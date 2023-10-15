@@ -57,9 +57,7 @@ void series_acceleration<T>::print_s_n(int n)
 template <typename T>
 void series_acceleration<T>::print_t_n(int n)
 {
-	T t_n = 0;	//its ineffective to use s_n method if n is big
-	for (int i = 0; i < n; ++i)	t_n += transform(i);
-	std::cout << "T_" << n << " : " << t_n << std::endl;
+	std::cout << "T_" << n << " : " << transform(n) << std::endl;
 }
 
 template <typename T>
