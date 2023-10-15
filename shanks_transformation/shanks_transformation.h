@@ -33,5 +33,5 @@ shanks_transform<T>::~shanks_transform()
 template <typename T>
 T shanks_transform<T>::transform(int n)
 {
-	return n > 0 ? this->S_n(n) + this->series(this->x, n) * this->series(this->x, n - 1) / (this->series(this->x, n) - this->series(this->x, n - 1)) : 0;
+	return n > 0 ? this->S_n(n) + this->series(this->x, n) * this->series(this->x, n + 1) / (this->series(this->x, n) - this->series(this->x, n + 1)) : 0;
 }
