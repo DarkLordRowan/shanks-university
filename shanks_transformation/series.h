@@ -9,28 +9,27 @@ class series_acceleration
 {
 public:
 	series_acceleration();
-	series_acceleration(std::function<T(T, int)> series, T x);
+	series_acceleration(std::function<T(const T, const int)> series, T x);
 	virtual ~series_acceleration() = 0;
-	void print_s_n(int n);
-	void print_t_n(int n);
+	constexpr void print_s_n(const int n) const;
+	constexpr void print_t_n(const int n) const;
 protected:
-	virtual T transform(int n);
-	std::function<T(T, int)> series;
+	virtual T transform(const int n) const;
+	std::function<T(const T, const int)> series;
 	T x;
-	T S_n(int n);
+	constexpr T S_n(int n) const;
 };
 
 template <typename T>
 series_acceleration<T>::series_acceleration()
 {
-	series = [](T x, int n) -> T {return 0; };
+	series = [](const T x, const int n) -> T {return 0; };
 }
 
 template <typename T>
-series_acceleration<T>::series_acceleration(std::function<T(T, int)> series, T x)
+series_acceleration<T>::series_acceleration(std::function<T(const T, const int)> series, const T x) : x(x), series(series)
 {
-	this->series = series;
-	this->x = x;
+
 }
 
 template <typename T>
@@ -40,25 +39,30 @@ series_acceleration<T>::~series_acceleration()
 }
 
 template <typename T>
-void series_acceleration<T>::print_s_n(int n)
+constexpr void series_acceleration<T>::print_s_n(const int n) const
 {
-	T s_n = 0;	//its ineffective to use s_n method if n is big
-	for (int i = 0; i <= n; ++i)	s_n += series(x, i);
-	std::cout << "S_" << n << " : " << s_n << std::endl;
+	std::cout << "S_" << n << " : " << S_n(n) << std::endl;
 }
 
 template <typename T>
-void series_acceleration<T>::print_t_n(int n)
+constexpr void series_acceleration<T>::print_t_n(const int n) const
 {
 	std::cout << "T_" << n << " : " << transform(n) << std::endl;
 }
 
 template <typename T>
-T series_acceleration<T>::S_n(int n)
+constexpr T series_acceleration<T>::S_n(const int n) const
 {
-	if (n < 0)	throw std::out_of_range("negative n"); //to do - specify exception
-	return n == 0 ? series(1,0) : S_n(n - 1) + series(x, n);
+	if (n < 0)	
+		throw std::domain_error("negative integer in the input");
+	T s_n = 0;
+	for (int i = n; i >= 0; --i)
+		s_n += series(x, i);
+	return s_n;
 }
 
 template <typename T>
-T series_acceleration<T>::transform(int n) { return 0; }
+T series_acceleration<T>::transform(int n) const
+{ 
+	return 0; 
+}
