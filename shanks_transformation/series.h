@@ -12,9 +12,9 @@ public:
 	series_acceleration(std::function<T(const T, const int)> series, T x);
 	virtual ~series_acceleration() = 0;
 	constexpr void print_s_n(const int n) const;
-	constexpr void print_t_n(const int n) const;
+	constexpr void print_t_n(const int n, const int order) const;
 protected:
-	virtual T transform(const int n) const;
+	virtual T transform(const int n, const int order) const;
 	std::function<T(const T, const int)> series;
 	T x;
 	constexpr T S_n(int n) const;
@@ -45,9 +45,9 @@ constexpr void series_acceleration<T>::print_s_n(const int n) const
 }
 
 template <typename T>
-constexpr void series_acceleration<T>::print_t_n(const int n) const
+constexpr void series_acceleration<T>::print_t_n(const int n, const int order) const
 {
-	std::cout << "T_" << n << " : " << transform(n) << std::endl;
+	std::cout << "T_" << n << " of order " << order << " : " << transform(n, order) << std::endl;
 }
 
 template <typename T>
@@ -62,7 +62,7 @@ constexpr T series_acceleration<T>::S_n(const int n) const
 }
 
 template <typename T>
-T series_acceleration<T>::transform(int n) const
+T series_acceleration<T>::transform(const int n, const int order) const
 { 
 	return 0; 
 }
