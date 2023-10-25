@@ -36,7 +36,7 @@ T shanks_transform<T>::transform(const int n, const int order) const
 {
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
-	else if (n == 0)
+	else if (n == 0 || n < order)
 		return 0;
 	else if (order == 1)
 	{
@@ -44,8 +44,6 @@ T shanks_transform<T>::transform(const int n, const int order) const
 		const auto a_n_plus_1 = this->series(this->x, n + 1);
 		return this->S_n(n) + a_n * a_n_plus_1 / (a_n - a_n_plus_1);
 	}
-	else if (n < order)
-		return 0;
 	else //n > order >= 1
 	{
 		std::vector<T> T_n(n + order, 0);
