@@ -54,6 +54,6 @@ int main(void)
 	test3.print_t_n(2, 3);
 	test3.print_t_n(3, 4);
 	test3.print_t_n(6, 2);
-	//test1.print_t_n(6, 2); TO DO - THIS EXPRESSION GIVES NAN (HOW UNEXPECTED...) - BORYA WE NEED TO DO SMTH ABOUT IT
+	//test1.print_t_n(6, 3); //TO DO - THIS EXPRESSION GIVES NAN (HOW UNEXPECTED...) - BORYA WE NEED TO DO SMTH ABOUT IT
 	return 0;
 }
