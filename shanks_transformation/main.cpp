@@ -1,4 +1,5 @@
 #include "shanks_transformation.h"
+#include "epsilon_algorithm.h"
 
 int fact(int n)
 {
@@ -39,21 +40,35 @@ float ch_x(float x, int n)
 int main(void)
 {
 	shanks_transform<float> test(&exp_x, 2.5);
+	epsilon_algorithm<float> eps_test(&exp_x, 2.5);
 	test.print_t_n(5,1);
+	eps_test.print_t_n(5, 1);
 	test.print_s_n(5);
 	shanks_transform<float> test1(&four_arctan_x, 1);
+	epsilon_algorithm<float> eps_test1(&four_arctan_x, 1);
 	test1.print_t_n(5,1);
+	eps_test1.print_t_n(5, 1);
 	test1.print_s_n(5);
 	shanks_transform<float> test2(&ch_x, 2.00001);
+	epsilon_algorithm<float> eps_test2(&ch_x, 2.00001);
 	test2.print_t_n(3,1);
+	eps_test2.print_t_n(3, 1);
 	test2.print_s_n(3);
 	shanks_transform<long double> test3(&four_arctan_x, 1);
+	epsilon_algorithm<long double> eps_test3(&four_arctan_x, 1);
 	test3.print_t_n(3, 1);
+	eps_test3.print_t_n(3, 1);
 	test3.print_t_n(2, 2);
+	eps_test3.print_t_n(2, 2);
 	test3.print_t_n(3, 2);
+	eps_test3.print_t_n(3, 2);
 	test3.print_t_n(2, 3);
+	eps_test3.print_t_n(2, 3);
 	test3.print_t_n(3, 4);
+	eps_test3.print_t_n(3, 4);
 	test3.print_t_n(6, 2);
+	eps_test3.print_t_n(6, 2);
 	//test1.print_t_n(6, 3); //TO DO - THIS EXPRESSION GIVES NAN (HOW UNEXPECTED...) - BORYA WE NEED TO DO SMTH ABOUT IT
+	eps_test1.print_t_n(6, 3);
 	return 0;
 }

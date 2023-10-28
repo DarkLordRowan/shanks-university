@@ -48,9 +48,7 @@ constexpr void series_acceleration<T>::print_s_n(const int n) const
 template <typename T>
 constexpr void series_acceleration<T>::print_t_n(const int n, const int order) const
 {
-	//std::cout << "T_" << n << " of order " << order << " : " << transform(n, order) << std::endl; 
-	// TO DO: OPTIMISE IT FOR 2ND FUNCTION
-	std::cout << "T_" << n << " of order " << order << " : " << epsilon_algorithm(n, order) << std::endl;
+	std::cout << "T_" << n << " of order " << order << " : " << transform(n, order) << std::endl; 
 }
 
 template <typename T>
