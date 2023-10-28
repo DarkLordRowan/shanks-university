@@ -11,6 +11,7 @@ public:
 	~shanks_transform() override;
 private:
 	T transform(const int n, const int order) const override;
+	T epsilon_algorithm(const int n, const int order) const override;
 };
 
 template <typename T>
@@ -64,4 +65,32 @@ T shanks_transform<T>::transform(const int n, const int order) const
 		}
 		return T_n[n];
 	}
+}
+
+template <typename T>
+T shanks_transform<T>::epsilon_algorithm(const int n, const int order) const
+{
+	// computing eps_(2*order)(S_n) as it is Shanks's transformation e_order(S_n) 
+	int m = 2 * order;
+	if (n < 0)
+		throw std::domain_error("negative integer in the input");
+	else if (n == 0)
+		return 0;
+	else if (order == 0)
+		return this->S_n(n);
+
+	std::vector<T> e(m + 1, 0);
+	T diff, temp1, temp2;
+	e[m] = this->S_n(n + m);
+	temp2 = 0.0;
+
+	for (int j = m; j > 0; j--)
+	{
+		temp1 = temp2;
+		temp2 = e[j - 1];
+		diff = e[j] - temp2; // TO DO: CHECK IF IT'S NOT ~ZERO
+		e[j - 1] = temp1 + 1.0 / diff;
+	}
+
+	return e[0];
 }

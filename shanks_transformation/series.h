@@ -15,6 +15,7 @@ public:
 	constexpr void print_t_n(const int n, const int order) const;
 protected:
 	virtual T transform(const int n, const int order) const;
+	virtual T epsilon_algorithm(const int n, const int order) const;
 	std::function<T(const T, const int)> series;
 	T x;
 	constexpr T S_n(int n) const;
@@ -47,7 +48,9 @@ constexpr void series_acceleration<T>::print_s_n(const int n) const
 template <typename T>
 constexpr void series_acceleration<T>::print_t_n(const int n, const int order) const
 {
-	std::cout << "T_" << n << " of order " << order << " : " << transform(n, order) << std::endl;
+	//std::cout << "T_" << n << " of order " << order << " : " << transform(n, order) << std::endl; 
+	// TO DO: OPTIMISE IT FOR 2ND FUNCTION
+	std::cout << "T_" << n << " of order " << order << " : " << epsilon_algorithm(n, order) << std::endl;
 }
 
 template <typename T>
@@ -65,4 +68,10 @@ template <typename T>
 T series_acceleration<T>::transform(const int n, const int order) const
 { 
 	return 0; 
+}
+
+template <typename T>
+T series_acceleration<T>::epsilon_algorithm(const int n, const int order) const
+{
+	return 0;
 }
