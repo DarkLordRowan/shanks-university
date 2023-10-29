@@ -127,6 +127,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="epsilon_algorithm.h" />
     <ClInclude Include="series.h" />
     <ClInclude Include="shanks_transformation.h" />
   </ItemGroup>
