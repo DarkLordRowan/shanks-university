@@ -7,7 +7,7 @@ class epsilon_algorithm : public series_acceleration<T>
 {
 public:
 	epsilon_algorithm();
-	epsilon_algorithm(std::function<T(const T, const int)> series, T x);
+	epsilon_algorithm(const std::function<T(const T, const int)> &series, const T x);
 	~epsilon_algorithm() override;
 private:
 	T transform(const int n, const int order) const override;
@@ -20,7 +20,7 @@ epsilon_algorithm<T>::epsilon_algorithm() : series_acceleration<T>()
 }
 
 template <typename T>
-epsilon_algorithm<T>::epsilon_algorithm(std::function<T(T, int)> series, T x) : series_acceleration<T>(series, x)
+epsilon_algorithm<T>::epsilon_algorithm(const std::function<T(T, int)> &series, const T x) : series_acceleration<T>(series, x)
 {
 
 }

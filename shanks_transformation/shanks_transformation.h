@@ -7,7 +7,7 @@ class shanks_transform : public series_acceleration<T>
 {
 public:
 	shanks_transform();
-	shanks_transform(std::function<T(const T, const int)> series, T x);
+	shanks_transform(const std::function<T(const T, const int)> &series, const T x);
 	~shanks_transform() override;
 private:
 	T transform(const int n, const int order) const override;
@@ -20,7 +20,7 @@ shanks_transform<T>::shanks_transform() : series_acceleration<T>()
 }
 
 template <typename T>
-shanks_transform<T>::shanks_transform(std::function<T(T, int)> series, T x) : series_acceleration<T>(series, x)
+shanks_transform<T>::shanks_transform(const std::function<T(T, int)> &series, const T x) : series_acceleration<T>(series, x)
 {
 
 }

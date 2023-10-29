@@ -39,23 +39,23 @@ float ch_x(float x, int n)
 
 int main(void)
 {
-	shanks_transform<float> test(&exp_x, 2.5);
-	epsilon_algorithm<float> eps_test(&exp_x, 2.5);
+	shanks_transform<float> test(exp_x, 2.5);
+	epsilon_algorithm<float> eps_test(exp_x, 2.5);
 	test.print_t_n(5,1);
 	eps_test.print_t_n(5, 1);
 	test.print_s_n(5);
-	shanks_transform<float> test1(&four_arctan_x, 1);
-	epsilon_algorithm<float> eps_test1(&four_arctan_x, 1);
+	shanks_transform<float> test1(four_arctan_x, 1);
+	epsilon_algorithm<float> eps_test1(four_arctan_x, 1);
 	test1.print_t_n(5,1);
 	eps_test1.print_t_n(5, 1);
 	test1.print_s_n(5);
-	shanks_transform<float> test2(&ch_x, 2.00001);
-	epsilon_algorithm<float> eps_test2(&ch_x, 2.00001);
+	shanks_transform<float> test2(ch_x, 2.00001);
+	epsilon_algorithm<float> eps_test2(ch_x, 2.00001);
 	test2.print_t_n(3,1);
 	eps_test2.print_t_n(3, 1);
 	test2.print_s_n(3);
-	shanks_transform<long double> test3(&four_arctan_x, 1);
-	epsilon_algorithm<long double> eps_test3(&four_arctan_x, 1);
+	shanks_transform<long double> test3(four_arctan_x, 1);
+	epsilon_algorithm<long double> eps_test3(four_arctan_x, 1);
 	test3.print_t_n(3, 1);
 	eps_test3.print_t_n(3, 1);
 	test3.print_t_n(2, 2);

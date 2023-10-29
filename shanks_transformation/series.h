@@ -9,7 +9,7 @@ class series_acceleration
 {
 public:
 	series_acceleration();
-	series_acceleration(std::function<T(const T, const int)> series, T x);
+	series_acceleration(const std::function<T(const T, const int)> &series, const T x);
 	virtual ~series_acceleration() = 0;
 	constexpr void print_s_n(const int n) const;
 	constexpr void print_t_n(const int n, const int order) const;
@@ -28,7 +28,7 @@ series_acceleration<T>::series_acceleration()
 }
 
 template <typename T>
-series_acceleration<T>::series_acceleration(std::function<T(const T, const int)> series, const T x) : x(x), series(series)
+series_acceleration<T>::series_acceleration(const std::function<T(const T, const int)> &series, const T x) : x(x), series(series)
 {
 
 }
