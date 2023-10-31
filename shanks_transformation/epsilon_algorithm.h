@@ -1,4 +1,6 @@
 #pragma once
+#define DEF_UNDEFINED_SUM 0
+
 #include "series.h"
 #include <vector>
 
@@ -39,7 +41,7 @@ T epsilon_algorithm<T>::transform(const int n, const int order) const
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
 	else if (n == 0)
-		return 0;
+		return DEF_UNDEFINED_SUM;
 	else if (order == 0)
 		return this->S_n(n);
 

@@ -39,36 +39,71 @@ float ch_x(float x, int n)
 
 int main(void)
 {
-	shanks_transform<float> test(exp_x, 2.5);
-	epsilon_algorithm<float> eps_test(exp_x, 2.5);
-	test.print_t_n(5,1);
-	eps_test.print_t_n(5, 1);
-	test.print_s_n(5);
-	shanks_transform<float> test1(four_arctan_x, 1);
-	epsilon_algorithm<float> eps_test1(four_arctan_x, 1);
-	test1.print_t_n(5,1);
-	eps_test1.print_t_n(5, 1);
-	test1.print_s_n(5);
-	shanks_transform<float> test2(ch_x, 2.00001);
-	epsilon_algorithm<float> eps_test2(ch_x, 2.00001);
-	test2.print_t_n(3,1);
-	eps_test2.print_t_n(3, 1);
-	test2.print_s_n(3);
-	shanks_transform<long double> test3(four_arctan_x, 1);
-	epsilon_algorithm<long double> eps_test3(four_arctan_x, 1);
-	test3.print_t_n(3, 1);
-	eps_test3.print_t_n(3, 1);
-	test3.print_t_n(2, 2);
-	eps_test3.print_t_n(2, 2);
-	test3.print_t_n(3, 2);
-	eps_test3.print_t_n(3, 2);
-	test3.print_t_n(2, 3);
-	eps_test3.print_t_n(2, 3);
-	test3.print_t_n(3, 4);
-	eps_test3.print_t_n(3, 4);
-	test3.print_t_n(6, 2);
-	eps_test3.print_t_n(6, 2);
-	//test1.print_t_n(6, 3); //TO DO - THIS EXPRESSION GIVES NAN (HOW UNEXPECTED...) - BORYA WE NEED TO DO SMTH ABOUT IT
-	eps_test1.print_t_n(6, 3);
+
+	/*
+		DEBUGGING
+	*/
+
+#if 0
+	shanks_transform<long double> test1_1(exp_x, 2.38);
+	epsilon_algorithm<long double> test1_2(exp_x, 2.38);
+	for (int i = 0; i < 5; ++i)
+		for (int j = 0; j < 10; ++j)
+		{
+			std::cout << "SHANKS TRANSFORMATION of order " << i << std::endl;
+			test1_1.print_t_n(j, i);
+			test1_1.print_s_n(j);
+			test1_1.print_diff_t_s(j, i);
+		}
+
+	for (int i = 0; i < 5; ++i)
+		for (int j = 0; j < 10; ++j)
+		{
+			std::cout << "EPSILON ALGORITHM of order " << i << std::endl;
+			test1_2.print_t_n(j, i);
+			test1_2.print_s_n(j);
+			test1_2.print_diff_t_s(j, i);
+		}
+#elif 1
+	shanks_transform<long double> test2_1(four_arctan_x, 1);
+	epsilon_algorithm<long double> test2_2(four_arctan_x, 1);
+	for (int i = 0; i < 5; ++i)
+		for (int j = 0; j < 10; ++j)
+		{
+			std::cout << "SHANKS TRANSFORMATION of order " << i << std::endl;
+			test2_1.print_t_n(j, i);
+			test2_1.print_s_n(j);
+			test2_1.print_diff_t_s(j, i);
+		}
+
+	for (int i = 0; i < 5; ++i)
+		for (int j = 0; j < 10; ++j)
+		{
+			std::cout << "EPSILON ALGORITHM of order " << i << std::endl;
+			test2_2.print_t_n(j, i);
+			test2_2.print_s_n(j);
+			test2_2.print_diff_t_s(j, i);
+		}
+#elif 0
+	shanks_transform<long double> test3_1(ch_x, 2.00001);
+	epsilon_algorithm<long double> test3_2(ch_x, 2.00001);
+	for (int i = 0; i < 5; ++i)
+		for (int j = 0; j < 10; ++j)
+		{
+			std::cout << "SHANKS TRANSFORMATION of order " << i << std::endl;
+			test3_1.print_t_n(j, i);
+			test3_1.print_s_n(j);
+			test3_1.print_diff_t_s(j, i);
+		}
+
+	for (int i = 0; i < 5; ++i)
+		for (int j = 0; j < 10; ++j)
+		{
+			std::cout << "EPSILON ALGORITHM of order " << i << std::endl;
+			test3_2.print_t_n(j, i);
+			test3_2.print_s_n(j);
+			test3_2.print_diff_t_s(j, i);
+		}
+#endif
 	return 0;
 }
