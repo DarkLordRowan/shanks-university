@@ -70,19 +70,41 @@ int main(void)
 	for (int i = 0; i < 5; ++i)
 		for (int j = 0; j < 10; ++j)
 		{
-			std::cout << "SHANKS TRANSFORMATION of order " << i << std::endl;
-			test2_1.print_t_n(j, i);
-			test2_1.print_s_n(j);
-			test2_1.print_diff_t_s(j, i);
+			try 
+			{
+				std::cout << "SHANKS TRANSFORMATION of order " << i << std::endl;
+				test2_1.print_t_n(j, i);
+				test2_1.print_s_n(j);
+				test2_1.print_diff_t_s(j, i);
+			}
+			catch (std::overflow_error& e)
+			{
+				std::cout << e.what() << std::endl;
+			}
+			catch (std::domain_error& e)
+			{
+				std::cout << e.what() << std::endl;
+			}
 		}
 
 	for (int i = 0; i < 5; ++i)
 		for (int j = 0; j < 10; ++j)
 		{
-			std::cout << "EPSILON ALGORITHM of order " << i << std::endl;
-			test2_2.print_t_n(j, i);
-			test2_2.print_s_n(j);
-			test2_2.print_diff_t_s(j, i);
+			try
+			{
+				std::cout << "EPSILON ALGORITHM of order " << i << std::endl;
+				test2_2.print_t_n(j, i);
+				test2_2.print_s_n(j);
+				test2_2.print_diff_t_s(j, i);
+			}
+			catch (std::overflow_error& e)
+			{
+				std::cout << e.what() << std::endl;
+			}
+			catch (std::domain_error& e)
+			{
+				std::cout << e.what() << std::endl;
+			}
 		}
 #elif 0
 	shanks_transform<long double> test3_1(ch_x, 2.00001);

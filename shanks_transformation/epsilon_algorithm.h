@@ -48,14 +48,16 @@ T epsilon_algorithm<T>::transform(const int n, const int order) const
 	std::vector<T> e(m + 1, 0);
 	T diff, temp1, temp2;
 	e[m] = this->S_n(n + m);
-	temp2 = 0.0;
+	temp2 = 0;
 
 	for (int j = m; j > 0; j--)
 	{
 		temp1 = temp2;
 		temp2 = e[j - 1];
-		diff = e[j] - temp2; // TO DO: CHECK IF IT'S NOT ~ZERO
-		e[j - 1] = temp1 + 1.0 / diff;
+		diff = e[j] - temp2;
+		if (isnan(abs(diff)))
+			throw std::overflow_error("division by zero");
+		e[j - 1] = fma(1, 1 / diff, temp1); 
 	}
 
 	return e[0];
