@@ -12,6 +12,7 @@ public:
 	epsilon_algorithm(const std::function<T(const T, const int)> &series, const T x);
 	~epsilon_algorithm() override;
 private:
+	/*shanks multistep epsilon algorithm of order order. return the partial sum of first n terms*/
 	T transform(const int n, const int order) const override;
 };
 

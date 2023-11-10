@@ -12,6 +12,7 @@ public:
 	shanks_transform(const std::function<T(const T, const int)> &series, const T x);
 	~shanks_transform() override;
 private:
+	/*shanks transformation of order order. return the partial sum of first n terms*/
 	T transform(const int n, const int order) const override;
 };
 
@@ -38,9 +39,9 @@ T shanks_transform<T>::transform(const int n, const int order) const
 {
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
-	else if (order == 0)
+	else if (order == 0) /*it is convenient to assume that transformation of order 0 is no transformation at all*/
 		return this->S_n(n);
-	else if (n == 0 || n < order)
+	else if (n < order || n == 0)
 		return DEF_UNDEFINED_SUM;
 	else if (order == 1)
 	{
@@ -53,7 +54,7 @@ T shanks_transform<T>::transform(const int n, const int order) const
 	else //n > order >= 1
 	{
 		std::vector<T> T_n(n + order, 0);
-		for (int i = n - order + 1; i <= n + order - 1; ++i) // n >= order - see transform method 
+		for (int i = n - order + 1; i <= n + order - 1; ++i) // if we got to this branch then we know that n >= order - see previous branches
 		{
 			const auto a_n = this->series(this->x, i);
 			const auto a_n_plus_1 = this->series(this->x, i + 1);
@@ -70,13 +71,12 @@ T shanks_transform<T>::transform(const int n, const int order) const
 				a = T_n[i];
 				b = T_n[i - 1];
 				c = T_n[i + 1];
-				//T_n_plus_1[i] = T_n[i] - (T_n[i] - T_n[i - 1]) * (T_n[i + 1] - T_n[i]) / (T_n[i + 1] - 2 * T_n[i] + T_n[i - 1]);
-				/*if (isnan(abs(2 * T_n[i] - T_n[i - 1] - T_n[i + 1])))
-					throw std::overflow_error("division by zero");
-				T_n_plus_1[i] = std::fma(std::fma(T_n[i], T_n[i+1] + T_n[i-1] - T_n[i], -T_n[i-1]*T_n[i+1]), 1 / (2 * T_n[i] - T_n[i - 1] - T_n[i+1]), T_n[i]);*/
-
 				if (isnan(abs(2 * a - b - c)))
 					throw std::overflow_error("division by zero");
+				/*if (isnan(abs(2 * T_n[i] - T_n[i - 1] - T_n[i + 1])))
+					throw std::overflow_error("division by zero");*/
+				/*T_n_plus_1[i] = T_n[i] - (T_n[i] - T_n[i - 1]) * (T_n[i + 1] - T_n[i]) / (T_n[i + 1] - 2 * T_n[i] + T_n[i - 1]);
+				T_n_plus_1[i] = std::fma(std::fma(T_n[i], T_n[i+1] + T_n[i-1] - T_n[i], -T_n[i-1]*T_n[i+1]), 1 / (2 * T_n[i] - T_n[i - 1] - T_n[i+1]), T_n[i]);*/
 				T_n_plus_1[i] = std::fma(std::fma(a, c + b - a, -b * c), 1 / (2 * a - b - c), a);
 				T_n = T_n_plus_1;
 			}
