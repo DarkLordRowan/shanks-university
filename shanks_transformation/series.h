@@ -7,6 +7,10 @@
 #include <exception>
 #include <math.h>
 
+// Base class series_acceleration
+// It is not used on it's own, bit it is inherited by shanks_transformation and epsilon_algorithm to implement the corresponding methods.
+// The class implementation provides everything needed for construction of an arbitrary series up to n terms and printing out the partial sum, 
+//	the partial sum after transformation is used and the difference between the later and the former.
 template <typename T>
 class series_acceleration
 {
