@@ -58,7 +58,7 @@ T epsilon_algorithm<T>::transform(const int n, const int order) const
 		diff = e[j] - temp2;
 		if (isnan(abs(diff)))
 			throw std::overflow_error("division by zero");
-		e[j - 1] = fma(1, 1 / diff, temp1); 
+		e[j - 1] = std::fma(1, 1 / diff, temp1); 
 	}
 
 	return e[0];

@@ -22,8 +22,11 @@ public:
 
 	/*methods for printing out certain quantities of the given series*/
 	constexpr void print_s_n(const int n) const;
+	constexpr void print_s_n(const int n, std::ostream& out) const;
 	constexpr void print_t_n(const int n, const int order) const;
+	constexpr void print_t_n(const int n, const int order, std::ostream& out) const;
 	constexpr void print_diff_t_s(const int n, const int order) const;
+	constexpr void print_diff_t_s(const int n, const int order, std::ostream& out) const;
 protected:
 	/*virtual method that returns the partial sum after transformation of the series*/
 	virtual T transform(const int n, const int order) const;
@@ -63,16 +66,35 @@ constexpr void series_acceleration<T>::print_s_n(const int n) const
 }
 
 template <typename T>
+constexpr void series_acceleration<T>::print_s_n(const int n, std::ostream& out) const
+{
+	out << "S_" << n << " : " << S_n(n) << std::endl;
+}
+
+template <typename T>
 constexpr void series_acceleration<T>::print_t_n(const int n, const int order) const
 {
 	std::cout << "T_" << n << " of order " << order << " : " << transform(n, order) << std::endl; 
 }
 
 template <typename T>
+constexpr void series_acceleration<T>::print_t_n(const int n, const int order, std::ostream& out) const
+{
+	out << "T_" << n << " of order " << order << " : " << transform(n, order) << std::endl;
+}
+
+template <typename T>
 constexpr void series_acceleration<T>::print_diff_t_s(const int n, const int order) const
 {
 	std::cout << "T_" << n << " of order " << order << " - S_" << n
-		<< " : " << transform(n, order) - S_n(n) << std::endl;	//to do : ostream instead just cout
+		<< " : " << transform(n, order) - S_n(n) << std::endl;
+}
+
+template <typename T>
+constexpr void series_acceleration<T>::print_diff_t_s(const int n, const int order, std::ostream& out) const
+{
+	out << "T_" << n << " of order " << order << " - S_" << n
+		<< " : " << transform(n, order) - S_n(n) << std::endl;
 }
 
 template <typename T>

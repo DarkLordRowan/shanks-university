@@ -74,7 +74,7 @@ int main(void)
 			{
 				std::cout << "SHANKS TRANSFORMATION of order " << i << std::endl;
 				test2_1.print_t_n(j, i);
-				test2_1.print_s_n(j);
+				test2_1.print_s_n(j, std::cout);
 				test2_1.print_diff_t_s(j, i);
 			}
 			catch (std::overflow_error& e)
