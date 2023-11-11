@@ -10,7 +10,7 @@
 // Base class series_acceleration
 // It is not used on it's own, bit it is inherited by shanks_transformation and epsilon_algorithm to implement the corresponding methods.
 // The class implementation provides everything needed for construction of an arbitrary series up to n terms and printing out the partial sum, 
-//	the partial sum after transformation is used and the difference between the later and the former.
+//	the partial sum after transformation is used and the difference between the latter and the former.
 template <typename T>
 class series_acceleration
 {
@@ -66,7 +66,7 @@ series_acceleration<T>::~series_acceleration()
 template <typename T>
 constexpr void series_acceleration<T>::print_s_n(const int n) const
 {
-	std::cout << "S_" << n << " : " << S_n(n) << std::endl;
+	print_s_n(n, std::cout);
 }
 
 template <typename T>
@@ -78,7 +78,7 @@ constexpr void series_acceleration<T>::print_s_n(const int n, std::ostream& out)
 template <typename T>
 constexpr void series_acceleration<T>::print_t_n(const int n, const int order) const
 {
-	std::cout << "T_" << n << " of order " << order << " : " << transform(n, order) << std::endl; 
+	print_t_n(n, order, std::cout);
 }
 
 template <typename T>
@@ -90,8 +90,7 @@ constexpr void series_acceleration<T>::print_t_n(const int n, const int order, s
 template <typename T>
 constexpr void series_acceleration<T>::print_diff_t_s(const int n, const int order) const
 {
-	std::cout << "T_" << n << " of order " << order << " - S_" << n
-		<< " : " << transform(n, order) - S_n(n) << std::endl;
+	print_diff_t_s(n, order, std::cout);
 }
 
 template <typename T>

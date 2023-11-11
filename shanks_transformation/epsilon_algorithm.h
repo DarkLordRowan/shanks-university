@@ -12,6 +12,9 @@ public:
 	epsilon_algorithm(const std::function<T(const T, const int)> &series, const T x);
 	~epsilon_algorithm() override;
 private:
+	/* Shanks multistep epsilon algorithm
+	receives n which stands for the number of terms in the partial sum and order which is the order of tranformation
+	returns the partial sum after the transformation*/
 	T transform(const int n, const int order) const override;
 };
 
@@ -33,12 +36,6 @@ epsilon_algorithm<T>::~epsilon_algorithm()
 
 }
 
-// Shanks multistep epsilon algorithm of order order
-// 
-// @param n is the number of terms in partial sums
-// @param order is the order of transformation
-// 
-// @return the partial sum after transformation of first n terms
 template <typename T>
 T epsilon_algorithm<T>::transform(const int n, const int order) const
 {
