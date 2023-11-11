@@ -12,7 +12,6 @@ public:
 	shanks_transform(const std::function<T(const T, const int)> &series, const T x);
 	~shanks_transform() override;
 private:
-	/*shanks transformation of order order. return the partial sum of first n terms*/
 	T transform(const int n, const int order) const override;
 };
 
@@ -34,6 +33,12 @@ shanks_transform<T>::~shanks_transform()
 
 }
 
+// Shanks transformation of order order
+// 
+// @param n is the number of terms in partial sums
+// @param order is the order of transformation
+// 
+// @return the partial sum after transformation of first n terms
 template <typename T>
 T shanks_transform<T>::transform(const int n, const int order) const
 {
