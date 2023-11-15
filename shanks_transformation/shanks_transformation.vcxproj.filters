@@ -30,4 +30,11 @@
       <Filter>Исходные файлы</Filter>
     </ClCompile>
   </ItemGroup>
+  <ItemGroup>
+    <Text Include="CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\..\..\Downloads\Telegram Desktop\doc_2023-11-15_22-34-40.vs\CMakePresets.json" />
+    <None Include="..\..\..\..\Downloads\Telegram Desktop\doc_2023-11-15_22-34-40.vs\Doxyfile" />
+  </ItemGroup>
 </Project>

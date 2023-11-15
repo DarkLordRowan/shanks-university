@@ -1,41 +1,85 @@
+/**
+ * @file epsilon_algorithm.h
+ * @brief This file contains the declaration of the Epsilon Algorithm class.
+ */
 #pragma once
 #define DEF_UNDEFINED_SUM 0
 
-#include "series.h"
-#include <vector>
+#include "series.h" // Include the series header
+#include <vector> // Include the vector library
 
+
+ /**
+  * @brief Epsilon Algorithm class template.
+  * @tparam T The type of the elements in the series.
+  */
 template <typename T>
 class epsilon_algorithm : public series_acceleration<T>
 {
 public:
+	/**
+   * @brief Default constructor.
+   */
 	epsilon_algorithm();
-	epsilon_algorithm(const std::function<T(const T, const int)> &series, const T x);
+
+	/**
+   * @brief Parameterized constructor to initialize the Epsilon Algorithm.
+   * @param series The series function to be accelerated.
+   * @param x The value of x.
+   */
+	epsilon_algorithm(const std::function<T(const T, const int)>& series, const T x);
+	/**
+   * @brief Destructor to clean up resources.
+   */
 	~epsilon_algorithm() override;
 private:
-	/* Shanks multistep epsilon algorithm
-	receives n which stands for the number of terms in the partial sum and order which is the order of tranformation
-	returns the partial sum after the transformation*/
+	/**
+   * @brief Shanks multistep epsilon algorithm.
+   * @param n The number of terms in the partial sum.
+   * @param order The order of transformation.
+   * @return The partial sum after the transformation.
+   */
 	T transform(const int n, const int order) const override;
 };
 
+/**
+ * @brief Default constructor for the Epsilon Algorithm.
+ * Initializes the Epsilon Algorithm.
+ */
 template <typename T>
 epsilon_algorithm<T>::epsilon_algorithm() : series_acceleration<T>()
 {
 
 }
 
+/**
+ * @brief Parameterized constructor for the Epsilon Algorithm.
+ * Initializes the Epsilon Algorithm with a series function and a value of x.
+ * @param series The series function to be accelerated.
+ * @param x The value of x.
+ */
 template <typename T>
-epsilon_algorithm<T>::epsilon_algorithm(const std::function<T(T, int)> &series, const T x) : series_acceleration<T>(series, x)
+epsilon_algorithm<T>::epsilon_algorithm(const std::function<T(T, int)>& series, const T x) : series_acceleration<T>(series, x)
 {
 
 }
 
+/**
+ * @brief Destructor to clean up resources for the Epsilon Algorithm.
+ */
 template <typename T>
 epsilon_algorithm<T>::~epsilon_algorithm()
 {
 
 }
 
+/**
+ * @brief Shanks multistep epsilon algorithm.
+ * Computes the partial sum after the transformation using the Epsilon Algorithm.
+ * @param n The number of terms in the partial sum.
+ * @param order The order of transformation.
+ * @return The partial sum after the transformation.
+ */
 template <typename T>
 T epsilon_algorithm<T>::transform(const int n, const int order) const
 {
@@ -60,7 +104,7 @@ T epsilon_algorithm<T>::transform(const int n, const int order) const
 		diff = e[j] - temp2;
 		if (isnan(abs(diff)))
 			throw std::overflow_error("division by zero");
-		e[j - 1] = std::fma(1, 1 / diff, temp1); 
+		e[j - 1] = std::fma(1, 1 / diff, temp1);
 	}
 
 	return e[0];

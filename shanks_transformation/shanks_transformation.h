@@ -1,41 +1,87 @@
+/**
+ * @file shanks_transform.h
+ * @brief This file contains the definition of the Shanks transformation class.
+ */
+
 #pragma once
 #define DEF_UNDEFINED_SUM 0
 
-#include "series.h"
-#include <vector>
+#include "series.h" // Include the series header
+#include <vector>  // Include the vector library
 
+ /**
+  * @brief Shanks transformation class.
+  * @tparam T The type of the elements in the series.
+  */
 template <typename T>
 class shanks_transform : public series_acceleration<T>
 {
 public:
+
+	/**
+   * @brief Default constructor.
+   */
 	shanks_transform();
-	shanks_transform(const std::function<T(const T, const int)> &series, const T x);
+
+	/**
+   * @brief Parameterized constructor to initialize the Shanks transformation.
+   * @param series The series function to be accelerated.
+   * @param x The value of x.
+   */
+	shanks_transform(const std::function<T(const T, const int)>& series, const T x);
+
+	/**
+   * @brief Destructor to clean up resources.
+   */
 	~shanks_transform() override;
 private:
-	/* Shanks transformation
-	receives n which stands for the number of terms in the partial sum and order which is the order of tranformation
-	returns the partial sum after the transformation*/
+	/**
+   * @brief Shanks transformation function.
+   * @param n The number of terms in the partial sum.
+   * @param order The order of transformation.
+   * @return The partial sum after the transformation.
+   */
 	T transform(const int n, const int order) const override;
 };
 
+/**
+ * @brief Default constructor for the Shanks transformation.
+ * Initializes the Shanks transformation.
+ */
 template <typename T>
 shanks_transform<T>::shanks_transform() : series_acceleration<T>()
 {
 
 }
 
+/**
+ * @brief Parameterized constructor for the Shanks transformation.
+ * Initializes the Shanks transformation with a series function and a value of x.
+ * @param series The series function to be accelerated.
+ * @param x The value of x.
+ */
 template <typename T>
-shanks_transform<T>::shanks_transform(const std::function<T(T, int)> &series, const T x) : series_acceleration<T>(series, x)
+shanks_transform<T>::shanks_transform(const std::function<T(T, int)>& series, const T x) : series_acceleration<T>(series, x)
 {
 
 }
 
+/**
+ * @brief Destructor to clean up resources for the Shanks transformation.
+ */
 template <typename T>
 shanks_transform<T>::~shanks_transform()
 {
 
 }
 
+/**
+ * @brief Shanks transformation function.
+ * Transforms the partial sum based on the number of terms and the order of transformation.
+ * @param n The number of terms in the partial sum.
+ * @param order The order of transformation.
+ * @return The partial sum after the transformation.
+ */
 template <typename T>
 T shanks_transform<T>::transform(const int n, const int order) const
 {
@@ -77,8 +123,8 @@ T shanks_transform<T>::transform(const int n, const int order) const
 					throw std::overflow_error("division by zero");
 				/*if (isnan(abs(2 * T_n[i] - T_n[i - 1] - T_n[i + 1])))
 					throw std::overflow_error("division by zero");*/
-				/*T_n_plus_1[i] = T_n[i] - (T_n[i] - T_n[i - 1]) * (T_n[i + 1] - T_n[i]) / (T_n[i + 1] - 2 * T_n[i] + T_n[i - 1]);
-				T_n_plus_1[i] = std::fma(std::fma(T_n[i], T_n[i+1] + T_n[i-1] - T_n[i], -T_n[i-1]*T_n[i+1]), 1 / (2 * T_n[i] - T_n[i - 1] - T_n[i+1]), T_n[i]);*/
+					/*T_n_plus_1[i] = T_n[i] - (T_n[i] - T_n[i - 1]) * (T_n[i + 1] - T_n[i]) / (T_n[i + 1] - 2 * T_n[i] + T_n[i - 1]);
+					T_n_plus_1[i] = std::fma(std::fma(T_n[i], T_n[i+1] + T_n[i-1] - T_n[i], -T_n[i-1]*T_n[i+1]), 1 / (2 * T_n[i] - T_n[i - 1] - T_n[i+1]), T_n[i]);*/
 				T_n_plus_1[i] = std::fma(std::fma(a, c + b - a, -b * c), 1 / (2 * a - b - c), a);
 				T_n = T_n_plus_1;
 			}

@@ -134,6 +134,13 @@
   <ItemGroup>
     <ClCompile Include="main.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <Text Include="CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\..\..\Downloads\Telegram Desktop\doc_2023-11-15_22-34-40.vs\CMakePresets.json" />
+    <None Include="..\..\..\..\Downloads\Telegram Desktop\doc_2023-11-15_22-34-40.vs\Doxyfile" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
