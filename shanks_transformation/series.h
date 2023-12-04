@@ -22,7 +22,7 @@
  * The class implementation provides everything needed for construction of an arbitrary series up to n terms and printing out the partial sum,
  * the partial sum after transformation is used, and the difference between the latter and the former.
  */
-template <typename T>
+template <typename T, typename K>
 class series_acceleration
 {
 public:
@@ -30,75 +30,75 @@ public:
 
 	/**
    * @brief Constructor that receives a series function and a point x
-   *
+   * @authors Bolshakov M.P.
    * @param series The series function which returns the nth term of the given series at point x
    * @param x The point x
    */
-	series_acceleration(const std::function<T(const T, const int)>& series, const T x);
+	series_acceleration(const std::function<T(const T, const K)>& series, const T x);
 
 	virtual ~series_acceleration() = 0;
 
 	/**
   * @brief Method for printing out the partial sum of the given series up to n terms
-  *
+  * @authors Bolshakov M.P.
   * @param n The number of terms
   */
-	constexpr void print_s_n(const int n) const;
+	constexpr void print_s_n(const K n) const;
 	/**
    * @brief Method for printing out the partial sum of the given series up to n terms to a specified output stream
-   *
+   * @authors Bolshakov M.P., Pashkov B.B.
    * @param n The number of terms
    * @param out The output stream
    */
 
-	constexpr void print_s_n(const int n, std::ostream& out) const;
+	constexpr void print_s_n(const K n, std::ostream& out) const;
 	/**
    * @brief Method for printing out the nth term of the given series up to n terms and a specified order
-   *
+   * @authors Bolshakov M.P., Pashkov B.B.
    * @param n The number of terms
    * @param order The order
    */
-	constexpr void print_t_n(const int n, const int order) const;
+	constexpr void print_t_n(const K n, const int order) const;
 
 	/**
    * @brief Method for printing out the nth term of the given series up to n terms and a specified order to a specified output stream
-   *
+   * @authors Bolshakov M.P.
    * @param n The number of terms
    * @param order The order
    * @param out The output stream
    */
-	constexpr void print_t_n(const int n, const int order, std::ostream& out) const;
+	constexpr void print_t_n(const K n, const int order, std::ostream& out) const;
 
 	/**
    * @brief Method for printing out the difference between the partial sum after transformation and the original partial sum up to n terms and a specified order
-   *
+   * @authors Bolshakov M.P., Pashkov B.B.
    * @param n The number of terms
    * @param order The order
    */
-	constexpr void print_diff_t_s(const int n, const int order) const;
+	constexpr void print_diff_t_s(const K n, const int order) const;
 
 	/**
    * @brief Method for printing out the difference between the partial sum after transformation and the original partial sum up to n terms and a specified order to a specified output stream
-   *
+   * @authors Bolshakov M.P.
    * @param n The number of terms
    * @param order The order
    * @param out The output stream
    */
-	constexpr void print_diff_t_s(const int n, const int order, std::ostream& out) const;
+	constexpr void print_diff_t_s(const K n, const int order, std::ostream& out) const;
 protected:
 	/**
    * @brief Virtual method that returns the partial sum after transformation of the series
-   *
+   * @authors Bolshakov M.P., Pashkov B.B. 
    * @param n The number of terms
    * @param order The order
    * @return The transformed partial sum
    */
-	virtual T transform(const int n, const int order) const;
+	virtual T transform(const K n, const int order) const;
 
 	/**
    * @brief Series function which returns the nth term of the given series at point x
    */
-	std::function<T(const T, const int)> series;
+	std::function<T(const T, const K)> series;
 
 	/**
    * @brief Point x
@@ -107,19 +107,19 @@ protected:
 
 	/**
 	   * @brief Partial sum of the series up to n terms
-	   *
+	   * @authors Bolshakov M.P.
 	   * @param n The number of terms
 	   * @return The partial sum
 	   */
-	constexpr T S_n(int n) const;
+	constexpr T S_n(K n) const;
 };
 
 /**
  * @brief Default constructor for the series_acceleration class.
  * Initializes the series function with a lambda function returning NO_SERIES_GIVEN.
  */
-template <typename T>
-series_acceleration<T>::series_acceleration()
+template <typename T, typename K>
+series_acceleration<T, K>::series_acceleration()
 {
 	series = [](const T x, const int n) -> T {return NO_SERIES_GIVEN; };
 }
@@ -130,8 +130,8 @@ series_acceleration<T>::series_acceleration()
  * @param series The series function to be accelerated.
  * @param x The value of x.
  */
-template <typename T>
-series_acceleration<T>::series_acceleration(const std::function<T(const T, const int)>& series, const T x) : x(x), series(series)
+template <typename T, typename K>
+series_acceleration<T, K>::series_acceleration(const std::function<T(const T, const K)>& series, const T x) : x(x), series(series)
 {
 
 }
@@ -140,8 +140,8 @@ series_acceleration<T>::series_acceleration(const std::function<T(const T, const
  * @brief Destructor for the series_acceleration class.
  * Provides cleanup for the series acceleration.
  */
-template <typename T>
-series_acceleration<T>::~series_acceleration()
+template <typename T, typename K>
+series_acceleration<T, K>::~series_acceleration()
 {
 
 }
@@ -151,8 +151,8 @@ series_acceleration<T>::~series_acceleration()
  *
  * @param n The number of terms in the partial sum.
  */
-template <typename T>
-constexpr void series_acceleration<T>::print_s_n(const int n) const
+template <typename T, typename K>
+constexpr void series_acceleration<T, K>::print_s_n(const K n) const
 {
 	print_s_n(n, std::cout);
 }
@@ -163,8 +163,8 @@ constexpr void series_acceleration<T>::print_s_n(const int n) const
  * @param n The number of terms in the partial sum.
  * @param out The output stream.
  */
-template <typename T>
-constexpr void series_acceleration<T>::print_s_n(const int n, std::ostream& out) const
+template <typename T, typename K>
+constexpr void series_acceleration<T, K>::print_s_n(const K n, std::ostream& out) const
 {
 	out << "S_" << n << " : " << S_n(n) << std::endl;
 }
@@ -175,8 +175,8 @@ constexpr void series_acceleration<T>::print_s_n(const int n, std::ostream& out)
  * @param n The number of terms.
  * @param order The order of transformation.
  */
-template <typename T>
-constexpr void series_acceleration<T>::print_t_n(const int n, const int order) const
+template <typename T, typename K>
+constexpr void series_acceleration<T, K>::print_t_n(const K n, const int order) const
 {
 	print_t_n(n, order, std::cout);
 }
@@ -189,8 +189,8 @@ constexpr void series_acceleration<T>::print_t_n(const int n, const int order) c
  * @param order The order of transformation.
  * @param out The output stream.
  */
-template <typename T>
-constexpr void series_acceleration<T>::print_t_n(const int n, const int order, std::ostream& out) const
+template <typename T, typename K>
+constexpr void series_acceleration<T, K>::print_t_n(const K n, const int order, std::ostream& out) const
 {
 	out << "T_" << n << " of order " << order << " : " << transform(n, order) << std::endl;
 }
@@ -201,8 +201,8 @@ constexpr void series_acceleration<T>::print_t_n(const int n, const int order, s
  * @param n The number of terms.
  * @param order The order of transformation.
  */
-template <typename T>
-constexpr void series_acceleration<T>::print_diff_t_s(const int n, const int order) const
+template <typename T, typename K>
+constexpr void series_acceleration<T, K>::print_diff_t_s(const K n, const int order) const
 {
 	print_diff_t_s(n, order, std::cout);
 }
@@ -214,8 +214,8 @@ constexpr void series_acceleration<T>::print_diff_t_s(const int n, const int ord
  * @param order The order of transformation.
  * @param out The output stream.
  */
-template <typename T>
-constexpr void series_acceleration<T>::print_diff_t_s(const int n, const int order, std::ostream& out) const
+template <typename T, typename K>
+constexpr void series_acceleration<T, K>::print_diff_t_s(const K n, const int order, std::ostream& out) const
 {
 	out << "T_" << n << " of order " << order << " - S_" << n
 		<< " : " << transform(n, order) - S_n(n) << std::endl;
@@ -227,8 +227,8 @@ constexpr void series_acceleration<T>::print_diff_t_s(const int n, const int ord
  * @param n The number of terms.
  * @return The partial sum S_n.
  */
-template <typename T>
-constexpr T series_acceleration<T>::S_n(const int n) const
+template <typename T, typename K>
+constexpr T series_acceleration<T, K>::S_n(const K n) const
 {
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
@@ -245,8 +245,8 @@ constexpr T series_acceleration<T>::S_n(const int n) const
  * @param order The order of transformation.
  * @return Default value for undefined transformation.
  */
-template <typename T>
-T series_acceleration<T>::transform(const int n, const int order) const
+template <typename T, typename K>
+T series_acceleration<T, K>::transform(const K n, const int order) const
 {
 	return DEF_NO_TRANSFORM;
 }

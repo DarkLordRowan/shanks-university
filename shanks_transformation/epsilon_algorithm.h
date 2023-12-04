@@ -11,23 +11,26 @@
 
  /**
   * @brief Epsilon Algorithm class template.
+  * @authors Pashkov B.B.
   * @tparam T The type of the elements in the series.
   */
-template <typename T>
-class epsilon_algorithm : public series_acceleration<T>
+template <typename T, typename K>
+class epsilon_algorithm : public series_acceleration<T, K>
 {
 public:
 	/**
    * @brief Default constructor.
+   * @authors Pashkov B.B.
    */
 	epsilon_algorithm();
 
 	/**
    * @brief Parameterized constructor to initialize the Epsilon Algorithm.
+   * @authors Pashkov B.B.
    * @param series The series function to be accelerated.
    * @param x The value of x.
    */
-	epsilon_algorithm(const std::function<T(const T, const int)>& series, const T x);
+	epsilon_algorithm(const std::function<T(const T, const K)>& series, const T x);
 	/**
    * @brief Destructor to clean up resources.
    */
@@ -39,15 +42,15 @@ private:
    * @param order The order of transformation.
    * @return The partial sum after the transformation.
    */
-	T transform(const int n, const int order) const override;
+	T transform(const K n, const int order) const override;
 };
 
 /**
  * @brief Default constructor for the Epsilon Algorithm.
  * Initializes the Epsilon Algorithm.
  */
-template <typename T>
-epsilon_algorithm<T>::epsilon_algorithm() : series_acceleration<T>()
+template <typename T, typename K>
+epsilon_algorithm<T, K>::epsilon_algorithm() : series_acceleration<T, K>()
 {
 
 }
@@ -58,8 +61,8 @@ epsilon_algorithm<T>::epsilon_algorithm() : series_acceleration<T>()
  * @param series The series function to be accelerated.
  * @param x The value of x.
  */
-template <typename T>
-epsilon_algorithm<T>::epsilon_algorithm(const std::function<T(T, int)>& series, const T x) : series_acceleration<T>(series, x)
+template <typename T, typename K>
+epsilon_algorithm<T, K>::epsilon_algorithm(const std::function<T(T, K)>& series, const T x) : series_acceleration<T, K>(series, x)
 {
 
 }
@@ -67,8 +70,8 @@ epsilon_algorithm<T>::epsilon_algorithm(const std::function<T(T, int)>& series, 
 /**
  * @brief Destructor to clean up resources for the Epsilon Algorithm.
  */
-template <typename T>
-epsilon_algorithm<T>::~epsilon_algorithm()
+template <typename T, typename K>
+epsilon_algorithm<T, K>::~epsilon_algorithm()
 {
 
 }
@@ -80,8 +83,8 @@ epsilon_algorithm<T>::~epsilon_algorithm()
  * @param order The order of transformation.
  * @return The partial sum after the transformation.
  */
-template <typename T>
-T epsilon_algorithm<T>::transform(const int n, const int order) const
+template <typename T, typename K>
+T epsilon_algorithm<T, K>::transform(const K n, const int order) const
 {
 	// computing eps_(2*order)(S_n) as it is Shanks's transformation e_order(S_n) 
 	int m = 2 * order;
@@ -102,7 +105,7 @@ T epsilon_algorithm<T>::transform(const int n, const int order) const
 		temp1 = temp2;
 		temp2 = e[j - 1];
 		diff = e[j] - temp2;
-		if (isnan(abs(diff)))
+		if (!std::isfinite(abs(diff)))
 			throw std::overflow_error("division by zero");
 		e[j - 1] = std::fma(1, 1 / diff, temp1);
 	}

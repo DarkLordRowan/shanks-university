@@ -13,43 +13,47 @@
   * @brief Shanks transformation class.
   * @tparam T The type of the elements in the series.
   */
-template <typename T>
-class shanks_transform : public series_acceleration<T>
+template <typename T, typename K>
+class shanks_transform : public series_acceleration<T, K>
 {
 public:
 
 	/**
    * @brief Default constructor.
+   * @author Bolshakov M.P.
    */
 	shanks_transform();
 
 	/**
    * @brief Parameterized constructor to initialize the Shanks transformation.
+   * @authors Bolshakov M.P.
    * @param series The series function to be accelerated.
    * @param x The value of x.
    */
-	shanks_transform(const std::function<T(const T, const int)>& series, const T x);
+	shanks_transform(const std::function<T(const T, const K)>& series, const T x);
 
 	/**
    * @brief Destructor to clean up resources.
+   * @authors Bolshakov M.P.
    */
 	~shanks_transform() override;
 private:
 	/**
    * @brief Shanks transformation function.
+   * @authors Bolshakov M.P., Pashkov B.B.
    * @param n The number of terms in the partial sum.
    * @param order The order of transformation.
    * @return The partial sum after the transformation.
    */
-	T transform(const int n, const int order) const override;
+	T transform(const K n, const int order) const override;
 };
 
 /**
  * @brief Default constructor for the Shanks transformation.
  * Initializes the Shanks transformation.
  */
-template <typename T>
-shanks_transform<T>::shanks_transform() : series_acceleration<T>()
+template <typename T, typename K>
+shanks_transform<T, K>::shanks_transform() : series_acceleration<T, K>()
 {
 
 }
@@ -60,8 +64,8 @@ shanks_transform<T>::shanks_transform() : series_acceleration<T>()
  * @param series The series function to be accelerated.
  * @param x The value of x.
  */
-template <typename T>
-shanks_transform<T>::shanks_transform(const std::function<T(T, int)>& series, const T x) : series_acceleration<T>(series, x)
+template <typename T, typename K>
+shanks_transform<T, K>::shanks_transform(const std::function<T(T, K)>& series, const T x) : series_acceleration<T, K>(series, x)
 {
 
 }
@@ -69,8 +73,8 @@ shanks_transform<T>::shanks_transform(const std::function<T(T, int)>& series, co
 /**
  * @brief Destructor to clean up resources for the Shanks transformation.
  */
-template <typename T>
-shanks_transform<T>::~shanks_transform()
+template <typename T, typename K>
+shanks_transform<T, K>::~shanks_transform()
 {
 
 }
@@ -82,8 +86,8 @@ shanks_transform<T>::~shanks_transform()
  * @param order The order of transformation.
  * @return The partial sum after the transformation.
  */
-template <typename T>
-T shanks_transform<T>::transform(const int n, const int order) const
+template <typename T, typename K>
+T shanks_transform<T, K>::transform(const K n, const int order) const
 {
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
@@ -95,20 +99,23 @@ T shanks_transform<T>::transform(const int n, const int order) const
 	{
 		const auto a_n = this->series(this->x, n);
 		const auto a_n_plus_1 = this->series(this->x, n + 1);
-		if (isnan(abs(a_n - a_n_plus_1)))
+		if (!std::isfinite(abs(a_n - a_n_plus_1)))
 			throw std::overflow_error("division by zero");
-		return std::fma(a_n * a_n_plus_1, 1 / (a_n - a_n_plus_1), this->S_n(n));
+		const auto tmp = -a_n_plus_1 * a_n_plus_1;
+		return std::fma(a_n * a_n_plus_1, (a_n + a_n_plus_1) / (std::fma(a_n, a_n, tmp) - std::fma(a_n_plus_1, a_n_plus_1, tmp)), this->S_n(n));
 	}
 	else //n > order >= 1
 	{
 		std::vector<T> T_n(n + order, 0);
+		auto a_n = this->series(this->x, n - order + 1);
+		auto a_n_plus_1 = this->series(this->x, n - order);
 		for (int i = n - order + 1; i <= n + order - 1; ++i) // if we got to this branch then we know that n >= order - see previous branches
 		{
-			const auto a_n = this->series(this->x, i);
-			const auto a_n_plus_1 = this->series(this->x, i + 1);
-			if (isnan(abs(a_n - a_n_plus_1)))
+			a_n = this->series(this->x, i);
+			a_n_plus_1 = this->series(this->x, i + 1);
+			if (!std::isfinite(abs(a_n - a_n_plus_1)))
 				throw std::overflow_error("division by zero");
-			T_n[i] = std::fma(a_n * a_n_plus_1, 1 / (a_n - a_n_plus_1), this->S_n(i));
+			T_n[i] = std::fma(a_n * a_n_plus_1, (a_n + a_n_plus_1) / (std::fma(a_n, a_n, -a_n_plus_1 * a_n_plus_1)), this->S_n(i));
 		}
 		std::vector<T> T_n_plus_1(n + order, 0);
 		T a, b, c;
@@ -119,9 +126,9 @@ T shanks_transform<T>::transform(const int n, const int order) const
 				a = T_n[i];
 				b = T_n[i - 1];
 				c = T_n[i + 1];
-				if (isnan(abs(2 * a - b - c)))
+				if (!std::isfinite(abs(2 * a - b - c)))
 					throw std::overflow_error("division by zero");
-				/*if (isnan(abs(2 * T_n[i] - T_n[i - 1] - T_n[i + 1])))
+				/*if (std::isfinite(abs(2 * T_n[i] - T_n[i - 1] - T_n[i + 1])))
 					throw std::overflow_error("division by zero");*/
 					/*T_n_plus_1[i] = T_n[i] - (T_n[i] - T_n[i - 1]) * (T_n[i + 1] - T_n[i]) / (T_n[i + 1] - 2 * T_n[i] + T_n[i - 1]);
 					T_n_plus_1[i] = std::fma(std::fma(T_n[i], T_n[i+1] + T_n[i-1] - T_n[i], -T_n[i-1]*T_n[i+1]), 1 / (2 * T_n[i] - T_n[i - 1] - T_n[i+1]), T_n[i]);*/

@@ -4,10 +4,12 @@
 
 #include "shanks_transformation.h"
 #include "epsilon_algorithm.h"
+#include <string> 
 
 
  /**
   * @brief Calculate the factorial of a given integer.
+  * @authors Pashkov B.B., Bolshakov M.P.
   *
   * This function takes in an integer n as input and returns the factorial of n as an integer value.
   * It first checks if the input integer n is greater than 0, and if so, it calculates the factorial using a for loop.
@@ -21,20 +23,16 @@
 int fact(int n)
 {
 	int f = 1;
-	if (n > 0)
-	{
-		for (int i = 2; i <= n; i++)
-		{
-			f *= i;
-		}
-	}
-	else if (n < 0)
+	for (int i = 2; i <= n; i++)
+		f *= i;
+	if (n < 0)
 		throw std::domain_error("negative integer in the input");
 	return f;
 }
 
 /*!
 	 * @param  x - a real number for which the exponential function needs to be calculated
+	 * @authors Bolshakov M.P.
 	 * @param  n - an integer representing the power for the exponential calculation
 	 * @return the result of the calculation of x^n / n!
 	 * @note  this is the expx function, which calculates the value of x^n / n! (exponential) for the given values of x and n.
@@ -49,6 +47,7 @@ float exp_x(float x, int n)
 
 /*!
 * @brief This is the four_arctan_x function, which calculates the value of 4 * arctan(x) for the given values of x and n.
+* @authors Bolshakov M.P.
 * 		 Parameter x - a real number for which the arctan function needs to be calculated.
 * 		 Parameter n - an integer representing the power used in the calculation.
 * 		 Return value - the result of the calculation of 4 * arctan(x).
@@ -61,16 +60,19 @@ float exp_x(float x, int n)
    * @note calculates the value of 4 * arctan(x) by using the formula: 4 * (-1)^n * x^(2*n+1) / (2*n+1)
    * @throw std::domain_error if the input n is a negative integer
    */
-float four_arctan_x(float x, int n)
+float four_arctan_x(float x, unsigned int n)
 {
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
-	return 4 * pow((-1), n % 2) * pow(x, 2 * n + 1) / (2 * n + 1);
+	if (std::abs(x) > 1)
+		throw std::domain_error("the arctan series diverge at x = " + std::to_string(x));
+	return 4 * (n % 2 ? -1 : 1) * pow(x, 2 * n + 1) / (2 * n + 1);
 }
 
 
 /**
  * @brief Calculate the value of x raised to the power of 2*n divided by the factorial of 2*n.
+ * @authors Pashkov B.B.
  *
  * This function takes in a float x and an integer n as input and returns a float value.
  * It first checks if the input integer n is negative, and if so, it throws a domain_error exception with the message "negative integer in the input".
@@ -97,8 +99,8 @@ int main(void)
 	*/
 
 #if 0
-	shanks_transform<long double> test1_1(exp_x, 2.38);
-	epsilon_algorithm<long double> test1_2(exp_x, 2.38);
+	shanks_transform<long double, int> test1_1(exp_x, 2.38);
+	epsilon_algorithm<long double, int> test1_2(exp_x, 2.38);
 	for (int i = 0; i < 5; ++i)
 		for (int j = 0; j < 10; ++j)
 		{
@@ -117,8 +119,8 @@ int main(void)
 			test1_2.print_diff_t_s(j, i);
 		}
 #elif 1
-	shanks_transform<long double> test2_1(four_arctan_x, 1);
-	epsilon_algorithm<long double> test2_2(four_arctan_x, 1);
+	shanks_transform<long double, unsigned int> test2_1(four_arctan_x, 1);
+	epsilon_algorithm<long double, unsigned int> test2_2(four_arctan_x, 1);
 	for (int i = 0; i < 5; ++i)
 		for (int j = 0; j < 10; ++j)
 		{
@@ -159,8 +161,8 @@ int main(void)
 			}
 		}
 #elif 0
-	shanks_transform<long double> test3_1(ch_x, 2.00001);
-	epsilon_algorithm<long double> test3_2(ch_x, 2.00001);
+	shanks_transform<long double, int> test3_1(ch_x, 2.00001);
+	epsilon_algorithm<long double, int> test3_2(ch_x, 2.00001);
 	for (int i = 0; i < 5; ++i)
 		for (int j = 0; j < 10; ++j)
 		{
