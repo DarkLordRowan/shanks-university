@@ -115,7 +115,8 @@ T shanks_transform<T, K>::transform(const K n, const int order) const
 			a_n_plus_1 = this->series(this->x, i + 1);
 			if (!std::isfinite(abs(a_n - a_n_plus_1)))
 				throw std::overflow_error("division by zero");
-			T_n[i] = std::fma(a_n * a_n_plus_1, (a_n + a_n_plus_1) / (std::fma(a_n, a_n, -a_n_plus_1 * a_n_plus_1)), this->S_n(i));
+			const auto tmp = -a_n_plus_1 * a_n_plus_1;
+			T_n[i] = std::fma(a_n * a_n_plus_1, (a_n + a_n_plus_1) / (std::fma(a_n, a_n, tmp) - std::fma(a_n_plus_1, a_n_plus_1, tmp)), this->S_n(i));
 		}
 		std::vector<T> T_n_plus_1(n + order, 0);
 		T a, b, c;
@@ -128,7 +129,7 @@ T shanks_transform<T, K>::transform(const K n, const int order) const
 				c = T_n[i + 1];
 				if (!std::isfinite(abs(2 * a - b - c)))
 					throw std::overflow_error("division by zero");
-				/*if (std::isfinite(abs(2 * T_n[i] - T_n[i - 1] - T_n[i + 1])))
+				/*if (!std::isfinite(abs(2 * T_n[i] - T_n[i - 1] - T_n[i + 1])))
 					throw std::overflow_error("division by zero");*/
 					/*T_n_plus_1[i] = T_n[i] - (T_n[i] - T_n[i - 1]) * (T_n[i + 1] - T_n[i]) / (T_n[i + 1] - 2 * T_n[i] + T_n[i - 1]);
 					T_n_plus_1[i] = std::fma(std::fma(T_n[i], T_n[i+1] + T_n[i-1] - T_n[i], -T_n[i-1]*T_n[i+1]), 1 / (2 * T_n[i] - T_n[i - 1] - T_n[i+1]), T_n[i]);*/
