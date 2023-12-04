@@ -8,6 +8,8 @@
 #define DEF_NO_TRANSFORM 0
 /** @brief Default value for an unspecified series */
 #define NO_SERIES_GIVEN 0
+/** @brief if 1 then the class has methods of printing partial sum of series, partial sum of transformed series and difference between them */
+#define DEBUGGING_MODE 1
 
 #include <functional>  // Include the functional library for std::function
 #include <iostream>   // Include the iostream library for I/O functionalities
@@ -43,6 +45,9 @@ public:
   * @authors Bolshakov M.P.
   * @param n The number of terms
   */
+
+#if DEBUGGING_MODE
+
 	constexpr void print_s_n(const K n) const;
 	/**
    * @brief Method for printing out the partial sum of the given series up to n terms to a specified output stream
@@ -85,6 +90,9 @@ public:
    * @param out The output stream
    */
 	constexpr void print_diff_t_s(const K n, const int order, std::ostream& out) const;
+
+#endif
+
 protected:
 	/**
    * @brief Virtual method that returns the partial sum after transformation of the series
@@ -151,6 +159,9 @@ series_acceleration<T, K>::~series_acceleration()
  *
  * @param n The number of terms in the partial sum.
  */
+
+#if DEBUGGING_MODE
+
 template <typename T, typename K>
 constexpr void series_acceleration<T, K>::print_s_n(const K n) const
 {
@@ -220,6 +231,8 @@ constexpr void series_acceleration<T, K>::print_diff_t_s(const K n, const int or
 	out << "T_" << n << " of order " << order << " - S_" << n
 		<< " : " << transform(n, order) - S_n(n) << std::endl;
 }
+
+#endif
 
 /**
  * @brief Calculate the partial sum of the series up to n terms.

@@ -98,6 +98,8 @@ int main(void)
 		DEBUGGING
 	*/
 
+#if DEBUGGING_MODE
+
 #if 0
 	shanks_transform<long double, int> test1_1(exp_x, 2.38);
 	epsilon_algorithm<long double, int> test1_2(exp_x, 2.38);
@@ -180,6 +182,7 @@ int main(void)
 			test3_2.print_s_n(j);
 			test3_2.print_diff_t_s(j, i);
 		}
+#endif
 #endif
 	return 0;
 }
