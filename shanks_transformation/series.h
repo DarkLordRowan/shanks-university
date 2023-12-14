@@ -235,7 +235,7 @@ constexpr void series_acceleration<T, K>::print_diff_t_s(const K n, const int or
 #endif
 
 /**
- * @brief Calculate the partial sum of the series up to n terms.
+ * @brief Calculate the partial sum of the series up to n terms. Formula [21]
  *
  * @param n The number of terms.
  * @return The partial sum S_n.
