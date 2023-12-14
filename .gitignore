@@ -6,3 +6,7 @@
 /.vs
 /shanks_transformation/x64/Debug
 /x64/Debug
+html
+latex
+docs
+!docs/html/.nojekyll

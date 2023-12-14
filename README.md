@@ -6,11 +6,14 @@
 Теория: [ссылка_на_теорию](https://drive.google.com/file/d/1Dq1qrBOKZAulvpoYDNv2B7Iv9DeCxX4l/view?usp=drive_link)
 
 ## Установка
-bash
+В git bash
+
+```
 mkdir build
 cd build
 cmake ..
 make
+```
 
 ## Документация
 Doxygen документация доступна [по ссылке](https://katerina-evdokimova.github.io/shanks-university/)
