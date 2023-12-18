@@ -42,7 +42,7 @@ private:
    * @param order The order of transformation.
    * @return The partial sum after the transformation.
    */
-	T transform(const K n, const int order) const override;
+	T operator()(const K n, const int order) const;
 };
 
 /**
@@ -84,7 +84,7 @@ epsilon_algorithm<T, K>::~epsilon_algorithm()
  * @return The partial sum after the transformation.
  */
 template <typename T, typename K>
-T epsilon_algorithm<T, K>::transform(const K n, const int order) const
+T epsilon_algorithm<T, K>::operator()(const K n, const int order) const
 {
 	// computing eps_(2*order)(S_n) as it is Shanks's transformation e_order(S_n) 
 	int m = 2 * order;

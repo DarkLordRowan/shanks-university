@@ -95,13 +95,13 @@ public:
 
 protected:
 	/**
-   * @brief Virtual method that returns the partial sum after transformation of the series
+   * @brief Virtual operator() that returns the partial sum after transformation of the series
    * @authors Bolshakov M.P., Pashkov B.B. 
    * @param n The number of terms
    * @param order The order
    * @return The transformed partial sum
    */
-	virtual T transform(const K n, const int order) const;
+	virtual T operator()(const K n, const int order) const;
 
 	/**
    * @brief Series function which returns the nth term of the given series at point x
@@ -203,7 +203,7 @@ constexpr void series_acceleration<T, K>::print_t_n(const K n, const int order) 
 template <typename T, typename K>
 constexpr void series_acceleration<T, K>::print_t_n(const K n, const int order, std::ostream& out) const
 {
-	out << "T_" << n << " of order " << order << " : " << transform(n, order) << std::endl;
+	out << "T_" << n << " of order " << order << " : " << this->operator()(n, order) << std::endl;
 }
 
 /**
@@ -229,7 +229,7 @@ template <typename T, typename K>
 constexpr void series_acceleration<T, K>::print_diff_t_s(const K n, const int order, std::ostream& out) const
 {
 	out << "T_" << n << " of order " << order << " - S_" << n
-		<< " : " << transform(n, order) - S_n(n) << std::endl;
+		<< " : " << this->operator()(n, order) - S_n(n) << std::endl;
 }
 
 #endif
@@ -259,7 +259,7 @@ constexpr T series_acceleration<T, K>::S_n(const K n) const
  * @return Default value for undefined transformation.
  */
 template <typename T, typename K>
-T series_acceleration<T, K>::transform(const K n, const int order) const
+T series_acceleration<T, K>::operator()(const K n, const int order) const
 {
 	return DEF_NO_TRANSFORM;
 }

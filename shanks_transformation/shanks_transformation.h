@@ -45,7 +45,7 @@ private:
    * @param order The order of transformation.
    * @return The partial sum after the transformation.
    */
-	T transform(const K n, const int order) const override;
+	T operator()(const K n, const int order) const;
 };
 
 /**
@@ -87,7 +87,7 @@ shanks_transform<T, K>::~shanks_transform()
  * @return The partial sum after the transformation.
  */
 template <typename T, typename K>
-T shanks_transform<T, K>::transform(const K n, const int order) const
+T shanks_transform<T, K>::operator()(const K n, const int order) const
 {
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
