@@ -81,7 +81,7 @@ shanks_transform<T, K>::~shanks_transform()
 
 /**
  * @brief Shanks transformation function.
- * Transforms the partial sum based on the number of terms and the order of transformation.
+ * Transforms the partial sum based on the number of terms and the order of transformation. // formuls [5 - 6]
  * @param n The number of terms in the partial sum.
  * @param order The order of transformation.
  * @return The partial sum after the transformation.
@@ -116,6 +116,8 @@ T shanks_transform<T, K>::operator()(const K n, const int order) const
 			if (!std::isfinite(abs(a_n - a_n_plus_1)))
 				throw std::overflow_error("division by zero");
 			const auto tmp = -a_n_plus_1 * a_n_plus_1;
+
+			// formula [6]
 			T_n[i] = std::fma(a_n * a_n_plus_1, (a_n + a_n_plus_1) / (std::fma(a_n, a_n, tmp) - std::fma(a_n_plus_1, a_n_plus_1, tmp)), this->S_n(i));
 		}
 		std::vector<T> T_n_plus_1(n + order, 0);
@@ -133,7 +135,7 @@ T shanks_transform<T, K>::operator()(const K n, const int order) const
 					throw std::overflow_error("division by zero");*/
 					/*T_n_plus_1[i] = T_n[i] - (T_n[i] - T_n[i - 1]) * (T_n[i + 1] - T_n[i]) / (T_n[i + 1] - 2 * T_n[i] + T_n[i - 1]);
 					T_n_plus_1[i] = std::fma(std::fma(T_n[i], T_n[i+1] + T_n[i-1] - T_n[i], -T_n[i-1]*T_n[i+1]), 1 / (2 * T_n[i] - T_n[i - 1] - T_n[i+1]), T_n[i]);*/
-				T_n_plus_1[i] = std::fma(std::fma(a, c + b - a, -b * c), 1 / (2 * a - b - c), a);
+				T_n_plus_1[i] = std::fma(std::fma(a, c + b - a, -b * c), 1 / (2 * a - b - c), a); 
 				T_n = T_n_plus_1;
 			}
 		}
