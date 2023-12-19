@@ -79,6 +79,7 @@ epsilon_algorithm<T, K>::~epsilon_algorithm()
 /**
  * @brief Shanks multistep epsilon algorithm.
  * Computes the partial sum after the transformation using the Epsilon Algorithm.
+ * For more information, see p. 5.3.2 in [https://e-maxx.ru/bookz/files/numerical_recipes.pdf]  
  * @param n The number of terms in the partial sum.
  * @param order The order of transformation.
  * @return The partial sum after the transformation.
