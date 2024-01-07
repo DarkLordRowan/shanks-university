@@ -15,13 +15,16 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="series.h">
+    <ClInclude Include="series_acceleration.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
     <ClInclude Include="shanks_transformation.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
     <ClInclude Include="epsilon_algorithm.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="series.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
   </ItemGroup>

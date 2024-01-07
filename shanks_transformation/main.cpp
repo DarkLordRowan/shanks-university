@@ -121,9 +121,10 @@ int main(void)
 			test1_2.print_diff_t_s(j, i);
 		}
 #elif 1
-	shanks_transform<long double, unsigned int> test2_1(four_arctan_x, 1);
-	epsilon_algorithm<long double, unsigned int> test2_2(four_arctan_x, 1);
-	for (int i = 0; i < 5; ++i)
+	exp_series<long double, long long int> exp_1(1);
+	shanks_transform<long double, long long int, exp_series<long double, long long int>> test2_1(exp_1);
+	epsilon_algorithm<long double, long long int, exp_series<long double, long long int>> test2_2(exp_1);
+	for (int i = 1; i < 5; ++i)
 		for (int j = 0; j < 10; ++j)
 		{
 			try

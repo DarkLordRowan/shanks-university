@@ -5,7 +5,7 @@
 #pragma once
 #define DEF_UNDEFINED_SUM 0
 
-#include "series.h" // Include the series header
+#include "series_acceleration.h" // Include the series header
 #include <vector> // Include the vector library
 
 
@@ -14,8 +14,8 @@
   * @authors Pashkov B.B.
   * @tparam T The type of the elements in the series.
   */
-template <typename T, typename K>
-class epsilon_algorithm : public series_acceleration<T, K>
+template <typename T, typename K, typename series_templ>
+class epsilon_algorithm : public series_acceleration<T, K, series_templ>
 {
 public:
 	/**
@@ -30,7 +30,7 @@ public:
    * @param series The series function to be accelerated.
    * @param x The value of x.
    */
-	epsilon_algorithm(const std::function<T(const T, const K)>& series, const T x);
+	epsilon_algorithm(const series_templ& series);
 	/**
    * @brief Destructor to clean up resources.
    */
@@ -49,8 +49,8 @@ private:
  * @brief Default constructor for the Epsilon Algorithm.
  * Initializes the Epsilon Algorithm.
  */
-template <typename T, typename K>
-epsilon_algorithm<T, K>::epsilon_algorithm() : series_acceleration<T, K>()
+template <typename T, typename K, typename series_templ>
+epsilon_algorithm<T, K, series_templ>::epsilon_algorithm() : series_acceleration<T, K, series_templ>()
 {
 
 }
@@ -61,8 +61,8 @@ epsilon_algorithm<T, K>::epsilon_algorithm() : series_acceleration<T, K>()
  * @param series The series function to be accelerated.
  * @param x The value of x.
  */
-template <typename T, typename K>
-epsilon_algorithm<T, K>::epsilon_algorithm(const std::function<T(T, K)>& series, const T x) : series_acceleration<T, K>(series, x)
+template <typename T, typename K, typename series_templ>
+epsilon_algorithm<T, K, series_templ>::epsilon_algorithm(const series_templ& series) : series_acceleration<T, K, series_templ>(series)
 {
 
 }
@@ -70,8 +70,8 @@ epsilon_algorithm<T, K>::epsilon_algorithm(const std::function<T(T, K)>& series,
 /**
  * @brief Destructor to clean up resources for the Epsilon Algorithm.
  */
-template <typename T, typename K>
-epsilon_algorithm<T, K>::~epsilon_algorithm()
+template <typename T, typename K, typename series_templ>
+epsilon_algorithm<T, K, series_templ>::~epsilon_algorithm()
 {
 
 }
@@ -83,8 +83,8 @@ epsilon_algorithm<T, K>::~epsilon_algorithm()
  * @param order The order of transformation.
  * @return The partial sum after the transformation.
  */
-template <typename T, typename K>
-T epsilon_algorithm<T, K>::operator()(const K n, const int order) const
+template <typename T, typename K, typename series_templ>
+T epsilon_algorithm<T, K, series_templ>::operator()(const K n, const int order) const
 {
 	// computing eps_(2*order)(S_n) as it is Shanks's transformation e_order(S_n) 
 	int m = 2 * order;
@@ -93,11 +93,11 @@ T epsilon_algorithm<T, K>::operator()(const K n, const int order) const
 	else if (n == 0)
 		return DEF_UNDEFINED_SUM;
 	else if (order == 0)
-		return this->S_n(n);
+		return this->series.S_n(n);
 
 	std::vector<T> e(m + 1, 0);
 	T diff, temp1, temp2;
-	e[m] = this->S_n(n + m);
+	e[m] = this->series.S_n(n + m);
 	temp2 = 0;
 
 	for (int j = m; j > 0; j--)

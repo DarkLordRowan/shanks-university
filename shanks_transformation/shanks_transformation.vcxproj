@@ -129,6 +129,7 @@
   <ItemGroup>
     <ClInclude Include="epsilon_algorithm.h" />
     <ClInclude Include="series.h" />
+    <ClInclude Include="series_acceleration.h" />
     <ClInclude Include="shanks_transformation.h" />
   </ItemGroup>
   <ItemGroup>
