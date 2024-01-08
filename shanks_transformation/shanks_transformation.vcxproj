@@ -131,6 +131,7 @@
     <ClInclude Include="series.h" />
     <ClInclude Include="series_acceleration.h" />
     <ClInclude Include="shanks_transformation.h" />
+    <ClInclude Include="test_functions.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />

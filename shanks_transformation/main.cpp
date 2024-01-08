@@ -2,9 +2,10 @@
  * @file main.cpp
  */
 
+#include <string> 
 #include "shanks_transformation.h"
 #include "epsilon_algorithm.h"
-#include <string> 
+#include "test_functions.h"
 
 
  /**
@@ -99,6 +100,21 @@ int main(void)
 	*/
 
 #if DEBUGGING_MODE
+	/*
+	std::cout << "Which transformation would you like to test?" << std::endl << "0 - shanks_transformation, 1 - epsilon_algorithm";
+	int transformation_id;
+	std::cin >> transformation_id;
+	switch(transformation_id)
+	{
+		case 0:
+		shanks_transform<long double, long long int, exp_series<long double, long long int>> test2_1();
+		break;
+		case 1:
+		epsilon_algorithm<long double, long long int, exp_series<long double, long long int>> test2_2();
+		break;
+		default:
+		throw std::exception(); //todo
+	}*/
 
 #if 0
 	shanks_transform<long double, int> test1_1(exp_x, 2.38);
@@ -127,42 +143,12 @@ int main(void)
 	for (int i = 1; i < 5; ++i)
 		for (int j = 0; j < 10; ++j)
 		{
-			try
-			{
-				std::cout << "SHANKS TRANSFORMATION of order " << i << std::endl;
-				test2_1.print_t_n(j, i);
-				test2_1.print_s_n(j, std::cout);
-				test2_1.print_diff_t_s(j, i);
-			}
-			catch (std::overflow_error& e)
-			{
-				std::cout << e.what() << std::endl;
-			}
-			catch (std::domain_error& e)
-			{
-				std::cout << e.what() << std::endl;
-			}
+			cmp_sum_and_transform<exp_series<long double, long long int>, epsilon_algorithm<long double, long long int, exp_series<long double, long long int>>>(j, i, exp_1);
+			cmp_sum_and_transform<exp_series<long double, long long int>, shanks_transform<long double, long long int, exp_series<long double, long long int>>>(j, i, exp_1);
 		}
+	transformation_remainders<exp_series<long double, long long int>, shanks_transform<long double, long long int, exp_series<long double, long long int>>>(5, 2, exp_1);
 
-	for (int i = 0; i < 5; ++i)
-		for (int j = 0; j < 10; ++j)
-		{
-			try
-			{
-				std::cout << "EPSILON ALGORITHM of order " << i << std::endl;
-				test2_2.print_t_n(j, i);
-				test2_2.print_s_n(j);
-				test2_2.print_diff_t_s(j, i);
-			}
-			catch (std::overflow_error& e)
-			{
-				std::cout << e.what() << std::endl;
-			}
-			catch (std::domain_error& e)
-			{
-				std::cout << e.what() << std::endl;
-			}
-		}
+
 #elif 0
 	shanks_transform<long double, int> test3_1(ch_x, 2.00001);
 	epsilon_algorithm<long double, int> test3_2(ch_x, 2.00001);

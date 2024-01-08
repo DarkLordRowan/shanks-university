@@ -15,27 +15,32 @@
 #include <iostream>   // Include the iostream library for I/O functionalities
 #include <exception>  // Include the exception library for std::exception
 #include <math.h>     // Include the math library for mathematical functions
+#include <string>	  // Include the library which contains the string class
 #include "series.h"
 
 
 /**
  * @brief Base class series_acceleration
- *
+ * @authors Bolshakov M.P.
  * It is not used on it's own, but it is inherited by shanks_transformation and epsilon_algorithm to implement the corresponding methods.
  * The class implementation provides everything needed for construction of an arbitrary series up to n terms and printing out the partial sum,
  * the partial sum after transformation is used, and the difference between the latter and the former.
+ * @tparam T The type of the elements in the series, K The type of enumerating integer, series_templ is the type of series whose convergence we accelerate
  */
 template <typename T, typename K, typename series_templ>
 class series_acceleration
 {
 public:
+	/**
+   * @brief Base constructor
+   * @authors Bolshakov M.P.
+   */
 	series_acceleration();
 
 	/**
-   * @brief Constructor that receives a series function and a point x
+   * @brief Parameterized constructor to initialize the Transformation.
    * @authors Bolshakov M.P.
-   * @param series The series function which returns the nth term of the given series at point x
-   * @param x The point x
+   * @param series The series class object to be accelerated
    */
 	series_acceleration(const series_templ& series);
 
@@ -92,61 +97,44 @@ public:
    */
 	constexpr void print_diff_t_s(const K n, const int order, std::ostream& out) const;
 
+	constexpr void print_info() const;
+
 #endif
 
-protected:
 	/**
    * @brief Virtual operator() that returns the partial sum after transformation of the series
-   * @authors Bolshakov M.P., Pashkov B.B. 
+   * @authors Bolshakov M.P., Pashkov B.B.
    * @param n The number of terms
-   * @param order The order
+   * @param order The order of the transformation
    * @return The transformed partial sum
    */
 	virtual T operator()(const K n, const int order) const;
 
+protected:
 	/**
-   * @brief Series function which returns the nth term of the given series at point x
+   * @brief Series whose convergence is being accelerated
+   * @authors Bolshakov M.P.
    */
 	series_templ series;
 };
 
-/**
- * @brief Default constructor for the series_acceleration class.
- * Initializes the series function with a lambda function returning NO_SERIES_GIVEN.
- */
 template <typename T, typename K, typename series_templ>
 series_acceleration<T, K, series_templ>::series_acceleration()
 {
 
 }
 
-/**
- * @brief Parameterized constructor for the series_acceleration class.
- * Initializes the series function and the value of x.
- * @param series The series function to be accelerated.
- * @param x The value of x.
- */
 template <typename T, typename K, typename series_templ>
 series_acceleration<T, K, series_templ>::series_acceleration(const series_templ& series) : series(series)
 {
 
 }
 
-/**
- * @brief Destructor for the series_acceleration class.
- * Provides cleanup for the series acceleration.
- */
 template <typename T, typename K, typename series_templ>
 series_acceleration<T, K, series_templ>::~series_acceleration()
 {
 
 }
-
-/**
- * @brief Print the partial sum S_n to the standard output stream.
- *
- * @param n The number of terms in the partial sum.
- */
 
 #if DEBUGGING_MODE
 
@@ -156,63 +144,30 @@ constexpr void series_acceleration<T, K, series_templ>::print_s_n(const K n) con
 	print_s_n(n, std::cout);
 }
 
-/**
- * @brief Print the partial sum S_n to the specified output stream.
- *
- * @param n The number of terms in the partial sum.
- * @param out The output stream.
- */
 template <typename T, typename K, typename series_templ>
 constexpr void series_acceleration<T, K, series_templ>::print_s_n(const K n, std::ostream& out) const
 {
 	out << "S_" << n << " : " << this->series.S_n(n) << std::endl;
 }
 
-/**
- * @brief Print the nth term of the series after transformation of order to the standard output stream.
- *
- * @param n The number of terms.
- * @param order The order of transformation.
- */
 template <typename T, typename K, typename series_templ>
 constexpr void series_acceleration<T, K, series_templ>::print_t_n(const K n, const int order) const
 {
 	print_t_n(n, order, std::cout);
 }
 
-
-/**
- * @brief Print the nth term of the series after transformation of order to the specified output stream.
- *
- * @param n The number of terms.
- * @param order The order of transformation.
- * @param out The output stream.
- */
 template <typename T, typename K, typename series_templ>
 constexpr void series_acceleration<T, K, series_templ>::print_t_n(const K n, const int order, std::ostream& out) const
 {
 	out << "T_" << n << " of order " << order << " : " << this->operator()(n, order) << std::endl;
 }
 
-/**
- * @brief Print the difference between the partial sum after transformation and the original partial sum to the standard output stream.
- *
- * @param n The number of terms.
- * @param order The order of transformation.
- */
 template <typename T, typename K, typename series_templ>
 constexpr void series_acceleration<T, K, series_templ>::print_diff_t_s(const K n, const int order) const
 {
 	print_diff_t_s(n, order, std::cout);
 }
 
-/**
- * @brief Print the difference between the partial sum after transformation and the original partial sum to the specified output stream.
- *
- * @param n The number of terms.
- * @param order The order of transformation.
- * @param out The output stream.
- */
 template <typename T, typename K, typename series_templ>
 constexpr void series_acceleration<T, K, series_templ>::print_diff_t_s(const K n, const int order, std::ostream& out) const
 {
@@ -220,15 +175,14 @@ constexpr void series_acceleration<T, K, series_templ>::print_diff_t_s(const K n
 		<< " : " << this->operator()(n, order) - this->series.S_n(n) << std::endl;
 }
 
+template <typename T, typename K, typename series_templ>
+constexpr void series_acceleration<T, K, series_templ>::print_info() const
+{
+	std::cout << "transformation: " << typeid(*this).name() << std::endl;
+}
+
 #endif
 
-/**
- * @brief Calculate the transformation of the partial sum.
- *
- * @param n The number of terms.
- * @param order The order of transformation.
- * @return Default value for undefined transformation.
- */
 template <typename T, typename K, typename series_templ>
 T series_acceleration<T, K, series_templ>::operator()(const K n, const int order) const
 {

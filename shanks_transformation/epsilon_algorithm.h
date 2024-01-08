@@ -12,7 +12,7 @@
  /**
   * @brief Epsilon Algorithm class template.
   * @authors Pashkov B.B.
-  * @tparam T The type of the elements in the series.
+  * @tparam T The type of the elements in the series, K The type of enumerating integer, series_templ is the type of series whose convergence we accelerate
   */
 template <typename T, typename K, typename series_templ>
 class epsilon_algorithm : public series_acceleration<T, K, series_templ>
@@ -27,17 +27,19 @@ public:
 	/**
    * @brief Parameterized constructor to initialize the Epsilon Algorithm.
    * @authors Pashkov B.B.
-   * @param series The series function to be accelerated.
-   * @param x The value of x.
+   * @param series The series class object to be accelerated
    */
 	epsilon_algorithm(const series_templ& series);
 	/**
    * @brief Destructor to clean up resources.
+   * @authors Pashkov B.B.
    */
 	~epsilon_algorithm() override;
-private:
+
 	/**
    * @brief Shanks multistep epsilon algorithm.
+   * Computes the partial sum after the transformation using the Epsilon Algorithm.
+   * For more information, see p. 5.3.2 in [https://e-maxx.ru/bookz/files/numerical_recipes.pdf]  
    * @param n The number of terms in the partial sum.
    * @param order The order of transformation.
    * @return The partial sum after the transformation.
@@ -45,45 +47,24 @@ private:
 	T operator()(const K n, const int order) const;
 };
 
-/**
- * @brief Default constructor for the Epsilon Algorithm.
- * Initializes the Epsilon Algorithm.
- */
 template <typename T, typename K, typename series_templ>
 epsilon_algorithm<T, K, series_templ>::epsilon_algorithm() : series_acceleration<T, K, series_templ>()
 {
 
 }
 
-/**
- * @brief Parameterized constructor for the Epsilon Algorithm.
- * Initializes the Epsilon Algorithm with a series function and a value of x.
- * @param series The series function to be accelerated.
- * @param x The value of x.
- */
 template <typename T, typename K, typename series_templ>
 epsilon_algorithm<T, K, series_templ>::epsilon_algorithm(const series_templ& series) : series_acceleration<T, K, series_templ>(series)
 {
 
 }
 
-/**
- * @brief Destructor to clean up resources for the Epsilon Algorithm.
- */
 template <typename T, typename K, typename series_templ>
 epsilon_algorithm<T, K, series_templ>::~epsilon_algorithm()
 {
 
 }
 
-/**
- * @brief Shanks multistep epsilon algorithm.
- * Computes the partial sum after the transformation using the Epsilon Algorithm.
- * For more information, see p. 5.3.2 in [https://e-maxx.ru/bookz/files/numerical_recipes.pdf]  
- * @param n The number of terms in the partial sum.
- * @param order The order of transformation.
- * @return The partial sum after the transformation.
- */
 template <typename T, typename K, typename series_templ>
 T epsilon_algorithm<T, K, series_templ>::operator()(const K n, const int order) const
 {

@@ -11,7 +11,7 @@
 
  /**
   * @brief Shanks transformation class.
-  * @tparam T The type of the elements in the series.
+  * @tparam T The type of the elements in the series, K The type of enumerating integer, series_templ is the type of series whose convergence we accelerate
   */
 template <typename T, typename K, typename series_templ>
 class shanks_transform : public series_acceleration<T, K, series_templ>
@@ -27,8 +27,7 @@ public:
 	/**
    * @brief Parameterized constructor to initialize the Shanks transformation.
    * @authors Bolshakov M.P.
-   * @param series The series function to be accelerated.
-   * @param x The value of x.
+   * @param series The series class object
    */
 	shanks_transform(const series_templ& series);
 
@@ -37,7 +36,6 @@ public:
    * @authors Bolshakov M.P.
    */
 	~shanks_transform() override;
-private:
 	/**
    * @brief Shanks transformation function.
    * @authors Bolshakov M.P., Pashkov B.B.
@@ -48,44 +46,24 @@ private:
 	T operator()(const K n, const int order) const;
 };
 
-/**
- * @brief Default constructor for the Shanks transformation.
- * Initializes the Shanks transformation.
- */
 template <typename T, typename K, typename series_templ>
 shanks_transform<T, K, series_templ>::shanks_transform() : series_acceleration<T, K, series_templ>()
 {
 
 }
 
-/**
- * @brief Parameterized constructor for the Shanks transformation.
- * Initializes the Shanks transformation with a series function and a value of x.
- * @param series The series function to be accelerated.
- * @param x The value of x.
- */
 template <typename T, typename K, typename series_templ>
 shanks_transform<T, K, series_templ>::shanks_transform(const series_templ& series) : series_acceleration<T, K, series_templ>(series)
 {
 
 }
 
-/**
- * @brief Destructor to clean up resources for the Shanks transformation.
- */
 template <typename T, typename K, typename series_templ>
 shanks_transform<T, K, series_templ>::~shanks_transform()
 {
 
 }
 
-/**
- * @brief Shanks transformation function.
- * Transforms the partial sum based on the number of terms and the order of transformation. // formuls [5 - 6]
- * @param n The number of terms in the partial sum.
- * @param order The order of transformation.
- * @return The partial sum after the transformation.
- */
 template <typename T, typename K, typename series_templ>
 T shanks_transform<T, K, series_templ>::operator()(const K n, const int order) const
 {
