@@ -107,8 +107,8 @@ T shanks_transform<T, K, series_templ>::operator()(const K n, const int order) c
 	else //n > order >= 1
 	{
 		std::vector<T> T_n(n + order, 0);
-		auto a_n = this->series.a_n(n - order + 1);
-		auto a_n_plus_1 = this->series.a_n(n - order);
+		auto a_n = this->series.a_n(n - order);
+		auto a_n_plus_1 = this->series.a_n(n - order + 1);
 		for (int i = n - order + 1; i <= n + order - 1; ++i) // if we got to this branch then we know that n >= order - see previous branches
 		{
 			a_n = this->series.a_n(i);
@@ -136,8 +136,8 @@ T shanks_transform<T, K, series_templ>::operator()(const K n, const int order) c
 					/*T_n_plus_1[i] = T_n[i] - (T_n[i] - T_n[i - 1]) * (T_n[i + 1] - T_n[i]) / (T_n[i + 1] - 2 * T_n[i] + T_n[i - 1]);
 					T_n_plus_1[i] = std::fma(std::fma(T_n[i], T_n[i+1] + T_n[i-1] - T_n[i], -T_n[i-1]*T_n[i+1]), 1 / (2 * T_n[i] - T_n[i - 1] - T_n[i+1]), T_n[i]);*/
 				T_n_plus_1[i] = std::fma(std::fma(a, c + b - a, -b * c), 1 / (2 * a - b - c), a); 
-				T_n = T_n_plus_1;
 			}
+			T_n = T_n_plus_1;
 		}
 		return T_n[n];
 	}

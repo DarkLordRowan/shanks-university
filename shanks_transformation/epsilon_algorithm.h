@@ -98,7 +98,10 @@ T epsilon_algorithm<T, K, series_templ>::operator()(const K n, const int order) 
 
 	std::vector<T> e(m + 1, 0);
 	T diff, temp1, temp2;
-	e[m] = this->series.S_n(n + m);
+	for (int j = m; j > 0; j--)
+	{
+		e[j] = this->series.S_n(n + j);
+	}
 	temp2 = 0;
 
 	for (int j = m; j > 0; j--)
@@ -106,7 +109,7 @@ T epsilon_algorithm<T, K, series_templ>::operator()(const K n, const int order) 
 		temp1 = temp2;
 		temp2 = e[j - 1];
 		diff = e[j] - temp2;
-		if (!std::isfinite(abs(diff)))
+		if (!std::isfinite(abs(1 / diff)))
 			throw std::overflow_error("division by zero");
 		e[j - 1] = std::fma(1, 1 / diff, temp1);
 	}
