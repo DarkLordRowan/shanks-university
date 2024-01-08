@@ -4,7 +4,8 @@
 
 #include "shanks_transformation.h"
 #include "epsilon_algorithm.h"
-#include <string> 
+#include <string>
+#include <complex>
 
 
  /**
@@ -120,7 +121,7 @@ int main(void)
 			test1_2.print_s_n(j);
 			test1_2.print_diff_t_s(j, i);
 		}
-#elif 1
+
 	exp_series<long double, long long int> exp_1(1);
 	shanks_transform<long double, long long int, exp_series<long double, long long int>> test2_1(exp_1);
 	epsilon_algorithm<long double, long long int, exp_series<long double, long long int>> test2_2(exp_1);
@@ -144,7 +145,7 @@ int main(void)
 			}
 		}
 
-	for (int i = 0; i < 5; ++i)
+	for (int i = 1; i < 5; ++i)
 		for (int j = 0; j < 10; ++j)
 		{
 			try
@@ -163,26 +164,266 @@ int main(void)
 				std::cout << e.what() << std::endl;
 			}
 		}
-#elif 0
-	shanks_transform<long double, int> test3_1(ch_x, 2.00001);
-	epsilon_algorithm<long double, int> test3_2(ch_x, 2.00001);
-	for (int i = 0; i < 5; ++i)
+
+	cosh_series<long double, long long int> cosh_1(1);
+	shanks_transform<long double, long long int, cosh_series<long double, long long int>> test3_1(cosh_1);
+	epsilon_algorithm<long double, long long int, cosh_series<long double, long long int>> test3_2(cosh_1);
+	for (int i = 1; i < 5; ++i)
 		for (int j = 0; j < 10; ++j)
 		{
-			std::cout << "SHANKS TRANSFORMATION of order " << i << std::endl;
-			test3_1.print_t_n(j, i);
-			test3_1.print_s_n(j);
-			test3_1.print_diff_t_s(j, i);
+			try
+			{
+				std::cout << "SHANKS TRANSFORMATION of order " << i << std::endl;
+				test3_1.print_t_n(j, i);
+				test3_1.print_s_n(j, std::cout);
+				test3_1.print_diff_t_s(j, i);
+			}
+			catch (std::overflow_error& e)
+			{
+				std::cout << e.what() << std::endl;
+			}
+			catch (std::domain_error& e)
+			{
+				std::cout << e.what() << std::endl;
+}
 		}
 
-	for (int i = 0; i < 5; ++i)
+	for (int i = 1; i < 5; ++i)
 		for (int j = 0; j < 10; ++j)
 		{
-			std::cout << "EPSILON ALGORITHM of order " << i << std::endl;
-			test3_2.print_t_n(j, i);
-			test3_2.print_s_n(j);
-			test3_2.print_diff_t_s(j, i);
+			try
+			{
+				std::cout << "EPSILON ALGORITHM of order " << i << std::endl;
+				test3_2.print_t_n(j, i);
+				test3_2.print_s_n(j);
+				test3_2.print_diff_t_s(j, i);
+			}
+			catch (std::overflow_error& e)
+			{
+				std::cout << e.what() << std::endl;
+			}
+			catch (std::domain_error& e)
+			{
+				std::cout << e.what() << std::endl;
+			}
 		}
+
+	ln1mx_series<long double, long long int> mln_03(0.7);
+	shanks_transform<long double, long long int, ln1mx_series<long double, long long int>> test4_1(mln_03);
+	epsilon_algorithm<long double, long long int, ln1mx_series<long double, long long int>> test4_2(mln_03);
+	for (int i = 1; i < 5; ++i)
+		for (int j = 0; j < 10; ++j)
+		{
+			try
+			{
+				std::cout << "SHANKS TRANSFORMATION of order " << i << std::endl;
+				test4_1.print_t_n(j, i);
+				test4_1.print_s_n(j, std::cout);
+				test4_1.print_diff_t_s(j, i);
+			}
+			catch (std::overflow_error& e)
+			{
+				std::cout << e.what() << std::endl;
+			}
+			catch (std::domain_error& e)
+			{
+				std::cout << e.what() << std::endl;
+			}
+		}
+
+	for (int i = 1; i < 5; ++i)
+		for (int j = 0; j < 10; ++j)
+		{
+			try
+			{
+				std::cout << "EPSILON ALGORITHM of order " << i << std::endl;
+				test4_2.print_t_n(j, i);
+				test4_2.print_s_n(j);
+				test4_2.print_diff_t_s(j, i);
+			}
+			catch (std::overflow_error& e)
+			{
+				std::cout << e.what() << std::endl;
+			}
+			catch (std::domain_error& e)
+			{
+				std::cout << e.what() << std::endl;
+			}
+		}
+
+
+mean_sinh_sin_series<long double, long long int> mean_sinh_sin_2f(2.01);
+shanks_transform<long double, long long int, mean_sinh_sin_series<long double, long long int>> test5_1(mean_sinh_sin_2f);
+epsilon_algorithm<long double, long long int, mean_sinh_sin_series<long double, long long int>> test5_2(mean_sinh_sin_2f);
+for (int i = 1; i < 5; ++i)
+	for (int j = 0; j < 10; ++j)
+	{
+		try
+		{
+			std::cout << "SHANKS TRANSFORMATION of order " << i << std::endl;
+			test5_1.print_t_n(j, i);
+			test5_1.print_s_n(j, std::cout);
+			test5_1.print_diff_t_s(j, i);
+		}
+		catch (std::overflow_error& e)
+		{
+			std::cout << e.what() << std::endl;
+		}
+		catch (std::domain_error& e)
+		{
+			std::cout << e.what() << std::endl;
+		}
+	}
+
+for (int i = 1; i < 5; ++i)
+	for (int j = 0; j < 10; ++j)
+	{
+		try
+		{
+			std::cout << "EPSILON ALGORITHM of order " << i << std::endl;
+			test5_2.print_t_n(j, i);
+			test5_2.print_s_n(j);
+			test5_2.print_diff_t_s(j, i);
+		}
+		catch (std::overflow_error& e)
+		{
+			std::cout << e.what() << std::endl;
+		}
+		catch (std::domain_error& e)
+		{
+			std::cout << e.what() << std::endl;
+		}
+	}
+
+exp_squared_erf_series<long double, long long int> exp_squared_erf_series(2);
+shanks_transform<long double, long long int, exp_squared_erf_series<long double, long long int>> test6_1(exp_erf_2);
+epsilon_algorithm<long double, long long int, exp_squared_erf_series<long double, long long int>> test6_2(exp_erf_2);
+for (int i = 1; i < 5; ++i)
+	for (int j = 0; j < 10; ++j)
+	{
+		try
+		{
+			std::cout << "SHANKS TRANSFORMATION of order " << i << std::endl;
+			test6_1.print_t_n(j, i);
+			test6_1.print_s_n(j, std::cout);
+			test6_1.print_diff_t_s(j, i);
+		}
+		catch (std::overflow_error& e)
+		{
+			std::cout << e.what() << std::endl;
+		}
+		catch (std::domain_error& e)
+		{
+			std::cout << e.what() << std::endl;
+		}
+	}
+
+for (int i = 1; i < 5; ++i)
+	for (int j = 0; j < 10; ++j)
+	{
+		try
+		{
+			std::cout << "EPSILON ALGORITHM of order " << i << std::endl;
+			test6_2.print_t_n(j, i);
+			test6_2.print_s_n(j);
+			test6_2.print_diff_t_s(j, i);
+		}
+		catch (std::overflow_error& e)
+		{
+			std::cout << e.what() << std::endl;
+		}
+		catch (std::domain_error& e)
+		{
+			std::cout << e.what() << std::endl;
+		}
+	}
+
+xmb_Jb_two_series<long double, long long int> xm3_J3(2, 3);
+shanks_transform<long double, long long int, xmb_Jb_two_series<long double, long long int>> test7_1(xm3_J3);
+epsilon_algorithm<long double, long long int, xmb_Jb_two_series<long double, long long int>> test7_2(xm3_J3);
+for (int i = 1; i < 5; ++i)
+	for (int j = 0; j < 10; ++j)
+	{
+		try
+		{
+			std::cout << "SHANKS TRANSFORMATION of order " << i << std::endl;
+			test7_1.print_t_n(j, i);
+			test7_1.print_s_n(j, std::cout);
+			test7_1.print_diff_t_s(j, i);
+		}
+		catch (std::overflow_error& e)
+		{
+			std::cout << e.what() << std::endl;
+		}
+		catch (std::domain_error& e)
+		{
+			std::cout << e.what() << std::endl;
+		}
+	}
+
+for (int i = 1; i < 5; ++i)
+	for (int j = 0; j < 10; ++j)
+	{
+		try
+		{
+			std::cout << "EPSILON ALGORITHM of order " << i << std::endl;
+			test7_2.print_t_n(j, i);
+			test7_2.print_s_n(j);
+			test7_2.print_diff_t_s(j, i);
+		}
+		catch (std::overflow_error& e)
+		{
+			std::cout << e.what() << std::endl;
+		}
+		catch (std::domain_error& e)
+		{
+			std::cout << e.what() << std::endl;
+		}
+	}
+
+#elif 1
+half_asin_two_x_series<long double, long long int> half_asin_two_03(0.3);
+shanks_transform<long double, long long int, half_asin_two_x_series<long double, long long int>> test8_1(half_asin_two_03);
+epsilon_algorithm<long double, long long int, half_asin_two_x_series<long double, long long int>> test8_2(half_asin_two_03);
+for (int i = 1; i < 5; ++i)
+	for (int j = 0; j < 10; ++j)
+	{
+		try
+		{
+			std::cout << "SHANKS TRANSFORMATION of order " << i << std::endl;
+			test8_1.print_t_n(j, i);
+			test8_1.print_s_n(j, std::cout);
+			test8_1.print_diff_t_s(j, i);
+		}
+		catch (std::overflow_error& e)
+		{
+			std::cout << e.what() << std::endl;
+		}
+		catch (std::domain_error& e)
+		{
+			std::cout << e.what() << std::endl;
+		}
+	}
+
+for (int i = 1; i < 5; ++i)
+	for (int j = 0; j < 10; ++j)
+	{
+		try
+		{
+			std::cout << "EPSILON ALGORITHM of order " << i << std::endl;
+			test8_2.print_t_n(j, i);
+			test8_2.print_s_n(j);
+			test8_2.print_diff_t_s(j, i);
+		}
+		catch (std::overflow_error& e)
+		{
+			std::cout << e.what() << std::endl;
+		}
+		catch (std::domain_error& e)
+		{
+			std::cout << e.what() << std::endl;
+		}
+	}
 #endif
 #endif
 	return 0;
