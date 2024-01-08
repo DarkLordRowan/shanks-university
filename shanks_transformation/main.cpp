@@ -147,7 +147,7 @@ int main(void)
 			cmp_sum_and_transform<exp_series<long double, long long int>, shanks_transform<long double, long long int, exp_series<long double, long long int>>>(j, i, exp_1);
 		}
 	transformation_remainders<exp_series<long double, long long int>, shanks_transform<long double, long long int, exp_series<long double, long long int>>>(5, 2, exp_1);
-
+	
 
 #elif 0
 	shanks_transform<long double, int> test3_1(ch_x, 2.00001);
