@@ -1,10 +1,21 @@
 /**
  * @file series.h
+ * List of series currently avaiable:
+ * 1 - exp_series
+ * 2 - four_arctan_series
+ * 3 - cosh_series
+ * 4 - ln1mx_series
+ * 5 - mean_sinh_sin_series
+ * 6 - exp_squared_erf_series
+ * 7 - xmb_Jb_two_series
+ * 8 - half_asin_two_x_series
  * @brief This file contains series base class and derived classes of various serieses (e.g. exp(x), ch(x))
  */
 #pragma once
 #define NO_X_GIVEN 0
 #define NO_SERIES_EXPRESSION_GIVEN 0
+
+
 
 /**
 * @brief Abstract class for series
@@ -425,7 +436,7 @@ class xmb_Jb_two_series : public series_base<T, K>
 {
 public:
 	xmb_Jb_two_series();
-	xmb_Jb_two_series(T x, K l);
+	xmb_Jb_two_series(T x, K b);
 	~xmb_Jb_two_series();
 	constexpr virtual T a_n(const K n) const;
 private:

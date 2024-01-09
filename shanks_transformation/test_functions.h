@@ -21,15 +21,14 @@
 * @param series The series class object to be accelerated
 */
 template <typename series_templ, typename transform_type>
-void cmp_sum_and_transform(const int n, const int order, const series_templ& series)
+void cmp_sum_and_transform(const int n, const int order, const series_templ& series, const transform_type& test)
 {
-	transform_type test(series);
-	test.print_info();
+	test->print_info();
 	try
 	{
-		test.print_s_n(n);
-		test.print_t_n(n, order);
-		test.print_diff_t_s(n, order);
+		test->print_s_n(n);
+		test->print_t_n(n, order);
+		test->print_diff_t_s(n, order);
 	}
 	catch (std::domain_error& e)
 	{
@@ -52,16 +51,15 @@ void cmp_sum_and_transform(const int n, const int order, const series_templ& ser
 * @param series The series class object to be accelerated
 */
 template <typename series_templ, typename transform_type>
-void transformation_remainders(const int n, const int order, const series_templ& series)
+void transformation_remainders(const int n, const int order, const series_templ& series, const transform_type& test)
 {
-	transform_type test(series);
 	std::cout << "Tranformation of order " << order << " remainders from i = 1 to " << n << std::endl;
-	test.print_info();
+	test->print_info();
 	for (int i = 0; i <= n; ++i)
 	{
 		try
 		{
-			std::cout << "S - T_" << i << " : " << series.get_sum() - test(i, order) << std::endl;
+			std::cout << "S - T_" << i << " : " << series->get_sum() - test->operator()(i, order) << std::endl;
 		}
 		catch (std::domain_error& e)
 		{

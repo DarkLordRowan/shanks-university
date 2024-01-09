@@ -75,13 +75,13 @@ T epsilon_algorithm<T, K, series_templ>::operator()(const K n, const int order) 
 	else if (n == 0)
 		return DEF_UNDEFINED_SUM;
 	else if (order == 0)
-		return this->series.S_n(n);
+		return this->series->S_n(n);
 
 	std::vector<T> e(m + 1, 0);
 	T diff, temp1, temp2;
 	for (int j = m; j > 0; j--)
 	{
-		e[j] = this->series.S_n(n + j);
+		e[j] = this->series->S_n(n + j);
 	}
 	temp2 = 0;
 

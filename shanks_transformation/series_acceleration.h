@@ -147,7 +147,7 @@ constexpr void series_acceleration<T, K, series_templ>::print_s_n(const K n) con
 template <typename T, typename K, typename series_templ>
 constexpr void series_acceleration<T, K, series_templ>::print_s_n(const K n, std::ostream& out) const
 {
-	out << "S_" << n << " : " << this->series.S_n(n) << std::endl;
+	out << "S_" << n << " : " << this->series->S_n(n) << std::endl;
 }
 
 template <typename T, typename K, typename series_templ>
@@ -172,7 +172,7 @@ template <typename T, typename K, typename series_templ>
 constexpr void series_acceleration<T, K, series_templ>::print_diff_t_s(const K n, const int order, std::ostream& out) const
 {
 	out << "T_" << n << " of order " << order << " - S_" << n
-		<< " : " << this->operator()(n, order) - this->series.S_n(n) << std::endl;
+		<< " : " << this->operator()(n, order) - this->series->S_n(n) << std::endl;
 }
 
 template <typename T, typename K, typename series_templ>

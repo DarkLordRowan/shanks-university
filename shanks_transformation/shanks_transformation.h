@@ -70,33 +70,33 @@ T shanks_transform<T, K, series_templ>::operator()(const K n, const int order) c
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
 	else if (order == 0) /*it is convenient to assume that transformation of order 0 is no transformation at all*/
-		return this->series.S_n(n);
+		return this->series->S_n(n);
 	else if (n < order || n == 0)
 		return DEF_UNDEFINED_SUM;
 	else if (order == 1)
 	{
-		const auto a_n = this->series.a_n(n);
-		const auto a_n_plus_1 = this->series.a_n(n + 1);
+		const auto a_n = this->series->a_n(n);
+		const auto a_n_plus_1 = this->series->a_n(n + 1);
 		if (!std::isfinite(abs(a_n - a_n_plus_1)))
 			throw std::overflow_error("division by zero");
 		const auto tmp = -a_n_plus_1 * a_n_plus_1;
-		return std::fma(a_n * a_n_plus_1, (a_n + a_n_plus_1) / (std::fma(a_n, a_n, tmp) - std::fma(a_n_plus_1, a_n_plus_1, tmp)), this->series.S_n(n));
+		return std::fma(a_n * a_n_plus_1, (a_n + a_n_plus_1) / (std::fma(a_n, a_n, tmp) - std::fma(a_n_plus_1, a_n_plus_1, tmp)), this->series->S_n(n));
 	}
 	else //n > order >= 1
 	{
 		std::vector<T> T_n(n + order, 0);
-		auto a_n = this->series.a_n(n - order);
-		auto a_n_plus_1 = this->series.a_n(n - order + 1);
+		auto a_n = this->series->a_n(n - order);
+		auto a_n_plus_1 = this->series->a_n(n - order + 1);
 		for (int i = n - order + 1; i <= n + order - 1; ++i) // if we got to this branch then we know that n >= order - see previous branches
 		{
-			a_n = this->series.a_n(i);
-			a_n_plus_1 = this->series.a_n(i + 1);
+			a_n = this->series->a_n(i);
+			a_n_plus_1 = this->series->a_n(i + 1);
 			if (!std::isfinite(abs(a_n - a_n_plus_1)))
 				throw std::overflow_error("division by zero");
 			const auto tmp = -a_n_plus_1 * a_n_plus_1;
 
 			// formula [6]
-			T_n[i] = std::fma(a_n * a_n_plus_1, (a_n + a_n_plus_1) / (std::fma(a_n, a_n, tmp) - std::fma(a_n_plus_1, a_n_plus_1, tmp)), this->series.S_n(i));
+			T_n[i] = std::fma(a_n * a_n_plus_1, (a_n + a_n_plus_1) / (std::fma(a_n, a_n, tmp) - std::fma(a_n_plus_1, a_n_plus_1, tmp)), this->series->S_n(i));
 		}
 		std::vector<T> T_n_plus_1(n + order, 0);
 		T a, b, c;
