@@ -62,15 +62,19 @@ inline void print_test_function_info()
 template <typename T, typename K>
 inline void main_testing_function()
 {
-	std::cout << "Enter x - the argument for the functional series" << std::endl;
-	T x = 0;
-	std::cin >> x;
 
 	//choosing series
 	print_series_info();
 	std::unique_ptr<series_base<T, K>> series;
 	int series_id = 0;
 	std::cin >> series_id;
+
+	//choosing x
+	std::cout << "Enter x - the argument for the functional series" << std::endl;
+	T x = 0;
+	std::cin >> x;
+
+	//choosing series (cont.)
 	switch (series_id)
 	{
 	case 1:
