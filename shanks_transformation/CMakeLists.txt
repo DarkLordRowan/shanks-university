@@ -1,12 +1,10 @@
-# CMakeList.txt: проект CMake для shanks-transformation; включите исходный код и определения,
-# укажите здесь логику для конкретного проекта.
+# CMakeList.txt: РїСЂРѕРµРєС‚ CMake РґР»СЏ shanks-transformation; РІРєР»СЋС‡РёС‚Рµ РёСЃС…РѕРґРЅС‹Р№ РєРѕРґ Рё РѕРїСЂРµРґРµР»РµРЅРёСЏ,
+# СѓРєР°Р¶РёС‚Рµ Р·РґРµСЃСЊ Р»РѕРіРёРєСѓ РґР»СЏ РєРѕРЅРєСЂРµС‚РЅРѕРіРѕ РїСЂРѕРµРєС‚Р°.
 #
 
-# Добавьте источник в исполняемый файл этого проекта.
+# Р”РѕР±Р°РІСЊС‚Рµ РёСЃС‚РѕС‡РЅРёРє РІ РёСЃРїРѕР»РЅСЏРµРјС‹Р№ С„Р°Р№Р» СЌС‚РѕРіРѕ РїСЂРѕРµРєС‚Р°.
 add_executable (shanks_transformation "main.cpp" "series.h" "shanks_transformation.h" "epsilon_algorithm.h")
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET shanks_transformation PROPERTY CXX_STANDARD 20)
 endif()
-
-# TODO: Добавьте тесты и целевые объекты, если это необходимо.
