@@ -55,7 +55,7 @@ void transformation_remainders(const int n, const int order, const series_templ&
 {
 	std::cout << "Tranformation of order " << order << " remainders from i = 1 to " << n << std::endl;
 	test->print_info();
-	for (int i = 0; i <= n; ++i)
+	for (int i = 1; i <= n; ++i)
 	{
 		try
 		{

@@ -159,7 +159,7 @@ const int series_base<T, K>::fact(const K n) const
 }
 
 /**
-* @brief Maclaurin series for exponent
+* @brief Maclaurin series of exponent
 * @authors Bolshakov M.P.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
@@ -184,10 +184,10 @@ public:
 	*/
 	~exp_series();
 	/**
-	* @brief Computes the nth term of the Maclaurin series for the exponent
+	* @brief Computes the nth term of the Maclaurin series of the exponent
 	* @authors Bolshakov M.P.
 	* @param n The number of the term
-	* @return nth term of the Maclaurin series for the exponent
+	* @return nth term of the Maclaurin series of the exponent
 	*/
 	constexpr virtual T a_n(const K n) const;
 };
@@ -218,7 +218,7 @@ constexpr T exp_series<T, K>::a_n(const K n) const
 }
 
 /**
-* @brief Maclaurin series for arctan multiplied by four
+* @brief Maclaurin series of arctan multiplied by four
 * @authors Bolshakov M.P.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
@@ -243,7 +243,7 @@ public:
 	*/
 	~four_arctan_series();
 	/**
-	* @brief Computes the nth term of the Maclaurin series for the arctan multiplied by four
+	* @brief Computes the nth term of the Maclaurin series of the arctan multiplied by four
 	* @authors Bolshakov M.P.
 	* @param n The number of the term
 	* @return nth term of the series
@@ -278,13 +278,40 @@ constexpr T four_arctan_series<T, K>::a_n(const K n) const
 	return 4 * (n % 2 ? -1 : 1) * pow(this->x, 2 * n + 1) / (2 * n + 1);
 }
 
+/**
+* @brief Maclaurin series of hyperbolic cosine
+* @authors Pashkov B.B.
+* @tparam T The type of the elements in the series, K The type of enumerating integer
+*/
 template <typename T, typename K>
 class cosh_series : public series_base<T, K>
 {
 public:
+	/**
+	* @brief Base constructor
+	* @authors Pashkov B.B.
+	*/
 	cosh_series();
+
+	/**
+	* @brief Parameterized constructor to initialize the series with function argument and sum
+	* @authors Pashkov B.B.	
+	* @param x The argument for function series
+	*/
 	cosh_series(T x);
+
+	/**
+	* @brief The Destructor.
+	* @authors Pashkov B.B.
+	*/
 	~cosh_series();
+
+	/**
+	* @brief Computes the nth term of the Maclaurin series of hyperbolic cosine
+	* @authors Pashkov B.B.
+	* @param n The number of the term
+	* @return nth term of the series
+	*/
 	constexpr virtual T a_n(const K n) const;
 };
 
@@ -314,15 +341,40 @@ constexpr T cosh_series<T, K>::a_n(const K n) const
 	return pow(this->x, 2 * n) / this->fact(2 * n);
 }
 
-// series with a_k = x^(k + 1) / (k + 1) 
-// converges to -ln(1 - x)
+/**
+* @brief Maclaurin series of -ln(1 - x)
+* @authors Pashkov B.B.
+* @tparam T The type of the elements in the series, K The type of enumerating integer
+*/
 template <typename T, typename K>
 class ln1mx_series : public series_base<T, K>
 {
 public:
+	/**
+	* @brief Base constructor
+	* @authors Pashkov B.B.
+	*/
 	ln1mx_series();
+
+	/**
+	* @brief Parameterized constructor to initialize the series with function argument and sum
+	* @authors Pashkov B.B.
+	* @param x The argument for function series
+	*/
 	ln1mx_series(T x);
+
+	/**
+	* @brief The Destructor.
+	* @authors Pashkov B.B.
+	*/
 	~ln1mx_series();
+
+	/**
+	* @brief Computes the nth term of the Maclaurin series of -ln(1 - x)
+	* @authors Pashkov B.B.
+	* @param n The number of the term
+	* @return nth term of the series
+	*/
 	constexpr virtual T a_n(const K n) const;
 };
 
@@ -353,15 +405,40 @@ constexpr T ln1mx_series<T, K>::a_n(const K n) const
 	return pow(this->x, n + 1) / (n + 1);
 }
 
-// series with a_k = x^(4k + 1) / (4k + 1)! 
-// converges to (sinh(x) + sin(x)) / 2
+/**
+* @brief Maclaurin series of (sinh(x) + sin(x)) / 2
+* @authors Pashkov B.B.
+* @tparam T The type of the elements in the series, K The type of enumerating integer
+*/
 template <typename T, typename K>
 class mean_sinh_sin_series : public series_base<T, K>
 {
 public:
+	/**
+	* @brief Base constructor
+	* @authors Pashkov B.B.
+	*/
 	mean_sinh_sin_series();
+
+	/**
+	* @brief Parameterized constructor to initialize the series with function argument and sum
+	* @authors Pashkov B.B.
+	* @param x The argument for function series
+	*/
 	mean_sinh_sin_series(T x);
+
+	/**
+	* @brief The Destructor.
+	* @authors Pashkov B.B.
+	*/
 	~mean_sinh_sin_series();
+
+	/**
+	* @brief Computes the nth term of the Maclaurin series of (sinh(x) + sin(x)) / 2
+	* @authors Pashkov B.B.
+	* @param n The number of the term
+	* @return nth term of the series
+	*/
 	constexpr virtual T a_n(const K n) const;
 };
 
@@ -391,15 +468,40 @@ constexpr T mean_sinh_sin_series<T, K>::a_n(const K n) const
 	return pow(this->x, 4 * n + 1) / this->fact(4 * n + 1);
 }
 
-// series with a_k = x^(2k + 1) / Gamma(k + 3 / 2) 
-// converges to exp(x^2)*erf(x)
+/**
+* @brief Maclaurin series of exp(x^2)*erf(x) where erf(x) is error function of x
+* @authors Pashkov B.B.
+* @tparam T The type of the elements in the series, K The type of enumerating integer
+*/
 template <typename T, typename K>
 class exp_squared_erf_series : public series_base<T, K>
 {
 public:
+	/**
+	* @brief Base constructor
+	* @authors Pashkov B.B.
+	*/
 	exp_squared_erf_series();
+
+	/**
+	* @brief Parameterized constructor to initialize the series with function argument and sum
+	* @authors Pashkov B.B.
+	* @param x The argument for function series
+	*/
 	exp_squared_erf_series(T x);
+
+	/**
+	* @brief The Destructor.
+	* @authors Pashkov B.B.
+	*/
 	~exp_squared_erf_series();
+
+	/**
+	* @brief Computes the nth term of the Maclaurin series of exp(x^2)*erf(x)
+	* @authors Pashkov B.B.
+	* @param n The number of the term
+	* @return nth term of the series
+	*/
 	constexpr virtual T a_n(const K n) const;
 };
 
@@ -410,7 +512,7 @@ exp_squared_erf_series<T, K>::exp_squared_erf_series() : series_base<T, K>()
 }
 
 template <typename T, typename K>
-exp_squared_erf_series<T, K>::exp_squared_erf_series(T x) : series_base<T, K>(x, std::exp(-x * x)* std::erf(x))
+exp_squared_erf_series<T, K>::exp_squared_erf_series(T x) : series_base<T, K>(x, std::exp(x * x)* std::erf(x))
 {
 
 }
@@ -429,17 +531,47 @@ constexpr T exp_squared_erf_series<T, K>::a_n(const K n) const
 	return pow(this->x, 2 * n + 1) / std::tgamma(n + 1.5);
 }
 
-// series with a_k = (-1)^k * x^2k / (k! * (k + b)!) 
-// converges to x^(-b) * J_b(2x)
+/**
+* @brief Maclaurin series of x^(-b) * J_b(2x) where J_b(x) is Bessel function of the first kind of order b
+* @authors Pashkov B.B.
+* @tparam T The type of the elements in the series, K The type of enumerating integer
+*/
 template <typename T, typename K>
 class xmb_Jb_two_series : public series_base<T, K>
 {
 public:
+	/**
+	* @brief Base constructor
+	* @authors Pashkov B.B.
+	*/
 	xmb_Jb_two_series();
+
+	/**
+	* @brief Parameterized constructor to initialize the series with function argument and sum
+	* @authors Pashkov B.B.
+	* @param x The argument for function series, b The integer constant 
+	*/
 	xmb_Jb_two_series(T x, K b);
+
+	/**
+	* @brief The Destructor.
+	* @authors Pashkov B.B.
+	*/
 	~xmb_Jb_two_series();
+
+	/**
+	* @brief Computes the nth term of the Maclaurin series of x^(-b) * J_b(2x)
+	* @authors Pashkov B.B.
+	* @param n The number of the term
+	* @return nth term of the series
+	*/
 	constexpr virtual T a_n(const K n) const;
 private:
+
+	/**
+	* @brief The order of Bessel function
+	* @authors Pashkov B.B.
+	*/
 	const K mu;
 };
 
@@ -469,15 +601,40 @@ constexpr T xmb_Jb_two_series<T, K>::a_n(const K n) const
 	return (1 - ((n & 1) << 1)) * pow(this->x, 2 * n) / this->fact(n) / this->fact(n + this->mu);
 }
 
-// series with a_k = (-1)^k * (2k)! * x^(2k+1) / ((k!)^2 * (2k + 1)) 
-// converges to 1/2 * Arsh(2x)
+/**
+* @brief Maclaurin series of 0.5 * asin(2x) where asin(x) is inverse sine of x
+* @authors Pashkov B.B.
+* @tparam T The type of the elements in the series, K The type of enumerating integer
+*/
 template <typename T, typename K>
 class half_asin_two_x_series : public series_base<T, K>
 {
 public:
+	/**
+	* @brief Base constructor
+	* @authors Pashkov B.B.
+	*/
 	half_asin_two_x_series();
+
+	/**
+	* @brief Parameterized constructor to initialize the series with function argument and sum
+	* @authors Pashkov B.B.
+	* @param x The argument for function series
+	*/
 	half_asin_two_x_series(T x);
+
+	/**
+	* @brief The Destructor.
+	* @authors Pashkov B.B.
+	*/
 	~half_asin_two_x_series();
+
+	/**
+	* @brief Computes the nth term of the Maclaurin series of 0.5 * asin(2x)
+	* @authors Pashkov B.B.
+	* @param n The number of the term
+	* @return nth term of the series
+	*/
 	constexpr virtual T a_n(const K n) const;
 };
 

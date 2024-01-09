@@ -47,8 +47,8 @@ inline void print_test_function_info()
 {
 	std::cout << "Which function would you like to use for testing?" << std::endl <<
 		"List of currently avaiable functions:" << std::endl <<
-		"1 - Shanks Transformation" << std::endl <<
-		"2 - Epsilon Algorithm" << std::endl;
+		"1 - T_n - S_n" << std::endl <<
+		"2 - T_n - S" << std::endl;
 }
 
 
