@@ -11,6 +11,19 @@
 #if DEBUGGING_MODE
 
  /**
+ * @brief prints out all available fungus for testing
+ * @authors Bolshakov M.P.
+ */
+inline void print_test_function_info()
+{
+	std::cout << "Which function would you like to use for testing?" << std::endl <<
+		"List of currently avaiable functions:" << std::endl <<
+		"1 - cmp_sum_and_transform - showcases the difference between the transformed partial sum and the nontransformed one" << std::endl <<
+		"2 - transformation_remainders - showcases the difference between series' sum and transformed partial sum" << std::endl <<
+		"3 - cmp_transformations - showcases the difference between convergence of sums accelerated by different transformations" << std::endl;
+}
+
+ /**
  * @brief prints out all available series for testing
  * @authors Bolshakov M.P.
  */
@@ -40,20 +53,6 @@ inline void print_transformation_info()
 		"1 - Shanks Transformation" << std::endl <<
 		"2 - Epsilon Algorithm" << std::endl;
 }
-
-/**
-* @brief prints out all available fungus for testing
-* @authors Bolshakov M.P.
-*/
-inline void print_test_function_info()
-{
-	std::cout << "Which function would you like to use for testing?" << std::endl <<
-		"List of currently avaiable functions:" << std::endl <<
-		"1 - T_n - S_n" << std::endl <<
-		"2 - T_n - S" << std::endl;
-}
-
-
 
 /**
 * @brief The main testing function
@@ -140,18 +139,32 @@ inline void main_testing_function()
 	std::cin >> function_id;
 	int n = 0;
 	int order = 0;
+	std::cout << "Enter n and order:" << std::endl;
+	std::cin >> n >> order;
 	switch (function_id)
 	{
 	case 1:
-		std::cout << "Enter n and order:" << std::endl;
-		std::cin >> n >> order;
 		cmp_sum_and_transform(n, order, series.get(), transform.get());
 		break;
 	case 2:
-		std::cout << "Enter n and order:" << std::endl;
-		std::cin >> n >> order;
 		transformation_remainders(n, order, series.get(), transform.get());
 		break;
+	case 3:
+	{
+		/*std::cout << "choose the type of the other";*/ //so far we've only got 2 transformations
+		std::unique_ptr<series_acceleration<T, K, decltype(series.get())>> transform2;
+		if (transformation_id == 1)
+			transform2.reset(new epsilon_algorithm<T, K, decltype(series.get())>(series.get()));
+		else //transformation_id is 2
+		{
+			if (alternating_series.contains(series_id))
+				transform2.reset(new shanks_transform_alternating<T, K, decltype(series.get())>(series.get()));
+			else
+				transform2.reset(new shanks_transform<T, K, decltype(series.get())>(series.get()));
+		}
+		cmp_transformations(n, order, series.get(), transform.get(), transform2.get());
+		break;
+	}
 	default:
 		throw std::domain_error("wrong function_id");
 	}

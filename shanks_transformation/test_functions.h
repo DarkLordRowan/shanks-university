@@ -71,3 +71,47 @@ void transformation_remainders(const int n, const int order, const series_templ&
 		}
 	}
 }
+
+/**
+* @brief Function that showcases the difference between 2 transformations
+* At first it prints out the type of transformations, series that are being transformed, type of enumerating integer and type of series terms
+* Then it prints out remainders of the series sum from 1 to n transformed 2 different ways and also tells which one got closer to the sum of the series
+* @authors Bolshakov M.P.
+* @tparam series_templ is the type of series whose convergence we accelerate, transform_type_1 is the first type of transformation we are using, transform_type_2 is the second type of transformation we are using
+* @param n The number of terms for the last remainder
+* @param order The order of the transformation
+* @param series The series class object to be accelerated
+*/
+template <typename series_templ, typename transform_type_1, typename transform_type_2>
+void cmp_transformations(const int n, const int order, const series_templ& series, const transform_type_1& test_1, const transform_type_2& test_2)
+{
+	std::cout << "Tranformations of order " << order << " remainders from i = 1 to " << n << std::endl;
+	std::cout << "The transformation #1 is ";
+	test_1->print_info();
+	std::cout << "The transformation #2 is ";
+	test_2->print_info();
+	auto diff_1 = series->a_n(0);
+	auto diff_2 = series->a_n(0);
+	for (int i = 1; i <= n; ++i)
+	{
+		try
+		{
+			diff_1 = series->get_sum() - test_1->operator()(i, order);
+			diff_2 = series->get_sum() - test_2->operator()(i, order);
+			std::cout << "The transformation #1: S - T_" << i << " : " << diff_1 << std::endl;
+			std::cout << "The transformation #2: S - T_" << i << " : " << diff_2 << std::endl;
+			if (std::abs(diff_1) > std::abs(diff_2))
+				std::cout << "The transformation #1 is faster" << std::endl;
+			else
+				std::cout << "The transformation #2 is faster" << std::endl;
+		}
+		catch (std::domain_error& e)
+		{
+			std::cout << e.what() << std::endl;
+		}
+		catch (std::overflow_error& e)
+		{
+			std::cout << e.what() << std::endl;
+		}
+	}
+}
