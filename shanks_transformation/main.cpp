@@ -11,19 +11,6 @@
 #if DEBUGGING_MODE
 
  /**
- * @brief prints out all available fungus for testing
- * @authors Bolshakov M.P.
- */
-inline void print_test_function_info()
-{
-	std::cout << "Which function would you like to use for testing?" << std::endl <<
-		"List of currently avaiable functions:" << std::endl <<
-		"1 - cmp_sum_and_transform - showcases the difference between the transformed partial sum and the nontransformed one" << std::endl <<
-		"2 - transformation_remainders - showcases the difference between series' sum and transformed partial sum" << std::endl <<
-		"3 - cmp_transformations - showcases the difference between convergence of sums accelerated by different transformations" << std::endl;
-}
-
- /**
  * @brief prints out all available series for testing
  * @authors Bolshakov M.P.
  */
@@ -39,7 +26,8 @@ inline void print_series_info()
 		"6 - exp_squared_erf_series" << std::endl <<
 		"7 - xmb_Jb_two_series" << std::endl <<
 		"8 - half_asin_two_x_series" << std::endl <<
-		"9 - sin_series" << std::endl;
+		"9 - sin_series" << std::endl <<
+		"10 - cos_series" << std::endl;
 }
 
 /**
@@ -52,6 +40,19 @@ inline void print_transformation_info()
 		"List of currently avaiable series:" << std::endl <<
 		"1 - Shanks Transformation" << std::endl <<
 		"2 - Epsilon Algorithm" << std::endl;
+}
+
+/**
+* @brief prints out all available fungus for testing
+* @authors Bolshakov M.P.
+*/
+inline void print_test_function_info()
+{
+	std::cout << "Which function would you like to use for testing?" << std::endl <<
+		"List of currently avaiable functions:" << std::endl <<
+		"1 - cmp_sum_and_transform - showcases the difference between the transformed partial sum and the nontransformed one" << std::endl <<
+		"2 - transformation_remainders - showcases the difference between series' sum and transformed partial sum" << std::endl <<
+		"3 - cmp_transformations - showcases the difference between convergence of sums accelerated by different transformations" << std::endl;
 }
 
 /**
@@ -76,7 +77,7 @@ inline void main_testing_function()
 	std::cin >> x;
 
 	//choosing series (cont.)
-	std::set<int> alternating_series = { 2, 7, 9 };
+	std::set<int> alternating_series = { 2, 7, 9, 10 };
 	switch (series_id)
 	{
 	case 1:
@@ -108,6 +109,9 @@ inline void main_testing_function()
 		break;
 	case 9:
 		series.reset(new sin_series<T, K>(x));
+		break;
+	case 10:
+		series.reset(new cos_series<T, K>(x));
 		break;
 	default:
 		throw std::domain_error("wrong series_id");

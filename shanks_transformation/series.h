@@ -10,6 +10,7 @@
  * 7 - xmb_Jb_two_series
  * 8 - half_asin_two_x_series
  * 9 - sin_series
+ * 10 - cos_series
  * @brief This file contains series base class and derived classes of various serieses (e.g. exp(x), ch(x))
  */
 #pragma once
@@ -723,4 +724,63 @@ constexpr T sin_series<T, K>::a_n(const K n) const
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
 	return (1 - ((n & 1) << 1)) * pow(this->x, 2 * n + 1) / this->fact(2 * n + 1);
+}
+
+/**
+* @brief Maclaurin series of cosine function
+* @authors Bolshakov M.P.
+* @tparam T The type of the elements in the series, K The type of enumerating integer
+*/
+template <typename T, typename K>
+class cos_series : public series_base<T, K>
+{
+public:
+	/**
+	* @brief Base constructor
+	* @authors Bolshakov M.P.
+	*/
+	cos_series();
+	/**
+	* @brief Parameterized constructor to initialize the series with function argument and sum
+	* @authors Bolshakov M.P.
+	* @param x The argument for function series
+	*/
+	cos_series(T x);
+	/**
+	* @brief The Destructor.
+	* @authors Bolshakov M.P.
+	*/
+	~cos_series();
+	/**
+	* @brief Computes the nth term of the Maclaurin series of the cosine function
+	* @authors Bolshakov M.P.
+	* @param n The number of the term
+	* @return nth term of the Maclaurin series of the cosine functions
+	*/
+	constexpr virtual T a_n(const K n) const;
+};
+
+template <typename T, typename K>
+cos_series<T, K>::cos_series() : series_base<T, K>()
+{
+
+}
+
+template <typename T, typename K>
+cos_series<T, K>::cos_series(T x) : series_base<T, K>(x, std::cos(x))
+{
+}
+
+template <typename T, typename K>
+cos_series<T, K>::~cos_series()
+{
+
+}
+
+template <typename T, typename K>
+constexpr T cos_series<T, K>::a_n(const K n) const
+{
+	if (n < 0)
+		throw std::domain_error("negative integer in the input");
+	return (1 - ((n & 1) << 1)) * pow(this->x, 2 * n) / this->fact(2 * n);
 }
