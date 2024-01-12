@@ -19,15 +19,17 @@ inline void print_series_info()
 	std::cout << "Which series' convergence would you like to accelerate?" << std::endl <<
 		"List of currently avaiable series:" << std::endl <<
 		"1 - exp_series" << std::endl <<
-		"2 - four_arctan_series" << std::endl <<
-		"3 - cosh_series" << std::endl <<
-		"4 - ln1mx_series" << std::endl <<
-		"5 - mean_sinh_sin_series" << std::endl <<
-		"6 - exp_squared_erf_series" << std::endl <<
-		"7 - xmb_Jb_two_series" << std::endl <<
-		"8 - half_asin_two_x_series" << std::endl <<
-		"9 - sin_series" << std::endl <<
-		"10 - cos_series" << std::endl;
+		"2 - cos_series" << std::endl <<
+		"3 - sin_series" << std::endl <<
+		"4 - cosh_series" << std::endl <<
+		"5 - sinh_series" << std::endl <<
+		"6 - bin_series" << std::endl <<
+		"7 - four_arctan_series" << std::endl <<
+		"8 - ln1mx_series" << std::endl <<
+		"9 - mean_sinh_sin_series" << std::endl <<
+		"10 - exp_squared_erf_series" << std::endl <<
+		"11 - xmb_Jb_two_series" << std::endl <<
+		"12 - half_asin_two_x_series" << std::endl;
 }
 
 /**
@@ -77,45 +79,56 @@ inline void main_testing_function()
 	std::cin >> x;
 
 	//choosing series (cont.)
-	std::set<int> alternating_series = { 2, 7, 9, 10 };
+	std::set<int> alternating_series = { 2, 3, 7, 11 };
 	switch (series_id)
 	{
 	case 1:
 		series.reset(new exp_series<T, K>(x));
 		break;
 	case 2:
-		series.reset(new four_arctan_series<T, K>(x));
+		series.reset(new cos_series<T, K>(x));
 		break;
 	case 3:
-		series.reset(new cosh_series<T, K>(x));
+		series.reset(new sin_series<T, K>(x));
 		break;
 	case 4:
-		series.reset(new ln1mx_series<T, K>(x));
+		series.reset(new cosh_series<T, K>(x));
 		break;
 	case 5:
-		series.reset(new mean_sinh_sin_series<T, K>(x));
+		series.reset(new sinh_series<T, K>(x));
 		break;
 	case 6:
-		series.reset(new exp_squared_erf_series<T, K>(x));
+		T alpha;
+		std::cout << "Enter the value for constant alpha for the series" << std::endl;
+		std::cin >> alpha;
+		series.reset(new bin_series<T, K>(x, alpha));
 		break;
 	case 7:
+		series.reset(new four_arctan_series<T, K>(x));
+		break;
+	case 8:
+		series.reset(new ln1mx_series<T, K>(x));
+		break;
+	case 9:
+		series.reset(new mean_sinh_sin_series<T, K>(x));
+		break;
+	case 10:
+		series.reset(new exp_squared_erf_series<T, K>(x));
+		break;
+	case 11:
 		K b;
 		std::cout << "Enter the value for constant b for the series" << std::endl;
 		std::cin >> b;
 		series.reset(new xmb_Jb_two_series<T, K>(x, b));
 		break;
-	case 8:
+	case 12:
 		series.reset(new half_asin_two_x_series<T, K>(x));
-		break;
-	case 9:
-		series.reset(new sin_series<T, K>(x));
-		break;
-	case 10:
-		series.reset(new cos_series<T, K>(x));
 		break;
 	default:
 		throw std::domain_error("wrong series_id");
 	}
+
+
 
 	//choosing transformation
 	print_transformation_info();
