@@ -3,6 +3,7 @@
  */
 
 #include <string> 
+#include <set>
 #include "shanks_transformation.h"
 #include "epsilon_algorithm.h"
 #include "test_functions.h"
@@ -24,7 +25,8 @@ inline void print_series_info()
 		"5 - mean_sinh_sin_series" << std::endl <<
 		"6 - exp_squared_erf_series" << std::endl <<
 		"7 - xmb_Jb_two_series" << std::endl <<
-		"8 - half_asin_two_x_series" << std::endl;
+		"8 - half_asin_two_x_series" << std::endl <<
+		"9 - sin_series" << std::endl;
 }
 
 /**
@@ -75,6 +77,7 @@ inline void main_testing_function()
 	std::cin >> x;
 
 	//choosing series (cont.)
+	std::set<int> alternating_series = { 2, 7, 9 };
 	switch (series_id)
 	{
 	case 1:
@@ -104,6 +107,9 @@ inline void main_testing_function()
 	case 8:
 		series.reset(new half_asin_two_x_series<T, K>(x));
 		break;
+	case 9:
+		series.reset(new sin_series<T, K>(x));
+		break;
 	default:
 		throw std::domain_error("wrong series_id");
 	}
@@ -116,7 +122,10 @@ inline void main_testing_function()
 	switch (transformation_id)
 	{
 	case 1:
-		transform.reset(new shanks_transform<T, K, decltype(series.get())>(series.get()));
+		if (alternating_series.contains(series_id))
+			transform.reset(new shanks_transform_alternating<T, K, decltype(series.get())>(series.get()));
+		else
+			transform.reset(new shanks_transform<T, K, decltype(series.get())>(series.get()));
 		break;
 	case 2:
 		transform.reset(new epsilon_algorithm<T, K, decltype(series.get())>(series.get()));
