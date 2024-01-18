@@ -18,6 +18,7 @@
 #pragma once
 #define NO_X_GIVEN 0
 #define NO_SERIES_EXPRESSION_GIVEN 0
+#define MINUS_ONE_RAISED_TO_POWER_N (1 - ((n & 1) << 1)) //(-1)^n
 
 
 
@@ -95,7 +96,9 @@ protected:
 	* @authors Bolshakov M.P.
 	* @return n!
 	*/
-	const int fact(const K n) const;
+	constexpr const K fact(const K n) const;
+
+	constexpr const T binomial_coefficient(const T n, const K k) const;
 };
 
 template <typename T, typename K>
@@ -152,7 +155,7 @@ series_base<T, K>::~series_base()
 }
 
 template <typename T, typename K>
-const int series_base<T, K>::fact(const K n) const
+constexpr const K series_base<T, K>::fact(const K n) const
 {
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
@@ -160,6 +163,15 @@ const int series_base<T, K>::fact(const K n) const
 	for (int i = 2; i <= n; i++)
 		f *= i;
 	return f;
+}
+
+template <typename T, typename K>
+constexpr const T series_base<T, K>::binomial_coefficient(const T n, const K k) const
+{
+	T b_c = 1;
+	for (int i = 0; i < k; ++i)
+		b_c = b_c * (n - static_cast<T>(i)) / (i + 1);
+	return b_c;
 }
 
 /**
@@ -277,7 +289,7 @@ constexpr T cos_series<T, K>::a_n(const K n) const
 {
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
-	return (1 - ((n & 1) << 1)) * pow(this->x, 2 * n) / this->fact(2 * n);
+	return MINUS_ONE_RAISED_TO_POWER_N * pow(this->x, 2 * n) / this->fact(2 * n);
 }
 
 /**
@@ -336,7 +348,7 @@ constexpr T sin_series<T, K>::a_n(const K n) const
 {
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
-	return (1 - ((n & 1) << 1)) * pow(this->x, 2 * n + 1) / this->fact(2 * n + 1);
+	return MINUS_ONE_RAISED_TO_POWER_N * pow(this->x, 2 * n + 1) / this->fact(2 * n + 1);
 }
 
 /**
@@ -529,7 +541,7 @@ constexpr T bin_series<T, K>::a_n(const K n) const
 {
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
-	return pow(this->x, n) / ((alpha + 1) * std::beta(alpha - n + 1, n + 1));
+	return this->binomial_coefficient(alpha, n) * pow(this->x, n);
 }
 
 /**
@@ -590,7 +602,7 @@ constexpr T four_arctan_series<T, K>::a_n(const K n) const
 {
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
-	return 4 * (1 - ((n & 1) << 1)) * pow(this->x, 2 * n + 1) / (2 * n + 1);
+	return 4 * MINUS_ONE_RAISED_TO_POWER_N * pow(this->x, 2 * n + 1) / (2 * n + 1);
 }
 
 /**
@@ -850,7 +862,7 @@ constexpr T xmb_Jb_two_series<T, K>::a_n(const K n) const
 {
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
-	return (1 - ((n & 1) << 1)) * pow(this->x, 2 * n) / (this->fact(n) * this->fact(n + this->mu));
+	return MINUS_ONE_RAISED_TO_POWER_N * pow(this->x, 2 * n) / (this->fact(n) * this->fact(n + this->mu));
 }
 
 /**

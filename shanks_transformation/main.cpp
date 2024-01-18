@@ -53,8 +53,9 @@ inline void print_test_function_info()
 	std::cout << "Which function would you like to use for testing?" << std::endl <<
 		"List of currently avaiable functions:" << std::endl <<
 		"1 - cmp_sum_and_transform - showcases the difference between the transformed partial sum and the nontransformed one" << std::endl <<
-		"2 - transformation_remainders - showcases the difference between series' sum and transformed partial sum" << std::endl <<
-		"3 - cmp_transformations - showcases the difference between convergence of sums accelerated by different transformations" << std::endl;
+		"2 - cmp_a_n_and_transform - showcases the difference between series' terms and transformed ones" << std::endl <<
+		"3 - transformation_remainders - showcases the difference between series' sum and transformed partial sum" << std::endl <<
+		"4 - cmp_transformations - showcases the difference between convergence of sums accelerated by different transformations" << std::endl;
 }
 
 /**
@@ -164,9 +165,12 @@ inline void main_testing_function()
 		cmp_sum_and_transform(n, order, series.get(), transform.get());
 		break;
 	case 2:
-		transformation_remainders(n, order, series.get(), transform.get());
+		cmp_a_n_and_transform(n, order, series.get(), transform.get());
 		break;
 	case 3:
+		transformation_remainders(n, order, series.get(), transform.get());
+		break;
+	case 4:
 	{
 		/*std::cout << "choose the type of the other";*/ //so far we've only got 2 transformations
 		std::unique_ptr<series_acceleration<T, K, decltype(series.get())>> transform2;
@@ -197,9 +201,21 @@ int main(void)
 	*/
 
 #if DEBUGGING_MODE
-	main_testing_function<long double, long long int>();
-	main_testing_function<float, short int>();
-	main_testing_function<double, int>();
+	try
+	{
+		//TODO: find a succinct way to test out various digit types
+		main_testing_function<long double, long long int>();
+		main_testing_function<double, int>();
+		main_testing_function<float, short int>();
+	}
+	catch (std::domain_error& e)
+	{
+		std::cout << e.what() << std::endl;
+	}
+	catch (std::overflow_error& e)
+	{
+		std::cout << e.what() << std::endl;
+	}
 #endif
 	return 0;
 }

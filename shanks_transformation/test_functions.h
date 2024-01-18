@@ -9,11 +9,11 @@
 #include "series.h"
 
 /*
-* @brief Function that prints out comparesment between transformed and untransformed partial sums
+* @brief Function that prints out comparesment between transformed and nontransformed partial sums
 * At first it prints out the type of transformation, series that are being transformed, type of enumerating integer and type of series terms
-* Then it prints out partial sum of first n terms of the series
-* After that it prints out transformed partial sum of first n terms of the series of order order 
-* At last it prints out the difference between the last two
+* Then it prints out partial sums of first i terms of the series where i ranges from 1 to n (!)
+* After that it prints out transformed partial sum of first i terms of the series of order order 
+* At last it prints out the difference between the two
 * @authors Bolshakov M.P.
 * @tparam series_templ is the type of series whose convergence we accelerate, transform_type is the type of transformation we are using
 * @param n The number of terms
@@ -24,19 +24,55 @@ template <typename series_templ, typename transform_type>
 void cmp_sum_and_transform(const int n, const int order, const series_templ& series, const transform_type& test)
 {
 	test->print_info();
-	try
+	for (int i = 1; i <= n; ++i)
 	{
-		test->print_s_n(n);
-		test->print_t_n(n, order);
-		test->print_diff_t_s(n, order);
+		try
+		{
+			test->print_s_n(i);
+			test->print_t_n(i, order);
+			test->print_diff_t_s(i, order);
+		}
+		catch (std::domain_error& e)
+		{
+			std::cout << e.what() << std::endl;
+		}
+		catch (std::overflow_error& e)
+		{
+			std::cout << e.what() << std::endl;
+		}
 	}
-	catch (std::domain_error& e)
+}
+
+/*
+* @brief Function that prints out comparesment between the terms of transformed and nontransformed series
+* At first it prints out the type of transformation, series that are being transformed, type of enumerating integer and type of series terms
+* Then it prints out terms from the first to nth of the series
+* At last it prints out terms from the first to nth of the transformed series
+* @authors Bolshakov M.P.
+* @tparam series_templ is the type of series whose convergence we accelerate, transform_type is the type of transformation we are using
+* @param n The number of terms
+* @param order The order of the transformation
+* @param series The series class object to be accelerated
+*/
+template <typename series_templ, typename transform_type>
+void cmp_a_n_and_transform(const int n, const int order, const series_templ& series, const transform_type& test)
+{
+	test->print_info();
+	for (int i = 1; i <= n; ++i)
 	{
-		std::cout << e.what() << std::endl;
-	}
-	catch (std::overflow_error& e)
-	{
-		std::cout << e.what() << std::endl;
+		try
+		{
+			test->print_a_n(i);
+			test->print_t_n_term(i, order);
+		}
+		catch (std::domain_error& e)
+		{
+			std::cout << e.what() << std::endl;
+		}
+		catch (std::overflow_error& e)
+		{
+			std::cout << e.what() << std::endl;
+		}
 	}
 }
 

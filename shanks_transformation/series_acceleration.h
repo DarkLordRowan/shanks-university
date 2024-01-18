@@ -59,7 +59,6 @@ public:
    * @brief Method for printing out the partial sum of the given series up to n terms to a specified output stream
    * @authors Bolshakov M.P., Pashkov B.B.
    * @param n The number of terms
-   * @param out The output stream
    */
 
 	constexpr void print_s_n(const K n, std::ostream& out) const;
@@ -67,7 +66,7 @@ public:
    * @brief Method for printing out the nth term of the given series up to n terms and a specified order
    * @authors Bolshakov M.P., Pashkov B.B.
    * @param n The number of terms
-   * @param order The order
+   * @param out The output stream
    */
 	constexpr void print_t_n(const K n, const int order) const;
 
@@ -76,7 +75,6 @@ public:
    * @authors Bolshakov M.P.
    * @param n The number of terms
    * @param order The order
-   * @param out The output stream
    */
 	constexpr void print_t_n(const K n, const int order, std::ostream& out) const;
 
@@ -85,6 +83,7 @@ public:
    * @authors Bolshakov M.P., Pashkov B.B.
    * @param n The number of terms
    * @param order The order
+   * @param out The output stream
    */
 	constexpr void print_diff_t_s(const K n, const int order) const;
 
@@ -93,10 +92,61 @@ public:
    * @authors Bolshakov M.P.
    * @param n The number of terms
    * @param order The order
-   * @param out The output stream
    */
 	constexpr void print_diff_t_s(const K n, const int order, std::ostream& out) const;
 
+	/**
+   * @brief Method for printing out the nth term of the series
+   * @authors Bolshakov M.P., Pashkov B.B.
+   * @param n The number of the term
+   */
+	constexpr void print_a_n(const K n) const;
+
+	/**
+   * @brief Method for printing out the nth term of the series in the specfied ostream
+   * @authors Bolshakov M.P., Pashkov B.B.
+   * @param n The number of the term
+   * @param out The output stream
+   */
+	constexpr void print_a_n(const K n, std::ostream& out) const;
+
+	/**
+   * @brief Method for printing out the nth term of the transformed series
+   * @authors Bolshakov M.P.
+   * @param n The number of the term
+   * @param order The order
+   */
+	constexpr void print_t_n_term(const K n, const int order) const;
+
+	/**
+   * @brief Method for printing out the nth term of the transformed series in the specfied ostream
+   * @authors Bolshakov M.P., Pashkov B.B.
+   * @param n The number of terms
+   * @param order The order
+   * @param out The output stream
+   */
+	constexpr void print_t_n_term(const K n, const int order, std::ostream& out) const;
+
+	/**
+   * @brief Method for printing out the difference between the nth term of the series and the nth term of the transformed sum
+   * @authors Bolshakov M.P.
+   * @param n The number of terms
+   * @param order The order
+   */
+	constexpr void print_diff_t_n_term_a_n(const K n, const int order) const;
+
+	/**
+   * @brief Method for printing out the difference between the nth term of the series and the nth term of the transformed sum in the specfied ostream
+   * @authors Bolshakov M.P.
+   * @param n The number of terms
+   * @param order The order
+   */
+	constexpr void print_diff_t_n_term_a_n(const K n, const int order, std::ostream& out) const;
+
+	/**
+   * @brief Method for printing out the info about the object of this class
+   * @authors Bolshakov M.P.
+   */
 	constexpr void print_info() const;
 
 #endif
@@ -173,6 +223,44 @@ constexpr void series_acceleration<T, K, series_templ>::print_diff_t_s(const K n
 {
 	out << "T_" << n << " of order " << order << " - S_" << n
 		<< " : " << this->operator()(n, order) - this->series->S_n(n) << std::endl;
+}
+
+template <typename T, typename K, typename series_templ>
+constexpr void series_acceleration<T, K, series_templ>::print_a_n(const K n) const
+{
+	print_a_n(n, std::cout);
+}
+
+template <typename T, typename K, typename series_templ>
+constexpr void series_acceleration<T, K, series_templ>::print_a_n(const K n, std::ostream& out) const
+{
+	out << "a_" << n << " : " << this->series->a_n(n) << std::endl;
+}
+
+template <typename T, typename K, typename series_templ>
+constexpr void series_acceleration<T, K, series_templ>::print_t_n_term(const K n, const int order) const
+{
+	print_t_n_term(n, order, std::cout);
+}
+
+template <typename T, typename K, typename series_templ>
+constexpr void series_acceleration<T, K, series_templ>::print_t_n_term(const K n, const int order, std::ostream& out) const
+{
+	out << "t_" << n << " : " << this->operator()(n, order) - this->operator()(n - 1, order) << std::endl;
+}
+
+template <typename T, typename K, typename series_templ>
+constexpr void series_acceleration<T, K, series_templ>::print_diff_t_n_term_a_n(const K n, const int order) const
+{
+	print_diff_t_n_term_a_n(n, order, std::cout);
+}
+
+template <typename T, typename K, typename series_templ>
+constexpr void series_acceleration<T, K, series_templ>::print_diff_t_n_term_a_n(const K n, const int order, std::ostream& out) const
+{
+
+	out << "t_" << n << " of order " << order << " - a_" << n
+		<< " : " << (this->operator()(n, order) - this->operator()(n - 1, order)) - this->series->a_n(n) << std::endl;
 }
 
 template <typename T, typename K, typename series_templ>
