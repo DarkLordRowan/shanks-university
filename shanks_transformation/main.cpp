@@ -14,7 +14,7 @@
  * @brief prints out all available series for testing
  * @authors Bolshakov M.P.
  */
-inline void print_series_info()
+inline static void print_series_info()
 {
 	std::cout << "Which series' convergence would you like to accelerate?" << std::endl <<
 		"List of currently avaiable series:" << std::endl <<
@@ -36,7 +36,7 @@ inline void print_series_info()
 * @brief prints out all available transformations for testing
 * @authors Bolshakov M.P.
 */
-inline void print_transformation_info()
+inline static void print_transformation_info()
 {
 	std::cout << "Which transformation would you like to test?" << std::endl <<
 		"List of currently avaiable series:" << std::endl <<
@@ -48,7 +48,7 @@ inline void print_transformation_info()
 * @brief prints out all available fungus for testing
 * @authors Bolshakov M.P.
 */
-inline void print_test_function_info()
+inline static void print_test_function_info()
 {
 	std::cout << "Which function would you like to use for testing?" << std::endl <<
 		"List of currently avaiable functions:" << std::endl <<
@@ -65,7 +65,7 @@ inline void print_test_function_info()
 * @authors Bolshakov M.P.
 */
 template <typename T, typename K>
-inline void main_testing_function()
+inline static void main_testing_function()
 {
 
 	//choosing series

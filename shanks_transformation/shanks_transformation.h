@@ -1,6 +1,6 @@
 /**
  * @file shanks_transform.h
- * @brief This file contains the definition of the Shanks transformation class.
+ * @brief This file contains the definition of the Shanks transformation class and specialization of this transformation for the alternating series.
  */
 
 #pragma once

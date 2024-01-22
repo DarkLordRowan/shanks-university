@@ -151,3 +151,5 @@ void cmp_transformations(const int n, const int order, const series_templ& serie
 		}
 	}
 }
+
+//TO DO make a function to compare shanks_transformation and shanks_transformation for alternating series
