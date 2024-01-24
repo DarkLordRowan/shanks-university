@@ -32,12 +32,6 @@ class series_acceleration
 {
 public:
 	/**
-   * @brief Base constructor
-   * @authors Bolshakov M.P.
-   */
-	series_acceleration();
-
-	/**
    * @brief Parameterized constructor to initialize the Transformation.
    * @authors Bolshakov M.P.
    * @param series The series class object to be accelerated
@@ -167,12 +161,6 @@ protected:
    */
 	series_templ series;
 };
-
-template <typename T, typename K, typename series_templ>
-series_acceleration<T, K, series_templ>::series_acceleration()
-{
-
-}
 
 template <typename T, typename K, typename series_templ>
 series_acceleration<T, K, series_templ>::series_acceleration(const series_templ& series) : series(series)
