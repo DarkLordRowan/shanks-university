@@ -36,17 +36,20 @@ public:
 	* @authors Bolshakov M.P.
 	*/
 	series_base();
+
 	/**
 	* @brief Parameterized constructor to initialize the series with function argument
 	* @authors Bolshakov M.P.
 	* @param x The argument for function series
 	*/
 	series_base(T x);
+
 	/**
 	* @brief Virtual distructor
 	* @authors Bolshakov M.P.
 	*/
 	virtual ~series_base() = 0;
+
 	/**
 	* @brief Computes partial sum of the first n terms
 	* @authors Bolshakov M.P.
@@ -54,6 +57,7 @@ public:
 	* @return Partial sum of the first n terms
 	*/
 	constexpr virtual T S_n(const K n) const;
+
 	/**
 	* @brief Computes nth term of the series
 	* @authors Bolshakov M.P.
@@ -61,11 +65,13 @@ public:
 	* @return nth term of the series
 	*/
 	constexpr virtual T a_n(const K n) const;
+
 	/**
 	* @brief x getter
 	* @authors Bolshakov M.P.
 	*/
 	constexpr const T get_x() const;
+
 	/**
 	* @brief sum getter
 	* @authors Bolshakov M.P.
@@ -79,25 +85,33 @@ protected:
 	* @param sum The sum of the series
 	*/
 	series_base(T x, T sum);
+
 	/**
 	* @brief function series argument
 	* It's set to 0 by default
 	* @authors Bolshakov M.P.
 	*/
 	const T x;
+
 	/**
 	* @brief sum of the series
 	* It's set to 0 by default
 	* @authors Bolshakov M.P.
 	*/
 	const T sum;
+
 	/**
-	* @brief factorial
+	* @brief factorial n!
 	* @authors Bolshakov M.P.
 	* @return n!
 	*/
 	constexpr const K fact(const K n) const;
 
+	/**
+	* @brief binomial coefficient C^n_k
+	* @authors Bolshakov M.P.
+	* @return combinations(n,k)
+	*/
 	constexpr const T binomial_coefficient(const T n, const K k) const;
 };
 
@@ -183,22 +197,14 @@ template <typename T, typename K>
 class exp_series : public series_base<T, K>
 {
 public:
-	/**
-	* @brief Base constructor
-	* @authors Bolshakov M.P.
-	*/
-	exp_series();
+
 	/**
 	* @brief Parameterized constructor to initialize the series with function argument and sum
 	* @authors Bolshakov M.P.
 	* @param x The argument for function series
 	*/
 	exp_series(T x);
-	/**
-	* @brief The Destructor.
-	* @authors Bolshakov M.P.
-	*/
-	~exp_series();
+
 	/**
 	* @brief Computes the nth term of the Maclaurin series of the exponent
 	* @authors Bolshakov M.P.
@@ -209,20 +215,8 @@ public:
 };
 
 template <typename T, typename K>
-exp_series<T, K>::exp_series() : series_base<T, K>()
-{
-
-}
-
-template <typename T, typename K>
 exp_series<T, K>::exp_series(T x) : series_base<T,K>(x, std::exp(x))
 {
-}
-
-template <typename T, typename K>
-exp_series<T, K>::~exp_series()
-{
-
 }
 
 template <typename T, typename K>
@@ -243,21 +237,12 @@ class cos_series : public series_base<T, K>
 {
 public:
 	/**
-	* @brief Base constructor
-	* @authors Bolshakov M.P.
-	*/
-	cos_series();
-	/**
 	* @brief Parameterized constructor to initialize the series with function argument and sum
 	* @authors Bolshakov M.P.
 	* @param x The argument for function series
 	*/
 	cos_series(T x);
-	/**
-	* @brief The Destructor.
-	* @authors Bolshakov M.P.
-	*/
-	~cos_series();
+
 	/**
 	* @brief Computes the nth term of the Maclaurin series of the cosine function
 	* @authors Bolshakov M.P.
@@ -268,20 +253,8 @@ public:
 };
 
 template <typename T, typename K>
-cos_series<T, K>::cos_series() : series_base<T, K>()
-{
-
-}
-
-template <typename T, typename K>
 cos_series<T, K>::cos_series(T x) : series_base<T, K>(x, std::cos(x))
 {
-}
-
-template <typename T, typename K>
-cos_series<T, K>::~cos_series()
-{
-
 }
 
 template <typename T, typename K>
@@ -302,21 +275,12 @@ class sin_series : public series_base<T, K>
 {
 public:
 	/**
-	* @brief Base constructor
-	* @authors Bolshakov M.P.
-	*/
-	sin_series();
-	/**
 	* @brief Parameterized constructor to initialize the series with function argument and sum
 	* @authors Bolshakov M.P.
 	* @param x The argument for function series
 	*/
 	sin_series(T x);
-	/**
-	* @brief The Destructor.
-	* @authors Bolshakov M.P.
-	*/
-	~sin_series();
+
 	/**
 	* @brief Computes the nth term of the Maclaurin series of the sine function
 	* @authors Bolshakov M.P.
@@ -327,20 +291,8 @@ public:
 };
 
 template <typename T, typename K>
-sin_series<T, K>::sin_series() : series_base<T, K>()
-{
-
-}
-
-template <typename T, typename K>
 sin_series<T, K>::sin_series(T x) : series_base<T, K>(x, std::sin(x))
 {
-}
-
-template <typename T, typename K>
-sin_series<T, K>::~sin_series()
-{
-
 }
 
 template <typename T, typename K>
@@ -360,11 +312,6 @@ template <typename T, typename K>
 class cosh_series : public series_base<T, K>
 {
 public:
-	/**
-	* @brief Base constructor
-	* @authors Pashkov B.B.
-	*/
-	cosh_series();
 
 	/**
 	* @brief Parameterized constructor to initialize the series with function argument and sum
@@ -372,12 +319,6 @@ public:
 	* @param x The argument for function series
 	*/
 	cosh_series(T x);
-
-	/**
-	* @brief The Destructor.
-	* @authors Pashkov B.B.
-	*/
-	~cosh_series();
 
 	/**
 	* @brief Computes the nth term of the Maclaurin series of hyperbolic cosine
@@ -389,19 +330,7 @@ public:
 };
 
 template <typename T, typename K>
-cosh_series<T, K>::cosh_series() : series_base<T, K>()
-{
-
-}
-
-template <typename T, typename K>
 cosh_series<T, K>::cosh_series(T x) : series_base<T, K>(x, std::cosh(x))
-{
-
-}
-
-template <typename T, typename K>
-cosh_series<T, K>::~cosh_series()
 {
 
 }
@@ -424,21 +353,12 @@ class sinh_series : public series_base<T, K>
 {
 public:
 	/**
-	* @brief Base constructor
-	* @authors Bolshakov M.P.
-	*/
-	sinh_series();
-	/**
 	* @brief Parameterized constructor to initialize the series with function argument and sum
 	* @authors Bolshakov M.P.
 	* @param x The argument for function series
 	*/
 	sinh_series(T x);
-	/**
-	* @brief The Destructor.
-	* @authors Bolshakov M.P.
-	*/
-	~sinh_series();
+
 	/**
 	* @brief Computes the nth term of the Maclaurin series of the sinh function
 	* @authors Bolshakov M.P.
@@ -449,20 +369,8 @@ public:
 };
 
 template <typename T, typename K>
-sinh_series<T, K>::sinh_series() : series_base<T, K>()
-{
-
-}
-
-template <typename T, typename K>
 sinh_series<T, K>::sinh_series(T x) : series_base<T, K>(x, std::sinh(x))
 {
-}
-
-template <typename T, typename K>
-sinh_series<T, K>::~sinh_series()
-{
-
 }
 
 template <typename T, typename K>
@@ -482,11 +390,6 @@ template <typename T, typename K>
 class bin_series : public series_base<T, K>
 {
 public:
-	/**
-	* @brief Base constructor
-	* @authors Bolshakov M.P.
-	*/
-	bin_series();
 
 	/**
 	* @brief Parameterized constructor to initialize the series with function argument and sum
@@ -494,12 +397,6 @@ public:
 	* @param x The argument for function series, b The integer constant
 	*/
 	bin_series(T x, T alpha);
-
-	/**
-	* @brief The Destructor.
-	* @authors Bolshakov M.P.
-	*/
-	~bin_series();
 
 	/**
 	* @brief Computes the nth term of the Binomial series
@@ -518,22 +415,10 @@ private:
 };
 
 template <typename T, typename K>
-bin_series<T, K>::bin_series() : series_base<T, K>()
-{
-
-}
-
-template <typename T, typename K>
 bin_series<T, K>::bin_series(T x, T alpha) : series_base<T, K>(x, std::pow(1 + x, alpha)), alpha(alpha)
 {
 	if (std::abs(x) >= 1)
 		throw std::domain_error("series diverge");
-}
-
-template <typename T, typename K>
-bin_series<T, K>::~bin_series()
-{
-
 }
 
 template <typename T, typename K>
@@ -554,21 +439,12 @@ class four_arctan_series : public series_base<T, K>
 {
 public:
 	/**
-	* @brief Base constructor
-	* @authors Bolshakov M.P.
-	*/
-	four_arctan_series();
-	/**
 	* @brief Parameterized constructor to initialize the series with function argument and sum
 	* @authors Bolshakov M.P.
 	* @param x The argument for function series
 	*/
 	four_arctan_series(T x);
-	/**
-	* @brief The Destructor.
-	* @authors Bolshakov M.P.
-	*/
-	~four_arctan_series();
+
 	/**
 	* @brief Computes the nth term of the Maclaurin series of the arctan multiplied by four
 	* @authors Bolshakov M.P.
@@ -579,22 +455,10 @@ public:
 };
 
 template <typename T, typename K>
-four_arctan_series<T, K>::four_arctan_series() : series_base<T, K>()
-{
-
-}
-
-template <typename T, typename K>
 four_arctan_series<T, K>::four_arctan_series(T x) : series_base<T, K>(x, std::exp(x))
 {
 	if (std::abs(x) > 1)
 		throw std::domain_error("the arctan series diverge at x = " + std::to_string(x));
-}
-
-template <typename T, typename K>
-four_arctan_series<T, K>::~four_arctan_series()
-{
-
 }
 
 template <typename T, typename K>
@@ -614,11 +478,6 @@ template <typename T, typename K>
 class ln1mx_series : public series_base<T, K>
 {
 public:
-	/**
-	* @brief Base constructor
-	* @authors Pashkov B.B.
-	*/
-	ln1mx_series();
 
 	/**
 	* @brief Parameterized constructor to initialize the series with function argument and sum
@@ -626,12 +485,6 @@ public:
 	* @param x The argument for function series
 	*/
 	ln1mx_series(T x);
-
-	/**
-	* @brief The Destructor.
-	* @authors Pashkov B.B.
-	*/
-	~ln1mx_series();
 
 	/**
 	* @brief Computes the nth term of the Maclaurin series of -ln(1 - x)
@@ -643,22 +496,10 @@ public:
 };
 
 template <typename T, typename K>
-ln1mx_series<T, K>::ln1mx_series() : series_base<T, K>()
-{
-
-}
-
-template <typename T, typename K>
 ln1mx_series<T, K>::ln1mx_series(T x) : series_base<T, K>(x, -std::log(1 - x))
 {
 	if (std::abs(this->x) > 1 || this->x == 1)
 		throw std::domain_error("series diverge");
-}
-
-template <typename T, typename K>
-ln1mx_series<T, K>::~ln1mx_series()
-{
-
 }
 
 template <typename T, typename K>
@@ -678,11 +519,6 @@ template <typename T, typename K>
 class mean_sinh_sin_series : public series_base<T, K>
 {
 public:
-	/**
-	* @brief Base constructor
-	* @authors Pashkov B.B.
-	*/
-	mean_sinh_sin_series();
 
 	/**
 	* @brief Parameterized constructor to initialize the series with function argument and sum
@@ -690,12 +526,6 @@ public:
 	* @param x The argument for function series
 	*/
 	mean_sinh_sin_series(T x);
-
-	/**
-	* @brief The Destructor.
-	* @authors Pashkov B.B.
-	*/
-	~mean_sinh_sin_series();
 
 	/**
 	* @brief Computes the nth term of the Maclaurin series of (sinh(x) + sin(x)) / 2
@@ -707,19 +537,7 @@ public:
 };
 
 template <typename T, typename K>
-mean_sinh_sin_series<T, K>::mean_sinh_sin_series() : series_base<T, K>()
-{
-
-}
-
-template <typename T, typename K>
 mean_sinh_sin_series<T, K>::mean_sinh_sin_series(T x) : series_base<T, K>(x, 0.5 * (std::sinh(x) + std::sin(x)))
-{
-
-}
-
-template <typename T, typename K>
-mean_sinh_sin_series<T, K>::~mean_sinh_sin_series()
 {
 
 }
@@ -742,23 +560,11 @@ class exp_squared_erf_series : public series_base<T, K>
 {
 public:
 	/**
-	* @brief Base constructor
-	* @authors Pashkov B.B.
-	*/
-	exp_squared_erf_series();
-
-	/**
 	* @brief Parameterized constructor to initialize the series with function argument and sum
 	* @authors Pashkov B.B.
 	* @param x The argument for function series
 	*/
 	exp_squared_erf_series(T x);
-
-	/**
-	* @brief The Destructor.
-	* @authors Pashkov B.B.
-	*/
-	~exp_squared_erf_series();
 
 	/**
 	* @brief Computes the nth term of the Maclaurin series of exp(x^2)*erf(x)
@@ -770,19 +576,7 @@ public:
 };
 
 template <typename T, typename K>
-exp_squared_erf_series<T, K>::exp_squared_erf_series() : series_base<T, K>()
-{
-
-}
-
-template <typename T, typename K>
 exp_squared_erf_series<T, K>::exp_squared_erf_series(T x) : series_base<T, K>(x, std::exp(x * x)* std::erf(x))
-{
-
-}
-
-template <typename T, typename K>
-exp_squared_erf_series<T, K>::~exp_squared_erf_series()
 {
 
 }
@@ -805,23 +599,11 @@ class xmb_Jb_two_series : public series_base<T, K>
 {
 public:
 	/**
-	* @brief Base constructor
-	* @authors Pashkov B.B.
-	*/
-	xmb_Jb_two_series();
-
-	/**
 	* @brief Parameterized constructor to initialize the series with function argument and sum
 	* @authors Pashkov B.B.
 	* @param x The argument for function series, b The integer constant 
 	*/
 	xmb_Jb_two_series(T x, K b);
-
-	/**
-	* @brief The Destructor.
-	* @authors Pashkov B.B.
-	*/
-	~xmb_Jb_two_series();
 
 	/**
 	* @brief Computes the nth term of the Maclaurin series of x^(-b) * J_b(2x)
@@ -840,19 +622,7 @@ private:
 };
 
 template <typename T, typename K>
-xmb_Jb_two_series<T, K>::xmb_Jb_two_series() : series_base<T, K>()
-{
-
-}
-
-template <typename T, typename K>
 xmb_Jb_two_series<T, K>::xmb_Jb_two_series(T x, K b) : series_base<T, K>(x, std::pow(x, -b)* std::cyl_bessel_j(b, 2 * x)), mu(b)
-{
-
-}
-
-template <typename T, typename K>
-xmb_Jb_two_series<T, K>::~xmb_Jb_two_series()
 {
 
 }
@@ -875,23 +645,11 @@ class half_asin_two_x_series : public series_base<T, K>
 {
 public:
 	/**
-	* @brief Base constructor
-	* @authors Pashkov B.B.
-	*/
-	half_asin_two_x_series();
-
-	/**
 	* @brief Parameterized constructor to initialize the series with function argument and sum
 	* @authors Pashkov B.B.
 	* @param x The argument for function series
 	*/
 	half_asin_two_x_series(T x);
-
-	/**
-	* @brief The Destructor.
-	* @authors Pashkov B.B.
-	*/
-	~half_asin_two_x_series();
 
 	/**
 	* @brief Computes the nth term of the Maclaurin series of 0.5 * asin(2x)
@@ -903,22 +661,10 @@ public:
 };
 
 template <typename T, typename K>
-half_asin_two_x_series<T, K>::half_asin_two_x_series() : series_base<T, K>()
-{
-
-}
-
-template <typename T, typename K>
 half_asin_two_x_series<T, K>::half_asin_two_x_series(T x) : series_base<T, K>(x, 0.5 * std::asin(2 * x))
 {
 	if (std::abs(this->x) > 0.5)
 		throw std::domain_error("series diverge");
-}
-
-template <typename T, typename K>
-half_asin_two_x_series<T, K>::~half_asin_two_x_series()
-{
-
 }
 
 template <typename T, typename K>
