@@ -40,7 +40,7 @@ inline static void print_series_info()
 
 /**
 * @brief prints out all available transformations for testing
-* @authors Bolshakov M.P.
+* @authors Bolshakov M.P. 
 */
 inline static void print_transformation_info()
 {
