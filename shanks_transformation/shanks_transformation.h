@@ -54,10 +54,11 @@ T shanks_transform<T, K, series_templ>::operator()(const K n, const int order) c
 	{
 		const auto a_n = this->series->a_n(n);
 		const auto a_n_plus_1 = this->series->a_n(n + 1);
-		if (!std::isfinite(abs(a_n - a_n_plus_1)))
+		const auto tmp = -a_n_plus_1 * a_n_plus_1;
+
+		if (!std::isfinite(std::fma(a_n, a_n, tmp) - std::fma(a_n_plus_1, a_n_plus_1, tmp)))
 			throw std::overflow_error("division by zero");
-		const auto tmp = std::fma(-a_n_plus_1, a_n_plus_1, 0);
-		return std::fma(a_n * a_n_plus_1, (a_n + a_n_plus_1) / (std::fma(a_n, a_n, tmp)), this->series->S_n(n));
+		return std::fma(a_n * a_n_plus_1, (a_n + a_n_plus_1) / (std::fma(a_n, a_n, tmp) - std::fma(a_n_plus_1, a_n_plus_1, tmp)), this->series->S_n(n));
 	}
 	else //n > order >= 1
 	{
