@@ -19,23 +19,12 @@ class shanks_transform : public series_acceleration<T, K, series_templ>
 public:
 
 	/**
-   * @brief Default constructor.
-   * @author Bolshakov M.P.
-   */
-	shanks_transform();
-
-	/**
    * @brief Parameterized constructor to initialize the Shanks transformation for non-alternating series.
    * @authors Bolshakov M.P.
    * @param series The series class object
    */
 	shanks_transform(const series_templ& series);
 
-	/**
-   * @brief Destructor to clean up resources.
-   * @authors Bolshakov M.P.
-   */
-	~shanks_transform() override;
 	/**
    * @brief Shanks transformation for non-alternating function.
    * @authors Bolshakov M.P., Pashkov B.B.
@@ -47,19 +36,7 @@ public:
 };
 
 template <typename T, typename K, typename series_templ>
-shanks_transform<T, K, series_templ>::shanks_transform() : series_acceleration<T, K, series_templ>()
-{
-
-}
-
-template <typename T, typename K, typename series_templ>
 shanks_transform<T, K, series_templ>::shanks_transform(const series_templ& series) : series_acceleration<T, K, series_templ>(series)
-{
-
-}
-
-template <typename T, typename K, typename series_templ>
-shanks_transform<T, K, series_templ>::~shanks_transform()
 {
 
 }
@@ -132,23 +109,12 @@ class shanks_transform_alternating : public series_acceleration<T, K, series_tem
 public:
 
 	/**
-   * @brief Default constructor.
-   * @author Bolshakov M.P.
-   */
-	shanks_transform_alternating();
-
-	/**
    * @brief Parameterized constructor to initialize the Shanks transformation for alternating series.
    * @authors Bolshakov M.P.
    * @param series The series class object
    */
 	shanks_transform_alternating(const series_templ& series);
 
-	/**
-   * @brief Destructor to clean up resources.
-   * @authors Bolshakov M.P.
-   */
-	~shanks_transform_alternating() override;
 	/**
    * @brief Shanks transformation for alternating series function.
    * @authors Bolshakov M.P., Pashkov B.B.
@@ -160,19 +126,7 @@ public:
 };
 
 template <typename T, typename K, typename series_templ>
-shanks_transform_alternating<T, K, series_templ>::shanks_transform_alternating() : series_acceleration<T, K, series_templ>()
-{
-
-}
-
-template <typename T, typename K, typename series_templ>
 shanks_transform_alternating<T, K, series_templ>::shanks_transform_alternating(const series_templ& series) : series_acceleration<T, K, series_templ>(series)
-{
-
-}
-
-template <typename T, typename K, typename series_templ>
-shanks_transform_alternating<T, K, series_templ>::~shanks_transform_alternating()
 {
 
 }

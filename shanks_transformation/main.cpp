@@ -1,5 +1,10 @@
 /**
  * @file main.cpp
+ * @brief testing out series_acceleration and series subclasses
+ * This project contains the following:
+ * 1) Series_acceleration base class in series_acceleration.h. Its subclasses are different variations of shanks transformations: shanks_transformation.h, epsilon_algorithm.h
+ * 2) Series base class and its subclasses in series.h. They are the ones being accelerated
+ * 3) Testing functions in test_functions.h. Functions that can be called in main to test how series_acceleration and series_base subclasses work and cooperate.
  */
 #include <memory>
 #include <string> 

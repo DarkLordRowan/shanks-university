@@ -19,22 +19,11 @@ class epsilon_algorithm : public series_acceleration<T, K, series_templ>
 {
 public:
 	/**
-   * @brief Default constructor.
-   * @authors Pashkov B.B.
-   */
-	epsilon_algorithm();
-
-	/**
    * @brief Parameterized constructor to initialize the Epsilon Algorithm.
    * @authors Pashkov B.B.
    * @param series The series class object to be accelerated
    */
 	epsilon_algorithm(const series_templ& series);
-	/**
-   * @brief Destructor to clean up resources.
-   * @authors Pashkov B.B.
-   */
-	~epsilon_algorithm() override;
 
 	/**
    * @brief Shanks multistep epsilon algorithm.
@@ -48,19 +37,7 @@ public:
 };
 
 template <typename T, typename K, typename series_templ>
-epsilon_algorithm<T, K, series_templ>::epsilon_algorithm() : series_acceleration<T, K, series_templ>()
-{
-
-}
-
-template <typename T, typename K, typename series_templ>
 epsilon_algorithm<T, K, series_templ>::epsilon_algorithm(const series_templ& series) : series_acceleration<T, K, series_templ>(series)
-{
-
-}
-
-template <typename T, typename K, typename series_templ>
-epsilon_algorithm<T, K, series_templ>::~epsilon_algorithm()
 {
 
 }
