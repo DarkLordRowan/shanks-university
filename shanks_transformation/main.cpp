@@ -1,7 +1,7 @@
 /**
  * @file main.cpp
  */
-
+#include <memory>
 #include <string> 
 #include <set>
 #include "shanks_transformation.h"
