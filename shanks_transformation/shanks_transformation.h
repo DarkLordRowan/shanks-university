@@ -87,17 +87,17 @@ T shanks_transform<T, K, series_templ>::operator()(const K n, const int order) c
 		std::vector<T> T_n(n + order, 0);
 		auto a_n = this->series->a_n(n - order);
 		auto a_n_plus_1 = this->series->a_n(n - order + 1);
-		auto tmp = std::fma(-a_n_plus_1, a_n_plus_1, 0);
+		auto tmp = -a_n_plus_1 * a_n_plus_1;
 		for (int i = n - order + 1; i <= n + order - 1; ++i) // if we got to this branch then we know that n >= order - see previous branches
 		{
 			a_n = this->series->a_n(i);
 			a_n_plus_1 = this->series->a_n(i + 1);
-			if (!std::isfinite(abs(a_n - a_n_plus_1)))
-				throw std::overflow_error("division by zero");
-			tmp = std::fma(-a_n_plus_1, a_n_plus_1, 0);
+			tmp = -a_n_plus_1 * a_n_plus_1;
 
+			if (!std::isfinite(std::fma(a_n, a_n, tmp) - std::fma(a_n_plus_1, a_n_plus_1, tmp)))
+				throw std::overflow_error("division by zero");
 			// formula [6]
-			T_n[i] = std::fma(a_n * a_n_plus_1, (a_n + a_n_plus_1) / std::fma(a_n, a_n, tmp), this->series->S_n(i));
+			T_n[i] = std::fma(a_n * a_n_plus_1, (a_n + a_n_plus_1) / (std::fma(a_n, a_n, tmp) - std::fma(a_n_plus_1, a_n_plus_1, tmp)), this->series->S_n(i));
 		}
 		std::vector<T> T_n_plus_1(n + order, 0);
 		T a, b, c;
