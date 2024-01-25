@@ -60,7 +60,7 @@ T shanks_transform<T, K, series_templ>::operator()(const K n, const int order) c
 			throw std::overflow_error("division by zero");
 		return std::fma(a_n * a_n_plus_1, (a_n + a_n_plus_1) / (std::fma(a_n, a_n, tmp) - std::fma(a_n_plus_1, a_n_plus_1, tmp)), this->series->S_n(n));
 	}
-	else //n > order >= 1
+	else [[likely]]//n > order >= 1
 	{
 		std::vector<T> T_n(n + order, 0);
 		auto a_n = this->series->a_n(n - order);
@@ -149,7 +149,7 @@ T shanks_transform_alternating<T, K, series_templ>::operator()(const K n, const 
 			throw std::overflow_error("division by zero");
 		return std::fma(a_n * a_n_plus_1, 1 / (a_n - a_n_plus_1), this->series->S_n(n));
 	}
-	else //n > order >= 1
+	else [[likely]] //n > order >= 1
 	{
 		std::vector<T> T_n(n + order, 0);
 		auto a_n = this->series->a_n(n - order);
