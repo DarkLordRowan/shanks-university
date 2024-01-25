@@ -2,6 +2,7 @@
  * @file test_functions.h
  * @brief This file contains the testing functions
  */
+
 #pragma once
 #include <exception>
 #include "test_functions.h"

@@ -2,6 +2,7 @@
  * @file epsilon_algorithm.h
  * @brief This file contains the declaration of the Epsilon Algorithm class.
  */
+
 #pragma once
 #define DEF_UNDEFINED_SUM 0
 
