@@ -136,6 +136,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="test_framework.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="CMakeLists.txt" />

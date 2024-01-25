@@ -15,6 +15,7 @@
  * 12 - half_asin_two_x_series
  * @brief This file contains series base class and derived classes of various serieses (e.g. exp(x), ch(x))
  */
+
 #pragma once
 #define NO_X_GIVEN 0
 #define NO_SERIES_EXPRESSION_GIVEN 0
