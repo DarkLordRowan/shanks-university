@@ -57,7 +57,7 @@ public:
 	* @param n The amount of terms in the partial sum
 	* @return Partial sum of the first n terms
 	*/
-	constexpr virtual T S_n(const K n) const;
+	[[nodiscard]] constexpr virtual T S_n(const K n) const;
 
 	/**
 	* @brief Computes nth term of the series
@@ -65,19 +65,19 @@ public:
 	* @param n The number of the term
 	* @return nth term of the series
 	*/
-	constexpr virtual T a_n(const K n) const;
+	[[nodiscard]] constexpr virtual T a_n(const K n) const;
 
 	/**
 	* @brief x getter
 	* @authors Bolshakov M.P.
 	*/
-	constexpr const T get_x() const;
+	[[nodiscard]] constexpr const T get_x() const;
 
 	/**
 	* @brief sum getter
 	* @authors Bolshakov M.P.
 	*/
-	constexpr const T get_sum() const;
+	[[nodiscard]] constexpr const T get_sum() const;
 protected:
 	/**
 	* @brief Parameterized constructor to initialize the series with function argument and sum of the series
@@ -106,14 +106,14 @@ protected:
 	* @authors Bolshakov M.P.
 	* @return n!
 	*/
-	constexpr const K fact(const K n) const;
+	[[nodiscard]] constexpr const K fact(const K n) const;
 
 	/**
 	* @brief binomial coefficient C^n_k
 	* @authors Bolshakov M.P.
 	* @return combinations(n,k)
 	*/
-	constexpr const T binomial_coefficient(const T n, const K k) const;
+	[[nodiscard]] constexpr const T binomial_coefficient(const T n, const K k) const;
 };
 
 template <typename T, typename K>
@@ -201,7 +201,7 @@ public:
 	* @param n The number of the term
 	* @return nth term of the Maclaurin series of the exponent
 	*/
-	constexpr virtual T a_n(const K n) const;
+	[[nodiscard]] constexpr virtual T a_n(const K n) const;
 };
 
 template <typename T, typename K>
@@ -239,7 +239,7 @@ public:
 	* @param n The number of the term
 	* @return nth term of the Maclaurin series of the cosine functions
 	*/
-	constexpr virtual T a_n(const K n) const;
+	[[nodiscard]] constexpr virtual T a_n(const K n) const;
 };
 
 template <typename T, typename K>
@@ -277,7 +277,7 @@ public:
 	* @param n The number of the term
 	* @return nth term of the Maclaurin series of the sine functions
 	*/
-	constexpr virtual T a_n(const K n) const;
+	[[nodiscard]] constexpr virtual T a_n(const K n) const;
 };
 
 template <typename T, typename K>
@@ -315,7 +315,7 @@ public:
 	* @param n The number of the term
 	* @return nth term of the series
 	*/
-	constexpr virtual T a_n(const K n) const;
+	[[nodiscard]] constexpr virtual T a_n(const K n) const;
 };
 
 template <typename T, typename K>
@@ -353,7 +353,7 @@ public:
 	* @param n The number of the term
 	* @return nth term of the Maclaurin series of the sinh functions
 	*/
-	constexpr virtual T a_n(const K n) const;
+	[[nodiscard]] constexpr virtual T a_n(const K n) const;
 };
 
 template <typename T, typename K>
@@ -391,7 +391,7 @@ public:
 	* @param n The number of the term
 	* @return nth term of the series
 	*/
-	constexpr virtual T a_n(const K n) const;
+	[[nodiscard]] constexpr virtual T a_n(const K n) const;
 private:
 
 	/**
@@ -440,7 +440,7 @@ public:
 	* @param n The number of the term
 	* @return nth term of the series
 	*/
-	constexpr virtual T a_n(const K n) const;
+	[[nodiscard]] constexpr virtual T a_n(const K n) const;
 };
 
 template <typename T, typename K>
@@ -482,7 +482,7 @@ public:
 	* @param n The number of the term
 	* @return nth term of the series
 	*/
-	constexpr virtual T a_n(const K n) const;
+	[[nodiscard]] constexpr virtual T a_n(const K n) const;
 };
 
 template <typename T, typename K>
@@ -524,7 +524,7 @@ public:
 	* @param n The number of the term
 	* @return nth term of the series
 	*/
-	constexpr virtual T a_n(const K n) const;
+	[[nodiscard]] constexpr virtual T a_n(const K n) const;
 };
 
 template <typename T, typename K>
@@ -562,7 +562,7 @@ public:
 	* @param n The number of the term
 	* @return nth term of the series
 	*/
-	constexpr virtual T a_n(const K n) const;
+	[[nodiscard]] constexpr virtual T a_n(const K n) const;
 };
 
 template <typename T, typename K>
@@ -600,7 +600,7 @@ public:
 	* @param n The number of the term
 	* @return nth term of the series
 	*/
-	constexpr virtual T a_n(const K n) const;
+	[[nodiscard]] constexpr virtual T a_n(const K n) const;
 private:
 
 	/**
@@ -645,7 +645,7 @@ public:
 	* @param n The number of the term
 	* @return nth term of the series
 	*/
-	constexpr virtual T a_n(const K n) const;
+	[[nodiscard]] constexpr virtual T a_n(const K n) const;
 };
 
 template <typename T, typename K>
