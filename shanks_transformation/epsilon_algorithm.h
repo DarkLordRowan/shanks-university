@@ -38,10 +38,7 @@ public:
 };
 
 template <typename T, typename K, typename series_templ>
-epsilon_algorithm<T, K, series_templ>::epsilon_algorithm(const series_templ& series) : series_acceleration<T, K, series_templ>(series)
-{
-
-}
+epsilon_algorithm<T, K, series_templ>::epsilon_algorithm(const series_templ& series) : series_acceleration<T, K, series_templ>(series) {}
 
 template <typename T, typename K, typename series_templ>
 T epsilon_algorithm<T, K, series_templ>::operator()(const K n, const int order) const

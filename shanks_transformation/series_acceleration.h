@@ -163,16 +163,10 @@ protected:
 };
 
 template <typename T, typename K, typename series_templ>
-series_acceleration<T, K, series_templ>::series_acceleration(const series_templ& series) : series(series)
-{
-
-}
+series_acceleration<T, K, series_templ>::series_acceleration(const series_templ& series) : series(series) {}
 
 template <typename T, typename K, typename series_templ>
-series_acceleration<T, K, series_templ>::~series_acceleration()
-{
-
-}
+series_acceleration<T, K, series_templ>::~series_acceleration() {}
 
 #if DEBUGGING_MODE
 

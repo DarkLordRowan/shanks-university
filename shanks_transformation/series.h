@@ -117,22 +117,13 @@ protected:
 };
 
 template <typename T, typename K>
-series_base<T, K>::series_base() : x(NO_X_GIVEN), sum(0)
-{
-	
-}
+series_base<T, K>::series_base() : x(NO_X_GIVEN), sum(0) {}
 
 template <typename T, typename K>
-series_base<T, K>::series_base(T x) : x(x), sum(0)
-{
-
-}
+series_base<T, K>::series_base(T x) : x(x), sum(0) {}
 
 template <typename T, typename K>
-series_base<T, K>::series_base(T x, T sum) : x(x), sum(sum)
-{
-
-}
+series_base<T, K>::series_base(T x, T sum) : x(x), sum(sum) {}
 
 template <typename T, typename K>
 constexpr T series_base<T, K>::S_n(const K n) const
@@ -164,10 +155,7 @@ constexpr const T series_base<T, K>::get_sum() const
 }
 
 template <typename T, typename K>
-series_base<T, K>::~series_base()
-{
-
-}
+series_base<T, K>::~series_base() {}
 
 template <typename T, typename K>
 constexpr const K series_base<T, K>::fact(const K n) const
@@ -198,6 +186,7 @@ template <typename T, typename K>
 class exp_series : public series_base<T, K>
 {
 public:
+	exp_series() = delete;
 
 	/**
 	* @brief Parameterized constructor to initialize the series with function argument and sum
@@ -216,9 +205,7 @@ public:
 };
 
 template <typename T, typename K>
-exp_series<T, K>::exp_series(T x) : series_base<T,K>(x, std::exp(x))
-{
-}
+exp_series<T, K>::exp_series(T x) : series_base<T,K>(x, std::exp(x)) {}
 
 template <typename T, typename K>
 constexpr T exp_series<T, K>::a_n(const K n) const
@@ -237,6 +224,8 @@ template <typename T, typename K>
 class cos_series : public series_base<T, K>
 {
 public:
+	cos_series() = delete;
+
 	/**
 	* @brief Parameterized constructor to initialize the series with function argument and sum
 	* @authors Bolshakov M.P.
@@ -254,9 +243,7 @@ public:
 };
 
 template <typename T, typename K>
-cos_series<T, K>::cos_series(T x) : series_base<T, K>(x, std::cos(x))
-{
-}
+cos_series<T, K>::cos_series(T x) : series_base<T, K>(x, std::cos(x)) {}
 
 template <typename T, typename K>
 constexpr T cos_series<T, K>::a_n(const K n) const
@@ -275,6 +262,8 @@ template <typename T, typename K>
 class sin_series : public series_base<T, K>
 {
 public:
+	sin_series() = delete;
+
 	/**
 	* @brief Parameterized constructor to initialize the series with function argument and sum
 	* @authors Bolshakov M.P.
@@ -292,9 +281,7 @@ public:
 };
 
 template <typename T, typename K>
-sin_series<T, K>::sin_series(T x) : series_base<T, K>(x, std::sin(x))
-{
-}
+sin_series<T, K>::sin_series(T x) : series_base<T, K>(x, std::sin(x)) {}
 
 template <typename T, typename K>
 constexpr T sin_series<T, K>::a_n(const K n) const
@@ -313,6 +300,7 @@ template <typename T, typename K>
 class cosh_series : public series_base<T, K>
 {
 public:
+	cosh_series() = delete;
 
 	/**
 	* @brief Parameterized constructor to initialize the series with function argument and sum
@@ -331,10 +319,7 @@ public:
 };
 
 template <typename T, typename K>
-cosh_series<T, K>::cosh_series(T x) : series_base<T, K>(x, std::cosh(x))
-{
-
-}
+cosh_series<T, K>::cosh_series(T x) : series_base<T, K>(x, std::cosh(x)) {}
 
 template <typename T, typename K>
 constexpr T cosh_series<T, K>::a_n(const K n) const
@@ -353,6 +338,8 @@ template <typename T, typename K>
 class sinh_series : public series_base<T, K>
 {
 public:
+	sinh_series() = delete;
+
 	/**
 	* @brief Parameterized constructor to initialize the series with function argument and sum
 	* @authors Bolshakov M.P.
@@ -370,9 +357,7 @@ public:
 };
 
 template <typename T, typename K>
-sinh_series<T, K>::sinh_series(T x) : series_base<T, K>(x, std::sinh(x))
-{
-}
+sinh_series<T, K>::sinh_series(T x) : series_base<T, K>(x, std::sinh(x)) {}
 
 template <typename T, typename K>
 constexpr T sinh_series<T, K>::a_n(const K n) const
@@ -391,6 +376,7 @@ template <typename T, typename K>
 class bin_series : public series_base<T, K>
 {
 public:
+	bin_series() = delete;
 
 	/**
 	* @brief Parameterized constructor to initialize the series with function argument and sum
@@ -439,6 +425,8 @@ template <typename T, typename K>
 class four_arctan_series : public series_base<T, K>
 {
 public:
+	four_arctan_series() = delete;
+
 	/**
 	* @brief Parameterized constructor to initialize the series with function argument and sum
 	* @authors Bolshakov M.P.
@@ -479,6 +467,7 @@ template <typename T, typename K>
 class ln1mx_series : public series_base<T, K>
 {
 public:
+	ln1mx_series() = delete;
 
 	/**
 	* @brief Parameterized constructor to initialize the series with function argument and sum
@@ -520,6 +509,7 @@ template <typename T, typename K>
 class mean_sinh_sin_series : public series_base<T, K>
 {
 public:
+	mean_sinh_sin_series() = delete;
 
 	/**
 	* @brief Parameterized constructor to initialize the series with function argument and sum
@@ -538,10 +528,7 @@ public:
 };
 
 template <typename T, typename K>
-mean_sinh_sin_series<T, K>::mean_sinh_sin_series(T x) : series_base<T, K>(x, 0.5 * (std::sinh(x) + std::sin(x)))
-{
-
-}
+mean_sinh_sin_series<T, K>::mean_sinh_sin_series(T x) : series_base<T, K>(x, 0.5 * (std::sinh(x) + std::sin(x))) {}
 
 template <typename T, typename K>
 constexpr T mean_sinh_sin_series<T, K>::a_n(const K n) const
@@ -560,6 +547,8 @@ template <typename T, typename K>
 class exp_squared_erf_series : public series_base<T, K>
 {
 public:
+	exp_squared_erf_series() = delete;
+
 	/**
 	* @brief Parameterized constructor to initialize the series with function argument and sum
 	* @authors Pashkov B.B.
@@ -577,10 +566,7 @@ public:
 };
 
 template <typename T, typename K>
-exp_squared_erf_series<T, K>::exp_squared_erf_series(T x) : series_base<T, K>(x, std::exp(x * x)* std::erf(x))
-{
-
-}
+exp_squared_erf_series<T, K>::exp_squared_erf_series(T x) : series_base<T, K>(x, std::exp(x * x)* std::erf(x)) {}
 
 template <typename T, typename K>
 constexpr T exp_squared_erf_series<T, K>::a_n(const K n) const
@@ -599,6 +585,8 @@ template <typename T, typename K>
 class xmb_Jb_two_series : public series_base<T, K>
 {
 public:
+	xmb_Jb_two_series() = delete;
+
 	/**
 	* @brief Parameterized constructor to initialize the series with function argument and sum
 	* @authors Pashkov B.B.
@@ -623,10 +611,7 @@ private:
 };
 
 template <typename T, typename K>
-xmb_Jb_two_series<T, K>::xmb_Jb_two_series(T x, K b) : series_base<T, K>(x, std::pow(x, -b)* std::cyl_bessel_j(b, 2 * x)), mu(b)
-{
-
-}
+xmb_Jb_two_series<T, K>::xmb_Jb_two_series(T x, K b) : series_base<T, K>(x, std::pow(x, -b)* std::cyl_bessel_j(b, 2 * x)), mu(b) {}
 
 template <typename T, typename K>
 constexpr T xmb_Jb_two_series<T, K>::a_n(const K n) const
@@ -645,6 +630,8 @@ template <typename T, typename K>
 class half_asin_two_x_series : public series_base<T, K>
 {
 public:
+	half_asin_two_x_series() = delete;
+
 	/**
 	* @brief Parameterized constructor to initialize the series with function argument and sum
 	* @authors Pashkov B.B.

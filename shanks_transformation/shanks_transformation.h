@@ -36,10 +36,7 @@ public:
 };
 
 template <typename T, typename K, typename series_templ>
-shanks_transform<T, K, series_templ>::shanks_transform(const series_templ& series) : series_acceleration<T, K, series_templ>(series)
-{
-
-}
+shanks_transform<T, K, series_templ>::shanks_transform(const series_templ& series) : series_acceleration<T, K, series_templ>(series) {}
 
 template <typename T, typename K, typename series_templ>
 T shanks_transform<T, K, series_templ>::operator()(const K n, const int order) const
@@ -127,10 +124,7 @@ public:
 };
 
 template <typename T, typename K, typename series_templ>
-shanks_transform_alternating<T, K, series_templ>::shanks_transform_alternating(const series_templ& series) : series_acceleration<T, K, series_templ>(series)
-{
-
-}
+shanks_transform_alternating<T, K, series_templ>::shanks_transform_alternating(const series_templ& series) : series_acceleration<T, K, series_templ>(series) {}
 
 template <typename T, typename K, typename series_templ>
 T shanks_transform_alternating<T, K, series_templ>::operator()(const K n, const int order) const
