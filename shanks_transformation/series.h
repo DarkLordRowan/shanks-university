@@ -106,14 +106,28 @@ protected:
 	* @authors Bolshakov M.P.
 	* @return n!
 	*/
-	[[nodiscard]] constexpr const K fact(const K n) const;
+	[[nodiscard]] constexpr static const K fact(const K n)//;
+	{
+		if (n < 0)
+			throw std::domain_error("negative integer in the input");
+		int f = 1;
+		for (int i = 2; i <= n; i++)
+			f *= i;
+		return f;
+	}
 
 	/**
 	* @brief binomial coefficient C^n_k
 	* @authors Bolshakov M.P.
 	* @return combinations(n,k)
 	*/
-	[[nodiscard]] constexpr const T binomial_coefficient(const T n, const K k) const;
+	[[nodiscard]] constexpr static const T binomial_coefficient(const T n, const K k)//;
+	{
+		T b_c = 1;
+		for (int i = 0; i < k; ++i)
+			b_c = b_c * (n - static_cast<T>(i)) / (i + 1);
+		return b_c;
+	}
 };
 
 template <typename T, typename K>
@@ -156,26 +170,6 @@ constexpr const T series_base<T, K>::get_sum() const
 
 template <typename T, typename K>
 series_base<T, K>::~series_base() {}
-
-template <typename T, typename K>
-constexpr const K series_base<T, K>::fact(const K n) const
-{
-	if (n < 0)
-		throw std::domain_error("negative integer in the input");
-	int f = 1;
-	for (int i = 2; i <= n; i++)
-		f *= i;
-	return f;
-}
-
-template <typename T, typename K>
-constexpr const T series_base<T, K>::binomial_coefficient(const T n, const K k) const
-{
-	T b_c = 1;
-	for (int i = 0; i < k; ++i)
-		b_c = b_c * (n - static_cast<T>(i)) / (i + 1);
-	return b_c;
-}
 
 /**
 * @brief Maclaurin series of exponent
@@ -413,7 +407,7 @@ constexpr T bin_series<T, K>::a_n(const K n) const
 {
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
-	return this->binomial_coefficient(alpha, n) * pow(this->x, n);
+	return series_base<T,K>::binomial_coefficient(alpha, n) * pow(this->x, n);
 }
 
 /**
