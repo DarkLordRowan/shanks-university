@@ -369,6 +369,8 @@ constexpr T sinh_series<T, K>::a_n(const K n) const
 template <typename T, typename K>
 class bin_series : public series_base<T, K>
 {
+	using series_base<T, K>::binomial_coefficient;
+
 public:
 	bin_series() = delete;
 
@@ -407,7 +409,7 @@ constexpr T bin_series<T, K>::a_n(const K n) const
 {
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
-	return series_base<T,K>::binomial_coefficient(alpha, n) * pow(this->x, n);
+	return binomial_coefficient(alpha, n) * pow(this->x, n);
 }
 
 /**
