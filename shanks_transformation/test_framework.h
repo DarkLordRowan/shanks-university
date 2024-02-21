@@ -29,7 +29,10 @@ enum series_id_t {
 	mean_sinh_sin_series_id,
 	exp_squared_erf_series_id, 
 	xmb_Jb_two_series_id, 
-	half_asin_two_x_series_id
+	half_asin_two_x_series_id,
+	inverse_1mx_series_id,
+	x_1mx_squared_series_id,
+	erf_series_id
 };
 
 enum test_function_id_t {
@@ -61,7 +64,10 @@ inline static void print_series_info()
 		"9 - mean_sinh_sin_series" << std::endl <<
 		"10 - exp_squared_erf_series" << std::endl <<
 		"11 - xmb_Jb_two_series" << std::endl <<
-		"12 - half_asin_two_x_series" << std::endl;
+		"12 - half_asin_two_x_series" << std::endl <<
+		"13 - inverse_1mx_series" << std::endl <<
+		"14 - x_1mx_squared_series" << std::endl <<
+		"15 - erf_series" << std::endl;
 }
 
 /**
@@ -112,7 +118,7 @@ inline static void main_testing_function()
 	std::cin >> x;
 
 	//choosing series (cont.)
-	std::set<int> alternating_series = { 2, 3, 7, 11 };
+	std::set<int> alternating_series = { 2, 3, 7, 11, 15 };
 	switch (series_id)
 	{
 	case series_id_t::exp_series_id:
@@ -156,6 +162,15 @@ inline static void main_testing_function()
 		break;
 	case series_id_t::half_asin_two_x_series_id:
 		series.reset(new half_asin_two_x_series<T, K>(x));
+		break;
+	case series_id_t::inverse_1mx_series_id:
+		series.reset(new inverse_1mx_series<T, K>(x));
+		break;
+	case series_id_t::x_1mx_squared_series_id:
+		series.reset(new x_1mx_squared_series<T, K>(x));
+		break;
+	case series_id_t::erf_series_id:
+		series.reset(new erf_series<T, K>(x));
 		break;
 	default:
 		throw std::domain_error("wrong series_id");

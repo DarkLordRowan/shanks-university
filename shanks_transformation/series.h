@@ -13,6 +13,9 @@
  * 10 - exp_squared_erf_series
  * 11 - xmb_Jb_two_series
  * 12 - half_asin_two_x_series
+ * 13 - inverse_1mx_series
+ * 14 - x_1mx_squared_series
+ * 15 - erf_series
  * @brief This file contains series base class and derived classes of various serieses (e.g. exp(x), ch(x))
  */
 
@@ -20,6 +23,7 @@
 #define NO_X_GIVEN 0
 #define NO_SERIES_EXPRESSION_GIVEN 0
 #define MINUS_ONE_RAISED_TO_POWER_N (1 - ((n & 1) << 1)) //(-1)^n
+#include <numbers>
 
 
 
@@ -663,4 +667,130 @@ constexpr T half_asin_two_x_series<T, K>::a_n(const K n) const
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
 	return this->fact(2 * n) * pow(this->x, 2 * n + 1) / (this->fact(n) * this->fact(n) * (2 * n + 1));
+}
+
+/**
+* @brief Maclaurin series of 1 / (1 - x)
+* @authors Pashkov B.B.
+* @tparam T The type of the elements in the series, K The type of enumerating integer
+*/
+template <typename T, typename K>
+class inverse_1mx_series : public series_base<T, K>
+{
+public:
+	inverse_1mx_series() = delete;
+
+	/**
+	* @brief Parameterized constructor to initialize the series with function argument and sum
+	* @authors Pashkov B.B.
+	* @param x The argument for function series
+	*/
+	inverse_1mx_series(T x);
+
+	/**
+	* @brief Computes the nth term of the Maclaurin series of 1 / (1 - x)
+	* @authors Pashkov B.B.
+	* @param n The number of the term
+	* @return nth term of the series
+	*/
+	[[nodiscard]] constexpr virtual T a_n(const K n) const;
+};
+
+template <typename T, typename K>
+inverse_1mx_series<T, K>::inverse_1mx_series(T x) : series_base<T, K>(x, 1 / (1 - x))
+{
+	if (std::abs(this->x) > 1 || this->x == 1)
+		throw std::domain_error("series diverge");
+}
+
+template <typename T, typename K>
+constexpr T inverse_1mx_series<T, K>::a_n(const K n) const
+{
+	if (n < 0)
+		throw std::domain_error("negative integer in the input");
+	return pow(this->x, n);
+}
+
+/**
+* @brief Maclaurin series of x / (1 - x)^2
+* @authors Pashkov B.B.
+* @tparam T The type of the elements in the series, K The type of enumerating integer
+*/
+template <typename T, typename K>
+class x_1mx_squared_series : public series_base<T, K>
+{
+public:
+	x_1mx_squared_series() = delete;
+
+	/**
+	* @brief Parameterized constructor to initialize the series with function argument and sum
+	* @authors Pashkov B.B.
+	* @param x The argument for function series
+	*/
+	x_1mx_squared_series(T x);
+
+	/**
+	* @brief Computes the nth term of the Maclaurin series of x / (1 - x)^2
+	* @authors Pashkov B.B.
+	* @param n The number of the term
+	* @return nth term of the series
+	*/
+	[[nodiscard]] constexpr virtual T a_n(const K n) const;
+};
+
+template <typename T, typename K>
+x_1mx_squared_series<T, K>::x_1mx_squared_series(T x) : series_base<T, K>(x, x / std::fma(x, x - 1, 1 - x))
+{
+	if (std::abs(this->x) > 1 || this->x == 1)
+		throw std::domain_error("series diverge");
+}
+
+template <typename T, typename K>
+constexpr T x_1mx_squared_series<T, K>::a_n(const K n) const
+{
+	if (n < 0)
+		throw std::domain_error("negative integer in the input");
+	return pow(this->x, n) * n;
+}
+
+/**
+* @brief Maclaurin series of sqrt(pi) * erf(x) / 2
+* @authors Pashkov B.B.
+* @tparam T The type of the elements in the series, K The type of enumerating integer
+*/
+template <typename T, typename K>
+class erf_series : public series_base<T, K>
+{
+public:
+	erf_series() = delete;
+
+	/**
+	* @brief Parameterized constructor to initialize the series with function argument and sum
+	* @authors Pashkov B.B.
+	* @param x The argument for function series
+	*/
+	erf_series(T x);
+
+	/**
+	* @brief Computes the nth term of the Maclaurin series of sqrt(pi) * erf(x) / 2
+	* @authors Pashkov B.B.
+	* @param n The number of the term
+	* @return nth term of the series
+	*/
+	[[nodiscard]] constexpr virtual T a_n(const K n) const;
+};
+
+template <typename T, typename K>
+erf_series<T, K>::erf_series(T x) : series_base<T, K>(x, std::sqrt(std::numbers::pi) * std::erf(x) / 2) 
+{
+	std::cout << std::sqrt(std::numbers::pi) << std::endl;
+	std::cout << std::erf(x) / 2 << std::endl;
+}
+
+template <typename T, typename K>
+constexpr T erf_series<T, K>::a_n(const K n) const
+{
+	if (n < 0)
+		throw std::domain_error("negative integer in the input");
+	return MINUS_ONE_RAISED_TO_POWER_N * pow(this->x, 2 * n + 1) / (this->fact(n) * (2 * n + 1));
 }
