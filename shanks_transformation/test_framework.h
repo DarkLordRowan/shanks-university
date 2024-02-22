@@ -32,7 +32,9 @@ enum series_id_t {
 	half_asin_two_x_series_id,
 	inverse_1mx_series_id,
 	x_1mx_squared_series_id,
-	erf_series_id
+	erf_series_id,
+	m_fact_1mx_mp1_inverse_series_id,
+	inverse_sqrt_1m4x_series_id
 };
 
 enum test_function_id_t {
@@ -67,7 +69,9 @@ inline static void print_series_info()
 		"12 - half_asin_two_x_series" << std::endl <<
 		"13 - inverse_1mx_series" << std::endl <<
 		"14 - x_1mx_squared_series" << std::endl <<
-		"15 - erf_series" << std::endl;
+		"15 - erf_series" << std::endl <<
+		"16 - m_fact_1mx_mp1_inverse_series" << std::endl <<
+		"17 - inverse_sqrt_1m4x_series" << std::endl;
 }
 
 /**
@@ -171,6 +175,15 @@ inline static void main_testing_function()
 		break;
 	case series_id_t::erf_series_id:
 		series.reset(new erf_series<T, K>(x));
+		break;
+	case series_id_t::m_fact_1mx_mp1_inverse_series_id:
+		T m;
+		std::cout << "Enter the value for constant m for the series" << std::endl;
+		std::cin >> m;
+		series.reset(new m_fact_1mx_mp1_inverse_series<T, K>(x, m));
+		break;
+	case series_id_t::inverse_sqrt_1m4x_series_id:
+		series.reset(new inverse_sqrt_1m4x_series<T, K>(x));
 		break;
 	default:
 		throw std::domain_error("wrong series_id");

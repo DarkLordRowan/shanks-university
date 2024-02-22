@@ -254,7 +254,7 @@ constexpr T cos_series<T, K>::a_n(const K n) const
 {
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
-	return MINUS_ONE_RAISED_TO_POWER_N * pow(this->x, 2 * n) / this->fact(2 * n);
+	return MINUS_ONE_RAISED_TO_POWER_N * std::pow(this->x, 2 * n) / this->fact(2 * n);
 }
 
 /**
@@ -292,7 +292,7 @@ constexpr T sin_series<T, K>::a_n(const K n) const
 {
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
-	return MINUS_ONE_RAISED_TO_POWER_N * pow(this->x, 2 * n + 1) / this->fact(2 * n + 1);
+	return MINUS_ONE_RAISED_TO_POWER_N * std::pow(this->x, 2 * n + 1) / this->fact(2 * n + 1);
 }
 
 /**
@@ -330,7 +330,7 @@ constexpr T cosh_series<T, K>::a_n(const K n) const
 {
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
-	return pow(this->x, 2 * n) / this->fact(2 * n);
+	return std::pow(this->x, 2 * n) / this->fact(2 * n);
 }
 
 /**
@@ -368,7 +368,7 @@ constexpr T sinh_series<T, K>::a_n(const K n) const
 {
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
-	return pow(this->x, 2 * n + 1) / this->fact(2 * n + 1);
+	return std::pow(this->x, 2 * n + 1) / this->fact(2 * n + 1);
 }
 
 /**
@@ -387,7 +387,7 @@ public:
 	/**
 	* @brief Parameterized constructor to initialize the series with function argument and sum
 	* @authors Bolshakov M.P.
-	* @param x The argument for function series, b The integer constant
+	* @param x The argument for function series, alpha The integer constant
 	*/
 	bin_series(T x, T alpha);
 
@@ -419,7 +419,7 @@ constexpr T bin_series<T, K>::a_n(const K n) const
 {
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
-	return binomial_coefficient(alpha, n) * pow(this->x, n);
+	return binomial_coefficient(alpha, n) * std::pow(this->x, n);
 }
 
 /**
@@ -461,7 +461,7 @@ constexpr T four_arctan_series<T, K>::a_n(const K n) const
 {
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
-	return 4 * MINUS_ONE_RAISED_TO_POWER_N * pow(this->x, 2 * n + 1) / (2 * n + 1);
+	return 4 * MINUS_ONE_RAISED_TO_POWER_N * std::pow(this->x, 2 * n + 1) / (2 * n + 1);
 }
 
 /**
@@ -503,7 +503,7 @@ constexpr T ln1mx_series<T, K>::a_n(const K n) const
 {
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
-	return pow(this->x, n + 1) / (n + 1);
+	return std::pow(this->x, n + 1) / (n + 1);
 }
 
 /**
@@ -541,7 +541,7 @@ constexpr T mean_sinh_sin_series<T, K>::a_n(const K n) const
 {
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
-	return pow(this->x, 4 * n + 1) / this->fact(4 * n + 1);
+	return std::pow(this->x, 4 * n + 1) / this->fact(4 * n + 1);
 }
 
 /**
@@ -579,7 +579,7 @@ constexpr T exp_squared_erf_series<T, K>::a_n(const K n) const
 {
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
-	return pow(this->x, 2 * n + 1) / std::tgamma(n + 1.5);
+	return std::pow(this->x, 2 * n + 1) / std::tgamma(n + 1.5);
 }
 
 /**
@@ -624,7 +624,7 @@ constexpr T xmb_Jb_two_series<T, K>::a_n(const K n) const
 {
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
-	return MINUS_ONE_RAISED_TO_POWER_N * pow(this->x, 2 * n) / (this->fact(n) * this->fact(n + this->mu));
+	return MINUS_ONE_RAISED_TO_POWER_N * std::pow(this->x, 2 * n) / (this->fact(n) * this->fact(n + this->mu));
 }
 
 /**
@@ -666,7 +666,7 @@ constexpr T half_asin_two_x_series<T, K>::a_n(const K n) const
 {
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
-	return this->fact(2 * n) * pow(this->x, 2 * n + 1) / (this->fact(n) * this->fact(n) * (2 * n + 1));
+	return this->fact(2 * n) * std::pow(this->x, 2 * n + 1) / (this->fact(n) * this->fact(n) * (2 * n + 1));
 }
 
 /**
@@ -708,7 +708,7 @@ constexpr T inverse_1mx_series<T, K>::a_n(const K n) const
 {
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
-	return pow(this->x, n);
+	return std::pow(this->x, n);
 }
 
 /**
@@ -750,7 +750,7 @@ constexpr T x_1mx_squared_series<T, K>::a_n(const K n) const
 {
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
-	return pow(this->x, n) * n;
+	return std::pow(this->x, n) * n;
 }
 
 /**
@@ -783,8 +783,7 @@ public:
 template <typename T, typename K>
 erf_series<T, K>::erf_series(T x) : series_base<T, K>(x, std::sqrt(std::numbers::pi) * std::erf(x) / 2) 
 {
-	std::cout << std::sqrt(std::numbers::pi) << std::endl;
-	std::cout << std::erf(x) / 2 << std::endl;
+
 }
 
 template <typename T, typename K>
@@ -792,5 +791,92 @@ constexpr T erf_series<T, K>::a_n(const K n) const
 {
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
-	return MINUS_ONE_RAISED_TO_POWER_N * pow(this->x, 2 * n + 1) / (this->fact(n) * (2 * n + 1));
+	return MINUS_ONE_RAISED_TO_POWER_N * std::pow(this->x, 2 * n + 1) / (this->fact(n) * (2 * n + 1));
+}
+
+/**
+* @brief Maclaurin series of m! / (1 - x) ^ (m + 1)
+* @authors Pashkov B.B.
+* @tparam T The type of the elements in the series, K The type of enumerating integer
+*/
+template <typename T, typename K>
+class m_fact_1mx_mp1_inverse_series : public series_base<T, K>
+{
+public:
+	m_fact_1mx_mp1_inverse_series() = delete;
+
+	/**
+	* @brief Parameterized constructor to initialize the series with function argument and sum
+	* @authors Pashkov B.B.
+	* @param x The argument for function series, m The integer constant
+	*/
+	m_fact_1mx_mp1_inverse_series(T x, K m);
+
+	/**
+	* @brief Computes the nth term of the Maclaurin series of  m! / (1 - x) ^ (m + 1)
+	* @authors Pashkov B.B.
+	* @param n The number of the term
+	* @return nth term of the series
+	*/
+	[[nodiscard]] constexpr virtual T a_n(const K n) const;
+private:
+
+	/**
+	* @brief The parameter m of the series
+	* @authors Pashkov B.B.
+	*/
+	const K m;
+};
+
+template <typename T, typename K>
+m_fact_1mx_mp1_inverse_series<T, K>::m_fact_1mx_mp1_inverse_series(T x, K m) : series_base<T, K>(x, this->fact(m) / pow(1 - x, m + 1)), m(m) {}
+
+template <typename T, typename K>
+constexpr T m_fact_1mx_mp1_inverse_series<T, K>::a_n(const K n) const
+{
+	if (n < 0)
+		throw std::domain_error("negative integer in the input");
+	return this->fact(this->m + n) * std::pow(this->x, n) / this->fact(n);
+}
+
+/**
+* @brief Maclaurin series of (1 - 4x) ^ (-1/2)
+* @authors Pashkov B.B.
+* @tparam T The type of the elements in the series, K The type of enumerating integer
+*/
+template <typename T, typename K>
+class inverse_sqrt_1m4x_series : public series_base<T, K>
+{
+public:
+	inverse_sqrt_1m4x_series() = delete;
+
+	/**
+	* @brief Parameterized constructor to initialize the series with function argument and sum
+	* @authors Pashkov B.B.
+	* @param x The argument for function series
+	*/
+	inverse_sqrt_1m4x_series(T x);
+
+	/**
+	* @brief Computes the nth term of the Maclaurin series of (1 - 4x) ^ (-1/2)
+	* @authors Pashkov B.B.
+	* @param n The number of the term
+	* @return nth term of the series
+	*/
+	[[nodiscard]] constexpr virtual T a_n(const K n) const;
+};
+
+template <typename T, typename K>
+inverse_sqrt_1m4x_series<T, K>::inverse_sqrt_1m4x_series(T x) : series_base<T, K>(x, std::pow(std::fma(-4, x, 1), -0.5)) 
+{
+	if (std::abs(this->x) > 0.25 || this->x == 0.25)
+		throw std::domain_error("series diverge");
+}
+
+template <typename T, typename K>
+constexpr T inverse_sqrt_1m4x_series<T, K>::a_n(const K n) const
+{
+	if (n < 0)
+		throw std::domain_error("negative integer in the input");
+	return this->fact(2 * n) * pow(this->x, n) / (this->fact(n) * this->fact(n));
 }
