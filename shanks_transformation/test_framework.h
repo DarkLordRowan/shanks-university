@@ -42,7 +42,8 @@ enum test_function_id_t {
 	cmp_sum_and_transform_id, 
 	cmp_a_n_and_transform_id, 
 	transformation_remainder_id, 
-	cmp_transformations_id
+	cmp_transformations_id,
+	eval_transform_time_id
 };
 
 #if DEBUGGING_MODE
@@ -97,7 +98,8 @@ inline static void print_test_function_info()
 		"1 - cmp_sum_and_transform - showcases the difference between the transformed partial sum and the nontransformed one" << std::endl <<
 		"2 - cmp_a_n_and_transform - showcases the difference between series' terms and transformed ones" << std::endl <<
 		"3 - transformation_remainders - showcases the difference between series' sum and transformed partial sum" << std::endl <<
-		"4 - cmp_transformations - showcases the difference between convergence of sums accelerated by different transformations" << std::endl;
+		"4 - cmp_transformations - showcases the difference between convergence of sums accelerated by different transformations" << std::endl <<
+		"5 - eval_transform_time - evaluates the time it takes to transform series" << std::endl;
 }
 
 /**
@@ -246,6 +248,9 @@ inline static void main_testing_function()
 		cmp_transformations(n, order, series.get(), transform.get(), transform2.get());
 		break;
 	}
+	case test_function_id_t::eval_transform_time_id:
+		eval_transform_time(n, order, series.get(), transform.get());
+		break;
 	default:
 		throw std::domain_error("wrong function_id");
 	}

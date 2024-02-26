@@ -8,6 +8,7 @@
 #include "test_functions.h"
 #include "series_acceleration.h"
 #include "series.h"
+#include <chrono>
 
 /*
 * @brief Function that prints out comparesment between transformed and nontransformed partial sums
@@ -20,6 +21,7 @@
 * @param n The number of terms
 * @param order The order of the transformation
 * @param series The series class object to be accelerated
+* @param test The type of transformation that is being used
 */
 template <typename series_templ, typename transform_type>
 void cmp_sum_and_transform(const int n, const int order, const series_templ& series, const transform_type& test)
@@ -54,6 +56,7 @@ void cmp_sum_and_transform(const int n, const int order, const series_templ& ser
 * @param n The number of terms
 * @param order The order of the transformation
 * @param series The series class object to be accelerated
+* @param test The type of transformation that is being used
 */
 template <typename series_templ, typename transform_type>
 void cmp_a_n_and_transform(const int n, const int order, const series_templ& series, const transform_type& test)
@@ -86,6 +89,7 @@ void cmp_a_n_and_transform(const int n, const int order, const series_templ& ser
 * @param n The number of terms for the last remainder
 * @param order The order of the transformation
 * @param series The series class object to be accelerated
+* @param test The type of transformation that is being used
 */
 template <typename series_templ, typename transform_type>
 void transformation_remainders(const int n, const int order, const series_templ& series, const transform_type& test)
@@ -118,6 +122,8 @@ void transformation_remainders(const int n, const int order, const series_templ&
 * @param n The number of terms for the last remainder
 * @param order The order of the transformation
 * @param series The series class object to be accelerated
+* @param test_1 The type of the first transformation that is being used
+* @param test_2 The type of the second transformation that is being used
 */
 template <typename series_templ, typename transform_type_1, typename transform_type_2>
 void cmp_transformations(const int n, const int order, const series_templ& series, const transform_type_1& test_1, const transform_type_2& test_2)
@@ -151,6 +157,39 @@ void cmp_transformations(const int n, const int order, const series_templ& serie
 			std::cout << e.what() << std::endl;
 		}
 	}
+}
+
+/**
+* @brief Function that evaluates the time it takes to transform series
+* @authors Bolshakov M.P.
+* @tparam series_templ is the type of series whose convergence we accelerate, transform_type is the type of transformation we are using
+* @param n The number of terms for the last remainder
+* @param order The order of the transformation
+* @param series The series class object to be accelerated
+* @param test The type of the first transformation that is being used
+*/
+template <typename series_templ, typename transform_type>
+void eval_transform_time(const int n, const int order, const series_templ& series, const transform_type& test)
+{
+	const auto start_time = std::chrono::system_clock::now();
+	test->print_info();
+	for (int i = 1; i <= n; ++i)
+	{
+		try
+		{
+			(*test)(i, order);
+		}
+		catch (std::domain_error& e)
+		{
+			std::cout << e.what() << std::endl;
+		}
+		catch (std::overflow_error& e)
+		{
+			std::cout << e.what() << std::endl;
+		}
+	}
+	const auto end_time = std::chrono::system_clock::now();
+	std::cout << "It took " << static_cast<std::chrono::duration<double>>(end_time - start_time) << " to perform these transformations" << std::endl;
 }
 
 //TO DO make a function to compare shanks_transformation and shanks_transformation for alternating series

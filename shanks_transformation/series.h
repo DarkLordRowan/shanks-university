@@ -16,6 +16,8 @@
  * 13 - inverse_1mx_series
  * 14 - x_1mx_squared_series
  * 15 - erf_series
+ * 16 - m_fact_1mx_mp1_inverse_series
+ * 17 - inverse_sqrt_1m4x_series
  * @brief This file contains series base class and derived classes of various serieses (e.g. exp(x), ch(x))
  */
 
