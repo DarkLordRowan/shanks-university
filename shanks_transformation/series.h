@@ -882,3 +882,87 @@ constexpr T inverse_sqrt_1m4x_series<T, K>::a_n(const K n) const
 		throw std::domain_error("negative integer in the input");
 	return this->fact(2 * n) * pow(this->x, n) / (this->fact(n) * this->fact(n));
 }
+
+/**
+* @brief Trigonometric series of 1/12 * (3x^2 - pi^2)
+* @authors Pashkov B.B.
+* @tparam T The type of the elements in the series, K The type of enumerating integer
+*/
+template <typename T, typename K>
+class one_twelfth_3x2_pi2_series : public series_base<T, K>
+{
+public:
+	one_twelfth_3x2_pi2_series() = delete;
+
+	/**
+	* @brief Parameterized constructor to initialize the series with function argument and sum
+	* @authors Pashkov B.B.
+	* @param x The argument for function series
+	*/
+	one_twelfth_3x2_pi2_series(T x);
+
+	/**
+	* @brief Computes the nth term of the Trigonometric series of 1/12 * (3x^2 - pi^2)
+	* @authors Pashkov B.B.
+	* @param n The number of the term
+	* @return nth term of the series
+	*/
+	[[nodiscard]] constexpr virtual T a_n(const K n) const;
+};
+
+template <typename T, typename K>
+one_twelfth_3x2_pi2_series<T, K>::one_twelfth_3x2_pi2_series(T x) : series_base<T, K>(x, 0.25 * x * x - std::numbers::pi * std::numbers::pi / 12) // TO DO: find a way to use std::fma
+{
+	if (std::abs(this->x) > std::numbers::pi)
+		throw std::domain_error("series diverge");
+}
+
+template <typename T, typename K>
+constexpr T one_twelfth_3x2_pi2_series<T, K>::a_n(const K n) const
+{
+	if (n < 0)
+		throw std::domain_error("negative integer in the input");
+	return MINUS_ONE_RAISED_TO_POWER_N * std::cos(n * this->x) / (n * n);
+}
+
+/**
+* @brief Trigonometric series of x/12 * (x^2 - pi^2)
+* @authors Pashkov B.B.
+* @tparam T The type of the elements in the series, K The type of enumerating integer
+*/
+template <typename T, typename K>
+class x_twelfth_x2_pi2_series : public series_base<T, K>
+{
+public:
+	x_twelfth_x2_pi2_series() = delete;
+
+	/**
+	* @brief Parameterized constructor to initialize the series with function argument and sum
+	* @authors Pashkov B.B.
+	* @param x The argument for function series
+	*/
+	x_twelfth_x2_pi2_series(T x);
+
+	/**
+	* @brief Computes the nth term of the Trigonometric series of x/12 * (x^2 - pi^2)
+	* @authors Pashkov B.B.
+	* @param n The number of the term
+	* @return nth term of the series
+	*/
+	[[nodiscard]] constexpr virtual T a_n(const K n) const;
+};
+
+template <typename T, typename K>
+x_twelfth_x2_pi2_series<T, K>::x_twelfth_x2_pi2_series(T x) : series_base<T, K>(x, x * (x * x - std::numbers::pi * std::numbers::pi) / 12)
+{
+	if (std::abs(this->x) > std::numbers::pi)
+		throw std::domain_error("series diverge");
+}
+
+template <typename T, typename K>
+constexpr T x_twelfth_x2_pi2_series<T, K>::a_n(const K n) const
+{
+	if (n < 0)
+		throw std::domain_error("negative integer in the input");
+	return MINUS_ONE_RAISED_TO_POWER_N * std::sin(n * this->x) / (n * n * n);
+}

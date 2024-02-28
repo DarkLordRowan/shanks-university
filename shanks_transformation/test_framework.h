@@ -34,7 +34,9 @@ enum series_id_t {
 	x_1mx_squared_series_id,
 	erf_series_id,
 	m_fact_1mx_mp1_inverse_series_id,
-	inverse_sqrt_1m4x_series_id
+	inverse_sqrt_1m4x_series_id,
+	one_twelfth_3x2_pi2_series_id,
+	x_twelfth_x2_pi2_series_id
 };
 
 enum test_function_id_t {
@@ -72,7 +74,9 @@ inline static void print_series_info()
 		"14 - x_1mx_squared_series" << std::endl <<
 		"15 - erf_series" << std::endl <<
 		"16 - m_fact_1mx_mp1_inverse_series" << std::endl <<
-		"17 - inverse_sqrt_1m4x_series" << std::endl;
+		"17 - inverse_sqrt_1m4x_series" << std::endl <<
+		"18 - one_twelfth_3x2_pi2_series" << std::endl <<
+		"19 - x_twelfth_x2_pi2_series" << std::endl;
 }
 
 /**
@@ -124,7 +128,7 @@ inline static void main_testing_function()
 	std::cin >> x;
 
 	//choosing series (cont.)
-	std::set<int> alternating_series = { 2, 3, 7, 11, 15 };
+	std::set<int> alternating_series = { 2, 3, 7, 11, 15, 18, 19 };
 	switch (series_id)
 	{
 	case series_id_t::exp_series_id:
@@ -186,6 +190,12 @@ inline static void main_testing_function()
 		break;
 	case series_id_t::inverse_sqrt_1m4x_series_id:
 		series.reset(new inverse_sqrt_1m4x_series<T, K>(x));
+		break;
+	case series_id_t::one_twelfth_3x2_pi2_series_id:
+		series.reset(new one_twelfth_3x2_pi2_series<T, K>(x));
+		break; 
+	case series_id_t::x_twelfth_x2_pi2_series_id:
+		series.reset(new x_twelfth_x2_pi2_series<T, K>(x));
 		break;
 	default:
 		throw std::domain_error("wrong series_id");
