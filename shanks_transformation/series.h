@@ -966,3 +966,155 @@ constexpr T x_twelfth_x2_pi2_series<T, K>::a_n(const K n) const
 		throw std::domain_error("negative integer in the input");
 	return MINUS_ONE_RAISED_TO_POWER_N * std::sin(n * this->x) / (n * n * n);
 }
+
+/**
+* @brief Numerical series representation of ln(2)
+* @authors Pashkov B.B.
+* @tparam T The type of the elements in the series, K The type of enumerating integer
+*/
+template <typename T, typename K>
+class ln2_series : public series_base<T, K>
+{
+public:
+	ln2_series();
+
+	/**
+	* @brief Parameterized constructor to initialize the series with function argument and sum
+	* @authors Pashkov B.B.
+	* @param x The argument for function series
+	*/
+	//ln2_series(T x);
+
+	/**
+	* @brief Computes the nth term of the Numerical series of ln(2)
+	* @authors Pashkov B.B.
+	* @param n The number of the term
+	* @return nth term of the series
+	*/
+	[[nodiscard]] constexpr virtual T a_n(const K n) const;
+};
+
+template <typename T, typename K>
+ln2_series<T, K>::ln2_series() : series_base<T, K>(0, std::log(2)) {}
+
+template <typename T, typename K>
+constexpr T ln2_series<T, K>::a_n(const K n) const
+{
+	if (n < 0)
+		throw std::domain_error("negative integer in the input");
+	return -MINUS_ONE_RAISED_TO_POWER_N / n;
+}
+
+/**
+* @brief Numerical series representation of 1
+* @authors Pashkov B.B.
+* @tparam T The type of the elements in the series, K The type of enumerating integer
+*/
+template <typename T, typename K>
+class one_series : public series_base<T, K>
+{
+public:
+	one_series();
+
+	/**
+	* @brief Parameterized constructor to initialize the series with function argument and sum
+	* @authors Pashkov B.B.
+	* @param x The argument for function series
+	*/
+	//ln2_series(T x);
+
+	/**
+	* @brief Computes the nth term of the Numerical series of 1
+	* @authors Pashkov B.B.
+	* @param n The number of the term
+	* @return nth term of the series
+	*/
+	[[nodiscard]] constexpr virtual T a_n(const K n) const;
+};
+
+template <typename T, typename K>
+one_series<T, K>::one_series() : series_base<T, K>(0, 1) {}
+
+template <typename T, typename K>
+constexpr T one_series<T, K>::a_n(const K n) const
+{
+	if (n < 0)
+		throw std::domain_error("negative integer in the input");
+	return 1 / (n * n + n) ;
+}
+
+/**
+* @brief Numerical series representation of 1
+* @authors Pashkov B.B.
+* @tparam T The type of the elements in the series, K The type of enumerating integer
+*/
+template <typename T, typename K>
+class one_series : public series_base<T, K>
+{
+public:
+	one_series();
+
+	/**
+	* @brief Parameterized constructor to initialize the series with function argument and sum
+	* @authors Pashkov B.B.
+	* @param x The argument for function series
+	*/
+	//ln2_series(T x);
+
+	/**
+	* @brief Computes the nth term of the Numerical series of 1
+	* @authors Pashkov B.B.
+	* @param n The number of the term
+	* @return nth term of the series
+	*/
+	[[nodiscard]] constexpr virtual T a_n(const K n) const;
+};
+
+template <typename T, typename K>
+one_series<T, K>::one_series() : series_base<T, K>(0, 1) {}
+
+template <typename T, typename K>
+constexpr T one_series<T, K>::a_n(const K n) const
+{
+	if (n < 0)
+		throw std::domain_error("negative integer in the input");
+	return 1 / (n * n + n);
+}
+
+/**
+* @brief Numerical series representation of -1/4
+* @authors Pashkov B.B.
+* @tparam T The type of the elements in the series, K The type of enumerating integer
+*/
+template <typename T, typename K>
+class minus_one_quarter_series : public series_base<T, K>
+{
+public:
+	minus_one_quarter_series();
+
+	/**
+	* @brief Parameterized constructor to initialize the series with function argument and sum
+	* @authors Pashkov B.B.
+	* @param x The argument for function series
+	*/
+	//ln2_series(T x);
+
+	/**
+	* @brief Computes the nth term of the Numerical series of 1
+	* @authors Pashkov B.B.
+	* @param n The number of the term
+	* @return nth term of the series
+	*/
+	[[nodiscard]] constexpr virtual T a_n(const K n) const;
+};
+
+template <typename T, typename K>
+minus_one_quarter_series<T, K>::minus_one_quarter_series() : series_base<T, K>(0, -0.25) {}
+
+template <typename T, typename K>
+constexpr T minus_one_quarter_series<T, K>::a_n(const K n) const
+{
+	if (n < 0)
+		throw std::domain_error("negative integer in the input");
+	return MINUS_ONE_RAISED_TO_POWER_N / (n * n + 2 * n);
+}
