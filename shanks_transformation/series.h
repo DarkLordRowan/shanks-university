@@ -18,6 +18,11 @@
  * 15 - erf_series
  * 16 - m_fact_1mx_mp1_inverse_series
  * 17 - inverse_sqrt_1m4x_series
+ * 18 - one_twelfth_3x2_pi2_series
+ * 19 - x_twelfth_x2_pi2_series
+ * 20 - ln2_series
+ * 21 - one_series
+ * 22 - minus_one_quarter_series
  * @brief This file contains series base class and derived classes of various serieses (e.g. exp(x), ch(x))
  */
 
@@ -52,18 +57,12 @@ public:
 	series_base(T x);
 
 	/**
-	* @brief Virtual distructor
-	* @authors Bolshakov M.P.
-	*/
-	virtual ~series_base() = 0;
-
-	/**
 	* @brief Computes partial sum of the first n terms
 	* @authors Bolshakov M.P.
 	* @param n The amount of terms in the partial sum
 	* @return Partial sum of the first n terms
 	*/
-	[[nodiscard]] constexpr virtual T S_n(const K n) const;
+	[[nodiscard]] constexpr T S_n(const K n) const;
 
 	/**
 	* @brief Computes nth term of the series
@@ -71,7 +70,7 @@ public:
 	* @param n The number of the term
 	* @return nth term of the series
 	*/
-	[[nodiscard]] constexpr virtual T a_n(const K n) const;
+	[[nodiscard]] constexpr virtual T a_n(const K n) const = 0;
 
 	/**
 	* @brief x getter
@@ -143,12 +142,6 @@ constexpr T series_base<T, K>::S_n(const K n) const
 }
 
 template <typename T, typename K>
-constexpr T series_base<T, K>::a_n(const K n) const
-{
-	return NO_SERIES_EXPRESSION_GIVEN;
-}
-
-template <typename T, typename K>
 constexpr const T series_base<T, K>::get_x() const
 {
 	return x;
@@ -172,16 +165,13 @@ constexpr const K series_base<T,K>::fact(const K n)
 }
 
 template <typename T, typename K>
-constexpr const T series_base<T,K>::binomial_coefficient(const T n, const K k)
+constexpr const T series_base<T, K>::binomial_coefficient(const T n, const K k)
 {
 	T b_c = 1;
 	for (int i = 0; i < k; ++i)
 		b_c = b_c * (n - static_cast<T>(i)) / (i + 1);
 	return b_c;
 }
-
-template <typename T, typename K>
-series_base<T, K>::~series_base() {}
 
 /**
 * @brief Maclaurin series of exponent
@@ -979,13 +969,6 @@ public:
 	ln2_series();
 
 	/**
-	* @brief Parameterized constructor to initialize the series with function argument and sum
-	* @authors Pashkov B.B.
-	* @param x The argument for function series
-	*/
-	//ln2_series(T x);
-
-	/**
 	* @brief Computes the nth term of the Numerical series of ln(2)
 	* @authors Pashkov B.B.
 	* @param n The number of the term
@@ -1014,52 +997,11 @@ template <typename T, typename K>
 class one_series : public series_base<T, K>
 {
 public:
+	/**
+	* @brief series constructor
+	* @authors Pashkov B.B.
+	*/
 	one_series();
-
-	/**
-	* @brief Parameterized constructor to initialize the series with function argument and sum
-	* @authors Pashkov B.B.
-	* @param x The argument for function series
-	*/
-	//ln2_series(T x);
-
-	/**
-	* @brief Computes the nth term of the Numerical series of 1
-	* @authors Pashkov B.B.
-	* @param n The number of the term
-	* @return nth term of the series
-	*/
-	[[nodiscard]] constexpr virtual T a_n(const K n) const;
-};
-
-template <typename T, typename K>
-one_series<T, K>::one_series() : series_base<T, K>(0, 1) {}
-
-template <typename T, typename K>
-constexpr T one_series<T, K>::a_n(const K n) const
-{
-	if (n < 0)
-		throw std::domain_error("negative integer in the input");
-	return 1 / (n * n + n) ;
-}
-
-/**
-* @brief Numerical series representation of 1
-* @authors Pashkov B.B.
-* @tparam T The type of the elements in the series, K The type of enumerating integer
-*/
-template <typename T, typename K>
-class one_series : public series_base<T, K>
-{
-public:
-	one_series();
-
-	/**
-	* @brief Parameterized constructor to initialize the series with function argument and sum
-	* @authors Pashkov B.B.
-	* @param x The argument for function series
-	*/
-	//ln2_series(T x);
 
 	/**
 	* @brief Computes the nth term of the Numerical series of 1
@@ -1091,13 +1033,6 @@ class minus_one_quarter_series : public series_base<T, K>
 {
 public:
 	minus_one_quarter_series();
-
-	/**
-	* @brief Parameterized constructor to initialize the series with function argument and sum
-	* @authors Pashkov B.B.
-	* @param x The argument for function series
-	*/
-	//ln2_series(T x);
 
 	/**
 	* @brief Computes the nth term of the Numerical series of 1

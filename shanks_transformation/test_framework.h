@@ -36,7 +36,11 @@ enum series_id_t {
 	m_fact_1mx_mp1_inverse_series_id,
 	inverse_sqrt_1m4x_series_id,
 	one_twelfth_3x2_pi2_series_id,
-	x_twelfth_x2_pi2_series_id
+	x_twelfth_x2_pi2_series_id,
+	ln2_series_id,
+	one_series_id,
+	minus_one_quarter_series_id
+
 };
 
 enum test_function_id_t {
@@ -196,6 +200,15 @@ inline static void main_testing_function()
 		break; 
 	case series_id_t::x_twelfth_x2_pi2_series_id:
 		series.reset(new x_twelfth_x2_pi2_series<T, K>(x));
+		break;
+	case series_id_t::ln2_series_id:
+		series.reset(new ln2_series<T, K>());
+		break;
+	case series_id_t::one_series_id:
+		series.reset(new one_series<T, K>());
+		break;
+	case series_id_t::minus_one_quarter_series_id:
+		series.reset(new minus_one_quarter_series<T, K>());
 		break;
 	default:
 		throw std::domain_error("wrong series_id");
