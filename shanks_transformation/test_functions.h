@@ -31,9 +31,10 @@ void cmp_sum_and_transform(const int n, const int order, const series_templ& ser
 	{
 		try
 		{
-			test->print_s_n(i);
-			test->print_t_n(i, order);
-			test->print_diff_t_s(i, order);
+			std::cout << "S_" << i << " : " << series->S_n(i) << std::endl;
+			std::cout << "T_" << i << " of order " << order << " : " << test->operator()(i, order) << std::endl;
+			std::cout << "T_" << i << " of order " << order << " - S_" << i
+				<< " : " << test->operator()(i, order) - series->S_n(i) << std::endl;
 		}
 		catch (std::domain_error& e)
 		{
@@ -66,8 +67,10 @@ void cmp_a_n_and_transform(const int n, const int order, const series_templ& ser
 	{
 		try
 		{
-			test->print_a_n(i);
-			test->print_t_n_term(i, order);
+			std::cout << "a_" << i << " : " << series->a_n(i) << std::endl;
+			std::cout << "t_" << i << " : " << test->operator()(i, order) - test->operator()(i - 1, order) << std::endl;
+			std::cout << "t_" << i << " of order " << order << " - a_" << i
+				<< " : " << (test->operator()(i, order) - test->operator()(i - 1, order)) - series->a_n(i) << std::endl;
 		}
 		catch (std::domain_error& e)
 		{
@@ -177,7 +180,7 @@ void eval_transform_time(const int n, const int order, const series_templ& serie
 	{
 		try
 		{
-			(*test)(i, order);
+			test->operator()(i, order);
 		}
 		catch (std::domain_error& e)
 		{
