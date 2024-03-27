@@ -447,7 +447,7 @@ public:
 };
 
 template <typename T, typename K>
-four_arctan_series<T, K>::four_arctan_series(T x) : series_base<T, K>(x, std::exp(x))
+four_arctan_series<T, K>::four_arctan_series(T x) : series_base<T, K>(x, 4*std::atan(x))
 {
 	if (std::abs(x) > 1)
 		throw std::domain_error("the arctan series diverge at x = " + std::to_string(x));

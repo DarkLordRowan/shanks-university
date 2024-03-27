@@ -248,13 +248,13 @@ inline static void main_testing_function()
 	switch (function_id)
 	{
 	case test_function_id_t::cmp_sum_and_transform_id:
-		cmp_sum_and_transform(n, order, series.get(), transform.get());
+		cmp_sum_and_transform(n, order, std::move(series.get()), std::move(transform.get()));
 		break;
 	case test_function_id_t::cmp_a_n_and_transform_id:
-		cmp_a_n_and_transform(n, order, series.get(), transform.get());
+		cmp_a_n_and_transform(n, order, std::move(series.get()), std::move(transform.get()));
 		break;
 	case test_function_id_t::transformation_remainder_id:
-		transformation_remainders(n, order, series.get(), transform.get());
+		transformation_remainders(n, order, std::move(series.get()), std::move(transform.get()));
 		break;
 	case test_function_id_t::cmp_transformations_id:
 	{
@@ -269,11 +269,11 @@ inline static void main_testing_function()
 			else
 				transform2.reset(new shanks_transform<T, K, decltype(series.get())>(series.get()));
 		}
-		cmp_transformations(n, order, series.get(), transform.get(), transform2.get());
+		cmp_transformations(n, order, std::move(series.get()), std::move(transform.get()), std::move(transform2.get()));
 		break;
 	}
 	case test_function_id_t::eval_transform_time_id:
-		eval_transform_time(n, order, series.get(), transform.get());
+		eval_transform_time(n, order, std::move(series.get()), std::move(transform.get()));
 		break;
 	default:
 		throw std::domain_error("wrong function_id");

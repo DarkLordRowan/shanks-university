@@ -55,7 +55,7 @@ T shanks_transform<T, K, series_templ>::operator()(const K n, const int order) c
 
 		const auto result = std::fma(a_n * a_n_plus_1, (a_n + a_n_plus_1) / (std::fma(a_n, a_n, tmp) - std::fma(a_n_plus_1, a_n_plus_1, tmp)), this->series->S_n(n));
 		if (!std::isfinite(result))
-			throw std::overflow_error("overflow");
+			throw std::overflow_error("divison by zero");
 		return result;
 	}
 	else [[likely]]//n > order >= 1
@@ -91,7 +91,7 @@ T shanks_transform<T, K, series_templ>::operator()(const K n, const int order) c
 			T_n = T_n_plus_1;
 		}
 		if (!std::isfinite(T_n[n]))
-			throw std::overflow_error("overflow");
+			throw std::overflow_error("division by zero");
 		return T_n[n];
 	}
 }
@@ -138,9 +138,10 @@ T shanks_transform_alternating<T, K, series_templ>::operator()(const K n, const 
 	{
 		const auto a_n = this->series->a_n(n);
 		const auto a_n_plus_1 = this->series->a_n(n + 1);
-		if (!std::isfinite(abs(a_n - a_n_plus_1)))
+		const auto result = std::fma(a_n * a_n_plus_1, 1 / (a_n - a_n_plus_1), this->series->S_n(n));
+		if (!std::isfinite(result))
 			throw std::overflow_error("division by zero");
-		return std::fma(a_n * a_n_plus_1, 1 / (a_n - a_n_plus_1), this->series->S_n(n));
+		return result
 	}
 	else [[likely]] //n > order >= 1
 	{
@@ -151,8 +152,6 @@ T shanks_transform_alternating<T, K, series_templ>::operator()(const K n, const 
 		{
 			a_n = this->series->a_n(i);
 			a_n_plus_1 = this->series->a_n(i + 1);
-			if (!std::isfinite(abs(a_n - a_n_plus_1)))
-				throw std::overflow_error("division by zero");
 
 			// formula [6]
 			T_n[i] = std::fma(a_n * a_n_plus_1, 1 / (a_n - a_n_plus_1), this->series->S_n(n));
@@ -166,8 +165,6 @@ T shanks_transform_alternating<T, K, series_templ>::operator()(const K n, const 
 				a = T_n[i];
 				b = T_n[i - 1];
 				c = T_n[i + 1];
-				if (!std::isfinite(abs(2 * a - b - c)))
-					throw std::overflow_error("division by zero");
 				/*if (!std::isfinite(abs(2 * T_n[i] - T_n[i - 1] - T_n[i + 1])))
 					throw std::overflow_error("division by zero");*/
 					/*T_n_plus_1[i] = T_n[i] - (T_n[i] - T_n[i - 1]) * (T_n[i + 1] - T_n[i]) / (T_n[i + 1] - 2 * T_n[i] + T_n[i - 1]);
@@ -176,6 +173,8 @@ T shanks_transform_alternating<T, K, series_templ>::operator()(const K n, const 
 			}
 			T_n = T_n_plus_1;
 		}
+		if (!isfinite(T_n[n]))
+			throw std::overflow_error("division by zero")
 		return T_n[n];
 	}
 }

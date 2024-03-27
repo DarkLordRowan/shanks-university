@@ -24,7 +24,7 @@
 * @param test The type of transformation that is being used
 */
 template <typename series_templ, typename transform_type>
-void cmp_sum_and_transform(const int n, const int order, const series_templ& series, const transform_type& test)
+void cmp_sum_and_transform(const int n, const int order, const series_templ&& series, const transform_type&& test)
 {
 	test->print_info();
 	for (int i = 1; i <= n; ++i)
@@ -60,7 +60,7 @@ void cmp_sum_and_transform(const int n, const int order, const series_templ& ser
 * @param test The type of transformation that is being used
 */
 template <typename series_templ, typename transform_type>
-void cmp_a_n_and_transform(const int n, const int order, const series_templ& series, const transform_type& test)
+void cmp_a_n_and_transform(const int n, const int order, const series_templ&& series, const transform_type&& test)
 {
 	test->print_info();
 	for (int i = 1; i <= n; ++i)
@@ -95,7 +95,7 @@ void cmp_a_n_and_transform(const int n, const int order, const series_templ& ser
 * @param test The type of transformation that is being used
 */
 template <typename series_templ, typename transform_type>
-void transformation_remainders(const int n, const int order, const series_templ& series, const transform_type& test)
+void transformation_remainders(const int n, const int order, const series_templ&& series, const transform_type&& test)
 {
 	std::cout << "Tranformation of order " << order << " remainders from i = 1 to " << n << std::endl;
 	test->print_info();
@@ -129,7 +129,7 @@ void transformation_remainders(const int n, const int order, const series_templ&
 * @param test_2 The type of the second transformation that is being used
 */
 template <typename series_templ, typename transform_type_1, typename transform_type_2>
-void cmp_transformations(const int n, const int order, const series_templ& series, const transform_type_1& test_1, const transform_type_2& test_2)
+void cmp_transformations(const int n, const int order, const series_templ&& series, const transform_type_1&& test_1, const transform_type_2&& test_2)
 {
 	std::cout << "Tranformations of order " << order << " remainders from i = 1 to " << n << std::endl;
 	std::cout << "The transformation #1 is ";
@@ -172,7 +172,7 @@ void cmp_transformations(const int n, const int order, const series_templ& serie
 * @param test The type of the first transformation that is being used
 */
 template <typename series_templ, typename transform_type>
-void eval_transform_time(const int n, const int order, const series_templ& series, const transform_type& test)
+void eval_transform_time(const int n, const int order, const series_templ&& series, const transform_type&& test)
 {
 	const auto start_time = std::chrono::system_clock::now();
 	test->print_info();
