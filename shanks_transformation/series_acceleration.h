@@ -8,8 +8,6 @@
 #define DEF_NO_TRANSFORM 0
 /** @brief Default value for an unspecified series */
 #define NO_SERIES_GIVEN 0
-/** @brief if 1 then the class has methods of printing partial sum of series, partial sum of transformed series and difference between them */
-#define DEBUGGING_MODE 1
 
 #include <functional>  // Include the functional library for std::function
 #include <iostream>   // Include the iostream library for I/O functionalities

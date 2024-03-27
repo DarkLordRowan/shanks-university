@@ -53,9 +53,10 @@ T shanks_transform<T, K, series_templ>::operator()(const K n, const int order) c
 		const auto a_n_plus_1 = this->series->a_n(n + 1);
 		const auto tmp = -a_n_plus_1 * a_n_plus_1;
 
-		if (!std::isfinite(std::fma(a_n, a_n, tmp) - std::fma(a_n_plus_1, a_n_plus_1, tmp)))
-			throw std::overflow_error("division by zero");
-		return std::fma(a_n * a_n_plus_1, (a_n + a_n_plus_1) / (std::fma(a_n, a_n, tmp) - std::fma(a_n_plus_1, a_n_plus_1, tmp)), this->series->S_n(n));
+		const auto result = std::fma(a_n * a_n_plus_1, (a_n + a_n_plus_1) / (std::fma(a_n, a_n, tmp) - std::fma(a_n_plus_1, a_n_plus_1, tmp)), this->series->S_n(n));
+		if (!std::isfinite(result))
+			throw std::overflow_error("overflow");
+		return result;
 	}
 	else [[likely]]//n > order >= 1
 	{
@@ -69,8 +70,6 @@ T shanks_transform<T, K, series_templ>::operator()(const K n, const int order) c
 			a_n_plus_1 = this->series->a_n(i + 1);
 			tmp = -a_n_plus_1 * a_n_plus_1;
 
-			if (!std::isfinite(std::fma(a_n, a_n, tmp) - std::fma(a_n_plus_1, a_n_plus_1, tmp)))
-				throw std::overflow_error("division by zero");
 			// formula [6]
 			T_n[i] = std::fma(a_n * a_n_plus_1, (a_n + a_n_plus_1) / (std::fma(a_n, a_n, tmp) - std::fma(a_n_plus_1, a_n_plus_1, tmp)), this->series->S_n(i));
 		}
@@ -83,16 +82,16 @@ T shanks_transform<T, K, series_templ>::operator()(const K n, const int order) c
 				a = T_n[i];
 				b = T_n[i - 1];
 				c = T_n[i + 1];
-				if (!std::isfinite(abs(2 * a - b - c)))
-					throw std::overflow_error("division by zero");
 				/*if (!std::isfinite(abs(2 * T_n[i] - T_n[i - 1] - T_n[i + 1])))
 					throw std::overflow_error("division by zero");*/
 					/*T_n_plus_1[i] = T_n[i] - (T_n[i] - T_n[i - 1]) * (T_n[i + 1] - T_n[i]) / (T_n[i + 1] - 2 * T_n[i] + T_n[i - 1]);
 					T_n_plus_1[i] = std::fma(std::fma(T_n[i], T_n[i+1] + T_n[i-1] - T_n[i], -T_n[i-1]*T_n[i+1]), 1 / (2 * T_n[i] - T_n[i - 1] - T_n[i+1]), T_n[i]);*/
-				T_n_plus_1[i] = std::fma(std::fma(a, c + b - a, -b * c), 1 / (2 * a - b - c), a); 
+				T_n_plus_1[i] = std::fma(std::fma(a, c + b - a, -b * c), 1 / (std::fma(2,a,-b-c)), a); 
 			}
 			T_n = T_n_plus_1;
 		}
+		if (!std::isfinite(T_n[n]))
+			throw std::overflow_error("overflow");
 		return T_n[n];
 	}
 }

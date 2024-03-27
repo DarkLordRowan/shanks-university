@@ -52,8 +52,6 @@ enum test_function_id_t {
 	eval_transform_time_id
 };
 
-#if DEBUGGING_MODE
-
 /**
 * @brief prints out all available series for testing
 * @authors Bolshakov M.P.
@@ -80,7 +78,10 @@ inline static void print_series_info()
 		"16 - m_fact_1mx_mp1_inverse_series" << std::endl <<
 		"17 - inverse_sqrt_1m4x_series" << std::endl <<
 		"18 - one_twelfth_3x2_pi2_series" << std::endl <<
-		"19 - x_twelfth_x2_pi2_series" << std::endl;
+		"19 - x_twelfth_x2_pi2_series" << std::endl <<
+		"20 - ln2_series_id" << std::endl <<
+		"21 - one_series_id" << std::endl <<
+		"22 - minus_one_quarter_series_id" << std::endl;
 }
 
 /**
@@ -278,5 +279,3 @@ inline static void main_testing_function()
 		throw std::domain_error("wrong function_id");
 	}
 }
-
-#endif

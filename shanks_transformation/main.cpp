@@ -12,12 +12,6 @@
 
 int main(void)
 {
-
-	/*
-		DEBUGGING
-	*/
-
-#if DEBUGGING_MODE
 	try
 	{
 		//TODO: find a succinct way to test out various digit types
@@ -33,6 +27,5 @@ int main(void)
 	{
 		std::cout << e.what() << std::endl;
 	}
-#endif
 	return 0;
 }
