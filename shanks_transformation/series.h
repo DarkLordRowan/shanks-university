@@ -158,7 +158,7 @@ constexpr const K series_base<T,K>::fact(const K n)
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
 	int f = 1;
-	for (int i = 2; i <= n; i++)
+	for (int i = 2; i <= n; ++i)
 		f *= i;
 	return f;
 }
@@ -915,7 +915,7 @@ public:
 };
 
 template <typename T, typename K>
-one_twelfth_3x2_pi2_series<T, K>::one_twelfth_3x2_pi2_series(T x) : series_base<T, K>(x, std::fma(0.25*x, x, -std::numbers::pi* std::numbers::pi / 12)) // TO DO: find a way to use std::fma
+one_twelfth_3x2_pi2_series<T, K>::one_twelfth_3x2_pi2_series(T x) : series_base<T, K>(x, std::fma(0.25*x, x, -std::numbers::pi* std::numbers::pi / 12))
 {
 	if (std::abs(this->x) > std::numbers::pi)
 		throw std::domain_error("series diverge");
@@ -957,7 +957,7 @@ public:
 };
 
 template <typename T, typename K>
-x_twelfth_x2_pi2_series<T, K>::x_twelfth_x2_pi2_series(T x) : series_base<T, K>(x, x * (x * x - std::numbers::pi * std::numbers::pi) / 12)
+x_twelfth_x2_pi2_series<T, K>::x_twelfth_x2_pi2_series(T x) : series_base<T, K>(x, std::fma(x / 12, (x + std::numbers::pi) * (x - std::numbers::pi), -std::fma(x + std::numbers::pi, x - std::numbers::pi, (x + std::numbers::pi) * (x - std::numbers::pi))))
 {
 	if (std::abs(this->x) > std::numbers::pi)
 		throw std::domain_error("series diverge");
@@ -1049,7 +1049,7 @@ public:
 	minus_one_quarter_series();
 
 	/**
-	* @brief Computes the nth term of the Numerical series of 1
+	* @brief Computes the nth term of the Numerical series of -1/4
 	* @authors Pashkov B.B.
 	* @param n The number of the term
 	* @return nth term of the series
@@ -1066,4 +1066,128 @@ constexpr T minus_one_quarter_series<T, K>::a_n(const K n)
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
 	return n ? series_base<T, K>::minus_one_raised_to_power_n(n) / (n * n + 2 * n) : 0;
+}
+
+/**
+* @brief Numerical series representation of pi/3
+* @authors Pashkov B.B.
+* @tparam T The type of the elements in the series, K The type of enumerating integer
+*/
+template <typename T, typename K>
+class pi_3_series : public series_base<T, K>
+{
+public:
+	pi_3_series();
+
+	/**
+	* @brief Computes the nth term of the Numerical series of pi/3
+	* @authors Pashkov B.B.
+	* @param n The number of the term
+	* @return nth term of the series
+	*/
+	[[nodiscard]] constexpr virtual T a_n(const K n);
+};
+
+template <typename T, typename K>
+pi_3_series<T, K>::pi_3_series() : series_base<T, K>(0, std::numbers::pi / 3) {}
+
+template <typename T, typename K>
+constexpr T pi_3_series<T, K>::a_n(const K n)
+{
+	if (n < 0)
+		throw std::domain_error("negative integer in the input");
+	return 1.0 / ((n + 1) * (2 * n + 1) * (4 * n + 1));
+}
+
+/**
+* @brief Numerical series representation of pi/4
+* @authors Pashkov B.B.
+* @tparam T The type of the elements in the series, K The type of enumerating integer
+*/
+template <typename T, typename K>
+class pi_4_series : public series_base<T, K>
+{
+public:
+	pi_4_series();
+
+	/**
+	* @brief Computes the nth term of the Numerical series of pi/4
+	* @authors Pashkov B.B.
+	* @param n The number of the term
+	* @return nth term of the series
+	*/
+	[[nodiscard]] constexpr virtual T a_n(const K n);
+};
+
+template <typename T, typename K>
+pi_4_series<T, K>::pi_4_series() : series_base<T, K>(0, 0.25 * std::numbers::pi) {}
+
+template <typename T, typename K>
+constexpr T pi_4_series<T, K>::a_n(const K n)
+{
+	if (n < 0)
+		throw std::domain_error("negative integer in the input");
+	return series_base<T, K>::minus_one_raised_to_power_n(n) / (2 * n + 1);
+}
+
+/**
+* @brief Numerical series representation of pi^2 / 6 - 1
+* @authors Pashkov B.B.
+* @tparam T The type of the elements in the series, K The type of enumerating integer
+*/
+template <typename T, typename K>
+class pi_squared_6_minus_one_series : public series_base<T, K>
+{
+public:
+	pi_squared_6_minus_one_series();
+
+	/**
+	* @brief Computes the nth term of the Numerical series of pi^2 / 6 - 1
+	* @authors Pashkov B.B.
+	* @param n The number of the term
+	* @return nth term of the series
+	*/
+	[[nodiscard]] constexpr virtual T a_n(const K n);
+};
+
+template <typename T, typename K>
+pi_squared_6_minus_one_series<T, K>::pi_squared_6_minus_one_series() : series_base<T, K>(0, std::fma(std::numbers::pi / 6, std::numbers::pi, -1)) {}
+
+template <typename T, typename K>
+constexpr T pi_squared_6_minus_one_series<T, K>::a_n(const K n)
+{
+	if (n < 0)
+		throw std::domain_error("negative integer in the input");
+	return n ? 1.0 / (n * n * n + n * n) : 0;
+}
+
+/**
+* @brief Numerical series representation of 3 - pi
+* @authors Pashkov B.B.
+* @tparam T The type of the elements in the series, K The type of enumerating integer
+*/
+template <typename T, typename K>
+class three_minus_pi_series : public series_base<T, K>
+{
+public:
+	three_minus_pi_series();
+
+	/**
+	* @brief Computes the nth term of the Numerical series of 3 - pi
+	* @authors Pashkov B.B.
+	* @param n The number of the term
+	* @return nth term of the series
+	*/
+	[[nodiscard]] constexpr virtual T a_n(const K n);
+};
+
+template <typename T, typename K>
+three_minus_pi_series<T, K>::three_minus_pi_series() : series_base<T, K>(0, 3 - std::numbers::pi) {}
+
+template <typename T, typename K>
+constexpr T three_minus_pi_series<T, K>::a_n(const K n)
+{
+	if (n < 0)
+		throw std::domain_error("negative integer in the input");
+	return n ? series_base<T, K>::minus_one_raised_to_power_n(n) / (n * (n + 1) * (2 * n + 1)) : 0;
 }
