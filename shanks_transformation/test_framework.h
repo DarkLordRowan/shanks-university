@@ -39,8 +39,11 @@ enum series_id_t {
 	x_twelfth_x2_pi2_series_id,
 	ln2_series_id,
 	one_series_id,
-	minus_one_quarter_series_id
-
+	minus_one_quarter_series_id,
+	pi_3_series_id,
+	pi_4_series_id,
+	pi_squared_6_minus_one_series_id,
+	three_minus_pi_series_id
 };
 
 enum test_function_id_t {
@@ -81,7 +84,11 @@ inline static void print_series_info()
 		"19 - x_twelfth_x2_pi2_series" << std::endl <<
 		"20 - ln2_series_id" << std::endl <<
 		"21 - one_series_id" << std::endl <<
-		"22 - minus_one_quarter_series_id" << std::endl;
+		"22 - minus_one_quarter_series_id" << std::endl <<
+		"23 - pi_3_series" << std::endl <<
+		"24 - pi_4_series" << std::endl <<
+		"25 - pi_squared_6_minus_one_series" << std::endl <<
+		"26 - three_minus_pi_series" << std::endl;
 }
 
 /**
@@ -210,6 +217,18 @@ inline static void main_testing_function()
 		break;
 	case series_id_t::minus_one_quarter_series_id:
 		series.reset(new minus_one_quarter_series<T, K>());
+		break;
+	case series_id_t::pi_3_series_id:
+		series.reset(new pi_3_series<T, K>());
+		break;
+	case series_id_t::pi_4_series_id:
+		series.reset(new pi_4_series<T, K>());
+		break;
+	case series_id_t::pi_squared_6_minus_one_series_id:
+		series.reset(new pi_squared_6_minus_one_series<T, K>());
+		break;
+	case series_id_t::three_minus_pi_series_id:
+		series.reset(new three_minus_pi_series<T, K>());
 		break;
 	default:
 		throw std::domain_error("wrong series_id");

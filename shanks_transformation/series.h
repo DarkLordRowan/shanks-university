@@ -23,6 +23,10 @@
  * 20 - ln2_series
  * 21 - one_series
  * 22 - minus_one_quarter_series
+ * 23 - pi_3_series
+ * 24 - pi_4_series
+ * 25 - pi_squared_6_minus_one_series
+ * 26 - three_minus_pi_series
  * @brief This file contains series base class and derived classes of various serieses (e.g. exp(x), ch(x))
  */
 
@@ -56,7 +60,7 @@ public:
 	* @param n The amount of terms in the partial sum
 	* @return Partial sum of the first n terms
 	*/
-	[[nodiscard]] constexpr T S_n(const K n);
+	[[nodiscard]] constexpr T S_n(K n) const;
 
 	/**
 	* @brief Computes nth term of the series
@@ -64,19 +68,19 @@ public:
 	* @param n The number of the term
 	* @return nth term of the series
 	*/
-	[[nodiscard]] constexpr virtual T a_n(const K n) = 0;
+	[[nodiscard]] constexpr virtual T operator()(K n) const = 0;
 
 	/**
 	* @brief x getter
 	* @authors Bolshakov M.P.
 	*/
-	[[nodiscard]] constexpr const T get_x();
+	[[nodiscard]] constexpr const T get_x() const;
 
 	/**
 	* @brief sum getter
 	* @authors Bolshakov M.P.
 	*/
-	[[nodiscard]] constexpr const T get_sum();
+	[[nodiscard]] constexpr const T get_sum() const;
 protected:
 	/**
 	* @brief Parameterized constructor to initialize the series with function argument and sum of the series
@@ -105,7 +109,7 @@ protected:
 	* @authors Bolshakov M.P.
 	* @return n!
 	*/
-	[[nodiscard]] constexpr static const K fact(const K n);
+	[[nodiscard]] constexpr static const K fact(K n);
 
 	/**
 	* @brief binomial coefficient C^n_k
@@ -120,7 +124,7 @@ protected:
 	* @authors Bolshakov M.P.
 	* @return (-1)^n
 	*/
-	[[nodiscard]] constexpr static const K minus_one_raised_to_power_n(const K n);
+	[[nodiscard]] constexpr static const T minus_one_raised_to_power_n(K n);
 };
 
 template <typename T, typename K>
@@ -130,30 +134,30 @@ template <typename T, typename K>
 series_base<T, K>::series_base(T x, T sum) : x(x), sum(sum) {}
 
 template <typename T, typename K>
-constexpr T series_base<T, K>::S_n(const K n)
+constexpr T series_base<T, K>::S_n(K n) const
 {
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
-	T sum = a_n(n);
+	T sum = operator()(n);
 	for (int i = 0; i < n; ++i)
-		sum += a_n(i);
+		sum += operator()(i);
 	return sum;
 }
 
 template <typename T, typename K>
-constexpr const T series_base<T, K>::get_x()
+constexpr const T series_base<T, K>::get_x() const
 {
 	return x;
 }
 
 template <typename T, typename K>
-constexpr const T series_base<T, K>::get_sum()
+constexpr const T series_base<T, K>::get_sum() const
 {
 	return sum;
 }
 
 template <typename T, typename K>
-constexpr const K series_base<T,K>::fact(const K n)
+constexpr const K series_base<T,K>::fact(K n)
 {
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
@@ -173,7 +177,7 @@ constexpr const T series_base<T, K>::binomial_coefficient(const T n, const K k)
 }
 
 template <typename T, typename K>
-constexpr const K series_base<T, K>::minus_one_raised_to_power_n(const K n)
+constexpr const T series_base<T, K>::minus_one_raised_to_power_n(K n)
 {
 	return n % 2 ? -1 : 1;
 }
@@ -202,14 +206,14 @@ public:
 	* @param n The number of the term
 	* @return nth term of the Maclaurin series of the exponent
 	*/
-	[[nodiscard]] constexpr virtual T a_n(const K n);
+	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
 template <typename T, typename K>
 exp_series<T, K>::exp_series(T x) : series_base<T,K>(x, std::exp(x)) {}
 
 template <typename T, typename K>
-constexpr T exp_series<T, K>::a_n(const K n)
+constexpr T exp_series<T, K>::operator()(K n) const
 {
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
@@ -240,14 +244,14 @@ public:
 	* @param n The number of the term
 	* @return nth term of the Maclaurin series of the cosine functions
 	*/
-	[[nodiscard]] constexpr virtual T a_n(const K n);
+	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
 template <typename T, typename K>
 cos_series<T, K>::cos_series(T x) : series_base<T, K>(x, std::cos(x)) {}
 
 template <typename T, typename K>
-constexpr T cos_series<T, K>::a_n(const K n)
+constexpr T cos_series<T, K>::operator()(K n) const
 {
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
@@ -278,14 +282,14 @@ public:
 	* @param n The number of the term
 	* @return nth term of the Maclaurin series of the sine functions
 	*/
-	[[nodiscard]] constexpr virtual T a_n(const K n);
+	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
 template <typename T, typename K>
 sin_series<T, K>::sin_series(T x) : series_base<T, K>(x, std::sin(x)) {}
 
 template <typename T, typename K>
-constexpr T sin_series<T, K>::a_n(const K n)
+constexpr T sin_series<T, K>::operator()(K n) const
 {
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
@@ -316,14 +320,14 @@ public:
 	* @param n The number of the term
 	* @return nth term of the series
 	*/
-	[[nodiscard]] constexpr virtual T a_n(const K n);
+	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
 template <typename T, typename K>
 cosh_series<T, K>::cosh_series(T x) : series_base<T, K>(x, std::cosh(x)) {}
 
 template <typename T, typename K>
-constexpr T cosh_series<T, K>::a_n(const K n)
+constexpr T cosh_series<T, K>::operator()(K n) const
 {
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
@@ -354,14 +358,14 @@ public:
 	* @param n The number of the term
 	* @return nth term of the Maclaurin series of the sinh functions
 	*/
-	[[nodiscard]] constexpr virtual T a_n(const K n);
+	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
 template <typename T, typename K>
 sinh_series<T, K>::sinh_series(T x) : series_base<T, K>(x, std::sinh(x)) {}
 
 template <typename T, typename K>
-constexpr T sinh_series<T, K>::a_n(const K n)
+constexpr T sinh_series<T, K>::operator()(K n) const
 {
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
@@ -394,7 +398,7 @@ public:
 	* @param n The number of the term
 	* @return nth term of the series
 	*/
-	[[nodiscard]] constexpr virtual T a_n(const K n);
+	[[nodiscard]] constexpr virtual T operator()(K n) const;
 private:
 
 	/**
@@ -412,7 +416,7 @@ bin_series<T, K>::bin_series(T x, T alpha) : series_base<T, K>(x, std::pow(1 + x
 }
 
 template <typename T, typename K>
-constexpr T bin_series<T, K>::a_n(const K n)
+constexpr T bin_series<T, K>::operator()(K n) const
 {
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
@@ -443,7 +447,7 @@ public:
 	* @param n The number of the term
 	* @return nth term of the series
 	*/
-	[[nodiscard]] constexpr virtual T a_n(const K n);
+	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
 template <typename T, typename K>
@@ -454,7 +458,7 @@ four_arctan_series<T, K>::four_arctan_series(T x) : series_base<T, K>(x, 4*std::
 }
 
 template <typename T, typename K>
-constexpr T four_arctan_series<T, K>::a_n(const K n)
+constexpr T four_arctan_series<T, K>::operator()(K n) const
 {
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
@@ -485,7 +489,7 @@ public:
 	* @param n The number of the term
 	* @return nth term of the series
 	*/
-	[[nodiscard]] constexpr virtual T a_n(const K n);
+	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
 template <typename T, typename K>
@@ -496,7 +500,7 @@ ln1mx_series<T, K>::ln1mx_series(T x) : series_base<T, K>(x, -std::log(1 - x))
 }
 
 template <typename T, typename K>
-constexpr T ln1mx_series<T, K>::a_n(const K n)
+constexpr T ln1mx_series<T, K>::operator()(K n) const
 {
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
@@ -527,14 +531,14 @@ public:
 	* @param n The number of the term
 	* @return nth term of the series
 	*/
-	[[nodiscard]] constexpr virtual T a_n(const K n);
+	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
 template <typename T, typename K>
 mean_sinh_sin_series<T, K>::mean_sinh_sin_series(T x) : series_base<T, K>(x, 0.5 * (std::sinh(x) + std::sin(x))) {}
 
 template <typename T, typename K>
-constexpr T mean_sinh_sin_series<T, K>::a_n(const K n)
+constexpr T mean_sinh_sin_series<T, K>::operator()(K n) const
 {
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
@@ -565,20 +569,20 @@ public:
 	* @param n The number of the term
 	* @return nth term of the series
 	*/
-	[[nodiscard]] constexpr virtual T a_n(const K n);
+	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
 template <typename T, typename K>
 exp_squared_erf_series<T, K>::exp_squared_erf_series(T x) : series_base<T, K>(x, std::exp(x * x)* std::erf(x)) {}
 
 template <typename T, typename K>
-constexpr T exp_squared_erf_series<T, K>::a_n(const K n)
+constexpr T exp_squared_erf_series<T, K>::operator()(K n) const
 {
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
 	const auto result = std::pow(this->x, 2 * n + 1) / std::tgamma(n+1.5);
 	if (!isfinite(result))
-		throw std::overflow_error("a_n is too big");
+		throw std::overflow_error("operator() is too big");
 	return result;
 }
 
@@ -606,7 +610,7 @@ public:
 	* @param n The number of the term
 	* @return nth term of the series
 	*/
-	[[nodiscard]] constexpr virtual T a_n(const K n);
+	[[nodiscard]] constexpr virtual T operator()(K n) const;
 private:
 
 	/**
@@ -620,7 +624,7 @@ template <typename T, typename K>
 xmb_Jb_two_series<T, K>::xmb_Jb_two_series(T x, K b) : series_base<T, K>(x, std::pow(x, -b)* std::cyl_bessel_j(b, 2 * x)), mu(b) {}
 
 template <typename T, typename K>
-constexpr T xmb_Jb_two_series<T, K>::a_n(const K n)
+constexpr T xmb_Jb_two_series<T, K>::operator()(K n) const
 {
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
@@ -651,7 +655,7 @@ public:
 	* @param n The number of the term
 	* @return nth term of the series
 	*/
-	[[nodiscard]] constexpr virtual T a_n(const K n);
+	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
 template <typename T, typename K>
@@ -662,7 +666,7 @@ half_asin_two_x_series<T, K>::half_asin_two_x_series(T x) : series_base<T, K>(x,
 }
 
 template <typename T, typename K>
-constexpr T half_asin_two_x_series<T, K>::a_n(const K n)
+constexpr T half_asin_two_x_series<T, K>::operator()(K n) const
 {
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
@@ -694,7 +698,7 @@ public:
 	* @param n The number of the term
 	* @return nth term of the series
 	*/
-	[[nodiscard]] constexpr virtual T a_n(const K n);
+	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
 template <typename T, typename K>
@@ -705,7 +709,7 @@ inverse_1mx_series<T, K>::inverse_1mx_series(T x) : series_base<T, K>(x, 1 / (1 
 }
 
 template <typename T, typename K>
-constexpr T inverse_1mx_series<T, K>::a_n(const K n)
+constexpr T inverse_1mx_series<T, K>::operator()(K n) const
 {
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
@@ -736,7 +740,7 @@ public:
 	* @param n The number of the term
 	* @return nth term of the series
 	*/
-	[[nodiscard]] constexpr virtual T a_n(const K n);
+	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
 template <typename T, typename K>
@@ -747,7 +751,7 @@ x_1mx_squared_series<T, K>::x_1mx_squared_series(T x) : series_base<T, K>(x, x /
 }
 
 template <typename T, typename K>
-constexpr T x_1mx_squared_series<T, K>::a_n(const K n)
+constexpr T x_1mx_squared_series<T, K>::operator()(K n) const
 {
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
@@ -778,7 +782,7 @@ public:
 	* @param n The number of the term
 	* @return nth term of the series
 	*/
-	[[nodiscard]] constexpr virtual T a_n(const K n);
+	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
 template <typename T, typename K>
@@ -788,7 +792,7 @@ erf_series<T, K>::erf_series(T x) : series_base<T, K>(x, std::sqrt(std::numbers:
 }
 
 template <typename T, typename K>
-constexpr T erf_series<T, K>::a_n(const K n)
+constexpr T erf_series<T, K>::operator()(K n) const
 {
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
@@ -819,7 +823,7 @@ public:
 	* @param n The number of the term
 	* @return nth term of the series
 	*/
-	[[nodiscard]] constexpr virtual T a_n(const K n);
+	[[nodiscard]] constexpr virtual T operator()(K n) const;
 private:
 
 	/**
@@ -837,7 +841,7 @@ m_fact_1mx_mp1_inverse_series<T, K>::m_fact_1mx_mp1_inverse_series(T x, K m) : s
 }
 
 template <typename T, typename K>
-constexpr T m_fact_1mx_mp1_inverse_series<T, K>::a_n(const K n)
+constexpr T m_fact_1mx_mp1_inverse_series<T, K>::operator()(K n) const
 {
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
@@ -868,7 +872,7 @@ public:
 	* @param n The number of the term
 	* @return nth term of the series
 	*/
-	[[nodiscard]] constexpr virtual T a_n(const K n);
+	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
 template <typename T, typename K>
@@ -879,7 +883,7 @@ inverse_sqrt_1m4x_series<T, K>::inverse_sqrt_1m4x_series(T x) : series_base<T, K
 }
 
 template <typename T, typename K>
-constexpr T inverse_sqrt_1m4x_series<T, K>::a_n(const K n)
+constexpr T inverse_sqrt_1m4x_series<T, K>::operator()(K n) const
 {
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
@@ -911,7 +915,7 @@ public:
 	* @param n The number of the term
 	* @return nth term of the series
 	*/
-	[[nodiscard]] constexpr virtual T a_n(const K n);
+	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
 template <typename T, typename K>
@@ -922,7 +926,7 @@ one_twelfth_3x2_pi2_series<T, K>::one_twelfth_3x2_pi2_series(T x) : series_base<
 }
 
 template <typename T, typename K>
-constexpr T one_twelfth_3x2_pi2_series<T, K>::a_n(const K n)
+constexpr T one_twelfth_3x2_pi2_series<T, K>::operator()(K n) const
 {
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
@@ -953,7 +957,7 @@ public:
 	* @param n The number of the term
 	* @return nth term of the series
 	*/
-	[[nodiscard]] constexpr virtual T a_n(const K n);
+	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
 template <typename T, typename K>
@@ -964,7 +968,7 @@ x_twelfth_x2_pi2_series<T, K>::x_twelfth_x2_pi2_series(T x) : series_base<T, K>(
 }
 
 template <typename T, typename K>
-constexpr T x_twelfth_x2_pi2_series<T, K>::a_n(const K n)
+constexpr T x_twelfth_x2_pi2_series<T, K>::operator()(K n) const
 {
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
@@ -988,14 +992,14 @@ public:
 	* @param n The number of the term
 	* @return nth term of the series
 	*/
-	[[nodiscard]] constexpr virtual T a_n(const K n);
+	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
 template <typename T, typename K>
 ln2_series<T, K>::ln2_series() : series_base<T, K>(0, std::log(2)) {}
 
 template <typename T, typename K>
-constexpr T ln2_series<T, K>::a_n(const K n)
+constexpr T ln2_series<T, K>::operator()(K n) const
 {
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
@@ -1023,14 +1027,14 @@ public:
 	* @param n The number of the term
 	* @return nth term of the series
 	*/
-	[[nodiscard]] constexpr virtual T a_n(const K n);
+	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
 template <typename T, typename K>
 one_series<T, K>::one_series() : series_base<T, K>(0, 1) {}
 
 template <typename T, typename K>
-constexpr T one_series<T, K>::a_n(const K n)
+constexpr T one_series<T, K>::operator()(K n) const
 {
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
@@ -1054,14 +1058,14 @@ public:
 	* @param n The number of the term
 	* @return nth term of the series
 	*/
-	[[nodiscard]] constexpr virtual T a_n(const K n);
+	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
 template <typename T, typename K>
 minus_one_quarter_series<T, K>::minus_one_quarter_series() : series_base<T, K>(0, -0.25) {}
 
 template <typename T, typename K>
-constexpr T minus_one_quarter_series<T, K>::a_n(const K n)
+constexpr T minus_one_quarter_series<T, K>::operator()(K n) const
 {
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
@@ -1085,14 +1089,14 @@ public:
 	* @param n The number of the term
 	* @return nth term of the series
 	*/
-	[[nodiscard]] constexpr virtual T a_n(const K n);
+	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
 template <typename T, typename K>
 pi_3_series<T, K>::pi_3_series() : series_base<T, K>(0, std::numbers::pi / 3) {}
 
 template <typename T, typename K>
-constexpr T pi_3_series<T, K>::a_n(const K n)
+constexpr T pi_3_series<T, K>::operator()(K n) const
 {
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
@@ -1116,14 +1120,14 @@ public:
 	* @param n The number of the term
 	* @return nth term of the series
 	*/
-	[[nodiscard]] constexpr virtual T a_n(const K n);
+	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
 template <typename T, typename K>
 pi_4_series<T, K>::pi_4_series() : series_base<T, K>(0, 0.25 * std::numbers::pi) {}
 
 template <typename T, typename K>
-constexpr T pi_4_series<T, K>::a_n(const K n)
+constexpr T pi_4_series<T, K>::operator()(K n) const
 {
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
@@ -1147,14 +1151,14 @@ public:
 	* @param n The number of the term
 	* @return nth term of the series
 	*/
-	[[nodiscard]] constexpr virtual T a_n(const K n);
+	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
 template <typename T, typename K>
 pi_squared_6_minus_one_series<T, K>::pi_squared_6_minus_one_series() : series_base<T, K>(0, std::fma(std::numbers::pi / 6, std::numbers::pi, -1)) {}
 
 template <typename T, typename K>
-constexpr T pi_squared_6_minus_one_series<T, K>::a_n(const K n)
+constexpr T pi_squared_6_minus_one_series<T, K>::operator()(K n) const
 {
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
@@ -1178,14 +1182,14 @@ public:
 	* @param n The number of the term
 	* @return nth term of the series
 	*/
-	[[nodiscard]] constexpr virtual T a_n(const K n);
+	[[nodiscard]] constexpr virtual T operator()(K n) const const;
 };
 
 template <typename T, typename K>
 three_minus_pi_series<T, K>::three_minus_pi_series() : series_base<T, K>(0, 3 - std::numbers::pi) {}
 
 template <typename T, typename K>
-constexpr T three_minus_pi_series<T, K>::a_n(const K n)
+constexpr T three_minus_pi_series<T, K>::operator()(K n) const
 {
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");

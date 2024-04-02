@@ -67,10 +67,10 @@ void cmp_a_n_and_transform(const int n, const int order, const series_templ&& se
 	{
 		try
 		{
-			std::cout << "a_" << i << " : " << series->a_n(i) << std::endl;
+			std::cout << "a_" << i << " : " << (*series)(i) << std::endl;
 			std::cout << "t_" << i << " : " << test->operator()(i, order) - test->operator()(i - 1, order) << std::endl;
 			std::cout << "t_" << i << " of order " << order << " - a_" << i
-				<< " : " << (test->operator()(i, order) - test->operator()(i - 1, order)) - series->a_n(i) << std::endl;
+				<< " : " << (test->operator()(i, order) - test->operator()(i - 1, order)) - (*series)(i) << std::endl;
 		}
 		catch (std::domain_error& e)
 		{
@@ -136,8 +136,8 @@ void cmp_transformations(const int n, const int order, const series_templ&& seri
 	test_1->print_info();
 	std::cout << "The transformation #2 is ";
 	test_2->print_info();
-	auto diff_1 = series->a_n(0);
-	auto diff_2 = series->a_n(0);
+	auto diff_1 = (*series)(0);
+	auto diff_2 = (*series)(0);
 	for (int i = 1; i <= n; ++i)
 	{
 		try
