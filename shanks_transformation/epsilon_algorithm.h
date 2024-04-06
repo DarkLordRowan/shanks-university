@@ -43,7 +43,6 @@ epsilon_algorithm<T, K, series_templ>::epsilon_algorithm(const series_templ& ser
 template <typename T, typename K, typename series_templ>
 T epsilon_algorithm<T, K, series_templ>::operator()(const K n, const int order) const
 {
-	// computing eps_(2*order)(S_n) as it is Shanks's transformation e_order(S_n) 
 	int m = 2 * order;
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
@@ -52,23 +51,25 @@ T epsilon_algorithm<T, K, series_templ>::operator()(const K n, const int order) 
 	else if (order == 0)
 		return this->series->S_n(n);
 
-	std::vector<T> e(m + 1, 0);
+	std::vector<T> e0(m + n + 1, 0);
+	std::vector<T> e1(m + n, 0);
 	T diff, temp1, temp2;
-	for (int j = m; j > 0; --j)
+	for (int j = m + n; j >= 0; --j)
 	{
-		e[j] = this->series->S_n(n + j);
-	}
-	temp2 = 0;
-
-	for (int j = m; j > 0; j--)
-	{
-		temp1 = temp2;
-		temp2 = e[j - 1];
-		diff = e[j] - temp2;
-		if (!std::isfinite(abs(1 / diff)))
-			throw std::overflow_error("division by zero");
-		e[j - 1] = 1/diff + temp1;
+		e0[j] = this->series->S_n(j);
 	}
 
-	return e[0];
+	int max_ind = m + n;
+	for (int i = 0; i < m; ++i)
+	{
+		for (int j = 0; j < max_ind; ++j)
+		{
+			e1[j] += 1.0 / (e0[j + 1] - e0[j]);
+		}
+		--max_ind;
+		std::swap(e0, e1);
+		e1.erase(e1.begin());
+	}
+
+	return e0[n-1];
 }
