@@ -1162,7 +1162,7 @@ constexpr T pi_squared_6_minus_one_series<T, K>::operator()(K n) const
 {
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
-	return n ? 1.0 / (n * n * n + n * n) : 0;
+	return n ? 1.0 / (n * n * (n + 1)) : 0;
 }
 
 /**
@@ -1194,4 +1194,128 @@ constexpr T three_minus_pi_series<T, K>::operator()(K n) const
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
 	return n ? series_base<T, K>::minus_one_raised_to_power_n(n) / (n * (n + 1) * (2 * n + 1)) : 0;
+}
+
+/**
+* @brief Numerical series representation of 1/12
+* @authors Pashkov B.B.
+* @tparam T The type of the elements in the series, K The type of enumerating integer
+*/
+template <typename T, typename K>
+class one_twelfth_series : public series_base<T, K>
+{
+public:
+	one_twelfth_series();
+
+	/**
+	* @brief Computes the nth term of the Numerical series of 1 / 12
+	* @authors Pashkov B.B.
+	* @param n The number of the term
+	* @return nth term of the series
+	*/
+	[[nodiscard]] constexpr virtual T operator()(K n) const const;
+};
+
+template <typename T, typename K>
+one_twelfth_series<T, K>::one_twelfth_series() : series_base<T, K>(0, 1 / 12) {}
+
+template <typename T, typename K>
+constexpr T one_twelfth_series<T, K>::operator()(K n) const
+{
+	if (n < 0)
+		throw std::domain_error("negative integer in the input");
+	return 1.0 / ((2 * n + 1) * (2 * n + 3) * (2 * n + 5));
+}
+
+/**
+* @brief Numerical series representation of pi/8 - 1/3
+* @authors Pashkov B.B.
+* @tparam T The type of the elements in the series, K The type of enumerating integer
+*/
+template <typename T, typename K>
+class eighth_pi_m_one_third_series : public series_base<T, K>
+{
+public:
+	eighth_pi_m_one_third_series();
+
+	/**
+	* @brief Computes the nth term of the Numerical series of pi/8 - 1/3
+	* @authors Pashkov B.B.
+	* @param n The number of the term
+	* @return nth term of the series
+	*/
+	[[nodiscard]] constexpr virtual T operator()(K n) const const;
+};
+
+template <typename T, typename K>
+eighth_pi_m_one_third_series<T, K>::eighth_pi_m_one_third_series() : series_base<T, K>(0, std::numbers::pi / 8 - 1 / 3) {}
+
+template <typename T, typename K>
+constexpr T eighth_pi_m_one_third_series<T, K>::operator()(K n) const
+{
+	if (n < 0)
+		throw std::domain_error("negative integer in the input");
+	return series_base<T, K>::minus_one_raised_to_power_n(n) / ((2 * n + 1) * (2 * n + 3) * (2 * n + 5));
+}
+
+/**
+* @brief Numerical series representation of (pi^2 - 9) / 3
+* @authors Pashkov B.B.
+* @tparam T The type of the elements in the series, K The type of enumerating integer
+*/
+template <typename T, typename K>
+class one_third_pi_squared_m_nine_series : public series_base<T, K>
+{
+public:
+	one_third_pi_squared_m_nine_series();
+
+	/**
+	* @brief Computes the nth term of the Numerical series of (pi^2 - 9) / 3
+	* @authors Pashkov B.B.
+	* @param n The number of the term
+	* @return nth term of the series
+	*/
+	[[nodiscard]] constexpr virtual T operator()(K n) const const;
+};
+
+template <typename T, typename K>
+one_third_pi_squared_m_nine_series<T, K>::one_third_pi_squared_m_nine_series() : series_base<T, K>(0, std::fma(std::numbers::pi, std::numbers::pi, -9) / 3) {}
+
+template <typename T, typename K>
+constexpr T one_third_pi_squared_m_nine_series<T, K>::operator()(K n) const
+{
+	if (n < 0)
+		throw std::domain_error("negative integer in the input");
+	return n ? 1.0 / (n * n * (n + 1) * (n + 1)) : 0;
+}
+
+/**
+* @brief Numerical series representation of 4 * ln2 - 3
+* @authors Pashkov B.B.
+* @tparam T The type of the elements in the series, K The type of enumerating integer
+*/
+template <typename T, typename K>
+class four_ln2_m_3_series : public series_base<T, K>
+{
+public:
+	four_ln2_m_3_series();
+
+	/**
+	* @brief Computes the nth term of the Numerical series of 4 * ln2 - 3
+	* @authors Pashkov B.B.
+	* @param n The number of the term
+	* @return nth term of the series
+	*/
+	[[nodiscard]] constexpr virtual T operator()(K n) const const;
+};
+
+template <typename T, typename K>
+four_ln2_m_3_series<T, K>::four_ln2_m_3_series() : series_base<T, K>(0, std::fma(4, std::log(2), -3)) {}
+
+template <typename T, typename K>
+constexpr T four_ln2_m_3_series<T, K>::operator()(K n) const
+{
+	if (n < 0)
+		throw std::domain_error("negative integer in the input");
+	return n ? series_base<T, K>::minus_one_raised_to_power_n(n) / (n * n * (n + 1) * (n + 1)) : 0;
 }
