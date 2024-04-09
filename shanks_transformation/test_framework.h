@@ -43,7 +43,11 @@ enum series_id_t {
 	pi_3_series_id,
 	pi_4_series_id,
 	pi_squared_6_minus_one_series_id,
-	three_minus_pi_series_id
+	three_minus_pi_series_id,
+	one_twelfth_series_id,
+	eighth_pi_m_one_third_series_id,
+	one_third_pi_squared_m_nine_series_id,
+	four_ln2_m_3_series_id
 };
 
 enum test_function_id_t {
@@ -88,7 +92,11 @@ inline static void print_series_info()
 		"23 - pi_3_series" << std::endl <<
 		"24 - pi_4_series" << std::endl <<
 		"25 - pi_squared_6_minus_one_series" << std::endl <<
-		"26 - three_minus_pi_series" << std::endl;
+		"26 - three_minus_pi_series" << std::endl <<
+		"27 - one_twelfth_series" << std::endl <<
+		"28 - eighth_pi_m_one_third_series" << std::endl <<
+		"29 - one_third_pi_squared_m_nine_series" << std::endl <<
+		"30 - four_ln2_m_3_series" << std::endl;
 }
 
 /**
@@ -230,11 +238,21 @@ inline static void main_testing_function()
 	case series_id_t::three_minus_pi_series_id:
 		series.reset(new three_minus_pi_series<T, K>());
 		break;
+	case series_id_t::one_twelfth_series_id:
+		series.reset(new one_twelfth_series<T, K>());
+		break;
+	case series_id_t::eighth_pi_m_one_third_series_id:
+		series.reset(new eighth_pi_m_one_third_series<T, K>());
+		break;
+	case series_id_t::one_third_pi_squared_m_nine_series_id:
+		series.reset(new one_third_pi_squared_m_nine_series<T, K>());
+		break;
+	case series_id_t::four_ln2_m_3_series_id:
+		series.reset(new four_ln2_m_3_series<T, K>());
+		break;
 	default:
 		throw std::domain_error("wrong series_id");
 	}
-
-
 
 	//choosing transformation
 	print_transformation_info();

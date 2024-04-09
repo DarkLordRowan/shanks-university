@@ -27,6 +27,10 @@
  * 24 - pi_4_series
  * 25 - pi_squared_6_minus_one_series
  * 26 - three_minus_pi_series
+ * 27 - one_twelfth_series
+ * 28 - eighth_pi_m_one_third_series
+ * 29 - one_third_pi_squared_m_nine_series
+ * 30 - four_ln2_m_3_series
  * @brief This file contains series base class and derived classes of various serieses (e.g. exp(x), ch(x))
  */
 
