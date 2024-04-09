@@ -415,7 +415,7 @@ private:
 template <typename T, typename K>
 bin_series<T, K>::bin_series(T x, T alpha) : series_base<T, K>(x, std::pow(1 + x, alpha)), alpha(alpha)
 {
-	if (std::abs(x) >= 1)
+	if (std::abs(x) > 1)
 		throw std::domain_error("series diverge");
 }
 
@@ -708,7 +708,7 @@ public:
 template <typename T, typename K>
 inverse_1mx_series<T, K>::inverse_1mx_series(T x) : series_base<T, K>(x, 1 / (1 - x))
 {
-	if (std::abs(this->x) > 1 || this->x == 1)
+	if (std::abs(this->x) >= 1)
 		throw std::domain_error("series diverge");
 }
 
