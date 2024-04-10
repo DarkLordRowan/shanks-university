@@ -675,7 +675,7 @@ constexpr T half_asin_two_x_series<T, K>::operator()(K n) const
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
 	const auto _fact_n = this->fact(n);
-	return this->fact(2 * n) * std::pow(this->x, 2 * n + 1) / (_fact_n * _fact_n * (2 * n + 1));
+	return this->fact(2 * n) * std::pow(this->x, 2 * n) / (_fact_n * _fact_n * (2 * n + 1)); // p. 566 typo
 }
 
 /**
@@ -842,6 +842,8 @@ m_fact_1mx_mp1_inverse_series<T, K>::m_fact_1mx_mp1_inverse_series(T x, K m) : s
 {
 	if (!isfinite(series_base<T,K>::sum)) // sum = this->fact(m) / pow(1 - x, m + 1))
 		throw std::overflow_error("sum is too big");
+	if (std::abs(this->x) >= 1) // p. 564 typo
+		throw std::domain_error("series diverge");
 }
 
 template <typename T, typename K>
@@ -1322,4 +1324,87 @@ constexpr T four_ln2_m_3_series<T, K>::operator()(K n) const
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
 	return n ? series_base<T, K>::minus_one_raised_to_power_n(n) / (n * n * (n + 1) * (n + 1)) : 0;
+}
+
+/**
+* @brief Maclaurin series of Lambert W_0 function
+* @authors Pashkov B.B.
+* @tparam T The type of the elements in the series, K The type of enumerating integer
+*/
+template <typename T, typename K>
+class Lambert_W_0_series : public series_base<T, K>
+{
+public:
+	Lambert_W_0_series() = delete;
+
+	/**
+	* @brief Parameterized constructor to initialize the series with function argument and sum
+	* @authors Pashkov B.B.
+	* @param x The argument for function series
+	*/
+	Lambert_W_0_series(T x);
+
+	/**
+	* @brief Computes the nth term of the Lambert W_0 function series
+	* @authors Pashkov B.B.
+	* @param n The number of the term
+	* @return nth term of the series
+	*/
+	[[nodiscard]] constexpr virtual T operator()(K n) const;
+};
+
+template <typename T, typename K>
+Lambert_W_0_series<T, K>::Lambert_W_0_series(T x) : series_base<T, K>(x, 28112002) 
+{
+	if (std::abs(this->x) >= std::exp(-1)
+		throw std::domain_error("series diverge");
+}
+
+template <typename T, typename K>
+constexpr T Lambert_W_0_series<T, K>::operator()(K n) const
+{
+	if (n < 0)
+		throw std::domain_error("negative integer in the input");
+	const T result = this->minus_one_raised_to_power_n(n - 1) * std::pow(n, n - 1) * std::pow(this->x, n) / this->fact(n);
+	if (!isfinite(result))
+		throw std::overflow_error("operator() is too big");
+	return result;
+}
+
+/**
+* @brief Maclaurin series of exp(-cos(x)) * sin(sin(x))
+* @authors Pashkov B.B.
+* @tparam T The type of the elements in the series, K The type of enumerating integer
+*/
+template <typename T, typename K>
+class exp_m_cos_x_sinsin_x_series : public series_base<T, K>
+{
+public:
+	exp_m_cos_x_sinsin_x_series() = delete;
+
+	/**
+	* @brief Parameterized constructor to initialize the series with function argument and sum
+	* @authors Pashkov B.B.
+	* @param x The argument for function series
+	*/
+	exp_m_cos_x_sinsin_x_series(T x);
+
+	/**
+	* @brief Computes the nth term of the exp(-cos(x)) * sin(sin(x)) series
+	* @authors Pashkov B.B.
+	* @param n The number of the term
+	* @return nth term of the series
+	*/
+	[[nodiscard]] constexpr virtual T operator()(K n) const;
+};
+
+template <typename T, typename K>
+exp_m_cos_x_sinsin_x_series<T, K>::exp_m_cos_x_sinsin_x_series(T x) : series_base<T, K>(x, std::exp(-std::cos(x)) * std::sin(std::sin(x))) {}
+
+template <typename T, typename K>
+constexpr T exp_m_cos_x_sinsin_x_series<T, K>::operator()(K n) const
+{
+	if (n < 0)
+		throw std::domain_error("negative integer in the input");
+	return this->minus_one_raised_to_power_n(n) * std::sin(n * x) / this->fact(n);
 }

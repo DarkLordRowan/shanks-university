@@ -47,7 +47,9 @@ enum series_id_t {
 	one_twelfth_series_id,
 	eighth_pi_m_one_third_series_id,
 	one_third_pi_squared_m_nine_series_id,
-	four_ln2_m_3_series_id
+	four_ln2_m_3_series_id,
+	Lambert_W_0_series_id,
+	exp_m_cos_x_sinsin_x_series_id
 };
 
 enum test_function_id_t {
@@ -96,7 +98,9 @@ inline static void print_series_info()
 		"27 - one_twelfth_series" << std::endl <<
 		"28 - eighth_pi_m_one_third_series" << std::endl <<
 		"29 - one_third_pi_squared_m_nine_series" << std::endl <<
-		"30 - four_ln2_m_3_series" << std::endl;
+		"30 - four_ln2_m_3_series" << std::endl <<
+		"31 - Lambert_W_0_series" << std::endl <<
+		"32 - exp_m_cos_x_sinsin_x_series" << std::endl;
 }
 
 /**
@@ -148,7 +152,7 @@ inline static void main_testing_function()
 	std::cin >> x;
 
 	//choosing series (cont.)
-	std::set<int> alternating_series = { 2, 3, 7, 11, 15, 18, 19 };
+	std::set<int> alternating_series = { 2, 3, 7, 11, 15, 18, 19, 20, 21, 24, 26, 28, 30, 31, 32 };
 	switch (series_id)
 	{
 	case series_id_t::exp_series_id:

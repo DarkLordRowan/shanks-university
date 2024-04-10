@@ -63,7 +63,7 @@ T epsilon_algorithm<T, K, series_templ>::operator()(const K n, const int order) 
 	{
 		for (int j = 0; j < max_ind; ++j)
 		{
-			if (!std::isfinite(e0[j + 1] - e0[j])
+			if (!std::isfinite(e0[j + 1] - e0[j]))
 				throw std::overflow_error("division by zero");
 			e1[j] += 1.0 / (e0[j + 1] - e0[j]);
 		}
