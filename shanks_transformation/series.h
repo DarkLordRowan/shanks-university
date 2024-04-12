@@ -86,6 +86,28 @@ public:
 	* @authors Bolshakov M.P.
 	*/
 	[[nodiscard]] constexpr const T get_sum() const;
+
+	/**
+	* @brief factorial n!
+	* @authors Bolshakov M.P.
+	* @return n!
+	*/
+	[[nodiscard]] constexpr static const K fact(K n);
+
+	/**
+	* @brief binomial coefficient C^n_k
+	* @authors Bolshakov M.P.
+	* @return combinations(n,k)
+	*/
+	[[nodiscard]] constexpr static const T binomial_coefficient(const T n, const K k);
+
+	/**
+	* @brief evaluates (-1)^n
+	* @authors Bolshakov M.P.
+	* @return (-1)^n
+	*/
+	[[nodiscard]] constexpr static const T minus_one_raised_to_power_n(K n);
+
 protected:
 	/**
 	* @brief Parameterized constructor to initialize the series with function argument and sum of the series
@@ -108,28 +130,6 @@ protected:
 	* @authors Bolshakov M.P.
 	*/
 	const T sum;
-
-	/**
-	* @brief factorial n!
-	* @authors Bolshakov M.P.
-	* @return n!
-	*/
-	[[nodiscard]] constexpr static const K fact(K n);
-
-	/**
-	* @brief binomial coefficient C^n_k
-	* @authors Bolshakov M.P.
-	* @return combinations(n,k)
-	*/
-	[[nodiscard]] constexpr static const T binomial_coefficient(const T n, const K k);
-
-
-	/**
-	* @brief evaluates (-1)^n
-	* @authors Bolshakov M.P.
-	* @return (-1)^n
-	*/
-	[[nodiscard]] constexpr static const T minus_one_raised_to_power_n(K n);
 };
 
 template <typename T, typename K>

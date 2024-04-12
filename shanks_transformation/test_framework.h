@@ -9,12 +9,14 @@
 #include <set>
 #include "shanks_transformation.h"
 #include "epsilon_algorithm.h"
+#include "levin_algorithm.h"
 #include "test_functions.h"
 
 enum transformation_id_t {
 	null_transformation_id, 
 	shanks_transformation_id, 
-	epsilon_algorithm_id
+	epsilon_algorithm_id,
+	levin_algorithm_id
 };
 enum series_id_t {
 	null_series_id, 
@@ -103,14 +105,15 @@ inline static void print_series_info()
 
 /**
 * @brief prints out all available transformations for testing
-* @authors Bolshakov M.P.
+* @authors Bolshakov M.P. Kreinin R.G.
 */
 inline static void print_transformation_info()
 {
 	std::cout << "Which transformation would you like to test?" << std::endl <<
 		"List of currently avaiable series:" << std::endl <<
 		"1 - Shanks Transformation" << std::endl <<
-		"2 - Epsilon Algorithm" << std::endl;
+		"2 - Epsilon Algorithm" << std::endl <<
+		"3 - Levin Algorithm" << std::endl;
 }
 
 /**
@@ -132,7 +135,7 @@ inline static void print_test_function_info()
 * @brief The main testing function
 * This function provides a convenient and interactive way to test out the convergence acceleration of various series
 * @tparam T The type of the elements in the series, K The type of enumerating integer
-* @authors Bolshakov M.P.
+* @authors Bolshakov M.P. Kreynin R.G.
 */
 template <typename T, typename K>
 inline static void main_testing_function()
@@ -275,6 +278,9 @@ inline static void main_testing_function()
 	case transformation_id_t::epsilon_algorithm_id:
 		transform.reset(new epsilon_algorithm<T, K, decltype(series.get())>(series.get()));
 		break;
+	case transformation_id_t::levin_algorithm_id:
+		transform.reset(new levin_algorithm<T, K, decltype(series.get())>(series.get()));
+		break;
 	default:
 		throw std::domain_error("wrong transformation_id");
 	}
@@ -300,17 +306,25 @@ inline static void main_testing_function()
 		break;
 	case test_function_id_t::cmp_transformations_id:
 	{
-		/*std::cout << "choose the type of the other";*/ //so far we've only got 2 transformations
+		int cmop_transformation_id = 0;
+		print_transformation_info();
+		std::cin >> cmop_transformation_id;
+
 		std::unique_ptr<series_acceleration<T, K, decltype(series.get())>> transform2;
-		if (transformation_id == 1)
+		if (cmop_transformation_id == 2)
 			transform2.reset(new epsilon_algorithm<T, K, decltype(series.get())>(series.get()));
-		else //transformation_id is 2
+		else if (cmop_transformation_id == 1)
 		{
 			if (alternating_series.contains(series_id))
 				transform2.reset(new shanks_transform_alternating<T, K, decltype(series.get())>(series.get()));
 			else
 				transform2.reset(new shanks_transform<T, K, decltype(series.get())>(series.get()));
 		}
+		else if (cmop_transformation_id == 3)
+		{
+			transform2.reset(new levin_algorithm<T, K, decltype(series.get())>(series.get()));
+		}
+
 		cmp_transformations(n, order, std::move(series.get()), std::move(transform.get()), std::move(transform2.get()));
 		break;
 	}
