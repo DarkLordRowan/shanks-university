@@ -1362,5 +1362,5 @@ constexpr T exp_m_cos_x_sinsin_x_series<T, K>::operator()(K n) const
 {
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
-	return this->minus_one_raised_to_power_n(n) * std::sin(n * x) / this->fact(n);
+	return this->minus_one_raised_to_power_n(n) * std::sin(n * this->x) / this->fact(n);
 }

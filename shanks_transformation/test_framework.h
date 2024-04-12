@@ -253,7 +253,7 @@ inline static void main_testing_function()
 		series.reset(new four_ln2_m_3_series<T, K>());
 		break;
 	case series_id_t::exp_m_cos_x_sinsin_x_series_id:
-		series.reset(new exp_m_cos_x_sinsin_x_series<T, K>());
+		series.reset(new exp_m_cos_x_sinsin_x_series<T, K>(x));
 		break;
 	default:
 		throw std::domain_error("wrong series_id");
