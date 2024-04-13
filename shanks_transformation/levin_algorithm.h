@@ -11,7 +11,7 @@
 
  /**
   * @brief Levin Algorithm class template.
-  * @authors Kreinin R.G.
+  * @authors  Kreinin R.G. Bolshakov M.P.
   * @tparam T The type of the elements in the series, K The type of enumerating integer, series_templ is the type of series whose convergence we accelerate
   */
 template <typename T, typename K, typename series_templ>
@@ -20,7 +20,7 @@ class levin_algorithm : public series_acceleration<T, K, series_templ>
 public:
 	/**
 	* @brief Parameterized constructor to initialize the Levin Algorithm.
-	* @authors Kreinin R.G.
+	* @authors Kreinin R.G. Bolshakov M.P.
 	* @param series The series class object to be accelerated
 	*/
 	levin_algorithm(const series_templ& series);
@@ -50,33 +50,26 @@ T levin_algorithm<T, K, series_templ>::operator()(const K n, const int order) co
 	else if (order == 0)
 		return this->series->S_n(n);
 
-	T numerator = 0;
-	T denominator = 0;
+	T numerator = 0, denominator = 0, C_njk, S_nj, g_n, rest;
 
-	for (int j = 0; j < order; j++)
+	for (int j = 0; j < order; ++j)
 	{
-		T rest = this->series->minus_one_raised_to_power_n(j) * this->series->binomial_coefficient(order, j);
+		rest = this->series->minus_one_raised_to_power_n(j) * this->series->binomial_coefficient(order, j);
 
-		T C_jkn_U = std::pow((n + j + 1), (order - 1));
-		T C_jkn_L = std::pow((n + order + 1), (order - 1));
+		C_njk = (std::pow((n + j + 1), (order - 1))) / (std::pow((n + order + 1), (order - 1)));
 
-		if (!std::isfinite(C_jkn_L))
-			throw std::overflow_error("division by zero");
+		S_nj = this->series->S_n(n + j);
 
-		T C_njk = C_jkn_U / C_jkn_L;
+		g_n = 1 / (this->series->operator()(n + j));
 
-		T S_nj = this->series->S_n(n + j);
-
-		double g_n = this->series->S_n(n + j) - this->series->S_n(n + j - 1);
-
-		if (!std::isfinite(g_n))
-			throw std::overflow_error("division by zero");
-
-		numerator += rest * C_njk * S_nj / g_n;
-		denominator += rest * C_njk / g_n;
+		numerator += rest * C_njk * S_nj * g_n;
+		denominator += rest * C_njk * g_n;
 	}
-	if (!std::isfinite(denominator))
+	
+	numerator = numerator / denominator;
+
+	if (!std::isfinite(numerator))
 		throw std::overflow_error("division by zero");
 
-	return numerator / denominator;
+	return numerator;
 }
