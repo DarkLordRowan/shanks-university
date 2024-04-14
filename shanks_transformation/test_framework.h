@@ -10,13 +10,15 @@
 #include "shanks_transformation.h"
 #include "epsilon_algorithm.h"
 #include "levin_algorithm.h"
+#include "epsilon_algorithm_two.h"
 #include "test_functions.h"
 
 enum transformation_id_t {
-	null_transformation_id, 
-	shanks_transformation_id, 
+	null_transformation_id,
+	shanks_transformation_id,
 	epsilon_algorithm_id,
-	levin_algorithm_id
+	levin_algorithm_id,
+	epsilon_algorithm_2_id
 };
 enum series_id_t {
 	null_series_id, 
@@ -113,7 +115,8 @@ inline static void print_transformation_info()
 		"List of currently avaiable series:" << std::endl <<
 		"1 - Shanks Transformation" << std::endl <<
 		"2 - Epsilon Algorithm" << std::endl <<
-		"3 - Levin Algorithm" << std::endl;
+		"3 - Levin Algorithm" << std::endl <<
+		"4 - Epsilon Algorithm V-2" << std::endl;
 }
 
 /**
@@ -281,6 +284,9 @@ inline static void main_testing_function()
 	case transformation_id_t::levin_algorithm_id:
 		transform.reset(new levin_algorithm<T, K, decltype(series.get())>(series.get()));
 		break;
+	case transformation_id_t::epsilon_algorithm_2_id:
+		transform.reset(new epsilon_algorithm_two<T, K, decltype(series.get())>(series.get()));
+		break;
 	default:
 		throw std::domain_error("wrong transformation_id");
 	}
@@ -311,22 +317,29 @@ inline static void main_testing_function()
 		std::cin >> cmop_transformation_id;
 
 		std::unique_ptr<series_acceleration<T, K, decltype(series.get())>> transform2;
-		if (cmop_transformation_id == 2)
-			transform2.reset(new epsilon_algorithm<T, K, decltype(series.get())>(series.get()));
-		else if (cmop_transformation_id == 1)
+		
+		switch (cmop_transformation_id)
 		{
+		case 1:
 			if (alternating_series.contains(series_id))
 				transform2.reset(new shanks_transform_alternating<T, K, decltype(series.get())>(series.get()));
 			else
 				transform2.reset(new shanks_transform<T, K, decltype(series.get())>(series.get()));
-		}
-		else if (cmop_transformation_id == 3)
-		{
+			break;
+		case 2:
+			transform2.reset(new epsilon_algorithm<T, K, decltype(series.get())>(series.get()));
+			break;
+		case 3:
 			transform2.reset(new levin_algorithm<T, K, decltype(series.get())>(series.get()));
+			break;
+		case 4:
+			transform2.reset(new epsilon_algorithm_two<T, K, decltype(series.get())>(series.get()));
+			break;
+		default:
+			throw std::domain_error("wrong algorithm id");
 		}
 
 		cmp_transformations(n, order, std::move(series.get()), std::move(transform.get()), std::move(transform2.get()));
-		break;
 	}
 	case test_function_id_t::eval_transform_time_id:
 		eval_transform_time(n, order, std::move(series.get()), std::move(transform.get()));

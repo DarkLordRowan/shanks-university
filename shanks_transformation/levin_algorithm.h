@@ -1,6 +1,6 @@
 /**
  * @file epsilon_DLR.h
- * @brief This file contains the declaration of the Levin algorithm class, Second implementation of Epsilon Algorithm class.
+ * @brief This file contains the declaration of the Levin algorithm class.
  */
 
 #pragma once
