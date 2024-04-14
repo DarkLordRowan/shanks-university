@@ -1,5 +1,5 @@
 /**
- * @file epsilon_DLR.h
+ * @file levin_algorithm.h
  * @brief This file contains the declaration of the Levin algorithm class.
  */
 
@@ -11,7 +11,7 @@
 
  /**
   * @brief Levin Algorithm class template.
-  * @authors  Kreinin R.G. Bolshakov M.P.
+  * @authors  Kreinin R.G.
   * @tparam T The type of the elements in the series, K The type of enumerating integer, series_templ is the type of series whose convergence we accelerate
   */
 template <typename T, typename K, typename series_templ>
@@ -20,7 +20,6 @@ class levin_algorithm : public series_acceleration<T, K, series_templ>
 public:
 	/**
 	* @brief Parameterized constructor to initialize the Levin Algorithm.
-	* @authors Kreinin R.G. Bolshakov M.P.
 	* @param series The series class object to be accelerated
 	*/
 	levin_algorithm(const series_templ& series);

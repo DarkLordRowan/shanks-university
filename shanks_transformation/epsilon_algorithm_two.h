@@ -1,5 +1,5 @@
 /**
- * @file epsilon_DLR.h
+ * @file epsilon_algorithm_two.h
  * @brief This file contains the declaration of the second implementation of Epsilon Algorithm class.
  */
 
@@ -20,7 +20,6 @@ class epsilon_algorithm_two : public series_acceleration<T, K, series_templ>
 public:
 	/**
 	* @brief Parameterized constructor to initialize the Epsilon Algorithm MK-2.
-	* @authors Kreinin R.G. Bolshakov M.P.
 	* @param series The series class object to be accelerated
 	*/
 	epsilon_algorithm_two(const series_templ& series);
