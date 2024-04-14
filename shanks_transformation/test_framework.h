@@ -351,6 +351,15 @@ inline static void main_testing_function()
 		case 4:
 			transform2.reset(new epsilon_algorithm_two<T, K, decltype(series.get())>(series.get()));
 			break;
+		case 5:
+			transform2.reset(new u_levi_sidi_algorithm<T, K, decltype(series.get())>(series.get()));
+			break;
+		case 6:
+			transform2.reset(new t_levi_sidi_algorithm<T, K, decltype(series.get())>(series.get()));
+			break;
+		case 7:
+			transform2.reset(new v_levi_sidi_algorithm<T, K, decltype(series.get())>(series.get()));
+			break;
 		default:
 			throw std::domain_error("wrong algorithm id");
 		}
