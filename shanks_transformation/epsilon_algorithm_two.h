@@ -52,11 +52,11 @@ T epsilon_algorithm_two<T, K, series_templ>::operator()(const K n, const int ord
 
 	int k = m + n;
 
-	std::vector<std::vector<T>> eps(4, std::vector<T>(k + 1, 0));
+	std::vector<std::vector<T>>* eps = new std::vector<std::vector<T>>(4, std::vector<T>(k + 1, 0));
 
 	for (int j = k; j >= 0; --j)
 	{
-		eps[3][j] = this->series->S_n(j);
+		(*eps)[3][j] = this->series->S_n(j);
 	}
 
 	T a = 0, a1 = 0, a2 = 0;
@@ -65,43 +65,46 @@ T epsilon_algorithm_two<T, K, series_templ>::operator()(const K n, const int ord
 	{
 		for (int i = 0; i != k; ++i)
 		{
-			eps[0][i] = eps[2][i + 1] + 1 / (eps[3][i + 1] - eps[3][i]);
+			(*eps)[0][i] = (*eps)[2][i + 1] + 1 / ((*eps)[3][i + 1] - (*eps)[3][i]);
 
-			if (!std::isfinite(eps[0][i]) && i + 2 <= k) //1 failsafe
+			if (!std::isfinite((*eps)[0][i]) && i + 2 <= k) //1 failsafe
 			{
-				a2 = 1 / eps[2][i + 1];
+				a2 = 1 / (*eps)[2][i + 1];
 
-				a1 = 1 / (1 - (a2 * eps[2][i + 2]));
-				a = eps[2][i + 2] * a1;
+				a1 = 1 / (1 - (a2 * (*eps)[2][i + 2]));
+				a = (*eps)[2][i + 2] * a1;
 
-				a1 = 1 / (1 - (a2 * eps[2][i]));
-				a += eps[2][i] * a1;
+				a1 = 1 / (1 - (a2 * (*eps)[2][i]));
+				a += (*eps)[2][i] * a1;
 
-				a1 = 1 / (1 - (a2 * eps[0][i + 2]));
-				a -= eps[0][i + 2] * a1;
+				a1 = 1 / (1 - (a2 * (*eps)[0][i + 2]));
+				a -= (*eps)[0][i + 2] * a1;
 
-				eps[0][i] = 1 / eps[2][i + 1];
-				eps[0][i] = 1 / (1 + a * eps[0][i]);
-				eps[0][i] = eps[0][i] * a;
+				(*eps)[0][i] = 1 / (*eps)[2][i + 1];
+				(*eps)[0][i] = 1 / (1 + a * (*eps)[0][i]);
+				(*eps)[0][i] = (*eps)[0][i] * a;
 			}
-			if (!std::isfinite(eps[0][i]))
+			if (!std::isfinite((*eps)[0][i]))
 			{
-				eps[0][i] = eps[2][i];
+				(*eps)[0][i] = (*eps)[2][i];
 			}
 		}
-		std::swap(eps[0], eps[1]);
-		std::swap(eps[1], eps[2]);
-		std::swap(eps[2], eps[3]);
+		std::swap((*eps)[0], (*eps)[1]);
+		std::swap((*eps)[1], (*eps)[2]);
+		std::swap((*eps)[2], (*eps)[3]);
 
 		--k;
 	}
+	T result = (*eps)[0][0];
 
 	if (n % 2 != 0)
 	{
-		return eps[3][0];
+		result = (*eps)[3][0];
 	}
 
-	return eps[0][0];
+	delete eps;
+
+	return result;
 }
 
 

@@ -14,8 +14,8 @@ int main(void)
 {
 	try
 	{
-		//main_testing_function<long double, long long int>();
-		//main_testing_function<double, int>();
+		main_testing_function<long double, long long int>();
+		main_testing_function<double, int>();
 		main_testing_function<float, short int>();
 	}
 	catch (std::domain_error& e)

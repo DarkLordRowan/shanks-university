@@ -146,7 +146,7 @@ void cmp_transformations(const int n, const int order, const series_templ&& seri
 			diff_2 = series->get_sum() - test_2->operator()(i, order);
 			std::cout << "The transformation #1: S - T_" << i << " : " << diff_1 << std::endl;
 			std::cout << "The transformation #2: S - T_" << i << " : " << diff_2 << std::endl;
-			if (std::abs(diff_1) > std::abs(diff_2))
+			if (std::abs(diff_1) < std::abs(diff_2))
 				std::cout << "The transformation #1 is faster" << std::endl;
 			else
 				std::cout << "The transformation #2 is faster" << std::endl;
