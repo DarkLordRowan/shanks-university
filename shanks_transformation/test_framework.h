@@ -22,7 +22,10 @@ enum transformation_id_t {
 	epsilon_algorithm_2_id,
 	u_S_transformation,
 	t_S_transformation,
-	v_S_transformation
+	v_S_transformation,
+	rec_u_S_transformation,
+	rec_v_S_transformation,
+	rec_t_S_transformation
 };
 enum series_id_t {
 	null_series_id, 
@@ -123,7 +126,10 @@ inline static void print_transformation_info()
 		"4 - Epsilon Algorithm V-2" << std::endl <<
 		"5 - u S-transformation" << std::endl <<
 		"6 - t S-transformation" << std::endl <<
-		"7 - v S-transformation" << std::endl;
+		"7 - v S-transformation" << std::endl <<
+		"8 - recursive u S-transformation" << std::endl <<
+		"9 - recursive t S-transformation" << std::endl <<
+		"10 - recursive v S-transformation" << std::endl;
 }
 
 /**
@@ -303,6 +309,15 @@ inline static void main_testing_function()
 	case transformation_id_t::v_S_transformation:
 		transform.reset(new v_levi_sidi_algorithm<T, K, decltype(series.get())>(series.get()));
 		break;
+	case transformation_id_t::rec_u_S_transformation:
+		transform.reset(new recursive_u_levi_sidi_algorithm<T, K, decltype(series.get())>(series.get()));
+		break;
+	case transformation_id_t::rec_t_S_transformation:
+		transform.reset(new recursive_t_levi_sidi_algorithm<T, K, decltype(series.get())>(series.get()));
+		break;
+	case transformation_id_t::rec_v_S_transformation:
+		transform.reset(new recursive_v_levi_sidi_algorithm<T, K, decltype(series.get())>(series.get()));
+		break;
 	default:
 		throw std::domain_error("wrong transformation_id");
 	}
@@ -359,6 +374,15 @@ inline static void main_testing_function()
 			break;
 		case 7:
 			transform2.reset(new v_levi_sidi_algorithm<T, K, decltype(series.get())>(series.get()));
+			break;
+		case 8:
+			transform2.reset(new recursive_u_levi_sidi_algorithm<T, K, decltype(series.get())>(series.get()));
+			break;
+		case 9:
+			transform2.reset(new recursive_t_levi_sidi_algorithm<T, K, decltype(series.get())>(series.get()));
+			break;
+		case 10:
+			transform2.reset(new recursive_v_levi_sidi_algorithm<T, K, decltype(series.get())>(series.get()));
 			break;
 		default:
 			throw std::domain_error("wrong algorithm id");
