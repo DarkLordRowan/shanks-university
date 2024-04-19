@@ -12,6 +12,7 @@
 #include "levin_algorithm.h"
 #include "levin_sidi.h"
 #include "epsilon_algorithm_two.h"
+#include "chang_whynn_algorithm.h"
 #include "test_functions.h"
 
 enum transformation_id_t {
@@ -22,7 +23,8 @@ enum transformation_id_t {
 	epsilon_algorithm_2_id,
 	u_S_transformation,
 	t_S_transformation,
-	v_S_transformation
+	v_S_transformation,
+	chang_epsilon_algorithm
 };
 enum series_id_t {
 	null_series_id, 
@@ -123,7 +125,8 @@ inline static void print_transformation_info()
 		"4 - Epsilon Algorithm V-2" << std::endl <<
 		"5 - u S-transformation" << std::endl <<
 		"6 - t S-transformation" << std::endl <<
-		"7 - v S-transformation" << std::endl;
+		"7 - v S-transformation" << std::endl <<
+		"8 - Chang - Wynn - Epsilon Algorithm" << std::endl;
 }
 
 /**
@@ -303,6 +306,9 @@ inline static void main_testing_function()
 	case transformation_id_t::v_S_transformation:
 		transform.reset(new v_levi_sidi_algorithm<T, K, decltype(series.get())>(series.get()));
 		break;
+	case transformation_id_t::chang_epsilon_algorithm:
+		transform.reset(new chang_whynn_algorithm<T, K, decltype(series.get())>(series.get()));
+		break;
 	default:
 		throw std::domain_error("wrong transformation_id");
 	}
@@ -359,6 +365,9 @@ inline static void main_testing_function()
 			break;
 		case 7:
 			transform2.reset(new v_levi_sidi_algorithm<T, K, decltype(series.get())>(series.get()));
+			break;
+		case 8: 
+			transform2.reset(new chang_whynn_algorithm<T, K, decltype(series.get())>(series.get()));
 			break;
 		default:
 			throw std::domain_error("wrong algorithm id");
