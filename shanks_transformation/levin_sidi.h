@@ -134,7 +134,15 @@ protected:
 		return numerator;
 	}
 
-
+	/**
+	* @brief Default function to calculate S-tranformation recursively. Implemented u,t and v transformations. For more information see p. 57 8.3-5 [https://arxiv.org/pdf/math/0306302.pdf]
+	* Levin-Sidi or Factorial analog of Levin Transformation is effective for series that belong to b(1)/LIN/FAC and inferior on b(1)/LOG for more information see p. 369 and p.285 [http://servidor.demec.ufpr.br/CFD/bibliografia/MER/Sidi_2003.pdf]
+	* @authors Venajalainen
+	* @param k The number of terms in the partial sum.
+	* @param n the order of transformation
+	* @param remainder_func functor, whose returning w_n for t,u or v transformation
+	* @return The partial sum after the transformation.
+	*/
 	template<class remainderType>
 	T calculate_recursively(const K& k, const int& n, remainderType remainder_func) const {
 
@@ -155,10 +163,17 @@ protected:
 			for (int j = 0; j <= k - i; ++j) {
 				// n' = n + j
 				// k = i
-				T scale = BETA + n + j + i - 2;
+				//T scale = BETA + n + j + i - 2;
+
+				T scale1 = ((BETA + n + j + i) * (BETA + n + j + i - 1));
+				T scale2 = ((BETA + n + j + 2 * i) * (BETA + n + j + 2 * i - 1));
+				T scale = scale1 / scale2;
+
 				//std::cout << std::endl << "DENOMINATOR: " << (*D)[j] << " " << (*D)[j + 1] << std::endl;
-				(*D)[j] = (scale+i) * (*D)[j + 1] - scale * (*D)[j];
-				(*N)[j] = (scale+i) * (*N)[j + 1] - scale * (*N)[j];
+				//(*D)[j] = (scale+i) * (*D)[j + 1] - scale * (*D)[j];
+				//(*N)[j] = (scale+i) * (*N)[j + 1] - scale * (*N)[j];
+				(*D)[j] = ((*D)[j + 1]*scale2 - scale1 * (*D)[j])/scale2;
+				(*N)[j] = ((*N)[j + 1]*scale2 - scale1 * (*N)[j])/scale2;
 			}
 		}
 
