@@ -10,7 +10,10 @@
 #include <vector> // Include the vector library
 
  /**
- * @brief Epsilon Algorithm MK-2 class template.
+ * @brief Epsilon Algorithm MK-2 class template. "Scalar Epsilon Algorithm" 
+ //SOME RESULTS CONCERNING THE FUNDAMENTAL NATURE OF WYNN'S VECTOR EPSILON ALGORITHM - same algo + vector form
+ //On a Device for Computing the e (S ) Transformation - nothing new, just matrix
+ //euler algoritm A_Note_on_the_Generalised_Euler_Transformation-Wynn-1971 - has Euler, but for um = z^m * v_m
  * @authors  Kreinin R.G.
  * @tparam T The type of the elements in the series, K The type of enumerating integer, series_templ is the type of series whose convergence we accelerate
  */
@@ -41,74 +44,65 @@ epsilon_algorithm_two<T, K, series_templ>::epsilon_algorithm_two(const series_te
 template <typename T, typename K, typename series_templ>
 T epsilon_algorithm_two<T, K, series_templ>::operator()(const K n, const int order) const
 {
-	int m = 2 * order;
+    if (n < 0)
+        throw std::domain_error("negative integer in the input");
+    else if (n == 0)
+        return DEF_UNDEFINED_SUM;
+    else if (order == 0)
+        return this->series->S_n(n);
 
-	if (n < 0)
-		throw std::domain_error("negative integer in the input");
-	else if (n == 0)
-		return DEF_UNDEFINED_SUM;
-	else if (order == 0)
-		return this->series->S_n(n);
+    int m = 2 * order;
+    int k = m;
 
-	int k = m + n;
+    (n % 2 == 0) ? k += n : k += n - 1;
 
-	std::vector<std::vector<T>>* eps = new std::vector<std::vector<T>>(4, std::vector<T>(k + 1, 0));
+    std::vector<std::vector<T>>* eps = new std::vector<std::vector<T>>(4, std::vector<T>(k + 1, 0));
 
-	for (int j = k; j >= 0; --j)
-	{
-		(*eps)[3][j] = this->series->S_n(j);
-	}
+    for (int j = k; j >= 0; --j)
+    {
+        (*eps)[3][j] = this->series->S_n(j);
+    }
 
-	T a = 0, a1 = 0, a2 = 0;
+    T a = 0, a1 = 0, a2 = 0;
 
-	while (k > -1)
-	{
-		for (int i = 0; i != k; ++i)
-		{
-			(*eps)[0][i] = (*eps)[2][i + 1] + 1 / ((*eps)[3][i + 1] - (*eps)[3][i]);
+    while (k > -1)
+    {
+        for (int i = 0; i != k; ++i)
+        {
+            (*eps)[0][i] = (*eps)[2][i + 1] + 1.0 / ((*eps)[3][i + 1] - (*eps)[3][i]);
 
-			if (!std::isfinite((*eps)[0][i]) && i + 2 <= k) //1 failsafe
-			{
-				a2 = 1 / (*eps)[2][i + 1];
+            if (!std::isfinite((*eps)[0][i]) && i + 2 <= k) //1 failsafe
+            {
+                a2 = 1.0 / (*eps)[2][i + 1];
 
-				a1 = 1 / (1 - (a2 * (*eps)[2][i + 2]));
-				a = (*eps)[2][i + 2] * a1;
+                a1 = 1.0 / (1.0 - (a2 * (*eps)[2][i + 2]));
+                a = (*eps)[2][i + 2] * a1;
 
-				a1 = 1 / (1 - (a2 * (*eps)[2][i]));
-				a += (*eps)[2][i] * a1;
+                a1 = 1.0 / (1.0 - (a2 * (*eps)[2][i]));
+                a += (*eps)[2][i] * a1;
 
-				a1 = 1 / (1 - (a2 * (*eps)[0][i + 2]));
-				a -= (*eps)[0][i + 2] * a1;
+                a1 = 1.0 / (1.0 - (a2 * (*eps)[0][i + 2]));
+                a -= (*eps)[0][i + 2] * a1;
 
-				(*eps)[0][i] = 1 / (*eps)[2][i + 1];
-				(*eps)[0][i] = 1 / (1 + a * (*eps)[0][i]);
-				(*eps)[0][i] = (*eps)[0][i] * a;
-			}
-			if (!std::isfinite((*eps)[0][i]))
-			{
-				(*eps)[0][i] = (*eps)[2][i];
-			}
-		}
-		std::swap((*eps)[0], (*eps)[1]);
-		std::swap((*eps)[1], (*eps)[2]);
-		std::swap((*eps)[2], (*eps)[3]);
+                (*eps)[0][i] = 1.0 / (*eps)[2][i + 1];
+                (*eps)[0][i] = 1.0 / (1.0 + a * (*eps)[0][i]);
+                (*eps)[0][i] = (*eps)[0][i] * a;
+            }
+            if (!std::isfinite((*eps)[0][i]))
+            {
+                (*eps)[0][i] = (*eps)[2][i];
+                k = 0;
+            }
+        }
+        std::swap((*eps)[0], (*eps)[1]);
+        std::swap((*eps)[1], (*eps)[2]);
+        std::swap((*eps)[2], (*eps)[3]);
 
-		--k;
-	}
-	T result = (*eps)[0][0];
+        --k;
+    }
+    const T result = (*eps)[0][0];
 
-	if (n % 2 != 0)
-	{
-		result = (*eps)[3][0];
-	}
+    delete eps;
 
-	delete eps;
-
-	return result;
+    return result;
 }
-
-
-
-
-
-

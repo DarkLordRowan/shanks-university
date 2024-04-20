@@ -51,7 +51,7 @@ T levin_algorithm<T, K, series_templ>::operator()(const K n, const int order) co
 
 	T numerator = 0, denominator = 0, C_njk, S_nj, g_n, rest;
 
-	for (int j = 0; j < order; ++j)
+	for (int j = 0; j <= order; ++j)
 	{
 		rest = this->series->minus_one_raised_to_power_n(j) * this->series->binomial_coefficient(order, j);
 
