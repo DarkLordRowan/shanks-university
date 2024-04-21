@@ -382,6 +382,7 @@ inline static void main_testing_function()
 			break;
 		case 8:
 			transform2.reset(new chang_whynn_algorithm<T, K, decltype(series.get())>(series.get()));
+			break;
 		case 9:
 			transform2.reset(new recursive_u_levi_sidi_algorithm<T, K, decltype(series.get())>(series.get()));
 			break;
