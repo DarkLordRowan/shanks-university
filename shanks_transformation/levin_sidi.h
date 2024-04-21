@@ -167,7 +167,6 @@ protected:
 
 				T scale1 = ((BETA + n + j + i) * (BETA + n + j + i - 1));
 				T scale2 = ((BETA + n + j + 2 * i) * (BETA + n + j + 2 * i - 1));
-				T scale = scale1 / scale2;
 
 				//std::cout << std::endl << "DENOMINATOR: " << (*D)[j] << " " << (*D)[j + 1] << std::endl;
 				//(*D)[j] = (scale+i) * (*D)[j + 1] - scale * (*D)[j];

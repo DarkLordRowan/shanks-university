@@ -24,13 +24,10 @@ enum transformation_id_t {
 	u_S_transformation,
 	t_S_transformation,
 	v_S_transformation,
-<<<<<<< HEAD
+	chang_epsilon_algorithm,
 	rec_u_S_transformation,
 	rec_v_S_transformation,
 	rec_t_S_transformation
-=======
-	chang_epsilon_algorithm
->>>>>>> origin
 };
 enum series_id_t {
 	null_series_id, 
@@ -132,13 +129,10 @@ inline static void print_transformation_info()
 		"5 - u S-transformation" << std::endl <<
 		"6 - t S-transformation" << std::endl <<
 		"7 - v S-transformation" << std::endl <<
-<<<<<<< HEAD
-		"8 - recursive u S-transformation" << std::endl <<
-		"9 - recursive t S-transformation" << std::endl <<
-		"10 - recursive v S-transformation" << std::endl;
-=======
-		"8 - Chang - Wynn - Epsilon Algorithm" << std::endl;
->>>>>>> origin
+		"8 - Chang - Wynn - Epsilon Algorithm" << std::endl << 
+		"9 - recursive u S-transformation" << std::endl <<
+		"10 - recursive t S-transformation" << std::endl <<
+		"11 - recursive v S-transformation" << std::endl;
 }
 
 /**
@@ -318,7 +312,6 @@ inline static void main_testing_function()
 	case transformation_id_t::v_S_transformation:
 		transform.reset(new v_levi_sidi_algorithm<T, K, decltype(series.get())>(series.get()));
 		break;
-<<<<<<< HEAD
 	case transformation_id_t::rec_u_S_transformation:
 		transform.reset(new recursive_u_levi_sidi_algorithm<T, K, decltype(series.get())>(series.get()));
 		break;
@@ -327,10 +320,8 @@ inline static void main_testing_function()
 		break;
 	case transformation_id_t::rec_v_S_transformation:
 		transform.reset(new recursive_v_levi_sidi_algorithm<T, K, decltype(series.get())>(series.get()));
-=======
 	case transformation_id_t::chang_epsilon_algorithm:
 		transform.reset(new chang_whynn_algorithm<T, K, decltype(series.get())>(series.get()));
->>>>>>> origin
 		break;
 	default:
 		throw std::domain_error("wrong transformation_id");
@@ -389,19 +380,16 @@ inline static void main_testing_function()
 		case 7:
 			transform2.reset(new v_levi_sidi_algorithm<T, K, decltype(series.get())>(series.get()));
 			break;
-<<<<<<< HEAD
 		case 8:
+			transform2.reset(new chang_whynn_algorithm<T, K, decltype(series.get())>(series.get()));
+		case 9:
 			transform2.reset(new recursive_u_levi_sidi_algorithm<T, K, decltype(series.get())>(series.get()));
 			break;
-		case 9:
+		case 10:
 			transform2.reset(new recursive_t_levi_sidi_algorithm<T, K, decltype(series.get())>(series.get()));
 			break;
-		case 10:
+		case 11:
 			transform2.reset(new recursive_v_levi_sidi_algorithm<T, K, decltype(series.get())>(series.get()));
-=======
-		case 8: 
-			transform2.reset(new chang_whynn_algorithm<T, K, decltype(series.get())>(series.get()));
->>>>>>> origin
 			break;
 		default:
 			throw std::domain_error("wrong algorithm id");
