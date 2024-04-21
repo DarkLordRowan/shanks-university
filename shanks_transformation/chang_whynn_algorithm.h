@@ -14,7 +14,7 @@
  //SOME RESULTS CONCERNING THE FUNDAMENTAL NATURE OF WYNN'S VECTOR EPSILON ALGORITHM - same algo + vector form
  //On a Device for Computing the e (S ) Transformation - nothing new, just matrix
 
- //Construction of new generalizations of Wynn’s
+ //Construction of new generalizations of WynnвЂ™s
 epsilon and rho algorithm by solving finite difference
 equations in the transformation order
 chang algo!
@@ -77,7 +77,7 @@ T chang_whynn_algorithm<T, K, series_templ>::operator()(const K n, const int ord
         down = 1.0 / down;
         t[1][i] = this->series->S_n(i + 1) - up * down;
 
-        f[i] = coef * coef2 * down; //Можно взять coef^2 для более сочного эффекта
+        f[i] = coef * coef2 * down; //Can make coeff2 ^2 for better effect
     }
 
     for (int k = 2; k <= max; ++k) {
@@ -144,10 +144,6 @@ std::vector<std::vector<T>> t(n + 5, std::vector<T>(n + 5, 0));
 
 
 */
-
-
-
-
 
 
 /*
