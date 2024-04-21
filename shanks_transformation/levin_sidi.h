@@ -197,7 +197,7 @@ public:
 
 
 	/**
-	* @brief generalised Levi-Sidi class template for derevetions
+	* @brief generalised Levi-Sidi class template for derivations
 	* @authors Venajalainen
 	* @tparam T The type of the elements in the series, K The type of enumerating integer, series_templ is the type of series whose convergence we accelerate
 	*/
