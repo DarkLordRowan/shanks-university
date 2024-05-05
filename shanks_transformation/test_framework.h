@@ -14,6 +14,9 @@
 #include "epsilon_algorithm_two.h"
 #include "chang_whynn_algorithm.h"
 #include "test_functions.h"
+#include "levin_sidi_M_algorithm.h"
+#include "weniger.h"
+#include"rho-wynn.h"
 
 enum transformation_id_t {
 	null_transformation_id,
@@ -27,7 +30,13 @@ enum transformation_id_t {
 	chang_epsilon_algorithm,
 	rec_u_S_transformation,
 	rec_v_S_transformation,
-	rec_t_S_transformation
+	rec_t_S_transformation,
+	u_M_transformation,
+	t_M_transformation,
+	d_M_transformation,
+	v_M_transformation,
+	weniger_transformation,
+	rho_wynn_transformation
 };
 enum series_id_t {
 	null_series_id, 
@@ -132,7 +141,13 @@ inline static void print_transformation_info()
 		"8 - Chang - Wynn - Epsilon Algorithm" << std::endl << 
 		"9 - recursive u S-transformation" << std::endl <<
 		"10 - recursive t S-transformation" << std::endl <<
-		"11 - recursive v S-transformation" << std::endl;
+		"11 - recursive v S-transformation" << std::endl <<
+		"12 - u M-transformation" << std::endl <<
+		"13 - t M-transformation" << std::endl <<
+		"14 - d M-transformation" << std::endl <<
+		"15 - v M-transformation" << std::endl <<
+		"16 - Weniger transformation" << std::endl <<
+		"17 - Rho - Wynn transformation" << std::endl;
 }
 
 /**
@@ -323,6 +338,24 @@ inline static void main_testing_function()
 	case transformation_id_t::chang_epsilon_algorithm:
 		transform.reset(new chang_whynn_algorithm<T, K, decltype(series.get())>(series.get()));
 		break;
+	case transformation_id_t::u_M_transformation:
+		transform.reset(new u_alevi_sidi_algorithm<T, K, decltype(series.get())>(series.get()));
+		break;
+	case transformation_id_t::t_M_transformation:
+		transform.reset(new t_alevi_sidi_algorithm<T, K, decltype(series.get())>(series.get()));
+		break;
+	case transformation_id_t::d_M_transformation:
+		transform.reset(new d_alevi_sidi_algorithm<T, K, decltype(series.get())>(series.get()));
+		break;
+	case transformation_id_t::v_M_transformation:
+		transform.reset(new v_alevi_sidi_algorithm<T, K, decltype(series.get())>(series.get()));
+		break;
+	case transformation_id_t::weniger_transformation:
+		transform.reset(new weniger_algorithm<T, K, decltype(series.get())>(series.get()));
+		break;
+	case transformation_id_t::rho_wynn_transformation:
+		transform.reset(new recursive_rho_Wynn_algorithm<T, K, decltype(series.get())>(series.get()));
+		break;
 	default:
 		throw std::domain_error("wrong transformation_id");
 	}
@@ -391,6 +424,24 @@ inline static void main_testing_function()
 			break;
 		case 11:
 			transform2.reset(new recursive_v_levi_sidi_algorithm<T, K, decltype(series.get())>(series.get()));
+			break;
+		case 12:
+			transform2.reset(new u_alevi_sidi_algorithm<T, K, decltype(series.get())>(series.get()));
+			break;
+		case 13:
+			transform2.reset(new t_alevi_sidi_algorithm<T, K, decltype(series.get())>(series.get()));
+			break;
+		case 14:
+			transform2.reset(new d_alevi_sidi_algorithm<T, K, decltype(series.get())>(series.get()));
+			break;
+		case 15:
+			transform2.reset(new v_alevi_sidi_algorithm<T, K, decltype(series.get())>(series.get()));
+			break;
+		case 16:
+			transform2.reset(new weniger_algorithm<T, K, decltype(series.get())>(series.get()));
+			break;
+		case 17:
+			transform2.reset(new recursive_rho_Wynn_algorithm<T, K, decltype(series.get())>(series.get()));
 			break;
 		default:
 			throw std::domain_error("wrong algorithm id");
