@@ -10,14 +10,14 @@
 #include "shanks_transformation.h"
 #include "epsilon_algorithm.h"
 #include "levin_algorithm.h"
-#include "levin_sidi.h"
+#include "levin_sidi_algorithm.h"
 #include "epsilon_algorithm_two.h"
 #include "chang_whynn_algorithm.h"
 #include "test_functions.h"
 #include "levin_sidi_M_algorithm.h"
-#include "weniger.h"
-#include"rho-wynn.h"
-#include "brezinski_theta.h"
+#include "weniger_algorithm.h"
+#include"rho_wynn_algorithm.h"
+#include "brezinski_theta_algorithm.h"
 
 enum transformation_id_t {
 	null_transformation_id,
