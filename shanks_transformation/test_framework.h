@@ -17,6 +17,7 @@
 #include "levin_sidi_M_algorithm.h"
 #include "weniger.h"
 #include"rho-wynn.h"
+#include "brezinski_theta.h"
 
 enum transformation_id_t {
 	null_transformation_id,
@@ -36,7 +37,8 @@ enum transformation_id_t {
 	d_M_transformation,
 	v_M_transformation,
 	weniger_transformation,
-	rho_wynn_transformation
+	rho_wynn_transformation,
+	brezinski_theta_transformation
 };
 enum series_id_t {
 	null_series_id, 
@@ -139,15 +141,16 @@ inline static void print_transformation_info()
 		"6 - t S-transformation" << std::endl <<
 		"7 - v S-transformation" << std::endl <<
 		"8 - Chang - Wynn - Epsilon Algorithm" << std::endl << 
-		"9 - recursive u S-transformation" << std::endl <<
-		"10 - recursive t S-transformation" << std::endl <<
-		"11 - recursive v S-transformation" << std::endl <<
+		"9 - Recursive u S-transformation" << std::endl <<
+		"10 - Recursive t S-transformation" << std::endl <<
+		"11 - Recursive v S-transformation" << std::endl <<
 		"12 - u M-transformation" << std::endl <<
 		"13 - t M-transformation" << std::endl <<
 		"14 - d M-transformation" << std::endl <<
 		"15 - v M-transformation" << std::endl <<
 		"16 - Weniger transformation" << std::endl <<
-		"17 - Rho - Wynn transformation" << std::endl;
+		"17 - Rho - Wynn transformation" << std::endl<<
+		"18 - Theta Brezinski transformation" << std::endl;
 }
 
 /**
@@ -356,6 +359,9 @@ inline static void main_testing_function()
 	case transformation_id_t::rho_wynn_transformation:
 		transform.reset(new recursive_rho_Wynn_algorithm<T, K, decltype(series.get())>(series.get()));
 		break;
+	case transformation_id_t::brezinski_theta_transformation:
+		transform.reset(new theta_brezinski_algorithm<T, K, decltype(series.get())>(series.get()));
+		break;
 	default:
 		throw std::domain_error("wrong transformation_id");
 	}
@@ -442,6 +448,9 @@ inline static void main_testing_function()
 			break;
 		case 17:
 			transform2.reset(new recursive_rho_Wynn_algorithm<T, K, decltype(series.get())>(series.get()));
+			break;
+		case 18:
+			transform2.reset(new theta_brezinski_algorithm<T, K, decltype(series.get())>(series.get()));
 			break;
 		default:
 			throw std::domain_error("wrong algorithm id");
