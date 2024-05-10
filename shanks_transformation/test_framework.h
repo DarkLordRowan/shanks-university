@@ -180,7 +180,7 @@ inline void init_levin(transformation_id_t id, std::unique_ptr<series_base<T,K>>
 	transform_base<T, K>* ptr = NULL;
 
 	if (type == 'u') ptr = new u_transform<T, K>{};
-	if (type == 't') ptr = new t_transform<T, K>{};
+	if (type == 't') ptr = new t_transform<T, K>{}; 
 	if (type == 'd') ptr = new v_transform<T, K>{};
 	if (type == 'v') ptr = new d_transform<T, K>{};
 
@@ -191,7 +191,7 @@ inline void init_levin(transformation_id_t id, std::unique_ptr<series_base<T,K>>
 			transform.reset(new levi_sidi_algorithm<T, K, decltype(series.get())>(series.get(), ptr, recursive));
 			return;
 		case transformation_id_t::D_algorithm:
-			transform.reset(new levi_sidi_algorithm<T, K, decltype(series.get())>(series.get(), ptr, recursive));
+			transform.reset(new drummonds_algorithm<T, K, decltype(series.get())>(series.get(), ptr, recursive));
 			return;
 		default:
 			throw std::domain_error("wrong id was givven");
@@ -431,10 +431,10 @@ inline static void main_testing_function()
 			transform2.reset(new epsilon_algorithm_two<T, K, decltype(series.get())>(series.get()));
 			break;
 		case transformation_id_t::S_algorithm:
-			init_levin(transformation_id_t::S_algorithm, series, transform);
+			init_levin(transformation_id_t::S_algorithm, series, transform2);
 			break;
 		case transformation_id_t::D_algorithm:
-			init_levin(transformation_id_t::D_algorithm, series, transform);
+			init_levin(transformation_id_t::D_algorithm, series, transform2);
 			break;
 		case chang_epsilon_algorithm:
 			transform2.reset(new chang_whynn_algorithm<T, K, decltype(series.get())>(series.get()));
