@@ -25,13 +25,13 @@ enum transformation_id_t {
 	epsilon_algorithm_id,
 	levin_algorithm_id,
 	epsilon_algorithm_2_id,
-	u_S_transformation,
-	t_S_transformation,
-	v_S_transformation,
+	u_S_algorithm,
+	t_S_algorithm,
+	v_S_algorithm,
 	chang_epsilon_algorithm,
-	rec_u_S_transformation,
-	rec_v_S_transformation,
-	rec_t_S_transformation,
+	rec_u_S_algorithm,
+	rec_t_S_algorithm,
+	rec_v_S_algorithm,
 	u_M_transformation,
 	t_M_transformation,
 	d_M_transformation,
@@ -321,23 +321,35 @@ inline static void main_testing_function()
 	case transformation_id_t::epsilon_algorithm_2_id:
 		transform.reset(new epsilon_algorithm_two<T, K, decltype(series.get())>(series.get()));
 		break;
-	case transformation_id_t::u_S_transformation:
-		transform.reset(new u_levi_sidi_algorithm<T, K, decltype(series.get())>(series.get()));
+	case transformation_id_t::u_S_algorithm:
+		transform.reset(new levi_sidi_algorithm<T, K, decltype(series.get())>(
+			series.get(), new u_transform<T,K>{})
+		);
 		break;
-	case transformation_id_t::t_S_transformation:
-		transform.reset(new t_levi_sidi_algorithm<T, K, decltype(series.get())>(series.get()));
+	case transformation_id_t::t_S_algorithm:
+		transform.reset(new levi_sidi_algorithm<T, K, decltype(series.get())>(
+			series.get(), new t_transform<T, K>{})
+		);
 		break;
-	case transformation_id_t::v_S_transformation:
-		transform.reset(new v_levi_sidi_algorithm<T, K, decltype(series.get())>(series.get()));
+	case transformation_id_t::v_S_algorithm:
+		transform.reset(new levi_sidi_algorithm<T, K, decltype(
+			series.get())>(series.get(), new v_transform<T, K>{})
+		);
 		break;
-	case transformation_id_t::rec_u_S_transformation:
-		transform.reset(new recursive_u_levi_sidi_algorithm<T, K, decltype(series.get())>(series.get()));
+	case transformation_id_t::rec_u_S_algorithm:
+		transform.reset(new levi_sidi_algorithm<T, K, decltype(series.get())>(
+			series.get(), new u_transform<T, K>{}, true)
+		);
 		break;
-	case transformation_id_t::rec_t_S_transformation:
-		transform.reset(new recursive_t_levi_sidi_algorithm<T, K, decltype(series.get())>(series.get()));
+	case transformation_id_t::rec_t_S_algorithm:
+		transform.reset(new levi_sidi_algorithm<T, K, decltype(
+			series.get())>(series.get(), new t_transform<T, K>{}, true)
+		);
 		break;
-	case transformation_id_t::rec_v_S_transformation:
-		transform.reset(new recursive_v_levi_sidi_algorithm<T, K, decltype(series.get())>(series.get()));
+	case transformation_id_t::rec_v_S_algorithm:
+		transform.reset(new levi_sidi_algorithm<T, K, decltype(series.get())>(
+			series.get(), new v_transform<T, K>{}, true)
+		);
 	case transformation_id_t::chang_epsilon_algorithm:
 		transform.reset(new chang_whynn_algorithm<T, K, decltype(series.get())>(series.get()));
 		break;
@@ -411,25 +423,25 @@ inline static void main_testing_function()
 			transform2.reset(new epsilon_algorithm_two<T, K, decltype(series.get())>(series.get()));
 			break;
 		case 5:
-			transform2.reset(new u_levi_sidi_algorithm<T, K, decltype(series.get())>(series.get()));
+			transform2.reset(new levi_sidi_algorithm<T, K, decltype(series.get())>(series.get(), new u_transform<T, K>{}));
 			break;
 		case 6:
-			transform2.reset(new t_levi_sidi_algorithm<T, K, decltype(series.get())>(series.get()));
+			transform2.reset(new levi_sidi_algorithm<T, K, decltype(series.get())>(series.get(), new t_transform<T, K>{}));
 			break;
 		case 7:
-			transform2.reset(new v_levi_sidi_algorithm<T, K, decltype(series.get())>(series.get()));
+			transform2.reset(new levi_sidi_algorithm<T, K, decltype(series.get())>(series.get(), new v_transform<T, K>{}));
 			break;
 		case 8:
 			transform2.reset(new chang_whynn_algorithm<T, K, decltype(series.get())>(series.get()));
 			break;
 		case 9:
-			transform2.reset(new recursive_u_levi_sidi_algorithm<T, K, decltype(series.get())>(series.get()));
+			transform2.reset(new levi_sidi_algorithm<T, K, decltype(series.get())>(series.get(), new u_transform<T, K>{}, true));
 			break;
 		case 10:
-			transform2.reset(new recursive_t_levi_sidi_algorithm<T, K, decltype(series.get())>(series.get()));
+			transform2.reset(new levi_sidi_algorithm<T, K, decltype(series.get())>(series.get(), new t_transform<T, K>{}, true));
 			break;
 		case 11:
-			transform2.reset(new recursive_v_levi_sidi_algorithm<T, K, decltype(series.get())>(series.get()));
+			transform2.reset(new levi_sidi_algorithm<T, K, decltype(series.get())>(series.get(), new v_transform<T, K>{}, true));
 			break;
 		case 12:
 			transform2.reset(new u_alevi_sidi_algorithm<T, K, decltype(series.get())>(series.get()));

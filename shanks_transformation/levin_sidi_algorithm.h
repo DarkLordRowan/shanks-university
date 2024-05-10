@@ -4,79 +4,66 @@
 */
 #pragma once
 #define DEF_UNDEFINED_SUM 0
-#define BETA 1 // beta is a a nonzero positive parameter, 1 is the standart value in the Literatur on Levin transformation, for more information see p. 39 in [https://arxiv.org/pdf/math/0306302.pdf]
-
+#define BETA 1
 
 #include "series_acceleration.h" // Include the series header
-#include <vector>
-#include <iostream>
+#include <vector> // Include the vector library
 
-template<typename T, typename K, typename series_templ> class levi_sidi_algorithm;
 
-template<typename T, typename K, typename series_templ> class u_levi_sidi_algorithm;
+template<typename T, typename K>
+class transform_base {
+public:
 
-template<typename T, typename K, typename series_templ> class t_levi_sidi_algorithm;
+	/**
+	* @brief Default constructor for abstract remainder functor for S-tranformation
+	* @authors Naumov A.
+	*/
 
-template<typename T, typename K, typename series_templ> class v_levi_sidi_algorithm;
+	virtual T operator()( const int& n, const int& j, const series_base<T, K>* series, T scale = T(1)) const = 0;
 
-template<typename T, typename K, typename series_templ> class recursive_u_levi_sidi_algorithm;
+};
 
-template<typename T, typename K, typename series_templ> class recursive_t_levi_sidi_algorithm;
-
-template<typename T, typename K, typename series_templ> class recursive_v_levi_sidi_algorithm;
-
-class u_transform {
+template<typename T, typename K>
+class u_transform : public transform_base<T,K> {
 public:
 	/**
-	* @brief Default constructor for u type remainder calculator for S-tranformation, for more information see p. 43 7.3-4 in [https://arxiv.org/pdf/math/0306302.pdf]
-	* @authors Venajalainen
+	* @brief Default constructor for u type remainder functor for S-tranformation, for more information see p. 43 7.3-4 in [https://arxiv.org/pdf/math/0306302.pdf]
+	* @authors Naumov A.
 	*/
 	u_transform() {}
 
-	template<typename T, typename K>
-	T operator()(const int& n, const int& j, const series_base<T, K>* series) const;
+	T operator()(const int& n, const int& j, const series_base<T, K>* series, T scale = T(1)) const {
+		return 1 / (scale * series->operator()(n + j + 1));
+	}
 };
 
 template<typename T, typename K>
-T u_transform::operator()(const int& n, const int& j, const series_base<T, K>* series) const {
-	return 1 / ((BETA + n) * series->operator()(n + j + 1));
-}
-
-
-class t_transform {
+class t_transform : public transform_base<T, K> {
 public:
 	/**
-	* @brief Default constructor for t type remainder calculator for S-tranformation, for more information see p. 60 8.4-4 in [https://arxiv.org/pdf/math/0306302.pdf]
-	* @authors Venajalainen
+	* @brief Default constructor for t type remainder functor for S-tranformation, for more information see p. 60 8.4-4 in [https://arxiv.org/pdf/math/0306302.pdf]
+	* @authors Naumov A.
 	*/
 	t_transform() {}
 
-	template<typename T, typename K>
-	T operator()(const int& n, const int& j, const series_base<T, K>* series) const;
+	T operator()(const int& n, const int& j, const series_base<T, K>* series, T scale = T(1)) const {
+		return 1 / series->operator()(n + j);
+	}
 };
 
 template<typename T, typename K>
-T t_transform::operator()(const int& n, const int& j, const series_base<T, K>* series) const {
-	return 1 / series->operator()(n + j);
-}
-
-
-class v_transform {
+class v_transform : public transform_base<T, K> {
 public:
 	/**
-	* @brief Default constructor for v type remainder calculator for S-tranformation, for more information see p. 60 8.4-5 in [https://arxiv.org/pdf/math/0306302.pdf]
-	* @authors Venajalainen
+	* @brief Default constructor for v type remainder functor for S-tranformation, for more information see p. 60 8.4-5 in [https://arxiv.org/pdf/math/0306302.pdf]
+	* @authors Naumov A.
 	*/
 	v_transform() {}
 
-	template<typename T, typename K>
-	T operator()(const int& n, const int& j, const series_base<T, K>* series) const;
+	T operator()(const int& n, const int& j, const series_base<T, K>* series, T scale = T(1)) const {
+		return (series->operator()(n + j + 1) - series->operator()(n + j)) / (series->operator()(n + j + 1) * series->operator()(n + j));
+	}
 };
-
-template<typename T, typename K>
-T v_transform::operator()(const int& n, const int& j, const series_base<T, K>* series) const {
-	return (series->operator()(n + j + 1) - series->operator()(n + j)) / (series->operator()(n + j + 1) * series->operator()(n + j));
-}
 
 
 template<typename T, typename K, typename series_templ>
@@ -84,18 +71,20 @@ class levi_sidi_algorithm : public series_acceleration<T, K, series_templ>
 {
 protected:
 
+	const transform_base<T, K>* remainder_func;
+
+	bool recursive;
+
 	/**
-	* @brief Default function to calculate S-tranformation. Implemented u,t and v transformations. For more information see p. 57 8.2-7 [https://arxiv.org/pdf/math/0306302.pdf]
+	* @brief Default function to calculate S-tranformation directly by formula. Implemented u,t and v transformations. For more information see p. 57 8.2-7 [https://arxiv.org/pdf/math/0306302.pdf]
 	* Levin-Sidi or Factorial analog of Levin Transformation is effective for series that belong to b(1)/LIN/FAC and inferior on b(1)/LOG for more information see p. 369 and p.285 [http://servidor.demec.ufpr.br/CFD/bibliografia/MER/Sidi_2003.pdf]
-	* @authors Venajalainen
+	* @authors Naumov A.
 	* @param k The number of terms in the partial sum.
 	* @param n the order of transformation
-	* @param remainder_func functor, whose returning w_n for t,u or v transformation
 	* @return The partial sum after the transformation.
 	*/
 
-	template<class remainderType>
-	T calculate(const K& k, const int& n, remainderType remainder_func) const {
+	virtual T calculate(const K& k, const int& n) const {
 
 		if (n < 0)
 			throw std::domain_error("negative integer in input");
@@ -119,7 +108,7 @@ protected:
 
 			rest = rest * (up / down);
 
-			w_n = remainder_func(n, j, this->series);
+			w_n = remainder_func->operator()(n, j, this->series, BETA + n);
 
 			numerator += rest * this->series->S_n(n + j) * w_n;
 			denominator += rest * w_n;
@@ -135,16 +124,16 @@ protected:
 	}
 
 	/**
-	* @brief Default function to calculate S-tranformation recursively. Implemented u,t and v transformations. For more information see p. 57 8.3-5 [https://arxiv.org/pdf/math/0306302.pdf]
+	* @brief Default function to calculate S-tranformation using reccurence formula. Implemented u,t and v transformations. For more information see p. 57 8.3-5 [https://arxiv.org/pdf/math/0306302.pdf]
 	* Levin-Sidi or Factorial analog of Levin Transformation is effective for series that belong to b(1)/LIN/FAC and inferior on b(1)/LOG for more information see p. 369 and p.285 [http://servidor.demec.ufpr.br/CFD/bibliografia/MER/Sidi_2003.pdf]
-	* @authors Venajalainen
+	* @authors Naumov A.
 	* @param k The number of terms in the partial sum.
 	* @param n the order of transformation
 	* @param remainder_func functor, whose returning w_n for t,u or v transformation
 	* @return The partial sum after the transformation.
 	*/
-	template<class remainderType>
-	T calculate_recursively(const K& k, const int& n, remainderType remainder_func) const {
+
+	T calculate_rec(const K& k, const int& n) const {
 
 		if (n < 0)
 			throw std::domain_error("negative integer in input");
@@ -155,28 +144,21 @@ protected:
 		std::vector<T>* D = new std::vector<T>(k + 1, 0);
 
 		for (int i = 0; i < k + 1; i++) {
-			(*D)[i] = remainder_func(0, n + i, this->series);
+			(*D)[i] = remainder_func->operator()(0, n + i, this->series);
 			(*N)[i] = this->series->S_n(n + i) * (*D)[i];
 		}
 
 		for (int i = 1; i <= k; ++i) {
 			for (int j = 0; j <= k - i; ++j) {
-				// n' = n + j
-				// k = i
-				//T scale = BETA + n + j + i - 2;
 
 				T scale1 = ((BETA + n + j + i) * (BETA + n + j + i - 1));
 				T scale2 = ((BETA + n + j + 2 * i) * (BETA + n + j + 2 * i - 1));
 
-				//std::cout << std::endl << "DENOMINATOR: " << (*D)[j] << " " << (*D)[j + 1] << std::endl;
-				//(*D)[j] = (scale+i) * (*D)[j + 1] - scale * (*D)[j];
-				//(*N)[j] = (scale+i) * (*N)[j + 1] - scale * (*N)[j];
-				(*D)[j] = ((*D)[j + 1]*scale2 - scale1 * (*D)[j])/scale2;
-				(*N)[j] = ((*N)[j + 1]*scale2 - scale1 * (*N)[j])/scale2;
+				(*D)[j] = ((*D)[j + 1] * scale2 - scale1 * (*D)[j]) / scale2;
+				(*N)[j] = ((*N)[j + 1] * scale2 - scale1 * (*N)[j]) / scale2;
 			}
 		}
 
-		//T numerator = N[0] / D[0];
 		T numerator = (*N)[0] / (*D)[0];
 
 		if (!std::isfinite(numerator))
@@ -185,24 +167,18 @@ protected:
 		return numerator;
 	}
 
-
 public:
-
-	friend class u_levi_sidi_algorithm<T, K, series_templ>;
-	friend class t_levi_sidi_algorithm<T, K, series_templ>;
-	friend class v_levi_sidi_algorithm<T, K, series_templ>;
-	friend class recursive_u_levi_sidi_algorithm<T, K, series_templ>;
-	friend class recursive_t_levi_sidi_algorithm<T, K, series_templ>;
-	friend class recursive_v_levi_sidi_algorithm<T, K, series_templ>;
-
 
 	/**
 	* @brief generalised Levi-Sidi class template for derivations
-	* @authors Venajalainen
+	* @authors Naumov A.
 	* @tparam T The type of the elements in the series, K The type of enumerating integer, series_templ is the type of series whose convergence we accelerate
+	* @param 
 	*/
 
-	levi_sidi_algorithm(const series_templ& series);
+	levi_sidi_algorithm(const series_templ& series, const transform_base<T, K>* func, bool recursive = false) : series_acceleration<T, K, series_templ>(series), remainder_func(func), recursive(recursive) {}
+
+	~levi_sidi_algorithm() { delete remainder_func; }
 
 	/**
 	* @brief Abstract method for the inherited classes below
@@ -212,183 +188,9 @@ public:
 	* @return The partial sum after the transformation.
 	*/
 
-	T operator()(const K k, const int n) const = 0;
+	T operator()(const K k, const int n) const {
+		if (recursive) return calculate_rec(k, n);
+		return calculate(k, n);
+	}
 
 };
-
-template<typename T, typename K, typename series_templ>
-levi_sidi_algorithm< T, K, series_templ>::levi_sidi_algorithm(const series_templ& series) : series_acceleration<T, K, series_templ>(series) {}
-
-template <typename T, typename K, typename series_templ>
-class u_levi_sidi_algorithm : public levi_sidi_algorithm<T, K, series_templ>
-{
-public:
-	/**
-	* @brief Parameterized constructor to initialize the Levin-Sidi u S-transformation.
-	* @authors Venajalainen
-	* @param series The series class object to be accelerated
-	*/
-	u_levi_sidi_algorithm(const series_templ& series);
-
-	/**
-	* @brief Impimentation of Levin-Sidi u S-transformation.
-	* Computes the partial sum after the transformation using the Levin-Sidi u S-transformation analogues to Levin u L-transformation
-	* For more information,
-	* @param k The number of terms in the partial sum.
-	* @param n The order of transformation.
-	* @return The partial sum after the transformation.
-	*/
-	T operator()(const K k, const int n) const;
-
-};
-
-template<typename T, typename K, typename series_templ>
-u_levi_sidi_algorithm< T, K, series_templ> ::u_levi_sidi_algorithm(const series_templ& series) : levi_sidi_algorithm<T, K, series_templ>(series) {}
-
-template<typename T, typename K, typename series_templ>
-T u_levi_sidi_algorithm<T, K, series_templ>::operator()(const K k, const int n) const { return levi_sidi_algorithm<T, K, series_templ>::calculate(k, n, u_transform{}); }
-
-template <typename T, typename K, typename series_templ>
-class t_levi_sidi_algorithm : public levi_sidi_algorithm<T, K, series_templ>
-{
-public:
-	/**
-	* @brief Parameterized constructor to initialize the Levin-Sidi t S-transformation.
-	* @authors Venajalainen
-	* @param series The series class object to be accelerated
-	*/
-	t_levi_sidi_algorithm(const series_templ& series);
-
-	/**
-	* @brief Impimentation of Levin-Sidi t S-tranformation.
-	* Computes the partial sum after the transformation using the Levin-Sidi t S-transformation analogues to Levin t L-transformation
-	* t transformation is suitable for strictly alternating series, for more information see p. 43 in [https://arxiv.org/pdf/math/0306302.pdf]
-	* @param k The number of terms in the partial sum.
-	* @param n The order of transformation.
-	* @return The partial sum after the transformation.
-	*/
-	T operator()(const K k, const int n) const;
-};
-
-template<typename T, typename K, typename series_templ>
-t_levi_sidi_algorithm < T, K, series_templ> ::t_levi_sidi_algorithm(const series_templ& series) : levi_sidi_algorithm<T, K, series_templ>(series) {}
-
-template<typename T, typename K, typename series_templ>
-T t_levi_sidi_algorithm<T, K, series_templ>::operator()(const K k, const int n) const { return levi_sidi_algorithm<T, K, series_templ>::calculate(k, n, t_transform{}); }
-
-template <typename T, typename K, typename series_templ>
-class v_levi_sidi_algorithm : public levi_sidi_algorithm<T, K, series_templ>
-{
-public:
-	/**
-	* @brief Parameterized constructor to initialize the Levin-Sidi v S-transformation.
-	* @authors Venajalainen
-	* @param series The series class object to be accelerated
-	*/
-	v_levi_sidi_algorithm(const series_templ& series);
-
-	/**
-	* @brief Impimentation of Levin-Sidi v S-transformation.
-	* Computes the partial sum after the transformation using the Levin-Sidi v S-transformation analogues to Levinvt L-transformation
-	* for more information see p. 44 in [https://arxiv.org/pdf/math/0306302.pdf]
-	* @param k The number of terms in the partial sum.
-	* @param n The order of transformation.
-	* @param remainder is parametr to choose the form of a w_i
-	* @return The partial sum after the transformation.
-	*/
-	T operator()(const K k, const int n) const;
-};
-
-
-template<typename T, typename K, typename series_templ>
-v_levi_sidi_algorithm < T, K, series_templ> ::v_levi_sidi_algorithm(const series_templ& series) : levi_sidi_algorithm<T, K, series_templ>(series) {}
-
-template<typename T, typename K, typename series_templ>
-T v_levi_sidi_algorithm<T, K, series_templ>::operator()(const K k, const int n) const { return levi_sidi_algorithm<T, K, series_templ>::calculate(k, n, v_transform{}); }
-
-template <typename T, typename K, typename series_templ>
-class recursive_u_levi_sidi_algorithm : public levi_sidi_algorithm<T, K, series_templ>
-{
-public:
-	/**
-	* @brief Parameterized constructor to initialize the Levin-Sidi u S-transformation.
-	* @authors Venajalainen
-	* @param series The series class object to be accelerated
-	*/
-	recursive_u_levi_sidi_algorithm(const series_templ& series);
-
-	/**
-	* @brief Impimentation of Levin-Sidi u S-transformation.
-	* Computes the partial sum after the transformation using the Levin-Sidi u S-transformation analogues to Levin u L-transformation
-	* For more information,
-	* @param k The number of terms in the partial sum.
-	* @param n The order of transformation.
-	* @return The partial sum after the transformation.
-	*/
-	T operator()(const K k, const int n) const;
-
-};
-
-template<typename T, typename K, typename series_templ>
-recursive_u_levi_sidi_algorithm< T, K, series_templ> ::recursive_u_levi_sidi_algorithm(const series_templ& series) : levi_sidi_algorithm<T, K, series_templ>(series) {}
-
-template<typename T, typename K, typename series_templ>
-T recursive_u_levi_sidi_algorithm<T, K, series_templ>::operator()(const K k, const int n) const { return levi_sidi_algorithm<T, K, series_templ>::calculate_recursively(k, n, u_transform{}); }
-
-template <typename T, typename K, typename series_templ>
-class recursive_t_levi_sidi_algorithm : public levi_sidi_algorithm<T, K, series_templ>
-{
-public:
-	/**
-	* @brief Parameterized constructor to initialize the Levin-Sidi t S-transformation.
-	* @authors Venajalainen
-	* @param series The series class object to be accelerated
-	*/
-	recursive_t_levi_sidi_algorithm(const series_templ& series);
-
-	/**
-	* @brief Impimentation of Levin-Sidi t S-tranformation.
-	* Computes the partial sum after the transformation using the Levin-Sidi t S-transformation analogues to Levin t L-transformation
-	* t transformation is suitable for strictly alternating series, for more information see p. 43 in [https://arxiv.org/pdf/math/0306302.pdf]
-	* @param k The number of terms in the partial sum.
-	* @param n The order of transformation.
-	* @return The partial sum after the transformation.
-	*/
-	T operator()(const K k, const int n) const;
-};
-
-template<typename T, typename K, typename series_templ>
-recursive_t_levi_sidi_algorithm < T, K, series_templ> ::recursive_t_levi_sidi_algorithm(const series_templ& series) : levi_sidi_algorithm<T, K, series_templ>(series) {}
-
-template<typename T, typename K, typename series_templ>
-T recursive_t_levi_sidi_algorithm<T, K, series_templ>::operator()(const K k, const int n) const { return levi_sidi_algorithm<T, K, series_templ>::calculate_recursively(k, n, t_transform{}); }
-
-template <typename T, typename K, typename series_templ>
-class recursive_v_levi_sidi_algorithm : public levi_sidi_algorithm<T, K, series_templ>
-{
-public:
-	/**
-	* @brief Parameterized constructor to initialize the Levin-Sidi v S-transformation.
-	* @authors Venajalainen
-	* @param series The series class object to be accelerated
-	*/
-	recursive_v_levi_sidi_algorithm(const series_templ& series);
-
-	/**
-	* @brief Impimentation of Levin-Sidi v S-transformation.
-	* Computes the partial sum after the transformation using the Levin-Sidi v S-transformation analogues to Levinvt L-transformation
-	* for more information see p. 44 in [https://arxiv.org/pdf/math/0306302.pdf]
-	* @param k The number of terms in the partial sum.
-	* @param n The order of transformation.
-	* @param remainder is parametr to choose the form of a w_i
-	* @return The partial sum after the transformation.
-	*/
-	T operator()(const K k, const int n) const;
-};
-
-
-template<typename T, typename K, typename series_templ>
-recursive_v_levi_sidi_algorithm < T, K, series_templ> ::recursive_v_levi_sidi_algorithm(const series_templ& series) : levi_sidi_algorithm<T, K, series_templ>(series) {}
-
-template<typename T, typename K, typename series_templ>
-T recursive_v_levi_sidi_algorithm<T, K, series_templ>::operator()(const K k, const int n) const { return levi_sidi_algorithm<T, K, series_templ>::calculate_recursively(k, n, v_transform{}); }
