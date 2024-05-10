@@ -10,7 +10,8 @@
 #include "shanks_transformation.h"
 #include "epsilon_algorithm.h"
 #include "levin_algorithm.h"
-#include "levin_sidi_algorithm.h"
+#include "levin_sidi_S_algorithm.h"
+#include "drummond_D_algorithm.h"
 #include "epsilon_algorithm_two.h"
 #include "chang_whynn_algorithm.h"
 #include "test_functions.h"
@@ -25,13 +26,9 @@ enum transformation_id_t {
 	epsilon_algorithm_id,
 	levin_algorithm_id,
 	epsilon_algorithm_2_id,
-	u_S_transformation,
-	t_S_transformation,
-	v_S_transformation,
+	S_algorithm,
+	D_algorithm,
 	chang_epsilon_algorithm,
-	rec_u_S_transformation,
-	rec_v_S_transformation,
-	rec_t_S_transformation,
 	u_M_transformation,
 	t_M_transformation,
 	d_M_transformation,
@@ -137,20 +134,16 @@ inline static void print_transformation_info()
 		"2 - Epsilon Algorithm" << std::endl <<
 		"3 - Levin Algorithm" << std::endl <<
 		"4 - Epsilon Algorithm V-2" << std::endl <<
-		"5 - u S-transformation" << std::endl <<
-		"6 - t S-transformation" << std::endl <<
-		"7 - v S-transformation" << std::endl <<
-		"8 - Chang - Wynn - Epsilon Algorithm" << std::endl << 
-		"9 - Recursive u S-transformation" << std::endl <<
-		"10 - Recursive t S-transformation" << std::endl <<
-		"11 - Recursive v S-transformation" << std::endl <<
-		"12 - u M-transformation" << std::endl <<
-		"13 - t M-transformation" << std::endl <<
-		"14 - d M-transformation" << std::endl <<
-		"15 - v M-transformation" << std::endl <<
-		"16 - Weniger transformation" << std::endl <<
-		"17 - Rho - Wynn transformation" << std::endl<<
-		"18 - Theta Brezinski transformation" << std::endl;
+		"5 - S-transformation" << std::endl <<
+		"6 - D-transformation" << std::endl <<
+		"7 - Chang - Wynn - Epsilon Algorithm" << std::endl << 
+		"8 - u M-transformation" << std::endl <<
+		"9 - t M-transformation" << std::endl <<
+		"10 - d M-transformation" << std::endl <<
+		"11 - v M-transformation" << std::endl <<
+		"12 - Weniger transformation" << std::endl <<
+		"13 - Rho - Wynn transformation" << std::endl<<
+		"14 - Theta Brezinski transformation" << std::endl;
 }
 
 /**
@@ -166,6 +159,44 @@ inline static void print_test_function_info()
 		"3 - transformation_remainders - showcases the difference between series' sum and transformed partial sum" << std::endl <<
 		"4 - cmp_transformations - showcases the difference between convergence of sums accelerated by different transformations" << std::endl <<
 		"5 - eval_transform_time - evaluates the time it takes to transform series" << std::endl;
+}
+
+/**
+* @brief initialize LevinType transformations, usable for S,D
+* @authors Naumov A.
+*/
+template<typename T, typename K, typename series_templ>
+inline void init_levin(transformation_id_t id, std::unique_ptr<series_base<T,K>>& series, std::unique_ptr<series_acceleration<T, K, series_templ>>& transform)
+{
+	bool recursive;
+	char type;
+
+	std::cout << std::endl;
+	std::cout << "|--------------------------------------|" << std::endl;
+	std::cout << "| choose what type of transformation u,t,d or v: "; std::cin >> type; std::cout << "|" << std::endl;
+	std::cout << "| Use recurrence formula? 1<-true or 0<-false : "; std::cin >> recursive; std::cout << "|" << std::endl;
+	std::cout << "|--------------------------------------|" << std::endl;
+
+	transform_base<T, K>* ptr = NULL;
+
+	if (type == 'u') ptr = new u_transform<T, K>{};
+	if (type == 't') ptr = new t_transform<T, K>{}; 
+	if (type == 'd') ptr = new v_transform<T, K>{};
+	if (type == 'v') ptr = new d_transform<T, K>{};
+
+	if (ptr == NULL) throw std::domain_error("chosen wrong type of transformation");
+
+	switch (id) {
+		case transformation_id_t::S_algorithm:
+			transform.reset(new levi_sidi_algorithm<T, K, decltype(series.get())>(series.get(), ptr, recursive));
+			return;
+		case transformation_id_t::D_algorithm:
+			transform.reset(new drummonds_algorithm<T, K, decltype(series.get())>(series.get(), ptr, recursive));
+			return;
+		default:
+			throw std::domain_error("wrong id was givven");
+	}
+		
 }
 
 /**
@@ -321,23 +352,12 @@ inline static void main_testing_function()
 	case transformation_id_t::epsilon_algorithm_2_id:
 		transform.reset(new epsilon_algorithm_two<T, K, decltype(series.get())>(series.get()));
 		break;
-	case transformation_id_t::u_S_transformation:
-		transform.reset(new u_levi_sidi_algorithm<T, K, decltype(series.get())>(series.get()));
+	case transformation_id_t::S_algorithm:
+		init_levin(transformation_id_t::S_algorithm, series, transform);
 		break;
-	case transformation_id_t::t_S_transformation:
-		transform.reset(new t_levi_sidi_algorithm<T, K, decltype(series.get())>(series.get()));
+	case transformation_id_t::D_algorithm:
+		init_levin(transformation_id_t::D_algorithm, series, transform);
 		break;
-	case transformation_id_t::v_S_transformation:
-		transform.reset(new v_levi_sidi_algorithm<T, K, decltype(series.get())>(series.get()));
-		break;
-	case transformation_id_t::rec_u_S_transformation:
-		transform.reset(new recursive_u_levi_sidi_algorithm<T, K, decltype(series.get())>(series.get()));
-		break;
-	case transformation_id_t::rec_t_S_transformation:
-		transform.reset(new recursive_t_levi_sidi_algorithm<T, K, decltype(series.get())>(series.get()));
-		break;
-	case transformation_id_t::rec_v_S_transformation:
-		transform.reset(new recursive_v_levi_sidi_algorithm<T, K, decltype(series.get())>(series.get()));
 	case transformation_id_t::chang_epsilon_algorithm:
 		transform.reset(new chang_whynn_algorithm<T, K, decltype(series.get())>(series.get()));
 		break;
@@ -395,61 +415,49 @@ inline static void main_testing_function()
 		
 		switch (cmop_transformation_id)
 		{
-		case 1:
+		case shanks_transformation_id:
 			if (alternating_series.contains(series_id))
 				transform2.reset(new shanks_transform_alternating<T, K, decltype(series.get())>(series.get()));
 			else
 				transform2.reset(new shanks_transform<T, K, decltype(series.get())>(series.get()));
 			break;
-		case 2:
+		case epsilon_algorithm_id:
 			transform2.reset(new epsilon_algorithm<T, K, decltype(series.get())>(series.get()));
 			break;
-		case 3:
+		case levin_algorithm_id:
 			transform2.reset(new levin_algorithm<T, K, decltype(series.get())>(series.get()));
 			break;
-		case 4:
+		case epsilon_algorithm_2_id:
 			transform2.reset(new epsilon_algorithm_two<T, K, decltype(series.get())>(series.get()));
 			break;
-		case 5:
-			transform2.reset(new u_levi_sidi_algorithm<T, K, decltype(series.get())>(series.get()));
+		case transformation_id_t::S_algorithm:
+			init_levin(transformation_id_t::S_algorithm, series, transform2);
 			break;
-		case 6:
-			transform2.reset(new t_levi_sidi_algorithm<T, K, decltype(series.get())>(series.get()));
+		case transformation_id_t::D_algorithm:
+			init_levin(transformation_id_t::D_algorithm, series, transform2);
 			break;
-		case 7:
-			transform2.reset(new v_levi_sidi_algorithm<T, K, decltype(series.get())>(series.get()));
-			break;
-		case 8:
+		case chang_epsilon_algorithm:
 			transform2.reset(new chang_whynn_algorithm<T, K, decltype(series.get())>(series.get()));
 			break;
-		case 9:
-			transform2.reset(new recursive_u_levi_sidi_algorithm<T, K, decltype(series.get())>(series.get()));
-			break;
-		case 10:
-			transform2.reset(new recursive_t_levi_sidi_algorithm<T, K, decltype(series.get())>(series.get()));
-			break;
-		case 11:
-			transform2.reset(new recursive_v_levi_sidi_algorithm<T, K, decltype(series.get())>(series.get()));
-			break;
-		case 12:
+		case u_M_transformation:
 			transform2.reset(new u_alevi_sidi_algorithm<T, K, decltype(series.get())>(series.get()));
 			break;
-		case 13:
+		case t_M_transformation:
 			transform2.reset(new t_alevi_sidi_algorithm<T, K, decltype(series.get())>(series.get()));
 			break;
-		case 14:
+		case d_M_transformation:
 			transform2.reset(new d_alevi_sidi_algorithm<T, K, decltype(series.get())>(series.get()));
 			break;
-		case 15:
+		case v_M_transformation:
 			transform2.reset(new v_alevi_sidi_algorithm<T, K, decltype(series.get())>(series.get()));
 			break;
-		case 16:
+		case weniger_transformation:
 			transform2.reset(new weniger_algorithm<T, K, decltype(series.get())>(series.get()));
 			break;
-		case 17:
+		case rho_wynn_transformation:
 			transform2.reset(new recursive_rho_Wynn_algorithm<T, K, decltype(series.get())>(series.get()));
 			break;
-		case 18:
+		case brezinski_theta_transformation:
 			transform2.reset(new theta_brezinski_algorithm<T, K, decltype(series.get())>(series.get()));
 			break;
 		default:
