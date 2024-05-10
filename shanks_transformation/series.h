@@ -133,10 +133,18 @@ protected:
 };
 
 template <typename T, typename K>
-series_base<T, K>::series_base(T x) : x(x), sum(0) {}
+series_base<T, K>::series_base(T x) : x(x), sum(0)
+{
+	static_assert(std::is_floating_point_v<T>);
+	static_assert(std::numeric_limits<K>::is_integer);
+}
 
 template <typename T, typename K>
-series_base<T, K>::series_base(T x, T sum) : x(x), sum(sum) {}
+series_base<T, K>::series_base(T x, T sum) : x(x), sum(sum)
+{
+	static_assert(std::is_floating_point_v<T>);
+	static_assert(std::numeric_limits<K>::is_integer);
+}
 
 template <typename T, typename K>
 constexpr T series_base<T, K>::S_n(K n) const

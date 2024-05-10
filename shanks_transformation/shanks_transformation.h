@@ -9,10 +9,10 @@
 #include "series_acceleration.h" // Include the series header
 #include <vector>  // Include the vector library
 
-/**
-* @brief Shanks transformation for non-alternating series class.
-* @tparam T The type of the elements in the series, K The type of enumerating integer, series_templ is the type of series whose convergence we accelerate
-*/
+ /**
+ * @brief Shanks transformation for non-alternating series class.
+ * @tparam T The type of the elements in the series, K The type of enumerating integer, series_templ is the type of series whose convergence we accelerate
+ */
 template <typename T, typename K, typename series_templ>
 class shanks_transform : public series_acceleration<T, K, series_templ>
 {
@@ -49,7 +49,7 @@ T shanks_transform<T, K, series_templ>::operator()(const K n, const int order) c
 		return DEF_UNDEFINED_SUM;
 	else if (order == 1)
 	{
-		
+
 		const auto a_n = this->series->operator()(n);
 		const auto a_n_plus_1 = this->series->operator()(n + 1);
 		const auto tmp = -a_n_plus_1 * a_n_plus_1;
@@ -87,7 +87,7 @@ T shanks_transform<T, K, series_templ>::operator()(const K n, const int order) c
 					throw std::overflow_error("division by zero");*/
 					/*T_n_plus_1[i] = T_n[i] - (T_n[i] - T_n[i - 1]) * (T_n[i + 1] - T_n[i]) / (T_n[i + 1] - 2 * T_n[i] + T_n[i - 1]);
 					T_n_plus_1[i] = std::fma(std::fma(T_n[i], T_n[i+1] + T_n[i-1] - T_n[i], -T_n[i-1]*T_n[i+1]), 1 / (2 * T_n[i] - T_n[i - 1] - T_n[i+1]), T_n[i]);*/
-				T_n_plus_1[i] = std::fma(std::fma(a, c + b - a, -b * c), 1 / (std::fma(2,a,-b-c)), a); 
+				T_n_plus_1[i] = std::fma(std::fma(a, c + b - a, -b * c), 1 / (std::fma(2,a,-b - c)), a);
 			}
 			T_n = T_n_plus_1;
 		}

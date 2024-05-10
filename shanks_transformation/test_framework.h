@@ -16,7 +16,7 @@
 #include "test_functions.h"
 #include "levin_sidi_M_algorithm.h"
 #include "weniger_algorithm.h"
-#include"rho_wynn_algorithm.h"
+#include "rho_wynn_algorithm.h"
 #include "brezinski_theta_algorithm.h"
 
 enum transformation_id_t {
