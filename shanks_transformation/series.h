@@ -39,14 +39,15 @@
 #define NO_X_GIVEN 0
 #define NO_SERIES_EXPRESSION_GIVEN 0
 #include <numbers>
+#include <limits>
 
 
 
-/**
-* @brief Abstract class for series
-* @authors Bolshakov M.P.
-* @tparam T The type of the elements in the series, K The type of enumerating integer
-*/
+ /**
+ * @brief Abstract class for series
+ * @authors Bolshakov M.P.
+ * @tparam T The type of the elements in the series, K The type of enumerating integer
+ */
 template <typename T, typename K>
 class series_base
 {
@@ -100,6 +101,7 @@ public:
 	* @return combinations(n,k)
 	*/
 	[[nodiscard]] constexpr static const T binomial_coefficient(const T n, const K k);
+
 
 	/**
 	* @brief evaluates (-1)^n
@@ -170,7 +172,7 @@ constexpr const T series_base<T, K>::get_sum() const
 }
 
 template <typename T, typename K>
-constexpr const K series_base<T,K>::fact(K n)
+constexpr const K series_base<T, K>::fact(K n)
 {
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
@@ -223,7 +225,7 @@ public:
 };
 
 template <typename T, typename K>
-exp_series<T, K>::exp_series(T x) : series_base<T,K>(x, std::exp(x)) {}
+exp_series<T, K>::exp_series(T x) : series_base<T, K>(x, std::exp(x)) {}
 
 template <typename T, typename K>
 constexpr T exp_series<T, K>::operator()(K n) const
@@ -268,7 +270,7 @@ constexpr T cos_series<T, K>::operator()(K n) const
 {
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
-	return series_base<T,K>::minus_one_raised_to_power_n(n) * std::pow(this->x, 2 * n) / this->fact(2 * n);
+	return series_base<T, K>::minus_one_raised_to_power_n(n) * std::pow(this->x, 2 * n) / this->fact(2 * n);
 }
 
 /**
@@ -322,7 +324,7 @@ public:
 
 	/**
 	* @brief Parameterized constructor to initialize the series with function argument and sum
-	* @authors Pashkov B.B.	
+	* @authors Pashkov B.B.
 	* @param x The argument for function series
 	*/
 	cosh_series(T x);
@@ -464,7 +466,7 @@ public:
 };
 
 template <typename T, typename K>
-four_arctan_series<T, K>::four_arctan_series(T x) : series_base<T, K>(x, 4*std::atan(x))
+four_arctan_series<T, K>::four_arctan_series(T x) : series_base<T, K>(x, 4 * std::atan(x))
 {
 	if (std::abs(x) > 1)
 		throw std::domain_error("the arctan series diverge at x = " + std::to_string(x));
@@ -586,14 +588,14 @@ public:
 };
 
 template <typename T, typename K>
-exp_squared_erf_series<T, K>::exp_squared_erf_series(T x) : series_base<T, K>(x, std::exp(x * x)* std::erf(x)) {}
+exp_squared_erf_series<T, K>::exp_squared_erf_series(T x) : series_base<T, K>(x, std::exp(x* x)* std::erf(x)) {}
 
 template <typename T, typename K>
 constexpr T exp_squared_erf_series<T, K>::operator()(K n) const
 {
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
-	const auto result = std::pow(this->x, 2 * n + 1) / std::tgamma(n+1.5);
+	const auto result = std::pow(this->x, 2 * n + 1) / std::tgamma(n + 1.5);
 	if (!isfinite(result))
 		throw std::overflow_error("operator() is too big");
 	return result;
@@ -613,7 +615,7 @@ public:
 	/**
 	* @brief Parameterized constructor to initialize the series with function argument and sum
 	* @authors Pashkov B.B.
-	* @param x The argument for function series, b The integer constant 
+	* @param x The argument for function series, b The integer constant
 	*/
 	xmb_Jb_two_series(T x, K b);
 
@@ -799,7 +801,7 @@ public:
 };
 
 template <typename T, typename K>
-erf_series<T, K>::erf_series(T x) : series_base<T, K>(x, std::sqrt(std::numbers::pi) * std::erf(x) * 0.5) 
+erf_series<T, K>::erf_series(T x) : series_base<T, K>(x, std::sqrt(std::numbers::pi)* std::erf(x) * 0.5)
 {
 
 }
@@ -847,9 +849,9 @@ private:
 };
 
 template <typename T, typename K>
-m_fact_1mx_mp1_inverse_series<T, K>::m_fact_1mx_mp1_inverse_series(T x, K m) : series_base<T, K>(x, this->fact(m) / pow(1 - x, m + 1)), m(m) 
+m_fact_1mx_mp1_inverse_series<T, K>::m_fact_1mx_mp1_inverse_series(T x, K m) : series_base<T, K>(x, this->fact(m) / pow(1 - x, m + 1)), m(m)
 {
-	if (!isfinite(series_base<T,K>::sum)) // sum = this->fact(m) / pow(1 - x, m + 1))
+	if (!isfinite(series_base<T, K>::sum)) // sum = this->fact(m) / pow(1 - x, m + 1))
 		throw std::overflow_error("sum is too big");
 	if (std::abs(this->x) >= 1) // p. 564 typo
 		throw std::domain_error("series diverge");
@@ -891,7 +893,7 @@ public:
 };
 
 template <typename T, typename K>
-inverse_sqrt_1m4x_series<T, K>::inverse_sqrt_1m4x_series(T x) : series_base<T, K>(x, std::pow(std::fma(-4, x, 1), -0.5)) 
+inverse_sqrt_1m4x_series<T, K>::inverse_sqrt_1m4x_series(T x) : series_base<T, K>(x, std::pow(std::fma(-4, x, 1), -0.5))
 {
 	if (std::abs(this->x) > 0.25 || this->x == 0.25)
 		throw std::domain_error("series diverge");
@@ -906,7 +908,7 @@ constexpr T inverse_sqrt_1m4x_series<T, K>::operator()(K n) const
 	return this->fact(2 * n) * pow(this->x, n) / (_fact_n * _fact_n);
 }
 
-/**	
+/**
 * @brief Trigonometric series of 1/12 * (3x^2 - pi^2)
 * @authors Pashkov B.B.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
@@ -934,7 +936,7 @@ public:
 };
 
 template <typename T, typename K>
-one_twelfth_3x2_pi2_series<T, K>::one_twelfth_3x2_pi2_series(T x) : series_base<T, K>(x, std::fma(0.25*x, x, -std::numbers::pi* std::numbers::pi / 12))
+one_twelfth_3x2_pi2_series<T, K>::one_twelfth_3x2_pi2_series(T x) : series_base<T, K>(x, std::fma(0.25 * x, x, -std::numbers::pi * std::numbers::pi / 12))
 {
 	if (std::abs(this->x) > std::numbers::pi)
 		throw std::domain_error("series diverge");
@@ -976,7 +978,7 @@ public:
 };
 
 template <typename T, typename K>
-x_twelfth_x2_pi2_series<T, K>::x_twelfth_x2_pi2_series(T x) : series_base<T, K>(x, std::fma(x / 12, (x + std::numbers::pi) * (x - std::numbers::pi), -std::fma(x + std::numbers::pi, x - std::numbers::pi, (x + std::numbers::pi) * (x - std::numbers::pi))))
+x_twelfth_x2_pi2_series<T, K>::x_twelfth_x2_pi2_series(T x) : series_base<T, K>(x, std::fma(x / 12, (x + std::numbers::pi)* (x - std::numbers::pi), -std::fma(x + std::numbers::pi, x - std::numbers::pi, (x + std::numbers::pi) * (x - std::numbers::pi))))
 {
 	if (std::abs(this->x) > std::numbers::pi)
 		throw std::domain_error("series diverge");
@@ -1053,7 +1055,7 @@ constexpr T one_series<T, K>::operator()(K n) const
 {
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
-	return n ? 1.0 / (n*n + n) : 0;
+	return n ? 1.0 / (n * n + n) : 0;
 }
 
 /**
@@ -1197,7 +1199,7 @@ public:
 	* @param n The number of the term
 	* @return nth term of the series
 	*/
-	[[nodiscard]] constexpr virtual T operator()(K n) const const;
+	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
 template <typename T, typename K>
@@ -1228,7 +1230,7 @@ public:
 	* @param n The number of the term
 	* @return nth term of the series
 	*/
-	[[nodiscard]] constexpr virtual T operator()(K n) const const;
+	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
 template <typename T, typename K>
@@ -1259,7 +1261,7 @@ public:
 	* @param n The number of the term
 	* @return nth term of the series
 	*/
-	[[nodiscard]] constexpr virtual T operator()(K n) const const;
+	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
 template <typename T, typename K>
@@ -1290,7 +1292,7 @@ public:
 	* @param n The number of the term
 	* @return nth term of the series
 	*/
-	[[nodiscard]] constexpr virtual T operator()(K n) const const;
+	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
 template <typename T, typename K>
@@ -1321,7 +1323,7 @@ public:
 	* @param n The number of the term
 	* @return nth term of the series
 	*/
-	[[nodiscard]] constexpr virtual T operator()(K n) const const;
+	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
 template <typename T, typename K>
@@ -1363,7 +1365,7 @@ public:
 };
 
 template <typename T, typename K>
-exp_m_cos_x_sinsin_x_series<T, K>::exp_m_cos_x_sinsin_x_series(T x) : series_base<T, K>(x, std::exp(-std::cos(x)) * std::sin(std::sin(x))) {}
+exp_m_cos_x_sinsin_x_series<T, K>::exp_m_cos_x_sinsin_x_series(T x) : series_base<T, K>(x, std::exp(-std::cos(x))* std::sin(std::sin(x))) {}
 
 template <typename T, typename K>
 constexpr T exp_m_cos_x_sinsin_x_series<T, K>::operator()(K n) const

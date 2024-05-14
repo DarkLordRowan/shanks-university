@@ -10,19 +10,19 @@
 #include "series.h"
 #include <chrono>
 
-/*
-* @brief Function that prints out comparesment between transformed and nontransformed partial sums
-* At first it prints out the type of transformation, series that are being transformed, type of enumerating integer and type of series terms
-* Then it prints out partial sums of first i terms of the series where i ranges from 1 to n (!)
-* After that it prints out transformed partial sum of first i terms of the series of order order 
-* At last it prints out the difference between the two
-* @authors Bolshakov M.P.
-* @tparam series_templ is the type of series whose convergence we accelerate, transform_type is the type of transformation we are using
-* @param n The number of terms
-* @param order The order of the transformation
-* @param series The series class object to be accelerated
-* @param test The type of transformation that is being used
-*/
+ /*
+ * @brief Function that prints out comparesment between transformed and nontransformed partial sums
+ * At first it prints out the type of transformation, series that are being transformed, type of enumerating integer and type of series terms
+ * Then it prints out partial sums of first i terms of the series where i ranges from 1 to n (!)
+ * After that it prints out transformed partial sum of first i terms of the series of order order
+ * At last it prints out the difference between the two
+ * @authors Bolshakov M.P.
+ * @tparam series_templ is the type of series whose convergence we accelerate, transform_type is the type of transformation we are using
+ * @param n The number of terms
+ * @param order The order of the transformation
+ * @param series The series class object to be accelerated
+ * @param test The type of transformation that is being used
+ */
 template <typename series_templ, typename transform_type>
 void cmp_sum_and_transform(const int n, const int order, const series_templ&& series, const transform_type&& test)
 {
@@ -84,7 +84,7 @@ void cmp_a_n_and_transform(const int n, const int order, const series_templ&& se
 }
 
 /**
-* @brief Function that prints out the remainders 
+* @brief Function that prints out the remainders
 * At first it prints out the type of transformation, series that are being transformed, type of enumerating integer and type of series terms
 * Then it prints out remainders of the series from 1 to n
 * @authors Bolshakov M.P.
@@ -192,7 +192,6 @@ void eval_transform_time(const int n, const int order, const series_templ&& seri
 		}
 	}
 	const auto end_time = std::chrono::system_clock::now();
-	std::cout << "It took " << static_cast<std::chrono::duration<double>>(end_time - start_time) << " to perform these transformations" << std::endl;
+	const std::chrono::duration<double, std::milli> diff = end_time - start_time;
+	std::cout << "It took " << diff.count() << " to perform these transformations" << std::endl;
 }
-
-//TO DO make a function to compare shanks_transformation and shanks_transformation for alternating series

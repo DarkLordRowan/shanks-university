@@ -338,9 +338,9 @@ inline static void main_testing_function()
 	switch (transformation_id)
 	{
 	case transformation_id_t::shanks_transformation_id:
-		if (alternating_series.contains(series_id))
-			transform.reset(new shanks_transform_alternating<T, K, decltype(series.get())>(series.get()));
-		else
+		//if (alternating_series.contains(series_id))
+			//transform.reset(new shanks_transform_alternating<T, K, decltype(series.get())>(series.get()));
+		//else
 			transform.reset(new shanks_transform<T, K, decltype(series.get())>(series.get()));
 		break;
 	case transformation_id_t::epsilon_algorithm_id:
@@ -416,9 +416,9 @@ inline static void main_testing_function()
 		switch (cmop_transformation_id)
 		{
 		case shanks_transformation_id:
-			if (alternating_series.contains(series_id))
-				transform2.reset(new shanks_transform_alternating<T, K, decltype(series.get())>(series.get()));
-			else
+			//if (alternating_series.contains(series_id))
+				//transform2.reset(new shanks_transform_alternating<T, K, decltype(series.get())>(series.get()));
+			//else
 				transform2.reset(new shanks_transform<T, K, decltype(series.get())>(series.get()));
 			break;
 		case epsilon_algorithm_id:
