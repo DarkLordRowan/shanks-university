@@ -6,7 +6,8 @@
 #pragma once
 
 #include "series_acceleration.h" // Include the series header
-#include <vector> // Include the vector library
+//#include <vector> // Include the vector library
+#define epsilon 1.0E-160 //precision of calculations. checks numeders to being close to zero
 
 template <typename T, typename K, typename series_templ>
 class theta_brezinski_algorithm : public series_acceleration<T, K, series_templ>
@@ -37,7 +38,7 @@ protected:
      * @param k The order of transformation.
      * @return The value of theta.
      */
-    T theta(const int n, const int k) const;
+    T theta(K n, const int k, T S_n, const K j) const;
 };
 
 template <typename T, typename K, typename series_templ>
@@ -47,35 +48,53 @@ theta_brezinski_algorithm<T, K, series_templ>::theta_brezinski_algorithm(const s
 template <typename T, typename K, typename series_templ>
 T theta_brezinski_algorithm<T, K, series_templ>::operator()(const K n, const int order) const
 {
-    if (n < 0)
+    if (order % 2 != 0 || order < 0) 
+        throw std::domain_error("order should be even number");
+    else if (n < 0)
         throw std::domain_error("negative integer in the input");
     else if (n == 0 || order == 0)
         return this->series->S_n(n);
-    return theta(n, order);
+    return theta(n, order, this->series->S_n(n),0);
 }
 
 
 template <typename T, typename K, typename series_templ>
-T theta_brezinski_algorithm<T, K, series_templ>::theta(const int n, const int k) const
+T theta_brezinski_algorithm<T, K, series_templ>::theta(K n, const int k, T S_n, const K j) const
 {
     if (k == 1)
     {
-        return 1/this->series->operator()(n+1); 
+        T res = 1/this->series->operator()(n+j+1);
+        if (!std::isfinite(res)) throw std::overflow_error("division by zero");
+        return res;
     }
-    else if (k == 0)
+
+    for (K tmp = n+1; tmp <= n + j; tmp++) {
+        S_n += this->series->operator()(tmp);
+    }
+    n += j;
+
+    if (k == 0)
     {
-        return this->series->S_n(n);
+        return S_n;
     }
     else if (k % 2 == 1)
     {
-        const T delta = theta(n, k - 1) - theta(n+1, k - 1); // Δυ_2k^(n)
-        return theta(n+1, k - 2) + T(1) / delta; // υ_(2k+1)^(n)=υ_(2k-1)^(n+1) + 1/(Δυ_2k^(n)
+        const T delta = theta(n, k - 1, S_n, 0) - theta(n, k - 1, S_n, 1); // Δυ_2k^(n)
+
+        if(delta > -epsilon && delta < epsilon) throw std::overflow_error("division by zero");
+
+        return theta(n, k - 2,S_n ,1) + T(1) / delta; // υ_(2k+1)^(n)=υ_(2k-1)^(n+1) + 1/(Δυ_2k^(n)
+        
     }
     else
     { // k % 2 == 0
-        const T delta_n = theta(n + 1, k - 2) - theta(n+2 , k - 2); // Δυ_2k^(n+1) 
-        const T delta_n1 = theta(n + 1, k - 1) - theta(n+2, k - 1); // Δυ_(2k+1)^(n+1)
-        const T delta2 = theta(n, k - 1) - 2 * theta(n+1, k - 1) + theta(n+2, k - 1); // Δ^2 υ_(2k+1)^(n)
-        return theta(n + 1, k - 2) + (delta_n * delta_n1) / delta2; // υ_(2k+2)^(n)=υ_2k^(n+1)+((Δυ_2k^(n+1))*(Δυ_(2k+1)^(n+1)))/(Δ^2 υ_(2k+1)^(n)
+        const T delta2 = theta(n, k - 1, S_n, 0) - 2 * theta(n, k - 1,S_n,1) + theta(n, k - 1,S_n,2); // Δ^2 υ_(2k+1)^(n)
+
+        if (delta2 > -epsilon && delta2 < epsilon) throw std::overflow_error("division by zero");
+
+        const T delta_n = theta(n, k - 2, S_n, 1) - theta(n , k - 2, S_n,2); // Δυ_2k^(n+1) 
+        const T delta_n1 = theta(n, k - 1, S_n,1) - theta(n, k - 1,S_n,2); // Δυ_(2k+1)^(n+1)
+        
+        return theta(n, k - 2, S_n, 1) + (delta_n * delta_n1) / delta2; // υ_(2k+2)^(n)=υ_2k^(n+1)+((Δυ_2k^(n+1))*(Δυ_(2k+1)^(n+1)))/(Δ^2 υ_(2k+1)^(n)
     }
 }

@@ -6,7 +6,6 @@
 #define DEF_UNDEFINED_SUM 0
 
 #include "series_acceleration.h" // Include the series header
-#include <vector>
 #include <iostream>
 
 template<typename T, typename K, typename series_templ>
@@ -62,9 +61,10 @@ T weniger_algorithm<T, K, series_templ>::operator()(const K k, const int n) cons
 	T binomial_coef = weniger_algorithm<T, K, series_templ>::series->binomial_coefficient(k, 0);
 	T S_n = weniger_algorithm<T, K, series_templ>::series->S_n(0);
 
+	T rest_a_n;
+
 	for (int m = 0; m < k - 1; ++m) {
 		coef *= (1 + m);
-
 	}
 
 	for (int j = 0; j <= k; ++j) {
@@ -74,22 +74,23 @@ T weniger_algorithm<T, K, series_templ>::operator()(const K k, const int n) cons
 
 		rest = rest * coef;
 
-		coef = coef / (1 + j) * (1 + j + 1 + k - 2);
+		coef = coef / (1 + j) * (j + k);
 
 		a_n = 1 / weniger_algorithm<T, K, series_templ>::series->operator()(j + 1);
 
-		numerator += rest * S_n * a_n;
+		rest_a_n = rest * a_n;
+
+		numerator += rest_a_n * S_n;
 
 		S_n += weniger_algorithm<T, K, series_templ>::series->operator()(j + 1);
 
-		denominator += rest * a_n;
+		denominator += rest_a_n;
 
 	}
 
 	numerator /= denominator;
 
-	if (!std::isfinite(numerator))
-		throw std::overflow_error("division by zero");
+	if (!std::isfinite(numerator)) throw std::overflow_error("division by zero");
 
 	return numerator;
 }

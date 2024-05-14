@@ -5,7 +5,7 @@
 #pragma once
 #define DEF_UNDEFINED_SUM 0
 #define GAMMA 10 // gamma is a a nonzero positive parameter, 10 is chosen by default
-
+#define epsilon 1.0E-16 //precision of calculations. checks numeders to being close to zero
 
 #include "series_acceleration.h" // Include the series header
 #include <vector>
@@ -36,7 +36,9 @@ public:
 
 template<typename T, typename K>
 T a_u_transform::operator()(const int& n, const int& j, const series_base<T, K>* series) const {
-	return 1 / ((-GAMMA - n) * series->operator()(n + j + 1)); 
+	T a = ((-GAMMA - n) * series->operator()(n + j + 1));
+	if (a < epsilon && a > -epsilon) throw std::domain_error("division by zero");
+		return 1 / a;
 }
 
 class a_t_transform {
@@ -53,7 +55,9 @@ public:
 
 template<typename T, typename K>
 T a_t_transform::operator()(const int& n, const int& j, const series_base<T, K>* series) const {
-	return 1 / (series->operator()(n + j));
+	T a = (series->operator()(n + j));
+	if (a < epsilon && a > -epsilon) throw std::domain_error("division by zero");
+	return 1 / a;
 }
 
 class a_d_transform {
@@ -70,7 +74,9 @@ public:
 
 template<typename T, typename K>
 T a_d_transform::operator()(const int& n, const int& j, const series_base<T, K>* series) const {
-	return 1 / (series->operator()(n + j+1));
+	T a = (series->operator()(n + j+1));
+	if (a < epsilon && a > -epsilon) throw std::domain_error("division by zero");
+	return 1 / a;
 }
 
 class a_v_transform {
@@ -87,7 +93,11 @@ public:
 
 template<typename T, typename K>
 T a_v_transform::operator()(const int& n, const int& j, const series_base<T, K>* series) const {
-	return (series->operator()(n + j) - series->operator()(n + j + 1)) / (series->operator()(n + j) * series->operator()(n + j + 1)) ;
+	T a1 = series->operator()(n + j);
+	T a2 = series->operator()(n + j + 1);
+	T tmp = a1 * a2;
+	if (tmp < epsilon && tmp > -epsilon) throw std::domain_error("division by zero");
+	return (a1 - a2) / tmp;
 }
 
 template<typename T, typename K, typename series_templ>
@@ -117,40 +127,50 @@ protected:
 
 		T numerator = T(0), denominator = T(0);
 		T w_n, rest;
-		T up, down;
+		T up = T(1), down = T(1);
 
 		T binomial_coef = this->series->binomial_coefficient(k, 0);
 		T S_n = this->series->S_n(n);
 
-		up = down = T(1);
+		T rest_w_n;
+		T down_coef = (GAMMA + n + 2), up_coef = down_coef - k;
+		
 		for (int m = 0; m < k - 1; ++m) {
-			up *= (GAMMA + n - k + 2 + m);
-			down *= (GAMMA + n + 2 + m);
+			up *= (up_coef + m);
+			down *= (down_coef + m);
 		}
 
+		up = (up / down);
+		down_coef = (GAMMA + n + 1);
+		up_coef = (down_coef - k + 1);
+		
 		for (int j = 0; j <= k; ++j) {
 
 			rest = this->series->minus_one_raised_to_power_n(j) * binomial_coef;
+
 			binomial_coef = binomial_coef * (k - j) / (j + 1);
 
-			rest = rest * (up / down);
+			rest = rest * up;
 
-			up = up / (GAMMA + n + j - k + 2) * (GAMMA + n + j + 1);
+			up = up / (up_coef + j) * ( down_coef + j );
 
 			w_n = remainder_func(n, j, this->series);
 
-			numerator += rest * S_n * w_n;
+			rest_w_n = rest * w_n;
+
+			numerator += rest_w_n * S_n ;
 
 			S_n += this->series->operator()(n + j + 1);
 
-			denominator += rest * w_n;
+			denominator += rest_w_n;
 
 		}
 
+		//if (denominator < epsilon && denominator > -epsilon)  throw std::domain_error("division by zero");
+
 		numerator /= denominator;
 
-		if (!std::isfinite(numerator))
-			throw std::overflow_error("division by zero");
+		if (!std::isfinite(numerator)) throw std::overflow_error("division by zero");
 
 		return numerator;
 	}
