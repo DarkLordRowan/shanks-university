@@ -61,8 +61,10 @@ T levin_algorithm<T, K, series_templ>::operator()(const K n, const int order) co
 
 		g_n = 1 / (this->series->operator()(n + j));
 
-		denominator += rest * C_njk * g_n;
-		numerator += denominator * S_nj;
+		rest *= C_njk * g_n;
+
+		denominator += rest;
+		numerator += rest * S_nj;
 		
 	}
 	

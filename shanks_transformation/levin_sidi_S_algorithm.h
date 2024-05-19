@@ -33,7 +33,7 @@ public:
 	u_transform() {}
 
 	T operator()(const int& n, const int& j, const series_base<T, K>* series, T scale = T(1)) const {
-		return 1 / (scale * series->operator()(n + j + 1));
+		return 1 / (scale * series->operator()(n + j));
 	}
 };
 
