@@ -1,16 +1,22 @@
 /**
-* @file levin_sidi_merg.h
-* @brief This files contains the definition of Drummonds D-transformation with u,t,d,v remainders
+* @file drummon_D_algorithm.h
+* @brief Containts implemetation for Drummond's D-transformation
+* @authors Naumov A.
 */
 #pragma once
 #define DEF_UNDEFINED_SUM 0
 
 #include "series_acceleration.h" // Include the series header
-#include "levin_sidi_S_algorithm.h"
 #include <vector> // Include the vector library
 
 
 
+/**
+ * @brief D_transformation class template.
+ * @tparam T The type of the elements in the series, K The type of enumerating integer, series_templ is the type of series whose convergence we accelerate
+ * @param remainder_func - remainder type
+ * @param recursive To calculate reccursively
+*/
 template<typename T, typename K, typename series_templ>
 class drummonds_algorithm : public series_acceleration<T, K, series_templ>
 {
@@ -22,7 +28,6 @@ protected:
 
 	/**
 	* @brief Function to calculate D-tranformation directly by formula. For more information see p. 70 9.5-4 [https://arxiv.org/pdf/math/0306302.pdf]
-	* @authors Naumov A.
 	* @param k The number of terms in the partial sum.
 	* @param n the order of transformation
 	* @return The partial sum after the transformation.
@@ -57,8 +62,7 @@ protected:
 	}
 
 	/**
-	* @brief Function to calculate D-tranformation using reccurence formula.  For more information see p. 70 9.5-5 [https://arxiv.org/pdf/math/0306302.pdf]
-	* @authors Naumov A.
+	* @brief Function to calculate D-tranformation using reccurence formula. For more information see p. 70 9.5-5 [https://arxiv.org/pdf/math/0306302.pdf]
 	* @param k The number of terms in the partial sum.
 	* @param n the order of transformation
 	* @return The partial sum after the transformation.
@@ -108,12 +112,12 @@ public:
 	~drummonds_algorithm() { delete remainder_func; }
 
 	/**
-	* @brief Abstract method for the inherited classes below
-	* Computes the partial sum after the transformation using the Drummonds Algorithm.
-	* @param k The number of terms in the partial sum.
-	* @param n The order of transformation.
-	* @return The partial sum after the transformation.
-	*/
+   * @brief S-transformation.
+   * Computes the partial sum after the D-transformation
+   * @param k The number of terms in the partial sum.
+   * @param n The order of transformation.
+   * @return The partial sum after the transformation.
+   */
 
 	T operator()(const K k, const int n) const {
 		if (recursive) return calculate_rec(k, n);

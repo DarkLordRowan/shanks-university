@@ -7,6 +7,7 @@
 #include <memory>
 #include <string> 
 #include <set>
+#include "remainders.h"
 #include "shanks_transformation.h"
 #include "epsilon_algorithm.h"
 #include "levin_algorithm.h"
