@@ -55,7 +55,7 @@ T epsilon_algorithm_two<T, K, series_templ>::operator()(const K n, const int ord
 
     (n % 2 == 0) ? k += n : k += n - 1;
 
-    std::vector<std::vector<T>> e(4, std::vector<T>(k + 2, 0)); //4 vectors ë+2 length containing four Epsilon Table rows 
+    std::vector<std::vector<T>> e(4, std::vector<T>(k + 3, 0)); //4 vectors k+3 length containing four Epsilon Table rows 
 
     for (int j = k; j >= 0; --j) //Counting first row of Epsilon Table
     {
