@@ -28,14 +28,14 @@ protected:
 	/**
 	* @brief Default function to calculate S-tranformation directly by formula. For more information see p. 57 8.2-7 [https://arxiv.org/pdf/math/0306302.pdf]
 	* Levin-Sidi or Factorial analog of Levin Transformation is effective for series that belong to b(1)/LIN/FAC and inferior on b(1)/LOG for more information see p. 369 and p.285 [http://servidor.demec.ufpr.br/CFD/bibliografia/MER/Sidi_2003.pdf]
-	* @param n The number of terms in the partial sum.
+	* @param order The number of terms in the partial sum.
 	* @param k the order of transformation
 	* @return The partial sum after the transformation.
 	*/
 
-	virtual T calculate(const K& k, const int& n) const {
+	virtual T calculate(const K& n, const int& order) const {
 
-		if (n < 0)
+		if (order < 0)
 			throw std::domain_error("negative integer in input");
 		if (BETA <= 0)
 			throw std::domain_error("beta cannot be initiared by a negative number or a zero");
@@ -45,21 +45,21 @@ protected:
 		T w_n, rest;
 		T up, down;
 
-		for (int j = 0; j <= k; ++j) {
+		for (int j = 0; j <= n; ++j) {
 
-			rest = this->series->minus_one_raised_to_power_n(j) * this->series->binomial_coefficient(k, j);
+			rest = this->series->minus_one_raised_to_power_n(j) * this->series->binomial_coefficient(n, j);
 
 			up = down = T(1);
-			for (int m = 0; m < k - 1; ++m) {
-				up *= (BETA + n + j + m);
-				down *= (BETA + n + k + m);
+			for (int m = 0; m < n - 1; ++m) {
+				up *= (BETA + order + j + m);
+				down *= (BETA + order + n + m);
 			}
 
 			rest = rest * (up / down);
 
 			w_n = remainder_func->operator()(n, j, this->series, BETA + n);
 
-			numerator += rest * this->series->S_n(n + j) * w_n;
+			numerator += rest * this->series->S_n(order + j) * w_n;
 			denominator += rest * w_n;
 
 		}
@@ -75,31 +75,31 @@ protected:
 	/**
 	* @brief Default function to calculate S-tranformation using reccurence formula. Implemented u,t and v transformations. For more information see p. 57 8.3-5 [https://arxiv.org/pdf/math/0306302.pdf]
 	* Levin-Sidi or Factorial analog of Levin Transformation is effective for series that belong to b(1)/LIN/FAC and inferior on b(1)/LOG for more information see p. 369 and p.285 [http://servidor.demec.ufpr.br/CFD/bibliografia/MER/Sidi_2003.pdf]
-	* @param k The number of terms in the partial sum.
-	* @param n the order of transformation
+	* @param n The number of terms in the partial sum.
+	* @param order the order of transformation
 	* @return The partial sum after the transformation.
 	*/
 
-	T calculate_rec(const K& k, const int& n) const {
+	T calculate_rec(const K& n, const int& order) const {
 
-		if (n < 0)
+		if (order < 0)
 			throw std::domain_error("negative integer in input");
 		if (BETA <= 0)
 			throw std::domain_error("beta cannot be initiared by a negative number or a zero");
 
-		std::vector<T>* N = new std::vector<T>(k + 1, 0);
-		std::vector<T>* D = new std::vector<T>(k + 1, 0);
+		std::vector<T>* N = new std::vector<T>(n + 1, 0);
+		std::vector<T>* D = new std::vector<T>(n + 1, 0);
 
-		for (int i = 0; i < k + 1; i++) {
-			(*D)[i] = remainder_func->operator()(0, n + i, this->series);
-			(*N)[i] = this->series->S_n(n + i) * (*D)[i];
+		for (int i = 0; i < n + 1; i++) {
+			(*D)[i] = remainder_func->operator()(0, order + i, this->series);
+			(*N)[i] = this->series->S_n(order + i) * (*D)[i];
 		}
 
-		for (int i = 1; i <= k; ++i) {
-			for (int j = 0; j <= k - i; ++j) {
+		for (int i = 1; i <= n; ++i) {
+			for (int j = 0; j <= n - i; ++j) {
 
-				T scale1 = ((BETA + n + j + i) * (BETA + n + j + i - 1));
-				T scale2 = ((BETA + n + j + 2 * i) * (BETA + n + j + 2 * i - 1));
+				T scale1 = ((BETA + order + j + i) * (BETA + order + j + i - 1));
+				T scale2 = ((BETA + order + j + 2 * i) * (BETA + order + j + 2 * i - 1));
 
 				(*D)[j] = ((*D)[j + 1] * scale2 - scale1 * (*D)[j]) / scale2;
 				(*N)[j] = ((*N)[j + 1] * scale2 - scale1 * (*N)[j]) / scale2;
@@ -132,14 +132,14 @@ public:
 	/**
    * @brief S-transformation.
    * Computes the partial sum after the S-transformation
-   * @param k The number of terms in the partial sum.
-   * @param n The order of transformation.
+   * @param n The number of terms in the partial sum.
+   * @param order The order of transformation.
    * @return The partial sum after the transformation.
    */
 
-	T operator()(const K k, const int n) const {
-		if (recursive) return calculate_rec(k, n);
-		return calculate(k, n);
+	T operator()(const K n, const int order) const {
+		if (recursive) return calculate_rec(n, n);
+		return calculate(n, order);
 	}
 
 };
