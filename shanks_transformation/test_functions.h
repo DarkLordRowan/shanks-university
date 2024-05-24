@@ -7,10 +7,10 @@
 #include <exception>
 #include "test_functions.h"
 #include "series_acceleration.h"
-#include "series.h"
+//#include "series.h"
 #include <chrono>
 
- /*
+ /**
  * @brief Function that prints out comparesment between transformed and nontransformed partial sums
  * At first it prints out the type of transformation, series that are being transformed, type of enumerating integer and type of series terms
  * Then it prints out partial sums of first i terms of the series where i ranges from 1 to n (!)
@@ -47,7 +47,7 @@ void cmp_sum_and_transform(const int n, const int order, const series_templ&& se
 	}
 }
 
-/*
+/**
 * @brief Function that prints out comparesment between the terms of transformed and nontransformed series
 * At first it prints out the type of transformation, series that are being transformed, type of enumerating integer and type of series terms
 * Then it prints out terms from the first to nth of the series
@@ -194,4 +194,47 @@ void eval_transform_time(const int n, const int order, const series_templ&& seri
 	const auto end_time = std::chrono::system_clock::now();
 	const std::chrono::duration<double, std::milli> diff = end_time - start_time;
 	std::cout << "It took " << diff.count() << " to perform these transformations" << std::endl;
+}
+
+
+/*
+* @brief Function that prints the terms of nontransformed partial sums
+* Then it prints out the nth terms  of the series
+* @authors Kreynin R.G.
+* @tparam series_templ is the type of series whose convergence we accelerate, transform_type is the type of transformation we are using
+* @param n The number of terms
+*/
+template <typename series_templ>
+void print_sum(const int n, const series_templ&& series)
+{
+	std::cout << "S_" << n << " : " << series->S_n(n) << std::endl;
+}
+
+/**
+* @brief Function that prints transformed partial sums
+* At first it prints out the type of transformation, series that are being transformed, type of enumerating integer and type of series terms
+* It prints out transformed partial sum of the n term of the series of order order
+* @authors Kreynin R.G.
+* @tparam transform_type is the type of transformation we are using
+* @param n The number of terms
+* @param order The order of the transformation
+* @param series The series class object to be accelerated
+* @param test The type of transformation that is being used
+*/
+template <typename transform_type>
+void print_transform(const int n, const int order, const transform_type&& test)
+{
+	test->print_info();
+	try
+	{
+		std::cout << "T_" << n << " of order " << order << " : " << test->operator()(n, order) << std::endl;
+	}
+	catch (std::domain_error& e)
+	{
+		std::cout << e.what() << std::endl;
+	}
+	catch (std::overflow_error& e)
+	{
+		std::cout << e.what() << std::endl;
+	}
 }

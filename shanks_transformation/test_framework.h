@@ -7,7 +7,7 @@
 #include <memory>
 #include <string> 
 #include <set>
-#include "remainders.h"
+
 #include "shanks_transformation.h"
 #include "epsilon_algorithm.h"
 #include "levin_algorithm.h"
@@ -20,7 +20,12 @@
 #include "weniger_algorithm.h"
 #include "rho_wynn_algorithm.h"
 #include "brezinski_theta_algorithm.h"
+#include "epsilon_algorithm_three.h"
 
+ /**
+  * @brief Enum of transformation IDs
+  * @authors Bolshakov M.P.
+  */
 enum transformation_id_t {
 	null_transformation_id,
 	shanks_transformation_id,
@@ -36,8 +41,13 @@ enum transformation_id_t {
 	v_M_transformation,
 	weniger_transformation,
 	rho_wynn_transformation,
-	brezinski_theta_transformation
+	brezinski_theta_transformation,
+	epsilon_algorithm_3_id
 };
+/**
+ * @brief Enum of series IDs
+ * @authors Bolshakov M.P.
+ */
 enum series_id_t {
 	null_series_id, 
 	exp_series_id, 
@@ -70,16 +80,22 @@ enum series_id_t {
 	eighth_pi_m_one_third_series_id,
 	one_third_pi_squared_m_nine_series_id,
 	four_ln2_m_3_series_id,
-	exp_m_cos_x_sinsin_x_series_id
+	exp_m_cos_x_sinsin_x_series_id,
+	testing_series_id
 };
 
+/**
+ * @brief Enum of testing functions IDs
+ * @authors Bolshakov M.P.
+ */
 enum test_function_id_t {
 	null_test_function_id, 
 	cmp_sum_and_transform_id, 
 	cmp_a_n_and_transform_id, 
 	transformation_remainder_id, 
 	cmp_transformations_id,
-	eval_transform_time_id
+	eval_transform_time_id,
+	test_all_transforms_id
 };
 
 /**
@@ -120,7 +136,8 @@ inline static void print_series_info()
 		"28 - eighth_pi_m_one_third_series" << std::endl <<
 		"29 - one_third_pi_squared_m_nine_series" << std::endl <<
 		"30 - four_ln2_m_3_series" << std::endl <<
-		"31 - exp_m_cos_x_sinsin_x_series" << std::endl;
+		"31 - exp_m_cos_x_sinsin_x_series" << std::endl <<
+		"32 - testing series" << std::endl;
 }
 
 /**
@@ -137,14 +154,15 @@ inline static void print_transformation_info()
 		"4 - Epsilon Algorithm V-2" << std::endl <<
 		"5 - S-transformation" << std::endl <<
 		"6 - D-transformation" << std::endl <<
-		"7 - Chang - Wynn - Epsilon Algorithm" << std::endl << 
+		"7 - Chang - Wynn - Epsilon Algorithm" << std::endl <<
 		"8 - u M-transformation" << std::endl <<
 		"9 - t M-transformation" << std::endl <<
 		"10 - d M-transformation" << std::endl <<
 		"11 - v M-transformation" << std::endl <<
 		"12 - Weniger transformation" << std::endl <<
-		"13 - Rho - Wynn transformation" << std::endl<<
-		"14 - Theta Brezinski transformation" << std::endl;
+		"13 - Rho - Wynn transformation" << std::endl <<
+		"14 - Theta Brezinski transformation" << std::endl <<
+		"15 - Epsilon Algorithm V-3" << std::endl;
 }
 
 /**
@@ -159,7 +177,9 @@ inline static void print_test_function_info()
 		"2 - cmp_a_n_and_transform - showcases the difference between series' terms and transformed ones" << std::endl <<
 		"3 - transformation_remainders - showcases the difference between series' sum and transformed partial sum" << std::endl <<
 		"4 - cmp_transformations - showcases the difference between convergence of sums accelerated by different transformations" << std::endl <<
-		"5 - eval_transform_time - evaluates the time it takes to transform series" << std::endl;
+		"5 - eval_transform_time - evaluates the time it takes to transform series" << std::endl <<
+		"6 - test all algorithms on summ" << std::endl;
+
 }
 
 /**
@@ -327,6 +347,9 @@ inline static void main_testing_function()
 	case series_id_t::exp_m_cos_x_sinsin_x_series_id:
 		series.reset(new exp_m_cos_x_sinsin_x_series<T, K>(x));
 		break;
+	case series_id_t::testing_series_id:
+	//	series.reset(new testing_series<T, K>(x));
+		break;
 	default:
 		throw std::domain_error("wrong series_id");
 	}
@@ -382,6 +405,9 @@ inline static void main_testing_function()
 		break;
 	case transformation_id_t::brezinski_theta_transformation:
 		transform.reset(new theta_brezinski_algorithm<T, K, decltype(series.get())>(series.get()));
+		break;
+	case transformation_id_t::epsilon_algorithm_3_id:
+		transform.reset(new epsilon_algorithm_three<T, K, decltype(series.get())>(series.get()));
 		break;
 	default:
 		throw std::domain_error("wrong transformation_id");
@@ -461,6 +487,9 @@ inline static void main_testing_function()
 		case brezinski_theta_transformation:
 			transform2.reset(new theta_brezinski_algorithm<T, K, decltype(series.get())>(series.get()));
 			break;
+		case epsilon_algorithm_3_id:
+			transform2.reset(new epsilon_algorithm_three<T, K, decltype(series.get())>(series.get()));
+			break;
 		default:
 			throw std::domain_error("wrong algorithm id");
 		}
@@ -469,6 +498,86 @@ inline static void main_testing_function()
 	}
 	case test_function_id_t::eval_transform_time_id:
 		eval_transform_time(n, order, std::move(series.get()), std::move(transform.get()));
+		break;
+	case test_function_id_t::test_all_transforms_id: //Testing all functions for series
+
+		for (int i = 1; i <= n; i++) 
+		{
+			print_sum(i, std::move(series.get()));
+			
+			//shanks
+			if (alternating_series.contains(series_id))
+				transform.reset(new shanks_transform_alternating<T, K, decltype(series.get())>(series.get()));
+			else
+				transform.reset(new shanks_transform<T, K, decltype(series.get())>(series.get()));
+			print_transform(i, order, std::move(transform.get()));
+
+			//epsilon v-1
+			transform.reset(new epsilon_algorithm<T, K, decltype(series.get())>(series.get()));
+			print_transform(i, order, std::move(transform.get()));
+
+			//epsilon v-2
+			transform.reset(new epsilon_algorithm_two<T, K, decltype(series.get())>(series.get()));
+			print_transform(i, order, std::move(transform.get()));
+
+			//epsilon v-3
+			transform.reset(new epsilon_algorithm_three<T, K, decltype(series.get())>(series.get()));
+			print_transform(i, order, std::move(transform.get()));
+
+			//rho-wynn
+			//transform.reset(new recursive_rho_Wynn_algorithm<T, K, decltype(series.get())>(series.get()));
+			//print_transform(i, order, std::move(transform.get()));
+			//Ошибка - k <= 2? 
+ 
+			//theta-brezinski
+			//transform.reset(new theta_brezinski_algorithm<T, K, decltype(series.get())>(series.get()));
+			//print_transform(i, order, std::move(transform.get()));
+			//Была ошибка... С... не помню, но не работало. Перемудрили?
+
+			//chang epsilon wynn
+			transform.reset(new chang_whynn_algorithm<T, K, decltype(series.get())>(series.get()));
+			print_transform(i, order, std::move(transform.get()));
+
+			//levin standart
+			transform.reset(new levin_algorithm<T, K, decltype(series.get())>(series.get()));
+			print_transform(i, order, std::move(transform.get()));
+
+			//levin S
+			//init_levin(transformation_id_t::S_algorithm, series, transform);
+			//print_transform(i, order, std::move(transform.get()));
+			//оч долго вбивать все это дохуя раз, мож можно что придумать?
+			// 
+			//levin D
+			//init_levin(transformation_id_t::D_algorithm, series, transform);
+			//print_transform(i, order, std::move(transform.get()));
+			//оч долго вбивать все это дохуя раз, мож можно что придумать?
+
+			//levin-sidi U
+			transform.reset(new u_alevi_sidi_algorithm<T, K, decltype(series.get())>(series.get()));
+			print_transform(i, order, std::move(transform.get()));
+			//Calculation gives domain error in T(0) 128. TEST IT
+
+			//levin-sidi T
+			transform.reset(new t_alevi_sidi_algorithm<T, K, decltype(series.get())>(series.get()));
+			print_transform(i, order, std::move(transform.get()));
+
+			//levin-sidi D
+			transform.reset(new d_alevi_sidi_algorithm<T, K, decltype(series.get())>(series.get()));
+			print_transform(i, order, std::move(transform.get()));
+
+			//alevi-sidi V
+			transform.reset(new v_alevi_sidi_algorithm<T, K, decltype(series.get())>(series.get()));
+			print_transform(i, order, std::move(transform.get()));
+			//(a1 - a2) / tmp при очень малом tmp вылетает. При делении это говно дает очень большую степень наверх, видимо 
+
+			//weniger
+			//transform.reset(new weniger_algorithm<T, K, decltype(series.get())>(series.get()));
+			//print_transform(i, order, std::move(transform.get()));
+			//Была ошибка std::overflow_error -> numenator = -inf
+
+			std::cout << std::endl;
+		}
+
 		break;
 	default:
 		throw std::domain_error("wrong function_id");
