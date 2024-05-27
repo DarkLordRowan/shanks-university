@@ -10,14 +10,11 @@
 #include <vector> // Include the vector library
 
  /**
- * @brief chang_wynn_algorithm class template. 
+ * @brief Chang-Wynn algorithm class template. 
  //SOME RESULTS CONCERNING THE FUNDAMENTAL NATURE OF WYNN'S VECTOR EPSILON ALGORITHM - same algo + vector form
  //On a Device for Computing the e (S ) Transformation - nothing new, just matrix
 
- //Construction of new generalizations of Wynn’s
-    epsilon and rho algorithm by solving finite difference
-    equations in the transformation order
-    chang algo!
+ //Construction of new generalizations of Wynn’s epsilon and rho algorithm by solving finite difference equations in the transformation order
  * @authors  Kreinin R.G.
  * @tparam T The type of the elements in the series, K The type of enumerating integer, series_templ is the type of series whose convergence we accelerate
  */

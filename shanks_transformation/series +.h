@@ -1,5 +1,5 @@
 /** updated
- * @file series.h
+ * @file series +.h
  * List of series currently avaiable:
  * 1 - exp_series
  * 2 - cos_series

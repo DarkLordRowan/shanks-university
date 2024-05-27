@@ -62,11 +62,11 @@ T epsilon_algorithm_two<T, K, series_templ>::operator()(const K n, const int ord
         e[3][j] = this->series->S_n(j);
     }
 
-    T a = 0, a1 = 0, a2 = 0; 
+    T a = 0, a1 = 0, a2 = 0;
 
-    while (k > -1) 
+    while (k > -1)
     {
-        for (int i = 0; i != k; ++i)
+        for (int i = 0; i < k; ++i)
         {
             e[0][i] = e[2][i + 1] + 1.0 / (e[3][i + 1] - e[3][i]); //Standart Epsilon Wynn algorithm
 
@@ -90,7 +90,8 @@ T epsilon_algorithm_two<T, K, series_templ>::operator()(const K n, const int ord
             if (!std::isfinite(e[0][i])) //If new element is still corrupted we just copy prev. element, so we will get result
             {
                 e[0][i] = e[2][i];
-                k = 0;
+                k = -1;
+                break;
             }
         }
         std::swap(e[0], e[1]); //Swapping rows of Epsilon Table. First ine will be overwriteen next turn

@@ -36,10 +36,7 @@ enum transformation_id_t {
 	S_algorithm,
 	D_algorithm,
 	chang_epsilon_algorithm,
-	u_M_transformation,
-	t_M_transformation,
-	d_M_transformation,
-	v_M_transformation,
+	M_algorithm,
 	weniger_transformation,
 	rho_wynn_transformation,
 	brezinski_theta_transformation,
@@ -156,14 +153,11 @@ inline static void print_transformation_info()
 		"5 - S-transformation" << std::endl <<
 		"6 - D-transformation" << std::endl <<
 		"7 - Chang - Wynn - Epsilon Algorithm" << std::endl <<
-		"8 - u M-transformation" << std::endl <<
-		"9 - t M-transformation" << std::endl <<
-		"10 - d M-transformation" << std::endl <<
-		"11 - v M-transformation" << std::endl <<
-		"12 - Weniger transformation" << std::endl <<
-		"13 - Rho - Wynn transformation" << std::endl <<
-		"14 - Theta Brezinski transformation" << std::endl <<
-		"15 - Epsilon Algorithm V-3" << std::endl;
+		"8 - M-transformation" << std::endl <<
+		"9 - Weniger transformation" << std::endl <<
+		"10 - Rho - Wynn transformation" << std::endl <<
+		"11 - Theta Brezinski transformation" << std::endl <<
+		"12 - Epsilon Algorithm V-3" << std::endl;
 }
 
 /**
@@ -190,21 +184,29 @@ inline static void print_test_function_info()
 template<typename T, typename K, typename series_templ>
 inline void init_levin(transformation_id_t id, std::unique_ptr<series_base<T,K>>& series, std::unique_ptr<series_acceleration<T, K, series_templ>>& transform)
 {
-	bool recursive;
+	bool recursive = false;
 	char type;
 
 	std::cout << std::endl;
 	std::cout << "|--------------------------------------|" << std::endl;
 	std::cout << "| choose what type of transformation u,t,d or v: "; std::cin >> type; std::cout << "|" << std::endl;
-	std::cout << "| Use recurrence formula? 1<-true or 0<-false : "; std::cin >> recursive; std::cout << "|" << std::endl;
+	if (!id == transformation_id_t::M_algorithm)
+	{
+		std::cout << "| Use recurrence formula? 1<-true or 0<-false : "; std::cin >> recursive; std::cout << "|" << std::endl;
+	}
 	std::cout << "|--------------------------------------|" << std::endl;
 
 	transform_base<T, K>* ptr = NULL;
 
 	if (type == 'u') ptr = new u_transform<T, K>{};
 	if (type == 't') ptr = new t_transform<T, K>{}; 
-	if (type == 'd') ptr = new v_transform<T, K>{};
-	if (type == 'v') ptr = new d_transform<T, K>{};
+	if (type == 'v') { 
+		if (!id == transformation_id_t::M_algorithm)
+			ptr = new v_transform<T, K>{};
+		else
+			ptr = new v_transform_2<T, K>{};
+	}
+	if (type == 'd') ptr = new d_transform<T, K>{};
 
 	if (ptr == NULL) throw std::domain_error("chosen wrong type of transformation");
 
@@ -215,10 +217,12 @@ inline void init_levin(transformation_id_t id, std::unique_ptr<series_base<T,K>>
 		case transformation_id_t::D_algorithm:
 			transform.reset(new drummonds_algorithm<T, K, decltype(series.get())>(series.get(), ptr, recursive));
 			return;
+		case transformation_id_t::M_algorithm:
+			transform.reset(new M_levin_sidi_algorithm<T, K, decltype(series.get())>(series.get(), ptr));
+			return;
 		default:
 			throw std::domain_error("wrong id was givven");
-	}
-		
+	}	
 }
 
 /**
@@ -386,23 +390,14 @@ inline static void main_testing_function()
 	case transformation_id_t::chang_epsilon_algorithm:
 		transform.reset(new chang_whynn_algorithm<T, K, decltype(series.get())>(series.get()));
 		break;
-	case transformation_id_t::u_M_transformation:
-		transform.reset(new u_alevi_sidi_algorithm<T, K, decltype(series.get())>(series.get()));
-		break;
-	case transformation_id_t::t_M_transformation:
-		transform.reset(new t_alevi_sidi_algorithm<T, K, decltype(series.get())>(series.get()));
-		break;
-	case transformation_id_t::d_M_transformation:
-		transform.reset(new d_alevi_sidi_algorithm<T, K, decltype(series.get())>(series.get()));
-		break;
-	case transformation_id_t::v_M_transformation:
-		transform.reset(new v_alevi_sidi_algorithm<T, K, decltype(series.get())>(series.get()));
+	case transformation_id_t::M_algorithm:
+		init_levin(transformation_id_t::M_algorithm, series, transform);
 		break;
 	case transformation_id_t::weniger_transformation:
 		transform.reset(new weniger_algorithm<T, K, decltype(series.get())>(series.get()));
 		break;
 	case transformation_id_t::rho_wynn_transformation:
-		transform.reset(new recursive_rho_Wynn_algorithm<T, K, decltype(series.get())>(series.get()));
+		transform.reset(new rho_Wynn_algorithm<T, K, decltype(series.get())>(series.get()));
 		break;
 	case transformation_id_t::brezinski_theta_transformation:
 		transform.reset(new theta_brezinski_algorithm<T, K, decltype(series.get())>(series.get()));
@@ -467,23 +462,14 @@ inline static void main_testing_function()
 		case chang_epsilon_algorithm:
 			transform2.reset(new chang_whynn_algorithm<T, K, decltype(series.get())>(series.get()));
 			break;
-		case u_M_transformation:
-			transform2.reset(new u_alevi_sidi_algorithm<T, K, decltype(series.get())>(series.get()));
-			break;
-		case t_M_transformation:
-			transform2.reset(new t_alevi_sidi_algorithm<T, K, decltype(series.get())>(series.get()));
-			break;
-		case d_M_transformation:
-			transform2.reset(new d_alevi_sidi_algorithm<T, K, decltype(series.get())>(series.get()));
-			break;
-		case v_M_transformation:
-			transform2.reset(new v_alevi_sidi_algorithm<T, K, decltype(series.get())>(series.get()));
+		case transformation_id_t::M_algorithm:
+			init_levin(transformation_id_t::M_algorithm, series, transform2);
 			break;
 		case weniger_transformation:
 			transform2.reset(new weniger_algorithm<T, K, decltype(series.get())>(series.get()));
 			break;
 		case rho_wynn_transformation:
-			transform2.reset(new recursive_rho_Wynn_algorithm<T, K, decltype(series.get())>(series.get()));
+			transform2.reset(new rho_Wynn_algorithm<T, K, decltype(series.get())>(series.get()));
 			break;
 		case brezinski_theta_transformation:
 			transform2.reset(new theta_brezinski_algorithm<T, K, decltype(series.get())>(series.get()));
@@ -526,14 +512,12 @@ inline static void main_testing_function()
 			print_transform(i, order, std::move(transform.get()));
 
 			//rho-wynn
-			//transform.reset(new recursive_rho_Wynn_algorithm<T, K, decltype(series.get())>(series.get()));
-			//print_transform(i, order, std::move(transform.get()));
-			//Ошибка - k <= 2? 
- 
+			transform.reset(new rho_Wynn_algorithm<T, K, decltype(series.get())>(series.get()));
+			print_transform(i, order, std::move(transform.get()));
+
 			//theta-brezinski
-			//transform.reset(new theta_brezinski_algorithm<T, K, decltype(series.get())>(series.get()));
-			//print_transform(i, order, std::move(transform.get()));
-			//Была ошибка... С... не помню, но не работало. Перемудрили?
+			transform.reset(new theta_brezinski_algorithm<T, K, decltype(series.get())>(series.get()));
+
 
 			//chang epsilon wynn
 			transform.reset(new chang_whynn_algorithm<T, K, decltype(series.get())>(series.get()));
@@ -543,39 +527,70 @@ inline static void main_testing_function()
 			transform.reset(new levin_algorithm<T, K, decltype(series.get())>(series.get()));
 			print_transform(i, order, std::move(transform.get()));
 
-			//levin S
-			//init_levin(transformation_id_t::S_algorithm, series, transform);
-			//print_transform(i, order, std::move(transform.get()));
-			//оч долго вбивать все это дохуя раз, мож можно что придумать?
-			// 
-			//levin D
-			//init_levin(transformation_id_t::D_algorithm, series, transform);
-			//print_transform(i, order, std::move(transform.get()));
-			//оч долго вбивать все это дохуя раз, мож можно что придумать?
-
-			//levin-sidi U
-			transform.reset(new u_alevi_sidi_algorithm<T, K, decltype(series.get())>(series.get()));
+			
+			//levin-sidi S U
+			transform.reset(new levi_sidi_algorithm<T, K, decltype(series.get())>(series.get(), new u_transform<T, K>{},false));
 			print_transform(i, order, std::move(transform.get()));
-			//Calculation gives domain error in T(0) 128. TEST IT
+			//
 
-			//levin-sidi T
-			transform.reset(new t_alevi_sidi_algorithm<T, K, decltype(series.get())>(series.get()));
+			//levin-sidi S T
+			transform.reset(new levi_sidi_algorithm<T, K, decltype(series.get())>(series.get(), new t_transform<T, K>{}, false));
 			print_transform(i, order, std::move(transform.get()));
+			//
 
-			//levin-sidi D
-			transform.reset(new d_alevi_sidi_algorithm<T, K, decltype(series.get())>(series.get()));
+			//levin-sidi S D
+			transform.reset(new levi_sidi_algorithm<T, K, decltype(series.get())>(series.get(), new d_transform<T, K>{}, false));
+			print_transform(i, order, std::move(transform.get()));
+			//
+
+			//levin-sidi S V
+			transform.reset(new levi_sidi_algorithm<T, K, decltype(series.get())>(series.get(), new v_transform<T, K>{}, false));
 			print_transform(i, order, std::move(transform.get()));
 
-			//alevi-sidi V
-			transform.reset(new v_alevi_sidi_algorithm<T, K, decltype(series.get())>(series.get()));
+			//levin-sidi D U
+			transform.reset(new drummonds_algorithm<T, K, decltype(series.get())>(series.get(), new u_transform<T, K>{}, false));
 			print_transform(i, order, std::move(transform.get()));
-			//(a1 - a2) / tmp при очень малом tmp вылетает. При делении это говно дает очень большую степень наверх, видимо 
+			//
 
+			//levin-sidi D T
+			transform.reset(new drummonds_algorithm<T, K, decltype(series.get())>(series.get(), new t_transform<T, K>{}, false));
+			print_transform(i, order, std::move(transform.get()));
+			//
+
+			//levin-sidi D D
+			transform.reset(new drummonds_algorithm<T, K, decltype(series.get())>(series.get(), new d_transform<T, K>{}, false));
+			print_transform(i, order, std::move(transform.get()));
+			//
+
+			//levin-sidi D V
+			transform.reset(new drummonds_algorithm<T, K, decltype(series.get())>(series.get(), new v_transform<T, K>{}, false));
+			print_transform(i, order, std::move(transform.get()));
+			//
+
+			//levin-sidi M U
+			transform.reset(new M_levin_sidi_algorithm<T, K, decltype(series.get())>(series.get(), new u_transform<T, K>{}));
+			print_transform(i, order, std::move(transform.get()));
+			//
+
+			//levin-sidi M T
+			transform.reset(new M_levin_sidi_algorithm<T, K, decltype(series.get())>(series.get(), new t_transform<T, K>{}));
+			print_transform(i, order, std::move(transform.get()));
+			//
+
+			//levin-sidi M D
+			transform.reset(new M_levin_sidi_algorithm<T, K, decltype(series.get())>(series.get(), new d_transform<T, K>{}));
+			print_transform(i, order, std::move(transform.get()));
+			//
+
+			//levin-sidi M V
+			transform.reset(new M_levin_sidi_algorithm<T, K, decltype(series.get())>(series.get(), new v_transform_2<T, K>{}));
+			print_transform(i, order, std::move(transform.get()));
+			//
+			
 			//weniger
-			//transform.reset(new weniger_algorithm<T, K, decltype(series.get())>(series.get()));
-			//print_transform(i, order, std::move(transform.get()));
-			//Была ошибка std::overflow_error -> numenator = -inf
-
+			transform.reset(new weniger_algorithm<T, K, decltype(series.get())>(series.get()));
+			print_transform(i, order, std::move(transform.get()));
+			
 			std::cout << std::endl;
 		}
 
