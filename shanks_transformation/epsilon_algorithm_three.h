@@ -64,10 +64,6 @@ T epsilon_algorithm_three<T, K, series_templ>::operator()(const K n, const int o
     for(int i = 0; i <= N; ++i) //Filling up Epsilon Table
         e[i] = this->series->S_n(i);
 
-    for (int a = 0; a != N + 3; ++a)
-        std::cout << e[a] << " ";
-    std::cout << std::endl;
-
     for (int i = 0; i <= order; ++i) //Working with Epsilon Table order times
     {
         N = n;
