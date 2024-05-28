@@ -22,6 +22,7 @@
 #include "rho_wynn_algorithm.h"
 #include "brezinski_theta_algorithm.h"
 #include "epsilon_algorithm_three.h"
+#include "levin_recursion_algorithm.h"
 
  /**
   * @brief Enum of transformation IDs
@@ -38,9 +39,10 @@ enum transformation_id_t {
 	chang_epsilon_algorithm,
 	M_algorithm,
 	weniger_transformation,
-	rho_wynn_transformation,
-	brezinski_theta_transformation,
-	epsilon_algorithm_3_id
+	rho_wynn_transformation_id,
+	brezinski_theta_transformation_id,
+	epsilon_algorithm_3_id,
+	levin_recursion_id
 };
 /**
  * @brief Enum of series IDs
@@ -157,7 +159,8 @@ inline static void print_transformation_info()
 		"9 - Weniger transformation" << std::endl <<
 		"10 - Rho - Wynn transformation" << std::endl <<
 		"11 - Theta Brezinski transformation" << std::endl <<
-		"12 - Epsilon Algorithm V-3" << std::endl;
+		"12 - Epsilon Algorithm V-3" << std::endl <<
+		"13 - Levin - Recursion Algorithm" << std::endl;
 }
 
 /**
@@ -284,7 +287,7 @@ inline static void main_testing_function()
 		series.reset(new exp_squared_erf_series<T, K>(x));
 		break;
 	case series_id_t::xmb_Jb_two_series_id:
-		K b;
+		K  b;
 		std::cout << "Enter the value for constant b for the series" << std::endl;
 		std::cin >> b;
 		series.reset(new xmb_Jb_two_series<T, K>(x, b));
@@ -302,7 +305,7 @@ inline static void main_testing_function()
 		series.reset(new erf_series<T, K>(x));
 		break;
 	case series_id_t::m_fact_1mx_mp1_inverse_series_id:
-		T m;
+		K m;
 		std::cout << "Enter the value for constant m for the series" << std::endl;
 		std::cin >> m;
 		series.reset(new m_fact_1mx_mp1_inverse_series<T, K>(x, m));
@@ -353,7 +356,7 @@ inline static void main_testing_function()
 		series.reset(new exp_m_cos_x_sinsin_x_series<T, K>(x));
 		break;
 	case series_id_t::testing_series_id:
-	//	series.reset(new testing_series<T, K>(x));
+		series.reset(new testing_series<T, K>(x));
 		break;
 	default:
 		throw std::domain_error("wrong series_id");
@@ -396,14 +399,17 @@ inline static void main_testing_function()
 	case transformation_id_t::weniger_transformation:
 		transform.reset(new weniger_algorithm<T, K, decltype(series.get())>(series.get()));
 		break;
-	case transformation_id_t::rho_wynn_transformation:
+	case transformation_id_t::rho_wynn_transformation_id:
 		transform.reset(new rho_Wynn_algorithm<T, K, decltype(series.get())>(series.get()));
 		break;
-	case transformation_id_t::brezinski_theta_transformation:
+	case transformation_id_t::brezinski_theta_transformation_id:
 		transform.reset(new theta_brezinski_algorithm<T, K, decltype(series.get())>(series.get()));
 		break;
 	case transformation_id_t::epsilon_algorithm_3_id:
 		transform.reset(new epsilon_algorithm_three<T, K, decltype(series.get())>(series.get()));
+		break;
+	case transformation_id_t::levin_recursion_id:
+		transform.reset(new levin_recursion_algorithm<T, K, decltype(series.get())>(series.get()));
 		break;
 	default:
 		throw std::domain_error("wrong transformation_id");
@@ -468,15 +474,17 @@ inline static void main_testing_function()
 		case weniger_transformation:
 			transform2.reset(new weniger_algorithm<T, K, decltype(series.get())>(series.get()));
 			break;
-		case rho_wynn_transformation:
+		case rho_wynn_transformation_id:
 			transform2.reset(new rho_Wynn_algorithm<T, K, decltype(series.get())>(series.get()));
 			break;
-		case brezinski_theta_transformation:
+		case brezinski_theta_transformation_id:
 			transform2.reset(new theta_brezinski_algorithm<T, K, decltype(series.get())>(series.get()));
 			break;
 		case epsilon_algorithm_3_id:
 			transform2.reset(new epsilon_algorithm_three<T, K, decltype(series.get())>(series.get()));
 			break;
+		case levin_recursion_id:
+			transform2.reset(new levin_recursion_algorithm<T, K, decltype(series.get())>(series.get()));
 		default:
 			throw std::domain_error("wrong algorithm id");
 		}
@@ -527,7 +535,10 @@ inline static void main_testing_function()
 			transform.reset(new levin_algorithm<T, K, decltype(series.get())>(series.get()));
 			print_transform(i, order, std::move(transform.get()));
 
-			
+			//levin recurcive
+			transform.reset(new levin_recursion_algorithm<T, K, decltype(series.get())>(series.get()));
+			print_transform(i, order, std::move(transform.get()));
+
 			//levin-sidi S U
 			transform.reset(new levi_sidi_algorithm<T, K, decltype(series.get())>(series.get(), new u_transform<T, K>{},false));
 			print_transform(i, order, std::move(transform.get()));

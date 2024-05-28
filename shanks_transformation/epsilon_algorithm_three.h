@@ -156,10 +156,6 @@ T epsilon_algorithm_three<T, K, series_templ>::operator()(const K n, const int o
 
         abs_error = std::max(std::abs(result - resla), EPRN * std::abs(result));
         resla = result;
-
-        for (int a = 0; a != N + 3; ++a)
-            std::cout << e[a] << " ";
-        std::cout << std::endl;
     }
 
 
