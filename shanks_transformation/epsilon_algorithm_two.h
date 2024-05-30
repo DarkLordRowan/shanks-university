@@ -90,8 +90,6 @@ T epsilon_algorithm_two<T, K, series_templ>::operator()(const K n, const int ord
             if (!std::isfinite(e[0][i])) //If new element is still corrupted we just copy prev. element, so we will get result
             {
                 e[0][i] = e[2][i];
-                k = -1;
-                break;
             }
         }
         std::swap(e[0], e[1]); //Swapping rows of Epsilon Table. First ine will be overwriteen next turn

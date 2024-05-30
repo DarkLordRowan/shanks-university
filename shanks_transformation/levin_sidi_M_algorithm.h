@@ -5,7 +5,7 @@
 */
 #pragma once
 #define DEF_UNDEFINED_SUM 0
-#define GAMMA 100 // gamma is a a nonzero positive parameter, 10 is chosen by default
+#define GAMMA 10 // gamma is a a nonzero positive parameter, 10 is chosen by default
 
 #include "series_acceleration.h" // Include the series header
 #include <vector>
@@ -101,9 +101,12 @@ public:
 	* @param func Remainder function
 	*/
 
-	M_levin_sidi_algorithm(const series_templ& series, const transform_base<T, K>* func) : series_acceleration<T, K, series_templ>(series), remainder_func(func){}
+	M_levin_sidi_algorithm(const series_templ& series, const transform_base<T, K>* func) : series_acceleration<T, K, series_templ>(series) {
+		if (func == nullptr) throw std::domain_error("null pointer remainder function");
+		remainder_func = func;
+	}
 
-	~M_levin_sidi_algorithm() { delete remainder_func; }
+	~M_levin_sidi_algorithm() { if(remainder_func != nullptr) delete remainder_func; }
 
 	/**
    * @brief M-transformation.

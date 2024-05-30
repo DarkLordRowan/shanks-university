@@ -8,6 +8,7 @@
 #include <string> 
 #include <set>
 
+#include "wynn_numerators.h"
 #include "remainders.h"
 #include "shanks_transformation.h"
 #include "epsilon_algorithm.h"
@@ -23,6 +24,7 @@
 #include "brezinski_theta_algorithm.h"
 #include "epsilon_algorithm_three.h"
 #include "levin_recursion_algorithm.h"
+
 
  /**
   * @brief Enum of transformation IDs
@@ -81,7 +83,15 @@ enum series_id_t {
 	one_third_pi_squared_m_nine_series_id,
 	four_ln2_m_3_series_id,
 	exp_m_cos_x_sinsin_x_series_id,
-	testing_series_id
+	pi_four_minus_ln2_halfed_series_id,
+	five_pi_twelve_series_id,
+	x_two_series_id,
+	pi_six_min_half_series_id,
+	x_two_throught_squares_id,
+	minus_one_ned_in_n_series_id,
+	minus_one_n_fact_n_in_n_series_id,
+	ln_x_plus_one_x_minus_one_halfed_series_id,
+	two_arcsin_square_x_halfed_series_id
 };
 
 /**
@@ -137,7 +147,16 @@ inline static void print_series_info()
 		"29 - one_third_pi_squared_m_nine_series" << std::endl <<
 		"30 - four_ln2_m_3_series" << std::endl <<
 		"31 - exp_m_cos_x_sinsin_x_series" << std::endl <<
-		"32 - testing series" << std::endl;
+		"32 - pi_four_minus_ln2_halfed_series" << std::endl <<
+		"33 - five_pi_twelve_series" << std::endl <<
+		"34 - x_two_series" << std::endl <<
+		"35 - pi_six_min_half_series" << std::endl <<
+		"36 - x_two_throught_squares" << std::endl <<
+		"37 - minus_one_ned_in_n_series" << std::endl <<
+		"38 - minus_one_n_fact_n_in_n_series" << std::endl <<
+		"39 - ln_x_plus_one_x_minus_one_halfed_series" << std::endl <<
+		"40 - two_arcsin_square_x_halfed_series" << std::endl <<
+		std::endl;
 }
 
 /**
@@ -181,8 +200,9 @@ inline static void print_test_function_info()
 }
 
 /**
-* @brief initialize LevinType transformations, usable for S,D
+* @brief initialize LevinType transformations, usable for S,D,M
 * @authors Naumov A.
+* @edited by Yurov P.
 */
 template<typename T, typename K, typename series_templ>
 inline void init_levin(transformation_id_t id, std::unique_ptr<series_base<T,K>>& series, std::unique_ptr<series_acceleration<T, K, series_templ>>& transform)
@@ -193,7 +213,7 @@ inline void init_levin(transformation_id_t id, std::unique_ptr<series_base<T,K>>
 	std::cout << std::endl;
 	std::cout << "|--------------------------------------|" << std::endl;
 	std::cout << "| choose what type of transformation u,t,d or v: "; std::cin >> type; std::cout << "|" << std::endl;
-	if (!id == transformation_id_t::M_algorithm)
+	if (id != transformation_id_t::M_algorithm)
 	{
 		std::cout << "| Use recurrence formula? 1<-true or 0<-false : "; std::cin >> recursive; std::cout << "|" << std::endl;
 	}
@@ -224,8 +244,40 @@ inline void init_levin(transformation_id_t id, std::unique_ptr<series_base<T,K>>
 			transform.reset(new M_levin_sidi_algorithm<T, K, decltype(series.get())>(series.get(), ptr));
 			return;
 		default:
-			throw std::domain_error("wrong id was givven");
+			throw std::domain_error("wrong id was given");
 	}	
+}
+
+/**
+* @brief initialize rho-WynnType transformations, usable for basic, Gamma, Gamma-Rho
+* @authors Yurov P.
+*/
+template<typename T, typename K, typename series_templ>
+inline void init_wynn(std::unique_ptr<series_base<T, K>>& series, std::unique_ptr<series_acceleration<T, K, series_templ>>& transform)
+{
+
+	int type;
+
+	std::cout << std::endl;
+	std::cout << "|------------------------------------------|" << std::endl;
+	std::cout << "| choose transformation variant:           |" << std::endl;
+	std::cout << "| classic (0), gamma (1), gamma-rho (2): "; std::cin >> type;
+	std::cout << "|------------------------------------------|" << std::endl;
+
+	switch (type) {
+	case 0:
+		transform.reset(new rho_Wynn_algorithm<T, K, decltype(series.get())>(series.get(), new rho_transform<T, K>{}));
+		break;
+	case 1:
+		transform.reset(new rho_Wynn_algorithm<T, K, decltype(series.get())>(series.get(), new generilized_transform<T, K>{}));
+		break;
+	case 2:
+		transform.reset(new rho_Wynn_algorithm<T, K, decltype(series.get())>(series.get(), new gamma_rho_transform<T, K>{}));
+		break;
+	default:
+		throw std::domain_error("wrong transform variant");
+		break;
+	}
 }
 
 /**
@@ -355,8 +407,32 @@ inline static void main_testing_function()
 	case series_id_t::exp_m_cos_x_sinsin_x_series_id:
 		series.reset(new exp_m_cos_x_sinsin_x_series<T, K>(x));
 		break;
-	case series_id_t::testing_series_id:
-		series.reset(new testing_series<T, K>(x));
+	case series_id_t::pi_four_minus_ln2_halfed_series_id:
+		series.reset(new pi_four_minus_ln2_halfed_series<T, K>(x));
+		break;
+	case series_id_t::five_pi_twelve_series_id:
+		series.reset(new five_pi_twelve_series<T, K>(x));
+		break;
+	case series_id_t::x_two_series_id:
+		series.reset(new x_two_series<T, K>(x));
+		break;
+	case series_id_t::pi_six_min_half_series_id:
+		series.reset(new pi_six_min_half_series<T, K>(x));
+		break;
+	case series_id_t::x_two_throught_squares_id:
+		series.reset(new x_two_throught_squares_series<T, K>(x));
+		break;
+	case series_id_t::minus_one_ned_in_n_series_id:
+		series.reset(new minus_one_ned_in_n_series<T, K>(x));
+		break;
+	case series_id_t::minus_one_n_fact_n_in_n_series_id:
+		series.reset(new minus_one_n_fact_n_in_n_series<T, K>(x));
+		break;
+	case series_id_t::ln_x_plus_one_x_minus_one_halfed_series_id:
+		series.reset(new ln_x_plus_one_x_minus_one_halfed_series<T, K>(x));
+		break;
+	case series_id_t::two_arcsin_square_x_halfed_series_id:
+		series.reset(new two_arcsin_square_x_halfed_series<T, K>(x));
 		break;
 	default:
 		throw std::domain_error("wrong series_id");
@@ -400,7 +476,7 @@ inline static void main_testing_function()
 		transform.reset(new weniger_algorithm<T, K, decltype(series.get())>(series.get()));
 		break;
 	case transformation_id_t::rho_wynn_transformation_id:
-		transform.reset(new rho_Wynn_algorithm<T, K, decltype(series.get())>(series.get()));
+		init_wynn(series, transform);
 		break;
 	case transformation_id_t::brezinski_theta_transformation_id:
 		transform.reset(new theta_brezinski_algorithm<T, K, decltype(series.get())>(series.get()));
@@ -475,7 +551,7 @@ inline static void main_testing_function()
 			transform2.reset(new weniger_algorithm<T, K, decltype(series.get())>(series.get()));
 			break;
 		case rho_wynn_transformation_id:
-			transform2.reset(new rho_Wynn_algorithm<T, K, decltype(series.get())>(series.get()));
+			init_wynn(series, transform2);
 			break;
 		case brezinski_theta_transformation_id:
 			transform2.reset(new theta_brezinski_algorithm<T, K, decltype(series.get())>(series.get()));
@@ -520,7 +596,15 @@ inline static void main_testing_function()
 			print_transform(i, order, std::move(transform.get()));
 
 			//rho-wynn
-			transform.reset(new rho_Wynn_algorithm<T, K, decltype(series.get())>(series.get()));
+			transform.reset(new rho_Wynn_algorithm<T, K, decltype(series.get())>(series.get(), new rho_transform<T, K>{}));
+			print_transform(i, order, std::move(transform.get()));
+
+			//rho-wynn
+			transform.reset(new rho_Wynn_algorithm<T, K, decltype(series.get())>(series.get(), new generilized_transform<T, K>{}));
+			print_transform(i, order, std::move(transform.get()));
+
+			//rho-wynn
+			transform.reset(new rho_Wynn_algorithm<T, K, decltype(series.get())>(series.get(), new gamma_rho_transform<T, K>{}));
 			print_transform(i, order, std::move(transform.get()));
 
 			//theta-brezinski

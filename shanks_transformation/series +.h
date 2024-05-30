@@ -26,14 +26,22 @@
  * 23 - pi_3_series
  * 24 - pi_4_series
  * 25 - pi_squared_6_minus_one_series
- * 26 - three_minus_pi_series
+ * 26 - three_minus_pi_sderies
  * 27 - one_twelfth_series
  * 28 - eighth_pi_m_one_third_series
  * 29 - one_third_pi_squared_m_nine_series
  * 30 - four_ln2_m_3_series
  * 31 - exp_m_cos_x_sinsin_x_series
- * 32 - TESTING SERIES
- * @brief This file contains series base class, requrrent_series class and derived classes of various serieses (e.g. exp(x), ch(x))
+ * 32 - pi_four_minus_ln2_halfed_series
+ * 33 - five_pi_twelve_series
+ * 34 - x_two_series
+ * 35 - pi_six_min_half_series
+ * 36 - x_two_throught_squares
+ * 37 - minus_one_ned_in_n_series
+ * 38 - minus_one_n_fact_n_in_n_series
+ * 39 - ln_x_plus_one_x_minus_one_halfed_series
+ * 40 - two_arcsin_square_x_halfed_series
+ * @brief This file contains series base class, requrrent_series_base class and derived classes of various serieses (e.g. exp(x), ch(x))
  */
 
 #pragma once
@@ -204,7 +212,7 @@ constexpr const T series_base<T, K>::minus_one_raised_to_power_n(K n)
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
 template <typename T, typename K>
-class requrrent_series
+class requrrent_series_base
 {
 public:
 	/**
@@ -212,14 +220,14 @@ public:
 	* @authors Kreynin R.G.
 	* @param x The argument for function series
 	*/
-	requrrent_series(T x);
+	requrrent_series_base(T x);
 
 	/**
 	* @brief Parameterized constructor to initialize the requrrent series with vector, containing elements of series
 	* @authors Kreynin R.G.
 	* @param row The first elements of the series
 	*/
-	requrrent_series(std::vector<T> row);
+	requrrent_series_base(std::vector<T> row);
 
 	/**
 	* @brief Computes nth term of the series
@@ -238,13 +246,13 @@ public:
 };
 
 template <typename T, typename K>
-requrrent_series<T, K>::requrrent_series(T x)
+requrrent_series_base<T, K>::requrrent_series_base(T x)
 {
 	this->series_vector.push_back(x);
 };
 
 template <typename T, typename K>
-requrrent_series<T, K>::requrrent_series(std::vector<T> row)
+requrrent_series_base<T, K>::requrrent_series_base(std::vector<T> row)
 {
 	if (row.size() < 1)
 		throw std::domain_error("empty row imput");
@@ -254,7 +262,7 @@ requrrent_series<T, K>::requrrent_series(std::vector<T> row)
 
 
 template <typename T, typename K>
-class exp_series : public series_base<T, K>, public requrrent_series<T, K>
+class exp_series : public series_base<T, K>, public requrrent_series_base<T, K>
 {
 public:
 	exp_series() = delete;
@@ -275,11 +283,17 @@ public:
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 
 private:
+	/**
+	* @brief Computes nth term of the series
+	* @authors Kreynin R.G.
+	* @param n The number of the term
+	* @return nth term of the series
+	*/
 	T acsess_row(K n);
 };
 
 template <typename T, typename K>
-exp_series<T, K>::exp_series(T x) : series_base<T, K>(x, std::exp(x)), requrrent_series<T, K>(T(1)) {  }
+exp_series<T, K>::exp_series(T x) : series_base<T, K>(x, std::exp(x)), requrrent_series_base<T, K>(T(1)) {  }
 
 template <typename T, typename K>
 T exp_series<T, K>::acsess_row(K n)
@@ -311,7 +325,7 @@ constexpr T exp_series<T, K>::operator()(K n) const
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
 template <typename T, typename K>
-class cos_series : public series_base<T, K>, public requrrent_series<T, K>
+class cos_series : public series_base<T, K>, public requrrent_series_base<T, K>
 {
 public:
 	cos_series() = delete;
@@ -332,11 +346,17 @@ public:
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 
 private:
+	/**
+	* @brief Computes nth term of the series
+	* @authors Kreynin R.G.
+	* @param n The number of the term
+	* @return nth term of the series
+	*/
 	T acsess_row(K n);
 };
 
 template <typename T, typename K>
-cos_series<T, K>::cos_series(T x) : series_base<T, K>(x, std::cos(x)), requrrent_series<T, K>(std::vector<T>{1, T((-1)* std::pow(x, 2) / 2)}) {}
+cos_series<T, K>::cos_series(T x) : series_base<T, K>(x, std::cos(x)), requrrent_series_base<T, K>(std::vector<T>{1, T((-1)* std::pow(x, 2) / 2)}) {}
 
 template <typename T, typename K>
 T cos_series<T, K>::acsess_row(K n)
@@ -368,7 +388,7 @@ constexpr T cos_series<T, K>::operator()(K n) const
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
 template <typename T, typename K>
-class sin_series : public series_base<T, K>, public requrrent_series<T, K>
+class sin_series : public series_base<T, K>, public requrrent_series_base<T, K>
 {
 public:
 	sin_series() = delete;
@@ -389,11 +409,17 @@ public:
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 
 private:
+	/**
+	* @brief Computes nth term of the series
+	* @authors Kreynin R.G.
+	* @param n The number of the term
+	* @return nth term of the series
+	*/
 	T acsess_row(K n);
 };
 
 template <typename T, typename K>
-sin_series<T, K>::sin_series(T x) : series_base<T, K>(x, std::sin(x)), requrrent_series<T, K>(x) {}
+sin_series<T, K>::sin_series(T x) : series_base<T, K>(x, std::sin(x)), requrrent_series_base<T, K>(x) {}
 
 template <typename T, typename K>
 T sin_series<T, K>::acsess_row(K n)
@@ -425,7 +451,7 @@ constexpr T sin_series<T, K>::operator()(K n) const
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
 template <typename T, typename K>
-class cosh_series : public series_base<T, K>, public requrrent_series<T, K>
+class cosh_series : public series_base<T, K>, public requrrent_series_base<T, K>
 {
 public:
 	cosh_series() = delete;
@@ -446,11 +472,17 @@ public:
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 
 private:
+	/**
+	* @brief Computes nth term of the series
+	* @authors Kreynin R.G.
+	* @param n The number of the term
+	* @return nth term of the series
+	*/
 	T acsess_row(K n);
 };
 
 template <typename T, typename K>
-cosh_series<T, K>::cosh_series(T x) : series_base<T, K>(x, std::cosh(x)), requrrent_series<T, K>(std::vector<T>{1, T(std::pow(this->x, 2) / 2) }) {}
+cosh_series<T, K>::cosh_series(T x) : series_base<T, K>(x, std::cosh(x)), requrrent_series_base<T, K>(std::vector<T>{1, T(std::pow(this->x, 2) / 2) }) {}
 
 template <typename T, typename K>
 T cosh_series<T, K>::acsess_row(K n)
@@ -482,7 +514,7 @@ constexpr T cosh_series<T, K>::operator()(K n) const
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
 template <typename T, typename K>
-class sinh_series : public series_base<T, K>, public requrrent_series<T, K>
+class sinh_series : public series_base<T, K>, public requrrent_series_base<T, K>
 {
 public:
 	sinh_series() = delete;
@@ -503,11 +535,17 @@ public:
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 
 private:
+	/**
+	* @brief Computes nth term of the series
+	* @authors Kreynin R.G.
+	* @param n The number of the term
+	* @return nth term of the series
+	*/
 	T acsess_row(K n);
 };
 
 template <typename T, typename K>
-sinh_series<T, K>::sinh_series(T x) : series_base<T, K>(x, std::sinh(x)), requrrent_series<T, K>(x) {}
+sinh_series<T, K>::sinh_series(T x) : series_base<T, K>(x, std::sinh(x)), requrrent_series_base<T, K>(x) {}
 
 template <typename T, typename K>
 T sinh_series<T, K>::acsess_row(K n)
@@ -611,6 +649,12 @@ public:
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 
 private:
+	/**
+	* @brief Computes nth term of the series
+	* @authors Kreynin R.G.
+	* @param n The number of the term
+	* @return nth term of the series
+	*/
 	T acsess_row(K n);
 };
 
@@ -677,7 +721,7 @@ constexpr T ln1mx_series<T, K>::operator()(K n) const
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
 template <typename T, typename K>
-class mean_sinh_sin_series : public series_base<T, K>, public requrrent_series<T, K>
+class mean_sinh_sin_series : public series_base<T, K>, public requrrent_series_base<T, K>
 {
 public:
 	mean_sinh_sin_series() = delete;
@@ -698,11 +742,17 @@ public:
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 
 private:
+	/**
+	* @brief Computes nth term of the series
+	* @authors Kreynin R.G.
+	* @param n The number of the term
+	* @return nth term of the series
+	*/
 	T acsess_row(K n);
 };
 
 template <typename T, typename K>
-mean_sinh_sin_series<T, K>::mean_sinh_sin_series(T x) : series_base<T, K>(x, 0.5 * (std::sinh(x) + std::sin(x))), requrrent_series<T, K>(x) {}
+mean_sinh_sin_series<T, K>::mean_sinh_sin_series(T x) : series_base<T, K>(x, 0.5 * (std::sinh(x) + std::sin(x))), requrrent_series_base<T, K>(x) {}
 
 template <typename T, typename K>
 T mean_sinh_sin_series<T, K>::acsess_row(K n)
@@ -949,7 +999,7 @@ constexpr T x_1mx_squared_series<T, K>::operator()(K n) const
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
 template <typename T, typename K>
-class erf_series : public series_base<T, K>
+class erf_series : public series_base<T, K>, public requrrent_series_base<T,K>
 {
 public:
 	erf_series() = delete;
@@ -968,20 +1018,46 @@ public:
 	* @return nth term of the series
 	*/
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
+
+private:
+	/**
+	* @brief Computes nth term of the series
+	* @authors Kreynin R.G.
+	* @param n The number of the term
+	* @return nth term of the series
+	*/
+	T acsess_row(K n);
 };
 
 template <typename T, typename K>
-erf_series<T, K>::erf_series(T x) : series_base<T, K>(x, std::sqrt(std::numbers::pi)* std::erf(x) * 0.5)
+erf_series<T, K>::erf_series(T x) : series_base<T, K>(x, std::sqrt(std::numbers::pi)* std::erf(x) * 0.5), requrrent_series_base<T, K>(x)
 {
 
 }
+
+template <typename T, typename K>
+T erf_series<T, K>::acsess_row(K n)
+{
+	if (n < 0)
+		throw std::domain_error("negative integer in the input");
+
+	K old_size = this->series_vector.size();
+
+	for (int i = old_size; i <= n; ++i) {
+		this->series_vector.push_back(this->series_vector[i - 1] * (-1) * std::pow(this->x, 2) / i  * (2 * (i - 1) + 1) / (2 * i + 1));
+	}
+
+	return this->series_vector[n];
+}
+
 
 template <typename T, typename K>
 constexpr T erf_series<T, K>::operator()(K n) const
 {
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
-	return series_base<T, K>::minus_one_raised_to_power_n(n) * std::pow(this->x, 2 * n + 1) / (this->fact(n) * (2 * n + 1));
+	const T a = const_cast<erf_series<T, K>*>(this)->acsess_row(n);
+	return a;
 }
 
 /**
@@ -990,7 +1066,7 @@ constexpr T erf_series<T, K>::operator()(K n) const
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
 template <typename T, typename K>
-class m_fact_1mx_mp1_inverse_series : public series_base<T, K>
+class m_fact_1mx_mp1_inverse_series : public series_base<T, K>, public requrrent_series_base<T,K>
 {
 public:
 	m_fact_1mx_mp1_inverse_series() = delete;
@@ -1016,10 +1092,18 @@ private:
 	* @authors Pashkov B.B.
 	*/
 	const K m;
+
+	/**
+	* @brief Computes nth term of the series
+	* @authors Kreynin R.G.
+	* @param n The number of the term
+	* @return nth term of the series
+	*/
+	T acsess_row(K n);
 };
 
 template <typename T, typename K>
-m_fact_1mx_mp1_inverse_series<T, K>::m_fact_1mx_mp1_inverse_series(T x, K m) : series_base<T, K>(x, this->fact(m) / pow(1 - x, m + 1)), m(m)
+m_fact_1mx_mp1_inverse_series<T, K>::m_fact_1mx_mp1_inverse_series(T x, K m) : series_base<T, K>(x, this->fact(m) / pow(1 - x, m + 1)), m(m), requrrent_series_base<T, K>(this->fact(m))
 {
 	if (!isfinite(series_base<T, K>::sum)) // sum = this->fact(m) / pow(1 - x, m + 1))
 		throw std::overflow_error("sum is too big");
@@ -1028,11 +1112,27 @@ m_fact_1mx_mp1_inverse_series<T, K>::m_fact_1mx_mp1_inverse_series(T x, K m) : s
 }
 
 template <typename T, typename K>
+T m_fact_1mx_mp1_inverse_series<T, K>::acsess_row(K n)
+{
+	if (n < 0)
+		throw std::domain_error("negative integer in the input");
+
+	K old_size = this->series_vector.size();
+
+	for (int i = old_size; i <= n; ++i) {
+		this->series_vector.push_back(this->series_vector[i - 1] * this->x * (this->m + i) / i);
+	}
+
+	return this->series_vector[n];
+}
+
+template <typename T, typename K>
 constexpr T m_fact_1mx_mp1_inverse_series<T, K>::operator()(K n) const
 {
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
-	return this->fact(this->m + n) * std::pow(this->x, n) / this->fact(n);
+	const T a = const_cast<m_fact_1mx_mp1_inverse_series<T, K>*>(this)->acsess_row(n);
+	return a;
 }
 
 /**
@@ -1545,11 +1645,364 @@ constexpr T exp_m_cos_x_sinsin_x_series<T, K>::operator()(K n) const
 	return this->minus_one_raised_to_power_n(n) * std::sin(n * this->x) / this->fact(n);
 }
 
+/**
+* @brief pi/4 - ln2/2 series page 526 part 1 This series = -0.5151, but in reality 0,438825
+* @authors Kreynin R.G.
+* @tparam T The type of the elements in the series, K The type of enumerating integer
+*/
+template <typename T, typename K>
+class pi_four_minus_ln2_halfed_series : public series_base<T, K>
+{
+public:
+	pi_four_minus_ln2_halfed_series() = delete;
+
+	/**
+	* @brief Parameterized constructor to initialize the series with function argument and sum
+	* @authors Kreynin R.G.
+	* @param x The argument for function series
+	*/
+	pi_four_minus_ln2_halfed_series(T x);
+
+	/**
+	* @brief Computes the nth term of the Maclaurin series of the sine function
+	* @authors Kreynin R.G.
+	* @param n The number of the term
+	* @return nth term of the Maclaurin series of the sine functions
+	*/
+	[[nodiscard]] constexpr virtual T operator()(K n) const;
+};
+
+template <typename T, typename K>
+pi_four_minus_ln2_halfed_series<T, K>::pi_four_minus_ln2_halfed_series(T x) : series_base<T, K>(x, x * (std::numbers::pi / 4 - std::log(2) / 2)) {}
+
+template <typename T, typename K>
+constexpr T pi_four_minus_ln2_halfed_series<T, K>::operator()(K n) const
+{
+	if (n < 0)
+		throw std::domain_error("negative integer in the input");
+	if (n == 0)
+		return 0;
+	return this->x * series_base<T, K>::minus_one_raised_to_power_n(std::trunc(n / 2)) / n;
+}
+
+/**
+* @brief 5pi/12 p 528 B1
+* @authors Kreynin R.G.
+* @tparam T The type of the elements in the series, K The type of enumerating integer
+*/
+template <typename T, typename K>
+class five_pi_twelve_series : public series_base<T, K>
+{
+public:
+	five_pi_twelve_series() = delete;
+
+	/**
+	* @brief Parameterized constructor to initialize the series with function argument and sum
+	* @authors Kreynin R.G.
+	* @param x The argument for function series
+	*/
+	five_pi_twelve_series(T x);
+
+	/**
+	* @brief Computes the nth term of the Maclaurin series of the sine function
+	* @authors Kreynin R.G.
+	* @param n The number of the term
+	* @return nth term of the Maclaurin series of the sine functions
+	*/
+	[[nodiscard]] constexpr virtual T operator()(K n) const;
+};
+
+template <typename T, typename K>
+five_pi_twelve_series<T, K>::five_pi_twelve_series(T x) : series_base<T, K>(x, x * 5 * std::numbers::pi / 12) {}
+
+template <typename T, typename K>
+constexpr T five_pi_twelve_series<T, K>::operator()(K n) const
+{
+	if (n < 0)
+		throw std::domain_error("negative integer in the input");
+	return this->x * series_base<T, K>::minus_one_raised_to_power_n(std::trunc(n / 3)) / (2*n + 1);
+}
+
+/**
+* @brief x / 2 series p 531
+* @authors Kreynin R.G.
+* @tparam T The type of the elements in the series, K The type of enumerating integer
+*/
+template <typename T, typename K>
+class x_two_series : public series_base<T, K>
+{
+public:
+	x_two_series() = delete;
+
+	/**
+	* @brief Parameterized constructor to initialize the series with function argument and sum
+	* @authors Kreynin R.G.
+	* @param x The argument for function series
+	*/
+	x_two_series(T x);
+
+	/**
+	* @brief Computes the nth term of the Maclaurin series of the sine function
+	* @authors Kreynin R.G.
+	* @param n The number of the term
+	* @return nth term of the Maclaurin series of the sine functions
+	*/
+	[[nodiscard]] constexpr virtual T operator()(K n) const;
+};
+
+template <typename T, typename K>
+x_two_series<T, K>::x_two_series(T x) : series_base<T, K>(x, x / 2) {}
+
+template <typename T, typename K>
+constexpr T x_two_series<T, K>::operator()(K n) const
+{
+	if (n < 0)
+		throw std::domain_error("negative integer in the input");
+	return this->x / ((2 * n + 1) * (2 * n + 3));
+}
+
+/**
+* @brief pi/5 - 1/2 series p 534
+* @authors Kreynin R.G.
+* @tparam T The type of the elements in the series, K The type of enumerating integer
+*/
+template <typename T, typename K>
+class pi_six_min_half_series : public series_base<T, K>
+{
+public:
+	pi_six_min_half_series() = delete;
+
+	/**
+	* @brief Parameterized constructor to initialize the series with function argument and sum
+	* @authors Kreynin R.G.
+	* @param x The argument for function series
+	*/
+	pi_six_min_half_series(T x);
+
+	/**
+	* @brief Computes the nth term of the Maclaurin series of the sine function
+	* @authors Kreynin R.G.
+	* @param n The number of the term
+	* @return nth term of the Maclaurin series of the sine functions
+	*/
+	[[nodiscard]] constexpr virtual T operator()(K n) const;
+};
+
+template <typename T, typename K>
+pi_six_min_half_series<T, K>::pi_six_min_half_series(T x) : series_base<T, K>(x, x * (std::numbers::pi / 6  - 1 / 2)) {}
+
+template <typename T, typename K>
+constexpr T pi_six_min_half_series<T, K>::operator()(K n) const
+{
+	if (n < 0)
+		throw std::domain_error("negative integer in the input");
+	return this-> x * series_base<T, K>::minus_one_raised_to_power_n(n) / ((6 * n + 5) * (6 * n + 7));
+}
 
 
 /**
+* @brief x/2 p 552
+* @authors Kreynin R.G.
+* @tparam T The type of the elements in the series, K The type of enumerating integer
+*/
+template <typename T, typename K>
+class x_two_throught_squares_series : public series_base<T, K>
+{
+public:
+	x_two_throught_squares_series() = delete;
+
+	/**
+	* @brief Parameterized constructor to initialize the series with function argument and sum
+	* @authors Kreynin R.G.
+	* @param x The argument for function series
+	*/
+	x_two_throught_squares_series(T x);
+
+	/**
+	* @brief Computes the nth term of the Maclaurin series of the sine function
+	* @authors Kreynin R.G.
+	* @param n The number of the term
+	* @return nth term of the Maclaurin series of the sine functions
+	*/
+	[[nodiscard]] constexpr virtual T operator()(K n) const;
+};
+
+template <typename T, typename K>
+x_two_throught_squares_series<T, K>::x_two_throught_squares_series(T x) : series_base<T, K>(x, x / 2) {}
+
+template <typename T, typename K>
+constexpr T x_two_throught_squares_series<T, K>::operator()(K n) const
+{
+	if (n < 0)
+		throw std::domain_error("negative integer in the input");
+	if (n == 0)
+		return 0;
+	return this->x * (2 * std::pow(n, 2) - 1) / (4 * std::pow(n, 4) + 1);
+}
+
+/**
+* @brief (-1)^n/n^n series = -0,78343051	p 553
+* @authors Kreynin R.G.
+* @tparam T The type of the elements in the series, K The type of enumerating integer
+*/
+template <typename T, typename K>
+class minus_one_ned_in_n_series : public series_base<T, K>
+{
+public:
+	minus_one_ned_in_n_series() = delete;
+
+	/**
+	* @brief Parameterized constructor to initialize the series with function argument and sum
+	* @authors Kreynin R.G.
+	* @param x The argument for function series
+	*/
+	minus_one_ned_in_n_series(T x);
+
+	/**
+	* @brief Computes the nth term of the Maclaurin series of the sine function
+	* @authors Kreynin R.G.
+	* @param n The number of the term
+	* @return nth term of the Maclaurin series of the sine functions
+	*/
+	[[nodiscard]] constexpr virtual T operator()(K n) const;
+};
+
+template <typename T, typename K>
+minus_one_ned_in_n_series<T, K>::minus_one_ned_in_n_series(T x) : series_base<T, K>(x, -0.78343051 * x) {}
+
+template <typename T, typename K>
+constexpr T minus_one_ned_in_n_series<T, K>::operator()(K n) const
+{
+	if (n < 0)
+		throw std::domain_error("negative integer in the input");
+	if (n == 0)
+		return 0;
+	return this->x * series_base<T, K>::minus_one_raised_to_power_n(n) / std::pow(n,n);
+}
+
+/**
+* @brief (-1)^n n! / n^n  p 554
+* @authors Kreynin R.G.
+* @tparam T The type of the elements in the series, K The type of enumerating integer
+*/
+template <typename T, typename K>
+class minus_one_n_fact_n_in_n_series : public series_base<T, K>
+{
+public:
+	minus_one_n_fact_n_in_n_series() = delete;
+
+	/**
+	* @brief Parameterized constructor to initialize the series with function argument and sum
+	* @authors Kreynin R.G.
+	* @param x The argument for function series
+	*/
+	minus_one_n_fact_n_in_n_series(T x);
+
+	/**
+	* @brief Computes the nth term of the Maclaurin series of the sine function
+	* @authors Kreynin R.G.
+	* @param n The number of the term
+	* @return nth term of the Maclaurin series of the sine functions
+	*/
+	[[nodiscard]] constexpr virtual T operator()(K n) const;
+};
+
+template <typename T, typename K>
+minus_one_n_fact_n_in_n_series<T, K>::minus_one_n_fact_n_in_n_series(T x) : series_base<T, K>(x, -0.65583160 * x) {}
+
+template <typename T, typename K>
+constexpr T minus_one_n_fact_n_in_n_series<T, K>::operator()(K n) const
+{
+	if (n < 0)
+		throw std::domain_error("negative integer in the input");
+	if (n == 0)
+		return 0;
+	return this->x * this->fact(n) * series_base<T, K>::minus_one_raised_to_power_n(n) / std::pow(n, n);
+}
+
+/**
+* @brief ln(x+1)/(1-x) / 2 series p557
+* @authors Kreynin R.G.
+* @tparam T The type of the elements in the series, K The type of enumerating integer
+*/
+template <typename T, typename K>
+class ln_x_plus_one_x_minus_one_halfed_series : public series_base<T, K>
+{
+public:
+	ln_x_plus_one_x_minus_one_halfed_series() = delete;
+
+	/**
+	* @brief Parameterized constructor to initialize the series with function argument and sum
+	* @authors Kreynin R.G.
+	* @param x The argument for function series
+	*/
+	ln_x_plus_one_x_minus_one_halfed_series(T x);
+
+	/**
+	* @brief Computes the nth term of the Maclaurin series of the sine function
+	* @authors Kreynin R.G.
+	* @param n The number of the term
+	* @return nth term of the Maclaurin series of the sine functions
+	*/
+	[[nodiscard]] constexpr virtual T operator()(K n) const;
+};
+
+template <typename T, typename K>
+ln_x_plus_one_x_minus_one_halfed_series<T, K>::ln_x_plus_one_x_minus_one_halfed_series(T x) : series_base<T, K>(x, std::log((1 + x) / (1 - x)) / 2)
+{
+	if (std::abs(x) > 1)
+		throw std::domain_error("series diverge");
+}
+
+template <typename T, typename K>
+constexpr T ln_x_plus_one_x_minus_one_halfed_series<T, K>::operator()(K n) const
+{
+	if (n < 0)
+		throw std::domain_error("negative integer in the input");
+	return std::pow(this->x, 2 * n + 1) / (2 * n + 1);
+}
+
+/**
+* @brief 2 arcsin(x/2)^2  p 567
+* @authors Kreynin R.G.
+* @tparam T The type of the elements in the series, K The type of enumerating integer
+*/
+template <typename T, typename K>
+class two_arcsin_square_x_halfed_series : public series_base<T, K>
+{
+public:
+	two_arcsin_square_x_halfed_series() = delete;
+
+	/**
+	* @brief Parameterized constructor to initialize the series with function argument and sum
+	* @authors Kreynin R.G.
+	* @param x The argument for function series
+	*/
+	two_arcsin_square_x_halfed_series(T x);
+
+	/**
+	* @brief Computes the nth term of the Maclaurin series of the sine function
+	* @authors Kreynin R.G.
+	* @param n The number of the term
+	* @return nth term of the Maclaurin series of the sine functions
+	*/
+	[[nodiscard]] constexpr virtual T operator()(K n) const;
+};
+
+template <typename T, typename K>
+two_arcsin_square_x_halfed_series<T, K>::two_arcsin_square_x_halfed_series(T x) : series_base<T, K>(x, 2 * std::pow(std::asin(x / 2), 2)) {}
+
+template <typename T, typename K>
+constexpr T two_arcsin_square_x_halfed_series<T, K>::operator()(K n) const
+{
+	if (n < 0)
+		throw std::domain_error("negative integer in the input");
+	return  pow(this->x, 2 * n + 2) * pow(this->fact(n), 2) / (this->fact(2 * n + 2));
+}
+
+/**
 * @brief function for testing new serieses or converting basic to 
-* @authors Bolshakov M.P.
+* @authors Kreynin R.G.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
 template <typename T, typename K>
@@ -1560,14 +2013,14 @@ public:
 
 	/**
 	* @brief Parameterized constructor to initialize the series with function argument and sum
-	* @authors Bolshakov M.P.
+	* @authors Kreynin R.G.
 	* @param x The argument for function series
 	*/
 	testing_series(T x);
 
 	/**
 	* @brief Computes the nth term of the Maclaurin series of the sine function
-	* @authors Bolshakov M.P.
+	* @authors Kreynin R.G.
 	* @param n The number of the term
 	* @return nth term of the Maclaurin series of the sine functions
 	*/
@@ -1575,12 +2028,76 @@ public:
 };
 
 template <typename T, typename K>
-testing_series<T, K>::testing_series(T x) : series_base<T, K>(x, std::sin(x)) {}
+testing_series<T, K>::testing_series(T x) : series_base<T, K>(x, 0) {}
 
 template <typename T, typename K>
 constexpr T testing_series<T, K>::operator()(K n) const
 {
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
-	return std::pow(this->x, n) / this->fact(n);
+	return 0;
+}
+
+
+/**
+* @brief function for testing new requrrive serieses or converting basic to
+* @authors Kreynin R.G.
+* @tparam T The type of the elements in the series, K The type of enumerating integer
+*/
+template <typename T, typename K>
+class requrrent_testing_series : public series_base<T, K>, public requrrent_series_base<T, K>
+{
+public:
+	requrrent_testing_series() = delete;
+
+	/**
+	* @brief Parameterized constructor to initialize the series with function argument and sum
+	* @authors Kreynin R.G.
+	* @param x The argument for function series
+	*/
+	requrrent_testing_series(T x);
+
+	/**
+	* @brief Computes the nth term of the Maclaurin series of the sine function
+	* @authors Kreynin R.G.
+	* @param n The number of the term
+	* @return nth term of the Maclaurin series of the sine functions
+	*/
+	[[nodiscard]] constexpr virtual T operator()(K n) const;
+
+private:
+	/**
+	* @brief Computes nth term of the series
+	* @authors Kreynin R.G.
+	* @param n The number of the term
+	* @return nth term of the series
+	*/
+	T acsess_row(K n);
+};
+
+template <typename T, typename K>
+requrrent_testing_series<T, K>::requrrent_testing_series(T x) : series_base<T, K>(x, 0), requrrent_series_base<T, K>(x) {}
+
+template <typename T, typename K>
+T requrrent_testing_series<T, K>::acsess_row(K n)
+{
+	if (n < 0)
+		throw std::domain_error("negative integer in the input");
+
+	K old_size = this->series_vector.size();
+
+	for (int i = old_size; i <= n; ++i) {
+		this->series_vector.push_back(this->series_vector[i - 1] * std::pow(this->x, 2) / (2 * i * (2 * i + 1)));
+	}
+
+	return this->series_vector[n];
+}
+
+template <typename T, typename K>
+constexpr T requrrent_testing_series<T, K>::operator()(K n) const
+{
+	if (n < 0)
+		throw std::domain_error("negative integer in the input");
+	const T a = const_cast<requrrent_testing_series<T, K>*>(this)->acsess_row(n);
+	return a;
 }

@@ -1,9 +1,10 @@
 /**
  * @file remainders.h
  * @brief This file contains the various variants of remainders for Levin type transformations
- * @authors Naumov A., Yurov P.
+ * @authors Naumov A.
+ * @edited by Yurov P.
 */
-
+#pragma once
 #include "series_acceleration.h"
 
 /**
