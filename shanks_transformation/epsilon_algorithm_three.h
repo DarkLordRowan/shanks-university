@@ -59,6 +59,9 @@ T epsilon_algorithm_three<T, K, series_templ>::operator()(const K n, const int o
     T abs_error = 0; //Absolute error
     T resla = 0; //Last result
 
+    int newelm, num, NUM, K1, K2, K3, ib, ib2, ie, in;
+    T RES, E0, E1, E2, E3, E1ABS, DELTA1, DELTA2, DELTA3, ERR1, ERR2, ERR3, TOL1, TOL2, TOL3;
+
     std::vector<T> e(N + 3, 0); //First N eliments of epsilon table + 2 elements for math
 
     for(int i = 0; i <= N; ++i) //Filling up Epsilon Table
@@ -67,36 +70,36 @@ T epsilon_algorithm_three<T, K, series_templ>::operator()(const K n, const int o
     for (int i = 0; i <= order; ++i) //Working with Epsilon Table order times
     {
         N = n;
-        int newelm = (N - 1) / 2;
+        newelm = (N - 1) / 2;
         K NEWELM = (N - 1) / 2;
         e[N + 2] = e[N];
         e[N] = OFRN;
         abs_error = OFRN;
-        int num = N;
-        int NUM = N;
-        int K1 = N;
+        num = N;
+        NUM = N;
+        K1 = N;
 
         for (int I = 1; I <= NEWELM; ++I) { //Counting all diagonal elements of epsilon table
-            int K2 = K1 - 1;
-            int K3 = K1 - 2;
-            T RES = e[K1 + 2];
-            T E0 = e[K3];
-            T E1 = e[K2];
-            T E2 = RES;
-            T E1ABS = std::abs(E1);
-            T DELTA2 = E2 - E1;
-            T ERR2 = std::abs(DELTA2);
-            T TOL2 = std::max(std::abs(E2), E1ABS) * EMACH;
-            T DELTA3 = E1 - E0;
-            T ERR3 = std::abs(DELTA3);
-            T TOL3 = std::max(E1ABS, std::abs(E0)) * EMACH;
+            K2 = K1 - 1;
+            K3 = K1 - 2;
+            RES = e[K1 + 2];
+            E0 = e[K3];
+            E1 = e[K2];
+            E2 = RES;
+            E1ABS = std::abs(E1);
+            DELTA2 = E2 - E1;
+            ERR2 = std::abs(DELTA2);
+            TOL2 = std::max(std::abs(E2), E1ABS) * EMACH;
+            DELTA3 = E1 - E0;
+            ERR3 = std::abs(DELTA3);
+            TOL3 = std::max(E1ABS, std::abs(E0)) * EMACH;
 
             if (ERR2 > TOL2 || ERR3 > TOL3) {
-                T E3 = e[K1];
+                E3 = e[K1];
                 e[K1] = E1;
-                T DELTA1 = E1 - E3;
-                T ERR1 = std::abs(DELTA1);
-                T TOL1 = std::max(E1ABS, std::abs(E3)) * EMACH;
+                DELTA1 = E1 - E3;
+                ERR1 = std::abs(DELTA1);
+                TOL1 = std::max(E1ABS, std::abs(E3)) * EMACH;
 
                 if (ERR1 <= TOL1 || ERR2 <= TOL2 || ERR3 <= TOL3) {
                     N = I + I - 1;
@@ -132,22 +135,22 @@ T epsilon_algorithm_three<T, K, series_templ>::operator()(const K n, const int o
         }
 
         if (N == n) {
-            N = 2 * (n / 2) - 1;
+            N = 2 * int((n / 2)) - 1;
         }
 
-        int ib = 1;
-        if ((num / 2) * 2 == num) {
+        ib = 1;
+        if (int((num / 2)) * 2 == num) {
             ib = 2;
         }
-        int ie = newelm + 1;
+        ie = newelm + 1;
         for (int j = 1; j <= ie; j++) {
-            int ib2 = ib + 2;
+            ib2 = ib + 2;
             e[ib] = e[ib2];
             ib = ib2;
         }
 
         if (num != N) {
-            int in = num - N + 1;
+            in = num - N + 1;
             for (int j = 1; j <= N; j++) {
                 e[j] = e[in];
                 in = in + 1;

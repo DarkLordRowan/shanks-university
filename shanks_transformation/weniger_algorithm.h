@@ -15,7 +15,7 @@ class weniger_algorithm : public series_acceleration<T, K, series_templ>
 protected:
 
 	/**
-	* @brief Default function to calculate W-tranformation.
+	* @brief Default function to calculate WT-transformation.
 	* For more information see "Joint use of the Weniger transformation and hyperasymptotics for accurate asymptotic evaluations of a class of saddle-point integrals"
 	* @param k The number of terms in the partial sum.
 	* @param n the order of transformation

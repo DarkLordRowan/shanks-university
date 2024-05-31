@@ -34,7 +34,7 @@ public:
     T operator() (const K n, const int order) const;
 
 private:
-    T operator() (T n_time, T k_time, double b, bool ND) const;
+    T operator() (T n_time, T k_time, T b, bool ND) const;
 };
 
 template <typename T, typename K, typename series_templ>
@@ -50,7 +50,7 @@ T levin_recursion_algorithm<T, K, series_templ>::operator()(const K n, const int
     else if (order == 0)
         return this->series->S_n(n);
 
-    T beta = -1; // it's an adjustable real parameter that is not a nonpositive integer
+    T beta = -1.5; // it's an adjustable real parameter
 
     T N_k = (*this)(n, order, beta, 0);
     T D_k = (*this)(n, order, beta, 1);
@@ -59,7 +59,7 @@ T levin_recursion_algorithm<T, K, series_templ>::operator()(const K n, const int
 }
 
 template <typename T, typename K, typename series_templ>
-T levin_recursion_algorithm<T, K, series_templ>::operator()(T n_time, T k_time, double b, bool ND) const
+T levin_recursion_algorithm<T, K, series_templ>::operator()(T n_time, T k_time, T b, bool ND) const
 {
     T R_0 = 0;
     T w_n = pow(T(-1), n_time) * this->series->fact(n_time);

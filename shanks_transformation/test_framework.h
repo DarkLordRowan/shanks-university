@@ -24,11 +24,14 @@
 #include "brezinski_theta_algorithm.h"
 #include "epsilon_algorithm_three.h"
 #include "levin_recursion_algorithm.h"
+#include "lubkin_W_algorithm.h"
+#include "richardson_algorithm.h"
 
 
  /**
   * @brief Enum of transformation IDs
   * @authors Bolshakov M.P.
+  * @edited by Kreynin R.G.
   */
 enum transformation_id_t {
 	null_transformation_id,
@@ -44,11 +47,14 @@ enum transformation_id_t {
 	rho_wynn_transformation_id,
 	brezinski_theta_transformation_id,
 	epsilon_algorithm_3_id,
-	levin_recursion_id
+	levin_recursion_id,
+	W_algorithm_id,
+	richardson_algorithm_id
 };
 /**
  * @brief Enum of series IDs
  * @authors Bolshakov M.P.
+ * @edited by Kreynin R.G.
  */
 enum series_id_t {
 	null_series_id, 
@@ -97,6 +103,7 @@ enum series_id_t {
 /**
  * @brief Enum of testing functions IDs
  * @authors Bolshakov M.P.
+ * @edited by Kreynin R.G.
  */
 enum test_function_id_t {
 	null_test_function_id, 
@@ -111,6 +118,7 @@ enum test_function_id_t {
 /**
 * @brief prints out all available series for testing
 * @authors Bolshakov M.P.
+* @edited by Kreynin R.G.
 */
 inline static void print_series_info()
 {
@@ -161,7 +169,8 @@ inline static void print_series_info()
 
 /**
 * @brief prints out all available transformations for testing
-* @authors Bolshakov M.P. Kreinin R.G.
+* @authors Bolshakov M.P.
+* @edited by Kreynin R.G.
 */
 inline static void print_transformation_info()
 {
@@ -179,12 +188,16 @@ inline static void print_transformation_info()
 		"10 - Rho - Wynn transformation" << std::endl <<
 		"11 - Theta Brezinski transformation" << std::endl <<
 		"12 - Epsilon Algorithm V-3" << std::endl <<
-		"13 - Levin - Recursion Algorithm" << std::endl;
+		"13 - Levin - Recursion Algorithm" << std::endl <<
+		"14 - Lubkin W-transformation" << std::endl <<
+		"15 - Richardson Algorithm" << std::endl <<
+		std::endl;
 }
 
 /**
 * @brief prints out all available fungus for testing
 * @authors Bolshakov M.P.
+* @edited by Kreynin R.G.
 */
 inline static void print_test_function_info()
 {
@@ -195,8 +208,8 @@ inline static void print_test_function_info()
 		"3 - transformation_remainders - showcases the difference between series' sum and transformed partial sum" << std::endl <<
 		"4 - cmp_transformations - showcases the difference between convergence of sums accelerated by different transformations" << std::endl <<
 		"5 - eval_transform_time - evaluates the time it takes to transform series" << std::endl <<
-		"6 - test all algorithms on summ" << std::endl;
-
+		"6 - test all algorithms on summ" << std::endl
+		<< std::endl;
 }
 
 /**
@@ -284,7 +297,8 @@ inline void init_wynn(std::unique_ptr<series_base<T, K>>& series, std::unique_pt
 * @brief The main testing function
 * This function provides a convenient and interactive way to test out the convergence acceleration of various series
 * @tparam T The type of the elements in the series, K The type of enumerating integer
-* @authors Bolshakov M.P. Kreynin R.G.
+* @authors Bolshakov M.P
+* @edited by Kreynin R.G.
 */
 template <typename T, typename K>
 inline static void main_testing_function()
@@ -487,6 +501,11 @@ inline static void main_testing_function()
 	case transformation_id_t::levin_recursion_id:
 		transform.reset(new levin_recursion_algorithm<T, K, decltype(series.get())>(series.get()));
 		break;
+	case transformation_id_t::W_algorithm_id:
+		transform.reset(new W_lubkin_algorithm<T, K, decltype(series.get())>(series.get()));
+		break;
+	case transformation_id_t::richardson_algorithm_id:
+		transform.reset(new richardson_algorithm<T, K, decltype(series.get())>(series.get()));
 	default:
 		throw std::domain_error("wrong transformation_id");
 	}
@@ -520,19 +539,19 @@ inline static void main_testing_function()
 		
 		switch (cmop_transformation_id)
 		{
-		case shanks_transformation_id:
+		case transformation_id_t::shanks_transformation_id:
 			if (alternating_series.contains(series_id))
 				transform2.reset(new shanks_transform_alternating<T, K, decltype(series.get())>(series.get()));
 			else
 				transform2.reset(new shanks_transform<T, K, decltype(series.get())>(series.get()));
 			break;
-		case epsilon_algorithm_id:
+		case transformation_id_t::epsilon_algorithm_id:
 			transform2.reset(new epsilon_algorithm<T, K, decltype(series.get())>(series.get()));
 			break;
-		case levin_algorithm_id:
+		case transformation_id_t::levin_algorithm_id:
 			transform2.reset(new levin_algorithm<T, K, decltype(series.get())>(series.get()));
 			break;
-		case epsilon_algorithm_2_id:
+		case transformation_id_t::epsilon_algorithm_2_id:
 			transform2.reset(new epsilon_algorithm_two<T, K, decltype(series.get())>(series.get()));
 			break;
 		case transformation_id_t::S_algorithm:
@@ -541,26 +560,31 @@ inline static void main_testing_function()
 		case transformation_id_t::D_algorithm:
 			init_levin(transformation_id_t::D_algorithm, series, transform2);
 			break;
-		case chang_epsilon_algorithm:
+		case transformation_id_t::chang_epsilon_algorithm:
 			transform2.reset(new chang_whynn_algorithm<T, K, decltype(series.get())>(series.get()));
 			break;
 		case transformation_id_t::M_algorithm:
 			init_levin(transformation_id_t::M_algorithm, series, transform2);
 			break;
-		case weniger_transformation:
+		case transformation_id_t::weniger_transformation:
 			transform2.reset(new weniger_algorithm<T, K, decltype(series.get())>(series.get()));
 			break;
-		case rho_wynn_transformation_id:
+		case transformation_id_t::rho_wynn_transformation_id:
 			init_wynn(series, transform2);
 			break;
-		case brezinski_theta_transformation_id:
+		case transformation_id_t::brezinski_theta_transformation_id:
 			transform2.reset(new theta_brezinski_algorithm<T, K, decltype(series.get())>(series.get()));
 			break;
-		case epsilon_algorithm_3_id:
+		case transformation_id_t::epsilon_algorithm_3_id:
 			transform2.reset(new epsilon_algorithm_three<T, K, decltype(series.get())>(series.get()));
 			break;
-		case levin_recursion_id:
+		case transformation_id_t::levin_recursion_id:
 			transform2.reset(new levin_recursion_algorithm<T, K, decltype(series.get())>(series.get()));
+		case transformation_id_t::W_algorithm_id:
+			transform2.reset(new W_lubkin_algorithm<T, K, decltype(series.get())>(series.get()));
+			break;
+		case transformation_id_t::richardson_algorithm_id:
+			transform2.reset(new richardson_algorithm<T, K, decltype(series.get())>(series.get()));
 		default:
 			throw std::domain_error("wrong algorithm id");
 		}
@@ -685,7 +709,15 @@ inline static void main_testing_function()
 			//weniger
 			transform.reset(new weniger_algorithm<T, K, decltype(series.get())>(series.get()));
 			print_transform(i, order, std::move(transform.get()));
+
+			//lubkin W
+			transform.reset(new W_lubkin_algorithm<T, K, decltype(series.get())>(series.get()));
+			print_transform(i, order, std::move(transform.get()));
 			
+			//Richardson
+			transform.reset(new richardson_algorithm<T, K, decltype(series.get())>(series.get()));
+			print_transform(i, order, std::move(transform.get()));
+
 			std::cout << std::endl;
 		}
 

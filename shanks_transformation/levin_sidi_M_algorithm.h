@@ -25,7 +25,7 @@ protected:
 	const transform_base<T, K>* remainder_func;
 
 	/**
-	* @brief Default function to calculate M-tranformation. Implemented u,t,d and v transformations. For more information see p. 65 9.2-6 [https://arxiv.org/pdf/math/0306302.pdf]
+	* @brief Default function to calculate M-transformation. Implemented u,t,d and v transformations. For more information see p. 65 9.2-6 [https://arxiv.org/pdf/math/0306302.pdf]
 	* Levin-Sidi or Factorial analog of Levin Transformation is effective for series that belong to b(1)/LIN/FAC and inferior on b(1)/LOG for more information see p. 369 and p.285 [http://servidor.demec.ufpr.br/CFD/bibliografia/MER/Sidi_2003.pdf]
 	* @authors Yurov P.I. Bezzaborov A.A.
 	* @param n The number of terms in the partial sum.
@@ -96,7 +96,7 @@ protected:
 public:
 
 	/**
-	* @brief Parameterized constructor to initialize the Levin-Sidi S-transformation.
+	* @brief Parameterized constructor to initialize the Levin-Sidi M-transformation.
 	* @param series The series class object to be accelerated
 	* @param func Remainder function
 	*/
@@ -110,7 +110,7 @@ public:
 
 	/**
    * @brief M-transformation.
-   * Computes the partial sum after the S-transformation
+   * Computes the partial sum after the M-transformation
    * @param n The number of terms in the partial sum.
    * @param order The order of transformation.
    * @return The partial sum after the transformation.

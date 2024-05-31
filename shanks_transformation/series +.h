@@ -2000,6 +2000,10 @@ constexpr T two_arcsin_square_x_halfed_series<T, K>::operator()(K n) const
 	return  pow(this->x, 2 * n + 2) * pow(this->fact(n), 2) / (this->fact(2 * n + 2));
 }
 
+
+
+
+
 /**
 * @brief function for testing new serieses or converting basic to 
 * @authors Kreynin R.G.
