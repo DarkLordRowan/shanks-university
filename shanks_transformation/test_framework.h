@@ -26,7 +26,7 @@
 #include "levin_recursion_algorithm.h"
 #include "lubkin_W_algorithm.h"
 #include "richardson_algorithm.h"
-
+#include "FSA.h"
 
  /**
   * @brief Enum of transformation IDs
@@ -49,7 +49,8 @@ enum transformation_id_t {
 	epsilon_algorithm_3_id,
 	levin_recursion_id,
 	W_algorithm_id,
-	richardson_algorithm_id
+	richardson_algorithm_id,
+	Ford_Sidi_algorithm_id
 };
 /**
  * @brief Enum of series IDs
@@ -191,6 +192,7 @@ inline static void print_transformation_info()
 		"13 - Levin - Recursion Algorithm" << std::endl <<
 		"14 - Lubkin W-transformation" << std::endl <<
 		"15 - Richardson Algorithm" << std::endl <<
+		"16 - Ford-Sidi Algorithm" << std::endl <<
 		std::endl;
 }
 
@@ -506,6 +508,10 @@ inline static void main_testing_function()
 		break;
 	case transformation_id_t::richardson_algorithm_id:
 		transform.reset(new richardson_algorithm<T, K, decltype(series.get())>(series.get()));
+		break;
+	case transformation_id_t::Ford_Sidi_algorithm_id:
+		transform.reset(new ford_sidi_algorithm<T, K, decltype(series.get())>(series.get()));
+		break;
 	default:
 		throw std::domain_error("wrong transformation_id");
 	}
@@ -585,6 +591,8 @@ inline static void main_testing_function()
 			break;
 		case transformation_id_t::richardson_algorithm_id:
 			transform2.reset(new richardson_algorithm<T, K, decltype(series.get())>(series.get()));
+		case transformation_id_t::Ford_Sidi_algorithm_id:
+			transform2.reset(new ford_sidi_algorithm<T, K, decltype(series.get())>(series.get()));
 		default:
 			throw std::domain_error("wrong algorithm id");
 		}
@@ -633,7 +641,6 @@ inline static void main_testing_function()
 
 			//theta-brezinski
 			transform.reset(new theta_brezinski_algorithm<T, K, decltype(series.get())>(series.get()));
-
 
 			//chang epsilon wynn
 			transform.reset(new chang_whynn_algorithm<T, K, decltype(series.get())>(series.get()));
@@ -716,6 +723,10 @@ inline static void main_testing_function()
 			
 			//Richardson
 			transform.reset(new richardson_algorithm<T, K, decltype(series.get())>(series.get()));
+			print_transform(i, order, std::move(transform.get()));
+
+			//Ford-Sidi
+			transform.reset(new ford_sidi_algorithm<T, K, decltype(series.get())>(series.get()));
 			print_transform(i, order, std::move(transform.get()));
 
 			std::cout << std::endl;

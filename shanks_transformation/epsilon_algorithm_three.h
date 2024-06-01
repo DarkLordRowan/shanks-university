@@ -60,7 +60,7 @@ T epsilon_algorithm_three<T, K, series_templ>::operator()(const K n, const int o
     T resla = 0; //Last result
 
     int newelm, num, NUM, K1, K2, K3, ib, ib2, ie, in;
-    T RES, E0, E1, E2, E3, E1ABS, DELTA1, DELTA2, DELTA3, ERR1, ERR2, ERR3, TOL1, TOL2, TOL3;
+    T RES, E0, E1, E2, E3, E1ABS, DELTA1, DELTA2, DELTA3, ERR1, ERR2, ERR3, TOL1, TOL2, TOL3, SS, EPSINF;
 
     std::vector<T> e(N + 3, 0); //First N eliments of epsilon table + 2 elements for math
 
@@ -106,8 +106,8 @@ T epsilon_algorithm_three<T, K, series_templ>::operator()(const K n, const int o
                     break;
                 }
 
-                T SS = 1.0 / DELTA1 + 1.0 / DELTA2 - 1.0 / DELTA3;
-                T EPSINF = std::abs(SS * E1);
+                SS = 1.0 / DELTA1 + 1.0 / DELTA2 - 1.0 / DELTA3;
+                EPSINF = std::abs(SS * E1);
 
                 if (EPSINF > 1e-3) {
                     RES = E1 + 1.0 / SS;
