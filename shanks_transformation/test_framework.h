@@ -7,28 +7,58 @@
 #include <memory>
 #include <string> 
 #include <set>
+
+#include "wynn_numerators.h"
+#include "remainders.h"
 #include "shanks_transformation.h"
 #include "epsilon_algorithm.h"
 #include "levin_algorithm.h"
-#include "levin_sidi.h"
+#include "levin_sidi_S_algorithm.h"
+#include "drummond_D_algorithm.h"
 #include "epsilon_algorithm_two.h"
 #include "chang_whynn_algorithm.h"
 #include "test_functions.h"
+#include "levin_sidi_M_algorithm.h"
+#include "weniger_algorithm.h"
+#include "rho_wynn_algorithm.h"
+#include "brezinski_theta_algorithm.h"
+#include "epsilon_algorithm_three.h"
+#include "levin_recursion_algorithm.h"
+#include "lubkin_W_algorithm.h"
+#include "richardson_algorithm.h"
+#include "FSA.h"
+#include "FSA_two.h"
 
+ /**
+  * @brief Enum of transformation IDs
+  * @authors Bolshakov M.P.
+  * @edited by Kreynin R.G.
+  */
 enum transformation_id_t {
 	null_transformation_id,
 	shanks_transformation_id,
 	epsilon_algorithm_id,
 	levin_algorithm_id,
 	epsilon_algorithm_2_id,
-	u_S_transformation,
-	t_S_transformation,
-	v_S_transformation,
+	S_algorithm,
+	D_algorithm,
 	chang_epsilon_algorithm,
-	rec_u_S_transformation,
-	rec_v_S_transformation,
-	rec_t_S_transformation
+	M_algorithm,
+	weniger_transformation,
+	rho_wynn_transformation_id,
+	brezinski_theta_transformation_id,
+	epsilon_algorithm_3_id,
+	levin_recursion_id,
+	W_algorithm_id,
+	richardson_algorithm_id,
+	Ford_Sidi_algorithm_id,
+	Ford_Sidi_algorithm_two_id
 };
+/**
+ * @brief Enum of series IDs
+ * @authors Bolshakov M.P.
+ * @edited by Kreynin R.G.
+ */
 enum series_id_t {
 	null_series_id, 
 	exp_series_id, 
@@ -61,21 +91,99 @@ enum series_id_t {
 	eighth_pi_m_one_third_series_id,
 	one_third_pi_squared_m_nine_series_id,
 	four_ln2_m_3_series_id,
-	exp_m_cos_x_sinsin_x_series_id
+	exp_m_cos_x_sinsin_x_series_id,
+	pi_four_minus_ln2_halfed_series_id,
+	five_pi_twelve_series_id,
+	x_two_series_id,
+	pi_six_min_half_series_id,
+	x_two_throught_squares_id,
+	minus_one_ned_in_n_series_id,
+	minus_one_n_fact_n_in_n_series_id,
+	ln_x_plus_one_x_minus_one_halfed_series_id,
+	two_arcsin_square_x_halfed_series_id,
+	pi_squared_twelve_series_id,
+	pi_cubed_32_series_id,
+	minus_three_plus_ln3_three_devided_two_plus_two_ln2_series_id,
+	two_ln2_series_id,
+	pi_x_multi_e_xpi_plus_e_minusxpi_divided_e_xpi_minus_e_minusxpi_minus_one_series_id,
+	pi_minus_x_2_id,
+	half_multi_ln_1div2multi1minuscosx_id,
+	half_minus_sinx_multi_pi_4_id,
+	ln_1plussqrt1plusxsquare_minus_ln_2_id,
+	ln_cosx_id,
+	ln_sinx_minus_ln_x_id,
+	pi_8_cosx_square_minus_1_div_3_cosx_id,
+	sqrt_oneminussqrtoneminusx_div_x_id,
+	one_minus_sqrt_1minus4x_div_2x_id,
+	arcsin_x_minus_x_series_id, 
+	pi_x_minus_x_square_and_x_square_minus_three_pi_x_plus_two_pi_square_series_id,
+	abs_sin_x_minus_2_div_pi_series_id,
+	pi_minus_3pi_4_and_pi_minus_x_minus_3pi_4_series_id,
+	minus_3_div_4_or_x_minus_3_div_4_series_id,
+	ten_minus_x_series_id,
+	x_series_id,
+	minus_x_minus_pi_4_or_minus_pi_4_series_id,
+	one_div_two_minus_x_multi_three_plus_x_series_id,
+	Si_x_series_id,
+	Ci_x_series_id,
+	Riemann_zeta_func_series_id,
+	Riemann_zeta_func_xmin1_div_Riemann_zeta_func_x_series_id,
+	xsquareplus3_div_xsquareplus2multix_minus_1_series_id,
+	arcsin_x_series_id,
+	arctg_x_series_id,
+	K_x_series_id,
+	E_x_series_id,
+	sqrt_1plusx_series_id,
+	Lambert_W_func_series_id,
+	Incomplete_Gamma_func_series_id,
+	Series_with_ln_number1_id,
+	Series_with_ln_number2_id,
+	pi_series_id,
+	x_min_sqrt_x_series_id,
+	arctan_x2_series_id,
+	ln1px4_series_id,
+	sin_x2_series_id,
+	arctan_x3_series_id,
+	arcsin_x2_series_id,
+	ln1_m_x2_series_id,
+	artanh_x_series_id,
+	arcsinh_x_series_id,
+	cos_x2_series_id,
+	sinh_x2_series_id,
+	arctanh_x2_series_id,
+	cos3xmin1_div_xsqare_series_id,
+	two_degree_x_series_id,
+	sqrt_1plusx_min_1_min_x_div_2_series_id,
+	ln13_min_ln7_div_7_series_id,
+	Ja_x_series_id,
+	one_div_sqrt2_sin_xdivsqrt2_series_id,
+	ln_1plusx_div_1plusx2_id,
+	cos_sqrt_x_id,
+	ln_1_plus_x3_id,
+	x_div_1minx_id,
+	x_div_1minx2_id,
+	gamma_series_id
 };
 
+/**
+ * @brief Enum of testing functions IDs
+ * @authors Bolshakov M.P.
+ * @edited by Kreynin R.G.
+ */
 enum test_function_id_t {
 	null_test_function_id, 
 	cmp_sum_and_transform_id, 
 	cmp_a_n_and_transform_id, 
 	transformation_remainder_id, 
 	cmp_transformations_id,
-	eval_transform_time_id
+	eval_transform_time_id,
+	test_all_transforms_id
 };
 
 /**
 * @brief prints out all available series for testing
 * @authors Bolshakov M.P.
+* @edited by Kreynin R.G.
 */
 inline static void print_series_info()
 {
@@ -111,12 +219,85 @@ inline static void print_series_info()
 		"28 - eighth_pi_m_one_third_series" << std::endl <<
 		"29 - one_third_pi_squared_m_nine_series" << std::endl <<
 		"30 - four_ln2_m_3_series" << std::endl <<
-		"31 - exp_m_cos_x_sinsin_x_series" << std::endl;
+		"31 - exp_m_cos_x_sinsin_x_series" << std::endl <<
+		"32 - pi_four_minus_ln2_halfed_series" << std::endl <<
+		"33 - five_pi_twelve_series" << std::endl <<
+		"34 - x_two_series" << std::endl <<
+		"35 - pi_six_min_half_series" << std::endl <<
+		"36 - x_two_throught_squares" << std::endl <<
+		"37 - minus_one_ned_in_n_series" << std::endl <<
+		"38 - minus_one_n_fact_n_in_n_series" << std::endl <<
+		"39 - ln_x_plus_one_x_minus_one_halfed_series" << std::endl <<
+		"40 - two_arcsin_square_x_halfed_series" << std::endl <<
+		"41 - pi_squared_twelve_series" << std::endl <<
+		"42 - pi_cubed_32_series" << std::endl << 
+		"43 - minus_three_plus_ln3_three_devided_two_plus_two_ln2_series" << std::endl <<
+		"44 - two_ln2_series" << std::endl << 
+		"45 - pi_x_multi_e_xpi_plus_e_minusxpi_divided_e_xpi_minus_e_minusxpi_minus_one_series" << std::endl << 
+		"46 - pi_minus_x_2" << std::endl << 
+		"47 - half_multi_ln_1div2multi1minuscosx" << std::endl << 
+		"48 - half_minus_sinx_multi_pi_4" << std::endl << 
+		"49 - ln_1plussqrt1plusxsquare_minus_ln_2" << std::endl << 
+		"50 - ln_cosx" << std::endl << 
+		"51 - ln_sinx_minus_ln_x" << std::endl << 
+		"52 - pi_8_cosx_square_minus_1_div_3_cosx" << std::endl << 
+		"53 - sqrt_oneminussqrtoneminusx_div_x" << std::endl << 
+		"54 - one_minus_sqrt_1minus4x_div_2x" << std::endl << 
+		"55 - arcsin_x_minus_x_series" << std::endl << 
+		"56 - pi_x_minus_x_square_and_x_square_minus_three_pi_x_plus_two_pi_square_series" << std::endl << 
+		"57 - abs_sin_x_minus_2_div_pi_series" << std::endl << 
+		"58 - pi_minus_3pi_4_and_pi_minus_x_minus_3pi_4_series" << std::endl << 
+		"59 - minus_3_div_4_or_x_minus_3_div_4_series" << std::endl << 
+		"60 - ten_minus_x_series" << std::endl << 
+		"61 - x_series" << std::endl << 
+		"62 - minus_x_minus_pi_4_or_minus_pi_4_series" << std::endl << 
+		"63 - one_div_two_minus_x_multi_three_plus_x_series" << std::endl << 
+		"64 - Si_x_series" << std::endl << 
+		"65 - Ci_x_series" << std::endl <<
+		"66 - Riemann_zeta_func_series" << std::endl << 
+		"67 - Riemann_zeta_func_xmin1_div_Riemann_zeta_func_x_series" << std::endl << 
+		"68 - xsquareplus3_div_xsquareplus2multix_minus_1_series" << std::endl << 
+		"69 - arcsin_x_series" << std::endl << 
+		"70 - arctg_x_series" << std::endl << 
+		"71 - K_x_series" << std::endl << 
+		"72 - E_x_series" << std::endl << 
+		"73 - sqrt_1plusx_series" << std::endl << 
+		"74 - Lambert_W_func_series" << std::endl << 
+		"75 - Incomplete_Gamma_func_series" << std::endl << 
+		"76 - Series_with_ln_number1" << std::endl << 
+		"77 - Series_with_ln_number2" << std::endl << 
+		"78 - pi_series" << std::endl << 
+		"79 - x_min_sqrt_x_series" << std::endl << 
+		"80 - arctan_x2_series" << std::endl <<
+		"81 - ln1px4_series" << std::endl <<
+		"82 - sin_x2_series" << std::endl <<
+		"83 - arctan_x3_series" << std::endl <<
+		"84 - arcsin_x2_series" << std::endl <<
+		"85 - ln1_m_x2_series" << std::endl <<
+		"86 - artanh_x_series" << std::endl <<
+		"87 - arcsinh_x_series" << std::endl <<
+		"88 - cos_x2_series" << std::endl <<
+		"89 - sinh_x2_series" << std::endl <<
+		"90 - arctanh_x2_series" << std::endl << 
+		"91 - cos3xmin1_div_xsqare_series" << std::endl << 
+		"92 - two_degree_x_series" << std::endl << 
+		"93 - sqrt_1plusx_min_1_min_x_div_2_series" << std::endl << 
+		"94 - ln13_min_ln7_div_7_series" << std::endl << 
+		"95 - Ja_x_series" << std::endl << 
+		"96 - one_div_sqrt2_sin_xdivsqrt2_series" << std::endl << 
+		"97 - ln_1plusx_div_1plusx2" << std::endl <<
+		"98 - cos_sqrt_x" << std::endl <<
+		"99 - ln_1_plus_x3" << std::endl <<
+		"100 - x_div_1minx" << std::endl <<
+		"101 - x_div_1minx2" << std::endl <<
+		"102 - gamma_series" << std::endl <<
+		std::endl;
 }
 
 /**
 * @brief prints out all available transformations for testing
-* @authors Bolshakov M.P. Kreinin R.G.
+* @authors Bolshakov M.P.
+* @edited by Kreynin R.G.
 */
 inline static void print_transformation_info()
 {
@@ -126,18 +307,26 @@ inline static void print_transformation_info()
 		"2 - Epsilon Algorithm" << std::endl <<
 		"3 - Levin Algorithm" << std::endl <<
 		"4 - Epsilon Algorithm V-2" << std::endl <<
-		"5 - u S-transformation" << std::endl <<
-		"6 - t S-transformation" << std::endl <<
-		"7 - v S-transformation" << std::endl <<
-		"8 - Chang - Wynn - Epsilon Algorithm" << std::endl << 
-		"9 - recursive u S-transformation" << std::endl <<
-		"10 - recursive t S-transformation" << std::endl <<
-		"11 - recursive v S-transformation" << std::endl;
+		"5 - S-transformation" << std::endl <<
+		"6 - D-transformation" << std::endl <<
+		"7 - Chang - Wynn - Epsilon Algorithm" << std::endl <<
+		"8 - M-transformation" << std::endl <<
+		"9 - Weniger transformation" << std::endl <<
+		"10 - Rho - Wynn transformation" << std::endl <<
+		"11 - Theta Brezinski transformation" << std::endl <<
+		"12 - Epsilon Algorithm V-3" << std::endl <<
+		"13 - Levin - Recursion Algorithm" << std::endl <<
+		"14 - Lubkin W-transformation" << std::endl <<
+		"15 - Richardson Algorithm" << std::endl <<
+		"16 - Ford-Sidi Algorithm" << std::endl <<
+		"17 - Ford-Sidi Algorithm V-2" << std::endl <<
+		std::endl;
 }
 
 /**
 * @brief prints out all available fungus for testing
 * @authors Bolshakov M.P.
+* @edited by Kreynin R.G.
 */
 inline static void print_test_function_info()
 {
@@ -147,14 +336,98 @@ inline static void print_test_function_info()
 		"2 - cmp_a_n_and_transform - showcases the difference between series' terms and transformed ones" << std::endl <<
 		"3 - transformation_remainders - showcases the difference between series' sum and transformed partial sum" << std::endl <<
 		"4 - cmp_transformations - showcases the difference between convergence of sums accelerated by different transformations" << std::endl <<
-		"5 - eval_transform_time - evaluates the time it takes to transform series" << std::endl;
+		"5 - eval_transform_time - evaluates the time it takes to transform series" << std::endl <<
+		"6 - test all algorithms on summ" << std::endl
+		<< std::endl;
+}
+
+/**
+* @brief initialize LevinType transformations, usable for S,D,M
+* @authors Naumov A.
+* @edited by Yurov P.
+*/
+template<typename T, typename K, typename series_templ>
+inline void init_levin(transformation_id_t id, std::unique_ptr<series_base<T,K>>& series, std::unique_ptr<series_acceleration<T, K, series_templ>>& transform)
+{
+	bool recursive = false;
+	char type;
+
+	std::cout << std::endl;
+	std::cout << "|--------------------------------------|" << std::endl;
+	std::cout << "| choose what type of transformation u,t,d or v: "; std::cin >> type; std::cout << "|" << std::endl;
+	if (id != transformation_id_t::M_algorithm)
+	{
+		std::cout << "| Use recurrence formula? 1<-true or 0<-false : "; std::cin >> recursive; std::cout << "|" << std::endl;
+	}
+	std::cout << "|--------------------------------------|" << std::endl;
+
+	transform_base<T, K>* ptr = NULL;
+
+	if (type == 'u') ptr = new u_transform<T, K>{};
+	if (type == 't') ptr = new t_transform<T, K>{}; 
+	if (type == 'v') { 
+		if (!id == transformation_id_t::M_algorithm)
+			ptr = new v_transform<T, K>{};
+		else
+			ptr = new v_transform_2<T, K>{};
+	}
+	if (type == 'd') ptr = new d_transform<T, K>{};
+
+	if (ptr == NULL) throw std::domain_error("chosen wrong type of transformation");
+
+	switch (id) {
+		case transformation_id_t::S_algorithm:
+			transform.reset(new levi_sidi_algorithm<T, K, decltype(series.get())>(series.get(), ptr, recursive));
+			return;
+		case transformation_id_t::D_algorithm:
+			transform.reset(new drummonds_algorithm<T, K, decltype(series.get())>(series.get(), ptr, recursive));
+			return;
+		case transformation_id_t::M_algorithm:
+			transform.reset(new M_levin_sidi_algorithm<T, K, decltype(series.get())>(series.get(), ptr));
+			return;
+		default:
+			throw std::domain_error("wrong id was given");
+	}	
+}
+
+/**
+* @brief initialize rho-WynnType transformations, usable for basic, Gamma, Gamma-Rho
+* @authors Yurov P.
+*/
+template<typename T, typename K, typename series_templ>
+inline void init_wynn(std::unique_ptr<series_base<T, K>>& series, std::unique_ptr<series_acceleration<T, K, series_templ>>& transform)
+{
+
+	int type;
+
+	std::cout << std::endl;
+	std::cout << "|------------------------------------------|" << std::endl;
+	std::cout << "| choose transformation variant:           |" << std::endl;
+	std::cout << "| classic (0), gamma (1), gamma-rho (2): "; std::cin >> type;
+	std::cout << "|------------------------------------------|" << std::endl;
+
+	switch (type) {
+	case 0:
+		transform.reset(new rho_Wynn_algorithm<T, K, decltype(series.get())>(series.get(), new rho_transform<T, K>{}));
+		break;
+	case 1:
+		transform.reset(new rho_Wynn_algorithm<T, K, decltype(series.get())>(series.get(), new generilized_transform<T, K>{}));
+		break;
+	case 2:
+		transform.reset(new rho_Wynn_algorithm<T, K, decltype(series.get())>(series.get(), new gamma_rho_transform<T, K>{}));
+		break;
+	default:
+		throw std::domain_error("wrong transform variant");
+		break;
+	}
 }
 
 /**
 * @brief The main testing function
 * This function provides a convenient and interactive way to test out the convergence acceleration of various series
 * @tparam T The type of the elements in the series, K The type of enumerating integer
-* @authors Bolshakov M.P. Kreynin R.G.
+* @authors Bolshakov M.P
+* @edited by Kreynin R.G.
 */
 template <typename T, typename K>
 inline static void main_testing_function()
@@ -213,7 +486,7 @@ inline static void main_testing_function()
 		std::cout << "Enter the value for constant b for the series" << std::endl;
 		std::cin >> b;
 		series.reset(new xmb_Jb_two_series<T, K>(x, b));
-		break;
+		break; 
 	case series_id_t::half_asin_two_x_series_id:
 		series.reset(new half_asin_two_x_series<T, K>(x));
 		break;
@@ -227,11 +500,11 @@ inline static void main_testing_function()
 		series.reset(new erf_series<T, K>(x));
 		break;
 	case series_id_t::m_fact_1mx_mp1_inverse_series_id:
-		T m;
+		K m;
 		std::cout << "Enter the value for constant m for the series" << std::endl;
 		std::cin >> m;
 		series.reset(new m_fact_1mx_mp1_inverse_series<T, K>(x, m));
-		break;
+		break; 
 	case series_id_t::inverse_sqrt_1m4x_series_id:
 		series.reset(new inverse_sqrt_1m4x_series<T, K>(x));
 		break;
@@ -277,6 +550,228 @@ inline static void main_testing_function()
 	case series_id_t::exp_m_cos_x_sinsin_x_series_id:
 		series.reset(new exp_m_cos_x_sinsin_x_series<T, K>(x));
 		break;
+	case series_id_t::pi_four_minus_ln2_halfed_series_id:
+		series.reset(new pi_four_minus_ln2_halfed_series<T, K>(x));
+		break;
+	case series_id_t::five_pi_twelve_series_id:
+		series.reset(new five_pi_twelve_series<T, K>(x));
+		break;
+	case series_id_t::x_two_series_id:
+		series.reset(new x_two_series<T, K>(x));
+		break;
+	case series_id_t::pi_six_min_half_series_id:
+		series.reset(new pi_six_min_half_series<T, K>(x));
+		break;
+	case series_id_t::x_two_throught_squares_id:
+		series.reset(new x_two_throught_squares_series<T, K>(x));
+		break;
+	case series_id_t::minus_one_ned_in_n_series_id:
+		series.reset(new minus_one_ned_in_n_series<T, K>(x));
+		break;
+	case series_id_t::minus_one_n_fact_n_in_n_series_id:
+		series.reset(new minus_one_n_fact_n_in_n_series<T, K>(x));
+		break;
+	case series_id_t::ln_x_plus_one_x_minus_one_halfed_series_id:
+		series.reset(new ln_x_plus_one_x_minus_one_halfed_series<T, K>(x));
+		break;
+	case series_id_t::two_arcsin_square_x_halfed_series_id:
+		series.reset(new two_arcsin_square_x_halfed_series<T, K>(x));
+		break;
+	case series_id_t::pi_squared_twelve_series_id:
+		series.reset(new pi_squared_twelve_series<T, K>());
+		break;
+	case series_id_t::pi_cubed_32_series_id:
+		series.reset(new pi_cubed_32_series<T, K>());
+		break; 
+	case series_id_t::minus_three_plus_ln3_three_devided_two_plus_two_ln2_series_id:
+		series.reset(new minus_three_plus_ln3_three_devided_two_plus_two_ln2_series<T, K>());
+		break; 
+	case series_id_t::two_ln2_series_id:
+		series.reset(new two_ln2_series<T, K>());
+		break; 
+	case series_id_t::pi_x_multi_e_xpi_plus_e_minusxpi_divided_e_xpi_minus_e_minusxpi_minus_one_series_id:
+		series.reset(new pi_x_multi_e_xpi_plus_e_minusxpi_divided_e_xpi_minus_e_minusxpi_minus_one_series<T, K>(x));
+		break; 
+	case series_id_t::pi_minus_x_2_id:
+		series.reset(new pi_minus_x_2<T, K>(x));
+		break; 
+	case series_id_t::half_multi_ln_1div2multi1minuscosx_id:
+		series.reset(new half_multi_ln_1div2multi1minuscosx<T, K>(x));
+		break; 
+	case series_id_t::half_minus_sinx_multi_pi_4_id:
+		series.reset(new half_minus_sinx_multi_pi_4<T, K>(x));
+		break; 
+	case series_id_t::ln_1plussqrt1plusxsquare_minus_ln_2_id:
+		series.reset(new ln_1plussqrt1plusxsquare_minus_ln_2<T, K>(x));
+		break; 
+	case series_id_t::ln_cosx_id:
+		series.reset(new ln_cosx<T, K>(x));
+		break; 
+	case series_id_t::ln_sinx_minus_ln_x_id:
+		series.reset(new ln_sinx_minus_ln_x<T, K>(x));
+		break; 
+	case series_id_t::pi_8_cosx_square_minus_1_div_3_cosx_id:
+		series.reset(new pi_8_cosx_square_minus_1_div_3_cosx<T, K>(x));
+		break; 
+	case series_id_t::sqrt_oneminussqrtoneminusx_div_x_id:
+		series.reset(new sqrt_oneminussqrtoneminusx_div_x<T, K>(x));
+		break; 
+	case series_id_t::one_minus_sqrt_1minus4x_div_2x_id:
+		series.reset(new one_minus_sqrt_1minus4x_div_2x<T, K>(x));
+		break; 
+	case series_id_t::arcsin_x_minus_x_series_id:
+		series.reset(new arcsin_x_minus_x_series<T, K>(x));
+		break; 
+	case series_id_t::pi_x_minus_x_square_and_x_square_minus_three_pi_x_plus_two_pi_square_series_id:
+		series.reset(new pi_x_minus_x_square_and_x_square_minus_three_pi_x_plus_two_pi_square_series<T, K>(x));
+		break; 
+	case series_id_t::abs_sin_x_minus_2_div_pi_series_id:
+		series.reset(new abs_sin_x_minus_2_div_pi_series<T, K>(x));
+		break; 
+	case series_id_t::pi_minus_3pi_4_and_pi_minus_x_minus_3pi_4_series_id:
+		series.reset(new pi_minus_3pi_4_and_pi_minus_x_minus_3pi_4_series<T, K>(x));
+		break; 
+	case series_id_t::minus_3_div_4_or_x_minus_3_div_4_series_id:
+		series.reset(new minus_3_div_4_or_x_minus_3_div_4_series<T, K>(x));
+		break; 
+	case series_id_t::ten_minus_x_series_id:
+		series.reset(new ten_minus_x_series<T, K>(x));
+		break; 
+	case series_id_t::x_series_id:
+		series.reset(new x_series<T, K>(x));
+		break; 
+	case series_id_t::minus_x_minus_pi_4_or_minus_pi_4_series_id:
+		series.reset(new minus_x_minus_pi_4_or_minus_pi_4_series<T, K>(x));
+		break; 
+	case series_id_t::one_div_two_minus_x_multi_three_plus_x_series_id:
+		series.reset(new one_div_two_minus_x_multi_three_plus_x_series<T, K>(x));
+		break; 
+	case series_id_t::Si_x_series_id:
+		series.reset(new Si_x_series<T, K>(x));
+		break; 
+	case series_id_t::Ci_x_series_id:
+		series.reset(new Ci_x_series<T, K>(x));
+		break;
+	case series_id_t::Riemann_zeta_func_series_id:
+		series.reset(new Riemann_zeta_func_series<T, K>(x));
+		break; 
+	case series_id_t::Riemann_zeta_func_xmin1_div_Riemann_zeta_func_x_series_id:
+		series.reset(new Riemann_zeta_func_xmin1_div_Riemann_zeta_func_x_series<T, K>(x));
+		break; 
+	case series_id_t::xsquareplus3_div_xsquareplus2multix_minus_1_series_id:
+		series.reset(new xsquareplus3_div_xsquareplus2multix_minus_1_series<T, K>(x));
+		break; 
+	case series_id_t::arcsin_x_series_id:
+		series.reset(new arcsin_x_series<T, K>(x));
+		break; 
+	case series_id_t::arctg_x_series_id:
+		series.reset(new arctg_x_series<T, K>(x));
+		break; 
+	case series_id_t::K_x_series_id:
+		series.reset(new K_x_series<T, K>(x));
+		break; 
+	case series_id_t::E_x_series_id:
+		series.reset(new E_x_series<T, K>(x));
+		break; 
+	case series_id_t::sqrt_1plusx_series_id:
+		series.reset(new sqrt_1plusx_series<T, K>(x));
+		break; 
+	case series_id_t::Lambert_W_func_series_id:
+		series.reset(new Lambert_W_func_series<T, K>(x));
+		break; 
+	case series_id_t::Incomplete_Gamma_func_series_id:
+		T s;
+		std::cout << "Enter the value for constant s for the series" << std::endl;
+		std::cin >> s;
+		series.reset(new Incomplete_Gamma_func_series<T, K>(x, s));
+		break; 
+	case series_id_t::Series_with_ln_number1_id:
+		series.reset(new Series_with_ln_number1<T, K>());
+		break; 
+	case series_id_t::Series_with_ln_number2_id:
+		series.reset(new Series_with_ln_number2<T, K>());
+		break;
+	case series_id_t::pi_series_id:
+		series.reset(new pi_series<T, K>());
+		break; 
+	case series_id_t::x_min_sqrt_x_series_id:
+		series.reset(new x_min_sqrt_x_series<T, K>(x));
+		break; 
+	case series_id_t::arctan_x2_series_id:
+		series.reset(new arctan_x2_series<T, K>(x));
+		break;
+	case series_id_t::ln1px4_series_id:
+		series.reset(new ln1px4_series<T, K>(x));
+		break;
+	case series_id_t::sin_x2_series_id:
+		series.reset(new sin_x2_series<T, K>(x));
+		break;
+	case series_id_t::arctan_x3_series_id:
+		series.reset(new arctan_x3_series<T, K>(x));
+		break;
+	case series_id_t::arcsin_x2_series_id:
+		series.reset(new arcsin_x2_series<T, K>(x));
+		break;
+	case series_id_t::ln1_m_x2_series_id:
+		series.reset(new ln1_m_x2_series<T, K>(x));
+		break;
+	case series_id_t::artanh_x_series_id:
+		series.reset(new artanh_x_series<T, K>(x));
+		break;
+	case series_id_t::arcsinh_x_series_id:
+		series.reset(new arcsinh_x_series<T, K>(x));
+		break;
+	case series_id_t::cos_x2_series_id:
+		series.reset(new cos_x2_series<T, K>(x));
+		break;
+	case series_id_t::sinh_x2_series_id:
+		series.reset(new sinh_x2_series<T, K>(x));
+		break;
+	case series_id_t::arctanh_x2_series_id:
+		series.reset(new arctanh_x2_series<T, K>(x));
+		break;
+	case series_id_t::cos3xmin1_div_xsqare_series_id:
+		series.reset(new cos3xmin1_div_xsqare_series<T, K>(x));
+		break; 
+	case series_id_t::two_degree_x_series_id:
+		series.reset(new two_degree_x_series<T, K>(x));
+		break; 
+	case series_id_t::sqrt_1plusx_min_1_min_x_div_2_series_id:
+		series.reset(new sqrt_1plusx_min_1_min_x_div_2_series<T, K>(x));
+		break; 
+	case series_id_t::ln13_min_ln7_div_7_series_id:
+		series.reset(new ln13_min_ln7_div_7_series<T, K>());
+		break; 
+	case series_id_t::Ja_x_series_id:
+		T a;
+		std::cout << "Enter the value for constant a for the series" << std::endl;
+		std::cin >> a;
+		series.reset(new Ja_x_series<T, K>(x, a));
+		break; 
+	case series_id_t::one_div_sqrt2_sin_xdivsqrt2_series_id:
+		series.reset(new one_div_sqrt2_sin_xdivsqrt2_series<T, K>(x));
+		break; 
+	case series_id_t::ln_1plusx_div_1plusx2_id:
+		series.reset(new ln_1plusx_div_1plusx2<T, K>(x));
+		break;
+	case series_id_t::cos_sqrt_x_id:
+		series.reset(new cos_sqrt_x<T, K>(x));
+		break;
+	case series_id_t::ln_1_plus_x3_id:
+		series.reset(new ln_1_plus_x3<T, K>(x));
+		break;
+	case series_id_t::x_div_1minx_id:
+		series.reset(new x_div_1minx<T, K>(x));
+		break;
+	case series_id_t::x_div_1minx2_id:
+		series.reset(new x_div_1minx2<T, K>(x));
+		break;
+	case series_id_t::gamma_series_id:
+		T t;
+		std::cout << "Enter the parameter t in the gamma series" << std::endl;
+		std::cin >> t;
+		series.reset(new gamma_series<T, K>(t, x));
+		break;
 	default:
 		throw std::domain_error("wrong series_id");
 	}
@@ -303,25 +798,44 @@ inline static void main_testing_function()
 	case transformation_id_t::epsilon_algorithm_2_id:
 		transform.reset(new epsilon_algorithm_two<T, K, decltype(series.get())>(series.get()));
 		break;
-	case transformation_id_t::u_S_transformation:
-		transform.reset(new u_levi_sidi_algorithm<T, K, decltype(series.get())>(series.get()));
+	case transformation_id_t::S_algorithm:
+		init_levin(transformation_id_t::S_algorithm, series, transform);
 		break;
-	case transformation_id_t::t_S_transformation:
-		transform.reset(new t_levi_sidi_algorithm<T, K, decltype(series.get())>(series.get()));
+	case transformation_id_t::D_algorithm:
+		init_levin(transformation_id_t::D_algorithm, series, transform);
 		break;
-	case transformation_id_t::v_S_transformation:
-		transform.reset(new v_levi_sidi_algorithm<T, K, decltype(series.get())>(series.get()));
-		break;
-	case transformation_id_t::rec_u_S_transformation:
-		transform.reset(new recursive_u_levi_sidi_algorithm<T, K, decltype(series.get())>(series.get()));
-		break;
-	case transformation_id_t::rec_t_S_transformation:
-		transform.reset(new recursive_t_levi_sidi_algorithm<T, K, decltype(series.get())>(series.get()));
-		break;
-	case transformation_id_t::rec_v_S_transformation:
-		transform.reset(new recursive_v_levi_sidi_algorithm<T, K, decltype(series.get())>(series.get()));
 	case transformation_id_t::chang_epsilon_algorithm:
 		transform.reset(new chang_whynn_algorithm<T, K, decltype(series.get())>(series.get()));
+		break;
+	case transformation_id_t::M_algorithm:
+		init_levin(transformation_id_t::M_algorithm, series, transform);
+		break;
+	case transformation_id_t::weniger_transformation:
+		transform.reset(new weniger_algorithm<T, K, decltype(series.get())>(series.get()));
+		break;
+	case transformation_id_t::rho_wynn_transformation_id:
+		init_wynn(series, transform);
+		break;
+	case transformation_id_t::brezinski_theta_transformation_id:
+		transform.reset(new theta_brezinski_algorithm<T, K, decltype(series.get())>(series.get()));
+		break;
+	case transformation_id_t::epsilon_algorithm_3_id:
+		transform.reset(new epsilon_algorithm_three<T, K, decltype(series.get())>(series.get()));
+		break;
+	case transformation_id_t::levin_recursion_id:
+		transform.reset(new levin_recursion_algorithm<T, K, decltype(series.get())>(series.get()));
+		break;
+	case transformation_id_t::W_algorithm_id:
+		transform.reset(new W_lubkin_algorithm<T, K, decltype(series.get())>(series.get()));
+		break;
+	case transformation_id_t::richardson_algorithm_id:
+		transform.reset(new richardson_algorithm<T, K, decltype(series.get())>(series.get()));
+		break;
+	case transformation_id_t::Ford_Sidi_algorithm_id:
+		transform.reset(new ford_sidi_algorithm<T, K, decltype(series.get())>(series.get()));
+		break;
+	case transformation_id_t::Ford_Sidi_algorithm_two_id:
+		transform.reset(new ford_sidi_algorithm_two<T, K, decltype(series.get())>(series.get()));
 		break;
 	default:
 		throw std::domain_error("wrong transformation_id");
@@ -356,41 +870,56 @@ inline static void main_testing_function()
 		
 		switch (cmop_transformation_id)
 		{
-		case 1:
+		case transformation_id_t::shanks_transformation_id:
 			if (alternating_series.contains(series_id))
 				transform2.reset(new shanks_transform_alternating<T, K, decltype(series.get())>(series.get()));
 			else
 				transform2.reset(new shanks_transform<T, K, decltype(series.get())>(series.get()));
 			break;
-		case 2:
+		case transformation_id_t::epsilon_algorithm_id:
 			transform2.reset(new epsilon_algorithm<T, K, decltype(series.get())>(series.get()));
 			break;
-		case 3:
+		case transformation_id_t::levin_algorithm_id:
 			transform2.reset(new levin_algorithm<T, K, decltype(series.get())>(series.get()));
 			break;
-		case 4:
+		case transformation_id_t::epsilon_algorithm_2_id:
 			transform2.reset(new epsilon_algorithm_two<T, K, decltype(series.get())>(series.get()));
 			break;
-		case 5:
-			transform2.reset(new u_levi_sidi_algorithm<T, K, decltype(series.get())>(series.get()));
+		case transformation_id_t::S_algorithm:
+			init_levin(transformation_id_t::S_algorithm, series, transform2);
 			break;
-		case 6:
-			transform2.reset(new t_levi_sidi_algorithm<T, K, decltype(series.get())>(series.get()));
+		case transformation_id_t::D_algorithm:
+			init_levin(transformation_id_t::D_algorithm, series, transform2);
 			break;
-		case 7:
-			transform2.reset(new v_levi_sidi_algorithm<T, K, decltype(series.get())>(series.get()));
-			break;
-		case 8:
+		case transformation_id_t::chang_epsilon_algorithm:
 			transform2.reset(new chang_whynn_algorithm<T, K, decltype(series.get())>(series.get()));
-		case 9:
-			transform2.reset(new recursive_u_levi_sidi_algorithm<T, K, decltype(series.get())>(series.get()));
 			break;
-		case 10:
-			transform2.reset(new recursive_t_levi_sidi_algorithm<T, K, decltype(series.get())>(series.get()));
+		case transformation_id_t::M_algorithm:
+			init_levin(transformation_id_t::M_algorithm, series, transform2);
 			break;
-		case 11:
-			transform2.reset(new recursive_v_levi_sidi_algorithm<T, K, decltype(series.get())>(series.get()));
+		case transformation_id_t::weniger_transformation:
+			transform2.reset(new weniger_algorithm<T, K, decltype(series.get())>(series.get()));
 			break;
+		case transformation_id_t::rho_wynn_transformation_id:
+			init_wynn(series, transform2);
+			break;
+		case transformation_id_t::brezinski_theta_transformation_id:
+			transform2.reset(new theta_brezinski_algorithm<T, K, decltype(series.get())>(series.get()));
+			break;
+		case transformation_id_t::epsilon_algorithm_3_id:
+			transform2.reset(new epsilon_algorithm_three<T, K, decltype(series.get())>(series.get()));
+			break;
+		case transformation_id_t::levin_recursion_id:
+			transform2.reset(new levin_recursion_algorithm<T, K, decltype(series.get())>(series.get()));
+		case transformation_id_t::W_algorithm_id:
+			transform2.reset(new W_lubkin_algorithm<T, K, decltype(series.get())>(series.get()));
+			break;
+		case transformation_id_t::richardson_algorithm_id:
+			transform2.reset(new richardson_algorithm<T, K, decltype(series.get())>(series.get()));
+		case transformation_id_t::Ford_Sidi_algorithm_id:
+			transform2.reset(new ford_sidi_algorithm<T, K, decltype(series.get())>(series.get()));
+		case transformation_id_t::Ford_Sidi_algorithm_two_id:
+			transform2.reset(new ford_sidi_algorithm_two<T, K, decltype(series.get())>(series.get()));
 		default:
 			throw std::domain_error("wrong algorithm id");
 		}
@@ -399,6 +928,141 @@ inline static void main_testing_function()
 	}
 	case test_function_id_t::eval_transform_time_id:
 		eval_transform_time(n, order, std::move(series.get()), std::move(transform.get()));
+		break;
+	case test_function_id_t::test_all_transforms_id: //Testing all functions for series
+
+		for (int i = 1; i <= n; i++) 
+		{
+			print_sum(i, std::move(series.get()));
+			
+			//shanks
+			if (alternating_series.contains(series_id))
+				transform.reset(new shanks_transform_alternating<T, K, decltype(series.get())>(series.get()));
+			else
+				transform.reset(new shanks_transform<T, K, decltype(series.get())>(series.get()));
+			print_transform(i, order, std::move(transform.get()));
+
+			//epsilon v-1
+			transform.reset(new epsilon_algorithm<T, K, decltype(series.get())>(series.get()));
+			print_transform(i, order, std::move(transform.get()));
+
+			//epsilon v-2
+			transform.reset(new epsilon_algorithm_two<T, K, decltype(series.get())>(series.get()));
+			print_transform(i, order, std::move(transform.get()));
+
+			//epsilon v-3
+			transform.reset(new epsilon_algorithm_three<T, K, decltype(series.get())>(series.get()));
+			print_transform(i, order, std::move(transform.get()));
+
+			//rho-wynn
+			transform.reset(new rho_Wynn_algorithm<T, K, decltype(series.get())>(series.get(), new rho_transform<T, K>{}));
+			print_transform(i, order, std::move(transform.get()));
+
+			//rho-wynn
+			transform.reset(new rho_Wynn_algorithm<T, K, decltype(series.get())>(series.get(), new generilized_transform<T, K>{}));
+			print_transform(i, order, std::move(transform.get()));
+
+			//rho-wynn
+			transform.reset(new rho_Wynn_algorithm<T, K, decltype(series.get())>(series.get(), new gamma_rho_transform<T, K>{}));
+			print_transform(i, order, std::move(transform.get()));
+
+			//theta-brezinski
+			transform.reset(new theta_brezinski_algorithm<T, K, decltype(series.get())>(series.get()));
+
+			//chang epsilon wynn
+			transform.reset(new chang_whynn_algorithm<T, K, decltype(series.get())>(series.get()));
+			print_transform(i, order, std::move(transform.get()));
+
+			//levin standart
+			transform.reset(new levin_algorithm<T, K, decltype(series.get())>(series.get()));
+			print_transform(i, order, std::move(transform.get()));
+
+			//levin recurcive
+			transform.reset(new levin_recursion_algorithm<T, K, decltype(series.get())>(series.get()));
+			print_transform(i, order, std::move(transform.get()));
+
+			//levin-sidi S U
+			transform.reset(new levi_sidi_algorithm<T, K, decltype(series.get())>(series.get(), new u_transform<T, K>{},false));
+			print_transform(i, order, std::move(transform.get()));
+			//
+
+			//levin-sidi S T
+			transform.reset(new levi_sidi_algorithm<T, K, decltype(series.get())>(series.get(), new t_transform<T, K>{}, false));
+			print_transform(i, order, std::move(transform.get()));
+			//
+
+			//levin-sidi S D
+			transform.reset(new levi_sidi_algorithm<T, K, decltype(series.get())>(series.get(), new d_transform<T, K>{}, false));
+			print_transform(i, order, std::move(transform.get()));
+			//
+
+			//levin-sidi S V
+			transform.reset(new levi_sidi_algorithm<T, K, decltype(series.get())>(series.get(), new v_transform<T, K>{}, false));
+			print_transform(i, order, std::move(transform.get()));
+
+			//levin-sidi D U
+			transform.reset(new drummonds_algorithm<T, K, decltype(series.get())>(series.get(), new u_transform<T, K>{}, false));
+			print_transform(i, order, std::move(transform.get()));
+			//
+
+			//levin-sidi D T
+			transform.reset(new drummonds_algorithm<T, K, decltype(series.get())>(series.get(), new t_transform<T, K>{}, false));
+			print_transform(i, order, std::move(transform.get()));
+			//
+
+			//levin-sidi D D
+			transform.reset(new drummonds_algorithm<T, K, decltype(series.get())>(series.get(), new d_transform<T, K>{}, false));
+			print_transform(i, order, std::move(transform.get()));
+			//
+
+			//levin-sidi D V
+			transform.reset(new drummonds_algorithm<T, K, decltype(series.get())>(series.get(), new v_transform<T, K>{}, false));
+			print_transform(i, order, std::move(transform.get()));
+			//
+
+			//levin-sidi M U
+			transform.reset(new M_levin_sidi_algorithm<T, K, decltype(series.get())>(series.get(), new u_transform<T, K>{}));
+			print_transform(i, order, std::move(transform.get()));
+			//
+
+			//levin-sidi M T
+			transform.reset(new M_levin_sidi_algorithm<T, K, decltype(series.get())>(series.get(), new t_transform<T, K>{}));
+			print_transform(i, order, std::move(transform.get()));
+			//
+
+			//levin-sidi M D
+			transform.reset(new M_levin_sidi_algorithm<T, K, decltype(series.get())>(series.get(), new d_transform<T, K>{}));
+			print_transform(i, order, std::move(transform.get()));
+			//
+
+			//levin-sidi M V
+			transform.reset(new M_levin_sidi_algorithm<T, K, decltype(series.get())>(series.get(), new v_transform_2<T, K>{}));
+			print_transform(i, order, std::move(transform.get()));
+			//
+			
+			//weniger
+			transform.reset(new weniger_algorithm<T, K, decltype(series.get())>(series.get()));
+			print_transform(i, order, std::move(transform.get()));
+
+			//lubkin W
+			transform.reset(new W_lubkin_algorithm<T, K, decltype(series.get())>(series.get()));
+			print_transform(i, order, std::move(transform.get()));
+			
+			//Richardson
+			transform.reset(new richardson_algorithm<T, K, decltype(series.get())>(series.get()));
+			print_transform(i, order, std::move(transform.get()));
+
+			//Ford-Sidi
+			transform.reset(new ford_sidi_algorithm<T, K, decltype(series.get())>(series.get()));
+			print_transform(i, order, std::move(transform.get()));
+
+			//Ford-Sidi v-2
+			transform.reset(new ford_sidi_algorithm_two<T, K, decltype(series.get())>(series.get()));
+			print_transform(i, order, std::move(transform.get()));
+
+			std::cout << std::endl;
+		}
+
 		break;
 	default:
 		throw std::domain_error("wrong function_id");

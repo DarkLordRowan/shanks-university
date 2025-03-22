@@ -1,0 +1,22 @@
+{
+    "version": 1,
+    "revision": 0,
+    "rules": [
+        {
+            "primary-output": "x64\\Debug\\test_framework.h.obj",
+            "outputs": [
+                "C:\\Users\\User\\Desktop\\shanks-university-master\\shanks_transformation\\x64\\Debug\\vc143.pdb",
+                "x64\\Debug\\",
+                "C:\\Users\\User\\Desktop\\shanks-university-master\\shanks_transformation\\x64\\Debug\\test_framework.h.ifc"
+            ],
+            "provides": [
+                {
+                    "logical-name": "test_framework.h",
+                    "source-path": "c:\\users\\user\\desktop\\shanks-university-master\\shanks_transformation\\test_framework.h",
+                    "lookup-method": "absolute"
+                }
+            ],
+            "requires": []
+        }
+    ]
+}
