@@ -27,6 +27,7 @@
 #include "lubkin_W_algorithm.h"
 #include "richardson_algorithm.h"
 #include "FSA.h"
+#include "FSA_3.h"
 
  /**
   * @brief Enum of transformation IDs
@@ -50,7 +51,8 @@ enum transformation_id_t {
 	levin_recursion_id,
 	W_algorithm_id,
 	richardson_algorithm_id,
-	Ford_Sidi_algorithm_id
+	Ford_Sidi_algorithm_id,
+	Ford_Sidi_algorithm_three_id
 };
 /**
  * @brief Enum of series IDs
@@ -193,6 +195,7 @@ inline static void print_transformation_info()
 		"14 - Lubkin W-transformation" << std::endl <<
 		"15 - Richardson Algorithm" << std::endl <<
 		"16 - Ford-Sidi Algorithm" << std::endl <<
+		"17 - Ford-Sidi-three Algorithm" << std::endl <<
 		std::endl;
 }
 
@@ -512,6 +515,9 @@ inline static void main_testing_function()
 	case transformation_id_t::Ford_Sidi_algorithm_id:
 		transform.reset(new ford_sidi_algorithm<T, K, decltype(series.get())>(series.get()));
 		break;
+	case transformation_id_t::Ford_Sidi_algorithm_three_id:
+		transform.reset(new ford_sidi_algorithm_three<T, K, decltype(series.get())>(series.get()));
+		break;
 	default:
 		throw std::domain_error("wrong transformation_id");
 	}
@@ -593,6 +599,8 @@ inline static void main_testing_function()
 			transform2.reset(new richardson_algorithm<T, K, decltype(series.get())>(series.get()));
 		case transformation_id_t::Ford_Sidi_algorithm_id:
 			transform2.reset(new ford_sidi_algorithm<T, K, decltype(series.get())>(series.get()));
+		case transformation_id_t::Ford_Sidi_algorithm_three_id:
+			transform2.reset(new ford_sidi_algorithm_three<T, K, decltype(series.get())>(series.get()));
 		default:
 			throw std::domain_error("wrong algorithm id");
 		}
@@ -727,6 +735,10 @@ inline static void main_testing_function()
 
 			//Ford-Sidi
 			transform.reset(new ford_sidi_algorithm<T, K, decltype(series.get())>(series.get()));
+			print_transform(i, order, std::move(transform.get()));
+
+			//Ford-Sidi V3
+			transform.reset(new ford_sidi_algorithm_three<T, K, decltype(series.get())>(series.get()));
 			print_transform(i, order, std::move(transform.get()));
 
 			std::cout << std::endl;
