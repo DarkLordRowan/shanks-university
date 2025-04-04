@@ -27,14 +27,16 @@ template <typename series_templ, typename transform_type>
 void cmp_sum_and_transform(const int n, const int order, const series_templ&& series, const transform_type&& test)
 {
 	test->print_info();
+	long double result;
 	for (int i = 1; i <= n; ++i)
 	{
 		try
 		{
+			result = test->operator()(i, order);
 			std::cout << "S_" << i << " : " << series->S_n(i) << std::endl;
-			std::cout << "T_" << i << " of order " << order << " : " << test->operator()(i, order) << std::endl;
+			std::cout << "T_" << i << " of order " << order << " : " << result << std::endl;
 			std::cout << "T_" << i << " of order " << order << " - S_" << i
-				<< " : " << test->operator()(i, order) - series->S_n(i) << std::endl;
+				<< " : " << result - series->S_n(i) << std::endl;
 		}
 		catch (std::domain_error& e)
 		{
@@ -63,14 +65,17 @@ template <typename series_templ, typename transform_type>
 void cmp_a_n_and_transform(const int n, const int order, const series_templ&& series, const transform_type&& test)
 {
 	test->print_info();
+	long double result, result1;
 	for (int i = 1; i <= n; ++i)
 	{
 		try
 		{
+			result1 = result;
+			result = test->operator()(i, order);
 			std::cout << "a_" << i << " : " << (*series)(i) << std::endl;
-			std::cout << "t_" << i << " : " << test->operator()(i, order) - test->operator()(i - 1, order) << std::endl;
+			std::cout << "t_" << i << " : " << result - result1 << std::endl;
 			std::cout << "t_" << i << " of order " << order << " - a_" << i
-				<< " : " << (test->operator()(i, order) - test->operator()(i - 1, order)) - (*series)(i) << std::endl;
+				<< " : " << (result - result1) - (*series)(i) << std::endl;
 		}
 		catch (std::domain_error& e)
 		{
