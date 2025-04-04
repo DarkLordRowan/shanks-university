@@ -65,17 +65,17 @@ template <typename series_templ, typename transform_type>
 void cmp_a_n_and_transform(const int n, const int order, const series_templ&& series, const transform_type&& test)
 {
 	test->print_info();
-	long double result, result1;
+	long double result = 0.0, last_result = 0.0;
 	for (int i = 1; i <= n; ++i)
 	{
 		try
 		{
-			result1 = result;
+			last_result = result;
 			result = test->operator()(i, order);
 			std::cout << "a_" << i << " : " << (*series)(i) << std::endl;
-			std::cout << "t_" << i << " : " << result - result1 << std::endl;
+			std::cout << "t_" << i << " : " << result - last_result << std::endl;
 			std::cout << "t_" << i << " of order " << order << " - a_" << i
-				<< " : " << (result - result1) - (*series)(i) << std::endl;
+				<< " : " << (result - last_result) - (*series)(i) << std::endl;
 		}
 		catch (std::domain_error& e)
 		{
