@@ -51,9 +51,7 @@ T chang_whynn_algorithm<T, K, series_templ>::operator()(const K n, const int ord
 
     T up, down, coef, coef2;
 
-    K max = 0;
-
-    (n % 2 == 0) ? max += n : max += n - 1;
+    K max = n - (n & 1);
 
     std::vector<std::vector<T>> e(2, std::vector<T>(n, 0)); //2 vectors n-1 length containing Epsilon table next and previous 
     std::vector<T> f(n, 0); //vector for containing F results from 0 to n-1

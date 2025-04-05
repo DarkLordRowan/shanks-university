@@ -1,9 +1,22 @@
 {
-    "Version": "1.1",
-    "Data": {
-        "Source": "c:\\users\\dlr_acer\\hw_mirea\\shanks-university\\shanks_transformation\\test_framework.h",
-        "ProvidedModule": "",
-        "ImportedModules": [],
-        "ImportedHeaderUnits": []
-    }
+    "version": 1,
+    "revision": 0,
+    "rules": [
+        {
+            "primary-output": "x64\\Debug\\test_framework.h.obj",
+            "outputs": [
+                "C:\\Users\\User\\Documents\\GitHub\\shanks-university\\shanks_transformation\\x64\\Debug\\vc143.pdb",
+                "x64\\Debug\\",
+                "C:\\Users\\User\\Documents\\GitHub\\shanks-university\\shanks_transformation\\x64\\Debug\\test_framework.h.ifc"
+            ],
+            "provides": [
+                {
+                    "logical-name": "test_framework.h",
+                    "source-path": "c:\\users\\user\\documents\\github\\shanks-university\\shanks_transformation\\test_framework.h",
+                    "lookup-method": "absolute"
+                }
+            ],
+            "requires": []
+        }
+    ]
 }

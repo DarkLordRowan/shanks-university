@@ -1,1033 +1,1285 @@
 ﻿  Проверка источников на наличие зависимостей модуля…
   test_framework.h
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\rho_wynn_algorithm.h(9,14): warning C4005: GAMMA: шчьхэхэшх ьръЁююяЁхфхыхэш
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\levin_sidi_M_algorithm.h(8): message : ёь. яЁхф√фє∙хх юяЁхфхыхэшх "GAMMA"
   Компиляция…
   test_framework.h
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\rho_wynn_algorithm.h(9,1): warning C4005: GAMMA: изменение макроопределения
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\levin_sidi_M_algorithm.h(8): message : см. предыдущее определение "GAMMA"
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\rho_wynn_algorithm.h(9,9): warning C4005: GAMMA: изменение макроопределения
+  (компиляция исходного файла "test_framework.h")
+      C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_sidi_M_algorithm.h(8,9):
+      см. предыдущее определение "GAMMA"
+  
   main.cpp
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\rho_wynn_algorithm.h(9,1): warning C4005: GAMMA: изменение макроопределения
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\levin_sidi_M_algorithm.h(8): message : см. предыдущее определение "GAMMA"
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\levin_sidi_S_algorithm.h(60,62): warning C4244: аргумент: преобразование "int" в "T", возможна потеря данных
-          with
-          [
-              T=float
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\levin_sidi_S_algorithm.h(36): message : во время компиляции функции-члена класс шаблон "T levi_sidi_algorithm<T,short,series_base<T,short> *>::calculate(const K &,const int &) const"
-          with
-          [
-              T=float,
-              K=short
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\levin_sidi_S_algorithm.h(142): message : выполняется компиляция ссылки на экземпляр шаблон функции "T levi_sidi_algorithm<T,short,series_base<T,short> *>::calculate(const K &,const int &) const"
-          with
-          [
-              T=float,
-              K=short
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\test_framework.h(434): message : выполняется компиляция ссылки на экземпляр класс шаблон функции "levi_sidi_algorithm<float,short,series_base<float,short> *>"
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\main.cpp(20): message : выполняется компиляция ссылки на экземпляр шаблон функции "void main_testing_function<float,short>(void)"
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\drummond_D_algorithm.h(47,93): warning C4244: аргумент: преобразование "const K" в "const T", возможна потеря данных
-          with
-          [
-              K=__int64
-          ]
-          and
-          [
-              T=long double
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\drummond_D_algorithm.h(36): message : во время компиляции функции-члена класс шаблон "T drummonds_algorithm<T,__int64,series_base<T,__int64> *>::calculate(const K &,const int &) const"
-          with
-          [
-              T=long double,
-              K=__int64
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\drummond_D_algorithm.h(124): message : выполняется компиляция ссылки на экземпляр шаблон функции "T drummonds_algorithm<T,__int64,series_base<T,__int64> *>::calculate(const K &,const int &) const"
-          with
-          [
-              T=long double,
-              K=__int64
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\test_framework.h(434): message : выполняется компиляция ссылки на экземпляр класс шаблон функции "drummonds_algorithm<long double,__int64,series_base<long double,__int64> *>"
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\main.cpp(18): message : выполняется компиляция ссылки на экземпляр шаблон функции "void main_testing_function<long double,__int64>(void)"
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\levin_sidi_S_algorithm.h(141,42): warning C4244: аргумент: преобразование "const K" в "const int", возможна потеря данных
-          with
-          [
-              K=__int64
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\levin_sidi_S_algorithm.h(140): message : во время компиляции функции-члена класс шаблон "T levi_sidi_algorithm<T,__int64,series_base<T,__int64> *>::operator ()(const K,const int) const"
-          with
-          [
-              T=long double,
-              K=__int64
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\test_framework.h(434): message : выполняется компиляция ссылки на экземпляр класс шаблон функции "levi_sidi_algorithm<long double,__int64,series_base<long double,__int64> *>"
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\levin_sidi_S_algorithm.h(50,93): warning C4244: аргумент: преобразование "const K" в "const T", возможна потеря данных
-          with
-          [
-              K=__int64
-          ]
-          and
-          [
-              T=long double
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\levin_sidi_S_algorithm.h(36): message : во время компиляции функции-члена класс шаблон "T levi_sidi_algorithm<T,__int64,series_base<T,__int64> *>::calculate(const K &,const int &) const"
-          with
-          [
-              T=long double,
-              K=__int64
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\levin_sidi_S_algorithm.h(142): message : выполняется компиляция ссылки на экземпляр шаблон функции "T levi_sidi_algorithm<T,__int64,series_base<T,__int64> *>::calculate(const K &,const int &) const"
-          with
-          [
-              T=long double,
-              K=__int64
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\levin_sidi_S_algorithm.h(60,62): warning C4244: аргумент: преобразование "K" в "T", возможна потеря данных
-          with
-          [
-              K=__int64
-          ]
-          and
-          [
-              T=long double
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\levin_sidi_S_algorithm.h(60,37): warning C4244: аргумент: преобразование "const K" в "const int", возможна потеря данных
-          with
-          [
-              K=__int64
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\weniger_algorithm.h(52,56): warning C4244: аргумент: преобразование "const K" в "const T", возможна потеря данных
-          with
-          [
-              K=__int64
-          ]
-          and
-          [
-              T=long double
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\weniger_algorithm.h(45): message : во время компиляции функции-члена класс шаблон "T weniger_algorithm<T,__int64,series_base<T,__int64> *>::operator ()(const K,const int) const"
-          with
-          [
-              T=long double,
-              K=__int64
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\test_framework.h(434): message : выполняется компиляция ссылки на экземпляр класс шаблон функции "weniger_algorithm<long double,__int64,series_base<long double,__int64> *>"
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\levin_sidi_M_algorithm.h(55,15): warning C4244: инициализация: преобразование "int" в "T", возможна потеря данных
-          with
-          [
-              T=float
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\levin_sidi_M_algorithm.h(39): message : во время компиляции функции-члена класс шаблон "T M_levin_sidi_algorithm<T,short,series_base<T,short> *>::calculate(const K &,const int &) const"
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\rho_wynn_algorithm.h(9,9): warning C4005: GAMMA: изменение макроопределения
+  (компиляция исходного файла "main.cpp")
+      C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_sidi_M_algorithm.h(8,9):
+      см. предыдущее определение "GAMMA"
+  
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_sidi_S_algorithm.h(60,62): warning C4244: аргумент: преобразование "int" в "T", возможна потеря данных
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_sidi_S_algorithm.h(60,62): warning C4244:         with
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_sidi_S_algorithm.h(60,62): warning C4244:         [
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_sidi_S_algorithm.h(60,62): warning C4244:             T=float
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_sidi_S_algorithm.h(60,62): warning C4244:         ]
+  (компиляция исходного файла "main.cpp")
+      C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_sidi_S_algorithm.h(60,62):
+      контекст создания экземпляра шаблона (сначала самый старый)
+          C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\main.cpp(20,3):
+          выполняется компиляция ссылки на экземпляр шаблон функции "void main_testing_function<float,short>(void)"
+          C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\test_framework.h(985,24):
+          выполняется компиляция ссылки на экземпляр класс шаблон функции "levi_sidi_algorithm<float,short,series_base<float,short> *>"
+          C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_sidi_S_algorithm.h(36,12):
+          во время компиляции функции-члена класс шаблон "T levi_sidi_algorithm<T,short,series_base<T,short> *>::calculate(const K &,const int &) const"
           with
           [
               T=float,
               K=short
           ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\levin_sidi_M_algorithm.h(120): message : выполняется компиляция ссылки на экземпляр шаблон функции "T M_levin_sidi_algorithm<T,short,series_base<T,short> *>::calculate(const K &,const int &) const"
+              C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_sidi_S_algorithm.h(142,3):
+              см. первую ссылку на levi_sidi_algorithm<float,short,series_base<float,short> *>::calculate "levi_sidi_algorithm<float,short,series_base<float,short> *>::operator ()"
+  
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\drummond_D_algorithm.h(47,93): warning C4244: аргумент: преобразование "const K" в "const T", возможна потеря данных
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\drummond_D_algorithm.h(47,93): warning C4244:         with
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\drummond_D_algorithm.h(47,93): warning C4244:         [
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\drummond_D_algorithm.h(47,93): warning C4244:             K=__int64
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\drummond_D_algorithm.h(47,93): warning C4244:         ]
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\drummond_D_algorithm.h(47,93): warning C4244:         and
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\drummond_D_algorithm.h(47,93): warning C4244:         [
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\drummond_D_algorithm.h(47,93): warning C4244:             T=long double
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\drummond_D_algorithm.h(47,93): warning C4244:         ]
+  (компиляция исходного файла "main.cpp")
+      C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\drummond_D_algorithm.h(47,93):
+      контекст создания экземпляра шаблона (сначала самый старый)
+          C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\main.cpp(18,3):
+          выполняется компиляция ссылки на экземпляр шаблон функции "void main_testing_function<long double,__int64>(void)"
+          C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\test_framework.h(1004,24):
+          выполняется компиляция ссылки на экземпляр класс шаблон функции "drummonds_algorithm<long double,__int64,series_base<long double,__int64> *>"
+          C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\drummond_D_algorithm.h(36,12):
+          во время компиляции функции-члена класс шаблон "T drummonds_algorithm<T,__int64,series_base<T,__int64> *>::calculate(const K &,const int &) const"
+          with
+          [
+              T=long double,
+              K=__int64
+          ]
+              C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\drummond_D_algorithm.h(124,3):
+              см. первую ссылку на drummonds_algorithm<long double,__int64,series_base<long double,__int64> *>::calculate "drummonds_algorithm<long double,__int64,series_base<long double,__int64> *>::operator ()"
+  
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_sidi_S_algorithm.h(141,42): warning C4244: аргумент: преобразование "const K" в "const int", возможна потеря данных
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_sidi_S_algorithm.h(141,42): warning C4244:         with
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_sidi_S_algorithm.h(141,42): warning C4244:         [
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_sidi_S_algorithm.h(141,42): warning C4244:             K=__int64
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_sidi_S_algorithm.h(141,42): warning C4244:         ]
+  (компиляция исходного файла "main.cpp")
+      C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_sidi_S_algorithm.h(141,42):
+      контекст создания экземпляра шаблона (сначала самый старый)
+          C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\test_framework.h(985,24):
+          выполняется компиляция ссылки на экземпляр класс шаблон функции "levi_sidi_algorithm<long double,__int64,series_base<long double,__int64> *>"
+          C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_sidi_S_algorithm.h(140,4):
+          во время компиляции функции-члена класс шаблон "T levi_sidi_algorithm<T,__int64,series_base<T,__int64> *>::operator ()(const K,const int) const"
+          with
+          [
+              T=long double,
+              K=__int64
+          ]
+  
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_sidi_S_algorithm.h(50,93): warning C4244: аргумент: преобразование "const K" в "const T", возможна потеря данных
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_sidi_S_algorithm.h(50,93): warning C4244:         with
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_sidi_S_algorithm.h(50,93): warning C4244:         [
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_sidi_S_algorithm.h(50,93): warning C4244:             K=__int64
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_sidi_S_algorithm.h(50,93): warning C4244:         ]
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_sidi_S_algorithm.h(50,93): warning C4244:         and
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_sidi_S_algorithm.h(50,93): warning C4244:         [
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_sidi_S_algorithm.h(50,93): warning C4244:             T=long double
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_sidi_S_algorithm.h(50,93): warning C4244:         ]
+  (компиляция исходного файла "main.cpp")
+      C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_sidi_S_algorithm.h(50,93):
+      контекст создания экземпляра шаблона (сначала самый старый)
+          C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_sidi_S_algorithm.h(36,12):
+          во время компиляции функции-члена класс шаблон "T levi_sidi_algorithm<T,__int64,series_base<T,__int64> *>::calculate(const K &,const int &) const"
+          with
+          [
+              T=long double,
+              K=__int64
+          ]
+              C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_sidi_S_algorithm.h(142,3):
+              см. первую ссылку на levi_sidi_algorithm<long double,__int64,series_base<long double,__int64> *>::calculate "levi_sidi_algorithm<long double,__int64,series_base<long double,__int64> *>::operator ()"
+  
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_sidi_S_algorithm.h(60,62): warning C4244: аргумент: преобразование "K" в "T", возможна потеря данных
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_sidi_S_algorithm.h(60,62): warning C4244:         with
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_sidi_S_algorithm.h(60,62): warning C4244:         [
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_sidi_S_algorithm.h(60,62): warning C4244:             K=__int64
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_sidi_S_algorithm.h(60,62): warning C4244:         ]
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_sidi_S_algorithm.h(60,62): warning C4244:         and
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_sidi_S_algorithm.h(60,62): warning C4244:         [
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_sidi_S_algorithm.h(60,62): warning C4244:             T=long double
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_sidi_S_algorithm.h(60,62): warning C4244:         ]
+  (компиляция исходного файла "main.cpp")
+  
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_sidi_S_algorithm.h(60,37): warning C4244: аргумент: преобразование "const K" в "const int", возможна потеря данных
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_sidi_S_algorithm.h(60,37): warning C4244:         with
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_sidi_S_algorithm.h(60,37): warning C4244:         [
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_sidi_S_algorithm.h(60,37): warning C4244:             K=__int64
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_sidi_S_algorithm.h(60,37): warning C4244:         ]
+  (компиляция исходного файла "main.cpp")
+  
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\weniger_algorithm.h(52,56): warning C4244: аргумент: преобразование "const K" в "const T", возможна потеря данных
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\weniger_algorithm.h(52,56): warning C4244:         with
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\weniger_algorithm.h(52,56): warning C4244:         [
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\weniger_algorithm.h(52,56): warning C4244:             K=__int64
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\weniger_algorithm.h(52,56): warning C4244:         ]
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\weniger_algorithm.h(52,56): warning C4244:         and
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\weniger_algorithm.h(52,56): warning C4244:         [
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\weniger_algorithm.h(52,56): warning C4244:             T=long double
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\weniger_algorithm.h(52,56): warning C4244:         ]
+  (компиляция исходного файла "main.cpp")
+      C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\weniger_algorithm.h(52,56):
+      контекст создания экземпляра шаблона (сначала самый старый)
+          C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\test_framework.h(814,23):
+          выполняется компиляция ссылки на экземпляр класс шаблон функции "weniger_algorithm<long double,__int64,series_base<long double,__int64> *>"
+          C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\weniger_algorithm.h(45,4):
+          во время компиляции функции-члена класс шаблон "T weniger_algorithm<T,__int64,series_base<T,__int64> *>::operator ()(const K,const int) const"
+          with
+          [
+              T=long double,
+              K=__int64
+          ]
+  
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_sidi_M_algorithm.h(55,15): warning C4244: инициализация: преобразование "int" в "T", возможна потеря данных
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_sidi_M_algorithm.h(55,15): warning C4244:         with
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_sidi_M_algorithm.h(55,15): warning C4244:         [
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_sidi_M_algorithm.h(55,15): warning C4244:             T=float
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_sidi_M_algorithm.h(55,15): warning C4244:         ]
+  (компиляция исходного файла "main.cpp")
+      C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_sidi_M_algorithm.h(55,15):
+      контекст создания экземпляра шаблона (сначала самый старый)
+          C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\test_framework.h(1024,24):
+          выполняется компиляция ссылки на экземпляр класс шаблон функции "M_levin_sidi_algorithm<float,short,series_base<float,short> *>"
+          C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_sidi_M_algorithm.h(39,4):
+          во время компиляции функции-члена класс шаблон "T M_levin_sidi_algorithm<T,short,series_base<T,short> *>::calculate(const K &,const int &) const"
           with
           [
               T=float,
               K=short
           ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\test_framework.h(434): message : выполняется компиляция ссылки на экземпляр класс шаблон функции "M_levin_sidi_algorithm<float,short,series_base<float,short> *>"
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\levin_sidi_M_algorithm.h(63,30): warning C4244: =: преобразование "int" в "T", возможна потеря данных
-          with
-          [
-              T=float
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\levin_sidi_M_algorithm.h(76,67): warning C4244: аргумент: преобразование "int" в "T", возможна потеря данных
-          with
-          [
-              T=float
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\levin_sidi_S_algorithm.h(101,14): warning C4244: инициализация: преобразование "int" в "T", возможна потеря данных
-          with
-          [
-              T=float
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\levin_sidi_S_algorithm.h(83): message : во время компиляции функции-члена класс шаблон "T levi_sidi_algorithm<T,short,series_base<T,short> *>::calculate_rec(const K &,const int &) const"
+              C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_sidi_M_algorithm.h(120,3):
+              см. первую ссылку на M_levin_sidi_algorithm<float,short,series_base<float,short> *>::calculate "M_levin_sidi_algorithm<float,short,series_base<float,short> *>::operator ()"
+  
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_sidi_M_algorithm.h(63,30): warning C4244: =: преобразование "int" в "T", возможна потеря данных
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_sidi_M_algorithm.h(63,30): warning C4244:         with
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_sidi_M_algorithm.h(63,30): warning C4244:         [
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_sidi_M_algorithm.h(63,30): warning C4244:             T=float
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_sidi_M_algorithm.h(63,30): warning C4244:         ]
+  (компиляция исходного файла "main.cpp")
+  
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_sidi_M_algorithm.h(76,67): warning C4244: аргумент: преобразование "int" в "T", возможна потеря данных
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_sidi_M_algorithm.h(76,67): warning C4244:         with
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_sidi_M_algorithm.h(76,67): warning C4244:         [
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_sidi_M_algorithm.h(76,67): warning C4244:             T=float
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_sidi_M_algorithm.h(76,67): warning C4244:         ]
+  (компиляция исходного файла "main.cpp")
+  
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_sidi_S_algorithm.h(101,14): warning C4244: инициализация: преобразование "int" в "T", возможна потеря данных
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_sidi_S_algorithm.h(101,14): warning C4244:         with
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_sidi_S_algorithm.h(101,14): warning C4244:         [
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_sidi_S_algorithm.h(101,14): warning C4244:             T=float
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_sidi_S_algorithm.h(101,14): warning C4244:         ]
+  (компиляция исходного файла "main.cpp")
+      C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_sidi_S_algorithm.h(101,14):
+      контекст создания экземпляра шаблона (сначала самый старый)
+          C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_sidi_S_algorithm.h(83,4):
+          во время компиляции функции-члена класс шаблон "T levi_sidi_algorithm<T,short,series_base<T,short> *>::calculate_rec(const K &,const int &) const"
           with
           [
               T=float,
               K=short
           ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\levin_sidi_S_algorithm.h(141): message : выполняется компиляция ссылки на экземпляр шаблон функции "T levi_sidi_algorithm<T,short,series_base<T,short> *>::calculate_rec(const K &,const int &) const"
-          with
-          [
-              T=float,
-              K=short
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\levin_sidi_S_algorithm.h(102,14): warning C4244: инициализация: преобразование "int" в "T", возможна потеря данных
-          with
-          [
-              T=float
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\levin_sidi_M_algorithm.h(51,56): warning C4244: аргумент: преобразование "const K" в "const T", возможна потеря данных
-          with
-          [
-              K=__int64
-          ]
-          and
-          [
-              T=long double
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\levin_sidi_M_algorithm.h(39): message : во время компиляции функции-члена класс шаблон "T M_levin_sidi_algorithm<T,__int64,series_base<T,__int64> *>::calculate(const K &,const int &) const"
-          with
-          [
-              T=long double,
-              K=__int64
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\levin_sidi_M_algorithm.h(120): message : выполняется компиляция ссылки на экземпляр шаблон функции "T M_levin_sidi_algorithm<T,__int64,series_base<T,__int64> *>::calculate(const K &,const int &) const"
-          with
-          [
-              T=long double,
-              K=__int64
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\test_framework.h(434): message : выполняется компиляция ссылки на экземпляр класс шаблон функции "M_levin_sidi_algorithm<long double,__int64,series_base<long double,__int64> *>"
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\levin_sidi_M_algorithm.h(76,67): warning C4244: аргумент: преобразование "K" в "T", возможна потеря данных
-          with
-          [
-              K=__int64
-          ]
-          and
-          [
-              T=long double
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\series +.h(396,28): warning C4018: <=: несоответствие типов со знаком и без знака
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\series +.h(390): message : во время компиляции функции-члена класс шаблон "T exp_series<T,__int64>::acsess_row(K)"
+              C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_sidi_S_algorithm.h(141,18):
+              см. первую ссылку на levi_sidi_algorithm<float,short,series_base<float,short> *>::calculate_rec "levi_sidi_algorithm<float,short,series_base<float,short> *>::operator ()"
+  
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_sidi_S_algorithm.h(102,14): warning C4244: инициализация: преобразование "int" в "T", возможна потеря данных
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_sidi_S_algorithm.h(102,14): warning C4244:         with
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_sidi_S_algorithm.h(102,14): warning C4244:         [
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_sidi_S_algorithm.h(102,14): warning C4244:             T=float
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_sidi_S_algorithm.h(102,14): warning C4244:         ]
+  (компиляция исходного файла "main.cpp")
+  
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_sidi_M_algorithm.h(51,56): warning C4244: аргумент: преобразование "const K" в "const T", возможна потеря данных
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_sidi_M_algorithm.h(51,56): warning C4244:         with
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_sidi_M_algorithm.h(51,56): warning C4244:         [
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_sidi_M_algorithm.h(51,56): warning C4244:             K=__int64
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_sidi_M_algorithm.h(51,56): warning C4244:         ]
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_sidi_M_algorithm.h(51,56): warning C4244:         and
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_sidi_M_algorithm.h(51,56): warning C4244:         [
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_sidi_M_algorithm.h(51,56): warning C4244:             T=long double
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_sidi_M_algorithm.h(51,56): warning C4244:         ]
+  (компиляция исходного файла "main.cpp")
+      C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_sidi_M_algorithm.h(51,56):
+      контекст создания экземпляра шаблона (сначала самый старый)
+          C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\test_framework.h(1024,24):
+          выполняется компиляция ссылки на экземпляр класс шаблон функции "M_levin_sidi_algorithm<long double,__int64,series_base<long double,__int64> *>"
+          C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_sidi_M_algorithm.h(39,4):
+          во время компиляции функции-члена класс шаблон "T M_levin_sidi_algorithm<T,__int64,series_base<T,__int64> *>::calculate(const K &,const int &) const"
           with
           [
               T=long double,
               K=__int64
           ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\series +.h(409): message : выполняется компиляция ссылки на экземпляр шаблон функции "T exp_series<T,__int64>::acsess_row(K)"
+              C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_sidi_M_algorithm.h(120,3):
+              см. первую ссылку на M_levin_sidi_algorithm<long double,__int64,series_base<long double,__int64> *>::calculate "M_levin_sidi_algorithm<long double,__int64,series_base<long double,__int64> *>::operator ()"
+  
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_sidi_M_algorithm.h(76,67): warning C4244: аргумент: преобразование "K" в "T", возможна потеря данных
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_sidi_M_algorithm.h(76,67): warning C4244:         with
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_sidi_M_algorithm.h(76,67): warning C4244:         [
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_sidi_M_algorithm.h(76,67): warning C4244:             K=__int64
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_sidi_M_algorithm.h(76,67): warning C4244:         ]
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_sidi_M_algorithm.h(76,67): warning C4244:         and
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_sidi_M_algorithm.h(76,67): warning C4244:         [
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_sidi_M_algorithm.h(76,67): warning C4244:             T=long double
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_sidi_M_algorithm.h(76,67): warning C4244:         ]
+  (компиляция исходного файла "main.cpp")
+  
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(396,28): warning C4018: <=: несоответствие типов со знаком и без знака
+  (компиляция исходного файла "main.cpp")
+      C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(396,28):
+      контекст создания экземпляра шаблона (сначала самый старый)
+          C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\test_framework.h(452,20):
+          выполняется компиляция ссылки на экземпляр класс шаблон функции "exp_series<long double,__int64>"
+          C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(390,1):
+          во время компиляции функции-члена класс шаблон "T exp_series<T,__int64>::acsess_row(K)"
           with
           [
               T=long double,
               K=__int64
           ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\test_framework.h(434): message : выполняется компиляция ссылки на экземпляр класс шаблон функции "exp_series<long double,__int64>"
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\series +.h(460,28): warning C4018: <=: несоответствие типов со знаком и без знака
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\series +.h(454): message : во время компиляции функции-члена класс шаблон "T cos_series<T,__int64>::acsess_row(K)"
+              C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(409,12):
+              см. первую ссылку на exp_series<long double,__int64>::acsess_row "exp_series<long double,__int64>::operator ()"
+  
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(460,28): warning C4018: <=: несоответствие типов со знаком и без знака
+  (компиляция исходного файла "main.cpp")
+      C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(460,28):
+      контекст создания экземпляра шаблона (сначала самый старый)
+          C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\test_framework.h(455,20):
+          выполняется компиляция ссылки на экземпляр класс шаблон функции "cos_series<long double,__int64>"
+          C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(454,1):
+          во время компиляции функции-члена класс шаблон "T cos_series<T,__int64>::acsess_row(K)"
           with
           [
               T=long double,
               K=__int64
           ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\series +.h(473): message : выполняется компиляция ссылки на экземпляр шаблон функции "T cos_series<T,__int64>::acsess_row(K)"
+              C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(473,12):
+              см. первую ссылку на cos_series<long double,__int64>::acsess_row "cos_series<long double,__int64>::operator ()"
+  
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(524,28): warning C4018: <=: несоответствие типов со знаком и без знака
+  (компиляция исходного файла "main.cpp")
+      C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(524,28):
+      контекст создания экземпляра шаблона (сначала самый старый)
+          C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\test_framework.h(458,20):
+          выполняется компиляция ссылки на экземпляр класс шаблон функции "sin_series<long double,__int64>"
+          C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(518,1):
+          во время компиляции функции-члена класс шаблон "T sin_series<T,__int64>::acsess_row(K)"
           with
           [
               T=long double,
               K=__int64
           ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\test_framework.h(434): message : выполняется компиляция ссылки на экземпляр класс шаблон функции "cos_series<long double,__int64>"
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\series +.h(524,28): warning C4018: <=: несоответствие типов со знаком и без знака
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\series +.h(518): message : во время компиляции функции-члена класс шаблон "T sin_series<T,__int64>::acsess_row(K)"
+              C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(536,12):
+              см. первую ссылку на sin_series<long double,__int64>::acsess_row "sin_series<long double,__int64>::operator ()"
+  
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(587,28): warning C4018: <=: несоответствие типов со знаком и без знака
+  (компиляция исходного файла "main.cpp")
+      C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(587,28):
+      контекст создания экземпляра шаблона (сначала самый старый)
+          C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\test_framework.h(461,20):
+          выполняется компиляция ссылки на экземпляр класс шаблон функции "cosh_series<long double,__int64>"
+          C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(581,1):
+          во время компиляции функции-члена класс шаблон "T cosh_series<T,__int64>::acsess_row(K)"
           with
           [
               T=long double,
               K=__int64
           ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\series +.h(536): message : выполняется компиляция ссылки на экземпляр шаблон функции "T sin_series<T,__int64>::acsess_row(K)"
+              C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(599,12):
+              см. первую ссылку на cosh_series<long double,__int64>::acsess_row "cosh_series<long double,__int64>::operator ()"
+  
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(650,28): warning C4018: <=: несоответствие типов со знаком и без знака
+  (компиляция исходного файла "main.cpp")
+      C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(650,28):
+      контекст создания экземпляра шаблона (сначала самый старый)
+          C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\test_framework.h(464,20):
+          выполняется компиляция ссылки на экземпляр класс шаблон функции "sinh_series<long double,__int64>"
+          C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(644,1):
+          во время компиляции функции-члена класс шаблон "T sinh_series<T,__int64>::acsess_row(K)"
           with
           [
               T=long double,
               K=__int64
           ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\test_framework.h(434): message : выполняется компиляция ссылки на экземпляр класс шаблон функции "sin_series<long double,__int64>"
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\series +.h(587,28): warning C4018: <=: несоответствие типов со знаком и без знака
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\series +.h(581): message : во время компиляции функции-члена класс шаблон "T cosh_series<T,__int64>::acsess_row(K)"
+              C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(662,12):
+              см. первую ссылку на sinh_series<long double,__int64>::acsess_row "sinh_series<long double,__int64>::operator ()"
+  
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(1134,28): warning C4018: <=: несоответствие типов со знаком и без знака
+  (компиляция исходного файла "main.cpp")
+      C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(1134,28):
+      контекст создания экземпляра шаблона (сначала самый старый)
+          C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\test_framework.h(500,20):
+          выполняется компиляция ссылки на экземпляр класс шаблон функции "erf_series<long double,__int64>"
+          C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(1128,1):
+          во время компиляции функции-члена класс шаблон "T erf_series<T,__int64>::acsess_row(K)"
           with
           [
               T=long double,
               K=__int64
           ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\series +.h(599): message : выполняется компиляция ссылки на экземпляр шаблон функции "T cosh_series<T,__int64>::acsess_row(K)"
+              C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(1147,12):
+              см. первую ссылку на erf_series<long double,__int64>::acsess_row "erf_series<long double,__int64>::operator ()"
+  
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(1210,28): warning C4018: <=: несоответствие типов со знаком и без знака
+  (компиляция исходного файла "main.cpp")
+      C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(1210,28):
+      контекст создания экземпляра шаблона (сначала самый старый)
+          C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\test_framework.h(506,20):
+          выполняется компиляция ссылки на экземпляр класс шаблон функции "m_fact_1mx_mp1_inverse_series<long double,__int64>"
+          C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(1204,1):
+          во время компиляции функции-члена класс шаблон "T m_fact_1mx_mp1_inverse_series<T,__int64>::acsess_row(K)"
           with
           [
               T=long double,
               K=__int64
           ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\test_framework.h(434): message : выполняется компиляция ссылки на экземпляр класс шаблон функции "cosh_series<long double,__int64>"
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\series +.h(650,28): warning C4018: <=: несоответствие типов со знаком и без знака
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\series +.h(644): message : во время компиляции функции-члена класс шаблон "T sinh_series<T,__int64>::acsess_row(K)"
+              C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(1222,12):
+              см. первую ссылку на m_fact_1mx_mp1_inverse_series<long double,__int64>::acsess_row "m_fact_1mx_mp1_inverse_series<long double,__int64>::operator ()"
+  
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(2633,72): warning C4244: аргумент: преобразование "K" в "const T", возможна потеря данных
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(2633,72): warning C4244:         with
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(2633,72): warning C4244:         [
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(2633,72): warning C4244:             K=__int64
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(2633,72): warning C4244:         ]
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(2633,72): warning C4244:         and
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(2633,72): warning C4244:         [
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(2633,72): warning C4244:             T=long double
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(2633,72): warning C4244:         ]
+  (компиляция исходного файла "main.cpp")
+      C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(2633,72):
+      контекст создания экземпляра шаблона (сначала самый старый)
+          C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\test_framework.h(620,20):
+          выполняется компиляция ссылки на экземпляр класс шаблон функции "one_minus_sqrt_1minus4x_div_2x<long double,__int64>"
+          C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(2628,1):
+          во время компиляции функции-члена класс шаблон "T one_minus_sqrt_1minus4x_div_2x<T,__int64>::operator ()(K) const"
           with
           [
               T=long double,
               K=__int64
           ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\series +.h(662): message : выполняется компиляция ссылки на экземпляр шаблон функции "T sinh_series<T,__int64>::acsess_row(K)"
+  
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(4331,56): warning C4244: аргумент: преобразование "K" в "int", возможна потеря данных
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(4331,56): warning C4244:         with
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(4331,56): warning C4244:         [
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(4331,56): warning C4244:             K=__int64
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(4331,56): warning C4244:         ]
+  (компиляция исходного файла "main.cpp")
+      C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(4331,56):
+      контекст создания экземпляра шаблона (сначала самый старый)
+          C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\test_framework.h(752,20):
+          выполняется компиляция ссылки на экземпляр класс шаблон функции "one_div_sqrt2_sin_xdivsqrt2_series<long double,__int64>"
+          C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(4327,1):
+          во время компиляции функции-члена класс шаблон "T one_div_sqrt2_sin_xdivsqrt2_series<T,__int64>::operator ()(K) const"
           with
           [
               T=long double,
               K=__int64
           ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\test_framework.h(434): message : выполняется компиляция ссылки на экземпляр класс шаблон функции "sinh_series<long double,__int64>"
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\series +.h(951,128): warning C4244: аргумент: преобразование "K" в "const double", возможна потеря данных
-          with
-          [
-              K=__int64
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\series +.h(951): message : во время компиляции функции-члена класс шаблон "xmb_Jb_two_series<long double,__int64>::xmb_Jb_two_series(T,K)"
-          with
-          [
-              T=long double,
-              K=__int64
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\test_framework.h(488): message : выполняется компиляция ссылки на экземпляр шаблон функции "xmb_Jb_two_series<long double,__int64>::xmb_Jb_two_series(T,K)"
-          with
-          [
-              T=long double,
-              K=__int64
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\test_framework.h(434): message : выполняется компиляция ссылки на экземпляр класс шаблон функции "xmb_Jb_two_series<long double,__int64>"
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\series +.h(1134,28): warning C4018: <=: несоответствие типов со знаком и без знака
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\series +.h(1128): message : во время компиляции функции-члена класс шаблон "T erf_series<T,__int64>::acsess_row(K)"
+  
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\shanks_transformation.h(152,14): warning C4244: инициализация: преобразование "K" в "int", возможна потеря данных
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\shanks_transformation.h(152,14): warning C4244:         with
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\shanks_transformation.h(152,14): warning C4244:         [
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\shanks_transformation.h(152,14): warning C4244:             K=__int64
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\shanks_transformation.h(152,14): warning C4244:         ]
+  (компиляция исходного файла "main.cpp")
+      C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\shanks_transformation.h(152,14):
+      контекст создания экземпляра шаблона (сначала самый старый)
+          C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\test_framework.h(788,24):
+          выполняется компиляция ссылки на экземпляр класс шаблон функции "shanks_transform_alternating<long double,__int64,series_base<long double,__int64> *>"
+          C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\shanks_transformation.h(131,1):
+          во время компиляции функции-члена класс шаблон "T shanks_transform_alternating<T,__int64,series_base<T,__int64> *>::operator ()(const K,const int) const"
           with
           [
               T=long double,
               K=__int64
           ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\series +.h(1147): message : выполняется компиляция ссылки на экземпляр шаблон функции "T erf_series<T,__int64>::acsess_row(K)"
+  
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\shanks_transformation.h(164,15): warning C4244: инициализация: преобразование "K" в "int", возможна потеря данных
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\shanks_transformation.h(164,15): warning C4244:         with
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\shanks_transformation.h(164,15): warning C4244:         [
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\shanks_transformation.h(164,15): warning C4244:             K=__int64
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\shanks_transformation.h(164,15): warning C4244:         ]
+  (компиляция исходного файла "main.cpp")
+  
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\shanks_transformation.h(68,14): warning C4244: инициализация: преобразование "K" в "int", возможна потеря данных
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\shanks_transformation.h(68,14): warning C4244:         with
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\shanks_transformation.h(68,14): warning C4244:         [
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\shanks_transformation.h(68,14): warning C4244:             K=__int64
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\shanks_transformation.h(68,14): warning C4244:         ]
+  (компиляция исходного файла "main.cpp")
+      C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\shanks_transformation.h(68,14):
+      контекст создания экземпляра шаблона (сначала самый старый)
+          C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\test_framework.h(790,24):
+          выполняется компиляция ссылки на экземпляр класс шаблон функции "shanks_transform<long double,__int64,series_base<long double,__int64> *>"
+          C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\shanks_transformation.h(43,1):
+          во время компиляции функции-члена класс шаблон "T shanks_transform<T,__int64,series_base<T,__int64> *>::operator ()(const K,const int) const"
           with
           [
               T=long double,
               K=__int64
           ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\test_framework.h(434): message : выполняется компиляция ссылки на экземпляр класс шаблон функции "erf_series<long double,__int64>"
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\series +.h(1210,28): warning C4018: <=: несоответствие типов со знаком и без знака
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\series +.h(1204): message : во время компиляции функции-члена класс шаблон "T m_fact_1mx_mp1_inverse_series<T,__int64>::acsess_row(K)"
+              C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\FSA.h(65,4):
+              см. первую ссылку на shanks_transform<long double,__int64,series_base<long double,__int64> *>::operator () "ford_sidi_algorithm<long double,__int64,series_base<long double,__int64> *>::Psi"
+              C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\FSA.h(43,11):
+              см. первую ссылку на ford_sidi_algorithm<long double,__int64,series_base<long double,__int64> *>::Psi "ford_sidi_algorithm<long double,__int64,series_base<long double,__int64> *>::operator ()"
+  
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\shanks_transformation.h(81,15): warning C4244: инициализация: преобразование "K" в "int", возможна потеря данных
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\shanks_transformation.h(81,15): warning C4244:         with
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\shanks_transformation.h(81,15): warning C4244:         [
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\shanks_transformation.h(81,15): warning C4244:             K=__int64
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\shanks_transformation.h(81,15): warning C4244:         ]
+  (компиляция исходного файла "main.cpp")
+  
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\epsilon_algorithm.h(57,13): warning C4244: инициализация: преобразование "K" в "int", возможна потеря данных
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\epsilon_algorithm.h(57,13): warning C4244:         with
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\epsilon_algorithm.h(57,13): warning C4244:         [
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\epsilon_algorithm.h(57,13): warning C4244:             K=__int64
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\epsilon_algorithm.h(57,13): warning C4244:         ]
+  (компиляция исходного файла "main.cpp")
+      C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\epsilon_algorithm.h(57,13):
+      контекст создания экземпляра шаблона (сначала самый старый)
+          C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\test_framework.h(793,23):
+          выполняется компиляция ссылки на экземпляр класс шаблон функции "epsilon_algorithm<long double,__int64,series_base<long double,__int64> *>"
+          C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\epsilon_algorithm.h(44,1):
+          во время компиляции функции-члена класс шаблон "T epsilon_algorithm<T,__int64,series_base<T,__int64> *>::operator ()(const K,const int) const"
           with
           [
               T=long double,
               K=__int64
           ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\series +.h(1222): message : выполняется компиляция ссылки на экземпляр шаблон функции "T m_fact_1mx_mp1_inverse_series<T,__int64>::acsess_row(K)"
+  
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\epsilon_algorithm.h(62,14): warning C4244: инициализация: преобразование "K" в "int", возможна потеря данных
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\epsilon_algorithm.h(62,14): warning C4244:         with
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\epsilon_algorithm.h(62,14): warning C4244:         [
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\epsilon_algorithm.h(62,14): warning C4244:             K=__int64
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\epsilon_algorithm.h(62,14): warning C4244:         ]
+  (компиляция исходного файла "main.cpp")
+  
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\epsilon_algorithm.h(65,14): warning C4244: инициализация: преобразование "K" в "int", возможна потеря данных
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\epsilon_algorithm.h(65,14): warning C4244:         with
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\epsilon_algorithm.h(65,14): warning C4244:         [
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\epsilon_algorithm.h(65,14): warning C4244:             K=__int64
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\epsilon_algorithm.h(65,14): warning C4244:         ]
+  (компиляция исходного файла "main.cpp")
+  
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\epsilon_algorithm_two.h(56,25): warning C4244: +=: преобразование "const K" в "int", возможна потеря данных
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\epsilon_algorithm_two.h(56,25): warning C4244:         with
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\epsilon_algorithm_two.h(56,25): warning C4244:         [
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\epsilon_algorithm_two.h(56,25): warning C4244:             K=__int64
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\epsilon_algorithm_two.h(56,25): warning C4244:         ]
+  (компиляция исходного файла "main.cpp")
+      C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\epsilon_algorithm_two.h(56,25):
+      контекст создания экземпляра шаблона (сначала самый старый)
+          C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\test_framework.h(799,23):
+          выполняется компиляция ссылки на экземпляр класс шаблон функции "epsilon_algorithm_two<long double,__int64,series_base<long double,__int64> *>"
+          C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\epsilon_algorithm_two.h(46,1):
+          во время компиляции функции-члена класс шаблон "T epsilon_algorithm_two<T,__int64,series_base<T,__int64> *>::operator ()(const K,const int) const"
           with
           [
               T=long double,
               K=__int64
           ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\test_framework.h(434): message : выполняется компиляция ссылки на экземпляр класс шаблон функции "m_fact_1mx_mp1_inverse_series<long double,__int64>"
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\series +.h(2633,72): warning C4244: аргумент: преобразование "K" в "const T", возможна потеря данных
-          with
-          [
-              K=__int64
-          ]
-          and
-          [
-              T=long double
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\series +.h(2628): message : во время компиляции функции-члена класс шаблон "T one_minus_sqrt_1minus4x_div_2x<T,__int64>::operator ()(K) const"
-          with
-          [
-              T=long double,
-              K=__int64
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\test_framework.h(434): message : выполняется компиляция ссылки на экземпляр класс шаблон функции "one_minus_sqrt_1minus4x_div_2x<long double,__int64>"
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\series +.h(4331,56): warning C4244: аргумент: преобразование "K" в "int", возможна потеря данных
-          with
-          [
-              K=__int64
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\series +.h(4327): message : во время компиляции функции-члена класс шаблон "T one_div_sqrt2_sin_xdivsqrt2_series<T,__int64>::operator ()(K) const"
-          with
-          [
-              T=long double,
-              K=__int64
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\test_framework.h(434): message : выполняется компиляция ссылки на экземпляр класс шаблон функции "one_div_sqrt2_sin_xdivsqrt2_series<long double,__int64>"
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\shanks_transformation.h(152,14): warning C4244: инициализация: преобразование "K" в "int", возможна потеря данных
-          with
-          [
-              K=__int64
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\shanks_transformation.h(131): message : во время компиляции функции-члена класс шаблон "T shanks_transform_alternating<T,__int64,series_base<T,__int64> *>::operator ()(const K,const int) const"
+  
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\epsilon_algorithm_two.h(56,36): warning C4244: +=: преобразование "K" в "int", возможна потеря данных
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\epsilon_algorithm_two.h(56,36): warning C4244:         with
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\epsilon_algorithm_two.h(56,36): warning C4244:         [
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\epsilon_algorithm_two.h(56,36): warning C4244:             K=__int64
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\epsilon_algorithm_two.h(56,36): warning C4244:         ]
+  (компиляция исходного файла "main.cpp")
+  
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\test_framework.h(369,35): warning C4806: ==: небезопасная операция: значение типа "bool", приведенное к типу "transformation_id_t", не может равняться данной константе
+  (компиляция исходного файла "main.cpp")
+      C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\test_framework.h(369,35):
+      контекст создания экземпляра шаблона (сначала самый старый)
+          C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\test_framework.h(802,3):
+          выполняется компиляция ссылки на экземпляр шаблон функции "void init_levin<long double,__int64,series_base<long double,__int64>*>(transformation_id_t,std::unique_ptr<series_base<long double,__int64>,std::default_delete<series_base<long double,__int64>>> &,std::unique_ptr<series_acceleration<long double,__int64,series_base<long double,__int64> *>,std::default_delete<series_acceleration<long double,__int64,series_base<long double,__int64> *>>> &)"
+  
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\epsilon_algorithm_three.h(51,11): warning C4244: инициализация: преобразование "const K" в "int", возможна потеря данных
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\epsilon_algorithm_three.h(51,11): warning C4244:         with
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\epsilon_algorithm_three.h(51,11): warning C4244:         [
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\epsilon_algorithm_three.h(51,11): warning C4244:             K=__int64
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\epsilon_algorithm_three.h(51,11): warning C4244:         ]
+  (компиляция исходного файла "main.cpp")
+      C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\epsilon_algorithm_three.h(51,11):
+      контекст создания экземпляра шаблона (сначала самый старый)
+          C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\test_framework.h(823,23):
+          выполняется компиляция ссылки на экземпляр класс шаблон функции "epsilon_algorithm_three<long double,__int64,series_base<long double,__int64> *>"
+          C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\epsilon_algorithm_three.h(43,1):
+          во время компиляции функции-члена класс шаблон "T epsilon_algorithm_three<T,__int64,series_base<T,__int64> *>::operator ()(const K,const int) const"
           with
           [
               T=long double,
               K=__int64
           ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\test_framework.h(434): message : выполняется компиляция ссылки на экземпляр класс шаблон функции "shanks_transform_alternating<long double,__int64,series_base<long double,__int64> *>"
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\shanks_transformation.h(164,15): warning C4244: инициализация: преобразование "K" в "int", возможна потеря данных
-          with
-          [
-              K=__int64
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\shanks_transformation.h(68,14): warning C4244: инициализация: преобразование "K" в "int", возможна потеря данных
-          with
-          [
-              K=__int64
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\shanks_transformation.h(43): message : во время компиляции функции-члена класс шаблон "T shanks_transform<T,__int64,series_base<T,__int64> *>::operator ()(const K,const int) const"
-          with
-          [
-              T=long double,
-              K=__int64
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\FSA.h(65): message : выполняется компиляция ссылки на экземпляр шаблон функции "T shanks_transform<T,__int64,series_base<T,__int64> *>::operator ()(const K,const int) const"
-          with
-          [
-              T=long double,
-              K=__int64
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\test_framework.h(434): message : выполняется компиляция ссылки на экземпляр класс шаблон функции "shanks_transform<long double,__int64,series_base<long double,__int64> *>"
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\shanks_transformation.h(81,15): warning C4244: инициализация: преобразование "K" в "int", возможна потеря данных
-          with
-          [
-              K=__int64
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\epsilon_algorithm.h(57,13): warning C4244: инициализация: преобразование "K" в "int", возможна потеря данных
-          with
-          [
-              K=__int64
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\epsilon_algorithm.h(44): message : во время компиляции функции-члена класс шаблон "T epsilon_algorithm<T,__int64,series_base<T,__int64> *>::operator ()(const K,const int) const"
+  
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\epsilon_algorithm_three.h(72,13): warning C4244: =: преобразование "const K" в "int", возможна потеря данных
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\epsilon_algorithm_three.h(72,13): warning C4244:         with
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\epsilon_algorithm_three.h(72,13): warning C4244:         [
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\epsilon_algorithm_three.h(72,13): warning C4244:             K=__int64
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\epsilon_algorithm_three.h(72,13): warning C4244:         ]
+  (компиляция исходного файла "main.cpp")
+  
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_recursion_algorithm.h(55,21): warning C4244: аргумент: преобразование "const K" в "T", возможна потеря данных
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_recursion_algorithm.h(55,21): warning C4244:         with
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_recursion_algorithm.h(55,21): warning C4244:         [
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_recursion_algorithm.h(55,21): warning C4244:             K=__int64
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_recursion_algorithm.h(55,21): warning C4244:         ]
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_recursion_algorithm.h(55,21): warning C4244:         and
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_recursion_algorithm.h(55,21): warning C4244:         [
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_recursion_algorithm.h(55,21): warning C4244:             T=long double
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_recursion_algorithm.h(55,21): warning C4244:         ]
+  (компиляция исходного файла "main.cpp")
+      C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_recursion_algorithm.h(55,21):
+      контекст создания экземпляра шаблона (сначала самый старый)
+          C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\test_framework.h(826,23):
+          выполняется компиляция ссылки на экземпляр класс шаблон функции "levin_recursion_algorithm<long double,__int64,series_base<long double,__int64> *>"
+          C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_recursion_algorithm.h(45,1):
+          во время компиляции функции-члена класс шаблон "T levin_recursion_algorithm<T,__int64,series_base<T,__int64> *>::operator ()(const K,const int) const"
           with
           [
               T=long double,
               K=__int64
           ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\test_framework.h(434): message : выполняется компиляция ссылки на экземпляр класс шаблон функции "epsilon_algorithm<long double,__int64,series_base<long double,__int64> *>"
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\epsilon_algorithm.h(62,14): warning C4244: инициализация: преобразование "K" в "int", возможна потеря данных
-          with
-          [
-              K=__int64
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\epsilon_algorithm.h(65,14): warning C4244: инициализация: преобразование "K" в "int", возможна потеря данных
-          with
-          [
-              K=__int64
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\epsilon_algorithm_two.h(56,25): warning C4244: +=: преобразование "const K" в "int", возможна потеря данных
-          with
-          [
-              K=__int64
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\epsilon_algorithm_two.h(46): message : во время компиляции функции-члена класс шаблон "T epsilon_algorithm_two<T,__int64,series_base<T,__int64> *>::operator ()(const K,const int) const"
-          with
-          [
-              T=long double,
-              K=__int64
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\test_framework.h(434): message : выполняется компиляция ссылки на экземпляр класс шаблон функции "epsilon_algorithm_two<long double,__int64,series_base<long double,__int64> *>"
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\epsilon_algorithm_two.h(56,36): warning C4244: +=: преобразование "K" в "int", возможна потеря данных
-          with
-          [
-              K=__int64
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\test_framework.h(369,35): warning C4806: ==: небезопасная операция: значение типа "bool", приведенное к типу "transformation_id_t", не может равняться данной константе
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\test_framework.h(434): message : выполняется компиляция ссылки на экземпляр шаблон функции "void init_levin<long double,__int64,series_base<long double,__int64>*>(transformation_id_t,std::unique_ptr<series_base<long double,__int64>,std::default_delete<series_base<long double,__int64>>> &,std::unique_ptr<series_acceleration<long double,__int64,series_base<long double,__int64> *>,std::default_delete<series_acceleration<long double,__int64,series_base<long double,__int64> *>>> &)"
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\epsilon_algorithm_three.h(51,11): warning C4244: инициализация: преобразование "const K" в "int", возможна потеря данных
-          with
-          [
-              K=__int64
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\epsilon_algorithm_three.h(43): message : во время компиляции функции-члена класс шаблон "T epsilon_algorithm_three<T,__int64,series_base<T,__int64> *>::operator ()(const K,const int) const"
-          with
-          [
-              T=long double,
-              K=__int64
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\test_framework.h(434): message : выполняется компиляция ссылки на экземпляр класс шаблон функции "epsilon_algorithm_three<long double,__int64,series_base<long double,__int64> *>"
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\epsilon_algorithm_three.h(72,13): warning C4244: =: преобразование "const K" в "int", возможна потеря данных
-          with
-          [
-              K=__int64
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\levin_recursion_algorithm.h(55,21): warning C4244: аргумент: преобразование "const K" в "T", возможна потеря данных
-          with
-          [
-              K=__int64
-          ]
-          and
-          [
-              T=long double
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\levin_recursion_algorithm.h(45): message : во время компиляции функции-члена класс шаблон "T levin_recursion_algorithm<T,__int64,series_base<T,__int64> *>::operator ()(const K,const int) const"
-          with
-          [
-              T=long double,
-              K=__int64
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\test_framework.h(434): message : выполняется компиляция ссылки на экземпляр класс шаблон функции "levin_recursion_algorithm<long double,__int64,series_base<long double,__int64> *>"
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\levin_recursion_algorithm.h(56,21): warning C4244: аргумент: преобразование "const K" в "T", возможна потеря данных
-          with
-          [
-              K=__int64
-          ]
-          and
-          [
-              T=long double
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\series +.h(855,1): warning C4267: инициализация: преобразование из "size_t" в "K"; возможна потеря данных
-          with
-          [
-              K=int
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\series +.h(851): message : во время компиляции функции-члена класс шаблон "T mean_sinh_sin_series<T,int>::acsess_row(K)"
+  
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_recursion_algorithm.h(56,21): warning C4244: аргумент: преобразование "const K" в "T", возможна потеря данных
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_recursion_algorithm.h(56,21): warning C4244:         with
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_recursion_algorithm.h(56,21): warning C4244:         [
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_recursion_algorithm.h(56,21): warning C4244:             K=__int64
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_recursion_algorithm.h(56,21): warning C4244:         ]
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_recursion_algorithm.h(56,21): warning C4244:         and
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_recursion_algorithm.h(56,21): warning C4244:         [
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_recursion_algorithm.h(56,21): warning C4244:             T=long double
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_recursion_algorithm.h(56,21): warning C4244:         ]
+  (компиляция исходного файла "main.cpp")
+  
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(855,13): warning C4267: инициализация: преобразование из "size_t" в "K"; возможна потеря данных
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(855,13): warning C4267:         with
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(855,13): warning C4267:         [
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(855,13): warning C4267:             K=int
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(855,13): warning C4267:         ]
+  (компиляция исходного файла "main.cpp")
+      C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(855,13):
+      контекст создания экземпляра шаблона (сначала самый старый)
+          C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\main.cpp(19,3):
+          выполняется компиляция ссылки на экземпляр шаблон функции "void main_testing_function<double,int>(void)"
+          C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\test_framework.h(479,20):
+          выполняется компиляция ссылки на экземпляр класс шаблон функции "mean_sinh_sin_series<double,int>"
+          C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(851,1):
+          во время компиляции функции-члена класс шаблон "T mean_sinh_sin_series<T,int>::acsess_row(K)"
           with
           [
               T=double,
               K=int
           ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\series +.h(869): message : выполняется компиляция ссылки на экземпляр шаблон функции "T mean_sinh_sin_series<T,int>::acsess_row(K)"
-          with
-          [
-              T=double,
-              K=int
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\test_framework.h(434): message : выполняется компиляция ссылки на экземпляр класс шаблон функции "mean_sinh_sin_series<double,int>"
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\main.cpp(19): message : выполняется компиляция ссылки на экземпляр шаблон функции "void main_testing_function<double,int>(void)"
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\series +.h(461,104): warning C4244: аргумент: преобразование "double" в "_Ty", возможна потеря данных
-          with
-          [
-              _Ty=float
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\series +.h(454): message : во время компиляции функции-члена класс шаблон "T cos_series<T,short>::acsess_row(K)"
-          with
-          [
-              T=float,
-              K=short
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\series +.h(473): message : выполняется компиляция ссылки на экземпляр шаблон функции "T cos_series<T,short>::acsess_row(K)"
+              C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(869,12):
+              см. первую ссылку на mean_sinh_sin_series<double,int>::acsess_row "mean_sinh_sin_series<double,int>::operator ()"
+  
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(461,104): warning C4244: аргумент: преобразование "double" в "_Ty", возможна потеря данных
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(461,104): warning C4244:         with
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(461,104): warning C4244:         [
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(461,104): warning C4244:             _Ty=float
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(461,104): warning C4244:         ]
+  (компиляция исходного файла "main.cpp")
+      C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(461,104):
+      контекст создания экземпляра шаблона (сначала самый старый)
+          C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\test_framework.h(455,20):
+          выполняется компиляция ссылки на экземпляр класс шаблон функции "cos_series<float,short>"
+          C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(454,1):
+          во время компиляции функции-члена класс шаблон "T cos_series<T,short>::acsess_row(K)"
           with
           [
               T=float,
               K=short
           ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\test_framework.h(434): message : выполняется компиляция ссылки на экземпляр класс шаблон функции "cos_series<float,short>"
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\series +.h(525,91): warning C4244: аргумент: преобразование "double" в "_Ty", возможна потеря данных
-          with
-          [
-              _Ty=float
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\series +.h(518): message : во время компиляции функции-члена класс шаблон "T sin_series<T,short>::acsess_row(K)"
-          with
-          [
-              T=float,
-              K=short
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\series +.h(536): message : выполняется компиляция ссылки на экземпляр шаблон функции "T sin_series<T,short>::acsess_row(K)"
-          with
-          [
-              T=float,
-              K=short
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\test_framework.h(434): message : выполняется компиляция ссылки на экземпляр класс шаблон функции "sin_series<float,short>"
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\series +.h(588,83): warning C4244: аргумент: преобразование "double" в "_Ty", возможна потеря данных
-          with
-          [
-              _Ty=float
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\series +.h(581): message : во время компиляции функции-члена класс шаблон "T cosh_series<T,short>::acsess_row(K)"
+              C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(473,12):
+              см. первую ссылку на cos_series<float,short>::acsess_row "cos_series<float,short>::operator ()"
+  
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(525,91): warning C4244: аргумент: преобразование "double" в "_Ty", возможна потеря данных
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(525,91): warning C4244:         with
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(525,91): warning C4244:         [
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(525,91): warning C4244:             _Ty=float
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(525,91): warning C4244:         ]
+  (компиляция исходного файла "main.cpp")
+      C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(525,91):
+      контекст создания экземпляра шаблона (сначала самый старый)
+          C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\test_framework.h(458,20):
+          выполняется компиляция ссылки на экземпляр класс шаблон функции "sin_series<float,short>"
+          C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(518,1):
+          во время компиляции функции-члена класс шаблон "T sin_series<T,short>::acsess_row(K)"
           with
           [
               T=float,
               K=short
           ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\series +.h(599): message : выполняется компиляция ссылки на экземпляр шаблон функции "T cosh_series<T,short>::acsess_row(K)"
+              C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(536,12):
+              см. первую ссылку на sin_series<float,short>::acsess_row "sin_series<float,short>::operator ()"
+  
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(588,83): warning C4244: аргумент: преобразование "double" в "_Ty", возможна потеря данных
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(588,83): warning C4244:         with
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(588,83): warning C4244:         [
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(588,83): warning C4244:             _Ty=float
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(588,83): warning C4244:         ]
+  (компиляция исходного файла "main.cpp")
+      C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(588,83):
+      контекст создания экземпляра шаблона (сначала самый старый)
+          C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\test_framework.h(461,20):
+          выполняется компиляция ссылки на экземпляр класс шаблон функции "cosh_series<float,short>"
+          C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(581,1):
+          во время компиляции функции-члена класс шаблон "T cosh_series<T,short>::acsess_row(K)"
           with
           [
               T=float,
               K=short
           ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\test_framework.h(434): message : выполняется компиляция ссылки на экземпляр класс шаблон функции "cosh_series<float,short>"
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\series +.h(651,83): warning C4244: аргумент: преобразование "double" в "_Ty", возможна потеря данных
-          with
-          [
-              _Ty=float
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\series +.h(644): message : во время компиляции функции-члена класс шаблон "T sinh_series<T,short>::acsess_row(K)"
-          with
-          [
-              T=float,
-              K=short
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\series +.h(662): message : выполняется компиляция ссылки на экземпляр шаблон функции "T sinh_series<T,short>::acsess_row(K)"
-          with
-          [
-              T=float,
-              K=short
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\test_framework.h(434): message : выполняется компиляция ссылки на экземпляр класс шаблон функции "sinh_series<float,short>"
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\series +.h(847,82): warning C4244: аргумент: преобразование "double" в "T", возможна потеря данных
-          with
-          [
-              T=float
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\series +.h(847): message : во время компиляции функции-члена класс шаблон "mean_sinh_sin_series<float,short>::mean_sinh_sin_series(T)"
-          with
-          [
-              T=float
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\test_framework.h(479): message : выполняется компиляция ссылки на экземпляр шаблон функции "mean_sinh_sin_series<float,short>::mean_sinh_sin_series(T)"
-          with
-          [
-              T=float
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\test_framework.h(434): message : выполняется компиляция ссылки на экземпляр класс шаблон функции "mean_sinh_sin_series<float,short>"
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\series +.h(855,1): warning C4267: инициализация: преобразование из "size_t" в "K"; возможна потеря данных
-          with
-          [
-              K=short
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\series +.h(851): message : во время компиляции функции-члена класс шаблон "T mean_sinh_sin_series<T,short>::acsess_row(K)"
+              C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(599,12):
+              см. первую ссылку на cosh_series<float,short>::acsess_row "cosh_series<float,short>::operator ()"
+  
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(651,83): warning C4244: аргумент: преобразование "double" в "_Ty", возможна потеря данных
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(651,83): warning C4244:         with
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(651,83): warning C4244:         [
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(651,83): warning C4244:             _Ty=float
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(651,83): warning C4244:         ]
+  (компиляция исходного файла "main.cpp")
+      C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(651,83):
+      контекст создания экземпляра шаблона (сначала самый старый)
+          C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\test_framework.h(464,20):
+          выполняется компиляция ссылки на экземпляр класс шаблон функции "sinh_series<float,short>"
+          C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(644,1):
+          во время компиляции функции-члена класс шаблон "T sinh_series<T,short>::acsess_row(K)"
           with
           [
               T=float,
               K=short
           ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\series +.h(869): message : выполняется компиляция ссылки на экземпляр шаблон функции "T mean_sinh_sin_series<T,short>::acsess_row(K)"
+              C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(662,12):
+              см. первую ссылку на sinh_series<float,short>::acsess_row "sinh_series<float,short>::operator ()"
+  
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(847,82): warning C4244: аргумент: преобразование "double" в "T", возможна потеря данных
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(847,82): warning C4244:         with
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(847,82): warning C4244:         [
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(847,82): warning C4244:             T=float
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(847,82): warning C4244:         ]
+  (компиляция исходного файла "main.cpp")
+      C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(847,82):
+      контекст создания экземпляра шаблона (сначала самый старый)
+          C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\test_framework.h(479,20):
+          выполняется компиляция ссылки на экземпляр класс шаблон функции "mean_sinh_sin_series<float,short>"
+          C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(847,55):
+          во время компиляции функции-члена класс шаблон "mean_sinh_sin_series<float,short>::mean_sinh_sin_series(T)"
+          with
+          [
+              T=float
+          ]
+              C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\test_framework.h(479,15):
+              см. первую ссылку на mean_sinh_sin_series<float,short>::mean_sinh_sin_series "main_testing_function"
+  
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(855,13): warning C4267: инициализация: преобразование из "size_t" в "K"; возможна потеря данных
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(855,13): warning C4267:         with
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(855,13): warning C4267:         [
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(855,13): warning C4267:             K=short
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(855,13): warning C4267:         ]
+  (компиляция исходного файла "main.cpp")
+      C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(855,13):
+      контекст создания экземпляра шаблона (сначала самый старый)
+          C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(851,1):
+          во время компиляции функции-члена класс шаблон "T mean_sinh_sin_series<T,short>::acsess_row(K)"
           with
           [
               T=float,
               K=short
           ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\series +.h(858,83): warning C4244: аргумент: преобразование "double" в "_Ty", возможна потеря данных
-          with
-          [
-              _Ty=float
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\series +.h(1124,116): warning C4244: аргумент: преобразование "double" в "T", возможна потеря данных
+              C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(869,12):
+              см. первую ссылку на mean_sinh_sin_series<float,short>::acsess_row "mean_sinh_sin_series<float,short>::operator ()"
+  
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(858,83): warning C4244: аргумент: преобразование "double" в "_Ty", возможна потеря данных
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(858,83): warning C4244:         with
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(858,83): warning C4244:         [
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(858,83): warning C4244:             _Ty=float
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(858,83): warning C4244:         ]
+  (компиляция исходного файла "main.cpp")
+  
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(1124,116): warning C4244: аргумент: преобразование "double" в "T", возможна потеря данных
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(1124,116): warning C4244:         with
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(1124,116): warning C4244:         [
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(1124,116): warning C4244:             T=float
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(1124,116): warning C4244:         ]
+  (компиляция исходного файла "main.cpp")
+      C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(1124,116):
+      контекст создания экземпляра шаблона (сначала самый старый)
+          C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\test_framework.h(500,20):
+          выполняется компиляция ссылки на экземпляр класс шаблон функции "erf_series<float,short>"
+          C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(1124,35):
+          во время компиляции функции-члена класс шаблон "erf_series<float,short>::erf_series(T)"
           with
           [
               T=float
           ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\series +.h(1124): message : во время компиляции функции-члена класс шаблон "erf_series<float,short>::erf_series(T)"
-          with
-          [
-              T=float
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\test_framework.h(500): message : выполняется компиляция ссылки на экземпляр шаблон функции "erf_series<float,short>::erf_series(T)"
-          with
-          [
-              T=float
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\test_framework.h(434): message : выполняется компиляция ссылки на экземпляр класс шаблон функции "erf_series<float,short>"
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\series +.h(1135,115): warning C4244: аргумент: преобразование "double" в "_Ty", возможна потеря данных
-          with
-          [
-              _Ty=float
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\series +.h(1128): message : во время компиляции функции-члена класс шаблон "T erf_series<T,short>::acsess_row(K)"
+              C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\test_framework.h(500,15):
+              см. первую ссылку на erf_series<float,short>::erf_series "main_testing_function"
+  
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(1135,115): warning C4244: аргумент: преобразование "double" в "_Ty", возможна потеря данных
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(1135,115): warning C4244:         with
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(1135,115): warning C4244:         [
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(1135,115): warning C4244:             _Ty=float
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(1135,115): warning C4244:         ]
+  (компиляция исходного файла "main.cpp")
+      C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(1135,115):
+      контекст создания экземпляра шаблона (сначала самый старый)
+          C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(1128,1):
+          во время компиляции функции-члена класс шаблон "T erf_series<T,short>::acsess_row(K)"
           with
           [
               T=float,
               K=short
           ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\series +.h(1147): message : выполняется компиляция ссылки на экземпляр шаблон функции "T erf_series<T,short>::acsess_row(K)"
+              C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(1147,12):
+              см. первую ссылку на erf_series<float,short>::acsess_row "erf_series<float,short>::operator ()"
+  
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(1254,94): warning C4244: аргумент: преобразование "double" в "T", возможна потеря данных
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(1254,94): warning C4244:         with
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(1254,94): warning C4244:         [
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(1254,94): warning C4244:             T=float
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(1254,94): warning C4244:         ]
+  (компиляция исходного файла "main.cpp")
+      C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(1254,94):
+      контекст создания экземпляра шаблона (сначала самый старый)
+          C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\test_framework.h(509,20):
+          выполняется компиляция ссылки на экземпляр класс шаблон функции "inverse_sqrt_1m4x_series<float,short>"
+          C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(1254,63):
+          во время компиляции функции-члена класс шаблон "inverse_sqrt_1m4x_series<float,short>::inverse_sqrt_1m4x_series(T)"
+          with
+          [
+              T=float
+          ]
+              C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\test_framework.h(509,15):
+              см. первую ссылку на inverse_sqrt_1m4x_series<float,short>::inverse_sqrt_1m4x_series "main_testing_function"
+  
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(1266,45): warning C4244: return: преобразование "double" в "T", возможна потеря данных
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(1266,45): warning C4244:         with
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(1266,45): warning C4244:         [
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(1266,45): warning C4244:             T=float
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(1266,45): warning C4244:         ]
+  (компиляция исходного файла "main.cpp")
+      C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(1266,45):
+      контекст создания экземпляра шаблона (сначала самый старый)
+          C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(1262,1):
+          во время компиляции функции-члена класс шаблон "T inverse_sqrt_1m4x_series<T,short>::operator ()(K) const"
           with
           [
               T=float,
               K=short
           ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\series +.h(1254,94): warning C4244: аргумент: преобразование "double" в "T", возможна потеря данных
+  
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(1297,98): warning C4244: аргумент: преобразование "double" в "T", возможна потеря данных
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(1297,98): warning C4244:         with
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(1297,98): warning C4244:         [
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(1297,98): warning C4244:             T=float
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(1297,98): warning C4244:         ]
+  (компиляция исходного файла "main.cpp")
+      C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(1297,98):
+      контекст создания экземпляра шаблона (сначала самый старый)
+          C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\test_framework.h(512,20):
+          выполняется компиляция ссылки на экземпляр класс шаблон функции "one_twelfth_3x2_pi2_series<float,short>"
+          C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(1297,67):
+          во время компиляции функции-члена класс шаблон "one_twelfth_3x2_pi2_series<float,short>::one_twelfth_3x2_pi2_series(T)"
           with
           [
               T=float
           ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\series +.h(1254): message : во время компиляции функции-члена класс шаблон "inverse_sqrt_1m4x_series<float,short>::inverse_sqrt_1m4x_series(T)"
+              C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\test_framework.h(512,15):
+              см. первую ссылку на one_twelfth_3x2_pi2_series<float,short>::one_twelfth_3x2_pi2_series "main_testing_function"
+  
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(1339,92): warning C4244: аргумент: преобразование "double" в "T", возможна потеря данных
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(1339,92): warning C4244:         with
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(1339,92): warning C4244:         [
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(1339,92): warning C4244:             T=float
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(1339,92): warning C4244:         ]
+  (компиляция исходного файла "main.cpp")
+      C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(1339,92):
+      контекст создания экземпляра шаблона (сначала самый старый)
+          C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\test_framework.h(515,20):
+          выполняется компиляция ссылки на экземпляр класс шаблон функции "x_twelfth_x2_pi2_series<float,short>"
+          C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(1339,61):
+          во время компиляции функции-члена класс шаблон "x_twelfth_x2_pi2_series<float,short>::x_twelfth_x2_pi2_series(T)"
           with
           [
               T=float
           ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\test_framework.h(509): message : выполняется компиляция ссылки на экземпляр шаблон функции "inverse_sqrt_1m4x_series<float,short>::inverse_sqrt_1m4x_series(T)"
-          with
-          [
-              T=float
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\test_framework.h(434): message : выполняется компиляция ссылки на экземпляр класс шаблон функции "inverse_sqrt_1m4x_series<float,short>"
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\series +.h(1266,45): warning C4244: return: преобразование "double" в "T", возможна потеря данных
-          with
-          [
-              T=float
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\series +.h(1262): message : во время компиляции функции-члена класс шаблон "T inverse_sqrt_1m4x_series<T,short>::operator ()(K) const"
+              C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\test_framework.h(515,15):
+              см. первую ссылку на x_twelfth_x2_pi2_series<float,short>::x_twelfth_x2_pi2_series "main_testing_function"
+  
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(1374,63): warning C4244: аргумент: преобразование "double" в "T", возможна потеря данных
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(1374,63): warning C4244:         with
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(1374,63): warning C4244:         [
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(1374,63): warning C4244:             T=float
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(1374,63): warning C4244:         ]
+  (компиляция исходного файла "main.cpp")
+      C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(1374,63):
+      контекст создания экземпляра шаблона (сначала самый старый)
+          C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\test_framework.h(518,20):
+          выполняется компиляция ссылки на экземпляр класс шаблон функции "ln2_series<float,short>"
+          C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(1374,32):
+          во время компиляции функции-члена класс шаблон "ln2_series<float,short>::ln2_series(void)"
+              C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\test_framework.h(518,15):
+              см. первую ссылку на ln2_series<float,short>::ln2_series "main_testing_function"
+  
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(1416,9): warning C4244: return: преобразование "double" в "T", возможна потеря данных
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(1416,9): warning C4244:         with
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(1416,9): warning C4244:         [
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(1416,9): warning C4244:             T=float
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(1416,9): warning C4244:         ]
+  (компиляция исходного файла "main.cpp")
+      C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(1416,9):
+      контекст создания экземпляра шаблона (сначала самый старый)
+          C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\test_framework.h(521,20):
+          выполняется компиляция ссылки на экземпляр класс шаблон функции "one_series<float,short>"
+          C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(1413,1):
+          во время компиляции функции-члена класс шаблон "T one_series<T,short>::operator ()(K) const"
           with
           [
               T=float,
               K=short
           ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\series +.h(1297,98): warning C4244: аргумент: преобразование "double" в "T", возможна потеря данных
-          with
-          [
-              T=float
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\series +.h(1297): message : во время компиляции функции-члена класс шаблон "one_twelfth_3x2_pi2_series<float,short>::one_twelfth_3x2_pi2_series(T)"
-          with
-          [
-              T=float
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\test_framework.h(512): message : выполняется компиляция ссылки на экземпляр шаблон функции "one_twelfth_3x2_pi2_series<float,short>::one_twelfth_3x2_pi2_series(T)"
-          with
-          [
-              T=float
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\test_framework.h(434): message : выполняется компиляция ссылки на экземпляр класс шаблон функции "one_twelfth_3x2_pi2_series<float,short>"
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\series +.h(1339,92): warning C4244: аргумент: преобразование "double" в "T", возможна потеря данных
-          with
-          [
-              T=float
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\series +.h(1339): message : во время компиляции функции-члена класс шаблон "x_twelfth_x2_pi2_series<float,short>::x_twelfth_x2_pi2_series(T)"
-          with
-          [
-              T=float
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\test_framework.h(515): message : выполняется компиляция ссылки на экземпляр шаблон функции "x_twelfth_x2_pi2_series<float,short>::x_twelfth_x2_pi2_series(T)"
-          with
-          [
-              T=float
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\test_framework.h(434): message : выполняется компиляция ссылки на экземпляр класс шаблон функции "x_twelfth_x2_pi2_series<float,short>"
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\series +.h(1374,63): warning C4244: аргумент: преобразование "double" в "T", возможна потеря данных
-          with
-          [
-              T=float
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\series +.h(1374): message : во время компиляции функции-члена класс шаблон "ln2_series<float,short>::ln2_series(void)"
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\test_framework.h(518): message : выполняется компиляция ссылки на экземпляр шаблон функции "ln2_series<float,short>::ln2_series(void)"
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\test_framework.h(434): message : выполняется компиляция ссылки на экземпляр класс шаблон функции "ln2_series<float,short>"
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\series +.h(1416,9): warning C4244: return: преобразование "double" в "T", возможна потеря данных
-          with
-          [
-              T=float
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\series +.h(1413): message : во время компиляции функции-члена класс шаблон "T one_series<T,short>::operator ()(K) const"
+  
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(1471,74): warning C4305: аргумент: усечение из "double" в "T"
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(1471,74): warning C4305:         with
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(1471,74): warning C4305:         [
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(1471,74): warning C4305:             T=float
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(1471,74): warning C4305:         ]
+  (компиляция исходного файла "main.cpp")
+      C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(1471,74):
+      контекст создания экземпляра шаблона (сначала самый старый)
+          C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\test_framework.h(527,20):
+          выполняется компиляция ссылки на экземпляр класс шаблон функции "pi_3_series<float,short>"
+          C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(1471,34):
+          во время компиляции функции-члена класс шаблон "pi_3_series<float,short>::pi_3_series(void)"
+              C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\test_framework.h(527,15):
+              см. первую ссылку на pi_3_series<float,short>::pi_3_series "main_testing_function"
+  
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(1478,13): warning C4244: return: преобразование "double" в "T", возможна потеря данных
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(1478,13): warning C4244:         with
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(1478,13): warning C4244:         [
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(1478,13): warning C4244:             T=float
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(1478,13): warning C4244:         ]
+  (компиляция исходного файла "main.cpp")
+      C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(1478,13):
+      контекст создания экземпляра шаблона (сначала самый старый)
+          C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(1475,1):
+          во время компиляции функции-члена класс шаблон "T pi_3_series<T,short>::operator ()(K) const"
           with
           [
               T=float,
               K=short
           ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\test_framework.h(434): message : выполняется компиляция ссылки на экземпляр класс шаблон функции "one_series<float,short>"
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\series +.h(1471,1): warning C4305: аргумент: усечение из "double" в "T"
-          with
-          [
-              T=float
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\series +.h(1471): message : во время компиляции функции-члена класс шаблон "pi_3_series<float,short>::pi_3_series(void)"
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\test_framework.h(527): message : выполняется компиляция ссылки на экземпляр шаблон функции "pi_3_series<float,short>::pi_3_series(void)"
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\test_framework.h(434): message : выполняется компиляция ссылки на экземпляр класс шаблон функции "pi_3_series<float,short>"
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\series +.h(1478,13): warning C4244: return: преобразование "double" в "T", возможна потеря данных
-          with
-          [
-              T=float
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\series +.h(1475): message : во время компиляции функции-члена класс шаблон "T pi_3_series<T,short>::operator ()(K) const"
-          with
-          [
-              T=float,
-              K=short
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\series +.h(2633,72): warning C4244: аргумент: преобразование "int" в "const T", возможна потеря данных
-          with
-          [
-              T=float
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\series +.h(2628): message : во время компиляции функции-члена класс шаблон "T one_minus_sqrt_1minus4x_div_2x<T,short>::operator ()(K) const"
+  
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(2633,72): warning C4244: аргумент: преобразование "int" в "const T", возможна потеря данных
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(2633,72): warning C4244:         with
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(2633,72): warning C4244:         [
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(2633,72): warning C4244:             T=float
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(2633,72): warning C4244:         ]
+  (компиляция исходного файла "main.cpp")
+      C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(2633,72):
+      контекст создания экземпляра шаблона (сначала самый старый)
+          C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\test_framework.h(620,20):
+          выполняется компиляция ссылки на экземпляр класс шаблон функции "one_minus_sqrt_1minus4x_div_2x<float,short>"
+          C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(2628,1):
+          во время компиляции функции-члена класс шаблон "T one_minus_sqrt_1minus4x_div_2x<T,short>::operator ()(K) const"
           with
           [
               T=float,
               K=short
           ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\test_framework.h(434): message : выполняется компиляция ссылки на экземпляр класс шаблон функции "one_minus_sqrt_1minus4x_div_2x<float,short>"
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\series +.h(4162,84): warning C4244: аргумент: преобразование "double" в "T", возможна потеря данных
+  
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(4162,84): warning C4244: аргумент: преобразование "double" в "T", возможна потеря данных
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(4162,84): warning C4244:         with
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(4162,84): warning C4244:         [
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(4162,84): warning C4244:             T=float
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(4162,84): warning C4244:         ]
+  (компиляция исходного файла "main.cpp")
+      C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(4162,84):
+      контекст создания экземпляра шаблона (сначала самый старый)
+          C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\test_framework.h(737,20):
+          выполняется компиляция ссылки на экземпляр класс шаблон функции "two_degree_x_series<float,short>"
+          C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(4162,53):
+          во время компиляции функции-члена класс шаблон "two_degree_x_series<float,short>::two_degree_x_series(T)"
           with
           [
               T=float
           ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\series +.h(4162): message : во время компиляции функции-члена класс шаблон "two_degree_x_series<float,short>::two_degree_x_series(T)"
-          with
-          [
-              T=float
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\test_framework.h(737): message : выполняется компиляция ссылки на экземпляр шаблон функции "two_degree_x_series<float,short>::two_degree_x_series(T)"
-          with
-          [
-              T=float
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\test_framework.h(434): message : выполняется компиляция ссылки на экземпляр класс шаблон функции "two_degree_x_series<float,short>"
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\series +.h(4244,99): warning C4244: аргумент: преобразование "double" в "T", возможна потеря данных
-          with
-          [
-              T=float
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\series +.h(4244): message : во время компиляции функции-члена класс шаблон "ln13_min_ln7_div_7_series<float,short>::ln13_min_ln7_div_7_series(void)"
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\test_framework.h(743): message : выполняется компиляция ссылки на экземпляр шаблон функции "ln13_min_ln7_div_7_series<float,short>::ln13_min_ln7_div_7_series(void)"
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\test_framework.h(434): message : выполняется компиляция ссылки на экземпляр класс шаблон функции "ln13_min_ln7_div_7_series<float,short>"
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\shanks_transformation.h(90,29): warning C4244: =: преобразование "double" в "_Ty", возможна потеря данных
-          with
-          [
-              _Ty=float
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\shanks_transformation.h(43): message : во время компиляции функции-члена класс шаблон "T shanks_transform<T,short,series_base<T,short> *>::operator ()(const K,const int) const"
+              C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\test_framework.h(737,15):
+              см. первую ссылку на two_degree_x_series<float,short>::two_degree_x_series "main_testing_function"
+  
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(4244,85): warning C4244: аргумент: преобразование "double" в "T", возможна потеря данных
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(4244,85): warning C4244:         with
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(4244,85): warning C4244:         [
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(4244,85): warning C4244:             T=float
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(4244,85): warning C4244:         ]
+  (компиляция исходного файла "main.cpp")
+      C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(4244,85):
+      контекст создания экземпляра шаблона (сначала самый старый)
+          C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\test_framework.h(743,20):
+          выполняется компиляция ссылки на экземпляр класс шаблон функции "ln13_min_ln7_div_7_series<float,short>"
+          C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\series +.h(4244,62):
+          во время компиляции функции-члена класс шаблон "ln13_min_ln7_div_7_series<float,short>::ln13_min_ln7_div_7_series(void)"
+              C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\test_framework.h(743,15):
+              см. первую ссылку на ln13_min_ln7_div_7_series<float,short>::ln13_min_ln7_div_7_series "main_testing_function"
+  
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\shanks_transformation.h(90,29): warning C4244: =: преобразование "double" в "_Ty", возможна потеря данных
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\shanks_transformation.h(90,29): warning C4244:         with
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\shanks_transformation.h(90,29): warning C4244:         [
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\shanks_transformation.h(90,29): warning C4244:             _Ty=float
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\shanks_transformation.h(90,29): warning C4244:         ]
+  (компиляция исходного файла "main.cpp")
+      C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\shanks_transformation.h(90,29):
+      контекст создания экземпляра шаблона (сначала самый старый)
+          C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\test_framework.h(790,24):
+          выполняется компиляция ссылки на экземпляр класс шаблон функции "shanks_transform<float,short,series_base<float,short> *>"
+          C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\shanks_transformation.h(43,1):
+          во время компиляции функции-члена класс шаблон "T shanks_transform<T,short,series_base<T,short> *>::operator ()(const K,const int) const"
           with
           [
               T=float,
               K=short
           ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\FSA.h(65): message : выполняется компиляция ссылки на экземпляр шаблон функции "T shanks_transform<T,short,series_base<T,short> *>::operator ()(const K,const int) const"
+              C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\FSA.h(65,4):
+              см. первую ссылку на shanks_transform<float,short,series_base<float,short> *>::operator () "ford_sidi_algorithm<float,short,series_base<float,short> *>::Psi"
+              C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\FSA.h(43,11):
+              см. первую ссылку на ford_sidi_algorithm<float,short,series_base<float,short> *>::Psi "ford_sidi_algorithm<float,short,series_base<float,short> *>::operator ()"
+  
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\epsilon_algorithm.h(67,24): warning C4244: +=: преобразование "double" в "_Ty", возможна потеря данных
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\epsilon_algorithm.h(67,24): warning C4244:         with
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\epsilon_algorithm.h(67,24): warning C4244:         [
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\epsilon_algorithm.h(67,24): warning C4244:             _Ty=float
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\epsilon_algorithm.h(67,24): warning C4244:         ]
+  (компиляция исходного файла "main.cpp")
+      C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\epsilon_algorithm.h(67,24):
+      контекст создания экземпляра шаблона (сначала самый старый)
+          C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\test_framework.h(793,23):
+          выполняется компиляция ссылки на экземпляр класс шаблон функции "epsilon_algorithm<float,short,series_base<float,short> *>"
+          C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\epsilon_algorithm.h(44,1):
+          во время компиляции функции-члена класс шаблон "T epsilon_algorithm<T,short,series_base<T,short> *>::operator ()(const K,const int) const"
           with
           [
               T=float,
               K=short
           ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\test_framework.h(434): message : выполняется компиляция ссылки на экземпляр класс шаблон функции "shanks_transform<float,short,series_base<float,short> *>"
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\epsilon_algorithm.h(67,24): warning C4244: +=: преобразование "double" в "_Ty", возможна потеря данных
-          with
-          [
-              _Ty=float
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\epsilon_algorithm.h(44): message : во время компиляции функции-члена класс шаблон "T epsilon_algorithm<T,short,series_base<T,short> *>::operator ()(const K,const int) const"
-          with
-          [
-              T=float,
-              K=short
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\test_framework.h(434): message : выполняется компиляция ссылки на экземпляр класс шаблон функции "epsilon_algorithm<float,short,series_base<float,short> *>"
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\levin_algorithm.h(56,92): warning C4244: аргумент: преобразование "const int" в "const T", возможна потеря данных
-          with
-          [
-              T=float
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\levin_algorithm.h(44): message : во время компиляции функции-члена класс шаблон "T levin_algorithm<T,short,series_base<T,short> *>::operator ()(const K,const int) const"
+  
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_algorithm.h(56,92): warning C4244: аргумент: преобразование "const int" в "const T", возможна потеря данных
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_algorithm.h(56,92): warning C4244:         with
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_algorithm.h(56,92): warning C4244:         [
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_algorithm.h(56,92): warning C4244:             T=float
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_algorithm.h(56,92): warning C4244:         ]
+  (компиляция исходного файла "main.cpp")
+      C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_algorithm.h(56,92):
+      контекст создания экземпляра шаблона (сначала самый старый)
+          C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\test_framework.h(796,23):
+          выполняется компиляция ссылки на экземпляр класс шаблон функции "levin_algorithm<float,short,series_base<float,short> *>"
+          C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_algorithm.h(44,1):
+          во время компиляции функции-члена класс шаблон "T levin_algorithm<T,short,series_base<T,short> *>::operator ()(const K,const int) const"
           with
           [
               T=float,
               K=short
           ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\test_framework.h(434): message : выполняется компиляция ссылки на экземпляр класс шаблон функции "levin_algorithm<float,short,series_base<float,short> *>"
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\levin_algorithm.h(58,48): warning C4244: =: преобразование "double" в "T", возможна потеря данных
-          with
-          [
-              T=float
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\epsilon_algorithm_two.h(71,35): warning C4244: =: преобразование "double" в "_Ty", возможна потеря данных
-          with
-          [
-              _Ty=float
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\epsilon_algorithm_two.h(46): message : во время компиляции функции-члена класс шаблон "T epsilon_algorithm_two<T,short,series_base<T,short> *>::operator ()(const K,const int) const"
-          with
-          [
-              T=float,
-              K=short
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\test_framework.h(434): message : выполняется компиляция ссылки на экземпляр класс шаблон функции "epsilon_algorithm_two<float,short,series_base<float,short> *>"
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\epsilon_algorithm_two.h(75,26): warning C4244: =: преобразование "double" в "T", возможна потеря данных
-          with
-          [
-              T=float
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\epsilon_algorithm_two.h(77,26): warning C4244: =: преобразование "double" в "T", возможна потеря данных
-          with
-          [
-              T=float
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\epsilon_algorithm_two.h(80,26): warning C4244: =: преобразование "double" в "T", возможна потеря данных
-          with
-          [
-              T=float
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\epsilon_algorithm_two.h(83,26): warning C4244: =: преобразование "double" в "T", возможна потеря данных
-          with
-          [
-              T=float
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\epsilon_algorithm_two.h(86,31): warning C4244: =: преобразование "double" в "_Ty", возможна потеря данных
-          with
-          [
-              _Ty=float
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\epsilon_algorithm_two.h(87,31): warning C4244: =: преобразование "double" в "_Ty", возможна потеря данных
-          with
-          [
-              _Ty=float
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\chang_whynn_algorithm.h(63,23): warning C4244: =: преобразование "double" в "_Ty", возможна потеря данных
-          with
-          [
-              _Ty=float
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\chang_whynn_algorithm.h(46): message : во время компиляции функции-члена класс шаблон "T chang_whynn_algorithm<T,short,series_base<T,short> *>::operator ()(const K,const int) const"
+  
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_algorithm.h(58,48): warning C4244: =: преобразование "double" в "T", возможна потеря данных
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_algorithm.h(58,48): warning C4244:         with
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_algorithm.h(58,48): warning C4244:         [
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_algorithm.h(58,48): warning C4244:             T=float
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_algorithm.h(58,48): warning C4244:         ]
+  (компиляция исходного файла "main.cpp")
+  
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\epsilon_algorithm_two.h(71,35): warning C4244: =: преобразование "double" в "_Ty", возможна потеря данных
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\epsilon_algorithm_two.h(71,35): warning C4244:         with
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\epsilon_algorithm_two.h(71,35): warning C4244:         [
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\epsilon_algorithm_two.h(71,35): warning C4244:             _Ty=float
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\epsilon_algorithm_two.h(71,35): warning C4244:         ]
+  (компиляция исходного файла "main.cpp")
+      C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\epsilon_algorithm_two.h(71,35):
+      контекст создания экземпляра шаблона (сначала самый старый)
+          C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\test_framework.h(799,23):
+          выполняется компиляция ссылки на экземпляр класс шаблон функции "epsilon_algorithm_two<float,short,series_base<float,short> *>"
+          C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\epsilon_algorithm_two.h(46,1):
+          во время компиляции функции-члена класс шаблон "T epsilon_algorithm_two<T,short,series_base<T,short> *>::operator ()(const K,const int) const"
           with
           [
               T=float,
               K=short
           ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\test_framework.h(434): message : выполняется компиляция ссылки на экземпляр класс шаблон функции "chang_whynn_algorithm<float,short,series_base<float,short> *>"
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\chang_whynn_algorithm.h(74,20): warning C4244: =: преобразование "double" в "T", возможна потеря данных
-          with
-          [
-              T=float
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\chang_whynn_algorithm.h(84,24): warning C4244: =: преобразование "double" в "T", возможна потеря данных
-          with
-          [
-              T=float
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\epsilon_algorithm_three.h(109,50): warning C4244: =: преобразование "double" в "T", возможна потеря данных
-          with
-          [
-              T=float
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\epsilon_algorithm_three.h(43): message : во время компиляции функции-члена класс шаблон "T epsilon_algorithm_three<T,short,series_base<T,short> *>::operator ()(const K,const int) const"
+  
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\epsilon_algorithm_two.h(75,26): warning C4244: =: преобразование "double" в "T", возможна потеря данных
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\epsilon_algorithm_two.h(75,26): warning C4244:         with
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\epsilon_algorithm_two.h(75,26): warning C4244:         [
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\epsilon_algorithm_two.h(75,26): warning C4244:             T=float
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\epsilon_algorithm_two.h(75,26): warning C4244:         ]
+  (компиляция исходного файла "main.cpp")
+  
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\epsilon_algorithm_two.h(77,26): warning C4244: =: преобразование "double" в "T", возможна потеря данных
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\epsilon_algorithm_two.h(77,26): warning C4244:         with
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\epsilon_algorithm_two.h(77,26): warning C4244:         [
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\epsilon_algorithm_two.h(77,26): warning C4244:             T=float
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\epsilon_algorithm_two.h(77,26): warning C4244:         ]
+  (компиляция исходного файла "main.cpp")
+  
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\epsilon_algorithm_two.h(80,26): warning C4244: =: преобразование "double" в "T", возможна потеря данных
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\epsilon_algorithm_two.h(80,26): warning C4244:         with
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\epsilon_algorithm_two.h(80,26): warning C4244:         [
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\epsilon_algorithm_two.h(80,26): warning C4244:             T=float
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\epsilon_algorithm_two.h(80,26): warning C4244:         ]
+  (компиляция исходного файла "main.cpp")
+  
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\epsilon_algorithm_two.h(83,26): warning C4244: =: преобразование "double" в "T", возможна потеря данных
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\epsilon_algorithm_two.h(83,26): warning C4244:         with
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\epsilon_algorithm_two.h(83,26): warning C4244:         [
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\epsilon_algorithm_two.h(83,26): warning C4244:             T=float
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\epsilon_algorithm_two.h(83,26): warning C4244:         ]
+  (компиляция исходного файла "main.cpp")
+  
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\epsilon_algorithm_two.h(86,31): warning C4244: =: преобразование "double" в "_Ty", возможна потеря данных
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\epsilon_algorithm_two.h(86,31): warning C4244:         with
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\epsilon_algorithm_two.h(86,31): warning C4244:         [
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\epsilon_algorithm_two.h(86,31): warning C4244:             _Ty=float
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\epsilon_algorithm_two.h(86,31): warning C4244:         ]
+  (компиляция исходного файла "main.cpp")
+  
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\epsilon_algorithm_two.h(87,31): warning C4244: =: преобразование "double" в "_Ty", возможна потеря данных
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\epsilon_algorithm_two.h(87,31): warning C4244:         with
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\epsilon_algorithm_two.h(87,31): warning C4244:         [
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\epsilon_algorithm_two.h(87,31): warning C4244:             _Ty=float
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\epsilon_algorithm_two.h(87,31): warning C4244:         ]
+  (компиляция исходного файла "main.cpp")
+  
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\chang_whynn_algorithm.h(61,23): warning C4244: =: преобразование "double" в "_Ty", возможна потеря данных
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\chang_whynn_algorithm.h(61,23): warning C4244:         with
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\chang_whynn_algorithm.h(61,23): warning C4244:         [
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\chang_whynn_algorithm.h(61,23): warning C4244:             _Ty=float
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\chang_whynn_algorithm.h(61,23): warning C4244:         ]
+  (компиляция исходного файла "main.cpp")
+      C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\chang_whynn_algorithm.h(61,23):
+      контекст создания экземпляра шаблона (сначала самый старый)
+          C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\test_framework.h(808,23):
+          выполняется компиляция ссылки на экземпляр класс шаблон функции "chang_whynn_algorithm<float,short,series_base<float,short> *>"
+          C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\chang_whynn_algorithm.h(46,1):
+          во время компиляции функции-члена класс шаблон "T chang_whynn_algorithm<T,short,series_base<T,short> *>::operator ()(const K,const int) const"
           with
           [
               T=float,
               K=short
           ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\test_framework.h(434): message : выполняется компиляция ссылки на экземпляр класс шаблон функции "epsilon_algorithm_three<float,short,series_base<float,short> *>"
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\epsilon_algorithm_three.h(113,30): warning C4244: =: преобразование "double" в "T", возможна потеря данных
-          with
-          [
-              T=float
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\levin_recursion_algorithm.h(55,24): warning C4244: аргумент: преобразование "const int" в "T", возможна потеря данных
-          with
-          [
-              T=float
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\levin_recursion_algorithm.h(45): message : во время компиляции функции-члена класс шаблон "T levin_recursion_algorithm<T,short,series_base<T,short> *>::operator ()(const K,const int) const"
+  
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\chang_whynn_algorithm.h(72,20): warning C4244: =: преобразование "double" в "T", возможна потеря данных
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\chang_whynn_algorithm.h(72,20): warning C4244:         with
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\chang_whynn_algorithm.h(72,20): warning C4244:         [
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\chang_whynn_algorithm.h(72,20): warning C4244:             T=float
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\chang_whynn_algorithm.h(72,20): warning C4244:         ]
+  (компиляция исходного файла "main.cpp")
+  
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\chang_whynn_algorithm.h(82,24): warning C4244: =: преобразование "double" в "T", возможна потеря данных
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\chang_whynn_algorithm.h(82,24): warning C4244:         with
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\chang_whynn_algorithm.h(82,24): warning C4244:         [
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\chang_whynn_algorithm.h(82,24): warning C4244:             T=float
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\chang_whynn_algorithm.h(82,24): warning C4244:         ]
+  (компиляция исходного файла "main.cpp")
+  
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\epsilon_algorithm_three.h(109,50): warning C4244: =: преобразование "double" в "T", возможна потеря данных
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\epsilon_algorithm_three.h(109,50): warning C4244:         with
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\epsilon_algorithm_three.h(109,50): warning C4244:         [
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\epsilon_algorithm_three.h(109,50): warning C4244:             T=float
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\epsilon_algorithm_three.h(109,50): warning C4244:         ]
+  (компиляция исходного файла "main.cpp")
+      C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\epsilon_algorithm_three.h(109,50):
+      контекст создания экземпляра шаблона (сначала самый старый)
+          C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\test_framework.h(823,23):
+          выполняется компиляция ссылки на экземпляр класс шаблон функции "epsilon_algorithm_three<float,short,series_base<float,short> *>"
+          C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\epsilon_algorithm_three.h(43,1):
+          во время компиляции функции-члена класс шаблон "T epsilon_algorithm_three<T,short,series_base<T,short> *>::operator ()(const K,const int) const"
           with
           [
               T=float,
               K=short
           ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\test_framework.h(434): message : выполняется компиляция ссылки на экземпляр класс шаблон функции "levin_recursion_algorithm<float,short,series_base<float,short> *>"
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\levin_recursion_algorithm.h(56,24): warning C4244: аргумент: преобразование "const int" в "T", возможна потеря данных
-          with
-          [
-              T=float
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\richardson_algorithm.h(60,67): warning C4244: =: преобразование "double" в "_Ty", возможна потеря данных
-          with
-          [
-              _Ty=float
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\richardson_algorithm.h(42): message : во время компиляции функции-члена класс шаблон "T richardson_algorithm<T,short,series_base<T,short> *>::operator ()(const K,const int) const"
+  
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\epsilon_algorithm_three.h(113,30): warning C4244: =: преобразование "double" в "T", возможна потеря данных
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\epsilon_algorithm_three.h(113,30): warning C4244:         with
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\epsilon_algorithm_three.h(113,30): warning C4244:         [
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\epsilon_algorithm_three.h(113,30): warning C4244:             T=float
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\epsilon_algorithm_three.h(113,30): warning C4244:         ]
+  (компиляция исходного файла "main.cpp")
+  
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_recursion_algorithm.h(55,24): warning C4244: аргумент: преобразование "const int" в "T", возможна потеря данных
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_recursion_algorithm.h(55,24): warning C4244:         with
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_recursion_algorithm.h(55,24): warning C4244:         [
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_recursion_algorithm.h(55,24): warning C4244:             T=float
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_recursion_algorithm.h(55,24): warning C4244:         ]
+  (компиляция исходного файла "main.cpp")
+      C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_recursion_algorithm.h(55,24):
+      контекст создания экземпляра шаблона (сначала самый старый)
+          C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\test_framework.h(826,23):
+          выполняется компиляция ссылки на экземпляр класс шаблон функции "levin_recursion_algorithm<float,short,series_base<float,short> *>"
+          C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_recursion_algorithm.h(45,1):
+          во время компиляции функции-члена класс шаблон "T levin_recursion_algorithm<T,short,series_base<T,short> *>::operator ()(const K,const int) const"
           with
           [
               T=float,
               K=short
           ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\test_framework.h(434): message : выполняется компиляция ссылки на экземпляр класс шаблон функции "richardson_algorithm<float,short,series_base<float,short> *>"
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\levin_recursion_algorithm.h(65,53): warning C4244: аргумент: преобразование "T" в "K", возможна потеря данных
+  
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_recursion_algorithm.h(56,24): warning C4244: аргумент: преобразование "const int" в "T", возможна потеря данных
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_recursion_algorithm.h(56,24): warning C4244:         with
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_recursion_algorithm.h(56,24): warning C4244:         [
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_recursion_algorithm.h(56,24): warning C4244:             T=float
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_recursion_algorithm.h(56,24): warning C4244:         ]
+  (компиляция исходного файла "main.cpp")
+  
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\richardson_algorithm.h(60,67): warning C4244: =: преобразование "double" в "_Ty", возможна потеря данных
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\richardson_algorithm.h(60,67): warning C4244:         with
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\richardson_algorithm.h(60,67): warning C4244:         [
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\richardson_algorithm.h(60,67): warning C4244:             _Ty=float
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\richardson_algorithm.h(60,67): warning C4244:         ]
+  (компиляция исходного файла "main.cpp")
+      C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\richardson_algorithm.h(60,67):
+      контекст создания экземпляра шаблона (сначала самый старый)
+          C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\test_framework.h(832,23):
+          выполняется компиляция ссылки на экземпляр класс шаблон функции "richardson_algorithm<float,short,series_base<float,short> *>"
+          C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\richardson_algorithm.h(42,1):
+          во время компиляции функции-члена класс шаблон "T richardson_algorithm<T,short,series_base<T,short> *>::operator ()(const K,const int) const"
           with
           [
-              T=long double
+              T=float,
+              K=short
           ]
-          and
-          [
-              K=__int64
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\levin_recursion_algorithm.h(63): message : во время компиляции функции-члена класс шаблон "T levin_recursion_algorithm<T,__int64,series_base<T,__int64> *>::operator ()(T,T,T,bool) const"
-          with
-          [
-              T=long double
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\levin_recursion_algorithm.h(55): message : выполняется компиляция ссылки на экземпляр шаблон функции "T levin_recursion_algorithm<T,__int64,series_base<T,__int64> *>::operator ()(T,T,T,bool) const"
-          with
-          [
-              T=long double
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\levin_recursion_algorithm.h(41): message : во время компиляции функции-члена класс шаблон "levin_recursion_algorithm<long double,__int64,series_base<long double,__int64> *>::levin_recursion_algorithm(const series_templ &)"
+  
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_recursion_algorithm.h(65,53): warning C4244: аргумент: преобразование "T" в "K", возможна потеря данных
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_recursion_algorithm.h(65,53): warning C4244:         with
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_recursion_algorithm.h(65,53): warning C4244:         [
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_recursion_algorithm.h(65,53): warning C4244:             T=long double
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_recursion_algorithm.h(65,53): warning C4244:         ]
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_recursion_algorithm.h(65,53): warning C4244:         and
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_recursion_algorithm.h(65,53): warning C4244:         [
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_recursion_algorithm.h(65,53): warning C4244:             K=__int64
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_recursion_algorithm.h(65,53): warning C4244:         ]
+  (компиляция исходного файла "main.cpp")
+      C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_recursion_algorithm.h(65,53):
+      контекст создания экземпляра шаблона (сначала самый старый)
+          C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_recursion_algorithm.h(41,102):
+          во время компиляции функции-члена класс шаблон "levin_recursion_algorithm<long double,__int64,series_base<long double,__int64> *>::levin_recursion_algorithm(const series_templ &)"
           with
           [
               series_templ=series_base<long double,__int64> *
           ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\test_framework.h(826): message : выполняется компиляция ссылки на экземпляр шаблон функции "levin_recursion_algorithm<long double,__int64,series_base<long double,__int64> *>::levin_recursion_algorithm(const series_templ &)"
-          with
-          [
-              series_templ=series_base<long double,__int64> *
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\levin_recursion_algorithm.h(68,33): warning C4244: аргумент: преобразование "T" в "K", возможна потеря данных
+              C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\test_framework.h(826,18):
+              см. первую ссылку на levin_recursion_algorithm<long double,__int64,series_base<long double,__int64> *>::levin_recursion_algorithm "main_testing_function"
+          C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_recursion_algorithm.h(63,1):
+          во время компиляции функции-члена класс шаблон "T levin_recursion_algorithm<T,__int64,series_base<T,__int64> *>::operator ()(T,T,T,bool) const"
           with
           [
               T=long double
           ]
-          and
-          [
-              K=__int64
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\levin_recursion_algorithm.h(65,53): warning C4244: аргумент: преобразование "T" в "K", возможна потеря данных
-          with
-          [
-              T=double
-          ]
-          and
-          [
-              K=int
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\levin_recursion_algorithm.h(63): message : во время компиляции функции-члена класс шаблон "T levin_recursion_algorithm<T,int,series_base<T,int> *>::operator ()(T,T,T,bool) const"
-          with
-          [
-              T=double
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\levin_recursion_algorithm.h(55): message : выполняется компиляция ссылки на экземпляр шаблон функции "T levin_recursion_algorithm<T,int,series_base<T,int> *>::operator ()(T,T,T,bool) const"
-          with
-          [
-              T=double
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\levin_recursion_algorithm.h(41): message : во время компиляции функции-члена класс шаблон "levin_recursion_algorithm<double,int,series_base<double,int> *>::levin_recursion_algorithm(const series_templ &)"
+              C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_recursion_algorithm.h(55,11):
+              см. первую ссылку на levin_recursion_algorithm<long double,__int64,series_base<long double,__int64> *>::operator () "levin_recursion_algorithm<long double,__int64,series_base<long double,__int64> *>::operator ()"
+  
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_recursion_algorithm.h(68,33): warning C4244: аргумент: преобразование "T" в "K", возможна потеря данных
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_recursion_algorithm.h(68,33): warning C4244:         with
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_recursion_algorithm.h(68,33): warning C4244:         [
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_recursion_algorithm.h(68,33): warning C4244:             T=long double
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_recursion_algorithm.h(68,33): warning C4244:         ]
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_recursion_algorithm.h(68,33): warning C4244:         and
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_recursion_algorithm.h(68,33): warning C4244:         [
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_recursion_algorithm.h(68,33): warning C4244:             K=__int64
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_recursion_algorithm.h(68,33): warning C4244:         ]
+  (компиляция исходного файла "main.cpp")
+  
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_recursion_algorithm.h(65,53): warning C4244: аргумент: преобразование "T" в "K", возможна потеря данных
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_recursion_algorithm.h(65,53): warning C4244:         with
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_recursion_algorithm.h(65,53): warning C4244:         [
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_recursion_algorithm.h(65,53): warning C4244:             T=double
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_recursion_algorithm.h(65,53): warning C4244:         ]
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_recursion_algorithm.h(65,53): warning C4244:         and
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_recursion_algorithm.h(65,53): warning C4244:         [
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_recursion_algorithm.h(65,53): warning C4244:             K=int
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_recursion_algorithm.h(65,53): warning C4244:         ]
+  (компиляция исходного файла "main.cpp")
+      C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_recursion_algorithm.h(65,53):
+      контекст создания экземпляра шаблона (сначала самый старый)
+          C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\test_framework.h(826,23):
+          выполняется компиляция ссылки на экземпляр класс шаблон функции "levin_recursion_algorithm<double,int,series_base<double,int> *>"
+          C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_recursion_algorithm.h(41,102):
+          во время компиляции функции-члена класс шаблон "levin_recursion_algorithm<double,int,series_base<double,int> *>::levin_recursion_algorithm(const series_templ &)"
           with
           [
               series_templ=series_base<double,int> *
           ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\test_framework.h(826): message : выполняется компиляция ссылки на экземпляр шаблон функции "levin_recursion_algorithm<double,int,series_base<double,int> *>::levin_recursion_algorithm(const series_templ &)"
-          with
-          [
-              series_templ=series_base<double,int> *
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\test_framework.h(434): message : выполняется компиляция ссылки на экземпляр класс шаблон функции "levin_recursion_algorithm<double,int,series_base<double,int> *>"
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\levin_recursion_algorithm.h(68,33): warning C4244: аргумент: преобразование "T" в "K", возможна потеря данных
+              C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\test_framework.h(826,18):
+              см. первую ссылку на levin_recursion_algorithm<double,int,series_base<double,int> *>::levin_recursion_algorithm "main_testing_function"
+          C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_recursion_algorithm.h(63,1):
+          во время компиляции функции-члена класс шаблон "T levin_recursion_algorithm<T,int,series_base<T,int> *>::operator ()(T,T,T,bool) const"
           with
           [
               T=double
           ]
-          and
-          [
-              K=int
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\levin_recursion_algorithm.h(65,53): warning C4244: аргумент: преобразование "T" в "K", возможна потеря данных
-          with
-          [
-              T=float
-          ]
-          and
-          [
-              K=short
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\levin_recursion_algorithm.h(63): message : во время компиляции функции-члена класс шаблон "T levin_recursion_algorithm<T,short,series_base<T,short> *>::operator ()(T,T,T,bool) const"
-          with
-          [
-              T=float
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\levin_recursion_algorithm.h(55): message : выполняется компиляция ссылки на экземпляр шаблон функции "T levin_recursion_algorithm<T,short,series_base<T,short> *>::operator ()(T,T,T,bool) const"
-          with
-          [
-              T=float
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\levin_recursion_algorithm.h(41): message : во время компиляции функции-члена класс шаблон "levin_recursion_algorithm<float,short,series_base<float,short> *>::levin_recursion_algorithm(const series_templ &)"
+              C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_recursion_algorithm.h(55,11):
+              см. первую ссылку на levin_recursion_algorithm<double,int,series_base<double,int> *>::operator () "levin_recursion_algorithm<double,int,series_base<double,int> *>::operator ()"
+  
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_recursion_algorithm.h(68,33): warning C4244: аргумент: преобразование "T" в "K", возможна потеря данных
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_recursion_algorithm.h(68,33): warning C4244:         with
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_recursion_algorithm.h(68,33): warning C4244:         [
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_recursion_algorithm.h(68,33): warning C4244:             T=double
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_recursion_algorithm.h(68,33): warning C4244:         ]
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_recursion_algorithm.h(68,33): warning C4244:         and
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_recursion_algorithm.h(68,33): warning C4244:         [
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_recursion_algorithm.h(68,33): warning C4244:             K=int
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_recursion_algorithm.h(68,33): warning C4244:         ]
+  (компиляция исходного файла "main.cpp")
+  
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_recursion_algorithm.h(65,53): warning C4244: аргумент: преобразование "T" в "K", возможна потеря данных
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_recursion_algorithm.h(65,53): warning C4244:         with
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_recursion_algorithm.h(65,53): warning C4244:         [
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_recursion_algorithm.h(65,53): warning C4244:             T=float
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_recursion_algorithm.h(65,53): warning C4244:         ]
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_recursion_algorithm.h(65,53): warning C4244:         and
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_recursion_algorithm.h(65,53): warning C4244:         [
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_recursion_algorithm.h(65,53): warning C4244:             K=short
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_recursion_algorithm.h(65,53): warning C4244:         ]
+  (компиляция исходного файла "main.cpp")
+      C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_recursion_algorithm.h(65,53):
+      контекст создания экземпляра шаблона (сначала самый старый)
+          C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_recursion_algorithm.h(41,102):
+          во время компиляции функции-члена класс шаблон "levin_recursion_algorithm<float,short,series_base<float,short> *>::levin_recursion_algorithm(const series_templ &)"
           with
           [
               series_templ=series_base<float,short> *
           ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\test_framework.h(826): message : выполняется компиляция ссылки на экземпляр шаблон функции "levin_recursion_algorithm<float,short,series_base<float,short> *>::levin_recursion_algorithm(const series_templ &)"
-          with
-          [
-              series_templ=series_base<float,short> *
-          ]
-C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\levin_recursion_algorithm.h(68,33): warning C4244: аргумент: преобразование "T" в "K", возможна потеря данных
+              C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\test_framework.h(826,18):
+              см. первую ссылку на levin_recursion_algorithm<float,short,series_base<float,short> *>::levin_recursion_algorithm "main_testing_function"
+          C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_recursion_algorithm.h(63,1):
+          во время компиляции функции-члена класс шаблон "T levin_recursion_algorithm<T,short,series_base<T,short> *>::operator ()(T,T,T,bool) const"
           with
           [
               T=float
           ]
-          and
-          [
-              K=short
-          ]
-  shanks_transformation.vcxproj -> C:\Users\DLR_ACER\HW_Mirea\shanks-university\x64\Debug\shanks_transformation.exe
+              C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_recursion_algorithm.h(55,11):
+              см. первую ссылку на levin_recursion_algorithm<float,short,series_base<float,short> *>::operator () "levin_recursion_algorithm<float,short,series_base<float,short> *>::operator ()"
+  
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_recursion_algorithm.h(68,33): warning C4244: аргумент: преобразование "T" в "K", возможна потеря данных
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_recursion_algorithm.h(68,33): warning C4244:         with
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_recursion_algorithm.h(68,33): warning C4244:         [
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_recursion_algorithm.h(68,33): warning C4244:             T=float
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_recursion_algorithm.h(68,33): warning C4244:         ]
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_recursion_algorithm.h(68,33): warning C4244:         and
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_recursion_algorithm.h(68,33): warning C4244:         [
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_recursion_algorithm.h(68,33): warning C4244:             K=short
+C:\Users\User\Documents\GitHub\shanks-university\shanks_transformation\levin_recursion_algorithm.h(68,33): warning C4244:         ]
+  (компиляция исходного файла "main.cpp")
+  
+  shanks_transformation.vcxproj -> C:\Users\User\Documents\GitHub\shanks-university\x64\Debug\shanks_transformation.exe
