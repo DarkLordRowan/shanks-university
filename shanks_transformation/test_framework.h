@@ -984,17 +984,14 @@ inline static void main_testing_function()
 			//levin-sidi S U
 			transform.reset(new levi_sidi_algorithm<T, K, decltype(series.get())>(series.get(), new u_transform<T, K>{},false));
 			print_transform(i, order, std::move(transform.get()));
-			//
 
 			//levin-sidi S T
 			transform.reset(new levi_sidi_algorithm<T, K, decltype(series.get())>(series.get(), new t_transform<T, K>{}, false));
 			print_transform(i, order, std::move(transform.get()));
-			//
 
 			//levin-sidi S D
 			transform.reset(new levi_sidi_algorithm<T, K, decltype(series.get())>(series.get(), new d_transform<T, K>{}, false));
 			print_transform(i, order, std::move(transform.get()));
-			//
 
 			//levin-sidi S V
 			transform.reset(new levi_sidi_algorithm<T, K, decltype(series.get())>(series.get(), new v_transform<T, K>{}, false));
@@ -1003,7 +1000,6 @@ inline static void main_testing_function()
 			//levin-sidi D U
 			transform.reset(new drummonds_algorithm<T, K, decltype(series.get())>(series.get(), new u_transform<T, K>{}, false));
 			print_transform(i, order, std::move(transform.get()));
-			//
 
 			//levin-sidi D T
 			transform.reset(new drummonds_algorithm<T, K, decltype(series.get())>(series.get(), new t_transform<T, K>{}, false));
