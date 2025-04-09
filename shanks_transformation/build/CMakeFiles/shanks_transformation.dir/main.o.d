@@ -274,4 +274,5 @@ CMakeFiles/shanks_transformation.dir/main.o: \
  /home/panama/Blacksmith/projects/shanks/shanks-university/shanks_transformation/lubkin_W_algorithm.h \
  /home/panama/Blacksmith/projects/shanks/shanks-university/shanks_transformation/richardson_algorithm.h \
  /home/panama/Blacksmith/projects/shanks/shanks-university/shanks_transformation/FSA.h \
+ /home/panama/Blacksmith/projects/shanks/shanks-university/shanks_transformation/FSA_two.h \
  /home/panama/Blacksmith/projects/shanks/shanks-university/shanks_transformation/FSA_3.h

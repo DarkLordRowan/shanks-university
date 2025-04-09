@@ -41,6 +41,68 @@
  * 38 - minus_one_n_fact_n_in_n_series
  * 39 - ln_x_plus_one_x_minus_one_halfed_series
  * 40 - two_arcsin_square_x_halfed_series
+ * 41 - pi_squared_twelve_series
+ *  42 - pi_cubed_32_series
+ *  43 - minus_three_plus_ln3_three_devided_two_plus_two_ln2_series
+ *  44 - two_ln2_series
+ *  45 - pi_x_multi_e_xpi_plus_e_minusxpi_divided_e_xpi_minus_e_minusxpi_minus_one_series
+ *  46 - pi_minus_x_2
+ *  47 - half_multi_ln_1div2multi1minuscosx
+ *  48 - half_minus_sinx_multi_pi_4
+ *  49 - ln_1plussqrt1plusxsquare_minus_ln_2
+ *  50 - ln_cosx
+ *  51 - ln_sinx_minus_ln_x
+ *  52 - pi_8_cosx_square_minus_1_div_3_cosx
+ *  53 - sqrt_oneminussqrtoneminusx_div_x
+ *  54 - one_minus_sqrt_1minus4x_div_2x
+ *  55 - arcsin_x_minus_x_series
+ *  56 - pi_x_minus_x_square_and_x_square_minus_three_pi_x_plus_two_pi_square_series
+ *  57 - abs_sin_x_minus_2_div_pi_series
+ *  58 - pi_minus_3pi_4_and_pi_minus_x_minus_3pi_4_series
+ *  59 - minus_3_div_4_or_x_minus_3_div_4_series
+ *  60 - ten_minus_x_series
+ *  61 - x_series
+ *  62 - minus_x_minus_pi_4_or_minus_pi_4_series
+ *  63 - one_div_two_minus_x_multi_three_plus_x_series
+ *  64 - Si_x_series
+ *  65 - Ci_x_series
+ *  66 - Riemann_zeta_func_series
+ *  67 - Riemann_zeta_func_xmin1_div_Riemann_zeta_func_x_series
+ *  68 - xsquareplus3_div_xsquareplus2multix_minus_1_series
+ *  69 - arcsin_x_series
+ *  70 - arctg_x_series
+ *  71 - K_x_series
+ *  72 - E_x_series
+ *  73 - sqrt_1plusx_series
+ *  74 - Lambert_W_func_series
+ *  75 - Incomplete_Gamma_func_series
+ *  76 - Series_with_ln_number1
+ *  77 - Series_with_ln_number2
+ *  78 - pi_series
+ *  79 - x_min_sqrt_x_series
+ *  80 - arctan_x2_series
+ *  81 - ln1px4_series
+ *  82 - sin_x2_series
+ *  83 - arctan_x3_series
+ *  84 - arcsin_x2_series
+ *  85 - ln1_m_x2_series
+ *  86 - artanh_x_series
+ *  87 - arcsinh_x_series
+ *  88 - cos_x2_series
+ *  89 - sinh_x2_series
+ *  90 - arctanh_x2_series
+ *  91 - cos3xmin1_div_xsqare_series
+ *  92 - two_degree_x_series
+ *  93 - sqrt_1plusx_min_1_min_x_div_2_series
+ *  94 - ln13_min_ln7_div_7_series
+ *  95 - Ja_x_series
+ *  96 - one_div_sqrt2_sin_xdivsqrt2_series
+ *  97 - ln_1plusx_div_1plusx2
+ *  98 - cos_sqrt_x
+ *  99 - ln_1_plus_x3
+ *  100 - x_div_1minx
+ *  101 - x_div_1minx2
+ *  102 - gamma_series
  * @brief This file contains series base class, requrrent_series_base class and derived classes of various serieses (e.g. exp(x), ch(x))
  */
 
@@ -117,6 +179,14 @@ public:
 	* @return (-1)^n
 	*/
 	[[nodiscard]] constexpr static const T minus_one_raised_to_power_n(K n);
+
+
+	/**
+	* @brief evaluates Euler function by n
+	* @authors Trudolyubov N.A.
+	* @return phi(n)
+	*/
+	[[nodiscard]] constexpr static const T phi(K n);
 
 protected:
 	/**
@@ -204,6 +274,26 @@ constexpr const T series_base<T, K>::minus_one_raised_to_power_n(K n)
 {
 	return n % 2 ? -1 : 1;
 }
+
+
+template <typename T, typename K>
+constexpr const T series_base<T, K>::phi(K n)
+{
+	if (n < 0)
+		throw std::domain_error("negative integer in the input");
+	K result = n;
+	for (K i = 2; i * i <= n; ++i)
+		if (n % i == 0) {
+			while (n % i == 0)
+				n /= i;
+			result -= result / i;
+		}
+	if (n > 1)
+		result -= result / n;
+	return result;
+}
+
+
 
 
 /**
@@ -1999,6 +2089,2515 @@ constexpr T two_arcsin_square_x_halfed_series<T, K>::operator()(K n) const
 		throw std::domain_error("negative integer in the input");
 	return  pow(this->x, 2 * n + 2) * pow(this->fact(n), 2) / (this->fact(2 * n + 2));
 }
+
+
+
+/**
+* @brief Maclaurin series of value pi^2/12
+* @authors Trudolyubov N.A.
+* @tparam T The type of the elements in the series, K The type of enumerating integer
+*/
+template <typename T, typename K>
+class pi_squared_twelve_series : public series_base<T, K>
+{
+public:
+	/**
+	* @brief Parameterized constructor
+	* @authors Trudolyubov N.A.
+	*/
+	pi_squared_twelve_series();
+
+	/**
+	* @brief Computes the nth term of the Maclaurin series of the cosine function
+	* @authors Trudolyubov N.A.
+	* @param n The number of the term
+	* @return nth term of the Maclaurin series of the cosine functions
+	*/
+	[[nodiscard]] constexpr virtual T operator()(K n) const;
+};
+
+template <typename T, typename K>
+pi_squared_twelve_series<T, K>::pi_squared_twelve_series() : series_base<T, K>(0, std::pow(std::numbers::pi, 2) / 12) {}
+
+template <typename T, typename K>
+constexpr T pi_squared_twelve_series<T, K>::operator()(K n) const
+{
+	if (n < 0)
+		throw std::domain_error("negative integer in the input");
+	return pow(-1, n + 2) / ((n + 1)*(n+1));
+}
+
+/**
+* @brief Maclaurin series of value pi^3/32
+* @authors Trudolyubov N.A.
+* @tparam T The type of the elements in the series, K The type of enumerating integer
+*/
+template <typename T, typename K>
+class pi_cubed_32_series : public series_base<T, K>
+{
+public:
+	/**
+	* @brief Parameterized constructor
+	* @authors Trudolyubov N.A.
+	*/
+	pi_cubed_32_series();
+
+	/**
+	* @brief Computes the nth term of the Maclaurin series of the cosine function
+	* @authors Trudolyubov N.A.
+	* @param n The number of the term
+	* @return nth term of the Maclaurin series of the cosine functions
+	*/
+	[[nodiscard]] constexpr virtual T operator()(K n) const;
+};
+
+template <typename T, typename K>
+pi_cubed_32_series<T, K>::pi_cubed_32_series() : series_base<T, K>(0, std::pow(std::numbers::pi, 3) / 32) {}
+
+template <typename T, typename K>
+constexpr T pi_cubed_32_series<T, K>::operator()(K n) const
+{
+	if (n < 0)
+		throw std::domain_error("negative integer in the input");
+	return pow(-1, n + 2) / ((2*((T)n+1) - 1)*(2*(T)(n+1) - 1)*(2* (T)(n+1) - 1));
+}
+
+/**
+* @brief Maclaurin series of value -3 + (3/2)*ln3 + 2*ln2
+* @authors Trudolyubov N.A.
+* @tparam T The type of the elements in the series, K The type of enumerating integer
+*/
+template <typename T, typename K>
+class minus_three_plus_ln3_three_devided_two_plus_two_ln2_series : public series_base<T, K>
+{
+public:
+	/**
+	* @brief Parameterized constructor
+	* @authors Trudolyubov N.A.
+	*/
+	minus_three_plus_ln3_three_devided_two_plus_two_ln2_series();
+
+	/**
+	* @brief Computes the nth term of the Maclaurin series of the cosine function
+	* @authors Trudolyubov N.A.
+	* @param n The number of the term
+	* @return nth term of the Maclaurin series of the cosine functions
+	*/
+	[[nodiscard]] constexpr virtual T operator()(K n) const;
+};
+
+template <typename T, typename K>
+minus_three_plus_ln3_three_devided_two_plus_two_ln2_series<T, K>::minus_three_plus_ln3_three_devided_two_plus_two_ln2_series() : series_base<T, K>(0, -3 + (3/2)*std::log(3) + 2*std::log(2)) {}
+
+template <typename T, typename K>
+constexpr T minus_three_plus_ln3_three_devided_two_plus_two_ln2_series<T, K>::operator()(K n) const
+{
+	if (n < 0)
+		throw std::domain_error("negative integer in the input");
+	return 1 / (((T)n + 1)*(36*((T)n+1)*((T)n+1) - 1));
+}
+
+
+/**
+* @brief Maclaurin series of value 2*ln2
+* @authors Trudolyubov N.A.
+* @tparam T The type of the elements in the series, K The type of enumerating integer
+*/
+template <typename T, typename K>
+class two_ln2_series : public series_base<T, K>
+{
+public:
+	/**
+	* @brief Parameterized constructor
+	* @authors Trudolyubov N.A.
+	*/
+	two_ln2_series();
+
+	/**
+	* @brief Computes the nth term of the Maclaurin series of the cosine function
+	* @authors Trudolyubov N.A.
+	* @param n The number of the term
+	* @return nth term of the Maclaurin series of the cosine functions
+	*/
+	[[nodiscard]] constexpr virtual T operator()(K n) const;
+};
+
+template <typename T, typename K>
+two_ln2_series<T, K>::two_ln2_series() : series_base<T, K>(0, 2 * std::log(2)) {}
+
+template <typename T, typename K>
+constexpr T two_ln2_series<T, K>::operator()(K n) const
+{
+	if (n < 0)
+		throw std::domain_error("negative integer in the input");
+	return (12*((T)n+1)*((T)n+1) - 1) / (((T)n + 1) * (4*((T)n + 1)*((T)n + 1) - 1)*(4*((T)n + 1)*((T)n + 1) - 1));
+}
+
+/**
+* @brief Maclaurin series of function pi * x * (e^(pi*x) + e^(-pi*x)) / (e^(pi*x) - e^(-pi*x)) - 1
+* @authors Trudolyubov N.A.
+* @tparam T The type of the elements in the series, K The type of enumerating integer
+*/
+template <typename T, typename K>
+class pi_x_multi_e_xpi_plus_e_minusxpi_divided_e_xpi_minus_e_minusxpi_minus_one_series : public series_base<T, K>
+{
+public:
+	pi_x_multi_e_xpi_plus_e_minusxpi_divided_e_xpi_minus_e_minusxpi_minus_one_series() = delete;
+
+	/**
+	* @brief Parameterized constructor to initialize the series with function argument and sum
+	* @authors Trudolyubov N.A.
+	* @param x The argument for function series
+	*/
+	pi_x_multi_e_xpi_plus_e_minusxpi_divided_e_xpi_minus_e_minusxpi_minus_one_series(T x);
+
+	/**
+	* @brief Computes the nth term of the Maclaurin series of the sine function
+	* @authors Trudolyubov N.A.
+	* @param n The number of the term
+	* @return nth term of the Maclaurin series of the sine functions
+	*/
+	[[nodiscard]] constexpr virtual T operator()(K n) const;
+};
+
+template <typename T, typename K>
+pi_x_multi_e_xpi_plus_e_minusxpi_divided_e_xpi_minus_e_minusxpi_minus_one_series<T, K>::pi_x_multi_e_xpi_plus_e_minusxpi_divided_e_xpi_minus_e_minusxpi_minus_one_series(T x) : series_base<T, K>(x, std::numbers::pi* x * (std::exp(std::numbers::pi* x) + std::exp(-std::numbers::pi * x)) / (std::exp(std::numbers::pi *x) - std::exp(-std::numbers::pi *x)) - 1) {}
+
+template <typename T, typename K>
+constexpr T pi_x_multi_e_xpi_plus_e_minusxpi_divided_e_xpi_minus_e_minusxpi_minus_one_series<T, K>::operator()(K n) const
+{
+	if (n < 0)
+		throw std::domain_error("negative integer in the input");
+	if (this->x == 0)
+		throw std::domain_error("x cannot be zero");
+	return (2*(this->x)*(this->x))/((this->x)*(this->x) + (n + 1)*(n + 1));
+}
+
+/**
+* @brief Maclaurin series of function (pi - x) / 2
+* @authors Trudolyubov N.A.
+* @tparam T The type of the elements in the series, K The type of enumerating integer
+*/
+template <typename T, typename K>
+class pi_minus_x_2 : public series_base<T, K>
+{
+public:
+	pi_minus_x_2() = delete;
+
+	/**
+	* @brief Parameterized constructor to initialize the series with function argument and sum
+	* @authors Trudolyubov N.A.
+	* @param x The argument for function series
+	*/
+	pi_minus_x_2(T x);
+
+	/**
+	* @brief Computes the nth term of the Maclaurin series of the sine function
+	* @authors Trudolyubov N.A.
+	* @param n The number of the term
+	* @return nth term of the Maclaurin series of the sine functions
+	*/
+	[[nodiscard]] constexpr virtual T operator()(K n) const;
+};
+
+template <typename T, typename K>
+pi_minus_x_2<T, K>::pi_minus_x_2(T x) : series_base<T, K>(x, (std::numbers::pi - x) / 2) {}
+
+template <typename T, typename K>
+constexpr T pi_minus_x_2<T, K>::operator()(K n) const
+{
+	if (n < 0)
+		throw std::domain_error("negative integer in the input");
+	if(this->x <= 0 or this->x >= 2*std::numbers::pi)
+		throw std::domain_error("The x value must be between 0 and 2*pi");
+	return std::sin((n + 1) * (this->x)) / (n + 1);
+}
+
+
+/**
+* @brief Maclaurin series of function 0.5 * ln(1/(2*(1 - cos(x))))
+* @authors Trudolyubov N.A.
+* @tparam T The type of the elements in the series, K The type of enumerating integer
+*/
+template <typename T, typename K>
+class half_multi_ln_1div2multi1minuscosx : public series_base<T, K>
+{
+public:
+	half_multi_ln_1div2multi1minuscosx() = delete;
+
+	/**
+	* @brief Parameterized constructor to initialize the series with function argument and sum
+	* @authors Trudolyubov N.A.
+	* @param x The argument for function series
+	*/
+	half_multi_ln_1div2multi1minuscosx(T x);
+
+	/**
+	* @brief Computes the nth term of the Maclaurin series of the sine function
+	* @authors Trudolyubov N.A.
+	* @param n The number of the term
+	* @return nth term of the Maclaurin series of the sine functions
+	*/
+	[[nodiscard]] constexpr virtual T operator()(K n) const;
+};
+
+template <typename T, typename K>
+half_multi_ln_1div2multi1minuscosx<T, K>::half_multi_ln_1div2multi1minuscosx(T x) : series_base<T, K>(x, 0.5 * std::log(1 / (2 - 2*std::cos(x)))) {}
+
+template <typename T, typename K>
+constexpr T half_multi_ln_1div2multi1minuscosx<T, K>::operator()(K n) const
+{
+	if (n < 0)
+		throw std::domain_error("negative integer in the input");
+	if (this->x <= 0 or this->x >= 2 * std::numbers::pi)
+		throw std::domain_error("The x value must be between 0 and 2*pi");
+	return std::cos((n + 1) * (this->x)) / (n + 1);
+}
+
+
+/**
+* @brief Maclaurin series of function 0.5 - (pi/4)*sin(x)
+* @authors Trudolyubov N.A.
+* @tparam T The type of the elements in the series, K The type of enumerating integer
+*/
+template <typename T, typename K>
+class half_minus_sinx_multi_pi_4 : public series_base<T, K>
+{
+public:
+	half_minus_sinx_multi_pi_4() = delete;
+
+	/**
+	* @brief Parameterized constructor to initialize the series with function argument and sum
+	* @authors Trudolyubov N.A.
+	* @param x The argument for function series
+	*/
+	half_minus_sinx_multi_pi_4(T x);
+
+	/**
+	* @brief Computes the nth term of the Maclaurin series of the sine function
+	* @authors Trudolyubov N.A.
+	* @param n The number of the term
+	* @return nth term of the Maclaurin series of the sine functions
+	*/
+	[[nodiscard]] constexpr virtual T operator()(K n) const;
+};
+
+template <typename T, typename K>
+half_minus_sinx_multi_pi_4<T, K>::half_minus_sinx_multi_pi_4(T x) : series_base<T, K>(x, 0.5 - std::numbers::pi * std::sin(x) / 4) {}
+
+template <typename T, typename K>
+constexpr T half_minus_sinx_multi_pi_4<T, K>::operator()(K n) const
+{
+	if (n < 0)
+		throw std::domain_error("negative integer in the input");
+	return std::cos(2*(this->x)*(n + 1)) / ((2*n + 1)*(2*n + 3));
+}
+
+/**
+* @brief Maclaurin series of function ln(1 + sqrt(1 + x^2)) - ln(2)
+* @authors Trudolyubov N.A.
+* @tparam T The type of the elements in the series, K The type of enumerating integer
+*/
+template <typename T, typename K>
+class ln_1plussqrt1plusxsquare_minus_ln_2 : public series_base<T, K>
+{
+public:
+	ln_1plussqrt1plusxsquare_minus_ln_2() = delete;
+
+	/**
+	* @brief Parameterized constructor to initialize the series with function argument and sum
+	* @authors Trudolyubov N.A.
+	* @param x The argument for function series
+	*/
+	ln_1plussqrt1plusxsquare_minus_ln_2(T x);
+
+	/**
+	* @brief Computes the nth term of the Maclaurin series of the sine function
+	* @authors Trudolyubov N.A.
+	* @param n The number of the term
+	* @return nth term of the Maclaurin series of the sine functions
+	*/
+	[[nodiscard]] constexpr virtual T operator()(K n) const;
+};
+
+template <typename T, typename K>
+ln_1plussqrt1plusxsquare_minus_ln_2<T, K>::ln_1plussqrt1plusxsquare_minus_ln_2(T x) : series_base<T, K>(x, std::log(1 + std::sqrt(1 + x*x)) - std::log(2)) {}
+
+template <typename T, typename K>
+constexpr T ln_1plussqrt1plusxsquare_minus_ln_2<T, K>::operator()(K n) const
+{
+	if (n < 0)
+		throw std::domain_error("negative integer in the input");
+	if((this->x)*(this->x) > 1)
+		throw std::domain_error("x^2 cannot be more than 1");
+	return this->minus_one_raised_to_power_n(n) * this->fact(2*n + 1) * std::pow(this->x, 2*n + 2) / (pow(2, 2*n + 2) * pow(this->fact(n+1), 2));
+}
+
+
+/**
+* @brief Maclaurin series of function ln(cos(x))
+* @authors Trudolyubov N.A.
+* @tparam T The type of the elements in the series, K The type of enumerating integer
+*/
+template <typename T, typename K>
+class ln_cosx : public series_base<T, K>
+{
+public:
+	ln_cosx() = delete;
+
+	/**
+	* @brief Parameterized constructor to initialize the series with function argument and sum
+	* @authors Trudolyubov N.A.
+	* @param x The argument for function series
+	*/
+	ln_cosx(T x);
+
+	/**
+	* @brief Computes the nth term of the Maclaurin series of the sine function
+	* @authors Trudolyubov N.A.
+	* @param n The number of the term
+	* @return nth term of the Maclaurin series of the sine functions
+	*/
+	[[nodiscard]] constexpr virtual T operator()(K n) const;
+};
+
+template <typename T, typename K>
+ln_cosx<T, K>::ln_cosx(T x) : series_base<T, K>(x, std::log(std::cos(x))) {}
+
+template <typename T, typename K>
+constexpr T ln_cosx<T, K>::operator()(K n) const
+{
+	if (n < 0)
+		throw std::domain_error("negative integer in the input");
+
+	return std::log(1 - 4*(this->x)*(this->x) / ((2*n + 1)*(2*n + 1) * std::numbers::pi * std::numbers::pi));
+}
+
+
+/**
+* @brief Maclaurin series of function ln(sin(x)) - ln(x)
+* @authors Trudolyubov N.A.
+* @tparam T The type of the elements in the series, K The type of enumerating integer
+*/
+template <typename T, typename K>
+class ln_sinx_minus_ln_x : public series_base<T, K>
+{
+public:
+	ln_sinx_minus_ln_x() = delete;
+
+	/**
+	* @brief Parameterized constructor to initialize the series with function argument and sum
+	* @authors Trudolyubov N.A.
+	* @param x The argument for function series
+	*/
+	ln_sinx_minus_ln_x(T x);
+
+	/**
+	* @brief Computes the nth term of the Maclaurin series of the sine function
+	* @authors Trudolyubov N.A.
+	* @param n The number of the term
+	* @return nth term of the Maclaurin series of the sine functions
+	*/
+	[[nodiscard]] constexpr virtual T operator()(K n) const;
+};
+
+template <typename T, typename K>
+ln_sinx_minus_ln_x<T, K>::ln_sinx_minus_ln_x(T x) : series_base<T, K>(x, std::log(std::sin(x)) - std::log(x)) {}
+
+template <typename T, typename K>
+constexpr T ln_sinx_minus_ln_x<T, K>::operator()(K n) const
+{
+	if (n < 0)
+		throw std::domain_error("negative integer in the input");
+
+	return std::log(1 - (this->x)*(this->x) / ((n + 1)*(n + 1)*std::numbers::pi*std::numbers::pi));
+}
+
+
+/**
+* @brief Maclaurin series of function (pi/8)*cos^2(x) - (1/3)*cos(x)
+* @authors Trudolyubov N.A.
+* @tparam T The type of the elements in the series, K The type of enumerating integer
+*/
+template <typename T, typename K>
+class pi_8_cosx_square_minus_1_div_3_cosx : public series_base<T, K>
+{
+public:
+	pi_8_cosx_square_minus_1_div_3_cosx() = delete;
+
+	/**
+	* @brief Parameterized constructor to initialize the series with function argument and sum
+	* @authors Trudolyubov N.A.
+	* @param x The argument for function series
+	*/
+	pi_8_cosx_square_minus_1_div_3_cosx(T x);
+
+	/**
+	* @brief Computes the nth term of the Maclaurin series of the sine function
+	* @authors Trudolyubov N.A.
+	* @param n The number of the term
+	* @return nth term of the Maclaurin series of the sine functions
+	*/
+	[[nodiscard]] constexpr virtual T operator()(K n) const;
+};
+
+template <typename T, typename K>
+pi_8_cosx_square_minus_1_div_3_cosx<T, K>::pi_8_cosx_square_minus_1_div_3_cosx(T x) : series_base<T, K>(x, (std::numbers::pi/8)*std::cos(x)*std::cos(x) - (1/3)*std::cos(x)) {}
+
+template <typename T, typename K>
+constexpr T pi_8_cosx_square_minus_1_div_3_cosx<T, K>::operator()(K n) const
+{
+	if (n < 0)
+		throw std::domain_error("negative integer in the input");
+	if(abs(this->x) > std::numbers::pi / 2)
+		throw std::domain_error("The value x must be between -pi/2 and pi/2 inclusive");
+	return this->minus_one_raised_to_power_n(n) * std::cos(2*n + 3) * this->x / ((2*n + 1)*(2*n + 3)*(2*n + 5));
+}
+
+/**
+* @brief Series of function sqrt((1 - sqrt(1 - x)) / x)
+* @authors Trudolyubov N.A.
+* @tparam T The type of the elements in the series, K The type of enumerating integer
+*/
+template <typename T, typename K>
+class sqrt_oneminussqrtoneminusx_div_x : public series_base<T, K>
+{
+public:
+	sqrt_oneminussqrtoneminusx_div_x() = delete;
+
+	/**
+	* @brief Parameterized constructor to initialize the series with function argument and sum
+	* @authors Trudolyubov N.A.
+	* @param x The argument for function series
+	*/
+	sqrt_oneminussqrtoneminusx_div_x(T x);
+
+	/**
+	* @brief Computes the nth term of the series of the sine function
+	* @authors Trudolyubov N.A.
+	* @param n The number of the term
+	* @return nth term of the series of the sine functions
+	*/
+	[[nodiscard]] constexpr virtual T operator()(K n) const;
+};
+
+template <typename T, typename K>
+sqrt_oneminussqrtoneminusx_div_x<T, K>::sqrt_oneminussqrtoneminusx_div_x(T x) : series_base<T, K>(x, std::sqrt((1 - sqrt(1 - x)) / x)) {}
+
+template <typename T, typename K>
+constexpr T sqrt_oneminussqrtoneminusx_div_x<T, K>::operator()(K n) const
+{
+	if (n < 0)
+		throw std::domain_error("negative integer in the input");
+	if(std::abs(this->x) >= 1 or this->x == 0)
+		throw std::domain_error("Modulus of the value x must be less 1 and cannot be equal to 0");
+	return this->fact(4*n)*pow(this->x, n) / (pow(2, 4*n)*sqrt(2)*(this->fact(2*n))* (this->fact(2*n + 1)));
+}
+
+
+/**
+* @brief Series of function (1 - sqrt(1 - 4x)) / 2x
+* @authors Trudolyubov N.A.
+* @tparam T The type of the elements in the series, K The type of enumerating integer
+*/
+template <typename T, typename K>
+class one_minus_sqrt_1minus4x_div_2x : public series_base<T, K>
+{
+public:
+	one_minus_sqrt_1minus4x_div_2x() = delete;
+
+	/**
+	* @brief Parameterized constructor to initialize the series with function argument and sum
+	* @authors Trudolyubov N.A.
+	* @param x The argument for function series
+	*/
+	one_minus_sqrt_1minus4x_div_2x(T x);
+
+	/**
+	* @brief Computes the nth term of the series of the sine function
+	* @authors Trudolyubov N.A.
+	* @param n The number of the term
+	* @return nth term of the series of the sine functions
+	*/
+	[[nodiscard]] constexpr virtual T operator()(K n) const;
+};
+
+template <typename T, typename K>
+one_minus_sqrt_1minus4x_div_2x<T, K>::one_minus_sqrt_1minus4x_div_2x(T x) : series_base<T, K>(x, (1 - sqrt(1 - 4*x)) / (2*x)) {}
+
+template <typename T, typename K>
+constexpr T one_minus_sqrt_1minus4x_div_2x<T, K>::operator()(K n) const
+{
+	if (n < 0)
+		throw std::domain_error("negative integer in the input");
+	if (std::abs(this->x) > 0.25 or this->x == 0)
+		throw std::domain_error("Modulus of the value x must be less or equal 1/4 and cannot be equal to 0");
+	return (pow(this->x, n) * (this->binomial_coefficient(2*n, n))) / (n + 1);
+}
+
+
+/**
+* @brief Taylor series of function arcsin(x) - x (���������� ���, �������� ��-�� �������� ���������� � �����������, ���� ���������)
+* @authors Trudolyubov N.A.
+* @tparam T The type of the elements in the series, K The type of enumerating integer
+*/
+template <typename T, typename K>
+class arcsin_x_minus_x_series : public series_base<T, K>
+{
+public:
+	arcsin_x_minus_x_series() = delete;
+
+	/**
+	* @brief Parameterized constructor to initialize the series with function argument and sum
+	* @authors Trudolyubov N.A.
+	* @param x The argument for function series
+	*/
+	arcsin_x_minus_x_series(T x);
+
+	/**
+	* @brief Computes the nth term of the Taylor series of the sine function
+	* @authors Trudolyubov N.A.
+	* @param n The number of the term
+	* @return nth term of the Taylor series of the sine functions
+	*/
+	[[nodiscard]] constexpr virtual T operator()(K n) const;
+};
+
+template <typename T, typename K>
+arcsin_x_minus_x_series<T, K>::arcsin_x_minus_x_series(T x) : series_base<T, K>(x, std::asin(x) - x) {}
+
+template <typename T, typename K>
+constexpr T arcsin_x_minus_x_series<T, K>::operator()(K n) const
+{
+	if (n < 0)
+		throw std::domain_error("negative integer in the input");
+	if (std::abs(this->x) > 1)
+		throw std::domain_error("Modulus of the value x must be less or equal to 1");
+	return (this->fact(this->fact(2 * n + 1)) * std::pow(this->x, 2 * n + 3)) / (this->fact(this->fact(2 * n + 2)) * (2 * n + 3));
+}
+
+
+/**
+* @brief Fourier series of system functions pi*x - x^2, 0 < x < pi
+*											x^2 - 3*pi*x + 2*pi^2, pi < x < 2*pi
+* @authors Trudolyubov N.A.
+* @tparam T The type of the elements in the series, K The type of enumerating integer
+*/
+template <typename T, typename K>
+class pi_x_minus_x_square_and_x_square_minus_three_pi_x_plus_two_pi_square_series : public series_base<T, K>
+{
+public:
+	pi_x_minus_x_square_and_x_square_minus_three_pi_x_plus_two_pi_square_series() = delete;
+
+	/**
+	* @brief Parameterized constructor to initialize the series with function argument and sum
+	* @authors Trudolyubov N.A.
+	* @param x The argument for function series
+	*/
+	pi_x_minus_x_square_and_x_square_minus_three_pi_x_plus_two_pi_square_series(T x);
+
+	/**
+	* @brief Computes the nth term of the Fourier series of the sine function
+	* @authors Trudolyubov N.A.
+	* @param n The number of the term
+	* @return nth term of the Fourier series of the sine functions
+	*/
+	[[nodiscard]] constexpr virtual T operator()(K n) const;
+};
+
+template <typename T, typename K>
+pi_x_minus_x_square_and_x_square_minus_three_pi_x_plus_two_pi_square_series<T, K>::pi_x_minus_x_square_and_x_square_minus_three_pi_x_plus_two_pi_square_series(T x) : series_base<T, K>(x) {}
+
+template <typename T, typename K>
+constexpr T pi_x_minus_x_square_and_x_square_minus_three_pi_x_plus_two_pi_square_series<T, K>::operator()(K n) const
+{
+	if (n < 0)
+		throw std::domain_error("negative integer in the input");
+	if (this->x <= 0 or this->x >= 2 * std::numbers::pi)
+		throw std::domain_error("Modulus of the value x must be between 0 and 2*pi not inclusive");
+	return (8/std::numbers::pi) * (std::sin((2*n + 1) * (this->x)) / ((2*n + 1)*(2*n + 1)*(2*n + 1)));
+}
+
+
+/**
+* @brief Fourier series of system functions sin(x) - 2/pi, 0 <= x <= pi
+*											-sin(x) - 2/pi, pi <= x <= 2*pi
+* @authors Trudolyubov N.A.
+* @tparam T The type of the elements in the series, K The type of enumerating integer
+*/
+template <typename T, typename K>
+class abs_sin_x_minus_2_div_pi_series : public series_base<T, K>
+{
+public:
+	abs_sin_x_minus_2_div_pi_series() = delete;
+
+	/**
+	* @brief Parameterized constructor to initialize the series with function argument and sum
+	* @authors Trudolyubov N.A.
+	* @param x The argument for function series
+	*/
+	abs_sin_x_minus_2_div_pi_series(T x);
+
+	/**
+	* @brief Computes the nth term of the Fourier series of the sine function
+	* @authors Trudolyubov N.A.
+	* @param n The number of the term
+	* @return nth term of the Fourier series of the sine functions
+	*/
+	[[nodiscard]] constexpr virtual T operator()(K n) const;
+};
+
+template <typename T, typename K>
+abs_sin_x_minus_2_div_pi_series<T, K>::abs_sin_x_minus_2_div_pi_series(T x) : series_base<T, K>(x, std::abs(std::sin(x)) - (2/std::numbers::pi)) {}
+
+template <typename T, typename K>
+constexpr T abs_sin_x_minus_2_div_pi_series<T, K>::operator()(K n) const
+{
+	if (n < 0)
+		throw std::domain_error("negative integer in the input");
+	return -4 * (std::cos(2*(this->x)*(n + 1))) / ((2*n + 1) * (2 * n + 3) * std::numbers::pi);
+}
+
+
+/**
+* @brief Fourier series of system functions pi - 3*pi/4, -pi < x < 0
+*											pi - x - 3*pi/4, 0 <= x <= pi
+* @authors Trudolyubov N.A.
+* @tparam T The type of the elements in the series, K The type of enumerating integer
+*/
+template <typename T, typename K>
+class pi_minus_3pi_4_and_pi_minus_x_minus_3pi_4_series : public series_base<T, K>
+{
+public:
+	pi_minus_3pi_4_and_pi_minus_x_minus_3pi_4_series() = delete;
+
+	/**
+	* @brief Parameterized constructor to initialize the series with function argument and sum
+	* @authors Trudolyubov N.A.
+	* @param x The argument for function series
+	*/
+	pi_minus_3pi_4_and_pi_minus_x_minus_3pi_4_series(T x);
+
+	/**
+	* @brief Computes the nth term of the Fourier series of the sine function
+	* @authors Trudolyubov N.A.
+	* @param n The number of the term
+	* @return nth term of the Fourier series of the sine functions
+	*/
+	[[nodiscard]] constexpr virtual T operator()(K n) const;
+};
+
+template <typename T, typename K>
+pi_minus_3pi_4_and_pi_minus_x_minus_3pi_4_series<T, K>::pi_minus_3pi_4_and_pi_minus_x_minus_3pi_4_series(T x) : series_base<T, K>(x) {}
+
+template <typename T, typename K>
+constexpr T pi_minus_3pi_4_and_pi_minus_x_minus_3pi_4_series<T, K>::operator()(K n) const
+{
+	if (n < 0)
+		throw std::domain_error("negative integer in the input");
+	if (this->x <= -std::numbers::pi or this->x > std::numbers::pi)
+		throw std::domain_error("The value x must be between -pi not inclusive and pi inclusive");
+	return (std::cos((n + 1)*(this->x)) * (1 - std::pow(-1, n + 1))) / ((n + 1)*(n + 1)*std::numbers::pi) + (std::pow(-1, n + 1) * std::sin((n + 1)*(this->x))) / (n + 1);
+}
+
+
+
+/**
+* @brief Fourier series of system functions f(x) = -3/4, -3 < x <= 0
+*											f(x) = x - 3/4, 0 < x < 3
+*											f(x + 6) = f(x)
+* @authors Trudolyubov N.A.
+* @tparam T The type of the elements in the series, K The type of enumerating integer
+*/
+template <typename T, typename K>
+class minus_3_div_4_or_x_minus_3_div_4_series : public series_base<T, K>
+{
+public:
+	minus_3_div_4_or_x_minus_3_div_4_series() = delete;
+
+	/**
+	* @brief Parameterized constructor to initialize the series with function argument and sum
+	* @authors Trudolyubov N.A.
+	* @param x The argument for function series
+	*/
+	minus_3_div_4_or_x_minus_3_div_4_series(T x);
+
+	/**
+	* @brief Computes the nth term of the Fourier series of the sine function
+	* @authors Trudolyubov N.A.
+	* @param n The number of the term
+	* @return nth term of the Fourier series of the sine functions
+	*/
+	[[nodiscard]] constexpr virtual T operator()(K n) const;
+};
+
+template <typename T, typename K>
+minus_3_div_4_or_x_minus_3_div_4_series<T, K>::minus_3_div_4_or_x_minus_3_div_4_series(T x) : series_base<T, K>(x) {}
+
+template <typename T, typename K>
+constexpr T minus_3_div_4_or_x_minus_3_div_4_series<T, K>::operator()(K n) const
+{
+	if (n < 0)
+		throw std::domain_error("negative integer in the input");
+	if (this->x <= -3 or this->x >= 3)
+		throw std::domain_error("The value x must be between -3 and 3 not inclusive");
+	return -6/(std::numbers::pi * std::numbers::pi) * std::cos((2*n + 1)*std::numbers::pi*(this->x) / 3) / ((2*n + 1)*(2*n + 1)) 
+		   -3/(std::numbers::pi) * (std::pow(-1, n + 1) * std::sin((this->x) * (n + 1) * std::numbers::pi / 3)) / (n + 1);
+}
+
+
+/**
+* @brief Fourier series of function f(x) = 10 - x, 5 < x < 15
+*									f(x + 10) = f(x)
+* @authors Trudolyubov N.A.
+* @tparam T The type of the elements in the series, K The type of enumerating integer
+*/
+template <typename T, typename K>
+class ten_minus_x_series : public series_base<T, K>
+{
+public:
+	ten_minus_x_series() = delete;
+
+	/**
+	* @brief Parameterized constructor to initialize the series with function argument and sum
+	* @authors Trudolyubov N.A.
+	* @param x The argument for function series
+	*/
+	ten_minus_x_series(T x);
+
+	/**
+	* @brief Computes the nth term of the Fourier series of the sine function
+	* @authors Trudolyubov N.A.
+	* @param n The number of the term
+	* @return nth term of the Fourier series of the sine functions
+	*/
+	[[nodiscard]] constexpr virtual T operator()(K n) const;
+};
+
+template <typename T, typename K>
+ten_minus_x_series<T, K>::ten_minus_x_series(T x) : series_base<T, K>(x, 10 - this->x) {}
+
+template <typename T, typename K>
+constexpr T ten_minus_x_series<T, K>::operator()(K n) const
+{
+	if (n < 0)
+		throw std::domain_error("negative integer in the input");
+	if (this->x <= 5 or this->x >= 15)
+		throw std::domain_error("The value x must be between 5 and 15 not inclusive");
+	return 10 * std::pow(-1, n + 1) * std:: sin((n + 1) * (this->x) * std::numbers::pi / 5) / ((n + 1) * std::numbers::pi);
+}
+
+
+/**
+* @brief Fourier series of function x, -pi <= x <= pi
+* @authors Trudolyubov N.A.
+* @tparam T The type of the elements in the series, K The type of enumerating integer
+*/
+template <typename T, typename K>
+class x_series : public series_base<T, K>
+{
+public:
+	x_series() = delete;
+
+	/**
+	* @brief Parameterized constructor to initialize the series with function argument and sum
+	* @authors Trudolyubov N.A.
+	* @param x The argument for function series
+	*/
+	x_series(T x);
+
+	/**
+	* @brief Computes the nth term of the Fourier series of the sine function
+	* @authors Trudolyubov N.A.
+	* @param n The number of the term
+	* @return nth term of the Fourier series of the sine functions
+	*/
+	[[nodiscard]] constexpr virtual T operator()(K n) const;
+};
+
+template <typename T, typename K>
+x_series<T, K>::x_series(T x) : series_base<T, K>(x, this->x) {}
+
+template <typename T, typename K>
+constexpr T x_series<T, K>::operator()(K n) const
+{
+	if (n < 0)
+		throw std::domain_error("negative integer in the input");
+	if (this->x < -std::numbers::pi or this->x > std::numbers::pi)
+		throw std::domain_error("The value x must be between -pi and pi inclusive");
+	return 2*std::pow(-1, n) * std::sin(this->x*(n + 1)) / (n + 1);
+}
+
+
+/**
+* @brief Fourier series of system functions -x, -pi < x <= 0
+*											 0,   0 < x < pi
+* @authors Trudolyubov N.A.
+* @tparam T The type of the elements in the series, K The type of enumerating integer
+*/
+template <typename T, typename K>
+class minus_x_minus_pi_4_or_minus_pi_4_series : public series_base<T, K>
+{
+public:
+	minus_x_minus_pi_4_or_minus_pi_4_series() = delete;
+
+	/**
+	* @brief Parameterized constructor to initialize the series with function argument and sum
+	* @authors Trudolyubov N.A.
+	* @param x The argument for function series
+	*/
+	minus_x_minus_pi_4_or_minus_pi_4_series(T x);
+
+	/**
+	* @brief Computes the nth term of the Fourier series of the sine function
+	* @authors Trudolyubov N.A.
+	* @param n The number of the term
+	* @return nth term of the Fourier series of the sine functions
+	*/
+	[[nodiscard]] constexpr virtual T operator()(K n) const;
+};
+
+template <typename T, typename K>
+minus_x_minus_pi_4_or_minus_pi_4_series<T, K>::minus_x_minus_pi_4_or_minus_pi_4_series(T x) : series_base<T, K>(x) {}
+
+template <typename T, typename K>
+constexpr T minus_x_minus_pi_4_or_minus_pi_4_series<T, K>::operator()(K n) const
+{
+	if (n < 0)
+		throw std::domain_error("negative integer in the input");
+	if (this->x <= -std::numbers::pi or this->x >= std::numbers::pi)
+		throw std::domain_error("The value x must be between -pi and pi not inclusive");
+	return -2*std::cos(2*n + 1)*(this->x) / (std::numbers::pi*(2*n + 1)*(2*n + 1))
+		   + std::pow(-1, n+1)*std::sin(this->x*(n + 1)) / (n + 1);
+}
+
+
+/**
+* @brief Laurent series of function 1 / ((2 - x)*(3 + x))
+* @authors Trudolyubov N.A.
+* @tparam T The type of the elements in the series, K The type of enumerating integer
+*/
+template <typename T, typename K>
+class one_div_two_minus_x_multi_three_plus_x_series : public series_base<T, K>
+{
+public:
+	one_div_two_minus_x_multi_three_plus_x_series() = delete;
+
+	/**
+	* @brief Parameterized constructor to initialize the series with function argument and sum
+	* @authors Trudolyubov N.A.
+	* @param x The argument for function series
+	*/
+	one_div_two_minus_x_multi_three_plus_x_series(T x);
+
+	/**
+	* @brief Computes the nth term of the Laurent series of the sine function
+	* @authors Trudolyubov N.A.
+	* @param n The number of the term
+	* @return nth term of the Laurent series of the sine functions
+	*/
+	[[nodiscard]] constexpr virtual T operator()(K n) const;
+};
+
+template <typename T, typename K>
+one_div_two_minus_x_multi_three_plus_x_series<T, K>::one_div_two_minus_x_multi_three_plus_x_series(T x) : series_base<T, K>(x, 1/((2 - this->x)*(3 + this->x))) {}
+
+template <typename T, typename K>
+constexpr T one_div_two_minus_x_multi_three_plus_x_series<T, K>::operator()(K n) const
+{
+	if (n < 0)
+		throw std::domain_error("negative integer in the input");
+	return (std::pow(-3, n) - std::pow(2, n)) / (5*std::pow(this->x, n + 1));
+}
+
+
+/**
+* @brief Taylor series of function Si(x)
+* @authors Trudolyubov N.A.
+* @tparam T The type of the elements in the series, K The type of enumerating integer
+*/
+template <typename T, typename K>
+class Si_x_series : public series_base<T, K>
+{
+public:
+	Si_x_series() = delete;
+
+	/**
+	* @brief Parameterized constructor to initialize the series with function argument and sum
+	* @authors Trudolyubov N.A.
+	* @param x The argument for function series
+	*/
+	Si_x_series(T x);
+
+	/**
+	* @brief Computes the nth term of the Taylor series of the sine function
+	* @authors Trudolyubov N.A.
+	* @param n The number of the term
+	* @return nth term of the Taylor series of the sine functions
+	*/
+	[[nodiscard]] constexpr virtual T operator()(K n) const;
+};
+
+template <typename T, typename K>
+Si_x_series<T, K>::Si_x_series(T x) : series_base<T, K>(x) {}
+
+template <typename T, typename K>
+constexpr T Si_x_series<T, K>::operator()(K n) const
+{
+	if (n < 0)
+		throw std::domain_error("negative integer in the input");
+	return std::pow(-1, n) * std::pow(this->x, 2*n + 1) / ((2*n + 1) * this->fact(2*n + 1));
+}
+
+
+/**
+* @brief integral cos serieses
+* @authors Pavlova A.R.
+* @tparam T The type of the elements in the series, K The type of enumerating integer
+*/
+template <typename T, typename K>
+class Ci_x_series : public series_base<T, K>
+{
+public:
+	Ci_x_series() = delete;
+
+	/**
+	* @brief Parameterized constructor to initialize the series with function argument and sum
+	* @authors Pavlova A.R.
+	* @param x The argument for function series
+	*/
+	Ci_x_series(T x);
+
+	/**
+	* @brief Computes the nth term of the integral cos series
+	* @authors Pavlova A.R.
+	* @param n The number of the term
+	* @param t The parametr for series
+	* @return nth term of the integral cos series
+	*/
+	[[nodiscard]] constexpr virtual T operator()(K n) const;
+
+private:
+	const T gamma = 0.57721566490153286060; // ��������� ������-���������
+};
+
+template <typename T, typename K>
+Ci_x_series<T, K>::Ci_x_series(T x) : series_base<T, K>(x) {}
+
+template <typename T, typename K>
+constexpr T Ci_x_series<T, K>::operator()(K n) const
+{
+	if (n < 0)
+		throw std::domain_error("The term index must be a non-negative integer");
+
+	if (n == 0)
+		return gamma + std::log(this->x);
+
+	return std::pow(-1, n) * std::pow(this->x, 2 * n) / (2 * n * this->fact(2 * n));
+}
+
+
+
+/**
+* @brief Dirichlet series of Riemann zeta function
+* @authors Trudolyubov N.A.
+* @tparam T The type of the elements in the series, K The type of enumerating integer
+*/
+template <typename T, typename K>
+class Riemann_zeta_func_series : public series_base<T, K>
+{
+public:
+	Riemann_zeta_func_series() = delete;
+
+	/**
+	* @brief Parameterized constructor to initialize the series with function argument and sum
+	* @authors Trudolyubov N.A.
+	* @param x The argument for function series
+	*/
+	Riemann_zeta_func_series(T x);
+
+	/**
+	* @brief Computes the nth term of the Dirichlet series of the sine function
+	* @authors Trudolyubov N.A.
+	* @param n The number of the term
+	* @return nth term of the Dirichlet series of the sine functions
+	*/
+	[[nodiscard]] constexpr virtual T operator()(K n) const;
+};
+
+template <typename T, typename K>
+Riemann_zeta_func_series<T, K>::Riemann_zeta_func_series(T x) : series_base<T, K>(x) {}
+
+template <typename T, typename K>
+constexpr T Riemann_zeta_func_series<T, K>::operator()(K n) const
+{
+	if (n < 0)
+		throw std::domain_error("negative integer in the input");
+	if (this->x <= 1)
+		throw std::domain_error("The value x must be greater than 1");
+	return 1 / std::pow(n + 1, this->x);
+}
+
+
+
+
+/**
+* @brief Dirichlet series of Riemann zeta function of x-1 divided by Riemann zeta function of x (R(x-1) / R(x))
+* @authors Trudolyubov N.A.
+* @tparam T The type of the elements in the series, K The type of enumerating integer
+*/
+template <typename T, typename K>
+class Riemann_zeta_func_xmin1_div_Riemann_zeta_func_x_series : public series_base<T, K>
+{
+public:
+	Riemann_zeta_func_xmin1_div_Riemann_zeta_func_x_series() = delete;
+
+	/**
+	* @brief Parameterized constructor to initialize the series with function argument and sum
+	* @authors Trudolyubov N.A.
+	* @param x The argument for function series
+	*/
+	Riemann_zeta_func_xmin1_div_Riemann_zeta_func_x_series(T x);
+
+	/**
+	* @brief Computes the nth term of the Dirichlet series of the sine function
+	* @authors Trudolyubov N.A.
+	* @param n The number of the term
+	* @return nth term of the Dirichlet series of the sine functions
+	*/
+	[[nodiscard]] constexpr virtual T operator()(K n) const;
+};
+
+template <typename T, typename K>
+Riemann_zeta_func_xmin1_div_Riemann_zeta_func_x_series<T, K>::Riemann_zeta_func_xmin1_div_Riemann_zeta_func_x_series(T x) : series_base<T, K>(x) {}
+
+template <typename T, typename K>
+constexpr T Riemann_zeta_func_xmin1_div_Riemann_zeta_func_x_series<T, K>::operator()(K n) const
+{
+	if (n < 0)
+		throw std::domain_error("negative integer in the input");
+	if (this->x <= 2)
+		throw std::domain_error("The value x must be greater than 1");
+	return this->phi(n + 1) / std::pow(n + 1, this->x);
+}
+
+
+/**
+* @brief Taylor series of function ((x^2 + 3) / (x^2 + 2*x)) - 1
+* @authors Trudolyubov N.A.
+* @tparam T The type of the elements in the series, K The type of enumerating integer
+*/
+template <typename T, typename K>
+class xsquareplus3_div_xsquareplus2multix_minus_1_series : public series_base<T, K>
+{
+public:
+	xsquareplus3_div_xsquareplus2multix_minus_1_series() = delete;
+
+	/**
+	* @brief Parameterized constructor to initialize the series with function argument and sum
+	* @authors Trudolyubov N.A.
+	* @param x The argument for function series
+	*/
+	xsquareplus3_div_xsquareplus2multix_minus_1_series(T x);
+
+	/**
+	* @brief Computes the nth term of the Taylor series of the sine function
+	* @authors Trudolyubov N.A.
+	* @param n The number of the term
+	* @return nth term of the Taylor series of the sine functions
+	*/
+	[[nodiscard]] constexpr virtual T operator()(K n) const;
+};
+
+template <typename T, typename K>
+xsquareplus3_div_xsquareplus2multix_minus_1_series<T, K>::xsquareplus3_div_xsquareplus2multix_minus_1_series(T x) : series_base<T, K>(x, (x*x + 3) / (x*x + 2*x) - 1) {}
+
+template <typename T, typename K>
+constexpr T xsquareplus3_div_xsquareplus2multix_minus_1_series<T, K>::operator()(K n) const
+{
+	if (n < 0)
+		throw std::domain_error("negative integer in the input");
+	if (std::abs(this->x - 1) <= 3)
+		throw std::domain_error("The absolute value of x - 1 must be greater than 3");
+	return std::pow(-1, n)*(1.5 - 3.5*std::pow(3, n)) / std::pow(this->x - 1, n + 1);
+}
+
+
+/**
+* @brief Taylor series of function arcsin(x)
+* @authors Trudolyubov N.A.
+* @tparam T The type of the elements in the series, K The type of enumerating integer
+*/
+template <typename T, typename K>
+class arcsin_x_series : public series_base<T, K>
+{
+public:
+	arcsin_x_series() = delete;
+
+	/**
+	* @brief Parameterized constructor to initialize the series with function argument and sum
+	* @authors Trudolyubov N.A.
+	* @param x The argument for function series
+	*/
+	arcsin_x_series(T x);
+
+	/**
+	* @brief Computes the nth term of the Taylor series of the sine function
+	* @authors Trudolyubov N.A.
+	* @param n The number of the term
+	* @return nth term of the Taylor series of the sine functions
+	*/
+	[[nodiscard]] constexpr virtual T operator()(K n) const;
+};
+
+template <typename T, typename K>
+arcsin_x_series<T, K>::arcsin_x_series(T x) : series_base<T, K>(x, std::asin(x)) {}
+
+template <typename T, typename K>
+constexpr T arcsin_x_series<T, K>::operator()(K n) const
+{
+	if (n < 0)
+		throw std::domain_error("negative integer in the input");
+	if (this->x < -1 or this->x > 1)
+		throw std::domain_error("The value x must be between -1 and 1 inclusive");
+	return this->fact(2*n)*std::pow(this->x, 2*n + 1) / (std::pow(4, n) * this->fact(n)*this->fact(n) * (2*n + 1));
+}
+
+
+/**
+* @brief Taylor series of function arctg(x)
+* @authors Trudolyubov N.A.
+* @tparam T The type of the elements in the series, K The type of enumerating integer
+*/
+template <typename T, typename K>
+class arctg_x_series : public series_base<T, K>
+{
+public:
+	arctg_x_series() = delete;
+
+	/**
+	* @brief Parameterized constructor to initialize the series with function argument and sum
+	* @authors Trudolyubov N.A.
+	* @param x The argument for function series
+	*/
+	arctg_x_series(T x);
+
+	/**
+	* @brief Computes the nth term of the Taylor series of the sine function
+	* @authors Trudolyubov N.A.
+	* @param n The number of the term
+	* @return nth term of the Taylor series of the sine functions
+	*/
+	[[nodiscard]] constexpr virtual T operator()(K n) const;
+};
+
+template <typename T, typename K>
+arctg_x_series<T, K>::arctg_x_series(T x) : series_base<T, K>(x, std::atan(x)) {}
+
+template <typename T, typename K>
+constexpr T arctg_x_series<T, K>::operator()(K n) const
+{
+	if (n < 0)
+		throw std::domain_error("negative integer in the input");
+	if (this->x < -1 or this->x > 1)
+		throw std::domain_error("The value x must be between -1 and 1 inclusive");
+	return std::pow(-1, n) * std::pow(this->x, 2*n + 1) / (2*n + 1);
+}
+
+
+/**
+* @brief Taylor series of Complete elliptic integral of first kind K
+* @authors Trudolyubov N.A.
+* @tparam T The type of the elements in the series, K The type of enumerating integer
+*/
+template <typename T, typename K>
+class K_x_series : public series_base<T, K>
+{
+public:
+	K_x_series() = delete;
+
+	/**
+	* @brief Parameterized constructor to initialize the series with function argument and sum
+	* @authors Trudolyubov N.A.
+	* @param x The argument for function series
+	*/
+	K_x_series(T x);
+
+	/**
+	* @brief Computes the nth term of the Taylor series of the sine function
+	* @authors Trudolyubov N.A.
+	* @param n The number of the term
+	* @return nth term of the Taylor series of the sine functions
+	*/
+	[[nodiscard]] constexpr virtual T operator()(K n) const;
+};
+
+template <typename T, typename K>
+K_x_series<T, K>::K_x_series(T x) : series_base<T, K>(x) {}
+
+template <typename T, typename K>
+constexpr T K_x_series<T, K>::operator()(K n) const
+{
+	if (n < 0)
+		throw std::domain_error("negative integer in the input");
+	return std::numbers::pi * this->fact(2*n)*this->fact(2*n) * std::pow(this->x, 2*n) / (2*std::pow(16, n) * std::pow(this->fact(n), 4));
+}
+
+
+/**
+* @brief Taylor series of Complete elliptic integral of second kind E
+* @authors Trudolyubov N.A.
+* @tparam T The type of the elements in the series, K The type of enumerating integer
+*/
+template <typename T, typename K>
+class E_x_series : public series_base<T, K>
+{
+public:
+	E_x_series() = delete;
+
+	/**
+	* @brief Parameterized constructor to initialize the series with function argument and sum
+	* @authors Trudolyubov N.A.
+	* @param x The argument for function series
+	*/
+	E_x_series(T x);
+
+	/**
+	* @brief Computes the nth term of the Taylor series of the sine function
+	* @authors Trudolyubov N.A.
+	* @param n The number of the term
+	* @return nth term of the Taylor series of the sine functions
+	*/
+	[[nodiscard]] constexpr virtual T operator()(K n) const;
+};
+
+template <typename T, typename K>
+E_x_series<T, K>::E_x_series(T x) : series_base<T, K>(x) {}
+
+template <typename T, typename K>
+constexpr T E_x_series<T, K>::operator()(K n) const
+{
+	if (n < 0)
+		throw std::domain_error("negative integer in the input");
+	return std::numbers::pi * this->fact(2 * n) * this->fact(2 * n) * std::pow(this->x, 2 * n) / (2 * (1 - 2*n) * std::pow(16, n) * std::pow(this->fact(n), 4));
+}
+
+
+/**
+* @brief Taylor series of function sqrt(1 + x) (��� ������ ����������� �������, �������� ��-�� �����������)
+* @authors Trudolyubov N.A.
+* @tparam T The type of the elements in the series, K The type of enumerating integer
+*/
+template <typename T, typename K>
+class sqrt_1plusx_series : public series_base<T, K>
+{
+public:
+	sqrt_1plusx_series() = delete;
+
+	/**
+	* @brief Parameterized constructor to initialize the series with function argument and sum
+	* @authors Trudolyubov N.A.
+	* @param x The argument for function series
+	*/
+	sqrt_1plusx_series(T x);
+
+	/**
+	* @brief Computes the nth term of the Taylor series of the sine function
+	* @authors Trudolyubov N.A.
+	* @param n The number of the term
+	* @return nth term of the Taylor series of the sine functions
+	*/
+	[[nodiscard]] constexpr virtual T operator()(K n) const;
+};
+
+template <typename T, typename K>
+sqrt_1plusx_series<T, K>::sqrt_1plusx_series(T x) : series_base<T, K>(x, std::sqrt(1 + x)) {}
+
+template <typename T, typename K>
+constexpr T sqrt_1plusx_series<T, K>::operator()(K n) const
+{
+	if (n < 0)
+		throw std::domain_error("negative integer in the input");
+	if (this->x < -1)
+		throw std::domain_error("The value x must be more or equel to -1");
+	return std::pow(-1, n)*(this->fact(2*n))*std::pow(this->x, n) / ((1 - 2*n)*(this->fact(n))*(this->fact(n))*std::pow(4, n));
+}
+
+
+
+/**
+* @brief Taylor series of Lambert W function 
+* @tparam T The type of the elements in the series, K The type of enumerating integer
+*/
+template <typename T, typename K>
+class Lambert_W_func_series : public series_base<T, K>
+{
+public:
+	Lambert_W_func_series() = delete;
+
+	/**
+	* @brief Parameterized constructor to initialize the series with function argument and sum
+	* @authors Trudolyubov N.A.
+	* @param x The argument for function series
+	*/
+	Lambert_W_func_series(T x);
+
+	/**
+	* @brief Computes the nth term of the Taylor series of the sine function
+	* @authors Trudolyubov N.A.
+	* @param n The number of the term
+	* @return nth term of the Taylor series of the sine functions
+	*/
+	[[nodiscard]] constexpr virtual T operator()(K n) const;
+};
+
+template <typename T, typename K>
+Lambert_W_func_series<T, K>::Lambert_W_func_series(T x) : series_base<T, K>(x) {}
+
+template <typename T, typename K>
+constexpr T Lambert_W_func_series<T, K>::operator()(K n) const
+{
+	if (n < 0)
+		throw std::domain_error("negative integer in the input");
+	if (std::abs(this->x) >= 1 / std::numbers::e)
+		throw std::domain_error("The absolute value of x must be less 1/e");
+	return std::pow(-n - 1, n)*std::pow(this->x, n + 1) / this->fact(n+1);
+}
+
+
+/**
+* @brief Taylor series of Incomplete Gamma function
+* @tparam T The type of the elements in the series, K The type of enumerating integer
+*/
+template <typename T, typename K>
+class Incomplete_Gamma_func_series : public series_base<T, K>
+{
+public:
+	Incomplete_Gamma_func_series() = delete;
+
+	/**
+	* @brief Parameterized constructor to initialize the series with function argument and sum
+	* @authors Trudolyubov N.A.
+	* @param x The argument for function series
+	*/
+	Incomplete_Gamma_func_series(T x, T s);
+
+	/**
+	* @brief Computes the nth term of the Taylor series of the sine function
+	* @authors Trudolyubov N.A.
+	* @param n The number of the term
+	* @return nth term of the Taylor series of the sine functions
+	*/
+	[[nodiscard]] constexpr virtual T operator()(K n) const;
+
+private:
+
+	/**
+	* @brief The parameter s of the series
+	* @authors Trudolyubov N.A.
+	*/
+	const T s;
+};
+
+template <typename T, typename K>
+Incomplete_Gamma_func_series<T, K>::Incomplete_Gamma_func_series(T x, T s) : series_base<T, K>(x), s(s) {}
+
+template <typename T, typename K>
+constexpr T Incomplete_Gamma_func_series<T, K>::operator()(K n) const
+{
+	if (n < 0)
+		throw std::domain_error("negative integer in the input");
+	return std::pow(-1, n) * std::pow(this->x, this->s + n) / (this->fact(n) * (this->s + n));
+}
+
+
+/**
+* @brief Series with ln number1
+* @authors Trudolyubov N.A.
+* @tparam T The type of the elements in the series, K The type of enumerating integer
+*/
+template <typename T, typename K>
+class Series_with_ln_number1 : public series_base<T, K>
+{
+public:
+	Series_with_ln_number1();
+
+	/**
+	* @brief Computes the nth term of the Taylor series of the sine function
+	* @authors Trudolyubov N.A.
+	* @param n The number of the term
+	* @return nth term of the Taylor series of the sine functions
+	*/
+	[[nodiscard]] constexpr virtual T operator()(K n) const;
+};
+
+template <typename T, typename K>
+Series_with_ln_number1<T, K>::Series_with_ln_number1() : series_base<T, K>(0) {}
+
+template <typename T, typename K>
+constexpr T Series_with_ln_number1<T, K>::operator()(K n) const
+{
+	if (n < 0)
+		throw std::domain_error("negative integer in the input");
+	return std::log(1 + std::pow(n + 1, (n + 1)*(n + 1) + (n + 1)/2) / 
+		  (std::pow(this->fact(n + 1), n + 1) * std::pow(std::numbers::e, (n + 1)*(n + 1))));
+}
+
+
+
+
+/**
+* @brief Series with ln number2
+* @authors Trudolyubov N.A.
+* @tparam T The type of the elements in the series, K The type of enumerating integer
+*/
+template <typename T, typename K>
+class Series_with_ln_number2 : public series_base<T, K>
+{
+public:
+	Series_with_ln_number2();
+
+	/**
+	* @brief Computes the nth term of the Taylor series of the sine function
+	* @authors Trudolyubov N.A.
+	* @param n The number of the term
+	* @return nth term of the Taylor series of the sine functions
+	*/
+	[[nodiscard]] constexpr virtual T operator()(K n) const;
+};
+
+template <typename T, typename K>
+Series_with_ln_number2<T, K>::Series_with_ln_number2() : series_base<T, K>(0) {}
+
+template <typename T, typename K>
+constexpr T Series_with_ln_number2<T, K>::operator()(K n) const
+{
+	if (n < 0)
+		throw std::domain_error("negative integer in the input");
+	return 1 / (std::pow(std::log(n + 2), std::log(n + 2)));
+}
+
+
+/**
+* @brief Taylor series of number pi
+* @authors Trudolyubov N.A.
+* @tparam T The type of the elements in the series, K The type of enumerating integer
+*/
+template <typename T, typename K>
+class pi_series : public series_base<T, K>
+{
+public:
+	pi_series();
+
+	/**
+	* @brief Computes the nth term of the Taylor series of the sine function
+	* @authors Trudolyubov N.A.
+	* @param n The number of the term
+	* @return nth term of the Taylor series of the sine functions
+	*/
+	[[nodiscard]] constexpr virtual T operator()(K n) const;
+};
+
+template <typename T, typename K>
+pi_series<T, K>::pi_series() : series_base<T, K>(0) {}
+
+template <typename T, typename K>
+constexpr T pi_series<T, K>::operator()(K n) const
+{
+	if (n < 0)
+		throw std::domain_error("negative integer in the input");
+	return std::sqrt(12) * std::pow(-3, -n) / (2*n + 1);
+}
+
+
+/**
+* @brief Taylor series of function x - sqrt(x)
+* @authors Trudolyubov N.A.
+* @tparam T The type of the elements in the series, K The type of enumerating integer
+*/
+template <typename T, typename K>
+class x_min_sqrt_x_series : public series_base<T, K>
+{
+public:
+	x_min_sqrt_x_series() = delete;
+
+	/**
+	* @brief Parameterized constructor to initialize the series with function argument and sum
+	* @authors Trudolyubov N.A.
+	* @param x The argument for function series
+	*/
+	x_min_sqrt_x_series(T x);
+
+	/**
+	* @brief Computes the nth term of the Taylor series of the sine function
+	* @authors Trudolyubov N.A.
+	* @param n The number of the term
+	* @return nth term of the Taylor series of the sine functions
+	*/
+	[[nodiscard]] constexpr virtual T operator()(K n) const;
+};
+
+template <typename T, typename K>
+x_min_sqrt_x_series<T, K>::x_min_sqrt_x_series(T x) : series_base<T, K>(x, x - std::sqrt(x)) {}
+
+template <typename T, typename K>
+constexpr T x_min_sqrt_x_series<T, K>::operator()(K n) const
+{
+	if (n < 0)
+		throw std::domain_error("negative integer in the input");
+
+	T tempsum = 0;
+	for (int m = 0; m < std::pow(2, n); m++)
+		tempsum += std::pow(this->x, m) * this->binomial_coefficient(std::pow(2, n + 1), 2*m + 1);
+
+	return std::pow(this->x-1, std::pow(2, n)) / tempsum;
+}
+
+
+/**
+* @brief arctan_x2 serieses
+* @authors Pavlova A.R.
+* @tparam T The type of the elements in the series, K The type of enumerating integer
+*/
+template <typename T, typename K>
+class arctan_x2_series : public series_base<T, K>
+{
+public:
+	arctan_x2_series() = delete;
+
+	/**
+	* @brief Parameterized constructor to initialize the series with function argument and sum
+	* @authors Pavlova A.R.
+	* @param x The argument for function series
+	*/
+	arctan_x2_series(T x);
+
+	/**
+	* @brief Computes the nth term of the arctan_x2 series
+	* @authors Pavlova A.R.
+	* @param n The number of the term
+	* @return nth term of the arctan_x2 series
+	*/
+	[[nodiscard]] constexpr virtual T operator()(K n) const;
+};
+
+template <typename T, typename K>
+arctan_x2_series<T, K>::arctan_x2_series(T x) : series_base<T, K>(x) {}
+
+template <typename T, typename K>
+constexpr T arctan_x2_series<T, K>::operator()(K n) const
+{
+	if (n < 0)
+		throw std::domain_error("The term index must be a non-negative integer");
+
+	return (std::pow(-1, n) * std::pow(this->x, 4 * n + 2)) / (2 * n + 1);
+}
+
+
+/**
+* @brief ln1px4 serieses
+* @authors Pavlova A.R.
+* @tparam T The type of the elements in the series, K The type of enumerating integer
+*/
+template <typename T, typename K>
+class ln1px4_series : public series_base<T, K>
+{
+public:
+	ln1px4_series() = delete;
+
+	/**
+	* @brief Parameterized constructor to initialize the series with function argument and sum
+	* @authors Pavlova A.R.
+	* @param x The argument for function series
+	*/
+	ln1px4_series(T x);
+
+	/**
+	* @brief Computes the nth term of the ln1px4 series
+	* @authors Pavlova A.R.
+	* @param n The number of the term
+	* @return nth term of the ln1px4 series
+	*/
+	[[nodiscard]] constexpr virtual T operator()(K n) const;
+};
+
+template <typename T, typename K>
+ln1px4_series<T, K>::ln1px4_series(T x) : series_base<T, K>(x) {}
+
+template <typename T, typename K>
+constexpr T ln1px4_series<T, K>::operator()(K n) const
+{
+	if (n < 0)
+		throw std::domain_error("The term index must be a non-negative integer");
+
+	return std::pow(-1, n + 2) * std::pow(this->x, 4 * (n + 1)) / (n + 1);
+}
+
+
+/**
+* @brief ln1px4 serieses
+* @authors Pavlova A.R.
+* @tparam T The type of the elements in the series, K The type of enumerating integer
+*/
+template <typename T, typename K>
+class sin_x2_series : public series_base<T, K>
+{
+public:
+	sin_x2_series() = delete;
+
+	/**
+	* @brief Parameterized constructor to initialize the series with function argument and sum
+	* @authors Pavlova A.R.
+	* @param x The argument for function series
+	*/
+	sin_x2_series(T x);
+
+	/**
+	* @brief Computes the nth term of the ln1px4 series
+	* @authors Pavlova A.R.
+	* @param n The number of the term
+	* @return nth term of the ln1px4 series
+	*/
+	[[nodiscard]] constexpr virtual T operator()(K n) const;
+};
+
+template <typename T, typename K>
+sin_x2_series<T, K>::sin_x2_series(T x) : series_base<T, K>(x) {}
+
+template <typename T, typename K>
+constexpr T sin_x2_series<T, K>::operator()(K n) const
+{
+	if (n < 0)
+		throw std::domain_error("The term index must be a non-negative integer");
+
+	return std::pow(-1, n) * std::pow(this->x, 4 * n + 2) / this->fact(2 * n + 2);
+}
+
+/**
+* @brief arctanx3 serieses
+* @authors Pavlova A.R.
+* @tparam T The type of the elements in the series, K The type of enumerating integer
+*/
+template <typename T, typename K>
+class arctan_x3_series : public series_base<T, K>
+{
+public:
+	arctan_x3_series() = delete;
+
+	/**
+	* @brief Parameterized constructor to initialize the series with function argument and sum
+	* @authors Pavlova A.R.
+	* @param x The argument for function series
+	*/
+	arctan_x3_series(T x);
+
+	/**
+	* @brief Computes the nth term of the arctanx3 series
+	* @authors Pavlova A.R.
+	* @param n The number of the term
+	* @return nth term of the arctanx3 series
+	*/
+	[[nodiscard]] constexpr virtual T operator()(K n) const;
+};
+
+template <typename T, typename K>
+arctan_x3_series<T, K>::arctan_x3_series(T x) : series_base<T, K>(x) {}
+
+template <typename T, typename K>
+constexpr T arctan_x3_series<T, K>::operator()(K n) const
+{
+	if (n < 0)
+		throw std::domain_error("The term index must be a non-negative integer");
+
+	return (std::pow(-1, n) * std::pow(this->x, 6 * n + 3)) / (2 * n + 2);
+}
+
+/**
+* @brief arcsinx2 serieses
+* @authors Pavlova A.R.
+* @tparam T The type of the elements in the series, K The type of enumerating integer
+*/
+template <typename T, typename K>
+class arcsin_x2_series : public series_base<T, K>
+{
+public:
+	arcsin_x2_series() = delete;
+
+	/**
+	* @brief Parameterized constructor to initialize the series with function argument and sum
+	* @authors Pavlova A.R.
+	* @param x The argument for function series
+	*/
+	arcsin_x2_series(T x);
+
+	/**
+	* @brief Computes the nth term of the arcsinx2 series
+	* @authors Pavlova A.R.
+	* @param n The number of the term
+	* @return nth term of the arcsinx2 series
+	*/
+	[[nodiscard]] constexpr virtual T operator()(K n) const;
+};
+
+template <typename T, typename K>
+arcsin_x2_series<T, K>::arcsin_x2_series(T x) : series_base<T, K>(x) {}
+
+template <typename T, typename K>
+constexpr T arcsin_x2_series<T, K>::operator()(K n) const
+{
+	if (n < 0)
+		throw std::domain_error("The term index must be a non-negative integer");
+
+	return (this->fact(2 * n) * std::pow(this->x, 4 * n + 2)) / (std::pow(4, n) * std::pow(this->fact(n), 2) * (2 * n + 1));
+}
+
+
+/**
+* @brief ln1minx2 serieses
+* @authors Pavlova A.R.
+* @tparam T The type of the elements in the series, K The type of enumerating integer
+*/
+template <typename T, typename K>
+class ln1_m_x2_series : public series_base<T, K>
+{
+public:
+	ln1_m_x2_series() = delete;
+
+	/**
+	* @brief Parameterized constructor to initialize the series with function argument and sum
+	* @authors Pavlova A.R.
+	* @param x The argument for function series
+	*/
+	ln1_m_x2_series(T x);
+
+	/**
+	* @brief Computes the nth term of the ln1minx2 series
+	* @authors Pavlova A.R.
+	* @param n The number of the term
+	* @return nth term of the ln1minx2 series
+	*/
+	[[nodiscard]] constexpr virtual T operator()(K n) const;
+};
+
+template <typename T, typename K>
+ln1_m_x2_series<T, K>::ln1_m_x2_series(T x) : series_base<T, K>(x) {}
+
+template <typename T, typename K>
+constexpr T ln1_m_x2_series<T, K>::operator()(K n) const
+{
+	if (n < 0)
+		throw std::domain_error("The term index must be a non-negative integer");
+
+	return -std::pow(this->x, 2 * n + 1) / (n + 1);
+}
+
+
+/**
+* @brief artanhx serieses
+* @authors Pavlova A.R.
+* @tparam T The type of the elements in the series, K The type of enumerating integer
+*/
+template <typename T, typename K>
+class artanh_x_series : public series_base<T, K>
+{
+public:
+	artanh_x_series() = delete;
+
+	/**
+	* @brief Parameterized constructor to initialize the series with function argument and sum
+	* @authors Pavlova A.R.
+	* @param x The argument for function series
+	*/
+	artanh_x_series(T x);
+
+	/**
+	* @brief Computes the nth term of the artanhx series
+	* @authors Pavlova A.R.
+	* @param n The number of the term
+	* @return nth term of the artanhx series
+	*/
+	[[nodiscard]] constexpr virtual T operator()(K n) const;
+};
+
+template <typename T, typename K>
+artanh_x_series<T, K>::artanh_x_series(T x) : series_base<T, K>(x) {}
+
+template <typename T, typename K>
+constexpr T artanh_x_series<T, K>::operator()(K n) const
+{
+	if (n < 0)
+		throw std::domain_error("The term index must be a non-negative integer");
+
+	return std::pow(this->x, 2 * n + 1) / (2 * n + 1);
+}
+
+
+/**
+* @brief arcsinhx serieses
+* @authors Pavlova A.R.
+* @tparam T The type of the elements in the series, K The type of enumerating integer
+*/
+template <typename T, typename K>
+class arcsinh_x_series : public series_base<T, K>
+{
+public:
+	arcsinh_x_series() = delete;
+
+	/**
+	* @brief Parameterized constructor to initialize the series with function argument and sum
+	* @authors Pavlova A.R.
+	* @param x The argument for function series
+	*/
+	arcsinh_x_series(T x);
+
+	/**
+	* @brief Computes the nth term of the ln1minx2 series
+	* @authors Pavlova A.R.
+	* @param n The number of the term
+	* @return nth term of the ln1minx2 series
+	*/
+	[[nodiscard]] constexpr virtual T operator()(K n) const;
+};
+
+template <typename T, typename K>
+arcsinh_x_series<T, K>::arcsinh_x_series(T x) : series_base<T, K>(x) {}
+
+template <typename T, typename K>
+constexpr T arcsinh_x_series<T, K>::operator()(K n) const
+{
+	if (n < 0)
+		throw std::domain_error("The term index must be a non-negative integer");
+
+	return (std::pow(-1, n) * this->fact(2 * n) * std::pow(this->x, 2 * n + 1)) / (std::pow(this->fact(n), 2) * std::pow(4, n) * (2 * n + 1));
+}
+
+
+/**
+* @brief cosx2 serieses
+* @authors Pavlova A.R.
+* @tparam T The type of the elements in the series, K The type of enumerating integer
+*/
+template <typename T, typename K>
+class cos_x2_series : public series_base<T, K>
+{
+public:
+	cos_x2_series() = delete;
+
+	/**
+	* @brief Parameterized constructor to initialize the series with function argument and sum
+	* @authors Pavlova A.R.
+	* @param x The argument for function series
+	*/
+	cos_x2_series(T x);
+
+	/**
+	* @brief Computes the nth term of the cosx2 series
+	* @authors Pavlova A.R.
+	* @param n The number of the term
+	* @return nth term of the cosx2 series
+	*/
+	[[nodiscard]] constexpr virtual T operator()(K n) const;
+};
+
+template <typename T, typename K>
+cos_x2_series<T, K>::cos_x2_series(T x) : series_base<T, K>(x) {}
+
+template <typename T, typename K>
+constexpr T cos_x2_series<T, K>::operator()(K n) const
+{
+	if (n < 0)
+		throw std::domain_error("The term index must be a non-negative integer");
+
+	return std::pow(-1, n) * std::pow(this->x, 4 * n) / this->fact(2 * n);
+}
+
+
+/**
+* @brief sinhx2 serieses
+* @authors Pavlova A.R.
+* @tparam T The type of the elements in the series, K The type of enumerating integer
+*/
+template <typename T, typename K>
+class sinh_x2_series : public series_base<T, K>
+{
+public:
+	sinh_x2_series() = delete;
+
+	/**
+	* @brief Parameterized constructor to initialize the series with function argument and sum
+	* @authors Pavlova A.R.
+	* @param x The argument for function series
+	*/
+	sinh_x2_series(T x);
+
+	/**
+	* @brief Computes the nth term of the sinhx2 series
+	* @authors Pavlova A.R.
+	* @param n The number of the term
+	* @return nth term of the sinhx2 series
+	*/
+	[[nodiscard]] constexpr virtual T operator()(K n) const;
+};
+
+template <typename T, typename K>
+sinh_x2_series<T, K>::sinh_x2_series(T x) : series_base<T, K>(x) {}
+
+template <typename T, typename K>
+constexpr T sinh_x2_series<T, K>::operator()(K n) const
+{
+	if (n < 0)
+		throw std::domain_error("The term index must be a non-negative integer");
+
+	return std::pow(this->x, 4 * n + 2) / this->fact(2 * n + 1);
+}
+
+
+/**
+* @brief arctanhx2 serieses
+* @authors Pavlova A.R.
+* @tparam T The type of the elements in the series, K The type of enumerating integer
+*/
+template <typename T, typename K>
+class arctanh_x2_series : public series_base<T, K>
+{
+public:
+	arctanh_x2_series() = delete;
+
+	/**
+	* @brief Parameterized constructor to initialize the series with function argument and sum
+	* @authors Pavlova A.R.
+	* @param x The argument for function series
+	*/
+	arctanh_x2_series(T x);
+
+	/**
+	* @brief Computes the nth term of the arctanhx2 series
+	* @authors Pavlova A.R.
+	* @param n The number of the term
+	* @return nth term of the arctanhx2 series
+	*/
+	[[nodiscard]] constexpr virtual T operator()(K n) const;
+};
+
+template <typename T, typename K>
+arctanh_x2_series<T, K>::arctanh_x2_series(T x) : series_base<T, K>(x) {}
+
+template <typename T, typename K>
+constexpr T arctanh_x2_series<T, K>::operator()(K n) const
+{
+	if (n < 0)
+		throw std::domain_error("The term index must be a non-negative integer");
+
+	return std::pow(this->x, 4 * n + 2) / (2 * n + 1);
+}
+
+/**
+/**
+* @brief Taylor series of function cos(3x - 1) / x^2
+* @authors Trudolyubov N.A.
+* @tparam T The type of the elements in the series, K The type of enumerating integer
+*/
+template <typename T, typename K>
+class cos3xmin1_div_xsqare_series : public series_base<T, K>
+{
+public:
+	cos3xmin1_div_xsqare_series() = delete;
+
+	/**
+	* @brief Parameterized constructor to initialize the series with function argument and sum
+	* @authors Trudolyubov N.A.
+	* @param x The argument for function series
+	*/
+	cos3xmin1_div_xsqare_series(T x);
+
+	/**
+	* @brief Computes the nth term of the Taylor series of the sine function
+	* @authors Trudolyubov N.A.
+	* @param n The number of the term
+	* @return nth term of the Taylor series of the sine functions
+	*/
+	[[nodiscard]] constexpr virtual T operator()(K n) const;
+};
+
+template <typename T, typename K>
+cos3xmin1_div_xsqare_series<T, K>::cos3xmin1_div_xsqare_series(T x) : series_base<T, K>(x, (std::cos(3*x) - 1) / (x*x)) {}
+
+template <typename T, typename K>
+constexpr T cos3xmin1_div_xsqare_series<T, K>::operator()(K n) const
+{
+	if (n < 0)
+		throw std::domain_error("negative integer in the input");
+	return this->minus_one_raised_to_power_n(n + 1) * std::pow(3, 2*n + 2) * std::pow(this->x, 2*n) / this->fact(2*n + 2);
+}
+
+
+
+/**
+/**
+* @brief Maclaurin series of function 2^x
+* @authors Trudolyubov N.A.
+* @tparam T The type of the elements in the series, K The type of enumerating integer
+*/
+template <typename T, typename K>
+class two_degree_x_series : public series_base<T, K>
+{
+public:
+	two_degree_x_series() = delete;
+
+	/**
+	* @brief Parameterized constructor to initialize the series with function argument and sum
+	* @authors Trudolyubov N.A.
+	* @param x The argument for function series
+	*/
+	two_degree_x_series(T x);
+
+	/**
+	* @brief Computes the nth term of the Maclaurin series of the sine function
+	* @authors Trudolyubov N.A.
+	* @param n The number of the term
+	* @return nth term of the Maclaurin series of the sine functions
+	*/
+	[[nodiscard]] constexpr virtual T operator()(K n) const;
+};
+
+template <typename T, typename K>
+two_degree_x_series<T, K>::two_degree_x_series(T x) : series_base<T, K>(x, std::pow(2, x)) {}
+
+template <typename T, typename K>
+constexpr T two_degree_x_series<T, K>::operator()(K n) const
+{
+	if (n < 0)
+		throw std::domain_error("negative integer in the input");
+	return std::pow(std::log(2), n) * std::pow(this->x, n) / this->fact(n);
+}
+
+
+/**
+/**
+* @brief Maclaurin series of function sqrt(1 + x) - 1 - x/2
+* @authors Trudolyubov N.A.
+* @tparam T The type of the elements in the series, K The type of enumerating integer
+*/
+template <typename T, typename K>
+class sqrt_1plusx_min_1_min_x_div_2_series : public series_base<T, K>
+{
+public:
+	sqrt_1plusx_min_1_min_x_div_2_series() = delete;
+
+	/**
+	* @brief Parameterized constructor to initialize the series with function argument and sum
+	* @authors Trudolyubov N.A.
+	* @param x The argument for function series
+	*/
+	sqrt_1plusx_min_1_min_x_div_2_series(T x);
+
+	/**
+	* @brief Computes the nth term of the Maclaurin series of the sine function
+	* @authors Trudolyubov N.A.
+	* @param n The number of the term
+	* @return nth term of the Maclaurin series of the sine functions
+	*/
+	[[nodiscard]] constexpr virtual T operator()(K n) const;
+};
+
+template <typename T, typename K>
+sqrt_1plusx_min_1_min_x_div_2_series<T, K>::sqrt_1plusx_min_1_min_x_div_2_series(T x) : series_base<T, K>(x, std::sqrt(1 + x) - 1 - x/2) {}
+
+template <typename T, typename K>
+constexpr T sqrt_1plusx_min_1_min_x_div_2_series<T, K>::operator()(K n) const
+{
+	if (n < 0)
+		throw std::domain_error("negative integer in the input");
+	
+	K temp = 1;
+	for (K i = 1; 2 * i + 1 <= 2 * n + 1; ++i)
+		temp *= 2 * i + 1;
+	return this->minus_one_raised_to_power_n(n + 3) * std::pow(this->x, n + 2) * temp / (this->fact(n + 2) * std::pow(2, n + 2));
+}
+
+
+/**
+/**
+* @brief Fourier series of function (ln13 - ln7) / 7
+* @authors Trudolyubov N.A.
+* @tparam T The type of the elements in the series, K The type of enumerating integer
+*/
+template <typename T, typename K>
+class ln13_min_ln7_div_7_series : public series_base<T, K>
+{
+public:
+	/**
+	* @brief Parameterized constructor to initialize the series with function argument and sum
+	* @authors Trudolyubov N.A.
+	* @param x The argument for function series
+	*/
+	ln13_min_ln7_div_7_series();
+
+	/**
+	* @brief Computes the nth term of the Fourier series of the sine function
+	* @authors Trudolyubov N.A.
+	* @param n The number of the term
+	* @return nth term of the Fourier series of the sine functions
+	*/
+	[[nodiscard]] constexpr virtual T operator()(K n) const;
+};
+
+template <typename T, typename K>
+ln13_min_ln7_div_7_series<T, K>::ln13_min_ln7_div_7_series() : series_base<T, K>(0, (std::log(13) - std::log(7) / 7)) {}
+
+template <typename T, typename K>
+constexpr T ln13_min_ln7_div_7_series<T, K>::operator()(K n) const
+{
+	if (n < 0)
+		throw std::domain_error("negative integer in the input");
+	return this->minus_one_raised_to_power_n(n + 2) * std::pow(6, n + 1) / ((n + 1) * std::pow(7, n + 2));
+}
+
+/**
+* @brief Taylor series of Bessel function J_b(x)
+* @authors Trudolyubov N.A.
+* @tparam T The type of the elements in the series, K The type of enumerating integer
+*/
+template <typename T, typename K>
+class Ja_x_series : public series_base<T, K>
+{
+public:
+	Ja_x_series() = delete;
+
+	/**
+	* @brief Parameterized constructor to initialize the series with function argument and sum
+	* @authors Trudolyubov N.A.
+	* @param x The argument for function series, b The integer constant
+	*/
+	Ja_x_series(T x, T a);
+
+	/**
+	* @authors Trudolyubov N.A.
+	* @param n The number of the term
+	* @return nth term of the series
+	*/
+	[[nodiscard]] constexpr virtual T operator()(K n) const;
+private:
+	const T a;
+};
+
+template <typename T, typename K>
+Ja_x_series<T, K>::Ja_x_series(T x, T a) : series_base<T, K>(x), a(a) {}
+
+template <typename T, typename K>
+constexpr T Ja_x_series<T, K>::operator()(K n) const
+{
+	if (n < 0)
+		throw std::domain_error("negative integer in the input");
+	return this->minus_one_raised_to_power_n(n) * std::pow(this->x / 2, 2*n + this->a) / (this->fact(n) * std::tgamma(n + this->a + 1));
+}
+
+
+/**
+/**
+* @brief Taylor series of function 1/sqrt(2) * sin(x/sqrt(2)) (����������� ����� �� ���� �������)
+* @authors Trudolyubov N.A.
+* @tparam T The type of the elements in the series, K The type of enumerating integer
+*/
+template <typename T, typename K>
+class one_div_sqrt2_sin_xdivsqrt2_series : public series_base<T, K>
+{
+public:
+	one_div_sqrt2_sin_xdivsqrt2_series() = delete;
+
+	/**
+	* @brief Parameterized constructor to initialize the series with function argument and sum
+	* @authors Trudolyubov N.A.
+	* @param x The argument for function series
+	*/
+	one_div_sqrt2_sin_xdivsqrt2_series(T x);
+
+	/**
+	* @brief Computes the nth term of the Taylor series of the sine function
+	* @authors Trudolyubov N.A.
+	* @param n The number of the term
+	* @return nth term of the Taylor series of the sine functions
+	*/
+	[[nodiscard]] constexpr virtual T operator()(K n) const;
+};
+
+template <typename T, typename K>
+one_div_sqrt2_sin_xdivsqrt2_series<T, K>::one_div_sqrt2_sin_xdivsqrt2_series(T x) : series_base<T, K>(x, std::sqrt(1 + x) - 1 - x / 2) {}
+
+template <typename T, typename K>
+constexpr T one_div_sqrt2_sin_xdivsqrt2_series<T, K>::operator()(K n) const
+{
+	if (n < 0)
+		throw std::domain_error("negative integer in the input");
+
+	return std::pow(-1, n / 2) * jn(2 * n + 1, this->x);
+}
+
+
+/**
+* @brief ln(1 + x)/(1 + x^2) serieses
+* @authors Pavlova A.R.
+* @tparam T The type of the elements in the series, K The type of enumerating integer
+*/
+template <typename T, typename K>
+class ln_1plusx_div_1plusx2 : public series_base<T, K>
+{
+public:
+	ln_1plusx_div_1plusx2() = delete;
+
+	/**
+	* @brief Parameterized constructor to initialize the series with function argument and sum
+	* @authors Pavlova A.R.
+	* @param x The argument for function series
+	*/
+	ln_1plusx_div_1plusx2(T x);
+
+	/**
+	* @brief Computes the nth term of the ln(1 + x)/(1 + x^2) series
+	* @authors Pavlova A.R.
+	* @param n The number of the term
+	* @return nth term of the ln(1 + x)/(1 + x^2) series
+	*/
+	[[nodiscard]] constexpr virtual T operator()(K n) const;
+};
+
+template <typename T, typename K>
+ln_1plusx_div_1plusx2<T, K>::ln_1plusx_div_1plusx2(T x) : series_base<T, K>(x) {}
+
+template <typename T, typename K>
+constexpr T ln_1plusx_div_1plusx2<T, K>::operator()(K n) const
+{
+	if (n < 0)
+		throw std::domain_error("The term index must be a non-negative integer");
+
+	return this->minus_one_raised_to_power_n(n+2) * std::pow(this->x, n+1) / ((n+1) * std::pow(1 + std::pow(this->x, 2), n+1));
+}
+
+
+
+/**
+* @brief cos(sqrt(x)) serieses
+* @authors Pavlova A.R.
+* @tparam T The type of the elements in the series, K The type of enumerating integer
+*/
+template <typename T, typename K>
+class cos_sqrt_x : public series_base<T, K>
+{
+public:
+	cos_sqrt_x() = delete;
+
+	/**
+	* @brief Parameterized constructor to initialize the series with function argument and sum
+	* @authors Pavlova A.R.
+	* @param x The argument for function series
+	*/
+	cos_sqrt_x(T x);
+
+	/**
+	* @brief Computes the nth term of the cos(sqrt(x)) series
+	* @authors Pavlova A.R.
+	* @param n The number of the term
+	* @return nth term of the cos(sqrt(x)) series
+	*/
+	[[nodiscard]] constexpr virtual T operator()(K n) const;
+};
+
+template <typename T, typename K>
+cos_sqrt_x<T, K>::cos_sqrt_x(T x) : series_base<T, K>(x) {}
+
+template <typename T, typename K>
+constexpr T cos_sqrt_x<T, K>::operator()(K n) const
+{
+	if (n < 0)
+		throw std::domain_error("The term index must be a non-negative integer");
+
+	return std::pow(-1, n) * std::pow(this->x, n) / this->fact(2 * n);
+}
+
+
+/**
+* @brief ln(1 + x^3) serieses
+* @authors Pavlova A.R.
+* @tparam T The type of the elements in the series, K The type of enumerating integer
+*/
+template <typename T, typename K>
+class ln_1_plus_x3 : public series_base<T, K>
+{
+public:
+	ln_1_plus_x3() = delete;
+
+	/**
+	* @brief Parameterized constructor to initialize the series with function argument and sum
+	* @authors Pavlova A.R.
+	* @param x The argument for function series
+	*/
+	ln_1_plus_x3(T x);
+
+	/**
+	* @brief Computes the nth term of the ln(1 + x^3) series
+	* @authors Pavlova A.R.
+	* @param n The number of the term
+	* @return nth term of the ln(1 + x^3) series
+	*/
+	[[nodiscard]] constexpr virtual T operator()(K n) const;
+};
+
+template <typename T, typename K>
+ln_1_plus_x3<T, K>::ln_1_plus_x3(T x) : series_base<T, K>(x) {}
+
+template <typename T, typename K>
+constexpr T ln_1_plus_x3<T, K>::operator()(K n) const
+{
+	if (n < 0)
+		throw std::domain_error("The term index must be a non-negative integer");
+
+	return this->minus_one_raised_to_power_n(n + 2) * std::pow(this->x, 3 * (n + 1)) / (n + 1);
+}
+
+
+/**
+* @brief x / sqrt(1 - x) serieses
+* @authors Pavlova A.R.
+* @tparam T The type of the elements in the series, K The type of enumerating integer
+*/
+template <typename T, typename K>
+class x_div_1minx : public series_base<T, K>
+{
+public:
+	x_div_1minx() = delete;
+
+	/**
+	* @brief Parameterized constructor to initialize the series with function argument and sum
+	* @authors Pavlova A.R.
+	* @param x The argument for function series
+	*/
+	x_div_1minx(T x);
+
+	/**
+	* @brief Computes the nth term of the x / sqrt(1 - x) series
+	* @authors Pavlova A.R.
+	* @param n The number of the term
+	* @return nth term of the x / sqrt(1 - x) series
+	*/
+	[[nodiscard]] constexpr virtual T operator()(K n) const;
+};
+
+template <typename T, typename K>
+x_div_1minx<T, K>::x_div_1minx(T x) : series_base<T, K>(x) {}
+
+template <typename T, typename K>
+constexpr T x_div_1minx<T, K>::operator()(K n) const
+{
+	if (n < 0)
+		throw std::domain_error("The term index must be a non-negative integer");
+
+	return this->fact(2 * n) * std::pow(this->x, n + 1) / (this->fact(n) * std::pow(4, this->x));
+}
+
+
+/**
+* @brief x / sqrt(1 - x) serieses
+* @authors Pavlova A.R.
+* @tparam T The type of the elements in the series, K The type of enumerating integer
+*/
+template <typename T, typename K>
+class x_div_1minx2 : public series_base<T, K>
+{
+public:
+	x_div_1minx2() = delete;
+
+	/**
+	* @brief Parameterized constructor to initialize the series with function argument and sum
+	* @authors Pavlova A.R.
+	* @param x The argument for function series
+	*/
+	x_div_1minx2(T x);
+
+	/**
+	* @brief Computes the nth term of the x / sqrt(1 - x) series
+	* @authors Pavlova A.R.
+	* @param n The number of the term
+	* @return nth term of the x / sqrt(1 - x) series
+	*/
+	[[nodiscard]] constexpr virtual T operator()(K n) const;
+};
+
+template <typename T, typename K>
+x_div_1minx2<T, K>::x_div_1minx2(T x) : series_base<T, K>(x) {}
+
+template <typename T, typename K>
+constexpr T x_div_1minx2<T, K>::operator()(K n) const
+{
+	if (n < 0)
+		throw std::domain_error("The term index must be a non-negative integer");
+
+	return std::pow(this->x, 2 * n + 1);
+}
+
+/**
+* @brief using gamma serieses
+* @authors Pavlova A.R.
+* @tparam T The type of the elements in the series, K The type of enumerating integer
+*/
+template <typename T, typename K>
+class gamma_series : public series_base<T, K>
+{
+public:
+	gamma_series() = delete;
+
+	/**
+	* @brief Parameterized constructor to initialize the series with function argument and sum
+	* @authors Pavlova A.R.
+	* @param x The argument for function series
+	*/
+	gamma_series(T t, T x);
+
+	/**
+	* @brief Computes the nth term of the using gamma series
+	* @authors Pavlova A.R.
+	* @param n The number of the term
+	* @param t The parametr for series
+	* @return nth term of the using gamma series
+	*/
+	[[nodiscard]] constexpr virtual T operator()(K n) const;
+
+private:
+	T t;
+	T x;
+
+	// ������ ������� ��� ������������ a_k
+	T a_k(K n) const;
+};
+
+template <typename T, typename K>
+gamma_series<T, K>::gamma_series(T t, T x) : series_base<T, K>(x), t(t), x(x) {}
+
+template <typename T, typename K>
+T gamma_series<T, K>::a_k(K n) const
+{
+	// ���������� ������������������ a_k, ��������:
+	return static_cast<T>(n + 1);  // � �������� ������� ����� a_k = n + 1
+}
+
+template <typename T, typename K>
+constexpr T gamma_series<T, K>::operator()(K n) const
+{
+	if (n < 0)
+		throw std::domain_error("The term index must be a non-negative integer");
+
+	T a_k_n = a_k(n);  // ��������� a_k
+	return a_k_n * std::pow(this->t, n) * std::tgamma(a_k_n);
+}
+
+
+
+
+
+
+
+
+
+
 
 
 

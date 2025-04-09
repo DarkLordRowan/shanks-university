@@ -4,6 +4,7 @@
 CMakeFiles/shanks_transformation.dir/main.o: /home/panama/Blacksmith/projects/shanks/shanks-university/shanks_transformation/main.cpp \
   /home/panama/Blacksmith/projects/shanks/shanks-university/shanks_transformation/FSA.h \
   /home/panama/Blacksmith/projects/shanks/shanks-university/shanks_transformation/FSA_3.h \
+  /home/panama/Blacksmith/projects/shanks/shanks-university/shanks_transformation/FSA_two.h \
   /home/panama/Blacksmith/projects/shanks/shanks-university/shanks_transformation/brezinski_theta_algorithm.h \
   /home/panama/Blacksmith/projects/shanks/shanks-university/shanks_transformation/chang_whynn_algorithm.h \
   /home/panama/Blacksmith/projects/shanks/shanks-university/shanks_transformation/drummond_D_algorithm.h \
@@ -448,12 +449,6 @@ CMakeFiles/shanks_transformation.dir/main.o: /home/panama/Blacksmith/projects/sh
 
 /usr/include/x86_64-linux-gnu/bits/pthread_stack_min-dynamic.h:
 
-/usr/include/x86_64-linux-gnu/bits/types/mbstate_t.h:
-
-/usr/include/c++/13/bits/unique_ptr.h:
-
-/usr/include/c++/13/bits/align.h:
-
 /usr/include/c++/13/bits/max_size_type.h:
 
 /usr/include/c++/13/locale:
@@ -471,8 +466,6 @@ CMakeFiles/shanks_transformation.dir/main.o: /home/panama/Blacksmith/projects/sh
 /usr/include/c++/13/bits/stl_construct.h:
 
 /usr/include/c++/13/bits/std_mutex.h:
-
-/usr/include/c++/13/bits/stl_bvector.h:
 
 /usr/include/c++/13/bits/stl_algobase.h:
 
@@ -538,11 +531,11 @@ CMakeFiles/shanks_transformation.dir/main.o: /home/panama/Blacksmith/projects/sh
 
 /usr/include/c++/13/bits/postypes.h:
 
+/usr/include/c++/13/bits/stl_multiset.h:
+
 /usr/include/c++/13/bits/parse_numbers.h:
 
 /usr/include/c++/13/bits/std_abs.h:
-
-/usr/include/c++/13/bits/stl_multiset.h:
 
 /usr/include/c++/13/bits/uses_allocator.h:
 
@@ -573,6 +566,10 @@ CMakeFiles/shanks_transformation.dir/main.o: /home/panama/Blacksmith/projects/sh
 /usr/include/x86_64-linux-gnu/bits/types/error_t.h:
 
 /usr/include/c++/13/bits/hashtable.h:
+
+/usr/include/c++/13/bits/functional_hash.h:
+
+/usr/include/errno.h:
 
 /usr/include/c++/13/bits/ptr_traits.h:
 
@@ -605,16 +602,6 @@ CMakeFiles/shanks_transformation.dir/main.o: /home/panama/Blacksmith/projects/sh
 /usr/include/c++/13/bits/requires_hosted.h:
 
 /usr/include/x86_64-linux-gnu/bits/floatn-common.h:
-
-/home/panama/Blacksmith/projects/shanks/shanks-university/shanks_transformation/rho_wynn_algorithm.h:
-
-/usr/include/c++/13/cstdint:
-
-/usr/include/c++/13/cstdlib:
-
-/usr/include/c++/13/bits/stl_tree.h:
-
-/usr/include/c++/13/bits/codecvt.h:
 
 /usr/lib/gcc/x86_64-linux-gnu/13/include/stdint.h:
 
@@ -652,6 +639,10 @@ CMakeFiles/shanks_transformation.dir/main.o: /home/panama/Blacksmith/projects/sh
 
 /home/panama/Blacksmith/projects/shanks/shanks-university/shanks_transformation/epsilon_algorithm_two.h:
 
+/usr/include/x86_64-linux-gnu/bits/posix2_lim.h:
+
+/usr/include/c++/13/bits/enable_special_members.h:
+
 /usr/include/c++/13/bits/basic_ios.tcc:
 
 /usr/include/c++/13/pstl/execution_defs.h:
@@ -660,21 +651,41 @@ CMakeFiles/shanks_transformation.dir/main.o: /home/panama/Blacksmith/projects/sh
 
 /usr/include/x86_64-linux-gnu/bits/getopt_core.h:
 
-/usr/include/c++/13/backward/auto_ptr.h:
-
 /usr/include/c++/13/bits/stl_raw_storage_iter.h:
 
 /usr/include/x86_64-linux-gnu/bits/mathcalls-helper-functions.h:
 
 /home/panama/Blacksmith/projects/shanks/shanks-university/shanks_transformation/FSA_3.h:
 
-/usr/include/x86_64-linux-gnu/c++/13/bits/ctype_inline.h:
+/usr/include/c++/13/bits/hashtable_policy.h:
 
-/usr/include/c++/13/bits/std_function.h:
+/home/panama/Blacksmith/projects/shanks/shanks-university/shanks_transformation/rho_wynn_algorithm.h:
+
+/usr/include/x86_64-linux-gnu/c++/13/bits/ctype_inline.h:
 
 /usr/include/c++/13/bits/char_traits.h:
 
-/usr/include/c++/13/bits/hashtable_policy.h:
+/usr/include/c++/13/bits/std_function.h:
+
+/usr/include/c++/13/cstdint:
+
+/usr/include/c++/13/cstdlib:
+
+/usr/include/c++/13/bits/stl_tree.h:
+
+/usr/include/c++/13/bits/codecvt.h:
+
+/usr/include/c++/13/bits/stl_bvector.h:
+
+/usr/include/c++/13/bits/locale_conv.h:
+
+/usr/include/c++/13/bits/istream.tcc:
+
+/usr/include/c++/13/bits/exception_ptr.h:
+
+/usr/include/c++/13/bits/vector.tcc:
+
+/usr/include/c++/13/optional:
 
 /usr/include/x86_64-linux-gnu/bits/waitstatus.h:
 
@@ -692,25 +703,19 @@ CMakeFiles/shanks_transformation.dir/main.o: /home/panama/Blacksmith/projects/sh
 
 /usr/include/c++/13/streambuf:
 
-/usr/include/c++/13/bits/atomic_lockfree_defines.h:
-
-/usr/include/x86_64-linux-gnu/asm/errno.h:
-
-/usr/include/c++/13/bits/exception_ptr.h:
-
-/usr/include/c++/13/bits/locale_conv.h:
-
-/usr/include/c++/13/bits/istream.tcc:
-
-/usr/include/c++/13/bits/vector.tcc:
-
-/usr/include/c++/13/optional:
+/home/panama/Blacksmith/projects/shanks/shanks-university/shanks_transformation/FSA_two.h:
 
 /home/panama/Blacksmith/projects/shanks/shanks-university/shanks_transformation/epsilon_algorithm.h:
 
 /usr/include/c++/13/ext/alloc_traits.h:
 
 /usr/include/c++/13/new:
+
+/usr/include/c++/13/bits/atomic_lockfree_defines.h:
+
+/usr/include/x86_64-linux-gnu/asm/errno.h:
+
+/usr/include/c++/13/backward/auto_ptr.h:
 
 /usr/include/c++/13/bits/uniform_int_dist.h:
 
@@ -731,6 +736,12 @@ CMakeFiles/shanks_transformation.dir/main.o: /home/panama/Blacksmith/projects/sh
 /usr/include/c++/13/bits/ranges_cmp.h:
 
 /usr/include/c++/13/iosfwd:
+
+/usr/include/c++/13/bits/align.h:
+
+/usr/include/x86_64-linux-gnu/bits/types/mbstate_t.h:
+
+/usr/include/c++/13/bits/unique_ptr.h:
 
 /usr/include/c++/13/bits/ios_base.h:
 
@@ -795,10 +806,6 @@ CMakeFiles/shanks_transformation.dir/main.o: /home/panama/Blacksmith/projects/sh
 /usr/include/time.h:
 
 /usr/include/x86_64-linux-gnu/bits/getopt_posix.h:
-
-/usr/include/c++/13/bits/functional_hash.h:
-
-/usr/include/errno.h:
 
 /usr/include/c++/13/cctype:
 
@@ -969,10 +976,6 @@ CMakeFiles/shanks_transformation.dir/main.o: /home/panama/Blacksmith/projects/sh
 /usr/include/endian.h:
 
 /usr/include/stdint.h:
-
-/usr/include/c++/13/bits/enable_special_members.h:
-
-/usr/include/x86_64-linux-gnu/bits/posix2_lim.h:
 
 /usr/include/pthread.h:
 
