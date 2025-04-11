@@ -44,7 +44,7 @@ protected:
 
 		for (int j = 0; j <= n; ++j) {
 
-			rest = this->series->minus_one_raised_to_power_n(j) * this->series->binomial_coefficient(n, j);
+			rest = this->series->minus_one_raised_to_power_n(j) * this->series->binomial_coefficient(static_cast<T>(n), j);
 
 			w_n = remainder_func->operator()(order, j, this->series, 1);
 

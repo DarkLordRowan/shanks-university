@@ -54,17 +54,17 @@ T epsilon_algorithm<T, K, series_templ>::operator()(const K n, const int order) 
 	std::vector<T> e1(m + n, 0);
 	auto e0_ref = &e0; // for swapping vectors in for cycle
 	auto e1_ref = &e1; //
-	for (int j = m + n; j >= 0; --j)
+	for (K j = m + n; j >= 0; --j) // int -> K mark
 	{
-		e0[j] = this->series->S_n(j);
+		e0[j] = this->series->S_n(j); 
 	}
 
-	int max_ind = m + n;
+	K max_ind = m + n; // int -> K mark
 	for (int i = 0; i < m; ++i)
 	{
-		for (int j = n - 1; j < max_ind; ++j)
+		for (K j = n - 1; j < max_ind; ++j)
 		{
-			(*e1_ref)[j] += 1.0 / ((*e0_ref)[j + 1] - (*e0_ref)[j]);
+			(*e1_ref)[j] += static_cast<T>(1.0 / ((*e0_ref)[j + 1] - (*e0_ref)[j]));
 		}
 		--max_ind;
 		std::swap(e0_ref, e1_ref);

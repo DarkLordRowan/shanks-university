@@ -34,7 +34,7 @@ public:
     T operator() (const K n, const int order) const;
 
 private:
-    T operator() (T n_time, T k_time, T b, bool ND) const;
+    T operator() (K n_time, K k_time, T b, bool ND) const;
 };
 
 template <typename T, typename K, typename series_templ>
@@ -59,10 +59,10 @@ T levin_recursion_algorithm<T, K, series_templ>::operator()(const K n, const int
 }
 
 template <typename T, typename K, typename series_templ>
-T levin_recursion_algorithm<T, K, series_templ>::operator()(T n_time, T k_time, T b, bool ND) const
+T levin_recursion_algorithm<T, K, series_templ>::operator()(K n_time, K k_time, T b, bool ND) const
 {
     T R_0 = 0;
-    T w_n = pow(T(-1), n_time) * this->series->fact(n_time);
+    T w_n = static_cast<T>(pow(T(-1), n_time) * this->series->fact(n_time));
 
     if (ND == 0)
         R_0 = this->series->S_n(n_time) / w_n;
@@ -73,7 +73,7 @@ T levin_recursion_algorithm<T, K, series_templ>::operator()(T n_time, T k_time, 
         return R_0;
 
     return
-    (*this)(n_time + 1, k_time - 1, b, ND) -
+    static_cast<T>((*this)(n_time + 1, k_time - 1, b, ND) -
     (*this)(n_time, k_time - 1, b, ND) * (b + n_time) * pow((b + n_time + k_time - 1), k_time - 2) /
-    pow((b + n_time + k_time), k_time - 1);
+    pow((b + n_time + k_time), k_time - 1));
 }
