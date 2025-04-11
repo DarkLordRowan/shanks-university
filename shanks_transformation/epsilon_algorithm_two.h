@@ -51,13 +51,13 @@ T epsilon_algorithm_two<T, K, series_templ>::operator()(const K n, const int ord
     else if (order == 0)
         return this->series->S_n(n);
 
-    int k = 2 * order;
+    K k = 2 * order; // int -> K
 
     (n % 2 == 0) ? k += n : k += n - 1;
 
     std::vector<std::vector<T>> e(4, std::vector<T>(k + 3, 0)); //4 vectors k+3 length containing four Epsilon Table rows 
 
-    for (int j = k; j >= 0; --j) //Counting first row of Epsilon Table
+    for (K j = k; j >= 0; --j) //Counting first row of Epsilon Table
     {
         e[3][j] = this->series->S_n(j);
     }
@@ -68,23 +68,23 @@ T epsilon_algorithm_two<T, K, series_templ>::operator()(const K n, const int ord
     {
         for (int i = 0; i < k; ++i)
         {
-            e[0][i] = e[2][i + 1] + 1.0 / (e[3][i + 1] - e[3][i]); //Standart Epsilon Wynn algorithm
+            e[0][i] = static_cast<T>(e[2][i + 1] + 1.0 / (e[3][i + 1] - e[3][i])); //Standart Epsilon Wynn algorithm
 
             if (!std::isfinite(e[0][i]) && i + 2 <= k) //This algorithm is used if new elliment is corrupted.
             {
-                a2 = 1.0 / e[2][i + 1];
+                a2 = static_cast<T>(1.0 / e[2][i + 1]);
 
-                a1 = 1.0 / (1.0 - (a2 * e[2][i + 2]));
+                a1 = static_cast<T>(1.0 / (1.0 - (a2 * e[2][i + 2])));
                 a = e[2][i + 2] * a1;
 
-                a1 = 1.0 / (1.0 - (a2 * e[2][i]));
+                a1 = static_cast<T>(1.0 / (1.0 - (a2 * e[2][i])));
                 a += e[2][i] * a1;
 
-                a1 = 1.0 / (1.0 - (a2 * e[0][i + 2]));
+                a1 = static_cast<T>(1.0 / (1.0 - (a2 * e[0][i + 2])));
                 a -= e[0][i + 2] * a1;
 
-                e[0][i] = 1.0 / e[2][i + 1];
-                e[0][i] = 1.0 / (1.0 + a * e[0][i]);
+                e[0][i] = static_cast<T>(1.0 / e[2][i + 1]);
+                e[0][i] = static_cast<T>(1.0 / (1.0 + a * e[0][i]));
                 e[0][i] = e[0][i] * a;
             }
             if (!std::isfinite(e[0][i])) //If new element is still corrupted we just copy prev. element, so we will get result
