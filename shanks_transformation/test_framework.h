@@ -840,7 +840,7 @@ inline static void main_testing_function()
 		transform.reset(new ford_sidi_algorithm_two<T, K, decltype(series.get())>(series.get()));
 		break;
 	case transformation_id_t::Ford_Sidi_algorithm_three_id:
-		transform.reset(new ford_sidi_algorithm_three<T, K, decltype(series.get())>(series.get()));
+		transform.reset(new ford_sidi_algorithm_three<T, K, decltype(series.get())>(series.get(), 0));
 		break;
 	default:
 		throw std::domain_error("wrong transformation_id");
@@ -854,6 +854,11 @@ inline static void main_testing_function()
 	int order = 0;
 	std::cout << "Enter n and order:" << std::endl;
 	std::cin >> n >> order;
+
+	if(dynamic_cast<ford_sidi_algorithm_three<T, K, decltype(series.get())>*>(transform.get())) {
+		transform.reset(new ford_sidi_algorithm_three<T, K, decltype(series.get())>(series.get(), n));
+	}
+
 	switch (function_id)
 	{
 	case test_function_id_t::cmp_sum_and_transform_id:
@@ -926,7 +931,7 @@ inline static void main_testing_function()
 		case transformation_id_t::Ford_Sidi_algorithm_two_id:
 			transform2.reset(new ford_sidi_algorithm_two<T, K, decltype(series.get())>(series.get()));
 		case transformation_id_t::Ford_Sidi_algorithm_three_id:
-			transform2.reset(new ford_sidi_algorithm_three<T, K, decltype(series.get())>(series.get()));
+			transform2.reset(new ford_sidi_algorithm_three<T, K, decltype(series.get())>(series.get(), n));
 		default:
 			throw std::domain_error("wrong algorithm id");
 		}
@@ -1069,7 +1074,7 @@ inline static void main_testing_function()
 			print_transform(i, order, std::move(transform.get()));
 			
 			//Ford-Sidi V3
-			transform.reset(new ford_sidi_algorithm_three<T, K, decltype(series.get())>(series.get()));
+			transform.reset(new ford_sidi_algorithm_three<T, K, decltype(series.get())>(series.get(), n));
 			print_transform(i, order, std::move(transform.get()));
 
 			std::cout << std::endl;
