@@ -6,8 +6,8 @@
 
 #pragma once
 #define DEF_UNDEFINED_SUM 0
-#define GAMMA 2 //parameter for gamma modification
-#define RHO 1	//parameter for gamma-rho modification
+//#define GAMMA 2 //parameter for gamma modification
+//#define RHO 1	//parameter for gamma-rho modification
 
 #include "series_acceleration.h" // Include the series header
 
@@ -35,7 +35,12 @@ protected:
 			return this->series->S_n(n);
 		}
 		T S_n = this->series->S_n(n);
-		T res = recursive_calculate_body(n, order - 2, S_n,1) + (numerator_func->operator()(n,order,this->series, GAMMA, RHO)) / (recursive_calculate_body(n, order - 1,S_n,1) - recursive_calculate_body(n, order - 1,S_n,0));
+
+		//Сделать их вбиваемыми TODO
+		T gamma = 2; //parameter for gamma modification
+		T RHO = 1;	//parameter for gamma-rho modification
+
+		T res = recursive_calculate_body(n, order - 2, S_n,1) + (numerator_func->operator()(n,order,this->series, gamma, RHO)) / (recursive_calculate_body(n, order - 1,S_n,1) - recursive_calculate_body(n, order - 1,S_n,0));
 
 		if (!std::isfinite(res)) throw std::overflow_error("division by zero");
 		return res;
@@ -53,7 +58,12 @@ protected:
 		else if (order == -1) {
 			return 0;
 		}
-		T res = recursive_calculate_body(n + j, order - 2, S_n, 1) + (numerator_func->operator()(n+j,order,this->series, GAMMA, RHO)) / (recursive_calculate_body(n + j, order - 1, S_n, 1) - recursive_calculate_body(n + j, order - 1, S_n, 0));
+
+		//Сделать их вбиваемыми TODO
+		T gamma = 2; //parameter for gamma modification
+		T RHO = 1;	//parameter for gamma-rho modification
+
+		T res = recursive_calculate_body(n + j, order - 2, S_n, 1) + (numerator_func->operator()(n+j,order,this->series, gamma, RHO)) / (recursive_calculate_body(n + j, order - 1, S_n, 1) - recursive_calculate_body(n + j, order - 1, S_n, 0));
 		if (!std::isfinite(res)) throw std::overflow_error("division by zero");
 		return res;
 	}

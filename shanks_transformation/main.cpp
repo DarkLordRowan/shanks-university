@@ -12,7 +12,6 @@
 
 int main(void)
 {
-
 	try
 	{
 		main_testing_function<long double, long long int>();

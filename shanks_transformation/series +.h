@@ -372,6 +372,7 @@ public:
 	*/
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 
+
 private:
 	/**
 	* @brief Computes nth term of the series
@@ -393,7 +394,7 @@ T exp_series<T, K>::acsess_row(K n)
 
 	auto old_size = this->series_vector.size();
 
-	for (auto i = old_size; i <= n; ++i) 
+	for (auto i = old_size; i <= static_cast<typename std::vector<T>::size_type>(n); ++i)
 	{
 		this->series_vector.push_back(this->series_vector[i - 1] * this->x / i);
 	}
@@ -457,8 +458,8 @@ T cos_series<T, K>::acsess_row(K n)
 
 	auto old_size = this->series_vector.size();
 
-	for (auto i = old_size; i <= n; ++i) {
-		this->series_vector.push_back(this->series_vector[i - 1] * static_cast<T>(-1) * std::pow(this->x, 2) / (2 * i * (2 * i - 1)));
+	for (auto i = old_size; i <= static_cast<typename std::vector<T>::size_type>(n); ++i) {
+		this->series_vector.push_back(this->series_vector[i - 1] * static_cast<T>(-1) * static_cast<T>(std::pow(this->x, 2) / (2 * i * (2 * i - 1))));
 	}
 
 	return this->series_vector[n];
@@ -521,8 +522,8 @@ T sin_series<T, K>::acsess_row(K n)
 
 	auto old_size = this->series_vector.size();
 
-	for (auto i = old_size; i <= n; ++i) {
-		this->series_vector.push_back(this->series_vector[i - 1] * T(-1) * std::pow(this->x, 2) / (2 * i * (2 * i + 1)));
+	for (auto i = old_size; i <= static_cast<typename std::vector<T>::size_type>(n); ++i) {
+		this->series_vector.push_back(this->series_vector[i - 1] * T(-1) * static_cast<T>(std::pow(this->x, 2) / (2 * i * (2 * i + 1))));
 	}
 
 	return this->series_vector[n];
@@ -584,8 +585,8 @@ T cosh_series<T, K>::acsess_row(K n)
 
 	auto old_size = this->series_vector.size();
 
-	for (auto i = old_size; i <= n; ++i) {
-		this->series_vector.push_back(this->series_vector[i - 1] * std::pow(this->x, 2) / (2 * i * (2 * i - 1)));
+	for (auto i = old_size; i <= static_cast<typename std::vector<T>::size_type>(n); ++i) {
+		this->series_vector.push_back(this->series_vector[i - 1] * static_cast<T>(std::pow(this->x, 2) / (2 * i * (2 * i - 1))));
 	}
 
 	return this->series_vector[n];
@@ -647,8 +648,8 @@ T sinh_series<T, K>::acsess_row(K n)
 
 	auto old_size = this->series_vector.size();
 
-	for (auto i = old_size; i <= n; ++i) {
-		this->series_vector.push_back(this->series_vector[i - 1] * std::pow(this->x, 2) / (2 * i * (2 * i + 1)));
+	for (auto i = old_size; i <= static_cast<typename std::vector<T>::size_type>(n); ++i) {
+		this->series_vector.push_back(this->series_vector[i - 1] * static_cast<T>(std::pow(this->x, 2) / (2 * i * (2 * i + 1))));
 	}
 
 	return this->series_vector[n];
@@ -747,7 +748,7 @@ private:
 	* @param n The number of the term
 	* @return nth term of the series
 	*/
-	T acsess_row(K n);
+	// T acsess_row(K n);
 };
 
 template <typename T, typename K>
@@ -844,7 +845,7 @@ private:
 };
 
 template <typename T, typename K>
-mean_sinh_sin_series<T, K>::mean_sinh_sin_series(T x) : series_base<T, K>(x, 0.5 * (std::sinh(x) + std::sin(x))), requrrent_series_base<T, K>(x) {}
+mean_sinh_sin_series<T, K>::mean_sinh_sin_series(T x) : series_base<T, K>(x, static_cast<T>(0.5 * (std::sinh(x) + std::sin(x)))), requrrent_series_base<T, K>(x) {}
 
 template <typename T, typename K>
 T mean_sinh_sin_series<T, K>::acsess_row(K n)
@@ -852,10 +853,10 @@ T mean_sinh_sin_series<T, K>::acsess_row(K n)
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
 
-	K old_size = this->series_vector.size();
+	auto old_size = this->series_vector.size();
 
-	for (auto i = old_size; i <= n; ++i) {
-		this->series_vector.push_back(this->series_vector[i - 1] * std::pow(this->x, 4) / ((4 * i + 1) * (4 * i) * (4 * i - 1) * (4 * i - 2)));
+	for (auto i = old_size; i <= static_cast<typename std::vector<T>::size_type>(n); ++i) {
+		this->series_vector.push_back(this->series_vector[i - 1] * static_cast<T>(std::pow(this->x, 4) / ((4 * i + 1) * (4 * i) * (4 * i - 1) * (4 * i - 2))));
 	}
 
 	return this->series_vector[n];
@@ -1121,7 +1122,7 @@ private:
 };
 
 template <typename T, typename K>
-erf_series<T, K>::erf_series(T x) : series_base<T, K>(x, static_cast<T>(std::sqrt(std::numbers::pi)) * std::erf(x) * 0.5), requrrent_series_base<T, K>(x) { }
+erf_series<T, K>::erf_series(T x) : series_base<T, K>(x, static_cast<T>(std::sqrt(std::numbers::pi)) * static_cast<T>(std::erf(x) * 0.5)), requrrent_series_base<T, K>(x) { }
 
 template <typename T, typename K>
 T erf_series<T, K>::acsess_row(K n)
@@ -1131,8 +1132,8 @@ T erf_series<T, K>::acsess_row(K n)
 
 	auto old_size = this->series_vector.size();
 
-	for (auto i = old_size; i <= n; ++i) {
-		this->series_vector.push_back(this->series_vector[i - 1] * (-1) * std::pow(this->x, 2) / i  * (2 * (i - 1) + 1) / (2 * i + 1));
+	for (auto i = old_size; i <= static_cast<typename std::vector<T>::size_type>(n); ++i) {
+		this->series_vector.push_back(this->series_vector[i - 1] * (-1) * static_cast<T>(std::pow(this->x, 2) / i  * (2 * (i - 1) + 1) / (2 * i + 1)));
 	}
 
 	return static_cast<T>(this->series_vector[n]);
@@ -1207,7 +1208,7 @@ T m_fact_1mx_mp1_inverse_series<T, K>::acsess_row(K n)
 
 	auto old_size = this->series_vector.size();
 
-	for (auto i = old_size; i <= n; ++i) {
+	for (auto i = old_size; i <= static_cast<typename std::vector<T>::size_type>(n); ++i) {
 		this->series_vector.push_back(this->series_vector[i - 1] * this->x * (this->m + i) / i);
 	}
 
@@ -1251,7 +1252,7 @@ public:
 };
 
 template <typename T, typename K>
-inverse_sqrt_1m4x_series<T, K>::inverse_sqrt_1m4x_series(T x) : series_base<T, K>(x, std::pow(std::fma(-4, x, 1), -0.5))
+inverse_sqrt_1m4x_series<T, K>::inverse_sqrt_1m4x_series(T x) : series_base<T, K>(x, static_cast<T>(std::pow(std::fma(-4, x, 1), -0.5)))
 {
 	if (std::abs(this->x) > 0.25 || this->x == 0.25)
 		throw std::domain_error("series diverge");
@@ -1263,7 +1264,7 @@ constexpr T inverse_sqrt_1m4x_series<T, K>::operator()(K n) const
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
 	const auto _fact_n = this->fact(n);
-	return this->fact(2 * n) * pow(this->x, n) / (_fact_n * _fact_n);
+	return this->fact(2 * n) * static_cast<T>(pow(this->x, n) / (_fact_n * _fact_n));
 }
 
 /**
@@ -1294,7 +1295,7 @@ public:
 };
 
 template <typename T, typename K>
-one_twelfth_3x2_pi2_series<T, K>::one_twelfth_3x2_pi2_series(T x) : series_base<T, K>(x, std::fma(0.25 * x, x, -std::numbers::pi * std::numbers::pi / 12))
+one_twelfth_3x2_pi2_series<T, K>::one_twelfth_3x2_pi2_series(T x) : series_base<T, K>(x, static_cast<T>(std::fma(0.25 * x, x, -std::numbers::pi * std::numbers::pi / 12)))
 {
 	if (std::abs(this->x) > std::numbers::pi)
 		throw std::domain_error("series diverge");
@@ -1336,7 +1337,7 @@ public:
 };
 
 template <typename T, typename K>
-x_twelfth_x2_pi2_series<T, K>::x_twelfth_x2_pi2_series(T x) : series_base<T, K>(x, std::fma(x / 12, (x + std::numbers::pi)* (x - std::numbers::pi), -std::fma(x + std::numbers::pi, x - std::numbers::pi, (x + std::numbers::pi) * (x - std::numbers::pi))))
+x_twelfth_x2_pi2_series<T, K>::x_twelfth_x2_pi2_series(T x) : series_base<T, K>(x, static_cast<T>(std::fma(x / 12, (x + std::numbers::pi)* (x - std::numbers::pi), -std::fma(x + std::numbers::pi, x - std::numbers::pi, (x + std::numbers::pi) * (x - std::numbers::pi)))))
 {
 	if (std::abs(this->x) > std::numbers::pi)
 		throw std::domain_error("series diverge");
@@ -1371,7 +1372,7 @@ public:
 };
 
 template <typename T, typename K>
-ln2_series<T, K>::ln2_series() : series_base<T, K>(0, std::log(2)) {}
+ln2_series<T, K>::ln2_series() : series_base<T, K>(0, static_cast<T>(std::log(2))) {}
 
 template <typename T, typename K>
 constexpr T ln2_series<T, K>::operator()(K n) const
@@ -1413,7 +1414,7 @@ constexpr T one_series<T, K>::operator()(K n) const
 {
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
-	return n ? 1.0 / fma(n, n, n) : 0;
+	return n ? static_cast<T>(1.0 / fma(n, n, n)) : 0;
 }
 
 /**
@@ -1468,14 +1469,14 @@ public:
 };
 
 template <typename T, typename K>
-pi_3_series<T, K>::pi_3_series() : series_base<T, K>(0, std::numbers::pi / 3) {}
+pi_3_series<T, K>::pi_3_series() : series_base<T, K>(0, static_cast<T>(std::numbers::pi / 3)) {}
 
 template <typename T, typename K>
 constexpr T pi_3_series<T, K>::operator()(K n) const
 {
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
-	return 1.0 / ((n + 1) * (2 * n + 1) * (4 * n + 1));
+	return static_cast<T>(1.0 / ((n + 1) * (2 * n + 1) * (4 * n + 1)));
 }
 
 /**
@@ -2630,7 +2631,12 @@ constexpr T one_minus_sqrt_1minus4x_div_2x<T, K>::operator()(K n) const
 		throw std::domain_error("negative integer in the input");
 	if (std::abs(this->x) > 0.25 or this->x == 0)
 		throw std::domain_error("Modulus of the value x must be less or equal 1/4 and cannot be equal to 0");
-	return static_cast<T>((pow(this->x, n) * (this->binomial_coefficient(2*n, n))) / (n + 1));
+
+	T xn = static_cast<T>(std::pow(this->x, n));
+	T binom_coef = static_cast<T>(this->binomial_coefficient(static_cast<T>(2*n), n));
+	T n_plus_1 = static_cast<T>(n + 1);
+
+	return (xn * binom_coef) / n_plus_1;
 }
 
 
@@ -4159,7 +4165,7 @@ public:
 };
 
 template <typename T, typename K>
-two_degree_x_series<T, K>::two_degree_x_series(T x) : series_base<T, K>(x, std::pow(2, x)) {}
+two_degree_x_series<T, K>::two_degree_x_series(T x) : series_base<T, K>(x, static_cast<T>(std::pow(2, x))) {}
 
 template <typename T, typename K>
 constexpr T two_degree_x_series<T, K>::operator()(K n) const
@@ -4241,7 +4247,7 @@ public:
 };
 
 template <typename T, typename K>
-ln13_min_ln7_div_7_series<T, K>::ln13_min_ln7_div_7_series() : series_base<T, K>(0, (std::log(13) - std::log(7) / 7)) {}
+ln13_min_ln7_div_7_series<T, K>::ln13_min_ln7_div_7_series() : series_base<T, K>(0, (static_cast<T>(std::log(13) - std::log(7) / 7))) {}
 
 template <typename T, typename K>
 constexpr T ln13_min_ln7_div_7_series<T, K>::operator()(K n) const
@@ -4328,7 +4334,7 @@ constexpr T one_div_sqrt2_sin_xdivsqrt2_series<T, K>::operator()(K n) const
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
 
-	return static_cast<T>(std::pow(-1, n / 2) * _jn(2 * n + 1, this->x));
+	return static_cast<T>(std::pow(-1, n / 2) * _jn(static_cast<int>(2 * n + 1), this->x));
 }
 
 

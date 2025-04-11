@@ -49,7 +49,7 @@ public:
 		T coef = T(1);
 
 
-		T binomial_coef = this->series->binomial_coefficient(n, 0);
+		T binomial_coef = this->series->binomial_coefficient(static_cast<T>(n), 0);
 		T S_n = this->series->S_n(0);
 
 		T rest_a_n;

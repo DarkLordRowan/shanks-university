@@ -23,7 +23,7 @@ public:
    * @param scale The value to multiple (needed for u variant)
    * @return The partial sum after the transformation.
    */
-	virtual T operator()(const int& n, const int& j, const series_base<T, K>* series, T scale = T(1)) const = 0;
+	virtual T operator()(const K& n, const K& j, const series_base<T, K>* series, T scale = T(1)) const = 0;
 
 };
 
@@ -46,7 +46,7 @@ public:
    * @return The partial sum after the transformation.
    */
 
-	T operator()(const int& n, const int& j, const series_base<T, K>* series, T scale = T(1)) const {
+	T operator()(const K& n, const K& j, const series_base<T, K>* series, T scale = T(1)) const {
 		T result = T(1) / (scale * series->operator()(n + j));
 		if (!std::isfinite(result)) throw std::overflow_error("division by zero");
 		return result;
@@ -72,7 +72,7 @@ public:
    * @return The partial sum after the transformation.
    */
 
-	T operator()(const int& n, const int& j, const series_base<T, K>* series, T scale = T(1)) const {
+	T operator()(const K& n, const K& j, const series_base<T, K>* series, T scale = T(1)) const {
 		T result =  T(1) / series->operator()(n + j);
 		if (!std::isfinite(result)) throw std::overflow_error("division by zero");
 		return result;
@@ -99,7 +99,7 @@ public:
    * @return The partial sum after the transformation.
    */
 
-	T operator()(const int& n, const int& j, const series_base<T, K>* series, T scale = T(1)) const {
+	T operator()(const K& n, const K& j, const series_base<T, K>* series, T scale = T(1)) const {
 		T result =  1 / series->operator()(n + j + 1);
 		if (!std::isfinite(result)) throw std::overflow_error("division by zero");
 		return result;
@@ -125,7 +125,7 @@ public:
    * @return The partial sum after the transformation.
    */
 
-	T operator()(const int& n, const int& j, const series_base<T, K>* series, T scale = T(1)) const {
+	T operator()(const K& n, const K& j, const series_base<T, K>* series, T scale = T(1)) const {
 		T a1 = series->operator()(n + j);
 		T a2 = series->operator()(n + j + 1);
 		T result = (a2 - a1) / (a1*a2);
@@ -152,7 +152,7 @@ public:
    * @return The partial sum after the transformation.
    */
 
-	T operator()(const int& n, const int& j, const series_base<T, K>* series, T scale = T(1)) const {
+	T operator()(const K& n, const K& j, const series_base<T, K>* series, T scale = T(1)) const {
 		T a1 = series->operator()(n + j);
 		T a2 = series->operator()(n + j + 1);
 		T result = (a1 - a2) / (a1 * a2);

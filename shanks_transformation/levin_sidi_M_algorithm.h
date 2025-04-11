@@ -16,7 +16,6 @@
  * @param remainder_func - remainder type
 */
 
-
 template<typename T, typename K, typename series_templ>
 class M_levin_sidi_algorithm : public series_acceleration<T, K, series_templ>
 {
@@ -48,22 +47,22 @@ protected:
 		T w_n, rest;
 		T up = T(1), down = T(1);
 
-		T binomial_coef = this->series->binomial_coefficient(n, 0);
+		T binomial_coef = this->series->binomial_coefficient(static_cast<T>(n), 0);
 		T S_n = this->series->S_n(order);
 
 		T rest_w_n;
-		T down_coef = (GAMMA + order + 2), up_coef = down_coef - n;
+		T down_coef = static_cast<T>(GAMMA + order + 2), up_coef = down_coef - n;
 		
-		for (int m = 0; m < n - 1; ++m) {
+		for (K m = 0; m < n - 1; ++m) {
 			up *= (up_coef + m);
 			down *= (down_coef + m);
 		}
 
 		up = (up / down);
-		down_coef = (GAMMA + order + 1);
+		down_coef = static_cast<T>(GAMMA + order + 1);
 		up_coef = (down_coef - n + 1);
 		
-		for (int j = 0; j <= n; ++j) {
+		for (K j = 0; j <= n; ++j) {
 
 			rest = this->series->minus_one_raised_to_power_n(j) * binomial_coef;
 
@@ -73,7 +72,7 @@ protected:
 
 			up = up / (up_coef + j) * ( down_coef + j );
 
-			w_n = remainder_func->operator()(order, j, this->series, -GAMMA-n);
+			w_n = remainder_func->operator()(order, j, this->series, static_cast<T>(- GAMMA - n));
 
 			rest_w_n = rest * w_n;
 
