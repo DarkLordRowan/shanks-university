@@ -48,7 +48,7 @@ T epsilon_algorithm_three<T, K, series_templ>::operator()(const K n, const int o
     else if (order == 0)
         return this->series->S_n(n);
 
-    int N = n;
+    K N = n; // int -> K
 
 	T EMACH = std::numeric_limits<T>::epsilon(); // The smallest relative spacing for the T
 	T EPRN = 50 * EMACH; 
@@ -59,8 +59,8 @@ T epsilon_algorithm_three<T, K, series_templ>::operator()(const K n, const int o
     T abs_error = 0; //Absolute error
     T resla = 0; //Last result
 
-    int newelm, num, NUM, K1, K2, K3, ib, ib2, ie, in;
-    T RES, E0, E1, E2, E3, E1ABS, DELTA1, DELTA2, DELTA3, ERR1, ERR2, ERR3, TOL1, TOL2, TOL3, SS, EPSINF;
+    K newelm, num, NUM, K1, K2, K3, ib, ib2, ie, in;
+    T RES, E0, E1, E2, E3, E1ABS, DELTA1, DELTA2, DELTA3, ERR1, ERR2, ERR3, TOL1, TOL2, TOL3, SS, EPSINF; // int -> K
 
     std::vector<T> e(N + 3, 0); //First N eliments of epsilon table + 2 elements for math
 
@@ -106,11 +106,11 @@ T epsilon_algorithm_three<T, K, series_templ>::operator()(const K n, const int o
                     break;
                 }
 
-                SS = 1.0 / DELTA1 + 1.0 / DELTA2 - 1.0 / DELTA3;
+                SS = static_cast<T>(1.0 / DELTA1 + 1.0 / DELTA2 - 1.0 / DELTA3);
                 EPSINF = std::abs(SS * E1);
 
                 if (EPSINF > 1e-3) {
-                    RES = E1 + 1.0 / SS;
+                    RES = static_cast<T>(E1 + 1.0 / SS);
                     e[K1] = RES;
                     K1 -= 2;
                     T ERROR = ERR2 + std::abs(RES - E2) + ERR3;

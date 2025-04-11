@@ -1,0 +1,25 @@
+﻿  Проверка источников на наличие зависимостей модуля…
+  test_framework.h
+  Компиляция…
+  test_framework.h
+  main.cpp
+C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\series +.h(952,128): warning C4244: аргумент: преобразование "K" в "const double", возможна потеря данных
+          with
+          [
+              K=__int64
+          ]
+C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\series +.h(952): message : во время компиляции функции-члена класс шаблон "xmb_Jb_two_series<long double,__int64>::xmb_Jb_two_series(T,K)"
+          with
+          [
+              T=long double,
+              K=__int64
+          ]
+C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\test_framework.h(488): message : выполняется компиляция ссылки на экземпляр шаблон функции "xmb_Jb_two_series<long double,__int64>::xmb_Jb_two_series(T,K)"
+          with
+          [
+              T=long double,
+              K=__int64
+          ]
+C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\test_framework.h(434): message : выполняется компиляция ссылки на экземпляр класс шаблон функции "xmb_Jb_two_series<long double,__int64>"
+C:\Users\DLR_ACER\HW_Mirea\shanks-university\shanks_transformation\main.cpp(17): message : выполняется компиляция ссылки на экземпляр шаблон функции "void main_testing_function<long double,__int64>(void)"
+  shanks_transformation.vcxproj -> C:\Users\DLR_ACER\HW_Mirea\shanks-university\x64\Debug\shanks_transformation.exe

@@ -369,7 +369,7 @@ inline void init_levin(transformation_id_t id, std::unique_ptr<series_base<T,K>>
 	if (type == 'u') ptr = new u_transform<T, K>{};
 	if (type == 't') ptr = new t_transform<T, K>{}; 
 	if (type == 'v') { 
-		if (!id == transformation_id_t::M_algorithm)
+		if (id != transformation_id_t::M_algorithm)
 			ptr = new v_transform<T, K>{};
 		else
 			ptr = new v_transform_2<T, K>{};
@@ -921,13 +921,16 @@ inline static void main_testing_function()
 			break;
 		case transformation_id_t::levin_recursion_id:
 			transform2.reset(new levin_recursion_algorithm<T, K, decltype(series.get())>(series.get()));
+			break;
 		case transformation_id_t::W_algorithm_id:
 			transform2.reset(new W_lubkin_algorithm<T, K, decltype(series.get())>(series.get()));
 			break;
 		case transformation_id_t::richardson_algorithm_id:
 			transform2.reset(new richardson_algorithm<T, K, decltype(series.get())>(series.get()));
+			break;
 		case transformation_id_t::Ford_Sidi_algorithm_id:
 			transform2.reset(new ford_sidi_algorithm<T, K, decltype(series.get())>(series.get()));
+			break;
 		case transformation_id_t::Ford_Sidi_algorithm_two_id:
 			transform2.reset(new ford_sidi_algorithm_two<T, K, decltype(series.get())>(series.get()));
 		case transformation_id_t::Ford_Sidi_algorithm_three_id:

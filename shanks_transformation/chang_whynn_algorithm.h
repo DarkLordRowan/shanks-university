@@ -51,7 +51,7 @@ T chang_whynn_algorithm<T, K, series_templ>::operator()(const K n, const int ord
 
     T up, down, coef, coef2;
 
-    int max = 0;
+    K max = 0; // int -> K mark 
 
     (n % 2 == 0) ? max += n : max += n - 1;
 
@@ -60,7 +60,7 @@ T chang_whynn_algorithm<T, K, series_templ>::operator()(const K n, const int ord
 
     for (int i = 0; i < max; ++i) //Counting first row of Epsilon Table
     {
-        e[0][i] = 1.0 / (this->series->operator()(i + 1)); 
+        e[0][i] = static_cast<T>(1.0 / (this->series->operator()(i + 1))); 
     }
 
     for (int i = 0; i < max; ++i) //Counting F function
@@ -71,8 +71,8 @@ T chang_whynn_algorithm<T, K, series_templ>::operator()(const K n, const int ord
         up = this->series->operator()(i + 1) * this->series->operator()(i + 2) * coef;
         down = this->series->operator()(i + 3) * coef2;
         down -= (this->series->operator()(i + 1)) * coef;
-        down = 1.0 / down;
-        e[1][i] = this->series->S_n(i + 1) - up * down;
+        down = static_cast<T>(1.0 / down);
+        e[1][i] = static_cast<T>(this->series->S_n(i + 1) - up * down);
 
         f[i] = coef * coef2 * down; //Can make coeff2 ^2 for better effect
     }
@@ -81,8 +81,12 @@ T chang_whynn_algorithm<T, K, series_templ>::operator()(const K n, const int ord
         for (int i = 0; i < max - k; ++i) {
 
             up = 1 - k + k * f[i];
-            down = 1.0 / (e[1][i + 1] - e[1][i]);
+            down = static_cast<T>(1.0 / (e[1][i + 1] - e[1][i]));
             e[0][i] = e[0][i + 1] + up * down;
+
+            if (!std::isfinite(e[0][i])) { //This 'if' checking incorrect values and avoiding them
+                e[0][i] = e[0][i + 1];
+            }
         }
         std::swap(e[0], e[1]); //Swapping 1 and 2 rows of Epsilon Table. First ine will be overwriteen next turn
     }

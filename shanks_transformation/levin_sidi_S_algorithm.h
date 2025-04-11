@@ -45,19 +45,19 @@ protected:
 		T w_n, rest;
 		T up, down;
 
-		for (int j = 0; j <= n; ++j) {
+		for (K j = 0; j <= n; ++j) {
 
-			rest = this->series->minus_one_raised_to_power_n(j) * this->series->binomial_coefficient(n, j);
+			rest = this->series->minus_one_raised_to_power_n(j) * this->series->binomial_coefficient(static_cast<T>(n), j);
 
 			up = down = T(1);
-			for (int m = 0; m < n - 1; ++m) {
+			for (K m = 0; m < n - 1; ++m) {
 				up *= (BETA + order + j + m);
 				down *= (BETA + order + n + m);
 			}
 
 			rest = rest * (up / down);
 
-			w_n = remainder_func->operator()(n, j, this->series, BETA + n);
+			w_n = remainder_func->operator()(n, j, this->series, static_cast<T>(BETA + n));
 
 			numerator += rest * this->series->S_n(order + j) * w_n;
 			denominator += rest * w_n;
@@ -70,6 +70,7 @@ protected:
 			throw std::overflow_error("division by zero");
 
 		return numerator;
+
 	}
 
 	/**
@@ -90,16 +91,16 @@ protected:
 		std::vector<T>* N = new std::vector<T>(n + 1, 0);
 		std::vector<T>* D = new std::vector<T>(n + 1, 0);
 
-		for (int i = 0; i < n + 1; i++) {
+		for (K i = 0; i < n + 1; i++) {
 			(*D)[i] = remainder_func->operator()(0, order + i, this->series);
 			(*N)[i] = this->series->S_n(order + i) * (*D)[i];
 		}
 
-		for (int i = 1; i <= n; ++i) {
-			for (int j = 0; j <= n - i; ++j) {
+		for (K i = 1; i <= n; ++i) { 
+			for (K j = 0; j <= n - i; ++j) { 
 
-				T scale1 = ((BETA + order + j + i) * (BETA + order + j + i - 1));
-				T scale2 = ((BETA + order + j + 2 * i) * (BETA + order + j + 2 * i - 1));
+				K scale1 = ((BETA + order + j + i) * (BETA + order + j + i - 1)); // T -> K
+				K scale2 = ((BETA + order + j + 2 * i) * (BETA + order + j + 2 * i - 1)); // T -> K
 
 				(*D)[j] = ((*D)[j + 1] * scale2 - scale1 * (*D)[j]) / scale2;
 				(*N)[j] = ((*N)[j + 1] * scale2 - scale1 * (*N)[j]) / scale2;
@@ -138,7 +139,7 @@ public:
    */
 
 	T operator()(const K n, const int order) const {
-		if (recursive) return calculate_rec(n, n);
+		if (recursive) return calculate_rec(n, order);
 		return calculate(n, order);
 	}
 

@@ -78,12 +78,20 @@ T ford_sidi_algorithm_three<T, K, series_templ>::operator()(const K n, const int
     for (K k = 0; k <= n - 1; k++) {
         K MM = n - (k + 1) - 1;
         T D = FSG[k + 2][MM + 1] - FSG[k + 2][MM];
-                                                    
+    
+        if(abs(D) > 1e-77){
         for (K i = k + 3; i <= this->Nmax - 3; i++) {
             FSG[i][MM] = (FSG[i][MM + 1] - FSG[i][MM]) / D;
         }
         FSA[MM] = (FSA[MM + 1] - FSA[MM]) / D;
-        FSI[MM] = (FSI[MM + 1] - FSI[MM]) / D;                                                                                                                            
+        FSI[MM] = (FSI[MM + 1] - FSI[MM]) / D;          
+        } else {
+            for (K i = k + 3; i <= this->Nmax - 3; i++) {
+                FSG[i][MM] = (FSG[i][MM + 1] - FSG[i][MM]);
+            }
+            FSA[MM] = (FSA[MM + 1] - FSA[MM]);
+            FSI[MM] = (FSI[MM + 1] - FSI[MM]);  
+        }                                                                                                   
 
     }
     return FSA[0] / FSI[0];

@@ -18,6 +18,7 @@
 #include "series +.h" 
 
 
+
 /**
  * @brief Base class series_acceleration
  * @authors Bolshakov M.P.

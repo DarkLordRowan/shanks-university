@@ -57,7 +57,7 @@ T richardson_algorithm<T, K, series_templ>::operator()(const K n, const int orde
     // The Richardson method main function 
     for (int l = 1; l <= n; ++l) {
         for (int m = l; m <= n; ++m) {
-            D[m][l] = (pow(4, l) * D[m][l - 1] - D[m - 1][l - 1]) / (pow(4, l) - 1);
+            D[m][l] = static_cast<T>((pow(4, l) * D[m][l - 1] - D[m - 1][l - 1]) / (pow(4, l) - 1));
         }
     }
 
