@@ -4333,8 +4333,12 @@ constexpr T one_div_sqrt2_sin_xdivsqrt2_series<T, K>::operator()(K n) const
 {
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
-
-	return static_cast<T>(std::pow(-1, n / 2) * _jn(static_cast<int>(2 * n + 1), this->x));
+	
+	#ifdef _WIN32
+		return static_cast<T>(std::pow(-1, n / 2) * _jn(static_cast<K>(2 * n + 1), this->x));
+	#else
+		return static_cast<T>(std::pow(-1, n / 2) * jn(static_cast<T>(2 * n + 1), this->x));
+	#endif
 }
 
 
