@@ -9,7 +9,6 @@
 #include "series_acceleration.h" // Include the series header
 #include <vector> // Include the vector library
 
-
  /**
   * @brief Epsilon Algorithm class template.
   * @tparam T The type of the elements in the series, K The type of enumerating integer, series_templ is the type of series whose convergence we accelerate
@@ -45,27 +44,28 @@ T epsilon_algorithm<T, K, series_templ>::operator()(const K n, const int order) 
 	int m = 2 * order;
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
-	else if (n == 0)
+
+	if (n == 0)
 		return DEF_UNDEFINED_SUM;
-	else if (order == 0)
+
+	if (order == 0)
 		return this->series->S_n(n);
 
 	std::vector<T> e0(m + n + 1, 0);
 	std::vector<T> e1(m + n, 0);
+
 	auto e0_ref = &e0; // for swapping vectors in for cycle
 	auto e1_ref = &e1; //
+
 	for (K j = m + n; j >= 0; --j) // int -> K mark
-	{
 		e0[j] = this->series->S_n(j); 
-	}
 
 	K max_ind = m + n; // int -> K mark
 	for (int i = 0; i < m; ++i)
 	{
 		for (K j = n - 1; j < max_ind; ++j)
-		{
 			(*e1_ref)[j] += static_cast<T>(1.0 / ((*e0_ref)[j + 1] - (*e0_ref)[j]));
-		}
+
 		--max_ind;
 		std::swap(e0_ref, e1_ref);
 		(*e1_ref).erase((*e1_ref).begin());

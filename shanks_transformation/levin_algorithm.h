@@ -22,7 +22,8 @@ public:
 	* @brief Parameterized constructor to initialize the Levin Algorithm.
 	* @param series The series class object to be accelerated
 	*/
-	levin_algorithm(const series_templ& series);
+
+	levin_algorithm(const series_templ& series) : series_acceleration<T, K, series_templ>(series) {}
 
 	/**
 	* @brief Fast impimentation of Levin algorithm.
@@ -32,45 +33,40 @@ public:
 	* @param order The order of transformation.
 	* @return The partial sum after the transformation.
 	*/
-	T operator()(const K n, const int order) const;
-};
 
-
-template <typename T, typename K, typename series_templ>
-levin_algorithm<T, K, series_templ>::levin_algorithm(const series_templ& series) : series_acceleration<T, K, series_templ>(series) {}
-
-template <typename T, typename K, typename series_templ>
-T levin_algorithm<T, K, series_templ>::operator()(const K n, const int order) const
-{
-	if (n < 0)
-		throw std::domain_error("negative integer in the input");
-	else if (n == 0)
-		return DEF_UNDEFINED_SUM;
-	else if (order == 0)
-		return this->series->S_n(n);
-
-	T numerator = 0, denominator = 0, C_njk, S_nj, g_n, rest;
-
-	for (int j = 0; j <= order; ++j) //Standart Levin algo procedure
+	T operator()(const K n, const int order) const
 	{
-		rest = this->series->minus_one_raised_to_power_n(j) * this->series->binomial_coefficient(static_cast<T>(order), j);
+		if (n < 0)
+			throw std::domain_error("negative integer in the input");
 
-		C_njk = static_cast<T>((std::pow((n + j + 1), (order - 1))) / (std::pow((n + order + 1), (order - 1))));
+		if (n == 0)
+			return DEF_UNDEFINED_SUM;
 
-		S_nj = this->series->S_n(n + j);
+		if (order == 0)
+			return this->series->S_n(n);
 
-		g_n = 1 / (this->series->operator()(n + j));
+		T numerator = 0, denominator = 0, C_njk, S_nj, g_n, rest;
 
-		rest *= C_njk * g_n;
+		for (int j = 0; j <= order; ++j) //Standart Levin algo procedure
+		{
+			rest = this->series->minus_one_raised_to_power_n(j) * this->series->binomial_coefficient(static_cast<T>(order), j);
 
-		denominator += rest;
-		numerator += rest * S_nj;
+			C_njk = static_cast<T>((std::pow((n + j + 1), (order - 1))) / (std::pow((n + order + 1), (order - 1))));
+
+			S_nj = this->series->S_n(n + j);
+
+			g_n = 1 / (this->series->operator()(n + j));
+
+			rest *= C_njk * g_n;
+
+			denominator += rest;
+			numerator += rest * S_nj;
+		}
+		numerator /= denominator;
+
+		if (!std::isfinite(numerator))
+			throw std::overflow_error("division by zero");
+
+		return numerator;
 	}
-	
-	numerator = numerator / denominator;
-
-	if (!std::isfinite(numerator))
-		throw std::overflow_error("division by zero");
-
-	return numerator;
-}
+};

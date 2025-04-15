@@ -3,13 +3,12 @@
 * @brief Containts implemetation for Drummond's D-transformation
 * @authors Naumov A.
 */
+
 #pragma once
 #define DEF_UNDEFINED_SUM 0
 
 #include "series_acceleration.h" // Include the series header
 #include <vector> // Include the vector library
-
-
 
 /**
  * @brief D_transformation class template.
@@ -21,9 +20,7 @@ template<typename T, typename K, typename series_templ>
 class drummonds_algorithm : public series_acceleration<T, K, series_templ>
 {
 protected:
-
 	const transform_base<T, K>* remainder_func;
-
 	bool recursive;
 
 	/**
@@ -33,30 +30,28 @@ protected:
 	* @return The partial sum after the transformation.
 	*/
 
-	virtual T calculate(const K& n, const int& order) const {
-
+	virtual T calculate(const K& n, const int& order) const 
+	{
 		if (order < 0)
 			throw std::domain_error("negative integer in input");
-
 
 		T numerator = T(0), denominator = T(0);
 		T w_n, rest;
 
-		for (int j = 0; j <= n; ++j) {
-
+		for (int j = 0; j <= n; ++j) 
+		{
 			rest = this->series->minus_one_raised_to_power_n(j) * this->series->binomial_coefficient(static_cast<T>(n), j);
 
 			w_n = remainder_func->operator()(order, j, this->series, 1);
 
 			numerator += rest * this->series->S_n(order + j) * w_n;
 			denominator += rest * w_n;
-
 		}
 
-		numerator /= denominator;
-
-		if (!std::isfinite(numerator))
+		if (denominator == 0 || !std::isfinite(numerator))
 			throw std::overflow_error("division by zero");
+
+		numerator /= denominator;
 
 		return numerator;
 	}
@@ -68,36 +63,36 @@ protected:
 	* @return The partial sum after the transformation.
 	*/
 
-	T calculate_rec(const K& n, const int& order) const {
-
+	T calculate_rec(const K& n, const int& order) const
+	{
 		if (order < 0)
 			throw std::domain_error("negative integer in input");
 
 		std::vector<T>* N = new std::vector<T>(n + 1, 0);
 		std::vector<T>* D = new std::vector<T>(n + 1, 0);
 
-		for (int i = 0; i < n + 1; i++) {
+		for (int i = 0; i < n + 1; ++i)
+		{
 			(*D)[i] = remainder_func->operator()(0, order + i, this->series);
 			(*N)[i] = this->series->S_n(order + i) * (*D)[i];
 		}
 
 		for (int i = 1; i <= n; ++i)
-			for (int j = 0; j <= n - i; ++j) {
-
+			for (int j = 0; j <= n - i; ++j) 
+			{
 				(*D)[j] = (*D)[j + 1] - (*D)[j];
 				(*N)[j] = (*N)[j + 1] - (*N)[j];
 			}
 
 		T numerator = (*N)[0] / (*D)[0];
 
-		delete N, D;
-
 		if (!std::isfinite(numerator))
 			throw std::overflow_error("division by zero");
 
+		delete N, D;
+
 		return numerator;
 	}
-
 public:
 
 	/**
@@ -119,10 +114,11 @@ public:
    * @return The partial sum after the transformation.
    */
 
-	T operator()(const K n, const int order) const {
-		if (recursive) return calculate_rec(n, order);
+	T operator()(const K n, const int order) const 
+	{
+		if (recursive) 
+			return calculate_rec(n, order);
+
 		return calculate(n, order);
 	}
-
 };
-

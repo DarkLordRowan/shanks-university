@@ -33,11 +33,13 @@ protected:
 		* j - to fix n
 		* S_n - partial sum of series.
 		*/
-		for (K i = 0; i < j; i++) {
+		for (K i = 0; i < j; ++i) 
 			S_n += this->series->operator()(n + 1 + i);
-		}
+		
 		n += j;
-		if (order == 0) return S_n;
+		if (order == 0) 
+			return S_n;
+
 		//calculate all basic parts of transform
 		T W0 = calculate(n, order - 1, S_n, 0);
 		T W1 = calculate(n, order - 1, S_n, 1);
@@ -56,6 +58,7 @@ protected:
 
 		if (!std::isfinite(result))
 			throw std::overflow_error("division by zero");
+
 		return result;
 
 	}
@@ -79,7 +82,9 @@ public:
    */
 
 	T operator()(const K n, const int order) const {
-		if (order < 0) throw std::domain_error("negative order input");
+		if (order < 0) 
+			throw std::domain_error("negative order input");
+
 		T S_n = this->series->S_n(n);
 		return calculate(n, order, S_n,0);
 	}
