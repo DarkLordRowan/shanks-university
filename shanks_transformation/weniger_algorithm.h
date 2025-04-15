@@ -23,9 +23,7 @@ protected:
 	* @return The partial sum after the transformation.
 	*/
 
-
 public:
-
 	
 	/**
 	* @brief Weniger class template for derivations
@@ -54,9 +52,9 @@ public:
 
 		T rest_a_n;
 
-		for (int m = 0; m < order - 1; ++m) {
+		for (int m = 0; m < order - 1; ++m) 
 			coef *= (1 + m);
-		}
+		
 
 		for (int j = 0; j <= order; ++j) {
 
@@ -79,7 +77,8 @@ public:
 
 		}
 		numerator /= denominator;
-		if (!std::isfinite(numerator)) throw std::overflow_error("division by zero");
+		if (!std::isfinite(numerator))
+			throw std::overflow_error("division by zero");
 
 		return numerator;
 	}

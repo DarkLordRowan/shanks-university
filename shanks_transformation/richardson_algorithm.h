@@ -6,10 +6,8 @@
 #pragma once
 #define DEF_UNDEFINED_SUM 0
 
-
 #include "series_acceleration.h" // Include the series header
 #include <vector> // Include the vector library
-
 
  /**
  * @brief Richardson transformation
@@ -43,24 +41,28 @@ T richardson_algorithm<T, K, series_templ>::operator()(const K n, const int orde
     // in the method we don't use order, it's only a stub 
     if (n < 0)
         throw std::domain_error("negative integer in the input");
-    else if (n == 0)
+
+    if (n == 0)
         return DEF_UNDEFINED_SUM;
 
-    // create a matrix
-    std::vector<std::vector<T>> D(n + 1, std::vector<T>(n + 1, 0));
+    std::vector<std::vector<T>> e(2, std::vector<T>(n + 1, 0)); //2 vectors n + 1 length containing Richardson table next and previous 
 
-    // Fill partial sums in the first string 
-    for (int i = 0; i <= n; ++i) {
-        D[i][0] = this->series->S_n(i);
-    }
+    for (int i = 0; i <= n; ++i) 
+       e[0][i] = this->series->S_n(i);
 
     // The Richardson method main function 
+    T a, b;
+    a = static_cast<T>(1);
+    
     for (int l = 1; l <= n; ++l) {
-        for (int m = l; m <= n; ++m) {
-            D[m][l] = static_cast<T>((pow(4, l) * D[m][l - 1] - D[m - 1][l - 1]) / (pow(4, l) - 1));
-        }
+        a *= 4;
+        b = a - 1;
+        for (int m = l; m <= n; ++m) 
+            e[1][m] = (a * e[0][m] - e[0][m - 1]) / b;
+        
+        std::swap(e[0], e[1]);
     }
-
-    // Get the last transfomation element from the matrix
-    return D[n][n];
+       
+    // n & 1 gives first bit 
+    return e[n & 1][n]; // get n & 1, cause if n is even, result is e[0][n], if n is odd, result is e[1][n]
 }
