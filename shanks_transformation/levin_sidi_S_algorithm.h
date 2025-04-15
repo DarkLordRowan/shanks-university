@@ -116,7 +116,7 @@ protected:
 				T scale1 = ((b3 + j) * (b4 + j));
 				T scale2 = (b5 * (b6 + j));
 
-				(*D)[j] = (*D)[j + 1] - scale1 * (*D)[j] / scale2
+				(*D)[j] = (*D)[j + 1] - scale1 * (*D)[j] / scale2;
 				(*N)[j] = (*N)[j + 1] - scale1 * (*N)[j] / scale2;
 			}
 		}
