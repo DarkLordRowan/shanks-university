@@ -29,6 +29,7 @@ CMakeFiles/shanks_transformation.dir/main.o: /home/panama/Blacksmith/projects/sh
   /usr/include/alloca.h \
   /usr/include/asm-generic/errno-base.h \
   /usr/include/asm-generic/errno.h \
+  /usr/include/c++/13/algorithm \
   /usr/include/c++/13/array \
   /usr/include/c++/13/backward/auto_ptr.h \
   /usr/include/c++/13/backward/binders.h \
@@ -91,6 +92,7 @@ CMakeFiles/shanks_transformation.dir/main.o: /home/panama/Blacksmith/projects/sh
   /usr/include/c++/13/bits/ptr_traits.h \
   /usr/include/c++/13/bits/quoted_string.h \
   /usr/include/c++/13/bits/range_access.h \
+  /usr/include/c++/13/bits/ranges_algo.h \
   /usr/include/c++/13/bits/ranges_algobase.h \
   /usr/include/c++/13/bits/ranges_base.h \
   /usr/include/c++/13/bits/ranges_cmp.h \
@@ -177,6 +179,7 @@ CMakeFiles/shanks_transformation.dir/main.o: /home/panama/Blacksmith/projects/sh
   /usr/include/c++/13/optional \
   /usr/include/c++/13/ostream \
   /usr/include/c++/13/pstl/execution_defs.h \
+  /usr/include/c++/13/pstl/glue_algorithm_defs.h \
   /usr/include/c++/13/pstl/glue_memory_defs.h \
   /usr/include/c++/13/pstl/pstl_config.h \
   /usr/include/c++/13/ratio \
@@ -449,6 +452,12 @@ CMakeFiles/shanks_transformation.dir/main.o: /home/panama/Blacksmith/projects/sh
 
 /usr/include/x86_64-linux-gnu/bits/pthread_stack_min-dynamic.h:
 
+/usr/include/x86_64-linux-gnu/bits/posix1_lim.h:
+
+/usr/include/x86_64-linux-gnu/bits/mathcalls.h:
+
+/usr/include/x86_64-linux-gnu/bits/mathcalls-narrow.h:
+
 /usr/include/c++/13/bits/max_size_type.h:
 
 /usr/include/c++/13/locale:
@@ -491,6 +500,12 @@ CMakeFiles/shanks_transformation.dir/main.o: /home/panama/Blacksmith/projects/sh
 
 /usr/include/c++/13/bits/ranges_algobase.h:
 
+/usr/include/c++/13/bits/stl_set.h:
+
+/usr/include/c++/13/bits/ostream_insert.h:
+
+/usr/include/c++/13/math.h:
+
 /usr/include/c++/13/bits/quoted_string.h:
 
 /usr/include/c++/13/bits/unordered_map.h:
@@ -500,12 +515,6 @@ CMakeFiles/shanks_transformation.dir/main.o: /home/panama/Blacksmith/projects/sh
 /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h:
 
 /home/panama/Blacksmith/projects/shanks/shanks-university/shanks_transformation/levin_sidi_M_algorithm.h:
-
-/usr/include/c++/13/bits/stl_set.h:
-
-/usr/include/c++/13/bits/ostream_insert.h:
-
-/usr/include/c++/13/math.h:
 
 /usr/include/c++/13/bits/ostream.tcc:
 
@@ -541,8 +550,6 @@ CMakeFiles/shanks_transformation.dir/main.o: /home/panama/Blacksmith/projects/sh
 
 /usr/include/c++/13/iomanip:
 
-/usr/include/x86_64-linux-gnu/bits/mathcalls-narrow.h:
-
 /usr/include/c++/13/bits/locale_facets_nonio.tcc:
 
 /usr/include/c++/13/bits/locale_facets.h:
@@ -551,11 +558,7 @@ CMakeFiles/shanks_transformation.dir/main.o: /home/panama/Blacksmith/projects/sh
 
 /usr/include/c++/13/bits/locale_classes.h:
 
-/usr/include/x86_64-linux-gnu/bits/mathcalls.h:
-
-/usr/include/c++/13/bits/stringfwd.h:
-
-/usr/include/c++/13/bits/iterator_concepts.h:
+/usr/include/c++/13/bits/ranges_algo.h:
 
 /usr/include/c++/13/bits/invoke.h:
 
@@ -570,6 +573,10 @@ CMakeFiles/shanks_transformation.dir/main.o: /home/panama/Blacksmith/projects/sh
 /usr/include/c++/13/bits/functional_hash.h:
 
 /usr/include/errno.h:
+
+/usr/include/x86_64-linux-gnu/gnu/stubs-64.h:
+
+/usr/include/c++/13/bits/node_handle.h:
 
 /usr/include/c++/13/bits/ptr_traits.h:
 
@@ -586,10 +593,6 @@ CMakeFiles/shanks_transformation.dir/main.o: /home/panama/Blacksmith/projects/sh
 /usr/include/c++/13/bits/alloc_traits.h:
 
 /usr/include/c++/13/bits/concept_check.h:
-
-/usr/include/x86_64-linux-gnu/gnu/stubs-64.h:
-
-/usr/include/c++/13/bits/node_handle.h:
 
 /usr/include/x86_64-linux-gnu/sys/syscall.h:
 
@@ -655,6 +658,8 @@ CMakeFiles/shanks_transformation.dir/main.o: /home/panama/Blacksmith/projects/sh
 
 /usr/include/x86_64-linux-gnu/bits/mathcalls-helper-functions.h:
 
+/usr/include/c++/13/algorithm:
+
 /home/panama/Blacksmith/projects/shanks/shanks-university/shanks_transformation/FSA_3.h:
 
 /usr/include/c++/13/bits/hashtable_policy.h:
@@ -716,10 +721,6 @@ CMakeFiles/shanks_transformation.dir/main.o: /home/panama/Blacksmith/projects/sh
 /usr/include/x86_64-linux-gnu/asm/errno.h:
 
 /usr/include/c++/13/backward/auto_ptr.h:
-
-/usr/include/c++/13/bits/uniform_int_dist.h:
-
-/usr/include/c++/13/bits/locale_classes.tcc:
 
 /home/panama/Blacksmith/projects/shanks/shanks-university/shanks_transformation/shanks_transformation.h:
 
@@ -807,6 +808,14 @@ CMakeFiles/shanks_transformation.dir/main.o: /home/panama/Blacksmith/projects/sh
 
 /usr/include/x86_64-linux-gnu/bits/getopt_posix.h:
 
+/usr/include/c++/13/bits/iterator_concepts.h:
+
+/usr/include/c++/13/bits/stringfwd.h:
+
+/usr/include/c++/13/bits/locale_classes.tcc:
+
+/usr/include/c++/13/bits/uniform_int_dist.h:
+
 /usr/include/c++/13/cctype:
 
 /usr/include/x86_64-linux-gnu/bits/types/struct_tm.h:
@@ -814,8 +823,6 @@ CMakeFiles/shanks_transformation.dir/main.o: /home/panama/Blacksmith/projects/sh
 /usr/include/c++/13/ext/atomicity.h:
 
 /usr/include/c++/13/tr1/gamma.tcc:
-
-/usr/include/x86_64-linux-gnu/bits/posix1_lim.h:
 
 /usr/include/c++/13/cerrno:
 
@@ -860,6 +867,8 @@ CMakeFiles/shanks_transformation.dir/main.o: /home/panama/Blacksmith/projects/sh
 /usr/include/locale.h:
 
 /usr/include/c++/13/ext/concurrence.h:
+
+/usr/include/c++/13/pstl/glue_algorithm_defs.h:
 
 /usr/include/x86_64-linux-gnu/bits/types/struct_timeval.h:
 

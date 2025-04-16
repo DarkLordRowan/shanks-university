@@ -112,6 +112,8 @@
 #include <numbers>
 #include <limits>
 #include <vector>
+#include <cmath>
+#include <algorithm>
 
  /**
  * @brief Abstract class for series
@@ -4327,13 +4329,107 @@ public:
 template <typename T, typename K>
 one_div_sqrt2_sin_xdivsqrt2_series<T, K>::one_div_sqrt2_sin_xdivsqrt2_series(T x) : series_base<T, K>(x, std::sqrt(1 + x) - 1 - x / 2) {}
 
+
+template <typename T>
+T bessel_j0(T x) {
+    if (x == 0.0) return 1.0;
+    const T eps = 1e-50;
+    T sum = 0.0, term = 1.0;
+    T x_sq = x * x;
+	int k = 0;
+    do {
+        sum += term;
+        term *= -x_sq / (4.0 * (k + 1) * (k + 1));
+		k++;
+    } while (std::abs(term) > eps * std::abs(sum));
+    return sum;
+}
+
+template <typename T>
+T bessel_j1(T x) {
+    if (x == 0.0) return 0.0;
+    const T eps = 1e-50;
+    T sum = 0.0, term = x / 2.0;
+    T x_sq = x * x;
+	int k = 0;
+    do {
+        sum += term;
+        term *= -x_sq / (4.0 * (k + 1) * (k + 2));
+		k++;
+    } while (std::abs(term) > eps * std::abs(sum));
+    return sum;
+}
+
+
+template <typename T, typename K>
+double jnn(K n, T x) {
+    if (n < 0) {
+        return ((n % 2) == 0 ? 1 : -1) * jnn(-n, x);
+    }
+    
+    if (x == 0.0) {
+        return n == 0 ? 1.0 : 0.0;
+    }
+    
+    if (std::abs(x) > 300.0) {
+        T mu = 4.0*n*n;
+        T chi = x - (0.5*n + 0.25)*std::numbers::pi;
+        T amplitude = std::sqrt(2.0/(std::numbers::pi*std::abs(x)));
+        T correction = 1.0 - (mu - 1.0)/(8.0*x) 
+                          + (mu - 1.0)*(mu - 9.0)/(128.0*x*x)
+                          - (mu - 1.0)*(mu - 9.0)*(mu - 25.0)/(3072.0*x*x*x);
+        return amplitude * correction * std::cos(chi);
+    }
+    
+    if (n <= 2) {
+        if (n == 0) return bessel_j0(x);
+        if (n == 1) return bessel_j1(x);
+        
+        T j0 = bessel_j0(x);
+        T j1 = bessel_j1(x);
+        return (2.0/x)*j1 - j0;
+    }
+    
+    if (n > x) {
+        K N = n + static_cast<K>(std::sqrt(40.0*n)) + 25;
+        std::vector<T> j(N+2, 0.0);
+        j[N] = 1.0;
+        
+        for (K k = N; k > 0; k--) {
+            j[k-1] = (2.0*k/x)*j[k] - j[k+1];
+        }
+        
+        T sum = j[0];
+        for (K k = 2; k <= N; k += 2) {
+            sum += 2.0 * j[k];
+        }
+        T scale = bessel_j0(x) / sum;
+        
+        return j[n] * scale;
+    }
+    
+    T j_prev = bessel_j0(x);
+    T j_curr = bessel_j1(x);
+    
+    for (K k = 2; k <= n; k++) {
+        T j_next = (2.0*(k-1)/x)*j_curr - j_prev;
+        j_prev = j_curr;
+        j_curr = j_next;
+    }
+    
+    return j_curr;
+}
+
 template <typename T, typename K>
 constexpr T one_div_sqrt2_sin_xdivsqrt2_series<T, K>::operator()(K n) const
 {
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
-
-	return static_cast<T>(std::pow(-1, n / 2) * jn(static_cast<int>(2 * n + 1), this->x));
+	#ifdef _WIN32
+		return static_cast<T>(std::pow(-1, n / 2) * _jn(static_cast<int>(2 * n + 1), this->x));
+	#else
+		return static_cast<T>(std::pow(-1, n / 2) * jnn(2 * n + 1, this->x));
+	#endif
 }
 
 

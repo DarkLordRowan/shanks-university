@@ -241,6 +241,8 @@ CMakeFiles/shanks_transformation.dir/main.o: \
  /usr/include/c++/13/tr1/poly_laguerre.tcc \
  /usr/include/c++/13/tr1/riemann_zeta.tcc \
  /home/panama/Blacksmith/projects/shanks/shanks-university/shanks_transformation/series\ +.h \
+ /usr/include/c++/13/algorithm /usr/include/c++/13/bits/ranges_algo.h \
+ /usr/include/c++/13/pstl/glue_algorithm_defs.h \
  /home/panama/Blacksmith/projects/shanks/shanks-university/shanks_transformation/remainders.h \
  /home/panama/Blacksmith/projects/shanks/shanks-university/shanks_transformation/shanks_transformation.h \
  /home/panama/Blacksmith/projects/shanks/shanks-university/shanks_transformation/epsilon_algorithm.h \

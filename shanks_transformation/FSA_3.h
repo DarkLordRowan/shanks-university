@@ -76,7 +76,7 @@ T ford_sidi_algorithm_three<T, K, series_templ>::operator()(const K n, const int
 
     // Основной цикл алгоритма Ford-Sidi
     for (K k = 0; k <= n - 1; k++) {
-        K MM = n - (k + 1) - 1;
+        K MM = n - (k + 1);
         T D = FSG[k + 2][MM + 1] - FSG[k + 2][MM];
     
         if(abs(D) > 1e-77){
