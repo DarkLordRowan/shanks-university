@@ -1,3 +1,0 @@
-/home/panama/Blacksmith/projects/shanks/shanks-university/shanks_transformation/build/CMakeFiles/shanks_transformation.dir
-/home/panama/Blacksmith/projects/shanks/shanks-university/shanks_transformation/build/CMakeFiles/edit_cache.dir
-/home/panama/Blacksmith/projects/shanks/shanks-university/shanks_transformation/build/CMakeFiles/rebuild_cache.dir

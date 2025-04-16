@@ -12,3 +12,4 @@ docs
 !docs/html/.nojekyll
 /x64/*
 /shanks_transformation/x64/*
+/shanks_transformation/build/*
