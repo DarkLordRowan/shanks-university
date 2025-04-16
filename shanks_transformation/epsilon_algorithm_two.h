@@ -46,21 +46,19 @@ T epsilon_algorithm_two<T, K, series_templ>::operator()(const K n, const int ord
 {
     if (n < 0)
         throw std::domain_error("negative integer in the input");
-    else if (n == 0)
+
+    if (n == 0)
         return DEF_UNDEFINED_SUM;
-    else if (order == 0)
+
+    if (order == 0)
         return this->series->S_n(n);
 
-    K k = 2 * order; // int -> K
-
-    (n % 2 == 0) ? k += n : k += n - 1;
+    K k = 2 * order + n - (n & 1);
 
     std::vector<std::vector<T>> e(4, std::vector<T>(k + 3, 0)); //4 vectors k+3 length containing four Epsilon Table rows 
 
     for (K j = k; j >= 0; --j) //Counting first row of Epsilon Table
-    {
         e[3][j] = this->series->S_n(j);
-    }
 
     T a = 0, a1 = 0, a2 = 0;
 
@@ -88,9 +86,7 @@ T epsilon_algorithm_two<T, K, series_templ>::operator()(const K n, const int ord
                 e[0][i] = e[0][i] * a;
             }
             if (!std::isfinite(e[0][i])) //If new element is still corrupted we just copy prev. element, so we will get result
-            {
-                e[0][i] = e[2][i];
-            }
+                e[0][i] = e[2][i];         
         }
         std::swap(e[0], e[1]); //Swapping rows of Epsilon Table. First ine will be overwriteen next turn
         std::swap(e[1], e[2]);

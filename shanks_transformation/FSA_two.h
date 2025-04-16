@@ -54,14 +54,6 @@ T ford_sidi_algorithm_two<T, K, series_templ>::operator()(const K n, const int o
 	if (m == 0)
 		throw std::overflow_error("division by zero");
 
-	/*if (m == 0) {
-		m = n;
-		while (delta_squared_S_n == 0 && m < 10*n) {
-			m = m + 1;
-			delta_squared_S_n = this->series->S_n(m + 2) - 2 * this->series->S_n(m + 1) + this->series->S_n(m);
-		}
-	}*/
-
 	T delta_S_n = this->series->S_n(m + 1) - this->series->S_n(m);
 
 	T T_n = this->series->S_n(m) - delta_S_n * delta_S_n / delta_squared_S_n;
