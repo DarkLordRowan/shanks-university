@@ -41,60 +41,67 @@ shanks_transform<T, K, series_templ>::shanks_transform(const series_templ& serie
 template <typename T, typename K, typename series_templ>
 T shanks_transform<T, K, series_templ>::operator()(const K n, const int order) const
 {
-	if (n < 0)
+	if (n < 0) [[unlikely]]
 		throw std::domain_error("negative integer in the input");
-	else if (order == 0) /*it is convenient to assume that transformation of order 0 is no transformation at all*/
+
+	if (order == 0) [[unlikely]] /*it is convenient to assume that transformation of order 0 is no transformation at all*/
 		return this->series->S_n(n);
-	else if (n < order || n == 0)
+
+	if (n < order || n == 0) [[unlikely]]
 		return DEF_UNDEFINED_SUM;
-	else if (order == 1)
+
+	if (order == 1) [[unlikely]]
 	{
+		T a_n, a_n_plus_1, tmp;
 
-		const auto a_n = this->series->operator()(n);
-		const auto a_n_plus_1 = this->series->operator()(n + 1);
-		const auto tmp = -a_n_plus_1 * a_n_plus_1;
+		a_n = this->series->operator()(n);
+		a_n_plus_1 = this->series->operator()(n + 1);
+		tmp = -a_n_plus_1 * a_n_plus_1;
 
-		const auto result = std::fma(a_n * a_n_plus_1, (a_n + a_n_plus_1) / (std::fma(a_n, a_n, tmp) - std::fma(a_n_plus_1, a_n_plus_1, tmp)), this->series->S_n(n));
+		const T result = std::fma(a_n * a_n_plus_1, (a_n + a_n_plus_1) / (std::fma(a_n, a_n, tmp) - std::fma(a_n_plus_1, a_n_plus_1, tmp)), this->series->S_n(n));
 		if (!std::isfinite(result))
 			throw std::overflow_error("divison by zero");
 		return result;
 	}
-	else [[likely]]//n > order >= 1
-	{
-		std::vector<T> T_n(n + order, 0);
-		auto a_n = this->series->operator()(n - order);
-		auto a_n_plus_1 = this->series->operator()(n - order + 1);
-		auto tmp = -a_n_plus_1 * a_n_plus_1;
-		for (K i = n - order + 1; i <= n + order - 1; ++i) // if we got to this branch then we know that n >= order - see previous branches  int -> K
-		{
-			a_n = this->series->operator()(i);
-			a_n_plus_1 = this->series->operator()(i + 1);
-			tmp = -a_n_plus_1 * a_n_plus_1;
+	//n > order >= 1
 
-			// formula [6]
-			T_n[i] = std::fma(a_n * a_n_plus_1, (a_n + a_n_plus_1) / (std::fma(a_n, a_n, tmp) - std::fma(a_n_plus_1, a_n_plus_1, tmp)), this->series->S_n(i));
-		}
-		std::vector<T> T_n_plus_1(n + order, 0);
-		T a, b, c;
-		for (int j = 2; j <= order; ++j)
-		{
-			for (K i = n - order + j; i <= n + order - j; ++i) // int -> K 
-			{
-				a = T_n[i];
-				b = T_n[i - 1];
-				c = T_n[i + 1];
-				/*if (!std::isfinite(abs(2 * T_n[i] - T_n[i - 1] - T_n[i + 1])))
-					throw std::overflow_error("division by zero");*/
-					/*T_n_plus_1[i] = T_n[i] - (T_n[i] - T_n[i - 1]) * (T_n[i + 1] - T_n[i]) / (T_n[i + 1] - 2 * T_n[i] + T_n[i - 1]);
-					T_n_plus_1[i] = std::fma(std::fma(T_n[i], T_n[i+1] + T_n[i-1] - T_n[i], -T_n[i-1]*T_n[i+1]), 1 / (2 * T_n[i] - T_n[i - 1] - T_n[i+1]), T_n[i]);*/
-				T_n_plus_1[i] = static_cast<T>(std::fma(std::fma(a, c + b - a, -b * c), 1 / (std::fma(2,a,-b - c)), a));
-			}
-			T_n = T_n_plus_1;
-		}
-		if (!std::isfinite(T_n[n]))
-			throw std::overflow_error("division by zero");
-		return T_n[n];
+	std::vector<T> T_n(n + order, 0);
+
+	T a_n, a_n_plus_1, tmp;
+	a_n = this->series->operator()(n - order);
+	a_n_plus_1 = this->series->operator()(n - order + 1);
+	tmp = -a_n_plus_1 * a_n_plus_1;
+
+	for (K i = n - order + 1; i <= n + order - 1; ++i) // if we got to this branch then we know that n >= order - see previous branches  int -> K
+	{
+		a_n = this->series->operator()(i);
+		a_n_plus_1 = this->series->operator()(i + 1);
+		tmp = -a_n_plus_1 * a_n_plus_1;
+
+		//formula[6]
+		T_n[i] = std::fma(a_n * a_n_plus_1, (a_n + a_n_plus_1) / (std::fma(a_n, a_n, tmp) - std::fma(a_n_plus_1, a_n_plus_1, tmp)), this->series->S_n(i));
 	}
+	std::vector<T> T_n_plus_1(n + order, 0);
+	T a, b, c;
+	for (int j = 2; j <= order; ++j)
+	{
+		for (K i = n - order + j; i <= n + order - j; ++i) // int -> K 
+		{
+			a = T_n[i];
+			b = T_n[i - 1];
+			c = T_n[i + 1];
+			/*if (!std::isfinite(abs(2 * T_n[i] - T_n[i - 1] - T_n[i + 1])))
+				throw std::overflow_error("division by zero");*/
+				/*T_n_plus_1[i] = T_n[i] - (T_n[i] - T_n[i - 1]) * (T_n[i + 1] - T_n[i]) / (T_n[i + 1] - 2 * T_n[i] + T_n[i - 1]);
+				T_n_plus_1[i] = std::fma(std::fma(T_n[i], T_n[i+1] + T_n[i-1] - T_n[i], -T_n[i-1]*T_n[i+1]), 1 / (2 * T_n[i] - T_n[i - 1] - T_n[i+1]), T_n[i]);*/
+			T_n_plus_1[i] = static_cast<T>(std::fma(std::fma(a, c + b - a, -b * c), 1 / (std::fma(2, a, -b - c)), a));
+		}
+		T_n = T_n_plus_1;
+	}
+	if (!std::isfinite(T_n[n]))
+		throw std::overflow_error("division by zero");
+
+	return T_n[n];
 }
 
 /**
@@ -129,53 +136,59 @@ shanks_transform_alternating<T, K, series_templ>::shanks_transform_alternating(c
 template <typename T, typename K, typename series_templ>
 T shanks_transform_alternating<T, K, series_templ>::operator()(const K n, const int order) const
 {
-	if (n < 0)
+	if (n < 0) [[unlikely]]
 		throw std::domain_error("negative integer in the input");
-	else if (order == 0) /*it is convenient to assume that transformation of order 0 is no transformation at all*/
+
+	if (order == 0) [[unlikely]] /*it is convenient to assume that transformation of order 0 is no transformation at all*/
 		return this->series->S_n(n);
-	else if (n < order || n == 0)
+
+	if (n < order || n == 0) [[unlikely]]
 		return DEF_UNDEFINED_SUM;
-	else if (order == 1)
+
+	if (order == 1) [[unlikely]]
 	{
-		const auto a_n = this->series->operator()(n);
-		const auto a_n_plus_1 = this->series->operator()(n + 1);
-		const auto result = std::fma(a_n * a_n_plus_1, 1 / (a_n - a_n_plus_1), this->series->S_n(n));
+		T a_n, a_n_plus_1, result;
+		a_n = this->series->operator()(n);
+		a_n_plus_1 = this->series->operator()(n + 1);
+		result = std::fma(a_n * a_n_plus_1, 1 / (a_n - a_n_plus_1), this->series->S_n(n));
 		if (!std::isfinite(result))
 			throw std::overflow_error("division by zero");
+
 		return result;
 	}
-	else [[likely]] //n > order >= 1
-	{
-		std::vector<T> T_n(n + order, 0);
-		auto a_n = this->series->operator()(n - order);
-		auto a_n_plus_1 = this->series->operator()(n - order + 1);
-		for (K i = n - order + 1; i <= n + order - 1; ++i) // if we got to this branch then we know that n >= order - see previous branches int->K
-		{
-			a_n = this->series->operator()(i);
-			a_n_plus_1 = this->series->operator()(i + 1);
+	//n > order >= 1
+	std::vector<T> T_n(n + order, 0);
 
-			// formula [6]
-			T_n[i] = std::fma(a_n * a_n_plus_1, 1 / (a_n - a_n_plus_1), this->series->S_n(n));
-		}
-		std::vector<T> T_n_plus_1(n + order, 0);
-		T a, b, c;
-		for (int j = 2; j <= order; ++j)
-		{
-			for (K i = n - order + j; i <= n + order - j; ++i) // int -> K
-			{
-				a = T_n[i];
-				b = T_n[i - 1];
-				c = T_n[i + 1];
-				/*if (!std::isfinite(abs(2 * T_n[i] - T_n[i - 1] - T_n[i + 1])))
-					throw std::overflow_error("division by zero");*/
-					/*T_n_plus_1[i] = T_n[i] - (T_n[i] - T_n[i - 1]) * (T_n[i + 1] - T_n[i]) / (T_n[i + 1] - 2 * T_n[i] + T_n[i - 1]);
-					T_n_plus_1[i] = std::fma(std::fma(T_n[i], T_n[i+1] + T_n[i-1] - T_n[i], -T_n[i-1]*T_n[i+1]), 1 / (2 * T_n[i] - T_n[i - 1] - T_n[i+1]), T_n[i]);*/
-				T_n_plus_1[i] = std::fma(std::fma(a, c + b - a, -b * c), 1 / (2 * a - b - c), a);
-			}
-			T_n = T_n_plus_1;
-		}
-		if (!isfinite(T_n[n]))
-			throw std::overflow_error("division by zero");
-		return T_n[n];
+	T a_n, a_n_plus_1;
+	a_n = this->series->operator()(n - order);
+	a_n_plus_1 = this->series->operator()(n - order + 1);
+	for (K i = n - order + 1; i <= n + order - 1; ++i) // if we got to this branch then we know that n >= order - see previous branches int->K
+	{
+		a_n = this->series->operator()(i);
+		a_n_plus_1 = this->series->operator()(i + 1);
+
+		// formula [6]
+		T_n[i] = std::fma(a_n * a_n_plus_1, 1 / (a_n - a_n_plus_1), this->series->S_n(n));
 	}
+	std::vector<T> T_n_plus_1(n + order, 0);
+	T a, b, c;
+	for (int j = 2; j <= order; ++j)
+	{
+		for (K i = n - order + j; i <= n + order - j; ++i) // int -> K
+		{
+			a = T_n[i];
+			b = T_n[i - 1];
+			c = T_n[i + 1];
+			/*if (!std::isfinite(abs(2 * T_n[i] - T_n[i - 1] - T_n[i + 1])))
+				throw std::overflow_error("division by zero");*/
+				/*T_n_plus_1[i] = T_n[i] - (T_n[i] - T_n[i - 1]) * (T_n[i + 1] - T_n[i]) / (T_n[i + 1] - 2 * T_n[i] + T_n[i - 1]);
+				T_n_plus_1[i] = std::fma(std::fma(T_n[i], T_n[i+1] + T_n[i-1] - T_n[i], -T_n[i-1]*T_n[i+1]), 1 / (2 * T_n[i] - T_n[i - 1] - T_n[i+1]), T_n[i]);*/
+			T_n_plus_1[i] = std::fma(std::fma(a, c + b - a, -b * c), 1 / (2 * a - b - c), a);
+		}
+		T_n = T_n_plus_1;
+	}
+	if (!isfinite(T_n[n]))
+		throw std::overflow_error("division by zero");
+
+	return T_n[n];
 }

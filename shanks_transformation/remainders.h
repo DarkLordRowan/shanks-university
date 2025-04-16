@@ -7,6 +7,35 @@
 #pragma once
 #include "series_acceleration.h"
 
+
+//=====================================================================
+
+//Хм, такое ощущение, что они его сделали
+//
+//А потом такие : а нахуй, похуй
+//
+//Везде, где Т(1) замени на scale
+//
+//Просто в комментах укажи, что - то вроде :
+//TODO посмотреть нахуй он нужен
+//
+//Смотри, потом мы будем "твикать" алгоритмы
+//
+//Пытаться улучшить или вывести свой
+//
+//Так что рили впиши везде scale вместо T(1)
+//
+//А где T(1) нет, по фану добавь умножение на scale
+//И везде впиши для @param scale : //TODO посмотреть нахуй он нужен
+
+
+//=====================================================================
+
+
+
+
+
+
 /**
 * @brief Abstract class for remainder
 * @tparam T The type of the elements in the series, K The type of enumerating integer
@@ -24,7 +53,6 @@ public:
    * @return The partial sum after the transformation.
    */
 	virtual T operator()(const K& n, const K& j, const series_base<T, K>* series, T scale = T(1)) const = 0;
-
 };
 
 
@@ -48,7 +76,10 @@ public:
 
 	T operator()(const K& n, const K& j, const series_base<T, K>* series, T scale = T(1)) const {
 		T result = T(1) / (scale * series->operator()(n + j));
-		if (!std::isfinite(result)) throw std::overflow_error("division by zero");
+
+		if (!std::isfinite(result))
+			throw std::overflow_error("division by zero");
+
 		return result;
 	}
 };
@@ -73,8 +104,11 @@ public:
    */
 
 	T operator()(const K& n, const K& j, const series_base<T, K>* series, T scale = T(1)) const {
-		T result =  T(1) / series->operator()(n + j);
-		if (!std::isfinite(result)) throw std::overflow_error("division by zero");
+		T result = T(1) / series->operator()(n + j);
+
+		if (!std::isfinite(result)) 
+			throw std::overflow_error("division by zero");
+
 		return result;
 	}
 };
@@ -101,7 +135,10 @@ public:
 
 	T operator()(const K& n, const K& j, const series_base<T, K>* series, T scale = T(1)) const {
 		T result =  1 / series->operator()(n + j + 1);
-		if (!std::isfinite(result)) throw std::overflow_error("division by zero");
+
+		if (!std::isfinite(result)) 
+			throw std::overflow_error("division by zero");
+
 		return result;
 	}
 };
@@ -128,8 +165,11 @@ public:
 	T operator()(const K& n, const K& j, const series_base<T, K>* series, T scale = T(1)) const {
 		T a1 = series->operator()(n + j);
 		T a2 = series->operator()(n + j + 1);
-		T result = (a2 - a1) / (a1*a2);
-		if (!std::isfinite(result)) throw std::overflow_error("division by zero");
+		T result = (a2 - a1) / (a1 * a2);
+
+		if (!std::isfinite(result)) 
+			throw std::overflow_error("division by zero");
+
 		return result;
 	}
 };
@@ -156,7 +196,10 @@ public:
 		T a1 = series->operator()(n + j);
 		T a2 = series->operator()(n + j + 1);
 		T result = (a1 - a2) / (a1 * a2);
-		if (!std::isfinite(result)) throw std::overflow_error("division by zero");
+
+		if (!std::isfinite(result)) 
+			throw std::overflow_error("division by zero");
+
 		return result;
 	}
 };

@@ -364,6 +364,11 @@ inline void init_levin(transformation_id_t id, std::unique_ptr<series_base<T,K>>
 	}
 	std::cout << "|--------------------------------------|" << std::endl;
 
+	T beta = T(0);		//parameter for LevinType transformations algorithm
+	T gamma = T(10);	//parameter for LevinType transformations algorithm
+
+	//transform.reset(new levin_recursion_algorithm<T, K, decltype(series.get())>(series.get(), beta));
+
 	transform_base<T, K>* ptr = NULL;
 
 	if (type == 'u') ptr = new u_transform<T, K>{};
@@ -380,13 +385,25 @@ inline void init_levin(transformation_id_t id, std::unique_ptr<series_base<T,K>>
 
 	switch (id) {
 		case transformation_id_t::S_algorithm:
-			transform.reset(new levi_sidi_algorithm<T, K, decltype(series.get())>(series.get(), ptr, recursive));
+
+			std::cout << std::endl;
+			std::cout << "|------------------------------------------|" << std::endl;
+			std::cout << "| Enter parameter beta: "; std::cin >> beta;
+			std::cout << "|------------------------------------------|" << std::endl;
+
+			transform.reset(new levi_sidi_algorithm<T, K, decltype(series.get())>(series.get(), ptr, recursive, beta));
 			return;
 		case transformation_id_t::D_algorithm:
 			transform.reset(new drummonds_algorithm<T, K, decltype(series.get())>(series.get(), ptr, recursive));
 			return;
 		case transformation_id_t::M_algorithm:
-			transform.reset(new M_levin_sidi_algorithm<T, K, decltype(series.get())>(series.get(), ptr));
+
+			std::cout << std::endl;
+			std::cout << "|------------------------------------------|" << std::endl;
+			std::cout << "| Enter parameter beta: "; std::cin >> gamma;
+			std::cout << "|------------------------------------------|" << std::endl;
+
+			transform.reset(new M_levin_sidi_algorithm<T, K, decltype(series.get())>(series.get(), ptr, gamma));
 			return;
 		default:
 			throw std::domain_error("wrong id was given");
@@ -402,6 +419,8 @@ inline void init_wynn(std::unique_ptr<series_base<T, K>>& series, std::unique_pt
 {
 
 	int type;
+	T gamma = T{};	//parameter for gamma modification
+	T RHO = T{};	//parameter for gamma-rho modification
 
 	std::cout << std::endl;
 	std::cout << "|------------------------------------------|" << std::endl;
@@ -414,15 +433,44 @@ inline void init_wynn(std::unique_ptr<series_base<T, K>>& series, std::unique_pt
 		transform.reset(new rho_Wynn_algorithm<T, K, decltype(series.get())>(series.get(), new rho_transform<T, K>{}));
 		break;
 	case 1:
-		transform.reset(new rho_Wynn_algorithm<T, K, decltype(series.get())>(series.get(), new generilized_transform<T, K>{}));
+		std::cout << std::endl;
+		std::cout << "|------------------------------------------|" << std::endl;
+		std::cout << "| Enter parameter gamma: "; std::cin >> gamma;
+		std::cout << "|------------------------------------------|" << std::endl;
+
+		transform.reset(new rho_Wynn_algorithm<T, K, decltype(series.get())>(series.get(), new generilized_transform<T, K>{}, gamma));
 		break;
 	case 2:
-		transform.reset(new rho_Wynn_algorithm<T, K, decltype(series.get())>(series.get(), new gamma_rho_transform<T, K>{}));
+		std::cout << std::endl;
+		std::cout << "|------------------------------------------|" << std::endl;
+		std::cout << "| Enter parameter gamma: "; std::cin >> gamma;
+		std::cout << "| Enter parameter RHO: "; std::cin >> RHO;
+		std::cout << "|------------------------------------------|" << std::endl;
+
+		transform.reset(new rho_Wynn_algorithm<T, K, decltype(series.get())>(series.get(), new gamma_rho_transform<T, K>{}, gamma, RHO));
 		break;
 	default:
 		throw std::domain_error("wrong transform variant");
 		break;
 	}
+}
+
+/**
+* @brief initialize levin_recursion transformation
+* @authors Maximov A.K.
+*/
+template<typename T, typename K, typename series_templ>
+inline void init_levin_recursion(std::unique_ptr<series_base<T, K>>& series, std::unique_ptr<series_acceleration<T, K, series_templ>>& transform)
+{
+
+	T beta = T{};	//parameter for levin_recursion algorithm
+
+	std::cout << std::endl;
+	std::cout << "|------------------------------------------|" << std::endl;
+	std::cout << "| Enter parameter beta: "; std::cin >> beta;
+	std::cout << "|------------------------------------------|" << std::endl;
+
+	transform.reset(new levin_recursion_algorithm<T, K, decltype(series.get())>(series.get(), beta));
 }
 
 /**
@@ -825,7 +873,7 @@ inline static void main_testing_function()
 		transform.reset(new epsilon_algorithm_three<T, K, decltype(series.get())>(series.get()));
 		break;
 	case transformation_id_t::levin_recursion_id:
-		transform.reset(new levin_recursion_algorithm<T, K, decltype(series.get())>(series.get()));
+		init_levin_recursion(series, transform);
 		break;
 	case transformation_id_t::W_algorithm_id:
 		transform.reset(new W_lubkin_algorithm<T, K, decltype(series.get())>(series.get()));
@@ -920,7 +968,7 @@ inline static void main_testing_function()
 			transform2.reset(new epsilon_algorithm_three<T, K, decltype(series.get())>(series.get()));
 			break;
 		case transformation_id_t::levin_recursion_id:
-			transform2.reset(new levin_recursion_algorithm<T, K, decltype(series.get())>(series.get()));
+			init_levin_recursion(series, transform);
 			break;
 		case transformation_id_t::W_algorithm_id:
 			transform2.reset(new W_lubkin_algorithm<T, K, decltype(series.get())>(series.get()));
@@ -997,7 +1045,7 @@ inline static void main_testing_function()
 			print_transform(i, order, std::move(transform.get()));
 
 			//levin-sidi S U
-			transform.reset(new levi_sidi_algorithm<T, K, decltype(series.get())>(series.get(), new u_transform<T, K>{},false));
+			transform.reset(new levi_sidi_algorithm<T, K, decltype(series.get())>(series.get(), new u_transform<T, K>{}, false));
 			print_transform(i, order, std::move(transform.get()));
 			//
 
