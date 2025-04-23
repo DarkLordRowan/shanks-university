@@ -3,7 +3,7 @@
 *.obj
 *.log
 *.exe
-/.vs
+/.vs*
 /shanks_transformation/x64/Debug
 /x64/Debug
 html
@@ -13,3 +13,5 @@ docs
 /x64/*
 /shanks_transformation/x64/*
 /shanks_transformation/build/*
+/shanks_transformation/output.txt
+/venv/*
