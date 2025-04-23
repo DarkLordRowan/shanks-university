@@ -113,6 +113,7 @@
 #include <limits>
 #include <vector>
 #include <cmath>
+#include <ctime>
 #include <algorithm>
 
  /**
@@ -4330,10 +4331,17 @@ template <typename T, typename K>
 one_div_sqrt2_sin_xdivsqrt2_series<T, K>::one_div_sqrt2_sin_xdivsqrt2_series(T x) : series_base<T, K>(x, std::sqrt(1 + x) - 1 - x / 2) {}
 
 
+
+/**
+* @brief Computes J₀(x) using Taylor series expansion
+* @tparam T Floating-point type
+* @param x Function argument
+* @return Value of J₀(x) 
+*/
 template <typename T>
 T bessel_j0(T x) {
     if (x == 0.0) return 1.0;
-    const T eps = 1e-50;
+    const T eps = 1e-18;
     T sum = 0.0, term = 1.0;
     T x_sq = x * x;
 	int k = 0;
@@ -4345,10 +4353,17 @@ T bessel_j0(T x) {
     return sum;
 }
 
+/**
+* @brief Computes J₁(x) using Taylor series expansion
+* @tparam T Floating-point type
+* @param x Function argument
+* @return Value of J₁(x)
+* 
+*/
 template <typename T>
 T bessel_j1(T x) {
     if (x == 0.0) return 0.0;
-    const T eps = 1e-50;
+    const T eps = 1e-18;
     T sum = 0.0, term = x / 2.0;
     T x_sq = x * x;
 	int k = 0;
@@ -4361,6 +4376,26 @@ T bessel_j1(T x) {
 }
 
 
+/**
+* @brief Implementation of Bessel functions of the first kind Jₙ(x) with high precision
+* @tparam T Floating-point type for calculations (float, double, etc.)
+* @tparam K Integer type for order parameter
+* 
+* This implementation provides computation of Bessel functions Jₙ(x) with precision up to 1e-18
+* using different numerical methods optimized for various parameter ranges:
+* - Taylor series for small arguments
+* - Asymptotic expansions for large arguments
+* - Miller's algorithm for high orders
+* - Recurrence relations for general cases
+* 
+* @param n Order of the Bessel function (can be negative)
+* @param x Argument of the Bessel function
+* @return Value of Jₙ(x) with maximum possible precision
+* 
+* @note For x > 300, uses asymptotic expansion with three correction terms
+* @note For n > x, uses Miller's algorithm with automatic normalization
+* @note Thread-safe implementation with no global state
+*/
 template <typename T, typename K>
 double jnn(K n, T x) {
     if (n < 0) {
@@ -4425,11 +4460,7 @@ constexpr T one_div_sqrt2_sin_xdivsqrt2_series<T, K>::operator()(K n) const
 {
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
-	#ifdef _WIN32
-		return static_cast<T>(std::pow(-1, n / 2) * _jn(static_cast<int>(2 * n + 1), this->x));
-	#else
-		return static_cast<T>(std::pow(-1, n / 2) * jnn(2 * n + 1, this->x));
-	#endif
+	return static_cast<T>(std::pow(-1, n / 2) * jnn(2 * n + 1, this->x));
 }
 
 
@@ -4790,3 +4821,75 @@ constexpr T requrrent_testing_series<T, K>::operator()(K n) const
 	return a;
 
 }
+
+
+/**
+* @brief A series that takes its values ​​from python	
+* @authors Sharonov K.S.
+* @tparam T The type of the elements in the series, K The type of enumerating integer
+*/
+template <typename T, typename K>
+class ArraySeries : public series_base<T, K>{
+public:
+    ArraySeries() = delete;
+    
+    /**
+     * @brief Constructor that takes an array of values
+     * @param values Array of series values
+     */
+    explicit ArraySeries(const std::vector<T>& values)
+        : series_base<T, K>(0), m_values(values) {}
+    
+    /**
+     * @brief Returns the n-th element of the array
+     * @param n Index of the element
+     * @return The n-th element of the array
+     */
+    [[nodiscard]] constexpr T operator()(K n) const override
+    {
+        if (n < 0 || static_cast<size_t>(n) >= m_values.size())
+            throw std::out_of_range("Index out of bounds");
+        return m_values[n];
+    }
+
+private:
+	/**
+     * @param m_values Array of series values
+     */
+    std::vector<T> m_values;
+};
+
+
+/**
+* @brief A series needed to add noise to the initial series
+* @authors Sharonov K.S.
+* @tparam T The type of the elements in the series, K The type of enumerating integer, series_templ type of initial series
+*/
+template <typename T, typename K, typename series_templ>
+class ModifiedSeries : public series_base<T, K>{
+public:
+    ModifiedSeries() = delete;
+    
+    /**
+     * @brief Constructor that combines a base series with a modifier function
+     * @param baseSeries The series to be modified
+     * @param modifier Function that takes an index and returns a modification factor
+     */
+    ModifiedSeries(const series_templ& baseSeries, std::function<int(int)> modifier): series_base<T, K>(baseSeries->get_x()), 
+          m_baseSeries(baseSeries), m_modifier(modifier) {}
+    
+    /**
+     * @brief Returns the modified n-th element of the base series
+     * @param n Index of the term to modify
+     * @return Modified value of the n-th term
+     */
+    [[nodiscard]] constexpr T operator()(K n) const override
+    {
+        T baseValue = (*m_baseSeries)(n);
+		return baseValue * (1 + T(m_modifier(n))/1000);
+    }
+
+private:
+	series_templ m_baseSeries;
+    std::function<int(int)> m_modifier;
+};
