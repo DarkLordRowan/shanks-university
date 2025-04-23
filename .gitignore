@@ -40,3 +40,4 @@ x64/Debug/shanks_transformation.exe
 *.ilk
 *.log
 *.exe
+*.tlog
