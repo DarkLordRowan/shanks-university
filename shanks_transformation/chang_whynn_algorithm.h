@@ -79,7 +79,7 @@ T chang_whynn_algorithm<T, K, series_templ>::operator()(const K n, const int ord
             down = static_cast<T>(1.0 / (e[1][i + 1] - e[1][i]));
             e[0][i] = e[0][i + 1] + up * down;
 
-            if (!std::isfinite(e[0][i])) //This 'if' checking incorrect values and avoiding them
+            if (!std::isfinite(e[0][i])) //Check for invalid values to avoid them
             { 
                 max = k + i + 1;
                 break;
