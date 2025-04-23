@@ -61,7 +61,7 @@ protected:
 			return 0;
 
 		int order_1 = order - 1;
-		T n_j = n + j;
+		K n_j = n + j;
 
 		T res = recursive_calculate_body(n_j, order_1 - 1, S_n, 1) + (numerator_func->operator()(n_j, order, this->series, gamma, RHO));
 		res /= (recursive_calculate_body(n_j, order_1, S_n, 1) - recursive_calculate_body(n_j, order_1, S_n, 0));
