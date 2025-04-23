@@ -232,7 +232,7 @@ constexpr T series_base<T, K>::S_n(K n) const
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
 	T sum = operator()(n);
-	for (int i = 0; i < n; ++i)
+	for (K i = 0; i < n; ++i)
 		sum += operator()(i);
 	return sum;
 }
@@ -254,8 +254,8 @@ constexpr const K series_base<T, K>::fact(K n)
 {
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
-	int f = 1;
-	for (int i = 2; i <= n; ++i)
+	K f = 1;
+	for (K i = 2; i <= n; ++i)
 		f *= i;
 	return f;
 }
@@ -264,7 +264,7 @@ template <typename T, typename K>
 constexpr const T series_base<T, K>::binomial_coefficient(const T n, const K k)
 {
 	T b_c = 1;
-	for (int i = 0; i < k; ++i)
+	for (K i = 0; i < k; ++i)
 		b_c = b_c * (n - static_cast<T>(i)) / (i + 1);
 	return b_c;
 }
@@ -338,7 +338,6 @@ public:
 template <typename T, typename K>
 requrrent_series_base<T, K>::requrrent_series_base(T x)
 {
-	series_vector.push_back(x);
 };
 
 template <typename T, typename K>
@@ -347,7 +346,6 @@ requrrent_series_base<T, K>::requrrent_series_base(std::vector<T> row)
 	if (row.size() < 1)
 		throw std::domain_error("empty row imput");
 
-	series_vector = row;
 };
 
 
@@ -448,7 +446,7 @@ private:
 };
 
 template <typename T, typename K>
-cos_series<T, K>::cos_series(T x) : series_base<T, K>(x, std::cos(x)), requrrent_series_base<T, K>(std::vector<T>{1, T((-1)* std::pow(x, 2) / 2)}) {}
+cos_series<T, K>::cos_series(T x) : series_base<T, K>(x, std::cos(x)), requrrent_series_base<T, K>(std::vector<T>{1, T(((-1)* x* x) / 2)}) {}
 
 template <typename T, typename K>
 T cos_series<T, K>::acsess_row(K n)
@@ -459,7 +457,7 @@ T cos_series<T, K>::acsess_row(K n)
 	auto old_size = this->series_vector.size();
 
 	for (auto i = old_size; i <= static_cast<typename std::vector<T>::size_type>(n); ++i) {
-		this->series_vector.push_back(this->series_vector[i - 1] * static_cast<T>(-1) * static_cast<T>(std::pow(this->x, 2) / (2 * i * (2 * i - 1))));
+		this->series_vector.push_back(this->series_vector[i - 1] * static_cast<T>(-1) * static_cast<T>((this->x * this->x) / (i * (4 * i - 2))));
 	}
 
 	return this->series_vector[n];
@@ -523,7 +521,7 @@ T sin_series<T, K>::acsess_row(K n)
 	auto old_size = this->series_vector.size();
 
 	for (auto i = old_size; i <= static_cast<typename std::vector<T>::size_type>(n); ++i) {
-		this->series_vector.push_back(this->series_vector[i - 1] * static_cast<T>(std::pow(this->x, 2) / (i * (4 * i - 2))));
+		this->series_vector.push_back(this->series_vector[i - 1] * T(-1) * static_cast<T>((this->x * this->x) / (i * (4 * i + 2))));
 	}
 
 	return this->series_vector[n];
@@ -575,7 +573,7 @@ private:
 };
 
 template <typename T, typename K>
-cosh_series<T, K>::cosh_series(T x) : series_base<T, K>(x, std::cosh(x)), requrrent_series_base<T, K>(std::vector<T>{1, T(std::pow(this->x, 2) / 2) }) {}
+cosh_series<T, K>::cosh_series(T x) : series_base<T, K>(x, std::cosh(x)), requrrent_series_base<T, K>(std::vector<T>{1, T((x* x) / 2) }) {}
 
 template <typename T, typename K>
 T cosh_series<T, K>::acsess_row(K n)
@@ -586,7 +584,7 @@ T cosh_series<T, K>::acsess_row(K n)
 	auto old_size = this->series_vector.size();
 
 	for (auto i = old_size; i <= static_cast<typename std::vector<T>::size_type>(n); ++i) {
-		this->series_vector.push_back(this->series_vector[i - 1] * static_cast<T>(std::pow(this->x, 2) / (i * (4 * i - 2))));
+		this->series_vector.push_back(this->series_vector[i - 1] * static_cast<T>((this->x * this->x) / (i * (4 * i - 2))));
 	}
 
 	return this->series_vector[n];
@@ -649,7 +647,7 @@ T sinh_series<T, K>::acsess_row(K n)
 	auto old_size = this->series_vector.size();
 
 	for (auto i = old_size; i <= static_cast<typename std::vector<T>::size_type>(n); ++i) {
-		this->series_vector.push_back(this->series_vector[i - 1] * static_cast<T>(std::pow(this->x, 2) / (2 * i * (2 * i + 1))));
+		this->series_vector.push_back(this->series_vector[i - 1] * static_cast<T>((this->x * this->x) / (i * (4 * i + 2))));
 	}
 
 	return this->series_vector[n];
@@ -1133,7 +1131,7 @@ T erf_series<T, K>::acsess_row(K n)
 	auto old_size = this->series_vector.size();
 
 	for (auto i = old_size; i <= static_cast<typename std::vector<T>::size_type>(n); ++i) {
-		this->series_vector.push_back(this->series_vector[i - 1] * (-1) * static_cast<T>(std::pow(this->x, 2) / i * (2 * (i - 1) + 1) / (2 * i + 1)));
+		this->series_vector.push_back(this->series_vector[i - 1] * static_cast<T>((-1)) * static_cast<T>((this->x * this->x) / i * (2 * i - 1) / (2 * i + 1)));
 	}
 
 	return static_cast<T>(this->series_vector[n]);
@@ -1348,8 +1346,9 @@ constexpr T x_twelfth_x2_pi2_series<T, K>::operator()(K n) const
 {
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
-	return n ? series_base<T, K>::minus_one_raised_to_power_n(n) * std::sin(n * this->x) / (std::pow(n, 3)) : 0;
+	return n ? static_cast<T>(series_base<T, K>::minus_one_raised_to_power_n(n) * std::sin(n * this->x) / (std::pow(n, 3))) : 0;
 }
+
 
 /**
 * @brief Numerical series representation of ln(2)
@@ -1445,7 +1444,7 @@ constexpr T minus_one_quarter_series<T, K>::operator()(K n) const
 {
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
-	return n ? series_base<T, K>::minus_one_raised_to_power_n(n) / n * (n + 2) : 0;
+	return n ? series_base<T, K>::minus_one_raised_to_power_n(n) / (n * (n + 2)) : 0;
 }
 
 /**
@@ -1500,7 +1499,6 @@ public:
 };
 
 template <typename T, typename K>
-pi_4_series<T, K>::pi_4_series() : series_base<T, K>(0, static_cast<T>(0.25 * std::numbers::pi)) {} //fix 
 
 template <typename T, typename K>
 constexpr T pi_4_series<T, K>::operator()(K n) const
@@ -1926,7 +1924,7 @@ constexpr T x_two_throught_squares_series<T, K>::operator()(K n) const
 		throw std::domain_error("negative integer in the input");
 	if (n == 0)
 		return 0;
-	return static_cast<T>(this->x * static_cast<T>((2 * std::pow(n, 2) - 1) / (4 * std::pow(n, 4) + 1)));
+	return static_cast<T>(this->x * static_cast<T>((2 * (n * n) - 1) / (4 * std::pow(n, 4) + 1)));
 }
 
 /**
@@ -2086,9 +2084,8 @@ constexpr T two_arcsin_square_x_halfed_series<T, K>::operator()(K n) const
 {
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
-	return  static_cast<T>(pow(this->x, 2 * n + 2) * pow(this->fact(n), 2) / (this->fact(2 * n + 2)));
+	return  static_cast<T>((pow(this->x, 2 * n + 2) * this->fact(n) * this->fact(n)) / (this->fact(2 * n + 2)));
 }
-
 
 
 /**
@@ -2116,7 +2113,7 @@ public:
 };
 
 template <typename T, typename K>
-pi_squared_twelve_series<T, K>::pi_squared_twelve_series() : series_base<T, K>(0, static_cast<T>(std::pow(std::numbers::pi, 2) / 12)) {}
+pi_squared_twelve_series<T, K>::pi_squared_twelve_series() : series_base<T, K>(0, static_cast<T>((std::numbers::pi* std::numbers::pi) / 12)) {}
 
 template <typename T, typename K>
 constexpr T pi_squared_twelve_series<T, K>::operator()(K n) const
@@ -2382,7 +2379,7 @@ public:
 };
 
 template <typename T, typename K>
-half_minus_sinx_multi_pi_4<T, K>::half_minus_sinx_multi_pi_4(T x) : series_base<T, K>(x, static_cast<T>(0.5 - std::numbers::pi * std::sin(x) / 4)) {}
+half_minus_sinx_multi_pi_4<T, K>::half_minus_sinx_multi_pi_4(T x) : series_base<T, K>(x, static_cast<T>((static_cast<T>(0.5) - std::numbers::pi * std::sin(x) * static_cast<T>(0.25)))) {}
 
 template <typename T, typename K>
 constexpr T half_minus_sinx_multi_pi_4<T, K>::operator()(K n) const
@@ -2420,7 +2417,7 @@ public:
 };
 
 template <typename T, typename K>
-ln_1plussqrt1plusxsquare_minus_ln_2<T, K>::ln_1plussqrt1plusxsquare_minus_ln_2(T x) : series_base<T, K>(x, static_cast<T>(std::log(1 + std::sqrt(1 + x * x)) - std::log(2))) {}
+ln_1plussqrt1plusxsquare_minus_ln_2<T, K>::ln_1plussqrt1plusxsquare_minus_ln_2(T x) : series_base<T, K>(x, static_cast<T>(std::log((1 + std::hypot(1, x)) / 2))) {}
 
 template <typename T, typename K>
 constexpr T ln_1plussqrt1plusxsquare_minus_ln_2<T, K>::operator()(K n) const
@@ -2429,7 +2426,7 @@ constexpr T ln_1plussqrt1plusxsquare_minus_ln_2<T, K>::operator()(K n) const
 		throw std::domain_error("negative integer in the input");
 	if ((this->x) * (this->x) > 1)
 		throw std::domain_error("x^2 cannot be more than 1");
-	return static_cast<T>(this->minus_one_raised_to_power_n(n) * this->fact(2 * n + 1) * std::pow(this->x, 2 * n + 2) / (pow(2, 2 * n + 2) * pow(this->fact(n + 1), 2)));
+	return static_cast<T>((this->minus_one_raised_to_power_n(n) * this->fact(2 * n + 1) * std::pow(this->x, 2 * n + 2)) / (pow(2, 2 * n + 2) * this->fact(n + 1) * this->fact(n + 1)));
 }
 
 
@@ -2501,7 +2498,7 @@ public:
 };
 
 template <typename T, typename K>
-ln_sinx_minus_ln_x<T, K>::ln_sinx_minus_ln_x(T x) : series_base<T, K>(x, std::log(std::sin(x)) - std::log(x)) {}
+ln_sinx_minus_ln_x<T, K>::ln_sinx_minus_ln_x(T x) : series_base<T, K>(x, std::log(std::sin(x) / x)) {}
 
 template <typename T, typename K>
 constexpr T ln_sinx_minus_ln_x<T, K>::operator()(K n) const
@@ -2541,7 +2538,7 @@ public:
 };
 
 template <typename T, typename K>
-pi_8_cosx_square_minus_1_div_3_cosx<T, K>::pi_8_cosx_square_minus_1_div_3_cosx(T x) : series_base<T, K>(x, static_cast<T>((std::numbers::pi / 8)* std::cos(x)* std::cos(x) - (1 / 3) * std::cos(x))) {}
+pi_8_cosx_square_minus_1_div_3_cosx<T, K>::pi_8_cosx_square_minus_1_div_3_cosx(T x) : series_base<T, K>(x, static_cast<T>((std::numbers::pi / 8)* std::cos(x)* (std::cos(x) - (1 / 3)))) {}
 
 template <typename T, typename K>
 constexpr T pi_8_cosx_square_minus_1_div_3_cosx<T, K>::operator()(K n) const
@@ -2641,7 +2638,7 @@ constexpr T one_minus_sqrt_1minus4x_div_2x<T, K>::operator()(K n) const
 
 
 /**
-* @brief Taylor series of function arcsin(x) - x (проблемный ряд, возможно из-за двойного факториала в знаменателе, надо исправить)
+* @brief Taylor series of function arcsin(x) - x (The problematic row, possibly due to the double factorial in the denominator, needs to be fixed.)
 * @authors Trudolyubov N.A.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
@@ -2801,7 +2798,7 @@ constexpr T pi_minus_3pi_4_and_pi_minus_x_minus_3pi_4_series<T, K>::operator()(K
 		throw std::domain_error("negative integer in the input");
 	if (this->x <= -std::numbers::pi or this->x > std::numbers::pi)
 		throw std::domain_error("The value x must be between -pi not inclusive and pi inclusive");
-	return static_cast<T>((std::cos((n + 1) * (this->x)) * (1 - std::pow(-1, n + 1))) / ((n + 1) * (n + 1) * std::numbers::pi) + (std::pow(-1, n + 1) * std::sin((n + 1) * (this->x))) / (n + 1));
+	return static_cast<T>((std::cos((n + 1) * (this->x)) * (1 - (1 - 2 * ((n + 1) % 2)))) / ((n + 1) * (n + 1) * std::numbers::pi) + ((1 - 2 * ((n + 1) % 2)) * std::sin((n + 1) * (this->x))) / (n + 1)); // (1 - 2 * ((n + 1) % 2)) = (-1)^{n+1}
 }
 
 
@@ -2846,7 +2843,7 @@ constexpr T minus_3_div_4_or_x_minus_3_div_4_series<T, K>::operator()(K n) const
 	if (this->x <= -3 or this->x >= 3)
 		throw std::domain_error("The value x must be between -3 and 3 not inclusive");
 	return static_cast<T>(-6 / (std::numbers::pi * std::numbers::pi) * std::cos((2 * n + 1) * std::numbers::pi * (this->x) / 3) / ((2 * n + 1) * (2 * n + 1))
-		- 3 / (std::numbers::pi) * (std::pow(-1, n + 1) * std::sin((this->x) * (n + 1) * std::numbers::pi / 3)) / (n + 1));
+		- 3 / (std::numbers::pi) * ((1 - 2 * ((n + 1) % 2)) * std::sin((this->x) * (n + 1) * std::numbers::pi / 3)) / (n + 1));  // (1 - 2 * ((n + 1) % 2)) = (-1)^{n+1}
 }
 
 
@@ -2888,7 +2885,7 @@ constexpr T ten_minus_x_series<T, K>::operator()(K n) const
 		throw std::domain_error("negative integer in the input");
 	if (this->x <= 5 or this->x >= 15)
 		throw std::domain_error("The value x must be between 5 and 15 not inclusive");
-	return static_cast<T>(10 * std::pow(-1, n + 1) * std::sin((n + 1) * (this->x) * std::numbers::pi / 5) / ((n + 1) * std::numbers::pi));
+	return static_cast<T>(10 * (1 - 2 * ((n + 1) % 2)) * std::sin((n + 1) * (this->x) * std::numbers::pi / 5) / ((n + 1) * std::numbers::pi)); // (1 - 2 * ((n + 1) % 2)) = (-1)^{n+1}
 }
 
 
@@ -2972,7 +2969,7 @@ constexpr T minus_x_minus_pi_4_or_minus_pi_4_series<T, K>::operator()(K n) const
 	if (this->x <= -std::numbers::pi or this->x >= std::numbers::pi)
 		throw std::domain_error("The value x must be between -pi and pi not inclusive");
 	return static_cast<T>(-2 * std::cos(2 * n + 1) * (this->x) / (std::numbers::pi * (2 * n + 1) * (2 * n + 1))
-		+ std::pow(-1, n + 1) * std::sin(this->x * (n + 1)) / (n + 1));
+		+ (1 - 2 * ((n + 1) % 2)) * std::sin(this->x * (n + 1)) / (n + 1)); // (1 - 2 * ((n + 1) % 2)) = (-1)^{n+1}
 }
 
 
@@ -3214,7 +3211,7 @@ public:
 };
 
 template <typename T, typename K>
-xsquareplus3_div_xsquareplus2multix_minus_1_series<T, K>::xsquareplus3_div_xsquareplus2multix_minus_1_series(T x) : series_base<T, K>(x, (x* x + 3) / (x * x + 2 * x) - 1) {}
+xsquareplus3_div_xsquareplus2multix_minus_1_series<T, K>::xsquareplus3_div_xsquareplus2multix_minus_1_series(T x) : series_base<T, K>(x, (x* x + 3) / (x * (x + 2)) - 1) {}
 
 template <typename T, typename K>
 constexpr T xsquareplus3_div_xsquareplus2multix_minus_1_series<T, K>::operator()(K n) const
@@ -4214,7 +4211,7 @@ constexpr T sqrt_1plusx_min_1_min_x_div_2_series<T, K>::operator()(K n) const
 		throw std::domain_error("negative integer in the input");
 
 	K temp = 1;
-	for (K i = 1; 2 * i + 1 <= 2 * n + 1; ++i)
+	for (K i = 1; 2 * i <= 2 * n; ++i)
 		temp *= 2 * i + 1;
 	return static_cast<T>(this->minus_one_raised_to_power_n(n + 3) * std::pow(this->x, n + 2) * temp / (this->fact(n + 2) * std::pow(2, n + 2)));
 }
@@ -4247,7 +4244,7 @@ public:
 };
 
 template <typename T, typename K>
-ln13_min_ln7_div_7_series<T, K>::ln13_min_ln7_div_7_series() : series_base<T, K>(0, (static_cast<T>(std::log(13) - std::log(7) / 7))) {}
+ln13_min_ln7_div_7_series<T, K>::ln13_min_ln7_div_7_series() : series_base<T, K>(0, (static_cast<T>(std::log(13 / 7) / 7))) {}
 
 template <typename T, typename K>
 constexpr T ln13_min_ln7_div_7_series<T, K>::operator()(K n) const
@@ -4334,11 +4331,11 @@ constexpr T one_div_sqrt2_sin_xdivsqrt2_series<T, K>::operator()(K n) const
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
 
-	#ifdef _WIN32
-		return static_cast<T>(std::pow(-1, n / 2) * _jn(static_cast<K>(2 * n + 1), this->x));
-	#else
-		return static_cast<T>(std::pow(-1, n / 2) * jn(static_cast<T>(2 * n + 1), this->x));
-	#endif
+#ifdef _WIN32
+	return static_cast<T>(std::pow(-1, n / 2) * _jn(static_cast<int>(2 * n + 1), this->x));
+#else
+	return static_cast<T>(std::pow(-1, n / 2) * jn(static_cast<T>(2 * n + 1), this->x));
+#endif
 }
 
 
@@ -4378,7 +4375,7 @@ constexpr T ln_1plusx_div_1plusx2<T, K>::operator()(K n) const
 	if (n < 0)
 		throw std::domain_error("The term index must be a non-negative integer");
 
-	return static_cast<T>(this->minus_one_raised_to_power_n(n + 2) * std::pow(this->x, n + 1) / ((n + 1) * std::pow(1 + std::pow(this->x, 2), n + 1)));
+	return static_cast<T>(this->minus_one_raised_to_power_n(n + 2) * std::pow(this->x, n + 1) / ((n + 1) * std::pow(1 + (this->x * this->x), n + 1)));
 }
 
 
@@ -4683,8 +4680,8 @@ T requrrent_testing_series<T, K>::acsess_row(K n)
 
 	K old_size = this->series_vector.size();
 
-	for (int i = old_size; i <= n; ++i) {
-		this->series_vector.push_back(this->series_vector[i - 1] * std::pow(this->x, 2) / (2 * i * (2 * i + 1)));
+	for (K i = old_size; i <= n; ++i) {
+		this->series_vector.push_back(this->series_vector[i - 1] * (this->x * this->x) / (i * (4 * i + 2)));
 	}
 
 	return this->series_vector[n];
