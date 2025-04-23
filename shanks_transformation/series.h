@@ -1499,6 +1499,7 @@ public:
 };
 
 template <typename T, typename K>
+pi_4_series<T, K>::pi_4_series() : series_base<T, K>(0, static_cast<T>(0.25 * std::numbers::pi)) {} //fix 
 
 template <typename T, typename K>
 constexpr T pi_4_series<T, K>::operator()(K n) const
