@@ -94,10 +94,9 @@ T epsilon_algorithm_two<T, K, series_templ>::operator()(const K n, const int ord
 
         --k;
     }
-    const T result = e[0][0]; //Only odd rows have mathmatical scence. Always returning e[0][0]
-
-    if (!std::isfinite(result))
+    
+    if (!std::isfinite(e[0][0]))
         throw std::overflow_error("division by zero");
 
-    return result;
+    return e[0][0];  //Only odd rows have mathmatical scense. Always returning e[0][0]
 }

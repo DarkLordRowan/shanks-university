@@ -1,6 +1,6 @@
 /**
 * @file drummon_D_algorithm.h
-* @brief Containts implemetation for Drummond's D-transformation
+* @brief Contains implementation of Drummond's D-transformation
 * @authors Naumov A.
 */
 
@@ -33,7 +33,7 @@ protected:
 			throw std::domain_error("negative integer in input");
 
 		T numerator = T(0), denominator = T(0);
-		T w_n, rest;
+		T w_n, rest, a1;
 
 		for (int j = 0; j <= n; ++j) 
 		{
@@ -41,8 +41,10 @@ protected:
 
 			w_n = remainder_func->operator()(order, j, this->series, 1);
 
-			numerator += rest * this->series->S_n(order + j) * w_n;
-			denominator += rest * w_n;
+			a1 = rest * w_n;
+
+			numerator += a1 * this->series->S_n(order + j);
+			denominator += a1 * rest;
 		}
 
 		if (denominator == 0 || !std::isfinite(numerator))
@@ -65,8 +67,8 @@ protected:
 		if (order < 0)
 			throw std::domain_error("negative integer in input");
 
-		std::vector<T> N (n + 1, 0);
-		std::vector<T> D (n + 1, 0);
+		std::vector<T> N (n + 1,    0);
+		std::vector<T> D (N.size(), 0);
 
 		for (int i = 0; i < n + 1; ++i)
 		{
