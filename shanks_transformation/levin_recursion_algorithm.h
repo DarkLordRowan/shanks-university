@@ -64,9 +64,9 @@ private:
         if (k_time == 0)
             return R_0;
 
-        T a1 = k_time - 1;
-        T a2 = b + n_time;
-        T a3 = a1 + a2;
+        K a1 = k_time - 1;
+        T a2 = static_cast<T>(b + n_time);
+        T a3 = static_cast<T>(a1 + a2);
 
         T res = static_cast<T>((*this)(n_time + 1, a1, b, ND) -
             (*this)(n_time, a1, b, ND) * a2 * pow(a3, a1 - 1) /

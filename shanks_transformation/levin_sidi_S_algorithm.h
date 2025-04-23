@@ -99,12 +99,13 @@ protected:
 		std::vector<T> N (n + 1,    0);
 		std::vector<T> D (N.size(), 0);
 
-		for (K i = 0; i < N.size(); ++i) {
+		for (K i = 0; i < K(N.size()); ++i) {
 			D[i] = remainder_func->operator()(0, order + i, this->series);
 			N[i] = this->series->S_n(order + i) * D[i];
 		}
 
-		T b1, b2, b3, b4, b5, b6, j_1;
+		T b1, b2, b3, b4, b5, b6;
+		K j_1;
 
 		b1 = beta + order;
 		b2 = b1 - 1;

@@ -72,5 +72,5 @@ T richardson_algorithm<T, K, series_templ>::operator()(const K n, const int orde
     if (!std::isfinite(res))
         throw std::overflow_error("division by zero");
 
-    return 
+    return res;
 }
