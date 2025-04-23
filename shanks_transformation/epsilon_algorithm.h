@@ -3,9 +3,6 @@
  * @brief This file contains the declaration of the Epsilon Algorithm class.
  */
 
-#pragma once
-#define DEF_UNDEFINED_SUM 0
-
 #include "series_acceleration.h" // Include the series header
 #include <vector> // Include the vector library
 
@@ -42,11 +39,8 @@ template <typename T, typename K, typename series_templ>
 T epsilon_algorithm<T, K, series_templ>::operator()(const K n, const int order) const
 {
 	int m = 2 * order;
-	if (n < 0)
+	if (n <= 0)
 		throw std::domain_error("negative integer in the input");
-
-	if (n == 0)
-		return DEF_UNDEFINED_SUM;
 
 	if (order == 0)
 		return this->series->S_n(n);

@@ -7,7 +7,7 @@
 
 #include "series_acceleration.h" // Include the series header
 #include <vector> // Include the vector library
-#include "series +.h" 
+#include "series.h" 
 
 template <typename T, typename K, typename series_templ>
 class ford_sidi_algorithm_two : public series_acceleration<T, K, series_templ>
@@ -42,14 +42,14 @@ T ford_sidi_algorithm_two<T, K, series_templ>::operator()(const K n, const int o
 	if (n == 0)
 		throw std::domain_error("n = 0 in the input");
 
-	T delta_squared_S_n = this->series->S_n(n + 2) - 2 * this->series->S_n(n + 1) + this->series->S_n(n);
+	T delta_squared_S_n;
 
 	K m = n;
-
-	while (delta_squared_S_n == 0 && m > 0) {
-		m = m - 1;
+	do
+	{
 		delta_squared_S_n = this->series->S_n(m + 2) - 2 * this->series->S_n(m + 1) + this->series->S_n(m);
-	}
+		m = m - 1;
+	} while (delta_squared_S_n == 0 && m > 0);
 
 	if (m == 0)
 		throw std::overflow_error("division by zero");
@@ -57,6 +57,9 @@ T ford_sidi_algorithm_two<T, K, series_templ>::operator()(const K n, const int o
 	T delta_S_n = this->series->S_n(m + 1) - this->series->S_n(m);
 
 	T T_n = this->series->S_n(m) - delta_S_n * delta_S_n / delta_squared_S_n;
+
+	if (!isfinite(T_n))
+		throw std::overflow_error("division by zero");
 
 	return T_n;
 }

@@ -14,9 +14,7 @@
 #include <exception>  // Include the exception library for std::exception
 #include <math.h>     // Include the math library for mathematical functions
 #include <string>	  // Include the library which contains the string class
-//#include "series.h"
-#include "series +.h" 
-
+#include "series.h"
 
 
 /**
@@ -67,5 +65,5 @@ series_acceleration<T, K, series_templ>::series_acceleration(const series_templ&
 template <typename T, typename K, typename series_templ>
 constexpr void series_acceleration<T, K, series_templ>::print_info() const
 {
-	std::cout << "transformation: " << typeid(*this).name() << std::endl;
+	std::cout << "transformation: " << typeid(*this).name() << '\n';
 }

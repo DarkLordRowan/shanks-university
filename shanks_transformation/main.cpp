@@ -12,6 +12,7 @@
 
 int main(void)
 {
+	while(true)
 	try
 	{
 		main_testing_function<long double, long long int>();
