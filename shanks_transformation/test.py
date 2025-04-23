@@ -174,8 +174,8 @@ def main():
         exec_program = "/build/test.exe" # Путь к exe файлу
     else:
         exec_program = "./build/test"
-    #a = program(exec_program, ["-1", "100"] + exp_series(1, 101) +  ["18"])
-    a = program(exec_program, ["1", "1", "18", "10", "1"])
+    a = program(exec_program, ["-1", "100"] + exp_series(1, 101) +  ["18"])
+    #a = program(exec_program, ["1", "1", "18", "10", "1"])
     a.run()
     output_message = a.get_output()
     error_message = a.get_error()
