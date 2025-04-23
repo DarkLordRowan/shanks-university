@@ -4,9 +4,6 @@
 * @authors Naumov A.
 */
 
-#pragma once
-#define DEF_UNDEFINED_SUM 0
-
 #include "series_acceleration.h" // Include the series header
 #include <vector> // Include the vector library
 
@@ -68,28 +65,26 @@ protected:
 		if (order < 0)
 			throw std::domain_error("negative integer in input");
 
-		std::vector<T>* N = new std::vector<T>(n + 1, 0);
-		std::vector<T>* D = new std::vector<T>(n + 1, 0);
+		std::vector<T> N (n + 1, 0);
+		std::vector<T> D (n + 1, 0);
 
 		for (int i = 0; i < n + 1; ++i)
 		{
-			(*D)[i] = remainder_func->operator()(0, order + i, this->series);
-			(*N)[i] = this->series->S_n(order + i) * (*D)[i];
+			D[i] = remainder_func->operator()(0, order + i, this->series);
+			N[i] = this->series->S_n(order + i) * D[i];
 		}
 
 		for (int i = 1; i <= n; ++i)
 			for (int j = 0; j <= n - i; ++j) 
 			{
-				(*D)[j] = (*D)[j + 1] - (*D)[j];
-				(*N)[j] = (*N)[j + 1] - (*N)[j];
+				D[j] = D[j + 1] - D[j];
+				N[j] = N[j + 1] - N[j];
 			}
 
-		T numerator = (*N)[0] / (*D)[0];
+		T numerator = N[0] / D[0];
 
 		if (!std::isfinite(numerator))
 			throw std::overflow_error("division by zero");
-
-		delete N, D;
 
 		return numerator;
 	}

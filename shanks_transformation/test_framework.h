@@ -187,111 +187,111 @@ enum test_function_id_t {
 */
 inline static void print_series_info()
 {
-	std::cout << "Which series' convergence would you like to accelerate?" << std::endl <<
-		"List of currently avaiable series:" << std::endl <<
-		"1 - exp_series" << std::endl <<
-		"2 - cos_series" << std::endl <<
-		"3 - sin_series" << std::endl <<
-		"4 - cosh_series" << std::endl <<
-		"5 - sinh_series" << std::endl <<
-		"6 - bin_series" << std::endl <<
-		"7 - four_arctan_series" << std::endl <<
-		"8 - ln1mx_series" << std::endl <<
-		"9 - mean_sinh_sin_series" << std::endl <<
-		"10 - exp_squared_erf_series" << std::endl <<
-		"11 - xmb_Jb_two_series" << std::endl <<
-		"12 - half_asin_two_x_series" << std::endl <<
-		"13 - inverse_1mx_series" << std::endl <<
-		"14 - x_1mx_squared_series" << std::endl <<
-		"15 - erf_series" << std::endl <<
-		"16 - m_fact_1mx_mp1_inverse_series" << std::endl <<
-		"17 - inverse_sqrt_1m4x_series" << std::endl <<
-		"18 - one_twelfth_3x2_pi2_series" << std::endl <<
-		"19 - x_twelfth_x2_pi2_series" << std::endl <<
-		"20 - ln2_series_id" << std::endl <<
-		"21 - one_series_id" << std::endl <<
-		"22 - minus_one_quarter_series_id" << std::endl <<
-		"23 - pi_3_series" << std::endl <<
-		"24 - pi_4_series" << std::endl <<
-		"25 - pi_squared_6_minus_one_series" << std::endl <<
-		"26 - three_minus_pi_series" << std::endl <<
-		"27 - one_twelfth_series" << std::endl <<
-		"28 - eighth_pi_m_one_third_series" << std::endl <<
-		"29 - one_third_pi_squared_m_nine_series" << std::endl <<
-		"30 - four_ln2_m_3_series" << std::endl <<
-		"31 - exp_m_cos_x_sinsin_x_series" << std::endl <<
-		"32 - pi_four_minus_ln2_halfed_series" << std::endl <<
-		"33 - five_pi_twelve_series" << std::endl <<
-		"34 - x_two_series" << std::endl <<
-		"35 - pi_six_min_half_series" << std::endl <<
-		"36 - x_two_throught_squares" << std::endl <<
-		"37 - minus_one_ned_in_n_series" << std::endl <<
-		"38 - minus_one_n_fact_n_in_n_series" << std::endl <<
-		"39 - ln_x_plus_one_x_minus_one_halfed_series" << std::endl <<
-		"40 - two_arcsin_square_x_halfed_series" << std::endl <<
-		"41 - pi_squared_twelve_series" << std::endl <<
-		"42 - pi_cubed_32_series" << std::endl << 
-		"43 - minus_three_plus_ln3_three_devided_two_plus_two_ln2_series" << std::endl <<
-		"44 - two_ln2_series" << std::endl << 
-		"45 - pi_x_multi_e_xpi_plus_e_minusxpi_divided_e_xpi_minus_e_minusxpi_minus_one_series" << std::endl << 
-		"46 - pi_minus_x_2" << std::endl << 
-		"47 - half_multi_ln_1div2multi1minuscosx" << std::endl << 
-		"48 - half_minus_sinx_multi_pi_4" << std::endl << 
-		"49 - ln_1plussqrt1plusxsquare_minus_ln_2" << std::endl << 
-		"50 - ln_cosx" << std::endl << 
-		"51 - ln_sinx_minus_ln_x" << std::endl << 
-		"52 - pi_8_cosx_square_minus_1_div_3_cosx" << std::endl << 
-		"53 - sqrt_oneminussqrtoneminusx_div_x" << std::endl << 
-		"54 - one_minus_sqrt_1minus4x_div_2x" << std::endl << 
-		"55 - arcsin_x_minus_x_series" << std::endl << 
-		"56 - pi_x_minus_x_square_and_x_square_minus_three_pi_x_plus_two_pi_square_series" << std::endl << 
-		"57 - abs_sin_x_minus_2_div_pi_series" << std::endl << 
-		"58 - pi_minus_3pi_4_and_pi_minus_x_minus_3pi_4_series" << std::endl << 
-		"59 - minus_3_div_4_or_x_minus_3_div_4_series" << std::endl << 
-		"60 - ten_minus_x_series" << std::endl << 
-		"61 - x_series" << std::endl << 
-		"62 - minus_x_minus_pi_4_or_minus_pi_4_series" << std::endl << 
-		"63 - one_div_two_minus_x_multi_three_plus_x_series" << std::endl << 
-		"64 - Si_x_series" << std::endl << 
-		"65 - Ci_x_series" << std::endl <<
-		"66 - Riemann_zeta_func_series" << std::endl << 
-		"67 - Riemann_zeta_func_xmin1_div_Riemann_zeta_func_x_series" << std::endl << 
-		"68 - xsquareplus3_div_xsquareplus2multix_minus_1_series" << std::endl << 
-		"69 - arcsin_x_series" << std::endl << 
-		"70 - arctg_x_series" << std::endl << 
-		"71 - K_x_series" << std::endl << 
-		"72 - E_x_series" << std::endl << 
-		"73 - sqrt_1plusx_series" << std::endl << 
-		"74 - Lambert_W_func_series" << std::endl << 
-		"75 - Incomplete_Gamma_func_series" << std::endl << 
-		"76 - Series_with_ln_number1" << std::endl << 
-		"77 - Series_with_ln_number2" << std::endl << 
-		"78 - pi_series" << std::endl << 
-		"79 - x_min_sqrt_x_series" << std::endl << 
-		"80 - arctan_x2_series" << std::endl <<
-		"81 - ln1px4_series" << std::endl <<
-		"82 - sin_x2_series" << std::endl <<
-		"83 - arctan_x3_series" << std::endl <<
-		"84 - arcsin_x2_series" << std::endl <<
-		"85 - ln1_m_x2_series" << std::endl <<
-		"86 - artanh_x_series" << std::endl <<
-		"87 - arcsinh_x_series" << std::endl <<
-		"88 - cos_x2_series" << std::endl <<
-		"89 - sinh_x2_series" << std::endl <<
-		"90 - arctanh_x2_series" << std::endl << 
-		"91 - cos3xmin1_div_xsqare_series" << std::endl << 
-		"92 - two_degree_x_series" << std::endl << 
-		"93 - sqrt_1plusx_min_1_min_x_div_2_series" << std::endl << 
-		"94 - ln13_min_ln7_div_7_series" << std::endl << 
-		"95 - Ja_x_series" << std::endl << 
-		"96 - one_div_sqrt2_sin_xdivsqrt2_series" << std::endl << 
-		"97 - ln_1plusx_div_1plusx2" << std::endl <<
-		"98 - cos_sqrt_x" << std::endl <<
-		"99 - ln_1_plus_x3" << std::endl <<
-		"100 - x_div_1minx" << std::endl <<
-		"101 - x_div_1minx2" << std::endl <<
-		"102 - gamma_series" << std::endl <<
-		std::endl;
+	std::cout << "Which series' convergence would you like to accelerate?" << '\n' <<
+		"List of currently avaiable series:" << '\n' <<
+		"1 - exp_series" << '\n' <<
+		"2 - cos_series" << '\n' <<
+		"3 - sin_series" << '\n' <<
+		"4 - cosh_series" << '\n' <<
+		"5 - sinh_series" << '\n' <<
+		"6 - bin_series" << '\n' <<
+		"7 - four_arctan_series" << '\n' <<
+		"8 - ln1mx_series" << '\n' <<
+		"9 - mean_sinh_sin_series" << '\n' <<
+		"10 - exp_squared_erf_series" << '\n' <<
+		"11 - xmb_Jb_two_series" << '\n' <<
+		"12 - half_asin_two_x_series" << '\n' <<
+		"13 - inverse_1mx_series" << '\n' <<
+		"14 - x_1mx_squared_series" << '\n' <<
+		"15 - erf_series" << '\n' <<
+		"16 - m_fact_1mx_mp1_inverse_series" << '\n' <<
+		"17 - inverse_sqrt_1m4x_series" << '\n' <<
+		"18 - one_twelfth_3x2_pi2_series" << '\n' <<
+		"19 - x_twelfth_x2_pi2_series" << '\n' <<
+		"20 - ln2_series_id" << '\n' <<
+		"21 - one_series_id" << '\n' <<
+		"22 - minus_one_quarter_series_id" << '\n' <<
+		"23 - pi_3_series" << '\n' <<
+		"24 - pi_4_series" << '\n' <<
+		"25 - pi_squared_6_minus_one_series" << '\n' <<
+		"26 - three_minus_pi_series" << '\n' <<
+		"27 - one_twelfth_series" << '\n' <<
+		"28 - eighth_pi_m_one_third_series" << '\n' <<
+		"29 - one_third_pi_squared_m_nine_series" << '\n' <<
+		"30 - four_ln2_m_3_series" << '\n' <<
+		"31 - exp_m_cos_x_sinsin_x_series" << '\n' <<
+		"32 - pi_four_minus_ln2_halfed_series" << '\n' <<
+		"33 - five_pi_twelve_series" << '\n' <<
+		"34 - x_two_series" << '\n' <<
+		"35 - pi_six_min_half_series" << '\n' <<
+		"36 - x_two_throught_squares" << '\n' <<
+		"37 - minus_one_ned_in_n_series" << '\n' <<
+		"38 - minus_one_n_fact_n_in_n_series" << '\n' <<
+		"39 - ln_x_plus_one_x_minus_one_halfed_series" << '\n' <<
+		"40 - two_arcsin_square_x_halfed_series" << '\n' <<
+		"41 - pi_squared_twelve_series" << '\n' <<
+		"42 - pi_cubed_32_series" << '\n' << 
+		"43 - minus_three_plus_ln3_three_devided_two_plus_two_ln2_series" << '\n' <<
+		"44 - two_ln2_series" << '\n' << 
+		"45 - pi_x_multi_e_xpi_plus_e_minusxpi_divided_e_xpi_minus_e_minusxpi_minus_one_series" << '\n' << 
+		"46 - pi_minus_x_2" << '\n' << 
+		"47 - half_multi_ln_1div2multi1minuscosx" << '\n' << 
+		"48 - half_minus_sinx_multi_pi_4" << '\n' << 
+		"49 - ln_1plussqrt1plusxsquare_minus_ln_2" << '\n' << 
+		"50 - ln_cosx" << '\n' << 
+		"51 - ln_sinx_minus_ln_x" << '\n' << 
+		"52 - pi_8_cosx_square_minus_1_div_3_cosx" << '\n' << 
+		"53 - sqrt_oneminussqrtoneminusx_div_x" << '\n' << 
+		"54 - one_minus_sqrt_1minus4x_div_2x" << '\n' << 
+		"55 - arcsin_x_minus_x_series" << '\n' << 
+		"56 - pi_x_minus_x_square_and_x_square_minus_three_pi_x_plus_two_pi_square_series" << '\n' << 
+		"57 - abs_sin_x_minus_2_div_pi_series" << '\n' << 
+		"58 - pi_minus_3pi_4_and_pi_minus_x_minus_3pi_4_series" << '\n' << 
+		"59 - minus_3_div_4_or_x_minus_3_div_4_series" << '\n' << 
+		"60 - ten_minus_x_series" << '\n' << 
+		"61 - x_series" << '\n' << 
+		"62 - minus_x_minus_pi_4_or_minus_pi_4_series" << '\n' << 
+		"63 - one_div_two_minus_x_multi_three_plus_x_series" << '\n' << 
+		"64 - Si_x_series" << '\n' << 
+		"65 - Ci_x_series" << '\n' <<
+		"66 - Riemann_zeta_func_series" << '\n' << 
+		"67 - Riemann_zeta_func_xmin1_div_Riemann_zeta_func_x_series" << '\n' << 
+		"68 - xsquareplus3_div_xsquareplus2multix_minus_1_series" << '\n' << 
+		"69 - arcsin_x_series" << '\n' << 
+		"70 - arctg_x_series" << '\n' << 
+		"71 - K_x_series" << '\n' << 
+		"72 - E_x_series" << '\n' << 
+		"73 - sqrt_1plusx_series" << '\n' << 
+		"74 - Lambert_W_func_series" << '\n' << 
+		"75 - Incomplete_Gamma_func_series" << '\n' << 
+		"76 - Series_with_ln_number1" << '\n' << 
+		"77 - Series_with_ln_number2" << '\n' << 
+		"78 - pi_series" << '\n' << 
+		"79 - x_min_sqrt_x_series" << '\n' << 
+		"80 - arctan_x2_series" << '\n' <<
+		"81 - ln1px4_series" << '\n' <<
+		"82 - sin_x2_series" << '\n' <<
+		"83 - arctan_x3_series" << '\n' <<
+		"84 - arcsin_x2_series" << '\n' <<
+		"85 - ln1_m_x2_series" << '\n' <<
+		"86 - artanh_x_series" << '\n' <<
+		"87 - arcsinh_x_series" << '\n' <<
+		"88 - cos_x2_series" << '\n' <<
+		"89 - sinh_x2_series" << '\n' <<
+		"90 - arctanh_x2_series" << '\n' << 
+		"91 - cos3xmin1_div_xsqare_series" << '\n' << 
+		"92 - two_degree_x_series" << '\n' << 
+		"93 - sqrt_1plusx_min_1_min_x_div_2_series" << '\n' << 
+		"94 - ln13_min_ln7_div_7_series" << '\n' << 
+		"95 - Ja_x_series" << '\n' << 
+		"96 - one_div_sqrt2_sin_xdivsqrt2_series" << '\n' << 
+		"97 - ln_1plusx_div_1plusx2" << '\n' <<
+		"98 - cos_sqrt_x" << '\n' <<
+		"99 - ln_1_plus_x3" << '\n' <<
+		"100 - x_div_1minx" << '\n' <<
+		"101 - x_div_1minx2" << '\n' <<
+		"102 - gamma_series" << '\n' <<
+		'\n';
 }
 
 /**
@@ -301,26 +301,26 @@ inline static void print_series_info()
 */
 inline static void print_transformation_info()
 {
-	std::cout << "Which transformation would you like to test?" << std::endl <<
-		"List of currently avaiable series:" << std::endl <<
-		"1 - Shanks Transformation" << std::endl <<
-		"2 - Epsilon Algorithm" << std::endl <<
-		"3 - Levin Algorithm" << std::endl <<
-		"4 - Epsilon Algorithm V-2" << std::endl <<
-		"5 - S-transformation" << std::endl <<
-		"6 - D-transformation" << std::endl <<
-		"7 - Chang - Wynn - Epsilon Algorithm" << std::endl <<
-		"8 - M-transformation" << std::endl <<
-		"9 - Weniger transformation" << std::endl <<
-		"10 - Rho - Wynn transformation" << std::endl <<
-		"11 - Theta Brezinski transformation" << std::endl <<
-		"12 - Epsilon Algorithm V-3" << std::endl <<
-		"13 - Levin - Recursion Algorithm" << std::endl <<
-		"14 - Lubkin W-transformation" << std::endl <<
-		"15 - Richardson Algorithm" << std::endl <<
-		"16 - Ford-Sidi Algorithm" << std::endl <<
-		"17 - Ford-Sidi Algorithm V-2" << std::endl <<
-		std::endl;
+	std::cout << "Which transformation would you like to test?" << '\n' <<
+		"List of currently avaiable series:" << '\n' <<
+		"1 - Shanks Transformation" << '\n' <<
+		"2 - Epsilon Algorithm" << '\n' <<
+		"3 - Levin Algorithm" << '\n' <<
+		"4 - Epsilon Algorithm V-2" << '\n' <<
+		"5 - S-transformation" << '\n' <<
+		"6 - D-transformation" << '\n' <<
+		"7 - Chang - Wynn - Epsilon Algorithm" << '\n' <<
+		"8 - M-transformation" << '\n' <<
+		"9 - Weniger transformation" << '\n' <<
+		"10 - Rho - Wynn transformation" << '\n' <<
+		"11 - Theta Brezinski transformation" << '\n' <<
+		"12 - Epsilon Algorithm V-3" << '\n' <<
+		"13 - Levin - Recursion Algorithm" << '\n' <<
+		"14 - Lubkin W-transformation" << '\n' <<
+		"15 - Richardson Algorithm" << '\n' <<
+		"16 - Ford-Sidi Algorithm" << '\n' <<
+		"17 - Ford-Sidi Algorithm V-2" << '\n' <<
+		'\n';
 }
 
 /**
@@ -330,15 +330,15 @@ inline static void print_transformation_info()
 */
 inline static void print_test_function_info()
 {
-	std::cout << "Which function would you like to use for testing?" << std::endl <<
-		"List of currently avaiable functions:" << std::endl <<
-		"1 - cmp_sum_and_transform - showcases the difference between the transformed partial sum and the nontransformed one" << std::endl <<
-		"2 - cmp_a_n_and_transform - showcases the difference between series' terms and transformed ones" << std::endl <<
-		"3 - transformation_remainders - showcases the difference between series' sum and transformed partial sum" << std::endl <<
-		"4 - cmp_transformations - showcases the difference between convergence of sums accelerated by different transformations" << std::endl <<
-		"5 - eval_transform_time - evaluates the time it takes to transform series" << std::endl <<
-		"6 - test all algorithms on summ" << std::endl
-		<< std::endl;
+	std::cout << "Which function would you like to use for testing?" << '\n' <<
+		"List of currently avaiable functions:" << '\n' <<
+		"1 - cmp_sum_and_transform - showcases the difference between the transformed partial sum and the nontransformed one" << '\n' <<
+		"2 - cmp_a_n_and_transform - showcases the difference between series' terms and transformed ones" << '\n' <<
+		"3 - transformation_remainders - showcases the difference between series' sum and transformed partial sum" << '\n' <<
+		"4 - cmp_transformations - showcases the difference between convergence of sums accelerated by different transformations" << '\n' <<
+		"5 - eval_transform_time - evaluates the time it takes to transform series" << '\n' <<
+		"6 - test all algorithms on summ" << '\n'
+		<< '\n';
 }
 
 /**
@@ -350,21 +350,20 @@ template<typename T, typename K, typename series_templ>
 inline void init_levin(transformation_id_t id, std::unique_ptr<series_base<T,K>>& series, std::unique_ptr<series_acceleration<T, K, series_templ>>& transform)
 {
 	bool recursive = false;
+	bool standart = false;
 	char type;
 
-	std::cout << std::endl;
-	std::cout << "|--------------------------------------|" << std::endl;
-	std::cout << "| choose what type of transformation u,t,d or v: "; std::cin >> type; std::cout << "|" << std::endl;
+	std::cout << '\n';
+	std::cout << "|--------------------------------------|" << '\n';
+	std::cout << "| choose what type of transformation u,t,d or v: "; std::cin >> type; std::cout << "|" << '\n';
 	if (id != transformation_id_t::M_algorithm)
 	{
-		std::cout << "| Use recurrence formula? 1<-true or 0<-false : "; std::cin >> recursive; std::cout << "|" << std::endl;
+		std::cout << "| Use recurrence formula? 1<-true or 0<-false : "; std::cin >> recursive; std::cout << "|" << '\n';
 	}
-	std::cout << "|--------------------------------------|" << std::endl;
+	std::cout << "|--------------------------------------|" << '\n';
 
-	T beta = T(0);		//parameter for LevinType transformations algorithm
-	T gamma = T(10);	//parameter for LevinType transformations algorithm
-
-	//transform.reset(new levin_recursion_algorithm<T, K, decltype(series.get())>(series.get(), beta));
+	T beta = T{};	//parameter for LevinType transformations algorithm
+	T gamma = T{};	//parameter for LevinType transformations algorithm
 
 	transform_base<T, K>* ptr = NULL;
 
@@ -383,10 +382,18 @@ inline void init_levin(transformation_id_t id, std::unique_ptr<series_base<T,K>>
 	switch (id) {
 		case transformation_id_t::S_algorithm:
 
-			std::cout << std::endl;
-			std::cout << "|------------------------------------------|" << std::endl;
-			std::cout << "| Enter parameter beta: "; std::cin >> beta;
-			std::cout << "|------------------------------------------|" << std::endl;
+			std::cout << '\n';
+			std::cout << "|------------------------------------------|" << '\n';
+			std::cout << "| Use standart beta value? 1<-true or 0<-false : "; std::cin >> standart; std::cout << "|" << '\n';
+			std::cout << "|------------------------------------------|" << '\n';
+
+			if (!standart) {
+				std::cout << '\n';
+				std::cout << "|------------------------------------------|" << '\n';
+				std::cout << "| Enter parameter beta: "; std::cin >> beta;
+				std::cout << "|------------------------------------------|" << '\n';
+			}
+			else beta = 1;
 
 			transform.reset(new levi_sidi_algorithm<T, K, decltype(series.get())>(series.get(), ptr, recursive, beta));
 			return;
@@ -395,10 +402,18 @@ inline void init_levin(transformation_id_t id, std::unique_ptr<series_base<T,K>>
 			return;
 		case transformation_id_t::M_algorithm:
 
-			std::cout << std::endl;
-			std::cout << "|------------------------------------------|" << std::endl;
-			std::cout << "| Enter parameter beta: "; std::cin >> gamma;
-			std::cout << "|------------------------------------------|" << std::endl;
+			std::cout << '\n';
+			std::cout << "|------------------------------------------|" << '\n';
+			std::cout << "| Use standart gamma value? 1<-true or 0<-false : "; std::cin >> standart; std::cout << "|" << '\n';
+			std::cout << "|------------------------------------------|" << '\n';
+
+			if (!standart) {
+				std::cout << '\n';
+				std::cout << "|------------------------------------------|" << '\n';
+				std::cout << "| Enter parameter gamma: "; std::cin >> gamma;
+				std::cout << "|------------------------------------------|" << '\n';
+			}
+			else gamma = 10;
 
 			transform.reset(new M_levin_sidi_algorithm<T, K, decltype(series.get())>(series.get(), ptr, gamma));
 			return;
@@ -416,33 +431,62 @@ inline void init_wynn(std::unique_ptr<series_base<T, K>>& series, std::unique_pt
 {
 
 	int type;
+	bool standart = false;
 	T gamma = T{};	//parameter for gamma modification
 	T RHO = T{};	//parameter for gamma-rho modification
 
-	std::cout << std::endl;
-	std::cout << "|------------------------------------------|" << std::endl;
-	std::cout << "| choose transformation variant:           |" << std::endl;
+	std::cout << '\n';
+	std::cout << "|------------------------------------------|" << '\n';
+	std::cout << "| choose transformation variant:           |" << '\n';
 	std::cout << "| classic (0), gamma (1), gamma-rho (2): "; std::cin >> type;
-	std::cout << "|------------------------------------------|" << std::endl;
+	std::cout << "|------------------------------------------|" << '\n';
 
 	switch (type) {
 	case 0:
 		transform.reset(new rho_Wynn_algorithm<T, K, decltype(series.get())>(series.get(), new rho_transform<T, K>{}));
 		break;
 	case 1:
-		std::cout << std::endl;
-		std::cout << "|------------------------------------------|" << std::endl;
-		std::cout << "| Enter parameter gamma: "; std::cin >> gamma;
-		std::cout << "|------------------------------------------|" << std::endl;
+		std::cout << '\n';
+		std::cout << "|------------------------------------------|" << '\n';
+		std::cout << "| Use standart gamma value? 1<-true or 0<-false : "; std::cin >> standart; std::cout << "|" << '\n';
+		std::cout << "|------------------------------------------|" << '\n';
+
+		if (!standart) {
+			std::cout << '\n';
+			std::cout << "|------------------------------------------|" << '\n';
+			std::cout << "| Enter parameter gamma: "; std::cin >> gamma;
+			std::cout << "|------------------------------------------|" << '\n';
+		}
+		else gamma = 2;
 
 		transform.reset(new rho_Wynn_algorithm<T, K, decltype(series.get())>(series.get(), new generilized_transform<T, K>{}, gamma));
 		break;
 	case 2:
-		std::cout << std::endl;
-		std::cout << "|------------------------------------------|" << std::endl;
-		std::cout << "| Enter parameter gamma: "; std::cin >> gamma;
-		std::cout << "| Enter parameter RHO: "; std::cin >> RHO;
-		std::cout << "|------------------------------------------|" << std::endl;
+		std::cout << '\n';
+		std::cout << "|------------------------------------------|" << '\n';
+		std::cout << "| Use standart gamma value? 1<-true or 0<-false : "; std::cin >> standart; std::cout << "|" << '\n';
+		std::cout << "|------------------------------------------|" << '\n';
+
+		if (!standart) {
+			std::cout << '\n';
+			std::cout << "|------------------------------------------|" << '\n';
+			std::cout << "| Enter parameter gamma: "; std::cin >> gamma;
+			std::cout << "|------------------------------------------|" << '\n';
+		}
+		else gamma = 2;
+
+		std::cout << '\n';
+		std::cout << "|------------------------------------------|" << '\n';
+		std::cout << "| Use standart RHO value? 1<-true or 0<-false : "; std::cin >> standart; std::cout << "|" << '\n';
+		std::cout << "|------------------------------------------|" << '\n';
+
+		if (!standart) {
+			std::cout << '\n';
+			std::cout << "|------------------------------------------|" << '\n';
+			std::cout << "| Enter parameter gamma: "; std::cin >> gamma;
+			std::cout << "|------------------------------------------|" << '\n';
+		}
+		else RHO = 1;
 
 		transform.reset(new rho_Wynn_algorithm<T, K, decltype(series.get())>(series.get(), new gamma_rho_transform<T, K>{}, gamma, RHO));
 		break;
@@ -459,13 +503,21 @@ inline void init_wynn(std::unique_ptr<series_base<T, K>>& series, std::unique_pt
 template<typename T, typename K, typename series_templ>
 inline void init_levin_recursion(std::unique_ptr<series_base<T, K>>& series, std::unique_ptr<series_acceleration<T, K, series_templ>>& transform)
 {
-
+	bool standart = false;
 	T beta = T{};	//parameter for levin_recursion algorithm
 
-	std::cout << std::endl;
-	std::cout << "|------------------------------------------|" << std::endl;
-	std::cout << "| Enter parameter beta: "; std::cin >> beta;
-	std::cout << "|------------------------------------------|" << std::endl;
+	std::cout << '\n';
+	std::cout << "|------------------------------------------|" << '\n';
+	std::cout << "| Use standart beta value? 1<-true or 0<-false : "; std::cin >> standart; std::cout << "|" << '\n';
+	std::cout << "|------------------------------------------|" << '\n';
+
+	if (!standart) {
+		std::cout << '\n';
+		std::cout << "|------------------------------------------|" << '\n';
+		std::cout << "| Enter parameter beta: "; std::cin >> beta;
+		std::cout << "|------------------------------------------|" << '\n';
+	}
+	else beta = -1.5;
 
 	transform.reset(new levin_recursion_algorithm<T, K, decltype(series.get())>(series.get(), beta));
 }
@@ -488,7 +540,7 @@ inline static void main_testing_function()
 	std::cin >> series_id;
 
 	//choosing x
-	std::cout << "Enter x - the argument for the functional series" << std::endl;
+	std::cout << "Enter x - the argument for the functional series" << '\n';
 	T x = 0;
 	std::cin >> x;
 
@@ -513,7 +565,7 @@ inline static void main_testing_function()
 		break;
 	case series_id_t::bin_series_id:
 		T alpha;
-		std::cout << "Enter the value for constant alpha for the series" << std::endl;
+		std::cout << "Enter the value for constant alpha for the series" << '\n';
 		std::cin >> alpha;
 		series.reset(new bin_series<T, K>(x, alpha));
 		break;
@@ -531,7 +583,7 @@ inline static void main_testing_function()
 		break;
 	case series_id_t::xmb_Jb_two_series_id:
 		K b;
-		std::cout << "Enter the value for constant b for the series" << std::endl;
+		std::cout << "Enter the value for constant b for the series" << '\n';
 		std::cin >> b;
 		series.reset(new xmb_Jb_two_series<T, K>(x, b));
 		break; 
@@ -549,7 +601,7 @@ inline static void main_testing_function()
 		break;
 	case series_id_t::m_fact_1mx_mp1_inverse_series_id:
 		K m;
-		std::cout << "Enter the value for constant m for the series" << std::endl;
+		std::cout << "Enter the value for constant m for the series" << '\n';
 		std::cin >> m;
 		series.reset(new m_fact_1mx_mp1_inverse_series<T, K>(x, m));
 		break; 
@@ -729,7 +781,7 @@ inline static void main_testing_function()
 		break; 
 	case series_id_t::Incomplete_Gamma_func_series_id:
 		T s;
-		std::cout << "Enter the value for constant s for the series" << std::endl;
+		std::cout << "Enter the value for constant s for the series" << '\n';
 		std::cin >> s;
 		series.reset(new Incomplete_Gamma_func_series<T, K>(x, s));
 		break; 
@@ -792,7 +844,7 @@ inline static void main_testing_function()
 		break; 
 	case series_id_t::Ja_x_series_id:
 		T a;
-		std::cout << "Enter the value for constant a for the series" << std::endl;
+		std::cout << "Enter the value for constant a for the series" << '\n';
 		std::cin >> a;
 		series.reset(new Ja_x_series<T, K>(x, a));
 		break; 
@@ -816,7 +868,7 @@ inline static void main_testing_function()
 		break;
 	case series_id_t::gamma_series_id:
 		T t;
-		std::cout << "Enter the parameter t in the gamma series" << std::endl;
+		std::cout << "Enter the parameter t in the gamma series" << '\n';
 		std::cin >> t;
 		series.reset(new gamma_series<T, K>(t, x));
 		break;
@@ -890,13 +942,23 @@ inline static void main_testing_function()
 	}
 
 	//choosing testing function
+
+	bool standart = false;
+
+	T beta_Levin_S_algorithm = T{};			//parameter for LevinType transformations algorithm
+	T gamma_Levin_M_algorithm = T{};		//parameter for LevinType transformations algorithm
+	T gamma_rho_Wynn_algorithm = T{};		//parameter for gamma modification
+	T RHO_rho_Wynn_algorithm = T{};			//parameter for gamma-rho modification
+	T beta_levin_recursion_algorithm = T{};	//parameter for levin_recursion algorithm
+
 	print_test_function_info();
 	int function_id = 0;
 	std::cin >> function_id;
 	int n = 0;
 	int order = 0;
-	std::cout << "Enter n and order:" << std::endl;
+	std::cout << "Enter n and order:" << '\n';
 	std::cin >> n >> order;
+
 	switch (function_id)
 	{
 	case test_function_id_t::cmp_sum_and_transform_id:
@@ -983,7 +1045,72 @@ inline static void main_testing_function()
 		break;
 	case test_function_id_t::test_all_transforms_id: //Testing all functions for series
 
-		for (int i = 1; i <= n; i++) 
+		std::cout << '\n';
+		std::cout << "|------------------------------------------|" << '\n';
+		std::cout << "| Use standart beta_Levin_S_algorithm value? 1<-true or 0<-false : "; std::cin >> standart; std::cout << "|" << '\n';
+		std::cout << "|------------------------------------------|" << '\n';
+
+		if (!standart) {
+			std::cout << '\n';
+			std::cout << "|------------------------------------------|" << '\n';
+			std::cout << "| Enter parameter beta_Levin_S_algorithm: "; std::cin >> beta_Levin_S_algorithm;
+			std::cout << "|------------------------------------------|" << '\n';
+		}
+		else beta_Levin_S_algorithm = 1;
+
+		std::cout << '\n';
+		std::cout << "|------------------------------------------|" << '\n';
+		std::cout << "| Use standart gamma_Levin_M_algorithm value? 1<-true or 0<-false : "; std::cin >> standart; std::cout << "|" << '\n';
+		std::cout << "|------------------------------------------|" << '\n';
+
+		if (!standart) {
+			std::cout << '\n';
+			std::cout << "|------------------------------------------|" << '\n';
+			std::cout << "| Enter parameter gamma_Levin_M_algorithm: "; std::cin >> gamma_Levin_M_algorithm;
+			std::cout << "|------------------------------------------|" << '\n';
+		}
+		else gamma_Levin_M_algorithm = 10;
+
+		std::cout << '\n';
+		std::cout << "|------------------------------------------|" << '\n';
+		std::cout << "| Use standart gamma_rho_Wynn_algorithm value? 1<-true or 0<-false : "; std::cin >> standart; std::cout << "|" << '\n';
+		std::cout << "|------------------------------------------|" << '\n';
+
+		if (!standart) {
+			std::cout << '\n';
+			std::cout << "|------------------------------------------|" << '\n';
+			std::cout << "| Enter parameter gamma_rho_Wynn_algorithm: "; std::cin >> gamma_rho_Wynn_algorithm;
+			std::cout << "|------------------------------------------|" << '\n';
+		}
+		else gamma_rho_Wynn_algorithm = 2;
+
+		std::cout << '\n';
+		std::cout << "|------------------------------------------|" << '\n';
+		std::cout << "| Use standart RHO_rho_Wynn_algorithm value? 1<-true or 0<-false : "; std::cin >> standart; std::cout << "|" << '\n';
+		std::cout << "|------------------------------------------|" << '\n';
+
+		if (!standart) {
+			std::cout << '\n';
+			std::cout << "|------------------------------------------|" << '\n';
+			std::cout << "| Enter parameter RHO_rho_Wynn_algorithm: "; std::cin >> RHO_rho_Wynn_algorithm;
+			std::cout << "|------------------------------------------|" << '\n';
+		}
+		else RHO_rho_Wynn_algorithm = 1;
+
+		std::cout << '\n';
+		std::cout << "|------------------------------------------|" << '\n';
+		std::cout << "| Use standart beta_levin_recursion_algorithm value? 1<-true or 0<-false : "; std::cin >> standart; std::cout << "|" << '\n';
+		std::cout << "|------------------------------------------|" << '\n';
+
+		if (!standart) {
+			std::cout << '\n';
+			std::cout << "|------------------------------------------|" << '\n';
+			std::cout << "| Enter parameter beta_levin_recursion_algorithm: "; std::cin >> beta_levin_recursion_algorithm;
+			std::cout << "|------------------------------------------|" << '\n';
+		}
+		else beta_levin_recursion_algorithm = -1.5;
+
+		for (int i = 1; i <= n; ++i)
 		{
 			print_sum(i, std::move(series.get()));
 			
@@ -1011,11 +1138,11 @@ inline static void main_testing_function()
 			print_transform(i, order, std::move(transform.get()));
 
 			//rho-wynn
-			transform.reset(new rho_Wynn_algorithm<T, K, decltype(series.get())>(series.get(), new generilized_transform<T, K>{}));
+			transform.reset(new rho_Wynn_algorithm<T, K, decltype(series.get())>(series.get(), new generilized_transform<T, K>{}, gamma_rho_Wynn_algorithm));
 			print_transform(i, order, std::move(transform.get()));
 
 			//rho-wynn
-			transform.reset(new rho_Wynn_algorithm<T, K, decltype(series.get())>(series.get(), new gamma_rho_transform<T, K>{}));
+			transform.reset(new rho_Wynn_algorithm<T, K, decltype(series.get())>(series.get(), new gamma_rho_transform<T, K>{}, gamma_rho_Wynn_algorithm, RHO_rho_Wynn_algorithm));
 			print_transform(i, order, std::move(transform.get()));
 
 			//theta-brezinski
@@ -1030,26 +1157,26 @@ inline static void main_testing_function()
 			print_transform(i, order, std::move(transform.get()));
 
 			//levin recurcive
-			transform.reset(new levin_recursion_algorithm<T, K, decltype(series.get())>(series.get()));
+			transform.reset(new levin_recursion_algorithm<T, K, decltype(series.get())>(series.get(), beta_levin_recursion_algorithm));
 			print_transform(i, order, std::move(transform.get()));
 
 			//levin-sidi S U
-			transform.reset(new levi_sidi_algorithm<T, K, decltype(series.get())>(series.get(), new u_transform<T, K>{}, false));
+			transform.reset(new levi_sidi_algorithm<T, K, decltype(series.get())>(series.get(), new u_transform<T, K>{}, false, beta_Levin_S_algorithm));
 			print_transform(i, order, std::move(transform.get()));
 			//
 
 			//levin-sidi S T
-			transform.reset(new levi_sidi_algorithm<T, K, decltype(series.get())>(series.get(), new t_transform<T, K>{}, false));
+			transform.reset(new levi_sidi_algorithm<T, K, decltype(series.get())>(series.get(), new t_transform<T, K>{}, false, beta_Levin_S_algorithm));
 			print_transform(i, order, std::move(transform.get()));
 			//
 
 			//levin-sidi S D
-			transform.reset(new levi_sidi_algorithm<T, K, decltype(series.get())>(series.get(), new d_transform<T, K>{}, false));
+			transform.reset(new levi_sidi_algorithm<T, K, decltype(series.get())>(series.get(), new d_transform<T, K>{}, false, beta_Levin_S_algorithm));
 			print_transform(i, order, std::move(transform.get()));
 			//
 
 			//levin-sidi S V
-			transform.reset(new levi_sidi_algorithm<T, K, decltype(series.get())>(series.get(), new v_transform<T, K>{}, false));
+			transform.reset(new levi_sidi_algorithm<T, K, decltype(series.get())>(series.get(), new v_transform<T, K>{}, false, beta_Levin_S_algorithm));
 			print_transform(i, order, std::move(transform.get()));
 
 			//levin-sidi D U
@@ -1073,22 +1200,22 @@ inline static void main_testing_function()
 			//
 
 			//levin-sidi M U
-			transform.reset(new M_levin_sidi_algorithm<T, K, decltype(series.get())>(series.get(), new u_transform<T, K>{}));
+			transform.reset(new M_levin_sidi_algorithm<T, K, decltype(series.get())>(series.get(), new u_transform<T, K>{}, gamma_Levin_M_algorithm));
 			print_transform(i, order, std::move(transform.get()));
 			//
 
 			//levin-sidi M T
-			transform.reset(new M_levin_sidi_algorithm<T, K, decltype(series.get())>(series.get(), new t_transform<T, K>{}));
+			transform.reset(new M_levin_sidi_algorithm<T, K, decltype(series.get())>(series.get(), new t_transform<T, K>{}, gamma_Levin_M_algorithm));
 			print_transform(i, order, std::move(transform.get()));
 			//
 
 			//levin-sidi M D
-			transform.reset(new M_levin_sidi_algorithm<T, K, decltype(series.get())>(series.get(), new d_transform<T, K>{}));
+			transform.reset(new M_levin_sidi_algorithm<T, K, decltype(series.get())>(series.get(), new d_transform<T, K>{}, gamma_Levin_M_algorithm));
 			print_transform(i, order, std::move(transform.get()));
 			//
 
 			//levin-sidi M V
-			transform.reset(new M_levin_sidi_algorithm<T, K, decltype(series.get())>(series.get(), new v_transform_2<T, K>{}));
+			transform.reset(new M_levin_sidi_algorithm<T, K, decltype(series.get())>(series.get(), new v_transform_2<T, K>{}, gamma_Levin_M_algorithm));
 			print_transform(i, order, std::move(transform.get()));
 			//
 			
@@ -1112,7 +1239,7 @@ inline static void main_testing_function()
 			transform.reset(new ford_sidi_algorithm_two<T, K, decltype(series.get())>(series.get()));
 			print_transform(i, order, std::move(transform.get()));
 
-			std::cout << std::endl;
+			std::cout << '\n';
 		}
 
 		break;

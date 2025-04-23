@@ -43,24 +43,35 @@ public:
         if (order == 0)
             return this->series->S_n(n);
 
-        T N_k = (*this)(n, order, beta, 0);
-        T D_k = (*this)(n, order, beta, 1);
+        T result = (*this)(n, order, beta, 0);
+        result /= (*this)(n, order, beta, 1);
 
-        return N_k / D_k;
+        if (!std::isfinite(result))
+            throw std::overflow_error("division by zero");
+
+        return result;
     }
 private:
     const T beta;
 
     T operator()(K n_time, K k_time, T b, bool ND) const
     {
-        T w_n = static_cast<T>(pow(T(-1), n_time) * this->series->fact(n_time));
-        T R_0 = (ND == 0 ? this->series->S_n(n_time) : T(1)) / w_n;
+        T result = (ND == 0 ? this->series->S_n(n_time) : T(1));
+        result /= static_cast<T>(pow(T(-1), n_time) * this->series->fact(n_time));
+
+        if (!std::isfinite(result))
+            throw std::overflow_error("division by zero");
 
         if (k_time == 0)
-            return R_0;
-
-        return static_cast<T>((*this)(n_time + 1, k_time - 1, b, ND) -
+            return result;
+        
+        result = static_cast<T>((*this)(n_time + 1, k_time - 1, b, ND) -
             (*this)(n_time, k_time - 1, b, ND) * (b + n_time) * pow((b + n_time + k_time - 1), k_time - 2) /
             pow((b + n_time + k_time), k_time - 1));
+
+        if (!std::isfinite(result))
+            throw std::overflow_error("division by zero");
+
+        return result;
     }
 };

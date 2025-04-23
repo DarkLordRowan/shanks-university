@@ -44,11 +44,8 @@ chang_whynn_algorithm<T, K, series_templ>::chang_whynn_algorithm(const series_te
 template <typename T, typename K, typename series_templ>
 T chang_whynn_algorithm<T, K, series_templ>::operator()(const K n, const int order) const
 {
-    if (n < 0)
-        throw std::domain_error("negative integer in the input");
-
-    if (n == 0)
-        return DEF_UNDEFINED_SUM;
+    if (n <= 0)
+        throw std::domain_error("negative or zero integer in the input");
 
     T up, down, coef, coef2;
 

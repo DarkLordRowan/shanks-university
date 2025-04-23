@@ -28,7 +28,7 @@ protected:
 			//std::cout << "order should be even number. order increased by 1" << '\n';
 		}
 
-		if (n < 0 || order < -2)
+		if (n < 0 || order < 0)
 			throw std::domain_error("negative integer in the input");
 
 		if (order == 0)

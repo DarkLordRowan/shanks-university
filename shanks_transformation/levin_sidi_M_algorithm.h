@@ -68,7 +68,7 @@ protected:
 
 			rest = rest * up;
 
-			up = up / (up_coef + j) * ( down_coef + j );
+			up /=  (up_coef + j) * ( down_coef + j );
 
 			w_n = remainder_func->operator()(order, j, this->series, static_cast<T>(-gamma - n));
 
