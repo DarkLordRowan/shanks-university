@@ -36,3 +36,7 @@ shanks_transformation/x64/Debug/shanks_t.94bab632.tlog/link.command.1.tlog
 shanks_transformation/x64/Debug/main.obj
 shanks_transformation/x64/Debug/shanks_transformation.ilk
 x64/Debug/shanks_transformation.exe
+*.tlog
+*.ilk
+*.log
+*.exe
