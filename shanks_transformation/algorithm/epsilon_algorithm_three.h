@@ -7,38 +7,38 @@
 #define DEF_UNDEFINED_SUM 0
 
 #include "../series_acceleration.h"
-#include <vector> // Include the vector library
+#include <vector>
 #undef epsilon
 
- /**
-  * @brief MK-3 Epsilon Algorithm class template.
-  * @tparam T Element type of series
-  * @tparam K Index type
-  * @tparam series_templ Series type to accelerate
-  */
-template <typename T, typename K, typename series_templ>
-class epsilon_algorithm_three : public series_acceleration<T, K, series_templ>
-{
+/**
+ * @brief MK-3 Epsilon Algorithm class template.
+ * @tparam T Element type of series
+ * @tparam K Index type
+ * @tparam series_templ Series type to accelerate
+ */
+template<typename T, typename K, typename series_templ>
+class epsilon_algorithm_three : public series_acceleration<T, K, series_templ> {
 private:
     T epsilon_threshold; // Threshold for epsilon, defaults to 1e-3
 
 public:
-	/**
-	* @brief Parameterized constructor to initialize the Epsilon Algorithm MK-2.
-	* @param series The series class object to be accelerated
-	*/
-    epsilon_algorithm_three(const series_templ& series, T epsilon_threshold_ = T(1e-3)) : series_acceleration<T, K, series_templ>(series), epsilon_threshold(epsilon_threshold_) {}
+    /**
+    * @brief Parameterized constructor to initialize the Epsilon Algorithm MK-2.
+    * @param series The series class object to be accelerated
+    */
+    epsilon_algorithm_three(const series_templ &series, T epsilon_threshold_ = T(1e-3)) : series_acceleration<T, K,
+            series_templ>(series), epsilon_threshold(epsilon_threshold_) {
+    }
 
-	/**
-	* @brief Fast impimentation of Epsilon algorithm.
-	* Computes the partial sum after the transformation using the Epsilon Algorithm.
-	* For more information, see 612.zip [https://calgo.acm.org/]
-	* @param n The number of terms in the partial sum.
-	* @param order The order of transformation.
-	* @return The partial sum after the transformation.
-	*/
-	T operator()(const K n, const int order) const
-    {
+    /**
+    * @brief Fast impimentation of Epsilon algorithm.
+    * Computes the partial sum after the transformation using the Epsilon Algorithm.
+    * For more information, see 612.zip [https://calgo.acm.org/]
+    * @param n The number of terms in the partial sum.
+    * @param order The order of transformation.
+    * @return The partial sum after the transformation.
+    */
+    T operator()(const K n, const int order) const {
         if (n < 0)
             throw std::domain_error("negative integer in the input");
 
@@ -60,7 +60,8 @@ public:
         T resla = 0; //Last result
 
         K newelm, num, NUM, K1, K2, K3, ib, ie, in;
-        T RES, E0, E1, E2, E3, E1ABS, DELTA1, DELTA2, DELTA3, ERR1, ERR2, ERR3, TOL1, TOL2, TOL3, SS, EPSINF; // int -> K
+        T RES, E0, E1, E2, E3, E1ABS, DELTA1, DELTA2, DELTA3, ERR1, ERR2, ERR3, TOL1, TOL2, TOL3, SS, EPSINF;
+        // int -> K
 
         std::vector<T> e(N + 3, 0); //First N eliments of epsilon table + 2 elements for math
 
@@ -91,16 +92,14 @@ public:
                 ERR3 = std::abs(DELTA3);
                 TOL3 = std::max(E1ABS, std::abs(E0)) * EMACH;
 
-                if (ERR2 > TOL2 || ERR3 > TOL3)
-                {
+                if (ERR2 > TOL2 || ERR3 > TOL3) {
                     E3 = e[K1];
                     e[K1] = E1;
                     DELTA1 = E1 - E3;
                     ERR1 = std::abs(DELTA1);
                     TOL1 = std::max(E1ABS, std::abs(E3)) * EMACH;
 
-                    if (ERR1 <= TOL1 || ERR2 <= TOL2 || ERR3 <= TOL3)
-                    {
+                    if (ERR1 <= TOL1 || ERR2 <= TOL2 || ERR3 <= TOL3) {
                         N = I + I - 1;
                         break;
                     }
@@ -108,27 +107,21 @@ public:
                     SS = static_cast<T>(1.0 / DELTA1 + 1.0 / DELTA2 - 1.0 / DELTA3);
                     EPSINF = std::abs(SS * E1);
 
-                    if (EPSINF > epsilon_threshold)
-                    {
+                    if (EPSINF > epsilon_threshold) {
                         RES = static_cast<T>(E1 + 1.0 / SS);
                         e[K1] = RES;
                         K1 -= 2;
                         T ERROR = ERR2 + std::abs(RES - E2) + ERR3;
 
-                        if (ERROR <= abs_error)
-                        {
+                        if (ERROR <= abs_error) {
                             abs_error = ERROR;
                             result = RES;
                         }
-                    }
-                    else
-                    {
+                    } else {
                         N = I + I - 1;
                         break;
                     }
-                }
-                else
-                {
+                } else {
                     result = RES;
                     abs_error = ERR2 + ERR3;
                     e[K1] = result;
@@ -139,15 +132,14 @@ public:
             if (N == n) // making N the greatest odd number <= n
                 N = (n & 1) ? n : n - 1;
 
-            ib = (num & 1) ? 1 : 2;  // Start index: 1 for odd, 2 for even
+            ib = (num & 1) ? 1 : 2; // Start index: 1 for odd, 2 for even
             ie = newelm + 1;
 
             // Copy elements with step 2
             for (K pos = ib; pos < ib + 2 * ie; pos += 2)
                 e[pos] = e[pos + 2];
 
-            if (num != N)
-            {
+            if (num != N) {
                 in = num - N + 1;
                 for (K j = 1; j <= N; ++j, ++in)
                     e[j] = e[in];
