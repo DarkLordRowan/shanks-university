@@ -5,9 +5,9 @@
 
 #pragma once
 
-#include "series_acceleration.h" // Include the series header
+#include "../series_acceleration.h"
 #include <vector> // Include the vector library
-#include "series.h" 
+#include "../series.h"
 #include <cmath>
 
 

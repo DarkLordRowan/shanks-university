@@ -6,7 +6,7 @@
 #pragma once
 #define DEF_UNDEFINED_SUM 0
 
-#include "series_acceleration.h" // Include the series header
+#include "../series_acceleration.h"
 #include <vector>  // Include the vector library
 
  /**
