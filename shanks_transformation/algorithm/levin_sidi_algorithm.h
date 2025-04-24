@@ -6,7 +6,7 @@
 //#define beta 1 // beta is a a nonzero positive parameter, 1 is the standart value in the Literatur on Levin transformation, for more information see p. 39 in [https://arxiv.org/pdf/math/0306302.pdf]
 
 
-#include "series_acceleration.h" // Include the series header
+#include "../series_acceleration.h"
 #include <vector>
 #include <iostream>
 

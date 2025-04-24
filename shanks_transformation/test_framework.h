@@ -10,12 +10,12 @@
 
 #include "wynn_numerators.h"
 #include "remainders.h"
-#include "shanks_transformation.h"
-#include "epsilon_algorithm.h"
+#include "algorithm/shanks_transformation_algorithm.h"
+#include "algorithm/epsilon_algorithm.h"
 #include "algorithm/levin_algorithm.h"
 #include "algorithm/levin_sidi_S_algorithm.h"
-#include "drummond_D_algorithm.h"
-#include "algorithm/epsilon_algorithm_two.h"
+#include "algorithm/drummond_D_algorithm.h"
+#include "algorithm/epsilon_two_algorithm.h"
 #include "algorithm/chang_whynn_algorithm.h"
 #include "test_functions.h"
 #include "algorithm/levin_sidi_M_algorithm.h"
@@ -24,12 +24,12 @@
 #include "algorithm/brezinski_theta_algorithm.h"
 #include "algorithm/epsilon_algorithm_three.h"
 #include "algorithm/levin_recursion_algorithm.h"
-#include "lubkin_W_algorithm.h"
-#include "richardson_algorithm.h"
-#include "FSA.h"
-#include "FSA_two.h"
+#include "algorithm/lubkin_W_algorithm.h"
+#include "algorithm/richardson_algorithm.h"
+#include "algorithm/FSA_algorithm.h"
+#include "algorithm/FSA_two_algorithm.h"
 
- /**
+/**
   * @brief Enum of transformation IDs
   * @authors Bolshakov M.P.
   * @edited by Kreynin R.G.
@@ -923,7 +923,7 @@ inline static void main_testing_function()
 		transform.reset(new levin_algorithm<T, K, decltype(series.get())>(series.get()));
 		break;
 	case transformation_id_t::epsilon_algorithm_2_id:
-		transform.reset(new epsilon_algorithm_two<T, K, decltype(series.get())>(series.get()));
+		transform.reset(new epsilon_two_algorithm<T, K, decltype(series.get())>(series.get()));
 		break;
 	case transformation_id_t::S_algorithm:
 		init_levin(transformation_id_t::S_algorithm, series, transform);
@@ -1021,7 +1021,7 @@ inline static void main_testing_function()
 			transform2.reset(new levin_algorithm<T, K, decltype(series.get())>(series.get()));
 			break;
 		case transformation_id_t::epsilon_algorithm_2_id:
-			transform2.reset(new epsilon_algorithm_two<T, K, decltype(series.get())>(series.get()));
+			transform2.reset(new epsilon_two_algorithm<T, K, decltype(series.get())>(series.get()));
 			break;
 		case transformation_id_t::S_algorithm:
 			init_levin(transformation_id_t::S_algorithm, series, transform2);
@@ -1167,7 +1167,7 @@ inline static void main_testing_function()
 			print_transform(i, order, std::move(transform.get()));
 
 			//epsilon v-2
-			transform.reset(new epsilon_algorithm_two<T, K, decltype(series.get())>(series.get()));
+			transform.reset(new epsilon_two_algorithm<T, K, decltype(series.get())>(series.get()));
 			print_transform(i, order, std::move(transform.get()));
 
 			//epsilon v-3

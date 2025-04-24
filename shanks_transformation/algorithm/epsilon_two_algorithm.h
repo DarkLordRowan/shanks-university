@@ -18,14 +18,14 @@
  * @tparam T The type of the elements in the series, K The type of enumerating integer, series_templ is the type of series whose convergence we accelerate
  */
 template <typename T, typename K, typename series_templ>
-class epsilon_algorithm_two : public series_acceleration<T, K, series_templ>
+class epsilon_two_algorithm : public series_acceleration<T, K, series_templ>
 {
 public:
     /**
     * @brief Parameterized constructor to initialize the Epsilon Algorithm MK-2.
     * @param series The series class object to be accelerated
     */
-    epsilon_algorithm_two(const series_templ& series);
+    epsilon_two_algorithm(const series_templ& series);
 
     /**
     * @brief Fast impimentation of Levin algorithm.
@@ -39,10 +39,10 @@ public:
 };
 
 template <typename T, typename K, typename series_templ>
-epsilon_algorithm_two<T, K, series_templ>::epsilon_algorithm_two(const series_templ& series) : series_acceleration<T, K, series_templ>(series) {}
+epsilon_two_algorithm<T, K, series_templ>::epsilon_two_algorithm(const series_templ& series) : series_acceleration<T, K, series_templ>(series) {}
 
 template <typename T, typename K, typename series_templ>
-T epsilon_algorithm_two<T, K, series_templ>::operator()(const K n, const int order) const
+T epsilon_two_algorithm<T, K, series_templ>::operator()(const K n, const int order) const
 {
     if (n < 0)
         throw std::domain_error("negative integer in the input");
