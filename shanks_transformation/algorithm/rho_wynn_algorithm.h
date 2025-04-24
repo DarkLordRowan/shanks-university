@@ -7,9 +7,9 @@
 #pragma once
 #define DEF_UNDEFINED_SUM 0
 
-#include "series_acceleration.h" // Include the series header
+#include "../series_acceleration.h"
 
- /**
+/**
   * @brief Rho Wynn Algorithm class template.
   * @tparam T The type of the elements in the series
   * @tparam K The type of enumerating integer
@@ -85,7 +85,7 @@ public:
 			delete numerator_func;
 	}
 	/**
-     * @brief Rho Wynn algorithm.ÿ
+     * @brief Rho Wynn algorithm.ï¿½
      * Computes the partial sum after the transformation using the Rho Wynn Algorithm.
      * For more information, see
      * @param n The number of terms in the partial sum.

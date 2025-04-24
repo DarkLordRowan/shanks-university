@@ -4,7 +4,7 @@
 * @authors Naumov A.
 */
 
-#include "series_acceleration.h" // Include the series header
+#include "../series_acceleration.h"
 #include <vector> // Include the vector library
 
 /**
