@@ -6,52 +6,48 @@
 #pragma once
 
 #include "../series_acceleration.h"
-#include <vector> // Include the vector library
-#include "../series.h"
 
-template <typename T, typename K, typename series_templ>
-class ford_sidi_algorithm_two : public series_acceleration<T, K, series_templ>
-{
+template<typename T, typename K, typename series_templ>
+class ford_sidi_algorithm_two : public series_acceleration<T, K, series_templ> {
 public:
+    /**
+    * @brief Parameterized constructor to initialize the Ford-Sidi V-2 Algorithm.
+    * @authors Maximov A.K.
+    * @param series The series class object to be accelerated
+    */
+    ford_sidi_algorithm_two(const series_templ &series) : series_acceleration<T, K, series_templ>(series) {
+    }
 
-	/*
-	* @brief Parameterized constructor to initialize the Ford-Sidi V-2 Algorithm.
-	* @authors Maximov A.K.
-	* @param series The series class object to be accelerated
-	*/
-	ford_sidi_algorithm_two(const series_templ& series) : series_acceleration<T, K, series_templ>(series) {}
+    /**
+    * @brief Fast implementation of Ford-Sidi.
+    * @param n The number of terms in the partial sum.
+    * @param order The order of transformation.
+    * @return The partial sum after the transformation.
+    */
+    T operator()(const K n, const int k) const {
+        if (n < 0)
+            throw std::domain_error("negative integer in the input");
 
-	/*
-	* @brief Fast implementation of Ford-Sidi.
-	* @param n The number of terms in the partial sum.
-	* @param order The order of transformation.
-	* @return The partial sum after the transformation.
-	*/
-	T operator()(const K n, const int k) const
-	{
-		if (n < 0)
-			throw std::domain_error("negative integer in the input");
+        if (n == 0)
+            throw std::domain_error("n = 0 in the input");
 
-		if (n == 0)
-			throw std::domain_error("n = 0 in the input");
+        T delta_squared_S_n;
 
-		T delta_squared_S_n;
+        K m = n;
+        do
+            delta_squared_S_n = this->series->S_n(m + 2) - 2 * this->series->S_n(m + 1) + this->series->S_n(m);
+        while (delta_squared_S_n == 0 && --m > 0);
 
-		K m = n;
-		do
-			delta_squared_S_n = this->series->S_n(m + 2) - 2 * this->series->S_n(m + 1) + this->series->S_n(m);
-		while (delta_squared_S_n == 0 && --m > 0);
+        if (m == 0)
+            throw std::overflow_error("division by zero");
 
-		if (m == 0)
-			throw std::overflow_error("division by zero");
+        T delta_S_n = this->series->S_n(m + 1) - this->series->S_n(m);
 
-		T delta_S_n = this->series->S_n(m + 1) - this->series->S_n(m);
+        T T_n = this->series->S_n(m) - delta_S_n * delta_S_n / delta_squared_S_n;
 
-		T T_n = this->series->S_n(m) - delta_S_n * delta_S_n / delta_squared_S_n;
+        if (!isfinite(T_n))
+            throw std::overflow_error("division by zero");
 
-		if (!isfinite(T_n))
-			throw std::overflow_error("division by zero");
-
-		return T_n;
-	}
+        return T_n;
+    }
 };
