@@ -19,7 +19,7 @@
 #include "../include/algorithm/chang_wynn_algorithm.hpp"
 #include "test_functions.h"
 #include "../src/algorithm/levin_sidi_M_algorithm.h"
-#include "../src/algorithm/weniger_algorithm.h"
+#include "../include/algorithm/weniger_algorithm.hpp"
 #include "../src/algorithm/rho_wynn_algorithm.h"
 #include "../include/algorithm/brezinski_theta_algorithm.hpp"
 #include "../src/algorithm/epsilon_algorithm_three.h"
