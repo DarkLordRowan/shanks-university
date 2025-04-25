@@ -4,7 +4,7 @@
  * @authors Yurov P.I. Bezzaborov A.A.
 */
 #pragma once
-#include "series.h"
+#include "utils/series.h"
 
 /**
  * @brief Abstract class for numerator
