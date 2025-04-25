@@ -112,6 +112,8 @@
 #include <numbers>
 #include <limits>
 #include <vector>
+#include <math.h>
+#include <string>
 
  /**
  * @brief Abstract class for series
@@ -3096,7 +3098,7 @@ public:
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 
 private:
-	const T gamma = static_cast<T>(0.57721566490153286060); // Константа Эйлера-Маскерони
+	const T gamma = static_cast<T>(0.57721566490153286060); // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ-пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 };
 
 template <typename T, typename K>
@@ -3402,7 +3404,7 @@ constexpr T E_x_series<T, K>::operator()(K n) const
 
 
 /**
-* @brief Taylor series of function sqrt(1 + x) (тут многое вычисляется неверно, вероятно из-за факториалов)
+* @brief Taylor series of function sqrt(1 + x) (пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ-пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ)
 * @authors Trudolyubov N.A.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
@@ -4315,7 +4317,7 @@ constexpr T Ja_x_series<T, K>::operator()(K n) const
 
 /**
 /**
-* @brief Taylor series of function 1/sqrt(2) * sin(x/sqrt(2)) (вычисляется плохо во всех методах)
+* @brief Taylor series of function 1/sqrt(2) * sin(x/sqrt(2)) (пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ)
 * @authors Trudolyubov N.A.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
@@ -4589,7 +4591,7 @@ private:
 	T t;
 	T x;
 
-	// Пример функции для коэффициента a_k
+	// пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ a_k
 	T a_k(K n) const;
 };
 
@@ -4599,8 +4601,8 @@ gamma_series<T, K>::gamma_series(T t, T x) : series_base<T, K>(x), t(t), x(x) {}
 template <typename T, typename K>
 T gamma_series<T, K>::a_k(K n) const
 {
-	// Определите последовательность a_k, например:
-	return static_cast<T>(n + 1);  // В качестве примера пусть a_k = n + 1
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ a_k, пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ:
+	return static_cast<T>(n + 1);  // пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ a_k = n + 1
 }
 
 template <typename T, typename K>
@@ -4609,7 +4611,7 @@ constexpr T gamma_series<T, K>::operator()(K n) const
 	if (n < 0)
 		throw std::domain_error("The term index must be a non-negative integer");
 
-	T a_k_n = a_k(n);  // Вычисляем a_k
+	T a_k_n = a_k(n);  // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ a_k
 	return static_cast<T>(a_k_n * std::pow(this->t, n) * std::tgamma(a_k_n));
 }
 

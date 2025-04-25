@@ -8,6 +8,7 @@
 
 #include "../series_acceleration.h"
 #include <vector>
+#include <math.h>
 
 /**
 * @brief Shanks transformation for non-alternating series class.

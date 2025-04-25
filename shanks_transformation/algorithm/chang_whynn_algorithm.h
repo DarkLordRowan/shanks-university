@@ -6,6 +6,7 @@
 #pragma once
 #define DEF_UNDEFINED_SUM 0
 
+#include <cmath>
 #include "../series_acceleration.h"
 #include <vector>
 

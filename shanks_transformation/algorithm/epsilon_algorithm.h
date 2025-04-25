@@ -3,6 +3,8 @@
  * @brief This file contains the declaration of the Epsilon Algorithm class.
  */
 
+#include <cmath>
+
 #include "../series_acceleration.h"
 #include <vector>
 
