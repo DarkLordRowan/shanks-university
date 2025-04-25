@@ -1,12 +1,12 @@
 #pragma once
 
 template<typename T, typename K, typename series_templ>
-chang_whynn_algorithm<T, K, series_templ>::chang_whynn_algorithm(const series_templ &series)
+chang_wynn_algorithm<T, K, series_templ>::chang_wynn_algorithm(const series_templ &series)
     : series_acceleration<T, K, series_templ>(series) {
 }
 
 template<typename T, typename K, typename series_templ>
-T chang_whynn_algorithm<T, K, series_templ>::operator()(const K n, const int order) const {
+T chang_wynn_algorithm<T, K, series_templ>::operator()(const K n, const int order) const {
     if (n <= 0)
         throw std::domain_error("negative or zero integer in the input");
 

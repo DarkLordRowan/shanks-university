@@ -8,7 +8,8 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(SOURCE_FILES main.cpp
-        include/algorithm/chang_wynn_algorithm.hpp)
+        include/algorithm/chang_wynn_algorithm.hpp
+        include/algorithm/brezinski_theta_algorithm.tpp)
 
 # Указываем каталог с заголовочными файлами
 include_directories(include)

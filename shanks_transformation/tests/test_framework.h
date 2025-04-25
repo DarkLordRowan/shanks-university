@@ -21,7 +21,7 @@
 #include "../src/algorithm/levin_sidi_M_algorithm.h"
 #include "../src/algorithm/weniger_algorithm.h"
 #include "../src/algorithm/rho_wynn_algorithm.h"
-#include "../src/algorithm/brezinski_theta_algorithm.h"
+#include "../include/algorithm/brezinski_theta_algorithm.hpp"
 #include "../src/algorithm/epsilon_algorithm_three.h"
 #include "../src/algorithm/levin_recursion_algorithm.h"
 #include "../src/algorithm/lubkin_W_algorithm.h"
@@ -932,7 +932,7 @@ inline static void main_testing_function()
 		init_levin(transformation_id_t::D_algorithm, series, transform);
 		break;
 	case transformation_id_t::chang_epsilon_algorithm:
-		transform.reset(new chang_whynn_algorithm<T, K, decltype(series.get())>(series.get()));
+		transform.reset(new chang_wynn_algorithm<T, K, decltype(series.get())>(series.get()));
 		break;
 	case transformation_id_t::M_algorithm:
 		init_levin(transformation_id_t::M_algorithm, series, transform);
@@ -944,7 +944,7 @@ inline static void main_testing_function()
 		init_wynn(series, transform);
 		break;
 	case transformation_id_t::brezinski_theta_transformation_id:
-		transform.reset(new theta_brezinski_algorithm<T, K, decltype(series.get())>(series.get()));
+		transform.reset(new brezinski_theta_algorithm<T, K, decltype(series.get())>(series.get()));
 		break;
 	case transformation_id_t::epsilon_algorithm_3_id:
 		init_epsilon_3(series, transform);
@@ -1030,7 +1030,7 @@ inline static void main_testing_function()
 			init_levin(transformation_id_t::D_algorithm, series, transform2);
 			break;
 		case transformation_id_t::chang_epsilon_algorithm:
-			transform2.reset(new chang_whynn_algorithm<T, K, decltype(series.get())>(series.get()));
+			transform2.reset(new chang_wynn_algorithm<T, K, decltype(series.get())>(series.get()));
 			break;
 		case transformation_id_t::M_algorithm:
 			init_levin(transformation_id_t::M_algorithm, series, transform2);
@@ -1042,7 +1042,7 @@ inline static void main_testing_function()
 			init_wynn(series, transform2);
 			break;
 		case transformation_id_t::brezinski_theta_transformation_id:
-			transform2.reset(new theta_brezinski_algorithm<T, K, decltype(series.get())>(series.get()));
+			transform2.reset(new brezinski_theta_algorithm<T, K, decltype(series.get())>(series.get()));
 			break;
 		case transformation_id_t::epsilon_algorithm_3_id:
 			init_epsilon_3(series, transform);
@@ -1187,10 +1187,10 @@ inline static void main_testing_function()
 			print_transform(i, order, std::move(transform.get()));
 
 			//theta-brezinski
-			transform.reset(new theta_brezinski_algorithm<T, K, decltype(series.get())>(series.get()));
+			transform.reset(new brezinski_theta_algorithm<T, K, decltype(series.get())>(series.get()));
 
 			//chang epsilon wynn
-			transform.reset(new chang_whynn_algorithm<T, K, decltype(series.get())>(series.get()));
+			transform.reset(new chang_wynn_algorithm<T, K, decltype(series.get())>(series.get()));
 			print_transform(i, order, std::move(transform.get()));
 
 			//levin standart
