@@ -8,7 +8,8 @@
  * 4) Framework for testing in test_framework.h
  * It is recommended you look up doxygen documentation on our repository https://katerina-evdokimova.github.io/shanks-university/ to convinently figure out what's everything for
  */
-#include "src/test_framework.h"
+#include <iostream>
+#include "tests/test_framework.h"
 
 int main() {
     while (true)
