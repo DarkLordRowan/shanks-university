@@ -10,22 +10,16 @@
  */
 #include "src/test_framework.h"
 
-int main(void)
-{
-	while(true)
-	try
-	{
-		main_testing_function<long double, long long int>();
-		main_testing_function<double, int>();
-		main_testing_function<float, short int>();
-	}
-	catch (std::domain_error& e)
-	{
-		std::cout << e.what() << std::endl;
-	}
-	catch (std::overflow_error& e)
-	{
-		std::cout << e.what() << std::endl;
-	}
-	return 0;
+int main() {
+    while (true)
+        try {
+            main_testing_function<long double, long long int>();
+            main_testing_function<double, int>();
+            main_testing_function<float, short int>();
+        } catch (std::domain_error &e) {
+            std::cout << e.what() << std::endl;
+        }
+        catch (std::overflow_error &e) {
+            std::cout << e.what() << std::endl;
+        }
 }
