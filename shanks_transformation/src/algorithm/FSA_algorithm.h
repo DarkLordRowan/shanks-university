@@ -1,7 +1,7 @@
 ﻿#pragma once
 
 #include "../series_acceleration.h"
-#include "../series.h"
+#include "../utils/series.h"
 
 template<typename T, typename K, typename series_templ>
 class ford_sidi_algorithm : public series_acceleration<T, K, series_templ> {
