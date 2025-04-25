@@ -5,7 +5,7 @@
 
 #pragma once
 
-#include "../../series_acceleration.h"
+#include "../series_acceleration.h"
 #include <cmath>
 
 template<typename T, typename K, typename series_templ>

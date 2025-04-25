@@ -12,5 +12,5 @@ docs
 *.log
 *.exe
 *.tlog
-/cmake-build-debug/
+*/cmake-build-debug/*
 /.idea/*

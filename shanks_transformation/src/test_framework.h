@@ -21,7 +21,7 @@
 #include "algorithm/levin_sidi_M_algorithm.h"
 #include "algorithm/weniger_algorithm.h"
 #include "algorithm/rho_wynn_algorithm.h"
-#include "algorithm/brezinski_theta/brezinski_theta_algorithm.h"
+#include "algorithm/brezinski_theta_algorithm.h"
 #include "algorithm/epsilon_algorithm_three.h"
 #include "algorithm/levin_recursion_algorithm.h"
 #include "algorithm/lubkin_W_algorithm.h"
