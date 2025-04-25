@@ -1,39 +1,14 @@
-/**
- * @file levin_recursion.h
- * @brief This file contains the definition of the Levin recursion transformation class.
- */
-
 #pragma once
 #define DEF_UNDEFINED_SUM 0
 
 #include "../series_acceleration.h"
 
-/**
- * @brief Levin recursion transformation
- * @authors Trudolyubov N.A.
- * @tparam T The type of the elements in the series
- * @tparam K The type of enumerating integer
- * @tparam series_templ is the type of series whose convergence we accelerate
- */
 template<typename T, typename K, typename series_templ>
 class levin_recursion_algorithm : public series_acceleration<T, K, series_templ> {
 public:
-    /**
-     * @brief Parameterized constructor to initialize the Levin recursion transformation for series.
-     * @param series The series class object
-     */
-
-    // previous standart value is -1.5 
     levin_recursion_algorithm(const series_templ &series, const T beta_ = T(-1.5))
         : series_acceleration<T, K, series_templ>(series), beta(beta_) {
     }
-
-    /**
-     * @brief Levin recursion transformation for series function.
-     * @param n The number of terms in the partial sum.
-     * @param order The order of transformation.
-     * @return The partial sum after the transformation.
-     */
 
     T operator()(const K n, const int order) const {
         if (n < 0)

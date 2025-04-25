@@ -1,32 +1,14 @@
-/**
-* @file drummon_D_algorithm.h
-* @brief Contains implementation of Drummond's D-transformation
-* @authors Naumov A.
-*/
+#pragma once
 
 #include <cmath>
 #include "../series_acceleration.h"
 #include <vector>
 
-/**
- * @brief D_transformation class template.
- * @tparam T The type of the elements in the series, K The type of enumerating integer, series_templ is the type of series whose convergence we accelerate
- * @param remainder_func - remainder type
- * @param recursive To calculate reccursively
-*/
 template<typename T, typename K, typename series_templ>
 class drummonds_algorithm : public series_acceleration<T, K, series_templ> {
 protected:
     const transform_base<T, K> *remainder_func;
     bool recursive;
-
-    /**
-    * @brief Function to calculate D-tranformation directly by formula. For more information see p. 70 9.5-4 [https://arxiv.org/pdf/math/0306302.pdf]
-    * @param n The number of terms in the partial sum.
-    * @param order the order of transformation
-    * @return The partial sum after the transformation.
-    */
-
     virtual T calculate(const K &n, const int &order) const {
         if (order < 0)
             throw std::domain_error("negative integer in input");
@@ -53,13 +35,6 @@ protected:
 
         return numerator;
     }
-
-    /**
-    * @brief Function to calculate D-tranformation using reccurence formula. For more information see p. 70 9.5-5 [https://arxiv.org/pdf/math/0306302.pdf]
-    * @param k The number of terms in the partial sum.
-    * @param order the order of transformation
-    * @return The partial sum after the transformation.
-    */
 
     T calculate_rec(const K &n, const int &order) const {
         if (order < 0)
@@ -88,27 +63,12 @@ protected:
     }
 
 public:
-    /**
-    * @brief Parameterized constructor to initialize the Drummonds Algorithm.
-    * @param series The series class object to be accelerated
-    * @param func Remainder function
-    * @param recursive How to calculate
-    */
-
     drummonds_algorithm(const series_templ &series, const transform_base<T, K> *func,
                         bool recursive = false) : series_acceleration<T, K, series_templ>(series), remainder_func(func),
                                                   recursive(recursive) {
     }
 
     ~drummonds_algorithm() { delete remainder_func; }
-
-    /**
-   * @brief D-transformation.
-   * Computes the partial sum after the D-transformation
-   * @param n The number of terms in the partial sum.
-   * @param order The order of transformation.
-   * @return The partial sum after the transformation.
-   */
 
     T operator()(const K n, const int order) const {
         if (recursive)

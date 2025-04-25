@@ -1,9 +1,4 @@
-﻿/**
- * @file theta_brezinski_algorithm.h
- * @brief This file contains the declaration of the Theta Brezinski Algorithm class.
- */
-
-#pragma once
+﻿#pragma once
 
 #include "../series_acceleration.h"
 #include <cmath>
@@ -11,22 +6,8 @@
 template<typename T, typename K, typename series_templ>
 class theta_brezinski_algorithm : public series_acceleration<T, K, series_templ> {
 public:
-    /**
-     * @brief Parameterized constructor to initialize the Theta Brezinski Algorithm.
-     * @authors Yurov P.I. Bezzaborov A.A.
-     * @param series The series class object to be accelerated
-     */
     theta_brezinski_algorithm(const series_templ &series) : series_acceleration<T, K, series_templ>(series) {
     }
-
-    /**
-     * @brief Fast implementation of Theta Brezinski algorithm.
-     * Computes the partial sum after the transformation using the Theta Brezinski Algorithm.
-     * For more information, see p. 277 10.2-4 in [https://arxiv.org/pdf/math/0306302.pdf]
-     * @param n The number of terms in the partial sum.
-     * @param order The order of transformation.
-     * @return The partial sum after the transformation.
-     */
     T operator()(const K n, const int order) const {
         if (order & 1 || order < 0) // order is odd or negative
             throw std::domain_error("order should be even number");

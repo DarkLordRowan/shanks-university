@@ -1,20 +1,8 @@
-/**
- * @file rho-wynn_algorithm.h
- * @brief This file contains the declaration of the Rho Wynn Algorithm class.
- * @authors Yurov P.I. Bezzaborov A.A.
- */
-
 #pragma once
 #define DEF_UNDEFINED_SUM 0
 
 #include "../series_acceleration.h"
 
-/**
-  * @brief Rho Wynn Algorithm class template.
-  * @tparam T The type of the elements in the series
-  * @tparam K The type of enumerating integer
-  * @tparam series_templ is the type of series whose convergence we accelerate
-  */
 template<typename T, typename K, typename series_templ>
 class rho_Wynn_algorithm : public series_acceleration<T, K, series_templ> {
 protected:
@@ -74,10 +62,6 @@ protected:
     }
 
 public:
-    /**
-     * @brief Parameterized constructor to initialize the Rho Wynn Algorithm.
-     * @param series The series class object to be accelerated
-     */
     rho_Wynn_algorithm(const series_templ &series, const numerator_base<T, K> *func, const T gamma_ = T(1),
                        const T RHO_ = T(0)) : series_acceleration<T, K, series_templ>(series), numerator_func(func),
                                               gamma(gamma_), RHO(RHO_) {
@@ -90,14 +74,6 @@ public:
             delete numerator_func;
     }
 
-    /**
-     * @brief Rho Wynn algorithm.�
-     * Computes the partial sum after the transformation using the Rho Wynn Algorithm.
-     * For more information, see
-     * @param n The number of terms in the partial sum.
-     * @param order The order of transformation.
-     * @return The partial sum after the transformation.
-     */
     T operator()(const K n, const int order) const {
         return calculate(n, order);
     }

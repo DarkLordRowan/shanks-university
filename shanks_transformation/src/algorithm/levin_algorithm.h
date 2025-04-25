@@ -1,39 +1,14 @@
-/**
- * @file levin_algorithm.h
- * @brief This file contains the declaration of the Levin algorithm class.
- */
-
 #pragma once
 #define DEF_UNDEFINED_SUM 0
 
 #include "../series_acceleration.h"
 
-/**
- * @brief Levin Algorithm class template.
- * @authors  Kreinin R.G.
- * @tparam T Element type of the series
- * @tparam K Integer index type
- * @tparam series_templ Series type to accelerate
- */
 template<typename T, typename K, typename series_templ>
 class levin_algorithm : public series_acceleration<T, K, series_templ> {
 public:
-    /**
-     * @brief Parameterized constructor to initialize the Levin Algorithm.
-     * @param series The series class object to be accelerated
-     */
 
     levin_algorithm(const series_templ &series) : series_acceleration<T, K, series_templ>(series) {
     }
-
-    /**
-     * @brief Fast impimentation of Levin algorithm.
-     * Computes the partial sum after the transformation using the Levin Algorithm.
-       * For more information, see 3.9.13 in [https://dlmf.nist.gov/3.9]
-     * @param n The number of terms in the partial sum.
-     * @param order The order of transformation.
-     * @return The partial sum after the transformation.
-     */
 
     T operator()(const K n, const int order) const {
         if (n < 0)
