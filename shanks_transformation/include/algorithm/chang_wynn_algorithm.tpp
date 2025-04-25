@@ -1,25 +1,8 @@
 #pragma once
 
-#include <cmath>
-#include "../series_acceleration.h"
-#include <vector>
-
-/**
-//SOME RESULTS CONCERNING THE FUNDAMENTAL NATURE OF WYNN'S VECTOR EPSILON ALGORITHM - same algo + vector form
-//On a Device for Computing the e (S ) Transformation - nothing new, just matrix
-
-//Construction of new generalizations of Wynn’s epsilon and rho algorithm by solving finite difference equations in the transformation order
-*/
 template<typename T, typename K, typename series_templ>
-class chang_whynn_algorithm : public series_acceleration<T, K, series_templ> {
-public:
-    chang_whynn_algorithm(const series_templ &series);
-    T operator()(const K n, const int order) const;
-};
-
-template<typename T, typename K, typename series_templ>
-chang_whynn_algorithm<T, K,
-    series_templ>::chang_whynn_algorithm(const series_templ &series) : series_acceleration<T, K, series_templ>(series) {
+chang_whynn_algorithm<T, K, series_templ>::chang_whynn_algorithm(const series_templ &series)
+    : series_acceleration<T, K, series_templ>(series) {
 }
 
 template<typename T, typename K, typename series_templ>
@@ -29,7 +12,7 @@ T chang_whynn_algorithm<T, K, series_templ>::operator()(const K n, const int ord
 
     T up, down, coef, coef2;
 
-    K max = n - (n & 1); // int -> K mark 
+    K max = n - (n & 1); // int -> K mark
 
     std::vector<std::vector<T> > e(2, std::vector<T>(n, 0));
     //2 vectors n-1 length containing Epsilon table next and previous

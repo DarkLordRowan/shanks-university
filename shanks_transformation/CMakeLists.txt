@@ -7,7 +7,8 @@ project(ShanksUniversity VERSION 1.0 LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-set(SOURCE_FILES main.cpp)
+set(SOURCE_FILES main.cpp
+        include/algorithm/chang_wynn_algorithm.hpp)
 
 # Указываем каталог с заголовочными файлами
 include_directories(include)

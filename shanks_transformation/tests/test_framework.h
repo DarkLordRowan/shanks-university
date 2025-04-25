@@ -16,7 +16,7 @@
 #include "../src/algorithm/levin_sidi_S_algorithm.h"
 #include "../src/algorithm/drummond_D_algorithm.h"
 #include "../src/algorithm/epsilon_two_algorithm.h"
-#include "../src/algorithm/chang_whynn_algorithm.h"
+#include "../include/algorithm/chang_wynn_algorithm.hpp"
 #include "test_functions.h"
 #include "../src/algorithm/levin_sidi_M_algorithm.h"
 #include "../src/algorithm/weniger_algorithm.h"
