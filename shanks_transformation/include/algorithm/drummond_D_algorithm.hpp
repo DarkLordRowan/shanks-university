@@ -13,8 +13,6 @@ protected:
 public:
     drummond_D_algorithm(const series_templ &series, const transform_base<T, K> *func, bool recursive = false);
 
-    ~drummond_D_algorithm() override;
-
     T operator()(K n, int order) const override;
 };
 

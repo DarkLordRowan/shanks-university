@@ -10,11 +10,6 @@ drummond_D_algorithm<T, K, series_templ>::drummond_D_algorithm(
 }
 
 template<typename T, typename K, typename series_templ>
-drummond_D_algorithm<T, K, series_templ>::~drummond_D_algorithm() {
-    delete remainder_func;
-}
-
-template<typename T, typename K, typename series_templ>
 T drummond_D_algorithm<T, K, series_templ>::operator()(const K n, const int order) const {
     return recursive ? calculate_rec(n, order) : calculate(n, order);
 }
