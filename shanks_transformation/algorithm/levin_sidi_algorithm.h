@@ -211,7 +211,7 @@ public:
     * @return The partial sum after the transformation.
     */
 
-    T operator()(const K k, const int n) const = 0
+    T operator()(const K k, const int n) const = 0;
 };
 
 template<typename T, typename K, typename series_templ>

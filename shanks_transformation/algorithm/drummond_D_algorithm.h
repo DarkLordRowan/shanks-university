@@ -4,6 +4,7 @@
 * @authors Naumov A.
 */
 
+#include <cmath>
 #include "../series_acceleration.h"
 #include <vector>
 
