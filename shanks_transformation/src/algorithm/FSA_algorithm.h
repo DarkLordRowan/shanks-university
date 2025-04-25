@@ -1,9 +1,4 @@
-﻿/**
- * @file FSA.h
- * @brief This file contains the declaration of the Ford-Sidi Algorithm class.
- */
-
-#pragma once
+﻿#pragma once
 
 #include "../series_acceleration.h"
 #include "../series.h"
@@ -11,22 +6,12 @@
 template<typename T, typename K, typename series_templ>
 class ford_sidi_algorithm : public series_acceleration<T, K, series_templ> {
 public:
-    /**
-    * @brief Parameterized constructor to initialize the Ford-Sidi Algorithm.
-    * @authors Matkov N.K. Peters E.A.
-    * @param series The series class object to be accelerated
-    */
     ford_sidi_algorithm(const series_templ &series) : series_acceleration<T, K, series_templ>(series) {
         shanks_trans = new shanks_transform<T, K, series_templ>(this->series);
     }
 
     ~ford_sidi_algorithm() { delete shanks_trans; }
-    /**
-    * @brief Fast implementation of Ford-Sidi.
-    * @param n The number of terms in the partial sum.
-    * @param order The order of transformation.
-    * @return The partial sum after the transformation.
-    */
+
     T operator()(const K n, const int k) const {
         if (n < 0)
             throw std::domain_error("negative integer in the input");
@@ -49,13 +34,7 @@ public:
 
 protected:
     const shanks_transform<T, K, series_templ> *shanks_trans;
-    /**
-     * @brief Recursive function to compute psi.
-     * Computes the value of psi according to the given parameters.
-     * @param n The number of terms in the partial sum.
-     * @param k The order of transformation.
-     * @return The value of psi.
-     */
+
     T Psi(const K n, const int k, const series_base<T, K> *u, const shanks_transform<T, K, series_templ> *g) const {
         if (k == 0)
             return (u->operator()(n)) / (g->operator()(n, 1));

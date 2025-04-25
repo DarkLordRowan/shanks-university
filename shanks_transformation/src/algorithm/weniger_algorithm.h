@@ -1,8 +1,3 @@
-/**
- * @file weniger.h
- * @brief This file contains the definition of Weniger-transformation
- * @authors Yurov P.I. Bezzaborov A.A.
- */
 #pragma once
 #define DEF_UNDEFINED_SUM 0
 
@@ -10,35 +5,11 @@
 
 template<typename T, typename K, typename series_templ>
 class weniger_algorithm : public series_acceleration<T, K, series_templ> {
-protected:
-    /**
-      * @brief Default function to calculate WT-transformation.
-      * For more information see "Joint use of the Weniger transformation and hyperasymptotics for accurate asymptotic evaluations of a class of saddle-point integrals"
-      * @param k The number of terms in the partial sum.
-      * @param n the order of transformation
-      * @param remainder_func functor, whose returning w_n for t,u or v transformation
-        * @return The partial sum after the transformation.
-      */
 
 public:
-    /**
-     * @brief Weniger class template for derivations
-     * @tparam T The type of the elements in the series
-     * @tparam K The type of enumerating integer
-     * @tparam series_templ is the type of series whose convergence we accelerate
-     */
 
     weniger_algorithm(const series_templ &series) : series_acceleration<T, K, series_templ>(series) {
     }
-
-    /**
-    * @brief Abstract method for the inherited classes below
-    * Computes the partial sum after the transformation using the epsilon Weniger Algorithm.
-    * @param k The number of terms in the partial sum.
-    * @param n The order of transformation.
-    * @return The partial sum after the transformation.
-    */
-
     T operator()(const K n, const int order) const {
         T numerator = T(0), denominator = T(0);
         T a_n, rest;

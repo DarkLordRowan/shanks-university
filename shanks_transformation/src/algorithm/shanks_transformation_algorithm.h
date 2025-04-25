@@ -1,8 +1,3 @@
-/**
- * @file shanks_transform.h
- * @brief This file contains the definition of the Shanks transformation class and specialization of this transformation for the alternating series.
- */
-
 #pragma once
 #define DEF_UNDEFINED_SUM 0
 
@@ -10,27 +5,10 @@
 #include <vector>
 #include <math.h>
 
-/**
-* @brief Shanks transformation for non-alternating series class.
-* @tparam T The type of the elements in the series, K The type of enumerating integer, series_templ is the type of series whose convergence we accelerate
-*/
 template<typename T, typename K, typename series_templ>
 class shanks_transform : public series_acceleration<T, K, series_templ> {
 public:
-    /**
-   * @brief Parameterized constructor to initialize the Shanks transformation for non-alternating series.
-   * @authors Bolshakov M.P.
-   * @param series The series class object
-   */
     shanks_transform(const series_templ &series);
-
-    /**
-   * @brief Shanks transformation for non-alternating function.
-   * @authors Bolshakov M.P., Pashkov B.B.
-   * @param n The number of terms in the partial sum.
-   * @param order The order of transformation.
-   * @return The partial sum after the transformation.
-   */
     T operator()(const K n, const int order) const;
 };
 
@@ -109,27 +87,12 @@ T shanks_transform<T, K, series_templ>::operator()(const K n, const int order) c
     return T_n[n];
 }
 
-/**
-* @brief Shanks transformation for alternating series class.
-* @tparam T The type of the elements in the series, K The type of enumerating integer, series_templ is the type of series whose convergence we accelerate
-*/
 template<typename T, typename K, typename series_templ>
 class shanks_transform_alternating : public series_acceleration<T, K, series_templ> {
 public:
-    /**
-   * @brief Parameterized constructor to initialize the Shanks transformation for alternating series.
-   * @authors Bolshakov M.P.
-   * @param series The series class object
-   */
+
     shanks_transform_alternating(const series_templ &series);
 
-    /**
-   * @brief Shanks transformation for alternating series function.
-   * @authors Bolshakov M.P., Pashkov B.B.
-   * @param n The number of terms in the partial sum.
-   * @param order The order of transformation.
-   * @return The partial sum after the transformation.
-   */
     T operator()(const K n, const int order) const;
 };
 
