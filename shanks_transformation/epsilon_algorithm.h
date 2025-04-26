@@ -31,7 +31,7 @@ public:
      * @param order The order of transformation.
      * @return The partial sum after the transformation.
      */
-	T operator()(const K n, const int order) const;
+    T operator()(const K n, const int order) const;
 };
 
 template <typename T, typename K, typename series_templ>

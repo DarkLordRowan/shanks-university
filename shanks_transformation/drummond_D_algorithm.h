@@ -62,8 +62,7 @@ protected:
 	* @return The partial sum after the transformation.
 	*/
 
-	T calculate_rec(const K& n, const int& order) const
-	{
+	T calculate_rec(const K& n, const int& order) const {
 		if (order < 0)
 			throw std::domain_error("negative integer in input");
 

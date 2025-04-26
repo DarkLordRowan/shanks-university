@@ -28,6 +28,9 @@
 #include "richardson_algorithm.h"
 #include "FSA.h"
 #include "FSA_two.h"
+#include "epsilon_modified_algorithm.h"
+#include "theta_modified_algorithm.h"
+#include "epsilon_aitken_theta_algorithm.h"
 
  /**
   * @brief Enum of transformation IDs
@@ -52,7 +55,10 @@ enum transformation_id_t {
 	W_algorithm_id,
 	richardson_algorithm_id,
 	Ford_Sidi_algorithm_id,
-	Ford_Sidi_algorithm_two_id
+	Ford_Sidi_algorithm_two_id,
+	epsilon_modified_algorithm_id,
+	theta_modified_algorithm_id,
+	epsilon_aitken_theta_algorithm_id
 };
 /**
  * @brief Enum of series IDs
@@ -320,6 +326,9 @@ inline static void print_transformation_info()
 		"15 - Richardson Algorithm" << '\n' <<
 		"16 - Ford-Sidi Algorithm" << '\n' <<
 		"17 - Ford-Sidi Algorithm V-2" << '\n' <<
+		"18 - Epsilon modified Algorithm" << '\n' <<
+		"19 - Theta modified Algorithm" << '\n' <<
+		"20 - Epsilon - Aitken - Theta Algorithm" << '\n' <<
 		'\n';
 }
 
@@ -964,6 +973,15 @@ inline static void main_testing_function()
 	case transformation_id_t::Ford_Sidi_algorithm_two_id:
 		transform.reset(new ford_sidi_algorithm_two<T, K, decltype(series.get())>(series.get()));
 		break;
+	case transformation_id_t::epsilon_modified_algorithm_id:
+		transform.reset(new epsilon_modified_algorithm<T, K, decltype(series.get())>(series.get()));
+		break;
+	case transformation_id_t::theta_modified_algorithm_id:
+		transform.reset(new theta_modified_algorithm<T, K, decltype(series.get())>(series.get()));
+		break;
+	case transformation_id_t::epsilon_aitken_theta_algorithm_id:
+		transform.reset(new epsilon_aitken_theta_algorithm<T, K, decltype(series.get())>(series.get()));
+		break;
 	default:
 		throw std::domain_error("wrong transformation_id");
 	}
@@ -1062,6 +1080,16 @@ inline static void main_testing_function()
 		case transformation_id_t::Ford_Sidi_algorithm_two_id:
 			transform2.reset(new ford_sidi_algorithm_two<T, K, decltype(series.get())>(series.get()));
 			break;
+		case transformation_id_t::epsilon_modified_algorithm_id:
+			transform2.reset(new epsilon_modified_algorithm<T, K, decltype(series.get())>(series.get()));
+			break;
+		case transformation_id_t::theta_modified_algorithm_id:
+			transform2.reset(new theta_modified_algorithm<T, K, decltype(series.get())>(series.get()));
+			break;
+		case transformation_id_t::epsilon_aitken_theta_algorithm_id:
+			transform2.reset(new epsilon_aitken_theta_algorithm<T, K, decltype(series.get())>(series.get()));
+			break;
+
 		default:
 			throw std::domain_error("wrong algorithm id");
 		}
@@ -1278,6 +1306,18 @@ inline static void main_testing_function()
 
 			//Ford-Sidi v-2
 			transform.reset(new ford_sidi_algorithm_two<T, K, decltype(series.get())>(series.get()));
+			print_transform(i, order, std::move(transform.get()));
+
+			//epsilon modified algorithm
+			transform.reset(new epsilon_modified_algorithm<T, K, decltype(series.get())>(series.get()));
+			print_transform(i, order, std::move(transform.get()));
+
+			//theta modified algorithm
+			transform.reset(new theta_modified_algorithm<T, K, decltype(series.get())>(series.get()));
+			print_transform(i, order, std::move(transform.get()));
+
+			//epsilon aitken theta algorithm algorithm
+			transform.reset(new epsilon_aitken_theta_algorithm<T, K, decltype(series.get())>(series.get()));
 			print_transform(i, order, std::move(transform.get()));
 
 			std::cout << '\n';

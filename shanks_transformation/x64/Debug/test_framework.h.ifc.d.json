@@ -174,7 +174,10 @@
             "c:\\users\\maximov\\desktop\\shanks-university\\shanks_transformation\\lubkin_w_algorithm.h",
             "c:\\users\\maximov\\desktop\\shanks-university\\shanks_transformation\\richardson_algorithm.h",
             "c:\\users\\maximov\\desktop\\shanks-university\\shanks_transformation\\fsa.h",
-            "c:\\users\\maximov\\desktop\\shanks-university\\shanks_transformation\\fsa_two.h"
+            "c:\\users\\maximov\\desktop\\shanks-university\\shanks_transformation\\fsa_two.h",
+            "c:\\users\\maximov\\desktop\\shanks-university\\shanks_transformation\\epsilon_modified_algorithm.h",
+            "c:\\users\\maximov\\desktop\\shanks-university\\shanks_transformation\\theta_modified_algorithm.h",
+            "c:\\users\\maximov\\desktop\\shanks-university\\shanks_transformation\\epsilon_aitken_theta_algorithm.h"
         ],
         "ImportedModules": [],
         "ImportedHeaderUnits": []
