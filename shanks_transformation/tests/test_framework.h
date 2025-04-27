@@ -5,7 +5,6 @@
 
 #pragma once
 #include <memory>
-#include <string> 
 #include <set>
 
 #include "../src/wynn_numerators.h"
@@ -22,7 +21,7 @@
 #include "../include/algorithm/weniger_algorithm.hpp"
 #include "../src/algorithm/rho_wynn_algorithm.h"
 #include "../include/algorithm/brezinski_theta_algorithm.hpp"
-#include "../src/algorithm/epsilon_algorithm_three.h"
+#include "../include/algorithm/epsilon_three_algorithm.hpp"
 #include "../src/algorithm/levin_recursion_algorithm.h"
 #include "../src/algorithm/lubkin_W_algorithm.h"
 #include "../src/algorithm/richardson_algorithm.h"
@@ -546,7 +545,7 @@ inline void init_epsilon_3(std::unique_ptr<series_base<T, K>>& series, std::uniq
 	}
 	else epsilon = T(1e-3);
 
-	transform.reset(new epsilon_algorithm_three<T, K, decltype(series.get())>(series.get(), epsilon));
+	transform.reset(new epsilon_three_algorithm<T, K, decltype(series.get())>(series.get(), epsilon));
 }
 
 /**
@@ -1171,7 +1170,7 @@ inline static void main_testing_function()
 			print_transform(i, order, std::move(transform.get()));
 
 			//epsilon v-3
-			transform.reset(new epsilon_algorithm_three<T, K, decltype(series.get())>(series.get(), epsilon_algorithm_3));
+			transform.reset(new epsilon_three_algorithm<T, K, decltype(series.get())>(series.get(), epsilon_algorithm_3));
 			print_transform(i, order, std::move(transform.get()));
 
 			//rho-wynn
