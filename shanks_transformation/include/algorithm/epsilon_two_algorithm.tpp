@@ -1,18 +1,8 @@
 #pragma once
 
-#include "../series_acceleration.h"
-#include <vector>
-
 template<typename T, typename K, typename series_templ>
-class epsilon_two_algorithm : public series_acceleration<T, K, series_templ> {
-public:
-    epsilon_two_algorithm(const series_templ &series);
-    T operator()(const K n, const int order) const;
-};
-
-template<typename T, typename K, typename series_templ>
-epsilon_two_algorithm<T, K,
-    series_templ>::epsilon_two_algorithm(const series_templ &series) : series_acceleration<T, K, series_templ>(series) {
+epsilon_two_algorithm<T, K, series_templ>::epsilon_two_algorithm(const series_templ &series)
+    : series_acceleration<T, K, series_templ>(series) {
 }
 
 template<typename T, typename K, typename series_templ>
@@ -59,7 +49,7 @@ T epsilon_two_algorithm<T, K, series_templ>::operator()(const K n, const int ord
             }
             if (!std::isfinite(e[0][i]))
                 //If new element is still corrupted we just copy prev. element, so we will get result
-                e[0][i] = e[2][i];
+                    e[0][i] = e[2][i];
         }
         std::swap(e[0], e[1]); //Swapping rows of Epsilon Table. First ine will be overwriteen next turn
         std::swap(e[1], e[2]);
