@@ -1,29 +1,7 @@
 #pragma once
 
-#include "../series_acceleration.h"
-#include <vector>
-#include <cmath>
-
-
 template<typename T, typename K, typename series_templ>
-class ford_sidi_algorithm_three : public series_acceleration<T, K, series_templ> {
-public:
-
-    ford_sidi_algorithm_three(const series_templ &series);
-
-    T operator()(const K n, const int k) const;
-
-protected:
-    mutable std::vector<std::vector<T> > FSG; // mutable allows modification in const methods
-    mutable std::vector<T> FSA;
-    mutable std::vector<T> FSI;
-    mutable std::vector<T> G;
-};
-
-
-template<typename T, typename K, typename series_templ>
-ford_sidi_algorithm_three<T, K,
-    series_templ>::ford_sidi_algorithm_three(const series_templ &series)
+ford_sidi_three_algorithm<T, K, series_templ>::ford_sidi_three_algorithm(const series_templ &series)
     : series_acceleration<T, K,
           series_templ>(series),
       FSG(1002, std::vector<T>(1001, 0.0)),
@@ -31,9 +9,8 @@ ford_sidi_algorithm_three<T, K,
       G(1002, 0.0) {
 }
 
-
 template<typename T, typename K, typename series_templ>
-T ford_sidi_algorithm_three<T, K, series_templ>::operator()(const K n, const int order) const {
+T ford_sidi_three_algorithm<T, K, series_templ>::operator()(const K n, const int order) const {
     G[1] = this->series->operator()(n - 1);
 
     T Te = 1.0 / (n);
