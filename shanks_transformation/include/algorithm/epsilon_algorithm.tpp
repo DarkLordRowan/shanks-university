@@ -1,20 +1,9 @@
 #pragma once
 
-#include <cmath>
-#include "../series_acceleration.h"
-#include <vector>
-
-template<typename T, typename K, typename series_templ>
-class epsilon_algorithm : public series_acceleration<T, K, series_templ> {
-public:
-    epsilon_algorithm(const series_templ &series);
-
-    T operator()(const K n, const int order) const;
-};
-
 template<typename T, typename K, typename series_templ>
 epsilon_algorithm<T, K, series_templ>::epsilon_algorithm(const series_templ &series)
     : series_acceleration<T, K, series_templ>(series) {
+
 }
 
 template<typename T, typename K, typename series_templ>
