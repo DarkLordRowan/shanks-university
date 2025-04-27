@@ -26,7 +26,7 @@
 #include "../src/algorithm/lubkin_W_algorithm.h"
 #include "../src/algorithm/richardson_algorithm.h"
 #include "../src/algorithm/FSA_algorithm.h"
-#include "../src/algorithm/FSA_two_algorithm.h"
+#include "../include/algorithm/ford_sidi_two_algorithm.hpp"
 
 /**
   * @brief Enum of transformation IDs
@@ -961,7 +961,7 @@ inline static void main_testing_function()
 		transform.reset(new ford_sidi_algorithm<T, K, decltype(series.get())>(series.get()));
 		break;
 	case transformation_id_t::Ford_Sidi_algorithm_two_id:
-		transform.reset(new ford_sidi_algorithm_two<T, K, decltype(series.get())>(series.get()));
+		transform.reset(new ford_sidi_two_algorithm<T, K, decltype(series.get())>(series.get()));
 		break;
 	default:
 		throw std::domain_error("wrong transformation_id");
@@ -1059,7 +1059,7 @@ inline static void main_testing_function()
 			transform2.reset(new ford_sidi_algorithm<T, K, decltype(series.get())>(series.get()));
 			break;
 		case transformation_id_t::Ford_Sidi_algorithm_two_id:
-			transform2.reset(new ford_sidi_algorithm_two<T, K, decltype(series.get())>(series.get()));
+			transform2.reset(new ford_sidi_two_algorithm<T, K, decltype(series.get())>(series.get()));
 			break;
 		default:
 			throw std::domain_error("wrong algorithm id");
@@ -1276,7 +1276,7 @@ inline static void main_testing_function()
 			print_transform(i, order, std::move(transform.get()));
 
 			//Ford-Sidi v-2
-			transform.reset(new ford_sidi_algorithm_two<T, K, decltype(series.get())>(series.get()));
+			transform.reset(new ford_sidi_two_algorithm<T, K, decltype(series.get())>(series.get()));
 			print_transform(i, order, std::move(transform.get()));
 
 			std::cout << '\n';
