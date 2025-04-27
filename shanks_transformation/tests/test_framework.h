@@ -10,7 +10,7 @@
 #include "../src/wynn_numerators.h"
 #include "../src/remainders.h"
 #include "../src/algorithm/shanks_transformation_algorithm.h"
-#include "../include/algorithm/epsilon_algorithm.hpp"
+#include "../include/algorithm/epsilon_one_algorithm.hpp"
 #include "../src/algorithm/levin_algorithm.h"
 #include "../src/algorithm/levin_sidi_S_algorithm.h"
 #include "../include/algorithm/drummond_D_algorithm.hpp"
@@ -916,7 +916,7 @@ inline static void main_testing_function()
 			transform.reset(new shanks_transform<T, K, decltype(series.get())>(series.get()));
 		break;
 	case transformation_id_t::epsilon_algorithm_id:
-		transform.reset(new epsilon_algorithm<T, K, decltype(series.get())>(series.get()));
+		transform.reset(new epsilon_one_algorithm<T, K, decltype(series.get())>(series.get()));
 		break;
 	case transformation_id_t::levin_algorithm_id:
 		transform.reset(new levin_algorithm<T, K, decltype(series.get())>(series.get()));
@@ -1014,7 +1014,7 @@ inline static void main_testing_function()
 				transform2.reset(new shanks_transform<T, K, decltype(series.get())>(series.get()));
 			break;
 		case transformation_id_t::epsilon_algorithm_id:
-			transform2.reset(new epsilon_algorithm<T, K, decltype(series.get())>(series.get()));
+			transform2.reset(new epsilon_one_algorithm<T, K, decltype(series.get())>(series.get()));
 			break;
 		case transformation_id_t::levin_algorithm_id:
 			transform2.reset(new levin_algorithm<T, K, decltype(series.get())>(series.get()));
@@ -1162,7 +1162,7 @@ inline static void main_testing_function()
 			print_transform(i, order, std::move(transform.get()));
 
 			//epsilon v-1
-			transform.reset(new epsilon_algorithm<T, K, decltype(series.get())>(series.get()));
+			transform.reset(new epsilon_one_algorithm<T, K, decltype(series.get())>(series.get()));
 			print_transform(i, order, std::move(transform.get()));
 
 			//epsilon v-2

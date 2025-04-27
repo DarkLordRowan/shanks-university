@@ -1,13 +1,13 @@
 #pragma once
 
 template<typename T, typename K, typename series_templ>
-epsilon_algorithm<T, K, series_templ>::epsilon_algorithm(const series_templ &series)
+epsilon_one_algorithm<T, K, series_templ>::epsilon_one_algorithm(const series_templ &series)
     : series_acceleration<T, K, series_templ>(series) {
 
 }
 
 template<typename T, typename K, typename series_templ>
-T epsilon_algorithm<T, K, series_templ>::operator()(const K n, const int order) const {
+T epsilon_one_algorithm<T, K, series_templ>::operator()(const K n, const int order) const {
     int m = 2 * order;
     if (n <= 0)
         throw std::domain_error("negative integer in the input");
