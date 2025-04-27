@@ -11,7 +11,7 @@
 #include "../src/wynn_numerators.h"
 #include "../src/remainders.h"
 #include "../src/algorithm/shanks_transformation_algorithm.h"
-#include "../src/algorithm/epsilon_algorithm.h"
+#include "../include/algorithm/epsilon_algorithm.hpp"
 #include "../src/algorithm/levin_algorithm.h"
 #include "../src/algorithm/levin_sidi_S_algorithm.h"
 #include "../include/algorithm/drummond_D_algorithm.hpp"
