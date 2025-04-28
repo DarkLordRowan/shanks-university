@@ -11,7 +11,7 @@
 #include "../src/remainders.h"
 #include "../src/algorithm/shanks_transformation_algorithm.h"
 #include "../include/algorithm/epsilon_one_algorithm.hpp"
-#include "../src/algorithm/levin_algorithm.h"
+#include "../include/algorithm/levin_algorithm.hpp"
 #include "../src/algorithm/levin_sidi_S_algorithm.h"
 #include "../include/algorithm/drummond_D_algorithm.hpp"
 #include "../include/algorithm/epsilon_two_algorithm.hpp"
