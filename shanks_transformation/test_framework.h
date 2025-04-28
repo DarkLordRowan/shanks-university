@@ -1359,8 +1359,12 @@ inline static void main_testing_function()
 		eval_transform_time(n, order, std::move(series.get()), std::move(transform.get()));
 		break;
 	case test_function_id_t::test_all_transforms_id: //Testing all functions for series
+	{
 
-		for (int i = 1; i <= n; i++) 
+		std::unique_ptr<series_acceleration<T, K, decltype(series.get())>> transform2;
+		transform2.reset(new ford_sidi_algorithm_three<T, K, decltype(series.get())>(series.get(), n));
+
+		for (int i = 1; i <= n; ++i) 
 		{
 			print_sum(i, std::move(series.get()));
 			
@@ -1491,13 +1495,13 @@ inline static void main_testing_function()
 			print_transform(i, order, std::move(transform.get()));
 			
 			//Ford-Sidi V3
-			transform.reset(new ford_sidi_algorithm_three<T, K, decltype(series.get())>(series.get(), n));
-			print_transform(i, order, std::move(transform.get()));
+			print_transform(i, order, std::move(transform2.get()));
 
 			std::cout << std::endl;
 		}
 
 		break;
+	}
 	default:
 		throw std::domain_error("wrong function_id");
 	}
