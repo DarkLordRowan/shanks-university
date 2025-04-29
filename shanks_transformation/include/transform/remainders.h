@@ -5,7 +5,7 @@
  * @edited by Yurov P.
 */
 #pragma once
-#include "series_acceleration.h"
+#include "../../src/series_acceleration.h"
 
 /**
 * @brief Abstract class for remainder

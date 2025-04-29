@@ -8,7 +8,7 @@
 #include <set>
 
 #include "../src/wynn_numerators.h"
-#include "../src/remainders.h"
+#include "../include/transform/remainders.h"
 #include "../include/algorithm/shanks_transform.hpp"
 #include "../include/algorithm/shanks_transform_alternating.hpp"
 #include "../include/algorithm/epsilon_one_algorithm.hpp"
