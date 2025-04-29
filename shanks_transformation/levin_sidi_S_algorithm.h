@@ -1,6 +1,6 @@
 ﻿/**
 * @file levin_sidi_S_algorithm.h
-* @brief This files contains implementation of Levin-Sidi S-transformation
+* @brief This file contains implementation of Levin-Sidi S-transformation
 * @authors Naumov A.
 */
 #pragma once
@@ -11,7 +11,9 @@
 
 /**
  * @brief S_transformation class template.
- * @tparam T The type of the elements in the series, K The type of enumerating integer, series_templ is the type of series whose convergence we accelerate
+ * @tparam T The type of the elements in the series
+ * @tparam K The type of enumerating integer
+ * @tparam series_templ is the type of series whose convergence we accelerate
  * @param remainder_func - remainder type
  * @param recursive To calculate reccursively
 */
@@ -61,7 +63,7 @@ protected:
 				down *= a4;
 			}
 
-			rest = rest * (up / down);
+			rest *= (up / down);
 
 			w_n = remainder_func->operator()(n, j, this->series, static_cast<T>(beta + n));
 
@@ -94,15 +96,16 @@ protected:
 		if (beta <= 0)
 			throw std::domain_error("beta cannot be initiared by a negative number or a zero");
 
-		std::vector<T>* N = new std::vector<T>(n + 1, 0);
-		std::vector<T>* D = new std::vector<T>(n + 1, 0);
+		std::vector<T> N (n + 1,    0);
+		std::vector<T> D (N.size(), 0);
 
-		for (K i = 0; i < n + 1; ++i) {
-			(*D)[i] = remainder_func->operator()(0, order + i, this->series);
-			(*N)[i] = this->series->S_n(order + i) * (*D)[i];
+		for (K i = 0; i < K(N.size()); ++i) {
+			D[i] = remainder_func->operator()(0, order + i, this->series);
+			N[i] = this->series->S_n(order + i) * D[i];
 		}
 
 		T b1, b2, b3, b4, b5, b6;
+		K j_1;
 
 		b1 = beta + order;
 		b2 = b1 - 1;
@@ -116,14 +119,14 @@ protected:
 				T scale1 = ((b3 + j) * (b4 + j));
 				T scale2 = (b5 * (b6 + j));
 
-				(*D)[j] = (*D)[j + 1] - scale1 * (*D)[j] / scale2;
-				(*N)[j] = (*N)[j + 1] - scale1 * (*N)[j] / scale2;
+				j_1 = j + 1;
+
+				D[j] = D[j_1] - scale1 * D[j] / scale2;
+				N[j] = N[j_1] - scale1 * N[j] / scale2;
 			}
 		}
 
-		T numerator = (*N)[0] / (*D)[0];
-
-		delete N, D;
+		T numerator = N[0] / D[0];
 
 		if (!std::isfinite(numerator))
 			throw std::overflow_error("division by zero");

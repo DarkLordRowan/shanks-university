@@ -7,7 +7,7 @@
 
 #include "series_acceleration.h" // Include the series header
 #include <vector> // Include the vector library
-#include "series +.h" 
+#include "series.h" 
 
 template <typename T, typename K, typename series_templ>
 class ford_sidi_algorithm : public series_acceleration<T, K, series_templ>
@@ -64,7 +64,7 @@ protected:
 		if (k == 0)
 			return (u->operator()(n)) / (g->operator()(n, 1));
 		
-		return (Psi(n + 1, k - 1, u, g) - Psi(n, k - 1, u, g)) / (Psi(n + 1, k - 1, k+1, g) - Psi(n, k - 1, k+1, g));
+		return (Psi(n + 1, k - 1, u, g) - Psi(n, k - 1, u, g)) / (Psi(n + 1, k - 1, k + 1, g) - Psi(n, k - 1, k + 1, g));
 	}
 	T Psi(const K n, const int k, const int k_1, const shanks_transform<T, K, series_templ>* g) const
 	{

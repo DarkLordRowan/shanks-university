@@ -7,22 +7,24 @@
 #include "series_acceleration.h"
 
 /**
-* @brief Abstract class for numerator
-* @tparam T The type of the elements in the series, K The type of enumerating integer
-*/
+ * @brief Abstract class for numerator
+ * @tparam T The type of the elements in the series
+ * @tparam K The type of enumerating integer
+ */
+
 template<typename T, typename K>
 class numerator_base {
 public:
 
 	/**
-   * @brief Virtual operator() function for computing numerator
-   * @param n The number of terms in the partial sum.
-   * @param order The order of transformation.
-   * @param series The series from where to grab terms for numerator
-   * @param gamma const for transformation	(	rho(gamma)		)
-   * @param rho const for transformation	(	rho(gamma,rho)	)
-   * @return The special numerator for transformation
-   */
+     * @brief Virtual operator() function for computing numerator
+     * @param n The number of terms in the partial sum.
+     * @param order The order of transformation.
+     * @param series The series from where to grab terms for numerator
+     * @param gamma const for transformation	(	rho(gamma)		)
+     * @param rho const for transformation	(	rho(gamma,rho)	)
+     * @return The special numerator for transformation
+     */
 	virtual T operator()(const K& n, const int& order, const series_base<T, K>* series, T gamma = T(1), T rho = T(0)) const = 0;
 
 };

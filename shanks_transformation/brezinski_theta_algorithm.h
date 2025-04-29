@@ -28,7 +28,7 @@ public:
      * @return The partial sum after the transformation.
      */
     T operator()(const K n, const int order) const {
-        if (order & 1 || order < 0) // order is odd or order < 0
+        if (order & 1 || order < 0) // order is odd or negative
             throw std::domain_error("order should be even number");
 
         if (n < 0)
