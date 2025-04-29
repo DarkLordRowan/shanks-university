@@ -23,7 +23,7 @@
 #include "../include/algorithm/brezinski_theta_algorithm.hpp"
 #include "../include/algorithm/epsilon_three_algorithm.hpp"
 #include "../include/algorithm/levin_recursion_algorithm.hpp"
-#include "../src/algorithm/lubkin_W_algorithm.h"
+#include "../include/algorithm/W_lubkin_algorithm.hpp"
 #include "../src/algorithm/richardson_algorithm.h"
 #include "../include/algorithm/ford_sidi_one_algorithm.hpp"
 #include "../include/algorithm/ford_sidi_two_algorithm.hpp"
