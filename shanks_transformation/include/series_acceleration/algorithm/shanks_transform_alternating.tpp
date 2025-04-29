@@ -53,7 +53,7 @@ T shanks_transform_alternating<T, K, series_templ>::operator()(const K n, const 
         T_n = T_n_plus_1;
     }
 
-    if (!isfinite(T_n[n]))
+    if (!std::isfinite(T_n[n]))
         throw std::overflow_error("division by zero");
 
     return T_n[n];

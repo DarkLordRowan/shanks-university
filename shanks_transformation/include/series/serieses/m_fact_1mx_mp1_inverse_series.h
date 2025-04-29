@@ -55,7 +55,7 @@ private:
 template <typename T, typename K>
 m_fact_1mx_mp1_inverse_series<T, K>::m_fact_1mx_mp1_inverse_series(T x, K m) : series_base<T, K>(x, static_cast<T>(static_cast<T>(this->fact(m)) / pow(1 - x, m + 1))), m(m), recurrent_series_base<T, K>(static_cast<T>(this->fact(m)))
 {
-	if (!isfinite(series_base<T, K>::sum)) // sum = this->fact(m) / pow(1 - x, m + 1))
+	if (!std::isfinite(series_base<T, K>::sum)) // sum = this->fact(m) / pow(1 - x, m + 1))
 		throw std::overflow_error("sum is too big");
 	if (std::abs(this->x) >= 1) // p. 564 typo
 		throw std::domain_error("series diverge");

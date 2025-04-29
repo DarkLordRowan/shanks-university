@@ -10,6 +10,7 @@
 #include "test_functions.h"
 #include "./series_acceleration/series_acceleration_all.hpp"
 #include "series_acceleration/series_acceleration.hpp"
+#include "series/series_all.hpp"
 
 /**
   * @brief Enum of transformation IDs

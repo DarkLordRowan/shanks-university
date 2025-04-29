@@ -27,7 +27,7 @@ T ford_sidi_two_algorithm<T, K, series_templ>::operator()(const K n, const int o
 
     T T_n = this->series->S_n(m) - delta_S_n * delta_S_n / delta_squared_S_n;
 
-    if (!isfinite(T_n))
+    if (!std::isfinite(T_n))
         throw std::overflow_error("division by zero");
 
     return T_n;
