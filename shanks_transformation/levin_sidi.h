@@ -1,9 +1,8 @@
 ﻿/**
 * @file levin_sidi_merg.h
-* @brief This files contains the definition of Levin-Sidi S-transformation with u,t,v remainders
+* @brief This file contains the definition of Levin-Sidi S-transformation with u,t,v remainders
 */
-#pragma once
-#define DEF_UNDEFINED_SUM 0
+
 //#define beta 1 // beta is a a nonzero positive parameter, 1 is the standart value in the Literatur on Levin transformation, for more information see p. 39 in [https://arxiv.org/pdf/math/0306302.pdf]
 
 
@@ -36,7 +35,7 @@ public:
 	u_transform(const T beta_ = T(1)) : beta(beta_) {};
 
 	template<typename T, typename K>
-	T operator()(const int& n, const int& j, const series_base<T, K>* series) const {
+	T operator()(const int n, const int j, const series_base<T, K>* series) const {
 		return T(1) / ((beta + n) * series->operator()(n + j + 1));
 	}
 };
@@ -64,7 +63,7 @@ public:
 	v_transform() {}
 
 	template<typename T, typename K>
-	T operator()(const int& n, const int& j, const series_base<T, K>* series) const {
+	T operator()(const int n, const int j, const series_base<T, K>* series) const {
 		return (series->operator()(n + j + 1) - series->operator()(n + j)) /
 			(series->operator()(n + j + 1) * series->operator()(n + j));
 	}
@@ -88,7 +87,7 @@ protected:
 	const T beta;
 
 	template<class remainderType>
-	T calculate(const K& k, const int& n, remainderType remainder_func) const {
+	T calculate(const K k, const int n, remainderType remainder_func) const {
 		if (n < 0)
 			throw std::domain_error("negative integer in input");
 
@@ -99,20 +98,22 @@ protected:
 		T w_n, rest;
 		T up, down;
 
+		T a1, a2, a3;
+
 		for (int j = 0; j <= k; ++j) {
 			rest = this->series->minus_one_raised_to_power_n(j) * this->series->binomial_coefficient(k, j);
 			up = down = T(1);
-			T a1 = beta + n;
+			a1 = beta + n;
 			for (int m = 0; m < k - 1; ++m) {
-				T a2 = a + m;
+				a2 = a1 + m;
 				up *= (a2 + j);
 				down *= (a2 + k);
 			}
-			rest = rest * (up / down);
+			rest *= (up / down);
 
 			w_n = remainder_func(n, j, this->series);
 
-			T a3 = rest * w_n;
+			a3 = rest * w_n;
 			numerator += a3 * this->series->S_n(n + j);
 			denominator += a3;
 		}
@@ -134,7 +135,7 @@ protected:
 	* @return The partial sum after the transformation.
 	*/
 	template<class remainderType>
-	T calculate_recursively(const K& k, const int& n, remainderType remainder_func) const {
+	T calculate_recursively(const K k, const int n, remainderType remainder_func) const {
 
 		if (n < 0)
 			throw std::domain_error("negative integer in input");
@@ -142,28 +143,33 @@ protected:
 		if (beta <= 0)
 			throw std::domain_error("beta cannot be initiared by a negative number or a zero");
 
-		std::vector<T>* N = new std::vector<T>(k + 1, 0);
-		std::vector<T>* D = new std::vector<T>(k + 1, 0);
+		std::vector<T> N (k + 1,    0);
+		std::vector<T> D (N.size(), 0);
 
-		for (int i = 0; i < k + 1; ++i) {
-			(*D)[i] = remainder_func(0, n + i, this->series);
-			(*N)[i] = this->series->S_n(n + i) * (*D)[i];
+		for (int i = 0; i < N.size(); ++i) {
+			D[i] = remainder_func(0, n + i, this->series);
+			N[i] = this->series->S_n(n + i) * D[i];
 		}
 
+		T a4, a5, a6, a7, scale1, scale2;
+		T j_1;
 		for (int i = 1; i <= k; ++i) {
-			T a4 = beta + n + i;
-			T a5 = a4 + i;
+			a4 = beta + n + i;
+			a5 = a4 + i;
+	
 			for (int j = 0; j <= k - i; ++j) {
-				T a6 = a4 + j;
-				T a7 = a5 + j;
-				T scale1 = (a6 * (a6 - 1));
-				T scale2 = (a7 * (a7 - 1));
+				a6 = a4 + j;
+				a7 = a5 + j;
+				scale1 = (a6 * (a6 - 1));
+				scale2 = (a7 * (a7 - 1));
 
-				(*D)[j] = ((*D)[j + 1]*scale2 - scale1 * (*D)[j])/scale2;
-				(*N)[j] = ((*N)[j + 1]*scale2 - scale1 * (*N)[j])/scale2;
+				j_1 = j + 1;
+
+				D[j] = D[j_1] - scale1 * (*D)[j] / scale2;
+				N[j] = N[j_1] - scale1 * (*N)[j] / scale2;
 			}
 		}
-		T numerator = (*N)[0] / (*D)[0];
+		T numerator = N[0] / D[0];
 
 		if (!std::isfinite(numerator))
 			throw std::overflow_error("division by zero");

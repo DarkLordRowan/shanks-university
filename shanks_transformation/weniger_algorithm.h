@@ -1,8 +1,8 @@
 /**
-* @file weniger.h
-* @brief This files contains the definition of Weniger-transformation
-* @authors Yurov P.I. Bezzaborov A.A.
-*/
+ * @file weniger.h
+ * @brief This file contains the definition of Weniger-transformation
+ * @authors Yurov P.I. Bezzaborov A.A.
+ */
 #pragma once
 #define DEF_UNDEFINED_SUM 0
 
@@ -15,20 +15,22 @@ class weniger_algorithm : public series_acceleration<T, K, series_templ>
 protected:
 
 	/**
-	* @brief Default function to calculate WT-transformation.
-	* For more information see "Joint use of the Weniger transformation and hyperasymptotics for accurate asymptotic evaluations of a class of saddle-point integrals"
-	* @param k The number of terms in the partial sum.
-	* @param n the order of transformation
-	* @param remainder_func functor, whose returning w_n for t,u or v transformation
-	* @return The partial sum after the transformation.
-	*/
+	  * @brief Default function to calculate WT-transformation.
+	  * For more information see "Joint use of the Weniger transformation and hyperasymptotics for accurate asymptotic evaluations of a class of saddle-point integrals"
+	  * @param k The number of terms in the partial sum.
+	  * @param n the order of transformation
+	  * @param remainder_func functor, whose returning w_n for t,u or v transformation
+  	  * @return The partial sum after the transformation.
+	  */
 
 public:
 	
 	/**
-	* @brief Weniger class template for derivations
-	* @tparam T The type of the elements in the series, K The type of enumerating integer, series_templ is the type of series whose convergence we accelerate
-	*/
+	 * @brief Weniger class template for derivations
+	 * @tparam T The type of the elements in the series
+	 * @tparam K The type of enumerating integer
+	 * @tparam series_templ is the type of series whose convergence we accelerate
+	 */
 
 	weniger_algorithm(const series_templ& series) : series_acceleration<T, K, series_templ>(series) {}
 
@@ -59,11 +61,11 @@ public:
 		for (int j = 0; j <= order; ++j) {
 
 			rest = this->series->minus_one_raised_to_power_n(j)* binomial_coef;
-			binomial_coef = binomial_coef * (order - j) / (j + 1);
+			binomial_coef *= (order - j) / (j + 1);
 
-			rest = rest * coef;
+			rest *= coef;
 
-			coef = coef / (1 + j) * (j + order);
+			coef *= (j + order) / (1 + j);
 
 			a_n = 1 / this->series->operator()(j + 1);
 
