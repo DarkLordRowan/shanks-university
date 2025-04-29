@@ -36,6 +36,6 @@ T Series_with_ln_number2<T, K>::operator()(K n) const
         throw std::domain_error("negative integer in the input");
     auto tmp = std::log(n + 2);
 
-    return 1 / static_cast<T>((std::pow(tmp, tmp)));
+    return 1 / static_cast<T>(std::pow(tmp, tmp));
 }
 

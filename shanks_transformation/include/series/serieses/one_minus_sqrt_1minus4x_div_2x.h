@@ -49,5 +49,5 @@ T one_minus_sqrt_1minus4x_div_2x<T, K>::operator()(K n) const
     T binom_coef = static_cast<T>(this->binomial_coefficient(static_cast<T>(2 * n), n));
     T n_plus_1 = static_cast<T>(n + 1);
 
-    return (xn * binom_coef) / n_plus_1;
+    return xn * binom_coef / n_plus_1;
 }

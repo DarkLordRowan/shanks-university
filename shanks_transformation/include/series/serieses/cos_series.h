@@ -44,7 +44,7 @@ private:
 };
 
 template <typename T, typename K>
-cos_series<T, K>::cos_series(T x) : series_base<T, K>(x, std::cos(x)), recurrent_series_base<T, K>(std::vector<T>{1, T(((-1)* x* x) / 2)}) {}
+cos_series<T, K>::cos_series(T x) : series_base<T, K>(x, std::cos(x)), recurrent_series_base<T, K>(std::vector<T>{1, T(-1* x* x / 2)}) {}
 
 template <typename T, typename K>
 T cos_series<T, K>::acsess_row(K n)
@@ -56,7 +56,7 @@ T cos_series<T, K>::acsess_row(K n)
     this->series_vector.reserve(n);
 
     for (auto i = old_size; i <= static_cast<typename std::vector<T>::size_type>(n); ++i) {
-        this->series_vector.push_back(this->series_vector[i - 1] * static_cast<T>(-1) * static_cast<T>((this->x * this->x) / (i * (4 * i - 2))));
+        this->series_vector.push_back(this->series_vector[i - 1] * static_cast<T>(-1) * static_cast<T>(this->x * this->x / (i * (4 * i - 2))));
     }
 
     return this->series_vector[n];

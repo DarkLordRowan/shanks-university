@@ -41,7 +41,7 @@ T ln_1plussqrt1plusxsquare_minus_ln_2<T, K>::operator()(K n) const
 {
     if (n < 0)
         throw std::domain_error("negative integer in the input");
-    if ((this->x) * (this->x) > 1)
+    if (this->x * this->x > 1)
         throw std::domain_error("x^2 cannot be more than 1");
-    return static_cast<T>((this->minus_one_raised_to_power_n(n) * this->fact(2 * n + 1) * std::pow(this->x, 2 * n + 2)) / (pow(2, 2 * n + 2) * this->fact(n + 1) * this->fact(n + 1)));
+    return static_cast<T>(this->minus_one_raised_to_power_n(n) * this->fact(2 * n + 1) * std::pow(this->x, 2 * n + 2) / (pow(2, 2 * n + 2) * this->fact(n + 1) * this->fact(n + 1)));
 }

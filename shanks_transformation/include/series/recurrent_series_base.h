@@ -47,7 +47,7 @@ template <typename T, typename K>
 recurrent_series_base<T, K>::recurrent_series_base(T x)
 {
     this->series_vector.push_back(x);
-};
+}
 
 template <typename T, typename K>
 recurrent_series_base<T, K>::recurrent_series_base(std::vector<T> row)
@@ -56,4 +56,4 @@ recurrent_series_base<T, K>::recurrent_series_base(std::vector<T> row)
         throw std::domain_error("empty row imput");
 
     this->series_vector = row;
-};
+}

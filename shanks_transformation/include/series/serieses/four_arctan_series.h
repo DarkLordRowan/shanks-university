@@ -32,8 +32,7 @@ public:
     */
     [[nodiscard]] T operator()(K n) const override;
 
-private:
-    /**
+/**
     * @brief Computes nth term of the series
     * @authors Kreynin R.G.
     * @param n The number of the term

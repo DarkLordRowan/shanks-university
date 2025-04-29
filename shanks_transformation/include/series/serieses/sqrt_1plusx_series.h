@@ -44,6 +44,6 @@ T sqrt_1plusx_series<T, K>::operator()(K n) const
         throw std::domain_error("negative integer in the input");
     if (this->x < -1)
         throw std::domain_error("The value x must be more or equel to -1");
-    return static_cast<T>(std::pow(-1, n) * (this->fact(2 * n)) * std::pow(this->x, n) / ((1 - 2 * n) * (this->fact(n)) * (this->fact(n)) * std::pow(4, n)));
+    return static_cast<T>(std::pow(-1, n) * this->fact(2 * n) * std::pow(this->x, n) / ((1 - 2 * n) * this->fact(n) * this->fact(n) * std::pow(4, n)));
 }
 

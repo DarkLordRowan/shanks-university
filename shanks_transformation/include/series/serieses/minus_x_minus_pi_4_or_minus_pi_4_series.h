@@ -45,6 +45,6 @@ T minus_x_minus_pi_4_or_minus_pi_4_series<T, K>::operator()(K n) const
         throw std::domain_error("negative integer in the input");
     if (this->x <= -std::numbers::pi or this->x >= std::numbers::pi)
         throw std::domain_error("The value x must be between -pi and pi not inclusive");
-    return static_cast<T>(-2 * std::cos(2 * n + 1) * (this->x) / (std::numbers::pi * (2 * n + 1) * (2 * n + 1))
+    return static_cast<T>(-2 * std::cos(2 * n + 1) * this->x / (std::numbers::pi * (2 * n + 1) * (2 * n + 1))
         + (1 - 2 * ((n + 1) % 2)) * std::sin(this->x * (n + 1)) / (n + 1)); // (1 - 2 * ((n + 1) % 2)) = (-1)^{n+1}
 }

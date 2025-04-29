@@ -11,7 +11,6 @@
 #include <cmath>
 
 #include "../series_base.h"
-#include "../recurrent_series_base.h"
 
 
 template <typename T, typename K>
@@ -46,6 +45,6 @@ T pi_minus_3pi_4_and_pi_minus_x_minus_3pi_4_series<T, K>::operator()(K n) const
         throw std::domain_error("negative integer in the input");
     if (this->x <= -std::numbers::pi or this->x > std::numbers::pi)
         throw std::domain_error("The value x must be between -pi not inclusive and pi inclusive");
-    return static_cast<T>((std::cos((n + 1) * (this->x)) * (1 - (1 - 2 * ((n + 1) % 2)))) / ((n + 1) * (n + 1) * std::numbers::pi) + ((1 - 2 * ((n + 1) % 2)) * std::sin((n + 1) * (this->x))) / (n + 1)); // (1 - 2 * ((n + 1) % 2)) = (-1)^{n+1}
+    return static_cast<T>(std::cos((n + 1) * this->x) * (1 - (1 - 2 * ((n + 1) % 2))) / ((n + 1) * (n + 1) * std::numbers::pi) + (1 - 2 * ((n + 1) % 2)) * std::sin((n + 1) * this->x) / (n + 1)); // (1 - 2 * ((n + 1) % 2)) = (-1)^{n+1}
 }
 

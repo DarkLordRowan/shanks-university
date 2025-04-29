@@ -35,13 +35,13 @@ public:
 };
 
 template <typename T, typename K>
-abs_sin_x_minus_2_div_pi_series<T, K>::abs_sin_x_minus_2_div_pi_series(T x) : series_base<T, K>(x, static_cast<T>(std::abs(std::sin(x)) - (2 / std::numbers::pi))) {}
+abs_sin_x_minus_2_div_pi_series<T, K>::abs_sin_x_minus_2_div_pi_series(T x) : series_base<T, K>(x, static_cast<T>(std::abs(std::sin(x)) - 2 / std::numbers::pi)) {}
 
 template <typename T, typename K>
 T abs_sin_x_minus_2_div_pi_series<T, K>::operator()(K n) const
 {
     if (n < 0)
         throw std::domain_error("negative integer in the input");
-    return static_cast<T>(-4 * (std::cos(2 * (this->x) * (n + 1))) / ((2 * n + 1) * (2 * n + 3) * std::numbers::pi));
+    return static_cast<T>(-4 * std::cos(2 * this->x * (n + 1)) / ((2 * n + 1) * (2 * n + 3) * std::numbers::pi));
 }
 

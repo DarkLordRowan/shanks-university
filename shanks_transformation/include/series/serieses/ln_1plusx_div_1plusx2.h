@@ -42,5 +42,5 @@ T ln_1plusx_div_1plusx2<T, K>::operator()(K n) const
     if (n < 0)
         throw std::domain_error("The term index must be a non-negative integer");
 
-    return static_cast<T>(this->minus_one_raised_to_power_n(n + 2) * std::pow(this->x, n + 1) / ((n + 1) * std::pow(1 + (this->x * this->x), n + 1)));
+    return static_cast<T>(this->minus_one_raised_to_power_n(n + 2) * std::pow(this->x, n + 1) / ((n + 1) * std::pow(1 + this->x * this->x, n + 1)));
 }

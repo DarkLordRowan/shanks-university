@@ -46,6 +46,6 @@ T x_twelfth_x2_pi2_series<T, K>::operator()(K n) const
 {
     if (n < 0)
         throw std::domain_error("negative integer in the input");
-    return n ? static_cast<T>(series_base<T, K>::minus_one_raised_to_power_n(n) * std::sin(n * this->x) / (std::pow(n, 3))) : 0;
+    return n ? static_cast<T>(series_base<T, K>::minus_one_raised_to_power_n(n) * std::sin(n * this->x) / std::pow(n, 3)) : 0;
 }
 

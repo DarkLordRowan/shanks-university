@@ -18,7 +18,7 @@ T weniger_algorithm<T, K, series_templ>::operator()(const K n, const int order) 
 
     // Calculating the coefficient
     for (int m = 0; m < order - 1; ++m)
-        coef *= (1 + m);
+        coef *= 1 + m;
 
     for (int j = 0; j <= order; ++j) {
         rest = this->series->minus_one_raised_to_power_n(j) * binomial_coef;

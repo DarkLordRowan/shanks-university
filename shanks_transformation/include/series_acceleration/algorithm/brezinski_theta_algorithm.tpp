@@ -60,6 +60,6 @@ theta(K n, const int order, T S_n, const K j) const {
     const T delta_n = theta(n, order - 2, S_n, 1) - theta(n, order - 2, S_n, 2); // Δυ_2k^(n+1) 
     const T delta_n1 = theta(n, order - 1, S_n, 1) - theta(n, order - 1, S_n, 2); // Δυ_(2k+1)^(n+1)
 
-    return theta(n, order - 2, S_n, 1) + (delta_n * delta_n1) * delta2;
+    return theta(n, order - 2, S_n, 1) + delta_n * delta_n1 * delta2;
     // υ_(2k+2)^(n)=υ_2k^(n+1)+((Δυ_2k^(n+1))*(Δυ_(2k+1)^(n+1)))/(Δ^2 υ_(2k+1)^(n)
 }

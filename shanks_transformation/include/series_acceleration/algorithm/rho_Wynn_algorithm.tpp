@@ -19,9 +19,9 @@ T rho_Wynn_algorithm<T, K, series_templ>::calculate(const K n, int order) const 
 
     int order_1 = order - 1;
 
-    T res = recursive_calculate_body(n, order_1 - 1, S_n, 1) + (numerator_func->operator()(
-                n, order, this->series, gamma, RHO));
-    res /= (recursive_calculate_body(n, order_1, S_n, 1) - recursive_calculate_body(n, order_1, S_n, 0));
+    T res = recursive_calculate_body(n, order_1 - 1, S_n, 1) + numerator_func->operator()(
+                n, order, this->series, gamma, RHO);
+    res /= recursive_calculate_body(n, order_1, S_n, 1) - recursive_calculate_body(n, order_1, S_n, 0);
 
     if (!std::isfinite(res))
         throw std::overflow_error("division by zero");
@@ -31,7 +31,7 @@ T rho_Wynn_algorithm<T, K, series_templ>::calculate(const K n, int order) const 
 
 template<typename T, typename K, typename series_templ>
 T rho_Wynn_algorithm<T, K, series_templ>::recursive_calculate_body(const K n, const int order, T S_n, const K j) const {
-    S_n += (j == K(0)) ? T(0) : this->series->operator()(n + j);
+    S_n += j == K(0) ? T(0) : this->series->operator()(n + j);
     if (order == 0)
         return S_n;
 
@@ -41,9 +41,9 @@ T rho_Wynn_algorithm<T, K, series_templ>::recursive_calculate_body(const K n, co
     int order_1 = order - 1;
     K n_j = n + j;
 
-    T res = recursive_calculate_body(n_j, order_1 - 1, S_n, 1) + (numerator_func->operator()(
-                n_j, order, this->series, gamma, RHO));
-    res /= (recursive_calculate_body(n_j, order_1, S_n, 1) - recursive_calculate_body(n_j, order_1, S_n, 0));
+    T res = recursive_calculate_body(n_j, order_1 - 1, S_n, 1) + numerator_func->operator()(
+                n_j, order, this->series, gamma, RHO);
+    res /= recursive_calculate_body(n_j, order_1, S_n, 1) - recursive_calculate_body(n_j, order_1, S_n, 0);
     if (!std::isfinite(res))
         throw std::overflow_error("division by zero");
 

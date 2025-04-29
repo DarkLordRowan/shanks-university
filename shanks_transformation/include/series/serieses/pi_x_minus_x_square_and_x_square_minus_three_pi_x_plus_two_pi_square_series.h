@@ -42,6 +42,6 @@ T pi_x_minus_x_square_and_x_square_minus_three_pi_x_plus_two_pi_square_series<T,
         throw std::domain_error("negative integer in the input");
     if (this->x <= 0 or this->x >= 2 * std::numbers::pi)
         throw std::domain_error("Modulus of the value x must be between 0 and 2*pi not inclusive");
-    return static_cast<T>((8 / std::numbers::pi) * (std::sin((2 * n + 1) * (this->x)) / ((2 * n + 1) * (2 * n + 1) * (2 * n + 1))));
+    return static_cast<T>(8 / std::numbers::pi * (std::sin((2 * n + 1) * this->x) / ((2 * n + 1) * (2 * n + 1) * (2 * n + 1))));
 }
 

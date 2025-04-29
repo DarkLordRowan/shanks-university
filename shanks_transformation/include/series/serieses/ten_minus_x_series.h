@@ -44,5 +44,5 @@ T ten_minus_x_series<T, K>::operator()(K n) const
         throw std::domain_error("negative integer in the input");
     if (this->x <= 5 or this->x >= 15)
         throw std::domain_error("The value x must be between 5 and 15 not inclusive");
-    return static_cast<T>(10 * (1 - 2 * ((n + 1) % 2)) * std::sin((n + 1) * (this->x) * std::numbers::pi / 5) / ((n + 1) * std::numbers::pi)); // (1 - 2 * ((n + 1) % 2)) = (-1)^{n+1}
+    return static_cast<T>(10 * (1 - 2 * ((n + 1) % 2)) * std::sin((n + 1) * this->x * std::numbers::pi / 5) / ((n + 1) * std::numbers::pi)); // (1 - 2 * ((n + 1) % 2)) = (-1)^{n+1}
 }

@@ -31,7 +31,7 @@ public:
 };
 
 template <typename T, typename K>
-ln13_min_ln7_div_7_series<T, K>::ln13_min_ln7_div_7_series() : series_base<T, K>(0, (static_cast<T>(std::log(13 / 7) / 7))) {}
+ln13_min_ln7_div_7_series<T, K>::ln13_min_ln7_div_7_series() : series_base<T, K>(0, static_cast<T>(std::log(13 / 7) / 7)) {}
 
 template <typename T, typename K>
 T ln13_min_ln7_div_7_series<T, K>::operator()(K n) const

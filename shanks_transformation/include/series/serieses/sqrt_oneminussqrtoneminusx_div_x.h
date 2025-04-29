@@ -43,6 +43,6 @@ T sqrt_oneminussqrtoneminusx_div_x<T, K>::operator()(K n) const
         throw std::domain_error("negative integer in the input");
     if (std::abs(this->x) >= 1 or this->x == 0)
         throw std::domain_error("Modulus of the value x must be less 1 and cannot be equal to 0");
-    return static_cast<T>(this->fact(4 * n) * pow(this->x, n) / (pow(2, 4 * n) * sqrt(2) * (this->fact(2 * n)) * (this->fact(2 * n + 1))));
+    return static_cast<T>(this->fact(4 * n) * pow(this->x, n) / (pow(2, 4 * n) * sqrt(2) * this->fact(2 * n) * this->fact(2 * n + 1)));
 }
 

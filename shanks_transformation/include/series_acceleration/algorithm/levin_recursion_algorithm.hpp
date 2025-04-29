@@ -5,7 +5,7 @@
 template<typename T, typename K, typename series_templ>
 class levin_recursion_algorithm final: public series_acceleration<T, K, series_templ> {
 public:
-    explicit levin_recursion_algorithm(const series_templ &series, const T beta_ = T(-1.5));
+    explicit levin_recursion_algorithm(const series_templ &series, T beta_ = T(-1.5));
 
     T operator()(K n, int order) const override;
 

@@ -67,7 +67,7 @@ void cmp_a_n_and_transform(const int n, const int order, const series_templ&& se
 			std::cout << "a_" << i << " : " << (*series)(i) << '\n';
 			std::cout << "t_" << i << " : " << test->operator()(i, order) - test->operator()(i - 1, order) << '\n';
 			std::cout << "t_" << i << " of order " << order << " - a_" << i
-				<< " : " << (test->operator()(i, order) - test->operator()(i - 1, order)) - (*series)(i) << '\n';
+				<< " : " << test->operator()(i, order) - test->operator()(i - 1, order) - (*series)(i) << '\n';
 		}
 		catch (std::domain_error& e)
 		{

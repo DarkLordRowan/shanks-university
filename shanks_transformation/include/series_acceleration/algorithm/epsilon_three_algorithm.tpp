@@ -76,9 +76,9 @@ T epsilon_three_algorithm<T, K, series_templ>::operator()(const K n, const int o
         }
 
         if (N == n)
-            N = (n & 1) ? n : n - 1;
+            N = n & 1 ? n : n - 1;
 
-        K ib = (num & 1) ? 1 : 2;
+        K ib = num & 1 ? 1 : 2;
         K ie = newelm + 1;
 
         for (K pos = ib; pos < ib + 2 * ie; pos += 2)

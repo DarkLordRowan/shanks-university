@@ -34,12 +34,12 @@ public:
 };
 
 template <typename T, typename K>
-half_minus_sinx_multi_pi_4<T, K>::half_minus_sinx_multi_pi_4(T x) : series_base<T, K>(x, static_cast<T>((static_cast<T>(0.5) - std::numbers::pi * std::sin(x) * static_cast<T>(0.25)))) {}
+half_minus_sinx_multi_pi_4<T, K>::half_minus_sinx_multi_pi_4(T x) : series_base<T, K>(x, static_cast<T>(static_cast<T>(0.5) - std::numbers::pi * std::sin(x) * static_cast<T>(0.25))) {}
 
 template <typename T, typename K>
 T half_minus_sinx_multi_pi_4<T, K>::operator()(K n) const
 {
     if (n < 0)
         throw std::domain_error("negative integer in the input");
-    return std::cos(2 * (this->x) * (n + 1)) / ((2 * n + 1) * (2 * n + 3));
+    return std::cos(2 * this->x * (n + 1)) / ((2 * n + 1) * (2 * n + 3));
 }

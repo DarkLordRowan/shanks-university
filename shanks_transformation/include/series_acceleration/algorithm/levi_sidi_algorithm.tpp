@@ -1,5 +1,7 @@
 #pragma once
 #include <cmath>
+#include <stdexcept>
+#include <vector>
 
 template<typename T, typename K, typename series_templ>
 levi_sidi_algorithm<T, K, series_templ>::levi_sidi_algorithm(const series_templ &series, T beta_)
@@ -27,10 +29,10 @@ T levi_sidi_algorithm<T, K, series_templ>::calculate(K k, int n, remainderType r
         a1 = beta + n;
         for (int m = 0; m < k - 1; ++m) {
             a2 = a1 + m;
-            up *= (a2 + j);
-            down *= (a2 + k);
+            up *= a2 + j;
+            down *= a2 + k;
         }
-        rest *= (up / down);
+        rest *= up / down;
 
         w_n = remainder_func(n, j, this->series);
 
@@ -72,8 +74,8 @@ T levi_sidi_algorithm<T, K, series_templ>::calculate_recursively(K k, int n, rem
         for (int j = 0; j <= k - i; ++j) {
             a6 = a4 + j;
             a7 = a5 + j;
-            scale1 = (a6 * (a6 - 1));
-            scale2 = (a7 * (a7 - 1));
+            scale1 = a6 * (a6 - 1);
+            scale2 = a7 * (a7 - 1);
 
             D[j] = D[j + 1] - scale1 * D[j] / scale2;
             N[j] = N[j + 1] - scale1 * N[j] / scale2;

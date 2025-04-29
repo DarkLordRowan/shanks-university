@@ -4,10 +4,10 @@
 
 
 template<typename T, typename K, typename series_templ>
-class shanks_transform : public series_acceleration<T, K, series_templ> {
+class shanks_transform final : public series_acceleration<T, K, series_templ> {
 public:
-    shanks_transform(const series_templ &series);
-    T operator()(const K n, const int order) const;
+    explicit shanks_transform(const series_templ &series);
+    T operator()(K n, int order) const override;
 };
 
 #include "shanks_transform.tpp"

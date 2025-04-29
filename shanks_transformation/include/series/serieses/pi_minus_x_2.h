@@ -43,5 +43,5 @@ T pi_minus_x_2<T, K>::operator()(K n) const
         throw std::domain_error("negative integer in the input");
     if (this->x <= 0 or this->x >= 2 * std::numbers::pi)
         throw std::domain_error("The x value must be between 0 and 2*pi");
-    return std::sin((n + 1) * (this->x)) / (n + 1);
+    return std::sin((n + 1) * this->x) / (n + 1);
 }

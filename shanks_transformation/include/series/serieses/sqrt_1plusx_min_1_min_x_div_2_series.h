@@ -23,7 +23,7 @@ public:
 	* @authors Trudolyubov N.A.
 	* @param x The argument for function series
 	*/
-	sqrt_1plusx_min_1_min_x_div_2_series(T x);
+	explicit sqrt_1plusx_min_1_min_x_div_2_series(T x);
 
 	/**
 	* @brief Computes the nth term of the Maclaurin series of the sine function

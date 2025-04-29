@@ -35,7 +35,7 @@ public:
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
 template<typename T, typename K>
-class rho_transform : public numerator_base<T, K> {
+class rho_transform final : public numerator_base<T, K> {
 public:
 
 	/**
@@ -60,7 +60,7 @@ public:
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
 template<typename T, typename K>
-class generilized_transform : public numerator_base<T, K> {
+class generilized_transform final : public numerator_base<T, K> {
 public:
 
 	/**
@@ -75,7 +75,7 @@ public:
    */
 
 	T operator()([[maybe_unused]] const K& n, const int& order, [[maybe_unused]] const series_base<T, K>* series,[[maybe_unused]] T gamma = T(1), [[maybe_unused]]T rho = T(0)) const {
-		return (order - gamma - 1);
+		return order - gamma - 1;
 	}
 };
 
@@ -85,7 +85,7 @@ public:
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
 template<typename T, typename K>
-class gamma_rho_transform : public numerator_base<T, K> {
+class gamma_rho_transform final : public numerator_base<T, K> {
 public:
 
 	/**

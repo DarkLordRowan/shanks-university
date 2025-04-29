@@ -34,13 +34,13 @@ T epsilon_two_algorithm<T, K, series_templ>::operator()(const K n, const int ord
             {
                 a2 = static_cast<T>(1.0 / e[2][i + 1]);
 
-                a1 = static_cast<T>(1.0 / (1.0 - (a2 * e[2][i + 2])));
+                a1 = static_cast<T>(1.0 / (1.0 - a2 * e[2][i + 2]));
                 a = e[2][i + 2] * a1;
 
-                a1 = static_cast<T>(1.0 / (1.0 - (a2 * e[2][i])));
+                a1 = static_cast<T>(1.0 / (1.0 - a2 * e[2][i]));
                 a += e[2][i] * a1;
 
-                a1 = static_cast<T>(1.0 / (1.0 - (a2 * e[0][i + 2])));
+                a1 = static_cast<T>(1.0 / (1.0 - a2 * e[0][i + 2]));
                 a -= e[0][i + 2] * a1;
 
                 e[0][i] = static_cast<T>(1.0 / e[2][i + 1]);

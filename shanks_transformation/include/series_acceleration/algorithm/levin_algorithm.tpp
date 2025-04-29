@@ -23,11 +23,11 @@ T levin_algorithm<T, K, series_templ>::operator()(const K n, const int order) co
         rest = this->series->minus_one_raised_to_power_n(j) * this->series->binomial_coefficient(
                    static_cast<T>(order), j);
 
-        C_njk = static_cast<T>((std::pow((n + j + 1), (order - 1))) / (std::pow((n + order + 1), (order - 1))));
+        C_njk = static_cast<T>(std::pow(n + j + 1, order - 1) / std::pow(n + order + 1, order - 1));
 
         S_nj = this->series->S_n(n + j);
 
-        g_n = 1 / (this->series->operator()(n + j));
+        g_n = 1 / this->series->operator()(n + j);
 
         rest *= C_njk * g_n;
 

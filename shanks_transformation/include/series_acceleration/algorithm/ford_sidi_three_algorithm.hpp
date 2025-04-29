@@ -1,5 +1,7 @@
 #pragma once
 
+#include <vector>
+
 #include "series_acceleration/series_acceleration.hpp"
 
 template<typename T, typename K, typename series_templ>

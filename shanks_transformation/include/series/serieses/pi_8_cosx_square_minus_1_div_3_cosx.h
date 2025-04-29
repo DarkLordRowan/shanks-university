@@ -10,7 +10,6 @@
 #include <cmath>
 
 #include "../series_base.h"
-#include "../recurrent_series_base.h"
 
 template <typename T, typename K>
 class pi_8_cosx_square_minus_1_div_3_cosx final : public series_base<T, K>
@@ -35,7 +34,8 @@ public:
 };
 
 template <typename T, typename K>
-pi_8_cosx_square_minus_1_div_3_cosx<T, K>::pi_8_cosx_square_minus_1_div_3_cosx(T x) : series_base<T, K>(x, static_cast<T>((std::numbers::pi / 8)* std::cos(x)* (std::cos(x) - (1 / 3)))) {}
+pi_8_cosx_square_minus_1_div_3_cosx<T, K>::pi_8_cosx_square_minus_1_div_3_cosx(T x) : series_base<T, K>(x, static_cast<T>(std::numbers::pi / 8 * std::cos(x) * (std::cos(x) - 1 / 3))) {
+}
 
 template <typename T, typename K>
 T pi_8_cosx_square_minus_1_div_3_cosx<T, K>::operator()(K n) const

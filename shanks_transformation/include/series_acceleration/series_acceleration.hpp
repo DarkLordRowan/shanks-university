@@ -1,8 +1,5 @@
 #pragma once
 
-#include <functional>
-#include <iostream>
-
 /**
  * @brief Base class series_acceleration
  * @tparam T Type of the series elements

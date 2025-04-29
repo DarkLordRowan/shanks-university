@@ -42,6 +42,6 @@ T arcsin_x_minus_x_series<T, K>::operator()(K n) const
         throw std::domain_error("negative integer in the input");
     if (std::abs(this->x) > 1)
         throw std::domain_error("Modulus of the value x must be less or equal to 1");
-    return static_cast<T>((this->fact(this->fact(2 * n + 1)) * std::pow(this->x, 2 * n + 3)) / (this->fact(this->fact(2 * n + 2)) * (2 * n + 3)));
+    return static_cast<T>(this->fact(this->fact(2 * n + 1)) * std::pow(this->x, 2 * n + 3) / (this->fact(this->fact(2 * n + 2)) * (2 * n + 3)));
 }
 

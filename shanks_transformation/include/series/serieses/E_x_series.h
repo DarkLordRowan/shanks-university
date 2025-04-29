@@ -30,7 +30,7 @@ public:
     * @param n The number of the term
     * @return nth term of the Taylor series of the sine functions
     */
-    [[nodiscard]] constexpr virtual T operator()(K n) const;
+    [[nodiscard]] constexpr T operator()(K n) const override;
 };
 
 template <typename T, typename K>

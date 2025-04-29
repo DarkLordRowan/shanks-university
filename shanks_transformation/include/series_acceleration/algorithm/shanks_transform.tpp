@@ -56,7 +56,7 @@ T shanks_transform<T, K, series_templ>::operator()(const K n, const int order) c
             a = T_n[i];
             b = T_n[i - 1];
             c = T_n[i + 1];
-            T_n_plus_1[i] = static_cast<T>(std::fma(std::fma(a, c + b - a, -b * c), 1 / (std::fma(2, a, -b - c)), a));
+            T_n_plus_1[i] = static_cast<T>(std::fma(std::fma(a, c + b - a, -b * c), 1 / std::fma(2, a, -b - c), a));
         }
         T_n = T_n_plus_1;
     }
