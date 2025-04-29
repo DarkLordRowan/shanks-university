@@ -1,5 +1,6 @@
 #pragma once
 #define DEF_UNDEFINED_SUM 0
+#include "series_acceleration/series_acceleration.hpp"
 
 
 template<typename T, typename K, typename series_templ>
