@@ -12,7 +12,7 @@
 #include "../src/algorithm/shanks_transformation_algorithm.h"
 #include "../include/algorithm/epsilon_one_algorithm.hpp"
 #include "../include/algorithm/levin_algorithm.hpp"
-#include "../src/algorithm/levin_sidi_S_algorithm.h"
+#include "../include/algorithm/levin_sidi_S_algorithm.hpp"
 #include "../include/algorithm/drummond_D_algorithm.hpp"
 #include "../include/algorithm/epsilon_two_algorithm.hpp"
 #include "../include/algorithm/chang_wynn_algorithm.hpp"
@@ -394,7 +394,7 @@ inline void init_levin(transformation_id_t id, std::unique_ptr<series_base<T, K>
 		}
 		else beta = 1;
 
-		transform.reset(new levi_sidi_algorithm<T, K, decltype(series.get())>(series.get(), ptr, recursive, beta));
+		transform.reset(new levin_sidi_S_algorithm<T, K, decltype(series.get())>(series.get(), ptr, recursive, beta));
 		return;
 	case transformation_id_t::D_algorithm:
 		transform.reset(new drummond_D_algorithm<T, K, decltype(series.get())>(series.get(), ptr, recursive));
@@ -1201,22 +1201,22 @@ inline static void main_testing_function()
 			print_transform(i, order, std::move(transform.get()));
 
 			//levin-sidi S U
-			transform.reset(new levi_sidi_algorithm<T, K, decltype(series.get())>(series.get(), new u_transform<T, K>{}, false, beta_Levin_S_algorithm));
+			transform.reset(new levin_sidi_S_algorithm<T, K, decltype(series.get())>(series.get(), new u_transform<T, K>{}, false, beta_Levin_S_algorithm));
 			print_transform(i, order, std::move(transform.get()));
 			//
 
 			//levin-sidi S T
-			transform.reset(new levi_sidi_algorithm<T, K, decltype(series.get())>(series.get(), new t_transform<T, K>{}, false, beta_Levin_S_algorithm));
+			transform.reset(new levin_sidi_S_algorithm<T, K, decltype(series.get())>(series.get(), new t_transform<T, K>{}, false, beta_Levin_S_algorithm));
 			print_transform(i, order, std::move(transform.get()));
 			//
 
 			//levin-sidi S D
-			transform.reset(new levi_sidi_algorithm<T, K, decltype(series.get())>(series.get(), new d_transform<T, K>{}, false, beta_Levin_S_algorithm));
+			transform.reset(new levin_sidi_S_algorithm<T, K, decltype(series.get())>(series.get(), new d_transform<T, K>{}, false, beta_Levin_S_algorithm));
 			print_transform(i, order, std::move(transform.get()));
 			//
 
 			//levin-sidi S V
-			transform.reset(new levi_sidi_algorithm<T, K, decltype(series.get())>(series.get(), new v_transform<T, K>{}, false, beta_Levin_S_algorithm));
+			transform.reset(new levin_sidi_S_algorithm<T, K, decltype(series.get())>(series.get(), new v_transform<T, K>{}, false, beta_Levin_S_algorithm));
 			print_transform(i, order, std::move(transform.get()));
 
 			//levin-sidi D U
