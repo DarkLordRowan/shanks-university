@@ -5,7 +5,6 @@
 /.vs
 html
 latex
-docs
 !docs/html/.nojekyll
 *.ilk
 */cmake-build-debug/*
