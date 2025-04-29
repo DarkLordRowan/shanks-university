@@ -49,8 +49,8 @@ public:
    * @return The special numerator for transformation
    */
 
-	T operator()(const K& n, const int& order, const series_base<T, K>* series, T gamma = T(1), T rho = T(0)) const {
-		return (series->operator()(n + order) - series->operator()(n));
+	T operator()(const K& n, const int& order, const series_base<T, K>* series,[[maybe_unused]] T gamma = T(1), [[maybe_unused]]T rho = T(0)) const {
+		return series->operator()(n + order) - series->operator()(n);
 	}
 };
 
@@ -74,7 +74,7 @@ public:
    * @return The special numerator for transformation
    */
 
-	T operator()(const K& n, const int& order, const series_base<T, K>* series, T gamma = T(1), T rho = T(0)) const {
+	T operator()([[maybe_unused]] const K& n, const int& order, [[maybe_unused]] const series_base<T, K>* series,[[maybe_unused]] T gamma = T(1), [[maybe_unused]]T rho = T(0)) const {
 		return (order - gamma - 1);
 	}
 };
@@ -100,7 +100,7 @@ public:
    * @return The special numerator for transformation
    */
 
-	T operator()(const K& n, const int& order, const series_base<T, K>* series, T gamma = T(1), T rho = T(0)) const {
+	T operator()([[maybe_unused]] const K& n, const int& order, [[maybe_unused]] const series_base<T, K>* series,[[maybe_unused]]  T gamma = T(1), T rho = T(0)) const {
 		return -gamma + T(order/2)/rho + T(order%2);
 	}
 };

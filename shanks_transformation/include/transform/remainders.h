@@ -75,7 +75,7 @@ public:
    * @return The partial sum after the transformation.
    */
 
-	T operator()(const K& n, const K& j, const series_base<T, K>* series, T scale = T(1)) const override {
+	T operator()(const K& n, const K& j, const series_base<T, K>* series, [[maybe_unused]] T scale = T(1)) const override {
 		T result = T(1) / series->operator()(n + j);
 
 		if (!std::isfinite(result)) 
@@ -105,7 +105,7 @@ public:
    * @return The partial sum after the transformation.
    */
 
-	T operator()(const K& n, const K& j, const series_base<T, K>* series, T scale = T(1)) const override {
+	T operator()(const K& n, const K& j, const series_base<T, K>* series,[[maybe_unused]]  T scale = T(1)) const override {
 		T result =  1 / series->operator()(n + j + 1);
 
 		if (!std::isfinite(result)) 
@@ -134,7 +134,7 @@ public:
    * @return The partial sum after the transformation.
    */
 
-	T operator()(const K& n, const K& j, const series_base<T, K>* series, T scale = T(1)) const override {
+	T operator()(const K& n, const K& j, const series_base<T, K>* series, [[maybe_unused]] T scale = T(1)) const override {
 		T a1 = series->operator()(n + j);
 		T a2 = series->operator()(n + j + 1);
 		T result = (a2 - a1) / (a1 * a2);
@@ -164,7 +164,7 @@ public:
    * @return The partial sum after the transformation.
    */
 
-	T operator()(const K& n, const K& j, const series_base<T, K>* series, T scale = T(1)) const override {
+	T operator()(const K& n, const K& j, const series_base<T, K>* series,[[maybe_unused]]  T scale = T(1)) const override {
 		T a1 = series->operator()(n + j);
 		T a2 = series->operator()(n + j + 1);
 		T result = (a1 - a2) / (a1 * a2);

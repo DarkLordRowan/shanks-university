@@ -165,11 +165,10 @@ void cmp_transformations(const int n, const int order, const series_templ&& seri
 * @tparam series_templ is the type of series whose convergence we accelerate, transform_type is the type of transformation we are using
 * @param n The number of terms for the last remainder
 * @param order The order of the transformation
-* @param series The series class object to be accelerated
 * @param test The type of the first transformation that is being used
 */
 template <typename series_templ, typename transform_type>
-void eval_transform_time(const int n, const int order, const series_templ&& series, const transform_type&& test)
+void eval_transform_time(const int n, const int order, const series_templ&&, const transform_type&& test)
 {
 	const auto start_time = std::chrono::system_clock::now();
 	test->print_info();
@@ -215,7 +214,6 @@ void print_sum(const int n, const series_templ&& series)
 * @tparam transform_type is the type of transformation we are using
 * @param n The number of terms
 * @param order The order of the transformation
-* @param series The series class object to be accelerated
 * @param test The type of transformation that is being used
 */
 template <typename transform_type>

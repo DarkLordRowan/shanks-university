@@ -35,7 +35,7 @@ public:
 };
 
 template <typename T, typename K>
-ten_minus_x_series<T, K>::ten_minus_x_series(T x) : series_base<T, K>(x, 10 - this->x) {}
+ten_minus_x_series<T, K>::ten_minus_x_series(T x) : series_base<T, K>(x, 10 - x) {}
 
 template <typename T, typename K>
 T ten_minus_x_series<T, K>::operator()(K n) const

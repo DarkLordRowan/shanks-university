@@ -16,7 +16,6 @@ T epsilon_three_algorithm<T, K, series_templ>::operator()(const K n, const int o
     K N = n;
     T EMACH = std::numeric_limits<T>::epsilon();
     T EPRN = 50 * EMACH;
-    T UFRN = std::numeric_limits<T>::denorm_min() / EPRN;
     T OFRN = std::numeric_limits<T>::max();
 
     T result = 0, abs_error = 0, resla = 0;

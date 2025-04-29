@@ -1,6 +1,5 @@
 
 /**
-/**
 * @brief Fourier series of function (ln13 - ln7) / 7
 * @authors Trudolyubov N.A.
 * @tparam T The type of the elements in the series, K The type of enumerating integer

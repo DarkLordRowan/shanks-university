@@ -32,7 +32,7 @@ public:
 };
 
 template <typename T, typename K>
-x_series<T, K>::x_series(T x) : series_base<T, K>(x, this->x) {}
+x_series<T, K>::x_series(T x) : series_base<T, K>(x, x) {}
 
 template <typename T, typename K>
 T x_series<T, K>::operator()(K n) const

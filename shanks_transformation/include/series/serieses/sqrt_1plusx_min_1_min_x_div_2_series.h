@@ -1,6 +1,5 @@
 
 /**
-/**
 * @brief Maclaurin series of function sqrt(1 + x) - 1 - x/2
 * @authors Trudolyubov N.A.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
