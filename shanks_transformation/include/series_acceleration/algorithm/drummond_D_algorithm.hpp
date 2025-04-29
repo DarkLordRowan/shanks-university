@@ -3,12 +3,12 @@
 #include "series_acceleration/series_acceleration.hpp"
 
 template<typename T, typename K, typename series_templ>
-class drummond_D_algorithm : public series_acceleration<T, K, series_templ> {
+class drummond_D_algorithm final : public series_acceleration<T, K, series_templ> {
 protected:
     const transform_base<T, K> *remainder_func;
     bool recursive;
 
-    virtual T calculate(const K &n, const int &order) const;
+    T calculate(const K &n, const int &order) const;
 
     T calculate_rec(const K &n, const int &order) const;
 

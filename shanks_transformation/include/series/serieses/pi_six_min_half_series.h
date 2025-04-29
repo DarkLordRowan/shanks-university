@@ -6,10 +6,7 @@
 */
 #pragma once
 
-#include <cmath>
-
 #include "../series_base.h"
-#include "../recurrent_series_base.h"
 
 template <typename T, typename K>
 class pi_six_min_half_series final : public series_base<T, K>

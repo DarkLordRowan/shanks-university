@@ -19,16 +19,16 @@ T chang_wynn_algorithm<T, K, series_templ>::operator()(const K n, const int) con
     std::vector<T> f(n, 0); //vector for containing F results from 0 to n-1
 
     for (int i = 0; i < max; ++i) //Counting first row of Epsilon Table
-        e[0][i] = static_cast<T>(1.0 / (this->series->operator()(i + 1)));
+        e[0][i] = static_cast<T>(1.0 / this->series->operator()(i + 1));
 
     for (int i = 0; i < max; ++i) //Counting F function
     {
-        coef = (this->series->S_n(i + 3) + this->series->S_n(i + 1) - 2 * this->series->S_n(i + 2));
-        coef2 = (this->series->S_n(i + 2) + this->series->S_n(i) - 2 * this->series->S_n(i + 1));
+        coef = this->series->S_n(i + 3) + this->series->S_n(i + 1) - 2 * this->series->S_n(i + 2);
+        coef2 = this->series->S_n(i + 2) + this->series->S_n(i) - 2 * this->series->S_n(i + 1);
 
         up = this->series->operator()(i + 1) * this->series->operator()(i + 2) * coef;
         down = this->series->operator()(i + 3) * coef2;
-        down -= (this->series->operator()(i + 1)) * coef;
+        down -= this->series->operator()(i + 1) * coef;
         down = static_cast<T>(1.0 / down);
         e[1][i] = static_cast<T>(this->series->S_n(i + 1) - up * down);
 

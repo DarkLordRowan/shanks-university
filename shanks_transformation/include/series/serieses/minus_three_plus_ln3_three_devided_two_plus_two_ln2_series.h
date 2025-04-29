@@ -31,7 +31,7 @@ public:
 };
 
 template <typename T, typename K>
-minus_three_plus_ln3_three_devided_two_plus_two_ln2_series<T, K>::minus_three_plus_ln3_three_devided_two_plus_two_ln2_series() : series_base<T, K>(0, static_cast<T>(-3 + (3 / 2) * std::log(3) + 2 * std::log(2))) {}
+minus_three_plus_ln3_three_devided_two_plus_two_ln2_series<T, K>::minus_three_plus_ln3_three_devided_two_plus_two_ln2_series() : series_base<T, K>(0, static_cast<T>(-3 + 3 / 2 * std::log(3) + 2 * std::log(2))) {}
 
 template <typename T, typename K>
 T minus_three_plus_ln3_three_devided_two_plus_two_ln2_series<T, K>::operator()(K n) const

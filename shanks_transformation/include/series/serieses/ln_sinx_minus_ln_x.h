@@ -42,5 +42,5 @@ T ln_sinx_minus_ln_x<T, K>::operator()(K n) const
     if (n < 0)
         throw std::domain_error("negative integer in the input");
 
-    return static_cast<T>(std::log(1 - (this->x) * (this->x) / ((n + 1) * (n + 1) * std::numbers::pi * std::numbers::pi)));
+    return static_cast<T>(std::log(1 - this->x * this->x / ((n + 1) * (n + 1) * std::numbers::pi * std::numbers::pi)));
 }

@@ -20,6 +20,7 @@ public:
     * @brief Parameterized constructor to initialize the series with function argument and sum
     * @authors Trudolyubov N.A.
     * @param x The argument for function series
+    * @param s
     */
     Incomplete_Gamma_func_series(T x, T s);
 

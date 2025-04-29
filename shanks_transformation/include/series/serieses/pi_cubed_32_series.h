@@ -39,5 +39,5 @@ T pi_cubed_32_series<T, K>::operator()(K n) const
     if (n < 0)
         throw std::domain_error("negative integer in the input");
     T n_temp = static_cast<T>(n + 1);
-    return this->minus_one_raised_to_power_n(n) / static_cast<T>((std::pow(2 * n_temp - 1, 3)));
+    return this->minus_one_raised_to_power_n(n) / static_cast<T>(std::pow(2 * n_temp - 1, 3));
 }

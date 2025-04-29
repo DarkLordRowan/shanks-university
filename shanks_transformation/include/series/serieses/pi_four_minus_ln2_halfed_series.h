@@ -34,7 +34,7 @@ public:
 };
 
 template <typename T, typename K>
-pi_four_minus_ln2_halfed_series<T, K>::pi_four_minus_ln2_halfed_series(T x) : series_base<T, K>(x, static_cast<T>(x* static_cast<T>((std::numbers::pi / 4 - std::log(2) / 2)))) {}
+pi_four_minus_ln2_halfed_series<T, K>::pi_four_minus_ln2_halfed_series(T x) : series_base<T, K>(x, static_cast<T>(x* static_cast<T>(std::numbers::pi / 4 - std::log(2) / 2))) {}
 
 template <typename T, typename K>
 T pi_four_minus_ln2_halfed_series<T, K>::operator()(K n) const

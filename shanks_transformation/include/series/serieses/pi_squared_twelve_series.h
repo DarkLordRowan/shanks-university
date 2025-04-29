@@ -7,10 +7,7 @@
 
 #pragma once
 
-#include <cmath>
-
 #include "../series_base.h"
-#include "../recurrent_series_base.h"
 
 template <typename T, typename K>
 class pi_squared_twelve_series final : public series_base<T, K>
@@ -32,12 +29,12 @@ public:
 };
 
 template <typename T, typename K>
-pi_squared_twelve_series<T, K>::pi_squared_twelve_series() : series_base<T, K>(0, static_cast<T>((std::numbers::pi* std::numbers::pi) / 12)) {}
+pi_squared_twelve_series<T, K>::pi_squared_twelve_series() : series_base<T, K>(0, static_cast<T>(std::numbers::pi* std::numbers::pi / 12)) {}
 
 template <typename T, typename K>
 T pi_squared_twelve_series<T, K>::operator()(K n) const
 {
     if (n < 0)
         throw std::domain_error("negative integer in the input");
-    return (this->minus_one_raised_to_power_n(n) / static_cast<T>(((n + 1) * (n + 1))));
+    return this->minus_one_raised_to_power_n(n) / static_cast<T>((n + 1) * (n + 1));
 }

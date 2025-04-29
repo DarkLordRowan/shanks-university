@@ -23,7 +23,7 @@ public:
     * @authors Trudolyubov N.A.
     * @param x The argument for function series
     */
-    x_min_sqrt_x_series(T x);
+    explicit x_min_sqrt_x_series(T x);
 
     /**
     * @brief Computes the nth term of the Taylor series of the sine function

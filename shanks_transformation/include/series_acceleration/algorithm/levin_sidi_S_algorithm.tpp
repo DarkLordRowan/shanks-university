@@ -40,11 +40,11 @@ T levin_sidi_S_algorithm<T, K, series_templ>::calculate(const K &n, const int &o
         for (K m = 0; m < n - 1; ++m) {
             T a3 = a1 + m;
             T a4 = a2 + m;
-            up *= (a3 + j);
+            up *= a3 + j;
             down *= a4;
         }
 
-        rest *= (up / down);
+        rest *= up / down;
 
         w_n = remainder_func->operator()(n, j, this->series, static_cast<T>(beta + n));
         T a5 = rest * w_n;

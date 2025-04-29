@@ -1,5 +1,7 @@
 #pragma once
 
+#include <vector>
+
 template<typename T, typename K, typename series_templ>
 ford_sidi_three_algorithm<T, K, series_templ>::ford_sidi_three_algorithm(const series_templ &series)
     : series_acceleration<T, K,
@@ -13,7 +15,7 @@ template<typename T, typename K, typename series_templ>
 T ford_sidi_three_algorithm<T, K, series_templ>::operator()(const K n, const int order) const {
     G[1] = this->series->operator()(n - 1);
 
-    T Te = 1.0 / (n);
+    T Te = 1.0 / n;
 
     for (int k = 1; k <= n + 500; ++k) {
         if (k == 1) {

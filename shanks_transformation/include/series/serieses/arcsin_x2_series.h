@@ -42,6 +42,6 @@ T arcsin_x2_series<T, K>::operator()(K n) const
     if (n < 0)
         throw std::domain_error("The term index must be a non-negative integer");
 
-    return static_cast<T>((this->fact(2 * n) * std::pow(this->x, 4 * n + 2)) / (std::pow(4, n) * std::pow(this->fact(n), 2) * (2 * n + 1)));
+    return static_cast<T>(this->fact(2 * n) * std::pow(this->x, 4 * n + 2) / (std::pow(4, n) * std::pow(this->fact(n), 2) * (2 * n + 1)));
 }
 

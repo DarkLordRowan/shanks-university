@@ -23,14 +23,14 @@ T W_lubkin_algorithm<T, K, series_templ>::calculate(K n, const int order, T S_n,
     T W3 = calculate(n, order_1, S_n, 3);
 
     //optimization calculations
-    T Wo0 = (W1 - W0);
-    T Wo1 = (W2 - W1);
-    T Wo2 = (W3 - W2);
+    T Wo0 = W1 - W0;
+    T Wo1 = W2 - W1;
+    T Wo2 = W3 - W2;
     T Woo1 = Wo0 * (Wo2 - Wo1);
     T Woo2 = Wo2 * (Wo1 - Wo0);
 
     //T result = W1 - ((W2 - W1) * (W1 - W0) * (W3 - 2 * W2 + W1)) / ((W3 - W2) * (W2 - 2 * W1 + W0) - (W1 - W0) * (W3 - 2 * W2 + W1)); //straight
-    T result = W1 - (Wo1 * Woo1) / (Woo2 - Woo1); // optimized
+    T result = W1 - Wo1 * Woo1 / (Woo2 - Woo1); // optimized
 
     if (!std::isfinite(result))
         throw std::overflow_error("division by zero");

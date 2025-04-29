@@ -57,7 +57,7 @@ T erf_series<T, K>::acsess_row(K n)
     this->series_vector.reserve(n);
 
     for (auto i = old_size; i <= static_cast<typename std::vector<T>::size_type>(n); ++i) {
-        this->series_vector.push_back(this->series_vector[i - 1] * static_cast<T>((-1)) * static_cast<T>(this->x * this->x / i * (2 * i - 1) / (2 * i + 1)));
+        this->series_vector.push_back(this->series_vector[i - 1] * static_cast<T>(-1) * static_cast<T>(this->x * this->x / i * (2 * i - 1) / (2 * i + 1)));
     }
 
     return static_cast<T>(this->series_vector[n]);
@@ -69,6 +69,6 @@ T erf_series<T, K>::operator()(K n) const
 {
     if (n < 0)
         throw std::domain_error("negative integer in the input");
-    const T a = const_cast<erf_series<T, K>*>(this)->acsess_row(n);
+    const T a = const_cast<erf_series*>(this)->acsess_row(n);
     return a;
 }

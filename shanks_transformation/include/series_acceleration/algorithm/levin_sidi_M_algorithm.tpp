@@ -42,13 +42,13 @@ T levin_sidi_M_algorithm<T, K, series_templ>::calculate(const K &n, const int &o
     T down_coef = static_cast<T>(gamma + order + 2), up_coef = down_coef - n;
 
     for (K m = 0; m < n - 1; ++m) {
-        up *= (up_coef + m);
-        down *= (down_coef + m);
+        up *= up_coef + m;
+        down *= down_coef + m;
     }
 
     up /= down;
     down_coef = static_cast<T>(gamma + order + 1);
-    up_coef = (down_coef - n + 1);
+    up_coef = down_coef - n + 1;
 
     for (K j = 0; j <= n; ++j) {
         rest = this->series->minus_one_raised_to_power_n(j) * binomial_coef;
