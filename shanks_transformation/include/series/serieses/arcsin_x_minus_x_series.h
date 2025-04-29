@@ -4,7 +4,6 @@
 #include <cmath>
 
 #include "../series_base.h"
-#include "../recurrent_series_base.h"
 
 /**
 * @brief Taylor series of function arcsin(x) - x (The problematic row, possibly due to the double factorial in the denominator, needs to be fixed.)

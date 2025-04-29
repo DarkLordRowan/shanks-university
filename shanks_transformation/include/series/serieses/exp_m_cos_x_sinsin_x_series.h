@@ -11,7 +11,6 @@
 #include <cmath>
 
 #include "../series_base.h"
-#include "../recurrent_series_base.h"
 
 template <typename T, typename K>
 class exp_m_cos_x_sinsin_x_series final : public series_base<T, K>
@@ -24,7 +23,7 @@ public:
     * @authors Pashkov B.B.
     * @param x The argument for function series
     */
-    exp_m_cos_x_sinsin_x_series(T x);
+    explicit exp_m_cos_x_sinsin_x_series(T x);
 
     /**
     * @brief Computes the nth term of the exp(-cos(x)) * sin(sin(x)) series

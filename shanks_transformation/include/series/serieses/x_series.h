@@ -3,7 +3,6 @@
 #include <cmath>
 
 #include "../series_base.h"
-#include "../recurrent_series_base.h"
 
 /**
 * @brief Fourier series of function x, -pi <= x <= pi

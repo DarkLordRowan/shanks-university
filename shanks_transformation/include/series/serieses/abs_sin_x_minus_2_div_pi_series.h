@@ -11,7 +11,6 @@
 #include <cmath>
 
 #include "../series_base.h"
-#include "../recurrent_series_base.h"
 
 template <typename T, typename K>
 class abs_sin_x_minus_2_div_pi_series final : public series_base<T, K>

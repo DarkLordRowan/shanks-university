@@ -9,7 +9,6 @@
 #include <cmath>
 
 #include "../series_base.h"
-#include "../recurrent_series_base.h"
 
 template<typename T, typename K>
 class two_arcsin_square_x_halfed_series final : public series_base<T, K> {

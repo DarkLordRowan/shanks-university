@@ -10,10 +10,9 @@
 #include <cmath>
 
 #include "../series_base.h"
-#include "../recurrent_series_base.h"
 
 template <typename T, typename K>
-class E_x_series : public series_base<T, K>
+class E_x_series final : public series_base<T, K>
 {
 public:
     E_x_series() = delete;
@@ -23,7 +22,7 @@ public:
     * @authors Trudolyubov N.A.
     * @param x The argument for function series
     */
-    E_x_series(T x);
+    explicit E_x_series(T x);
 
     /**
     * @brief Computes the nth term of the Taylor series of the sine function

@@ -11,7 +11,6 @@
 #include <cmath>
 
 #include "../series_base.h"
-#include "../recurrent_series_base.h"
 
 template <typename T, typename K>
 class arctan_x3_series final : public series_base<T, K>
@@ -44,5 +43,5 @@ T arctan_x3_series<T, K>::operator()(K n) const
     if (n < 0)
         throw std::domain_error("The term index must be a non-negative integer");
 
-    return static_cast<T>((std::pow(-1, n) * std::pow(this->x, 6 * n + 3)) / (2 * n + 2));
+    return static_cast<T>(std::pow(-1, n) * std::pow(this->x, 6 * n + 3) / (2 * n + 2));
 }

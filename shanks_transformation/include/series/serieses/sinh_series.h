@@ -24,7 +24,7 @@ public:
     * @authors Bolshakov M.P.
     * @param x The argument for function series
     */
-    sinh_series(T x);
+    explicit sinh_series(T x);
 
     /**
     * @brief Computes the nth term of the Maclaurin series of the sinh function

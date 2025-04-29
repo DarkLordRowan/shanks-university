@@ -11,7 +11,6 @@
 #include <cmath>
 
 #include "../series_base.h"
-#include "../recurrent_series_base.h"
 
 template <typename T, typename K>
 class cos3xmin1_div_xsqare_series final : public series_base<T, K>

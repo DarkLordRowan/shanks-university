@@ -10,7 +10,6 @@
 #include <cmath>
 
 #include "../series_base.h"
-#include "../recurrent_series_base.h"
 
 template <typename T, typename K>
 class xsquareplus3_div_xsquareplus2multix_minus_1_series final : public series_base<T, K>

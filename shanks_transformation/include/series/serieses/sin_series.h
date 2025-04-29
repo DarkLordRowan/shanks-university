@@ -13,7 +13,7 @@
 #include "../recurrent_series_base.h"
 
 template <typename T, typename K>
-class sin_series : public series_base<T, K>, public recurrent_series_base<T, K>
+class sin_series final : public series_base<T, K>, public recurrent_series_base<T, K>
 {
 public:
     sin_series() = delete;
