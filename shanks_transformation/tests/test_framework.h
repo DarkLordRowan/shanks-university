@@ -9,7 +9,8 @@
 
 #include "../src/wynn_numerators.h"
 #include "../src/remainders.h"
-#include "../src/algorithm/shanks_transformation_algorithm.h"
+#include "../include/algorithm/shanks_transform.hpp"
+#include "../include/algorithm/shanks_transform_alternating.hpp"
 #include "../include/algorithm/epsilon_one_algorithm.hpp"
 #include "../include/algorithm/levin_algorithm.hpp"
 #include "../include/algorithm/levin_sidi_S_algorithm.hpp"
