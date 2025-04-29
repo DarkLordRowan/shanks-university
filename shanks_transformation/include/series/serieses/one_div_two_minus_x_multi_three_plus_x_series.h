@@ -35,7 +35,7 @@ public:
 };
 
 template <typename T, typename K>
-one_div_two_minus_x_multi_three_plus_x_series<T, K>::one_div_two_minus_x_multi_three_plus_x_series(T x) : series_base<T, K>(x, 1 / ((2 - this->x) * (3 + this->x))) {}
+one_div_two_minus_x_multi_three_plus_x_series<T, K>::one_div_two_minus_x_multi_three_plus_x_series(T x) : series_base<T, K>(x, 1 / ((2 - x) * (3 + x))) {}
 
 template <typename T, typename K>
 T one_div_two_minus_x_multi_three_plus_x_series<T, K>::operator()(K n) const

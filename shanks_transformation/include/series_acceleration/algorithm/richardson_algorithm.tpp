@@ -7,7 +7,7 @@ richardson_algorithm<T, K, series_templ>::richardson_algorithm(const series_temp
 }
 
 template<typename T, typename K, typename series_templ>
-T richardson_algorithm<T, K, series_templ>::operator()(const K n, const int order) const {
+T richardson_algorithm<T, K, series_templ>::operator()(const K n, const int) const {
     if (n < 0)
         throw std::domain_error("negative integer in the input");
 

@@ -3,9 +3,9 @@
 template<typename T, typename K, typename series_templ>
 levin_sidi_S_algorithm<T, K, series_templ>::levin_sidi_S_algorithm(
     const series_templ &series, const transform_base<T, K> *func,
-    bool recursive, const T beta_
+    const bool recursive, const T beta_
 ) : series_acceleration<T, K, series_templ>(series),
-    remainder_func(func), recursive(recursive), beta(beta_) {}
+    beta(beta_), remainder_func(func), recursive(recursive) {}
 
 template<typename T, typename K, typename series_templ>
 levin_sidi_S_algorithm<T, K, series_templ>::~levin_sidi_S_algorithm() {

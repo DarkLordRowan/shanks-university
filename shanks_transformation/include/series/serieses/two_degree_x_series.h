@@ -1,5 +1,4 @@
 /**
-/**
 * @brief Maclaurin series of function 2^x
 * @authors Trudolyubov N.A.
 * @tparam T The type of the elements in the series, K The type of enumerating integer

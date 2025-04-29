@@ -6,7 +6,7 @@ ford_sidi_two_algorithm<T, K, series_templ>::ford_sidi_two_algorithm(const serie
 }
 
 template<typename T, typename K, typename series_templ>
-T ford_sidi_two_algorithm<T, K, series_templ>::operator()(const K n, const int order) const {
+T ford_sidi_two_algorithm<T, K, series_templ>::operator()(const K n, const int) const {
     if (n < 0)
         throw std::domain_error("negative integer in the input");
 

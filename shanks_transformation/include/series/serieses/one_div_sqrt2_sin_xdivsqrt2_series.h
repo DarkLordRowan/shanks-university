@@ -1,6 +1,5 @@
 
 /**
-/**
 * @brief Taylor series of function 1/sqrt(2) * sin(x/sqrt(2))
 * @authors Trudolyubov N.A.
 * @tparam T The type of the elements in the series, K The type of enumerating integer

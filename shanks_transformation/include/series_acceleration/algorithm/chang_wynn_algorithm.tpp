@@ -6,7 +6,7 @@ chang_wynn_algorithm<T, K, series_templ>::chang_wynn_algorithm(const series_temp
 }
 
 template<typename T, typename K, typename series_templ>
-T chang_wynn_algorithm<T, K, series_templ>::operator()(const K n, const int order) const {
+T chang_wynn_algorithm<T, K, series_templ>::operator()(const K n, const int) const {
     if (n <= 0)
         throw std::domain_error("negative or zero integer in the input");
 
