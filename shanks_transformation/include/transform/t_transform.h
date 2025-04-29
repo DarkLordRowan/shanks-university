@@ -1,8 +1,9 @@
 #pragma once
+#include "series/series.h"
+
 class t_transform {
 public:
-    t_transform() {
-    }
+    t_transform() = default;
 
     template<typename T, typename K>
     T operator()(const int &n, const int &j, const series_base<T, K> *series) const {

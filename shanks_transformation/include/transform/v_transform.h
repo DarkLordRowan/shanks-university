@@ -1,4 +1,7 @@
 #pragma once
+
+#include "series/series.h"
+
 class v_transform {
 public:
     v_transform() {
