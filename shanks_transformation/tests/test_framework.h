@@ -17,7 +17,7 @@
 #include "../include/algorithm/epsilon_two_algorithm.hpp"
 #include "../include/algorithm/chang_wynn_algorithm.hpp"
 #include "test_functions.h"
-#include "../src/algorithm/levin_sidi_M_algorithm.h"
+#include "../include/algorithm/levin_sidi_M_algorithm.hpp"
 #include "../include/algorithm/weniger_algorithm.hpp"
 #include "../src/algorithm/rho_wynn_algorithm.h"
 #include "../include/algorithm/brezinski_theta_algorithm.hpp"
@@ -414,7 +414,7 @@ inline void init_levin(transformation_id_t id, std::unique_ptr<series_base<T, K>
 		}
 		else gamma = 10;
 
-		transform.reset(new M_levin_sidi_algorithm<T, K, decltype(series.get())>(series.get(), ptr, gamma));
+		transform.reset(new levin_sidi_M_algorithm<T, K, decltype(series.get())>(series.get(), ptr, gamma));
 		return;
 	default:
 		throw std::domain_error("wrong id was given");
@@ -1240,22 +1240,22 @@ inline static void main_testing_function()
 			//
 
 			//levin-sidi M U
-			transform.reset(new M_levin_sidi_algorithm<T, K, decltype(series.get())>(series.get(), new u_transform<T, K>{}, gamma_Levin_M_algorithm));
+			transform.reset(new levin_sidi_M_algorithm<T, K, decltype(series.get())>(series.get(), new u_transform<T, K>{}, gamma_Levin_M_algorithm));
 			print_transform(i, order, std::move(transform.get()));
 			//
 
 			//levin-sidi M T
-			transform.reset(new M_levin_sidi_algorithm<T, K, decltype(series.get())>(series.get(), new t_transform<T, K>{}, gamma_Levin_M_algorithm));
+			transform.reset(new levin_sidi_M_algorithm<T, K, decltype(series.get())>(series.get(), new t_transform<T, K>{}, gamma_Levin_M_algorithm));
 			print_transform(i, order, std::move(transform.get()));
 			//
 
 			//levin-sidi M D
-			transform.reset(new M_levin_sidi_algorithm<T, K, decltype(series.get())>(series.get(), new d_transform<T, K>{}, gamma_Levin_M_algorithm));
+			transform.reset(new levin_sidi_M_algorithm<T, K, decltype(series.get())>(series.get(), new d_transform<T, K>{}, gamma_Levin_M_algorithm));
 			print_transform(i, order, std::move(transform.get()));
 			//
 
 			//levin-sidi M V
-			transform.reset(new M_levin_sidi_algorithm<T, K, decltype(series.get())>(series.get(), new v_transform_2<T, K>{}, gamma_Levin_M_algorithm));
+			transform.reset(new levin_sidi_M_algorithm<T, K, decltype(series.get())>(series.get(), new v_transform_2<T, K>{}, gamma_Levin_M_algorithm));
 			print_transform(i, order, std::move(transform.get()));
 			//
 
