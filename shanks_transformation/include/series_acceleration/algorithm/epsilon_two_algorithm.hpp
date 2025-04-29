@@ -1,5 +1,7 @@
 #pragma once
 
+#include "series_acceleration/series_acceleration.hpp"
+
 template<typename T, typename K, typename series_templ>
 class epsilon_two_algorithm final: public series_acceleration<T, K, series_templ> {
 public:

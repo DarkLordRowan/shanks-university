@@ -28,7 +28,7 @@
 #include "../include/series_acceleration/algorithm/richardson_algorithm.hpp"
 #include "../include/series_acceleration/algorithm/ford_sidi_one_algorithm.hpp"
 #include "../include/series_acceleration/algorithm/ford_sidi_two_algorithm.hpp"
-#include "series_acceleration/series_acceleration.h"
+#include "series_acceleration/series_acceleration.hpp"
 
 /**
   * @brief Enum of transformation IDs
