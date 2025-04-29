@@ -15,6 +15,7 @@
 template<typename T, typename K>
 class numerator_base {
 public:
+	virtual ~numerator_base() = default;
 
 	/**
      * @brief Virtual operator() function for computing numerator
@@ -100,6 +101,6 @@ public:
    */
 
 	T operator()(const K& n, const int& order, const series_base<T, K>* series, T gamma = T(1), T rho = T(0)) const {
-		return (-gamma + T(order/2)/rho + T(order%2));
+		return -gamma + T(order/2)/rho + T(order%2);
 	}
 };
