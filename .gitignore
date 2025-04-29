@@ -4,6 +4,7 @@
 *.log
 *.exe
 /.vs*
+*.ilk
 /shanks_transformation/x64/Debug
 /x64/Debug
 html
@@ -11,6 +12,7 @@ latex
 docs
 !docs/html/.nojekyll
 x64/Debug/shanks_transformation.exe
+shanks_transformation/build/*
 shanks_transformation/x64/Debug/vc143.pdb
 shanks_transformation/x64/Debug/vc143.idb
 shanks_transformation/x64/Debug/test_framework.h.obj
@@ -36,11 +38,6 @@ shanks_transformation/x64/Debug/shanks_t.94bab632.tlog/link.command.1.tlog
 shanks_transformation/x64/Debug/main.obj
 shanks_transformation/x64/Debug/shanks_transformation.ilk
 x64/Debug/shanks_transformation.exe
-*.tlog
-*.ilk
-*.log
-*.exe
-*.tlog
 /shanks_transformation/output.txt
 /shanks_transformation/plot.png
 /venv/*
