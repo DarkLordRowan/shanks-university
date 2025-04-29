@@ -102,7 +102,7 @@
  *  100 - x_div_1minx
  *  101 - x_div_1minx2
  *  102 - gamma_series
- * @brief This file contains series base class, requrrent_series_base class and derived classes of various serieses (e.g. exp(x), ch(x))
+ * @brief This file contains series base class, recurrent_series_base class and derived classes of various serieses (e.g. exp(x), ch(x))
  */
 
 #pragma once
@@ -123,13 +123,14 @@ template <typename T, typename K>
 class series_base
 {
 public:
+	virtual ~series_base() = default;
 
 	/**
 	* @brief Parameterized constructor to initialize the series with function argument
 	* @authors Bolshakov M.P.
 	* @param x The argument for function series
 	*/
-	series_base(T x = 0);
+	explicit series_base(T x = 0);
 
 	/**
 	* @brief Computes partial sum of the first n terms
@@ -151,27 +152,27 @@ public:
 	* @brief x getter
 	* @authors Bolshakov M.P.
 	*/
-	[[nodiscard]] constexpr const T get_x() const;
+	[[nodiscard]] constexpr T get_x() const;
 
 	/**
 	* @brief sum getter
 	* @authors Bolshakov M.P.
 	*/
-	[[nodiscard]] constexpr const T get_sum() const;
+	[[nodiscard]] constexpr T get_sum() const;
 
 	/**
 	* @brief factorial n!
 	* @authors Bolshakov M.P.
 	* @return n!
 	*/
-	[[nodiscard]] constexpr static const K fact(K n);
+	[[nodiscard]] constexpr static K fact(K n);
 
 	/**
 	* @brief binomial coefficient C^n_k
 	* @authors Bolshakov M.P.
 	* @return combinations(n,k)
 	*/
-	[[nodiscard]] constexpr static const T binomial_coefficient(const T n, const K k);
+	[[nodiscard]] constexpr static T binomial_coefficient(T n, K k);
 
 
 	/**
@@ -179,7 +180,7 @@ public:
 	* @authors Bolshakov M.P.
 	* @return (-1)^n
 	*/
-	[[nodiscard]] constexpr static const T minus_one_raised_to_power_n(K n);
+	[[nodiscard]] constexpr static T minus_one_raised_to_power_n(K n);
 
 
 	/**
@@ -187,7 +188,7 @@ public:
 	* @authors Trudolyubov N.A.
 	* @return phi(n)
 	*/
-	[[nodiscard]] constexpr static const T phi(K n);
+	[[nodiscard]] constexpr static T phi(K n);
 
 protected:
 	/**
@@ -239,20 +240,18 @@ constexpr T series_base<T, K>::S_n(K n) const
 }
 
 template <typename T, typename K>
-constexpr const T series_base<T, K>::get_x() const
+constexpr T series_base<T, K>::get_x() const
 {
 	return x;
 }
 
 template <typename T, typename K>
-constexpr const T series_base<T, K>::get_sum() const
-{
+constexpr T series_base<T, K>::get_sum() const {
 	return sum;
 }
 
 template <typename T, typename K>
-constexpr const K series_base<T, K>::fact(K n)
-{
+constexpr K series_base<T, K>::fact(K n) {
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
 	K f = 1;
@@ -262,7 +261,7 @@ constexpr const K series_base<T, K>::fact(K n)
 }
 
 template <typename T, typename K>
-constexpr const T series_base<T, K>::binomial_coefficient(const T n, const K k)
+constexpr T series_base<T, K>::binomial_coefficient(const T n, const K k)
 {
 	T b_c = 1;
 	for (K i = 0; i < k; ++i)
@@ -271,14 +270,14 @@ constexpr const T series_base<T, K>::binomial_coefficient(const T n, const K k)
 }
 
 template <typename T, typename K>
-constexpr const T series_base<T, K>::minus_one_raised_to_power_n(K n)
+constexpr T series_base<T, K>::minus_one_raised_to_power_n(K n)
 {
 	return static_cast<T>(n % 2 ? -1.0 : 1.0);
 }
 
 
 template <typename T, typename K>
-constexpr const T series_base<T, K>::phi(K n)
+constexpr T series_base<T, K>::phi(K n)
 {
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
@@ -298,27 +297,29 @@ constexpr const T series_base<T, K>::phi(K n)
 
 
 /**
-* @brief Abstract class for requrrent series
+* @brief Abstract class for recurrent series
 * @authors Kreynin R.G.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
 template <typename T, typename K>
-class requrrent_series_base
+class recurrent_series_base
 {
 public:
+	virtual ~recurrent_series_base() = default;
+
 	/**
-	* @brief Parameterized constructor to initialize the requrrent series with function argument
+	* @brief Parameterized constructor to initialize the recurrent series with function argument
 	* @authors Kreynin R.G.
 	* @param x The argument for function series
 	*/
-	requrrent_series_base(T x);
+	explicit recurrent_series_base(T x);
 
 	/**
-	* @brief Parameterized constructor to initialize the requrrent series with vector, containing elements of series
+	* @brief Parameterized constructor to initialize the recurrent series with vector, containing elements of series
 	* @authors Kreynin R.G.
 	* @param row The first elements of the series
 	*/
-	requrrent_series_base(std::vector<T> row);
+	explicit recurrent_series_base(std::vector<T> row);
 
 	/**
 	* @brief Computes nth term of the series
@@ -337,15 +338,15 @@ public:
 };
 
 template <typename T, typename K>
-requrrent_series_base<T, K>::requrrent_series_base(T x)
+recurrent_series_base<T, K>::recurrent_series_base(T x)
 {
 	this->series_vector.push_back(x);
 };
 
 template <typename T, typename K>
-requrrent_series_base<T, K>::requrrent_series_base(std::vector<T> row)
+recurrent_series_base<T, K>::recurrent_series_base(std::vector<T> row)
 {
-	if (row.size() < 1)
+	if (row.empty())
 		throw std::domain_error("empty row imput");
 
 	this->series_vector = row;
@@ -353,7 +354,7 @@ requrrent_series_base<T, K>::requrrent_series_base(std::vector<T> row)
 
 
 template <typename T, typename K>
-class exp_series : public series_base<T, K>, public requrrent_series_base<T, K>
+class exp_series final : public series_base<T, K>, public recurrent_series_base<T, K>
 {
 public:
 	exp_series() = delete;
@@ -363,7 +364,7 @@ public:
 	* @authors Bolshakov M.P.
 	* @param x The argument for function series
 	*/
-	exp_series(T x);
+	explicit exp_series(T x);
 
 	/**
 	* @brief Computes the nth term of the Maclaurin series of the exponent
@@ -381,11 +382,11 @@ private:
 	* @param n The number of the term
 	* @return nth term of the series
 	*/
-	T acsess_row(K n);
+	T acsess_row(K n) override;
 };
 
 template <typename T, typename K>
-exp_series<T, K>::exp_series(T x) : series_base<T, K>(x, std::exp(x)), requrrent_series_base<T, K>(T(1)) {  }
+exp_series<T, K>::exp_series(T x) : series_base<T, K>(x, std::exp(x)), recurrent_series_base<T, K>(T(1)) {  }
 
 template <typename T, typename K>
 T exp_series<T, K>::acsess_row(K n)
@@ -419,7 +420,7 @@ constexpr T exp_series<T, K>::operator()(K n) const
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
 template <typename T, typename K>
-class cos_series : public series_base<T, K>, public requrrent_series_base<T, K>
+class cos_series final : public series_base<T, K>, public recurrent_series_base<T, K>
 {
 public:
 	cos_series() = delete;
@@ -429,7 +430,7 @@ public:
 	* @authors Bolshakov M.P.
 	* @param x The argument for function series
 	*/
-	cos_series(T x);
+	explicit cos_series(T x);
 
 	/**
 	* @brief Computes the nth term of the Maclaurin series of the cosine function
@@ -437,7 +438,7 @@ public:
 	* @param n The number of the term
 	* @return nth term of the Maclaurin series of the cosine functions
 	*/
-	[[nodiscard]] constexpr virtual T operator()(K n) const;
+	[[nodiscard]] constexpr T operator()(K n) const override;
 
 private:
 	/**
@@ -450,7 +451,7 @@ private:
 };
 
 template <typename T, typename K>
-cos_series<T, K>::cos_series(T x) : series_base<T, K>(x, std::cos(x)), requrrent_series_base<T, K>(std::vector<T>{1, T(((-1)* x* x) / 2)}) {}
+cos_series<T, K>::cos_series(T x) : series_base<T, K>(x, std::cos(x)), recurrent_series_base<T, K>(std::vector<T>{1, T(((-1)* x* x) / 2)}) {}
 
 template <typename T, typename K>
 T cos_series<T, K>::acsess_row(K n)
@@ -474,7 +475,7 @@ constexpr T cos_series<T, K>::operator()(K n) const
 {
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
-	const T a = const_cast<cos_series<T, K>*>(this)->acsess_row(n);
+	const T a = const_cast<cos_series*>(this)->acsess_row(n);
 	return a;
 }
 
@@ -484,7 +485,7 @@ constexpr T cos_series<T, K>::operator()(K n) const
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
 template <typename T, typename K>
-class sin_series : public series_base<T, K>, public requrrent_series_base<T, K>
+class sin_series : public series_base<T, K>, public recurrent_series_base<T, K>
 {
 public:
 	sin_series() = delete;
@@ -494,7 +495,7 @@ public:
 	* @authors Bolshakov M.P.
 	* @param x The argument for function series
 	*/
-	sin_series(T x);
+	explicit sin_series(T x);
 
 	/**
 	* @brief Computes the nth term of the Maclaurin series of the sine function
@@ -502,7 +503,7 @@ public:
 	* @param n The number of the term
 	* @return nth term of the Maclaurin series of the sine functions
 	*/
-	[[nodiscard]] constexpr virtual T operator()(K n) const;
+	[[nodiscard]] constexpr T operator()(K n) const override;
 
 private:
 	/**
@@ -511,11 +512,11 @@ private:
 	* @param n The number of the term
 	* @return nth term of the series
 	*/
-	T acsess_row(K n);
+	T acsess_row(K n) override;
 };
 
 template <typename T, typename K>
-sin_series<T, K>::sin_series(T x) : series_base<T, K>(x, std::sin(x)), requrrent_series_base<T, K>(x) {}
+sin_series<T, K>::sin_series(T x) : series_base<T, K>(x, std::sin(x)), recurrent_series_base<T, K>(x) {}
 
 template <typename T, typename K>
 T sin_series<T, K>::acsess_row(K n)
@@ -548,7 +549,7 @@ constexpr T sin_series<T, K>::operator()(K n) const
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
 template <typename T, typename K>
-class cosh_series : public series_base<T, K>, public requrrent_series_base<T, K>
+class cosh_series : public series_base<T, K>, public recurrent_series_base<T, K>
 {
 public:
 	cosh_series() = delete;
@@ -558,7 +559,7 @@ public:
 	* @authors Pashkov B.B.
 	* @param x The argument for function series
 	*/
-	cosh_series(T x);
+	explicit cosh_series(T x);
 
 	/**
 	* @brief Computes the nth term of the Maclaurin series of hyperbolic cosine
@@ -579,7 +580,7 @@ private:
 };
 
 template <typename T, typename K>
-cosh_series<T, K>::cosh_series(T x) : series_base<T, K>(x, std::cosh(x)), requrrent_series_base<T, K>(std::vector<T>{1, T((x* x) / 2) }) {}
+cosh_series<T, K>::cosh_series(T x) : series_base<T, K>(x, std::cosh(x)), recurrent_series_base<T, K>(std::vector<T>{1, T((x* x) / 2) }) {}
 
 template <typename T, typename K>
 T cosh_series<T, K>::acsess_row(K n)
@@ -612,7 +613,7 @@ constexpr T cosh_series<T, K>::operator()(K n) const
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
 template <typename T, typename K>
-class sinh_series : public series_base<T, K>, public requrrent_series_base<T, K>
+class sinh_series final : public series_base<T, K>, public recurrent_series_base<T, K>
 {
 public:
 	sinh_series() = delete;
@@ -639,11 +640,11 @@ private:
 	* @param n The number of the term
 	* @return nth term of the series
 	*/
-	T acsess_row(K n);
+	T acsess_row(K n) override;
 };
 
 template <typename T, typename K>
-sinh_series<T, K>::sinh_series(T x) : series_base<T, K>(x, std::sinh(x)), requrrent_series_base<T, K>(x) {}
+sinh_series<T, K>::sinh_series(T x) : series_base<T, K>(x, std::sinh(x)), recurrent_series_base<T, K>(x) {}
 
 template <typename T, typename K>
 T sinh_series<T, K>::acsess_row(K n)
@@ -655,7 +656,7 @@ T sinh_series<T, K>::acsess_row(K n)
 	this->series_vector.reserve(n);
 
 	for (auto i = old_size; i <= static_cast<typename std::vector<T>::size_type>(n); ++i) {
-		this->series_vector.push_back(this->series_vector[i - 1] * static_cast<T>((this->x * this->x) / (i * (4 * i + 2))));
+		this->series_vector.push_back(this->series_vector[i - 1] * static_cast<T>(this->x * this->x / (i * (4 * i + 2))));
 	}
 
 	return this->series_vector[n];
@@ -666,7 +667,7 @@ constexpr T sinh_series<T, K>::operator()(K n) const
 {
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
-	const T a = const_cast<sinh_series<T, K>*>(this)->acsess_row(n);
+	const T a = const_cast<sinh_series*>(this)->acsess_row(n);
 	return a;
 }
 
@@ -727,7 +728,7 @@ constexpr T bin_series<T, K>::operator()(K n) const
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
 template <typename T, typename K>
-class four_arctan_series : public series_base<T, K>
+class four_arctan_series final : public series_base<T, K>
 {
 public:
 	four_arctan_series() = delete;
@@ -737,7 +738,7 @@ public:
 	* @authors Bolshakov M.P.
 	* @param x The argument for function series
 	*/
-	four_arctan_series(T x);
+	explicit four_arctan_series(T x);
 
 	/**
 	* @brief Computes the nth term of the Maclaurin series of the arctan multiplied by four
@@ -820,7 +821,7 @@ constexpr T ln1mx_series<T, K>::operator()(K n) const
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
 template <typename T, typename K>
-class mean_sinh_sin_series : public series_base<T, K>, public requrrent_series_base<T, K>
+class mean_sinh_sin_series : public series_base<T, K>, public recurrent_series_base<T, K>
 {
 public:
 	mean_sinh_sin_series() = delete;
@@ -851,7 +852,7 @@ private:
 };
 
 template <typename T, typename K>
-mean_sinh_sin_series<T, K>::mean_sinh_sin_series(T x) : series_base<T, K>(x, static_cast<T>(0.5 * (std::sinh(x) + std::sin(x)))), requrrent_series_base<T, K>(x) {}
+mean_sinh_sin_series<T, K>::mean_sinh_sin_series(T x) : series_base<T, K>(x, static_cast<T>(0.5 * (std::sinh(x) + std::sin(x)))), recurrent_series_base<T, K>(x) {}
 
 template <typename T, typename K>
 T mean_sinh_sin_series<T, K>::acsess_row(K n)
@@ -1098,7 +1099,7 @@ constexpr T x_1mx_squared_series<T, K>::operator()(K n) const
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
 template <typename T, typename K>
-class erf_series : public series_base<T, K>, public requrrent_series_base<T, K>
+class erf_series : public series_base<T, K>, public recurrent_series_base<T, K>
 {
 public:
 	erf_series() = delete;
@@ -1129,7 +1130,7 @@ private:
 };
 
 template <typename T, typename K>
-erf_series<T, K>::erf_series(T x) : series_base<T, K>(x, static_cast<T>(std::sqrt(std::numbers::pi))* static_cast<T>(std::erf(x) / 2)), requrrent_series_base<T, K>(x) { }
+erf_series<T, K>::erf_series(T x) : series_base<T, K>(x, static_cast<T>(std::sqrt(std::numbers::pi))* static_cast<T>(std::erf(x) / 2)), recurrent_series_base<T, K>(x) { }
 
 template <typename T, typename K>
 T erf_series<T, K>::acsess_row(K n)
@@ -1163,7 +1164,7 @@ constexpr T erf_series<T, K>::operator()(K n) const
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
 template <typename T, typename K>
-class m_fact_1mx_mp1_inverse_series : public series_base<T, K>, public requrrent_series_base<T, K>
+class m_fact_1mx_mp1_inverse_series : public series_base<T, K>, public recurrent_series_base<T, K>
 {
 public:
 	m_fact_1mx_mp1_inverse_series() = delete;
@@ -1200,7 +1201,7 @@ private:
 };
 
 template <typename T, typename K>
-m_fact_1mx_mp1_inverse_series<T, K>::m_fact_1mx_mp1_inverse_series(T x, K m) : series_base<T, K>(x, static_cast<T>(static_cast<T>(this->fact(m)) / pow(1 - x, m + 1))), m(m), requrrent_series_base<T, K>(static_cast<T>(this->fact(m)))
+m_fact_1mx_mp1_inverse_series<T, K>::m_fact_1mx_mp1_inverse_series(T x, K m) : series_base<T, K>(x, static_cast<T>(static_cast<T>(this->fact(m)) / pow(1 - x, m + 1))), m(m), recurrent_series_base<T, K>(static_cast<T>(this->fact(m)))
 {
 	if (!isfinite(series_base<T, K>::sum)) // sum = this->fact(m) / pow(1 - x, m + 1))
 		throw std::overflow_error("sum is too big");
@@ -4659,17 +4660,17 @@ constexpr T testing_series<T, K>::operator()(K n) const
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
 template <typename T, typename K>
-class requrrent_testing_series : public series_base<T, K>, public requrrent_series_base<T, K>
+class recurrent_testing_series : public series_base<T, K>, public recurrent_series_base<T, K>
 {
 public:
-	requrrent_testing_series() = delete;
+	recurrent_testing_series() = delete;
 
 	/**
 	* @brief Parameterized constructor to initialize the series with function argument and sum
 	* @authors Kreynin R.G.
 	* @param x The argument for function series
 	*/
-	requrrent_testing_series(T x);
+	recurrent_testing_series(T x);
 
 	/**
 	* @brief Computes the nth term of the Maclaurin series of the sine function
@@ -4690,10 +4691,10 @@ private:
 };
 
 template <typename T, typename K>
-requrrent_testing_series<T, K>::requrrent_testing_series(T x) : series_base<T, K>(x, 0), requrrent_series_base<T, K>(x) {}
+recurrent_testing_series<T, K>::recurrent_testing_series(T x) : series_base<T, K>(x, 0), recurrent_series_base<T, K>(x) {}
 
 template <typename T, typename K>
-T requrrent_testing_series<T, K>::acsess_row(K n)
+T recurrent_testing_series<T, K>::acsess_row(K n)
 {
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
@@ -4709,11 +4710,11 @@ T requrrent_testing_series<T, K>::acsess_row(K n)
 }
 
 template <typename T, typename K>
-constexpr T requrrent_testing_series<T, K>::operator()(K n) const
+constexpr T recurrent_testing_series<T, K>::operator()(K n) const
 {
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
-	const T a = const_cast<requrrent_testing_series<T, K>*>(this)->acsess_row(n);
+	const T a = const_cast<recurrent_testing_series<T, K>*>(this)->acsess_row(n);
 	return a;
 
 }
