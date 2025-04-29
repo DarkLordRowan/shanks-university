@@ -4,7 +4,6 @@
 #include <cmath>
 
 #include "../series_base.h"
-#include "../recurrent_series_base.h"
 
 /**
 * @brief Binomial series ( (1+x)^a maclaurin series)
@@ -12,7 +11,7 @@
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
 template <typename T, typename K>
-class bin_series : public series_base<T, K>
+class bin_series final : public series_base<T, K>
 {
     using series_base<T, K>::binomial_coefficient;
 
@@ -51,7 +50,7 @@ bin_series<T, K>::bin_series(T x, T alpha) : series_base<T, K>(x, std::pow(1 + x
 }
 
 template <typename T, typename K>
-constexpr T bin_series<T, K>::operator()(K n) const
+T bin_series<T, K>::operator()(K n) const
 {
     if (n < 0)
         throw std::domain_error("negative integer in the input");

@@ -5,6 +5,7 @@
  * @edited by Yurov P.
 */
 #pragma once
+#include <cmath>
 
 /**
 * @brief Abstract class for remainder

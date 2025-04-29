@@ -8,6 +8,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Рекурсивно ищем все .cpp, .hpp и .tpp
 file(GLOB_RECURSE SOURCE_FILES
         main.cpp
+        include/*.h
         include/*.hpp
         include/*.tpp
 )

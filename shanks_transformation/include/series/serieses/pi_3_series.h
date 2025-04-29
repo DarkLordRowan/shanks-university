@@ -29,7 +29,7 @@ pi_3_series<T, K>::pi_3_series() : series_base<T, K>(0, static_cast<T>(std::numb
 }
 
 template<typename T, typename K>
-constexpr T pi_3_series<T, K>::operator()(K n) const {
+T pi_3_series<T, K>::operator()(K n) const {
     if (n < 0)
         throw std::domain_error("negative integer in the input");
     return static_cast<T>(1.0 / ((n + 1) * (2 * n + 1) * (4 * n + 1)));

@@ -21,7 +21,7 @@ public:
     * @authors Trudolyubov N.A.
     * @param x The argument for function series
     */
-    x_series(T x);
+    explicit x_series(T x);
 
     /**
     * @brief Computes the nth term of the Fourier series of the sine function
@@ -36,7 +36,7 @@ template <typename T, typename K>
 x_series<T, K>::x_series(T x) : series_base<T, K>(x, this->x) {}
 
 template <typename T, typename K>
-constexpr T x_series<T, K>::operator()(K n) const
+T x_series<T, K>::operator()(K n) const
 {
     if (n < 0)
         throw std::domain_error("negative integer in the input");

@@ -1,4 +1,5 @@
 #pragma once
+#include "series/serieses/one_series.h"
 
 template<typename T, typename K, typename series_templ>
 ford_sidi_one_algorithm<T, K, series_templ>::ford_sidi_one_algorithm(const series_templ &series)
@@ -11,7 +12,7 @@ T ford_sidi_one_algorithm<T, K, series_templ>::operator()(const K n, const int k
     if (n < 0)
         throw std::domain_error("negative integer in the input");
 
-    one_series<T, K> *ones_seq = new one_series<T, K>();
+    auto *ones_seq = new one_series<T, K>();
 
     T T_n_k = Psi(1 + 1, k - 1, (this->series), shanks_trans) - Psi(1, k - 1, (this->series), shanks_trans);
     T_n_k /= (Psi(1 + 1, k - 1, ones_seq, shanks_trans) - Psi(1, k - 1, ones_seq, shanks_trans));

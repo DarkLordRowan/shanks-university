@@ -8,9 +8,7 @@
 #pragma once
 
 #include <cmath>
-
 #include "../series_base.h"
-#include "../recurrent_series_base.h"
 
 template <typename T, typename K>
 class exp_squared_erf_series final : public series_base<T, K>
@@ -23,7 +21,7 @@ public:
     * @authors Pashkov B.B.
     * @param x The argument for function series
     */
-    exp_squared_erf_series(T x);
+    explicit exp_squared_erf_series(T x);
 
     /**
     * @brief Computes the nth term of the Maclaurin series of exp(x^2)*erf(x)
@@ -43,7 +41,7 @@ T exp_squared_erf_series<T, K>::operator()(K n) const
     if (n < 0)
         throw std::domain_error("negative integer in the input");
     const auto result = std::pow(this->x, 2 * n + 1) / std::tgamma(n + 1.5);
-    if (!isfinite(result))
+    if (!std::isfinite(result))
         throw std::overflow_error("operator() is too big");
     return static_cast<T>(result);
 }
