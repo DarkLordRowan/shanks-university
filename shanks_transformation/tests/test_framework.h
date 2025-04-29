@@ -7,7 +7,7 @@
 #include <memory>
 #include <set>
 
-#include "../src/wynn_numerators.h"
+#include "../include/transform/wynn_numerators.h"
 #include "../include/transform/remainders.h"
 #include "../include/algorithm/shanks_transform.hpp"
 #include "../include/algorithm/shanks_transform_alternating.hpp"
