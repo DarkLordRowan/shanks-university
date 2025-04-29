@@ -82,6 +82,6 @@ T m_fact_1mx_mp1_inverse_series<T, K>::operator()(K n) const
 {
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
-	const T a = const_cast<m_fact_1mx_mp1_inverse_series<T, K>*>(this)->acsess_row(n);
+	const T a = const_cast<m_fact_1mx_mp1_inverse_series*>(this)->acsess_row(n);
 	return a;
 }

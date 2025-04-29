@@ -7,10 +7,7 @@
 
 #pragma once
 
-#include <cmath>
-
 #include "../series_base.h"
-#include "../recurrent_series_base.h"
 
 template <typename T, typename K>
 class eighth_pi_m_one_third_series final : public series_base<T, K>

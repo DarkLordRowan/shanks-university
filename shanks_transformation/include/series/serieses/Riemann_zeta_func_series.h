@@ -10,7 +10,7 @@
 #include <cmath>
 
 #include "../series_base.h"
-#include "../recurrent_series_base.h"
+
 template <typename T, typename K>
 class Riemann_zeta_func_series final : public series_base<T, K>
 {

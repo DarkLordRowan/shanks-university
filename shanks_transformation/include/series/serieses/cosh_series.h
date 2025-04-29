@@ -14,7 +14,7 @@
 #include "../recurrent_series_base.h"
 
 template <typename T, typename K>
-class cosh_series : public series_base<T, K>, public recurrent_series_base<T, K>
+class cosh_series final : public series_base<T, K>, public recurrent_series_base<T, K>
 {
 public:
     cosh_series() = delete;
@@ -41,7 +41,7 @@ private:
     * @param n The number of the term
     * @return nth term of the series
     */
-    T acsess_row(K n);
+    T acsess_row(K n) override;
 };
 
 template <typename T, typename K>
