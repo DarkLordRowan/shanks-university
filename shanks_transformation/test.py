@@ -411,14 +411,16 @@ def find_params(params):
     return [series, x, transformation, function, n, order]
 
 
-def work_with_data(logger, function_id, file):
+def work_with_data(logger, function_id, file, plot_file):
     if function_id == "1":
         S_n = []
         T_n = []
+        lim = 0
         try:
             logger.log(f"Values of file:")
             with open(file, 'r') as f:
                 i = 1
+                lim = float(f.readline().strip())
                 while True:
                     line = f.readline().strip()
                     if not line:
@@ -431,7 +433,7 @@ def work_with_data(logger, function_id, file):
                     logger.log(f"S_{i}: {S_n[i-1]}")
 
                     try:
-                        T_n.append(f.readline().strip())
+                        T_n.append(float(f.readline().strip()))
                     except:
                         T_n.append(0)
                         logger.log_error(f.readline().strip())
@@ -442,21 +444,22 @@ def work_with_data(logger, function_id, file):
             logger.log_error(f"Error reading from file: {str(e)}")
 
         x = list(range(len(S_n)))
+        lim_arr = [lim for i in range(len(S_n))]
 
         plt.figure(figsize=(15, 15), dpi=600)
         
         plt.plot(x, S_n, color = "Green", label = "S_n")
         plt.plot(x, T_n, color="Red", label = "T_n")
+        if (lim != 0):
+            plt.plot(x, lim_arr, color="black", label = "sum")
 
-
-        plt.tight_layout(pad=2.0)
+        plt.tight_layout() #pad = 2.0
         plt.legend()
 
-        
-        plt.savefig("plot.png", bbox_inches='tight', dpi=600)
+        plt.savefig(plot_file, dpi=600)
         plt.close()
         
-        logger.log(f"plot saved to {"plot.png"}")
+        logger.log(f"plot saved to {plot_file}")
 
     if function_id == "2":
         a_n = []
@@ -530,11 +533,13 @@ def work_with_data(logger, function_id, file):
     if function_id == "6":
         S_n = []
         T_n = [[] for i in range(30)]
+        lim = 0
         try:
             logger.log(f"Values of file:")
             with open(file, 'r') as f:
                 i = 0
                 n = 30
+                lim = float(f.readline().strip())
                 for line in f:
                     if i % n == 0:
                         logger.log("---")
@@ -554,6 +559,8 @@ def work_with_data(logger, function_id, file):
             logger.log_error(f"Error reading from file: {str(e)}")    
 
         x = list(range(len(S_n)))
+        lim_arr = [lim for i in range(len(S_n))]
+
 
         plt.figure(figsize=(15, 15), dpi=600)
         
@@ -561,14 +568,18 @@ def work_with_data(logger, function_id, file):
         for i in range(1, 30):
             plt.plot(x, T_n[i], color=color_dict_hex[i-1], label = f"{algorithms[i-1]}")
 
+        if (lim != 0):
+            plt.plot(x, lim_arr, color="black", label = "Sum")
+
+
 
         plt.tight_layout(pad=2.0)
         plt.legend()
         
-        plt.savefig("plot.png", bbox_inches='tight', dpi=600)
+        plt.savefig(plot_file, bbox_inches='tight', dpi=600)
         plt.close()
         
-        logger.log(f"plot saved to {"plot.png"}")
+        logger.log(f"plot saved to {plot_file}")
 
 def main():
     exec_file = ""
@@ -576,7 +587,7 @@ def main():
         exec_file = "/build/test.exe" # Путь к exe файлу
     else:
         exec_file = "./build/test"
-    params = ["103", "1", "1", "18", "6", "10", "1"]
+    params = ["1", "1", "18", "5", "100000", "1"]
 
     program = Program(exec_file, params)
     program.run()
@@ -585,12 +596,17 @@ def main():
     if (error_message):
         logger.log_error(error_message)
 
-    logger = Logger(log_file='output.log')
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+
+    plot_file = os.path.join(current_dir, "plot.png")
+    log_file = os.path.join(current_dir, "output.log")
+
+    logger = Logger(log_file)
 
     a = find_params(params)
     log_selected_params(logger, a)
 
-    work_with_data(logger, a[3][0], "output.txt")
+    work_with_data(logger, a[3][0], "output.txt", plot_file)
     
     logger.log("------------------------------------------")
 

@@ -274,6 +274,8 @@ void cmp_sum_and_transform_f(K n, const int order, const series_templ&& series, 
     out_file << std::fixed << std::setprecision(18);
     out_file.unsetf(std::ios::scientific);
 
+	out_file << series -> get_sum() << '\n';
+
     for (K i = 1; i <= n; ++i)
 	{
 		try
@@ -317,6 +319,9 @@ void cmp_a_n_and_transform_f(const int n, const int order, const series_templ&& 
 
     out_file << std::fixed << std::setprecision(18);
     out_file.unsetf(std::ios::scientific);
+
+	out_file << series -> get_sum() << '\n';
+
 	long double result = 0.0, last_result = 0.0;
 	for (int i = 1; i <= n; ++i)
 	{
