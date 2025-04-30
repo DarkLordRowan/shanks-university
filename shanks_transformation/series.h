@@ -4734,7 +4734,7 @@ public:
      * @param baseSeries The series to be modified
      * @param modifier Function that takes an index and returns a modification factor
      */
-    ModifiedSeries(const series_templ& baseSeries, std::function<int(int)> modifier): series_base<T, K>(baseSeries->get_x()), 
+    ModifiedSeries(const series_templ& baseSeries, std::function<int(int)> modifier): series_base<T, K>(baseSeries->get_x(), baseSeries->get_sum()), 
           m_baseSeries(baseSeries), m_modifier(modifier) {}
     
     /**

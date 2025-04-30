@@ -1215,6 +1215,8 @@ inline static void main_testing_function(){
 
         f << std::fixed << std::setprecision(18);
         f.unsetf(std::ios::scientific);    
+        f << series -> get_sum() << '\n';
+
 		for (int i = 1; i <= n; ++i) 
 		{
 			print_sum_f(i, std::move(series.get()), f);
