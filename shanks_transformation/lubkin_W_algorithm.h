@@ -42,12 +42,14 @@ protected:
 		if (order == 0) 
 			return S_n;
 
-		//calculate all basic parts of transform
-		int order_1 = order - 1;
-		T W0 = calculate(n, order_1, S_n, 0);
-		T W1 = calculate(n, order_1, S_n, 1);
-		T W2 = calculate(n, order_1, S_n, 2);
-		T W3 = calculate(n, order_1, S_n, 3);
+		//calculate all basic parts of transfor
+
+		//TODO спросить у Парфенова, ибо жертвуем читаемостью кода, ради его небольшого ускорения
+		int order1 = order - 1;
+		T W0 = calculate(n, order1, S_n, 0);
+		T W1 = calculate(n, order1, S_n, 1);
+		T W2 = calculate(n, order1, S_n, 2);
+		T W3 = calculate(n, order1, S_n, 3);
 		
 		//optimization calculations
 		T Wo0 = (W1 - W0);
@@ -57,7 +59,7 @@ protected:
 		T Woo2 = Wo2 * (Wo1 - Wo0);
 
 		//T result = W1 - ((W2 - W1) * (W1 - W0) * (W3 - 2 * W2 + W1)) / ((W3 - W2) * (W2 - 2 * W1 + W0) - (W1 - W0) * (W3 - 2 * W2 + W1)); //straigh
-		T result = W1 - (Wo1 * Woo1) / (Woo2 - Woo1); // optimized
+		const T result = fma(-Wo1, Woo1 / (Woo2 - Woo1), W1); // optimized
 
 		if (!std::isfinite(result))
 			throw std::overflow_error("division by zero");
@@ -88,7 +90,6 @@ public:
 		if (order < 0) 
 			throw std::domain_error("negative order input");
 
-		T S_n = this->series->S_n(n);
-		return calculate(n, order, S_n,0);
+		return calculate(n, order, this->series->S_n(n), 0);
 	}
 };

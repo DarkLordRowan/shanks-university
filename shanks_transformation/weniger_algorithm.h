@@ -57,23 +57,27 @@ public:
 		for (int m = 0; m < order - 1; ++m) 
 			coef *= (1 + m);
 		
+		//TODO спросить у Парфенова, ибо жертвуем читаемостью кода, ради его небольшого ускорения
+		int j1;
 
 		for (int j = 0; j <= order; ++j) {
 
-			rest = this->series->minus_one_raised_to_power_n(j)* binomial_coef;
-			binomial_coef *= (order - j) / (j + 1);
+			j1 = j + 1;
+
+			rest = this->series->minus_one_raised_to_power_n(j) * binomial_coef;
+			binomial_coef *= (order - j) / j1;
 
 			rest *= coef;
 
-			coef *= (j + order) / (1 + j);
+			coef *= (j + order) / j1;
 
-			a_n = 1 / this->series->operator()(j + 1);
+			a_n = 1 / this->series->operator()(j1);
 
 			rest_a_n = rest * a_n;
 
 			numerator += rest_a_n * S_n;
 
-			S_n += this->series->operator()(j + 1);
+			S_n += this->series->operator()(j1);
 
 			denominator += rest_a_n;
 

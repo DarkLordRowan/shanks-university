@@ -47,7 +47,7 @@ public:
 
 		T delta_S_n = this->series->S_n(m + 1) - this->series->S_n(m);
 
-		T T_n = this->series->S_n(m) - delta_S_n * delta_S_n / delta_squared_S_n;
+		const T T_n = fma(-delta_S_n, delta_S_n / delta_squared_S_n, this->series->S_n(m));
 
 		if (!isfinite(T_n))
 			throw std::overflow_error("division by zero");

@@ -24,7 +24,7 @@ protected:
 	const T RHO;
 
 	T calculate(const K n, int order) const { //const int order
-		if (order & 1) {
+		if (order & 1) { // order is odd
 			++order;
 			throw std::domain_error("order should be even number");
 		}
@@ -35,12 +35,13 @@ protected:
 		if (order == 0)
 			return this->series->S_n(n);
 
-		T S_n = this->series->S_n(n);
+		const T S_n = this->series->S_n(n);
 
-		int order_1 = order - 1;
+		//TODO спросить у Парфенова, ибо жертвуем читаемостью кода, ради его небольшого ускорения
+		const int order1 = order - 1;
 
-		T res = recursive_calculate_body(n, order_1 - 1, S_n, 1) + (numerator_func->operator()(n, order, this->series, gamma, RHO));
-		res /= (recursive_calculate_body(n, order_1, S_n, 1) - recursive_calculate_body(n, order_1, S_n, 0));
+		const T res = (recursive_calculate_body(n, order1 - 1, S_n, 1) + numerator_func->operator()(n, order, this->series, gamma, RHO)) / 
+			(recursive_calculate_body(n, order1, S_n, 1) - recursive_calculate_body(n, order1, S_n, 0));
 
 		if (!std::isfinite(res))
 			throw std::overflow_error("division by zero");
@@ -60,11 +61,13 @@ protected:
 		if (order == -1)
 			return 0;
 
-		int order_1 = order - 1;
-		K n_j = n + j;
+		//TODO спросить у Парфенова, ибо жертвуем читаемостью кода, ради его небольшого ускорения
+		const int order1 = order - 1;
+		const K nj = n + j;
 
-		T res = recursive_calculate_body(n_j, order_1 - 1, S_n, 1) + (numerator_func->operator()(n_j, order, this->series, gamma, RHO));
-		res /= (recursive_calculate_body(n_j, order_1, S_n, 1) - recursive_calculate_body(n_j, order_1, S_n, 0));
+		const T res = (recursive_calculate_body(nj, order1 - 1, S_n, 1) + numerator_func->operator()(nj, order, this->series, gamma, RHO)) /
+			(recursive_calculate_body(nj, order1, S_n, 1) - recursive_calculate_body(nj, order1, S_n, 0));
+
 		if (!std::isfinite(res))
 			throw std::overflow_error("division by zero");
 

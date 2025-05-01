@@ -35,7 +35,7 @@ protected:
 	 * We assume that the Pochhammer symbol satisfies (-x)_n = (-1)^n*(x-n+1)_n
 	 */
 
-	T calculate(const K& n, const int& order) const {
+	T calculate(const K n, const int order) const {
 		if (order < 0)
 			throw std::domain_error("negative integer in input");
 
@@ -51,6 +51,9 @@ protected:
 
 		T rest_w_n;
 		T down_coef = static_cast<T>(gamma + order + 2), up_coef = down_coef - n;
+
+		//TODO спросить у Парфенова, ибо жертвуем читаемостью кода, ради его небольшого ускорения
+		K j1;
 		
 		for (K m = 0; m < n - 1; ++m) {
 			up *= (up_coef + m);
@@ -63,13 +66,14 @@ protected:
 		
 		for (K j = 0; j <= n; ++j) {
 
+			j1 = j + 1;
 			rest = this->series->minus_one_raised_to_power_n(j) * binomial_coef;
 
-			binomial_coef = binomial_coef * (n - j) / (j + 1);
+			binomial_coef = binomial_coef * (n - j) / j1;
 
 			rest *= up;
 
-			up /= (up_coef + j) * ( down_coef + j );
+			up /= (up_coef + j) * ( down_coef + j);
 
 			w_n = remainder_func->operator()(order, j, this->series, static_cast<T>(-gamma - n));
 
@@ -77,7 +81,7 @@ protected:
 
 			numerator += rest_w_n * S_n ;
 
-			S_n += this->series->operator()(order + j + 1);
+			S_n += this->series->operator()(order + j1);
 
 			denominator += rest_w_n;
 		}

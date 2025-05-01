@@ -31,6 +31,7 @@ void cmp_sum_and_transform(const int n, const int order, const series_templ&& se
 	{
 		try
 		{
+			std::cout << "Sum of algo : " << series->get_sum() << '\n';
 			std::cout << "S_" << i << " : " << series->S_n(i) << '\n';
 			std::cout << "T_" << i << " of order " << order << " : " << test->operator()(i, order) << '\n';
 			std::cout << "T_" << i << " of order " << order << " - S_" << i
@@ -207,6 +208,7 @@ void eval_transform_time(const int n, const int order, const series_templ&& seri
 template <typename series_templ>
 void print_sum(const int n, const series_templ&& series)
 {
+	std::cout << "Sum of algo :" << series->get_sum() << '\n';
 	std::cout << "S_" << n << " : " << series->S_n(n) << '\n';
 }
 

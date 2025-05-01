@@ -60,30 +60,28 @@ T epsilon_algorithm_two<T, K, series_templ>::operator()(const K n, const int ord
     for (K j = k; j >= 0; --j) //Counting first row of Epsilon Table
         e[3][j] = this->series->S_n(j);
 
-    T a = 0, a1 = 0, a2 = 0;
+    T a = 0;
+
+    //TODO спросить у Парфенова, ибо жертвуем читаемостью кода, ради его небольшого ускорения
+    int i1, i2;
 
     while (k > -1)
     {
         for (int i = 0; i < k; ++i)
         {
-            e[0][i] = static_cast<T>(e[2][i + 1] + 1.0 / (e[3][i + 1] - e[3][i])); //Standart Epsilon Wynn algorithm
+            i1 = i + 1;
+            i2 = i + 2;
+            e[0][i] = static_cast<T>(e[2][i1] + 1.0 / (e[3][i1] - e[3][i])); //Standart Epsilon Wynn algorithm
 
-            if (!std::isfinite(e[0][i]) && i + 2 <= k) //This algorithm is used if new elliment is corrupted.
+            if (!std::isfinite(e[0][i]) && i2 <= k) //This algorithm is used if new elliment is corrupted.
             {
-                a2 = static_cast<T>(1.0 / e[2][i + 1]);
+                a = e[2][i2] * static_cast<T>(1.0 / (1.0 - e[2][i2] / e[2][i1]));
 
-                a1 = static_cast<T>(1.0 / (1.0 - (a2 * e[2][i + 2])));
-                a = e[2][i + 2] * a1;
+                a += e[2][i] * static_cast<T>(1.0 / (1.0 - e[2][i] / e[2][i1]));
 
-                a1 = static_cast<T>(1.0 / (1.0 - (a2 * e[2][i])));
-                a += e[2][i] * a1;
+                a -= e[0][i2] * static_cast<T>(1.0 / (1.0 - e[0][i2] / e[2][i1]));
 
-                a1 = static_cast<T>(1.0 / (1.0 - (a2 * e[0][i + 2])));
-                a -= e[0][i + 2] * a1;
-
-                e[0][i] = static_cast<T>(1.0 / e[2][i + 1]);
-                e[0][i] = static_cast<T>(1.0 / (1.0 + a * e[0][i]));
-                e[0][i] = e[0][i] * a;
+                e[0][i] = static_cast<T>(a / (1.0 + a / e[2][i1]));
             }
             if (!std::isfinite(e[0][i])) //If new element is still corrupted we just copy prev. element, so we will get result
                 e[0][i] = e[2][i];         

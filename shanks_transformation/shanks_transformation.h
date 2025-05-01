@@ -65,14 +65,18 @@ T shanks_transform<T, K, series_templ>::operator()(const K n, const int order) c
 	}
 	//n > order >= 1
 
-	std::vector<T> T_n(n + order, 0);
+	//TODO спросить у Парфенова, ибо жертвуем читаемостью кода, ради его небольшого ускорения
+	const K n_minus_order = n - order;
+	const K n_plus_order = n + order;
+
+	std::vector<T> T_n(n_plus_order, 0);
 
 	T a_n, a_n_plus_1, tmp;
-	a_n = this->series->operator()(n - order);
-	a_n_plus_1 = this->series->operator()(n - order + 1);
+	a_n = this->series->operator()(n_minus_order);
+	a_n_plus_1 = this->series->operator()(n_minus_order + 1);
 	tmp = -a_n_plus_1 * a_n_plus_1;
 
-	for (K i = n - order + 1; i <= n + order - 1; ++i) // if we got to this branch then we know that n >= order - see previous branches  int -> K
+	for (K i = n_minus_order + 1; i <= n_plus_order - 1; ++i) // if we got to this branch then we know that n >= order - see previous branches  int -> K
 	{
 		a_n = this->series->operator()(i);
 		a_n_plus_1 = this->series->operator()(i + 1);
@@ -85,7 +89,7 @@ T shanks_transform<T, K, series_templ>::operator()(const K n, const int order) c
 	T a, b, c;
 	for (int j = 2; j <= order; ++j)
 	{
-		for (K i = n - order + j; i <= n + order - j; ++i) // int -> K 
+		for (K i = n_minus_order + j; i <= n_plus_order - j; ++i) // int -> K 
 		{
 			a = T_n[i];
 			b = T_n[i - 1];
@@ -157,12 +161,18 @@ T shanks_transform_alternating<T, K, series_templ>::operator()(const K n, const 
 		return result;
 	}
 	//n > order >= 1
-	std::vector<T> T_n(n + order, 0);
+
+	//TODO спросить у Парфенова, ибо жертвуем читаемостью кода, ради его небольшого ускорения
+	const K n_minus_order = n - order;
+	const K n_minus_order1 = n_minus_order + 1;
+	const K n_plus_order = n + order;
+
+	std::vector<T> T_n(n_plus_order, 0);
 
 	T a_n, a_n_plus_1;
-	a_n = this->series->operator()(n - order);
-	a_n_plus_1 = this->series->operator()(n - order + 1);
-	for (K i = n - order + 1; i <= n + order - 1; ++i) // if we got to this branch then we know that n >= order - see previous branches int->K
+	a_n = this->series->operator()(n_minus_order);
+	a_n_plus_1 = this->series->operator()(n_minus_order1);
+	for (K i = n_minus_order1; i <= n_plus_order - 1; ++i) // if we got to this branch then we know that n >= order - see previous branches int->K
 	{
 		a_n = this->series->operator()(i);
 		a_n_plus_1 = this->series->operator()(i + 1);
@@ -170,11 +180,11 @@ T shanks_transform_alternating<T, K, series_templ>::operator()(const K n, const 
 		// formula [6]
 		T_n[i] = std::fma(a_n * a_n_plus_1, 1 / (a_n - a_n_plus_1), this->series->S_n(n));
 	}
-	std::vector<T> T_n_plus_1(n + order, 0);
+	std::vector<T> T_n_plus_1(n_plus_order, 0);
 	T a, b, c;
 	for (int j = 2; j <= order; ++j)
 	{
-		for (K i = n - order + j; i <= n + order - j; ++i) // int -> K
+		for (K i = n_minus_order + j; i <= n_plus_order - j; ++i) // int -> K
 		{
 			a = T_n[i];
 			b = T_n[i - 1];
