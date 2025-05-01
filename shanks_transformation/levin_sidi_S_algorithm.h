@@ -25,7 +25,7 @@ protected:
 
 	const transform_base<T, K>* remainder_func;
 
-	bool recursive;
+	const bool recursive;
 
 	/**
 	* @brief Default function to calculate S-tranformation directly by formula. For more information see p. 57 8.2-7 [https://arxiv.org/pdf/math/0306302.pdf]
@@ -35,7 +35,7 @@ protected:
 	* @return The partial sum after the transformation.
 	*/
 
-	virtual T calculate(const K& n, const int& order) const {
+	virtual T calculate(const K n, const int order) const {
 
 		if (order < 0)
 			throw std::domain_error("negative integer in input");
@@ -89,7 +89,7 @@ protected:
 	* @return The partial sum after the transformation.
 	*/
 
-	T calculate_rec(const K& n, const int& order) const {
+	T calculate_rec(const K n, const int order) const {
 		if (order < 0)
 			throw std::domain_error("negative integer in input");
 
@@ -99,13 +99,17 @@ protected:
 		std::vector<T> N (n + 1,    0);
 		std::vector<T> D (N.size(), 0);
 
-		for (K i = 0; i < K(N.size()); ++i) {
-			D[i] = remainder_func->operator()(0, order + i, this->series);
-			N[i] = this->series->S_n(order + i) * D[i];
+		//TODO спросить у Парфенова, ибо жертвуем читаемостью кода, ради его небольшого ускорения
+		int orderi;
+
+		for (int i = 0; i < int(N.size()); ++i) {
+			orderi = order + i;
+			D[i] = remainder_func->operator()(0, orderi, this->series);
+			N[i] = this->series->S_n(orderi) * D[i];
 		}
 
 		T b1, b2, b3, b4, b5, b6;
-		K j_1;
+		K j1;
 
 		b1 = beta + order;
 		b2 = b1 - 1;
@@ -116,13 +120,13 @@ protected:
 			b5 = b3 + i;
 			b6 = b4 + i;
 			for (K j = 0; j <= n - i; ++j) { 
-				T scale1 = ((b3 + j) * (b4 + j));
-				T scale2 = (b5 * (b6 + j));
+				T scale1 = (b3 + j) * (b4 + j);
+				T scale2 = b5 * (b6 + j);
 
-				j_1 = j + 1;
+				j1 = j + 1;
 
-				D[j] = D[j_1] - scale1 * D[j] / scale2;
-				N[j] = N[j_1] - scale1 * N[j] / scale2;
+				D[j] = fma(-scale1, D[j] / scale2, D[j1]);
+				N[j] = fma(-scale1, N[j] / scale2, N[j1]);
 			}
 		}
 
@@ -143,7 +147,7 @@ public:
 	* @param recursive How to calculate straightly or reccurently
 	*/
 
-	levi_sidi_algorithm(const series_templ& series, const transform_base<T, K>* func, bool recursive = false, const T beta_ = T(1)) : series_acceleration<T, K, series_templ>(series), remainder_func(func), recursive(recursive), beta(beta_) {}
+	levi_sidi_algorithm(const series_templ& series, const transform_base<T, K>* func, const bool recursive = false, const T beta_ = T(1)) : series_acceleration<T, K, series_templ>(series), remainder_func(func), recursive(recursive), beta(beta_) {}
 
 	~levi_sidi_algorithm() { delete remainder_func; }
 

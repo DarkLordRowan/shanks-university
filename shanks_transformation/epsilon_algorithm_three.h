@@ -50,16 +50,15 @@ public:
 
         K N = n; // int -> K
 
-        T EMACH = std::numeric_limits<T>::epsilon(); // The smallest relative spacing for the T
-        T EPRN = 50 * EMACH;
-        T UFRN = std::numeric_limits<T>::denorm_min() / EPRN; //The smallest finite value of the T
-        T OFRN = std::numeric_limits<T>::max(); //The largest finite magnitude that can be represented by a T 
+        const T EMACH = std::numeric_limits<T>::epsilon(); // The smallest relative spacing for the T
+        const T EPRN = 50 * EMACH;
+        const T OFRN = std::numeric_limits<T>::max(); //The largest finite magnitude that can be represented by a T 
 
         T result = 0; //New result
         T abs_error = 0; //Absolute error
         T resla = 0; //Last result
 
-        K newelm, num, NUM, K1, K2, K3, ib, ie, in;
+        K newelm, num, NUM, K1, ib, ie, in;
         T RES, E0, E1, E2, E3, E1ABS, DELTA1, DELTA2, DELTA3, ERR1, ERR2, ERR3, TOL1, TOL2, TOL3, SS, EPSINF; // int -> K
 
         std::vector<T> e(N + 3, 0); //First N eliments of epsilon table + 2 elements for math
@@ -77,11 +76,9 @@ public:
 
             for (int I = 1; I <= NEWELM; ++I) //Counting all diagonal elements of epsilon table
             {
-                K2 = K1 - 1;
-                K3 = K1 - 2;
                 RES = e[K1 + 2];
-                E0 = e[K3];
-                E1 = e[K2];
+                E0 = e[K1 - 2];
+                E1 = e[K1 - 1];
                 E2 = RES;
                 E1ABS = std::abs(E1);
                 DELTA2 = E2 - E1;

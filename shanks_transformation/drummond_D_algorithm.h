@@ -17,8 +17,8 @@ template<typename T, typename K, typename series_templ>
 class drummonds_algorithm : public series_acceleration<T, K, series_templ>
 {
 protected:
-	const transform_base<T, K>* remainder_func;
-	bool recursive;
+	const transform_base<T, K>* const remainder_func;
+	const bool recursive;
 
 	/**
 	* @brief Function to calculate D-tranformation directly by formula. For more information see p. 70 9.5-4 [https://arxiv.org/pdf/math/0306302.pdf]
@@ -27,7 +27,7 @@ protected:
 	* @return The partial sum after the transformation.
 	*/
 
-	virtual T calculate(const K& n, const int& order) const 
+	virtual T calculate(const K n, const int order) const 
 	{
 		if (order < 0)
 			throw std::domain_error("negative integer in input");
@@ -44,13 +44,13 @@ protected:
 			a1 = rest * w_n;
 
 			numerator += a1 * this->series->S_n(order + j);
-			denominator += a1 * rest;
+			denominator += a1;
 		}
 
-		if (denominator == 0 || !std::isfinite(numerator))
-			throw std::overflow_error("division by zero");
-
 		numerator /= denominator;
+
+		if (!std::isfinite(numerator))
+			throw std::overflow_error("division by zero");
 
 		return numerator;
 	}
@@ -62,27 +62,34 @@ protected:
 	* @return The partial sum after the transformation.
 	*/
 
-	T calculate_rec(const K& n, const int& order) const {
+	T calculate_rec(const K n, const int order) const {
 		if (order < 0)
 			throw std::domain_error("negative integer in input");
 
-		std::vector<T> N (n + 1,    0);
-		std::vector<T> D (N.size(), 0);
 
-		for (int i = 0; i < n + 1; ++i)
+		//TODO спросить у Парфенова, ибо жертвуем читаемостью кода, ради его небольшого ускорения
+		const K n1 = n + 1;
+		int orderi, j1;
+
+		std::vector<T> N (n1, 0);
+		std::vector<T> D (n1, 0);
+
+		for (int i = 0; i < n1; ++i)
 		{
-			D[i] = remainder_func->operator()(0, order + i, this->series);
-			N[i] = this->series->S_n(order + i) * D[i];
+			orderi = order + i;
+			D[i] = remainder_func->operator()(0, orderi, this->series);
+			N[i] = this->series->S_n(orderi) * D[i];
 		}
 
 		for (int i = 1; i <= n; ++i)
 			for (int j = 0; j <= n - i; ++j) 
 			{
-				D[j] = D[j + 1] - D[j];
-				N[j] = N[j + 1] - N[j];
+				j1 = j + 1;
+				D[j] = D[j1] - D[j];
+				N[j] = N[j1] - N[j];
 			}
 
-		T numerator = N[0] / D[0];
+		const T numerator = N[0] / D[0];
 
 		if (!std::isfinite(numerator))
 			throw std::overflow_error("division by zero");
@@ -98,7 +105,7 @@ public:
 	* @param recursive How to calculate
 	*/
 
-	drummonds_algorithm(const series_templ& series, const transform_base<T, K>* func, bool recursive = false) : series_acceleration<T, K, series_templ>(series), remainder_func(func), recursive(recursive) {}
+	drummonds_algorithm(const series_templ& series, const transform_base<T, K>* const func, const bool recursive = false) : series_acceleration<T, K, series_templ>(series), remainder_func(func), recursive(recursive) {}
 
 	~drummonds_algorithm() { delete remainder_func; }
 
@@ -112,9 +119,6 @@ public:
 
 	T operator()(const K n, const int order) const 
 	{
-		if (recursive) 
-			return calculate_rec(n, order);
-
-		return calculate(n, order);
+		return recursive ? calculate_rec(n, order) : calculate(n, order);
 	}
 };

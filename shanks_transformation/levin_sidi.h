@@ -49,7 +49,7 @@ public:
 	t_transform() {}
 
 	template<typename T, typename K>
-	T operator()(const int& n, const int& j, const series_base<T, K>* series) const {
+	T operator()(const int n, const int j, const series_base<T, K>* series) const {
 		return T(1) / series->operator()(n + j);
 	}
 };
@@ -64,8 +64,12 @@ public:
 
 	template<typename T, typename K>
 	T operator()(const int n, const int j, const series_base<T, K>* series) const {
-		return (series->operator()(n + j + 1) - series->operator()(n + j)) /
-			(series->operator()(n + j + 1) * series->operator()(n + j));
+
+		//TODO спросить у Парфенова, ибо жертвуем читаемостью кода, ради его небольшого ускорения
+		const int n1 = n + j;
+		const int n2 = n1 + 1;
+		return (series->operator()(n2) - series->operator()(n1)) /
+			(series->operator()(n2) * series->operator()(n1));
 	}
 };
 
@@ -146,13 +150,21 @@ protected:
 		std::vector<T> N (k + 1,    0);
 		std::vector<T> D (N.size(), 0);
 
+
+		//TODO спросить у Парфенова, ибо жертвуем читаемостью кода, ради его небольшого ускорения
+		int n1;
+
 		for (int i = 0; i < N.size(); ++i) {
-			D[i] = remainder_func(0, n + i, this->series);
-			N[i] = this->series->S_n(n + i) * D[i];
+
+			n1 = n + i;
+			D[i] = remainder_func(0, n1, this->series);
+			N[i] = this->series->S_n(n1) * D[i];
 		}
 
 		T a4, a5, a6, a7, scale1, scale2;
-		T j_1;
+
+		//TODO спросить у Парфенова, ибо жертвуем читаемостью кода, ради его небольшого ускорения
+		T j1;
 		for (int i = 1; i <= k; ++i) {
 			a4 = beta + n + i;
 			a5 = a4 + i;
@@ -163,10 +175,10 @@ protected:
 				scale1 = (a6 * (a6 - 1));
 				scale2 = (a7 * (a7 - 1));
 
-				j_1 = j + 1;
+				j1 = j + 1;
 
-				D[j] = D[j_1] - scale1 * (*D)[j] / scale2;
-				N[j] = N[j_1] - scale1 * (*N)[j] / scale2;
+				D[j] = fma(-scale1, (*D)[j] / scale2, D[j1]);
+				N[j] = fma(-scale1, (*N)[j] / scale2; N[j1]);
 			}
 		}
 		T numerator = N[0] / D[0];

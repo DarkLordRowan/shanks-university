@@ -129,7 +129,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="epsilon_aitken_theta algorithm.h" />
     <ClInclude Include="epsilon_algorithm.h" />
     <ClInclude Include="epsilon_modified_algorithm.h" />
     <ClInclude Include="series.h" />

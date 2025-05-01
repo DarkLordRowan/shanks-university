@@ -36,9 +36,6 @@
     <ClInclude Include="theta_modified_algorithm.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="epsilon_aitken_theta algorithm.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">

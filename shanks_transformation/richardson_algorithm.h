@@ -52,12 +52,10 @@ public:
             a *= 4;
             b = a - 1;
             for (int m = l; m <= n; ++m)
-                e[1][m] = (a * e[0][m] - e[0][m - 1]) / b;
+                e[1][m] = fma(a, e[0][m], -e[0][m - 1]) / b;
 
             std::swap(e[0], e[1]);
         }
-
-        // n & 1 gives first bit 
 
         const T res = e[n & 1][n]; // get n & 1, cause if n is even, result is e[0][n], if n is odd, result is e[1][n]
 
