@@ -7,6 +7,16 @@ from pathlib import Path
 from datetime import datetime
 from math import factorial
 
+
+standart_algos = {
+    "1": "beta_Levin_S_algorithm",
+    "2": "gamma_Levin_M_algorithm", 
+    "3": "gamma_rho_Wynn_algorithm",
+    "4": "RHO_rho_Wynn_algorithm",
+    "5": "beta_levin_recursion_algorithm",
+    "6": "epsilon_algorithm_3" 
+}
+
 transformations = {
     "0": "null_transformation",
     "1": "shanks_transformation",
@@ -26,7 +36,10 @@ transformations = {
     "15": "richardson_algorithm",
     "16": "Ford_Sidi_algorithm",
     "17": "Ford_Sidi_algorithm_two",
-    "18": "Ford_Sidi_algorithm_three"
+    "18": "Ford_Sidi_algorithm_three",
+    "19": "Epsilon modified Algorithm",
+    "20": "Theta modified Algorithm",
+    "21": "Epsilon - Aitken - Theta Algorithm"
 }
 
 series_id = {
@@ -166,7 +179,11 @@ algorithms = {
     25: "Richardson",
     26: "Ford-Sidi",
     27: "Ford-Sidi_v-2",
-    28: "Ford-Sidi_V3"
+    28: "Ford-Sidi_V3",
+    29: "Epsilon modified Algorithm",
+    30: "Theta modified Algorithm",
+    31: "Epsilon - Aitken - Theta Algorithm"
+
 }
 
 color_dict_hex = {
@@ -199,7 +216,11 @@ color_dict_hex = {
     26: '#006400', # darkgreen
     27: '#F0E68C', # khaki
     28: '#DA70D6', # orchid
-    29: '#4682B4'  # steelblue
+    29: '#4682B4',  # steelblue
+    30: '#575499', 
+    31: '#012940',  
+    32: '#111234', 
+
 }
 
 functions = {
@@ -229,13 +250,14 @@ class Program:
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
-            text=True
+            text=True,
+            bufsize=50
         )
 
         for line in self.cl_arguments:
             process.stdin.write(line + "\n")
             process.stdin.flush()
-
+            print(process.stdout.readline())
         self.output, self.stderr = process.communicate()
 
     def get_output(self):
@@ -353,6 +375,13 @@ def log_selected_params(logger, params):
         
         elif function[1] == "13":
                 logger.log(f"Parameter beta: {function[2]}")
+    elif function[0] == "6":
+        for i in range(0, 7):
+            if function[i] == "1":
+                logger.log(f"Use standart {i} algorithm")
+            elif function[i] == "0":
+                logger.log(f"Use not standart {standart_algos[i]} algorithm")
+
 
     logger.log(f"N: {n[0]}")
     logger.log(f"order: {order[0]}")
@@ -407,6 +436,13 @@ def find_params(params):
                 function.append(params[a + 6])
         elif params[a+3] in ["13"]:
             function.append(params[a + 4])
+    elif params[a] == "6":
+        function.append(params[a+1])
+        function.append(params[a+2])
+        function.append(params[a+3])
+        function.append(params[a+4])
+        function.append(params[a+5])
+        function.append(params[a+6])
 
     return [series, x, transformation, function, n, order]
 
@@ -421,6 +457,7 @@ def work_with_data(logger, function_id, file, plot_file):
             with open(file, 'r') as f:
                 i = 1
                 lim = float(f.readline().strip())
+                logger.log(f"Sum of series: {lim}")
                 while True:
                     line = f.readline().strip()
                     if not line:
@@ -532,20 +569,19 @@ def work_with_data(logger, function_id, file, plot_file):
     
     if function_id == "6":
         S_n = []
-        T_n = [[] for i in range(30)]
+        T_n = [[] for i in range(34)]
         lim = 0
         try:
             logger.log(f"Values of file:")
             with open(file, 'r') as f:
                 i = 0
-                n = 30
+                n = 33
                 lim = float(f.readline().strip())
                 for line in f:
                     if i % n == 0:
                         logger.log("---")
                         S_n.append(float(line))
                         logger.log(f"S_{i//n+1}: {S_n[-1]}")
-
                     else:
                         try:
                             T_n[(i)%n].append(float(line))
@@ -565,7 +601,7 @@ def work_with_data(logger, function_id, file, plot_file):
         plt.figure(figsize=(15, 15), dpi=600)
         
         plt.plot(x, S_n, color = "Green", label = "S_n")
-        for i in range(1, 30):
+        for i in range(1, 33):
             plt.plot(x, T_n[i], color=color_dict_hex[i-1], label = f"{algorithms[i-1]}")
 
         if (lim != 0):
@@ -587,7 +623,7 @@ def main():
         exec_file = "/build/test.exe" # Путь к exe файлу
     else:
         exec_file = "./build/test"
-    params = ["1", "1", "18", "5", "100000", "1"]
+    params = ["1", "1", "17", "6", "10", "2", "1", "1", "1", "1", "1", "1"]
 
     program = Program(exec_file, params)
     program.run()

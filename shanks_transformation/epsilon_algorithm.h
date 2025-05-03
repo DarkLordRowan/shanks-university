@@ -2,7 +2,7 @@
  * @file epsilon_algorithm.h
  * @brief This file contains the declaration of the Epsilon Algorithm class.
  */
-
+#pragma once
 #include "series_acceleration.h" // Include the series header
 #include <vector> // Include the vector library
 
