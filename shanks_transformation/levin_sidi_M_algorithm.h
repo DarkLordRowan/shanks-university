@@ -8,6 +8,7 @@
 
 #include "series_acceleration.h" // Include the series header
 #include <vector>
+#include <memory> // For std::unique_ptr
 
 /**
  * @brief M_transformation class template.
@@ -22,7 +23,7 @@ class M_levin_sidi_algorithm : public series_acceleration<T, K, series_templ>
 {
 protected:
 	const T gamma;
-	const transform_base<T, K>* remainder_func;
+	std::unique_ptr<const transform_base<T, K>> remainder_func;
 
 	/**
 	 * @brief Default function to calculate M-transformation. Implemented u,t,d and v transformations. For more information see p. 65 9.2-6 [https://arxiv.org/pdf/math/0306302.pdf]
@@ -102,17 +103,12 @@ public:
 	 * @param func Remainder function
 	*/
 
-	M_levin_sidi_algorithm(const series_templ& series, const transform_base<T, K>* func, const T gamma_ = T(10)) : series_acceleration<T, K, series_templ>(series), gamma(gamma_) {
+	M_levin_sidi_algorithm(const series_templ& series, const transform_base<T, K>* func, const T gamma_ = T(10)) : series_acceleration<T, K, series_templ>(series), remainder_func(func), gamma(gamma_) {
 		if (func == nullptr) 
 			throw std::domain_error("null pointer remainder function");
-
-		remainder_func = func;
 	}
 
-	~M_levin_sidi_algorithm() { 
-		if (remainder_func != nullptr) 
-			delete remainder_func;
-	}
+	// Default destructor is sufficient since unique_ptr handles deletion
 
 	/**
      * @brief M-transformation.
