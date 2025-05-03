@@ -2,7 +2,6 @@
  * @file test_functions.h
  * @brief This file contains the testing functions
  */
-
 #pragma once
 #include <exception>
 #include <fstream>
@@ -247,9 +246,7 @@ void print_transform(const int n, const int order, const transform_type&& test)
 }
 
 
-
-
-  /**
+/**
  * @brief Function that prints out comparesment between transformed and nontransformed partial sums
  * At first it prints out the type of transformation, series that are being transformed, type of enumerating integer and type of series terms
  * Then it prints out partial sums of first i terms of the series where i ranges from 1 to n (!)
@@ -261,37 +258,39 @@ void print_transform(const int n, const int order, const transform_type&& test)
  * @param order The order of the transformation
  * @param series The series class object to be accelerated
  * @param test The type of transformation that is being used
- * @param filename The name of the file in which the result is displayed
+ * @param f_stream output data in file
  */
-template <typename K, typename series_templ, typename transform_type>
-void cmp_sum_and_transform_f(K n, const int order, const series_templ&& series, const transform_type&& test, const std::string& filename = "output.txt")
+template <typename series_templ, typename transform_type>
+void cmp_sum_and_transform_f(const int n, const int order, const series_templ&& series, const transform_type&& test, std::ofstream& f_stream)
 {
-    std::ofstream out_file(filename);
-    if (!out_file.is_open()) {
-        throw std::runtime_error("Failed to open output file");
-    }
-
-    out_file << std::fixed << std::setprecision(18);
-    out_file.unsetf(std::ios::scientific);
-
-	out_file << series -> get_sum() << '\n';
-
-    for (K i = 1; i <= n; ++i)
+	test->print_info();
+	long double result, sum = series->get_sum(), S_n;
+	f_stream << sum << '\n';
+	for (int i = 1; i <= n; ++i)
 	{
 		try
 		{
-            out_file << series->S_n(i) << "\n";
-            out_file << test->operator()(i, order) << "\n";
+			result = test->operator()(i, order);
+			S_n = series->S_n(i);
+			std::cout << "Sum of algo : " << sum << '\n';
+			std::cout << "S_" << i << " : " << S_n << '\n';
+			std::cout << "T_" << i << " of order " << order << " : " << result << '\n';
+			std::cout << "T_" << i << " of order " << order << " - S_" << i
+				<< " : " << result - S_n << '\n';
+			f_stream << S_n << '\n';
+			f_stream << result << '\n';
+
 		}
 		catch (std::domain_error& e)
 		{
-			std::cout << e.what() << std::endl;
-			out_file << e.what() << "\n";
+			std::cout << e.what() << '\n';
+			f_stream << e.what() << '\n';
 		}
 		catch (std::overflow_error& e)
 		{
-			out_file << e.what() << "\n";
-			std::cout << e.what() << std::endl;
+			std::cout << e.what() << '\n';
+			f_stream << e.what() << '\n';
+
 		}
 	}
 }
@@ -307,41 +306,37 @@ void cmp_sum_and_transform_f(K n, const int order, const series_templ&& series, 
 * @param order The order of the transformation
 * @param series The series class object to be accelerated
 * @param test The type of transformation that is being used
-* @param filename The name of the file in which the result is displayed
+* @param f_stream output data in file
 */
 template <typename series_templ, typename transform_type>
-void cmp_a_n_and_transform_f(const int n, const int order, const series_templ&& series, const transform_type&& test, const std::string& filename = "output.txt")
+void cmp_a_n_and_transform_f(const int n, const int order, const series_templ&& series, const transform_type&& test, std::ofstream& f_stream)
 {
-	std::ofstream out_file(filename);
-    if (!out_file.is_open()) {
-        throw std::runtime_error("Failed to open output file");
-    }
-
-    out_file << std::fixed << std::setprecision(18);
-    out_file.unsetf(std::ios::scientific);
-
-	out_file << series -> get_sum() << '\n';
-
-	long double result = 0.0, last_result = 0.0;
+	test->print_info();
+	long double result = 0.0, last_result = 0.0, a_n = 0.0;
 	for (int i = 1; i <= n; ++i)
 	{
 		try
 		{
 			last_result = result;
 			result = test->operator()(i, order);
-			out_file << (*series)(i) << "\n";
-			out_file << result - last_result << "\n";
-			out_file << (result - last_result) - (*series)(i) << "\n";
+			a_n = (*series)(i);
+			std::cout << "a_" << i << " : " << a_n << '\n';
+			std::cout << "t_" << i << " : " << result - last_result << '\n';
+			std::cout << "t_" << i << " of order " << order << " - a_" << i
+				<< " : " << (result - last_result) - a_n << '\n';
+			f_stream << a_n << '\n';
+			f_stream << result - last_result << '\n';
+			f_stream << (result - last_result) - a_n << '\n';
 		}
 		catch (std::domain_error& e)
 		{
-			std::cout << e.what() << std::endl;
-			out_file << e.what() << "\n";
+			std::cout << e.what() << '\n';
+			f_stream << e.what() << '\n';
 		}
 		catch (std::overflow_error& e)
 		{
-			std::cout << e.what() << std::endl;
-			out_file << e.what() << "\n";
+			std::cout << e.what() << '\n';
+			f_stream << e.what() << '\n';
 		}
 	}
 }
@@ -356,34 +351,31 @@ void cmp_a_n_and_transform_f(const int n, const int order, const series_templ&& 
 * @param order The order of the transformation
 * @param series The series class object to be accelerated
 * @param test The type of transformation that is being used
-* @param filename The name of the file in which the result is displayed
+* @param f_stream Output data in file
 */
 template <typename series_templ, typename transform_type>
-void transformation_remainders_f(const int n, const int order, const series_templ&& series, const transform_type&& test, const std::string& filename = "output.txt")
+void transformation_remainders_f(const int n, const int order, const series_templ&& series, const transform_type&& test, std::ofstream& f_stream)
 {
-	std::ofstream out_file(filename);
-    if (!out_file.is_open()) {
-        throw std::runtime_error("Failed to open output file");
-    }
-
-    out_file << std::fixed << std::setprecision(18);
-    out_file.unsetf(std::ios::scientific);
+	std::cout << "Tranformation of order " << order << " remainders from i = 1 to " << n << '\n';
+	test->print_info();
+	long double result;
 	for (int i = 1; i <= n; ++i)
 	{
 		try
 		{
-			out_file << series->get_sum() - test->operator()(i, order) << "\n";
+			result = series->get_sum() - test->operator()(i, order);
+			std::cout << "S - T_" << i << " : " << result << '\n';
+			f_stream << result << '\n';
 		}
 		catch (std::domain_error& e)
 		{
-			std::cout << e.what() << std::endl;
-			out_file << e.what() << "\n";
+			std::cout << e.what() << '\n';
+			f_stream << e.what() << '\n';
 		}
 		catch (std::overflow_error& e)
 		{
-			std::cout << e.what() << std::endl;
-			out_file << e.what() << "\n";
-
+			std::cout << e.what() << '\n';
+			f_stream << e.what() << '\n';
 		}
 	}
 }
@@ -399,19 +391,16 @@ void transformation_remainders_f(const int n, const int order, const series_temp
 * @param series The series class object to be accelerated
 * @param test_1 The type of the first transformation that is being used
 * @param test_2 The type of the second transformation that is being used
-* @param filename The name of the file in which the result is displayed
+* @param f_stream Output data in file
 */
 template <typename series_templ, typename transform_type_1, typename transform_type_2>
-void cmp_transformations_f(const int n, const int order, const series_templ&& series, const transform_type_1&& test_1, const transform_type_2&& test_2, const std::string& filename = "output.txt")
+void cmp_transformations_f(const int n, const int order, const series_templ&& series, const transform_type_1&& test_1, const transform_type_2&& test_2, std::ofstream& f_stream)
 {
-	std::ofstream out_file(filename);
-    if (!out_file.is_open()) {
-        throw std::runtime_error("Failed to open output file");
-    }
-
-    out_file << std::fixed << std::setprecision(18);
-    out_file.unsetf(std::ios::scientific);
-
+	std::cout << "Tranformations of order " << order << " remainders from i = 1 to " << n << '\n';
+	std::cout << "The transformation #1 is ";
+	test_1->print_info();
+	std::cout << "The transformation #2 is ";
+	test_2->print_info();
 	auto diff_1 = (*series)(0);
 	auto diff_2 = (*series)(0);
 	for (int i = 1; i <= n; ++i)
@@ -420,19 +409,24 @@ void cmp_transformations_f(const int n, const int order, const series_templ&& se
 		{
 			diff_1 = series->get_sum() - test_1->operator()(i, order);
 			diff_2 = series->get_sum() - test_2->operator()(i, order);
-			out_file << diff_1 << "\n";
-			out_file << diff_2 << "\n";
+			std::cout << "The transformation #1: S - T_" << i << " : " << diff_1 << '\n';
+			std::cout << "The transformation #2: S - T_" << i << " : " << diff_2 << '\n';
+			if (std::abs(diff_1) < std::abs(diff_2))
+				std::cout << "The transformation #1 is faster" << '\n';
+			else
+				std::cout << "The transformation #2 is faster" << '\n';
+			f_stream << diff_1 << '\n';
+			f_stream << diff_2 << '\n';
 		}
 		catch (std::domain_error& e)
 		{
-			std::cout << e.what() << std::endl;
-			out_file << e.what() << "\n";
+			std::cout << e.what() << '\n';
+			f_stream << e.what() << '\n';
 		}
 		catch (std::overflow_error& e)
 		{
-			std::cout << e.what() << std::endl;
-			out_file << e.what() << "\n";
-
+			std::cout << e.what() << '\n';
+			f_stream << e.what() << '\n';
 		}
 	}
 }
@@ -445,20 +439,13 @@ void cmp_transformations_f(const int n, const int order, const series_templ&& se
 * @param order The order of the transformation
 * @param series The series class object to be accelerated
 * @param test The type of the first transformation that is being used
-* @param filename The name of the file in which the result is displayed
+* @param f_steam Output data in file
 */
 template <typename series_templ, typename transform_type>
-void eval_transform_time_f(const int n, const int order, const series_templ&& series, const transform_type&& test, const std::string& filename = "output.txt")
+void eval_transform_time_f(const int n, const int order, const series_templ&& series, const transform_type&& test, std::ofstream& f_stream)
 {
-	std::ofstream out_file(filename);
-    if (!out_file.is_open()) {
-        throw std::runtime_error("Failed to open output file");
-    }
-
-    out_file << std::fixed << std::setprecision(18);
-    out_file.unsetf(std::ios::scientific);
-
 	const auto start_time = std::chrono::system_clock::now();
+	test->print_info();
 	for (int i = 1; i <= n; ++i)
 	{
 		try
@@ -467,34 +454,34 @@ void eval_transform_time_f(const int n, const int order, const series_templ&& se
 		}
 		catch (std::domain_error& e)
 		{
-			out_file << e.what() << "\n";
-			std::cout << e.what() << std::endl;
+			std::cout << e.what() << '\n';
 		}
 		catch (std::overflow_error& e)
 		{
-			std::cout << e.what() << std::endl;
-			out_file << e.what() << "\n";
-
+			std::cout << e.what() << '\n';
 		}
 	}
 	const auto end_time = std::chrono::system_clock::now();
 	const std::chrono::duration<double, std::milli> diff = end_time - start_time;
-	out_file << diff.count() << "\n";
+	std::cout << "It took " << diff.count() << " to perform these transformations" << '\n';
+	f_stream << diff.count() << '\n';
 }
 
 
-/**
+/** 
 * @brief Function that prints the terms of nontransformed partial sums
 * Then it prints out the nth terms  of the series
 * @authors Kreynin R.G.
 * @tparam series_templ is the type of series whose convergence we accelerate, transform_type is the type of transformation we are using
 * @param n The number of terms
-* @param f_stream Stream that wil be displayed results
+* @param f_steam Output data in file
 */
 template <typename series_templ>
 void print_sum_f(const int n, const series_templ&& series, std::ofstream& f_stream)
 {
-	f_stream << series->S_n(n) << "\n";
+	std::cout << "Sum of algo :" << series->get_sum() << '\n';
+	std::cout << "S_" << n << " : " << series->S_n(n) << '\n';
+	f_stream << series->S_n(n) << '\n';
 }
 
 /**
@@ -507,23 +494,27 @@ void print_sum_f(const int n, const series_templ&& series, std::ofstream& f_stre
 * @param order The order of the transformation
 * @param series The series class object to be accelerated
 * @param test The type of transformation that is being used
-* @param f_stream Stream that wil be displayed results
+* @param f_steam Output data in file
 */
 template <typename transform_type>
 void print_transform_f(const int n, const int order, const transform_type&& test, std::ofstream& f_stream)
 {
+	test->print_info();
+	long double result;
 	try
 	{
-		f_stream << test->operator()(n, order) << "\n";
+		result = test->operator()(n, order);
+		std::cout << "T_" << n << " of order " << order << " : " << result << '\n';
+		f_stream << result << '\n';
 	}
 	catch (std::domain_error& e)
 	{
-		f_stream << e.what() << "\n";
-		std::cout << e.what() << std::endl;
+		std::cout << e.what() << '\n';
+		f_stream << e.what() << '\n';
 	}
 	catch (std::overflow_error& e)
 	{
-		f_stream << e.what() << "\n";
-		std::cout << e.what() << std::endl;
+		std::cout << e.what() << '\n';
+		f_stream << e.what() << '\n';
 	}
 }
