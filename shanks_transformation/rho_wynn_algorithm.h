@@ -8,6 +8,7 @@
 #define DEF_UNDEFINED_SUM 0
 
 #include "series_acceleration.h" // Include the series header
+#include <memory> // For std::unique_ptr
 
  /**
   * @brief Rho Wynn Algorithm class template.
@@ -19,7 +20,7 @@ template <typename T, typename K, typename series_templ>
 class rho_Wynn_algorithm : public series_acceleration<T, K, series_templ>
 {
 protected:
-	const numerator_base<T, K>* numerator_func;
+	std::unique_ptr<const numerator_base<T, K>> numerator_func;
 	const T gamma;
 	const T RHO;
 
@@ -83,10 +84,8 @@ public:
 			throw std::domain_error("null poniter numerator function");
 	}
 
-	~rho_Wynn_algorithm() {
-		if (numerator_func != nullptr)
-			delete numerator_func;
-	}
+	//Default destructor is sufficient since unique_ptr handles deletion
+
 	/**
      * @brief Rho Wynn algorithm.ÿ
      * Computes the partial sum after the transformation using the Rho Wynn Algorithm.
@@ -99,4 +98,26 @@ public:
 	{
 		return calculate(n, order);
 	}
+
+	/**
+	 * @brief Compute transformed partial sum (extended version for arbitrary precision)
+	 * @tparam BigK Type for term count (auto-deduced)
+	 * @tparam BigOrder Type for order (auto-deduced)
+	 * @param n Number of terms (passed by reference for large types)
+	 * @param order Transformation order (must be even, passed by reference)
+	 * @return The accelerated partial sum
+	 * @throws std::domain_error for invalid arguments
+	 * @throws std::overflow_error for division by zero
+	 */
+
+	template <typename BigK, typename BigOrder, typename = std::enable_if_t<!std::is_same_v<BigK, K> || !std::is_same_v<BigOrder, int>>> T operator()(const BigK& n, const BigOrder& order) const {
+		static_assert(std::is_integral_v<BigOrder>, "Order type must be integral");
+		static_assert(std::is_constructible_v<K, BigK>, "Term count type must be convertible to K");
+
+		if (order < BigOrder(0))
+			throw std::domain_error("negative order");
+
+		return calculate_impl(static_cast<K>(n), static_cast<int>(order));
+	}
+
 };
