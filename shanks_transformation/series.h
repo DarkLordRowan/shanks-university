@@ -288,8 +288,8 @@ constexpr const T series_base<T, K>::phi(K n)
 				n /= i;
 			result -= result / i;
 		}
-	if (n > 1)
-		result -= result / n;
+
+	result -= n > 1 ? result / n : 0;
 	return static_cast<T>(result);
 }
 
