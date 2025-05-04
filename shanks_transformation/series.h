@@ -294,8 +294,6 @@ constexpr const T series_base<T, K>::phi(K n)
 }
 
 
-
-
 /**
 * @brief Abstract class for requrrent series
 * @authors Kreynin R.G.
@@ -309,6 +307,7 @@ public:
 	* @brief Parameterized constructor to initialize the requrrent series with function argument
 	* @authors Kreynin R.G.
 	* @param x The argument for function series
+	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	*/
 	requrrent_series_base(T x);
 
@@ -316,6 +315,7 @@ public:
 	* @brief Parameterized constructor to initialize the requrrent series with vector, containing elements of series
 	* @authors Kreynin R.G.
 	* @param row The first elements of the series
+	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	*/
 	requrrent_series_base(std::vector<T> row);
 
@@ -323,12 +323,14 @@ public:
 	* @brief Computes nth term of the series
 	* @authors Kreynin R.G.
 	* @param n The number of the term
+	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	* @return nth term of the series
 	*/
 	virtual T acsess_row(K n) = 0;
 
 	/**
 	* @brief Vector, containing elements of the series
+	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	* It's empty by default
 	* @authors Kreynin R.G.
 	*/
@@ -351,6 +353,11 @@ requrrent_series_base<T, K>::requrrent_series_base(std::vector<T> row)
 };
 
 
+/**
+* @brief Maclaurin series of exp(x) function
+* @authors Bolshakov M.P.
+* @tparam T The type of the elements in the series, K The type of enumerating integer
+*/
 template <typename T, typename K>
 class exp_series : public series_base<T, K>, public requrrent_series_base<T, K>
 {
@@ -360,6 +367,7 @@ public:
 	/**
 	* @brief Parameterized constructor to initialize the series with function argument and sum
 	* @authors Bolshakov M.P.
+	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	* @param x The argument for function series
 	*/
 	exp_series(T x);
@@ -368,6 +376,7 @@ public:
 	* @brief Computes the nth term of the Maclaurin series of the exponent
 	* @authors Bolshakov M.P.
 	* @param n The number of the term
+	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	* @return nth term of the Maclaurin series of the exponent
 	*/
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
@@ -378,6 +387,7 @@ private:
 	* @brief Computes nth term of the series
 	* @authors Kreynin R.G.
 	* @param n The number of the term
+	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	* @return nth term of the series
 	*/
 	T acsess_row(K n);
@@ -408,8 +418,8 @@ constexpr T exp_series<T, K>::operator()(K n) const
 {
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
-	const T a = const_cast<exp_series<T, K>*>(this)->acsess_row(n);
-	return a;
+	const T result = const_cast<exp_series<T, K>*>(this)->acsess_row(n);
+	return result;
 }
 
 /**
@@ -427,6 +437,7 @@ public:
 	* @brief Parameterized constructor to initialize the series with function argument and sum
 	* @authors Bolshakov M.P.
 	* @param x The argument for function series
+	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	*/
 	cos_series(T x);
 
@@ -434,6 +445,7 @@ public:
 	* @brief Computes the nth term of the Maclaurin series of the cosine function
 	* @authors Bolshakov M.P.
 	* @param n The number of the term
+	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	* @return nth term of the Maclaurin series of the cosine functions
 	*/
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
@@ -443,13 +455,14 @@ private:
 	* @brief Computes nth term of the series
 	* @authors Kreynin R.G.
 	* @param n The number of the term
+	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	* @return nth term of the series
 	*/
 	T acsess_row(K n);
 };
 
 template <typename T, typename K>
-cos_series<T, K>::cos_series(T x) : series_base<T, K>(x, std::cos(x)), requrrent_series_base<T, K>(std::vector<T>{1, T(((-1)* x* x) / 2)}) {}
+cos_series<T, K>::cos_series(T x) : series_base<T, K>(x, std::cos(x)), requrrent_series_base<T, K>(std::vector<T>{1, T(((-1) * x * x) / 2)}) {}
 
 template <typename T, typename K>
 T cos_series<T, K>::acsess_row(K n)
@@ -461,7 +474,7 @@ T cos_series<T, K>::acsess_row(K n)
 	this->series_vector.reserve(n);
 
 	for (auto i = old_size; i <= static_cast<typename std::vector<T>::size_type>(n); ++i) {
-		this->series_vector.push_back(this->series_vector[i - 1] * static_cast<T>(-1) * static_cast<T>((this->x * this->x) / (i * (4 * i - 2))));
+		this->series_vector.push_back(this->series_vector[i - 1] * static_cast<T>(-1) * static_cast<T>((this->x * this->x) / (i * std::fma(4, i, -2))));
 	}
 
 	return this->series_vector[n];
@@ -473,8 +486,8 @@ constexpr T cos_series<T, K>::operator()(K n) const
 {
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
-	const T a = const_cast<cos_series<T, K>*>(this)->acsess_row(n);
-	return a;
+	const T result = const_cast<cos_series<T, K>*>(this)->acsess_row(n);
+	return result;
 }
 
 /**
@@ -492,6 +505,7 @@ public:
 	* @brief Parameterized constructor to initialize the series with function argument and sum
 	* @authors Bolshakov M.P.
 	* @param x The argument for function series
+	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	*/
 	sin_series(T x);
 
@@ -499,6 +513,7 @@ public:
 	* @brief Computes the nth term of the Maclaurin series of the sine function
 	* @authors Bolshakov M.P.
 	* @param n The number of the term
+	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	* @return nth term of the Maclaurin series of the sine functions
 	*/
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
@@ -508,6 +523,7 @@ private:
 	* @brief Computes nth term of the series
 	* @authors Kreynin R.G.
 	* @param n The number of the term
+	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	* @return nth term of the series
 	*/
 	T acsess_row(K n);
@@ -526,7 +542,7 @@ T sin_series<T, K>::acsess_row(K n)
 	this->series_vector.reserve(n);
 
 	for (auto i = old_size; i <= static_cast<typename std::vector<T>::size_type>(n); ++i) {
-		this->series_vector.push_back(this->series_vector[i - 1] * T(-1) * static_cast<T>((this->x * this->x) / (i * (4 * i + 2))));
+		this->series_vector.push_back(this->series_vector[i - 1] * static_cast<T>(-1) * static_cast<T>((this->x * this->x) / (i * std::fma(4, i, 2))));
 	}
 
 	return this->series_vector[n];
@@ -556,6 +572,7 @@ public:
 	* @brief Parameterized constructor to initialize the series with function argument and sum
 	* @authors Pashkov B.B.
 	* @param x The argument for function series
+	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	*/
 	cosh_series(T x);
 
@@ -563,6 +580,7 @@ public:
 	* @brief Computes the nth term of the Maclaurin series of hyperbolic cosine
 	* @authors Pashkov B.B.
 	* @param n The number of the term
+	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	* @return nth term of the series
 	*/
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
@@ -572,6 +590,7 @@ private:
 	* @brief Computes nth term of the series
 	* @authors Kreynin R.G.
 	* @param n The number of the term
+	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	* @return nth term of the series
 	*/
 	T acsess_row(K n);
@@ -590,7 +609,7 @@ T cosh_series<T, K>::acsess_row(K n)
 	this->series_vector.reserve(n);
 
 	for (auto i = old_size; i <= static_cast<typename std::vector<T>::size_type>(n); ++i) {
-		this->series_vector.push_back(this->series_vector[i - 1] * static_cast<T>((this->x * this->x) / (i * (4 * i - 2))));
+		this->series_vector.push_back(this->series_vector[i - 1] * static_cast<T>((this->x * this->x) / (i * std::fma(4, i, -2))));
 	}
 
 	return this->series_vector[n];
@@ -601,12 +620,12 @@ constexpr T cosh_series<T, K>::operator()(K n) const
 {
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
-	const T a = const_cast<cosh_series<T, K>*>(this)->acsess_row(n);
-	return a;
+	const T result = const_cast<cosh_series<T, K>*>(this)->acsess_row(n);
+	return result;
 }
 
 /**
-* @brief Maclaurin series of sinh function
+* @brief Maclaurin series of hyperbolic sine
 * @authors Bolshakov M.P.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
@@ -620,6 +639,7 @@ public:
 	* @brief Parameterized constructor to initialize the series with function argument and sum
 	* @authors Bolshakov M.P.
 	* @param x The argument for function series
+	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	*/
 	sinh_series(T x);
 
@@ -627,6 +647,7 @@ public:
 	* @brief Computes the nth term of the Maclaurin series of the sinh function
 	* @authors Bolshakov M.P.
 	* @param n The number of the term
+	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	* @return nth term of the Maclaurin series of the sinh functions
 	*/
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
@@ -636,6 +657,7 @@ private:
 	* @brief Computes nth term of the series
 	* @authors Kreynin R.G.
 	* @param n The number of the term
+	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	* @return nth term of the series
 	*/
 	T acsess_row(K n);
@@ -654,7 +676,7 @@ T sinh_series<T, K>::acsess_row(K n)
 	this->series_vector.reserve(n);
 
 	for (auto i = old_size; i <= static_cast<typename std::vector<T>::size_type>(n); ++i) {
-		this->series_vector.push_back(this->series_vector[i - 1] * static_cast<T>((this->x * this->x) / (i * (4 * i + 2))));
+		this->series_vector.push_back(this->series_vector[i - 1] * static_cast<T>((this->x * this->x) / (i * std::fma(4, i, 2))));
 	}
 
 	return this->series_vector[n];
@@ -665,12 +687,12 @@ constexpr T sinh_series<T, K>::operator()(K n) const
 {
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
-	const T a = const_cast<sinh_series<T, K>*>(this)->acsess_row(n);
-	return a;
+	const T result = const_cast<sinh_series<T, K>*>(this)->acsess_row(n);
+	return result;
 }
 
 /**
-* @brief Binomial series ( (1+x)^a maclaurin series)
+* @brief Binomial series (Maclaurin series for (1+x)^a function)
 * @authors Bolshakov M.P.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
@@ -685,7 +707,8 @@ public:
 	/**
 	* @brief Parameterized constructor to initialize the series with function argument and sum
 	* @authors Bolshakov M.P.
-	* @param x The argument for function series, alpha The integer constant
+	* @param x The argument for function series, alpha The power constant
+	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	*/
 	bin_series(T x, T alpha);
 
@@ -693,6 +716,7 @@ public:
 	* @brief Computes the nth term of the Binomial series
 	* @authors Bolshakov M.P.
 	* @param n The number of the term
+	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	* @return nth term of the series
 	*/
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
@@ -708,8 +732,8 @@ private:
 template <typename T, typename K>
 bin_series<T, K>::bin_series(T x, T alpha) : series_base<T, K>(x, std::pow(1 + x, alpha)), alpha(alpha)
 {
-	if (std::abs(x) > 1)
-		throw std::domain_error("series diverge");
+	if (std::abs(x) >= 1)
+		throw std::domain_error("the bin series diverge at x = " + std::to_string(x) + "; series converge if x only in (-1, 1)");
 }
 
 template <typename T, typename K>
@@ -721,7 +745,7 @@ constexpr T bin_series<T, K>::operator()(K n) const
 }
 
 /**
-* @brief Maclaurin series of arctan multiplied by four
+* @brief Maclaurin series of function 4 * artan(x)
 * @authors Bolshakov M.P.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
@@ -735,6 +759,7 @@ public:
 	* @brief Parameterized constructor to initialize the series with function argument and sum
 	* @authors Bolshakov M.P.
 	* @param x The argument for function series
+	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	*/
 	four_arctan_series(T x);
 
@@ -742,25 +767,17 @@ public:
 	* @brief Computes the nth term of the Maclaurin series of the arctan multiplied by four
 	* @authors Bolshakov M.P.
 	* @param n The number of the term
+	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	* @return nth term of the series
 	*/
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
-
-private:
-	/**
-	* @brief Computes nth term of the series
-	* @authors Kreynin R.G.
-	* @param n The number of the term
-	* @return nth term of the series
-	*/
-	// T acsess_row(K n);
 };
 
 template <typename T, typename K>
 four_arctan_series<T, K>::four_arctan_series(T x) : series_base<T, K>(x, 4 * std::atan(x))
 {
 	if (std::abs(x) > 1)
-		throw std::domain_error("the arctan series diverge at x = " + std::to_string(x));
+		throw std::domain_error("the 4 * arctan(x) series diverge at x = " + std::to_string(x) + "; series converge if x only in [-1, 1]");
 }
 
 template <typename T, typename K>
@@ -768,11 +785,11 @@ constexpr T four_arctan_series<T, K>::operator()(K n) const
 {
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
-	return static_cast<T>(4 * series_base<T, K>::minus_one_raised_to_power_n(n) * std::pow(this->x, 2 * n + 1) / (2 * n + 1));
+	return static_cast<T>(4 * series_base<T, K>::minus_one_raised_to_power_n(n) * std::pow(this->x, std::fma(2, n, 1)) / std::fma(2, n, 1));
 }
 
 /**
-* @brief Maclaurin series of -ln(1 - x)
+* @brief Maclaurin series of function -ln(1 - x)
 * @authors Pashkov B.B.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
@@ -786,6 +803,7 @@ public:
 	* @brief Parameterized constructor to initialize the series with function argument and sum
 	* @authors Pashkov B.B.
 	* @param x The argument for function series
+	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	*/
 	ln1mx_series(T x);
 
@@ -793,6 +811,7 @@ public:
 	* @brief Computes the nth term of the Maclaurin series of -ln(1 - x)
 	* @authors Pashkov B.B.
 	* @param n The number of the term
+	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	* @return nth term of the series
 	*/
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
@@ -801,8 +820,8 @@ public:
 template <typename T, typename K>
 ln1mx_series<T, K>::ln1mx_series(T x) : series_base<T, K>(x, -std::log(1 - x))
 {
-	if (std::abs(this->x) > 1 || this->x == 1)
-		throw std::domain_error("series diverge");
+	if (std::abs(this->x) >= 1 || this->x == 1)
+		throw std::domain_error("the -ln(1 - x) series diverge at x = " + std::to_string(x) + "; series converge if x only in (-1, 1)");
 }
 
 template <typename T, typename K>
@@ -814,7 +833,7 @@ constexpr T ln1mx_series<T, K>::operator()(K n) const
 }
 
 /**
-* @brief Maclaurin series of (sinh(x) + sin(x)) / 2
+* @brief Maclaurin series of function (sinh(x) + sin(x)) / 2
 * @authors Pashkov B.B.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
@@ -828,6 +847,7 @@ public:
 	* @brief Parameterized constructor to initialize the series with function argument and sum
 	* @authors Pashkov B.B.
 	* @param x The argument for function series
+	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	*/
 	mean_sinh_sin_series(T x);
 
@@ -835,6 +855,7 @@ public:
 	* @brief Computes the nth term of the Maclaurin series of (sinh(x) + sin(x)) / 2
 	* @authors Pashkov B.B.
 	* @param n The number of the term
+	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	* @return nth term of the series
 	*/
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
@@ -844,13 +865,14 @@ private:
 	* @brief Computes nth term of the series
 	* @authors Kreynin R.G.
 	* @param n The number of the term
+	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	* @return nth term of the series
 	*/
 	T acsess_row(K n);
 };
 
 template <typename T, typename K>
-mean_sinh_sin_series<T, K>::mean_sinh_sin_series(T x) : series_base<T, K>(x, static_cast<T>(0.5 * (std::sinh(x) + std::sin(x)))), requrrent_series_base<T, K>(x) {}
+mean_sinh_sin_series<T, K>::mean_sinh_sin_series(T x) : series_base<T, K>(x, static_cast<T>(static_cast<T>(0.5) * (std::sinh(x) + std::sin(x)))), requrrent_series_base<T, K>(x) {}
 
 template <typename T, typename K>
 T mean_sinh_sin_series<T, K>::acsess_row(K n)
@@ -862,25 +884,24 @@ T mean_sinh_sin_series<T, K>::acsess_row(K n)
 	this->series_vector.reserve(n);
 
 	for (auto i = old_size; i <= static_cast<typename std::vector<T>::size_type>(n); ++i) {
-		this->series_vector.push_back(this->series_vector[i - 1] * static_cast<T>(std::pow(this->x, 4) / ((4 * i + 1) * (4 * i) * (4 * i - 1) * (4 * i - 2))));
+		this->series_vector.push_back(this->series_vector[i - 1] * static_cast<T>(std::pow(this->x, 4) / (std::fma(4, i, 1) * (4 * i) * std::fma(4, i, -1) * std::fma(4, i, -2))));
 	}
 
 	return this->series_vector[n];
-} //std::pow(this->x, 4 * n + 1) / this->fact(4 * n + 1); FIX THIS SHIT!
+}
 
 template <typename T, typename K>
 constexpr T mean_sinh_sin_series<T, K>::operator()(K n) const
 {
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
-	const T a = const_cast<mean_sinh_sin_series<T, K>*>(this)->acsess_row(n);
-	return a;
+	const T result = const_cast<mean_sinh_sin_series<T, K>*>(this)->acsess_row(n);
+	return result;
 }
 
 
-
 /**
-* @brief Maclaurin series of exp(x^2)*erf(x) where erf(x) is error function of x
+* @brief Maclaurin series of function exp(x^2)*erf(x), where erf(x) is error function of x
 * @authors Pashkov B.B.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
@@ -894,6 +915,7 @@ public:
 	* @brief Parameterized constructor to initialize the series with function argument and sum
 	* @authors Pashkov B.B.
 	* @param x The argument for function series
+	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	*/
 	exp_squared_erf_series(T x);
 
@@ -901,27 +923,28 @@ public:
 	* @brief Computes the nth term of the Maclaurin series of exp(x^2)*erf(x)
 	* @authors Pashkov B.B.
 	* @param n The number of the term
+	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	* @return nth term of the series
 	*/
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
 template <typename T, typename K>
-exp_squared_erf_series<T, K>::exp_squared_erf_series(T x) : series_base<T, K>(x, std::exp(x* x)* std::erf(x)) {}
+exp_squared_erf_series<T, K>::exp_squared_erf_series(T x) : series_base<T, K>(x, std::exp(x * x)* std::erf(x)) {}
 
 template <typename T, typename K>
 constexpr T exp_squared_erf_series<T, K>::operator()(K n) const
 {
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
-	const auto result = std::pow(this->x, 2 * n + 1) / std::tgamma(n + 1.5);
+	const auto result = std::pow(this->x, std::fma(2, n, 1)) / std::tgamma(n + 1.5);
 	if (!isfinite(result))
 		throw std::overflow_error("operator() is too big");
 	return static_cast<T>(result);
 }
 
 /**
-* @brief Maclaurin series of x^(-b) * J_b(2x) where J_b(x) is Bessel function of the first kind of order b
+* @brief Maclaurin series of function x^(-b) * J_b(2x) where J_b(x) is Bessel function of the first kind of order b
 * @authors Pashkov B.B.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
@@ -934,7 +957,8 @@ public:
 	/**
 	* @brief Parameterized constructor to initialize the series with function argument and sum
 	* @authors Pashkov B.B.
-	* @param x The argument for function series, b The integer constant
+	* @param x The argument for function series, b The order constant
+	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	*/
 	xmb_Jb_two_series(T x, K b);
 
@@ -942,6 +966,7 @@ public:
 	* @brief Computes the nth term of the Maclaurin series of x^(-b) * J_b(2x)
 	* @authors Pashkov B.B.
 	* @param n The number of the term
+	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	* @return nth term of the series
 	*/
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
@@ -962,11 +987,11 @@ constexpr T xmb_Jb_two_series<T, K>::operator()(K n) const
 {
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
-	return static_cast<T>(series_base<T, K>::minus_one_raised_to_power_n(n) * std::pow(this->x, 2 * n) / (static_cast<T>(this->fact(n)) * static_cast<T>(this->fact(n + this->mu))));
+	return static_cast<T>(series_base<T, K>::minus_one_raised_to_power_n(n) * std::pow(this->x, 2 * n) / (static_cast<T>(this->fact(n)) * static_cast<T>(std::tgamma(n + this->mu + 1))));
 }
 
 /**
-* @brief Maclaurin series of 0.5 * asin(2x) where asin(x) is inverse sine of x
+* @brief Maclaurin series of function 0.5 * asin(2x), where asin(x) is inverse sine of x
 * @authors Pashkov B.B.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
@@ -980,6 +1005,7 @@ public:
 	* @brief Parameterized constructor to initialize the series with function argument and sum
 	* @authors Pashkov B.B.
 	* @param x The argument for function series
+	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	*/
 	half_asin_two_x_series(T x);
 
@@ -987,16 +1013,17 @@ public:
 	* @brief Computes the nth term of the Maclaurin series of 0.5 * asin(2x)
 	* @authors Pashkov B.B.
 	* @param n The number of the term
+	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	* @return nth term of the series
 	*/
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
 template <typename T, typename K>
-half_asin_two_x_series<T, K>::half_asin_two_x_series(T x) : series_base<T, K>(x, static_cast<T>(0.5 * std::asin(2 * x)))
+half_asin_two_x_series<T, K>::half_asin_two_x_series(T x) : series_base<T, K>(x, static_cast<T>(static_cast<T>(0.5) * std::asin(2 * x)))
 {
 	if (std::abs(this->x) > 0.5)
-		throw std::domain_error("series diverge");
+		throw std::domain_error("the 0.5 * asin(2x) series diverge at x = " + std::to_string(x) + "; series converge if x only in [-0.5, 0.5]");
 }
 
 template <typename T, typename K>
@@ -1005,10 +1032,12 @@ constexpr T half_asin_two_x_series<T, K>::operator()(K n) const
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
 	const auto _fact_n = this->fact(n);
-	return static_cast<T>(static_cast<T>(this->fact(2 * n)) * std::pow(this->x, 2 * n) / (_fact_n * _fact_n * (2 * n + 1))); // p. 566 typo
+	return static_cast<T>(static_cast<T>(this->fact(2 * n)) * std::pow(this->x, 2 * n) / (_fact_n * _fact_n * (2 * n + 1)));
 }
+
+
 /**
-* @brief Maclaurin series of 1 / (1 - x)
+* @brief Maclaurin series of function 1 / (1 - x)
 * @authors Pashkov B.B.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
@@ -1022,6 +1051,7 @@ public:
 	* @brief Parameterized constructor to initialize the series with function argument and sum
 	* @authors Pashkov B.B.
 	* @param x The argument for function series
+	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	*/
 	inverse_1mx_series(T x);
 
@@ -1029,6 +1059,7 @@ public:
 	* @brief Computes the nth term of the Maclaurin series of 1 / (1 - x)
 	* @authors Pashkov B.B.
 	* @param n The number of the term
+	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	* @return nth term of the series
 	*/
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
@@ -1038,7 +1069,7 @@ template <typename T, typename K>
 inverse_1mx_series<T, K>::inverse_1mx_series(T x) : series_base<T, K>(x, 1 / (1 - x))
 {
 	if (std::abs(this->x) >= 1)
-		throw std::domain_error("series diverge");
+		throw std::domain_error("the 1 / (1 - x) series diverge at x = " + std::to_string(x) + "; series converge if x only in (-1, 1)");
 }
 
 template <typename T, typename K>
@@ -1050,7 +1081,7 @@ constexpr T inverse_1mx_series<T, K>::operator()(K n) const
 }
 
 /**
-* @brief Maclaurin series of x / (1 - x)^2
+* @brief Maclaurin series of function x / (1 - x)^2
 * @authors Pashkov B.B.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
@@ -1064,6 +1095,7 @@ public:
 	* @brief Parameterized constructor to initialize the series with function argument and sum
 	* @authors Pashkov B.B.
 	* @param x The argument for function series
+	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	*/
 	x_1mx_squared_series(T x);
 
@@ -1071,6 +1103,7 @@ public:
 	* @brief Computes the nth term of the Maclaurin series of x / (1 - x)^2
 	* @authors Pashkov B.B.
 	* @param n The number of the term
+	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	* @return nth term of the series
 	*/
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
@@ -1079,8 +1112,8 @@ public:
 template <typename T, typename K>
 x_1mx_squared_series<T, K>::x_1mx_squared_series(T x) : series_base<T, K>(x, x / std::fma(x, x - 1, 1 - x))
 {
-	if (std::abs(this->x) > 1 || this->x == 1)
-		throw std::domain_error("series diverge");
+	if (std::abs(this->x) >= 1)
+		throw std::domain_error("the 1 / (1 - x)^2 series diverge at x = " + std::to_string(x) + "; series converge if x only in (-1, 1)");
 }
 
 template <typename T, typename K>
@@ -1092,7 +1125,7 @@ constexpr T x_1mx_squared_series<T, K>::operator()(K n) const
 }
 
 /**
-* @brief Maclaurin series of sqrt(pi) * erf(x) / 2
+* @brief Maclaurin series of function 0.5 * sqrt(pi) * erf(x)
 * @authors Pashkov B.B.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
@@ -1106,6 +1139,7 @@ public:
 	* @brief Parameterized constructor to initialize the series with function argument and sum
 	* @authors Pashkov B.B.
 	* @param x The argument for function series
+	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	*/
 	erf_series(T x);
 
@@ -1113,6 +1147,7 @@ public:
 	* @brief Computes the nth term of the Maclaurin series of sqrt(pi) * erf(x) / 2
 	* @authors Pashkov B.B.
 	* @param n The number of the term
+	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	* @return nth term of the series
 	*/
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
@@ -1122,6 +1157,7 @@ private:
 	* @brief Computes nth term of the series
 	* @authors Kreynin R.G.
 	* @param n The number of the term
+	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	* @return nth term of the series
 	*/
 	T acsess_row(K n);
@@ -1140,12 +1176,11 @@ T erf_series<T, K>::acsess_row(K n)
 	this->series_vector.reserve(n);
 
 	for (auto i = old_size; i <= static_cast<typename std::vector<T>::size_type>(n); ++i) {
-		this->series_vector.push_back(this->series_vector[i - 1] * static_cast<T>((-1)) * static_cast<T>((this->x * this->x) / i * (2 * i - 1) / (2 * i + 1)));
+		this->series_vector.push_back(this->series_vector[i - 1] * static_cast<T>((-1)) * static_cast<T>((this->x * this->x) / i * std::fma(2, i, -1) / std::fma(2, i, 1)));
 	}
 
 	return static_cast<T>(this->series_vector[n]);
 }
-
 
 template <typename T, typename K>
 constexpr T erf_series<T, K>::operator()(K n) const
@@ -1157,7 +1192,7 @@ constexpr T erf_series<T, K>::operator()(K n) const
 }
 
 /**
-* @brief Maclaurin series of m! / (1 - x) ^ (m + 1)
+* @brief Maclaurin series of function m! / (1 - x) ^ (m + 1), where m - integer parameter
 * @authors Pashkov B.B.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
@@ -1170,7 +1205,8 @@ public:
 	/**
 	* @brief Parameterized constructor to initialize the series with function argument and sum
 	* @authors Pashkov B.B.
-	* @param x The argument for function series, m The integer constant
+	* @param x The argument for function series, m The integer constant parameter
+	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	*/
 	m_fact_1mx_mp1_inverse_series(T x, K m);
 
@@ -1178,13 +1214,14 @@ public:
 	* @brief Computes the nth term of the Maclaurin series of  m! / (1 - x) ^ (m + 1)
 	* @authors Pashkov B.B.
 	* @param n The number of the term
+	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	* @return nth term of the series
 	*/
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 private:
 
 	/**
-	* @brief The parameter m of the series
+	* @brief The const parameter m of the series
 	* @authors Pashkov B.B.
 	*/
 	const K m;
@@ -1193,6 +1230,7 @@ private:
 	* @brief Computes nth term of the series
 	* @authors Kreynin R.G.
 	* @param n The number of the term
+	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	* @return nth term of the series
 	*/
 	T acsess_row(K n);
@@ -1203,8 +1241,8 @@ m_fact_1mx_mp1_inverse_series<T, K>::m_fact_1mx_mp1_inverse_series(T x, K m) : s
 {
 	if (!isfinite(series_base<T, K>::sum)) // sum = this->fact(m) / pow(1 - x, m + 1))
 		throw std::overflow_error("sum is too big");
-	if (std::abs(this->x) >= 1) // p. 564 typo
-		throw std::domain_error("series diverge");
+	if (std::abs(this->x) >= 1) 
+		throw std::domain_error("the m! / (1 - x) ^ (m + 1) series diverge at x = " + std::to_string(x) + "; series converge if x only in (-1, 1)");
 }
 
 template <typename T, typename K>
@@ -1233,7 +1271,7 @@ constexpr T m_fact_1mx_mp1_inverse_series<T, K>::operator()(K n) const
 }
 
 /**
-* @brief Maclaurin series of (1 - 4x) ^ (-1/2)
+* @brief Maclaurin series of function (1 - 4x) ^ (-1/2)
 * @authors Pashkov B.B.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
@@ -1247,6 +1285,7 @@ public:
 	* @brief Parameterized constructor to initialize the series with function argument and sum
 	* @authors Pashkov B.B.
 	* @param x The argument for function series
+	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	*/
 	inverse_sqrt_1m4x_series(T x);
 
@@ -1254,6 +1293,7 @@ public:
 	* @brief Computes the nth term of the Maclaurin series of (1 - 4x) ^ (-1/2)
 	* @authors Pashkov B.B.
 	* @param n The number of the term
+	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	* @return nth term of the series
 	*/
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
@@ -1262,8 +1302,8 @@ public:
 template <typename T, typename K>
 inverse_sqrt_1m4x_series<T, K>::inverse_sqrt_1m4x_series(T x) : series_base<T, K>(x, static_cast<T>(std::pow(std::fma(-4, x, 1), -0.5)))
 {
-	if (std::abs(this->x) > 0.25 || this->x == 0.25)
-		throw std::domain_error("series diverge");
+	if (std::abs(this->x) >= 0.25)
+		throw std::domain_error("the (1 - 4x) ^ (-1/2) series diverge at x = " + std::to_string(x) + "; series converge if x only in (-0.25, 0.25)");
 }
 
 template <typename T, typename K>
@@ -1276,7 +1316,7 @@ constexpr T inverse_sqrt_1m4x_series<T, K>::operator()(K n) const
 }
 
 /**
-* @brief Trigonometric series of 1/12 * (3x^2 - pi^2)
+* @brief Trigonometric series of function 1/12 * (3x^2 - pi^2)
 * @authors Pashkov B.B.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
@@ -1290,6 +1330,7 @@ public:
 	* @brief Parameterized constructor to initialize the series with function argument and sum
 	* @authors Pashkov B.B.
 	* @param x The argument for function series
+	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	*/
 	one_twelfth_3x2_pi2_series(T x);
 
@@ -1297,6 +1338,7 @@ public:
 	* @brief Computes the nth term of the Trigonometric series of 1/12 * (3x^2 - pi^2)
 	* @authors Pashkov B.B.
 	* @param n The number of the term
+	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	* @return nth term of the series
 	*/
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
@@ -1306,7 +1348,7 @@ template <typename T, typename K>
 one_twelfth_3x2_pi2_series<T, K>::one_twelfth_3x2_pi2_series(T x) : series_base<T, K>(x, static_cast<T>(std::fma(0.25 * x, x, -std::numbers::pi * std::numbers::pi / 12)))
 {
 	if (std::abs(this->x) > std::numbers::pi)
-		throw std::domain_error("series diverge");
+		throw std::domain_error("the 1/12 * (3x^2 - pi^2) series diverge at x = " + std::to_string(x) + "; series converge if x only in (-pi, pi)");
 }
 
 template <typename T, typename K>
@@ -1318,7 +1360,7 @@ constexpr T one_twelfth_3x2_pi2_series<T, K>::operator()(K n) const
 }
 
 /**
-* @brief Trigonometric series of x/12 * (x^2 - pi^2)
+* @brief Trigonometric series of function x/12 * (x^2 - pi^2)
 * @authors Pashkov B.B.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
@@ -1332,6 +1374,7 @@ public:
 	* @brief Parameterized constructor to initialize the series with function argument and sum
 	* @authors Pashkov B.B.
 	* @param x The argument for function series
+	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	*/
 	x_twelfth_x2_pi2_series(T x);
 
@@ -1339,6 +1382,7 @@ public:
 	* @brief Computes the nth term of the Trigonometric series of x/12 * (x^2 - pi^2)
 	* @authors Pashkov B.B.
 	* @param n The number of the term
+	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	* @return nth term of the series
 	*/
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
@@ -1348,7 +1392,7 @@ template <typename T, typename K>
 x_twelfth_x2_pi2_series<T, K>::x_twelfth_x2_pi2_series(T x) : series_base<T, K>(x, static_cast<T>(std::fma(x / 12, (x + std::numbers::pi)* (x - std::numbers::pi), -std::fma(x + std::numbers::pi, x - std::numbers::pi, (x + std::numbers::pi) * (x - std::numbers::pi)))))
 {
 	if (std::abs(this->x) > std::numbers::pi)
-		throw std::domain_error("series diverge");
+		throw std::domain_error("the x/12 * (x^2 - pi^2) series diverge at x = " + std::to_string(x) + "; series converge if x only in (-pi, pi)");
 }
 
 template <typename T, typename K>
@@ -1375,6 +1419,7 @@ public:
 	* @brief Computes the nth term of the Numerical series of ln(2)
 	* @authors Pashkov B.B.
 	* @param n The number of the term
+	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	* @return nth term of the series
 	*/
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
@@ -1410,6 +1455,7 @@ public:
 	* @brief Computes the nth term of the Numerical series of 1
 	* @authors Pashkov B.B.
 	* @param n The number of the term
+	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	* @return nth term of the series
 	*/
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
@@ -1441,13 +1487,14 @@ public:
 	* @brief Computes the nth term of the Numerical series of -1/4
 	* @authors Pashkov B.B.
 	* @param n The number of the term
+	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	* @return nth term of the series
 	*/
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
 template <typename T, typename K>
-minus_one_quarter_series<T, K>::minus_one_quarter_series() : series_base<T, K>(0, -0.25) {}
+minus_one_quarter_series<T, K>::minus_one_quarter_series() : series_base<T, K>(0, static_cast<T>(-0.25)) {}
 
 template <typename T, typename K>
 constexpr T minus_one_quarter_series<T, K>::operator()(K n) const
@@ -1472,6 +1519,7 @@ public:
 	* @brief Computes the nth term of the Numerical series of pi/3
 	* @authors Pashkov B.B.
 	* @param n The number of the term
+	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	* @return nth term of the series
 	*/
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
@@ -1503,20 +1551,21 @@ public:
 	* @brief Computes the nth term of the Numerical series of pi/4
 	* @authors Pashkov B.B.
 	* @param n The number of the term
+	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	* @return nth term of the series
 	*/
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
 template <typename T, typename K>
-pi_4_series<T, K>::pi_4_series() : series_base<T, K>(0, static_cast<T>(0.25 * std::numbers::pi)) {}
+pi_4_series<T, K>::pi_4_series() : series_base<T, K>(0, static_cast<T>(std::numbers::pi / 4)) {}
 
 template <typename T, typename K>
 constexpr T pi_4_series<T, K>::operator()(K n) const
 {
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
-	return series_base<T, K>::minus_one_raised_to_power_n(n) / (2 * n + 1);
+	return series_base<T, K>::minus_one_raised_to_power_n(n) / static_cast<T>(std::fma(2, n, 1));
 }
 
 /**
@@ -1534,6 +1583,7 @@ public:
 	* @brief Computes the nth term of the Numerical series of pi^2 / 6 - 1
 	* @authors Pashkov B.B.
 	* @param n The number of the term
+	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	* @return nth term of the series
 	*/
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
