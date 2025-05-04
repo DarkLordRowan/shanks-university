@@ -15,69 +15,87 @@ template <typename T, typename K, typename series_templ>
 class ford_sidi_algorithm_three : public series_acceleration<T, K, series_templ>{
 public:
 
-    /*    * @brief Parameterized constructor to initialize the Ford-Sidi V-3 Algorithm.
-    * @authors Sharonov K.S.    * @param series The series class object to be accelerated
-    */    ford_sidi_algorithm_three(const series_templ& series);
+    /*    
+     * @brief Parameterized constructor to initialize the Ford-Sidi V-3 Algorithm.
+     * @authors Sharonov K.S.    * @param series The series class object to be accelerated
+     */    
+    ford_sidi_algorithm_three(const series_templ& series);
+
     /*
-    * @brief Fast implementation of Ford-Sidi.    
-    * @param n The number of terms in the partial sum.
-    * @param order The order of transformation.    
-    * * @return The partial sum after the transformation.
-    */    T operator()(const K n, const int k) const;
-protected:
-    mutable std::vector<std::vector<T>> FSG; // mutable allows modification in const methods
-    mutable std::vector<T> FSA;
-    mutable std::vector<T> FSI;
-    mutable std::vector<T> G;
+     * @brief Fast implementation of Ford-Sidi.    
+     * @param n The number of terms in the partial sum.
+     * @param order The order of transformation.    
+     * * @return The partial sum after the transformation.
+     */    
+    T operator()(const K n, const int k) const;
 };
 
-
 template <typename T, typename K, typename series_templ>
-ford_sidi_algorithm_three<T, K, series_templ>::ford_sidi_algorithm_three(const series_templ& series) : series_acceleration<T, K, series_templ>(series), FSG(1002, std::vector<T>(1001, 0.0)), FSA(1001, 0.0), FSI(1001, 0.0), G(1002, 0.0) {}
-
+//ford_sidi_algorithm_three<T, K, series_templ>::ford_sidi_algorithm_three(const series_templ& series) : series_acceleration<T, K, series_templ>(series), FSG(1002, std::vector<T>(1001, 0.0)), FSA(1001, 0.0), FSI(1001, 0.0), G(1002, 0.0) {}
+ford_sidi_algorithm_three<T, K, series_templ>::ford_sidi_algorithm_three(const series_templ& series) : series_acceleration<T, K, series_templ>(series) {}
 
 template <typename T, typename K, typename series_templ>
 T ford_sidi_algorithm_three<T, K, series_templ>::operator()(const K n, const int order) const{
+    if (n < 0)
+        throw std::domain_error("negative integer in the input");
 
-    G[1] = this->series->operator()(n-1);
-    
-    T Te = 1.0 / (n);
-    
-    for (int k = 1; k <= n + 500; ++k) {
-        if (k == 1) {
-            G[k] = G[k] * pow(n, k);
-        } else {
-            G[k] = Te * G[k - 1];
-        }
-    }
+    if (n == 0)
+        throw std::domain_error("n = 0 in the input");
 
-    if (abs(G[1]) >= 1e-77) {
-        FSA[n - 1] = this -> series -> S_n(n-1) / G[1];
-        FSI[n - 1] = 1.0 / G[1];
-        for (int i = 2; i <= n+500; ++i) {
-            FSG[i][n - 1] = G[i] / G[1];
-        }
-    } else {
-        FSA[n - 1] = this -> series -> S_n(n-1);
-        FSI[n - 1] = 1.0;
-        for (int i = 2; i <= n+500; ++i) {
-            FSG[i][n - 1] = G[i];
-        }
-    }
+    if (order < 0)
+        throw std::domain_error("negative order input");
+    
+    //TODO спросить у Парфенова, ибо жертвуем читаемостью кода, ради его небольшого ускорения
+    const K n1 = n - 1;
+    const K m = n + 1;
+
+    std::vector<T> G(m + 1);
+    std::vector<T> FSA(G.size());
+    std::vector<T> FSI(G.size());
+    std::vector<std::vector<T>> FSG(m + 2, std::vector<T>(G.size()));
+
+    G[0] = this->series->operator()(n1) * n;
+    
+    T Te = T(1) / n;
+    
+    for (K k = 1; k <= m; ++k)
+        G[k] = Te * G[k - 1];
+
+    FSA[n1] = this->series->S_n(n1);
+    FSI[n1] = T(1);
+
+    if (G[0] != 0) {
+        FSA[n1] /= G[0];
+        FSI[n1] /= G[0];
+        for (K i = 1; i <= m; ++i)
+            FSG[i][n1] = G[i] / G[0];
+    } 
+    else
+        for (K i = 1; i <= m; ++i)
+            FSG[i][n1] = G[i];
+
+    //TODO спросить у Парфенова, ибо жертвуем читаемостью кода, ради его небольшого ускорения
+    K MM, MM1, k2;
+    T D;
 
     // Основной цикл алгоритма Ford-Sidi
-    for (int k = 0; k <= n - 1; ++k) {
-        K MM = n - (k + 1) - 1;
-        T D = FSG[k + 2][MM + 1] - FSG[k + 2][MM];
+    for (K k = 0; k <= n1; ++k) {
+        MM = n1 - k;
+        MM1 = MM + 1;
+        k2 = k + 2;
+        D = FSG[k2][MM1] - FSG[k2][MM];
 
-        for (int i = k + 3; i <= n+500; ++i) {
-            FSG[i][MM] = (FSG[i][MM + 1] - FSG[i][MM]) / D;
-        }
-            FSA[MM] = (FSA[MM + 1] - FSA[MM]) / D;
-            FSI[MM] = (FSI[MM + 1] - FSI[MM]) / D;
+        for (K i = k + 3; i <= m; ++i)
+            FSG[i][MM] = (FSG[i][MM1] - FSG[i][MM]) / D;
 
+        FSA[MM] = (FSA[MM1] - FSA[MM]) / D;
+        FSI[MM] = (FSI[MM1] - FSI[MM]) / D;
     }
-    return FSA[0] / FSI[0];
+
+    const T res = FSA[0] / FSI[0];
+
+    if (!std::isfinite(res))
+        throw std::overflow_error("division by zero");
+
+    return res;
 }
-
-

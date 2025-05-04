@@ -28,6 +28,7 @@
 #include "richardson_algorithm.h"
 #include "FSA.h"
 #include "FSA_two.h"
+#include "FSA_3.h"
 #include "epsilon_modified_algorithm.h"
 #include "theta_modified_algorithm.h"
 #include "epsilon_aitken_theta_algorithm.h"
@@ -56,6 +57,7 @@ enum transformation_id_t {
 	richardson_algorithm_id,
 	Ford_Sidi_algorithm_id,
 	Ford_Sidi_algorithm_two_id,
+	Ford_Sidi_algorithm_three_id,
 	epsilon_modified_algorithm_id,
 	theta_modified_algorithm_id,
 	epsilon_aitken_theta_algorithm_id
@@ -326,9 +328,10 @@ inline static void print_transformation_info()
 		"15 - Richardson Algorithm" << '\n' <<
 		"16 - Ford-Sidi Algorithm" << '\n' <<
 		"17 - Ford-Sidi Algorithm V-2" << '\n' <<
-		"18 - Epsilon modified Algorithm" << '\n' <<
-		"19 - Theta modified Algorithm" << '\n' <<
-		"20 - Epsilon - Aitken - Theta Algorithm" << '\n' <<
+		"18 - Ford-Sidi Algorithm V-3" << '\n' <<
+		"19 - Epsilon modified Algorithm" << '\n' <<
+		"20 - Theta modified Algorithm" << '\n' <<
+		"21 - Epsilon - Aitken - Theta Algorithm" << '\n' <<
 		'\n';
 }
 
@@ -973,6 +976,9 @@ inline static void main_testing_function()
 	case transformation_id_t::Ford_Sidi_algorithm_two_id:
 		transform.reset(new ford_sidi_algorithm_two<T, K, decltype(series.get())>(series.get()));
 		break;
+	case transformation_id_t::Ford_Sidi_algorithm_three_id:
+		transform.reset(new ford_sidi_algorithm_three<T, K, decltype(series.get())>(series.get()));
+		break;
 	case transformation_id_t::epsilon_modified_algorithm_id:
 		transform.reset(new epsilon_modified_algorithm<T, K, decltype(series.get())>(series.get()));
 		break;
@@ -1079,6 +1085,9 @@ inline static void main_testing_function()
 			break;
 		case transformation_id_t::Ford_Sidi_algorithm_two_id:
 			transform2.reset(new ford_sidi_algorithm_two<T, K, decltype(series.get())>(series.get()));
+			break;
+		case transformation_id_t::Ford_Sidi_algorithm_three_id:
+			transform2.reset(new ford_sidi_algorithm_three<T, K, decltype(series.get())>(series.get()));
 			break;
 		case transformation_id_t::epsilon_modified_algorithm_id:
 			transform2.reset(new epsilon_modified_algorithm<T, K, decltype(series.get())>(series.get()));
