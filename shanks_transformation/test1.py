@@ -1,12 +1,17 @@
 from test import *
 
+
+def test_all_1_functions():
+    pass
+
+
 def main():
     exec_file = ""
-    if (os.name == "Windows"):
+    if (os.name == "nt"):
         exec_file = "/build/test.exe" # Путь к exe файлу
     else:
         exec_file = "./build/test"
-    params = ["1", "1", "17", "6", "10", "1", "1", "1", "1", "1", "1", "1"]
+    params = ["1", "1", "17", "6", "10", "2", "1", "1", "1", "1", "1", "1"]
 
     program = Program(exec_file, params)
     program.run()
