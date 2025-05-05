@@ -284,11 +284,13 @@ void cmp_sum_and_transform_f(const int n, const int order, const series_templ&& 
 		catch (std::domain_error& e)
 		{
 			std::cout << e.what() << '\n';
+			f_stream << series->S_n(i) << '\n';
 			f_stream << e.what() << '\n';
 		}
 		catch (std::overflow_error& e)
 		{
 			std::cout << e.what() << '\n';
+			f_stream << series->S_n(i) << '\n';
 			f_stream << e.what() << '\n';
 
 		}
@@ -331,11 +333,15 @@ void cmp_a_n_and_transform_f(const int n, const int order, const series_templ&& 
 		catch (std::domain_error& e)
 		{
 			std::cout << e.what() << '\n';
+			f_stream << (*series)(i) << '\n';
+			f_stream << e.what() << '\n';
 			f_stream << e.what() << '\n';
 		}
 		catch (std::overflow_error& e)
 		{
 			std::cout << e.what() << '\n';
+			f_stream << (*series)(i) << '\n';
+			f_stream << e.what() << '\n';
 			f_stream << e.what() << '\n';
 		}
 	}
@@ -408,14 +414,22 @@ void cmp_transformations_f(const int n, const int order, const series_templ&& se
 		try
 		{
 			diff_1 = series->get_sum() - test_1->operator()(i, order);
-			diff_2 = series->get_sum() - test_2->operator()(i, order);
-			std::cout << "The transformation #1: S - T_" << i << " : " << diff_1 << '\n';
-			std::cout << "The transformation #2: S - T_" << i << " : " << diff_2 << '\n';
-			if (std::abs(diff_1) < std::abs(diff_2))
-				std::cout << "The transformation #1 is faster" << '\n';
-			else
-				std::cout << "The transformation #2 is faster" << '\n';
 			f_stream << diff_1 << '\n';
+		}
+		catch (std::domain_error& e)
+		{
+			std::cout << e.what() << '\n';
+			f_stream << e.what() << '\n';
+		}
+		catch (std::overflow_error& e)
+		{
+			std::cout << e.what() << '\n';
+			f_stream << e.what() << '\n';
+		}
+
+		try
+		{
+			diff_2 = series->get_sum() - test_2->operator()(i, order);
 			f_stream << diff_2 << '\n';
 		}
 		catch (std::domain_error& e)

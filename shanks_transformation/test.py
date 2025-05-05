@@ -251,13 +251,11 @@ class Program:
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=True,
-            bufsize=50
         )
 
         for line in self.cl_arguments:
             process.stdin.write(line + "\n")
             process.stdin.flush()
-            print(process.stdout.readline())
         self.output, self.stderr = process.communicate()
 
     def get_output(self):
@@ -464,17 +462,19 @@ def work_with_data(logger, function_id, file, plot_file):
                         break
                     try:
                         S_n.append(float(line))
+                        logger.log(f"S_{i}: {S_n[i-1]}")
                     except:
-                        S_n.append(0)
-                        logger.log_error(line)
-                    logger.log(f"S_{i}: {S_n[i-1]}")
+                        S_n.append(None)
+                        logger.log_error(f"S_{i}: {line}(replaced by None)")
+
+                    line = f.readline().strip()
 
                     try:
-                        T_n.append(float(f.readline().strip()))
+                        T_n.append(float(line))
+                        logger.log(f"T_{i}: {T_n[i-1]}")
                     except:
-                        T_n.append(0)
-                        logger.log_error(f.readline().strip())
-                    logger.log(f"T_{i}: {T_n[i-1]}")
+                        T_n.append(None)
+                        logger.log(f"T_{i}: {line}(replaced by None)")
                     i += 1
 
         except Exception as e:
@@ -483,17 +483,17 @@ def work_with_data(logger, function_id, file, plot_file):
         x = list(range(len(S_n)))
         lim_arr = [lim for i in range(len(S_n))]
 
-        plt.figure(figsize=(15, 15), dpi=600)
+        plt.figure(figsize=(15, 15))
         
-        plt.plot(x, S_n, color = "Green", label = "S_n")
-        plt.plot(x, T_n, color="Red", label = "T_n")
+        plt.plot(x, S_n, linestyle="--", color="Blue", label="S_n")
+        plt.plot(x, T_n, linestyle="--", color="Green", label = "T_n")
         if (lim != 0):
-            plt.plot(x, lim_arr, color="black", label = "sum")
+            plt.plot(x, lim_arr, linestyle=":", color="Red", label="sum")
 
-        plt.tight_layout() #pad = 2.0
+        plt.tight_layout(pad = 2.0)
         plt.legend()
-
-        plt.savefig(plot_file, dpi=600)
+        plt.grid()
+        plt.savefig(plot_file)
         plt.close()
         
         logger.log(f"plot saved to {plot_file}")
@@ -512,25 +512,28 @@ def work_with_data(logger, function_id, file, plot_file):
                         break
                     try:
                         a_n.append(float(line))
+                        logger.log(f"a_{i}: {a_n[i-1]}")
                     except:
-                        a_n.append(0)
-                        logger.log_error(line)
-                    logger.log(f"a_{i}: {a_n[i-1]}")
+                        a_n.append(None)
+                        logger.log(f"a_{i}: {line}(replaced by None)")
+
+                    line = f.readline().strip()
 
                     try:
-                        t_n.append(float(f.readline().strip()))
+                        t_n.append(float(line))
+                        logger.log(f"t_{i}: {t_n[i-1]}")
                     except:
-                        t_n.append(0)
-                        logger.log_error(f.readline().strip())
-                    logger.log(f"t_{i}: {t_n[i-1]}")
+                        t_n.append(None)
+                        logger.log(f"t_{i}: {line}(replaced by None)")
 
+                    line = f.readline().strip()
 
                     try:
-                        diff.append(float(f.readline().strip()))
+                        diff.append(float(line))
+                        logger.log(f"t_{i} - a{i}: {diff[i-1]}")
                     except:
-                        diff.append(0)
-                        logger.log_error(f.readline().strip())
-                    logger.log(f"t_{i} - a{i}: {diff[i-1]}")
+                        diff.append(None)
+                        logger.log(f"t_{i} - a{i}: {line}(replaced by None)")
 
                     i += 1
         except Exception as e:
@@ -545,25 +548,59 @@ def work_with_data(logger, function_id, file, plot_file):
                 for line in f:
                     try:
                         diff.append(float(line.strip()))
+                        logger.log(f"S-T_{i}: {diff[i-1]}")
                     except:
-                        diff.append(0)
-                        logger.log_error(line.strip())
-
-                    logger.log(f"S-T_{i}: {diff[i-1]}")
+                        diff.append(None)
+                        logger.log(f"S-T_{i}: {line.strip()}(replaced by None)")
                     i += 1
         except Exception as e:
             logger.log_error(f"Error reading from file: {str(e)}")
 
     if function_id == "4":
-        ...
-    
+        first_transform = []
+        second_transform = []
+        try:
+            with open(file, 'r') as f:
+                i = 1
+                while True:
+                    line = f.readline().strip()
+                    if not line:
+                        break
+                    try:
+                        first_transform.append(float(line))
+                        logger.log(f"first_transformation_{i}: {first_transform[i-1]}")
+                    except:
+                        first_transform.append(None)
+                        logger.log_error(f"first_transformation_{i}: {line}(replaced by None)")
+
+                    line = f.readline().strip()
+
+                    try:
+                        second_transform.append(float(line))
+                        logger.log(f"second_transformation_{i}: {second_transform[i-1]}")
+                    except:
+                        second_transform.append(None)
+                        logger.log(f"second_transformation_{i}: {line}(replaced by None)")
+                    i += 1
+
+                    try:
+                        if first_transform[-1] > second_transform[-1]:
+                            logger.log(f"First transformation faster")
+                        else:
+                            logger.log(f"Second transformation faster")
+                    except:
+                        logger.log(f"Can not compare first and second transformation")
+
+        except Exception as e:
+            logger.log_error(f"Error reading from file: {str(e)}")
+            
     if function_id == "5":
         time = ''
         try:
             logger.log(f"Values of file:")
             with open(file, 'r') as f:
                 time = f.readline()
-                logger.log(f"execution took {time} seconds")
+                logger.log(f"execution took {time} milliseconds")
         except Exception as e:
             logger.log_error(f"Error reading from file: {str(e)}")
     
@@ -585,11 +622,10 @@ def work_with_data(logger, function_id, file, plot_file):
                     else:
                         try:
                             T_n[(i)%n].append(float(line))
+                            logger.log(f"{algorithms[(i-1)%n]}: {T_n[(i)%n][-1]}")
                         except:
-                            T_n[(i)%n].append(0)
-                            logger.log_error(line.strip())
-
-                        logger.log(f"{algorithms[(i-1)%n]}: {T_n[(i)%n][-1]}")
+                            T_n[(i)%n].append(None)
+                            logger.log_error(f"{algorithms[(i-1)%n]}: {line.strip()} (replaced by None)")
                     i += 1
         except Exception as e:
             logger.log_error(f"Error reading from file: {str(e)}")    
@@ -598,32 +634,36 @@ def work_with_data(logger, function_id, file, plot_file):
         lim_arr = [lim for i in range(len(S_n))]
 
 
-        plt.figure(figsize=(15, 15), dpi=600)
+        plt.figure(figsize=(15, 15))
         
         plt.plot(x, S_n, color = "Green", label = "S_n")
         for i in range(1, 33):
-            plt.plot(x, T_n[i], color=color_dict_hex[i-1], label = f"{algorithms[i-1]}")
+            if i not in [27, 30, 31, 32]: #TODO:fix
+                plt.plot(x, T_n[i], color=color_dict_hex[i-1], label = f"{algorithms[i-1]}") 
 
         if (lim != 0):
             plt.plot(x, lim_arr, color="black", label = "Sum")
 
-
-
         plt.tight_layout(pad=2.0)
         plt.legend()
+        plt.grid()
         
-        plt.savefig(plot_file, bbox_inches='tight', dpi=600)
+        plt.savefig(plot_file, bbox_inches='tight')
         plt.close()
         
         logger.log(f"plot saved to {plot_file}")
 
+
 def main():
     exec_file = ""
-    if (os.name == "Windows"):
-        exec_file = "/build/test.exe" # Путь к exe файлу
+    if (os.name == "nt"):
+        exec_file = "/test.exe" # Путь к exe файлу
     else:
         exec_file = "./build/test"
-    params = ["1", "1", "17", "6", "10", "2", "1", "1", "1", "1", "1", "1"]
+    #params = ["1", "1", "4", "6", "10", "1", "1", "1", "1", "1", "1", "1"]
+    #params = ["15", "3", "10", "0", "1", "10", "2"]
+    #params = ["15", "3", "4", "4", "10", "2", "18"]
+
 
     program = Program(exec_file, params)
     program.run()
@@ -647,7 +687,23 @@ def main():
     logger.log("------------------------------------------")
 
 
+'''
+Руководство по пользованию(Вводим так де как и на c++). Надо сделать параметры которые будут передаваться в программу.
 
+1)Выбираем ряд(первое значение)
+2)Вводим x(второе значение)
+1.1)Если выбрали ряд под номерами ["6", "11", "16", "75", "95", "102"]. То для них надо ввести дополнительный параметр.
+1.2)Если же выбрали ряд 103, то дальше нужно выбрать ряд, от который он будет модифицировать(в нашем случае добавлять шум). Смотрит пункт 3
+4)Выбираем трансформацию.
+4.1)Если выбрали трансформацию под номерами ["5", "6", "8"]. То надо выбрать какую трансформацию использовать(u,t,d,v) и выбрать является ли она рекурсивной(0, 1)
+4.2)Если выбрана трансформация 10, то надо выбрать параметр Beta.
+4.3)Если выбрана трансформация 13, то надо выбрать какую использовать 0 - classic(не требует доп параметров), 1 - gamma(требует доп параметр), 2 - gamma-rho(требует 2 доп параметра)
+5)Выбираем функцию
+6)Вводим n
+7)Вводим order
+5.1)Если выбрана функция 4, требуется написать трансформацию, с которой мы будем сравнивать(рассмотреть случаи 4.1-4.3)
+5.2)Если выбрана функция 6, требуется написать 6 раз(для каждого алгоритма из [beta_Levin_S_algorithm, gamma_Levin_M_algorithm, gamma_rho_Wynn_algorithm, RHO_rho_Wynn_algorithm, beta_levin_recursion_algorithm, epsilon_algorithm_3] написать его параметр) следующий выбор: сли допишем 1, то автоматически выберется стандартное значение параметра, если 0, тонадо будет написать значение параметра
+'''
 
 if __name__ == "__main__":
     main()

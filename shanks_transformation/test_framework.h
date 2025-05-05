@@ -20,7 +20,6 @@
 #include "drummond_D_algorithm.h"
 #include "epsilon_algorithm_two.h"
 #include "chang_whynn_algorithm.h"
-#include "test_functions.h"
 #include "levin_sidi_M_algorithm.h"
 #include "weniger_algorithm.h"
 #include "rho_wynn_algorithm.h"

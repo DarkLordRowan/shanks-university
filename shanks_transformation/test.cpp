@@ -19,7 +19,6 @@
 #include "drummond_D_algorithm.h"
 #include "epsilon_algorithm_two.h"
 #include "chang_whynn_algorithm.h"
-#include "test_functions.h"
 #include "levin_sidi_M_algorithm.h"
 #include "weniger_algorithm.h"
 #include "rho_wynn_algorithm.h"
@@ -1482,6 +1481,7 @@ inline static void main_testing_function()
         }
 
         cmp_transformations_f(n, order, std::move(series.get()), std::move(transform.get()), std::move(transform2.get()), f);
+        break;
     }
     case test_function_id_t::eval_transform_time_id:
         eval_transform_time_f(n, order, std::move(series.get()), std::move(transform.get()), f);
