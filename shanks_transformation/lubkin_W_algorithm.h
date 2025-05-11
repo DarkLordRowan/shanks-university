@@ -16,7 +16,7 @@
  * @tparam series_templ is the type of series whose convergence we accelerate
  */
 
-template<typename T, typename K, typename series_templ>
+template<std::floating_point T, std::unsigned_integral K, typename series_templ>
 class W_lubkin_algorithm : public series_acceleration<T, K, series_templ>
 {
 protected:
@@ -30,7 +30,7 @@ protected:
 	 * @return The partial sum after the transformation.
 	 */
 
-	T calculate(K n, const int order, T S_n, const K j) const {
+	T calculate(K n, const K order, T S_n, const K j) const {
 		/*
 		* j - to fix n
 		* S_n - partial sum of series.
@@ -45,7 +45,7 @@ protected:
 		//calculate all basic parts of transfor
 
 		//TODO спросить у Парфенова, ибо жертвуем читаемостью кода, ради его небольшого ускорения
-		int order1 = order - 1;
+		K order1 = order - 1;
 		T W0 = calculate(n, order1, S_n, 0);
 		T W1 = calculate(n, order1, S_n, 1);
 		T W2 = calculate(n, order1, S_n, 2);
@@ -86,7 +86,7 @@ public:
      * @return The partial sum after the transformation.
      */
 
-	T operator()(const K n, const int order) const {
+	T operator()(const K n, const K order) const {
 		if (order < 0) 
 			throw std::domain_error("negative order input");
 

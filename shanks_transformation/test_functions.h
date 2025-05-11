@@ -23,13 +23,12 @@
  * @param series The series class object to be accelerated
  * @param test The type of transformation that is being used
  */
-template <typename series_templ, typename transform_type>
-void cmp_sum_and_transform(const int n, const int order, const series_templ&& series, const transform_type&& test)
+template <std::unsigned_integral K, typename series_templ, typename transform_type>
+void cmp_sum_and_transform(const K n, const K order, const series_templ&& series, const transform_type&& test)
 {
 	test->print_info();
-	for (int i = 1; i <= n; ++i)
-	{
-		try
+	for (K i = 1; i <= n; ++i) {
+		try 
 		{
 			std::cout << "Sum of algo : " << series->get_sum() << '\n';
 			std::cout << "S_" << i << " : " << series->S_n(i) << '\n';
@@ -60,12 +59,11 @@ void cmp_sum_and_transform(const int n, const int order, const series_templ&& se
 * @param series The series class object to be accelerated
 * @param test The type of transformation that is being used
 */
-template <typename series_templ, typename transform_type>
-void cmp_a_n_and_transform(const int n, const int order, const series_templ&& series, const transform_type&& test)
+template <std::unsigned_integral K, typename series_templ, typename transform_type>
+void cmp_a_n_and_transform(const K n, const K order, const series_templ&& series, const transform_type&& test)
 {
 	test->print_info();
-	for (int i = 1; i <= n; ++i)
-	{
+	for (K i = 1; i <= n; ++i) {
 		try
 		{
 			std::cout << "a_" << i << " : " << (*series)(i) << '\n';
@@ -95,13 +93,12 @@ void cmp_a_n_and_transform(const int n, const int order, const series_templ&& se
 * @param series The series class object to be accelerated
 * @param test The type of transformation that is being used
 */
-template <typename series_templ, typename transform_type>
-void transformation_remainders(const int n, const int order, const series_templ&& series, const transform_type&& test)
+template <std::unsigned_integral K, typename series_templ, typename transform_type>
+void transformation_remainders(const K n, const K order, const series_templ&& series, const transform_type&& test)
 {
 	std::cout << "Tranformation of order " << order << " remainders from i = 1 to " << n << '\n';
 	test->print_info();
-	for (int i = 1; i <= n; ++i)
-	{
+	for (K i = 1; i <= n; ++i) {
 		try
 		{
 			std::cout << "S - T_" << i << " : " << series->get_sum() - test->operator()(i, order) << '\n';
@@ -129,8 +126,8 @@ void transformation_remainders(const int n, const int order, const series_templ&
 * @param test_1 The type of the first transformation that is being used
 * @param test_2 The type of the second transformation that is being used
 */
-template <typename series_templ, typename transform_type_1, typename transform_type_2>
-void cmp_transformations(const int n, const int order, const series_templ&& series, const transform_type_1&& test_1, const transform_type_2&& test_2)
+template <std::unsigned_integral K, typename series_templ, typename transform_type_1, typename transform_type_2>
+void cmp_transformations(const K n, const K order, const series_templ&& series, const transform_type_1&& test_1, const transform_type_2&& test_2)
 {
 	std::cout << "Tranformations of order " << order << " remainders from i = 1 to " << n << '\n';
 	std::cout << "The transformation #1 is ";
@@ -139,8 +136,7 @@ void cmp_transformations(const int n, const int order, const series_templ&& seri
 	test_2->print_info();
 	auto diff_1 = (*series)(0);
 	auto diff_2 = (*series)(0);
-	for (int i = 1; i <= n; ++i)
-	{
+	for (K i = 1; i <= n; ++i) {
 		try
 		{
 			diff_1 = series->get_sum() - test_1->operator()(i, order);
@@ -172,13 +168,12 @@ void cmp_transformations(const int n, const int order, const series_templ&& seri
 * @param series The series class object to be accelerated
 * @param test The type of the first transformation that is being used
 */
-template <typename series_templ, typename transform_type>
-void eval_transform_time(const int n, const int order, const series_templ&& series, const transform_type&& test)
+template <std::unsigned_integral K, typename series_templ, typename transform_type>
+void eval_transform_time(const K n, const K order, const series_templ&& series, const transform_type&& test)
 {
 	const auto start_time = std::chrono::system_clock::now();
 	test->print_info();
-	for (int i = 1; i <= n; ++i)
-	{
+	for (K i = 1; i <= n; ++i) {
 		try
 		{
 			test->operator()(i, order);
@@ -205,8 +200,8 @@ void eval_transform_time(const int n, const int order, const series_templ&& seri
 * @tparam series_templ is the type of series whose convergence we accelerate, transform_type is the type of transformation we are using
 * @param n The number of terms
 */
-template <typename series_templ>
-void print_sum(const int n, const series_templ&& series)
+template <std::unsigned_integral K, typename series_templ>
+void print_sum(const K n, const series_templ&& series)
 {
 	std::cout << "Sum of algo :" << series->get_sum() << '\n';
 	std::cout << "S_" << n << " : " << series->S_n(n) << '\n';
@@ -223,8 +218,8 @@ void print_sum(const int n, const series_templ&& series)
 * @param series The series class object to be accelerated
 * @param test The type of transformation that is being used
 */
-template <typename transform_type>
-void print_transform(const int n, const int order, const transform_type&& test)
+template <std::unsigned_integral K, typename transform_type>
+void print_transform(const K n, const K order, const transform_type&& test)
 {
 	test->print_info();
 	try

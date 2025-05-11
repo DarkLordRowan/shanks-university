@@ -112,13 +112,14 @@
 #include <numbers>
 #include <limits>
 #include <vector>
+#include <concepts>
 
  /**
  * @brief Abstract class for series
  * @authors Bolshakov M.P.
  * @tparam T The type of the elements in the series, K The type of enumerating integer
  */
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 class series_base
 {
 public:
@@ -128,6 +129,7 @@ public:
 	* @authors Bolshakov M.P.
 	* @param x The argument for function series
 	*/
+	
 	series_base(T x = 0);
 
 	/**
@@ -159,11 +161,11 @@ public:
 	[[nodiscard]] constexpr const T get_sum() const;
 
 	/**
-	* @brief factorial n!
+	* @brief factorial k!
 	* @authors Bolshakov M.P.
-	* @return n!
+	* @return k!
 	*/
-	[[nodiscard]] constexpr static const K fact(K n);
+	[[nodiscard]] constexpr static const K fact(K k);
 
 	/**
 	* @brief binomial coefficient C^n_k
@@ -195,6 +197,7 @@ protected:
 	* @param x The argument for function series
 	* @param sum The sum of the series
 	*/
+
 	series_base(T x, T sum);
 
 	/**
@@ -212,75 +215,61 @@ protected:
 	const T sum;
 };
 
-template <typename T, typename K>
-series_base<T, K>::series_base(T x) : x(x), sum(0)
-{
-	static_assert(std::is_floating_point_v<T>);
-	static_assert(std::numeric_limits<K>::is_integer);
-}
+template <std::floating_point T, std::unsigned_integral K>
+series_base<T, K>::series_base(T x) : x(x), sum(0) {}
 
-template <typename T, typename K>
-series_base<T, K>::series_base(T x, T sum) : x(x), sum(sum)
-{
-	static_assert(std::is_floating_point_v<T>);
-	static_assert(std::numeric_limits<K>::is_integer);
-}
+template <std::floating_point T, std::unsigned_integral K>
+series_base<T, K>::series_base(T x, T sum) : x(x), sum(sum) {}
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 constexpr T series_base<T, K>::S_n(K n) const
 {
-	if (n < 0)
-		throw std::domain_error("negative integer in the input");
 	T sum = operator()(n);
 	for (K i = 0; i < n; ++i)
 		sum += operator()(i);
 	return sum;
 }
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 constexpr const T series_base<T, K>::get_x() const
 {
 	return x;
 }
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 constexpr const T series_base<T, K>::get_sum() const
 {
 	return sum;
 }
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 constexpr const K series_base<T, K>::fact(K n)
 {
-	if (n < 0)
-		throw std::domain_error("negative integer in the input");
 	K f = 1;
 	for (K i = 2; i <= n; ++i)
 		f *= i;
 	return f;
 }
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 constexpr const T series_base<T, K>::binomial_coefficient(const T n, const K k)
 {
 	T b_c = 1;
 	for (K i = 0; i < k; ++i)
-		b_c = b_c * (n - static_cast<T>(i)) / (i + 1);
+		b_c *= (n - static_cast<T>(i)) / (i + 1);
 	return b_c;
 }
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 constexpr const T series_base<T, K>::minus_one_raised_to_power_n(K n)
 {
 	return static_cast<T>(n % 2 ? -1.0 : 1.0);
 }
 
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 constexpr const T series_base<T, K>::phi(K n)
 {
-	if (n < 0)
-		throw std::domain_error("negative integer in the input");
 	K result = n;
 	for (K i = 2; i * i <= n; ++i)
 		if (n % i == 0) {
@@ -299,7 +288,7 @@ constexpr const T series_base<T, K>::phi(K n)
 * @authors Kreynin R.G.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 class requrrent_series_base
 {
 public:
@@ -337,13 +326,13 @@ public:
 	std::vector<T> series_vector;
 };
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 requrrent_series_base<T, K>::requrrent_series_base(T x)
 {
 	this->series_vector.push_back(x);
 };
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 requrrent_series_base<T, K>::requrrent_series_base(std::vector<T> row)
 {
 	if (row.size() < 1)
@@ -358,7 +347,7 @@ requrrent_series_base<T, K>::requrrent_series_base(std::vector<T> row)
 * @authors Bolshakov M.P.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 class exp_series : public series_base<T, K>, public requrrent_series_base<T, K>
 {
 public:
@@ -393,15 +382,12 @@ private:
 	T acsess_row(K n);
 };
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 exp_series<T, K>::exp_series(T x) : series_base<T, K>(x, std::exp(x)), requrrent_series_base<T, K>(T(1)) {  }
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 T exp_series<T, K>::acsess_row(K n)
 {
-	if (n < 0)
-		throw std::domain_error("negative integer in the input");
-
 	auto old_size = this->series_vector.size();
 	this->series_vector.reserve(n);
 
@@ -413,13 +399,10 @@ T exp_series<T, K>::acsess_row(K n)
 	return this->series_vector[n];
 }
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 constexpr T exp_series<T, K>::operator()(K n) const
 {
-	if (n < 0)
-		throw std::domain_error("negative integer in the input");
-	const T result = const_cast<exp_series<T, K>*>(this)->acsess_row(n);
-	return result;
+	return const_cast<exp_series<T, K>*>(this)->acsess_row(n);
 }
 
 /**
@@ -427,7 +410,7 @@ constexpr T exp_series<T, K>::operator()(K n) const
 * @authors Bolshakov M.P.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 class cos_series : public series_base<T, K>, public requrrent_series_base<T, K>
 {
 public:
@@ -461,15 +444,12 @@ private:
 	T acsess_row(K n);
 };
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 cos_series<T, K>::cos_series(T x) : series_base<T, K>(x, std::cos(x)), requrrent_series_base<T, K>(std::vector<T>{1, T(((-1) * x * x) / 2)}) {}
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 T cos_series<T, K>::acsess_row(K n)
 {
-	if (n < 0)
-		throw std::domain_error("negative integer in the input");
-
 	auto old_size = this->series_vector.size();
 	this->series_vector.reserve(n);
 
@@ -481,13 +461,10 @@ T cos_series<T, K>::acsess_row(K n)
 }
 
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 constexpr T cos_series<T, K>::operator()(K n) const
 {
-	if (n < 0)
-		throw std::domain_error("negative integer in the input");
-	const T result = const_cast<cos_series<T, K>*>(this)->acsess_row(n);
-	return result;
+	return const_cast<cos_series<T, K>*>(this)->acsess_row(n);
 }
 
 /**
@@ -495,7 +472,7 @@ constexpr T cos_series<T, K>::operator()(K n) const
 * @authors Bolshakov M.P.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 class sin_series : public series_base<T, K>, public requrrent_series_base<T, K>
 {
 public:
@@ -529,15 +506,12 @@ private:
 	T acsess_row(K n);
 };
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 sin_series<T, K>::sin_series(T x) : series_base<T, K>(x, std::sin(x)), requrrent_series_base<T, K>(x) {}
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 T sin_series<T, K>::acsess_row(K n)
 {
-	if (n < 0)
-		throw std::domain_error("negative integer in the input");
-
 	auto old_size = this->series_vector.size();
 	this->series_vector.reserve(n);
 
@@ -548,13 +522,10 @@ T sin_series<T, K>::acsess_row(K n)
 	return this->series_vector[n];
 }
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 constexpr T sin_series<T, K>::operator()(K n) const
 {
-	if (n < 0)
-		throw std::domain_error("negative integer in the input");
-	const T result = const_cast<sin_series<T, K>*>(this)->acsess_row(n);
-	return result;
+	return const_cast<sin_series<T, K>*>(this)->acsess_row(n);
 }
 
 /**
@@ -562,7 +533,7 @@ constexpr T sin_series<T, K>::operator()(K n) const
 * @authors Pashkov B.B.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 class cosh_series : public series_base<T, K>, public requrrent_series_base<T, K>
 {
 public:
@@ -596,15 +567,12 @@ private:
 	T acsess_row(K n);
 };
 
-template <typename T, typename K>
-cosh_series<T, K>::cosh_series(T x) : series_base<T, K>(x, std::cosh(x)), requrrent_series_base<T, K>(std::vector<T>{1, T((x* x) / 2) }) {}
+template <std::floating_point T, std::unsigned_integral K>
+cosh_series<T, K>::cosh_series(T x) : series_base<T, K>(x, std::cosh(x)), requrrent_series_base<T, K>(std::vector<T>{1, T((x * x) / 2) }) {}
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 T cosh_series<T, K>::acsess_row(K n)
 {
-	if (n < 0)
-		throw std::domain_error("negative integer in the input");
-
 	auto old_size = this->series_vector.size();
 	this->series_vector.reserve(n);
 
@@ -615,13 +583,10 @@ T cosh_series<T, K>::acsess_row(K n)
 	return this->series_vector[n];
 }
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 constexpr T cosh_series<T, K>::operator()(K n) const
 {
-	if (n < 0)
-		throw std::domain_error("negative integer in the input");
-	const T result = const_cast<cosh_series<T, K>*>(this)->acsess_row(n);
-	return result;
+	return const_cast<cosh_series<T, K>*>(this)->acsess_row(n);
 }
 
 /**
@@ -629,7 +594,7 @@ constexpr T cosh_series<T, K>::operator()(K n) const
 * @authors Bolshakov M.P.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 class sinh_series : public series_base<T, K>, public requrrent_series_base<T, K>
 {
 public:
@@ -663,15 +628,12 @@ private:
 	T acsess_row(K n);
 };
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 sinh_series<T, K>::sinh_series(T x) : series_base<T, K>(x, std::sinh(x)), requrrent_series_base<T, K>(x) {}
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 T sinh_series<T, K>::acsess_row(K n)
 {
-	if (n < 0)
-		throw std::domain_error("negative integer in the input");
-
 	auto old_size = this->series_vector.size();
 	this->series_vector.reserve(n);
 
@@ -682,13 +644,10 @@ T sinh_series<T, K>::acsess_row(K n)
 	return this->series_vector[n];
 }
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 constexpr T sinh_series<T, K>::operator()(K n) const
 {
-	if (n < 0)
-		throw std::domain_error("negative integer in the input");
-	const T result = const_cast<sinh_series<T, K>*>(this)->acsess_row(n);
-	return result;
+	return const_cast<sinh_series<T, K>*>(this)->acsess_row(n);
 }
 
 /**
@@ -696,7 +655,7 @@ constexpr T sinh_series<T, K>::operator()(K n) const
 * @authors Bolshakov M.P.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 class bin_series : public series_base<T, K>
 {
 	using series_base<T, K>::binomial_coefficient;
@@ -729,14 +688,14 @@ private:
 	const T alpha;
 };
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 bin_series<T, K>::bin_series(T x, T alpha) : series_base<T, K>(x, std::pow(1 + x, alpha)), alpha(alpha)
 {
 	if (std::abs(x) >= 1)
 		throw std::domain_error("the bin series diverge at x = " + std::to_string(x) + "; series converge if x only in (-1, 1)");
 }
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 constexpr T bin_series<T, K>::operator()(K n) const
 {
 	if (n < 0)
@@ -749,7 +708,7 @@ constexpr T bin_series<T, K>::operator()(K n) const
 * @authors Bolshakov M.P.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 class four_arctan_series : public series_base<T, K>
 {
 public:
@@ -773,19 +732,18 @@ public:
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 four_arctan_series<T, K>::four_arctan_series(T x) : series_base<T, K>(x, 4 * std::atan(x))
 {
 	if (std::abs(x) > 1)
 		throw std::domain_error("the 4 * arctan(x) series diverge at x = " + std::to_string(x) + "; series converge if x only in [-1, 1]");
 }
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 constexpr T four_arctan_series<T, K>::operator()(K n) const
 {
-	if (n < 0)
-		throw std::domain_error("negative integer in the input");
-	return static_cast<T>(4 * series_base<T, K>::minus_one_raised_to_power_n(n) * std::pow(this->x, std::fma(2, n, 1)) / std::fma(2, n, 1)); // (7.1) Rows.pdf
+	const K temp = std::fma(2, n, 1);
+	return static_cast<T>(4 * series_base<T, K>::minus_one_raised_to_power_n(n) * std::pow(this->x, a) / a); // (7.1) Rows.pdf
 }
 
 /**
@@ -793,7 +751,7 @@ constexpr T four_arctan_series<T, K>::operator()(K n) const
 * @authors Pashkov B.B.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 class ln1mx_series : public series_base<T, K>
 {
 public:
@@ -817,19 +775,20 @@ public:
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 ln1mx_series<T, K>::ln1mx_series(T x) : series_base<T, K>(x, -std::log(1 - x))
 {
 	if (std::abs(this->x) >= 1 || this->x == 1)
 		throw std::domain_error("the -ln(1 - x) series diverge at x = " + std::to_string(x) + "; series converge if x only in (-1, 1)");
 }
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 constexpr T ln1mx_series<T, K>::operator()(K n) const
 {
-	if (n < 0)
-		throw std::domain_error("negative integer in the input");
-	return static_cast<T>(std::pow(this->x, n + 1) / (n + 1)); // (8.1) [Rows.pdf]
+	// TODO пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ n + 1 - пїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ!, пїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅ-пїЅпїЅ))
+	// TODO пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ.
+	const K temp = n + 1;
+	return static_cast<T>(std::pow(this->x, temp) / temp); // (8.1) [Rows.pdf]
 }
 
 /**
@@ -837,7 +796,7 @@ constexpr T ln1mx_series<T, K>::operator()(K n) const
 * @authors Pashkov B.B.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 class mean_sinh_sin_series : public series_base<T, K>, public requrrent_series_base<T, K>
 {
 public:
@@ -871,32 +830,26 @@ private:
 	T acsess_row(K n);
 };
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 mean_sinh_sin_series<T, K>::mean_sinh_sin_series(T x) : series_base<T, K>(x, static_cast<T>(static_cast<T>(0.5) * (std::sinh(x) + std::sin(x)))), requrrent_series_base<T, K>(x) {}
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 T mean_sinh_sin_series<T, K>::acsess_row(K n)
 {
-	if (n < 0)
-		throw std::domain_error("negative integer in the input");
-
 	auto old_size = this->series_vector.size();
 	this->series_vector.reserve(n);
-
+	T a;
 	for (auto i = old_size; i <= static_cast<typename std::vector<T>::size_type>(n); ++i) {
-		this->series_vector.push_back(this->series_vector[i - 1] * static_cast<T>(std::pow(this->x, 4) / (std::fma(4, i, 1) * (4 * i) * std::fma(4, i, -1) * std::fma(4, i, -2)))); // (9.1) [Rows.pdf]
+		a = static_cast<T>(std::fma(4, i, 1));
+		this->series_vector.push_back(this->series_vector[i - 1] * static_cast<T>(std::pow(this->x, 4) / (a * (4 * i) * (a - 2) * (a - 3)))); // (9.1) [Rows.pdf]
 	}
-
 	return this->series_vector[n];
 }
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 constexpr T mean_sinh_sin_series<T, K>::operator()(K n) const
 {
-	if (n < 0)
-		throw std::domain_error("negative integer in the input");
-	const T result = const_cast<mean_sinh_sin_series<T, K>*>(this)->acsess_row(n);
-	return result;
+	return const_cast<mean_sinh_sin_series<T, K>*>(this)->acsess_row(n);
 }
 
 
@@ -905,7 +858,7 @@ constexpr T mean_sinh_sin_series<T, K>::operator()(K n) const
 * @authors Pashkov B.B.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 class exp_squared_erf_series : public series_base<T, K>
 {
 public:
@@ -929,10 +882,10 @@ public:
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 exp_squared_erf_series<T, K>::exp_squared_erf_series(T x) : series_base<T, K>(x, std::exp(x * x) * std::erf(x)) {}
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 constexpr T exp_squared_erf_series<T, K>::operator()(K n) const
 {
 	if (n < 0)
@@ -948,7 +901,7 @@ constexpr T exp_squared_erf_series<T, K>::operator()(K n) const
 * @authors Pashkov B.B.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 class xmb_Jb_two_series : public series_base<T, K>
 {
 public:
@@ -979,14 +932,12 @@ private:
 	const K mu;
 };
 
-template <typename T, typename K>
-xmb_Jb_two_series<T, K>::xmb_Jb_two_series(T x, K b) : series_base<T, K>(x, static_cast<T>(std::pow(x, -b)* std::cyl_bessel_j(b, 2 * x))), mu(b) {}
+template <std::floating_point T, std::unsigned_integral K>
+xmb_Jb_two_series<T, K>::xmb_Jb_two_series(T x, K b) : series_base<T, K>(x, static_cast<T>(1 / std::pow(x, b)* std::cyl_bessel_j(b, 2 * x))), mu(b) {}
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 constexpr T xmb_Jb_two_series<T, K>::operator()(K n) const
 {
-	if (n < 0)
-		throw std::domain_error("negative integer in the input");
 	return static_cast<T>(series_base<T, K>::minus_one_raised_to_power_n(n) * std::pow(this->x, 2 * n) / (static_cast<T>(this->fact(n)) * static_cast<T>(std::tgamma(n + this->mu + 1)))); // (11.3) [Rows.pdf]
 }
 
@@ -995,7 +946,7 @@ constexpr T xmb_Jb_two_series<T, K>::operator()(K n) const
 * @authors Pashkov B.B.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 class half_asin_two_x_series : public series_base<T, K>
 {
 public:
@@ -1019,20 +970,19 @@ public:
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
-template <typename T, typename K>
-half_asin_two_x_series<T, K>::half_asin_two_x_series(T x) : series_base<T, K>(x, static_cast<T>(static_cast<T>(0.5) * std::asin(2 * x)))
+template <std::floating_point T, std::unsigned_integral K>
+half_asin_two_x_series<T, K>::half_asin_two_x_series(T x) : series_base<T, K>(x, static_cast<T>(0.5 * std::asin(2 * x)))
 {
-	if (std::abs(this->x) > 0.5)
+	if (std::abs(this->x) > static_cast<T>(0.5))
 		throw std::domain_error("the 0.5 * asin(2x) series diverge at x = " + std::to_string(x) + "; series converge if x only in [-0.5, 0.5]");
 }
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 constexpr T half_asin_two_x_series<T, K>::operator()(K n) const
 {
-	if (n < 0)
-		throw std::domain_error("negative integer in the input");
 	const auto _fact_n = this->fact(n);
-	return static_cast<T>(static_cast<T>(this->fact(2 * n)) * std::pow(this->x, 2 * n) / (_fact_n * _fact_n * (2 * n + 1))); // (12.1) [Rows.pdf]
+	const K a = 2 * n;
+	return static_cast<T>(static_cast<T>(this->fact(a)) * std::pow(this->x, a) / (_fact_n * _fact_n * (a + 1))); // (12.1) [Rows.pdf]
 }
 
 
@@ -1041,7 +991,7 @@ constexpr T half_asin_two_x_series<T, K>::operator()(K n) const
 * @authors Pashkov B.B.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 class inverse_1mx_series : public series_base<T, K>
 {
 public:
@@ -1065,18 +1015,16 @@ public:
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 inverse_1mx_series<T, K>::inverse_1mx_series(T x) : series_base<T, K>(x, 1 / (1 - x))
 {
 	if (std::abs(this->x) >= 1)
 		throw std::domain_error("the 1 / (1 - x) series diverge at x = " + std::to_string(x) + "; series converge if x only in (-1, 1)");
 }
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 constexpr T inverse_1mx_series<T, K>::operator()(K n) const
 {
-	if (n < 0)
-		throw std::domain_error("negative integer in the input");
 	return static_cast<T>(std::pow(this->x, n)); // (13.1) [Rows.pdf]
 }
 
@@ -1085,7 +1033,7 @@ constexpr T inverse_1mx_series<T, K>::operator()(K n) const
 * @authors Pashkov B.B.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 class x_1mx_squared_series : public series_base<T, K>
 {
 public:
@@ -1109,18 +1057,16 @@ public:
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 x_1mx_squared_series<T, K>::x_1mx_squared_series(T x) : series_base<T, K>(x, x / std::fma(x, x - 1, 1 - x))
 {
 	if (std::abs(this->x) >= 1)
 		throw std::domain_error("the 1 / (1 - x)^2 series diverge at x = " + std::to_string(x) + "; series converge if x only in (-1, 1)");
 }
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 constexpr T x_1mx_squared_series<T, K>::operator()(K n) const
 {
-	if (n < 0)
-		throw std::domain_error("negative integer in the input");
 	return static_cast<T>(std::pow(this->x, n) * n); // (14.1) [Rows.pdf]
 }
 
@@ -1129,7 +1075,7 @@ constexpr T x_1mx_squared_series<T, K>::operator()(K n) const
 * @authors Pashkov B.B.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 class erf_series : public series_base<T, K>, public requrrent_series_base<T, K>
 {
 public:
@@ -1163,33 +1109,27 @@ private:
 	T acsess_row(K n);
 };
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 erf_series<T, K>::erf_series(T x) : series_base<T, K>(x, static_cast<T>(std::sqrt(std::numbers::pi)) * static_cast<T>(std::erf(x) / 2)), requrrent_series_base<T, K>(x) { }
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 T erf_series<T, K>::acsess_row(K n)
 {
-	if (n < 0)
-		throw std::domain_error("negative integer in the input");
-
 	auto old_size = this->series_vector.size();
 	this->series_vector.reserve(n);
-
+	T a;
 	for (auto i = old_size; i <= static_cast<typename std::vector<T>::size_type>(n); ++i) 
 	{
-		this->series_vector.push_back(this->series_vector[i - 1] * static_cast<T>((-1)) * static_cast<T>((this->x * this->x) / i * std::fma(2, i, -1) / std::fma(2, i, 1)));
+		a = static_cast<T>(std::fma(2, i, 1));
+		this->series_vector.push_back(this->series_vector[i - 1] * static_cast<T>((-1)) * static_cast<T>((this->x * this->x) / i * (a - 2) / a));
 	}
-
 	return static_cast<T>(this->series_vector[n]);
 }
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 constexpr T erf_series<T, K>::operator()(K n) const
 {
-	if (n < 0)
-		throw std::domain_error("negative integer in the input");
-	const T result = const_cast<erf_series<T, K>*>(this)->acsess_row(n);
-	return result;
+	return const_cast<erf_series<T, K>*>(this)->acsess_row(n);
 }
 
 /**
@@ -1197,7 +1137,7 @@ constexpr T erf_series<T, K>::operator()(K n) const
 * @authors Pashkov B.B.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 class m_fact_1mx_mp1_inverse_series : public series_base<T, K>, public requrrent_series_base<T, K>
 {
 public:
@@ -1237,38 +1177,32 @@ private:
 	T acsess_row(K n);
 };
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 m_fact_1mx_mp1_inverse_series<T, K>::m_fact_1mx_mp1_inverse_series(T x, K m) : series_base<T, K>(x, static_cast<T>(static_cast<T>(this->fact(m)) / pow(1 - x, m + 1))), m(m), requrrent_series_base<T, K>(static_cast<T>(this->fact(m)))
 {
 	if (!isfinite(series_base<T, K>::sum)) // sum = this->fact(m) / pow(1 - x, m + 1))
 		throw std::overflow_error("sum is too big");
+
 	if (std::abs(this->x) >= 1) 
 		throw std::domain_error("the m! / (1 - x) ^ (m + 1) series diverge at x = " + std::to_string(x) + "; series converge if x only in (-1, 1)");
 }
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 T m_fact_1mx_mp1_inverse_series<T, K>::acsess_row(K n)
 {
-	if (n < 0)
-		throw std::domain_error("negative integer in the input");
-
 	auto old_size = this->series_vector.size();
 	this->series_vector.reserve(n);
 
-	for (auto i = old_size; i <= static_cast<typename std::vector<T>::size_type>(n); ++i) {
+	for (auto i = old_size; i <= static_cast<typename std::vector<T>::size_type>(n); ++i)
 		this->series_vector.push_back(this->series_vector[i - 1] * this->x * (this->m + i) / i);
-	}
 
 	return this->series_vector[n];
 }
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 constexpr T m_fact_1mx_mp1_inverse_series<T, K>::operator()(K n) const
 {
-	if (n < 0)
-		throw std::domain_error("negative integer in the input");
-	const T a = const_cast<m_fact_1mx_mp1_inverse_series<T, K>*>(this)->acsess_row(n);
-	return a;
+	return const_cast<m_fact_1mx_mp1_inverse_series<T, K>*>(this)->acsess_row(n);
 }
 
 /**
@@ -1276,7 +1210,7 @@ constexpr T m_fact_1mx_mp1_inverse_series<T, K>::operator()(K n) const
 * @authors Pashkov B.B.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 class inverse_sqrt_1m4x_series : public series_base<T, K>
 {
 public:
@@ -1300,18 +1234,16 @@ public:
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 inverse_sqrt_1m4x_series<T, K>::inverse_sqrt_1m4x_series(T x) : series_base<T, K>(x, static_cast<T>(std::pow(std::fma(-4, x, 1), -0.5)))
 {
-	if (std::abs(this->x) >= 0.25)
+	if (std::abs(this->x) >= static_cast<T>(0.25))
 		throw std::domain_error("the (1 - 4x) ^ (-1/2) series diverge at x = " + std::to_string(x) + "; series converge if x only in (-0.25, 0.25)");
 }
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 constexpr T inverse_sqrt_1m4x_series<T, K>::operator()(K n) const
 {
-	if (n < 0)
-		throw std::domain_error("negative integer in the input");
 	const auto _fact_n = this->fact(n);
 	return this->fact(2 * n) * static_cast<T>(pow(this->x, n) / (_fact_n * _fact_n));
 }
@@ -1321,7 +1253,7 @@ constexpr T inverse_sqrt_1m4x_series<T, K>::operator()(K n) const
 * @authors Pashkov B.B.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 class one_twelfth_3x2_pi2_series : public series_base<T, K>
 {
 public:
@@ -1345,18 +1277,16 @@ public:
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 one_twelfth_3x2_pi2_series<T, K>::one_twelfth_3x2_pi2_series(T x) : series_base<T, K>(x, static_cast<T>(std::fma(0.25 * x, x, -std::numbers::pi * std::numbers::pi / 12)))
 {
 	if (std::abs(this->x) > std::numbers::pi)
 		throw std::domain_error("the 1/12 * (3x^2 - pi^2) series diverge at x = " + std::to_string(x) + "; series converge if x only in (-pi, pi)");
 }
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 constexpr T one_twelfth_3x2_pi2_series<T, K>::operator()(K n) const
 {
-	if (n < 0)
-		throw std::domain_error("negative integer in the input");
 	return n ? series_base<T, K>::minus_one_raised_to_power_n(n) * std::cos(n * this->x) / (n * n) : 0;
 }
 
@@ -1365,7 +1295,7 @@ constexpr T one_twelfth_3x2_pi2_series<T, K>::operator()(K n) const
 * @authors Pashkov B.B.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 class x_twelfth_x2_pi2_series : public series_base<T, K>
 {
 public:
@@ -1389,18 +1319,16 @@ public:
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
-template <typename T, typename K>
-x_twelfth_x2_pi2_series<T, K>::x_twelfth_x2_pi2_series(T x) : series_base<T, K>(x, static_cast<T>(std::fma(x / 12, (x + std::numbers::pi)* (x - std::numbers::pi), -std::fma(x + std::numbers::pi, x - std::numbers::pi, (x + std::numbers::pi) * (x - std::numbers::pi)))))
+template <std::floating_point T, std::unsigned_integral K>
+x_twelfth_x2_pi2_series<T, K>::x_twelfth_x2_pi2_series(T x) : series_base<T, K>(x, static_cast<T>(x / 12 * (x * x - std::numbers::pi * std::numbers::pi)))
 {
 	if (std::abs(this->x) > std::numbers::pi)
 		throw std::domain_error("the x/12 * (x^2 - pi^2) series diverge at x = " + std::to_string(x) + "; series converge if x only in (-pi, pi)");
 }
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 constexpr T x_twelfth_x2_pi2_series<T, K>::operator()(K n) const
 {
-	if (n < 0)
-		throw std::domain_error("negative integer in the input");
 	return n ? static_cast<T>(series_base<T, K>::minus_one_raised_to_power_n(n) * std::sin(n * this->x) / (std::pow(n, 3))) : 0;
 }
 
@@ -1410,7 +1338,7 @@ constexpr T x_twelfth_x2_pi2_series<T, K>::operator()(K n) const
 * @authors Pashkov B.B.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 class ln2_series : public series_base<T, K>
 {
 public:
@@ -1426,14 +1354,12 @@ public:
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 ln2_series<T, K>::ln2_series() : series_base<T, K>(0, static_cast<T>(std::log(2))) {}
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 constexpr T ln2_series<T, K>::operator()(K n) const
 {
-	if (n < 0)
-		throw std::domain_error("negative integer in the input");
 	return n ? static_cast<T>(-series_base<T, K>::minus_one_raised_to_power_n(n)) / n : 0;
 }
 
@@ -1442,7 +1368,7 @@ constexpr T ln2_series<T, K>::operator()(K n) const
 * @authors Pashkov B.B.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 class one_series : public series_base<T, K>
 {
 public:
@@ -1462,14 +1388,12 @@ public:
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 one_series<T, K>::one_series() : series_base<T, K>(0, 1) {}
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 constexpr T one_series<T, K>::operator()(K n) const
 {
-	if (n < 0)
-		throw std::domain_error("negative integer in the input");
 	return n ? static_cast<T>(1.0 / fma(n, n, n)) : 0;
 }
 
@@ -1478,7 +1402,7 @@ constexpr T one_series<T, K>::operator()(K n) const
 * @authors Pashkov B.B.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 class minus_one_quarter_series : public series_base<T, K>
 {
 public:
@@ -1494,14 +1418,12 @@ public:
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 minus_one_quarter_series<T, K>::minus_one_quarter_series() : series_base<T, K>(0, static_cast<T>(-0.25)) {}
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 constexpr T minus_one_quarter_series<T, K>::operator()(K n) const
 {
-	if (n < 0)
-		throw std::domain_error("negative integer in the input");
 	return n ? series_base<T, K>::minus_one_raised_to_power_n(n) / (n * (n + 2)) : 0;
 }
 
@@ -1510,7 +1432,7 @@ constexpr T minus_one_quarter_series<T, K>::operator()(K n) const
 * @authors Pashkov B.B.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 class pi_3_series : public series_base<T, K>
 {
 public:
@@ -1526,15 +1448,14 @@ public:
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 pi_3_series<T, K>::pi_3_series() : series_base<T, K>(0, static_cast<T>(std::numbers::pi / 3)) {}
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 constexpr T pi_3_series<T, K>::operator()(K n) const
 {
-	if (n < 0)
-		throw std::domain_error("negative integer in the input");
-	return static_cast<T>(1.0 / ((n + 1) * (2 * n + 1) * (4 * n + 1)));
+	const K a = 2 * n + 1;
+	return static_cast<T>(1.0 / ((n + 1) * a * (2 * a - 1)));
 }
 
 /**
@@ -1542,7 +1463,7 @@ constexpr T pi_3_series<T, K>::operator()(K n) const
 * @authors Pashkov B.B.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 class pi_4_series : public series_base<T, K>
 {
 public:
@@ -1558,14 +1479,12 @@ public:
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 pi_4_series<T, K>::pi_4_series() : series_base<T, K>(0, static_cast<T>(std::numbers::pi / 4)) {}
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 constexpr T pi_4_series<T, K>::operator()(K n) const
 {
-	if (n < 0)
-		throw std::domain_error("negative integer in the input");
 	return series_base<T, K>::minus_one_raised_to_power_n(n) / static_cast<T>(std::fma(2, n, 1));
 }
 
@@ -1574,7 +1493,7 @@ constexpr T pi_4_series<T, K>::operator()(K n) const
 * @authors Pashkov B.B.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 class pi_squared_6_minus_one_series : public series_base<T, K>
 {
 public:
@@ -1590,14 +1509,12 @@ public:
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 pi_squared_6_minus_one_series<T, K>::pi_squared_6_minus_one_series() : series_base<T, K>(0, static_cast<T>(std::fma(std::numbers::pi / 6, std::numbers::pi, -1))) {}
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 constexpr T pi_squared_6_minus_one_series<T, K>::operator()(K n) const
 {
-	if (n < 0)
-		throw std::domain_error("negative integer in the input");
 	return static_cast<T>(n ? 1.0 / (n * n * (n + 1)) : 0);
 }
 
@@ -1606,7 +1523,7 @@ constexpr T pi_squared_6_minus_one_series<T, K>::operator()(K n) const
 * @authors Pashkov B.B.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 class three_minus_pi_series : public series_base<T, K>
 {
 public:
@@ -1621,14 +1538,12 @@ public:
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 three_minus_pi_series<T, K>::three_minus_pi_series() : series_base<T, K>(0, static_cast<T>(3 - std::numbers::pi)) {}
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 constexpr T three_minus_pi_series<T, K>::operator()(K n) const
 {
-	if (n < 0)
-		throw std::domain_error("negative integer in the input");
 	return n ? series_base<T, K>::minus_one_raised_to_power_n(n) / (n * (n + 1) * (2 * n + 1)) : 0;
 }
 
@@ -1637,7 +1552,7 @@ constexpr T three_minus_pi_series<T, K>::operator()(K n) const
 * @authors Pashkov B.B.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 class one_twelfth_series : public series_base<T, K>
 {
 public:
@@ -1652,15 +1567,14 @@ public:
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 one_twelfth_series<T, K>::one_twelfth_series() : series_base<T, K>(0, 1 / 12) {}
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 constexpr T one_twelfth_series<T, K>::operator()(K n) const
 {
-	if (n < 0)
-		throw std::domain_error("negative integer in the input");
-	return static_cast<T>(1.0 / ((2 * n + 1) * (2 * n + 3) * (2 * n + 5)));
+	const K a = 2 * n + 1;
+	return static_cast<T>(1.0 / (a * (a + 2) * (a + 4)));
 }
 
 /**
@@ -1668,7 +1582,7 @@ constexpr T one_twelfth_series<T, K>::operator()(K n) const
 * @authors Pashkov B.B.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 class eighth_pi_m_one_third_series : public series_base<T, K>
 {
 public:
@@ -1683,15 +1597,14 @@ public:
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 eighth_pi_m_one_third_series<T, K>::eighth_pi_m_one_third_series() : series_base<T, K>(0, static_cast<T>(std::numbers::pi / 8 - 1 / 3)) {}
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 constexpr T eighth_pi_m_one_third_series<T, K>::operator()(K n) const
 {
-	if (n < 0)
-		throw std::domain_error("negative integer in the input");
-	return series_base<T, K>::minus_one_raised_to_power_n(n) / ((2 * n + 1) * (2 * n + 3) * (2 * n + 5));
+	const K a = 2 * n + 1;
+	return series_base<T, K>::minus_one_raised_to_power_n(n) / (a * (a + 2) * (a + 4));
 }
 
 /**
@@ -1699,7 +1612,7 @@ constexpr T eighth_pi_m_one_third_series<T, K>::operator()(K n) const
 * @authors Pashkov B.B.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 class one_third_pi_squared_m_nine_series : public series_base<T, K>
 {
 public:
@@ -1714,15 +1627,15 @@ public:
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 one_third_pi_squared_m_nine_series<T, K>::one_third_pi_squared_m_nine_series() : series_base<T, K>(0, static_cast<T>(std::fma(std::numbers::pi, std::numbers::pi, -9) / 3)) {}
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 constexpr T one_third_pi_squared_m_nine_series<T, K>::operator()(K n) const
 {
-	if (n < 0)
-		throw std::domain_error("negative integer in the input");
-	return static_cast<T>(n ? 1.0 / (n * n * (n + 1) * (n + 1)) : 0);
+	// TODO пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ))
+	const K a = n * (n + 1);
+	return static_cast<T>(n ? 1.0 / (a * a) : 0);
 }
 
 /**
@@ -1730,7 +1643,7 @@ constexpr T one_third_pi_squared_m_nine_series<T, K>::operator()(K n) const
 * @authors Pashkov B.B.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 class four_ln2_m_3_series : public series_base<T, K>
 {
 public:
@@ -1745,15 +1658,15 @@ public:
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 four_ln2_m_3_series<T, K>::four_ln2_m_3_series() : series_base<T, K>(0, static_cast<T>(std::fma(4, std::log(2), -3))) {}
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 constexpr T four_ln2_m_3_series<T, K>::operator()(K n) const
 {
-	if (n < 0)
-		throw std::domain_error("negative integer in the input");
-	return n ? series_base<T, K>::minus_one_raised_to_power_n(n) / (n * n * (n + 1) * (n + 1)) : 0;
+	// TODO пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅ
+	const K a = n * (n + 1);
+	return n ? series_base<T, K>::minus_one_raised_to_power_n(n) / (a * a) : 0;
 }
 
 /**
@@ -1761,7 +1674,7 @@ constexpr T four_ln2_m_3_series<T, K>::operator()(K n) const
 * @authors Pashkov B.B.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 class exp_m_cos_x_sinsin_x_series : public series_base<T, K>
 {
 public:
@@ -1783,14 +1696,12 @@ public:
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 exp_m_cos_x_sinsin_x_series<T, K>::exp_m_cos_x_sinsin_x_series(T x) : series_base<T, K>(x, std::exp(-std::cos(x))* std::sin(std::sin(x))) {}
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 constexpr T exp_m_cos_x_sinsin_x_series<T, K>::operator()(K n) const
 {
-	if (n < 0)
-		throw std::domain_error("negative integer in the input");
 	return this->minus_one_raised_to_power_n(n) * std::sin(n * this->x) / this->fact(n);
 }
 
@@ -1799,7 +1710,7 @@ constexpr T exp_m_cos_x_sinsin_x_series<T, K>::operator()(K n) const
 * @authors Kreynin R.G.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 class pi_four_minus_ln2_halfed_series : public series_base<T, K>
 {
 public:
@@ -1821,16 +1732,15 @@ public:
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 pi_four_minus_ln2_halfed_series<T, K>::pi_four_minus_ln2_halfed_series(T x) : series_base<T, K>(x, static_cast<T>(x* static_cast<T>((std::numbers::pi / 4 - std::log(2) / 2)))) {}
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 constexpr T pi_four_minus_ln2_halfed_series<T, K>::operator()(K n) const
 {
-	if (n < 0)
-		throw std::domain_error("negative integer in the input");
 	if (n == 0)
 		return 0;
+
 	return this->x * series_base<T, K>::minus_one_raised_to_power_n(static_cast<K>(std::trunc(n / 2))) / n;
 }
 
@@ -1839,7 +1749,7 @@ constexpr T pi_four_minus_ln2_halfed_series<T, K>::operator()(K n) const
 * @authors Kreynin R.G.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 class five_pi_twelve_series : public series_base<T, K>
 {
 public:
@@ -1861,14 +1771,12 @@ public:
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 five_pi_twelve_series<T, K>::five_pi_twelve_series(T x) : series_base<T, K>(x, static_cast<T>(x * 5 * std::numbers::pi / 12)) {}
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 constexpr T five_pi_twelve_series<T, K>::operator()(K n) const
 {
-	if (n < 0)
-		throw std::domain_error("negative integer in the input");
 	return this->x * series_base<T, K>::minus_one_raised_to_power_n(static_cast<K>(std::trunc(n / 3))) / (2 * n + 1);
 }
 
@@ -1877,7 +1785,7 @@ constexpr T five_pi_twelve_series<T, K>::operator()(K n) const
 * @authors Kreynin R.G.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 class x_two_series : public series_base<T, K>
 {
 public:
@@ -1899,15 +1807,14 @@ public:
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 x_two_series<T, K>::x_two_series(T x) : series_base<T, K>(x, x / 2) {}
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 constexpr T x_two_series<T, K>::operator()(K n) const
 {
-	if (n < 0)
-		throw std::domain_error("negative integer in the input");
-	return this->x / ((2 * n + 1) * (2 * n + 3));
+	const K a = 2 * n + 1;
+	return this->x / (a * (a + 2));
 }
 
 /**
@@ -1915,7 +1822,7 @@ constexpr T x_two_series<T, K>::operator()(K n) const
 * @authors Kreynin R.G.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 class pi_six_min_half_series : public series_base<T, K>
 {
 public:
@@ -1937,15 +1844,14 @@ public:
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 pi_six_min_half_series<T, K>::pi_six_min_half_series(T x) : series_base<T, K>(x, static_cast<T>(x* (std::numbers::pi / 6 - 1 / 2))) {}
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 constexpr T pi_six_min_half_series<T, K>::operator()(K n) const
 {
-	if (n < 0)
-		throw std::domain_error("negative integer in the input");
-	return this->x * series_base<T, K>::minus_one_raised_to_power_n(n) / ((6 * n + 5) * (6 * n + 7));
+	const K a = 6 * n + 5;
+	return this->x * series_base<T, K>::minus_one_raised_to_power_n(n) / (a * (a + 2));
 }
 
 
@@ -1954,7 +1860,7 @@ constexpr T pi_six_min_half_series<T, K>::operator()(K n) const
 * @authors Kreynin R.G.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 class x_two_throught_squares_series : public series_base<T, K>
 {
 public:
@@ -1976,17 +1882,16 @@ public:
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 x_two_throught_squares_series<T, K>::x_two_throught_squares_series(T x) : series_base<T, K>(x, x / 2) {}
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 constexpr T x_two_throught_squares_series<T, K>::operator()(K n) const
 {
-	if (n < 0)
-		throw std::domain_error("negative integer in the input");
 	if (n == 0)
 		return 0;
-	return static_cast<T>(this->x * static_cast<T>((2 * (n * n) - 1) / (4 * std::pow(n, 4) + 1)));
+
+	return static_cast<T>(this->x * static_cast<T>((2 * n * n - 1) / (4 * std::pow(n, 4) + 1)));
 }
 
 /**
@@ -1994,7 +1899,7 @@ constexpr T x_two_throught_squares_series<T, K>::operator()(K n) const
 * @authors Kreynin R.G.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 class minus_one_ned_in_n_series : public series_base<T, K>
 {
 public:
@@ -2016,16 +1921,15 @@ public:
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 minus_one_ned_in_n_series<T, K>::minus_one_ned_in_n_series(T x) : series_base<T, K>(x, static_cast<T>(-0.78343051 * x)) {}
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 constexpr T minus_one_ned_in_n_series<T, K>::operator()(K n) const
 {
-	if (n < 0)
-		throw std::domain_error("negative integer in the input");
 	if (n == 0)
 		return 0;
+
 	return this->x * static_cast<T>(series_base<T, K>::minus_one_raised_to_power_n(n) / std::pow(n, n));
 }
 
@@ -2034,7 +1938,7 @@ constexpr T minus_one_ned_in_n_series<T, K>::operator()(K n) const
 * @authors Kreynin R.G.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 class minus_one_n_fact_n_in_n_series : public series_base<T, K>
 {
 public:
@@ -2056,16 +1960,15 @@ public:
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 minus_one_n_fact_n_in_n_series<T, K>::minus_one_n_fact_n_in_n_series(T x) : series_base<T, K>(x, static_cast<T>(-0.65583160 * x)) {}
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 constexpr T minus_one_n_fact_n_in_n_series<T, K>::operator()(K n) const
 {
-	if (n < 0)
-		throw std::domain_error("negative integer in the input");
 	if (n == 0)
 		return 0;
+
 	return static_cast<T>(this->x * this->fact(n) * series_base<T, K>::minus_one_raised_to_power_n(n) / std::pow(n, n));
 }
 
@@ -2074,7 +1977,7 @@ constexpr T minus_one_n_fact_n_in_n_series<T, K>::operator()(K n) const
 * @authors Kreynin R.G.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 class ln_x_plus_one_x_minus_one_halfed_series : public series_base<T, K>
 {
 public:
@@ -2098,18 +2001,16 @@ public:
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 ln_x_plus_one_x_minus_one_halfed_series<T, K>::ln_x_plus_one_x_minus_one_halfed_series(T x) : series_base<T, K>(x, std::log((1 + x) / (1 - x)) / 2)
 {
 	if (std::abs(x) >= 1)
 		throw std::domain_error("the ln((x+1)/(1-x)) series diverge at x = " + std::to_string(this->x) + "; series converge if x only in (-1, 1)");
 }
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 constexpr T ln_x_plus_one_x_minus_one_halfed_series<T, K>::operator()(K n) const
 {
-	if (n < 0)
-		throw std::domain_error("negative integer in the input");
 	return static_cast<T>(std::pow(this->x, std::fma(2, n, 1)) / std::fma(2, n, 1)); // (39.2) [Rows.pdf] 
 }
 
@@ -2118,7 +2019,7 @@ constexpr T ln_x_plus_one_x_minus_one_halfed_series<T, K>::operator()(K n) const
 * @authors Kreynin R.G.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 class two_arcsin_square_x_halfed_series : public series_base<T, K>
 {
 public:
@@ -2149,11 +2050,9 @@ two_arcsin_square_x_halfed_series<T, K>::two_arcsin_square_x_halfed_series(T x) 
 		throw std::domain_error("the 2arcsin(x/2)^2 series diverge at x = " + std::to_string(this->x) + "; series converge if x only in [-2, 2]");
 }
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 constexpr T two_arcsin_square_x_halfed_series<T, K>::operator()(K n) const
 {
-	if (n < 0)
-		throw std::domain_error("negative integer in the input");
 	return  static_cast<T>((pow(this->x, std::fma(2, n, 2)) * this->fact(n) * this->fact(n)) / (this->fact(static_cast<K>(std::fma(2, n, 2))))); // (40.3) [Rows.pdf]
 }
 
@@ -2163,7 +2062,7 @@ constexpr T two_arcsin_square_x_halfed_series<T, K>::operator()(K n) const
 * @authors Trudolyubov N.A.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 class pi_squared_twelve_series : public series_base<T, K>
 {
 public:
@@ -2183,10 +2082,10 @@ public:
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 pi_squared_twelve_series<T, K>::pi_squared_twelve_series() : series_base<T, K>(0, static_cast<T>((std::numbers::pi* std::numbers::pi) / 12)) {}
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 constexpr T pi_squared_twelve_series<T, K>::operator()(K n) const
 {
 	if (n < 0)
@@ -2201,7 +2100,7 @@ constexpr T pi_squared_twelve_series<T, K>::operator()(K n) const
 * @authors Trudolyubov N.A.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 class pi_cubed_32_series : public series_base<T, K>
 {
 public:
@@ -2221,14 +2120,12 @@ public:
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 pi_cubed_32_series<T, K>::pi_cubed_32_series() : series_base<T, K>(0, static_cast<T>(std::pow(std::numbers::pi, 3) / 32)) {}
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 constexpr T pi_cubed_32_series<T, K>::operator()(K n) const
 {
-	if (n < 0)
-		throw std::domain_error("negative integer in the input");
 	T n_temp = static_cast<T>(n + 1);
 	return this->minus_one_raised_to_power_n(n) / static_cast<T>((std::pow(std::fma(2, n_temp, -1), 3))); // (42.2) [Rows.pdf]
 }
@@ -2239,7 +2136,7 @@ constexpr T pi_cubed_32_series<T, K>::operator()(K n) const
 * @authors Trudolyubov N.A.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 class minus_three_plus_ln3_three_devided_two_plus_two_ln2_series : public series_base<T, K>
 {
 public:
@@ -2259,14 +2156,12 @@ public:
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 minus_three_plus_ln3_three_devided_two_plus_two_ln2_series<T, K>::minus_three_plus_ln3_three_devided_two_plus_two_ln2_series() : series_base<T, K>(0, static_cast<T>(-3 + (3 / 2) * std::log(3) + 2 * std::log(2))) {}
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 constexpr T minus_three_plus_ln3_three_devided_two_plus_two_ln2_series<T, K>::operator()(K n) const
 {
-	if (n < 0)
-		throw std::domain_error("negative integer in the input");
 	T n_temp = static_cast<T>(n + 1);
 
 	return static_cast<T>(1 / (n_temp * (std::fma(36, n_temp * n_temp, -1))));  // (43.2) [Rows.pdf]
@@ -2278,7 +2173,7 @@ constexpr T minus_three_plus_ln3_three_devided_two_plus_two_ln2_series<T, K>::op
 * @authors Trudolyubov N.A.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 class two_ln2_series : public series_base<T, K>
 {
 public:
@@ -2298,15 +2193,12 @@ public:
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 two_ln2_series<T, K>::two_ln2_series() : series_base<T, K>(0, static_cast<T>(2 * std::log(2))) {}
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 constexpr T two_ln2_series<T, K>::operator()(K n) const
 {
-	if (n < 0)
-		throw std::domain_error("negative integer in the input");
-
 	T n_temp = static_cast<T>(n + 1);
 
 	return (12 * n_temp * n_temp - 1) / (n_temp * (4 * n_temp * n_temp - 1) * (4 * n_temp * n_temp - 1)); // (44.2) [Rows.pdf]
@@ -2317,7 +2209,7 @@ constexpr T two_ln2_series<T, K>::operator()(K n) const
 * @authors Trudolyubov N.A.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 class pi_x_multi_e_xpi_plus_e_minusxpi_divided_e_xpi_minus_e_minusxpi_minus_one_series : public series_base<T, K>
 {
 public:
@@ -2348,11 +2240,9 @@ pi_x_multi_e_xpi_plus_e_minusxpi_divided_e_xpi_minus_e_minusxpi_minus_one_series
 		throw std::domain_error("x cannot be zero");
 }
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 constexpr T pi_x_multi_e_xpi_plus_e_minusxpi_divided_e_xpi_minus_e_minusxpi_minus_one_series<T, K>::operator()(K n) const
 {
-	if (n < 0)
-		throw std::domain_error("negative integer in the input");
 	return (2 * (this->x) * (this->x)) / ((this->x) * (this->x) + (n + 1) * (n + 1)); // (45.4) [Rows.pdf]
 }
 
@@ -2362,7 +2252,7 @@ constexpr T pi_x_multi_e_xpi_plus_e_minusxpi_divided_e_xpi_minus_e_minusxpi_minu
 * @authors Trudolyubov N.A.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 class pi_minus_x_2 : public series_base<T, K>
 {
 public:
@@ -2393,12 +2283,11 @@ pi_minus_x_2<T, K>::pi_minus_x_2(T x) : series_base<T, K>(x, static_cast<T>((std
 		throw std::domain_error("the (pi - x) / 2 series diverge at x = " + std::to_string(this->x) + "; series converge if x only in (0, 2pi)");
 }
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 constexpr T pi_minus_x_2<T, K>::operator()(K n) const
 {
-	if (n < 0)
-		throw std::domain_error("negative integer in the input");
-	return std::sin((n + 1) * (this->x)) / (n + 1);  // (46.5) [Rows.pdf]
+	const K a = n + 1;
+	return std::sin(a * (this->x)) / a;  // (46.5) [Rows.pdf]
 }
 
 
@@ -2407,7 +2296,7 @@ constexpr T pi_minus_x_2<T, K>::operator()(K n) const
 * @authors Trudolyubov N.A.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 class half_multi_ln_1div2multi1minuscosx : public series_base<T, K>
 {
 public:
@@ -2438,12 +2327,11 @@ half_multi_ln_1div2multi1minuscosx<T, K>::half_multi_ln_1div2multi1minuscosx(T x
 		throw std::domain_error("the 0.5 * ln(1/(2*(1 - cos(x)))) series diverge at x = " + std::to_string(x) + "; series converge if x only in (0, 2pi)");
 }
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 constexpr T half_multi_ln_1div2multi1minuscosx<T, K>::operator()(K n) const
 {
-	if (n < 0)
-		throw std::domain_error("negative integer in the input");
-	return std::cos((n + 1) * (this->x)) / (n + 1); // (47.5) [Rows.pdf]
+	const K a = n + 1;
+	return std::cos(a * (this->x)) / a; // (47.5) [Rows.pdf]
 }
 
 
@@ -2452,7 +2340,7 @@ constexpr T half_multi_ln_1div2multi1minuscosx<T, K>::operator()(K n) const
 * @authors Trudolyubov N.A.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 class half_minus_sinx_multi_pi_4 : public series_base<T, K>
 {
 public:
@@ -2483,12 +2371,11 @@ half_minus_sinx_multi_pi_4<T, K>::half_minus_sinx_multi_pi_4(T x) : series_base<
 		throw std::domain_error("the 0.5 - (pi/4)*sin(x) series diverge at x = " + std::to_string(x) + "; series converge if x only in [0, pi/2]");
 }
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 constexpr T half_minus_sinx_multi_pi_4<T, K>::operator()(K n) const
 {
-	if (n < 0)
-		throw std::domain_error("negative integer in the input");
-	return static_cast<T>(std::cos(2 * (this->x) * (n + 1)) / (std::fma(2, n, 1) * std::fma(2, n, 3))); // (48.2) [Rows.pdf]
+	const K a = std::fma(2, n, 1);
+	return std::cos(2 * (this->x) * (n + 1)) / (a * (a + 2)); // (48.2) [Rows.pdf]
 }
 
 
@@ -2497,7 +2384,7 @@ constexpr T half_minus_sinx_multi_pi_4<T, K>::operator()(K n) const
 * @authors Trudolyubov N.A.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 class ln_1plussqrt1plusxsquare_minus_ln_2 : public series_base<T, K>
 {
 public:
@@ -2528,11 +2415,9 @@ ln_1plussqrt1plusxsquare_minus_ln_2<T, K>::ln_1plussqrt1plusxsquare_minus_ln_2(T
 		throw std::domain_error("x^2 cannot be more than 1");
 }
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 constexpr T ln_1plussqrt1plusxsquare_minus_ln_2<T, K>::operator()(K n) const
 {
-	if (n < 0)
-		throw std::domain_error("negative integer in the input");
 	return static_cast<T>((this->minus_one_raised_to_power_n(n) * this->fact(static_cast<K>(std::fma(2, n, 1))) * std::pow(this->x, std::fma(2, n, 2))) / 
 		(pow(2, std::fma(2, n, 2)) * this->fact(n + 1) * this->fact(n + 1))); // (49.3) [Rows.pdf]
 }
@@ -2543,7 +2428,7 @@ constexpr T ln_1plussqrt1plusxsquare_minus_ln_2<T, K>::operator()(K n) const
 * @authors Trudolyubov N.A.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 class ln_cosx : public series_base<T, K>
 {
 public:
@@ -2574,11 +2459,9 @@ ln_cosx<T, K>::ln_cosx(T x) : series_base<T, K>(x, std::log(std::cos(x)))
 		throw std::domain_error("the ln(cos(x)) series diverge at x = " + std::to_string(x) + "; series converge if x only in [-pi/2, pi/2]");
 }
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 constexpr T ln_cosx<T, K>::operator()(K n) const
 {
-	if (n < 0)
-		throw std::domain_error("negative integer in the input");
 	return static_cast<T>(-(std::pow(std::sin(this->x), std::fma(2, n, 2))) / std::fma(2, n, 2)); // (50.2) [Rows.pdf]
 }
 
@@ -2588,7 +2471,7 @@ constexpr T ln_cosx<T, K>::operator()(K n) const
 * @authors Trudolyubov N.A.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 class ln_sinx_minus_ln_x : public series_base<T, K>
 {
 public:
@@ -2619,12 +2502,11 @@ ln_sinx_minus_ln_x<T, K>::ln_sinx_minus_ln_x(T x) : series_base<T, K>(x, std::lo
 		throw std::domain_error("the ln(sin(x)) - ln(x) series diverge at x = " + std::to_string(x) + "; series converge if x only in [0, pi]");
 }
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 constexpr T ln_sinx_minus_ln_x<T, K>::operator()(K n) const
 {
-	if (n < 0)
-		throw std::domain_error("negative integer in the input");
-	return static_cast<T>(std::log(1 - (this->x) * (this->x) / ((n + 1) * (n + 1) * std::numbers::pi * std::numbers::pi))); // (51.2) [Rows.pdf]
+	const K a = n + 1;
+	return static_cast<T>(std::log(1 - (this->x) * (this->x) / (a * a * std::numbers::pi * std::numbers::pi)));
 }
 
 
@@ -2633,7 +2515,7 @@ constexpr T ln_sinx_minus_ln_x<T, K>::operator()(K n) const
 * @authors Trudolyubov N.A.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 class pi_8_cosx_square_minus_1_div_3_cosx : public series_base<T, K>
 {
 public:
@@ -2655,17 +2537,16 @@ public:
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 pi_8_cosx_square_minus_1_div_3_cosx<T, K>::pi_8_cosx_square_minus_1_div_3_cosx(T x) : series_base<T, K>(x, static_cast<T>((std::numbers::pi / 8)* std::cos(x)* (std::cos(x) - (1 / 3)))) {}
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 constexpr T pi_8_cosx_square_minus_1_div_3_cosx<T, K>::operator()(K n) const
 {
-	if (n < 0)
-		throw std::domain_error("negative integer in the input");
 	if (abs(this->x) > std::numbers::pi / 2)
 		throw std::domain_error("The value x must be between -pi/2 and pi/2 inclusive");
-	return static_cast<T>(this->minus_one_raised_to_power_n(n) * std::cos(2 * n + 3) * this->x / ((2 * n + 1) * (2 * n + 3) * (2 * n + 5)));
+	const K a = 2 + n + 1;
+	return static_cast<T>(this->minus_one_raised_to_power_n(n) * std::cos(a + 2) * this->x / (a * (a + 2) * (a + 4)));
 }
 
 /**
@@ -2673,7 +2554,7 @@ constexpr T pi_8_cosx_square_minus_1_div_3_cosx<T, K>::operator()(K n) const
 * @authors Trudolyubov N.A.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 class sqrt_oneminussqrtoneminusx_div_x : public series_base<T, K>
 {
 public:
@@ -2695,17 +2576,17 @@ public:
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 sqrt_oneminussqrtoneminusx_div_x<T, K>::sqrt_oneminussqrtoneminusx_div_x(T x) : series_base<T, K>(x, std::sqrt((1 - sqrt(1 - x)) / x)) {}
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 constexpr T sqrt_oneminussqrtoneminusx_div_x<T, K>::operator()(K n) const
 {
-	if (n < 0)
-		throw std::domain_error("negative integer in the input");
 	if (std::abs(this->x) >= 1 or this->x == 0)
 		throw std::domain_error("Modulus of the value x must be less 1 and cannot be equal to 0");
-	return static_cast<T>(this->fact(4 * n) * pow(this->x, n) / (pow(2, 4 * n) * sqrt(2) * (this->fact(2 * n)) * (this->fact(2 * n + 1))));
+	const K a = 2 * n;
+	const K b = 2 * a;
+	return static_cast<T>(this->fact(b) * pow(this->x, n) / (pow(2, b) * sqrt(2) * (this->fact(a)) * (this->fact(a + 1))));
 }
 
 
@@ -2714,7 +2595,7 @@ constexpr T sqrt_oneminussqrtoneminusx_div_x<T, K>::operator()(K n) const
 * @authors Trudolyubov N.A.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 class one_minus_sqrt_1minus4x_div_2x : public series_base<T, K>
 {
 public:
@@ -2736,15 +2617,13 @@ public:
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 one_minus_sqrt_1minus4x_div_2x<T, K>::one_minus_sqrt_1minus4x_div_2x(T x) : series_base<T, K>(x, (1 - static_cast<T>(sqrt(std::fma(-4, x, 1)))) / (2 * x)) {}
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 constexpr T one_minus_sqrt_1minus4x_div_2x<T, K>::operator()(K n) const
 {
-	if (n < 0)
-		throw std::domain_error("negative integer in the input");
-	if (std::abs(this->x) > 0.25 or this->x == 0)
+	if (std::abs(this->x) > static_cast<T>(0.25) or this->x == 0)
 		throw std::domain_error("Modulus of the value x must be less or equal 1/4 and cannot be equal to 0");
 
 	T xn = static_cast<T>(std::pow(this->x, n));
@@ -2760,7 +2639,7 @@ constexpr T one_minus_sqrt_1minus4x_div_2x<T, K>::operator()(K n) const
 * @authors Trudolyubov N.A.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 class arcsin_x_minus_x_series : public series_base<T, K>
 {
 public:
@@ -2782,17 +2661,17 @@ public:
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 arcsin_x_minus_x_series<T, K>::arcsin_x_minus_x_series(T x) : series_base<T, K>(x, std::asin(x) - x) {}
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 constexpr T arcsin_x_minus_x_series<T, K>::operator()(K n) const
 {
-	if (n < 0)
-		throw std::domain_error("negative integer in the input");
 	if (std::abs(this->x) > 1)
 		throw std::domain_error("Modulus of the value x must be less or equal to 1");
-	return static_cast<T>((this->fact(this->fact(2 * n + 1)) * std::pow(this->x, 2 * n + 3)) / (this->fact(this->fact(2 * n + 2)) * (2 * n + 3)));
+	const K a = 2 * n + 1;
+	const K b = a + 2;
+	return static_cast<T>((this->fact(this->fact(a)) * std::pow(this->x, b)) / (this->fact(this->fact(a + 1)) * (b)));
 }
 
 
@@ -2802,7 +2681,7 @@ constexpr T arcsin_x_minus_x_series<T, K>::operator()(K n) const
 * @authors Trudolyubov N.A.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 class pi_x_minus_x_square_and_x_square_minus_three_pi_x_plus_two_pi_square_series : public series_base<T, K>
 {
 public:
@@ -2824,17 +2703,16 @@ public:
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 pi_x_minus_x_square_and_x_square_minus_three_pi_x_plus_two_pi_square_series<T, K>::pi_x_minus_x_square_and_x_square_minus_three_pi_x_plus_two_pi_square_series(T x) : series_base<T, K>(x) {}
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 constexpr T pi_x_minus_x_square_and_x_square_minus_three_pi_x_plus_two_pi_square_series<T, K>::operator()(K n) const
 {
-	if (n < 0)
-		throw std::domain_error("negative integer in the input");
 	if (this->x <= 0 or this->x >= 2 * std::numbers::pi)
 		throw std::domain_error("Modulus of the value x must be between 0 and 2*pi not inclusive");
-	return static_cast<T>((8 / std::numbers::pi) * (std::sin((2 * n + 1) * (this->x)) / ((2 * n + 1) * (2 * n + 1) * (2 * n + 1))));
+	const K a = 2 * n + 1;
+	return static_cast<T>((8 / std::numbers::pi) * (std::sin(a * (this->x)) / (a * a * a)));
 }
 
 
@@ -2844,7 +2722,7 @@ constexpr T pi_x_minus_x_square_and_x_square_minus_three_pi_x_plus_two_pi_square
 * @authors Trudolyubov N.A.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 class abs_sin_x_minus_2_div_pi_series : public series_base<T, K>
 {
 public:
@@ -2866,15 +2744,14 @@ public:
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 abs_sin_x_minus_2_div_pi_series<T, K>::abs_sin_x_minus_2_div_pi_series(T x) : series_base<T, K>(x, static_cast<T>(std::abs(std::sin(x)) - (2 / std::numbers::pi))) {}
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 constexpr T abs_sin_x_minus_2_div_pi_series<T, K>::operator()(K n) const
 {
-	if (n < 0)
-		throw std::domain_error("negative integer in the input");
-	return static_cast<T>(-4 * (std::cos(2 * (this->x) * (n + 1))) / ((2 * n + 1) * (2 * n + 3) * std::numbers::pi));
+	const K a = 2 * n + 1;
+	return static_cast<T>(-4 * (std::cos((this->x) * (a + 1))) / (a * (a + 2) * std::numbers::pi));
 }
 
 
@@ -2884,7 +2761,7 @@ constexpr T abs_sin_x_minus_2_div_pi_series<T, K>::operator()(K n) const
 * @authors Trudolyubov N.A.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 class pi_minus_3pi_4_and_pi_minus_x_minus_3pi_4_series : public series_base<T, K>
 {
 public:
@@ -2906,17 +2783,17 @@ public:
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 pi_minus_3pi_4_and_pi_minus_x_minus_3pi_4_series<T, K>::pi_minus_3pi_4_and_pi_minus_x_minus_3pi_4_series(T x) : series_base<T, K>(x) {}
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 constexpr T pi_minus_3pi_4_and_pi_minus_x_minus_3pi_4_series<T, K>::operator()(K n) const
 {
-	if (n < 0)
-		throw std::domain_error("negative integer in the input");
 	if (this->x <= -std::numbers::pi or this->x > std::numbers::pi)
 		throw std::domain_error("The value x must be between -pi not inclusive and pi inclusive");
-	return static_cast<T>((std::cos((n + 1) * (this->x)) * (1 - (1 - 2 * ((n + 1) % 2)))) / ((n + 1) * (n + 1) * std::numbers::pi) + ((1 - 2 * ((n + 1) % 2)) * std::sin((n + 1) * (this->x))) / (n + 1)); // (1 - 2 * ((n + 1) % 2)) = (-1)^{n+1}
+	const K a = n + 1;
+	const K b = 1 - 2 * (a % 2);
+	return static_cast<T>((std::cos(a * (this->x)) * (1 - b)) / (a * a * std::numbers::pi) + b * std::sin(a * (this->x)) / a); // (1 - 2 * ((n + 1) % 2)) = (-1)^{n+1}
 }
 
 
@@ -2928,7 +2805,7 @@ constexpr T pi_minus_3pi_4_and_pi_minus_x_minus_3pi_4_series<T, K>::operator()(K
 * @authors Trudolyubov N.A.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 class minus_3_div_4_or_x_minus_3_div_4_series : public series_base<T, K>
 {
 public:
@@ -2950,18 +2827,18 @@ public:
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 minus_3_div_4_or_x_minus_3_div_4_series<T, K>::minus_3_div_4_or_x_minus_3_div_4_series(T x) : series_base<T, K>(x) {}
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 constexpr T minus_3_div_4_or_x_minus_3_div_4_series<T, K>::operator()(K n) const
 {
-	if (n < 0)
-		throw std::domain_error("negative integer in the input");
 	if (this->x <= -3 or this->x >= 3)
 		throw std::domain_error("The value x must be between -3 and 3 not inclusive");
-	return static_cast<T>(-6 / (std::numbers::pi * std::numbers::pi) * std::cos((2 * n + 1) * std::numbers::pi * (this->x) / 3) / ((2 * n + 1) * (2 * n + 1))
-		- 3 / (std::numbers::pi) * ((1 - 2 * ((n + 1) % 2)) * std::sin((this->x) * (n + 1) * std::numbers::pi / 3)) / (n + 1));  // (1 - 2 * ((n + 1) % 2)) = (-1)^{n+1}
+	const K a = n + 1;
+	const K b = 2 * n + 1;
+	return static_cast<T>(-6 / (std::numbers::pi * std::numbers::pi) * std::cos(b * std::numbers::pi * (this->x) / 3) / (b * b)
+		- 3 / (std::numbers::pi) * ((1 - 2 * (a % 2)) * std::sin((this->x) * a * std::numbers::pi / 3)) / a);  // (1 - 2 * ((n + 1) % 2)) = (-1)^{n+1}
 }
 
 
@@ -2971,7 +2848,7 @@ constexpr T minus_3_div_4_or_x_minus_3_div_4_series<T, K>::operator()(K n) const
 * @authors Trudolyubov N.A.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 class ten_minus_x_series : public series_base<T, K>
 {
 public:
@@ -2993,17 +2870,16 @@ public:
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 ten_minus_x_series<T, K>::ten_minus_x_series(T x) : series_base<T, K>(x, 10 - this->x) {}
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 constexpr T ten_minus_x_series<T, K>::operator()(K n) const
 {
-	if (n < 0)
-		throw std::domain_error("negative integer in the input");
 	if (this->x <= 5 or this->x >= 15)
 		throw std::domain_error("The value x must be between 5 and 15 not inclusive");
-	return static_cast<T>(10 * (1 - 2 * ((n + 1) % 2)) * std::sin((n + 1) * (this->x) * std::numbers::pi / 5) / ((n + 1) * std::numbers::pi)); // (1 - 2 * ((n + 1) % 2)) = (-1)^{n+1}
+	const K a = n + 1;
+	return static_cast<T>((10 - 20 * (a % 2)) * std::sin(a * (this->x) * std::numbers::pi / 5) / (a * std::numbers::pi)); // (1 - 2 * ((n + 1) % 2)) = (-1)^{n+1}
 }
 
 
@@ -3012,7 +2888,7 @@ constexpr T ten_minus_x_series<T, K>::operator()(K n) const
 * @authors Trudolyubov N.A.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 class x_series : public series_base<T, K>
 {
 public:
@@ -3034,17 +2910,16 @@ public:
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 x_series<T, K>::x_series(T x) : series_base<T, K>(x, this->x) {}
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 constexpr T x_series<T, K>::operator()(K n) const
 {
-	if (n < 0)
-		throw std::domain_error("negative integer in the input");
 	if (this->x < -std::numbers::pi or this->x > std::numbers::pi)
 		throw std::domain_error("The value x must be between -pi and pi inclusive");
-	return static_cast<T>(2 * std::pow(-1, n) * std::sin(this->x * (n + 1)) / (n + 1));
+	const K a = n + 1;
+	return static_cast<T>((2 - 4 * (a % 2)) * std::sin(this->x * a) / a); // (1 - 2 * ((n + 1) % 2)) = (-1)^{n+1}
 }
 
 
@@ -3054,7 +2929,7 @@ constexpr T x_series<T, K>::operator()(K n) const
 * @authors Trudolyubov N.A.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 class minus_x_minus_pi_4_or_minus_pi_4_series : public series_base<T, K>
 {
 public:
@@ -3076,18 +2951,18 @@ public:
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 minus_x_minus_pi_4_or_minus_pi_4_series<T, K>::minus_x_minus_pi_4_or_minus_pi_4_series(T x) : series_base<T, K>(x) {}
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 constexpr T minus_x_minus_pi_4_or_minus_pi_4_series<T, K>::operator()(K n) const
 {
-	if (n < 0)
-		throw std::domain_error("negative integer in the input");
 	if (this->x <= -std::numbers::pi or this->x >= std::numbers::pi)
 		throw std::domain_error("The value x must be between -pi and pi not inclusive");
-	return static_cast<T>(-2 * std::cos(2 * n + 1) * (this->x) / (std::numbers::pi * (2 * n + 1) * (2 * n + 1))
-		+ (1 - 2 * ((n + 1) % 2)) * std::sin(this->x * (n + 1)) / (n + 1)); // (1 - 2 * ((n + 1) % 2)) = (-1)^{n+1}
+	const K a = n + 1;
+	const K b = 2 * n + 1;
+	return static_cast<T>(-2 * std::cos(b) * (this->x) / (std::numbers::pi * b * b)
+		+ (1 - 2 * (a % 2)) * std::sin(this->x * a) / a); // (1 - 2 * ((n + 1) % 2)) = (-1)^{n+1}
 }
 
 
@@ -3096,7 +2971,7 @@ constexpr T minus_x_minus_pi_4_or_minus_pi_4_series<T, K>::operator()(K n) const
 * @authors Trudolyubov N.A.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 class one_div_two_minus_x_multi_three_plus_x_series : public series_base<T, K>
 {
 public:
@@ -3118,14 +2993,12 @@ public:
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 one_div_two_minus_x_multi_three_plus_x_series<T, K>::one_div_two_minus_x_multi_three_plus_x_series(T x) : series_base<T, K>(x, 1 / ((2 - this->x) * (3 + this->x))) {}
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 constexpr T one_div_two_minus_x_multi_three_plus_x_series<T, K>::operator()(K n) const
 {
-	if (n < 0)
-		throw std::domain_error("negative integer in the input");
 	return static_cast<T>((std::pow(-3, n) - std::pow(2, n)) / (5 * std::pow(this->x, n + 1)));
 }
 
@@ -3135,7 +3008,7 @@ constexpr T one_div_two_minus_x_multi_three_plus_x_series<T, K>::operator()(K n)
 * @authors Trudolyubov N.A.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 class Si_x_series : public series_base<T, K>
 {
 public:
@@ -3157,15 +3030,14 @@ public:
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 Si_x_series<T, K>::Si_x_series(T x) : series_base<T, K>(x) {}
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 constexpr T Si_x_series<T, K>::operator()(K n) const
 {
-	if (n < 0)
-		throw std::domain_error("negative integer in the input");
-	return static_cast<T>(std::pow(-1, n) * std::pow(this->x, 2 * n + 1) / ((2 * n + 1) * this->fact(2 * n + 1)));
+	const K a = n + 1;
+	return static_cast<T>(std::pow(-1, n) * std::pow(this->x, a) / (a * this->fact(a)));
 }
 
 
@@ -3174,7 +3046,7 @@ constexpr T Si_x_series<T, K>::operator()(K n) const
 * @authors Pavlova A.R.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 class Ci_x_series : public series_base<T, K>
 {
 public:
@@ -3197,22 +3069,20 @@ public:
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 
 private:
-	const T gamma = static_cast<T>(0.57721566490153286060); // Константа Эйлера-Маскерони
+	const T gamma = static_cast<T>(0.57721566490153286060); // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ-пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 };
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 Ci_x_series<T, K>::Ci_x_series(T x) : series_base<T, K>(x) {}
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 constexpr T Ci_x_series<T, K>::operator()(K n) const
 {
-	if (n < 0)
-		throw std::domain_error("The term index must be a non-negative integer");
-
 	if (n == 0)
 		return gamma + std::log(this->x);
 
-	return static_cast<T>(std::pow(-1, n) * std::pow(this->x, 2 * n) / (2 * n * this->fact(2 * n)));
+	const K a = 2 * n;
+	return static_cast<T>(std::pow(-1, n) * std::pow(this->x, a) / (a * this->fact(a)));
 }
 
 
@@ -3222,7 +3092,7 @@ constexpr T Ci_x_series<T, K>::operator()(K n) const
 * @authors Trudolyubov N.A.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 class Riemann_zeta_func_series : public series_base<T, K>
 {
 public:
@@ -3244,14 +3114,12 @@ public:
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 Riemann_zeta_func_series<T, K>::Riemann_zeta_func_series(T x) : series_base<T, K>(x) {}
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 constexpr T Riemann_zeta_func_series<T, K>::operator()(K n) const
 {
-	if (n < 0)
-		throw std::domain_error("negative integer in the input");
 	if (this->x <= 1)
 		throw std::domain_error("The value x must be greater than 1");
 	return static_cast<T>(1 / std::pow(n + 1, this->x));
@@ -3265,7 +3133,7 @@ constexpr T Riemann_zeta_func_series<T, K>::operator()(K n) const
 * @authors Trudolyubov N.A.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 class Riemann_zeta_func_xmin1_div_Riemann_zeta_func_x_series : public series_base<T, K>
 {
 public:
@@ -3287,17 +3155,16 @@ public:
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 Riemann_zeta_func_xmin1_div_Riemann_zeta_func_x_series<T, K>::Riemann_zeta_func_xmin1_div_Riemann_zeta_func_x_series(T x) : series_base<T, K>(x) {}
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 constexpr T Riemann_zeta_func_xmin1_div_Riemann_zeta_func_x_series<T, K>::operator()(K n) const
 {
-	if (n < 0)
-		throw std::domain_error("negative integer in the input");
 	if (this->x <= 2)
 		throw std::domain_error("The value x must be greater than 1");
-	return static_cast<T>(this->phi(n + 1) / std::pow(n + 1, this->x));
+	const K a = n + 1;
+	return static_cast<T>(this->phi(a) / std::pow(a, this->x));
 }
 
 
@@ -3306,7 +3173,7 @@ constexpr T Riemann_zeta_func_xmin1_div_Riemann_zeta_func_x_series<T, K>::operat
 * @authors Trudolyubov N.A.
 * @tparam T - type of the elements in the series, K - type of enumerating integer
 */
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 class xsquareplus3_div_xsquareplus2multix_minus_1_series : public series_base<T, K>
 {
 public:
@@ -3328,17 +3195,15 @@ public:
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 xsquareplus3_div_xsquareplus2multix_minus_1_series<T, K>::xsquareplus3_div_xsquareplus2multix_minus_1_series(T x) : series_base<T, K>(x, ((x * x + 3) / x * (x + 2)) - 1) {}
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 constexpr T xsquareplus3_div_xsquareplus2multix_minus_1_series<T, K>::operator()(K n) const
 {
-	if (n < 0)
-		throw std::domain_error("negative integer in the input");
 	if (std::abs(this->x - 1) >= 2)
 		throw std::domain_error("The absolute value of x - 1 must be lower than 2");
-	return static_cast<T>(0.5 * series_base<T, K>::minus_one_raised_to_power_n(n) * std::pow(3, -n - 1) * (std::pow(3, n + 2) - 7) * std::pow(this->x - 1, n));
+	return static_cast<T>(0.5 * series_base<T, K>::minus_one_raised_to_power_n(n) / std::pow(3, n + 1) * (std::pow(3, n + 2) - 7) * std::pow(this->x - 1, n));
 }
 
 
@@ -3347,7 +3212,7 @@ constexpr T xsquareplus3_div_xsquareplus2multix_minus_1_series<T, K>::operator()
 * @authors Trudolyubov N.A.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 class arcsin_x_series : public series_base<T, K>
 {
 public:
@@ -3369,17 +3234,16 @@ public:
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 arcsin_x_series<T, K>::arcsin_x_series(T x) : series_base<T, K>(x, std::asin(x)) {}
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 constexpr T arcsin_x_series<T, K>::operator()(K n) const
 {
-	if (n < 0)
-		throw std::domain_error("negative integer in the input");
 	if (this->x < -1 or this->x > 1)
 		throw std::domain_error("The value x must be between -1 and 1 inclusive");
-	return static_cast<T>(this->fact(2 * n) * std::pow(this->x, 2 * n + 1) / (std::pow(4, n) * this->fact(n) * this->fact(n) * (2 * n + 1)));
+	const K a = 2 * n + 1;
+	return static_cast<T>(this->fact(a - 1) * std::pow(this->x, a) / (std::pow(4, n) * this->fact(n) * this->fact(n) * a));
 }
 
 
@@ -3388,7 +3252,7 @@ constexpr T arcsin_x_series<T, K>::operator()(K n) const
 * @authors Trudolyubov N.A.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 class arctg_x_series : public series_base<T, K>
 {
 public:
@@ -3410,17 +3274,16 @@ public:
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 arctg_x_series<T, K>::arctg_x_series(T x) : series_base<T, K>(x, std::atan(x)) {}
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 constexpr T arctg_x_series<T, K>::operator()(K n) const
 {
-	if (n < 0)
-		throw std::domain_error("negative integer in the input");
 	if (this->x < -1 or this->x > 1)
 		throw std::domain_error("The value x must be between -1 and 1 inclusive");
-	return static_cast<T>(std::pow(-1, n) * std::pow(this->x, 2 * n + 1) / (2 * n + 1));
+	const K a = 2 * n + 1;
+	return static_cast<T>(std::pow(-1, n) * std::pow(this->x, a) / a);
 }
 
 
@@ -3429,7 +3292,7 @@ constexpr T arctg_x_series<T, K>::operator()(K n) const
 * @authors Trudolyubov N.A.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 class K_x_series : public series_base<T, K>
 {
 public:
@@ -3451,15 +3314,14 @@ public:
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 K_x_series<T, K>::K_x_series(T x) : series_base<T, K>(x) {}
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 constexpr T K_x_series<T, K>::operator()(K n) const
 {
-	if (n < 0)
-		throw std::domain_error("negative integer in the input");
-	return static_cast<T>(std::numbers::pi * this->fact(2 * n) * this->fact(2 * n) * std::pow(this->x, 2 * n) / (2 * std::pow(16, n) * std::pow(this->fact(n), 4)));
+	const K a = 2 * n;
+	return static_cast<T>(std::numbers::pi * this->fact(a) * this->fact(a) * std::pow(this->x, a) / (2 * std::pow(16, n) * std::pow(this->fact(n), 4)));
 }
 
 
@@ -3468,7 +3330,7 @@ constexpr T K_x_series<T, K>::operator()(K n) const
 * @authors Trudolyubov N.A.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 class E_x_series : public series_base<T, K>
 {
 public:
@@ -3490,24 +3352,23 @@ public:
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 E_x_series<T, K>::E_x_series(T x) : series_base<T, K>(x) {}
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 constexpr T E_x_series<T, K>::operator()(K n) const
 {
-	if (n < 0)
-		throw std::domain_error("negative integer in the input");
-	return static_cast<T>(std::numbers::pi * this->fact(2 * n) * this->fact(2 * n) * std::pow(this->x, 2 * n) / (2 * (1 - 2 * n) * std::pow(16, n) * std::pow(this->fact(n), 4)));
+	const K a = 2 * n;
+	return static_cast<T>(std::numbers::pi * this->fact(a) * this->fact(a) * std::pow(this->x, a) / (2 * (1 - a) * std::pow(16, n) * std::pow(this->fact(n), 4)));
 }
 
 
 /**
-* @brief Taylor series of function sqrt(1 + x) (тут многое вычисляется неверно, вероятно из-за факториалов)
+* @brief Taylor series of function sqrt(1 + x) (пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ-пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ)
 * @authors Trudolyubov N.A.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 class sqrt_1plusx_series : public series_base<T, K>
 {
 public:
@@ -3529,17 +3390,16 @@ public:
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 sqrt_1plusx_series<T, K>::sqrt_1plusx_series(T x) : series_base<T, K>(x, std::sqrt(1 + x)) {}
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 constexpr T sqrt_1plusx_series<T, K>::operator()(K n) const
 {
-	if (n < 0)
-		throw std::domain_error("negative integer in the input");
 	if (this->x < -1)
 		throw std::domain_error("The value x must be more or equel to -1");
-	return static_cast<T>(std::pow(-1, n) * (this->fact(2 * n)) * std::pow(this->x, n) / ((1 - 2 * n) * (this->fact(n)) * (this->fact(n)) * std::pow(4, n)));
+	const K a = 2 * n;
+	return static_cast<T>(std::pow(-1, n) * (this->fact(a)) * std::pow(this->x, n) / ((1 - a) * (this->fact(n)) * (this->fact(n)) * std::pow(4, n)));
 }
 
 
@@ -3548,7 +3408,7 @@ constexpr T sqrt_1plusx_series<T, K>::operator()(K n) const
 * @brief Taylor series of Lambert W function
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 class Lambert_W_func_series : public series_base<T, K>
 {
 public:
@@ -3570,17 +3430,16 @@ public:
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 Lambert_W_func_series<T, K>::Lambert_W_func_series(T x) : series_base<T, K>(x) {}
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 constexpr T Lambert_W_func_series<T, K>::operator()(K n) const
 {
-	if (n < 0)
-		throw std::domain_error("negative integer in the input");
 	if (std::abs(this->x) >= 1 / std::numbers::e)
 		throw std::domain_error("The absolute value of x must be less 1/e");
-	return static_cast<T>(std::pow(-n - 1, n) * std::pow(this->x, n + 1) / this->fact(n + 1));
+	const K a = n + 1;
+	return static_cast<T>((1 - 2 * ((n + 1) % 2)) * pow(a, n) * std::pow(this->x, a) / this->fact(a)); // pow(-a, n) = pow(-1, n) * pow(a, n) and (1 - 2 * ((n + 1) % 2)) = (-1)^{n+1}
 }
 
 
@@ -3588,7 +3447,7 @@ constexpr T Lambert_W_func_series<T, K>::operator()(K n) const
 * @brief Taylor series of Incomplete Gamma function
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 class Incomplete_Gamma_func_series : public series_base<T, K>
 {
 public:
@@ -3618,14 +3477,12 @@ private:
 	const T s;
 };
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 Incomplete_Gamma_func_series<T, K>::Incomplete_Gamma_func_series(T x, T s) : series_base<T, K>(x), s(s) {}
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 constexpr T Incomplete_Gamma_func_series<T, K>::operator()(K n) const
 {
-	if (n < 0)
-		throw std::domain_error("negative integer in the input");
 	return static_cast<T>(std::pow(-1, n) * std::pow(this->x, this->s + n) / (this->fact(n) * (this->s + n)));
 }
 
@@ -3635,7 +3492,7 @@ constexpr T Incomplete_Gamma_func_series<T, K>::operator()(K n) const
 * @authors Trudolyubov N.A.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 class Series_with_ln_number1 : public series_base<T, K>
 {
 public:
@@ -3650,16 +3507,16 @@ public:
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 Series_with_ln_number1<T, K>::Series_with_ln_number1() : series_base<T, K>(0) {}
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 constexpr T Series_with_ln_number1<T, K>::operator()(K n) const
 {
-	if (n < 0)
-		throw std::domain_error("negative integer in the input");
-	return static_cast<T>(std::log(1 + std::pow(n + 1, (n + 1) * (n + 1) + (n + 1) / 2) /
-		(std::pow(this->fact(n + 1), n + 1) * std::pow(std::numbers::e, (n + 1) * (n + 1)))));
+	const K a = n + 1;
+	const K b = a * a;
+	return static_cast<T>(std::log(1 + std::pow(a, b + a / 2) /
+		(std::pow(this->fact(a), a) * std::pow(std::numbers::e, b))));
 }
 
 
@@ -3670,7 +3527,7 @@ constexpr T Series_with_ln_number1<T, K>::operator()(K n) const
 * @authors Trudolyubov N.A.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 class Series_with_ln_number2 : public series_base<T, K>
 {
 public:
@@ -3685,14 +3542,12 @@ public:
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 Series_with_ln_number2<T, K>::Series_with_ln_number2() : series_base<T, K>(0) {}
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 constexpr T Series_with_ln_number2<T, K>::operator()(K n) const
 {
-	if (n < 0)
-		throw std::domain_error("negative integer in the input");
 	auto tmp = std::log(n + 2);
 
 	return 1 / static_cast<T>((std::pow(tmp, tmp)));
@@ -3704,7 +3559,7 @@ constexpr T Series_with_ln_number2<T, K>::operator()(K n) const
 * @authors Trudolyubov N.A.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 class pi_series : public series_base<T, K>
 {
 public:
@@ -3719,15 +3574,13 @@ public:
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 pi_series<T, K>::pi_series() : series_base<T, K>(0) {}
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 constexpr T pi_series<T, K>::operator()(K n) const
 {
-	if (n < 0)
-		throw std::domain_error("negative integer in the input");
-	return static_cast<T>(std::sqrt(12) * std::pow(-3, -n) / (2 * n + 1));
+	return static_cast<T>(std::sqrt(12) * (1 - 2 * ((n + 1) % 2)) / std::pow(3, n) / (2 * n + 1));
 }
 
 
@@ -3736,7 +3589,7 @@ constexpr T pi_series<T, K>::operator()(K n) const
 * @authors Trudolyubov N.A.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 class x_min_sqrt_x_series : public series_base<T, K>
 {
 public:
@@ -3758,17 +3611,14 @@ public:
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 x_min_sqrt_x_series<T, K>::x_min_sqrt_x_series(T x) : series_base<T, K>(x, x - std::sqrt(x)) {}
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 constexpr T x_min_sqrt_x_series<T, K>::operator()(K n) const
 {
-	if (n < 0)
-		throw std::domain_error("negative integer in the input");
-
 	T tempsum = 0;
-	for (int m = 0; m < std::pow(2, n); m++)
+	for (K m = 0; m < std::pow(2, n); m++)
 		tempsum += static_cast<T>(static_cast<T>(std::pow(this->x, m)) * static_cast<T>(this->binomial_coefficient(static_cast<T>(std::pow(2, n + 1)), 2 * m + 1)));
 
 	return static_cast<T>(std::pow(this->x - 1, std::pow(2, n)) / tempsum);
@@ -3780,7 +3630,7 @@ constexpr T x_min_sqrt_x_series<T, K>::operator()(K n) const
 * @authors Pavlova A.R.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 class arctan_x2_series : public series_base<T, K>
 {
 public:
@@ -3802,16 +3652,14 @@ public:
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 arctan_x2_series<T, K>::arctan_x2_series(T x) : series_base<T, K>(x) {}
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 constexpr T arctan_x2_series<T, K>::operator()(K n) const
 {
-	if (n < 0)
-		throw std::domain_error("The term index must be a non-negative integer");
-
-	return static_cast<T>((std::pow(-1, n) * std::pow(this->x, 4 * n + 2)) / (2 * n + 1));
+	const K a = 2 * n + 1;
+	return static_cast<T>((std::pow(-1, n) * std::pow(this->x, 2 * a)) / a);
 }
 
 
@@ -3820,7 +3668,7 @@ constexpr T arctan_x2_series<T, K>::operator()(K n) const
 * @authors Pavlova A.R.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 class ln1px4_series : public series_base<T, K>
 {
 public:
@@ -3842,16 +3690,14 @@ public:
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 ln1px4_series<T, K>::ln1px4_series(T x) : series_base<T, K>(x) {}
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 constexpr T ln1px4_series<T, K>::operator()(K n) const
 {
-	if (n < 0)
-		throw std::domain_error("The term index must be a non-negative integer");
-
-	return static_cast<T>(std::pow(-1, n + 2) * std::pow(this->x, 4 * (n + 1)) / (n + 1));
+	const K a = n + 1;
+	return static_cast<T>(std::pow(-1, a + 1) * std::pow(this->x, 4 * a) / a);
 }
 
 
@@ -3860,7 +3706,7 @@ constexpr T ln1px4_series<T, K>::operator()(K n) const
 * @authors Pavlova A.R.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 class sin_x2_series : public series_base<T, K>
 {
 public:
@@ -3882,16 +3728,14 @@ public:
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 sin_x2_series<T, K>::sin_x2_series(T x) : series_base<T, K>(x) {}
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 constexpr T sin_x2_series<T, K>::operator()(K n) const
 {
-	if (n < 0)
-		throw std::domain_error("The term index must be a non-negative integer");
-
-	return static_cast<T>(std::pow(-1, n) * std::pow(this->x, 4 * n + 2) / this->fact(2 * n + 2));
+	const K a = 2 * n + 1;
+	return static_cast<T>(std::pow(-1, n) * std::pow(this->x, 2 * a) / this->fact(a + 1));
 }
 
 /**
@@ -3899,7 +3743,7 @@ constexpr T sin_x2_series<T, K>::operator()(K n) const
 * @authors Pavlova A.R.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 class arctan_x3_series : public series_base<T, K>
 {
 public:
@@ -3921,16 +3765,14 @@ public:
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 arctan_x3_series<T, K>::arctan_x3_series(T x) : series_base<T, K>(x) {}
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 constexpr T arctan_x3_series<T, K>::operator()(K n) const
 {
-	if (n < 0)
-		throw std::domain_error("The term index must be a non-negative integer");
-
-	return static_cast<T>((std::pow(-1, n) * std::pow(this->x, 6 * n + 3)) / (2 * n + 2));
+	const K a = 2 * n + 1;
+	return static_cast<T>((std::pow(-1, n) * std::pow(this->x, 3 * a)) / (a + 1));
 }
 
 /**
@@ -3938,7 +3780,7 @@ constexpr T arctan_x3_series<T, K>::operator()(K n) const
 * @authors Pavlova A.R.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 class arcsin_x2_series : public series_base<T, K>
 {
 public:
@@ -3960,16 +3802,14 @@ public:
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 arcsin_x2_series<T, K>::arcsin_x2_series(T x) : series_base<T, K>(x) {}
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 constexpr T arcsin_x2_series<T, K>::operator()(K n) const
 {
-	if (n < 0)
-		throw std::domain_error("The term index must be a non-negative integer");
-
-	return static_cast<T>((this->fact(2 * n) * std::pow(this->x, 4 * n + 2)) / (std::pow(4, n) * std::pow(this->fact(n), 2) * (2 * n + 1)));
+	const K a = 2 * n + 1;
+	return static_cast<T>((this->fact(a - 1) * std::pow(this->x, 2 * a)) / (std::pow(4, n) * std::pow(this->fact(n), 2) * a));
 }
 
 
@@ -3978,7 +3818,7 @@ constexpr T arcsin_x2_series<T, K>::operator()(K n) const
 * @authors Pavlova A.R.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 class ln1_m_x2_series : public series_base<T, K>
 {
 public:
@@ -4000,16 +3840,14 @@ public:
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 ln1_m_x2_series<T, K>::ln1_m_x2_series(T x) : series_base<T, K>(x) {}
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 constexpr T ln1_m_x2_series<T, K>::operator()(K n) const
 {
-	if (n < 0)
-		throw std::domain_error("The term index must be a non-negative integer");
-
-	return static_cast<T>(-std::pow(this->x, 2 * n + 1) / (n + 1));
+	const K a = n + 1;
+	return static_cast<T>(-std::pow(this->x, a + n) / a);
 }
 
 
@@ -4018,7 +3856,7 @@ constexpr T ln1_m_x2_series<T, K>::operator()(K n) const
 * @authors Pavlova A.R.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 class artanh_x_series : public series_base<T, K>
 {
 public:
@@ -4040,16 +3878,14 @@ public:
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 artanh_x_series<T, K>::artanh_x_series(T x) : series_base<T, K>(x) {}
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 constexpr T artanh_x_series<T, K>::operator()(K n) const
 {
-	if (n < 0)
-		throw std::domain_error("The term index must be a non-negative integer");
-
-	return static_cast<T>(std::pow(this->x, 2 * n + 1) / (2 * n + 1));
+	const K a = 2 * n + 1;
+	return static_cast<T>(std::pow(this->x, a) / a);
 }
 
 
@@ -4058,7 +3894,7 @@ constexpr T artanh_x_series<T, K>::operator()(K n) const
 * @authors Pavlova A.R.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 class arcsinh_x_series : public series_base<T, K>
 {
 public:
@@ -4080,16 +3916,14 @@ public:
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 arcsinh_x_series<T, K>::arcsinh_x_series(T x) : series_base<T, K>(x) {}
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 constexpr T arcsinh_x_series<T, K>::operator()(K n) const
 {
-	if (n < 0)
-		throw std::domain_error("The term index must be a non-negative integer");
-
-	return static_cast<T>((std::pow(-1, n) * this->fact(2 * n) * std::pow(this->x, 2 * n + 1)) / (std::pow(this->fact(n), 2) * std::pow(4, n) * (2 * n + 1)));
+	const K a = 2 * n + 1;
+	return static_cast<T>((std::pow(-1, n) * this->fact(a - 1) * std::pow(this->x, a)) / (std::pow(this->fact(n), 2) * std::pow(4, n) * a));
 }
 
 
@@ -4098,7 +3932,7 @@ constexpr T arcsinh_x_series<T, K>::operator()(K n) const
 * @authors Pavlova A.R.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 class cos_x2_series : public series_base<T, K>
 {
 public:
@@ -4120,16 +3954,14 @@ public:
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 cos_x2_series<T, K>::cos_x2_series(T x) : series_base<T, K>(x) {}
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 constexpr T cos_x2_series<T, K>::operator()(K n) const
 {
-	if (n < 0)
-		throw std::domain_error("The term index must be a non-negative integer");
-
-	return static_cast<T>(std::pow(-1, n) * std::pow(this->x, 4 * n) / this->fact(2 * n));
+	const K a = 2 * n;
+	return static_cast<T>(std::pow(-1, n) * std::pow(this->x, 2 * a) / this->fact(a));
 }
 
 
@@ -4138,7 +3970,7 @@ constexpr T cos_x2_series<T, K>::operator()(K n) const
 * @authors Pavlova A.R.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 class sinh_x2_series : public series_base<T, K>
 {
 public:
@@ -4160,16 +3992,14 @@ public:
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 sinh_x2_series<T, K>::sinh_x2_series(T x) : series_base<T, K>(x) {}
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 constexpr T sinh_x2_series<T, K>::operator()(K n) const
 {
-	if (n < 0)
-		throw std::domain_error("The term index must be a non-negative integer");
-
-	return static_cast<T>(std::pow(this->x, 4 * n + 2) / this->fact(2 * n + 1));
+	const K a = static_cast<K>(std::fma(2, n, 1));
+	return static_cast<T>(std::pow(this->x, 2 * a) / this->fact(a));
 }
 
 
@@ -4178,7 +4008,7 @@ constexpr T sinh_x2_series<T, K>::operator()(K n) const
 * @authors Pavlova A.R.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 class arctanh_x2_series : public series_base<T, K>
 {
 public:
@@ -4200,16 +4030,14 @@ public:
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 arctanh_x2_series<T, K>::arctanh_x2_series(T x) : series_base<T, K>(x) {}
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 constexpr T arctanh_x2_series<T, K>::operator()(K n) const
 {
-	if (n < 0)
-		throw std::domain_error("The term index must be a non-negative integer");
-
-	return static_cast<T>(std::pow(this->x, 4 * n + 2) / (2 * n + 1));
+	const T a = static_cast<T>(std::fma(2, n, 1));
+	return static_cast<T>(std::pow(this->x, 2 * a) / a);
 }
 
 /**
@@ -4218,7 +4046,7 @@ constexpr T arctanh_x2_series<T, K>::operator()(K n) const
 * @authors Trudolyubov N.A.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 class cos3xmin1_div_xsqare_series : public series_base<T, K>
 {
 public:
@@ -4240,15 +4068,14 @@ public:
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 cos3xmin1_div_xsqare_series<T, K>::cos3xmin1_div_xsqare_series(T x) : series_base<T, K>(x, (std::cos(3 * x) - 1) / (x * x)) {}
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 constexpr T cos3xmin1_div_xsqare_series<T, K>::operator()(K n) const
 {
-	if (n < 0)
-		throw std::domain_error("negative integer in the input");
-	return static_cast<T>(this->minus_one_raised_to_power_n(n + 1) * std::pow(3, 2 * n + 2) * std::pow(this->x, 2 * n) / this->fact(2 * n + 2));
+	const K a = 2 * n + 2;
+	return static_cast<T>(this->minus_one_raised_to_power_n(n + 1) * std::pow(3, a) * std::pow(this->x, a - 2) / this->fact(a));
 }
 
 
@@ -4259,7 +4086,7 @@ constexpr T cos3xmin1_div_xsqare_series<T, K>::operator()(K n) const
 * @authors Trudolyubov N.A.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 class two_degree_x_series : public series_base<T, K>
 {
 public:
@@ -4281,14 +4108,12 @@ public:
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 two_degree_x_series<T, K>::two_degree_x_series(T x) : series_base<T, K>(x, static_cast<T>(std::pow(2, x))) {}
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 constexpr T two_degree_x_series<T, K>::operator()(K n) const
 {
-	if (n < 0)
-		throw std::domain_error("negative integer in the input");
 	return static_cast<T>(std::pow(std::log(2), n) * std::pow(this->x, n) / this->fact(n));
 }
 
@@ -4299,7 +4124,7 @@ constexpr T two_degree_x_series<T, K>::operator()(K n) const
 * @authors Trudolyubov N.A.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 class sqrt_1plusx_min_1_min_x_div_2_series : public series_base<T, K>
 {
 public:
@@ -4321,19 +4146,17 @@ public:
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 sqrt_1plusx_min_1_min_x_div_2_series<T, K>::sqrt_1plusx_min_1_min_x_div_2_series(T x) : series_base<T, K>(x, std::sqrt(1 + x) - 1 - x / 2) {}
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 constexpr T sqrt_1plusx_min_1_min_x_div_2_series<T, K>::operator()(K n) const
 {
-	if (n < 0)
-		throw std::domain_error("negative integer in the input");
-
 	K temp = 1;
-	for (K i = 1; 2 * i <= 2 * n; ++i)
-		temp *= 2 * i + 1;
-	return static_cast<T>(this->minus_one_raised_to_power_n(n + 3) * std::pow(this->x, n + 2) * temp / (this->fact(n + 2) * std::pow(2, n + 2)));
+	for (K i = 1; i <= n; ++i)
+		temp *= static_cast<K>(2, i, 1);
+	const K a = n + 2;
+	return static_cast<T>(this->minus_one_raised_to_power_n(a + 1) * std::pow(this->x, a) * temp / (this->fact(a) * std::pow(2, a)));
 }
 
 
@@ -4343,7 +4166,7 @@ constexpr T sqrt_1plusx_min_1_min_x_div_2_series<T, K>::operator()(K n) const
 * @authors Trudolyubov N.A.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 class ln13_min_ln7_div_7_series : public series_base<T, K>
 {
 public:
@@ -4363,15 +4186,15 @@ public:
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 ln13_min_ln7_div_7_series<T, K>::ln13_min_ln7_div_7_series() : series_base<T, K>(0, (static_cast<T>(std::log(13 / 7) / 7))) {}
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 constexpr T ln13_min_ln7_div_7_series<T, K>::operator()(K n) const
 {
-	if (n < 0)
-		throw std::domain_error("negative integer in the input");
-	return static_cast<T>(this->minus_one_raised_to_power_n(n + 2) * std::pow(6, n + 1) / ((n + 1) * std::pow(7, n + 2)));
+	const K a = n + 1;
+	const K b = n + 2;
+	return static_cast<T>(this->minus_one_raised_to_power_n(b) * std::pow(6, a) / (a * std::pow(7, b)));
 }
 
 /**
@@ -4379,7 +4202,7 @@ constexpr T ln13_min_ln7_div_7_series<T, K>::operator()(K n) const
 * @authors Trudolyubov N.A.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 class Ja_x_series : public series_base<T, K>
 {
 public:
@@ -4402,25 +4225,23 @@ private:
 	const T a;
 };
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 Ja_x_series<T, K>::Ja_x_series(T x, T a) : series_base<T, K>(x), a(a) {}
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 constexpr T Ja_x_series<T, K>::operator()(K n) const
 {
-	if (n < 0)
-		throw std::domain_error("negative integer in the input");
 	return this->minus_one_raised_to_power_n(n) * std::pow(this->x / 2, 2 * n + this->a) / (this->fact(n) * std::tgamma(n + this->a + 1));
 }
 
 
 /**
 /**
-* @brief Taylor series of function 1/sqrt(2) * sin(x/sqrt(2)) (вычисляется плохо во всех методах)
+* @brief Taylor series of function 1/sqrt(2) * sin(x/sqrt(2)) (пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ)
 * @authors Trudolyubov N.A.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 class one_div_sqrt2_sin_xdivsqrt2_series : public series_base<T, K>
 {
 public:
@@ -4442,15 +4263,12 @@ public:
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 one_div_sqrt2_sin_xdivsqrt2_series<T, K>::one_div_sqrt2_sin_xdivsqrt2_series(T x) : series_base<T, K>(x, std::sqrt(1 + x) - 1 - x / 2) {}
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 constexpr T one_div_sqrt2_sin_xdivsqrt2_series<T, K>::operator()(K n) const
 {
-	if (n < 0)
-		throw std::domain_error("negative integer in the input");
-
 #ifdef _WIN32
 	return static_cast<T>(std::pow(-1, n / 2) * _jn(static_cast<int>(2 * n + 1), this->x));
 #else
@@ -4464,7 +4282,7 @@ constexpr T one_div_sqrt2_sin_xdivsqrt2_series<T, K>::operator()(K n) const
 * @authors Pavlova A.R.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 class ln_1plusx_div_1plusx2 : public series_base<T, K>
 {
 public:
@@ -4486,16 +4304,14 @@ public:
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 ln_1plusx_div_1plusx2<T, K>::ln_1plusx_div_1plusx2(T x) : series_base<T, K>(x) {}
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 constexpr T ln_1plusx_div_1plusx2<T, K>::operator()(K n) const
 {
-	if (n < 0)
-		throw std::domain_error("The term index must be a non-negative integer");
-
-	return static_cast<T>(this->minus_one_raised_to_power_n(n + 2) * std::pow(this->x, n + 1) / ((n + 1) * std::pow(1 + (this->x * this->x), n + 1)));
+	const K a = n + 1;
+	return static_cast<T>(this->minus_one_raised_to_power_n(n + 2) * std::pow(this->x, a) / (a * std::pow(1 + (this->x * this->x), a)));
 }
 
 
@@ -4505,7 +4321,7 @@ constexpr T ln_1plusx_div_1plusx2<T, K>::operator()(K n) const
 * @authors Pavlova A.R.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 class cos_sqrt_x : public series_base<T, K>
 {
 public:
@@ -4527,15 +4343,12 @@ public:
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 cos_sqrt_x<T, K>::cos_sqrt_x(T x) : series_base<T, K>(x) {}
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 constexpr T cos_sqrt_x<T, K>::operator()(K n) const
 {
-	if (n < 0)
-		throw std::domain_error("The term index must be a non-negative integer");
-
 	return static_cast<T>(std::pow(-1, n) * std::pow(this->x, n) / this->fact(2 * n));
 }
 
@@ -4545,7 +4358,7 @@ constexpr T cos_sqrt_x<T, K>::operator()(K n) const
 * @authors Pavlova A.R.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 class ln_1_plus_x3 : public series_base<T, K>
 {
 public:
@@ -4567,16 +4380,14 @@ public:
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 ln_1_plus_x3<T, K>::ln_1_plus_x3(T x) : series_base<T, K>(x) {}
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 constexpr T ln_1_plus_x3<T, K>::operator()(K n) const
 {
-	if (n < 0)
-		throw std::domain_error("The term index must be a non-negative integer");
-
-	return static_cast<T>(this->minus_one_raised_to_power_n(n + 2) * std::pow(this->x, 3 * (n + 1)) / (n + 1));
+	const K a = n + 1;
+	return static_cast<T>(this->minus_one_raised_to_power_n(n + 2) * std::pow(this->x, 3 * a) / a);
 }
 
 
@@ -4585,7 +4396,7 @@ constexpr T ln_1_plus_x3<T, K>::operator()(K n) const
 * @authors Pavlova A.R.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 class x_div_1minx : public series_base<T, K>
 {
 public:
@@ -4607,15 +4418,12 @@ public:
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 x_div_1minx<T, K>::x_div_1minx(T x) : series_base<T, K>(x) {}
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 constexpr T x_div_1minx<T, K>::operator()(K n) const
 {
-	if (n < 0)
-		throw std::domain_error("The term index must be a non-negative integer");
-
 	return static_cast<T>(this->fact(2 * n) * std::pow(this->x, n + 1) / (this->fact(n) * std::pow(4, this->x)));
 }
 
@@ -4625,7 +4433,7 @@ constexpr T x_div_1minx<T, K>::operator()(K n) const
 * @authors Pavlova A.R.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 class x_div_1minx2 : public series_base<T, K>
 {
 public:
@@ -4647,16 +4455,13 @@ public:
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 x_div_1minx2<T, K>::x_div_1minx2(T x) : series_base<T, K>(x) {}
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 constexpr T x_div_1minx2<T, K>::operator()(K n) const
 {
-	if (n < 0)
-		throw std::domain_error("The term index must be a non-negative integer");
-
-	return static_cast<T>(std::pow(this->x, 2 * n + 1));
+	return static_cast<T>(std::pow(this->x, std::fma(2, n, 1)));
 }
 
 /**
@@ -4664,7 +4469,7 @@ constexpr T x_div_1minx2<T, K>::operator()(K n) const
 * @authors Pavlova A.R.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 class gamma_series : public series_base<T, K>
 {
 public:
@@ -4690,27 +4495,24 @@ private:
 	T t;
 	T x;
 
-	// Пример функции для коэффициента a_k
+	// пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ a_k
 	T a_k(K n) const;
 };
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 gamma_series<T, K>::gamma_series(T t, T x) : series_base<T, K>(x), t(t), x(x) {}
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 T gamma_series<T, K>::a_k(K n) const
 {
-	// Определите последовательность a_k, например:
-	return static_cast<T>(n + 1);  // В качестве примера пусть a_k = n + 1
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ a_k, пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ:
+	return static_cast<T>(n + 1);  // пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ a_k = n + 1
 }
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 constexpr T gamma_series<T, K>::operator()(K n) const
 {
-	if (n < 0)
-		throw std::domain_error("The term index must be a non-negative integer");
-
-	T a_k_n = a_k(n);  // Вычисляем a_k
+	T a_k_n = a_k(n);  // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ a_k
 	return static_cast<T>(a_k_n * std::pow(this->t, n) * std::tgamma(a_k_n));
 }
 
@@ -4719,7 +4521,7 @@ constexpr T gamma_series<T, K>::operator()(K n) const
 * @authors Kreynin R.G.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 class testing_series : public series_base<T, K>
 {
 public:
@@ -4741,14 +4543,12 @@ public:
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 testing_series<T, K>::testing_series(T x) : series_base<T, K>(x, 0) {}
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 constexpr T testing_series<T, K>::operator()(K n) const
 {
-	if (n < 0)
-		throw std::domain_error("negative integer in the input");
 	return 0;
 }
 
@@ -4758,7 +4558,7 @@ constexpr T testing_series<T, K>::operator()(K n) const
 * @authors Kreynin R.G.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 class requrrent_testing_series : public series_base<T, K>, public requrrent_series_base<T, K>
 {
 public:
@@ -4789,31 +4589,24 @@ private:
 	T acsess_row(K n);
 };
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 requrrent_testing_series<T, K>::requrrent_testing_series(T x) : series_base<T, K>(x, 0), requrrent_series_base<T, K>(x) {}
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 T requrrent_testing_series<T, K>::acsess_row(K n)
 {
-	if (n < 0)
-		throw std::domain_error("negative integer in the input");
-
 	K old_size = this->series_vector.size();
 	this->series_vector.reserve(n);
 
-	for (K i = old_size; i <= n; ++i) {
-		this->series_vector.push_back(this->series_vector[i - 1] * (this->x * this->x) / (i * (4 * i + 2)));
-	}
+	for (K i = old_size; i <= n; ++i) 
+		this->series_vector.push_back(this->series_vector[i - 1] * (this->x * this->x) / (i * std::fma(4, i, 2)));
 
 	return this->series_vector[n];
 }
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 constexpr T requrrent_testing_series<T, K>::operator()(K n) const
 {
-	if (n < 0)
-		throw std::domain_error("negative integer in the input");
 	const T a = const_cast<requrrent_testing_series<T, K>*>(this)->acsess_row(n);
 	return a;
-
 }

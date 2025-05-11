@@ -16,7 +16,7 @@
  * @tparam K The type of enumerating integer
  * @tparam series_templ is the type of series whose convergence we accelerate
  */
-template <typename T, typename K, typename series_templ>
+template <std::floating_point T, std::unsigned_integral K, typename series_templ>
 class levin_recursion_algorithm : public series_acceleration<T, K, series_templ>
 {
 public:
@@ -34,11 +34,7 @@ public:
       * @return The partial sum after the transformation.
       */
 
-    T operator()(const K n, const int order) const
-    {
-        if (n < 0)
-            throw std::domain_error("negative integer in the input");
-
+    T operator()(const K n, const K order) const {
         if (n == 0)
             return DEF_UNDEFINED_SUM;
 
@@ -55,8 +51,7 @@ public:
 private:
     const T beta;
 
-    T operator()(const K n_time, const K k_time, const T b, const bool ND) const
-    {
+    T operator()(const K n_time, const K k_time, const T b, const bool ND) const {
         T w_n = static_cast<T>(pow(T(-1), n_time) * this->series->fact(n_time));
         T R_0 = (ND == 0 ? this->series->S_n(n_time) : T(1)) / w_n;
 

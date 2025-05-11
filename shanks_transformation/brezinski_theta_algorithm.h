@@ -8,7 +8,7 @@
 #include "series_acceleration.h" // Include the series header
 #include <vector> // Include the vector library
 
-template <typename T, typename K, typename series_templ>
+template <std::floating_point T, std::unsigned_integral K, typename series_templ>
 class theta_brezinski_algorithm : public series_acceleration<T, K, series_templ>
 {
 public:
@@ -27,12 +27,9 @@ public:
      * @param order The order of transformation.
      * @return The partial sum after the transformation.
      */
-    T operator()(const K n, const int order) const {
-        if (order & 1 || order < 0) // order is odd or negative
+    T operator()(const K n, const K order) const {
+        if (order & 1) // is order odd?
             throw std::domain_error("order should be even number");
-
-        if (n < 0)
-            throw std::domain_error("negative integer in the input");
 
         if (n == 0 || order == 0)
             return this->series->S_n(n);
@@ -48,11 +45,9 @@ protected:
      * @param k The order of transformation.
      * @return The value of theta.
      */
-    T theta(K n, const int order, T S_n, const K j) const
-    {
-        if (order == 1)
-        {
-            T res = T(1) / this->series->operator()(n + j + 1);
+    T theta(K n, const K order, T S_n, const K j) const {
+        if (order == 1) {
+            T res = 1 / this->series->operator()(n + j + 1);
             if (!std::isfinite(res))
                 throw std::overflow_error("division by zero");
 
@@ -68,16 +63,15 @@ protected:
             return S_n;
 
         //TODO спросить у Парфенова, ибо жертвуем читаемостью кода, ради его небольшого ускорения
-        const int order1 = order - 1;
-        const int order2 = order - 2;
+        const K order1 = order - 1;
+        const K order2 = order - 2;
 
         const T theta_order1_0 = theta(n, order1, S_n, 0);
         const T theta_order1_1 = theta(n, order1, S_n, 1);
         const T theta_order1_2 = theta(n, order1, S_n, 2);
         const T theta_order2_1 = theta(n, order2, S_n, 1);
 
-        if (order & 1) // order is odd 
-        {
+        if (order & 1) { // order is odd
             const T delta = T(1) / (theta_order1_0 - theta_order1_1); // 1/Δυ_2k^(n)
 
             if (!std::isfinite(delta))

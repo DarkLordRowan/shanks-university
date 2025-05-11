@@ -17,7 +17,7 @@
  * @param remainder_func - remainder type
  * @param recursive To calculate reccursively
 */
-template<typename T, typename K, typename series_templ>
+template<std::floating_point T, std::unsigned_integral K, typename series_templ>
 class levi_sidi_algorithm : public series_acceleration<T, K, series_templ>
 {
 protected:
@@ -35,13 +35,9 @@ protected:
 	* @return The partial sum after the transformation.
 	*/
 
-	virtual T calculate(const K n, const int order) const {
-
-		if (order < 0)
-			throw std::domain_error("negative integer in input");
-
-		if (beta <= 0)
-			throw std::domain_error("beta cannot be initiared by a negative number or a zero");
+	virtual T calculate(const K n, const K order) const {
+		if (beta == 0)
+			throw std::domain_error("beta cannot be initiared by a zero");
 
 		T numerator = T(0), denominator = T(0);
 		T w_n, rest;
@@ -89,10 +85,7 @@ protected:
 	* @return The partial sum after the transformation.
 	*/
 
-	T calculate_rec(const K n, const int order) const {
-		if (order < 0)
-			throw std::domain_error("negative integer in input");
-
+	T calculate_rec(const K n, const K order) const {
 		if (beta <= 0)
 			throw std::domain_error("beta cannot be initiared by a negative number or a zero");
 
@@ -100,9 +93,9 @@ protected:
 		std::vector<T> D (N.size(), 0);
 
 		//TODO спросить у Парфенова, ибо жертвуем читаемостью кода, ради его небольшого ускорения
-		int orderi;
+		K orderi;
 
-		for (int i = 0; i < int(N.size()); ++i) {
+		for (K i = 0; i < K(N.size()); ++i) {
 			orderi = order + i;
 			D[i] = remainder_func->operator()(0, orderi, this->series);
 			N[i] = this->series->S_n(orderi) * D[i];
@@ -159,7 +152,7 @@ public:
    * @return The partial sum after the transformation.
    */
 
-	T operator()(const K n, const int order) const {
+	T operator()(const K n, const K order) const {
 		if (recursive)
 			return calculate_rec(n, order);
 
