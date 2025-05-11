@@ -18,7 +18,7 @@
  * @param remainder_func - remainder type
  */
 
-template<typename T, typename K, typename series_templ>
+template<std::floating_point T, std::unsigned_integral K, typename series_templ>
 class M_levin_sidi_algorithm : public series_acceleration<T, K, series_templ>
 {
 protected:
@@ -36,10 +36,7 @@ protected:
 	 * We assume that the Pochhammer symbol satisfies (-x)_n = (-1)^n*(x-n+1)_n
 	 */
 
-	T calculate(const K n, const int order) const {
-		if (order < 0)
-			throw std::domain_error("negative integer in input");
-
+	T calculate(const K n, const K order) const {
 		if (gamma <= n - 1)
 			throw std::domain_error("gamma cannot be lesser than n-1");
 
@@ -66,7 +63,6 @@ protected:
 		up_coef = (down_coef - n + 1);
 		
 		for (K j = 0; j <= n; ++j) {
-
 			j1 = j + 1;
 			rest = this->series->minus_one_raised_to_power_n(j) * binomial_coef;
 
@@ -118,7 +114,7 @@ public:
      * @return The partial sum after the transformation.
      */
 
-	T operator()(const K n, const int order) const {
+	T operator()(const K n, const K order) const {
 		return calculate(n, order);
 	}
 };

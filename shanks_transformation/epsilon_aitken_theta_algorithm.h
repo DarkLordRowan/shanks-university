@@ -13,7 +13,7 @@
   * @tparam K Integer index type.
   * @tparam series_templ Series type to accelerate.
   */
-template <typename T, typename K, typename series_templ>
+template <std::floating_point T, std::unsigned_integral K, typename series_templ>
 class epsilon_aitken_theta_algorithm : public series_acceleration<T, K, series_templ>
 {
 public:
@@ -32,7 +32,7 @@ public:
      * @return The partial sum after the transformation.
      */
 
-    T operator()(const K n, const int order) const {
+    T operator()(const K n, const K order) const {
         if (n < 4)
             return 0;
 

@@ -16,7 +16,7 @@
  * @tparam K The type of enumerating integer
  * @tparam series_templ is the type of series whose convergence we accelerate
  */
-template <typename T, typename K, typename series_templ>
+template <std::floating_point T, std::unsigned_integral K, typename series_templ>
 class richardson_algorithm : public series_acceleration<T, K, series_templ>
 {
 public:
@@ -31,27 +31,24 @@ public:
       * @param order The order of transformation.
       * @return The partial sum after the transformation.
       */
-    T operator() (const K n, const int order) const {
+    T operator() (const K n, const K order) const {
         // in the method we don't use order, it's only a stub 
-        if (n < 0)
-            throw std::domain_error("negative integer in the input");
-
         if (n == 0)
             return DEF_UNDEFINED_SUM;
 
         std::vector<std::vector<T>> e(2, std::vector<T>(n + 1, 0)); //2 vectors n + 1 length containing Richardson table next and previous 
 
-        for (int i = 0; i <= n; ++i)
+        for (K i = 0; i <= n; ++i)
             e[0][i] = this->series->S_n(i);
 
         // The Richardson method main function 
         T a, b;
         a = static_cast<T>(1);
 
-        for (int l = 1; l <= n; ++l) {
+        for (K l = 1; l <= n; ++l) {
             a *= 4;
             b = a - 1;
-            for (int m = l; m <= n; ++m)
+            for (K m = l; m <= n; ++m)
                 e[1][m] = fma(a, e[0][m], -e[0][m - 1]) / b;
 
             std::swap(e[0], e[1]);
