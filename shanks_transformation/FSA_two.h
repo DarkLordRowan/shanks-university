@@ -9,7 +9,7 @@
 #include <vector> // Include the vector library
 #include "series.h" 
 
-template <typename T, typename K, typename series_templ>
+template <std::floating_point T, std::unsigned_integral K, typename series_templ>
 class ford_sidi_algorithm_two : public series_acceleration<T, K, series_templ>
 {
 public:
@@ -27,11 +27,7 @@ public:
 	* @param order The order of transformation.
 	* @return The partial sum after the transformation.
 	*/
-	T operator()(const K n, const int k) const
-	{
-		if (n < 0)
-			throw std::domain_error("negative integer in the input");
-
+	T operator()(const K n, const K k) const {
 		if (n == 0)
 			throw std::domain_error("n = 0 in the input");
 
@@ -40,6 +36,7 @@ public:
 		K m = n;
 		do
 			delta_squared_S_n = this->series->S_n(m + 2) - 2 * this->series->S_n(m + 1) + this->series->S_n(m);
+
 		while (delta_squared_S_n == 0 && --m > 0);
 
 		if (m == 0)

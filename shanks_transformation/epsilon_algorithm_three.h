@@ -16,7 +16,7 @@
   * @tparam K Index type
   * @tparam series_templ Series type to accelerate
   */
-template <typename T, typename K, typename series_templ>
+template <std::floating_point T, std::unsigned_integral K, typename series_templ>
 class epsilon_algorithm_three : public series_acceleration<T, K, series_templ>
 {
 private:
@@ -27,7 +27,7 @@ public:
 	* @brief Parameterized constructor to initialize the Epsilon Algorithm MK-2.
 	* @param series The series class object to be accelerated
 	*/
-    epsilon_algorithm_three(const series_templ& series, T epsilon_threshold_ = T(1e-3)) : series_acceleration<T, K, series_templ>(series), epsilon_threshold(epsilon_threshold_) {}
+    epsilon_algorithm_three(const series_templ& series, const T epsilon_threshold_ = T(1e-3)) : series_acceleration<T, K, series_templ>(series), epsilon_threshold(epsilon_threshold_) {}
 
 	/**
 	* @brief Fast impimentation of Epsilon algorithm.
@@ -37,11 +37,7 @@ public:
 	* @param order The order of transformation.
 	* @return The partial sum after the transformation.
 	*/
-	T operator()(const K n, const int order) const
-    {
-        if (n < 0)
-            throw std::domain_error("negative integer in the input");
-
+	T operator()(const K n, const K order) const {
         if (n == 0)
             return DEF_UNDEFINED_SUM;
 
@@ -63,19 +59,17 @@ public:
 
         std::vector<T> e(N + 3, 0); //First N eliments of epsilon table + 2 elements for math
 
-        for (int i = 0; i <= N; ++i) //Filling up Epsilon Table
+        for (K i = 0; i <= N; ++i) //Filling up Epsilon Table
             e[i] = this->series->S_n(i);
 
-        for (int i = 0; i <= order; ++i) //Working with Epsilon Table order times
-        {
+        for (K i = 0; i <= order; ++i) { //Working with Epsilon Table order times
             num = NUM = K1 = N = n;
             K NEWELM = newelm = (N - 1) / 2;
 
             e[N + 2] = e[N];
             e[N] = abs_error = OFRN;
 
-            for (int I = 1; I <= NEWELM; ++I) //Counting all diagonal elements of epsilon table
-            {
+            for (K I = 1; I <= NEWELM; ++I) { //Counting all diagonal elements of epsilon table
                 RES = e[K1 + 2];
                 E0 = e[K1 - 2];
                 E1 = e[K1 - 1];
@@ -88,16 +82,14 @@ public:
                 ERR3 = std::abs(DELTA3);
                 TOL3 = std::max(E1ABS, std::abs(E0)) * EMACH;
 
-                if (ERR2 > TOL2 || ERR3 > TOL3)
-                {
+                if (ERR2 > TOL2 || ERR3 > TOL3) {
                     E3 = e[K1];
                     e[K1] = E1;
                     DELTA1 = E1 - E3;
                     ERR1 = std::abs(DELTA1);
                     TOL1 = std::max(E1ABS, std::abs(E3)) * EMACH;
 
-                    if (ERR1 <= TOL1 || ERR2 <= TOL2 || ERR3 <= TOL3)
-                    {
+                    if (ERR1 <= TOL1 || ERR2 <= TOL2 || ERR3 <= TOL3) {
                         N = I + I - 1;
                         break;
                     }
@@ -105,27 +97,23 @@ public:
                     SS = static_cast<T>(1.0 / DELTA1 + 1.0 / DELTA2 - 1.0 / DELTA3);
                     EPSINF = std::abs(SS * E1);
 
-                    if (EPSINF > epsilon_threshold)
-                    {
+                    if (EPSINF > epsilon_threshold) {
                         RES = static_cast<T>(E1 + 1.0 / SS);
                         e[K1] = RES;
                         K1 -= 2;
                         T ERROR = ERR2 + std::abs(RES - E2) + ERR3;
 
-                        if (ERROR <= abs_error)
-                        {
+                        if (ERROR <= abs_error) {
                             abs_error = ERROR;
                             result = RES;
                         }
                     }
-                    else
-                    {
+                    else {
                         N = I + I - 1;
                         break;
                     }
                 }
-                else
-                {
+                else {
                     result = RES;
                     abs_error = ERR2 + ERR3;
                     e[K1] = result;
@@ -143,8 +131,7 @@ public:
             for (K pos = ib; pos < ib + 2 * ie; pos += 2)
                 e[pos] = e[pos + 2];
 
-            if (num != N)
-            {
+            if (num != N) {
                 in = num - N + 1;
                 for (K j = 1; j <= N; ++j, ++in)
                     e[j] = e[in];

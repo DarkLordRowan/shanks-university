@@ -16,7 +16,7 @@
   * @tparam K The type of enumerating integer
   * @tparam series_templ is the type of series whose convergence we accelerate
   */
-template <typename T, typename K, typename series_templ>
+template <std::floating_point T, std::unsigned_integral K, typename series_templ>
 class rho_Wynn_algorithm : public series_acceleration<T, K, series_templ>
 {
 protected:
@@ -24,14 +24,11 @@ protected:
 	const T gamma;
 	const T RHO;
 
-	T calculate(const K n, int order) const { //const int order
-		if (order & 1) { // order is odd
+	T calculate(const K n, K order) const { //const int order
+		if (order & 1) { // is order odd
 			++order;
 			throw std::domain_error("order should be even number");
 		}
-
-		if (n < 0 || order < 0)
-			throw std::domain_error("negative integer in the input");
 
 		if (order == 0)
 			return this->series->S_n(n);
@@ -39,7 +36,7 @@ protected:
 		const T S_n = this->series->S_n(n);
 
 		//TODO спросить у Парфенова, ибо жертвуем читаемостью кода, ради его небольшого ускорения
-		const int order1 = order - 1;
+		const K order1 = order - 1;
 
 		const T res = (recursive_calculate_body(n, order1 - 1, S_n, 1) + numerator_func->operator()(n, order, this->series, gamma, RHO)) / 
 			(recursive_calculate_body(n, order1, S_n, 1) - recursive_calculate_body(n, order1, S_n, 0));
@@ -50,7 +47,7 @@ protected:
 		return res;
 	}
 
-	T recursive_calculate_body(const K n, const int order, T S_n, const K j) const {
+	T recursive_calculate_body(const K n, const K order, T S_n, const K j) const {
 		/**
 		* S_n - previous sum;
 		* j - adjusts n: (n + j);
@@ -63,7 +60,7 @@ protected:
 			return 0;
 
 		//TODO спросить у Парфенова, ибо жертвуем читаемостью кода, ради его небольшого ускорения
-		const int order1 = order - 1;
+		const K order1 = order - 1;
 		const K nj = n + j;
 
 		const T res = (recursive_calculate_body(nj, order1 - 1, S_n, 1) + numerator_func->operator()(nj, order, this->series, gamma, RHO)) /
@@ -94,8 +91,7 @@ public:
      * @param order The order of transformation.
      * @return The partial sum after the transformation.
      */
-	T operator()(const K n, const int order) const
-	{
+	T operator()(const K n, const K order) const {
 		return calculate(n, order);
 	}
 
@@ -110,14 +106,9 @@ public:
 	 * @throws std::overflow_error for division by zero
 	 */
 
-	template <typename BigK, typename BigOrder, typename = std::enable_if_t<!std::is_same_v<BigK, K> || !std::is_same_v<BigOrder, int>>> T operator()(const BigK& n, const BigOrder& order) const {
-		static_assert(std::is_integral_v<BigOrder>, "Order type must be integral");
+	template <typename BigK, typename BigOrder, typename = std::enable_if_t<!std::is_same_v<BigK, K> || !std::is_same_v<BigOrder, K>>> T operator()(const BigK& n, const BigOrder& order) const {
 		static_assert(std::is_constructible_v<K, BigK>, "Term count type must be convertible to K");
-
-		if (order < BigOrder(0))
-			throw std::domain_error("negative order");
 
 		return calculate_impl(static_cast<K>(n), static_cast<int>(order));
 	}
-
 };
