@@ -251,11 +251,14 @@ class Program:
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=True,
+            #bufsize=1, 
+            #universal_newlines=True
         )
 
         for line in self.cl_arguments:
             process.stdin.write(line + "\n")
             process.stdin.flush()
+            #print(process.stdout.readline())
         self.output, self.stderr = process.communicate()
 
     def get_output(self):
@@ -303,13 +306,6 @@ class Logger:
         except Exception as e:
             print(f"Logging error: {str(e)}")
             return False                                                                                                                                                                                                                                                                                                                                    
-
-def exp_series(x, n):
-    arr = []
-    for i in range(n):
-        a_n = x**i / factorial(i)
-        arr.append(f"{a_n}")
-    return arr
 
 def log_selected_params(logger, params):
     series, x, transformation, function, n, order = params
@@ -660,7 +656,7 @@ def main():
         exec_file = "/test.exe" # Путь к exe файлу
     else:
         exec_file = "./build/test"
-    #params = ["1", "1", "4", "6", "10", "1", "1", "1", "1", "1", "1", "1"]
+    params = ["1", "1", "4", "6", "10", "1", "1", "1", "1", "1", "1", "1"]
     #params = ["15", "3", "10", "0", "1", "10", "2"]
     #params = ["15", "3", "4", "4", "10", "2", "18"]
 
