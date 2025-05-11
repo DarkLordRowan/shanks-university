@@ -544,7 +544,7 @@ inline void init_levin_recursion(std::unique_ptr<series_base<T, K>>& series, std
  * @authors Sharonov K.S.
  * @param i The number of term
  */
-int get_cached_random(int i) {
+inline int get_cached_random(int i) {
     static auto cache = std::unordered_map<int, int>{};
     
     static auto gen = std::mt19937(std::random_device{}());

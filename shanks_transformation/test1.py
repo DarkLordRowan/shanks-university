@@ -1,8 +1,10 @@
 from test import *
 
 
-def test_all_1_functions():
-    pass
+def test_all_series_for_1_function(exec_file, params):
+    program = Program(exec_file, params)
+    program.run()
+
 
 
 def main():
