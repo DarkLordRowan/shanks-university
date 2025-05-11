@@ -407,7 +407,7 @@ T exp_series<T, K>::acsess_row(K n)
 
 	for (auto i = old_size; i <= static_cast<typename std::vector<T>::size_type>(n); ++i)
 	{
-		this->series_vector.push_back(this->series_vector[i - 1] * this->x / i);
+		this->series_vector.push_back(this->series_vector[i - 1] * this->x / i); // (1.2) [Rows.pdf]
 	}
 
 	return this->series_vector[n];
@@ -474,7 +474,7 @@ T cos_series<T, K>::acsess_row(K n)
 	this->series_vector.reserve(n);
 
 	for (auto i = old_size; i <= static_cast<typename std::vector<T>::size_type>(n); ++i) {
-		this->series_vector.push_back(this->series_vector[i - 1] * static_cast<T>(-1) * static_cast<T>((this->x * this->x) / (i * std::fma(4, i, -2))));
+		this->series_vector.push_back(this->series_vector[i - 1] * static_cast<T>(-1) * static_cast<T>((this->x * this->x) / (i * std::fma(4, i, -2)))); // (2.2) [Rows.pdf]
 	}
 
 	return this->series_vector[n];
@@ -542,7 +542,7 @@ T sin_series<T, K>::acsess_row(K n)
 	this->series_vector.reserve(n);
 
 	for (auto i = old_size; i <= static_cast<typename std::vector<T>::size_type>(n); ++i) {
-		this->series_vector.push_back(this->series_vector[i - 1] * static_cast<T>(-1) * static_cast<T>((this->x * this->x) / (i * std::fma(4, i, 2))));
+		this->series_vector.push_back(this->series_vector[i - 1] * static_cast<T>(-1) * static_cast<T>((this->x * this->x) / (i * std::fma(4, i, 2)))); // (3.2) [Rows.pdf]
 	}
 
 	return this->series_vector[n];
@@ -553,8 +553,8 @@ constexpr T sin_series<T, K>::operator()(K n) const
 {
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
-	const T a = const_cast<sin_series<T, K>*>(this)->acsess_row(n);
-	return a;
+	const T result = const_cast<sin_series<T, K>*>(this)->acsess_row(n);
+	return result;
 }
 
 /**
@@ -609,7 +609,7 @@ T cosh_series<T, K>::acsess_row(K n)
 	this->series_vector.reserve(n);
 
 	for (auto i = old_size; i <= static_cast<typename std::vector<T>::size_type>(n); ++i) {
-		this->series_vector.push_back(this->series_vector[i - 1] * static_cast<T>((this->x * this->x) / (i * std::fma(4, i, -2))));
+		this->series_vector.push_back(this->series_vector[i - 1] * static_cast<T>((this->x * this->x) / (i * std::fma(4, i, -2)))); // (4.2) [Rows.pdf] 
 	}
 
 	return this->series_vector[n];
@@ -676,7 +676,7 @@ T sinh_series<T, K>::acsess_row(K n)
 	this->series_vector.reserve(n);
 
 	for (auto i = old_size; i <= static_cast<typename std::vector<T>::size_type>(n); ++i) {
-		this->series_vector.push_back(this->series_vector[i - 1] * static_cast<T>((this->x * this->x) / (i * std::fma(4, i, 2))));
+		this->series_vector.push_back(this->series_vector[i - 1] * static_cast<T>((this->x * this->x) / (i * std::fma(4, i, 2)))); // (5.2) [Rows.pdf]
 	}
 
 	return this->series_vector[n];
@@ -741,7 +741,7 @@ constexpr T bin_series<T, K>::operator()(K n) const
 {
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
-	return static_cast<T>(binomial_coefficient(alpha, n) * std::pow(this->x, n));
+	return static_cast<T>(binomial_coefficient(alpha, n) * std::pow(this->x, n)); // (6.1) [Rows.pdf]
 }
 
 /**
@@ -785,7 +785,7 @@ constexpr T four_arctan_series<T, K>::operator()(K n) const
 {
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
-	return static_cast<T>(4 * series_base<T, K>::minus_one_raised_to_power_n(n) * std::pow(this->x, std::fma(2, n, 1)) / std::fma(2, n, 1));
+	return static_cast<T>(4 * series_base<T, K>::minus_one_raised_to_power_n(n) * std::pow(this->x, std::fma(2, n, 1)) / std::fma(2, n, 1)); // (7.1) Rows.pdf
 }
 
 /**
@@ -829,7 +829,7 @@ constexpr T ln1mx_series<T, K>::operator()(K n) const
 {
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
-	return static_cast<T>(std::pow(this->x, n + 1) / (n + 1));
+	return static_cast<T>(std::pow(this->x, n + 1) / (n + 1)); // (8.1) [Rows.pdf]
 }
 
 /**
@@ -884,7 +884,7 @@ T mean_sinh_sin_series<T, K>::acsess_row(K n)
 	this->series_vector.reserve(n);
 
 	for (auto i = old_size; i <= static_cast<typename std::vector<T>::size_type>(n); ++i) {
-		this->series_vector.push_back(this->series_vector[i - 1] * static_cast<T>(std::pow(this->x, 4) / (std::fma(4, i, 1) * (4 * i) * std::fma(4, i, -1) * std::fma(4, i, -2))));
+		this->series_vector.push_back(this->series_vector[i - 1] * static_cast<T>(std::pow(this->x, 4) / (std::fma(4, i, 1) * (4 * i) * std::fma(4, i, -1) * std::fma(4, i, -2)))); // (9.1) [Rows.pdf]
 	}
 
 	return this->series_vector[n];
@@ -930,14 +930,14 @@ public:
 };
 
 template <typename T, typename K>
-exp_squared_erf_series<T, K>::exp_squared_erf_series(T x) : series_base<T, K>(x, std::exp(x * x)* std::erf(x)) {}
+exp_squared_erf_series<T, K>::exp_squared_erf_series(T x) : series_base<T, K>(x, std::exp(x * x) * std::erf(x)) {}
 
 template <typename T, typename K>
 constexpr T exp_squared_erf_series<T, K>::operator()(K n) const
 {
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
-	const auto result = std::pow(this->x, std::fma(2, n, 1)) / std::tgamma(n + 1.5);
+	const auto result = std::pow(this->x, std::fma(2, n, 1)) / std::tgamma(n + 1.5); // (10.3) [Rows.pdf]
 	if (!isfinite(result))
 		throw std::overflow_error("operator() is too big");
 	return static_cast<T>(result);
@@ -987,7 +987,7 @@ constexpr T xmb_Jb_two_series<T, K>::operator()(K n) const
 {
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
-	return static_cast<T>(series_base<T, K>::minus_one_raised_to_power_n(n) * std::pow(this->x, 2 * n) / (static_cast<T>(this->fact(n)) * static_cast<T>(std::tgamma(n + this->mu + 1))));
+	return static_cast<T>(series_base<T, K>::minus_one_raised_to_power_n(n) * std::pow(this->x, 2 * n) / (static_cast<T>(this->fact(n)) * static_cast<T>(std::tgamma(n + this->mu + 1)))); // (11.3) [Rows.pdf]
 }
 
 /**
@@ -1032,7 +1032,7 @@ constexpr T half_asin_two_x_series<T, K>::operator()(K n) const
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
 	const auto _fact_n = this->fact(n);
-	return static_cast<T>(static_cast<T>(this->fact(2 * n)) * std::pow(this->x, 2 * n) / (_fact_n * _fact_n * (2 * n + 1)));
+	return static_cast<T>(static_cast<T>(this->fact(2 * n)) * std::pow(this->x, 2 * n) / (_fact_n * _fact_n * (2 * n + 1))); // (12.1) [Rows.pdf]
 }
 
 
@@ -1077,7 +1077,7 @@ constexpr T inverse_1mx_series<T, K>::operator()(K n) const
 {
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
-	return static_cast<T>(std::pow(this->x, n));
+	return static_cast<T>(std::pow(this->x, n)); // (13.1) [Rows.pdf]
 }
 
 /**
@@ -1121,7 +1121,7 @@ constexpr T x_1mx_squared_series<T, K>::operator()(K n) const
 {
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
-	return static_cast<T>(std::pow(this->x, n) * n);
+	return static_cast<T>(std::pow(this->x, n) * n); // (14.1) [Rows.pdf]
 }
 
 /**
@@ -1164,7 +1164,7 @@ private:
 };
 
 template <typename T, typename K>
-erf_series<T, K>::erf_series(T x) : series_base<T, K>(x, static_cast<T>(std::sqrt(std::numbers::pi))* static_cast<T>(std::erf(x) / 2)), requrrent_series_base<T, K>(x) { }
+erf_series<T, K>::erf_series(T x) : series_base<T, K>(x, static_cast<T>(std::sqrt(std::numbers::pi)) * static_cast<T>(std::erf(x) / 2)), requrrent_series_base<T, K>(x) { }
 
 template <typename T, typename K>
 T erf_series<T, K>::acsess_row(K n)
@@ -1175,7 +1175,8 @@ T erf_series<T, K>::acsess_row(K n)
 	auto old_size = this->series_vector.size();
 	this->series_vector.reserve(n);
 
-	for (auto i = old_size; i <= static_cast<typename std::vector<T>::size_type>(n); ++i) {
+	for (auto i = old_size; i <= static_cast<typename std::vector<T>::size_type>(n); ++i) 
+	{
 		this->series_vector.push_back(this->series_vector[i - 1] * static_cast<T>((-1)) * static_cast<T>((this->x * this->x) / i * std::fma(2, i, -1) / std::fma(2, i, 1)));
 	}
 
@@ -1187,8 +1188,8 @@ constexpr T erf_series<T, K>::operator()(K n) const
 {
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
-	const T a = const_cast<erf_series<T, K>*>(this)->acsess_row(n);
-	return a;
+	const T result = const_cast<erf_series<T, K>*>(this)->acsess_row(n);
+	return result;
 }
 
 /**
@@ -2069,7 +2070,7 @@ constexpr T minus_one_n_fact_n_in_n_series<T, K>::operator()(K n) const
 }
 
 /**
-* @brief ln(x+1)/(1-x) / 2 series p557
+* @brief Maclaurin series of function ln((x+1)/(1-x))
 * @authors Kreynin R.G.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
@@ -2083,6 +2084,7 @@ public:
 	* @brief Parameterized constructor to initialize the series with function argument and sum
 	* @authors Kreynin R.G.
 	* @param x The argument for function series
+	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	*/
 	ln_x_plus_one_x_minus_one_halfed_series(T x);
 
@@ -2090,6 +2092,7 @@ public:
 	* @brief Computes the nth term of the Maclaurin series of the sine function
 	* @authors Kreynin R.G.
 	* @param n The number of the term
+	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	* @return nth term of the Maclaurin series of the sine functions
 	*/
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
@@ -2098,8 +2101,8 @@ public:
 template <typename T, typename K>
 ln_x_plus_one_x_minus_one_halfed_series<T, K>::ln_x_plus_one_x_minus_one_halfed_series(T x) : series_base<T, K>(x, std::log((1 + x) / (1 - x)) / 2)
 {
-	if (std::abs(x) > 1)
-		throw std::domain_error("series diverge");
+	if (std::abs(x) >= 1)
+		throw std::domain_error("the ln((x+1)/(1-x)) series diverge at x = " + std::to_string(this->x) + "; series converge if x only in (-1, 1)");
 }
 
 template <typename T, typename K>
@@ -2107,11 +2110,11 @@ constexpr T ln_x_plus_one_x_minus_one_halfed_series<T, K>::operator()(K n) const
 {
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
-	return static_cast<T>(std::pow(this->x, 2 * n + 1) / (2 * n + 1));
+	return static_cast<T>(std::pow(this->x, std::fma(2, n, 1)) / std::fma(2, n, 1)); // (39.2) [Rows.pdf] 
 }
 
 /**
-* @brief 2 arcsin(x/2)^2  p 567
+* @brief Maclaurin series of function 2 arcsin(x/2)^2
 * @authors Kreynin R.G.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
@@ -2125,6 +2128,7 @@ public:
 	* @brief Parameterized constructor to initialize the series with function argument and sum
 	* @authors Kreynin R.G.
 	* @param x The argument for function series
+	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	*/
 	two_arcsin_square_x_halfed_series(T x);
 
@@ -2132,25 +2136,30 @@ public:
 	* @brief Computes the nth term of the Maclaurin series of the sine function
 	* @authors Kreynin R.G.
 	* @param n The number of the term
+	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	* @return nth term of the Maclaurin series of the sine functions
 	*/
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
 template <typename T, typename K>
-two_arcsin_square_x_halfed_series<T, K>::two_arcsin_square_x_halfed_series(T x) : series_base<T, K>(x, static_cast<T>(2 * std::pow(std::asin(x / 2), 2))) {}
+two_arcsin_square_x_halfed_series<T, K>::two_arcsin_square_x_halfed_series(T x) : series_base<T, K>(x, static_cast<T>(2 * std::pow(std::asin(x / 2), 2))) 
+{
+	if (std::abs(this->x) > 2)
+		throw std::domain_error("the 2arcsin(x/2)^2 series diverge at x = " + std::to_string(this->x) + "; series converge if x only in [-2, 2]");
+}
 
 template <typename T, typename K>
 constexpr T two_arcsin_square_x_halfed_series<T, K>::operator()(K n) const
 {
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
-	return  static_cast<T>((pow(this->x, 2 * n + 2) * this->fact(n) * this->fact(n)) / (this->fact(2 * n + 2)));
+	return  static_cast<T>((pow(this->x, std::fma(2, n, 2)) * this->fact(n) * this->fact(n)) / (this->fact(static_cast<K>(std::fma(2, n, 2))))); // (40.3) [Rows.pdf]
 }
 
 
 /**
-* @brief Maclaurin series of value pi^2/12
+* @brief Number series of value pi^2/12
 * @authors Trudolyubov N.A.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
@@ -2168,6 +2177,7 @@ public:
 	* @brief Computes the nth term of the Maclaurin series of the cosine function
 	* @authors Trudolyubov N.A.
 	* @param n The number of the term
+	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	* @return nth term of the Maclaurin series of the cosine functions
 	*/
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
@@ -2181,11 +2191,13 @@ constexpr T pi_squared_twelve_series<T, K>::operator()(K n) const
 {
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
-	return (this->minus_one_raised_to_power_n(n) / static_cast<T>(((n + 1) * (n + 1))));
+	T n_temp = static_cast<T>(n + 1);
+
+	return this->minus_one_raised_to_power_n(n) / (n_temp * n_temp); // (41.1) [Rows.pdf]
 }
 
 /**
-* @brief Maclaurin series of value pi^3/32
+* @brief Number series of value pi^3/32
 * @authors Trudolyubov N.A.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
@@ -2203,6 +2215,7 @@ public:
 	* @brief Computes the nth term of the Maclaurin series of the cosine function
 	* @authors Trudolyubov N.A.
 	* @param n The number of the term
+	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	* @return nth term of the Maclaurin series of the cosine functions
 	*/
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
@@ -2217,11 +2230,12 @@ constexpr T pi_cubed_32_series<T, K>::operator()(K n) const
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
 	T n_temp = static_cast<T>(n + 1);
-	return this->minus_one_raised_to_power_n(n) / static_cast<T>((std::pow(2 * n_temp - 1, 3)));
+	return this->minus_one_raised_to_power_n(n) / static_cast<T>((std::pow(std::fma(2, n_temp, -1), 3))); // (42.2) [Rows.pdf]
 }
 
+
 /**
-* @brief Maclaurin series of value -3 + (3/2)*ln3 + 2*ln2
+* @brief Number series of value -3 + (3/2)*ln3 + 2*ln2
 * @authors Trudolyubov N.A.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
@@ -2239,6 +2253,7 @@ public:
 	* @brief Computes the nth term of the Maclaurin series of the cosine function
 	* @authors Trudolyubov N.A.
 	* @param n The number of the term
+	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	* @return nth term of the Maclaurin series of the cosine functions
 	*/
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
@@ -2254,12 +2269,12 @@ constexpr T minus_three_plus_ln3_three_devided_two_plus_two_ln2_series<T, K>::op
 		throw std::domain_error("negative integer in the input");
 	T n_temp = static_cast<T>(n + 1);
 
-	return 1 / (n_temp * (36 * n_temp * n_temp - 1));
+	return static_cast<T>(1 / (n_temp * (std::fma(36, n_temp * n_temp, -1))));  // (43.2) [Rows.pdf]
 }
 
 
 /**
-* @brief Maclaurin series of value 2*ln2
+* @brief Number series of value 2*ln2
 * @authors Trudolyubov N.A.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
@@ -2277,6 +2292,7 @@ public:
 	* @brief Computes the nth term of the Maclaurin series of the cosine function
 	* @authors Trudolyubov N.A.
 	* @param n The number of the term
+	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	* @return nth term of the Maclaurin series of the cosine functions
 	*/
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
@@ -2293,7 +2309,7 @@ constexpr T two_ln2_series<T, K>::operator()(K n) const
 
 	T n_temp = static_cast<T>(n + 1);
 
-	return (12 * n_temp * n_temp - 1) / (n_temp * (4 * n_temp * n_temp - 1) * (4 * n_temp * n_temp - 1));
+	return (12 * n_temp * n_temp - 1) / (n_temp * (4 * n_temp * n_temp - 1) * (4 * n_temp * n_temp - 1)); // (44.2) [Rows.pdf]
 }
 
 /**
@@ -2311,6 +2327,7 @@ public:
 	* @brief Parameterized constructor to initialize the series with function argument and sum
 	* @authors Trudolyubov N.A.
 	* @param x The argument for function series
+	* tparam T The type of the elements in the series, K The type of enumerating integer
 	*/
 	pi_x_multi_e_xpi_plus_e_minusxpi_divided_e_xpi_minus_e_minusxpi_minus_one_series(T x);
 
@@ -2318,26 +2335,30 @@ public:
 	* @brief Computes the nth term of the Maclaurin series of the sine function
 	* @authors Trudolyubov N.A.
 	* @param n The number of the term
+	* tparam T The type of the elements in the series, K The type of enumerating integer
 	* @return nth term of the Maclaurin series of the sine functions
 	*/
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
 template <typename T, typename K>
-pi_x_multi_e_xpi_plus_e_minusxpi_divided_e_xpi_minus_e_minusxpi_minus_one_series<T, K>::pi_x_multi_e_xpi_plus_e_minusxpi_divided_e_xpi_minus_e_minusxpi_minus_one_series(T x) : series_base<T, K>(x, static_cast<T>(std::numbers::pi* x * 2.0 * std::cosh(std::numbers::pi * x) / (2.0 * std::sinh(std::numbers::pi * x)) - 1)) {}
+pi_x_multi_e_xpi_plus_e_minusxpi_divided_e_xpi_minus_e_minusxpi_minus_one_series<T, K>::pi_x_multi_e_xpi_plus_e_minusxpi_divided_e_xpi_minus_e_minusxpi_minus_one_series(T x) : series_base<T, K>(x, static_cast<T>(std::numbers::pi* x * 2.0 * std::cosh(std::numbers::pi * x) / (2.0 * std::sinh(std::numbers::pi * x)) - 1)) 
+{
+	if (this->x == 0) // if x = 0 then series turns in 0
+		throw std::domain_error("x cannot be zero");
+}
 
 template <typename T, typename K>
 constexpr T pi_x_multi_e_xpi_plus_e_minusxpi_divided_e_xpi_minus_e_minusxpi_minus_one_series<T, K>::operator()(K n) const
 {
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
-	if (this->x == 0)
-		throw std::domain_error("x cannot be zero");
-	return (2 * (this->x) * (this->x)) / ((this->x) * (this->x) + (n + 1) * (n + 1));
+	return (2 * (this->x) * (this->x)) / ((this->x) * (this->x) + (n + 1) * (n + 1)); // (45.4) [Rows.pdf]
 }
 
+
 /**
-* @brief Maclaurin series of function (pi - x) / 2
+* @brief Trigonometric series of function (pi - x) / 2
 * @authors Trudolyubov N.A.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
@@ -2351,6 +2372,7 @@ public:
 	* @brief Parameterized constructor to initialize the series with function argument and sum
 	* @authors Trudolyubov N.A.
 	* @param x The argument for function series
+	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	*/
 	pi_minus_x_2(T x);
 
@@ -2358,27 +2380,30 @@ public:
 	* @brief Computes the nth term of the Maclaurin series of the sine function
 	* @authors Trudolyubov N.A.
 	* @param n The number of the term
+	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	* @return nth term of the Maclaurin series of the sine functions
 	*/
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
 template <typename T, typename K>
-pi_minus_x_2<T, K>::pi_minus_x_2(T x) : series_base<T, K>(x, static_cast<T>((std::numbers::pi - x) / 2)) {}
+pi_minus_x_2<T, K>::pi_minus_x_2(T x) : series_base<T, K>(x, static_cast<T>((std::numbers::pi - x) / 2)) 
+{
+	if (this->x <= 0 or this->x >= 2 * std::numbers::pi)
+		throw std::domain_error("the (pi - x) / 2 series diverge at x = " + std::to_string(this->x) + "; series converge if x only in (0, 2pi)");
+}
 
 template <typename T, typename K>
 constexpr T pi_minus_x_2<T, K>::operator()(K n) const
 {
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
-	if (this->x <= 0 or this->x >= 2 * std::numbers::pi)
-		throw std::domain_error("The x value must be between 0 and 2*pi");
-	return std::sin((n + 1) * (this->x)) / (n + 1);
+	return std::sin((n + 1) * (this->x)) / (n + 1);  // (46.5) [Rows.pdf]
 }
 
 
 /**
-* @brief Maclaurin series of function 0.5 * ln(1/(2*(1 - cos(x))))
+* @brief Trigonometric series of function 0.5 * ln(1/(2*(1 - cos(x))))
 * @authors Trudolyubov N.A.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
@@ -2392,6 +2417,7 @@ public:
 	* @brief Parameterized constructor to initialize the series with function argument and sum
 	* @authors Trudolyubov N.A.
 	* @param x The argument for function series
+	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	*/
 	half_multi_ln_1div2multi1minuscosx(T x);
 
@@ -2399,27 +2425,30 @@ public:
 	* @brief Computes the nth term of the Maclaurin series of the sine function
 	* @authors Trudolyubov N.A.
 	* @param n The number of the term
+	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	* @return nth term of the Maclaurin series of the sine functions
 	*/
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
 template <typename T, typename K>
-half_multi_ln_1div2multi1minuscosx<T, K>::half_multi_ln_1div2multi1minuscosx(T x) : series_base<T, K>(x, static_cast<T>(0.5 * std::log(1 / (2 - 2 * std::cos(x))))) {}
+half_multi_ln_1div2multi1minuscosx<T, K>::half_multi_ln_1div2multi1minuscosx(T x) : series_base<T, K>(x, static_cast<T>(0.5 * std::log(1 / (2 - 2 * std::cos(x))))) 
+{
+	if (this->x <= 0 || this->x >= 2 * std::numbers::pi)
+		throw std::domain_error("the 0.5 * ln(1/(2*(1 - cos(x)))) series diverge at x = " + std::to_string(x) + "; series converge if x only in (0, 2pi)");
+}
 
 template <typename T, typename K>
 constexpr T half_multi_ln_1div2multi1minuscosx<T, K>::operator()(K n) const
 {
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
-	if (this->x <= 0 or this->x >= 2 * std::numbers::pi)
-		throw std::domain_error("The x value must be between 0 and 2*pi");
-	return std::cos((n + 1) * (this->x)) / (n + 1);
+	return std::cos((n + 1) * (this->x)) / (n + 1); // (47.5) [Rows.pdf]
 }
 
 
 /**
-* @brief Maclaurin series of function 0.5 - (pi/4)*sin(x)
+* @brief Trigonometric series of function 0.5 - (pi/4)*sin(x)
 * @authors Trudolyubov N.A.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
@@ -2433,6 +2462,7 @@ public:
 	* @brief Parameterized constructor to initialize the series with function argument and sum
 	* @authors Trudolyubov N.A.
 	* @param x The argument for function series
+	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	*/
 	half_minus_sinx_multi_pi_4(T x);
 
@@ -2440,21 +2470,27 @@ public:
 	* @brief Computes the nth term of the Maclaurin series of the sine function
 	* @authors Trudolyubov N.A.
 	* @param n The number of the term
+	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	* @return nth term of the Maclaurin series of the sine functions
 	*/
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
 template <typename T, typename K>
-half_minus_sinx_multi_pi_4<T, K>::half_minus_sinx_multi_pi_4(T x) : series_base<T, K>(x, static_cast<T>((static_cast<T>(0.5) - std::numbers::pi * std::sin(x) * static_cast<T>(0.25)))) {}
+half_minus_sinx_multi_pi_4<T, K>::half_minus_sinx_multi_pi_4(T x) : series_base<T, K>(x, static_cast<T>((static_cast<T>(0.5) - std::numbers::pi * std::sin(x) * static_cast<T>(0.25)))) 
+{
+	if (this->x < 0 || this->x > std::numbers::pi / 2)
+		throw std::domain_error("the 0.5 - (pi/4)*sin(x) series diverge at x = " + std::to_string(x) + "; series converge if x only in [0, pi/2]");
+}
 
 template <typename T, typename K>
 constexpr T half_minus_sinx_multi_pi_4<T, K>::operator()(K n) const
 {
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
-	return std::cos(2 * (this->x) * (n + 1)) / ((2 * n + 1) * (2 * n + 3));
+	return static_cast<T>(std::cos(2 * (this->x) * (n + 1)) / (std::fma(2, n, 1) * std::fma(2, n, 3))); // (48.2) [Rows.pdf]
 }
+
 
 /**
 * @brief Maclaurin series of function ln(1 + sqrt(1 + x^2)) - ln(2)
@@ -2471,6 +2507,7 @@ public:
 	* @brief Parameterized constructor to initialize the series with function argument and sum
 	* @authors Trudolyubov N.A.
 	* @param x The argument for function series
+	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	*/
 	ln_1plussqrt1plusxsquare_minus_ln_2(T x);
 
@@ -2478,22 +2515,26 @@ public:
 	* @brief Computes the nth term of the Maclaurin series of the sine function
 	* @authors Trudolyubov N.A.
 	* @param n The number of the term
+	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	* @return nth term of the Maclaurin series of the sine functions
 	*/
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
 template <typename T, typename K>
-ln_1plussqrt1plusxsquare_minus_ln_2<T, K>::ln_1plussqrt1plusxsquare_minus_ln_2(T x) : series_base<T, K>(x, static_cast<T>(std::log((1 + std::hypot(1, x)) / 2))) {}
+ln_1plussqrt1plusxsquare_minus_ln_2<T, K>::ln_1plussqrt1plusxsquare_minus_ln_2(T x) : series_base<T, K>(x, static_cast<T>(std::log((1 + std::hypot(1, x)) / 2))) 
+{
+	if ((this->x) * (this->x) > 1)
+		throw std::domain_error("x^2 cannot be more than 1");
+}
 
 template <typename T, typename K>
 constexpr T ln_1plussqrt1plusxsquare_minus_ln_2<T, K>::operator()(K n) const
 {
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
-	if ((this->x) * (this->x) > 1)
-		throw std::domain_error("x^2 cannot be more than 1");
-	return static_cast<T>((this->minus_one_raised_to_power_n(n) * this->fact(2 * n + 1) * std::pow(this->x, 2 * n + 2)) / (pow(2, 2 * n + 2) * this->fact(n + 1) * this->fact(n + 1)));
+	return static_cast<T>((this->minus_one_raised_to_power_n(n) * this->fact(static_cast<K>(std::fma(2, n, 1))) * std::pow(this->x, std::fma(2, n, 2))) / 
+		(pow(2, std::fma(2, n, 2)) * this->fact(n + 1) * this->fact(n + 1))); // (49.3) [Rows.pdf]
 }
 
 
@@ -2512,6 +2553,7 @@ public:
 	* @brief Parameterized constructor to initialize the series with function argument and sum
 	* @authors Trudolyubov N.A.
 	* @param x The argument for function series
+	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	*/
 	ln_cosx(T x);
 
@@ -2519,21 +2561,25 @@ public:
 	* @brief Computes the nth term of the Maclaurin series of the sine function
 	* @authors Trudolyubov N.A.
 	* @param n The number of the term
+	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	* @return nth term of the Maclaurin series of the sine functions
 	*/
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
 template <typename T, typename K>
-ln_cosx<T, K>::ln_cosx(T x) : series_base<T, K>(x, std::log(std::cos(x))) {}
+ln_cosx<T, K>::ln_cosx(T x) : series_base<T, K>(x, std::log(std::cos(x))) 
+{
+	if (std::abs(this->x) >= std::numbers::pi / 2)
+		throw std::domain_error("the ln(cos(x)) series diverge at x = " + std::to_string(x) + "; series converge if x only in [-pi/2, pi/2]");
+}
 
 template <typename T, typename K>
 constexpr T ln_cosx<T, K>::operator()(K n) const
 {
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
-
-	return static_cast<T>(std::log(1 - 4 * (this->x) * (this->x) / ((2 * n + 1) * (2 * n + 1) * std::numbers::pi * std::numbers::pi)));
+	return static_cast<T>(-(std::pow(std::sin(this->x), std::fma(2, n, 2))) / std::fma(2, n, 2)); // (50.2) [Rows.pdf]
 }
 
 
@@ -2552,6 +2598,7 @@ public:
 	* @brief Parameterized constructor to initialize the series with function argument and sum
 	* @authors Trudolyubov N.A.
 	* @param x The argument for function series
+	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	*/
 	ln_sinx_minus_ln_x(T x);
 
@@ -2559,21 +2606,25 @@ public:
 	* @brief Computes the nth term of the Maclaurin series of the sine function
 	* @authors Trudolyubov N.A.
 	* @param n The number of the term
+	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	* @return nth term of the Maclaurin series of the sine functions
 	*/
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
 template <typename T, typename K>
-ln_sinx_minus_ln_x<T, K>::ln_sinx_minus_ln_x(T x) : series_base<T, K>(x, std::log(std::sin(x) / x)) {}
+ln_sinx_minus_ln_x<T, K>::ln_sinx_minus_ln_x(T x) : series_base<T, K>(x, std::log(std::sin(x) / x)) 
+{
+	if (this->x < 0 || this->x > std::numbers::pi)
+		throw std::domain_error("the ln(sin(x)) - ln(x) series diverge at x = " + std::to_string(x) + "; series converge if x only in [0, pi]");
+}
 
 template <typename T, typename K>
 constexpr T ln_sinx_minus_ln_x<T, K>::operator()(K n) const
 {
 	if (n < 0)
 		throw std::domain_error("negative integer in the input");
-
-	return static_cast<T>(std::log(1 - (this->x) * (this->x) / ((n + 1) * (n + 1) * std::numbers::pi * std::numbers::pi)));
+	return static_cast<T>(std::log(1 - (this->x) * (this->x) / ((n + 1) * (n + 1) * std::numbers::pi * std::numbers::pi))); // (51.2) [Rows.pdf]
 }
 
 
