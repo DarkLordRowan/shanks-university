@@ -13,7 +13,7 @@
  * @param remainder_func - remainder type
  * @param recursive To calculate reccursively
 */
-template<typename T, typename K, typename series_templ>
+template<std::floating_point T, std::unsigned_integral K, typename series_templ>
 class drummonds_algorithm : public series_acceleration<T, K, series_templ>
 {
 protected:
@@ -27,20 +27,13 @@ protected:
 	* @return The partial sum after the transformation.
 	*/
 
-	virtual T calculate(const K n, const int order) const 
-	{
-		if (order < 0)
-			throw std::domain_error("negative integer in input");
-
+	virtual T calculate(const K n, const K order) const {
 		T numerator = T(0), denominator = T(0);
 		T w_n, rest, a1;
 
-		for (int j = 0; j <= n; ++j) 
-		{
+		for (K j = 0; j <= n; ++j) {
 			rest = this->series->minus_one_raised_to_power_n(j) * this->series->binomial_coefficient(static_cast<T>(n), j);
-
 			w_n = remainder_func->operator()(order, j, this->series, 1);
-
 			a1 = rest * w_n;
 
 			numerator += a1 * this->series->S_n(order + j);
@@ -62,28 +55,22 @@ protected:
 	* @return The partial sum after the transformation.
 	*/
 
-	T calculate_rec(const K n, const int order) const {
-		if (order < 0)
-			throw std::domain_error("negative integer in input");
-
-
+	T calculate_rec(const K n, const K order) const {
 		//TODO спросить у Парфенова, ибо жертвуем читаемостью кода, ради его небольшого ускорения
 		const K n1 = n + 1;
-		int orderi, j1;
+		K orderi, j1;
 
 		std::vector<T> N (n1, 0);
 		std::vector<T> D (n1, 0);
 
-		for (int i = 0; i < n1; ++i)
-		{
+		for (K i = 0; i < n1; ++i) {
 			orderi = order + i;
 			D[i] = remainder_func->operator()(0, orderi, this->series);
 			N[i] = this->series->S_n(orderi) * D[i];
 		}
 
-		for (int i = 1; i <= n; ++i)
-			for (int j = 0; j <= n - i; ++j) 
-			{
+		for (K i = 1; i <= n; ++i)
+			for (K j = 0; j <= n - i; ++j) {
 				j1 = j + 1;
 				D[j] = D[j1] - D[j];
 				N[j] = N[j1] - N[j];
@@ -117,8 +104,7 @@ public:
    * @return The partial sum after the transformation.
    */
 
-	T operator()(const K n, const int order) const 
-	{
+	T operator()(const K n, const K order) const {
 		return recursive ? calculate_rec(n, order) : calculate(n, order);
 	}
 };

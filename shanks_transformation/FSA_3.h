@@ -11,7 +11,7 @@
 #include <cmath>
 
 
-template <typename T, typename K, typename series_templ>
+template <std::floating_point T, std::unsigned_integral K, typename series_templ>
 class ford_sidi_algorithm_three : public series_acceleration<T, K, series_templ>{
 public:
 
@@ -27,23 +27,16 @@ public:
      * @param order The order of transformation.    
      * * @return The partial sum after the transformation.
      */    
-    T operator()(const K n, const int k) const;
+    T operator()(const K n, const K k) const;
 };
 
-template <typename T, typename K, typename series_templ>
-//ford_sidi_algorithm_three<T, K, series_templ>::ford_sidi_algorithm_three(const series_templ& series) : series_acceleration<T, K, series_templ>(series), FSG(1002, std::vector<T>(1001, 0.0)), FSA(1001, 0.0), FSI(1001, 0.0), G(1002, 0.0) {}
+template <std::floating_point T, std::unsigned_integral K, typename series_templ>
 ford_sidi_algorithm_three<T, K, series_templ>::ford_sidi_algorithm_three(const series_templ& series) : series_acceleration<T, K, series_templ>(series) {}
 
-template <typename T, typename K, typename series_templ>
-T ford_sidi_algorithm_three<T, K, series_templ>::operator()(const K n, const int order) const{
-    if (n < 0)
-        throw std::domain_error("negative integer in the input");
-
+template <std::floating_point T, std::unsigned_integral K, typename series_templ>
+T ford_sidi_algorithm_three<T, K, series_templ>::operator()(const K n, const K order) const {  
     if (n == 0)
-        throw std::domain_error("n = 0 in the input");
-
-    if (order < 0)
-        throw std::domain_error("negative order input");
+        throw std::domain_error("zero integer in the input");
     
     //TODO спросить у Парфенова, ибо жертвуем читаемостью кода, ради его небольшого ускорения
     const K n1 = n - 1;

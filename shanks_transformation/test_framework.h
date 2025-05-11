@@ -189,6 +189,22 @@ enum test_function_id_t {
 };
 
 /**
+ * @brief safely reads and validates unsigned integral input
+ * @authors Maximov A.K.
+ */
+
+template <std::unsigned_integral K>
+K read_input() {
+	long long input;
+	std::cin >> input;
+
+	if (input < 0) 
+		throw std::domain_error("Negative value in the input!");
+
+	return static_cast<K>(input); // Безопасное преобразование
+}
+
+/**
 * @brief prints out all available series for testing
 * @authors Bolshakov M.P.
 * @edited by Kreynin R.G.
@@ -358,7 +374,7 @@ inline static void print_test_function_info()
 * @authors Naumov A.
 * @edited by Yurov P.
 */
-template<typename T, typename K, typename series_templ>
+template<std::floating_point T, std::unsigned_integral K, typename series_templ>
 inline void init_levin(transformation_id_t id, std::unique_ptr<series_base<T, K>>& series, std::unique_ptr<series_acceleration<T, K, series_templ>>& transform)
 {
 	bool recursive = false;
@@ -438,11 +454,10 @@ inline void init_levin(transformation_id_t id, std::unique_ptr<series_base<T, K>
 * @brief initialize rho-WynnType transformations, usable for basic, Gamma, Gamma-Rho
 * @authors Yurov P.
 */
-template<typename T, typename K, typename series_templ>
+template<std::floating_point T, std::unsigned_integral K, typename series_templ>
 inline void init_wynn(std::unique_ptr<series_base<T, K>>& series, std::unique_ptr<series_acceleration<T, K, series_templ>>& transform)
 {
-
-	int type;
+	K type;
 	bool standart = false;
 	T gamma = T{};	//parameter for gamma modification
 	T RHO = T{};	//parameter for gamma-rho modification
@@ -450,7 +465,7 @@ inline void init_wynn(std::unique_ptr<series_base<T, K>>& series, std::unique_pt
 	std::cout << '\n';
 	std::cout << "|------------------------------------------|" << '\n';
 	std::cout << "| choose transformation variant:           |" << '\n';
-	std::cout << "| classic (0), gamma (1), gamma-rho (2): "; std::cin >> type;
+	std::cout << "| classic (0), gamma (1), gamma-rho (2): "; type = read_input<K>();
 	std::cout << "|------------------------------------------|" << '\n';
 
 	switch (type) {
@@ -512,7 +527,7 @@ inline void init_wynn(std::unique_ptr<series_base<T, K>>& series, std::unique_pt
 * @brief initialize levin_recursion transformation
 * @authors Maximov A.K.
 */
-template<typename T, typename K, typename series_templ>
+template<std::floating_point T, std::unsigned_integral K, typename series_templ>
 inline void init_levin_recursion(std::unique_ptr<series_base<T, K>>& series, std::unique_ptr<series_acceleration<T, K, series_templ>>& transform)
 {
 	bool standart = false;
@@ -538,7 +553,7 @@ inline void init_levin_recursion(std::unique_ptr<series_base<T, K>>& series, std
 * @brief initialize epsilon_algorithm_3_id transformation
 * @authors Maximov A.K.
 */
-template<typename T, typename K, typename series_templ>
+template<std::floating_point T, std::unsigned_integral K, typename series_templ>
 inline void init_epsilon_3(std::unique_ptr<series_base<T, K>>& series, std::unique_ptr<series_acceleration<T, K, series_templ>>& transform)
 {
 
@@ -568,15 +583,14 @@ inline void init_epsilon_3(std::unique_ptr<series_base<T, K>>& series, std::uniq
 * @authors Bolshakov M.P
 * @edited by Kreynin R.G.
 */
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 inline static void main_testing_function()
 {
 
 	//choosing series
 	print_series_info();
 	std::unique_ptr<series_base<T, K>> series;
-	int series_id = 0;
-	std::cin >> series_id;
+	K series_id = read_input<K>();
 
 	//choosing x
 	std::cout << "Enter x - the argument for the functional series" << '\n';
@@ -584,7 +598,7 @@ inline static void main_testing_function()
 	std::cin >> x;
 
 	//choosing series (cont.)
-	std::set<int> alternating_series = { 2, 3, 7, 11, 15, 18, 19, 20, 21, 24, 26, 28, 30, 31 };
+	std::set<K> alternating_series = { 2, 3, 7, 11, 15, 18, 19, 20, 21, 24, 26, 28, 30, 31 };
 	switch (series_id)
 	{
 	case series_id_t::exp_series_id:
@@ -623,7 +637,7 @@ inline static void main_testing_function()
 	case series_id_t::xmb_Jb_two_series_id:
 		K b;
 		std::cout << "Enter the value for constant b for the series" << '\n';
-		std::cin >> b;
+		b = read_input<K>();
 		series.reset(new xmb_Jb_two_series<T, K>(x, b));
 		break;
 	case series_id_t::half_asin_two_x_series_id:
@@ -641,7 +655,7 @@ inline static void main_testing_function()
 	case series_id_t::m_fact_1mx_mp1_inverse_series_id:
 		K m;
 		std::cout << "Enter the value for constant m for the series" << '\n';
-		std::cin >> m;
+		m = read_input<K>();
 		series.reset(new m_fact_1mx_mp1_inverse_series<T, K>(x, m));
 		break;
 	case series_id_t::inverse_sqrt_1m4x_series_id:
@@ -917,8 +931,7 @@ inline static void main_testing_function()
 
 	//choosing transformation
 	print_transformation_info();
-	int transformation_id = 0;
-	std::cin >> transformation_id;
+	K transformation_id = read_input<K>();
 	std::unique_ptr<series_acceleration<T, K, decltype(series.get())>> transform;
 	switch (transformation_id)
 	{
@@ -1004,12 +1017,10 @@ inline static void main_testing_function()
 	T epsilon_algorithm_3 = T{};			//parameter for levin_recursion algorithm
 
 	print_test_function_info();
-	int function_id = 0;
-	std::cin >> function_id;
-	int n = 0;
-	int order = 0;
+	K function_id = read_input<K>();
 	std::cout << "Enter n and order:" << '\n';
-	std::cin >> n >> order;
+	K n = read_input<K>();
+	K order = read_input<K>();
 
 	switch (function_id)
 	{
@@ -1024,9 +1035,8 @@ inline static void main_testing_function()
 		break;
 	case test_function_id_t::cmp_transformations_id:
 	{
-		int cmop_transformation_id = 0;
 		print_transformation_info();
-		std::cin >> cmop_transformation_id;
+		K cmop_transformation_id = read_input<K>();;
 
 		std::unique_ptr<series_acceleration<T, K, decltype(series.get())>> transform2;
 
@@ -1104,6 +1114,7 @@ inline static void main_testing_function()
 		}
 
 		cmp_transformations(n, order, std::move(series.get()), std::move(transform.get()), std::move(transform2.get()));
+		break;
 	}
 	case test_function_id_t::eval_transform_time_id:
 		eval_transform_time(n, order, std::move(series.get()), std::move(transform.get()));
@@ -1188,7 +1199,7 @@ inline static void main_testing_function()
 		}
 		else epsilon_algorithm_3 = T(1e-3);
 
-		for (int i = 1; i <= n; i++)
+		for (K i = 1; i <= n; i++)
 		{
 			print_sum(i, std::move(series.get()));
 
@@ -1197,6 +1208,7 @@ inline static void main_testing_function()
 				transform.reset(new shanks_transform_alternating<T, K, decltype(series.get())>(series.get()));
 			else
 				transform.reset(new shanks_transform<T, K, decltype(series.get())>(series.get()));
+			
 			print_transform(i, order, std::move(transform.get()));
 
 			//epsilon v-1

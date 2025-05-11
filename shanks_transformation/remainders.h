@@ -40,7 +40,7 @@
 * @brief Abstract class for remainder
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template<typename T, typename K>
+template<std::floating_point T, std::unsigned_integral K>
 class transform_base {
 public:
 
@@ -60,7 +60,7 @@ public:
 * @brief Class for u variant of remainder
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template<typename T, typename K>
+template<std::floating_point T, std::unsigned_integral K>
 class u_transform : public transform_base<T, K> {
 public:
 	
@@ -89,7 +89,7 @@ public:
 * @brief Class for t variant of remainder
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template<typename T, typename K>
+template<std::floating_point T, std::unsigned_integral K>
 class t_transform : public transform_base<T, K> {
 public:
 
@@ -119,7 +119,7 @@ public:
 * @brief Class for t-wave variant of remainder
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template<typename T, typename K>
+template<std::floating_point T, std::unsigned_integral K>
 class d_transform : public transform_base<T, K> {
 public:
 
@@ -148,7 +148,7 @@ public:
 * @brief Class for v-wave variant of remainder
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template<typename T, typename K>
+template<std::floating_point T, std::unsigned_integral K>
 class v_transform : public transform_base<T, K> {
 public:
 
@@ -179,7 +179,7 @@ public:
 * @brief Class for v-wave variant of remainder
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template<typename T, typename K>
+template<std::floating_point T, std::unsigned_integral K>
 class v_transform_2 : public transform_base<T, K> {
 public:
 

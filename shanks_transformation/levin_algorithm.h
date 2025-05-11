@@ -16,7 +16,7 @@
   * @tparam K Integer index type
   * @tparam series_templ Series type to accelerate
   */
-template <typename T, typename K, typename series_templ>
+template <std::floating_point T, std::unsigned_integral K, typename series_templ>
 class levin_algorithm : public series_acceleration<T, K, series_templ>
 {
 public:
@@ -36,11 +36,7 @@ public:
 	 * @return The partial sum after the transformation.
 	 */
 
-	T operator()(const K n, const int order) const
-	{
-		if (n < 0)
-			throw std::domain_error("negative integer in the input");
-
+	T operator()(const K n, const K order) const {
 		if (n == 0)
 			return DEF_UNDEFINED_SUM;
 
@@ -49,8 +45,7 @@ public:
 
 		T numerator = 0, denominator = 0, C_njk, S_nj, g_n, rest;
 
-		for (int j = 0; j <= order; ++j) //Standart Levin algo procedure
-		{
+		for (K j = 0; j <= order; ++j) { //Standart Levin algo procedure
 			rest = this->series->minus_one_raised_to_power_n(j) * this->series->binomial_coefficient(static_cast<T>(order), j);
 
 			C_njk = static_cast<T>((std::pow((n + j + 1), (order - 1))) / (std::pow((n + order + 1), (order - 1))));
