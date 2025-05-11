@@ -742,9 +742,10 @@ four_arctan_series<T, K>::four_arctan_series(T x) : series_base<T, K>(x, 4 * std
 template <std::floating_point T, std::unsigned_integral K>
 constexpr T four_arctan_series<T, K>::operator()(K n) const
 {
-	const K temp = std::fma(2, n, 1);
-	return static_cast<T>(4 * series_base<T, K>::minus_one_raised_to_power_n(n) * std::pow(this->x, a) / a); // (7.1) Rows.pdf
+	const K temp = static_cast<K>(std::fma(2, n, 1));
+	return static_cast<T>(4 * series_base<T, K>::minus_one_raised_to_power_n(n) * std::pow(this->x, temp) / temp); // (7.1) Rows.pdf
 }
+
 
 /**
 * @brief Maclaurin series of function -ln(1 - x)
@@ -2043,7 +2044,7 @@ public:
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 two_arcsin_square_x_halfed_series<T, K>::two_arcsin_square_x_halfed_series(T x) : series_base<T, K>(x, static_cast<T>(2 * std::pow(std::asin(x / 2), 2))) 
 {
 	if (std::abs(this->x) > 2)
@@ -2233,7 +2234,7 @@ public:
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 pi_x_multi_e_xpi_plus_e_minusxpi_divided_e_xpi_minus_e_minusxpi_minus_one_series<T, K>::pi_x_multi_e_xpi_plus_e_minusxpi_divided_e_xpi_minus_e_minusxpi_minus_one_series(T x) : series_base<T, K>(x, static_cast<T>(std::numbers::pi* x * 2.0 * std::cosh(std::numbers::pi * x) / (2.0 * std::sinh(std::numbers::pi * x)) - 1)) 
 {
 	if (this->x == 0) // if x = 0 then series turns in 0
@@ -2276,7 +2277,7 @@ public:
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 pi_minus_x_2<T, K>::pi_minus_x_2(T x) : series_base<T, K>(x, static_cast<T>((std::numbers::pi - x) / 2)) 
 {
 	if (this->x <= 0 or this->x >= 2 * std::numbers::pi)
@@ -2320,7 +2321,7 @@ public:
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 half_multi_ln_1div2multi1minuscosx<T, K>::half_multi_ln_1div2multi1minuscosx(T x) : series_base<T, K>(x, static_cast<T>(0.5 * std::log(1 / (2 - 2 * std::cos(x))))) 
 {
 	if (this->x <= 0 || this->x >= 2 * std::numbers::pi)
@@ -2364,7 +2365,7 @@ public:
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 half_minus_sinx_multi_pi_4<T, K>::half_minus_sinx_multi_pi_4(T x) : series_base<T, K>(x, static_cast<T>((static_cast<T>(0.5) - std::numbers::pi * std::sin(x) * static_cast<T>(0.25)))) 
 {
 	if (this->x < 0 || this->x > std::numbers::pi / 2)
@@ -2374,7 +2375,7 @@ half_minus_sinx_multi_pi_4<T, K>::half_minus_sinx_multi_pi_4(T x) : series_base<
 template <std::floating_point T, std::unsigned_integral K>
 constexpr T half_minus_sinx_multi_pi_4<T, K>::operator()(K n) const
 {
-	const K a = std::fma(2, n, 1);
+	const K a = static_cast<K>(std::fma(2, n, 1));
 	return std::cos(2 * (this->x) * (n + 1)) / (a * (a + 2)); // (48.2) [Rows.pdf]
 }
 
@@ -2408,7 +2409,7 @@ public:
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 ln_1plussqrt1plusxsquare_minus_ln_2<T, K>::ln_1plussqrt1plusxsquare_minus_ln_2(T x) : series_base<T, K>(x, static_cast<T>(std::log((1 + std::hypot(1, x)) / 2))) 
 {
 	if ((this->x) * (this->x) > 1)
@@ -2452,7 +2453,7 @@ public:
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 ln_cosx<T, K>::ln_cosx(T x) : series_base<T, K>(x, std::log(std::cos(x))) 
 {
 	if (std::abs(this->x) >= std::numbers::pi / 2)
@@ -2495,7 +2496,7 @@ public:
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 ln_sinx_minus_ln_x<T, K>::ln_sinx_minus_ln_x(T x) : series_base<T, K>(x, std::log(std::sin(x) / x)) 
 {
 	if (this->x < 0 || this->x > std::numbers::pi)
