@@ -40,4 +40,5 @@ shanks_transformation/x64/Debug/shanks_transformation.ilk
 x64/Debug/shanks_transformation.exe
 /shanks_transformation/output.txt
 /shanks_transformation/plot.png
+shanks_transformation/output_testing_data
 /venv/*
