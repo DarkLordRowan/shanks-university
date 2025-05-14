@@ -168,6 +168,13 @@ public:
 	[[nodiscard]] constexpr static const K fact(K k);
 
 	/**
+	* @brief double factorial k!!
+	* @authors Bolshakov M.P.
+	* @return k!!
+	*/
+	[[nodiscard]] constexpr static const K double_fact(K k);
+
+	/**
 	* @brief binomial coefficient C^n_k
 	* @authors Bolshakov M.P.
 	* @return combinations(n,k)
@@ -249,6 +256,14 @@ constexpr const K series_base<T, K>::fact(K n)
 	for (K i = 2; i <= n; ++i)
 		f *= i;
 	return f;
+}
+
+template <std::floating_point T, std::unsigned_integral K>
+constexpr const K series_base<T, K>::double_fact(K n)
+{
+	if (n == 0 || n == 1)
+		return 1;
+	return n * series_base<T, K>::double_fact(n - 2);
 }
 
 template <std::floating_point T, std::unsigned_integral K>
@@ -2636,7 +2651,7 @@ constexpr T one_minus_sqrt_1minus4x_div_2x<T, K>::operator()(K n) const
 
 
 /**
-* @brief Taylor series of function arcsin(x) - x (The problematic row, possibly due to the double factorial in the denominator, needs to be fixed.)
+* @brief Maclaurin series of function arcsin(x) - x
 * @authors Trudolyubov N.A.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
@@ -2650,6 +2665,7 @@ public:
 	* @brief Parameterized constructor to initialize the series with function argument and sum
 	* @authors Trudolyubov N.A.
 	* @param x The argument for function series
+	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	*/
 	arcsin_x_minus_x_series(T x);
 
@@ -2657,22 +2673,26 @@ public:
 	* @brief Computes the nth term of the Taylor series of the sine function
 	* @authors Trudolyubov N.A.
 	* @param n The number of the term
+	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	* @return nth term of the Taylor series of the sine functions
 	*/
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-arcsin_x_minus_x_series<T, K>::arcsin_x_minus_x_series(T x) : series_base<T, K>(x, std::asin(x) - x) {}
+arcsin_x_minus_x_series<T, K>::arcsin_x_minus_x_series(T x) : series_base<T, K>(x, std::asin(x) - x) 
+{
+	if (std::abs(this->x) > 1)
+		throw std::domain_error("the arcsin(x) - x series diverge at x = " + std::to_string(x) + "; series converge if x only in [-1, 1]");
+}
 
 template <std::floating_point T, std::unsigned_integral K>
 constexpr T arcsin_x_minus_x_series<T, K>::operator()(K n) const
 {
 	if (std::abs(this->x) > 1)
 		throw std::domain_error("Modulus of the value x must be less or equal to 1");
-	const K a = 2 * n + 1;
-	const K b = a + 2;
-	return static_cast<T>((this->fact(this->fact(a)) * std::pow(this->x, b)) / (this->fact(this->fact(a + 1)) * (b)));
+	const K a = static_cast<K>(std::fma(2, n, 1));
+	return static_cast<T>((this->double_fact(a) * std::pow(this->x, a+2)) / (this->double_fact(a+1) * (a+2))); // (55.3) [Rows.pdf]
 }
 
 
