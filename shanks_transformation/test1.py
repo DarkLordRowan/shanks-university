@@ -363,14 +363,13 @@ def test_all_series_for_1_function(logger, exec_file, params, consts, plot_dir, 
     k = 0
     parameters = []
     for num_series in range(len(series_id)-2):
-        if (not check_series_value(num_series, float(params[0])) or num_series == 55): #55 too slow
+        if (not check_series_value(num_series, float(params[0])) or num_series == 55): 
             logger.log(f"Cant build plot and csv file for {series_id[str(num_series)]}, because {get_series_limits(num_series)}, given x = {params[0]}")
             continue
-        if num_series + 1 in [6, 11, 16, 75, 95, 102]:
-            parameters=[str(num_series), consts[k], *params]
+        if num_series in [6, 11, 16, 75, 95, 102]:
+            parameters=[str(num_series), params[0], consts[k], *params[1:]]
         else:
             parameters=[str(num_series), *params]
-        print(parameters)
         program = Program(exec_file, parameters)
         program.run()
         S_n = []
@@ -433,17 +432,192 @@ def test_all_series_for_1_function(logger, exec_file, params, consts, plot_dir, 
         csv_file = os.path.join(plot_dir, f"{series_id[str(num_series+1)]}_{transformations[params[1][0]]}.csv")
         with open(csv_file, 'w', newline='') as csvfile:
             writer = csv.writer(csvfile)
-            writer.writerow(['S_n', transformations[params[1][0]]], "limit_of_row")
+            writer.writerow(['S_n', transformations[params[1][0]]])
 
             for row in zip(S_n, T_n, lim_arr):
                 writer.writerow(row)
-                
-    return
+
+def test_all_series_for_all_function(logger, exec_file, params, consts, plot_dir, output_file):
+    k = 0
+    parameters = []
+
+    names = ["S_n"]
+    for i in range(len(algorithms)):
+        names.append(algorithms[i])
+
+    for num_series in range(len(series_id)-2):
+        if (not check_series_value(num_series, float(params[0])) or num_series == 55): #55 too slow
+            logger.log(f"Cant build plot and csv file for {series_id[str(num_series)]}, because {get_series_limits(num_series)}, given x = {params[0]}")
+            continue
+        if num_series in [6, 11, 16, 75, 95, 102]:
+            parameters=[str(num_series), consts[k], "1", *params]
+        else:
+            parameters=[str(num_series), "1", *params]
+        print(parameters)
+        program = Program(exec_file, parameters)
+        program.run()
+
+        S_n = []
+        T_n = [[] for i in range(34)]
+        lim = 0
+        try:
+            logger.log(f"Values of file:")
+            with open(output_file, 'r') as f:
+                i = 0
+                n = 33
+                lim = float(f.readline().strip())
+                for line in f:
+                    if i % n == 0:
+                        logger.log("---")
+                        S_n.append(float(line))
+                        logger.log(f"S_{i//n+1}: {S_n[-1]}")
+                    else:
+                        try:
+                            T_n[(i)%n].append(float(line))
+                            logger.log(f"{algorithms[(i-1)%n]}: {T_n[(i)%n][-1]}")
+                        except:
+                            T_n[(i)%n].append(None)
+                            logger.log_error(f"{algorithms[(i-1)%n]}: {line.strip()} (replaced by None)")
+                    i += 1
+        except Exception as e:
+            logger.log_error(f"Error reading from file: {str(e)}")
+
+        plot_file = os.path.join(plot_dir, f"{series_id[str(num_series+1)]}_all_transformations.png")
+
+        x = list(range(len(S_n)))
+        lim_arr = [lim for i in range(len(S_n))]
+
+
+        plt.figure(figsize=(15, 15))
+        
+        plt.plot(x, S_n, color = "Green", label = "S_n")
+        for i in range(1, 33):
+            if i not in [27, 30, 31, 32]: #TODO:fix
+                plt.plot(x, T_n[i], color=color_dict_hex[i-1], label = f"{algorithms[i-1]}") 
+
+        if (lim != 0):
+            plt.plot(x, lim_arr, color="black", label = "Sum")
+
+        plt.tight_layout(pad=2.0)
+        plt.legend()
+        plt.grid()
+        
+        plt.savefig(plot_file, bbox_inches='tight')
+        plt.close()
+        
+        logger.log(f"Constructed graph for a {series_id[str(num_series+1)]} and saved to {plot_file}")
+    
+        csv_file = os.path.join(plot_dir, f"{series_id[str(num_series+1)]}_all_transformations.csv")
+
+        with open(csv_file, 'w', newline='') as csvfile:
+            writer = csv.writer(csvfile)
+            writer.writerow(names)
+            for row in zip(S_n, *T_n[1:-1], lim_arr):
+                writer.writerow(row)
+
+def test_speed(logger, exec_file, params, consts, output_file):
+    logger.log(f"Testing speed:")  
+    i = 0
+    for t in range(1, len(transformations)):
+        parameters =[]
+        if str(t) in ["5", "6", "8", "10", "12", "13"]:
+            parameters = [*params[0], params[1], str(t), *consts[i], "5", params[2], params[3]]
+            i+=1
+        else:
+            parameters = [*params[0], params[1], str(t), "5", params[2], params[3]]
+
+        program = Program(exec_file, parameters)
+        program.run()
+        try:
+            with open(output_file, 'r') as f:
+                time = f.readline()
+                logger.log(f"{transformations[str(t)]}: execution took {time} milliseconds")
+        except Exception as e:
+            logger.log_error(f"Error reading from file: {str(e)}")
+
+def test_x_for_all_transformations(logger, exec_file, params, consts, plot_dir, output_file, iter):
+    k = 0
+    parameters = []
+
+    names = ["S_n"]
+    for i in range(len(algorithms)):
+        names.append(algorithms[i])
+
+    for x in range(iter[0], iter[1], iter[2]):
+        if (params[0][0] != "103" and not check_series_value(int(params[0][0]), x) or int(params[0][0]) == 55):
+            logger.log(f"Cant build plot and csv file for {series_id[params[0][0]]}, because {get_series_limits(int(params[0][0]))}, given x = {x}")
+            continue
+        elif (params[0][0] == "103" and not check_series_value(int(params[0][1]), x)):
+            logger.log(f"Cant build plot and csv file for {series_id[params[0][1]]}, because {get_series_limits(int(params[0][1]))}, given x = {x}")
+            continue
+        if len(params[0]) == 1:
+            parameters=[params[0][0], str(x), "1", *params[1:]]
+        else:
+            parameters=[params[0][0], str(x), *params[0][1:], "1", *params[len(params[0]):]]
+        program = Program(exec_file, parameters)
+        program.run()
+
+        S_n = []
+        T_n = [[] for i in range(34)]
+        lim = 0
+        try:
+            logger.log(f"Values of file:")
+            with open(output_file, 'r') as f:
+                i = 0
+                n = 33
+                lim = float(f.readline().strip())
+                for line in f:
+                    if i % n == 0:
+                        logger.log("---")
+                        S_n.append(float(line))
+                        logger.log(f"S_{i//n+1}: {S_n[-1]}")
+                    else:
+                        try:
+                            T_n[(i)%n].append(float(line))
+                            logger.log(f"{algorithms[(i-1)%n]}: {T_n[(i)%n][-1]}")
+                        except:
+                            T_n[(i)%n].append(None)
+                            logger.log_error(f"{algorithms[(i-1)%n]}: {line.strip()} (replaced by None)")
+                    i += 1
+        except Exception as e:
+            logger.log_error(f"Error reading from file: {str(e)}")
+
+        plot_file = os.path.join(plot_dir, f"{series_id[params[0][0]]}_x={x}_all_transformations.png")
+
+        x_arr = list(range(len(S_n)))
+        lim_arr = [lim for i in range(len(S_n))]
+
+
+        plt.figure(figsize=(15, 15))
+        
+        plt.plot(x_arr, S_n, color = "Green", label = "S_n")
+        for i in range(1, 33):
+            if i not in [27, 30, 31, 32]:
+                plt.plot(x_arr, T_n[i], color=color_dict_hex[i-1], label = f"{algorithms[i-1]}") 
+
+        if (lim != 0):
+            plt.plot(x_arr, lim_arr, color="black", label = "Sum")
+
+        plt.tight_layout(pad=2.0)
+        plt.legend()
+        plt.grid()
+        
+        plt.savefig(plot_file, bbox_inches='tight')
+        plt.close()
+        
+        logger.log(f"Constructed graph for a {series_id[params[0][0]]} and saved to {plot_file}")
+    
+        csv_file = os.path.join(plot_dir, f"{series_id[params[0][0]]}_x={x}_all_transformations.csv")
+
+        with open(csv_file, 'w', newline='') as csvfile:
+            writer = csv.writer(csvfile)
+            writer.writerow(names)
+            for row in zip(S_n, *T_n[1:-1], lim_arr):
+                writer.writerow(row)
 
 
 
 def main():
-    print(get_series_limits(1))
     current_dir = os.path.dirname(os.path.abspath(__file__))
     log_file = os.path.join(current_dir, "output.log")
 
@@ -453,6 +627,13 @@ def main():
     if not os.path.exists(testing_data_dir):
         os.makedirs(testing_data_dir)
         logger.log(f"New directory has been created - {testing_data_dir}")
+    
+    testing_data_dir = os.path.join(current_dir, 'output_testing_data')
+    for i in range(1, 5):
+        if not os.path.exists(os.path.join(testing_data_dir, str(i))):
+            os.makedirs(os.path.join(testing_data_dir, str(i)))
+            logger.log(f"New directory has been created - {i}")
+
     plot_dir = os.path.join(current_dir, testing_data_dir)
 
 
@@ -464,15 +645,17 @@ def main():
 
     function_txt = '''
         Choose function:\n
-        1)test_all_series(cmp_sum_and_transform)\n
-        2)
-        3)
-        4)
+        1)test_all_series(cmp_sum_and_transform for all series)
+        2)test_all_series_all_transformation(test_all_transforms)
+        3)test_multi_x_for_1_series_and_for_all_transfomations
+        4)test_work_speed_of_transformation_for_series
     '''
 
     print(function_txt)
     function_id = int(input())
     if function_id == 1:
+        plot_dir = os.path.join(plot_dir, "1")
+
         series_with_const = ["6", "11", "16", "75", "95", "102"]
         consts = []
         transform = []
@@ -524,10 +707,193 @@ def main():
 
         params = [x, *transform, "1", n, order]
         test_all_series_for_1_function(logger, exec_file, params, consts, plot_dir, "output.txt")
+
     elif function_id == 2:
-        pass
-    else:
-        print("wrong function_id")
+        plot_dir = os.path.join(plot_dir, "2")
+
+        parameters = []
+        series_with_const = ["6", "11", "16", "75", "95", "102"]
+        consts = []
+
+        for i in range(len(series_with_const)):
+            consts.append(input(f"Input const for a {series_id[series_with_const[i]]}:"))
+
+
+        standart = input("| Use standart beta_Levin_S_algorithm value? 1<-true or 0<-false : ")
+        parameters.append(standart)
+        if not int(standart):
+            beta = input("| Enter parameter beta_Levin_S_algorithm: ")
+            parameters.append(beta)
+
+        standart = input("| Use standart gamma_Levin_M_algorithm value? 1<-true or 0<-false : ")
+        parameters.append(standart)
+
+        if not int(standart):
+            gamma = input("| Enter parameter gamma_Levin_M_algorithm: ")
+            parameters.append(gamma)
+
+        standart = input("| Use standart gamma_rho_Wynn_algorithm value? 1<-true or 0<-false : ")
+        parameters.append(standart)
+
+        if not int(standart):
+            gamma_rho = input("| Enter parameter gamma_rho_Wynn_algorithm: ")
+            parameters.append(gamma_rho)
+
+        standart = input("| Use standart RHO_rho_Wynn_algorithm value? 1<-true or 0<-false : ")
+        parameters.append(standart)
+
+        if not int(standart):
+            rho = input("| Enter parameter RHO_rho_Wynn_algorithm: ")
+            parameters.append(rho)
+
+        standart = input("| Use standart beta_levin_recursion_algorithm value? 1<-true or 0<-false : ")
+        parameters.append(standart)
+
+        if not int(standart):
+            beta_rec = input("| Enter parameter beta_levin_recursion_algorithm: ")
+            parameters.append(beta_rec)
+
+        standart = input("| Use standart epsilon_algorithm_3 value? 1<-true or 0<-false : ")
+        parameters.append(standart)
+
+        if not int(standart):
+            epsilon = input("| Enter parameter epsilon_algorithm_3: ")
+            parameters.append(epsilon)
+
+        x = input("Input x: ")
+        n = input("Input n: ")
+        order = input("Input order: ")
+
+        params = [x, "6", n, order, *parameters]
+        test_all_series_for_all_function(logger, exec_file, params, consts, plot_dir, "output.txt")
+    elif function_id == 3:
+        plot_dir = os.path.join(plot_dir, "3")
+
+        series = []
+        consts = []
+        transform = []
+        parameters = []
+
+        series.append(input("Choose series:"))
+        if series[-1] in ["6", "11", "16", "75", "95", "102"]:
+            series.append(input("Enter parameter:"))
+        elif series[-1] == "103":
+            series.append(input("Choose series:"))
+            if series[-1] in ["6", "11", "16", "75", "95", "102"]:
+                series.append(input("Enter parameter:"))
+
+        standart = input("| Use standart beta_Levin_S_algorithm value? 1<-true or 0<-false : ")
+        parameters.append(standart)
+        if not int(standart):
+            beta = input("| Enter parameter beta_Levin_S_algorithm: ")
+            parameters.append(beta)
+
+        standart = input("| Use standart gamma_Levin_M_algorithm value? 1<-true or 0<-false : ")
+        parameters.append(standart)
+
+        if not int(standart):
+            gamma = input("| Enter parameter gamma_Levin_M_algorithm: ")
+            parameters.append(gamma)
+
+        standart = input("| Use standart gamma_rho_Wynn_algorithm value? 1<-true or 0<-false : ")
+        parameters.append(standart)
+
+        if not int(standart):
+            gamma_rho = input("| Enter parameter gamma_rho_Wynn_algorithm: ")
+            parameters.append(gamma_rho)
+
+        standart = input("| Use standart RHO_rho_Wynn_algorithm value? 1<-true or 0<-false : ")
+        parameters.append(standart)
+
+        if not int(standart):
+            rho = input("| Enter parameter RHO_rho_Wynn_algorithm: ")
+            parameters.append(rho)
+
+        standart = input("| Use standart beta_levin_recursion_algorithm value? 1<-true or 0<-false : ")
+        parameters.append(standart)
+
+        if not int(standart):
+            beta_rec = input("| Enter parameter beta_levin_recursion_algorithm: ")
+            parameters.append(beta_rec)
+
+        standart = input("| Use standart epsilon_algorithm_3 value? 1<-true or 0<-false : ")
+        parameters.append(standart)
+
+        if not int(standart):
+            epsilon = input("| Enter parameter epsilon_algorithm_3: ")
+            parameters.append(epsilon)
+
+        if series[0] != "103":
+            print(f"{get_series_limits(int(series[0]))}) for choosen series")
+        else:
+            print(f"({get_series_limits(int(series[1]))}) for choosen series")
+        print("to set x we will use range(start, stop, step)")
+        start = int(input("Input start: "))
+        stop = int(input("Input stop: "))
+        step = int(input("Input step: "))
+        n = input("Input n: ")
+        order = input("Input order: ")
+
+        params = [series, "6", n, order, *parameters]
+        test_x_for_all_transformations(logger, exec_file, params, consts, plot_dir, "output.txt", [start, stop, step])
+    elif function_id == 4:
+        series = []
+        consts = [[] for i in range(6)]
+
+        #TODO: print series info
+        series.append(input("Choose series:"))
+        if series[-1] in ["6", "11", "16", "75", "95", "102"]:
+            series.append(input("Enter parameter:"))
+        elif series[-1] == "103":
+            series.append(input("Choose series:"))
+            if series[-1] in ["6", "11", "16", "75", "95", "102"]:
+                series.append(input("Enter parameter:"))
+
+        print(f"\nChoose parameters for {transformations["5"]}")
+        consts[0].append(input("Сhoose what type of transformation u,t,d or v: "))
+        consts[0].append(input("Use recurrence formula? 1<-true or 0<-false: "))
+        consts[0].append(input("Use standart beta value? 1<-true or 0<-false: "))
+        if consts[0][-1] == "0":
+            consts[0].append(input("Enter parameter beta: "))
+        print(f"\nChoose parameters for {transformations["6"]}")
+        consts[1].append(input("Срoose what type of transformation u,t,d or v: "))
+        consts[1].append(input("Use recurrence formula? 1<-true or 0<-false: "))
+        print(f"\nChoose parameters for {transformations["8"]}")
+        consts[2].append(input("Срoose what type of transformation u,t,d or v: "))
+        consts[2].append(input("Use standart beta value? 1<-true or 0<-false: "))
+        if consts[2][-1] == "0":
+            consts[2].append(input("Enter parameter beta: "))
+        print(f"\nChoose parameters for {transformations["10"]}")
+        consts[3].append(input("choose transformation variant:\nclassic (0), gamma (1), gamma-rho (2): "))
+        if consts[3][-1] == "1":
+            consts[3].append(input("Use standart gamma value? 1<-true or 0<-false:"))
+            if consts[3][-1] == "0":
+                consts[3].append(input("Enter parameter gamma:"))
+        if consts[3][-1] == "2":
+            consts[3].append(input("Use standart gamma value? 1<-true or 0<-false:"))
+            if consts[3][-1] == "0":
+                consts[3].append(input("Enter parameter gamma:"))
+            consts[3].append(input("Use standart RHO value? 1<-true or 0<-false:"))
+            if consts[3][-1] == "0":
+                consts[3].append(input("Enter parameter RHO:"))
+        print(f"Choose parameters for {transformations["12"]}")
+        consts[4].append(input("Use standart epsilon value? 1<-true or 0<-false: "))
+        if consts[4][-1] == "0":
+            consts[4].append(input("Enter parameter epsilon: "))
+        print(f"Choose parameters for {transformations["13"]}")
+        consts[5].append(input("Use standart beta value? 1<-true or 0<-false: "))
+        if consts[5][-1] == "0":
+            consts[5].append(input("Enter parameter beta: "))
+        x = ""
+
+        if series[0] != "103":
+            x = input(f"Input x({get_series_limits(int(series[0]))}): ")
+        else:
+            x = input(f"Input x({get_series_limits(int(series[1]))}): ")
+        n = input("Input n: ")
+        order = input("Input order: ")
+        params = [series, x, n, order]
+        test_speed(logger, exec_file, params, consts, "output.txt")
 
     
     logger.log("------------------------------------------")
