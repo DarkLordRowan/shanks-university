@@ -359,7 +359,7 @@ def test_all_series_for_1_function(logger, exec_file, params, consts, plot_dir, 
     lim_array = []
     k = 0
     parameters = []
-    for num_series in range(len(series_id)-2):
+    for num_series in range(1, len(series_id)-1):
         if (not check_series_value(num_series, float(params[0])) or num_series == 55): 
             logger.log(f"Cant build plot and csv file for {series_id[str(num_series)]}, because {get_series_limits(num_series)}, given x = {params[0]}")
             continue
@@ -442,7 +442,7 @@ def test_all_series_for_all_function(logger, exec_file, params, consts, plot_dir
     for i in range(len(algorithms)):
         names.append(algorithms[i])
 
-    for num_series in range(len(series_id)-2):
+    for num_series in range(1, len(series_id)-1):
         if (not check_series_value(num_series, float(params[0])) or num_series == 55): #55 too slow
             logger.log(f"Cant build plot and csv file for {series_id[str(num_series)]}, because {get_series_limits(num_series)}, given x = {params[0]}")
             continue
