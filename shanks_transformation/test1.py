@@ -1,8 +1,5 @@
 from test import *
 
-import math
-from math import pi, e, log, sqrt, cos, sin, tan, atan, asin, acos, sinh, cosh, tanh, gamma, factorial, erf, erfc
-import csv
 
 def get_series_limits(series_num):
     """Возвращает ограничения для ряда по его номеру"""
@@ -648,7 +645,8 @@ def main():
         1)test_all_series(cmp_sum_and_transform for all series)
         2)test_all_series_all_transformation(test_all_transforms)
         3)test_multi_x_for_1_series_and_for_all_transfomations
-        4)test_work_speed_of_transformation_for_series
+        4)read_parameters_from_file
+        5)test_work_speed_of_transformation_for_series
     '''
 
     print(function_txt)
@@ -837,6 +835,24 @@ def main():
         params = [series, "6", n, order, *parameters]
         test_x_for_all_transformations(logger, exec_file, params, consts, plot_dir, "output.txt", [start, stop, step])
     elif function_id == 4:
+        parameters = []
+        plot_dir = os.path.join(plot_dir, "4")
+        with open("testing_parameters", 'r') as f:
+            for line in f:
+                parameters.append(line.split(" "))
+        
+        for i in range(len(parameters)):
+            program = Program(exec_file, parameters[i])
+            program.run()
+
+            plot_file = os.path.join(plot_dir, f"plot{i}.png")
+
+            a = find_params(parameters[i])
+            log_selected_params(logger, a)
+
+            work_with_data(logger, a[3][0], "output.txt", plot_file)
+
+    elif function_id == 5:
         series = []
         consts = [[] for i in range(6)]
 
