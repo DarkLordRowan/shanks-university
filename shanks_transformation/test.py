@@ -5,7 +5,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 from pathlib import Path
 from datetime import datetime
-from math import factorial
+import math
+from math import pi, e, log, sqrt, cos, sin, tan, atan, asin, acos, sinh, cosh, tanh, gamma, factorial, erf, erfc
+import csv
+
 
 
 standart_algos = {
@@ -380,64 +383,166 @@ def log_selected_params(logger, params):
     logger.log(f"order: {order[0]}")
 
 
+
 def find_params(params):
-    series = [params[0]]
-    x = [params[1]]
-    transformation = []
-    function = []
-    n = []
-    order = []
-
-    if params[0] == "103":
-        series.append(params[2])
-        if params[2] in ["6", "11", "16", "75", "95", "102"]:
-            series.append(params[3])
-    elif params[0] in ["6", "11", "16", "75", "95", "102"]:
-        series.append(params[2])
-    a = len(series) + 1
-    transformation.append(params[a])
-    if params[a] in ["5", "6", "8"]:
-        transformation.append(params[a + 1])
-        transformation.append(params[a + 2])
-    elif params[a] in ["10"]:
-        transformation.append(params[a + 1])
-        if params[a+1] == "1":
-            transformation.append(params[a + 2])
-        if params[a+1] == "2":
-            transformation.append(params[a + 2])
-            transformation.append(params[a + 3])
-    elif params[a] in ["13"]:
-        transformation.append(params[a + 1])
-
-    a += len(transformation)
-
-    function.append(params[a])
-    n.append(params[a+1])
-    order.append(params[a+2])
-
-    if params[a] == "4":
-        function.append(params[a+3])
-        if params[a+3] in ["5", "6", "8"]:
-            function.append(params[a + 4])
-            function.append(params[a + 5])
-        elif params[a+3] in ["10"]:
-            function.append(params[a + 4])
-            if params[a+4] == "1":
-                function.append(params[a + 5])
-            if params[a+4] == "2":
-                function.append(params[a + 5])
-                function.append(params[a + 6])
-        elif params[a+3] in ["13"]:
-            function.append(params[a + 4])
-    elif params[a] == "6":
-        function.append(params[a+1])
-        function.append(params[a+2])
-        function.append(params[a+3])
-        function.append(params[a+4])
-        function.append(params[a+5])
-        function.append(params[a+6])
-
-    return [series, x, transformation, function, n, order]
+    try:
+        result = {
+            'series': [],
+            'x': None,
+            'transformation': [],
+            'function': [],
+            'n': None,
+            'order': None
+        }
+        
+        param_index = 0
+        
+        result['series'].append(params[param_index])
+        param_index += 1
+        
+        result['x'] = params[param_index]
+        param_index += 1
+        
+        if result['series'][0] in ["6", "11", "16", "75", "95", "102"]:
+            result['series'].append(params[param_index])
+            param_index += 1
+        elif result['series'][0] == "103":
+            result['series'].append(params[param_index]) 
+            param_index += 1
+            if result['series'][1] in ["6", "11", "16", "75", "95", "102"]:
+                result['series'].append(params[param_index])
+                param_index += 1
+        
+        result['transformation'].append(params[param_index])
+        param_index += 1
+        
+        if result['transformation'][0] in ["5", "6", "8"]:
+            result['transformation'].append(params[param_index])
+            param_index += 1
+            result['transformation'].append(params[param_index])  
+            param_index += 1
+        
+        elif result['transformation'][0] == "13":
+            use_default_beta = params[param_index]
+            result['transformation'].append(use_default_beta)
+            param_index += 1
+            
+            if use_default_beta == "0":
+                result['transformation'].append(params[param_index])
+                param_index += 1
+        
+        elif result['transformation'][0] == "10":
+            transform_type = params[param_index]
+            result['transformation'].append(transform_type)
+            param_index += 1
+            
+            if transform_type == "1": 
+                use_default_gamma = params[param_index]
+                result['transformation'].append(use_default_gamma)
+                param_index += 1
+                
+                if use_default_gamma == "0":
+                    result['transformation'].append(params[param_index])  
+                    param_index += 1
+                    
+            elif transform_type == "2":  
+                use_default_gamma = params[param_index]
+                result['transformation'].append(use_default_gamma)
+                param_index += 1
+                
+                if use_default_gamma == "0":
+                    result['transformation'].append(params[param_index])  
+                    param_index += 1
+                
+                use_default_rho = params[param_index]
+                result['transformation'].append(use_default_rho)
+                param_index += 1
+                
+                if use_default_rho == "0":
+                    result['transformation'].append(params[param_index])
+                    param_index += 1
+        
+        result['function'].append(params[param_index])
+        param_index += 1
+        
+        result['n'] = params[param_index]
+        param_index += 1
+        
+        result['order'] = params[param_index]
+        param_index += 1
+        
+        if result['function'][0] == "4":
+            result['function'].append(params[param_index])  
+            param_index += 1
+            
+            if result['function'][1] in ["5", "6", "8"]:
+                result['function'].append(params[param_index])  
+                param_index += 1
+                result['function'].append(params[param_index])  
+                param_index += 1
+                
+            elif result['function'][1] == "10":
+                use_default_beta = params[param_index]
+                result['function'].append(use_default_beta)
+                param_index += 1
+                
+                if use_default_beta == "0":
+                    result['function'].append(params[param_index])  
+                    param_index += 1
+                    
+            elif result['function'][1] == "13":
+                transform_type = params[param_index]
+                result['function'].append(transform_type)
+                param_index += 1
+                
+                if transform_type == "1": 
+                    use_default_gamma = params[param_index]
+                    result['function'].append(use_default_gamma)
+                    param_index += 1
+                    
+                    if use_default_gamma == "0":
+                        result['function'].append(params[param_index])  
+                        param_index += 1
+                        
+                elif transform_type == "2": 
+                    use_default_gamma = params[param_index]
+                    result['function'].append(use_default_gamma)
+                    param_index += 1
+                    
+                    if use_default_gamma == "0":
+                        result['function'].append(params[param_index]) 
+                        param_index += 1
+                    
+                    use_default_rho = params[param_index]
+                    result['function'].append(use_default_rho)
+                    param_index += 1
+                    
+                    if use_default_rho == "0":
+                        result['function'].append(params[param_index])  
+                        param_index += 1
+        
+        elif result['function'][0] == "6":
+            algorithms = [
+                'beta_Levin_S_algorithm',
+                'gamma_Levin_M_algorithm',
+                'gamma_rho_Wynn_algorithm',
+                'RHO_rho_Wynn_algorithm',
+                'beta_levin_recursion_algorithm',
+                'epsilon_algorithm_3'
+            ]
+            
+            for algo in algorithms:
+                use_default = params[param_index]
+                result['function'].append(use_default)
+                param_index += 1
+                
+                if use_default == "0":
+                    result['function'].append(params[param_index]) 
+                    param_index += 1
+        
+        return [result['series'], result['x'], result['transformation'], result['function'], result['n'], result['order']]
+    except: 
+        print("Cant parse this parameters")
 
 
 def work_with_data(logger, function_id, file, plot_file):
@@ -492,8 +597,16 @@ def work_with_data(logger, function_id, file, plot_file):
         plt.close()
         
         logger.log(f"plot saved to {plot_file}")
+        
+        csv_file = os.path.splitext(plot_file)[0] + ".csv"
+        with open(csv_file, 'w', newline='') as csvfile:
+            writer = csv.writer(csvfile)
+            writer.writerow(['S_n', 'T_n', 'Sum'])
+            for row in zip(S_n, T_n, lim_arr):
+                writer.writerow(row)
+        logger.log(f"CSV data saved to {csv_file}")
 
-    if function_id == "2":
+    elif function_id == "2":
         a_n = []
         t_n = []
         diff = []
@@ -531,10 +644,19 @@ def work_with_data(logger, function_id, file, plot_file):
                         logger.log(f"t_{i} - a{i}: {line}(replaced by None)")
 
                     i += 1
+                    
+            csv_file = os.path.splitext(plot_file)[0] + ".csv"
+            with open(csv_file, 'w', newline='') as csvfile:
+                writer = csv.writer(csvfile)
+                writer.writerow(['a_n', 't_n', 't_n - a_n'])
+                for row in zip(a_n, t_n, diff):
+                    writer.writerow(row)
+            logger.log(f"CSV data saved to {csv_file}")
+                    
         except Exception as e:
             logger.log_error(f"Error reading from file: {str(e)}")
 
-    if function_id == "3":
+    elif function_id == "3":
         diff = []
         try:
             logger.log(f"Values of file:")
@@ -548,10 +670,19 @@ def work_with_data(logger, function_id, file, plot_file):
                         diff.append(None)
                         logger.log(f"S-T_{i}: {line.strip()}(replaced by None)")
                     i += 1
+                    
+            csv_file = os.path.splitext(plot_file)[0] + ".csv"
+            with open(csv_file, 'w', newline='') as csvfile:
+                writer = csv.writer(csvfile)
+                writer.writerow(['S_n - T_n'])
+                for val in diff:
+                    writer.writerow([val])
+            logger.log(f"CSV data saved to {csv_file}")
+                    
         except Exception as e:
             logger.log_error(f"Error reading from file: {str(e)}")
 
-    if function_id == "4":
+    elif function_id == "4":
         first_transform = []
         second_transform = []
         try:
@@ -585,21 +716,37 @@ def work_with_data(logger, function_id, file, plot_file):
                             logger.log(f"Second transformation faster")
                     except:
                         logger.log(f"Can not compare first and second transformation")
-
+                        
+            csv_file = os.path.splitext(plot_file)[0] + ".csv"
+            with open(csv_file, 'w', newline='') as csvfile:
+                writer = csv.writer(csvfile)
+                writer.writerow(['First transformation', 'Second transformation'])
+                for row in zip(first_transform, second_transform):
+                    writer.writerow(row)
+            logger.log(f"CSV data saved to {csv_file}")
+                    
         except Exception as e:
             logger.log_error(f"Error reading from file: {str(e)}")
             
-    if function_id == "5":
+    elif function_id == "5":
         time = ''
         try:
             logger.log(f"Values of file:")
             with open(file, 'r') as f:
                 time = f.readline()
                 logger.log(f"execution took {time} milliseconds")
+                
+            csv_file = os.path.splitext(plot_file)[0] + ".csv"
+            with open(csv_file, 'w', newline='') as csvfile:
+                writer = csv.writer(csvfile)
+                writer.writerow(['Execution time (ms)'])
+                writer.writerow([time])
+            logger.log(f"CSV data saved to {csv_file}")
+                
         except Exception as e:
             logger.log_error(f"Error reading from file: {str(e)}")
     
-    if function_id == "6":
+    elif function_id == "6":
         S_n = []
         T_n = [[] for i in range(34)]
         lim = 0
@@ -628,7 +775,6 @@ def work_with_data(logger, function_id, file, plot_file):
         x = list(range(len(S_n)))
         lim_arr = [lim for i in range(len(S_n))]
 
-
         plt.figure(figsize=(15, 15))
         
         plt.plot(x, S_n, color = "Green", label = "S_n")
@@ -647,6 +793,18 @@ def work_with_data(logger, function_id, file, plot_file):
         plt.close()
         
         logger.log(f"plot saved to {plot_file}")
+        
+        csv_file = os.path.splitext(plot_file)[0] + ".csv"
+        names = ["S_n"]
+        for i in range(len(algorithms)):
+            names.append(algorithms[i])
+            
+        with open(csv_file, 'w', newline='') as csvfile:
+            writer = csv.writer(csvfile)
+            writer.writerow(names)
+            for row in zip(S_n, *T_n[1:-1], lim_arr):
+                writer.writerow(row)
+        logger.log(f"CSV data saved to {csv_file}")
 
 
 
@@ -658,8 +816,8 @@ def work_with_data(logger, function_id, file, plot_file):
 1.2)Если же выбрали ряд 103, то дальше нужно выбрать ряд, от который он будет модифицировать(в нашем случае добавлять шум). Смотрит пункт 3
 3)Выбираем трансформацию.
 3.1)Если выбрали трансформацию под номерами ["5", "6", "8"]. То надо выбрать какую трансформацию использовать(u,t,d,v) и выбрать является ли она рекурсивной(0, 1)
-3.2)Если выбрана трансформация 10, то надо выбрать делать ли параметр Beta по умолчанию(1), иначе(0) ввести параметр Beta.
-3.3)Если выбрана трансформация 13, то надо выбрать какую использовать 0 - classic(не требует доп параметров), 1 - gamma(делать ли параметр gamma по умолчанию(1), иначе(0) ввести его), 2 - gamma-rho(делать ли параметр gamma по умолчанию(1), иначе(0) ввести параметр gamma и аналогично для параметра rho )
+3.2)Если выбрана трансформация 13, то надо выбрать делать ли параметр Beta по умолчанию(1), иначе(0) ввести параметр Beta.
+3.3)Если выбрана трансформация 10, то надо выбрать какую использовать 0 - classic(не требует доп параметров), 1 - gamma(делать ли параметр gamma по умолчанию(1), иначе(0) ввести его), 2 - gamma-rho(делать ли параметр gamma по умолчанию(1), иначе(0) ввести параметр gamma и аналогично для параметра rho )
 4)Выбираем функцию
 5)Вводим n
 6)Вводим order
@@ -681,9 +839,9 @@ def main():
     n = "10"
     order = "2"    
     
-    params = [row, x, transform, function, n, order, "1", "1", "1", "1", "1", "1"]
-    #params = ["15", "3", "10", "0", "1", "10", "2"]
-    #params = ["15", "3", "4", "4", "10", "2", "18"]
+    #params = [row, x, transform, function, n, order, "1", "1", "1", "1", "1", "1"]
+    #params = ["15", "3", "10", "0", "1", "1", "10", "2"]
+    params = ["15", "3", "4", "4", "10", "2", "18"]
 
 
     program = Program(exec_file, params)
