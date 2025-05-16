@@ -360,7 +360,7 @@ def test_all_series_for_1_function(logger, exec_file, params, consts, plot_dir, 
     k = 0
     parameters = []
     for num_series in range(1, len(series_id)-1):
-        if (not check_series_value(num_series, float(params[0])) or num_series == 55): 
+        if (not check_series_value(num_series, float(params[0])) or num_series == 55 or num_series == 79): 
             logger.log(f"Cant build plot and csv file for {series_id[str(num_series)]}, because {get_series_limits(num_series)}, given x = {params[0]}")
             continue
         if num_series in [6, 11, 16, 75, 95, 102]:
@@ -443,7 +443,7 @@ def test_all_series_for_all_function(logger, exec_file, params, consts, plot_dir
         names.append(algorithms[i])
 
     for num_series in range(1, len(series_id)-1):
-        if (not check_series_value(num_series, float(params[0])) or num_series == 55): #55 too slow
+        if (not check_series_value(num_series, float(params[0])) or num_series == 55 or num_series == 79): #55 too slow
             logger.log(f"Cant build plot and csv file for {series_id[str(num_series)]}, because {get_series_limits(num_series)}, given x = {params[0]}")
             continue
         if num_series in [6, 11, 16, 75, 95, 102]:
@@ -540,8 +540,9 @@ def test_x_for_all_transformations(logger, exec_file, params, consts, plot_dir, 
     for i in range(len(algorithms)):
         names.append(algorithms[i])
 
-    for x in range(iter[0], iter[1], iter[2]):
-        if (params[0][0] != "103" and not check_series_value(int(params[0][0]), x) or int(params[0][0]) == 55):
+    x_p = np.linspace(iter[0], iter[1], iter[2])
+    for x in x_p:
+        if (params[0][0] != "103" and not check_series_value(int(params[0][0]), x) or int(params[0][0]) == 55 or int(params[0][0] == 79)):
             logger.log(f"Cant build plot and csv file for {series_id[params[0][0]]}, because {get_series_limits(int(params[0][0]))}, given x = {x}")
             continue
         elif (params[0][0] == "103" and not check_series_value(int(params[0][1]), x)):
@@ -825,10 +826,10 @@ def main():
             print(f"{get_series_limits(int(series[0]))}) for choosen series")
         else:
             print(f"({get_series_limits(int(series[1]))}) for choosen series")
-        print("to set x we will use range(start, stop, step)")
+        print("to set x we will use np.linspace(start, stop, count)")
         start = int(input("Input start: "))
         stop = int(input("Input stop: "))
-        step = int(input("Input step: "))
+        step = int(input("Input x count: "))
         n = input("Input n: ")
         order = input("Input order: ")
 
@@ -865,21 +866,21 @@ def main():
             if series[-1] in ["6", "11", "16", "75", "95", "102"]:
                 series.append(input("Enter parameter:"))
 
-        print(f"\nChoose parameters for {transformations["5"]}")
+        print(f"\nChoose parameters for {transformations['5']}")
         consts[0].append(input("Сhoose what type of transformation u,t,d or v: "))
         consts[0].append(input("Use recurrence formula? 1<-true or 0<-false: "))
         consts[0].append(input("Use standart beta value? 1<-true or 0<-false: "))
         if consts[0][-1] == "0":
             consts[0].append(input("Enter parameter beta: "))
-        print(f"\nChoose parameters for {transformations["6"]}")
+        print(f"\nChoose parameters for {transformations['6']}")
         consts[1].append(input("Срoose what type of transformation u,t,d or v: "))
         consts[1].append(input("Use recurrence formula? 1<-true or 0<-false: "))
-        print(f"\nChoose parameters for {transformations["8"]}")
+        print(f"\nChoose parameters for {transformations['8']}")
         consts[2].append(input("Срoose what type of transformation u,t,d or v: "))
         consts[2].append(input("Use standart beta value? 1<-true or 0<-false: "))
         if consts[2][-1] == "0":
             consts[2].append(input("Enter parameter beta: "))
-        print(f"\nChoose parameters for {transformations["10"]}")
+        print(f"\nChoose parameters for {transformations['10']}")
         consts[3].append(input("choose transformation variant:\nclassic (0), gamma (1), gamma-rho (2): "))
         if consts[3][-1] == "1":
             consts[3].append(input("Use standart gamma value? 1<-true or 0<-false:"))
@@ -892,11 +893,11 @@ def main():
             consts[3].append(input("Use standart RHO value? 1<-true or 0<-false:"))
             if consts[3][-1] == "0":
                 consts[3].append(input("Enter parameter RHO:"))
-        print(f"Choose parameters for {transformations["12"]}")
+        print(f"Choose parameters for {transformations['12']}")
         consts[4].append(input("Use standart epsilon value? 1<-true or 0<-false: "))
         if consts[4][-1] == "0":
             consts[4].append(input("Enter parameter epsilon: "))
-        print(f"Choose parameters for {transformations["13"]}")
+        print(f"Choose parameters for {transformations['13']}")
         consts[5].append(input("Use standart beta value? 1<-true or 0<-false: "))
         if consts[5][-1] == "0":
             consts[5].append(input("Enter parameter beta: "))
