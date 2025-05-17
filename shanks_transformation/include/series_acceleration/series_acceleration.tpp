@@ -1,4 +1,5 @@
 #pragma once
+#include <iostream>
 
 template<typename T, typename K, typename series_templ>
 series_acceleration<T, K, series_templ>::series_acceleration(const series_templ &series)
