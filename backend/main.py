@@ -1,11 +1,21 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 import series_module
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(
     title="Series Computation API",
     version="0.1.0",
     root_path="/api"
+)
+
+# Разрешить CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],  # адрес фронтенда
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # Поддерживаемые ряды и ускорители
