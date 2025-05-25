@@ -278,7 +278,7 @@ constexpr const T series_base<T, K>::binomial_coefficient(const T n, const K k)
 template <std::floating_point T, std::unsigned_integral K>
 constexpr const T series_base<T, K>::minus_one_raised_to_power_n(K n)
 {
-	return static_cast<T>(n % 2 ? -1.0 : 1.0);
+	return static_cast<T>(n & 1 ? -1.0 : 1.0);
 }
 
 
@@ -407,9 +407,7 @@ T exp_series<T, K>::acsess_row(K n)
 	this->series_vector.reserve(n);
 
 	for (auto i = old_size; i <= static_cast<typename std::vector<T>::size_type>(n); ++i)
-	{
 		this->series_vector.push_back(this->series_vector[i - 1] * this->x / i); // (1.2) [Rows.pdf]
-	}
 
 	return this->series_vector[n];
 }
@@ -468,9 +466,10 @@ T cos_series<T, K>::acsess_row(K n)
 	auto old_size = this->series_vector.size();
 	this->series_vector.reserve(n);
 
-	for (auto i = old_size; i <= static_cast<typename std::vector<T>::size_type>(n); ++i) {
-		this->series_vector.push_back(this->series_vector[i - 1] * static_cast<T>(-1) * static_cast<T>((this->x * this->x) / (i * std::fma(4, i, -2)))); // (2.2) [Rows.pdf]
-	}
+	T a = static_cast<T>(-this->x * this->x);
+
+	for (auto i = old_size; i <= static_cast<typename std::vector<T>::size_type>(n); ++i)
+		this->series_vector.push_back(this->series_vector[i - 1] * static_cast<T>(a / (i * std::fma(4, i, -2)))); // (2.2) [Rows.pdf]
 
 	return this->series_vector[n];
 }
@@ -530,9 +529,10 @@ T sin_series<T, K>::acsess_row(K n)
 	auto old_size = this->series_vector.size();
 	this->series_vector.reserve(n);
 
-	for (auto i = old_size; i <= static_cast<typename std::vector<T>::size_type>(n); ++i) {
-		this->series_vector.push_back(this->series_vector[i - 1] * static_cast<T>(-1) * static_cast<T>((this->x * this->x) / (i * std::fma(4, i, 2)))); // (3.2) [Rows.pdf]
-	}
+	T a = static_cast<T>(-this->x * this->x);
+
+	for (auto i = old_size; i <= static_cast<typename std::vector<T>::size_type>(n); ++i)
+		this->series_vector.push_back(this->series_vector[i - 1] * static_cast<T>(a / (i * std::fma(4, i, 2)))); // (3.2) [Rows.pdf]
 
 	return this->series_vector[n];
 }
@@ -591,9 +591,10 @@ T cosh_series<T, K>::acsess_row(K n)
 	auto old_size = this->series_vector.size();
 	this->series_vector.reserve(n);
 
-	for (auto i = old_size; i <= static_cast<typename std::vector<T>::size_type>(n); ++i) {
-		this->series_vector.push_back(this->series_vector[i - 1] * static_cast<T>((this->x * this->x) / (i * std::fma(4, i, -2)))); // (4.2) [Rows.pdf] 
-	}
+	T a = static_cast<T>(this->x * this->x);
+
+	for (auto i = old_size; i <= static_cast<typename std::vector<T>::size_type>(n); ++i)
+		this->series_vector.push_back(this->series_vector[i - 1] * static_cast<T>(a / (i * std::fma(4, i, -2)))); // (4.2) [Rows.pdf] 
 
 	return this->series_vector[n];
 }
@@ -652,9 +653,10 @@ T sinh_series<T, K>::acsess_row(K n)
 	auto old_size = this->series_vector.size();
 	this->series_vector.reserve(n);
 
-	for (auto i = old_size; i <= static_cast<typename std::vector<T>::size_type>(n); ++i) {
-		this->series_vector.push_back(this->series_vector[i - 1] * static_cast<T>((this->x * this->x) / (i * std::fma(4, i, 2)))); // (5.2) [Rows.pdf]
-	}
+	T a = static_cast<T>(this->x * this->x);
+
+	for (auto i = old_size; i <= static_cast<typename std::vector<T>::size_type>(n); ++i)
+		this->series_vector.push_back(this->series_vector[i - 1] * static_cast<T>(a / (i * std::fma(4, i, 2)))); // (5.2) [Rows.pdf]
 
 	return this->series_vector[n];
 }
@@ -713,8 +715,6 @@ bin_series<T, K>::bin_series(T x, T alpha) : series_base<T, K>(x, std::pow(1 + x
 template <std::floating_point T, std::unsigned_integral K>
 constexpr T bin_series<T, K>::operator()(K n) const
 {
-	if (n < 0)
-		throw std::domain_error("negative integer in the input");
 	return static_cast<T>(binomial_coefficient(alpha, n) * std::pow(this->x, n)); // (6.1) [Rows.pdf]
 }
 
@@ -794,7 +794,7 @@ public:
 template <std::floating_point T, std::unsigned_integral K>
 ln1mx_series<T, K>::ln1mx_series(T x) : series_base<T, K>(x, -std::log(1 - x))
 {
-	if (std::abs(this->x) >= 1 || this->x == 1)
+	if (std::abs(this->x) >= 1)
 		throw std::domain_error("the -ln(1 - x) series diverge at x = " + std::to_string(x) + "; series converge if x only in (-1, 1)");
 }
 
@@ -855,7 +855,7 @@ T mean_sinh_sin_series<T, K>::acsess_row(K n)
 	T a;
 	for (auto i = old_size; i <= static_cast<typename std::vector<T>::size_type>(n); ++i) {
 		a = static_cast<T>(std::fma(4, i, 1));
-		this->series_vector.push_back(this->series_vector[i - 1] * static_cast<T>(std::pow(this->x, 4) / (a * (4 * i) * (a - 2) * (a - 3)))); // (9.1) [Rows.pdf]
+		this->series_vector.push_back(this->series_vector[i - 1] * static_cast<T>(std::pow(this->x, 4) / (4 * i * a * (a - 2) * (a - 3)))); // (9.1) [Rows.pdf]
 	}
 	return this->series_vector[n];
 }
@@ -903,6 +903,8 @@ template <std::floating_point T, std::unsigned_integral K>
 constexpr T exp_squared_erf_series<T, K>::operator()(K n) const
 {
 	const auto result = std::pow(this->x, std::fma(2, n, 1)) / std::tgamma(n + 1.5); // (10.3) [Rows.pdf]
+	if (!isfinite(result))
+		throw std::overflow_error("operator() is too big");
 	return static_cast<T>(result);
 }
 
@@ -948,7 +950,8 @@ xmb_Jb_two_series<T, K>::xmb_Jb_two_series(T x, K b) : series_base<T, K>(x, stat
 template <std::floating_point T, std::unsigned_integral K>
 constexpr T xmb_Jb_two_series<T, K>::operator()(K n) const
 {
-	return static_cast<T>(series_base<T, K>::minus_one_raised_to_power_n(n) * std::pow(this->x, 2 * n) / (static_cast<T>(this->fact(n)) * static_cast<T>(std::tgamma(n + this->mu + 1)))); // (11.3) [Rows.pdf]
+	return static_cast<T>(series_base<T, K>::minus_one_raised_to_power_n(n) * std::pow(this->x, 2 * n) * static_cast<T>(std::tgamma(n + this->mu + 1))
+		/ (static_cast<T>(this->fact(n)))); // (11.3) [Rows.pdf]
 }
 
 /**
@@ -1128,10 +1131,13 @@ T erf_series<T, K>::acsess_row(K n)
 	auto old_size = this->series_vector.size();
 	this->series_vector.reserve(n);
 	T a;
+
+	T b = static_cast<T>(-this->x * this->x);
+
 	for (auto i = old_size; i <= static_cast<typename std::vector<T>::size_type>(n); ++i) 
 	{
 		a = static_cast<T>(std::fma(2, i, 1));
-		this->series_vector.push_back(this->series_vector[i - 1] * static_cast<T>((-1)) * static_cast<T>((this->x * this->x) / i * (a - 2) / a)); // (15.3) [Rows.pdf]
+		this->series_vector.push_back(this->series_vector[i - 1] * static_cast<T>(b * (a - 2) / (i * a))); // (15.3) [Rows.pdf]
 	}
 	return static_cast<T>(this->series_vector[n]);
 }
@@ -1769,7 +1775,7 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-exp_m_cos_x_sinsin_x_series<T, K>::exp_m_cos_x_sinsin_x_series(T x) : series_base<T, K>(x, std::exp(-std::cos(x))* std::sin(std::sin(x))) 
+exp_m_cos_x_sinsin_x_series<T, K>::exp_m_cos_x_sinsin_x_series(T x) : series_base<T, K>(x, std::exp(-std::cos(x)) * std::sin(std::sin(x))) 
 {
 	if (std::abs(this->x) >= std::numbers::pi)
 		throw std::domain_error("the exp(-cos(x)) * sin(sin(x)) series diverge at x = " + std::to_string(x) + "; series converge if x only in (-pi, pi)");
@@ -1926,7 +1932,7 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-pi_six_min_half_series<T, K>::pi_six_min_half_series(T x) : series_base<T, K>(x, static_cast<T>(x* (std::numbers::pi / 6 - 1 / 2))) {}
+pi_six_min_half_series<T, K>::pi_six_min_half_series(T x) : series_base<T, K>(x, static_cast<T>(x * (std::numbers::pi / 6 - 0.5))) {}
 
 template <std::floating_point T, std::unsigned_integral K>
 constexpr T pi_six_min_half_series<T, K>::operator()(K n) const
@@ -2285,7 +2291,8 @@ template <std::floating_point T, std::unsigned_integral K>
 constexpr T two_ln2_series<T, K>::operator()(K n) const
 {
 	T n_temp = static_cast<T>(n + 1);
-	return static_cast<T>(std::fma(12, n_temp * n_temp, -1) * this->x / (n_temp * std::fma(4, n_temp * n_temp, -1) * std::fma(4, n_temp * n_temp, -1))); // (44.2) [Rows.pdf]
+	T a = n_temp * n_temp * 4 - 1;
+	return (3 * a + 2) / (n_temp * a * a); // (44.2) [Rows.pdf]
 }
 
 
@@ -2544,7 +2551,7 @@ public:
 template <std::floating_point T, std::unsigned_integral K>
 ln_cosx<T, K>::ln_cosx(T x) : series_base<T, K>(x, std::log(std::cos(x))) 
 {
-	if (std::abs(this->x) >= std::numbers::pi / 2)
+	if (std::abs(this->x) * 2 >= std::numbers::pi)
 		throw std::domain_error("the ln(cos(x)) series diverge at x = " + std::to_string(x) + "; series converge if x only in [-pi/2, pi/2]");
 }
 
@@ -2588,15 +2595,15 @@ public:
 template <std::floating_point T, std::unsigned_integral K>
 ln_sinx_minus_ln_x<T, K>::ln_sinx_minus_ln_x(T x) : series_base<T, K>(x, std::log(std::sin(x) / x)) 
 {
-	if (this->x < 0 || this->x > std::numbers::pi)
-		throw std::domain_error("the ln(sin(x)) - ln(x) series diverge at x = " + std::to_string(x) + "; series converge if x only in [0, pi]");
+	if (this->x <= 0 || this->x > std::numbers::pi)
+		throw std::domain_error("the ln(sin(x)) - ln(x) series diverge at x = " + std::to_string(x) + "; series converge if x only in (0, pi]");
 }
 
 template <std::floating_point T, std::unsigned_integral K>
 constexpr T ln_sinx_minus_ln_x<T, K>::operator()(K n) const
 {
-	const K a = n + 1;
-	return static_cast<T>(std::log(1 - (this->x) * (this->x) / (a * a * std::numbers::pi * std::numbers::pi))); // (51.2) [Rows.pdf]
+	const T a = static_cast<T>((this->x) / ((n + 1) * std::numbers::pi));
+	return static_cast<T>(std::log(1 - a * a)); // (51.2) [Rows.pdf]
 }
 
 
@@ -2911,8 +2918,9 @@ template <std::floating_point T, std::unsigned_integral K>
 constexpr T pi_minus_3pi_4_and_pi_minus_x_minus_3pi_4_series<T, K>::operator()(K n) const
 {
 	const K a = n + 1;
-	const K b = 1 - 2 * (a % 2); // (1 - 2 * ((n + 1) % 2)) = (-1)^{n+1}
-	return static_cast<T>((std::cos(a * (this->x)) * (1 - b)) / (a * a * std::numbers::pi) + b * std::sin(a * (this->x)) / a); // (58.5) [Rows.pdf]
+	const K b = 1 - 2 * (a & 1); // (1 - 2 * ((n + 1) & 1)) = (-1)^{n+1}
+	const T c = static_cast<T>(a * (this->x));
+	return static_cast<T>((std::cos(c) * (1 - b)) / (a * a * std::numbers::pi) + b * std::sin(c) / a); // (58.5) [Rows.pdf]
 }
 
 
@@ -2958,9 +2966,10 @@ template <std::floating_point T, std::unsigned_integral K>
 constexpr T minus_3_div_4_or_x_minus_3_div_4_series<T, K>::operator()(K n) const
 {
 	const K a = n + 1;
-	const K b = static_cast<K>(std::fma(2, n, 1)); 
-	return static_cast<T>(-6 / (std::numbers::pi * std::numbers::pi) * std::cos(a * std::numbers::pi * (this->x) / 3) / (b * b)
-		- 3 / (std::numbers::pi) * ((1 - 2 * (a % 2)) * std::sin((this->x) * a * std::numbers::pi / 3)) / a); //(59.5) [Rows.pdf]
+	const K b = a + n; // 2 * n + 1
+	const T c = static_cast<T>((this->x) * std::numbers::pi / 3);
+	const T d = static_cast<T>(std::numbers::pi * b);
+	return static_cast<T>(-6 * std::cos(b * c) / (d * d) - 3 * (1 - 2 * (a & 1)) * std::sin(a * c) / (a * std::numbers::pi));  // (59.5) [Rows.pdf], (1 - 2 * ((n + 1) & 1)) = (-1)^{n+1}
 }
 
 
@@ -3005,7 +3014,8 @@ template <std::floating_point T, std::unsigned_integral K>
 constexpr T ten_minus_x_series<T, K>::operator()(K n) const
 {
 	const K a = n + 1;
-	return static_cast<T>((10 - 20 * (a % 2)) * std::sin(a * (this->x) * std::numbers::pi / 5) / (a * std::numbers::pi)); // (60.4) [Rows.pdf]
+	const T b = static_cast<T>(a * std::numbers::pi);
+	return static_cast<T>((10 - 20 * (a & 1)) * std::sin(b * (this->x) / 5) / b); // (60.4) [Rows.pdf], (1 - 2 * ((n + 1) & 1)) = (-1)^{n+1}
 }
 
 
@@ -3049,7 +3059,7 @@ template <std::floating_point T, std::unsigned_integral K>
 constexpr T x_series<T, K>::operator()(K n) const
 {
 	const K a = n + 1;
-	return static_cast<T>((2 - 4 * (a % 2)) * std::sin(this->x * a) / a); // (61.4) [Rows.pdf]
+	return static_cast<T>((2 - 4 * (a & 1)) * std::sin(this->x * a) / a); // (61.4) [Rows.pdf], (1 - 2 * ((n + 1) & 2)) = (-1)^{n+1}
 }
 
 
@@ -3096,7 +3106,7 @@ constexpr T minus_x_minus_pi_4_or_minus_pi_4_series<T, K>::operator()(K n) const
 	const K a = n + 1;
 	const K b = static_cast<K>(std::fma(2, n, 1));
 	return static_cast<T>(-2 * std::cos(a * this->x) / (std::numbers::pi * b * b)
-		+ (1 - 2 * (a % 2)) * std::sin(this->x * a) / a); // (62.5) [Rows.pdf]
+		+ (1 - 2 * (a & 1)) * std::sin(this->x * a) / a); // (62.5) [Rows.pdf], (1 - 2 * ((n + 1) & 1)) = (-1)^{n+1}
 }
 
 
@@ -3179,7 +3189,7 @@ template <std::floating_point T, std::unsigned_integral K>
 constexpr T Si_x_series<T, K>::operator()(K n) const
 {
 	const K a = static_cast<K>(std::fma(2, n, 1));
-	return static_cast<T>(this->minus_one_raised_to_power_n(n) * std::pow(this->x, a) / (a * this->fact(a))); // (64.1) [Rows.pdf]
+	return static_cast<T>((1 - 2 * (n & 1)) * std::pow(this->x, a) / (a * this->fact(a))); // (64.1) [Rows.pdf], (1 - 2 * (n & 1)) = (-1)^{n}
 }
 
 
@@ -3225,7 +3235,7 @@ constexpr T Ci_x_series<T, K>::operator()(K n) const
 		return gamma + std::log(this->x); // (65.1) [Rows.pdf]
 
 	const K a = 2 * n;
-	return static_cast<T>(this->minus_one_raised_to_power_n(n) * std::pow(this->x, a) / (a * this->fact(a))); // (65.1) [Rows.pdf]
+	return static_cast<T>((1 - 2 * (n & 1)) * std::pow(this->x, a) / (a * this->fact(a))); // (65.1) [Rows.pdf], (1 - 2 * (n & 1)) = (-1)^{n}
 }
 
 
@@ -3441,7 +3451,7 @@ template <std::floating_point T, std::unsigned_integral K>
 constexpr T arctg_x_series<T, K>::operator()(K n) const
 {
 	const K a = static_cast<K>(std::fma(2, n, 1));
-	return static_cast<T>(this->minus_one_raised_to_power_n(n) * std::pow(this->x, a) / a); // (70.1) [Rows.pdf]
+	return static_cast<T>((1 - 2 * (n & 1)) * std::pow(this->x, a) / a); // (70.1) [Rows.pdf], (1 - 2 * (n & 1)) = (-1)^{n}
 }
 
 
@@ -3573,7 +3583,7 @@ template <std::floating_point T, std::unsigned_integral K>
 constexpr T sqrt_1plusx_series<T, K>::operator()(K n) const
 {
 	const K a = 2 * n;
-	return static_cast<T>((this->minus_one_raised_to_power_n(n) * this->fact(a) * std::pow(this->x, n)) / ((1 - a) * this->fact(n) * this->fact(n) * std::pow(4, n))); // (73.1) [Rows.pdf]
+	return static_cast<T>((1 - 2 * (n & 1)) * (this->fact(a)) * std::pow(this->x, n) / ((1 - a) * (this->fact(n)) * (this->fact(n)) * std::pow(4, n))); // (73.1) [Rows.pdf], (1 - 2 * (n & 1)) = (-1)^{n}
 }
 
 
@@ -3617,7 +3627,7 @@ template <std::floating_point T, std::unsigned_integral K>
 constexpr T Lambert_W_func_series<T, K>::operator()(K n) const
 {
 	const K a = n + 1;
-	return static_cast<T>(this->minus_one_raised_to_power_n(n) * std::pow(a, n) * std::pow(this->x, a) / this->fact(a)); // (74.2) [Rows.pdf]
+	return static_cast<T>((1 - 2 * (n & 1)) * std::pow(a, n) * std::pow(this->x, a) / this->fact(a)); // (74.2) [Rows.pdf]
 }
 
 
@@ -3664,7 +3674,7 @@ Incomplete_Gamma_func_series<T, K>::Incomplete_Gamma_func_series(T x, T s) : ser
 template <std::floating_point T, std::unsigned_integral K>
 constexpr T Incomplete_Gamma_func_series<T, K>::operator()(K n) const
 {
-	return static_cast<T>(std::pow(-1, n) * std::pow(this->x, this->s + n) / (this->fact(n) * (this->s + n))); // (75.1) [Rows.pdf]
+	return static_cast<T>((1 - 2 * (n & 1)) * std::pow(this->x, this->s + n) / (this->fact(n) * (this->s + n))); // (75.1) [Rows.pdf], (1 - 2 * (n & 1)) = (-1)^{n}
 }
 
 
@@ -3778,7 +3788,7 @@ pi_series<T, K>::pi_series(T x) : series_base<T, K>(x) {}
 template <std::floating_point T, std::unsigned_integral K>
 constexpr T pi_series<T, K>::operator()(K n) const
 {
-	return this->x * static_cast<T>(std::sqrt(12) * (1 - 2 * ((n + 1) % 2)) / (std::pow(3, n) * (2 * n + 1))); // (78.1) [Rows.pdf]
+	return this->x * static_cast<T>(std::sqrt(12) * (1 - 2 * ((n + 1) & 1)) / (std::pow(3, n) * std::fma(2, n, 1))); // (78.1) [Rows.pdf], (n + 1) % 2 is the same (n + 1) & 1
 }
 
 
@@ -3801,7 +3811,8 @@ public:
 	*/
 	x_min_sqrt_x_series(T x);
 
-	/**
+	/**	return this->x * static_cast<T>(std::sqrt(12) * (1 - 2 * ((n + 1) % 2)) / (std::pow(3, n) * (2 * n + 1))); // (78.1) [Rows.pdf]
+
 	* @brief Computes the nth term of the Taylor series of the sine function
 	* @authors Trudolyubov N.A.
 	* @param n The number of the term
@@ -3867,7 +3878,7 @@ template <std::floating_point T, std::unsigned_integral K>
 constexpr T arctan_x2_series<T, K>::operator()(K n) const
 {
 	const K a = 2 * n + 1;
-	return static_cast<T>((this->minus_one_raised_to_power_n(n) * std::pow(this->x, 2 * a)) / a); // (80.2) [Rows.pdf]
+	return static_cast<T>((1 - 2 * (n & 1)) * std::pow(this->x, 2 * a) / a); // (80.2) [Rows.pdf], (1 - 2 * (n & 1)) = (-1)^{n}
 }
 
 
@@ -3911,7 +3922,7 @@ template <std::floating_point T, std::unsigned_integral K>
 constexpr T ln1px4_series<T, K>::operator()(K n) const
 {
 	const K a = n + 1;
-	return static_cast<T>((1 - 2 * ((n + 1) % 2)) * std::pow(this->x, 4 * a) / a); // (81.3) [Rows.pdf]
+	return static_cast<T>((1 - 2 * ((a + 1) & 1)) * std::pow(this->x, 4 * a) / a); // (81.3) [Rows.pdf], (1 - 2 * ((a + 1) & 1)) = (-1)^{a + 1}
 }
 
 
@@ -3951,7 +3962,7 @@ template <std::floating_point T, std::unsigned_integral K>
 constexpr T sin_x2_series<T, K>::operator()(K n) const
 {
 	const K a = static_cast<K>(std::fma(2, n, 1));
-	return static_cast<T>(this->minus_one_raised_to_power_n(n) * std::pow(this->x, 2 * a) / this->fact(a)); // (82.2) [Rows.pdf]
+	return static_cast<T>((1 - 2 * (n & 1)) * std::pow(this->x, 2 * a) / this->fact(a)); // (82.2) [Rows.pdf], // (1 - 2 * (n & 1)) = (-1)^{n}
 }
 
 /**
@@ -3994,7 +4005,7 @@ template <std::floating_point T, std::unsigned_integral K>
 constexpr T arctan_x3_series<T, K>::operator()(K n) const
 {
 	const K a = static_cast<K>(std::fma(2, n, 1));
-	return static_cast<T>((this->minus_one_raised_to_power_n(n) * std::pow(this->x, 3 * a)) / a); // (83.2) [Rows.pdf]
+	return static_cast<T>(((1 - 2 * (n & 1)) * std::pow(this->x, 3 * a)) / a); // (83.2) [Rows.pdf], (1 - 2 * (n & 1)) = (-1)^{n}
 }
 
 /**
@@ -4209,7 +4220,7 @@ template <std::floating_point T, std::unsigned_integral K>
 constexpr T cos_x2_series<T, K>::operator()(K n) const
 {
 	const K a = 2 * n;
-	return static_cast<T>(this->minus_one_raised_to_power_n(n) * std::pow(this->x, 2 * a) / this->fact(a)); // (88.2) [Rows.pdf]
+	return static_cast<T>((1 - 2 * (n & 1)) * std::pow(this->x, 2 * a) / this->fact(a)); // (1 - 2 * (n & 1)) = (-1)^{n} (88.2) [Rows.pdf]
 }
 
 
@@ -4327,7 +4338,10 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-cos3xmin1_div_xsqare_series<T, K>::cos3xmin1_div_xsqare_series(T x) : series_base<T, K>(x, (std::cos(3 * x) - 1) / (x * x)) {}
+cos3xmin1_div_xsqare_series<T, K>::cos3xmin1_div_xsqare_series(T x) : series_base<T, K>(x, (std::cos(3 * x) - 1) / (x * x)) {
+	if (this->x == 0)
+		throw std::domain_error("x cannot be zero");
+}
 
 template <std::floating_point T, std::unsigned_integral K>
 constexpr T cos3xmin1_div_xsqare_series<T, K>::operator()(K n) const
@@ -4532,7 +4546,10 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-one_div_sqrt2_sin_xdivsqrt2_series<T, K>::one_div_sqrt2_sin_xdivsqrt2_series(T x) : series_base<T, K>(x, static_cast<T>((1 / std::sqrt(2)) * std::sin(x / std::sqrt(2)))) {}
+one_div_sqrt2_sin_xdivsqrt2_series<T, K>::one_div_sqrt2_sin_xdivsqrt2_series(T x) : series_base<T, K>(x, static_cast<T>((1 / std::sqrt(2)) * std::sin(x / std::sqrt(2)))) {
+	if (this->x < -1)
+		throw std::domain_error("x cannot be less than -1");
+}
 
 template <std::floating_point T, std::unsigned_integral K>
 constexpr T one_div_sqrt2_sin_xdivsqrt2_series<T, K>::operator()(K n) const
@@ -4621,12 +4638,16 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-cos_sqrt_x<T, K>::cos_sqrt_x(T x) : series_base<T, K>(x, static_cast<T>(std::cos(std::sqrt(x)))) {}
+cos_sqrt_x<T, K>::cos_sqrt_x(T x) : series_base<T, K>(x, static_cast<T>(std::cos(std::sqrt(x)))) 
+{
+	if (this->x < 0)
+		throw std::domain_error("x cannot be negative");
+}
 
 template <std::floating_point T, std::unsigned_integral K>
 constexpr T cos_sqrt_x<T, K>::operator()(K n) const
 {
-	return static_cast<T>(this->minus_one_raised_to_power_n(n) * std::pow(this->x, n) / this->fact(2 * n)); // (98.2) [Rows.pdf]
+	return static_cast<T>((1 - 2 * (n & 1)) * std::pow(this->x, n) / this->fact(2 * n)); // (1 - 2 * (n & 1)) = (-1)^{n} (98.2) [Rows.pdf]
 }
 
 
@@ -4908,6 +4929,5 @@ T requrrent_testing_series<T, K>::acsess_row(K n)
 template <std::floating_point T, std::unsigned_integral K>
 constexpr T requrrent_testing_series<T, K>::operator()(K n) const
 {
-	const T a = const_cast<requrrent_testing_series<T, K>*>(this)->acsess_row(n);
-	return a;
+	return const_cast<requrrent_testing_series<T, K>*>(this)->acsess_row(n);
 }
