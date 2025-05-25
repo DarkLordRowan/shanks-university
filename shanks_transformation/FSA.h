@@ -31,7 +31,7 @@ public:
 	*/
 	T operator()(const K n, const K k) const 
 	{
-		one_series<T, K>* ones_seq = new one_series<T,K>();
+		one_series<T, K>* ones_seq = new one_series<T,K>(1);
 
 		// Насколько мы коллективным разумом поняли, g это как бы ряд используемого преобразования(shanks_transform, richardson_extrapolation, G_transformation и тд)
 		// пока я не реализовал выбор и оставил только shanks_transform, хотя в дальнейшем выбор конечно же надо прикрутить
