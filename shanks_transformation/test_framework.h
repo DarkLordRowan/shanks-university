@@ -668,37 +668,37 @@ inline static void main_testing_function()
 		series.reset(new x_twelfth_x2_pi2_series<T, K>(x));
 		break;
 	case series_id_t::ln2_series_id:
-		series.reset(new ln2_series<T, K>());
+		series.reset(new ln2_series<T, K>(x));
 		break;
 	case series_id_t::one_series_id:
-		series.reset(new one_series<T, K>());
+		series.reset(new one_series<T, K>(x));
 		break;
 	case series_id_t::minus_one_quarter_series_id:
-		series.reset(new minus_one_quarter_series<T, K>());
+		series.reset(new minus_one_quarter_series<T, K>(x));
 		break;
 	case series_id_t::pi_3_series_id:
-		series.reset(new pi_3_series<T, K>());
+		series.reset(new pi_3_series<T, K>(x));
 		break;
 	case series_id_t::pi_4_series_id:
-		series.reset(new pi_4_series<T, K>());
+		series.reset(new pi_4_series<T, K>(x));
 		break;
 	case series_id_t::pi_squared_6_minus_one_series_id:
-		series.reset(new pi_squared_6_minus_one_series<T, K>());
+		series.reset(new pi_squared_6_minus_one_series<T, K>(x));
 		break;
 	case series_id_t::three_minus_pi_series_id:
-		series.reset(new three_minus_pi_series<T, K>());
+		series.reset(new three_minus_pi_series<T, K>(x));
 		break;
 	case series_id_t::one_twelfth_series_id:
-		series.reset(new one_twelfth_series<T, K>());
+		series.reset(new one_twelfth_series<T, K>(x));
 		break;
 	case series_id_t::eighth_pi_m_one_third_series_id:
-		series.reset(new eighth_pi_m_one_third_series<T, K>());
+		series.reset(new eighth_pi_m_one_third_series<T, K>(x));
 		break;
 	case series_id_t::one_third_pi_squared_m_nine_series_id:
-		series.reset(new one_third_pi_squared_m_nine_series<T, K>());
+		series.reset(new one_third_pi_squared_m_nine_series<T, K>(x));
 		break;
 	case series_id_t::four_ln2_m_3_series_id:
-		series.reset(new four_ln2_m_3_series<T, K>());
+		series.reset(new four_ln2_m_3_series<T, K>(x));
 		break;
 	case series_id_t::exp_m_cos_x_sinsin_x_series_id:
 		series.reset(new exp_m_cos_x_sinsin_x_series<T, K>(x));
@@ -731,16 +731,16 @@ inline static void main_testing_function()
 		series.reset(new two_arcsin_square_x_halfed_series<T, K>(x));
 		break;
 	case series_id_t::pi_squared_twelve_series_id:
-		series.reset(new pi_squared_twelve_series<T, K>());
+		series.reset(new pi_squared_twelve_series<T, K>(x));
 		break;
 	case series_id_t::pi_cubed_32_series_id:
-		series.reset(new pi_cubed_32_series<T, K>());
+		series.reset(new pi_cubed_32_series<T, K>(x));
 		break;
 	case series_id_t::minus_three_plus_ln3_three_devided_two_plus_two_ln2_series_id:
-		series.reset(new minus_three_plus_ln3_three_devided_two_plus_two_ln2_series<T, K>());
+		series.reset(new minus_three_plus_ln3_three_devided_two_plus_two_ln2_series<T, K>(x));
 		break;
 	case series_id_t::two_ln2_series_id:
-		series.reset(new two_ln2_series<T, K>());
+		series.reset(new two_ln2_series<T, K>(x));
 		break;
 	case series_id_t::pi_x_multi_e_xpi_plus_e_minusxpi_divided_e_xpi_minus_e_minusxpi_minus_one_series_id:
 		series.reset(new pi_x_multi_e_xpi_plus_e_minusxpi_divided_e_xpi_minus_e_minusxpi_minus_one_series<T, K>(x));
@@ -839,13 +839,13 @@ inline static void main_testing_function()
 		series.reset(new Incomplete_Gamma_func_series<T, K>(x, s));
 		break;
 	case series_id_t::Series_with_ln_number1_id:
-		series.reset(new Series_with_ln_number1<T, K>());
+		series.reset(new Series_with_ln_number1<T, K>(x));
 		break;
 	case series_id_t::Series_with_ln_number2_id:
-		series.reset(new Series_with_ln_number2<T, K>());
+		series.reset(new Series_with_ln_number2<T, K>(x));
 		break;
 	case series_id_t::pi_series_id:
-		series.reset(new pi_series<T, K>());
+		series.reset(new pi_series<T, K>(x));
 		break;
 	case series_id_t::x_min_sqrt_x_series_id:
 		series.reset(new x_min_sqrt_x_series<T, K>(x));
@@ -893,7 +893,7 @@ inline static void main_testing_function()
 		series.reset(new sqrt_1plusx_min_1_min_x_div_2_series<T, K>(x));
 		break;
 	case series_id_t::ln13_min_ln7_div_7_series_id:
-		series.reset(new ln13_min_ln7_div_7_series<T, K>());
+		series.reset(new ln13_min_ln7_div_7_series<T, K>(x));
 		break;
 	case series_id_t::Ja_x_series_id:
 		T a;
