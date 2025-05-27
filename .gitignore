@@ -42,3 +42,4 @@ x64/Debug/shanks_transformation.exe
 /shanks_transformation/plot.png
 shanks_transformation/output_testing_data
 /venv/*
+/shanks_transformation/__pycache__
