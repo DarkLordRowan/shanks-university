@@ -13,7 +13,7 @@
  * @brief Shanks transformation for non-alternating series class.
  * @tparam T The type of the elements in the series, K The type of enumerating integer, series_templ is the type of series whose convergence we accelerate
  */
-template <typename T, typename K, typename series_templ>
+template <std::floating_point T, std::unsigned_integral K, typename series_templ>
 class shanks_transform : public series_acceleration<T, K, series_templ>
 {
 public:
@@ -32,25 +32,22 @@ public:
    * @param order The order of transformation.
    * @return The partial sum after the transformation.
    */
-	T operator()(const K n, const int order) const;
+	T operator()(const K n, const K order) const;
 };
 
-template <typename T, typename K, typename series_templ>
+template <std::floating_point T, std::unsigned_integral K, typename series_templ>
 shanks_transform<T, K, series_templ>::shanks_transform(const series_templ& series) : series_acceleration<T, K, series_templ>(series) {}
 
-template <typename T, typename K, typename series_templ>
-T shanks_transform<T, K, series_templ>::operator()(const K n, const int order) const
+template <std::floating_point T, std::unsigned_integral K, typename series_templ>
+T shanks_transform<T, K, series_templ>::operator()(const K n, const K order) const
 {
-	if (n < 0) [[unlikely]]
-		throw std::domain_error("negative integer in the input");
-
 	if (order == 0) [[unlikely]] /*it is convenient to assume that transformation of order 0 is no transformation at all*/
 		return this->series->S_n(n);
 
 	if (n < order || n == 0) [[unlikely]]
 		return DEF_UNDEFINED_SUM;
 
-	if (order == 1) [[unlikely]]
+	if (order == 1) [[unlikely]] 
 	{
 		T a_n, a_n_plus_1, tmp;
 
@@ -65,14 +62,18 @@ T shanks_transform<T, K, series_templ>::operator()(const K n, const int order) c
 	}
 	//n > order >= 1
 
-	std::vector<T> T_n(n + order, 0);
+	//TODO спросить у Парфенова, ибо жертвуем читаемостью кода, ради его небольшого ускорения
+	const K n_minus_order = n - order;
+	const K n_plus_order = n + order;
+
+	std::vector<T> T_n(n_plus_order, 0);
 
 	T a_n, a_n_plus_1, tmp;
-	a_n = this->series->operator()(n - order);
-	a_n_plus_1 = this->series->operator()(n - order + 1);
+	a_n = this->series->operator()(n_minus_order);
+	a_n_plus_1 = this->series->operator()(n_minus_order + 1);
 	tmp = -a_n_plus_1 * a_n_plus_1;
 
-	for (K i = n - order + 1; i <= n + order - 1; ++i) // if we got to this branch then we know that n >= order - see previous branches  int -> K
+	for (K i = n_minus_order + 1; i <= n_plus_order - 1; ++i) // if we got to this branch then we know that n >= order - see previous branches  int -> K
 	{
 		a_n = this->series->operator()(i);
 		a_n_plus_1 = this->series->operator()(i + 1);
@@ -83,10 +84,8 @@ T shanks_transform<T, K, series_templ>::operator()(const K n, const int order) c
 	}
 	std::vector<T> T_n_plus_1(n + order, 0);
 	T a, b, c;
-	for (int j = 2; j <= order; ++j)
-	{
-		for (K i = n - order + j; i <= n + order - j; ++i) // int -> K 
-		{
+	for (K j = 2; j <= order; ++j) {
+		for (K i = n_minus_order + j; i <= n_plus_order - j; ++i) { // int -> K
 			a = T_n[i];
 			b = T_n[i - 1];
 			c = T_n[i + 1];
@@ -108,7 +107,7 @@ T shanks_transform<T, K, series_templ>::operator()(const K n, const int order) c
 * @brief Shanks transformation for alternating series class.
 * @tparam T The type of the elements in the series, K The type of enumerating integer, series_templ is the type of series whose convergence we accelerate
 */
-template <typename T, typename K, typename series_templ>
+template <std::floating_point T, std::unsigned_integral K, typename series_templ>
 class shanks_transform_alternating : public series_acceleration<T, K, series_templ>
 {
 public:
@@ -127,18 +126,14 @@ public:
    * @param order The order of transformation.
    * @return The partial sum after the transformation.
    */
-	T operator()(const K n, const int order) const;
+	T operator()(const K n, const K order) const;
 };
 
-template <typename T, typename K, typename series_templ>
+template <std::floating_point T, std::unsigned_integral K, typename series_templ>
 shanks_transform_alternating<T, K, series_templ>::shanks_transform_alternating(const series_templ& series) : series_acceleration<T, K, series_templ>(series) {}
 
-template <typename T, typename K, typename series_templ>
-T shanks_transform_alternating<T, K, series_templ>::operator()(const K n, const int order) const
-{
-	if (n < 0) [[unlikely]]
-		throw std::domain_error("negative integer in the input");
-
+template <std::floating_point T, std::unsigned_integral K, typename series_templ>
+T shanks_transform_alternating<T, K, series_templ>::operator()(const K n, const K order) const {
 	if (order == 0) [[unlikely]] /*it is convenient to assume that transformation of order 0 is no transformation at all*/
 		return this->series->S_n(n);
 
@@ -157,12 +152,18 @@ T shanks_transform_alternating<T, K, series_templ>::operator()(const K n, const 
 		return result;
 	}
 	//n > order >= 1
-	std::vector<T> T_n(n + order, 0);
+
+	//TODO спросить у Парфенова, ибо жертвуем читаемостью кода, ради его небольшого ускорения
+	const K n_minus_order = n - order;
+	const K n_minus_order1 = n_minus_order + 1;
+	const K n_plus_order = n + order;
+
+	std::vector<T> T_n(n_plus_order, 0);
 
 	T a_n, a_n_plus_1;
-	a_n = this->series->operator()(n - order);
-	a_n_plus_1 = this->series->operator()(n - order + 1);
-	for (K i = n - order + 1; i <= n + order - 1; ++i) // if we got to this branch then we know that n >= order - see previous branches int->K
+	a_n = this->series->operator()(n_minus_order);
+	a_n_plus_1 = this->series->operator()(n_minus_order1);
+	for (K i = n_minus_order1; i <= n_plus_order - 1; ++i) // if we got to this branch then we know that n >= order - see previous branches int->K
 	{
 		a_n = this->series->operator()(i);
 		a_n_plus_1 = this->series->operator()(i + 1);
@@ -170,12 +171,10 @@ T shanks_transform_alternating<T, K, series_templ>::operator()(const K n, const 
 		// formula [6]
 		T_n[i] = std::fma(a_n * a_n_plus_1, 1 / (a_n - a_n_plus_1), this->series->S_n(n));
 	}
-	std::vector<T> T_n_plus_1(n + order, 0);
+	std::vector<T> T_n_plus_1(n_plus_order, 0);
 	T a, b, c;
-	for (int j = 2; j <= order; ++j)
-	{
-		for (K i = n - order + j; i <= n + order - j; ++i) // int -> K
-		{
+	for (K j = 2; j <= order; ++j) {
+		for (K i = n_minus_order + j; i <= n_plus_order - j; ++i) { // int -> K
 			a = T_n[i];
 			b = T_n[i - 1];
 			c = T_n[i + 1];

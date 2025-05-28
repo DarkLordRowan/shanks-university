@@ -8,6 +8,7 @@
 #define DEF_UNDEFINED_SUM 0
 
 #include "series_acceleration.h" // Include the series header
+#include <memory> // For std::unique_ptr
 
  /**
   * @brief Rho Wynn Algorithm class template.
@@ -15,32 +16,30 @@
   * @tparam K The type of enumerating integer
   * @tparam series_templ is the type of series whose convergence we accelerate
   */
-template <typename T, typename K, typename series_templ>
+template <std::floating_point T, std::unsigned_integral K, typename series_templ>
 class rho_Wynn_algorithm : public series_acceleration<T, K, series_templ>
 {
 protected:
-	const numerator_base<T, K>* numerator_func;
+	std::unique_ptr<const numerator_base<T, K>> numerator_func;
 	const T gamma;
 	const T RHO;
 
-	T calculate(const K n, int order) const { //const int order
-		if (order & 1) {
+	T calculate(const K n, K order) const { //const int order
+		if (order & 1) { // is order odd
 			++order;
 			throw std::domain_error("order should be even number");
 		}
 
-		if (n < 0 || order < 0)
-			throw std::domain_error("negative integer in the input");
-
 		if (order == 0)
 			return this->series->S_n(n);
 
-		T S_n = this->series->S_n(n);
+		const T S_n = this->series->S_n(n);
 
-		int order_1 = order - 1;
+		//TODO спросить у Парфенова, ибо жертвуем читаемостью кода, ради его небольшого ускорения
+		const K order1 = order - 1;
 
-		T res = recursive_calculate_body(n, order_1 - 1, S_n, 1) + (numerator_func->operator()(n, order, this->series, gamma, RHO));
-		res /= (recursive_calculate_body(n, order_1, S_n, 1) - recursive_calculate_body(n, order_1, S_n, 0));
+		const T res = (recursive_calculate_body(n, order1 - 1, S_n, 1) + numerator_func->operator()(n, order, this->series, gamma, RHO)) / 
+			(recursive_calculate_body(n, order1, S_n, 1) - recursive_calculate_body(n, order1, S_n, 0));
 
 		if (!std::isfinite(res))
 			throw std::overflow_error("division by zero");
@@ -48,7 +47,7 @@ protected:
 		return res;
 	}
 
-	T recursive_calculate_body(const K n, const int order, T S_n, const K j) const {
+	T recursive_calculate_body(const K n, const K order, T S_n, const K j) const {
 		/**
 		* S_n - previous sum;
 		* j - adjusts n: (n + j);
@@ -60,11 +59,13 @@ protected:
 		if (order == -1)
 			return 0;
 
-		int order_1 = order - 1;
-		K n_j = n + j;
+		//TODO спросить у Парфенова, ибо жертвуем читаемостью кода, ради его небольшого ускорения
+		const K order1 = order - 1;
+		const K nj = n + j;
 
-		T res = recursive_calculate_body(n_j, order_1 - 1, S_n, 1) + (numerator_func->operator()(n_j, order, this->series, gamma, RHO));
-		res /= (recursive_calculate_body(n_j, order_1, S_n, 1) - recursive_calculate_body(n_j, order_1, S_n, 0));
+		const T res = (recursive_calculate_body(nj, order1 - 1, S_n, 1) + numerator_func->operator()(nj, order, this->series, gamma, RHO)) /
+			(recursive_calculate_body(nj, order1, S_n, 1) - recursive_calculate_body(nj, order1, S_n, 0));
+
 		if (!std::isfinite(res))
 			throw std::overflow_error("division by zero");
 
@@ -80,10 +81,8 @@ public:
 			throw std::domain_error("null poniter numerator function");
 	}
 
-	~rho_Wynn_algorithm() {
-		if (numerator_func != nullptr)
-			delete numerator_func;
-	}
+	//Default destructor is sufficient since unique_ptr handles deletion
+
 	/**
      * @brief Rho Wynn algorithm.я
      * Computes the partial sum after the transformation using the Rho Wynn Algorithm.
@@ -92,8 +91,24 @@ public:
      * @param order The order of transformation.
      * @return The partial sum after the transformation.
      */
-	T operator()(const K n, const int order) const
-	{
+	T operator()(const K n, const K order) const {
 		return calculate(n, order);
+	}
+
+	/**
+	 * @brief Compute transformed partial sum (extended version for arbitrary precision)
+	 * @tparam BigK Type for term count (auto-deduced)
+	 * @tparam BigOrder Type for order (auto-deduced)
+	 * @param n Number of terms (passed by reference for large types)
+	 * @param order Transformation order (must be even, passed by reference)
+	 * @return The accelerated partial sum
+	 * @throws std::domain_error for invalid arguments
+	 * @throws std::overflow_error for division by zero
+	 */
+
+	template <typename BigK, typename BigOrder, typename = std::enable_if_t<!std::is_same_v<BigK, K> || !std::is_same_v<BigOrder, K>>> T operator()(const BigK& n, const BigOrder& order) const {
+		static_assert(std::is_constructible_v<K, BigK>, "Term count type must be convertible to K");
+
+		return calculate_impl(static_cast<K>(n), static_cast<int>(order));
 	}
 };

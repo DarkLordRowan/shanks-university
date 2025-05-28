@@ -192,6 +192,22 @@ enum test_function_id_t {
 };
 
 /**
+ * @brief safely reads and validates unsigned integral input
+ * @authors Maximov A.K.
+ */
+
+template <std::unsigned_integral K>
+K read_input() {
+	long long input;
+	std::cin >> input;
+
+	if (input < 0) 
+		throw std::domain_error("Negative value in the input!");
+
+	return static_cast<K>(input); // ���������� ��������������
+}
+
+/**
 * @brief prints out all available series for testing
 * @authors Bolshakov M.P.
 * @edited by Kreynin R.G.
@@ -362,7 +378,7 @@ inline static void print_test_function_info()
 * @authors Naumov A.
 * @edited by Yurov P.
 */
-template<typename T, typename K, typename series_templ>
+template<std::floating_point T, std::unsigned_integral K, typename series_templ>
 inline void init_levin(transformation_id_t id, std::unique_ptr<series_base<T, K>>& series, std::unique_ptr<series_acceleration<T, K, series_templ>>& transform)
 {
 	bool recursive = false;
@@ -442,11 +458,10 @@ inline void init_levin(transformation_id_t id, std::unique_ptr<series_base<T, K>
 * @brief initialize rho-WynnType transformations, usable for basic, Gamma, Gamma-Rho
 * @authors Yurov P.
 */
-template<typename T, typename K, typename series_templ>
+template<std::floating_point T, std::unsigned_integral K, typename series_templ>
 inline void init_wynn(std::unique_ptr<series_base<T, K>>& series, std::unique_ptr<series_acceleration<T, K, series_templ>>& transform)
 {
-
-	int type;
+	K type;
 	bool standart = false;
 	T gamma = T{};	//parameter for gamma modification
 	T RHO = T{};	//parameter for gamma-rho modification
@@ -454,7 +469,7 @@ inline void init_wynn(std::unique_ptr<series_base<T, K>>& series, std::unique_pt
 	std::cout << '\n';
 	std::cout << "|------------------------------------------|" << '\n';
 	std::cout << "| choose transformation variant:           |" << '\n';
-	std::cout << "| classic (0), gamma (1), gamma-rho (2): "; std::cin >> type;
+	std::cout << "| classic (0), gamma (1), gamma-rho (2): "; type = read_input<K>();
 	std::cout << "|------------------------------------------|" << '\n';
 
 	switch (type) {
@@ -516,7 +531,7 @@ inline void init_wynn(std::unique_ptr<series_base<T, K>>& series, std::unique_pt
 * @brief initialize levin_recursion transformation
 * @authors Maximov A.K.
 */
-template<typename T, typename K, typename series_templ>
+template<std::floating_point T, std::unsigned_integral K, typename series_templ>
 inline void init_levin_recursion(std::unique_ptr<series_base<T, K>>& series, std::unique_ptr<series_acceleration<T, K, series_templ>>& transform)
 {
 	bool standart = false;
@@ -564,7 +579,7 @@ inline int get_cached_random(int i) {
 * @brief initialize epsilon_algorithm_3_id transformation
 * @authors Maximov A.K.
 */
-template<typename T, typename K, typename series_templ>
+template<std::floating_point T, std::unsigned_integral K, typename series_templ>
 inline void init_epsilon_3(std::unique_ptr<series_base<T, K>>& series, std::unique_ptr<series_acceleration<T, K, series_templ>>& transform)
 {
 
@@ -594,22 +609,21 @@ inline void init_epsilon_3(std::unique_ptr<series_base<T, K>>& series, std::uniq
 * @authors Bolshakov M.P
 * @edited by Kreynin R.G.
 */
-template <typename T, typename K>
+template <std::floating_point T, std::unsigned_integral K>
 inline static void main_testing_function()
 {
 
 	//choosing series
 	print_series_info();
 	std::unique_ptr<series_base<T, K>> series, series1;
-	int series_id = 0;
-	std::cin >> series_id;
+	K series_id = read_input<K>();
 	//choosing x
 	std::cout << "Enter x - the argument for the functional series" << '\n';
 	T x = 0;
 	std::cin >> x;
 
 	//choosing series (cont.)
-	std::set<int> alternating_series = { 2, 3, 7, 11, 15, 18, 19, 20, 21, 24, 26, 28, 30, 31 };
+	std::set<K> alternating_series = { 2, 3, 7, 11, 15, 18, 19, 20, 21, 24, 26, 28, 30, 31 };
 	switch (series_id)
 	{
 	case series_id_t::exp_series_id:
@@ -648,7 +662,7 @@ inline static void main_testing_function()
 	case series_id_t::xmb_Jb_two_series_id:
 		K b;
 		std::cout << "Enter the value for constant b for the series" << '\n';
-		std::cin >> b;
+		b = read_input<K>();
 		series.reset(new xmb_Jb_two_series<T, K>(x, b));
 		break;
 	case series_id_t::half_asin_two_x_series_id:
@@ -666,7 +680,7 @@ inline static void main_testing_function()
 	case series_id_t::m_fact_1mx_mp1_inverse_series_id:
 		K m;
 		std::cout << "Enter the value for constant m for the series" << '\n';
-		std::cin >> m;
+		m = read_input<K>();
 		series.reset(new m_fact_1mx_mp1_inverse_series<T, K>(x, m));
 		break;
 	case series_id_t::inverse_sqrt_1m4x_series_id:
@@ -679,37 +693,37 @@ inline static void main_testing_function()
 		series.reset(new x_twelfth_x2_pi2_series<T, K>(x));
 		break;
 	case series_id_t::ln2_series_id:
-		series.reset(new ln2_series<T, K>());
+		series.reset(new ln2_series<T, K>(x));
 		break;
 	case series_id_t::one_series_id:
-		series.reset(new one_series<T, K>());
+		series.reset(new one_series<T, K>(x));
 		break;
 	case series_id_t::minus_one_quarter_series_id:
-		series.reset(new minus_one_quarter_series<T, K>());
+		series.reset(new minus_one_quarter_series<T, K>(x));
 		break;
 	case series_id_t::pi_3_series_id:
-		series.reset(new pi_3_series<T, K>());
+		series.reset(new pi_3_series<T, K>(x));
 		break;
 	case series_id_t::pi_4_series_id:
-		series.reset(new pi_4_series<T, K>());
+		series.reset(new pi_4_series<T, K>(x));
 		break;
 	case series_id_t::pi_squared_6_minus_one_series_id:
-		series.reset(new pi_squared_6_minus_one_series<T, K>());
+		series.reset(new pi_squared_6_minus_one_series<T, K>(x));
 		break;
 	case series_id_t::three_minus_pi_series_id:
-		series.reset(new three_minus_pi_series<T, K>());
+		series.reset(new three_minus_pi_series<T, K>(x));
 		break;
 	case series_id_t::one_twelfth_series_id:
-		series.reset(new one_twelfth_series<T, K>());
+		series.reset(new one_twelfth_series<T, K>(x));
 		break;
 	case series_id_t::eighth_pi_m_one_third_series_id:
-		series.reset(new eighth_pi_m_one_third_series<T, K>());
+		series.reset(new eighth_pi_m_one_third_series<T, K>(x));
 		break;
 	case series_id_t::one_third_pi_squared_m_nine_series_id:
-		series.reset(new one_third_pi_squared_m_nine_series<T, K>());
+		series.reset(new one_third_pi_squared_m_nine_series<T, K>(x));
 		break;
 	case series_id_t::four_ln2_m_3_series_id:
-		series.reset(new four_ln2_m_3_series<T, K>());
+		series.reset(new four_ln2_m_3_series<T, K>(x));
 		break;
 	case series_id_t::exp_m_cos_x_sinsin_x_series_id:
 		series.reset(new exp_m_cos_x_sinsin_x_series<T, K>(x));
@@ -742,16 +756,16 @@ inline static void main_testing_function()
 		series.reset(new two_arcsin_square_x_halfed_series<T, K>(x));
 		break;
 	case series_id_t::pi_squared_twelve_series_id:
-		series.reset(new pi_squared_twelve_series<T, K>());
+		series.reset(new pi_squared_twelve_series<T, K>(x));
 		break;
 	case series_id_t::pi_cubed_32_series_id:
-		series.reset(new pi_cubed_32_series<T, K>());
+		series.reset(new pi_cubed_32_series<T, K>(x));
 		break;
 	case series_id_t::minus_three_plus_ln3_three_devided_two_plus_two_ln2_series_id:
-		series.reset(new minus_three_plus_ln3_three_devided_two_plus_two_ln2_series<T, K>());
+		series.reset(new minus_three_plus_ln3_three_devided_two_plus_two_ln2_series<T, K>(x));
 		break;
 	case series_id_t::two_ln2_series_id:
-		series.reset(new two_ln2_series<T, K>());
+		series.reset(new two_ln2_series<T, K>(x));
 		break;
 	case series_id_t::pi_x_multi_e_xpi_plus_e_minusxpi_divided_e_xpi_minus_e_minusxpi_minus_one_series_id:
 		series.reset(new pi_x_multi_e_xpi_plus_e_minusxpi_divided_e_xpi_minus_e_minusxpi_minus_one_series<T, K>(x));
@@ -850,13 +864,13 @@ inline static void main_testing_function()
 		series.reset(new Incomplete_Gamma_func_series<T, K>(x, s));
 		break;
 	case series_id_t::Series_with_ln_number1_id:
-		series.reset(new Series_with_ln_number1<T, K>());
+		series.reset(new Series_with_ln_number1<T, K>(x));
 		break;
 	case series_id_t::Series_with_ln_number2_id:
-		series.reset(new Series_with_ln_number2<T, K>());
+		series.reset(new Series_with_ln_number2<T, K>(x));
 		break;
 	case series_id_t::pi_series_id:
-		series.reset(new pi_series<T, K>());
+		series.reset(new pi_series<T, K>(x));
 		break;
 	case series_id_t::x_min_sqrt_x_series_id:
 		series.reset(new x_min_sqrt_x_series<T, K>(x));
@@ -904,7 +918,7 @@ inline static void main_testing_function()
 		series.reset(new sqrt_1plusx_min_1_min_x_div_2_series<T, K>(x));
 		break;
 	case series_id_t::ln13_min_ln7_div_7_series_id:
-		series.reset(new ln13_min_ln7_div_7_series<T, K>());
+		series.reset(new ln13_min_ln7_div_7_series<T, K>(x));
 		break;
 	case series_id_t::Ja_x_series_id:
 		T a;
@@ -946,7 +960,7 @@ inline static void main_testing_function()
 
 		switch (series_id_1)
 		{
-		case series_id_t::exp_series_id:
+			case series_id_t::exp_series_id:
 			series1.reset(new exp_series<T, K>(x));
 			break;
 		case series_id_t::cos_series_id:
@@ -963,7 +977,7 @@ inline static void main_testing_function()
 			break;
 		case series_id_t::bin_series_id:
 			T alpha;
-			std::cout << "Enter the value for constant alpha for the series" << std::endl;
+			std::cout << "Enter the value for constant alpha for the series" << '\n';
 			std::cin >> alpha;
 			series1.reset(new bin_series<T, K>(x, alpha));
 			break;
@@ -980,11 +994,11 @@ inline static void main_testing_function()
 			series1.reset(new exp_squared_erf_series<T, K>(x));
 			break;
 		case series_id_t::xmb_Jb_two_series_id:
-			K  b;
-			std::cout << "Enter the value for constant b for the series" << std::endl;
-			std::cin >> b;
+			K b;
+			std::cout << "Enter the value for constant b for the series" << '\n';
+			b = read_input<K>();
 			series1.reset(new xmb_Jb_two_series<T, K>(x, b));
-			break; 
+			break;
 		case series_id_t::half_asin_two_x_series_id:
 			series1.reset(new half_asin_two_x_series<T, K>(x));
 			break;
@@ -999,51 +1013,51 @@ inline static void main_testing_function()
 			break;
 		case series_id_t::m_fact_1mx_mp1_inverse_series_id:
 			K m;
-			std::cout << "Enter the value for constant m for the series" << std::endl;
-			std::cin >> m;
+			std::cout << "Enter the value for constant m for the series" << '\n';
+			m = read_input<K>();
 			series1.reset(new m_fact_1mx_mp1_inverse_series<T, K>(x, m));
-			break; 
+			break;
 		case series_id_t::inverse_sqrt_1m4x_series_id:
 			series1.reset(new inverse_sqrt_1m4x_series<T, K>(x));
 			break;
 		case series_id_t::one_twelfth_3x2_pi2_series_id:
 			series1.reset(new one_twelfth_3x2_pi2_series<T, K>(x));
-			break; 
+			break;
 		case series_id_t::x_twelfth_x2_pi2_series_id:
 			series1.reset(new x_twelfth_x2_pi2_series<T, K>(x));
 			break;
 		case series_id_t::ln2_series_id:
-			series1.reset(new ln2_series<T, K>());
+			series1.reset(new ln2_series<T, K>(x));
 			break;
 		case series_id_t::one_series_id:
-			series1.reset(new one_series<T, K>());
+			series1.reset(new one_series<T, K>(x));
 			break;
 		case series_id_t::minus_one_quarter_series_id:
-			series1.reset(new minus_one_quarter_series<T, K>());
+			series1.reset(new minus_one_quarter_series<T, K>(x));
 			break;
 		case series_id_t::pi_3_series_id:
-			series1.reset(new pi_3_series<T, K>());
+			series1.reset(new pi_3_series<T, K>(x));
 			break;
 		case series_id_t::pi_4_series_id:
-			series1.reset(new pi_4_series<T, K>());
+			series1.reset(new pi_4_series<T, K>(x));
 			break;
 		case series_id_t::pi_squared_6_minus_one_series_id:
-			series1.reset(new pi_squared_6_minus_one_series<T, K>());
+			series1.reset(new pi_squared_6_minus_one_series<T, K>(x));
 			break;
 		case series_id_t::three_minus_pi_series_id:
-			series1.reset(new three_minus_pi_series<T, K>());
+			series1.reset(new three_minus_pi_series<T, K>(x));
 			break;
 		case series_id_t::one_twelfth_series_id:
-			series1.reset(new one_twelfth_series<T, K>());
+			series1.reset(new one_twelfth_series<T, K>(x));
 			break;
 		case series_id_t::eighth_pi_m_one_third_series_id:
-			series1.reset(new eighth_pi_m_one_third_series<T, K>());
+			series1.reset(new eighth_pi_m_one_third_series<T, K>(x));
 			break;
 		case series_id_t::one_third_pi_squared_m_nine_series_id:
-			series1.reset(new one_third_pi_squared_m_nine_series<T, K>());
+			series1.reset(new one_third_pi_squared_m_nine_series<T, K>(x));
 			break;
 		case series_id_t::four_ln2_m_3_series_id:
-			series1.reset(new four_ln2_m_3_series<T, K>());
+			series1.reset(new four_ln2_m_3_series<T, K>(x));
 			break;
 		case series_id_t::exp_m_cos_x_sinsin_x_series_id:
 			series1.reset(new exp_m_cos_x_sinsin_x_series<T, K>(x));
@@ -1076,125 +1090,125 @@ inline static void main_testing_function()
 			series1.reset(new two_arcsin_square_x_halfed_series<T, K>(x));
 			break;
 		case series_id_t::pi_squared_twelve_series_id:
-			series1.reset(new pi_squared_twelve_series<T, K>());
+			series1.reset(new pi_squared_twelve_series<T, K>(x));
 			break;
 		case series_id_t::pi_cubed_32_series_id:
-			series1.reset(new pi_cubed_32_series<T, K>());
-			break; 
+			series1.reset(new pi_cubed_32_series<T, K>(x));
+			break;
 		case series_id_t::minus_three_plus_ln3_three_devided_two_plus_two_ln2_series_id:
-			series1.reset(new minus_three_plus_ln3_three_devided_two_plus_two_ln2_series<T, K>());
-			break; 
+			series1.reset(new minus_three_plus_ln3_three_devided_two_plus_two_ln2_series<T, K>(x));
+			break;
 		case series_id_t::two_ln2_series_id:
-			series1.reset(new two_ln2_series<T, K>());
-			break; 
+			series1.reset(new two_ln2_series<T, K>(x));
+			break;
 		case series_id_t::pi_x_multi_e_xpi_plus_e_minusxpi_divided_e_xpi_minus_e_minusxpi_minus_one_series_id:
 			series1.reset(new pi_x_multi_e_xpi_plus_e_minusxpi_divided_e_xpi_minus_e_minusxpi_minus_one_series<T, K>(x));
-			break; 
+			break;
 		case series_id_t::pi_minus_x_2_id:
 			series1.reset(new pi_minus_x_2<T, K>(x));
-			break; 
+			break;
 		case series_id_t::half_multi_ln_1div2multi1minuscosx_id:
 			series1.reset(new half_multi_ln_1div2multi1minuscosx<T, K>(x));
-			break; 
+			break;
 		case series_id_t::half_minus_sinx_multi_pi_4_id:
 			series1.reset(new half_minus_sinx_multi_pi_4<T, K>(x));
-			break; 
+			break;
 		case series_id_t::ln_1plussqrt1plusxsquare_minus_ln_2_id:
 			series1.reset(new ln_1plussqrt1plusxsquare_minus_ln_2<T, K>(x));
-			break; 
+			break;
 		case series_id_t::ln_cosx_id:
 			series1.reset(new ln_cosx<T, K>(x));
-			break; 
+			break;
 		case series_id_t::ln_sinx_minus_ln_x_id:
 			series1.reset(new ln_sinx_minus_ln_x<T, K>(x));
-			break; 
+			break;
 		case series_id_t::pi_8_cosx_square_minus_1_div_3_cosx_id:
 			series1.reset(new pi_8_cosx_square_minus_1_div_3_cosx<T, K>(x));
-			break; 
+			break;
 		case series_id_t::sqrt_oneminussqrtoneminusx_div_x_id:
 			series1.reset(new sqrt_oneminussqrtoneminusx_div_x<T, K>(x));
-			break; 
+			break;
 		case series_id_t::one_minus_sqrt_1minus4x_div_2x_id:
 			series1.reset(new one_minus_sqrt_1minus4x_div_2x<T, K>(x));
-			break; 
+			break;
 		case series_id_t::arcsin_x_minus_x_series_id:
 			series1.reset(new arcsin_x_minus_x_series<T, K>(x));
-			break; 
+			break;
 		case series_id_t::pi_x_minus_x_square_and_x_square_minus_three_pi_x_plus_two_pi_square_series_id:
 			series1.reset(new pi_x_minus_x_square_and_x_square_minus_three_pi_x_plus_two_pi_square_series<T, K>(x));
-			break; 
+			break;
 		case series_id_t::abs_sin_x_minus_2_div_pi_series_id:
 			series1.reset(new abs_sin_x_minus_2_div_pi_series<T, K>(x));
-			break; 
+			break;
 		case series_id_t::pi_minus_3pi_4_and_pi_minus_x_minus_3pi_4_series_id:
 			series1.reset(new pi_minus_3pi_4_and_pi_minus_x_minus_3pi_4_series<T, K>(x));
-			break; 
+			break;
 		case series_id_t::minus_3_div_4_or_x_minus_3_div_4_series_id:
 			series1.reset(new minus_3_div_4_or_x_minus_3_div_4_series<T, K>(x));
-			break; 
+			break;
 		case series_id_t::ten_minus_x_series_id:
 			series1.reset(new ten_minus_x_series<T, K>(x));
-			break; 
+			break;
 		case series_id_t::x_series_id:
 			series1.reset(new x_series<T, K>(x));
-			break; 
+			break;
 		case series_id_t::minus_x_minus_pi_4_or_minus_pi_4_series_id:
 			series1.reset(new minus_x_minus_pi_4_or_minus_pi_4_series<T, K>(x));
-			break; 
+			break;
 		case series_id_t::one_div_two_minus_x_multi_three_plus_x_series_id:
 			series1.reset(new one_div_two_minus_x_multi_three_plus_x_series<T, K>(x));
-			break; 
+			break;
 		case series_id_t::Si_x_series_id:
 			series1.reset(new Si_x_series<T, K>(x));
-			break; 
+			break;
 		case series_id_t::Ci_x_series_id:
 			series1.reset(new Ci_x_series<T, K>(x));
 			break;
 		case series_id_t::Riemann_zeta_func_series_id:
 			series1.reset(new Riemann_zeta_func_series<T, K>(x));
-			break; 
+			break;
 		case series_id_t::Riemann_zeta_func_xmin1_div_Riemann_zeta_func_x_series_id:
 			series1.reset(new Riemann_zeta_func_xmin1_div_Riemann_zeta_func_x_series<T, K>(x));
-			break; 
+			break;
 		case series_id_t::xsquareplus3_div_xsquareplus2multix_minus_1_series_id:
 			series1.reset(new xsquareplus3_div_xsquareplus2multix_minus_1_series<T, K>(x));
-			break; 
+			break;
 		case series_id_t::arcsin_x_series_id:
 			series1.reset(new arcsin_x_series<T, K>(x));
-			break; 
+			break;
 		case series_id_t::arctg_x_series_id:
 			series1.reset(new arctg_x_series<T, K>(x));
-			break; 
+			break;
 		case series_id_t::K_x_series_id:
 			series1.reset(new K_x_series<T, K>(x));
-			break; 
+			break;
 		case series_id_t::E_x_series_id:
 			series1.reset(new E_x_series<T, K>(x));
-			break; 
+			break;
 		case series_id_t::sqrt_1plusx_series_id:
 			series1.reset(new sqrt_1plusx_series<T, K>(x));
-			break; 
+			break;
 		case series_id_t::Lambert_W_func_series_id:
 			series1.reset(new Lambert_W_func_series<T, K>(x));
-			break; 
+			break;
 		case series_id_t::Incomplete_Gamma_func_series_id:
 			T s;
-			std::cout << "Enter the value for constant s for the series" << std::endl;
+			std::cout << "Enter the value for constant s for the series" << '\n';
 			std::cin >> s;
 			series1.reset(new Incomplete_Gamma_func_series<T, K>(x, s));
-			break; 
+			break;
 		case series_id_t::Series_with_ln_number1_id:
-			series1.reset(new Series_with_ln_number1<T, K>());
-			break; 
+			series1.reset(new Series_with_ln_number1<T, K>(x));
+			break;
 		case series_id_t::Series_with_ln_number2_id:
-			series1.reset(new Series_with_ln_number2<T, K>());
+			series1.reset(new Series_with_ln_number2<T, K>(x));
 			break;
 		case series_id_t::pi_series_id:
-			series1.reset(new pi_series<T, K>());
-			break; 
+			series1.reset(new pi_series<T, K>(x));
+			break;
 		case series_id_t::x_min_sqrt_x_series_id:
 			series1.reset(new x_min_sqrt_x_series<T, K>(x));
-			break; 
+			break;
 		case series_id_t::arctan_x2_series_id:
 			series1.reset(new arctan_x2_series<T, K>(x));
 			break;
@@ -1230,25 +1244,25 @@ inline static void main_testing_function()
 			break;
 		case series_id_t::cos3xmin1_div_xsqare_series_id:
 			series1.reset(new cos3xmin1_div_xsqare_series<T, K>(x));
-			break; 
+			break;
 		case series_id_t::two_degree_x_series_id:
 			series1.reset(new two_degree_x_series<T, K>(x));
-			break; 
+			break;
 		case series_id_t::sqrt_1plusx_min_1_min_x_div_2_series_id:
 			series1.reset(new sqrt_1plusx_min_1_min_x_div_2_series<T, K>(x));
-			break; 
+			break;
 		case series_id_t::ln13_min_ln7_div_7_series_id:
-			series1.reset(new ln13_min_ln7_div_7_series<T, K>());
-			break; 
+			series1.reset(new ln13_min_ln7_div_7_series<T, K>(x));
+			break;
 		case series_id_t::Ja_x_series_id:
 			T a;
-			std::cout << "Enter the value for constant a for the series" << std::endl;
+			std::cout << "Enter the value for constant a for the series" << '\n';
 			std::cin >> a;
 			series1.reset(new Ja_x_series<T, K>(x, a));
-			break; 
+			break;
 		case series_id_t::one_div_sqrt2_sin_xdivsqrt2_series_id:
 			series1.reset(new one_div_sqrt2_sin_xdivsqrt2_series<T, K>(x));
-			break; 
+			break;
 		case series_id_t::ln_1plusx_div_1plusx2_id:
 			series1.reset(new ln_1plusx_div_1plusx2<T, K>(x));
 			break;
@@ -1266,7 +1280,7 @@ inline static void main_testing_function()
 			break;
 		case series_id_t::gamma_series_id:
 			T t;
-			std::cout << "Enter the parameter t in the gamma series" << std::endl;
+			std::cout << "Enter the parameter t in the gamma series" << '\n';
 			std::cin >> t;
 			series1.reset(new gamma_series<T, K>(t, x));
 			break;
@@ -1282,8 +1296,7 @@ inline static void main_testing_function()
 
 	//choosing transformation
 	print_transformation_info();
-	int transformation_id = 0;
-	std::cin >> transformation_id;
+	K transformation_id = read_input<K>();
 	std::unique_ptr<series_acceleration<T, K, decltype(series.get())>> transform;
 	switch (transformation_id)
 	{
@@ -1369,12 +1382,10 @@ inline static void main_testing_function()
 	T epsilon_algorithm_3 = T{};			//parameter for levin_recursion algorithm
 
 	print_test_function_info();
-	int function_id = 0;
-	std::cin >> function_id;
-	int n = 0;
-	int order = 0;
+	K function_id = read_input<K>();
 	std::cout << "Enter n and order:" << '\n';
-	std::cin >> n >> order;
+	K n = read_input<K>();
+	K order = read_input<K>();
 
 	if(dynamic_cast<ford_sidi_algorithm_three<T, K, decltype(series.get())>*>(transform.get())) {
 		transform.reset(new ford_sidi_algorithm_three<T, K, decltype(series.get())>(series.get(), n));
@@ -1393,9 +1404,8 @@ inline static void main_testing_function()
 		break;
 	case test_function_id_t::cmp_transformations_id:
 	{
-		int cmop_transformation_id = 0;
 		print_transformation_info();
-		std::cin >> cmop_transformation_id;
+		K cmop_transformation_id = read_input<K>();;
 
 		std::unique_ptr<series_acceleration<T, K, decltype(series.get())>> transform2;
 
@@ -1473,6 +1483,7 @@ inline static void main_testing_function()
 		}
 
 		cmp_transformations(n, order, std::move(series.get()), std::move(transform.get()), std::move(transform2.get()));
+		break;
 	}
 	case test_function_id_t::eval_transform_time_id:
 		eval_transform_time(n, order, std::move(series.get()), std::move(transform.get()));
@@ -1561,7 +1572,7 @@ inline static void main_testing_function()
 		}
 		else epsilon_algorithm_3 = T(1e-3);
 
-		for (int i = 1; i <= n; i++)
+		for (K i = 1; i <= n; i++)
 		{
 			print_sum(i, std::move(series.get()));
 
@@ -1570,6 +1581,7 @@ inline static void main_testing_function()
 				transform.reset(new shanks_transform_alternating<T, K, decltype(series.get())>(series.get()));
 			else
 				transform.reset(new shanks_transform<T, K, decltype(series.get())>(series.get()));
+			
 			print_transform(i, order, std::move(transform.get()));
 
 			//epsilon v-1

@@ -9,7 +9,7 @@
 #include "series_acceleration.h" // Include the series header
 #include <iostream>
 
-template<typename T, typename K, typename series_templ>
+template<std::floating_point T, std::unsigned_integral K, typename series_templ>
 class weniger_algorithm : public series_acceleration<T, K, series_templ>
 {
 protected:
@@ -42,7 +42,7 @@ public:
 	* @return The partial sum after the transformation.
 	*/
 
-	T operator()(const K n, const int order) const {
+	T operator()(const K n, const K order) const {
 
 		T numerator = T(0), denominator = T(0);
 		T a_n, rest;
@@ -54,26 +54,29 @@ public:
 
 		T rest_a_n;
 
-		for (int m = 0; m < order - 1; ++m) 
+		for (K m = 0; m < order - 1; ++m) 
 			coef *= (1 + m);
 		
+		//TODO спросить у Парфенова, ибо жертвуем читаемостью кода, ради его небольшого ускорения
+		K j1;
 
-		for (int j = 0; j <= order; ++j) {
+		for (K j = 0; j <= order; ++j) {
+			j1 = j + 1;
 
-			rest = this->series->minus_one_raised_to_power_n(j)* binomial_coef;
-			binomial_coef *= (order - j) / (j + 1);
+			rest = this->series->minus_one_raised_to_power_n(j) * binomial_coef;
+			binomial_coef *= (order - j) / j1;
 
 			rest *= coef;
 
-			coef *= (j + order) / (1 + j);
+			coef *= (j + order) / j1;
 
-			a_n = 1 / this->series->operator()(j + 1);
+			a_n = 1 / this->series->operator()(j1);
 
 			rest_a_n = rest * a_n;
 
 			numerator += rest_a_n * S_n;
 
-			S_n += this->series->operator()(j + 1);
+			S_n += this->series->operator()(j1);
 
 			denominator += rest_a_n;
 
