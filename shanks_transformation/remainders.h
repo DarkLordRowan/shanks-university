@@ -40,7 +40,7 @@
 * @brief Abstract class for remainder
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template<typename T, typename K>
+template<std::floating_point T, std::unsigned_integral K>
 class transform_base {
 public:
 
@@ -52,7 +52,7 @@ public:
    * @param scale The value to multiple (needed for u variant)
    * @return The partial sum after the transformation.
    */
-	virtual T operator()(const K& n, const K& j, const series_base<T, K>* series, T scale = T(1)) const = 0;
+	virtual T operator()(const K n, const K j, const series_base<T, K>* series, const T scale = T(1)) const = 0;
 };
 
 
@@ -60,7 +60,7 @@ public:
 * @brief Class for u variant of remainder
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template<typename T, typename K>
+template<std::floating_point T, std::unsigned_integral K>
 class u_transform : public transform_base<T, K> {
 public:
 	
@@ -74,8 +74,8 @@ public:
    * @return The partial sum after the transformation.
    */
 
-	T operator()(const K& n, const K& j, const series_base<T, K>* series, T scale = T(1)) const {
-		T result = T(1) / (scale * series->operator()(n + j));
+	T operator()(const K n, const K j, const series_base<T, K>* series, const T scale = T(1)) const {
+		const T result = T(1) / scale / series->operator()(n + j);
 
 		if (!std::isfinite(result))
 			throw std::overflow_error("division by zero");
@@ -89,7 +89,7 @@ public:
 * @brief Class for t variant of remainder
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template<typename T, typename K>
+template<std::floating_point T, std::unsigned_integral K>
 class t_transform : public transform_base<T, K> {
 public:
 
@@ -103,8 +103,8 @@ public:
    * @return The partial sum after the transformation.
    */
 
-	T operator()(const K& n, const K& j, const series_base<T, K>* series, T scale = T(1)) const {
-		T result = T(1) / series->operator()(n + j);
+	T operator()(const K n, const K j, const series_base<T, K>* series, const T scale = T(1)) const {
+		const T result = T(1) / series->operator()(n + j);
 
 		if (!std::isfinite(result)) 
 			throw std::overflow_error("division by zero");
@@ -119,7 +119,7 @@ public:
 * @brief Class for t-wave variant of remainder
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template<typename T, typename K>
+template<std::floating_point T, std::unsigned_integral K>
 class d_transform : public transform_base<T, K> {
 public:
 
@@ -133,12 +133,12 @@ public:
    * @return The partial sum after the transformation.
    */
 
-	T operator()(const K& n, const K& j, const series_base<T, K>* series, T scale = T(1)) const {
-		T result =  1 / series->operator()(n + j + 1);
+	T operator()(const K n, const K j, const series_base<T, K>* series, const T scale = T(1)) const {
+		const T result = T(1) / series->operator()(n + j + 1);
 
 		if (!std::isfinite(result)) 
 			throw std::overflow_error("division by zero");
-
+		
 		return result;
 	}
 };
@@ -148,7 +148,7 @@ public:
 * @brief Class for v-wave variant of remainder
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template<typename T, typename K>
+template<std::floating_point T, std::unsigned_integral K>
 class v_transform : public transform_base<T, K> {
 public:
 
@@ -162,10 +162,11 @@ public:
    * @return The partial sum after the transformation.
    */
 
-	T operator()(const K& n, const K& j, const series_base<T, K>* series, T scale = T(1)) const {
-		T a1 = series->operator()(n + j);
-		T a2 = series->operator()(n + j + 1);
-		T result = (a2 - a1) / (a1 * a2);
+	T operator()(const K n, const K j, const series_base<T, K>* series, const T scale = T(1)) const {
+		const K nj = n + j;
+		const T a1 = series->operator()(nj);
+		const T a2 = series->operator()(nj + 1);
+		const T result = (a2 - a1) / (a1 * a2);
 
 		if (!std::isfinite(result)) 
 			throw std::overflow_error("division by zero");
@@ -178,7 +179,7 @@ public:
 * @brief Class for v-wave variant of remainder
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template<typename T, typename K>
+template<std::floating_point T, std::unsigned_integral K>
 class v_transform_2 : public transform_base<T, K> {
 public:
 
@@ -192,10 +193,11 @@ public:
    * @return The partial sum after the transformation.
    */
 
-	T operator()(const K& n, const K& j, const series_base<T, K>* series, T scale = T(1)) const {
-		T a1 = series->operator()(n + j);
-		T a2 = series->operator()(n + j + 1);
-		T result = (a1 - a2) / (a1 * a2);
+	T operator()(const K n, const K j, const series_base<T, K>* series, const T scale = T(1)) const {
+		const K nj = n + j;
+		const T a1 = series->operator()(nj);
+		const T a2 = series->operator()(nj + 1);
+		const T result = (a1 - a2) / (a1 * a2);
 
 		if (!std::isfinite(result)) 
 			throw std::overflow_error("division by zero");

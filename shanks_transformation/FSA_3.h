@@ -11,7 +11,7 @@
 #include <cmath>
 
 
-template <typename T, typename K, typename series_templ>
+template <std::floating_point T, std::unsigned_integral K, typename series_templ>
 class ford_sidi_algorithm_three : public series_acceleration<T, K, series_templ>{
 public:
 
@@ -27,7 +27,7 @@ public:
     * @param order The order of transformation.    
     * @return The partial sum after the transformation.
     */    
-    T operator()(const K n, const int k) const;
+    T operator()(const K n, const K k) const;
 
 protected:
     /** 
@@ -52,12 +52,11 @@ protected:
     mutable std::vector<T> G;
 };
 
-
-template <typename T, typename K, typename series_templ>
+template <std::floating_point T, std::unsigned_integral K, typename series_templ>
 ford_sidi_algorithm_three<T, K, series_templ>::ford_sidi_algorithm_three(const series_templ& series, K n) :series_acceleration<T, K, series_templ>(series), FSG(n + 2, std::vector<T>(n + 1, 0.0)), FSA(n + 1, 0.0), FSI(n + 1, 0.0), G(n + 2, 0.0), Nmax(n) {}
 
-template <typename T, typename K, typename series_templ>
-T ford_sidi_algorithm_three<T, K, series_templ>::operator()(const K n, const int order) const{
+template <std::floating_point T, std::unsigned_integral K, typename series_templ>
+T ford_sidi_algorithm_three<T, K, series_templ>::operator()(const K n, const K order) const{
 
     G[1] = this->series->operator()(n-1);
     
@@ -93,10 +92,13 @@ T ford_sidi_algorithm_three<T, K, series_templ>::operator()(const K n, const int
             FSG[i][MM] = (FSG[i][MM + 1] - FSG[i][MM]) / D;
         }
         FSA[MM] = (FSA[MM + 1] - FSA[MM]) / D;
-        FSI[MM] = (FSI[MM + 1] - FSI[MM]) / D;                                                                                         
-
+        FSI[MM] = (FSI[MM + 1] - FSI[MM]) / D;         
     }
-    return FSA[0] / FSI[0];
+
+    const T res = FSA[0] / FSI[0];
+
+    if (!std::isfinite(res))
+        throw std::overflow_error("division by zero");
+
+    return res;
 }
-
-

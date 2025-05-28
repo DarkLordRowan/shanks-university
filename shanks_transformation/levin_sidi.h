@@ -10,19 +10,19 @@
 #include <vector>
 #include <iostream>
 
-template<typename T, typename K, typename series_templ> class levi_sidi_algorithm;
+template<std::floating_point T, std::unsigned_integral K, typename series_templ> class levi_sidi_algorithm;
 
-template<typename T, typename K, typename series_templ> class u_levi_sidi_algorithm;
+template<std::floating_point T, std::unsigned_integral K, typename series_templ> class u_levi_sidi_algorithm;
 
-template<typename T, typename K, typename series_templ> class t_levi_sidi_algorithm;
+template<std::floating_point T, std::unsigned_integral K, typename series_templ> class t_levi_sidi_algorithm;
 
-template<typename T, typename K, typename series_templ> class v_levi_sidi_algorithm;
+template<std::floating_point T, std::unsigned_integral K, typename series_templ> class v_levi_sidi_algorithm;
 
-template<typename T, typename K, typename series_templ> class recursive_u_levi_sidi_algorithm;
+template<std::floating_point T, std::unsigned_integral K, typename series_templ> class recursive_u_levi_sidi_algorithm;
 
-template<typename T, typename K, typename series_templ> class recursive_t_levi_sidi_algorithm;
+template<std::floating_point T, std::unsigned_integral K, typename series_templ> class recursive_t_levi_sidi_algorithm;
 
-template<typename T, typename K, typename series_templ> class recursive_v_levi_sidi_algorithm;
+template<std::floating_point T, std::unsigned_integral K, typename series_templ> class recursive_v_levi_sidi_algorithm;
 
 class u_transform {
 private:
@@ -34,8 +34,8 @@ public:
 	*/
 	u_transform(const T beta_ = T(1)) : beta(beta_) {};
 
-	template<typename T, typename K>
-	T operator()(const int n, const int j, const series_base<T, K>* series) const {
+	template<std::floating_point T, std::unsigned_integral K>
+	T operator()(const K n, const K j, const series_base<T, K>* series) const {
 		return T(1) / ((beta + n) * series->operator()(n + j + 1));
 	}
 };
@@ -48,8 +48,8 @@ public:
 	*/
 	t_transform() {}
 
-	template<typename T, typename K>
-	T operator()(const int& n, const int& j, const series_base<T, K>* series) const {
+	template<std::floating_point T, std::unsigned_integral K>
+	T operator()(const K n, const int j, const series_base<T, K>* series) const {
 		return T(1) / series->operator()(n + j);
 	}
 };
@@ -62,14 +62,18 @@ public:
 	*/
 	v_transform() {}
 
-	template<typename T, typename K>
-	T operator()(const int n, const int j, const series_base<T, K>* series) const {
-		return (series->operator()(n + j + 1) - series->operator()(n + j)) /
-			(series->operator()(n + j + 1) * series->operator()(n + j));
+	template<std::floating_point T, std::unsigned_integral K>
+	T operator()(const K n, const K j, const series_base<T, K>* series) const {
+
+		//TODO спросить у Парфенова, ибо жертвуем читаемостью кода, ради его небольшого ускорения
+		const K n1 = n + j;
+		const K n2 = n1 + 1;
+		return (series->operator()(n2) - series->operator()(n1)) /
+			(series->operator()(n2) * series->operator()(n1));
 	}
 };
 
-template<typename T, typename K, typename series_templ>
+template<std::floating_point T, std::unsigned_integral K, typename series_templ>
 class levi_sidi_algorithm : public series_acceleration<T, K, series_templ>
 {
 protected:
@@ -87,10 +91,7 @@ protected:
 	const T beta;
 
 	template<class remainderType>
-	T calculate(const K k, const int n, remainderType remainder_func) const {
-		if (n < 0)
-			throw std::domain_error("negative integer in input");
-
+	T calculate(const K k, const K n, remainderType remainder_func) const {
 		if (beta <= 0)
 			throw std::domain_error("beta cannot be initiared by a negative number or a zero");
 
@@ -100,11 +101,11 @@ protected:
 
 		T a1, a2, a3;
 
-		for (int j = 0; j <= k; ++j) {
+		for (K j = 0; j <= k; ++j) {
 			rest = this->series->minus_one_raised_to_power_n(j) * this->series->binomial_coefficient(k, j);
 			up = down = T(1);
 			a1 = beta + n;
-			for (int m = 0; m < k - 1; ++m) {
+			for (K m = 0; m < k - 1; ++m) {
 				a2 = a1 + m;
 				up *= (a2 + j);
 				down *= (a2 + k);
@@ -135,38 +136,41 @@ protected:
 	* @return The partial sum after the transformation.
 	*/
 	template<class remainderType>
-	T calculate_recursively(const K k, const int n, remainderType remainder_func) const {
-
-		if (n < 0)
-			throw std::domain_error("negative integer in input");
-
+	T calculate_recursively(const K k, const K n, remainderType remainder_func) const {
 		if (beta <= 0)
 			throw std::domain_error("beta cannot be initiared by a negative number or a zero");
 
 		std::vector<T> N (k + 1,    0);
 		std::vector<T> D (N.size(), 0);
 
-		for (int i = 0; i < N.size(); ++i) {
-			D[i] = remainder_func(0, n + i, this->series);
-			N[i] = this->series->S_n(n + i) * D[i];
+
+		//TODO спросить у Парфенова, ибо жертвуем читаемостью кода, ради его небольшого ускорения
+		K n1;
+
+		for (K i = 0; i < N.size(); ++i) {
+			n1 = n + i;
+			D[i] = remainder_func(0, n1, this->series);
+			N[i] = this->series->S_n(n1) * D[i];
 		}
 
 		T a4, a5, a6, a7, scale1, scale2;
-		T j_1;
-		for (int i = 1; i <= k; ++i) {
+
+		//TODO спросить у Парфенова, ибо жертвуем читаемостью кода, ради его небольшого ускорения
+		T j1;
+		for (K i = 1; i <= k; ++i) {
 			a4 = beta + n + i;
 			a5 = a4 + i;
 	
-			for (int j = 0; j <= k - i; ++j) {
+			for (K j = 0; j <= k - i; ++j) {
 				a6 = a4 + j;
 				a7 = a5 + j;
 				scale1 = (a6 * (a6 - 1));
 				scale2 = (a7 * (a7 - 1));
 
-				j_1 = j + 1;
+				j1 = j + 1;
 
-				D[j] = D[j_1] - scale1 * (*D)[j] / scale2;
-				N[j] = N[j_1] - scale1 * (*N)[j] / scale2;
+				D[j] = fma(-scale1, (*D)[j] / scale2, D[j1]);
+				N[j] = fma(-scale1, (*N)[j] / scale2; N[j1]);
 			}
 		}
 		T numerator = N[0] / D[0];
@@ -204,7 +208,7 @@ public:
 	T operator()(const K k, const int n) const = 0
 };
 
-template <typename T, typename K, typename series_templ>
+template <std::floating_point T, std::unsigned_integral K, typename series_templ>
 class u_levi_sidi_algorithm : public levi_sidi_algorithm<T, K, series_templ>
 {
 public:
@@ -223,12 +227,12 @@ public:
 	* @param n The order of transformation.
 	* @return The partial sum after the transformation.
 	*/
-	T operator()(const K k, const int n) const {
+	T operator()(const K k, const K n) const {
 		return levi_sidi_algorithm<T, K, series_templ>::calculate(k, n, u_transform{});
 	}
 };
 
-template <typename T, typename K, typename series_templ>
+template <std::floating_point T, std::unsigned_integral K, typename series_templ>
 class t_levi_sidi_algorithm : public levi_sidi_algorithm<T, K, series_templ>
 {
 public:
@@ -247,12 +251,12 @@ public:
 	* @param n The order of transformation.
 	* @return The partial sum after the transformation.
 	*/
-	T operator()(const K k, const int n) const {
+	T operator()(const K k, const K n) const {
 		return levi_sidi_algorithm<T, K, series_templ>::calculate(k, n, t_transform{});
 	}
 };
 
-template <typename T, typename K, typename series_templ>
+template <std::floating_point T, std::unsigned_integral K, typename series_templ>
 class v_levi_sidi_algorithm : public levi_sidi_algorithm<T, K, series_templ>
 {
 public:
@@ -272,12 +276,12 @@ public:
 	* @param remainder is parametr to choose the form of a w_i
 	* @return The partial sum after the transformation.
 	*/
-	T operator()(const K k, const int n) const { 
+	T operator()(const K k, const K n) const { 
 		return levi_sidi_algorithm<T, K, series_templ>::calculate(k, n, v_transform{});
 	}
 };
 
-template <typename T, typename K, typename series_templ>
+template <std::floating_point T, std::unsigned_integral K, typename series_templ>
 class recursive_u_levi_sidi_algorithm : public levi_sidi_algorithm<T, K, series_templ>
 {
 public:
@@ -296,12 +300,12 @@ public:
 	* @param n The order of transformation.
 	* @return The partial sum after the transformation.
 	*/
-	T operator()(const K k, const int n) const { 
+	T operator()(const K k, const K n) const { 
 		return levi_sidi_algorithm<T, K, series_templ>::calculate_recursively(k, n, u_transform{});
 	}
 };
 
-template <typename T, typename K, typename series_templ>
+template <std::floating_point T, std::unsigned_integral K, typename series_templ>
 class recursive_t_levi_sidi_algorithm : public levi_sidi_algorithm<T, K, series_templ>
 {
 public:
@@ -320,12 +324,12 @@ public:
 	* @param n The order of transformation.
 	* @return The partial sum after the transformation.
 	*/
-	T operator()(const K k, const int n) const {
+	T operator()(const K k, const K n) const {
 		return levi_sidi_algorithm<T, K, series_templ>::calculate_recursively(k, n, t_transform{});
 	}
 };
 
-template <typename T, typename K, typename series_templ>
+template <std::floating_point T, std::unsigned_integral K, typename series_templ>
 class recursive_v_levi_sidi_algorithm : public levi_sidi_algorithm<T, K, series_templ>
 {
 public:
@@ -345,7 +349,7 @@ public:
 	* @param remainder is parametr to choose the form of a w_i
 	* @return The partial sum after the transformation.
 	*/
-	T operator()(const K k, const int n) const { 
+	T operator()(const K k, const K n) const { 
 		return levi_sidi_algorithm<T, K, series_templ>::calculate_recursively(k, n, v_transform{});
 	}
 };

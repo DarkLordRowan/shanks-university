@@ -12,7 +12,7 @@
  * @tparam K The type of enumerating integer
  */
 
-template<typename T, typename K>
+template<std::floating_point T, std::unsigned_integral K>
 class numerator_base {
 public:
 
@@ -25,7 +25,7 @@ public:
      * @param rho const for transformation	(	rho(gamma,rho)	)
      * @return The special numerator for transformation
      */
-	virtual T operator()(const K& n, const int& order, const series_base<T, K>* series, T gamma = T(1), T rho = T(0)) const = 0;
+	virtual T operator()(const K n, const K order, const series_base<T, K>* series, const T gamma = T(1), const T rho = T(0)) const = 0;
 
 };
 
@@ -33,7 +33,7 @@ public:
 * @brief Class for rho variant of numerator
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template<typename T, typename K>
+template<std::floating_point T, std::unsigned_integral K>
 class rho_transform : public numerator_base<T, K> {
 public:
 
@@ -48,7 +48,7 @@ public:
    * @return The special numerator for transformation
    */
 
-	T operator()(const K& n, const int& order, const series_base<T, K>* series, T gamma = T(1), T rho = T(0)) const {
+	T operator()(const K n, const K order, const series_base<T, K>* series, const T gamma = T(1), const T rho = T(0)) const {
 		return (series->operator()(n + order) - series->operator()(n));
 	}
 };
@@ -73,7 +73,7 @@ public:
    * @return The special numerator for transformation
    */
 
-	T operator()(const K& n, const int& order, const series_base<T, K>* series, T gamma = T(1), T rho = T(0)) const {
+	T operator()(const K n, const K order, const series_base<T, K>* series, const T gamma = T(1), const T rho = T(0)) const {
 		return (order - gamma - 1);
 	}
 };
@@ -83,7 +83,7 @@ public:
 * @brief Class for gamma-rho variant of numerator
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template<typename T, typename K>
+template<std::floating_point T, std::unsigned_integral K>
 class gamma_rho_transform : public numerator_base<T, K> {
 public:
 
@@ -99,7 +99,16 @@ public:
    * @return The special numerator for transformation
    */
 
-	T operator()(const K& n, const int& order, const series_base<T, K>* series, T gamma = T(1), T rho = T(0)) const {
-		return (-gamma + T(order/2)/rho + T(order%2));
+	T operator()(const K n, const K order, const series_base<T, K>* series, const T gamma = T(1), const T rho = T(0)) const {
+
+		// insight: order % 2 is the same order & 1
+		// if order is even:
+		// order % 2 = 0
+		// order & 1 = 0
+		// else order is odd:
+		// order % 2 = 1
+		// order & 1 = 1
+
+		return (-gamma + T(order / 2) / rho + T(order & 1));
 	}
 };

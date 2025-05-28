@@ -12,7 +12,7 @@
   * @tparam K Integer index type.
   * @tparam series_templ Series type to accelerate.
   */
-template <typename T, typename K, typename series_templ>
+template <std::floating_point T, std::unsigned_integral K, typename series_templ>
 class epsilon_modified_algorithm : public series_acceleration<T, K, series_templ>
 {
 public:
@@ -31,9 +31,9 @@ public:
 	 * @return The partial sum after the transformation.
 	 */
 
-	T operator()(const K n, const int order) const {
+	T operator()(const K n, const K order) const {
 
-		std::vector<std::vector<T>> eps(n, std::vector<T>(n, T(0)));
+		std::vector<std::vector<T>> eps(n, std::vector<T>(n, 0));
 
 		//std::vector<std::vector<T>> e(2, std::vector<T>(n, 0)); //2 vectors n length containing Epsilon table next and previous 
 
@@ -59,7 +59,3 @@ public:
 		return eps[n - 1][n - 1];
 	}
 };
-
-
-//template <typename T, typename K, typename series_templ>
-//epsilon_modified_algorithm<T, K, series_templ>::epsilon_modified_algorithm(const series_templ& series) : series_acceleration<T, K, series_templ>(series) {}

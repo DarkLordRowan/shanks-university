@@ -838,10 +838,10 @@ def main():
     function = "6"
     n = "10"
     order = "2"    
-    
-    #params = [row, x, transform, function, n, order, "1", "1", "1", "1", "1", "1"]
+    #params = [row, x, transform, function, n, order]
+    params = [row, x, transform, function, n, order, "1", "1", "1", "1", "1", "1"]
     #params = ["15", "3", "10", "0", "1", "1", "10", "2"]
-    params = ["15", "3", "4", "4", "10", "2", "18"]
+    #params = ["15", "3", "4", "4", "10", "2", "18"]
 
 
     program = Program(exec_file, params)

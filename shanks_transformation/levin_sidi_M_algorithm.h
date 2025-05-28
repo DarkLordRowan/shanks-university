@@ -8,6 +8,7 @@
 
 #include "series_acceleration.h" // Include the series header
 #include <vector>
+#include <memory> // For std::unique_ptr
 
 /**
  * @brief M_transformation class template.
@@ -17,12 +18,12 @@
  * @param remainder_func - remainder type
  */
 
-template<typename T, typename K, typename series_templ>
+template<std::floating_point T, std::unsigned_integral K, typename series_templ>
 class M_levin_sidi_algorithm : public series_acceleration<T, K, series_templ>
 {
 protected:
 	const T gamma;
-	const transform_base<T, K>* remainder_func;
+	std::unique_ptr<const transform_base<T, K>> remainder_func;
 
 	/**
 	 * @brief Default function to calculate M-transformation. Implemented u,t,d and v transformations. For more information see p. 65 9.2-6 [https://arxiv.org/pdf/math/0306302.pdf]
@@ -35,10 +36,7 @@ protected:
 	 * We assume that the Pochhammer symbol satisfies (-x)_n = (-1)^n*(x-n+1)_n
 	 */
 
-	T calculate(const K& n, const int& order) const {
-		if (order < 0)
-			throw std::domain_error("negative integer in input");
-
+	T calculate(const K n, const K order) const {
 		if (gamma <= n - 1)
 			throw std::domain_error("gamma cannot be lesser than n-1");
 
@@ -51,6 +49,9 @@ protected:
 
 		T rest_w_n;
 		T down_coef = static_cast<T>(gamma + order + 2), up_coef = down_coef - n;
+
+		//TODO спросить у Парфенова, ибо жертвуем читаемостью кода, ради его небольшого ускорения
+		K j1;
 		
 		for (K m = 0; m < n - 1; ++m) {
 			up *= (up_coef + m);
@@ -62,14 +63,14 @@ protected:
 		up_coef = (down_coef - n + 1);
 		
 		for (K j = 0; j <= n; ++j) {
-
+			j1 = j + 1;
 			rest = this->series->minus_one_raised_to_power_n(j) * binomial_coef;
 
-			binomial_coef = binomial_coef * (n - j) / (j + 1);
+			binomial_coef = binomial_coef * (n - j) / j1;
 
 			rest *= up;
 
-			up /= (up_coef + j) * ( down_coef + j );
+			up /= (up_coef + j) * ( down_coef + j);
 
 			w_n = remainder_func->operator()(order, j, this->series, static_cast<T>(-gamma - n));
 
@@ -77,7 +78,7 @@ protected:
 
 			numerator += rest_w_n * S_n ;
 
-			S_n += this->series->operator()(order + j + 1);
+			S_n += this->series->operator()(order + j1);
 
 			denominator += rest_w_n;
 		}
@@ -98,17 +99,12 @@ public:
 	 * @param func Remainder function
 	*/
 
-	M_levin_sidi_algorithm(const series_templ& series, const transform_base<T, K>* func, const T gamma_ = T(10)) : series_acceleration<T, K, series_templ>(series), gamma(gamma_) {
+	M_levin_sidi_algorithm(const series_templ& series, const transform_base<T, K>* func, const T gamma_ = T(10)) : series_acceleration<T, K, series_templ>(series), remainder_func(func), gamma(gamma_) {
 		if (func == nullptr) 
 			throw std::domain_error("null pointer remainder function");
-
-		remainder_func = func;
 	}
 
-	~M_levin_sidi_algorithm() { 
-		if (remainder_func != nullptr) 
-			delete remainder_func;
-	}
+	// Default destructor is sufficient since unique_ptr handles deletion
 
 	/**
      * @brief M-transformation.
@@ -118,7 +114,7 @@ public:
      * @return The partial sum after the transformation.
      */
 
-	T operator()(const K n, const int order) const {
+	T operator()(const K n, const K order) const {
 		return calculate(n, order);
 	}
 };
