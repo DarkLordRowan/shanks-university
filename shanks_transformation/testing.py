@@ -10,6 +10,43 @@ from math import pi, e, log, sqrt, cos, sin, tan, atan, asin, acos, sinh, cosh, 
 import csv
 
 
+algorithm_styles = {
+    0: {'color': '#FF0000', 'marker': 'o', 'linestyle': '-', 'markersize': 4},  # Красный
+    1: {'color': '#00FF00', 'marker': '^', 'linestyle': '--', 'markersize': 4},  # Зеленый
+    2: {'color': '#0000FF', 'marker': 's', 'linestyle': '-.', 'markersize': 4},  # Синий
+    3: {'color': '#FFFF00', 'marker': 'D', 'linestyle': ':', 'markersize': 4},  # Желтый
+    4: {'color': '#FF00FF', 'marker': 'p', 'linestyle': '-', 'markersize': 5},  # Пурпурный
+    5: {'color': '#00FFFF', 'marker': 'H', 'linestyle': '--', 'markersize': 5},  # Голубой
+    6: {'color': '#FF8000', 'marker': 'v', 'linestyle': '-.', 'markersize': 5},  # Оранжевый
+    7: {'color': '#8000FF', 'marker': '<', 'linestyle': ':', 'markersize': 5},  # Фиолетовый
+    8: {'color': '#008000', 'marker': '>', 'linestyle': '-', 'markersize': 5},  # Темно-зеленый
+    9: {'color': '#000080', 'marker': 'X', 'linestyle': '--', 'markersize': 6},  # Темно-синий
+    10: {'color': '#800000', 'marker': '*', 'linestyle': '-.', 'markersize': 6},  # Темно-красный
+    11: {'color': '#808000', 'marker': 'd', 'linestyle': ':', 'markersize': 6},  # Оливковый
+    12: {'color': '#008080', 'marker': '|', 'linestyle': '-', 'markersize': 6},  # Бирюзовый
+    13: {'color': '#800080', 'marker': '_', 'linestyle': '--', 'markersize': 6},  # Темно-пурпурный
+    14: {'color': '#FF0080', 'marker': '.', 'linestyle': '-.', 'markersize': 7},  # Розово-красный
+    15: {'color': '#00FF80', 'marker': '1', 'linestyle': ':', 'markersize': 7},  # Зелено-голубой
+    16: {'color': '#80FF00', 'marker': '2', 'linestyle': '-', 'markersize': 7},  # Лаймовый
+    17: {'color': '#0080FF', 'marker': '3', 'linestyle': '--', 'markersize': 7},  # Ярко-синий
+    18: {'color': '#FF80FF', 'marker': '4', 'linestyle': '-.', 'markersize': 7},  # Светло-пурпурный
+    19: {'color': '#80FFFF', 'marker': '+', 'linestyle': ':', 'markersize': 8},  # Светло-голубой
+    20: {'color': '#FF8040', 'marker': 'x', 'linestyle': '-', 'markersize': 8},  # Оранжево-красный
+    21: {'color': '#40FF80', 'marker': 'P', 'linestyle': '--', 'markersize': 8},  # Мятный
+    22: {'color': '#8040FF', 'marker': 'h', 'linestyle': '-.', 'markersize': 8},  # Фиолетово-синий
+    23: {'color': '#FFCC00', 'marker': '8', 'linestyle': ':', 'markersize': 8},  # Золотистый
+    24: {'color': '#6600CC', 'marker': 'D', 'linestyle': '-', 'markersize': 8},  # Индиго
+    25: {'color': '#CC0066', 'marker': 'd', 'linestyle': '--', 'markersize': 8},  # Малиновый
+    26: {'color': '#0066CC', 'marker': 'p', 'linestyle': '-.', 'markersize': 8},  # Морская волна
+    27: {'color': '#66CC00', 'marker': 'H', 'linestyle': ':', 'markersize': 8},  # Ярко-зеленый
+    28: {'color': '#990033', 'marker': 'v', 'linestyle': '-', 'markersize': 8},  # Бордовый
+    29: {'color': '#339900', 'marker': '^', 'linestyle': '--', 'markersize': 8},  # Травяной
+    30: {'color': '#003399', 'marker': 's', 'linestyle': '-.', 'markersize': 8},  # Темно-ультрамарин
+    31: {'color': '#993300', 'marker': '*', 'linestyle': ':', 'markersize': 9},  # Коричнево-оранжевый
+    32: {'color': '#330099', 'marker': 'o', 'linestyle': '-', 'markersize': 9}   # Темно-фиолетовый
+}
+
+
 standart_algos = {
     "1": "beta_Levin_S_algorithm",
     "2": "gamma_Levin_M_algorithm", 
@@ -514,23 +551,38 @@ def plot_comparison(x, y1, y2, y3, labels, filename):
     plt.close()
 
 def plot_multiple_algorithms(x, S_n, T_n, lim, filename):
-    plt.figure(figsize=(15, 15))
-    plt.plot(x, S_n, color="Green", label="S_n")
+    plt.figure(figsize=(18, 12))
+    
+    plt.plot(x, S_n, color='black', linewidth=2, linestyle='-', 
+             marker='o', markersize=6, label='Partial sums (S_n)')
     
     for i in range(1, 33):
-        if i not in [27, 30, 31, 32]:
-            plt.plot(x, T_n[i], color=color_dict_hex[i-1], label=algorithms[i-1])
+        if i not in [27, 30, 31, 32]:  
+            style = algorithm_styles[i-1]
+            plt.plot(x, T_n[i], 
+                     color=style['color'],
+                     linestyle=style['linestyle'],
+                     marker=style['marker'],
+                     markersize=style['markersize'],
+                     linewidth=1.5,
+                     label=f'{algorithms[i-1]}')
     
     if lim:
-        plt.plot(x, [lim]*len(x), color="black", label="Sum")
-    
-    if lim != 0:
-        plt.ylim(lim - lim * 0.1, lim + lim * 0.1)
+        plt.axhline(y=lim, color='red', linewidth=2, linestyle='--', label='Limit')
         
-    plt.tight_layout(pad=2.0)
-    plt.legend()
-    plt.grid()
-    plt.savefig(filename, bbox_inches='tight')
+        y_min = lim - 0.5 * abs(lim)
+        y_max = lim + 0.5 * abs(lim)
+        plt.ylim(y_min, y_max)
+    
+    plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', fontsize=9)
+    
+    plt.grid(True, linestyle=':', alpha=0.7)
+    plt.xlabel('Iteration', fontsize=12)
+    plt.ylabel('Value', fontsize=12)
+    plt.title('Comparison of Convergence Acceleration Algorithms', fontsize=14)
+    
+    plt.tight_layout()
+    plt.savefig(filename, dpi=300, bbox_inches='tight')
     plt.close()
 
 
