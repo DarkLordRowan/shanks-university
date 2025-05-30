@@ -457,8 +457,6 @@ def get_algorithm_params():
     return params
 
 def generate_filename(params, ext=".png"):
-    """Генерирует осмысленное имя файла для результатов function 4"""
-    # Извлекаем параметры из списка
     series_num = params[0]
     x_value = params[1]
     trans1_num = params[2]
@@ -466,7 +464,6 @@ def generate_filename(params, ext=".png"):
     n_value = params[-2]
     order_value = params[-1]
     
-    # Получаем текстовые названия
     series_name = series_id.get(series_num, f"series_{series_num}")
     trans1_name = transformations.get(trans1_num, f"trans_{trans1_num}")
     trans2_name = transformations.get(trans2_num, f"trans_{trans2_num}")
@@ -481,10 +478,8 @@ def generate_filename(params, ext=".png"):
         f"{ext}"
     )
     
-    # Заменяем проблемные символы
     filename = filename.replace(" ", "_").replace("/", "-").replace("\\", "-")
-    return filename[:150]  # Ограничиваем длину имени файла
-
+    return filename[:150] 
 
 def run_program_and_process_output(exec_file, params, output_file, logger):
     program = Program(exec_file, params)
@@ -529,6 +524,9 @@ def plot_multiple_algorithms(x, S_n, T_n, lim, filename):
     if lim:
         plt.plot(x, [lim]*len(x), color="black", label="Sum")
     
+    if lim != 0:
+        plt.ylim(lim - lim * 0.1, lim + lim * 0.1)
+        
     plt.tight_layout(pad=2.0)
     plt.legend()
     plt.grid()
