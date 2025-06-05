@@ -9,9 +9,13 @@ import math
 from math import pi, e, log, sqrt, cos, sin, tan, atan, asin, acos, sinh, cosh, tanh, gamma, factorial, erf, erfc
 import csv
 import logging
+import json
 from new_logger import (
     setup_loggers, log_execution, timed_algorithm,
-    Timer, StatsContext, LogParser, log_selected_params_new
+    Timer, StatsContext, LogParser, log_selected_params_new, 
+    log_shanks_sequence, log_function_2_iteration_data, 
+    log_function_3_remainder_data, log_function_4_comparison_data,
+    log_function_5_speed_result, log_function_6_multi_transform_data
 )
 
 # Initialize loggers
@@ -314,80 +318,146 @@ class Program:
     def get_error(self):
         return self.stderr                                                                                                                                                                                                                                                                                                                
 
-'''
-def log_selected_params(logger, params):
+def log_selected_params(params):
     series, x, transformation, function, n, order = params
-    logger.log(f"Testing parameters:")
-
-    if (len(series) == 1):
-        logger.log(f"Series: {series_id[series[0]]}")
-    elif (series[0] == "103") and len(series) == 2:
-        logger.log(f"Series: {series_id[series[0]]}")
-        logger.log(f"ModifiedSeries: {series_id[series[1]]}")
-    elif (series[0] == "103") and len(series) == 3:
-        logger.log(f"Series: {series_id[series[0]]}")
-        logger.log(f"ModifiedSeries: {series_id[series[1]]}")
-        logger.log(f"Series constanta: {series[2]}")
-    else:
-        logger.log(f"Series: {series_id[series[0]]}")
-        logger.log(f"Series constanta: {series[1]}")
-
-    logger.log(f"X: {x[0]}")
+    log_data = {
+        "event_type": "test_parameters",
+        "series": {
+            "id": series[0],
+            "name": series_id.get(series[0], "unknown_series"),
+            "parameters": {}
+        },
+        "x": float(x) if x else None,
+        "transformation": {
+            "id": transformation[0],
+            "name": transformations.get(transformation[0], "unknown_transform"),
+            "parameters": {}
+        },
+        "function": {
+            "id": function[0],
+            "name": functions.get(function[0], "unknown_function"),
+            "parameters": {}
+        },
+        "n": int(n) if n else None,
+        "order": int(order) if order else None,
+        "timestamp": datetime.now().isoformat()
+    }
     
-    logger.log(f"Transformation: {transformations[transformation[0]]}")
+    # modified series or series with const
+    if series[0] == "103":  
+        log_data["series"]["type"] = "modified"
+        if len(series) >= 2:
+            log_data["series"]["base_series"] = series_id.get(series[1], "unknown_series")
+        if len(series) >= 3:
+            log_data["series"]["parameters"]["const"] = series[2]
+    elif len(series) > 1:
+        log_data["series"]["parameters"]["const"] = series[1]
+    
+    # transformation deetails
     if transformation[0] in ["5", "6", "8"]:
-        if transformation[2] == "0":
-            logger.log(f"Type of transformation: {transformation[1]} not recurrence")
-        else:
-            logger.log(f"Type of transformation: {transformation[1]} recurrence")
-
+        log_data["transformation"]["parameters"]["type"] = transformation[1]
+        log_data["transformation"]["parameters"]["recurrence"] = transformation[2] == "1"
     elif transformation[0] == "10":
-        if transformation[1] == "0":
-            logger.log(f"Type of transformation: classic")
-        if transformation[1] == "1":
-            logger.log(f"Type of transformation: gamma")
-            logger.log(f"Gamma: {transformation[2]}")
-        if transformation[1] == "2":
-            logger.log(f"Type of transformation: gamma-rho")
-            logger.log(f"Gamma: {transformation[2]}")
-            logger.log(f"RHO: {transformation[3]}")
-    
-    elif transformation[0] == "13":
-            logger.log(f"Parameter beta: {transformation[2]}")
-
-    logger.log(f"Function: {functions[function[0]]}")
-    if function[0] == "4":
-        logger.log(f"Compare with: {transformations[function[1]]}")
-        if function[1] in ["5", "6", "8"]:
-            if function[3] == "0":
-                logger.log(f"Type of transformation: {function[2]} not recurrence")
-            else:
-                logger.log(f"Type of transformation: {function[2]} recurrence")
-
-        elif function[1] == "10":
-            if function[2] == "0":
-                logger.log(f"Type of transformation: classic")
-            if function[2] == "1":
-                logger.log(f"Type of transformation: gamma")
-                logger.log(f"Gamma: {function[3]}")
-            if function[2] == "2":
-                logger.log(f"Type of transformation: gamma-rho")
-                logger.log(f"Gamma: {function[3]}")
-                logger.log(f"RHO: {function[4]}")
+        transform_type = transformation[1]
+        log_data["transformation"]["parameters"]["variant"] = {
+            "0": "classic",
+            "1": "gamma",
+            "2": "gamma-rho"
+        }.get(transform_type, "unknown")
         
+        if transform_type == "1":
+            log_data["transformation"]["parameters"]["gamma"] = transformation[2]
+        elif transform_type == "2":
+            log_data["transformation"]["parameters"]["gamma"] = transformation[2]
+            log_data["transformation"]["parameters"]["rho"] = transformation[3]
+    elif transformation[0] == "13":
+        log_data["transformation"]["parameters"]["beta"] = transformation[2]
+    
+    # function dop params
+    if function[0] == "4":
+        log_data["function"]["compare_with"] = {
+            "id": function[1],
+            "name": transformations.get(function[1], "unknown_transform"),
+            "parameters": {}
+        }
+        
+        if function[1] in ["5", "6", "8"]:
+            log_data["function"]["compare_with"]["type"] = function[2]
+            log_data["function"]["compare_with"]["recurrence"] = function[3] == "1"
+        elif function[1] == "10":
+            cmp_type = function[2]
+            log_data["function"]["compare_with"]["variant"] = {
+                "0": "classic",
+                "1": "gamma",
+                "2": "gamma-rho"
+            }.get(cmp_type, "unknown")
+            
+            if cmp_type == "1":
+                log_data["function"]["compare_with"]["gamma"] = function[3]
+            elif cmp_type == "2":
+                log_data["function"]["compare_with"]["gamma"] = function[3]
+                log_data["function"]["compare_with"]["rho"] = function[4]
         elif function[1] == "13":
-                logger.log(f"Parameter beta: {function[2]}")
+            log_data["function"]["compare_with"]["beta"] = function[2]
+    
     elif function[0] == "6":
-        for i in range(0, 7):
-            if function[i] == "1":
-                logger.log(f"Use standart {i} algorithm")
-            elif function[i] == "0":
-                logger.log(f"Use not standart {standart_algos[i]} algorithm")
+        log_data["function"]["algorithms"] = []
+        for i in range(7):
+            algo_info = {
+                "id": i,
+                "name": standart_algos.get(str(i), f"algorithm_{i}"),
+                "is_standard": function[i] == "1"
+            }
+            log_data["function"]["algorithms"].append(algo_info)
+    
+    stats_logger.info(json.dumps(log_data, ensure_ascii=False))
+    
+    debug_logger.info("\n" + "="*50 + "\nTEST PARAMETERS\n" + "="*50)
+    
+    # series
+    series_msg = f"Series: {log_data['series']['name']} (ID: {log_data['series']['id']})"
+    if 'type' in log_data['series'] and log_data['series']['type'] == "modified":
+        series_msg += f"\n  Modified from: {log_data['series']['base_series']}"
+    if 'const' in log_data['series']['parameters']:
+        series_msg += f"\n  Constant: {log_data['series']['parameters']['const']}"
+    debug_logger.info(series_msg)
+    
+    # x
+    debug_logger.info(f"X value: {log_data['x']}")
+    
+    # transformation
+    transform_msg = (
+        f"Transformation: {log_data['transformation']['name']} "
+        f"(ID: {log_data['transformation']['id']})"
+    )
+    if log_data['transformation']['parameters']:
+        transform_msg += "\n  Parameters:"
+        for param, value in log_data['transformation']['parameters'].items():
+            transform_msg += f"\n    {param}: {value}"
+    debug_logger.info(transform_msg)
+    
+    # function
+    function_msg = f"Function: {log_data['function']['name']} (ID: {log_data['function']['id']})"
+    if 'compare_with' in log_data['function']:
+        cmp = log_data['function']['compare_with']
+        function_msg += f"\n  Comparing with: {cmp['name']} (ID: {cmp['id']})"
+        if cmp['parameters']:
+            function_msg += "\n    Comparison parameters:"
+            for param, value in cmp['parameters'].items():
+                function_msg += f"\n      {param}: {value}"
+    elif 'algorithms' in log_data['function']:
+        function_msg += "\n  Algorithms:"
+        for algo in log_data['function']['algorithms']:
+            status = "STANDARD" if algo['is_standard'] else "custom"
+            function_msg += f"\n    {algo['name']}: {status}"
+    debug_logger.info(function_msg)
+    
+    # n, order
+    debug_logger.info(f"N: {log_data['n']}")
+    debug_logger.info(f"Order: {log_data['order']}")
 
+    debug_logger.info("="*50)
 
-    logger.log(f"N: {n[0]}")
-    logger.log(f"order: {order[0]}")
-'''
 
 def setup_directories(current_dir):
     testing_data_dir = os.path.join(current_dir, 'output_testing_data')
@@ -457,8 +527,8 @@ def get_algorithm_params():
         "5": ("beta_levin_recursion_algorithm", "beta_rec"),
         "6": ("epsilon_algorithm_3", "epsilon")
     }
-
-    for algo_name, param_name in algorithms:
+    for key in sorted(algo_configs.keys()):
+        algo_name, param_name = algo_configs[str(key)]
         standart = input(f"Use standart {algo_name} value? 1<-true or 0<-false: ")
         params.append(standart)
         if standart == "0":
@@ -466,7 +536,7 @@ def get_algorithm_params():
                 params.append(input(f"Enter parameter gamma for {algo_name}: "))
                 params.append(input(f"Enter parameter RHO for {algo_name}: "))
             else:
-                params.append(input(f"Enter parameter {param_name_stem} for {algo_name}: "))
+                params.append(input(f"Enter parameter {param_name} for {algo_name}: "))
     return params
 
 def generate_filename(params, ext=".png"):
@@ -481,7 +551,6 @@ def generate_filename(params, ext=".png"):
     trans1_name = transformations.get(trans1_num, f"trans_{trans1_num}")
     trans2_name = transformations.get(trans2_num, f"trans_{trans2_num}")
     
-    # Формируем имя файла
     filename = (
         f"cmp_{trans1_name}_vs_{trans2_name}_"
         f"series_{series_name}_"
@@ -496,9 +565,10 @@ def generate_filename(params, ext=".png"):
 
 @log_execution(logger_name="debug_logger", level=logging.INFO)
 @timed_algorithm(logger_name="timing_logger", level=logging.INFO)
-def run_program_and_process_output(exec_file, params, output_file): # Removed logger argument
+def run_program_and_process_output(exec_file, params, output_file):
     program = Program(exec_file, params)
     program.run()
+    log_selected_params(find_params(params))
 
     try:
         with open(output_file, 'r') as f:
@@ -540,23 +610,20 @@ def plot_multiple_algorithms(x, S_n, T_n, lim, filename):
     for i in range(1, 33):
         if i not in [27, 30, 31, 32]:
             algo_name = algorithms[i] 
-            if algo_name and i in T_n and T_n[i] and i in algorithm_styles:
-                style = algorithm_styles[i-1]
-                plt.plot(x, T_n[i], 
-                        color=style['color'],
-                        linestyle=style['linestyle'],
-                        marker=style['marker'],
-                        markersize=style['markersize'],
-                        linewidth=1.5,
-                        label=f'{algorithms[i-1]}')
-            else:
-                debug_logger.warning(f"Length mismatch for algorithm {algo_name} (data length {len(T_n[i])}, x length {len(x)}). Skipping plot.")	
+            style = algorithm_styles[i-1]
+            plt.plot(x, T_n[i], 
+                    color=style['color'],
+                    linestyle=style['linestyle'],
+                    marker=style['marker'],
+                    markersize=style['markersize'],
+                    linewidth=1.5,
+                    label=f'{algorithms[i-1]}')
     
     #limit
     plt.axhline(y=lim, color='red', linewidth=2, linestyle='--', label='Limit')
         
-    y_min = lim - (5 / n * abs(lim))
-    y_max = lim + (5 / n * abs(lim))
+    y_min = lim - (0.5 * abs(lim))
+    y_max = lim + (0.5 * abs(lim))
     plt.ylim(y_min, y_max)
     
     plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', fontsize=9)
@@ -1064,7 +1131,7 @@ def print_transformation_info():
     ]
     print('\n'.join(transformations_list))
 
-def process_function_1_data(output_file): # Removed logger argument
+def process_function_1_data(output_file): 
     S_n = []
     T_n = []
     lim = 0.0
@@ -1075,7 +1142,6 @@ def process_function_1_data(output_file): # Removed logger argument
             try:
                 lim_str = f.readline().strip()
                 lim = float(lim_str)
-                debug_logger.info(f"Sum of series (lim): {lim}")
             except ValueError:
                 debug_logger.error(f"Could not parse limit value: {lim}. Defaulting to 0.0.")
                 lim = 0.0
@@ -1086,7 +1152,6 @@ def process_function_1_data(output_file): # Removed logger argument
                     break 
                 try:
                     S_n.append(float(line_s))
-                    debug_logger.info(f"S_{i}: {S_n[-1]}") 
                 except ValueError:
                     S_n.append(None)
                     debug_logger.warning(f"S_{i}: Could not parse '{line_s}', replaced by None")
@@ -1095,12 +1160,27 @@ def process_function_1_data(output_file): # Removed logger argument
 
                 try:
                     T_n.append(float(line_t))
-                    debug_logger.info(f"T_{i}: {T_n[-1]}") 
                 except ValueError:
                     T_n.append(None)
                     debug_logger.warning(f"T_{i}: Could not parse '{line_t}', replaced by None")
                 i += 1
-            #debug_logger.info(f"Processed {i-1} pairs of S_n, T_n values.")
+
+                if i >= 3:
+                    log_shanks_sequence(
+                        iteration=i-1,
+                        sequence_value=S_n[-1],
+                        transformed_value=T_n[-1],
+                        prev_error=abs(T_n[-2] - lim),
+                        expected_limit=lim
+                    )
+                else:
+                    log_shanks_sequence(
+                        iteration=i-1,
+                        sequence_value=S_n[-1],
+                        transformed_value=T_n[-1],
+                        prev_error=float("inf"),
+                        expected_limit=lim
+                    )
     except FileNotFoundError:
         debug_logger.error(f"File not found: {output_file}")
     except Exception as e:
@@ -1138,31 +1218,68 @@ def process_function_6_data(output_file):
             try:
                 lim_str = f.readline().strip()
                 lim = float(lim_str)
-                debug_logger.info(f"Sum of series (lim): {lim}")
             except:
                 debug_logger.error(f"Could not parse limit value: {lim_str}. Defaulting to 0.0.")
                 lim = 0.0
             for line in f:
                 if i % n == 0:
-                    logger.log("---")
                     try:
                         S_n.append(float(line))
-                        debug_logger.info(f"S_{i//n+1}: {S_n[-1]}")
                     except:
                         S_n.append(None)
                         debug_logger.warning(f"S_{i//n+1}: Could not parse '{line}', replaced by None")
-                        debug_logger.info(f"S_{i//n+1}: {S_n[-1]}")
-                    S_n.append(float(line))
                 else:
                     try:
                         T_n[(i)%n].append(float(line))
-                        debug_logger.warning(f"{algorithms[(i-1)%n]}: {T_n[(i)%n][-1]}")
                     except:
                         T_n[(i)%n].append(None)
                         debug_logger.warning(f"{algorithms[(i-1)%n]}: '{line.strip()}' (replaced by None)")
+                
                 i += 1
+    except FileNotFoundError:
+        debug_logger.error(f"File not found: {output_file}")
     except Exception as e:
-        debug_logger.warning(f"Error reading from file: {str(e)}")    
+        debug_logger.error(f"Error reading from file {output_file}: {str(e)}")
+
+    num_iterations = len(S_n)
+    for i in range(num_iterations):
+        s_n_current_val = S_n[i]
+        
+        trans_dict = {}
+        prev_errors_dict_current_iter = {}
+
+        for j in range(32): 
+            algo_index = j + 1 
+            
+            algo_name = algorithms.get(j, f"UnknownAlgo_{j}")
+
+            t_n_value = None
+            if algo_index < len(T_n) and i < len(T_n[algo_index]):
+                t_n_value = T_n[algo_index][i]
+            
+            trans_dict[algo_name] = t_n_value
+            prev_error_value = None
+            
+            if i > 0:
+                if algo_index < len(T_n) and (i - 1) < len(T_n[algo_index]):
+                    prev_t_n_val = T_n[algo_index][i - 1]
+                    if prev_t_n_val is not None and lim is not None:
+                        try:
+                            prev_error_value = abs(prev_t_n_val - lim)
+                        except TypeError:
+                            debug_logger.warning(f"Iter {i}, Algo {algo_name}: Cannot calculate prev_error for prev_t_n={prev_t_n_val}") #
+            prev_errors_dict_current_iter[algo_name] = prev_error_value
+            
+        if s_n_current_val is not None:
+            log_function_6_multi_transform_data(
+                iteration=i,
+                s_n_value=s_n_current_val,
+                transformed_values_dict=trans_dict,
+                expected_limit=lim,
+                prev_transformed_errors_dict=prev_errors_dict_current_iter
+            )
+        else:
+            debug_logger.warning(f"Skipping logging for iteration {i} due to missing S_n value.") #
     return S_n, T_n, lim
 
 def save_function_6_results(S_n, T_n, lim, plot_file, csv_file):
@@ -1183,7 +1300,7 @@ def save_function_6_results(S_n, T_n, lim, plot_file, csv_file):
 
 
 
-def process_speed_data(output_file, transformation_name): # Removed logger argument
+def process_speed_data(output_file, transformation_name): 
     try:
         with open(output_file, 'r') as f:
             time = f.readline().strip()
@@ -1214,7 +1331,6 @@ def process_function_2_data(output_file):
                     break
                 try:
                     a_n.append(float(line))
-                    debug_logger.info(f"a_{i}: {a_n[i-1]}")
                 except:
                     a_n.append(None)
                     debug_logger.warning(f"a_{i}: {line}(replaced by None)")
@@ -1222,7 +1338,6 @@ def process_function_2_data(output_file):
                 line = f.readline().strip()
                 try:
                     t_n.append(float(line))
-                    debug_logger.info(f"t_{i}: {t_n[i-1]}")
                 except:
                     t_n.append(None)
                     debug_logger.warning(f"t_{i}: {line}(replaced by None)")
@@ -1230,10 +1345,11 @@ def process_function_2_data(output_file):
                 line = f.readline().strip()
                 try:
                     diff.append(float(line))
-                    debug_logger.info(f"t_{i} - a{i}: {diff[i-1]}")
                 except:
                     diff.append(None)
                     debug_logger.warning(f"t_{i} - a{i}: {line}(replaced by None)")
+
+                log_function_2_iteration_data(i, a_n[-1], t_n[-1])
 
                 i += 1
 
@@ -1244,7 +1360,7 @@ def process_function_2_data(output_file):
 
     return a_n, t_n, diff
 
-def process_function_3_data(output_file): # Removed logger argument
+def process_function_3_data(output_file): 
     diff = []
     try:
         debug_logger.info(f"Reading S-T_n diff from: {output_file}")
@@ -1253,10 +1369,11 @@ def process_function_3_data(output_file): # Removed logger argument
             for line in f:
                 try: 
                     diff.append(float(line.strip()))
-                    debug_logger.info(f"S-T_{i}: {diff[i-1]}")
                 except ValueError: 
                     diff.append(None)
                     debug_logger.warning(f"S-T_{i} parse error: '{line.strip()}'")
+
+                log_function_3_remainder_data(i, diff)
                 i += 1
     except FileNotFoundError: 
         debug_logger.error(f"File not found: {output_file}")
@@ -1277,7 +1394,6 @@ def process_function_4_data(output_file):
                     break
                 try:
                     first_transform.append(float(line))
-                    debug_logger.info(f"first_transformation_{i}: {first_transform[i-1]}")
                 except:
                     first_transform.append(None)
                     debug_logger.warning(f"first_transformation_{i}: {line}(replaced by None)")
@@ -1285,34 +1401,30 @@ def process_function_4_data(output_file):
                 line = f.readline().strip()
                 try:
                     second_transform.append(float(line))
-                    debug_logger.info(f"second_transformation_{i}: {second_transform[i-1]}")
                 except:
                     second_transform.append(None)
                     debug_logger.warning(f"second_transformation_{i}: {line}(replaced by None)")
+
+                log_function_4_comparison_data(i, first_transform[-1], first_transform[-1], transform1_name="Transform1", transform2_name="Transform2")
                 i += 1
 
-                try:
-                    if first_transform[-1] > second_transform[-1]:
-                        debug_logger.info(f"First transformation faster")
-                    else:
-                        debug_logger.info(f"Second transformation faster")
-                except:
-                    debug_logger.warning(f"Can not compare first and second transformation")
     except FileNotFoundError: 
         debug_logger.error(f"File not found: {output_file}")
     except Exception as e: 
         debug_logger.error(f"Error reading file {output_file}: {e}")
     return first_transform, second_transform
 
-def process_function_5_data(output_file, logger):
+def process_function_5_data(output_file):
     try:
-        logger.log(f"Values of file:")
         with open(output_file, 'r') as f:
             time = f.readline()
-            logger.log(f"execution took {time} milliseconds")
+            log_function_5_speed_result("Transformation", time)
             return time
-    except Exception as e:
-        logger.log_error(f"Error reading from file: {str(e)}")
+    except FileNotFoundError: 
+        debug_logger.error(f"File not found: {output_file}")
+        return None
+    except Exception as e: 
+        debug_logger.error(f"Error reading file {output_file}: {e}")
         return None
 
 def work_with_data(function_id, file, plot_file):
@@ -1474,8 +1586,7 @@ def main():
     2) test_all_series_all_transformation(test_all_transforms)
     3) test_multi_x_for_1_series_and_for_all_transfomations
     4) read_parameters_from_file
-    5) test_work_speed_of_transformation_for_series
-    ''')
+    ''')# 5) test_work_speed_of_transformation_for_series
     
     function_id = int(input())
     
@@ -1544,7 +1655,7 @@ def main():
             
             plot_file = os.path.join(plot_dir, generate_filename(params))
             work_with_data(parsed_params[3][0], "output.txt", plot_file)
-    
+    '''
     elif function_id == 5:
         series = get_series_params(input("Choose series:"))
         
@@ -1559,52 +1670,13 @@ def main():
         
         params = [series, x, n, order]
         test_speed(exec_file, params, consts, "output.txt")
-
-selected_series = ['GDP', 'Inflation']
-selected_transformations = ['log', 'diff']
-selected_functions = ['ARIMA', 'LSTM']
-x = 100
-n = 20
-order = 3
-
-log_selected_params_new(
-    selected_series=selected_series,
-    transformations=selected_transformations,
-    functions=selected_functions,
-    x=x,
-    n=n,
-    order=order
-)
+    '''
 
 if __name__ == '__main__':
     with Timer("Full Testing Pipeline Execution"):
         debug_logger.info("Main execution started")
     main()
-
-
-    try:
-        parser = LogParser("output_testing.log") 
-        results = parser.get_results() 
-        if results:
-            debug_logger.info("Found logged Optimization Results in output_testing.log:")
-            for res_idx, res_entry in enumerate(results):
-                debug_logger.info(f"  Result {res_idx+1}: {res_entry}")
-        else:
-            debug_logger.info("No 'OPTIMIZATION_RESULTS' found by parser in output_testing.log.")
-
-        all_stats = parser.get_all_statistics()
-        if all_stats:
-            debug_logger.info(f"Found {len(all_stats)} general statistics entries in output_testing.log.")
-            for stat_entry in all_stats:
-               debug_logger.debug(f"  Stat: {stat_entry}")
-        
-        critical = parser.get_critical_events()
-        if critical:
-            debug_logger.info(f"Found {len(critical)} critical event entries.")
-            for crit_event in critical:
-                debug_logger.warning(f"  Critical Event: {crit_event}")
-
-    except FileNotFoundError:
-        debug_logger.error("Log file 'output_testing.log' not found for parsing at the end.")
-    except Exception as e:
-        debug_logger.error(f"Error during final log parsing: {e}")
+    parser = LogParser("output_testing.log")
+    results = parser.get_results()
+    for res in results:
+        print("Logged Optimization Result:", res)
