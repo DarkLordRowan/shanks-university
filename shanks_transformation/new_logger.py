@@ -481,73 +481,168 @@ def log_optimization_results(
         ensure_ascii=False
     ))
 
-def log_shanks_sequence(
-    iteration=None,
-    sequence_value=None,
-    transformed_value=None,
-    error=None,
-    expected_limit=None,
-    logger_name="stats_logger",
-    critical_limits=None,
-    **extra_metrics
-):
-    """
-    Logs sequence data specific to Shanks transformation.
+def log_shanks_sequence(iteration, sequence_value, transformed_value, expected_limit, 
+                       prev_error=None, **metrics):
+    current_error = abs(transformed_value - expected_limit)
+    is_diverging = prev_error and (current_error > prev_error)
     
-    Parameters:
-        iteration: Current iteration or sequence index.
-        sequence_value: Original sequence value.
-        transformed_value: Value after Shanks transformation.
-        error: Error relative to expected limit (if applicable).
-        expected_limit: Expected limit of the sequence (if known).
-        logger_name: Name of the logger to use.
-        critical_limits: Dict of metric limits for warning (e.g., {"error": 1e-3}).
-        **extra_metrics: Additional metrics to log.
-    """
-    dbg = logging.getLogger("debug_logger")
-    stats = logging.getLogger(logger_name)
-
     data = {
+        "type": "SHANKS_SEQUENCE",
         "iter": iteration,
-        "sequence_value": sequence_value,
-        "transformed_value": transformed_value,
-        "error": error,
-        "expected_limit": expected_limit
+        "S_{iteration}": sequence_value,
+        "T_{iteration}": transformed_value,
+        "error": current_error,
+        "limit": expected_limit,
+        "is_diverging": is_diverging,
+        "timestamp": datetime.now().isoformat()
     }
-    data.update(extra_metrics)
+    data.update(metrics)
+    
+    # Логирование в JSON
+    stats_logger.info(json.dumps(data))
+    
+    # Визуальное предупреждение при расходимости
+    if is_diverging:
+        debug_logger.warning(
+            f"⚠️ DIVERGENCE DETECTED! Iter {iteration}: "
+            f"Error increased from {prev_error:.2e} to {current_error:.2e}"
+        )
+        
+        # Дополнительная диагностика
+        debug_logger.debug(f"Diagnostics - S_n: {sequence_value}, T_n: {transformed_value}, Limit: {expected_limit}")
+    return is_diverging
 
-    # Checking critical values
-    if critical_limits:
-        for key, limit in critical_limits.items():
-            value = data.get(key)
-            if value is not None:
-                if (isinstance(limit, tuple) and (value < limit[0] or value > limit[1])) or \
-                   (isinstance(limit, (int, float)) and value > limit):
-                    dbg.warning(f"⚠️ Critical value! {key} = {value} (exceeds limit {limit})")
-                    stats.warning(json.dumps({
-                        "type": "CRITICAL_VALUE",
-                        "metric": key,
-                        "value": value,
-                        "limit": limit,
-                        "iteration": iteration,
-                    }))
 
-    # Human-readable block
-    header = f"Shanks Iteration {iteration}"
-    lines = [header, "{"]
-    for k, v in data.items():
-        lines.append(f"    {k}: {v},")
-    lines.append("}")
-    dbg.info("\n" + "\n".join(lines))
+def log_function_2_iteration_data(iteration, a_n_value, t_n_value, **metrics):
+    difference = None
+    if a_n_value is not None and t_n_value is not None:
+        try:
+            difference = t_n_value - a_n_value
+        except TypeError:
+            debug_logger.warning(f"Func2 Iter {iteration}: Could not calculate difference for a_n={a_n_value}, t_n={t_n_value}")
 
-    # JSON skeleton
-    payload = {"type": "SHANKS_SEQUENCE", **data}
-    stats.info(json.dumps(
-        payload,
-        default=str,
-        separators=(",", ":"),
-        ensure_ascii=False
-    ))
+    log_entry = {
+        "type": "FUNCTION_2_ANALYSIS",
+        "iteration": iteration,
+        "a_n_value": a_n_value,
+        "t_n_value": t_n_value,
+        "difference_t_n_minus_a_n": difference,
+        "timestamp": datetime.now().isoformat()
+    }
+    log_entry.update(metrics)
+    stats_logger.info(json.dumps(log_entry, default=str, separators=(",", ":"), ensure_ascii=False))
+
+    debug_logger.info(
+        f"Func2 Iter {iteration}: a_n={a_n_value}, t_n={t_n_value}, diff(t_n-a_n)={difference}"
+    )
+
+def log_function_3_remainder_data(iteration, remainder_value, **metrics):
+    log_entry = {
+        "type": "FUNCTION_3_REMAINDER",
+        "iteration": iteration,
+        "remainder_S_n_minus_T_n": remainder_value,
+        "timestamp": datetime.now().isoformat()
+    }
+    log_entry.update(metrics)
+    stats_logger.info(json.dumps(log_entry, default=str, separators=(",", ":"), ensure_ascii=False))
+
+    debug_logger.info(
+        f"Func3 Iter {iteration}: Remainder (S_n - T_n) = {remainder_value}"
+    )
+
+
+def log_function_4_comparison_data(iteration, value1, value2, transform1_name="Transform1", transform2_name="Transform2", **metrics):
+    comparison_note = "Values are equal or non-comparable."
+    if value1 is not None and value2 is not None:
+        try:
+            if value1 < value2:
+                comparison_note = f"{transform1_name} is smaller."
+            elif value2 < value1:
+                comparison_note = f"{transform2_name} is smaller."
+        except TypeError:
+            comparison_note = "Cannot compare values due to type mismatch."
+
+
+    log_entry = {
+        "type": "FUNCTION_4_COMPARISON",
+        "iteration": iteration,
+        transform1_name: value1,
+        transform2_name: value2,
+        "timestamp": datetime.now().isoformat()
+    }
+    log_entry.update(metrics)
+    stats_logger.info(json.dumps(log_entry, default=str, separators=(",", ":"), ensure_ascii=False))
+
+    debug_logger.info(
+        f"Func4 Iter {iteration}: {transform1_name}={value1}, {transform2_name}={value2}. Note: {comparison_note}"
+    )
+
+def log_function_5_speed_result(transformation_name, execution_time_ms, n_terms=None, series_x=None, order=None, **metrics):
+    log_entry = {
+        "type": "FUNCTION_5_SPEED_TEST",
+        "transformation_name": transformation_name,
+        "execution_time_ms": execution_time_ms,
+        "n_terms": n_terms,
+        "series_x_value": series_x,
+        "order": order,
+        "timestamp": datetime.now().isoformat()
+    }
+    log_entry.update(metrics)
+    stats_logger.info(json.dumps(log_entry, default=str, separators=(",", ":"), ensure_ascii=False))
+
+    param_str = []
+    if n_terms is not None: param_str.append(f"N={n_terms}")
+    if series_x is not None: param_str.append(f"x={series_x}")
+    if order is not None: param_str.append(f"Order={order}")
+    
+    debug_logger.info(
+        f"Func5 Speed Test: {transformation_name} ({', '.join(param_str)}) executed in {execution_time_ms} ms"
+    )
+
+def log_function_6_multi_transform_data(iteration, s_n_value, transformed_values_dict, expected_limit, prev_transformed_errors_dict=None, **metrics):
+    if prev_transformed_errors_dict is None:
+        prev_transformed_errors_dict = {}
+
+    base_log_entry = {
+        "type": "FUNCTION_6_MULTI_ALGO_ITERATION",
+        "iteration": iteration,
+        "s_n_value": s_n_value,
+        "expected_limit": expected_limit,
+        "timestamp": datetime.now().isoformat()
+    }
+    
+    algo_perf = {}
+    debug_messages = [
+        f"Func6 Iter {iteration}: S_n={s_n_value}, Expected Limit={expected_limit}"
+    ]
+
+    for algo_name, t_n_val in transformed_values_dict.items():
+        current_error = None
+        is_diverging = None
+        prev_error = prev_transformed_errors_dict.get(algo_name)
+
+        if t_n_val is not None and expected_limit is not None:
+            try:
+                current_error = abs(t_n_val - expected_limit)
+                if prev_error is not None and current_error is not None:
+                    is_diverging = current_error > prev_error
+            except TypeError:
+                debug_logger.warning(f"Func6 Iter {iteration}, Algo {algo_name}: Could not calculate error for t_n={t_n_val}, limit={expected_limit}")
+        
+        algo_perf[f"{algo_name}_t_n_value"] = t_n_val
+        algo_perf[f"{algo_name}_error"] = current_error
+        algo_perf[f"{algo_name}_is_diverging"] = is_diverging
+        debug_msg_algo = f"{algo_name}: T_n={t_n_val}, Error={current_error}"
+        if is_diverging:
+            debug_msg_algo += f"\033[91m⚠️ DIVERGENCE! Error increased from {prev_error} to {current_error}\033[0m"
+        debug_messages.append(debug_msg_algo)
+    full_log_entry = {}
+    full_log_entry.update(base_log_entry)
+    full_log_entry.update(algo_perf)
+    stats_logger.info(json.dumps(full_log_entry, default=str, separators=(",", ":"), ensure_ascii=False))
+    
+    for msg in debug_messages:
+        debug_logger.info(msg)
 
 # ----------------------------------------------------------------------------- 
 # Log Parsing
