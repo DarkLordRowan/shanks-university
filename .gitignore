@@ -7,6 +7,7 @@ html
 latex
 !docs/html/.nojekyll
 *.ilk
+.idea/*
 */.idea/*
 */cmake-build-debug/*
 */cmake-build-debug-event-trace/*
