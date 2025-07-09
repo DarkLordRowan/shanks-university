@@ -3,14 +3,14 @@
  * @brief This file contains the declaration of the Ford-Sidi Algorithm class.
  */
 
-
+// TODO удалить к чертям это ускорение
 #pragma once
 
 #include "series_acceleration.h" // Include the series header
 #include <vector> // Include the vector library
-#include "series +.h" 
+#include "series.h" 
 
-template <typename T, typename K, typename series_templ>
+template <std::floating_point T, std::unsigned_integral K, typename series_templ>
 class ford_sidi_algorithm : public series_acceleration<T, K, series_templ>
 {
 public:
@@ -20,8 +20,7 @@ public:
     * @authors Matkov N.K. Peters E.A.
     * @param series The series class object to be accelerated
 	*/
-	ford_sidi_algorithm(const series_templ& series) : series_acceleration<T, K, series_templ>(series) {shanks_trans = new shanks_transform<T, K, series_templ>(this->series);
-	}
+	ford_sidi_algorithm(const series_templ& series) : series_acceleration<T, K, series_templ>(series) {shanks_trans = new shanks_transform<T, K, series_templ>(this->series); }
 	
 	~ford_sidi_algorithm() { delete shanks_trans; }
 	/*
@@ -30,26 +29,30 @@ public:
     * @param order The order of transformation.
     * @return The partial sum after the transformation.
 	*/
-	T operator()(const K n, const int k) const 
+	T operator()(const K n, const K k) const 
 	{
-		if (n < 0)
-			throw std::domain_error("negative integer in the input");
-
-		one_series<T, K>* ones_seq = new one_series<T,K>();
+		one_series<T, K>* ones_seq = new one_series<T,K>(1);
 
 		// Насколько мы коллективным разумом поняли, g это как бы ряд используемого преобразования(shanks_transform, richardson_extrapolation, G_transformation и тд)
 		// пока я не реализовал выбор и оставил только shanks_transform, хотя в дальнейшем выбор конечно же надо прикрутить
 		
-		T T_n_k = (Psi(1+ 1, k - 1, (this->series), shanks_trans) - Psi(1, k - 1, (this->series), shanks_trans)) / (Psi(1 + 1, k - 1, ones_seq, shanks_trans) - Psi(1, k - 1, ones_seq, shanks_trans));
-		for (K i = 2; i <= n; i++)
+		K k1 = k - 1;
+		K i1;
+
+		T T_n_k = Psi(2, k1, (this->series), shanks_trans) - Psi(1, k1, (this->series), shanks_trans);
+		T_n_k /= (Psi(2, k1, ones_seq, shanks_trans) - Psi(1, k1, ones_seq, shanks_trans));
+		
+		for (K i = 2; i <= n; ++i)
 		{
-			T_n_k += (Psi(i+1, k - 1, (this->series), shanks_trans) - Psi(i, k - 1, (this->series), shanks_trans)) / (Psi(i + 1, k - 1, ones_seq, shanks_trans) - Psi(i, k - 1, ones_seq, shanks_trans));
+			i1 = i + 1;
+			T a = Psi(i1, k1, (this->series), shanks_trans) - Psi(i, k1, (this->series), shanks_trans);
+			a /= (Psi(i1, k1, ones_seq, shanks_trans) - Psi(i, k1, ones_seq, shanks_trans));
+			T_n_k += a;
 		}
 		return T_n_k;
 	}
 
 protected:
-
 	const shanks_transform<T, K, series_templ>* shanks_trans;
 	/**
 	 * @brief Recursive function to compute psi.
@@ -58,27 +61,26 @@ protected:
 	 * @param k The order of transformation.
 	 * @return The value of psi.
 	 */
-	T Psi(const K n, const int k, const series_base<T,K>* u, const shanks_transform<T, K, series_templ>* g) const
+	T Psi(const K n, const K k, const series_base<T,K>* u, const shanks_transform<T, K, series_templ>* g) const
 	{
 		if (k == 0)
-		{
 			return (u->operator()(n)) / (g->operator()(n, 1));
-		}
-		else
-		{
-			return (Psi(n + 1, k - 1, u, g) - Psi(n, k - 1, u, g)) / (Psi(n + 1, k - 1, k+1, g) - Psi(n, k - 1, k+1, g));
-		}
+		
+		K n1 = n + 1;
+		K km1 = k - 1;
+		K kp1 = k + 1;
+
+		return (Psi(n1, km1, u, g) - Psi(n, km1, u, g)) / (Psi(n1, km1, kp1, g) - Psi(n, km1, kp1, g));
 	}
-	T Psi(const K n, const int k, const int k_1, const shanks_transform<T, K, series_templ>* g) const
+	T Psi(const K n, const K k, const K k_1, const shanks_transform<T, K, series_templ>* g) const
 	{
 		if (k == 0)
-		{
 			return (g->operator()(n, k_1)) / (g->operator()(n, 1));
-		}
-		else
-		{ 
-			return (Psi(n + 1, k - 1, k_1, g) - Psi(n, k - 1, k_1, g)) / (Psi(n + 1, k - 1, k + 1, g) - Psi(n, k - 1, k + 1, g));
-		}
-	}
+		
+		K n1 = n + 1;
+		K km1 = k - 1;
+		K kp1 = k + 1;
 
+		return (Psi(n1, km1, k_1, g) - Psi(n, km1, k_1, g)) / (Psi(n1, km1, kp1, g) - Psi(n, km1, kp1, g));
+	}
 };

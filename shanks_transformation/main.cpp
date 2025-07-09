@@ -12,11 +12,12 @@
 
 int main(void)
 {
+	while(true)
 	try
 	{
-		main_testing_function<long double, long long int>();
-		main_testing_function<double, int>();
-		main_testing_function<float, short int>();
+		main_testing_function<long double, unsigned long long int>();
+		main_testing_function<double, unsigned int>();
+		main_testing_function<float, unsigned short int>();
 	}
 	catch (std::domain_error& e)
 	{
