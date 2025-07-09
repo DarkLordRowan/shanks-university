@@ -6,61 +6,59 @@
 #pragma once
 #define DEF_UNDEFINED_SUM 0
 
-
 #include "series_acceleration.h" // Include the series header
 #include <vector> // Include the vector library
-
 
  /**
  * @brief Richardson transformation
  * @authors Trudolyubov N.A., Pavlova A.R.
- * @tparam T The type of the elements in the series, K The type of enumerating integer, series_templ is the type of series whose convergence we accelerate
+ * @tparam T The type of the elements in the series
+ * @tparam K The type of enumerating integer
+ * @tparam series_templ is the type of series whose convergence we accelerate
  */
-template <typename T, typename K, typename series_templ>
+template <std::floating_point T, std::unsigned_integral K, typename series_templ>
 class richardson_algorithm : public series_acceleration<T, K, series_templ>
 {
 public:
      /**
-    * @brief Parameterized constructor to initialize the Richardson transformation for series.
-    * @param series The series class object
-    */
-    richardson_algorithm(const series_templ& series);
+      * @brief Parameterized constructor to initialize the Richardson transformation for series.
+      * @param series The series class object
+      */
+    richardson_algorithm(const series_templ& series) : series_acceleration<T, K, series_templ>(series) {}
      /**
-    * @brief Richardson transformation for series function.
-    * @param n The number of terms in the partial sum.
-    * @param order The order of transformation.
-    * @return The partial sum after the transformation.
-    */
-    T operator() (const K n, const int order) const;
-};
+      * @brief Richardson transformation for series function.
+      * @param n The number of terms in the partial sum.
+      * @param order The order of transformation.
+      * @return The partial sum after the transformation.
+      */
+    T operator() (const K n, const K order) const {
+        // in the method we don't use order, it's only a stub 
+        if (n == 0)
+            return DEF_UNDEFINED_SUM;
 
-template <typename T, typename K, typename series_templ>
-richardson_algorithm<T, K, series_templ>::richardson_algorithm(const series_templ& series) : series_acceleration<T, K, series_templ>(series) {}
+        std::vector<std::vector<T>> e(2, std::vector<T>(n + 1, 0)); //2 vectors n + 1 length containing Richardson table next and previous 
 
-template <typename T, typename K, typename series_templ>
-T richardson_algorithm<T, K, series_templ>::operator()(const K n, const int order) const
-{
-    // in the method we don't use order, it's only a stub 
-    if (n < 0)
-        throw std::domain_error("negative integer in the input");
-    else if (n == 0)
-        return DEF_UNDEFINED_SUM;
+        for (K i = 0; i <= n; ++i)
+            e[0][i] = this->series->S_n(i);
 
-    // create a matrix
-    std::vector<std::vector<T>> D(n + 1, std::vector<T>(n + 1, 0));
+        // The Richardson method main function 
+        T a, b;
+        a = static_cast<T>(1);
 
-    // Fill partial sums in the first string 
-    for (int i = 0; i <= n; ++i) {
-        D[i][0] = this->series->S_n(i);
-    }
+        for (K l = 1; l <= n; ++l) {
+            a *= 4;
+            b = a - 1;
+            for (K m = l; m <= n; ++m)
+                e[1][m] = fma(a, e[0][m], -e[0][m - 1]) / b;
 
-    // The Richardson method main function 
-    for (int l = 1; l <= n; ++l) {
-        for (int m = l; m <= n; ++m) {
-            D[m][l] = (pow(4, l) * D[m][l - 1] - D[m - 1][l - 1]) / (pow(4, l) - 1);
+            std::swap(e[0], e[1]);
         }
-    }
 
-    // Get the last transfomation element from the matrix
-    return D[n][n];
-}
+        const T res = e[n & 1][n]; // get n & 1, cause if n is even, result is e[0][n], if n is odd, result is e[1][n]
+
+        if (!std::isfinite(res))
+            throw std::overflow_error("division by zero");
+
+        return res;
+    }
+};
