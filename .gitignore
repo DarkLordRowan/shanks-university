@@ -481,4 +481,4 @@ x64/Debug/shanks_transformation.exe
 *.log
 *.exe
 *.tlog
-./clangd
+.clangd
