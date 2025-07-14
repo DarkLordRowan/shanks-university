@@ -436,7 +436,7 @@ FodyWeavers.xsd
 
 # End of https://www.toptal.com/developers/gitignore/api/cmake,visualstudio,visualstudiocode
 
-#Custom ingores, written before
+#Custom ignores, written before
 
 x64
 *.tlog
@@ -481,3 +481,4 @@ x64/Debug/shanks_transformation.exe
 *.log
 *.exe
 *.tlog
+./clangd
