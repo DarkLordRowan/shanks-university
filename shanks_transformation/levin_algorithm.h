@@ -9,6 +9,7 @@
 #include "series_acceleration.h" // Include the series header
 #include <vector> // Include the vector library
 
+
  /**
   * @brief Levin Algorithm class template.
   * @authors  Kreinin R.G.

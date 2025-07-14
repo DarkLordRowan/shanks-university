@@ -9,6 +9,7 @@
 
 #include "series_acceleration.h" // Include the series header
 #include <memory> // For std::unique_ptr
+#include "wynn_numerators.h"
 
  /**
   * @brief Rho Wynn Algorithm class template.
@@ -35,7 +36,7 @@ protected:
 
 		const T S_n = this->series->S_n(n);
 
-		//TODO спросить у Парфенова, ибо жертвуем читаемостью кода, ради его небольшого ускорения
+		//TODO пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 		const K order1 = order - 1;
 
 		const T res = (recursive_calculate_body(n, order1 - 1, S_n, 1) + numerator_func->operator()(n, order, this->series, gamma, RHO)) / 
@@ -59,7 +60,7 @@ protected:
 		if (order == -1)
 			return 0;
 
-		//TODO спросить у Парфенова, ибо жертвуем читаемостью кода, ради его небольшого ускорения
+		//TODO пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 		const K order1 = order - 1;
 		const K nj = n + j;
 
@@ -84,7 +85,7 @@ public:
 	//Default destructor is sufficient since unique_ptr handles deletion
 
 	/**
-     * @brief Rho Wynn algorithm.я
+     * @brief Rho Wynn algorithm.пїЅ
      * Computes the partial sum after the transformation using the Rho Wynn Algorithm.
      * For more information, see
      * @param n The number of terms in the partial sum.

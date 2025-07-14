@@ -9,12 +9,12 @@
 #include <set>
 
 #include "wynn_numerators.h"
-#include "remainders.h"
+#include "./remainders/remainders.hpp"
 #include "shanks_transformation.h"
 #include "epsilon_algorithm.h"
 #include "levin_algorithm.h"
-#include "levin_sidi_S_algorithm.h"
-#include "drummond_D_algorithm.h"
+#include "./levin_sidi_S/levin_sidi_S_algorithm.hpp"
+#include "./drummond_D/drummond_D_algorithm.hpp"
 #include "epsilon_algorithm_two.h"
 #include "chang_whynn_algorithm.h"
 #include "test_functions.h"
@@ -201,7 +201,7 @@ K read_input() {
 	if (input < 0) 
 		throw std::domain_error("Negative value in the input!");
 
-	return static_cast<K>(input); // Безопасное преобразование
+	return static_cast<K>(input); // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 }
 
 /**
@@ -423,10 +423,10 @@ inline void init_levin(transformation_id_t id, std::unique_ptr<series_base<T, K>
 		}
 		else beta = 1;
 
-		transform.reset(new levi_sidi_algorithm<T, K, decltype(series.get())>(series.get(), ptr, recursive, beta));
+		transform.reset(new levin_sidi_S_algorithm<T, K, decltype(series.get())>(series.get(), type, recursive, beta));
 		return;
 	case transformation_id_t::D_algorithm:
-		transform.reset(new drummonds_algorithm<T, K, decltype(series.get())>(series.get(), ptr, recursive));
+		transform.reset(new drummonds_D_algorithm<T, K, decltype(series.get())>(series.get(), type, recursive));
 		return;
 	case transformation_id_t::M_algorithm:
 
@@ -1251,41 +1251,41 @@ inline static void main_testing_function()
 			print_transform(i, order, std::move(transform.get()));
 
 			//levin-sidi S U
-			transform.reset(new levi_sidi_algorithm<T, K, decltype(series.get())>(series.get(), new u_transform<T, K>{}, false, beta_Levin_S_algorithm));
+			transform.reset(new levin_sidi_S_algorithm<T, K, decltype(series.get())>(series.get(), 'u', false, beta_Levin_S_algorithm));
 			print_transform(i, order, std::move(transform.get()));
 			//
 
 			//levin-sidi S T
-			transform.reset(new levi_sidi_algorithm<T, K, decltype(series.get())>(series.get(), new t_transform<T, K>{}, false, beta_Levin_S_algorithm));
+			transform.reset(new levin_sidi_S_algorithm<T, K, decltype(series.get())>(series.get(), 't', false, beta_Levin_S_algorithm));
 			print_transform(i, order, std::move(transform.get()));
 			//
 
 			//levin-sidi S D
-			transform.reset(new levi_sidi_algorithm<T, K, decltype(series.get())>(series.get(), new d_transform<T, K>{}, false, beta_Levin_S_algorithm));
+			transform.reset(new levin_sidi_S_algorithm<T, K, decltype(series.get())>(series.get(), 'd', false, beta_Levin_S_algorithm));
 			print_transform(i, order, std::move(transform.get()));
 			//
 
 			//levin-sidi S V
-			transform.reset(new levi_sidi_algorithm<T, K, decltype(series.get())>(series.get(), new v_transform<T, K>{}, false, beta_Levin_S_algorithm));
+			transform.reset(new levin_sidi_S_algorithm<T, K, decltype(series.get())>(series.get(), 'v', false, beta_Levin_S_algorithm));
 			print_transform(i, order, std::move(transform.get()));
 
 			//levin-sidi D U
-			transform.reset(new drummonds_algorithm<T, K, decltype(series.get())>(series.get(), new u_transform<T, K>{}, false));
+			transform.reset(new drummonds_D_algorithm<T, K, decltype(series.get())>(series.get(), 'u', false));
 			print_transform(i, order, std::move(transform.get()));
 			//
 
 			//levin-sidi D T
-			transform.reset(new drummonds_algorithm<T, K, decltype(series.get())>(series.get(), new t_transform<T, K>{}, false));
+			transform.reset(new drummonds_D_algorithm<T, K, decltype(series.get())>(series.get(), 't', false));
 			print_transform(i, order, std::move(transform.get()));
 			//
 
 			//levin-sidi D D
-			transform.reset(new drummonds_algorithm<T, K, decltype(series.get())>(series.get(), new d_transform<T, K>{}, false));
+			transform.reset(new drummonds_D_algorithm<T, K, decltype(series.get())>(series.get(), 'd', false));
 			print_transform(i, order, std::move(transform.get()));
 			//
 
 			//levin-sidi D V
-			transform.reset(new drummonds_algorithm<T, K, decltype(series.get())>(series.get(), new v_transform<T, K>{}, false));
+			transform.reset(new drummonds_D_algorithm<T, K, decltype(series.get())>(series.get(), 'v', false));
 			print_transform(i, order, std::move(transform.get()));
 			//
 

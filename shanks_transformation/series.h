@@ -107,6 +107,8 @@
  */
 
 #pragma once
+#include <cmath>
+#include <stdexcept>
 #define NO_X_GIVEN 0
 #define NO_SERIES_EXPRESSION_GIVEN 0
 #include <numbers>
