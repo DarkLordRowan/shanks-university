@@ -4,7 +4,6 @@
  */
 
 #pragma once
-#define DEF_UNDEFINED_SUM 0
 
 #include "series_acceleration.h" // Include the series header
 #include <vector> // Include the vector library
@@ -16,7 +15,7 @@
  * @tparam K The type of enumerating integer
  * @tparam series_templ is the type of series whose convergence we accelerate
  */
-template <std::floating_point T, std::unsigned_integral K, typename series_templ>
+template <typename T, std::unsigned_integral K, typename series_templ>
 class richardson_algorithm : public series_acceleration<T, K, series_templ>
 {
 public:
@@ -34,9 +33,9 @@ public:
     T operator() (const K n, const K order) const {
         // in the method we don't use order, it's only a stub 
         if (n == 0)
-            return DEF_UNDEFINED_SUM;
+            return T(0);
 
-        std::vector<std::vector<T>> e(2, std::vector<T>(n + 1, 0)); //2 vectors n + 1 length containing Richardson table next and previous 
+        std::vector<std::vector<T>> e(2, std::vector<T>(n + 1, T(0))); //2 vectors n + 1 length containing Richardson table next and previous 
 
         for (K i = 0; i <= n; ++i)
             e[0][i] = this->series->S_n(i);
@@ -46,8 +45,8 @@ public:
         a = static_cast<T>(1);
 
         for (K l = 1; l <= n; ++l) {
-            a *= 4;
-            b = a - 1;
+            a *= T(4);
+            b = a - T(1);
             for (K m = l; m <= n; ++m)
                 e[1][m] = fma(a, e[0][m], -e[0][m - 1]) / b;
 
@@ -56,7 +55,7 @@ public:
 
         const T res = e[n & 1][n]; // get n & 1, cause if n is even, result is e[0][n], if n is odd, result is e[1][n]
 
-        if (!std::isfinite(res))
+        if (!isfinite(res))
             throw std::overflow_error("division by zero");
 
         return res;

@@ -5,7 +5,6 @@
 
 #pragma once
 #include <memory>
-#include <string> 
 #include <set>
 
 #include "wynn_numerators.h"
@@ -374,7 +373,7 @@ inline static void print_test_function_info()
 * @authors Naumov A.
 * @edited by Yurov P.
 */
-template<std::floating_point T, std::unsigned_integral K, typename series_templ>
+template<typename T, std::unsigned_integral K, typename series_templ>
 inline void init_levin(transformation_id_t id, std::unique_ptr<series_base<T, K>>& series, std::unique_ptr<series_acceleration<T, K, series_templ>>& transform)
 {
 	bool recursive = false;
@@ -421,7 +420,7 @@ inline void init_levin(transformation_id_t id, std::unique_ptr<series_base<T, K>
 			std::cout << "| Enter parameter beta: "; std::cin >> beta;
 			std::cout << "|------------------------------------------|" << '\n';
 		}
-		else beta = 1;
+		else beta = T(1);
 
 		transform.reset(new levin_sidi_S_algorithm<T, K, decltype(series.get())>(series.get(), type, recursive, beta));
 		return;
@@ -441,7 +440,7 @@ inline void init_levin(transformation_id_t id, std::unique_ptr<series_base<T, K>
 			std::cout << "| Enter parameter gamma: "; std::cin >> gamma;
 			std::cout << "|------------------------------------------|" << '\n';
 		}
-		else gamma = 10;
+		else gamma = T(10);
 
 		transform.reset(new M_levin_sidi_algorithm<T, K, decltype(series.get())>(series.get(), ptr, gamma));
 		return;
@@ -454,7 +453,7 @@ inline void init_levin(transformation_id_t id, std::unique_ptr<series_base<T, K>
 * @brief initialize rho-WynnType transformations, usable for basic, Gamma, Gamma-Rho
 * @authors Yurov P.
 */
-template<std::floating_point T, std::unsigned_integral K, typename series_templ>
+template<typename T, std::unsigned_integral K, typename series_templ>
 inline void init_wynn(std::unique_ptr<series_base<T, K>>& series, std::unique_ptr<series_acceleration<T, K, series_templ>>& transform)
 {
 	K type;
@@ -484,7 +483,7 @@ inline void init_wynn(std::unique_ptr<series_base<T, K>>& series, std::unique_pt
 			std::cout << "| Enter parameter gamma: "; std::cin >> gamma;
 			std::cout << "|------------------------------------------|" << '\n';
 		}
-		else gamma = 2;
+		else gamma = T(2);
 
 		transform.reset(new rho_Wynn_algorithm<T, K, decltype(series.get())>(series.get(), new generilized_transform<T, K>{}, gamma));
 		break;
@@ -500,7 +499,7 @@ inline void init_wynn(std::unique_ptr<series_base<T, K>>& series, std::unique_pt
 			std::cout << "| Enter parameter gamma: "; std::cin >> gamma;
 			std::cout << "|------------------------------------------|" << '\n';
 		}
-		else gamma = 2;
+		else gamma = T(2);
 
 		std::cout << '\n';
 		std::cout << "|------------------------------------------|" << '\n';
@@ -513,7 +512,7 @@ inline void init_wynn(std::unique_ptr<series_base<T, K>>& series, std::unique_pt
 			std::cout << "| Enter parameter gamma: "; std::cin >> gamma;
 			std::cout << "|------------------------------------------|" << '\n';
 		}
-		else RHO = 1;
+		else RHO = T(1);
 
 		transform.reset(new rho_Wynn_algorithm<T, K, decltype(series.get())>(series.get(), new gamma_rho_transform<T, K>{}, gamma, RHO));
 		break;
@@ -527,7 +526,7 @@ inline void init_wynn(std::unique_ptr<series_base<T, K>>& series, std::unique_pt
 * @brief initialize levin_recursion transformation
 * @authors Maximov A.K.
 */
-template<std::floating_point T, std::unsigned_integral K, typename series_templ>
+template<typename T, std::unsigned_integral K, typename series_templ>
 inline void init_levin_recursion(std::unique_ptr<series_base<T, K>>& series, std::unique_ptr<series_acceleration<T, K, series_templ>>& transform)
 {
 	bool standart = false;
@@ -544,7 +543,7 @@ inline void init_levin_recursion(std::unique_ptr<series_base<T, K>>& series, std
 		std::cout << "| Enter parameter beta: "; std::cin >> beta;
 		std::cout << "|------------------------------------------|" << '\n';
 	}
-	else beta = -1.5;
+	else beta = T(-1.5);
 
 	transform.reset(new levin_recursion_algorithm<T, K, decltype(series.get())>(series.get(), beta));
 }
@@ -553,7 +552,7 @@ inline void init_levin_recursion(std::unique_ptr<series_base<T, K>>& series, std
 * @brief initialize epsilon_algorithm_3_id transformation
 * @authors Maximov A.K.
 */
-template<std::floating_point T, std::unsigned_integral K, typename series_templ>
+template<typename T, std::unsigned_integral K, typename series_templ>
 inline void init_epsilon_3(std::unique_ptr<series_base<T, K>>& series, std::unique_ptr<series_acceleration<T, K, series_templ>>& transform)
 {
 
@@ -583,7 +582,7 @@ inline void init_epsilon_3(std::unique_ptr<series_base<T, K>>& series, std::uniq
 * @authors Bolshakov M.P
 * @edited by Kreynin R.G.
 */
-template <std::floating_point T, std::unsigned_integral K>
+template <typename T, std::unsigned_integral K>
 inline static void main_testing_function()
 {
 
@@ -594,16 +593,25 @@ inline static void main_testing_function()
 
 	//choosing x
 	std::cout << "Enter x - the argument for the functional series" << '\n';
-	T x = 0;
+	T x = T(0);
 	std::cin >> x;
+	std::cout << "\nTHE X IS -> " << x <<"\n";
+
+	std::string garbage;
+	std::cin >> garbage;
+
 
 	//choosing series (cont.)
 	std::set<K> alternating_series = { 2, 3, 7, 11, 15, 18, 19, 20, 21, 24, 26, 28, 30, 31 };
+	std::cout <<"\nDID WE?\n";
 	switch (series_id)
 	{
-	case series_id_t::exp_series_id:
+	case series_id_t::exp_series_id:{
+		std::cout << "/nWE ENTERED/n";
 		series.reset(new exp_series<T, K>(x));
+		std::cout << "/nWE EXITED/n";
 		break;
+	}
 	case series_id_t::cos_series_id:
 		series.reset(new cos_series<T, K>(x));
 		break;
@@ -617,11 +625,13 @@ inline static void main_testing_function()
 		series.reset(new sinh_series<T, K>(x));
 		break;
 	case series_id_t::bin_series_id:
+	{
 		T alpha;
 		std::cout << "Enter the value for constant alpha for the series" << '\n';
 		std::cin >> alpha;
 		series.reset(new bin_series<T, K>(x, alpha));
 		break;
+	}
 	case series_id_t::four_arctan_series_id:
 		series.reset(new four_arctan_series<T, K>(x));
 		break;
@@ -635,11 +645,13 @@ inline static void main_testing_function()
 		series.reset(new exp_squared_erf_series<T, K>(x));
 		break;
 	case series_id_t::xmb_Jb_two_series_id:
+	{
 		K b;
 		std::cout << "Enter the value for constant b for the series" << '\n';
 		b = read_input<K>();
 		series.reset(new xmb_Jb_two_series<T, K>(x, b));
 		break;
+	}
 	case series_id_t::half_asin_two_x_series_id:
 		series.reset(new half_asin_two_x_series<T, K>(x));
 		break;
@@ -833,11 +845,13 @@ inline static void main_testing_function()
 		series.reset(new Lambert_W_func_series<T, K>(x));
 		break;
 	case series_id_t::Incomplete_Gamma_func_series_id:
+	{
 		T s;
 		std::cout << "Enter the value for constant s for the series" << '\n';
 		std::cin >> s;
 		series.reset(new Incomplete_Gamma_func_series<T, K>(x, s));
 		break;
+	}
 	case series_id_t::Series_with_ln_number1_id:
 		series.reset(new Series_with_ln_number1<T, K>(x));
 		break;
@@ -896,11 +910,13 @@ inline static void main_testing_function()
 		series.reset(new ln13_min_ln7_div_7_series<T, K>(x));
 		break;
 	case series_id_t::Ja_x_series_id:
+	{
 		T a;
 		std::cout << "Enter the value for constant a for the series" << '\n';
 		std::cin >> a;
 		series.reset(new Ja_x_series<T, K>(x, a));
 		break;
+	}
 	case series_id_t::one_div_sqrt2_sin_xdivsqrt2_series_id:
 		series.reset(new one_div_sqrt2_sin_xdivsqrt2_series<T, K>(x));
 		break;
@@ -920,11 +936,13 @@ inline static void main_testing_function()
 		series.reset(new x_div_1minx2<T, K>(x));
 		break;
 	case series_id_t::gamma_series_id:
+	{
 		T t;
 		std::cout << "Enter the parameter t in the gamma series" << '\n';
 		std::cin >> t;
 		series.reset(new gamma_series<T, K>(t, x));
 		break;
+	}
 	default:
 		throw std::domain_error("wrong series_id");
 	}
@@ -1004,6 +1022,8 @@ inline static void main_testing_function()
 	default:
 		throw std::domain_error("wrong transformation_id");
 	}
+
+	std::cout << "/nWE PASSED/n";
 
 	//choosing testing function
 
@@ -1132,7 +1152,7 @@ inline static void main_testing_function()
 			std::cout << "| Enter parameter beta_Levin_S_algorithm: "; std::cin >> beta_Levin_S_algorithm;
 			std::cout << "|------------------------------------------|" << '\n';
 		}
-		else beta_Levin_S_algorithm = 1;
+		else beta_Levin_S_algorithm = T(1);
 
 		std::cout << '\n';
 		std::cout << "|------------------------------------------|" << '\n';
@@ -1145,7 +1165,7 @@ inline static void main_testing_function()
 			std::cout << "| Enter parameter gamma_Levin_M_algorithm: "; std::cin >> gamma_Levin_M_algorithm;
 			std::cout << "|------------------------------------------|" << '\n';
 		}
-		else gamma_Levin_M_algorithm = 10;
+		else gamma_Levin_M_algorithm = T(10);
 
 		std::cout << '\n';
 		std::cout << "|------------------------------------------|" << '\n';
@@ -1158,7 +1178,7 @@ inline static void main_testing_function()
 			std::cout << "| Enter parameter gamma_rho_Wynn_algorithm: "; std::cin >> gamma_rho_Wynn_algorithm;
 			std::cout << "|------------------------------------------|" << '\n';
 		}
-		else gamma_rho_Wynn_algorithm = 2;
+		else gamma_rho_Wynn_algorithm = T(2);
 
 		std::cout << '\n';
 		std::cout << "|------------------------------------------|" << '\n';
@@ -1171,7 +1191,7 @@ inline static void main_testing_function()
 			std::cout << "| Enter parameter RHO_rho_Wynn_algorithm: "; std::cin >> RHO_rho_Wynn_algorithm;
 			std::cout << "|------------------------------------------|" << '\n';
 		}
-		else RHO_rho_Wynn_algorithm = 1;
+		else RHO_rho_Wynn_algorithm = T(1);
 
 		std::cout << '\n';
 		std::cout << "|------------------------------------------|" << '\n';
@@ -1184,7 +1204,7 @@ inline static void main_testing_function()
 			std::cout << "| Enter parameter beta_levin_recursion_algorithm: "; std::cin >> beta_levin_recursion_algorithm;
 			std::cout << "|------------------------------------------|" << '\n';
 		}
-		else beta_levin_recursion_algorithm = -1.5;
+		else beta_levin_recursion_algorithm = T(-1.5);
 
 		std::cout << '\n';
 		std::cout << "|------------------------------------------|" << '\n';

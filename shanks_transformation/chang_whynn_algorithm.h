@@ -18,7 +18,7 @@
   * @authors Kreinin R.G.
   * @tparam T The type of the elements in the series, K The type of enumerating integer, series_templ is the type of series whose convergence we accelerate
   */
-template <std::floating_point T, std::unsigned_integral K, typename series_templ>
+template <typename T, std::unsigned_integral K, typename series_templ>
 class chang_whynn_algorithm : public series_acceleration<T, K, series_templ>
 {
 public:
@@ -46,28 +46,28 @@ public:
 
         K max = n - (n & 1); // int -> K mark 
 
-        std::vector<std::vector<T>> e(2, std::vector<T>(n, 0)); //2 vectors n length containing Epsilon table next and previous 
-        std::vector<T> f(n, 0); //vector for containing F results from 0 to n-1
+        std::vector<std::vector<T>> e(2, std::vector<T>(n, T(0))); //2 vectors n length containing Epsilon table next and previous 
+        std::vector<T> f(n, T(0)); //vector for containing F results from 0 to n-1
 
         for (K i = 0; i < max; ++i) //Counting first row of Epsilon Table
-            e[0][i] = static_cast<T>(1.0 / (this->series->operator()(i + 1)));
+            e[0][i] = T(1) / this->series->operator()(i + 1);
 
         for (K i = 0; i < max; ++i) { //Counting F function
             i1 = i + 1;
             i2 = i + 2;
             i3 = i + 3;
 
-            coef = static_cast<T>(fma(-2, this->series->S_n(i2), this->series->S_n(i3) + this->series->S_n(i1)));
+            coef = fma(T(-2), this->series->S_n(i2), this->series->S_n(i3) + this->series->S_n(i1));
 
-            coef2 = static_cast<T>(fma(-2, this->series->S_n(i1), this->series->S_n(i2) + this->series->S_n(i)));
+            coef2 = fma(T(-2), this->series->S_n(i1), this->series->S_n(i2) + this->series->S_n(i));
 
             up = this->series->operator()(i1) * this->series->operator()(i2) * coef;
 
             down = this->series->operator()(i3) * coef2;
             down -= this->series->operator()(i1) * coef;
-            down = static_cast<T>(1.0 / down);
+            down = T(1) / down;
 
-            e[1][i] = static_cast<T>(fma(-up, down, this->series->S_n(i1)));
+            e[1][i] = fma(-up, down, this->series->S_n(i1));
 
             f[i] = coef * coef2 * down; //Can make coeff2 ^2 for better effect
         }
@@ -76,11 +76,11 @@ public:
             k1 = 1 - k;
             for (K i = 0; i < max - k; ++i) {
                 i1 = i + 1;
-                up = static_cast<T>(fma(k, f[i], k1));
-                down = static_cast<T>(1.0 / (e[1][i1] - e[1][i]));
+                up   = fma(T(k), f[i], T(k1));
+                down = T(1) / (e[1][i1] - e[1][i]);
                 e[0][i] = static_cast<T>(fma(up, down, e[0][i1]));
 
-                if (!std::isfinite(e[0][i])) { //Check for invalid values to avoid them
+                if (!isfinite(e[0][i])) { //Check for invalid values to avoid them
                     max = k + i1;
                     break;
                 }
@@ -90,7 +90,7 @@ public:
 
         const T result = e[max & 1][0]; //Only odd rows have mathmatical scence. Always returning e[0][0]
 
-        if (!std::isfinite(result))
+        if (!isfinite(result))
             throw std::overflow_error("division by zero");
 
         return result;

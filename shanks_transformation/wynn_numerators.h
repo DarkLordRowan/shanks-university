@@ -4,7 +4,9 @@
  * @authors Yurov P.I. Bezzaborov A.A.
 */
 #pragma once
-#include "series_acceleration.h"
+
+#include <concepts>
+#include "series.h"
 
 /**
  * @brief Abstract class for numerator
@@ -12,7 +14,7 @@
  * @tparam K The type of enumerating integer
  */
 
-template<std::floating_point T, std::unsigned_integral K>
+template<typename T, std::unsigned_integral K>
 class numerator_base {
 public:
 
@@ -33,7 +35,7 @@ public:
 * @brief Class for rho variant of numerator
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template<std::floating_point T, std::unsigned_integral K>
+template<typename T, std::unsigned_integral K>
 class rho_transform : public numerator_base<T, K> {
 public:
 
@@ -74,7 +76,7 @@ public:
    */
 
 	T operator()(const K n, const K order, const series_base<T, K>* series, const T gamma = T(1), const T rho = T(0)) const {
-		return (order - gamma - 1);
+		return (T(order) - gamma - T(1));
 	}
 };
 
@@ -83,7 +85,7 @@ public:
 * @brief Class for gamma-rho variant of numerator
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template<std::floating_point T, std::unsigned_integral K>
+template<typename T, std::unsigned_integral K>
 class gamma_rho_transform : public numerator_base<T, K> {
 public:
 

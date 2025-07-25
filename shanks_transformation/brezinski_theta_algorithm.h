@@ -6,9 +6,8 @@
 #pragma once
 
 #include "series_acceleration.h" // Include the series header
-#include <vector> // Include the vector library
 
-template <std::floating_point T, std::unsigned_integral K, typename series_templ>
+template <typename T, std::unsigned_integral K, typename series_templ>
 class theta_brezinski_algorithm : public series_acceleration<T, K, series_templ>
 {
 public:
@@ -47,8 +46,8 @@ protected:
      */
     T theta(K n, const K order, T S_n, const K j) const {
         if (order == 1) {
-            T res = 1 / this->series->operator()(n + j + 1);
-            if (!std::isfinite(res))
+            T res = T(1) / this->series->operator()(n + j + 1);
+            if (!isfinite(res))
                 throw std::overflow_error("division by zero");
 
             return res;
@@ -66,28 +65,28 @@ protected:
         const K order1 = order - 1;
         const K order2 = order - 2;
 
-        const T theta_order1_0 = theta(n, order1, S_n, 0);
-        const T theta_order1_1 = theta(n, order1, S_n, 1);
-        const T theta_order1_2 = theta(n, order1, S_n, 2);
-        const T theta_order2_1 = theta(n, order2, S_n, 1);
+        T theta_order1_0 = theta(n, order1, S_n, 0);
+        T theta_order1_1 = theta(n, order1, S_n, 1);
+        T theta_order1_2 = theta(n, order1, S_n, 2);
+        T theta_order2_1 = theta(n, order2, S_n, 1);
 
         if (order & 1) { // order is odd
             const T delta = T(1) / (theta_order1_0 - theta_order1_1); // 1/Δυ_2k^(n)
 
-            if (!std::isfinite(delta))
+            if (!isfinite(delta))
                 throw std::overflow_error("division by zero");
 
             return theta_order2_1 + delta; // υ_(2k+1)^(n)=υ_(2k-1)^(n+1) + 1/(Δυ_2k^(n)
         }
         // order is even
 
-        const T delta2 = T(1) / static_cast<T>(fma(-2, theta_order1_1, theta_order1_0 + theta_order1_2)); // Δ^2 υ_(2k+1)^(n)
+        T delta2 = T(1) / fma(T(-2), theta_order1_1, theta_order1_0 + theta_order1_2); // Δ^2 υ_(2k+1)^(n)
 
-        if (!std::isfinite(delta2))
+        if (!isfinite(delta2))
             throw std::overflow_error("division by zero");
 
-        const T delta_n = theta_order2_1 - theta(n, order2, S_n, 2); // Δυ_2k^(n+1) 
-        const T delta_n1 = theta_order1_1 - theta_order1_2; // Δυ_(2k+1)^(n+1)
+        T delta_n = theta_order2_1 - theta(n, order2, S_n, 2); // Δυ_2k^(n+1) 
+        T delta_n1 = theta_order1_1 - theta_order1_2; // Δυ_(2k+1)^(n+1)
 
         return static_cast<T>(fma(delta_n * delta_n1, delta2, theta_order2_1)); // υ_(2k+2)^(n)=υ_2k^(n+1)+((Δυ_2k^(n+1))*(Δυ_(2k+1)^(n+1)))/(Δ^2 υ_(2k+1)^(n)
     }

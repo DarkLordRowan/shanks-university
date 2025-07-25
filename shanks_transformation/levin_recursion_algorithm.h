@@ -4,10 +4,8 @@
  */
 
 #pragma once
-#define DEF_UNDEFINED_SUM 0
 
 #include "series_acceleration.h" // Include the series header
-#include <vector> // Include the vector library
 
  /**
  * @brief Levin recursion transformation
@@ -16,7 +14,7 @@
  * @tparam K The type of enumerating integer
  * @tparam series_templ is the type of series whose convergence we accelerate
  */
-template <std::floating_point T, std::unsigned_integral K, typename series_templ>
+template <typename T, std::unsigned_integral K, typename series_templ>
 class levin_recursion_algorithm : public series_acceleration<T, K, series_templ>
 {
 public:
@@ -36,14 +34,14 @@ public:
 
     T operator()(const K n, const K order) const {
         if (n == 0)
-            return DEF_UNDEFINED_SUM;
+            return T(0);
 
         if (order == 0)
             return this->series->S_n(n);
 
         const T result = (*this)(n, order, beta, 0) / (*this)(n, order, beta, 1);
 
-        if (!std::isfinite(result))
+        if (!isfinite(result))
             throw std::overflow_error("division by zero");
 
         return result;
@@ -52,23 +50,23 @@ private:
     const T beta;
 
     T operator()(const K n_time, const K k_time, const T b, const bool ND) const {
-        T w_n = static_cast<T>(pow(T(-1), n_time) * this->series->fact(n_time));
+        T w_n = pow(T(-1), T(n_time)) * static_cast<T>(this->series->fact(n_time));
         T R_0 = (ND == 0 ? this->series->S_n(n_time) : T(1)) / w_n;
 
         if (k_time == 0)
             return R_0;
 
         const K a1 = k_time - 1;
-        const T a2 = static_cast<T>(b + n_time);
-        const T a3 = static_cast<T>(a1 + a2);
+        const T a2 = b + static_cast<T>(n_time);
+        const T a3 = a2 + T(a1);
 
         const T res = static_cast<T>(fma(
             -a2 * (*this)(n_time, a1, b, ND),
-            pow(a3, a1 - 1) / pow(a3 + 1, a1),
+            pow(a3, T(a1) - T(1)) / pow(a3 + T(1), T(a1)),
             (*this)(n_time + 1, a1, b, ND)
         ));
 
-        if (!std::isfinite(res))
+        if (!isfinite(res))
             throw std::overflow_error("division by zero");
 
         return res;

@@ -9,7 +9,7 @@
 #include <vector> // Include the vector library
 #include "series.h" 
 
-template <std::floating_point T, std::unsigned_integral K, typename series_templ>
+template <typename T, std::unsigned_integral K, typename series_templ>
 class ford_sidi_algorithm_two : public series_acceleration<T, K, series_templ>
 {
 public:
@@ -35,9 +35,9 @@ public:
 
 		K m = n;
 		do
-			delta_squared_S_n = this->series->S_n(m + 2) - 2 * this->series->S_n(m + 1) + this->series->S_n(m);
+			delta_squared_S_n = this->series->S_n(m + 2) - T(2) * this->series->S_n(m + 1) + this->series->S_n(m);
 
-		while (delta_squared_S_n == 0 && --m > 0);
+		while (delta_squared_S_n == T(0) && --m > 0);
 
 		if (m == 0)
 			throw std::overflow_error("division by zero");

@@ -4,10 +4,8 @@
  */
 
 #pragma once
-#define DEF_UNDEFINED_SUM 0
 
 #include "series_acceleration.h" // Include the series header
-#include <vector> // Include the vector library
 
 
  /**
@@ -17,7 +15,7 @@
   * @tparam K Integer index type
   * @tparam series_templ Series type to accelerate
   */
-template <std::floating_point T, std::unsigned_integral K, typename series_templ>
+template <typename T, std::unsigned_integral K, typename series_templ>
 class levin_algorithm : public series_acceleration<T, K, series_templ>
 {
 public:
@@ -39,12 +37,12 @@ public:
 
 	T operator()(const K n, const K order) const {
 		if (n == 0)
-			return DEF_UNDEFINED_SUM;
+			return T(0);
 
 		if (order == 0)
 			return this->series->S_n(n);
 
-		T numerator = 0, denominator = 0, C_njk, S_nj, g_n, rest;
+		T numerator(0), denominator(0), C_njk, S_nj, g_n, rest;
 
 		for (K j = 0; j <= order; ++j) { //Standart Levin algo procedure
 			rest = this->series->minus_one_raised_to_power_n(j) * this->series->binomial_coefficient(static_cast<T>(order), j);
@@ -53,7 +51,7 @@ public:
 
 			S_nj = this->series->S_n(n + j);
 
-			g_n = 1 / (this->series->operator()(n + j));
+			g_n = T(1) / (this->series->operator()(n + j));
 
 			rest *= C_njk * g_n;
 
@@ -62,7 +60,7 @@ public:
 		}
 		numerator /= denominator;
 
-		if (!std::isfinite(numerator))
+		if (!isfinite(numerator))
 			throw std::overflow_error("division by zero");
 
 		return numerator;

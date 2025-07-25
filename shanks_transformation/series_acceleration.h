@@ -9,12 +9,8 @@
 /** @brief Default value for an unspecified series */
 #define NO_SERIES_GIVEN 0
 
-#include <functional>  // Include the functional library for std::function
 #include <iostream>   // Include the iostream library for I/O functionalities
-#include <exception>  // Include the exception library for std::exception
 #include <math.h>     // Include the math library for mathematical functions
-#include <string>	  // Include the library which contains the string class
-#include "series.h"
 
 
 /**
@@ -25,7 +21,7 @@
  * the partial sum after transformation is used, and the difference between the latter and the former.
  * @tparam T The type of the elements in the series, K The type of enumerating integer, series_templ is the type of series whose convergence we accelerate
  */
-template <std::floating_point T, std::unsigned_integral K, typename series_templ>
+template <typename T, std::unsigned_integral K, typename series_templ>
 class series_acceleration
 {
 public:
@@ -59,10 +55,10 @@ protected:
 	series_templ series;
 };
 
-template <std::floating_point T, std::unsigned_integral K, typename series_templ>
+template <typename T, std::unsigned_integral K, typename series_templ>
 series_acceleration<T, K, series_templ>::series_acceleration(const series_templ& series) : series(series) {}
 
-template <std::floating_point T, std::unsigned_integral K, typename series_templ>
+template <typename T, std::unsigned_integral K, typename series_templ>
 constexpr void series_acceleration<T, K, series_templ>::print_info() const
 {
 	std::cout << "transformation: " << typeid(*this).name() << '\n';

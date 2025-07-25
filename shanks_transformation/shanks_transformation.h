@@ -4,7 +4,6 @@
  */
 
 #pragma once
-#define DEF_UNDEFINED_SUM 0
 
 #include "series_acceleration.h" // Include the series header
 #include <vector>  // Include the vector library
@@ -13,7 +12,7 @@
  * @brief Shanks transformation for non-alternating series class.
  * @tparam T The type of the elements in the series, K The type of enumerating integer, series_templ is the type of series whose convergence we accelerate
  */
-template <std::floating_point T, std::unsigned_integral K, typename series_templ>
+template <typename T, std::unsigned_integral K, typename series_templ>
 class shanks_transform : public series_acceleration<T, K, series_templ>
 {
 public:
@@ -35,17 +34,17 @@ public:
 	T operator()(const K n, const K order) const;
 };
 
-template <std::floating_point T, std::unsigned_integral K, typename series_templ>
+template <typename T, std::unsigned_integral K, typename series_templ>
 shanks_transform<T, K, series_templ>::shanks_transform(const series_templ& series) : series_acceleration<T, K, series_templ>(series) {}
 
-template <std::floating_point T, std::unsigned_integral K, typename series_templ>
+template <typename T, std::unsigned_integral K, typename series_templ>
 T shanks_transform<T, K, series_templ>::operator()(const K n, const K order) const
 {
 	if (order == 0) [[unlikely]] /*it is convenient to assume that transformation of order 0 is no transformation at all*/
 		return this->series->S_n(n);
 
 	if (n < order || n == 0) [[unlikely]]
-		return DEF_UNDEFINED_SUM;
+		return T(0);
 
 	if (order == 1) [[unlikely]] 
 	{
@@ -55,18 +54,18 @@ T shanks_transform<T, K, series_templ>::operator()(const K n, const K order) con
 		a_n_plus_1 = this->series->operator()(n + 1);
 		tmp = -a_n_plus_1 * a_n_plus_1;
 
-		const T result = std::fma(a_n * a_n_plus_1, (a_n + a_n_plus_1) / (std::fma(a_n, a_n, tmp) - std::fma(a_n_plus_1, a_n_plus_1, tmp)), this->series->S_n(n));
-		if (!std::isfinite(result))
+		const T result = fma(a_n * a_n_plus_1, (a_n + a_n_plus_1) / (fma(a_n, a_n, tmp) - fma(a_n_plus_1, a_n_plus_1, tmp)), this->series->S_n(n));
+		if (!isfinite(result))
 			throw std::overflow_error("divison by zero");
 		return result;
 	}
 	//n > order >= 1
 
-	//TODO спросить у Парфенова, ибо жертвуем читаемостью кода, ради его небольшого ускорения
+	//TODO пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	const K n_minus_order = n - order;
 	const K n_plus_order = n + order;
 
-	std::vector<T> T_n(n_plus_order, 0);
+	std::vector<T> T_n(n_plus_order, T(0));
 
 	T a_n, a_n_plus_1, tmp;
 	a_n = this->series->operator()(n_minus_order);
@@ -80,24 +79,24 @@ T shanks_transform<T, K, series_templ>::operator()(const K n, const K order) con
 		tmp = -a_n_plus_1 * a_n_plus_1;
 
 		//formula[6]
-		T_n[i] = std::fma(a_n * a_n_plus_1, (a_n + a_n_plus_1) / (std::fma(a_n, a_n, tmp) - std::fma(a_n_plus_1, a_n_plus_1, tmp)), this->series->S_n(i));
+		T_n[i] = fma(a_n * a_n_plus_1, (a_n + a_n_plus_1) / (fma(a_n, a_n, tmp) - fma(a_n_plus_1, a_n_plus_1, tmp)), this->series->S_n(i));
 	}
-	std::vector<T> T_n_plus_1(n + order, 0);
+	std::vector<T> T_n_plus_1(n + order, T(0));
 	T a, b, c;
 	for (K j = 2; j <= order; ++j) {
 		for (K i = n_minus_order + j; i <= n_plus_order - j; ++i) { // int -> K
 			a = T_n[i];
 			b = T_n[i - 1];
 			c = T_n[i + 1];
-			/*if (!std::isfinite(abs(2 * T_n[i] - T_n[i - 1] - T_n[i + 1])))
+			/*if (!isfinite(abs(2 * T_n[i] - T_n[i - 1] - T_n[i + 1])))
 				throw std::overflow_error("division by zero");*/
 				/*T_n_plus_1[i] = T_n[i] - (T_n[i] - T_n[i - 1]) * (T_n[i + 1] - T_n[i]) / (T_n[i + 1] - 2 * T_n[i] + T_n[i - 1]);
 				T_n_plus_1[i] = std::fma(std::fma(T_n[i], T_n[i+1] + T_n[i-1] - T_n[i], -T_n[i-1]*T_n[i+1]), 1 / (2 * T_n[i] - T_n[i - 1] - T_n[i+1]), T_n[i]);*/
-			T_n_plus_1[i] = static_cast<T>(std::fma(std::fma(a, c + b - a, -b * c), 1 / (std::fma(2, a, -b - c)), a));
+			T_n_plus_1[i] = static_cast<T>(fma(fma(a, c + b - a, -b * c), T(1) / (fma(T(2), a, -b - c)), a));
 		}
 		T_n = T_n_plus_1;
 	}
-	if (!std::isfinite(T_n[n]))
+	if (!isfinite(T_n[n]))
 		throw std::overflow_error("division by zero");
 
 	return T_n[n];
@@ -107,7 +106,7 @@ T shanks_transform<T, K, series_templ>::operator()(const K n, const K order) con
 * @brief Shanks transformation for alternating series class.
 * @tparam T The type of the elements in the series, K The type of enumerating integer, series_templ is the type of series whose convergence we accelerate
 */
-template <std::floating_point T, std::unsigned_integral K, typename series_templ>
+template <typename T, std::unsigned_integral K, typename series_templ>
 class shanks_transform_alternating : public series_acceleration<T, K, series_templ>
 {
 public:
@@ -129,36 +128,36 @@ public:
 	T operator()(const K n, const K order) const;
 };
 
-template <std::floating_point T, std::unsigned_integral K, typename series_templ>
+template <typename T, std::unsigned_integral K, typename series_templ>
 shanks_transform_alternating<T, K, series_templ>::shanks_transform_alternating(const series_templ& series) : series_acceleration<T, K, series_templ>(series) {}
 
-template <std::floating_point T, std::unsigned_integral K, typename series_templ>
+template <typename T, std::unsigned_integral K, typename series_templ>
 T shanks_transform_alternating<T, K, series_templ>::operator()(const K n, const K order) const {
 	if (order == 0) [[unlikely]] /*it is convenient to assume that transformation of order 0 is no transformation at all*/
 		return this->series->S_n(n);
 
 	if (n < order || n == 0) [[unlikely]]
-		return DEF_UNDEFINED_SUM;
+		return T(0);
 
 	if (order == 1) [[unlikely]]
 	{
 		T a_n, a_n_plus_1, result;
 		a_n = this->series->operator()(n);
 		a_n_plus_1 = this->series->operator()(n + 1);
-		result = std::fma(a_n * a_n_plus_1, 1 / (a_n - a_n_plus_1), this->series->S_n(n));
-		if (!std::isfinite(result))
+		result = fma(a_n * a_n_plus_1, T(1) / (a_n - a_n_plus_1), this->series->S_n(n));
+		if (!isfinite(result))
 			throw std::overflow_error("division by zero");
 
 		return result;
 	}
 	//n > order >= 1
 
-	//TODO спросить у Парфенова, ибо жертвуем читаемостью кода, ради его небольшого ускорения
+	//TODO пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	const K n_minus_order = n - order;
 	const K n_minus_order1 = n_minus_order + 1;
 	const K n_plus_order = n + order;
 
-	std::vector<T> T_n(n_plus_order, 0);
+	std::vector<T> T_n(n_plus_order, T(0));
 
 	T a_n, a_n_plus_1;
 	a_n = this->series->operator()(n_minus_order);
@@ -169,20 +168,20 @@ T shanks_transform_alternating<T, K, series_templ>::operator()(const K n, const 
 		a_n_plus_1 = this->series->operator()(i + 1);
 
 		// formula [6]
-		T_n[i] = std::fma(a_n * a_n_plus_1, 1 / (a_n - a_n_plus_1), this->series->S_n(n));
+		T_n[i] = fma(a_n * a_n_plus_1, T(1) / (a_n - a_n_plus_1), this->series->S_n(n));
 	}
-	std::vector<T> T_n_plus_1(n_plus_order, 0);
+	std::vector<T> T_n_plus_1(n_plus_order, T(0));
 	T a, b, c;
 	for (K j = 2; j <= order; ++j) {
 		for (K i = n_minus_order + j; i <= n_plus_order - j; ++i) { // int -> K
 			a = T_n[i];
 			b = T_n[i - 1];
 			c = T_n[i + 1];
-			/*if (!std::isfinite(abs(2 * T_n[i] - T_n[i - 1] - T_n[i + 1])))
+			/*if (!isfinite(abs(2 * T_n[i] - T_n[i - 1] - T_n[i + 1])))
 				throw std::overflow_error("division by zero");*/
 				/*T_n_plus_1[i] = T_n[i] - (T_n[i] - T_n[i - 1]) * (T_n[i + 1] - T_n[i]) / (T_n[i + 1] - 2 * T_n[i] + T_n[i - 1]);
 				T_n_plus_1[i] = std::fma(std::fma(T_n[i], T_n[i+1] + T_n[i-1] - T_n[i], -T_n[i-1]*T_n[i+1]), 1 / (2 * T_n[i] - T_n[i - 1] - T_n[i+1]), T_n[i]);*/
-			T_n_plus_1[i] = std::fma(std::fma(a, c + b - a, -b * c), 1 / (2 * a - b - c), a);
+			T_n_plus_1[i] = fma(fma(a, c + b - a, -b * c), T(1) / (T(2) * a - b - c), a);
 		}
 		T_n = T_n_plus_1;
 	}

@@ -642,13 +642,13 @@
  };
  
  template <typename T, typename K>
- sinh_series<T, K>::sinh_series(T x) : series_base<T, K>(x, std::sinh(x)), requrrent_series_base<T, K>(x) {}
+ sinh_series<T, K>::sinh_series(T x) : series_base<T, K>(x, sinh(x)), requrrent_series_base<T, K>(x) {}
  
  template <typename T, typename K>
  T sinh_series<T, K>::acsess_row(K n)
  {
 	 if (n < 0)
-		 throw std::domain_error("negative integer in the input");
+		 throw domain_error("negative integer in the input");
  
 	 auto old_size = this->series_vector.size();
 	 this->series_vector.reserve(n);
@@ -664,7 +664,7 @@
  constexpr T sinh_series<T, K>::operator()(K n) const
  {
 	 if (n < 0)
-		 throw std::domain_error("negative integer in the input");
+		 throw domain_error("negative integer in the input");
 	 const T a = const_cast<sinh_series<T, K>*>(this)->acsess_row(n);
 	 return a;
  }

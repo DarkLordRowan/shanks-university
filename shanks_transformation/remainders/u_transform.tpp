@@ -2,11 +2,11 @@
 
 #include "remainders.hpp"
 
-template<std::floating_point T, std::unsigned_integral K>
+template<typename T, std::unsigned_integral K>
 T u_transform<T, K>::operator()(const K n, const K order, const series_base<T,K>* series, T scale) const {
-    const T result = 1 / (scale * series->operator()(n+order));
+    const T result = T(1) / (scale * series->operator()(n+order));
 
-    if (!std::isfinite(result)) throw std::overflow_error("division by zero");
+    if (!isfinite(result)) throw std::overflow_error("division by zero");
 
     return result;
  }

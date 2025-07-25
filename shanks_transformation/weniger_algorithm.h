@@ -7,9 +7,8 @@
 #define DEF_UNDEFINED_SUM 0
 
 #include "series_acceleration.h" // Include the series header
-#include <iostream>
 
-template<std::floating_point T, std::unsigned_integral K, typename series_templ>
+template<typename T, std::unsigned_integral K, typename series_templ>
 class weniger_algorithm : public series_acceleration<T, K, series_templ>
 {
 protected:
@@ -55,22 +54,22 @@ public:
 		T rest_a_n;
 
 		for (K m = 0; m < order - 1; ++m) 
-			coef *= (1 + m);
+			coef *= T(1 + m);
 		
-		//TODO спросить у Парфенова, ибо жертвуем читаемостью кода, ради его небольшого ускорения
+		//TODO пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 		K j1;
 
 		for (K j = 0; j <= order; ++j) {
 			j1 = j + 1;
 
 			rest = this->series->minus_one_raised_to_power_n(j) * binomial_coef;
-			binomial_coef *= (order - j) / j1;
+			binomial_coef *= T(order - j) / T(j1);
 
 			rest *= coef;
 
-			coef *= (j + order) / j1;
+			coef *= T(j + order) / T(j1);
 
-			a_n = 1 / this->series->operator()(j1);
+			a_n = T(1) / this->series->operator()(j1);
 
 			rest_a_n = rest * a_n;
 
@@ -82,7 +81,7 @@ public:
 
 		}
 		numerator /= denominator;
-		if (!std::isfinite(numerator))
+		if (!isfinite(numerator))
 			throw std::overflow_error("division by zero");
 
 		return numerator;

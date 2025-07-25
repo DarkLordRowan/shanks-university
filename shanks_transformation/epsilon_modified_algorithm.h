@@ -12,7 +12,7 @@
   * @tparam K Integer index type.
   * @tparam series_templ Series type to accelerate.
   */
-template <std::floating_point T, std::unsigned_integral K, typename series_templ>
+template <typename T, std::unsigned_integral K, typename series_templ>
 class epsilon_modified_algorithm : public series_acceleration<T, K, series_templ>
 {
 public:
@@ -33,7 +33,7 @@ public:
 
 	T operator()(const K n, const K order) const {
 
-		std::vector<std::vector<T>> eps(n, std::vector<T>(n, 0));
+		std::vector<std::vector<T>> eps(n, std::vector<T>(n, T(0)));
 
 		//std::vector<std::vector<T>> e(2, std::vector<T>(n, 0)); //2 vectors n length containing Epsilon table next and previous 
 
@@ -46,14 +46,14 @@ public:
 			for (K m = k; m < n; ++m) {
 				m1 = m - 1;
 				k1 = k - 1;
-				eps[m][k] = eps[m1][k1] + T(1) / (eps[m][k1] - eps[m1][k1]) / ((k & 1) ? order + T(k + 1) / 2 : T(2) / (k + 2));
+				eps[m][k] = eps[m1][k1] + T(1) / (eps[m][k1] - eps[m1][k1]) / ((k & 1) ? T(order +k + 1) / T(2) : T(2) / T(k + 2));
 
-				// по логике должно быть как написано ниже, то есть k1 - 1, вместо k1, 
-				// но в связи с тем, что кое кем был слижен код в тупую с чат гпт, точный вариант установаить невозможно
+				// пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ, пїЅпїЅ пїЅпїЅпїЅпїЅ k1 - 1, пїЅпїЅпїЅпїЅпїЅпїЅ k1, 
+				// пїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅ, пїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅ пїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 				//eps[m][k] = eps[m1][k1 - 1] + T(1) / (eps[m][k1] - eps[m1][k1]) / ((k & 1) ? order + T(k + 1) / 2 : T(2) / (k + 2));
 			}
 
-		if (!std::isfinite(eps[n - 1][n - 1]))
+		if (!isfinite(eps[n - 1][n - 1]))
 			throw std::overflow_error("division by zero");
 
 		return eps[n - 1][n - 1];
