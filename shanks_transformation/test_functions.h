@@ -4,11 +4,10 @@
  */
 
 #pragma once
-#include <exception>
-#include "test_functions.h"
-#include "series_acceleration.h"
+
 //#include "series.h"
 #include <chrono>
+#include <iostream>
 
  /**
  * @brief Function that prints out comparesment between transformed and nontransformed partial sums
@@ -143,7 +142,7 @@ void cmp_transformations(const K n, const K order, const series_templ&& series, 
 			diff_2 = series->get_sum() - test_2->operator()(i, order);
 			std::cout << "The transformation #1: S - T_" << i << " : " << diff_1 << '\n';
 			std::cout << "The transformation #2: S - T_" << i << " : " << diff_2 << '\n';
-			if (std::abs(diff_1) < std::abs(diff_2))
+			if (abs(diff_1) < abs(diff_2))
 				std::cout << "The transformation #1 is faster" << '\n';
 			else
 				std::cout << "The transformation #2 is faster" << '\n';

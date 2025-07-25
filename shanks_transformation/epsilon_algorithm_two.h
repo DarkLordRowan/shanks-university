@@ -4,7 +4,6 @@
  */
 
 #pragma once
-#define DEF_UNDEFINED_SUM 0
 
 #include "series_acceleration.h" // Include the series header
 #include <vector> // Include the vector library
@@ -17,7 +16,7 @@
   * @authors Kreinin R.G.
   * @tparam T The type of the elements in the series, K The type of enumerating integer, series_templ is the type of series whose convergence we accelerate
   */
-template <std::floating_point T, std::unsigned_integral K, typename series_templ>
+template <typename T, std::unsigned_integral K, typename series_templ>
 class epsilon_algorithm_two : public series_acceleration<T, K, series_templ>
 {
 public:
@@ -38,48 +37,48 @@ public:
     T operator()(const K n, const K order) const;
 };
 
-template <std::floating_point T, std::unsigned_integral K, typename series_templ>
+template <typename T, std::unsigned_integral K, typename series_templ>
 epsilon_algorithm_two<T, K, series_templ>::epsilon_algorithm_two(const series_templ& series) : series_acceleration<T, K, series_templ>(series) {}
 
-template <std::floating_point T, std::unsigned_integral K, typename series_templ>
+template <typename T, std::unsigned_integral K, typename series_templ>
 T epsilon_algorithm_two<T, K, series_templ>::operator()(const K n, const K order) const
 {
     if (n == 0)
-        return DEF_UNDEFINED_SUM;
+        return T(0);
 
     if (order == 0)
         return this->series->S_n(n);
 
     K k = 2 * order + n - (n & 1);
 
-    std::vector<std::vector<T>> e(4, std::vector<T>(k + 3, 0)); //4 vectors k+3 length containing four Epsilon Table rows 
+    std::vector<std::vector<T>> e(4, std::vector<T>(k + 3, T(0))); //4 vectors k+3 length containing four Epsilon Table rows 
 
     K j = k;
     do { //Counting first row of Epsilon Table
         e[3][j] = this->series->S_n(j);
     } while (--j > 0);
 
-    T a = 0;
+    T a(0);
 
-    //TODO спросить у Парфенова, ибо жертвуем читаемостью кода, ради его небольшого ускорения
+    //TODO пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
     K i1, i2;
 
     while (k > -1) {
         for (K i = 0; i < k; ++i) {
             i1 = i + 1;
             i2 = i + 2;
-            e[0][i] = static_cast<T>(e[2][i1] + 1.0 / (e[3][i1] - e[3][i])); //Standart Epsilon Wynn algorithm
+            e[0][i] = e[2][i1] + T(1) / (e[3][i1] - e[3][i]); //Standart Epsilon Wynn algorithm
 
-            if (!std::isfinite(e[0][i]) && i2 <= k) { //This algorithm is used if new elliment is corrupted.
-                a = e[2][i2] * static_cast<T>(1.0 / (1.0 - e[2][i2] / e[2][i1]));
+            if (!isfinite(e[0][i]) && i2 <= k) { //This algorithm is used if new elliment is corrupted.
+                a = e[2][i2] * T(1) / (T(1) - e[2][i2] / e[2][i1]);
 
-                a += e[2][i] * static_cast<T>(1.0 / (1.0 - e[2][i] / e[2][i1]));
+                a += e[2][i] * T(1) / (T(1) - e[2][i] / e[2][i1]);
 
-                a -= e[0][i2] * static_cast<T>(1.0 / (1.0 - e[0][i2] / e[2][i1]));
+                a -= e[0][i2] * T(1) / (T(1) - e[0][i2] / e[2][i1]);
 
-                e[0][i] = static_cast<T>(a / (1.0 + a / e[2][i1]));
+                e[0][i] = a / (T(1) + a / e[2][i1]);
             }
-            if (!std::isfinite(e[0][i])) //If new element is still corrupted we just copy prev. element, so we will get result
+            if (!isfinite(e[0][i])) //If new element is still corrupted we just copy prev. element, so we will get result
                 e[0][i] = e[2][i];         
         }
         std::swap(e[0], e[1]); //Swapping rows of Epsilon Table. First ine will be overwriteen next turn
@@ -89,7 +88,7 @@ T epsilon_algorithm_two<T, K, series_templ>::operator()(const K n, const K order
         --k;
     }
     
-    if (!std::isfinite(e[0][0]))
+    if (!isfinite(e[0][0]))
         throw std::overflow_error("division by zero");
 
     return e[0][0];  //Only odd rows have mathmatical scense. Always returning e[0][0]

@@ -4,7 +4,6 @@
  */
 
 #pragma once
-#define DEF_UNDEFINED_SUM 0
 
 #include "series_acceleration.h" // Include the series header
 #include <vector> // Include the vector library
@@ -16,7 +15,7 @@
   * @tparam K Index type
   * @tparam series_templ Series type to accelerate
   */
-template <std::floating_point T, std::unsigned_integral K, typename series_templ>
+template <typename T, std::unsigned_integral K, typename series_templ>
 class epsilon_algorithm_three : public series_acceleration<T, K, series_templ>
 {
 private:
@@ -39,7 +38,7 @@ public:
 	*/
 	T operator()(const K n, const K order) const {
         if (n == 0)
-            return DEF_UNDEFINED_SUM;
+            return T(0);
 
         if (order == 0)
             return this->series->S_n(n);
@@ -47,17 +46,17 @@ public:
         K N = n; // int -> K
 
         const T EMACH = std::numeric_limits<T>::epsilon(); // The smallest relative spacing for the T
-        const T EPRN = 50 * EMACH;
+        const T EPRN = T(50) * EMACH;
         const T OFRN = std::numeric_limits<T>::max(); //The largest finite magnitude that can be represented by a T 
 
-        T result = 0; //New result
-        T abs_error = 0; //Absolute error
-        T resla = 0; //Last result
+        T result(0); //New result
+        T abs_error(0); //Absolute error
+        T resla(0); //Last result
 
         K newelm, num, NUM, K1, ib, ie, in;
         T RES, E0, E1, E2, E3, E1ABS, DELTA1, DELTA2, DELTA3, ERR1, ERR2, ERR3, TOL1, TOL2, TOL3, SS, EPSINF; // int -> K
 
-        std::vector<T> e(N + 3, 0); //First N eliments of epsilon table + 2 elements for math
+        std::vector<T> e(N + 3, T(0)); //First N eliments of epsilon table + 2 elements for math
 
         for (K i = 0; i <= N; ++i) //Filling up Epsilon Table
             e[i] = this->series->S_n(i);
@@ -74,36 +73,36 @@ public:
                 E0 = e[K1 - 2];
                 E1 = e[K1 - 1];
                 E2 = RES;
-                E1ABS = std::abs(E1);
+                E1ABS = abs(E1);
                 DELTA2 = E2 - E1;
-                ERR2 = std::abs(DELTA2);
-                TOL2 = std::max(std::abs(E2), E1ABS) * EMACH;
+                ERR2 = abs(DELTA2);
+                TOL2 = T(max(abs(E2), abs(E1))) * EMACH;
                 DELTA3 = E1 - E0;
-                ERR3 = std::abs(DELTA3);
-                TOL3 = std::max(E1ABS, std::abs(E0)) * EMACH;
+                ERR3 = abs(DELTA3);
+                TOL3 = T(max(abs(E1), abs(E0))) * EMACH;
 
                 if (ERR2 > TOL2 || ERR3 > TOL3) {
                     E3 = e[K1];
                     e[K1] = E1;
                     DELTA1 = E1 - E3;
-                    ERR1 = std::abs(DELTA1);
-                    TOL1 = std::max(E1ABS, std::abs(E3)) * EMACH;
+                    ERR1 = abs(DELTA1);
+                    TOL1 = T(max(abs(E1), abs(E3))) * EMACH;
 
                     if (ERR1 <= TOL1 || ERR2 <= TOL2 || ERR3 <= TOL3) {
                         N = I + I - 1;
                         break;
                     }
 
-                    SS = static_cast<T>(1.0 / DELTA1 + 1.0 / DELTA2 - 1.0 / DELTA3);
-                    EPSINF = std::abs(SS * E1);
+                    SS = T(1.0) / DELTA1 + T(1.0) / DELTA2 - T(1.0) / DELTA3;
+                    EPSINF = abs(SS * E1);
 
                     if (EPSINF > epsilon_threshold) {
-                        RES = static_cast<T>(E1 + 1.0 / SS);
+                        RES = static_cast<T>(E1 + T(1.0) / SS);
                         e[K1] = RES;
                         K1 -= 2;
-                        T ERROR = ERR2 + std::abs(RES - E2) + ERR3;
+                        T ERROR = ERR2 + T(abs(RES - E2)) + ERR3;
 
-                        if (ERROR <= abs_error) {
+                        if (abs(ERROR) <= abs(abs_error)) {
                             abs_error = ERROR;
                             result = RES;
                         }
@@ -137,11 +136,11 @@ public:
                     e[j] = e[in];
             }
 
-            abs_error = std::max(std::abs(result - resla), EPRN * std::abs(result));
+            abs_error = max(abs(result - resla), abs(EPRN * T(abs(result))));
             resla = result;
         }
 
-        if (!std::isfinite(result))
+        if (!isfinite(result))
             throw std::overflow_error("division by zero");
 
         return result;

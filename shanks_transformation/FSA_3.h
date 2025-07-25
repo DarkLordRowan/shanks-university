@@ -7,11 +7,10 @@
 
 #include "series_acceleration.h" // Include the series header
 #include <vector> // Include the vector library
-#include "series.h" 
 #include <cmath>
 
 
-template <std::floating_point T, std::unsigned_integral K, typename series_templ>
+template <typename T, std::unsigned_integral K, typename series_templ>
 class ford_sidi_algorithm_three : public series_acceleration<T, K, series_templ>{
 public:
 
@@ -30,10 +29,10 @@ public:
     T operator()(const K n, const K k) const;
 };
 
-template <std::floating_point T, std::unsigned_integral K, typename series_templ>
+template <typename T, std::unsigned_integral K, typename series_templ>
 ford_sidi_algorithm_three<T, K, series_templ>::ford_sidi_algorithm_three(const series_templ& series) : series_acceleration<T, K, series_templ>(series) {}
 
-template <std::floating_point T, std::unsigned_integral K, typename series_templ>
+template <typename T, std::unsigned_integral K, typename series_templ>
 T ford_sidi_algorithm_three<T, K, series_templ>::operator()(const K n, const K order) const {  
     if (n == 0)
         throw std::domain_error("zero integer in the input");
@@ -47,9 +46,9 @@ T ford_sidi_algorithm_three<T, K, series_templ>::operator()(const K n, const K o
     std::vector<T> FSI(G.size());
     std::vector<std::vector<T>> FSG(m + 2, std::vector<T>(G.size()));
 
-    G[0] = this->series->operator()(n1) * n;
+    G[0] = this->series->operator()(n1) * T(n);
     
-    T Te = T(1) / n;
+    T Te = T(1/ n);
     
     for (K k = 1; k <= m; ++k)
         G[k] = Te * G[k - 1];
@@ -57,7 +56,7 @@ T ford_sidi_algorithm_three<T, K, series_templ>::operator()(const K n, const K o
     FSA[n1] = this->series->S_n(n1);
     FSI[n1] = T(1);
 
-    if (G[0] != 0) {
+    if (G[0] != T(0)) {
         FSA[n1] /= G[0];
         FSI[n1] /= G[0];
         for (K i = 1; i <= m; ++i)
@@ -87,7 +86,7 @@ T ford_sidi_algorithm_three<T, K, series_templ>::operator()(const K n, const K o
 
     const T res = FSA[0] / FSI[0];
 
-    if (!std::isfinite(res))
+    if (!isfinite(res))
         throw std::overflow_error("division by zero");
 
     return res;

@@ -12,7 +12,7 @@
   * @tparam K Integer index type.
   * @tparam series_templ Series type to accelerate.
   */
-template <std::floating_point T, std::unsigned_integral K, typename series_templ>
+template <typename T, std::unsigned_integral K, typename series_templ>
 class theta_modified_algorithm : public series_acceleration<T, K, series_templ>
 {
 public:
@@ -45,7 +45,7 @@ public:
 		for (K i = 0; i < n; i++)
 			current[i] = this->series->operator()(i);
 
-		for (K k = 0; k < 1; ++k) { // тут вместо 1 было iter, возможно iter - параметр, но если и так, то от него смысла нету, тк при iter > 1 ответ все время 0
+		for (K k = 0; k < 1; ++k) { // пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ 1 пїЅпїЅпїЅпїЅ iter, пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ iter - пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅ пїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅ, пїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ, пїЅпїЅ пїЅпїЅпїЅ iter > 1 пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ 0
 			for (K i = 0; i < m; ++i) {
 				i1 = i + 1;
 				i2 = i + 2;
@@ -66,7 +66,7 @@ public:
 
 		const T res = current[m - 1];
 
-		if (!std::isfinite(res))
+		if (!isfinite(res))
 			throw std::overflow_error("division by zero");
 
 		return res;

@@ -4,10 +4,10 @@
 #include <vector>
 
 
-template<std::floating_point T, std::unsigned_integral K, typename series_templ>
+template<typename T, std::unsigned_integral K, typename series_templ>
 inline T drummonds_D_algorithm<T,K,series_templ>::calc_result(const K n, const K order) const {
 
-	T numerator = T(0), denominator = T(0);
+	T numerator(0), denominator(0);
 	T rest;
 
 	for (K j = 0; j <= n; ++j) {
@@ -18,16 +18,16 @@ inline T drummonds_D_algorithm<T,K,series_templ>::calc_result(const K n, const K
 
 	T result = numerator / denominator;
 
-	if (!std::isfinite(result))
+	if (!isfinite(result))
 		throw std::overflow_error("division by zero");
 	return result;
 }
 
-template<std::floating_point T, std::unsigned_integral K, typename series_templ>
+template<typename T, std::unsigned_integral K, typename series_templ>
 inline T drummonds_D_algorithm<T,K,series_templ>::calc_result_rec(const K n, const K order) const {
 
-	std::vector<T>   Num(order + 1, 0);
-	std::vector<T> Denom(order+1, 0);
+	std::vector<T>   Num(order + 1, T(0));
+	std::vector<T> Denom(order + 1, T(0));
 
     //init the base values
 	for (K i = 0; i < order+1; ++i) {
@@ -39,17 +39,17 @@ inline T drummonds_D_algorithm<T,K,series_templ>::calc_result_rec(const K n, con
 	for (K i = 1; i <= order; ++i)
 		for (K j = 0; j <= order - i; ++j) {
 			Denom[j] = Denom[j+1] - Denom[j];
-			Num[j] = Num[j+1] - Num[j];
+			Num[j]   = Num[j+1]   -   Num[j];
 		}
 
 	T result = Num[0] / Denom[0];
 
-	if (!std::isfinite(result))
+	if (!isfinite(result))
 		throw std::overflow_error("division by zero");
 	return result;
 }
 
-template<std::floating_point T, std::unsigned_integral K, typename series_templ>
+template<typename T, std::unsigned_integral K, typename series_templ>
 drummonds_D_algorithm<T,K,series_templ>::drummonds_D_algorithm(const series_templ& series, char variant, bool useRecFormulas) : 
 series_acceleration<T, K, series_templ>(series),
 useRecFormulas(useRecFormulas)
@@ -74,9 +74,9 @@ useRecFormulas(useRecFormulas)
     }
 }
 
-template<std::floating_point T, std::unsigned_integral K, typename series_templ>
+template<typename T, std::unsigned_integral K, typename series_templ>
 T drummonds_D_algorithm<T,K,series_templ>::operator()(const K n, const K order) const { 
     T result = (useRecFormulas ? calc_result_rec(n,order) : calc_result(n, order));
-    if (!std::isfinite(result)) throw std::overflow_error("division by zero");
+    if (!isfinite(result)) throw std::overflow_error("division by zero");
     return result;
 }

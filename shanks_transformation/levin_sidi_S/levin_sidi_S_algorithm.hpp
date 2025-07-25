@@ -19,7 +19,7 @@
  * @param useRecFormulas - use reccurence relation, the calculation will be done using arrays
  * @param variant        - type of remainder to use
 */
-template<std::floating_point T, std::unsigned_integral K, typename series_templ>
+template<typename T, std::unsigned_integral K, typename series_templ>
 class levin_sidi_S_algorithm : public series_acceleration<T, K, series_templ> {
 protected:
 

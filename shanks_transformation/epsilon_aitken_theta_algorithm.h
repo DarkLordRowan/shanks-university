@@ -13,7 +13,7 @@
   * @tparam K Integer index type.
   * @tparam series_templ Series type to accelerate.
   */
-template <std::floating_point T, std::unsigned_integral K, typename series_templ>
+template <typename T, std::unsigned_integral K, typename series_templ>
 class epsilon_aitken_theta_algorithm : public series_acceleration<T, K, series_templ>
 {
 public:
@@ -34,9 +34,9 @@ public:
 
     T operator()(const K n, const K order) const {
         if (n < 4)
-            return 0;
+            return T(0);
 
-        std::vector<T> current(n);
+        std::vector<T> current(n, T(0));
 
         for (K i = 0; i < n; i++)
             current[i] = this->series->operator()(i);
@@ -47,21 +47,21 @@ public:
 
         K i1, i2;
 
-        for (K k = 1; k <= n; ++k) { // тут вместо n было iter, возможно iter - параметр, но если и так, то от него смысла нету, тк при iter > 1 ответ все время 0
+        for (K k = 1; k <= n; ++k) { // пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ n пїЅпїЅпїЅпїЅ iter, пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ iter - пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅ пїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅ, пїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ, пїЅпїЅ пїЅпїЅпїЅ iter > 1 пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ 0
             std::vector<T> step1(n, T(0));
             std::vector<T> step3(n, T(0));
 
             if (order == 1) {
-                gamma = T(1) / 2 / k;
+                gamma = T(1) / T(2 * k);
                 lambda = T(1) - gamma;
             }
             else if (order == 2) {
-                gamma = T(2) / 3 / k;
+                gamma = T(2) / T(3 * k);
                 lambda = T(1) - gamma;
             }
             else {
-                gamma = T(1) / (k + 1);
-                lambda = k * gamma;
+                gamma = T(1) / T(k + 1);
+                lambda = T(k) * gamma;
             }
 
             /*
@@ -94,7 +94,7 @@ public:
 
         const T res = current[n - 4];
 
-        if (!std::isfinite(res))
+        if (!isfinite(res))
             throw std::overflow_error("division by zero");
 
         return res;

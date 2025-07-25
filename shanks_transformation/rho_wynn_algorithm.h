@@ -5,7 +5,6 @@
  */
 
 #pragma once
-#define DEF_UNDEFINED_SUM 0
 
 #include "series_acceleration.h" // Include the series header
 #include <memory> // For std::unique_ptr
@@ -17,7 +16,7 @@
   * @tparam K The type of enumerating integer
   * @tparam series_templ is the type of series whose convergence we accelerate
   */
-template <std::floating_point T, std::unsigned_integral K, typename series_templ>
+template <typename T, std::unsigned_integral K, typename series_templ>
 class rho_Wynn_algorithm : public series_acceleration<T, K, series_templ>
 {
 protected:
@@ -42,7 +41,7 @@ protected:
 		const T res = (recursive_calculate_body(n, order1 - 1, S_n, 1) + numerator_func->operator()(n, order, this->series, gamma, RHO)) / 
 			(recursive_calculate_body(n, order1, S_n, 1) - recursive_calculate_body(n, order1, S_n, 0));
 
-		if (!std::isfinite(res))
+		if (!isfinite(res))
 			throw std::overflow_error("division by zero");
 
 		return res;
@@ -58,7 +57,7 @@ protected:
 			return S_n;
 
 		if (order == -1)
-			return 0;
+			return T(0);
 
 		//TODO �������� � ���������, ��� �������� ����������� ����, ���� ��� ���������� ���������
 		const K order1 = order - 1;
@@ -67,7 +66,7 @@ protected:
 		const T res = (recursive_calculate_body(nj, order1 - 1, S_n, 1) + numerator_func->operator()(nj, order, this->series, gamma, RHO)) /
 			(recursive_calculate_body(nj, order1, S_n, 1) - recursive_calculate_body(nj, order1, S_n, 0));
 
-		if (!std::isfinite(res))
+		if (!isfinite(res))
 			throw std::overflow_error("division by zero");
 
 		return res;

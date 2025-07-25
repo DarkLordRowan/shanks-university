@@ -8,7 +8,6 @@
 
 #include "series_acceleration.h" // Include the series header
 #include "./remainders/remainders.hpp"
-#include <vector>
 #include <memory> // For std::unique_ptr
 
 /**
@@ -19,7 +18,7 @@
  * @param remainder_func - remainder type
  */
 
-template<std::floating_point T, std::unsigned_integral K, typename series_templ>
+template<typename T, std::unsigned_integral K, typename series_templ>
 class M_levin_sidi_algorithm : public series_acceleration<T, K, series_templ>
 {
 protected:
@@ -38,8 +37,8 @@ protected:
 	 */
 
 	T calculate(const K n, const K order) const {
-		if (gamma <= n - 1)
-			throw std::domain_error("gamma cannot be lesser than n-1");
+		//if (gamma <= T(n - 1))
+		//	throw std::domain_error("gamma cannot be lesser than n-1");
 
 		T numerator = T(0), denominator = T(0);
 		T w_n, rest;
@@ -49,31 +48,31 @@ protected:
 		T S_n = this->series->S_n(order);
 
 		T rest_w_n;
-		T down_coef = static_cast<T>(gamma + order + 2), up_coef = down_coef - n;
+		T down_coef = gamma + static_cast<T>(order + 2), up_coef = down_coef - T(n);
 
 		//TODO �������� � ���������, ��� �������� ����������� ����, ���� ��� ���������� ���������
 		K j1;
 		
 		for (K m = 0; m < n - 1; ++m) {
-			up *= (up_coef + m);
-			down *= (down_coef + m);
+			up *= (up_coef + T(m));
+			down *= (down_coef + T(m));
 		}
 
 		up /= down;
-		down_coef = static_cast<T>(gamma + order + 1);
-		up_coef = (down_coef - n + 1);
+		down_coef = gamma + static_cast<T>(order + 1);
+		up_coef   = gamma + static_cast<T>(1 - n);
 		
 		for (K j = 0; j <= n; ++j) {
 			j1 = j + 1;
 			rest = this->series->minus_one_raised_to_power_n(j) * binomial_coef;
 
-			binomial_coef = binomial_coef * (n - j) / j1;
+			binomial_coef = binomial_coef * T(n - j) / T(j1);
 
 			rest *= up;
 
-			up /= (up_coef + j) * ( down_coef + j);
+			up /= (up_coef + T(j)) * ( down_coef + T(j));
 
-			w_n = remainder_func->operator()(order, j, this->series, static_cast<T>(-gamma - n));
+			w_n = remainder_func->operator()(order, j, this->series, -gamma-static_cast<T>(n));
 
 			rest_w_n = rest * w_n;
 
@@ -86,7 +85,7 @@ protected:
 
 		numerator /= denominator;
 
-		if (!std::isfinite(numerator))
+		if (!isfinite(numerator))
 			throw std::overflow_error("division by zero");
 
 		return numerator;

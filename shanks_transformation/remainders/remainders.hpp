@@ -8,7 +8,7 @@
 * @brief Abstract class for remainders
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template<std::floating_point T, std::unsigned_integral K>
+template<typename T, std::unsigned_integral K>
 class transform_base{
 public:
 
@@ -27,7 +27,7 @@ public:
 * @brief Class for u variant of remainder
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template<std::floating_point T, std::unsigned_integral K>
+template<typename T, std::unsigned_integral K>
 class u_transform : public transform_base<T, K> {
     /**
     * @brief Operator() function for computing u type remainders, such as, w_n = n*a_n (for S algo with beta: w_n = (beta + n) * a_n)
@@ -45,7 +45,7 @@ class u_transform : public transform_base<T, K> {
 * @brief Class for t variant of remainder
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template<std::floating_point T, std::unsigned_integral K>
+template<typename T, std::unsigned_integral K>
 class t_transform : public transform_base<T, K> {
     /**
     * @brief Operator() function for computing t type remainders, such as, w_n = a_n
@@ -63,7 +63,7 @@ class t_transform : public transform_base<T, K> {
 * @brief Class for t-wave variant of remainder
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template<std::floating_point T, std::unsigned_integral K>
+template<typename T, std::unsigned_integral K>
 class d_transform : public transform_base<T, K>  {
     /**
     * @brief Operator() function for computing t-wave type remainders, such as, w_n = a_(n+1)
@@ -81,7 +81,7 @@ class d_transform : public transform_base<T, K>  {
 * @brief Class for v variant of remainder
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template<std::floating_point T, std::unsigned_integral K>
+template<typename T, std::unsigned_integral K>
 class v_transform : public transform_base<T, K> {
     /**
     * @brief Operator() function for computing v type remainders, such as, w_n = a_n*a_(n+1)/(a_(n+1)-a_n)
@@ -99,7 +99,7 @@ class v_transform : public transform_base<T, K> {
 * @brief Class for v-wave variant of remainder
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template<std::floating_point T, std::unsigned_integral K>
+template<typename T, std::unsigned_integral K>
 class v_transform_2 : public transform_base<T, K> {
     /**
     * @brief Operator() function for computing v-wave type remainders, such as, w_n = a_n*a_(n+1)/(a_n-a_(n+1))

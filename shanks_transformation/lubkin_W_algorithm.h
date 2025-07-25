@@ -7,7 +7,6 @@
 #define DEF_UNDEFINED_SUM 0
 
 #include "series_acceleration.h" // Include the series header
-#include <vector>
 
 /**
  * @brief W_transformation class template.
@@ -16,7 +15,7 @@
  * @tparam series_templ is the type of series whose convergence we accelerate
  */
 
-template<std::floating_point T, std::unsigned_integral K, typename series_templ>
+template<typename T, std::unsigned_integral K, typename series_templ>
 class W_lubkin_algorithm : public series_acceleration<T, K, series_templ>
 {
 protected:
@@ -44,7 +43,7 @@ protected:
 
 		//calculate all basic parts of transfor
 
-		//TODO спросить у Парфенова, ибо жертвуем читаемостью кода, ради его небольшого ускорения
+		//TODO пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 		K order1 = order - 1;
 		T W0 = calculate(n, order1, S_n, 0);
 		T W1 = calculate(n, order1, S_n, 1);
@@ -61,7 +60,7 @@ protected:
 		//T result = W1 - ((W2 - W1) * (W1 - W0) * (W3 - 2 * W2 + W1)) / ((W3 - W2) * (W2 - 2 * W1 + W0) - (W1 - W0) * (W3 - 2 * W2 + W1)); //straigh
 		const T result = fma(-Wo1, Woo1 / (Woo2 - Woo1), W1); // optimized
 
-		if (!std::isfinite(result))
+		if (!isfinite(result))
 			throw std::overflow_error("division by zero");
 
 		return result;

@@ -7,10 +7,10 @@
 #pragma once
 
 #include "series_acceleration.h" // Include the series header
-#include <vector> // Include the vector library
 #include "series.h" 
+#include "shanks_transformation.h"
 
-template <std::floating_point T, std::unsigned_integral K, typename series_templ>
+template <typename T, std::unsigned_integral K, typename series_templ>
 class ford_sidi_algorithm : public series_acceleration<T, K, series_templ>
 {
 public:
@@ -31,7 +31,7 @@ public:
 	*/
 	T operator()(const K n, const K k) const 
 	{
-		one_series<T, K>* ones_seq = new one_series<T,K>(1);
+		one_series<T, K>* ones_seq = new one_series<T,K>(T(1));
 
 		// Насколько мы коллективным разумом поняли, g это как бы ряд используемого преобразования(shanks_transform, richardson_extrapolation, G_transformation и тд)
 		// пока я не реализовал выбор и оставил только shanks_transform, хотя в дальнейшем выбор конечно же надо прикрутить

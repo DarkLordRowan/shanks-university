@@ -9,6 +9,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 add_executable(shanks_transformation main.cpp)
 target_include_directories(shanks_transformation PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}
+    "libs"
 )
 
 # Добавьте источник в исполняемый файл этого проекта.
