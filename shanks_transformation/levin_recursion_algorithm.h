@@ -25,7 +25,10 @@ public:
       */
     
     // previous standart value is -1.5 
-    explicit levin_recursion_algorithm<T, K, series_templ>(const series_templ& series, const T beta_ = static_cast<T>(-1.5));
+    explicit levin_recursion_algorithm(
+        const series_templ& series, 
+        const T beta_ = static_cast<T>(-1.5)
+    );
 
     //levin_recursion_algorithm(const series_templ& series, const T beta_ = T(-1.5)) : series_acceleration<T, K, series_templ>(series), beta(beta_) {}
      /**
