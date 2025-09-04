@@ -7,7 +7,6 @@
 #define DEF_UNDEFINED_SUM 0
 
 #include "series_acceleration.h" // Include the series header
-#include <vector> // Include the vector library
 
  /**
  * @brief Levin recursion transformation
@@ -26,7 +25,9 @@ public:
       */
     
     // previous standart value is -1.5 
-    levin_recursion_algorithm(const series_templ& series, const T beta_ = T(-1.5)) : series_acceleration<T, K, series_templ>(series), beta(beta_) {}
+    explicit levin_recursion_algorithm<T, K, series_templ>(const series_templ& series, const T beta_ = static_cast<T>(-1.5));
+
+    //levin_recursion_algorithm(const series_templ& series, const T beta_ = T(-1.5)) : series_acceleration<T, K, series_templ>(series), beta(beta_) {}
      /**
       * @brief Levin recursion transformation for series function.
       * @param n The number of terms in the partial sum.
@@ -48,6 +49,8 @@ public:
 
         return result;
     }
+
+
 private:
     const T beta;
 
@@ -74,3 +77,14 @@ private:
         return res;
     }
 };
+
+template <std::floating_point T, std::unsigned_integral K, typename series_templ>
+levin_recursion_algorithm<T, K, series_templ>::levin_recursion_algorithm(
+    const series_templ& series, 
+    const T beta_
+    ) :
+    series_acceleration<T, K, series_templ>(series),
+    beta(beta_)
+{
+//TODO: тут нужна ли проверка на допустимость значения бета?
+}

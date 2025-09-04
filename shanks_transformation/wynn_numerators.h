@@ -4,7 +4,14 @@
  * @authors Yurov P.I. Bezzaborov A.A.
 */
 #pragma once
-#include "series_acceleration.h"
+
+#include "series.h"
+
+enum numerator_variant{
+           rho_variant,
+   generalized_variant,
+     gamma_rho_variant,
+};
 
 /**
  * @brief Abstract class for numerator
