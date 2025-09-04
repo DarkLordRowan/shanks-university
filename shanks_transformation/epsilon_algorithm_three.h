@@ -20,6 +20,7 @@ template <std::floating_point T, std::unsigned_integral K, typename series_templ
 class epsilon_algorithm_three : public series_acceleration<T, K, series_templ>
 {
 private:
+
     T epsilon_threshold; // Threshold for epsilon, defaults to 1e-3
 
 public:
@@ -27,7 +28,7 @@ public:
 	* @brief Parameterized constructor to initialize the Epsilon Algorithm MK-2.
 	* @param series The series class object to be accelerated
 	*/
-    epsilon_algorithm_three(const series_templ& series, const T epsilon_threshold_ = T(1e-3)) : series_acceleration<T, K, series_templ>(series), epsilon_threshold(epsilon_threshold_) {}
+    explicit epsilon_algorithm_three(const series_templ& series, const T epsilon_threshold_ = static_cast<T>(1e-3));
 
 	/**
 	* @brief Fast impimentation of Epsilon algorithm.
@@ -147,3 +148,12 @@ public:
         return result;
     }
 };
+
+template <std::floating_point T, std::unsigned_integral K, typename series_templ>
+epsilon_algorithm_three<T, K, series_templ>::epsilon_algorithm_three(
+    const series_templ& series, 
+    const T epsilon_threshold_
+    ) : 
+    series_acceleration<T, K, series_templ>(series), 
+    epsilon_threshold(epsilon_threshold_) 
+{}

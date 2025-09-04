@@ -62,7 +62,6 @@ T shanks_transform<T, K, series_templ>::operator()(const K n, const K order) con
 	}
 	//n > order >= 1
 
-	//TODO спросить у Парфенова, ибо жертвуем читаемостью кода, ради его небольшого ускорения
 	const K n_minus_order = n - order;
 	const K n_plus_order = n + order;
 
@@ -153,7 +152,6 @@ T shanks_transform_alternating<T, K, series_templ>::operator()(const K n, const 
 	}
 	//n > order >= 1
 
-	//TODO спросить у Парфенова, ибо жертвуем читаемостью кода, ради его небольшого ускорения
 	const K n_minus_order = n - order;
 	const K n_minus_order1 = n_minus_order + 1;
 	const K n_plus_order = n + order;

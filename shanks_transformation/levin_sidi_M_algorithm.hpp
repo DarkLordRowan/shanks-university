@@ -19,9 +19,10 @@
  */
 
 template<std::floating_point T, std::unsigned_integral K, typename series_templ>
-class M_levin_sidi_algorithm : public series_acceleration<T, K, series_templ>
+class levin_sidi_M_algorithm : public series_acceleration<T, K, series_templ>
 {
 protected:
+
 	const T gamma;
 	std::unique_ptr<const transform_base<T, K>> remainder_func;
 
@@ -37,7 +38,7 @@ protected:
 	 */
 
 	T calculate(const K n, const K order) const {
-		if (gamma <= n - 1)
+		if (gamma - static_cast<T>(n - 1) <= static_cast<T>(0))
 			throw std::domain_error("gamma cannot be lesser than n-1");
 
 		T numerator = T(0), denominator = T(0);
@@ -48,31 +49,30 @@ protected:
 		T S_n = this->series->S_n(order);
 
 		T rest_w_n;
-		T down_coef = static_cast<T>(gamma + order + 2), up_coef = down_coef - n;
+		T down_coef = gamma + static_cast<T>(order + 2), up_coef = down_coef - static_cast<T>(n);
 
-		//TODO �������� � ���������, ��� �������� ����������� ����, ���� ��� ���������� ���������
 		K j1;
 		
 		for (K m = 0; m < n - 1; ++m) {
-			up *= (up_coef + m);
-			down *= (down_coef + m);
+			up   *= (up_coef   + static_cast<T>(m));
+			down *= (down_coef + static_cast<T>(m));
 		}
 
 		up /= down;
-		down_coef = static_cast<T>(gamma + order + 1);
-		up_coef = (down_coef - n + 1);
+		down_coef = gamma + static_cast<T>(order + 1);
+		up_coef   = down_coef - static_cast<T>(n + 1);
 		
 		for (K j = 0; j <= n; ++j) {
 			j1 = j + 1;
 			rest = this->series->minus_one_raised_to_power_n(j) * binomial_coef;
 
-			binomial_coef = binomial_coef * (n - j) / j1;
+			binomial_coef = binomial_coef * static_cast<T>(n - j) / static_cast<T>(j1);
 
 			rest *= up;
 
-			up /= (up_coef + j) * ( down_coef + j);
+			up /= (up_coef + static_cast<T>(j)) * ( down_coef + static_cast<T>(j));
 
-			w_n = remainder_func->operator()(order, j, this->series, static_cast<T>(-gamma - n));
+			w_n = remainder_func->operator()(order, j, this->series, -gamma-static_cast<T>(n));
 
 			rest_w_n = rest * w_n;
 
@@ -96,14 +96,16 @@ public:
 	/**
 	c* @brief Parameterized constructor to initialize the Levin-Sidi M-transformation.
 	 * @param series The series class object to be accelerated
-	 * @param func Remainder function
+	 * @param variant Remainder type
+	 * @param gamma_ Parameter //TODO более подробно
 	*/
 
-	M_levin_sidi_algorithm(const series_templ& series, const transform_base<T, K>* func, const T gamma_ = T(10)) : series_acceleration<T, K, series_templ>(series), remainder_func(func), gamma(gamma_) {
-
-		if (func == nullptr) 
-			throw std::domain_error("null pointer remainder function");
-	}
+	//levin_sidi_M_algorithm(const series_templ& series, const transform_base<T, K>* func, const T gamma_ = T(10)) : series_acceleration<T, K, series_templ>(series), remainder_func(func), gamma(gamma_)
+	explicit levin_sidi_M_algorithm(
+		const series_templ& series, 
+		const remainder_type variant = remainder_type::u_variant, 
+		T gamma_ = static_cast<T>(10)
+	);
 
 	// Default destructor is sufficient since unique_ptr handles deletion
 
@@ -119,3 +121,35 @@ public:
 		return calculate(n, order);
 	}
 };
+
+
+template<std::floating_point T, std::unsigned_integral K, typename series_templ>
+levin_sidi_M_algorithm<T, K, series_templ>::levin_sidi_M_algorithm(
+	const series_templ& series, 
+	const remainder_type variant, 
+	const T gamma_
+	) :
+	series_acceleration<T, K, series_templ>(series),
+	gamma(gamma_)
+{
+
+	switch(variant){
+        case remainder_type::u_variant :
+            remainder_func.reset(new u_transform<T, K>());
+            break;
+        case remainder_type::t_variant :
+            remainder_func.reset(new t_transform<T, K>());
+            break;
+        case remainder_type::v_variant :
+            remainder_func.reset(new v_transform<T, K>());
+            break;
+        case remainder_type::t_wave_variant:
+            remainder_func.reset(new t_wave_transform<T, K>());
+            break;
+        case remainder_type::v_wave_variant:
+            remainder_func.reset(new v_wave_transform<T, K>());
+            break;
+        default:
+            remainder_func.reset(new u_transform<T, K>());
+    }
+}

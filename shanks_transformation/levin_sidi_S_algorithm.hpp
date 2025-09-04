@@ -54,7 +54,13 @@ public:
 	* @param useRecFormulas use reccurence or straightforward formula 
     * @param parameter value of beta parameter
 	*/
-    explicit levin_sidi_S_algorithm(const series_templ& series, char variant = 'u', bool useRecFormulas = false,  T parameter = T(1));
+
+    explicit levin_sidi_S_algorithm(
+        const series_templ& series, 
+        const remainder_type variant = remainder_type::u_variant, 
+        bool useRecFormulas = false,  
+        T parameter = T(1)
+    );
 
     /**
     * @brief S-transformation.
@@ -100,15 +106,6 @@ inline T levin_sidi_S_algorithm<T, K,series_templ>::calc_result(K n, K order) co
 
 template<std::floating_point T, std::unsigned_integral K, typename series_templ>
 inline T levin_sidi_S_algorithm<T, K,series_templ>::calc_result_rec(K n, K order) const{
-    //  пример:
-    //  S^(20)_3
-    //      |    \     
-    //  S^(20)_2    S^(21)_2
-    //      |    \      |     \  
-    //  S^(20)_1    S^(21)_1    S^(22)_1
-    //      |    \      |     \    |      \         
-    //  S^(20)_0    S^(21)_0    S^(22)_0    S^(23)_0 
-    //
 
     std::vector<T>   Num(order + 1, 0);
     std::vector<T> Denom(order + 1, 0);
@@ -145,7 +142,12 @@ inline T levin_sidi_S_algorithm<T, K,series_templ>::calc_result_rec(K n, K order
 }
 
 template<std::floating_point T, std::unsigned_integral K, typename series_templ>
-levin_sidi_S_algorithm<T, K, series_templ>::levin_sidi_S_algorithm(const series_templ& series, char variant, bool useRecFormulas,  T parameter ) : 
+levin_sidi_S_algorithm<T, K, series_templ>::levin_sidi_S_algorithm(
+    const series_templ& series, 
+    remainder_type variant, 
+    bool useRecFormulas,  
+    T parameter
+    ) : 
     series_acceleration<T, K, series_templ>(series),
     useRecFormulas(useRecFormulas)
 {
@@ -153,30 +155,32 @@ levin_sidi_S_algorithm<T, K, series_templ>::levin_sidi_S_algorithm(const series_
     // beta must be nonzero positive real number
     // beta = 1 is default
     //check parameter else default
-    if (parameter > T(0)) this->beta = parameter;
+    if (parameter > static_cast<T>(0)) this->beta = parameter;
     else {
-        this->beta = T(1);
+        this->beta = static_cast<T>(1);
         //TODO: наверное сообщение по типу usage
     }
 
     //check variant else default 'u'
     //TODO: тоже самое наверное
     switch(variant){
-        case 't':
+        case remainder_type::u_variant :
+            remainder_func.reset(new u_transform<T, K>());
+            break;
+        case remainder_type::t_variant :
             remainder_func.reset(new t_transform<T, K>());
             break;
-        case 'v':
+        case remainder_type::v_variant :
             remainder_func.reset(new v_transform<T, K>());
             break;
-        case 'd':
-            remainder_func.reset(new d_transform<T, K>());
+        case remainder_type::t_wave_variant:
+            remainder_func.reset(new t_wave_transform<T, K>());
             break;
-        case 'w':
-            remainder_func.reset(new v_transform_2<T, K>());
+        case remainder_type::v_wave_variant:
+            remainder_func.reset(new v_wave_transform<T, K>());
             break;
         default:
             remainder_func.reset(new u_transform<T, K>());
-            break;
     }
 }
 

@@ -50,7 +50,11 @@ public:
 	* @param variant Type of remainder to use
 	* @param useRecFormulas use reccurence or straightforward formula 
 	*/
-	explicit drummonds_D_algorithm(const series_templ& series, char variant = 'u', bool useRecFormulas = false);
+	explicit drummonds_D_algorithm(
+		const series_templ& series, 
+		const remainder_type variant = remainder_type::u_variant, 
+		bool useRecFormulas = false
+	);
 
 	/**
     * @brief D-transformation.
@@ -109,23 +113,30 @@ inline T drummonds_D_algorithm<T,K,series_templ>::calc_result_rec(const K n, con
 }
 
 template<std::floating_point T, std::unsigned_integral K, typename series_templ>
-drummonds_D_algorithm<T,K,series_templ>::drummonds_D_algorithm(const series_templ& series, char variant, bool useRecFormulas) : 
-series_acceleration<T, K, series_templ>(series),
-useRecFormulas(useRecFormulas)
+drummonds_D_algorithm<T,K,series_templ>::drummonds_D_algorithm(
+	const series_templ& series, 
+	const remainder_type variant, 
+	bool useRecFormulas
+	) : 
+	series_acceleration<T, K, series_templ>(series),
+	useRecFormulas(useRecFormulas)
 {
     //check variant else default 'u'
     switch(variant){
-        case 't':
+        case remainder_type::u_variant :
+            remainder_func.reset(new u_transform<T, K>());
+            break;
+        case remainder_type::t_variant :
             remainder_func.reset(new t_transform<T, K>());
             break;
-        case 'v':
+        case remainder_type::v_variant :
             remainder_func.reset(new v_transform<T, K>());
             break;
-        case 'd':
-            remainder_func.reset(new d_transform<T, K>());
+        case remainder_type::t_wave_variant:
+            remainder_func.reset(new t_wave_transform<T, K>());
             break;
-        case 'w':
-            remainder_func.reset(new v_transform_2<T, K>());
+        case remainder_type::v_wave_variant:
+            remainder_func.reset(new v_wave_transform<T, K>());
             break;
         default:
             remainder_func.reset(new u_transform<T, K>());

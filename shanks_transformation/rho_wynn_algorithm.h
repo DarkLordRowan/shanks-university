@@ -36,7 +36,6 @@ protected:
 
 		const T S_n = this->series->S_n(n);
 
-		//TODO �������� � ���������, ��� �������� ����������� ����, ���� ��� ���������� ���������
 		const K order1 = order - 1;
 
 		const T res = (recursive_calculate_body(n, order1 - 1, S_n, 1) + numerator_func->operator()(n, order, this->series, gamma, RHO)) / 
@@ -60,7 +59,6 @@ protected:
 		if (order == -1)
 			return 0;
 
-		//TODO �������� � ���������, ��� �������� ����������� ����, ���� ��� ���������� ���������
 		const K order1 = order - 1;
 		const K nj = n + j;
 
@@ -77,15 +75,17 @@ public:
      * @brief Parameterized constructor to initialize the Rho Wynn Algorithm.
      * @param series The series class object to be accelerated
      */
-	rho_Wynn_algorithm(const series_templ& series, const numerator_base<T, K>* func, const T gamma_ = T(1), const T RHO_ = T(0)) : series_acceleration<T, K, series_templ>(series), numerator_func(func), gamma(gamma_), RHO(RHO_) {
-		if (func == nullptr)
-			throw std::domain_error("null poniter numerator function");
-	}
+	explicit rho_Wynn_algorithm(
+		const series_templ& series, 
+		const numerator_variant variant = numerator_variant::rho_variant, 
+		const T gamma_ = T(1), 
+		const T RHO_ = T(0)
+	);
 
 	//Default destructor is sufficient since unique_ptr handles deletion
 
 	/**
-     * @brief Rho Wynn algorithm.�
+     * @brief Rho Wynn algorithm.
      * Computes the partial sum after the transformation using the Rho Wynn Algorithm.
      * For more information, see
      * @param n The number of terms in the partial sum.
@@ -113,3 +113,36 @@ public:
 		return calculate_impl(static_cast<K>(n), static_cast<int>(order));
 	}
 };
+
+template <std::floating_point T, std::unsigned_integral K, typename series_templ>
+rho_Wynn_algorithm<T, K, series_templ>::rho_Wynn_algorithm(
+	const series_templ& series, 
+	const numerator_variant variant,
+	const T gamma_, 
+	const T RHO_
+	) : 
+	series_acceleration<T, K, series_templ>(series), 
+	gamma(gamma_), 
+	RHO(RHO_) 
+{
+	//TODO: проверить можно ли использовать стандартные значения, указанный в конструктуре, в других вариантах + унифицировать названия
+	// есть ли какие то ограничения на кастомные значения?
+	// classic (0), gamma (1), gamma-rho (2): 
+	// 0 -> gamma = 1, RHO = 0
+	// 1 -> gamma = 2, RHO = 0
+	// 2 -> gamma = 2, RHO = 1
+
+	switch(variant) {
+		case numerator_variant::rho_variant :
+			numerator_func.reset(new rho_transform<T, K>());
+			break;
+		case numerator_variant::generalized_variant :
+			numerator_func.reset(new rho_transform<T, K>());
+			break;
+		case numerator_variant::gamma_rho_variant :
+			numerator_func.reset(new rho_transform<T, K>());
+			break;
+		default:
+			numerator_func.reset(new rho_transform<T, K>());
+	}
+}
