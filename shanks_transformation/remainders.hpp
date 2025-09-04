@@ -2,7 +2,7 @@
 #pragma once
 
 #include <concepts>
-#include "../series.h"
+#include "series.h"
 
 /**
 * @brief Abstract class for remainders
@@ -39,7 +39,15 @@ class u_transform : public transform_base<T, K> {
     */
     T operator() (const K n, const K order, const series_base<T,K>* series, T scale = T(1)) const override;
 };
-#include "u_transform.tpp"
+
+template<std::floating_point T, std::unsigned_integral K>
+T u_transform<T, K>::operator()(const K n, const K order, const series_base<T,K>* series, T scale) const {
+    const T result = T(1) / (scale * series->operator()(n+order));
+
+    if (!std::isfinite(result)) throw std::overflow_error("division by zero");
+
+    return result;
+ }
 
 /**
 * @brief Class for t variant of remainder
@@ -57,7 +65,13 @@ class t_transform : public transform_base<T, K> {
     */
     T operator() (const K n, const K order, const series_base<T,K>* series, T scale = T(1)) const override;
 };
-#include "t_transform.tpp"
+
+template<std::floating_point T, std::unsigned_integral K>
+T t_transform<T, K>::operator()(const K n, const K order, const series_base<T,K>* series, T scale) const {
+    const T result = T(1) / series->operator()(n+order);
+    if (!std::isfinite(result)) throw std::overflow_error("division by zero");
+    return result;
+}
 
 /**
 * @brief Class for t-wave variant of remainder
@@ -75,7 +89,15 @@ class d_transform : public transform_base<T, K>  {
     */
     T operator() (const K n, const K order, const series_base<T,K>* series, T scale = T(1)) const override;
 };
-#include "d_transform.tpp"
+
+template<std::floating_point T, std::unsigned_integral K>
+T d_transform<T,K>::operator()(const K n, const K order, const series_base<T, K>* series, T scale ) const {
+	const T result = T(1) / series->operator()(n + order + 1);
+
+	if (!std::isfinite(result)) throw std::overflow_error("division by zero");
+	
+	return result;
+}
 
 /**
 * @brief Class for v variant of remainder
@@ -93,7 +115,14 @@ class v_transform : public transform_base<T, K> {
     */
     T operator() (const K n, const K order, const series_base<T,K>* series, T scale = T(1)) const override;
 };
-#include "v_transform.tpp"
+
+template<std::floating_point T, std::unsigned_integral K>
+T v_transform<T,K>::operator()(const K n, const K order, const series_base<T,K>* series, T scale) const {
+    const T a1 = series->operator()(n+order), a2  = series->operator()(n+order+1);
+    const T result = (a2-a1) / (a1 * a2);
+	if (!std::isfinite(result)) throw std::overflow_error("division by zero");
+	return result;
+}
 
 /**
 * @brief Class for v-wave variant of remainder
@@ -111,4 +140,11 @@ class v_transform_2 : public transform_base<T, K> {
     */
     T operator() (const K n, const K order, const series_base<T,K>* series, T scale = T(1)) const override;
 };
-#include "v_transform_2.tpp"
+
+template<std::floating_point T, std::unsigned_integral K>
+T v_transform_2<T,K>::operator()(const K n, const K order, const series_base<T,K>* series, T scale) const  {
+    const T a1 = series->operator()(n+order), a2 = series->operator()(n+order+1);
+    const T result = (a1 - a2) / (a1 * a2);
+	if (!std::isfinite(result)) throw std::overflow_error("division by zero");
+	return result;
+}
