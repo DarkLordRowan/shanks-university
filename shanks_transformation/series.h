@@ -112,9 +112,10 @@
 #define NO_X_GIVEN 0
 #define NO_SERIES_EXPRESSION_GIVEN 0
 #include <numbers>
-#include <limits>
 #include <vector>
 #include <concepts>
+
+using std::isfinite;
 
  /**
  * @brief Abstract class for series

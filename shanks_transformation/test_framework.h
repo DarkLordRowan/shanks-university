@@ -912,7 +912,7 @@ inline static void main_testing_function()
 		eval_transform_time(n, order, std::move(series.get()), std::move(transform.get()));
 		break;
 	case test_function_id_t::test_all_transforms_id: //Testing all functions for series
-
+		/*
 		std::cout << '\n';
 		std::cout << "|------------------------------------------|" << '\n';
 		std::cout << "| Use standart beta_Levin_S_algorithm value? 1<-true or 0<-false : "; std::cin >> standart; std::cout << "|" << '\n';
@@ -990,7 +990,7 @@ inline static void main_testing_function()
 			std::cout << "|------------------------------------------|" << '\n';
 		}
 		else epsilon_algorithm_3 = T(1e-3);
-
+		*/
 		for (K i = 1; i <= n; i++)
 		{
 			print_sum(i, std::move(series.get()));
@@ -1015,16 +1015,16 @@ inline static void main_testing_function()
 			transform.reset(new epsilon_algorithm_three<T, K, decltype(series.get())>(series.get(), epsilon_algorithm_3));
 			print_transform(i, order, std::move(transform.get()));
 
-			//rho-wynn
-			transform.reset(new rho_Wynn_algorithm<T, K, decltype(series.get())>(series.get(), new rho_transform<T, K>{}));
+			//rho-wynn classic
+			transform.reset(new rho_Wynn_algorithm<T, K, decltype(series.get())>(series.get(), numerator_variant::rho_variant));
 			print_transform(i, order, std::move(transform.get()));
 
-			//rho-wynn
-			transform.reset(new rho_Wynn_algorithm<T, K, decltype(series.get())>(series.get(), new generilized_transform<T, K>{}, gamma_rho_Wynn_algorithm));
+			//rho-wynn generalized
+			transform.reset(new rho_Wynn_algorithm<T, K, decltype(series.get())>(series.get(), numerator_variant::generalized_variant));
 			print_transform(i, order, std::move(transform.get()));
 
-			//rho-wynn
-			transform.reset(new rho_Wynn_algorithm<T, K, decltype(series.get())>(series.get(), new gamma_rho_transform<T, K>{}, gamma_rho_Wynn_algorithm, RHO_rho_Wynn_algorithm));
+			//rho-wynn gamma-rho
+			transform.reset(new rho_Wynn_algorithm<T, K, decltype(series.get())>(series.get(), numerator_variant::gamma_rho_variant));
 			print_transform(i, order, std::move(transform.get()));
 
 			//theta-brezinski
@@ -1043,22 +1043,22 @@ inline static void main_testing_function()
 			print_transform(i, order, std::move(transform.get()));
 
 			//levin-sidi S U
-			transform.reset(new levin_sidi_S_algorithm<T, K, decltype(series.get())>(series.get(), remainder_type::u_variant, false, beta_Levin_S_algorithm));
+			transform.reset(new levin_sidi_S_algorithm<T, K, decltype(series.get())>(series.get(), remainder_type::u_variant, false));
 			print_transform(i, order, std::move(transform.get()));
 			//
 
 			//levin-sidi S T
-			transform.reset(new levin_sidi_S_algorithm<T, K, decltype(series.get())>(series.get(), remainder_type::t_variant, false, beta_Levin_S_algorithm));
+			transform.reset(new levin_sidi_S_algorithm<T, K, decltype(series.get())>(series.get(), remainder_type::t_variant, false));
 			print_transform(i, order, std::move(transform.get()));
 			//
 
 			//levin-sidi S T-WAVE
-			transform.reset(new levin_sidi_S_algorithm<T, K, decltype(series.get())>(series.get(), remainder_type::t_wave_variant, false, beta_Levin_S_algorithm));
+			transform.reset(new levin_sidi_S_algorithm<T, K, decltype(series.get())>(series.get(), remainder_type::t_wave_variant, false));
 			print_transform(i, order, std::move(transform.get()));
 			//
 
 			//levin-sidi S V
-			transform.reset(new levin_sidi_S_algorithm<T, K, decltype(series.get())>(series.get(), remainder_type::v_variant, false, beta_Levin_S_algorithm));
+			transform.reset(new levin_sidi_S_algorithm<T, K, decltype(series.get())>(series.get(), remainder_type::v_variant, false));
 			print_transform(i, order, std::move(transform.get()));
 
 			//levin-sidi D U
@@ -1082,22 +1082,22 @@ inline static void main_testing_function()
 			//
 
 			//levin-sidi M U
-			transform.reset(new levin_sidi_M_algorithm<T, K, decltype(series.get())>(series.get(), remainder_type::u_variant, gamma_Levin_M_algorithm));
+			transform.reset(new levin_sidi_M_algorithm<T, K, decltype(series.get())>(series.get(), remainder_type::u_variant));
 			print_transform(i, order, std::move(transform.get()));
 			//
 
 			//levin-sidi M T
-			transform.reset(new levin_sidi_M_algorithm<T, K, decltype(series.get())>(series.get(), remainder_type::t_variant, gamma_Levin_M_algorithm));
+			transform.reset(new levin_sidi_M_algorithm<T, K, decltype(series.get())>(series.get(), remainder_type::t_variant));
 			print_transform(i, order, std::move(transform.get()));
 			//
 
 			//levin-sidi M T-WAVE
-			transform.reset(new levin_sidi_M_algorithm<T, K, decltype(series.get())>(series.get(), remainder_type::t_wave_variant, gamma_Levin_M_algorithm));
+			transform.reset(new levin_sidi_M_algorithm<T, K, decltype(series.get())>(series.get(), remainder_type::t_wave_variant));
 			print_transform(i, order, std::move(transform.get()));
 			//
 
 			//levin-sidi M V-WAVE
-			transform.reset(new levin_sidi_M_algorithm<T, K, decltype(series.get())>(series.get(), remainder_type::v_wave_variant, gamma_Levin_M_algorithm));
+			transform.reset(new levin_sidi_M_algorithm<T, K, decltype(series.get())>(series.get(), remainder_type::v_wave_variant));
 			print_transform(i, order, std::move(transform.get()));
 			//
 
