@@ -4,10 +4,8 @@
  * @authors Yurov P.I. Bezzaborov A.A.
  */
 #pragma once
-#define DEF_UNDEFINED_SUM 0
 
 #include "series_acceleration.h" // Include the series header
-#include <iostream>
 
 template<std::floating_point T, std::unsigned_integral K, typename series_templ>
 class weniger_algorithm : public series_acceleration<T, K, series_templ>
@@ -57,26 +55,25 @@ public:
 		for (K m = 0; m < order - 1; ++m) 
 			coef *= (1 + m);
 		
-		//TODO спросить у Парфенова, ибо жертвуем читаемостью кода, ради его небольшого ускорения
-		K j1;
+		T j1;
 
 		for (K j = 0; j <= order; ++j) {
-			j1 = j + 1;
+			j1 = static_cast<T>(j + 1);
 
 			rest = this->series->minus_one_raised_to_power_n(j) * binomial_coef;
-			binomial_coef *= (order - j) / j1;
+			binomial_coef *= static_cast<T>(order - j) / j1;
 
 			rest *= coef;
 
-			coef *= (j + order) / j1;
+			coef *= static_cast<T>(j + order) / j1;
 
-			a_n = 1 / this->series->operator()(j1);
+			a_n = static_cast<T>(1) / this->series->operator()(j1);
 
 			rest_a_n = rest * a_n;
 
 			numerator += rest_a_n * S_n;
 
-			S_n += this->series->operator()(j1);
+			S_n += this->series->operator()(j + 1);
 
 			denominator += rest_a_n;
 

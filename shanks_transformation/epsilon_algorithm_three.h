@@ -4,9 +4,9 @@
  */
 
 #pragma once
-#define DEF_UNDEFINED_SUM 0
 
 #include "series_acceleration.h" // Include the series header
+#include <exception>
 #include <vector> // Include the vector library
 #undef epsilon
 
@@ -40,7 +40,7 @@ public:
 	*/
 	T operator()(const K n, const K order) const {
         if (n == 0)
-            return DEF_UNDEFINED_SUM;
+            return 0; // TODO: диагностика
 
         if (order == 0)
             return this->series->S_n(n);

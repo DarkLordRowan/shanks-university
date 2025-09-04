@@ -4,7 +4,6 @@
  * @authors Yurov P.I. Bezzaborov A.A.
  */
 #pragma once
-#define DEF_UNDEFINED_SUM 0
 
 #include "series_acceleration.h" // Include the series header
 
@@ -43,7 +42,6 @@ protected:
 
 		//calculate all basic parts of transfor
 
-		//TODO �������� � ���������, ��� �������� ����������� ����, ���� ��� ���������� ���������
 		K order1 = order - 1;
 		T W0 = calculate(n, order1, S_n, 0);
 		T W1 = calculate(n, order1, S_n, 1);

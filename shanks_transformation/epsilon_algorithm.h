@@ -46,7 +46,6 @@ T epsilon_algorithm<T, K, series_templ>::operator()(const K n, const K order) co
 	const K m = 2 * order;
 	K max_ind = m + n; // int -> K mark
 
-	//TODO спросить у Парфенова, ибо жертвуем читаемостью кода, ради его небольшого ускорения
 	const K n1 = n - 1;
 
 	std::vector<T> e0(max_ind + 1, 0);

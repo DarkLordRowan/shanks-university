@@ -4,7 +4,6 @@
  */
 
 #pragma once
-#define DEF_UNDEFINED_SUM 0
 
 #include "series_acceleration.h" // Include the series header
 #include <vector>  // Include the vector library
@@ -45,7 +44,7 @@ T shanks_transform<T, K, series_templ>::operator()(const K n, const K order) con
 		return this->series->S_n(n);
 
 	if (n < order || n == 0) [[unlikely]]
-		return DEF_UNDEFINED_SUM;
+		return 0; // TODO: диагностика
 
 	if (order == 1) [[unlikely]] 
 	{
@@ -137,7 +136,7 @@ T shanks_transform_alternating<T, K, series_templ>::operator()(const K n, const 
 		return this->series->S_n(n);
 
 	if (n < order || n == 0) [[unlikely]]
-		return DEF_UNDEFINED_SUM;
+		return 0; // TODO: диагностика
 
 	if (order == 1) [[unlikely]]
 	{

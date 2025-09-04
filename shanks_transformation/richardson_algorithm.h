@@ -4,7 +4,6 @@
  */
 
 #pragma once
-#define DEF_UNDEFINED_SUM 0
 
 #include "series_acceleration.h" // Include the series header
 #include <vector> // Include the vector library
@@ -34,7 +33,7 @@ public:
     T operator() (const K n, const K order) const {
         // in the method we don't use order, it's only a stub 
         if (n == 0)
-            return DEF_UNDEFINED_SUM;
+            return 0; // TODO: диагностика
 
         std::vector<std::vector<T>> e(2, std::vector<T>(n + 1, 0)); //2 vectors n + 1 length containing Richardson table next and previous 
 

@@ -27,7 +27,7 @@ protected:
     T beta = T(1);
     std::unique_ptr<const transform_base<T, K>> remainder_func;
     bool useRecFormulas = false;
-    char variant = 'u';
+    remainder_type variant = remainder_type::u_variant;
 
     /**
 	* @brief Function to calculate S-tranformation directly by formula. For more information see p. 57 8.2-7 [https://arxiv.org/pdf/math/0306302.pdf]
@@ -93,7 +93,7 @@ inline T levin_sidi_S_algorithm<T, K,series_templ>::calc_result(K n, K order) co
         rest *= (up_pochamer / down_pochamer) * remainder_func->operator()(n, 
             j, 
             this->series,
-             (variant == 'u' ? beta : T(1))
+             (variant == remainder_type::u_variant ? beta : T(1))
             );
         numerator   += rest * this->series->S_n(n + j);
         denominator += rest;
