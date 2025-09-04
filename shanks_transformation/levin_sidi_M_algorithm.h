@@ -7,8 +7,7 @@
 #define DEF_UNDEFINED_SUM 0
 
 #include "series_acceleration.h" // Include the series header
-#include "./remainders/remainders.hpp"
-#include <vector>
+#include "remainders.hpp"
 #include <memory> // For std::unique_ptr
 
 /**
@@ -101,6 +100,7 @@ public:
 	*/
 
 	M_levin_sidi_algorithm(const series_templ& series, const transform_base<T, K>* func, const T gamma_ = T(10)) : series_acceleration<T, K, series_templ>(series), remainder_func(func), gamma(gamma_) {
+
 		if (func == nullptr) 
 			throw std::domain_error("null pointer remainder function");
 	}

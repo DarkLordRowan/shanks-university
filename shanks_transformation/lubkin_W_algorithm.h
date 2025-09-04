@@ -7,7 +7,6 @@
 #define DEF_UNDEFINED_SUM 0
 
 #include "series_acceleration.h" // Include the series header
-#include <vector>
 
 /**
  * @brief W_transformation class template.
@@ -44,7 +43,7 @@ protected:
 
 		//calculate all basic parts of transfor
 
-		//TODO спросить у Парфенова, ибо жертвуем читаемостью кода, ради его небольшого ускорения
+		//TODO пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 		K order1 = order - 1;
 		T W0 = calculate(n, order1, S_n, 0);
 		T W1 = calculate(n, order1, S_n, 1);

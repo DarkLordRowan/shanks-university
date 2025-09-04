@@ -5,16 +5,15 @@
 
 #pragma once
 #include <memory>
-#include <string> 
 #include <set>
 
 #include "wynn_numerators.h"
-#include "./remainders/remainders.hpp"
+#include "remainders.hpp"
 #include "shanks_transformation.h"
 #include "epsilon_algorithm.h"
 #include "levin_algorithm.h"
-#include "./levin_sidi_S/levin_sidi_S_algorithm.hpp"
-#include "./drummond_D/drummond_D_algorithm.hpp"
+#include "levin_sidi_S_algorithm.hpp"
+#include "drummond_D_algorithm.hpp"
 #include "epsilon_algorithm_two.h"
 #include "chang_whynn_algorithm.h"
 #include "test_functions.h"
@@ -39,27 +38,27 @@
   * @edited by Kreynin R.G.
   */
 enum transformation_id_t {
-	null_transformation_id,
-	shanks_transformation_id,
-	epsilon_algorithm_id,
-	levin_algorithm_id,
-	epsilon_algorithm_2_id,
-	S_algorithm,
-	D_algorithm,
-	chang_epsilon_algorithm,
-	M_algorithm,
-	weniger_transformation,
-	rho_wynn_transformation_id,
+			   null_transformation_id,
+			 shanks_transformation_id,
+				 epsilon_algorithm_id,
+				   levin_algorithm_id,
+			   epsilon_algorithm_2_id,
+					   S_algorithm_id,
+					   D_algorithm_id,
+		   chang_epsilon_algorithm_id,
+					   M_algorithm_id,
+			weniger_transformation_id,
+		   rho_wynn_transformation_id,
 	brezinski_theta_transformation_id,
-	epsilon_algorithm_3_id,
-	levin_recursion_id,
-	W_algorithm_id,
-	richardson_algorithm_id,
-	Ford_Sidi_algorithm_id,
-	Ford_Sidi_algorithm_two_id,
-	Ford_Sidi_algorithm_three_id,
-	epsilon_modified_algorithm_id,
-	theta_modified_algorithm_id,
+			   epsilon_algorithm_3_id,
+				   levin_recursion_id,
+					   W_algorithm_id,
+			  richardson_algorithm_id,
+		       Ford_Sidi_algorithm_id,
+		   Ford_Sidi_algorithm_two_id,
+		 Ford_Sidi_algorithm_three_id,
+		epsilon_modified_algorithm_id,
+		  theta_modified_algorithm_id,
 	epsilon_aitken_theta_algorithm_id
 };
 /**
@@ -384,13 +383,12 @@ inline void init_levin(transformation_id_t id, std::unique_ptr<series_base<T, K>
 	std::cout << '\n';
 	std::cout << "|--------------------------------------|" << '\n';
 	std::cout << "| choose what type of transformation u,t,d or v: "; std::cin >> type; std::cout << "|" << '\n';
-	if (id != transformation_id_t::M_algorithm)
+	if (id != transformation_id_t::M_algorithm_id)
 	{
 		std::cout << "| Use recurrence formula? 1<-true or 0<-false : "; std::cin >> recursive; std::cout << "|" << '\n';
 	}
 	std::cout << "|--------------------------------------|" << '\n';
 
-	T beta = T{};	//parameter for LevinType transformations algorithm
 	T gamma = T{};	//parameter for LevinType transformations algorithm
 
 	transform_base<T, K>* ptr = NULL;
@@ -398,7 +396,7 @@ inline void init_levin(transformation_id_t id, std::unique_ptr<series_base<T, K>
 	if (type == 'u') ptr = new u_transform<T, K>{};
 	if (type == 't') ptr = new t_transform<T, K>{};
 	if (type == 'v') {
-		if (id != transformation_id_t::M_algorithm)
+		if (id != transformation_id_t::M_algorithm_id)
 			ptr = new v_transform<T, K>{};
 		else
 			ptr = new v_transform_2<T, K>{};
@@ -407,28 +405,7 @@ inline void init_levin(transformation_id_t id, std::unique_ptr<series_base<T, K>
 
 	if (ptr == NULL) throw std::domain_error("chosen wrong type of transformation");
 
-	switch (id) {
-	case transformation_id_t::S_algorithm:
-
-		std::cout << '\n';
-		std::cout << "|------------------------------------------|" << '\n';
-		std::cout << "| Use standart beta value? 1<-true or 0<-false : "; std::cin >> standart; std::cout << "|" << '\n';
-		std::cout << "|------------------------------------------|" << '\n';
-
-		if (!standart) {
-			std::cout << '\n';
-			std::cout << "|------------------------------------------|" << '\n';
-			std::cout << "| Enter parameter beta: "; std::cin >> beta;
-			std::cout << "|------------------------------------------|" << '\n';
-		}
-		else beta = 1;
-
-		transform.reset(new levin_sidi_S_algorithm<T, K, decltype(series.get())>(series.get(), type, recursive, beta));
-		return;
-	case transformation_id_t::D_algorithm:
-		transform.reset(new drummonds_D_algorithm<T, K, decltype(series.get())>(series.get(), type, recursive));
-		return;
-	case transformation_id_t::M_algorithm:
+	if(id == transformation_id_t::M_algorithm_id){
 
 		std::cout << '\n';
 		std::cout << "|------------------------------------------|" << '\n';
@@ -445,9 +422,8 @@ inline void init_levin(transformation_id_t id, std::unique_ptr<series_base<T, K>
 
 		transform.reset(new M_levin_sidi_algorithm<T, K, decltype(series.get())>(series.get(), ptr, gamma));
 		return;
-	default:
-		throw std::domain_error("wrong id was given");
 	}
+	throw std::domain_error("wrong id was given");
 }
 
 /**
@@ -950,19 +926,21 @@ inline static void main_testing_function()
 	case transformation_id_t::epsilon_algorithm_2_id:
 		transform.reset(new epsilon_algorithm_two<T, K, decltype(series.get())>(series.get()));
 		break;
-	case transformation_id_t::S_algorithm:
-		init_levin(transformation_id_t::S_algorithm, series, transform);
+	case transformation_id_t::S_algorithm_id:
+		transform.reset(new levin_sidi_S_algorithm<T, K, decltype(series.get())>(series.get()));
+		//init_levin(transformation_id_t::S_algorithm, series, transform);
 		break;
-	case transformation_id_t::D_algorithm:
-		init_levin(transformation_id_t::D_algorithm, series, transform);
+	case transformation_id_t::D_algorithm_id:
+		transform.reset(new drummonds_D_algorithm<T, K, decltype(series.get())>(series.get()));
+		//init_levin(transformation_id_t::D_algorithm, series, transform);
 		break;
-	case transformation_id_t::chang_epsilon_algorithm:
+	case transformation_id_t::chang_epsilon_algorithm_id:
 		transform.reset(new chang_whynn_algorithm<T, K, decltype(series.get())>(series.get()));
 		break;
-	case transformation_id_t::M_algorithm:
-		init_levin(transformation_id_t::M_algorithm, series, transform);
+	case transformation_id_t::M_algorithm_id:
+		init_levin(transformation_id_t::M_algorithm_id, series, transform);
 		break;
-	case transformation_id_t::weniger_transformation:
+	case transformation_id_t::weniger_transformation_id:
 		transform.reset(new weniger_algorithm<T, K, decltype(series.get())>(series.get()));
 		break;
 	case transformation_id_t::rho_wynn_transformation_id:
@@ -1057,19 +1035,19 @@ inline static void main_testing_function()
 		case transformation_id_t::epsilon_algorithm_2_id:
 			transform2.reset(new epsilon_algorithm_two<T, K, decltype(series.get())>(series.get()));
 			break;
-		case transformation_id_t::S_algorithm:
-			init_levin(transformation_id_t::S_algorithm, series, transform2);
+		case transformation_id_t::S_algorithm_id:
+			transform.reset(new levin_sidi_S_algorithm<T, K, decltype(series.get())>(series.get()));
 			break;
-		case transformation_id_t::D_algorithm:
-			init_levin(transformation_id_t::D_algorithm, series, transform2);
+		case transformation_id_t::D_algorithm_id:
+			transform.reset(new drummonds_D_algorithm<T, K, decltype(series.get())>(series.get()));
 			break;
-		case transformation_id_t::chang_epsilon_algorithm:
+		case transformation_id_t::chang_epsilon_algorithm_id:
 			transform2.reset(new chang_whynn_algorithm<T, K, decltype(series.get())>(series.get()));
 			break;
-		case transformation_id_t::M_algorithm:
-			init_levin(transformation_id_t::M_algorithm, series, transform2);
+		case transformation_id_t::M_algorithm_id:
+			init_levin(transformation_id_t::M_algorithm_id, series, transform2);
 			break;
-		case transformation_id_t::weniger_transformation:
+		case transformation_id_t::weniger_transformation_id:
 			transform2.reset(new weniger_algorithm<T, K, decltype(series.get())>(series.get()));
 			break;
 		case transformation_id_t::rho_wynn_transformation_id:
