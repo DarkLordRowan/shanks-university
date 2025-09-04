@@ -6,8 +6,6 @@
 #pragma once
 
 #include "series_acceleration.h" // Include the series header
-#include <vector> // Include the vector library
-#include "series.h" 
 
 template <std::floating_point T, std::unsigned_integral K, typename series_templ>
 class ford_sidi_algorithm_two : public series_acceleration<T, K, series_templ>

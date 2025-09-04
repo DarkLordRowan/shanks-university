@@ -4,7 +4,7 @@
  */
 
 #pragma once
-#define DEF_UNDEFINED_SUM 0
+#include <cmath>
 
 #include "series_acceleration.h" // Include the series header
 
@@ -40,7 +40,7 @@ public:
 
     T operator()(const K n, const K order) const {
         if (n == 0)
-            return DEF_UNDEFINED_SUM;
+            return 0;
 
         if (order == 0)
             return this->series->S_n(n);
@@ -58,7 +58,8 @@ private:
     const T beta;
 
     T operator()(const K n_time, const K k_time, const T b, const bool ND) const {
-        T w_n = static_cast<T>(pow(T(-1), n_time) * this->series->fact(n_time));
+        //T w_n = static_cast<T>(pow(T(-1), n_time) * this->series->fact(n_time));
+        T w_n = static_cast<T>(1-2*(n_time % 2)) * this->series->fact(n_time);
         T R_0 = (ND == 0 ? this->series->S_n(n_time) : T(1)) / w_n;
 
         if (k_time == 0)

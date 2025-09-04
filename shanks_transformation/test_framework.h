@@ -4,6 +4,7 @@
  */
 
 #pragma once
+
 #include <memory>
 #include <set>
 
@@ -59,7 +60,7 @@ enum transformation_id_t {
 		 Ford_Sidi_algorithm_three_id,
 		epsilon_modified_algorithm_id,
 		  theta_modified_algorithm_id,
-	epsilon_aitken_theta_algorithm_id
+	epsilon_aitken_theta_algorithm_id,
 };
 /**
  * @brief Enum of series IDs
@@ -169,7 +170,7 @@ enum series_id_t {
 	ln_1_plus_x3_id,
 	x_div_1minx_id,
 	x_div_1minx2_id,
-	gamma_series_id
+	gamma_series_id,
 };
 
 /**
@@ -178,13 +179,13 @@ enum series_id_t {
  * @edited by Kreynin R.G.
  */
 enum test_function_id_t {
-	null_test_function_id,
-	cmp_sum_and_transform_id,
-	cmp_a_n_and_transform_id,
+	      null_test_function_id,
+	   cmp_sum_and_transform_id,
+	   cmp_a_n_and_transform_id,
 	transformation_remainder_id,
-	cmp_transformations_id,
-	eval_transform_time_id,
-	test_all_transforms_id
+	     cmp_transformations_id,
+	     eval_transform_time_id,
+	     test_all_transforms_id,
 };
 
 /**

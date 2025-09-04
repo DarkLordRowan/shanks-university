@@ -4,7 +4,6 @@
  * @authors Yurov P.I. Bezzaborov A.A.
  */
 #pragma once
-#define DEF_UNDEFINED_SUM 0
 
 #include "series_acceleration.h" // Include the series header
 #include "remainders.hpp"
@@ -42,16 +41,14 @@ protected:
 			throw std::domain_error("gamma cannot be lesser than n-1");
 
 		T numerator = T(0), denominator = T(0);
-		T w_n, rest;
+		T rest;
 		T up = T(1), down = T(1);
 
 		T binomial_coef = this->series->binomial_coefficient(static_cast<T>(n), 0);
 		T S_n = this->series->S_n(order);
 
-		T rest_w_n;
 		T down_coef = gamma + static_cast<T>(order + 2), up_coef = down_coef - static_cast<T>(n);
 
-		K j1;
 		
 		for (K m = 0; m < n - 1; ++m) {
 			up   *= (up_coef   + static_cast<T>(m));
@@ -63,24 +60,40 @@ protected:
 		up_coef   = down_coef - static_cast<T>(n + 1);
 		
 		for (K j = 0; j <= n; ++j) {
-			j1 = j + 1;
-			rest = this->series->minus_one_raised_to_power_n(j) * binomial_coef;
+			
+			//rest = this->series->minus_one_raised_to_power_n(j) * binomial_coef
+			//binomial_coef = binomial_coef * static_cast<T>(n - j) / static_cast<T>(j + 1);
+			//rest *= up;
 
-			binomial_coef = binomial_coef * static_cast<T>(n - j) / static_cast<T>(j1);
+			//w_n = remainder_func->operator()(
+			//	order, 
+			//	j, 
+			//	this->series, 
+			//	-gamma-static_cast<T>(n)
+			//);
 
-			rest *= up;
+			//rest_w_n = rest * w_n;
 
+			//numerator += rest_w_n * S_n ;
+
+			//S_n += this->series->operator()(order + j + 1);
+
+			//denominator += rest_w_n;
+
+			rest = this->series->minus_one_raised_to_power_n(j) * binomial_coef * static_cast<T>(n - j) / static_cast<T>(j + 1) * up;
 			up /= (up_coef + static_cast<T>(j)) * ( down_coef + static_cast<T>(j));
 
-			w_n = remainder_func->operator()(order, j, this->series, -gamma-static_cast<T>(n));
+			rest *= remainder_func->operator()(
+				order, 
+				j, 
+				this->series, 
+				-gamma-static_cast<T>(n)
+			);
 
-			rest_w_n = rest * w_n;
+			numerator += rest * S_n ;
+			denominator += rest;
 
-			numerator += rest_w_n * S_n ;
-
-			S_n += this->series->operator()(order + j1);
-
-			denominator += rest_w_n;
+			S_n += this->series->operator()(order + j + 1);
 		}
 
 		numerator /= denominator;

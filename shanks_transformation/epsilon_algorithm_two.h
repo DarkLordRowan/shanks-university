@@ -4,7 +4,6 @@
  */
 
 #pragma once
-#define DEF_UNDEFINED_SUM 0
 
 #include "series_acceleration.h" // Include the series header
 #include <vector> // Include the vector library
@@ -45,7 +44,7 @@ template <std::floating_point T, std::unsigned_integral K, typename series_templ
 T epsilon_algorithm_two<T, K, series_templ>::operator()(const K n, const K order) const
 {
     if (n == 0)
-        return DEF_UNDEFINED_SUM;
+        return 0; // TODO: РґРёР°РіРЅРѕСЃС‚РёРєР°
 
     if (order == 0)
         return this->series->S_n(n);
@@ -61,7 +60,6 @@ T epsilon_algorithm_two<T, K, series_templ>::operator()(const K n, const K order
 
     T a = 0;
 
-    //TODO спросить у Парфенова, ибо жертвуем читаемостью кода, ради его небольшого ускорения
     K i1, i2;
 
     while (k > -1) {

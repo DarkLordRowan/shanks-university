@@ -42,10 +42,10 @@ public:
 
 		std::vector<T> current(n), next(n);
 
-		for (K i = 0; i < n; i++)
+		for (K i = 0; i < n; ++i)
 			current[i] = this->series->operator()(i);
 
-		for (K k = 0; k < 1; ++k) { // тут вместо 1 было iter, возможно iter - параметр, но если и так, то от него смысла нету, тк при iter > 1 ответ все время 0
+		for (K k = 0; k < 1; ++k) { 
 			for (K i = 0; i < m; ++i) {
 				i1 = i + 1;
 				i2 = i + 2;
@@ -59,7 +59,7 @@ public:
 			current = next;
 		}
 
-		for (K i = 0; i < n; i++)
+		for (K i = 0; i < n; ++i)
 			std::cout << "[ " << current[i] << " ] ";
 
 		std::cout << "\n";
