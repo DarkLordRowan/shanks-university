@@ -5,7 +5,7 @@
  */
 #pragma once
 
-#include "series_acceleration.h" // Include the series header
+#include "series_acceleration.hpp" // Include the series header
 #include "remainders.hpp"
 #include <memory> // For std::unique_ptr
 
@@ -36,73 +36,7 @@ protected:
 	 * We assume that the Pochhammer symbol satisfies (-x)_n = (-1)^n*(x-n+1)_n
 	 */
 
-	T calculate(const K n, const K order) const {
-		if (gamma - static_cast<T>(n - 1) <= static_cast<T>(0))
-			throw std::domain_error("gamma cannot be lesser than n-1");
-
-		T numerator = T(0), denominator = T(0);
-		T rest;
-		T up = T(1), down = T(1);
-
-		T binomial_coef = this->series->binomial_coefficient(static_cast<T>(n), 0);
-		T S_n = this->series->S_n(order);
-
-		T down_coef = gamma + static_cast<T>(order + 2), up_coef = down_coef - static_cast<T>(n);
-
-		
-		for (K m = 0; m < n - 1; ++m) {
-			up   *= (up_coef   + static_cast<T>(m));
-			down *= (down_coef + static_cast<T>(m));
-		}
-
-		up /= down;
-		down_coef = gamma + static_cast<T>(order + 1);
-		up_coef   = down_coef - static_cast<T>(n + 1);
-		
-		for (K j = 0; j <= n; ++j) {
-			
-			//rest = this->series->minus_one_raised_to_power_n(j) * binomial_coef
-			//binomial_coef = binomial_coef * static_cast<T>(n - j) / static_cast<T>(j + 1);
-			//rest *= up;
-
-			//w_n = remainder_func->operator()(
-			//	order, 
-			//	j, 
-			//	this->series, 
-			//	-gamma-static_cast<T>(n)
-			//);
-
-			//rest_w_n = rest * w_n;
-
-			//numerator += rest_w_n * S_n ;
-
-			//S_n += this->series->operator()(order + j + 1);
-
-			//denominator += rest_w_n;
-
-			rest = this->series->minus_one_raised_to_power_n(j) * binomial_coef * static_cast<T>(n - j) / static_cast<T>(j + 1) * up;
-			up /= (up_coef + static_cast<T>(j)) * ( down_coef + static_cast<T>(j));
-
-			rest *= remainder_func->operator()(
-				order, 
-				j, 
-				this->series, 
-				-gamma-static_cast<T>(n)
-			);
-
-			numerator += rest * S_n ;
-			denominator += rest;
-
-			S_n += this->series->operator()(order + j + 1);
-		}
-
-		numerator /= denominator;
-
-		if (!std::isfinite(numerator))
-			throw std::overflow_error("division by zero");
-
-		return numerator;
-	}
+	inline T calculate(const K n, const K order) const;
 
 public:
 
@@ -117,7 +51,7 @@ public:
 	explicit levin_sidi_M_algorithm(
 		const series_templ& series, 
 		const remainder_type variant = remainder_type::u_variant, 
-		T gamma_ = static_cast<T>(10)
+		const T gamma_ = static_cast<T>(10)
 	);
 
 	// Default destructor is sufficient since unique_ptr handles deletion
@@ -130,11 +64,61 @@ public:
      * @return The partial sum after the transformation.
      */
 
-	T operator()(const K n, const K order) const {
-		return calculate(n, order);
-	}
+	T operator()(const K n, const K order) const override;
 };
 
+template<std::floating_point T, std::unsigned_integral K, typename series_templ>
+inline T levin_sidi_M_algorithm<T, K, series_templ>::calculate(const K n, const K order) const {
+	if (gamma - static_cast<T>(n - 1) <= static_cast<T>(0))
+		throw std::domain_error("gamma cannot be lesser than n-1");
+	T numerator = static_cast<T>(0), denominator = static_cast<T>(0);
+
+	T rest;
+
+	T up = static_cast<T>(1), down = static_cast<T>(1);
+	T binomial_coef = this->series->binomial_coefficient(static_cast<T>(n), 0);
+	T S_n = this->series->S_n(order);
+
+	T down_coef = gamma + static_cast<T>(order + 2);
+	T   up_coef = down_coef - static_cast<T>(n);
+	
+	for (K m = 0; m < n - 1; ++m) {
+		up   *= (up_coef   + static_cast<T>(m));
+		down *= (down_coef + static_cast<T>(m));
+	}
+	up /= down;
+	down_coef = gamma + static_cast<T>(order + 1);
+	up_coef   = down_coef - static_cast<T>(n + 1);
+	
+	for (K j = 0; j <= n; ++j) {
+		rest  = this->series->minus_one_raised_to_power_n(j); 
+		rest *= binomial_coef * static_cast<T>(n - j);
+		rest *= up; 
+		rest /= static_cast<T>(j + 1);
+		up /= (  up_coef + static_cast<T>(j));
+		up *= (down_coef + static_cast<T>(j));
+		rest *= remainder_func->operator()(
+			order, 
+			j, 
+			this->series, 
+			-gamma-static_cast<T>(n)
+		);
+		numerator += rest * S_n ;
+		denominator += rest;
+		S_n += this->series->operator()(order + j + 1);
+	}
+
+	numerator /= denominator;
+
+	if (!std::isfinite(numerator))
+		throw std::overflow_error("division by zero");
+	return numerator;
+}
+
+template<std::floating_point T, std::unsigned_integral K, typename series_templ>
+T levin_sidi_M_algorithm<T, K, series_templ>::operator()(const K n, const K order) const {
+	return calculate(n, order);
+}
 
 template<std::floating_point T, std::unsigned_integral K, typename series_templ>
 levin_sidi_M_algorithm<T, K, series_templ>::levin_sidi_M_algorithm(

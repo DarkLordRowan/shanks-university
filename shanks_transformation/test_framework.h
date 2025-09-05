@@ -8,29 +8,28 @@
 #include <memory>
 #include <set>
 
-#include "wynn_numerators.h"
+#include "wynn_numerators.hpp"
 #include "remainders.hpp"
-#include "shanks_transformation.h"
-#include "epsilon_algorithm.h"
-#include "levin_algorithm.h"
+#include "shanks_transformation.hpp"
+#include "epsilon_algorithm.hpp"
+#include "levin_L_algorithm.hpp"
 #include "epsilon_algorithm_two.h"
 #include "chang_whynn_algorithm.h"
 #include "test_functions.h"
 #include "levin_sidi_M_algorithm.hpp"
 #include "levin_sidi_S_algorithm.hpp"
 #include "drummond_D_algorithm.hpp"
-#include "weniger_algorithm.h"
-#include "rho_wynn_algorithm.h"
+#include "weniger_algorithm.hpp"
+#include "rho_wynn_algorithm.hpp"
 #include "brezinski_theta_algorithm.h"
 #include "epsilon_algorithm_three.h"
-#include "levin_recursion_algorithm.h"
-#include "lubkin_W_algorithm.h"
-#include "richardson_algorithm.h"
-#include "FSA.h"
-#include "FSA_two.h"
-#include "FSA_3.h"
-#include "epsilon_modified_algorithm.h"
-#include "theta_modified_algorithm.h"
+#include "lubkin_W_algorithm.hpp"
+#include "richardson_algorithm.hpp"
+#include "FSA.hpp"
+#include "FSA2.hpp"
+#include "FSA3.hpp"
+#include "epsilon_modified_algorithm.hpp"
+#include "theta_modified_algorithm.hpp"
 #include "epsilon_aitken_theta_algorithm.h"
 
  /**
@@ -738,7 +737,7 @@ inline static void main_testing_function()
 		transform.reset(new epsilon_algorithm<T, K, decltype(series.get())>(series.get()));
 		break;
 	case transformation_id_t::levin_algorithm_id:
-		transform.reset(new levin_algorithm<T, K, decltype(series.get())>(series.get()));
+		transform.reset(new levin_L_algorithm<T, K, decltype(series.get())>(series.get()));
 		break;
 	case transformation_id_t::epsilon_algorithm_2_id:
 		transform.reset(new epsilon_algorithm_two<T, K, decltype(series.get())>(series.get()));
@@ -768,7 +767,7 @@ inline static void main_testing_function()
 		transform.reset(new epsilon_algorithm_three<T, K, decltype(series.get())>(series.get()));
 		break;
 	case transformation_id_t::levin_recursion_id:
-		transform.reset(new levin_recursion_algorithm<T, K, decltype(series.get())>(series.get()));
+		transform.reset(new levin_L_algorithm<T, K, decltype(series.get())>(series.get(), true));
 		break;
 	case transformation_id_t::W_algorithm_id:
 		transform.reset(new W_lubkin_algorithm<T, K, decltype(series.get())>(series.get()));
@@ -799,8 +798,6 @@ inline static void main_testing_function()
 	}
 
 	//choosing testing function
-
-	bool standart = false;
 
 	T beta_Levin_S_algorithm = T{};			//parameter for LevinType transformations algorithm
 	T gamma_Levin_M_algorithm = T{};		//parameter for LevinType transformations algorithm
@@ -845,7 +842,7 @@ inline static void main_testing_function()
 			transform2.reset(new epsilon_algorithm<T, K, decltype(series.get())>(series.get()));
 			break;
 		case transformation_id_t::levin_algorithm_id:
-			transform2.reset(new levin_algorithm<T, K, decltype(series.get())>(series.get()));
+			transform2.reset(new levin_L_algorithm<T, K, decltype(series.get())>(series.get()));
 			break;
 		case transformation_id_t::epsilon_algorithm_2_id:
 			transform2.reset(new epsilon_algorithm_two<T, K, decltype(series.get())>(series.get()));
@@ -875,7 +872,7 @@ inline static void main_testing_function()
 			transform.reset(new epsilon_algorithm_three<T, K, decltype(series.get())>(series.get()));
 			break;
 		case transformation_id_t::levin_recursion_id:
-			transform2.reset(new levin_recursion_algorithm<T, K, decltype(series.get())>(series.get()));
+			transform2.reset(new levin_L_algorithm<T, K, decltype(series.get())>(series.get(), true));
 			break;
 		case transformation_id_t::W_algorithm_id:
 			transform2.reset(new W_lubkin_algorithm<T, K, decltype(series.get())>(series.get()));
@@ -913,85 +910,6 @@ inline static void main_testing_function()
 		eval_transform_time(n, order, std::move(series.get()), std::move(transform.get()));
 		break;
 	case test_function_id_t::test_all_transforms_id: //Testing all functions for series
-		/*
-		std::cout << '\n';
-		std::cout << "|------------------------------------------|" << '\n';
-		std::cout << "| Use standart beta_Levin_S_algorithm value? 1<-true or 0<-false : "; std::cin >> standart; std::cout << "|" << '\n';
-		std::cout << "|------------------------------------------|" << '\n';
-
-		if (!standart) {
-			std::cout << '\n';
-			std::cout << "|------------------------------------------|" << '\n';
-			std::cout << "| Enter parameter beta_Levin_S_algorithm: "; std::cin >> beta_Levin_S_algorithm;
-			std::cout << "|------------------------------------------|" << '\n';
-		}
-		else beta_Levin_S_algorithm = 1;
-
-		std::cout << '\n';
-		std::cout << "|------------------------------------------|" << '\n';
-		std::cout << "| Use standart gamma_Levin_M_algorithm value? 1<-true or 0<-false : "; std::cin >> standart; std::cout << "|" << '\n';
-		std::cout << "|------------------------------------------|" << '\n';
-
-		if (!standart) {
-			std::cout << '\n';
-			std::cout << "|------------------------------------------|" << '\n';
-			std::cout << "| Enter parameter gamma_Levin_M_algorithm: "; std::cin >> gamma_Levin_M_algorithm;
-			std::cout << "|------------------------------------------|" << '\n';
-		}
-		else gamma_Levin_M_algorithm = 10;
-
-		std::cout << '\n';
-		std::cout << "|------------------------------------------|" << '\n';
-		std::cout << "| Use standart gamma_rho_Wynn_algorithm value? 1<-true or 0<-false : "; std::cin >> standart; std::cout << "|" << '\n';
-		std::cout << "|------------------------------------------|" << '\n';
-
-		if (!standart) {
-			std::cout << '\n';
-			std::cout << "|------------------------------------------|" << '\n';
-			std::cout << "| Enter parameter gamma_rho_Wynn_algorithm: "; std::cin >> gamma_rho_Wynn_algorithm;
-			std::cout << "|------------------------------------------|" << '\n';
-		}
-		else gamma_rho_Wynn_algorithm = 2;
-
-		std::cout << '\n';
-		std::cout << "|------------------------------------------|" << '\n';
-		std::cout << "| Use standart RHO_rho_Wynn_algorithm value? 1<-true or 0<-false : "; std::cin >> standart; std::cout << "|" << '\n';
-		std::cout << "|------------------------------------------|" << '\n';
-
-		if (!standart) {
-			std::cout << '\n';
-			std::cout << "|------------------------------------------|" << '\n';
-			std::cout << "| Enter parameter RHO_rho_Wynn_algorithm: "; std::cin >> RHO_rho_Wynn_algorithm;
-			std::cout << "|------------------------------------------|" << '\n';
-		}
-		else RHO_rho_Wynn_algorithm = 1;
-
-		std::cout << '\n';
-		std::cout << "|------------------------------------------|" << '\n';
-		std::cout << "| Use standart beta_levin_recursion_algorithm value? 1<-true or 0<-false : "; std::cin >> standart; std::cout << "|" << '\n';
-		std::cout << "|------------------------------------------|" << '\n';
-
-		if (!standart) {
-			std::cout << '\n';
-			std::cout << "|------------------------------------------|" << '\n';
-			std::cout << "| Enter parameter beta_levin_recursion_algorithm: "; std::cin >> beta_levin_recursion_algorithm;
-			std::cout << "|------------------------------------------|" << '\n';
-		}
-		else beta_levin_recursion_algorithm = -1.5;
-
-		std::cout << '\n';
-		std::cout << "|------------------------------------------|" << '\n';
-		std::cout << "| Use standart epsilon_algorithm_3 value? 1<-true or 0<-false : "; std::cin >> standart; std::cout << "|" << '\n';
-		std::cout << "|------------------------------------------|" << '\n';
-
-		if (!standart) {
-			std::cout << '\n';
-			std::cout << "|------------------------------------------|" << '\n';
-			std::cout << "| Enter parameter epsilon_algorithm_3: "; std::cin >> epsilon_algorithm_3;
-			std::cout << "|------------------------------------------|" << '\n';
-		}
-		else epsilon_algorithm_3 = T(1e-3);
-		*/
 		for (K i = 1; i <= n; i++)
 		{
 			print_sum(i, std::move(series.get()));
@@ -1017,15 +935,15 @@ inline static void main_testing_function()
 			print_transform(i, order, std::move(transform.get()));
 
 			//rho-wynn classic
-			transform.reset(new rho_Wynn_algorithm<T, K, decltype(series.get())>(series.get(), numerator_variant::rho_variant));
+			transform.reset(new rho_Wynn_algorithm<T, K, decltype(series.get())>(series.get(), numerator_type::rho_variant));
 			print_transform(i, order, std::move(transform.get()));
 
 			//rho-wynn generalized
-			transform.reset(new rho_Wynn_algorithm<T, K, decltype(series.get())>(series.get(), numerator_variant::generalized_variant));
+			transform.reset(new rho_Wynn_algorithm<T, K, decltype(series.get())>(series.get(), numerator_type::generalized_variant));
 			print_transform(i, order, std::move(transform.get()));
 
 			//rho-wynn gamma-rho
-			transform.reset(new rho_Wynn_algorithm<T, K, decltype(series.get())>(series.get(), numerator_variant::gamma_rho_variant));
+			transform.reset(new rho_Wynn_algorithm<T, K, decltype(series.get())>(series.get(), numerator_type::gamma_rho_variant));
 			print_transform(i, order, std::move(transform.get()));
 
 			//theta-brezinski
@@ -1036,11 +954,11 @@ inline static void main_testing_function()
 			print_transform(i, order, std::move(transform.get()));
 
 			//levin standart
-			transform.reset(new levin_algorithm<T, K, decltype(series.get())>(series.get()));
+			transform.reset(new levin_L_algorithm<T, K, decltype(series.get())>(series.get()));
 			print_transform(i, order, std::move(transform.get()));
 
 			//levin recurcive
-			transform.reset(new levin_recursion_algorithm<T, K, decltype(series.get())>(series.get(), beta_levin_recursion_algorithm));
+			transform.reset(new levin_L_algorithm<T, K, decltype(series.get())>(series.get(), true));
 			print_transform(i, order, std::move(transform.get()));
 
 			//levin-sidi S U

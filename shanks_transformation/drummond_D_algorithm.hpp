@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "series_acceleration.h"      // Include series_acceleration
+#include "series_acceleration.hpp"    // Include series_acceleration
 #include "remainders.hpp"  		      // Include remainders
 #include <memory>					  // Include for unique ptr
 
@@ -17,6 +17,7 @@
  * @param useRecFormulas - use reccurence relation, the calculation will be done using arrays
  * @param variant        - type of remainder to use
 */
+
 template<std::floating_point T, std::unsigned_integral K, typename series_templ>
 class drummonds_D_algorithm : public series_acceleration<T, K, series_templ>
 {
@@ -24,7 +25,7 @@ protected:
 
     std::unique_ptr<const transform_base<T, K>> remainder_func;
     bool useRecFormulas = false;
-    char variant = 'u';
+    remainder_type variant = remainder_type::u_variant;
 
 	/**
 	* @brief Function to calculate D-tranformation directly by formula. For more information see p. 70 9.5-4 [https://arxiv.org/pdf/math/0306302.pdf]
@@ -32,6 +33,7 @@ protected:
 	* @param order the order of transformation
 	* @return The partial sum after the transformation.
 	*/
+
 	inline T calc_result(const K n, const K order) const;
 
 	/**
@@ -40,16 +42,18 @@ protected:
 	* @param order the order of transformation
 	* @return The partial sum after the transformation.
 	*/
+
 	inline T calc_result_rec(const K n, const K order) const;
 
 public:
 
 	/**
-	* @brief Parameterized constructor to initialize the Drummond's D Algorithm.
+	* @brief Parameterized explicit constructor to initialize the Drummond's D Algorithm.
 	* @param series The series class object to be accelerated
 	* @param variant Type of remainder to use
 	* @param useRecFormulas use reccurence or straightforward formula 
 	*/
+
 	explicit drummonds_D_algorithm(
 		const series_templ& series, 
 		const remainder_type variant = remainder_type::u_variant, 
@@ -63,6 +67,7 @@ public:
     * @param order The order of transformation.
     * @return The partial sum after the transformation.
     */
+
     T operator()(const K n, const K order) const override;
 
 };
@@ -70,27 +75,35 @@ public:
 template<std::floating_point T, std::unsigned_integral K, typename series_templ>
 inline T drummonds_D_algorithm<T,K,series_templ>::calc_result(const K n, const K order) const {
 
-	T numerator = T(0), denominator = T(0);
+    using std::isfinite;
+
+	T numerator = static_cast<T>(0), denominator = static_cast<T>(0);
 	T rest;
 
 	for (K j = 0; j <= n; ++j) {
-		rest = this->series->minus_one_raised_to_power_n(j) * this->series->binomial_coefficient(static_cast<T>(n), j) * remainder_func->operator()(n,j, this->series);
+
+		rest  = this->series->minus_one_raised_to_power_n(j);
+		rest *= this->series->binomial_coefficient(static_cast<T>(n), j);
+		rest *= remainder_func->operator()(n,j, this->series);
+
 		numerator   += rest * this->series->S_n(n+j);
 		denominator += rest;
 	}
 
-	T result = numerator / denominator;
+	numerator /= denominator;
 
-	if (!std::isfinite(result))
+	if (!isfinite(numerator))
 		throw std::overflow_error("division by zero");
-	return result;
+	return numerator;
 }
 
 template<std::floating_point T, std::unsigned_integral K, typename series_templ>
 inline T drummonds_D_algorithm<T,K,series_templ>::calc_result_rec(const K n, const K order) const {
 
-	std::vector<T>   Num(order + 1, 0);
-	std::vector<T> Denom(order + 1, 0);
+    using std::isfinite;
+
+	std::vector<T>   Num(order + 1, static_cast<T>(0));
+	std::vector<T> Denom(order + 1, static_cast<T>(0));
 
     //init the base values
 	for (K i = 0; i < order+1; ++i) {
@@ -102,14 +115,15 @@ inline T drummonds_D_algorithm<T,K,series_templ>::calc_result_rec(const K n, con
 	for (K i = 1; i <= order; ++i)
 		for (K j = 0; j <= order - i; ++j) {
 			Denom[j] = Denom[j+1] - Denom[j];
-			Num[j] = Num[j+1] - Num[j];
+			  Num[j] =   Num[j+1] -   Num[j];
 		}
 
-	T result = Num[0] / Denom[0];
+	Num[0] /= Denom[0];
 
-	if (!std::isfinite(result))
+	if (!isfinite(Num[0]))
 		throw std::overflow_error("division by zero");
-	return result;
+    
+	return Num[0];
 }
 
 template<std::floating_point T, std::unsigned_integral K, typename series_templ>
@@ -146,7 +160,10 @@ drummonds_D_algorithm<T,K,series_templ>::drummonds_D_algorithm(
 
 template<std::floating_point T, std::unsigned_integral K, typename series_templ>
 T drummonds_D_algorithm<T,K,series_templ>::operator()(const K n, const K order) const { 
+
+    using std::isfinite;
+
     T result = (useRecFormulas ? calc_result_rec(n,order) : calc_result(n, order));
-    if (!std::isfinite(result)) throw std::overflow_error("division by zero");
+    if (!isfinite(result)) throw std::overflow_error("division by zero");
     return result;
 }
