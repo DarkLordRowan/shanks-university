@@ -5,7 +5,7 @@
 
 #pragma once
 
-#include "series_acceleration.h" // Include the series header
+#include "series_acceleration.hpp" // Include the series header
 
 template <std::floating_point T, std::unsigned_integral K, typename series_templ>
 class theta_brezinski_algorithm : public series_acceleration<T, K, series_templ>

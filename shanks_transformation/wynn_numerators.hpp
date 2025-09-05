@@ -7,7 +7,10 @@
 
 #include "series.h"
 
-enum numerator_variant{
+/**
+  * @brief Enum for remainders types to use in Levin-type transformations
+*/
+enum numerator_type{
            rho_variant,
    generalized_variant,
      gamma_rho_variant,
@@ -55,7 +58,7 @@ public:
    * @return The special numerator for transformation
    */
 
-	T operator()(const K n, const K order, const series_base<T, K>* series, const T gamma = T(1), const T rho = T(0)) const {
+	T operator()(const K n, const K order, const series_base<T, K>* series, const T gamma = static_cast<T>(1), const T rho = static_cast<T>(0)) const {
 		return (series->operator()(n + order) - series->operator()(n));
 	}
 };
@@ -80,8 +83,8 @@ public:
    * @return The special numerator for transformation
    */
 
-	T operator()(const K n, const K order, const series_base<T, K>* series, const T gamma = T(1), const T rho = T(0)) const {
-		return (order - gamma - 1);
+	T operator()(const K n, const K order, const series_base<T, K>* series, const T gamma = static_cast<T>(1), const T rho = static_cast<T>(0)) const {
+		return static_cast<T>(order) - gamma - static_cast<T>(1);
 	}
 };
 
@@ -106,7 +109,7 @@ public:
    * @return The special numerator for transformation
    */
 
-	T operator()(const K n, const K order, const series_base<T, K>* series, const T gamma = T(1), const T rho = T(0)) const {
+	T operator()(const K n, const K order, const series_base<T, K>* series, const T gamma = static_cast<T>(1), const T rho = static_cast<T>(0)) const {
 
 		// insight: order % 2 is the same order & 1
 		// if order is even:
@@ -116,6 +119,6 @@ public:
 		// order % 2 = 1
 		// order & 1 = 1
 
-		return (-gamma + T(order / 2) / rho + T(order & 1));
+		return (-gamma + static_cast<T>(order / 2) / rho + static_cast<T>(order & 1));
 	}
 };

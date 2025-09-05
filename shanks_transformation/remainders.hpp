@@ -4,6 +4,11 @@
 #include <concepts>
 #include "series.h"
 
+/**
+  * @brief Enum for remainders types to use in Levin-type transformations
+  * @authors Bolshakov M.P.
+  * @edited by Kreynin R.G.
+*/
 enum remainder_type{
          u_variant,
          t_variant,
@@ -50,9 +55,12 @@ class u_transform : public transform_base<T, K> {
 
 template<std::floating_point T, std::unsigned_integral K>
 T u_transform<T, K>::operator()(const K n, const K order, const series_base<T,K>* series, T scale) const {
-    const T result = T(1) / (scale * series->operator()(n+order));
 
-    if (!std::isfinite(result)) throw std::overflow_error("division by zero");
+    using std::isfinite;
+
+    const T result = static_cast<T>(1) / (scale * series->operator()(n+order));
+
+    if (!isfinite(result)) throw std::overflow_error("division by zero");
 
     return result;
  }
@@ -76,8 +84,11 @@ class t_transform : public transform_base<T, K> {
 
 template<std::floating_point T, std::unsigned_integral K>
 T t_transform<T, K>::operator()(const K n, const K order, const series_base<T,K>* series, T scale) const {
-    const T result = T(1) / series->operator()(n+order);
-    if (!std::isfinite(result)) throw std::overflow_error("division by zero");
+
+    using std::isfinite;
+
+    const T result = static_cast<T>(1) / series->operator()(n+order);
+    if (!isfinite(result)) throw std::overflow_error("division by zero");
     return result;
 }
 
@@ -100,10 +111,12 @@ class t_wave_transform : public transform_base<T, K>  {
 
 template<std::floating_point T, std::unsigned_integral K>
 T t_wave_transform<T,K>::operator()(const K n, const K order, const series_base<T, K>* series, T scale ) const {
-	const T result = T(1) / series->operator()(n + order + 1);
 
-	if (!std::isfinite(result)) throw std::overflow_error("division by zero");
-	
+    using std::isfinite;
+
+	const T result = static_cast<T>(1) / series->operator()(n + order + 1);
+
+	if (!isfinite(result)) throw std::overflow_error("division by zero");
 	return result;
 }
 
@@ -126,9 +139,12 @@ class v_transform : public transform_base<T, K> {
 
 template<std::floating_point T, std::unsigned_integral K>
 T v_transform<T,K>::operator()(const K n, const K order, const series_base<T,K>* series, T scale) const {
+
+    using std::isfinite;
+
     const T a1 = series->operator()(n+order), a2  = series->operator()(n+order+1);
     const T result = (a2-a1) / (a1 * a2);
-	if (!std::isfinite(result)) throw std::overflow_error("division by zero");
+	if (!isfinite(result)) throw std::overflow_error("division by zero");
 	return result;
 }
 
@@ -151,8 +167,11 @@ class v_wave_transform : public transform_base<T, K> {
 
 template<std::floating_point T, std::unsigned_integral K>
 T v_wave_transform<T,K>::operator()(const K n, const K order, const series_base<T,K>* series, T scale) const  {
+
+    using std::isfinite;
+    
     const T a1 = series->operator()(n+order), a2 = series->operator()(n+order+1);
     const T result = (a1 - a2) / (a1 * a2);
-	if (!std::isfinite(result)) throw std::overflow_error("division by zero");
+	if (!isfinite(result)) throw std::overflow_error("division by zero");
 	return result;
 }

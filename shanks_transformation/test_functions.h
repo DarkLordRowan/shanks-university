@@ -4,11 +4,10 @@
  */
 
 #pragma once
-#include <exception>
-#include "test_functions.h"
-#include "series_acceleration.h"
+
 //#include "series.h"
 #include <chrono>
+#include <iostream>
 
  /**
  * @brief Function that prints out comparesment between transformed and nontransformed partial sums

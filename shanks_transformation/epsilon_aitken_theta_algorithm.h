@@ -4,7 +4,7 @@
  * @brief This file contains the declaration of the Epsilon-Aitken-Theta Algorithm class.
  */
 
-#include "series_acceleration.h" // Include the series header
+#include "series_acceleration.hpp" // Include the series header
 #include <vector> // Include the vector library
 
  /**

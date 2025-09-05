@@ -7,7 +7,7 @@
 #pragma once
 
 #include "remainders.hpp"            // Include remainders
-#include "series_acceleration.h"     // Include series_acceleration
+#include "series_acceleration.hpp"   // Include series_acceleration
 #include <memory>                    // Include for unique ptr
 
 /**
@@ -24,7 +24,7 @@ template<std::floating_point T, std::unsigned_integral K, typename series_templ>
 class levin_sidi_S_algorithm : public series_acceleration<T, K, series_templ> {
 protected:
 
-    T beta = T(1);
+    T beta;
     std::unique_ptr<const transform_base<T, K>> remainder_func;
     bool useRecFormulas = false;
     remainder_type variant = remainder_type::u_variant;
@@ -76,39 +76,47 @@ public:
 template<std::floating_point T, std::unsigned_integral K, typename series_templ>
 inline T levin_sidi_S_algorithm<T, K,series_templ>::calc_result(K n, K order) const{
 
-    T result;
-    T numerator = T(0), denominator = T(0);
+    using std::isfinite;
+
+    T numerator = static_cast<T>(0), denominator = static_cast<T>(0);
     T rest;
-    T up_pochamer;  
-    T down_pochamer; 
+    T up_pochamer, down_pochamer; 
     for (K j = 0; j <= order; ++j){
-        rest = this->series->minus_one_raised_to_power_n(j) * this->series->binomial_coefficient(order,j);
-        up_pochamer = down_pochamer = T(1);
+        rest  = this->series->minus_one_raised_to_power_n(j);
+        rest *= this->series->binomial_coefficient(order, j);
+
+        up_pochamer = down_pochamer = static_cast<T>(1);
         //up_pochamer   (beta + n + j)_(order - 1)     = (beta + n + j)(beta + n + j + 1)...(beta + n + j + order - 2)
         //down_pochamer (beta + n + order)_(order - 1) = (beta + n + order)(beta + n + order + 1)...(beta + n + order + oreder - 2)
         for (K i = 0; i < order - 1; ++i){
-            up_pochamer   *= (beta + static_cast<T>(n + j + i));
+            up_pochamer   *= (beta + static_cast<T>(n + j     + i));
             down_pochamer *= (beta + static_cast<T>(n + order + i));
         }
-        rest *= (up_pochamer / down_pochamer) * remainder_func->operator()(n, 
+
+        rest *= (up_pochamer / down_pochamer);
+        rest *= remainder_func->operator()(n, 
             j, 
             this->series,
              (variant == remainder_type::u_variant ? beta : T(1))
             );
+
         numerator   += rest * this->series->S_n(n + j);
         denominator += rest;
     }
-    result = numerator/denominator;
+
+    numerator /= denominator;
     
-    if (!std::isfinite(result)) throw std::overflow_error("division by zero");
-    return result;
+    if (!isfinite(numerator)) throw std::overflow_error("division by zero");
+    return numerator;
 }
 
 template<std::floating_point T, std::unsigned_integral K, typename series_templ>
 inline T levin_sidi_S_algorithm<T, K,series_templ>::calc_result_rec(K n, K order) const{
 
-    std::vector<T>   Num(order + 1, 0);
-    std::vector<T> Denom(order + 1, 0);
+    using std::isfinite;
+
+    std::vector<T>   Num(order + 1, static_cast<T>(0));
+    std::vector<T> Denom(order + 1, static_cast<T>(0));
 
     for (K i = 0; i <= order; ++i){
 
@@ -116,29 +124,31 @@ inline T levin_sidi_S_algorithm<T, K,series_templ>::calc_result_rec(K n, K order
             n, 
             i, 
             this->series,
-            (variant == 'u' ? beta : T(1))
+            (variant == remainder_type::u_variant ? beta : T(1))
         );
 
-        Num[i] = this->series->S_n(n + i) * Denom[i];
+        Num[i] = this->series->S_n(n + i); Num[i] *= Denom[i];
     }
     
     T scale1, scale2;
     for (K i = 1; i <= order; ++i)
         for(K j = 0; j <= order - i; ++j){
+
             // i ~ k from formula
             // j ~ n from formula
             scale1 = beta + static_cast<T>(i + j);
             scale1*= (scale1 - T(1));
             scale2 = scale1 + static_cast<T>(i);
             scale2*= (scale2 - T(1));
+
             Denom[j] = fma(-scale1,Denom[j]/scale2,Denom[j+1]);
               Num[j] = fma(-scale1,  Num[j]/scale2,  Num[j+1]);
         }
     
-    T result = Num[0] / Denom[0];
+    Num[0] /= Denom[0];
     
-    if (!std::isfinite(result)) throw std::overflow_error("division by zero");
-    return result;
+    if (!isfinite(Num[0])) throw std::overflow_error("division by zero");
+    return Num[0];
 }
 
 template<std::floating_point T, std::unsigned_integral K, typename series_templ>
@@ -186,7 +196,10 @@ levin_sidi_S_algorithm<T, K, series_templ>::levin_sidi_S_algorithm(
 
 template<std::floating_point T, std::unsigned_integral K, typename series_templ>
 T levin_sidi_S_algorithm<T, K, series_templ>::operator()(const K n, const K order) const{ 
+
+    using std::isfinite;
+
     T result = (useRecFormulas ? calc_result_rec(n,order) : calc_result(n, order));
-    if (!std::isfinite(result)) throw std::overflow_error("division by zero");
+    if (!isfinite(result)) throw std::overflow_error("division by zero");
     return result;
 }
