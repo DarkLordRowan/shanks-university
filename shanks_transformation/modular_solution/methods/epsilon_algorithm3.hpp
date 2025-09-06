@@ -56,7 +56,8 @@ T epsilon_algorithm_three<T, K, series_templ>::operator()(const K n, const K ord
     using std::max;
     using std::abs;
 
-    if (n == static_cast<K>(0)) return 0; // TODO: диагностика
+    if (n == static_cast<K>(0)) 
+        throw std::domain_error("n = 0 in the input");
     if (order == static_cast<K>(0)) return this->series->S_n(n);
 
     K N = n; // int -> K

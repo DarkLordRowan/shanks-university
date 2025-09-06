@@ -44,7 +44,7 @@ T chang_whynn_algorithm<T, K, series_templ>::operator()(const K n, const K order
     using std::fma;
 
     if (n == static_cast<K>(0))
-        throw std::domain_error("zero integer in the input");
+        throw std::domain_error("n = 0 in the input");
 
     T up, down, coef, coef2;
 
@@ -106,9 +106,8 @@ T chang_whynn_algorithm<T, K, series_templ>::operator()(const K n, const K order
         std::swap(e[0], e[1]); //Swapping 1 and 2 rows of Epsilon Table. First ine will be overwriteen next turn
     }
 
-    const T result = e[max & 1][0]; //Only odd rows have mathmatical scence. Always returning e[0][0]
-    if (!isfinite(result))
+    if (!isfinite(e[max & 1][0])) //Only odd rows have mathmatical scence. Always returning e[0][0]
         throw std::overflow_error("division by zero");
 
-    return result;
+    return e[max & 1][0];
 }

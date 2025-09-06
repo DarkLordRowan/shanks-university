@@ -120,9 +120,9 @@ T epsilon_aitken_theta_algorithm<T, K, series_templ>::operator()(const K n, cons
         current = step3;
     }
 
-    const T res = current[n - static_cast<K>(4)];
-    if (!isfinite(res))
+
+    if (!isfinite(current[n - static_cast<K>(4)]))
         throw std::overflow_error("division by zero");
 
-    return res;
+    return current[n - static_cast<K>(4)];
 }

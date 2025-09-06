@@ -69,8 +69,12 @@ public:
 
 template<std::floating_point T, std::unsigned_integral K, typename series_templ>
 inline T levin_sidi_M_algorithm<T, K, series_templ>::calculate(const K n, const K order) const {
+
+	using std::isfinite;
+
 	if (gamma - static_cast<T>(n - 1) <= static_cast<T>(0))
 		throw std::domain_error("gamma cannot be lesser than n-1");
+
 	T numerator = static_cast<T>(0), denominator = static_cast<T>(0);
 
 	T rest;
@@ -110,7 +114,7 @@ inline T levin_sidi_M_algorithm<T, K, series_templ>::calculate(const K n, const 
 
 	numerator /= denominator;
 
-	if (!std::isfinite(numerator))
+	if (!isfinite(numerator))
 		throw std::overflow_error("division by zero");
 	return numerator;
 }

@@ -39,7 +39,7 @@ T ford_sidi_algorithm_three<T, K, series_templ>::operator()(const K n, const K o
     using std::isfinite;
 
     if (n == static_cast<K>(0))
-        throw std::domain_error("zero integer in the input"); //TODO: унифицировать ошибку
+        throw std::domain_error("n = 0 in the input");
     
     //TODO спросить у Парфенова, ибо жертвуем читаемостью кода, ради его небольшого ускорения
     const K n1 = n - static_cast<K>(1);
@@ -88,10 +88,10 @@ T ford_sidi_algorithm_three<T, K, series_templ>::operator()(const K n, const K o
         FSI[MM] = (FSI[MM1] - FSI[MM]) / D;
     }
 
-    const T res = FSA[0] / FSI[0];
+    FSA[0] /= FSI[0]; //result 
 
-    if (!isfinite(res))
+    if (!isfinite(FSA[0]))
         throw std::overflow_error("division by zero");
 
-    return res;
+    return FSA[0];
 }
