@@ -482,5 +482,5 @@ x64/Debug/shanks_transformation.exe
 *.exe
 *.tlog
 .clangd
-shanks_transformation/build
-shanks_transformation/rebuild.sh
+*/build*
+*/rebuild.sh
