@@ -53,7 +53,7 @@ public:
      * @param order The order of transformation.
      * @return The partial sum after the transformation.
      */
-	T operator()(const K n, const K order) const { return calculate(n, order); }
+	T operator()(const K n, const K order) const override { return calculate(n, order); }
 
 	/**
 	 * @brief Compute transformed partial sum (extended version for arbitrary precision)

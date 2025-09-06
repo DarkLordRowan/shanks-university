@@ -21,7 +21,7 @@ public:
      * @authors Pashkov B.B.
      * @param series The series class object to be accelerated
      */
-	epsilon_algorithm(const series_templ& series);
+	explicit epsilon_algorithm(const series_templ& series);
 
 	/**
      * @brief Shanks multistep epsilon algorithm.
@@ -31,7 +31,7 @@ public:
      * @param order The order of transformation.
      * @return The partial sum after the transformation.
      */
-    T operator()(const K n, const K order) const;
+    T operator()(const K n, const K order) const override;
 };
 
 template <std::floating_point T, std::unsigned_integral K, typename series_templ>
@@ -64,7 +64,7 @@ T epsilon_algorithm<T, K, series_templ>::operator()(const K n, const K order) co
 
 	for (K i = static_cast<K>(0); i < m; ++i) {
 		for (K j = n1; j < max_ind; ++j)
-			(*e1_add)[j] += static_cast<T>(1) / ((*e0_add)[j + 1] - (*e0_add)[j]);
+			(*e1_add)[j] += static_cast<T>(1) / ((*e0_add)[j + static_cast<K>(1)] - (*e0_add)[j]);
 
 		--max_ind;
 		std::swap(e0_add, e1_add);

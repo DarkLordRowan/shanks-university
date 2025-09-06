@@ -19,7 +19,7 @@ public:
      * @authors Sharonov K.S.    
      * @param series The series class object to be accelerated
      */    
-    ford_sidi_algorithm_three(const series_templ& series);
+    explicit ford_sidi_algorithm_three(const series_templ& series);
 
     /*
      * @brief Fast implementation of Ford-Sidi.    
@@ -27,7 +27,7 @@ public:
      * @param order The order of transformation.    
      * * @return The partial sum after the transformation.
      */    
-    T operator()(const K n, const K k) const;
+    T operator()(const K n, const K k) const override;
 };
 
 template <std::floating_point T, std::unsigned_integral K, typename series_templ>

@@ -105,7 +105,7 @@ public:
     * @param scale The value to multiple (needed for u variant of S algo for now)
     * @return remainder of necessary type
     */
-    virtual T operator() (const K n, const K order, const series_base<T,K>* series, T scale = T(1)) const = 0;
+    virtual T operator() (const K n, const K order, const series_base<T,K>* series, T scale = static_cast<T>(1)) const = 0;
 };
 
 /**
@@ -122,7 +122,7 @@ class u_transform : public transform_base<T, K> {
     * @param scale The value to multiple (needed for u variant of S algo for now)
     * @return u type remainder
     */
-    T operator() (const K n, const K order, const series_base<T,K>* series, T scale = T(1)) const override;
+    T operator() (const K n, const K order, const series_base<T,K>* series, T scale = static_cast<T>(1)) const override;
 };
 
 template<std::floating_point T, std::unsigned_integral K>
@@ -151,7 +151,7 @@ class t_transform : public transform_base<T, K> {
     * @param scale not neccesary
     * @return t type remainder
     */
-    T operator() (const K n, const K order, const series_base<T,K>* series, T scale = T(1)) const override;
+    T operator() (const K n, const K order, const series_base<T,K>* series, T scale = static_cast<T>(1)) const override;
 };
 
 template<std::floating_point T, std::unsigned_integral K>
@@ -178,7 +178,7 @@ class t_wave_transform : public transform_base<T, K>  {
     * @param scale not neccesary
     * @return t-wave type remainder
     */
-    T operator() (const K n, const K order, const series_base<T,K>* series, T scale = T(1)) const override;
+    T operator() (const K n, const K order, const series_base<T,K>* series, T scale = static_cast<T>(1)) const override;
 };
 
 template<std::floating_point T, std::unsigned_integral K>
@@ -206,7 +206,7 @@ class v_transform : public transform_base<T, K> {
     * @param scale not neccesary
     * @return v type remainder
     */
-    T operator() (const K n, const K order, const series_base<T,K>* series, T scale = T(1)) const override;
+    T operator() (const K n, const K order, const series_base<T,K>* series, T scale = static_cast<T>(1)) const override;
 };
 
 template<std::floating_point T, std::unsigned_integral K>
@@ -290,7 +290,13 @@ public:
      * @param rho const for transformation	(	rho(gamma,rho)	)
      * @return The special numerator for transformation
      */
-	virtual T operator()(const K n, const K order, const series_base<T, K>* series, const T gamma = T(1), const T rho = T(0)) const = 0;
+	virtual T operator()(
+		const K n, 
+		const K order, 
+		const series_base<T, K>* series, 
+		const T gamma = static_cast<T>(1), 
+		const T rho = static_cast<T>(0)
+	) const = 0;
 
 };
 
@@ -313,7 +319,13 @@ public:
    * @return The special numerator for transformation
    */
 
-	T operator()(const K n, const K order, const series_base<T, K>* series, const T gamma = static_cast<T>(1), const T rho = static_cast<T>(0)) const {
+	T operator()(
+		const K n, 
+		const K order, 
+		const series_base<T, K>* series,
+		const T gamma = static_cast<T>(1), 
+		const T rho = static_cast<T>(0)
+	) const override {
 		return (series->operator()(n + order) - series->operator()(n));
 	}
 };
@@ -338,7 +350,13 @@ public:
    * @return The special numerator for transformation
    */
 
-	T operator()(const K n, const K order, const series_base<T, K>* series, const T gamma = static_cast<T>(1), const T rho = static_cast<T>(0)) const {
+	T operator()(
+		const K n, 
+		const K order, 
+		const series_base<T, K>* series, 
+		const T gamma = static_cast<T>(1), 
+		const T rho = static_cast<T>(0)
+	) const override {
 		return static_cast<T>(order) - gamma - static_cast<T>(1);
 	}
 };
@@ -364,7 +382,13 @@ public:
    * @return The special numerator for transformation
    */
 
-	T operator()(const K n, const K order, const series_base<T, K>* series, const T gamma = static_cast<T>(1), const T rho = static_cast<T>(0)) const {
+	T operator()(
+		const K n, 
+		const K order, 
+		const series_base<T, K>* series, 
+		const T gamma = static_cast<T>(1), 
+		const T rho = static_cast<T>(0)
+	) const override {
 
 		// insight: order % 2 is the same order & 1
 		// if order is even:
@@ -436,7 +460,7 @@ public:
 	 * @return The partial sum after the transformation.
 	*/
 
-	T operator()(const K n, const K order) const;
+	T operator()(const K n, const K order) const override;
 };
 
 template<std::floating_point T, std::unsigned_integral K, typename series_templ>
@@ -774,7 +798,7 @@ public:
         const series_templ& series, 
         const remainder_type variant = remainder_type::u_variant, 
         bool useRecFormulas = false,  
-        T parameter = T(1)
+        T parameter = static_cast<T>(1)
     );
 
     /**
@@ -910,7 +934,7 @@ levin_sidi_S_algorithm<T, K, series_templ>::levin_sidi_S_algorithm(
 }
 
 template<std::floating_point T, std::unsigned_integral K, typename series_templ>
-T levin_sidi_S_algorithm<T, K, series_templ>::operator()(const K n, const K order) const{ 
+T levin_sidi_S_algorithm<T, K, series_templ>::operator()(const K n, const K order) const { 
 
     using std::isfinite;
 
@@ -1128,7 +1152,7 @@ public:
      * @param order The order of transformation.
      * @return The partial sum after the transformation.
      */
-	T operator()(const K n, const K order) const { return calculate(n, order); }
+	T operator()(const K n, const K order) const override { return calculate(n, order); }
 
 	/**
 	 * @brief Compute transformed partial sum (extended version for arbitrary precision)
@@ -1274,7 +1298,7 @@ public:
 	* @return The partial sum after the transformation.
 	*/
 
-	T operator()(const K n, const K order) const;
+	T operator()(const K n, const K order) const override;
 };
 
 template<std::floating_point T, std::unsigned_integral K, typename series_templ>
@@ -1359,7 +1383,7 @@ public:
    * @param order The order of transformation.
    * @return The partial sum after the transformation.
    */
-	T operator()(const K n, const K order) const;
+	T operator()(const K n, const K order) const override;
 };
 
 template <std::floating_point T, std::unsigned_integral K, typename series_templ>
@@ -1453,7 +1477,7 @@ public:
    * @param order The order of transformation.
    * @return The partial sum after the transformation.
    */
-	T operator()(const K n, const K order) const;
+	T operator()(const K n, const K order) const override;
 };
 
 template <std::floating_point T, std::unsigned_integral K, typename series_templ>
@@ -1520,8 +1544,11 @@ T shanks_transform_alternating<T, K, series_templ>::operator()(const K n, const 
 		}
 		T_n = T_n_plus_1;
 	}
+
 	if (!isfinite(T_n[n]))
 		throw std::overflow_error("division by zero");
+
+    return T_n[n];
 }
 
 //----------------------------------------------------------------------------------------------------------------------------------------//
@@ -1560,7 +1587,7 @@ public:
 	 * @return The partial sum after the transformation.
 	 */
 
-	T operator()(const K n, const K order) const;
+	T operator()(const K n, const K order) const override;
 };
 
 template <std::floating_point T, std::unsigned_integral K, typename series_templ>
@@ -1632,7 +1659,7 @@ public:
       * @param order The order of transformation.
       * @return The partial sum after the transformation.
       */
-    T operator() (const K n, const K order) const;
+    T operator() (const K n, const K order) const override;
 };
 
 template <std::floating_point T, std::unsigned_integral K, typename series_templ>
@@ -1824,7 +1851,7 @@ public:
     * @param order The order of transformation.
     * @return The partial sum after the transformation.
 	*/
-	T operator()(const K n, const K k) const;
+	T operator()(const K n, const K k) const override;
 };
 
 template <std::floating_point T, std::unsigned_integral K, typename series_templ>
@@ -1918,7 +1945,7 @@ public:
 	* @param order The order of transformation.
 	* @return The partial sum after the transformation.
 	*/
-	T operator()(const K n, const K k) const;
+	T operator()(const K n, const K k) const override;
 };
 
 template <std::floating_point T, std::unsigned_integral K, typename series_templ>
@@ -1971,7 +1998,7 @@ public:
      * @authors Sharonov K.S.    
      * @param series The series class object to be accelerated
      */    
-    ford_sidi_algorithm_three(const series_templ& series);
+    explicit ford_sidi_algorithm_three(const series_templ& series);
 
     /*
      * @brief Fast implementation of Ford-Sidi.    
@@ -1979,7 +2006,7 @@ public:
      * @param order The order of transformation.    
      * * @return The partial sum after the transformation.
      */    
-    T operator()(const K n, const K k) const;
+    T operator()(const K n, const K k) const override;
 };
 
 template <std::floating_point T, std::unsigned_integral K, typename series_templ>
@@ -2078,7 +2105,7 @@ public:
 	 * @return The partial sum after the transformation.
 	 */
 
-	T operator()(const K n, const K order) const;
+	T operator()(const K n, const K order) const override;
 };
 
 template <std::floating_point T, std::unsigned_integral K, typename series_templ>
@@ -2134,7 +2161,7 @@ public:
      * @authors Pashkov B.B.
      * @param series The series class object to be accelerated
      */
-	epsilon_algorithm(const series_templ& series);
+	explicit epsilon_algorithm(const series_templ& series);
 
 	/**
      * @brief Shanks multistep epsilon algorithm.
@@ -2144,15 +2171,14 @@ public:
      * @param order The order of transformation.
      * @return The partial sum after the transformation.
      */
-    T operator()(const K n, const K order) const;
+    T operator()(const K n, const K order) const override;
 };
 
 template <std::floating_point T, std::unsigned_integral K, typename series_templ>
 epsilon_algorithm<T, K, series_templ>::epsilon_algorithm(const series_templ& series) : series_acceleration<T, K, series_templ>(series) {}
 
 template <std::floating_point T, std::unsigned_integral K, typename series_templ>
-T epsilon_algorithm<T, K, series_templ>::operator()(const K n, const K order) const
-{
+T epsilon_algorithm<T, K, series_templ>::operator()(const K n, const K order) const {
 
 	using std::isfinite;
 
@@ -2196,59 +2222,640 @@ T epsilon_algorithm<T, K, series_templ>::operator()(const K n, const K order) co
 //----------------------------------------------------------------------------------------------------------------------------------------//
 
 //----------------------------------------------------------------------------------------------------------------------------------------//
-//                                                                 FSA                                                                    //
+//                                                         EPSILON ALGORITHM 2                                                            //
 //                                                                BEGIN                                                                   //
 //----------------------------------------------------------------------------------------------------------------------------------------//
+
+/**
+  * @brief Epsilon Algorithm MK-2 class template. "Scalar Epsilon Algorithm"
+  //SOME RESULTS CONCERNING THE FUNDAMENTAL NATURE OF WYNN'S VECTOR EPSILON ALGORITHM - same algo + vector form
+  //On a Device for Computing the e (S ) Transformation - nothing new, just matrix
+  //euler algoritm A_Note_on_the_Generalised_Euler_Transformation-Wynn-1971 - has Euler, but for um = z^m * v_m
+  * @authors Kreinin R.G.
+  * @tparam T The type of the elements in the series, K The type of enumerating integer, series_templ is the type of series whose convergence we accelerate
+*/
+template <std::floating_point T, std::unsigned_integral K, typename series_templ>
+class epsilon_algorithm_two : public series_acceleration<T, K, series_templ>
+{
+public:
+    /**
+     * @brief Parameterized constructor to initialize the Epsilon Algorithm MK-2.
+     * @param series The series class object to be accelerated
+    */
+    explicit epsilon_algorithm_two(const series_templ& series);
+
+    /**
+     * @brief Fast impimentation of Levin algorithm.
+     * Computes the partial sum after the transformation using the Epsilon Algorithm.
+     * For more information, see page 20-21 in [https://hal.science/hal-04207550/document]
+     * @param n The number of terms in the partial sum.
+     * @param order The order of transformation.
+     * @return The partial sum after the transformation.
+    */
+    T operator()(const K n, const K order) const override;
+};
+
+template <std::floating_point T, std::unsigned_integral K, typename series_templ>
+epsilon_algorithm_two<T, K, series_templ>::epsilon_algorithm_two(const series_templ& series) : series_acceleration<T, K, series_templ>(series) {}
+
+template <std::floating_point T, std::unsigned_integral K, typename series_templ>
+T epsilon_algorithm_two<T, K, series_templ>::operator()(const K n, const K order) const {
+
+    using std::isfinite;
+
+    if (n == static_cast<K>(0)) return 0; // TODO: диагностика
+
+    if (order == static_cast<K>(0))
+        return this->series->S_n(n);
+
+    K k = static_cast<K>(2);
+    k *= order;
+    k += n;
+    k -= (n & 1);
+
+    std::vector<std::vector<T>> e(4, std::vector<T>(k + 3, static_cast<T>(0))); //4 vectors k+3 length containing four Epsilon Table rows 
+
+    K j = k;
+    do { //Counting first row of Epsilon Table
+        e[3][j] = this->series->S_n(j);
+    } while (--j > static_cast<K>(0));
+
+    T a = static_cast<T>(0);
+
+    K i1, i2;
+
+    while (k > static_cast<K>(-1)) {
+        for (K i = static_cast<K>(0); i < k; ++i) {
+            i1 = i + static_cast<K>(1);
+            i2 = i + static_cast<K>(2);
+            e[0][i] = e[2][i1] + static_cast<T>(1) / (e[3][i1] - e[3][i]); //Standart Epsilon Wynn algorithm
+
+            if (!isfinite(e[0][i]) && i2 <= k) { //This algorithm is used if new elliment is corrupted.
+                a = e[2][i2] * static_cast<T>(1) / (static_cast<T>(1) - e[2][i2] / e[2][i1]);
+
+                a += e[2][i] * static_cast<T>(1) / (static_cast<T>(1) - e[2][i] / e[2][i1]);
+
+                a -= e[0][i2] * static_cast<T>(1)/ (static_cast<T>(1) - e[0][i2] / e[2][i1]);
+
+                e[0][i] = a / (static_cast<T>(1) + a / e[2][i1]);
+            }
+
+            if (!isfinite(e[0][i])) //If new element is still corrupted we just copy prev. element, so we will get result
+                e[0][i] = e[2][i];         
+        }
+
+        std::swap(e[0], e[1]); //Swapping rows of Epsilon Table. First ine will be overwriteen next turn
+        std::swap(e[1], e[2]);
+        std::swap(e[2], e[3]);
+
+        --k;
+    }
+    
+    if (!isfinite(e[0][0]))
+        throw std::overflow_error("division by zero");
+
+    return e[0][0];  //Only odd rows have mathmatical scense. Always returning e[0][0]
+}
+
 //----------------------------------------------------------------------------------------------------------------------------------------//
-//                                                                 FSA                                                                    //
+//                                                         EPSILON ALGORITHM 2                                                            //
 //                                                                 END                                                                    //
 //----------------------------------------------------------------------------------------------------------------------------------------//
 
 
 //----------------------------------------------------------------------------------------------------------------------------------------//
-//                                                                 FSA                                                                    //
+//                                                         EPSILON ALGORITHM 3                                                            //
 //                                                                BEGIN                                                                   //
 //----------------------------------------------------------------------------------------------------------------------------------------//
+
+ /**
+  * @brief MK-3 Epsilon Algorithm class template.
+  * @tparam T Element type of series
+  * @tparam K Index type
+  * @tparam series_templ Series type to accelerate
+  */
+template <std::floating_point T, std::unsigned_integral K, typename series_templ>
+class epsilon_algorithm_three : public series_acceleration<T, K, series_templ>
+{
+private:
+
+    const T epsilon_threshold; // Threshold for epsilon, defaults to 1e-3
+
+public:
+	/**
+	* @brief Parameterized constructor to initialize the Epsilon Algorithm MK-2.
+	* @param series The series class object to be accelerated
+	*/
+    explicit epsilon_algorithm_three(const series_templ& series, const T epsilon_threshold_ = static_cast<T>(1e-3));
+
+	/**
+	* @brief Fast impimentation of Epsilon algorithm.
+	* Computes the partial sum after the transformation using the Epsilon Algorithm.
+	* For more information, see 612.zip [https://calgo.acm.org/]
+	* @param n The number of terms in the partial sum.
+	* @param order The order of transformation.
+	* @return The partial sum after the transformation.
+	*/
+	T operator()(const K n, const K order) const override;
+};
+
+template <std::floating_point T, std::unsigned_integral K, typename series_templ>
+epsilon_algorithm_three<T, K, series_templ>::epsilon_algorithm_three(
+    const series_templ& series, 
+    const T epsilon_threshold_
+    ) : 
+    series_acceleration<T, K, series_templ>(series), 
+    epsilon_threshold(epsilon_threshold_) 
+{}
+
+template <std::floating_point T, std::unsigned_integral K, typename series_templ>
+T epsilon_algorithm_three<T, K, series_templ>::operator()(const K n, const K order) const {
+
+    using std::isfinite;
+    using std::max;
+    using std::abs;
+
+    if (n == static_cast<K>(0)) return 0; // TODO: диагностика
+    if (order == static_cast<K>(0)) return this->series->S_n(n);
+
+    K N = n; // int -> K
+
+    const T EMACH = std::numeric_limits<T>::epsilon(); // The smallest relative spacing for the T
+    const T EPRN = static_cast<T>(50) * EMACH;
+    const T OFRN = std::numeric_limits<T>::max(); //The largest finite magnitude that can be represented by a T 
+
+    T result = static_cast<T>(0); //New result
+    T abs_error = static_cast<T>(0); //Absolute error
+    T resla = static_cast<T>(0); //Last result
+    K newelm, num, NUM, K1, ib, ie, in;
+    T RES, E0, E1, E2, E3, E1ABS, DELTA1, DELTA2, DELTA3, ERR1, ERR2, ERR3, TOL1, TOL2, TOL3, SS, EPSINF; // int -> K
+
+    std::vector<T> e(N + static_cast<K>(3), static_cast<T>(0)); //First N eliments of epsilon table + 2 elements for math
+
+    for (K i = static_cast<K>(0); i <= N; ++i) //Filling up Epsilon Table
+        e[i] = this->series->S_n(i);
+
+    for (K i = static_cast<K>(0); i <= order; ++i) { //Working with Epsilon Table order times
+
+        num = NUM = K1 = N = n;
+        K NEWELM = newelm = (N - static_cast<K>(1)) / static_cast<K>(2);
+        e[N + static_cast<K>(2)] = e[N];
+        e[N] = abs_error = OFRN;
+
+        for (K I = static_cast<K>(1); I <= NEWELM; ++I) { //Counting all diagonal elements of epsilon table
+
+            RES = e[K1 + static_cast<K>(2)];
+            E0 = e[K1 - static_cast<K>(2)];
+            E1 = e[K1 - static_cast<K>(1)];
+
+            E2 = RES;
+
+            E1ABS = static_cast<T>(abs(E1));
+            
+            DELTA2 = E2 - E1;
+
+            ERR2 = static_cast<T>(abs(DELTA2));
+
+            TOL2 = max(
+                static_cast<T>(abs(E2)), 
+                E1ABS
+            );
+            TOL2*=EMACH;
+
+            DELTA3 = E1 - E0;
+            ERR3 = static_cast<T>(abs(DELTA3));
+            TOL3 = max(
+                E1ABS, 
+                static_cast<T>(abs(E0))
+            );
+            TOL3*= EMACH;
+
+            if (ERR2 > TOL2 || ERR3 > TOL3) {
+
+                E3 = e[K1];
+                e[K1] = E1;
+
+                DELTA1 = E1;
+                DELTA1-= E3;
+
+                ERR1 = static_cast<T>(abs(DELTA1));
+
+                TOL1 = max(
+                    E1ABS, 
+                    static_cast<T>(abs(E3))
+                );
+                TOL1*= EMACH;
+
+                if (ERR1 <= TOL1 || ERR2 <= TOL2 || ERR3 <= TOL3) {
+                    N = static_cast<K>(2) * I - static_cast<K>(1);
+                    break;
+                }
+
+                SS = static_cast<T>(1) / DELTA1 + static_cast<T>(1) / DELTA2 - static_cast<T>(1) / DELTA3;
+                EPSINF = static_cast<T>(abs(SS * E1));
+
+                if (EPSINF > epsilon_threshold) {
+                    RES = E1 + static_cast<T>(1) / SS;
+                    e[K1] = RES;
+                    K1 -= static_cast<K>(2);
+                    T ERROR = ERR2 + static_cast<T>(abs(RES - E2)) + ERR3;
+                    if (ERROR <= abs_error) {
+                        abs_error = ERROR;
+                        result = RES;
+                    }
+                }
+                else {
+                    N = static_cast<K>(2) * I - static_cast<K>(1);
+                    break;
+                }
+            }
+
+            else {
+                result = RES;
+                abs_error = ERR2 + ERR3;
+                e[K1] = result;
+                break;
+            }
+        }
+
+        if (N == n) // making N the greatest odd number <= n
+            N = (n & 1) ? n : n - static_cast<K>(1);
+
+        ib = (num & 1) ? static_cast<K>(1) : static_cast<K>(2);  // Start index: 1 for odd, 2 for even
+        ie = newelm + static_cast<K>(1);
+
+        // Copy elements with step 2
+        for (K pos = ib; pos < ib + static_cast<K>(2) * ie; pos += static_cast<K>(2))
+            e[pos] = e[pos + static_cast<K>(2)];
+
+        if (num != N) {
+            in = num - N + static_cast<K>(1);
+            for (K j = static_cast<K>(1); j <= N; ++j, ++in)
+                e[j] = e[in];
+        }
+
+        abs_error = max(
+            static_cast<T>(abs(result - resla)), 
+            EPRN * static_cast<T>(abs(result))
+        );
+
+        resla = result;
+    }
+
+    if (!isfinite(result))
+        throw std::overflow_error("division by zero");
+
+    return result;
+}
+
 //----------------------------------------------------------------------------------------------------------------------------------------//
-//                                                                 FSA                                                                    //
+//                                                         EPSILON ALGORITHM 3                                                            //
 //                                                                 END                                                                    //
 //----------------------------------------------------------------------------------------------------------------------------------------//
 
 
 //----------------------------------------------------------------------------------------------------------------------------------------//
-//                                                                 FSA                                                                    //
+//                                                    EPSILON AITKEN THETA ALGORITHM                                                      //
 //                                                                BEGIN                                                                   //
 //----------------------------------------------------------------------------------------------------------------------------------------//
+
+ /**
+  * @brief Epsilon-Aitken-Theta Algorithm class template.
+  * @tparam T Element type of the series.
+  * @tparam K Integer index type.
+  * @tparam series_templ Series type to accelerate.
+*/
+template <std::floating_point T, std::unsigned_integral K, typename series_templ>
+class epsilon_aitken_theta_algorithm : public series_acceleration<T, K, series_templ>
+{
+public:
+    /**
+     * @brief Parameterized constructor to initialize the Theta Algorithm.
+     * @authors Novak.M., Maximov.A.K.
+     * @param series The series class object to be accelerated
+    */
+    epsilon_aitken_theta_algorithm(const series_templ& series) : series_acceleration<T, K, series_templ>(series) {}
+
+    /**
+     * @brief combizing of Epsilon Aitken Theta algorithms
+     * Computes the partial sum after the transformation using the Epsilon, Aitken, Theta algo
+     * @param n The number of terms in the partial sum.
+     * @param order The order of transformation.
+     * @return The partial sum after the transformation.
+    */
+
+    T operator()(const K n, const K order) const override;
+};
+
+template <std::floating_point T, std::unsigned_integral K, typename series_templ>
+T epsilon_aitken_theta_algorithm<T, K, series_templ>::operator()(const K n, const K order) const {
+
+    using std::isfinite;
+
+    if (n < static_cast<K>(4))
+        return static_cast<T>(0); //TODO: диагностический вывод
+
+    std::vector<T> current(n);
+
+    for (K i = static_cast<K>(0); i < n; ++i)
+        current[i] = this->series->operator()(i);
+
+    T delta, delta_next;
+    T gamma, lambda;
+    T ck = static_cast<T>(1);
+    K i1, i2;
+
+    for (K k = static_cast<K>(1); k <= n; ++k) { 
+
+        std::vector<T> step1(n, static_cast<T>(0));
+        std::vector<T> step3(n, static_cast<T>(0));
+
+        switch (order){
+            case static_cast<K>(1):
+                gamma = static_cast<T>(1);
+                gamma/= static_cast<T>(2);
+                gamma/= static_cast<T>(k);
+
+                lambda = static_cast<T>(1) - gamma;
+
+                break;
+            case static_cast<K>(2):
+
+                gamma = static_cast<T>(2);
+                gamma/= static_cast<T>(3);
+                gamma/= static_cast<T>(k);
+
+                lambda = static_cast<T>(1) - gamma;
+
+                break;
+            default:
+                gamma = static_cast<T>(1);
+                gamma/=(k + static_cast<T>(1));
+
+                lambda =static_cast<T>(k);
+                lambda*=gamma;
+        }
+
+        switch (order){
+            case static_cast<K>(1):
+                ck+= static_cast<T>(order /(static_cast<K>(2) * k - static_cast<K>(1)));
+                break;
+
+            case static_cast<K>(2):
+                ck+= static_cast<T>(static_cast<K>(1)/(static_cast<K>(3) * k - static_cast<K>(2)));
+                break;
+
+            default:
+                ck+=static_cast<T>(order / k);
+        }
+
+        step1[0] = current[1] - ck * (current[1] - current[0]) / (current[2] - current[1]);
+
+        for (K i = static_cast<K>(0); i < static_cast<K>(step3.size() - 3); ++i) {
+
+            i1 = i + static_cast<K>(1);
+            i2 = i + static_cast<K>(2);
+
+            step1[i1] = current[i2] - ck * (current[i2] - current[i1]) / (current[i2 + static_cast<K>(1)] - current[i2]);
+
+            delta = step1[i1] - step1[i];
+
+            delta_next = (i2 < static_cast<K>(step1.size()) ? 
+                step1[i2] - step1[i1] 
+                : 
+                static_cast<T>(0)
+            );
+
+            step3[i] = gamma * step1[i] + lambda * (step1[i1] + (delta * delta_next) / (delta - delta_next));
+        }
+
+        current = step3;
+    }
+
+    const T res = current[n - static_cast<K>(4)];
+    if (!isfinite(res))
+        throw std::overflow_error("division by zero");
+
+    return res;
+}
+
 //----------------------------------------------------------------------------------------------------------------------------------------//
-//                                                                 FSA                                                                    //
+//                                                    EPSILON AITKEN THETA ALGORITHM                                                      //
 //                                                                 END                                                                    //
 //----------------------------------------------------------------------------------------------------------------------------------------//
 
+
 //----------------------------------------------------------------------------------------------------------------------------------------//
-//                                                                 FSA                                                                    //
+//                                                        CHANG WHYNN ALGORITHM                                                           //
 //                                                                BEGIN                                                                   //
 //----------------------------------------------------------------------------------------------------------------------------------------//
+
+/**
+  * @brief Chang-Wynn algorithm class template. 
+  //SOME RESULTS CONCERNING THE FUNDAMENTAL NATURE OF WYNN'S VECTOR EPSILON ALGORITHM - same algo + vector form
+  //On a Device for Computing the e (S ) Transformation - nothing new, just matrix 
+  //Construction of new generalizations of Wynn’s epsilon and rho algorithm by solving finite difference equations in the transformation order
+  * @authors Kreinin R.G.
+  * @tparam T The type of the elements in the series, K The type of enumerating integer, series_templ is the type of series whose convergence we accelerate
+*/
+template <std::floating_point T, std::unsigned_integral K, typename series_templ>
+class chang_whynn_algorithm : public series_acceleration<T, K, series_templ>
+{
+public:
+	/**
+	 * @brief Parameterized constructor to initialize the chang_wynn_algorithm
+	 * @param series The series class object to be accelerated
+	*/
+    explicit chang_whynn_algorithm(const series_templ& series) : series_acceleration<T, K, series_templ>(series) {}
+
+	/**
+	 * @brief Fast impimentation of Levin algorithm.
+	 * Computes the partial sum after the transformation using the chang_wynn_algorithm
+	 * @param n The number of terms in the partial sum.
+	 * @param order The order of transformation.
+	 * @return The partial sum after the transformation.
+	*/
+	T operator()(const K n, const K order) const override;
+};
+
+template <std::floating_point T, std::unsigned_integral K, typename series_templ>
+T chang_whynn_algorithm<T, K, series_templ>::operator()(const K n, const K order) const {
+
+    using std::isfinite;
+    using std::fma;
+
+    if (n == static_cast<K>(0))
+        throw std::domain_error("zero integer in the input");
+
+    T up, down, coef, coef2;
+
+    //TODO спросить у Парфенова, ибо жертвуем читаемостью кода, ради его небольшого ускорения
+    K i1, i2, i3, k1;
+    K max = n - (n & 1); // int -> K mark 
+
+    std::vector<std::vector<T>> e(2, std::vector<T>(n, static_cast<T>(0))); //2 vectors n length containing Epsilon table next and previous 
+    std::vector<T> f(n, static_cast<T>(0)); //vector for containing F results from 0 to n-1
+
+    for (K i = static_cast<K>(0); i < max; ++i) //Counting first row of Epsilon Table
+        e[0][i] = static_cast<T>(1) / (this->series->operator()(i + static_cast<K>(1)));
+
+    for (K i = static_cast<K>(0); i < max; ++i) { //Counting F function
+
+        i1 = i + static_cast<K>(1);
+        i2 = i + static_cast<K>(2);
+        i3 = i + static_cast<K>(3);
+
+        coef = fma(
+            static_cast<T>(-2), 
+            this->series->S_n(i2), 
+            this->series->S_n(i3) + this->series->S_n(i1)
+        );
+        coef2 = fma(
+            static_cast<T>(-2), 
+            this->series->S_n(i1), 
+            this->series->S_n(i2) + this->series->S_n(i)
+        );
+
+        up = this->series->operator()(i1);
+        up*= this->series->operator()(i2);
+        up*= coef;
+
+        down = this->series->operator()(i3) * coef2;
+        down -= this->series->operator()(i1) * coef;
+        down = static_cast<T>(1) / down;
+
+        e[1][i] = static_cast<T>(fma(-up, down, this->series->S_n(i1)));
+        f[i] = coef * coef2 * down; //Can make coeff2 ^2 for better effect
+    }
+    for (K k = static_cast<K>(2); k <= max; ++k) { //Counting from 2 to n rows of Epsilon Table
+        k1 = static_cast<K>(1) - k;
+
+        for (K i = static_cast<K>(0); i < max - k; ++i) {
+            i1 = i + static_cast<K>(1);
+
+            up = fma(static_cast<T>(k), f[i], static_cast<T>(k1));
+            down = static_cast<T>(1) / (e[1][i1] - e[1][i]);
+
+            e[0][i] = fma(up, down, e[0][i1]);
+            if (!isfinite(e[0][i])) { //Check for invalid values to avoid them
+                max = k + i1;
+                break;
+            }
+
+        }
+        
+        std::swap(e[0], e[1]); //Swapping 1 and 2 rows of Epsilon Table. First ine will be overwriteen next turn
+    }
+
+    const T result = e[max & 1][0]; //Only odd rows have mathmatical scence. Always returning e[0][0]
+    if (!isfinite(result))
+        throw std::overflow_error("division by zero");
+
+    return result;
+}
+
 //----------------------------------------------------------------------------------------------------------------------------------------//
-//                                                                 FSA                                                                    //
+//                                                        CHANG WHYNN ALGORITHM                                                           //
 //                                                                 END                                                                    //
 //----------------------------------------------------------------------------------------------------------------------------------------//
 
 
 //----------------------------------------------------------------------------------------------------------------------------------------//
-//                                                                 FSA                                                                    //
+//                                                       BREZINSKI THETA ALGORITHM                                                        //
 //                                                                BEGIN                                                                   //
 //----------------------------------------------------------------------------------------------------------------------------------------//
-//----------------------------------------------------------------------------------------------------------------------------------------//
-//                                                                 FSA                                                                    //
-//                                                                 END                                                                    //
-//----------------------------------------------------------------------------------------------------------------------------------------//
 
+template <std::floating_point T, std::unsigned_integral K, typename series_templ>
+class theta_brezinski_algorithm : public series_acceleration<T, K, series_templ>
+{
+protected:
+    /**
+     * @brief Recursive function to compute theta.
+     * Computes the value of theta according to the given parameters.
+     * @param n The number of terms in the partial sum.
+     * @param k The order of transformation.
+     * @return The value of theta.
+     */
+    T theta(K n, const K order, T S_n, const K j) const;
+
+public:
+    /*
+     * @brief Parameterized constructor to initialize the Theta Brezinski Algorithm.
+     * @authors Yurov P.I. Bezzaborov A.A.
+     * @param series The series class object to be accelerated
+     */
+    explicit theta_brezinski_algorithm(const series_templ& series) : series_acceleration<T, K, series_templ>(series) {}
+
+    /**
+     * @brief Fast implementation of Theta Brezinski algorithm.
+     * Computes the partial sum after the transformation using the Theta Brezinski Algorithm.
+     * For more information, see p. 277 10.2-4 in [https://arxiv.org/pdf/math/0306302.pdf]
+     * @param n The number of terms in the partial sum.
+     * @param order The order of transformation.
+     * @return The partial sum after the transformation.
+     */
+    T operator()(const K n, const K order) const override;
+};
+
+template <std::floating_point T, std::unsigned_integral K, typename series_templ>
+T theta_brezinski_algorithm<T, K, series_templ>::theta(K n, const K order, T S_n, const K j) const {
+
+    using std::isfinite;
+
+    if (order == static_cast<K>(1)) {
+
+        T res = static_cast<T>(1) / this->series->operator()(n + j + static_cast<K>(1));
+        if (!isfinite(res))
+            throw std::overflow_error("division by zero");
+        return res;
+    }
+
+    for (K tmp = n + 1; tmp <= n + j; ++tmp)
+        S_n += this->series->operator()(tmp);
+
+    n += j;
+
+    if (order == static_cast<K>(0))
+        return S_n;
+
+    //TODO спросить у Парфенова, ибо жертвуем читаемостью кода, ради его небольшого ускорения
+    const K order1 = order - static_cast<K>(1);
+    const K order2 = order - static_cast<K>(2);
+    const T theta_order1_0 = theta(n, order1, S_n, 0);
+    const T theta_order1_1 = theta(n, order1, S_n, 1);
+    const T theta_order1_2 = theta(n, order1, S_n, 2);
+    const T theta_order2_1 = theta(n, order2, S_n, 1);
+
+    if (order & 1) { // order is odd
+        const T delta = static_cast<T>(1) / (theta_order1_0 - theta_order1_1); // 1/Δυ_2k^(n)
+        if (!isfinite(delta))
+            throw std::overflow_error("division by zero");
+        return theta_order2_1 + delta; // υ_(2k+1)^(n)=υ_(2k-1)^(n+1) + 1/(Δυ_2k^(n)
+    }
+    // order is even
+    const T delta2 = static_cast<T>(1) / fma(static_cast<T>(-2), theta_order1_1, theta_order1_0 + theta_order1_2); // Δ^2 υ_(2k+1)^(n)
+
+    if (!isfinite(delta2))
+        throw std::overflow_error("division by zero");
+
+    const T delta_n = theta_order2_1 - theta(n, order2, S_n, static_cast<K>(2)); // Δυ_2k^(n+1) 
+    const T delta_n1 = theta_order1_1 - theta_order1_2; // Δυ_(2k+1)^(n+1)
+
+    return fma(delta_n * delta_n1, delta2, theta_order2_1); // υ_(2k+2)^(n)=υ_2k^(n+1)+((Δυ_2k^(n+1))*(Δυ_(2k+1)^(n+1)))/(Δ^2 υ_(2k+1)^(n)
+}
+
+template <std::floating_point T, std::unsigned_integral K, typename series_templ>
+T theta_brezinski_algorithm<T, K, series_templ>::operator()(const K n, const K order) const{
+    if (order & 1) // is order odd?
+        throw std::domain_error("order should be even number");
+
+    if (n == static_cast<K>(0) || order == static_cast<K>(0))
+        return this->series->S_n(n);
+
+    return theta(n, order, this->series->S_n(n), 0);
+}
 
 //----------------------------------------------------------------------------------------------------------------------------------------//
-//                                                                 FSA                                                                    //
-//                                                                BEGIN                                                                   //
-//----------------------------------------------------------------------------------------------------------------------------------------//
-//----------------------------------------------------------------------------------------------------------------------------------------//
-//                                                                 FSA                                                                    //
+//                                                       BREZINSKI THETA ALGORITHM                                                        //
 //                                                                 END                                                                    //
 //----------------------------------------------------------------------------------------------------------------------------------------//

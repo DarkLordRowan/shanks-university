@@ -8,29 +8,8 @@
 #include <memory>
 #include <set>
 
-#include "wynn_numerators.hpp"
-#include "remainders.hpp"
-#include "shanks_transformation.hpp"
-#include "epsilon_algorithm.hpp"
-#include "levin_L_algorithm.hpp"
-#include "epsilon_algorithm_two.h"
-#include "chang_whynn_algorithm.h"
+#include "series_acceleration.hpp"
 #include "test_functions.h"
-#include "levin_sidi_M_algorithm.hpp"
-#include "levin_sidi_S_algorithm.hpp"
-#include "drummond_D_algorithm.hpp"
-#include "weniger_algorithm.hpp"
-#include "rho_wynn_algorithm.hpp"
-#include "brezinski_theta_algorithm.h"
-#include "epsilon_algorithm_three.h"
-#include "lubkin_W_algorithm.hpp"
-#include "richardson_algorithm.hpp"
-#include "FSA.hpp"
-#include "FSA2.hpp"
-#include "FSA3.hpp"
-#include "epsilon_modified_algorithm.hpp"
-#include "theta_modified_algorithm.hpp"
-#include "epsilon_aitken_theta_algorithm.h"
 
  /**
   * @brief Enum of transformation IDs

@@ -30,7 +30,7 @@ public:
       * @param order The order of transformation.
       * @return The partial sum after the transformation.
       */
-    T operator() (const K n, const K order) const;
+    T operator() (const K n, const K order) const override;
 };
 
 template <std::floating_point T, std::unsigned_integral K, typename series_templ>
