@@ -35,7 +35,7 @@ T ford_sidi_algorithm_two<T, K, series_templ>::operator()(const K n, const K k) 
 	using std::isfinite;
 
 	if (n == static_cast<K>(0))
-		throw std::domain_error("n = 0 in the input"); //TODO: унифицировать ошибку
+		throw std::domain_error("n = 0 in the input");
 
 	T delta_squared_S_n;
 	K m = n;

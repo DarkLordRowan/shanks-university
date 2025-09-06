@@ -40,7 +40,8 @@ T richardson_algorithm<T, K, series_templ>::operator()(const K n, const K order)
     using std::fma;
 
     // in the method we don't use order, it's only a stub 
-    if (n == static_cast<K>(0)) return static_cast<T>(0); // TODO: диагностика
+    if (n == static_cast<K>(0)) 
+        throw std::domain_error("n = 0 in the input");
 
     std::vector<std::vector<T>> e(2, std::vector<T>(n + static_cast<K>(1), static_cast<T>(0))); //2 vectors n + 1 length containing Richardson table next and previous 
     

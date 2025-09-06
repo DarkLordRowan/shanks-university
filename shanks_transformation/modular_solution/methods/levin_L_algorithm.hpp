@@ -154,10 +154,12 @@ T levin_L_algorithm<T, K, series_templ>::operator()(const K n, const K order) co
 
 	using std::isfinite;
 
-	if (n == static_cast<K>(0)) return static_cast<T>(0); //TODO: диагнастичекский ретурн, что делать
+	if (n == static_cast<K>(0)) 
+		throw std::domain_error("n = 0 in the input");
+
 	if (order == static_cast<K>(0)) return this->series->S_n(n);
 
-    T result = (useRecFormulas ? calc_result_rec(n,order) : calc_result(n, order));
+    const T result = (useRecFormulas ? calc_result_rec(n,order) : calc_result(n, order));
     if (!isfinite(result)) throw std::overflow_error("division by zero");
     return result;
 }

@@ -199,7 +199,7 @@ T levin_sidi_S_algorithm<T, K, series_templ>::operator()(const K n, const K orde
 
     using std::isfinite;
 
-    T result = (useRecFormulas ? calc_result_rec(n,order) : calc_result(n, order));
+    const T result = (useRecFormulas ? calc_result_rec(n,order) : calc_result(n, order));
     if (!isfinite(result)) throw std::overflow_error("division by zero");
     return result;
 }

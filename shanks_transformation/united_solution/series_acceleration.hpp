@@ -559,10 +559,11 @@ T levin_L_algorithm<T, K, series_templ>::operator()(const K n, const K order) co
 
 	using std::isfinite;
 
-	if (n == static_cast<K>(0)) return static_cast<T>(0); //TODO: диагнастичекский ретурн, что делать
+	if (n == static_cast<K>(0)) 
+        throw std::domain_error("n = 0 in the input"); //TODO: диагнастичекский ретурн, что делать
 	if (order == static_cast<K>(0)) return this->series->S_n(n);
 
-    T result = (useRecFormulas ? calc_result_rec(n,order) : calc_result(n, order));
+    const T result = (useRecFormulas ? calc_result_rec(n,order) : calc_result(n, order));
     if (!isfinite(result)) throw std::overflow_error("division by zero");
     return result;
 }
@@ -732,7 +733,7 @@ T drummonds_D_algorithm<T,K,series_templ>::operator()(const K n, const K order) 
 
     using std::isfinite;
 
-    T result = (useRecFormulas ? calc_result_rec(n,order) : calc_result(n, order));
+    const T result = (useRecFormulas ? calc_result_rec(n,order) : calc_result(n, order));
     if (!isfinite(result)) throw std::overflow_error("division by zero");
     return result;
 }
@@ -938,7 +939,7 @@ T levin_sidi_S_algorithm<T, K, series_templ>::operator()(const K n, const K orde
 
     using std::isfinite;
 
-    T result = (useRecFormulas ? calc_result_rec(n,order) : calc_result(n, order));
+    const T result = (useRecFormulas ? calc_result_rec(n,order) : calc_result(n, order));
     if (!isfinite(result)) throw std::overflow_error("division by zero");
     return result;
 }
@@ -1017,6 +1018,9 @@ public:
 
 template<std::floating_point T, std::unsigned_integral K, typename series_templ>
 inline T levin_sidi_M_algorithm<T, K, series_templ>::calculate(const K n, const K order) const {
+
+    using std::isfinite;
+
 	if (gamma - static_cast<T>(n - 1) <= static_cast<T>(0))
 		throw std::domain_error("gamma cannot be lesser than n-1");
 	T numerator = static_cast<T>(0), denominator = static_cast<T>(0);
@@ -1058,7 +1062,7 @@ inline T levin_sidi_M_algorithm<T, K, series_templ>::calculate(const K n, const 
 
 	numerator /= denominator;
 
-	if (!std::isfinite(numerator))
+	if (!isfinite(numerator))
 		throw std::overflow_error("division by zero");
 	return numerator;
 }
@@ -1955,7 +1959,7 @@ T ford_sidi_algorithm_two<T, K, series_templ>::operator()(const K n, const K k) 
 	using std::isfinite;
 
 	if (n == static_cast<K>(0))
-		throw std::domain_error("n = 0 in the input"); //TODO: унифицировать ошибку
+		throw std::domain_error("n = 0 in the input");
 
 	T delta_squared_S_n;
 	K m = n;
@@ -2018,7 +2022,7 @@ T ford_sidi_algorithm_three<T, K, series_templ>::operator()(const K n, const K o
     using std::isfinite;
 
     if (n == static_cast<K>(0))
-        throw std::domain_error("zero integer in the input"); //TODO: унифицировать ошибку
+        throw std::domain_error("n = 0 in the input");
     
     //TODO спросить у Парфенова, ибо жертвуем читаемостью кода, ради его небольшого ускорения
     const K n1 = n - static_cast<K>(1);
@@ -2067,12 +2071,12 @@ T ford_sidi_algorithm_three<T, K, series_templ>::operator()(const K n, const K o
         FSI[MM] = (FSI[MM1] - FSI[MM]) / D;
     }
 
-    const T res = FSA[0] / FSI[0];
+    FSA[0] /= FSI[0]; //result
 
-    if (!isfinite(res))
+    if (!isfinite(FSA[0]))
         throw std::overflow_error("division by zero");
 
-    return res;
+    return FSA[0];
 }
 
 //----------------------------------------------------------------------------------------------------------------------------------------//
@@ -2263,7 +2267,8 @@ T epsilon_algorithm_two<T, K, series_templ>::operator()(const K n, const K order
 
     using std::isfinite;
 
-    if (n == static_cast<K>(0)) return 0; // TODO: диагностика
+    if (n == static_cast<K>(0)) 
+        throw std::domain_error("n = 0 in the input");
 
     if (order == static_cast<K>(0))
         return this->series->S_n(n);
@@ -2375,7 +2380,9 @@ T epsilon_algorithm_three<T, K, series_templ>::operator()(const K n, const K ord
     using std::max;
     using std::abs;
 
-    if (n == static_cast<K>(0)) return 0; // TODO: диагностика
+    if (n == static_cast<K>(0)) 
+        throw std::domain_error("n = 0 in the input");
+
     if (order == static_cast<K>(0)) return this->series->S_n(n);
 
     K N = n; // int -> K
@@ -2632,11 +2639,10 @@ T epsilon_aitken_theta_algorithm<T, K, series_templ>::operator()(const K n, cons
         current = step3;
     }
 
-    const T res = current[n - static_cast<K>(4)];
-    if (!isfinite(res))
+    if (!isfinite(current[n - static_cast<K>(4)]))
         throw std::overflow_error("division by zero");
 
-    return res;
+    return current[n - static_cast<K>(4)];
 }
 
 //----------------------------------------------------------------------------------------------------------------------------------------//
@@ -2685,7 +2691,7 @@ T chang_whynn_algorithm<T, K, series_templ>::operator()(const K n, const K order
     using std::fma;
 
     if (n == static_cast<K>(0))
-        throw std::domain_error("zero integer in the input");
+        throw std::domain_error("n = 0 in the input");
 
     T up, down, coef, coef2;
 
@@ -2747,11 +2753,10 @@ T chang_whynn_algorithm<T, K, series_templ>::operator()(const K n, const K order
         std::swap(e[0], e[1]); //Swapping 1 and 2 rows of Epsilon Table. First ine will be overwriteen next turn
     }
 
-    const T result = e[max & 1][0]; //Only odd rows have mathmatical scence. Always returning e[0][0]
-    if (!isfinite(result))
+    if (!isfinite(e[max & 1][0])) //Only odd rows have mathmatical scence. Always returning e[0][0]
         throw std::overflow_error("division by zero");
 
-    return result;
+    return e[max & 1][0];
 }
 
 //----------------------------------------------------------------------------------------------------------------------------------------//
