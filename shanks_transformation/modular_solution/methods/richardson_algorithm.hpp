@@ -55,8 +55,10 @@ T richardson_algorithm<T, K, series_templ>::operator()(const K n, const K order)
         a *= static_cast<T>(4);
         b = a - static_cast<T>(1);
 
-        for (K m = l; m <= n; ++m)
-            e[1][m] = fma(a, e[0][m], -e[0][m - 1]) / b;
+        for (K m = l; m <= n; ++m){
+            e[1][m] = fma(a, e[0][m], -e[0][m - 1]); 
+            e[1][m]/= b;
+        }
 
         std::swap(e[0], e[1]);
     }
