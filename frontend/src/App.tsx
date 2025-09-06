@@ -1,9 +1,11 @@
-// App.tsx
+import React from "react";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { routes } from "./routes";
 
-export default function App() {
-    return (
-        <div className="h-screen w-screen">
-            print
-        </div>
-    );
-}
+const router = createBrowserRouter(routes);
+
+const App: React.FC = () => {
+    return <RouterProvider router={router} />;
+};
+
+export default App;
