@@ -7,7 +7,7 @@
 #pragma once
 
 #include "series_acceleration.hpp" // Include the series header
-#include "series.h" 
+#include "../series.h" 
 #include "shanks_transformation.hpp"
 
 #include <memory>
@@ -56,7 +56,7 @@ public:
     * @param order The order of transformation.
     * @return The partial sum after the transformation.
 	*/
-	T operator()(const K n, const K k) const;
+	T operator()(const K n, const K k) const override;
 };
 
 template <std::floating_point T, std::unsigned_integral K, typename series_templ>

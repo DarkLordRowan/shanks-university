@@ -5,7 +5,7 @@
 */
 #pragma once
 
-#include "series.h"
+#include "../series.h"
 
 /**
   * @brief Enum for remainders types to use in Levin-type transformations
