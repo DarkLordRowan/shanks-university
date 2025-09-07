@@ -7,7 +7,7 @@
 #include "../include/series_acceleration/algorithm/epsilon_one_algorithm.hpp"
 #include "../include/series_acceleration/algorithm/levin_algorithm.hpp"
 #include "../include/series_acceleration/algorithm/levin_sidi_S_algorithm.hpp"
-#include "../include/series_acceleration/algorithm/drummond_D_algorithm.hpp"
+#include "../include/series_acceleration/algorithm/drummond_d_algorithm.hpp"
 #include "../include/series_acceleration/algorithm/epsilon_two_algorithm.hpp"
 #include "../include/series_acceleration/algorithm/chang_wynn_algorithm.hpp"
 #include "../include/series_acceleration/algorithm/levin_sidi_M_algorithm.hpp"
