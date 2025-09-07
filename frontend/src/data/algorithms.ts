@@ -37,7 +37,7 @@ export const TREE: AlgNode[] = [
         ],
     },
     {
-        id: "levin_sidi",
+        id: "levin_sidi_algorithm",
         title: "levin_sidi_algorithm",
         subtitle: "Алгоритм Левина-Сиди (Levin-Sidi’s Transformation)",
         authorIds: ["levin",'sidi'],
@@ -45,7 +45,7 @@ export const TREE: AlgNode[] = [
             {
                 id: "levin_sidi_basic_algorithm",
                 title: "levin_sidi_basic_algorithm",
-                subtitle: "базовый",
+                subtitle: "Алгоритм Левина-Сиди (базовый)",
                 authorIds: ["levin",'sidi'],
             },
             {
@@ -63,37 +63,37 @@ export const TREE: AlgNode[] = [
             {
                 id: "levin_sidi_t_algorithm",
                 title: "levin_sidi_t_algorithm",
-                subtitle: "Алгоритм Левина-Сиди",
+                subtitle: "t-Алгоритм Левина-Сиди",
                 authorIds: ["levin",'sidi'],
             },
             {
                 id: "levin_sidi_u_algorithm",
                 title: "levin_sidi_u_algorithm",
-                subtitle: "Алгоритм Левина-Сиди",
+                subtitle: "u-Алгоритм Левина-Сиди",
                 authorIds: ["levin",'sidi'],
             },
             {
                 id: "levin_sidi_v_algorithm",
                 title: "levin_sidi_v_algorithm",
-                subtitle: "Алгоритм Левина-Сиди",
+                subtitle: "v-Алгоритм Левина-Сиди",
                 authorIds: ["levin",'sidi'],
             },
             {
                 id: "levin_sidi_t_recursive_algorithm",
                 title: "levin_sidi_t_recursive_algorithm",
-                subtitle: "Алгоритм Левина-Сиди",
+                subtitle: "t-Алгоритм Левина-Сиди (рекурсивный)",
                 authorIds: ["levin",'sidi'],
             },
             {
                 id: "levin_sidi_u_recursive_algorithm",
                 title: "levin_sidi_u_recursive_algorithm",
-                subtitle: "Алгоритм Левина-Сиди",
+                subtitle: "u-Алгоритм Левина-Сиди (рекурсивный)",
                 authorIds: ["levin",'sidi'],
             },
             {
                 id: "levin_sidi_v_recursive_algorithm",
                 title: "levin_sidi_v_recursive_algorithm",
-                subtitle: "Алгоритм Левина-Сиди",
+                subtitle: "v-Алгоритм Левина-Сиди (рекурсивный)",
                 authorIds: ["levin",'sidi'],
             },
         ],
@@ -152,8 +152,8 @@ export const TREE: AlgNode[] = [
         authorIds: ["shanks"],
         children: [
             {
-                id: "shanks_algorithm",
-                title: "shanks_algorithm",
+                id: "shanks_basic_algorithm",
+                title: "shanks_basic_algorithm",
                 subtitle: "Алгоритм Шенкса (//TODO)",
                 authorIds: ["shanks"],
             },
