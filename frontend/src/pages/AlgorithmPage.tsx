@@ -4,28 +4,26 @@ import { TREE } from "../data/algorithms";
 import { resolveAuthors } from "../data/authors";
 import type { AlgNode } from "../types/algorithms";
 
-/** Найти узел по id */
+/* ===== поиск в дереве ===== */
 function findNodeById(nodes: AlgNode[], id: string): AlgNode | undefined {
     for (const n of nodes) {
         if (n.id === id) return n;
-        if (n.children) {
-            const child = findNodeById(n.children, id);
-            if (child) return child;
+        if (n.children?.length) {
+            const hit = findNodeById(n.children, id);
+            if (hit) return hit;
         }
     }
     return undefined;
 }
 
-/** База репозитория и пути (подправь при необходимости) */
+/* ===== GitHub-константы (подправь при необходимости) ===== */
 const GH = {
     owner: "DarkLordRowan",
     repo: "shanks-university",
     branch: "feature/structure",
-    // относительный путь внутри репо до папки с .tpp:
     folder: "shanks_transformation/include/series_acceleration/algorithm",
 };
 
-/** Построить ссылки на raw и обычную страницу GitHub */
 function buildLinks(algId: string) {
     const path = `${GH.folder}/${algId}.tpp`;
     const raw = `https://raw.githubusercontent.com/${GH.owner}/${GH.repo}/${GH.branch}/${path}`;
@@ -33,14 +31,13 @@ function buildLinks(algId: string) {
     return { raw, web, path };
 }
 
-/** Просмотрщик исходника */
+/* ===== CodeViewer с подсветкой ===== */
 const CodeViewer: React.FC<{ url: string; filename: string }> = ({ url, filename }) => {
-    const [code, setCode] = React.useState<string>("");
+    const [code, setCode] = React.useState("");
     const [loading, setLoading] = React.useState(true);
     const [error, setError] = React.useState<string | null>(null);
     const codeRef = React.useRef<HTMLElement | null>(null);
 
-    // загрузка исходника
     React.useEffect(() => {
         let alive = true;
         setLoading(true);
@@ -58,21 +55,16 @@ const CodeViewer: React.FC<{ url: string; filename: string }> = ({ url, filename
         };
     }, [url]);
 
-    // подсветка после установки текста
     React.useEffect(() => {
         if (!code || !codeRef.current) return;
-
         let cancelled = false;
-
         (async () => {
-            // динамически тянем только нужное
             const hljs = (await import("highlight.js/lib/core")).default;
             const { default: cpp } = await import("highlight.js/lib/languages/cpp");
             if (cancelled) return;
             hljs.registerLanguage("cpp", cpp);
             hljs.highlightElement(codeRef.current!);
         })();
-
         return () => {
             cancelled = true;
         };
@@ -104,6 +96,7 @@ const CodeViewer: React.FC<{ url: string; filename: string }> = ({ url, filename
     );
 };
 
+/* ===== страница алгоритма ===== */
 const AlgorithmPage: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const node = id ? findNodeById(TREE, id) : undefined;
@@ -118,6 +111,16 @@ const AlgorithmPage: React.FC = () => {
     }
 
     const authors = resolveAuthors(node.authorIds);
+    const hasChildren = !!node.children?.length;
+
+    // Если есть подалгоритмы — считаем их «реализациями» и показываем список ссылок
+    const implementations = (node.children ?? []).slice().sort((a, b) => {
+        // кидаем «базовую» наверх, если в подзаголовке есть "базов" или id/название содержит "one"
+        const aBase = /базов|(^|_)one(_|$)/i.test((a.subtitle ?? "") + " " + a.id + " " + a.title);
+        const bBase = /базов|(^|_)one(_|$)/i.test((b.subtitle ?? "") + " " + b.id + " " + b.title);
+        return Number(bBase) - Number(aBase);
+    });
+
     const { raw, web, path } = buildLinks(node.id);
 
     return (
@@ -147,21 +150,47 @@ const AlgorithmPage: React.FC = () => {
                     </div>
                 )}
 
-                <div className="flex flex-wrap items-center gap-3 text-sm">
-                    <span className="text-textDim">Файл:</span>
-                    <code className="rounded bg-surface/40 px-2 py-[2px]">{path}</code>
-                    <a href={web} target="_blank" rel="noreferrer" className="link">Открыть на GitHub</a>
-                </div>
+                {!hasChildren ? (
+                    <>
+                        <div className="flex flex-wrap items-center gap-3 text-sm">
+                            <span className="text-textDim">Файл:</span>
+                            <code className="rounded bg-surface/40 px-2 py-[2px]">{path}</code>
+                            <a href={web} target="_blank" rel="noreferrer" className="link">Открыть на GitHub</a>
+                        </div>
+                        {node.document && (
+                            <div className="text-sm text-textDim">Документ: {node.document}</div>
+                        )}
+                        <Link to="/algorithms" className="btn mt-2">← Назад к списку</Link>
+                    </>
+                ) : (
+                    <>
+                        <div className="rounded-xl2 border border-border/60 bg-panel/70 p-3">
+                            <div className="mb-2 font-semibold">Реализации:</div>
+                            <ul className="space-y-1">
+                                {implementations.map((child) => (
+                                    <li key={child.id} className="flex items-center gap-2">
+                                        <span className="inline-block h-2 w-2 rounded-full bg-accent/90" />
+                                        <Link to={`/algorithms/${child.id}`} className="link">
+                                            {child.title}
+                                        </Link>
+                                        {child.subtitle && (
+                                            <span className="text-xs text-textDim">— {child.subtitle}</span>
+                                        )}
+                                    </li>
+                                ))}
+                            </ul>
+                            <p className="mt-3 text-xs text-textDim">
+                                Этот алгоритм имеет несколько вариантов реализации. Откройте соответствующую страницу, чтобы посмотреть исходный код.
+                            </p>
+                        </div>
 
-                {node.document && (
-                    <div className="text-sm text-textDim">Документ: {node.document}</div>
+                        <Link to="/algorithms" className="btn">← Назад к списку</Link>
+                    </>
                 )}
-
-                <Link to="/algorithms" className="btn mt-2">← Назад к списку</Link>
             </div>
 
-            {/* viewer кода из raw.githubusercontent.com */}
-            <CodeViewer url={raw} filename={`${node.id}.tpp`} />
+            {/* Показываем исходник только для листьев */}
+            {!hasChildren && <CodeViewer url={raw} filename={`${node.id}.tpp`} />}
         </div>
     );
 };

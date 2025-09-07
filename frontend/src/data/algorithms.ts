@@ -1,5 +1,4 @@
 import type { AlgNode } from "../types/algorithms";
-import type { AuthorId } from "../types/author.ts";
 
 // Дерево алгоритмов: используем только authorIds: AuthorId[]
 export const TREE: AlgNode[] = [
@@ -8,27 +7,33 @@ export const TREE: AlgNode[] = [
         title: "weniger_algorithm",
         subtitle: "Алгоритм Венигера (Преобразование Венигера)",
         document: "Weniger.pdf -> weniger_algorithm.pdf",
-        authorIds: ["weniger" satisfies AuthorId],
+        authorIds: ["weniger"],
         children: [],
     },
     {
         id: "drummond_d_algorithm",
         title: "drummond_d_algorithm",
         subtitle: "Алгоритм Драммонда",
-        authorIds: ["drummond" satisfies AuthorId],
+        authorIds: ["drummond"],
         children: [],
     },
     {
         id: "levin_algorithm",
         title: "levin_algorithm",
         subtitle: "Алгоритм Левина (Levin’s Transformation)",
-        authorIds: ["levin" satisfies AuthorId],
+        authorIds: ["levin"],
         children: [
+            {
+                id: "levin_basic_algorithm",
+                title: "levin_basic_algorithm",
+                subtitle: "Алгоритм Левина (базовый)",
+                authorIds: ["levin"],
+            },
             {
                 id: "levin_recursion_algorithm",
                 title: "levin_recursion_algorithm",
                 subtitle: "Алгоритм Левина (рекурсивный)",
-                authorIds: ["levin" satisfies AuthorId],
+                authorIds: ["levin"],
             },
         ],
     },
