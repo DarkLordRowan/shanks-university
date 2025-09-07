@@ -1,6 +1,5 @@
 import type { AlgNode } from "../types/algorithms";
 
-// Дерево алгоритмов: используем только authorIds: AuthorId[]
 export const TREE: AlgNode[] = [
     {
         id: "weniger_algorithm",
@@ -38,9 +37,71 @@ export const TREE: AlgNode[] = [
         ],
     },
     {
+        id: "levin_sidi",
+        title: "levin_sidi_algorithm",
+        subtitle: "Алгоритм Левина-Сиди (Levin-Sidi’s Transformation)",
+        authorIds: ["levin",'sidi'],
+        children: [
+            {
+                id: "levin_sidi_basic_algorithm",
+                title: "levin_sidi_basic_algorithm",
+                subtitle: "базовый",
+                authorIds: ["levin",'sidi'],
+            },
+            {
+                id: "levin_sidi_m_algorithm",
+                title: "levin_sidi_m_algorithm",
+                subtitle: "M-Алгоритм Левина-Сиди",
+                authorIds: ["levin",'sidi'],
+            },
+            {
+                id: "levin_sidi_s_algorithm",
+                title: "levin_sidi_s_algorithm",
+                subtitle: "S-Алгоритм Левина-Сиди",
+                authorIds: ["levin",'sidi'],
+            },
+            {
+                id: "levin_sidi_t_algorithm",
+                title: "levin_sidi_t_algorithm",
+                subtitle: "Алгоритм Левина-Сиди",
+                authorIds: ["levin",'sidi'],
+            },
+            {
+                id: "levin_sidi_u_algorithm",
+                title: "levin_sidi_u_algorithm",
+                subtitle: "Алгоритм Левина-Сиди",
+                authorIds: ["levin",'sidi'],
+            },
+            {
+                id: "levin_sidi_v_algorithm",
+                title: "levin_sidi_v_algorithm",
+                subtitle: "Алгоритм Левина-Сиди",
+                authorIds: ["levin",'sidi'],
+            },
+            {
+                id: "levin_sidi_t_recursive_algorithm",
+                title: "levin_sidi_t_recursive_algorithm",
+                subtitle: "Алгоритм Левина-Сиди",
+                authorIds: ["levin",'sidi'],
+            },
+            {
+                id: "levin_sidi_u_recursive_algorithm",
+                title: "levin_sidi_u_recursive_algorithm",
+                subtitle: "Алгоритм Левина-Сиди",
+                authorIds: ["levin",'sidi'],
+            },
+            {
+                id: "levin_sidi_v_recursive_algorithm",
+                title: "levin_sidi_v_recursive_algorithm",
+                subtitle: "Алгоритм Левина-Сиди",
+                authorIds: ["levin",'sidi'],
+            },
+        ],
+    },
+    {
         id: "lubkin_w_algorithm",
-        title: "W_lubkin_algorithm",
-        subtitle: "Алгоритм Лубкина (W-алгоритм Лубкина)",
+        title: "lubkin_w_algorithm",
+        subtitle: "W-Алгоритм Лубкина",
         authorIds: ["lubkin"],
         children: [],
     },
@@ -85,15 +146,21 @@ export const TREE: AlgNode[] = [
         children: [],
     },
     {
-        id: "shanks_transform",
-        title: "shanks_transform",
+        id: "shanks_algorithm",
+        title: "shanks_algorithm",
         subtitle: "Алгоритм Шенкса (Shanks’ Transformation)",
         authorIds: ["shanks"],
         children: [
             {
-                id: "shanks_transform_alternating",
-                title: "shanks_transform_alternating",
-                subtitle: "Шэнкс (знакопеременный)",
+                id: "shanks_algorithm",
+                title: "shanks_algorithm",
+                subtitle: "Алгоритм Шенкса (//TODO)",
+                authorIds: ["shanks"],
+            },
+            {
+                id: "shanks_alternating_algorithm",
+                title: "shanks_alternating_algorithm",
+                subtitle: "Алгоритм Шенкса (//TODO)",
                 authorIds: ["shanks"],
             },
         ],
@@ -107,19 +174,19 @@ export const TREE: AlgNode[] = [
             {
                 id: "wynn_epsilon_one_algorithm",
                 title: "wynn_epsilon_one_algorithm",
-                subtitle: "базовый",
+                subtitle: "Эпсилон-алгоритм Винна (базовый)",
                 authorIds: ["wynn"]
             },
             {
                 id: "wynn_epsilon_two_algorithm",
                 title: "wynn_epsilon_two_algorithm",
-                subtitle: "вторая версия",
+                subtitle: "Эпсилон-алгоритм Винна (вторая версия)",
                 authorIds: ["wynn"]
             },
             {
                 id: "wynn_epsilon_three_algorithm",
                 title: "wynn_epsilon_three_algorithm",
-                subtitle: "третья версия",
+                subtitle: "Эпсилон-алгоритм Винна (третья версия)",
                 authorIds: ["wynn"]
             },
         ],
