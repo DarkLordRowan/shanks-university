@@ -38,7 +38,9 @@ const CodeViewer: React.FC<{ url: string; filename: string }> = ({ url, filename
     const [code, setCode] = React.useState<string>("");
     const [loading, setLoading] = React.useState(true);
     const [error, setError] = React.useState<string | null>(null);
+    const codeRef = React.useRef<HTMLElement | null>(null);
 
+    // загрузка исходника
     React.useEffect(() => {
         let alive = true;
         setLoading(true);
@@ -56,12 +58,30 @@ const CodeViewer: React.FC<{ url: string; filename: string }> = ({ url, filename
         };
     }, [url]);
 
+    // подсветка после установки текста
+    React.useEffect(() => {
+        if (!code || !codeRef.current) return;
+
+        let cancelled = false;
+
+        (async () => {
+            // динамически тянем только нужное
+            const hljs = (await import("highlight.js/lib/core")).default;
+            const { default: cpp } = await import("highlight.js/lib/languages/cpp");
+            if (cancelled) return;
+            hljs.registerLanguage("cpp", cpp);
+            hljs.highlightElement(codeRef.current!);
+        })();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [code]);
+
     const copy = async () => {
         try {
             await navigator.clipboard.writeText(code);
-        } catch {
-            /* ignore */
-        }
+        } catch {/* ignore */}
     };
 
     return (
@@ -74,14 +94,10 @@ const CodeViewer: React.FC<{ url: string; filename: string }> = ({ url, filename
             </div>
 
             {loading && <div className="text-textDim text-sm">Загрузка исходника…</div>}
-            {error && (
-                <div className="text-red-400 text-sm">
-                    Не удалось загрузить файл: {error}
-                </div>
-            )}
+            {error && <div className="text-red-400 text-sm">Не удалось загрузить файл: {error}</div>}
             {!loading && !error && (
                 <pre className="overflow-auto rounded-xl2 border border-border/60 bg-surface/40 p-4 text-sm leading-relaxed">
-          <code>{code}</code>
+          <code ref={codeRef} className="language-cpp">{code}</code>
         </pre>
             )}
         </div>
