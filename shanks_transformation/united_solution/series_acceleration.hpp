@@ -215,7 +215,7 @@ T t_wave_transform<T,K>::operator()(const K n, const K order, const series_base<
 
     using std::isfinite;
 
-	const T result = static_cast<T>(1) / series->operator()(n + order + 1);
+	const T result = static_cast<T>(1) / series->operator()(n + order + static_cast<K>(1));
 
 	if (!isfinite(result)) throw std::overflow_error("division by zero");
 	return result;
@@ -271,7 +271,7 @@ T v_wave_transform<T,K>::operator()(const K n, const K order, const series_base<
 
     using std::isfinite;
     
-    const T a1 = series->operator()(n+order), a2 = series->operator()(n+order+1);
+    const T a1 = series->operator()(n+order), a2 = series->operator()(n+order+static_cast<K>(1));
     const T result = (a1 - a2) / (a1 * a2);
 	if (!isfinite(result)) throw std::overflow_error("division by zero");
 	return result;
@@ -427,7 +427,7 @@ public:
 		// order % 2 = 1
 		// order & 1 = 1
 
-		return (-gamma + static_cast<T>(order / 2) / rho + static_cast<T>(order & 1));
+		return (-gamma + static_cast<T>(order / static_cast<K>(2)) / rho + static_cast<T>(order & static_cast<K>(1)));
 	}
 };
 
@@ -513,17 +513,18 @@ inline T levin_L_algorithm<T, K,series_templ>::calc_result(K n, K order) const{
 	T numerator = static_cast<T>(0), denominator = static_cast<T>(0);
 	T C_njk, S_nj, g_n, rest;
 
-	for (K j = 0; j <= order; ++j) { //Standart Levin algo procedure
+	for (K j = static_cast<K>(0); j <= order; ++j) { //Standart Levin algo procedure
 
 		rest  = this->series->minus_one_raised_to_power_n(j);
 		rest *= this->series->binomial_coefficient(static_cast<T>(order), j);
 
-		C_njk  = static_cast<T>(pow(n + j     + 1, order - 1));
-		C_njk /= static_cast<T>(pow(n + order + 1, order - 1));
+		C_njk  = static_cast<T>(pow(n + j     + static_cast<K>(1), order - static_cast<K>(1)));
+		C_njk /= static_cast<T>(pow(n + order + static_cast<K>(1), order - static_cast<K>(1)));
 
 		S_nj = this->series->S_n(n + j);
 
-		g_n = static_cast<T>(1) / (this->series->operator()(n + j));
+		g_n = static_cast<T>(1);
+        g_n/= (this->series->operator()(n + j));
 
 		rest *= C_njk;
 		rest *= g_n;
@@ -545,8 +546,10 @@ T levin_L_algorithm<T, K, series_templ>::operator()(const K n_time, const K k_ti
 
 	using std::isfinite;
 
-    T w_n = static_cast<T>(1-2*(n_time % 2)) * this->series->fact(n_time);
-    T R_0 = (ND == static_cast<T>(0) ? this->series->S_n(n_time) : static_cast<T>(1)); R_0 /= w_n;
+    T w_n = static_cast<T>(static_cast<K>(1)-static_cast<K>(2)*(n_time % static_cast<K>(2)));
+      w_n *= this->series->fact(n_time);
+    T R_0 = (ND == static_cast<T>(0) ? this->series->S_n(n_time) : static_cast<T>(1)); 
+      R_0 /= w_n;
 
     if (k_time == static_cast<K>(0)) return R_0;
 
@@ -576,7 +579,7 @@ inline T levin_L_algorithm<T, K,series_templ>::calc_result_rec(K n, K order) con
 
 	using std::isfinite;
 
-    const T result = (*this)(n, order, beta, 0) / (*this)(n, order, beta, 1);
+    const T result = (*this)(n, order, beta, false) / (*this)(n, order, beta, true);
 
     if (!isfinite(result)) throw std::overflow_error("division by zero");
 
@@ -679,7 +682,7 @@ inline T drummonds_D_algorithm<T,K,series_templ>::calc_result(const K n, const K
 	T numerator = static_cast<T>(0), denominator = static_cast<T>(0);
 	T rest;
 
-	for (K j = 0; j <= n; ++j) {
+	for (K j = static_cast<K>(0); j <= n; ++j) {
 
 		rest  = this->series->minus_one_raised_to_power_n(j);
 		rest *= this->series->binomial_coefficient(static_cast<T>(n), j);
@@ -705,14 +708,14 @@ inline T drummonds_D_algorithm<T,K,series_templ>::calc_result_rec(const K n, con
 	std::vector<T> Denom(order + 1, static_cast<T>(0));
 
     //init the base values
-	for (K i = 0; i < order+1; ++i) {
+	for (K i = static_cast<K>(0); i < order+static_cast<K>(1); ++i) {
 		Denom[i] = remainder_func->operator()(n, i, this->series);
 		  Num[i] = this->series->S_n(n+i) * Denom[i];
 	}
 
     //recurrence
-	for (K i = 1; i <= order; ++i)
-		for (K j = 0; j <= order - i; ++j) {
+	for (K i = static_cast<K>(1); i <= order; ++i)
+		for (K j = static_cast<K>(0); j <= order - i; ++j) {
 			Denom[j] = Denom[j+1] - Denom[j];
 			  Num[j] =   Num[j+1] -   Num[j];
 		}
@@ -850,14 +853,14 @@ inline T levin_sidi_S_algorithm<T, K,series_templ>::calc_result(K n, K order) co
     T numerator = static_cast<T>(0), denominator = static_cast<T>(0);
     T rest;
     T up_pochamer, down_pochamer; 
-    for (K j = 0; j <= order; ++j){
+    for (K j = static_cast<K>(0); j <= order; ++j){
         rest  = this->series->minus_one_raised_to_power_n(j);
         rest *= this->series->binomial_coefficient(order, j);
 
         up_pochamer = down_pochamer = static_cast<T>(1);
         //up_pochamer   (beta + n + j)_(order - 1)     = (beta + n + j)(beta + n + j + 1)...(beta + n + j + order - 2)
         //down_pochamer (beta + n + order)_(order - 1) = (beta + n + order)(beta + n + order + 1)...(beta + n + order + oreder - 2)
-        for (K i = 0; i < order - 1; ++i){
+        for (K i = static_cast<K>(0); i < order - static_cast<K>(1); ++i){
             up_pochamer   *= (beta + static_cast<T>(n + j     + i));
             down_pochamer *= (beta + static_cast<T>(n + order + i));
         }
@@ -866,7 +869,7 @@ inline T levin_sidi_S_algorithm<T, K,series_templ>::calc_result(K n, K order) co
         rest *= remainder_func->operator()(n, 
             j, 
             this->series,
-             (variant == remainder_type::u_variant ? beta : T(1))
+             (variant == remainder_type::u_variant ? beta : static_cast<T>(1))
             );
 
         numerator   += rest * this->series->S_n(n + j);
@@ -884,34 +887,34 @@ inline T levin_sidi_S_algorithm<T, K,series_templ>::calc_result_rec(K n, K order
 
     using std::isfinite;
 
-    std::vector<T>   Num(order + 1, static_cast<T>(0));
-    std::vector<T> Denom(order + 1, static_cast<T>(0));
+    std::vector<T>   Num(order + static_cast<K>(1), static_cast<T>(0));
+    std::vector<T> Denom(order + static_cast<K>(1), static_cast<T>(0));
 
-    for (K i = 0; i <= order; ++i){
+    for (K i = static_cast<K>(0); i <= order; ++i){
 
         Denom[i] = remainder_func->operator()(
             n, 
             i, 
             this->series,
-            (variant == remainder_type::u_variant ? beta : T(1))
+            (variant == remainder_type::u_variant ? beta : static_cast<T>(1))
         );
 
         Num[i] = this->series->S_n(n + i); Num[i] *= Denom[i];
     }
     
     T scale1, scale2;
-    for (K i = 1; i <= order; ++i)
-        for(K j = 0; j <= order - i; ++j){
+    for (K i = static_cast<K>(1); i <= order; ++i)
+        for(K j = static_cast<K>(0); j <= order - i; ++j){
 
             // i ~ k from formula
             // j ~ n from formula
             scale1 = beta + static_cast<T>(i + j);
-            scale1*= (scale1 - T(1));
+            scale1*= (scale1 - static_cast<T>(1));
             scale2 = scale1 + static_cast<T>(i);
-            scale2*= (scale2 - T(1));
+            scale2*= (scale2 - static_cast<T>(1));
 
-            Denom[j] = fma(-scale1,Denom[j]/scale2,Denom[j+1]);
-              Num[j] = fma(-scale1,  Num[j]/scale2,  Num[j+1]);
+            Denom[j] = fma(-scale1,Denom[j]/scale2,Denom[j+static_cast<K>(1)]);
+              Num[j] = fma(-scale1,  Num[j]/scale2,  Num[j+static_cast<K>(1)]);
         }
     
     Num[0] /= Denom[0];
@@ -1050,32 +1053,32 @@ inline T levin_sidi_M_algorithm<T, K, series_templ>::calculate(const K n, const 
 
     using std::isfinite;
 
-	if (gamma - static_cast<T>(n - 1) <= static_cast<T>(0))
+	if (gamma - static_cast<T>(n - static_cast<K>(1)) <= static_cast<T>(0))
 		throw std::domain_error("gamma cannot be lesser than n-1");
 	T numerator = static_cast<T>(0), denominator = static_cast<T>(0);
 
 	T rest;
 
 	T up = static_cast<T>(1), down = static_cast<T>(1);
-	T binomial_coef = this->series->binomial_coefficient(static_cast<T>(n), 0);
+	T binomial_coef = this->series->binomial_coefficient(static_cast<T>(n), static_cast<K>(0));
 	T S_n = this->series->S_n(order);
 
-	T down_coef = gamma + static_cast<T>(order + 2);
+	T down_coef = gamma + static_cast<T>(order + static_cast<K>(2));
 	T   up_coef = down_coef - static_cast<T>(n);
 	
-	for (K m = 0; m < n - 1; ++m) {
+	for (K m = static_cast<K>(0); m < n - static_cast<K>(1); ++m) {
 		up   *= (up_coef   + static_cast<T>(m));
 		down *= (down_coef + static_cast<T>(m));
 	}
 	up /= down;
-	down_coef = gamma + static_cast<T>(order + 1);
-	up_coef   = down_coef - static_cast<T>(n + 1);
+	down_coef = gamma + static_cast<T>(order + static_cast<K>(1));
+	up_coef   = down_coef - static_cast<T>(n + static_cast<K>(1));
 	
-	for (K j = 0; j <= n; ++j) {
+	for (K j = static_cast<K>(0); j <= n; ++j) {
 		rest  = this->series->minus_one_raised_to_power_n(j); 
 		rest *= binomial_coef * static_cast<T>(n - j);
 		rest *= up; 
-		rest /= static_cast<T>(j + 1);
+		rest /= static_cast<T>(j + static_cast<K>(1));
 		up /= (  up_coef + static_cast<T>(j));
 		up *= (down_coef + static_cast<T>(j));
 		rest *= remainder_func->operator()(
@@ -1086,7 +1089,7 @@ inline T levin_sidi_M_algorithm<T, K, series_templ>::calculate(const K n, const 
 		);
 		numerator += rest * S_n ;
 		denominator += rest;
-		S_n += this->series->operator()(order + j + 1);
+		S_n += this->series->operator()(order + j + static_cast<K>(1));
 	}
 
 	numerator /= denominator;
@@ -1243,15 +1246,40 @@ inline T rho_Wynn_algorithm<T, K, series_templ>::calculate(const K n, K order) c
 
 	using std::isfinite;
 
-	if (order & 1)// is order odd
+	if (order & static_cast<K>(1))// is order odd
 		throw std::domain_error("order should be even number");
 
 	if (order == static_cast<K>(0)) return this->series->S_n(n);
 
 	const T S_n = this->series->S_n(n);
 	const K order1 = order - static_cast<K>(1);
-	const T res = (recursive_calculate_body(n, order1 - 1, S_n, 1) + numerator_func->operator()(n, order, this->series, gamma, RHO)) / 
-		(recursive_calculate_body(n, order1, S_n, 1) - recursive_calculate_body(n, order1, S_n, 0));
+	const T res = ( 
+        recursive_calculate_body(
+            n, 
+            order1 - static_cast<K>(1), 
+            S_n, 
+            static_cast<K>(1)
+        ) + 
+        numerator_func->operator()(
+            n, 
+            order, 
+            this->series, 
+            gamma, 
+            RHO)
+        ) / (
+        recursive_calculate_body(
+            n,
+            order1,
+            S_n, 
+            static_cast<K>(1)
+        ) - 
+        recursive_calculate_body(
+            n, 
+            order1, 
+            S_n, 
+            static_cast<K>(0)
+        ) 
+    );
 
 	if (!isfinite(res))
 		throw std::overflow_error("division by zero");
@@ -1278,8 +1306,30 @@ T rho_Wynn_algorithm<T, K, series_templ>::recursive_calculate_body(const K n, co
 
 	const K order1 = order - static_cast<K>(1);
 	const K nj = n + j;
-	const T res = (recursive_calculate_body(nj, order1 - static_cast<K>(1), S_n, 1) + numerator_func->operator()(nj, order, this->series, gamma, RHO)) /
-		(recursive_calculate_body(nj, order1, S_n, 1) - recursive_calculate_body(nj, order1, S_n, 0));
+	const T res = (recursive_calculate_body(
+        nj, 
+        order1 - static_cast<K>(1), 
+        S_n, 
+        static_cast<K>(1)) + 
+        numerator_func->operator()(
+            nj, order, 
+            this->series, 
+            gamma, 
+            RHO)
+        ) / (
+            recursive_calculate_body(
+                nj, 
+                order1,
+                 S_n, 
+                static_cast<K>(1)
+            ) - 
+            recursive_calculate_body(
+                nj, 
+                order1, 
+                S_n, 
+                static_cast<K>(0)
+            )
+         );
 
 	if (!isfinite(res))
 		throw std::overflow_error("division by zero");
@@ -1344,17 +1394,17 @@ T weniger_algorithm<T, K, series_templ>::operator()(const K n, const K order) co
 	T a_n, rest;
 
 	T coef = static_cast<T>(1);
-	T binomial_coef = this->series->binomial_coefficient(static_cast<T>(n), 0);
+	T binomial_coef = this->series->binomial_coefficient(static_cast<T>(n), static_cast<K>(0));
 	T S_n = this->series->S_n(0);
 
-	for (K m = 0; m < order - 1; ++m) 
+	for (K m = static_cast<K>(0); m < order - static_cast<K>(1); ++m) 
 		coef *= static_cast<T>(1 + m);
 	
 	T j1;
 
-	for (K j = 0; j <= order; ++j) {
+	for (K j = static_cast<K>(0); j <= order; ++j) {
 
-		j1 = static_cast<T>(j + 1);
+		j1 = static_cast<T>(j + static_cast<K>(1));
 
 		rest  = this->series->minus_one_raised_to_power_n(j);
 		rest *= binomial_coef;
@@ -1370,7 +1420,7 @@ T weniger_algorithm<T, K, series_templ>::operator()(const K n, const K order) co
 
 		numerator += rest * S_n;
 		denominator += rest;
-		S_n += this->series->operator()(j + 1);
+		S_n += this->series->operator()(j + static_cast<K>(1));
 		
 	}
 
@@ -1439,10 +1489,14 @@ T shanks_transform<T, K, series_templ>::operator()(const K n, const K order) con
 		T a_n, a_n_plus_1, tmp;
 
 		a_n = this->series->operator()(n);
-		a_n_plus_1 = this->series->operator()(n + 1);
+		a_n_plus_1 = this->series->operator()(n + static_cast<K>(1));
 		tmp = -a_n_plus_1 * a_n_plus_1;
 
-		const T result = fma(a_n * a_n_plus_1, (a_n + a_n_plus_1) / (fma(a_n, a_n, tmp) - fma(a_n_plus_1, a_n_plus_1, tmp)), this->series->S_n(n));
+		const T result = fma(
+            a_n * a_n_plus_1, 
+            (a_n + a_n_plus_1) / (fma(a_n, a_n, tmp) - fma(a_n_plus_1, a_n_plus_1, tmp)), 
+            this->series->S_n(n)
+        );
 
 		if (!isfinite(result))
 			throw std::overflow_error("divison by zero");
@@ -1457,26 +1511,34 @@ T shanks_transform<T, K, series_templ>::operator()(const K n, const K order) con
 
 	T a_n, a_n_plus_1, tmp;
 	a_n = this->series->operator()(n_minus_order);
-	a_n_plus_1 = this->series->operator()(n_minus_order + 1);
+	a_n_plus_1 = this->series->operator()(n_minus_order + static_cast<K>(1));
 	tmp = -a_n_plus_1 * a_n_plus_1;
 
-	for (K i = n_minus_order + 1; i <= n_plus_order - 1; ++i) // if we got to this branch then we know that n >= order - see previous branches  int -> K
+	for (K i = n_minus_order + static_cast<K>(1); i <= n_plus_order - static_cast<K>(1); ++i) // if we got to this branch then we know that n >= order - see previous branches  int -> K
 	{
 		a_n = this->series->operator()(i);
-		a_n_plus_1 = this->series->operator()(i + 1);
+		a_n_plus_1 = this->series->operator()(i + static_cast<K>(1));
 		tmp = -a_n_plus_1 * a_n_plus_1;
 
 		//formula[6]
-		T_n[i] = fma(a_n * a_n_plus_1, (a_n + a_n_plus_1) / (fma(a_n, a_n, tmp) - fma(a_n_plus_1, a_n_plus_1, tmp)), this->series->S_n(i));
+		T_n[i] = fma(
+            a_n * a_n_plus_1, 
+            (a_n + a_n_plus_1) / (fma(a_n, a_n, tmp) - fma(a_n_plus_1, a_n_plus_1, tmp)), 
+            this->series->S_n(i)
+        );
 	}
 	std::vector<T> T_n_plus_1(n + order, static_cast<T>(0));
 	T a, b, c;
-	for (K j = 2; j <= order; ++j) {
+	for (K j = static_cast<K>(2); j <= order; ++j) {
 		for (K i = n_minus_order + j; i <= n_plus_order - j; ++i) { // int -> K
 			a = T_n[i];
-			b = T_n[i - 1];
-			c = T_n[i + 1];
-			T_n_plus_1[i] = static_cast<T>(std::fma(std::fma(a, c + b - a, -b * c), 1 / (std::fma(2, a, -b - c)), a));
+			b = T_n[i - static_cast<K>(1)];
+			c = T_n[i + static_cast<K>(1)];
+			T_n_plus_1[i] = fma(
+                fma(a, c + b - a, -b * c), 
+                static_cast<T>(1) / (fma(static_cast<T>(2), a, -b - c)),
+                a
+            );
 		}
 		T_n = T_n_plus_1;
 	}
@@ -1533,8 +1595,12 @@ T shanks_transform_alternating<T, K, series_templ>::operator()(const K n, const 
 		T a_n, a_n_plus_1, result;
 
 		a_n = this->series->operator()(n);
-		a_n_plus_1 = this->series->operator()(n + 1);
-		result = fma(a_n * a_n_plus_1, static_cast<T>(1) / (a_n - a_n_plus_1), this->series->S_n(n));
+		a_n_plus_1 = this->series->operator()(n + static_cast<K>(1));
+		result = fma(
+            a_n * a_n_plus_1, 
+            static_cast<T>(1) / (a_n - a_n_plus_1), 
+            this->series->S_n(n)
+        );
 
 		if (!isfinite(result))
 			throw std::overflow_error("division by zero");
@@ -1544,7 +1610,7 @@ T shanks_transform_alternating<T, K, series_templ>::operator()(const K n, const 
 	//n > order >= 1
 
 	const K n_minus_order = n - order;
-	const K n_minus_order1 = n_minus_order + 1;
+	const K n_minus_order1 = n_minus_order + static_cast<K>(1);
 	const K n_plus_order = n + order;
 
 	std::vector<T> T_n(n_plus_order, static_cast<T>(0));
@@ -1554,27 +1620,38 @@ T shanks_transform_alternating<T, K, series_templ>::operator()(const K n, const 
 	a_n = this->series->operator()(n_minus_order);
 	a_n_plus_1 = this->series->operator()(n_minus_order1);
 
-	for (K i = n_minus_order1; i <= n_plus_order - 1; ++i) // if we got to this branch then we know that n >= order - see previous branches int->K
+	for (K i = n_minus_order1; i <= n_plus_order - static_cast<K>(1); ++i) // if we got to this branch then we know that n >= order - see previous branches int->K
 	{
 		a_n = this->series->operator()(i);
-		a_n_plus_1 = this->series->operator()(i + 1);
+		a_n_plus_1 = this->series->operator()(i + static_cast<K>(1));
 
 		// formula [6]
-		T_n[i] = fma(a_n * a_n_plus_1, static_cast<T>(1) / (a_n - a_n_plus_1), this->series->S_n(n));
+		T_n[i] = fma(
+            a_n * a_n_plus_1, 
+            static_cast<T>(1) / (a_n - a_n_plus_1), 
+            this->series->S_n(n)
+        );
+
 	}
 
 	std::vector<T> T_n_plus_1(n_plus_order, static_cast<T>(0));
 	T a, b, c;
 
-	for (K j = 2; j <= order; ++j) {
+	for (K j = static_cast<K>(2); j <= order; ++j) {
 		for (K i = n_minus_order + j; i <= n_plus_order - j; ++i) { // int -> K
 
 			a = T_n[i];
-			b = T_n[i - 1];
-			c = T_n[i + 1];
+			b = T_n[i - static_cast<K>(1)];
+			c = T_n[i + static_cast<K>(1)];
 
-			T_n_plus_1[i] = fma(fma(a, c + b - a, -b * c), static_cast<T>(1) / (static_cast<T>(2) * a - b - c), a);
+			T_n_plus_1[i] = fma(
+                fma(a, c + b - a, -b * c),
+                static_cast<T>(1) / (static_cast<T>(2) * a - b - c),
+                a
+            );
+
 		}
+
 		T_n = T_n_plus_1;
 	}
 
@@ -1638,26 +1715,28 @@ T theta_modified_algorithm<T, K, series_templ>::operator()(const K n, const K or
 	std::vector<T> current(n);
 	std::vector<T> next(n);
 
-	for (K i = 0; i < n; ++i)
+	for (K i = static_cast<K>(0); i < n; ++i)
 		current[i] = this->series->operator()(i);
 
-	for (K k = 0; k < 1; ++k) { 
-		for (K i = 0; i < m; ++i) {
-			i1 = i + static_cast<K>(1);
-			i2 = i + static_cast<K>(2);
+    //пока удалил for (K k = 0; k < 1; ++k) { с комментариме -> тут вместо 1 было iter, возможно iter - параметр, но если и так, то от него смысла нету, тк при iter > 1 ответ все время 0
+	for (K i = static_cast<K>(0); i < m; ++i) {
 
-			delta = current[i1] - current[i];
-			delta_next = (i2 < n) ? current[i2] - current[i1] : static_cast<T>(0);
+		i1 = i + static_cast<K>(1);
+		i2 = i + static_cast<K>(2);
 
-			next[i] = current[i1];
-			next[i]+= (delta * delta_next) / (delta - delta_next);
-		}
-		current = next;
+		delta = current[i1] - current[i];
+
+		delta_next = (i2 < n) ? current[i2] - current[i1] : static_cast<T>(0);
+
+		next[i] = current[i1];
+		next[i]+= (delta * delta_next) / (delta - delta_next);
 	}
+
+	current = next;
 	
-	if (!isfinite(current[m - 1]))
+	if (!isfinite(current[m - static_cast<K>(1)]))
 		throw std::overflow_error("division by zero");
-	return current[m - 1];
+	return current[m - static_cast<K>(1)];
 }
 
 //----------------------------------------------------------------------------------------------------------------------------------------//
@@ -1704,30 +1783,36 @@ T richardson_algorithm<T, K, series_templ>::operator()(const K n, const K order)
     // in the method we don't use order, it's only a stub 
     if (n == static_cast<K>(0)) return static_cast<T>(0); // TODO: диагностика
 
-    std::vector<std::vector<T>> e(2, std::vector<T>(n + static_cast<K>(1), static_cast<T>(0))); //2 vectors n + 1 length containing Richardson table next and previous 
+    std::vector<std::vector<T>> e(
+        2, 
+        std::vector<T>(
+            n + static_cast<K>(1), 
+            static_cast<T>(0)
+        )
+    ); //2 vectors n + 1 length containing Richardson table next and previous 
     
-    for (K i = 0; i <= n; ++i)
+    for (K i = static_cast<K>(0); i <= n; ++i)
         e[0][i] = this->series->S_n(i);
 
     // The Richardson method main function 
     T a, b;
     a = static_cast<T>(1);
-    for (K l = 1; l <= n; ++l) {
+    for (K l = static_cast<K>(1); l <= n; ++l) {
         a *= static_cast<T>(4);
         b = a - static_cast<T>(1);
 
-        for (K m = l; m <= n; ++m){
-            e[1][m] = fma(a, e[0][m], -e[0][m - 1]);
+        for (K m = static_cast<K>(1); m <= n; ++m){
+            e[1][m] = fma(a, e[0][m], -e[0][m - static_cast<K>(1)]);
             e[1][m]/= b;
         }
 
         std::swap(e[0], e[1]);
     }
 
-    if (!isfinite(e[n & 1][n])) // get n & 1, cause if n is even, result is e[0][n], if n is odd, result is e[1][n]
+    if (!isfinite(e[n & static_cast<K>(1)][n])) // get n & 1, cause if n is even, result is e[0][n], if n is odd, result is e[1][n]
         throw std::overflow_error("division by zero");
 
-    return e[n & 1][n];
+    return e[n & static_cast<K>(1)][n];
 }
 
 //----------------------------------------------------------------------------------------------------------------------------------------//
@@ -1791,7 +1876,7 @@ T W_lubkin_algorithm<T, K, series_templ>::operator()(const K n, const K order) c
 	if (order < static_cast<K>(0)) 
 		throw std::domain_error("negative order input");
 
-	return calculate(n, order, this->series->S_n(n), 0);
+	return calculate(n, order, this->series->S_n(n), static_cast<K>(0));
 }
 
 template<std::floating_point T, std::unsigned_integral K, typename series_templ>
@@ -1804,7 +1889,7 @@ T W_lubkin_algorithm<T, K, series_templ>::calculate(K n, const K order, T S_n, c
 	* j - to fix n
 	* S_n - partial sum of series.
 	*/
-	for (K i = 0; i < j; ++i) 
+	for (K i = static_cast<K>(0); i < j; ++i) 
 		S_n += this->series->operator()(n  + i + static_cast<K>(1));
 	
 	n += j;
@@ -1813,10 +1898,10 @@ T W_lubkin_algorithm<T, K, series_templ>::calculate(K n, const K order, T S_n, c
 
 	//calculate all basic parts of transfor
 	K order1 = order - static_cast<K>(1);
-	T W0 = calculate(n, order1, S_n, 0);
-	T W1 = calculate(n, order1, S_n, 1);
-	T W2 = calculate(n, order1, S_n, 2);
-	T W3 = calculate(n, order1, S_n, 3);
+	T W0 = calculate(n, order1, S_n, static_cast<K>(0));
+	T W1 = calculate(n, order1, S_n, static_cast<K>(1));
+	T W2 = calculate(n, order1, S_n, static_cast<K>(2));
+	T W3 = calculate(n, order1, S_n, static_cast<K>(3));
 	
 	//optimization calculations
 	T Wo0 = W1 - W0;
@@ -1826,7 +1911,11 @@ T W_lubkin_algorithm<T, K, series_templ>::calculate(K n, const K order, T S_n, c
 	T Woo2 = Wo2 * (Wo1 - Wo0);
 
 	//T result = W1 - ((W2 - W1) * (W1 - W0) * (W3 - 2 * W2 + W1)) / ((W3 - W2) * (W2 - 2 * W1 + W0) - (W1 - W0) * (W3 - 2 * W2 + W1)); //straigh
-	const T result = fma(-Wo1, Woo1 / (Woo2 - Woo1), W1); // optimized
+	const T result = fma(
+        -Wo1, 
+        Woo1 / (Woo2 - Woo1), 
+        W1
+    ); // optimized
 	if (!isfinite(result))
 		throw std::overflow_error("division by zero");
 	return result;
@@ -1897,7 +1986,7 @@ T ford_sidi_algorithm<T, K, series_templ>::Psi(
 	const shanks_transform<T, K, series_templ>* g
 ) const {
 	if (k == static_cast<K>(0))
-		return (u->operator()(n)) / (g->operator()(n, 1));
+		return (u->operator()(n)) / (g->operator()(n, static_cast<K>(1)));
 	
 	K n1  = n + static_cast<K>(1);
 	K km1 = k - static_cast<K>(1);
@@ -1913,7 +2002,7 @@ T ford_sidi_algorithm<T, K, series_templ>::Psi(
 	const shanks_transform<T, K, series_templ>* g
 ) const {
 	if (k == static_cast<K>(0))
-		return (g->operator()(n, k_1)) / (g->operator()(n, 1));
+		return (g->operator()(n, k_1)) / (g->operator()(n, static_cast<K>(1)));
 	
 	K n1  = n + static_cast<K>(1);
 	K km1 = k - static_cast<K>(1);
@@ -1932,8 +2021,8 @@ T ford_sidi_algorithm<T, K, series_templ>::operator()(const K n, const K k) cons
 	
 	K k1 = k - static_cast<K>(1);
 	K i1;
-	T T_n_k = Psi(2, k1, (this->series), shanks_trans.get()) - Psi(1, k1, (this->series), shanks_trans.get());
-	T_n_k /= (Psi(2, k1, ones_seq.get(), shanks_trans.get()) - Psi(1, k1, ones_seq.get(), shanks_trans.get()));
+	T T_n_k = Psi(static_cast<K>(2), k1, (this->series), shanks_trans.get()) - Psi(static_cast<K>(1), k1, (this->series), shanks_trans.get());
+	T_n_k /= (Psi(static_cast<K>(2), k1, ones_seq.get(), shanks_trans.get()) - Psi(static_cast<K>(1), k1, ones_seq.get(), shanks_trans.get()));
 	
 	for (K i = static_cast<K>(2); i <= n; ++i)
 	{
@@ -1999,7 +2088,7 @@ T ford_sidi_algorithm_two<T, K, series_templ>::operator()(const K n, const K k) 
 		delta_squared_S_n = this->series->S_n(m + static_cast<K>(2));
 		delta_squared_S_n-= static_cast<T>(2) * this->series->S_n(m + static_cast<K>(1));
 		delta_squared_S_n+= this->series->S_n(m);
-	} while (delta_squared_S_n == 0 && --m > static_cast<K>(0));
+	} while (delta_squared_S_n == static_cast<T>(0) && --m > static_cast<K>(0));
 
 	if (m == static_cast<K>(0))
 		throw std::overflow_error("division by zero");
@@ -2007,7 +2096,11 @@ T ford_sidi_algorithm_two<T, K, series_templ>::operator()(const K n, const K k) 
 	T delta_S_n = this->series->S_n(m + static_cast<K>(1));
 	delta_S_n -= this->series->S_n(m);
 
-	const T T_n = fma(-delta_S_n, delta_S_n / delta_squared_S_n, this->series->S_n(m));
+	const T T_n = fma(
+        -delta_S_n, 
+        delta_S_n / delta_squared_S_n, 
+        this->series->S_n(m)
+    );
 	
 	if (!isfinite(T_n))
 		throw std::overflow_error("division by zero");
@@ -2069,7 +2162,7 @@ T ford_sidi_algorithm_three<T, K, series_templ>::operator()(const K n, const K o
     T Te = static_cast<T>(1) / static_cast<T>(n);
     
     for (K k = static_cast<K>(1); k <= m; ++k)
-        G[k] = Te * G[k - 1];
+        G[k] = Te * G[k - static_cast<K>(1)];
 
     FSA[n1] = this->series->S_n(n1);
     FSI[n1] = static_cast<T>(1);
@@ -2095,11 +2188,17 @@ T ford_sidi_algorithm_three<T, K, series_templ>::operator()(const K n, const K o
         k2 = k + static_cast<K>(2);
         D = FSG[k2][MM1] - FSG[k2][MM];
 
-        for (K i = k + static_cast<K>(3); i <= m; ++i)
-            FSG[i][MM] = (FSG[i][MM1] - FSG[i][MM]) / D;
+        for (K i = k + static_cast<K>(3); i <= m; ++i){
+            FSG[i][MM] = (FSG[i][MM1] - FSG[i][MM]);
+            FSG[i][MM]/= D;
+        }
 
-        FSA[MM] = (FSA[MM1] - FSA[MM]) / D;
-        FSI[MM] = (FSI[MM1] - FSI[MM]) / D;
+        FSA[MM] = (FSA[MM1] - FSA[MM]); 
+        FSA[MM]/= D;
+        
+        FSI[MM] = (FSI[MM1] - FSI[MM]);
+        FSI[MM]/= D;
+
     }
 
     FSA[0] /= FSI[0]; //result
@@ -2307,9 +2406,15 @@ T epsilon_algorithm_two<T, K, series_templ>::operator()(const K n, const K order
     K k = static_cast<K>(2);
     k *= order;
     k += n;
-    k -= (n & 1);
+    k -= (n & static_cast<K>(1));
 
-    std::vector<std::vector<T>> e(4, std::vector<T>(k + 3, static_cast<T>(0))); //4 vectors k+3 length containing four Epsilon Table rows 
+    std::vector<std::vector<T>> e(
+        4, 
+        std::vector<T>(
+            k + 3, 
+            static_cast<T>(0)
+        )
+    ); //4 vectors k+3 length containing four Epsilon Table rows 
 
     K j = k;
     do { //Counting first row of Epsilon Table
@@ -2333,14 +2438,15 @@ T epsilon_algorithm_two<T, K, series_templ>::operator()(const K n, const K order
 
                 a -= e[0][i2] * static_cast<T>(1)/ (static_cast<T>(1) - e[0][i2] / e[2][i1]);
 
-                e[0][i] = a / (static_cast<T>(1) + a / e[2][i1]);
+                e[0][i] = a;
+                e[0][i]/= (static_cast<T>(1) + a / e[2][i1]);
             }
 
             if (!isfinite(e[0][i])) //If new element is still corrupted we just copy prev. element, so we will get result
                 e[0][i] = e[2][i];         
         }
 
-        std::swap(e[0], e[1]); //Swapping rows of Epsilon Table. First ine will be overwriteen next turn
+        std::swap(e[0], e[1]); //Swapping rows of Epsilon Table. First in will be overwritten next turn
         std::swap(e[1], e[2]);
         std::swap(e[2], e[3]);
 
@@ -2350,7 +2456,7 @@ T epsilon_algorithm_two<T, K, series_templ>::operator()(const K n, const K order
     if (!isfinite(e[0][0]))
         throw std::overflow_error("division by zero");
 
-    return e[0][0];  //Only odd rows have mathmatical scense. Always returning e[0][0]
+    return e[0][0];  //Only odd rows have mathmatical scense. Always return e[0][0]
 }
 
 //----------------------------------------------------------------------------------------------------------------------------------------//
@@ -2473,8 +2579,7 @@ T epsilon_algorithm_three<T, K, series_templ>::operator()(const K n, const K ord
                 E3 = e[K1];
                 e[K1] = E1;
 
-                DELTA1 = E1;
-                DELTA1-= E3;
+                DELTA1 = E1 - E3;
 
                 ERR1 = static_cast<T>(abs(DELTA1));
 
@@ -2493,7 +2598,8 @@ T epsilon_algorithm_three<T, K, series_templ>::operator()(const K n, const K ord
                 EPSINF = static_cast<T>(abs(SS * E1));
 
                 if (EPSINF > epsilon_threshold) {
-                    RES = E1 + static_cast<T>(1) / SS;
+                    RES = E1;
+                    RES+= static_cast<T>(1) / SS;
                     e[K1] = RES;
                     K1 -= static_cast<K>(2);
                     T ERROR = ERR2 + static_cast<T>(abs(RES - E2)) + ERR3;
@@ -2517,9 +2623,9 @@ T epsilon_algorithm_three<T, K, series_templ>::operator()(const K n, const K ord
         }
 
         if (N == n) // making N the greatest odd number <= n
-            N = (n & 1) ? n : n - static_cast<K>(1);
+            N = (n & static_cast<K>(1)) ? n : n - static_cast<K>(1);
 
-        ib = (num & 1) ? static_cast<K>(1) : static_cast<K>(2);  // Start index: 1 for odd, 2 for even
+        ib = (num & static_cast<K>(1)) ? static_cast<K>(1) : static_cast<K>(2);  // Start index: 1 for odd, 2 for even
         ie = newelm + static_cast<K>(1);
 
         // Copy elements with step 2
@@ -2728,9 +2834,16 @@ T chang_whynn_algorithm<T, K, series_templ>::operator()(const K n, const K order
 
     //TODO спросить у Парфенова, ибо жертвуем читаемостью кода, ради его небольшого ускорения
     K i1, i2, i3, k1;
-    K max = n - (n & 1); // int -> K mark 
+    K max = n - (n & static_cast<K>(1)); // int -> K mark 
 
-    std::vector<std::vector<T>> e(2, std::vector<T>(n, static_cast<T>(0))); //2 vectors n length containing Epsilon table next and previous 
+    std::vector<std::vector<T>> e(
+        2, 
+        std::vector<T>(
+            n, 
+            static_cast<T>(0)
+        )
+    ); //2 vectors n length containing Epsilon table next and previous 
+
     std::vector<T> f(n, static_cast<T>(0)); //vector for containing F results from 0 to n-1
 
     for (K i = static_cast<K>(0); i < max; ++i) //Counting first row of Epsilon Table
@@ -2784,10 +2897,10 @@ T chang_whynn_algorithm<T, K, series_templ>::operator()(const K n, const K order
         std::swap(e[0], e[1]); //Swapping 1 and 2 rows of Epsilon Table. First ine will be overwriteen next turn
     }
 
-    if (!isfinite(e[max & 1][0])) //Only odd rows have mathmatical scence. Always returning e[0][0]
+    if (!isfinite(e[max & static_cast<K>(1)][0])) //Only odd rows have mathmatical scence. Always returning e[0][0]
         throw std::overflow_error("division by zero");
 
-    return e[max & 1][0];
+    return e[max & static_cast<K>(1)][0];
 }
 
 //----------------------------------------------------------------------------------------------------------------------------------------//
@@ -2834,7 +2947,12 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K, typename series_templ>
-T theta_brezinski_algorithm<T, K, series_templ>::theta(K n, const K order, T S_n, const K j) const {
+T theta_brezinski_algorithm<T, K, series_templ>::theta(
+    K n, 
+    const K order, 
+    T S_n, 
+    const K j
+) const {
 
     using std::isfinite;
 
@@ -2846,7 +2964,7 @@ T theta_brezinski_algorithm<T, K, series_templ>::theta(K n, const K order, T S_n
         return res;
     }
 
-    for (K tmp = n + 1; tmp <= n + j; ++tmp)
+    for (K tmp = n + static_cast<K>(1); tmp <= n + j; ++tmp)
         S_n += this->series->operator()(tmp);
 
     n += j;
@@ -2857,12 +2975,12 @@ T theta_brezinski_algorithm<T, K, series_templ>::theta(K n, const K order, T S_n
     //TODO спросить у Парфенова, ибо жертвуем читаемостью кода, ради его небольшого ускорения
     const K order1 = order - static_cast<K>(1);
     const K order2 = order - static_cast<K>(2);
-    const T theta_order1_0 = theta(n, order1, S_n, 0);
-    const T theta_order1_1 = theta(n, order1, S_n, 1);
-    const T theta_order1_2 = theta(n, order1, S_n, 2);
-    const T theta_order2_1 = theta(n, order2, S_n, 1);
+    const T theta_order1_0 = theta(n, order1, S_n, static_cast<K>(0));
+    const T theta_order1_1 = theta(n, order1, S_n, static_cast<K>(1));
+    const T theta_order1_2 = theta(n, order1, S_n, static_cast<K>(2));
+    const T theta_order2_1 = theta(n, order2, S_n, static_cast<K>(1));
 
-    if (order & 1) { // order is odd
+    if (order & static_cast<K>(1)) { // order is odd
         const T delta = static_cast<T>(1) / (theta_order1_0 - theta_order1_1); // 1/Δυ_2k^(n)
         if (!isfinite(delta))
             throw std::overflow_error("division by zero");
@@ -2882,13 +3000,13 @@ T theta_brezinski_algorithm<T, K, series_templ>::theta(K n, const K order, T S_n
 
 template <std::floating_point T, std::unsigned_integral K, typename series_templ>
 T theta_brezinski_algorithm<T, K, series_templ>::operator()(const K n, const K order) const{
-    if (order & 1) // is order odd?
+    if (order & static_cast<K>(1)) // is order odd?
         throw std::domain_error("order should be even number");
 
     if (n == static_cast<K>(0) || order == static_cast<K>(0))
         return this->series->S_n(n);
 
-    return theta(n, order, this->series->S_n(n), 0);
+    return theta(n, order, this->series->S_n(n), static_cast<K>(0));
 }
 
 //----------------------------------------------------------------------------------------------------------------------------------------//

@@ -80,7 +80,7 @@ inline T drummonds_D_algorithm<T,K,series_templ>::calc_result(const K n, const K
 	T numerator = static_cast<T>(0), denominator = static_cast<T>(0);
 	T rest;
 
-	for (K j = 0; j <= n; ++j) {
+	for (K j = static_cast<K>(0); j <= n; ++j) {
 
 		rest  = this->series->minus_one_raised_to_power_n(j);
 		rest *= this->series->binomial_coefficient(static_cast<T>(n), j);
@@ -102,20 +102,20 @@ inline T drummonds_D_algorithm<T,K,series_templ>::calc_result_rec(const K n, con
 
     using std::isfinite;
 
-	std::vector<T>   Num(order + 1, static_cast<T>(0));
-	std::vector<T> Denom(order + 1, static_cast<T>(0));
+	std::vector<T>   Num(order + static_cast<K>(1), static_cast<T>(0));
+	std::vector<T> Denom(order + static_cast<K>(1), static_cast<T>(0));
 
     //init the base values
-	for (K i = 0; i < order+1; ++i) {
+	for (K i = static_cast<K>(0); i < order+static_cast<K>(1); ++i) {
 		Denom[i] = remainder_func->operator()(n, i, this->series);
 		  Num[i] = this->series->S_n(n+i) * Denom[i];
 	}
 
     //recurrence
-	for (K i = 1; i <= order; ++i)
-		for (K j = 0; j <= order - i; ++j) {
-			Denom[j] = Denom[j+1] - Denom[j];
-			  Num[j] =   Num[j+1] -   Num[j];
+	for (K i = static_cast<K>(1); i <= order; ++i)
+		for (K j = static_cast<K>(0); j <= order - i; ++j) {
+			Denom[j] = Denom[j+static_cast<K>(1)] - Denom[j];
+			  Num[j] =   Num[j+static_cast<K>(1)] -   Num[j];
 		}
 
 	Num[0] /= Denom[0];

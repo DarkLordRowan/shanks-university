@@ -51,7 +51,6 @@ T epsilon_aitken_theta_algorithm<T, K, series_templ>::operator()(const K n, cons
     T delta, delta_next;
     T gamma, lambda;
     T ck = static_cast<T>(1);
-    K i1, i2;
 
     for (K k = static_cast<K>(1); k <= n; ++k) { 
 
@@ -99,12 +98,16 @@ T epsilon_aitken_theta_algorithm<T, K, series_templ>::operator()(const K n, cons
 
         step1[0] = current[1] - ck * (current[1] - current[0]) / (current[2] - current[1]);
 
+        K i1, i2, i3;
+
         for (K i = static_cast<K>(0); i < static_cast<K>(step3.size() - 3); ++i) {
 
             i1 = i + static_cast<K>(1);
             i2 = i + static_cast<K>(2);
+            i3 = i + static_cast<K>(3);
 
-            step1[i1] = current[i2] - ck * (current[i2] - current[i1]) / (current[i2 + static_cast<K>(1)] - current[i2]);
+            step1[i1] = current[i2];
+            step1[i1]-= ck * (current[i2] - current[i1]) / (current[i3] - current[i2]);
 
             delta = step1[i1] - step1[i];
 

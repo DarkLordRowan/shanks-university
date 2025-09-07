@@ -41,9 +41,11 @@ T ford_sidi_algorithm_two<T, K, series_templ>::operator()(const K n, const K k) 
 	K m = n;
 
 	do{
+		
 		delta_squared_S_n = this->series->S_n(m + static_cast<K>(2));
 		delta_squared_S_n-= static_cast<T>(2) * this->series->S_n(m + static_cast<K>(1));
 		delta_squared_S_n+= this->series->S_n(m);
+
 	} while (delta_squared_S_n == 0 && --m > static_cast<K>(0));
 
 	if (m == static_cast<K>(0))

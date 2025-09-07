@@ -54,10 +54,14 @@ T shanks_transform<T, K, series_templ>::operator()(const K n, const K order) con
 		T a_n, a_n_plus_1, tmp;
 
 		a_n = this->series->operator()(n);
-		a_n_plus_1 = this->series->operator()(n + 1);
+		a_n_plus_1 = this->series->operator()(n + static_cast<K>(1));
 		tmp = -a_n_plus_1 * a_n_plus_1;
 
-		const T result = fma(a_n * a_n_plus_1, (a_n + a_n_plus_1) / (fma(a_n, a_n, tmp) - fma(a_n_plus_1, a_n_plus_1, tmp)), this->series->S_n(n));
+		const T result = fma(
+			a_n * a_n_plus_1,
+			(a_n + a_n_plus_1) / (fma(a_n, a_n, tmp) - fma(a_n_plus_1, a_n_plus_1, tmp)), 
+			this->series->S_n(n)
+		);
 
 		if (!isfinite(result))
 			throw std::overflow_error("divison by zero");
@@ -72,26 +76,36 @@ T shanks_transform<T, K, series_templ>::operator()(const K n, const K order) con
 
 	T a_n, a_n_plus_1, tmp;
 	a_n = this->series->operator()(n_minus_order);
-	a_n_plus_1 = this->series->operator()(n_minus_order + 1);
+	a_n_plus_1 = this->series->operator()(n_minus_order + static_cast<K>(1));
 	tmp = -a_n_plus_1 * a_n_plus_1;
 
-	for (K i = n_minus_order + 1; i <= n_plus_order - 1; ++i) // if we got to this branch then we know that n >= order - see previous branches  int -> K
+	for (K i = n_minus_order + static_cast<K>(1); i <= n_plus_order - static_cast<K>(1); ++i) // if we got to this branch then we know that n >= order - see previous branches  int -> K
 	{
 		a_n = this->series->operator()(i);
-		a_n_plus_1 = this->series->operator()(i + 1);
+		a_n_plus_1 = this->series->operator()(i + static_cast<K>(1));
 		tmp = -a_n_plus_1 * a_n_plus_1;
 
 		//formula[6]
-		T_n[i] = fma(a_n * a_n_plus_1, (a_n + a_n_plus_1) / (fma(a_n, a_n, tmp) - fma(a_n_plus_1, a_n_plus_1, tmp)), this->series->S_n(i));
+		T_n[i] = fma(
+			a_n * a_n_plus_1, 
+			(a_n + a_n_plus_1) / (fma(a_n, a_n, tmp) - fma(a_n_plus_1, a_n_plus_1, tmp)), 
+			this->series->S_n(i)
+		);
 	}
+
 	std::vector<T> T_n_plus_1(n + order, static_cast<T>(0));
 	T a, b, c;
-	for (K j = 2; j <= order; ++j) {
+
+	for (K j = static_cast<K>(2); j <= order; ++j) {
 		for (K i = n_minus_order + j; i <= n_plus_order - j; ++i) { // int -> K
 			a = T_n[i];
-			b = T_n[i - 1];
-			c = T_n[i + 1];
-			T_n_plus_1[i] = static_cast<T>(std::fma(std::fma(a, c + b - a, -b * c), 1 / (std::fma(2, a, -b - c)), a));
+			b = T_n[i - static_cast<K>(1)];
+			c = T_n[i + static_cast<K>(1)];
+			T_n_plus_1[i] = fma(
+				fma(a, c + b - a, -b * c), 
+				static_cast<T>(1) / (fma(2, a, -b - c)), 
+				a
+			);
 		}
 		T_n = T_n_plus_1;
 	}
@@ -148,8 +162,12 @@ T shanks_transform_alternating<T, K, series_templ>::operator()(const K n, const 
 		T a_n, a_n_plus_1, result;
 
 		a_n = this->series->operator()(n);
-		a_n_plus_1 = this->series->operator()(n + 1);
-		result = fma(a_n * a_n_plus_1, static_cast<T>(1) / (a_n - a_n_plus_1), this->series->S_n(n));
+		a_n_plus_1 = this->series->operator()(n + static_cast<K>(1));
+		result = fma(
+			a_n * a_n_plus_1, 
+			static_cast<T>(1) / (a_n - a_n_plus_1), 
+			this->series->S_n(n)
+		);
 
 		if (!isfinite(result))
 			throw std::overflow_error("division by zero");
@@ -159,7 +177,7 @@ T shanks_transform_alternating<T, K, series_templ>::operator()(const K n, const 
 	//n > order >= 1
 
 	const K n_minus_order = n - order;
-	const K n_minus_order1 = n_minus_order + 1;
+	const K n_minus_order1 = n_minus_order + static_cast<K>(1);
 	const K n_plus_order = n + order;
 
 	std::vector<T> T_n(n_plus_order, static_cast<T>(0));
@@ -169,26 +187,34 @@ T shanks_transform_alternating<T, K, series_templ>::operator()(const K n, const 
 	a_n = this->series->operator()(n_minus_order);
 	a_n_plus_1 = this->series->operator()(n_minus_order1);
 
-	for (K i = n_minus_order1; i <= n_plus_order - 1; ++i) // if we got to this branch then we know that n >= order - see previous branches int->K
+	for (K i = n_minus_order1; i <= n_plus_order - static_cast<K>(1); ++i) // if we got to this branch then we know that n >= order - see previous branches int->K
 	{
 		a_n = this->series->operator()(i);
-		a_n_plus_1 = this->series->operator()(i + 1);
+		a_n_plus_1 = this->series->operator()(i + static_cast<K>(1));
 
 		// formula [6]
-		T_n[i] = fma(a_n * a_n_plus_1, static_cast<T>(1) / (a_n - a_n_plus_1), this->series->S_n(n));
+		T_n[i] = fma(
+			a_n * a_n_plus_1, 
+			static_cast<T>(1) / (a_n - a_n_plus_1), 
+			this->series->S_n(n)
+		);
 	}
 
 	std::vector<T> T_n_plus_1(n_plus_order, static_cast<T>(0));
 	T a, b, c;
 
-	for (K j = 2; j <= order; ++j) {
+	for (K j = static_cast<K>(2); j <= order; ++j) {
 		for (K i = n_minus_order + j; i <= n_plus_order - j; ++i) { // int -> K
 
 			a = T_n[i];
-			b = T_n[i - 1];
-			c = T_n[i + 1];
+			b = T_n[i - static_cast<K>(1)];
+			c = T_n[i + static_cast<K>(1)];
 
-			T_n_plus_1[i] = fma(fma(a, c + b - a, -b * c), static_cast<T>(1) / (static_cast<T>(2) * a - b - c), a);
+			T_n_plus_1[i] = fma(
+				fma(a, c + b - a, -b * c), 
+				static_cast<T>(1) / (static_cast<T>(2) * a - b - c), 
+				a
+			);
 		}
 		T_n = T_n_plus_1;
 	}

@@ -55,9 +55,15 @@ T epsilon_algorithm_two<T, K, series_templ>::operator()(const K n, const K order
     K k = static_cast<K>(2);
     k *= order;
     k += n;
-    k -= (n & 1);
+    k -= (n & static_cast<K>(1));
 
-    std::vector<std::vector<T>> e(4, std::vector<T>(k + 3, static_cast<T>(0))); //4 vectors k+3 length containing four Epsilon Table rows 
+    std::vector<std::vector<T>> e(
+        4, 
+        std::vector<T>(
+            k + static_cast<K>(3), 
+            static_cast<T>(0)
+        )
+    ); //4 vectors k+3 length containing four Epsilon Table rows 
 
     K j = k;
     do { //Counting first row of Epsilon Table
@@ -70,9 +76,12 @@ T epsilon_algorithm_two<T, K, series_templ>::operator()(const K n, const K order
 
     while (k > static_cast<K>(-1)) {
         for (K i = static_cast<K>(0); i < k; ++i) {
+
             i1 = i + static_cast<K>(1);
             i2 = i + static_cast<K>(2);
-            e[0][i] = e[2][i1] + static_cast<T>(1) / (e[3][i1] - e[3][i]); //Standart Epsilon Wynn algorithm
+
+            e[0][i] = e[2][i1];
+            e[0][i]+= static_cast<T>(1) / (e[3][i1] - e[3][i]); //Standart Epsilon Wynn algorithm
 
             if (!isfinite(e[0][i]) && i2 <= k) { //This algorithm is used if new elliment is corrupted.
                 a = e[2][i2] * static_cast<T>(1) / (static_cast<T>(1) - e[2][i2] / e[2][i1]);

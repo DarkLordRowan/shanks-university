@@ -111,7 +111,7 @@ inline T rho_Wynn_algorithm<T, K, series_templ>::calculate(const K n, K order) c
 
 	using std::isfinite;
 
-	if (order & 1)// is order odd
+	if (order & static_cast<K>(1))// is order odd
 		//++order; //why
 		throw std::domain_error("order should be even number");
 
@@ -119,8 +119,33 @@ inline T rho_Wynn_algorithm<T, K, series_templ>::calculate(const K n, K order) c
 
 	const T S_n = this->series->S_n(n);
 	const K order1 = order - static_cast<K>(1);
-	const T res = (recursive_calculate_body(n, order1 - 1, S_n, 1) + numerator_func->operator()(n, order, this->series, gamma, RHO)) / 
-		(recursive_calculate_body(n, order1, S_n, 1) - recursive_calculate_body(n, order1, S_n, 0));
+	const T res = (
+		recursive_calculate_body(
+			n, 
+			order1 - static_cast<T>(1),
+			 S_n, 
+			 static_cast<T>(1)
+		) + 
+		numerator_func->operator()(
+			n, 
+			order, 
+			this->series, 
+			gamma, 
+			RHO)
+		) / (
+		recursive_calculate_body(
+			n, 
+			order1, 
+			S_n, 
+			static_cast<K>(1)
+		) - 
+		recursive_calculate_body(
+			n, 
+			order1,
+			 S_n, 
+			 static_cast<T>(0)
+		)
+	);
 
 	if (!isfinite(res))
 		throw std::overflow_error("division by zero");
@@ -146,8 +171,33 @@ T rho_Wynn_algorithm<T, K, series_templ>::recursive_calculate_body(const K n, co
 
 	const K order1 = order - static_cast<K>(1);
 	const K nj = n + j;
-	const T res = (recursive_calculate_body(nj, order1 - static_cast<K>(1), S_n, 1) + numerator_func->operator()(nj, order, this->series, gamma, RHO)) /
-		(recursive_calculate_body(nj, order1, S_n, 1) - recursive_calculate_body(nj, order1, S_n, 0));
+	const T res = (
+		recursive_calculate_body(
+			nj, 
+			order1 - static_cast<K>(1), 
+			S_n, 
+			static_cast<K>(1)
+		) + 
+		numerator_func->operator()(
+			nj, 
+			order, 
+			this->series,
+			gamma, 
+			RHO)
+		) / (
+		recursive_calculate_body(
+			nj, 
+			order1,
+			 S_n, 
+			 static_cast<K>(1)
+		) - 
+		recursive_calculate_body(
+			nj, 
+			order1, 
+			S_n, 
+			static_cast<K>(0)
+		)
+	);
 
 	if (!isfinite(res))
 		throw std::overflow_error("division by zero");

@@ -67,7 +67,7 @@ T ford_sidi_algorithm<T, K, series_templ>::Psi(
 	const shanks_transform<T, K, series_templ>* g
 ) const {
 	if (k == static_cast<K>(0))
-		return (u->operator()(n)) / (g->operator()(n, 1));
+		return (u->operator()(n)) / (g->operator()(n, static_cast<K>(1)));
 	
 	K n1  = n + static_cast<K>(1);
 	K km1 = k - static_cast<K>(1);
@@ -83,7 +83,7 @@ T ford_sidi_algorithm<T, K, series_templ>::Psi(
 	const shanks_transform<T, K, series_templ>* g
 ) const {
 	if (k == static_cast<K>(0))
-		return (g->operator()(n, k_1)) / (g->operator()(n, 1));
+		return (g->operator()(n, k_1)) / (g->operator()(n, static_cast<K>(1)));
 	
 	K n1  = n + static_cast<K>(1);
 	K km1 = k - static_cast<K>(1);
@@ -102,8 +102,8 @@ T ford_sidi_algorithm<T, K, series_templ>::operator()(const K n, const K k) cons
 	
 	K k1 = k - static_cast<K>(1);
 	K i1;
-	T T_n_k = Psi(2, k1, (this->series), shanks_trans.get()) - Psi(1, k1, (this->series), shanks_trans.get());
-	T_n_k /= (Psi(2, k1, ones_seq.get(), shanks_trans.get()) - Psi(1, k1, ones_seq.get(), shanks_trans.get()));
+	T T_n_k = Psi(static_cast<K>(2), k1, (this->series), shanks_trans.get()) - Psi(static_cast<K>(1), k1, (this->series), shanks_trans.get());
+	T_n_k /= (Psi(static_cast<K>(2), k1, ones_seq.get(), shanks_trans.get()) - Psi(static_cast<K>(1), k1, ones_seq.get(), shanks_trans.get()));
 	
 	for (K i = static_cast<K>(2); i <= n; ++i)
 	{
