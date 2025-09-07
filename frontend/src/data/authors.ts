@@ -1,4 +1,4 @@
-import type { Author } from "../types/author.ts";
+import type { Author, AuthorId } from "../types/author.ts";
 
 export const AUTHORS = {
     wynn: {
@@ -57,3 +57,8 @@ export const AUTHORS = {
         url: "https://en.wikipedia.org/wiki/Daniel_Shanks_(mathematician)",
     },
 } satisfies Record<string, Author>;
+
+export function resolveAuthors(ids?: AuthorId[]): Author[] {
+    if (!ids?.length) return [];
+    return ids.map((id) => AUTHORS[id]).filter(Boolean);
+}
