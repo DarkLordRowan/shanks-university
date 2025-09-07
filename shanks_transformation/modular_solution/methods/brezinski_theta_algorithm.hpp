@@ -52,7 +52,7 @@ T theta_brezinski_algorithm<T, K, series_templ>::theta(K n, const K order, T S_n
         return res;
     }
 
-    for (K tmp = n + 1; tmp <= n + j; ++tmp)
+    for (K tmp = n + static_cast<K>(1); tmp <= n + j; ++tmp)
         S_n += this->series->operator()(tmp);
 
     n += j;
@@ -63,12 +63,12 @@ T theta_brezinski_algorithm<T, K, series_templ>::theta(K n, const K order, T S_n
     //TODO спросить у Парфенова, ибо жертвуем читаемостью кода, ради его небольшого ускорения
     const K order1 = order - static_cast<K>(1);
     const K order2 = order - static_cast<K>(2);
-    const T theta_order1_0 = theta(n, order1, S_n, 0);
-    const T theta_order1_1 = theta(n, order1, S_n, 1);
-    const T theta_order1_2 = theta(n, order1, S_n, 2);
-    const T theta_order2_1 = theta(n, order2, S_n, 1);
+    const T theta_order1_0 = theta(n, order1, S_n, static_cast<K>(0));
+    const T theta_order1_1 = theta(n, order1, S_n, static_cast<K>(1));
+    const T theta_order1_2 = theta(n, order1, S_n, static_cast<K>(2));
+    const T theta_order2_1 = theta(n, order2, S_n, static_cast<K>(1));
 
-    if (order & 1) { // order is odd
+    if (order & static_cast<K>(1)) { // order is odd
         const T delta = static_cast<T>(1) / (theta_order1_0 - theta_order1_1); // 1/Δυ_2k^(n)
         if (!isfinite(delta))
             throw std::overflow_error("division by zero");
@@ -88,11 +88,11 @@ T theta_brezinski_algorithm<T, K, series_templ>::theta(K n, const K order, T S_n
 
 template <std::floating_point T, std::unsigned_integral K, typename series_templ>
 T theta_brezinski_algorithm<T, K, series_templ>::operator()(const K n, const K order) const{
-    if (order & 1) // is order odd?
+    if (order & static_cast<K>(1)) // is order odd?
         throw std::domain_error("order should be even number");
 
     if (n == static_cast<K>(0) || order == static_cast<K>(0))
         return this->series->S_n(n);
 
-    return theta(n, order, this->series->S_n(n), 0);
+    return theta(n, order, this->series->S_n(n), static_cast<K>(0));
 }

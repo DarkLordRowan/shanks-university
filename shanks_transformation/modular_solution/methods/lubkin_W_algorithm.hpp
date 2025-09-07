@@ -58,7 +58,7 @@ T W_lubkin_algorithm<T, K, series_templ>::operator()(const K n, const K order) c
 	if (order < static_cast<K>(0)) 
 		throw std::domain_error("negative order input");
 
-	return calculate(n, order, this->series->S_n(n), 0);
+	return calculate(n, order, this->series->S_n(n), static_cast<K>(0));
 }
 
 template<std::floating_point T, std::unsigned_integral K, typename series_templ>
@@ -71,7 +71,7 @@ T W_lubkin_algorithm<T, K, series_templ>::calculate(K n, const K order, T S_n, c
 	* j - to fix n
 	* S_n - partial sum of series.
 	*/
-	for (K i = 0; i < j; ++i) 
+	for (K i = static_cast<K>(0); i < j; ++i) 
 		S_n += this->series->operator()(n  + i + static_cast<K>(1));
 	
 	n += j;
@@ -80,10 +80,10 @@ T W_lubkin_algorithm<T, K, series_templ>::calculate(K n, const K order, T S_n, c
 
 	//calculate all basic parts of transfor
 	K order1 = order - static_cast<K>(1);
-	T W0 = calculate(n, order1, S_n, 0);
-	T W1 = calculate(n, order1, S_n, 1);
-	T W2 = calculate(n, order1, S_n, 2);
-	T W3 = calculate(n, order1, S_n, 3);
+	T W0 = calculate(n, order1, S_n, static_cast<K>(0));
+	T W1 = calculate(n, order1, S_n, static_cast<K>(1));
+	T W2 = calculate(n, order1, S_n, static_cast<K>(2));
+	T W3 = calculate(n, order1, S_n, static_cast<K>(3));
 	
 	//optimization calculations
 	T Wo0 = W1 - W0;

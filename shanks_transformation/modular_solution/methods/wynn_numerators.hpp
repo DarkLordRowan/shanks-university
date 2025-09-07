@@ -119,6 +119,6 @@ public:
 		// order % 2 = 1
 		// order & 1 = 1
 
-		return (-gamma + static_cast<T>(order / 2) / rho + static_cast<T>(order & 1));
+		return (-gamma + static_cast<T>(order / static_cast<K>(2)) / rho + static_cast<T>(order & static_cast<K>(1)));
 	}
 };

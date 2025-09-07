@@ -58,6 +58,7 @@ T epsilon_algorithm_three<T, K, series_templ>::operator()(const K n, const K ord
 
     if (n == static_cast<K>(0)) 
         throw std::domain_error("n = 0 in the input");
+
     if (order == static_cast<K>(0)) return this->series->S_n(n);
 
     K N = n; // int -> K
@@ -72,7 +73,10 @@ T epsilon_algorithm_three<T, K, series_templ>::operator()(const K n, const K ord
     K newelm, num, NUM, K1, ib, ie, in;
     T RES, E0, E1, E2, E3, E1ABS, DELTA1, DELTA2, DELTA3, ERR1, ERR2, ERR3, TOL1, TOL2, TOL3, SS, EPSINF; // int -> K
 
-    std::vector<T> e(N + static_cast<K>(3), static_cast<T>(0)); //First N eliments of epsilon table + 2 elements for math
+    std::vector<T> e(
+        N + static_cast<K>(3), 
+        static_cast<T>(0)
+    ); //First N eliments of epsilon table + 2 elements for math
 
     for (K i = static_cast<K>(0); i <= N; ++i) //Filling up Epsilon Table
         e[i] = this->series->S_n(i);
@@ -163,7 +167,7 @@ T epsilon_algorithm_three<T, K, series_templ>::operator()(const K n, const K ord
         if (N == n) // making N the greatest odd number <= n
             N = (n & 1) ? n : n - static_cast<K>(1);
 
-        ib = (num & 1) ? static_cast<K>(1) : static_cast<K>(2);  // Start index: 1 for odd, 2 for even
+        ib = (num & static_cast<K>(1)) ? static_cast<K>(1) : static_cast<K>(2);  // Start index: 1 for odd, 2 for even
         ie = newelm + static_cast<K>(1);
 
         // Copy elements with step 2

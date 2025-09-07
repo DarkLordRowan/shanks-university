@@ -49,24 +49,24 @@ T theta_modified_algorithm<T, K, series_templ>::operator()(const K n, const K or
 	std::vector<T> current(n);
 	std::vector<T> next(n);
 
-	for (K i = 0; i < n; ++i)
+	for (K i = static_cast<K>(0); i < n; ++i)
 		current[i] = this->series->operator()(i);
+ 
+	for (K i = static_cast<K>(0); i < m; ++i) {
 
-	for (K k = 0; k < 1; ++k) { 
-		for (K i = 0; i < m; ++i) {
-			i1 = i + static_cast<K>(1);
-			i2 = i + static_cast<K>(2);
+		i1 = i + static_cast<K>(1);
+		i2 = i + static_cast<K>(2);
 
-			delta = current[i1] - current[i];
-			delta_next = (i2 < n) ? current[i2] - current[i1] : static_cast<T>(0);
+		delta = current[i1] - current[i];
+		delta_next = (i2 < n) ? current[i2] - current[i1] : static_cast<T>(0);
 
-			next[i] = current[i1];
-			next[i]+= (delta * delta_next) / (delta - delta_next);
-		}
-		current = next;
+		next[i] = current[i1];
+		next[i]+= (delta * delta_next) / (delta - delta_next);
+
 	}
+	current = next;
 	
-	if (!isfinite(current[m - 1]))
+	if (!isfinite(current[m - static_cast<K>(1)]))
 		throw std::overflow_error("division by zero");
-	return current[m - 1];
+	return current[m - static_cast<K>(1)];
 }

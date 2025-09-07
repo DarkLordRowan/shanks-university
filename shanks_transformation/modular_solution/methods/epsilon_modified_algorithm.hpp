@@ -53,10 +53,12 @@ T epsilon_modified_algorithm<T, K, series_templ>::operator()(const K n, const K 
 			k1 = k - static_cast<K>(1);
 			eps[m][k] = eps[m1][k1];
 			eps[m][k] += static_cast<T>(1) / (eps[m][k1] - eps[m1][k1]) / (
-				(k & static_cast<K>(1)) ? 
-				static_cast<T>(order) + static_cast<T>(k + static_cast<K>(1)) / static_cast<T>(2) 
-				: 
-				static_cast<T>(2) / static_cast<T>(k + static_cast<K>(2))
+				(
+					k & static_cast<K>(1)) ? 
+					static_cast<T>(order) + static_cast<T>(k + static_cast<K>(1)) / static_cast<T>(2) 
+					: 
+					static_cast<T>(2) / static_cast<T>(k + static_cast<K>(2)
+				)
 			);
 
 		}

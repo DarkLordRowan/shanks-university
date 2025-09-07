@@ -52,7 +52,7 @@ T epsilon_algorithm<T, K, series_templ>::operator()(const K n, const K order) co
 	const K n1 = n - static_cast<K>(1);
 
 	std::vector<T> e0(max_ind + static_cast<K>(1), static_cast<T>(0));
-	std::vector<T> e1(max_ind,     static_cast<T>(0));
+	std::vector<T> e1(max_ind                    , static_cast<T>(0));
 
 	auto e0_add = &e0; // Pointer for vector swapping
 	auto e1_add = &e1; // Pointer for vector swapping

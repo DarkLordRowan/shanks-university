@@ -48,14 +48,17 @@ T ford_sidi_algorithm_three<T, K, series_templ>::operator()(const K n, const K o
     std::vector<T> G(m + static_cast<K>(1));
     std::vector<T> FSA(G.size());
     std::vector<T> FSI(G.size());
-    std::vector<std::vector<T>> FSG(m + static_cast<K>(2), std::vector<T>(G.size()));
+    std::vector<std::vector<T>> FSG(
+        m + static_cast<K>(2), 
+        std::vector<T>(G.size())
+    );
 
     G[0] = this->series->operator()(n1) * static_cast<T>(n);
     
     T Te = static_cast<T>(1) / static_cast<T>(n);
     
     for (K k = static_cast<K>(1); k <= m; ++k)
-        G[k] = Te * G[k - 1];
+        G[k] = Te * G[k - static_cast<K>(1)];
 
     FSA[n1] = this->series->S_n(n1);
     FSI[n1] = static_cast<T>(1);
@@ -81,11 +84,16 @@ T ford_sidi_algorithm_three<T, K, series_templ>::operator()(const K n, const K o
         k2 = k + static_cast<K>(2);
         D = FSG[k2][MM1] - FSG[k2][MM];
 
-        for (K i = k + static_cast<K>(3); i <= m; ++i)
-            FSG[i][MM] = (FSG[i][MM1] - FSG[i][MM]) / D;
+        for (K i = k + static_cast<K>(3); i <= m; ++i){
+            FSG[i][MM] = FSG[i][MM1] - FSG[i][MM];
+            FSG[i][MM]/= D;
+        }
 
-        FSA[MM] = (FSA[MM1] - FSA[MM]) / D;
-        FSI[MM] = (FSI[MM1] - FSI[MM]) / D;
+        FSA[MM] = FSA[MM1] - FSA[MM];
+        FSA[MM]/= D;
+
+        FSI[MM] = FSI[MM1] - FSI[MM];
+        FSI[MM]/= D;
     }
 
     FSA[0] /= FSI[0]; //result 

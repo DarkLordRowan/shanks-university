@@ -59,7 +59,7 @@ public:
         const series_templ& series, 
         const remainder_type variant = remainder_type::u_variant, 
         bool useRecFormulas = false,  
-        T parameter = T(1)
+        T parameter = static_cast<T>(1)
     );
 
     /**
@@ -81,14 +81,14 @@ inline T levin_sidi_S_algorithm<T, K,series_templ>::calc_result(K n, K order) co
     T numerator = static_cast<T>(0), denominator = static_cast<T>(0);
     T rest;
     T up_pochamer, down_pochamer; 
-    for (K j = 0; j <= order; ++j){
+    for (K j = static_cast<K>(0); j <= order; ++j){
         rest  = this->series->minus_one_raised_to_power_n(j);
         rest *= this->series->binomial_coefficient(order, j);
 
         up_pochamer = down_pochamer = static_cast<T>(1);
         //up_pochamer   (beta + n + j)_(order - 1)     = (beta + n + j)(beta + n + j + 1)...(beta + n + j + order - 2)
         //down_pochamer (beta + n + order)_(order - 1) = (beta + n + order)(beta + n + order + 1)...(beta + n + order + oreder - 2)
-        for (K i = 0; i < order - 1; ++i){
+        for (K i = static_cast<K>(0); i < order - static_cast<K>(1); ++i){
             up_pochamer   *= (beta + static_cast<T>(n + j     + i));
             down_pochamer *= (beta + static_cast<T>(n + order + i));
         }
@@ -115,34 +115,34 @@ inline T levin_sidi_S_algorithm<T, K,series_templ>::calc_result_rec(K n, K order
 
     using std::isfinite;
 
-    std::vector<T>   Num(order + 1, static_cast<T>(0));
-    std::vector<T> Denom(order + 1, static_cast<T>(0));
+    std::vector<T>   Num(order + static_cast<K>(1), static_cast<T>(0));
+    std::vector<T> Denom(order + static_cast<K>(1), static_cast<T>(0));
 
-    for (K i = 0; i <= order; ++i){
+    for (K i = static_cast<K>(0); i <= order; ++i){
 
         Denom[i] = remainder_func->operator()(
             n, 
             i, 
             this->series,
-            (variant == remainder_type::u_variant ? beta : T(1))
+            (variant == remainder_type::u_variant ? beta : static_cast<T>(1))
         );
 
         Num[i] = this->series->S_n(n + i); Num[i] *= Denom[i];
     }
     
     T scale1, scale2;
-    for (K i = 1; i <= order; ++i)
-        for(K j = 0; j <= order - i; ++j){
+    for (K i = static_cast<K>(1); i <= order; ++i)
+        for(K j = static_cast<K>(0); j <= order - i; ++j){
 
             // i ~ k from formula
             // j ~ n from formula
             scale1 = beta + static_cast<T>(i + j);
-            scale1*= (scale1 - T(1));
+            scale1*= (scale1 - static_cast<T>(1));
             scale2 = scale1 + static_cast<T>(i);
-            scale2*= (scale2 - T(1));
+            scale2*= (scale2 - static_cast<T>(1));
 
-            Denom[j] = fma(-scale1,Denom[j]/scale2,Denom[j+1]);
-              Num[j] = fma(-scale1,  Num[j]/scale2,  Num[j+1]);
+            Denom[j] = fma(-scale1,Denom[j]/scale2,Denom[j+static_cast<K>(1)]);
+              Num[j] = fma(-scale1,  Num[j]/scale2,  Num[j+static_cast<K>(1)]);
         }
     
     Num[0] /= Denom[0];

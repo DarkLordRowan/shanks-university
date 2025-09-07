@@ -50,9 +50,16 @@ T chang_whynn_algorithm<T, K, series_templ>::operator()(const K n, const K order
 
     //TODO спросить у Парфенова, ибо жертвуем читаемостью кода, ради его небольшого ускорения
     K i1, i2, i3, k1;
-    K max = n - (n & 1); // int -> K mark 
+    K max = n - (n & static_cast<K>(1)); // int -> K mark 
 
-    std::vector<std::vector<T>> e(2, std::vector<T>(n, static_cast<T>(0))); //2 vectors n length containing Epsilon table next and previous 
+    std::vector<std::vector<T>> e(
+        2, 
+        std::vector<T>(
+            n, 
+            static_cast<T>(0)
+        )
+    ); //2 vectors n length containing Epsilon table next and previous 
+
     std::vector<T> f(n, static_cast<T>(0)); //vector for containing F results from 0 to n-1
 
     for (K i = static_cast<K>(0); i < max; ++i) //Counting first row of Epsilon Table
@@ -93,7 +100,8 @@ T chang_whynn_algorithm<T, K, series_templ>::operator()(const K n, const K order
             i1 = i + static_cast<K>(1);
 
             up = fma(static_cast<T>(k), f[i], static_cast<T>(k1));
-            down = static_cast<T>(1) / (e[1][i1] - e[1][i]);
+            down = static_cast<T>(1);
+            down/= (e[1][i1] - e[1][i]);
 
             e[0][i] = fma(up, down, e[0][i1]);
             if (!isfinite(e[0][i])) { //Check for invalid values to avoid them
@@ -106,8 +114,8 @@ T chang_whynn_algorithm<T, K, series_templ>::operator()(const K n, const K order
         std::swap(e[0], e[1]); //Swapping 1 and 2 rows of Epsilon Table. First ine will be overwriteen next turn
     }
 
-    if (!isfinite(e[max & 1][0])) //Only odd rows have mathmatical scence. Always returning e[0][0]
+    if (!isfinite(e[max & static_cast<K>(1)][0])) //Only odd rows have mathmatical scence. Always returning e[0][0]
         throw std::overflow_error("division by zero");
 
-    return e[max & 1][0];
+    return e[max & static_cast<K>(1)][0];
 }

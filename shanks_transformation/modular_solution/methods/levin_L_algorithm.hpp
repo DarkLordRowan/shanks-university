@@ -84,12 +84,13 @@ inline T levin_L_algorithm<T, K,series_templ>::calc_result(K n, K order) const{
 		rest  = this->series->minus_one_raised_to_power_n(j);
 		rest *= this->series->binomial_coefficient(static_cast<T>(order), j);
 
-		C_njk  = static_cast<T>(pow(n + j     + 1, order - 1));
-		C_njk /= static_cast<T>(pow(n + order + 1, order - 1));
+		C_njk  = static_cast<T>(pow(n + j     + static_cast<K>(1), order - static_cast<K>(1)));
+		C_njk /= static_cast<T>(pow(n + order + static_cast<K>(1), order - static_cast<K>(1)));
 
 		S_nj = this->series->S_n(n + j);
 
-		g_n = static_cast<T>(1) / (this->series->operator()(n + j));
+		g_n = static_cast<T>(1);
+		g_n/= (this->series->operator()(n + j));
 
 		rest *= C_njk;
 		rest *= g_n;
@@ -111,7 +112,7 @@ T levin_L_algorithm<T, K, series_templ>::operator()(const K n_time, const K k_ti
 
 	using std::isfinite;
 
-    T w_n = static_cast<T>(1-2*(n_time % 2)) * this->series->fact(n_time);
+    T w_n = static_cast<T>(static_cast<K>(1)-static_cast<K>(2)*(n_time % static_cast<K>(2))) * this->series->fact(n_time);
     T R_0 = (ND == static_cast<T>(0) ? this->series->S_n(n_time) : static_cast<T>(1)); R_0 /= w_n;
 
     if (k_time == static_cast<K>(0)) return R_0;
@@ -142,7 +143,7 @@ inline T levin_L_algorithm<T, K,series_templ>::calc_result_rec(K n, K order) con
 
 	using std::isfinite;
 
-    const T result = (*this)(n, order, beta, 0) / (*this)(n, order, beta, 1);
+    const T result = (*this)(n, order, beta, false) / (*this)(n, order, beta, true);
 
     if (!isfinite(result)) throw std::overflow_error("division by zero");
 

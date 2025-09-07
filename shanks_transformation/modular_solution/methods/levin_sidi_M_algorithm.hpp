@@ -72,7 +72,7 @@ inline T levin_sidi_M_algorithm<T, K, series_templ>::calculate(const K n, const 
 
 	using std::isfinite;
 
-	if (gamma - static_cast<T>(n - 1) <= static_cast<T>(0))
+	if (gamma - static_cast<T>(n - static_cast<K>(1)) <= static_cast<T>(0))
 		throw std::domain_error("gamma cannot be lesser than n-1");
 
 	T numerator = static_cast<T>(0), denominator = static_cast<T>(0);
@@ -80,36 +80,42 @@ inline T levin_sidi_M_algorithm<T, K, series_templ>::calculate(const K n, const 
 	T rest;
 
 	T up = static_cast<T>(1), down = static_cast<T>(1);
-	T binomial_coef = this->series->binomial_coefficient(static_cast<T>(n), 0);
+	T binomial_coef = this->series->binomial_coefficient(static_cast<T>(n), static_cast<K>(0));
 	T S_n = this->series->S_n(order);
 
-	T down_coef = gamma + static_cast<T>(order + 2);
+	T down_coef = gamma + static_cast<T>(order + static_cast<K>(2));
 	T   up_coef = down_coef - static_cast<T>(n);
 	
-	for (K m = 0; m < n - 1; ++m) {
+	for (K m = static_cast<K>(0); m < n - static_cast<K>(1); ++m) {
 		up   *= (up_coef   + static_cast<T>(m));
 		down *= (down_coef + static_cast<T>(m));
 	}
 	up /= down;
-	down_coef = gamma + static_cast<T>(order + 1);
-	up_coef   = down_coef - static_cast<T>(n + 1);
+	down_coef = gamma + static_cast<T>(order + static_cast<K>(1));
+	up_coef   = down_coef - static_cast<T>(n + static_cast<K>(1));
 	
-	for (K j = 0; j <= n; ++j) {
+	for (K j = static_cast<K>(0); j <= n; ++j) {
+
 		rest  = this->series->minus_one_raised_to_power_n(j); 
 		rest *= binomial_coef * static_cast<T>(n - j);
 		rest *= up; 
-		rest /= static_cast<T>(j + 1);
+		rest /= static_cast<T>(j + static_cast<K>(1));
+
 		up /= (  up_coef + static_cast<T>(j));
 		up *= (down_coef + static_cast<T>(j));
+
 		rest *= remainder_func->operator()(
 			order, 
 			j, 
 			this->series, 
 			-gamma-static_cast<T>(n)
 		);
+
 		numerator += rest * S_n ;
 		denominator += rest;
-		S_n += this->series->operator()(order + j + 1);
+
+		S_n += this->series->operator()(order + j + static_cast<K>(1));
+
 	}
 
 	numerator /= denominator;

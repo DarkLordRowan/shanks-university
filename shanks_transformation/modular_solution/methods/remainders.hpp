@@ -114,7 +114,7 @@ T t_wave_transform<T,K>::operator()(const K n, const K order, const series_base<
 
     using std::isfinite;
 
-	const T result = static_cast<T>(1) / series->operator()(n + order + 1);
+	const T result = static_cast<T>(1) / series->operator()(n + order + static_cast<K>(1));
 
 	if (!isfinite(result)) throw std::overflow_error("division by zero");
 	return result;
@@ -142,7 +142,7 @@ T v_transform<T,K>::operator()(const K n, const K order, const series_base<T,K>*
 
     using std::isfinite;
 
-    const T a1 = series->operator()(n+order), a2  = series->operator()(n+order+1);
+    const T a1 = series->operator()(n+order), a2  = series->operator()(n+order+static_cast<K>(1));
     const T result = (a2-a1) / (a1 * a2);
 	if (!isfinite(result)) throw std::overflow_error("division by zero");
 	return result;
