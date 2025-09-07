@@ -9,7 +9,7 @@ export const AUTHORS = {
     brezinski: {
         id: "brezinski",
         name: "Claude Brezinski",
-        url: "https://en.wikipedia.org/wiki/Claude_Brezinski", // если появится
+        url: "https://en.wikipedia.org/wiki/Claude_Brezinski",
     },
     drummond: {
         id: "drummond",
@@ -19,7 +19,7 @@ export const AUTHORS = {
     levin: {
         id: "levin",
         name: "David Levin",
-        url: undefined, // пока нет подходящей статьи
+        url: undefined,
     },
     sidi: {
         id: "sidi",
@@ -44,11 +44,11 @@ export const AUTHORS = {
     weniger: {
         id: "weniger",
         name: "Ernst Joachim Weniger",
-        url: undefined, // нет
+        url: undefined,
     },
     chang: {
         id: "chang",
-        name: "Chang", // слишком общий
+        name: "Chang",
         url: undefined,
     },
     shanks: {
