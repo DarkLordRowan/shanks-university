@@ -103,7 +103,7 @@
  *  100 - x_div_1minx
  *  101 - x_div_1minx2
  *  102 - gamma_series
- * @brief This file contains series base class, requrrent_series_base class and derived classes of various serieses (e.g. exp(x), ch(x))
+ * @brief This file contains series base class, reccurent_series_base class and derived classes of various serieses (e.g. exp(x), ch(x))
  */
 
 #pragma once
@@ -302,29 +302,29 @@ constexpr const T series_base<T, K>::phi(K n)
 
 
 /**
-* @brief Abstract class for requrrent series
+* @brief Abstract class for reccurent series
 * @authors Kreynin R.G.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
 template <std::floating_point T, std::unsigned_integral K>
-class requrrent_series_base
+class reccurent_series_base
 {
 public:
 	/**
-	* @brief Parameterized constructor to initialize the requrrent series with function argument
+	* @brief Parameterized constructor to initialize the reccurent series with function argument
 	* @authors Kreynin R.G.
 	* @param x The argument for function series
 	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	*/
-	requrrent_series_base(T x);
+	reccurent_series_base(T x);
 
 	/**
-	* @brief Parameterized constructor to initialize the requrrent series with vector, containing elements of series
+	* @brief Parameterized constructor to initialize the reccurent series with vector, containing elements of series
 	* @authors Kreynin R.G.
 	* @param row The first elements of the series
 	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	*/
-	requrrent_series_base(std::vector<T> row);
+	reccurent_series_base(std::vector<T> row);
 
 	/**
 	* @brief Computes nth term of the series
@@ -333,7 +333,7 @@ public:
 	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	* @return nth term of the series
 	*/
-	virtual T acsess_row(K n) = 0;
+	virtual T access_row(K n) = 0;
 
 	/**
 	* @brief Vector, containing elements of the series
@@ -345,13 +345,13 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-requrrent_series_base<T, K>::requrrent_series_base(T x)
+reccurent_series_base<T, K>::reccurent_series_base(T x)
 {
 	this->series_vector.push_back(x);
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-requrrent_series_base<T, K>::requrrent_series_base(std::vector<T> row)
+reccurent_series_base<T, K>::reccurent_series_base(std::vector<T> row)
 {
 	if (row.size() < 1)
 		throw std::domain_error("empty row imput");
@@ -366,7 +366,7 @@ requrrent_series_base<T, K>::requrrent_series_base(std::vector<T> row)
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
 template <std::floating_point T, std::unsigned_integral K>
-class exp_series : public series_base<T, K>, public requrrent_series_base<T, K>
+class exp_series : public series_base<T, K>, public reccurent_series_base<T, K>
 {
 public:
 	exp_series() = delete;
@@ -397,14 +397,14 @@ private:
 	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	* @return nth term of the series
 	*/
-	T acsess_row(K n);
+	T access_row(K n);
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-exp_series<T, K>::exp_series(T x) : series_base<T, K>(x, std::exp(x)), requrrent_series_base<T, K>(T(1)) {}
+exp_series<T, K>::exp_series(T x) : series_base<T, K>(x, std::exp(x)), reccurent_series_base<T, K>(T(1)) {}
 
 template <std::floating_point T, std::unsigned_integral K>
-T exp_series<T, K>::acsess_row(K n)
+T exp_series<T, K>::access_row(K n)
 {
 	auto old_size = this->series_vector.size();
 	this->series_vector.reserve(n);
@@ -418,7 +418,7 @@ T exp_series<T, K>::acsess_row(K n)
 template <std::floating_point T, std::unsigned_integral K>
 constexpr T exp_series<T, K>::operator()(K n) const
 {
-	return const_cast<exp_series<T, K>*>(this)->acsess_row(n);
+	return const_cast<exp_series<T, K>*>(this)->access_row(n);
 }
 
 /**
@@ -427,7 +427,7 @@ constexpr T exp_series<T, K>::operator()(K n) const
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
 template <std::floating_point T, std::unsigned_integral K>
-class cos_series : public series_base<T, K>, public requrrent_series_base<T, K>
+class cos_series : public series_base<T, K>, public reccurent_series_base<T, K>
 {
 public:
 	cos_series() = delete;
@@ -457,14 +457,14 @@ private:
 	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	* @return nth term of the series
 	*/
-	T acsess_row(K n);
+	T access_row(K n);
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-cos_series<T, K>::cos_series(T x) : series_base<T, K>(x, std::cos(x)), requrrent_series_base<T, K>(std::vector<T>{1, T(((-1) * x * x) / 2)}) {}
+cos_series<T, K>::cos_series(T x) : series_base<T, K>(x, std::cos(x)), reccurent_series_base<T, K>(std::vector<T>{1, T(((-1) * x * x) / 2)}) {}
 
 template <std::floating_point T, std::unsigned_integral K>
-T cos_series<T, K>::acsess_row(K n)
+T cos_series<T, K>::access_row(K n)
 {
 	auto old_size = this->series_vector.size();
 	this->series_vector.reserve(n);
@@ -481,7 +481,7 @@ T cos_series<T, K>::acsess_row(K n)
 template <std::floating_point T, std::unsigned_integral K>
 constexpr T cos_series<T, K>::operator()(K n) const
 {
-	return const_cast<cos_series<T, K>*>(this)->acsess_row(n);
+	return const_cast<cos_series<T, K>*>(this)->access_row(n);
 }
 
 /**
@@ -490,7 +490,7 @@ constexpr T cos_series<T, K>::operator()(K n) const
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
 template <std::floating_point T, std::unsigned_integral K>
-class sin_series : public series_base<T, K>, public requrrent_series_base<T, K>
+class sin_series : public series_base<T, K>, public reccurent_series_base<T, K>
 {
 public:
 	sin_series() = delete;
@@ -520,14 +520,14 @@ private:
 	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	* @return nth term of the series
 	*/
-	T acsess_row(K n);
+	T access_row(K n);
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-sin_series<T, K>::sin_series(T x) : series_base<T, K>(x, std::sin(x)), requrrent_series_base<T, K>(x) {}
+sin_series<T, K>::sin_series(T x) : series_base<T, K>(x, std::sin(x)), reccurent_series_base<T, K>(x) {}
 
 template <std::floating_point T, std::unsigned_integral K>
-T sin_series<T, K>::acsess_row(K n)
+T sin_series<T, K>::access_row(K n)
 {
 	auto old_size = this->series_vector.size();
 	this->series_vector.reserve(n);
@@ -543,7 +543,7 @@ T sin_series<T, K>::acsess_row(K n)
 template <std::floating_point T, std::unsigned_integral K>
 constexpr T sin_series<T, K>::operator()(K n) const
 {
-	return const_cast<sin_series<T, K>*>(this)->acsess_row(n);
+	return const_cast<sin_series<T, K>*>(this)->access_row(n);
 }
 
 /**
@@ -552,7 +552,7 @@ constexpr T sin_series<T, K>::operator()(K n) const
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
 template <std::floating_point T, std::unsigned_integral K>
-class cosh_series : public series_base<T, K>, public requrrent_series_base<T, K>
+class cosh_series : public series_base<T, K>, public reccurent_series_base<T, K>
 {
 public:
 	cosh_series() = delete;
@@ -582,14 +582,14 @@ private:
 	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	* @return nth term of the series
 	*/
-	T acsess_row(K n);
+	T access_row(K n);
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-cosh_series<T, K>::cosh_series(T x) : series_base<T, K>(x, std::cosh(x)), requrrent_series_base<T, K>(std::vector<T>{1, T((x * x) / 2) }) {}
+cosh_series<T, K>::cosh_series(T x) : series_base<T, K>(x, std::cosh(x)), reccurent_series_base<T, K>(std::vector<T>{1, T((x * x) / 2) }) {}
 
 template <std::floating_point T, std::unsigned_integral K>
-T cosh_series<T, K>::acsess_row(K n)
+T cosh_series<T, K>::access_row(K n)
 {
 	auto old_size = this->series_vector.size();
 	this->series_vector.reserve(n);
@@ -605,7 +605,7 @@ T cosh_series<T, K>::acsess_row(K n)
 template <std::floating_point T, std::unsigned_integral K>
 constexpr T cosh_series<T, K>::operator()(K n) const
 {
-	return const_cast<cosh_series<T, K>*>(this)->acsess_row(n);
+	return const_cast<cosh_series<T, K>*>(this)->access_row(n);
 }
 
 /**
@@ -614,7 +614,7 @@ constexpr T cosh_series<T, K>::operator()(K n) const
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
 template <std::floating_point T, std::unsigned_integral K>
-class sinh_series : public series_base<T, K>, public requrrent_series_base<T, K>
+class sinh_series : public series_base<T, K>, public reccurent_series_base<T, K>
 {
 public:
 	sinh_series() = delete;
@@ -644,14 +644,14 @@ private:
 	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	* @return nth term of the series
 	*/
-	T acsess_row(K n);
+	T access_row(K n);
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-sinh_series<T, K>::sinh_series(T x) : series_base<T, K>(x, std::sinh(x)), requrrent_series_base<T, K>(x) {}
+sinh_series<T, K>::sinh_series(T x) : series_base<T, K>(x, std::sinh(x)), reccurent_series_base<T, K>(x) {}
 
 template <std::floating_point T, std::unsigned_integral K>
-T sinh_series<T, K>::acsess_row(K n)
+T sinh_series<T, K>::access_row(K n)
 {
 	auto old_size = this->series_vector.size();
 	this->series_vector.reserve(n);
@@ -667,7 +667,7 @@ T sinh_series<T, K>::acsess_row(K n)
 template <std::floating_point T, std::unsigned_integral K>
 constexpr T sinh_series<T, K>::operator()(K n) const
 {
-	return const_cast<sinh_series<T, K>*>(this)->acsess_row(n);
+	return const_cast<sinh_series<T, K>*>(this)->access_row(n);
 }
 
 /**
@@ -814,7 +814,7 @@ constexpr T ln1mx_series<T, K>::operator()(K n) const
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
 template <std::floating_point T, std::unsigned_integral K>
-class mean_sinh_sin_series : public series_base<T, K>, public requrrent_series_base<T, K>
+class mean_sinh_sin_series : public series_base<T, K>, public reccurent_series_base<T, K>
 {
 public:
 	mean_sinh_sin_series() = delete;
@@ -844,14 +844,14 @@ private:
 	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	* @return nth term of the series
 	*/
-	T acsess_row(K n);
+	T access_row(K n);
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-mean_sinh_sin_series<T, K>::mean_sinh_sin_series(T x) : series_base<T, K>(x, static_cast<T>(static_cast<T>(0.5) * (std::sinh(x) + std::sin(x)))), requrrent_series_base<T, K>(x) {}
+mean_sinh_sin_series<T, K>::mean_sinh_sin_series(T x) : series_base<T, K>(x, static_cast<T>(static_cast<T>(0.5) * (std::sinh(x) + std::sin(x)))), reccurent_series_base<T, K>(x) {}
 
 template <std::floating_point T, std::unsigned_integral K>
-T mean_sinh_sin_series<T, K>::acsess_row(K n)
+T mean_sinh_sin_series<T, K>::access_row(K n)
 {
 	auto old_size = this->series_vector.size();
 	this->series_vector.reserve(n);
@@ -866,7 +866,7 @@ T mean_sinh_sin_series<T, K>::acsess_row(K n)
 template <std::floating_point T, std::unsigned_integral K>
 constexpr T mean_sinh_sin_series<T, K>::operator()(K n) const
 {
-	return const_cast<mean_sinh_sin_series<T, K>*>(this)->acsess_row(n);
+	return const_cast<mean_sinh_sin_series<T, K>*>(this)->access_row(n);
 }
 
 
@@ -1092,7 +1092,7 @@ constexpr T x_1mx_squared_series<T, K>::operator()(K n) const
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
 template <std::floating_point T, std::unsigned_integral K>
-class erf_series : public series_base<T, K>, public requrrent_series_base<T, K>
+class erf_series : public series_base<T, K>, public reccurent_series_base<T, K>
 {
 public:
 	erf_series() = delete;
@@ -1122,14 +1122,14 @@ private:
 	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	* @return nth term of the series
 	*/
-	T acsess_row(K n);
+	T access_row(K n);
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-erf_series<T, K>::erf_series(T x) : series_base<T, K>(x, static_cast<T>(std::sqrt(std::numbers::pi)) * static_cast<T>(std::erf(x) / 2)), requrrent_series_base<T, K>(x) { }
+erf_series<T, K>::erf_series(T x) : series_base<T, K>(x, static_cast<T>(std::sqrt(std::numbers::pi)) * static_cast<T>(std::erf(x) / 2)), reccurent_series_base<T, K>(x) { }
 
 template <std::floating_point T, std::unsigned_integral K>
-T erf_series<T, K>::acsess_row(K n)
+T erf_series<T, K>::access_row(K n)
 {
 	auto old_size = this->series_vector.size();
 	this->series_vector.reserve(n);
@@ -1148,7 +1148,7 @@ T erf_series<T, K>::acsess_row(K n)
 template <std::floating_point T, std::unsigned_integral K>
 constexpr T erf_series<T, K>::operator()(K n) const
 {
-	return const_cast<erf_series<T, K>*>(this)->acsess_row(n);
+	return const_cast<erf_series<T, K>*>(this)->access_row(n);
 }
 
 /**
@@ -1157,7 +1157,7 @@ constexpr T erf_series<T, K>::operator()(K n) const
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
 template <std::floating_point T, std::unsigned_integral K>
-class m_fact_1mx_mp1_inverse_series : public series_base<T, K>, public requrrent_series_base<T, K>
+class m_fact_1mx_mp1_inverse_series : public series_base<T, K>, public reccurent_series_base<T, K>
 {
 public:
 	m_fact_1mx_mp1_inverse_series() = delete;
@@ -1193,11 +1193,11 @@ private:
 	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	* @return nth term of the series
 	*/
-	T acsess_row(K n);
+	T access_row(K n);
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-m_fact_1mx_mp1_inverse_series<T, K>::m_fact_1mx_mp1_inverse_series(T x, K m) : series_base<T, K>(x, static_cast<T>(static_cast<T>(this->fact(m)) / pow(1 - x, m + 1))), m(m), requrrent_series_base<T, K>(static_cast<T>(this->fact(m)))
+m_fact_1mx_mp1_inverse_series<T, K>::m_fact_1mx_mp1_inverse_series(T x, K m) : series_base<T, K>(x, static_cast<T>(static_cast<T>(this->fact(m)) / pow(1 - x, m + 1))), m(m), reccurent_series_base<T, K>(static_cast<T>(this->fact(m)))
 {
 	if (!isfinite(series_base<T, K>::sum)) // sum = this->fact(m) / pow(1 - x, m + 1))
 		throw std::overflow_error("sum is too big");
@@ -1207,7 +1207,7 @@ m_fact_1mx_mp1_inverse_series<T, K>::m_fact_1mx_mp1_inverse_series(T x, K m) : s
 }
 
 template <std::floating_point T, std::unsigned_integral K>
-T m_fact_1mx_mp1_inverse_series<T, K>::acsess_row(K n)
+T m_fact_1mx_mp1_inverse_series<T, K>::access_row(K n)
 {
 	auto old_size = this->series_vector.size();
 	this->series_vector.reserve(n);
@@ -1221,7 +1221,7 @@ T m_fact_1mx_mp1_inverse_series<T, K>::acsess_row(K n)
 template <std::floating_point T, std::unsigned_integral K>
 constexpr T m_fact_1mx_mp1_inverse_series<T, K>::operator()(K n) const
 {
-	return const_cast<m_fact_1mx_mp1_inverse_series<T, K>*>(this)->acsess_row(n);
+	return const_cast<m_fact_1mx_mp1_inverse_series<T, K>*>(this)->access_row(n);
 }
 
 /**
@@ -4884,17 +4884,17 @@ constexpr T testing_series<T, K>::operator()(K n) const
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
 template <std::floating_point T, std::unsigned_integral K>
-class requrrent_testing_series : public series_base<T, K>, public requrrent_series_base<T, K>
+class reccurent_testing_series : public series_base<T, K>, public reccurent_series_base<T, K>
 {
 public:
-	requrrent_testing_series() = delete;
+	reccurent_testing_series() = delete;
 
 	/**
 	* @brief Parameterized constructor to initialize the series with function argument and sum
 	* @authors Kreynin R.G.
 	* @param x The argument for function series
 	*/
-	requrrent_testing_series(T x);
+	reccurent_testing_series(T x);
 
 	/**
 	* @brief Computes the nth term of the Maclaurin series of the sine function
@@ -4911,14 +4911,14 @@ private:
 	* @param n The number of the term
 	* @return nth term of the series
 	*/
-	T acsess_row(K n);
+	T access_row(K n);
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-requrrent_testing_series<T, K>::requrrent_testing_series(T x) : series_base<T, K>(x, 0), requrrent_series_base<T, K>(x) {}
+reccurent_testing_series<T, K>::reccurent_testing_series(T x) : series_base<T, K>(x, 0), reccurent_series_base<T, K>(x) {}
 
 template <std::floating_point T, std::unsigned_integral K>
-T requrrent_testing_series<T, K>::acsess_row(K n)
+T reccurent_testing_series<T, K>::access_row(K n)
 {
 	K old_size = this->series_vector.size();
 	this->series_vector.reserve(n);
@@ -4930,7 +4930,7 @@ T requrrent_testing_series<T, K>::acsess_row(K n)
 }
 
 template <std::floating_point T, std::unsigned_integral K>
-constexpr T requrrent_testing_series<T, K>::operator()(K n) const
+constexpr T reccurent_testing_series<T, K>::operator()(K n) const
 {
-	return const_cast<requrrent_testing_series<T, K>*>(this)->acsess_row(n);
+	return const_cast<reccurent_testing_series<T, K>*>(this)->access_row(n);
 }
