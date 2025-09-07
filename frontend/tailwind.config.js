@@ -5,17 +5,17 @@ export default {
         extend: {
             colors: {
                 // фон и панели
-                surface: "#0b1220",   // общий фон
-                panel:   "#131a2a",   // карточки / header
+                surface: "#0a0a0f",   // ещё темнее фон
+                panel:   "#1e293b",   // заметно светлее для контраста
                 // акценты
-                primary:   "#6c8cf5", // синий
-                secondary: "#a78bfa", // фиолетовый
-                accent:    "#22d3ee", // бирюзовый
-                border:    "#1f2a44",
-                textDim:   "#9aa4b2",
+                primary:   "#3b82f6", // ярко-синий
+                secondary: "#a855f7", // насыщенный фиолетовый
+                accent:    "#06b6d4", // яркая бирюза
+                border:    "#334155", // более заметная обводка
+                textDim:   "#cbd5e1", // светло-серый, лучше читается на тёмном фоне
             },
             boxShadow: {
-                panel: "0 6px 24px rgba(0,0,0,.35)",
+                panel: "0 8px 20px rgba(0,0,0,0.6)", // более выражённая тень
             },
             borderRadius: {
                 xl2: "1rem",
