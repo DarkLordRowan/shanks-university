@@ -4,6 +4,12 @@ import { TREE } from "../data/algorithms";
 import { resolveAuthors } from "../data/authors";
 import type { AlgNode } from "../types/algorithms";
 
+// Markdown
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import rehypeRaw from "rehype-raw";
+import rehypeHighlight from "rehype-highlight";
+
 /* ===== поиск в дереве ===== */
 function findNodeById(nodes: AlgNode[], id: string): AlgNode | undefined {
     for (const n of nodes) {
@@ -16,22 +22,30 @@ function findNodeById(nodes: AlgNode[], id: string): AlgNode | undefined {
     return undefined;
 }
 
-/* ===== GitHub-константы (подправь при необходимости) ===== */
+/* ===== GitHub-константы ===== */
 const GH = {
     owner: "DarkLordRowan",
     repo: "shanks-university",
     branch: "feature/structure",
-    folder: "shanks_transformation/include/series_acceleration/algorithm",
+    srcFolder: "shanks_transformation/include/series_acceleration/algorithm",
+    docsFolder: "docs/algorithm",
 };
 
-function buildLinks(algId: string) {
-    const path = `${GH.folder}/${algId}.tpp`;
+function buildSrcLinks(algId: string) {
+    const path = `${GH.srcFolder}/${algId}.tpp`;
     const raw = `https://raw.githubusercontent.com/${GH.owner}/${GH.repo}/${GH.branch}/${path}`;
     const web = `https://github.com/${GH.owner}/${GH.repo}/blob/${GH.branch}/${path}`;
     return { raw, web, path };
 }
 
-/* ===== CodeViewer с подсветкой ===== */
+function buildDocLinks(algId: string) {
+    const path = `${GH.docsFolder}/${algId}.md`;
+    const raw = `https://raw.githubusercontent.com/${GH.owner}/${GH.repo}/${GH.branch}/${path}`;
+    const web = `https://github.com/${GH.owner}/${GH.repo}/blob/${GH.branch}/${path}`;
+    return { raw, web, path };
+}
+
+/* ===== CodeViewer с подсветкой (C++) ===== */
 const CodeViewer: React.FC<{ url: string; filename: string }> = ({ url, filename }) => {
     const [code, setCode] = React.useState("");
     const [loading, setLoading] = React.useState(true);
@@ -96,6 +110,57 @@ const CodeViewer: React.FC<{ url: string; filename: string }> = ({ url, filename
     );
 };
 
+/* ===== MarkdownDoc (теория) ===== */
+const MarkdownDoc: React.FC<{ id: string }> = ({ id }) => {
+    const { raw, web, path } = React.useMemo(() => buildDocLinks(id), [id]);
+    const [md, setMd] = React.useState<string>("");
+    const [loading, setLoading] = React.useState(true);
+    const [error, setError] = React.useState<string | null>(null);
+
+    React.useEffect(() => {
+        let alive = true;
+        setLoading(true);
+        setError(null);
+        fetch(raw, { cache: "no-store" })
+            .then(async (r) => {
+                if (!r.ok) throw new Error(`${r.status} ${r.statusText}`);
+                const txt = await r.text();
+                if (alive) setMd(txt);
+            })
+            .catch((e) => alive && setError(e.message))
+            .finally(() => alive && setLoading(false));
+        return () => {
+            alive = false;
+        };
+    }, [raw]);
+
+    return (
+        <div className="card">
+            <div className="mb-3 flex items-center justify-between">
+                <div className="text-sm text-textDim">Теория • <code className="px-1">{path}</code></div>
+                <a href={web} target="_blank" rel="noreferrer" className="link">Открыть на GitHub</a>
+            </div>
+
+            {loading && <div className="text-textDim text-sm">Загрузка теории…</div>}
+            {error && (
+                <div className="text-textDim text-sm">
+                    Теоретический документ не найден или недоступен: {error}
+                </div>
+            )}
+            {!loading && !error && (
+                <article className="prose prose-invert max-w-none prose-pre:bg-surface/40 prose-code:text-white">
+                    <ReactMarkdown
+                        remarkPlugins={[remarkGfm]}
+                        rehypePlugins={[rehypeRaw, rehypeHighlight]}
+                    >
+                        {md}
+                    </ReactMarkdown>
+                </article>
+            )}
+        </div>
+    );
+};
+
 /* ===== страница алгоритма ===== */
 const AlgorithmPage: React.FC = () => {
     const { id } = useParams<{ id: string }>();
@@ -113,15 +178,13 @@ const AlgorithmPage: React.FC = () => {
     const authors = resolveAuthors(node.authorIds);
     const hasChildren = !!node.children?.length;
 
-    // Если есть подалгоритмы — считаем их «реализациями» и показываем список ссылок
     const implementations = (node.children ?? []).slice().sort((a, b) => {
-        // кидаем «базовую» наверх, если в подзаголовке есть "базов" или id/название содержит "one"
         const aBase = /базов|(^|_)one(_|$)/i.test((a.subtitle ?? "") + " " + a.id + " " + a.title);
         const bBase = /базов|(^|_)one(_|$)/i.test((b.subtitle ?? "") + " " + b.id + " " + b.title);
         return Number(bBase) - Number(aBase);
     });
 
-    const { raw, web, path } = buildLinks(node.id);
+    const { raw, web, path } = buildSrcLinks(node.id);
 
     return (
         <div className="space-y-4">
@@ -150,19 +213,7 @@ const AlgorithmPage: React.FC = () => {
                     </div>
                 )}
 
-                {!hasChildren ? (
-                    <>
-                        <div className="flex flex-wrap items-center gap-3 text-sm">
-                            <span className="text-textDim">Файл:</span>
-                            <code className="rounded bg-surface/40 px-2 py-[2px]">{path}</code>
-                            <a href={web} target="_blank" rel="noreferrer" className="link">Открыть на GitHub</a>
-                        </div>
-                        {node.document && (
-                            <div className="text-sm text-textDim">Документ: {node.document}</div>
-                        )}
-                        <Link to="/algorithms" className="btn mt-2">← Назад к списку</Link>
-                    </>
-                ) : (
+                {hasChildren ? (
                     <>
                         <div className="rounded-xl2 border border-border/60 bg-panel/70 p-3">
                             <div className="mb-2 font-semibold">Реализации:</div>
@@ -186,10 +237,25 @@ const AlgorithmPage: React.FC = () => {
 
                         <Link to="/algorithms" className="btn">← Назад к списку</Link>
                     </>
+                ) : (
+                    <>
+                        <div className="flex flex-wrap items-center gap-3 text-sm">
+                            <span className="text-textDim">Файл:</span>
+                            <code className="rounded bg-surface/40 px-2 py-[2px]">{path}</code>
+                            <a href={web} target="_blank" rel="noreferrer" className="link">Открыть на GitHub</a>
+                        </div>
+                        {node.document && (
+                            <div className="text-sm text-textDim">Документ: {node.document}</div>
+                        )}
+                        <Link to="/algorithms" className="btn mt-2">← Назад к списку</Link>
+                    </>
                 )}
             </div>
 
-            {/* Показываем исходник только для листьев */}
+            {/* Теория — для всех (родителей и листьев). Если файла нет, будет сообщение. */}
+            <MarkdownDoc id={node.id} />
+
+            {/* Исходник — только для листьев */}
             {!hasChildren && <CodeViewer url={raw} filename={`${node.id}.tpp`} />}
         </div>
     );
