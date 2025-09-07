@@ -381,7 +381,7 @@ template<typename T, typename K, typename series_templ>
 		transform.reset(new levin_sidi_S_algorithm<T, K, decltype(series.get())>(series.get(), ptr, recursive, beta));
 		return;
 	case D_algorithm:
-		transform.reset(new drummond_D_algorithm<T, K, decltype(series.get())>(series.get(), ptr, recursive));
+		transform.reset(new drummond_d_algorithm<T, K, decltype(series.get())>(series.get(), ptr, recursive));
 		return;
 	case M_algorithm:
 
@@ -1205,22 +1205,22 @@ template <typename T, typename K>
 			print_transform(i, order, std::move(transform.get()));
 
 			//levin-sidi D U
-			transform.reset(new drummond_D_algorithm<T, K, decltype(series.get())>(series.get(), new u_transform<T, K>{}, false));
+			transform.reset(new drummond_d_algorithm<T, K, decltype(series.get())>(series.get(), new u_transform<T, K>{}, false));
 			print_transform(i, order, std::move(transform.get()));
 			//
 
 			//levin-sidi D T
-			transform.reset(new drummond_D_algorithm<T, K, decltype(series.get())>(series.get(), new t_transform<T, K>{}, false));
+			transform.reset(new drummond_d_algorithm<T, K, decltype(series.get())>(series.get(), new t_transform<T, K>{}, false));
 			print_transform(i, order, std::move(transform.get()));
 			//
 
 			//levin-sidi D D
-			transform.reset(new drummond_D_algorithm<T, K, decltype(series.get())>(series.get(), new d_transform<T, K>{}, false));
+			transform.reset(new drummond_d_algorithm<T, K, decltype(series.get())>(series.get(), new d_transform<T, K>{}, false));
 			print_transform(i, order, std::move(transform.get()));
 			//
 
 			//levin-sidi D V
-			transform.reset(new drummond_D_algorithm<T, K, decltype(series.get())>(series.get(), new v_transform<T, K>{}, false));
+			transform.reset(new drummond_d_algorithm<T, K, decltype(series.get())>(series.get(), new v_transform<T, K>{}, false));
 			print_transform(i, order, std::move(transform.get()));
 			//
 
