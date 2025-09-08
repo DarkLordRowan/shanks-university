@@ -49,6 +49,3 @@ enum transformation_id_t {
 #include "./methods/FSA.hpp"
 #include "./methods/FSA2.hpp"
 #include "./methods/FSA3.hpp"
-#include "./methods/epsilon_modified_algorithm.hpp"
-#include "./methods/theta_modified_algorithm.hpp"
-#include "./methods/epsilon_aitken_theta_algorithm.hpp"
