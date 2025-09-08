@@ -1,35 +1,14 @@
-# CMakeList.txt: проект CMake для shanks-transformation; включите исходный код и определения,
-# укажите здесь логику для конкретного проекта.
 cmake_minimum_required(VERSION 3.11)
 project(shanks_transformation LANGUAGES CXX)
-
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# Executable (main program)
 add_executable(shanks_transformation main.cpp)
-target_include_directories(shanks_transformation PUBLIC
-    ${CMAKE_CURRENT_SOURCE_DIR}
-)
+target_include_directories(shanks_transformation PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
-# Добавьте источник в исполняемый файл этого проекта.
-#add_executable (shanks_transformation 
-#"main.cpp" 
-#"series +.h" 
-#"wynn_numerators.h"
-#"shanks_transformation.h"
-#"epsilon_algorithm.h"
-#"chang_whynn_algorithm.h" 
-#"epsilon_algorithm_two.h" 
-#"levin_algorithm.h" 
-#"./levin_sidi_S/levin_sidi_S_algorithm.hpp" 
-#"./drummond_D/drummond_D_algorithm.hpp"
-#"./remainders/remainders.hpp"
-#"levin_sidi_M_algorithm.h" 
-#"rho_wynn_algorithm.h" 
-#"weniger_algorithm.h" 
-#"brezinski_theta_algorithm.h" 
-#"epsilon_algorithm_three.h" 
-#"richardson_algorithm.h" 
-#"levin_recursion_algorithm.h"
-#)
-#target_compile_features(shanks_transformation PRIVATE cxx_std_20)
+# Pybind11 module (Python entrypoint)
+set(PYBIND11_FINDPYTHON ON)
+find_package(pybind11 CONFIG REQUIRED)
+pybind11_add_module(pyshanks py.cpp)
+target_include_directories(pyshanks PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
