@@ -1,5 +1,5 @@
 ﻿/**
- * @file theta_brezinski_algorithm.h
+ * @file brezinski_theta_algorithm.h
  * @brief This file contains the declaration of the Theta Brezinski Algorithm class.
  */
 
@@ -8,7 +8,7 @@
 #include "../series_acceleration.hpp"
 
 template <std::floating_point T, std::unsigned_integral K, typename series_templ>
-class theta_brezinski_algorithm : public series_acceleration<T, K, series_templ>
+class brezinski_theta_algorithm : public series_acceleration<T, K, series_templ>
 {
 protected:
     /**
@@ -26,7 +26,7 @@ public:
      * @authors Yurov P.I. Bezzaborov A.A.
      * @param series The series class object to be accelerated
      */
-    explicit theta_brezinski_algorithm(const series_templ& series) : series_acceleration<T, K, series_templ>(series) {}
+    explicit brezinski_theta_algorithm(const series_templ& series) : series_acceleration<T, K, series_templ>(series) {}
 
     /**
      * @brief Fast implementation of Theta Brezinski algorithm.
@@ -40,7 +40,7 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K, typename series_templ>
-T theta_brezinski_algorithm<T, K, series_templ>::theta(K n, const K order, T S_n, const K j) const {
+T brezinski_theta_algorithm<T, K, series_templ>::theta(K n, const K order, T S_n, const K j) const {
 
     using std::isfinite;
 
@@ -80,14 +80,14 @@ T theta_brezinski_algorithm<T, K, series_templ>::theta(K n, const K order, T S_n
     if (!isfinite(delta2))
         throw std::overflow_error("division by zero");
 
-    const T delta_n = theta_order2_1 - theta(n, order2, S_n, static_cast<K>(2)); // Δυ_2k^(n+1) 
+    const T delta_n = theta_order2_1 - theta(n, order2, S_n, static_cast<K>(2)); // Δυ_2k^(n+1)
     const T delta_n1 = theta_order1_1 - theta_order1_2; // Δυ_(2k+1)^(n+1)
 
     return fma(delta_n * delta_n1, delta2, theta_order2_1); // υ_(2k+2)^(n)=υ_2k^(n+1)+((Δυ_2k^(n+1))*(Δυ_(2k+1)^(n+1)))/(Δ^2 υ_(2k+1)^(n)
 }
 
 template <std::floating_point T, std::unsigned_integral K, typename series_templ>
-T theta_brezinski_algorithm<T, K, series_templ>::operator()(const K n, const K order) const{
+T brezinski_theta_algorithm<T, K, series_templ>::operator()(const K n, const K order) const{
     if (order & static_cast<K>(1)) // is order odd?
         throw std::domain_error("order should be even number");
 

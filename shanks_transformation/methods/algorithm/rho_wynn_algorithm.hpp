@@ -1,5 +1,5 @@
 /**
- * @file rho-wynn_algorithm.h
+ * @file rho_wynn_algorithm.h
  * @brief This file contains the declaration of the Rho Wynn Algorithm class.
  * @authors Yurov P.I. Bezzaborov A.A.
  */
@@ -19,7 +19,7 @@
   * @tparam series_templ is the type of series whose convergence we accelerate
   */
 template <std::floating_point T, std::unsigned_integral K, typename series_templ>
-class rho_Wynn_algorithm : public series_acceleration<T, K, series_templ>
+class rho_wynn_algorithm : public series_acceleration<T, K, series_templ>
 {
 protected:
 
@@ -36,10 +36,10 @@ public:
      * @brief Parameterized constructor to initialize the Rho Wynn Algorithm.
      * @param series The series class object to be accelerated
      */
-	explicit rho_Wynn_algorithm(
-		const series_templ& series, 
-		const numerator_type variant = numerator_type::rho_variant, 
-		const T gamma_ = T(1), 
+	explicit rho_wynn_algorithm(
+		const series_templ& series,
+		const numerator_type variant = numerator_type::rho_variant,
+		const T gamma_ = T(1),
 		const T RHO_ = T(0)
 	);
 
@@ -74,19 +74,19 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K, typename series_templ>
-rho_Wynn_algorithm<T, K, series_templ>::rho_Wynn_algorithm(
-	const series_templ& series, 
+rho_wynn_algorithm<T, K, series_templ>::rho_wynn_algorithm(
+	const series_templ& series,
 	const numerator_type variant,
-	const T gamma_, 
+	const T gamma_,
 	const T RHO_
-	) : 
-	series_acceleration<T, K, series_templ>(series), 
-	gamma(gamma_), 
-	RHO(RHO_) 
+	) :
+	series_acceleration<T, K, series_templ>(series),
+	gamma(gamma_),
+	RHO(RHO_)
 {
 	//TODO: проверить можно ли использовать стандартные значения, указанный в конструктуре, в других вариантах + унифицировать названия
 	// есть ли какие то ограничения на кастомные значения?
-	// classic (0), gamma (1), gamma-rho (2): 
+	// classic (0), gamma (1), gamma-rho (2):
 	// 0 -> gamma = 1, RHO = 0
 	// 1 -> gamma = 2, RHO = 0
 	// 2 -> gamma = 2, RHO = 1
@@ -107,7 +107,7 @@ rho_Wynn_algorithm<T, K, series_templ>::rho_Wynn_algorithm(
 }
 
 template <std::floating_point T, std::unsigned_integral K, typename series_templ>
-inline T rho_Wynn_algorithm<T, K, series_templ>::calculate(const K n, K order) const { //const int order	
+inline T rho_wynn_algorithm<T, K, series_templ>::calculate(const K n, K order) const { //const int order
 
 	using std::isfinite;
 
@@ -134,13 +134,7 @@ inline T rho_Wynn_algorithm<T, K, series_templ>::calculate(const K n, K order) c
 			RHO)
 		) / (
 		recursive_calculate_body(
-			n, 
-			order1, 
-			S_n, 
-			static_cast<K>(1)
-		) - 
-		recursive_calculate_body(
-			n, 
+			n,
 			order1,
 			 S_n, 
 			 static_cast<K>(0)
@@ -149,11 +143,11 @@ inline T rho_Wynn_algorithm<T, K, series_templ>::calculate(const K n, K order) c
 
 	if (!isfinite(res))
 		throw std::overflow_error("division by zero");
-	return res;	
+	return res;
 }
 
 template <std::floating_point T, std::unsigned_integral K, typename series_templ>
-T rho_Wynn_algorithm<T, K, series_templ>::recursive_calculate_body(const K n, const K order, T S_n, const K j) const {
+T rho_wynn_algorithm<T, K, series_templ>::recursive_calculate_body(const K n, const K order, T S_n, const K j) const {
 
 	using std::isfinite;
 	/**
@@ -173,28 +167,28 @@ T rho_Wynn_algorithm<T, K, series_templ>::recursive_calculate_body(const K n, co
 	const K nj = n + j;
 	const T res = (
 		recursive_calculate_body(
-			nj, 
-			order1 - static_cast<K>(1), 
-			S_n, 
+			nj,
+			order1 - static_cast<K>(1),
+			S_n,
 			static_cast<K>(1)
 		) + 
 		numerator->operator()(
 			nj, 
 			order, 
 			this->series,
-			gamma, 
+			gamma,
 			RHO)
 		) / (
 		recursive_calculate_body(
-			nj, 
+			nj,
 			order1,
-			 S_n, 
+			 S_n,
 			 static_cast<K>(1)
-		) - 
+		) -
 		recursive_calculate_body(
-			nj, 
-			order1, 
-			S_n, 
+			nj,
+			order1,
+			S_n,
 			static_cast<K>(0)
 		)
 	);
