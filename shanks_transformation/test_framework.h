@@ -684,7 +684,7 @@ inline static void main_testing_function()
 		transform.reset(new wynn_epsilon_1_algorithm<T, K, decltype(series.get())>(series.get()));
 		break;
 	case transformation_id_t::epsilon_algorithm_2_id:
-		transform.reset(new epsilon_algorithm_two<T, K, decltype(series.get())>(series.get()));
+		transform.reset(new wynn_epsilon_algorithm_two<T, K, decltype(series.get())>(series.get()));
 		break;
 	case transformation_id_t::S_algorithm_id:
 		transform.reset(new levin_sidi_s_algorithm<T, K, decltype(series.get())>(series.get()));
@@ -702,13 +702,13 @@ inline static void main_testing_function()
 		transform.reset(new weniger_algorithm<T, K, decltype(series.get())>(series.get()));
 		break;
 	case transformation_id_t::rho_wynn_transformation_id:
-		transform.reset(new rho_Wynn_algorithm<T, K, decltype(series.get())>(series.get()));
+		transform.reset(new rho_wynn_algorithm<T, K, decltype(series.get())>(series.get()));
 		break;
 	case transformation_id_t::brezinski_theta_transformation_id:
 		transform.reset(new brezinski_theta_algorithm<T, K, decltype(series.get())>(series.get()));
 		break;
 	case transformation_id_t::epsilon_algorithm_3_id:
-		transform.reset(new epsilon_algorithm_three<T, K, decltype(series.get())>(series.get()));
+		transform.reset(new wynn_epsilon_algorithm_three<T, K, decltype(series.get())>(series.get()));
 		break;
 	case transformation_id_t::W_algorithm_id:
 		transform.reset(new W_lubkin_algorithm<T, K, decltype(series.get())>(series.get()));
@@ -772,7 +772,7 @@ inline static void main_testing_function()
 			transform2.reset(new wynn_epsilon_1_algorithm<T, K, decltype(series.get())>(series.get()));
 			break;
 		case transformation_id_t::epsilon_algorithm_2_id:
-			transform2.reset(new epsilon_algorithm_two<T, K, decltype(series.get())>(series.get()));
+			transform2.reset(new wynn_epsilon_algorithm_two<T, K, decltype(series.get())>(series.get()));
 			break;
 		case transformation_id_t::S_algorithm_id:
 			transform.reset(new levin_sidi_s_algorithm<T, K, decltype(series.get())>(series.get()));
@@ -790,13 +790,13 @@ inline static void main_testing_function()
 			transform2.reset(new weniger_algorithm<T, K, decltype(series.get())>(series.get()));
 			break;
 		case transformation_id_t::rho_wynn_transformation_id:
-			transform2.reset(new rho_Wynn_algorithm<T, K, decltype(series.get())>(series.get()));
+			transform2.reset(new rho_wynn_algorithm<T, K, decltype(series.get())>(series.get()));
 			break;
 		case transformation_id_t::brezinski_theta_transformation_id:
 			transform2.reset(new brezinski_theta_algorithm<T, K, decltype(series.get())>(series.get()));
 			break;
 		case transformation_id_t::epsilon_algorithm_3_id:
-			transform.reset(new epsilon_algorithm_three<T, K, decltype(series.get())>(series.get()));
+			transform.reset(new wynn_epsilon_algorithm_three<T, K, decltype(series.get())>(series.get()));
 			break;
 		case transformation_id_t::W_algorithm_id:
 			transform2.reset(new W_lubkin_algorithm<T, K, decltype(series.get())>(series.get()));
@@ -839,23 +839,23 @@ inline static void main_testing_function()
 			print_transform(i, order, std::move(transform.get()));
 
 			//epsilon v-2
-			transform.reset(new epsilon_algorithm_two<T, K, decltype(series.get())>(series.get()));
+			transform.reset(new wynn_epsilon_algorithm_two<T, K, decltype(series.get())>(series.get()));
 			print_transform(i, order, std::move(transform.get()));
 
 			//epsilon v-3
-			transform.reset(new epsilon_algorithm_three<T, K, decltype(series.get())>(series.get(), epsilon_algorithm_3));
+			transform.reset(new wynn_epsilon_algorithm_three<T, K, decltype(series.get())>(series.get(), epsilon_algorithm_3));
 			print_transform(i, order, std::move(transform.get()));
 
 			//rho-wynn classic
-			transform.reset(new rho_Wynn_algorithm<T, K, decltype(series.get())>(series.get(), numerator_type::rho_variant));
+			transform.reset(new rho_wynn_algorithm<T, K, decltype(series.get())>(series.get(), numerator_type::rho_variant));
 			print_transform(i, order, std::move(transform.get()));
 
 			//rho-wynn generalized
-			transform.reset(new rho_Wynn_algorithm<T, K, decltype(series.get())>(series.get(), numerator_type::generalized_variant));
+			transform.reset(new rho_wynn_algorithm<T, K, decltype(series.get())>(series.get(), numerator_type::generalized_variant));
 			print_transform(i, order, std::move(transform.get()));
 
 			//rho-wynn gamma-rho
-			transform.reset(new rho_Wynn_algorithm<T, K, decltype(series.get())>(series.get(), numerator_type::gamma_rho_variant));
+			transform.reset(new rho_wynn_algorithm<T, K, decltype(series.get())>(series.get(), numerator_type::gamma_rho_variant));
 			print_transform(i, order, std::move(transform.get()));
 
 			//theta-brezinski

@@ -17,14 +17,14 @@
   * @tparam T The type of the elements in the series, K The type of enumerating integer, series_templ is the type of series whose convergence we accelerate
   */
 template <std::floating_point T, std::unsigned_integral K, typename series_templ>
-class epsilon_algorithm_two : public series_acceleration<T, K, series_templ>
+class wynn_epsilon_algorithm_two : public series_acceleration<T, K, series_templ>
 {
 public:
     /**
      * @brief Parameterized constructor to initialize the Epsilon Algorithm MK-2.
      * @param series The series class object to be accelerated
      */
-    explicit epsilon_algorithm_two(const series_templ& series);
+    explicit wynn_epsilon_algorithm_two(const series_templ& series);
 
     /**
      * @brief Fast impimentation of Levin algorithm.
@@ -38,10 +38,10 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K, typename series_templ>
-epsilon_algorithm_two<T, K, series_templ>::epsilon_algorithm_two(const series_templ& series) : series_acceleration<T, K, series_templ>(series) {}
+wynn_epsilon_algorithm_two<T, K, series_templ>::wynn_epsilon_algorithm_two(const series_templ& series) : series_acceleration<T, K, series_templ>(series) {}
 
 template <std::floating_point T, std::unsigned_integral K, typename series_templ>
-T epsilon_algorithm_two<T, K, series_templ>::operator()(const K n, const K order) const
+T wynn_epsilon_algorithm_two<T, K, series_templ>::operator()(const K n, const K order) const
 {
 
 	using std::isfinite;
@@ -54,7 +54,7 @@ T epsilon_algorithm_two<T, K, series_templ>::operator()(const K n, const K order
 	K k = static_cast<K>(2) * order + n;
 
 	std::vector<std::vector<T>> eps(
-		4, 
+		4,
 		std::vector<T>(
 			k + static_cast<K>(1),
 			static_cast<T>(0)
