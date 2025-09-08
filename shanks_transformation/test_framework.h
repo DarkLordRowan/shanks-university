@@ -148,7 +148,7 @@ K read_input() {
 	long long input;
 	std::cin >> input;
 
-	if (input < 0) 
+	if (input < 0)
 		throw std::domain_error("Negative value in the input!");
 
 	return static_cast<K>(input); // ���������� ��������������
@@ -705,7 +705,7 @@ inline static void main_testing_function()
 		transform.reset(new rho_Wynn_algorithm<T, K, decltype(series.get())>(series.get()));
 		break;
 	case transformation_id_t::brezinski_theta_transformation_id:
-		transform.reset(new theta_brezinski_algorithm<T, K, decltype(series.get())>(series.get()));
+		transform.reset(new brezinski_theta_algorithm<T, K, decltype(series.get())>(series.get()));
 		break;
 	case transformation_id_t::epsilon_algorithm_3_id:
 		transform.reset(new epsilon_algorithm_three<T, K, decltype(series.get())>(series.get()));
@@ -793,7 +793,7 @@ inline static void main_testing_function()
 			transform2.reset(new rho_Wynn_algorithm<T, K, decltype(series.get())>(series.get()));
 			break;
 		case transformation_id_t::brezinski_theta_transformation_id:
-			transform2.reset(new theta_brezinski_algorithm<T, K, decltype(series.get())>(series.get()));
+			transform2.reset(new brezinski_theta_algorithm<T, K, decltype(series.get())>(series.get()));
 			break;
 		case transformation_id_t::epsilon_algorithm_3_id:
 			transform.reset(new epsilon_algorithm_three<T, K, decltype(series.get())>(series.get()));
@@ -831,7 +831,7 @@ inline static void main_testing_function()
 				transform.reset(new shanks_transform_alternating<T, K, decltype(series.get())>(series.get()));
 			else
 				transform.reset(new shanks_transform<T, K, decltype(series.get())>(series.get()));
-			
+
 			print_transform(i, order, std::move(transform.get()));
 
 			//epsilon v-1
@@ -859,7 +859,7 @@ inline static void main_testing_function()
 			print_transform(i, order, std::move(transform.get()));
 
 			//theta-brezinski
-			transform.reset(new theta_brezinski_algorithm<T, K, decltype(series.get())>(series.get()));
+			transform.reset(new brezinski_theta_algorithm<T, K, decltype(series.get())>(series.get()));
 			print_transform(i, order, std::move(transform.get()));
 
 			//chang epsilon wynn
