@@ -289,12 +289,10 @@ inline static void print_transformation_info()
 		"10 - Rho - Wynn transformation" << '\n' <<
 		"11 - Theta Brezinski transformation" << '\n' <<
 		"12 - Epsilon Algorithm V-3" << '\n' <<
-		"13 - Levin - Recursion Algorithm" << '\n' <<
-		"14 - Lubkin W-transformation" << '\n' <<
-		"15 - Richardson Algorithm" << '\n' <<
-		"16 - Ford-Sidi Algorithm" << '\n' <<
-		"17 - Ford-Sidi Algorithm V-2" << '\n' <<
-		"18 - Ford-Sidi Algorithm V-3" << '\n' <<
+		"13 - Lubkin W-transformation" << '\n' <<
+		"14 - Richardson Algorithm" << '\n' <<
+		"15 - Ford-Sidi Algorithm V-2" << '\n' <<
+		"16 - Ford-Sidi Algorithm V-3" << '\n' <<
 		'\n';
 }
 
@@ -672,6 +670,7 @@ inline static void main_testing_function()
 	//choosing transformation
 	print_transformation_info();
 	K transformation_id = read_input<K>();
+
 	std::unique_ptr<series_acceleration<T, K, decltype(series.get())>> transform;
 	switch (transformation_id)
 	{
@@ -717,15 +716,12 @@ inline static void main_testing_function()
 	case transformation_id_t::richardson_algorithm_id:
 		transform.reset(new richardson_algorithm<T, K, decltype(series.get())>(series.get()));
 		break;
-	case transformation_id_t::Ford_Sidi_algorithm_id:
-		transform.reset(new ford_sidi_algorithm<T, K, decltype(series.get())>(series.get()));
-		break;
+
 	case transformation_id_t::Ford_Sidi_algorithm_two_id:
 		transform.reset(new ford_sidi_algorithm_two<T, K, decltype(series.get())>(series.get()));
 		break;
 	case transformation_id_t::Ford_Sidi_algorithm_three_id:
 		transform.reset(new ford_sidi_algorithm_three<T, K, decltype(series.get())>(series.get()));
-		break;
 		break;
 	default:
 		throw std::domain_error("wrong transformation_id");
@@ -808,9 +804,6 @@ inline static void main_testing_function()
 		case transformation_id_t::richardson_algorithm_id:
 			transform2.reset(new richardson_algorithm<T, K, decltype(series.get())>(series.get()));
 			break;
-		case transformation_id_t::Ford_Sidi_algorithm_id:
-			transform2.reset(new ford_sidi_algorithm<T, K, decltype(series.get())>(series.get()));
-			break;
 		case transformation_id_t::Ford_Sidi_algorithm_two_id:
 			transform2.reset(new ford_sidi_algorithm_two<T, K, decltype(series.get())>(series.get()));
 			break;
@@ -867,6 +860,7 @@ inline static void main_testing_function()
 
 			//theta-brezinski
 			transform.reset(new theta_brezinski_algorithm<T, K, decltype(series.get())>(series.get()));
+			print_transform(i, order, std::move(transform.get()));
 
 			//chang epsilon wynn
 			transform.reset(new chang_whynn_algorithm<T, K, decltype(series.get())>(series.get()));
@@ -951,13 +945,12 @@ inline static void main_testing_function()
 			transform.reset(new richardson_algorithm<T, K, decltype(series.get())>(series.get()));
 			print_transform(i, order, std::move(transform.get()));
 
-			//Ford-Sidi
-			transform.reset(new ford_sidi_algorithm<T, K, decltype(series.get())>(series.get()));
-			print_transform(i, order, std::move(transform.get()));
-
 			//Ford-Sidi v-2
 			transform.reset(new ford_sidi_algorithm_two<T, K, decltype(series.get())>(series.get()));
 			print_transform(i, order, std::move(transform.get()));
+
+
+		break;
 
 			std::cout << '\n';
 		}

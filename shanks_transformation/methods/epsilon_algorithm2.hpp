@@ -44,68 +44,66 @@ template <std::floating_point T, std::unsigned_integral K, typename series_templ
 T epsilon_algorithm_two<T, K, series_templ>::operator()(const K n, const K order) const
 {
 
-    using std::isfinite;
+    int m = 2 * order;
 
-    if (n == static_cast<K>(0)) 
-        throw std::domain_error("n = 0 in the input");
+	if (n < 0)
+		throw std::domain_error("negative integer in the input");
+	else if (n == 0)
+		return 0;
+	else if (order == 0)
+		return this->series->S_n(n);
 
-    if (order == static_cast<K>(0))
-        return this->series->S_n(n);
+	int k = m + n;
 
-    K k = static_cast<K>(2);
-    k *= order;
-    k += n;
-    k -= (n & static_cast<K>(1));
+	std::vector<std::vector<T>> eps(4, std::vector<T>(k + 1, 0));
 
-    std::vector<std::vector<T>> e(
-        4, 
-        std::vector<T>(
-            k + static_cast<K>(3), 
-            static_cast<T>(0)
-        )
-    ); //4 vectors k+3 length containing four Epsilon Table rows 
+	for (int j = k; j >= 0; --j)
+	{
+		eps[3][j] = this->series->S_n(j);
+	}
 
-    K j = k;
-    do { //Counting first row of Epsilon Table
-        e[3][j] = this->series->S_n(j);
-    } while (--j > static_cast<K>(0));
+	T a = 0, a1 = 0, a2 = 0;
 
-    T a = static_cast<T>(0);
+	while (k > -1)
+	{
+		for (int i = 0; i != k; ++i)
+		{
+			eps[0][i] = eps[2][i + 1] + 1 / (eps[3][i + 1] - eps[3][i]);
 
-    K i1, i2;
+			if (!std::isfinite(eps[0][i]) && i + 2 <= k) //1 failsafe
+			{
+				a2 = 1 / eps[2][i + 1];
 
-    while (k > static_cast<K>(-1)) {
-        for (K i = static_cast<K>(0); i < k; ++i) {
+				a1 = 1 / (1 - (a2 * eps[2][i + 2]));
+				a = eps[2][i + 2] * a1;
 
-            i1 = i + static_cast<K>(1);
-            i2 = i + static_cast<K>(2);
+				a1 = 1 / (1 - (a2 * eps[2][i]));
+				a += eps[2][i] * a1;
 
-            e[0][i] = e[2][i1];
-            e[0][i]+= static_cast<T>(1) / (e[3][i1] - e[3][i]); //Standart Epsilon Wynn algorithm
+				a1 = 1 / (1 - (a2 * eps[0][i + 2]));
+				a -= eps[0][i + 2] * a1;
 
-            if (!isfinite(e[0][i]) && i2 <= k) { //This algorithm is used if new elliment is corrupted.
-                a = e[2][i2] * static_cast<T>(1) / (static_cast<T>(1) - e[2][i2] / e[2][i1]);
+				eps[0][i] = 1 / eps[2][i + 1];
+				eps[0][i] = 1 / (1 + a * eps[0][i]);
+				eps[0][i] = eps[0][i] * a;
+			}
+			if (!std::isfinite(eps[0][i]))
+			{
+				eps[0][i] = eps[2][i];
+			}
+		}
+		std::swap(eps[0], eps[1]);
+		std::swap(eps[1], eps[2]);
+		std::swap(eps[2], eps[3]);
 
-                a += e[2][i] * static_cast<T>(1) / (static_cast<T>(1) - e[2][i] / e[2][i1]);
+		--k;
+	}
 
-                a -= e[0][i2] * static_cast<T>(1)/ (static_cast<T>(1) - e[0][i2] / e[2][i1]);
+	if (n % 2 != 0)
+	{
+		return eps[3][0];
+	}
 
-                e[0][i] = a / (static_cast<T>(1) + a / e[2][i1]);
-            }
+	return eps[0][0];
 
-            if (!isfinite(e[0][i])) //If new element is still corrupted we just copy prev. element, so we will get result
-                e[0][i] = e[2][i];         
-        }
-
-        std::swap(e[0], e[1]); //Swapping rows of Epsilon Table. First ine will be overwriteen next turn
-        std::swap(e[1], e[2]);
-        std::swap(e[2], e[3]);
-
-        --k;
-    }
-    
-    if (!isfinite(e[0][0]))
-        throw std::overflow_error("division by zero");
-
-    return e[0][0];  //Only odd rows have mathmatical scense. Always returning e[0][0]
 }
