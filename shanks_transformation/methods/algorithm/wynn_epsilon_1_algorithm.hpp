@@ -13,7 +13,7 @@
   * @tparam series_templ Series type to accelerate.
   */
 template <std::floating_point T, std::unsigned_integral K, typename series_templ>
-class epsilon_algorithm : public series_acceleration<T, K, series_templ>
+class wynn_epsilon_1_algorithm : public series_acceleration<T, K, series_templ>
 {
 public:
 	/**
@@ -21,7 +21,7 @@ public:
      * @authors Pashkov B.B.
      * @param series The series class object to be accelerated
      */
-	explicit epsilon_algorithm(const series_templ& series);
+	explicit wynn_epsilon_1_algorithm(const series_templ& series);
 
 	/**
      * @brief Shanks multistep epsilon algorithm.
@@ -35,10 +35,10 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K, typename series_templ>
-epsilon_algorithm<T, K, series_templ>::epsilon_algorithm(const series_templ& series) : series_acceleration<T, K, series_templ>(series) {}
+wynn_epsilon_1_algorithm<T, K, series_templ>::wynn_epsilon_1_algorithm(const series_templ& series) : series_acceleration<T, K, series_templ>(series) {}
 
 template <std::floating_point T, std::unsigned_integral K, typename series_templ>
-T epsilon_algorithm<T, K, series_templ>::operator()(const K n, const K order) const
+T wynn_epsilon_1_algorithm<T, K, series_templ>::operator()(const K n, const K order) const
 {
 
 	using std::isfinite;

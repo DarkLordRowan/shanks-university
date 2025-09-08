@@ -18,7 +18,7 @@
  */
 
 template<std::floating_point T, std::unsigned_integral K, typename series_templ>
-class levin_sidi_M_algorithm : public series_acceleration<T, K, series_templ>
+class levin_sidi_m_algorithm : public series_acceleration<T, K, series_templ>
 {
 protected:
 
@@ -48,7 +48,7 @@ public:
 	*/
 
 	//levin_sidi_M_algorithm(const series_templ& series, const transform_base<T, K>* func, const T gamma_ = T(10)) : series_acceleration<T, K, series_templ>(series), remainder_func(func), gamma(gamma_)
-	explicit levin_sidi_M_algorithm(
+	explicit levin_sidi_m_algorithm(
 		const series_templ& series, 
 		const remainder_type variant = remainder_type::u_variant, 
 		const T gamma_ = static_cast<T>(10)
@@ -68,7 +68,7 @@ public:
 };
 
 template<std::floating_point T, std::unsigned_integral K, typename series_templ>
-inline T levin_sidi_M_algorithm<T, K, series_templ>::calculate(const K n, const K order) const {
+inline T levin_sidi_m_algorithm<T, K, series_templ>::calculate(const K n, const K order) const {
 
 	using std::isfinite;
 
@@ -126,12 +126,12 @@ inline T levin_sidi_M_algorithm<T, K, series_templ>::calculate(const K n, const 
 }
 
 template<std::floating_point T, std::unsigned_integral K, typename series_templ>
-T levin_sidi_M_algorithm<T, K, series_templ>::operator()(const K n, const K order) const {
+T levin_sidi_m_algorithm<T, K, series_templ>::operator()(const K n, const K order) const {
 	return calculate(n, order);
 }
 
 template<std::floating_point T, std::unsigned_integral K, typename series_templ>
-levin_sidi_M_algorithm<T, K, series_templ>::levin_sidi_M_algorithm(
+levin_sidi_m_algorithm<T, K, series_templ>::levin_sidi_m_algorithm(
 	const series_templ& series, 
 	const remainder_type variant, 
 	const T gamma_

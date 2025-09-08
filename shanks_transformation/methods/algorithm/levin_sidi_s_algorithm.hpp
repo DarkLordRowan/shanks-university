@@ -21,7 +21,7 @@
  * @param variant        - type of remainder to use
 */
 template<std::floating_point T, std::unsigned_integral K, typename series_templ>
-class levin_sidi_S_algorithm : public series_acceleration<T, K, series_templ> {
+class levin_sidi_s_algorithm : public series_acceleration<T, K, series_templ> {
 protected:
 
     T beta;
@@ -55,7 +55,7 @@ public:
     * @param parameter value of beta parameter
 	*/
 
-    explicit levin_sidi_S_algorithm(
+    explicit levin_sidi_s_algorithm(
         const series_templ& series, 
         const remainder_type variant = remainder_type::u_variant, 
         bool useRecFormulas = false,  
@@ -74,7 +74,7 @@ public:
 };
 
 template<std::floating_point T, std::unsigned_integral K, typename series_templ>
-inline T levin_sidi_S_algorithm<T, K,series_templ>::calc_result(K n, K order) const{
+inline T levin_sidi_s_algorithm<T, K,series_templ>::calc_result(K n, K order) const{
 
     using std::isfinite;
 
@@ -111,7 +111,7 @@ inline T levin_sidi_S_algorithm<T, K,series_templ>::calc_result(K n, K order) co
 }
 
 template<std::floating_point T, std::unsigned_integral K, typename series_templ>
-inline T levin_sidi_S_algorithm<T, K,series_templ>::calc_result_rec(K n, K order) const{
+inline T levin_sidi_s_algorithm<T, K,series_templ>::calc_result_rec(K n, K order) const{
 
     using std::isfinite;
 
@@ -152,7 +152,7 @@ inline T levin_sidi_S_algorithm<T, K,series_templ>::calc_result_rec(K n, K order
 }
 
 template<std::floating_point T, std::unsigned_integral K, typename series_templ>
-levin_sidi_S_algorithm<T, K, series_templ>::levin_sidi_S_algorithm(
+levin_sidi_s_algorithm<T, K, series_templ>::levin_sidi_s_algorithm(
     const series_templ& series, 
     remainder_type variant, 
     bool useRecFormulas,  
@@ -195,7 +195,7 @@ levin_sidi_S_algorithm<T, K, series_templ>::levin_sidi_S_algorithm(
 }
 
 template<std::floating_point T, std::unsigned_integral K, typename series_templ>
-T levin_sidi_S_algorithm<T, K, series_templ>::operator()(const K n, const K order) const{ 
+T levin_sidi_s_algorithm<T, K, series_templ>::operator()(const K n, const K order) const{ 
 
     using std::isfinite;
 
