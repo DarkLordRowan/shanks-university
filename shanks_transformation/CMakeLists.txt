@@ -20,6 +20,7 @@ target_include_directories(shanks_transformation PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
+set(PYBIND11_FINDPYTHON ON)
 find_package(pybind11 CONFIG REQUIRED)
 
 pybind11_add_module(pyshanks py.cpp)
