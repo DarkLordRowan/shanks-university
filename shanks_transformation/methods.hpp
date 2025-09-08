@@ -8,23 +8,19 @@
 enum transformation_id_t {
 			   null_transformation_id,
 			 shanks_transformation_id,
-          theta_modified_algorithm_id,
           	weniger_transformation_id,
 		   rho_wynn_transformation_id,
 	brezinski_theta_transformation_id,
 				 epsilon_algorithm_id,
 			   epsilon_algorithm_2_id,
                epsilon_algorithm_3_id,
-        epsilon_modified_algorithm_id,
            chang_epsilon_algorithm_id,
-    epsilon_aitken_theta_algorithm_id,
 				       L_algorithm_id,
                        S_algorithm_id,
 					   D_algorithm_id,
                        M_algorithm_id,
 					   W_algorithm_id,
 			  richardson_algorithm_id,
-		       Ford_Sidi_algorithm_id,
 		   Ford_Sidi_algorithm_two_id,
 		 Ford_Sidi_algorithm_three_id,
 };
@@ -46,6 +42,5 @@ enum transformation_id_t {
 #include "./methods/epsilon_algorithm3.hpp"
 #include "./methods/lubkin_W_algorithm.hpp"
 #include "./methods/richardson_algorithm.hpp"
-#include "./methods/FSA.hpp"
 #include "./methods/FSA2.hpp"
 #include "./methods/FSA3.hpp"
