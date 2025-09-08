@@ -103,7 +103,7 @@ T shanks_transform<T, K, series_templ>::operator()(const K n, const K order) con
 			c = T_n[i + static_cast<K>(1)];
 			T_n_plus_1[i] = fma(
 				fma(a, c + b - a, -b * c), 
-				static_cast<T>(1) / (fma(2, a, -b - c)), 
+				static_cast<T>(1) / (fma(static_cast<T>(2), a, -b - c)), 
 				a
 			);
 		}
