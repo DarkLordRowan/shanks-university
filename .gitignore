@@ -484,3 +484,11 @@ x64/Debug/shanks_transformation.exe
 .clangd
 shanks_transformation/**/build*
 rebuild.sh
+
+
+# //TODO сократить  вчё то что сверху
+.idea/*
+*/.idea/*
+*/cmake-build-debug/*
+*/cmake-build-debug-event-trace/*
+*/cmake-build-release-visual-studio/*
