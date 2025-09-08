@@ -949,8 +949,9 @@ inline static void main_testing_function()
 			transform.reset(new ford_sidi_algorithm_two<T, K, decltype(series.get())>(series.get()));
 			print_transform(i, order, std::move(transform.get()));
 
-
-		break;
+			//Ford-Sidi v-3
+			transform.reset(new ford_sidi_algorithm_three<T, K, decltype(series.get())>(series.get()));
+			print_transform(i, order, std::move(transform.get()));
 
 			std::cout << '\n';
 		}
