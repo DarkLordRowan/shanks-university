@@ -16,7 +16,7 @@
   * @tparam series_templ Series type to accelerate
   */
 template <std::floating_point T, std::unsigned_integral K, typename series_templ>
-class epsilon_algorithm_three : public series_acceleration<T, K, series_templ>
+class wynn_epsilon_algorithm_three : public series_acceleration<T, K, series_templ>
 {
 private:
 
@@ -27,7 +27,7 @@ public:
 	* @brief Parameterized constructor to initialize the Epsilon Algorithm MK-2.
 	* @param series The series class object to be accelerated
 	*/
-    explicit epsilon_algorithm_three(const series_templ& series, const T epsilon_threshold_ = static_cast<T>(1e-3));
+    explicit wynn_epsilon_algorithm_three(const series_templ& series, const T epsilon_threshold_ = static_cast<T>(1e-3));
 
 	/**
 	* @brief Fast impimentation of Epsilon algorithm.
@@ -41,22 +41,22 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K, typename series_templ>
-epsilon_algorithm_three<T, K, series_templ>::epsilon_algorithm_three(
-    const series_templ& series, 
+wynn_epsilon_algorithm_three<T, K, series_templ>::wynn_epsilon_algorithm_three(
+    const series_templ& series,
     const T epsilon_threshold_
-    ) : 
-    series_acceleration<T, K, series_templ>(series), 
-    epsilon_threshold(epsilon_threshold_) 
+    ) :
+    series_acceleration<T, K, series_templ>(series),
+    epsilon_threshold(epsilon_threshold_)
 {}
 
 template <std::floating_point T, std::unsigned_integral K, typename series_templ>
-T epsilon_algorithm_three<T, K, series_templ>::operator()(const K n, const K order) const {
+T wynn_epsilon_algorithm_three<T, K, series_templ>::operator()(const K n, const K order) const {
 
     using std::isfinite;
     using std::max;
     using std::abs;
 
-    if (n == static_cast<K>(0)) 
+    if (n == static_cast<K>(0))
         throw std::domain_error("n = 0 in the input");
 
     if (order == static_cast<K>(0)) return this->series->S_n(n);
@@ -65,7 +65,7 @@ T epsilon_algorithm_three<T, K, series_templ>::operator()(const K n, const K ord
 
     const T EMACH = std::numeric_limits<T>::epsilon(); // The smallest relative spacing for the T
     const T EPRN = static_cast<T>(50) * EMACH;
-    const T OFRN = std::numeric_limits<T>::max(); //The largest finite magnitude that can be represented by a T 
+    const T OFRN = std::numeric_limits<T>::max(); //The largest finite magnitude that can be represented by a T
 
     T result = static_cast<T>(0); //New result
     T abs_error = static_cast<T>(0); //Absolute error
@@ -74,7 +74,7 @@ T epsilon_algorithm_three<T, K, series_templ>::operator()(const K n, const K ord
     T RES, E0, E1, E2, E3, DELTA1, DELTA2, DELTA3, ERR1, ERR2, ERR3, TOL1, TOL2, TOL3, SS, EPSINF; // int -> K
 
     std::vector<T> e(
-        N + static_cast<K>(3), 
+        N + static_cast<K>(3),
         static_cast<T>(0)
     ); //First N eliments of epsilon table + 2 elements for math
 
