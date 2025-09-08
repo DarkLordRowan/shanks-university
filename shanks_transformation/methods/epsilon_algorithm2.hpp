@@ -44,54 +44,64 @@ template <std::floating_point T, std::unsigned_integral K, typename series_templ
 T epsilon_algorithm_two<T, K, series_templ>::operator()(const K n, const K order) const
 {
 
-    int m = 2 * order;
+	using std::isfinite;
 
-	if (n < 0)
-		throw std::domain_error("negative integer in the input");
-	else if (n == 0)
-		return 0;
-	else if (order == 0)
+	if (n == static_cast<K>(0))
+		throw std::domain_error("n = 0 in the input");
+	if (order == static_cast<K>(0))
 		return this->series->S_n(n);
 
-	int k = m + n;
+	K k = static_cast<K>(2) * order + n;
 
-	std::vector<std::vector<T>> eps(4, std::vector<T>(k + 1, 0));
+	std::vector<std::vector<T>> eps(
+		4, 
+		std::vector<T>(
+			k + static_cast<K>(1),
+			static_cast<T>(0)
+		)
+	);
 
-	for (int j = k; j >= 0; --j)
+	for (K i = static_cast<K>(0); i <= k; ++i)
+		eps[3][i] = this->series->S_n(i);
+
+
+	T a, a1, a2;
+	a = a1 = a2 = static_cast<T>(0);
+
+	K i1, i2;
+
+	while (k > static_cast<K>(0))
 	{
-		eps[3][j] = this->series->S_n(j);
-	}
-
-	T a = 0, a1 = 0, a2 = 0;
-
-	while (k > -1)
-	{
-		for (int i = 0; i != k; ++i)
+		for (K i = static_cast<K>(0); i != k; ++i)
 		{
-			eps[0][i] = eps[2][i + 1] + 1 / (eps[3][i + 1] - eps[3][i]);
+			i1 = i + static_cast<K>(1);
+			i2 = i + static_cast<K>(2);
 
-			if (!std::isfinite(eps[0][i]) && i + 2 <= k) //1 failsafe
+			eps[0][i] = eps[2][i1] + static_cast<T>(1) / (eps[3][i1] - eps[3][i]);
+
+			if (!isfinite(eps[0][i]) && i2 <= k) //1 failsafe
 			{
-				a2 = 1 / eps[2][i + 1];
+				a2 = static_cast<T>(1) / eps[2][i1];
 
-				a1 = 1 / (1 - (a2 * eps[2][i + 2]));
-				a = eps[2][i + 2] * a1;
+				a1 = static_cast<T>(1) / (static_cast<T>(1) - (a2 * eps[2][i2]));
+				a = eps[2][i2] * a1;
 
-				a1 = 1 / (1 - (a2 * eps[2][i]));
+				a1 = static_cast<T>(1) / (static_cast<T>(1) - (a2 * eps[2][i]));
 				a += eps[2][i] * a1;
 
-				a1 = 1 / (1 - (a2 * eps[0][i + 2]));
-				a -= eps[0][i + 2] * a1;
+				a1 = static_cast<T>(1) / (static_cast<T>(1) - (a2 * eps[0][i2]));
+				a -= eps[0][i2] * a1;
 
-				eps[0][i] = 1 / eps[2][i + 1];
-				eps[0][i] = 1 / (1 + a * eps[0][i]);
+				eps[0][i] = static_cast<T>(1) / eps[2][i1];
+				eps[0][i] = static_cast<T>(1) / (static_cast<T>(1) + a * eps[0][i]);
 				eps[0][i] = eps[0][i] * a;
 			}
-			if (!std::isfinite(eps[0][i]))
-			{
+
+			if (!isfinite(eps[0][i]))
 				eps[0][i] = eps[2][i];
-			}
+
 		}
+
 		std::swap(eps[0], eps[1]);
 		std::swap(eps[1], eps[2]);
 		std::swap(eps[2], eps[3]);
@@ -99,10 +109,13 @@ T epsilon_algorithm_two<T, K, series_templ>::operator()(const K n, const K order
 		--k;
 	}
 
-	if (n % 2 != 0)
-	{
+	//for k = 0
+	std::swap(eps[0], eps[1]);
+	std::swap(eps[1], eps[2]);
+	std::swap(eps[2], eps[3]);
+
+	if (n % static_cast<K>(2) != static_cast<K>(0))
 		return eps[3][0];
-	}
 
 	return eps[0][0];
 
