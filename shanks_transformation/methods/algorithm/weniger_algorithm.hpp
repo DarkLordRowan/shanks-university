@@ -53,28 +53,28 @@ T weniger_algorithm<T, K, series_templ>::operator()(const K n, const K order) co
 	T a_n, rest;
 
 	T coef = static_cast<T>(1);
-	T binomial_coef = this->series->binomial_coefficient(static_cast<T>(n), static_cast<T>(0));
+	T binomial_coef = this->series->binomial_coefficient(static_cast<T>(n), static_cast<K>(0));
 	T S_n = this->series->S_n(0);
 
 	for (K m = static_cast<K>(0); m < order - static_cast<K>(1); ++m) 
 		coef *= static_cast<T>(static_cast<K>(1) + m);
 	
-	T j1;
+	K j1;
 
 	for (K j = static_cast<K>(0); j <= order; ++j) {
 
-		j1 = static_cast<T>(j + static_cast<K>(1));
+		j1 = j + static_cast<K>(1);
 
 		rest  = this->series->minus_one_raised_to_power_n(j);
 		rest *= binomial_coef;
 
 		binomial_coef *= static_cast<T>(order - j);
-		binomial_coef /= j1;
+		binomial_coef /= static_cast<T>(j1);
 
 		rest *= coef;
 
 		coef *= static_cast<T>(j + order);
-		coef /= j1;
+		coef /= static_cast<T>(j1);
 
 		a_n = static_cast<T>(1);
 		a_n/= this->series->operator()(j1);

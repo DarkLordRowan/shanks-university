@@ -16,7 +16,7 @@
  * @tparam K The type of enumerating integer
  * @tparam series_templ is the type of series whose convergence we accelerate
  * @param beta           - nonzero positive parameter, 1 is the standart value, for more information see p. 39 in [https://arxiv.org/pdf/math/0306302.pdf]
- * @param remainder_func - remainder to use in calculations
+ * @param remainder - remainder to use in calculations
  * @param useRecFormulas - use reccurence relation, the calculation will be done using arrays
  * @param variant        - type of remainder to use
 */
@@ -25,7 +25,7 @@ class levin_sidi_s_algorithm : public series_acceleration<T, K, series_templ> {
 protected:
 
     T beta;
-    std::unique_ptr<const transform_base<T, K>> remainder_func;
+    std::unique_ptr<const transform_base<T, K>> remainder;
     bool useRecFormulas = false;
     remainder_type variant = remainder_type::u_variant;
 
@@ -83,7 +83,7 @@ inline T levin_sidi_s_algorithm<T, K,series_templ>::calc_result(K n, K order) co
     T up_pochamer, down_pochamer; 
     for (K j = static_cast<K>(0); j <= order; ++j){
         rest  = this->series->minus_one_raised_to_power_n(j);
-        rest *= this->series->binomial_coefficient(order, j);
+        rest *= this->series->binomial_coefficient(static_cast<T>(order), j);
 
         up_pochamer = down_pochamer = static_cast<T>(1);
         //up_pochamer   (beta + n + j)_(order - 1)     = (beta + n + j)(beta + n + j + 1)...(beta + n + j + order - 2)
@@ -94,7 +94,7 @@ inline T levin_sidi_s_algorithm<T, K,series_templ>::calc_result(K n, K order) co
         }
 
         rest *= (up_pochamer / down_pochamer);
-        rest *= remainder_func->operator()(n, 
+        rest *= remainder->operator()(n, 
             j, 
             this->series,
              (variant == remainder_type::u_variant ? beta : T(1))
@@ -120,7 +120,7 @@ inline T levin_sidi_s_algorithm<T, K,series_templ>::calc_result_rec(K n, K order
 
     for (K i = static_cast<K>(0); i <= order; ++i){
 
-        Denom[i] = remainder_func->operator()(
+        Denom[i] = remainder->operator()(
             n, 
             i, 
             this->series,
@@ -175,22 +175,22 @@ levin_sidi_s_algorithm<T, K, series_templ>::levin_sidi_s_algorithm(
     //TODO: тоже самое наверное
     switch(variant){
         case remainder_type::u_variant :
-            remainder_func.reset(new u_transform<T, K>());
+            remainder.reset(new u_transform<T, K>());
             break;
         case remainder_type::t_variant :
-            remainder_func.reset(new t_transform<T, K>());
+            remainder.reset(new t_transform<T, K>());
             break;
         case remainder_type::v_variant :
-            remainder_func.reset(new v_transform<T, K>());
+            remainder.reset(new v_transform<T, K>());
             break;
         case remainder_type::t_wave_variant:
-            remainder_func.reset(new t_wave_transform<T, K>());
+            remainder.reset(new t_wave_transform<T, K>());
             break;
         case remainder_type::v_wave_variant:
-            remainder_func.reset(new v_wave_transform<T, K>());
+            remainder.reset(new v_wave_transform<T, K>());
             break;
         default:
-            remainder_func.reset(new u_transform<T, K>());
+            remainder.reset(new u_transform<T, K>());
     }
 }
 

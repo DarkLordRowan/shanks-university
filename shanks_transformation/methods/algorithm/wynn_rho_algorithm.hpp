@@ -23,7 +23,7 @@ class rho_Wynn_algorithm : public series_acceleration<T, K, series_templ>
 {
 protected:
 
-	std::unique_ptr<const numerator_base<T, K>> numerator_func;
+	std::unique_ptr<const numerator_base<T, K>> numerator;
 	const T gamma;
 	const T RHO;
 
@@ -93,16 +93,16 @@ rho_Wynn_algorithm<T, K, series_templ>::rho_Wynn_algorithm(
 
 	switch(variant) {
 		case numerator_type::rho_variant :
-			numerator_func.reset(new rho_transform<T, K>());
+			numerator.reset(new rho_transform<T, K>());
 			break;
 		case numerator_type::generalized_variant :
-			numerator_func.reset(new rho_transform<T, K>());
+			numerator.reset(new rho_transform<T, K>());
 			break;
 		case numerator_type::gamma_rho_variant :
-			numerator_func.reset(new rho_transform<T, K>());
+			numerator.reset(new rho_transform<T, K>());
 			break;
 		default:
-			numerator_func.reset(new rho_transform<T, K>());
+			numerator.reset(new rho_transform<T, K>());
 	}
 }
 
@@ -122,11 +122,11 @@ inline T rho_Wynn_algorithm<T, K, series_templ>::calculate(const K n, K order) c
 	const T res = (
 		recursive_calculate_body(
 			n, 
-			order1 - static_cast<T>(1),
+			order1 - static_cast<K>(1),
 			 S_n, 
-			 static_cast<T>(1)
+			 static_cast<K>(1)
 		) + 
-		numerator_func->operator()(
+		numerator->operator()(
 			n, 
 			order, 
 			this->series, 
@@ -143,7 +143,7 @@ inline T rho_Wynn_algorithm<T, K, series_templ>::calculate(const K n, K order) c
 			n, 
 			order1,
 			 S_n, 
-			 static_cast<T>(0)
+			 static_cast<K>(0)
 		)
 	);
 
@@ -178,7 +178,7 @@ T rho_Wynn_algorithm<T, K, series_templ>::recursive_calculate_body(const K n, co
 			S_n, 
 			static_cast<K>(1)
 		) + 
-		numerator_func->operator()(
+		numerator->operator()(
 			nj, 
 			order, 
 			this->series,

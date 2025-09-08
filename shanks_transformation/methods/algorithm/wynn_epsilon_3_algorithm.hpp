@@ -71,7 +71,7 @@ T epsilon_algorithm_three<T, K, series_templ>::operator()(const K n, const K ord
     T abs_error = static_cast<T>(0); //Absolute error
     T resla = static_cast<T>(0); //Last result
     K newelm, num, NUM, K1, ib, ie, in;
-    T RES, E0, E1, E2, E3, E1ABS, DELTA1, DELTA2, DELTA3, ERR1, ERR2, ERR3, TOL1, TOL2, TOL3, SS, EPSINF; // int -> K
+    T RES, E0, E1, E2, E3, DELTA1, DELTA2, DELTA3, ERR1, ERR2, ERR3, TOL1, TOL2, TOL3, SS, EPSINF; // int -> K
 
     std::vector<T> e(
         N + static_cast<K>(3), 
@@ -96,24 +96,22 @@ T epsilon_algorithm_three<T, K, series_templ>::operator()(const K n, const K ord
 
             E2 = RES;
 
-            E1ABS = static_cast<T>(abs(E1));
-
             DELTA2 = E2 - E1;
 
-            ERR2 = static_cast<T>(abs(DELTA2));
+            ERR2 = abs(DELTA2);
 
-            TOL2 = max(
-                static_cast<T>(abs(E2)), 
-                E1ABS
-            );
+            TOL2 = static_cast<T>(max(
+                abs(E2), 
+                abs(E1)
+            ));
             TOL2*=EMACH;
 
             DELTA3 = E1 - E0;
-            ERR3 = static_cast<T>(abs(DELTA3));
-            TOL3 = max(
-                E1ABS, 
-                static_cast<T>(abs(E0))
-            );
+            ERR3 = abs(DELTA3);
+            TOL3 = static_cast<T>(max(
+                abs(E1), 
+                abs(E0)
+            ));
             TOL3*= EMACH;
 
             if (ERR2 > TOL2 || ERR3 > TOL3) {
@@ -124,12 +122,12 @@ T epsilon_algorithm_three<T, K, series_templ>::operator()(const K n, const K ord
                 DELTA1 = E1;
                 DELTA1-= E3;
 
-                ERR1 = static_cast<T>(abs(DELTA1));
+                ERR1 = abs(DELTA1);
 
-                TOL1 = max(
-                    E1ABS, 
-                    static_cast<T>(abs(E3))
-                );
+                TOL1 = static_cast<T>(max(
+                    abs(E1), 
+                    abs(E3)
+                ));
                 TOL1*= EMACH;
 
                 if (ERR1 <= TOL1 || ERR2 <= TOL2 || ERR3 <= TOL3) {
@@ -138,14 +136,14 @@ T epsilon_algorithm_three<T, K, series_templ>::operator()(const K n, const K ord
                 }
 
                 SS = static_cast<T>(1) / DELTA1 + static_cast<T>(1) / DELTA2 - static_cast<T>(1) / DELTA3;
-                EPSINF = static_cast<T>(abs(SS * E1));
+                EPSINF = abs(SS * E1);
 
                 if (EPSINF > epsilon_threshold) {
                     RES = E1 + static_cast<T>(1) / SS;
                     e[K1] = RES;
                     K1 -= static_cast<K>(2);
                     T ERROR = ERR2 + static_cast<T>(abs(RES - E2)) + ERR3;
-                    if (ERROR <= abs_error) {
+                    if (abs(ERROR) <= abs(abs_error)) {
                         abs_error = ERROR;
                         result = RES;
                     }
@@ -165,7 +163,7 @@ T epsilon_algorithm_three<T, K, series_templ>::operator()(const K n, const K ord
         }
 
         if (N == n) // making N the greatest odd number <= n
-            N = (n & 1) ? n : n - static_cast<K>(1);
+            N = (n & static_cast<K>(1)) ? n : n - static_cast<K>(1);
 
         ib = (num & static_cast<K>(1)) ? static_cast<K>(1) : static_cast<K>(2);  // Start index: 1 for odd, 2 for even
         ie = newelm + static_cast<K>(1);
@@ -181,8 +179,8 @@ T epsilon_algorithm_three<T, K, series_templ>::operator()(const K n, const K ord
         }
 
         abs_error = max(
-            static_cast<T>(abs(result - resla)), 
-            EPRN * static_cast<T>(abs(result))
+            abs(result - resla), 
+            abs(EPRN) * abs(result)
         );
 
         resla = result;
