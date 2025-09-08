@@ -5,7 +5,7 @@
 
 #pragma once
 
-#include "series_acceleration.hpp" // Include the series header
+#include "../series_acceleration.hpp"
 #include <vector> // Include the vector library
 #undef epsilon
 

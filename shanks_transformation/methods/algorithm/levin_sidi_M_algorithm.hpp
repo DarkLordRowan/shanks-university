@@ -5,8 +5,8 @@
  */
 #pragma once
 
-#include "series_acceleration.hpp" // Include the series header
-#include "remainders.hpp"
+#include "../series_acceleration.hpp"
+#include "../remainders.hpp"
 #include <memory> // For std::unique_ptr
 
 /**

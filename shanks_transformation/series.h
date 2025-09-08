@@ -114,6 +114,7 @@
 #include <numbers>
 #include <vector>
 #include <concepts>
+#include <string>
 
 using std::isfinite;
 

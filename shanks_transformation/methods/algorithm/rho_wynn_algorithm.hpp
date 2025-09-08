@@ -9,10 +9,10 @@
 
 #include <memory> // For std::unique_ptr
 
-#include "series_acceleration.hpp" // Include the series header
-#include "wynn_numerators.hpp"
+#include "../series_acceleration.hpp"
+#include "../wynn_numerators.hpp"
 
- /**
+/**
   * @brief Rho Wynn Algorithm class template.
   * @tparam T The type of the elements in the series
   * @tparam K The type of enumerating integer

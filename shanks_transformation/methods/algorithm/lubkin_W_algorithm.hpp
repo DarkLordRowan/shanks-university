@@ -5,7 +5,7 @@
  */
 #pragma once
 
-#include "series_acceleration.hpp" // Include the series header
+#include "../series_acceleration.hpp"
 
 /**
  * @brief W_transformation class template.
