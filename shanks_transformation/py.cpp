@@ -166,112 +166,98 @@ PYBIND11_MODULE(pyshanks, m) {
         .def(py::init<SeriesBase*>(), py::arg("series"), py::keep_alive<1, 2>())
         .def("__call__", &ShanksAlt::operator());
 
+
+    using BrezinskiTheta = brezinski_theta_algorithm<T, K, SeriesBase*>;
+    py::class_<BrezinskiTheta, SeriesAccel>(m, "BrezinskiThetaAlgorithm")
+        .def(py::init<SeriesBase*>(), py::arg("series"), py::keep_alive<1, 2>())
+        .def("__call__", &BrezinskiTheta::operator());
+
+    using ChangWynn = chang_wynn_algorithm<T, K, SeriesBase*>;
+    py::class_<ChangWynn, SeriesAccel>(m, "ChangWynnAlgorithm")
+        .def(py::init<SeriesBase*>(), py::arg("series"), py::keep_alive<1, 2>())
+        .def("__call__", &ChangWynn::operator());
+
+    using DrummondD = drummonds_D_algorithm<T, K, SeriesBase*>;
+    py::class_<DrummondD, SeriesAccel>(m, "DrummondDAlgorithm")
+        .def(py::init<SeriesBase*, remainder_type, bool>(),
+             py::arg("series"), py::keep_alive<1, 2>(),
+             py::arg("variant") = remainder_type::u_variant,
+             py::arg("useRecFormulas") = false)
+        .def("__call__", &DrummondD::operator());
+
     using FordSidiTwo = ford_sidi_algorithm_two<T, K, SeriesBase*>;
     py::class_<FordSidiTwo, SeriesAccel>(m, "FordSidiAlgorithmTwo")
         .def(py::init<SeriesBase*>(), py::arg("series"), py::keep_alive<1, 2>())
         .def("__call__", &FordSidiTwo::operator());
 
-    // using FordSidiThree = ford_sidi_algorithm_three<T, K, SeriesBase*>;
-    // py::class_<FordSidiThree, SeriesAccel>(m, "FordSidiAlgorithmThree")
-    //     .def(py::init<SeriesBase*>(), py::arg("series"))
-    //     .def("__call__", &FordSidiThree::operator());
+    using FordSidiThree = ford_sidi_algorithm_three<T, K, SeriesBase*>;
+    py::class_<FordSidiThree, SeriesAccel>(m, "FordSidiAlgorithmThree")
+        .def(py::init<SeriesBase*>(), py::arg("series"), py::keep_alive<1, 2>())
+        .def("__call__", &FordSidiThree::operator());
 
-    // using ThetaBrezinski = theta_brezinski_algorithm<T, K, SeriesBase*>;
-    // py::class_<ThetaBrezinski, SeriesAccel>(m, "ThetaBrezinskiAlgorithm")
-    //     .def(py::init<SeriesBase*>(), py::arg("series"))
-    //     .def("__call__", &ThetaBrezinski::operator());
+    using LevinL = levin_algorithm<T, K, SeriesBase*>;
+    py::class_<LevinL, SeriesAccel>(m, "LevinLAlgorithm")
+        .def(py::init<SeriesBase*, bool, T>(),
+             py::arg("series"), py::keep_alive<1, 2>(),
+             py::arg("useRecFormulas") = false,
+             py::arg("beta") = static_cast<T>(-1.5))
+        .def("__call__", (T (LevinL::*)(K, K) const) &LevinL::operator());
 
-    // using ChangWynn = chang_whynn_algorithm<T, K, SeriesBase*>;
-    // py::class_<ChangWynn, SeriesAccel>(m, "ChangWynnAlgorithm")
-    //     .def(py::init<SeriesBase*>(), py::arg("series"))
-    //     .def("__call__", &ChangWynn::operator());
+    using LevinSidiM = levin_sidi_m_algorithm<T, K, SeriesBase*>;
+    py::class_<LevinSidiM, SeriesAccel>(m, "LevinSidiMAlgorithm")
+        .def(py::init<SeriesBase*, remainder_type, T>(),
+             py::arg("series"), py::keep_alive<1, 2>(),
+             py::arg("variant") = remainder_type::u_variant,
+             py::arg("gamma") = static_cast<T>(10))
+        .def("__call__", &LevinSidiM::operator());
 
-    // using DrummondD = drummonds_D_algorithm<T, K, SeriesBase*>;
-    // py::class_<DrummondD, SeriesAccel>(m, "DrummondDAlgorithm")
-    //     .def(py::init<SeriesBase*, remainder_type, bool>(),
-    //          py::arg("series"),
-    //          py::arg("variant") = remainder_type::u_variant,
-    //          py::arg("useRecFormulas") = false)
-    //     .def("__call__", &DrummondD::operator());
+    using LevinSidiS = levin_sidi_s_algorithm<T, K, SeriesBase*>;
+    py::class_<LevinSidiS, SeriesAccel>(m, "LevinSidiSAlgorithm")
+        .def(py::init<SeriesBase*, remainder_type, bool, T>(),
+             py::arg("series"), py::keep_alive<1, 2>(),
+             py::arg("variant") = remainder_type::u_variant,
+             py::arg("useRecFormulas") = false,
+             py::arg("parameter") = static_cast<T>(1))
+        .def("__call__", &LevinSidiS::operator());
 
-    // using EpsilonAitkenTheta = epsilon_aitken_theta_algorithm<T, K, SeriesBase*>;
-    // py::class_<EpsilonAitkenTheta, SeriesAccel>(m, "EpsilonAitkenThetaAlgorithm")
-    //     .def(py::init<SeriesBase*>(), py::arg("series"))
-    //     .def("__call__", &EpsilonAitkenTheta::operator());
+    using LubkinW = W_lubkin_algorithm<T, K, SeriesBase*>;
+    py::class_<LubkinW, SeriesAccel>(m, "LubkinWAlgorithm")
+        .def(py::init<SeriesBase*>(), py::arg("series"), py::keep_alive<1, 2>())
+        .def("__call__", &LubkinW::operator());
 
-    // using Epsilon = epsilon_algorithm<T, K, SeriesBase*>;
-    // py::class_<Epsilon, SeriesAccel>(m, "EpsilonAlgorithm")
-    //     .def(py::init<SeriesBase*>(), py::arg("series"))
-    //     .def("__call__", &Epsilon::operator());
+    using RhoWynn = rho_wynn_algorithm<T, K, SeriesBase*>;
+    py::class_<RhoWynn, SeriesAccel>(m, "RhoWynnAlgorithm")
+        .def(py::init<SeriesBase*, numerator_type, T, T>(),
+             py::arg("series"), py::keep_alive<1, 2>(),
+             py::arg("variant") = numerator_type::rho_variant,
+             py::arg("gamma") = static_cast<T>(1),
+             py::arg("RHO") = static_cast<T>(0))
+        .def("__call__", (T (RhoWynn::*)(K, K) const) &RhoWynn::operator());
 
-    // using Epsilon2 = epsilon_algorithm_two<T, K, SeriesBase*>;
-    // py::class_<Epsilon2, SeriesAccel>(m, "EpsilonAlgorithmTwo")
-    //     .def(py::init<SeriesBase*>(), py::arg("series"))
-    //     .def("__call__", &Epsilon2::operator());
+    using Richardson = richardson_algorithm<T, K, SeriesBase*>;
+    py::class_<Richardson, SeriesAccel>(m, "RichardsonAlgorithm")
+        .def(py::init<SeriesBase*>(), py::arg("series"), py::keep_alive<1, 2>())
+        .def("__call__", &Richardson::operator());
 
-    // using Epsilon3 = epsilon_algorithm_three<T, K, SeriesBase*>;
-    // py::class_<Epsilon3, SeriesAccel>(m, "EpsilonAlgorithmThree")
-    //     .def(py::init<SeriesBase*, T>(),
-    //          py::arg("series"),
-    //          py::arg("epsilon_threshold") = static_cast<T>(1e-3))
-    //     .def("__call__", &Epsilon3::operator());
+    using Weniger = weniger_algorithm<T, K, SeriesBase*>;
+    py::class_<Weniger, SeriesAccel>(m, "WenigerAlgorithm")
+        .def(py::init<SeriesBase*>(), py::arg("series"), py::keep_alive<1, 2>())
+        .def("__call__", &Weniger::operator());
 
-    // using EpsilonModified = epsilon_modified_algorithm<T, K, SeriesBase*>;
-    // py::class_<EpsilonModified, SeriesAccel>(m, "EpsilonModifiedAlgorithm")
-    //     .def(py::init<SeriesBase*>(), py::arg("series"))
-    //     .def("__call__", &EpsilonModified::operator());
+    using Epsilon = wynn_epsilon_1_algorithm<T, K, SeriesBase*>;
+    py::class_<Epsilon, SeriesAccel>(m, "WynnEpsilonAlgorithm")
+        .def(py::init<SeriesBase*>(), py::arg("series"), py::keep_alive<1, 2>())
+        .def("__call__", &Epsilon::operator());
 
-    // using LevinL = levin_L_algorithm<T, K, SeriesBase*>;
-    // py::class_<LevinL, SeriesAccel>(m, "LevinLAlgorithm")
-    //     .def(py::init<SeriesBase*, bool, T>())
-    //          // py::arg("series"),
-    //          // py::arg("useRecFormulas") = false,
-    //          // py::arg("beta") = static_cast<T>(-1.5))
-    //     .def("__call__", (T (LevinL::*)(K, K) const) &LevinL::operator());
+    using Epsilon2 = wynn_epsilon_algorithm_two<T, K, SeriesBase*>;
+    py::class_<Epsilon2, SeriesAccel>(m, "WynnEpsilonAlgorithmTwo")
+        .def(py::init<SeriesBase*>(), py::arg("series"), py::keep_alive<1, 2>())
+        .def("__call__", &Epsilon2::operator());
 
-    // using LevinSidiM = levin_sidi_M_algorithm<T, K, SeriesBase*>;
-    // py::class_<LevinSidiM, SeriesAccel>(m, "LevinSidiMAlgorithm")
-    //     .def(py::init<SeriesBase*, remainder_type, T>(),
-    //          py::arg("series"),
-    //          py::arg("variant") = remainder_type::u_variant,
-    //          py::arg("gamma") = static_cast<T>(10))
-    //     .def("__call__", &LevinSidiM::operator());
-
-    // using LevinSidiS = levin_sidi_S_algorithm<T, K, SeriesBase*>;
-    // py::class_<LevinSidiS, SeriesAccel>(m, "LevinSidiSAlgorithm")
-    //     .def(py::init<SeriesBase*, remainder_type, bool, T>(),
-    //          py::arg("series"),
-    //          py::arg("variant") = remainder_type::u_variant,
-    //          py::arg("useRecFormulas") = false,
-    //          py::arg("parameter") = static_cast<T>(1))
-    //     .def("__call__", &LevinSidiS::operator());
-
-    // using LubkinW = W_lubkin_algorithm<T, K, SeriesBase*>;
-    // py::class_<LubkinW, SeriesAccel>(m, "LubkinWAlgorithm")
-    //     .def(py::init<SeriesBase*>(), py::arg("series"))
-    //     .def("__call__", &LubkinW::operator());
-
-    // using RhoWynn = rho_Wynn_algorithm<T, K, SeriesBase*>;
-    // py::class_<RhoWynn, SeriesAccel>(m, "RhoWynnAlgorithm")
-    //     .def(py::init<SeriesBase*, numerator_type, T, T>(),
-    //          py::arg("series"),
-    //          py::arg("variant") = numerator_type::rho_variant,
-    //          py::arg("gamma") = static_cast<T>(1),
-    //          py::arg("RHO") = static_cast<T>(0))
-    //     .def("__call__", (T (RhoWynn::*)(K, K) const) &RhoWynn::operator());
-
-    // using Richardson = richardson_algorithm<T, K, SeriesBase*>;
-    // py::class_<Richardson, SeriesAccel>(m, "RichardsonAlgorithm")
-    //     .def(py::init<SeriesBase*>(), py::arg("series"))
-    //     .def("__call__", &Richardson::operator());
-
-    // using ThetaModified = theta_modified_algorithm<T, K, SeriesBase*>;
-    // py::class_<ThetaModified, SeriesAccel>(m, "ThetaModifiedAlgorithm")
-    //     .def(py::init<SeriesBase*>(), py::arg("series"))
-    //     .def("__call__", &ThetaModified::operator());
-
-    // using Weniger = weniger_algorithm<T, K, SeriesBase*>;
-    // py::class_<Weniger, SeriesAccel>(m, "WenigerAlgorithm")
-    //     .def(py::init<SeriesBase*>(), py::arg("series"))
-    //     .def("__call__", &Weniger::operator());
+    using Epsilon3 = wynn_epsilon_algorithm_three<T, K, SeriesBase*>;
+    py::class_<Epsilon3, SeriesAccel>(m, "WynnEpsilonAlgorithmThree")
+        .def(py::init<SeriesBase*, T>(),
+             py::arg("series"), py::keep_alive<1, 2>(),
+             py::arg("epsilon_threshold") = static_cast<T>(1e-3))
+        .def("__call__", &Epsilon3::operator());
 }
