@@ -16,7 +16,7 @@
   * @tparam series_templ Series type to accelerate
 */
 template <std::floating_point T, std::unsigned_integral K, typename series_templ>
-class levin_L_algorithm : public series_acceleration<T, K, series_templ>
+class levin_algorithm : public series_acceleration<T, K, series_templ>
 {
 protected:
 
@@ -40,7 +40,7 @@ public:
 	 * @param series The series class object to be accelerated
 	*/
 
-	explicit levin_L_algorithm(
+	explicit levin_algorithm(
 		const series_templ& series, 
 		const bool useRecFormulas = false, 
 		const T beta = static_cast<T>(-1.5)
@@ -59,7 +59,7 @@ public:
 };
 
 template<std::floating_point T, std::unsigned_integral K, typename series_templ>
-levin_L_algorithm<T, K,series_templ>::levin_L_algorithm(
+levin_algorithm<T, K,series_templ>::levin_algorithm(
 	const series_templ& series, 
 	const bool useRecFormulas, 
 	const T beta
@@ -71,7 +71,7 @@ levin_L_algorithm<T, K,series_templ>::levin_L_algorithm(
 		}
 
 template<std::floating_point T, std::unsigned_integral K, typename series_templ>
-inline T levin_L_algorithm<T, K,series_templ>::calc_result(K n, K order) const{
+inline T levin_algorithm<T, K,series_templ>::calc_result(K n, K order) const{
 
 	using std::pow;
 	using std::isfinite;
@@ -108,7 +108,7 @@ inline T levin_L_algorithm<T, K,series_templ>::calc_result(K n, K order) const{
 }
 
 template <std::floating_point T, std::unsigned_integral K, typename series_templ>
-T levin_L_algorithm<T, K, series_templ>::operator()(const K n_time, const K k_time, const T b, const bool ND) const {
+T levin_algorithm<T, K, series_templ>::operator()(const K n_time, const K k_time, const T b, const bool ND) const {
 
 	using std::isfinite;
 
@@ -139,7 +139,7 @@ T levin_L_algorithm<T, K, series_templ>::operator()(const K n_time, const K k_ti
 }
 
 template<std::floating_point T, std::unsigned_integral K, typename series_templ>
-inline T levin_L_algorithm<T, K,series_templ>::calc_result_rec(K n, K order) const{
+inline T levin_algorithm<T, K,series_templ>::calc_result_rec(K n, K order) const{
 
 	using std::isfinite;
 
@@ -151,7 +151,7 @@ inline T levin_L_algorithm<T, K,series_templ>::calc_result_rec(K n, K order) con
 }
 
 template <std::floating_point T, std::unsigned_integral K, typename series_templ>
-T levin_L_algorithm<T, K, series_templ>::operator()(const K n, const K order) const {
+T levin_algorithm<T, K, series_templ>::operator()(const K n, const K order) const {
 
 	using std::isfinite;
 

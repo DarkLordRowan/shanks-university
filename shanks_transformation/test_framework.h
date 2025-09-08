@@ -681,22 +681,22 @@ inline static void main_testing_function()
 			transform.reset(new shanks_transform<T, K, decltype(series.get())>(series.get()));
 		break;
 	case transformation_id_t::epsilon_algorithm_id:
-		transform.reset(new epsilon_algorithm<T, K, decltype(series.get())>(series.get()));
+		transform.reset(new wynn_epsilon_1_algorithm<T, K, decltype(series.get())>(series.get()));
 		break;
 	case transformation_id_t::epsilon_algorithm_2_id:
 		transform.reset(new epsilon_algorithm_two<T, K, decltype(series.get())>(series.get()));
 		break;
 	case transformation_id_t::S_algorithm_id:
-		transform.reset(new levin_sidi_S_algorithm<T, K, decltype(series.get())>(series.get()));
+		transform.reset(new levin_sidi_s_algorithm<T, K, decltype(series.get())>(series.get()));
 		break;
 	case transformation_id_t::D_algorithm_id:
 		transform.reset(new drummonds_D_algorithm<T, K, decltype(series.get())>(series.get()));
 		break;
 	case transformation_id_t::chang_epsilon_algorithm_id:
-		transform.reset(new chang_whynn_algorithm<T, K, decltype(series.get())>(series.get()));
+		transform.reset(new chang_wynn_algorithm<T, K, decltype(series.get())>(series.get()));
 		break;
 	case transformation_id_t::M_algorithm_id:
-		transform.reset(new levin_sidi_M_algorithm<T, K, decltype(series.get())>(series.get()));
+		transform.reset(new levin_sidi_m_algorithm<T, K, decltype(series.get())>(series.get()));
 		break;
 	case transformation_id_t::weniger_transformation_id:
 		transform.reset(new weniger_algorithm<T, K, decltype(series.get())>(series.get()));
@@ -769,22 +769,22 @@ inline static void main_testing_function()
 				transform2.reset(new shanks_transform<T, K, decltype(series.get())>(series.get()));
 			break;
 		case transformation_id_t::epsilon_algorithm_id:
-			transform2.reset(new epsilon_algorithm<T, K, decltype(series.get())>(series.get()));
+			transform2.reset(new wynn_epsilon_1_algorithm<T, K, decltype(series.get())>(series.get()));
 			break;
 		case transformation_id_t::epsilon_algorithm_2_id:
 			transform2.reset(new epsilon_algorithm_two<T, K, decltype(series.get())>(series.get()));
 			break;
 		case transformation_id_t::S_algorithm_id:
-			transform.reset(new levin_sidi_S_algorithm<T, K, decltype(series.get())>(series.get()));
+			transform.reset(new levin_sidi_s_algorithm<T, K, decltype(series.get())>(series.get()));
 			break;
 		case transformation_id_t::D_algorithm_id:
 			transform.reset(new drummonds_D_algorithm<T, K, decltype(series.get())>(series.get()));
 			break;
 		case transformation_id_t::chang_epsilon_algorithm_id:
-			transform2.reset(new chang_whynn_algorithm<T, K, decltype(series.get())>(series.get()));
+			transform2.reset(new chang_wynn_algorithm<T, K, decltype(series.get())>(series.get()));
 			break;
 		case transformation_id_t::M_algorithm_id:
-			transform2.reset(new levin_sidi_M_algorithm<T, K, decltype(series.get())>(series.get()));
+			transform2.reset(new levin_sidi_m_algorithm<T, K, decltype(series.get())>(series.get()));
 			break;
 		case transformation_id_t::weniger_transformation_id:
 			transform2.reset(new weniger_algorithm<T, K, decltype(series.get())>(series.get()));
@@ -835,7 +835,7 @@ inline static void main_testing_function()
 			print_transform(i, order, std::move(transform.get()));
 
 			//epsilon v-1
-			transform.reset(new epsilon_algorithm<T, K, decltype(series.get())>(series.get()));
+			transform.reset(new wynn_epsilon_1_algorithm<T, K, decltype(series.get())>(series.get()));
 			print_transform(i, order, std::move(transform.get()));
 
 			//epsilon v-2
@@ -863,34 +863,34 @@ inline static void main_testing_function()
 			print_transform(i, order, std::move(transform.get()));
 
 			//chang epsilon wynn
-			transform.reset(new chang_whynn_algorithm<T, K, decltype(series.get())>(series.get()));
+			transform.reset(new chang_wynn_algorithm<T, K, decltype(series.get())>(series.get()));
 			print_transform(i, order, std::move(transform.get()));
 
 			//levin standart
-			transform.reset(new levin_L_algorithm<T, K, decltype(series.get())>(series.get()));
+			transform.reset(new levin_algorithm<T, K, decltype(series.get())>(series.get()));
 			print_transform(i, order, std::move(transform.get()));
 
 			//levin recurcive
-			transform.reset(new levin_L_algorithm<T, K, decltype(series.get())>(series.get(), true));
+			transform.reset(new levin_algorithm<T, K, decltype(series.get())>(series.get(), true));
 			print_transform(i, order, std::move(transform.get()));
 
 			//levin-sidi S U
-			transform.reset(new levin_sidi_S_algorithm<T, K, decltype(series.get())>(series.get(), remainder_type::u_variant, false));
+			transform.reset(new levin_sidi_s_algorithm<T, K, decltype(series.get())>(series.get(), remainder_type::u_variant, false));
 			print_transform(i, order, std::move(transform.get()));
 			//
 
 			//levin-sidi S T
-			transform.reset(new levin_sidi_S_algorithm<T, K, decltype(series.get())>(series.get(), remainder_type::t_variant, false));
+			transform.reset(new levin_sidi_s_algorithm<T, K, decltype(series.get())>(series.get(), remainder_type::t_variant, false));
 			print_transform(i, order, std::move(transform.get()));
 			//
 
 			//levin-sidi S T-WAVE
-			transform.reset(new levin_sidi_S_algorithm<T, K, decltype(series.get())>(series.get(), remainder_type::t_wave_variant, false));
+			transform.reset(new levin_sidi_s_algorithm<T, K, decltype(series.get())>(series.get(), remainder_type::t_wave_variant, false));
 			print_transform(i, order, std::move(transform.get()));
 			//
 
 			//levin-sidi S V
-			transform.reset(new levin_sidi_S_algorithm<T, K, decltype(series.get())>(series.get(), remainder_type::v_variant, false));
+			transform.reset(new levin_sidi_s_algorithm<T, K, decltype(series.get())>(series.get(), remainder_type::v_variant, false));
 			print_transform(i, order, std::move(transform.get()));
 
 			//levin-sidi D U
@@ -914,22 +914,22 @@ inline static void main_testing_function()
 			//
 
 			//levin-sidi M U
-			transform.reset(new levin_sidi_M_algorithm<T, K, decltype(series.get())>(series.get(), remainder_type::u_variant));
+			transform.reset(new levin_sidi_m_algorithm<T, K, decltype(series.get())>(series.get(), remainder_type::u_variant));
 			print_transform(i, order, std::move(transform.get()));
 			//
 
 			//levin-sidi M T
-			transform.reset(new levin_sidi_M_algorithm<T, K, decltype(series.get())>(series.get(), remainder_type::t_variant));
+			transform.reset(new levin_sidi_m_algorithm<T, K, decltype(series.get())>(series.get(), remainder_type::t_variant));
 			print_transform(i, order, std::move(transform.get()));
 			//
 
 			//levin-sidi M T-WAVE
-			transform.reset(new levin_sidi_M_algorithm<T, K, decltype(series.get())>(series.get(), remainder_type::t_wave_variant));
+			transform.reset(new levin_sidi_m_algorithm<T, K, decltype(series.get())>(series.get(), remainder_type::t_wave_variant));
 			print_transform(i, order, std::move(transform.get()));
 			//
 
 			//levin-sidi M V-WAVE
-			transform.reset(new levin_sidi_M_algorithm<T, K, decltype(series.get())>(series.get(), remainder_type::v_wave_variant));
+			transform.reset(new levin_sidi_m_algorithm<T, K, decltype(series.get())>(series.get(), remainder_type::v_wave_variant));
 			print_transform(i, order, std::move(transform.get()));
 			//
 

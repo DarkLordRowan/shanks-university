@@ -18,14 +18,14 @@
   * @tparam T The type of the elements in the series, K The type of enumerating integer, series_templ is the type of series whose convergence we accelerate
   */
 template <std::floating_point T, std::unsigned_integral K, typename series_templ>
-class chang_whynn_algorithm : public series_acceleration<T, K, series_templ>
+class chang_wynn_algorithm : public series_acceleration<T, K, series_templ>
 {
 public:
 	/**
 	 * @brief Parameterized constructor to initialize the chang_wynn_algorithm
 	 * @param series The series class object to be accelerated
 	 */
-    explicit chang_whynn_algorithm(const series_templ& series) : series_acceleration<T, K, series_templ>(series) {}
+    explicit chang_wynn_algorithm(const series_templ& series) : series_acceleration<T, K, series_templ>(series) {}
 
 	/**
 	 * @brief Fast impimentation of Levin algorithm.
@@ -38,7 +38,7 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K, typename series_templ>
-T chang_whynn_algorithm<T, K, series_templ>::operator()(const K n, const K order) const {
+T chang_wynn_algorithm<T, K, series_templ>::operator()(const K n, const K order) const {
 
     using std::isfinite;
     using std::fma;
