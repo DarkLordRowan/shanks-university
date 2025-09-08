@@ -94,5 +94,3 @@ T weniger_algorithm<T, K, series_templ>::operator()(const K n, const K order) co
 	
 	return numerator;
 }
-
-#include "weniger_algorithm.tpp"

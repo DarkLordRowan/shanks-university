@@ -134,7 +134,7 @@ class v_transform : public transform_base<T, K> {
     * @param scale not neccesary
     * @return v type remainder
     */
-    T operator() (const K n, const K order, const series_base<T,K>* series, T scale = static_cast<T>(1)) const override;
+    T operator() (const K n, const K order, const series_base<T,K>* series, T scale = T(1)) const override;
 };
 
 template<std::floating_point T, std::unsigned_integral K>
