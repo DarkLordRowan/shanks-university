@@ -3,7 +3,7 @@
  * @brief This file contains the declaration of the Epsilon Algorithm class.
  */
 
-#include "series_acceleration.hpp" // Include the series header
+#include "../series_acceleration.hpp"
 #include <vector> // Include the vector library
 
  /**

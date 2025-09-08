@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include "remainders.hpp"            // Include remainders
-#include "series_acceleration.hpp"   // Include series_acceleration
+#include "../remainders.hpp"
+#include "../series_acceleration.hpp"
 #include <memory>                    // Include for unique ptr
 
 /**
