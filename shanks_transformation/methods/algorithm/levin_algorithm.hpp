@@ -112,8 +112,8 @@ T levin_algorithm<T, K, series_templ>::operator()(const K n_time, const K k_time
 
 	using std::isfinite;
 
-    T w_n = static_cast<T>(static_cast<K>(1)-static_cast<K>(2)*(n_time % static_cast<K>(2))) * this->series->fact(n_time);
-    T R_0 = (ND == static_cast<T>(0) ? this->series->S_n(n_time) : static_cast<T>(1)); R_0 /= w_n;
+    T w_n = static_cast<T>((static_cast<K>(1)-static_cast<K>(2)*(n_time % static_cast<K>(2))) * this->series->fact(n_time));
+    T R_0 = (!ND ? this->series->S_n(n_time) : static_cast<T>(1)); R_0 /= w_n;
 
     if (k_time == static_cast<K>(0)) return R_0;
 
@@ -123,7 +123,7 @@ T levin_algorithm<T, K, series_templ>::operator()(const K n_time, const K k_time
     const T res = static_cast<T>(
         fma(
             -a2 * (*this)(n_time, a1, b, ND),
-            pow(a3, a1 - static_cast<T>(1)) / pow(a3 + static_cast<T>(1), a1),
+            pow(a3, static_cast<T>(a1) - static_cast<T>(1)) / pow(a3 + static_cast<T>(1), static_cast<T>(a1)),
             (*this)(
                 n_time + static_cast<K>(1), 
                 a1, 

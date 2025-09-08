@@ -23,7 +23,7 @@ class levin_sidi_m_algorithm : public series_acceleration<T, K, series_templ>
 protected:
 
 	const T gamma;
-	std::unique_ptr<const transform_base<T, K>> remainder_func;
+	std::unique_ptr<const transform_base<T, K>> remainder;
 
 	/**
 	 * @brief Default function to calculate M-transformation. Implemented u,t,d and v transformations. For more information see p. 65 9.2-6 [https://arxiv.org/pdf/math/0306302.pdf]
@@ -31,7 +31,7 @@ protected:
 	 * @authors Yurov P.I. Bezzaborov A.A.
 	 * @param n The number of terms in the partial sum.
 	 * @param order the order of transformation
-	 * @param remainder_func functor, whose returning w_n for u,t,d or v transformation
+	 * @param remainder functor, whose returning w_n for u,t,d or v transformation
 	 * @return The partial sum after the transformation.
 	 * We assume that the Pochhammer symbol satisfies (-x)_n = (-1)^n*(x-n+1)_n
 	 */
@@ -104,7 +104,7 @@ inline T levin_sidi_m_algorithm<T, K, series_templ>::calculate(const K n, const 
 		up /= (  up_coef + static_cast<T>(j));
 		up *= (down_coef + static_cast<T>(j));
 
-		rest *= remainder_func->operator()(
+		rest *= remainder->operator()(
 			order, 
 			j, 
 			this->series, 
@@ -142,21 +142,21 @@ levin_sidi_m_algorithm<T, K, series_templ>::levin_sidi_m_algorithm(
 
 	switch(variant){
         case remainder_type::u_variant :
-            remainder_func.reset(new u_transform<T, K>());
+            remainder.reset(new u_transform<T, K>());
             break;
         case remainder_type::t_variant :
-            remainder_func.reset(new t_transform<T, K>());
+            remainder.reset(new t_transform<T, K>());
             break;
         case remainder_type::v_variant :
-            remainder_func.reset(new v_transform<T, K>());
+            remainder.reset(new v_transform<T, K>());
             break;
         case remainder_type::t_wave_variant:
-            remainder_func.reset(new t_wave_transform<T, K>());
+            remainder.reset(new t_wave_transform<T, K>());
             break;
         case remainder_type::v_wave_variant:
-            remainder_func.reset(new v_wave_transform<T, K>());
+            remainder.reset(new v_wave_transform<T, K>());
             break;
         default:
-            remainder_func.reset(new u_transform<T, K>());
+            remainder.reset(new u_transform<T, K>());
     }
 }
