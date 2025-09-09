@@ -485,6 +485,7 @@ x64/Debug/shanks_transformation.exe
 .clangd
 shanks_transformation/**/build*
 rebuild.sh
+.vscode
 
 
 # //TODO сократить  вчё то что сверху
