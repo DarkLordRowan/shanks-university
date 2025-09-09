@@ -6,6 +6,7 @@
 #pragma once
 
 #include "../series_acceleration.hpp"
+#include <cmath> //Include for fma, isfinite
 
 template <std::floating_point T, std::unsigned_integral K, typename series_templ>
 class ford_sidi_2_algorithm final : public series_acceleration<T, K, series_templ>

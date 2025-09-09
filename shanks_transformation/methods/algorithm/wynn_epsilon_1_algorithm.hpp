@@ -5,6 +5,7 @@
 
 #include "../series_acceleration.hpp"
 #include <vector> // Include the vector library
+#include <cmath> //Include for isfinite
 
  /**
   * @brief Epsilon Algorithm class template.

@@ -7,7 +7,7 @@
 
 #include "../series_acceleration.hpp"
 #include <vector> // Include the vector library
-#include <cmath>
+#include <cmath>  // Include for isfinite
 
 
 template <std::floating_point T, std::unsigned_integral K, typename series_templ>

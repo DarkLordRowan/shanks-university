@@ -6,8 +6,9 @@
 #pragma once
 
 #include "../series_acceleration.hpp"
+#include <cmath> //Include for isfinite
 #include <vector> // Include the vector library
-#undef epsilon
+
 
  /**
   * @brief MK-3 Epsilon Algorithm class template.

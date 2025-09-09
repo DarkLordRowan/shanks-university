@@ -6,6 +6,7 @@
 #pragma once
 
 #include "../series_acceleration.hpp"
+#include <cmath> //Include for fma, isfinite
 
 template <std::floating_point T, std::unsigned_integral K, typename series_templ>
 class brezinski_theta_algorithm final : public series_acceleration<T, K, series_templ>
@@ -43,6 +44,7 @@ template <std::floating_point T, std::unsigned_integral K, typename series_templ
 T brezinski_theta_algorithm<T, K, series_templ>::theta(K n, const K order, T S_n, const K j) const {
 
     using std::isfinite;
+    using std::fma;
 
     if (order == static_cast<K>(1)) {
 
