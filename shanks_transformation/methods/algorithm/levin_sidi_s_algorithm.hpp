@@ -56,8 +56,8 @@ public:
 	*/
 
     explicit levin_sidi_s_algorithm(
-        const series_templ& series, 
-        const remainder_type variant = remainder_type::u_variant, 
+        const series_templ& series,
+        remainder_type variant = remainder_type::u_variant,
         bool useRecFormulas = false,  
         T parameter = static_cast<T>(1)
     );
@@ -69,7 +69,7 @@ public:
     * @param order The order of transformation.
     * @return The partial sum after the transformation.
     */
-    T operator()(const K n, const K order) const override;
+    T operator()(K n, K order) const override;
 
 };
 

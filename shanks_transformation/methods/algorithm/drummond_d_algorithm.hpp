@@ -34,7 +34,7 @@ protected:
 	* @return The partial sum after the transformation.
 	*/
 
-	inline T calc_result(const K n, const K order) const;
+	inline T calc_result(K n, K order) const;
 
 	/**
 	* @brief Function to calculate D-tranformation using reccurence relation. For more information see p. 70 9.5-5 [https://arxiv.org/pdf/math/0306302.pdf]
@@ -43,7 +43,7 @@ protected:
 	* @return The partial sum after the transformation.
 	*/
 
-	inline T calc_result_rec(const K n, const K order) const;
+	inline T calc_result_rec(K n, K order) const;
 
 public:
 
@@ -55,8 +55,8 @@ public:
 	*/
 
 	explicit drummond_d_algorithm(
-		const series_templ& series, 
-		const remainder_type variant = remainder_type::u_variant, 
+		const series_templ& series,
+		remainder_type variant = remainder_type::u_variant,
 		bool useRecFormulas = false
 	);
 
@@ -68,7 +68,7 @@ public:
     * @return The partial sum after the transformation.
     */
 
-    T operator()(const K n, const K order) const override;
+    T operator()(K n, K order) const override;
 
 };
 

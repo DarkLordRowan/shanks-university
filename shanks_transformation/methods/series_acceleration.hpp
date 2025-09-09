@@ -47,7 +47,7 @@ public:
    * @param order The order of the transformation
    * @return The transformed partial sum
    */
-	virtual T operator()(const K n, const K order) const = 0;
+	virtual T operator()(K n, K order) const = 0;
 
 protected:
 	/**

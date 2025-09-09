@@ -33,7 +33,7 @@ public:
     * @param scale The value to multiple (needed for u variant of S algo for now)
     * @return remainder of necessary type
     */
-    virtual T operator() (const K n, const K order, const series_base<T,K>* series, T scale = static_cast<T>(1)) const = 0;
+    virtual T operator() (K n, K order, const series_base<T,K>* series, T scale = static_cast<T>(1)) const = 0;
 };
 
 /**
@@ -50,7 +50,7 @@ class u_transform : public transform_base<T, K> {
     * @param scale The value to multiple (needed for u variant of S algo for now)
     * @return u type remainder
     */
-    T operator() (const K n, const K order, const series_base<T,K>* series, T scale = static_cast<T>(1)) const override;
+    T operator() (K n, K order, const series_base<T,K>* series, T scale = static_cast<T>(1)) const override;
 };
 
 template<std::floating_point T, std::unsigned_integral K>
@@ -79,7 +79,7 @@ class t_transform : public transform_base<T, K> {
     * @param scale not neccesary
     * @return t type remainder
     */
-    T operator() (const K n, const K order, const series_base<T,K>* series, T scale = static_cast<T>(1)) const override;
+    T operator() (K n, K order, const series_base<T,K>* series, T scale = static_cast<T>(1)) const override;
 };
 
 template<std::floating_point T, std::unsigned_integral K>
@@ -106,7 +106,7 @@ class t_wave_transform : public transform_base<T, K>  {
     * @param scale not neccesary
     * @return t-wave type remainder
     */
-    T operator() (const K n, const K order, const series_base<T,K>* series, T scale = static_cast<T>(1)) const override;
+    T operator() (K n, K order, const series_base<T,K>* series, T scale = static_cast<T>(1)) const override;
 };
 
 template<std::floating_point T, std::unsigned_integral K>
@@ -134,7 +134,7 @@ class v_transform : public transform_base<T, K> {
     * @param scale not neccesary
     * @return v type remainder
     */
-    T operator() (const K n, const K order, const series_base<T,K>* series, T scale = T(1)) const override;
+    T operator() (K n, K order, const series_base<T,K>* series, T scale = T(1)) const override;
 };
 
 template<std::floating_point T, std::unsigned_integral K>
@@ -162,7 +162,7 @@ class v_wave_transform : public transform_base<T, K> {
     * @param scale not neccesary
     * @return v-wave type remainder
     */
-    T operator() (const K n, const K order, const series_base<T,K>* series, T scale = static_cast<T>(1)) const override;
+    T operator() (K n, K order, const series_base<T,K>* series, T scale = static_cast<T>(1)) const override;
 };
 
 template<std::floating_point T, std::unsigned_integral K>

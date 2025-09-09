@@ -27,9 +27,9 @@ protected:
 	const T gamma;
 	const T RHO;
 
-	inline T calculate(const K n, K order) const;
+	inline T calculate(K n, K order) const;
 
-	T recursive_calculate_body(const K n, const K order, T S_n, const K j) const;
+	T recursive_calculate_body(K n, K order, T S_n, K j) const;
 
 public:
 	/**
@@ -38,9 +38,9 @@ public:
      */
 	explicit wynn_rho_algorithm(
 		const series_templ& series,
-		const numerator_type variant = numerator_type::rho_variant,
-		const T gamma_ = T(1),
-		const T RHO_ = T(0)
+		numerator_type variant = numerator_type::rho_variant,
+		T gamma_ = T(1),
+		T RHO_ = T(0)
 	);
 
 	//Default destructor is sufficient since unique_ptr handles deletion
@@ -121,22 +121,22 @@ inline T wynn_rho_algorithm<T, K, series_templ>::calculate(const K n, K order) c
 	const K order1 = order - static_cast<K>(1);
 	const T res = (
 		recursive_calculate_body(
-			n, 
+			n,
 			order1 - static_cast<K>(1),
-			 S_n, 
+			 S_n,
 			 static_cast<K>(1)
-		) + 
+		) +
 		numerator->operator()(
-			n, 
-			order, 
-			this->series, 
-			gamma, 
+			n,
+			order,
+			this->series,
+			gamma,
 			RHO)
 		) / (
 		recursive_calculate_body(
 			n,
 			order1,
-			 S_n, 
+			 S_n,
 			 static_cast<K>(0)
 		)
 	);
@@ -171,10 +171,10 @@ T wynn_rho_algorithm<T, K, series_templ>::recursive_calculate_body(const K n, co
 			order1 - static_cast<K>(1),
 			S_n,
 			static_cast<K>(1)
-		) + 
+		) +
 		numerator->operator()(
-			nj, 
-			order, 
+			nj,
+			order,
 			this->series,
 			gamma,
 			RHO)

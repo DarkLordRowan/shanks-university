@@ -35,7 +35,7 @@ public:
      * @param rho const for transformation	(	rho(gamma,rho)	)
      * @return The special numerator for transformation
      */
-	virtual T operator()(const K n, const K order, const series_base<T, K>* series, const T gamma = T(1), const T rho = T(0)) const = 0;
+	virtual T operator()(K n, K order, const series_base<T, K>* series, T gamma = T(1), T rho = T(0)) const = 0;
 
 };
 

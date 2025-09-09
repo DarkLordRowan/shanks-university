@@ -36,7 +36,7 @@ protected:
 	 * We assume that the Pochhammer symbol satisfies (-x)_n = (-1)^n*(x-n+1)_n
 	 */
 
-	inline T calculate(const K n, const K order) const;
+	inline T calculate(K n, K order) const;
 
 public:
 
@@ -49,9 +49,9 @@ public:
 
 	//levin_sidi_M_algorithm(const series_templ& series, const transform_base<T, K>* func, const T gamma_ = T(10)) : series_acceleration<T, K, series_templ>(series), remainder_func(func), gamma(gamma_)
 	explicit levin_sidi_m_algorithm(
-		const series_templ& series, 
-		const remainder_type variant = remainder_type::u_variant, 
-		const T gamma_ = static_cast<T>(10)
+		const series_templ& series,
+		remainder_type variant = remainder_type::u_variant,
+		T gamma_ = static_cast<T>(10)
 	);
 
 	// Default destructor is sufficient since unique_ptr handles deletion
@@ -64,7 +64,7 @@ public:
      * @return The partial sum after the transformation.
      */
 
-	T operator()(const K n, const K order) const override;
+	T operator()(K n, K order) const override;
 };
 
 template<std::floating_point T, std::unsigned_integral K, typename series_templ>
