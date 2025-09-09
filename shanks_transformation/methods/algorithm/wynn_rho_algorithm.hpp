@@ -119,7 +119,7 @@ inline T wynn_rho_algorithm<T, K, series_templ>::calculate(const K n, K order) c
 
 	const T S_n = this->series->S_n(n);
 	const K order1 = order - static_cast<K>(1);
-	const T res = (
+	const T res = 
 		recursive_calculate_body(
 			n,
 			order1 - static_cast<K>(1),
@@ -131,13 +131,19 @@ inline T wynn_rho_algorithm<T, K, series_templ>::calculate(const K n, K order) c
 			order,
 			this->series,
 			gamma,
-			RHO)
+			RHO
 		) / (
 		recursive_calculate_body(
 			n,
 			order1,
-			 S_n,
-			 static_cast<K>(0)
+			S_n,
+			static_cast<K>(1)
+		) -
+		recursive_calculate_body(
+			n,
+			order1,
+			S_n,
+			static_cast<K>(0)
 		)
 	);
 
@@ -165,7 +171,7 @@ T wynn_rho_algorithm<T, K, series_templ>::recursive_calculate_body(const K n, co
 
 	const K order1 = order - static_cast<K>(1);
 	const K nj = n + j;
-	const T res = (
+	const T res = 
 		recursive_calculate_body(
 			nj,
 			order1 - static_cast<K>(1),
@@ -177,7 +183,7 @@ T wynn_rho_algorithm<T, K, series_templ>::recursive_calculate_body(const K n, co
 			order,
 			this->series,
 			gamma,
-			RHO)
+			RHO
 		) / (
 		recursive_calculate_body(
 			nj,
