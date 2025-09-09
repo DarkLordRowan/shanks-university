@@ -29,14 +29,14 @@ export const TREE: AlgNode[] = [
         authorIds: ["ford", "sidi"],
         children: [
             {
-                id: "ford_sidi_two_algorithm",
-                title: "ford_sidi_two_algorithm",
+                id: "ford_sidi_2_algorithm",
+                title: "ford_sidi_2_algorithm",
                 subtitle: "Алгоритм Форд–Сиди (вторая версия)",
                 authorIds: ["ford", "sidi"]
             },
             {
-                id: "ford_sidi_three_algorithm",
-                title: "ford_sidi_three_algorithm",
+                id: "ford_sidi_3_algorithm",
+                title: "ford_sidi_3_algorithm",
                 subtitle: "Алгоритм Форд–Сиди (третья версия)",
                 authorIds: ["ford", "sidi"]
             },
@@ -105,20 +105,20 @@ export const TREE: AlgNode[] = [
         authorIds: ["wynn"],
         children: [
             {
-                id: "wynn_epsilon_one_algorithm",
-                title: "wynn_epsilon_one_algorithm",
+                id: "wynn_epsilon_1_algorithm",
+                title: "wynn_epsilon_1_algorithm",
                 subtitle: "Эпсилон-алгоритм Винна (первая версия)",
                 authorIds: ["wynn"]
             },
             {
-                id: "wynn_epsilon_two_algorithm",
-                title: "wynn_epsilon_two_algorithm",
+                id: "wynn_epsilon_2_algorithm",
+                title: "wynn_epsilon_2_algorithm",
                 subtitle: "Эпсилон-алгоритм Винна (вторая версия)",
                 authorIds: ["wynn"]
             },
             {
-                id: "wynn_epsilon_three_algorithm",
-                title: "wynn_epsilon_three_algorithm",
+                id: "wynn_epsilon_3_algorithm",
+                title: "wynn_epsilon_3_algorithm",
                 subtitle: "Эпсилон-алгоритм Винна (третья версия)",
                 authorIds: ["wynn"]
             },
