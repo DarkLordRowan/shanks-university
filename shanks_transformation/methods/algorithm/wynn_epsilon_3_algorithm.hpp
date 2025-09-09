@@ -1,5 +1,5 @@
 /**
- * @file epsilon_algorithm_three.h
+ * @file wynn_epsilon_3_algorithm.hpp
  * @brief This file contains the declaration of the third implementation of Epsilon Algorithm class.
  */
 
@@ -16,7 +16,7 @@
   * @tparam series_templ Series type to accelerate
   */
 template <std::floating_point T, std::unsigned_integral K, typename series_templ>
-class wynn_epsilon_algorithm_three : public series_acceleration<T, K, series_templ>
+class wynn_epsilon_3_algorithm : public series_acceleration<T, K, series_templ>
 {
 private:
 
@@ -27,7 +27,7 @@ public:
 	* @brief Parameterized constructor to initialize the Epsilon Algorithm MK-2.
 	* @param series The series class object to be accelerated
 	*/
-    explicit wynn_epsilon_algorithm_three(const series_templ& series, const T epsilon_threshold_ = static_cast<T>(1e-3));
+    explicit wynn_epsilon_3_algorithm(const series_templ& series, const T epsilon_threshold_ = static_cast<T>(1e-3));
 
 	/**
 	* @brief Fast impimentation of Epsilon algorithm.
@@ -41,7 +41,7 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K, typename series_templ>
-wynn_epsilon_algorithm_three<T, K, series_templ>::wynn_epsilon_algorithm_three(
+wynn_epsilon_3_algorithm<T, K, series_templ>::wynn_epsilon_3_algorithm(
     const series_templ& series,
     const T epsilon_threshold_
     ) :
@@ -50,7 +50,7 @@ wynn_epsilon_algorithm_three<T, K, series_templ>::wynn_epsilon_algorithm_three(
 {}
 
 template <std::floating_point T, std::unsigned_integral K, typename series_templ>
-T wynn_epsilon_algorithm_three<T, K, series_templ>::operator()(const K n, const K order) const {
+T wynn_epsilon_3_algorithm<T, K, series_templ>::operator()(const K n, const K order) const {
 
     using std::isfinite;
     using std::max;

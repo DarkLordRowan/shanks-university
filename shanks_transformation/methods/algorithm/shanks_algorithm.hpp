@@ -1,5 +1,5 @@
 /**
- * @file shanks_transform.h
+ * @file shanks_algorithm.hpp
  * @brief This file contains the definition of the Shanks transformation class and specialization of this transformation for the alternating series.
  */
 
@@ -13,7 +13,7 @@
  * @tparam T The type of the elements in the series, K The type of enumerating integer, series_templ is the type of series whose convergence we accelerate
  */
 template <std::floating_point T, std::unsigned_integral K, typename series_templ>
-class shanks_transform : public series_acceleration<T, K, series_templ>
+class shanks_algorithm : public series_acceleration<T, K, series_templ>
 {
 public:
 
@@ -22,7 +22,7 @@ public:
    * @authors Bolshakov M.P.
    * @param series The series class object
    */
-	explicit shanks_transform(const series_templ& series);
+	explicit shanks_algorithm(const series_templ& series);
 
 	/**
    * @brief Shanks transformation for non-alternating function.
@@ -35,10 +35,10 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K, typename series_templ>
-shanks_transform<T, K, series_templ>::shanks_transform(const series_templ& series) : series_acceleration<T, K, series_templ>(series) {}
+shanks_algorithm<T, K, series_templ>::shanks_algorithm(const series_templ& series) : series_acceleration<T, K, series_templ>(series) {}
 
 template <std::floating_point T, std::unsigned_integral K, typename series_templ>
-T shanks_transform<T, K, series_templ>::operator()(const K n, const K order) const{
+T shanks_algorithm<T, K, series_templ>::operator()(const K n, const K order) const{
 
 	using std::isfinite;
 	using std::fma;

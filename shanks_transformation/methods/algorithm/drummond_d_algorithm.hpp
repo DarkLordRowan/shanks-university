@@ -1,5 +1,5 @@
 /**
-* @file drummon_D_algorithm.h
+* @file drummond_d_algorithm.hpp
 * @brief Contains implementation of Drummond's D-transformation
 * @authors Naumov A.
 */
@@ -19,7 +19,7 @@
 */
 
 template<std::floating_point T, std::unsigned_integral K, typename series_templ>
-class drummonds_D_algorithm : public series_acceleration<T, K, series_templ>
+class drummond_d_algorithm : public series_acceleration<T, K, series_templ>
 {
 protected:
 
@@ -54,7 +54,7 @@ public:
 	* @param useRecFormulas use reccurence or straightforward formula 
 	*/
 
-	explicit drummonds_D_algorithm(
+	explicit drummond_d_algorithm(
 		const series_templ& series, 
 		const remainder_type variant = remainder_type::u_variant, 
 		bool useRecFormulas = false
@@ -73,7 +73,7 @@ public:
 };
 
 template<std::floating_point T, std::unsigned_integral K, typename series_templ>
-inline T drummonds_D_algorithm<T,K,series_templ>::calc_result(const K n, const K order) const {
+inline T drummond_d_algorithm<T,K,series_templ>::calc_result(const K n, const K order) const {
 
     using std::isfinite;
 
@@ -98,7 +98,7 @@ inline T drummonds_D_algorithm<T,K,series_templ>::calc_result(const K n, const K
 }
 
 template<std::floating_point T, std::unsigned_integral K, typename series_templ>
-inline T drummonds_D_algorithm<T,K,series_templ>::calc_result_rec(const K n, const K order) const {
+inline T drummond_d_algorithm<T,K,series_templ>::calc_result_rec(const K n, const K order) const {
 
     using std::isfinite;
 
@@ -127,7 +127,7 @@ inline T drummonds_D_algorithm<T,K,series_templ>::calc_result_rec(const K n, con
 }
 
 template<std::floating_point T, std::unsigned_integral K, typename series_templ>
-drummonds_D_algorithm<T,K,series_templ>::drummonds_D_algorithm(
+drummond_d_algorithm<T,K,series_templ>::drummond_d_algorithm(
 	const series_templ& series, 
 	const remainder_type variant, 
 	bool useRecFormulas
@@ -159,7 +159,7 @@ drummonds_D_algorithm<T,K,series_templ>::drummonds_D_algorithm(
 }
 
 template<std::floating_point T, std::unsigned_integral K, typename series_templ>
-T drummonds_D_algorithm<T,K,series_templ>::operator()(const K n, const K order) const { 
+T drummond_d_algorithm<T,K,series_templ>::operator()(const K n, const K order) const {
 
     using std::isfinite;
 

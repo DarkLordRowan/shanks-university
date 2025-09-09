@@ -1,5 +1,5 @@
 /**
- * @file weniger.h
+ * @file weniger_algorithm.hpp
  * @brief This file contains the definition of Weniger-transformation
  * @authors Yurov P.I. Bezzaborov A.A.
  */

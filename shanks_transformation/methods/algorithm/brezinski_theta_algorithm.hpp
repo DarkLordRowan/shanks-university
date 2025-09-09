@@ -1,5 +1,5 @@
 ﻿/**
- * @file brezinski_theta_algorithm.h
+ * @file brezinski_theta_algorithm.hpp
  * @brief This file contains the declaration of the Theta Brezinski Algorithm class.
  */
 

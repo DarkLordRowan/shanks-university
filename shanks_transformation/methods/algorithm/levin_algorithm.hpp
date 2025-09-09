@@ -1,5 +1,5 @@
 /**
- * @file levin_algorithm.h
+ * @file levin_algorithm.hpp
  * @brief This file contains the declaration of the Levin algorithm class.
  */
 

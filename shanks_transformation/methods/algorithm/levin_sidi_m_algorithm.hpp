@@ -1,5 +1,5 @@
 /**
- * @file levin_sidi_M_algorithm.h
+ * @file levin_sidi_m_algorithm.hpp
  * @brief This file contains the definition of analogues of Levin-Sidi M-transformation
  * @authors Yurov P.I. Bezzaborov A.A.
  */

@@ -1,5 +1,5 @@
 /**
- * @file FSA_two.h
+ * @file ford_sidi_2_algorithm.hpp
  * @brief This file contains the declaration of the Ford-Sidi Algorithm class.
  */
 
@@ -8,7 +8,7 @@
 #include "../series_acceleration.hpp"
 
 template <std::floating_point T, std::unsigned_integral K, typename series_templ>
-class ford_sidi_algorithm_two : public series_acceleration<T, K, series_templ>
+class ford_sidi_2_algorithm : public series_acceleration<T, K, series_templ>
 {
 public:
 
@@ -17,7 +17,7 @@ public:
 	* @authors Maximov A.K.
 	* @param series The series class object to be accelerated
 	*/
-	explicit ford_sidi_algorithm_two(const series_templ& series) : series_acceleration<T, K, series_templ>(series) {}
+	explicit ford_sidi_2_algorithm(const series_templ& series) : series_acceleration<T, K, series_templ>(series) {}
 
 	/*
 	* @brief Fast implementation of Ford-Sidi.
@@ -29,7 +29,7 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K, typename series_templ>
-T ford_sidi_algorithm_two<T, K, series_templ>::operator()(const K n, const K k) const {
+T ford_sidi_2_algorithm<T, K, series_templ>::operator()(const K n, const K k) const {
 
 	using std::fma;
 	using std::isfinite;

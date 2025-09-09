@@ -1,5 +1,5 @@
 /**
- * @file FSA_3.h
+ * @file ford_sidi_3_algorithm.hpp
  * @brief This file contains the declaration of the Ford-Sidi Algorithm class.
  */
 
@@ -11,7 +11,7 @@
 
 
 template <std::floating_point T, std::unsigned_integral K, typename series_templ>
-class ford_sidi_algorithm_three : public series_acceleration<T, K, series_templ>{
+class ford_sidi_3_algorithm : public series_acceleration<T, K, series_templ>{
 public:
 
     /*    
@@ -19,7 +19,7 @@ public:
      * @authors Sharonov K.S.    
      * @param series The series class object to be accelerated
      */    
-    explicit ford_sidi_algorithm_three(const series_templ& series);
+    explicit ford_sidi_3_algorithm(const series_templ& series);
 
     /*
      * @brief Fast implementation of Ford-Sidi.    
@@ -31,10 +31,10 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K, typename series_templ>
-ford_sidi_algorithm_three<T, K, series_templ>::ford_sidi_algorithm_three(const series_templ& series) : series_acceleration<T, K, series_templ>(series) {}
+ford_sidi_3_algorithm<T, K, series_templ>::ford_sidi_3_algorithm(const series_templ& series) : series_acceleration<T, K, series_templ>(series) {}
 
 template <std::floating_point T, std::unsigned_integral K, typename series_templ>
-T ford_sidi_algorithm_three<T, K, series_templ>::operator()(const K n, const K order) const {  
+T ford_sidi_3_algorithm<T, K, series_templ>::operator()(const K n, const K order) const {
 
     using std::isfinite;
 

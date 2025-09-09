@@ -1,5 +1,5 @@
 /**
- * @file richardson_algorithm.h
+ * @file richardson_algorithm.hpp
  * @brief This file contains the definition of the Richardson transformation class.
  */
 

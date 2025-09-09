@@ -678,19 +678,19 @@ inline static void main_testing_function()
 		if (alternating_series.contains(series_id))
 			transform.reset(new shanks_transform_alternating<T, K, decltype(series.get())>(series.get()));
 		else
-			transform.reset(new shanks_transform<T, K, decltype(series.get())>(series.get()));
+			transform.reset(new shanks_algorithm<T, K, decltype(series.get())>(series.get()));
 		break;
 	case transformation_id_t::epsilon_algorithm_id:
 		transform.reset(new wynn_epsilon_1_algorithm<T, K, decltype(series.get())>(series.get()));
 		break;
 	case transformation_id_t::epsilon_algorithm_2_id:
-		transform.reset(new wynn_epsilon_algorithm_two<T, K, decltype(series.get())>(series.get()));
+		transform.reset(new wynn_epsilon_2_algorithm<T, K, decltype(series.get())>(series.get()));
 		break;
 	case transformation_id_t::S_algorithm_id:
 		transform.reset(new levin_sidi_s_algorithm<T, K, decltype(series.get())>(series.get()));
 		break;
 	case transformation_id_t::D_algorithm_id:
-		transform.reset(new drummonds_D_algorithm<T, K, decltype(series.get())>(series.get()));
+		transform.reset(new drummond_d_algorithm<T, K, decltype(series.get())>(series.get()));
 		break;
 	case transformation_id_t::chang_epsilon_algorithm_id:
 		transform.reset(new chang_wynn_algorithm<T, K, decltype(series.get())>(series.get()));
@@ -708,20 +708,20 @@ inline static void main_testing_function()
 		transform.reset(new brezinski_theta_algorithm<T, K, decltype(series.get())>(series.get()));
 		break;
 	case transformation_id_t::epsilon_algorithm_3_id:
-		transform.reset(new wynn_epsilon_algorithm_three<T, K, decltype(series.get())>(series.get()));
+		transform.reset(new wynn_epsilon_3_algorithm<T, K, decltype(series.get())>(series.get()));
 		break;
 	case transformation_id_t::W_algorithm_id:
-		transform.reset(new W_lubkin_algorithm<T, K, decltype(series.get())>(series.get()));
+		transform.reset(new lubkin_w_algorithm<T, K, decltype(series.get())>(series.get()));
 		break;
 	case transformation_id_t::richardson_algorithm_id:
 		transform.reset(new richardson_algorithm<T, K, decltype(series.get())>(series.get()));
 		break;
 
 	case transformation_id_t::Ford_Sidi_algorithm_two_id:
-		transform.reset(new ford_sidi_algorithm_two<T, K, decltype(series.get())>(series.get()));
+		transform.reset(new ford_sidi_2_algorithm<T, K, decltype(series.get())>(series.get()));
 		break;
 	case transformation_id_t::Ford_Sidi_algorithm_three_id:
-		transform.reset(new ford_sidi_algorithm_three<T, K, decltype(series.get())>(series.get()));
+		transform.reset(new ford_sidi_3_algorithm<T, K, decltype(series.get())>(series.get()));
 		break;
 	default:
 		throw std::domain_error("wrong transformation_id");
@@ -766,19 +766,19 @@ inline static void main_testing_function()
 			if (alternating_series.contains(series_id))
 				transform2.reset(new shanks_transform_alternating<T, K, decltype(series.get())>(series.get()));
 			else
-				transform2.reset(new shanks_transform<T, K, decltype(series.get())>(series.get()));
+				transform2.reset(new shanks_algorithm<T, K, decltype(series.get())>(series.get()));
 			break;
 		case transformation_id_t::epsilon_algorithm_id:
 			transform2.reset(new wynn_epsilon_1_algorithm<T, K, decltype(series.get())>(series.get()));
 			break;
 		case transformation_id_t::epsilon_algorithm_2_id:
-			transform2.reset(new wynn_epsilon_algorithm_two<T, K, decltype(series.get())>(series.get()));
+			transform2.reset(new wynn_epsilon_2_algorithm<T, K, decltype(series.get())>(series.get()));
 			break;
 		case transformation_id_t::S_algorithm_id:
 			transform.reset(new levin_sidi_s_algorithm<T, K, decltype(series.get())>(series.get()));
 			break;
 		case transformation_id_t::D_algorithm_id:
-			transform.reset(new drummonds_D_algorithm<T, K, decltype(series.get())>(series.get()));
+			transform.reset(new drummond_d_algorithm<T, K, decltype(series.get())>(series.get()));
 			break;
 		case transformation_id_t::chang_epsilon_algorithm_id:
 			transform2.reset(new chang_wynn_algorithm<T, K, decltype(series.get())>(series.get()));
@@ -796,19 +796,19 @@ inline static void main_testing_function()
 			transform2.reset(new brezinski_theta_algorithm<T, K, decltype(series.get())>(series.get()));
 			break;
 		case transformation_id_t::epsilon_algorithm_3_id:
-			transform.reset(new wynn_epsilon_algorithm_three<T, K, decltype(series.get())>(series.get()));
+			transform.reset(new wynn_epsilon_3_algorithm<T, K, decltype(series.get())>(series.get()));
 			break;
 		case transformation_id_t::W_algorithm_id:
-			transform2.reset(new W_lubkin_algorithm<T, K, decltype(series.get())>(series.get()));
+			transform2.reset(new lubkin_w_algorithm<T, K, decltype(series.get())>(series.get()));
 			break;
 		case transformation_id_t::richardson_algorithm_id:
 			transform2.reset(new richardson_algorithm<T, K, decltype(series.get())>(series.get()));
 			break;
 		case transformation_id_t::Ford_Sidi_algorithm_two_id:
-			transform2.reset(new ford_sidi_algorithm_two<T, K, decltype(series.get())>(series.get()));
+			transform2.reset(new ford_sidi_2_algorithm<T, K, decltype(series.get())>(series.get()));
 			break;
 		case transformation_id_t::Ford_Sidi_algorithm_three_id:
-			transform2.reset(new ford_sidi_algorithm_three<T, K, decltype(series.get())>(series.get()));
+			transform2.reset(new ford_sidi_3_algorithm<T, K, decltype(series.get())>(series.get()));
 			break;
 
 		default:
@@ -830,7 +830,7 @@ inline static void main_testing_function()
 			if (alternating_series.contains(series_id))
 				transform.reset(new shanks_transform_alternating<T, K, decltype(series.get())>(series.get()));
 			else
-				transform.reset(new shanks_transform<T, K, decltype(series.get())>(series.get()));
+				transform.reset(new shanks_algorithm<T, K, decltype(series.get())>(series.get()));
 
 			print_transform(i, order, std::move(transform.get()));
 
@@ -839,11 +839,11 @@ inline static void main_testing_function()
 			print_transform(i, order, std::move(transform.get()));
 
 			//epsilon v-2
-			transform.reset(new wynn_epsilon_algorithm_two<T, K, decltype(series.get())>(series.get()));
+			transform.reset(new wynn_epsilon_2_algorithm<T, K, decltype(series.get())>(series.get()));
 			print_transform(i, order, std::move(transform.get()));
 
 			//epsilon v-3
-			transform.reset(new wynn_epsilon_algorithm_three<T, K, decltype(series.get())>(series.get(), epsilon_algorithm_3));
+			transform.reset(new wynn_epsilon_3_algorithm<T, K, decltype(series.get())>(series.get(), epsilon_algorithm_3));
 			print_transform(i, order, std::move(transform.get()));
 
 			//rho-wynn classic
@@ -894,22 +894,22 @@ inline static void main_testing_function()
 			print_transform(i, order, std::move(transform.get()));
 
 			//levin-sidi D U
-			transform.reset(new drummonds_D_algorithm<T, K, decltype(series.get())>(series.get(), remainder_type::u_variant, false));
+			transform.reset(new drummond_d_algorithm<T, K, decltype(series.get())>(series.get(), remainder_type::u_variant, false));
 			print_transform(i, order, std::move(transform.get()));
 			//
 
 			//levin-sidi D T
-			transform.reset(new drummonds_D_algorithm<T, K, decltype(series.get())>(series.get(), remainder_type::t_variant, false));
+			transform.reset(new drummond_d_algorithm<T, K, decltype(series.get())>(series.get(), remainder_type::t_variant, false));
 			print_transform(i, order, std::move(transform.get()));
 			//
 
 			//levin-sidi D T-WAVE
-			transform.reset(new drummonds_D_algorithm<T, K, decltype(series.get())>(series.get(), remainder_type::t_wave_variant, false));
+			transform.reset(new drummond_d_algorithm<T, K, decltype(series.get())>(series.get(), remainder_type::t_wave_variant, false));
 			print_transform(i, order, std::move(transform.get()));
 			//
 
 			//levin-sidi D V
-			transform.reset(new drummonds_D_algorithm<T, K, decltype(series.get())>(series.get(), remainder_type::v_variant, false));
+			transform.reset(new drummond_d_algorithm<T, K, decltype(series.get())>(series.get(), remainder_type::v_variant, false));
 			print_transform(i, order, std::move(transform.get()));
 			//
 
@@ -938,7 +938,7 @@ inline static void main_testing_function()
 			print_transform(i, order, std::move(transform.get()));
 
 			//lubkin W
-			transform.reset(new W_lubkin_algorithm<T, K, decltype(series.get())>(series.get()));
+			transform.reset(new lubkin_w_algorithm<T, K, decltype(series.get())>(series.get()));
 			print_transform(i, order, std::move(transform.get()));
 
 			//Richardson
@@ -946,11 +946,11 @@ inline static void main_testing_function()
 			print_transform(i, order, std::move(transform.get()));
 
 			//Ford-Sidi v-2
-			transform.reset(new ford_sidi_algorithm_two<T, K, decltype(series.get())>(series.get()));
+			transform.reset(new ford_sidi_2_algorithm<T, K, decltype(series.get())>(series.get()));
 			print_transform(i, order, std::move(transform.get()));
 
 			//Ford-Sidi v-3
-			transform.reset(new ford_sidi_algorithm_three<T, K, decltype(series.get())>(series.get()));
+			transform.reset(new ford_sidi_3_algorithm<T, K, decltype(series.get())>(series.get()));
 			print_transform(i, order, std::move(transform.get()));
 
 			std::cout << '\n';
