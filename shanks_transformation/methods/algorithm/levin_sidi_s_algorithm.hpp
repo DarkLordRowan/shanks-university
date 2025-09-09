@@ -97,7 +97,7 @@ inline T levin_sidi_s_algorithm<T, K,series_templ>::calc_result(K n, K order) co
         rest *= remainder->operator()(n, 
             j, 
             this->series,
-             (variant == remainder_type::u_variant ? beta : T(1))
+             (variant == remainder_type::u_variant ? beta : static_cast<T>(1))
             );
 
         numerator   += rest * this->series->S_n(n + j);
