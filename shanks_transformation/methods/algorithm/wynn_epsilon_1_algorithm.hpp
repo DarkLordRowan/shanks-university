@@ -1,5 +1,5 @@
 /**
- * @file epsilon_algorithm.h
+ * @file wynn_epsilon_1_algorithm.hpp
  * @brief This file contains the declaration of the Epsilon Algorithm class.
  */
 

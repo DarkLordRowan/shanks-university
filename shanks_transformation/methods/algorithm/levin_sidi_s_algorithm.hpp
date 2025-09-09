@@ -1,5 +1,5 @@
 /**
-* @file levin_sidi_S_algorithm.hpp
+* @file levin_sidi_s_algorithm.hpp
 * @brief Contains implementation of Drummond's D-transformation
 * @authors Naumov A.
 */

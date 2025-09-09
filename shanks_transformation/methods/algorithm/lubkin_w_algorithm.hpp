@@ -1,5 +1,5 @@
 /**
- * @file lubkin_W_algorithm.h
+ * @file lubkin_w_algorithm.hpp
  * @brief This file contains the definition of Lubkin W-transformation
  * @authors Yurov P.I. Bezzaborov A.A.
  */
@@ -15,7 +15,7 @@
  */
 
 template<std::floating_point T, std::unsigned_integral K, typename series_templ>
-class W_lubkin_algorithm : public series_acceleration<T, K, series_templ>
+class lubkin_w_algorithm : public series_acceleration<T, K, series_templ>
 {
 protected:
 
@@ -38,7 +38,7 @@ public:
 	 * @param func Remainder function
 	 */
 
-	explicit W_lubkin_algorithm(const series_templ& series) : series_acceleration<T, K, series_templ>(series) {}
+	explicit lubkin_w_algorithm(const series_templ& series) : series_acceleration<T, K, series_templ>(series) {}
 
 
 	/**
@@ -53,7 +53,7 @@ public:
 };
 
 template<std::floating_point T, std::unsigned_integral K, typename series_templ>
-T W_lubkin_algorithm<T, K, series_templ>::operator()(const K n, const K order) const {
+T lubkin_w_algorithm<T, K, series_templ>::operator()(const K n, const K order) const {
 
 	if (order < static_cast<K>(0)) 
 		throw std::domain_error("negative order input");
@@ -62,7 +62,7 @@ T W_lubkin_algorithm<T, K, series_templ>::operator()(const K n, const K order) c
 }
 
 template<std::floating_point T, std::unsigned_integral K, typename series_templ>
-T W_lubkin_algorithm<T, K, series_templ>::calculate(K n, const K order, T S_n, const K j) const {
+T lubkin_w_algorithm<T, K, series_templ>::calculate(K n, const K order, T S_n, const K j) const {
 
 	using std::isfinite;
 	using std::fma;

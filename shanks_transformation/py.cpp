@@ -177,7 +177,7 @@ PYBIND11_MODULE(pyshanks, m) {
         .def(py::init<SeriesBase*>(), py::arg("series"), py::keep_alive<1, 2>())
         .def("__call__", &ChangWynn::operator());
 
-    using DrummondD = drummonds_D_algorithm<T, K, SeriesBase*>;
+    using DrummondD = drummond_d_algorithm<T, K, SeriesBase*>;
     py::class_<DrummondD, SeriesAccel>(m, "DrummondDAlgorithm")
         .def(py::init<SeriesBase*, remainder_type, bool>(),
              py::arg("series"), py::keep_alive<1, 2>(),

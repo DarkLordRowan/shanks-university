@@ -1,5 +1,5 @@
 /**
- * @file epsilon_algorithm_two.h
+ * @file chang_wynn_algorithm.hpp
  * @brief This file contains the declaration of the chang-wynn algorith,
  */
 
