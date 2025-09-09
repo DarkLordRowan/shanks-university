@@ -278,18 +278,18 @@ inline static void print_transformation_info()
 	std::cout << "Which transformation would you like to test?" << '\n' <<
 		"List of currently avaiable series:" << '\n' <<
 		"1 - Shanks Transformation" << '\n' <<
-		"2 - Epsilon Algorithm" << '\n' <<
-		"3 - Levin Algorithm" << '\n' <<
-		"4 - Epsilon Algorithm V-2" << '\n' <<
-		"5 - S-transformation" << '\n' <<
-		"6 - D-transformation" << '\n' <<
-		"7 - Chang - Wynn - Epsilon Algorithm" << '\n' <<
-		"8 - M-transformation" << '\n' <<
-		"9 - Weniger transformation" << '\n' <<
-		"10 - Rho - Wynn transformation" << '\n' <<
-		"11 - Theta Brezinski transformation" << '\n' <<
-		"12 - Epsilon Algorithm V-3" << '\n' <<
-		"13 - Lubkin W-transformation" << '\n' <<
+		"2 - Weniger transformation" << '\n' <<
+		"3 - Rho - Wynn transformation" << '\n' <<
+		"4 - Theta Brezinski transformation" << '\n' <<
+		"5 - Epsilon algorithm" << '\n' <<
+		"6 - Epsilon v2 algorithm" << '\n' <<
+		"7 - Epsilon v3 algorithm" << '\n' <<
+		"8 - Chang epsilon algorithm" << '\n' <<
+		"9 - L algorithm" << '\n' <<
+		"10 - S algorithm" << '\n' <<
+		"11 - D algorithm" << '\n' <<
+		"12 - M algorithm" << '\n' <<
+		"13 - W algorithm" << '\n' <<
 		"14 - Richardson Algorithm" << '\n' <<
 		"15 - Ford-Sidi Algorithm V-2" << '\n' <<
 		"16 - Ford-Sidi Algorithm V-3" << '\n' <<
