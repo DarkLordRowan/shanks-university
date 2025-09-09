@@ -1,17 +1,17 @@
 #include <gtest/gtest.h>
 
 #include "series.h"
-#include "methods/algorithm/brezinski_theta_algorithm.hpp"
+#include "methods/algorithm/weniger_algorithm.hpp"
 
-TEST(brezinski_theta_algorithm, HapyPath)
+TEST(weniger_algorithm, HapyPath)
 {
     using K = unsigned;
     using T = double;
 
-    const exp_series<T, K> series(0.5);
+    const exp_series<T, K> series(1);
     using SeriesTempl = const series_base<T, K>*;
     const SeriesTempl p = &series;
-    const brezinski_theta_algorithm<T, K, SeriesTempl> algo(p);
+    const weniger_algorithm<T, K, SeriesTempl> algo(p);
 
     constexpr K n = 6;
     constexpr K order = 0;

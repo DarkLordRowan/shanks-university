@@ -1,17 +1,17 @@
 #include <gtest/gtest.h>
 
 #include "series.h"
-#include "methods/algorithm/brezinski_theta_algorithm.hpp"
+#include "methods/algorithm/chang_wynn_algorithm.hpp"
 
-TEST(brezinski_theta_algorithm, HapyPath)
+TEST(chang_wynn_algorithm, HapyPath)
 {
     using K = unsigned;
     using T = double;
 
     const exp_series<T, K> series(0.5);
-    using SeriesTempl = const series_base<T, K>*;
+    using SeriesTempl = const series_base<T, K> *;
     const SeriesTempl p = &series;
-    const brezinski_theta_algorithm<T, K, SeriesTempl> algo(p);
+    const chang_wynn_algorithm<T, K, SeriesTempl> algo(p);
 
     constexpr K n = 6;
     constexpr K order = 0;
