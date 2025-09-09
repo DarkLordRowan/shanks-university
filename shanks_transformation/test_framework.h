@@ -702,7 +702,7 @@ inline static void main_testing_function()
 		transform.reset(new weniger_algorithm<T, K, decltype(series.get())>(series.get()));
 		break;
 	case transformation_id_t::rho_wynn_transformation_id:
-		transform.reset(new rho_wynn_algorithm<T, K, decltype(series.get())>(series.get()));
+		transform.reset(new wynn_rho_algorithm<T, K, decltype(series.get())>(series.get()));
 		break;
 	case transformation_id_t::brezinski_theta_transformation_id:
 		transform.reset(new brezinski_theta_algorithm<T, K, decltype(series.get())>(series.get()));
@@ -790,7 +790,7 @@ inline static void main_testing_function()
 			transform2.reset(new weniger_algorithm<T, K, decltype(series.get())>(series.get()));
 			break;
 		case transformation_id_t::rho_wynn_transformation_id:
-			transform2.reset(new rho_wynn_algorithm<T, K, decltype(series.get())>(series.get()));
+			transform2.reset(new wynn_rho_algorithm<T, K, decltype(series.get())>(series.get()));
 			break;
 		case transformation_id_t::brezinski_theta_transformation_id:
 			transform2.reset(new brezinski_theta_algorithm<T, K, decltype(series.get())>(series.get()));
@@ -847,15 +847,15 @@ inline static void main_testing_function()
 			print_transform(i, order, std::move(transform.get()));
 
 			//rho-wynn classic
-			transform.reset(new rho_wynn_algorithm<T, K, decltype(series.get())>(series.get(), numerator_type::rho_variant));
+			transform.reset(new wynn_rho_algorithm<T, K, decltype(series.get())>(series.get(), numerator_type::rho_variant));
 			print_transform(i, order, std::move(transform.get()));
 
 			//rho-wynn generalized
-			transform.reset(new rho_wynn_algorithm<T, K, decltype(series.get())>(series.get(), numerator_type::generalized_variant));
+			transform.reset(new wynn_rho_algorithm<T, K, decltype(series.get())>(series.get(), numerator_type::generalized_variant));
 			print_transform(i, order, std::move(transform.get()));
 
 			//rho-wynn gamma-rho
-			transform.reset(new rho_wynn_algorithm<T, K, decltype(series.get())>(series.get(), numerator_type::gamma_rho_variant));
+			transform.reset(new wynn_rho_algorithm<T, K, decltype(series.get())>(series.get(), numerator_type::gamma_rho_variant));
 			print_transform(i, order, std::move(transform.get()));
 
 			//theta-brezinski

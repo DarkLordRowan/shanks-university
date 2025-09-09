@@ -1,5 +1,5 @@
 /**
- * @file rho_wynn_algorithm.h
+ * @file wynn_rho_algorithm.hpp
  * @brief This file contains the declaration of the Rho Wynn Algorithm class.
  * @authors Yurov P.I. Bezzaborov A.A.
  */
@@ -19,7 +19,7 @@
   * @tparam series_templ is the type of series whose convergence we accelerate
   */
 template <std::floating_point T, std::unsigned_integral K, typename series_templ>
-class rho_wynn_algorithm : public series_acceleration<T, K, series_templ>
+class wynn_rho_algorithm : public series_acceleration<T, K, series_templ>
 {
 protected:
 
@@ -36,7 +36,7 @@ public:
      * @brief Parameterized constructor to initialize the Rho Wynn Algorithm.
      * @param series The series class object to be accelerated
      */
-	explicit rho_wynn_algorithm(
+	explicit wynn_rho_algorithm(
 		const series_templ& series,
 		const numerator_type variant = numerator_type::rho_variant,
 		const T gamma_ = T(1),
@@ -74,7 +74,7 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K, typename series_templ>
-rho_wynn_algorithm<T, K, series_templ>::rho_wynn_algorithm(
+wynn_rho_algorithm<T, K, series_templ>::wynn_rho_algorithm(
 	const series_templ& series,
 	const numerator_type variant,
 	const T gamma_,
@@ -107,7 +107,7 @@ rho_wynn_algorithm<T, K, series_templ>::rho_wynn_algorithm(
 }
 
 template <std::floating_point T, std::unsigned_integral K, typename series_templ>
-inline T rho_wynn_algorithm<T, K, series_templ>::calculate(const K n, K order) const { //const int order
+inline T wynn_rho_algorithm<T, K, series_templ>::calculate(const K n, K order) const { //const int order
 
 	using std::isfinite;
 
@@ -147,7 +147,7 @@ inline T rho_wynn_algorithm<T, K, series_templ>::calculate(const K n, K order) c
 }
 
 template <std::floating_point T, std::unsigned_integral K, typename series_templ>
-T rho_wynn_algorithm<T, K, series_templ>::recursive_calculate_body(const K n, const K order, T S_n, const K j) const {
+T wynn_rho_algorithm<T, K, series_templ>::recursive_calculate_body(const K n, const K order, T S_n, const K j) const {
 
 	using std::isfinite;
 	/**

@@ -37,7 +37,7 @@ enum transformation_id_t {
 #include "./methods/algorithm/levin_sidi_s_algorithm.hpp"
 #include "./methods/algorithm/drummond_d_algorithm.hpp"
 #include "./methods/algorithm/weniger_algorithm.hpp"
-#include "./methods/algorithm/rho_wynn_algorithm.hpp"
+#include "./methods/algorithm/wynn_rho_algorithm.hpp"
 #include "./methods/algorithm/brezinski_theta_algorithm.hpp"
 #include "./methods/algorithm/wynn_epsilon_3_algorithm.hpp"
 #include "./methods/algorithm/lubkin_w_algorithm.hpp"
