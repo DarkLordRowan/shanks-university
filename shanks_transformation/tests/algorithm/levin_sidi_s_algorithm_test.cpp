@@ -14,7 +14,7 @@ TEST(levin_sidi_s_algorithm, HapyPath)
     const levin_sidi_s_algorithm<T, K, SeriesTempl> algo(p);
 
     constexpr K n = 6;
-    constexpr K order = 0;
+    constexpr K order = 2;
 
     const T got = algo(n, order);
     const T expected = series.S_n(n);
