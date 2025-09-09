@@ -27,7 +27,7 @@ public:
 	* @brief Parameterized constructor to initialize the Epsilon Algorithm MK-2.
 	* @param series The series class object to be accelerated
 	*/
-    explicit wynn_epsilon_3_algorithm(const series_templ& series, const T epsilon_threshold_ = static_cast<T>(1e-3));
+    explicit wynn_epsilon_3_algorithm(const series_templ& series, T epsilon_threshold_ = static_cast<T>(1e-3));
 
 	/**
 	* @brief Fast impimentation of Epsilon algorithm.
@@ -37,7 +37,7 @@ public:
 	* @param order The order of transformation.
 	* @return The partial sum after the transformation.
 	*/
-	T operator()(const K n, const K order) const override;
+	T operator()(K n, K order) const override;
 };
 
 template <std::floating_point T, std::unsigned_integral K, typename series_templ>

@@ -25,7 +25,7 @@ public:
 	* @param order The order of transformation.
 	* @return The partial sum after the transformation.
 	*/
-	T operator()(const K n, const K k) const override;
+	T operator()(K n, K k) const override;
 };
 
 template <std::floating_point T, std::unsigned_integral K, typename series_templ>

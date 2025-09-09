@@ -18,7 +18,7 @@ protected:
      * @param k The order of transformation.
      * @return The value of theta.
      */
-    T theta(K n, const K order, T S_n, const K j) const;
+    T theta(K n, K order, T S_n, K j) const;
 
 public:
     /*
@@ -36,7 +36,7 @@ public:
      * @param order The order of transformation.
      * @return The partial sum after the transformation.
      */
-    T operator()(const K n, const K order) const override;
+    T operator()(K n, K order) const override;
 };
 
 template <std::floating_point T, std::unsigned_integral K, typename series_templ>

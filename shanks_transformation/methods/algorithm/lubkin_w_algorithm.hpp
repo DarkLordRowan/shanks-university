@@ -28,7 +28,7 @@ protected:
 	 * @return The partial sum after the transformation.
 	 */
 
-	T calculate(K n, const K order, T S_n, const K j) const;
+	T calculate(K n, K order, T S_n, K j) const;
 	
 public:
 
@@ -49,7 +49,7 @@ public:
      * @return The partial sum after the transformation.
      */
 
-	T operator()(const K n, const K order) const override;
+	T operator()(K n, K order) const override;
 };
 
 template<std::floating_point T, std::unsigned_integral K, typename series_templ>

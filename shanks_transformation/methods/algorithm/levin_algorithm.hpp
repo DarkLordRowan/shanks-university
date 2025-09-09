@@ -25,12 +25,7 @@ protected:
 
 	inline T calc_result(K n, K order) const;
 
-	T operator()(
-		const K n_time, 
-		const K k_time, 
-		const T b, 
-		const bool ND
-	) const;
+	T operator()(K n_time,K k_time,T b,bool ND) const;
 
 	inline T calc_result_rec(K n, K order) const;
 
@@ -41,9 +36,9 @@ public:
 	*/
 
 	explicit levin_algorithm(
-		const series_templ& series, 
-		const bool useRecFormulas = false, 
-		const T beta = static_cast<T>(-1.5)
+		const series_templ& series,
+		bool useRecFormulas = false,
+		T beta = static_cast<T>(-1.5)
 	);
 
 	/**
