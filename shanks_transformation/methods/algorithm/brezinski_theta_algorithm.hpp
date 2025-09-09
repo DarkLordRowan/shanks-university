@@ -8,7 +8,7 @@
 #include "../series_acceleration.hpp"
 
 template <std::floating_point T, std::unsigned_integral K, typename series_templ>
-class brezinski_theta_algorithm : public series_acceleration<T, K, series_templ>
+class brezinski_theta_algorithm final : public series_acceleration<T, K, series_templ>
 {
 protected:
     /**

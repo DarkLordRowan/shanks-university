@@ -25,6 +25,8 @@ template <std::floating_point T, std::unsigned_integral K, typename series_templ
 class series_acceleration
 {
 public:
+	virtual ~series_acceleration() = default;
+
 	/**
    * @brief Parameterized constructor to initialize the Transformation.
    * @authors Bolshakov M.P.

@@ -21,7 +21,7 @@
  * @param variant        - type of remainder to use
 */
 template<std::floating_point T, std::unsigned_integral K, typename series_templ>
-class levin_sidi_s_algorithm : public series_acceleration<T, K, series_templ> {
+class levin_sidi_s_algorithm final : public series_acceleration<T, K, series_templ> {
 protected:
 
     T beta;
