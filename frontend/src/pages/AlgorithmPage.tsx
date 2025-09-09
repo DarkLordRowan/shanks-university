@@ -27,20 +27,20 @@ function findNodeById(nodes: AlgNode[], id: string): AlgNode | undefined {
 const GH = {
     owner: "DarkLordRowan",
     repo: "shanks-university",
-    branch: "feature/structure",
-    srcFolder: "shanks_transformation/include/series_acceleration/algorithm", // .tpp
-    docsFolder: "docs/algorithm", // .md
+    branch: "Fixes",
+    srcFolder: "shanks_transformation/methods/algorithm", // .tpp
+    docsFolder: "theory/algorithm", // .md
 };
 
 function buildSrcLinks(algId: string) {
-    const path = `${GH.srcFolder}/${algId}.tpp`;
+    const path = `${GH.srcFolder}/${algId}.hpp`;
     const raw = `https://raw.githubusercontent.com/${GH.owner}/${GH.repo}/${GH.branch}/${path}`;
     const web = `https://github.com/${GH.owner}/${GH.repo}/blob/${GH.branch}/${path}`;
     return { raw, web, path };
 }
 
 function buildDocLinks(algId: string) {
-    const path = `${GH.docsFolder}/${algId}.md`;
+    const path = `${GH.docsFolder}/${algId}.tex`;
     const raw = `https://raw.githubusercontent.com/${GH.owner}/${GH.repo}/${GH.branch}/${path}`;
     const web = `https://github.com/${GH.owner}/${GH.repo}/blob/${GH.branch}/${path}`;
     return { raw, web, path };
@@ -85,7 +85,7 @@ const CodeViewer: React.FC<{ url: string; filename: string }> = ({ url, filename
     }, [code]);
 
     const copy = async () => {
-        try { await navigator.clipboard.writeText(code); } catch {}
+        try { await navigator.clipboard.writeText(code); } catch { /* empty */ }
     };
 
     const total = hlLines.length || code.split("\n").length;
@@ -145,7 +145,7 @@ const MarkdownDoc: React.FC<{ id: string }> = ({ id }) => {
     const [error, setError] = React.useState<string | null>(null);
 
     const articleRef = React.useRef<HTMLElement | null>(null);
-    const [toc, setToc] = React.useState<TocItem[]>([]);
+    const [, setToc] = React.useState<TocItem[]>([]);
 
     React.useEffect(() => {
         let alive = true;
