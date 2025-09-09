@@ -28,13 +28,14 @@
  * - Weniger, E.J. (1992). Interpolation between sequence transformations. Numerical Algorithms, 3(1-4), 477-486.
  *
  * @tparam T Floating-point type for series elements (must satisfy std::floating_point)
- *           Represents numerical precision (float, double, long double)
+ *           Represents numerical precision (float, double, long double).
+ *           Used for all floating-point calculations and storage.
  * @tparam K Unsigned integral type for indices and order (must satisfy std::unsigned_integral)
- *           Used for counting and indexing operations
+ *           Used for counting and indexing operations. Valid values: K >= 0.
  * @tparam series_templ Type of series object to accelerate. Must provide:
- *           - T operator()(K n) const: returns the n-th series term a_n
- *           - T S_n(K n) const: returns the n-th partial sum s_n = a_0 + ... + a_n
- *           - T minus_one_raised_to_power_n(K n) const: returns (-1)^n
+ *           - T operator()(K n) const: returns the n-th series term aₙ
+ *           - T S_n(K n) const: returns the n-th partial sum sₙ = a₀ + ... + aₙ
+ *           - T minus_one_raised_to_power_n(K n) const: returns (-1)ⁿ
  *           - T binomial_coefficient(T n, K k) const: returns binomial coefficient C(n, k)
  */
 template<std::floating_point T, std::unsigned_integral K, typename series_templ>
@@ -57,7 +58,7 @@ public:
 	 * optimal remainder estimation and convergence acceleration.
 	 *
 	 * For theory, see: Weniger (1989), Eq. (8.2-7)
-	 * Weniger transformation: δ_k^{(n)}(β,s_n) = [Δ^k((β+n)_{k-1}s_n/Δs_n)] / [Δ^k((β+n)_{k-1}/Δs_n)]
+	 * Weniger transformation: δₖ⁽ⁿ⁾(β,sₙ) = [Δᵏ((β+n)ₖ₋₁sₙ/Δsₙ)] / [Δᵏ((β+n)ₖ₋₁/Δsₙ)]
 	 *
 	 * @param n The number of terms to use in the transformation (starting index)
 	 *        Valid values: n >= 0
@@ -78,19 +79,23 @@ T weniger_algorithm<T, K, series_templ>::operator()(const K n, const K order) co
 	// Weniger transformation as ratio of binomial sums with Pochhammer symbols
 	T numerator = static_cast<T>(0), denominator = static_cast<T>(0);
 
-	T a_n, rest;
+	// For theory, see: Weniger (1989), Eq. (8.2-7) term components
+	T a_n, rest;	// Weight factor for current term: (-1)ʲ × C(order, j) × (β+n+j)ₖ₋₁
+					// Remainder estimate: 1/Δsₙ = 1/a_{n+1}
 
+	// For theory, see: Weniger (1989), Eq. (8.2-7) weight factor
+	// Initial Pochhammer-like term: (β+n)ₖ₋₁ with β=1, equivalent to (n+1)ₖ₋₁ = Γ(n+k)/Γ(n+1)
 	T coef = static_cast<T>(1);
 
-	// For theory, see: Weniger (1989), Eq. (8.2-7) numerator and denominator structure
-	// Initialization of binomial coefficient: C(order, 0) = 1
+	// For theory, see: Weniger (1989), Eq. (8.2-7) recursive computation
+	// Initial binomial coefficient: C(order, 0) = 1
 	T binomial_coef = this->series->binomial_coefficient(static_cast<T>(n), static_cast<K>(0));
 
-	// Initial partial sum S_0
+	// For theory, see: Weniger (1989), Eq. (8.2-7) partial sum initialization
+	// Initial partial sum Sₙ
 	T S_n = this->series->S_n(0);
 
-	// For theory, see: Weniger (1989), Eq. (8.2-7) weight factors
-	// Precomputation of Pochhammer symbol (1)_{order-1} = Γ(order)/Γ(1) = (order-1)!
+	// Precompute initial value: (1)ₖ₋₁ = (k-1)!
 	for (K m = static_cast<K>(0); m < order - static_cast<K>(1); ++m) 
 		coef *= static_cast<T>(static_cast<K>(1) + m);
 	
@@ -103,42 +108,50 @@ T weniger_algorithm<T, K, series_templ>::operator()(const K n, const K order) co
 		j1 = j + static_cast<K>(1);
 
 		// For theory, see: Weniger (1989), Eq. (8.2-7) term structure
-		// Term sign: (-1)^j
+		// Term sign: (-1)ʲ
 		rest  = this->series->minus_one_raised_to_power_n(j);
+
 		// Binomial coefficient: C(order, j)
 		rest *= binomial_coef;
 
 		// For theory, see: Weniger (1989), Eq. (8.2-7) recursive binomial update
-		// Update binomial coefficient: C(order, j+1) = C(order, j) * (order - j) / (j + 1)
+		// Update binomial coefficient: C(order, j+1) = C(order, j) × (order - j) / (j + 1)
 		binomial_coef *= static_cast<T>(order - j);
 		binomial_coef /= static_cast<T>(j1);
 
 		// For theory, see: Weniger (1989), Eq. (8.2-7) weight factor
-		// Pochhammer symbol factor: (β+n+j)_{k-1} with β=1
+		// Pochhammer symbol factor: (β+n+j)ₖ₋₁ with β=1
 		rest *= coef;
 
 		// For theory, see: Weniger (1989), Eq. (8.2-7) recursive Pochhammer update
-		// Update Pochhammer-like term: (1+j+order-1)_{k-1} recursive relation
+		// Update Pochhammer-like term: (β+n+j+1)ₖ₋₁ = (β+n+j)ₖ₋₁ × (β+n+j+order) / (β+n+j+1)
+		// With β=1: (n+j+1)ₖ₋₁ = (n+j)ₖ₋₁ × (n+j+order) / (n+j+1)
 		coef *= static_cast<T>(j + order);
 		coef /= static_cast<T>(j1);
 
 		// For theory, see: Weniger (1989), Eq. (8.2-7) remainder estimate
-		// Remainder estimate: ω_n = Δs_n = a_{n+1} for Levin-type variants
+		// Remainder estimate: ωₙ = Δsₙ = a_{n+1}, so 1/ωₙ = 1/a_{j+1}
 		a_n = static_cast<T>(1);
 		a_n/= this->series->operator()(j1);
 
 		rest *= a_n;
 
+		// For theory, see: Weniger (1989), Eq. (8.2-7) numerator term
+		// Numerator term: rest × s_{n+j}
 		numerator   += rest * S_n;
+
+		// For theory, see: Weniger (1989), Eq. (8.2-7) denominator term
+		// Denominator term: rest
 		denominator += rest;
 
+		// For theory, see: Weniger (1989), Eq. (8.2-7) partial sum update
 		// Update partial sum: S_{j+1} = S_j + a_{j+1}
 		S_n += this->series->operator()(j + static_cast<K>(1));
 		
 	}
 
 	// For theory, see: Weniger (1989), Eq. (8.2-7) final ratio
-	// Final transformed value: δ_k^{(n)} = numerator / denominator
+	// Final transformed value: δₖ⁽ⁿ⁾ = numerator / denominator
 	numerator /= denominator;
 
 	if (!isfinite(numerator))
