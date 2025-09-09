@@ -10,7 +10,7 @@
  */
 #include "test_framework.h"
 
-int main(void)
+int main()
 {
 	while(true){
 		try
