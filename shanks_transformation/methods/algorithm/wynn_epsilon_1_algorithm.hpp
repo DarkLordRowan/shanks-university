@@ -13,7 +13,7 @@
   * @tparam series_templ Series type to accelerate.
   */
 template <std::floating_point T, std::unsigned_integral K, typename series_templ>
-class wynn_epsilon_1_algorithm : public series_acceleration<T, K, series_templ>
+class wynn_epsilon_1_algorithm final : public series_acceleration<T, K, series_templ>
 {
 public:
 	/**

@@ -18,7 +18,7 @@
   * @tparam T The type of the elements in the series, K The type of enumerating integer, series_templ is the type of series whose convergence we accelerate
   */
 template <std::floating_point T, std::unsigned_integral K, typename series_templ>
-class chang_wynn_algorithm : public series_acceleration<T, K, series_templ>
+class chang_wynn_algorithm final : public series_acceleration<T, K, series_templ>
 {
 public:
 	/**

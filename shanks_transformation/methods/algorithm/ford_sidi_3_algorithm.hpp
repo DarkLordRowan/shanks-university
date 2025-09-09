@@ -11,7 +11,7 @@
 
 
 template <std::floating_point T, std::unsigned_integral K, typename series_templ>
-class ford_sidi_3_algorithm : public series_acceleration<T, K, series_templ>{
+class ford_sidi_3_algorithm final : public series_acceleration<T, K, series_templ>{
 public:
 
     /*    

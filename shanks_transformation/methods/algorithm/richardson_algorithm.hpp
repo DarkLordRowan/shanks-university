@@ -16,7 +16,7 @@
  * @tparam series_templ is the type of series whose convergence we accelerate
  */
 template <std::floating_point T, std::unsigned_integral K, typename series_templ>
-class richardson_algorithm : public series_acceleration<T, K, series_templ>
+class richardson_algorithm final : public series_acceleration<T, K, series_templ>
 {
 public:
      /**
