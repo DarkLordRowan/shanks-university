@@ -17,12 +17,14 @@ protected:
      * Computes the value of theta according to the given parameters.
      * @param n The number of terms in the partial sum.
      * @param k The order of transformation.
+     * @param j ?
      * @return The value of theta.
      */
     T theta(K n, K order, T S_n, K j) const;
 
 public:
-    /*
+
+    /**
      * @brief Parameterized constructor to initialize the Theta Brezinski Algorithm.
      * @authors Yurov P.I. Bezzaborov A.A.
      * @param series The series class object to be accelerated
@@ -65,6 +67,7 @@ T brezinski_theta_algorithm<T, K, series_templ>::theta(K n, const K order, T S_n
     //TODO спросить у Парфенова, ибо жертвуем читаемостью кода, ради его небольшого ускорения
     const K order1 = order - static_cast<K>(1);
     const K order2 = order - static_cast<K>(2);
+    
     const T theta_order1_0 = theta(n, order1, S_n, static_cast<K>(0));
     const T theta_order1_1 = theta(n, order1, S_n, static_cast<K>(1));
     const T theta_order1_2 = theta(n, order1, S_n, static_cast<K>(2));

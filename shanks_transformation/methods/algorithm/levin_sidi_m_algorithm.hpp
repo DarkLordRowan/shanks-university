@@ -44,10 +44,9 @@ public:
 	c* @brief Parameterized constructor to initialize the Levin-Sidi M-transformation.
 	 * @param series The series class object to be accelerated
 	 * @param variant Remainder type
-	 * @param gamma_ Parameter //TODO более подробно
+	 * @param gamma_ is positive real number such that gamma >= order - 1, see p. 64 [https://arxiv.org/pdf/math/0306302.pdf]
 	*/
 
-	//levin_sidi_M_algorithm(const series_templ& series, const transform_base<T, K>* func, const T gamma_ = T(10)) : series_acceleration<T, K, series_templ>(series), remainder_func(func), gamma(gamma_)
 	explicit levin_sidi_m_algorithm(
 		const series_templ& series,
 		remainder_type variant = remainder_type::u_variant,
@@ -72,8 +71,8 @@ inline T levin_sidi_m_algorithm<T, K, series_templ>::calculate(const K n, const 
 
 	using std::isfinite;
 
-	if (gamma - static_cast<T>(n - static_cast<K>(1)) <= static_cast<T>(0))
-		throw std::domain_error("gamma cannot be lesser than n-1");
+	if (gamma - static_cast<T>(order - static_cast<K>(1)) < static_cast<T>(0))
+		throw std::domain_error("gamma cannot be lesser than order - 1");
 
 	T numerator = static_cast<T>(0), denominator = static_cast<T>(0);
 
