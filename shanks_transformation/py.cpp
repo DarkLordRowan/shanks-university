@@ -197,10 +197,11 @@ PYBIND11_MODULE(pyshanks, m) {
 
     using LevinL = levin_algorithm<T, K, SeriesBase*>;
     py::class_<LevinL, SeriesAccel>(m, "LevinLAlgorithm")
-        .def(py::init<SeriesBase*, bool, T>(),
+        .def(py::init<SeriesBase*, remainder_type, bool, T>(),
              py::arg("series"), py::keep_alive<1, 2>(),
+             py::arg("variant") = remainder_type::u_variant,
              py::arg("useRecFormulas") = false,
-             py::arg("beta") = static_cast<T>(-1.5))
+             py::arg("beta") = static_cast<T>(1))
         .def("__call__", (T (LevinL::*)(K, K) const) &LevinL::operator());
 
     using LevinSidiM = levin_sidi_m_algorithm<T, K, SeriesBase*>;

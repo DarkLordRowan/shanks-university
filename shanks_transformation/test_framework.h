@@ -877,7 +877,7 @@ inline static void main_testing_function()
 			print_transform(i, order, std::move(transform.get()));
 
 			//levin recurcive
-			transform.reset(new levin_algorithm<T, K, decltype(series.get())>(series.get(), true));
+			transform.reset(new levin_algorithm<T, K, decltype(series.get())>(series.get(), remainder_type::u_variant, true));
 			print_transform(i, order, std::move(transform.get()));
 
 			//levin-sidi S U

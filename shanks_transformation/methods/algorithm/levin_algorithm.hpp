@@ -6,7 +6,11 @@
 #pragma once
 
 #include "../series_acceleration.hpp"
+#include "../remainders.hpp"
+
 #include <cmath> //Include for pow, isfinite
+#include <vector>
+#include <memory>
 
 
 /**
@@ -21,25 +25,39 @@ class levin_algorithm final : public series_acceleration<T, K, series_templ>
 {
 protected:
 
-	const T beta;
-	bool useRecFormulas = false;
+	T beta;
+    std::unique_ptr<const transform_base<T, K>> remainder;
+    bool useRecFormulas = false;
+    remainder_type variant = remainder_type::u_variant;
 
+	/**
+	 * @brief 
+	 * @param n     K The series class object to be accelerated
+	 * @param order K The type of enumerating integer
+	*/
 	inline T calc_result(K n, K order) const;
 
-	T operator()(K n_time,K k_time,T b,bool ND) const;
-
+	/**
+	 * @brief 
+	 * @param n     K The series class object to be accelerated
+	 * @param order K The type of enumerating integer
+	*/
 	inline T calc_result_rec(K n, K order) const;
 
 public:
 	/**
 	 * @brief Parameterized constructor to initialize the Levin Algorithm.
 	 * @param series The series class object to be accelerated
+	 * @param variant Type of remainder to use
+	 * @param useRecFormulas use reccurence or straightforward formula 
+	 * @param beta is nonzero positivbe real number, default value in literature is beta = 1, for more info p39 [https://arxiv.org/pdf/math/0306302]
 	*/
 
 	explicit levin_algorithm(
 		const series_templ& series,
-		bool useRecFormulas = false,
-		T beta = static_cast<T>(-1.5)
+        remainder_type variant = remainder_type::u_variant,
+        bool useRecFormulas = false,  
+        T beta = static_cast<T>(1)
 	);
 
 	/**
@@ -56,15 +74,41 @@ public:
 
 template<std::floating_point T, std::unsigned_integral K, typename series_templ>
 levin_algorithm<T, K,series_templ>::levin_algorithm(
-	const series_templ& series, 
-	const bool useRecFormulas, 
-	const T beta
-	) :
+	const series_templ& series,
+    remainder_type variant,
+    bool useRecFormulas,
+    T beta
+) :
 	series_acceleration<T, K, series_templ>(series),
 	useRecFormulas(useRecFormulas),
-	beta(beta)
+	variant(variant)
 	{//TODO: нужно ли проверять бету на допустимость?
-		}
+		if (beta > static_cast<T>(0))
+			this->beta = beta;
+		else this->beta = static_cast<T>(1);
+
+	//check variant else default 'u'
+    //TODO: тоже самое наверное
+    switch(variant){
+        case remainder_type::u_variant :
+            remainder.reset(new u_transform<T, K>());
+            break;
+        case remainder_type::t_variant :
+            remainder.reset(new t_transform<T, K>());
+            break;
+        case remainder_type::v_variant :
+            remainder.reset(new v_transform<T, K>());
+            break;
+        case remainder_type::t_wave_variant:
+            remainder.reset(new t_wave_transform<T, K>());
+            break;
+        case remainder_type::v_wave_variant:
+            remainder.reset(new v_wave_transform<T, K>());
+            break;
+        default:
+            remainder.reset(new u_transform<T, K>());
+    }
+	}
 
 template<std::floating_point T, std::unsigned_integral K, typename series_templ>
 inline T levin_algorithm<T, K,series_templ>::calc_result(K n, K order) const{
@@ -75,7 +119,7 @@ inline T levin_algorithm<T, K,series_templ>::calc_result(K n, K order) const{
 	T numerator = static_cast<T>(0), denominator = static_cast<T>(0);
 	T C_njk, S_nj, g_n, rest;
 
-	for (K j = 0; j <= order; ++j) { //Standart Levin algo procedure
+	for (K j = static_cast<K>(0); j <= order; ++j) { //Standart Levin algo procedure
 
 		rest  = this->series->minus_one_raised_to_power_n(j);
 		rest *= this->series->binomial_coefficient(static_cast<T>(order), j);
@@ -86,7 +130,12 @@ inline T levin_algorithm<T, K,series_templ>::calc_result(K n, K order) const{
 		S_nj = this->series->S_n(n + j);
 
 		g_n = static_cast<T>(1);
-		g_n/= (this->series->operator()(n + j));
+		g_n/= remainder->operator()(
+            n + j, 
+            j, 
+            this->series,
+            (variant == remainder_type::u_variant ? beta : static_cast<T>(1))
+        );
 
 		rest *= C_njk;
 		rest *= g_n;
@@ -103,47 +152,51 @@ inline T levin_algorithm<T, K,series_templ>::calc_result(K n, K order) const{
 	return numerator;
 }
 
-template <std::floating_point T, std::unsigned_integral K, typename series_templ>
-T levin_algorithm<T, K, series_templ>::operator()(const K n_time, const K k_time, const T b, const bool ND) const {
-
-	using std::isfinite;
-
-    T w_n = static_cast<T>((static_cast<K>(1)-static_cast<K>(2)*(n_time % static_cast<K>(2))) * this->series->fact(n_time));
-    T R_0 = (!ND ? this->series->S_n(n_time) : static_cast<T>(1)); R_0 /= w_n;
-
-    if (k_time == static_cast<K>(0)) return R_0;
-
-    const K a1 = k_time - static_cast<K>(1);
-    const T a2 = b + static_cast<T>(n_time);
-    const T a3 = static_cast<T>(a1) + a2;
-    const T res = static_cast<T>(
-        fma(
-            -a2 * (*this)(n_time, a1, b, ND),
-            pow(a3, static_cast<T>(a1) - static_cast<T>(1)) / pow(a3 + static_cast<T>(1), static_cast<T>(a1)),
-            (*this)(
-                n_time + static_cast<K>(1), 
-                a1, 
-                b, 
-                ND
-            )
-        )
-    );
-
-    if (!isfinite(res)) throw std::overflow_error("division by zero");
-
-     return res;
-}
-
 template<std::floating_point T, std::unsigned_integral K, typename series_templ>
 inline T levin_algorithm<T, K,series_templ>::calc_result_rec(K n, K order) const{
 
 	using std::isfinite;
 
-    const T result = (*this)(n, order, beta, false) / (*this)(n, order, beta, true);
+    //const T result = (*this)(n, order, beta, false) / (*this)(n, order, beta, true);
 
-    if (!isfinite(result)) throw std::overflow_error("division by zero");
+	std::vector<T>   Num(order + static_cast<K>(1), static_cast<T>(0));
+	std::vector<T> Denom(order + static_cast<K>(1), static_cast<T>(0));
 
-    return result;
+    //init the base values
+	for (K i = static_cast<K>(0); i < order+static_cast<K>(1); ++i) {
+		Denom[i] = remainder->operator()(
+            n, 
+            i, 
+            this->series,
+            (variant == remainder_type::u_variant ? beta : static_cast<T>(1))
+        );
+
+		Num[i] = this->series->S_n(n+i) * Denom[i];
+	}
+
+    //recurrence
+	T scale, nj;
+	const T order1 = static_cast<T>(order - static_cast<K>(1));
+
+	for (K i = static_cast<K>(1); i <= order; ++i)
+		for (K j = static_cast<K>(0); j <= order - i; ++j) {
+
+			nj = static_cast<T>(n + j);
+
+			scale = -(beta + static_cast<T>(n));
+			scale*= pow(static_cast<T>(1) - static_cast<T>(1) / (beta + nj + static_cast<T>(1)), order1);
+			scale/=(beta + nj + static_cast<T>(1));
+
+			Denom[j] = fma(-scale,Denom[j],Denom[j+static_cast<K>(1)]);
+              Num[j] = fma(-scale,  Num[j],  Num[j+static_cast<K>(1)]);
+		}
+
+	Num[0] /= Denom[0];
+
+	if (!isfinite(Num[0]))
+		throw std::overflow_error("division by zero");
+    
+	return Num[0];
 }
 
 template <std::floating_point T, std::unsigned_integral K, typename series_templ>
