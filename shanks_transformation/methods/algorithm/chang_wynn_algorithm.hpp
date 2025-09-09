@@ -1,5 +1,5 @@
 /**
- * @file chang_whynn_algorithm.h
+ * @file chang_whynn_algorithm.hpp
  * @brief This file contains the declaration of the Chang-Wynn algorithm,
  *        which combines elements of Wynn's epsilon algorithm with Chang's modifications.
  */
