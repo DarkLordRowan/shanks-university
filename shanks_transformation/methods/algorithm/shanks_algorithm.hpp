@@ -19,19 +19,19 @@ class shanks_algorithm final : public series_acceleration<T, K, series_templ>
 public:
 
 	/**
-   * @brief Parameterized constructor to initialize the Shanks transformation for non-alternating series.
-   * @authors Bolshakov M.P.
-   * @param series The series class object
-   */
+     * @brief Parameterized constructor to initialize the Shanks transformation for non-alternating series.
+     * @authors Bolshakov M.P.
+     * @param series The series class object
+    */
 	explicit shanks_algorithm(const series_templ& series);
 
 	/**
-   * @brief Shanks transformation for non-alternating function.
-   * @authors Bolshakov M.P., Pashkov B.B.
-   * @param n The number of terms in the partial sum.
-   * @param order The order of transformation.
-   * @return The partial sum after the transformation.
-   */
+     * @brief Shanks transformation for non-alternating function.
+     * @authors Bolshakov M.P., Pashkov B.B.
+     * @param n The number of terms in the partial sum.
+     * @param order The order of transformation.
+     * @return The partial sum after the transformation.
+    */
 	T operator()(K n, K order) const;
 };
 

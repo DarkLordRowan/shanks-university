@@ -23,14 +23,15 @@ public:
      /**
       * @brief Parameterized constructor to initialize the Richardson transformation for series.
       * @param series The series class object
-      */
+    */
     explicit richardson_algorithm(const series_templ& series) : series_acceleration<T, K, series_templ>(series) {}
+
      /**
       * @brief Richardson transformation for series function.
       * @param n The number of terms in the partial sum.
       * @param order The order of transformation.
       * @return The partial sum after the transformation.
-      */
+    */
     T operator() (K n, K order) const override;
 };
 

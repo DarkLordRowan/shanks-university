@@ -16,6 +16,7 @@ protected:
 	/**
 	  * @brief Default function to calculate WT-transformation.
 	  * For more information see "Joint use of the Weniger transformation and hyperasymptotics for accurate asymptotic evaluations of a class of saddle-point integrals"
+	  * откуда?
 	  * @param k The number of terms in the partial sum.
 	  * @param n the order of transformation
 	  * @param remainder_func functor, whose returning w_n for t,u or v transformation

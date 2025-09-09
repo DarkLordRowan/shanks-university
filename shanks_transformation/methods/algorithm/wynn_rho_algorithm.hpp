@@ -18,6 +18,8 @@
   * @tparam K The type of enumerating integer
   * @tparam series_templ is the type of series whose convergence we accelerate
   */
+
+//TODO: указать источники
 template <std::floating_point T, std::unsigned_integral K, typename series_templ>
 class wynn_rho_algorithm final : public series_acceleration<T, K, series_templ>
 {
@@ -84,7 +86,7 @@ wynn_rho_algorithm<T, K, series_templ>::wynn_rho_algorithm(
 	gamma(gamma_),
 	RHO(RHO_)
 {
-	//TODO: проверить можно ли использовать стандартные значения, указанный в конструктуре, в других вариантах + унифицировать названия
+	//TODO: проверить можно ли использовать стандартные значения, указанные в конструктуре, в других вариантах + унифицировать названия
 	// есть ли какие то ограничения на кастомные значения?
 	// classic (0), gamma (1), gamma-rho (2):
 	// 0 -> gamma = 1, RHO = 0

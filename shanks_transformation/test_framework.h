@@ -9,6 +9,7 @@
 #include <set>
 
 #include "methods.hpp"
+#include "methods/remainders.hpp"
 #include "series.h"
 #include "test_functions.h"
 
@@ -716,7 +717,9 @@ inline static void main_testing_function()
 	case transformation_id_t::richardson_algorithm_id:
 		transform.reset(new richardson_algorithm<T, K, decltype(series.get())>(series.get()));
 		break;
-
+	case transformation_id_t::L_algorithm_id:
+		transform.reset(new levin_algorithm<T, K, decltype(series.get())>(series.get()));
+		break;
 	case transformation_id_t::Ford_Sidi_algorithm_two_id:
 		transform.reset(new ford_sidi_2_algorithm<T, K, decltype(series.get())>(series.get()));
 		break;
@@ -773,6 +776,9 @@ inline static void main_testing_function()
 			break;
 		case transformation_id_t::epsilon_algorithm_2_id:
 			transform2.reset(new wynn_epsilon_2_algorithm<T, K, decltype(series.get())>(series.get()));
+			break;
+		case transformation_id_t::L_algorithm_id:
+			transform.reset(new levin_algorithm<T, K, decltype(series.get())>(series.get()));
 			break;
 		case transformation_id_t::S_algorithm_id:
 			transform.reset(new levin_sidi_s_algorithm<T, K, decltype(series.get())>(series.get()));

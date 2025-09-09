@@ -13,7 +13,7 @@
 /**
  * @brief D_transformation class template.
  * @tparam T The type of the elements in the series, K The type of enumerating integer, series_templ is the type of series whose convergence we accelerate
- * @param remainder_func - remainder to use in formula
+ * @param remainder      - remainder to use in formula(w_n in literature)
  * @param useRecFormulas - use reccurence relation, the calculation will be done using arrays
  * @param variant        - type of remainder to use
 */
@@ -23,7 +23,7 @@ class drummond_d_algorithm final : public series_acceleration<T, K, series_templ
 {
 protected:
 
-    std::unique_ptr<const transform_base<T, K>> remainder_func;
+    std::unique_ptr<const transform_base<T, K>> remainder;
     bool useRecFormulas = false;
     remainder_type variant = remainder_type::u_variant;
 
@@ -37,7 +37,7 @@ protected:
 	inline T calc_result(K n, K order) const;
 
 	/**
-	* @brief Function to calculate D-tranformation using reccurence relation. For more information see p. 70 9.5-5 [https://arxiv.org/pdf/math/0306302.pdf]
+	* @brief Function to calculate D-tranformation using recurrence relation. For more information see p. 70 9.5-5 [https://arxiv.org/pdf/math/0306302.pdf]
 	* @param n The partial sum number (S_n) from which the calculations will be done
 	* @param order the order of transformation
 	* @return The partial sum after the transformation.
@@ -51,7 +51,7 @@ public:
 	* @brief Parameterized explicit constructor to initialize the Drummond's D Algorithm.
 	* @param series The series class object to be accelerated
 	* @param variant Type of remainder to use
-	* @param useRecFormulas use reccurence or straightforward formula 
+	* @param useRecFormulas use recurrence or straightforward formula 
 	*/
 
 	explicit drummond_d_algorithm(
@@ -84,7 +84,7 @@ inline T drummond_d_algorithm<T,K,series_templ>::calc_result(const K n, const K 
 
 		rest  = this->series->minus_one_raised_to_power_n(j);
 		rest *= this->series->binomial_coefficient(static_cast<T>(n), j);
-		rest *= remainder_func->operator()(n,j, this->series);
+		rest *= remainder->operator()(n,j, this->series);
 
 		numerator   += rest * this->series->S_n(n+j);
 		denominator += rest;
@@ -107,7 +107,7 @@ inline T drummond_d_algorithm<T,K,series_templ>::calc_result_rec(const K n, cons
 
     //init the base values
 	for (K i = static_cast<K>(0); i < order+static_cast<K>(1); ++i) {
-		Denom[i] = remainder_func->operator()(n, i, this->series);
+		Denom[i] = remainder->operator()(n, i, this->series);
 		  Num[i] = this->series->S_n(n+i) * Denom[i];
 	}
 
@@ -138,22 +138,22 @@ drummond_d_algorithm<T,K,series_templ>::drummond_d_algorithm(
     //check variant else default 'u'
     switch(variant){
         case remainder_type::u_variant :
-            remainder_func.reset(new u_transform<T, K>());
+            remainder.reset(new u_transform<T, K>());
             break;
         case remainder_type::t_variant :
-            remainder_func.reset(new t_transform<T, K>());
+            remainder.reset(new t_transform<T, K>());
             break;
         case remainder_type::v_variant :
-            remainder_func.reset(new v_transform<T, K>());
+            remainder.reset(new v_transform<T, K>());
             break;
         case remainder_type::t_wave_variant:
-            remainder_func.reset(new t_wave_transform<T, K>());
+            remainder.reset(new t_wave_transform<T, K>());
             break;
         case remainder_type::v_wave_variant:
-            remainder_func.reset(new v_wave_transform<T, K>());
+            remainder.reset(new v_wave_transform<T, K>());
             break;
         default:
-            remainder_func.reset(new u_transform<T, K>());
+            remainder.reset(new u_transform<T, K>());
             break;
     }
 }

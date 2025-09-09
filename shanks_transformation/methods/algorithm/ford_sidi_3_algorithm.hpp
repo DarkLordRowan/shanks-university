@@ -14,19 +14,19 @@ template <std::floating_point T, std::unsigned_integral K, typename series_templ
 class ford_sidi_3_algorithm final : public series_acceleration<T, K, series_templ>{
 public:
 
-    /*    
+    /**    
      * @brief Parameterized constructor to initialize the Ford-Sidi V-3 Algorithm.
      * @authors Sharonov K.S.    
      * @param series The series class object to be accelerated
-     */    
+    */    
     explicit ford_sidi_3_algorithm(const series_templ& series);
 
-    /*
+    /**
      * @brief Fast implementation of Ford-Sidi.    
      * @param n The number of terms in the partial sum.
      * @param order The order of transformation.    
-     * * @return The partial sum after the transformation.
-     */    
+     * @return The partial sum after the transformation.
+    */    
     T operator()(K n, K k) const override;
 };
 

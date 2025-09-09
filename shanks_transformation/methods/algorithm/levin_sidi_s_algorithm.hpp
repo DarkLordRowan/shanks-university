@@ -16,8 +16,8 @@
  * @tparam K The type of enumerating integer
  * @tparam series_templ is the type of series whose convergence we accelerate
  * @param beta           - nonzero positive parameter, 1 is the standart value, for more information see p. 39 in [https://arxiv.org/pdf/math/0306302.pdf]
- * @param remainder - remainder to use in calculations
- * @param useRecFormulas - use reccurence relation, the calculation will be done using arrays
+ * @param remainder      - remainder to use in calculations(w_n in literature)
+ * @param useRecFormulas - use recurrence formula, the calculation will be done using arrays
  * @param variant        - type of remainder to use
 */
 template<std::floating_point T, std::unsigned_integral K, typename series_templ>
@@ -38,7 +38,7 @@ protected:
     inline T calc_result(K n, K order) const;
 
     /**
-	* @brief Function to calculate S-tranformation using reccurence relation. For more information see p. 57 8.3-5 [https://arxiv.org/pdf/math/0306302.pdf]
+	* @brief Function to calculate S-tranformation using recurrence formula. For more information see p. 57 8.3-5 [https://arxiv.org/pdf/math/0306302.pdf]
 	* @param n The partial sum number (S_n) from which the calculations will be done
 	* @param order the order of transformation
 	* @return The partial sum after the transformation.
@@ -157,14 +157,15 @@ levin_sidi_s_algorithm<T, K, series_templ>::levin_sidi_s_algorithm(
     remainder_type variant, 
     bool useRecFormulas,  
     T parameter
-    ) : 
+) : 
     series_acceleration<T, K, series_templ>(series),
-    useRecFormulas(useRecFormulas)
+    useRecFormulas(useRecFormulas),
+    variant(variant)
 {
     // parameter is "beta" parameter
     // beta must be nonzero positive real number
     // beta = 1 is default
-    //check parameter else default
+    // check parameter else default
     if (parameter > static_cast<T>(0)) this->beta = parameter;
     else {
         this->beta = static_cast<T>(1);

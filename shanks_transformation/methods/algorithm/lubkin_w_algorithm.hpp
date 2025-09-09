@@ -26,6 +26,7 @@ protected:
 	 * @authors Yurov P.I. Bezzaborov A.A.
 	 * @param n The number of terms in the partial sum.
 	 * @param order the order of transformation
+	 * @param j ?
 	 * @return The partial sum after the transformation.
 	 */
 
