@@ -7,6 +7,7 @@
 
 #include "../series_acceleration.hpp"
 #include <cmath> //Include for fma, isfinite
+#include <vector>
 
 /**
  * @brief W_transformation class template.
@@ -26,11 +27,10 @@ protected:
 	 * @authors Yurov P.I. Bezzaborov A.A.
 	 * @param n The number of terms in the partial sum.
 	 * @param order the order of transformation
-	 * @param j ?
 	 * @return The partial sum after the transformation.
 	 */
 
-	T calculate(K n, K order, T S_n, K j) const;
+	T calculate(K n, K order) const;
 	
 public:
 
@@ -60,43 +60,66 @@ T lubkin_w_algorithm<T, K, series_templ>::operator()(const K n, const K order) c
 	if (order < static_cast<K>(0)) 
 		throw std::domain_error("negative order input");
 
-	return calculate(n, order, this->series->S_n(n), static_cast<K>(0));
+	return calculate(n, order);
 }
 
+
 template<std::floating_point T, std::unsigned_integral K, typename series_templ>
-T lubkin_w_algorithm<T, K, series_templ>::calculate(K n, const K order, T S_n, const K j) const {
+T lubkin_w_algorithm<T, K, series_templ>::calculate(K n, const K order) const {
 
 	using std::isfinite;
 	using std::fma;
 
-	/*
-	* j - to fix n
-	* S_n - partial sum of series.
-	*/
-	for (K i = static_cast<K>(0); i < j; ++i) 
-		S_n += this->series->operator()(n  + i + static_cast<K>(1));
+	const K base_size = static_cast<K>(3) * order + static_cast<K>(1);
+
+	std::vector<T> W(
+		base_size, 
+		static_cast<T>(0)
+	);
+
+	for(K i = static_cast<K>(0); i < base_size; ++i){
+		W[i] = this->series->S_n(n + i);
+	}
+
+	T Wo0, Wo1, Wo2;
+	T Woo1, Woo2;
+
+
+	K j1, j2, j3;
+
+	for(K level = static_cast<K>(1); level <= order; ++level){
+
+		for(K j = static_cast<K>(0); j < base_size - level * static_cast<K>(3); ++j){
+
+			// W[j] = W[j+1] + (W[j+2] - W[j+1]) * (1 - r_(m+1))/(1 - 2 * r_(m+1) + r_m * r_(m+1))
+			// r_m = (W[m+2]-W[m+1])/(W[m+1] - W[m])
+
+			j1 = j + static_cast<K>(1);
+			j2 = j + static_cast<K>(2);
+			j3 = j + static_cast<K>(3);
+
+			//W[j] = W[j1] + 
+			//(W[j2]-W[j1]) * (1 - (W[j3]-W[j2])/(W[j2]-W[j1])) / 
+			//(1 - 2 * (W[j3]-W[j2])/(W[j2]-W[j1]) + (W[j2]-W[j1])/(W[j1]-W[j])*(W[j3]-W[j2])/(W[j2]-W[j1]));
+		
+			Wo0 = W[j1] - W[j];
+			Wo1 = W[j2] - W[j1];
+			Wo2 = W[j3] - W[j2];
+			Woo1 = Wo0 * (Wo2 - Wo1);
+			Woo2 = Wo2 * (Wo1 - Wo0);
+
+			W[j] = fma(
+				-Wo1, 
+				Woo1 / (Woo2 - Woo1),
+				 W[j1]
+			); // optimized <- this is it W1 - ((W2 - W1) * (W1 - W0) * (W3 - 2 * W2 + W1)) / ((W3 - W2) * (W2 - 2 * W1 + W0) - (W1 - W0) * (W3 - 2 * W2 + W1))
+
+		}
+	}
 	
-	n += j;
-
-	if (order == static_cast<K>(0)) return S_n;
-
-	//calculate all basic parts of transfor
-	K order1 = order - static_cast<K>(1);
-	T W0 = calculate(n, order1, S_n, static_cast<K>(0));
-	T W1 = calculate(n, order1, S_n, static_cast<K>(1));
-	T W2 = calculate(n, order1, S_n, static_cast<K>(2));
-	T W3 = calculate(n, order1, S_n, static_cast<K>(3));
-	
-	//optimization calculations
-	T Wo0 = W1 - W0;
-	T Wo1 = W2 - W1;
-	T Wo2 = W3 - W2;
-	T Woo1 = Wo0 * (Wo2 - Wo1);
-	T Woo2 = Wo2 * (Wo1 - Wo0);
-
-	//T result = W1 - ((W2 - W1) * (W1 - W0) * (W3 - 2 * W2 + W1)) / ((W3 - W2) * (W2 - 2 * W1 + W0) - (W1 - W0) * (W3 - 2 * W2 + W1)); //straigh
-	const T result = fma(-Wo1, Woo1 / (Woo2 - Woo1), W1); // optimized
-	if (!isfinite(result))
+	if (!isfinite(W[0]))
 		throw std::overflow_error("division by zero");
-	return result;
+	return W[0];
+
 }
+
