@@ -156,7 +156,7 @@ PYBIND11_MODULE(pyshanks, m) {
         .value("gamma_rho_variant", numerator_type::gamma_rho_variant)
         .export_values();
 
-    using Shanks = shanks_transform<T, K, SeriesBase*>;
+    using Shanks = shanks_algorithm<T, K, SeriesBase*>;
     py::class_<Shanks, SeriesAccel>(m, "ShanksTransform")
         .def(py::init<SeriesBase*>(), py::arg("series"), py::keep_alive<1, 2>())
         .def("__call__", &Shanks::operator());
@@ -185,12 +185,12 @@ PYBIND11_MODULE(pyshanks, m) {
              py::arg("useRecFormulas") = false)
         .def("__call__", &DrummondD::operator());
 
-    using FordSidiTwo = ford_sidi_algorithm_two<T, K, SeriesBase*>;
+    using FordSidiTwo = ford_sidi_2_algorithm<T, K, SeriesBase*>;
     py::class_<FordSidiTwo, SeriesAccel>(m, "FordSidiAlgorithmTwo")
         .def(py::init<SeriesBase*>(), py::arg("series"), py::keep_alive<1, 2>())
         .def("__call__", &FordSidiTwo::operator());
 
-    using FordSidiThree = ford_sidi_algorithm_three<T, K, SeriesBase*>;
+    using FordSidiThree = ford_sidi_3_algorithm<T, K, SeriesBase*>;
     py::class_<FordSidiThree, SeriesAccel>(m, "FordSidiAlgorithmThree")
         .def(py::init<SeriesBase*>(), py::arg("series"), py::keep_alive<1, 2>())
         .def("__call__", &FordSidiThree::operator());
@@ -220,12 +220,12 @@ PYBIND11_MODULE(pyshanks, m) {
              py::arg("parameter") = static_cast<T>(1))
         .def("__call__", &LevinSidiS::operator());
 
-    using LubkinW = W_lubkin_algorithm<T, K, SeriesBase*>;
+    using LubkinW = lubkin_w_algorithm<T, K, SeriesBase*>;
     py::class_<LubkinW, SeriesAccel>(m, "LubkinWAlgorithm")
         .def(py::init<SeriesBase*>(), py::arg("series"), py::keep_alive<1, 2>())
         .def("__call__", &LubkinW::operator());
 
-    using RhoWynn = rho_wynn_algorithm<T, K, SeriesBase*>;
+    using RhoWynn = wynn_rho_algorithm<T, K, SeriesBase*>;
     py::class_<RhoWynn, SeriesAccel>(m, "RhoWynnAlgorithm")
         .def(py::init<SeriesBase*, numerator_type, T, T>(),
              py::arg("series"), py::keep_alive<1, 2>(),
@@ -249,12 +249,12 @@ PYBIND11_MODULE(pyshanks, m) {
         .def(py::init<SeriesBase*>(), py::arg("series"), py::keep_alive<1, 2>())
         .def("__call__", &Epsilon::operator());
 
-    using Epsilon2 = wynn_epsilon_algorithm_two<T, K, SeriesBase*>;
+    using Epsilon2 = wynn_epsilon_2_algorithm<T, K, SeriesBase*>;
     py::class_<Epsilon2, SeriesAccel>(m, "WynnEpsilonAlgorithmTwo")
         .def(py::init<SeriesBase*>(), py::arg("series"), py::keep_alive<1, 2>())
         .def("__call__", &Epsilon2::operator());
 
-    using Epsilon3 = wynn_epsilon_algorithm_three<T, K, SeriesBase*>;
+    using Epsilon3 = wynn_epsilon_3_algorithm<T, K, SeriesBase*>;
     py::class_<Epsilon3, SeriesAccel>(m, "WynnEpsilonAlgorithmThree")
         .def(py::init<SeriesBase*, T>(),
              py::arg("series"), py::keep_alive<1, 2>(),

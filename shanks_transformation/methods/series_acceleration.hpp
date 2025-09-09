@@ -4,10 +4,6 @@
  */
 
 #pragma once
-/** @brief Default value for undefined transformation */
-#define DEF_NO_TRANSFORM 0
-/** @brief Default value for an unspecified series */
-#define NO_SERIES_GIVEN 0
 
 #include <iostream>   // Include the iostream library for I/O functionalities
 

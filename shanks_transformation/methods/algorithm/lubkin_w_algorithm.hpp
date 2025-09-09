@@ -6,6 +6,7 @@
 #pragma once
 
 #include "../series_acceleration.hpp"
+#include <cmath> //Include for fma, isfinite
 
 /**
  * @brief W_transformation class template.

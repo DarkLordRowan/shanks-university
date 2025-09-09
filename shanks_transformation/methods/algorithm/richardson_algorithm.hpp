@@ -7,6 +7,7 @@
 
 #include "../series_acceleration.hpp"
 #include <vector> // Include the vector library
+#include <cmath> //Include for fma, isfinite
 
  /**
  * @brief Richardson transformation
