@@ -71,8 +71,9 @@ inline T levin_sidi_m_algorithm<T, K, series_templ>::calculate(const K n, const 
 
 	using std::isfinite;
 
-	if (gamma - static_cast<T>(order - static_cast<K>(1)) < static_cast<T>(0))
-		throw std::domain_error("gamma cannot be lesser than order - 1");
+	//TODO разобраться с документом (pdf) n/order
+	if (gamma - static_cast<T>(n - static_cast<K>(1)) < static_cast<T>(0))
+		throw std::domain_error("gamma cannot be lesser than n - 1");
 
 	T numerator = static_cast<T>(0), denominator = static_cast<T>(0);
 
