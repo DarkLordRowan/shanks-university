@@ -2777,7 +2777,7 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-arcsin_x_minus_x_series<T, K>::arcsin_x_minus_x_series(T x) : series_base<T, K>(x, std::asin(x) - x)
+arcsin_x_minus_x_series<T, K>::arcsin_x_minus_x_series(T x) : series_base<T, K>(x, static_cast<T>(std::asin(x)) - x) 
 {
 	if (std::abs(this->x) > 1)
 		throw std::domain_error("the arcsin(x) - x series diverge at x = " + std::to_string(x) + "; series converge if x only in [-1, 1]");
@@ -2822,17 +2822,18 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-pi_x_minus_x_square_and_x_square_minus_three_pi_x_plus_two_pi_square_series<T, K>::pi_x_minus_x_square_and_x_square_minus_three_pi_x_plus_two_pi_square_series(T x) : series_base<T, K>(x)
+pi_x_minus_x_square_and_x_square_minus_three_pi_x_plus_two_pi_square_series<T, K>::pi_x_minus_x_square_and_x_square_minus_three_pi_x_plus_two_pi_square_series(T x) : series_base<T, K>(x, 
+	0 < x && x < std::numbers::pi ? static_cast<T>(std::numbers::pi) * x - x * x : (x * x)  - (static_cast<T>(3) * static_cast<T>(std::numbers::pi) * x) + (2 * static_cast<T>(std::numbers::pi) * static_cast<T>(std::numbers::pi)))
 {
-	if (this->x <= 0 || this->x >= 2 * std::numbers::pi)
+	if (this->x <= static_cast<T>(0) || this->x >= static_cast<T>(2) * static_cast<T>(std::numbers::pi))
 		throw std::domain_error("the series diverge at x = " + std::to_string(x) + "; series converge if x only in (0, 2pi)");
 }
 
 template <std::floating_point T, std::unsigned_integral K>
 constexpr T pi_x_minus_x_square_and_x_square_minus_three_pi_x_plus_two_pi_square_series<T, K>::operator()(K n) const
 {
-	const K a = static_cast<K>(std::fma(2, n, 1));
-	return static_cast<T>((8 / std::numbers::pi) * (std::sin(a * (this->x)) / std::pow(a, 3))); // (56.2) [Rows.pdf]
+	const T a = static_cast<T>(std::fma(2, n, 1));
+	return (static_cast<T>(8) / std::numbers::pi_v<T>) * (static_cast<T>(std::sin(a * (this->x))) / static_cast<T>(std::pow(a, 3))); // (56.2) [Rows.pdf]
 }
 
 
@@ -2867,17 +2868,18 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-abs_sin_x_minus_2_div_pi_series<T, K>::abs_sin_x_minus_2_div_pi_series(T x) : series_base<T, K>(x, static_cast<T>(std::abs(std::sin(x)) - (2 / std::numbers::pi)))
+abs_sin_x_minus_2_div_pi_series<T, K>::abs_sin_x_minus_2_div_pi_series(T x) : series_base<T, K>(x, 
+	0 <= x && x <= static_cast<T>(std::numbers::pi) ? static_cast<T>(std::sin(x)) - (static_cast<T>(2) / static_cast<T>(std::numbers::pi)) : - static_cast<T>(std::sin(x)) - (static_cast<T>(2) / static_cast<T>(std::numbers::pi))) 
 {
-	if (this->x <= 0 || this->x >= 2 * std::numbers::pi)
-		throw std::domain_error("the series diverge at x = " + std::to_string(x) + "; series converge if x only in (0, 2pi)");
+	if (this->x < 0 || this->x > 2 * std::numbers::pi)
+		throw std::domain_error("the series diverge at x = " + std::to_string(x) + "; series converge if x only in [0, 2pi]");
 }
 
 template <std::floating_point T, std::unsigned_integral K>
 constexpr T abs_sin_x_minus_2_div_pi_series<T, K>::operator()(K n) const
 {
-	const K a = static_cast<K>(std::fma(2, n, 1));
-	return static_cast<T>(-4 * (std::cos((this->x) * (a + 1))) / (a * (a + 2) * std::numbers::pi)); // (57.2) [Rows.pdf]
+	const T a = static_cast<T>(std::fma(2, n, 1));
+	return static_cast<T>(-4) * static_cast<T>((std::cos((this->x) * (a + static_cast<T>(1))))) / (a * (a + static_cast<T>(2)) * static_cast<T>(std::numbers::pi)); // (57.2) [Rows.pdf]
 }
 
 
@@ -2912,9 +2914,10 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-pi_minus_3pi_4_and_pi_minus_x_minus_3pi_4_series<T, K>::pi_minus_3pi_4_and_pi_minus_x_minus_3pi_4_series(T x) : series_base<T, K>(x)
+pi_minus_3pi_4_and_pi_minus_x_minus_3pi_4_series<T, K>::pi_minus_3pi_4_and_pi_minus_x_minus_3pi_4_series(T x) : series_base<T, K>(x,
+	- static_cast<T>(std::numbers::pi) < x && x < 0 ? static_cast<T>(std::numbers::pi) - static_cast<T>(3) * static_cast<T>(std::numbers::pi) / static_cast<T>(4) : static_cast<T>(std::numbers::pi) - x - static_cast<T>(3) * static_cast<T>(std::numbers::pi) / static_cast<T>(4)) 
 {
-	if (this->x <= -std::numbers::pi || this->x > std::numbers::pi)
+	if (this->x <= - static_cast<T>(std::numbers::pi) || this->x > static_cast<T>(std::numbers::pi))
 		throw std::domain_error("the series diverge at x = " + std::to_string(x) + "; series converge if x only in (-pi, pi]");
 }
 
@@ -2922,9 +2925,8 @@ template <std::floating_point T, std::unsigned_integral K>
 constexpr T pi_minus_3pi_4_and_pi_minus_x_minus_3pi_4_series<T, K>::operator()(K n) const
 {
 	const K a = n + 1;
-	const K b = 1 - 2 * (a & 1); // (1 - 2 * ((n + 1) & 1)) = (-1)^{n+1}
-	const T c = static_cast<T>(a * (this->x));
-	return static_cast<T>((std::cos(c) * (1 - b)) / (a * a * std::numbers::pi) + b * std::sin(c) / a); // (58.5) [Rows.pdf]
+	const T b = a * this->x;
+	return (static_cast<T>(std::cos(b)) * (static_cast<T>(1) - this->minus_one_raised_to_power_n(static_cast<K>(a)))) / (static_cast<T>(a) * static_cast<T>(a) * static_cast<T>(std::numbers::pi)) + this->minus_one_raised_to_power_n(static_cast<K>(a)) * static_cast<T>(std::sin(b)) / static_cast<T>(a); // (58.5) [Rows.pdf]
 }
 
 
@@ -2960,7 +2962,8 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-minus_3_div_4_or_x_minus_3_div_4_series<T, K>::minus_3_div_4_or_x_minus_3_div_4_series(T x) : series_base<T, K>(x)
+minus_3_div_4_or_x_minus_3_div_4_series<T, K>::minus_3_div_4_or_x_minus_3_div_4_series(T x) : series_base<T, K>(x,
+	-3 < x && x < 0 ? - static_cast<T>(3) / static_cast<T>(4) : x - static_cast<T>(3) / static_cast<T>(4)) 
 {
 	if (this->x <= -3 || this->x >= 3)
 		throw std::domain_error("the series diverge at x = " + std::to_string(x) + "; series converge if x only in (-3, 3)");
@@ -2969,11 +2972,11 @@ minus_3_div_4_or_x_minus_3_div_4_series<T, K>::minus_3_div_4_or_x_minus_3_div_4_
 template <std::floating_point T, std::unsigned_integral K>
 constexpr T minus_3_div_4_or_x_minus_3_div_4_series<T, K>::operator()(K n) const
 {
-	const K a = n + 1;
-	const K b = a + n; // 2 * n + 1
-	const T c = static_cast<T>((this->x) * std::numbers::pi / 3);
-	const T d = static_cast<T>(std::numbers::pi * b);
-	return static_cast<T>(-6 * std::cos(b * c) / (d * d) - 3 * (1 - 2 * (a & 1)) * std::sin(a * c) / (a * std::numbers::pi));  // (59.5) [Rows.pdf], (1 - 2 * ((n + 1) & 1)) = (-1)^{n+1}
+	const T a = static_cast<T>(n + static_cast<K>(1));
+	const T b = a + static_cast<T>(n); // 2 * n + 1
+	const T c = this->x * static_cast<T>(std::numbers::pi) / static_cast<T>(3);
+	const T d = static_cast<T>(std::numbers::pi) * b;
+	return static_cast<T>(-6) * static_cast<T>(std::cos(b * c)) / (d * d) - static_cast<T>(3) * this->minus_one_raised_to_power_n(static_cast<K>(a)) * static_cast<T>(std::sin(a * c)) / (a * static_cast<T>(std::numbers::pi));  // (59.5) [Rows.pdf], (1 - 2 * ((n + 1) & 1)) = (-1)^{n+1}
 }
 
 
@@ -3008,18 +3011,18 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-ten_minus_x_series<T, K>::ten_minus_x_series(T x) : series_base<T, K>(x, 10 - this->x)
+ten_minus_x_series<T, K>::ten_minus_x_series(T x) : series_base<T, K>(x, static_cast<T>(10) - x) 
 {
-	if (this->x <= 5 || this->x >= 15)
-		throw std::domain_error("the series diverge at x = " + std::to_string(x) + "; series converge if x only in (5, 15)");
+	if (this->x <= static_cast<T>(5) || this->x >= static_cast<T>(15))
+		 throw std::domain_error("the series diverge at x = " + std::to_string(x) + "; series converge if x only in (5, 15)");
 }
 
 template <std::floating_point T, std::unsigned_integral K>
 constexpr T ten_minus_x_series<T, K>::operator()(K n) const
 {
-	const K a = n + 1;
-	const T b = static_cast<T>(a * std::numbers::pi);
-	return static_cast<T>((10 - 20 * (a & 1)) * std::sin(b * (this->x) / 5) / b); // (60.4) [Rows.pdf], (1 - 2 * ((n + 1) & 1)) = (-1)^{n+1}
+	const T a = static_cast<T>(n + static_cast<K>(1));
+	const T b = a * static_cast<T>(std::numbers::pi);
+	return static_cast<T>(10) * this->minus_one_raised_to_power_n(static_cast<K>(a)) * static_cast<T>(std::sin(b * this->x / static_cast<T>(5))) / b; // (60.4) [Rows.pdf], (1 - 2 * ((n + 1) & 1)) = (-1)^{n+1}
 }
 
 
