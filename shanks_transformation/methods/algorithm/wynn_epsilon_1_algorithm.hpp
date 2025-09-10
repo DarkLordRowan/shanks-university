@@ -86,6 +86,9 @@ T wynn_epsilon_1_algorithm<T, K, series_templ>::operator()(const K n, const K or
 
 	// For theory, see: Wynn (1956), Section 2 - Definition of εₖ⁽ⁿ⁾
 	// Initial condition: ε₀⁽ⁿ⁾ = Sₙ (n-th partial sum)
+	if (n == static_cast<K>(0))
+		throw std::domain_error("n = 0 in the input");
+
 	if (order == static_cast<K>(0))
 		return this->series->S_n(n);
 
@@ -115,6 +118,7 @@ T wynn_epsilon_1_algorithm<T, K, series_templ>::operator()(const K n, const K or
 	// For theory, see: Wynn (1956), Eq. (4) - Main recurrence relation
 	// εₖ₊₁⁽ⁿ⁾ = εₖ₋₁⁽ⁿ⁺¹⁾ + 1/(εₖ⁽ⁿ⁺¹⁾ - εₖ⁽ⁿ⁾)
 	for (K i = static_cast<K>(0); i < m; ++i) {
+
 		for (K j = n1; j < max_ind; ++j) {
 			// Compute εₖ₊₁⁽ʲ⁾ using the recurrence relation
 			(*e1_add)[j] += static_cast<T>(1) / ((*e0_add)[j + static_cast<K>(1)] - (*e0_add)[j]);
