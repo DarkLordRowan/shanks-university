@@ -6,7 +6,7 @@ import inspect
 import types
 
 try:
-    import pyshanks
+    from . import pyshanks
 except Exception as e:
     raise RuntimeError(f"Не удалось импортировать pyshanks: {e}") from e
 

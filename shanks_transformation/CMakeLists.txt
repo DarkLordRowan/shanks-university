@@ -19,15 +19,6 @@ FetchContent_MakeAvailable(pybind11)
 pybind11_add_module(pyshanks py.cpp)
 target_include_directories(pyshanks PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 set_target_properties(pyshanks PROPERTIES PREFIX "")
-# авто размещение в папку backend файла pyshanks.pyd
-set(OUTPUT_BACKEND_DIR "${CMAKE_SOURCE_DIR}/../backend")
-add_custom_command(TARGET pyshanks POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E make_directory "${OUTPUT_BACKEND_DIR}"
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        "$<TARGET_FILE:pyshanks>"
-        "${OUTPUT_BACKEND_DIR}/$<TARGET_FILE_NAME:pyshanks>"
-        COMMENT "Copying $<TARGET_FILE_NAME:pyshanks> -> ${OUTPUT_BACKEND_DIR}"
-)
 
 # -------------------------
 # Тесты (GoogleTest) — автоподхват всех *.cpp в ./tests/**

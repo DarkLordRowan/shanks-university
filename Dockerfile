@@ -1,15 +1,26 @@
 # ---- builder: собираем нативное расширение ----
 FROM python:3.13-slim AS builder
-RUN apt-get update && apt-get install -y --no-install-recommends build-essential cmake git \
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    cmake \
+    git \
  && rm -rf /var/lib/apt/lists/*
 WORKDIR /src
 COPY shanks_transformation/ ./shanks_transformation/
 RUN cmake -S shanks_transformation -B build -DCMAKE_BUILD_TYPE=Release \
- && cmake --build build --config Release
-RUN mkdir -p /wheel && cp -v build/*.so /wheel/ 2>/dev/null || true
+      -DPython3_EXECUTABLE="$(which python)" \
+ && cmake --build build --config Release --target pyshanks
 
-# ---- runtime: только то, что нужно для запуска ----
+# (на Linux это .so; добавил .pyd на всякий случай)
+RUN mkdir -p /wheel && \
+    (find build -name "pyshanks*.so"  -exec cp -v {} /wheel/ \; || true) && \
+    (find build -name "pyshanks*.pyd" -exec cp -v {} /wheel/ \; || true)
+
+# ---- runtime: минимальный образ для запуска FastAPI ----
 FROM python:3.13-slim
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
 WORKDIR /app
 COPY backend/requirements.txt ./backend/requirements.txt
 RUN python -m pip install --no-cache-dir -r backend/requirements.txt
