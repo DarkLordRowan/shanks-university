@@ -45,6 +45,7 @@ protected:
 
 	const T gamma;											///< Positive real parameter such that gamma >= order - 1
 	std::unique_ptr<const transform_base<T, K>> remainder;	///< Pointer to remainder transformation object
+	remainder_type variant;
 
 	/**
 	 * @brief Core implementation of the M-transformation using direct summation.
@@ -196,6 +197,7 @@ levin_sidi_m_algorithm<T, K, series_templ>::levin_sidi_m_algorithm(
 	const T gamma_
 	) :
 	series_acceleration<T, K, series_templ>(series),
+	variant(variant),
 	gamma(gamma_)
 {
 

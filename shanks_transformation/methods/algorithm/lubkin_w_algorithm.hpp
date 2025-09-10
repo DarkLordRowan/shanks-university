@@ -100,9 +100,6 @@ public:
 template<std::floating_point T, std::unsigned_integral K, typename series_templ>
 T lubkin_w_algorithm<T, K, series_templ>::operator()(const K n, const K order) const {
 
-	if (order < static_cast<K>(0)) 
-		throw std::domain_error("negative order input");
-
 	return calculate(n, order);
 }
 

@@ -691,7 +691,7 @@ inline static void main_testing_function()
 		transform.reset(new levin_sidi_s_algorithm<T, K, decltype(series.get())>(series.get()));
 		break;
 	case transformation_id_t::D_algorithm_id:
-		transform.reset(new drummond_d_algorithm<T, K, decltype(series.get())>(series.get()));
+		transform.reset(new drummond_d_algorithm<T, K, decltype(series.get())>(series.get(), remainder_type::t_variant));
 		break;
 	case transformation_id_t::chang_epsilon_algorithm_id:
 		transform.reset(new chang_wynn_algorithm<T, K, decltype(series.get())>(series.get()));
@@ -784,7 +784,7 @@ inline static void main_testing_function()
 			transform.reset(new levin_sidi_s_algorithm<T, K, decltype(series.get())>(series.get()));
 			break;
 		case transformation_id_t::D_algorithm_id:
-			transform.reset(new drummond_d_algorithm<T, K, decltype(series.get())>(series.get()));
+			transform.reset(new drummond_d_algorithm<T, K, decltype(series.get())>(series.get(), remainder_type::t_variant));
 			break;
 		case transformation_id_t::chang_epsilon_algorithm_id:
 			transform2.reset(new chang_wynn_algorithm<T, K, decltype(series.get())>(series.get()));
@@ -828,7 +828,7 @@ inline static void main_testing_function()
 		eval_transform_time(n, order, std::move(series.get()), std::move(transform.get()));
 		break;
 	case test_function_id_t::test_all_transforms_id: //Testing all functions for series
-		for (K i = 1; i <= n; i++)
+		for (K i = 0; i <= n; i++)
 		{
 			print_sum(i, std::move(series.get()));
 

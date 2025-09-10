@@ -26,7 +26,7 @@ template <std::unsigned_integral K, typename series_templ, typename transform_ty
 void cmp_sum_and_transform(const K n, const K order, const series_templ&& series, const transform_type&& test)
 {
 	test->print_info();
-	for (K i = 1; i <= n; ++i) {
+	for (K i = 0; i <= n; ++i) {
 		try 
 		{
 			std::cout << "Sum of algo : " << series->get_sum() << '\n';
