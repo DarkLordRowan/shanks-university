@@ -1,0 +1,23 @@
+[project]
+name = "shanks-consumer"
+version = "0.1.0"
+description = "shanks_consumer"
+authors = [
+    {name = "abyssal",email = "abyssal@example.com"}
+]
+readme = "README.md"
+requires-python = "^3.11"
+dependencies = [
+]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.pylint.MASTER]
+extension-pkg-allow-list = ["pyshanks"]
+
+[tool.pylint.TYPECHECK]
+generated-members = ["pyshanks.*"]
+ignored-modules = ["pyshanks"]
