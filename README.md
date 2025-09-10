@@ -113,9 +113,9 @@ Doxygen документация доступна [по ссылке](https://bi
 
 
 
-# Запуск:
+# Запуск backend api:
 
 ```
-cmake -S . -B build
-cmake --build build --config Release   # или Debug
+docker build -t shanks-api:latest .
+docker run -d --name shanks-api -p 8000:8000 --restart unless-stopped shanks-api:latest
 ```

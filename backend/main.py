@@ -2,7 +2,7 @@ from typing import Dict, Optional
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 
-from pyshanks_wrapper import ShanksEngine, SeriesResult, AccelResult
+from .pyshanks_wrapper import ShanksEngine, SeriesResult, AccelResult
 
 app = FastAPI(title="Series Computation API", version="0.1.0", root_path="/api")
 engine = ShanksEngine()
