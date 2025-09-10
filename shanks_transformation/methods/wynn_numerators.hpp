@@ -192,6 +192,6 @@ public:
 		T base = -gamma + static_cast<T>(order / static_cast<K>(2)) / rho;
 
 		// Add 1 for odd orders (order & 1 checks parity)
-		return base + static_cast<T>(order & static_cast<K>(1)));
+		return base + static_cast<T>(order & static_cast<K>(1));
 	}
 };
