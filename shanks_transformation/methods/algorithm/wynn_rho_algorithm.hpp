@@ -89,11 +89,21 @@ public:
 	 *        Valid values: T >= 0, typically 0 or 1
 	 *        Additional parameter for gamma-rho variant
 	 */
+
+	// // Был:
+	//explicit wynn_rho_algorithm(
+	//	const series_templ& series,
+	//	numerator_type variant = numerator_type::rho_variant,
+	//	T gamma_ = T(1), // Передача по значению
+	//	T RHO_ = T(0)    // Передача по значению
+	//);
+
+	// Стал:
 	explicit wynn_rho_algorithm(
 		const series_templ& series,
 		numerator_type variant = numerator_type::rho_variant,
-		T gamma_ = T(1),
-		T RHO_ = T(0)
+		const T& gamma_ = T(1), // Передача по константной ссылке
+		const T& RHO_ = T(0)    // Передача по константной ссылке
 	);
 
 	//Default destructor is sufficient since unique_ptr handles deletion
@@ -137,7 +147,7 @@ public:
 	template <typename BigK, typename BigOrder, typename = std::enable_if_t<!std::is_same_v<BigK, K> || !std::is_same_v<BigOrder, K>>> T operator()(const BigK& n, const BigOrder& order) const {
 		static_assert(std::is_constructible_v<K, BigK>, "Term count type must be convertible to K");
 
-		return calculate_impl(static_cast<K>(n), static_cast<int>(order));
+		return calculate(static_cast<K>(n), static_cast<int>(order)); // ЗАМЕНА calculate_impl НА calculate ... поскольку первого просто не существует, возможно предполагалось его использование
 	}
 };
 
@@ -145,8 +155,8 @@ template <std::floating_point T, std::unsigned_integral K, typename series_templ
 wynn_rho_algorithm<T, K, series_templ>::wynn_rho_algorithm(
 	const series_templ& series,
 	const numerator_type variant,
-	const T gamma_,
-	const T RHO_
+	const T& gamma_,
+	const T& RHO_
 	) :
 	series_acceleration<T, K, series_templ>(series),
 	gamma(gamma_),
