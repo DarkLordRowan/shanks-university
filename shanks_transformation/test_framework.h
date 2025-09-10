@@ -485,31 +485,31 @@ inline static void main_testing_function()
 		series.reset(new pi_x_multi_e_xpi_plus_e_minusxpi_divided_e_xpi_minus_e_minusxpi_minus_one_series<T, K>(x));
 		break;
 	case series_id_t::pi_minus_x_2_id:
-		series.reset(new pi_minus_x_2<T, K>(x));
+		series.reset(new pi_minus_x_2_series<T, K>(x));
 		break;
 	case series_id_t::half_multi_ln_1div2multi1minuscosx_id:
-		series.reset(new half_multi_ln_1div2multi1minuscosx<T, K>(x));
+		series.reset(new half_multi_ln_1div2multi1minuscosx_series<T, K>(x));
 		break;
 	case series_id_t::half_minus_sinx_multi_pi_4_id:
-		series.reset(new half_minus_sinx_multi_pi_4<T, K>(x));
+		series.reset(new half_minus_sinx_multi_pi_4_series<T, K>(x));
 		break;
 	case series_id_t::ln_1plussqrt1plusxsquare_minus_ln_2_id:
-		series.reset(new ln_1plussqrt1plusxsquare_minus_ln_2<T, K>(x));
+		series.reset(new ln_1plussqrt1plusxsquare_minus_ln_2_series<T, K>(x));
 		break;
 	case series_id_t::ln_cosx_id:
-		series.reset(new ln_cosx<T, K>(x));
+		series.reset(new ln_cosx_series<T, K>(x));
 		break;
 	case series_id_t::ln_sinx_minus_ln_x_id:
-		series.reset(new ln_sinx_minus_ln_x<T, K>(x));
+		series.reset(new ln_sinx_minus_ln_x_series<T, K>(x));
 		break;
 	case series_id_t::pi_8_cosx_square_minus_1_div_3_cosx_id:
-		series.reset(new pi_8_cosx_square_minus_1_div_3_cosx<T, K>(x));
+		series.reset(new pi_8_cosx_square_minus_1_div_3_cosx_series<T, K>(x));
 		break;
 	case series_id_t::sqrt_oneminussqrtoneminusx_div_x_id:
-		series.reset(new sqrt_oneminussqrtoneminusx_div_x<T, K>(x));
+		series.reset(new sqrt_oneminussqrtoneminusx_div_x_series<T, K>(x));
 		break;
 	case series_id_t::one_minus_sqrt_1minus4x_div_2x_id:
-		series.reset(new one_minus_sqrt_1minus4x_div_2x<T, K>(x));
+		series.reset(new one_minus_sqrt_1minus4x_div_2x_series<T, K>(x));
 		break;
 	case series_id_t::arcsin_x_minus_x_series_id:
 		series.reset(new arcsin_x_minus_x_series<T, K>(x));

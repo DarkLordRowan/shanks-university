@@ -74,15 +74,15 @@ PYBIND11_MODULE(pyshanks, m) {
     S(SER43, minus_three_plus_ln3_three_devided_two_plus_two_ln2_series, "MinusThreePlusLn3ThreeDividedTwoPlusTwoLn2Series", (T))
     S(SER44, two_ln2_series, "TwoLn2Series", (T))
     S(SER45, pi_x_multi_e_xpi_plus_e_minusxpi_divided_e_xpi_minus_e_minusxpi_minus_one_series, "PiXMultiE_XpiPlusEMinusXpiDividedE_XpiMinusEMinusXpiMinusOneSeries", (T))
-    S(SER46, pi_minus_x_2, "PiMinusX2Series", (T))
-    S(SER47, half_multi_ln_1div2multi1minuscosx, "HalfMultiLn1Div2Multi1MinusCosxSeries", (T))
-    S(SER48, half_minus_sinx_multi_pi_4, "HalfMinusSinxMultiPi4Series", (T))
-    S(SER49, ln_1plussqrt1plusxsquare_minus_ln_2, "Ln1PlusSqrt1PlusXsquareMinusLn2Series", (T))
-    S(SER50, ln_cosx, "LnCosxSeries", (T))
-    S(SER51, ln_sinx_minus_ln_x, "LnSinxMinusLnXSeries", (T))
-    S(SER52, pi_8_cosx_square_minus_1_div_3_cosx, "Pi8CosxSquareMinus1Div3CosxSeries", (T))
-    S(SER53, sqrt_oneminussqrtoneminusx_div_x, "SqrtOneminusSqrtoneminusxDivXSeries", (T))
-    S(SER54, one_minus_sqrt_1minus4x_div_2x, "OneMinusSqrt1minus4xDiv2xSeries", (T))
+    S(SER46, pi_minus_x_2_series, "PiMinusX2Series", (T))
+    S(SER47, half_multi_ln_1div2multi1minuscosx_series, "HalfMultiLn1Div2Multi1MinusCosxSeries", (T))
+    S(SER48, half_minus_sinx_multi_pi_4_series, "HalfMinusSinxMultiPi4Series", (T))
+    S(SER49, ln_1plussqrt1plusxsquare_minus_ln_2_series, "Ln1PlusSqrt1PlusXsquareMinusLn2Series", (T))
+    S(SER50, ln_cosx_series, "LnCosxSeries", (T))
+    S(SER51, ln_sinx_minus_ln_x_series, "LnSinxMinusLnXSeries", (T))
+    S(SER52, pi_8_cosx_square_minus_1_div_3_cosx_series, "Pi8CosxSquareMinus1Div3CosxSeries", (T))
+    S(SER53, sqrt_oneminussqrtoneminusx_div_x_series, "SqrtOneminusSqrtoneminusxDivXSeries", (T))
+    S(SER54, one_minus_sqrt_1minus4x_div_2x_series, "OneMinusSqrt1minus4xDiv2xSeries", (T))
     S(SER55, arcsin_x_minus_x_series, "ArcsinXMinusXSeries", (T))
     S(SER56, pi_x_minus_x_square_and_x_square_minus_three_pi_x_plus_two_pi_square_series, "PiXMinusXSquareAndXSquareMinusThreePiXPlusTwoPiSquareSeries", (T))
     S(SER57, abs_sin_x_minus_2_div_pi_series, "AbsSinXMinus2DivPiSeries", (T))
@@ -136,9 +136,9 @@ PYBIND11_MODULE(pyshanks, m) {
     #undef S
 
     // series_acceleration
-    using SeriesAccel = series_acceleration<T, K, SeriesBase*>;
-    py::class_<SeriesAccel>(m, "SeriesAcceleration")
-        .def("__call__", &SeriesAccel::operator());
+    using SeriesAcceleration = series_acceleration<T, K, SeriesBase*>;
+    py::class_<SeriesAcceleration>(m, "SeriesAcceleration")
+        .def("__call__", &SeriesAcceleration::operator());
 
     py::enum_<remainder_type>(m, "RemainderType")
         .value("u_variant", remainder_type::u_variant)
@@ -155,91 +155,91 @@ PYBIND11_MODULE(pyshanks, m) {
         .export_values();
 
     using Shanks = shanks_algorithm<T, K, SeriesBase*>;
-    py::class_<Shanks, SeriesAccel>(m, "ShanksTransform")
+    py::class_<Shanks, SeriesAcceleration>(m, "ShanksAlgorithm")
         .def(py::init<SeriesBase*>(), py::arg("series"), py::keep_alive<1, 2>());
 
     using ShanksAlt = shanks_transform_alternating<T, K, SeriesBase*>;
-    py::class_<ShanksAlt, SeriesAccel>(m, "ShanksTransformAlternating")
+    py::class_<ShanksAlt, SeriesAcceleration>(m, "ShanksTransformAlternatingAlgorithm")
         .def(py::init<SeriesBase*>(), py::arg("series"), py::keep_alive<1, 2>());
 
 
     using BrezinskiTheta = brezinski_theta_algorithm<T, K, SeriesBase*>;
-    py::class_<BrezinskiTheta, SeriesAccel>(m, "BrezinskiThetaAlgorithm")
+    py::class_<BrezinskiTheta, SeriesAcceleration>(m, "BrezinskiThetaAlgorithm")
         .def(py::init<SeriesBase*>(), py::arg("series"), py::keep_alive<1, 2>());
 
     using ChangWynn = chang_wynn_algorithm<T, K, SeriesBase*>;
-    py::class_<ChangWynn, SeriesAccel>(m, "ChangWynnAlgorithm")
+    py::class_<ChangWynn, SeriesAcceleration>(m, "ChangWynnAlgorithm")
         .def(py::init<SeriesBase*>(), py::arg("series"), py::keep_alive<1, 2>());
 
     using DrummondD = drummond_d_algorithm<T, K, SeriesBase*>;
-    py::class_<DrummondD, SeriesAccel>(m, "DrummondDAlgorithm")
+    py::class_<DrummondD, SeriesAcceleration>(m, "DrummondDAlgorithm")
         .def(py::init<SeriesBase*, remainder_type, bool>(),
-             py::arg("series"), py::keep_alive<1, 2>(),
-             py::arg("variant") = remainder_type::u_variant,
-             py::arg("useRecFormulas") = false);
+            py::arg("series"), py::keep_alive<1, 2>(),
+            py::arg("variant") = remainder_type::u_variant,
+            py::arg("useRecFormulas") = false);
 
-    using FordSidiTwo = ford_sidi_2_algorithm<T, K, SeriesBase*>;
-    py::class_<FordSidiTwo, SeriesAccel>(m, "FordSidiAlgorithmTwo")
+    using FordSidi2 = ford_sidi_2_algorithm<T, K, SeriesBase*>;
+    py::class_<FordSidi2, SeriesAcceleration>(m, "FordSidi2Algorithm")
         .def(py::init<SeriesBase*>(), py::arg("series"), py::keep_alive<1, 2>());
 
     using FordSidiThree = ford_sidi_3_algorithm<T, K, SeriesBase*>;
-    py::class_<FordSidiThree, SeriesAccel>(m, "FordSidiAlgorithmThree")
+    py::class_<FordSidiThree, SeriesAcceleration>(m, "FordSidi3Algorithm")
         .def(py::init<SeriesBase*>(), py::arg("series"), py::keep_alive<1, 2>());
 
-    using LevinL = levin_algorithm<T, K, SeriesBase*>;
-    py::class_<LevinL, SeriesAccel>(m, "LevinLAlgorithm")
+    using Levin = levin_algorithm<T, K, SeriesBase*>;
+    py::class_<Levin, SeriesAcceleration>(m, "LevinAlgorithm")
         .def(py::init<SeriesBase*, remainder_type, bool, T>(),
-             py::arg("series"), py::keep_alive<1, 2>(),
-             py::arg("variant") = remainder_type::u_variant,
-             py::arg("useRecFormulas") = false,
-             py::arg("beta") = static_cast<T>(1));
+            py::arg("series"), py::keep_alive<1, 2>(),
+            py::arg("variant") = remainder_type::u_variant,
+            py::arg("useRecFormulas") = false,
+            py::arg("beta") = static_cast<T>(1));
 
     using LevinSidiM = levin_sidi_m_algorithm<T, K, SeriesBase*>;
-    py::class_<LevinSidiM, SeriesAccel>(m, "LevinSidiMAlgorithm")
+    py::class_<LevinSidiM, SeriesAcceleration>(m, "LevinSidiMAlgorithm")
         .def(py::init<SeriesBase*, remainder_type, T>(),
-             py::arg("series"), py::keep_alive<1, 2>(),
-             py::arg("variant") = remainder_type::u_variant,
-             py::arg("gamma") = static_cast<T>(10));
+            py::arg("series"), py::keep_alive<1, 2>(),
+            py::arg("variant") = remainder_type::u_variant,
+            py::arg("gamma") = static_cast<T>(10));
 
     using LevinSidiS = levin_sidi_s_algorithm<T, K, SeriesBase*>;
-    py::class_<LevinSidiS, SeriesAccel>(m, "LevinSidiSAlgorithm")
+    py::class_<LevinSidiS, SeriesAcceleration>(m, "LevinSidiSAlgorithm")
         .def(py::init<SeriesBase*, remainder_type, bool, T>(),
-             py::arg("series"), py::keep_alive<1, 2>(),
-             py::arg("variant") = remainder_type::u_variant,
-             py::arg("useRecFormulas") = false,
-             py::arg("parameter") = static_cast<T>(1));
+            py::arg("series"), py::keep_alive<1, 2>(),
+            py::arg("variant") = remainder_type::u_variant,
+            py::arg("useRecFormulas") = false,
+            py::arg("parameter") = static_cast<T>(1));
 
     using LubkinW = lubkin_w_algorithm<T, K, SeriesBase*>;
-    py::class_<LubkinW, SeriesAccel>(m, "LubkinWAlgorithm")
+    py::class_<LubkinW, SeriesAcceleration>(m, "LubkinWAlgorithm")
         .def(py::init<SeriesBase*>(), py::arg("series"), py::keep_alive<1, 2>());
 
-    using RhoWynn = wynn_rho_algorithm<T, K, SeriesBase*>;
-    py::class_<RhoWynn, SeriesAccel>(m, "RhoWynnAlgorithm")
+    using WhynnRho = wynn_rho_algorithm<T, K, SeriesBase*>;
+    py::class_<WhynnRho, SeriesAcceleration>(m, "WhynnRhoAlgorithm")
         .def(py::init<SeriesBase*, numerator_type, T, T>(),
-             py::arg("series"), py::keep_alive<1, 2>(),
-             py::arg("variant") = numerator_type::rho_variant,
-             py::arg("gamma") = static_cast<T>(1),
-             py::arg("RHO") = static_cast<T>(0));
+            py::arg("series"), py::keep_alive<1, 2>(),
+            py::arg("variant") = numerator_type::rho_variant,
+            py::arg("gamma") = static_cast<T>(1),
+            py::arg("RHO") = static_cast<T>(0));
 
     using Richardson = richardson_algorithm<T, K, SeriesBase*>;
-    py::class_<Richardson, SeriesAccel>(m, "RichardsonAlgorithm")
+    py::class_<Richardson, SeriesAcceleration>(m, "RichardsonAlgorithm")
         .def(py::init<SeriesBase*>(), py::arg("series"), py::keep_alive<1, 2>());
 
     using Weniger = weniger_algorithm<T, K, SeriesBase*>;
-    py::class_<Weniger, SeriesAccel>(m, "WenigerAlgorithm")
+    py::class_<Weniger, SeriesAcceleration>(m, "WenigerAlgorithm")
         .def(py::init<SeriesBase*>(), py::arg("series"), py::keep_alive<1, 2>());
 
-    using Epsilon = wynn_epsilon_1_algorithm<T, K, SeriesBase*>;
-    py::class_<Epsilon, SeriesAccel>(m, "WynnEpsilonAlgorithm")
+    using WynnEpsilon = wynn_epsilon_1_algorithm<T, K, SeriesBase*>;
+    py::class_<WynnEpsilon, SeriesAcceleration>(m, "WynnEpsilonAlgorithm")
         .def(py::init<SeriesBase*>(), py::arg("series"), py::keep_alive<1, 2>());
 
-    using Epsilon2 = wynn_epsilon_2_algorithm<T, K, SeriesBase*>;
-    py::class_<Epsilon2, SeriesAccel>(m, "WynnEpsilonAlgorithmTwo")
+    using WynnEpsilon2 = wynn_epsilon_2_algorithm<T, K, SeriesBase*>;
+    py::class_<WynnEpsilon2, SeriesAcceleration>(m, "WynnEpsilon2Algorithm")
         .def(py::init<SeriesBase*>(), py::arg("series"), py::keep_alive<1, 2>());
 
-    using Epsilon3 = wynn_epsilon_3_algorithm<T, K, SeriesBase*>;
-    py::class_<Epsilon3, SeriesAccel>(m, "WynnEpsilonAlgorithmThree")
+    using WynnEpsilon3 = wynn_epsilon_3_algorithm<T, K, SeriesBase*>;
+    py::class_<WynnEpsilon3, SeriesAcceleration>(m, "WynnEpsilon3Algorithm")
         .def(py::init<SeriesBase*, T>(),
-             py::arg("series"), py::keep_alive<1, 2>(),
-             py::arg("epsilon_threshold") = static_cast<T>(1e-3));
+            py::arg("series"), py::keep_alive<1, 2>(),
+            py::arg("epsilon_threshold") = static_cast<T>(1e-3));
 }
