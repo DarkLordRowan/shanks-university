@@ -3,12 +3,206 @@
  * @brief This file contains pybind11 bindings.
  */
 #include <pybind11/pybind11.h>
+#include <pybind11/numpy.h>
 
 #include "series.h"
 #include "methods.hpp"
 
-
 namespace py = pybind11;
+
+template <std::floating_point T, std::unsigned_integral K>
+class array_series : public series_base<T,K> {
+public:
+    array_series() = delete;
+
+    explicit array_series(py::buffer buffer);
+    explicit array_series(py::object seq);
+
+    [[nodiscard]] virtual T operator()(K n) const override;
+    [[nodiscard]] std::size_t size() const noexcept { return size_; }
+
+private:
+    void build_from_buffer(py::buffer buffer);
+    void copy_from_buffer_info(const py::buffer_info& info);
+    void copy_from_object(py::object obj);
+
+    py::object owner_;       ///< keeps the Python object alive while this instance exists
+    T* data_ptr_ = nullptr;  ///< points into either owner_'s buffer or storage_.data()
+    std::vector<T> storage_; ///< owned storage when zero-copy impossible
+    std::size_t size_ = 0;
+};
+
+template <std::floating_point T, std::unsigned_integral K>
+array_series<T,K>::array_series(py::buffer buffer)
+: owner_(buffer)
+{
+    build_from_buffer(buffer);
+}
+
+template <std::floating_point T, std::unsigned_integral K>
+array_series<T,K>::array_series(py::object seq)
+: owner_(seq)
+{
+    // Try to treat as array-like first (fast path, allows numpy, memoryview, etc.)
+    if (py::array arr = py::array::ensure(seq)) {
+        // ask pybind11 to produce a contiguous c-style array of T (forcecast: allow conversion)
+        using arr_t = py::array_t<T, py::array::c_style | py::array::forcecast>;
+        if (py::array conv = arr_t::ensure(arr)) {
+            if (conv.ndim() == 1) {
+                auto info = conv.request();
+                data_ptr_ = static_cast<T*>(info.ptr);
+                size_ = static_cast<std::size_t>(info.shape[0]);
+                owner_ = conv; // keep the possibly-new array alive
+                return;
+            }
+        }
+    }
+    // fallback: sequence-copy
+    copy_from_object(owner_);
+}
+
+template <std::floating_point T, std::unsigned_integral K>
+void array_series<T,K>::build_from_buffer(py::buffer buffer)
+{
+    py::buffer_info info = buffer.request();
+    if (info.ndim != 1) {
+        // not 1-D buffer -> fall back to generic sequence copy
+        copy_from_object(owner_);
+        return;
+    }
+
+    // If format exactly matches T and contiguous in memory -> zero-copy
+    if (info.format == py::format_descriptor<T>::format()
+        && info.strides.size() <= 1
+        && static_cast<std::size_t>(info.itemsize) == sizeof(T)
+        && (info.strides.empty() || static_cast<std::size_t>(info.strides[0]) == sizeof(T)))
+    {
+        data_ptr_ = static_cast<T*>(info.ptr);
+        size_ = static_cast<std::size_t>(info.shape[0]);
+        // owner_ already holds the original buffer object (e.g., numpy array)
+        return;
+    }
+
+    // otherwise try letting pybind11 build a contiguous T array (handles cast & endianness)
+    try {
+        py::array arr(info); // wrap
+        using arr_t = py::array_t<T, py::array::c_style | py::array::forcecast>;
+        if (py::array conv = arr_t::ensure(arr)) {
+            if (conv.ndim() == 1) {
+                auto info2 = conv.request();
+                data_ptr_ = static_cast<T*>(info2.ptr);
+                size_ = static_cast<std::size_t>(info2.shape[0]);
+                owner_ = conv; // keep converted/copy array alive
+                return;
+            }
+        }
+    } catch (...) {
+        // fall through to manual conversion
+    }
+
+    // last resort: perform a reasonably fast manual conversion from some common native formats.
+    copy_from_buffer_info(info);
+}
+
+template <std::floating_point T, std::unsigned_integral K>
+void array_series<T,K>::copy_from_buffer_info(const py::buffer_info& info)
+{
+    // prepare storage
+    size_ = static_cast<std::size_t>(info.shape[0]);
+    storage_.resize(size_);
+
+    // Common fast typed-read cases: float32 -> T, float64 -> T, int32/int64 -> T, uint32/uint64 -> T
+    // Compare format codes via py::format_descriptor<Src>::format()
+    const char* fmt = info.format.c_str();
+    const std::size_t itemsize = static_cast<std::size_t>(info.itemsize);
+
+    auto try_cast_from = [&](auto* src_ptr) {
+        using Src = std::remove_pointer_t<decltype(src_ptr)>;
+        for (std::size_t i = 0; i < size_; ++i)
+            storage_[i] = static_cast<T>(src_ptr[i]);
+        data_ptr_ = storage_.data();
+    };
+
+    if (itemsize == sizeof(float) && info.format == py::format_descriptor<float>::format()) {
+        const float* ptr = static_cast<const float*>(info.ptr);
+        if (info.strides.empty() || static_cast<std::size_t>(info.strides[0]) == sizeof(float)) {
+            try_cast_from(const_cast<float*>(ptr));
+            return;
+        }
+    }
+    if (itemsize == sizeof(double) && info.format == py::format_descriptor<double>::format()) {
+        const double* ptr = static_cast<const double*>(info.ptr);
+        if (info.strides.empty() || static_cast<std::size_t>(info.strides[0]) == sizeof(double)) {
+            try_cast_from(const_cast<double*>(ptr));
+            return;
+        }
+    }
+    if (itemsize == sizeof(std::int32_t) && info.format == py::format_descriptor<std::int32_t>::format()) {
+        const std::int32_t* ptr = static_cast<const std::int32_t*>(info.ptr);
+        if (info.strides.empty() || static_cast<std::size_t>(info.strides[0]) == sizeof(std::int32_t)) {
+            try_cast_from(const_cast<std::int32_t*>(ptr));
+            return;
+        }
+    }
+    if (itemsize == sizeof(std::int64_t) && info.format == py::format_descriptor<std::int64_t>::format()) {
+        const std::int64_t* ptr = static_cast<const std::int64_t*>(info.ptr);
+        if (info.strides.empty() || static_cast<std::size_t>(info.strides[0]) == sizeof(std::int64_t)) {
+            try_cast_from(const_cast<std::int64_t*>(ptr));
+            return;
+        }
+    }
+    if (itemsize == sizeof(std::uint32_t) && info.format == py::format_descriptor<std::uint32_t>::format()) {
+        const std::uint32_t* ptr = static_cast<const std::uint32_t*>(info.ptr);
+        if (info.strides.empty() || static_cast<std::size_t>(info.strides[0]) == sizeof(std::uint32_t)) {
+            try_cast_from(const_cast<std::uint32_t*>(ptr));
+            return;
+        }
+    }
+    if (itemsize == sizeof(std::uint64_t) && info.format == py::format_descriptor<std::uint64_t>::format()) {
+        const std::uint64_t* ptr = static_cast<const std::uint64_t*>(info.ptr);
+        if (info.strides.empty() || static_cast<std::size_t>(info.strides[0]) == sizeof(std::uint64_t)) {
+            try_cast_from(const_cast<std::uint64_t*>(ptr));
+            return;
+        }
+    }
+
+    // If we got here, we couldn't do a tight bulk read. Fall back to a safe element-wise conversion
+    // that avoids PyObject indexing: create a py::array wrapper and read elements via array indexing.
+    try {
+        py::array arr(info);
+        // read element-by-element via array indexing (still avoids Python-level sequence ops)
+        for (std::size_t i = 0; i < size_; ++i) {
+            py::object item = arr.attr("__getitem__")(py::int_(i));
+            storage_[i] = py::cast<T>(item);
+        }
+        data_ptr_ = storage_.data();
+        return;
+    } catch (...) {
+        // final fallback: treat owner_ as generic sequence (this will be slow)
+        copy_from_object(owner_);
+    }
+}
+
+template <std::floating_point T, std::unsigned_integral K>
+void array_series<T,K>::copy_from_object(py::object obj)
+{
+    py::sequence seq = py::reinterpret_borrow<py::sequence>(obj);
+    size_ = static_cast<std::size_t>(seq.size());
+    storage_.resize(size_);
+    for (std::size_t i = 0; i < size_; ++i) {
+        storage_[i] = py::cast<T>(seq[py::int_(i)]);
+    }
+    data_ptr_ = storage_.data();
+}
+
+template <std::floating_point T, std::unsigned_integral K>
+T array_series<T,K>::operator()(K n) const
+{
+    std::size_t idx = static_cast<std::size_t>(n);
+    if (idx >= size_) throw std::out_of_range("array_series: index out of range");
+    return data_ptr_[idx];
+}
+
 using T = double;
 using K = size_t;
 
@@ -242,4 +436,10 @@ PYBIND11_MODULE(pyshanks, m) {
         .def(py::init<SeriesBase*, T>(),
             py::arg("series"), py::keep_alive<1, 2>(),
             py::arg("epsilon_threshold") = static_cast<T>(1e-3));
+
+    using ArraySeries = array_series<T, K>;
+    py::class_<ArraySeries, SeriesBase>(m, "ArraySeries")
+        .def(py::init<py::buffer>(), py::arg("buffer"), "Construct from a Python buffer (numpy array/memoryview). Zero-copy when possible.")
+        .def(py::init<py::object>(), py::arg("sequence"), "Construct from a Python sequence (will copy).")
+        .def("size", &ArraySeries::size);
 }
