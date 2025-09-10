@@ -111,3 +111,11 @@ Doxygen документация доступна [по ссылке](https://bi
 
 - [Подробный анализ трансформации Шенкса и Эпсилон алгоритма](https://www.researchgate.net/publication/327178717_The_genesis_and_early_developments_of_Aitken's_process_Shanks'_transformation_the_e-algorithm_and_related_fixed_point_methods)
 
+
+
+# Запуск:
+
+```
+cmake -S . -B build
+cmake --build build --config Release   # или Debug
+```
