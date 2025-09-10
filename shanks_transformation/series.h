@@ -133,7 +133,7 @@ public:
 	* @authors Bolshakov M.P.
 	* @param x The argument for function series
 	*/
-	
+
 	series_base(T x = 0);
 
 	/**
@@ -598,7 +598,7 @@ T cosh_series<T, K>::access_row(K n)
 	T a = static_cast<T>(this->x * this->x);
 
 	for (auto i = old_size; i <= static_cast<typename std::vector<T>::size_type>(n); ++i)
-		this->series_vector.push_back(this->series_vector[i - 1] * static_cast<T>(a / (i * std::fma(4, i, -2)))); // (4.2) [Rows.pdf] 
+		this->series_vector.push_back(this->series_vector[i - 1] * static_cast<T>(a / (i * std::fma(4, i, -2)))); // (4.2) [Rows.pdf]
 
 	return this->series_vector[n];
 }
@@ -1138,7 +1138,7 @@ T erf_series<T, K>::access_row(K n)
 
 	T b = static_cast<T>(-this->x * this->x);
 
-	for (auto i = old_size; i <= static_cast<typename std::vector<T>::size_type>(n); ++i) 
+	for (auto i = old_size; i <= static_cast<typename std::vector<T>::size_type>(n); ++i)
 	{
 		a = static_cast<T>(std::fma(2, i, 1));
 		this->series_vector.push_back(this->series_vector[i - 1] * static_cast<T>(b * (a - 2) / (i * a))); // (15.3) [Rows.pdf]
@@ -1203,7 +1203,7 @@ m_fact_1mx_mp1_inverse_series<T, K>::m_fact_1mx_mp1_inverse_series(T x, K m) : s
 	if (!isfinite(series_base<T, K>::sum)) // sum = this->fact(m) / pow(1 - x, m + 1))
 		throw std::overflow_error("sum is too big");
 
-	if (std::abs(this->x) >= 1) 
+	if (std::abs(this->x) >= 1)
 		throw std::domain_error("the m! / (1 - x) ^ (m + 1) series diverge at x = " + std::to_string(x) + "; series converge if x only in (-1, 1)");
 }
 
@@ -1495,7 +1495,7 @@ template <std::floating_point T, std::unsigned_integral K>
 constexpr T pi_3_series<T, K>::operator()(K n) const
 {
 	const K a = 2 * n + 1;
-	return static_cast<T>(1.0 * this->x / ((n + 1) * a * (2 * a - 1))); // (23.2) [Rows.pdf]	
+	return static_cast<T>(1.0 * this->x / ((n + 1) * a * (2 * a - 1))); // (23.2) [Rows.pdf]
 }
 
 /**
@@ -1779,7 +1779,7 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-exp_m_cos_x_sinsin_x_series<T, K>::exp_m_cos_x_sinsin_x_series(T x) : series_base<T, K>(x, std::exp(-std::cos(x)) * std::sin(std::sin(x))) 
+exp_m_cos_x_sinsin_x_series<T, K>::exp_m_cos_x_sinsin_x_series(T x) : series_base<T, K>(x, std::exp(-std::cos(x)) * std::sin(std::sin(x)))
 {
 	if (std::abs(this->x) >= std::numbers::pi)
 		throw std::domain_error("the exp(-cos(x)) * sin(sin(x)) series diverge at x = " + std::to_string(x) + "; series converge if x only in (-pi, pi)");
@@ -1792,7 +1792,7 @@ constexpr T exp_m_cos_x_sinsin_x_series<T, K>::operator()(K n) const
 }
 
 /**
-* @brief Numerical series representation of (pi/4 - ln2/2) * x 
+* @brief Numerical series representation of (pi/4 - ln2/2) * x
 * @authors Kreynin R.G.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
@@ -1868,7 +1868,7 @@ constexpr T five_pi_twelve_series<T, K>::operator()(K n) const
 }
 
 /**
-* @brief Numerical series representation of x / 2 
+* @brief Numerical series representation of x / 2
 * @authors Kreynin R.G.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
@@ -1907,7 +1907,7 @@ constexpr T x_two_series<T, K>::operator()(K n) const
 }
 
 /**
-* @brief Numerical series representation of (pi/5 - 1/2) * x 
+* @brief Numerical series representation of (pi/5 - 1/2) * x
 * @authors Kreynin R.G.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
@@ -2101,7 +2101,7 @@ template <std::floating_point T, std::unsigned_integral K>
 constexpr T ln_x_plus_one_x_minus_one_halfed_series<T, K>::operator()(K n) const
 {
 	const K a = static_cast<K>(std::fma(2, n, 1));
-	return static_cast<T>(std::pow(this->x, a) / a); // (39.3) [Rows.pdf] 
+	return static_cast<T>(std::pow(this->x, a) / a); // (39.3) [Rows.pdf]
 }
 
 /**
@@ -2134,7 +2134,7 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-two_arcsin_square_x_halfed_series<T, K>::two_arcsin_square_x_halfed_series(T x) : series_base<T, K>(x, static_cast<T>(2 * std::pow(std::asin(x / 2), 2))) 
+two_arcsin_square_x_halfed_series<T, K>::two_arcsin_square_x_halfed_series(T x) : series_base<T, K>(x, static_cast<T>(2 * std::pow(std::asin(x / 2), 2)))
 {
 	if (std::abs(this->x) > 2)
 		throw std::domain_error("the 2arcsin(x/2)^2 series diverge at x = " + std::to_string(this->x) + "; series converge if x only in [-2, 2]");
@@ -2330,7 +2330,7 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-pi_x_multi_e_xpi_plus_e_minusxpi_divided_e_xpi_minus_e_minusxpi_minus_one_series<T, K>::pi_x_multi_e_xpi_plus_e_minusxpi_divided_e_xpi_minus_e_minusxpi_minus_one_series(T x) : series_base<T, K>(x, static_cast<T>(std::numbers::pi* x * 2.0 * std::cosh(std::numbers::pi * x) / (2.0 * std::sinh(std::numbers::pi * x)) - 1)) 
+pi_x_multi_e_xpi_plus_e_minusxpi_divided_e_xpi_minus_e_minusxpi_minus_one_series<T, K>::pi_x_multi_e_xpi_plus_e_minusxpi_divided_e_xpi_minus_e_minusxpi_minus_one_series(T x) : series_base<T, K>(x, static_cast<T>(std::numbers::pi* x * 2.0 * std::cosh(std::numbers::pi * x) / (2.0 * std::sinh(std::numbers::pi * x)) - 1))
 {
 	if (this->x == 0) // if x = 0 then series turns in 0
 		throw std::domain_error("x cannot be zero");
@@ -2351,10 +2351,10 @@ constexpr T pi_x_multi_e_xpi_plus_e_minusxpi_divided_e_xpi_minus_e_minusxpi_minu
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
 template <std::floating_point T, std::unsigned_integral K>
-class pi_minus_x_2 : public series_base<T, K>
+class pi_minus_x_2_series : public series_base<T, K>
 {
 public:
-	pi_minus_x_2() = delete;
+	pi_minus_x_2_series() = delete;
 
 	/**
 	* @brief Parameterized constructor to initialize the series with function argument and sum
@@ -2362,7 +2362,7 @@ public:
 	* @param x The argument for function series
 	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	*/
-	pi_minus_x_2(T x);
+	pi_minus_x_2_series(T x);
 
 	/**
 	* @brief Computes the nth term of the Maclaurin series of the sine function
@@ -2375,14 +2375,14 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-pi_minus_x_2<T, K>::pi_minus_x_2(T x) : series_base<T, K>(x, static_cast<T>((std::numbers::pi - x) / 2)) 
+pi_minus_x_2_series<T, K>::pi_minus_x_2_series(T x) : series_base<T, K>(x, static_cast<T>((std::numbers::pi - x) / 2))
 {
 	if (this->x <= 0 or this->x >= 2 * std::numbers::pi)
 		throw std::domain_error("the (pi - x) / 2 series diverge at x = " + std::to_string(this->x) + "; series converge if x only in (0, 2pi)");
 }
 
 template <std::floating_point T, std::unsigned_integral K>
-constexpr T pi_minus_x_2<T, K>::operator()(K n) const
+constexpr T pi_minus_x_2_series<T, K>::operator()(K n) const
 {
 	const K a = n + 1;
 	return std::sin(a * (this->x)) / a;  // (46.5) [Rows.pdf]
@@ -2395,10 +2395,10 @@ constexpr T pi_minus_x_2<T, K>::operator()(K n) const
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
 template <std::floating_point T, std::unsigned_integral K>
-class half_multi_ln_1div2multi1minuscosx : public series_base<T, K>
+class half_multi_ln_1div2multi1minuscosx_series : public series_base<T, K>
 {
 public:
-	half_multi_ln_1div2multi1minuscosx() = delete;
+	half_multi_ln_1div2multi1minuscosx_series() = delete;
 
 	/**
 	* @brief Parameterized constructor to initialize the series with function argument and sum
@@ -2406,7 +2406,7 @@ public:
 	* @param x The argument for function series
 	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	*/
-	half_multi_ln_1div2multi1minuscosx(T x);
+	half_multi_ln_1div2multi1minuscosx_series(T x);
 
 	/**
 	* @brief Computes the nth term of the Maclaurin series of the sine function
@@ -2419,14 +2419,14 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-half_multi_ln_1div2multi1minuscosx<T, K>::half_multi_ln_1div2multi1minuscosx(T x) : series_base<T, K>(x, static_cast<T>(0.5 * std::log(1 / (2 - 2 * std::cos(x))))) 
+half_multi_ln_1div2multi1minuscosx_series<T, K>::half_multi_ln_1div2multi1minuscosx_series(T x) : series_base<T, K>(x, static_cast<T>(0.5 * std::log(1 / (2 - 2 * std::cos(x)))))
 {
 	if (this->x <= 0 || this->x >= 2 * std::numbers::pi)
 		throw std::domain_error("the 0.5 * ln(1/(2*(1 - cos(x)))) series diverge at x = " + std::to_string(x) + "; series converge if x only in (0, 2pi)");
 }
 
 template <std::floating_point T, std::unsigned_integral K>
-constexpr T half_multi_ln_1div2multi1minuscosx<T, K>::operator()(K n) const
+constexpr T half_multi_ln_1div2multi1minuscosx_series<T, K>::operator()(K n) const
 {
 	const K a = n + 1;
 	return std::cos(a * (this->x)) / a; // (47.5) [Rows.pdf]
@@ -2439,10 +2439,10 @@ constexpr T half_multi_ln_1div2multi1minuscosx<T, K>::operator()(K n) const
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
 template <std::floating_point T, std::unsigned_integral K>
-class half_minus_sinx_multi_pi_4 : public series_base<T, K>
+class half_minus_sinx_multi_pi_4_series : public series_base<T, K>
 {
 public:
-	half_minus_sinx_multi_pi_4() = delete;
+	half_minus_sinx_multi_pi_4_series() = delete;
 
 	/**
 	* @brief Parameterized constructor to initialize the series with function argument and sum
@@ -2450,7 +2450,7 @@ public:
 	* @param x The argument for function series
 	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	*/
-	half_minus_sinx_multi_pi_4(T x);
+	half_minus_sinx_multi_pi_4_series(T x);
 
 	/**
 	* @brief Computes the nth term of the Maclaurin series of the sine function
@@ -2463,14 +2463,14 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-half_minus_sinx_multi_pi_4<T, K>::half_minus_sinx_multi_pi_4(T x) : series_base<T, K>(x, static_cast<T>((static_cast<T>(0.5) - std::numbers::pi * std::sin(x) * static_cast<T>(0.25)))) 
+half_minus_sinx_multi_pi_4_series<T, K>::half_minus_sinx_multi_pi_4_series(T x) : series_base<T, K>(x, static_cast<T>((static_cast<T>(0.5) - std::numbers::pi * std::sin(x) * static_cast<T>(0.25))))
 {
 	if (this->x < 0 || this->x > std::numbers::pi / 2)
 		throw std::domain_error("the 0.5 - (pi/4)*sin(x) series diverge at x = " + std::to_string(x) + "; series converge if x only in [0, pi/2]");
 }
 
 template <std::floating_point T, std::unsigned_integral K>
-constexpr T half_minus_sinx_multi_pi_4<T, K>::operator()(K n) const
+constexpr T half_minus_sinx_multi_pi_4_series<T, K>::operator()(K n) const
 {
 	const K a = static_cast<K>(std::fma(2, n, 1));
 	return std::cos(2 * (this->x) * (n + 1)) / (a * (a + 2)); // (48.2) [Rows.pdf]
@@ -2483,10 +2483,10 @@ constexpr T half_minus_sinx_multi_pi_4<T, K>::operator()(K n) const
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
 template <std::floating_point T, std::unsigned_integral K>
-class ln_1plussqrt1plusxsquare_minus_ln_2 : public series_base<T, K>
+class ln_1plussqrt1plusxsquare_minus_ln_2_series : public series_base<T, K>
 {
 public:
-	ln_1plussqrt1plusxsquare_minus_ln_2() = delete;
+	ln_1plussqrt1plusxsquare_minus_ln_2_series() = delete;
 
 	/**
 	* @brief Parameterized constructor to initialize the series with function argument and sum
@@ -2494,7 +2494,7 @@ public:
 	* @param x The argument for function series
 	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	*/
-	ln_1plussqrt1plusxsquare_minus_ln_2(T x);
+	ln_1plussqrt1plusxsquare_minus_ln_2_series(T x);
 
 	/**
 	* @brief Computes the nth term of the Maclaurin series of the sine function
@@ -2507,18 +2507,18 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-ln_1plussqrt1plusxsquare_minus_ln_2<T, K>::ln_1plussqrt1plusxsquare_minus_ln_2(T x) : series_base<T, K>(x, static_cast<T>(std::log((1 + std::hypot(1, x)) / 2))) 
+ln_1plussqrt1plusxsquare_minus_ln_2_series<T, K>::ln_1plussqrt1plusxsquare_minus_ln_2_series(T x) : series_base<T, K>(x, static_cast<T>(std::log((1 + std::hypot(1, x)) / 2)))
 {
 	if ((this->x) * (this->x) > 1)
 		throw std::domain_error("x^2 cannot be more than 1");
 }
 
 template <std::floating_point T, std::unsigned_integral K>
-constexpr T ln_1plussqrt1plusxsquare_minus_ln_2<T, K>::operator()(K n) const
+constexpr T ln_1plussqrt1plusxsquare_minus_ln_2_series<T, K>::operator()(K n) const
 {
 	const K a = n + 1;
 	const K b = static_cast<K>(std::fma(2, n, 2));
-	return static_cast<T>((this->minus_one_raised_to_power_n(n) * this->fact(b - 1) * std::pow(this->x, b)) / 
+	return static_cast<T>((this->minus_one_raised_to_power_n(n) * this->fact(b - 1) * std::pow(this->x, b)) /
 		(pow(2, b) * this->fact(a) * this->fact(a))); // (49.3) [Rows.pdf]
 }
 
@@ -2529,10 +2529,10 @@ constexpr T ln_1plussqrt1plusxsquare_minus_ln_2<T, K>::operator()(K n) const
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
 template <std::floating_point T, std::unsigned_integral K>
-class ln_cosx : public series_base<T, K>
+class ln_cosx_series : public series_base<T, K>
 {
 public:
-	ln_cosx() = delete;
+	ln_cosx_series() = delete;
 
 	/**
 	* @brief Parameterized constructor to initialize the series with function argument and sum
@@ -2540,7 +2540,7 @@ public:
 	* @param x The argument for function series
 	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	*/
-	ln_cosx(T x);
+	ln_cosx_series(T x);
 
 	/**
 	* @brief Computes the nth term of the Maclaurin series of the sine function
@@ -2553,14 +2553,14 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-ln_cosx<T, K>::ln_cosx(T x) : series_base<T, K>(x, std::log(std::cos(x))) 
+ln_cosx_series<T, K>::ln_cosx_series(T x) : series_base<T, K>(x, std::log(std::cos(x)))
 {
 	if (std::abs(this->x) * 2 >= std::numbers::pi)
 		throw std::domain_error("the ln(cos(x)) series diverge at x = " + std::to_string(x) + "; series converge if x only in [-pi/2, pi/2]");
 }
 
 template <std::floating_point T, std::unsigned_integral K>
-constexpr T ln_cosx<T, K>::operator()(K n) const
+constexpr T ln_cosx_series<T, K>::operator()(K n) const
 {
 	const K a = static_cast<K>(std::fma(2, n, 2));
 	return static_cast<T>(-(std::pow(std::sin(this->x), a)) / a); // (50.2) [Rows.pdf]
@@ -2573,10 +2573,10 @@ constexpr T ln_cosx<T, K>::operator()(K n) const
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
 template <std::floating_point T, std::unsigned_integral K>
-class ln_sinx_minus_ln_x : public series_base<T, K>
+class ln_sinx_minus_ln_x_series : public series_base<T, K>
 {
 public:
-	ln_sinx_minus_ln_x() = delete;
+	ln_sinx_minus_ln_x_series() = delete;
 
 	/**
 	* @brief Parameterized constructor to initialize the series with function argument and sum
@@ -2584,7 +2584,7 @@ public:
 	* @param x The argument for function series
 	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	*/
-	ln_sinx_minus_ln_x(T x);
+	ln_sinx_minus_ln_x_series(T x);
 
 	/**
 	* @brief Computes the nth term of the Maclaurin series of the sine function
@@ -2597,14 +2597,14 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-ln_sinx_minus_ln_x<T, K>::ln_sinx_minus_ln_x(T x) : series_base<T, K>(x, std::log(std::sin(x) / x)) 
+ln_sinx_minus_ln_x_series<T, K>::ln_sinx_minus_ln_x_series(T x) : series_base<T, K>(x, std::log(std::sin(x) / x))
 {
 	if (this->x <= 0 || this->x > std::numbers::pi)
 		throw std::domain_error("the ln(sin(x)) - ln(x) series diverge at x = " + std::to_string(x) + "; series converge if x only in (0, pi]");
 }
 
 template <std::floating_point T, std::unsigned_integral K>
-constexpr T ln_sinx_minus_ln_x<T, K>::operator()(K n) const
+constexpr T ln_sinx_minus_ln_x_series<T, K>::operator()(K n) const
 {
 	const T a = static_cast<T>((this->x) / ((n + 1) * std::numbers::pi));
 	return static_cast<T>(std::log(1 - a * a)); // (51.2) [Rows.pdf]
@@ -2617,10 +2617,10 @@ constexpr T ln_sinx_minus_ln_x<T, K>::operator()(K n) const
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
 template <std::floating_point T, std::unsigned_integral K>
-class pi_8_cosx_square_minus_1_div_3_cosx : public series_base<T, K>
+class pi_8_cosx_square_minus_1_div_3_cosx_series : public series_base<T, K>
 {
 public:
-	pi_8_cosx_square_minus_1_div_3_cosx() = delete;
+	pi_8_cosx_square_minus_1_div_3_cosx_series() = delete;
 
 	/**
 	* @brief Parameterized constructor to initialize the series with function argument and sum
@@ -2628,7 +2628,7 @@ public:
 	* @param x The argument for function series
 	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	*/
-	pi_8_cosx_square_minus_1_div_3_cosx(T x);
+	pi_8_cosx_square_minus_1_div_3_cosx_series(T x);
 
 	/**
 	* @brief Computes the nth term of the Maclaurin series of the sine function
@@ -2641,14 +2641,14 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-pi_8_cosx_square_minus_1_div_3_cosx<T, K>::pi_8_cosx_square_minus_1_div_3_cosx(T x) : series_base<T, K>(x, static_cast<T>((std::numbers::pi / 8) * std::cos(x) * std::cos(x) - ((1 / 3) * std::cos(x)))) 
+pi_8_cosx_square_minus_1_div_3_cosx_series<T, K>::pi_8_cosx_square_minus_1_div_3_cosx_series(T x) : series_base<T, K>(x, static_cast<T>((std::numbers::pi / 8) * std::cos(x) * std::cos(x) - ((1 / 3) * std::cos(x))))
 {
 	if (abs(this->x) > std::numbers::pi / 2)
 		throw std::domain_error("the (pi/8)*cos^2(x) - (1/3)*cos(x) series diverge at x = " + std::to_string(x) + "; series converge if x only in [-pi/2, pi/2]");
 }
 
 template <std::floating_point T, std::unsigned_integral K>
-constexpr T pi_8_cosx_square_minus_1_div_3_cosx<T, K>::operator()(K n) const
+constexpr T pi_8_cosx_square_minus_1_div_3_cosx_series<T, K>::operator()(K n) const
 {
 	const K temp = static_cast<K>(std::fma(2, n, 1));
 	return static_cast<T>(this->minus_one_raised_to_power_n(n) * std::cos(temp + 2) * this->x / (temp * (temp + 2) * (temp + 4))); // (52.2) [Rows.pdf]
@@ -2661,10 +2661,10 @@ constexpr T pi_8_cosx_square_minus_1_div_3_cosx<T, K>::operator()(K n) const
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
 template <std::floating_point T, std::unsigned_integral K>
-class sqrt_oneminussqrtoneminusx_div_x : public series_base<T, K>
+class sqrt_oneminussqrtoneminusx_div_x_series : public series_base<T, K>
 {
 public:
-	sqrt_oneminussqrtoneminusx_div_x() = delete;
+	sqrt_oneminussqrtoneminusx_div_x_series() = delete;
 
 	/**
 	* @brief Parameterized constructor to initialize the series with function argument and sum
@@ -2672,7 +2672,7 @@ public:
 	* @param x The argument for function series
 	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	*/
-	sqrt_oneminussqrtoneminusx_div_x(T x);
+	sqrt_oneminussqrtoneminusx_div_x_series(T x);
 
 	/**
 	* @brief Computes the nth term of the series of the sine function
@@ -2685,14 +2685,14 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-sqrt_oneminussqrtoneminusx_div_x<T, K>::sqrt_oneminussqrtoneminusx_div_x(T x) : series_base<T, K>(x, std::sqrt((1 - sqrt(1 - x)) / x)) 
+sqrt_oneminussqrtoneminusx_div_x_series<T, K>::sqrt_oneminussqrtoneminusx_div_x_series(T x) : series_base<T, K>(x, std::sqrt((1 - sqrt(1 - x)) / x))
 {
 	if (std::abs(this->x) >= 1 or this->x == 0)
 		throw std::domain_error("the sqrt((1 - sqrt(1 - x)) / x) series diverge at x = " + std::to_string(x) + "; series converge if x only in (-1, 0) and (0, 1)");
 }
 
 template <std::floating_point T, std::unsigned_integral K>
-constexpr T sqrt_oneminussqrtoneminusx_div_x<T, K>::operator()(K n) const
+constexpr T sqrt_oneminussqrtoneminusx_div_x_series<T, K>::operator()(K n) const
 {
 	const K a = 2 * n;
 	const K b = 2 * a;
@@ -2706,10 +2706,10 @@ constexpr T sqrt_oneminussqrtoneminusx_div_x<T, K>::operator()(K n) const
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
 template <std::floating_point T, std::unsigned_integral K>
-class one_minus_sqrt_1minus4x_div_2x : public series_base<T, K>
+class one_minus_sqrt_1minus4x_div_2x_series : public series_base<T, K>
 {
 public:
-	one_minus_sqrt_1minus4x_div_2x() = delete;
+	one_minus_sqrt_1minus4x_div_2x_series() = delete;
 
 	/**
 	* @brief Parameterized constructor to initialize the series with function argument and sum
@@ -2717,7 +2717,7 @@ public:
 	* @param x The argument for function series
 	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	*/
-	one_minus_sqrt_1minus4x_div_2x(T x);
+	one_minus_sqrt_1minus4x_div_2x_series(T x);
 
 	/**
 	* @brief Computes the nth term of the series of the sine function
@@ -2730,14 +2730,14 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-one_minus_sqrt_1minus4x_div_2x<T, K>::one_minus_sqrt_1minus4x_div_2x(T x) : series_base<T, K>(x, (1 - static_cast<T>(sqrt(std::fma(-4, x, 1)))) / (2 * x)) 
+one_minus_sqrt_1minus4x_div_2x_series<T, K>::one_minus_sqrt_1minus4x_div_2x_series(T x) : series_base<T, K>(x, (1 - static_cast<T>(sqrt(std::fma(-4, x, 1)))) / (2 * x))
 {
 	if (std::abs(this->x) > static_cast<T>(0.25) or this->x == 0)
 		throw std::domain_error("the  (1 - sqrt(1 - 4x)) / 2x series diverge at x = " + std::to_string(x) + "; series converge if x only in [-1/4, 0) and (0, 1/4]");
 }
 
 template <std::floating_point T, std::unsigned_integral K>
-constexpr T one_minus_sqrt_1minus4x_div_2x<T, K>::operator()(K n) const
+constexpr T one_minus_sqrt_1minus4x_div_2x_series<T, K>::operator()(K n) const
 {
 	const T xn = static_cast<T>(std::pow(this->x, n));
 	const T binom_coef = static_cast<T>(this->binomial_coefficient(static_cast<T>(0.5), n + 1));
@@ -2777,7 +2777,7 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-arcsin_x_minus_x_series<T, K>::arcsin_x_minus_x_series(T x) : series_base<T, K>(x, std::asin(x) - x) 
+arcsin_x_minus_x_series<T, K>::arcsin_x_minus_x_series(T x) : series_base<T, K>(x, std::asin(x) - x)
 {
 	if (std::abs(this->x) > 1)
 		throw std::domain_error("the arcsin(x) - x series diverge at x = " + std::to_string(x) + "; series converge if x only in [-1, 1]");
@@ -2822,7 +2822,7 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-pi_x_minus_x_square_and_x_square_minus_three_pi_x_plus_two_pi_square_series<T, K>::pi_x_minus_x_square_and_x_square_minus_three_pi_x_plus_two_pi_square_series(T x) : series_base<T, K>(x) 
+pi_x_minus_x_square_and_x_square_minus_three_pi_x_plus_two_pi_square_series<T, K>::pi_x_minus_x_square_and_x_square_minus_three_pi_x_plus_two_pi_square_series(T x) : series_base<T, K>(x)
 {
 	if (this->x <= 0 || this->x >= 2 * std::numbers::pi)
 		throw std::domain_error("the series diverge at x = " + std::to_string(x) + "; series converge if x only in (0, 2pi)");
@@ -2867,7 +2867,7 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-abs_sin_x_minus_2_div_pi_series<T, K>::abs_sin_x_minus_2_div_pi_series(T x) : series_base<T, K>(x, static_cast<T>(std::abs(std::sin(x)) - (2 / std::numbers::pi))) 
+abs_sin_x_minus_2_div_pi_series<T, K>::abs_sin_x_minus_2_div_pi_series(T x) : series_base<T, K>(x, static_cast<T>(std::abs(std::sin(x)) - (2 / std::numbers::pi)))
 {
 	if (this->x <= 0 || this->x >= 2 * std::numbers::pi)
 		throw std::domain_error("the series diverge at x = " + std::to_string(x) + "; series converge if x only in (0, 2pi)");
@@ -2912,7 +2912,7 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-pi_minus_3pi_4_and_pi_minus_x_minus_3pi_4_series<T, K>::pi_minus_3pi_4_and_pi_minus_x_minus_3pi_4_series(T x) : series_base<T, K>(x) 
+pi_minus_3pi_4_and_pi_minus_x_minus_3pi_4_series<T, K>::pi_minus_3pi_4_and_pi_minus_x_minus_3pi_4_series(T x) : series_base<T, K>(x)
 {
 	if (this->x <= -std::numbers::pi || this->x > std::numbers::pi)
 		throw std::domain_error("the series diverge at x = " + std::to_string(x) + "; series converge if x only in (-pi, pi]");
@@ -2960,7 +2960,7 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-minus_3_div_4_or_x_minus_3_div_4_series<T, K>::minus_3_div_4_or_x_minus_3_div_4_series(T x) : series_base<T, K>(x) 
+minus_3_div_4_or_x_minus_3_div_4_series<T, K>::minus_3_div_4_or_x_minus_3_div_4_series(T x) : series_base<T, K>(x)
 {
 	if (this->x <= -3 || this->x >= 3)
 		throw std::domain_error("the series diverge at x = " + std::to_string(x) + "; series converge if x only in (-3, 3)");
@@ -3008,7 +3008,7 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-ten_minus_x_series<T, K>::ten_minus_x_series(T x) : series_base<T, K>(x, 10 - this->x) 
+ten_minus_x_series<T, K>::ten_minus_x_series(T x) : series_base<T, K>(x, 10 - this->x)
 {
 	if (this->x <= 5 || this->x >= 15)
 		throw std::domain_error("the series diverge at x = " + std::to_string(x) + "; series converge if x only in (5, 15)");
@@ -3053,7 +3053,7 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-x_series<T, K>::x_series(T x) : series_base<T, K>(x, this->x) 
+x_series<T, K>::x_series(T x) : series_base<T, K>(x, this->x)
 {
 	if (this->x < -std::numbers::pi || this->x > std::numbers::pi)
 		throw std::domain_error("the series diverge at x = " + std::to_string(x) + "; series converge if x only in [-pi, pi]");
@@ -3098,7 +3098,7 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-minus_x_minus_pi_4_or_minus_pi_4_series<T, K>::minus_x_minus_pi_4_or_minus_pi_4_series(T x) : series_base<T, K>(x) 
+minus_x_minus_pi_4_or_minus_pi_4_series<T, K>::minus_x_minus_pi_4_or_minus_pi_4_series(T x) : series_base<T, K>(x)
 {
 	if (this->x <= -std::numbers::pi or this->x >= std::numbers::pi)
 		throw std::domain_error("the series diverge at x = " + std::to_string(x) + "; series converge if x only in (-pi, pi)");
@@ -3144,7 +3144,7 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-one_div_two_minus_x_multi_three_plus_x_series<T, K>::one_div_two_minus_x_multi_three_plus_x_series(T x) : series_base<T, K>(x, 1 / ((2 - this->x) * (3 + this->x))) 
+one_div_two_minus_x_multi_three_plus_x_series<T, K>::one_div_two_minus_x_multi_three_plus_x_series(T x) : series_base<T, K>(x, 1 / ((2 - this->x) * (3 + this->x)))
 {
 	if (std::abs(this->x) >= 2)
 		throw std::domain_error("the 1 / ((2 - x)*(3 + x)) series diverge at x = " + std::to_string(x) + "; series converge if x only in (-2, 2)");
@@ -3273,7 +3273,7 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-Riemann_zeta_func_series<T, K>::Riemann_zeta_func_series(T x) : series_base<T, K>(x) 
+Riemann_zeta_func_series<T, K>::Riemann_zeta_func_series(T x) : series_base<T, K>(x)
 {
 	if (this->x <= 1)
 		throw std::domain_error("The value x must be greater than 1");
@@ -3316,7 +3316,7 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-Riemann_zeta_func_xmin1_div_Riemann_zeta_func_x_series<T, K>::Riemann_zeta_func_xmin1_div_Riemann_zeta_func_x_series(T x) : series_base<T, K>(x) 
+Riemann_zeta_func_xmin1_div_Riemann_zeta_func_x_series<T, K>::Riemann_zeta_func_xmin1_div_Riemann_zeta_func_x_series(T x) : series_base<T, K>(x)
 {
 	if (this->x <= 2)
 		throw std::domain_error("The value x must be greater than 2");
@@ -3358,7 +3358,7 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-xsquareplus3_div_xsquareplus2multix_minus_1_series<T, K>::xsquareplus3_div_xsquareplus2multix_minus_1_series(T x) : series_base<T, K>(x, ((x * x + 3) / x * (x + 2)) - 1) 
+xsquareplus3_div_xsquareplus2multix_minus_1_series<T, K>::xsquareplus3_div_xsquareplus2multix_minus_1_series(T x) : series_base<T, K>(x, ((x * x + 3) / x * (x + 2)) - 1)
 {
 	if (std::abs(this->x - 1) >= 2)
 		throw std::domain_error("the ((x^2 + 3) / (x^2 + 2*x)) - 1 series diverge at x = " + std::to_string(x) + "; series converge if x only in (-2, 2)");
@@ -3401,7 +3401,7 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-arcsin_x_series<T, K>::arcsin_x_series(T x) : series_base<T, K>(x, std::asin(x)) 
+arcsin_x_series<T, K>::arcsin_x_series(T x) : series_base<T, K>(x, std::asin(x))
 {
 	if (this->x < -1 || this->x > 1)
 		throw std::domain_error("the arcsin(x) series diverge at x = " + std::to_string(x) + "; series converge if x only in [-1, 1]");
@@ -3445,7 +3445,7 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-arctg_x_series<T, K>::arctg_x_series(T x) : series_base<T, K>(x, std::atan(x)) 
+arctg_x_series<T, K>::arctg_x_series(T x) : series_base<T, K>(x, std::atan(x))
 {
 	if (std::abs(this->x) > 1)
 		throw std::domain_error("the atan(x) series diverge at x = " + std::to_string(this->x) + "; series converge if x only in [-1, 1]");
@@ -3489,7 +3489,7 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-K_x_series<T, K>::K_x_series(T x) : series_base<T, K>(x) 
+K_x_series<T, K>::K_x_series(T x) : series_base<T, K>(x)
 {
 	if (std::abs(this->x) >= 1)
 		throw std::domain_error("the K(x) series diverge at x = " + std::to_string(this->x) + "; series converge if x only in (-1, 1)");
@@ -3533,7 +3533,7 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-E_x_series<T, K>::E_x_series(T x) : series_base<T, K>(x) 
+E_x_series<T, K>::E_x_series(T x) : series_base<T, K>(x)
 {
 	if (std::abs(this->x) >= 1)
 		throw std::domain_error("the E(x) series diverge at x = " + std::to_string(this->x) + "; series converge if x only in (-1, 1)");
@@ -3577,7 +3577,7 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-sqrt_1plusx_series<T, K>::sqrt_1plusx_series(T x) : series_base<T, K>(x, std::sqrt(1 + x)) 
+sqrt_1plusx_series<T, K>::sqrt_1plusx_series(T x) : series_base<T, K>(x, std::sqrt(1 + x))
 {
 	if (std::abs(this->x) > 1)
 		throw std::domain_error("the sqrt(1 + x) series diverge at x = " + std::to_string(this->x) + "; series converge if x only in [-1, 1]");
@@ -3621,7 +3621,7 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-Lambert_W_func_series<T, K>::Lambert_W_func_series(T x) : series_base<T, K>(x) 
+Lambert_W_func_series<T, K>::Lambert_W_func_series(T x) : series_base<T, K>(x)
 {
 	if (std::abs(this->x) >= 1 / std::numbers::e)
 		throw std::domain_error("The absolute value of x must be less 1/e");
@@ -3827,7 +3827,7 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-x_min_sqrt_x_series<T, K>::x_min_sqrt_x_series(T x) : series_base<T, K>(x, x - std::sqrt(x)) 
+x_min_sqrt_x_series<T, K>::x_min_sqrt_x_series(T x) : series_base<T, K>(x, x - std::sqrt(x))
 {
 	if (this->x <= 0 || this->x >= 1)
 		throw std::domain_error("the series diverge at x = " + std::to_string(this->x) + "; series converge if x only in (0, 1)");
@@ -3839,7 +3839,7 @@ constexpr T x_min_sqrt_x_series<T, K>::operator()(K n) const
 	if (n == 0 || n == 1)
 		return static_cast<T>((1 - this->binomial_coefficient(static_cast<T>(0.5), n)) * std::pow(-1 + this->x, n)); // (79.1) [Rows.pdf]
 	return static_cast<T>((-this->binomial_coefficient(static_cast<T>(0.5), n)) * std::pow(-1 + this->x, n)); // (79.1) [Rows.pdf]
-} 
+}
 
 
 /**
@@ -3872,7 +3872,7 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-arctan_x2_series<T, K>::arctan_x2_series(T x) : series_base<T, K>(x, std::atan(x * x)) 
+arctan_x2_series<T, K>::arctan_x2_series(T x) : series_base<T, K>(x, std::atan(x * x))
 {
 	if (std::abs(this->x) > 1)
 		throw std::domain_error("the atan(x^2) series diverge at x = " + std::to_string(this->x) + "; series converge if x only in [-1, 1]");
@@ -3916,7 +3916,7 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-ln1px4_series<T, K>::ln1px4_series(T x) : series_base<T, K>(x, static_cast<T>(std::log(1 + std::pow(x, 4)))) 
+ln1px4_series<T, K>::ln1px4_series(T x) : series_base<T, K>(x, static_cast<T>(std::log(1 + std::pow(x, 4))))
 {
 	if (std::abs(this->x) >= 1)
 		throw std::domain_error("the ln(1 + x^4) series diverge at x = " + std::to_string(this->x) + "; series converge if x only in (-1, 1)");
@@ -3999,7 +3999,7 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-arctan_x3_series<T, K>::arctan_x3_series(T x) : series_base<T, K>(x, static_cast<T>(std::atan(std::pow(x, 3)))) 
+arctan_x3_series<T, K>::arctan_x3_series(T x) : series_base<T, K>(x, static_cast<T>(std::atan(std::pow(x, 3))))
 {
 	if (std::abs(this->x) > 1)
 		throw std::domain_error("the atan(x^3) series diverge at x = " + std::to_string(this->x) + "; series converge if x only in [-1, 1]");
@@ -4042,7 +4042,7 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-arcsin_x2_series<T, K>::arcsin_x2_series(T x) : series_base<T, K>(x, std::asin(x * x)) 
+arcsin_x2_series<T, K>::arcsin_x2_series(T x) : series_base<T, K>(x, std::asin(x * x))
 {
 	if (std::abs(this->x) > 1)
 		throw std::domain_error("the asin(x^2) series diverge at x = " + std::to_string(this->x) + "; series converge if x only in [-1, 1]");
@@ -4086,7 +4086,7 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-ln1_m_x2_series<T, K>::ln1_m_x2_series(T x) : series_base<T, K>(x, std::log(1 - x * x)) 
+ln1_m_x2_series<T, K>::ln1_m_x2_series(T x) : series_base<T, K>(x, std::log(1 - x * x))
 {
 	if (std::abs(this->x) >= 1)
 		throw std::domain_error("the ln(1 - x^2) series diverge at x = " + std::to_string(this->x) + "; series converge if x only in (-1, 1)");
@@ -4130,7 +4130,7 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-artanh_x_series<T, K>::artanh_x_series(T x) : series_base<T, K>(x, std::atanh(x)) 
+artanh_x_series<T, K>::artanh_x_series(T x) : series_base<T, K>(x, std::atanh(x))
 {
 	if (std::abs(this->x) > 1)
 		throw std::domain_error("the arth(x) series diverge at x = " + std::to_string(this->x) + "; series converge if x only in [-1, 1]");
@@ -4174,7 +4174,7 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-arcsinh_x_series<T, K>::arcsinh_x_series(T x) : series_base<T, K>(x, std::asinh(x)) 
+arcsinh_x_series<T, K>::arcsinh_x_series(T x) : series_base<T, K>(x, std::asinh(x))
 {
 	if (std::abs(this->x) > 1)
 		throw std::domain_error("the arsh(x) series diverge at x = " + std::to_string(this->x) + "; series converge if x only in [-1, 1]");
@@ -4184,7 +4184,7 @@ template <std::floating_point T, std::unsigned_integral K>
 constexpr T arcsinh_x_series<T, K>::operator()(K n) const
 {
 	const K a = static_cast<K>(std::fma(2, n, 1));
-	return static_cast<T>((((1 - 2 * (n & 1))) * this->double_fact(a) * std::pow(this->x, a+2)) / (this->double_fact(a + 1) * (a + 2)));  // (87.2) [Rows.pdf], (1 - 2 * (n & 1)) = (-1)^{n} 
+	return static_cast<T>((((1 - 2 * (n & 1))) * this->double_fact(a) * std::pow(this->x, a+2)) / (this->double_fact(a + 1) * (a + 2)));  // (87.2) [Rows.pdf], (1 - 2 * (n & 1)) = (-1)^{n}
 }
 
 
@@ -4269,7 +4269,7 @@ constexpr T sinh_x2_series<T, K>::operator()(K n) const
 
 
 /**
-* @brief Maclaurin series of function arth(x^2) 
+* @brief Maclaurin series of function arth(x^2)
 * @authors Pavlova A.R.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
@@ -4298,7 +4298,7 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-arctanh_x2_series<T, K>::arctanh_x2_series(T x) : series_base<T, K>(x, std::atanh(x * x)) 
+arctanh_x2_series<T, K>::arctanh_x2_series(T x) : series_base<T, K>(x, std::atanh(x * x))
 {
 	if (std::abs(this->x) > 1)
 		throw std::domain_error("the arth(x^2) series diverge at x = " + std::to_string(this->x) + "; series converge if x only in [-1, 1]");
@@ -4424,7 +4424,7 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-sqrt_1plusx_min_1_min_x_div_2_series<T, K>::sqrt_1plusx_min_1_min_x_div_2_series(T x) : series_base<T, K>(x, std::sqrt(1 + x) - 1 - x / 2) 
+sqrt_1plusx_min_1_min_x_div_2_series<T, K>::sqrt_1plusx_min_1_min_x_div_2_series(T x) : series_base<T, K>(x, std::sqrt(1 + x) - 1 - x / 2)
 {
 	if (std::abs(this->x) > 1)
 		throw std::domain_error("the sqrt(1 + x) - 1 - x/2 series diverge at x = " + std::to_string(this->x) + "; series converge if x only in [-1, 1]");
@@ -4567,7 +4567,7 @@ constexpr T one_div_sqrt2_sin_xdivsqrt2_series<T, K>::operator()(K n) const
 
 
 /**
-* @brief Maclaurin series for function ln(1 + x)/(1 + x^2) 
+* @brief Maclaurin series for function ln(1 + x)/(1 + x^2)
 * @authors Pavlova A.R.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
@@ -4596,7 +4596,7 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-ln_1plusx_div_1plusx2<T, K>::ln_1plusx_div_1plusx2(T x) : series_base<T, K>(std::log(1+x) / (1 + x * x)) 
+ln_1plusx_div_1plusx2<T, K>::ln_1plusx_div_1plusx2(T x) : series_base<T, K>(std::log(1+x) / (1 + x * x))
 {
 	if (std::abs(this->x) >= 1)
 	{
@@ -4642,7 +4642,7 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-cos_sqrt_x<T, K>::cos_sqrt_x(T x) : series_base<T, K>(x, static_cast<T>(std::cos(std::sqrt(x)))) 
+cos_sqrt_x<T, K>::cos_sqrt_x(T x) : series_base<T, K>(x, static_cast<T>(std::cos(std::sqrt(x))))
 {
 	if (this->x < 0)
 		throw std::domain_error("x cannot be negative");
@@ -4685,7 +4685,7 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-ln_1_plus_x3<T, K>::ln_1_plus_x3(T x) : series_base<T, K>(x, static_cast<T>(std::log(1 + std::pow(x, 3)))) 
+ln_1_plus_x3<T, K>::ln_1_plus_x3(T x) : series_base<T, K>(x, static_cast<T>(std::log(1 + std::pow(x, 3))))
 {
 	if (std::abs(this->x) >= 1)
 	{
@@ -4731,7 +4731,7 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-x_div_1minx<T, K>::x_div_1minx(T x) : series_base<T, K>(x, static_cast<T>(x / std::sqrt(1 - x))) 
+x_div_1minx<T, K>::x_div_1minx(T x) : series_base<T, K>(x, static_cast<T>(x / std::sqrt(1 - x)))
 {
 	if (std::abs(this->x) >= 1)
 	{
@@ -4924,7 +4924,7 @@ T reccurent_testing_series<T, K>::access_row(K n)
 	K old_size = this->series_vector.size();
 	this->series_vector.reserve(n);
 
-	for (K i = old_size; i <= n; ++i) 
+	for (K i = old_size; i <= n; ++i)
 		this->series_vector.push_back(this->series_vector[i - 1] * (this->x * this->x) / (i * std::fma(4, i, 2)));
 
 	return this->series_vector[n];
