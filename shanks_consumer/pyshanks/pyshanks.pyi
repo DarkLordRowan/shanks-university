@@ -1,6 +1,6 @@
 # type: ignore[unused-arg] pylint: disable=unused-argument
 
-from typing import TypeVar
+from typing import TypeVar, overload, Sequence, Any, Union
 from abc import abstractmethod
 from enum import Enum
 
@@ -24,6 +24,14 @@ class SeriesBase:
     def S_n(self, n: K) -> T: ...
     def get_sum(self) -> T: ...
     def get_x(self) -> T: ...
+
+class ArraySeries(SeriesBase):
+    @overload
+    def __init__(self, buffer: memoryview) -> None: ...
+    @overload
+    def __init__(self, sequence: Sequence[Any]) -> None: ...
+    def __init__(self, data: Union[memoryview, Sequence[Any]]) -> None: ...
+    def size(self) -> int: ...
 
 class ExpSeries(SeriesBase):
     def __init__(self, x: T) -> None: ...
@@ -338,10 +346,10 @@ class SeriesAcceleration:
     def __init__(self, series: SeriesBase) -> None: ...
     def __call__(self, arg1: K, arg2: K) -> T: ...
 
-class ShanksTransform(SeriesAcceleration):
+class ShanksAlgorithm(SeriesAcceleration):
     def __init__(self, series: SeriesBase) -> None: ...
 
-class ShanksTransformAlternating(SeriesAcceleration):
+class ShanksTransformAlternatingAlgorithm(SeriesAcceleration):
     def __init__(self, series: SeriesBase) -> None: ...
 
 class BrezinskiThetaAlgorithm(SeriesAcceleration):
@@ -358,21 +366,27 @@ class DrummondDAlgorithm(SeriesAcceleration):
         useRecFormulas: bool = ...,
     ) -> None: ...
 
-class FordSidiAlgorithmTwo(SeriesAcceleration):
+class FordSidi2Algorithm(SeriesAcceleration):
     def __init__(self, series: SeriesBase) -> None: ...
 
-class FordSidiAlgorithmThree(SeriesAcceleration):
+class FordSidi3Algorithm(SeriesAcceleration):
     def __init__(self, series: SeriesBase) -> None: ...
 
-class LevinLAlgorithm(SeriesAcceleration):
+class LevinAlgorithm(SeriesAcceleration):
     def __init__(
-        self, series: SeriesBase, useRecFormulas: bool = ..., beta: T = ...
+        self,
+        series: SeriesBase,
+        variant: RemainderType = ...,
+        useRecFormulas: bool = ...,
+        beta: T = ...
     ) -> None: ...
-    def __call__(self, n: K, m: K) -> T: ...
 
 class LevinSidiMAlgorithm(SeriesAcceleration):
     def __init__(
-        self, series: SeriesBase, variant: RemainderType = ..., gamma: T = ...
+        self,
+        series: SeriesBase,
+        variant: RemainderType = ...,
+        gamma: T = ...
     ) -> None: ...
 
 class LevinSidiSAlgorithm(SeriesAcceleration):
@@ -387,7 +401,7 @@ class LevinSidiSAlgorithm(SeriesAcceleration):
 class LubkinWAlgorithm(SeriesAcceleration):
     def __init__(self, series: SeriesBase) -> None: ...
 
-class RhoWynnAlgorithm(SeriesAcceleration):
+class WhynnRhoAlgorithm(SeriesAcceleration):
     def __init__(
         self,
         series: SeriesBase,
@@ -395,7 +409,6 @@ class RhoWynnAlgorithm(SeriesAcceleration):
         gamma: T = ...,
         RHO: T = ...,
     ) -> None: ...
-    def __call__(self, n: K, m: K) -> T: ...
 
 class RichardsonAlgorithm(SeriesAcceleration):
     def __init__(self, series: SeriesBase) -> None: ...
@@ -406,10 +419,10 @@ class WenigerAlgorithm(SeriesAcceleration):
 class WynnEpsilonAlgorithm(SeriesAcceleration):
     def __init__(self, series: SeriesBase) -> None: ...
 
-class WynnEpsilonAlgorithmTwo(SeriesAcceleration):
+class WynnEpsilon2Algorithm(SeriesAcceleration):
     def __init__(self, series: SeriesBase) -> None: ...
 
-class WynnEpsilonAlgorithmThree(SeriesAcceleration):
+class WynnEpsilon3Algorithm(SeriesAcceleration):
     def __init__(
         self, series: SeriesBase, epsilon_threshold: T = ...
     ) -> None: ...
