@@ -3,34 +3,26 @@ import pathlib
 from src.params import (
     AccelParamModule,
     SeriesParamModule,
-    get_trial_params,
+    get_series_params_from_csv,
+    get_series_params_from_json,
+    get_accel_params_from_json,
 )
-from src.trial import SimpleTrial, ComplexTrial
-from dataclasses import asdict
-import json
+from src.trial import ComplexTrial
 
 
 import pyshanks
 
 if __name__ == "__main__":
-    st = SimpleTrial(
-        SeriesParamModule(pyshanks.CosSeries, [9]),
-        AccelParamModule(
-            pyshanks.ShanksTransform, list(range(10, 30)), [4, 5]
-        ),
+    st = ComplexTrial(
+        [
+            SeriesParamModule(pyshanks.CosSeries, [9]),
+            *get_series_params_from_csv(pathlib.Path("example_series.csv")),
+            *get_series_params_from_json(pathlib.Path("example.json")),
+        ],
+        [
+            AccelParamModule(pyshanks.ShanksAlgorithm, range(10, 30), [4, 5]),
+            *get_accel_params_from_json(pathlib.Path("example.json")),
+        ],
     )
     st.execute()
-    print(*st.results, sep="\n")  # ? 18
-
-    tp = get_trial_params(json_location=pathlib.Path("example.json"))
-
-    if tp:
-        st = ComplexTrial(tp)
-        st.execute()
-        print(
-            json.dumps(
-                [asdict(result) for result in st.results],
-                indent=4,
-                sort_keys=True,
-            )
-        )
+    print(*st.results, sep="\n")
