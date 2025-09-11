@@ -14,6 +14,7 @@
 #include "../series_acceleration.hpp"
 #include "../remainders.hpp"
 #include <memory>					  // Include for unique ptr
+#include <stdexcept>
 
  /**
   * @brief Drummond's D-transformation class template for accelerating slowly convergent series.
@@ -136,11 +137,11 @@ inline T drummond_d_algorithm<T,K,series_templ>::calc_result(const K n, const K 
 
 	// For theory, see: Drummond (1976), Eq. (2.1)
 	// D_n^{(k)} = [Σ_{j=0}^n (-1)^j C(n, j) w_{n,j} S_{n+j}] / [Σ_{j=0}^n (-1)^j C(n, j) w_{n,j}]
-	for (K j = static_cast<K>(0); j <= n; ++j) {
+	for (K j = static_cast<K>(0); j <= order; ++j) {
 
 		// Compute weight term: (-1)^j * C(n, j) * w_{n,j}
 		rest  = this->series->minus_one_raised_to_power_n(j);
-		rest *= this->series->binomial_coefficient(static_cast<T>(n), j);
+		rest *= this->series->binomial_coefficient(static_cast<T>(order), j);
 		rest *= remainder->operator()(n,j, this->series);
 
 		numerator   += rest * this->series->S_n(n+j);
@@ -195,8 +196,10 @@ drummond_d_algorithm<T,K,series_templ>::drummond_d_algorithm(
 	bool useRecFormulas
 	) : 
 	series_acceleration<T, K, series_templ>(series),
+	variant(variant),
 	useRecFormulas(useRecFormulas)
 {
+
 	// Initialize the appropriate remainder estimator based on variant
     switch(variant){
         case remainder_type::u_variant :
@@ -224,6 +227,11 @@ template<std::floating_point T, std::unsigned_integral K, typename series_templ>
 T drummond_d_algorithm<T,K,series_templ>::operator()(const K n, const K order) const {
 
     using std::isfinite;
+
+
+	if (n == static_cast<K>(0) && variant == remainder_type::u_variant)
+		throw std::domain_error("n = 0 in the input and remainder type is u");
+
 
     const T result = (useRecFormulas ? calc_result_rec(n,order) : calc_result(n, order));
     if (!isfinite(result)) throw std::overflow_error("division by zero");
