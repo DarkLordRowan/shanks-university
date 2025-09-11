@@ -6,75 +6,66 @@ from src.params import (
 import itertools
 
 from dataclasses import dataclass
+from typing import Any, Generator, Iterable
 
+def cartesian_dicts(d: dict[str, Iterable[Any]]) -> Generator[dict[str, Any], None, None]:
+    keys: list[str] = list(d)
+    for vals in itertools.product(*(d[k] for k in keys)):
+        yield dict(zip(keys, vals))
 
 @dataclass
 class TrialResult:
     series_name: str
     series_argument: float
     accel_name: str
-    n_value: int
     m_value: int
-    result: float | None
+    computed: list[tuple[float, float]]
     error: str | None
 
+@dataclass
+class Trial:
+    series: BaseSeriesParam
+    accel: BaseAccelParam
 
-class SimpleTrial:
-    def __init__(self, series: BaseSeriesParam, accel: BaseAccelParam):
-        self.series = series
-        self.accel = accel
-
-        self.results: list[TrialResult] = []
-
-    def execute(self):
-        if not (
-            self.series.arguments
-            and self.accel.n_values
-            and self.accel.m_values
-        ):
-            raise ValueError
-        for argument, n_value, m_value in itertools.product(
+    def execute(self) -> list[TrialResult]:
+        results = []
+        for argument, m_value, additional_args in itertools.product(
             self.series.arguments,
-            self.accel.n_values,
             self.accel.m_values,
+            cartesian_dicts(self.accel.additional_args)
         ):
-            ready_series = self.series.executable(argument)  # type: ignore
-            error, result = None, None
+            computed = []
+            error = None
             try:
-                result = self.accel.executable(
-                    ready_series, **self.accel.additional_args
-                )(n_value, m_value)
+                ready_series = self.series.executable(argument)  # type: ignore
+                for n_value in self.accel.n_values:
+                    computed.append(self.accel.executable(
+                        ready_series, **additional_args
+                    )(n_value, m_value))
             except Exception as e:  # TODO more debug info
                 error = str(e)
 
-            self.results.append(
+            results.append(
                 TrialResult(
                     series_name=self.series.series_name,
                     series_argument=argument,
                     accel_name=self.accel.accel_name,
-                    n_value=n_value,
                     m_value=m_value,
-                    result=result,
+                    computed=computed,
                     error=error,
                 )
             )
+        return results
 
-
+@dataclass
 class ComplexTrial:
+    series_params: list[BaseSeriesParam]
+    accel_params: list[BaseAccelParam]
 
-    def __init__(
-        self,
-        series_params: list[BaseSeriesParam],
-        accel_params: list[BaseAccelParam],
-    ):
-        self.series_params = series_params
-        self.accel_params = accel_params
-        self.results: list = []
-
-    def execute(self):
+    def execute(self) -> list[TrialResult]:
+        results = []
         for series, accel in itertools.product(
             self.series_params, self.accel_params
         ):
-            st = SimpleTrial(series, accel)
-            st.execute()
-            self.results += st.results
+            results += Trial(series, accel).execute()
+        return results

@@ -362,7 +362,7 @@ class DrummondDAlgorithm(SeriesAcceleration):
     def __init__(
         self,
         series: SeriesBase,
-        variant: RemainderType = ...,
+        remainder: RemainderType = ...,
         useRecFormulas: bool = ...,
     ) -> None: ...
 
@@ -376,7 +376,7 @@ class LevinAlgorithm(SeriesAcceleration):
     def __init__(
         self,
         series: SeriesBase,
-        variant: RemainderType = ...,
+        remainder: RemainderType = ...,
         useRecFormulas: bool = ...,
         beta: T = ...
     ) -> None: ...
@@ -385,7 +385,7 @@ class LevinSidiMAlgorithm(SeriesAcceleration):
     def __init__(
         self,
         series: SeriesBase,
-        variant: RemainderType = ...,
+        remainder: RemainderType = ...,
         gamma: T = ...
     ) -> None: ...
 
@@ -393,7 +393,7 @@ class LevinSidiSAlgorithm(SeriesAcceleration):
     def __init__(
         self,
         series: SeriesBase,
-        variant: RemainderType = ...,
+        remainder: RemainderType = ...,
         useRecFormulas: bool = ...,
         parameter: T = ...,
     ) -> None: ...
@@ -405,7 +405,7 @@ class WhynnRhoAlgorithm(SeriesAcceleration):
     def __init__(
         self,
         series: SeriesBase,
-        variant: NumeratorType = ...,
+        numerator: NumeratorType = ...,
         gamma: T = ...,
         RHO: T = ...,
     ) -> None: ...

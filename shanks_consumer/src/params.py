@@ -5,16 +5,20 @@ This module provides classes and functions to define and load parameters
 for numerical series and acceleration methods from various sources including
 JSON files, CSV files, and direct Python module references.
 """
-
+import inspect
 from dataclasses import dataclass
 import pathlib
 import json
 import pyshanks
 import csv
 from abc import ABC, abstractmethod
-from typing import Iterable
+from typing import Iterable, Any
 from collections.abc import Callable
 
+def autowrap(x: Any) -> Iterable[Any]:
+    if x is not None and (isinstance(x, str) or not isinstance(x, Iterable)):
+        return [x]
+    return x
 
 class BaseSeriesParam(ABC):
     """Abstract base class for series parameter configurations."""
@@ -25,7 +29,7 @@ class BaseSeriesParam(ABC):
 
     @property
     @abstractmethod
-    def arguments(self) -> Iterable[int] | None: ...
+    def arguments(self) -> Iterable[float]: ...
 
     @property
     @abstractmethod
@@ -44,7 +48,7 @@ class SeriesParamJSON(BaseSeriesParam):
     """
 
     name: str
-    x: Iterable[int] | None = None
+    x: Iterable[float]
 
     @property
     def arguments(self):
@@ -72,7 +76,7 @@ class SeriesParamModule(BaseSeriesParam):
     """
 
     caller: type[pyshanks.SeriesBase]
-    x: Iterable[int] | None = None
+    x: Iterable[float]
 
     @property
     def arguments(self):
@@ -143,7 +147,7 @@ class BaseAccelParam(ABC):
 
     @property
     @abstractmethod
-    def additional_args(self) -> dict: ...
+    def additional_args(self) -> dict[str, Iterable[Any]]: ...
 
 
 @dataclass
@@ -183,19 +187,25 @@ class AccelParamJSON(StandardAccelParam):
     name: str
     n: Iterable[int]
     m: Iterable[int]
-    init_args: dict | None = None
+    init_args: dict[str, Iterable[Any]]
 
     def __post_init__(self):
         """Post-initialization processing for complex argument types."""
         self.expanded_init_args = {}
         if self.init_args:
             for key, value in self.init_args.items():
-                if isinstance(value, dict):
-                    self.expanded_init_args[key] = getattr(
-                        pyshanks, value["type"]
-                    )(value["value"])
+                value = autowrap(value)
+                def value_as_variants_of(of):
+                    res = []
+                    for v in value:
+                        res.append(getattr(of, v))
+                    return res
+                if key == "remainder":
+                    self.expanded_init_args[key] = value_as_variants_of(pyshanks.RemainderType)
+                elif key == "numerator":
+                    self.expanded_init_args[key] = value_as_variants_of(pyshanks.NumeratorType)
                 else:
-                    self.expanded_init_args[key] = value
+                    self.expanded_init_args[key] = autowrap(value)
 
     @property
     def accel_name(self):
@@ -275,9 +285,7 @@ def get_series_params_from_json(
 
     series_list = []
     for series_data in data["series"]:
-        x_value = series_data.get("x", None)
-        if x_value is not None and not isinstance(x_value, list):
-            x_value = [x_value]
+        x_value = autowrap(series_data.get("x", None))
 
         series_list.append(
             SeriesParamJSON(
@@ -308,13 +316,8 @@ def get_accel_params_from_json(
         data = json.load(f)
     methods_list = []
     for method_data in data["methods"]:
-        n_value = method_data["n"]
-        m_value = method_data["m"]
-
-        if not isinstance(n_value, list):
-            n_value = [n_value]
-        if not isinstance(m_value, list):
-            m_value = [m_value]
+        n_value = autowrap(method_data["n"])
+        m_value = autowrap(method_data["m"])
 
         methods_list.append(
             AccelParamJSON(
@@ -355,3 +358,52 @@ def get_series_params_from_csv(
             )
             for i, row in enumerate(csv.reader(f), 1)
         ]
+
+def _is_concrete_subclass(cls: type, base: type) -> bool:
+    """
+    Return ``True`` if *cls* is a non‑abstract subclass of *base*.
+    """
+    return (
+        inspect.isclass(cls)
+        and issubclass(cls, base)
+        and cls is not base
+        and not inspect.isabstract(cls)
+    )
+
+def demo_all_synthetic_series(
+    x: float | Iterable[float],
+) -> list[BaseSeriesParam]:
+    series_params: list[BaseSeriesParam] = []
+
+    for name, cls in inspect.getmembers(pyshanks, inspect.isclass):
+        if _is_concrete_subclass(cls, pyshanks.SeriesBase) and name != "ArraySeries":
+            series_params.append(
+                SeriesParamModule(
+                    caller=cls,
+                    x=autowrap(x),
+                )
+            )
+    return series_params
+
+def all_accel(
+    n: int | Iterable[int],
+    m: int | Iterable[int],
+    extra_args: dict[str, Any] = {},
+) -> list[BaseAccelParam]:
+    extra_args = extra_args or {}
+
+    accel_params: list[BaseAccelParam] = []
+
+    for _, cls in inspect.getmembers(pyshanks, inspect.isclass):
+        if _is_concrete_subclass(cls, pyshanks.SeriesAcceleration):
+            # Pull algorithm‑specific kwargs if they exist
+            kwargs: dict[str, Any] = dict(extra_args.get(cls.__name__, {}))
+            accel_params.append(
+                AccelParamModule(
+                    caller=cls,
+                    n=autowrap(n),
+                    m=autowrap(m),
+                    **kwargs,
+                )
+            )
+    return accel_params

@@ -369,7 +369,7 @@ PYBIND11_MODULE(pyshanks, m) {
     py::class_<DrummondD, SeriesAcceleration>(m, "DrummondDAlgorithm")
         .def(py::init<SeriesBase*, remainder_type, bool>(),
             py::arg("series"), py::keep_alive<1, 2>(),
-            py::arg("variant") = remainder_type::u_variant,
+            py::arg("remainder") = remainder_type::u_variant,
             py::arg("useRecFormulas") = false);
 
     using FordSidi2 = ford_sidi_2_algorithm<T, K, SeriesBase*>;
@@ -384,7 +384,7 @@ PYBIND11_MODULE(pyshanks, m) {
     py::class_<Levin, SeriesAcceleration>(m, "LevinAlgorithm")
         .def(py::init<SeriesBase*, remainder_type, bool, T>(),
             py::arg("series"), py::keep_alive<1, 2>(),
-            py::arg("variant") = remainder_type::u_variant,
+            py::arg("remainder") = remainder_type::u_variant,
             py::arg("useRecFormulas") = false,
             py::arg("beta") = static_cast<T>(1));
 
@@ -392,14 +392,14 @@ PYBIND11_MODULE(pyshanks, m) {
     py::class_<LevinSidiM, SeriesAcceleration>(m, "LevinSidiMAlgorithm")
         .def(py::init<SeriesBase*, remainder_type, T>(),
             py::arg("series"), py::keep_alive<1, 2>(),
-            py::arg("variant") = remainder_type::u_variant,
+            py::arg("remainder") = remainder_type::u_variant,
             py::arg("gamma") = static_cast<T>(10));
 
     using LevinSidiS = levin_sidi_s_algorithm<T, K, SeriesBase*>;
     py::class_<LevinSidiS, SeriesAcceleration>(m, "LevinSidiSAlgorithm")
         .def(py::init<SeriesBase*, remainder_type, bool, T>(),
             py::arg("series"), py::keep_alive<1, 2>(),
-            py::arg("variant") = remainder_type::u_variant,
+            py::arg("remainder") = remainder_type::u_variant,
             py::arg("useRecFormulas") = false,
             py::arg("parameter") = static_cast<T>(1));
 
@@ -411,7 +411,7 @@ PYBIND11_MODULE(pyshanks, m) {
     py::class_<WhynnRho, SeriesAcceleration>(m, "WhynnRhoAlgorithm")
         .def(py::init<SeriesBase*, numerator_type, T, T>(),
             py::arg("series"), py::keep_alive<1, 2>(),
-            py::arg("variant") = numerator_type::rho_variant,
+            py::arg("numerator") = numerator_type::rho_variant,
             py::arg("gamma") = static_cast<T>(1),
             py::arg("RHO") = static_cast<T>(0));
 
