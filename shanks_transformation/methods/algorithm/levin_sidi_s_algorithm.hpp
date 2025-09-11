@@ -20,7 +20,7 @@
   *
   * @authors Naumov A.
   *
-  * This class implements the Levin-Sidi S-transformation, also known as Drummond's D-transformation,
+  * This class implements the Levin-Sidi S-transformation,
   * which is particularly effective for series with specific asymptotic behaviors. The transformation
   * uses Pochhammer symbols and can be computed using either direct formulas or recurrence relations.
   *
@@ -232,8 +232,9 @@ levin_sidi_s_algorithm<T, K, series_templ>::levin_sidi_s_algorithm(
     T parameter
 ) : 
     series_acceleration<T, K, series_templ>(series),
-    useRecFormulas(useRecFormulas),
-    variant(variant)
+    variant(variant),
+    useRecFormulas(useRecFormulas)
+
 {
     // parameter is "beta" parameter
     // beta must be nonzero positive real number

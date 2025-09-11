@@ -14,6 +14,7 @@
 
 #include "../series_acceleration.hpp"
 #include <cmath> //Include for fma, isfinite
+#include <vector>
 
 /**
  * @brief Brezinski's theta algorithm class template implementing a nonlinear sequence transformation.
@@ -46,7 +47,7 @@ class brezinski_theta_algorithm final : public series_acceleration<T, K, series_
 protected:
 
     /**
-     * @brief Recursive function to compute theta transformation values.
+     * @brief Function to compute theta transformation values.
      *
      * Computes the value of theta according to Brezinski's recursive formulas.
      * This function implements the core recursive structure of the theta algorithm.
@@ -62,7 +63,8 @@ protected:
      * @return The transformed value at the specified order and parameters
      * @throws std::overflow_error if division by zero occurs during computation
      */
-    T theta(K n, K order, T S_n, K j) const;
+
+    inline T calculate(K n, K order) const;
 
 public:
 
@@ -100,66 +102,64 @@ public:
     T operator()(K n, K order) const override;
 };
 
+
 template <std::floating_point T, std::unsigned_integral K, typename series_templ>
-T brezinski_theta_algorithm<T, K, series_templ>::theta(K n, const K order, T S_n, const K j) const {
+T brezinski_theta_algorithm<T, K, series_templ>::calculate(K n, const K order) const {
 
     using std::isfinite;
-    using std::fma;
 
-    // For theory, see: Brezinski (1977), Chapter 4, Eq. (4.12)
-    // Base case for order = 1: θ₁⁽ⁿ⁾ = 1/a_{n+j+1}
-    if (order == static_cast<K>(1)) {
+    const K base_size = static_cast<K>(3) * order / static_cast<K>(2) + static_cast<K>(1);
 
-        T res = static_cast<T>(1) / this->series->operator()(n + j + static_cast<K>(1));
-        if (!isfinite(res))
-            throw std::overflow_error("division by zero");
-        return res;
+    std::vector<T> theta_odd(
+        base_size,
+        static_cast<T>(0)
+    ); // vector for theta_(2n + 1)
+
+    std::vector<T> theta_even(
+        base_size,
+        static_cast<T>(0)
+    ); //vector for theta_(2n), in the beginning it is theta_(-1) which is zero for all i
+
+    // init theta_(0)
+    for(K j = static_cast<K>(0); j < base_size; ++j)
+        theta_even[j] = this->series->S_n(n + j);
+
+
+    K j1, j2;
+    T delta; //temporary varaible
+
+    for(K level = static_cast<K>(1); level <= order / static_cast<K>(2); ++level){
+
+        // transform odd vector
+        for(K j = static_cast<K>(0); j < base_size + static_cast<K>(2) - static_cast<K>(3) * level; ++j){
+
+            j1 = j + static_cast<K>(1);
+            j2 = j + static_cast<K>(2);
+
+            delta = theta_even[j1] - theta_even[j];
+
+            theta_odd[j] = fma(theta_odd[j1], delta, static_cast<T>(1));
+            theta_odd[j]/= delta;
+        }
+
+        // transform even vector
+        for(K j = static_cast<K>(0); j < base_size - static_cast<K>(3) * level; ++j){
+
+            j1 = j + static_cast<K>(1);
+            j2 = j + static_cast<K>(2);
+
+            delta = theta_odd[j2] - theta_odd[j1];
+            
+            theta_even[j] = theta_even[j+1];
+            theta_even[j]-= (theta_even[j+2]-theta_even[j+1]) * delta / (theta_odd[j+1] - theta_odd[j] - delta);
+
+        }
     }
 
-    // For theory, see: Brezinski (2003), Section 3.2, Eq. (3.15)
-    // Compute partial sum from n+1 to n+j: S_{n+j} = S_n + Σ_{k=n+1}^{n+j} a_k
-    for (K tmp = n + static_cast<K>(1); tmp <= n + j; ++tmp)
-        S_n += this->series->operator()(tmp);
-
-    n += j;
-
-    // For theory, see: Brezinski (1977), Chapter 4, Eq. (4.10)
-    // Base case for order = 0: θ₀⁽ⁿ⁾ = S_n (partial sum)
-    if (order == static_cast<K>(0))
-        return S_n;
-
-    //TODO спросить у Парфенова, ибо жертвуем читаемостью кода, ради его небольшого 
-    // Precompute orders for recursive calls
-    const K order1 = order - static_cast<K>(1);
-    const K order2 = order - static_cast<K>(2);
-
-    // For theory, see: Brezinski (2003), Section 10.2, Eq. (10.2.4)
-    // Recursive computation of theta values with different offsets
-    const T theta_order1_0 = theta(n, order1, S_n, static_cast<K>(0));
-    const T theta_order1_1 = theta(n, order1, S_n, static_cast<K>(1));
-    const T theta_order1_2 = theta(n, order1, S_n, static_cast<K>(2));
-    const T theta_order2_1 = theta(n, order2, S_n, static_cast<K>(1));
-
-    // For theory, see: Brezinski (1977), Chapter 4, Eq. (4.13a)
-    // Odd order transformation: θ₂ₖ₊₁⁽ⁿ⁾ = θ₂ₖ₋₁⁽ⁿ⁺¹⁾ + 1/(θ₂ₖ⁽ⁿ⁾ - θ₂ₖ⁽ⁿ⁺¹⁾)
-    if (order & static_cast<K>(1)) { // order is odd
-        const T delta = static_cast<T>(1) / (theta_order1_0 - theta_order1_1); // 1/Δθ₂ₖ⁽ⁿ⁾
-        if (!isfinite(delta))
-            throw std::overflow_error("division by zero");
-        return theta_order2_1 + delta; // θ₂ₖ₊₁⁽ⁿ⁾ = θ₂ₖ₋₁⁽ⁿ⁺¹⁾ + 1/Δθ₂ₖ⁽ⁿ⁾
-    }
-
-    // For theory, see: Brezinski (1977), Chapter 4, Eq. (4.13b)
-    // Even order transformation: θ₂ₖ₊₂⁽ⁿ⁾ = θ₂ₖ⁽ⁿ⁺¹⁾ + (Δθ₂ₖ⁽ⁿ⁺¹⁾·Δθ₂ₖ₊₁⁽ⁿ⁺¹⁾)/Δ²θ₂ₖ₊₁⁽ⁿ⁾
-    const T delta2 = static_cast<T>(1) / fma(static_cast<T>(-2), theta_order1_1, theta_order1_0 + theta_order1_2); // 1/Δ²θ₂ₖ₊₁⁽ⁿ⁾
-
-    if (!isfinite(delta2))
+    if(!isfinite(theta_even[0]))
         throw std::overflow_error("division by zero");
 
-    const T delta_n = theta_order2_1 - theta(n, order2, S_n, static_cast<K>(2)); // Δθ₂ₖ⁽ⁿ⁺¹⁾
-    const T delta_n1 = theta_order1_1 - theta_order1_2; // Δθ₂ₖ₊₁⁽ⁿ⁺¹⁾
-
-    return fma(delta_n * delta_n1, delta2, theta_order2_1); // θ₂ₖ₊₂⁽ⁿ⁾ = θ₂ₖ⁽ⁿ⁺¹⁾ + (Δθ₂ₖ⁽ⁿ⁺¹⁾·Δθ₂ₖ₊₁⁽ⁿ⁺¹⁾)/Δ²θ₂ₖ₊₁⁽ⁿ⁾
+    return theta_even[0];
 }
 
 template <std::floating_point T, std::unsigned_integral K, typename series_templ>
@@ -172,10 +172,11 @@ T brezinski_theta_algorithm<T, K, series_templ>::operator()(const K n, const K o
 
     // For theory, see: Brezinski (1977), Chapter 4, Eq. (4.10)
     // Base cases: return partial sum for n=0 or order=0
-    if (n == static_cast<K>(0) || order == static_cast<K>(0))
+    //if (n == static_cast<K>(0) || order == static_cast<K>(0))
+    if (order == static_cast<K>(0))
         return this->series->S_n(n);
 
     // For theory, see: Brezinski (2003), Section 10.2, Eq. (10.2.4)
-    // Start recursive computation with initial parameters
-    return theta(n, order, this->series->S_n(n), static_cast<K>(0));
+    // Start computation with initial parameters
+    return calculate(n, order);
 }

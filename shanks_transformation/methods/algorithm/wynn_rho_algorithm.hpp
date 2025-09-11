@@ -175,10 +175,10 @@ wynn_rho_algorithm<T, K, series_templ>::wynn_rho_algorithm(
 			numerator.reset(new rho_transform<T, K>());
 			break;
 		case numerator_type::generalized_variant :
-			numerator.reset(new rho_transform<T, K>());
+			numerator.reset(new generilized_transform<T, K>());
 			break;
 		case numerator_type::gamma_rho_variant :
-			numerator.reset(new rho_transform<T, K>());
+			numerator.reset(new gamma_rho_transform<T, K>());
 			break;
 		default:
 			numerator.reset(new rho_transform<T, K>());
