@@ -6,8 +6,12 @@ from src.params import (
     get_series_params_from_csv,
     get_series_params_from_json,
     get_accel_params_from_json,
+    all_accel,
+    demo_all_synthetic_series,
 )
-from src.trial import ComplexTrial
+from src.trial import Trial, ComplexTrial
+from dataclasses import asdict
+import json
 
 
 import pyshanks
@@ -24,5 +28,38 @@ if __name__ == "__main__":
             *get_accel_params_from_json(pathlib.Path("example.json")),
         ],
     )
-    st.execute()
-    print(*st.results, sep="\n")
+    print(*st.execute(), sep="\n")
+
+    st = Trial(
+        SeriesParamModule(pyshanks.CosSeries, [9]),
+        AccelParamModule(
+            pyshanks.ShanksAlgorithm, range(10, 30), [4, 5]
+        ),
+    )
+    print(*st.execute(), sep="\n")  # ? 18
+
+    print("-- All series --")
+
+    a = ComplexTrial(demo_all_synthetic_series([0.5]), [AccelParamModule(
+        pyshanks.ShanksAlgorithm, range(10, 30), [4, 5]
+    )])
+
+    print(
+        json.dumps(
+            [asdict(result) for result in a.execute()],
+            indent=4,
+            sort_keys=True,
+        )
+    )
+
+    print("--All accels --")
+
+    b = ComplexTrial([SeriesParamModule(pyshanks.CosSeries, [9])], all_accel([30], 4))
+
+    print(
+        json.dumps(
+            [asdict(result) for result in b.execute()],
+            indent=4,
+            sort_keys=True,
+        )
+    )
