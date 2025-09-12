@@ -22,6 +22,10 @@ if __name__ == "__main__":
                 a=[1, 2, 3, 4, 5],
                 b=[1, 1, 1, 1, 1],
             ),
+            SeriesParamModule(
+                pyshanks.CosSeries,
+                x=[5],
+            ),
             *get_series_params_from_csv(pathlib.Path("example_series.csv")),
             *get_series_params_from_json(pathlib.Path("example.json")),
         ],
