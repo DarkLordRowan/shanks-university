@@ -836,7 +836,7 @@ four_arctan_series<T, K>::four_arctan_series(T x) : series_base<T, K>(x, 4 * std
 	// Сходится при |x| ≤ 1 (условно при |x| = 1)
 
 	if (std::abs(x) > 1 || !std::isfinite(x)) {
-		this->throw_domain_error("|x| must be ≤ 1");
+		this->throw_domain_error("|x| must be <= 1");
 	}
 }
 
@@ -1110,7 +1110,7 @@ half_asin_two_x_series<T, K>::half_asin_two_x_series(T x) : series_base<T, K>(x,
 	// Сходится при |x| ≤ 0.5 (абсолютно при |x| < 0.5, условно при |x| = 0.5)
 
 	if (std::abs(x) > static_cast<T>(0.5) || !std::isfinite(x)) {
-		this->throw_domain_error("|x| must be ≤ 0.5");
+		this->throw_domain_error("|x| must be <= 0.5");
 	}
 }
 
@@ -1461,7 +1461,7 @@ one_twelfth_3x2_pi2_series<T, K>::one_twelfth_3x2_pi2_series(T x) : series_base<
 	// Расходится при |x| > π
 
 	if (std::abs(x) > std::numbers::pi || !std::isfinite(x)) {
-		this->throw_domain_error("|x| must be ≤ π");
+		this->throw_domain_error("|x| must be <= π");
 	}
 }
 
@@ -1509,7 +1509,7 @@ x_twelfth_x2_pi2_series<T, K>::x_twelfth_x2_pi2_series(T x) : series_base<T, K>(
 	// Расходится при |x| > π
 
 	if (std::abs(x) > std::numbers::pi || !std::isfinite(x)) {
-		this->throw_domain_error("|x| must be ≤ π");
+		this->throw_domain_error("|x| must be <= π");
 	}
 }
 
@@ -2052,7 +2052,7 @@ exp_m_cos_x_sinsin_x_series<T, K>::exp_m_cos_x_sinsin_x_series(T x) : series_bas
 	// Однако для численной стабильности ограничиваем |x| ≤ π
 
 	if (std::abs(x) >= std::numbers::pi || !std::isfinite(x)) {
-		this->throw_domain_error("|x| must be ≤ π for numerical stability");
+		this->throw_domain_error("|x| must be <= π for numerical stability");
 	}
 }
 
@@ -2337,7 +2337,7 @@ minus_one_ned_in_n_series<T, K>::minus_one_ned_in_n_series(T x) : series_base<T,
 	// При |x| < 1 сходится абсолютно
 
 	if (std::abs(x) > 1 || !std::isfinite(x)) {
-		this->throw_domain_error("|x| must be ≤ 1");
+		this->throw_domain_error("|x| must be <= 1");
 	}
 }
 
@@ -2482,7 +2482,7 @@ two_arcsin_square_x_halfed_series<T, K>::two_arcsin_square_x_halfed_series(T x) 
 	// Расходится при |x| > 2
 
 	if (std::abs(x) > 2 || !std::isfinite(x)) {
-		this->throw_domain_error("|x| must be ≤ 2");
+		this->throw_domain_error("|x| must be <= 2");
 	}
 }
 
@@ -2815,7 +2815,7 @@ half_multi_ln_1div2multi1minuscosx_series<T, K>::half_multi_ln_1div2multi1minusc
 	// Расходится при x = 0, x = 2π и других точках, где cos(x) = 1
 
 	if (x <= 0 || x >= 2 * std::numbers::pi || !std::isfinite(x) || std::cos(x) == 1) {
-		this->throw_domain_error("x must be in (0, 2π) and cos(x) ≠ 1");
+		this->throw_domain_error("x must be in (0, 2π) and cos(x) != 1");
 	}
 }
 
@@ -2913,7 +2913,7 @@ ln_1plussqrt1plusxsquare_minus_ln_2_series<T, K>::ln_1plussqrt1plusxsquare_minus
 	// Расходится при |x| > 1
 
 	if (x * x > 1 || !std::isfinite(x)) {
-		this->throw_domain_error("|x| must be ≤ 1");
+		this->throw_domain_error("|x| must be <= 1");
 	}
 }
 
@@ -3062,7 +3062,7 @@ pi_8_cosx_square_minus_1_div_3_cosx_series<T, K>::pi_8_cosx_square_minus_1_div_3
 	// Расходится при |x| > π/2
 
 	if (std::abs(x) > std::numbers::pi / 2 || !std::isfinite(x)) {
-		this->throw_domain_error("|x| must be ≤ π/2");
+		this->throw_domain_error("|x| must be <= π/2");
 	}
 }
 
@@ -3213,7 +3213,7 @@ arcsin_x_minus_x_series<T, K>::arcsin_x_minus_x_series(T x) : series_base<T, K>(
 	// Расходится при |x| > 1
 
 	if (std::abs(x) > 1 || !std::isfinite(x)) {
-		this->throw_domain_error("|x| must be ≤ 1");
+		this->throw_domain_error("|x| must be <= 1");
 	}
 }
 
@@ -3865,7 +3865,7 @@ xsquareplus3_div_xsquareplus2multix_minus_1_series<T, K>::xsquareplus3_div_xsqua
 	// Расходится при |x| ≤ 2
 
 	if (std::abs(x) <= 2 || !std::isfinite(x) || x == 0) {
-		this->throw_domain_error("|x| must be > 2 and x ≠ 0");
+		this->throw_domain_error("|x| must be > 2 and x != 0");
 	}
 }
 
@@ -3913,7 +3913,7 @@ arcsin_x_series<T, K>::arcsin_x_series(T x) : series_base<T, K>(x, std::asin(x))
 	// Расходится при |x| > 1
 
 	if (x < -1 || x > 1 || !std::isfinite(x)) {
-		this->throw_domain_error("|x| must be ≤ 1");
+		this->throw_domain_error("|x| must be <= 1");
 	}
 }
 
@@ -3962,7 +3962,7 @@ arctg_x_series<T, K>::arctg_x_series(T x) : series_base<T, K>(x, std::atan(x))
 	// Расходится при |x| > 1
 
 	if (std::abs(x) > 1 || !std::isfinite(x)) {
-		this->throw_domain_error("|x| must be ≤ 1");
+		this->throw_domain_error("|x| must be <= 1");
 	}
 }
 
@@ -4109,7 +4109,7 @@ sqrt_1plusx_series<T, K>::sqrt_1plusx_series(T x) : series_base<T, K>(x, std::sq
 	// Расходится при |x| > 1
 
 	if (std::abs(x) > 1 || !std::isfinite(x)) {
-		this->throw_domain_error("|x| must be ≤ 1");
+		this->throw_domain_error("|x| must be <= 1");
 	}
 }
 
@@ -4454,7 +4454,7 @@ arctan_x2_series<T, K>::arctan_x2_series(T x) : series_base<T, K>(x, std::atan(x
 	// Расходится при |x| > 1
 
 	if (std::abs(x) > 1 || !std::isfinite(x)) {
-		this->throw_domain_error("|x| must be ≤ 1");
+		this->throw_domain_error("|x| must be <= 1");
 	}
 }
 
@@ -4600,7 +4600,7 @@ arctan_x3_series<T, K>::arctan_x3_series(T x) : series_base<T, K>(x, static_cast
 	// Расходится при |x| > 1
 
 	if (std::abs(x) > 1 || !std::isfinite(x)) {
-		this->throw_domain_error("|x| must be ≤ 1");
+		this->throw_domain_error("|x| must be <= 1");
 	}
 }
 
@@ -4649,7 +4649,7 @@ arcsin_x2_series<T, K>::arcsin_x2_series(T x) : series_base<T, K>(x, std::asin(x
 	// Расходится при |x| > 1
 
 	if (std::abs(x) > 1 || !std::isfinite(x)) {
-		this->throw_domain_error("|x| must be ≤ 1");
+		this->throw_domain_error("|x| must be <= 1");
 	}
 }
 
@@ -4796,7 +4796,7 @@ arcsinh_x_series<T, K>::arcsinh_x_series(T x) : series_base<T, K>(x, std::asinh(
 	// Расходится при |x| > 1
 
 	if (std::abs(x) > 1 || !std::isfinite(x)) {
-		this->throw_domain_error("|x| must be ≤ 1");
+		this->throw_domain_error("|x| must be <= 1");
 	}
 }
 
@@ -5086,7 +5086,7 @@ sqrt_1plusx_min_1_min_x_div_2_series<T, K>::sqrt_1plusx_min_1_min_x_div_2_series
 	// Расходится при |x| > 1
 
 	if (std::abs(x) > 1 || !std::isfinite(x)) {
-		this->throw_domain_error("|x| must be ≤ 1");
+		this->throw_domain_error("|x| must be <= 1");
 	}
 }
 
@@ -5335,7 +5335,7 @@ cos_sqrt_x_series<T, K>::cos_sqrt_x_series(T x) : series_base<T, K>(x, static_ca
 	// Расходится при x < 0 (комплексная область)
 
 	if (x < 0 || !std::isfinite(x)) {
-		this->throw_domain_error("x must be ≥ 0");
+		this->throw_domain_error("x must be >= 0");
 	}
 }
 
