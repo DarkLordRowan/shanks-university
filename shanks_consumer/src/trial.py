@@ -17,8 +17,11 @@ def cartesian_dicts(d: dict[str, Iterable[Any]]) -> Generator[dict[str, Any], No
 @dataclass
 class ComputedTrialResult:
     n: int
-    s_n: float
-    value: float
+    series_value: float
+    partial_sum: float
+    partial_sum_deviation: float
+    accel_value: float
+    accel_value_deviation: float
 
 
 @dataclass
@@ -66,21 +69,30 @@ class Trial:
             computed, series_lim = [], None
             error, error_n_value = None, None
             try:
-                ready_series = self.series.executable(*[argument[key] for key in argument])  # type: ignore
+                ready_series = self.series.executable(
+                    *[argument[key] for key in argument]
+                )
                 series_lim = ready_series.get_sum()
                 for n_value in self.accel.n_values:
                     error_n_value = n_value
+                    accel_value = self.accel.executable(
+                        ready_series,
+                        *[additional_args[key] for key in additional_args]
+                    )(n_value, m_value)
+
+                    partial_sum = ready_series.S_n(n_value)
                     computed.append(
                         ComputedTrialResult(
-                            n_value,
-                            ready_series.S_n(n_value),
-                            self.accel.executable(
-                                ready_series,
-                                *[
-                                    additional_args[key]
-                                    for key in additional_args
-                                ]
-                            )(n_value, m_value),
+                            n=n_value,
+                            partial_sum=partial_sum,
+                            partial_sum_deviation=abs(
+                                partial_sum - series_lim
+                            ),
+                            series_value=ready_series(n_value),
+                            accel_value=accel_value,  # type: ignore
+                            accel_value_deviation=abs(
+                                accel_value - series_lim
+                            ),
                         )
                     )
             except Exception as e:  # TODO more debug info
