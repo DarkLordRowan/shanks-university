@@ -30,7 +30,7 @@ class ErrorTrialResult:
 @dataclass
 class SeriesTrialResult:
     name: str
-    sum: Any
+    lim: Any
     arguments: Mapping[str, Any]
 
 
@@ -47,7 +47,6 @@ class TrialResult:
     accel: AccelTrialResult
     computed: list[ComputedTrialResult]
     error: ErrorTrialResult | None
-
 
 @dataclass
 class Trial:
