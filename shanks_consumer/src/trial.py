@@ -21,6 +21,12 @@ class ComputedTrialResult:
 
 
 @dataclass
+class ErrorTrialResult:
+    description: str
+    data: Mapping[str, str]
+
+
+@dataclass
 class TrialResult:
     series_name: str
     series_arguments: Mapping[str, Any]
@@ -28,7 +34,7 @@ class TrialResult:
     accel_m_value: int
     accel_additional_args: Mapping[str, str]
     computed: list[ComputedTrialResult]
-    error: str | None
+    error: ErrorTrialResult | None
 
 
 @dataclass
@@ -46,11 +52,11 @@ class Trial:
             self.accel.m_values,
             cartesian_dicts(self.accel.additional_args),
         ):
-            computed = []
-            error = None
+            computed, error, error_n_value = [], None, None
             try:
                 ready_series = self.series.executable(*[argument[key] for key in argument])  # type: ignore
                 for n_value in self.accel.n_values:
+                    error_n_value = n_value
                     computed.append(
                         ComputedTrialResult(
                             n_value,
@@ -64,7 +70,7 @@ class Trial:
                         )
                     )
             except Exception as e:  # TODO more debug info
-                error = str(e)
+                error = ErrorTrialResult(str(e), {"n": str(error_n_value)})
 
             results.append(
                 TrialResult(
