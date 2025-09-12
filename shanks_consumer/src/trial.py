@@ -6,21 +6,30 @@ from src.params import (
 import itertools
 
 from dataclasses import dataclass
-from typing import Any, Generator, Iterable
+from typing import Any, Generator, Iterable, Mapping
 
 def cartesian_dicts(d: dict[str, Iterable[Any]]) -> Generator[dict[str, Any], None, None]:
     keys: list[str] = list(d)
     for vals in itertools.product(*(d[k] for k in keys)):
         yield dict(zip(keys, vals))
 
+
+@dataclass
+class ComputedTrialResult:
+    n: int
+    value: float
+
+
 @dataclass
 class TrialResult:
     series_name: str
-    series_argument: float
+    series_arguments: Mapping[str, Any]
     accel_name: str
-    m_value: int
-    computed: list[tuple[float, float]]
+    accel_m_value: int
+    accel_additional_args: Mapping[str, str]
+    computed: list[ComputedTrialResult]
     error: str | None
+
 
 @dataclass
 class Trial:
@@ -30,27 +39,43 @@ class Trial:
     def execute(self) -> list[TrialResult]:
         results = []
         for argument, m_value, additional_args in itertools.product(
-            self.series.arguments,
+            [
+                dict(zip(self.series.arguments.keys(), values))
+                for values in zip(*self.series.arguments.values())
+            ],
             self.accel.m_values,
-            cartesian_dicts(self.accel.additional_args)
+            cartesian_dicts(self.accel.additional_args),
         ):
             computed = []
             error = None
             try:
-                ready_series = self.series.executable(argument)  # type: ignore
+                ready_series = self.series.executable(*[argument[key] for key in argument])  # type: ignore
                 for n_value in self.accel.n_values:
-                    computed.append(self.accel.executable(
-                        ready_series, **additional_args
-                    )(n_value, m_value))
+                    computed.append(
+                        ComputedTrialResult(
+                            n_value,
+                            self.accel.executable(
+                                ready_series,
+                                *[
+                                    additional_args[key]
+                                    for key in additional_args
+                                ]
+                            )(n_value, m_value),
+                        )
+                    )
             except Exception as e:  # TODO more debug info
                 error = str(e)
 
             results.append(
                 TrialResult(
                     series_name=self.series.series_name,
-                    series_argument=argument,
+                    series_arguments=argument,
                     accel_name=self.accel.accel_name,
-                    m_value=m_value,
+                    accel_m_value=m_value,
+                    accel_additional_args={
+                        key: str(value)
+                        for key, value in additional_args.items()
+                    },
                     computed=computed,
                     error=error,
                 )

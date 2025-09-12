@@ -1,0 +1,1954 @@
+[
+    {
+        "accel_additional_args": {
+            "useRecFormulas": "True",
+            "variant": "RemainderType.t_variant"
+        },
+        "accel_m_value": 4,
+        "accel_name": "LevinAlgorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 1.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 1,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {
+            "useRecFormulas": "False",
+            "variant": "RemainderType.t_variant"
+        },
+        "accel_m_value": 4,
+        "accel_name": "LevinAlgorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 1.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 1,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {
+            "useRecFormulas": "True",
+            "variant": "RemainderType.t_variant"
+        },
+        "accel_m_value": 5,
+        "accel_name": "LevinAlgorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 1.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 1,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {
+            "useRecFormulas": "False",
+            "variant": "RemainderType.t_variant"
+        },
+        "accel_m_value": 5,
+        "accel_name": "LevinAlgorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 1.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 1,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {
+            "useRecFormulas": "True",
+            "variant": "RemainderType.t_variant"
+        },
+        "accel_m_value": 4,
+        "accel_name": "LevinAlgorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 2.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 2,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {
+            "useRecFormulas": "False",
+            "variant": "RemainderType.t_variant"
+        },
+        "accel_m_value": 4,
+        "accel_name": "LevinAlgorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 2.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 2,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {
+            "useRecFormulas": "True",
+            "variant": "RemainderType.t_variant"
+        },
+        "accel_m_value": 5,
+        "accel_name": "LevinAlgorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 2.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 2,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {
+            "useRecFormulas": "False",
+            "variant": "RemainderType.t_variant"
+        },
+        "accel_m_value": 5,
+        "accel_name": "LevinAlgorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 2.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 2,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {
+            "useRecFormulas": "True",
+            "variant": "RemainderType.t_variant"
+        },
+        "accel_m_value": 4,
+        "accel_name": "LevinAlgorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 3.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 3,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {
+            "useRecFormulas": "False",
+            "variant": "RemainderType.t_variant"
+        },
+        "accel_m_value": 4,
+        "accel_name": "LevinAlgorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 3.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 3,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {
+            "useRecFormulas": "True",
+            "variant": "RemainderType.t_variant"
+        },
+        "accel_m_value": 5,
+        "accel_name": "LevinAlgorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 3.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 3,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {
+            "useRecFormulas": "False",
+            "variant": "RemainderType.t_variant"
+        },
+        "accel_m_value": 5,
+        "accel_name": "LevinAlgorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 3.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 3,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {
+            "useRecFormulas": "True",
+            "variant": "RemainderType.t_variant"
+        },
+        "accel_m_value": 4,
+        "accel_name": "LevinAlgorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 4.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 4,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {
+            "useRecFormulas": "False",
+            "variant": "RemainderType.t_variant"
+        },
+        "accel_m_value": 4,
+        "accel_name": "LevinAlgorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 4.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 4,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {
+            "useRecFormulas": "True",
+            "variant": "RemainderType.t_variant"
+        },
+        "accel_m_value": 5,
+        "accel_name": "LevinAlgorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 4.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 4,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {
+            "useRecFormulas": "False",
+            "variant": "RemainderType.t_variant"
+        },
+        "accel_m_value": 5,
+        "accel_name": "LevinAlgorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 4.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 4,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {
+            "useRecFormulas": "True",
+            "variant": "RemainderType.t_variant"
+        },
+        "accel_m_value": 4,
+        "accel_name": "LevinAlgorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 5.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 5,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {
+            "useRecFormulas": "False",
+            "variant": "RemainderType.t_variant"
+        },
+        "accel_m_value": 4,
+        "accel_name": "LevinAlgorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 5.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 5,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {
+            "useRecFormulas": "True",
+            "variant": "RemainderType.t_variant"
+        },
+        "accel_m_value": 5,
+        "accel_name": "LevinAlgorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 5.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 5,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {
+            "useRecFormulas": "False",
+            "variant": "RemainderType.t_variant"
+        },
+        "accel_m_value": 5,
+        "accel_name": "LevinAlgorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 5.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 5,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {},
+        "accel_m_value": 4,
+        "accel_name": "ShanksAlgorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 1.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 1,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {},
+        "accel_m_value": 5,
+        "accel_name": "ShanksAlgorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 1.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 1,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {},
+        "accel_m_value": 4,
+        "accel_name": "ShanksAlgorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 2.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 2,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {},
+        "accel_m_value": 5,
+        "accel_name": "ShanksAlgorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 2.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 2,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {},
+        "accel_m_value": 4,
+        "accel_name": "ShanksAlgorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 3.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 3,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {},
+        "accel_m_value": 5,
+        "accel_name": "ShanksAlgorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 3.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 3,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {},
+        "accel_m_value": 4,
+        "accel_name": "ShanksAlgorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 4.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 4,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {},
+        "accel_m_value": 5,
+        "accel_name": "ShanksAlgorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 4.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 4,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {},
+        "accel_m_value": 4,
+        "accel_name": "ShanksAlgorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 5.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 5,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {},
+        "accel_m_value": 5,
+        "accel_name": "ShanksAlgorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 5.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 5,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {},
+        "accel_m_value": 4,
+        "accel_name": "ShanksAlgorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 1.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 1,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {},
+        "accel_m_value": 4,
+        "accel_name": "ShanksAlgorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 2.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 2,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {},
+        "accel_m_value": 4,
+        "accel_name": "ShanksAlgorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 3.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 3,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {},
+        "accel_m_value": 4,
+        "accel_name": "ShanksAlgorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 4.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 4,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {},
+        "accel_m_value": 4,
+        "accel_name": "ShanksAlgorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 5.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 5,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {},
+        "accel_m_value": 4,
+        "accel_name": "ShanksTransformAlternatingAlgorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 1.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 1,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {},
+        "accel_m_value": 4,
+        "accel_name": "ShanksTransformAlternatingAlgorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 2.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 2,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {},
+        "accel_m_value": 4,
+        "accel_name": "ShanksTransformAlternatingAlgorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 3.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 3,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {},
+        "accel_m_value": 4,
+        "accel_name": "ShanksTransformAlternatingAlgorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 4.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 4,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {},
+        "accel_m_value": 4,
+        "accel_name": "ShanksTransformAlternatingAlgorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 5.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 5,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {},
+        "accel_m_value": 4,
+        "accel_name": "BrezinskiThetaAlgorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 1.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 1,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {},
+        "accel_m_value": 4,
+        "accel_name": "BrezinskiThetaAlgorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 2.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 2,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {},
+        "accel_m_value": 4,
+        "accel_name": "BrezinskiThetaAlgorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 3.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 3,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {},
+        "accel_m_value": 4,
+        "accel_name": "BrezinskiThetaAlgorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 4.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 4,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {},
+        "accel_m_value": 4,
+        "accel_name": "BrezinskiThetaAlgorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 5.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 5,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {},
+        "accel_m_value": 4,
+        "accel_name": "ChangWynnAlgorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 1.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 1,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {},
+        "accel_m_value": 4,
+        "accel_name": "ChangWynnAlgorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 2.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 2,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {},
+        "accel_m_value": 4,
+        "accel_name": "ChangWynnAlgorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 3.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 3,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {},
+        "accel_m_value": 4,
+        "accel_name": "ChangWynnAlgorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 4.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 4,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {},
+        "accel_m_value": 4,
+        "accel_name": "ChangWynnAlgorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 5.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 5,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {
+            "remainder": "RemainderType.u_variant",
+            "useRecFormulas": "True"
+        },
+        "accel_m_value": 4,
+        "accel_name": "DrummondDAlgorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 1.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 1,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {
+            "remainder": "RemainderType.u_variant",
+            "useRecFormulas": "True"
+        },
+        "accel_m_value": 4,
+        "accel_name": "DrummondDAlgorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 2.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 2,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {
+            "remainder": "RemainderType.u_variant",
+            "useRecFormulas": "True"
+        },
+        "accel_m_value": 4,
+        "accel_name": "DrummondDAlgorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 3.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 3,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {
+            "remainder": "RemainderType.u_variant",
+            "useRecFormulas": "True"
+        },
+        "accel_m_value": 4,
+        "accel_name": "DrummondDAlgorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 4.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 4,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {
+            "remainder": "RemainderType.u_variant",
+            "useRecFormulas": "True"
+        },
+        "accel_m_value": 4,
+        "accel_name": "DrummondDAlgorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 5.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 5,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {},
+        "accel_m_value": 4,
+        "accel_name": "FordSidi2Algorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 1.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 1,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {},
+        "accel_m_value": 4,
+        "accel_name": "FordSidi2Algorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 2.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 2,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {},
+        "accel_m_value": 4,
+        "accel_name": "FordSidi2Algorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 3.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 3,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {},
+        "accel_m_value": 4,
+        "accel_name": "FordSidi2Algorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 4.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 4,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {},
+        "accel_m_value": 4,
+        "accel_name": "FordSidi2Algorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 5.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 5,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {},
+        "accel_m_value": 4,
+        "accel_name": "FordSidi3Algorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 1.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 1,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {},
+        "accel_m_value": 4,
+        "accel_name": "FordSidi3Algorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 2.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 2,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {},
+        "accel_m_value": 4,
+        "accel_name": "FordSidi3Algorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 3.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 3,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {},
+        "accel_m_value": 4,
+        "accel_name": "FordSidi3Algorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 4.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 4,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {},
+        "accel_m_value": 4,
+        "accel_name": "FordSidi3Algorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 5.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 5,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {},
+        "accel_m_value": 4,
+        "accel_name": "LevinAlgorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 1.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 1,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {},
+        "accel_m_value": 4,
+        "accel_name": "LevinAlgorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 2.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 2,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {},
+        "accel_m_value": 4,
+        "accel_name": "LevinAlgorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 3.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 3,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {},
+        "accel_m_value": 4,
+        "accel_name": "LevinAlgorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 4.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 4,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {},
+        "accel_m_value": 4,
+        "accel_name": "LevinAlgorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 5.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 5,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {
+            "gamma": "15",
+            "remainder": "RemainderType.u_variant"
+        },
+        "accel_m_value": 4,
+        "accel_name": "LevinSidiMAlgorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 1.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 1,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {
+            "gamma": "15",
+            "remainder": "RemainderType.u_variant"
+        },
+        "accel_m_value": 4,
+        "accel_name": "LevinSidiMAlgorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 2.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 2,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {
+            "gamma": "15",
+            "remainder": "RemainderType.u_variant"
+        },
+        "accel_m_value": 4,
+        "accel_name": "LevinSidiMAlgorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 3.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 3,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {
+            "gamma": "15",
+            "remainder": "RemainderType.u_variant"
+        },
+        "accel_m_value": 4,
+        "accel_name": "LevinSidiMAlgorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 4.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 4,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {
+            "gamma": "15",
+            "remainder": "RemainderType.u_variant"
+        },
+        "accel_m_value": 4,
+        "accel_name": "LevinSidiMAlgorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 5.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 5,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {
+            "parameter": "15",
+            "remainder": "RemainderType.u_variant",
+            "useRecFormulas": "False"
+        },
+        "accel_m_value": 4,
+        "accel_name": "LevinSidiSAlgorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 1.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 1,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {
+            "parameter": "15",
+            "remainder": "RemainderType.u_variant",
+            "useRecFormulas": "False"
+        },
+        "accel_m_value": 4,
+        "accel_name": "LevinSidiSAlgorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 2.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 2,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {
+            "parameter": "15",
+            "remainder": "RemainderType.u_variant",
+            "useRecFormulas": "False"
+        },
+        "accel_m_value": 4,
+        "accel_name": "LevinSidiSAlgorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 3.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 3,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {
+            "parameter": "15",
+            "remainder": "RemainderType.u_variant",
+            "useRecFormulas": "False"
+        },
+        "accel_m_value": 4,
+        "accel_name": "LevinSidiSAlgorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 4.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 4,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {
+            "parameter": "15",
+            "remainder": "RemainderType.u_variant",
+            "useRecFormulas": "False"
+        },
+        "accel_m_value": 4,
+        "accel_name": "LevinSidiSAlgorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 5.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 5,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {},
+        "accel_m_value": 4,
+        "accel_name": "LubkinWAlgorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 1.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 1,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {},
+        "accel_m_value": 4,
+        "accel_name": "LubkinWAlgorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 2.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 2,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {},
+        "accel_m_value": 4,
+        "accel_name": "LubkinWAlgorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 3.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 3,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {},
+        "accel_m_value": 4,
+        "accel_name": "LubkinWAlgorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 4.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 4,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {},
+        "accel_m_value": 4,
+        "accel_name": "LubkinWAlgorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 5.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 5,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {
+            "RHO": "15",
+            "gamma": "15",
+            "numerator": "NumeratorType.rho_variant"
+        },
+        "accel_m_value": 4,
+        "accel_name": "WhynnRhoAlgorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 1.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 1,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {
+            "RHO": "15",
+            "gamma": "15",
+            "numerator": "NumeratorType.rho_variant"
+        },
+        "accel_m_value": 4,
+        "accel_name": "WhynnRhoAlgorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 2.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 2,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {
+            "RHO": "15",
+            "gamma": "15",
+            "numerator": "NumeratorType.rho_variant"
+        },
+        "accel_m_value": 4,
+        "accel_name": "WhynnRhoAlgorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 3.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 3,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {
+            "RHO": "15",
+            "gamma": "15",
+            "numerator": "NumeratorType.rho_variant"
+        },
+        "accel_m_value": 4,
+        "accel_name": "WhynnRhoAlgorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 4.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 4,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {
+            "RHO": "15",
+            "gamma": "15",
+            "numerator": "NumeratorType.rho_variant"
+        },
+        "accel_m_value": 4,
+        "accel_name": "WhynnRhoAlgorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 5.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 5,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {},
+        "accel_m_value": 4,
+        "accel_name": "RichardsonAlgorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 1.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 1,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {},
+        "accel_m_value": 4,
+        "accel_name": "RichardsonAlgorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 2.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 2,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {},
+        "accel_m_value": 4,
+        "accel_name": "RichardsonAlgorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 3.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 3,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {},
+        "accel_m_value": 4,
+        "accel_name": "RichardsonAlgorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 4.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 4,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {},
+        "accel_m_value": 4,
+        "accel_name": "RichardsonAlgorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 5.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 5,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {},
+        "accel_m_value": 4,
+        "accel_name": "WenigerAlgorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 1.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 1,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {},
+        "accel_m_value": 4,
+        "accel_name": "WenigerAlgorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 2.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 2,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {},
+        "accel_m_value": 4,
+        "accel_name": "WenigerAlgorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 3.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 3,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {},
+        "accel_m_value": 4,
+        "accel_name": "WenigerAlgorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 4.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 4,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {},
+        "accel_m_value": 4,
+        "accel_name": "WenigerAlgorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 5.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 5,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {},
+        "accel_m_value": 4,
+        "accel_name": "WynnEpsilonAlgorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 1.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 1,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {},
+        "accel_m_value": 4,
+        "accel_name": "WynnEpsilonAlgorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 2.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 2,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {},
+        "accel_m_value": 4,
+        "accel_name": "WynnEpsilonAlgorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 3.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 3,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {},
+        "accel_m_value": 4,
+        "accel_name": "WynnEpsilonAlgorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 4.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 4,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {},
+        "accel_m_value": 4,
+        "accel_name": "WynnEpsilonAlgorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 5.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 5,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {},
+        "accel_m_value": 4,
+        "accel_name": "WynnEpsilon2Algorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 1.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 1,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {},
+        "accel_m_value": 4,
+        "accel_name": "WynnEpsilon2Algorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 2.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 2,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {},
+        "accel_m_value": 4,
+        "accel_name": "WynnEpsilon2Algorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 3.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 3,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {},
+        "accel_m_value": 4,
+        "accel_name": "WynnEpsilon2Algorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 4.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 4,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {},
+        "accel_m_value": 4,
+        "accel_name": "WynnEpsilon2Algorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 5.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 5,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {
+            "epsilon_threshold": "0.001"
+        },
+        "accel_m_value": 4,
+        "accel_name": "WynnEpsilon3Algorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 1.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 1,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {
+            "epsilon_threshold": "0.001"
+        },
+        "accel_m_value": 4,
+        "accel_name": "WynnEpsilon3Algorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 2.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 2,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {
+            "epsilon_threshold": "0.001"
+        },
+        "accel_m_value": 4,
+        "accel_name": "WynnEpsilon3Algorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 3.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 3,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {
+            "epsilon_threshold": "0.001"
+        },
+        "accel_m_value": 4,
+        "accel_name": "WynnEpsilon3Algorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 4.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 4,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {
+            "epsilon_threshold": "0.001"
+        },
+        "accel_m_value": 4,
+        "accel_name": "WynnEpsilon3Algorithm",
+        "computed": [],
+        "error": "bin series diverges at x = 5.000000 (|x| >= 1)",
+        "series_arguments": {
+            "a": 5,
+            "b": 1
+        },
+        "series_name": "BinSeries"
+    },
+    {
+        "accel_additional_args": {
+            "useRecFormulas": "True",
+            "variant": "RemainderType.t_variant"
+        },
+        "accel_m_value": 4,
+        "accel_name": "LevinAlgorithm",
+        "computed": [
+            {
+                "n": 10,
+                "value": -0.9092055304423765
+            },
+            {
+                "n": 15,
+                "value": -0.911130264229753
+            },
+            {
+                "n": 20,
+                "value": -0.9111302618847364
+            }
+        ],
+        "error": null,
+        "series_arguments": {
+            "x": 9.0
+        },
+        "series_name": "CosSeries"
+    },
+    {
+        "accel_additional_args": {
+            "useRecFormulas": "False",
+            "variant": "RemainderType.t_variant"
+        },
+        "accel_m_value": 4,
+        "accel_name": "LevinAlgorithm",
+        "computed": [
+            {
+                "n": 10,
+                "value": -0.017437515224572306
+            },
+            {
+                "n": 15,
+                "value": -0.911142803819087
+            },
+            {
+                "n": 20,
+                "value": -0.9111302618765384
+            }
+        ],
+        "error": null,
+        "series_arguments": {
+            "x": 9.0
+        },
+        "series_name": "CosSeries"
+    },
+    {
+        "accel_additional_args": {
+            "useRecFormulas": "True",
+            "variant": "RemainderType.t_variant"
+        },
+        "accel_m_value": 5,
+        "accel_name": "LevinAlgorithm",
+        "computed": [
+            {
+                "n": 10,
+                "value": -0.9113540661788176
+            },
+            {
+                "n": 15,
+                "value": -0.9111302617110607
+            },
+            {
+                "n": 20,
+                "value": -0.9111302618847338
+            }
+        ],
+        "error": null,
+        "series_arguments": {
+            "x": 9.0
+        },
+        "series_name": "CosSeries"
+    },
+    {
+        "accel_additional_args": {
+            "useRecFormulas": "False",
+            "variant": "RemainderType.t_variant"
+        },
+        "accel_m_value": 5,
+        "accel_name": "LevinAlgorithm",
+        "computed": [
+            {
+                "n": 10,
+                "value": 0.03848268940095062
+            },
+            {
+                "n": 15,
+                "value": -0.9111429311295081
+            },
+            {
+                "n": 20,
+                "value": -0.911130261876514
+            }
+        ],
+        "error": null,
+        "series_arguments": {
+            "x": 9.0
+        },
+        "series_name": "CosSeries"
+    },
+    {
+        "accel_additional_args": {
+            "useRecFormulas": "True",
+            "variant": "RemainderType.t_variant"
+        },
+        "accel_m_value": 4,
+        "accel_name": "LevinAlgorithm",
+        "computed": [
+            {
+                "n": 10,
+                "value": -0.7916259334379265
+            },
+            {
+                "n": 15,
+                "value": -0.8390716922072848
+            },
+            {
+                "n": 20,
+                "value": -0.839071529076653
+            }
+        ],
+        "error": null,
+        "series_arguments": {
+            "x": 10.0
+        },
+        "series_name": "CosSeries"
+    },
+    {
+        "accel_additional_args": {
+            "useRecFormulas": "False",
+            "variant": "RemainderType.t_variant"
+        },
+        "accel_m_value": 4,
+        "accel_name": "LevinAlgorithm",
+        "computed": [
+            {
+                "n": 10,
+                "value": 8.84645366467804
+            },
+            {
+                "n": 15,
+                "value": -0.8394371613738527
+            },
+            {
+                "n": 20,
+                "value": -0.8390715283906403
+            }
+        ],
+        "error": null,
+        "series_arguments": {
+            "x": 10.0
+        },
+        "series_name": "CosSeries"
+    },
+    {
+        "accel_additional_args": {
+            "useRecFormulas": "True",
+            "variant": "RemainderType.t_variant"
+        },
+        "accel_m_value": 5,
+        "accel_name": "LevinAlgorithm",
+        "computed": [
+            {
+                "n": 10,
+                "value": -0.8458811568340001
+            },
+            {
+                "n": 15,
+                "value": -0.8390715141226773
+            },
+            {
+                "n": 20,
+                "value": -0.8390715290765897
+            }
+        ],
+        "error": null,
+        "series_arguments": {
+            "x": 10.0
+        },
+        "series_name": "CosSeries"
+    },
+    {
+        "accel_additional_args": {
+            "useRecFormulas": "False",
+            "variant": "RemainderType.t_variant"
+        },
+        "accel_m_value": 5,
+        "accel_name": "LevinAlgorithm",
+        "computed": [
+            {
+                "n": 10,
+                "value": 9.862400737912237
+            },
+            {
+                "n": 15,
+                "value": -0.8394429675571448
+            },
+            {
+                "n": 20,
+                "value": -0.8390715283874574
+            }
+        ],
+        "error": null,
+        "series_arguments": {
+            "x": 10.0
+        },
+        "series_name": "CosSeries"
+    },
+    {
+        "accel_additional_args": {
+            "useRecFormulas": "True",
+            "variant": "RemainderType.t_variant"
+        },
+        "accel_m_value": 4,
+        "accel_name": "LevinAlgorithm",
+        "computed": [
+            {
+                "n": 10,
+                "value": 0.8742263493860326
+            },
+            {
+                "n": 15,
+                "value": 0.004418081292286471
+            },
+            {
+                "n": 20,
+                "value": 0.004425697992805453
+            }
+        ],
+        "error": null,
+        "series_arguments": {
+            "x": 11.0
+        },
+        "series_name": "CosSeries"
+    },
+    {
+        "accel_additional_args": {
+            "useRecFormulas": "False",
+            "variant": "RemainderType.t_variant"
+        },
+        "accel_m_value": 4,
+        "accel_name": "LevinAlgorithm",
+        "computed": [
+            {
+                "n": 10,
+                "value": 87.8273863107236
+            },
+            {
+                "n": 15,
+                "value": -0.0033424269325440666
+            },
+            {
+                "n": 20,
+                "value": 0.004425735428442996
+            }
+        ],
+        "error": null,
+        "series_arguments": {
+            "x": 11.0
+        },
+        "series_name": "CosSeries"
+    },
+    {
+        "accel_additional_args": {
+            "useRecFormulas": "True",
+            "variant": "RemainderType.t_variant"
+        },
+        "accel_m_value": 5,
+        "accel_name": "LevinAlgorithm",
+        "computed": [
+            {
+                "n": 10,
+                "value": -0.14655671401216525
+            },
+            {
+                "n": 15,
+                "value": 0.00442654480021417
+            },
+            {
+                "n": 20,
+                "value": 0.004425697986974084
+            }
+        ],
+        "error": null,
+        "series_arguments": {
+            "x": 11.0
+        },
+        "series_name": "CosSeries"
+    },
+    {
+        "accel_additional_args": {
+            "useRecFormulas": "False",
+            "variant": "RemainderType.t_variant"
+        },
+        "accel_m_value": 5,
+        "accel_name": "LevinAlgorithm",
+        "computed": [
+            {
+                "n": 10,
+                "value": 103.1797646121043
+            },
+            {
+                "n": 15,
+                "value": -0.0035287353478290484
+            },
+            {
+                "n": 20,
+                "value": 0.004425735686545405
+            }
+        ],
+        "error": null,
+        "series_arguments": {
+            "x": 11.0
+        },
+        "series_name": "CosSeries"
+    },
+    {
+        "accel_additional_args": {
+            "useRecFormulas": "True",
+            "variant": "RemainderType.t_variant"
+        },
+        "accel_m_value": 4,
+        "accel_name": "LevinAlgorithm",
+        "computed": [
+            {
+                "n": 10,
+                "value": 13.344775306818995
+            },
+            {
+                "n": 15,
+                "value": 0.8435979147901141
+            },
+            {
+                "n": 20,
+                "value": 0.8438539591603714
+            }
+        ],
+        "error": null,
+        "series_arguments": {
+            "x": 12.0
+        },
+        "series_name": "CosSeries"
+    },
+    {
+        "accel_additional_args": {
+            "useRecFormulas": "False",
+            "variant": "RemainderType.t_variant"
+        },
+        "accel_m_value": 4,
+        "accel_name": "LevinAlgorithm",
+        "computed": [
+            {
+                "n": 10,
+                "value": 707.2761301660663
+            },
+            {
+                "n": 15,
+                "value": 0.7163979400494802
+            },
+            {
+                "n": 20,
+                "value": 0.8438554030500535
+            }
+        ],
+        "error": null,
+        "series_arguments": {
+            "x": 12.0
+        },
+        "series_name": "CosSeries"
+    },
+    {
+        "accel_additional_args": {
+            "useRecFormulas": "True",
+            "variant": "RemainderType.t_variant"
+        },
+        "accel_m_value": 5,
+        "accel_name": "LevinAlgorithm",
+        "computed": [
+            {
+                "n": 10,
+                "value": -1.7364572422663531
+            },
+            {
+                "n": 15,
+                "value": 0.8438879191868066
+            },
+            {
+                "n": 20,
+                "value": 0.8438539586936854
+            }
+        ],
+        "error": null,
+        "series_arguments": {
+            "x": 12.0
+        },
+        "series_name": "CosSeries"
+    },
+    {
+        "accel_additional_args": {
+            "useRecFormulas": "False",
+            "variant": "RemainderType.t_variant"
+        },
+        "accel_m_value": 5,
+        "accel_name": "LevinAlgorithm",
+        "computed": [
+            {
+                "n": 10,
+                "value": 917.9982551704263
+            },
+            {
+                "n": 15,
+                "value": 0.7119057298275259
+            },
+            {
+                "n": 20,
+                "value": 0.843855417387632
+            }
+        ],
+        "error": null,
+        "series_arguments": {
+            "x": 12.0
+        },
+        "series_name": "CosSeries"
+    }
+]
