@@ -23,7 +23,7 @@
  * @param test The type of transformation that is being used
  */
 template <std::unsigned_integral K, typename series_templ, typename transform_type>
-void cmp_sum_and_transform(const K n, const K order, const series_templ&& series, const transform_type&& test)
+void cmp_sum_and_transform(const K n, const K order, const series_templ& series, const transform_type& test)
 {
 	test->print_info();
 	for (K i = 0; i <= n; ++i) {
@@ -59,7 +59,7 @@ void cmp_sum_and_transform(const K n, const K order, const series_templ&& series
 * @param test The type of transformation that is being used
 */
 template <std::unsigned_integral K, typename series_templ, typename transform_type>
-void cmp_a_n_and_transform(const K n, const K order, const series_templ&& series, const transform_type&& test)
+void cmp_a_n_and_transform(const K n, const K order, const series_templ& series, const transform_type& test)
 {
 	test->print_info();
 	for (K i = 1; i <= n; ++i) {
@@ -93,7 +93,7 @@ void cmp_a_n_and_transform(const K n, const K order, const series_templ&& series
 * @param test The type of transformation that is being used
 */
 template <std::unsigned_integral K, typename series_templ, typename transform_type>
-void transformation_remainders(const K n, const K order, const series_templ&& series, const transform_type&& test)
+void transformation_remainders(const K n, const K order, const series_templ& series, const transform_type& test)
 {
 	std::cout << "Tranformation of order " << order << " remainders from i = 1 to " << n << '\n';
 	test->print_info();
@@ -126,7 +126,7 @@ void transformation_remainders(const K n, const K order, const series_templ&& se
 * @param test_2 The type of the second transformation that is being used
 */
 template <std::unsigned_integral K, typename series_templ, typename transform_type_1, typename transform_type_2>
-void cmp_transformations(const K n, const K order, const series_templ&& series, const transform_type_1&& test_1, const transform_type_2&& test_2)
+void cmp_transformations(const K n, const K order, const series_templ& series, const transform_type_1& test_1, const transform_type_2& test_2)
 {
 	std::cout << "Tranformations of order " << order << " remainders from i = 1 to " << n << '\n';
 	std::cout << "The transformation #1 is ";
@@ -168,7 +168,7 @@ void cmp_transformations(const K n, const K order, const series_templ&& series, 
 * @param test The type of the first transformation that is being used
 */
 template <std::unsigned_integral K, typename series_templ, typename transform_type>
-void eval_transform_time(const K n, const K order, const series_templ&& series, const transform_type&& test)
+void eval_transform_time(const K n, const K order, const series_templ& series, const transform_type& test)
 {
 	const auto start_time = std::chrono::system_clock::now();
 	test->print_info();
@@ -200,7 +200,7 @@ void eval_transform_time(const K n, const K order, const series_templ&& series, 
 * @param n The number of terms
 */
 template <std::unsigned_integral K, typename series_templ>
-void print_sum(const K n, const series_templ&& series)
+void print_sum(const K n, const series_templ& series)
 {
 	std::cout << "Sum of algo :" << series->get_sum() << '\n';
 	std::cout << "S_" << n << " : " << series->S_n(n) << '\n';
@@ -218,7 +218,7 @@ void print_sum(const K n, const series_templ&& series)
 * @param test The type of transformation that is being used
 */
 template <std::unsigned_integral K, typename transform_type>
-void print_transform(const K n, const K order, const transform_type&& test)
+void print_transform(const K n, const K order, const transform_type& test)
 {
 	test->print_info();
 	try

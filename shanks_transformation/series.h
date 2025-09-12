@@ -26,7 +26,7 @@
  * 23 - pi_3_series
  * 24 - pi_4_series
  * 25 - pi_squared_6_minus_one_series
- * 26 - three_minus_pi_sderies
+ * 26 - three_minus_pi_series
  * 27 - one_twelfth_series
  * 28 - eighth_pi_m_one_third_series
  * 29 - one_third_pi_squared_m_nine_series
@@ -36,7 +36,7 @@
  * 33 - five_pi_twelve_series
  * 34 - x_two_series
  * 35 - pi_six_min_half_series
- * 36 - x_two_throught_squares
+ * 36 - x_two_throught_squares_series
  * 37 - minus_one_ned_in_n_series
  * 38 - minus_one_n_fact_n_in_n_series
  * 39 - ln_x_plus_one_x_minus_one_halfed_series
@@ -76,8 +76,8 @@
  *  73 - sqrt_1plusx_series
  *  74 - Lambert_W_func_series
  *  75 - Incomplete_Gamma_func_series
- *  76 - Series_with_ln_number1
- *  77 - Series_with_ln_number2
+ *  76 - Series_with_ln_number1_series
+ *  77 - Series_with_ln_number2_series
  *  78 - pi_series
  *  79 - x_min_sqrt_x_series
  *  80 - arctan_x2_series
@@ -97,11 +97,11 @@
  *  94 - ln13_min_ln7_div_7_series
  *  95 - Ja_x_series
  *  96 - one_div_sqrt2_sin_xdivsqrt2_series
- *  97 - ln_1plusx_div_1plusx2
- *  98 - cos_sqrt_x
- *  99 - ln_1_plus_x3
- *  100 - x_div_1minx
- *  101 - x_div_1minx2
+ *  97 - ln_1plusx_div_1plusx2_series
+ *  98 - cos_sqrt_x_series
+ *  99 - ln_1_plus_x3_series
+ *  100 - x_div_1minx_series
+ *  101 - x_div_1minx2_series
  *  102 - gamma_series
  * @brief This file contains series base class, reccurent_series_base class and derived classes of various serieses (e.g. exp(x), ch(x))
  */
@@ -302,7 +302,6 @@ constexpr const T series_base<T, K>::minus_one_raised_to_power_n(K n)
 	return static_cast<T>(n & 1 ? -1.0 : 1.0);
 }
 
-
 template <std::floating_point T, std::unsigned_integral K>
 constexpr const T series_base<T, K>::phi(K n)
 {
@@ -388,6 +387,7 @@ reccurent_series_base<T, K>::reccurent_series_base(std::vector<T> row) : series_
 	}
 };
 
+
 /**
 * @brief Maclaurin series of exp(x) function
 * @authors Bolshakov M.P.
@@ -429,7 +429,15 @@ private:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-exp_series<T, K>::exp_series(T x) : series_base<T, K>(x, std::exp(x)), reccurent_series_base<T, K>(T(1)) {}
+exp_series<T, K>::exp_series(T x) : series_base<T, K>(x, std::exp(x)), reccurent_series_base<T, K>(T(1))
+{
+	this->series_name = "exp(x)";
+	// Сходится при ∀x ∈ ℝ
+
+	if (!std::isfinite(x)) {
+		series_base<T, K>::throw_domain_error("x is not finite");
+	}
+}
 
 template <std::floating_point T, std::unsigned_integral K>
 T exp_series<T, K>::access_row(K n)
@@ -448,6 +456,7 @@ constexpr T exp_series<T, K>::operator()(K n) const
 {
 	return const_cast<exp_series<T, K>*>(this)->access_row(n);
 }
+
 
 /**
 * @brief Maclaurin series of cosine function
@@ -489,7 +498,15 @@ private:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-cos_series<T, K>::cos_series(T x) : series_base<T, K>(x, std::cos(x)), reccurent_series_base<T, K>(std::vector<T>{1, T(((-1) * x * x) / 2)}) {}
+cos_series<T, K>::cos_series(T x) : series_base<T, K>(x, std::cos(x)), reccurent_series_base<T, K>(std::vector<T>{1, T(((-1) * x * x) / 2)})
+{
+	this->series_name = "cos(x)";
+	// Сходится при ∀x ∈ ℝ
+
+	if (!std::isfinite(x)) {
+		series_base<T, K>::throw_domain_error("x is not finite");
+	}
+}
 
 template <std::floating_point T, std::unsigned_integral K>
 T cos_series<T, K>::access_row(K n)
@@ -506,12 +523,12 @@ T cos_series<T, K>::access_row(K n)
 	return series_vec[n];
 }
 
-
 template <std::floating_point T, std::unsigned_integral K>
 constexpr T cos_series<T, K>::operator()(K n) const
 {
 	return const_cast<cos_series<T, K>*>(this)->access_row(n);
 }
+
 
 /**
 * @brief Maclaurin series of sine function
@@ -553,7 +570,14 @@ private:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-sin_series<T, K>::sin_series(T x) : series_base<T, K>(x, std::sin(x)), reccurent_series_base<T, K>(x) {}
+sin_series<T, K>::sin_series(T x) : series_base<T, K>(x, std::sin(x)), reccurent_series_base<T, K>(x) {
+	this->series_name = "sin(x)";
+	// Сходится при ∀x ∈ ℝ
+
+	if (!std::isfinite(x)) {
+		series_base<T, K>::throw_domain_error("x is not finite");
+	}
+}
 
 template <std::floating_point T, std::unsigned_integral K>
 T sin_series<T, K>::access_row(K n)
@@ -575,6 +599,7 @@ constexpr T sin_series<T, K>::operator()(K n) const
 {
 	return const_cast<sin_series<T, K>*>(this)->access_row(n);
 }
+
 
 /**
 * @brief Maclaurin series of hyperbolic cosine
@@ -616,7 +641,15 @@ private:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-cosh_series<T, K>::cosh_series(T x) : series_base<T, K>(x, std::cosh(x)), reccurent_series_base<T, K>(std::vector<T>{1, T((x * x) / 2) }) {}
+cosh_series<T, K>::cosh_series(T x) : series_base<T, K>(x, std::cosh(x)), reccurent_series_base<T, K>(std::vector<T>{1, T((x * x) / 2) })
+{
+	this->series_name = "cosh(x)";
+	// Сходится при ∀x ∈ ℝ
+
+	if (!std::isfinite(x)) {
+		series_base<T, K>::throw_domain_error("x is not finite");
+	}
+}
 
 template <std::floating_point T, std::unsigned_integral K>
 T cosh_series<T, K>::access_row(K n)
@@ -637,6 +670,7 @@ constexpr T cosh_series<T, K>::operator()(K n) const
 {
 	return const_cast<cosh_series<T, K>*>(this)->access_row(n);
 }
+
 
 /**
 * @brief Maclaurin series of hyperbolic sine
@@ -678,7 +712,15 @@ private:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-sinh_series<T, K>::sinh_series(T x) : series_base<T, K>(x, std::sinh(x)), reccurent_series_base<T, K>(x) {}
+sinh_series<T, K>::sinh_series(T x) : series_base<T, K>(x, std::sinh(x)), reccurent_series_base<T, K>(x)
+{
+	this->series_name = "sinh(x)";
+	// Сходится при ∀x ∈ ℝ
+
+	if (!std::isfinite(x)) {
+		series_base<T, K>::throw_domain_error("x is not finite");
+	}
+}
 
 template <std::floating_point T, std::unsigned_integral K>
 T sinh_series<T, K>::access_row(K n)
@@ -699,6 +741,7 @@ constexpr T sinh_series<T, K>::operator()(K n) const
 {
 	return const_cast<sinh_series<T, K>*>(this)->access_row(n);
 }
+
 
 /**
 * @brief Binomial series (Maclaurin series for (1+x)^a function)
@@ -738,19 +781,16 @@ private:
 	const T alpha;
 };
 
-//template <std::floating_point T, std::unsigned_integral K>
-//bin_series<T, K>::bin_series(T x, T alpha) : series_base<T, K>(x, std::pow(1 + x, alpha)), alpha(alpha)
-//{
-//	if (std::abs(x) >= 1)
-//		throw std::domain_error("the bin series diverge at x = " + std::to_string(x) + "; series converge if x only in (-1, 1)");
-//}
-
 template <std::floating_point T, std::unsigned_integral K>
 bin_series<T, K>::bin_series(T x, T alpha) : series_base<T, K>(x, std::pow(1 + x, alpha)), alpha(alpha)
 {
-	this->series_name = "bin";
-	if (std::abs(x) >= 1)
-		this->throw_domain_error("|x| >= 1");
+	this->series_name = "(1+x)^α";
+	// Сходится при |x| < 1 (абсолютно), при x = -1 зависит от α
+	// При α > 0 сходится при x = -1, при α ≤ -1 расходится
+
+	if (std::abs(x) >= 1 || !std::isfinite(x) || !std::isfinite(alpha)) {
+		this->throw_domain_error("|x| must be < 1 and parameters must be finite");
+	}
 }
 
 template <std::floating_point T, std::unsigned_integral K>
@@ -758,6 +798,7 @@ constexpr T bin_series<T, K>::operator()(K n) const
 {
 	return static_cast<T>(binomial_coefficient(alpha, n) * std::pow(this->x, n)); // (6.1) [Rows.pdf]
 }
+
 
 /**
 * @brief Maclaurin series of function 4 * artan(x)
@@ -791,9 +832,12 @@ public:
 template <std::floating_point T, std::unsigned_integral K>
 four_arctan_series<T, K>::four_arctan_series(T x) : series_base<T, K>(x, 4 * std::atan(x))
 {
-	this->series_name = "4*arctan";
-	if (std::abs(x) > 1)
-		this->throw_domain_error("|x| > 1");
+	this->series_name = "4*arctan(x)";
+	// Сходится при |x| ≤ 1 (условно при |x| = 1)
+
+	if (std::abs(x) > 1 || !std::isfinite(x)) {
+		this->throw_domain_error("|x| must be ≤ 1");
+	}
 }
 
 template <std::floating_point T, std::unsigned_integral K>
@@ -837,8 +881,12 @@ template <std::floating_point T, std::unsigned_integral K>
 ln1mx_series<T, K>::ln1mx_series(T x) : series_base<T, K>(x, -std::log(1 - x))
 {
 	this->series_name = "-ln(1-x)";
-	if (std::abs(this->x) >= 1)
-		this->throw_domain_error("|x| >= 1");
+	// Сходится при |x| < 1 (абсолютно), условно сходится при x = -1
+	// Расходится при x = 1
+
+	if (std::abs(x) >= 1 || !std::isfinite(x)) {
+		this->throw_domain_error("|x| must be < 1");
+	}
 }
 
 template <std::floating_point T, std::unsigned_integral K>
@@ -847,6 +895,7 @@ constexpr T ln1mx_series<T, K>::operator()(K n) const
 	const K temp = n + 1;
 	return static_cast<T>(std::pow(this->x, temp) / temp); // (8.2) [Rows.pdf]
 }
+
 
 /**
 * @brief Maclaurin series of function (sinh(x) + sin(x)) / 2
@@ -888,7 +937,15 @@ private:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-mean_sinh_sin_series<T, K>::mean_sinh_sin_series(T x) : series_base<T, K>(x, static_cast<T>(static_cast<T>(0.5) * (std::sinh(x) + std::sin(x)))), reccurent_series_base<T, K>(x) {}
+mean_sinh_sin_series<T, K>::mean_sinh_sin_series(T x) : series_base<T, K>(x, static_cast<T>(static_cast<T>(0.5) * (std::sinh(x) + std::sin(x)))), reccurent_series_base<T, K>(x)
+{
+	this->series_name = "0.5*(sinh(x) + sin(x))";
+	// Сходится при ∀x ∈ ℝ (как сумма двух всюду сходящихся рядов)
+
+	if (!std::isfinite(x)) {
+		series_base<T, K>::throw_domain_error("x is not finite");
+	}
+}
 
 template <std::floating_point T, std::unsigned_integral K>
 T mean_sinh_sin_series<T, K>::access_row(K n)
@@ -941,7 +998,15 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-exp_squared_erf_series<T, K>::exp_squared_erf_series(T x) : series_base<T, K>(x, std::exp(x * x) * std::erf(x)) {}
+exp_squared_erf_series<T, K>::exp_squared_erf_series(T x) : series_base<T, K>(x, std::exp(x * x) * std::erf(x))
+{
+	this->series_name = "exp(x²)*erf(x)";
+	// Сходится при ∀x ∈ ℝ (ряд для erf(x) сходится на всей числовой прямой)
+
+	if (!std::isfinite(x)) {
+		this->throw_domain_error("x is not finite");
+	}
+}
 
 template <std::floating_point T, std::unsigned_integral K>
 constexpr T exp_squared_erf_series<T, K>::operator()(K n) const
@@ -951,6 +1016,7 @@ constexpr T exp_squared_erf_series<T, K>::operator()(K n) const
 		throw std::overflow_error("operator() is too big");
 	return static_cast<T>(result);
 }
+
 
 /**
 * @brief Maclaurin series of function x^(-b) * J_b(2x) where J_b(x) is Bessel function of the first kind of order b
@@ -989,7 +1055,16 @@ private:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-xmb_Jb_two_series<T, K>::xmb_Jb_two_series(T x, K b) : series_base<T, K>(x, static_cast<T>(1 / std::pow(x, b) * std::cyl_bessel_j(b, 2 * x))), mu(b) {}
+xmb_Jb_two_series<T, K>::xmb_Jb_two_series(T x, K b) : series_base<T, K>(x, static_cast<T>(1 / std::pow(x, b) * std::cyl_bessel_j(b, 2 * x))), mu(b) 
+{
+	this->series_name = "x⁻ᵇJᵦ(2x)";
+	// Сходится при ∀x ∈ ℝ\{0} (ряд Бесселя сходится на всей числовой прямой)
+	// При x = 0 требуется специальное рассмотрение (предел)
+
+	if (!std::isfinite(x) || x == 0) {
+		this->throw_domain_error("x must be finite and non-zero");
+	}
+}
 
 template <std::floating_point T, std::unsigned_integral K>
 constexpr T xmb_Jb_two_series<T, K>::operator()(K n) const
@@ -997,6 +1072,7 @@ constexpr T xmb_Jb_two_series<T, K>::operator()(K n) const
 	return static_cast<T>(series_base<T, K>::minus_one_raised_to_power_n(n) * std::pow(this->x, 2 * n) * static_cast<T>(std::tgamma(n + this->mu + 1))
 		/ (static_cast<T>(this->fact(n)))); // (11.3) [Rows.pdf]
 }
+
 
 /**
 * @brief Maclaurin series of function 0.5 * asin(2x), where asin(x) is inverse sine of x
@@ -1031,8 +1107,11 @@ template <std::floating_point T, std::unsigned_integral K>
 half_asin_two_x_series<T, K>::half_asin_two_x_series(T x) : series_base<T, K>(x, static_cast<T>(0.5 * std::asin(2 * x)))
 {
 	this->series_name = "0.5*asin(2x)";
-	if (std::abs(this->x) > static_cast<T>(0.5))
-		this->throw_domain_error("|x| > 0.5");
+	// Сходится при |x| ≤ 0.5 (абсолютно при |x| < 0.5, условно при |x| = 0.5)
+
+	if (std::abs(x) > static_cast<T>(0.5) || !std::isfinite(x)) {
+		this->throw_domain_error("|x| must be ≤ 0.5");
+	}
 }
 
 template <std::floating_point T, std::unsigned_integral K>
@@ -1077,8 +1156,12 @@ template <std::floating_point T, std::unsigned_integral K>
 inverse_1mx_series<T, K>::inverse_1mx_series(T x) : series_base<T, K>(x, 1 / (1 - x))
 {
 	this->series_name = "1/(1-x)";
-	if (std::abs(this->x) >= 1)
-		this->throw_domain_error("|x| >= 1");
+	// Сходится при |x| < 1 (геометрический ряд)
+	// Расходится при |x| ≥ 1
+
+	if (std::abs(x) >= 1 || !std::isfinite(x)) {
+		this->throw_domain_error("|x| must be < 1");
+	}
 }
 
 template <std::floating_point T, std::unsigned_integral K>
@@ -1086,6 +1169,7 @@ constexpr T inverse_1mx_series<T, K>::operator()(K n) const
 {
 	return static_cast<T>(std::pow(this->x, n)); // (13.1) [Rows.pdf]
 }
+
 
 /**
 * @brief Maclaurin series of function x / (1 - x)^2
@@ -1120,8 +1204,12 @@ template <std::floating_point T, std::unsigned_integral K>
 x_1mx_squared_series<T, K>::x_1mx_squared_series(T x) : series_base<T, K>(x, x / std::fma(x, x - 1, 1 - x))
 {
 	this->series_name = "x/(1-x)^2";
-	if (std::abs(this->x) >= 1)
-		this->throw_domain_error("|x| >= 1");
+	// Сходится при |x| < 1 (производная геометрического ряда)
+	// Расходится при |x| ≥ 1
+
+	if (std::abs(x) >= 1 || !std::isfinite(x)) {
+		this->throw_domain_error("|x| must be < 1");
+	}
 }
 
 template <std::floating_point T, std::unsigned_integral K>
@@ -1129,6 +1217,7 @@ constexpr T x_1mx_squared_series<T, K>::operator()(K n) const
 {
 	return static_cast<T>(std::pow(this->x, n) * n); // (14.4) [Rows.pdf]
 }
+
 
 /**
 * @brief Maclaurin series of function 0.5 * sqrt(pi) * erf(x)
@@ -1170,7 +1259,15 @@ private:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-erf_series<T, K>::erf_series(T x) : series_base<T, K>(x, static_cast<T>(std::sqrt(std::numbers::pi)) * static_cast<T>(std::erf(x) / 2)), reccurent_series_base<T, K>(x) { }
+erf_series<T, K>::erf_series(T x) : series_base<T, K>(x, static_cast<T>(std::sqrt(std::numbers::pi)) * static_cast<T>(std::erf(x) / 2)), reccurent_series_base<T, K>(x)
+{
+	this->series_name = "√π/2 * erf(x)";
+	// Сходится при ∀x ∈ ℝ (ряд для erf(x) сходится на всей числовой прямой)
+
+	if (!std::isfinite(x)) {
+		series_base<T, K>::throw_domain_error("x is not finite");
+	}
+}
 
 template <std::floating_point T, std::unsigned_integral K>
 T erf_series<T, K>::access_row(K n)
@@ -1195,6 +1292,7 @@ constexpr T erf_series<T, K>::operator()(K n) const
 {
 	return const_cast<erf_series<T, K>*>(this)->access_row(n);
 }
+
 
 /**
 * @brief Maclaurin series of function m! / (1 - x) ^ (m + 1), where m - integer parameter
@@ -1245,12 +1343,16 @@ template <std::floating_point T, std::unsigned_integral K>
 m_fact_1mx_mp1_inverse_series<T, K>::m_fact_1mx_mp1_inverse_series(T x, K m) : series_base<T, K>(x, static_cast<T>(static_cast<T>(this->fact(m)) / pow(1 - x, m + 1))), m(m), reccurent_series_base<T, K>(static_cast<T>(this->fact(m)))
 {
 	this->series_name = "m!/(1-x)^(m+1)";
+	// Сходится при |x| < 1 (m-ая производная геометрического ряда)
+	// Расходится при |x| ≥ 1
 
-	if (!isfinite(series_base<T, K>::sum))
+	if (!std::isfinite(series_base<T, K>::sum)) {
 		throw std::overflow_error("sum is too big");
+	}
 
-	if (std::abs(this->x) >= 1)
-		series_base<T, K>::throw_domain_error("|x| >= 1"); // Явное указание класса
+	if (std::abs(this->x) >= 1 || !std::isfinite(x)) {
+		series_base<T, K>::throw_domain_error("|x| must be < 1");
+	}
 }
 
 template <std::floating_point T, std::unsigned_integral K>
@@ -1271,6 +1373,7 @@ constexpr T m_fact_1mx_mp1_inverse_series<T, K>::operator()(K n) const
 {
 	return const_cast<m_fact_1mx_mp1_inverse_series<T, K>*>(this)->access_row(n);
 }
+
 
 /**
 * @brief Maclaurin series of function (1 - 4x) ^ (-1/2)
@@ -1305,8 +1408,12 @@ template <std::floating_point T, std::unsigned_integral K>
 inverse_sqrt_1m4x_series<T, K>::inverse_sqrt_1m4x_series(T x) : series_base<T, K>(x, static_cast<T>(std::pow(std::fma(-4, x, 1), -0.5)))
 {
 	this->series_name = "1/sqrt(1-4x)";
-	if (std::abs(this->x) >= static_cast<T>(0.25))
-		this->throw_domain_error("|x| >= 0.25");
+	// Сходится при |x| < 0.25 (биномиальный ряд)
+	// Расходится при |x| ≥ 0.25
+
+	if (std::abs(x) >= static_cast<T>(0.25) || !std::isfinite(x)) {
+		this->throw_domain_error("|x| must be < 0.25");
+	}
 }
 
 template <std::floating_point T, std::unsigned_integral K>
@@ -1315,6 +1422,7 @@ constexpr T inverse_sqrt_1m4x_series<T, K>::operator()(K n) const
 	const auto _fact_n = this->fact(n);
 	return this->fact(2 * n) * static_cast<T>(pow(this->x, n) / (_fact_n * _fact_n)); // (17.2) [Rows.pdf]
 }
+
 
 /**
 * @brief Trigonometric series of function 1/12 * (3x^2 - pi^2)
@@ -1349,8 +1457,12 @@ template <std::floating_point T, std::unsigned_integral K>
 one_twelfth_3x2_pi2_series<T, K>::one_twelfth_3x2_pi2_series(T x) : series_base<T, K>(x, static_cast<T>(std::fma(0.25 * x, x, -std::numbers::pi * std::numbers::pi / 12)))
 {
 	this->series_name = "1/12*(3x^2-pi^2)";
-	if (std::abs(this->x) > std::numbers::pi)
-		this->throw_domain_error("|x| > pi");
+	// Сходится при |x| ≤ π (ряд Фурье для функции f(x) = x²)
+	// Расходится при |x| > π
+
+	if (std::abs(x) > std::numbers::pi || !std::isfinite(x)) {
+		this->throw_domain_error("|x| must be ≤ π");
+	}
 }
 
 template <std::floating_point T, std::unsigned_integral K>
@@ -1358,6 +1470,7 @@ constexpr T one_twelfth_3x2_pi2_series<T, K>::operator()(K n) const
 {
 	return n ? series_base<T, K>::minus_one_raised_to_power_n(n) * std::cos(n * this->x) / (n * n) : 0; // (18.2) [Rows.pdf]
 }
+
 
 /**
 * @brief Trigonometric series of function x/12 * (x^2 - pi^2)
@@ -1392,8 +1505,12 @@ template <std::floating_point T, std::unsigned_integral K>
 x_twelfth_x2_pi2_series<T, K>::x_twelfth_x2_pi2_series(T x) : series_base<T, K>(x, static_cast<T>(x / 12 * (x * x - std::numbers::pi * std::numbers::pi)))
 {
 	this->series_name = "x/12*(x^2-pi^2)";
-	if (std::abs(this->x) > std::numbers::pi)
-		this->throw_domain_error("|x| > pi");
+	// Сходится при |x| ≤ π (ряд Фурье для функции f(x) = x³)
+	// Расходится при |x| > π
+
+	if (std::abs(x) > std::numbers::pi || !std::isfinite(x)) {
+		this->throw_domain_error("|x| must be ≤ π");
+	}
 }
 
 template <std::floating_point T, std::unsigned_integral K>
@@ -1431,13 +1548,22 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-ln2_series<T, K>::ln2_series(T x) : series_base<T, K>(x, static_cast<T>(std::log(2) * x)) {}
+ln2_series<T, K>::ln2_series(T x) : series_base<T, K>(x, static_cast<T>(std::log(2) * x))
+{
+	this->series_name = "ln(2)*x";
+	// Сходится при ∀x ∈ ℝ (линейная функция)
+
+	if (!std::isfinite(x)) {
+		this->throw_domain_error("x is not finite");
+	}
+}
 
 template <std::floating_point T, std::unsigned_integral K>
 constexpr T ln2_series<T, K>::operator()(K n) const
 {
 	return n ? static_cast<T>((- series_base<T, K>::minus_one_raised_to_power_n(n) * this->x) / n) : 0; // (20.2) [Rows.pdf]
 }
+
 
 /**
 * @brief Numerical series representation of 1 * x
@@ -1467,13 +1593,22 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-one_series<T, K>::one_series(T x) : series_base<T, K>(x, 1 * x) {}
+one_series<T, K>::one_series(T x) : series_base<T, K>(x, 1 * x)
+{
+	this->series_name = "1*x";
+	// Сходится при ∀x ∈ ℝ (линейная функция)
+
+	if (!std::isfinite(x)) {
+		this->throw_domain_error("x is not finite");
+	}
+}
 
 template <std::floating_point T, std::unsigned_integral K>
 constexpr T one_series<T, K>::operator()(K n) const
 {
 	return n ? static_cast<T>(1.0 * this->x / fma(n, n, n)) : 0; // (21.5) [Rows.pdf]
 }
+
 
 /**
 * @brief Numerical series representation of -1/4 * x
@@ -1503,13 +1638,22 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-minus_one_quarter_series<T, K>::minus_one_quarter_series(T x) : series_base<T, K>(x, static_cast<T>(-0.25 * x)) {}
+minus_one_quarter_series<T, K>::minus_one_quarter_series(T x) : series_base<T, K>(x, static_cast<T>(-0.25 * x))
+{
+	this->series_name = "-0.25*x";
+	// Сходится при ∀x ∈ ℝ (линейная функция)
+
+	if (!std::isfinite(x)) {
+		this->throw_domain_error("x is not finite");
+	}
+}
 
 template <std::floating_point T, std::unsigned_integral K>
 constexpr T minus_one_quarter_series<T, K>::operator()(K n) const
 {
 	return n ? static_cast<T>(series_base<T, K>::minus_one_raised_to_power_n(n) * this->x / (n * (n + 2))) : 0; // (22.2) [Rows.pdf]
 }
+
 
 /**
 * @brief Numerical series representation of pi/3 * x
@@ -1539,7 +1683,15 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-pi_3_series<T, K>::pi_3_series(T x) : series_base<T, K>(x, static_cast<T>(std::numbers::pi * x / 3)) {}
+pi_3_series<T, K>::pi_3_series(T x) : series_base<T, K>(x, static_cast<T>(std::numbers::pi * x / 3))
+{
+	this->series_name = "π*x/3";
+	// Сходится при ∀x ∈ ℝ (линейная функция)
+
+	if (!std::isfinite(x)) {
+		this->throw_domain_error("x is not finite");
+	}
+}
 
 template <std::floating_point T, std::unsigned_integral K>
 constexpr T pi_3_series<T, K>::operator()(K n) const
@@ -1547,6 +1699,7 @@ constexpr T pi_3_series<T, K>::operator()(K n) const
 	const K a = 2 * n + 1;
 	return static_cast<T>(1.0 * this->x / ((n + 1) * a * (2 * a - 1))); // (23.2) [Rows.pdf]
 }
+
 
 /**
 * @brief Numerical series representation of pi/4 * x
@@ -1576,13 +1729,22 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-pi_4_series<T, K>::pi_4_series(T x) : series_base<T, K>(x, static_cast<T>(std::numbers::pi * x / 4)) {}
+pi_4_series<T, K>::pi_4_series(T x) : series_base<T, K>(x, static_cast<T>(std::numbers::pi * x / 4))
+{
+	this->series_name = "π*x/4";
+	// Сходится при ∀x ∈ ℝ (линейная функция)
+
+	if (!std::isfinite(x)) {
+		this->throw_domain_error("x is not finite");
+	}
+}
 
 template <std::floating_point T, std::unsigned_integral K>
 constexpr T pi_4_series<T, K>::operator()(K n) const
 {
 	return (series_base<T, K>::minus_one_raised_to_power_n(n) * this->x) / static_cast<T>(std::fma(2, n, 1)); // (24.3) [Rows.pdf]
 }
+
 
 /**
 * @brief Numerical series representation of (pi^2 / 6 - 1) * x
@@ -1612,13 +1774,22 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-pi_squared_6_minus_one_series<T, K>::pi_squared_6_minus_one_series(T x) : series_base<T, K>(x, static_cast<T>((std::fma(std::numbers::pi / 6, std::numbers::pi, -1)) * x)) {}
+pi_squared_6_minus_one_series<T, K>::pi_squared_6_minus_one_series(T x) : series_base<T, K>(x, static_cast<T>((std::fma(std::numbers::pi / 6, std::numbers::pi, -1)) * x))
+{
+	this->series_name = "(π²/6 - 1)*x";
+	// Сходится при ∀x ∈ ℝ (линейная функция)
+
+	if (!std::isfinite(x)) {
+		this->throw_domain_error("x is not finite");
+	}
+}
 
 template <std::floating_point T, std::unsigned_integral K>
 constexpr T pi_squared_6_minus_one_series<T, K>::operator()(K n) const
 {
 	return static_cast<T>(n ? (1.0 * this->x) / (n * n * (n + 1)) : 0); // (25.3) [Rows.pdf]
 }
+
 
 /**
 * @brief Numerical series representation of (3 - pi) * x
@@ -1647,13 +1818,22 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-three_minus_pi_series<T, K>::three_minus_pi_series(T x) : series_base<T, K>(x, static_cast<T>((3 - std::numbers::pi) * x)) {}
+three_minus_pi_series<T, K>::three_minus_pi_series(T x) : series_base<T, K>(x, static_cast<T>((3 - std::numbers::pi) * x))
+{
+	this->series_name = "(3-π)*x";
+	// Сходится при ∀x ∈ ℝ (линейная функция)
+
+	if (!std::isfinite(x)) {
+		this->throw_domain_error("x is not finite");
+	}
+}
 
 template <std::floating_point T, std::unsigned_integral K>
 constexpr T three_minus_pi_series<T, K>::operator()(K n) const
 {
 	return n ? static_cast<T>((series_base<T, K>::minus_one_raised_to_power_n(n) * this-> x) / (n * (n + 1) * (2 * n + 1))) : 0; // (26.2) [Rows.pdf]
 }
+
 
 /**
 * @brief Numerical series representation of 1 * x/12
@@ -1682,7 +1862,15 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-one_twelfth_series<T, K>::one_twelfth_series(T x) : series_base<T, K>(x, x / 12) {}
+one_twelfth_series<T, K>::one_twelfth_series(T x) : series_base<T, K>(x, x / 12)
+{
+	this->series_name = "x/12";
+	// Сходится при ∀x ∈ ℝ (линейная функция)
+
+	if (!std::isfinite(x)) {
+		this->throw_domain_error("x is not finite");
+	}
+}
 
 template <std::floating_point T, std::unsigned_integral K>
 constexpr T one_twelfth_series<T, K>::operator()(K n) const
@@ -1690,6 +1878,7 @@ constexpr T one_twelfth_series<T, K>::operator()(K n) const
 	const K a = 2 * n + 1;
 	return static_cast<T>((1.0 * this->x) / (a * (a + 2) * (a + 4))); // (27.2) [Rows.pdf]
 }
+
 
 /**
 * @brief Numerical series representation of (pi/8 - 1/3) * x
@@ -1718,7 +1907,15 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-eighth_pi_m_one_third_series<T, K>::eighth_pi_m_one_third_series(T x) : series_base<T, K>(x, static_cast<T>((std::numbers::pi / 8 - 1 / 3) * x)) {}
+eighth_pi_m_one_third_series<T, K>::eighth_pi_m_one_third_series(T x) : series_base<T, K>(x, static_cast<T>((std::numbers::pi / 8 - 1 / 3) * x))
+{
+	this->series_name = "(π/8 - 1/3)*x";
+	// Сходится при ∀x ∈ ℝ (линейная функция)
+
+	if (!std::isfinite(x)) {
+		this->throw_domain_error("x is not finite");
+	}
+}
 
 template <std::floating_point T, std::unsigned_integral K>
 constexpr T eighth_pi_m_one_third_series<T, K>::operator()(K n) const
@@ -1726,6 +1923,7 @@ constexpr T eighth_pi_m_one_third_series<T, K>::operator()(K n) const
 	const K a = 2 * n + 1;
 	return static_cast<T>((series_base<T, K>::minus_one_raised_to_power_n(n) * this->x) / (a * (a + 2) * (a + 4))); // (28.2) [Rows.pdf]
 }
+
 
 /**
 * @brief Numerical series representation of (pi^2 - 9) * x / 3
@@ -1754,7 +1952,15 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-one_third_pi_squared_m_nine_series<T, K>::one_third_pi_squared_m_nine_series(T x) : series_base<T, K>(x, static_cast<T>((std::fma(std::numbers::pi, std::numbers::pi, -9) * x) / 3)) {}
+one_third_pi_squared_m_nine_series<T, K>::one_third_pi_squared_m_nine_series(T x) : series_base<T, K>(x, static_cast<T>((std::fma(std::numbers::pi, std::numbers::pi, -9) * x) / 3))
+{
+	this->series_name = "(π² - 9)*x/3";
+	// Сходится при ∀x ∈ ℝ (линейная функция)
+
+	if (!std::isfinite(x)) {
+		this->throw_domain_error("x is not finite");
+	}
+}
 
 template <std::floating_point T, std::unsigned_integral K>
 constexpr T one_third_pi_squared_m_nine_series<T, K>::operator()(K n) const
@@ -1762,6 +1968,7 @@ constexpr T one_third_pi_squared_m_nine_series<T, K>::operator()(K n) const
 	const K a = n * (n + 1);
 	return static_cast<T>(n ? (1.0 * this->x) / (a * a) : 0); // (29.2) [Rows.pdf]
 }
+
 
 /**
 * @brief Numerical series representation of (4 * ln2 - 3) * x
@@ -1790,7 +1997,15 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-four_ln2_m_3_series<T, K>::four_ln2_m_3_series(T x) : series_base<T, K>(x, static_cast<T>(std::fma(4, std::log(2), -3) * x)) {}
+four_ln2_m_3_series<T, K>::four_ln2_m_3_series(T x) : series_base<T, K>(x, static_cast<T>(std::fma(4, std::log(2), -3) * x))
+{
+	this->series_name = "(4*ln(2) - 3)*x";
+	// Сходится при ∀x ∈ ℝ (линейная функция)
+
+	if (!std::isfinite(x)) {
+		this->throw_domain_error("x is not finite");
+	}
+}
 
 template <std::floating_point T, std::unsigned_integral K>
 constexpr T four_ln2_m_3_series<T, K>::operator()(K n) const
@@ -1798,6 +2013,7 @@ constexpr T four_ln2_m_3_series<T, K>::operator()(K n) const
 	const K a = n * (n + 1);
 	return static_cast<T>(n ? (series_base<T, K>::minus_one_raised_to_power_n(n) * this->x) / (a * a) : 0); // (30.2) [Rows.pdf]
 }
+
 
 /**
 * @brief Maclaurin series of exp(-cos(x)) * sin(sin(x))
@@ -1832,8 +2048,12 @@ template <std::floating_point T, std::unsigned_integral K>
 exp_m_cos_x_sinsin_x_series<T, K>::exp_m_cos_x_sinsin_x_series(T x) : series_base<T, K>(x, std::exp(-std::cos(x))* std::sin(std::sin(x)))
 {
 	this->series_name = "exp(-cos(x))*sin(sin(x))";
-	if (std::abs(this->x) >= std::numbers::pi)
-		this->throw_domain_error("|x| >= pi");
+	// Сходится при ∀x ∈ ℝ (композиция всюду сходящихся функций)
+	// Однако для численной стабильности ограничиваем |x| ≤ π
+
+	if (std::abs(x) >= std::numbers::pi || !std::isfinite(x)) {
+		this->throw_domain_error("|x| must be ≤ π for numerical stability");
+	}
 }
 
 template <std::floating_point T, std::unsigned_integral K>
@@ -1841,6 +2061,7 @@ constexpr T exp_m_cos_x_sinsin_x_series<T, K>::operator()(K n) const
 {
 	return static_cast<T>(this->minus_one_raised_to_power_n(n) * std::sin(n * this->x) / this->fact(n)); // (31.1) [Rows.pdf]
 }
+
 
 /**
 * @brief Numerical series representation of (pi/4 - ln2/2) * x
@@ -1872,13 +2093,22 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-pi_four_minus_ln2_halfed_series<T, K>::pi_four_minus_ln2_halfed_series(T x) : series_base<T, K>(x, static_cast<T>(x * static_cast<T>((std::numbers::pi / 4 - std::log(2) / 2)))) {}
+pi_four_minus_ln2_halfed_series<T, K>::pi_four_minus_ln2_halfed_series(T x) : series_base<T, K>(x, static_cast<T>(x * static_cast<T>((std::numbers::pi / 4 - std::log(2) / 2))))
+{
+	this->series_name = "(π/4 - ln(2)/2)*x";
+	// Сходится при ∀x ∈ ℝ (линейная функция)
+
+	if (!std::isfinite(x)) {
+		this->throw_domain_error("x is not finite");
+	}
+}
 
 template <std::floating_point T, std::unsigned_integral K>
 constexpr T pi_four_minus_ln2_halfed_series<T, K>::operator()(K n) const
 {
 	return static_cast<T>(n ? this->x * series_base<T, K>::minus_one_raised_to_power_n(static_cast<K>(std::trunc(n / 2))) / n : 0); // (32.2) [Rows.pdf]
 }
+
 
 /**
 * @brief Numerical series representation of (5pi/12) * x
@@ -1910,13 +2140,22 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-five_pi_twelve_series<T, K>::five_pi_twelve_series(T x) : series_base<T, K>(x, static_cast<T>(x * 5 * std::numbers::pi / 12)) {}
+five_pi_twelve_series<T, K>::five_pi_twelve_series(T x) : series_base<T, K>(x, static_cast<T>(x * 5 * std::numbers::pi / 12))
+{
+	this->series_name = "5πx/12";
+	// Сходится при ∀x ∈ ℝ (линейная функция)
+
+	if (!std::isfinite(x)) {
+		this->throw_domain_error("x is not finite");
+	}
+}
 
 template <std::floating_point T, std::unsigned_integral K>
 constexpr T five_pi_twelve_series<T, K>::operator()(K n) const
 {
 	return static_cast<T>(this->x * series_base<T, K>::minus_one_raised_to_power_n(static_cast<K>(std::trunc(n / 3))) / std::fma(2, n, 1)); // (33.2) [Rows.pdf]
 }
+
 
 /**
 * @brief Numerical series representation of x / 2
@@ -1948,7 +2187,15 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-x_two_series<T, K>::x_two_series(T x) : series_base<T, K>(x, x / 2) {}
+x_two_series<T, K>::x_two_series(T x) : series_base<T, K>(x, x / 2)
+{
+	this->series_name = "x/2";
+	// Сходится при ∀x ∈ ℝ (линейная функция)
+
+	if (!std::isfinite(x)) {
+		this->throw_domain_error("x is not finite");
+	}
+}
 
 template <std::floating_point T, std::unsigned_integral K>
 constexpr T x_two_series<T, K>::operator()(K n) const
@@ -1956,6 +2203,7 @@ constexpr T x_two_series<T, K>::operator()(K n) const
 	const K a = static_cast<K>(std::fma(2, n, 1));
 	return static_cast<T>(this->x / (a * (a + 2))); // (34.2) [Rows.pdf]
 }
+
 
 /**
 * @brief Numerical series representation of (pi/5 - 1/2) * x
@@ -1987,7 +2235,15 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-pi_six_min_half_series<T, K>::pi_six_min_half_series(T x) : series_base<T, K>(x, static_cast<T>(x * (std::numbers::pi / 6 - 0.5))) {}
+pi_six_min_half_series<T, K>::pi_six_min_half_series(T x) : series_base<T, K>(x, static_cast<T>(x * (std::numbers::pi / 6 - 0.5)))
+{
+	this->series_name = "(π/6 - 0.5)*x";
+	// Сходится при ∀x ∈ ℝ (линейная функция)
+
+	if (!std::isfinite(x)) {
+		this->throw_domain_error("x is not finite");
+	}
+}
 
 template <std::floating_point T, std::unsigned_integral K>
 constexpr T pi_six_min_half_series<T, K>::operator()(K n) const
@@ -2027,7 +2283,15 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-x_two_throught_squares_series<T, K>::x_two_throught_squares_series(T x) : series_base<T, K>(x, x / 2) {}
+x_two_throught_squares_series<T, K>::x_two_throught_squares_series(T x) : series_base<T, K>(x, x / 2)
+{
+	this->series_name = "x/2";
+	// Сходится при ∀x ∈ ℝ (линейная функция)
+
+	if (!std::isfinite(x)) {
+		this->throw_domain_error("x is not finite");
+	}
+}
 
 template <std::floating_point T, std::unsigned_integral K>
 constexpr T x_two_throught_squares_series<T, K>::operator()(K n) const
@@ -2066,13 +2330,23 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-minus_one_ned_in_n_series<T, K>::minus_one_ned_in_n_series(T x) : series_base<T, K>(x, static_cast<T>(-0.78343051 * x)) {} // -0.78343051 value only for initialization, we can calculate with more accuracy with operator()(K n)
+minus_one_ned_in_n_series<T, K>::minus_one_ned_in_n_series(T x) : series_base<T, K>(x, static_cast<T>(-0.78343051 * x)) // -0.78343051 value only for initialization, we can calculate with more accuracy with operator()(K n)
+{
+	this->series_name = "∑(-1)ⁿ/n * x";
+	// Сходится при |x| ≤ 1, x ≠ -1 (условно при x = 1, расходится при x = -1)
+	// При |x| < 1 сходится абсолютно
+
+	if (std::abs(x) > 1 || !std::isfinite(x)) {
+		this->throw_domain_error("|x| must be ≤ 1");
+	}
+}
 
 template <std::floating_point T, std::unsigned_integral K>
 constexpr T minus_one_ned_in_n_series<T, K>::operator()(K n) const
 {
 	return n ? this->x * static_cast<T>(series_base<T, K>::minus_one_raised_to_power_n(n) / std::pow(n, n)) : 0; // (37.2) [Rows.pdf]
 }
+
 
 /**
 * @brief  Numerical series (-1)^n n! / n^n = -0.65583160
@@ -2104,13 +2378,23 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-minus_one_n_fact_n_in_n_series<T, K>::minus_one_n_fact_n_in_n_series(T x) : series_base<T, K>(x, static_cast<T>(-0.65583160 * x)) {} // -0.65583160 value only for initialization, we can calculate with more accuracy with operator()(K n)
+minus_one_n_fact_n_in_n_series<T, K>::minus_one_n_fact_n_in_n_series(T x) : series_base<T, K>(x, static_cast<T>(-0.65583160 * x)) // -0.65583160 value only for initialization, we can calculate with more accuracy with operator()(K n)
+{
+	this->series_name = "∑(-1)ⁿ·n!/n * x";
+	// Сходится только при x = 0 (факториал растёт быстрее любой геометрической прогрессии)
+	// Расходится при ∀x ≠ 0
+
+	if (x != 0 || !std::isfinite(x)) {
+		this->throw_domain_error("series converges only at x = 0");
+	}
+}
 
 template <std::floating_point T, std::unsigned_integral K>
 constexpr T minus_one_n_fact_n_in_n_series<T, K>::operator()(K n) const
 {
 	return static_cast<T>(n ? (this->x * this->fact(n) * series_base<T, K>::minus_one_raised_to_power_n(n)) / std::pow(n, n) : 0); // (38.2) [Rows.pdf]
 }
+
 
 /**
 * @brief Maclaurin series of function ln((x+1)/(1-x))
@@ -2145,8 +2429,12 @@ template <std::floating_point T, std::unsigned_integral K>
 ln_x_plus_one_x_minus_one_halfed_series<T, K>::ln_x_plus_one_x_minus_one_halfed_series(T x) : series_base<T, K>(x, std::log((1 + x) / (1 - x)) / 2)
 {
 	this->series_name = "0.5*ln((1+x)/(1-x))";
-	if (std::abs(x) >= 1)
-		this->throw_domain_error("|x| >= 1");
+	// Сходится при |x| < 1 (абсолютно)
+	// Расходится при |x| ≥ 1
+
+	if (std::abs(x) >= 1 || !std::isfinite(x)) {
+		this->throw_domain_error("|x| must be < 1");
+	}
 }
 
 template <std::floating_point T, std::unsigned_integral K>
@@ -2155,6 +2443,7 @@ constexpr T ln_x_plus_one_x_minus_one_halfed_series<T, K>::operator()(K n) const
 	const K a = static_cast<K>(std::fma(2, n, 1));
 	return static_cast<T>(std::pow(this->x, a) / a); // (39.3) [Rows.pdf]
 }
+
 
 /**
 * @brief Maclaurin series of function 2 arcsin(x/2)^2
@@ -2189,8 +2478,12 @@ template <std::floating_point T, std::unsigned_integral K>
 two_arcsin_square_x_halfed_series<T, K>::two_arcsin_square_x_halfed_series(T x) : series_base<T, K>(x, static_cast<T>(2 * std::pow(std::asin(x / 2), 2)))
 {
 	this->series_name = "2*arcsin(x/2)^2";
-	if (std::abs(this->x) > 2)
-		this->throw_domain_error("|x| > 2");
+	// Сходится при |x| ≤ 2 (ряд для arcsin(z) сходится при |z| ≤ 1, где z = x/2)
+	// Расходится при |x| > 2
+
+	if (std::abs(x) > 2 || !std::isfinite(x)) {
+		this->throw_domain_error("|x| must be ≤ 2");
+	}
 }
 
 template <std::floating_point T, std::unsigned_integral K>
@@ -2229,7 +2522,15 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-pi_squared_twelve_series<T, K>::pi_squared_twelve_series(T x) : series_base<T, K>(x, static_cast<T>((x * std::numbers::pi * std::numbers::pi) / 12)) {}
+pi_squared_twelve_series<T, K>::pi_squared_twelve_series(T x) : series_base<T, K>(x, static_cast<T>((x * std::numbers::pi * std::numbers::pi) / 12))
+{
+	this->series_name = "π²x/12";
+	// Сходится при ∀x ∈ ℝ (линейная функция)
+
+	if (!std::isfinite(x)) {
+		this->throw_domain_error("x is not finite");
+	}
+}
 
 template <std::floating_point T, std::unsigned_integral K>
 constexpr T pi_squared_twelve_series<T, K>::operator()(K n) const
@@ -2237,6 +2538,7 @@ constexpr T pi_squared_twelve_series<T, K>::operator()(K n) const
 	T n_temp = static_cast<T>(n + 1);
 	return (this->x * this->minus_one_raised_to_power_n(n)) / (n_temp * n_temp); // (41.1) [Rows.pdf]
 }
+
 
 /**
 * @brief Numerical series representation of (pi^3/32) * x
@@ -2266,7 +2568,15 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-pi_cubed_32_series<T, K>::pi_cubed_32_series(T x) : series_base<T, K>(0, static_cast<T>(x * std::pow(std::numbers::pi, 3) / 32)) {}
+pi_cubed_32_series<T, K>::pi_cubed_32_series(T x) : series_base<T, K>(0, static_cast<T>(x * std::pow(std::numbers::pi, 3) / 32))
+{
+	this->series_name = "π³x/32";
+	// Сходится при ∀x ∈ ℝ (линейная функция)
+
+	if (!std::isfinite(x)) {
+		this->throw_domain_error("x is not finite");
+	}
+}
 
 template <std::floating_point T, std::unsigned_integral K>
 constexpr T pi_cubed_32_series<T, K>::operator()(K n) const
@@ -2304,7 +2614,15 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-minus_three_plus_ln3_three_devided_two_plus_two_ln2_series<T, K>::minus_three_plus_ln3_three_devided_two_plus_two_ln2_series(T x) : series_base<T, K>(x, x * static_cast<T>(-3 + (3 / 2) * std::log(3) + 2 * std::log(2))) {}
+minus_three_plus_ln3_three_devided_two_plus_two_ln2_series<T, K>::minus_three_plus_ln3_three_devided_two_plus_two_ln2_series(T x) : series_base<T, K>(x, x * static_cast<T>(-3 + (3 / 2) * std::log(3) + 2 * std::log(2)))
+{
+	this->series_name = "(-3 + 3/2*ln(3) + 2*ln(2))*x";
+	// Сходится при ∀x ∈ ℝ (линейная функция)
+
+	if (!std::isfinite(x)) {
+		this->throw_domain_error("x is not finite");
+	}
+}
 
 template <std::floating_point T, std::unsigned_integral K>
 constexpr T minus_three_plus_ln3_three_devided_two_plus_two_ln2_series<T, K>::operator()(K n) const
@@ -2342,7 +2660,15 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-two_ln2_series<T, K>::two_ln2_series(T x) : series_base<T, K>(x, x * static_cast<T>(2 * std::log(2))) {}
+two_ln2_series<T, K>::two_ln2_series(T x) : series_base<T, K>(x, x * static_cast<T>(2 * std::log(2)))
+{
+	this->series_name = "2*ln(2)*x";
+	// Сходится при ∀x ∈ ℝ (линейная функция)
+
+	if (!std::isfinite(x)) {
+		this->throw_domain_error("x is not finite");
+	}
+}
 
 template <std::floating_point T, std::unsigned_integral K>
 constexpr T two_ln2_series<T, K>::operator()(K n) const
@@ -2385,9 +2711,13 @@ public:
 template <std::floating_point T, std::unsigned_integral K>
 pi_x_multi_e_xpi_plus_e_minusxpi_divided_e_xpi_minus_e_minusxpi_minus_one_series<T, K>::pi_x_multi_e_xpi_plus_e_minusxpi_divided_e_xpi_minus_e_minusxpi_minus_one_series(T x) : series_base<T, K>(x, static_cast<T>(std::numbers::pi* x * 2.0 * std::cosh(std::numbers::pi * x) / (2.0 * std::sinh(std::numbers::pi * x)) - 1))
 {
-	this->series_name = "pi*x*coth(pi*x)-1";
-	if (this->x == 0)
-		this->throw_domain_error("x = 0");
+	this->series_name = "π*x*coth(π*x)-1";
+	// Сходится при ∀x ∈ ℝ\{0} (ряд для гиперболического котангенса)
+	// При x = 0 требуется специальное рассмотрение (предел)
+
+	if (x == 0 || !std::isfinite(x)) {
+		this->throw_domain_error("x must be finite and non-zero");
+	}
 }
 
 template <std::floating_point T, std::unsigned_integral K>
@@ -2431,9 +2761,13 @@ public:
 template <std::floating_point T, std::unsigned_integral K>
 pi_minus_x_2_series<T, K>::pi_minus_x_2_series(T x) : series_base<T, K>(x, static_cast<T>((std::numbers::pi - x) / 2))
 {
-	this->series_name = "(pi-x)/2";
-	if (this->x <= 0 or this->x >= 2 * std::numbers::pi)
-		this->throw_domain_error("x <= 0 or x >= 2pi");
+	this->series_name = "(π-x)/2";
+	// Сходится при 0 < x < 2π (ряд Фурье для функции f(x) = x)
+	// Расходится при x ≤ 0 или x ≥ 2π
+
+	if (x <= 0 || x >= 2 * std::numbers::pi || !std::isfinite(x)) {
+		this->throw_domain_error("x must be in (0, 2π)");
+	}
 }
 
 template <std::floating_point T, std::unsigned_integral K>
@@ -2477,8 +2811,12 @@ template <std::floating_point T, std::unsigned_integral K>
 half_multi_ln_1div2multi1minuscosx_series<T, K>::half_multi_ln_1div2multi1minuscosx_series(T x) : series_base<T, K>(x, static_cast<T>(0.5 * std::log(1 / (2 - 2 * std::cos(x)))))
 {
 	this->series_name = "0.5*ln(1/(2*(1-cos(x))))";
-	if (this->x <= 0 || this->x >= 2 * std::numbers::pi)
-		this->throw_domain_error("x <= 0 or x >= 2pi");
+	// Сходится при 0 < x < 2π (ряд для логарифма тригонометрической функции)
+	// Расходится при x = 0, x = 2π и других точках, где cos(x) = 1
+
+	if (x <= 0 || x >= 2 * std::numbers::pi || !std::isfinite(x) || std::cos(x) == 1) {
+		this->throw_domain_error("x must be in (0, 2π) and cos(x) ≠ 1");
+	}
 }
 
 template <std::floating_point T, std::unsigned_integral K>
@@ -2521,9 +2859,13 @@ public:
 template <std::floating_point T, std::unsigned_integral K>
 half_minus_sinx_multi_pi_4_series<T, K>::half_minus_sinx_multi_pi_4_series(T x) : series_base<T, K>(x, static_cast<T>((static_cast<T>(0.5) - std::numbers::pi * std::sin(x) * static_cast<T>(0.25))))
 {
-	this->series_name = "0.5-(pi/4)*sin(x)";
-	if (this->x < 0 || this->x > std::numbers::pi / 2)
-		this->throw_domain_error("x < 0 or x > pi/2");
+	this->series_name = "0.5-(π/4)*sin(x)";
+	// Сходится при 0 ≤ x ≤ π/2 (ряд Фурье или тригонометрический ряд)
+	// Расходится при x < 0 или x > π/2
+
+	if (x < 0 || x > std::numbers::pi / 2 || !std::isfinite(x)) {
+		this->throw_domain_error("x must be in [0, π/2]");
+	}
 }
 
 template <std::floating_point T, std::unsigned_integral K>
@@ -2532,6 +2874,7 @@ constexpr T half_minus_sinx_multi_pi_4_series<T, K>::operator()(K n) const
 	const K a = static_cast<K>(std::fma(2, n, 1));
 	return std::cos(2 * (this->x) * (n + 1)) / (a * (a + 2)); // (48.2) [Rows.pdf]
 }
+
 
 /**
 * @brief Maclaurin series of function ln(1 + sqrt(1 + x^2)) - ln(2)
@@ -2566,8 +2909,12 @@ template <std::floating_point T, std::unsigned_integral K>
 ln_1plussqrt1plusxsquare_minus_ln_2_series<T, K>::ln_1plussqrt1plusxsquare_minus_ln_2_series(T x) : series_base<T, K>(x, static_cast<T>(std::log((1 + std::hypot(1, x)) / 2)))
 {
 	this->series_name = "ln(1+sqrt(1+x^2))-ln(2)";
-	if ((this->x) * (this->x) > 1)
-		this->throw_domain_error("x^2 > 1");
+	// Сходится при |x| ≤ 1 (биномиальный ряд для sqrt(1+x²))
+	// Расходится при |x| > 1
+
+	if (x * x > 1 || !std::isfinite(x)) {
+		this->throw_domain_error("|x| must be ≤ 1");
+	}
 }
 
 template <std::floating_point T, std::unsigned_integral K>
@@ -2613,8 +2960,12 @@ template <std::floating_point T, std::unsigned_integral K>
 ln_cosx_series<T, K>::ln_cosx_series(T x) : series_base<T, K>(x, std::log(std::cos(x)))
 {
 	this->series_name = "ln(cos(x))";
-	if (std::abs(this->x) * 2 >= std::numbers::pi)
-		this->throw_domain_error("|x| >= pi/2");
+	// Сходится при |x| < π/2 (ряд для логарифма косинуса)
+	// Расходится при |x| ≥ π/2 (cos(x) ≤ 0, логарифм не определён)
+
+	if (std::abs(x) * 2 >= std::numbers::pi || !std::isfinite(x)) {
+		this->throw_domain_error("|x| must be < π/2");
+	}
 }
 
 template <std::floating_point T, std::unsigned_integral K>
@@ -2657,9 +3008,13 @@ public:
 template <std::floating_point T, std::unsigned_integral K>
 ln_sinx_minus_ln_x_series<T, K>::ln_sinx_minus_ln_x_series(T x) : series_base<T, K>(x, std::log(std::sin(x) / x))
 {
-	this->series_name = "ln(sin(x))-ln(x)";
-	if (this->x <= 0 || this->x > std::numbers::pi)
-		this->throw_domain_error("x <= 0 or x > pi");
+	this->series_name = "ln(sin(x)/x)";
+	// Сходится при 0 < x ≤ π (ряд для логарифма синуса)
+	// Расходится при x ≤ 0 или x > π (sin(x)/x ≤ 0, логарифм не определён)
+
+	if (x <= 0 || x > std::numbers::pi || !std::isfinite(x)) {
+		this->throw_domain_error("x must be in (0, π]");
+	}
 }
 
 template <std::floating_point T, std::unsigned_integral K>
@@ -2702,9 +3057,13 @@ public:
 template <std::floating_point T, std::unsigned_integral K>
 pi_8_cosx_square_minus_1_div_3_cosx_series<T, K>::pi_8_cosx_square_minus_1_div_3_cosx_series(T x) : series_base<T, K>(x, static_cast<T>((std::numbers::pi / 8)* std::cos(x)* std::cos(x) - ((1 / 3) * std::cos(x))))
 {
-	this->series_name = "(pi/8)*cos^2(x)-(1/3)*cos(x)";
-	if (abs(this->x) > std::numbers::pi / 2)
-		this->throw_domain_error("|x| > pi/2");
+	this->series_name = "(π/8)*cos²(x)-(1/3)*cos(x)";
+	// Сходится при |x| ≤ π/2 (тригонометрический ряд)
+	// Расходится при |x| > π/2
+
+	if (std::abs(x) > std::numbers::pi / 2 || !std::isfinite(x)) {
+		this->throw_domain_error("|x| must be ≤ π/2");
+	}
 }
 
 template <std::floating_point T, std::unsigned_integral K>
@@ -2748,8 +3107,12 @@ template <std::floating_point T, std::unsigned_integral K>
 sqrt_oneminussqrtoneminusx_div_x_series<T, K>::sqrt_oneminussqrtoneminusx_div_x_series(T x) : series_base<T, K>(x, std::sqrt((1 - sqrt(1 - x)) / x))
 {
 	this->series_name = "sqrt((1-sqrt(1-x))/x)";
-	if (std::abs(this->x) >= 1 or this->x == 0)
-		this->throw_domain_error("|x| >= 1 or x == 0");
+	// Сходится при 0 < |x| < 1 (биномиальный ряд для sqrt(1-x))
+	// Расходится при |x| ≥ 1 или x = 0
+
+	if (std::abs(x) >= 1 || x == 0 || !std::isfinite(x)) {
+		this->throw_domain_error("|x| must be in (0, 1)");
+	}
 }
 
 template <std::floating_point T, std::unsigned_integral K>
@@ -2794,8 +3157,12 @@ template <std::floating_point T, std::unsigned_integral K>
 one_minus_sqrt_1minus4x_div_2x_series<T, K>::one_minus_sqrt_1minus4x_div_2x_series(T x) : series_base<T, K>(x, (1 - static_cast<T>(sqrt(std::fma(-4, x, 1)))) / (2 * x))
 {
 	this->series_name = "(1-sqrt(1-4x))/(2x)";
-	if (std::abs(this->x) > static_cast<T>(0.25) or this->x == 0)
-		this->throw_domain_error("|x| > 0.25 or x == 0");
+	// Сходится при 0 < |x| ≤ 0.25 (производящая функция для чисел Каталана)
+	// Расходится при |x| > 0.25 или x = 0
+
+	if (std::abs(x) > static_cast<T>(0.25) || x == 0 || !std::isfinite(x)) {
+		this->throw_domain_error("|x| must be in (0, 0.25]");
+	}
 }
 
 template <std::floating_point T, std::unsigned_integral K>
@@ -2842,8 +3209,12 @@ template <std::floating_point T, std::unsigned_integral K>
 arcsin_x_minus_x_series<T, K>::arcsin_x_minus_x_series(T x) : series_base<T, K>(x, static_cast<T>(std::asin(x)) - x)
 {
 	this->series_name = "arcsin(x)-x";
-	if (std::abs(this->x) > 1)
-		this->throw_domain_error("|x| > 1");
+	// Сходится при |x| ≤ 1 (ряд для arcsin(x) сходится при |x| ≤ 1)
+	// Расходится при |x| > 1
+
+	if (std::abs(x) > 1 || !std::isfinite(x)) {
+		this->throw_domain_error("|x| must be ≤ 1");
+	}
 }
 
 template <std::floating_point T, std::unsigned_integral K>
@@ -2885,12 +3256,15 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-pi_x_minus_x_square_and_x_square_minus_three_pi_x_plus_two_pi_square_series<T, K>::pi_x_minus_x_square_and_x_square_minus_three_pi_x_plus_two_pi_square_series(T x) : series_base<T, K>(x,
-	0 < x && x < std::numbers::pi ? static_cast<T>(std::numbers::pi) * x - x * x : (x * x) - (static_cast<T>(3) * static_cast<T>(std::numbers::pi) * x) + (2 * static_cast<T>(std::numbers::pi) * static_cast<T>(std::numbers::pi)))
+pi_x_minus_x_square_and_x_square_minus_three_pi_x_plus_two_pi_square_series<T, K>::pi_x_minus_x_square_and_x_square_minus_three_pi_x_plus_two_pi_square_series(T x) : series_base<T, K>(x, 0 < x && x < std::numbers::pi ? static_cast<T>(std::numbers::pi) * x - x * x : (x * x) - (static_cast<T>(3) * static_cast<T>(std::numbers::pi) * x) + (2 * static_cast<T>(std::numbers::pi) * static_cast<T>(std::numbers::pi)))
 {
-	this->series_name = "piecewise_quadratic_function";
-	if (this->x <= static_cast<T>(0) || this->x >= static_cast<T>(2) * static_cast<T>(std::numbers::pi))
-		this->throw_domain_error("x <= 0 or x >= 2pi");
+	this->series_name = "f(x) = { πx - x², 0 < x < π; x² - 3πx + 2π², π ≤ x < 2π }";
+	// Сходится при 0 < x < 2π (ряд Фурье для кусочно-квадратичной функции)
+	// Расходится при x ≤ 0 или x ≥ 2π
+
+	if (x <= static_cast<T>(0) || x >= static_cast<T>(2) * static_cast<T>(std::numbers::pi) || !std::isfinite(x)) {
+		this->throw_domain_error("x must be in (0, 2π)");
+	}
 }
 
 template <std::floating_point T, std::unsigned_integral K>
@@ -2932,12 +3306,15 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-abs_sin_x_minus_2_div_pi_series<T, K>::abs_sin_x_minus_2_div_pi_series(T x) : series_base<T, K>(x,
-	0 <= x && x <= static_cast<T>(std::numbers::pi) ? static_cast<T>(std::sin(x)) - (static_cast<T>(2) / static_cast<T>(std::numbers::pi)) : -static_cast<T>(std::sin(x)) - (static_cast<T>(2) / static_cast<T>(std::numbers::pi)))
+abs_sin_x_minus_2_div_pi_series<T, K>::abs_sin_x_minus_2_div_pi_series(T x) : series_base<T, K>(x, 0 <= x && x <= static_cast<T>(std::numbers::pi) ? static_cast<T>(std::sin(x)) - (static_cast<T>(2) / static_cast<T>(std::numbers::pi)) : -static_cast<T>(std::sin(x)) - (static_cast<T>(2) / static_cast<T>(std::numbers::pi)))
 {
-	this->series_name = "abs(sin(x))-2/pi";
-	if (this->x < 0 || this->x > 2 * std::numbers::pi)
-		this->throw_domain_error("x < 0 or x > 2pi");
+	this->series_name = "|sin(x)| - 2/π";
+	// Сходится при 0 ≤ x ≤ 2π (ряд Фурье для функции |sin(x)|)
+	// Расходится при x < 0 или x > 2π
+
+	if (x < 0 || x > 2 * std::numbers::pi || !std::isfinite(x)) {
+		this->throw_domain_error("x must be in [0, 2π]");
+	}
 }
 
 template <std::floating_point T, std::unsigned_integral K>
@@ -2979,12 +3356,15 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-pi_minus_3pi_4_and_pi_minus_x_minus_3pi_4_series<T, K>::pi_minus_3pi_4_and_pi_minus_x_minus_3pi_4_series(T x) : series_base<T, K>(x,
-	-static_cast<T>(std::numbers::pi) < x && x < 0 ? static_cast<T>(std::numbers::pi) - static_cast<T>(3) * static_cast<T>(std::numbers::pi) / static_cast<T>(4) : static_cast<T>(std::numbers::pi) - x - static_cast<T>(3) * static_cast<T>(std::numbers::pi) / static_cast<T>(4))
+pi_minus_3pi_4_and_pi_minus_x_minus_3pi_4_series<T, K>::pi_minus_3pi_4_and_pi_minus_x_minus_3pi_4_series(T x) : series_base<T, K>(x, -static_cast<T>(std::numbers::pi) < x && x < 0 ? static_cast<T>(std::numbers::pi) - static_cast<T>(3) * static_cast<T>(std::numbers::pi) / static_cast<T>(4) : static_cast<T>(std::numbers::pi) - x - static_cast<T>(3) * static_cast<T>(std::numbers::pi) / static_cast<T>(4))
 {
-	this->series_name = "piecewise_linear_function";
-	if (this->x <= -static_cast<T>(std::numbers::pi) || this->x > static_cast<T>(std::numbers::pi))
-		this->throw_domain_error("x <= -pi or x > pi");
+	this->series_name = "f(x) = { π - 3π/4, -π < x < 0; π - x - 3π/4, 0 ≤ x ≤ π }";
+	// Сходится при -π < x ≤ π (ряд Фурье для кусочно-линейной функции)
+	// Расходится при x ≤ -π или x > π
+
+	if (x <= -static_cast<T>(std::numbers::pi) || x > static_cast<T>(std::numbers::pi) || !std::isfinite(x)) {
+		this->throw_domain_error("x must be in (-π, π]");
+	}
 }
 
 template <std::floating_point T, std::unsigned_integral K>
@@ -3028,12 +3408,15 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-minus_3_div_4_or_x_minus_3_div_4_series<T, K>::minus_3_div_4_or_x_minus_3_div_4_series(T x) : series_base<T, K>(x,
-	-3 < x && x < 0 ? -static_cast<T>(3) / static_cast<T>(4) : x - static_cast<T>(3) / static_cast<T>(4))
+minus_3_div_4_or_x_minus_3_div_4_series<T, K>::minus_3_div_4_or_x_minus_3_div_4_series(T x) : series_base<T, K>(x, -3 < x && x < 0 ? -static_cast<T>(3) / static_cast<T>(4) : x - static_cast<T>(3) / static_cast<T>(4))
 {
-	this->series_name = "piecewise_linear_function";
-	if (this->x <= -3 || this->x >= 3)
-		this->throw_domain_error("x <= -3 or x >= 3");
+	this->series_name = "f(x) = { -3/4, -3 < x < 0; x - 3/4, 0 ≤ x < 3 }";
+	// Сходится при -3 < x < 3 (ряд Фурье для кусочно-линейной функции на интервале [-3, 3])
+	// Расходится при x ≤ -3 или x ≥ 3
+
+	if (x <= -3 || x >= 3 || !std::isfinite(x)) {
+		this->throw_domain_error("x must be in (-3, 3)");
+	}
 }
 
 template <std::floating_point T, std::unsigned_integral K>
@@ -3081,8 +3464,12 @@ template <std::floating_point T, std::unsigned_integral K>
 ten_minus_x_series<T, K>::ten_minus_x_series(T x) : series_base<T, K>(x, static_cast<T>(10) - x)
 {
 	this->series_name = "10-x";
-	if (this->x <= static_cast<T>(5) || this->x >= static_cast<T>(15))
-		this->throw_domain_error("x <= 5 or x >= 15");
+	// Сходится при 5 < x < 15 (ряд Фурье для линейной функции на интервале [5, 15])
+	// Расходится при x ≤ 5 или x ≥ 15
+
+	if (x <= static_cast<T>(5) || x >= static_cast<T>(15) || !std::isfinite(x)) {
+		this->throw_domain_error("x must be in (5, 15)");
+	}
 }
 
 template <std::floating_point T, std::unsigned_integral K>
@@ -3127,8 +3514,12 @@ template <std::floating_point T, std::unsigned_integral K>
 x_series<T, K>::x_series(T x) : series_base<T, K>(x, this->x)
 {
 	this->series_name = "x";
-	if (this->x < -std::numbers::pi || this->x > std::numbers::pi)
-		this->throw_domain_error("x < -pi or x > pi");
+	// Сходится при -π < x < π (ряд Фурье для функции f(x) = x)
+	// Расходится при x ≤ -π или x ≥ π
+
+	if (x < -std::numbers::pi || x > std::numbers::pi || !std::isfinite(x)) {
+		this->throw_domain_error("x must be in (-π, π)");
+	}
 }
 
 template <std::floating_point T, std::unsigned_integral K>
@@ -3172,9 +3563,13 @@ public:
 template <std::floating_point T, std::unsigned_integral K>
 minus_x_minus_pi_4_or_minus_pi_4_series<T, K>::minus_x_minus_pi_4_or_minus_pi_4_series(T x) : series_base<T, K>(x)
 {
-	this->series_name = "piecewise_linear_function";
-	if (this->x <= -std::numbers::pi or this->x >= std::numbers::pi)
-		this->throw_domain_error("x <= -pi or x >= pi");
+	this->series_name = "f(x) = { -x - π/4, -π < x < 0; -π/4, 0 ≤ x < π }";
+	// Сходится при -π < x < π (ряд Фурье для кусочно-линейной функции)
+	// Расходится при x ≤ -π или x ≥ π
+
+	if (x <= -std::numbers::pi || x >= std::numbers::pi || !std::isfinite(x)) {
+		this->throw_domain_error("x must be in (-π, π)");
+	}
 }
 
 template <std::floating_point T, std::unsigned_integral K>
@@ -3219,9 +3614,13 @@ public:
 template <std::floating_point T, std::unsigned_integral K>
 one_div_two_minus_x_multi_three_plus_x_series<T, K>::one_div_two_minus_x_multi_three_plus_x_series(T x) : series_base<T, K>(x, 1 / ((2 - this->x) * (3 + this->x)))
 {
-	this->series_name = "1/((2-x)*(3+x))";
-	if (std::abs(this->x) >= 2)
-		this->throw_domain_error("|x| >= 2");
+	this->series_name = "1/((2-x)(3+x))";
+	// Сходится при |x| < 2 (радиус сходимости определяется полюсами в x=2 и x=-3)
+	// Расходится при |x| ≥ 2
+
+	if (std::abs(x) >= 2 || !std::isfinite(x)) {
+		this->throw_domain_error("|x| must be < 2");
+	}
 }
 
 template <std::floating_point T, std::unsigned_integral K>
@@ -3261,7 +3660,15 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-Si_x_series<T, K>::Si_x_series(T x) : series_base<T, K>(x) {}
+Si_x_series<T, K>::Si_x_series(T x) : series_base<T, K>(x)
+{
+	this->series_name = "Si(x)";
+	// Сходится при ∀x ∈ ℝ (интегральный синус, ряд сходится на всей числовой прямой)
+
+	if (!std::isfinite(x)) {
+		this->throw_domain_error("x is not finite");
+	}
+}
 
 template <std::floating_point T, std::unsigned_integral K>
 constexpr T Si_x_series<T, K>::operator()(K n) const
@@ -3304,7 +3711,16 @@ private:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-Ci_x_series<T, K>::Ci_x_series(T x) : series_base<T, K>(x) {}
+Ci_x_series<T, K>::Ci_x_series(T x) : series_base<T, K>(x)
+{
+	this->series_name = "Ci(x)";
+	// Сходится при ∀x ∈ ℝ\{0} (интегральный косинус, ряд сходится на всей числовой прямой кроме x=0)
+	// При x=0 требуется специальное рассмотрение (предел)
+
+	if (x == 0 || !std::isfinite(x)) {
+		this->throw_domain_error("x must be finite and non-zero");
+	}
+}
 
 template <std::floating_point T, std::unsigned_integral K>
 constexpr T Ci_x_series<T, K>::operator()(K n) const
@@ -3349,9 +3765,13 @@ public:
 template <std::floating_point T, std::unsigned_integral K>
 Riemann_zeta_func_series<T, K>::Riemann_zeta_func_series(T x) : series_base<T, K>(x)
 {
-	this->series_name = "Riemann_zeta";
-	if (this->x <= 1)
-		this->throw_domain_error("x <= 1");
+	this->series_name = "ζ(x)";
+	// Сходится при x > 1 (дзета-функция Римана)
+	// Расходится при x ≤ 1
+
+	if (x <= 1 || !std::isfinite(x)) {
+		this->throw_domain_error("x must be > 1");
+	}
 }
 
 template <std::floating_point T, std::unsigned_integral K>
@@ -3393,9 +3813,13 @@ public:
 template <std::floating_point T, std::unsigned_integral K>
 Riemann_zeta_func_xmin1_div_Riemann_zeta_func_x_series<T, K>::Riemann_zeta_func_xmin1_div_Riemann_zeta_func_x_series(T x) : series_base<T, K>(x)
 {
-	this->series_name = "zeta(x-1)/zeta(x)";
-	if (this->x <= 2)
-		this->throw_domain_error("x <= 2");
+	this->series_name = "ζ(x-1)/ζ(x)";
+	// Сходится при x > 2 (отношение дзета-функций, ζ(x) сходится при x > 1, ζ(x-1) при x > 2)
+	// Расходится при x ≤ 2
+
+	if (x <= 2 || !std::isfinite(x)) {
+		this->throw_domain_error("x must be > 2");
+	}
 }
 
 template <std::floating_point T, std::unsigned_integral K>
@@ -3436,9 +3860,13 @@ public:
 template <std::floating_point T, std::unsigned_integral K>
 xsquareplus3_div_xsquareplus2multix_minus_1_series<T, K>::xsquareplus3_div_xsquareplus2multix_minus_1_series(T x) : series_base<T, K>(x, ((x* x + 3) / x * (x + 2)) - 1)
 {
-	this->series_name = "(x^2+3)/(x^2+2x)-1";
-	if (std::abs(this->x - 1) >= 2)
-		this->throw_domain_error("|x-1| >= 2");
+	this->series_name = "((x²+3)/x)*(x+2)-1";
+	// Сходится при |x| > 2 (ряд Лорана, разложение в окрестности бесконечности)
+	// Расходится при |x| ≤ 2
+
+	if (std::abs(x) <= 2 || !std::isfinite(x) || x == 0) {
+		this->throw_domain_error("|x| must be > 2 and x ≠ 0");
+	}
 }
 
 template <std::floating_point T, std::unsigned_integral K>
@@ -3481,8 +3909,12 @@ template <std::floating_point T, std::unsigned_integral K>
 arcsin_x_series<T, K>::arcsin_x_series(T x) : series_base<T, K>(x, std::asin(x))
 {
 	this->series_name = "arcsin(x)";
-	if (this->x < -1 || this->x > 1)
-		this->throw_domain_error("x < -1 or x > 1");
+	// Сходится при |x| ≤ 1 (биномиальный ряд для arcsin(x))
+	// Расходится при |x| > 1
+
+	if (x < -1 || x > 1 || !std::isfinite(x)) {
+		this->throw_domain_error("|x| must be ≤ 1");
+	}
 }
 
 template <std::floating_point T, std::unsigned_integral K>
@@ -3526,8 +3958,12 @@ template <std::floating_point T, std::unsigned_integral K>
 arctg_x_series<T, K>::arctg_x_series(T x) : series_base<T, K>(x, std::atan(x))
 {
 	this->series_name = "arctg(x)";
-	if (std::abs(this->x) > 1)
-		this->throw_domain_error("|x| > 1");
+	// Сходится при |x| ≤ 1 (ряд для arctg(x) сходится абсолютно при |x| < 1, условно при |x| = 1)
+	// Расходится при |x| > 1
+
+	if (std::abs(x) > 1 || !std::isfinite(x)) {
+		this->throw_domain_error("|x| must be ≤ 1");
+	}
 }
 
 template <std::floating_point T, std::unsigned_integral K>
@@ -3571,8 +4007,12 @@ template <std::floating_point T, std::unsigned_integral K>
 K_x_series<T, K>::K_x_series(T x) : series_base<T, K>(x)
 {
 	this->series_name = "K(x)";
-	if (std::abs(this->x) >= 1)
-		this->throw_domain_error("|x| >= 1");
+	// Сходится при |x| < 1 (полный эллиптический интеграл первого рода)
+	// Расходится при |x| ≥ 1
+
+	if (std::abs(x) >= 1 || !std::isfinite(x)) {
+		this->throw_domain_error("|x| must be < 1");
+	}
 }
 
 template <std::floating_point T, std::unsigned_integral K>
@@ -3616,8 +4056,12 @@ template <std::floating_point T, std::unsigned_integral K>
 E_x_series<T, K>::E_x_series(T x) : series_base<T, K>(x)
 {
 	this->series_name = "E(x)";
-	if (std::abs(this->x) >= 1)
-		this->throw_domain_error("|x| >= 1");
+	// Сходится при |x| < 1 (полный эллиптический интеграл второго рода)
+	// Расходится при |x| ≥ 1
+
+	if (std::abs(x) >= 1 || !std::isfinite(x)) {
+		this->throw_domain_error("|x| must be < 1");
+	}
 }
 
 template <std::floating_point T, std::unsigned_integral K>
@@ -3661,8 +4105,12 @@ template <std::floating_point T, std::unsigned_integral K>
 sqrt_1plusx_series<T, K>::sqrt_1plusx_series(T x) : series_base<T, K>(x, std::sqrt(1 + x))
 {
 	this->series_name = "sqrt(1+x)";
-	if (std::abs(this->x) > 1)
-		this->throw_domain_error("|x| > 1");
+	// Сходится при |x| ≤ 1 (биномиальный ряд, абсолютно при |x| < 1, условно при x = -1)
+	// Расходится при |x| > 1
+
+	if (std::abs(x) > 1 || !std::isfinite(x)) {
+		this->throw_domain_error("|x| must be ≤ 1");
+	}
 }
 
 template <std::floating_point T, std::unsigned_integral K>
@@ -3705,9 +4153,13 @@ public:
 template <std::floating_point T, std::unsigned_integral K>
 Lambert_W_func_series<T, K>::Lambert_W_func_series(T x) : series_base<T, K>(x)
 {
-	this->series_name = "Lambert_W";
-	if (std::abs(this->x) >= 1 / std::numbers::e)
-		this->throw_domain_error("|x| >= 1/e");
+	this->series_name = "W(x)";
+	// Сходится при |x| < 1/e (ряд для функции Ламберта)
+	// Расходится при |x| ≥ 1/e
+
+	if (std::abs(x) >= 1 / std::numbers::e || !std::isfinite(x)) {
+		this->throw_domain_error("|x| must be < 1/e");
+	}
 }
 
 template <std::floating_point T, std::unsigned_integral K>
@@ -3756,7 +4208,16 @@ private:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-Incomplete_Gamma_func_series<T, K>::Incomplete_Gamma_func_series(T x, T s) : series_base<T, K>(x), s(s) {}
+Incomplete_Gamma_func_series<T, K>::Incomplete_Gamma_func_series(T x, T s) : series_base<T, K>(x), s(s)
+{
+	this->series_name = "γ(s,x)";
+	// Сходится при ∀x ∈ ℝ, s > 0 (неполная гамма-функция)
+	// Расходится при s ≤ 0
+
+	if (s <= 0 || !std::isfinite(x) || !std::isfinite(s)) {
+		this->throw_domain_error("s must be > 0 and parameters must be finite");
+	}
+}
 
 template <std::floating_point T, std::unsigned_integral K>
 constexpr T Incomplete_Gamma_func_series<T, K>::operator()(K n) const
@@ -3771,7 +4232,7 @@ constexpr T Incomplete_Gamma_func_series<T, K>::operator()(K n) const
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
 template <std::floating_point T, std::unsigned_integral K>
-class Series_with_ln_number1 : public series_base<T, K>
+class Series_with_ln_number1_series : public series_base<T, K>
 {
 public:
 	/**
@@ -3780,7 +4241,7 @@ public:
 	* @param x The argument for function series
 	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	*/
-	Series_with_ln_number1(T x);
+	Series_with_ln_number1_series(T x);
 
 	/**
 	* @brief Computes the nth term of the Taylor series of the sine function
@@ -3793,10 +4254,19 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-Series_with_ln_number1<T, K>::Series_with_ln_number1(T x) : series_base<T, K>(x) {}
+Series_with_ln_number1_series<T, K>::Series_with_ln_number1_series(T x) : series_base<T, K>(x)
+{
+	this->series_name = "series_with_ln";
+	// Сходится при |x| < 1 (ряд с логарифмическими членами)
+	// Расходится при |x| ≥ 1
+
+	if (std::abs(x) >= 1 || !std::isfinite(x)) {
+		this->throw_domain_error("|x| must be < 1");
+	}
+}
 
 template <std::floating_point T, std::unsigned_integral K>
-constexpr T Series_with_ln_number1<T, K>::operator()(K n) const
+constexpr T Series_with_ln_number1_series<T, K>::operator()(K n) const
 {
 	const K a = n + 1;
 	const K b = a * a;
@@ -3810,7 +4280,7 @@ constexpr T Series_with_ln_number1<T, K>::operator()(K n) const
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
 template <std::floating_point T, std::unsigned_integral K>
-class Series_with_ln_number2 : public series_base<T, K>
+class Series_with_ln_number2_series : public series_base<T, K>
 {
 public:
 	/**
@@ -3819,7 +4289,7 @@ public:
 	* @param x The argument for function series
 	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	*/
-	Series_with_ln_number2(T x);
+	Series_with_ln_number2_series(T x);
 
 	/**
 	* @brief Computes the nth term of the Taylor series of the sine function
@@ -3832,10 +4302,19 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-Series_with_ln_number2<T, K>::Series_with_ln_number2(T x) : series_base<T, K>(x) {}
+Series_with_ln_number2_series<T, K>::Series_with_ln_number2_series(T x) : series_base<T, K>(x)
+{
+	this->series_name = "series_with_ln2";
+	// Сходится при |x| < 1 (ряд с логарифмическими членами)
+	// Расходится при |x| ≥ 1
+
+	if (std::abs(x) >= 1 || !std::isfinite(x)) {
+		this->throw_domain_error("|x| must be < 1");
+	}
+}
 
 template <std::floating_point T, std::unsigned_integral K>
-constexpr T Series_with_ln_number2<T, K>::operator()(K n) const
+constexpr T Series_with_ln_number2_series<T, K>::operator()(K n) const
 {
 	auto tmp = std::log(n + 2);
 	return this->x / static_cast<T>((std::pow(tmp, tmp))); // (77.2) [Rows.pdf]
@@ -3870,7 +4349,15 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-pi_series<T, K>::pi_series(T x) : series_base<T, K>(x) {}
+pi_series<T, K>::pi_series(T x) : series_base<T, K>(x)
+{
+	this->series_name = "π";
+	// Сходится при ∀x ∈ ℝ (константа π)
+
+	if (!std::isfinite(x)) {
+		this->throw_domain_error("x is not finite");
+	}
+}
 
 template <std::floating_point T, std::unsigned_integral K>
 constexpr T pi_series<T, K>::operator()(K n) const
@@ -3912,9 +4399,13 @@ public:
 template <std::floating_point T, std::unsigned_integral K>
 x_min_sqrt_x_series<T, K>::x_min_sqrt_x_series(T x) : series_base<T, K>(x, x - std::sqrt(x))
 {
-	this->series_name = "x-sqrt(x)";
-	if (this->x <= 0 || this->x >= 1)
-		this->throw_domain_error("x <= 0 or x >= 1");
+	this->series_name = "x-√x";
+	// Сходится при 0 < x < 1 (разложение в ряд Тейлора)
+	// Расходится при x ≤ 0 или x ≥ 1
+
+	if (x <= 0 || x >= 1 || !std::isfinite(x)) {
+		this->throw_domain_error("x must be in (0, 1)");
+	}
 }
 
 template <std::floating_point T, std::unsigned_integral K>
@@ -3958,9 +4449,13 @@ public:
 template <std::floating_point T, std::unsigned_integral K>
 arctan_x2_series<T, K>::arctan_x2_series(T x) : series_base<T, K>(x, std::atan(x* x))
 {
-	this->series_name = "arctan(x^2)";
-	if (std::abs(this->x) > 1)
-		this->throw_domain_error("|x| > 1");
+	this->series_name = "arctan(x²)";
+	// Сходится при |x| ≤ 1 (ряд для arctan(z) сходится при |z| ≤ 1, где z = x²)
+	// Расходится при |x| > 1
+
+	if (std::abs(x) > 1 || !std::isfinite(x)) {
+		this->throw_domain_error("|x| must be ≤ 1");
+	}
 }
 
 template <std::floating_point T, std::unsigned_integral K>
@@ -4003,9 +4498,13 @@ public:
 template <std::floating_point T, std::unsigned_integral K>
 ln1px4_series<T, K>::ln1px4_series(T x) : series_base<T, K>(x, static_cast<T>(std::log(1 + std::pow(x, 4))))
 {
-	this->series_name = "ln(1+x^4)";
-	if (std::abs(this->x) >= 1)
-		this->throw_domain_error("|x| >= 1");
+	this->series_name = "ln(1+x⁴)";
+	// Сходится при |x| ≤ 1 (ряд для ln(1+z) сходится при |z| ≤ 1, где z = x⁴)
+	// Расходится при |x| > 1
+
+	if (std::abs(x) >= 1 || !std::isfinite(x)) {
+		this->throw_domain_error("|x| must be < 1");
+	}
 }
 
 template <std::floating_point T, std::unsigned_integral K>
@@ -4046,7 +4545,15 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-sin_x2_series<T, K>::sin_x2_series(T x) : series_base<T, K>(x, std::sin(x * x)) {}
+sin_x2_series<T, K>::sin_x2_series(T x) : series_base<T, K>(x, std::sin(x * x))
+{
+	this->series_name = "sin(x²)";
+	// Сходится при ∀x ∈ ℝ (ряд для sin(z) сходится при ∀z ∈ ℝ, где z = x²)
+
+	if (!std::isfinite(x)) {
+		this->throw_domain_error("x is not finite");
+	}
+}
 
 template <std::floating_point T, std::unsigned_integral K>
 constexpr T sin_x2_series<T, K>::operator()(K n) const
@@ -4054,6 +4561,7 @@ constexpr T sin_x2_series<T, K>::operator()(K n) const
 	const K a = static_cast<K>(std::fma(2, n, 1));
 	return static_cast<T>((1 - 2 * (n & 1)) * std::pow(this->x, 2 * a) / this->fact(a)); // (82.2) [Rows.pdf], // (1 - 2 * (n & 1)) = (-1)^{n}
 }
+
 
 /**
 * @brief Maclaurin series of function arctan(x^3)
@@ -4087,9 +4595,13 @@ public:
 template <std::floating_point T, std::unsigned_integral K>
 arctan_x3_series<T, K>::arctan_x3_series(T x) : series_base<T, K>(x, static_cast<T>(std::atan(std::pow(x, 3))))
 {
-	this->series_name = "arctan(x^3)";
-	if (std::abs(this->x) > 1)
-		this->throw_domain_error("|x| > 1");
+	this->series_name = "arctan(x³)";
+	// Сходится при |x| ≤ 1 (ряд для arctan(z) сходится при |z| ≤ 1, где z = x³)
+	// Расходится при |x| > 1
+
+	if (std::abs(x) > 1 || !std::isfinite(x)) {
+		this->throw_domain_error("|x| must be ≤ 1");
+	}
 }
 
 template <std::floating_point T, std::unsigned_integral K>
@@ -4098,6 +4610,7 @@ constexpr T arctan_x3_series<T, K>::operator()(K n) const
 	const K a = static_cast<K>(std::fma(2, n, 1));
 	return static_cast<T>(((1 - 2 * (n & 1)) * std::pow(this->x, 3 * a)) / a); // (83.2) [Rows.pdf], (1 - 2 * (n & 1)) = (-1)^{n}
 }
+
 
 /**
 * @brief Maclaurin series of function arcsin(x^2)
@@ -4131,9 +4644,13 @@ public:
 template <std::floating_point T, std::unsigned_integral K>
 arcsin_x2_series<T, K>::arcsin_x2_series(T x) : series_base<T, K>(x, std::asin(x* x))
 {
-	this->series_name = "arcsin(x^2)";
-	if (std::abs(this->x) > 1)
-		this->throw_domain_error("|x| > 1");
+	this->series_name = "arcsin(x²)";
+	// Сходится при |x| ≤ 1 (ряд для arcsin(z) сходится при |z| ≤ 1, где z = x²)
+	// Расходится при |x| > 1
+
+	if (std::abs(x) > 1 || !std::isfinite(x)) {
+		this->throw_domain_error("|x| must be ≤ 1");
+	}
 }
 
 template <std::floating_point T, std::unsigned_integral K>
@@ -4176,9 +4693,13 @@ public:
 template <std::floating_point T, std::unsigned_integral K>
 ln1_m_x2_series<T, K>::ln1_m_x2_series(T x) : series_base<T, K>(x, std::log(1 - x * x))
 {
-	this->series_name = "ln(1-x^2)";
-	if (std::abs(this->x) >= 1)
-		this->throw_domain_error("|x| >= 1");
+	this->series_name = "ln(1-x²)";
+	// Сходится при |x| < 1 (ряд для ln(1-z) сходится при |z| < 1, где z = x²)
+	// Расходится при |x| ≥ 1
+
+	if (std::abs(x) >= 1 || !std::isfinite(x)) {
+		this->throw_domain_error("|x| must be < 1");
+	}
 }
 
 template <std::floating_point T, std::unsigned_integral K>
@@ -4222,8 +4743,12 @@ template <std::floating_point T, std::unsigned_integral K>
 artanh_x_series<T, K>::artanh_x_series(T x) : series_base<T, K>(x, std::atanh(x))
 {
 	this->series_name = "artanh(x)";
-	if (std::abs(this->x) > 1)
-		this->throw_domain_error("|x| > 1");
+	// Сходится при |x| < 1 (ряд для гиперболического арктангенса)
+	// Расходится при |x| ≥ 1
+
+	if (std::abs(x) >= 1 || !std::isfinite(x)) {
+		this->throw_domain_error("|x| must be < 1");
+	}
 }
 
 template <std::floating_point T, std::unsigned_integral K>
@@ -4267,8 +4792,12 @@ template <std::floating_point T, std::unsigned_integral K>
 arcsinh_x_series<T, K>::arcsinh_x_series(T x) : series_base<T, K>(x, std::asinh(x))
 {
 	this->series_name = "arcsinh(x)";
-	if (std::abs(this->x) > 1)
-		this->throw_domain_error("|x| > 1");
+	// Сходится при |x| ≤ 1 (ряд для гиперболического арксинуса)
+	// Расходится при |x| > 1
+
+	if (std::abs(x) > 1 || !std::isfinite(x)) {
+		this->throw_domain_error("|x| must be ≤ 1");
+	}
 }
 
 template <std::floating_point T, std::unsigned_integral K>
@@ -4309,7 +4838,15 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-cos_x2_series<T, K>::cos_x2_series(T x) : series_base<T, K>(x, std::cos(x * x)) {}
+cos_x2_series<T, K>::cos_x2_series(T x) : series_base<T, K>(x, std::cos(x * x))
+{
+	this->series_name = "cos(x²)";
+	// Сходится при ∀x ∈ ℝ (ряд для cos(z) сходится при ∀z ∈ ℝ, где z = x²)
+
+	if (!std::isfinite(x)) {
+		this->throw_domain_error("x is not finite");
+	}
+}
 
 template <std::floating_point T, std::unsigned_integral K>
 constexpr T cos_x2_series<T, K>::operator()(K n) const
@@ -4349,7 +4886,15 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-sinh_x2_series<T, K>::sinh_x2_series(T x) : series_base<T, K>(x, std::sinh(x * x)) {}
+sinh_x2_series<T, K>::sinh_x2_series(T x) : series_base<T, K>(x, std::sinh(x * x))
+{
+	this->series_name = "sinh(x²)";
+	// Сходится при ∀x ∈ ℝ (ряд для sinh(z) сходится при ∀z ∈ ℝ, где z = x²)
+
+	if (!std::isfinite(x)) {
+		this->throw_domain_error("x is not finite");
+	}
+}
 
 template <std::floating_point T, std::unsigned_integral K>
 constexpr T sinh_x2_series<T, K>::operator()(K n) const
@@ -4389,11 +4934,15 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-arctanh_x2_series<T, K>::arctanh_x2_series(T x) : series_base<T, K>(x, std::atanh(x* x))
+arctanh_x2_series<T, K>::arctanh_x2_series(T x) : series_base<T, K>(x, std::atanh(x * x))
 {
-	this->series_name = "arctanh(x^2)";
-	if (std::abs(this->x) > 1)
-		this->throw_domain_error("|x| > 1");
+	this->series_name = "arctanh(x²)";
+	// Сходится при |x| < 1 (ряд для гиперболического арктангенса, где z = x²)
+	// Расходится при |x| ≥ 1
+
+	if (std::abs(x) >= 1 || !std::isfinite(x)) {
+		this->throw_domain_error("|x| must be < 1");
+	}
 }
 
 template <std::floating_point T, std::unsigned_integral K>
@@ -4434,10 +4983,15 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-cos3xmin1_div_xsqare_series<T, K>::cos3xmin1_div_xsqare_series(T x) : series_base<T, K>(x, (std::cos(3 * x) - 1) / (x * x)) {
-	this->series_name = "(cos(3x)-1)/x^2";
-	if (this->x == 0)
-		this->throw_domain_error("x = 0");
+cos3xmin1_div_xsqare_series<T, K>::cos3xmin1_div_xsqare_series(T x) : series_base<T, K>(x, (std::cos(3 * x) - 1) / (x * x))
+{
+	this->series_name = "(cos(3x)-1)/x²";
+	// Сходится при ∀x ∈ ℝ\{0} (ряд для (cos(z)-1)/z² сходится при ∀z ∈ ℝ\{0}, где z = 3x)
+	// При x = 0 требуется специальное рассмотрение (предел)
+
+	if (x == 0 || !std::isfinite(x)) {
+		this->throw_domain_error("x must be finite and non-zero");
+	}
 }
 
 template <std::floating_point T, std::unsigned_integral K>
@@ -4478,7 +5032,15 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-two_degree_x_series<T, K>::two_degree_x_series(T x) : series_base<T, K>(x, static_cast<T>(std::pow(2, x))) {}
+two_degree_x_series<T, K>::two_degree_x_series(T x) : series_base<T, K>(x, static_cast<T>(std::pow(2, x)))
+{
+	this->series_name = "2^x";
+	// Сходится при ∀x ∈ ℝ (экспоненциальная функция 2^x = e^(x·ln2))
+
+	if (!std::isfinite(x)) {
+		this->throw_domain_error("x is not finite");
+	}
+}
 
 template <std::floating_point T, std::unsigned_integral K>
 constexpr T two_degree_x_series<T, K>::operator()(K n) const
@@ -4519,9 +5081,13 @@ public:
 template <std::floating_point T, std::unsigned_integral K>
 sqrt_1plusx_min_1_min_x_div_2_series<T, K>::sqrt_1plusx_min_1_min_x_div_2_series(T x) : series_base<T, K>(x, std::sqrt(1 + x) - 1 - x / 2)
 {
-	this->series_name = "sqrt(1+x)-1-x/2";
-	if (std::abs(this->x) > 1)
-		this->throw_domain_error("|x| > 1");
+	this->series_name = "√(1+x)-1-x/2";
+	// Сходится при |x| ≤ 1 (биномиальный ряд, абсолютно при |x| < 1, условно при x = -1)
+	// Расходится при |x| > 1
+
+	if (std::abs(x) > 1 || !std::isfinite(x)) {
+		this->throw_domain_error("|x| must be ≤ 1");
+	}
 }
 
 template <std::floating_point T, std::unsigned_integral K>
@@ -4559,7 +5125,15 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-ln13_min_ln7_div_7_series<T, K>::ln13_min_ln7_div_7_series(T x) : series_base<T, K>(x, static_cast<T>(std::log(13 / 7) * x / 7)) {}
+ln13_min_ln7_div_7_series<T, K>::ln13_min_ln7_div_7_series(T x) : series_base<T, K>(x, static_cast<T>(std::log(13 / 7) * x / 7))
+{
+	this->series_name = "(ln(13 / 7))·x/7";
+	// Сходится при ∀x ∈ ℝ (линейная функция)
+
+	if (!std::isfinite(x)) {
+		this->throw_domain_error("x is not finite");
+	}
+}
 
 template <std::floating_point T, std::unsigned_integral K>
 constexpr T ln13_min_ln7_div_7_series<T, K>::operator()(K n) const
@@ -4568,6 +5142,7 @@ constexpr T ln13_min_ln7_div_7_series<T, K>::operator()(K n) const
 	const K b = n + 2;
 	return static_cast<T>(this->minus_one_raised_to_power_n(b) * std::pow(6, a) * this->x / (a * std::pow(7, b))); // (94.2) [Rows.pdf]
 }
+
 
 /**
 * @brief Taylor series of Bessel function J_b(x)
@@ -4605,7 +5180,16 @@ private:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-Ja_x_series<T, K>::Ja_x_series(T x, T a) : series_base<T, K>(x), a(a) {}
+Ja_x_series<T, K>::Ja_x_series(T x, T a) : series_base<T, K>(x), a(a)
+{
+	this->series_name = "Jₐ(x)";
+	// Сходится при ∀x ∈ ℝ (функция Бесселя первого рода)
+	// Сходится при ∀a ∈ ℝ
+
+	if (!std::isfinite(x) || !std::isfinite(a)) {
+		this->throw_domain_error("x and a must be finite");
+	}
+}
 
 template <std::floating_point T, std::unsigned_integral K>
 constexpr T Ja_x_series<T, K>::operator()(K n) const
@@ -4644,10 +5228,14 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-one_div_sqrt2_sin_xdivsqrt2_series<T, K>::one_div_sqrt2_sin_xdivsqrt2_series(T x) : series_base<T, K>(x, static_cast<T>((1 / std::sqrt(2))* std::sin(x / std::sqrt(2)))) {
-	this->series_name = "(1/sqrt(2))*sin(x/sqrt(2))";
-	if (this->x < -1)
-		this->throw_domain_error("x < -1");
+one_div_sqrt2_sin_xdivsqrt2_series<T, K>::one_div_sqrt2_sin_xdivsqrt2_series(T x) : series_base<T, K>(x, static_cast<T>((1 / std::sqrt(2)) * std::sin(x / std::sqrt(2))))
+{
+	this->series_name = "(1/√2)*sin(x/√2)";
+	// Сходится при ∀x ∈ ℝ (ряд для sin(z) сходится при ∀z ∈ ℝ, где z = x/√2)
+
+	if (!std::isfinite(x)) {
+		this->throw_domain_error("x is not finite");
+	}
 }
 
 template <std::floating_point T, std::unsigned_integral K>
@@ -4667,10 +5255,10 @@ constexpr T one_div_sqrt2_sin_xdivsqrt2_series<T, K>::operator()(K n) const
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
 template <std::floating_point T, std::unsigned_integral K>
-class ln_1plusx_div_1plusx2 : public series_base<T, K>
+class ln_1plusx_div_1plusx2_series : public series_base<T, K>
 {
 public:
-	ln_1plusx_div_1plusx2() = delete;
+	ln_1plusx_div_1plusx2_series() = delete;
 
 	/**
 	* @brief Parameterized constructor to initialize the series with function argument and sum
@@ -4678,7 +5266,7 @@ public:
 	* @param x The argument for function series
 	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	*/
-	ln_1plusx_div_1plusx2(T x);
+	ln_1plusx_div_1plusx2_series(T x);
 
 	/**
 	* @brief Computes the nth term of the ln(1 + x)/(1 + x^2) series
@@ -4691,17 +5279,19 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-ln_1plusx_div_1plusx2<T, K>::ln_1plusx_div_1plusx2(T x) : series_base<T, K>(x, std::log(1 + x) / (1 + x * x))
+ln_1plusx_div_1plusx2_series<T, K>::ln_1plusx_div_1plusx2_series(T x) : series_base<T, K>(x, std::log(1 + x) / (1 + x * x))
 {
-	this->series_name = "ln(1+x)/(1+x^2)";
-	if (std::abs(this->x) >= 1)
-	{
-		this->throw_domain_error("|x| >= 1");
+	this->series_name = "ln(1+x)/(1+x²)";
+	// Сходится при |x| < 1 (ряд для ln(1+x) сходится при |x| < 1, знаменатель 1+x² > 0 при ∀x ∈ ℝ)
+	// Расходится при |x| ≥ 1
+
+	if (std::abs(x) >= 1 || !std::isfinite(x)) {
+		this->throw_domain_error("|x| must be < 1");
 	}
 }
 
 template <std::floating_point T, std::unsigned_integral K>
-constexpr T ln_1plusx_div_1plusx2<T, K>::operator()(K n) const
+constexpr T ln_1plusx_div_1plusx2_series<T, K>::operator()(K n) const
 {
 	const K a = n + 1;
 	return static_cast<T>(this->minus_one_raised_to_power_n(n) * std::pow(this->x, a) / (a * std::pow(1 + (this->x * this->x), a))); // (97.1) [Rows.pdf]
@@ -4714,10 +5304,10 @@ constexpr T ln_1plusx_div_1plusx2<T, K>::operator()(K n) const
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
 template <std::floating_point T, std::unsigned_integral K>
-class cos_sqrt_x : public series_base<T, K>
+class cos_sqrt_x_series : public series_base<T, K>
 {
 public:
-	cos_sqrt_x() = delete;
+	cos_sqrt_x_series() = delete;
 
 	/**
 	* @brief Parameterized constructor to initialize the series with function argument and sum
@@ -4725,7 +5315,7 @@ public:
 	* @param x The argument for function series
 	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	*/
-	cos_sqrt_x(T x);
+	cos_sqrt_x_series(T x);
 
 	/**
 	* @brief Computes the nth term of the cos(sqrt(x)) series
@@ -4738,15 +5328,19 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-cos_sqrt_x<T, K>::cos_sqrt_x(T x) : series_base<T, K>(x, static_cast<T>(std::cos(std::sqrt(x))))
+cos_sqrt_x_series<T, K>::cos_sqrt_x_series(T x) : series_base<T, K>(x, static_cast<T>(std::cos(std::sqrt(x))))
 {
-	this->series_name = "cos(sqrt(x))";
-	if (this->x < 0)
-		this->throw_domain_error("x < 0");
+	this->series_name = "cos(√x)";
+	// Сходится при x ≥ 0 (ряд для cos(z) сходится при ∀z ∈ ℝ, где z = √x)
+	// Расходится при x < 0 (комплексная область)
+
+	if (x < 0 || !std::isfinite(x)) {
+		this->throw_domain_error("x must be ≥ 0");
+	}
 }
 
 template <std::floating_point T, std::unsigned_integral K>
-constexpr T cos_sqrt_x<T, K>::operator()(K n) const
+constexpr T cos_sqrt_x_series<T, K>::operator()(K n) const
 {
 	return static_cast<T>((1 - 2 * (n & 1)) * std::pow(this->x, n) / this->fact(2 * n)); // (1 - 2 * (n & 1)) = (-1)^{n} (98.2) [Rows.pdf]
 }
@@ -4758,10 +5352,10 @@ constexpr T cos_sqrt_x<T, K>::operator()(K n) const
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
 template <std::floating_point T, std::unsigned_integral K>
-class ln_1_plus_x3 : public series_base<T, K>
+class ln_1_plus_x3_series : public series_base<T, K>
 {
 public:
-	ln_1_plus_x3() = delete;
+	ln_1_plus_x3_series() = delete;
 
 	/**
 	* @brief Parameterized constructor to initialize the series with function argument and sum
@@ -4769,7 +5363,7 @@ public:
 	* @param x The argument for function series
 	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	*/
-	ln_1_plus_x3(T x);
+	ln_1_plus_x3_series(T x);
 
 	/**
 	* @brief Computes the nth term of the ln(1 + x^3) series
@@ -4782,17 +5376,19 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-ln_1_plus_x3<T, K>::ln_1_plus_x3(T x) : series_base<T, K>(x, static_cast<T>(std::log(1 + std::pow(x, 3))))
+ln_1_plus_x3_series<T, K>::ln_1_plus_x3_series(T x) : series_base<T, K>(x, static_cast<T>(std::log(1 + std::pow(x, 3))))
 {
-	this->series_name = "ln(1+x^3)";
-	if (std::abs(this->x) >= 1)
-	{
-		this->throw_domain_error("|x| >= 1");
+	this->series_name = "ln(1+x³)";
+	// Сходится при |x| ≤ 1 (ряд для ln(1+z) сходится при |z| ≤ 1, где z = x³)
+	// Расходится при |x| > 1
+
+	if (std::abs(x) >= 1 || !std::isfinite(x)) {
+		this->throw_domain_error("|x| must be < 1");
 	}
 }
 
 template <std::floating_point T, std::unsigned_integral K>
-constexpr T ln_1_plus_x3<T, K>::operator()(K n) const
+constexpr T ln_1_plus_x3_series<T, K>::operator()(K n) const
 {
 	const K a = n + 1;
 	return static_cast<T>(this->minus_one_raised_to_power_n(a) * std::pow(this->x, 3 * a) / a); // (99.3) [Rows.pdf]
@@ -4805,10 +5401,10 @@ constexpr T ln_1_plus_x3<T, K>::operator()(K n) const
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
 template <std::floating_point T, std::unsigned_integral K>
-class x_div_1minx : public series_base<T, K>
+class x_div_1minx_series : public series_base<T, K>
 {
 public:
-	x_div_1minx() = delete;
+	x_div_1minx_series() = delete;
 
 	/**
 	* @brief Parameterized constructor to initialize the series with function argument and sum
@@ -4816,7 +5412,7 @@ public:
 	* @param x The argument for function series
 	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	*/
-	x_div_1minx(T x);
+	x_div_1minx_series(T x);
 
 	/**
 	* @brief Computes the nth term of the x / sqrt(1 - x) series
@@ -4829,17 +5425,19 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-x_div_1minx<T, K>::x_div_1minx(T x) : series_base<T, K>(x, static_cast<T>(x / std::sqrt(1 - x)))
+x_div_1minx_series<T, K>::x_div_1minx_series(T x) : series_base<T, K>(x, static_cast<T>(x / std::sqrt(1 - x)))
 {
-	this->series_name = "x/sqrt(1-x)";
-	if (std::abs(this->x) >= 1)
-	{
-		this->throw_domain_error("|x| >= 1");
+	this->series_name = "x/√(1-x)";
+	// Сходится при |x| < 1 (биномиальный ряд в знаменателе)
+	// Расходится при |x| ≥ 1
+
+	if (std::abs(x) >= 1 || !std::isfinite(x)) {
+		this->throw_domain_error("|x| must be < 1");
 	}
 }
 
 template <std::floating_point T, std::unsigned_integral K>
-constexpr T x_div_1minx<T, K>::operator()(K n) const
+constexpr T x_div_1minx_series<T, K>::operator()(K n) const
 {
 	return static_cast<T>(this->fact(2 * n) * std::pow(this->x, n + 1) / (this->fact(n) * std::pow(4, n))); // (100.1) [Rows.pdf]
 }
@@ -4851,10 +5449,10 @@ constexpr T x_div_1minx<T, K>::operator()(K n) const
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
 template <std::floating_point T, std::unsigned_integral K>
-class x_div_1minx2 : public series_base<T, K>
+class x_div_1minx2_series : public series_base<T, K>
 {
 public:
-	x_div_1minx2() = delete;
+	x_div_1minx2_series() = delete;
 
 	/**
 	* @brief Parameterized constructor to initialize the series with function argument and sum
@@ -4862,7 +5460,7 @@ public:
 	* @param x The argument for function series
 	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	*/
-	x_div_1minx2(T x);
+	x_div_1minx2_series(T x);
 
 	/**
 	* @brief Computes the nth term of the x / sqrt(1 - x) series
@@ -4875,17 +5473,19 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-x_div_1minx2<T, K>::x_div_1minx2(T x) : series_base<T, K>(x, static_cast<T>(x / std::sqrt(1 - x * x)))
+x_div_1minx2_series<T, K>::x_div_1minx2_series(T x) : series_base<T, K>(x, static_cast<T>(x / std::sqrt(1 - x * x)))
 {
-	this->series_name = "x/sqrt(1-x^2)";
-	if (std::abs(this->x) >= 1)
-	{
-		this->throw_domain_error("|x| >= 1");
+	this->series_name = "x/√(1-x²)";
+	// Сходится при |x| < 1 (биномиальный ряд в знаменателе)
+	// Расходится при |x| ≥ 1
+
+	if (std::abs(x) >= 1 || !std::isfinite(x)) {
+		this->throw_domain_error("|x| must be < 1");
 	}
 }
 
 template <std::floating_point T, std::unsigned_integral K>
-constexpr T x_div_1minx2<T, K>::operator()(K n) const
+constexpr T x_div_1minx2_series<T, K>::operator()(K n) const
 {
 	return static_cast<T>(std::pow(this->x, std::fma(2, n, 1))); // (101.1) [Rows.pdf]
 }
@@ -4927,7 +5527,16 @@ private:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-gamma_series<T, K>::gamma_series(T t, T x) : series_base<T, K>(x), t(t), x(x) {}
+gamma_series<T, K>::gamma_series(T t, T x) : series_base<T, K>(x), t(t), x(x)
+{
+	this->series_name = "Γ(t,x)";
+	// Сходится при ∀x ∈ ℝ, t > 0 (неполная гамма-функция)
+	// Расходится при t ≤ 0
+
+	if (t <= 0 || !std::isfinite(x) || !std::isfinite(t)) {
+		this->throw_domain_error("t must be > 0 and parameters must be finite");
+	}
+}
 
 template <std::floating_point T, std::unsigned_integral K>
 T gamma_series<T, K>::a_k(K n) const
@@ -4941,6 +5550,7 @@ constexpr T gamma_series<T, K>::operator()(K n) const
 	T a_k_n = a_k(n);
 	return static_cast<T>(a_k_n * std::pow(this->t, n) * std::tgamma(a_k_n)); // (102.1) [Rows.pdf]
 }
+
 
 /**
 * @brief function for testing new serieses or converting basic to
@@ -4970,7 +5580,16 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-testing_series<T, K>::testing_series(T x) : series_base<T, K>(x, 0) {}
+testing_series<T, K>::testing_series(T x) : series_base<T, K>(x, 0) 
+{
+	this->series_name = "testing_series";
+	// Область сходимости зависит от конкретной тестовой функции
+	// Требуется уточнение для конкретного тестового случая
+
+	if (!std::isfinite(x)) {
+		this->throw_domain_error("x is not finite");
+	}
+}
 
 template <std::floating_point T, std::unsigned_integral K>
 constexpr T testing_series<T, K>::operator()(K n) const
@@ -5016,7 +5635,16 @@ private:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-reccurent_testing_series<T, K>::reccurent_testing_series(T x) : series_base<T, K>(x, 0), reccurent_series_base<T, K>(x) {}
+reccurent_testing_series<T, K>::reccurent_testing_series(T x) : series_base<T, K>(x, 0), reccurent_series_base<T, K>(x)
+{
+	this->series_name = "reccurent_testing_series";
+	// Область сходимости зависит от конкретной тестовой рекуррентной функции
+	// Требуется уточнение для конкретного тестового случая
+
+	if (!std::isfinite(x)) {
+		this->throw_domain_error("x is not finite");
+	}
+}
 
 template <std::floating_point T, std::unsigned_integral K>
 T reccurent_testing_series<T, K>::access_row(K n)
