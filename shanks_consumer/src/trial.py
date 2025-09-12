@@ -17,22 +17,34 @@ def cartesian_dicts(d: dict[str, Iterable[Any]]) -> Generator[dict[str, Any], No
 @dataclass
 class ComputedTrialResult:
     n: int
+    s_n: float
     value: float
 
 
 @dataclass
 class ErrorTrialResult:
     description: str
-    data: Mapping[str, str]
+    data: Mapping[str, Any]
+
+
+@dataclass
+class SeriesTrialResult:
+    name: str
+    sum: Any
+    arguments: Mapping[str, Any]
+
+
+@dataclass
+class AccelTrialResult:
+    name: str
+    m_value: int
+    additional_args: Mapping[str, str]
 
 
 @dataclass
 class TrialResult:
-    series_name: str
-    series_arguments: Mapping[str, Any]
-    accel_name: str
-    accel_m_value: int
-    accel_additional_args: Mapping[str, str]
+    series: SeriesTrialResult
+    accel: AccelTrialResult
     computed: list[ComputedTrialResult]
     error: ErrorTrialResult | None
 
@@ -52,14 +64,17 @@ class Trial:
             self.accel.m_values,
             cartesian_dicts(self.accel.additional_args),
         ):
-            computed, error, error_n_value = [], None, None
+            computed, series_sum = [], None
+            error, error_n_value = None, None
             try:
                 ready_series = self.series.executable(*[argument[key] for key in argument])  # type: ignore
+                series_sum = ready_series.get_sum()
                 for n_value in self.accel.n_values:
                     error_n_value = n_value
                     computed.append(
                         ComputedTrialResult(
                             n_value,
+                            ready_series.S_n(n_value),
                             self.accel.executable(
                                 ready_series,
                                 *[
@@ -70,18 +85,23 @@ class Trial:
                         )
                     )
             except Exception as e:  # TODO more debug info
-                error = ErrorTrialResult(str(e), {"n": str(error_n_value)})
+                error = ErrorTrialResult(str(e), {"n": error_n_value})
 
             results.append(
                 TrialResult(
-                    series_name=self.series.series_name,
-                    series_arguments=argument,
-                    accel_name=self.accel.accel_name,
-                    accel_m_value=m_value,
-                    accel_additional_args={
-                        key: str(value)
-                        for key, value in additional_args.items()
-                    },
+                    SeriesTrialResult(
+                        name=self.series.series_name,
+                        sum=series_sum,
+                        arguments=argument,
+                    ),
+                    AccelTrialResult(
+                        name=self.accel.accel_name,
+                        m_value=m_value,
+                        additional_args={
+                            key: str(value)
+                            for key, value in additional_args.items()
+                        },
+                    ),
                     computed=computed,
                     error=error,
                 )
