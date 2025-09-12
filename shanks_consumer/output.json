@@ -52,8 +52,8 @@
             "arguments": {
                 "x": 5
             },
-            "name": "CosSeries",
-            "sum": 0.28366218546322625
+            "lim": 0.28366218546322625,
+            "name": "CosSeries"
         }
     }
 ]
