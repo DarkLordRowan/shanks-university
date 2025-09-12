@@ -63,11 +63,11 @@ class Trial:
             self.accel.m_values,
             cartesian_dicts(self.accel.additional_args),
         ):
-            computed, series_sum = [], None
+            computed, series_lim = [], None
             error, error_n_value = None, None
             try:
                 ready_series = self.series.executable(*[argument[key] for key in argument])  # type: ignore
-                series_sum = ready_series.get_sum()
+                series_lim = ready_series.get_sum()
                 for n_value in self.accel.n_values:
                     error_n_value = n_value
                     computed.append(
@@ -90,7 +90,7 @@ class Trial:
                 TrialResult(
                     SeriesTrialResult(
                         name=self.series.series_name,
-                        sum=series_sum,
+                        lim=series_lim,
                         arguments=argument,
                     ),
                     AccelTrialResult(
