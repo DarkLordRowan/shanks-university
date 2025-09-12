@@ -12,7 +12,7 @@ import json
 import pyshanks
 import csv
 from abc import ABC, abstractmethod
-from typing import Iterable, Any
+from typing import Iterable, Any, Mapping
 from collections.abc import Callable
 
 def autowrap(x: Any) -> Iterable[Any]:
@@ -29,7 +29,7 @@ class BaseSeriesParam(ABC):
 
     @property
     @abstractmethod
-    def arguments(self) -> Iterable[float]: ...
+    def arguments(self) -> Mapping[str, Iterable[float]]: ...
 
     @property
     @abstractmethod
@@ -44,16 +44,16 @@ class SeriesParamJSON(BaseSeriesParam):
 
     Attributes:
         name: Name of the series function in pyshanks module.
-        x: Optional iterable of integer arguments for the series function.
+        args: Optional iterable of tuple of floats arguments for the series function.
     """
 
     name: str
-    x: Iterable[float]
+    args: Mapping[str, Iterable[float]]
 
     @property
     def arguments(self):
         """Implementation of abstract method - returns the x arguments."""
-        return self.x
+        return self.args
 
     @property
     def series_name(self):
@@ -76,12 +76,29 @@ class SeriesParamModule(BaseSeriesParam):
     """
 
     caller: type[pyshanks.SeriesBase]
-    x: Iterable[float]
+    args: Mapping[str, Iterable[float]]
+
+    def __init__(
+        self,
+        caller: type[pyshanks.SeriesBase],
+        **kwargs,
+    ):
+        """Initialize with direct caller reference and optional kwargs.
+
+        Args:
+            caller: SeriesAcceleration class reference.
+            n: Iterable of integer n values.
+            m: Iterable of integer m values.
+            **kwargs: Additional initialization arguments.
+        """
+        self.caller = caller
+        self.args = kwargs
+        super().__init__()
 
     @property
     def arguments(self):
         """Implementation of abstract method - returns the x arguments."""
-        return self.x
+        return self.args
 
     @property
     def series_name(self):
@@ -111,7 +128,7 @@ class SeriesParamCSV(BaseSeriesParam):
     @property
     def arguments(self):
         """Implementation of abstract method - returns dummy arguments."""
-        return [0]
+        return {}
 
     @property
     def series_name(self):
@@ -187,7 +204,7 @@ class AccelParamJSON(StandardAccelParam):
     name: str
     n: Iterable[int]
     m: Iterable[int]
-    init_args: dict[str, Iterable[Any]]
+    init_args: Mapping[str, Iterable[Any]]
 
     def __post_init__(self):
         """Post-initialization processing for complex argument types."""
@@ -285,13 +302,18 @@ def get_series_params_from_json(
 
     series_list = []
     for series_data in data["series"]:
-        x_value = autowrap(series_data.get("x", None))
+        args = series_data.get("args", {})
+        args = (
+            {"x": map(float, autowrap(args))}
+            if not isinstance(args, dict)
+            else {
+                str(key): map(float, autowrap(value))
+                for key, value in args.items()
+            }
+        )
 
         series_list.append(
-            SeriesParamJSON(
-                series_data["name"],
-                x=x_value,
-            )
+            SeriesParamJSON(name=series_data.get("name"), args=args)
         )
 
     return series_list
@@ -385,10 +407,11 @@ def demo_all_synthetic_series(
             )
     return series_params
 
+
 def all_accel(
     n: int | Iterable[int],
     m: int | Iterable[int],
-    extra_args: dict[str, Any] = {},
+    extra_args: dict[str, Any] | None = None,
 ) -> list[BaseAccelParam]:
     extra_args = extra_args or {}
 
@@ -396,7 +419,6 @@ def all_accel(
 
     for _, cls in inspect.getmembers(pyshanks, inspect.isclass):
         if _is_concrete_subclass(cls, pyshanks.SeriesAcceleration):
-            # Pull algorithm‑specific kwargs if they exist
             kwargs: dict[str, Any] = dict(extra_args.get(cls.__name__, {}))
             accel_params.append(
                 AccelParamModule(
