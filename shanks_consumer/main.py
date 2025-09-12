@@ -18,27 +18,12 @@ if __name__ == "__main__":
     st = ComplexTrial(
         [
             SeriesParamModule(
-                pyshanks.BinSeries,
-                a=[1, 2, 3, 4, 5],
-                b=[1, 1, 1, 1, 1],
-            ),
-            SeriesParamModule(
                 pyshanks.CosSeries,
                 x=[5],
             ),
-            *get_series_params_from_csv(pathlib.Path("example_series.csv")),
-            *get_series_params_from_json(pathlib.Path("example.json")),
         ],
         [
-            AccelParamModule(
-                pyshanks.LevinAlgorithm,
-                [10, 15, 20],
-                [4, 5],
-                variant=[pyshanks.RemainderType(1)],
-                useRecFormulas=[True, False],
-            ),
-            AccelParamModule(pyshanks.ShanksAlgorithm, [10, 15, 20], [4, 5]),
-            *get_accel_params_from_json(pathlib.Path("example.json")),
+            AccelParamModule(pyshanks.ShanksAlgorithm, range(10, 20), [4]),
         ],
     )
     print(
