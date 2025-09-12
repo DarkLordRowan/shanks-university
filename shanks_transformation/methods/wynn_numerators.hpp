@@ -84,9 +84,9 @@ class rho_transform : public numerator_base<T, K> {
 public:
 
 	/**
-	 * @brief Compute the rho-variant numerator.
+	 * @brief Compute the classic rho-variant numerator.
 	 *
-	 * Implements: numerator = term(n + order) - term(n)
+	 * Implements: numerator = term(n + order + 1) - term(n), see p. 34 6.2-2b [https://arxiv.org/pdf/math/0306302]
 	 * This represents the forward difference of order 'order' at index n.
 	 *
 	 * @param n Starting index in the series.
@@ -102,7 +102,7 @@ public:
 	T operator()(const K n, const K order, const series_base<T, K>* series, const T gamma = static_cast<T>(1), const T rho = static_cast<T>(0)) const {
 
 		// For theory, see: Wynn (1956), Eq. (2.6b): ΔS_n = S_{n+1} - S_n
-		return (series->operator()(n + order) - series->operator()(n));
+		return (series->operator()(n + order) - series->operator()(n)); //p.35 6.2-4b [https://arxiv.org/pdf/math/0306302]
 	}
 };
 
@@ -125,7 +125,7 @@ public:
 	/**
 	 * @brief Compute the generalized-variant numerator.
 	 *
-	 * Implements: numerator = order - gamma - 1
+	 * Implements: numerator = order - gamma - 1 
 	 * This provides a order-dependent constant numerator.
 	 *
 	 * @param n Unused parameter (maintained for interface consistency).
@@ -138,7 +138,8 @@ public:
 	 * @return The computed constant: order - gamma - 1.
 	 */
 	T operator()(const K n, const K order, const series_base<T, K>* series, const T gamma = static_cast<T>(1), const T rho = static_cast<T>(0)) const {
-		return static_cast<T>(order) - gamma - static_cast<T>(1);
+	
+		return static_cast<T>(order - static_cast<K>(1)) - gamma; //p.377 Algorithm 20.1.3 [http://servidor.demec.ufpr.br/CFD/bibliografia/MER/Sidi_2003.pdf]
 	}
 };
 
@@ -188,8 +189,10 @@ public:
 		// order & 1 = 1
 
 
+		//p.377 Algorithm 20.1.6 [http://servidor.demec.ufpr.br/CFD/bibliografia/MER/Sidi_2003.pdf]
+
 		// For theory, see: Wynn (1962), Section 2: Parameterized transformations
-		T base = -gamma + static_cast<T>(order / static_cast<K>(2)) / rho;
+		T base = -gamma + static_cast<T>(order) / static_cast<T>(2) / rho;
 
 		// Add 1 for odd orders (order & 1 checks parity)
 		return base + static_cast<T>(order & static_cast<K>(1));
