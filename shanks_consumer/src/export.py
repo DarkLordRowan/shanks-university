@@ -1,10 +1,3 @@
-from src.trial import (
-    TrialResult,
-    AccelTrialResult,
-    ErrorTrialResult,
-    SeriesTrialResult,
-    ComputedTrialResult,
-)
 from typing import Iterable
 import pathlib
 import json
@@ -12,13 +5,38 @@ import csv
 from dataclasses import asdict, fields
 
 
-class ExportTrialResults:
-    def __init__(
-        self,
-        results: Iterable[TrialResult],
-        location: pathlib.Path | None = None,
-    ):
-        self.results = results
+from src.trial import (
+    TrialResult,
+    AccelTrialResult,
+    ErrorTrialResult,
+    SeriesTrialResult,
+    ComputedTrialResult,
+)
+
+from src.events import TrialEvent
+
+
+def dataclass_fields_with_prefix(dataclass_type, prefix: str) -> list[str]:
+    return list(map(lambda s: prefix + s.name, fields(dataclass_type)))
+
+
+def dataclasses_to_json(dataclasses, location):
+    with open(
+        location,
+        mode="w",
+        encoding="utf-8",
+    ) as f:
+        f.write(
+            json.dumps(
+                [asdict(dataclass) for dataclass in dataclasses],
+                indent=4,
+                sort_keys=True,
+            )
+        )
+
+
+class BaseExport:
+    def __init__(self, location: pathlib.Path | None = None):
         self.location = location
 
     def _verify_location(
@@ -29,27 +47,22 @@ class ExportTrialResults:
             raise ValueError("Provide location to export")
         return location
 
+
+class ExportTrialResults(BaseExport):
+    def __init__(
+        self,
+        results: Iterable[TrialResult],
+        location: pathlib.Path | None = None,
+    ):
+        self.results = results
+        super().__init__(location)
+
     def to_json(self, override_location: pathlib.Path | None = None):
-        with open(
-            self._verify_location(override_location),
-            mode="w",
-            encoding="utf-8",
-        ) as f:
-            f.write(
-                json.dumps(
-                    [asdict(result) for result in self.results],
-                    indent=4,
-                    sort_keys=True,
-                )
-            )
+        dataclasses_to_json(
+            self.results, self._verify_location(override_location)
+        )
 
     def to_csv(self, override_location: pathlib.Path):
-
-        def dataclass_fields_with_prefix(
-            dataclass_type, prefix: str
-        ) -> list[str]:
-            return list(map(lambda s: prefix + s.name, fields(dataclass_type)))
-
         with open(
             self._verify_location(override_location),
             mode="w",
@@ -81,3 +94,45 @@ class ExportTrialResults:
                         result_context
                         + list(map(str, asdict(compute).values()))
                     )
+
+
+class ExportTrialEvents(BaseExport):
+    def __init__(
+        self,
+        events: Iterable[TrialEvent],
+        location: pathlib.Path | None = None,
+    ):
+        self.events = events
+        super().__init__(location)
+
+    def to_json(self, override_location: pathlib.Path | None = None):
+        dataclasses_to_json(
+            self.events, self._verify_location(override_location)
+        )
+
+    def to_csv(self, override_location: pathlib.Path):
+        with open(
+            self._verify_location(override_location),
+            mode="w",
+            encoding="utf-8",
+        ) as f:
+            csv_writer = csv.writer(f)
+            csv_writer.writerow(
+                ["event_name", "event_data"]
+                + dataclass_fields_with_prefix(SeriesTrialResult, "series_")
+                + dataclass_fields_with_prefix(AccelTrialResult, "accel_")
+                + dataclass_fields_with_prefix(ErrorTrialResult, "error_")
+            )
+            for event in self.events:
+                csv_writer.writerow(
+                    [event.event, event.data]
+                    + list(map(str, asdict(event.result.series).values()))
+                    + list(map(str, asdict(event.result.accel).values()))
+                    + (
+                        list(map(str, asdict(event.result.error).values()))
+                        if event.result.error
+                        else list(
+                            map(str, asdict(ErrorTrialResult("", {})).values())
+                        )
+                    )
+                )

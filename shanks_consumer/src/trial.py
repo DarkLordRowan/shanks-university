@@ -118,7 +118,6 @@ class Trial:
                 )
             )
         return results
-
 @dataclass
 class ComplexTrial:
     series_params: list[BaseSeriesParam]

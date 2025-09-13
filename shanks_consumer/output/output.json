@@ -2,89 +2,237 @@
     {
         "accel": {
             "additional_args": {},
-            "m_value": 4,
-            "name": "ShanksAlgorithm"
+            "m_value": 1,
+            "name": "LevinAlgorithm"
         },
         "computed": [
             {
-                "accel_value": 0.0,
-                "accel_value_deviation": 0.8623188722876839,
+                "accel_value": 6482.7004927754115,
+                "accel_value_deviation": 6482.292410713598,
+                "n": 1,
+                "partial_sum": -199.0,
+                "partial_sum_deviation": 199.4080820618134,
+                "series_value": -200.0
+            },
+            {
+                "accel_value": -83364.45954747066,
+                "accel_value_deviation": 83364.86762953247,
+                "n": 2,
+                "partial_sum": 6467.666666666667,
+                "partial_sum_deviation": 6467.258584604853,
+                "series_value": 6666.666666666667
+            },
+            {
+                "accel_value": 573149.9031475608,
+                "accel_value_deviation": 573149.495065499,
+                "n": 3,
+                "partial_sum": -82421.22222222222,
+                "partial_sum_deviation": 82421.63030428403,
+                "series_value": -88888.88888888889
+            },
+            {
+                "accel_value": -2495698.7925796383,
+                "accel_value_deviation": 2495699.2006617,
+                "n": 4,
+                "partial_sum": 552499.4126984127,
+                "partial_sum_deviation": 552499.0046163509,
+                "series_value": 634920.6349206349
+            }
+        ],
+        "error": null,
+        "series": {
+            "arguments": {
+                "x": 20
+            },
+            "lim": 0.40808206181339196,
+            "name": "CosSeries"
+        }
+    },
+    {
+        "accel": {
+            "additional_args": {},
+            "m_value": 2,
+            "name": "LevinAlgorithm"
+        },
+        "computed": [
+            {
+                "accel_value": -86826.29191032815,
+                "accel_value_deviation": 86826.69999238996,
+                "n": 1,
+                "partial_sum": -199.0,
+                "partial_sum_deviation": 199.4080820618134,
+                "series_value": -200.0
+            },
+            {
+                "accel_value": 637761.859121127,
+                "accel_value_deviation": 637761.4510390653,
+                "n": 2,
+                "partial_sum": 6467.666666666667,
+                "partial_sum_deviation": 6467.258584604853,
+                "series_value": 6666.666666666667
+            },
+            {
+                "accel_value": -3198144.3301736363,
+                "accel_value_deviation": 3198144.7382556982,
+                "n": 3,
+                "partial_sum": -82421.22222222222,
+                "partial_sum_deviation": 82421.63030428403,
+                "series_value": -88888.88888888889
+            },
+            {
+                "accel_value": 13453065.25232079,
+                "accel_value_deviation": 13453064.844238728,
+                "n": 4,
+                "partial_sum": 552499.4126984127,
+                "partial_sum_deviation": 552499.0046163509,
+                "series_value": 634920.6349206349
+            }
+        ],
+        "error": null,
+        "series": {
+            "arguments": {
+                "x": 20
+            },
+            "lim": 0.40808206181339196,
+            "name": "CosSeries"
+        }
+    },
+    {
+        "accel": {
+            "additional_args": {},
+            "m_value": 3,
+            "name": "LevinAlgorithm"
+        },
+        "computed": [
+            {
+                "accel_value": 803960.2493691136,
+                "accel_value_deviation": 803959.8412870518,
+                "n": 1,
+                "partial_sum": -199.0,
+                "partial_sum_deviation": 199.4080820618134,
+                "series_value": -200.0
+            },
+            {
+                "accel_value": -5643164.131598317,
+                "accel_value_deviation": 5643164.5396803785,
+                "n": 2,
+                "partial_sum": 6467.666666666667,
+                "partial_sum_deviation": 6467.258584604853,
+                "series_value": 6666.666666666667
+            },
+            {
+                "accel_value": 92754287.00942734,
+                "accel_value_deviation": 92754286.60134527,
+                "n": 3,
+                "partial_sum": -82421.22222222222,
+                "partial_sum_deviation": 82421.63030428403,
+                "series_value": -88888.88888888889
+            },
+            {
+                "accel_value": 69842651.8520099,
+                "accel_value_deviation": 69842651.44392784,
+                "n": 4,
+                "partial_sum": 552499.4126984127,
+                "partial_sum_deviation": 552499.0046163509,
+                "series_value": 634920.6349206349
+            }
+        ],
+        "error": null,
+        "series": {
+            "arguments": {
+                "x": 20
+            },
+            "lim": 0.40808206181339196,
+            "name": "CosSeries"
+        }
+    },
+    {
+        "accel": {
+            "additional_args": {},
+            "m_value": 4,
+            "name": "LevinAlgorithm"
+        },
+        "computed": [
+            {
+                "accel_value": -48636694.53320268,
+                "accel_value_deviation": 48636694.94128474,
+                "n": 1,
+                "partial_sum": -199.0,
+                "partial_sum_deviation": 199.4080820618134,
+                "series_value": -200.0
+            },
+            {
+                "accel_value": -26181064.108508456,
+                "accel_value_deviation": 26181064.516590517,
+                "n": 2,
+                "partial_sum": 6467.666666666667,
+                "partial_sum_deviation": 6467.258584604853,
+                "series_value": 6666.666666666667
+            },
+            {
+                "accel_value": 45894080.86494418,
+                "accel_value_deviation": 45894080.45686212,
+                "n": 3,
+                "partial_sum": -82421.22222222222,
+                "partial_sum_deviation": 82421.63030428403,
+                "series_value": -88888.88888888889
+            },
+            {
+                "accel_value": -166365023.80483192,
+                "accel_value_deviation": 166365024.212914,
+                "n": 4,
+                "partial_sum": 552499.4126984127,
+                "partial_sum_deviation": 552499.0046163509,
+                "series_value": 634920.6349206349
+            }
+        ],
+        "error": null,
+        "series": {
+            "arguments": {
+                "x": 20
+            },
+            "lim": 0.40808206181339196,
+            "name": "CosSeries"
+        }
+    },
+    {
+        "accel": {
+            "additional_args": {},
+            "m_value": 1,
+            "name": "LevinAlgorithm"
+        },
+        "computed": [
+            {
+                "accel_value": 4161682.6667206674,
+                "accel_value_deviation": 4161681.804401795,
                 "n": 1,
                 "partial_sum": -4999.0,
                 "partial_sum_deviation": 4999.862318872288,
                 "series_value": -5000.0
             },
             {
-                "accel_value": 0.0,
-                "accel_value_deviation": 0.8623188722876839,
+                "accel_value": -1384750554.9475617,
+                "accel_value_deviation": 1384750555.8098805,
                 "n": 2,
                 "partial_sum": 4161667.666666667,
                 "partial_sum_deviation": 4161666.8043477945,
                 "series_value": 4166666.666666667
             },
             {
-                "accel_value": 0.0,
-                "accel_value_deviation": 0.8623188722876839,
+                "accel_value": 246643646424.68256,
+                "accel_value_deviation": 246643646423.82025,
                 "n": 3,
                 "partial_sum": -1384727221.222222,
                 "partial_sum_deviation": 1384727222.0845408,
                 "series_value": -1388888888.8888888
             },
             {
-                "accel_value": 14.689338292757585,
-                "accel_value_deviation": 13.8270194204699,
+                "accel_value": -27313962276689.832,
+                "accel_value_deviation": 27313962276690.695,
                 "n": 4,
                 "partial_sum": 246631145794.6508,
                 "partial_sum_deviation": 246631145793.78848,
                 "series_value": 248015873015.87302
-            },
-            {
-                "accel_value": -4461.348541753418,
-                "accel_value_deviation": 4462.210860625706,
-                "n": 5,
-                "partial_sum": -27310688078191.242,
-                "partial_sum_deviation": 27310688078192.105,
-                "series_value": -27557319223985.89
-            },
-            {
-                "accel_value": 744138.6324934383,
-                "accel_value_deviation": 744137.7701745661,
-                "n": 6,
-                "partial_sum": 2060365010708618.2,
-                "partial_sum_deviation": 2060365010708617.5,
-                "series_value": 2087675698786809.8
-            },
-            {
-                "accel_value": -77884161.55101505,
-                "accel_value_deviation": 77884162.41333392,
-                "n": 7,
-                "partial_sum": -1.1264709096658862e+17,
-                "partial_sum_deviation": 1.1264709096658862e+17,
-                "series_value": -1.1470745597729723e+17
-            },
-            {
-                "accel_value": 5566581951.978717,
-                "accel_value_deviation": 5566581951.116398,
-                "n": 8,
-                "partial_sum": 4.666830241420795e+18,
-                "partial_sum_deviation": 4.666830241420795e+18,
-                "series_value": 4.779477332387384e+18
-            },
-            {
-                "accel_value": -288027366269.52814,
-                "accel_value_deviation": 288027366270.39044,
-                "n": 9,
-                "partial_sum": -1.5152523944444143e+20,
-                "partial_sum_deviation": 1.5152523944444143e+20,
-                "series_value": -1.5619206968586224e+20
-            },
-            {
-                "accel_value": 11259992314305.06,
-                "accel_value_deviation": 11259992314304.197,
-                "n": 10,
-                "partial_sum": 3.9587923838677224e+21,
-                "partial_sum_deviation": 3.9587923838677224e+21,
-                "series_value": 4.110317623312164e+21
             }
         ],
         "error": null,
@@ -99,89 +247,41 @@
     {
         "accel": {
             "additional_args": {},
-            "m_value": 4,
-            "name": "ShanksTransformAlternatingAlgorithm"
+            "m_value": 2,
+            "name": "LevinAlgorithm"
         },
         "computed": [
             {
-                "accel_value": 0.0,
-                "accel_value_deviation": 0.8623188722876839,
+                "accel_value": -1384832229.035181,
+                "accel_value_deviation": 1384832229.8974998,
                 "n": 1,
                 "partial_sum": -4999.0,
                 "partial_sum_deviation": 4999.862318872288,
                 "series_value": -5000.0
             },
             {
-                "accel_value": 0.0,
-                "accel_value_deviation": 0.8623188722876839,
+                "accel_value": 246678297318.9621,
+                "accel_value_deviation": 246678297318.0998,
                 "n": 2,
                 "partial_sum": 4161667.666666667,
                 "partial_sum_deviation": 4161666.8043477945,
                 "series_value": 4166666.666666667
             },
             {
-                "accel_value": 0.0,
-                "accel_value_deviation": 0.8623188722876839,
+                "accel_value": -27321726227952.145,
+                "accel_value_deviation": 27321726227953.008,
                 "n": 3,
                 "partial_sum": -1384727221.222222,
                 "partial_sum_deviation": 1384727222.0845408,
                 "series_value": -1388888888.8888888
             },
             {
-                "accel_value": 246631139267.41806,
-                "accel_value_deviation": 246631139266.55576,
+                "accel_value": 2061929357237043.2,
+                "accel_value_deviation": 2061929357237042.5,
                 "n": 4,
                 "partial_sum": 246631145794.6508,
                 "partial_sum_deviation": 246631145793.78848,
                 "series_value": 248015873015.87302
-            },
-            {
-                "accel_value": -27310686622116.36,
-                "accel_value_deviation": 27310686622117.223,
-                "n": 5,
-                "partial_sum": -27310688078191.242,
-                "partial_sum_deviation": 27310688078192.105,
-                "series_value": -27557319223985.89
-            },
-            {
-                "accel_value": 2060364818870073.5,
-                "accel_value_deviation": 2060364818870072.8,
-                "n": 6,
-                "partial_sum": 2060365010708618.2,
-                "partial_sum_deviation": 2060365010708617.5,
-                "series_value": 2087675698786809.8
-            },
-            {
-                "accel_value": -1.1264707435947442e+17,
-                "accel_value_deviation": 1.1264707435947442e+17,
-                "n": 7,
-                "partial_sum": -1.1264709096658862e+17,
-                "partial_sum_deviation": 1.1264709096658862e+17,
-                "series_value": -1.1470745597729723e+17
-            },
-            {
-                "accel_value": 4.666829227714359e+18,
-                "accel_value_deviation": 4.666829227714359e+18,
-                "n": 8,
-                "partial_sum": 4.666830241420795e+18,
-                "partial_sum_deviation": 4.666830241420795e+18,
-                "series_value": 4.779477332387384e+18
-            },
-            {
-                "accel_value": -1.5152519357046486e+20,
-                "accel_value_deviation": 1.5152519357046486e+20,
-                "n": 9,
-                "partial_sum": -1.5152523944444143e+20,
-                "partial_sum_deviation": 1.5152523944444143e+20,
-                "series_value": -1.5619206968586224e+20
-            },
-            {
-                "accel_value": 3.958790786068078e+21,
-                "accel_value_deviation": 3.958790786068078e+21,
-                "n": 10,
-                "partial_sum": 3.9587923838677224e+21,
-                "partial_sum_deviation": 3.9587923838677224e+21,
-                "series_value": 4.110317623312164e+21
             }
         ],
         "error": null,
@@ -196,336 +296,41 @@
     {
         "accel": {
             "additional_args": {},
-            "m_value": 4,
-            "name": "BrezinskiThetaAlgorithm"
+            "m_value": 3,
+            "name": "LevinAlgorithm"
         },
         "computed": [
             {
-                "accel_value": -902.0077794664539,
-                "accel_value_deviation": 902.8700983387416,
+                "accel_value": 246745595359.17572,
+                "accel_value_deviation": 246745595358.31342,
                 "n": 1,
                 "partial_sum": -4999.0,
                 "partial_sum_deviation": 4999.862318872288,
                 "series_value": -5000.0
             },
             {
-                "accel_value": 157038.588098526,
-                "accel_value_deviation": 157037.7257796537,
+                "accel_value": -27335786186726.61,
+                "accel_value_deviation": 27335786186727.473,
                 "n": 2,
                 "partial_sum": 4161667.666666667,
                 "partial_sum_deviation": 4161666.8043477945,
                 "series_value": 4166666.666666667
             },
             {
-                "accel_value": -16806709.169338226,
-                "accel_value_deviation": 16806710.0316571,
+                "accel_value": 2063749205174084.2,
+                "accel_value_deviation": 2063749205174083.5,
                 "n": 3,
                 "partial_sum": -1384727221.222222,
                 "partial_sum_deviation": 1384727222.0845408,
                 "series_value": -1388888888.8888888
             },
             {
-                "accel_value": 1211709065.6850586,
-                "accel_value_deviation": 1211709064.8227398,
+                "accel_value": -1.1295417573391013e+17,
+                "accel_value_deviation": 1.1295417573391013e+17,
                 "n": 4,
                 "partial_sum": 246631145794.6508,
                 "partial_sum_deviation": 246631145793.78848,
                 "series_value": 248015873015.87302
-            },
-            {
-                "accel_value": -62611615569.078125,
-                "accel_value_deviation": 62611615569.940445,
-                "n": 5,
-                "partial_sum": -27310688078191.242,
-                "partial_sum_deviation": 27310688078192.105,
-                "series_value": -27557319223985.89
-            },
-            {
-                "accel_value": 2425075246311.0,
-                "accel_value_deviation": 2425075246310.1377,
-                "n": 6,
-                "partial_sum": 2060365010708618.2,
-                "partial_sum_deviation": 2060365010708617.5,
-                "series_value": 2087675698786809.8
-            },
-            {
-                "accel_value": -72849364701584.0,
-                "accel_value_deviation": 72849364701584.86,
-                "n": 7,
-                "partial_sum": -1.1264709096658862e+17,
-                "partial_sum_deviation": 1.1264709096658862e+17,
-                "series_value": -1.1470745597729723e+17
-            },
-            {
-                "accel_value": 1743806365057024.0,
-                "accel_value_deviation": 1743806365057023.2,
-                "n": 8,
-                "partial_sum": 4.666830241420795e+18,
-                "partial_sum_deviation": 4.666830241420795e+18,
-                "series_value": 4.779477332387384e+18
-            },
-            {
-                "accel_value": -3.400945076744192e+16,
-                "accel_value_deviation": 3.400945076744192e+16,
-                "n": 9,
-                "partial_sum": -1.5152523944444143e+20,
-                "partial_sum_deviation": 1.5152523944444143e+20,
-                "series_value": -1.5619206968586224e+20
-            },
-            {
-                "accel_value": 5.507843443669074e+17,
-                "accel_value_deviation": 5.507843443669074e+17,
-                "n": 10,
-                "partial_sum": 3.9587923838677224e+21,
-                "partial_sum_deviation": 3.9587923838677224e+21,
-                "series_value": 4.110317623312164e+21
-            }
-        ],
-        "error": null,
-        "series": {
-            "arguments": {
-                "x": 100
-            },
-            "lim": 0.8623188722876839,
-            "name": "CosSeries"
-        }
-    },
-    {
-        "accel": {
-            "additional_args": {},
-            "m_value": 4,
-            "name": "ChangWynnAlgorithm"
-        },
-        "computed": [
-            {
-                "accel_value": 0.0,
-                "accel_value_deviation": 0.8623188722876839,
-                "n": 1,
-                "partial_sum": -4999.0,
-                "partial_sum_deviation": 4999.862318872288,
-                "series_value": -5000.0
-            },
-            {
-                "accel_value": 3.9748496513768106,
-                "accel_value_deviation": 3.1125307790891266,
-                "n": 2,
-                "partial_sum": 4161667.666666667,
-                "partial_sum_deviation": 4161666.8043477945,
-                "series_value": 4166666.666666667
-            },
-            {
-                "accel_value": 3.9748496513768106,
-                "accel_value_deviation": 3.1125307790891266,
-                "n": 3,
-                "partial_sum": -1384727221.222222,
-                "partial_sum_deviation": 1384727222.0845408,
-                "series_value": -1388888888.8888888
-            },
-            {
-                "accel_value": -5.990241969238468,
-                "accel_value_deviation": 6.852560841526152,
-                "n": 4,
-                "partial_sum": 246631145794.6508,
-                "partial_sum_deviation": 246631145793.78848,
-                "series_value": 248015873015.87302
-            },
-            {
-                "accel_value": -5.990241969238468,
-                "accel_value_deviation": 6.852560841526152,
-                "n": 5,
-                "partial_sum": -27310688078191.242,
-                "partial_sum_deviation": 27310688078192.105,
-                "series_value": -27557319223985.89
-            },
-            {
-                "accel_value": 13.922031247286213,
-                "accel_value_deviation": 13.05971237499853,
-                "n": 6,
-                "partial_sum": 2060365010708618.2,
-                "partial_sum_deviation": 2060365010708617.5,
-                "series_value": 2087675698786809.8
-            },
-            {
-                "accel_value": 13.922031247286213,
-                "accel_value_deviation": 13.05971237499853,
-                "n": 7,
-                "partial_sum": -1.1264709096658862e+17,
-                "partial_sum_deviation": 1.1264709096658862e+17,
-                "series_value": -1.1470745597729723e+17
-            },
-            {
-                "accel_value": -39.123064449379854,
-                "accel_value_deviation": 39.985383321667534,
-                "n": 8,
-                "partial_sum": 4.666830241420795e+18,
-                "partial_sum_deviation": 4.666830241420795e+18,
-                "series_value": 4.779477332387384e+18
-            },
-            {
-                "accel_value": -39.123064449379854,
-                "accel_value_deviation": 39.985383321667534,
-                "n": 9,
-                "partial_sum": -1.5152523944444143e+20,
-                "partial_sum_deviation": 1.5152523944444143e+20,
-                "series_value": -1.5619206968586224e+20
-            },
-            {
-                "accel_value": 122.03172219296994,
-                "accel_value_deviation": 121.16940332068225,
-                "n": 10,
-                "partial_sum": 3.9587923838677224e+21,
-                "partial_sum_deviation": 3.9587923838677224e+21,
-                "series_value": 4.110317623312164e+21
-            }
-        ],
-        "error": null,
-        "series": {
-            "arguments": {
-                "x": 100
-            },
-            "lim": 0.8623188722876839,
-            "name": "CosSeries"
-        }
-    },
-    {
-        "accel": {
-            "additional_args": {
-                "remainder": "RemainderType.u_variant",
-                "useRecFormulas": "True"
-            },
-            "m_value": 4,
-            "name": "DrummondDAlgorithm"
-        },
-        "computed": [
-            {
-                "accel_value": -0.018736086948959074,
-                "accel_value_deviation": 0.881054959236643,
-                "n": 1,
-                "partial_sum": -4999.0,
-                "partial_sum_deviation": 4999.862318872288,
-                "series_value": -5000.0
-            },
-            {
-                "accel_value": 15.078907428527945,
-                "accel_value_deviation": 14.21658855624026,
-                "n": 2,
-                "partial_sum": 4161667.666666667,
-                "partial_sum_deviation": 4161666.8043477945,
-                "series_value": 4166666.666666667
-            },
-            {
-                "accel_value": -4776.073254481398,
-                "accel_value_deviation": 4776.935573353686,
-                "n": 3,
-                "partial_sum": -1384727221.222222,
-                "partial_sum_deviation": 1384727222.0845408,
-                "series_value": -1388888888.8888888
-            },
-            {
-                "accel_value": 796733.3181987833,
-                "accel_value_deviation": 796732.4558799111,
-                "n": 4,
-                "partial_sum": 246631145794.6508,
-                "partial_sum_deviation": 246631145793.78848,
-                "series_value": 248015873015.87302
-            },
-            {
-                "accel_value": -81213648.64107741,
-                "accel_value_deviation": 81213649.50339629,
-                "n": 5,
-                "partial_sum": -27310688078191.242,
-                "partial_sum_deviation": 27310688078192.105,
-                "series_value": -27557319223985.89
-            },
-            {
-                "accel_value": 5534445656.017297,
-                "accel_value_deviation": 5534445655.154978,
-                "n": 6,
-                "partial_sum": 2060365010708618.2,
-                "partial_sum_deviation": 2060365010708617.5,
-                "series_value": 2087675698786809.8
-            },
-            {
-                "accel_value": -267633218017.81177,
-                "accel_value_deviation": 267633218018.67407,
-                "n": 7,
-                "partial_sum": -1.1264709096658862e+17,
-                "partial_sum_deviation": 1.1264709096658862e+17,
-                "series_value": -1.1470745597729723e+17
-            },
-            {
-                "accel_value": 9572453994999.627,
-                "accel_value_deviation": 9572453994998.764,
-                "n": 8,
-                "partial_sum": 4.666830241420795e+18,
-                "partial_sum_deviation": 4.666830241420795e+18,
-                "series_value": 4.779477332387384e+18
-            },
-            {
-                "accel_value": -260684497533399.56,
-                "accel_value_deviation": 260684497533400.44,
-                "n": 9,
-                "partial_sum": -1.5152523944444143e+20,
-                "partial_sum_deviation": 1.5152523944444143e+20,
-                "series_value": -1.5619206968586224e+20
-            },
-            {
-                "accel_value": 5508700445939128.0,
-                "accel_value_deviation": 5508700445939127.0,
-                "n": 10,
-                "partial_sum": 3.9587923838677224e+21,
-                "partial_sum_deviation": 3.9587923838677224e+21,
-                "series_value": 4.110317623312164e+21
-            }
-        ],
-        "error": null,
-        "series": {
-            "arguments": {
-                "x": 100
-            },
-            "lim": 0.8623188722876839,
-            "name": "CosSeries"
-        }
-    },
-    {
-        "accel": {
-            "additional_args": {},
-            "m_value": 4,
-            "name": "FordSidi2Algorithm"
-        },
-        "computed": [
-            {
-                "accel_value": -6.953289662390976e+20,
-                "accel_value_deviation": 6.953289662390976e+20,
-                "n": 10,
-                "partial_sum": 3.9587923838677224e+21,
-                "partial_sum_deviation": 3.9587923838677224e+21,
-                "series_value": 4.110317623312164e+21
-            }
-        ],
-        "error": null,
-        "series": {
-            "arguments": {
-                "x": 100
-            },
-            "lim": 0.8623188722876839,
-            "name": "CosSeries"
-        }
-    },
-    {
-        "accel": {
-            "additional_args": {},
-            "m_value": 4,
-            "name": "FordSidi3Algorithm"
-        },
-        "computed": [
-            {
-                "accel_value": -1.5152523944444143e+20,
-                "accel_value_deviation": 1.5152523944444143e+20,
-                "n": 10,
-                "partial_sum": 3.9587923838677224e+21,
-                "partial_sum_deviation": 3.9587923838677224e+21,
-                "series_value": 4.110317623312164e+21
             }
         ],
         "error": null,
@@ -545,646 +350,44 @@
         },
         "computed": [
             {
-                "accel_value": 3.2036726575898534e+26,
-                "accel_value_deviation": 3.2036726575898534e+26,
-                "n": 10,
-                "partial_sum": 3.9587923838677224e+21,
-                "partial_sum_deviation": 3.9587923838677224e+21,
-                "series_value": 4.110317623312164e+21
-            }
-        ],
-        "error": null,
-        "series": {
-            "arguments": {
-                "x": 100
-            },
-            "lim": 0.8623188722876839,
-            "name": "CosSeries"
-        }
-    },
-    {
-        "accel": {
-            "additional_args": {
-                "gamma": "15",
-                "remainder": "RemainderType.u_variant"
-            },
-            "m_value": 4,
-            "name": "LevinSidiMAlgorithm"
-        },
-        "computed": [
-            {
-                "accel_value": -97918659237.92612,
-                "accel_value_deviation": 97918659238.78844,
-                "n": 10,
-                "partial_sum": 3.9587923838677224e+21,
-                "partial_sum_deviation": 3.9587923838677224e+21,
-                "series_value": 4.110317623312164e+21
-            }
-        ],
-        "error": null,
-        "series": {
-            "arguments": {
-                "x": 100
-            },
-            "lim": 0.8623188722876839,
-            "name": "CosSeries"
-        }
-    },
-    {
-        "accel": {
-            "additional_args": {
-                "parameter": "15",
-                "remainder": "RemainderType.u_variant",
-                "useRecFormulas": "False"
-            },
-            "m_value": 4,
-            "name": "LevinSidiSAlgorithm"
-        },
-        "computed": [
-            {
-                "accel_value": -8.19970553718559e+16,
-                "accel_value_deviation": 8.19970553718559e+16,
-                "n": 10,
-                "partial_sum": 3.9587923838677224e+21,
-                "partial_sum_deviation": 3.9587923838677224e+21,
-                "series_value": 4.110317623312164e+21
-            }
-        ],
-        "error": null,
-        "series": {
-            "arguments": {
-                "x": 100
-            },
-            "lim": 0.8623188722876839,
-            "name": "CosSeries"
-        }
-    },
-    {
-        "accel": {
-            "additional_args": {},
-            "m_value": 4,
-            "name": "LubkinWAlgorithm"
-        },
-        "computed": [
-            {
-                "accel_value": 758910264917416.8,
-                "accel_value_deviation": 758910264917415.9,
-                "n": 10,
-                "partial_sum": 3.9587923838677224e+21,
-                "partial_sum_deviation": 3.9587923838677224e+21,
-                "series_value": 4.110317623312164e+21
-            }
-        ],
-        "error": null,
-        "series": {
-            "arguments": {
-                "x": 100
-            },
-            "lim": 0.8623188722876839,
-            "name": "CosSeries"
-        }
-    },
-    {
-        "accel": {
-            "additional_args": {
-                "RHO": "15",
-                "gamma": "15",
-                "numerator": "NumeratorType.rho_variant"
-            },
-            "m_value": 4,
-            "name": "WhynnRhoAlgorithm"
-        },
-        "computed": [
-            {
-                "accel_value": 2.8822759610989095e+28,
-                "accel_value_deviation": 2.8822759610989095e+28,
-                "n": 10,
-                "partial_sum": 3.9587923838677224e+21,
-                "partial_sum_deviation": 3.9587923838677224e+21,
-                "series_value": 4.110317623312164e+21
-            }
-        ],
-        "error": null,
-        "series": {
-            "arguments": {
-                "x": 100
-            },
-            "lim": 0.8623188722876839,
-            "name": "CosSeries"
-        }
-    },
-    {
-        "accel": {
-            "additional_args": {},
-            "m_value": 4,
-            "name": "RichardsonAlgorithm"
-        },
-        "computed": [
-            {
-                "accel_value": 5.823071371883572e+21,
-                "accel_value_deviation": 5.823071371883572e+21,
-                "n": 10,
-                "partial_sum": 3.9587923838677224e+21,
-                "partial_sum_deviation": 3.9587923838677224e+21,
-                "series_value": 4.110317623312164e+21
-            }
-        ],
-        "error": null,
-        "series": {
-            "arguments": {
-                "x": 100
-            },
-            "lim": 0.8623188722876839,
-            "name": "CosSeries"
-        }
-    },
-    {
-        "accel": {
-            "additional_args": {},
-            "m_value": 4,
-            "name": "WenigerAlgorithm"
-        },
-        "computed": [
-            {
-                "accel_value": 134.25094808662485,
-                "accel_value_deviation": 133.38862921433716,
-                "n": 10,
-                "partial_sum": 3.9587923838677224e+21,
-                "partial_sum_deviation": 3.9587923838677224e+21,
-                "series_value": 4.110317623312164e+21
-            }
-        ],
-        "error": null,
-        "series": {
-            "arguments": {
-                "x": 100
-            },
-            "lim": 0.8623188722876839,
-            "name": "CosSeries"
-        }
-    },
-    {
-        "accel": {
-            "additional_args": {},
-            "m_value": 4,
-            "name": "WynnEpsilonAlgorithm"
-        },
-        "computed": [
-            {
-                "accel_value": -3.8825522565961974e+18,
-                "accel_value_deviation": 3.8825522565961974e+18,
-                "n": 10,
-                "partial_sum": 3.9587923838677224e+21,
-                "partial_sum_deviation": 3.9587923838677224e+21,
-                "series_value": 4.110317623312164e+21
-            }
-        ],
-        "error": null,
-        "series": {
-            "arguments": {
-                "x": 100
-            },
-            "lim": 0.8623188722876839,
-            "name": "CosSeries"
-        }
-    },
-    {
-        "accel": {
-            "additional_args": {},
-            "m_value": 4,
-            "name": "WynnEpsilon2Algorithm"
-        },
-        "computed": [
-            {
-                "accel_value": 207868.66374606453,
-                "accel_value_deviation": 207867.80142719223,
-                "n": 10,
-                "partial_sum": 3.9587923838677224e+21,
-                "partial_sum_deviation": 3.9587923838677224e+21,
-                "series_value": 4.110317623312164e+21
-            }
-        ],
-        "error": null,
-        "series": {
-            "arguments": {
-                "x": 100
-            },
-            "lim": 0.8623188722876839,
-            "name": "CosSeries"
-        }
-    },
-    {
-        "accel": {
-            "additional_args": {
-                "epsilon_threshold": "0.001"
-            },
-            "m_value": 4,
-            "name": "WynnEpsilon3Algorithm"
-        },
-        "computed": [
-            {
-                "accel_value": 3.9587923838677224e+21,
-                "accel_value_deviation": 3.9587923838677224e+21,
-                "n": 10,
-                "partial_sum": 3.9587923838677224e+21,
-                "partial_sum_deviation": 3.9587923838677224e+21,
-                "series_value": 4.110317623312164e+21
-            }
-        ],
-        "error": null,
-        "series": {
-            "arguments": {
-                "x": 100
-            },
-            "lim": 0.8623188722876839,
-            "name": "CosSeries"
-        }
-    },
-    {
-        "accel": {
-            "additional_args": {},
-            "m_value": 4,
-            "name": "ShanksAlgorithm"
-        },
-        "computed": [
-            {
-                "accel_value": 0.0,
-                "accel_value_deviation": 0.9111302618846769,
+                "accel_value": -27357606702174.5,
+                "accel_value_deviation": 27357606702175.363,
                 "n": 1,
-                "partial_sum": -39.5,
-                "partial_sum_deviation": 38.58886973811532,
-                "series_value": -40.5
+                "partial_sum": -4999.0,
+                "partial_sum_deviation": 4999.862318872288,
+                "series_value": -5000.0
             },
             {
-                "accel_value": 0.0,
-                "accel_value_deviation": 0.9111302618846769,
+                "accel_value": 2066495548982741.5,
+                "accel_value_deviation": 2066495548982740.8,
                 "n": 2,
-                "partial_sum": 233.875,
-                "partial_sum_deviation": 234.78613026188467,
-                "series_value": 273.375
+                "partial_sum": 4161667.666666667,
+                "partial_sum_deviation": 4161666.8043477945,
+                "series_value": 4166666.666666667
             },
             {
-                "accel_value": 0.0,
-                "accel_value_deviation": 0.9111302618846769,
+                "accel_value": -1.1318890720889381e+17,
+                "accel_value_deviation": 1.1318890720889381e+17,
                 "n": 3,
-                "partial_sum": -504.23750000000007,
-                "partial_sum_deviation": 503.3263697381154,
-                "series_value": -738.1125000000001
+                "partial_sum": -1384727221.222222,
+                "partial_sum_deviation": 1384727222.0845408,
+                "series_value": -1388888888.8888888
             },
             {
-                "accel_value": -0.8770491616561177,
-                "accel_value_deviation": 0.03408110022855926,
+                "accel_value": 4.70128009904664e+18,
+                "accel_value_deviation": 4.70128009904664e+18,
                 "n": 4,
-                "partial_sum": 563.3895089285714,
-                "partial_sum_deviation": 564.3006391904561,
-                "series_value": 1067.6270089285715
-            },
-            {
-                "accel_value": -0.9148497624249725,
-                "accel_value_deviation": 0.0037195005402955728,
-                "n": 5,
-                "partial_sum": -397.47479910714287,
-                "partial_sum_deviation": 396.5636688452582,
-                "series_value": -960.8643080357144
-            },
-            {
-                "accel_value": -0.9106726272395829,
-                "accel_value_deviation": 0.0004576346450940738,
-                "n": 6,
-                "partial_sum": 192.1464808238636,
-                "partial_sum_deviation": 193.05761108574828,
-                "series_value": 589.6212799310066
-            },
-            {
-                "accel_value": -0.9111833715840492,
-                "accel_value_deviation": 5.310969937222243e-05,
-                "n": 7,
-                "partial_sum": -70.26738551905692,
-                "partial_sum_deviation": 69.35625525717224,
-                "series_value": -262.4138663429205
-            },
-            {
-                "accel_value": -0.9111249079952932,
-                "accel_value_deviation": 5.353889383719057e-06,
-                "n": 8,
-                "partial_sum": 18.29729437167873,
-                "partial_sum_deviation": 19.208424633563407,
-                "series_value": 88.56467989073569
-            },
-            {
-                "accel_value": -0.9111307265822759,
-                "accel_value_deviation": 4.646975989563984e-07,
-                "n": 9,
-                "partial_sum": -5.146297364104228,
-                "partial_sum_deviation": 4.235167102219552,
-                "series_value": -23.443591735782977
-            },
-            {
-                "accel_value": -0.9111302267948973,
-                "accel_value_deviation": 3.5089779637509366e-08,
-                "n": 10,
-                "partial_sum": -0.14911070463465492,
-                "partial_sum_deviation": 0.762019557250022,
-                "series_value": 4.997186659469529
+                "partial_sum": 246631145794.6508,
+                "partial_sum_deviation": 246631145793.78848,
+                "series_value": 248015873015.87302
             }
         ],
         "error": null,
         "series": {
             "arguments": {
-                "x": 9.0
+                "x": 100
             },
-            "lim": -0.9111302618846769,
-            "name": "CosSeries"
-        }
-    },
-    {
-        "accel": {
-            "additional_args": {},
-            "m_value": 4,
-            "name": "ShanksAlgorithm"
-        },
-        "computed": [
-            {
-                "accel_value": 0.0,
-                "accel_value_deviation": 0.8390715290764524,
-                "n": 1,
-                "partial_sum": -49.0,
-                "partial_sum_deviation": 48.16092847092355,
-                "series_value": -50.0
-            },
-            {
-                "accel_value": 0.0,
-                "accel_value_deviation": 0.8390715290764524,
-                "n": 2,
-                "partial_sum": 367.6666666666667,
-                "partial_sum_deviation": 368.50573819574316,
-                "series_value": 416.6666666666667
-            },
-            {
-                "accel_value": 0.0,
-                "accel_value_deviation": 0.8390715290764524,
-                "n": 3,
-                "partial_sum": -1021.2222222222222,
-                "partial_sum_deviation": 1020.3831506931457,
-                "series_value": -1388.888888888889
-            },
-            {
-                "accel_value": -0.6425302216866388,
-                "accel_value_deviation": 0.19654130738981368,
-                "n": 4,
-                "partial_sum": 1458.9365079365077,
-                "partial_sum_deviation": 1459.775579465584,
-                "series_value": 2480.15873015873
-            },
-            {
-                "accel_value": -0.8675738047891403,
-                "accel_value_deviation": 0.02850227571268782,
-                "n": 5,
-                "partial_sum": -1296.7954144620812,
-                "partial_sum_deviation": 1295.9563429330049,
-                "series_value": -2755.731922398589
-            },
-            {
-                "accel_value": -0.834943972003915,
-                "accel_value_deviation": 0.004127557072537424,
-                "n": 6,
-                "partial_sum": 790.8802843247281,
-                "partial_sum_deviation": 791.7193558538046,
-                "series_value": 2087.67569878681
-            },
-            {
-                "accel_value": -0.8396437584463226,
-                "accel_value_deviation": 0.0005722293698701142,
-                "n": 7,
-                "partial_sum": -356.19427544824384,
-                "partial_sum_deviation": 355.35520391916737,
-                "series_value": -1147.0745597729724
-            },
-            {
-                "accel_value": -0.8390005920047519,
-                "accel_value_deviation": 7.093707170058305e-05,
-                "n": 8,
-                "partial_sum": 121.75345779049462,
-                "partial_sum_deviation": 122.59252931957107,
-                "series_value": 477.9477332387385
-            },
-            {
-                "accel_value": -0.8390792032526687,
-                "accel_value_deviation": 7.674176216276862e-06,
-                "n": 9,
-                "partial_sum": -34.43861189536773,
-                "partial_sum_deviation": 33.59954036629128,
-                "series_value": -156.19206968586226
-            },
-            {
-                "accel_value": -0.8390708041330613,
-                "accel_value_deviation": 7.249433910949676e-07,
-                "n": 10,
-                "partial_sum": 6.664564337753944,
-                "partial_sum_deviation": 7.503635866830397,
-                "series_value": 41.103176233121644
-            }
-        ],
-        "error": null,
-        "series": {
-            "arguments": {
-                "x": 10.0
-            },
-            "lim": -0.8390715290764524,
-            "name": "CosSeries"
-        }
-    },
-    {
-        "accel": {
-            "additional_args": {},
-            "m_value": 4,
-            "name": "ShanksAlgorithm"
-        },
-        "computed": [
-            {
-                "accel_value": 0.0,
-                "accel_value_deviation": 0.004425697988050785,
-                "n": 1,
-                "partial_sum": -59.5,
-                "partial_sum_deviation": 59.50442569798805,
-                "series_value": -60.5
-            },
-            {
-                "accel_value": 0.0,
-                "accel_value_deviation": 0.004425697988050785,
-                "n": 2,
-                "partial_sum": 550.5416666666667,
-                "partial_sum_deviation": 550.5372409686787,
-                "series_value": 610.0416666666667
-            },
-            {
-                "accel_value": 0.0,
-                "accel_value_deviation": 0.004425697988050785,
-                "n": 3,
-                "partial_sum": -1909.9597222222226,
-                "partial_sum_deviation": 1909.9641479202107,
-                "series_value": -2460.5013888888893
-            },
-            {
-                "accel_value": 0.7688245165733717,
-                "accel_value_deviation": 0.7643988185853209,
-                "n": 4,
-                "partial_sum": 3406.4807787698414,
-                "partial_sum_deviation": 3406.4763530718533,
-                "series_value": 5316.440500992064
-            },
-            {
-                "accel_value": -0.15539675120628177,
-                "accel_value_deviation": 0.15982244919433256,
-                "n": 5,
-                "partial_sum": -3741.1781170083786,
-                "partial_sum_deviation": 3741.182542706367,
-                "series_value": -7147.65889577822
-            },
-            {
-                "accel_value": 0.03322123534578366,
-                "accel_value_deviation": 0.028795537357732874,
-                "n": 6,
-                "partial_sum": 2810.8425374549906,
-                "partial_sum_deviation": 2810.8381117570025,
-                "series_value": 6552.0206544633675
-            },
-            {
-                "accel_value": -0.00036626478434301457,
-                "accel_value_deviation": 0.0047919627723938,
-                "n": 7,
-                "partial_sum": -1545.1711943585688,
-                "partial_sum_deviation": 1545.175620056557,
-                "series_value": -4356.013731813558
-            },
-            {
-                "accel_value": 0.005143608078968117,
-                "accel_value_deviation": 0.0007179100909173314,
-                "n": 8,
-                "partial_sum": 650.9857287641007,
-                "partial_sum_deviation": 650.9813030661127,
-                "series_value": 2196.1569231226686
-            },
-            {
-                "accel_value": 0.004330964672558681,
-                "accel_value_deviation": 9.473331549210429e-05,
-                "n": 9,
-                "partial_sum": -217.42926371251087,
-                "partial_sum_deviation": 217.4336894104989,
-                "series_value": -868.4149924766107
-            },
-            {
-                "accel_value": 0.004436658960309523,
-                "accel_value_deviation": 1.0960972258737892e-05,
-                "n": 10,
-                "partial_sum": 59.09235231293633,
-                "partial_sum_deviation": 59.08792661494828,
-                "series_value": 276.5216160254471
-            }
-        ],
-        "error": null,
-        "series": {
-            "arguments": {
-                "x": 11.0
-            },
-            "lim": 0.004425697988050785,
-            "name": "CosSeries"
-        }
-    },
-    {
-        "accel": {
-            "additional_args": {},
-            "m_value": 4,
-            "name": "ShanksAlgorithm"
-        },
-        "computed": [
-            {
-                "accel_value": 0.0,
-                "accel_value_deviation": 0.8438539587324921,
-                "n": 1,
-                "partial_sum": -71.0,
-                "partial_sum_deviation": 71.8438539587325,
-                "series_value": -72.0
-            },
-            {
-                "accel_value": 0.0,
-                "accel_value_deviation": 0.8438539587324921,
-                "n": 2,
-                "partial_sum": 793.0,
-                "partial_sum_deviation": 792.1561460412676,
-                "series_value": 864.0
-            },
-            {
-                "accel_value": 0.0,
-                "accel_value_deviation": 0.8438539587324921,
-                "n": 3,
-                "partial_sum": -3354.2,
-                "partial_sum_deviation": 3355.043853958732,
-                "series_value": -4147.2
-            },
-            {
-                "accel_value": 2.9811787907874288,
-                "accel_value_deviation": 2.1373248320549365,
-                "n": 4,
-                "partial_sum": 7310.028571428572,
-                "partial_sum_deviation": 7309.18471746984,
-                "series_value": 10664.228571428572
-            },
-            {
-                "accel_value": 0.1683721300935473,
-                "accel_value_deviation": 0.6754818286389448,
-                "n": 5,
-                "partial_sum": -9752.737142857146,
-                "partial_sum_deviation": 9753.58099681588,
-                "series_value": -17062.765714285717
-            },
-            {
-                "accel_value": 1.0018611322459277,
-                "accel_value_deviation": 0.15800717351343552,
-                "n": 6,
-                "partial_sum": 8861.18909090909,
-                "partial_sum_deviation": 8860.345236950358,
-                "series_value": 18613.926233766237
-            },
-            {
-                "accel_value": 0.8117949286484822,
-                "accel_value_deviation": 0.0320590300840099,
-                "n": 7,
-                "partial_sum": -5866.3129841587,
-                "partial_sum_deviation": 5867.156838117432,
-                "series_value": -14727.50207506779
-            },
-            {
-                "accel_value": 0.8496266366571823,
-                "accel_value_deviation": 0.005772677924690162,
-                "n": 8,
-                "partial_sum": 2970.188260881976,
-                "partial_sum_deviation": 2969.3444069232437,
-                "series_value": 8836.501245040674
-            },
-            {
-                "accel_value": 0.8429376662788571,
-                "accel_value_deviation": 0.0009162924536350037,
-                "n": 9,
-                "partial_sum": -1188.1652661959888,
-                "partial_sum_deviation": 1189.0091201547214,
-                "series_value": -4158.353527077964
-            },
-            {
-                "accel_value": 0.8439817432919818,
-                "accel_value_deviation": 0.00012778455948969647,
-                "n": 10,
-                "partial_sum": 387.6318598546086,
-                "partial_sum_deviation": 386.7880058958761,
-                "series_value": 1575.797126050597
-            }
-        ],
-        "error": null,
-        "series": {
-            "arguments": {
-                "x": 12.0
-            },
-            "lim": 0.8438539587324921,
+            "lim": 0.8623188722876839,
             "name": "CosSeries"
         }
     }

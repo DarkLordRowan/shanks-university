@@ -1,0 +1,482 @@
+[
+    {
+        "data": {
+            "accel_value": -83364.45954747066,
+            "accel_value_deviation": 83364.86762953247,
+            "n": 2,
+            "partial_sum": 6467.666666666667,
+            "partial_sum_deviation": 6467.258584604853,
+            "series_value": 6666.666666666667
+        },
+        "event": "divergent_accel_method",
+        "result": {
+            "accel": {
+                "additional_args": {},
+                "m_value": 1,
+                "name": "LevinAlgorithm"
+            },
+            "computed": [
+                {
+                    "accel_value": 6482.7004927754115,
+                    "accel_value_deviation": 6482.292410713598,
+                    "n": 1,
+                    "partial_sum": -199.0,
+                    "partial_sum_deviation": 199.4080820618134,
+                    "series_value": -200.0
+                },
+                {
+                    "accel_value": -83364.45954747066,
+                    "accel_value_deviation": 83364.86762953247,
+                    "n": 2,
+                    "partial_sum": 6467.666666666667,
+                    "partial_sum_deviation": 6467.258584604853,
+                    "series_value": 6666.666666666667
+                },
+                {
+                    "accel_value": 573149.9031475608,
+                    "accel_value_deviation": 573149.495065499,
+                    "n": 3,
+                    "partial_sum": -82421.22222222222,
+                    "partial_sum_deviation": 82421.63030428403,
+                    "series_value": -88888.88888888889
+                },
+                {
+                    "accel_value": -2495698.7925796383,
+                    "accel_value_deviation": 2495699.2006617,
+                    "n": 4,
+                    "partial_sum": 552499.4126984127,
+                    "partial_sum_deviation": 552499.0046163509,
+                    "series_value": 634920.6349206349
+                }
+            ],
+            "error": null,
+            "series": {
+                "arguments": {
+                    "x": 20
+                },
+                "lim": 0.40808206181339196,
+                "name": "CosSeries"
+            }
+        }
+    },
+    {
+        "data": {
+            "accel_value": 637761.859121127,
+            "accel_value_deviation": 637761.4510390653,
+            "n": 2,
+            "partial_sum": 6467.666666666667,
+            "partial_sum_deviation": 6467.258584604853,
+            "series_value": 6666.666666666667
+        },
+        "event": "divergent_accel_method",
+        "result": {
+            "accel": {
+                "additional_args": {},
+                "m_value": 2,
+                "name": "LevinAlgorithm"
+            },
+            "computed": [
+                {
+                    "accel_value": -86826.29191032815,
+                    "accel_value_deviation": 86826.69999238996,
+                    "n": 1,
+                    "partial_sum": -199.0,
+                    "partial_sum_deviation": 199.4080820618134,
+                    "series_value": -200.0
+                },
+                {
+                    "accel_value": 637761.859121127,
+                    "accel_value_deviation": 637761.4510390653,
+                    "n": 2,
+                    "partial_sum": 6467.666666666667,
+                    "partial_sum_deviation": 6467.258584604853,
+                    "series_value": 6666.666666666667
+                },
+                {
+                    "accel_value": -3198144.3301736363,
+                    "accel_value_deviation": 3198144.7382556982,
+                    "n": 3,
+                    "partial_sum": -82421.22222222222,
+                    "partial_sum_deviation": 82421.63030428403,
+                    "series_value": -88888.88888888889
+                },
+                {
+                    "accel_value": 13453065.25232079,
+                    "accel_value_deviation": 13453064.844238728,
+                    "n": 4,
+                    "partial_sum": 552499.4126984127,
+                    "partial_sum_deviation": 552499.0046163509,
+                    "series_value": 634920.6349206349
+                }
+            ],
+            "error": null,
+            "series": {
+                "arguments": {
+                    "x": 20
+                },
+                "lim": 0.40808206181339196,
+                "name": "CosSeries"
+            }
+        }
+    },
+    {
+        "data": {
+            "accel_value": -5643164.131598317,
+            "accel_value_deviation": 5643164.5396803785,
+            "n": 2,
+            "partial_sum": 6467.666666666667,
+            "partial_sum_deviation": 6467.258584604853,
+            "series_value": 6666.666666666667
+        },
+        "event": "divergent_accel_method",
+        "result": {
+            "accel": {
+                "additional_args": {},
+                "m_value": 3,
+                "name": "LevinAlgorithm"
+            },
+            "computed": [
+                {
+                    "accel_value": 803960.2493691136,
+                    "accel_value_deviation": 803959.8412870518,
+                    "n": 1,
+                    "partial_sum": -199.0,
+                    "partial_sum_deviation": 199.4080820618134,
+                    "series_value": -200.0
+                },
+                {
+                    "accel_value": -5643164.131598317,
+                    "accel_value_deviation": 5643164.5396803785,
+                    "n": 2,
+                    "partial_sum": 6467.666666666667,
+                    "partial_sum_deviation": 6467.258584604853,
+                    "series_value": 6666.666666666667
+                },
+                {
+                    "accel_value": 92754287.00942734,
+                    "accel_value_deviation": 92754286.60134527,
+                    "n": 3,
+                    "partial_sum": -82421.22222222222,
+                    "partial_sum_deviation": 82421.63030428403,
+                    "series_value": -88888.88888888889
+                },
+                {
+                    "accel_value": 69842651.8520099,
+                    "accel_value_deviation": 69842651.44392784,
+                    "n": 4,
+                    "partial_sum": 552499.4126984127,
+                    "partial_sum_deviation": 552499.0046163509,
+                    "series_value": 634920.6349206349
+                }
+            ],
+            "error": null,
+            "series": {
+                "arguments": {
+                    "x": 20
+                },
+                "lim": 0.40808206181339196,
+                "name": "CosSeries"
+            }
+        }
+    },
+    {
+        "data": {
+            "accel_value": 45894080.86494418,
+            "accel_value_deviation": 45894080.45686212,
+            "n": 3,
+            "partial_sum": -82421.22222222222,
+            "partial_sum_deviation": 82421.63030428403,
+            "series_value": -88888.88888888889
+        },
+        "event": "divergent_accel_method",
+        "result": {
+            "accel": {
+                "additional_args": {},
+                "m_value": 4,
+                "name": "LevinAlgorithm"
+            },
+            "computed": [
+                {
+                    "accel_value": -48636694.53320268,
+                    "accel_value_deviation": 48636694.94128474,
+                    "n": 1,
+                    "partial_sum": -199.0,
+                    "partial_sum_deviation": 199.4080820618134,
+                    "series_value": -200.0
+                },
+                {
+                    "accel_value": -26181064.108508456,
+                    "accel_value_deviation": 26181064.516590517,
+                    "n": 2,
+                    "partial_sum": 6467.666666666667,
+                    "partial_sum_deviation": 6467.258584604853,
+                    "series_value": 6666.666666666667
+                },
+                {
+                    "accel_value": 45894080.86494418,
+                    "accel_value_deviation": 45894080.45686212,
+                    "n": 3,
+                    "partial_sum": -82421.22222222222,
+                    "partial_sum_deviation": 82421.63030428403,
+                    "series_value": -88888.88888888889
+                },
+                {
+                    "accel_value": -166365023.80483192,
+                    "accel_value_deviation": 166365024.212914,
+                    "n": 4,
+                    "partial_sum": 552499.4126984127,
+                    "partial_sum_deviation": 552499.0046163509,
+                    "series_value": 634920.6349206349
+                }
+            ],
+            "error": null,
+            "series": {
+                "arguments": {
+                    "x": 20
+                },
+                "lim": 0.40808206181339196,
+                "name": "CosSeries"
+            }
+        }
+    },
+    {
+        "data": {
+            "accel_value": -1384750554.9475617,
+            "accel_value_deviation": 1384750555.8098805,
+            "n": 2,
+            "partial_sum": 4161667.666666667,
+            "partial_sum_deviation": 4161666.8043477945,
+            "series_value": 4166666.666666667
+        },
+        "event": "divergent_accel_method",
+        "result": {
+            "accel": {
+                "additional_args": {},
+                "m_value": 1,
+                "name": "LevinAlgorithm"
+            },
+            "computed": [
+                {
+                    "accel_value": 4161682.6667206674,
+                    "accel_value_deviation": 4161681.804401795,
+                    "n": 1,
+                    "partial_sum": -4999.0,
+                    "partial_sum_deviation": 4999.862318872288,
+                    "series_value": -5000.0
+                },
+                {
+                    "accel_value": -1384750554.9475617,
+                    "accel_value_deviation": 1384750555.8098805,
+                    "n": 2,
+                    "partial_sum": 4161667.666666667,
+                    "partial_sum_deviation": 4161666.8043477945,
+                    "series_value": 4166666.666666667
+                },
+                {
+                    "accel_value": 246643646424.68256,
+                    "accel_value_deviation": 246643646423.82025,
+                    "n": 3,
+                    "partial_sum": -1384727221.222222,
+                    "partial_sum_deviation": 1384727222.0845408,
+                    "series_value": -1388888888.8888888
+                },
+                {
+                    "accel_value": -27313962276689.832,
+                    "accel_value_deviation": 27313962276690.695,
+                    "n": 4,
+                    "partial_sum": 246631145794.6508,
+                    "partial_sum_deviation": 246631145793.78848,
+                    "series_value": 248015873015.87302
+                }
+            ],
+            "error": null,
+            "series": {
+                "arguments": {
+                    "x": 100
+                },
+                "lim": 0.8623188722876839,
+                "name": "CosSeries"
+            }
+        }
+    },
+    {
+        "data": {
+            "accel_value": 246678297318.9621,
+            "accel_value_deviation": 246678297318.0998,
+            "n": 2,
+            "partial_sum": 4161667.666666667,
+            "partial_sum_deviation": 4161666.8043477945,
+            "series_value": 4166666.666666667
+        },
+        "event": "divergent_accel_method",
+        "result": {
+            "accel": {
+                "additional_args": {},
+                "m_value": 2,
+                "name": "LevinAlgorithm"
+            },
+            "computed": [
+                {
+                    "accel_value": -1384832229.035181,
+                    "accel_value_deviation": 1384832229.8974998,
+                    "n": 1,
+                    "partial_sum": -4999.0,
+                    "partial_sum_deviation": 4999.862318872288,
+                    "series_value": -5000.0
+                },
+                {
+                    "accel_value": 246678297318.9621,
+                    "accel_value_deviation": 246678297318.0998,
+                    "n": 2,
+                    "partial_sum": 4161667.666666667,
+                    "partial_sum_deviation": 4161666.8043477945,
+                    "series_value": 4166666.666666667
+                },
+                {
+                    "accel_value": -27321726227952.145,
+                    "accel_value_deviation": 27321726227953.008,
+                    "n": 3,
+                    "partial_sum": -1384727221.222222,
+                    "partial_sum_deviation": 1384727222.0845408,
+                    "series_value": -1388888888.8888888
+                },
+                {
+                    "accel_value": 2061929357237043.2,
+                    "accel_value_deviation": 2061929357237042.5,
+                    "n": 4,
+                    "partial_sum": 246631145794.6508,
+                    "partial_sum_deviation": 246631145793.78848,
+                    "series_value": 248015873015.87302
+                }
+            ],
+            "error": null,
+            "series": {
+                "arguments": {
+                    "x": 100
+                },
+                "lim": 0.8623188722876839,
+                "name": "CosSeries"
+            }
+        }
+    },
+    {
+        "data": {
+            "accel_value": -27335786186726.61,
+            "accel_value_deviation": 27335786186727.473,
+            "n": 2,
+            "partial_sum": 4161667.666666667,
+            "partial_sum_deviation": 4161666.8043477945,
+            "series_value": 4166666.666666667
+        },
+        "event": "divergent_accel_method",
+        "result": {
+            "accel": {
+                "additional_args": {},
+                "m_value": 3,
+                "name": "LevinAlgorithm"
+            },
+            "computed": [
+                {
+                    "accel_value": 246745595359.17572,
+                    "accel_value_deviation": 246745595358.31342,
+                    "n": 1,
+                    "partial_sum": -4999.0,
+                    "partial_sum_deviation": 4999.862318872288,
+                    "series_value": -5000.0
+                },
+                {
+                    "accel_value": -27335786186726.61,
+                    "accel_value_deviation": 27335786186727.473,
+                    "n": 2,
+                    "partial_sum": 4161667.666666667,
+                    "partial_sum_deviation": 4161666.8043477945,
+                    "series_value": 4166666.666666667
+                },
+                {
+                    "accel_value": 2063749205174084.2,
+                    "accel_value_deviation": 2063749205174083.5,
+                    "n": 3,
+                    "partial_sum": -1384727221.222222,
+                    "partial_sum_deviation": 1384727222.0845408,
+                    "series_value": -1388888888.8888888
+                },
+                {
+                    "accel_value": -1.1295417573391013e+17,
+                    "accel_value_deviation": 1.1295417573391013e+17,
+                    "n": 4,
+                    "partial_sum": 246631145794.6508,
+                    "partial_sum_deviation": 246631145793.78848,
+                    "series_value": 248015873015.87302
+                }
+            ],
+            "error": null,
+            "series": {
+                "arguments": {
+                    "x": 100
+                },
+                "lim": 0.8623188722876839,
+                "name": "CosSeries"
+            }
+        }
+    },
+    {
+        "data": {
+            "accel_value": 2066495548982741.5,
+            "accel_value_deviation": 2066495548982740.8,
+            "n": 2,
+            "partial_sum": 4161667.666666667,
+            "partial_sum_deviation": 4161666.8043477945,
+            "series_value": 4166666.666666667
+        },
+        "event": "divergent_accel_method",
+        "result": {
+            "accel": {
+                "additional_args": {},
+                "m_value": 4,
+                "name": "LevinAlgorithm"
+            },
+            "computed": [
+                {
+                    "accel_value": -27357606702174.5,
+                    "accel_value_deviation": 27357606702175.363,
+                    "n": 1,
+                    "partial_sum": -4999.0,
+                    "partial_sum_deviation": 4999.862318872288,
+                    "series_value": -5000.0
+                },
+                {
+                    "accel_value": 2066495548982741.5,
+                    "accel_value_deviation": 2066495548982740.8,
+                    "n": 2,
+                    "partial_sum": 4161667.666666667,
+                    "partial_sum_deviation": 4161666.8043477945,
+                    "series_value": 4166666.666666667
+                },
+                {
+                    "accel_value": -1.1318890720889381e+17,
+                    "accel_value_deviation": 1.1318890720889381e+17,
+                    "n": 3,
+                    "partial_sum": -1384727221.222222,
+                    "partial_sum_deviation": 1384727222.0845408,
+                    "series_value": -1388888888.8888888
+                },
+                {
+                    "accel_value": 4.70128009904664e+18,
+                    "accel_value_deviation": 4.70128009904664e+18,
+                    "n": 4,
+                    "partial_sum": 246631145794.6508,
+                    "partial_sum_deviation": 246631145793.78848,
+                    "series_value": 248015873015.87302
+                }
+            ],
+            "error": null,
+            "series": {
+                "arguments": {
+                    "x": 100
+                },
+                "lim": 0.8623188722876839,
+                "name": "CosSeries"
+            }
+        }
+    }
+]
