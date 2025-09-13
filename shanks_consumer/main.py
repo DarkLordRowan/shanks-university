@@ -1,14 +1,13 @@
 import pathlib
 
-from src.params import (
+from shanks_consumer.src.shanks_consumer.params import (
+    AccelParamModule,
     SeriesParamModule,
     get_accel_params_from_json,
     get_series_params_from_json,
 )
-from src.trial import ComplexTrial
-from src.export import ExportTrialResults
-
-from src.plot import InteractiveConvergencePlot
+from shanks_consumer.src.shanks_consumer.trial import ComplexTrial
+from shanks_consumer.src.shanks_consumer.export import ExportTrialResult
 
 import pyshanks
 
