@@ -4,17 +4,41 @@
 @tailwind components;
 @tailwind utilities;
 
+:root { color-scheme: dark; }
+
 @layer base {
-    html, body, #root {
-        height: 100%;
+    html, body, #root { height: 100%; }
+
+    body { @apply bg-surface text-white antialiased; }
+
+    a   { @apply transition-colors; }
+
+    /* === БАЗОВЫЕ СТИЛИ ФОРМ (тёмная тема) === */
+    input, select, textarea, button {
+        @apply bg-panel text-white border border-border;
     }
-    body {
-        @apply bg-surface text-white antialiased;
+    input:focus, select:focus, textarea:focus, button:focus {
+        @apply outline-none ring-2 ring-primary/40 border-primary/60;
     }
-    a {
-        @apply transition-colors;
+    /* placeholder на тёмном фоне */
+    input::placeholder, textarea::placeholder { color: theme(colors.textDim); opacity: 1; }
+
+    /* options в select (чтобы не были белыми) */
+    option {
+        background-color: theme(colors.panel);
+        color: #fff;
     }
+
+    /* Скроллбары (необязательно, но аккуратнее смотрятся) */
+    * {
+        scrollbar-width: thin;
+        scrollbar-color: theme(colors.border) transparent;
+    }
+    *::-webkit-scrollbar { height: 10px; width: 10px; }
+    *::-webkit-scrollbar-thumb { background: theme(colors.border); border-radius: 8px; }
+    *::-webkit-scrollbar-track { background: transparent; }
 }
+
 @layer components {
     .btn {
         @apply inline-flex items-center gap-2 rounded-xl2 px-4 py-2
@@ -23,7 +47,5 @@
     .card {
         @apply bg-panel/90 border border-border/60 rounded-xl2 shadow-panel p-4;
     }
-    .link {
-        @apply text-primary hover:text-secondary;
-    }
+    .link { @apply text-primary hover:text-secondary; }
 }
