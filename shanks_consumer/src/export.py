@@ -6,7 +6,7 @@ import csv
 from dataclasses import asdict
 
 
-class ExportTrialResult:
+class ExportTrialResults:
     def __init__(
         self,
         results: Iterable[TrialResult],

@@ -1,11 +1,14 @@
 import pathlib
 
 from src.params import (
-    AccelParamModule,
     SeriesParamModule,
+    get_accel_params_from_json,
+    get_series_params_from_json,
 )
 from src.trial import ComplexTrial
-from src.export import ExportTrialResult
+from src.export import ExportTrialResults
+
+from src.plot import InteractiveConvergencePlot
 
 import pyshanks
 
@@ -14,14 +17,17 @@ if __name__ == "__main__":
         [
             SeriesParamModule(
                 pyshanks.CosSeries,
-                x=[5],
+                x=[100],
             ),
+            *get_series_params_from_json(pathlib.Path("data/example.json")),
         ],
         [
-            AccelParamModule(pyshanks.ShanksAlgorithm, range(10, 20), [4]),
+            *get_accel_params_from_json(pathlib.Path("data/example.json")),
         ],
     )
-    exporter = ExportTrialResult(st.execute())
+    results = st.execute()
+    exporter = ExportTrialResults(results)
 
-    exporter.to_json(pathlib.Path("output.json"))
-    exporter.to_csv(pathlib.Path("output.csv"))
+    exporter.to_json(pathlib.Path("output/output.json"))
+    exporter.to_csv(pathlib.Path("output/output.csv"))
+    InteractiveConvergencePlot(results).show()
