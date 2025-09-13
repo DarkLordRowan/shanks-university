@@ -13,10 +13,14 @@ dependencies = [
     "pyqt6 (>=6.9.1,<7.0.0)",
 ]
 
-
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.poetry]
+packages = [
+    { include = "shanks_consumer", from = "src" }
+]
 
 [tool.pylint.MASTER]
 extension-pkg-allow-list = ["pyshanks"]
