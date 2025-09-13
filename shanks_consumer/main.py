@@ -13,10 +13,6 @@ import pyshanks
 if __name__ == "__main__":
     st = ComplexTrial(
         [
-            SeriesParamModule(
-                pyshanks.CosSeries,
-                x=[100],
-            ),
             *get_series_params_from_json(pathlib.Path("data/example.json")),
         ],
         [

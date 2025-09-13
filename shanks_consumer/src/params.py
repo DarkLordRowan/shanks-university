@@ -18,6 +18,12 @@ from collections.abc import Callable
 def autowrap(x: Any) -> Iterable[Any]:
     if x is not None and (isinstance(x, str) or not isinstance(x, Iterable)):
         return [x]
+    if isinstance(x, dict):
+        # ? consider as range value
+        return [
+            x["start"] + i * x["step"]
+            for i in range(int((x["stop"] - x["start"]) / x["step"]))
+        ]
     return x
 
 class BaseSeriesParam(ABC):
@@ -308,14 +314,13 @@ def load_series_params_from_data(
     series_list: list[SeriesParamJSON] = []
     for series_data in data["series"]:
         args = series_data.get("args", {})
-        args = (
-            {"x": map(float, autowrap(args))}
-            if not isinstance(args, dict)
-            else {
+        if not isinstance(args, dict):
+            args = {"x": map(float, autowrap(args))}
+        else:
+            args = {
                 str(key): map(float, autowrap(value))
                 for key, value in args.items()
             }
-        )
         series_list.append(
             SeriesParamJSON(name=series_data.get("name"), args=args)
         )
