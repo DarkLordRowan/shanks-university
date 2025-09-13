@@ -1,4 +1,4 @@
-from src.params import (
+from shanks_consumer.src.shanks_consumer.params import (
     BaseAccelParam,
     BaseSeriesParam,
 )
