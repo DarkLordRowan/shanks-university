@@ -1,8 +1,8 @@
 import pathlib
 
-from shanks_consumer.export import ExportTrialResults
-from shanks_consumer.params import get_series_params_from_json, get_accel_params_from_json
-from shanks_consumer.trial import ComplexTrial
+from src.export import ExportTrialResults
+from src.params import get_series_params_from_json, get_accel_params_from_json
+from src.trial import ComplexTrial
 
 def proc(json_file):
     st = ComplexTrial(
