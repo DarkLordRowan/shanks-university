@@ -1,480 +1,1687 @@
 [
     {
         "data": {
-            "accel_value": -83364.45954747066,
-            "accel_value_deviation": 83364.86762953247,
-            "n": 2,
-            "partial_sum": 6467.666666666667,
-            "partial_sum_deviation": 6467.258584604853,
-            "series_value": 6666.666666666667
+            "accel_value": 0.5403023016693559,
+            "accel_value_deviation": 4.198783876141476e-09,
+            "n": 4,
+            "partial_sum": 0.5403025793650794,
+            "partial_sum_deviation": 2.734969396511744e-07,
+            "series_value": 2.4801587301587298e-05
         },
-        "event": "divergent_accel_method",
+        "event": "slow_accel_method",
         "result": {
             "accel": {
                 "additional_args": {},
-                "m_value": 1,
-                "name": "LevinAlgorithm"
+                "m_value": 4,
+                "name": "ShanksAlgorithm"
             },
             "computed": [
                 {
-                    "accel_value": 6482.7004927754115,
-                    "accel_value_deviation": 6482.292410713598,
+                    "accel_value": 0.0,
+                    "accel_value_deviation": 0.5403023058681398,
                     "n": 1,
-                    "partial_sum": -199.0,
-                    "partial_sum_deviation": 199.4080820618134,
-                    "series_value": -200.0
+                    "partial_sum": 0.5,
+                    "partial_sum_deviation": 0.040302305868139765,
+                    "series_value": -0.5
                 },
                 {
-                    "accel_value": -83364.45954747066,
-                    "accel_value_deviation": 83364.86762953247,
+                    "accel_value": 0.0,
+                    "accel_value_deviation": 0.5403023058681398,
                     "n": 2,
-                    "partial_sum": 6467.666666666667,
-                    "partial_sum_deviation": 6467.258584604853,
-                    "series_value": 6666.666666666667
+                    "partial_sum": 0.5416666666666667,
+                    "partial_sum_deviation": 0.0013643607985269757,
+                    "series_value": 0.041666666666666664
                 },
                 {
-                    "accel_value": 573149.9031475608,
-                    "accel_value_deviation": 573149.495065499,
+                    "accel_value": 0.0,
+                    "accel_value_deviation": 0.5403023058681398,
                     "n": 3,
-                    "partial_sum": -82421.22222222222,
-                    "partial_sum_deviation": 82421.63030428403,
-                    "series_value": -88888.88888888889
+                    "partial_sum": 0.5402777777777777,
+                    "partial_sum_deviation": 2.4528090362019306e-05,
+                    "series_value": -0.0013888888888888887
                 },
                 {
-                    "accel_value": -2495698.7925796383,
-                    "accel_value_deviation": 2495699.2006617,
+                    "accel_value": 0.5403023016693559,
+                    "accel_value_deviation": 4.198783876141476e-09,
                     "n": 4,
-                    "partial_sum": 552499.4126984127,
-                    "partial_sum_deviation": 552499.0046163509,
-                    "series_value": 634920.6349206349
+                    "partial_sum": 0.5403025793650794,
+                    "partial_sum_deviation": 2.734969396511744e-07,
+                    "series_value": 2.4801587301587298e-05
+                },
+                {
+                    "accel_value": 0.5403023053713418,
+                    "accel_value_deviation": 4.967979361225616e-10,
+                    "n": 5,
+                    "partial_sum": 0.540302303791887,
+                    "partial_sum_deviation": 2.076252725302652e-09,
+                    "series_value": -2.755731922398589e-07
                 }
             ],
-            "error": null,
+            "error": {
+                "data": {
+                    "n": 6
+                },
+                "description": "division by zero"
+            },
             "series": {
                 "arguments": {
-                    "x": 20
+                    "x": 1.0
                 },
-                "lim": 0.40808206181339196,
+                "lim": 0.5403023058681398,
                 "name": "CosSeries"
             }
         }
     },
     {
         "data": {
-            "accel_value": 637761.859121127,
-            "accel_value_deviation": 637761.4510390653,
-            "n": 2,
-            "partial_sum": 6467.666666666667,
-            "partial_sum_deviation": 6467.258584604853,
-            "series_value": 6666.666666666667
+            "accel_value": 0.0,
+            "accel_value_deviation": 0.4161468365471424,
+            "n": 1,
+            "partial_sum": -1.0,
+            "partial_sum_deviation": 0.5838531634528576,
+            "series_value": -2.0
         },
-        "event": "divergent_accel_method",
+        "event": "slow_accel_method",
         "result": {
             "accel": {
                 "additional_args": {},
-                "m_value": 2,
-                "name": "LevinAlgorithm"
+                "m_value": 4,
+                "name": "ShanksAlgorithm"
             },
             "computed": [
                 {
-                    "accel_value": -86826.29191032815,
-                    "accel_value_deviation": 86826.69999238996,
+                    "accel_value": 0.0,
+                    "accel_value_deviation": 0.4161468365471424,
                     "n": 1,
-                    "partial_sum": -199.0,
-                    "partial_sum_deviation": 199.4080820618134,
-                    "series_value": -200.0
+                    "partial_sum": -1.0,
+                    "partial_sum_deviation": 0.5838531634528576,
+                    "series_value": -2.0
                 },
                 {
-                    "accel_value": 637761.859121127,
-                    "accel_value_deviation": 637761.4510390653,
+                    "accel_value": 0.0,
+                    "accel_value_deviation": 0.4161468365471424,
                     "n": 2,
-                    "partial_sum": 6467.666666666667,
-                    "partial_sum_deviation": 6467.258584604853,
-                    "series_value": 6666.666666666667
+                    "partial_sum": -0.3333333333333335,
+                    "partial_sum_deviation": 0.08281350321380893,
+                    "series_value": 0.6666666666666666
                 },
                 {
-                    "accel_value": -3198144.3301736363,
-                    "accel_value_deviation": 3198144.7382556982,
+                    "accel_value": 0.0,
+                    "accel_value_deviation": 0.4161468365471424,
                     "n": 3,
-                    "partial_sum": -82421.22222222222,
-                    "partial_sum_deviation": 82421.63030428403,
-                    "series_value": -88888.88888888889
+                    "partial_sum": -0.4222222222222224,
+                    "partial_sum_deviation": 0.006075385675079981,
+                    "series_value": -0.08888888888888888
                 },
                 {
-                    "accel_value": 13453065.25232079,
-                    "accel_value_deviation": 13453064.844238728,
+                    "accel_value": -0.41614682816619086,
+                    "accel_value_deviation": 8.38095154387375e-09,
                     "n": 4,
-                    "partial_sum": 552499.4126984127,
-                    "partial_sum_deviation": 552499.0046163509,
-                    "series_value": 634920.6349206349
+                    "partial_sum": -0.41587301587301595,
+                    "partial_sum_deviation": 0.00027382067412645705,
+                    "series_value": 0.006349206349206348
+                },
+                {
+                    "accel_value": -0.41614686765420233,
+                    "accel_value_deviation": 3.110705992792617e-08,
+                    "n": 5,
+                    "partial_sum": -0.4161552028218696,
+                    "partial_sum_deviation": 8.366274727167333e-06,
+                    "series_value": -0.0002821869488536155
+                },
+                {
+                    "accel_value": -0.4161468387956046,
+                    "accel_value_deviation": 2.2484621942098215e-09,
+                    "n": 6,
+                    "partial_sum": -0.41614665170220744,
+                    "partial_sum_deviation": 1.8484493496950805e-07,
+                    "series_value": 8.551119662230772e-06
+                },
+                {
+                    "accel_value": -0.4161468362304413,
+                    "accel_value_deviation": 3.1670110978154753e-10,
+                    "n": 7,
+                    "partial_sum": -0.4161468396389033,
+                    "partial_sum_deviation": 3.091760902851348e-09,
+                    "series_value": -1.879366958732038e-07
+                },
+                {
+                    "accel_value": -0.41614684229597104,
+                    "accel_value_deviation": 5.748828635354641e-09,
+                    "n": 8,
+                    "partial_sum": -0.416146836506625,
+                    "partial_sum_deviation": 4.0517422750241394e-11,
+                    "series_value": 3.132278264553397e-09
+                },
+                {
+                    "accel_value": -0.4161468960282338,
+                    "accel_value_deviation": 5.9481091385649165e-08,
+                    "n": 9,
+                    "partial_sum": -0.41614683654756973,
+                    "partial_sum_deviation": 4.2732484217822275e-13,
+                    "series_value": -4.094481391573068e-11
                 }
             ],
-            "error": null,
+            "error": {
+                "data": {
+                    "n": 10
+                },
+                "description": "division by zero"
+            },
             "series": {
                 "arguments": {
-                    "x": 20
+                    "x": 2.0
                 },
-                "lim": 0.40808206181339196,
+                "lim": -0.4161468365471424,
                 "name": "CosSeries"
             }
         }
     },
     {
         "data": {
-            "accel_value": -5643164.131598317,
-            "accel_value_deviation": 5643164.5396803785,
-            "n": 2,
-            "partial_sum": 6467.666666666667,
-            "partial_sum_deviation": 6467.258584604853,
-            "series_value": 6666.666666666667
-        },
-        "event": "divergent_accel_method",
-        "result": {
-            "accel": {
-                "additional_args": {},
-                "m_value": 3,
-                "name": "LevinAlgorithm"
-            },
-            "computed": [
-                {
-                    "accel_value": 803960.2493691136,
-                    "accel_value_deviation": 803959.8412870518,
-                    "n": 1,
-                    "partial_sum": -199.0,
-                    "partial_sum_deviation": 199.4080820618134,
-                    "series_value": -200.0
-                },
-                {
-                    "accel_value": -5643164.131598317,
-                    "accel_value_deviation": 5643164.5396803785,
-                    "n": 2,
-                    "partial_sum": 6467.666666666667,
-                    "partial_sum_deviation": 6467.258584604853,
-                    "series_value": 6666.666666666667
-                },
-                {
-                    "accel_value": 92754287.00942734,
-                    "accel_value_deviation": 92754286.60134527,
-                    "n": 3,
-                    "partial_sum": -82421.22222222222,
-                    "partial_sum_deviation": 82421.63030428403,
-                    "series_value": -88888.88888888889
-                },
-                {
-                    "accel_value": 69842651.8520099,
-                    "accel_value_deviation": 69842651.44392784,
-                    "n": 4,
-                    "partial_sum": 552499.4126984127,
-                    "partial_sum_deviation": 552499.0046163509,
-                    "series_value": 634920.6349206349
-                }
-            ],
-            "error": null,
-            "series": {
-                "arguments": {
-                    "x": 20
-                },
-                "lim": 0.40808206181339196,
-                "name": "CosSeries"
-            }
-        }
-    },
-    {
-        "data": {
-            "accel_value": 45894080.86494418,
-            "accel_value_deviation": 45894080.45686212,
-            "n": 3,
-            "partial_sum": -82421.22222222222,
-            "partial_sum_deviation": 82421.63030428403,
-            "series_value": -88888.88888888889
+            "accel_value": -0.41614686765420233,
+            "accel_value_deviation": 3.110705992792617e-08,
+            "n": 5,
+            "partial_sum": -0.4161552028218696,
+            "partial_sum_deviation": 8.366274727167333e-06,
+            "series_value": -0.0002821869488536155
         },
         "event": "divergent_accel_method",
         "result": {
             "accel": {
                 "additional_args": {},
                 "m_value": 4,
-                "name": "LevinAlgorithm"
+                "name": "ShanksAlgorithm"
             },
             "computed": [
                 {
-                    "accel_value": -48636694.53320268,
-                    "accel_value_deviation": 48636694.94128474,
+                    "accel_value": 0.0,
+                    "accel_value_deviation": 0.4161468365471424,
                     "n": 1,
-                    "partial_sum": -199.0,
-                    "partial_sum_deviation": 199.4080820618134,
-                    "series_value": -200.0
+                    "partial_sum": -1.0,
+                    "partial_sum_deviation": 0.5838531634528576,
+                    "series_value": -2.0
                 },
                 {
-                    "accel_value": -26181064.108508456,
-                    "accel_value_deviation": 26181064.516590517,
+                    "accel_value": 0.0,
+                    "accel_value_deviation": 0.4161468365471424,
                     "n": 2,
-                    "partial_sum": 6467.666666666667,
-                    "partial_sum_deviation": 6467.258584604853,
-                    "series_value": 6666.666666666667
+                    "partial_sum": -0.3333333333333335,
+                    "partial_sum_deviation": 0.08281350321380893,
+                    "series_value": 0.6666666666666666
                 },
                 {
-                    "accel_value": 45894080.86494418,
-                    "accel_value_deviation": 45894080.45686212,
+                    "accel_value": 0.0,
+                    "accel_value_deviation": 0.4161468365471424,
                     "n": 3,
-                    "partial_sum": -82421.22222222222,
-                    "partial_sum_deviation": 82421.63030428403,
-                    "series_value": -88888.88888888889
+                    "partial_sum": -0.4222222222222224,
+                    "partial_sum_deviation": 0.006075385675079981,
+                    "series_value": -0.08888888888888888
                 },
                 {
-                    "accel_value": -166365023.80483192,
-                    "accel_value_deviation": 166365024.212914,
+                    "accel_value": -0.41614682816619086,
+                    "accel_value_deviation": 8.38095154387375e-09,
                     "n": 4,
-                    "partial_sum": 552499.4126984127,
-                    "partial_sum_deviation": 552499.0046163509,
-                    "series_value": 634920.6349206349
+                    "partial_sum": -0.41587301587301595,
+                    "partial_sum_deviation": 0.00027382067412645705,
+                    "series_value": 0.006349206349206348
+                },
+                {
+                    "accel_value": -0.41614686765420233,
+                    "accel_value_deviation": 3.110705992792617e-08,
+                    "n": 5,
+                    "partial_sum": -0.4161552028218696,
+                    "partial_sum_deviation": 8.366274727167333e-06,
+                    "series_value": -0.0002821869488536155
+                },
+                {
+                    "accel_value": -0.4161468387956046,
+                    "accel_value_deviation": 2.2484621942098215e-09,
+                    "n": 6,
+                    "partial_sum": -0.41614665170220744,
+                    "partial_sum_deviation": 1.8484493496950805e-07,
+                    "series_value": 8.551119662230772e-06
+                },
+                {
+                    "accel_value": -0.4161468362304413,
+                    "accel_value_deviation": 3.1670110978154753e-10,
+                    "n": 7,
+                    "partial_sum": -0.4161468396389033,
+                    "partial_sum_deviation": 3.091760902851348e-09,
+                    "series_value": -1.879366958732038e-07
+                },
+                {
+                    "accel_value": -0.41614684229597104,
+                    "accel_value_deviation": 5.748828635354641e-09,
+                    "n": 8,
+                    "partial_sum": -0.416146836506625,
+                    "partial_sum_deviation": 4.0517422750241394e-11,
+                    "series_value": 3.132278264553397e-09
+                },
+                {
+                    "accel_value": -0.4161468960282338,
+                    "accel_value_deviation": 5.9481091385649165e-08,
+                    "n": 9,
+                    "partial_sum": -0.41614683654756973,
+                    "partial_sum_deviation": 4.2732484217822275e-13,
+                    "series_value": -4.094481391573068e-11
                 }
             ],
-            "error": null,
+            "error": {
+                "data": {
+                    "n": 10
+                },
+                "description": "division by zero"
+            },
             "series": {
                 "arguments": {
-                    "x": 20
+                    "x": 2.0
                 },
-                "lim": 0.40808206181339196,
+                "lim": -0.4161468365471424,
                 "name": "CosSeries"
             }
         }
     },
     {
         "data": {
-            "accel_value": -1384750554.9475617,
-            "accel_value_deviation": 1384750555.8098805,
-            "n": 2,
-            "partial_sum": 4161667.666666667,
-            "partial_sum_deviation": 4161666.8043477945,
-            "series_value": 4166666.666666667
+            "accel_value": 0.0,
+            "accel_value_deviation": 0.9899924966004454,
+            "n": 1,
+            "partial_sum": -3.5,
+            "partial_sum_deviation": 2.510007503399555,
+            "series_value": -4.5
         },
-        "event": "divergent_accel_method",
+        "event": "slow_accel_method",
         "result": {
             "accel": {
                 "additional_args": {},
-                "m_value": 1,
-                "name": "LevinAlgorithm"
+                "m_value": 4,
+                "name": "ShanksAlgorithm"
             },
             "computed": [
                 {
-                    "accel_value": 4161682.6667206674,
-                    "accel_value_deviation": 4161681.804401795,
+                    "accel_value": 0.0,
+                    "accel_value_deviation": 0.9899924966004454,
                     "n": 1,
-                    "partial_sum": -4999.0,
-                    "partial_sum_deviation": 4999.862318872288,
-                    "series_value": -5000.0
+                    "partial_sum": -3.5,
+                    "partial_sum_deviation": 2.510007503399555,
+                    "series_value": -4.5
                 },
                 {
-                    "accel_value": -1384750554.9475617,
-                    "accel_value_deviation": 1384750555.8098805,
+                    "accel_value": 0.0,
+                    "accel_value_deviation": 0.9899924966004454,
                     "n": 2,
-                    "partial_sum": 4161667.666666667,
-                    "partial_sum_deviation": 4161666.8043477945,
-                    "series_value": 4166666.666666667
+                    "partial_sum": -0.125,
+                    "partial_sum_deviation": 0.8649924966004454,
+                    "series_value": 3.375
                 },
                 {
-                    "accel_value": 246643646424.68256,
-                    "accel_value_deviation": 246643646423.82025,
+                    "accel_value": 0.0,
+                    "accel_value_deviation": 0.9899924966004454,
                     "n": 3,
-                    "partial_sum": -1384727221.222222,
-                    "partial_sum_deviation": 1384727222.0845408,
-                    "series_value": -1388888888.8888888
+                    "partial_sum": -1.1375000000000002,
+                    "partial_sum_deviation": 0.14750750339955476,
+                    "series_value": -1.0125
                 },
                 {
-                    "accel_value": -27313962276689.832,
-                    "accel_value_deviation": 27313962276690.695,
+                    "accel_value": -0.9899924961911661,
+                    "accel_value_deviation": 4.0927927713596546e-10,
                     "n": 4,
-                    "partial_sum": 246631145794.6508,
-                    "partial_sum_deviation": 246631145793.78848,
-                    "series_value": 248015873015.87302
+                    "partial_sum": -0.9747767857142857,
+                    "partial_sum_deviation": 0.015215710886159695,
+                    "series_value": 0.1627232142857143
+                },
+                {
+                    "accel_value": -0.9899924956043294,
+                    "accel_value_deviation": 9.961159674887199e-10,
+                    "n": 5,
+                    "partial_sum": -0.9910491071428573,
+                    "partial_sum_deviation": 0.0010566105424119066,
+                    "series_value": -0.01627232142857143
+                },
+                {
+                    "accel_value": -0.9899924976198151,
+                    "accel_value_deviation": 1.0193696997617963e-09,
+                    "n": 6,
+                    "partial_sum": -0.989939630681818,
+                    "partial_sum_deviation": 5.2865918627409414e-05,
+                    "series_value": 0.0011094764610389612
+                },
+                {
+                    "accel_value": -0.9899924240849193,
+                    "accel_value_deviation": 7.251552613940504e-08,
+                    "n": 7,
+                    "partial_sum": -0.989994494902419,
+                    "partial_sum_deviation": 1.9983019735603236e-06,
+                    "series_value": -5.486422060082775e-05
+                },
+                {
+                    "accel_value": -0.9899924997507159,
+                    "accel_value_deviation": 3.1502704889163624e-09,
+                    "n": 8,
+                    "partial_sum": -0.9899924374941463,
+                    "partial_sum_deviation": 5.9106299077349433e-08,
+                    "series_value": 2.0574082725310405e-06
+                },
+                {
+                    "accel_value": -0.9899924979586959,
+                    "accel_value_deviation": 1.3582505120623978e-09,
+                    "n": 9,
+                    "partial_sum": -0.9899924980061543,
+                    "partial_sum_deviation": 1.405708882629142e-09,
+                    "series_value": -6.051200801561883e-08
+                },
+                {
+                    "accel_value": -0.9899925006947871,
+                    "accel_value_deviation": 4.094341643501309e-09,
+                    "n": 10,
+                    "partial_sum": -0.9899924965729756,
+                    "partial_sum_deviation": 2.7469804209090398e-11,
+                    "series_value": 1.433179137212025e-09
                 }
             ],
             "error": null,
             "series": {
                 "arguments": {
-                    "x": 100
+                    "x": 3.0
                 },
-                "lim": 0.8623188722876839,
+                "lim": -0.9899924966004454,
                 "name": "CosSeries"
             }
         }
     },
     {
         "data": {
-            "accel_value": 246678297318.9621,
-            "accel_value_deviation": 246678297318.0998,
-            "n": 2,
-            "partial_sum": 4161667.666666667,
-            "partial_sum_deviation": 4161666.8043477945,
-            "series_value": 4166666.666666667
-        },
-        "event": "divergent_accel_method",
-        "result": {
-            "accel": {
-                "additional_args": {},
-                "m_value": 2,
-                "name": "LevinAlgorithm"
-            },
-            "computed": [
-                {
-                    "accel_value": -1384832229.035181,
-                    "accel_value_deviation": 1384832229.8974998,
-                    "n": 1,
-                    "partial_sum": -4999.0,
-                    "partial_sum_deviation": 4999.862318872288,
-                    "series_value": -5000.0
-                },
-                {
-                    "accel_value": 246678297318.9621,
-                    "accel_value_deviation": 246678297318.0998,
-                    "n": 2,
-                    "partial_sum": 4161667.666666667,
-                    "partial_sum_deviation": 4161666.8043477945,
-                    "series_value": 4166666.666666667
-                },
-                {
-                    "accel_value": -27321726227952.145,
-                    "accel_value_deviation": 27321726227953.008,
-                    "n": 3,
-                    "partial_sum": -1384727221.222222,
-                    "partial_sum_deviation": 1384727222.0845408,
-                    "series_value": -1388888888.8888888
-                },
-                {
-                    "accel_value": 2061929357237043.2,
-                    "accel_value_deviation": 2061929357237042.5,
-                    "n": 4,
-                    "partial_sum": 246631145794.6508,
-                    "partial_sum_deviation": 246631145793.78848,
-                    "series_value": 248015873015.87302
-                }
-            ],
-            "error": null,
-            "series": {
-                "arguments": {
-                    "x": 100
-                },
-                "lim": 0.8623188722876839,
-                "name": "CosSeries"
-            }
-        }
-    },
-    {
-        "data": {
-            "accel_value": -27335786186726.61,
-            "accel_value_deviation": 27335786186727.473,
-            "n": 2,
-            "partial_sum": 4161667.666666667,
-            "partial_sum_deviation": 4161666.8043477945,
-            "series_value": 4166666.666666667
-        },
-        "event": "divergent_accel_method",
-        "result": {
-            "accel": {
-                "additional_args": {},
-                "m_value": 3,
-                "name": "LevinAlgorithm"
-            },
-            "computed": [
-                {
-                    "accel_value": 246745595359.17572,
-                    "accel_value_deviation": 246745595358.31342,
-                    "n": 1,
-                    "partial_sum": -4999.0,
-                    "partial_sum_deviation": 4999.862318872288,
-                    "series_value": -5000.0
-                },
-                {
-                    "accel_value": -27335786186726.61,
-                    "accel_value_deviation": 27335786186727.473,
-                    "n": 2,
-                    "partial_sum": 4161667.666666667,
-                    "partial_sum_deviation": 4161666.8043477945,
-                    "series_value": 4166666.666666667
-                },
-                {
-                    "accel_value": 2063749205174084.2,
-                    "accel_value_deviation": 2063749205174083.5,
-                    "n": 3,
-                    "partial_sum": -1384727221.222222,
-                    "partial_sum_deviation": 1384727222.0845408,
-                    "series_value": -1388888888.8888888
-                },
-                {
-                    "accel_value": -1.1295417573391013e+17,
-                    "accel_value_deviation": 1.1295417573391013e+17,
-                    "n": 4,
-                    "partial_sum": 246631145794.6508,
-                    "partial_sum_deviation": 246631145793.78848,
-                    "series_value": 248015873015.87302
-                }
-            ],
-            "error": null,
-            "series": {
-                "arguments": {
-                    "x": 100
-                },
-                "lim": 0.8623188722876839,
-                "name": "CosSeries"
-            }
-        }
-    },
-    {
-        "data": {
-            "accel_value": 2066495548982741.5,
-            "accel_value_deviation": 2066495548982740.8,
-            "n": 2,
-            "partial_sum": 4161667.666666667,
-            "partial_sum_deviation": 4161666.8043477945,
-            "series_value": 4166666.666666667
+            "accel_value": -0.9899924956043294,
+            "accel_value_deviation": 9.961159674887199e-10,
+            "n": 5,
+            "partial_sum": -0.9910491071428573,
+            "partial_sum_deviation": 0.0010566105424119066,
+            "series_value": -0.01627232142857143
         },
         "event": "divergent_accel_method",
         "result": {
             "accel": {
                 "additional_args": {},
                 "m_value": 4,
-                "name": "LevinAlgorithm"
+                "name": "ShanksAlgorithm"
             },
             "computed": [
                 {
-                    "accel_value": -27357606702174.5,
-                    "accel_value_deviation": 27357606702175.363,
+                    "accel_value": 0.0,
+                    "accel_value_deviation": 0.9899924966004454,
                     "n": 1,
-                    "partial_sum": -4999.0,
-                    "partial_sum_deviation": 4999.862318872288,
-                    "series_value": -5000.0
+                    "partial_sum": -3.5,
+                    "partial_sum_deviation": 2.510007503399555,
+                    "series_value": -4.5
                 },
                 {
-                    "accel_value": 2066495548982741.5,
-                    "accel_value_deviation": 2066495548982740.8,
+                    "accel_value": 0.0,
+                    "accel_value_deviation": 0.9899924966004454,
                     "n": 2,
-                    "partial_sum": 4161667.666666667,
-                    "partial_sum_deviation": 4161666.8043477945,
-                    "series_value": 4166666.666666667
+                    "partial_sum": -0.125,
+                    "partial_sum_deviation": 0.8649924966004454,
+                    "series_value": 3.375
                 },
                 {
-                    "accel_value": -1.1318890720889381e+17,
-                    "accel_value_deviation": 1.1318890720889381e+17,
+                    "accel_value": 0.0,
+                    "accel_value_deviation": 0.9899924966004454,
                     "n": 3,
-                    "partial_sum": -1384727221.222222,
-                    "partial_sum_deviation": 1384727222.0845408,
-                    "series_value": -1388888888.8888888
+                    "partial_sum": -1.1375000000000002,
+                    "partial_sum_deviation": 0.14750750339955476,
+                    "series_value": -1.0125
                 },
                 {
-                    "accel_value": 4.70128009904664e+18,
-                    "accel_value_deviation": 4.70128009904664e+18,
+                    "accel_value": -0.9899924961911661,
+                    "accel_value_deviation": 4.0927927713596546e-10,
                     "n": 4,
-                    "partial_sum": 246631145794.6508,
-                    "partial_sum_deviation": 246631145793.78848,
-                    "series_value": 248015873015.87302
+                    "partial_sum": -0.9747767857142857,
+                    "partial_sum_deviation": 0.015215710886159695,
+                    "series_value": 0.1627232142857143
+                },
+                {
+                    "accel_value": -0.9899924956043294,
+                    "accel_value_deviation": 9.961159674887199e-10,
+                    "n": 5,
+                    "partial_sum": -0.9910491071428573,
+                    "partial_sum_deviation": 0.0010566105424119066,
+                    "series_value": -0.01627232142857143
+                },
+                {
+                    "accel_value": -0.9899924976198151,
+                    "accel_value_deviation": 1.0193696997617963e-09,
+                    "n": 6,
+                    "partial_sum": -0.989939630681818,
+                    "partial_sum_deviation": 5.2865918627409414e-05,
+                    "series_value": 0.0011094764610389612
+                },
+                {
+                    "accel_value": -0.9899924240849193,
+                    "accel_value_deviation": 7.251552613940504e-08,
+                    "n": 7,
+                    "partial_sum": -0.989994494902419,
+                    "partial_sum_deviation": 1.9983019735603236e-06,
+                    "series_value": -5.486422060082775e-05
+                },
+                {
+                    "accel_value": -0.9899924997507159,
+                    "accel_value_deviation": 3.1502704889163624e-09,
+                    "n": 8,
+                    "partial_sum": -0.9899924374941463,
+                    "partial_sum_deviation": 5.9106299077349433e-08,
+                    "series_value": 2.0574082725310405e-06
+                },
+                {
+                    "accel_value": -0.9899924979586959,
+                    "accel_value_deviation": 1.3582505120623978e-09,
+                    "n": 9,
+                    "partial_sum": -0.9899924980061543,
+                    "partial_sum_deviation": 1.405708882629142e-09,
+                    "series_value": -6.051200801561883e-08
+                },
+                {
+                    "accel_value": -0.9899925006947871,
+                    "accel_value_deviation": 4.094341643501309e-09,
+                    "n": 10,
+                    "partial_sum": -0.9899924965729756,
+                    "partial_sum_deviation": 2.7469804209090398e-11,
+                    "series_value": 1.433179137212025e-09
                 }
             ],
             "error": null,
             "series": {
                 "arguments": {
-                    "x": 100
+                    "x": 3.0
                 },
-                "lim": 0.8623188722876839,
+                "lim": -0.9899924966004454,
+                "name": "CosSeries"
+            }
+        }
+    },
+    {
+        "data": {
+            "accel_value": 0.0,
+            "accel_value_deviation": 0.6536436208636119,
+            "n": 1,
+            "partial_sum": -7.0,
+            "partial_sum_deviation": 6.346356379136388,
+            "series_value": -8.0
+        },
+        "event": "slow_accel_method",
+        "result": {
+            "accel": {
+                "additional_args": {},
+                "m_value": 4,
+                "name": "ShanksAlgorithm"
+            },
+            "computed": [
+                {
+                    "accel_value": 0.0,
+                    "accel_value_deviation": 0.6536436208636119,
+                    "n": 1,
+                    "partial_sum": -7.0,
+                    "partial_sum_deviation": 6.346356379136388,
+                    "series_value": -8.0
+                },
+                {
+                    "accel_value": 0.0,
+                    "accel_value_deviation": 0.6536436208636119,
+                    "n": 2,
+                    "partial_sum": 3.666666666666666,
+                    "partial_sum_deviation": 4.320310287530278,
+                    "series_value": 10.666666666666666
+                },
+                {
+                    "accel_value": 0.0,
+                    "accel_value_deviation": 0.6536436208636119,
+                    "n": 3,
+                    "partial_sum": -2.022222222222222,
+                    "partial_sum_deviation": 1.3685786013586103,
+                    "series_value": -5.688888888888888
+                },
+                {
+                    "accel_value": -0.6536435921705848,
+                    "accel_value_deviation": 2.8693027176451835e-08,
+                    "n": 4,
+                    "partial_sum": -0.3968253968253972,
+                    "partial_sum_deviation": 0.25681822403821475,
+                    "series_value": 1.6253968253968252
+                },
+                {
+                    "accel_value": -0.6536436217707631,
+                    "accel_value_deviation": 9.07151131990247e-10,
+                    "n": 5,
+                    "partial_sum": -0.6857848324514995,
+                    "partial_sum_deviation": 0.03214121158788752,
+                    "series_value": -0.28895943562610227
+                },
+                {
+                    "accel_value": -0.6536436209783136,
+                    "accel_value_deviation": 1.1470169258842589e-10,
+                    "n": 6,
+                    "partial_sum": -0.6507594463150022,
+                    "partial_sum_deviation": 0.002884174548609786,
+                    "series_value": 0.03502538613649724
+                },
+                {
+                    "accel_value": -0.653643621693457,
+                    "accel_value_deviation": 8.298450815402703e-10,
+                    "n": 7,
+                    "partial_sum": -0.653838601140189,
+                    "partial_sum_deviation": 0.0001949802765770503,
+                    "series_value": -0.003079154825186571
+                },
+                {
+                    "accel_value": -0.6536436191117057,
+                    "accel_value_deviation": 1.7519062867066282e-09,
+                    "n": 8,
+                    "partial_sum": -0.6536333241518424,
+                    "partial_sum_deviation": 1.0296711769552935e-05,
+                    "series_value": 0.0002052769883457714
+                },
+                {
+                    "accel_value": -0.653643622082259,
+                    "accel_value_deviation": 1.218647072143142e-09,
+                    "n": 9,
+                    "partial_sum": -0.6536440575891418,
+                    "partial_sum_deviation": 4.367255298509676e-07,
+                    "series_value": -1.0733437299125304e-05
+                },
+                {
+                    "accel_value": -0.6536436218479279,
+                    "accel_value_deviation": 9.843159620714914e-10,
+                    "n": 10,
+                    "partial_sum": -0.6536436056549398,
+                    "partial_sum_deviation": 1.5208672099475962e-08,
+                    "series_value": 4.5193420206843385e-07
+                }
+            ],
+            "error": null,
+            "series": {
+                "arguments": {
+                    "x": 4.0
+                },
+                "lim": -0.6536436208636119,
+                "name": "CosSeries"
+            }
+        }
+    },
+    {
+        "data": {
+            "accel_value": -0.653643621693457,
+            "accel_value_deviation": 8.298450815402703e-10,
+            "n": 7,
+            "partial_sum": -0.653838601140189,
+            "partial_sum_deviation": 0.0001949802765770503,
+            "series_value": -0.003079154825186571
+        },
+        "event": "divergent_accel_method",
+        "result": {
+            "accel": {
+                "additional_args": {},
+                "m_value": 4,
+                "name": "ShanksAlgorithm"
+            },
+            "computed": [
+                {
+                    "accel_value": 0.0,
+                    "accel_value_deviation": 0.6536436208636119,
+                    "n": 1,
+                    "partial_sum": -7.0,
+                    "partial_sum_deviation": 6.346356379136388,
+                    "series_value": -8.0
+                },
+                {
+                    "accel_value": 0.0,
+                    "accel_value_deviation": 0.6536436208636119,
+                    "n": 2,
+                    "partial_sum": 3.666666666666666,
+                    "partial_sum_deviation": 4.320310287530278,
+                    "series_value": 10.666666666666666
+                },
+                {
+                    "accel_value": 0.0,
+                    "accel_value_deviation": 0.6536436208636119,
+                    "n": 3,
+                    "partial_sum": -2.022222222222222,
+                    "partial_sum_deviation": 1.3685786013586103,
+                    "series_value": -5.688888888888888
+                },
+                {
+                    "accel_value": -0.6536435921705848,
+                    "accel_value_deviation": 2.8693027176451835e-08,
+                    "n": 4,
+                    "partial_sum": -0.3968253968253972,
+                    "partial_sum_deviation": 0.25681822403821475,
+                    "series_value": 1.6253968253968252
+                },
+                {
+                    "accel_value": -0.6536436217707631,
+                    "accel_value_deviation": 9.07151131990247e-10,
+                    "n": 5,
+                    "partial_sum": -0.6857848324514995,
+                    "partial_sum_deviation": 0.03214121158788752,
+                    "series_value": -0.28895943562610227
+                },
+                {
+                    "accel_value": -0.6536436209783136,
+                    "accel_value_deviation": 1.1470169258842589e-10,
+                    "n": 6,
+                    "partial_sum": -0.6507594463150022,
+                    "partial_sum_deviation": 0.002884174548609786,
+                    "series_value": 0.03502538613649724
+                },
+                {
+                    "accel_value": -0.653643621693457,
+                    "accel_value_deviation": 8.298450815402703e-10,
+                    "n": 7,
+                    "partial_sum": -0.653838601140189,
+                    "partial_sum_deviation": 0.0001949802765770503,
+                    "series_value": -0.003079154825186571
+                },
+                {
+                    "accel_value": -0.6536436191117057,
+                    "accel_value_deviation": 1.7519062867066282e-09,
+                    "n": 8,
+                    "partial_sum": -0.6536333241518424,
+                    "partial_sum_deviation": 1.0296711769552935e-05,
+                    "series_value": 0.0002052769883457714
+                },
+                {
+                    "accel_value": -0.653643622082259,
+                    "accel_value_deviation": 1.218647072143142e-09,
+                    "n": 9,
+                    "partial_sum": -0.6536440575891418,
+                    "partial_sum_deviation": 4.367255298509676e-07,
+                    "series_value": -1.0733437299125304e-05
+                },
+                {
+                    "accel_value": -0.6536436218479279,
+                    "accel_value_deviation": 9.843159620714914e-10,
+                    "n": 10,
+                    "partial_sum": -0.6536436056549398,
+                    "partial_sum_deviation": 1.5208672099475962e-08,
+                    "series_value": 4.5193420206843385e-07
+                }
+            ],
+            "error": null,
+            "series": {
+                "arguments": {
+                    "x": 4.0
+                },
+                "lim": -0.6536436208636119,
+                "name": "CosSeries"
+            }
+        }
+    },
+    {
+        "data": {
+            "accel_value": 0.0,
+            "accel_value_deviation": 0.28366218546322625,
+            "n": 1,
+            "partial_sum": -11.5,
+            "partial_sum_deviation": 11.783662185463227,
+            "series_value": -12.5
+        },
+        "event": "slow_accel_method",
+        "result": {
+            "accel": {
+                "additional_args": {},
+                "m_value": 4,
+                "name": "ShanksAlgorithm"
+            },
+            "computed": [
+                {
+                    "accel_value": 0.0,
+                    "accel_value_deviation": 0.28366218546322625,
+                    "n": 1,
+                    "partial_sum": -11.5,
+                    "partial_sum_deviation": 11.783662185463227,
+                    "series_value": -12.5
+                },
+                {
+                    "accel_value": 0.0,
+                    "accel_value_deviation": 0.28366218546322625,
+                    "n": 2,
+                    "partial_sum": 14.541666666666668,
+                    "partial_sum_deviation": 14.258004481203441,
+                    "series_value": 26.041666666666668
+                },
+                {
+                    "accel_value": 0.0,
+                    "accel_value_deviation": 0.28366218546322625,
+                    "n": 3,
+                    "partial_sum": -7.159722222222218,
+                    "partial_sum_deviation": 7.4433844076854445,
+                    "series_value": -21.70138888888889
+                },
+                {
+                    "accel_value": 0.283662583820297,
+                    "accel_value_deviation": 3.983570707744022e-07,
+                    "n": 4,
+                    "partial_sum": 2.52839781746032,
+                    "partial_sum_deviation": 2.2447356319970937,
+                    "series_value": 9.68812003968254
+                },
+                {
+                    "accel_value": 0.28366213332404305,
+                    "accel_value_deviation": 5.213918319313393e-08,
+                    "n": 5,
+                    "partial_sum": -0.1627466380070537,
+                    "partial_sum_deviation": 0.44640882347027994,
+                    "series_value": -2.6911444554673722
+                },
+                {
+                    "accel_value": 0.28366218773340585,
+                    "accel_value_deviation": 2.2701795998614216e-09,
+                    "n": 6,
+                    "partial_sum": 0.34693981189207035,
+                    "partial_sum_deviation": 0.0632776264288441,
+                    "series_value": 0.5096864498991235
+                },
+                {
+                    "accel_value": 0.2836621853887501,
+                    "accel_value_deviation": 7.447614747135844e-11,
+                    "n": 7,
+                    "partial_sum": 0.2769279369059262,
+                    "partial_sum_deviation": 0.006734248557300038,
+                    "series_value": -0.07001187498614334
+                },
+                {
+                    "accel_value": 0.2836621856749547,
+                    "accel_value_deviation": 2.1172846809136558e-10,
+                    "n": 8,
+                    "partial_sum": 0.28422084055031516,
+                    "partial_sum_deviation": 0.0005586550870889107,
+                    "series_value": 0.007292903644389931
+                },
+                {
+                    "accel_value": 0.2836621869362598,
+                    "accel_value_deviation": 1.4730335284873775e-09,
+                    "n": 9,
+                    "partial_sum": 0.28362501508917237,
+                    "partial_sum_deviation": 3.7170374053874244e-05,
+                    "series_value": -0.0005958254611429682
+                },
+                {
+                    "accel_value": 0.28366218985086133,
+                    "accel_value_deviation": 4.387635088587416e-09,
+                    "n": 10,
+                    "partial_sum": 0.28366421413266857,
+                    "partial_sum_deviation": 2.028669442322162e-06,
+                    "series_value": 3.9199043496247906e-05
+                }
+            ],
+            "error": null,
+            "series": {
+                "arguments": {
+                    "x": 5.0
+                },
+                "lim": 0.28366218546322625,
+                "name": "CosSeries"
+            }
+        }
+    },
+    {
+        "data": {
+            "accel_value": 0.2836621856749547,
+            "accel_value_deviation": 2.1172846809136558e-10,
+            "n": 8,
+            "partial_sum": 0.28422084055031516,
+            "partial_sum_deviation": 0.0005586550870889107,
+            "series_value": 0.007292903644389931
+        },
+        "event": "divergent_accel_method",
+        "result": {
+            "accel": {
+                "additional_args": {},
+                "m_value": 4,
+                "name": "ShanksAlgorithm"
+            },
+            "computed": [
+                {
+                    "accel_value": 0.0,
+                    "accel_value_deviation": 0.28366218546322625,
+                    "n": 1,
+                    "partial_sum": -11.5,
+                    "partial_sum_deviation": 11.783662185463227,
+                    "series_value": -12.5
+                },
+                {
+                    "accel_value": 0.0,
+                    "accel_value_deviation": 0.28366218546322625,
+                    "n": 2,
+                    "partial_sum": 14.541666666666668,
+                    "partial_sum_deviation": 14.258004481203441,
+                    "series_value": 26.041666666666668
+                },
+                {
+                    "accel_value": 0.0,
+                    "accel_value_deviation": 0.28366218546322625,
+                    "n": 3,
+                    "partial_sum": -7.159722222222218,
+                    "partial_sum_deviation": 7.4433844076854445,
+                    "series_value": -21.70138888888889
+                },
+                {
+                    "accel_value": 0.283662583820297,
+                    "accel_value_deviation": 3.983570707744022e-07,
+                    "n": 4,
+                    "partial_sum": 2.52839781746032,
+                    "partial_sum_deviation": 2.2447356319970937,
+                    "series_value": 9.68812003968254
+                },
+                {
+                    "accel_value": 0.28366213332404305,
+                    "accel_value_deviation": 5.213918319313393e-08,
+                    "n": 5,
+                    "partial_sum": -0.1627466380070537,
+                    "partial_sum_deviation": 0.44640882347027994,
+                    "series_value": -2.6911444554673722
+                },
+                {
+                    "accel_value": 0.28366218773340585,
+                    "accel_value_deviation": 2.2701795998614216e-09,
+                    "n": 6,
+                    "partial_sum": 0.34693981189207035,
+                    "partial_sum_deviation": 0.0632776264288441,
+                    "series_value": 0.5096864498991235
+                },
+                {
+                    "accel_value": 0.2836621853887501,
+                    "accel_value_deviation": 7.447614747135844e-11,
+                    "n": 7,
+                    "partial_sum": 0.2769279369059262,
+                    "partial_sum_deviation": 0.006734248557300038,
+                    "series_value": -0.07001187498614334
+                },
+                {
+                    "accel_value": 0.2836621856749547,
+                    "accel_value_deviation": 2.1172846809136558e-10,
+                    "n": 8,
+                    "partial_sum": 0.28422084055031516,
+                    "partial_sum_deviation": 0.0005586550870889107,
+                    "series_value": 0.007292903644389931
+                },
+                {
+                    "accel_value": 0.2836621869362598,
+                    "accel_value_deviation": 1.4730335284873775e-09,
+                    "n": 9,
+                    "partial_sum": 0.28362501508917237,
+                    "partial_sum_deviation": 3.7170374053874244e-05,
+                    "series_value": -0.0005958254611429682
+                },
+                {
+                    "accel_value": 0.28366218985086133,
+                    "accel_value_deviation": 4.387635088587416e-09,
+                    "n": 10,
+                    "partial_sum": 0.28366421413266857,
+                    "partial_sum_deviation": 2.028669442322162e-06,
+                    "series_value": 3.9199043496247906e-05
+                }
+            ],
+            "error": null,
+            "series": {
+                "arguments": {
+                    "x": 5.0
+                },
+                "lim": 0.28366218546322625,
+                "name": "CosSeries"
+            }
+        }
+    },
+    {
+        "data": {
+            "accel_value": 0.0,
+            "accel_value_deviation": 0.960170286650366,
+            "n": 1,
+            "partial_sum": -17.0,
+            "partial_sum_deviation": 17.960170286650367,
+            "series_value": -18.0
+        },
+        "event": "slow_accel_method",
+        "result": {
+            "accel": {
+                "additional_args": {},
+                "m_value": 4,
+                "name": "ShanksAlgorithm"
+            },
+            "computed": [
+                {
+                    "accel_value": 0.0,
+                    "accel_value_deviation": 0.960170286650366,
+                    "n": 1,
+                    "partial_sum": -17.0,
+                    "partial_sum_deviation": 17.960170286650367,
+                    "series_value": -18.0
+                },
+                {
+                    "accel_value": 0.0,
+                    "accel_value_deviation": 0.960170286650366,
+                    "n": 2,
+                    "partial_sum": 37.0,
+                    "partial_sum_deviation": 36.03982971334963,
+                    "series_value": 54.0
+                },
+                {
+                    "accel_value": 0.0,
+                    "accel_value_deviation": 0.960170286650366,
+                    "n": 3,
+                    "partial_sum": -27.799999999999997,
+                    "partial_sum_deviation": 28.760170286650364,
+                    "series_value": -64.8
+                },
+                {
+                    "accel_value": 0.9601768460881962,
+                    "accel_value_deviation": 6.559437830233605e-06,
+                    "n": 4,
+                    "partial_sum": 13.857142857142861,
+                    "partial_sum_deviation": 12.896972570492496,
+                    "series_value": 41.65714285714286
+                },
+                {
+                    "accel_value": 0.9601689324475801,
+                    "accel_value_deviation": 1.354202785908143e-06,
+                    "n": 5,
+                    "partial_sum": -2.805714285714288,
+                    "partial_sum_deviation": 3.7658845723646537,
+                    "series_value": -16.662857142857145
+                },
+                {
+                    "accel_value": 0.9601703860927676,
+                    "accel_value_deviation": 9.944240164649898e-08,
+                    "n": 6,
+                    "partial_sum": 1.7387012987013044,
+                    "partial_sum_deviation": 0.7785310120509384,
+                    "series_value": 4.544415584415585
+                },
+                {
+                    "accel_value": 0.9601702815066518,
+                    "accel_value_deviation": 5.143714121302878e-09,
+                    "n": 7,
+                    "partial_sum": 0.8398059083773433,
+                    "partial_sum_deviation": 0.12036437827302271,
+                    "series_value": -0.8988953903239618
+                },
+                {
+                    "accel_value": 0.9601702866557745,
+                    "accel_value_deviation": 5.408562486763913e-12,
+                    "n": 8,
+                    "partial_sum": 0.9746402169259298,
+                    "partial_sum_deviation": 0.01446993027556387,
+                    "series_value": 0.13483430854859427
+                },
+                {
+                    "accel_value": 0.9601702881026083,
+                    "accel_value_deviation": 1.452242326394071e-09,
+                    "n": 9,
+                    "partial_sum": 0.9587773570966852,
+                    "partial_sum_deviation": 0.001392929553680755,
+                    "series_value": -0.015862859829246383
+                },
+                {
+                    "accel_value": 0.9601702877014856,
+                    "accel_value_deviation": 1.0511196357754216e-09,
+                    "n": 10,
+                    "partial_sum": 0.9602801543436721,
+                    "partial_sum_deviation": 0.00010986769330612045,
+                    "series_value": 0.0015027972469812364
+                }
+            ],
+            "error": null,
+            "series": {
+                "arguments": {
+                    "x": 6.0
+                },
+                "lim": 0.960170286650366,
+                "name": "CosSeries"
+            }
+        }
+    },
+    {
+        "data": {
+            "accel_value": 0.9601702881026083,
+            "accel_value_deviation": 1.452242326394071e-09,
+            "n": 9,
+            "partial_sum": 0.9587773570966852,
+            "partial_sum_deviation": 0.001392929553680755,
+            "series_value": -0.015862859829246383
+        },
+        "event": "divergent_accel_method",
+        "result": {
+            "accel": {
+                "additional_args": {},
+                "m_value": 4,
+                "name": "ShanksAlgorithm"
+            },
+            "computed": [
+                {
+                    "accel_value": 0.0,
+                    "accel_value_deviation": 0.960170286650366,
+                    "n": 1,
+                    "partial_sum": -17.0,
+                    "partial_sum_deviation": 17.960170286650367,
+                    "series_value": -18.0
+                },
+                {
+                    "accel_value": 0.0,
+                    "accel_value_deviation": 0.960170286650366,
+                    "n": 2,
+                    "partial_sum": 37.0,
+                    "partial_sum_deviation": 36.03982971334963,
+                    "series_value": 54.0
+                },
+                {
+                    "accel_value": 0.0,
+                    "accel_value_deviation": 0.960170286650366,
+                    "n": 3,
+                    "partial_sum": -27.799999999999997,
+                    "partial_sum_deviation": 28.760170286650364,
+                    "series_value": -64.8
+                },
+                {
+                    "accel_value": 0.9601768460881962,
+                    "accel_value_deviation": 6.559437830233605e-06,
+                    "n": 4,
+                    "partial_sum": 13.857142857142861,
+                    "partial_sum_deviation": 12.896972570492496,
+                    "series_value": 41.65714285714286
+                },
+                {
+                    "accel_value": 0.9601689324475801,
+                    "accel_value_deviation": 1.354202785908143e-06,
+                    "n": 5,
+                    "partial_sum": -2.805714285714288,
+                    "partial_sum_deviation": 3.7658845723646537,
+                    "series_value": -16.662857142857145
+                },
+                {
+                    "accel_value": 0.9601703860927676,
+                    "accel_value_deviation": 9.944240164649898e-08,
+                    "n": 6,
+                    "partial_sum": 1.7387012987013044,
+                    "partial_sum_deviation": 0.7785310120509384,
+                    "series_value": 4.544415584415585
+                },
+                {
+                    "accel_value": 0.9601702815066518,
+                    "accel_value_deviation": 5.143714121302878e-09,
+                    "n": 7,
+                    "partial_sum": 0.8398059083773433,
+                    "partial_sum_deviation": 0.12036437827302271,
+                    "series_value": -0.8988953903239618
+                },
+                {
+                    "accel_value": 0.9601702866557745,
+                    "accel_value_deviation": 5.408562486763913e-12,
+                    "n": 8,
+                    "partial_sum": 0.9746402169259298,
+                    "partial_sum_deviation": 0.01446993027556387,
+                    "series_value": 0.13483430854859427
+                },
+                {
+                    "accel_value": 0.9601702881026083,
+                    "accel_value_deviation": 1.452242326394071e-09,
+                    "n": 9,
+                    "partial_sum": 0.9587773570966852,
+                    "partial_sum_deviation": 0.001392929553680755,
+                    "series_value": -0.015862859829246383
+                },
+                {
+                    "accel_value": 0.9601702877014856,
+                    "accel_value_deviation": 1.0511196357754216e-09,
+                    "n": 10,
+                    "partial_sum": 0.9602801543436721,
+                    "partial_sum_deviation": 0.00010986769330612045,
+                    "series_value": 0.0015027972469812364
+                }
+            ],
+            "error": null,
+            "series": {
+                "arguments": {
+                    "x": 6.0
+                },
+                "lim": 0.960170286650366,
+                "name": "CosSeries"
+            }
+        }
+    },
+    {
+        "data": {
+            "accel_value": 0.0,
+            "accel_value_deviation": 0.7539022543433046,
+            "n": 1,
+            "partial_sum": -23.5,
+            "partial_sum_deviation": 24.253902254343306,
+            "series_value": -24.5
+        },
+        "event": "slow_accel_method",
+        "result": {
+            "accel": {
+                "additional_args": {},
+                "m_value": 4,
+                "name": "ShanksAlgorithm"
+            },
+            "computed": [
+                {
+                    "accel_value": 0.0,
+                    "accel_value_deviation": 0.7539022543433046,
+                    "n": 1,
+                    "partial_sum": -23.5,
+                    "partial_sum_deviation": 24.253902254343306,
+                    "series_value": -24.5
+                },
+                {
+                    "accel_value": 0.0,
+                    "accel_value_deviation": 0.7539022543433046,
+                    "n": 2,
+                    "partial_sum": 76.54166666666666,
+                    "partial_sum_deviation": 75.78776441232336,
+                    "series_value": 100.04166666666666
+                },
+                {
+                    "accel_value": 0.0,
+                    "accel_value_deviation": 0.7539022543433046,
+                    "n": 3,
+                    "partial_sum": -86.85972222222222,
+                    "partial_sum_deviation": 87.61362447656552,
+                    "series_value": -163.40138888888887
+                },
+                {
+                    "accel_value": 0.7541159531981063,
+                    "accel_value_deviation": 0.0002136988548017138,
+                    "n": 4,
+                    "partial_sum": 56.11649305555554,
+                    "partial_sum_deviation": 55.362590801212235,
+                    "series_value": 142.97621527777775
+                },
+                {
+                    "accel_value": 0.7538776844943473,
+                    "accel_value_deviation": 2.456984895726766e-05,
+                    "n": 5,
+                    "partial_sum": -21.726113040123465,
+                    "partial_sum_deviation": 22.48001529446677,
+                    "series_value": -77.84260609567899
+                },
+                {
+                    "accel_value": 0.7539046480965634,
+                    "accel_value_deviation": 2.3937532588336197e-06,
+                    "n": 6,
+                    "partial_sum": 7.17000588933314,
+                    "partial_sum_deviation": 6.4161036349898355,
+                    "series_value": 28.896118929456595
+                },
+                {
+                    "accel_value": 0.7539020788335513,
+                    "accel_value_deviation": 1.7550975328628482e-07,
+                    "n": 7,
+                    "partial_sum": -0.6097184378282456,
+                    "partial_sum_deviation": 1.3636206921715504,
+                    "series_value": -7.77972432716139
+                },
+                {
+                    "accel_value": 0.7539022648052616,
+                    "accel_value_deviation": 1.0461956967411368e-08,
+                    "n": 8,
+                    "partial_sum": 0.9786419456338704,
+                    "partial_sum_deviation": 0.2247396912905658,
+                    "series_value": 1.5883603834621172
+                },
+                {
+                    "accel_value": 0.7539022538706815,
+                    "accel_value_deviation": 4.726230518059538e-10,
+                    "n": 9,
+                    "partial_sum": 0.7242966554716361,
+                    "partial_sum_deviation": 0.02960559887166847,
+                    "series_value": -0.25434529016223445
+                },
+                {
+                    "accel_value": 0.7539022531899926,
+                    "accel_value_deviation": 1.153312001456186e-09,
+                    "n": 10,
+                    "partial_sum": 0.7570938113083401,
+                    "partial_sum_deviation": 0.0031915569650354803,
+                    "series_value": 0.03279715583670918
+                }
+            ],
+            "error": null,
+            "series": {
+                "arguments": {
+                    "x": 7.0
+                },
+                "lim": 0.7539022543433046,
+                "name": "CosSeries"
+            }
+        }
+    },
+    {
+        "data": {
+            "accel_value": 0.7539022531899926,
+            "accel_value_deviation": 1.153312001456186e-09,
+            "n": 10,
+            "partial_sum": 0.7570938113083401,
+            "partial_sum_deviation": 0.0031915569650354803,
+            "series_value": 0.03279715583670918
+        },
+        "event": "divergent_accel_method",
+        "result": {
+            "accel": {
+                "additional_args": {},
+                "m_value": 4,
+                "name": "ShanksAlgorithm"
+            },
+            "computed": [
+                {
+                    "accel_value": 0.0,
+                    "accel_value_deviation": 0.7539022543433046,
+                    "n": 1,
+                    "partial_sum": -23.5,
+                    "partial_sum_deviation": 24.253902254343306,
+                    "series_value": -24.5
+                },
+                {
+                    "accel_value": 0.0,
+                    "accel_value_deviation": 0.7539022543433046,
+                    "n": 2,
+                    "partial_sum": 76.54166666666666,
+                    "partial_sum_deviation": 75.78776441232336,
+                    "series_value": 100.04166666666666
+                },
+                {
+                    "accel_value": 0.0,
+                    "accel_value_deviation": 0.7539022543433046,
+                    "n": 3,
+                    "partial_sum": -86.85972222222222,
+                    "partial_sum_deviation": 87.61362447656552,
+                    "series_value": -163.40138888888887
+                },
+                {
+                    "accel_value": 0.7541159531981063,
+                    "accel_value_deviation": 0.0002136988548017138,
+                    "n": 4,
+                    "partial_sum": 56.11649305555554,
+                    "partial_sum_deviation": 55.362590801212235,
+                    "series_value": 142.97621527777775
+                },
+                {
+                    "accel_value": 0.7538776844943473,
+                    "accel_value_deviation": 2.456984895726766e-05,
+                    "n": 5,
+                    "partial_sum": -21.726113040123465,
+                    "partial_sum_deviation": 22.48001529446677,
+                    "series_value": -77.84260609567899
+                },
+                {
+                    "accel_value": 0.7539046480965634,
+                    "accel_value_deviation": 2.3937532588336197e-06,
+                    "n": 6,
+                    "partial_sum": 7.17000588933314,
+                    "partial_sum_deviation": 6.4161036349898355,
+                    "series_value": 28.896118929456595
+                },
+                {
+                    "accel_value": 0.7539020788335513,
+                    "accel_value_deviation": 1.7550975328628482e-07,
+                    "n": 7,
+                    "partial_sum": -0.6097184378282456,
+                    "partial_sum_deviation": 1.3636206921715504,
+                    "series_value": -7.77972432716139
+                },
+                {
+                    "accel_value": 0.7539022648052616,
+                    "accel_value_deviation": 1.0461956967411368e-08,
+                    "n": 8,
+                    "partial_sum": 0.9786419456338704,
+                    "partial_sum_deviation": 0.2247396912905658,
+                    "series_value": 1.5883603834621172
+                },
+                {
+                    "accel_value": 0.7539022538706815,
+                    "accel_value_deviation": 4.726230518059538e-10,
+                    "n": 9,
+                    "partial_sum": 0.7242966554716361,
+                    "partial_sum_deviation": 0.02960559887166847,
+                    "series_value": -0.25434529016223445
+                },
+                {
+                    "accel_value": 0.7539022531899926,
+                    "accel_value_deviation": 1.153312001456186e-09,
+                    "n": 10,
+                    "partial_sum": 0.7570938113083401,
+                    "partial_sum_deviation": 0.0031915569650354803,
+                    "series_value": 0.03279715583670918
+                }
+            ],
+            "error": null,
+            "series": {
+                "arguments": {
+                    "x": 7.0
+                },
+                "lim": 0.7539022543433046,
+                "name": "CosSeries"
+            }
+        }
+    },
+    {
+        "data": {
+            "accel_value": 0.0,
+            "accel_value_deviation": 0.14550003380861354,
+            "n": 1,
+            "partial_sum": -31.0,
+            "partial_sum_deviation": 30.854499966191387,
+            "series_value": -32.0
+        },
+        "event": "slow_accel_method",
+        "result": {
+            "accel": {
+                "additional_args": {},
+                "m_value": 4,
+                "name": "ShanksAlgorithm"
+            },
+            "computed": [
+                {
+                    "accel_value": 0.0,
+                    "accel_value_deviation": 0.14550003380861354,
+                    "n": 1,
+                    "partial_sum": -31.0,
+                    "partial_sum_deviation": 30.854499966191387,
+                    "series_value": -32.0
+                },
+                {
+                    "accel_value": 0.0,
+                    "accel_value_deviation": 0.14550003380861354,
+                    "n": 2,
+                    "partial_sum": 139.66666666666666,
+                    "partial_sum_deviation": 139.81216670047527,
+                    "series_value": 170.66666666666666
+                },
+                {
+                    "accel_value": 0.0,
+                    "accel_value_deviation": 0.14550003380861354,
+                    "n": 3,
+                    "partial_sum": -224.4222222222222,
+                    "partial_sum_deviation": 224.27672218841357,
+                    "series_value": -364.08888888888885
+                },
+                {
+                    "accel_value": -0.1418431299270187,
+                    "accel_value_deviation": 0.003656903881594842,
+                    "n": 4,
+                    "partial_sum": 191.67936507936508,
+                    "partial_sum_deviation": 191.8248651131737,
+                    "series_value": 416.10158730158724
+                },
+                {
+                    "accel_value": -0.14585048327681144,
+                    "accel_value_deviation": 0.0003504494681978998,
+                    "n": 5,
+                    "partial_sum": -104.2150970017637,
+                    "partial_sum_deviation": 104.06959696795508,
+                    "series_value": -295.8944620811287
+                },
+                {
+                    "accel_value": -0.14546143289440666,
+                    "accel_value_deviation": 3.860091420687661e-05,
+                    "n": 6,
+                    "partial_sum": 39.24888461332904,
+                    "partial_sum_deviation": 39.394384647137656,
+                    "series_value": 143.4639816150927
+                },
+                {
+                    "accel_value": -0.14550370396842538,
+                    "accel_value_deviation": 3.6701598118416e-06,
+                    "n": 7,
+                    "partial_sum": -11.199988042527735,
+                    "partial_sum_deviation": 11.054488008719122,
+                    "series_value": -50.44887265585678
+                },
+                {
+                    "accel_value": -0.14549974261902673,
+                    "accel_value_deviation": 2.911895868040748e-07,
+                    "n": 8,
+                    "partial_sum": 2.2530446657007346,
+                    "partial_sum_deviation": 2.398544699509348,
+                    "series_value": 13.453032708228475
+                },
+                {
+                    "accel_value": -0.14550005349452075,
+                    "accel_value_deviation": 1.9685907209909814e-08,
+                    "n": 9,
+                    "partial_sum": -0.5606615216411885,
+                    "partial_sum_deviation": 0.415161487832575,
+                    "series_value": -2.8137061873419036
+                },
+                {
+                    "accel_value": -0.1455000326491455,
+                    "accel_value_deviation": 1.1594680493498544e-09,
+                    "n": 10,
+                    "partial_sum": -0.0867741637730628,
+                    "partial_sum_deviation": 0.05872587003555074,
+                    "series_value": 0.4738873578681101
+                }
+            ],
+            "error": null,
+            "series": {
+                "arguments": {
+                    "x": 8.0
+                },
+                "lim": -0.14550003380861354,
+                "name": "CosSeries"
+            }
+        }
+    },
+    {
+        "data": {
+            "accel_value": 0.0,
+            "accel_value_deviation": 0.9111302618846769,
+            "n": 1,
+            "partial_sum": -39.5,
+            "partial_sum_deviation": 38.58886973811532,
+            "series_value": -40.5
+        },
+        "event": "slow_accel_method",
+        "result": {
+            "accel": {
+                "additional_args": {},
+                "m_value": 4,
+                "name": "ShanksAlgorithm"
+            },
+            "computed": [
+                {
+                    "accel_value": 0.0,
+                    "accel_value_deviation": 0.9111302618846769,
+                    "n": 1,
+                    "partial_sum": -39.5,
+                    "partial_sum_deviation": 38.58886973811532,
+                    "series_value": -40.5
+                },
+                {
+                    "accel_value": 0.0,
+                    "accel_value_deviation": 0.9111302618846769,
+                    "n": 2,
+                    "partial_sum": 233.875,
+                    "partial_sum_deviation": 234.78613026188467,
+                    "series_value": 273.375
+                },
+                {
+                    "accel_value": 0.0,
+                    "accel_value_deviation": 0.9111302618846769,
+                    "n": 3,
+                    "partial_sum": -504.23750000000007,
+                    "partial_sum_deviation": 503.3263697381154,
+                    "series_value": -738.1125000000001
+                },
+                {
+                    "accel_value": -0.8770491616561177,
+                    "accel_value_deviation": 0.03408110022855926,
+                    "n": 4,
+                    "partial_sum": 563.3895089285714,
+                    "partial_sum_deviation": 564.3006391904561,
+                    "series_value": 1067.6270089285715
+                },
+                {
+                    "accel_value": -0.9148497624249725,
+                    "accel_value_deviation": 0.0037195005402955728,
+                    "n": 5,
+                    "partial_sum": -397.47479910714287,
+                    "partial_sum_deviation": 396.5636688452582,
+                    "series_value": -960.8643080357144
+                },
+                {
+                    "accel_value": -0.9106726272395829,
+                    "accel_value_deviation": 0.0004576346450940738,
+                    "n": 6,
+                    "partial_sum": 192.1464808238636,
+                    "partial_sum_deviation": 193.05761108574828,
+                    "series_value": 589.6212799310066
+                },
+                {
+                    "accel_value": -0.9111833715840492,
+                    "accel_value_deviation": 5.310969937222243e-05,
+                    "n": 7,
+                    "partial_sum": -70.26738551905692,
+                    "partial_sum_deviation": 69.35625525717224,
+                    "series_value": -262.4138663429205
+                },
+                {
+                    "accel_value": -0.9111249079952932,
+                    "accel_value_deviation": 5.353889383719057e-06,
+                    "n": 8,
+                    "partial_sum": 18.29729437167873,
+                    "partial_sum_deviation": 19.208424633563407,
+                    "series_value": 88.56467989073569
+                },
+                {
+                    "accel_value": -0.9111307265822759,
+                    "accel_value_deviation": 4.646975989563984e-07,
+                    "n": 9,
+                    "partial_sum": -5.146297364104228,
+                    "partial_sum_deviation": 4.235167102219552,
+                    "series_value": -23.443591735782977
+                },
+                {
+                    "accel_value": -0.9111302267948973,
+                    "accel_value_deviation": 3.5089779637509366e-08,
+                    "n": 10,
+                    "partial_sum": -0.14911070463465492,
+                    "partial_sum_deviation": 0.762019557250022,
+                    "series_value": 4.997186659469529
+                }
+            ],
+            "error": null,
+            "series": {
+                "arguments": {
+                    "x": 9.0
+                },
+                "lim": -0.9111302618846769,
+                "name": "CosSeries"
+            }
+        }
+    },
+    {
+        "data": {
+            "accel_value": 0.0,
+            "accel_value_deviation": 0.8390715290764524,
+            "n": 1,
+            "partial_sum": -49.0,
+            "partial_sum_deviation": 48.16092847092355,
+            "series_value": -50.0
+        },
+        "event": "slow_accel_method",
+        "result": {
+            "accel": {
+                "additional_args": {},
+                "m_value": 4,
+                "name": "ShanksAlgorithm"
+            },
+            "computed": [
+                {
+                    "accel_value": 0.0,
+                    "accel_value_deviation": 0.8390715290764524,
+                    "n": 1,
+                    "partial_sum": -49.0,
+                    "partial_sum_deviation": 48.16092847092355,
+                    "series_value": -50.0
+                },
+                {
+                    "accel_value": 0.0,
+                    "accel_value_deviation": 0.8390715290764524,
+                    "n": 2,
+                    "partial_sum": 367.6666666666667,
+                    "partial_sum_deviation": 368.50573819574316,
+                    "series_value": 416.6666666666667
+                },
+                {
+                    "accel_value": 0.0,
+                    "accel_value_deviation": 0.8390715290764524,
+                    "n": 3,
+                    "partial_sum": -1021.2222222222222,
+                    "partial_sum_deviation": 1020.3831506931457,
+                    "series_value": -1388.888888888889
+                },
+                {
+                    "accel_value": -0.6425302216866388,
+                    "accel_value_deviation": 0.19654130738981368,
+                    "n": 4,
+                    "partial_sum": 1458.9365079365077,
+                    "partial_sum_deviation": 1459.775579465584,
+                    "series_value": 2480.15873015873
+                },
+                {
+                    "accel_value": -0.8675738047891403,
+                    "accel_value_deviation": 0.02850227571268782,
+                    "n": 5,
+                    "partial_sum": -1296.7954144620812,
+                    "partial_sum_deviation": 1295.9563429330049,
+                    "series_value": -2755.731922398589
+                },
+                {
+                    "accel_value": -0.834943972003915,
+                    "accel_value_deviation": 0.004127557072537424,
+                    "n": 6,
+                    "partial_sum": 790.8802843247281,
+                    "partial_sum_deviation": 791.7193558538046,
+                    "series_value": 2087.67569878681
+                },
+                {
+                    "accel_value": -0.8396437584463226,
+                    "accel_value_deviation": 0.0005722293698701142,
+                    "n": 7,
+                    "partial_sum": -356.19427544824384,
+                    "partial_sum_deviation": 355.35520391916737,
+                    "series_value": -1147.0745597729724
+                },
+                {
+                    "accel_value": -0.8390005920047519,
+                    "accel_value_deviation": 7.093707170058305e-05,
+                    "n": 8,
+                    "partial_sum": 121.75345779049462,
+                    "partial_sum_deviation": 122.59252931957107,
+                    "series_value": 477.9477332387385
+                },
+                {
+                    "accel_value": -0.8390792032526687,
+                    "accel_value_deviation": 7.674176216276862e-06,
+                    "n": 9,
+                    "partial_sum": -34.43861189536773,
+                    "partial_sum_deviation": 33.59954036629128,
+                    "series_value": -156.19206968586226
+                },
+                {
+                    "accel_value": -0.8390708041330613,
+                    "accel_value_deviation": 7.249433910949676e-07,
+                    "n": 10,
+                    "partial_sum": 6.664564337753944,
+                    "partial_sum_deviation": 7.503635866830397,
+                    "series_value": 41.103176233121644
+                }
+            ],
+            "error": null,
+            "series": {
+                "arguments": {
+                    "x": 10.0
+                },
+                "lim": -0.8390715290764524,
                 "name": "CosSeries"
             }
         }
