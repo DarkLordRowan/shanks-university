@@ -8,7 +8,10 @@ import itertools
 from dataclasses import dataclass
 from typing import Any, Generator, Iterable, Mapping
 
-def cartesian_dicts(d: dict[str, Iterable[Any]]) -> Generator[dict[str, Any], None, None]:
+
+def cartesian_dicts(
+    d: dict[str, Iterable[Any]],
+) -> Generator[dict[str, Any], None, None]:
     keys: list[str] = list(d)
     for vals in itertools.product(*(d[k] for k in keys)):
         yield dict(zip(keys, vals))
@@ -50,6 +53,7 @@ class TrialResult:
     accel: AccelTrialResult
     computed: list[ComputedTrialResult]
     error: ErrorTrialResult | None
+
 
 @dataclass
 class Trial:
@@ -118,6 +122,8 @@ class Trial:
                 )
             )
         return results
+
+
 @dataclass
 class ComplexTrial:
     series_params: list[BaseSeriesParam]

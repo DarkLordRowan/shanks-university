@@ -5,6 +5,7 @@ This module provides classes and functions to define and load parameters
 for numerical series and acceleration methods from various sources including
 JSON files, CSV files, and direct Python module references.
 """
+
 import inspect
 from dataclasses import dataclass
 import pathlib
@@ -15,10 +16,12 @@ from abc import ABC, abstractmethod
 from typing import Iterable, Any, Mapping
 from collections.abc import Callable
 
+
 def autowrap(x: Any) -> Iterable[Any]:
     if x is not None and (isinstance(x, str) or not isinstance(x, Iterable)):
         return [x]
     return x
+
 
 class BaseSeriesParam(ABC):
     """Abstract base class for series parameter configurations."""
@@ -212,15 +215,21 @@ class AccelParamJSON(StandardAccelParam):
         if self.init_args:
             for key, value in self.init_args.items():
                 value = autowrap(value)
+
                 def value_as_variants_of(of):
                     res = []
                     for v in value:
                         res.append(getattr(of, v))
                     return res
+
                 if key == "remainder":
-                    self.expanded_init_args[key] = value_as_variants_of(pyshanks.RemainderType)
+                    self.expanded_init_args[key] = value_as_variants_of(
+                        pyshanks.RemainderType
+                    )
                 elif key == "numerator":
-                    self.expanded_init_args[key] = value_as_variants_of(pyshanks.NumeratorType)
+                    self.expanded_init_args[key] = value_as_variants_of(
+                        pyshanks.NumeratorType
+                    )
                 else:
                     self.expanded_init_args[key] = autowrap(value)
 
@@ -299,8 +308,13 @@ def get_series_params_from_json(
     """
     with open(json_location, encoding="utf-8") as f:
         data = json.load(f)
+    return load_series_params_from_data(data)
 
-    series_list = []
+
+def load_series_params_from_data(
+    data: dict,
+) -> list[SeriesParamJSON]:
+    series_list: list[SeriesParamJSON] = []
     for series_data in data["series"]:
         args = series_data.get("args", {})
         args = (
@@ -311,11 +325,9 @@ def get_series_params_from_json(
                 for key, value in args.items()
             }
         )
-
         series_list.append(
             SeriesParamJSON(name=series_data.get("name"), args=args)
         )
-
     return series_list
 
 
@@ -336,11 +348,16 @@ def get_accel_params_from_json(
     """
     with open(json_location, encoding="utf-8") as f:
         data = json.load(f)
-    methods_list = []
+    return load_accel_params_from_data(data)
+
+
+def load_accel_params_from_data(
+    data: dict,
+) -> list[AccelParamJSON]:
+    methods_list: list[AccelParamJSON] = []
     for method_data in data["methods"]:
         n_value = autowrap(method_data["n"])
         m_value = autowrap(method_data["m"])
-
         methods_list.append(
             AccelParamJSON(
                 name=method_data["name"],
@@ -349,7 +366,6 @@ def get_accel_params_from_json(
                 init_args=method_data.get("args", {}),
             )
         )
-
     return methods_list
 
 
@@ -381,6 +397,7 @@ def get_series_params_from_csv(
             for i, row in enumerate(csv.reader(f), 1)
         ]
 
+
 def _is_concrete_subclass(cls: type, base: type) -> bool:
     """
     Return ``True`` if *cls* is a non‑abstract subclass of *base*.
@@ -392,13 +409,17 @@ def _is_concrete_subclass(cls: type, base: type) -> bool:
         and not inspect.isabstract(cls)
     )
 
+
 def demo_all_synthetic_series(
     x: float | Iterable[float],
 ) -> list[BaseSeriesParam]:
     series_params: list[BaseSeriesParam] = []
 
     for name, cls in inspect.getmembers(pyshanks, inspect.isclass):
-        if _is_concrete_subclass(cls, pyshanks.SeriesBase) and name != "ArraySeries":
+        if (
+            _is_concrete_subclass(cls, pyshanks.SeriesBase)
+            and name != "ArraySeries"
+        ):
             series_params.append(
                 SeriesParamModule(
                     caller=cls,

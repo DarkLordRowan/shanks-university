@@ -1,6 +1,7 @@
 import pathlib
 
 from src.params import (
+    AccelParamModule,
     SeriesParamModule,
     AccelParamModule,
 )
