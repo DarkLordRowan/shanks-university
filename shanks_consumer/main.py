@@ -30,4 +30,4 @@ if __name__ == "__main__":
 
     exporter.to_json(pathlib.Path("output/output.json"))
     exporter.to_csv(pathlib.Path("output/output.csv"))
-    InteractiveConvergencePlot(results).show()
+    # InteractiveConvergencePlot(results).show()
