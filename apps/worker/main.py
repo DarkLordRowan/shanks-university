@@ -1,11 +1,28 @@
 import io
 
 from fastapi import FastAPI, Body
-from fastapi.responses import JSONResponse
-from fastapi.responses import StreamingResponse
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse, StreamingResponse
 from src import export, params, trial
 
 app = FastAPI(title="Shanks Worker Service", version="1.0.0", root_path="/api")
+
+origins = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "https://series-accelerator.mirea-kmbo.ru",
+    "http://series-accelerator.mirea-kmbo.ru",
+]
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=False,
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["*"],
+    expose_headers=["Content-Disposition"],
+)
 
 
 def _compute_results(payload: dict):
