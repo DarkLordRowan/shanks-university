@@ -299,13 +299,8 @@ def get_series_params_from_json(
     """
     with open(json_location, encoding="utf-8") as f:
         data = json.load(f)
-    return load_series_params_from_data(data)
 
-
-def load_series_params_from_data(
-    data: dict,
-) -> list[SeriesParamJSON]:
-    series_list: list[SeriesParamJSON] = []
+    series_list = []
     for series_data in data["series"]:
         args = series_data.get("args", {})
         args = (
@@ -316,9 +311,11 @@ def load_series_params_from_data(
                 for key, value in args.items()
             }
         )
+
         series_list.append(
             SeriesParamJSON(name=series_data.get("name"), args=args)
         )
+
     return series_list
 
 
@@ -339,16 +336,11 @@ def get_accel_params_from_json(
     """
     with open(json_location, encoding="utf-8") as f:
         data = json.load(f)
-    return load_accel_params_from_data(data)
-
-
-def load_accel_params_from_data(
-    data: dict,
-) -> list[AccelParamJSON]:
-    methods_list: list[AccelParamJSON] = []
+    methods_list = []
     for method_data in data["methods"]:
         n_value = autowrap(method_data["n"])
         m_value = autowrap(method_data["m"])
+
         methods_list.append(
             AccelParamJSON(
                 name=method_data["name"],
@@ -357,6 +349,7 @@ def load_accel_params_from_data(
                 init_args=method_data.get("args", {}),
             )
         )
+
     return methods_list
 
 
