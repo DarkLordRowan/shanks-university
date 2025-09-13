@@ -61,6 +61,9 @@ class ExportTrialResults(BaseExport):
             self.results, self._verify_location(override_location)
         )
 
+    def as_dict(self) -> list[dict]:
+        return [asdict(result) for result in self.results]
+
     def to_csv(self, override_location: pathlib.Path):
         with open(
             self._verify_location(override_location),
@@ -108,6 +111,9 @@ class ExportTrialEvents(BaseExport):
         dataclasses_to_json(
             self.events, self._verify_location(override_location)
         )
+
+    def as_dict(self) -> list[dict]:
+        return [asdict(event) for event in self.events]
 
     def to_csv(self, override_location: pathlib.Path):
         with open(
