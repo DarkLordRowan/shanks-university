@@ -1,13 +1,20 @@
 import matplotlib.pyplot as plt
 from matplotlib import rcParams
-
+import os
+import pathlib
 
 class InteractiveConvergencePlot:
-    def __init__(self, results):
+
+    def __init__(self, results, save_dir: pathlib.Path | None = None):
         self.results = list(results)
         self.current_index = 0
         self.fig = None
         self.axes = None
+        self.save_dir = save_dir
+
+        if self.save_dir:
+            os.makedirs(self.save_dir, exist_ok=True)
+
         self.setup_plot()
 
     def setup_plot(self):
@@ -22,10 +29,14 @@ class InteractiveConvergencePlot:
         self.fig, (self.ax1, self.ax2, self.ax3) = plt.subplots(
             1, 3, figsize=(18, 6), dpi=100
         )
-        self.fig.canvas.mpl_connect("key_press_event", self.on_key_press)
-        self.fig.canvas.manager.set_window_title(
-            "Анализатор сходимости методов"
-        )
+
+        # Only connect keyboard events if we're showing interactively
+        if not self.save_dir:
+            self.fig.canvas.mpl_connect("key_press_event", self.on_key_press)
+            self.fig.canvas.manager.set_window_title(
+                "Анализатор сходимости методов"
+            )
+
         self.update_plot()
 
     def on_key_press(self, event):
@@ -210,7 +221,36 @@ class InteractiveConvergencePlot:
 
         plt.tight_layout()
         plt.subplots_adjust(top=0.90, bottom=0.15)
+
+        # Save the plot if save directory is specified
+        if self.save_dir:
+            filename = f"trial_{self.current_index + 1:03d}_{trial.series.name}_{trial.accel.name}.png"
+            filepath = os.path.join(self.save_dir, filename)
+            plt.savefig(filepath, dpi=150, bbox_inches="tight")
+            print(f"Saved: {filepath}")
+
         self.fig.canvas.draw()
 
     def show(self):
-        plt.show()
+        if self.save_dir:
+            # If saving mode, iterate through all trials and save them
+            for i in range(len(self.results)):
+                self.current_index = i
+                self.update_plot()
+            plt.close(self.fig)  # Close the figure after saving all
+        else:
+            # Interactive mode
+            plt.show()
+
+
+# Alternative function for batch saving without interactive display
+def save_all_plots(results, save_dir):
+    """
+    Save all trial plots to the specified directory without interactive display.
+
+    Parameters:
+    results: List of trial results
+    save_dir: Directory to save plots (default: "convergence_plots")
+    """
+    plotter = InteractiveConvergencePlot(results, save_dir=save_dir)
+    plotter.show()  # This will save all plots and exit

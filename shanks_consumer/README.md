@@ -1,1 +1,142 @@
-# shanks consumer
+# Shanks consumer CLI
+
+## Установка
+
+Убедитесь что у вас установлен Python.
+
+```bash
+git clone https://github.com/DarkLordRowan/shanks-university.git
+git checkout Fixes
+cd shanks_consumer
+
+bash install_pyshanks.sh
+
+pip install -r requirements.txt
+```
+
+## Использование
+
+### Базовое использование
+
+```bash
+python main.py
+```
+
+Запускает со стандартными расположениями файлов:
+
+* Ряды: `data/example.json` и `data/example_series.csv`
+
+* Ускорение: `data/example.json`
+
+* Вывод: `output/output.json`, `output/output.csv`, `output/events.json`, `output/events.csv`
+
+* Графики: `plots/`
+
+### Пользовательские входные файлы
+
+```bash
+python main.py \
+    --series-json data/custom_series.json \
+    --series-csv data/custom_data.csv \
+    --accel-json data/accel_config.json
+```
+
+### Пользовательские выходные директории
+
+```bash
+python script.py \
+    --output-dir results/my_analysis \
+    --plots-dir figures/my_analysis \
+    --results-json results/my_analysis/final_results.json \
+    --events-csv results/my_analysis/detected_events.csv
+```
+
+### Выборочная обработка
+
+```bash
+# Пропустить детектирование событий
+python script.py --no-events
+
+# Пропустить генерацию графиков
+python script.py --no-plots
+
+# Пропустить и события и графики
+python script.py --no-events --no-plots
+```
+
+### Подробный вывод
+
+```bash
+# Базовый подробный вывод
+python script.py -v
+
+# Детальный вывод с трейсбэком при ошибках
+python script.py -vv
+```
+
+## Аргументы
+
+### Опции ввода
+
+* `--series-json`: JSON файл для параметров серий (по умолчанию: `data/example.json`)
+
+* `--series-csv`: CSV файл для параметров серий (по умолчанию: `data/example_series.csv`)
+
+* `--accel-json`: JSON файл для параметров ускорения (по умолчанию: `data/example.json`)
+
+### Опции вывода
+
+* `--output-dir`: Директория для выходных файлов (по умолчанию: `output/`)
+
+* `--plots-dir`: Директория для изображений графиков (по умолчанию: plots/)
+
+* `--results-json`: Пользовательский JSON файл для результатов
+
+* `--results-csv`: Пользовательский CSV файл для результатов
+
+* `--events-json`: Пользовательский JSON файл для событий
+
+* `--events-csv`: Пользовательский CSV файл для событий
+
+### Флаги обработки
+
+* `--no-events`: Пропустить детектирование и экспорт событий
+
+* `--no-plots`: Пропустить генерацию графиков
+
+* `--verbose/-v`: Увеличить уровень детализации (используйте `-v` для базового, `-vv` для детального)
+
+## Выходные файлы
+
+**Результаты** (`results`): Содержит результаты выполнения испытаний в форматах JSON и CSV
+
+**События** (`events`): Содержит обнаруженные события из анализа испытаний
+
+**Графики** (`plots`): Визуальные представления результатов анализа
+
+## Примеры
+
+### Быстрый анализ с пользовательскими данными
+
+```bash
+python script.py --series-json my_data.json --output-dir quick_results -v
+```
+
+### Продуктивный запуск со всеми выводами
+
+```bash
+python script.py \
+    --series-json production/series_config.json \
+    --series-csv production/series_data.csv \
+    --accel-json production/accel_config.json \
+    --output-dir production/results \
+    --plots-dir production/figures \
+    --results-json production/results/final_analysis.json \
+    -vv
+```
+
+### Минимальный вывод для тестирования
+
+```bash
+python script.py --no-events --no-plots --output-dir test_run
+```
