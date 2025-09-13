@@ -2095,7 +2095,7 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-pi_four_minus_ln2_halfed_series<T, K>::pi_four_minus_ln2_halfed_series(T x) : series_base<T, K>(x, static_cast<T>(x * static_cast<T>((std::numbers::pi / 4 - std::log(2) / 2))))
+pi_four_minus_ln2_halfed_series<T, K>::pi_four_minus_ln2_halfed_series(T x) : series_base<T, K>(x, x * (static_cast<T>(std::numbers::pi) / static_cast<T>(4) - static_cast<T>(std::log(2)) / static_cast<T>(2)))
 {
 	this->series_name = "(π/4 - ln(2)/2)*x";
 	// Сходится при ∀x ∈ ℝ (линейная функция)
@@ -2108,7 +2108,7 @@ pi_four_minus_ln2_halfed_series<T, K>::pi_four_minus_ln2_halfed_series(T x) : se
 template <std::floating_point T, std::unsigned_integral K>
 constexpr T pi_four_minus_ln2_halfed_series<T, K>::operator()(K n) const
 {
-	return static_cast<T>(n ? this->x * series_base<T, K>::minus_one_raised_to_power_n(static_cast<K>(std::trunc(n / 2))) / n : 0); // (32.2) [Rows.pdf]
+	return static_cast<T>(n ? this->x * series_base<T, K>::minus_one_raised_to_power_n(static_cast<K>(std::trunc(n / 2))) / static_cast<T>(n) : 0); // (32.2) [Rows.pdf]
 }
 
 
@@ -2142,7 +2142,7 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-five_pi_twelve_series<T, K>::five_pi_twelve_series(T x) : series_base<T, K>(x, static_cast<T>(x * 5 * std::numbers::pi / 12))
+five_pi_twelve_series<T, K>::five_pi_twelve_series(T x) : series_base<T, K>(x, x * static_cast<T>(5) * static_cast<T>(std::numbers::pi) / static_cast<T>(12))
 {
 	this->series_name = "5πx/12";
 	// Сходится при ∀x ∈ ℝ (линейная функция)
@@ -2155,12 +2155,12 @@ five_pi_twelve_series<T, K>::five_pi_twelve_series(T x) : series_base<T, K>(x, s
 template <std::floating_point T, std::unsigned_integral K>
 constexpr T five_pi_twelve_series<T, K>::operator()(K n) const
 {
-	return static_cast<T>(this->x * series_base<T, K>::minus_one_raised_to_power_n(static_cast<K>(std::trunc(n / 3))) / std::fma(2, n, 1)); // (33.2) [Rows.pdf]
+	return this->x * series_base<T, K>::minus_one_raised_to_power_n(static_cast<K>(std::trunc(n / 3))) / static_cast<T>(std::fma(2, n, 1)); // (33.2) [Rows.pdf]
 }
 
 
 /**
-* @brief Numerical series representation of x / 2
+* @brief Numerical series representation of x / 2 (version 1)
 * @authors Kreynin R.G.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
@@ -2189,7 +2189,7 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-x_two_series<T, K>::x_two_series(T x) : series_base<T, K>(x, x / 2)
+x_two_series<T, K>::x_two_series(T x) : series_base<T, K>(x, x / static_cast<T>(2))
 {
 	this->series_name = "x/2";
 	// Сходится при ∀x ∈ ℝ (линейная функция)
@@ -2203,7 +2203,7 @@ template <std::floating_point T, std::unsigned_integral K>
 constexpr T x_two_series<T, K>::operator()(K n) const
 {
 	const K a = static_cast<K>(std::fma(2, n, 1));
-	return static_cast<T>(this->x / (a * (a + 2))); // (34.2) [Rows.pdf]
+	return this->x / static_cast<T>(a * (a + static_cast<K>(2))); // (34.2) [Rows.pdf]
 }
 
 
@@ -2237,7 +2237,7 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-pi_six_min_half_series<T, K>::pi_six_min_half_series(T x) : series_base<T, K>(x, static_cast<T>(x * (std::numbers::pi / 6 - 0.5)))
+pi_six_min_half_series<T, K>::pi_six_min_half_series(T x) : series_base<T, K>(x, x * (static_cast<T>(std::numbers::pi) / static_cast<T>(6) - static_cast<T>(0.5)))
 {
 	this->series_name = "(π/6 - 0.5)*x";
 	// Сходится при ∀x ∈ ℝ (линейная функция)
@@ -2251,12 +2251,12 @@ template <std::floating_point T, std::unsigned_integral K>
 constexpr T pi_six_min_half_series<T, K>::operator()(K n) const
 {
 	const K a = static_cast<K>(std::fma(6, n, 5));
-	return static_cast<T>(this->x * series_base<T, K>::minus_one_raised_to_power_n(n) / (a * (a + 2))); // (35.2) [Rows.pdf]
+	return this->x * series_base<T, K>::minus_one_raised_to_power_n(n) / static_cast<T>(a * (a + static_cast<K>(2))); // (35.2) [Rows.pdf]
 }
 
 
 /**
-* @brief Numerical series representation of x/2
+* @brief Numerical series representation of x/2 (version 2)
 * @authors Kreynin R.G.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
@@ -2285,7 +2285,7 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-x_two_throught_squares_series<T, K>::x_two_throught_squares_series(T x) : series_base<T, K>(x, x / 2)
+x_two_throught_squares_series<T, K>::x_two_throught_squares_series(T x) : series_base<T, K>(x, x / static_cast<T>(2))
 {
 	this->series_name = "x/2";
 	// Сходится при ∀x ∈ ℝ (линейная функция)
@@ -2298,12 +2298,12 @@ x_two_throught_squares_series<T, K>::x_two_throught_squares_series(T x) : series
 template <std::floating_point T, std::unsigned_integral K>
 constexpr T x_two_throught_squares_series<T, K>::operator()(K n) const
 {
-	return static_cast<T>(n ? (this->x * std::fma(2, n * n, -1)) / (std::fma(4, std::pow(n, 4), 1)) : 0); // (36.2) [Rows.pdf]
+	return static_cast<T>(n ? this->x * static_cast<T>(std::fma(2, n * n, -1)) / static_cast<T>(std::fma(4, std::pow(n, 4), 1)) : 0); // (36.2) [Rows.pdf]
 }
 
 
 /**
-* @brief Numerical series (-1)^n/n^n = -0,78343051
+* @brief Numerical series (-1)^n * x /n^n = -0,78343051 * x
 * @authors Kreynin R.G.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
@@ -2332,7 +2332,7 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-minus_one_ned_in_n_series<T, K>::minus_one_ned_in_n_series(T x) : series_base<T, K>(x, static_cast<T>(-0.78343051 * x)) // -0.78343051 value only for initialization, we can calculate with more accuracy with operator()(K n)
+minus_one_ned_in_n_series<T, K>::minus_one_ned_in_n_series(T x) : series_base<T, K>(x, static_cast<T>(-0.78343051)* x) // -0.78343051 value only for initialization, we can calculate with more accuracy with operator()(K n)
 {
 	this->series_name = "∑(-1)ⁿ/n * x";
 	// Сходится при |x| ≤ 1, x ≠ -1 (условно при x = 1, расходится при x = -1)
@@ -2346,12 +2346,12 @@ minus_one_ned_in_n_series<T, K>::minus_one_ned_in_n_series(T x) : series_base<T,
 template <std::floating_point T, std::unsigned_integral K>
 constexpr T minus_one_ned_in_n_series<T, K>::operator()(K n) const
 {
-	return n ? this->x * static_cast<T>(series_base<T, K>::minus_one_raised_to_power_n(n) / std::pow(n, n)) : 0; // (37.2) [Rows.pdf]
+	return static_cast<T>(n ? this->x * series_base<T, K>::minus_one_raised_to_power_n(n) / static_cast<T>(std::pow(n, n)) : 0); // (37.2) [Rows.pdf]
 }
 
 
 /**
-* @brief  Numerical series (-1)^n n! / n^n = -0.65583160
+* @brief  Numerical series (-1)^n n! * x / n^n = -0.65583160
 * @authors Kreynin R.G.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
@@ -2380,7 +2380,7 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-minus_one_n_fact_n_in_n_series<T, K>::minus_one_n_fact_n_in_n_series(T x) : series_base<T, K>(x, static_cast<T>(-0.65583160 * x)) // -0.65583160 value only for initialization, we can calculate with more accuracy with operator()(K n)
+minus_one_n_fact_n_in_n_series<T, K>::minus_one_n_fact_n_in_n_series(T x) : series_base<T, K>(x, static_cast<T>(-0.65583160) * x) // -0.65583160 value only for initialization, we can calculate with more accuracy with operator()(K n)
 {
 	this->series_name = "∑(-1)ⁿ·n!/n * x";
 	// Сходится только при x = 0 (факториал растёт быстрее любой геометрической прогрессии)
@@ -2394,7 +2394,7 @@ minus_one_n_fact_n_in_n_series<T, K>::minus_one_n_fact_n_in_n_series(T x) : seri
 template <std::floating_point T, std::unsigned_integral K>
 constexpr T minus_one_n_fact_n_in_n_series<T, K>::operator()(K n) const
 {
-	return static_cast<T>(n ? (this->x * this->fact(n) * series_base<T, K>::minus_one_raised_to_power_n(n)) / std::pow(n, n) : 0); // (38.2) [Rows.pdf]
+	return static_cast<T>(n ? this->x * static_cast<T>(this->fact(n)) * series_base<T, K>::minus_one_raised_to_power_n(n) / static_cast<T>(std::pow(n, n)) : 0); // (38.2) [Rows.pdf]
 }
 
 
@@ -2428,7 +2428,7 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-ln_x_plus_one_x_minus_one_halfed_series<T, K>::ln_x_plus_one_x_minus_one_halfed_series(T x) : series_base<T, K>(x, std::log((1 + x) / (1 - x)) / 2)
+ln_x_plus_one_x_minus_one_halfed_series<T, K>::ln_x_plus_one_x_minus_one_halfed_series(T x) : series_base<T, K>(x, static_cast<T>(std::log((static_cast<T>(1) + x) / (static_cast<T>(1) - x))) / static_cast<T>(2))
 {
 	this->series_name = "0.5*ln((1+x)/(1-x))";
 	// Сходится при |x| < 1 (абсолютно)
@@ -2443,7 +2443,7 @@ template <std::floating_point T, std::unsigned_integral K>
 constexpr T ln_x_plus_one_x_minus_one_halfed_series<T, K>::operator()(K n) const
 {
 	const K a = static_cast<K>(std::fma(2, n, 1));
-	return static_cast<T>(std::pow(this->x, a) / a); // (39.3) [Rows.pdf]
+	return static_cast<T>(std::pow(this->x, a)) / static_cast<T>(a); // (39.3) [Rows.pdf]
 }
 
 
@@ -2477,7 +2477,7 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-two_arcsin_square_x_halfed_series<T, K>::two_arcsin_square_x_halfed_series(T x) : series_base<T, K>(x, static_cast<T>(2 * std::pow(std::asin(x / 2), 2)))
+two_arcsin_square_x_halfed_series<T, K>::two_arcsin_square_x_halfed_series(T x) : series_base<T, K>(x, static_cast<T>(2) * static_cast<T>(std::asin(x / static_cast<T>(2))) * static_cast<T>(std::asin(x / static_cast<T>(2))))
 {
 	this->series_name = "2*arcsin(x/2)^2";
 	// Сходится при |x| ≤ 2 (ряд для arcsin(z) сходится при |z| ≤ 1, где z = x/2)
@@ -2491,8 +2491,9 @@ two_arcsin_square_x_halfed_series<T, K>::two_arcsin_square_x_halfed_series(T x) 
 template <std::floating_point T, std::unsigned_integral K>
 constexpr T two_arcsin_square_x_halfed_series<T, K>::operator()(K n) const
 {
-	const K a = static_cast<K>(std::fma(2, n, 2));
-	return static_cast<T>((pow(this->x, a) * this->fact(n) * this->fact(n)) / this->fact(a)); // (40.3) [Rows.pdf]
+	const K a = static_cast<K>(std::fma(2, n, 1));
+	// return (this->binomial_coefficient(2 * n, n) * this->binomial_coefficient(2 * n, n) * std::pow(this->x, 2 * a)) / (a * a * std::pow(2, std::fma(3, a, -2)));
+	return static_cast<T>((std::pow(this->x, a - 1)) *  static_cast<T>(this->fact(n)) * static_cast<T>(this->fact(n))) / (static_cast<T>(2 * (n + 1)) * static_cast<T>(this->fact(a)));
 }
 
 
@@ -2524,7 +2525,7 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-pi_squared_twelve_series<T, K>::pi_squared_twelve_series(T x) : series_base<T, K>(x, static_cast<T>((x * std::numbers::pi * std::numbers::pi) / 12))
+pi_squared_twelve_series<T, K>::pi_squared_twelve_series(T x) : series_base<T, K>(x, x * static_cast<T>(std::numbers::pi) * static_cast<T>(std::numbers::pi) / static_cast<T>(12))
 {
 	this->series_name = "π²x/12";
 	// Сходится при ∀x ∈ ℝ (линейная функция)
@@ -2537,8 +2538,8 @@ pi_squared_twelve_series<T, K>::pi_squared_twelve_series(T x) : series_base<T, K
 template <std::floating_point T, std::unsigned_integral K>
 constexpr T pi_squared_twelve_series<T, K>::operator()(K n) const
 {
-	T n_temp = static_cast<T>(n + 1);
-	return (this->x * this->minus_one_raised_to_power_n(n)) / (n_temp * n_temp); // (41.1) [Rows.pdf]
+	const T n_temp = static_cast<T>(n + 1);
+	return this->x * this->minus_one_raised_to_power_n(n) / (n_temp * n_temp); // (41.1) [Rows.pdf]
 }
 
 
@@ -2570,7 +2571,7 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-pi_cubed_32_series<T, K>::pi_cubed_32_series(T x) : series_base<T, K>(0, static_cast<T>(x * std::pow(std::numbers::pi, 3) / 32))
+pi_cubed_32_series<T, K>::pi_cubed_32_series(T x) : series_base<T, K>(x, x * static_cast<T>(std::pow(std::numbers::pi, 3)) / static_cast<T>(32))
 {
 	this->series_name = "π³x/32";
 	// Сходится при ∀x ∈ ℝ (линейная функция)
@@ -2583,8 +2584,8 @@ pi_cubed_32_series<T, K>::pi_cubed_32_series(T x) : series_base<T, K>(0, static_
 template <std::floating_point T, std::unsigned_integral K>
 constexpr T pi_cubed_32_series<T, K>::operator()(K n) const
 {
-	T n_temp = static_cast<T>(n + 1);
-	return this->x * this->minus_one_raised_to_power_n(n) / static_cast<T>((std::pow(std::fma(2, n_temp, 1), 3))); // (42.2) [Rows.pdf]
+	const T n_temp = static_cast<T>(n + 1);
+	return this->x * this->minus_one_raised_to_power_n(n) / static_cast<T>(std::pow(std::fma(2, n_temp, -1), 3)); // (42.2) [Rows.pdf]
 }
 
 
@@ -2616,7 +2617,7 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-minus_three_plus_ln3_three_devided_two_plus_two_ln2_series<T, K>::minus_three_plus_ln3_three_devided_two_plus_two_ln2_series(T x) : series_base<T, K>(x, x * static_cast<T>(-3 + (3 / 2) * std::log(3) + 2 * std::log(2)))
+minus_three_plus_ln3_three_devided_two_plus_two_ln2_series<T, K>::minus_three_plus_ln3_three_devided_two_plus_two_ln2_series(T x) : series_base<T, K>(x, x * (static_cast<T>(-3)  + (static_cast<T>(3) / static_cast<T>(2)) * static_cast<T>(std::log(3)) +  static_cast<T>(std::log(4))))
 {
 	this->series_name = "(-3 + 3/2*ln(3) + 2*ln(2))*x";
 	// Сходится при ∀x ∈ ℝ (линейная функция)
@@ -2630,7 +2631,7 @@ template <std::floating_point T, std::unsigned_integral K>
 constexpr T minus_three_plus_ln3_three_devided_two_plus_two_ln2_series<T, K>::operator()(K n) const
 {
 	T n_temp = static_cast<T>(n + 1);
-	return static_cast<T>(this->x / (n_temp * (std::fma(36, n_temp * n_temp, -1))));  // (43.2) [Rows.pdf]
+	return this->x / (n_temp * static_cast<T>(std::fma(36, n_temp * n_temp, -1)));  // (43.2) [Rows.pdf]
 }
 
 
@@ -2662,7 +2663,7 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-two_ln2_series<T, K>::two_ln2_series(T x) : series_base<T, K>(x, x * static_cast<T>(2 * std::log(2)))
+two_ln2_series<T, K>::two_ln2_series(T x) : series_base<T, K>(x, x * static_cast<T>(static_cast<T>(2) * static_cast<T>(std::log(2))))
 {
 	this->series_name = "2*ln(2)*x";
 	// Сходится при ∀x ∈ ℝ (линейная функция)
@@ -2675,9 +2676,9 @@ two_ln2_series<T, K>::two_ln2_series(T x) : series_base<T, K>(x, x * static_cast
 template <std::floating_point T, std::unsigned_integral K>
 constexpr T two_ln2_series<T, K>::operator()(K n) const
 {
-	T n_temp = static_cast<T>(n + 1);
-	T a = n_temp * n_temp * 4 - 1;
-	return (3 * a + 2) / (n_temp * a * a); // (44.2) [Rows.pdf]
+	const T n_temp = static_cast<T>(n + 1);
+	const T a = n_temp * n_temp * static_cast<T>(4) - static_cast<T>(1);
+	return (static_cast<T>(3) * a + static_cast<T>(2)) / (n_temp * a * a); // (44.2) [Rows.pdf]
 }
 
 
@@ -2711,7 +2712,7 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-pi_x_multi_e_xpi_plus_e_minusxpi_divided_e_xpi_minus_e_minusxpi_minus_one_series<T, K>::pi_x_multi_e_xpi_plus_e_minusxpi_divided_e_xpi_minus_e_minusxpi_minus_one_series(T x) : series_base<T, K>(x, static_cast<T>(std::numbers::pi* x * 2.0 * std::cosh(std::numbers::pi * x) / (2.0 * std::sinh(std::numbers::pi * x)) - 1))
+pi_x_multi_e_xpi_plus_e_minusxpi_divided_e_xpi_minus_e_minusxpi_minus_one_series<T, K>::pi_x_multi_e_xpi_plus_e_minusxpi_divided_e_xpi_minus_e_minusxpi_minus_one_series(T x) : series_base<T, K>(x, ((static_cast<T>(std::numbers::pi) * x) / (static_cast<T>(std::tanh(static_cast<T>(std::numbers::pi) * x)))) - 1)
 {
 	this->series_name = "π*x*coth(π*x)-1";
 	// Сходится при ∀x ∈ ℝ\{0} (ряд для гиперболического котангенса)
@@ -2725,9 +2726,9 @@ pi_x_multi_e_xpi_plus_e_minusxpi_divided_e_xpi_minus_e_minusxpi_minus_one_series
 template <std::floating_point T, std::unsigned_integral K>
 constexpr T pi_x_multi_e_xpi_plus_e_minusxpi_divided_e_xpi_minus_e_minusxpi_minus_one_series<T, K>::operator()(K n) const
 {
-	const K a = n + 1;
-	const T b = (this->x) * (this->x);
-	return static_cast<T>(2 * b / (b + a * a)); // (45.4) [Rows.pdf]
+	const K a = n + static_cast<K>(1);
+	const T b = this->x * this->x;
+	return (static_cast<T>(2) * b) / (b + static_cast<T>(a * a)); // (45.4) [Rows.pdf]
 }
 
 
@@ -2761,7 +2762,7 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-pi_minus_x_2_series<T, K>::pi_minus_x_2_series(T x) : series_base<T, K>(x, static_cast<T>((std::numbers::pi - x) / 2))
+pi_minus_x_2_series<T, K>::pi_minus_x_2_series(T x) : series_base<T, K>(x, static_cast<T>(0.5) * (static_cast<T>(std::numbers::pi) - x))
 {
 	this->series_name = "(π-x)/2";
 	// Сходится при 0 < x < 2π (ряд Фурье для функции f(x) = x)
@@ -2775,8 +2776,8 @@ pi_minus_x_2_series<T, K>::pi_minus_x_2_series(T x) : series_base<T, K>(x, stati
 template <std::floating_point T, std::unsigned_integral K>
 constexpr T pi_minus_x_2_series<T, K>::operator()(K n) const
 {
-	const K a = n + 1;
-	return std::sin(a * (this->x)) / a;  // (46.5) [Rows.pdf]
+	const T a = static_cast<T>(n + 1);
+	return static_cast<T>(std::sin(a * (this->x))) / a;  // (46.5) [Rows.pdf]
 }
 
 
@@ -2810,7 +2811,7 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-half_multi_ln_1div2multi1minuscosx_series<T, K>::half_multi_ln_1div2multi1minuscosx_series(T x) : series_base<T, K>(x, static_cast<T>(0.5 * std::log(1 / (2 - 2 * std::cos(x)))))
+half_multi_ln_1div2multi1minuscosx_series<T, K>::half_multi_ln_1div2multi1minuscosx_series(T x) : series_base<T, K>(x, static_cast<T>(0.5) * static_cast<T>(std::log(static_cast<T>(1) / (static_cast<T>(2) - static_cast<T>(2) * static_cast<T>(std::cos(x))))))
 {
 	this->series_name = "0.5*ln(1/(2*(1-cos(x))))";
 	// Сходится при 0 < x < 2π (ряд для логарифма тригонометрической функции)
@@ -2824,8 +2825,8 @@ half_multi_ln_1div2multi1minuscosx_series<T, K>::half_multi_ln_1div2multi1minusc
 template <std::floating_point T, std::unsigned_integral K>
 constexpr T half_multi_ln_1div2multi1minuscosx_series<T, K>::operator()(K n) const
 {
-	const K a = n + 1;
-	return std::cos(a * (this->x)) / a; // (47.5) [Rows.pdf]
+	const T a = static_cast<T>(n + 1);
+	return static_cast<T>(std::cos(a * (this->x))) / a; // (47.5) [Rows.pdf]
 }
 
 
@@ -2859,7 +2860,7 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-half_minus_sinx_multi_pi_4_series<T, K>::half_minus_sinx_multi_pi_4_series(T x) : series_base<T, K>(x, static_cast<T>((static_cast<T>(0.5) - std::numbers::pi * std::sin(x) * static_cast<T>(0.25))))
+half_minus_sinx_multi_pi_4_series<T, K>::half_minus_sinx_multi_pi_4_series(T x) : series_base<T, K>(x, static_cast<T>(0.5) - static_cast<T>(std::numbers::pi) * static_cast<T>(std::sin(x)) * static_cast<T>(0.25))
 {
 	this->series_name = "0.5-(π/4)*sin(x)";
 	// Сходится при 0 ≤ x ≤ π/2 (ряд Фурье или тригонометрический ряд)
@@ -2874,7 +2875,7 @@ template <std::floating_point T, std::unsigned_integral K>
 constexpr T half_minus_sinx_multi_pi_4_series<T, K>::operator()(K n) const
 {
 	const K a = static_cast<K>(std::fma(2, n, 1));
-	return std::cos(2 * (this->x) * (n + 1)) / (a * (a + 2)); // (48.2) [Rows.pdf]
+	return std::cos(static_cast<T>(2) * (this->x) * static_cast<T>(n + 1)) / static_cast<T>(a * (a + 2)); // (48.2) [Rows.pdf]
 }
 
 
@@ -2908,7 +2909,7 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-ln_1plussqrt1plusxsquare_minus_ln_2_series<T, K>::ln_1plussqrt1plusxsquare_minus_ln_2_series(T x) : series_base<T, K>(x, static_cast<T>(std::log((1 + std::hypot(1, x)) / 2)))
+ln_1plussqrt1plusxsquare_minus_ln_2_series<T, K>::ln_1plussqrt1plusxsquare_minus_ln_2_series(T x) : series_base<T, K>(x, static_cast<T>(std::log(static_cast<T>(0.5) * (static_cast<T>(1) + static_cast<T>(std::hypot(1, x))))))
 {
 	this->series_name = "ln(1+sqrt(1+x^2))-ln(2)";
 	// Сходится при |x| ≤ 1 (биномиальный ряд для sqrt(1+x²))
@@ -2924,8 +2925,8 @@ constexpr T ln_1plussqrt1plusxsquare_minus_ln_2_series<T, K>::operator()(K n) co
 {
 	const K a = n + 1;
 	const K b = static_cast<K>(std::fma(2, n, 2));
-	return static_cast<T>((this->minus_one_raised_to_power_n(n) * this->fact(b - 1) * std::pow(this->x, b)) /
-		(pow(2, b) * this->fact(a) * this->fact(a))); // (49.3) [Rows.pdf]
+	return (this->minus_one_raised_to_power_n(n) * static_cast<T>(this->fact(b - 1)) * static_cast<T>(std::pow(this->x, b))) /
+		static_cast<T>(static_cast<K>(pow(static_cast<K>(2), b)) * this->fact(a) * this->fact(a)); // (49.3) [Rows.pdf]
 }
 
 
@@ -2959,7 +2960,7 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-ln_cosx_series<T, K>::ln_cosx_series(T x) : series_base<T, K>(x, std::log(std::cos(x)))
+ln_cosx_series<T, K>::ln_cosx_series(T x) : series_base<T, K>(x, static_cast<T>(std::log(std::cos(x))))
 {
 	this->series_name = "ln(cos(x))";
 	// Сходится при |x| < π/2 (ряд для логарифма косинуса)
@@ -2974,7 +2975,7 @@ template <std::floating_point T, std::unsigned_integral K>
 constexpr T ln_cosx_series<T, K>::operator()(K n) const
 {
 	const K a = static_cast<K>(std::fma(2, n, 2));
-	return static_cast<T>(-(std::pow(std::sin(this->x), a)) / a); // (50.2) [Rows.pdf]
+	return static_cast<T>( - std::pow(std::sin(this->x), a)) / static_cast<T>(a); // (50.2) [Rows.pdf]
 }
 
 
@@ -3008,7 +3009,7 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-ln_sinx_minus_ln_x_series<T, K>::ln_sinx_minus_ln_x_series(T x) : series_base<T, K>(x, std::log(std::sin(x) / x))
+ln_sinx_minus_ln_x_series<T, K>::ln_sinx_minus_ln_x_series(T x) : series_base<T, K>(x, static_cast<T>(std::log(static_cast<T>(std::sin(x)) / x)))
 {
 	this->series_name = "ln(sin(x)/x)";
 	// Сходится при 0 < x ≤ π (ряд для логарифма синуса)
@@ -3022,8 +3023,8 @@ ln_sinx_minus_ln_x_series<T, K>::ln_sinx_minus_ln_x_series(T x) : series_base<T,
 template <std::floating_point T, std::unsigned_integral K>
 constexpr T ln_sinx_minus_ln_x_series<T, K>::operator()(K n) const
 {
-	const T a = static_cast<T>((this->x) / ((n + 1) * std::numbers::pi));
-	return static_cast<T>(std::log(1 - a * a)); // (51.2) [Rows.pdf]
+	const T a = static_cast<T>(this->x / (static_cast<T>(n + 1) * static_cast<T>(std::numbers::pi)));
+	return static_cast<T>(std::log(static_cast<T>(1) - a * a)); // (51.2) [Rows.pdf]
 }
 
 
