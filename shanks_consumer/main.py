@@ -2,13 +2,11 @@ import pathlib
 
 from src.params import (
     SeriesParamModule,
-    AccelParamModule,
+    get_accel_params_from_json,
+    get_series_params_from_json,
 )
 from src.trial import ComplexTrial
-
-from src.export import ExportTrialResults, ExportTrialEvents
-
-from src.events import TrialEventScanner
+from src.export import ExportTrialResults
 
 import pyshanks
 
@@ -17,22 +15,17 @@ if __name__ == "__main__":
         [
             SeriesParamModule(
                 pyshanks.CosSeries,
-                x=[20, 100],
+                x=[100],
             ),
+            *get_series_params_from_json(pathlib.Path("data/example.json")),
         ],
-        [AccelParamModule(pyshanks.LevinAlgorithm, range(1, 5), range(1, 5))],
+        [
+            *get_accel_params_from_json(pathlib.Path("data/example.json")),
+        ],
     )
     results = st.execute()
-    result_exporter = ExportTrialResults(results)
+    exporter = ExportTrialResults(results)
 
-    result_exporter.to_json(pathlib.Path("output/output.json"))
-    result_exporter.to_csv(pathlib.Path("output/output.csv"))
-
-    scanner = TrialEventScanner(results)
-    events = scanner.execute()
-
-    event_exporter = ExportTrialEvents(events)
-    event_exporter.to_json(pathlib.Path("output/events.json"))
-    event_exporter.to_csv(pathlib.Path("output/events.csv"))
-
+    exporter.to_json(pathlib.Path("output/output.json"))
+    exporter.to_csv(pathlib.Path("output/output.csv"))
     # InteractiveConvergencePlot(results).show()
