@@ -1,7 +1,6 @@
 {
   "series": [
     {
-      "series_type": "synthetic",
       "name": "CosSeries",
       "args": [9, 10, 11, 12]
     }
@@ -9,31 +8,31 @@
   "methods": [
     {
       "name": "ShanksAlgorithm",
-      "n": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 100],
+      "n": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
       "m": 4,
       "args": {}
     },
     {
       "name": "ShanksTransformAlternatingAlgorithm",
-      "n": 10,
+      "n": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
       "m": 4,
       "args": {}
     },
     {
       "name": "BrezinskiThetaAlgorithm",
-      "n": 10,
+      "n": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
       "m": 4,
       "args": {}
     },
     {
       "name": "ChangWynnAlgorithm",
-      "n": 10,
+      "n": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
       "m": 4,
       "args": {}
     },
     {
       "name": "DrummondDAlgorithm",
-      "n": 10,
+      "n": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
       "m": 4,
       "args": {
         "remainder": "u_variant",
