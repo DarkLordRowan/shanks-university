@@ -1055,7 +1055,6 @@ private:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-xmb_Jb_two_series<T, K>::xmb_Jb_two_series(T x, K b) : series_base<T, K>(x, static_cast<T>(static_cast<T>(1) / static_cast<T>(std::pow(x, b)) * static_cast<T>(std::cyl_bessel_j(b, 2 * x)))), mu(b) 
 xmb_Jb_two_series<T, K>::xmb_Jb_two_series(T x, K b) : series_base<T, K>(x, static_cast<T>(1 / std::pow(x, b) * std::cyl_bessel_j(b, 2 * x))), mu(b) 
 {
 	this->series_name = "x⁻ᵇJᵦ(2x)";
