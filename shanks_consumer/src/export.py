@@ -1,3 +1,4 @@
+import io
 from typing import Iterable
 import pathlib
 import json
@@ -97,6 +98,32 @@ class ExportTrialResults(BaseExport):
                         + list(map(str, asdict(compute).values()))
                     )
 
+    def to_csv_text(self) -> str:
+        buf = io.StringIO()
+        writer = csv.writer(buf)
+        writer.writerow(
+            dataclass_fields_with_prefix(SeriesTrialResult, "series_")
+            + dataclass_fields_with_prefix(AccelTrialResult, "accel_")
+            + dataclass_fields_with_prefix(ErrorTrialResult, "error_")
+            + dataclass_fields_with_prefix(ComputedTrialResult, "computed_")
+        )
+        for result in self.results:
+            context = (
+                    list(map(str, asdict(result.series).values()))
+                    + list(map(str, asdict(result.accel).values()))
+                    + (
+                        list(map(str, asdict(result.error).values()))
+                        if result.error
+                        else list(map(str, asdict(ErrorTrialResult("", {})).values()))
+                    )
+            )
+            for compute in result.computed:
+                writer.writerow(context + list(map(str, asdict(compute).values())))
+        return buf.getvalue()
+
+    def to_csv_bytes(self, encoding: str = "utf-8") -> bytes:
+        return self.to_csv_text().encode(encoding)
+
 
 class ExportTrialEvents(BaseExport):
     def __init__(
@@ -141,3 +168,28 @@ class ExportTrialEvents(BaseExport):
                         )
                     )
                 )
+
+    def to_csv_text(self) -> str:
+        buf = io.StringIO()
+        writer = csv.writer(buf)
+        writer.writerow(
+            ["event_name", "event_data"]
+            + dataclass_fields_with_prefix(SeriesTrialResult, "series_")
+            + dataclass_fields_with_prefix(AccelTrialResult, "accel_")
+            + dataclass_fields_with_prefix(ErrorTrialResult, "error_")
+        )
+        for event in self.events:
+            writer.writerow(
+                [event.event, event.data]
+                + list(map(str, asdict(event.result.series).values()))
+                + list(map(str, asdict(event.result.accel).values()))
+                + (
+                    list(map(str, asdict(event.result.error).values()))
+                    if event.result.error
+                    else list(map(str, asdict(ErrorTrialResult("", {})).values()))
+                )
+            )
+        return buf.getvalue()
+
+    def to_csv_bytes(self, encoding: str = "utf-8") -> bytes:
+        return self.to_csv_text().encode(encoding)
