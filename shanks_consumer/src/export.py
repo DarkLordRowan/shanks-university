@@ -1,9 +1,15 @@
-from src.trial import TrialResult
+from src.trial import (
+    TrialResult,
+    AccelTrialResult,
+    ErrorTrialResult,
+    SeriesTrialResult,
+    ComputedTrialResult,
+)
 from typing import Iterable
 import pathlib
 import json
 import csv
-from dataclasses import asdict
+from dataclasses import asdict, fields
 
 
 class ExportTrialResults:
@@ -38,12 +44,26 @@ class ExportTrialResults:
             )
 
     def to_csv(self, override_location: pathlib.Path):
+
+        def dataclass_fields_with_prefix(
+            dataclass_type, prefix: str
+        ) -> list[str]:
+            return list(map(lambda s: prefix + s.name, fields(dataclass_type)))
+
         with open(
             self._verify_location(override_location),
             mode="w",
             encoding="utf-8",
         ) as f:
             csv_writer = csv.writer(f)
+            csv_writer.writerow(
+                dataclass_fields_with_prefix(SeriesTrialResult, "series_")
+                + dataclass_fields_with_prefix(AccelTrialResult, "accel_")
+                + dataclass_fields_with_prefix(ErrorTrialResult, "error_")
+                + dataclass_fields_with_prefix(
+                    ComputedTrialResult, "computed_"
+                )
+            )
             for result in self.results:
                 result_context = (
                     list(map(str, asdict(result.series).values()))
@@ -51,7 +71,9 @@ class ExportTrialResults:
                     + (
                         list(map(str, asdict(result.error).values()))
                         if result.error
-                        else []
+                        else list(
+                            map(str, asdict(ErrorTrialResult("", {})).values())
+                        )
                     )
                 )
                 for compute in result.computed:
