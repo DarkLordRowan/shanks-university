@@ -1,11 +1,11 @@
 import pathlib
 
-from src.params import (
+from shanks_consumer.src.shanks_consumer.params import (
     AccelParamModule,
     SeriesParamModule,
 )
-from src.trial import ComplexTrial
-from src.export import ExportTrialResult
+from shanks_consumer.src.shanks_consumer.trial import ComplexTrial
+from shanks_consumer.src.shanks_consumer.export import ExportTrialResult
 
 import pyshanks
 

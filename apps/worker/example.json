@@ -1,0 +1,130 @@
+{
+  "series": [
+    {
+      "series_type": "synthetic",
+      "name": "CosSeries",
+      "args": [9, 10, 11, 12]
+    }
+  ],
+  "methods": [
+    {
+      "name": "ShanksAlgorithm",
+      "n": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 100],
+      "m": 4,
+      "args": {}
+    },
+    {
+      "name": "ShanksTransformAlternatingAlgorithm",
+      "n": 10,
+      "m": 4,
+      "args": {}
+    },
+    {
+      "name": "BrezinskiThetaAlgorithm",
+      "n": 10,
+      "m": 4,
+      "args": {}
+    },
+    {
+      "name": "ChangWynnAlgorithm",
+      "n": 10,
+      "m": 4,
+      "args": {}
+    },
+    {
+      "name": "DrummondDAlgorithm",
+      "n": 10,
+      "m": 4,
+      "args": {
+        "remainder": "u_variant",
+        "useRecFormulas": true
+      }
+    },
+    {
+      "name": "FordSidi2Algorithm",
+      "n": 10,
+      "m": 4,
+      "args": {}
+    },
+    {
+      "name": "FordSidi3Algorithm",
+      "n": 10,
+      "m": 4,
+      "args": {}
+    },
+    {
+      "name": "LevinAlgorithm",
+      "n": 10,
+      "m": 4,
+      "args": {}
+    },
+    {
+      "name": "LevinSidiMAlgorithm",
+      "n": 10,
+      "m": 4,
+      "args": {
+        "remainder": "u_variant",
+        "gamma": 15
+      }
+    },
+    {
+      "name": "LevinSidiSAlgorithm",
+      "n": 10,
+      "m": 4,
+      "args": {
+        "remainder": "u_variant",
+        "useRecFormulas": false,
+        "parameter": 15
+      }
+    },
+    {
+      "name": "LubkinWAlgorithm",
+      "n": 10,
+      "m": 4,
+      "args": {}
+    },
+    {
+      "name": "WhynnRhoAlgorithm",
+      "n": 10,
+      "m": 4,
+      "args": {
+        "numerator": "rho_variant",
+        "gamma": 15,
+        "RHO": 15
+      }
+    },
+    {
+      "name": "RichardsonAlgorithm",
+      "n": 10,
+      "m": 4,
+      "args": {}
+    },
+    {
+      "name": "WenigerAlgorithm",
+      "n": 10,
+      "m": 4,
+      "args": {}
+    },
+    {
+      "name": "WynnEpsilonAlgorithm",
+      "n": 10,
+      "m": 4,
+      "args": {}
+    },
+    {
+      "name": "WynnEpsilon2Algorithm",
+      "n": 10,
+      "m": 4,
+      "args": {}
+    },
+
+    {
+      "name": "WynnEpsilon3Algorithm",
+      "n": 10,
+      "m": 4,
+      "args": {
+        "epsilon_threshold": 0.001
+      }
+    }
+  ]
+}
