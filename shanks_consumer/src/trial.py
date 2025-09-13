@@ -134,5 +134,6 @@ class ComplexTrial:
         for series, accel in itertools.product(
             self.series_params, self.accel_params
         ):
-            results += Trial(series, accel).execute()
+            result = Trial(series, accel).execute()
+            results += result
         return results

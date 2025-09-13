@@ -315,10 +315,10 @@ def load_series_params_from_data(
     for series_data in data["series"]:
         args = series_data.get("args", {})
         if not isinstance(args, dict):
-            args = {"x": map(float, autowrap(args))}
+            args = {"x": list(map(float, autowrap(args)))}
         else:
             args = {
-                str(key): map(float, autowrap(value))
+                str(key): list(map(float, autowrap(value)))
                 for key, value in args.items()
             }
         series_list.append(
