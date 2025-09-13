@@ -1,5 +1,5 @@
 {
-  "series": [
+  "series": [ 
     {
       "name": "ExpSeries",
       "args": {
@@ -17,16 +17,22 @@
       }
     }
   ],
+
   "methods": [
     {
+
       "name": "ShanksAlgorithm",
+
       "n": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+
       "m": 4,
+
       "args": {}
     },
     {
       "name": "ShanksTransformAlternatingAlgorithm",
       "n": {
+
         "start": 1,
         "stop": 11,
         "step": 1
@@ -39,14 +45,25 @@
       "args": {}
     },
     {
-      "name": "FordSidi3Algorithm",
+      "name": "LevinAlgorithm",
       "n": {
         "start": 1,
         "stop": 11,
         "step": 1
       },
       "m": [8],
-      "args": {}
+      "args": {
+
+
+        "remainder": ["v_variant", "u_variant", "t_wave_variant"],
+        "useRecFormulas": true,
+
+        "beta": {
+            "start": 0,
+            "stop": 1,
+            "step": 0.1
+        }
+      }
     }
   ]
 }
