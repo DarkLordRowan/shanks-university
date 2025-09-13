@@ -1,4 +1,4 @@
-from shanks_consumer.trial import (
+from src.trial import (
     TrialResult,
     AccelTrialResult,
     ErrorTrialResult,
