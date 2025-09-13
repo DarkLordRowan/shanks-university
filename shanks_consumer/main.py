@@ -1,15 +1,14 @@
 import pathlib
 
 from src.params import (
-    AccelParamModule,
     SeriesParamModule,
     AccelParamModule,
 )
 from src.trial import ComplexTrial
-from src.events import TrialEventScanner
+
 from src.export import ExportTrialResults, ExportTrialEvents
 
-from src.plot import InteractiveConvergencePlot
+from src.events import TrialEventScanner
 
 import pyshanks
 

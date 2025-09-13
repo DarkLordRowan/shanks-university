@@ -4,7 +4,6 @@ import json
 import csv
 from dataclasses import asdict, fields
 
-
 from src.trial import (
     TrialResult,
     AccelTrialResult,
