@@ -1,28 +1,29 @@
-import pathlib
+from fastapi import FastAPI, Body
+from fastapi.responses import JSONResponse
 
-from src.export import ExportTrialResults
-from src.params import get_series_params_from_json, get_accel_params_from_json
-from src.trial import ComplexTrial
+from shanks_consumer import export, params, trial
 
-def proc(json_file):
-    st = ComplexTrial(
-        [
-            *get_series_params_from_json(json_file),
-        ],
-        [
-            *get_accel_params_from_json(json_file),
-        ],
+app = FastAPI(title="Shanks Worker Service")
+
+def proc(json_data: dict) -> dict:
+    """
+    Принимает Python-словарь (распарсенный JSON), запускает ComplexTrial
+    и возвращает результат как dict.
+    """
+    st = trial.ComplexTrial(
+        [*params.get_series_params_from_json_location(json_data)],
+        [*params.get_accel_params_from_json(json_data)],
     )
     results = st.execute()
-    exporter = ExportTrialResults(results)
+    exporter = export.ExportTrialResults(results)
     return exporter.to_json()
 
-
-def main():
-    jsonfile = pathlib.Path("example.json")
-    jsonNe = proc(jsonfile)
-    print(jsonNe)
+@app.post("/process")
+async def process_json(payload: dict = Body(...)):
+    result = proc(payload)
+    return JSONResponse(content=result)
 
 
 if __name__ == "__main__":
-    main()
+    import uvicorn
+    uvicorn.run("main:app", host="0.0.0.0", port=8000)
