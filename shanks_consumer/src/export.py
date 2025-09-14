@@ -73,7 +73,8 @@ class ExportTrialResults(BaseExport):
         ) as f:
             csv_writer = csv.writer(f)
             csv_writer.writerow(
-                dataclass_fields_with_prefix(SeriesTrialResult, "series_")
+                ["id"]
+                + dataclass_fields_with_prefix(SeriesTrialResult, "series_")
                 + dataclass_fields_with_prefix(AccelTrialResult, "accel_")
                 + dataclass_fields_with_prefix(ErrorTrialResult, "error_")
                 + dataclass_fields_with_prefix(
@@ -82,7 +83,8 @@ class ExportTrialResults(BaseExport):
             )
             for result in self.results:
                 result_context = (
-                    list(map(str, asdict(result.series).values()))
+                    [result.id]
+                    + list(map(str, asdict(result.series).values()))
                     + list(map(str, asdict(result.accel).values()))
                     + (
                         list(map(str, asdict(result.error).values()))
@@ -102,20 +104,24 @@ class ExportTrialResults(BaseExport):
         buf = io.StringIO()
         writer = csv.writer(buf)
         writer.writerow(
-            dataclass_fields_with_prefix(SeriesTrialResult, "series_")
+            ["id"]
+            + dataclass_fields_with_prefix(SeriesTrialResult, "series_")
             + dataclass_fields_with_prefix(AccelTrialResult, "accel_")
             + dataclass_fields_with_prefix(ErrorTrialResult, "error_")
             + dataclass_fields_with_prefix(ComputedTrialResult, "computed_")
         )
         for result in self.results:
             context = (
-                    list(map(str, asdict(result.series).values()))
-                    + list(map(str, asdict(result.accel).values()))
-                    + (
-                        list(map(str, asdict(result.error).values()))
-                        if result.error
-                        else list(map(str, asdict(ErrorTrialResult("", {})).values()))
+                [result.id]
+                + list(map(str, asdict(result.series).values()))
+                + list(map(str, asdict(result.accel).values()))
+                + (
+                    list(map(str, asdict(result.error).values()))
+                    if result.error
+                    else list(
+                        map(str, asdict(ErrorTrialResult("", {})).values())
                     )
+                )
             )
             for compute in result.computed:
                 writer.writerow(context + list(map(str, asdict(compute).values())))
@@ -149,46 +155,16 @@ class ExportTrialEvents(BaseExport):
             encoding="utf-8",
         ) as f:
             csv_writer = csv.writer(f)
-            csv_writer.writerow(
-                ["event_name", "event_data"]
-                + dataclass_fields_with_prefix(SeriesTrialResult, "series_")
-                + dataclass_fields_with_prefix(AccelTrialResult, "accel_")
-                + dataclass_fields_with_prefix(ErrorTrialResult, "error_")
-            )
+            csv_writer.writerow(["event_name", "event_data", "result_id"])
             for event in self.events:
-                csv_writer.writerow(
-                    [event.event, event.data]
-                    + list(map(str, asdict(event.result.series).values()))
-                    + list(map(str, asdict(event.result.accel).values()))
-                    + (
-                        list(map(str, asdict(event.result.error).values()))
-                        if event.result.error
-                        else list(
-                            map(str, asdict(ErrorTrialResult("", {})).values())
-                        )
-                    )
-                )
+                csv_writer.writerow([event.event, event.data, event.result_id])
 
     def to_csv_text(self) -> str:
         buf = io.StringIO()
         writer = csv.writer(buf)
-        writer.writerow(
-            ["event_name", "event_data"]
-            + dataclass_fields_with_prefix(SeriesTrialResult, "series_")
-            + dataclass_fields_with_prefix(AccelTrialResult, "accel_")
-            + dataclass_fields_with_prefix(ErrorTrialResult, "error_")
-        )
+        writer.writerow(["event_name", "event_data", "result_id"])
         for event in self.events:
-            writer.writerow(
-                [event.event, event.data]
-                + list(map(str, asdict(event.result.series).values()))
-                + list(map(str, asdict(event.result.accel).values()))
-                + (
-                    list(map(str, asdict(event.result.error).values()))
-                    if event.result.error
-                    else list(map(str, asdict(ErrorTrialResult("", {})).values()))
-                )
-            )
+            writer.writerow([event.event, event.data, event.result_id])
         return buf.getvalue()
 
     def to_csv_bytes(self, encoding: str = "utf-8") -> bytes:
