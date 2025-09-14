@@ -94,10 +94,11 @@ const Experiments: React.FC = () => {
 
   const jsonTable = useMemo(() => {
     if (!Array.isArray(jsonResult)) return { headers: [], rows: [] as (string | number)[][] };
-    const headers = ["series_name","series_x","series_lim","accel_name","m","n","series_value","partial_sum","partial_sum_dev","accel_value","accel_value_dev","error"];
+    const headers = ["id","series_name","series_x","series_lim","accel_name","m","n","series_value","partial_sum","partial_sum_deviation","accel_value","accel_value_deviation","error"];
     const rows: (string | number)[][] = [];
     for (const block of jsonResult) {
       const s = block?.series ?? {}; const a = block?.accel ?? {};
+      const blkId = typeof block?.id === "string" ? block.id : "";
       const err = block?.error?.description ? String(block.error.description) : "";
       const seriesName = s?.name ?? "";
       const seriesX = s?.arguments && typeof s.arguments === "object" && "x" in s.arguments ? (s.arguments.x as any) : "";
@@ -105,7 +106,7 @@ const Experiments: React.FC = () => {
       const accelName = a?.name ?? ""; const m = a?.m_value ?? a?.m ?? "";
       const items: any[] = Array.isArray(block?.computed) ? block.computed : [];
       for (const it of items) {
-        rows.push([seriesName, seriesX, seriesLim, accelName, m, it?.n ?? "", it?.series_value ?? "", it?.partial_sum ?? "",
+        rows.push([blkId, seriesName, seriesX, seriesLim, accelName, m, it?.n ?? "", it?.series_value ?? "", it?.partial_sum ?? "",
           it?.partial_sum_deviation ?? "", it?.accel_value ?? "", it?.accel_value_deviation ?? "", err]);
       }
     }
@@ -351,12 +352,13 @@ const Experiments: React.FC = () => {
       const lim = toNum(s?.lim);
       const accelName = a?.name ?? "";
       const m = a?.m_value ?? a?.m ?? "";
+      const blkId = typeof block?.id === "string" ? block.id : "";
 
       const key = `${seriesName}|x=${xVal}|${accelName}|m=${m}`;
       if (!byKey[key]) {
         byKey[key] = {
           id: key,
-          caption: `${seriesName} (x=${xVal}${lim!=null?`, lim=${lim}`:""}) · ${accelName}${m!==""?` (m=${m})`:""}`,
+          caption: `${seriesName} (x=${xVal}${lim!=null?`, lim=${lim}`:""}) · ${accelName}${m!==""?` (m=${m})`:""}${blkId ? ` · id=${blkId}` : ""}`,
           limit: lim,
           partial: [],
           accel: [],
@@ -401,7 +403,7 @@ const Experiments: React.FC = () => {
   return (
       <div className="mx-auto max-w-6xl px-4 py-6">
         <h1 className="mb-4 text-2xl font-bold">Эксперименты</h1>
-        <p className="mb-6 text-textDim">Загрузите JSON с параметрами серий и методов. Мы отправим его во внешнее API и получим результаты в форматах JSON и CSV.</p>
+        <p className="mb-6 text-textDim">Загрузите JSON с параметрами рядов и алгоритмов. Мы отправим его во внешнее API и получим результаты в форматах JSON и CSV.</p>
 
         {/* Входные данные */}
         <div className="mb-6 rounded-2xl border border-border/60 bg-panel/70 p-4">
