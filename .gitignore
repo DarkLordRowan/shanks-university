@@ -69,6 +69,7 @@ x86/
 [Aa][Rr][Mm]/
 [Aa][Rr][Mm]64/
 bld/
+build/
 [Bb]in/
 [Oo]bj/
 [Ll]og/
@@ -482,3 +483,15 @@ x64/Debug/shanks_transformation.exe
 *.exe
 *.tlog
 .clangd
+shanks_transformation/**/build*
+rebuild.sh
+.vscode
+
+
+# //TODO сократить  вчё то что сверху
+.idea/*
+*/.idea/*
+*/cmake-build-debug/*
+*/cmake-build-debug-event-trace/*
+*/cmake-build-release-visual-studio/*
+/shanks_transformation/tests/cmake-build-release-visual-studio/
