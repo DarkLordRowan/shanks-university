@@ -1,5 +1,3 @@
-#pragma once
-
 #ifndef INC_COMPLEXPRECISION
 #define INC_COMPLEXPRECISION
 

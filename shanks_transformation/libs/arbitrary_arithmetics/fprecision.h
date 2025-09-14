@@ -1,5 +1,3 @@
-#pragma once
-
 #ifndef INC_FPRECISION
 #define INC_FPRECISION
 
@@ -391,13 +389,6 @@ class float_precision {
 	  friend inline bool operator!=(const float_precision&, const float_precision&);
 	  friend inline bool operator>=(const float_precision&, const float_precision&);
 	  friend inline bool operator<=(const float_precision&, const float_precision&);
-	  
-	  friend inline bool operator> (const float_precision&, const double&);
-	  friend inline bool operator< (const float_precision&, const double&);
-	  friend inline bool operator==(const float_precision&, const double&);
-	  friend inline bool operator!=(const float_precision&, const double&);
-	  friend inline bool operator>=(const float_precision&, const double&);
-	  friend inline bool operator<=(const float_precision&, const double&);
 
       // Specialization
       friend std::ostream& operator<<( std::ostream& strm, const float_precision& d );
@@ -2737,12 +2728,6 @@ inline float_precision fabs( const float_precision& a )
 	return abs(a);
 	}
 
-inline bool operator> (const float_precision& a, const double& b){return a>float_precision(b);}
-inline bool operator< (const float_precision& a, const double& b){return a<float_precision(b);}
-inline bool operator==(const float_precision& a, const double& b){return a == float_precision(b);}
-inline bool operator!=(const float_precision& a, const double& b){return a != float_precision(b);}
-inline bool operator>=(const float_precision& a, const double& b){return a>=float_precision(b);}
-inline bool operator<=(const float_precision& a, const double& b){return a<=float_precision(b);}
 
 //////////////////////////////////////////////////////////
 //

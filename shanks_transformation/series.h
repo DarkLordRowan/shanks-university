@@ -1578,7 +1578,7 @@ namespace series{
 		// Сходится при |x| ≤ π (ряд Фурье для функции f(x) = x³)
 		// Расходится при |x| > π
 
-		if (abs(x) > std::numbers::pi || !isfinite(x)) {
+		if (abs(x) > static_cast<T>(std::numbers::pi) || !isfinite(x)) {
 			this->throw_domain_error("|x| must be ≤ π");
 		}
 	}
