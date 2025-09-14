@@ -219,7 +219,7 @@ const Experiments: React.FC = () => {
               <>
                 {jsonError && <div className="mb-3 rounded-xl border border-red-400/60 bg-red-500/10 p-3 text-sm text-red-300">{jsonError}</div>}
                 {jsonTable.headers.length ? (
-                    <DataTable headers={jsonTable.headers} rows={jsonTable.rows} />
+                    <DataTable headers={jsonTable.headers} rows={jsonTable.rows} enableSorting enableColumnFilters storageKey="exp_json_table" />
                 ) : (
                     <div className="rounded-xl border border-border/60 p-4 text-sm text-textDim">Нет данных. Отправьте запрос.</div>
                 )}
@@ -230,7 +230,7 @@ const Experiments: React.FC = () => {
               <>
                 {csvError && <div className="mb-3 rounded-xl border border-red-400/60 bg-red-500/10 p-3 text-sm text-red-300">{csvError}</div>}
                 {csvTable.headers.length ? (
-                    <DataTable headers={csvTable.headers} rows={csvTable.rows} compact />
+                    <DataTable headers={csvTable.headers} rows={csvTable.rows} compact enableSorting enableColumnFilters storageKey="exp_csv_table" />
                 ) : (
                     <div className="rounded-xl border border-border/60 p-4 text-sm text-textDim">Нет данных. Отправьте запрос.</div>
                 )}
