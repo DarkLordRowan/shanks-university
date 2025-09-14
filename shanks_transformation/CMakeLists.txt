@@ -1,30 +1,35 @@
-cmake_minimum_required(VERSION 3.10...3.24)
-project(ShanksUniversity VERSION 1.0 LANGUAGES CXX)
-
+cmake_minimum_required(VERSION 3.11)
+project(shanks_transformation LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Подключаем pybind11
-find_package(pybind11 CONFIG QUIET)
-if (NOT pybind11_FOUND)
-    include(FetchContent)
-    FetchContent_Declare(
-            pybind11
-            GIT_REPOSITORY https://github.com/pybind/pybind11.git
-            GIT_TAG        v2.11.1
-    )
-    FetchContent_MakeAvailable(pybind11)
-endif()
+include(FetchContent)
 
-# Python-модуль series_module
-pybind11_add_module(series_module bindings.cpp)
-target_include_directories(series_module PRIVATE include)
+# -------------------------
+# Бинарник (основная программа)
+# -------------------------
+add_executable(shanks_transformation main.cpp)
+target_include_directories(shanks_transformation PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
-# Убираем префикс «lib»
-set_target_properties(series_module PROPERTIES PREFIX "")
+# -------------------------
+# Pybind11 модуль
+# -------------------------
+FetchContent_Declare(pybind11 GIT_REPOSITORY https://github.com/pybind/pybind11.git GIT_TAG v2.13.6)
+FetchContent_MakeAvailable(pybind11)
+pybind11_add_module(pyshanks py.cpp)
+target_include_directories(pyshanks PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+set_target_properties(pyshanks PROPERTIES PREFIX "")
 
-# Выводим модуль в папку backend/
-set_target_properties(series_module PROPERTIES
-        LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/../backend"
-        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/../backend"
-)
+# -------------------------
+# Тесты (GoogleTest) — автоподхват всех *.cpp в ./tests/**
+# -------------------------
+FetchContent_Declare(googletest URL https://github.com/google/googletest/archive/refs/tags/v1.15.2.zip)
+set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+FetchContent_MakeAvailable(googletest)
+enable_testing()
+include(GoogleTest)
+file(GLOB_RECURSE TEST_SOURCES CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/tests/*.cpp)
+add_executable(all_tests ${TEST_SOURCES})
+target_include_directories(all_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/methods)
+target_link_libraries(all_tests PRIVATE GTest::gtest_main)
+gtest_discover_tests(all_tests)

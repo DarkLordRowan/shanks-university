@@ -1,0 +1,171 @@
+import io
+from typing import Iterable
+import pathlib
+import json
+import csv
+from dataclasses import asdict, fields
+
+from src.trial import (
+    TrialResult,
+    AccelTrialResult,
+    ErrorTrialResult,
+    SeriesTrialResult,
+    ComputedTrialResult,
+)
+
+from src.events import TrialEvent
+
+
+def dataclass_fields_with_prefix(dataclass_type, prefix: str) -> list[str]:
+    return list(map(lambda s: prefix + s.name, fields(dataclass_type)))
+
+
+def dataclasses_to_json(dataclasses, location):
+    with open(
+        location,
+        mode="w",
+        encoding="utf-8",
+    ) as f:
+        f.write(
+            json.dumps(
+                [asdict(dataclass) for dataclass in dataclasses],
+                indent=4,
+                sort_keys=True,
+            )
+        )
+
+
+class BaseExport:
+    def __init__(self, location: pathlib.Path | None = None):
+        self.location = location
+
+    def _verify_location(
+        self, override_location: pathlib.Path | None
+    ) -> pathlib.Path:
+        location = override_location or self.location
+        if not location:
+            raise ValueError("Provide location to export")
+        return location
+
+
+class ExportTrialResults(BaseExport):
+    def __init__(
+        self,
+        results: Iterable[TrialResult],
+        location: pathlib.Path | None = None,
+    ):
+        self.results = results
+        super().__init__(location)
+
+    def to_json(self, override_location: pathlib.Path | None = None):
+        dataclasses_to_json(
+            self.results, self._verify_location(override_location)
+        )
+
+    def as_dict(self) -> list[dict]:
+        return [asdict(result) for result in self.results]
+
+    def to_csv(self, override_location: pathlib.Path):
+        with open(
+            self._verify_location(override_location),
+            mode="w",
+            encoding="utf-8",
+        ) as f:
+            csv_writer = csv.writer(f)
+            csv_writer.writerow(
+                ["id"]
+                + dataclass_fields_with_prefix(SeriesTrialResult, "series_")
+                + dataclass_fields_with_prefix(AccelTrialResult, "accel_")
+                + dataclass_fields_with_prefix(ErrorTrialResult, "error_")
+                + dataclass_fields_with_prefix(
+                    ComputedTrialResult, "computed_"
+                )
+            )
+            for result in self.results:
+                result_context = (
+                    [result.id]
+                    + list(map(str, asdict(result.series).values()))
+                    + list(map(str, asdict(result.accel).values()))
+                    + (
+                        list(map(str, asdict(result.error).values()))
+                        if result.error
+                        else list(
+                            map(str, asdict(ErrorTrialResult("", {})).values())
+                        )
+                    )
+                )
+                for compute in result.computed:
+                    csv_writer.writerow(
+                        result_context
+                        + list(map(str, asdict(compute).values()))
+                    )
+
+    def to_csv_text(self) -> str:
+        buf = io.StringIO()
+        writer = csv.writer(buf)
+        writer.writerow(
+            ["id"]
+            + dataclass_fields_with_prefix(SeriesTrialResult, "series_")
+            + dataclass_fields_with_prefix(AccelTrialResult, "accel_")
+            + dataclass_fields_with_prefix(ErrorTrialResult, "error_")
+            + dataclass_fields_with_prefix(ComputedTrialResult, "computed_")
+        )
+        for result in self.results:
+            context = (
+                [result.id]
+                + list(map(str, asdict(result.series).values()))
+                + list(map(str, asdict(result.accel).values()))
+                + (
+                    list(map(str, asdict(result.error).values()))
+                    if result.error
+                    else list(
+                        map(str, asdict(ErrorTrialResult("", {})).values())
+                    )
+                )
+            )
+            for compute in result.computed:
+                writer.writerow(context + list(map(str, asdict(compute).values())))
+        return buf.getvalue()
+
+    def to_csv_bytes(self, encoding: str = "utf-8") -> bytes:
+        return self.to_csv_text().encode(encoding)
+
+
+class ExportTrialEvents(BaseExport):
+    def __init__(
+        self,
+        events: Iterable[TrialEvent],
+        location: pathlib.Path | None = None,
+    ):
+        self.events = events
+        super().__init__(location)
+
+    def to_json(self, override_location: pathlib.Path | None = None):
+        dataclasses_to_json(
+            self.events, self._verify_location(override_location)
+        )
+
+    def as_dict(self) -> list[dict]:
+        return [asdict(event) for event in self.events]
+
+    def to_csv(self, override_location: pathlib.Path):
+        with open(
+            self._verify_location(override_location),
+            mode="w",
+            encoding="utf-8",
+        ) as f:
+            csv_writer = csv.writer(f)
+            csv_writer.writerow(["event_name", "event_data", "result_id"])
+            for event in self.events:
+                csv_writer.writerow([event.event, event.data, event.result_id])
+
+    def to_csv_text(self) -> str:
+        buf = io.StringIO()
+        writer = csv.writer(buf)
+        writer.writerow(["event_name", "event_data", "result_id"])
+        for event in self.events:
+            writer.writerow([event.event, event.data, event.result_id])
+        return buf.getvalue()
+
+    def to_csv_bytes(self, encoding: str = "utf-8") -> bytes:
+        return self.to_csv_text().encode(encoding)

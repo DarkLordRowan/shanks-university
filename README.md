@@ -26,18 +26,30 @@
 
 Теория: [ссылка на теорию](https://drive.google.com/drive/folders/19KFEQhl9ZR4EE2zDFvi610bNdNBWfGIb?usp=sharing)
 
+
 ## Установка
-##### Клонировать проект 
+
+Убедитесь что у вас установлен Python.
+
+### Unix
+```bash
+git clone https://github.com/DarkLordRowan/shanks-university.git
+git checkout Fixes
+cd shanks_consumer
+
+bash install_pyshanks.sh
+
+pip install -r requirements.txt
 ```
-git clone git@github.com:DarkLordRowan/shanks-university.git
+
+### Windows
 ```
-##### Забилдить проект
+install_py_requirement.bat
+install_pyshanks_windows.bat
 ```
-mkdir build
-cd build
-cmake ..
-make
-```
+
+## Использование
+Файл MANUAL.md, в shanks_consumer.
 
 ## Документация
 Doxygen документация доступна [по ссылке](https://bimbobam.github.io)
