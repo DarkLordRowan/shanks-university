@@ -5,7 +5,7 @@ import Experiments from "./pages/Experiments";
 import Algorithms from "./pages/Algorithms";
 import Docs from "./pages/Docs";
 import NotFound from "./pages/NotFound";
-import AlgorithmPage from "./pages/AlgorithmPage.tsx";
+import Algorithm from "./pages/Algorithm";
 
 export const routes: RouteObject[] = [
     {
@@ -15,7 +15,7 @@ export const routes: RouteObject[] = [
             { index: true, element: <Home /> },
             { path: "experiments", element: <Experiments /> },
             { path: "algorithms", element: <Algorithms /> },
-            { path: "algorithms/:id", element: <AlgorithmPage /> },
+            { path: "algorithms/:id", element: <Algorithm /> },
             { path: "docs", element: <Docs /> },
             { path: "*", element: <NotFound /> },
         ],
