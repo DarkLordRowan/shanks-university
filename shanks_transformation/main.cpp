@@ -28,7 +28,11 @@ int main()
 		{
 			std::cout << e.what() << std::endl;
 		}
-		
-		return 0;
+		catch (...){
+			std::cout << "\nERROR\n";
+		}
+
 	}
+
+	return 0;
 }
