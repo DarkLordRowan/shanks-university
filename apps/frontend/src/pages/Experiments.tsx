@@ -114,6 +114,25 @@ const Experiments: React.FC = () => {
 
   const csvTable = useMemo(() => (csvText ? parseCsv(csvText) : { headers: [], rows: [] as string[][] }), [csvText]);
 
+
+
+  type ErrorFilterMode = "all" | "onlyGood" | "onlyBad";
+  const [errorFilterMode, setErrorFilterMode] = useState<ErrorFilterMode>("all");
+
+  const applyErrorFilter = (table: { headers: string[]; rows: any[][] }) => {
+    const i = table.headers.indexOf("error_description");
+    const j = i === -1 ? table.headers.indexOf("error") : i;
+    if (j === -1 || errorFilterMode === "all") return table;
+
+    const hasErr = (r: any[]) => String(r[j] ?? "").trim().length > 0;
+    const rows =
+        errorFilterMode === "onlyBad"
+            ? table.rows.filter(hasErr)
+            : table.rows.filter(r => !hasErr(r));
+
+    return { headers: table.headers, rows };
+  };
+
   return (
       <div className="mx-auto max-w-6xl px-4 py-6">
         <h1 className="mb-4 text-2xl font-bold">Эксперименты</h1>
@@ -217,9 +236,36 @@ const Experiments: React.FC = () => {
 
           {activeTab === "jsonTable" && (
               <>
-                {jsonError && <div className="mb-3 rounded-xl border border-red-400/60 bg-red-500/10 p-3 text-sm text-red-300">{jsonError}</div>}
+                {jsonError && (
+                    <div className="mb-3 rounded-xl border border-red-400/60 bg-red-500/10 p-3 text-sm text-red-300">{jsonError}</div>
+                )}
                 {jsonTable.headers.length ? (
-                    <DataTable headers={jsonTable.headers} rows={jsonTable.rows} />
+                    <>
+                      <div className="mb-2 flex items-center gap-2 text-sm">
+                        <span className="text-textDim">Ошибки:</span>
+                        <select
+                            className="rounded-md border border-border bg-background/60 px-2 py-1 text-sm"
+                            value={errorFilterMode}
+                            onChange={(e) => setErrorFilterMode(e.target.value as ErrorFilterMode)}
+                        >
+                          <option value="all">показывать все</option>
+                          <option value="onlyGood">только без ошибок</option>
+                          <option value="onlyBad">только с ошибками</option>
+                        </select>
+                      </div>
+                      {(() => {
+                        const t = applyErrorFilter(jsonTable);
+                        return (
+                            <DataTable
+                                headers={t.headers}
+                                rows={t.rows}
+                                enableSorting
+                                enableColumnFilters
+                                storageKey="exp_json_table"
+                            />
+                        );
+                      })()}
+                    </>
                 ) : (
                     <div className="rounded-xl border border-border/60 p-4 text-sm text-textDim">Нет данных. Отправьте запрос.</div>
                 )}
@@ -228,9 +274,37 @@ const Experiments: React.FC = () => {
 
           {activeTab === "csvTable" && (
               <>
-                {csvError && <div className="mb-3 rounded-xl border border-red-400/60 bg-red-500/10 p-3 text-sm text-red-300">{csvError}</div>}
+                {csvError && (
+                    <div className="mb-3 rounded-xl border border-red-400/60 bg-red-500/10 p-3 text-sm text-red-300">{csvError}</div>
+                )}
                 {csvTable.headers.length ? (
-                    <DataTable headers={csvTable.headers} rows={csvTable.rows} compact />
+                    <>
+                      <div className="mb-2 flex items-center gap-2 text-sm">
+                        <span className="text-textDim">Ошибки:</span>
+                        <select
+                            className="rounded-md border border-border bg-background/60 px-2 py-1 text-sm"
+                            value={errorFilterMode}
+                            onChange={(e) => setErrorFilterMode(e.target.value as ErrorFilterMode)}
+                        >
+                          <option value="all">показывать все</option>
+                          <option value="onlyGood">только без ошибок</option>
+                          <option value="onlyBad">только с ошибками</option>
+                        </select>
+                      </div>
+                      {(() => {
+                        const t = applyErrorFilter(csvTable);
+                        return (
+                            <DataTable
+                                headers={t.headers}
+                                rows={t.rows}
+                                compact
+                                enableSorting
+                                enableColumnFilters
+                                storageKey="exp_csv_table"
+                            />
+                        );
+                      })()}
+                    </>
                 ) : (
                     <div className="rounded-xl border border-border/60 p-4 text-sm text-textDim">Нет данных. Отправьте запрос.</div>
                 )}
