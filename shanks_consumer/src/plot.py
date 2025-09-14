@@ -184,7 +184,7 @@ class InteractiveConvergencePlot:
 
         title = (
             f"Испытание {self.current_index + 1}/{len(self.results)}: "
-            f"{trial.series.name} {series_params} | {trial.accel.name} [m={trial.accel.m_value}]\n"
+            f"id: {trial.id} | {trial.series.name} {series_params} | {trial.accel.name} [m={trial.accel.m_value}]\n"
             f"←/→: навигация | Home/End: первое/последнее испытание"
         )
 
@@ -224,7 +224,7 @@ class InteractiveConvergencePlot:
 
         # Save the plot if save directory is specified
         if self.save_dir:
-            filename = f"trial_{self.current_index + 1:03d}_{trial.series.name}_{trial.accel.name}.png"
+            filename = f"trial_{self.current_index + 1:03d}_{trial.id}_{trial.series.name}_{trial.accel.name}.png"
             filepath = os.path.join(self.save_dir, filename)
             plt.savefig(filepath, dpi=150, bbox_inches="tight")
             print(f"Saved: {filepath}")

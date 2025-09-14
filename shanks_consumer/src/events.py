@@ -6,7 +6,7 @@ from dataclasses import dataclass, asdict
 
 @dataclass
 class TrialEvent:
-    result: TrialResult
+    result_id: str
     event: str
     data: dict
 
@@ -39,5 +39,5 @@ class TrialEventScanner:
             for name, method in self._scan_methods.items():
                 event_data = method(result)
                 if event_data:
-                    events.append(TrialEvent(result, name, event_data))
+                    events.append(TrialEvent(result.id, name, event_data))
         return events

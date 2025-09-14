@@ -8,6 +8,8 @@ import itertools
 from dataclasses import dataclass
 from typing import Any, Generator, Iterable, Mapping
 
+import uuid
+
 
 def cartesian_dicts(
     d: dict[str, Iterable[Any]],
@@ -53,7 +55,7 @@ class TrialResult:
     accel: AccelTrialResult
     computed: list[ComputedTrialResult]
     error: ErrorTrialResult | None
-
+    id: str = str(uuid.uuid4())
 
 @dataclass
 class Trial:
