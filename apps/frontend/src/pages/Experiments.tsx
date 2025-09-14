@@ -133,6 +133,271 @@ const Experiments: React.FC = () => {
     return { headers: table.headers, rows };
   };
 
+
+
+// === charts utils ===
+  type XY = { x: number; y: number };
+
+  const toNum = (v: any): number | null => {
+    if (typeof v === "number" && Number.isFinite(v)) return v;
+    if (v == null) return null;
+    const n = Number(String(v).replace(",", "."));
+    return Number.isFinite(n) ? n : null;
+  };
+
+  const niceTicks = (min: number, max: number, count = 5) => {
+    if (min === max) return [min];
+    const span = max - min;
+    const step = Math.pow(10, Math.floor(Math.log10(span / count)));
+    const err = span / (count * step);
+    const mult = err >= 7.5 ? 10 : err >= 3 ? 5 : err >= 1.5 ? 2 : 1;
+    const niceStep = step * mult;
+    const t0 = Math.ceil(min / niceStep) * niceStep;
+    const ticks: number[] = [];
+    for (let t = t0; t <= max + 1e-12; t += niceStep) ticks.push(+t.toFixed(12));
+    return ticks;
+  };
+
+  const niceLogTicks = (minPos: number, maxPos: number) => {
+    const a = Math.floor(Math.log10(minPos));
+    const b = Math.ceil(Math.log10(maxPos));
+    const ticks: number[] = [];
+    for (let p = a; p <= b; p++) ticks.push(Math.pow(10, p));
+    return ticks;
+  };
+
+  const linePath = (pts: XY[], xScale: (n: number) => number, yScale: (n: number) => number) =>
+      pts.map((p, i) => `${i ? "L" : "M"}${xScale(p.x)},${yScale(p.y)}`).join(" ");
+
+  const fmt = (v: number) => (v >= 1e4 || v < 1e-3 ? v.toExponential(2) : v.toFixed(2));
+
+// === небольшой универсальный SVG-чарт ===
+  const SimpleLineChart: React.FC<{
+    width?: number;
+    height?: number;
+    title: string;
+    xLabel?: string;
+    yLabel?: string;
+    series: { label: string; data: XY[]; color: string; dashed?: boolean }[];
+    horizontalLines?: { y: number; label?: string; color?: string; dashed?: boolean }[];
+    logY?: boolean;
+    annotateMaxText?: string | ((v: number) => string);
+  }> = ({
+          width = 420,
+          height = 220,
+          title,
+          xLabel,
+          yLabel,
+          series,
+          horizontalLines = [],
+          logY = false,
+          annotateMaxText,
+        }) => {
+    const PADL = 40, PADR = 8, PADT = 24, PADB = 30;
+    const W = width, H = height;
+    const all = series.flatMap(s => s.data);
+    if (!all.length) return null;
+
+    const minX = Math.min(...all.map(p => p.x));
+    const maxX = Math.max(...all.map(p => p.x));
+    const xScale = (x: number) => {
+      if (maxX === minX) return PADL + (W - PADL - PADR) / 2;
+      return PADL + ((x - minX) / (maxX - minX)) * (W - PADL - PADR);
+    };
+
+    const allY = series.flatMap(s => s.data.map(d => d.y)).concat(horizontalLines.map(l => l.y));
+    let minY = Math.min(...allY), maxY = Math.max(...allY);
+    if (!logY) {
+      const pad = (maxY - minY) * 0.05 || 1;
+      minY -= pad; maxY += pad;
+    } else {
+      // лог шкала => только положительные
+      const pos = allY.filter(v => v > 0);
+      const lo = Math.min(...pos), hi = Math.max(...pos);
+      minY = lo; maxY = hi;
+    }
+
+    const yLinear = (y: number) => {
+      if (maxY === minY) return H - PADB - (H - PADT - PADB)/2;
+      return H - PADB - ((y - minY) / (maxY - minY)) * (H - PADT - PADB);
+    };
+    const yLog = (y: number) => {
+      const ly = Math.log10(y), lmin = Math.log10(minY), lmax = Math.log10(maxY);
+      if (lmax === lmin) return H - PADB - (H - PADT - PADB)/2;
+      return H - PADB - ((ly - lmin) / (lmax - lmin)) * (H - PADT - PADB);
+    };
+    const yScale = logY ? yLog : yLinear;
+
+    const xticks = niceTicks(minX, maxX, 6);
+    const yticks = logY ? niceLogTicks(minY, maxY) : niceTicks(minY, maxY, 5);
+
+    // легенда
+    const Legend: React.FC = () => (
+        <div className="mt-1 flex flex-wrap items-center gap-3 text-[11px] text-textDim">
+          {series.map(s => (
+              <span key={s.label} className="inline-flex items-center gap-1">
+          <span style={{background:s.color}} className="inline-block h-2 w-3 rounded-sm" />
+                {s.label}
+        </span>
+          ))}
+        </div>
+    );
+
+    // аннотация максимума (для коэффициента)
+    let maxPoint: XY | null = null;
+    if (annotateMaxText) {
+      const allPts = series.flatMap(s => s.data);
+      if (allPts.length) {
+        maxPoint = allPts.reduce((a,b) => (a.y > b.y ? a : b));
+      }
+    }
+
+    return (
+        <div className="rounded-lg border border-border/60 bg-surface p-2">
+          <div className="mb-1 text-sm">{title}</div>
+          <div className="relative w-full" style={{ aspectRatio: `${W}/${H}` }}>
+            <svg
+                viewBox={`0 0 ${W} ${H}`}
+                preserveAspectRatio="xMidYMid meet"
+                className="absolute inset-0 h-full w-full block"
+            >
+            {/* оси */}
+            <path d={`M${PADL},${H-PADB} L${W-PADR},${H-PADB}`} stroke="currentColor" strokeOpacity="0.4" />
+            <path d={`M${PADL},${PADT} L${PADL},${H-PADB}`} stroke="currentColor" strokeOpacity="0.4" />
+            {/* сетка */}
+            {xticks.map((t, i) => (
+                <g key={`x${i}`}>
+                  <line x1={xScale(t)} y1={PADT} x2={xScale(t)} y2={H-PADB} stroke="currentColor" strokeOpacity="0.08" />
+                  <text x={xScale(t)} y={H-PADB+14} textAnchor="middle" className="fill-current text-[10px]">{t}</text>
+                </g>
+            ))}
+            {yticks.map((t, i) => (
+                <g key={`y${i}`}>
+                  <line x1={PADL} y1={yScale(t)} x2={W-PADR} y2={yScale(t)} stroke="currentColor" strokeOpacity="0.08" />
+                  <text x={PADL-6} y={yScale(t)+3} textAnchor="end" className="fill-current text-[10px]">
+                    {logY ? `1e${Math.log10(t).toFixed(0)}` : t}
+                  </text>
+                </g>
+            ))}
+
+            {/* горизонтальные линии (предел) */}
+            {horizontalLines.map((l, i) => (
+                <g key={`h${i}`}>
+                  <line x1={PADL} x2={W-PADR} y1={yScale(l.y)} y2={yScale(l.y)}
+                        stroke={l.color ?? "#ef4444"} strokeDasharray={l.dashed ? "6 4" : undefined} strokeWidth={1.2}/>
+                  {l.label && (
+                      <text x={W-PADR-4} y={yScale(l.y)-4} textAnchor="end" className="fill-current text-[10px] opacity-80">
+                        {l.label}
+                      </text>
+                  )}
+                </g>
+            ))}
+
+            {/* линии серий */}
+            {series.map((s, idx) => (
+                <g key={idx}>
+                  <path d={linePath(s.data, xScale, yScale)} fill="none"
+                        stroke={s.color} strokeWidth={1.8} strokeDasharray={s.dashed ? "6 4" : undefined}/>
+                  {s.data.map((p, i) => (
+                      <circle key={i} cx={xScale(p.x)} cy={yScale(p.y)} r={2.2} fill={s.color}/>
+                  ))}
+                </g>
+            ))}
+
+            {/* подписи осей */}
+            {xLabel && <text x={(PADL+W-PADR)/2} y={H-6} textAnchor="middle" className="fill-current text-[10px]">{xLabel}</text>}
+            {yLabel && <text x={12} y={(PADT+H-PADB)/2} transform={`rotate(-90 12 ${(PADT+H-PADB)/2})`} textAnchor="middle" className="fill-current text-[10px]">{yLabel}</text>}
+
+            {/* аннотация максимума */}
+              {annotateMaxText && maxPoint && (() => {
+                const txt = typeof annotateMaxText === "function" ? annotateMaxText(maxPoint.y) : annotateMaxText;
+                const bx = Math.min(W - PADR - 76, Math.max(PADL, xScale(maxPoint.x) + 6));
+                const by = Math.max(PADT + 14, yScale(maxPoint.y) - 6);
+                return (
+                    <>
+                      <rect x={bx} y={by - 12} width="76" height="16" rx="3" className="fill-current" opacity="0.12" />
+                      <text x={bx + 4} y={by - 0.5} className="fill-current text-[10px]">{txt}</text>
+                    </>
+                );
+              })()}
+            </svg>
+          </div>
+          <Legend/>
+        </div>
+    );
+  };
+
+// === подготовка данных для трёх панелей ===
+  type ChartGroup = {
+    id: string;
+    caption: string;
+    limit?: number | null;
+    partial: XY[];
+    accel: XY[];
+    errPartial: XY[];  // |S_n - L|
+    errAccel: XY[];    // |A_n - L|
+    ratio: XY[];       // |S_n - L| / |A_n - L|
+  };
+
+  const chartGroups = useMemo<ChartGroup[]>(() => {
+    if (!Array.isArray(jsonResult)) return [];
+    const byKey: Record<string, ChartGroup> = {};
+
+    for (const block of jsonResult) {
+      const s = block?.series ?? {};
+      const a = block?.accel ?? {};
+      const seriesName = s?.name ?? "";
+      const xVal = (s?.arguments && typeof s.arguments === "object" && "x" in s.arguments) ? s.arguments.x : "";
+      const lim = toNum(s?.lim);
+      const accelName = a?.name ?? "";
+      const m = a?.m_value ?? a?.m ?? "";
+
+      const key = `${seriesName}|x=${xVal}|${accelName}|m=${m}`;
+      if (!byKey[key]) {
+        byKey[key] = {
+          id: key,
+          caption: `${seriesName} (x=${xVal}${lim!=null?`, lim=${lim}`:""}) · ${accelName}${m!==""?` (m=${m})`:""}`,
+          limit: lim,
+          partial: [],
+          accel: [],
+          errPartial: [],
+          errAccel: [],
+          ratio: [],
+        };
+      }
+      const items: any[] = Array.isArray(block?.computed) ? block.computed : [];
+      for (const it of items) {
+        const n = toNum(it?.n);
+        if (n == null) continue;
+
+        const ps = toNum(it?.partial_sum);
+        if (ps != null) byKey[key].partial.push({ x: n, y: ps });
+
+        const av = toNum(it?.accel_value);
+        if (av != null) byKey[key].accel.push({ x: n, y: av });
+
+        if (lim != null && ps != null) byKey[key].errPartial.push({ x: n, y: Math.abs(ps - lim) });
+        if (lim != null && av != null) byKey[key].errAccel.push({ x: n, y: Math.abs(av - lim) });
+
+        if (lim != null && ps != null && av != null) {
+          const eP = Math.abs(ps - lim), eA = Math.abs(av - lim);
+          if (eA > 0) byKey[key].ratio.push({ x: n, y: eP / eA });
+        }
+      }
+    }
+
+    const groups = Object.values(byKey);
+    for (const g of groups) {
+      g.partial.sort((a,b)=>a.x-b.x);
+      g.accel.sort((a,b)=>a.x-b.x);
+      g.errPartial.sort((a,b)=>a.x-b.x);
+      g.errAccel.sort((a,b)=>a.x-b.x);
+      g.ratio.sort((a,b)=>a.x-b.x);
+    }
+    return groups;
+  }, [jsonResult]);
+
+
   return (
       <div className="mx-auto max-w-6xl px-4 py-6">
         <h1 className="mb-4 text-2xl font-bold">Эксперименты</h1>
@@ -265,6 +530,58 @@ const Experiments: React.FC = () => {
                             />
                         );
                       })()}
+
+                      {/* >>> НОВОЕ: графики по сериям (после таблицы) <<< */}
+                      {/* === ГРАФИКИ ДЛЯ КАЖДОГО РЯДА (после таблицы) === */}
+                      {chartGroups.length > 0 && (
+                          <div className="mt-6 space-y-4">
+                            <h3 className="text-lg font-semibold">Графики по сериям</h3>
+                            <div className="space-y-4">
+                              {chartGroups.map((g) => (
+                                  <div key={g.id} className="rounded-xl border border-border/60 bg-panel/60 p-3">
+                                    <div className="mb-2 text-sm text-textDim">{g.caption}</div>
+                                    <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                                      {/* 1) Значения методов + предел */}
+                                      <SimpleLineChart
+                                          title="Сравнение значений методов"
+                                          xLabel="Порядок (n)"
+                                          series={[
+                                            { label: "Частичные суммы", data: g.partial, color: "#3b82f6" },
+                                            { label: "Ускоренный метод", data: g.accel, color: "#f59e0b" },
+                                          ]}
+                                          horizontalLines={g.limit != null ? [{ y: g.limit, label: `Предел: ${g.limit}`, color:"#ef4444", dashed:true }] : []}
+                                      />
+
+                                      {/* 2) Абсолютное отклонение (лог-шкала) */}
+                                      <SimpleLineChart
+                                          title="Абсолютное отклонение (log scale)"
+                                          xLabel="Порядок (n)"
+                                          yLabel="|значение − предел|"
+                                          logY
+                                          series={[
+                                            { label: "Частичные суммы", data: g.errPartial, color: "#3b82f6" },
+                                            { label: "Ускоренный метод", data: g.errAccel, color: "#f59e0b" },
+                                          ]}
+                                      />
+
+                                      {/* 3) Коэффициент ускорения: |Sₙ−L| / |Aₙ−L| */}
+                                      <SimpleLineChart
+                                          title="Коэффициент ускорения (Частичная / Ускоренная)"
+                                          xLabel="Порядок (n)"
+                                          series={[
+                                            { label: "Коэффициент ускорения", data: g.ratio, color: "#10b981" },
+                                          ]}
+                                          logY
+                                          annotateMaxText={(v) => `Max: ${fmt(v)}x`}
+                                      />
+
+                                    </div>
+                                  </div>
+                              ))}
+                            </div>
+                          </div>
+                      )}
+
                     </>
                 ) : (
                     <div className="rounded-xl border border-border/60 p-4 text-sm text-textDim">Нет данных. Отправьте запрос.</div>
