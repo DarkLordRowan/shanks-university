@@ -103,7 +103,7 @@
  *  100 - x_div_1minx_series
  *  101 - x_div_1minx2_series
  *  102 - gamma_series
- * @brief This file contains series base class, reccurent_series_base class and derived classes of various serieses (e.g. exp(x), ch(x))
+ * @brief This file contains series base class, recurrent_series_base class and derived classes of various serieses (e.g. exp(x), ch(x))
  */
 
 #pragma once
@@ -319,29 +319,29 @@ constexpr const T series_base<T, K>::phi(K n)
 
 
 /**
-* @brief Abstract class for reccurent series
+* @brief Abstract class for recurrent series
 * @authors Kreynin R.G.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
 template <std::floating_point T, std::unsigned_integral K>
-class reccurent_series_base
+class recurrent_series_base
 {
 public:
 	/**
-	* @brief Parameterized constructor to initialize the reccurent series with function argument
+	* @brief Parameterized constructor to initialize the recurrent series with function argument
 	* @authors Kreynin R.G.
 	* @param x The argument for function series
 	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	*/
-	reccurent_series_base(T x);
+	recurrent_series_base(T x);
 
 	/**
-	* @brief Parameterized constructor to initialize the reccurent series with vector, containing elements of series
+	* @brief Parameterized constructor to initialize the recurrent series with vector, containing elements of series
 	* @authors Kreynin R.G.
 	* @param row The first elements of the series
 	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	*/
-	reccurent_series_base(std::vector<T> row);
+	recurrent_series_base(std::vector<T> row);
 
 	/**
 	* @brief Computes nth term of the series
@@ -373,14 +373,14 @@ protected:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-reccurent_series_base<T, K>::reccurent_series_base(T x)
+recurrent_series_base<T, K>::recurrent_series_base(T x)
 {
 	this->series_vector.push_back(x);
 };
 
 
 template <std::floating_point T, std::unsigned_integral K>
-reccurent_series_base<T, K>::reccurent_series_base(std::vector<T> row) : series_vector(std::move(row))
+recurrent_series_base<T, K>::recurrent_series_base(std::vector<T> row) : series_vector(std::move(row))
 {
 	if (this->series_vector.empty()) {
 		this->throw_domain_error("empty initial row");
@@ -394,7 +394,7 @@ reccurent_series_base<T, K>::reccurent_series_base(std::vector<T> row) : series_
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
 template <std::floating_point T, std::unsigned_integral K>
-class exp_series : public series_base<T, K>, public reccurent_series_base<T, K>
+class exp_series : public series_base<T, K>, public recurrent_series_base<T, K>
 {
 public:
 	exp_series() = delete;
@@ -429,7 +429,7 @@ private:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-exp_series<T, K>::exp_series(T x) : series_base<T, K>(x, std::exp(x)), reccurent_series_base<T, K>(static_cast<T>(1))
+exp_series<T, K>::exp_series(T x) : series_base<T, K>(x, std::exp(x)), recurrent_series_base<T, K>(static_cast<T>(1))
 {
 	this->series_name = "exp(x)";
 	// Сходится при ∀x ∈ ℝ
@@ -464,7 +464,7 @@ constexpr T exp_series<T, K>::operator()(K n) const
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
 template <std::floating_point T, std::unsigned_integral K>
-class cos_series : public series_base<T, K>, public reccurent_series_base<T, K>
+class cos_series : public series_base<T, K>, public recurrent_series_base<T, K>
 {
 public:
 	cos_series() = delete;
@@ -498,7 +498,7 @@ private:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-cos_series<T, K>::cos_series(T x) : series_base<T, K>(x, std::cos(x)), reccurent_series_base<T, K>(std::vector<T>{static_cast<T>(1), (static_cast<T>(-1) * x * x) / static_cast<T>(2)})
+cos_series<T, K>::cos_series(T x) : series_base<T, K>(x, std::cos(x)), recurrent_series_base<T, K>(std::vector<T>{static_cast<T>(1), (static_cast<T>(-1) * x * x) / static_cast<T>(2)})
 {
 	this->series_name = "cos(x)";
 	// Сходится при ∀x ∈ ℝ
@@ -536,7 +536,7 @@ constexpr T cos_series<T, K>::operator()(K n) const
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
 template <std::floating_point T, std::unsigned_integral K>
-class sin_series : public series_base<T, K>, public reccurent_series_base<T, K>
+class sin_series : public series_base<T, K>, public recurrent_series_base<T, K>
 {
 public:
 	sin_series() = delete;
@@ -570,7 +570,7 @@ private:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-sin_series<T, K>::sin_series(T x) : series_base<T, K>(x, std::sin(x)), reccurent_series_base<T, K>(x) {
+sin_series<T, K>::sin_series(T x) : series_base<T, K>(x, std::sin(x)), recurrent_series_base<T, K>(x) {
 	this->series_name = "sin(x)";
 	// Сходится при ∀x ∈ ℝ
 
@@ -607,7 +607,7 @@ constexpr T sin_series<T, K>::operator()(K n) const
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
 template <std::floating_point T, std::unsigned_integral K>
-class cosh_series : public series_base<T, K>, public reccurent_series_base<T, K>
+class cosh_series : public series_base<T, K>, public recurrent_series_base<T, K>
 {
 public:
 	cosh_series() = delete;
@@ -641,7 +641,7 @@ private:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-cosh_series<T, K>::cosh_series(T x) : series_base<T, K>(x, std::cosh(x)), reccurent_series_base<T, K>(std::vector<T>{static_cast<T>(1), (x * x) / static_cast<T>(2)})
+cosh_series<T, K>::cosh_series(T x) : series_base<T, K>(x, std::cosh(x)), recurrent_series_base<T, K>(std::vector<T>{static_cast<T>(1), (x * x) / static_cast<T>(2)})
 {
 	this->series_name = "cosh(x)";
 	// Сходится при ∀x ∈ ℝ
@@ -678,7 +678,7 @@ constexpr T cosh_series<T, K>::operator()(K n) const
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
 template <std::floating_point T, std::unsigned_integral K>
-class sinh_series : public series_base<T, K>, public reccurent_series_base<T, K>
+class sinh_series : public series_base<T, K>, public recurrent_series_base<T, K>
 {
 public:
 	sinh_series() = delete;
@@ -712,7 +712,7 @@ private:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-sinh_series<T, K>::sinh_series(T x) : series_base<T, K>(x, std::sinh(x)), reccurent_series_base<T, K>(x)
+sinh_series<T, K>::sinh_series(T x) : series_base<T, K>(x, std::sinh(x)), recurrent_series_base<T, K>(x)
 {
 	this->series_name = "sinh(x)";
 	// Сходится при ∀x ∈ ℝ
@@ -903,7 +903,7 @@ constexpr T ln1mx_series<T, K>::operator()(K n) const
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
 template <std::floating_point T, std::unsigned_integral K>
-class mean_sinh_sin_series : public series_base<T, K>, public reccurent_series_base<T, K>
+class mean_sinh_sin_series : public series_base<T, K>, public recurrent_series_base<T, K>
 {
 public:
 	mean_sinh_sin_series() = delete;
@@ -937,7 +937,7 @@ private:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-mean_sinh_sin_series<T, K>::mean_sinh_sin_series(T x) : series_base<T, K>(x, static_cast<T>(0.5) * (static_cast<T>(std::sinh(x)) + static_cast<T>(std::sin(x)))), reccurent_series_base<T, K>(x)
+mean_sinh_sin_series<T, K>::mean_sinh_sin_series(T x) : series_base<T, K>(x, static_cast<T>(0.5) * (static_cast<T>(std::sinh(x)) + static_cast<T>(std::sin(x)))), recurrent_series_base<T, K>(x)
 {
 	this->series_name = "0.5*(sinh(x) + sin(x))";
 	// Сходится при ∀x ∈ ℝ (как сумма двух всюду сходящихся рядов)
@@ -1225,7 +1225,7 @@ constexpr T x_1mx_squared_series<T, K>::operator()(K n) const
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
 template <std::floating_point T, std::unsigned_integral K>
-class erf_series : public series_base<T, K>, public reccurent_series_base<T, K>
+class erf_series : public series_base<T, K>, public recurrent_series_base<T, K>
 {
 public:
 	erf_series() = delete;
@@ -1259,7 +1259,7 @@ private:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-erf_series<T, K>::erf_series(T x) : series_base<T, K>(x, static_cast<T>(0.5) * static_cast<T>(std::sqrt(std::numbers::pi)) * static_cast<T>(std::erf(x))), reccurent_series_base<T, K>(x)
+erf_series<T, K>::erf_series(T x) : series_base<T, K>(x, static_cast<T>(0.5) * static_cast<T>(std::sqrt(std::numbers::pi)) * static_cast<T>(std::erf(x))), recurrent_series_base<T, K>(x)
 {
 	this->series_name = "√π/2 * erf(x)";
 	// Сходится при ∀x ∈ ℝ (ряд для erf(x) сходится на всей числовой прямой)
@@ -1299,7 +1299,7 @@ constexpr T erf_series<T, K>::operator()(K n) const
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
 template <std::floating_point T, std::unsigned_integral K>
-class m_fact_1mx_mp1_inverse_series : public series_base<T, K>, public reccurent_series_base<T, K>
+class m_fact_1mx_mp1_inverse_series : public series_base<T, K>, public recurrent_series_base<T, K>
 {
 public:
 	m_fact_1mx_mp1_inverse_series() = delete;
@@ -1339,7 +1339,7 @@ private:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-m_fact_1mx_mp1_inverse_series<T, K>::m_fact_1mx_mp1_inverse_series(T x, K m) : series_base<T, K>(x, static_cast<T>(this->fact(m)) / static_cast<T>(pow(static_cast<T>(1) - x, m + 1))), m(m), reccurent_series_base<T, K>(static_cast<T>(this->fact(m)))
+m_fact_1mx_mp1_inverse_series<T, K>::m_fact_1mx_mp1_inverse_series(T x, K m) : series_base<T, K>(x, static_cast<T>(this->fact(m)) / static_cast<T>(pow(static_cast<T>(1) - x, m + 1))), m(m), recurrent_series_base<T, K>(static_cast<T>(this->fact(m)))
 {
 	this->series_name = "m!/(1-x)^(m+1)";
 	// Сходится при |x| < 1 (m-ая производная геометрического ряда)
@@ -5672,17 +5672,17 @@ constexpr T testing_series<T, K>::operator()(K n) const
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
 template <std::floating_point T, std::unsigned_integral K>
-class reccurent_testing_series : public series_base<T, K>, public reccurent_series_base<T, K>
+class recurrent_testing_series : public series_base<T, K>, public recurrent_series_base<T, K>
 {
 public:
-	reccurent_testing_series() = delete;
+	recurrent_testing_series() = delete;
 
 	/**
 	* @brief Parameterized constructor to initialize the series with function argument and sum
 	* @authors Kreynin R.G.
 	* @param x The argument for function series
 	*/
-	reccurent_testing_series(T x);
+	recurrent_testing_series(T x);
 
 	/**
 	* @brief Computes the nth term of the Maclaurin series of the sine function
@@ -5703,9 +5703,9 @@ private:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-reccurent_testing_series<T, K>::reccurent_testing_series(T x) : series_base<T, K>(x, 0), reccurent_series_base<T, K>(x)
+recurrent_testing_series<T, K>::recurrent_testing_series(T x) : series_base<T, K>(x, 0), recurrent_series_base<T, K>(x)
 {
-	this->series_name = "reccurent_testing_series";
+	this->series_name = "recurrent_testing_series";
 	// Область сходимости зависит от конкретной тестовой рекуррентной функции
 	// Требуется уточнение для конкретного тестового случая
 
@@ -5715,7 +5715,7 @@ reccurent_testing_series<T, K>::reccurent_testing_series(T x) : series_base<T, K
 }
 
 template <std::floating_point T, std::unsigned_integral K>
-T reccurent_testing_series<T, K>::access_row(K n)
+T recurrent_testing_series<T, K>::access_row(K n)
 {
 	auto& series_vec = this->get_series_vector();
 	K old_size = series_vec.size();
@@ -5728,7 +5728,7 @@ T reccurent_testing_series<T, K>::access_row(K n)
 }
 
 template <std::floating_point T, std::unsigned_integral K>
-constexpr T reccurent_testing_series<T, K>::operator()(K n) const
+constexpr T recurrent_testing_series<T, K>::operator()(K n) const
 {
-	return const_cast<reccurent_testing_series<T, K>*>(this)->access_row(n);
+	return const_cast<recurrent_testing_series<T, K>*>(this)->access_row(n);
 }
