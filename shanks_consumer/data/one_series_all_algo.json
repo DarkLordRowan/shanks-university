@@ -110,6 +110,16 @@
       "args": {}
     },
     {
+      "name": "ChangWynnAlgorithm",
+      "n": {
+        "start": 1,
+        "stop": 51,
+        "step": 1
+      },
+      "m": 4,
+      "args": {}
+    },
+    {
       "name": "RichardsonAlgorithm",
       "n": {
         "start": 1,
