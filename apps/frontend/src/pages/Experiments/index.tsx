@@ -91,9 +91,9 @@ const Experiments: React.FC = () => {
                 <textarea
                     className="h-48 w-full resize-y rounded-xl border border-border/60 bg-panel p-2 font-mono text-sm text-white"
                     placeholder={`{
-                     "series": [ ... ],
-                     "methods": [ ... ]
-                     }`}
+  "series": [ ... ],
+  "methods": [ ... ]
+}`}
                     value={rawText}
                     onChange={(e) => setRawText(e.target.value)}
                 />
