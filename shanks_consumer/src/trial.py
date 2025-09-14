@@ -5,7 +5,7 @@ from src.params import (
 
 import itertools
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, Generator, Iterable, Mapping
 
 import uuid
@@ -55,7 +55,7 @@ class TrialResult:
     accel: AccelTrialResult
     computed: list[ComputedTrialResult]
     error: ErrorTrialResult | None
-    id: str = str(uuid.uuid4())
+    id: str = field(default_factory=lambda: str(uuid.uuid4()))
 
 @dataclass
 class Trial:
