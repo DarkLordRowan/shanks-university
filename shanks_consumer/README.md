@@ -1,19 +1,5 @@
 # Shanks consumer CLI
 
-## Установка
-
-Убедитесь что у вас установлен Python.
-
-```bash
-git clone https://github.com/DarkLordRowan/shanks-university.git
-git checkout Fixes
-cd shanks_consumer
-
-bash install_pyshanks.sh
-
-pip install -r requirements.txt
-```
-
 ## Использование
 
 ### Базовое использование
