@@ -1476,10 +1476,8 @@ inline static void main_testing_function()
 	T x = static_cast<T>(0);
 	if constexpr (std::is_same<T, float_precision>::value){
 		std::string kostil;
-		std::cout << "OK\n";
 		std::cin >> kostil;
-		std::cout << "OK\n";
-		
+
 		x=T(kostil);
 
 	} else {

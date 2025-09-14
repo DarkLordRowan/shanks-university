@@ -16,9 +16,9 @@ int main()
 		try
 		{
 			main_testing_function<float_precision, unsigned long long int >();
-			main_testing_function<long double, unsigned long long int>();
-			main_testing_function<double, unsigned int>();
-			main_testing_function<float, unsigned short int>();
+			//main_testing_function<long double, unsigned long long int>();
+			//main_testing_function<double, unsigned int>();
+			//main_testing_function<float, unsigned short int>();
 		}
 		catch (std::domain_error& e)
 		{
@@ -28,6 +28,7 @@ int main()
 		{
 			std::cout << e.what() << std::endl;
 		}
+		
 		return 0;
 	}
 }

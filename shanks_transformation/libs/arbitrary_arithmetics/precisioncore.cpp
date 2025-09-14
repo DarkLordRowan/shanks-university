@@ -5716,16 +5716,16 @@ void _float_precision_strip_trailing_zeros( std::string *s )
 //   Note that the mantissa number has ALWAYS been normalize prior to rounding
 //   The mantissa NEVER contain a leading sign
 //   Rounding Mode Positive numnber   Result    
-//   Rounding to nearest              +ï¿½   
+//   Rounding to nearest              +·   
 //   Rounding toward zero (Truncate)  Maximum, positive finite value   
-//   Rounding up (toward +ï¿½)          +ï¿½   
-//   Rounding down) (toward -ï¿½)       Maximum, positive finite value   
+//   Rounding up (toward +·)          +·   
+//   Rounding down) (toward -·)       Maximum, positive finite value   
 //
 //   Rounding Mode Negative number    Result    
-//   Rounding to nearest              -ï¿½   
+//   Rounding to nearest              -·   
 //   Rounding toward zero (Truncate)  Maximum, negative finite value   
-//   Rounding up (toward +ï¿½)          Maximum, negative finite value   
-//   Rounding down) (toward -ï¿½)       -ï¿½   
+//   Rounding up (toward +·)          Maximum, negative finite value   
+//   Rounding down) (toward -·)       -·   
 //
 int _float_precision_rounding( std::string *m, int sign, size_t precision, enum round_mode mode )
    {
@@ -6196,16 +6196,16 @@ eptype _float_precision_normalize(std::vector<fptype>& m)
 //   Round the fraction to the number of precision based on the round mode 
 //   Note that the fptype number has ALWAYS been normalize prior to rounding
 //   Rounding Mode Positive numnber   Result    
-//   Rounding to nearest              +ï¿½   
+//   Rounding to nearest              +·   
 //   Rounding toward zero (Truncate)  Maximum, positive finite value   
-//   Rounding up (toward +ï¿½)          +ï¿½   
-//   Rounding down) (toward -ï¿½)       Maximum, positive finite value   
+//   Rounding up (toward +·)          +·   
+//   Rounding down) (toward -·)       Maximum, positive finite value   
 //
 //   Rounding Mode Negative number    Result    
-//   Rounding to nearest              -ï¿½   
+//   Rounding to nearest              -·   
 //   Rounding toward zero (Truncate)  Maximum, negative finite value   
-//   Rounding up (toward +ï¿½)          Maximum, negative finite value   
-//   Rounding down) (toward -ï¿½) 
+//   Rounding up (toward +·)          Maximum, negative finite value   
+//   Rounding down) (toward -·) 
 //		1) first check if we need to do any rounding at all
 //		2) If mode == ROUND_NEAR determine if we are doing ROUND_DOWn or ROUND_UP
 //		3) Discard excesive fptype digits that is beyond the precision

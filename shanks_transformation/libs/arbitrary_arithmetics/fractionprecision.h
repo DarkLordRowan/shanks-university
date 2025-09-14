@@ -1,5 +1,3 @@
-#pragma once
-
 #ifndef INC_FRACTIONPRECISION
 #define INC_FRACTIONPRECISION
 
