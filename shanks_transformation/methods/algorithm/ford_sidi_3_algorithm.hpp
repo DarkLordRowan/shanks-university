@@ -88,8 +88,6 @@ T ford_sidi_3_algorithm<T, K, series_templ>::operator()(const K n, const K order
     // The algorithm requires at least one term for meaningful computation
     if (n == static_cast<K>(0))
         throw std::domain_error("n = 0 in the input");
-    
-    //TODO спросить у Парфенова, ибо жертвуем читаемостью кода, ради его небольшого ускорения
 
     // For theory, see: Osada (2000), Section 4 - Efficient implementation
     // Algorithm uses auxiliary sequences for improved computational efficiency
@@ -146,7 +144,6 @@ T ford_sidi_3_algorithm<T, K, series_templ>::operator()(const K n, const K order
         for (K i = static_cast<K>(1); i <= m; ++i)
             FSG[i][n1] = G[i];
     }
-    //TODO спросить у Парфенова, ибо жертвуем читаемостью кода, ради его небольшого ускорения
 
     // For theory, see: Osada (2000), Section 4 - Main algorithm loop
     // Main Ford-Sidi transformation computation

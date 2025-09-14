@@ -162,12 +162,6 @@ wynn_rho_algorithm<T, K, series_templ>::wynn_rho_algorithm(
 	gamma(gamma_),
 	RHO(RHO_)
 {
-	//TODO: проверить можно ли использовать стандартные значения, указанные в конструктуре, в других вариантах + унифицировать названия
-	// есть ли какие то ограничения на кастомные значения?
-	// classic (0), gamma (1), gamma-rho (2):
-	// 0 -> gamma = 1, RHO = 0
-	// 1 -> gamma = 2, RHO = 0
-	// 2 -> gamma = 2, RHO = 1
 
 	// Initialize the appropriate numerator computation strategy
 	switch(variant) {

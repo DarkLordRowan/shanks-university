@@ -113,7 +113,6 @@ inline T levin_sidi_m_algorithm<T, K, series_templ>::calculate(const K n, const 
 
 	using std::isfinite;
 
-	//TODO разобраться с документом (pdf) n/order
     // Validate parameter constraint: gamma >= n - 1
 	if (gamma - static_cast<T>(n - static_cast<K>(1)) < static_cast<T>(0))
 		throw std::domain_error("gamma cannot be lesser than n - 1");
@@ -172,10 +171,6 @@ inline T levin_sidi_m_algorithm<T, K, series_templ>::calculate(const K n, const 
 		// Update partial sum for next iteration: S_{k+j+1} = S_{k+j} + a_{k+j+1}
 		S_n += this->series->operator()(order + j + static_cast<K>(1));
 
-		// TODO проверить корректность пересчета бин. коэф.
-		//// Update binomial coefficient for next iteration: C(n, j+1) = C(n, j) * (n-j)/(j+1)
-		//binomial_coef *= static_cast<T>(n - j);
-		//binomial_coef /= static_cast<T>(j + static_cast<K>(1));
 	}
 
 	numerator /= denominator;

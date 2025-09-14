@@ -73,7 +73,7 @@ T shanks_algorithm<T, K, series_templ>::operator()(const K n, const K order) con
 		return this->series->S_n(n);
 
 	if (n < order || n == static_cast<K>(0)) [[unlikely]]
-		return static_cast<T>(0); // TODO: диагностика
+		return static_cast<T>(0);
 
 	if (order == static_cast<K>(1)) [[unlikely]] 
 	{
@@ -204,7 +204,7 @@ T shanks_transform_alternating<T, K, series_templ>::operator()(const K n, const 
 		return this->series->S_n(n);
 
 	if (n < order || n == static_cast<K>(0)) [[unlikely]]
-		return static_cast<T>(0); // TODO: диагностика
+		return static_cast<T>(0);
 
 	if (order == static_cast<K>(1)) [[unlikely]]
 	{
