@@ -1,0 +1,69 @@
+{
+  "series": [ 
+    {
+      "name": "ExpSeries",
+      "args": {
+        "x": [1, 2, 3, 4]
+      }
+    },
+    {
+      "name": "CosSeries",
+      "args": {
+        "x": {
+          "start": 1,
+          "stop": 11,
+          "step": 1
+        }
+      }
+    }
+  ],
+
+  "methods": [
+    {
+
+      "name": "ShanksAlgorithm",
+
+      "n": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+
+      "m": 4,
+
+      "args": {}
+    },
+    {
+      "name": "ShanksTransformAlternatingAlgorithm",
+      "n": {
+
+        "start": 1,
+        "stop": 11,
+        "step": 1
+      },
+      "m": {
+        "start": 2,
+        "stop": 10,
+        "step": 3
+      },
+      "args": {}
+    },
+    {
+      "name": "LevinAlgorithm",
+      "n": {
+        "start": 1,
+        "stop": 11,
+        "step": 1
+      },
+      "m": [8],
+      "args": {
+
+
+        "remainder": ["v_variant", "u_variant", "t_wave_variant"],
+        "useRecFormulas": true,
+
+        "beta": {
+            "start": 0,
+            "stop": 1,
+            "step": 0.1
+        }
+      }
+    }
+  ]
+}

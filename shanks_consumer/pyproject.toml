@@ -1,0 +1,31 @@
+[project]
+name = "shanks-consumer"
+version = "0.1.0"
+description = "shanks_consumer"
+authors = [
+    {name = "abyssal",email = "abyssal@example.com"}
+]
+readme = "README.md"
+requires-python = "^3.11"
+dependencies = [
+    "numpy (>=2.3.3,<3.0.0)",
+    "matplotlib (>=3.10.6,<4.0.0)",
+    "pyqt6 (>=6.9.1,<7.0.0)",
+]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry]
+packages = [
+    { include = "src", from = "." }
+]
+
+[tool.pylint.MASTER]
+extension-pkg-allow-list = ["pyshanks"]
+
+[tool.pylint.TYPECHECK]
+generated-members = ["pyshanks.*"]
+ignored-modules = ["pyshanks"]
