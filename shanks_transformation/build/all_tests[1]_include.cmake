@@ -1,0 +1,5 @@
+if(EXISTS "/mnt/HDD/GIT_PROJECTS/shanks-university/shanks_transformation/build/all_tests[1]_tests.cmake")
+  include("/mnt/HDD/GIT_PROJECTS/shanks-university/shanks_transformation/build/all_tests[1]_tests.cmake")
+else()
+  add_test(all_tests_NOT_BUILT all_tests_NOT_BUILT)
+endif()
