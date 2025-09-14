@@ -90,8 +90,6 @@ T chang_wynn_algorithm<T, K, series_templ>::operator()(const K n, const K order)
         throw std::domain_error("n = 0 in the input");
 
     T up, down, coef, coef2;
-
-    //TODO спросить у Парфенова, ибо жертвуем читаемостью кода, ради его небольшого ускорения
     
     // For theory, see: Chang et al. (2019), Section 3.4, Eq. (3.20)
     // Initialization of epsilon table with modified initial conditions.

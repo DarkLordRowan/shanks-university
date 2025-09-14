@@ -138,7 +138,7 @@ levin_algorithm<T, K,series_templ>::levin_algorithm(
 	series_acceleration<T, K, series_templ>(series),
 	useRecFormulas(useRecFormulas),
 	variant(variant)
-	{//TODO: нужно ли проверять бету на допустимость?
+	{
 
 		// Validate and set beta parameter (must be positive)
 		if (beta > static_cast<T>(0))
@@ -146,7 +146,6 @@ levin_algorithm<T, K,series_templ>::levin_algorithm(
 		else this->beta = static_cast<T>(1);
 
 	//check variant else default 'u'
-    //TODO: тоже самое наверное
 
 	// Initialize the appropriate remainder transformation based on variant
     switch(variant){

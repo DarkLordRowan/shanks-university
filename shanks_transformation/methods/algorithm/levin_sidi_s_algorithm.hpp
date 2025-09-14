@@ -243,10 +243,8 @@ levin_sidi_s_algorithm<T, K, series_templ>::levin_sidi_s_algorithm(
     if (parameter > static_cast<T>(0)) this->beta = parameter;
     else {
         this->beta = static_cast<T>(1);
-        //TODO: наверное сообщение по типу usage
     }
 
-    //TODO: тоже самое наверное
     // Initialize the appropriate remainder transformation based on variant
     switch(variant){
         case remainder_type::u_variant :
