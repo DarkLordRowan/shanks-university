@@ -48,8 +48,8 @@ install_py_requirement.bat
 install_pyshanks_windows.bat
 ```
 
-## Установка
-Использование описывается в файле README.md, папка shanks_consumer.
+## Использование
+Файл MANUAL.md, в shanks_consumer.
 
 ## Документация
 Doxygen документация доступна [по ссылке](https://bimbobam.github.io)
