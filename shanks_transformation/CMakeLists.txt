@@ -14,11 +14,11 @@ target_include_directories(shanks_transformation PUBLIC ${CMAKE_CURRENT_SOURCE_D
 # -------------------------
 # Pybind11 модуль
 # -------------------------
-#FetchContent_Declare(pybind11 GIT_REPOSITORY https://github.com/pybind/pybind11.git GIT_TAG v2.13.6)
-#FetchContent_MakeAvailable(pybind11)
-#pybind11_add_module(pyshanks py.cpp)
-#target_include_directories(pyshanks PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
-#set_target_properties(pyshanks PROPERTIES PREFIX "")
+FetchContent_Declare(pybind11 GIT_REPOSITORY https://github.com/pybind/pybind11.git GIT_TAG v2.13.6)
+FetchContent_MakeAvailable(pybind11)
+pybind11_add_module(pyshanks py.cpp)
+target_include_directories(pyshanks PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+set_target_properties(pyshanks PROPERTIES PREFIX "")
 #
 ## -------------------------
 ## Тесты (GoogleTest) — автоподхват всех *.cpp в ./tests/**
