@@ -4,7 +4,8 @@ import pathlib
 import json
 import csv
 from dataclasses import asdict, fields
-from pyshanks import FP
+
+from src.params import ArbEncoder
 
 from src.trial import (
     TrialResult,
@@ -20,15 +21,7 @@ from src.events import TrialEvent
 def dataclass_fields_with_prefix(dataclass_type, prefix: str) -> list[str]:
     return list(map(lambda s: prefix + s.name, fields(dataclass_type)))
 
-class FPEncoder(json.JSONEncoder):
-    def default(self, o):
-        if isinstance(o, FP):
-            return str(o)
-        return super().default(o)
-
 def dataclasses_to_json(dataclasses, location):
-    for i in dataclasses:
-        print(i)
     with open(
         location,
         mode="w",
@@ -39,7 +32,7 @@ def dataclasses_to_json(dataclasses, location):
                 [asdict(dataclass) for dataclass in dataclasses],
                 indent=4,
                 sort_keys=True,
-                cls=FPEncoder
+                cls=ArbEncoder
             )
         )
 

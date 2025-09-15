@@ -9,13 +9,14 @@ import inspect
 from dataclasses import dataclass
 import pathlib
 import json
-import pyshanks
+import pyshanks as ps
 import csv
 from abc import ABC, abstractmethod
 from typing import Iterable, Any, Mapping
 from collections.abc import Callable
 
 def autowrap(x: Any) -> Iterable[Any]:
+    print(x)
     if x is not None and (isinstance(x, str) or not isinstance(x, Iterable)):
         return [x]
     if isinstance(x, dict):
@@ -35,13 +36,13 @@ class BaseSeriesParam(ABC):
 
     @property
     @abstractmethod
-    def arguments(self) -> Mapping[str, Iterable[float]]: ...
+    def arguments(self) -> Mapping[str, Iterable[float | ps.Arb]]: ...
 
     @property
     @abstractmethod
     def executable(
         self,
-    ) -> type[pyshanks.SeriesBase] | Callable[..., pyshanks.ArraySeries]: ...
+    ) -> type[ps.SeriesBaseF64] | type[ps.SeriesBaseArb] | Callable[..., ps.ArraySeriesF64 | ps.ArraySeriesArb]: ...
 
 
 @dataclass
@@ -54,7 +55,7 @@ class SeriesParamJSON(BaseSeriesParam):
     """
 
     name: str
-    args: Mapping[str, Iterable[float]]
+    args: Mapping[str, Iterable[float | ps.Arb]]
 
     @property
     def arguments(self):
@@ -69,7 +70,7 @@ class SeriesParamJSON(BaseSeriesParam):
     @property
     def executable(self):
         """Implementation of abstract method - gets executable from pyshanks."""
-        return getattr(pyshanks, self.name)
+        return getattr(ps, self.name)
 
 
 @dataclass
@@ -81,12 +82,12 @@ class SeriesParamModule(BaseSeriesParam):
         x: Optional iterable of integer arguments for the series function.
     """
 
-    caller: type[pyshanks.SeriesBase]
-    args: Mapping[str, Iterable[float]]
+    caller: type[ps.SeriesBaseF64 | ps.SeriesBaseArb]
+    args: Mapping[str, Iterable[float | ps.Arb]]
 
     def __init__(
         self,
-        caller: type[pyshanks.SeriesBase],
+        caller: type[ps.SeriesBaseF64 | ps.SeriesBaseArb],
         **kwargs,
     ):
         """Initialize with direct caller reference and optional kwargs.
@@ -129,7 +130,7 @@ class SeriesParamCSV(BaseSeriesParam):
 
     location: pathlib.Path
     row: int
-    data: pyshanks.ArraySeries
+    data: ps.ArraySeriesF64 | ps.ArraySeriesArb
 
     @property
     def arguments(self):
@@ -158,7 +159,7 @@ class BaseAccelParam(ABC):
     @abstractmethod
     def executable(
         self,
-    ) -> type[pyshanks.SeriesAcceleration]: ...
+    ) -> type[ps.SeriesAccelerationF64 | ps.SeriesAccelerationArb]: ...
 
     @property
     @abstractmethod
@@ -224,9 +225,9 @@ class AccelParamJSON(StandardAccelParam):
                         res.append(getattr(of, v))
                     return res
                 if key == "remainder":
-                    self.expanded_init_args[key] = value_as_variants_of(pyshanks.RemainderType)
+                    self.expanded_init_args[key] = value_as_variants_of(ps.RemainderType)
                 elif key == "numerator":
-                    self.expanded_init_args[key] = value_as_variants_of(pyshanks.NumeratorType)
+                    self.expanded_init_args[key] = value_as_variants_of(ps.NumeratorType)
                 else:
                     self.expanded_init_args[key] = autowrap(value)
 
@@ -238,7 +239,7 @@ class AccelParamJSON(StandardAccelParam):
     @property
     def executable(self):
         """Implementation of abstract method - gets executable from pyshanks."""
-        return getattr(pyshanks, self.name)
+        return getattr(ps, self.name)
 
     @property
     def additional_args(self):
@@ -255,7 +256,7 @@ class AccelParamModule(StandardAccelParam):
 
     def __init__(
         self,
-        caller: type[pyshanks.SeriesAcceleration],
+        caller: type[ps.SeriesAccelerationF64 | ps.SeriesAccelerationArb],
         n: Iterable[int],
         m: Iterable[int],
         **kwargs,
@@ -287,9 +288,29 @@ class AccelParamModule(StandardAccelParam):
         """Implementation of abstract method - returns init args or empty dict."""
         return self.init_args or {}
 
+class ArbEncoder(json.JSONEncoder):
+    def default(self, o):
+        if isinstance(o, ps.Arb):
+            return str(o)
+        return super().default(o)
+
+class ArbDecoder(json.JSONDecoder):
+    def __init__(self, *args, **kwargs):
+        super().__init__(
+            parse_float=self._parse_number,
+            parse_int=self._parse_number,
+            *args,
+            **kwargs,
+        )
+    @staticmethod
+    def _parse_number(value):
+        """Convert a JSON numeric literal to a high‑precision FP instance."""
+        return ps.Arb(str(value))
+
 
 def get_series_params_from_json(
     json_location: pathlib.Path,
+    arb: bool
 ) -> list[SeriesParamJSON]:
     """Load series parameters from a JSON configuration file.
 
@@ -304,31 +325,33 @@ def get_series_params_from_json(
         JSONDecodeError: If the JSON file is malformed.
     """
     with open(json_location, encoding="utf-8") as f:
-        data = json.load(f)
-    return load_series_params_from_data(data)
+        data = json.load(f, cls=ArbDecoder) if arb else json.load(f)
+    return load_series_params_from_data(data, arb)
 
 
 def load_series_params_from_data(
     data: dict,
+    arb: bool,
 ) -> list[SeriesParamJSON]:
     series_list: list[SeriesParamJSON] = []
     for series_data in data["series"]:
         args = series_data.get("args", {})
         if not isinstance(args, dict):
-            args = {"x": list(map(float, autowrap(args)))}
+            args = {"x": autowrap(args) }
         else:
             args = {
-                str(key): list(map(float, autowrap(value)))
+                str(key): autowrap(value)
                 for key, value in args.items()
             }
         series_list.append(
-            SeriesParamJSON(name=series_data.get("name"), args=args)
+            SeriesParamJSON(name=series_data.get("name")+("Arb" if arb else "F64"), args=args)
         )
     return series_list
 
 
 def get_accel_params_from_json(
     json_location: pathlib.Path,
+    arb: bool,
 ) -> list[AccelParamJSON]:
     """Load acceleration parameters from a JSON configuration file.
 
@@ -343,12 +366,13 @@ def get_accel_params_from_json(
         JSONDecodeError: If the JSON file is malformed.
     """
     with open(json_location, encoding="utf-8") as f:
-        data = json.load(f)
-    return load_accel_params_from_data(data)
+        data = json.load(f, cls=ArbDecoder) if arb else json.load(f)
+    return load_accel_params_from_data(data, arb)
 
 
 def load_accel_params_from_data(
     data: dict,
+    arb: bool,
 ) -> list[AccelParamJSON]:
     methods_list: list[AccelParamJSON] = []
     for method_data in data["methods"]:
@@ -356,7 +380,7 @@ def load_accel_params_from_data(
         m_value = autowrap(method_data["m"])
         methods_list.append(
             AccelParamJSON(
-                name=method_data["name"],
+                name=method_data["name"] + ("Arb" if arb else "F64"),
                 n=n_value,
                 m=m_value,
                 init_args=method_data.get("args", {}),
@@ -367,6 +391,7 @@ def load_accel_params_from_data(
 
 def get_series_params_from_csv(
     csv_location: pathlib.Path,
+    arb: bool
 ) -> Iterable[SeriesParamCSV]:
     """Load series parameters from a CSV file.
 
@@ -386,9 +411,9 @@ def get_series_params_from_csv(
             SeriesParamCSV(
                 location=csv_location,
                 row=i,
-                data=pyshanks.ArraySeries(
+                data=ps.ArraySeriesArb(row) if arb else ps.ArraySeriesF64(
                     list(map(float, row))
-                ),  # TODO possible better precision conversion
+                ),
             )
             for i, row in enumerate(csv.reader(f), 1)
         ]
@@ -406,36 +431,18 @@ def _is_concrete_subclass(cls: type, base: type) -> bool:
     )
 
 
-def demo_all_synthetic_series(
-    x: float | Iterable[float],
-) -> list[BaseSeriesParam]:
-    series_params: list[BaseSeriesParam] = []
-
-    for name, cls in inspect.getmembers(pyshanks, inspect.isclass):
-        if (
-            _is_concrete_subclass(cls, pyshanks.SeriesBase)
-            and name != "ArraySeries"
-        ):
-            series_params.append(
-                SeriesParamModule(
-                    caller=cls,
-                    x=autowrap(x),
-                )
-            )
-    return series_params
-
-
 def all_accel(
     n: int | Iterable[int],
     m: int | Iterable[int],
+    arb: bool,
     extra_args: dict[str, Any] | None = None,
 ) -> list[BaseAccelParam]:
     extra_args = extra_args or {}
 
     accel_params: list[BaseAccelParam] = []
 
-    for _, cls in inspect.getmembers(pyshanks, inspect.isclass):
-        if _is_concrete_subclass(cls, pyshanks.SeriesAcceleration):
+    for _, cls in inspect.getmembers(ps, inspect.isclass):
+        if _is_concrete_subclass(cls, ps.SeriesAccelerationArb if arb else ps.SeriesAccelerationF64):
             kwargs: dict[str, Any] = dict(extra_args.get(cls.__name__, {}))
             accel_params.append(
                 AccelParamModule(
