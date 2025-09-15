@@ -88,7 +88,15 @@ static char _VinterP_[] = "@(#)intervalprecision.h 02.06 -- Copyright (C) Henrik
 #include <type_traits>
 #include <stdexcept>
 
-static_assert(__cplusplus >= 201703L, "The intervalprecision.h code requires c++17 or higher.");
+#if defined(_MSVC_LANG)
+	#if _MSVC_LANG < 201402L
+		#error The intervalprecision.h code requires c++14 or higher
+	#endif
+#else
+	#if __cplusplus < 201402L
+		#error The intervalprecision.h code requires c++14 or higher
+	#endif
+#endif
 
 #define PHASE4	// Add support for float_precision
 //#define PHASE5	// use simplify interval operations by always convert interval to its closed form and then perform the operation and leave the interval closed

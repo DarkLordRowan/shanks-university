@@ -72,7 +72,15 @@ static char _VF_[] = "@(#)fprecision.h 03.29 -- Copyright (C) Henrik Vestermark"
 #include <assert.h>
 #include "iprecision.h"
 
-static_assert(__cplusplus >= 201402L, "The fprecision.h code requires c++14 or higher.");
+#if defined(_MSVC_LANG)
+	#if _MSVC_LANG < 201402L
+		#error The fprecision.h code requires c++14 or higher
+	#endif
+#else
+	#if __cplusplus < 201402L
+		#error The fprecision.h code requires c++14 or higher
+	#endif
+#endif
 
 // Configuration. Notice the code has only been tested as 64-bit entities. 
 typedef uintmax_t fptype;	// The default size of the internal binary vector type unsigned 64bit

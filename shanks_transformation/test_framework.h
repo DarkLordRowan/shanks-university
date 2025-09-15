@@ -1645,13 +1645,17 @@ inline static void main_testing_function()
 
 		auto all_transforms = create_all_transformations();
 
-		for (K i = 0; i <= n; i++)
+		for (K i = 1; i <= n; i++)
 		{
 			print_sum(i, std::move(series.get()));
 
 			for (auto& current_transform : all_transforms)
 			{
-				print_transform(i, order, std::move(current_transform.get()));
+				try{
+					print_transform(i, order, std::move(current_transform.get()));
+				} catch(float_precision::divide_by_zero){
+					std::cout << "divide_by_zero\n";
+				}
 			}
 
 			std::cout << '\n';

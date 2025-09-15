@@ -81,7 +81,15 @@ static char _VI_[] = "@(#)iprecision.h 03.24 -- Copyright (C) Henrik Vestermark"
 #include <cstdlib>
 #include <random>	// Needed for random_precision class and PRNGs in general
 
-static_assert(__cplusplus >= 201402L, "The iprecision.h code requires c++14 or higher.");
+#if defined(_MSVC_LANG)
+	#if _MSVC_LANG < 201402L
+		#error The iprecision.h code requires c++14 or higher
+	#endif
+#else
+	#if __cplusplus < 201402L
+		#error The iprecision.h code requires c++14 or higher
+	#endif
+#endif
 
 // THIS is the only configuration parameter to set or change.
 typedef std::uintmax_t iptype;	// The default size of the internal binary vector type, an unsigned 64bit. It should ALWAYS be set to the 'biggest' integer type.
