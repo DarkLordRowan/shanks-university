@@ -48,7 +48,15 @@ static char _VFP_[] = "@(#)fractionprecision.h 01.05 -- Copyright (C) Henrik Ves
 
 #include <iostream>
 
-static_assert(__cplusplus >= 201402L, "The fractionprecision.h code requires c++14 or higher.");
+#if defined(_MSVC_LANG)
+	#if _MSVC_LANG < 201402L
+		#error The fractionprecision.h code requires c++14 or higher
+	#endif
+#else
+	#if __cplusplus < 201402L
+		#error The fractionprecision.h code requires c++14 or higher
+	#endif
+#endif
 
 // Complex Precision template class for fraction arithmetic
 // Notice construction,assignments always guarantees that normalized fraction sign is always in the numerator. As a consequence the sign method just return the sign of the numerator

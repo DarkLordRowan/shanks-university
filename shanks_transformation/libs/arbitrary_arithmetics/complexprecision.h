@@ -54,7 +54,15 @@ static char _VC_[] = "@(#)complexprecision.h 01.09 -- Copyright (C) Henrik Veste
 #include <stdexcept>
 #include <iostream>
 
-static_assert(__cplusplus >= 201402L, "The complexprecision.h code requires c++14 or higher.");
+#if defined(_MSVC_LANG)
+	#if _MSVC_LANG < 201402L
+		#error The complexprecision.h code requires c++14 or higher
+	#endif
+#else
+	#if __cplusplus < 201402L
+		#error The complexprecision.h code requires c++14 or higher
+	#endif
+#endif
 
 // Complex Precision template class
 template<class _Ty> class complex_precision {

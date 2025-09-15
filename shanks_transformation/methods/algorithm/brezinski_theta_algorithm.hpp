@@ -109,7 +109,6 @@ T brezinski_theta_algorithm<T, K, series_templ>::calculate(K n, const K order) c
     using std::isfinite;
 
     const K base_size = static_cast<K>(3) * order / static_cast<K>(2) + static_cast<K>(1);
-    std::cout << base_size << "\n";
 
     std::vector<T> theta_odd(
         base_size,

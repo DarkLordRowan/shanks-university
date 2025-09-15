@@ -135,7 +135,15 @@ static char _VIP_[] = "@(#)precisioncore.cpp 03.72 -- Copyright (C) Henrik Veste
 #include "fprecision.h"
 #include "fractionprecision.h"
 
-static_assert(__cplusplus >= 201402L, "The precisioncore.cpp code requires c++14 or higher.");
+#if defined(_MSVC_LANG)
+	#if _MSVC_LANG < 201402L
+		#error The precisioncore.cpp code requires c++14 or higher
+	#endif
+#else
+	#if __cplusplus < 201402L
+		#error The precisioncore.cppcode requires c++14 or higher
+	#endif
+#endif
 
 // System Configurations
 //#define HVE_DEBUG		// This is for my own internal testing phase and should alweays been undef or commented out
@@ -4158,7 +4166,7 @@ static bool lucas_spp(uintmax_t n, intmax_t D, intmax_t P, intmax_t Q, bool spp)
 		};
 
 		// Bypass all leading zeros
-		for (i = int(dig.size()) - 1; i >= 0 && 0 == dig[i]; --i)
+		for (i = int(dig.size()) - 1; i >= 0 && false == static_cast<bool>(dig[i]); --i)
 			;
 		// By pass the first one bit
 		--i;
@@ -4184,7 +4192,7 @@ static bool lucas_spp(uintmax_t n, intmax_t D, intmax_t P, intmax_t Q, bool spp)
 			}
 			while (V < 0)
 				V += n;	// ensure that V is positive modulo n. Emulates floored division
-			if (1 == dig[i])
+			if (true == static_cast<bool>(dig[i]))
 			{	// Notice P and D is usually small numbers so we dont check for overflow here
 				tmp = U;
 				U = div2modn(P * U + V, n);			// U'k+1=(P(U'k)+(V'k))/2
@@ -4292,7 +4300,7 @@ static bool lucas_spp(const int_precision& n, const intmax_t D, const intmax_t P
 			std::bitset<64> dig(k.index(j - 1));
 			if (j == k.size())  // First time
 			{// Bypass all leading zeros in the most significant vector
-				for (i = intmax_t(dig.size()) - 1; i >= 0 && 0 == dig[i]; --i)
+				for (i = intmax_t(dig.size()) - 1; i >= 0 && false == static_cast<bool>(dig[i]); --i)
 					;
 				// By pass the first one bit in the most significant vector
 				--i;
@@ -4308,7 +4316,7 @@ static bool lucas_spp(const int_precision& n, const intmax_t D, const intmax_t P
 
 				while (V < 0)
 					V += n;	// ensure that V is positive modulo n. Emulates floored division
-				if (1 == dig[i])
+				if (true == static_cast<bool>(dig[i]))
 				{	// Notice P and D is usually small numbers so we dont check for overflow here
 					tmp = U;
 					U = div2modn(P * U + V, n);			// U'k+1=(P(U'k)+(V'k))/2
@@ -5716,16 +5724,16 @@ void _float_precision_strip_trailing_zeros( std::string *s )
 //   Note that the mantissa number has ALWAYS been normalize prior to rounding
 //   The mantissa NEVER contain a leading sign
 //   Rounding Mode Positive numnber   Result    
-//   Rounding to nearest              +·   
+//   Rounding to nearest              +ï¿½   
 //   Rounding toward zero (Truncate)  Maximum, positive finite value   
-//   Rounding up (toward +·)          +·   
-//   Rounding down) (toward -·)       Maximum, positive finite value   
+//   Rounding up (toward +ï¿½)          +ï¿½   
+//   Rounding down) (toward -ï¿½)       Maximum, positive finite value   
 //
 //   Rounding Mode Negative number    Result    
-//   Rounding to nearest              -·   
+//   Rounding to nearest              -ï¿½   
 //   Rounding toward zero (Truncate)  Maximum, negative finite value   
-//   Rounding up (toward +·)          Maximum, negative finite value   
-//   Rounding down) (toward -·)       -·   
+//   Rounding up (toward +ï¿½)          Maximum, negative finite value   
+//   Rounding down) (toward -ï¿½)       -ï¿½   
 //
 int _float_precision_rounding( std::string *m, int sign, size_t precision, enum round_mode mode )
    {
@@ -6196,16 +6204,16 @@ eptype _float_precision_normalize(std::vector<fptype>& m)
 //   Round the fraction to the number of precision based on the round mode 
 //   Note that the fptype number has ALWAYS been normalize prior to rounding
 //   Rounding Mode Positive numnber   Result    
-//   Rounding to nearest              +·   
+//   Rounding to nearest              +ï¿½   
 //   Rounding toward zero (Truncate)  Maximum, positive finite value   
-//   Rounding up (toward +·)          +·   
-//   Rounding down) (toward -·)       Maximum, positive finite value   
+//   Rounding up (toward +ï¿½)          +ï¿½   
+//   Rounding down) (toward -ï¿½)       Maximum, positive finite value   
 //
 //   Rounding Mode Negative number    Result    
-//   Rounding to nearest              -·   
+//   Rounding to nearest              -ï¿½   
 //   Rounding toward zero (Truncate)  Maximum, negative finite value   
-//   Rounding up (toward +·)          Maximum, negative finite value   
-//   Rounding down) (toward -·) 
+//   Rounding up (toward +ï¿½)          Maximum, negative finite value   
+//   Rounding down) (toward -ï¿½) 
 //		1) first check if we need to do any rounding at all
 //		2) If mode == ROUND_NEAR determine if we are doing ROUND_DOWn or ROUND_UP
 //		3) Discard excesive fptype digits that is beyond the precision
