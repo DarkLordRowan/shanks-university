@@ -1,13 +1,13 @@
 {
   "series": [
     {
-      "name": "ExpSeriesFP",
+      "name": "ExpSeries",
       "args": {
         "x": [1, 2, 3, 4]
       }
     },
     {
-      "name": "CosSeriesFP",
+      "name": "CosSeries",
       "args": {
         "x": {
           "start": 1,
@@ -20,7 +20,7 @@
 
   "methods": [
     {
-      "name": "ShanksAlgorithmFP",
+      "name": "ShanksAlgorithm",
 
       "n": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
 
@@ -29,7 +29,7 @@
       "args": {}
     },
     {
-      "name": "ShanksTransformAlternatingAlgorithmFP",
+      "name": "ShanksTransformAlternatingAlgorithm",
       "n": {
         "start": 1,
         "stop": 11,
@@ -43,7 +43,7 @@
       "args": {}
     },
     {
-      "name": "LevinAlgorithmFP",
+      "name": "LevinAlgorithm",
       "n": {
         "start": 1,
         "stop": 11,

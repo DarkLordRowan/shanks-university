@@ -7,6 +7,7 @@ import itertools
 
 from dataclasses import dataclass
 from typing import Any, Generator, Iterable, Mapping
+from pyshanks import Arb
 
 
 def cartesian_dicts(
@@ -20,11 +21,11 @@ def cartesian_dicts(
 @dataclass
 class ComputedTrialResult:
     n: int
-    series_value: float
-    partial_sum: float
-    partial_sum_deviation: float
-    accel_value: float
-    accel_value_deviation: float
+    series_value: float | Arb
+    partial_sum: float | Arb
+    partial_sum_deviation: float | Arb
+    accel_value: float | Arb
+    accel_value_deviation: float | Arb
 
 
 @dataclass

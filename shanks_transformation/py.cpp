@@ -206,11 +206,25 @@ using K = size_t;
 PYBIND11_MODULE(pyshanks, m) {
     m.doc() = "pybind11: polymorphic series + all Shanks‑type transformations (double + float_precision)";
 
+    py::enum_<remainder_type>(m, "RemainderType")
+        .value("u_variant", remainder_type::u_variant)
+        .value("t_variant", remainder_type::t_variant)
+        .value("v_variant", remainder_type::v_variant)
+        .value("t_wave_variant", remainder_type::t_wave_variant)
+        .value("v_wave_variant", remainder_type::v_wave_variant)
+        .export_values();
+
+    py::enum_<numerator_type>(m, "NumeratorType")
+        .value("rho_variant", numerator_type::rho_variant)
+        .value("generalized_variant", numerator_type::generalized_variant)
+        .value("gamma_rho_variant", numerator_type::gamma_rho_variant)
+        .export_values();
+
     // double
     {
         using T = double;
         using SeriesBase = series_base<T, K>;
-        py::class_<SeriesBase>(m, "SeriesBase")
+        py::class_<SeriesBase>(m, "SeriesBaseF64")
             .def("S_n", &SeriesBase::S_n)
             .def("__call__", &SeriesBase::operator())
             .def("get_sum", &SeriesBase::get_sum)
@@ -223,108 +237,108 @@ PYBIND11_MODULE(pyshanks, m) {
             using Alias = Impl<T, K>; \
             BIND_SERIES(Alias, NameStr, UNPAREN BIND_ARGS);
 
-        S(SER1, exp_series, "ExpSeries", (T))
-        S(SER2, cos_series, "CosSeries", (T))
-        S(SER3, sin_series, "SinSeries", (T))
-        S(SER4, cosh_series, "CoshSeries", (T))
-        S(SER5, sinh_series, "SinhSeries", (T))
-        S(SER6, bin_series, "BinSeries", (T,T))
-        S(SER7, four_arctan_series, "FourArctanSeries", (T))
-        S(SER8, ln1mx_series, "Ln1mxSeries", (T))
-        S(SER9, mean_sinh_sin_series, "MeanSinhSinSeries", (T))
-        S(SER10, exp_squared_erf_series, "ExpSquaredErfSeries", (T))
-        S(SER11, xmb_Jb_two_series, "XmbJbTwoSeries", (T,K))
-        S(SER12, half_asin_two_x_series, "HalfAsinTwoXSeries", (T))
-        S(SER13, inverse_1mx_series, "Inverse1mxSeries", (T))
-        S(SER14, x_1mx_squared_series, "X_1mx_SquaredSeries", (T))
-        S(SER15, erf_series, "ErfSeries", (T))
-        S(SER16, m_fact_1mx_mp1_inverse_series, "MFact1mxMp1InverseSeries", (T,K))
-        S(SER17, inverse_sqrt_1m4x_series, "InvSqrt1m4xSeries", (T))
-        S(SER18, one_twelfth_3x2_pi2_series, "OneTwelfth3x2Pi2Series", (T))
-        S(SER19, x_twelfth_x2_pi2_series, "XTwelfthX2Pi2Series", (T))
-        S(SER20, ln2_series, "Ln2Series", (T))
-        S(SER21, one_series, "OneSeries", (T))
-        S(SER22, minus_one_quarter_series, "MinusOneQuarterSeries", (T))
-        S(SER23, pi_3_series, "Pi3Series", (T))
-        S(SER24, pi_4_series, "Pi4Series", (T))
-        S(SER25, pi_squared_6_minus_one_series, "PiSquared6MinusOneSeries", (T))
-        S(SER26, three_minus_pi_series, "ThreeMinusPiSeries", (T))
-        S(SER27, one_twelfth_series, "OneTwelfthSeries", (T))
-        S(SER28, eighth_pi_m_one_third_series, "EighthPiMOneThirdSeries", (T))
-        S(SER29, one_third_pi_squared_m_nine_series, "OneThirdPiSquaredMNineSeries", (T))
-        S(SER30, four_ln2_m_3_series, "FourLn2M3Series", (T))
-        S(SER31, exp_m_cos_x_sinsin_x_series, "ExpMCosXSinsinXSeries", (T))
-        S(SER32, pi_four_minus_ln2_halfed_series, "PiFourMinusLn2HalfedSeries", (T))
-        S(SER33, five_pi_twelve_series, "FivePiTwelveSeries", (T))
-        S(SER34, x_two_series, "XTwoSeries", (T))
-        S(SER35, pi_six_min_half_series, "PiSixMinHalfSeries", (T))
-        S(SER36, x_two_throught_squares_series, "XTwoThroughtSquaresSeries", (T))
-        S(SER37, minus_one_ned_in_n_series, "MinusOneNedInNSeries", (T))
-        S(SER38, minus_one_n_fact_n_in_n_series, "MinusOneNFactNInNSeries", (T))
-        S(SER39, ln_x_plus_one_x_minus_one_halfed_series, "LnXPlusOneXMinusOneHalfedSeries", (T))
-        S(SER40, two_arcsin_square_x_halfed_series, "TwoArcsinSquareXHalfedSeries", (T))
-        S(SER41, pi_squared_twelve_series, "PiSquaredTwelveSeries", (T))
-        S(SER42, pi_cubed_32_series, "PiCubed32Series", (T))
-        S(SER43, minus_three_plus_ln3_three_devided_two_plus_two_ln2_series, "MinusThreePlusLn3ThreeDividedTwoPlusTwoLn2Series", (T))
-        S(SER44, two_ln2_series, "TwoLn2Series", (T))
-        S(SER45, pi_x_multi_e_xpi_plus_e_minusxpi_divided_e_xpi_minus_e_minusxpi_minus_one_series, "PiXMultiE_XpiPlusEMinusXpiDividedE_XpiMinusEMinusXpiMinusOneSeries", (T))
-        S(SER46, pi_minus_x_2_series, "PiMinusX2Series", (T))
-        S(SER47, half_multi_ln_1div2multi1minuscosx_series, "HalfMultiLn1Div2Multi1MinusCosxSeries", (T))
-        S(SER48, half_minus_sinx_multi_pi_4_series, "HalfMinusSinxMultiPi4Series", (T))
-        S(SER49, ln_1plussqrt1plusxsquare_minus_ln_2_series, "Ln1PlusSqrt1PlusXsquareMinusLn2Series", (T))
-        S(SER50, ln_cosx_series, "LnCosxSeries", (T))
-        S(SER51, ln_sinx_minus_ln_x_series, "LnSinxMinusLnXSeries", (T))
-        S(SER52, pi_8_cosx_square_minus_1_div_3_cosx_series, "Pi8CosxSquareMinus1Div3CosxSeries", (T))
-        S(SER53, sqrt_oneminussqrtoneminusx_div_x_series, "SqrtOneminusSqrtoneminusxDivXSeries", (T))
-        S(SER54, one_minus_sqrt_1minus4x_div_2x_series, "OneMinusSqrt1minus4xDiv2xSeries", (T))
-        S(SER55, arcsin_x_minus_x_series, "ArcsinXMinusXSeries", (T))
-        S(SER56, pi_x_minus_x_square_and_x_square_minus_three_pi_x_plus_two_pi_square_series, "PiXMinusXSquareAndXSquareMinusThreePiXPlusTwoPiSquareSeries", (T))
-        S(SER57, abs_sin_x_minus_2_div_pi_series, "AbsSinXMinus2DivPiSeries", (T))
-        S(SER58, pi_minus_3pi_4_and_pi_minus_x_minus_3pi_4_series, "PiMinus3pi4AndPiMinusXMinus3pi4Series", (T))
-        S(SER59, minus_3_div_4_or_x_minus_3_div_4_series, "Minus3Div4OrXMinus3Div4Series", (T))
-        S(SER60, ten_minus_x_series, "TenMinusXSeries", (T))
-        S(SER61, x_series, "XSeries", (T))
-        S(SER62, minus_x_minus_pi_4_or_minus_pi_4_series, "MinusXMinusPi4OrMinusPi4Series", (T))
-        S(SER63, one_div_two_minus_x_multi_three_plus_x_series, "OneDivTwoMinusXMultiThreePlusXSeries", (T))
-        S(SER64, Si_x_series, "SiXSeries", (T))
-        S(SER65, Ci_x_series, "CiXSeries", (T))
-        S(SER66, Riemann_zeta_func_series, "RiemannZetaFuncSeries", (T))
-        S(SER67, Riemann_zeta_func_xmin1_div_Riemann_zeta_func_x_series, "RiemannZetaFuncXmin1DivRiemannZetaFuncXSeries", (T))
-        S(SER68, xsquareplus3_div_xsquareplus2multix_minus_1_series, "Xsquareplus3DivXsquareplus2multixMinus1Series", (T))
-        S(SER69, arcsin_x_series, "ArcsinXSeries", (T))
-        S(SER70, arctg_x_series, "ArctgXSeries", (T))
-        S(SER71, K_x_series, "KXSeries", (T))
-        S(SER72, E_x_series, "EXSeries", (T))
-        S(SER73, sqrt_1plusx_series, "Sqrt1plusXSeries", (T))
-        S(SER74, Lambert_W_func_series, "LambertWFuncSeries", (T))
-        S(SER75, Incomplete_Gamma_func_series, "IncompleteGammaFuncSeries", (T,T))
-        S(SER76, Series_with_ln_number1_series, "SeriesWithLnNumber1", (T))
-        S(SER77, Series_with_ln_number2_series, "SeriesWithLnNumber2", (T))
-        S(SER78, pi_series, "PiSeries", (T))
-        S(SER79, x_min_sqrt_x_series, "XMinSqrtXSeries", (T))
-        S(SER80, arctan_x2_series, "ArctanX2Series", (T))
-        S(SER81, ln1px4_series, "Ln1px4Series", (T))
-        S(SER82, sin_x2_series, "SinX2Series", (T))
-        S(SER83, arctan_x3_series, "ArctanX3Series", (T))
-        S(SER84, arcsin_x2_series, "ArcsinX2Series", (T))
-        S(SER85, ln1_m_x2_series, "Ln1MinusX2Series", (T))
-        S(SER86, artanh_x_series, "ArtanhXSeries", (T))
-        S(SER87, arcsinh_x_series, "ArcsinhXSeries", (T))
-        S(SER88, cos_x2_series, "CosX2Series", (T))
-        S(SER89, sinh_x2_series, "SinhX2Series", (T))
-        S(SER90, arctanh_x2_series, "ArctanhX2Series", (T))
-        S(SER91, cos3xmin1_div_xsqare_series, "Cos3xMinus1DivXsquareSeries", (T))
-        S(SER92, two_degree_x_series, "TwoDegreeXSeries", (T))
-        S(SER93, sqrt_1plusx_min_1_min_x_div_2_series, "Sqrt1plusXMinus1MinusXDiv2Series", (T))
-        S(SER94, ln13_min_ln7_div_7_series, "Ln13MinusLn7Div7Series", (T))
-        S(SER95, Ja_x_series, "JaXSeries", (T,T))
-        S(SER96, one_div_sqrt2_sin_xdivsqrt2_series, "OneDivSqrt2SinXDivSqrt2Series", (T))
-        S(SER97, ln_1plusx_div_1plusx2_series, "Ln1plusXDiv1plusX2Series", (T))
-        S(SER98, cos_sqrt_x_series, "CosSqrtXSeries", (T))
-        S(SER99, ln_1_plus_x3_series, "Ln1PlusX3Series", (T))
-        S(SER100, x_div_1minx_series, "XDiv1minXSeries", (T))
-        S(SER101, x_div_1minx2_series, "XDiv1minX2Series", (T))
-        S(SER102, gamma_series, "GammaSeries", (T,T))
+        S(SER1, exp_series, "ExpSeriesF64", (T))
+        S(SER2, cos_series, "CosSeriesF64", (T))
+        S(SER3, sin_series, "SinSeriesF64", (T))
+        S(SER4, cosh_series, "CoshSeriesF64", (T))
+        S(SER5, sinh_series, "SinhSeriesF64", (T))
+        S(SER6, bin_series, "BinSeriesF64", (T,T))
+        S(SER7, four_arctan_series, "FourArctanSeriesF64", (T))
+        S(SER8, ln1mx_series, "Ln1mxSeriesF64", (T))
+        S(SER9, mean_sinh_sin_series, "MeanSinhSinSeriesF64", (T))
+        S(SER10, exp_squared_erf_series, "ExpSquaredErfSeriesF64", (T))
+        S(SER11, xmb_Jb_two_series, "XmbJbTwoSeriesF64", (T,K))
+        S(SER12, half_asin_two_x_series, "HalfAsinTwoXSeriesF64", (T))
+        S(SER13, inverse_1mx_series, "Inverse1mxSeriesF64", (T))
+        S(SER14, x_1mx_squared_series, "X_1mx_SquaredSeriesF64", (T))
+        S(SER15, erf_series, "ErfSeriesF64", (T))
+        S(SER16, m_fact_1mx_mp1_inverse_series, "MFact1mxMp1InverseSeriesF64", (T,K))
+        S(SER17, inverse_sqrt_1m4x_series, "InvSqrt1m4xSeriesF64", (T))
+        S(SER18, one_twelfth_3x2_pi2_series, "OneTwelfth3x2Pi2SeriesF64", (T))
+        S(SER19, x_twelfth_x2_pi2_series, "XTwelfthX2Pi2SeriesF64", (T))
+        S(SER20, ln2_series, "Ln2SeriesF64", (T))
+        S(SER21, one_series, "OneSeriesF64", (T))
+        S(SER22, minus_one_quarter_series, "MinusOneQuarterSeriesF64", (T))
+        S(SER23, pi_3_series, "Pi3SeriesF64", (T))
+        S(SER24, pi_4_series, "Pi4SeriesF64", (T))
+        S(SER25, pi_squared_6_minus_one_series, "PiSquared6MinusOneSeriesF64", (T))
+        S(SER26, three_minus_pi_series, "ThreeMinusPiSeriesF64", (T))
+        S(SER27, one_twelfth_series, "OneTwelfthSeriesF64", (T))
+        S(SER28, eighth_pi_m_one_third_series, "EighthPiMOneThirdSeriesF64", (T))
+        S(SER29, one_third_pi_squared_m_nine_series, "OneThirdPiSquaredMNineSeriesF64", (T))
+        S(SER30, four_ln2_m_3_series, "FourLn2M3SeriesF64", (T))
+        S(SER31, exp_m_cos_x_sinsin_x_series, "ExpMCosXSinsinXSeriesF64", (T))
+        S(SER32, pi_four_minus_ln2_halfed_series, "PiFourMinusLn2HalfedSeriesF64", (T))
+        S(SER33, five_pi_twelve_series, "FivePiTwelveSeriesF64", (T))
+        S(SER34, x_two_series, "XTwoSeriesF64", (T))
+        S(SER35, pi_six_min_half_series, "PiSixMinHalfSeriesF64", (T))
+        S(SER36, x_two_throught_squares_series, "XTwoThroughtSquaresSeriesF64", (T))
+        S(SER37, minus_one_ned_in_n_series, "MinusOneNedInNSeriesF64", (T))
+        S(SER38, minus_one_n_fact_n_in_n_series, "MinusOneNFactNInNSeriesF64", (T))
+        S(SER39, ln_x_plus_one_x_minus_one_halfed_series, "LnXPlusOneXMinusOneHalfedSeriesF64", (T))
+        S(SER40, two_arcsin_square_x_halfed_series, "TwoArcsinSquareXHalfedSeriesF64", (T))
+        S(SER41, pi_squared_twelve_series, "PiSquaredTwelveSeriesF64", (T))
+        S(SER42, pi_cubed_32_series, "PiCubed32SeriesF64", (T))
+        S(SER43, minus_three_plus_ln3_three_devided_two_plus_two_ln2_series, "MinusThreePlusLn3ThreeDividedTwoPlusTwoLn2SeriesF64", (T))
+        S(SER44, two_ln2_series, "TwoLn2SeriesF64", (T))
+        S(SER45, pi_x_multi_e_xpi_plus_e_minusxpi_divided_e_xpi_minus_e_minusxpi_minus_one_series, "PiXMultiE_XpiPlusEMinusXpiDividedE_XpiMinusEMinusXpiMinusOneSeriesF64", (T))
+        S(SER46, pi_minus_x_2_series, "PiMinusX2SeriesF64", (T))
+        S(SER47, half_multi_ln_1div2multi1minuscosx_series, "HalfMultiLn1Div2Multi1MinusCosxSeriesF64", (T))
+        S(SER48, half_minus_sinx_multi_pi_4_series, "HalfMinusSinxMultiPi4SeriesF64", (T))
+        S(SER49, ln_1plussqrt1plusxsquare_minus_ln_2_series, "Ln1PlusSqrt1PlusXsquareMinusLn2SeriesF64", (T))
+        S(SER50, ln_cosx_series, "LnCosxSeriesF64", (T))
+        S(SER51, ln_sinx_minus_ln_x_series, "LnSinxMinusLnXSeriesF64", (T))
+        S(SER52, pi_8_cosx_square_minus_1_div_3_cosx_series, "Pi8CosxSquareMinus1Div3CosxSeriesF64", (T))
+        S(SER53, sqrt_oneminussqrtoneminusx_div_x_series, "SqrtOneminusSqrtoneminusxDivXSeriesF64", (T))
+        S(SER54, one_minus_sqrt_1minus4x_div_2x_series, "OneMinusSqrt1minus4xDiv2xSeriesF64", (T))
+        S(SER55, arcsin_x_minus_x_series, "ArcsinXMinusXSeriesF64", (T))
+        S(SER56, pi_x_minus_x_square_and_x_square_minus_three_pi_x_plus_two_pi_square_series, "PiXMinusXSquareAndXSquareMinusThreePiXPlusTwoPiSquareSeriesF64", (T))
+        S(SER57, abs_sin_x_minus_2_div_pi_series, "AbsSinXMinus2DivPiSeriesF64", (T))
+        S(SER58, pi_minus_3pi_4_and_pi_minus_x_minus_3pi_4_series, "PiMinus3pi4AndPiMinusXMinus3pi4SeriesF64", (T))
+        S(SER59, minus_3_div_4_or_x_minus_3_div_4_series, "Minus3Div4OrXMinus3Div4SeriesF64", (T))
+        S(SER60, ten_minus_x_series, "TenMinusXSeriesF64", (T))
+        S(SER61, x_series, "XSeriesF64", (T))
+        S(SER62, minus_x_minus_pi_4_or_minus_pi_4_series, "MinusXMinusPi4OrMinusPi4SeriesF64", (T))
+        S(SER63, one_div_two_minus_x_multi_three_plus_x_series, "OneDivTwoMinusXMultiThreePlusXSeriesF64", (T))
+        S(SER64, Si_x_series, "SiXSeriesF64", (T))
+        S(SER65, Ci_x_series, "CiXSeriesF64", (T))
+        S(SER66, Riemann_zeta_func_series, "RiemannZetaFuncSeriesF64", (T))
+        S(SER67, Riemann_zeta_func_xmin1_div_Riemann_zeta_func_x_series, "RiemannZetaFuncXmin1DivRiemannZetaFuncXSeriesF64", (T))
+        S(SER68, xsquareplus3_div_xsquareplus2multix_minus_1_series, "Xsquareplus3DivXsquareplus2multixMinus1SeriesF64", (T))
+        S(SER69, arcsin_x_series, "ArcsinXSeriesF64", (T))
+        S(SER70, arctg_x_series, "ArctgXSeriesF64", (T))
+        S(SER71, K_x_series, "KXSeriesF64", (T))
+        S(SER72, E_x_series, "EXSeriesF64", (T))
+        S(SER73, sqrt_1plusx_series, "Sqrt1plusXSeriesF64", (T))
+        S(SER74, Lambert_W_func_series, "LambertWFuncSeriesF64", (T))
+        S(SER75, Incomplete_Gamma_func_series, "IncompleteGammaFuncSeriesF64", (T,T))
+        S(SER76, Series_with_ln_number1_series, "SeriesWithLnNumber1F64", (T))
+        S(SER77, Series_with_ln_number2_series, "SeriesWithLnNumber2F64", (T))
+        S(SER78, pi_series, "PiSeriesF64", (T))
+        S(SER79, x_min_sqrt_x_series, "XMinSqrtXSeriesF64", (T))
+        S(SER80, arctan_x2_series, "ArctanX2SeriesF64", (T))
+        S(SER81, ln1px4_series, "Ln1px4SeriesF64", (T))
+        S(SER82, sin_x2_series, "SinX2SeriesF64", (T))
+        S(SER83, arctan_x3_series, "ArctanX3SeriesF64", (T))
+        S(SER84, arcsin_x2_series, "ArcsinX2SeriesF64", (T))
+        S(SER85, ln1_m_x2_series, "Ln1MinusX2SeriesF64", (T))
+        S(SER86, artanh_x_series, "ArtanhXSeriesF64", (T))
+        S(SER87, arcsinh_x_series, "ArcsinhXSeriesF64", (T))
+        S(SER88, cos_x2_series, "CosX2SeriesF64", (T))
+        S(SER89, sinh_x2_series, "SinhX2SeriesF64", (T))
+        S(SER90, arctanh_x2_series, "ArctanhX2SeriesF64", (T))
+        S(SER91, cos3xmin1_div_xsqare_series, "Cos3xMinus1DivXsquareSeriesF64", (T))
+        S(SER92, two_degree_x_series, "TwoDegreeXSeriesF64", (T))
+        S(SER93, sqrt_1plusx_min_1_min_x_div_2_series, "Sqrt1plusXMinus1MinusXDiv2SeriesF64", (T))
+        S(SER94, ln13_min_ln7_div_7_series, "Ln13MinusLn7Div7SeriesF64", (T))
+        S(SER95, Ja_x_series, "JaXSeriesF64", (T,T))
+        S(SER96, one_div_sqrt2_sin_xdivsqrt2_series, "OneDivSqrt2SinXDivSqrt2SeriesF64", (T))
+        S(SER97, ln_1plusx_div_1plusx2_series, "Ln1plusXDiv1plusX2SeriesF64", (T))
+        S(SER98, cos_sqrt_x_series, "CosSqrtXSeriesF64", (T))
+        S(SER99, ln_1_plus_x3_series, "Ln1PlusX3SeriesF64", (T))
+        S(SER100, x_div_1minx_series, "XDiv1minXSeriesF64", (T))
+        S(SER101, x_div_1minx2_series, "XDiv1minX2SeriesF64", (T))
+        S(SER102, gamma_series, "GammaSeriesF64", (T,T))
 
         #undef BIND_SERIES
         #undef UNPAREN
@@ -332,57 +346,43 @@ PYBIND11_MODULE(pyshanks, m) {
 
         // series_acceleration
         using SeriesAcceleration = series_acceleration<T, K, SeriesBase*>;
-        py::class_<SeriesAcceleration>(m, "SeriesAcceleration")
+        py::class_<SeriesAcceleration>(m, "SeriesAccelerationF64")
             .def("__call__", &SeriesAcceleration::operator());
 
-        py::enum_<remainder_type>(m, "RemainderType")
-            .value("u_variant", remainder_type::u_variant)
-            .value("t_variant", remainder_type::t_variant)
-            .value("v_variant", remainder_type::v_variant)
-            .value("t_wave_variant", remainder_type::t_wave_variant)
-            .value("v_wave_variant", remainder_type::v_wave_variant)
-            .export_values();
-
-        py::enum_<numerator_type>(m, "NumeratorType")
-            .value("rho_variant", numerator_type::rho_variant)
-            .value("generalized_variant", numerator_type::generalized_variant)
-            .value("gamma_rho_variant", numerator_type::gamma_rho_variant)
-            .export_values();
-
         using Shanks = shanks_algorithm<T, K, SeriesBase*>;
-        py::class_<Shanks, SeriesAcceleration>(m, "ShanksAlgorithm")
+        py::class_<Shanks, SeriesAcceleration>(m, "ShanksAlgorithmF64")
             .def(py::init<SeriesBase*>(), py::arg("series"), py::keep_alive<1, 2>());
 
         using ShanksAlt = shanks_transform_alternating<T, K, SeriesBase*>;
-        py::class_<ShanksAlt, SeriesAcceleration>(m, "ShanksTransformAlternatingAlgorithm")
+        py::class_<ShanksAlt, SeriesAcceleration>(m, "ShanksTransformAlternatingAlgorithmF64")
             .def(py::init<SeriesBase*>(), py::arg("series"), py::keep_alive<1, 2>());
 
 
         using BrezinskiTheta = brezinski_theta_algorithm<T, K, SeriesBase*>;
-        py::class_<BrezinskiTheta, SeriesAcceleration>(m, "BrezinskiThetaAlgorithm")
+        py::class_<BrezinskiTheta, SeriesAcceleration>(m, "BrezinskiThetaAlgorithmF64")
             .def(py::init<SeriesBase*>(), py::arg("series"), py::keep_alive<1, 2>());
 
         using ChangWynn = chang_wynn_algorithm<T, K, SeriesBase*>;
-        py::class_<ChangWynn, SeriesAcceleration>(m, "ChangWynnAlgorithm")
+        py::class_<ChangWynn, SeriesAcceleration>(m, "ChangWynnAlgorithmF64")
             .def(py::init<SeriesBase*>(), py::arg("series"), py::keep_alive<1, 2>());
 
         using DrummondD = drummond_d_algorithm<T, K, SeriesBase*>;
-        py::class_<DrummondD, SeriesAcceleration>(m, "DrummondDAlgorithm")
+        py::class_<DrummondD, SeriesAcceleration>(m, "DrummondDAlgorithmF64")
             .def(py::init<SeriesBase*, remainder_type, bool>(),
                 py::arg("series"), py::keep_alive<1, 2>(),
                 py::arg("remainder") = remainder_type::u_variant,
                 py::arg("useRecFormulas") = false);
 
         using FordSidi2 = ford_sidi_2_algorithm<T, K, SeriesBase*>;
-        py::class_<FordSidi2, SeriesAcceleration>(m, "FordSidi2Algorithm")
+        py::class_<FordSidi2, SeriesAcceleration>(m, "FordSidi2AlgorithmF64")
             .def(py::init<SeriesBase*>(), py::arg("series"), py::keep_alive<1, 2>());
 
         using FordSidiThree = ford_sidi_3_algorithm<T, K, SeriesBase*>;
-        py::class_<FordSidiThree, SeriesAcceleration>(m, "FordSidi3Algorithm")
+        py::class_<FordSidiThree, SeriesAcceleration>(m, "FordSidi3AlgorithmF64")
             .def(py::init<SeriesBase*>(), py::arg("series"), py::keep_alive<1, 2>());
 
         using Levin = levin_algorithm<T, K, SeriesBase*>;
-        py::class_<Levin, SeriesAcceleration>(m, "LevinAlgorithm")
+        py::class_<Levin, SeriesAcceleration>(m, "LevinAlgorithmF64")
             .def(py::init<SeriesBase*, remainder_type, bool, T>(),
                 py::arg("series"), py::keep_alive<1, 2>(),
                 py::arg("remainder") = remainder_type::u_variant,
@@ -390,14 +390,14 @@ PYBIND11_MODULE(pyshanks, m) {
                 py::arg("beta") = static_cast<T>(1));
 
         using LevinSidiM = levin_sidi_m_algorithm<T, K, SeriesBase*>;
-        py::class_<LevinSidiM, SeriesAcceleration>(m, "LevinSidiMAlgorithm")
+        py::class_<LevinSidiM, SeriesAcceleration>(m, "LevinSidiMAlgorithmF64")
             .def(py::init<SeriesBase*, remainder_type, T>(),
                 py::arg("series"), py::keep_alive<1, 2>(),
                 py::arg("remainder") = remainder_type::u_variant,
                 py::arg("gamma") = static_cast<T>(10));
 
         using LevinSidiS = levin_sidi_s_algorithm<T, K, SeriesBase*>;
-        py::class_<LevinSidiS, SeriesAcceleration>(m, "LevinSidiSAlgorithm")
+        py::class_<LevinSidiS, SeriesAcceleration>(m, "LevinSidiSAlgorithmF64")
             .def(py::init<SeriesBase*, remainder_type, bool, T>(),
                 py::arg("series"), py::keep_alive<1, 2>(),
                 py::arg("remainder") = remainder_type::u_variant,
@@ -405,11 +405,11 @@ PYBIND11_MODULE(pyshanks, m) {
                 py::arg("parameter") = static_cast<T>(1));
 
         using LubkinW = lubkin_w_algorithm<T, K, SeriesBase*>;
-        py::class_<LubkinW, SeriesAcceleration>(m, "LubkinWAlgorithm")
+        py::class_<LubkinW, SeriesAcceleration>(m, "LubkinWAlgorithmF64")
             .def(py::init<SeriesBase*>(), py::arg("series"), py::keep_alive<1, 2>());
 
         using WhynnRho = wynn_rho_algorithm<T, K, SeriesBase*>;
-        py::class_<WhynnRho, SeriesAcceleration>(m, "WhynnRhoAlgorithm")
+        py::class_<WhynnRho, SeriesAcceleration>(m, "WhynnRhoAlgorithmF64")
             .def(py::init<SeriesBase*, numerator_type, T, T>(),
                 py::arg("series"), py::keep_alive<1, 2>(),
                 py::arg("numerator") = numerator_type::rho_variant,
@@ -417,29 +417,29 @@ PYBIND11_MODULE(pyshanks, m) {
                 py::arg("RHO") = static_cast<T>(0));
 
         using Richardson = richardson_algorithm<T, K, SeriesBase*>;
-        py::class_<Richardson, SeriesAcceleration>(m, "RichardsonAlgorithm")
+        py::class_<Richardson, SeriesAcceleration>(m, "RichardsonAlgorithmF64")
             .def(py::init<SeriesBase*>(), py::arg("series"), py::keep_alive<1, 2>());
 
         using Weniger = weniger_algorithm<T, K, SeriesBase*>;
-        py::class_<Weniger, SeriesAcceleration>(m, "WenigerAlgorithm")
+        py::class_<Weniger, SeriesAcceleration>(m, "WenigerAlgorithmF64")
             .def(py::init<SeriesBase*>(), py::arg("series"), py::keep_alive<1, 2>());
 
         using WynnEpsilon = wynn_epsilon_1_algorithm<T, K, SeriesBase*>;
-        py::class_<WynnEpsilon, SeriesAcceleration>(m, "WynnEpsilonAlgorithm")
+        py::class_<WynnEpsilon, SeriesAcceleration>(m, "WynnEpsilonAlgorithmF64")
             .def(py::init<SeriesBase*>(), py::arg("series"), py::keep_alive<1, 2>());
 
         using WynnEpsilon2 = wynn_epsilon_2_algorithm<T, K, SeriesBase*>;
-        py::class_<WynnEpsilon2, SeriesAcceleration>(m, "WynnEpsilon2Algorithm")
+        py::class_<WynnEpsilon2, SeriesAcceleration>(m, "WynnEpsilon2AlgorithmF64")
             .def(py::init<SeriesBase*>(), py::arg("series"), py::keep_alive<1, 2>());
 
         using WynnEpsilon3 = wynn_epsilon_3_algorithm<T, K, SeriesBase*>;
-        py::class_<WynnEpsilon3, SeriesAcceleration>(m, "WynnEpsilon3Algorithm")
+        py::class_<WynnEpsilon3, SeriesAcceleration>(m, "WynnEpsilon3AlgorithmF64")
             .def(py::init<SeriesBase*, T>(),
                 py::arg("series"), py::keep_alive<1, 2>(),
                 py::arg("epsilon_threshold") = static_cast<T>(1e-3));
 
         using ArraySeries = array_series<T, K>;
-        py::class_<ArraySeries, SeriesBase>(m, "ArraySeries")
+        py::class_<ArraySeries, SeriesBase>(m, "ArraySeriesF64")
             .def(py::init<py::buffer>(), py::arg("buffer"), "Construct from a Python buffer (numpy array/memoryview). Zero-copy when possible.")
             .def(py::init<py::object>(), py::arg("sequence"), "Construct from a Python sequence (will copy).")
             .def("size", &ArraySeries::size);
@@ -447,269 +447,276 @@ PYBIND11_MODULE(pyshanks, m) {
 
     // Arbitrary
     {
-        #define ADD_NUM_OP(pyname, cppop) \
+        #define ADD_NUM_BINOP(pyname, rpyname, cppop) \
+          .def(pyname, [](const float_precision &a, const float_precision &b) { return a cppop b; }, py::is_operator()) \
+          .def(rpyname, [](const float_precision &self, const float_precision &other) { return other cppop self; }, py::is_operator()) \
+          .def(pyname, [](const float_precision &self, double other) { return self cppop float_precision(other); }, py::is_operator()) \
+          .def(rpyname, [](const float_precision &self, double other) { return float_precision(other) cppop self; }, py::is_operator()) \
+          .def(pyname, [](const float_precision &self, long long other) { return self cppop float_precision((double)other); }, py::is_operator()) \
+          .def(rpyname, [](const float_precision &self, long long other) { return float_precision((double)other) cppop self; }, py::is_operator())
+        #define ADD_NUM_INPLACE(pyname, cppop) \
+          .def(pyname, [](float_precision &self, const float_precision &other) -> float_precision& { self = self cppop other; return self; }, py::is_operator()) \
+          .def(pyname, [](float_precision &self, double other) -> float_precision& { self = self cppop float_precision(other); return self; }, py::is_operator()) \
+          .def(pyname, [](float_precision &self, long long other) -> float_precision& { self = self cppop float_precision((double)other); return self; }, py::is_operator())
+        #define ADD_NUM_CMP(pyname, cppop) \
+          .def(pyname, [](const float_precision &a, const float_precision &b) { return a cppop b; }, py::is_operator()) \
           .def(pyname, [](const float_precision &a, double b) { return a cppop float_precision(b); }, py::is_operator()) \
-          .def(pyname, [](double a, const float_precision &b) { return float_precision(a) cppop b; }, py::is_operator()) \
-          .def(pyname, [](const float_precision &a, long long b) { return a cppop float_precision((double)b); }, py::is_operator()) \
-          .def(pyname, [](long long a, const float_precision &b) { return float_precision((double)a) cppop b; }, py::is_operator())
-        py::class_<float_precision>(m, "FP")
+          .def(pyname, [](const float_precision &a, long long b) { return a cppop float_precision((double)b); }, py::is_operator())
+        py::class_<float_precision>(m, "Arb")
             .def(py::init<>())
             .def(py::init<double>(), py::arg("d"))
             .def(py::init<const std::string&>(), py::arg("s"))
             .def("__str__", [](const float_precision &x){ return x.toString(); })
             .def("__format__", [](const float_precision &x, const std::string &fmt) { return x.toString(); })
-            .def("__repr__", [](const float_precision &self) { return "<FP: " + self.toString() + ">"; })
-            .def("__add__", [](const float_precision &a, const float_precision &b) { return a + b; })
-            .def("__radd__", [](const float_precision &a, const float_precision &b) { return b + a; })
-            .def("__sub__", [](const float_precision &a, const float_precision &b) { return a - b; })
-            .def("__rsub__", [](const float_precision &a, const float_precision &b) { return b - a; })
-            .def("__mul__", [](const float_precision &a, const float_precision &b) { return a * b; })
-            .def("__rmul__", [](const float_precision &a, const float_precision &b) { return b * a; })
-            .def("__truediv__", [](const float_precision &a, const float_precision &b) { return a / b; })
-            .def("__rtruediv__", [](const float_precision &a, const float_precision &b) { return b / a; })
+            .def("__repr__", [](const float_precision &self) { return "<Arb: " + self.toString() + ">"; })
+            ADD_NUM_BINOP("__add__", "__radd__", +)
+            ADD_NUM_BINOP("__sub__", "__rsub__", -)
+            ADD_NUM_BINOP("__mul__", "__rmul__", *)
+            ADD_NUM_BINOP("__truediv__", "__rtruediv__", /)
+            ADD_NUM_INPLACE("__iadd__", +)
+            ADD_NUM_INPLACE("__isub__", -)
+            ADD_NUM_INPLACE("__imul__", *)
+            ADD_NUM_INPLACE("__itruediv__", /)
+            ADD_NUM_CMP("__eq__", ==)
+            ADD_NUM_CMP("__ne__", !=)
+            ADD_NUM_CMP("__lt__", <)
+            ADD_NUM_CMP("__le__", <=)
+            ADD_NUM_CMP("__gt__", >)
+            ADD_NUM_CMP("__ge__", >=)
             .def("__neg__", [](const float_precision &a) { return -a; })
             .def("__pos__", [](const float_precision &a) { return a; })
-            .def("__abs__", [](const float_precision &a) { return abs(a); })
-            .def("__getstate__", [](const float_precision &self) {
-                return self.toString();
-            })
-            .def("__setstate__", [](float_precision &self, const std::string &state) {
-                new (&self) float_precision(state, 20, ROUND_NEAR);
-            })
-            ADD_NUM_OP("__eq__", ==)
-            ADD_NUM_OP("__ne__", !=)
-            ADD_NUM_OP("__lt__", <)
-            ADD_NUM_OP("__le__", <=)
-            ADD_NUM_OP("__gt__", >)
-            ADD_NUM_OP("__ge__", >=)
-            // Lossy!
+            .def("__abs__", [](const float_precision &a) { return a < float_precision(0.0) ? -a : a; })
             .def("__float__", [](const float_precision &x){ return static_cast<double>(x); })
+            .def("__int__", [](const float_precision &x){ return static_cast<long>(static_cast<double>(x)); })
+            .def("__index__", [](const float_precision &x){ return static_cast<long>(static_cast<double>(x)); })
+            .def("__getstate__", [](const float_precision &self) { return self.toString(); })
+            .def("__setstate__", [](float_precision &self, const std::string &state) { new (&self) float_precision(state); })
             ;
-        #undef ADD_NUM_OP
-        py::implicitly_convertible<double, float_precision>();
-        py::implicitly_convertible<std::string, float_precision>();
+        #undef ADD_NUM_BINOP
+        #undef ADD_NUM_INPLACE
+        #undef ADD_NUM_CMP
 
         using T = float_precision;
-        using SeriesBaseFP = series_base<T, K>;
-        py::class_<SeriesBaseFP>(m, "SeriesBaseFP")
-            .def("S_n", &SeriesBaseFP::S_n)
-            .def("__call__", &SeriesBaseFP::operator())
-            .def("get_sum", &SeriesBaseFP::get_sum)
-            .def("get_x", &SeriesBaseFP::get_x);
+        using SeriesBase = series_base<T, K>;
+        py::class_<SeriesBase>(m, "SeriesBaseArb")
+            .def("S_n", &SeriesBase::S_n)
+            .def("__call__", &SeriesBase::operator())
+            .def("get_sum", &SeriesBase::get_sum)
+            .def("get_x", &SeriesBase::get_x);
 
-        #define BIND_SERIES_FP(DERIVED, PYNAME, ...)       \
-            py::class_<DERIVED, SeriesBaseFP>(m, PYNAME "FP").def(py::init<__VA_ARGS__>())
-        #define UNPAREN_FP(...) __VA_ARGS__
-        #define S_FP(Alias, Impl, NameStr, BIND_ARGS) \
+        #define BIND_SERIES_(DERIVED, PYNAME, ...)       \
+            py::class_<DERIVED, SeriesBase>(m, PYNAME).def(py::init<__VA_ARGS__>())
+        #define UNPAREN_(...) __VA_ARGS__
+        #define S_(Alias, Impl, NameStr, BIND_ARGS) \
             using Alias = Impl<T, K>; \
-            BIND_SERIES_FP(Alias, NameStr, UNPAREN_FP BIND_ARGS);
+            BIND_SERIES_(Alias, NameStr, UNPAREN_ BIND_ARGS);
 
-        S_FP(SER1FP, exp_series, "ExpSeries", (T))
-        S_FP(SER2FP, cos_series, "CosSeries", (T))
-        S_FP(SER3FP, sin_series, "SinSeries", (T))
-        S_FP(SER4FP, cosh_series, "CoshSeries", (T))
-        S_FP(SER5FP, sinh_series, "SinhSeries", (T))
-        S_FP(SER6FP, bin_series, "BinSeries", (T,T))
-        S_FP(SER7FP, four_arctan_series, "FourArctanSeries", (T))
-        S_FP(SER8FP, ln1mx_series, "Ln1mxSeries", (T))
-        S_FP(SER9FP, mean_sinh_sin_series, "MeanSinhSinSeries", (T))
-        S_FP(SER10FP, exp_squared_erf_series, "ExpSquaredErfSeries", (T))
-        S_FP(SER11FP, xmb_Jb_two_series, "XmbJbTwoSeries", (T,K))
-        S_FP(SER12FP, half_asin_two_x_series, "HalfAsinTwoXSeries", (T))
-        S_FP(SER13FP, inverse_1mx_series, "Inverse1mxSeries", (T))
-        S_FP(SER14FP, x_1mx_squared_series, "X_1mx_SquaredSeries", (T))
-        S_FP(SER15FP, erf_series, "ErfSeries", (T))
-        S_FP(SER16FP, m_fact_1mx_mp1_inverse_series, "MFact1mxMp1InverseSeries", (T,K))
-        S_FP(SER17FP, inverse_sqrt_1m4x_series, "InvSqrt1m4xSeries", (T))
-        S_FP(SER18FP, one_twelfth_3x2_pi2_series, "OneTwelfth3x2Pi2Series", (T))
-        S_FP(SER19FP, x_twelfth_x2_pi2_series, "XTwelfthX2Pi2Series", (T))
-        S_FP(SER20FP, ln2_series, "Ln2Series", (T))
-        S_FP(SER21FP, one_series, "OneSeries", (T))
-        S_FP(SER22FP, minus_one_quarter_series, "MinusOneQuarterSeries", (T))
-        S_FP(SER23FP, pi_3_series, "Pi3Series", (T))
-        S_FP(SER24FP, pi_4_series, "Pi4Series", (T))
-        S_FP(SER25FP, pi_squared_6_minus_one_series, "PiSquared6MinusOneSeries", (T))
-        S_FP(SER26FP, three_minus_pi_series, "ThreeMinusPiSeries", (T))
-        S_FP(SER27FP, one_twelfth_series, "OneTwelfthSeries", (T))
-        S_FP(SER28FP, eighth_pi_m_one_third_series, "EighthPiMOneThirdSeries", (T))
-        S_FP(SER29FP, one_third_pi_squared_m_nine_series, "OneThirdPiSquaredMNineSeries", (T))
-        S_FP(SER30FP, four_ln2_m_3_series, "FourLn2M3Series", (T))
-        S_FP(SER31FP, exp_m_cos_x_sinsin_x_series, "ExpMCosXSinsinXSeries", (T))
-        S_FP(SER32FP, pi_four_minus_ln2_halfed_series, "PiFourMinusLn2HalfedSeries", (T))
-        S_FP(SER33FP, five_pi_twelve_series, "FivePiTwelveSeries", (T))
-        S_FP(SER34FP, x_two_series, "XTwoSeries", (T))
-        S_FP(SER35FP, pi_six_min_half_series, "PiSixMinHalfSeries", (T))
-        S_FP(SER36FP, x_two_throught_squares_series, "XTwoThroughtSquaresSeries", (T))
-        S_FP(SER37FP, minus_one_ned_in_n_series, "MinusOneNedInNSeries", (T))
-        S_FP(SER38FP, minus_one_n_fact_n_in_n_series, "MinusOneNFactNInNSeries", (T))
-        S_FP(SER39FP, ln_x_plus_one_x_minus_one_halfed_series, "LnXPlusOneXMinusOneHalfedSeries", (T))
-        S_FP(SER40FP, two_arcsin_square_x_halfed_series, "TwoArcsinSquareXHalfedSeries", (T))
-        S_FP(SER41FP, pi_squared_twelve_series, "PiSquaredTwelveSeries", (T))
-        S_FP(SER42FP, pi_cubed_32_series, "PiCubed32Series", (T))
-        S_FP(SER43FP, minus_three_plus_ln3_three_devided_two_plus_two_ln2_series, "MinusThreePlusLn3ThreeDividedTwoPlusTwoLn2Series", (T))
-        S_FP(SER44FP, two_ln2_series, "TwoLn2Series", (T))
-        S_FP(SER45FP, pi_x_multi_e_xpi_plus_e_minusxpi_divided_e_xpi_minus_e_minusxpi_minus_one_series, "PiXMultiE_XpiPlusEMinusXpiDividedE_XpiMinusEMinusXpiMinusOneSeries", (T))
-        S_FP(SER46FP, pi_minus_x_2_series, "PiMinusX2Series", (T))
-        S_FP(SER47FP, half_multi_ln_1div2multi1minuscosx_series, "HalfMultiLn1Div2Multi1MinusCosxSeries", (T))
-        S_FP(SER48FP, half_minus_sinx_multi_pi_4_series, "HalfMinusSinxMultiPi4Series", (T))
-        S_FP(SER49FP, ln_1plussqrt1plusxsquare_minus_ln_2_series, "Ln1PlusSqrt1PlusXsquareMinusLn2Series", (T))
-        S_FP(SER50FP, ln_cosx_series, "LnCosxSeries", (T))
-        S_FP(SER51FP, ln_sinx_minus_ln_x_series, "LnSinxMinusLnXSeries", (T))
-        S_FP(SER52FP, pi_8_cosx_square_minus_1_div_3_cosx_series, "Pi8CosxSquareMinus1Div3CosxSeries", (T))
-        S_FP(SER53FP, sqrt_oneminussqrtoneminusx_div_x_series, "SqrtOneminusSqrtoneminusxDivXSeries", (T))
-        S_FP(SER54FP, one_minus_sqrt_1minus4x_div_2x_series, "OneMinusSqrt1minus4xDiv2xSeries", (T))
-        S_FP(SER55FP, arcsin_x_minus_x_series, "ArcsinXMinusXSeries", (T))
-        S_FP(SER56FP, pi_x_minus_x_square_and_x_square_minus_three_pi_x_plus_two_pi_square_series, "PiXMinusXSquareAndXSquareMinusThreePiXPlusTwoPiSquareSeries", (T))
-        S_FP(SER57FP, abs_sin_x_minus_2_div_pi_series, "AbsSinXMinus2DivPiSeries", (T))
-        S_FP(SER58FP, pi_minus_3pi_4_and_pi_minus_x_minus_3pi_4_series, "PiMinus3pi4AndPiMinusXMinus3pi4Series", (T))
-        S_FP(SER59FP, minus_3_div_4_or_x_minus_3_div_4_series, "Minus3Div4OrXMinus3Div4Series", (T))
-        S_FP(SER60FP, ten_minus_x_series, "TenMinusXSeries", (T))
-        S_FP(SER61FP, x_series, "XSeries", (T))
-        S_FP(SER62FP, minus_x_minus_pi_4_or_minus_pi_4_series, "MinusXMinusPi4OrMinusPi4Series", (T))
-        S_FP(SER63FP, one_div_two_minus_x_multi_three_plus_x_series, "OneDivTwoMinusXMultiThreePlusXSeries", (T))
-        S_FP(SER64FP, Si_x_series, "SiXSeries", (T))
-        S_FP(SER65FP, Ci_x_series, "CiXSeries", (T))
-        S_FP(SER66FP, Riemann_zeta_func_series, "RiemannZetaFuncSeries", (T))
-        S_FP(SER67FP, Riemann_zeta_func_xmin1_div_Riemann_zeta_func_x_series, "RiemannZetaFuncXmin1DivRiemannZetaFuncXSeries", (T))
-        S_FP(SER68FP, xsquareplus3_div_xsquareplus2multix_minus_1_series, "Xsquareplus3DivXsquareplus2multixMinus1Series", (T))
-        S_FP(SER69FP, arcsin_x_series, "ArcsinXSeries", (T))
-        S_FP(SER70FP, arctg_x_series, "ArctgXSeries", (T))
-        S_FP(SER71FP, K_x_series, "KXSeries", (T))
-        S_FP(SER72FP, E_x_series, "EXSeries", (T))
-        S_FP(SER73FP, sqrt_1plusx_series, "Sqrt1plusXSeries", (T))
-        S_FP(SER74FP, Lambert_W_func_series, "LambertWFuncSeries", (T))
-        S_FP(SER75FP, Incomplete_Gamma_func_series, "IncompleteGammaFuncSeries", (T,T))
-        S_FP(SER76FP, Series_with_ln_number1_series, "SeriesWithLnNumber1", (T))
-        S_FP(SER77FP, Series_with_ln_number2_series, "SeriesWithLnNumber2", (T))
-        S_FP(SER78FP, pi_series, "PiSeries", (T))
-        S_FP(SER79FP, x_min_sqrt_x_series, "XMinSqrtXSeries", (T))
-        S_FP(SER80FP, arctan_x2_series, "ArctanX2Series", (T))
-        S_FP(SER81FP, ln1px4_series, "Ln1px4Series", (T))
-        S_FP(SER82FP, sin_x2_series, "SinX2Series", (T))
-        S_FP(SER83FP, arctan_x3_series, "ArctanX3Series", (T))
-        S_FP(SER84FP, arcsin_x2_series, "ArcsinX2Series", (T))
-        S_FP(SER85FP, ln1_m_x2_series, "Ln1MinusX2Series", (T))
-        S_FP(SER86FP, artanh_x_series, "ArtanhXSeries", (T))
-        S_FP(SER87FP, arcsinh_x_series, "ArcsinhXSeries", (T))
-        S_FP(SER88FP, cos_x2_series, "CosX2Series", (T))
-        S_FP(SER89FP, sinh_x2_series, "SinhX2Series", (T))
-        S_FP(SER90FP, arctanh_x2_series, "ArctanhX2Series", (T))
-        S_FP(SER91FP, cos3xmin1_div_xsqare_series, "Cos3xMinus1DivXsquareSeries", (T))
-        S_FP(SER92FP, two_degree_x_series, "TwoDegreeXSeries", (T))
-        S_FP(SER93FP, sqrt_1plusx_min_1_min_x_div_2_series, "Sqrt1plusXMinus1MinusXDiv2Series", (T))
-        S_FP(SER94FP, ln13_min_ln7_div_7_series, "Ln13MinusLn7Div7Series", (T))
-        S_FP(SER95FP, Ja_x_series, "JaXSeries", (T,T))
-        S_FP(SER96FP, one_div_sqrt2_sin_xdivsqrt2_series, "OneDivSqrt2SinXDivSqrt2Series", (T))
-        S_FP(SER97FP, ln_1plusx_div_1plusx2_series, "Ln1plusXDiv1plusX2Series", (T))
-        S_FP(SER98FP, cos_sqrt_x_series, "CosSqrtXSeries", (T))
-        S_FP(SER99FP, ln_1_plus_x3_series, "Ln1PlusX3Series", (T))
-        S_FP(SER100FP, x_div_1minx_series, "XDiv1minXSeries", (T))
-        S_FP(SER101FP, x_div_1minx2_series, "XDiv1minX2Series", (T))
-        S_FP(SER102FP, gamma_series, "GammaSeries", (T,T))
+        S_(SER1, exp_series, "ExpSeriesArb", (T))
+        S_(SER2, cos_series, "CosSeriesArb", (T))
+        S_(SER3, sin_series, "SinSeriesArb", (T))
+        S_(SER4, cosh_series, "CoshSeriesArb", (T))
+        S_(SER5, sinh_series, "SinhSeriesArb", (T))
+        S_(SER6, bin_series, "BinSeriesArb", (T,T))
+        S_(SER7, four_arctan_series, "FourArctanSeriesArb", (T))
+        S_(SER8, ln1mx_series, "Ln1mxSeriesArb", (T))
+        S_(SER9, mean_sinh_sin_series, "MeanSinhSinSeriesArb", (T))
+        S_(SER10, exp_squared_erf_series, "ExpSquaredErfSeriesArb", (T))
+        S_(SER11, xmb_Jb_two_series, "XmbJbTwoSeriesArb", (T,K))
+        S_(SER12, half_asin_two_x_series, "HalfAsinTwoXSeriesArb", (T))
+        S_(SER13, inverse_1mx_series, "Inverse1mxSeriesArb", (T))
+        S_(SER14, x_1mx_squared_series, "X_1mx_SquaredSeriesArb", (T))
+        S_(SER15, erf_series, "ErfSeriesArb", (T))
+        S_(SER16, m_fact_1mx_mp1_inverse_series, "MFact1mxMp1InverseSeriesArb", (T,K))
+        S_(SER17, inverse_sqrt_1m4x_series, "InvSqrt1m4xSeriesArb", (T))
+        S_(SER18, one_twelfth_3x2_pi2_series, "OneTwelfth3x2Pi2SeriesArb", (T))
+        S_(SER19, x_twelfth_x2_pi2_series, "XTwelfthX2Pi2SeriesArb", (T))
+        S_(SER20, ln2_series, "Ln2SeriesArb", (T))
+        S_(SER21, one_series, "OneSeriesArb", (T))
+        S_(SER22, minus_one_quarter_series, "MinusOneQuarterSeriesArb", (T))
+        S_(SER23, pi_3_series, "Pi3SeriesArb", (T))
+        S_(SER24, pi_4_series, "Pi4SeriesArb", (T))
+        S_(SER25, pi_squared_6_minus_one_series, "PiSquared6MinusOneSeriesArb", (T))
+        S_(SER26, three_minus_pi_series, "ThreeMinusPiSeriesArb", (T))
+        S_(SER27, one_twelfth_series, "OneTwelfthSeriesArb", (T))
+        S_(SER28, eighth_pi_m_one_third_series, "EighthPiMOneThirdSeriesArb", (T))
+        S_(SER29, one_third_pi_squared_m_nine_series, "OneThirdPiSquaredMNineSeriesArb", (T))
+        S_(SER30, four_ln2_m_3_series, "FourLn2M3SeriesArb", (T))
+        S_(SER31, exp_m_cos_x_sinsin_x_series, "ExpMCosXSinsinXSeriesArb", (T))
+        S_(SER32, pi_four_minus_ln2_halfed_series, "PiFourMinusLn2HalfedSeriesArb", (T))
+        S_(SER33, five_pi_twelve_series, "FivePiTwelveSeriesArb", (T))
+        S_(SER34, x_two_series, "XTwoSeriesArb", (T))
+        S_(SER35, pi_six_min_half_series, "PiSixMinHalfSeriesArb", (T))
+        S_(SER36, x_two_throught_squares_series, "XTwoThroughtSquaresSeriesArb", (T))
+        S_(SER37, minus_one_ned_in_n_series, "MinusOneNedInNSeriesArb", (T))
+        S_(SER38, minus_one_n_fact_n_in_n_series, "MinusOneNFactNInNSeriesArb", (T))
+        S_(SER39, ln_x_plus_one_x_minus_one_halfed_series, "LnXPlusOneXMinusOneHalfedSeriesArb", (T))
+        S_(SER40, two_arcsin_square_x_halfed_series, "TwoArcsinSquareXHalfedSeriesArb", (T))
+        S_(SER41, pi_squared_twelve_series, "PiSquaredTwelveSeriesArb", (T))
+        S_(SER42, pi_cubed_32_series, "PiCubed32SeriesArb", (T))
+        S_(SER43, minus_three_plus_ln3_three_devided_two_plus_two_ln2_series, "MinusThreePlusLn3ThreeDividedTwoPlusTwoLn2SeriesArb", (T))
+        S_(SER44, two_ln2_series, "TwoLn2SeriesArb", (T))
+        S_(SER45, pi_x_multi_e_xpi_plus_e_minusxpi_divided_e_xpi_minus_e_minusxpi_minus_one_series, "PiXMultiE_XpiPlusEMinusXpiDividedE_XpiMinusEMinusXpiMinusOneSeriesArb", (T))
+        S_(SER46, pi_minus_x_2_series, "PiMinusX2SeriesArb", (T))
+        S_(SER47, half_multi_ln_1div2multi1minuscosx_series, "HalfMultiLn1Div2Multi1MinusCosxSeriesArb", (T))
+        S_(SER48, half_minus_sinx_multi_pi_4_series, "HalfMinusSinxMultiPi4SeriesArb", (T))
+        S_(SER49, ln_1plussqrt1plusxsquare_minus_ln_2_series, "Ln1PlusSqrt1PlusXsquareMinusLn2SeriesArb", (T))
+        S_(SER50, ln_cosx_series, "LnCosxSeriesArb", (T))
+        S_(SER51, ln_sinx_minus_ln_x_series, "LnSinxMinusLnXSeriesArb", (T))
+        S_(SER52, pi_8_cosx_square_minus_1_div_3_cosx_series, "Pi8CosxSquareMinus1Div3CosxSeriesArb", (T))
+        S_(SER53, sqrt_oneminussqrtoneminusx_div_x_series, "SqrtOneminusSqrtoneminusxDivXSeriesArb", (T))
+        S_(SER54, one_minus_sqrt_1minus4x_div_2x_series, "OneMinusSqrt1minus4xDiv2xSeriesArb", (T))
+        S_(SER55, arcsin_x_minus_x_series, "ArcsinXMinusXSeriesArb", (T))
+        S_(SER56, pi_x_minus_x_square_and_x_square_minus_three_pi_x_plus_two_pi_square_series, "PiXMinusXSquareAndXSquareMinusThreePiXPlusTwoPiSquareSeriesArb", (T))
+        S_(SER57, abs_sin_x_minus_2_div_pi_series, "AbsSinXMinus2DivPiSeriesArb", (T))
+        S_(SER58, pi_minus_3pi_4_and_pi_minus_x_minus_3pi_4_series, "PiMinus3pi4AndPiMinusXMinus3pi4SeriesArb", (T))
+        S_(SER59, minus_3_div_4_or_x_minus_3_div_4_series, "Minus3Div4OrXMinus3Div4SeriesArb", (T))
+        S_(SER60, ten_minus_x_series, "TenMinusXSeriesArb", (T))
+        S_(SER61, x_series, "XSeriesArb", (T))
+        S_(SER62, minus_x_minus_pi_4_or_minus_pi_4_series, "MinusXMinusPi4OrMinusPi4SeriesArb", (T))
+        S_(SER63, one_div_two_minus_x_multi_three_plus_x_series, "OneDivTwoMinusXMultiThreePlusXSeriesArb", (T))
+        S_(SER64, Si_x_series, "SiXSeriesArb", (T))
+        S_(SER65, Ci_x_series, "CiXSeriesArb", (T))
+        S_(SER66, Riemann_zeta_func_series, "RiemannZetaFuncSeriesArb", (T))
+        S_(SER67, Riemann_zeta_func_xmin1_div_Riemann_zeta_func_x_series, "RiemannZetaFuncXmin1DivRiemannZetaFuncXSeriesArb", (T))
+        S_(SER68, xsquareplus3_div_xsquareplus2multix_minus_1_series, "Xsquareplus3DivXsquareplus2multixMinus1SeriesArb", (T))
+        S_(SER69, arcsin_x_series, "ArcsinXSeriesArb", (T))
+        S_(SER70, arctg_x_series, "ArctgXSeriesArb", (T))
+        S_(SER71, K_x_series, "KXSeriesArb", (T))
+        S_(SER72, E_x_series, "EXSeriesArb", (T))
+        S_(SER73, sqrt_1plusx_series, "Sqrt1plusXSeriesArb", (T))
+        S_(SER74, Lambert_W_func_series, "LambertWFuncSeriesArb", (T))
+        S_(SER75, Incomplete_Gamma_func_series, "IncompleteGammaFuncSeriesArb", (T,T))
+        S_(SER76, Series_with_ln_number1_series, "SeriesWithLnNumber1Arb", (T))
+        S_(SER77, Series_with_ln_number2_series, "SeriesWithLnNumber2Arb", (T))
+        S_(SER78, pi_series, "PiSeriesArb", (T))
+        S_(SER79, x_min_sqrt_x_series, "XMinSqrtXSeriesArb", (T))
+        S_(SER80, arctan_x2_series, "ArctanX2SeriesArb", (T))
+        S_(SER81, ln1px4_series, "Ln1px4SeriesArb", (T))
+        S_(SER82, sin_x2_series, "SinX2SeriesArb", (T))
+        S_(SER83, arctan_x3_series, "ArctanX3SeriesArb", (T))
+        S_(SER84, arcsin_x2_series, "ArcsinX2SeriesArb", (T))
+        S_(SER85, ln1_m_x2_series, "Ln1MinusX2SeriesArb", (T))
+        S_(SER86, artanh_x_series, "ArtanhXSeriesArb", (T))
+        S_(SER87, arcsinh_x_series, "ArcsinhXSeriesArb", (T))
+        S_(SER88, cos_x2_series, "CosX2SeriesArb", (T))
+        S_(SER89, sinh_x2_series, "SinhX2SeriesArb", (T))
+        S_(SER90, arctanh_x2_series, "ArctanhX2SeriesArb", (T))
+        S_(SER91, cos3xmin1_div_xsqare_series, "Cos3xMinus1DivXsquareSeriesArb", (T))
+        S_(SER92, two_degree_x_series, "TwoDegreeXSeriesArb", (T))
+        S_(SER93, sqrt_1plusx_min_1_min_x_div_2_series, "Sqrt1plusXMinus1MinusXDiv2SeriesArb", (T))
+        S_(SER94, ln13_min_ln7_div_7_series, "Ln13MinusLn7Div7SeriesArb", (T))
+        S_(SER95, Ja_x_series, "JaXSeriesArb", (T,T))
+        S_(SER96, one_div_sqrt2_sin_xdivsqrt2_series, "OneDivSqrt2SinXDivSqrt2SeriesArb", (T))
+        S_(SER97, ln_1plusx_div_1plusx2_series, "Ln1plusXDiv1plusX2SeriesArb", (T))
+        S_(SER98, cos_sqrt_x_series, "CosSqrtXSeriesArb", (T))
+        S_(SER99, ln_1_plus_x3_series, "Ln1PlusX3SeriesArb", (T))
+        S_(SER100, x_div_1minx_series, "XDiv1minXSeriesArb", (T))
+        S_(SER101, x_div_1minx2_series, "XDiv1minX2SeriesArb", (T))
+        S_(SER102, gamma_series, "GammaSeriesArb", (T,T))
 
-        #undef BIND_SERIES_FP
-        #undef UNPAREN_FP
-        #undef S_FP
+        #undef BIND_SERIES_
+        #undef UNPAREN_
+        #undef S_
 
-        // series_acceleration (FP versions)
-        using SeriesAccelerationFP = series_acceleration<T, K, SeriesBaseFP*>;
-        py::class_<SeriesAccelerationFP>(m, "SeriesAccelerationFP")
-            .def("__call__", &SeriesAccelerationFP::operator());
+        // series_acceleration (arbitrary precision)
+        using SeriesAcceleration = series_acceleration<T, K, SeriesBase*>;
+        py::class_<SeriesAcceleration>(m, "SeriesAccelerationArb")
+            .def("__call__", &SeriesAcceleration::operator());
 
-        using ShanksFP = shanks_algorithm<T, K, SeriesBaseFP*>;
-        py::class_<ShanksFP, SeriesAccelerationFP>(m, "ShanksAlgorithmFP")
-            .def(py::init<SeriesBaseFP*>(), py::arg("series"), py::keep_alive<1, 2>());
+        using Shanks = shanks_algorithm<T, K, SeriesBase*>;
+        py::class_<Shanks, SeriesAcceleration>(m, "ShanksAlgorithmArb")
+            .def(py::init<SeriesBase*>(), py::arg("series"), py::keep_alive<1, 2>());
 
-        using ShanksAltFP = shanks_transform_alternating<T, K, SeriesBaseFP*>;
-        py::class_<ShanksAltFP, SeriesAccelerationFP>(m, "ShanksTransformAlternatingAlgorithmFP")
-            .def(py::init<SeriesBaseFP*>(), py::arg("series"), py::keep_alive<1, 2>());
+        using ShanksAlt = shanks_transform_alternating<T, K, SeriesBase*>;
+        py::class_<ShanksAlt, SeriesAcceleration>(m, "ShanksTransformAlternatingAlgorithmArb")
+            .def(py::init<SeriesBase*>(), py::arg("series"), py::keep_alive<1, 2>());
 
 
-        using BrezinskiThetaFP = brezinski_theta_algorithm<T, K, SeriesBaseFP*>;
-        py::class_<BrezinskiThetaFP, SeriesAccelerationFP>(m, "BrezinskiThetaAlgorithmFP")
-            .def(py::init<SeriesBaseFP*>(), py::arg("series"), py::keep_alive<1, 2>());
+        using BrezinskiTheta = brezinski_theta_algorithm<T, K, SeriesBase*>;
+        py::class_<BrezinskiTheta, SeriesAcceleration>(m, "BrezinskiThetaAlgorithmArb")
+            .def(py::init<SeriesBase*>(), py::arg("series"), py::keep_alive<1, 2>());
 
-        using ChangWynnFP = chang_wynn_algorithm<T, K, SeriesBaseFP*>;
-        py::class_<ChangWynnFP, SeriesAccelerationFP>(m, "ChangWynnAlgorithmFP")
-            .def(py::init<SeriesBaseFP*>(), py::arg("series"), py::keep_alive<1, 2>());
+        using ChangWynn = chang_wynn_algorithm<T, K, SeriesBase*>;
+        py::class_<ChangWynn, SeriesAcceleration>(m, "ChangWynnAlgorithmArb")
+            .def(py::init<SeriesBase*>(), py::arg("series"), py::keep_alive<1, 2>());
 
-        using DrummondDFP = drummond_d_algorithm<T, K, SeriesBaseFP*>;
-        py::class_<DrummondDFP, SeriesAccelerationFP>(m, "DrummondDAlgorithmFP")
-            .def(py::init<SeriesBaseFP*, remainder_type, bool>(),
+        using DrummondD = drummond_d_algorithm<T, K, SeriesBase*>;
+        py::class_<DrummondD, SeriesAcceleration>(m, "DrummondDAlgorithmArb")
+            .def(py::init<SeriesBase*, remainder_type, bool>(),
                 py::arg("series"), py::keep_alive<1, 2>(),
                 py::arg("remainder") = remainder_type::u_variant,
                 py::arg("useRecFormulas") = false);
 
-        using FordSidi2FP = ford_sidi_2_algorithm<T, K, SeriesBaseFP*>;
-        py::class_<FordSidi2FP, SeriesAccelerationFP>(m, "FordSidi2AlgorithmFP")
-            .def(py::init<SeriesBaseFP*>(), py::arg("series"), py::keep_alive<1, 2>());
+        using FordSidi2 = ford_sidi_2_algorithm<T, K, SeriesBase*>;
+        py::class_<FordSidi2, SeriesAcceleration>(m, "FordSidi2AlgorithmArb")
+            .def(py::init<SeriesBase*>(), py::arg("series"), py::keep_alive<1, 2>());
 
-        using FordSidiThreeFP = ford_sidi_3_algorithm<T, K, SeriesBaseFP*>;
-        py::class_<FordSidiThreeFP, SeriesAccelerationFP>(m, "FordSidi3AlgorithmFP")
-            .def(py::init<SeriesBaseFP*>(), py::arg("series"), py::keep_alive<1, 2>());
+        using FordSidiThree = ford_sidi_3_algorithm<T, K, SeriesBase*>;
+        py::class_<FordSidiThree, SeriesAcceleration>(m, "FordSidi3AlgorithmArb")
+            .def(py::init<SeriesBase*>(), py::arg("series"), py::keep_alive<1, 2>());
 
-        using LevinFP = levin_algorithm<T, K, SeriesBaseFP*>;
-        py::class_<LevinFP, SeriesAccelerationFP>(m, "LevinAlgorithmFP")
-            .def(py::init<SeriesBaseFP*, remainder_type, bool, T>(),
+        using Levin = levin_algorithm<T, K, SeriesBase*>;
+        py::class_<Levin, SeriesAcceleration>(m, "LevinAlgorithmArb")
+            .def(py::init<SeriesBase*, remainder_type, bool, T>(),
                 py::arg("series"), py::keep_alive<1, 2>(),
                 py::arg("remainder") = remainder_type::u_variant,
                 py::arg("useRecFormulas") = false,
                 py::arg("beta") = static_cast<T>(1));
 
-        using LevinSidiMFP = levin_sidi_m_algorithm<T, K, SeriesBaseFP*>;
-        py::class_<LevinSidiMFP, SeriesAccelerationFP>(m, "LevinSidiMAlgorithmFP")
-            .def(py::init<SeriesBaseFP*, remainder_type, T>(),
+        using LevinSidiM = levin_sidi_m_algorithm<T, K, SeriesBase*>;
+        py::class_<LevinSidiM, SeriesAcceleration>(m, "LevinSidiMAlgorithmArb")
+            .def(py::init<SeriesBase*, remainder_type, T>(),
                 py::arg("series"), py::keep_alive<1, 2>(),
                 py::arg("remainder") = remainder_type::u_variant,
                 py::arg("gamma") = static_cast<T>(10));
 
-        using LevinSidiSFP = levin_sidi_s_algorithm<T, K, SeriesBaseFP*>;
-        py::class_<LevinSidiSFP, SeriesAccelerationFP>(m, "LevinSidiSAlgorithmFP")
-            .def(py::init<SeriesBaseFP*, remainder_type, bool, T>(),
+        using LevinSidiS = levin_sidi_s_algorithm<T, K, SeriesBase*>;
+        py::class_<LevinSidiS, SeriesAcceleration>(m, "LevinSidiSAlgorithmArb")
+            .def(py::init<SeriesBase*, remainder_type, bool, T>(),
                 py::arg("series"), py::keep_alive<1, 2>(),
                 py::arg("remainder") = remainder_type::u_variant,
                 py::arg("useRecFormulas") = false,
                 py::arg("parameter") = static_cast<T>(1));
 
-        using LubkinWFP = lubkin_w_algorithm<T, K, SeriesBaseFP*>;
-        py::class_<LubkinWFP, SeriesAccelerationFP>(m, "LubkinWAlgorithmFP")
-            .def(py::init<SeriesBaseFP*>(), py::arg("series"), py::keep_alive<1, 2>());
+        using LubkinW = lubkin_w_algorithm<T, K, SeriesBase*>;
+        py::class_<LubkinW, SeriesAcceleration>(m, "LubkinWAlgorithmArb")
+            .def(py::init<SeriesBase*>(), py::arg("series"), py::keep_alive<1, 2>());
 
-        using WhynnRhoFP = wynn_rho_algorithm<T, K, SeriesBaseFP*>;
-        py::class_<WhynnRhoFP, SeriesAccelerationFP>(m, "WhynnRhoAlgorithmFP")
-            .def(py::init<SeriesBaseFP*, numerator_type, T, T>(),
+        using WhynnRho = wynn_rho_algorithm<T, K, SeriesBase*>;
+        py::class_<WhynnRho, SeriesAcceleration>(m, "WhynnRhoAlgorithmArb")
+            .def(py::init<SeriesBase*, numerator_type, T, T>(),
                 py::arg("series"), py::keep_alive<1, 2>(),
                 py::arg("numerator") = numerator_type::rho_variant,
                 py::arg("gamma") = static_cast<T>(1),
                 py::arg("RHO") = static_cast<T>(0));
 
-        using RichardsonFP = richardson_algorithm<T, K, SeriesBaseFP*>;
-        py::class_<RichardsonFP, SeriesAccelerationFP>(m, "RichardsonAlgorithmFP")
-            .def(py::init<SeriesBaseFP*>(), py::arg("series"), py::keep_alive<1, 2>());
+        using Richardson = richardson_algorithm<T, K, SeriesBase*>;
+        py::class_<Richardson, SeriesAcceleration>(m, "RichardsonAlgorithmArb")
+            .def(py::init<SeriesBase*>(), py::arg("series"), py::keep_alive<1, 2>());
 
-        using WenigerFP = weniger_algorithm<T, K, SeriesBaseFP*>;
-        py::class_<WenigerFP, SeriesAccelerationFP>(m, "WenigerAlgorithmFP")
-            .def(py::init<SeriesBaseFP*>(), py::arg("series"), py::keep_alive<1, 2>());
+        using Weniger = weniger_algorithm<T, K, SeriesBase*>;
+        py::class_<Weniger, SeriesAcceleration>(m, "WenigerAlgorithmArb")
+            .def(py::init<SeriesBase*>(), py::arg("series"), py::keep_alive<1, 2>());
 
-        using WynnEpsilonFP = wynn_epsilon_1_algorithm<T, K, SeriesBaseFP*>;
-        py::class_<WynnEpsilonFP, SeriesAccelerationFP>(m, "WynnEpsilonAlgorithmFP")
-            .def(py::init<SeriesBaseFP*>(), py::arg("series"), py::keep_alive<1, 2>());
+        using WynnEpsilon = wynn_epsilon_1_algorithm<T, K, SeriesBase*>;
+        py::class_<WynnEpsilon, SeriesAcceleration>(m, "WynnEpsilonAlgorithmArb")
+            .def(py::init<SeriesBase*>(), py::arg("series"), py::keep_alive<1, 2>());
 
-        using WynnEpsilon2FP = wynn_epsilon_2_algorithm<T, K, SeriesBaseFP*>;
-        py::class_<WynnEpsilon2FP, SeriesAccelerationFP>(m, "WynnEpsilon2AlgorithmFP")
-            .def(py::init<SeriesBaseFP*>(), py::arg("series"), py::keep_alive<1, 2>());
+        using WynnEpsilon2 = wynn_epsilon_2_algorithm<T, K, SeriesBase*>;
+        py::class_<WynnEpsilon2, SeriesAcceleration>(m, "WynnEpsilon2AlgorithmArb")
+            .def(py::init<SeriesBase*>(), py::arg("series"), py::keep_alive<1, 2>());
 
-        using WynnEpsilon3FP = wynn_epsilon_3_algorithm<T, K, SeriesBaseFP*>;
-        py::class_<WynnEpsilon3FP, SeriesAccelerationFP>(m, "WynnEpsilon3AlgorithmFP")
-            .def(py::init<SeriesBaseFP*, T>(),
+        using WynnEpsilon3 = wynn_epsilon_3_algorithm<T, K, SeriesBase*>;
+        py::class_<WynnEpsilon3, SeriesAcceleration>(m, "WynnEpsilon3AlgorithmArb")
+            .def(py::init<SeriesBase*, T>(),
                 py::arg("series"), py::keep_alive<1, 2>(),
-                py::arg("epsilon_threshold") = static_cast<T>(1e-3));
+                py::arg("epsilon_threshold") = float_precision("1e-3"));
 
-        using ArraySeriesFP = array_series<T, K>;
-        py::class_<ArraySeriesFP, SeriesBaseFP>(m, "ArraySeriesFP")
+        using ArraySeries = array_series<T, K>;
+        py::class_<ArraySeries, SeriesBase>(m, "ArraySeriesArb")
             .def(py::init<py::buffer>(), py::arg("buffer"), "Construct from a Python buffer (numpy array/memoryview). Will copy/convert elements to arbitrary precision.")
             .def(py::init<py::object>(), py::arg("sequence"), "Construct from a Python sequence (will copy).")
-            .def("size", &ArraySeriesFP::size);
+            .def("size", &ArraySeries::size);
     }
 
     // Done
