@@ -107,12 +107,10 @@
  */
 
 #pragma once
-#include "libs/arbitrary_arithmetics/fprecision.h"
+
 #include <cmath>
 #include <stdexcept>
 #include <type_traits>
-#define NO_X_GIVEN 0
-#define NO_SERIES_EXPRESSION_GIVEN 0
 #include <numbers>
 #include <vector>
 #include <concepts>
@@ -120,32 +118,15 @@
 
 #include "methods/custom_concepts.hpp"
 
+#ifndef INC_FPRECISION
+	#include "libs/arbitrary_arithmetics/fprecision.h"
+#endif
+
 namespace series{
-
-	using std::isfinite;
-	
-
-	using std::sin;
-	using std::asin;
-	using std::cos;
-	using std::cosh;
-	using std::atan;
-
-	using std::exp;
-	using std::log;
-	
-	using std::fma;
-
-	using std::to_string;
-
-	using std::tgamma;
-	using std::erf;
 
 	inline std::string to_string(const float_precision& value){
 		return value.toString();
 	}
-
-
 	 /**
 	 * @brief Abstract class for series
 	 * @authors Bolshakov M.P.

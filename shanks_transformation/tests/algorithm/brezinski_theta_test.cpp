@@ -1,5 +1,8 @@
 #include <gtest/gtest.h>
 
+#include <math.h>
+#include "libs/arbitrary_arithmetics/precisioncore.cpp"
+
 #include "series.h"
 #include "methods/algorithm/brezinski_theta_algorithm.hpp"
 

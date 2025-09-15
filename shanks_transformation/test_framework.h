@@ -10,9 +10,11 @@
 #include <memory>
 #include <set>
 
-#include "libs/arbitrary_arithmetics/fprecision.h"
+#ifndef INC_FPRECISION
+	#include "libs/arbitrary_arithmetics/fprecision.h"
+#endif
+
 #include "methods.hpp"
-#include "methods/remainders.hpp"
 #include "series.h"
 #include "test_functions.h"
 
