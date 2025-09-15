@@ -33,8 +33,11 @@ int main()
 		{
 			std::cout << e.what() << std::endl;
 		}
-		catch (...){
-			std::cout << "\nERROR\n";
+		catch (float_precision::divide_by_zero& e){
+			std::cout << "float_precision::division by zero" << std::endl;
+		}
+		catch (float_precision::domain_error& e){
+			std::cout << "float_precision::domain error" << std::endl;
 		}
 
 	}
