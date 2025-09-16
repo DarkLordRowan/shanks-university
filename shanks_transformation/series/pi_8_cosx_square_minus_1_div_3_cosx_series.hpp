@@ -1,3 +1,5 @@
+#pragma once
+#include "series.h"
 
 /**
 * @brief Maclaurin series of function (pi/8)*cos^2(x) - (1/3)*cos(x)

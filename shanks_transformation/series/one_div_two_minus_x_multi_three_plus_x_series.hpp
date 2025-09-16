@@ -1,3 +1,5 @@
+#pragma once
+#include "series.h"
 
 /**
 * @brief Laurent series of function 1 / ((2 - x)*(3 + x))

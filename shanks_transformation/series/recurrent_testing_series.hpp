@@ -1,3 +1,5 @@
+#pragma once
+#include "series.h"
 
 /**
 * @brief function for testing new requrrive serieses or converting basic to

@@ -1,3 +1,5 @@
+#pragma once
+#include "series.h"
 
 /**
 * @brief Series of function (1 - sqrt(1 - 4x)) / 2x

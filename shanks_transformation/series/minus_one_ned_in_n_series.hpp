@@ -1,3 +1,5 @@
+#pragma once
+#include "series.h"
 
 /**
 * @brief Numerical series (-1)^n * x /n^n = -0,78343051 * x

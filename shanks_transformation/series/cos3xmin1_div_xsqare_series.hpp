@@ -1,3 +1,5 @@
+#pragma once
+#include "series.h"
 
 /**
 * @brief Taylor series of function cos(3x - 1) / x^2

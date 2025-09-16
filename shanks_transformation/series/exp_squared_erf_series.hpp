@@ -1,3 +1,5 @@
+#pragma once
+#include "series.h"
 
 /**
 * @brief Maclaurin series of function exp(x^2)*erf(x), where erf(x) is error function of x
