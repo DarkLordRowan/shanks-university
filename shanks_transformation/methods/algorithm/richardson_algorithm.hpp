@@ -32,8 +32,8 @@
  *
  * @tparam T Floating-point type for series elements and computations
  *           - Purpose: Represents numerical precision for all calculations
- *           - Valid values: Any FloatLike type (float, double, long double)
- *           - Constraints: Must satisfy FloatLike concept
+ *           - Valid values: Any Accepted type (float, double, long double)
+ *           - Constraints: Must satisfy Accepted concept
  *           - Example usage: Stores partial sums, transformation results, and intermediate values
  *
  * @tparam K Unsigned integral type for indices and counting operations
@@ -49,7 +49,7 @@
  *               - T S_n(K n) const: returns the n-th partial sum sₙ = a₀ + ... + aₙ
  *           - Example usage: Convergent series with known partial sums
  */
-template <FloatLike T, std::unsigned_integral K, typename series_templ>
+template <Accepted T, std::unsigned_integral K, typename series_templ>
 class richardson_algorithm final : public series_acceleration<T, K, series_templ>
 {
 public:
@@ -92,7 +92,7 @@ public:
     T operator() (K n, K order) const override;
 };
 
-template <FloatLike T, std::unsigned_integral K, typename series_templ>
+template <Accepted T, std::unsigned_integral K, typename series_templ>
 T richardson_algorithm<T, K, series_templ>::operator()(const K n, const K order) const {
 
     using std::isfinite;

@@ -2743,4 +2743,8 @@ inline float_precision fabs( const float_precision& a )
 //
 //////////////////////////////////////////////////////////
 
+//CUSTOM FOR COMPATABILITY
+
+inline std::string to_string(const float_precision& x) { return x.toString(); }
+
 #endif

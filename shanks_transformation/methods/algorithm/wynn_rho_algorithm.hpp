@@ -29,7 +29,7 @@
   * - Wynn, P. (1966). Upon a second-order continued-fraction transformation for accelerating convergence.
   * - Osada, N. (1993). Acceleration Methods for Slowly Convergent Sequences and Their Applications.
   *
-  * @tparam T Floating-point type for series elements (must satisfy FloatLike)
+  * @tparam T Floating-point type for series elements (must satisfy Accepted)
   *           Represents numerical precision (float, double, long double)
   *           Used for all mathematical computations and storage
   * @tparam K Unsigned integral type for indices and order (must satisfy std::unsigned_integral)
@@ -39,7 +39,7 @@
   *           - T operator()(K n) const: returns the n-th series term a_n
   *           - T S_n(K n) const: returns the n-th partial sum s_n = a_0 + ... + a_n
   */
-template <FloatLike T, std::unsigned_integral K, typename series_templ>
+template <Accepted T, std::unsigned_integral K, typename series_templ>
 class wynn_rho_algorithm final : public series_acceleration<T, K, series_templ>
 {
 protected:
@@ -151,7 +151,7 @@ public:
 	}
 };
 
-template <FloatLike T, std::unsigned_integral K, typename series_templ>
+template <Accepted T, std::unsigned_integral K, typename series_templ>
 wynn_rho_algorithm<T, K, series_templ>::wynn_rho_algorithm(
 	const series_templ& series,
 	const numerator_type variant,
@@ -185,7 +185,7 @@ wynn_rho_algorithm<T, K, series_templ>::wynn_rho_algorithm(
 	}
 }
 
-template <FloatLike T, std::unsigned_integral K, typename series_templ>
+template <Accepted T, std::unsigned_integral K, typename series_templ>
 inline T wynn_rho_algorithm<T, K, series_templ>::calculate(const K n, K order) const { //const int order
 
 	using std::isfinite;
@@ -235,7 +235,7 @@ inline T wynn_rho_algorithm<T, K, series_templ>::calculate(const K n, K order) c
 	return res;
 }
 
-template <FloatLike T, std::unsigned_integral K, typename series_templ>
+template <Accepted T, std::unsigned_integral K, typename series_templ>
 T wynn_rho_algorithm<T, K, series_templ>::recursive_calculate_body(const K n, const K order, T S_n, const K j) const {
 
 	using std::isfinite;

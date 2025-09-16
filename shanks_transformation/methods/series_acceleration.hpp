@@ -11,7 +11,7 @@
 #pragma once
 
 #include <iostream>   // Include the iostream library for I/O functionalities
-#include "custom_concepts.hpp"
+#include "../custom_concepts.hpp"
 
  /**
   * @brief Base class for series acceleration transformations
@@ -31,7 +31,7 @@
   *           Used for counting and indexing operations (typically size_t, unsigned int, etc.)
   * @tparam series_templ Type of series object to accelerate. Must provide the required interface.
   */
-template<FloatLike T, std::unsigned_integral K, typename series_templ>
+template<Accepted T, std::unsigned_integral K, typename series_templ>
 class series_acceleration
 {
 public:
@@ -92,7 +92,7 @@ protected:
  *
  * @param series The series object to be accelerated
  */
-template<FloatLike T, std::unsigned_integral K, typename series_templ>
+template<Accepted T, std::unsigned_integral K, typename series_templ>
 series_acceleration<T, K, series_templ>::series_acceleration(const series_templ &series) : series(series) {}
 
 /**
@@ -101,7 +101,7 @@ series_acceleration<T, K, series_templ>::series_acceleration(const series_templ 
  * Outputs the name of the actual derived class type using RTTI (run-time type information).
  * This helps identify which specific acceleration method is being used.
  */
-template<FloatLike T, std::unsigned_integral K, typename series_templ>
+template<Accepted T, std::unsigned_integral K, typename series_templ>
 constexpr void series_acceleration<T, K, series_templ>::print_info() const
 {
     std::cout << "transformation: " << typeid(*this).name() << '\n';

@@ -19,117 +19,9 @@
 #endif
 
 #include "methods.hpp"
-#include "series.h"
+#include "series.hpp"
 #include "test_functions.h"
 
- /**
-  * @brief Enum of series IDs
-  */
-enum series_id_t {
-	null_series_id,
-	exp_series_id,
-	cos_series_id,
-	sin_series_id,
-	cosh_series_id,
-	sinh_series_id,
-	bin_series_id,
-	four_arctan_series_id,
-	ln1mx_series_id,
-	mean_sinh_sin_series_id,
-	exp_squared_erf_series_id,
-	xmb_Jb_two_series_id,
-	half_asin_two_x_series_id,
-	inverse_1mx_series_id,
-	x_1mx_squared_series_id,
-	erf_series_id,
-	m_fact_1mx_mp1_inverse_series_id,
-	inverse_sqrt_1m4x_series_id,
-	one_twelfth_3x2_pi2_series_id,
-	x_twelfth_x2_pi2_series_id,
-	ln2_series_id,
-	one_series_id,
-	minus_one_quarter_series_id,
-	pi_3_series_id,
-	pi_4_series_id,
-	pi_squared_6_minus_one_series_id,
-	three_minus_pi_series_id,
-	one_twelfth_series_id,
-	eighth_pi_m_one_third_series_id,
-	one_third_pi_squared_m_nine_series_id,
-	four_ln2_m_3_series_id,
-	exp_m_cos_x_sinsin_x_series_id,
-	pi_four_minus_ln2_halfed_series_id,
-	five_pi_twelve_series_id,
-	x_two_series_id,
-	pi_six_min_half_series_id,
-	x_two_throught_squares_series_id,
-	minus_one_ned_in_n_series_id,
-	minus_one_n_fact_n_in_n_series_id,
-	ln_x_plus_one_x_minus_one_halfed_series_id,
-	two_arcsin_square_x_halfed_series_id,
-	pi_squared_twelve_series_id,
-	pi_cubed_32_series_id,
-	minus_three_plus_ln3_three_devided_two_plus_two_ln2_series_id,
-	two_ln2_series_id,
-	pi_x_multi_e_xpi_plus_e_minusxpi_divided_e_xpi_minus_e_minusxpi_minus_one_series_id,
-	pi_minus_x_2_series_id,
-	half_multi_ln_1div2multi1minuscosx_series_id,
-	half_minus_sinx_multi_pi_4_series_id,
-	ln_1plussqrt1plusxsquare_minus_ln_2_series_id,
-	ln_cosx_series_id,
-	ln_sinx_minus_ln_x_series_id,
-	pi_8_cosx_square_minus_1_div_3_cosx_series_id,
-	sqrt_oneminussqrtoneminusx_div_x_series_id,
-	one_minus_sqrt_1minus4x_div_2x_series_id,
-	arcsin_x_minus_x_series_id,
-	pi_x_minus_x_square_and_x_square_minus_three_pi_x_plus_two_pi_square_series_id,
-	abs_sin_x_minus_2_div_pi_series_id,
-	pi_minus_3pi_4_and_pi_minus_x_minus_3pi_4_series_id,
-	minus_3_div_4_or_x_minus_3_div_4_series_id,
-	ten_minus_x_series_id,
-	x_series_id,
-	minus_x_minus_pi_4_or_minus_pi_4_series_id,
-	one_div_two_minus_x_multi_three_plus_x_series_id,
-	Si_x_series_id,
-	Ci_x_series_id,
-	Riemann_zeta_func_series_id,
-	Riemann_zeta_func_xmin1_div_Riemann_zeta_func_x_series_id,
-	xsquareplus3_div_xsquareplus2multix_minus_1_series_id,
-	arcsin_x_series_id,
-	arctg_x_series_id,
-	K_x_series_id,
-	E_x_series_id,
-	sqrt_1plusx_series_id,
-	Lambert_W_func_series_id,
-	Incomplete_Gamma_func_series_id,
-	Series_with_ln_number1_series_id,
-	Series_with_ln_number2_series_id,
-	pi_series_id,
-	x_min_sqrt_x_series_id,
-	arctan_x2_series_id,
-	ln1px4_series_id,
-	sin_x2_series_id,
-	arctan_x3_series_id,
-	arcsin_x2_series_id,
-	ln1_m_x2_series_id,
-	artanh_x_series_id,
-	arcsinh_x_series_id,
-	cos_x2_series_id,
-	sinh_x2_series_id,
-	arctanh_x2_series_id,
-	cos3xmin1_div_xsqare_series_id,
-	two_degree_x_series_id,
-	sqrt_1plusx_min_1_min_x_div_2_series_id,
-	ln13_min_ln7_div_7_series_id,
-	Ja_x_series_id,
-	one_div_sqrt2_sin_xdivsqrt2_series_id,
-	ln_1plusx_div_1plusx2_series_id,
-	cos_sqrt_x_series_id,
-	ln_1_plus_x3_series_id,
-	x_div_1minx_series_id,
-	x_div_1minx2_series_id,
-	gamma_series_id,
-};
 
 /**
  * @brief Enum of testing functions IDs
@@ -1172,7 +1064,7 @@ inline static void print_test_function_info() {
  * @brief Helper function to get series by ID
  */
 template <FloatLike T, std::unsigned_integral K>
-inline static std::unique_ptr<series::series_base<T, K>> create_series_by_id(series_id_t id, T x) {
+inline static std::unique_ptr<series_base<T, K>> create_series_by_id(series_id_t id, T x) {
 	// This function replace huge switch-case
 	auto all_series = create_series_info();
 	if (static_cast<int>(id) < 1 || static_cast<int>(id) > all_series.size()) {
@@ -1183,232 +1075,232 @@ inline static std::unique_ptr<series::series_base<T, K>> create_series_by_id(ser
 	// Пока оставляю старый switch, но можно оптимизировать дальше
 	switch (id) {
 	case exp_series_id:
-		return std::make_unique<series::exp_series<T, K>>(x);
+		return std::make_unique<exp_series<T, K>>(x);
 	case cos_series_id:
-		return std::make_unique<series::cos_series<T, K>>(x);
+		return std::make_unique<cos_series<T, K>>(x);
 	case sin_series_id:
-		return std::make_unique<series::sin_series<T, K>>(x);
+		return std::make_unique<sin_series<T, K>>(x);
 	case cosh_series_id:
-		return std::make_unique<series::cosh_series<T, K>>(x);
+		return std::make_unique<cosh_series<T, K>>(x);
 	case sinh_series_id:
-		return std::make_unique<series::sinh_series<T, K>>(x);
+		return std::make_unique<sinh_series<T, K>>(x);
 	case bin_series_id: {
 		T alpha;
 		std::cout << "Enter the value for constant alpha for the bin series: ";
 		std::cin >> alpha;
-		return std::make_unique<series::bin_series<T, K>>(x, alpha);
+		return std::make_unique<bin_series<T, K>>(x, alpha);
 	}
 	case four_arctan_series_id:
-		return std::make_unique<series::four_arctan_series<T, K>>(x);
+		return std::make_unique<four_arctan_series<T, K>>(x);
 	case ln1mx_series_id:
-		return std::make_unique<series::ln1mx_series<T, K>>(x);
+		return std::make_unique<ln1mx_series<T, K>>(x);
 	case mean_sinh_sin_series_id:
-		return std::make_unique<series::mean_sinh_sin_series<T, K>>(x);
+		return std::make_unique<mean_sinh_sin_series<T, K>>(x);
 	case exp_squared_erf_series_id:
-		return std::make_unique<series::exp_squared_erf_series<T, K>>(x);
+		return std::make_unique<exp_squared_erf_series<T, K>>(x);
 	case xmb_Jb_two_series_id: {
 		K b;
 		std::cout << "Enter the value for constant b for the xmb_Jb_two series: ";
 		b = read_input<K>();
-		return std::make_unique<series::xmb_Jb_two_series<T, K>>(x, b);
+		return std::make_unique<xmb_Jb_two_series<T, K>>(x, b);
 	}
 	case half_asin_two_x_series_id:
-		return std::make_unique<series::half_asin_two_x_series<T, K>>(x);
+		return std::make_unique<half_asin_two_x_series<T, K>>(x);
 	case inverse_1mx_series_id:
-		return std::make_unique<series::inverse_1mx_series<T, K>>(x);
+		return std::make_unique<inverse_1mx_series<T, K>>(x);
 	case x_1mx_squared_series_id:
-		return std::make_unique<series::x_1mx_squared_series<T, K>>(x);
+		return std::make_unique<x_1mx_squared_series<T, K>>(x);
 	case erf_series_id:
-		return std::make_unique<series::erf_series<T, K>>(x);
+		return std::make_unique<erf_series<T, K>>(x);
 	case m_fact_1mx_mp1_inverse_series_id: {
 		K m;
 		std::cout << "Enter the value for constant m for the m_fact series: ";
 		m = read_input<K>();
-		return std::make_unique<series::m_fact_1mx_mp1_inverse_series<T, K>>(x, m);
+		return std::make_unique<m_fact_1mx_mp1_inverse_series<T, K>>(x, m);
 	}
 	case inverse_sqrt_1m4x_series_id:
-		return std::make_unique<series::inverse_sqrt_1m4x_series<T, K>>(x);
+		return std::make_unique<inverse_sqrt_1m4x_series<T, K>>(x);
 	case one_twelfth_3x2_pi2_series_id:
-		return std::make_unique<series::one_twelfth_3x2_pi2_series<T, K>>(x);
+		return std::make_unique<one_twelfth_3x2_pi2_series<T, K>>(x);
 	case x_twelfth_x2_pi2_series_id:
-		return std::make_unique<series::x_twelfth_x2_pi2_series<T, K>>(x);
+		return std::make_unique<x_twelfth_x2_pi2_series<T, K>>(x);
 	case ln2_series_id:
-		return std::make_unique<series::ln2_series<T, K>>(x);
+		return std::make_unique<ln2_series<T, K>>(x);
 	case one_series_id:
-		return std::make_unique<series::one_series<T, K>>(x);
+		return std::make_unique<one_series<T, K>>(x);
 	case minus_one_quarter_series_id:
-		return std::make_unique<series::minus_one_quarter_series<T, K>>(x);
+		return std::make_unique<minus_one_quarter_series<T, K>>(x);
 	case pi_3_series_id:
-		return std::make_unique<series::pi_3_series<T, K>>(x);
+		return std::make_unique<pi_3_series<T, K>>(x);
 	case pi_4_series_id:
-		return std::make_unique<series::pi_4_series<T, K>>(x);
+		return std::make_unique<pi_4_series<T, K>>(x);
 	case pi_squared_6_minus_one_series_id:
-		return std::make_unique<series::pi_squared_6_minus_one_series<T, K>>(x);
+		return std::make_unique<pi_squared_6_minus_one_series<T, K>>(x);
 	case three_minus_pi_series_id:
-		return std::make_unique<series::three_minus_pi_series<T, K>>(x);
+		return std::make_unique<three_minus_pi_series<T, K>>(x);
 	case one_twelfth_series_id:
-		return std::make_unique<series::one_twelfth_series<T, K>>(x);
+		return std::make_unique<one_twelfth_series<T, K>>(x);
 	case eighth_pi_m_one_third_series_id:
-		return std::make_unique<series::eighth_pi_m_one_third_series<T, K>>(x);
+		return std::make_unique<eighth_pi_m_one_third_series<T, K>>(x);
 	case one_third_pi_squared_m_nine_series_id:
-		return std::make_unique<series::one_third_pi_squared_m_nine_series<T, K>>(x);
+		return std::make_unique<one_third_pi_squared_m_nine_series<T, K>>(x);
 	case four_ln2_m_3_series_id:
-		return std::make_unique<series::four_ln2_m_3_series<T, K>>(x);
+		return std::make_unique<four_ln2_m_3_series<T, K>>(x);
 	case exp_m_cos_x_sinsin_x_series_id:
-		return std::make_unique<series::exp_m_cos_x_sinsin_x_series<T, K>>(x);
+		return std::make_unique<exp_m_cos_x_sinsin_x_series<T, K>>(x);
 	case pi_four_minus_ln2_halfed_series_id:
-		return std::make_unique<series::pi_four_minus_ln2_halfed_series<T, K>>(x);
+		return std::make_unique<pi_four_minus_ln2_halfed_series<T, K>>(x);
 	case five_pi_twelve_series_id:
-		return std::make_unique<series::five_pi_twelve_series<T, K>>(x);
+		return std::make_unique<five_pi_twelve_series<T, K>>(x);
 	case x_two_series_id:
-		return std::make_unique<series::x_two_series<T, K>>(x);
+		return std::make_unique<x_two_series<T, K>>(x);
 	case pi_six_min_half_series_id:
-		return std::make_unique<series::pi_six_min_half_series<T, K>>(x);
+		return std::make_unique<pi_six_min_half_series<T, K>>(x);
 	case x_two_throught_squares_series_id:
-		return std::make_unique<series::x_two_throught_squares_series<T, K>>(x);
+		return std::make_unique<x_two_throught_squares_series<T, K>>(x);
 	case minus_one_ned_in_n_series_id:
-		return std::make_unique<series::minus_one_ned_in_n_series<T, K>>(x);
+		return std::make_unique<minus_one_ned_in_n_series<T, K>>(x);
 	case minus_one_n_fact_n_in_n_series_id:
-		return std::make_unique<series::minus_one_n_fact_n_in_n_series<T, K>>(x);
+		return std::make_unique<minus_one_n_fact_n_in_n_series<T, K>>(x);
 	case ln_x_plus_one_x_minus_one_halfed_series_id:
-		return std::make_unique<series::ln_x_plus_one_x_minus_one_halfed_series<T, K>>(x);
+		return std::make_unique<ln_x_plus_one_x_minus_one_halfed_series<T, K>>(x);
 	case two_arcsin_square_x_halfed_series_id:
-		return std::make_unique<series::two_arcsin_square_x_halfed_series<T, K>>(x);
+		return std::make_unique<two_arcsin_square_x_halfed_series<T, K>>(x);
 	case pi_squared_twelve_series_id:
-		return std::make_unique<series::pi_squared_twelve_series<T, K>>(x);
+		return std::make_unique<pi_squared_twelve_series<T, K>>(x);
 	case pi_cubed_32_series_id:
-		return std::make_unique<series::pi_cubed_32_series<T, K>>(x);
+		return std::make_unique<pi_cubed_32_series<T, K>>(x);
 	case minus_three_plus_ln3_three_devided_two_plus_two_ln2_series_id:
-		return std::make_unique<series::minus_three_plus_ln3_three_devided_two_plus_two_ln2_series<T, K>>(x);
+		return std::make_unique<minus_three_plus_ln3_three_devided_two_plus_two_ln2_series<T, K>>(x);
 	case two_ln2_series_id:
-		return std::make_unique<series::two_ln2_series<T, K>>(x);
+		return std::make_unique<two_ln2_series<T, K>>(x);
 	case pi_x_multi_e_xpi_plus_e_minusxpi_divided_e_xpi_minus_e_minusxpi_minus_one_series_id:
-		return std::make_unique<series::pi_x_multi_e_xpi_plus_e_minusxpi_divided_e_xpi_minus_e_minusxpi_minus_one_series<T, K>>(x);
+		return std::make_unique<pi_x_multi_e_xpi_plus_e_minusxpi_divided_e_xpi_minus_e_minusxpi_minus_one_series<T, K>>(x);
 	case pi_minus_x_2_series_id:
-		return std::make_unique<series::pi_minus_x_2_series<T, K>>(x);
+		return std::make_unique<pi_minus_x_2_series<T, K>>(x);
 	case half_multi_ln_1div2multi1minuscosx_series_id:
-		return std::make_unique<series::half_multi_ln_1div2multi1minuscosx_series<T, K>>(x);
+		return std::make_unique<half_multi_ln_1div2multi1minuscosx_series<T, K>>(x);
 	case half_minus_sinx_multi_pi_4_series_id:
-		return std::make_unique<series::half_minus_sinx_multi_pi_4_series<T, K>>(x);
+		return std::make_unique<half_minus_sinx_multi_pi_4_series<T, K>>(x);
 	case ln_1plussqrt1plusxsquare_minus_ln_2_series_id:
-		return std::make_unique<series::ln_1plussqrt1plusxsquare_minus_ln_2_series<T, K>>(x);
+		return std::make_unique<ln_1plussqrt1plusxsquare_minus_ln_2_series<T, K>>(x);
 	case ln_cosx_series_id:
-		return std::make_unique<series::ln_cosx_series<T, K>>(x);
+		return std::make_unique<ln_cosx_series<T, K>>(x);
 	case ln_sinx_minus_ln_x_series_id:
-		return std::make_unique<series::ln_sinx_minus_ln_x_series<T, K>>(x);
+		return std::make_unique<ln_sinx_minus_ln_x_series<T, K>>(x);
 	case pi_8_cosx_square_minus_1_div_3_cosx_series_id:
-		return std::make_unique<series::pi_8_cosx_square_minus_1_div_3_cosx_series<T, K>>(x);
+		return std::make_unique<pi_8_cosx_square_minus_1_div_3_cosx_series<T, K>>(x);
 	case sqrt_oneminussqrtoneminusx_div_x_series_id:
-		return std::make_unique<series::sqrt_oneminussqrtoneminusx_div_x_series<T, K>>(x);
+		return std::make_unique<sqrt_oneminussqrtoneminusx_div_x_series<T, K>>(x);
 	case one_minus_sqrt_1minus4x_div_2x_series_id:
-		return std::make_unique<series::one_minus_sqrt_1minus4x_div_2x_series<T, K>>(x);
+		return std::make_unique<one_minus_sqrt_1minus4x_div_2x_series<T, K>>(x);
 	case arcsin_x_minus_x_series_id:
-		return std::make_unique<series::arcsin_x_minus_x_series<T, K>>(x);
+		return std::make_unique<arcsin_x_minus_x_series<T, K>>(x);
 	case pi_x_minus_x_square_and_x_square_minus_three_pi_x_plus_two_pi_square_series_id:
-		return std::make_unique<series::pi_x_minus_x_square_and_x_square_minus_three_pi_x_plus_two_pi_square_series<T, K>>(x);
+		return std::make_unique<pi_x_minus_x_square_and_x_square_minus_three_pi_x_plus_two_pi_square_series<T, K>>(x);
 	case abs_sin_x_minus_2_div_pi_series_id:
-		return std::make_unique<series::abs_sin_x_minus_2_div_pi_series<T, K>>(x);
+		return std::make_unique<abs_sin_x_minus_2_div_pi_series<T, K>>(x);
 	case pi_minus_3pi_4_and_pi_minus_x_minus_3pi_4_series_id:
-		return std::make_unique<series::pi_minus_3pi_4_and_pi_minus_x_minus_3pi_4_series<T, K>>(x);
+		return std::make_unique<pi_minus_3pi_4_and_pi_minus_x_minus_3pi_4_series<T, K>>(x);
 	case minus_3_div_4_or_x_minus_3_div_4_series_id:
-		return std::make_unique<series::minus_3_div_4_or_x_minus_3_div_4_series<T, K>>(x);
+		return std::make_unique<minus_3_div_4_or_x_minus_3_div_4_series<T, K>>(x);
 	case ten_minus_x_series_id:
-		return std::make_unique<series::ten_minus_x_series<T, K>>(x);
+		return std::make_unique<ten_minus_x_series<T, K>>(x);
 	case x_series_id:
-		return std::make_unique<series::x_series<T, K>>(x);
+		return std::make_unique<x_series<T, K>>(x);
 	case minus_x_minus_pi_4_or_minus_pi_4_series_id:
-		return std::make_unique<series::minus_x_minus_pi_4_or_minus_pi_4_series<T, K>>(x);
+		return std::make_unique<minus_x_minus_pi_4_or_minus_pi_4_series<T, K>>(x);
 	case one_div_two_minus_x_multi_three_plus_x_series_id:
-		return std::make_unique<series::one_div_two_minus_x_multi_three_plus_x_series<T, K>>(x);
+		return std::make_unique<one_div_two_minus_x_multi_three_plus_x_series<T, K>>(x);
 	case Si_x_series_id:
-		return std::make_unique<series::Si_x_series<T, K>>(x);
+		return std::make_unique<Si_x_series<T, K>>(x);
 	case Ci_x_series_id:
-		return std::make_unique<series::Ci_x_series<T, K>>(x);
+		return std::make_unique<Ci_x_series<T, K>>(x);
 	case Riemann_zeta_func_series_id:
-		return std::make_unique<series::Riemann_zeta_func_series<T, K>>(x);
+		return std::make_unique<Riemann_zeta_func_series<T, K>>(x);
 	case Riemann_zeta_func_xmin1_div_Riemann_zeta_func_x_series_id:
-		return std::make_unique<series::Riemann_zeta_func_xmin1_div_Riemann_zeta_func_x_series<T, K>>(x);
+		return std::make_unique<Riemann_zeta_func_xmin1_div_Riemann_zeta_func_x_series<T, K>>(x);
 	case xsquareplus3_div_xsquareplus2multix_minus_1_series_id:
-		return std::make_unique<series::xsquareplus3_div_xsquareplus2multix_minus_1_series<T, K>>(x);
+		return std::make_unique<xsquareplus3_div_xsquareplus2multix_minus_1_series<T, K>>(x);
 	case arcsin_x_series_id:
-		return std::make_unique<series::arcsin_x_series<T, K>>(x);
+		return std::make_unique<arcsin_x_series<T, K>>(x);
 	case arctg_x_series_id:
-		return std::make_unique<series::arctg_x_series<T, K>>(x);
+		return std::make_unique<arctg_x_series<T, K>>(x);
 	case K_x_series_id:
-		return std::make_unique<series::K_x_series<T, K>>(x);
+		return std::make_unique<K_x_series<T, K>>(x);
 	case E_x_series_id:
-		return std::make_unique<series::E_x_series<T, K>>(x);
+		return std::make_unique<E_x_series<T, K>>(x);
 	case sqrt_1plusx_series_id:
-		return std::make_unique<series::sqrt_1plusx_series<T, K>>(x);
+		return std::make_unique<sqrt_1plusx_series<T, K>>(x);
 	case Lambert_W_func_series_id:
-		return std::make_unique<series::Lambert_W_func_series<T, K>>(x);
+		return std::make_unique<Lambert_W_func_series<T, K>>(x);
 	case Incomplete_Gamma_func_series_id: {
 		T s;
 		std::cout << "Enter the value for constant s for the Incomplete Gamma series: ";
 		std::cin >> s;
-		return std::make_unique<series::Incomplete_Gamma_func_series<T, K>>(x, s);
+		return std::make_unique<Incomplete_Gamma_func_series<T, K>>(x, s);
 	}
 	case Series_with_ln_number1_series_id:
-		return std::make_unique<series::Series_with_ln_number1_series<T, K>>(x);
+		return std::make_unique<Series_with_ln_number1_series<T, K>>(x);
 	case Series_with_ln_number2_series_id:
-		return std::make_unique<series::Series_with_ln_number2_series<T, K>>(x);
+		return std::make_unique<Series_with_ln_number2_series<T, K>>(x);
 	case pi_series_id:
-		return std::make_unique<series::pi_series<T, K>>(x);
+		return std::make_unique<pi_series<T, K>>(x);
 	case x_min_sqrt_x_series_id:
-		return std::make_unique<series::x_min_sqrt_x_series<T, K>>(x);
+		return std::make_unique<x_min_sqrt_x_series<T, K>>(x);
 	case arctan_x2_series_id:
-		return std::make_unique<series::arctan_x2_series<T, K>>(x);
+		return std::make_unique<arctan_x2_series<T, K>>(x);
 	case ln1px4_series_id:
-		return std::make_unique<series::ln1px4_series<T, K>>(x);
+		return std::make_unique<ln1px4_series<T, K>>(x);
 	case sin_x2_series_id:
-		return std::make_unique<series::sin_x2_series<T, K>>(x);
+		return std::make_unique<sin_x2_series<T, K>>(x);
 	case arctan_x3_series_id:
-		return std::make_unique<series::arctan_x3_series<T, K>>(x);
+		return std::make_unique<arctan_x3_series<T, K>>(x);
 	case arcsin_x2_series_id:
-		return std::make_unique<series::arcsin_x2_series<T, K>>(x);
+		return std::make_unique<arcsin_x2_series<T, K>>(x);
 	case ln1_m_x2_series_id:
-		return std::make_unique<series::ln1_m_x2_series<T, K>>(x);
+		return std::make_unique<ln1_m_x2_series<T, K>>(x);
 	case artanh_x_series_id:
-		return std::make_unique<series::artanh_x_series<T, K>>(x);
+		return std::make_unique<artanh_x_series<T, K>>(x);
 	case arcsinh_x_series_id:
-		return std::make_unique<series::arcsinh_x_series<T, K>>(x);
+		return std::make_unique<arcsinh_x_series<T, K>>(x);
 	case cos_x2_series_id:
-		return std::make_unique<series::cos_x2_series<T, K>>(x);
+		return std::make_unique<cos_x2_series<T, K>>(x);
 	case sinh_x2_series_id:
-		return std::make_unique<series::sinh_x2_series<T, K>>(x);
+		return std::make_unique<sinh_x2_series<T, K>>(x);
 	case arctanh_x2_series_id:
-		return std::make_unique<series::arctanh_x2_series<T, K>>(x);
+		return std::make_unique<arctanh_x2_series<T, K>>(x);
 	case cos3xmin1_div_xsqare_series_id:
-		return std::make_unique<series::cos3xmin1_div_xsqare_series<T, K>>(x);
+		return std::make_unique<cos3xmin1_div_xsqare_series<T, K>>(x);
 	case two_degree_x_series_id:
-		return std::make_unique<series::two_degree_x_series<T, K>>(x);
+		return std::make_unique<two_degree_x_series<T, K>>(x);
 	case sqrt_1plusx_min_1_min_x_div_2_series_id:
-		return std::make_unique<series::sqrt_1plusx_min_1_min_x_div_2_series<T, K>>(x);
+		return std::make_unique<sqrt_1plusx_min_1_min_x_div_2_series<T, K>>(x);
 	case ln13_min_ln7_div_7_series_id:
-		return std::make_unique<series::ln13_min_ln7_div_7_series<T, K>>(x);
+		return std::make_unique<ln13_min_ln7_div_7_series<T, K>>(x);
 	case Ja_x_series_id: {
 		T a;
 		std::cout << "Enter the value for constant a for the Ja_x series: ";
 		std::cin >> a;
-		return std::make_unique<series::Ja_x_series<T, K>>(x, a);
+		return std::make_unique<Ja_x_series<T, K>>(x, a);
 	}
 	case one_div_sqrt2_sin_xdivsqrt2_series_id:
-		return std::make_unique<series::one_div_sqrt2_sin_xdivsqrt2_series<T, K>>(x);
+		return std::make_unique<one_div_sqrt2_sin_xdivsqrt2_series<T, K>>(x);
 	case ln_1plusx_div_1plusx2_series_id:
-		return std::make_unique<series::ln_1plusx_div_1plusx2_series<T, K>>(x);
+		return std::make_unique<ln_1plusx_div_1plusx2_series<T, K>>(x);
 	case cos_sqrt_x_series_id:
-		return std::make_unique<series::cos_sqrt_x_series<T, K>>(x);
+		return std::make_unique<cos_sqrt_x_series<T, K>>(x);
 	case ln_1_plus_x3_series_id:
-		return std::make_unique<series::ln_1_plus_x3_series<T, K>>(x);
+		return std::make_unique<ln_1_plus_x3_series<T, K>>(x);
 	case x_div_1minx_series_id:
-		return std::make_unique<series::x_div_1minx_series<T, K>>(x);
+		return std::make_unique<x_div_1minx_series<T, K>>(x);
 	case x_div_1minx2_series_id:
-		return std::make_unique<series::x_div_1minx2_series<T, K>>(x);
+		return std::make_unique<x_div_1minx2_series<T, K>>(x);
 	case gamma_series_id: {
 		T t;
 		std::cout << "Enter the parameter t for the gamma series: ";
 		std::cin >> t;
-		return std::make_unique<series::gamma_series<T, K>>(t, x);
+		return std::make_unique<gamma_series<T, K>>(t, x);
 	}
 
 	default: throw std::domain_error("Series not implemented");
@@ -1474,7 +1366,7 @@ inline static void main_testing_function()
 {
 	//choosing series
 	print_series_info();
-	std::unique_ptr<series::series_base<T, K>> series;
+	std::unique_ptr<series_base<T, K>> series;
 	K series_id = read_input<K>();
 
 	//choosing x

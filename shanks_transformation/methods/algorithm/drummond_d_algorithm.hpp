@@ -28,7 +28,7 @@
   * - Osada, N. (1993). Acceleration Methods for Slowly Convergent Sequences and Their Applications.
   * - Sidi, A. (2003). Practical Extrapolation Methods: Theory and Applications.
   *
-  * @tparam T Floating-point type for series elements (must satisfy FloatLike)
+  * @tparam T Floating-point type for series elements (must satisfy Accepted)
   *           Represents numerical precision (float, double, long double)
   *           Used for all mathematical computations and storage
   * @tparam K Unsigned integral type for indices and order (must satisfy std::unsigned_integral)
@@ -40,7 +40,7 @@
   *           - T minus_one_raised_to_power_n(K n) const: returns (-1)^n
   *           - T binomial_coefficient(T n, K k) const: returns binomial coefficient C(n, k)
   */
-template<FloatLike T, std::unsigned_integral K, typename series_templ>
+template<Accepted T, std::unsigned_integral K, typename series_templ>
 class drummond_d_algorithm final : public series_acceleration<T, K, series_templ>
 {
 protected:
@@ -127,7 +127,7 @@ public:
 
 };
 
-template<FloatLike T, std::unsigned_integral K, typename series_templ>
+template<Accepted T, std::unsigned_integral K, typename series_templ>
 inline T drummond_d_algorithm<T,K,series_templ>::calc_result(const K n, const K order) const {
 
     using std::isfinite;
@@ -155,7 +155,7 @@ inline T drummond_d_algorithm<T,K,series_templ>::calc_result(const K n, const K 
 	return numerator;
 }
 
-template<FloatLike T, std::unsigned_integral K, typename series_templ>
+template<Accepted T, std::unsigned_integral K, typename series_templ>
 inline T drummond_d_algorithm<T,K,series_templ>::calc_result_rec(const K n, const K order) const {
 
     using std::isfinite;
@@ -189,7 +189,7 @@ inline T drummond_d_algorithm<T,K,series_templ>::calc_result_rec(const K n, cons
 	return Num[0];
 }
 
-template<FloatLike T, std::unsigned_integral K, typename series_templ>
+template<Accepted T, std::unsigned_integral K, typename series_templ>
 drummond_d_algorithm<T,K,series_templ>::drummond_d_algorithm(
 	const series_templ& series, 
 	const remainder_type variant, 
@@ -223,7 +223,7 @@ drummond_d_algorithm<T,K,series_templ>::drummond_d_algorithm(
     }
 }
 
-template<FloatLike T, std::unsigned_integral K, typename series_templ>
+template<Accepted T, std::unsigned_integral K, typename series_templ>
 T drummond_d_algorithm<T,K,series_templ>::operator()(const K n, const K order) const {
 
     using std::isfinite;

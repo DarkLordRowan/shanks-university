@@ -11,7 +11,7 @@
 #include <type_traits>
 #include <string>
 
-#include "series.h"
+#include "series.hpp"
 #include "methods.hpp"
 
 #include <math.h>
@@ -19,7 +19,6 @@
 #include "libs/arbitrary_arithmetics/fprecision.h"
 #include "libs/arbitrary_arithmetics/precisioncore.cpp"
 
-using namespace series;
 namespace py = pybind11;
 
 template <typename T>
@@ -89,7 +88,7 @@ static void copy_iterable_to_storage(py::object obj, std::vector<T>& storage, py
 }
 
 template <typename T, std::unsigned_integral K>
-class array_series : public series::series_base<T,K> {
+class array_series : public series_base<T,K> {
 public:
     array_series() = delete;
     explicit array_series(py::buffer buffer);

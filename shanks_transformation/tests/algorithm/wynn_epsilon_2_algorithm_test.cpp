@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "series.h"
+#include "series.hpp"
 #include "methods/algorithm/wynn_epsilon_2_algorithm.hpp"
 
 TEST(wynn_epsilon_2_algorithm, HapyPath)
@@ -8,8 +8,8 @@ TEST(wynn_epsilon_2_algorithm, HapyPath)
     using K = unsigned;
     using T = double;
 
-    const series::exp_series<T, K> series(0.5);
-    using SeriesTempl = const series::series_base<T, K>*;
+    const exp_series<T, K> series(0.5);
+    using SeriesTempl = const series_base<T, K>*;
     const SeriesTempl p = &series;
     const wynn_epsilon_2_algorithm<T, K, SeriesTempl> algo(p);
 

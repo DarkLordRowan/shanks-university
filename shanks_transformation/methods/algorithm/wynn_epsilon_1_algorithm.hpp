@@ -31,7 +31,7 @@
  *   slowly convergent series based on the use of rational functions.
  *   Numerische Mathematik, 4(1), 8-14.
  *
- * @tparam T Floating-point type for series elements (must satisfy FloatLike)
+ * @tparam T Floating-point type for series elements (must satisfy Accepted)
  *           Represents numerical precision (float, double, long double)
  * @tparam K Unsigned integral type for indices and order (must satisfy std::unsigned_integral)
  *           Used for counting and indexing operations (e.g., size_t, unsigned int)
@@ -39,7 +39,7 @@
  *           - T operator()(K n) const: returns the n-th series term a_n
  *           - T S_n(K n) const: returns the n-th partial sum s_n = a_0 + ... + a_n
  */
-template <FloatLike T, std::unsigned_integral K, typename series_templ>
+template <Accepted T, std::unsigned_integral K, typename series_templ>
 class wynn_epsilon_1_algorithm final : public series_acceleration<T, K, series_templ>
 {
 public:
@@ -75,10 +75,10 @@ public:
     T operator()(K n, K order) const override;
 };
 
-template <FloatLike T, std::unsigned_integral K, typename series_templ>
+template <Accepted T, std::unsigned_integral K, typename series_templ>
 wynn_epsilon_1_algorithm<T, K, series_templ>::wynn_epsilon_1_algorithm(const series_templ& series) : series_acceleration<T, K, series_templ>(series) {}
 
-template <FloatLike T, std::unsigned_integral K, typename series_templ>
+template <Accepted T, std::unsigned_integral K, typename series_templ>
 T wynn_epsilon_1_algorithm<T, K, series_templ>::operator()(const K n, const K order) const
 {
 

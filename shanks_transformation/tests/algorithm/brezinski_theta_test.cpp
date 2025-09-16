@@ -3,7 +3,7 @@
 #include <math.h>
 #include "libs/arbitrary_arithmetics/precisioncore.cpp"
 
-#include "series.h"
+#include "series.hpp"
 #include "methods/algorithm/brezinski_theta_algorithm.hpp"
 
 TEST(brezinski_theta_algorithm, HapyPath)
@@ -11,8 +11,8 @@ TEST(brezinski_theta_algorithm, HapyPath)
     using K = unsigned;
     using T = double;
 
-    const series::exp_series<T, K> series(0.5);
-    using SeriesTempl = const series::series_base<T, K>*;
+    const exp_series<T, K> series(0.5);
+    using SeriesTempl = const series_base<T, K>*;
     const SeriesTempl p = &series;
     const brezinski_theta_algorithm<T, K, SeriesTempl> algo(p);
 

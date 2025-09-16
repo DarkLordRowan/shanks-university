@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "series.h"
+#include "series.hpp"
 #include "methods/algorithm/lubkin_w_algorithm.hpp"
 
 TEST(lubkin_w_algorithm, HapyPath)
@@ -8,8 +8,8 @@ TEST(lubkin_w_algorithm, HapyPath)
     using K = unsigned;
     using T = double;
 
-    const series::exp_series<T, K> series(0.5);
-    using SeriesTempl = const series::series_base<T, K>*;
+    const exp_series<T, K> series(0.5);
+    using SeriesTempl = const series_base<T, K>*;
     const SeriesTempl p = &series;
     const lubkin_w_algorithm<T, K, SeriesTempl> algo(p);
 

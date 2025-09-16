@@ -27,7 +27,7 @@
   *
   * Template Parameters:
   * @tparam T Floating-point type for series elements and computations.
-  *           Must satisfy FloatLike. Represents numerical precision (float, double, long double).
+  *           Must satisfy Accepted. Represents numerical precision (float, double, long double).
   *           Determines the precision of all arithmetic operations and storage.
   * @tparam K Unsigned integral type for indices, counts, and sizes.
   *           Must satisfy std::unsigned_integral. Used for indexing terms, table sizes, and loop counters.
@@ -37,7 +37,7 @@
   *           - T S_n(K n) const: returns the n-th partial sum sₙ = a₀ + ... + aₙ
   *           The series object encapsulates the sequence whose convergence is to be accelerated.
   */
-template <FloatLike T, std::unsigned_integral K, typename series_templ>
+template <Accepted T, std::unsigned_integral K, typename series_templ>
 class wynn_epsilon_3_algorithm final : public series_acceleration<T, K, series_templ>
 {
 private:
@@ -82,7 +82,7 @@ public:
 };
 
 // Constructor implementation
-template <FloatLike T, std::unsigned_integral K, typename series_templ>
+template <Accepted T, std::unsigned_integral K, typename series_templ>
 wynn_epsilon_3_algorithm<T, K, series_templ>::wynn_epsilon_3_algorithm(
     const series_templ& series,
     const T epsilon_threshold_
@@ -92,7 +92,7 @@ wynn_epsilon_3_algorithm<T, K, series_templ>::wynn_epsilon_3_algorithm(
 {}
 
 // Algorithm implementation
-template <FloatLike T, std::unsigned_integral K, typename series_templ>
+template <Accepted T, std::unsigned_integral K, typename series_templ>
 T wynn_epsilon_3_algorithm<T, K, series_templ>::operator()(const K n, const K order) const {
 
     using std::isfinite;

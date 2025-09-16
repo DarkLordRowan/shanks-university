@@ -31,7 +31,7 @@
  * - Osada, N. (1992). A method for obtaining sequence transformations.
  * - Sidi, A. (2003). Practical Extrapolation Methods: Theory and Applications. (Chapter 15.4)
  *
- * @tparam T Floating-point type for series elements (must satisfy FloatLike)
+ * @tparam T Floating-point type for series elements (must satisfy Accepted)
  *           Represents numerical precision (float, double, long double)
  *           Determines the arithmetic precision of all computations
  * @tparam K Unsigned integral type for indices and order (must satisfy std::unsigned_integral)
@@ -42,7 +42,7 @@
  *           - T S_n(K n) const: returns the n-th partial sum s_n = a_0 + ... + a_n
  *           Represents the mathematical series to be accelerated
  */
-template<FloatLike T, std::unsigned_integral K, typename series_templ>
+template<Accepted T, std::unsigned_integral K, typename series_templ>
 class lubkin_w_algorithm final : public series_acceleration<T, K, series_templ>
 {
 protected:
@@ -97,13 +97,13 @@ public:
 	T operator()(K n, K order) const override;
 };
 
-template<FloatLike T, std::unsigned_integral K, typename series_templ>
+template<Accepted T, std::unsigned_integral K, typename series_templ>
 T lubkin_w_algorithm<T, K, series_templ>::operator()(const K n, const K order) const {
 
 	return calculate(n, order);
 }
 
-template<FloatLike T, std::unsigned_integral K, typename series_templ>
+template<Accepted T, std::unsigned_integral K, typename series_templ>
 T lubkin_w_algorithm<T, K, series_templ>::calculate(K n, const K order) const {
 
 	using std::isfinite;

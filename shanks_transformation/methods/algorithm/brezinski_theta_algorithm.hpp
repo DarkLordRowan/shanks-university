@@ -32,7 +32,7 @@
  * - Weniger, E. J. (2003). Nonlinear Sequence Transformations for the Acceleration of
  *   Convergence and the Summation of Divergent Series.
  *
- * @tparam T Floating-point type for series elements (must satisfy FloatLike)
+ * @tparam T Floating-point type for series elements (must satisfy Accepted)
  *           Represents numerical precision (float, double, long double)
  *           Used for all mathematical computations and storage of series terms
  * @tparam K Unsigned integral type for indices and order (must satisfy std::unsigned_integral)
@@ -41,7 +41,7 @@
  *           - T operator()(K n) const: returns the n-th series term a_n
  *           - T S_n(K n) const: returns the n-th partial sum s_n = a_0 + ... + a_n
  */
-template <FloatLike T, std::unsigned_integral K, typename series_templ>
+template <Accepted T, std::unsigned_integral K, typename series_templ>
 class brezinski_theta_algorithm final : public series_acceleration<T, K, series_templ>
 {
 protected:
@@ -103,7 +103,7 @@ public:
 };
 
 
-template <FloatLike T, std::unsigned_integral K, typename series_templ>
+template <Accepted T, std::unsigned_integral K, typename series_templ>
 T brezinski_theta_algorithm<T, K, series_templ>::calculate(K n, const K order) const {
 
     using std::isfinite;
@@ -162,7 +162,7 @@ T brezinski_theta_algorithm<T, K, series_templ>::calculate(K n, const K order) c
     return theta_even[0];
 }
 
-template <FloatLike T, std::unsigned_integral K, typename series_templ>
+template <Accepted T, std::unsigned_integral K, typename series_templ>
 T brezinski_theta_algorithm<T, K, series_templ>::operator()(const K n, const K order) const{
 
     // For theory, see: Brezinski (2003), Section 10.2, Theorem 10.2.1

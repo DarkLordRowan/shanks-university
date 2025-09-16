@@ -31,7 +31,7 @@
  *   Construction of new generalizations of Wynn's epsilon and rho algorithm by solving
  *   finite difference equations in the transformation order. Numerical Algorithms.
  *
- * @tparam T Floating-point type for series elements (must satisfy FloatLike)
+ * @tparam T Floating-point type for series elements (must satisfy Accepted)
  *           Represents numerical precision (float, double, long double)
  *           Purpose: To handle the numerical computations with desired precision.
  *           Valid values: Any standard floating-point type (float, double, long double).
@@ -45,7 +45,7 @@
  *           Purpose: To abstract the series representation, allowing flexibility (e.g., user-defined series).
  *           Valid values: Any type meeting the above requirements.
  */
-template <FloatLike T, std::unsigned_integral K, typename series_templ>
+template <Accepted T, std::unsigned_integral K, typename series_templ>
 class chang_wynn_algorithm final : public series_acceleration<T, K, series_templ>
 {
 public:
@@ -80,7 +80,7 @@ public:
 	T operator()(K n, K order) const override;
 };
 
-template <FloatLike T, std::unsigned_integral K, typename series_templ>
+template <Accepted T, std::unsigned_integral K, typename series_templ>
 T chang_wynn_algorithm<T, K, series_templ>::operator()(const K n, const K order) const {
 
     using std::isfinite;
