@@ -7,6 +7,8 @@
 
 #include "series.h"
 #include "methods.hpp"
+#include "series/series_all.hpp"
+
 
 namespace py = pybind11;
 

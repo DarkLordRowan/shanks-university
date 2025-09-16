@@ -14,6 +14,7 @@
 #include "methods/remainders.hpp"
 #include "series.h"
 #include "test_functions.h"
+#include "series/series_all.hpp"
 
  /**
   * @brief Enum of series IDs
