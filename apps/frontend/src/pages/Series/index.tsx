@@ -1,6 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { SERIES } from "../../data/series";
+import { FormulaBadge } from "./components/FormulaBadge.tsx";
 
 const SeriesList: React.FC = () => {
     const [q, setQ] = React.useState("");
@@ -34,21 +35,36 @@ const SeriesList: React.FC = () => {
             </div>
 
             {/* list */}
-            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                 {filtered.map((row) => {
+                    const href = `/series/${row.id}`;
                     return (
-                        <div key={row.id} className="rounded-xl2 border border-border/60 bg-panel/60 p-3">
-                            <div className="mb-1 flex items-center justify-between gap-2">
-                                <Link to={`/series/${row.id}`} className="font-semibold text-white hover:underline">
-                                    {row.title}
-                                </Link>
-                                <code className="rounded bg-surface/40 px-2 py-[2px] text-[11px] text-textDim">{row.id}</code>
+                        <Link
+                            key={row.id}
+                            to={href}
+                            className="group block rounded-2xl border border-border/60 bg-panel/60 p-3 transition
+                            hover:border-primary/50 hover:bg-panel/70 hover:shadow-[0_6px_24px_rgba(0,0,0,0.25)]"
+                        >
+                            <div className="mb-2 flex items-center justify-between">
+                                <code className="rounded-md bg-surface/40 px-2 py-[2px] text-[11px] text-textDim">
+                                    {row.id}
+                                </code>
                             </div>
-                            {row.subtitle && <div className="text-sm text-textDim">{row.subtitle}</div>}
+                            <div className="mb-3">
+                                <FormulaBadge latex={row.title}/>
+                            </div>
+                            {row.subtitle && (
+                                <div className="text-sm text-textDim">{row.subtitle}</div>
+                            )}
                             <div className="mt-3">
-                                <Link to={`/series/${row.id}`} className="btn">Открыть</Link>
+                                <span
+                                    className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm
+                                    font-medium text-black transition group-hover:translate-x-[2px]"
+                                >
+                                    Открыть
+                                </span>
                             </div>
-                        </div>
+                        </Link>
                     );
                 })}
             </div>
