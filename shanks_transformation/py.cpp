@@ -6,8 +6,8 @@
 #include <pybind11/numpy.h>
 
 #include "series.hpp"
-#include "methods.hpp"
 #include "series/series_base.hpp"
+#include "methods.hpp"
 
 
 namespace py = pybind11;

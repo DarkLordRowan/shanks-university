@@ -108,7 +108,6 @@
  * @brief This file contains series base class, recurrent_series_base class and derived classes of various serieses (e.g. exp(x), ch(x))
  */
 
-
 enum series_id_t {
 	null_series_id,
 	exp_series_id,

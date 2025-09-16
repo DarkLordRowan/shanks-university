@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "../../series/serieses/exp_series.hpp"
+#include "series.hpp"
 #include "methods/algorithm/levin_algorithm.hpp"
 
 TEST(levin_algorithm, HapyPath)

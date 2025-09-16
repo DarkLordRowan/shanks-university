@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "../../series/serieses/exp_series.hpp"
+#include "series.hpp"
 #include "methods/algorithm/ford_sidi_3_algorithm.hpp"
 
 TEST(ford_sidi_3_algorithm, HapyPath)
