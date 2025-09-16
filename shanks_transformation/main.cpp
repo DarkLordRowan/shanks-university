@@ -20,6 +20,7 @@ int main()
 	while(true){
 		try
 		{
+			float_precision_ctrl.precision(50);
 			main_testing_function<float_precision, unsigned long long int >();
 			//main_testing_function<long double, unsigned long long int>();
 			//main_testing_function<double, unsigned int>();

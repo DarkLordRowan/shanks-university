@@ -1181,7 +1181,7 @@ namespace series{
 	};
 
 	template <FloatLike T, std::unsigned_integral K>
-	inverse_1mx_series<T, K>::inverse_1mx_series(T x) : series_base<T, K>(x, 1 / (1 - x))
+	inverse_1mx_series<T, K>::inverse_1mx_series(T x) : series_base<T, K>(x, static_cast<T>(1) / (static_cast<T>(1) - x))
 	{
 		this->series_name = "1/(1-x)";
 		// Сходится при |x| < 1 (геометрический ряд)
@@ -4710,7 +4710,7 @@ namespace series{
 	};
 
 	template <FloatLike T, std::unsigned_integral K>
-	ln1px4_series<T, K>::ln1px4_series(T x) : series_base<T, K>(x, log(1 + pow(x, static_cast<T>(4))))
+	ln1px4_series<T, K>::ln1px4_series(T x) : series_base<T, K>(x, log(static_cast<T>(1) + pow(x, static_cast<T>(4))))
 	{
 		this->series_name = "ln(1+x⁴)";
 		// Сходится при |x| ≤ 1 (ряд для ln(1+z) сходится при |z| ≤ 1, где z = x⁴)
@@ -4905,7 +4905,7 @@ namespace series{
 	};
 
 	template <FloatLike T, std::unsigned_integral K>
-	ln1_m_x2_series<T, K>::ln1_m_x2_series(T x) : series_base<T, K>(x, log(1 - x * x))
+	ln1_m_x2_series<T, K>::ln1_m_x2_series(T x) : series_base<T, K>(x, log(static_cast<T>(1) - x * x))
 	{
 		this->series_name = "ln(1-x²)";
 		// Сходится при |x| < 1 (ряд для ln(1-z) сходится при |z| < 1, где z = x²)
@@ -5293,7 +5293,7 @@ namespace series{
 	};
 
 	template <FloatLike T, std::unsigned_integral K>
-	sqrt_1plusx_min_1_min_x_div_2_series<T, K>::sqrt_1plusx_min_1_min_x_div_2_series(T x) : series_base<T, K>(x, sqrt(1 + x) - static_cast<T>(1) - static_cast<T>(0.5)*x)
+	sqrt_1plusx_min_1_min_x_div_2_series<T, K>::sqrt_1plusx_min_1_min_x_div_2_series(T x) : series_base<T, K>(x, sqrt(static_cast<T>(1) + x) - static_cast<T>(1) - static_cast<T>(0.5)*x)
 	{
 		this->series_name = "√(1+x)-1-x/2";
 		// Сходится при |x| ≤ 1 (биномиальный ряд, абсолютно при |x| < 1, условно при x = -1)

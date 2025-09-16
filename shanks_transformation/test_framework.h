@@ -14,6 +14,10 @@
 	#include "libs/arbitrary_arithmetics/fprecision.h"
 #endif
 
+#ifndef INC_COMPLEXPRECISION
+	#include "libs/arbitrary_arithmetics/complexprecision.h"
+#endif
+
 #include "methods.hpp"
 #include "series.h"
 #include "test_functions.h"
