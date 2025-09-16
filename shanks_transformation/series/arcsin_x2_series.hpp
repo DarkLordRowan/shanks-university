@@ -1,0 +1,48 @@
+
+/**
+* @brief Maclaurin series of function arcsin(x^2)
+* @authors Pavlova A.R.
+* @tparam T The type of the elements in the series, K The type of enumerating integer
+*/
+template <std::floating_point T, std::unsigned_integral K>
+class arcsin_x2_series : public series_base<T, K>
+{
+public:
+    arcsin_x2_series() = delete;
+
+    /**
+    * @brief Parameterized constructor to initialize the series with function argument and sum
+    * @authors Pavlova A.R.
+    * @param x The argument for function series
+    * @tparam T The type of the elements in the series, K The type of enumerating integer
+    */
+    arcsin_x2_series(T x);
+
+    /**
+    * @brief Computes the nth term of the arcsinx2 series
+    * @authors Pavlova A.R.
+    * @param n The number of the term
+    * @tparam T The type of the elements in the series, K The type of enumerating integer
+    * @return nth term of the arcsinx2 series
+    */
+    [[nodiscard]] constexpr virtual T operator()(K n) const;
+};
+
+template <std::floating_point T, std::unsigned_integral K>
+arcsin_x2_series<T, K>::arcsin_x2_series(T x) : series_base<T, K>(x, std::asin(x* x))
+{
+    this->series_name = "arcsin(x²)";
+    // Сходится при |x| ≤ 1 (ряд для arcsin(z) сходится при |z| ≤ 1, где z = x²)
+    // Расходится при |x| > 1
+
+    if (std::abs(x) > static_cast <T>(1) || !std::isfinite(x)) {
+        this->throw_domain_error("|x| must be ≤ 1");
+    }
+}
+
+template <std::floating_point T, std::unsigned_integral K>
+constexpr T arcsin_x2_series<T, K>::operator()(K n) const
+{
+    const K a = static_cast<K>(std::fma(static_cast <K>(2), n, static_cast <K>(1)));
+    return static_cast<T>((this->fact(a - static_cast <K>(1)) * std::pow(this->x, static_cast <K>(2) * a)) / (std::pow(static_cast <K>(4), n) * std::pow(this->fact(n), static_cast <K>(2)) * a)); // (84.1) [Rows.pdf]
+}
