@@ -32,7 +32,7 @@
       "name": "ShanksTransformAlternatingAlgorithm",
       "n": {
         "start": 1,
-        "stop": 11,
+        "stop": 50,
         "step": 1
       },
       "m": {
@@ -46,7 +46,7 @@
       "name": "LevinAlgorithm",
       "n": {
         "start": 1,
-        "stop": 11,
+        "stop": 50,
         "step": 1
       },
       "m": [8],
