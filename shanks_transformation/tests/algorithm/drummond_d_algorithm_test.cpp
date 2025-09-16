@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "../../series/serieses/exp_series.hpp"
+#include "series.hpp"
 #include "methods/algorithm/drummond_d_algorithm.hpp"
 
 TEST(drummond_d_algorithm, HapyPath)

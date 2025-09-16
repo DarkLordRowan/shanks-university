@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "../../series/serieses/exp_series.hpp"
+#include "series.hpp"
 #include "methods/algorithm/wynn_epsilon_2_algorithm.hpp"
 
 TEST(wynn_epsilon_2_algorithm, HapyPath)
