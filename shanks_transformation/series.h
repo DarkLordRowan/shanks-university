@@ -127,6 +127,7 @@ template <std::floating_point T, std::unsigned_integral K>
 class series_base
 {
 public:
+	virtual ~series_base() = default;
 
 	/**
 	* @brief Parameterized constructor to initialize the series with function argument

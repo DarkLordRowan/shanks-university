@@ -7,7 +7,7 @@
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
 template <std::floating_point T, std::unsigned_integral K>
-class Ja_x_series : public series_base<T, K>
+class Ja_x_series final : public series_base<T, K>
 {
 public:
     Ja_x_series() = delete;

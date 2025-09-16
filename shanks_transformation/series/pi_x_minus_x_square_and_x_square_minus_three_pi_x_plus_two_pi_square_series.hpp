@@ -8,7 +8,7 @@
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
 template <std::floating_point T, std::unsigned_integral K>
-class pi_x_minus_x_square_and_x_square_minus_three_pi_x_plus_two_pi_square_series : public series_base<T, K>
+class pi_x_minus_x_square_and_x_square_minus_three_pi_x_plus_two_pi_square_series final : public series_base<T, K>
 {
 public:
 	pi_x_minus_x_square_and_x_square_minus_three_pi_x_plus_two_pi_square_series() = delete;

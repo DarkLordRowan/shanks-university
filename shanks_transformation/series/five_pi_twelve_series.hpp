@@ -7,7 +7,7 @@
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
 template <std::floating_point T, std::unsigned_integral K>
-class five_pi_twelve_series : public series_base<T, K>
+class five_pi_twelve_series final : public series_base<T, K>
 {
 public:
     five_pi_twelve_series() = delete;

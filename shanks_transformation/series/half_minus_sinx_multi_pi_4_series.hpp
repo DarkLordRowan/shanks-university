@@ -7,7 +7,7 @@
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
 template <std::floating_point T, std::unsigned_integral K>
-class half_minus_sinx_multi_pi_4_series : public series_base<T, K>
+class half_minus_sinx_multi_pi_4_series final : public series_base<T, K>
 {
 public:
     half_minus_sinx_multi_pi_4_series() = delete;

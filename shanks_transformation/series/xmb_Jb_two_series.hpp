@@ -7,7 +7,7 @@
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
 template <std::floating_point T, std::unsigned_integral K>
-class xmb_Jb_two_series : public series_base<T, K>
+class xmb_Jb_two_series final : public series_base<T, K>
 {
 public:
     xmb_Jb_two_series() = delete;
@@ -16,6 +16,7 @@ public:
     * @brief Parameterized constructor to initialize the series with function argument and sum
     * @authors Pashkov B.B.
     * @param x The argument for function series, b The order constant
+    * @param b
     * @tparam T The type of the elements in the series, K The type of enumerating integer
     */
     xmb_Jb_two_series(T x, K b);
