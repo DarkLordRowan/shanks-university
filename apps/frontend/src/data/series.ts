@@ -100,7 +100,7 @@ export const SERIES: SeriesNode[] = [
         document: "Rows.docx",
     },
     {
-        id: "arctg_x_series",
+        id: "arctan_x_series",
         title: "\\arctan x",
         subtitle: "Ряд Маклорена для арктангенса",
         formula: "\\displaystyle \\arctan x=\\sum_{n=0}^{\\infty}(-1)^n\\frac{x^{2n+1}}{2n+1}\\quad(|x|\\le1,\\ x\\ne\\pm1\\text{ — условно})",
@@ -135,14 +135,14 @@ export const SERIES: SeriesNode[] = [
         document: "Rows.docx",
     },
     {
-        id: "arctg_x2_series",
+        id: "arctan_x2_series",
         title: "\\arctan(x^{2})",
         subtitle: "Подстановка в ряд арктангенса",
         formula: "\\displaystyle \\arctan(x^{2})=\\sum_{n=0}^{\\infty}(-1)^n\\frac{x^{4n+2}}{2n+1}\\quad(|x|\\le1)",
         document: "Rows.docx",
     },
     {
-        id: "arctg_x3_series",
+        id: "arctan_x3_series",
         title: "\\arctan(x^{3})",
         subtitle: "Подстановка в ряд арктангенса",
         formula: "\\displaystyle \\arctan(x^{3})=\\sum_{n=0}^{\\infty}(-1)^n\\frac{x^{6n+3}}{2n+1}\\quad(|x|\\le1)",
@@ -163,7 +163,7 @@ export const SERIES: SeriesNode[] = [
         document: "Rows.docx",
     },
     {
-        id: "cos_sqrt_x",
+        id: "cos_sqrt_x_series",
         title: "\\cos\\!\\sqrt{x}",
         subtitle: "Косинус от корня",
         formula: "\\displaystyle \\cos\\!\\sqrt{x}=\\sum_{n=0}^{\\infty}(-1)^n\\frac{x^{n}}{(2n)!}",
@@ -286,13 +286,6 @@ export const SERIES: SeriesNode[] = [
         title: "\\ln(\\sin x)-\\ln x",
         subtitle: "Маклорен через числа Бернулли",
         formula: "\\displaystyle \\ln(\\sin x)-\\ln x=-\\sum_{n=1}^{\\infty}\\frac{B_{2n}}{2n\\,(2n)!}\\,(2^{2n}-2)\\,x^{2n}",
-        document: "Rows.docx",
-    },
-    {
-        id: "sqrt_1plusx_min_1_min_x_div_2_series",
-        title: "\\sqrt{1+x}-1-\\tfrac{x}{2}",
-        subtitle: "Сдвинутый биномиальный ряд (α=1/2)",
-        formula: "\\displaystyle \\sum_{n=2}^{\\infty}\\binom{\\tfrac12}{n}x^{n}",
         document: "Rows.docx",
     },
     {
@@ -422,20 +415,6 @@ export const SERIES: SeriesNode[] = [
         document: "Rows.docx",
     },
     {
-        id: "ln1px4_series",
-        title: "\\ln(1+x^{4})",
-        subtitle: "Логарифм с подстановкой",
-        formula: "\\displaystyle \\sum_{n=1}^{\\infty}(-1)^{n+1}\\frac{x^{4n}}{n}",
-        document: "Rows.docx",
-    },
-    {
-        id: "ln1_m_x2_series",
-        title: "\\ln(1-x^{2})",
-        subtitle: "Логарифм квадрата",
-        formula: "\\displaystyle -\\sum_{n=1}^{\\infty}\\frac{x^{2n}}{n}",
-        document: "Rows.docx",
-    },
-    {
         id: "Incomplete_Gamma_func_series",
         title: "\\gamma(s,x)",
         subtitle: "Неполная гамма-функция (ряд при малом x)",
@@ -555,13 +534,6 @@ export const SERIES: SeriesNode[] = [
         document: "Rows.docx",
     },
     {
-        id: "erf_series",
-        title: "\\operatorname{erf}(x)",
-        subtitle: "Функция ошибок",
-        formula: "\\displaystyle \\frac{2}{\\sqrt{\\pi}}\\sum_{n=0}^{\\infty}(-1)^n\\frac{x^{2n+1}}{n!(2n+1)}",
-        document: "Rows.docx",
-    },
-    {
         id: "exp_squared_erf_series",
         title: "e^{x^{2}}\\operatorname{erf}(x)",
         subtitle: "Комбинированная функция",
@@ -607,64 +579,56 @@ export const SERIES: SeriesNode[] = [
         id: "abs_sin_x_minus_2_div_pi_series",
         title: "\\lvert\\sin x\\rvert-\\tfrac{2}{\\pi}",
         subtitle: "Косинусный ряд Фурье для |sin x| без постоянной",
-        formula:
-            "\\displaystyle \\lvert\\sin x\\rvert-\\tfrac{2}{\\pi}=-\\frac{4}{\\pi}\\sum_{n=1}^{\\infty}\\frac{\\cos(2nx)}{4n^{2}-1}",
+        formula: "\\displaystyle \\lvert\\sin x\\rvert-\\tfrac{2}{\\pi}=-\\frac{4}{\\pi}\\sum_{n=1}^{\\infty}\\frac{\\cos(2nx)}{4n^{2}-1}",
         document: "Rows.docx",
     },
     {
         id: "pi_minus_3pi_4_and_pi_minus_x_minus_3pi_4_series",
         title: "Кусочная функция на [0,\\pi] и [\\pi,2\\pi]",
         subtitle: "Разложение в тригонометрический ряд Фурье",
-        formula:
-            "\\displaystyle f(x)=\\begin{cases}\\pi-\\tfrac{3\\pi}{4},&x\\in[0,\\pi],\\\\ \\pi-x-\\tfrac{3\\pi}{4},&x\\in[\\pi,2\\pi],\\end{cases}\\quad f(x)\\sim a_0/2+\\sum_{n\\ge1}(a_n\\cos nx+b_n\\sin nx)",
+        formula: "\\displaystyle f(x)=\\begin{cases}\\pi-\\tfrac{3\\pi}{4},&x\\in[0,\\pi],\\\\ \\pi-x-\\tfrac{3\\pi}{4},&x\\in[\\pi,2\\pi],\\end{cases}\\quad f(x)\\sim a_0/2+\\sum_{n\\ge1}(a_n\\cos nx+b_n\\sin nx)",
         document: "Rows.docx",
     },
     {
         id: "minus_x_minus_pi_4_or_minus_pi_4_series",
         title: "-x-\\tfrac{\\pi}{4}\\ \\text{или}\\ -\\tfrac{\\pi}{4}",
         subtitle: "Фурье-ряд для кусочной линейной функции",
-        formula:
-            "\\displaystyle f(x)=\\begin{cases}-x-\\tfrac{\\pi}{4},&x\\in(0,\\pi),\\\\ -\\tfrac{\\pi}{4},&x\\in(-\\pi,0),\\end{cases}\\quad f(x)\\sim \\sum_{n\\ge1}b_n\\sin(nx)+a_n\\cos(nx)",
+        formula: "\\displaystyle f(x)=\\begin{cases}-x-\\tfrac{\\pi}{4},&x\\in(0,\\pi),\\\\ -\\tfrac{\\pi}{4},&x\\in(-\\pi,0),\\end{cases}\\quad f(x)\\sim \\sum_{n\\ge1}b_n\\sin(nx)+a_n\\cos(nx)",
         document: "Rows.docx",
     },
     {
         id: "one_twelfth_3x2_pi2_series",
         title: "\\tfrac{1}{12}(3x^{2}+\\pi^{2})",
         subtitle: "Чётная функция → косинусный Фурье-ряд",
-        formula:
-            "\\displaystyle \\tfrac{1}{12}(3x^{2}+\\pi^{2})=\\frac{\\pi^{2}}{6}+\\sum_{n=1}^{\\infty}\\frac{(-1)^{n}}{n^{2}}\\cos(nx),\\quad x\\in[-\\pi,\\pi]",
+        formula: "\\displaystyle \\tfrac{1}{12}(3x^{2}+\\pi^{2})=\\frac{\\pi^{2}}{6}+\\sum_{n=1}^{\\infty}\\frac{(-1)^{n}}{n^{2}}\\cos(nx),\\quad x\\in[-\\pi,\\pi]",
         document: "Rows.docx",
     },
     {
         id: "x_two_series",
         title: "x^{2}",
         subtitle: "Классический косинусный Фурье-ряд",
-        formula:
-            "\\displaystyle x^{2}=\\frac{\\pi^{2}}{3}+4\\sum_{n=1}^{\\infty}\\frac{(-1)^{n}}{n^{2}}\\cos(nx),\\quad x\\in(-\\pi,\\pi)",
+        formula: "\\displaystyle x^{2}=\\frac{\\pi^{2}}{3}+4\\sum_{n=1}^{\\infty}\\frac{(-1)^{n}}{n^{2}}\\cos(nx),\\quad x\\in(-\\pi,\\pi)",
         document: "Rows.docx",
     },
     {
         id: "x_two_throught_squares_series",
         title: "x^{2} через ряд по квадратам",
         subtitle: "Альтернативный косинусный ряд",
-        formula:
-            "\\displaystyle x^{2}=\\frac{\\pi^{2}}{12}+\\sum_{n=1}^{\\infty}\\frac{2}{n^{2}}\\Big(1-\\cos(nx)\\Big),\\quad x\\in(-\\pi,\\pi)",
+        formula: "\\displaystyle x^{2}=\\frac{\\pi^{2}}{12}+\\sum_{n=1}^{\\infty}\\frac{2}{n^{2}}\\Big(1-\\cos(nx)\\Big),\\quad x\\in(-\\pi,\\pi)",
         document: "Rows.docx",
     },
     {
         id: "xmb_Jb_two_series",
         title: "x^{m}J_{\\,b}(2x)",
         subtitle: "Через ряд Бесселя первого рода",
-        formula:
-            "\\displaystyle x^{m}J_{b}(2x)=x^{m}\\sum_{n=0}^{\\infty}\\frac{(-1)^{n}}{n!\\,\\Gamma(n+b+1)}\\,x^{2n+b}",
+        formula: "\\displaystyle x^{m}J_{b}(2x)=x^{m}\\sum_{n=0}^{\\infty}\\frac{(-1)^{n}}{n!\\,\\Gamma(n+b+1)}\\,x^{2n+b}",
         document: "Rows.docx",
     },
     {
         id: "ln13_min_ln7_div_7_series",
         title: "\\ln 13-\\tfrac{1}{7}\\ln 7",
         subtitle: "Числовой логарифмический ряд",
-        formula:
-            "\\displaystyle \\ln 13-\\tfrac{1}{7}\\ln 7=\\sum_{n=1}^{\\infty}\\frac{(-1)^{n+1}}{n}\\Bigg[\\Big(\\tfrac{12}{13}\\Big)^{n}-\\frac{1}{7}\\Big(\\tfrac{6}{7}\\Big)^{n}\\Bigg]",
+        formula: "\\displaystyle \\ln 13-\\tfrac{1}{7}\\ln 7=\\sum_{n=1}^{\\infty}\\frac{(-1)^{n+1}}{n}\\Bigg[\\Big(\\tfrac{12}{13}\\Big)^{n}-\\frac{1}{7}\\Big(\\tfrac{6}{7}\\Big)^{n}\\Bigg]",
         document: "Rows.docx",
     },
     {
@@ -678,111 +642,56 @@ export const SERIES: SeriesNode[] = [
         id: "five_pi_twelve_series",
         title: "\\tfrac{5\\pi}{12}",
         subtitle: "Представление через ряд Грегори (пример)",
-        formula:
-            "\\displaystyle \\tfrac{5\\pi}{12}=\\sum_{n=0}^{\\infty}\\frac{(-1)^n}{2n+1}\\,c_{n},\\quad c_{n}=\\mathbf{1}_{n=0}+\\mathbf{1}_{n\\ge0}\\frac{1}{3^{2n+1}}",
+        formula: "\\displaystyle \\tfrac{5\\pi}{12}=\\sum_{n=0}^{\\infty}\\frac{(-1)^n}{2n+1}\\,c_{n},\\quad c_{n}=\\mathbf{1}_{n=0}+\\mathbf{1}_{n\\ge0}\\frac{1}{3^{2n+1}}",
         document: "Rows.docx",
     },
     {
         id: "three_minus_pi_series",
         title: "3-\\pi",
         subtitle: "Числовой ряд для константы",
-        formula:
-            "\\displaystyle 3-\\pi=\\sum_{n=1}^{\\infty}\\left(\\frac{1}{n(n+1)}-\\frac{4(-1)^{n}}{2n-1}\\right)",
+        formula: "\\displaystyle 3-\\pi=\\sum_{n=1}^{\\infty}\\left(\\frac{1}{n(n+1)}-\\frac{4(-1)^{n}}{2n-1}\\right)",
         document: "Rows.docx",
     },
     {
         id: "pi_six_min_half_series",
         title: "\\tfrac{\\pi}{6}-\\tfrac{1}{2}",
         subtitle: "Константа через ряд",
-        formula:
-            "\\displaystyle \\tfrac{\\pi}{6}-\\tfrac{1}{2}=\\sum_{n=1}^{\\infty}\\left(\\frac{(-1)^{n+1}}{3(2n-1)}-\\frac{1}{2n(n+1)}\\right)",
-        document: "Rows.docx",
-    },
-    {
-        id: "pi_four_minus_ln2_halfed_series",
-        title: "\\tfrac{\\pi}{4}-\\tfrac{\\ln 2}{2}",
-        subtitle: "Комбинация рядов для arctan и ln",
-        formula:
-            "\\displaystyle \\tfrac{\\pi}{4}-\\tfrac{\\ln 2}{2}=\\sum_{n=1}^{\\infty}\\left(\\frac{(-1)^{n+1}}{2n-1}-\\frac{(-1)^{n+1}}{2n}\\right)",
+        formula: "\\displaystyle \\tfrac{\\pi}{6}-\\tfrac{1}{2}=\\sum_{n=1}^{\\infty}\\left(\\frac{(-1)^{n+1}}{3(2n-1)}-\\frac{1}{2n(n+1)}\\right)",
         document: "Rows.docx",
     },
     {
         id: "pi_8_cosx_square_minus_1_div_3_cosx_series",
         title: "\\tfrac{\\pi}{8}\\cos^{2}x-\\tfrac{1}{3}\\cos x",
         subtitle: "Комбинированный тригонометрический ряд",
-        formula:
-            "\\displaystyle \\tfrac{\\pi}{8}\\cos^{2}x-\\tfrac{1}{3}\\cos x=\\tfrac{\\pi}{16}+\\sum_{n=1}^{\\infty}\\Big(\\alpha_n\\cos nx+\\beta_n\\sin nx\\Big)",
+        formula: "\\displaystyle \\tfrac{\\pi}{8}\\cos^{2}x-\\tfrac{1}{3}\\cos x=\\tfrac{\\pi}{16}+\\sum_{n=1}^{\\infty}\\Big(\\alpha_n\\cos nx+\\beta_n\\sin nx\\Big)",
         document: "Rows.docx",
     },
     {
         id: "ln_1plussqrt1plusxsquare_minus_ln_2_series",
         title: "\\ln\\!\\big(1+\\sqrt{1+x^{2}}\\big)-\\ln 2",
         subtitle: "Ряд Маклорена",
-        formula:
-            "\\displaystyle \\ln\\!\\big(1+\\sqrt{1+x^{2}}\\big)-\\ln 2=\\sum_{n=1}^{\\infty}(-1)^{n+1}\\frac{(2n)!}{2^{2n+1}(n!)^{2}(2n)}\\,x^{2n}",
+        formula: "\\displaystyle \\ln\\!\\big(1+\\sqrt{1+x^{2}}\\big)-\\ln 2=\\sum_{n=1}^{\\infty}(-1)^{n+1}\\frac{(2n)!}{2^{2n+1}(n!)^{2}(2n)}\\,x^{2n}",
         document: "Rows.docx",
     },
     {
         id: "m_fact_1mx_mp1_inverse_series",
         title: "(1-x)^{-(m+1)}",
         subtitle: "Обобщённый биномиальный ряд",
-        formula:
-            "\\displaystyle (1-x)^{-(m+1)}=\\sum_{n=0}^{\\infty}\\binom{m+n}{n}x^{n}\\quad(|x|<1)",
+        formula: "\\displaystyle (1-x)^{-(m+1)}=\\sum_{n=0}^{\\infty}\\binom{m+n}{n}x^{n}\\quad(|x|<1)",
         document: "Rows.docx",
     },
     {
         id: "one_div_two_minus_x_multi_three_plus_x_series",
         title: "\\dfrac{1}{(2-x)(3+x)}",
         subtitle: "Ряд Лорана/Тейлора от 0 (частичные дроби)",
-        formula:
-            "\\displaystyle \\frac{1}{(2-x)(3+x)}=\\frac{1}{5}\\sum_{n=0}^{\\infty}\\left(\\frac{x^{n}}{2^{n+1}}-\\frac{(-x)^{n}}{3^{n+1}}\\right),\\quad |x|<2",
+        formula: "\\displaystyle \\frac{1}{(2-x)(3+x)}=\\frac{1}{5}\\sum_{n=0}^{\\infty}\\left(\\frac{x^{n}}{2^{n+1}}-\\frac{(-x)^{n}}{3^{n+1}}\\right),\\quad |x|<2",
         document: "Rows.docx",
     },
     {
         id: "xsquareplus3_div_xsquareplus2multix_minus_1_series",
         title: "\\dfrac{x^{2}+3}{x^{2}+2x-1}",
         subtitle: "Ряд около нуля (радиус до \\(\\sqrt2-1\\))",
-        formula:
-            "\\displaystyle \\frac{x^{2}+3}{x^{2}+2x-1}=-3-6x-16x^{2}-38x^{3}-92x^{4}-222x^{5}-536x^{6}-1294x^{7}-\\cdots",
+        formula: "\\displaystyle \\frac{x^{2}+3}{x^{2}+2x-1}=-3-6x-16x^{2}-38x^{3}-92x^{4}-222x^{5}-536x^{6}-1294x^{7}-\\cdots",
         document: "Rows.docx",
-    },
-    {
-        id: "Si_x_series",
-        title: "\\operatorname{Si}(x)",
-        subtitle: "Интеграл синуса — повтор",
-        formula:
-            "\\displaystyle \\operatorname{Si}(x)=\\sum_{n=0}^{\\infty}(-1)^n\\frac{x^{2n+1}}{(2n+1)(2n+1)!}",
-        document: "Rows.docx",
-    },
-    {
-        id: "Ci_x_series",
-        title: "\\operatorname{Ci}(x)",
-        subtitle: "Интеграл косинуса — повтор",
-        formula:
-            "\\displaystyle \\operatorname{Ci}(x)=\\gamma+\\ln x+\\sum_{n=1}^{\\infty}(-1)^n\\frac{x^{2n}}{2n\\,(2n)!}",
-        document: "Rows.docx",
-    },
-    {
-        id: "E_x_series",
-        title: "E(m)",
-        subtitle: "Полный эллиптический интеграл второго рода",
-        formula:
-            "\\displaystyle E(m)=\\tfrac{\\pi}{2}\\sum_{n=0}^{\\infty}\\Bigg(\\frac{(2n)!}{2^{2n}(n!)^2}\\Bigg)^{2}\\frac{m^{n}}{1-2n}",
-        document: "Rows.docx",
-    },
-    {
-        id: "K_x_series",
-        title: "K(m)",
-        subtitle: "Полный эллиптический интеграл первого рода — повтор",
-        formula:
-            "\\displaystyle K(m)=\\tfrac{\\pi}{2}\\sum_{n=0}^{\\infty}\\Bigg(\\frac{(2n)!}{2^{2n}(n!)^2}\\Bigg)^{2}m^{n}",
-        document: "Rows.docx",
-    },
-    {
-        id: "Lambert_W_func_series",
-        title: "W(x)",
-        subtitle: "Ряд Ламберта — повтор",
-        formula: "\\displaystyle W(x)=\\sum_{n=1}^{\\infty}\\frac{(-n)^{n-1}}{n!}\\,x^{n}",
-        document: "Rows.docx",
-    },
+    }
 ];
