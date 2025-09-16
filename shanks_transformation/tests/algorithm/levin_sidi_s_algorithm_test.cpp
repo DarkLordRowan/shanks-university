@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "series.h"
+#include "series.hpp"
 #include "methods/algorithm/levin_sidi_s_algorithm.hpp"
 
 TEST(levin_sidi_s_algorithm, HapyPath)
@@ -8,8 +8,8 @@ TEST(levin_sidi_s_algorithm, HapyPath)
     using K = unsigned;
     using T = double;
 
-    const series::exp_series<T, K> series(0.5);
-    using SeriesTempl = const series::series_base<T, K>*;
+    const exp_series<T, K> series(0.5);
+    using SeriesTempl = const series_base<T, K>*;
     const SeriesTempl p = &series;
     const levin_sidi_s_algorithm<T, K, SeriesTempl> algo(p);
 

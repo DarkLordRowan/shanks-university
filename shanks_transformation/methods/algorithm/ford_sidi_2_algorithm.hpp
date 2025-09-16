@@ -29,7 +29,7 @@
  * - Osada, N. (2000). The E-algorithm and the Ford-Sidi algorithm.
  *   Journal of Computational and Applied Mathematics, 122(1), 223-230.
  *
- * @tparam T Floating-point type for series elements (must satisfy FloatLike)
+ * @tparam T Floating-point type for series elements (must satisfy Accepted)
  *           Represents numerical precision (float, double, long double).
  *           Used for all numerical computations and storage.
  * @tparam K Unsigned integral type for indices and order (must satisfy std::unsigned_integral)
@@ -40,7 +40,7 @@
  *           - T S_n(K n) const: returns the n-th partial sum s_n = a_0 + ... + a_n
  *           The series object encapsulates the mathematical sequence to be accelerated.
  */
-template <FloatLike T, std::unsigned_integral K, typename series_templ>
+template <Accepted T, std::unsigned_integral K, typename series_templ>
 class ford_sidi_2_algorithm final : public series_acceleration<T, K, series_templ>
 {
 public:
@@ -76,7 +76,7 @@ public:
 	T operator()(K n, K k) const override;
 };
 
-template <FloatLike T, std::unsigned_integral K, typename series_templ>
+template <Accepted T, std::unsigned_integral K, typename series_templ>
 T ford_sidi_2_algorithm<T, K, series_templ>::operator()(const K n, const K k) const {
 
 	using std::fma;

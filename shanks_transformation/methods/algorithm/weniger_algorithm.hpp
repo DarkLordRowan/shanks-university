@@ -27,7 +27,7 @@
  *   and the summation of divergent series. Computer Physics Reports, 10(5-6), 189-371.
  * - Weniger, E.J. (1992). Interpolation between sequence transformations. Numerical Algorithms, 3(1-4), 477-486.
  *
- * @tparam T Floating-point type for series elements (must satisfy FloatLike)
+ * @tparam T Floating-point type for series elements (must satisfy Accepted)
  *           Represents numerical precision (float, double, long double).
  *           Used for all floating-point calculations and storage.
  * @tparam K Unsigned integral type for indices and order (must satisfy std::unsigned_integral)
@@ -38,7 +38,7 @@
  *           - T minus_one_raised_to_power_n(K n) const: returns (-1)ⁿ
  *           - T binomial_coefficient(T n, K k) const: returns binomial coefficient C(n, k)
  */
-template<FloatLike T, std::unsigned_integral K, typename series_templ>
+template<Accepted T, std::unsigned_integral K, typename series_templ>
 class weniger_algorithm final : public series_acceleration<T, K, series_templ>
 {
 public:
@@ -70,7 +70,7 @@ public:
 	T operator()(K n, K order) const override;
 };
 
-template<FloatLike T, std::unsigned_integral K, typename series_templ>
+template<Accepted T, std::unsigned_integral K, typename series_templ>
 T weniger_algorithm<T, K, series_templ>::operator()(const K n, const K order) const {
 
 	using std::isfinite;

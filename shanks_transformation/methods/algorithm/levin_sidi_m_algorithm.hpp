@@ -28,7 +28,7 @@
   * - Sidi, A. (2003). Practical Extrapolation Methods: Theory and Applications.
   * - Sidi, A. (2003). A new class of nonlinear transformations. arXiv:math/0306302.
   *
-  * @tparam T Floating-point type for series elements (must satisfy FloatLike)
+  * @tparam T Floating-point type for series elements (must satisfy Accepted)
   *           Represents numerical precision (float, double, long double)
   * @tparam K Unsigned integral type for indices and order (must satisfy std::unsigned_integral)
   *           Used for counting and indexing operations
@@ -38,7 +38,7 @@
   *           - T minus_one_raised_to_power_n(K j) const: returns (-1)^j
   *           - T binomial_coefficient(T n, K k) const: returns binomial coefficient C(n, k)
   */
-template<FloatLike T, std::unsigned_integral K, typename series_templ>
+template<Accepted T, std::unsigned_integral K, typename series_templ>
 class levin_sidi_m_algorithm final : public series_acceleration<T, K, series_templ>
 {
 protected:
@@ -108,7 +108,7 @@ public:
 	T operator()(K n, K order) const override;
 };
 
-template<FloatLike T, std::unsigned_integral K, typename series_templ>
+template<Accepted T, std::unsigned_integral K, typename series_templ>
 inline T levin_sidi_m_algorithm<T, K, series_templ>::calculate(const K n, const K order) const {
 
 	using std::isfinite;
@@ -185,12 +185,12 @@ inline T levin_sidi_m_algorithm<T, K, series_templ>::calculate(const K n, const 
 	return numerator;
 }
 
-template<FloatLike T, std::unsigned_integral K, typename series_templ>
+template<Accepted T, std::unsigned_integral K, typename series_templ>
 T levin_sidi_m_algorithm<T, K, series_templ>::operator()(const K n, const K order) const {
 	return calculate(n, order);
 }
 
-template<FloatLike T, std::unsigned_integral K, typename series_templ>
+template<Accepted T, std::unsigned_integral K, typename series_templ>
 levin_sidi_m_algorithm<T, K, series_templ>::levin_sidi_m_algorithm(
 	const series_templ& series, 
 	const remainder_type variant, 

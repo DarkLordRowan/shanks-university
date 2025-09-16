@@ -12,7 +12,7 @@
 #pragma once
 
 #include <concepts>
-#include "../series.h"
+#include "../series/series_base.hpp"
 
  /**
   * @brief Enum for remainder types to use in Levin-type transformations
@@ -41,12 +41,12 @@ enum remainder_type{
  * Provides the interface for different remainder estimate variants used in
  * Levin's sequence transformations for convergence acceleration.
  *
- * @tparam T Floating-point type for series elements (must satisfy FloatLike)
+ * @tparam T Floating-point type for series elements (must satisfy Accepted)
  *           Represents numerical precision (float, double, long double)
  * @tparam K Unsigned integral type for indices (must satisfy std::unsigned_integral)
  *           Used for counting and indexing operations
  */
-template<FloatLike T, std::unsigned_integral K>
+template<Accepted T, std::unsigned_integral K>
 class transform_base{
 public:
 
@@ -63,7 +63,7 @@ public:
      * @return The computed remainder estimate ωₙ
      * @throws std::overflow_error if division by zero or numerical instability occurs
      */
-    virtual T operator() (K n, K order, const series::series_base<T,K>* series, T scale = static_cast<T>(1)) const = 0;
+    virtual T operator() (K n, K order, const series_base<T,K>* series, T scale = static_cast<T>(1)) const = 0;
 };
 
 /**
@@ -75,7 +75,7 @@ public:
  * @tparam T Floating-point type for series elements
  * @tparam K Unsigned integral type for indices
  */
-template<FloatLike T, std::unsigned_integral K>
+template<Accepted T, std::unsigned_integral K>
 class u_transform : public transform_base<T, K> {
 
     /**
@@ -91,11 +91,11 @@ class u_transform : public transform_base<T, K> {
      * @return u-variant remainder estimate ωₙ = 1/[(scale + n) * aₙ]
      * @throws std::overflow_error if aₙ = 0 causing division by zero
      */
-    T operator() (K n, K order, const series::series_base<T,K>* series, T scale = static_cast<T>(1)) const override;
+    T operator() (K n, K order, const series_base<T,K>* series, T scale = static_cast<T>(1)) const override;
 };
 
-template<FloatLike T, std::unsigned_integral K>
-T u_transform<T, K>::operator()(const K n, const K order, const series::series_base<T,K>* series, T scale) const {
+template<Accepted T, std::unsigned_integral K>
+T u_transform<T, K>::operator()(const K n, const K order, const series_base<T,K>* series, T scale) const {
 
     using std::isfinite;
 
@@ -117,7 +117,7 @@ T u_transform<T, K>::operator()(const K n, const K order, const series::series_b
  * @tparam T Floating-point type for series elements
  * @tparam K Unsigned integral type for indices
  */
-template<FloatLike T, std::unsigned_integral K>
+template<Accepted T, std::unsigned_integral K>
 class t_transform : public transform_base<T, K> {
 
     /**
@@ -133,11 +133,11 @@ class t_transform : public transform_base<T, K> {
      * @return t-variant remainder estimate ωₙ = 1/aₙ₊ₖ
      * @throws std::overflow_error if aₙ₊ₖ = 0 causing division by zero
      */
-    T operator() (K n, K order, const series::series_base<T,K>* series, T scale = static_cast<T>(1)) const override;
+    T operator() (K n, K order, const series_base<T,K>* series, T scale = static_cast<T>(1)) const override;
 };
 
-template<FloatLike T, std::unsigned_integral K>
-T t_transform<T, K>::operator()(const K n, const K order, const series::series_base<T,K>* series, T scale) const {
+template<Accepted T, std::unsigned_integral K>
+T t_transform<T, K>::operator()(const K n, const K order, const series_base<T,K>* series, T scale) const {
 
     using std::isfinite;
 
@@ -157,7 +157,7 @@ T t_transform<T, K>::operator()(const K n, const K order, const series::series_b
  * @tparam T Floating-point type for series elements
  * @tparam K Unsigned integral type for indices
  */
-template<FloatLike T, std::unsigned_integral K>
+template<Accepted T, std::unsigned_integral K>
 class t_wave_transform : public transform_base<T, K>  {
 
     /**
@@ -173,11 +173,11 @@ class t_wave_transform : public transform_base<T, K>  {
      * @return t-wave variant remainder estimate ωₙ = 1/aₙ₊ₖ₊₁
      * @throws std::overflow_error if aₙ₊ₖ₊₁ = 0 causing division by zero
      */
-    T operator() (K n, K order, const series::series_base<T,K>* series, T scale = static_cast<T>(1)) const override;
+    T operator() (K n, K order, const series_base<T,K>* series, T scale = static_cast<T>(1)) const override;
 };
 
-template<FloatLike T, std::unsigned_integral K>
-T t_wave_transform<T,K>::operator()(const K n, const K order, const series::series_base<T, K>* series, T scale ) const {
+template<Accepted T, std::unsigned_integral K>
+T t_wave_transform<T,K>::operator()(const K n, const K order, const series_base<T, K>* series, T scale ) const {
 
     using std::isfinite;
 
@@ -198,7 +198,7 @@ T t_wave_transform<T,K>::operator()(const K n, const K order, const series::seri
  * @tparam T Floating-point type for series elements
  * @tparam K Unsigned integral type for indices
  */
-template<FloatLike T, std::unsigned_integral K>
+template<Accepted T, std::unsigned_integral K>
 class v_transform : public transform_base<T, K> {
 
     /**
@@ -214,11 +214,11 @@ class v_transform : public transform_base<T, K> {
      * @return v-variant remainder estimate ωₙ = (aₙ₊ₖ₊₁ - aₙ₊ₖ)/(aₙ₊ₖ * aₙ₊ₖ₊₁)
      * @throws std::overflow_error if aₙ₊ₖ = 0 or aₙ₊ₖ₊₁ = 0 causing division by zero
      */
-    T operator() (K n, K order, const series::series_base<T,K>* series, T scale = T(1)) const override;
+    T operator() (K n, K order, const series_base<T,K>* series, T scale = T(1)) const override;
 };
 
-template<FloatLike T, std::unsigned_integral K>
-T v_transform<T,K>::operator()(const K n, const K order, const series::series_base<T,K>* series, T scale) const {
+template<Accepted T, std::unsigned_integral K>
+T v_transform<T,K>::operator()(const K n, const K order, const series_base<T,K>* series, T scale) const {
 
     using std::isfinite;
 
@@ -239,7 +239,7 @@ T v_transform<T,K>::operator()(const K n, const K order, const series::series_ba
  * @tparam T Floating-point type for series elements
  * @tparam K Unsigned integral type for indices
  */
-template<FloatLike T, std::unsigned_integral K>
+template<Accepted T, std::unsigned_integral K>
 class v_wave_transform : public transform_base<T, K> {
     
     /**
@@ -255,11 +255,11 @@ class v_wave_transform : public transform_base<T, K> {
      * @return v-wave variant remainder estimate ωₙ = (aₙ₊ₖ - aₙ₊ₖ₊₁)/(aₙ₊ₖ * aₙ₊ₖ₊₁)
      * @throws std::overflow_error if aₙ₊ₖ = 0 or aₙ₊ₖ₊₁ = 0 causing division by zero
      */
-    T operator() (K n, K order, const series::series_base<T,K>* series, T scale = static_cast<T>(1)) const override;
+    T operator() (K n, K order, const series_base<T,K>* series, T scale = static_cast<T>(1)) const override;
 };
 
-template<FloatLike T, std::unsigned_integral K>
-T v_wave_transform<T,K>::operator()(const K n, const K order, const series::series_base<T,K>* series, T scale) const  {
+template<Accepted T, std::unsigned_integral K>
+T v_wave_transform<T,K>::operator()(const K n, const K order, const series_base<T,K>* series, T scale) const  {
 
     using std::isfinite;
 

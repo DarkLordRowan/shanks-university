@@ -487,8 +487,6 @@ template<class _Ty> complex_precision<_Ty> atanh(const complex_precision<_Ty> x)
 
 //CUSTOM DEFINITIONS FOR ISFINITE, FMA, JUST FOR EVERYTHING TO WORK
 
-#pragma message "ПРИКОЛ ДЛЯ СОВМЕСТИМОСТИ ПОДКЛЮЧЁН"
-
 template<class _Ty> inline bool isfinite(const complex_precision<_Ty>& x){ return isfinite(x.real()) && isfinite(x.imag()); }
 template<class _Ty> inline complex_precision<_Ty> fma(complex_precision<_Ty> x, complex_precision<_Ty> y, complex_precision<_Ty> z){
    
