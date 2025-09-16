@@ -449,7 +449,6 @@ x64
 /x64/Debug
 html
 latex
-docs
 !docs/html/.nojekyll
 x64/Debug/shanks_transformation.exe
 shanks_transformation/x64/Debug/vc143.pdb

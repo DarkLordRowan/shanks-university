@@ -6,6 +6,7 @@ import { buildJsonTable, filterByError } from "./utils/tables";
 import { buildChartGroups } from "./utils/chartUtils";
 import { parseCsv } from "../../utils/csv";
 import { DataTable } from "../../components/ui/DataTable";
+import { ChartsSection } from "./components/ChartsSection";
 
 const Experiments: React.FC = () => {
     // входные данные
@@ -210,7 +211,7 @@ const Experiments: React.FC = () => {
 
                                 {/* Графики */}
                                 {(() => {
-                                    const {ChartsSection} = require("./components/ChartsSection");
+
                                     return <ChartsSection groups={chartGroups}/>;
                                 })()}
                             </>
