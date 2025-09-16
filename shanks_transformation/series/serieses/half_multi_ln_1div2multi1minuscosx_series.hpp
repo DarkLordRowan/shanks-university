@@ -1,5 +1,5 @@
 #pragma once
-#include "series.h"
+#include "series/series_base.hpp"
 
 /**
 * @brief Trigonometric series of function 0.5 * ln(1/(2*(1 - cos(x))))

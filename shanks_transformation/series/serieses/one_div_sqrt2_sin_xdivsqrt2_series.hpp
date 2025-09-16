@@ -1,5 +1,5 @@
 #pragma once
-#include "series.h"
+#include "series/series_base.hpp"
 
 /**
 * @brief Taylor series of function 1/sqrt(2) * sin(x/sqrt(2))

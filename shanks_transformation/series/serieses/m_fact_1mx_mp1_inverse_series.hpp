@@ -1,5 +1,5 @@
 #pragma once
-#include "series.h"
+#include "series/series_base.hpp"
 
 /**
 * @brief Maclaurin series of function m! / (1 - x) ^ (m + 1), where m - integer parameter

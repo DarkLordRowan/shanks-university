@@ -1,5 +1,5 @@
 #pragma once
-#include "series.h"
+#include "series/series_base.hpp"
 
 /**
 * @brief Maclaurin series of function (pi/8)*cos^2(x) - (1/3)*cos(x)

@@ -12,9 +12,9 @@
 
 #include "methods.hpp"
 #include "methods/remainders.hpp"
-#include "series.h"
+#include "series.hpp"
+#include "series/series_base.hpp"
 #include "test_functions.h"
-#include "series/series_all.hpp"
 
 /**
  * @brief Enum of testing functions IDs

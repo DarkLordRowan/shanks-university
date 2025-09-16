@@ -12,7 +12,7 @@
 #pragma once
 
 #include <concepts>
-#include "../series.h"
+#include "series/series_base.hpp"
 
  /**
   * @brief Enum for remainder types to use in Levin-type transformations
