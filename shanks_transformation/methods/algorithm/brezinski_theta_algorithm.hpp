@@ -130,8 +130,6 @@ T brezinski_theta_algorithm<T, K, series_templ>::calculate(K n, const K order) c
 
     for(K level = static_cast<K>(1); level <= order / static_cast<K>(2); ++level){
 
-        std::cout << level << "\n";
-
         // transform odd vector
         for(K j = static_cast<K>(0); j < base_size + static_cast<K>(2) - static_cast<K>(3) * level; ++j){
 
