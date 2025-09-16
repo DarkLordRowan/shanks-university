@@ -1,3 +1,5 @@
+#pragma once
+#include "series.h"
 
 /**
 * @brief Maclaurin series of function (sinh(x) + sin(x)) / 2

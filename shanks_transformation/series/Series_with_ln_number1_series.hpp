@@ -1,3 +1,5 @@
+#pragma once
+#include "series.h"
 
 /**
 * @brief Series with ln number1

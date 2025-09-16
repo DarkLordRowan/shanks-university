@@ -1,3 +1,5 @@
+#pragma once
+#include "series.h"
 
 /**
 * @brief Numerical series representation of ln(2) * x

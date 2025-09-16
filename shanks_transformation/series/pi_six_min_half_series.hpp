@@ -1,3 +1,5 @@
+#pragma once
+#include "series.h"
 
 /**
 * @brief Numerical series representation of (pi/5 - 1/2) * x

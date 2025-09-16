@@ -1,3 +1,5 @@
+#pragma once
+#include "series.h"
 
 /**
 * @brief Maclaurin series of function 0.5 * sqrt(pi) * erf(x)

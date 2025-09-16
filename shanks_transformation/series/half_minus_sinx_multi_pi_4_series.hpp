@@ -1,3 +1,5 @@
+#pragma once
+#include "series.h"
 
 /**
 * @brief Trigonometric series of function 0.5 - (pi/4)*sin(x)

@@ -1,3 +1,5 @@
+#pragma once
+#include "series.h"
 
 /**
 * @brief Taylor series of function 1/sqrt(2) * sin(x/sqrt(2))

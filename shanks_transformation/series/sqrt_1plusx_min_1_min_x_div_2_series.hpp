@@ -1,3 +1,5 @@
+#pragma once
+#include "series.h"
 
 /**
 * @brief Maclaurin series of function sqrt(1 + x) - 1 - x/2

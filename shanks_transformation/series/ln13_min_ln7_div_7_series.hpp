@@ -1,3 +1,5 @@
+#pragma once
+#include "series.h"
 
 /**
 * @brief Numetric series of function (ln13 - ln7) * x / 7

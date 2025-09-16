@@ -1,3 +1,5 @@
+#pragma once
+#include "series.h"
 
 /**
 * @brief Binomial series (Maclaurin series for (1+x)^a function)

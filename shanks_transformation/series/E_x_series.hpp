@@ -1,3 +1,5 @@
+#pragma once
+#include "series.h"
 
 /**
 * @brief Taylor series of Complete elliptic integral of second kind E

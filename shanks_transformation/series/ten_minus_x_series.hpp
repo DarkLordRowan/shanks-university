@@ -1,3 +1,5 @@
+#pragma once
+#include "series.h"
 
 /**
 * @brief Fourier series of function f(x) = 10 - x, 5 < x < 15

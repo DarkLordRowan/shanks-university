@@ -1,3 +1,5 @@
+#pragma once
+#include "series.h"
 
 /**
 * @brief Maclaurin series of function ln(1 + sqrt(1 + x^2)) - ln(2)

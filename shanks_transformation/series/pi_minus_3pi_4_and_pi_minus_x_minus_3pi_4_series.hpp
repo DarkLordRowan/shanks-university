@@ -1,3 +1,5 @@
+#pragma once
+#include "series.h"
 
 /**
 * @brief Fourier series of system functions pi - 3*pi/4, -pi < x < 0

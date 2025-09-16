@@ -1,3 +1,5 @@
+#pragma once
+#include "series.h"
 
 /**
 * @brief Fourier series of system functions sin(x) - 2/pi, 0 <= x <= pi
