@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "series.h"
+#include "../../series/serieses/exp_series.hpp"
 #include "methods/algorithm/levin_sidi_s_algorithm.hpp"
 
 TEST(levin_sidi_s_algorithm, HapyPath)

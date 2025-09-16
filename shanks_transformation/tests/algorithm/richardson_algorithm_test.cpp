@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "series.h"
+#include "../../series/serieses/exp_series.hpp"
 #include "methods/algorithm/richardson_algorithm.hpp"
 
 TEST(richardson_algorithm, HapyPath)

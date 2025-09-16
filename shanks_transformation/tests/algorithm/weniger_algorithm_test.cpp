@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "series.h"
+#include "../../series/serieses/exp_series.hpp"
 #include "methods/algorithm/weniger_algorithm.hpp"
 
 TEST(weniger_algorithm, HapyPath)

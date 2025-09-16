@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "series.h"
+#include "../../series/serieses/exp_series.hpp"
 #include "methods/algorithm/chang_wynn_algorithm.hpp"
 
 TEST(chang_wynn_algorithm, HapyPath)

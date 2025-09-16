@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "series.h"
+#include "../../series/serieses/exp_series.hpp"
 #include "methods/algorithm/lubkin_w_algorithm.hpp"
 
 TEST(lubkin_w_algorithm, HapyPath)
