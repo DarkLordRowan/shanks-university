@@ -7,7 +7,7 @@
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
 template <std::floating_point T, std::unsigned_integral K>
-class pi_x_multi_e_xpi_plus_e_minusxpi_divided_e_xpi_minus_e_minusxpi_minus_one_series : public series_base<T, K>
+class pi_x_multi_e_xpi_plus_e_minusxpi_divided_e_xpi_minus_e_minusxpi_minus_one_series final : public series_base<T, K>
 {
 public:
 	pi_x_multi_e_xpi_plus_e_minusxpi_divided_e_xpi_minus_e_minusxpi_minus_one_series() = delete;

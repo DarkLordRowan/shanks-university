@@ -7,7 +7,7 @@
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
 template <std::floating_point T, std::unsigned_integral K>
-class ln13_min_ln7_div_7_series : public series_base<T, K>
+class ln13_min_ln7_div_7_series final : public series_base<T, K>
 {
 public:
     /**

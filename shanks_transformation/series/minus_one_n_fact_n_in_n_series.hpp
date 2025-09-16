@@ -7,7 +7,7 @@
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
 template <std::floating_point T, std::unsigned_integral K>
-class minus_one_n_fact_n_in_n_series : public series_base<T, K>
+class minus_one_n_fact_n_in_n_series final : public series_base<T, K>
 {
 public:
     minus_one_n_fact_n_in_n_series() = delete;

@@ -7,7 +7,7 @@
 * @tparam T - type of the elements in the series, K - type of enumerating integer
 */
 template <std::floating_point T, std::unsigned_integral K>
-class xsquareplus3_div_xsquareplus2multix_minus_1_series : public series_base<T, K>
+class xsquareplus3_div_xsquareplus2multix_minus_1_series final : public series_base<T, K>
 {
 public:
     xsquareplus3_div_xsquareplus2multix_minus_1_series() = delete;

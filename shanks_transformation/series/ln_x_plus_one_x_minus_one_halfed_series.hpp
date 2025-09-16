@@ -7,7 +7,7 @@
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
 template <std::floating_point T, std::unsigned_integral K>
-class ln_x_plus_one_x_minus_one_halfed_series : public series_base<T, K>
+class ln_x_plus_one_x_minus_one_halfed_series final : public series_base<T, K>
 {
 public:
     ln_x_plus_one_x_minus_one_halfed_series() = delete;

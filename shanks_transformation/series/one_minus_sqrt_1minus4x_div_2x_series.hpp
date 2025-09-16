@@ -7,7 +7,7 @@
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
 template <std::floating_point T, std::unsigned_integral K>
-class one_minus_sqrt_1minus4x_div_2x_series : public series_base<T, K>
+class one_minus_sqrt_1minus4x_div_2x_series final : public series_base<T, K>
 {
 public:
 	one_minus_sqrt_1minus4x_div_2x_series() = delete;

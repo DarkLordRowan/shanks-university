@@ -7,7 +7,7 @@
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
 template <std::floating_point T, std::unsigned_integral K>
-class gamma_series : public series_base<T, K>
+class gamma_series final : public series_base<T, K>
 {
 public:
     gamma_series() = delete;
