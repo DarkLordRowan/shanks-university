@@ -2,7 +2,7 @@ export const GH_SERIES = {
     owner: "DarkLordRowan",
     repo: "shanks-university",
     branch: "Fixes",
-    srcFolder: "shanks_transformation/series", // .hpp с кодом ряда
+    srcFolder: "shanks_transformation/series/serieses", // .hpp с кодом ряда
     docsFolder: "theory/series",               // .tex с теорией по ряду
 };
 
