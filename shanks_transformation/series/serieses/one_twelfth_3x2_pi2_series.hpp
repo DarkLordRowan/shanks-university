@@ -1,5 +1,5 @@
 #pragma once
-#include "series.h"
+#include "series/series_base.hpp"
 
 /**
 * @brief Trigonometric series of function 1/12 * (3x^2 - pi^2)

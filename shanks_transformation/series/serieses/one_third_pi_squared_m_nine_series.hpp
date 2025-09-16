@@ -1,5 +1,5 @@
 #pragma once
-#include "series.h"
+#include "series/series_base.hpp"
 
 /**
 * @brief Numerical series representation of (pi^2 - 9) * x / 3

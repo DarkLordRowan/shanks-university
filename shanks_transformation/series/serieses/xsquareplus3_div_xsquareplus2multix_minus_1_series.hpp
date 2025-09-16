@@ -1,5 +1,5 @@
 #pragma once
-#include "series.h"
+#include "series/series_base.hpp"
 
 /**
 * @brief Taylor series of function ((x^2 + 3) / (x^2 + 2*x)) - 1 at x = 1

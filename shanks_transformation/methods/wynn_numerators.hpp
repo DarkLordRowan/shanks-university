@@ -15,9 +15,9 @@
 
 #pragma once
 
-#include "../series.h"
+#include "series/series_base.hpp"
 
- /**
+/**
   * @brief Enum for remainder types to use in Levin-type transformations.
   *
   * Determines the type of numerator function used in the transformation:

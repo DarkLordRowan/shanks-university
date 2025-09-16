@@ -1,5 +1,5 @@
 #pragma once
-#include "series.h"
+#include "series/series_base.hpp"
 
 /**
 * @brief Binomial series (Maclaurin series for (1+x)^a function)

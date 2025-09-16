@@ -1,5 +1,5 @@
 #pragma once
-#include "series.h"
+#include "series/series_base.hpp"
 
 /**
 * @brief Series of function (1 - sqrt(1 - 4x)) / 2x

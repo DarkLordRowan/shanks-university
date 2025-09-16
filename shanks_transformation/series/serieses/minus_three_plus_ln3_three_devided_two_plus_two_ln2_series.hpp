@@ -1,5 +1,5 @@
 #pragma once
-#include "series.h"
+#include "series/series_base.hpp"
 
 /**
 * @brief Numerical series representation of (-3 + (3/2)*ln3 + 2*ln2) * x

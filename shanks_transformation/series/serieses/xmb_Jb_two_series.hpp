@@ -1,5 +1,5 @@
 #pragma once
-#include "series.h"
+#include "series/series_base.hpp"
 
 /**
 * @brief Maclaurin series of function x^(-b) * J_b(2x) where J_b(x) is Bessel function of the first kind of order b
