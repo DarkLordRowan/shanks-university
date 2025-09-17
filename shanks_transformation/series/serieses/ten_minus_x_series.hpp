@@ -29,6 +29,18 @@ public:
     * @return nth term of the Fourier series of the sine functions
     */
     [[nodiscard]] constexpr virtual T operator()(K n) const;
+
+    constexpr inline bool domain_checker(T x) const{ 
+
+		if constexpr ( std::is_floating_point<T>::value || std::is_same<T, float_precision>::value)
+			return x <= static_cast<T>(5) || x >= static_cast<T>(15) || !isfinite(x);
+
+		if constexpr ( std::is_same<T, complex_precision<float_precision>>::value)
+			return x.real() <= static_cast<float_precision>(5) || x.real() >= static_cast<float_precision>(15) || !isfinite(x);
+		
+		return false;
+	}
+    
 };
 
 template <Accepted T, std::unsigned_integral K>
@@ -38,7 +50,7 @@ ten_minus_x_series<T, K>::ten_minus_x_series(T x) : series_base<T, K>(x, static_
     // Сходится при 5 < x < 15 (ряд Фурье для линейной функции на интервале [5, 15])
     // Расходится при x ≤ 5 или x ≥ 15
 
-    if (x <= static_cast<T>(5) || x >= static_cast<T>(15) || !isfinite(x)) {
+    if (domain_checker(x)) {
         this->throw_domain_error("x must be in (5, 15)");
     }
 }

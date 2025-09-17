@@ -32,7 +32,7 @@ template <Accepted T, std::unsigned_integral K>
 pi_squared_6_minus_one_series<T, K>::pi_squared_6_minus_one_series(T x) : 
 series_base<T, K>(
     x, 
-    x * fma(static_cast<T>(std::numbers::pi) / static_cast<T>(6), static_cast<T>(std::numbers::pi), static_cast<T>(-1))
+    x * fma(static_cast<T>(std::numbers::pi) / static_cast<T>(6), static_cast<T>(PI), static_cast<T>(-1))
 )
 {
     this->series_name = "(π²/6 - 1)*x";

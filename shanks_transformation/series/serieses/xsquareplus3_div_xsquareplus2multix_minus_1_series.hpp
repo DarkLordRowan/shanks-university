@@ -26,23 +26,33 @@ public:
     * @return nth term of Taylor series of the sine functions
     */
     [[nodiscard]] constexpr virtual T operator()(K n) const;
+
+    constexpr inline bool domain_checker(T x) const{ 
+
+		if constexpr ( std::is_floating_point<T>::value)
+			return abs(x) >= static_cast<T>(2) || !isfinite(x) || x == static_cast<T>(0); 
+
+		if constexpr ( std::is_same<T, float_precision>::value || std::is_same<T, complex_precision<float_precision>>::value)
+			return abs(x) >= static_cast<float_precision>(2) || !isfinite(x) || x == static_cast<T>(0);
+		
+		return false;
+
+	}
+
 };
 
 template <Accepted T, std::unsigned_integral K>
 xsquareplus3_div_xsquareplus2multix_minus_1_series<T, K>::xsquareplus3_div_xsquareplus2multix_minus_1_series(T x)
 : series_base<T, K>(
     x,
-    abs(x) < static_cast<T>(2) ?
     (x* x + static_cast<T>(3)) /( x * (x + static_cast<T>(2))) - static_cast<T>(1)
-    :
-    static_cast<T>(0)
 )
 {
     this->series_name = "((x²+3)/x)*(x+2)-1";
     // Сходится при |x| < 2 (ряд Лорана, разложение в окрестности бесконечности)
     // Расходится при |x| >= 2
 
-    if (abs(x) >= static_cast<T>(2) || !isfinite(x) || x == static_cast<T>(0)) {
+    if (domain_checker(x)) {
         this->throw_domain_error("|x| must be > 2 and x ≠ 0");
     }
 }

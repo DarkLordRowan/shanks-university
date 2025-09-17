@@ -28,20 +28,32 @@ public:
 	* @return nth term of the Maclaurin series of the sine functions
 	*/
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
+
+	constexpr inline bool domain_checker(T x) const{ 
+
+		if constexpr ( std::is_floating_point<T>::value || std::is_same<T, float_precision>::value)
+			return abs(x) > static_cast<T>(1) || !isfinite(x); 
+
+		if constexpr ( std::is_same<T, complex_precision<float_precision>>::value )
+			return abs(x) > static_cast<float_precision>(1) || !isfinite(x); ; 
+		
+		return false;
+	}
+
 };
 
 template <Accepted T, std::unsigned_integral K>
 ln_1plussqrt1plusxsquare_minus_ln_2_series<T, K>::ln_1plussqrt1plusxsquare_minus_ln_2_series(T x) : 
 series_base<T, K>(
 	x, 
-	log(static_cast<T>(0.5) //* (static_cast<T>(1) + hypot(static_cast<T>(1), x)))
-))
+	log(static_cast<T>(0.5) * (static_cast<T>(1) + hypot(static_cast<T>(1), x)))
+)
 {
 	this->series_name = "ln(1+sqrt(1+x^2))-ln(2)";
 	// Сходится при |x| ≤ 1 (биномиальный ряд для sqrt(1+x²))
 	// Расходится при |x| > 1
 
-	if (x * x > static_cast <T>(1) || !isfinite(x)) {
+	if (domain_checker(x)) {
 		this->throw_domain_error("|x| must be ≤ 1");
 	}
 }

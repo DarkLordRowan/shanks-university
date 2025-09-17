@@ -29,21 +29,54 @@ public:
 	* @return nth term of the Fourier series of the sine functions
 	*/
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
+
+	constexpr inline bool domain_checker(T x) const{ 
+
+		if constexpr ( std::is_floating_point<T>::value)
+			return abs(x) >= static_cast<T>(PI) || !isfinite(x); 
+
+		if constexpr (std::is_same<T, float_precision>::value || std::is_same<T, complex_precision<float_precision>>::value)
+			return abs(x) >= arbPI || !isfinite(x);
+		
+		return false;
+	}
+
+	constexpr inline T calculate_sum(T x) const {
+		if(domain_checker(x)){ return static_cast<T>(0);}
+
+		if constexpr ( std::is_floating_point<T>::value){
+			return x<= static_cast<T>(0) && x<static_cast<T>(PI) ? static_cast<T>(-0.25 * PI) :
+				   x>  static_cast<T>(0) && x<static_cast<T>(PI) ? static_cast<T>(-0.25 * PI) - x :
+				   x;
+		}
+
+		if constexpr ( std::is_same<T, float_precision>::value){
+			return x<= static_cast<float_precision>(0) && x<arbPI ? static_cast<T>(-0.25) * arbPI :
+				   x>  static_cast<float_precision>(0) && x<arbPI ? static_cast<T>(-0.25) * arbPI - x :
+				   x;
+		}
+
+
+		if constexpr ( std::is_same<T, complex_precision<float_precision>>::value ){
+			return x.real()<= static_cast<float_precision>(0) && x.real()<arbPI ? static_cast<T>(-0.25) * static_cast<T>(arbPI) :
+				   x.real()>  static_cast<float_precision>(0) && x.real()<arbPI ? static_cast<T>(-0.25) * static_cast<T>(arbPI) - x :
+				   x;
+		}
+	}
 };
 
 template <Accepted T, std::unsigned_integral K>
 minus_x_minus_pi_4_or_minus_pi_4_series<T, K>::minus_x_minus_pi_4_or_minus_pi_4_series(T x)
-: series_base<T, K>(x,
-	x<= static_cast<T>(0) && x<static_cast<T>(std::numbers::pi) ? static_cast<T>(-0.25 * std::numbers::pi) :
-	x>  static_cast<T>(0) && x<static_cast<T>(std::numbers::pi) ? static_cast<T>(-0.25 * std::numbers::pi) - x :
-	x
+: series_base<T, K>(
+	x,
+	calculate_sum(x)
 )
 {
 	this->series_name = "f(x) = { -x - π/4, -π < x < 0; -π/4, 0 ≤ x < π }";
 	// Сходится при -π < x < π (ряд Фурье для кусочно-линейной функции)
 	// Расходится при x ≤ -π или x ≥ π
 
-	if (abs(x) >= static_cast<T>(std::numbers::pi) || !isfinite(x)) {
+	if (domain_checker(x)) {
 		this->throw_domain_error("x must be in (-π, π)");
 	}
 }

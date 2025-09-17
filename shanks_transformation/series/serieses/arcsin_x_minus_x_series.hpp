@@ -28,6 +28,19 @@ public:
     * @return nth term of the Taylor series of the sine functions
     */
     [[nodiscard]] constexpr virtual T operator()(K n) const;
+
+    constexpr inline bool domain_checker(T x) const{ 
+
+		if constexpr ( std::is_floating_point<T>::value || std::is_same<T, float_precision>::value)
+			return x > static_cast<T>(1.0) || !isfinite(x); 
+
+		if constexpr ( std::is_same<T, complex_precision<float_precision>>::value )
+			return x.real() > static_cast<float_precision>(1.0) || !isfinite(x); 
+		
+		return false;
+
+	}
+
 };
 
 template <Accepted T, std::unsigned_integral K>
@@ -37,7 +50,7 @@ arcsin_x_minus_x_series<T, K>::arcsin_x_minus_x_series(T x) : series_base<T, K>(
     // Сходится при |x| ≤ 1 (ряд для arcsin(x) сходится при |x| ≤ 1)
     // Расходится при |x| > 1
 
-    if (abs(x) > static_cast<T>(1) || !isfinite(x)) {
+    if (domain_checker(x)) {
         this->throw_domain_error("|x| must be ≤ 1");
     }
 }

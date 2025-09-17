@@ -30,6 +30,19 @@ public:
     * @return nth term of the series
     */
     [[nodiscard]] constexpr virtual T operator()(K n) const;
+
+    constexpr inline bool domain_checker(T x, T alpha) const{ 
+
+		if constexpr ( std::is_floating_point<T>::value || std::is_same<T, float_precision>::value)
+			return x >= static_cast<T>(1.0) || !isfinite(x) || !isfinite(alpha); 
+
+		if constexpr ( std::is_same<T, complex_precision<float_precision>>::value )
+			return x.real() >= static_cast<float_precision>(1.0) || !isfinite(x) || !isfinite(alpha); 
+		
+		return false;
+
+	}
+
 private:
 
     /**
@@ -46,7 +59,7 @@ bin_series<T, K>::bin_series(T x, T alpha) : series_base<T, K>(x, pow(static_cas
     // Сходится при |x| < 1 (абсолютно), при x = -1 зависит от α
     // При α > 0 сходится при x = -1, при α ≤ -1 расходится
 
-    if (abs(x) >= static_cast<T>(1) || !isfinite(x) || !isfinite(alpha)) {
+    if (domain_checker(x, alpha)) {
         this->throw_domain_error("|x| must be < 1 and parameters must be finite");
     }
 }

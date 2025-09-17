@@ -147,7 +147,7 @@ T wynn_epsilon_3_algorithm<T, K, series_templ>::operator()(const K n, const K or
 
             DELTA2 = E2 - E1;                   // εₛ⁽ⁿ⁺¹⁾ - εₛ₋₁⁽ⁿ⁾
 
-            ERR2 = abs(DELTA2);                 // Absolute difference
+            //ERR2 = abs(DELTA2);                 // Absolute difference
 
             TOL2 = static_cast<T>(max(          // Tolerance based on machine precision
                 abs(E2), 
@@ -156,7 +156,7 @@ T wynn_epsilon_3_algorithm<T, K, series_templ>::operator()(const K n, const K or
             TOL2*=EMACH;
 
             DELTA3 = E1 - E0;                   // εₛ₋₁⁽ⁿ⁾ - εₛ₋₂⁽ⁿ⁾
-            ERR3 = abs(DELTA3);
+            //ERR3 = abs(DELTA3);
             TOL3 = static_cast<T>(max(
                 abs(E1), 
                 abs(E0)
@@ -164,14 +164,14 @@ T wynn_epsilon_3_algorithm<T, K, series_templ>::operator()(const K n, const K or
             TOL3*= EMACH;
 
             // Check if differences are significant relative to tolerances
-            if (ERR2 > TOL2 || ERR3 > TOL3) {
+            if (abs(DELTA2) > abs(TOL2) || abs(DELTA3) > abs(TOL3)) {
 
                 E3 = e[K1];                     // εₛ⁽ⁿ⁾
                 e[K1] = E1;                     // Store εₛ₋₁⁽ⁿ⁾ temporarily
 
                 DELTA1 = E1 - E3;               // εₛ₋₁⁽ⁿ⁾ - εₛ⁽ⁿ⁾
 
-                ERR1 = abs(DELTA1);
+                //ERR1 = abs(DELTA1);
 
                 TOL1 = static_cast<T>(max(
                     abs(E1), 
@@ -180,23 +180,21 @@ T wynn_epsilon_3_algorithm<T, K, series_templ>::operator()(const K n, const K or
                 TOL1*= EMACH;
 
                 // If differences are insignificant, terminate early
-                if (ERR1 <= TOL1 || ERR2 <= TOL2 || ERR3 <= TOL3) {
+                if (abs(DELTA1) <= abs(TOL1) || abs(DELTA2) <= abs(TOL2) || abs(DELTA3) <= abs(TOL3)) {
                     N = static_cast<K>(2) * I - static_cast<K>(1);
                     break;
                 }
 
                 // For theory, see: Wynn (1962), Eq. (13): Rational function extrapolation step.
                 SS = static_cast<T>(1) / DELTA1 + static_cast<T>(1) / DELTA2 - static_cast<T>(1) / DELTA3;
-                EPSINF = abs(SS * E1);
 
                 // Check if correction term is within threshold
-                if (EPSINF > epsilon_threshold) {
+                if (abs(SS * E1) > abs(epsilon_threshold)) {
                     RES = E1 + static_cast<T>(1) / SS;      // Apply epsilon correction
                     e[K1] = RES;                            // Store updated value
                     K1 -= static_cast<K>(2);                // Move to previous position in table
-                    T ERROR = ERR2 + static_cast<T>(abs(RES - E2)) + ERR3;  // Total error estimat
-                    if (abs(ERROR) <= abs(abs_error)) {
-                        abs_error = ERROR;
+                    if (abs(DELTA2) + abs(RES - E2) + abs(DELTA3) <= abs(abs_error)) {
+                        abs_error = static_cast<T>(abs(DELTA2) + abs(RES - E2) + abs(DELTA3));
                         result = RES;                       // Update best result
                     }
                 }
@@ -209,7 +207,7 @@ T wynn_epsilon_3_algorithm<T, K, series_templ>::operator()(const K n, const K or
             else {
                 // Differences are insignificant; accept current value
                 result = RES;
-                abs_error = ERR2 + ERR3;
+                abs_error = abs(DELTA2) + abs(DELTA3);
                 e[K1] = result;
                 break;
             }
@@ -237,10 +235,10 @@ T wynn_epsilon_3_algorithm<T, K, series_templ>::operator()(const K n, const K or
         }
 
         // Update error estimate and previous result
-        abs_error = max(
+        abs_error = static_cast<T>(max(
             abs(result - resla), 
             abs(EPRN) * abs(result)
-        );
+        ));
 
         resla = result;
     }

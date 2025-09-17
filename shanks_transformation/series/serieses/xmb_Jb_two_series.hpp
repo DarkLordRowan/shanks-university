@@ -29,6 +29,20 @@ public:
     * @return nth term of the series
     */
     [[nodiscard]] constexpr virtual T operator()(K n) const;
+
+    constexpr inline T calculate_sum(T x, K b) const {
+		if(!isfinite(x) || x == static_cast<T>(0)){ return static_cast<T>(0);}
+
+		if constexpr ( std::is_floating_point<T>::value ){
+			return static_cast<T>(1) / pow(x, static_cast<T>(b)) * std::cyl_bessel_j(static_cast<T>(b), static_cast<T>(2) * x);
+		}
+
+		if constexpr ( std::is_same<T, float_precision>::value || std::is_same<T, complex_precision<float_precision>>::value){
+			return static_cast<T>(0);
+		}
+
+	}
+
 private:
 
     /**
@@ -42,7 +56,7 @@ template <Accepted T, std::unsigned_integral K>
 xmb_Jb_two_series<T, K>::xmb_Jb_two_series(T x, K b) : 
 series_base<T, K>(
     x,
-    static_cast<T>(1) / pow(x, static_cast<T>(b)) //* std::cyl_bessel_j(static_cast<T>(b), static_cast<T>(2) * x)
+    calculate_sum(x, b)
     ), mu(b)
 {
     this->series_name = "x⁻ᵇJᵦ(2x)";

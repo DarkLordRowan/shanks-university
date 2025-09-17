@@ -28,13 +28,14 @@ public:
 	* @return nth term of the Maclaurin series of the sine functions
 	*/
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
+
 };
 
 template <Accepted T, std::unsigned_integral K>
 pi_x_multi_e_xpi_plus_e_minusxpi_divided_e_xpi_minus_e_minusxpi_minus_one_series<T, K>::pi_x_multi_e_xpi_plus_e_minusxpi_divided_e_xpi_minus_e_minusxpi_minus_one_series(T x) : 
 series_base<T, K>(
 	x, 
-	static_cast<T>(std::numbers::pi) * x / tanh(static_cast<T>(std::numbers::pi) * x) - static_cast<T>(1)
+	static_cast<T>(PI) * x / tanh(static_cast<T>(PI) * x) - static_cast<T>(1)
 )
 {
 	this->series_name = "π*x*coth(π*x)-1";

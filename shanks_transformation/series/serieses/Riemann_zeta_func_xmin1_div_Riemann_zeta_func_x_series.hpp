@@ -28,6 +28,17 @@ public:
     * @return nth term of the Dirichlet series of the sine functions
     */
     [[nodiscard]] constexpr virtual T operator()(K n) const;
+
+    constexpr inline bool domain_checker(T x) const{ 
+
+		if constexpr ( std::is_floating_point<T>::value || std::is_same<T, float_precision>::value)
+			return x <= static_cast<T>(2) || !isfinite(x);
+
+		if constexpr ( std::is_same<T, complex_precision<float_precision>>::value)
+			return x.real() <= static_cast<float_precision>(2) || !isfinite(x);
+		
+		return false;
+	}
 };
 
 template <Accepted T, std::unsigned_integral K>
@@ -37,7 +48,7 @@ Riemann_zeta_func_xmin1_div_Riemann_zeta_func_x_series<T, K>::Riemann_zeta_func_
     // Сходится при x > 2 (отношение дзета-функций, ζ(x) сходится при x > 1, ζ(x-1) при x > 2)
     // Расходится при x ≤ 2
 
-    if (x <= static_cast<T>(2) || !isfinite(x)) {
+    if (domain_checker(x)) {
         this->throw_domain_error("x must be > 2");
     }
 }

@@ -44,6 +44,18 @@ private:
 	* @return nth term of the series
 	*/
 	T access_row(K n);
+
+	constexpr inline bool domain_checker(T x) const{ 
+
+		if constexpr ( std::is_floating_point<T>::value || std::is_same<T, float_precision>::value)
+			return abs(x) >= static_cast<T>(1) || !isfinite(x); 
+
+		if constexpr ( std::is_same<T, complex_precision<float_precision>>::value )
+			return abs(x) >= static_cast<float_precision>(1) || !isfinite(x); 
+		
+		return false;
+	}
+	
 };
 
 template <Accepted T, std::unsigned_integral K>
@@ -62,7 +74,7 @@ series_base<T, K>(
 		throw std::overflow_error("sum is too big");
 	}
 
-	if (abs(x) >= static_cast<T>(1) || !isfinite(x)) {
+	if (domain_checker(x)) {
 		series_base<T, K>::throw_domain_error("|x| must be < 1");
 	}
 }

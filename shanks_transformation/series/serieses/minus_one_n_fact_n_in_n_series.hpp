@@ -28,6 +28,7 @@ public:
     * @return nth term of the Maclaurin series of the sine functions
     */
     [[nodiscard]] constexpr virtual T operator()(K n) const;
+
 };
 
 template <Accepted T, std::unsigned_integral K>

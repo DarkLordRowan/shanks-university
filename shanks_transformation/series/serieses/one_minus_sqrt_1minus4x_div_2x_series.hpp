@@ -28,6 +28,18 @@ public:
 	* @return nth term of the series of the sine functions
 	*/
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
+
+	constexpr inline bool domain_checker(T x) const{ 
+
+		if constexpr ( std::is_floating_point<T>::value || std::is_same<T, float_precision>::value)
+			return abs(x) > static_cast<T>(0.25) || x == static_cast<T>(0) || !isfinite(x);
+
+		if constexpr ( std::is_same<T, complex_precision<float_precision>>::value)
+			return abs(x) > static_cast<float_precision>(0.25) || x == static_cast<T>(0) || !isfinite(x);
+		
+		return false;
+	}
+
 };
 
 template <Accepted T, std::unsigned_integral K>
@@ -41,7 +53,7 @@ series_base<T, K>(
 	// Сходится при 0 < |x| ≤ 0.25 (производящая функция для чисел Каталана)
 	// Расходится при |x| > 0.25 или x = 0
 
-	if (abs(x) > static_cast<T>(0.25) || x == static_cast<T>(0) || !isfinite(x)) {
+	if (domain_checker(x)) {
 		this->throw_domain_error("|x| must be in (0, 0.25]");
 	}
 }

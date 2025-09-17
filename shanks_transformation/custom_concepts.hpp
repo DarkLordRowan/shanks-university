@@ -8,6 +8,7 @@
     #include "libs/arbitrary_arithmetics/complexprecision.h"
 #endif
 
+#define USE_COMPLEX
 
 template<typename T>
 concept FloatLike = requires{ std::is_floating_point<T>::value || std::is_same<T, float_precision>::value; };

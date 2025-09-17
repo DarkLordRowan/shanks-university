@@ -29,6 +29,17 @@ public:
     */
     [[nodiscard]] constexpr virtual T operator()(K n) const;
 
+    constexpr inline bool domain_checker(T x, T s) const{ 
+
+		if constexpr ( std::is_floating_point<T>::value || std::is_same<T, float_precision>::value)
+			return s <= static_cast<T>(0) || !isfinite(x) || !isfinite(s);
+
+		if constexpr ( std::is_same<T, complex_precision<float_precision>>::value )
+			return s.real() <= static_cast<float_precision>(0) || !isfinite(x) || !isfinite(s);
+
+		return false;
+	}
+
 private:
 
     /**
@@ -45,7 +56,7 @@ Incomplete_Gamma_func_series<T, K>::Incomplete_Gamma_func_series(T x, T s) : ser
     // Сходится при ∀x ∈ ℝ, s > 0 (неполная гамма-функция)
     // Расходится при s ≤ 0
 
-    if (s <= static_cast<T>(0) || !isfinite(x) || !isfinite(s)) {
+    if (domain_checker(x, s)) {
         this->throw_domain_error("s must be > 0 and parameters must be finite");
     }
 }

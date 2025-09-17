@@ -141,9 +141,22 @@ levin_algorithm<T, K,series_templ>::levin_algorithm(
 	{//TODO: нужно ли проверять бету на допустимость?
 
 		// Validate and set beta parameter (must be positive)
-		if (beta > static_cast<T>(0))
-			this->beta = beta;
-		else this->beta = static_cast<T>(1);
+
+		if constexpr(std::is_floating_point<T>::value || std::is_same<T, float_precision>::value){
+
+			this->beta = (beta > static_cast<T>(0) ? beta : static_cast<T>(1));
+
+		} else if constexpr (std::is_same<T, complex_precision<float_precision>>::value){
+
+			this->beta = (
+				beta.real() > static_cast<float_precision>(0) && beta.imag() == static_cast<float_precision>(0) ?
+				beta :
+				complex_precision<float_precision>(1)
+			);
+			
+		}	
+
+		
 
 	//check variant else default 'u'
     //TODO: тоже самое наверное

@@ -57,9 +57,9 @@ T mean_sinh_sin_series<T, K>::access_row(K n)
 	auto& series_vec = this->series_vector; // ссылка на член базового класса
 	auto old_size = series_vec.size();
 	series_vec.reserve(n);
-	T a;
+	K a;
 	for (auto i = old_size; i <= static_cast<typename std::vector<T>::size_type>(n); ++i) {
-		a = static_cast<T>(fma(4, i, 1));
+		a = static_cast<K>(fma(4, i, 1));
 		series_vec.push_back(series_vec[i - 1] * pow(this->x, static_cast<T>(4)) / static_cast<T>((4 * i * a * (a - 2) * (a - 3))));
 	}
 	return series_vec[n];

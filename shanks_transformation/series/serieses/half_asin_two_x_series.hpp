@@ -28,6 +28,18 @@ public:
     * @return nth term of the series
     */
     [[nodiscard]] constexpr virtual T operator()(K n) const;
+
+    constexpr inline bool domain_checker(T x) const{ 
+
+		if constexpr ( std::is_floating_point<T>::value || std::is_same<T, float_precision>::value)
+			return abs(x) > static_cast<T>(0.5) || !isfinite(x); 
+
+		if constexpr ( std::is_same<T, complex_precision<float_precision>>::value )
+			return abs(x.real()) > static_cast<float_precision>(0.5) || !isfinite(x); 
+		
+		return false;
+
+	}
 };
 
 template <Accepted T, std::unsigned_integral K>
@@ -36,7 +48,7 @@ half_asin_two_x_series<T, K>::half_asin_two_x_series(T x) : series_base<T, K>(x,
     this->series_name = "0.5*asin(2x)";
     // Сходится при |x| ≤ 0.5 (абсолютно при |x| < 0.5, условно при |x| = 0.5)
 
-    if (abs(x) > static_cast<T>(0.5) || !isfinite(x)) {
+    if (domain_checker(x)) {
         this->throw_domain_error("|x| must be ≤ 0.5");
     }
 }

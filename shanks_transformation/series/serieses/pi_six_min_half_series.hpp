@@ -31,7 +31,7 @@ public:
 };
 
 template <Accepted T, std::unsigned_integral K>
-pi_six_min_half_series<T, K>::pi_six_min_half_series(T x) : series_base<T, K>(x, x * (static_cast<T>(std::numbers::pi) / static_cast<T>(6) - static_cast<T>(0.5)))
+pi_six_min_half_series<T, K>::pi_six_min_half_series(T x) : series_base<T, K>(x, x * (static_cast<T>(PI) / static_cast<T>(6) - static_cast<T>(0.5)))
 {
     this->series_name = "(π/6 - 0.5)*x";
     // Сходится при ∀x ∈ ℝ (линейная функция)
