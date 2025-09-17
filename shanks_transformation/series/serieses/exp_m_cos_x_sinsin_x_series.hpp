@@ -1,4 +1,7 @@
 #pragma once
+
+#include <numbers>
+
 #include "../series_base.hpp"
 
 /**
@@ -28,6 +31,18 @@ public:
     * @return nth term of the series
     */
     [[nodiscard]] constexpr virtual T operator()(K n) const;
+
+    constexpr inline bool domain_checker(T x) const{ 
+
+		if constexpr ( std::is_floating_point<T>::value || std::is_same<T, float_precision>::value)
+			return abs(x) >= static_cast<T>(PI) || !isfinite(x); 
+
+		if constexpr ( std::is_same<T, complex_precision<float_precision>>::value )
+			return abs(x.real()) >= arbPI || !isfinite(x); 
+		
+		return false;
+
+	}
 };
 
 template <Accepted T, std::unsigned_integral K>
@@ -37,7 +52,7 @@ exp_m_cos_x_sinsin_x_series<T, K>::exp_m_cos_x_sinsin_x_series(T x) : series_bas
     // Сходится при ∀x ∈ ℝ (композиция всюду сходящихся функций)
     // Однако для численной стабильности ограничиваем |x| ≤ π
 
-    if (abs(x) >= static_cast<T>(std::numbers::pi) || !isfinite(x)) {
+    if (domain_checker(x)) {
         this->throw_domain_error("|x| must be ≤ π for numerical stability");
     }
 }

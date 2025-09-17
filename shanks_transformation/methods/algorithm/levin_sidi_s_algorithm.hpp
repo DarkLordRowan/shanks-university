@@ -14,6 +14,7 @@
 #include "../remainders.hpp"
 #include "../series_acceleration.hpp"
 #include <memory>                    // Include for unique ptr
+#include <type_traits>
 
  /**
   * @brief Levin-Sidi S-transformation class template (Drummond's D-transformation).
@@ -240,12 +241,17 @@ levin_sidi_s_algorithm<T, K, series_templ>::levin_sidi_s_algorithm(
     // beta must be nonzero positive real number
     // beta = 1 is default
     // check parameter else default
-    if (parameter > static_cast<T>(0)) this->beta = parameter;
-    else {
-        this->beta = static_cast<T>(1);
-        //TODO: наверное сообщение по типу usage
-    }
 
+    if constexpr (std::is_floating_point<T>::value || std::is_same<T, float_precision>::value){
+        this->beta = (parameter > static_cast<T>(0) ?  parameter : static_cast<T>(1));
+    } else if constexpr (std::is_same<T, complex_precision<float_precision>>::value){
+        this->beta = (
+            parameter.real() > static_cast<float_precision>(0) && parameter.imag() == static_cast<float_precision>(0) ?
+            parameter :
+            complex_precision<float_precision>(1)
+        );
+    }
+    
     //TODO: тоже самое наверное
     // Initialize the appropriate remainder transformation based on variant
     switch(variant){

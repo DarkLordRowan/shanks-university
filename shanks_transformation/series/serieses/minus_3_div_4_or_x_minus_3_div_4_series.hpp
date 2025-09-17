@@ -30,22 +30,49 @@ public:
 	* @return nth term of the Fourier series of the sine functions
 	*/
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
+
+	constexpr inline bool domain_checker(T x) const{ 
+
+		if constexpr ( std::is_floating_point<T>::value || std::is_same<T, float_precision>::value)
+			return abs(x) >= static_cast<T>(3) || !isfinite(x); 
+
+		if constexpr ( std::is_same<T, complex_precision<float_precision>>::value )
+			return abs(x) >= static_cast<float_precision>(3) || !isfinite(x); 
+		
+		return false;
+	}
+
+	constexpr inline T calculate_sum(T x) const {
+		if(domain_checker(x)){ return static_cast<T>(0);}
+
+		if constexpr ( std::is_floating_point<T>::value || std::is_same<T, float_precision>::value){
+			return static_cast<T>(-3) < x && x < static_cast<T>(0) ? 
+					static_cast<T>(-0.75) : 
+					x - static_cast<T>(-0.75);
+		}
+
+
+		if constexpr ( std::is_same<T, complex_precision<float_precision>>::value ){
+			return static_cast<float_precision>(-3) < x.real() && x.real() < static_cast<float_precision>(0) ? 
+					static_cast<complex_precision<float_precision>>(-0.75) : 
+					x - static_cast<complex_precision<float_precision>>(-0.75);
+		}
+	}
+
 };
 
 template <Accepted T, std::unsigned_integral K>
 minus_3_div_4_or_x_minus_3_div_4_series<T, K>::minus_3_div_4_or_x_minus_3_div_4_series(T x) : 
 series_base<T, K>(
 	x, 
-	static_cast<T>(-3) < x && x < static_cast<T>(0) ? 
-	static_cast<T>(-0.75) : 
-	x - static_cast<T>(-0.75)
+	calculate_sum(x)
 )
 {
 	this->series_name = "f(x) = { -3/4, -3 < x < 0; x - 3/4, 0 ≤ x < 3 }";
 	// Сходится при -3 < x < 3 (ряд Фурье для кусочно-линейной функции на интервале [-3, 3])
 	// Расходится при x ≤ -3 или x ≥ 3
 
-	if (abs(x) >= static_cast<T>(3)|| !isfinite(x)) {
+	if (domain_checker(x)) {
 		this->throw_domain_error("x must be in (-3, 3)");
 	}
 }

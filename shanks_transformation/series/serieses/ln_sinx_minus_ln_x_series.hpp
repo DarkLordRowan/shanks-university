@@ -28,6 +28,21 @@ public:
     * @return nth term of the Maclaurin series of the sine functions
     */
     [[nodiscard]] constexpr virtual T operator()(K n) const;
+
+    constexpr inline bool domain_checker(T x) const{ 
+
+		if constexpr ( std::is_floating_point<T>::value)
+			return x <= static_cast<T>(0) || x > static_cast<T>(PI) || !isfinite(x); 
+
+        if constexpr (std::is_same<T, float_precision>::value)
+            return x <= static_cast<T>(0) || x > arbPI || !isfinite(x); 
+
+		if constexpr ( std::is_same<T, complex_precision<float_precision>>::value )
+			return x.real() <= static_cast<float_precision>(0) || x.real() > arbPI || !isfinite(x); 
+		
+		return false;
+	}
+    
 };
 
 template <Accepted T, std::unsigned_integral K>
@@ -37,7 +52,7 @@ ln_sinx_minus_ln_x_series<T, K>::ln_sinx_minus_ln_x_series(T x) : series_base<T,
     // Сходится при 0 < x ≤ π (ряд для логарифма синуса)
     // Расходится при x ≤ 0 или x > π (sin(x)/x ≤ 0, логарифм не определён)
 
-    if (x <= static_cast<T>(0) || x > static_cast<T>(std::numbers::pi) || !isfinite(x)) {
+    if (domain_checker(x)) {
         this->throw_domain_error("x must be in (0, π]");
     }
 }

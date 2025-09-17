@@ -25,10 +25,31 @@ public:
     * @return nth term of the series
     */
     [[nodiscard]] constexpr virtual T operator()(K n) const;
+
+    constexpr inline T calculate_sum(T x) const {
+
+		if(!isfinite(x)){ return static_cast<T>(0);}
+
+        T res = static_cast<T>(-1)/static_cast<T>(3);
+
+		if constexpr ( std::is_floating_point<T>::value){
+			res += static_cast<T>(0.125 * PI);
+		}
+
+		if constexpr ( std::is_same<T, float_precision>::value || std::is_same<T, complex_precision<float_precision>>::value){
+			res +=static_cast<T>(0.125) * static_cast<T>(arbPI);
+        }
+
+        return x * res;
+	}
 };
 
 template <Accepted T, std::unsigned_integral K>
-eighth_pi_m_one_third_series<T, K>::eighth_pi_m_one_third_series(T x) : series_base<T, K>(x, x * (static_cast<T>(std::numbers::pi * 0.125) - static_cast<T>(1) / static_cast<T>(3)))
+eighth_pi_m_one_third_series<T, K>::eighth_pi_m_one_third_series(T x) : 
+series_base<T, K>(
+    x, 
+    calculate_sum(x)
+)
 {
     this->series_name = "(π/8 - 1/3)*x";
     // Сходится при ∀x ∈ ℝ (линейная функция)

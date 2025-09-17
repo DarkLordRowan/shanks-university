@@ -29,7 +29,7 @@ public:
 };
 
 template <Accepted T, std::unsigned_integral K>
-pi_series<T, K>::pi_series(T x) : series_base<T, K>(x)
+pi_series<T, K>::pi_series(T x) : series_base<T, K>(x, static_cast<T>(PI))
 {
     this->series_name = "π";
     // Сходится при ∀x ∈ ℝ (константа π)

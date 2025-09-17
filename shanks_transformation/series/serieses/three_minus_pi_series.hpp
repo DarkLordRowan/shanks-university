@@ -25,10 +25,11 @@ public:
     * @return nth term of the series
     */
     [[nodiscard]] constexpr virtual T operator()(K n) const;
+    
 };
 
 template <Accepted T, std::unsigned_integral K>
-three_minus_pi_series<T, K>::three_minus_pi_series(T x) : series_base<T, K>(x, (static_cast<T>(3) - static_cast<T>(std::numbers::pi)) * x)
+three_minus_pi_series<T, K>::three_minus_pi_series(T x) : series_base<T, K>(x, (static_cast<T>(3) - static_cast<T>(PI)) * x)
 {
     this->series_name = "(3-π)*x";
     // Сходится при ∀x ∈ ℝ (линейная функция)

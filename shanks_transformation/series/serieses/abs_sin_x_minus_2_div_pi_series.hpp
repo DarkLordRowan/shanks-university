@@ -1,5 +1,6 @@
 #pragma once
 #include "../series_base.hpp"
+#include <type_traits>
 
 /**
 * @brief Fourier series of system functions sin(x) - 2/pi, 0 <= x <= pi
@@ -29,19 +30,59 @@ public:
 	* @return nth term of the Fourier series of the sine functions
 	*/
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
+
+	constexpr inline bool domain_checker(T x) const{ 
+
+		if constexpr ( std::is_floating_point<T>::value)
+			return x < 0 || x > static_cast<T>(2.0 * PI) || !isfinite(x); 
+
+		if constexpr ( std::is_same<T, float_precision>::value)
+			return x < static_cast<float_precision>(0) || x > static_cast<float_precision>(2.0) * arbPI || !isfinite(x);
+
+		if constexpr ( std::is_same<T, complex_precision<float_precision>>::value )
+			return x.real() < static_cast<float_precision>(0) || x.real() > static_cast<float_precision>(2.0) * arbPI || !isfinite(x); 
+		
+		return false;
+
+	}
+
+	constexpr inline T calculate_sum(T x) const {
+		if(domain_checker(x)){ return static_cast<T>(0);}
+
+		if constexpr ( std::is_floating_point<T>::value){
+			return x < static_cast<T>(PI) ? 
+			 sin(x) - static_cast<T>(2.0)/static_cast<T>(PI) :
+			-sin(x) - static_cast<T>(2.0)/static_cast<T>(PI);
+		}
+
+		if constexpr ( std::is_same<T, float_precision>::value){
+			return x < arbPI ? 
+			 sin(x) - static_cast<T>(2.0)/static_cast<T>(arbPI) :
+			-sin(x) - static_cast<T>(2.0)/static_cast<T>(arbPI);
+		}
+
+		if constexpr ( std::is_same<T, complex_precision<float_precision>>::value ){
+			return x.real() < arbPI ? 
+			 sin(x) - static_cast<T>(2.0)/static_cast<T>(arbPI) :
+			-sin(x) - static_cast<T>(2.0)/static_cast<T>(arbPI);
+		}
+	}
+
 };
+
 
 template <Accepted T, std::unsigned_integral K>
 abs_sin_x_minus_2_div_pi_series<T, K>::abs_sin_x_minus_2_div_pi_series(T x) : 
 series_base<T, K>(
 	x, 
-	static_cast<T>(0) <= x && x <= static_cast<T>(std::numbers::pi) ? static_cast<T>(sin(x)) - (static_cast<T>(2) / static_cast<T>(std::numbers::pi)) : -static_cast<T>(sin(x)) - (static_cast<T>(2) / static_cast<T>(std::numbers::pi)))
+	calculate_sum(x)
+)
 {
 	this->series_name = "|sin(x)| - 2/π";
 	// Сходится при 0 ≤ x ≤ 2π (ряд Фурье для функции |sin(x)|)
 	// Расходится при x < 0 или x > 2π
 
-	if (x < static_cast<T>(0) || x > static_cast<T>(2 * std::numbers::pi) || !isfinite(x)) {
+	if (domain_checker(x)) {
 		this->throw_domain_error("x must be in [0, 2π]");
 	}
 }

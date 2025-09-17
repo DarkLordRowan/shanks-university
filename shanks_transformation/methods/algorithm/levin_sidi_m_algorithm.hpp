@@ -14,6 +14,7 @@
 #include "../series_acceleration.hpp"
 #include "../remainders.hpp"
 #include <memory> // For std::unique_ptr
+#include <type_traits>
 
  /**
   * @brief Levin-Sidi M-transformation class template.
@@ -115,8 +116,16 @@ inline T levin_sidi_m_algorithm<T, K, series_templ>::calculate(const K n, const 
 
 	//TODO разобраться с документом (pdf) n/order
     // Validate parameter constraint: gamma >= n - 1
-	if (gamma - static_cast<T>(n - static_cast<K>(1)) < static_cast<T>(0))
-		throw std::domain_error("gamma cannot be lesser than n - 1");
+
+	if constexpr (std::is_floating_point<T>::value || std::is_same<T, float_precision>::value){
+		if(gamma - static_cast<T>(n - 1) < static_cast<T>(0)){
+			throw std::domain_error("gamma cannot be lesser than n - 1");
+		}
+	}  else if constexpr (std::is_same<T, complex_precision<float_precision>>::value){
+		if (gamma.real() - static_cast<float_precision>(n-1) < static_cast<float_precision>(0)){
+			throw std::domain_error("gamma cannot be lesser than n - 1");
+		}
+	}
 
 	T numerator = static_cast<T>(0), denominator = static_cast<T>(0);
 

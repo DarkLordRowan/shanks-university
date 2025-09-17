@@ -12,6 +12,9 @@
 
 using std::isfinite;
 
+static const float_precision arbPI = float_precision(_float_table(_PI, float_precision_ctrl.precision()));
+static const double PI = std::numbers::pi;
+
 
  /**
  * @brief Abstract class for series
@@ -186,7 +189,7 @@ constexpr const K series_base<T, K>::double_fact(K n)
 template <Accepted T, std::unsigned_integral K>
 constexpr const T series_base<T, K>::binomial_coefficient(const T n, const K k)
 {
-	T b_c = 1;
+	T b_c = static_cast<T>(1);
 	for (K i = 0; i < k; ++i)
 		b_c *= (n - static_cast<T>(i)) / static_cast<T>(i + 1);
 	return b_c;

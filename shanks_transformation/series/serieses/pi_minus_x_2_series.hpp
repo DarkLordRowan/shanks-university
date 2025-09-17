@@ -28,16 +28,31 @@ public:
     * @return nth term of the Maclaurin series of the sine functions
     */
     [[nodiscard]] constexpr virtual T operator()(K n) const;
+
+    constexpr inline bool domain_checker(T x) const{ 
+
+		if constexpr ( std::is_floating_point<T>::value)
+			return x <= static_cast<T>(0) || x >= static_cast<T>(2.0 * PI) || !isfinite(x);
+        
+        if constexpr ( std::is_same<T, float_precision>::value)
+			return x <= static_cast<T>(0) || x >= static_cast<T>(2) * arbPI || !isfinite(x);
+
+		if constexpr ( std::is_same<T, complex_precision<float_precision>>::value)
+			return x.real() <= static_cast<float_precision>(0) || x.real() >= static_cast<float_precision>(2) * arbPI || !isfinite(x);
+		
+		return false;
+	}
+
 };
 
 template <Accepted T, std::unsigned_integral K>
-pi_minus_x_2_series<T, K>::pi_minus_x_2_series(T x) : series_base<T, K>(x, static_cast<T>(0.5) * (static_cast<T>(std::numbers::pi) - x))
+pi_minus_x_2_series<T, K>::pi_minus_x_2_series(T x) : series_base<T, K>(x, static_cast<T>(0.5) * (static_cast<T>(PI) - x))
 {
     this->series_name = "(π-x)/2";
     // Сходится при 0 < x < 2π (ряд Фурье для функции f(x) = x)
     // Расходится при x ≤ 0 или x ≥ 2π
 
-    if (x <= static_cast<T>(0) || x >= static_cast<T>(2 * std::numbers::pi) || !isfinite(x)) {
+    if (domain_checker(x)) {
         this->throw_domain_error("x must be in (0, 2π)");
     }
 }

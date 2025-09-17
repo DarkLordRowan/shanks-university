@@ -29,22 +29,58 @@ public:
 	* @return nth term of the Fourier series of the sine functions
 	*/
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
+
+	constexpr inline bool domain_checker(T x) const{ 
+
+		if constexpr ( std::is_floating_point<T>::value)
+			return x <= static_cast<T>(0) || x >= static_cast<T>(2.0 * PI) || !isfinite(x);
+        
+        if constexpr ( std::is_same<T, float_precision>::value)
+			return x <= static_cast<T>(0) || x >= static_cast<T>(2.0) * arbPI || !isfinite(x);
+
+		if constexpr ( std::is_same<T, complex_precision<float_precision>>::value)
+			return x.real() <= static_cast<float_precision>(0) || x.real() >= static_cast<float_precision>(2.0) * arbPI || !isfinite(x);
+		
+		return false;
+	}
+
+	constexpr inline T calculate_sum(T x) const {
+		if(domain_checker(x)){ return static_cast<T>(0);}
+
+		if constexpr ( std::is_floating_point<T>::value ){
+			return static_cast<T>(0) < x && x < static_cast<T>(PI) ? 
+				   static_cast<T>(PI) * x - x * x : 
+				   (x * x) - static_cast<T>(3.0 * PI) * x + static_cast<T>(2.0 * PI) * static_cast<T>(PI);
+		}
+
+		if constexpr ( std::is_same<T, float_precision>::value){
+			return static_cast<T>(0) < x && x < arbPI ? 
+				   arbPI * x - x * x : 
+				   (x * x) - static_cast<T>(3.0) * arbPI * x + static_cast<T>(2.0) * arbPI * arbPI;
+		}
+
+
+		if constexpr ( std::is_same<T, complex_precision<float_precision>>::value ){
+			return static_cast<float_precision>(0) < x.real() && x.real() < arbPI ? 
+				   static_cast<T>(arbPI) * x - x * x : 
+				   (x * x) - static_cast<T>(3.0) * static_cast<T>(arbPI) * x + static_cast<T>(2.0) * static_cast<T>(arbPI * arbPI);
+		}
+	}
+
 };
 
 template <Accepted T, std::unsigned_integral K>
 pi_x_minus_x_square_and_x_square_minus_three_pi_x_plus_two_pi_square_series<T, K>::pi_x_minus_x_square_and_x_square_minus_three_pi_x_plus_two_pi_square_series(T x) : 
 series_base<T, K>(
 	x, 
-	static_cast<T>(0) < x && x < static_cast<T>(std::numbers::pi) ? 
-	static_cast<T>(std::numbers::pi) * x - x * x : 
-	(x * x) - static_cast<T>(3.0 * std::numbers::pi * x) + static_cast<T>(2.0 * std::numbers::pi) * static_cast<T>(std::numbers::pi)
+	calculate_sum(x)
 )
 {
 	this->series_name = "f(x) = { πx - x², 0 < x < π; x² - 3πx + 2π², π ≤ x < 2π }";
 	// Сходится при 0 < x < 2π (ряд Фурье для кусочно-квадратичной функции)
 	// Расходится при x ≤ 0 или x ≥ 2π
 
-	if (x <= static_cast<T>(0) || x >= static_cast<T>(2.0 * std::numbers::pi) || !isfinite(x)) {
+	if (domain_checker(x)) {
 		this->throw_domain_error("x must be in (0, 2π)");
 	}
 }

@@ -1278,14 +1278,21 @@ inline static std::unique_ptr<series_base<T, K>> create_series_by_id(series_id_t
 		return std::make_unique<sqrt_1plusx_min_1_min_x_div_2_series<T, K>>(x);
 	case ln13_min_ln7_div_7_series_id:
 		return std::make_unique<ln13_min_ln7_div_7_series<T, K>>(x);
+
+	#ifndef USE_COMPLEX
+
 	case Ja_x_series_id: {
 		T a;
 		std::cout << "Enter the value for constant a for the Ja_x series: ";
 		std::cin >> a;
 		return std::make_unique<Ja_x_series<T, K>>(x, a);
 	}
+	
 	case one_div_sqrt2_sin_xdivsqrt2_series_id:
 		return std::make_unique<one_div_sqrt2_sin_xdivsqrt2_series<T, K>>(x);
+
+	#endif
+
 	case ln_1plusx_div_1plusx2_series_id:
 		return std::make_unique<ln_1plusx_div_1plusx2_series<T, K>>(x);
 	case cos_sqrt_x_series_id:
@@ -1296,12 +1303,15 @@ inline static std::unique_ptr<series_base<T, K>> create_series_by_id(series_id_t
 		return std::make_unique<x_div_1minx_series<T, K>>(x);
 	case x_div_1minx2_series_id:
 		return std::make_unique<x_div_1minx2_series<T, K>>(x);
+
+	#ifndef USE_COMPLEX
 	case gamma_series_id: {
 		T t;
 		std::cout << "Enter the parameter t for the gamma series: ";
 		std::cin >> t;
 		return std::make_unique<gamma_series<T, K>>(t, x);
 	}
+	#endif
 
 	default: throw std::domain_error("Series not implemented");
 	}
@@ -1373,11 +1383,23 @@ inline static void main_testing_function()
 	std::cout << "Enter x - the argument for the functional series" << '\n';
 	T x = static_cast<T>(0);
 	if constexpr (std::is_same<T, float_precision>::value){
+
+		//(real_part, imag_part)
 		std::string kostil;
 		std::cin >> kostil;
 
 		x=T(kostil);
 
+	} else if constexpr (std::is_same<T, complex_precision<float_precision>>::value) {
+
+		std::string real_p;
+		std::string imag_p;
+
+		std::cout << "Real part: "; std::cin>>real_p;
+		std::cout << "Imag part: "; std::cin>>imag_p;
+
+		x = complex_precision<float_precision>(real_p, imag_p);
+		
 	} else {
 		std::cin >> x;
 	}
@@ -1550,6 +1572,8 @@ inline static void main_testing_function()
 				try{
 					print_transform(i, order, std::move(current_transform.get()));
 				} catch(float_precision::divide_by_zero){
+					std::cout << "divide_by_zero\n";
+				} catch(complex_precision<float_precision>::divide_by_zero){
 					std::cout << "divide_by_zero\n";
 				}
 			}

@@ -373,6 +373,10 @@ template<class _Ty> complex_precision<_Ty> asin(const complex_precision<_Ty> x)
 	return complex_precision<_Ty>(z * complex_precision<_Ty>(0,-1));
 }
 
+#ifndef INC_FPRECISION
+   #include "fprecision.h"
+#endif
+
 // Specialization for acos for float_precision
 //
 inline complex_precision<float_precision> acos(const complex_precision<float_precision> x)
@@ -487,6 +491,7 @@ template<class _Ty> complex_precision<_Ty> atanh(const complex_precision<_Ty> x)
 
 //CUSTOM DEFINITIONS FOR ISFINITE, FMA, JUST FOR EVERYTHING TO WORK
 
+template<class _Ty> inline complex_precision<_Ty> hypot(const complex_precision<_Ty>& x, const complex_precision<_Ty>& y){ return sqrt(x * x + y *y ); }
 template<class _Ty> inline bool isfinite(const complex_precision<_Ty>& x){ return isfinite(x.real()) && isfinite(x.imag()); }
 template<class _Ty> inline complex_precision<_Ty> fma(complex_precision<_Ty> x, complex_precision<_Ty> y, complex_precision<_Ty> z){
    
@@ -498,6 +503,6 @@ template<class _Ty> inline complex_precision<_Ty> fma(complex_precision<_Ty> x, 
    return res;
 }
 
-template<class _Ty> inline std::string to_string(const complex_precision<_Ty>& x){ return x.toString(); }
+template<class _Ty> inline std::string to_string(const complex_precision<_Ty>& x){ return x.real().toString() + x.imag().toString() + " * i"; }
 
 #endif

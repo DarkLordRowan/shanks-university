@@ -28,6 +28,17 @@ public:
 	* @return nth term of the Maclaurin series of the sine functions
 	*/
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
+
+	constexpr inline bool domain_checker(T x) const{ 
+
+		if constexpr ( std::is_floating_point<T>::value)
+			return abs(x) > static_cast<T>(PI * 0.5) || !isfinite(x);
+        
+        if constexpr ( std::is_same<T, float_precision>::value || std::is_same<T, complex_precision<float_precision>>::value)
+			return abs(x) > arbPI * static_cast<float_precision>(0.5) || !isfinite(x);
+		
+		return false;
+	}
 };
 
 template <Accepted T, std::unsigned_integral K>
@@ -41,7 +52,7 @@ series_base<T, K>(
 	// Сходится при |x| ≤ π/2 (тригонометрический ряд)
 	// Расходится при |x| > π/2
 
-	if (abs(x) > static_cast<T>(std::numbers::pi * 0.5) || !isfinite(x)) {
+	if (domain_checker(x)) {
 		this->throw_domain_error("|x| must be ≤ π/2");
 	}
 }

@@ -28,6 +28,17 @@ public:
     * @return nth term of the ln1minx2 series
     */
     [[nodiscard]] constexpr virtual T operator()(K n) const;
+
+    constexpr inline bool domain_checker(T x) const{ 
+
+		if constexpr ( std::is_floating_point<T>::value || std::is_same<T, float_precision>::value)
+			return abs(x) >= static_cast<T>(1) || !isfinite(x); 
+
+		if constexpr ( std::is_same<T, complex_precision<float_precision>>::value )
+			return abs(x) >= static_cast<float_precision>(1) || !isfinite(x); 
+		
+		return false;
+	}
 };
 
 template <Accepted T, std::unsigned_integral K>
@@ -37,7 +48,7 @@ ln1_m_x2_series<T, K>::ln1_m_x2_series(T x) : series_base<T, K>(x, log(static_ca
     // Сходится при |x| < 1 (ряд для ln(1-z) сходится при |z| < 1, где z = x²)
     // Расходится при |x| ≥ 1
 
-    if (abs(x) >= static_cast<T>(1) || !isfinite(x)) {
+    if (domain_checker(x)) {
         this->throw_domain_error("|x| must be < 1");
     }
 }

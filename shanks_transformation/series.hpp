@@ -240,14 +240,19 @@ enum series_id_t {
 #include "series/serieses/five_pi_twelve_series.hpp"
 #include "series/serieses/four_arctan_series.hpp"
 #include "series/serieses/four_ln2_m_3_series.hpp"
-#include "series/serieses/gamma_series.hpp"
 #include "series/serieses/half_asin_two_x_series.hpp"
 #include "series/serieses/half_minus_sinx_multi_pi_4_series.hpp"
 #include "series/serieses/half_multi_ln_1div2multi1minuscosx_series.hpp"
 #include "series/serieses/Incomplete_Gamma_func_series.hpp"
 #include "series/serieses/inverse_1mx_series.hpp"
 #include "series/serieses/inverse_sqrt_1m4x_series.hpp"
-#include "series/serieses/Ja_x_series.hpp"
+
+#ifndef USE_COMPLEX
+	#include "series/serieses/gamma_series.hpp"
+	#include "series/serieses/Ja_x_series.hpp"
+	#include "series/serieses/one_div_sqrt2_sin_xdivsqrt2_series.hpp"
+#endif
+
 #include "series/serieses/K_x_series.hpp"
 #include "series/serieses/Lambert_W_func_series.hpp"
 #include "series/serieses/ln1_m_x2_series.hpp"
@@ -269,7 +274,6 @@ enum series_id_t {
 #include "series/serieses/minus_one_quarter_series.hpp"
 #include "series/serieses/minus_three_plus_ln3_three_devided_two_plus_two_ln2_series.hpp"
 #include "series/serieses/minus_x_minus_pi_4_or_minus_pi_4_series.hpp"
-#include "series/serieses/one_div_sqrt2_sin_xdivsqrt2_series.hpp"
 #include "series/serieses/one_div_two_minus_x_multi_three_plus_x_series.hpp"
 #include "series/serieses/one_minus_sqrt_1minus4x_div_2x_series.hpp"
 #include "series/serieses/one_series.hpp"

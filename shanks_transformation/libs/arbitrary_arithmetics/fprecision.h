@@ -2747,4 +2747,6 @@ inline float_precision fabs( const float_precision& a )
 
 inline std::string to_string(const float_precision& x) { return x.toString(); }
 
+inline float_precision hypot(const float_precision& x, const float_precision& y){ return sqrt(x * x + y * y ); }
+
 #endif

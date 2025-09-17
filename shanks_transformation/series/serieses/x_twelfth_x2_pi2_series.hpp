@@ -28,6 +28,18 @@ public:
     * @return nth term of the series
     */
     [[nodiscard]] constexpr virtual T operator()(K n) const;
+
+    constexpr inline bool domain_checker(T x) const{ 
+
+		if constexpr ( std::is_floating_point<T>::value)
+			return abs(x) > static_cast<T>(PI) || !isfinite(x);
+
+		if constexpr ( std::is_same<T, complex_precision<float_precision>>::value || std::is_same<T, float_precision>::value)
+			return abs(x) > arbPI || !isfinite(x);
+		
+		return false;
+	}
+    
 };
 
 template <Accepted T, std::unsigned_integral K>
@@ -41,7 +53,7 @@ series_base<T, K>(
     // Сходится при |x| ≤ π (ряд Фурье для функции f(x) = x³)
     // Расходится при |x| > π
 
-    if (abs(x) > static_cast<T>(std::numbers::pi) || !isfinite(x)) {
+    if (domain_checker(x)) {
         this->throw_domain_error("|x| must be ≤ π");
     }
 }

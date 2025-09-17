@@ -29,6 +29,20 @@ public:
 	*/
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 
+	constexpr inline T calculate_sum(T x) const {
+
+		if(!isfinite(x) || std::is_same<T, complex_precision<float_precision>>::value){ return static_cast<T>(0);}
+
+		if constexpr ( std::is_floating_point<T>::value){
+			return static_cast<T>(0.5) * sqrt(static_cast<T>(PI))* erf(x);
+		}
+
+		if constexpr ( std::is_same<T, float_precision>::value){
+			return static_cast<T>(0.5) * sqrt(arbPI) * erf(x);
+        }
+
+	}
+
 private:
 	/**
 	* @brief Computes nth term of the series
@@ -38,10 +52,12 @@ private:
 	* @return nth term of the series
 	*/
 	T access_row(K n);
+
+	
 };
 
 template <Accepted T, std::unsigned_integral K>
-erf_series<T, K>::erf_series(T x) : series_base<T, K>(x, static_cast<T>(0.5) * sqrt(static_cast<T>(std::numbers::pi)) * erf(x)), recurrent_series_base<T, K>(x)
+erf_series<T, K>::erf_series(T x) : series_base<T, K>(x, calculate_sum(x)), recurrent_series_base<T, K>(x)
 {
 	this->series_name = "√π/2 * erf(x)";
 	// Сходится при ∀x ∈ ℝ (ряд для erf(x) сходится на всей числовой прямой)
