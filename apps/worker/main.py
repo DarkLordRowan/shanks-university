@@ -1,4 +1,4 @@
-import io as _io
+import io
 import os as _os
 from datetime import datetime as _dt
 from typing import Dict as _Dict, Any as _Any
@@ -10,6 +10,7 @@ import httpx as _httpx
 from bson import Binary as _Binary
 
 from src import export, params, trial, events
+from starlette.responses import JSONResponse, StreamingResponse
 
 _MONGODB_URI = _os.getenv("MONGODB_URI", "mongodb://localhost:27017")
 _MONGODB_DB = _os.getenv("MONGODB_DB", "shanks")
@@ -115,7 +116,7 @@ async def create_job(body: _Dict[str, _Any] = _Body(...), authorization: str | N
 async def legacy_process_json(payload: dict = _Body(...)):
     results = _compute_results(payload)
     exporter = export.ExportTrialResults(results)
-    return {"data": exporter.as_dict()}
+    return JSONResponse(content=exporter.as_dict())
 
 
 @_worker_app.post("/process/csv")
@@ -123,9 +124,11 @@ async def legacy_process_csv(payload: dict = _Body(...)):
     results = _compute_results(payload)
     exporter = export.ExportTrialResults(results)
     content = exporter.to_csv_bytes()
-    return {
-        "csv_size": len(content)
-    }
+    return StreamingResponse(
+        io.BytesIO(content),
+        media_type="text/csv",
+        headers={"Content-Disposition": 'attachment; filename="results.csv"'}
+    )
 
 
 app = _worker_app
