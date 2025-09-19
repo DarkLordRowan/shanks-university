@@ -1,0 +1,66 @@
+name: shanks
+
+services:
+  mongo:
+    image: mongo:6.0
+    container_name: shanks-mongo
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+      MONGO_INITDB_DATABASE: shanks
+      APP_USER_PASSWORD: ${APP_USER_PASSWORD}
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+      - ./mongo/init-mongo.js:/docker-entrypoint-initdb.d/01-init.js:ro
+
+  mongo-express:
+    image: mongo-express:1.0.2
+    container_name: shanks-mongo-express
+    restart: unless-stopped
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+      ME_CONFIG_MONGODB_ADMINPASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+      ME_CONFIG_MONGODB_URL: mongodb://${MONGO_INITDB_ROOT_USERNAME}:${MONGO_INITDB_ROOT_PASSWORD}@mongo:27017/
+      ME_CONFIG_BASICAUTH: "false"
+    ports:
+      - "8081:8081"
+    depends_on: [mongo]
+
+  worker:
+    build:
+      context: ..
+      dockerfile: apps/worker/Dockerfile
+    container_name: shanks-worker
+    restart: unless-stopped
+    environment:
+      MONGODB_URI: mongodb://app_user:${APP_USER_PASSWORD}@mongo:27017/shanks?authSource=admin
+      MONGODB_DB: shanks
+      GATEWAY_URL: http://gateway:8000
+      GATEWAY_TOKEN: ${GATEWAY_TOKEN}
+      WORKER_TOKEN: ${WORKER_TOKEN}
+    expose:
+      - "8000"
+    depends_on: [mongo]
+
+  gateway:
+    build:
+      context: ..
+      dockerfile: apps/gateway/Dockerfile
+    container_name: shanks-gateway
+    restart: unless-stopped
+    environment:
+      MONGODB_URI: mongodb://app_user:${APP_USER_PASSWORD}@mongo:27017/shanks?authSource=admin
+      MONGODB_DB: shanks
+      WORKER_URL: http://worker:8000/api
+      WORKER_TOKEN: ${WORKER_TOKEN}
+      GATEWAY_TOKEN: ${GATEWAY_TOKEN}
+      CORS_ORIGINS: http://localhost:5173,http://127.0.0.1:5173,http://localhost:3000,http://127.0.0.1:3000
+    ports:
+      - "8000:8000"
+    depends_on: [mongo, worker]
+
+volumes:
+  mongo_data:

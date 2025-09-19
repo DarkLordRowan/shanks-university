@@ -107,7 +107,7 @@ const SeriesPage: React.FC = () => {
                     </div>
                 </div>
 
-                {node.subtitle && <p className="text-sm text-textDim">{node.subtitle}</p>}
+                {/*{node.subtitle && <p className="text-sm text-textDim">{node.subtitle}</p>}*/}
 
                 <div className="flex flex-wrap items-center gap-3 text-sm">
                     <span className="text-textDim">Исходник:</span>
