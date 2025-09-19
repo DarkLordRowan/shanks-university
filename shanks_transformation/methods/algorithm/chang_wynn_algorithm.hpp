@@ -77,11 +77,11 @@ public:
      * @throws std::domain_error if n=0 is provided as input.
      * @throws std::overflow_error if division by zero or numerical instability occurs.
      */
-	T operator()(K n, K order) const override;
+	T operator()(K n, K order) override;
 };
 
 template <Accepted T, std::unsigned_integral K, typename series_templ>
-T chang_wynn_algorithm<T, K, series_templ>::operator()(const K n, const K order) const {
+T chang_wynn_algorithm<T, K, series_templ>::operator()(const K n, const K order) {
 
     using std::isfinite;
     using std::fma;
@@ -118,7 +118,7 @@ T chang_wynn_algorithm<T, K, series_templ>::operator()(const K n, const K order)
     for (K i = static_cast<K>(0); i < max; ++i) {
         // For theory, see: Wynn (1956), Eq. (2.8)
         // ε₁⁽ⁿ⁾ = 1 / ΔSₙ for n >= 0.
-        e[0][i] = static_cast<T>(1) / (this->series->operator()(i + static_cast<K>(1)));
+        e[0][i] = static_cast<T>(1) / (this->series->an(i + static_cast<K>(1)));
     }
 
     // For theory, see: Chang et al. (2019), Eq. (3.20d)
@@ -134,29 +134,29 @@ T chang_wynn_algorithm<T, K, series_templ>::operator()(const K n, const K order)
         // Compute second differences: Δ²S_{n+1} = S_{n+3} - 2S_{n+2} + S_{n+1}
         coef = fma(
             static_cast<T>(-2), 
-            this->series->S_n(i2), 
-            this->series->S_n(i3) + this->series->S_n(i1)
+            this->series->Sn(i2), 
+            this->series->Sn(i3) + this->series->Sn(i1)
         ); 
 
         // Compute Δ²S_n = S_{n+2} - 2S_{n+1} + S_n
         coef2 = fma(
             static_cast<T>(-2), 
-            this->series->S_n(i1), 
-            this->series->S_n(i2) + this->series->S_n(i)
+            this->series->Sn(i1), 
+            this->series->Sn(i2) + this->series->Sn(i)
         );
 
         // Numerator: ΔS_n * ΔS_{n+1} * Δ²S_{n+1}
-        up = this->series->operator()(i1);
-        up*= this->series->operator()(i2);
+        up = this->series->an(i1);
+        up*= this->series->an(i2);
         up*= coef;
 
         // Denominator: ΔS_{n+2} * Δ²S_n - ΔS_n * Δ²S_{n+1}
-        down = this->series->operator()(i3) * coef2;
-        down -= this->series->operator()(i1) * coef;
+        down = this->series->an(i3) * coef2;
+        down -= this->series->an(i1) * coef;
         down = static_cast<T>(1) / down; // Reciprocal for division.
          
         // Compute T₂⁽ⁿ⁾ = S_{n+1} - (up * down)
-        e[1][i] = static_cast<T>(fma(-up, down, this->series->S_n(i1)));
+        e[1][i] = static_cast<T>(fma(-up, down, this->series->Sn(i1)));
 
         // Compute F₁⁽ⁿ⁾ = Δ²S_{n+1} * Δ²S_n * down
         f[i] = coef * coef2 * down;

@@ -1,71 +1,87 @@
 #pragma once
-#include "../series_base.hpp"
+
+#include "../term_calculator.hpp"
 
 /**
-* @brief Taylor series of Incomplete Gamma function
-* @authors Trudolyubov N.A.
+* @brief Maclaurin series of hyperbolic cosine
+* @authors Pashkov B.B.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
 template <Accepted T, std::unsigned_integral K>
-class Incomplete_Gamma_func_series final : public series_base<T, K>
+class Incomplete_Gamma_func_series final : public TermCalculatorBase<T, K>
 {
-public:
-    Incomplete_Gamma_func_series() = delete;
+protected:
+
+    T s;
 
     /**
-    * @brief Parameterized constructor to initialize the series with function argument and sum
-    * @authors Trudolyubov N.A.
-    * @param x The argument for function series
-    * @tparam T The type of the elements in the series, K The type of enumerating integer
-    */
-    Incomplete_Gamma_func_series(T x, T s);
-
-    /**
-    * @brief Computes the nth term of the Taylor series of the sine function
-    * @authors Trudolyubov N.A.
-    * @param n The number of the term
-    * @tparam T The type of the elements in the series, K The type of enumerating integer
-    * @return nth term of the Taylor series of the sine functions
-    */
-    [[nodiscard]] constexpr virtual T operator()(K n) const;
-
-    constexpr inline bool domain_checker(T x, T s) const{ 
+     * @brief 
+     * 
+     * @param x 
+     * @return true 
+     * @return false 
+     */
+    inline bool domain_checker(const SeriesConfig<T,K>& config) const { 
 
 		if constexpr ( std::is_floating_point<T>::value || std::is_same<T, float_precision>::value)
-			return s <= static_cast<T>(0) || !isfinite(x) || !isfinite(s);
+			return config.addTParameter <= static_cast<T>(0) || !isfinite(config.x) || !isfinite(config.addTParameter);
 
 		if constexpr ( std::is_same<T, complex_precision<float_precision>>::value )
-			return s.real() <= static_cast<float_precision>(0) || !isfinite(x) || !isfinite(s);
+			return config.addTParameter.real() <= static_cast<float_precision>(0) || !isfinite(config.x) || !isfinite(config.addTParameter);
 
 		return false;
 	}
 
-private:
+    /**s
+	 * @brief 
+	 * 
+	 * @param x 
+	 * @return constexpr T 
+	 */
+	T calculate_sum() const  { return static_cast<T>(0); }
 
-    /**
-    * @brief The parameter s of the series
-    * @authors Trudolyubov N.A.
-    */
-    const T s;
+public:
+
+	/**
+	 * @brief Construct a new cos series object
+	 * 
+	 */
+	Incomplete_Gamma_func_series() = delete;
+
+
+	/**
+	* @brief Computes the nth term of the Maclaurin series of the cosine function
+	* @authors Bolshakov M.P.
+	* @param n The number of the term
+	* @tparam T The type of the elements in the series, K The type of enumerating integer
+	* @return nth term of the Maclaurin series of the cosine functions
+	*/
+	[[nodiscard]] constexpr virtual T calculateTerm(K n) const override;
+
+	/**
+	 * @brief 
+	 * 
+	 * @param config 
+	 */
+	Incomplete_Gamma_func_series(const SeriesConfig<T,K>& config);
 };
 
 template <Accepted T, std::unsigned_integral K>
-Incomplete_Gamma_func_series<T, K>::Incomplete_Gamma_func_series(T x, T s) : series_base<T, K>(x), s(s)
-{
-    this->series_name = "γ(s,x)";
-    // Сходится при ∀x ∈ ℝ, s > 0 (неполная гамма-функция)
-    // Расходится при s ≤ 0
+Incomplete_Gamma_func_series<T, K>::Incomplete_Gamma_func_series(const SeriesConfig<T,K>& config) {
 
-    if (domain_checker(x, s)) {
-        this->throw_domain_error("s must be > 0 and parameters must be finite");
-    }
+	if (domain_checker(config)){
+		this->throw_domain_error("s must be > 0 and parameters must be finite");
+	}
+
+	TermCalculatorBase<T,K>::series_name = "γ(s,x)";
+	TermCalculatorBase<T, K>::x = config.x;
+	TermCalculatorBase<T, K>::sum = calculate_sum();
+
 }
 
 template <Accepted T, std::unsigned_integral K>
-constexpr T Incomplete_Gamma_func_series<T, K>::operator()(K n) const
-{
-
-    //s(s+1)...(s+n)
+constexpr T Incomplete_Gamma_func_series<T, K>::calculateTerm(K n) const {
+	//s(s+1)...(s+n)
     T coeff = s;
     for(K j = 1; j <=n ; ++j)
         coeff *= (s + static_cast<T>(j));

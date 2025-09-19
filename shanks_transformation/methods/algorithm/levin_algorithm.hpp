@@ -51,7 +51,7 @@ class levin_algorithm final : public series_acceleration<T, K, series_templ>
 protected:
 
 	T beta;													///< Parameter for u-variant transformation (β > 0). Default value is 1.0.
-    std::unique_ptr<const transform_base<T, K>> remainder;	///< Pointer to remainder transformation object
+    std::unique_ptr<transform_base<T, K>> remainder;	///< Pointer to remainder transformation object
     bool useRecFormulas = false;							///< Flag to use recurrence formulas (true) or direct formulas (false)
     remainder_type variant = remainder_type::u_variant;		///< Type of Levin transformation variant (u, t, v, t~, v~)
 
@@ -66,7 +66,7 @@ protected:
 	 * @param order Order of transformation (k value)
 	 * @return Accelerated sum estimate T_{k,n}
 	 */
-	inline T calc_result(K n, K order) const;
+	inline T calc_result(K n, K order);
 
 	/**
 	 * @brief Computes the Levin transformation using recurrence formulas.
@@ -78,7 +78,7 @@ protected:
 	 * @param order Order of transformation (k value)
 	 * @return Accelerated sum estimate T_{k,n}
 	 */
-	inline T calc_result_rec(K n, K order) const;
+	inline T calc_result_rec(K n, K order);
 
 public:
 
@@ -125,7 +125,7 @@ public:
 	 * @throws std::domain_error if n=0 is provided as input
 	 * @throws std::overflow_error if division by zero or numerical instability occurs
 	 */
-	T operator()(const K n, const K order) const override;
+	T operator()(const K n, const K order) override;
 };
 
 template<Accepted T, std::unsigned_integral K, typename series_templ>
@@ -184,7 +184,7 @@ levin_algorithm<T, K,series_templ>::levin_algorithm(
 	}
 
 template<Accepted T, std::unsigned_integral K, typename series_templ>
-inline T levin_algorithm<T, K,series_templ>::calc_result(K n, K order) const{
+inline T levin_algorithm<T, K,series_templ>::calc_result(K n, K order) {
 
 	using std::pow;
 	using std::isfinite;
@@ -197,15 +197,15 @@ inline T levin_algorithm<T, K,series_templ>::calc_result(K n, K order) const{
 	//           [∑_{j=0}^k (-1)^j C(k,j) (n+j+1)^{k-1}/(n+k+1)^{k-1} 1/R_{n+j}]
 	for (K j = static_cast<K>(0); j <= order; ++j) {
 		// Compute (-1)^j * C(k,j)
-		rest  = this->series->minus_one_raised_to_power_n(j);
-		rest *= this->series->binomial_coefficient(static_cast<T>(order), j);
+		rest  = minus_one_raised_to_power_n<T,K>(j);
+		rest *= binomial_coefficient<T,K>(static_cast<T>(order), j);
 
 		// Compute (n+j+1)^{k-1}/(n+k+1)^{k-1}
 		C_njk  = static_cast<T>(pow(n + j     + static_cast<K>(1), order - static_cast<K>(1)));
 		C_njk /= static_cast<T>(pow(n + order + static_cast<K>(1), order - static_cast<K>(1)));
 
 		// Get partial sum S_{n+j}
-		S_nj = this->series->S_n(n + j);
+		S_nj = this->series->Sn(n + j);
 
 		// Compute 1/R_{n+j} where R_{n+j} is the remainder estimate
 		g_n = static_cast<T>(1);
@@ -233,7 +233,7 @@ inline T levin_algorithm<T, K,series_templ>::calc_result(K n, K order) const{
 }
 
 template<Accepted T, std::unsigned_integral K, typename series_templ>
-inline T levin_algorithm<T, K,series_templ>::calc_result_rec(K n, K order) const{
+inline T levin_algorithm<T, K,series_templ>::calc_result_rec(K n, K order) {
 
 	using std::isfinite;
 
@@ -253,7 +253,7 @@ inline T levin_algorithm<T, K,series_templ>::calc_result_rec(K n, K order) const
             (variant == remainder_type::u_variant ? beta : static_cast<T>(1))
         );
 
-		Num[i] = this->series->S_n(n+i) * Denom[i];
+		Num[i] = this->series->Sn(n+i) * Denom[i];
 	}
 
 	// Recursive computation using the E-algorithm scheme
@@ -284,14 +284,14 @@ inline T levin_algorithm<T, K,series_templ>::calc_result_rec(K n, K order) const
 }
 
 template <Accepted T, std::unsigned_integral K, typename series_templ>
-T levin_algorithm<T, K, series_templ>::operator()(const K n, const K order) const {
+T levin_algorithm<T, K, series_templ>::operator()(const K n, const K order) {
 
 	using std::isfinite;
 
 	if (n == static_cast<K>(0)) 
 		throw std::domain_error("n = 0 in the input");
 
-	if (order == static_cast<K>(0)) return this->series->S_n(n);
+	if (order == static_cast<K>(0)) return this->series->Sn(n);
 
     const T result = (useRecFormulas ? calc_result_rec(n,order) : calc_result(n, order));
     if (!isfinite(result)) throw std::overflow_error("division by zero");

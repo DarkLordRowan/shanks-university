@@ -99,7 +99,7 @@ public:
      * @throws std::domain_error if n=0 or order is odd
      * @throws std::overflow_error if division by zero occurs during computation
      */
-    T operator()(K n, K order) const override;
+    T operator()(K n, K order) override;
 };
 
 
@@ -122,7 +122,7 @@ T brezinski_theta_algorithm<T, K, series_templ>::calculate(K n, const K order) c
 
     // init theta_(0)
     for(K j = static_cast<K>(0); j < base_size; ++j)
-        theta_even[j] = this->series->S_n(n + j);
+        theta_even[j] = this->series->Sn(n + j);
 
 
     K j1, j2;
@@ -163,7 +163,7 @@ T brezinski_theta_algorithm<T, K, series_templ>::calculate(K n, const K order) c
 }
 
 template <Accepted T, std::unsigned_integral K, typename series_templ>
-T brezinski_theta_algorithm<T, K, series_templ>::operator()(const K n, const K order) const{
+T brezinski_theta_algorithm<T, K, series_templ>::operator()(const K n, const K order) {
 
     // For theory, see: Brezinski (2003), Section 10.2, Theorem 10.2.1
     // Only even orders have mathematical meaning in the final result
@@ -174,7 +174,7 @@ T brezinski_theta_algorithm<T, K, series_templ>::operator()(const K n, const K o
     // Base cases: return partial sum for n=0 or order=0
     //if (n == static_cast<K>(0) || order == static_cast<K>(0))
     if (order == static_cast<K>(0))
-        return this->series->S_n(n);
+        return this->series->Sn(n);
 
     // For theory, see: Brezinski (2003), Section 10.2, Eq. (10.2.4)
     // Start computation with initial parameters

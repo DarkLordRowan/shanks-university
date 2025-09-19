@@ -1,46 +1,74 @@
 #pragma once
-#include "../series_base.hpp"
+
+#include "../term_calculator.hpp"
 
 /**
-* @brief Numerical series representation of 1 * x
+* @brief Maclaurin series of hyperbolic cosine
 * @authors Pashkov B.B.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
 template <Accepted T, std::unsigned_integral K>
-class one_series final : public series_base<T, K>
+class one_series final : public TermCalculatorBase<T, K>
 {
-public:
-    /**
-    * @brief Parameterized constructor to initialize the series with function argument and sum
-    * @authors Pashkov B.B.
-    * @param x The argument for series
-    * @tparam T The type of the elements in the series, K The type of enumerating integer
-    */
-    one_series(T x);
+protected:
 
     /**
-    * @brief Computes the nth term of the Numerical series of 1 * x
-    * @authors Pashkov B.B.
-    * @param n The number of the term
-    * @tparam T The type of the elements in the series, K The type of enumerating integer
-    * @return nth term of the series
-    */
-    [[nodiscard]] constexpr virtual T operator()(K n) const;
+     * @brief 
+     * 
+     * @param x 
+     * @return true 
+     * @return false 
+     */
+    inline bool domain_checker(const SeriesConfig<T,K>& config) const { return !isfinite(config.x); }
+
+    /**s
+	 * @brief 
+	 * 
+	 * @param x 
+	 * @return constexpr T 
+	 */
+	T calculate_sum() const  { return this->x; }
+
+public:
+
+	/**
+	 * @brief Construct a new cos series object
+	 * 
+	 */
+	one_series() = delete;
+
+
+	/**
+	* @brief Computes the nth term of the Maclaurin series of the cosine function
+	* @authors Bolshakov M.P.
+	* @param n The number of the term
+	* @tparam T The type of the elements in the series, K The type of enumerating integer
+	* @return nth term of the Maclaurin series of the cosine functions
+	*/
+	[[nodiscard]] constexpr virtual T calculateTerm(K n) const override;
+
+	/**
+	 * @brief 
+	 * 
+	 * @param config 
+	 */
+	one_series(const SeriesConfig<T,K>& config);
 };
 
 template <Accepted T, std::unsigned_integral K>
-one_series<T, K>::one_series(T x) : series_base<T, K>(x, x)
-{
-    this->series_name = "1*x";
-    // Сходится при ∀x ∈ ℝ (линейная функция)
+one_series<T, K>::one_series(const SeriesConfig<T,K>& config) {
 
-    if (!isfinite(x)) {
-        this->throw_domain_error("x is not finite");
-    }
+	if (domain_checker(config)){
+		this->throw_domain_error("x is not finite");
+	}
+
+	TermCalculatorBase<T,K>::series_name = "x";
+	TermCalculatorBase<T, K>::x = config.x;
+	TermCalculatorBase<T, K>::sum = calculate_sum();
+
 }
 
 template <Accepted T, std::unsigned_integral K>
-constexpr T one_series<T, K>::operator()(K n) const
-{
-    return (n ? this->x / static_cast<T>(fma(n, n, n)) : static_cast<T>(0)); // (21.5) [Rows.pdf]
+constexpr T one_series<T, K>::calculateTerm(K n) const {
+	return (n ? this->x / static_cast<T>(fma(n, n, n)) : static_cast<T>(0)); // (21.5) [Rows.pdf]
 }

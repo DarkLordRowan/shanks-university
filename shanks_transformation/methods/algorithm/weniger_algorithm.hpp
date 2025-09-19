@@ -67,11 +67,11 @@ public:
 	 * @return The accelerated partial sum after Weniger transformation
 	 * @throws std::overflow_error if division by zero or numerical instability occurs
 	 */
-	T operator()(K n, K order) const override;
+	T operator()(K n, K order) override;
 };
 
 template<Accepted T, std::unsigned_integral K, typename series_templ>
-T weniger_algorithm<T, K, series_templ>::operator()(const K n, const K order) const {
+T weniger_algorithm<T, K, series_templ>::operator()(const K n, const K order) {
 
 	using std::isfinite;
 
@@ -89,11 +89,11 @@ T weniger_algorithm<T, K, series_templ>::operator()(const K n, const K order) co
 
 	// For theory, see: Weniger (1989), Eq. (8.2-7) recursive computation
 	// Initial binomial coefficient: C(order, 0) = 1
-	T binomial_coef = this->series->binomial_coefficient(static_cast<T>(n), static_cast<K>(0));
+	T binomial_coef = binomial_coefficient<T,K>(static_cast<T>(n), static_cast<K>(0));
 
 	// For theory, see: Weniger (1989), Eq. (8.2-7) partial sum initialization
 	// Initial partial sum Sₙ
-	T S_n = this->series->S_n(0);
+	T S_n = this->series->Sn(0);
 
 	// Precompute initial value: (1)ₖ₋₁ = (k-1)!
 	for (K m = static_cast<K>(0); m < order - static_cast<K>(1); ++m) 
@@ -109,7 +109,7 @@ T weniger_algorithm<T, K, series_templ>::operator()(const K n, const K order) co
 
 		// For theory, see: Weniger (1989), Eq. (8.2-7) term structure
 		// Term sign: (-1)ʲ
-		rest  = this->series->minus_one_raised_to_power_n(j);
+		rest  = minus_one_raised_to_power_n<T,K>(j);
 
 		// Binomial coefficient: C(order, j)
 		rest *= binomial_coef;
@@ -132,7 +132,7 @@ T weniger_algorithm<T, K, series_templ>::operator()(const K n, const K order) co
 		// For theory, see: Weniger (1989), Eq. (8.2-7) remainder estimate
 		// Remainder estimate: ωₙ = Δsₙ = a_{n+1}, so 1/ωₙ = 1/a_{j+1}
 		a_n = static_cast<T>(1);
-		a_n/= this->series->operator()(j1);
+		a_n/= this->series->an(j1);
 
 		rest *= a_n;
 
@@ -146,7 +146,7 @@ T weniger_algorithm<T, K, series_templ>::operator()(const K n, const K order) co
 
 		// For theory, see: Weniger (1989), Eq. (8.2-7) partial sum update
 		// Update partial sum: S_{j+1} = S_j + a_{j+1}
-		S_n += this->series->operator()(j + static_cast<K>(1));
+		S_n += this->series->an(j + static_cast<K>(1));
 		
 	}
 

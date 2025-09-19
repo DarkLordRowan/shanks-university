@@ -78,7 +78,7 @@ public:
      * @throws std::domain_error if n=0.
      * @throws std::overflow_error if numerical instability (e.g., division by zero) occurs.
      */
-	T operator()(K n, K order) const override;
+	T operator()(K n, K order) override;
 };
 
 // Constructor implementation
@@ -93,7 +93,7 @@ wynn_epsilon_3_algorithm<T, K, series_templ>::wynn_epsilon_3_algorithm(
 
 // Algorithm implementation
 template <Accepted T, std::unsigned_integral K, typename series_templ>
-T wynn_epsilon_3_algorithm<T, K, series_templ>::operator()(const K n, const K order) const {
+T wynn_epsilon_3_algorithm<T, K, series_templ>::operator()(const K n, const K order) {
 
     using std::isfinite;
     using std::max;
@@ -102,7 +102,7 @@ T wynn_epsilon_3_algorithm<T, K, series_templ>::operator()(const K n, const K or
     if (n == static_cast<K>(0))
         throw std::domain_error("n = 0 in the input");
 
-    if (order == static_cast<K>(0)) return this->series->S_n(n);
+    if (order == static_cast<K>(0)) return this->series->Sn(n);
 
     K N = n; // Number of terms used in transformation
 
@@ -126,7 +126,7 @@ T wynn_epsilon_3_algorithm<T, K, series_templ>::operator()(const K n, const K or
 
     // Initialize epsilon table with partial sums: ε₀⁽ⁱ⁾ = S_i for i=0,...,N
     for (K i = static_cast<K>(0); i <= N; ++i) //Filling up Epsilon Table
-        e[i] = this->series->S_n(i);
+        e[i] = this->series->Sn(i);
 
     // Apply epsilon algorithm for 'order' iterations
     for (K i = static_cast<K>(0); i <= order; ++i) { //Working with Epsilon Table order times

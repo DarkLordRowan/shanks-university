@@ -1,47 +1,74 @@
 #pragma once
-#include "../series_base.hpp"
+
+#include "../term_calculator.hpp"
 
 /**
-* @brief function for testing new serieses or converting basic to
-* @authors Kreynin R.G.
+* @brief Maclaurin series of hyperbolic cosine
+* @authors Pashkov B.B.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
 template <Accepted T, std::unsigned_integral K>
-class testing_series final : public series_base<T, K>
+class testing_series final : public TermCalculatorBase<T, K>
 {
+protected:
+
+    /**
+     * @brief 
+     * 
+     * @param x 
+     * @return true 
+     * @return false 
+     */
+    inline bool domain_checker(const SeriesConfig<T,K>& config) const { return !isfinite(config.x); }
+
+    /**s
+	 * @brief 
+	 * 
+	 * @param x 
+	 * @return constexpr T 
+	 */
+	T calculate_sum() const  { return static_cast<T>(0); }
+
 public:
-    testing_series() = delete;
 
-    /**
-    * @brief Parameterized constructor to initialize the series with function argument and sum
-    * @authors Kreynin R.G.
-    * @param x The argument for function series
-    */
-    testing_series(T x);
+	/**
+	 * @brief Construct a new cos series object
+	 * 
+	 */
+	testing_series() = delete;
 
-    /**
-    * @brief Computes the nth term of the Maclaurin series of the sine function
-    * @authors Kreynin R.G.
-    * @param n The number of the term
-    * @return nth term of the Maclaurin series of the sine functions
-    */
-    [[nodiscard]] constexpr virtual T operator()(K n) const;
+
+	/**
+	* @brief Computes the nth term of the Maclaurin series of the cosine function
+	* @authors Bolshakov M.P.
+	* @param n The number of the term
+	* @tparam T The type of the elements in the series, K The type of enumerating integer
+	* @return nth term of the Maclaurin series of the cosine functions
+	*/
+	[[nodiscard]] constexpr virtual T calculateTerm(K n) const override;
+
+	/**
+	 * @brief 
+	 * 
+	 * @param config 
+	 */
+	testing_series(const SeriesConfig<T,K>& config);
 };
 
 template <Accepted T, std::unsigned_integral K>
-testing_series<T, K>::testing_series(T x) : series_base<T, K>(x, static_cast<T>(0))
-{
-    this->series_name = "testing_series";
-    // Область сходимости зависит от конкретной тестовой функции
-    // Требуется уточнение для конкретного тестового случая
+testing_series<T, K>::testing_series(const SeriesConfig<T,K>& config) {
 
-    if (!isfinite(x)) {
-        this->throw_domain_error("x is not finite");
-    }
+	if (domain_checker(config)){
+		this->throw_domain_error("x is not finite");
+	}
+
+	TermCalculatorBase<T,K>::series_name = "testing_series";
+	TermCalculatorBase<T, K>::x = config.x;
+	TermCalculatorBase<T, K>::sum = calculate_sum();
+
 }
 
 template <Accepted T, std::unsigned_integral K>
-constexpr T testing_series<T, K>::operator()(K n) const
-{
-    return static_cast<T>(0);
+constexpr T testing_series<T, K>::calculateTerm(K n) const {
+	return static_cast<T>(0);
 }

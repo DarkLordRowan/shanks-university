@@ -70,7 +70,7 @@ public:
      * @return The accelerated partial sum after applying the transformation
      * @throws May throw domain_error or overflow_error in derived implementations
      */
-    virtual T operator()(K n, K order) const = 0;
+    virtual T operator()(K n, K order) = 0;
 
 protected:
 

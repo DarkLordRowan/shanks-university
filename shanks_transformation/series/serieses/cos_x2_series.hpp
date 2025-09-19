@@ -1,48 +1,75 @@
 #pragma once
-#include "../series_base.hpp"
+
+#include "../term_calculator.hpp"
+
 /**
-* @brief Maclaurin series of function cos(x^2)
-* @authors Pavlova A.R.
+* @brief Maclaurin series of cosine function
+* @authors Bolshakov M.P.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
 template <Accepted T, std::unsigned_integral K>
-class cos_x2_series final : public series_base<T, K>
+class cos_x2_series final : public TermCalculatorBase<T, K>
 {
+protected:
+
+    /**
+     * @brief 
+     * 
+     * @param x 
+     * @return true 
+     * @return false 
+     */
+    inline bool domain_checker(const SeriesConfig<T,K>& config) const{ return !isfinite(config.x); }
+
+    /**s
+	 * @brief 
+	 * 
+	 * @param x 
+	 * @return constexpr T 
+	 */
+	T calculate_sum() const  { return cos(this->x * this->x); }
+
 public:
-    cos_x2_series() = delete;
 
-    /**
-    * @brief Parameterized constructor to initialize the series with function argument and sum
-    * @authors Pavlova A.R.
-    * @param x The argument for function series
-    * @tparam T The type of the elements in the series, K The type of enumerating integer
-    */
-    cos_x2_series(T x);
+	/**
+	 * @brief Construct a new cos series object
+	 * 
+	 */
+	cos_x2_series() = delete;
 
-    /**
-    * @brief Computes the nth term of the cos(x^2) series
-    * @authors Pavlova A.R.
-    * @param n The number of the term
-    * @tparam T The type of the elements in the series, K The type of enumerating integer
-    * @return nth term of the cos(x^2) series
-    */
-    [[nodiscard]] constexpr virtual T operator()(K n) const;
+
+	/**
+	* @brief Computes the nth term of the Maclaurin series of the cosine function
+	* @authors Bolshakov M.P.
+	* @param n The number of the term
+	* @tparam T The type of the elements in the series, K The type of enumerating integer
+	* @return nth term of the Maclaurin series of the cosine functions
+	*/
+	[[nodiscard]] constexpr virtual T calculateTerm(K n) const override;
+
+	/**
+	 * @brief 
+	 * 
+	 * @param config 
+	 */
+	cos_x2_series(const SeriesConfig<T,K>& config);
 };
 
 template <Accepted T, std::unsigned_integral K>
-cos_x2_series<T, K>::cos_x2_series(T x) : series_base<T, K>(x, cos(x* x))
-{
-    this->series_name = "cos(x²)";
-    // Сходится при ∀x ∈ ℝ (ряд для cos(z) сходится при ∀z ∈ ℝ, где z = x²)
+cos_x2_series<T, K>::cos_x2_series(const SeriesConfig<T,K>& config) {
 
-    if (!isfinite(x)) {
-        this->throw_domain_error("x is not finite");
-    }
+	if (domain_checker(config)){
+		this->throw_domain_error("x is not finite");
+	}
+
+	TermCalculatorBase<T,K>::series_name = "cos(x²)";
+	TermCalculatorBase<T, K>::x = config.x;
+	TermCalculatorBase<T, K>::sum = calculate_sum();
+
 }
 
 template <Accepted T, std::unsigned_integral K>
-constexpr T cos_x2_series<T, K>::operator()(K n) const
-{
-    const K a = 2 * n;
-    return series_base<T, K>::minus_one_raised_to_power_n(n) * pow(this->x, static_cast<T>(2 * a)) / static_cast<T>(this->fact(a)); // (88.2) [Rows.pdf]
+constexpr T cos_x2_series<T, K>::calculateTerm(K n) const {
+	const K a = 2 * n;
+    return minus_one_raised_to_power_n<T,K>(n) * pow(this->x, static_cast<T>(2 * a)) / static_cast<T>(fact<K>(a));
 }

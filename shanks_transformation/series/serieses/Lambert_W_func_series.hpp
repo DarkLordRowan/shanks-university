@@ -1,63 +1,86 @@
 #pragma once
-#include "../series_base.hpp"
+
+#include "../term_calculator.hpp"
 
 /**
-* @brief Taylor series of Lambert W_0 function
-* @authors Trudolyubov N.A.
+* @brief Maclaurin series of hyperbolic cosine
+* @authors Pashkov B.B.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
 template <Accepted T, std::unsigned_integral K>
-class Lambert_W_func_series final : public series_base<T, K>
+class Lambert_W_func_series final : public TermCalculatorBase<T, K>
 {
-public:
-    Lambert_W_func_series() = delete;
+protected:
 
     /**
-    * @brief Parameterized constructor to initialize the series with function argument and sum
-    * @authors Trudolyubov N.A.
-    * @param x The argument for function series
-    * @tparam T The type of the elements in the series, K The type of enumerating integer
-    */
-    Lambert_W_func_series(T x);
-
-    /**
-    * @brief Computes the nth term of the Taylor series of the sine function
-    * @authors Trudolyubov N.A.
-    * @param n The number of the term
-    * @tparam T The type of the elements in the series, K The type of enumerating integer
-    * @return nth term of the Taylor series of the sine functions
-    */
-    [[nodiscard]] constexpr virtual T operator()(K n) const;
-
-    constexpr inline bool domain_checker(T x) const{ 
+     * @brief 
+     * 
+     * @param x 
+     * @return true 
+     * @return false 
+     */
+    inline bool domain_checker(const SeriesConfig<T,K>& config) const{ 
 
 		if constexpr ( std::is_floating_point<T>::value || std::is_same<T, float_precision>::value)
-			return abs(x) >= static_cast<T>(1.0 / std::numbers::e) || !isfinite(x);
+			return abs(config.x) >= static_cast<T>(1.0 / std::numbers::e) || !isfinite(config.x);
 
 		if constexpr ( std::is_same<T, complex_precision<float_precision>>::value )
-			return abs(x) >= static_cast<float_precision>(1.0 / std::numbers::e) || !isfinite(x);
+			return abs(config.x) >= static_cast<float_precision>(1.0 / std::numbers::e) || !isfinite(config.x);
 
 		return false;
 	}
+
+    /**s
+	 * @brief 
+	 * 
+	 * @param x 
+	 * @return constexpr T 
+	 */
+	T calculate_sum() const  { return static_cast<T>(0); }
+
+public:
+
+	/**
+	 * @brief Construct a new cos series object
+	 * 
+	 */
+	Lambert_W_func_series() = delete;
+
+
+	/**
+	* @brief Computes the nth term of the Maclaurin series of the cosine function
+	* @authors Bolshakov M.P.
+	* @param n The number of the term
+	* @tparam T The type of the elements in the series, K The type of enumerating integer
+	* @return nth term of the Maclaurin series of the cosine functions
+	*/
+	[[nodiscard]] constexpr virtual T calculateTerm(K n) const override;
+
+	/**
+	 * @brief 
+	 * 
+	 * @param config 
+	 */
+	Lambert_W_func_series(const SeriesConfig<T,K>& config);
 };
 
 template <Accepted T, std::unsigned_integral K>
-Lambert_W_func_series<T, K>::Lambert_W_func_series(T x) : series_base<T, K>(x)
-{
-    this->series_name = "W(x)";
-    // Сходится при |x| < 1/e (ряд для функции Ламберта)
-    // Расходится при |x| ≥ 1/e
+Lambert_W_func_series<T, K>::Lambert_W_func_series(const SeriesConfig<T,K>& config) {
 
-    if (domain_checker(x)) {
-        this->throw_domain_error("|x| must be < 1/e");
-    }
+	if (domain_checker(config)){
+		this->throw_domain_error("|x| must be < 1/e");
+	}
+
+	TermCalculatorBase<T,K>::series_name = "W(x)";
+	TermCalculatorBase<T, K>::x = config.x;
+	TermCalculatorBase<T, K>::sum = calculate_sum();
+
 }
 
 template <Accepted T, std::unsigned_integral K>
-constexpr T Lambert_W_func_series<T, K>::operator()(K n) const
-{
-    if(n == 0)
+constexpr T Lambert_W_func_series<T, K>::calculateTerm(K n) const {
+	if(n == 0)
         return static_cast<T>(0);
 
-    return this->minus_one_raised_to_power_n(n - 1) * static_cast<T>(pow(n, n-1)) * pow(this->x, static_cast<T>(n)) / static_cast<T>(this->fact(n)); // (74.2) [Rows.pdf]
+    return minus_one_raised_to_power_n<T,K>(n - 1) * static_cast<T>(pow(n, n-1)) * pow(this->x, static_cast<T>(n)) / static_cast<T>(fact<K>(n)); // (74.2) [Rows.pdf]
 }

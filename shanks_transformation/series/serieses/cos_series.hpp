@@ -1,5 +1,5 @@
 #pragma once
-#include "../series_base.hpp"
+#include "../term_calculator.hpp"
 
 /**
 * @brief Maclaurin series of cosine function
@@ -7,18 +7,35 @@
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
 template <Accepted T, std::unsigned_integral K>
-class cos_series final : public series_base<T, K>, public recurrent_series_base<T, K>
+class cos_series final : public TermCalculatorBase<T, K>
 {
+protected:
+
+    /**
+     * @brief 
+     * 
+     * @param x 
+     * @return true 
+     * @return false 
+     */
+    inline bool domain_checker(const SeriesConfig<T,K>& config) const{  return !isfinite(config.x); }
+
+    /**s
+	 * @brief 
+	 * 
+	 * @param x 
+	 * @return constexpr T 
+	 */
+	T calculate_sum() const  { return cos(this->x); }
+
 public:
-	cos_series() = delete;
 
 	/**
-	* @brief Parameterized constructor to initialize the series with function argument and sum
-	* @authors Bolshakov M.P.
-	* @param x The argument for function series
-	* @tparam T The type of the elements in the series, K The type of enumerating integer
-	*/
-	cos_series(T x);
+	 * @brief Construct a new cos series object
+	 * 
+	 */
+	cos_series() = delete;
+
 
 	/**
 	* @brief Computes the nth term of the Maclaurin series of the cosine function
@@ -27,47 +44,30 @@ public:
 	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	* @return nth term of the Maclaurin series of the cosine functions
 	*/
-	[[nodiscard]] constexpr virtual T operator()(K n) const;
+	[[nodiscard]] constexpr virtual T calculateTerm(K n) const override;
 
-private:
 	/**
-	* @brief Computes nth term of the series
-	* @authors Kreynin R.G.
-	* @param n The number of the term
-	* @tparam T The type of the elements in the series, K The type of enumerating integer
-	* @return nth term of the series
-	*/
-	T access_row(K n);
+	 * @brief 
+	 * 
+	 * @param config 
+	 */
+	cos_series(const SeriesConfig<T,K>& config);
 };
 
 template <Accepted T, std::unsigned_integral K>
-cos_series<T, K>::cos_series(T x) : series_base<T, K>(x, cos(x)), recurrent_series_base<T, K>(std::vector<T>{static_cast<T>(1), (static_cast<T>(-1) * x * x) / static_cast<T>(2)})
-{
-	this->series_name = "cos(x)";
-	// Сходится при ∀x ∈ ℝ
+cos_series<T, K>::cos_series(const SeriesConfig<T,K>& config) {
 
-	if (!isfinite(x)) {
-		series_base<T, K>::throw_domain_error("x is not finite");
+	if (domain_checker(config)){
+		this->throw_domain_error("x is not finite");
 	}
+
+	TermCalculatorBase<T,K>::series_name = "cos(x)";
+	TermCalculatorBase<T, K>::x = config.x;
+	TermCalculatorBase<T, K>::sum = calculate_sum();
+
 }
 
 template <Accepted T, std::unsigned_integral K>
-T cos_series<T, K>::access_row(K n)
-{
-	auto& series_vec = this->series_vector; // ссылка на член базового класса
-	auto old_size = series_vec.size();
-	series_vec.reserve(n);
-
-	T a = static_cast<T>(-1) * this->x * this->x;
-
-	for (auto i = old_size; i <= static_cast<typename std::vector<T>::size_type>(n); ++i)
-		series_vec.push_back(series_vec[i - 1] * a / static_cast<T>(i * fma(4, i, -2)));
-
-	return series_vec[n];
-}
-
-template <Accepted T, std::unsigned_integral K>
-constexpr T cos_series<T, K>::operator()(K n) const
-{
-	return const_cast<cos_series<T, K>*>(this)->access_row(n);
+constexpr T cos_series<T, K>::calculateTerm(K n) const {
+	return minus_one_raised_to_power_n<T,K>(n) * pow(this->x, static_cast<T>(2*n)) / static_cast<T>(fact<K>(2*n));
 }

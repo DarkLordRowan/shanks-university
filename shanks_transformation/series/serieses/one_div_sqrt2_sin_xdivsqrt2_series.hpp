@@ -1,56 +1,78 @@
 #pragma once
-#include "../series_base.hpp"
+
+#include "../term_calculator.hpp"
 
 /**
-* @brief Taylor series of function 1/sqrt(2) * sin(x/sqrt(2))
-* @authors Trudolyubov N.A.
+* @brief Maclaurin series of hyperbolic cosine
+* @authors Pashkov B.B.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
 template <Accepted T, std::unsigned_integral K>
-class one_div_sqrt2_sin_xdivsqrt2_series final : public series_base<T, K>
+class one_div_sqrt2_sin_xdivsqrt2_series final : public TermCalculatorBase<T, K>
 {
+protected:
+
+    /**
+     * @brief 
+     * 
+     * @param x 
+     * @return true 
+     * @return false 
+     */
+    inline bool domain_checker(const SeriesConfig<T,K>& config) const { return !isfinite(config.x); }
+
+    /**s
+	 * @brief 
+	 * 
+	 * @param x 
+	 * @return constexpr T 
+	 */
+	T calculate_sum() const  { return sin(this->x / sqrt(static_cast<T>(2))) / sqrt(static_cast<T>(2)); }
+
 public:
-    one_div_sqrt2_sin_xdivsqrt2_series() = delete;
 
-    /**
-    * @brief Parameterized constructor to initialize the series with function argument and sum
-    * @authors Trudolyubov N.A.
-    * @param x The argument for function series
-    * @tparam T The type of the elements in the series, K The type of enumerating integer
-    */
-    one_div_sqrt2_sin_xdivsqrt2_series(T x);
+	/**
+	 * @brief Construct a new cos series object
+	 * 
+	 */
+	one_div_sqrt2_sin_xdivsqrt2_series() = delete;
 
-    /**
-    * @brief Computes the nth term of the Taylor series of the sine function
-    * @authors Trudolyubov N.A.
-    * @param n The number of the term
-    * @tparam T The type of the elements in the series, K The type of enumerating integer
-    * @return nth term of the Taylor series of the sine functions
-    */
-    [[nodiscard]] constexpr virtual T operator()(K n) const;
+
+	/**
+	* @brief Computes the nth term of the Maclaurin series of the cosine function
+	* @authors Bolshakov M.P.
+	* @param n The number of the term
+	* @tparam T The type of the elements in the series, K The type of enumerating integer
+	* @return nth term of the Maclaurin series of the cosine functions
+	*/
+	[[nodiscard]] constexpr virtual T calculateTerm(K n) const override;
+
+	/**
+	 * @brief 
+	 * 
+	 * @param config 
+	 */
+	one_div_sqrt2_sin_xdivsqrt2_series(const SeriesConfig<T,K>& config);
 };
 
 template <Accepted T, std::unsigned_integral K>
-one_div_sqrt2_sin_xdivsqrt2_series<T, K>::one_div_sqrt2_sin_xdivsqrt2_series(T x) : 
-series_base<T, K>(
-    x, 
-    sin(x / sqrt(static_cast<T>(2))) / sqrt(static_cast<T>(2))
-)
-{
-    this->series_name = "(1/√2)*sin(x/√2)";
-    // Сходится при ∀x ∈ ℝ (ряд для sin(z) сходится при ∀z ∈ ℝ, где z = x/√2)
+one_div_sqrt2_sin_xdivsqrt2_series<T, K>::one_div_sqrt2_sin_xdivsqrt2_series(const SeriesConfig<T,K>& config) {
 
-    if (!isfinite(x)) {
-        this->throw_domain_error("x is not finite");
-    }
+	if (domain_checker(config)){
+		this->throw_domain_error("x is not finite");
+	}
+
+	TermCalculatorBase<T,K>::series_name = "(1/√2)*sin(x/√2)";
+	TermCalculatorBase<T, K>::x = config.x;
+	TermCalculatorBase<T, K>::sum = calculate_sum();
+
 }
 
 template <Accepted T, std::unsigned_integral K>
-constexpr T one_div_sqrt2_sin_xdivsqrt2_series<T, K>::operator()(K n) const
-{
-#ifdef _WIN32
-    return static_cast<T>(pow(-1, n / 2) * _jn(static_cast<int>(2 * n + 1), this->x)); // (96.1) [Rows.pdf]
-#else
-    return static_cast<T>(pow(-1, n / 2) * jn(static_cast<T>(2 * n + 1), this->x));
-#endif
+constexpr T one_div_sqrt2_sin_xdivsqrt2_series<T, K>::calculateTerm(K n) const {
+	#ifdef _WIN32
+        return static_cast<T>(pow(-1, n / 2) * _jn(static_cast<int>(2 * n + 1), this->x)); // (96.1) [Rows.pdf]
+    #else
+        return static_cast<T>(pow(-1, n / 2) * jn(static_cast<T>(2 * n + 1), this->x));
+    #endif
 }

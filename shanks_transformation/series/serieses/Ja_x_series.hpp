@@ -1,55 +1,77 @@
 #pragma once
-#include "../series_base.hpp"
+
+#include "../term_calculator.hpp"
 
 /**
-* @brief Taylor series of Bessel function J_b(x)
-* @authors Trudolyubov N.A.
+* @brief Maclaurin series of hyperbolic cosine
+* @authors Pashkov B.B.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
 template <Accepted T, std::unsigned_integral K>
-class Ja_x_series final : public series_base<T, K>
+class Ja_x_series final : public TermCalculatorBase<T, K>
 {
+protected:
+
+    T a;
+
+    /**
+     * @brief 
+     * 
+     * @param x 
+     * @return true 
+     * @return false 
+     */
+    inline bool domain_checker(const SeriesConfig<T,K>& config) const override { return !isfinite(config.x) || !isfinite(config.addTParameter); }
+
+    /**s
+	 * @brief 
+	 * 
+	 * @param x 
+	 * @return constexpr T 
+	 */
+	T calculate_sum() const  { return static_cast<T>(0); }
+
 public:
-    Ja_x_series() = delete;
 
-    /**
-    * @brief Parameterized constructor to initialize the series with function argument and sum
-    * @authors Trudolyubov N.A.
-    * @param x The argument for function series, b The integer constant
-    * @tparam T The type of the elements in the series, K The type of enumerating integer
-    */
-    Ja_x_series(T x, T a);
+	/**
+	 * @brief Construct a new cos series object
+	 * 
+	 */
+	Ja_x_series() = delete;
 
-    /**
-    * @brief Computes the nth term of the Fourier series of the sine function
-    * @authors Trudolyubov N.A.
-    * @param n The number of the term
-    * @tparam T The type of the elements in the series, K The type of enumerating integer
-    * @return nth term of the series
-    */
-    [[nodiscard]] constexpr virtual T operator()(K n) const;
-private:
-    /**
-    * @brief The order of Bessel function
-    * @authors Trudolyubov N.A.
-    */
-    const T a;
+
+	/**
+	* @brief Computes the nth term of the Maclaurin series of the cosine function
+	* @authors Bolshakov M.P.
+	* @param n The number of the term
+	* @tparam T The type of the elements in the series, K The type of enumerating integer
+	* @return nth term of the Maclaurin series of the cosine functions
+	*/
+	[[nodiscard]] constexpr virtual T calculateTerm(K n) const override;
+
+	/**
+	 * @brief 
+	 * 
+	 * @param config 
+	 */
+	Ja_x_series(const SeriesConfig<T,K>& config);
 };
 
 template <Accepted T, std::unsigned_integral K>
-Ja_x_series<T, K>::Ja_x_series(T x, T a) : series_base<T, K>(x), a(a)
-{
-    this->series_name = "Jₐ(x)";
-    // Сходится при ∀x ∈ ℝ (функция Бесселя первого рода)
-    // Сходится при ∀a ∈ ℝ
+Ja_x_series<T, K>::Ja_x_series(const SeriesConfig<T,K>& config) {
 
-    if (!isfinite(x) || !isfinite(a)) {
-        this->throw_domain_error("x and a must be finite");
-    }
+	if (domain_checker(config)){
+		this->throw_domain_error("x and a must be finite");
+	}
+
+	TermCalculatorBase<T,K>::series_name = "Jₐ(x)";
+	TermCalculatorBase<T, K>::x = config.x;
+    Ja_x_series<T,K>::a = config.addTParameter;
+	TermCalculatorBase<T, K>::sum = calculate_sum();
+
 }
 
 template <Accepted T, std::unsigned_integral K>
-constexpr T Ja_x_series<T, K>::operator()(K n) const
-{
-    return this->minus_one_raised_to_power_n(n) * pow(this->x * static_cast <T>(0.5), static_cast<T>(2 * n) + this->a) / (static_cast<T>(this->fact(n)) * tgamma(this->a + static_cast<T>(n + 1))); // (95.1) [Rows.pdf]
+constexpr T Ja_x_series<T, K>::calculateTerm(K n) const {
+	return minus_one_raised_to_power_n<T,K>(n) * pow(this->x * static_cast <T>(0.5), static_cast<T>(2 * n) + this->a) / (static_cast<T>(fact<K>(n)) * tgamma(this->a + static_cast<T>(n + 1))); // (95.1) [Rows.pdf]
 }
