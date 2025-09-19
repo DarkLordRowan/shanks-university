@@ -73,7 +73,7 @@ const SeriesList: React.FC = () => {
                                 <FormulaBadge latex={row.title}/>
                             </div>
 
-                            {row.subtitle && <div className="text-sm text-textDim">{row.subtitle}</div>}
+                            {/*{row.subtitle && <div className="text-sm text-textDim">{row.subtitle}</div>}*/}
 
                             <div className="mt-3">
                                 <span className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-medium text-black transition group-hover:translate-x-[2px]">
