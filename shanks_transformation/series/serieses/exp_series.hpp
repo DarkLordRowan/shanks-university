@@ -1,71 +1,74 @@
 #pragma once
-#include "../series_base.hpp"
+
+#include "../term_calculator.hpp"
 
 /**
-* @brief Maclaurin series of exp(x) function
-* @authors Bolshakov M.P.
+* @brief Maclaurin series of hyperbolic cosine
+* @authors Pashkov B.B.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
 template <Accepted T, std::unsigned_integral K>
-class exp_series final : public series_base<T, K>, public recurrent_series_base<T, K>
+class exp_series final : public TermCalculatorBase<T, K>
 {
+protected:
+
+    /**
+     * @brief 
+     * 
+     * @param x 
+     * @return true 
+     * @return false 
+     */
+    inline bool domain_checker(const SeriesConfig<T,K>& config) const { return !isfinite(config.x); }
+
+    /**s
+	 * @brief 
+	 * 
+	 * @param x 
+	 * @return constexpr T 
+	 */
+	T calculate_sum() const { return exp(this->x); }
+
 public:
+
+	/**
+	 * @brief Construct a new cos series object
+	 * 
+	 */
 	exp_series() = delete;
 
-	/**
-	* @brief Parameterized constructor to initialize the series with function argument and sum
-	* @authors Bolshakov M.P.
-	* @tparam T The type of the elements in the series, K The type of enumerating integer
-	* @param x The argument for function series
-	*/
-	exp_series(T x);
 
 	/**
-	* @brief Computes the nth term of the Maclaurin series of the exponent
+	* @brief Computes the nth term of the Maclaurin series of the cosine function
 	* @authors Bolshakov M.P.
 	* @param n The number of the term
 	* @tparam T The type of the elements in the series, K The type of enumerating integer
-	* @return nth term of the Maclaurin series of the exponent
+	* @return nth term of the Maclaurin series of the cosine functions
 	*/
-	[[nodiscard]] constexpr virtual T operator()(K n) const;
+	[[nodiscard]] constexpr virtual T calculateTerm(K n) const override;
 
-
-private:
 	/**
-	* @brief Computes nth term of the series
-	* @authors Kreynin R.G.
-	* @param n The number of the term
-	* @tparam T The type of the elements in the series, K The type of enumerating integer
-	* @return nth term of the series
-	*/
-	T access_row(K n);
+	 * @brief 
+	 * 
+	 * @param config 
+	 */
+	exp_series(const SeriesConfig<T,K>& config);
 };
 
 template <Accepted T, std::unsigned_integral K>
-exp_series<T, K>::exp_series(T x) : series_base<T, K>(x, exp(x)), recurrent_series_base<T, K>(static_cast<T>(1))
-{
-	this->series_name = "exp(x)";
-	// Сходится при ∀x ∈ ℝ
+exp_series<T, K>::exp_series(const SeriesConfig<T,K>& config) {
 
-	if (!isfinite(x)) {
-		series_base<T, K>::throw_domain_error("x is not finite");
+	if (domain_checker(config)){
+		this->throw_domain_error("x is not finite");
 	}
+
+	TermCalculatorBase<T,K>::series_name = "exp(x)";
+	TermCalculatorBase<T, K>::x = config.x;
+	TermCalculatorBase<T, K>::sum = calculate_sum();
+
 }
 
 template <Accepted T, std::unsigned_integral K>
-T exp_series<T, K>::access_row(K n)
-{
-	auto old_size = this->series_vector.size();
-	this->series_vector.reserve(n);
-
-	for (auto i = old_size; i <= static_cast<typename std::vector<T>::size_type>(n); ++i)
-		this->series_vector.push_back(this->series_vector[i - 1] * this->x / static_cast<T>(i));
-
-	return this->series_vector[n];
-}
-
-template <Accepted T, std::unsigned_integral K>
-constexpr T exp_series<T, K>::operator()(K n) const
-{
-	return const_cast<exp_series<T, K>*>(this)->access_row(n);
+constexpr T exp_series<T, K>::calculateTerm(K n) const {
+	return pow(this->x, static_cast<T>(n)) / static_cast<T>(fact<K>(n));
 }

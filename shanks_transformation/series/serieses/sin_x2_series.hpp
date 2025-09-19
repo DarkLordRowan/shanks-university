@@ -1,49 +1,75 @@
 #pragma once
-#include "../series_base.hpp"
+
+#include "../term_calculator.hpp"
 
 /**
-* @brief Maclaurin series of function sin(x^2)
-* @authors Pavlova A.R.
+* @brief Maclaurin series of hyperbolic cosine
+* @authors Pashkov B.B.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
 template <Accepted T, std::unsigned_integral K>
-class sin_x2_series final : public series_base<T, K>
+class sin_x2_series final : public TermCalculatorBase<T, K>
 {
+protected:
+
+    /**
+     * @brief 
+     * 
+     * @param x 
+     * @return true 
+     * @return false 
+     */
+    inline bool domain_checker(const SeriesConfig<T,K>& config) const { return !isfinite(config.x); }
+
+    /**s
+	 * @brief 
+	 * 
+	 * @param x 
+	 * @return constexpr T 
+	 */
+	T calculate_sum() const  { return sin(this->x * this->x); }
+
 public:
-    sin_x2_series() = delete;
 
-    /**
-    * @brief Parameterized constructor to initialize the series with function argument and sum
-    * @authors Pavlova A.R.
-    * @param x The argument for function series
-    * tparam T The type of the elements in the series, K The type of enumerating integer
-    */
-    sin_x2_series(T x);
+	/**
+	 * @brief Construct a new cos series object
+	 * 
+	 */
+	sin_x2_series() = delete;
 
-    /**
-    * @brief Computes the nth term of the ln1px4 series
-    * @authors Pavlova A.R.
-    * @param n The number of the term
-    * tparam T The type of the elements in the series, K The type of enumerating integer
-    * @return nth term of the ln1px4 series
-    */
-    [[nodiscard]] constexpr virtual T operator()(K n) const;
+
+	/**
+	* @brief Computes the nth term of the Maclaurin series of the cosine function
+	* @authors Bolshakov M.P.
+	* @param n The number of the term
+	* @tparam T The type of the elements in the series, K The type of enumerating integer
+	* @return nth term of the Maclaurin series of the cosine functions
+	*/
+	[[nodiscard]] constexpr virtual T calculateTerm(K n) const override;
+
+	/**
+	 * @brief 
+	 * 
+	 * @param config 
+	 */
+	sin_x2_series(const SeriesConfig<T,K>& config);
 };
 
 template <Accepted T, std::unsigned_integral K>
-sin_x2_series<T, K>::sin_x2_series(T x) : series_base<T, K>(x, sin(x* x))
-{
-    this->series_name = "sin(x²)";
-    // Сходится при ∀x ∈ ℝ (ряд для sin(z) сходится при ∀z ∈ ℝ, где z = x²)
+sin_x2_series<T, K>::sin_x2_series(const SeriesConfig<T,K>& config) {
 
-    if (!isfinite(x)) {
-        this->throw_domain_error("x is not finite");
-    }
+	if (domain_checker(config)){
+		this->throw_domain_error("x is not finite");
+	}
+
+	TermCalculatorBase<T,K>::series_name = "sin(x²)";
+	TermCalculatorBase<T, K>::x = config.x;
+	TermCalculatorBase<T, K>::sum = calculate_sum();
+
 }
 
 template <Accepted T, std::unsigned_integral K>
-constexpr T sin_x2_series<T, K>::operator()(K n) const
-{
-    const K a = static_cast<K>(fma(2, n, 1));
-    return series_base<T, K>::minus_one_raised_to_power_n(n) * pow(this->x, static_cast<T>(static_cast<K>(2) * a)) / static_cast<T>(this->fact(a)); // (82.2) [Rows.pdf]
+constexpr T sin_x2_series<T, K>::calculateTerm(K n) const {
+	const K a = static_cast<K>(fma(2, n, 1));
+    return minus_one_raised_to_power_n<T,K>(n) * pow(this->x, static_cast<T>(static_cast<K>(2) * a)) / static_cast<T>(fact<K>(a)); // (82.2) [Rows.pdf]
 }

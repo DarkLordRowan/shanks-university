@@ -61,7 +61,7 @@ protected:
 	 * @param order The order of transformation (number of iterations)
 	 * @return The accelerated partial sum after Lubkin transformation
 	 */
-	T calculate(K n, K order) const;
+	T calculate(K n, K order);
 	
 public:
 
@@ -94,17 +94,17 @@ public:
 	 * @throws std::domain_error if negative order is provided
 	 * @throws std::overflow_error if division by zero or numerical instability occurs
 	 */
-	T operator()(K n, K order) const override;
+	T operator()(K n, K order) override;
 };
 
 template<Accepted T, std::unsigned_integral K, typename series_templ>
-T lubkin_w_algorithm<T, K, series_templ>::operator()(const K n, const K order) const {
+T lubkin_w_algorithm<T, K, series_templ>::operator()(const K n, const K order) {
 
 	return calculate(n, order);
 }
 
 template<Accepted T, std::unsigned_integral K, typename series_templ>
-T lubkin_w_algorithm<T, K, series_templ>::calculate(K n, const K order) const {
+T lubkin_w_algorithm<T, K, series_templ>::calculate(K n, const K order) {
 
 	using std::isfinite;
 	using std::fma;
@@ -119,7 +119,7 @@ T lubkin_w_algorithm<T, K, series_templ>::calculate(K n, const K order) const {
 	);
 
 	for(K i = static_cast<K>(0); i < base_size; ++i){
-		W[i] = this->series->S_n(n + i);
+		W[i] = this->series->Sn(n + i);
 	}
 
 	T Wo0, Wo1, Wo2;  // First differences: ΔS_n, ΔS_{n+1}, ΔS_{n+2}

@@ -12,6 +12,7 @@
 #pragma once
 
 #include <memory> // For std::unique_ptr
+#include <stdexcept>
 
 #include "../series_acceleration.hpp"
 #include "../wynn_numerators.hpp"
@@ -44,7 +45,7 @@ class wynn_rho_algorithm final : public series_acceleration<T, K, series_templ>
 {
 protected:
 
-	std::unique_ptr<const numerator_base<T, K>> numerator;	/**< Numerator computation strategy */
+	std::unique_ptr<numerator_base<T, K>> numerator;	/**< Numerator computation strategy */
 	const T gamma;											/**< Gamma parameter for generalized rho transformation */
 	const T RHO;											/**< Rho parameter for gamma-rho variant */
 
@@ -54,21 +55,8 @@ protected:
 	 * @param order Transformation order (must be even)
 	 * @return Accelerated partial sum
 	 */
-	inline T calculate(K n, K order) const;
+	inline T calculate(K n, K order);
 
-	/**
-	 * @brief Recursive computation body for the rho algorithm.
-	 *
-	 * For theory, see: Wynn (1966), Eq. (3.2) - Recursive formulation
-	 * ρₖ⁽ⁿ⁾ = ρₖ₋₂⁽ⁿ⁺¹⁾ + [γ + k(RHO - 1)] / [ρₖ₋₁⁽ⁿ⁺¹⁾ - ρₖ₋₁⁽ⁿ⁾]
-	 *
-	 * @param n Current index
-	 * @param order Current recursion order
-	 * @param S_n Current partial sum value
-	 * @param j Adjustment index for term selection
-	 * @return Computed transformation value
-	 */
-	T recursive_calculate_body(K n, K order, T S_n, K j) const;
 
 public:
 
@@ -128,7 +116,14 @@ public:
 	 * @throws std::domain_error if order is odd
 	 * @throws std::overflow_error if division by zero occurs
 	 */
-	T operator()(const K n, const K order) const override { return calculate(n, order); }
+	T operator()(const K n, const K order) override { 
+
+		if(order & 1){
+			throw std::domain_error("order is odd");
+		}
+
+		return calculate(n, order); 
+	}
 
 	/**
 	 * @brief Compute transformed partial sum (extended version for arbitrary precision)
@@ -146,6 +141,10 @@ public:
 	 */
 	template <typename BigK, typename BigOrder, typename = std::enable_if_t<!std::is_same_v<BigK, K> || !std::is_same_v<BigOrder, K>>> T operator()(const BigK& n, const BigOrder& order) const {
 		static_assert(std::is_constructible_v<K, BigK>, "Term count type must be convertible to K");
+
+		if( order & 1){
+			throw std::domain_error("order is odd");
+		}
 
 		return calculate(static_cast<K>(n), static_cast<int>(order)); // ЗАМЕНА calculate_impl НА calculate ... поскольку первого просто не существует, возможно предполагалось его использование
 	}
@@ -186,111 +185,58 @@ wynn_rho_algorithm<T, K, series_templ>::wynn_rho_algorithm(
 }
 
 template <Accepted T, std::unsigned_integral K, typename series_templ>
-inline T wynn_rho_algorithm<T, K, series_templ>::calculate(const K n, K order) const { //const int order
+inline T wynn_rho_algorithm<T, K, series_templ>::calculate(const K n, K order) { //const int order
 
 	using std::isfinite;
 
-	// For theory, see: Wynn (1966), Theorem 1 - Order must be even
-	if (order & static_cast<K>(1))// is order odd
-		//++order; //why
-		throw std::domain_error("order should be even number");
+	const K base_size = order + static_cast<K>(1);
 
-	if (order == static_cast<K>(0)) return this->series->S_n(n);
+    std::vector<T> rho_odd(
+        base_size,
+        static_cast<T>(0)
+    ); // vector for theta_(2n + 1)
 
-	const T S_n = this->series->S_n(n);
-	const K order1 = order - static_cast<K>(1);
+    std::vector<T> rho_even(
+        base_size,
+        static_cast<T>(0)
+    ); //vector for theta_(2n), in the beginning it is theta_(-1) which is zero for all i
 
-	// For theory, see: Wynn (1966), Eq. (3.5) - Main recurrence relation
-	// ρₖ⁽ⁿ⁾ = ρₖ₋₂⁽ⁿ⁺¹⁾ + Nₖ⁽ⁿ⁾ / (ρₖ₋₁⁽ⁿ⁺¹⁾ - ρₖ₋₁⁽ⁿ⁾)
-	const T res = 
-		recursive_calculate_body(
-			n,
-			order1 - static_cast<K>(1),
-			 S_n,
-			 static_cast<K>(1)
-		) +
-		numerator->operator()(
-			n,
-			order,
-			this->series,
-			gamma,
-			RHO
-		) / (
-		recursive_calculate_body(
-			n,
-			order1,
-			S_n,
-			static_cast<K>(1)
-		) -
-		recursive_calculate_body(
-			n,
-			order1,
-			S_n,
-			static_cast<K>(0)
-		)
-	);
+    // init theta_(0)
+    for(K j = static_cast<K>(0); j < base_size; ++j)
+        rho_even[j] = this->series->Sn(n + j);
 
-	if (!isfinite(res))
-		throw std::overflow_error("division by zero");
-	return res;
+
+    K j1, j2;
+    T delta; //temporary varaible
+
+    for(K level = static_cast<K>(1); level <= order / static_cast<K>(2); ++level){
+
+        // transform odd vector
+        for(K j = static_cast<K>(0); j < base_size - level; ++j){
+
+            j1 = j + static_cast<K>(1);
+
+            delta = rho_even[j1] - rho_even[j];
+
+			rho_odd[j] = rho_odd[j1] + numerator->operator()(j, level * 2 - 1, this->series, RHO, gamma) / delta;
+
+        }
+
+        // transform even vector
+        for(K j = static_cast<K>(0); j < base_size - level; ++j){
+
+            j1 = j + static_cast<K>(1);
+
+            delta = rho_odd[j1] - rho_odd[j];
+            
+			rho_even[j] = rho_even[j1] + numerator->operator()(j, level * 2, this->series, RHO, gamma) / delta;
+
+        }
+    }
+
+    if(!isfinite(rho_even[0]))
+        throw std::overflow_error("division by zero");
+
+    return rho_even[0];
 }
 
-template <Accepted T, std::unsigned_integral K, typename series_templ>
-T wynn_rho_algorithm<T, K, series_templ>::recursive_calculate_body(const K n, const K order, T S_n, const K j) const {
-
-	using std::isfinite;
-	/**
-	* S_n - previous sum;
-	* j - adjusts n: (n + j);
-	*/
-
-	// For theory, see: Wynn (1966), Eq. (3.3) - Base case initialization
-	// Add current term if j > 0 (j=0 means use current S_n without adding new terms)
-	S_n += (j == static_cast<K>(0)) ? static_cast<T>(0) : this->series->operator()(n + j);
-
-	// Base case: return current partial sum when order reaches 0
-	if (order == static_cast<K>(0))
-		return S_n;
-
-	// Invalid order case
-	if (order == static_cast<K>(-1))
-		return static_cast<T>(0);
-
-	const K order1 = order - static_cast<K>(1);
-	const K nj = n + j;
-
-	// For theory, see: Wynn (1966), Eq. (3.5) - Recursive computation
-	// ρₖ⁽ⁿ⁾ = ρₖ₋₂⁽ⁿ⁺¹⁾ + Nₖ⁽ⁿ⁾ / (ρₖ₋₁⁽ⁿ⁺¹⁾ - ρₖ₋₁⁽ⁿ⁾)
-	const T res = 
-		recursive_calculate_body(
-			nj,
-			order1 - static_cast<K>(1),
-			S_n,
-			static_cast<K>(1)
-		) +
-		numerator->operator()(
-			nj,
-			order,
-			this->series,
-			gamma,
-			RHO
-		) / (
-		recursive_calculate_body(
-			nj,
-			order1,
-			 S_n,
-			 static_cast<K>(1)
-		) -
-		recursive_calculate_body(
-			nj,
-			order1,
-			S_n,
-			static_cast<K>(0)
-		)
-	);
-
-	if (!isfinite(res))
-		throw std::overflow_error("division by zero");
-
-	return res;
-}

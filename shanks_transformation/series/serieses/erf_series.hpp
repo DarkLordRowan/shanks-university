@@ -1,91 +1,88 @@
 #pragma once
-#include "../series_base.hpp"
+
+#include "../term_calculator.hpp"
 
 /**
-* @brief Maclaurin series of function 0.5 * sqrt(pi) * erf(x)
+* @brief Maclaurin series of hyperbolic cosine
 * @authors Pashkov B.B.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
 template <Accepted T, std::unsigned_integral K>
-class erf_series final : public series_base<T, K>, public recurrent_series_base<T, K>
+class erf_series final : public TermCalculatorBase<T, K>
 {
-public:
-	erf_series() = delete;
+protected:
 
-	/**
-	* @brief Parameterized constructor to initialize the series with function argument and sum
-	* @authors Pashkov B.B.
-	* @param x The argument for function series
-	* @tparam T The type of the elements in the series, K The type of enumerating integer
-	*/
-	erf_series(T x);
+    /**
+     * @brief 
+     * 
+     * @param x 
+     * @return true 
+     * @return false 
+     */
+    inline bool domain_checker(const SeriesConfig<T,K>& config) const { return !isfinite(config.x); }
 
-	/**
-	* @brief Computes the nth term of the Maclaurin series of sqrt(pi) * erf(x) / 2
-	* @authors Pashkov B.B.
-	* @param n The number of the term
-	* @tparam T The type of the elements in the series, K The type of enumerating integer
-	* @return nth term of the series
-	*/
-	[[nodiscard]] constexpr virtual T operator()(K n) const;
+    /**s
+	 * @brief 
+	 * 
+	 * @param x 
+	 * @return constexpr T 
+	 */
+	T calculate_sum() const  {
 
-	constexpr inline T calculate_sum(T x) const {
-
-		if(!isfinite(x) || std::is_same<T, complex_precision<float_precision>>::value){ return static_cast<T>(0);}
+		if(std::is_same<T, complex_precision<float_precision>>::value){ return static_cast<T>(0);}
 
 		if constexpr ( std::is_floating_point<T>::value){
-			return static_cast<T>(0.5) * sqrt(static_cast<T>(PI))* erf(x);
+			return static_cast<T>(0.5) * sqrt(static_cast<T>(PI))* erf(this->x);
 		}
 
 		if constexpr ( std::is_same<T, float_precision>::value){
-			return static_cast<T>(0.5) * sqrt(arbPI) * erf(x);
+			return static_cast<T>(0.5) * sqrt(arbPI) * erf(this->x);
         }
-
+		return static_cast<T>(0);
 	}
 
-private:
+public:
+
 	/**
-	* @brief Computes nth term of the series
-	* @authors Kreynin R.G.
+	 * @brief Construct a new cos series object
+	 * 
+	 */
+	erf_series() = delete;
+
+
+	/**
+	* @brief Computes the nth term of the Maclaurin series of the cosine function
+	* @authors Bolshakov M.P.
 	* @param n The number of the term
 	* @tparam T The type of the elements in the series, K The type of enumerating integer
-	* @return nth term of the series
+	* @return nth term of the Maclaurin series of the cosine functions
 	*/
-	T access_row(K n);
+	[[nodiscard]] constexpr virtual T calculateTerm(K n) const override;
 
-	
+	/**
+	 * @brief 
+	 * 
+	 * @param config 
+	 */
+	erf_series(const SeriesConfig<T,K>& config);
 };
 
 template <Accepted T, std::unsigned_integral K>
-erf_series<T, K>::erf_series(T x) : series_base<T, K>(x, calculate_sum(x)), recurrent_series_base<T, K>(x)
-{
-	this->series_name = "√π/2 * erf(x)";
-	// Сходится при ∀x ∈ ℝ (ряд для erf(x) сходится на всей числовой прямой)
+erf_series<T, K>::erf_series(const SeriesConfig<T,K>& config) {
 
-	if (!isfinite(x)) {
-		series_base<T, K>::throw_domain_error("x is not finite");
+	if (domain_checker(config)){
+		this->throw_domain_error("x is not finite");
 	}
+
+	TermCalculatorBase<T,K>::series_name = "√π/2 * erf(x)";
+	TermCalculatorBase<T, K>::x = config.x;
+	TermCalculatorBase<T, K>::sum = calculate_sum();
+
 }
 
 template <Accepted T, std::unsigned_integral K>
-T erf_series<T, K>::access_row(K n)
-{
-	auto& series_vec = this->series_vector; // ссылка на член базового класса
-	auto old_size = series_vec.size();
-	series_vec.reserve(n);
-	T a;
-	T b = static_cast<T>(-this->x * this->x);
+constexpr T erf_series<T, K>::calculateTerm(K n) const {
+	const T two_n_1 = static_cast<T>(fma(2,n,1));
 
-	for (auto i = old_size; i <= static_cast<typename std::vector<T>::size_type>(n); ++i)
-	{
-		a = static_cast<T>(fma(2, i, 1));
-		series_vec.push_back(series_vec[i - 1] * (b * (a - static_cast<T>(2)) / (static_cast<T>(i) * a)));
-	}
-	return series_vec[n];
-}
-
-template <Accepted T, std::unsigned_integral K>
-constexpr T erf_series<T, K>::operator()(K n) const
-{
-	return const_cast<erf_series<T, K>*>(this)->access_row(n);
+	return minus_one_raised_to_power_n<T,K>(n) * static_cast<T>(2) * pow(this->x, two_n_1) / (sqrt(static_cast<T>(PI)) * static_cast<T>(fact<K>(n)) * two_n_1);
 }

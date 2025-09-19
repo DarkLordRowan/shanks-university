@@ -73,11 +73,11 @@ public:
 	 * @throws std::domain_error if n=0 is provided as input.
 	 * @throws std::overflow_error if division by zero or numerical instability occurs.
 	 */
-	T operator()(K n, K k) const override;
+	T operator()(K n, K k) override;
 };
 
 template <Accepted T, std::unsigned_integral K, typename series_templ>
-T ford_sidi_2_algorithm<T, K, series_templ>::operator()(const K n, const K k) const {
+T ford_sidi_2_algorithm<T, K, series_templ>::operator()(const K n, const K k) {
 
 	using std::fma;
 	using std::isfinite;
@@ -95,9 +95,9 @@ T ford_sidi_2_algorithm<T, K, series_templ>::operator()(const K n, const K k) co
 	do{
 		// For theory, see: Ford & Sidi (1987), Eq. (1.8) - Finite difference computation
 		// Second difference formula: Δ²S_m = S_{m+2} - 2S_{m+1} + S_m
-		delta_squared_S_n = this->series->S_n(m + static_cast<K>(2));
-		delta_squared_S_n-= static_cast<T>(2) * this->series->S_n(m + static_cast<K>(1));
-		delta_squared_S_n+= this->series->S_n(m);
+		delta_squared_S_n = this->series->Sn(m + static_cast<K>(2));
+		delta_squared_S_n-= static_cast<T>(2) * this->series->Sn(m + static_cast<K>(1));
+		delta_squared_S_n+= this->series->Sn(m);
 
 	} while (delta_squared_S_n == static_cast<T>(0) && --m > static_cast<K>(0));
 
@@ -108,12 +108,12 @@ T ford_sidi_2_algorithm<T, K, series_templ>::operator()(const K n, const K k) co
 
 	// For theory, see: Ford & Sidi (1987), Eq. (1.9) - First difference computation
 	// First difference formula: ΔS_m = S_{m+1} - S_m
-	T delta_S_n = this->series->S_n(m + static_cast<K>(1));
-	delta_S_n -= this->series->S_n(m);
+	T delta_S_n = this->series->Sn(m + static_cast<K>(1));
+	delta_S_n -= this->series->Sn(m);
 
 	// For theory, see: Osada (2000), Eq. (20) - Main transformation formula
 	// Ford-Sidi acceleration: T_n = S_m - [(ΔS_m)² / Δ²S_m]
-	const T T_n = fma(-delta_S_n, delta_S_n / delta_squared_S_n, this->series->S_n(m));
+	const T T_n = fma(-delta_S_n, delta_S_n / delta_squared_S_n, this->series->Sn(m));
 
 	// For theory, see: Ford & Sidi (1987), Section 3 - Numerical stability check
 	// Ensures the result is a finite floating-point value

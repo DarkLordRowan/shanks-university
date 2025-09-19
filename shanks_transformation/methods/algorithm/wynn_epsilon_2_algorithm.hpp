@@ -78,14 +78,14 @@ public:
 	 * @throws std::domain_error if n=0 is provided as input
 	 * @throws std::overflow_error if numerical instability occurs
 	 */
-    T operator()(K n, K order) const override;
+    T operator()(K n, K order) override;
 };
 
 template <Accepted T, std::unsigned_integral K, typename series_templ>
 wynn_epsilon_2_algorithm<T, K, series_templ>::wynn_epsilon_2_algorithm(const series_templ& series) : series_acceleration<T, K, series_templ>(series) {}
 
 template <Accepted T, std::unsigned_integral K, typename series_templ>
-T wynn_epsilon_2_algorithm<T, K, series_templ>::operator()(const K n, const K order) const
+T wynn_epsilon_2_algorithm<T, K, series_templ>::operator()(const K n, const K order)
 {
 
 	using std::isfinite;
@@ -94,7 +94,7 @@ T wynn_epsilon_2_algorithm<T, K, series_templ>::operator()(const K n, const K or
 	if (n == static_cast<K>(0))
 		throw std::domain_error("n = 0 in the input");
 	if (order == static_cast<K>(0))
-		return this->series->S_n(n);
+		return this->series->Sn(n);
 
 	// For theory, see: Wynn (1956), Section 3 - Algorithm construction and table size
 	// Total number of entries needed in the epsilon table: k = 2*order + n
@@ -113,7 +113,7 @@ T wynn_epsilon_2_algorithm<T, K, series_templ>::operator()(const K n, const K or
 	// For theory, see: Wynn (1956), Eq. (2) - Initialization with partial sums
 	// Initialize the bottom row with partial sums: ε₀⁽ᵐ⁾ = Sₙ for m = 0,1,...,k
 	for (K i = static_cast<K>(0); i <= k; ++i)
-		eps[3][i] = this->series->S_n(i);
+		eps[3][i] = this->series->Sn(i);
 
 
 	T a, a1, a2;

@@ -57,20 +57,20 @@ public:
 	 * @return The accelerated partial sum after Shanks transformation
 	 * @throws std::overflow_error if division by zero or numerical instability occurs
 	 */
-	T operator()(K n, K order) const;
+	T operator()(K n, K order);
 };
 
 template <Accepted T, std::unsigned_integral K, typename series_templ>
 shanks_algorithm<T, K, series_templ>::shanks_algorithm(const series_templ& series) : series_acceleration<T, K, series_templ>(series) {}
 
 template <Accepted T, std::unsigned_integral K, typename series_templ>
-T shanks_algorithm<T, K, series_templ>::operator()(const K n, const K order) const{
+T shanks_algorithm<T, K, series_templ>::operator()(const K n, const K order) {
 
 	using std::isfinite;
 	using std::fma;
 
 	if (order == static_cast<K>(0)) [[unlikely]] /*it is convenient to assume that transformation of order 0 is no transformation at all*/
-		return this->series->S_n(n);
+		return this->series->Sn(n);
 
 	if (n < order || n == static_cast<K>(0)) [[unlikely]]
 		return static_cast<T>(0); // TODO: диагностика
@@ -79,8 +79,8 @@ T shanks_algorithm<T, K, series_templ>::operator()(const K n, const K order) con
 	{
 		T a_n, a_n_plus_1, tmp;
 
-		a_n = this->series->operator()(n);
-		a_n_plus_1 = this->series->operator()(n + static_cast<K>(1));
+		a_n = this->series->an(n);
+		a_n_plus_1 = this->series->an(n + static_cast<K>(1));
 		tmp = -a_n_plus_1 * a_n_plus_1;
 
 		// For theory, see: Shanks (1955), Eq. (6) - Aitken's Δ² process
@@ -88,7 +88,7 @@ T shanks_algorithm<T, K, series_templ>::operator()(const K n, const K order) con
 		const T result = fma(
 			a_n * a_n_plus_1,
 			(a_n + a_n_plus_1) / (fma(a_n, a_n, tmp) - fma(a_n_plus_1, a_n_plus_1, tmp)), 
-			this->series->S_n(n)
+			this->series->Sn(n)
 		);
 		//n > order >= 1
 
@@ -104,14 +104,14 @@ T shanks_algorithm<T, K, series_templ>::operator()(const K n, const K order) con
 	std::vector<T> T_n(n_plus_order, static_cast<T>(0));
 
 	T a_n, a_n_plus_1, tmp;
-	a_n = this->series->operator()(n_minus_order);
-	a_n_plus_1 = this->series->operator()(n_minus_order + static_cast<K>(1));
+	a_n = this->series->an(n_minus_order);
+	a_n_plus_1 = this->series->an(n_minus_order + static_cast<K>(1));
 	tmp = -a_n_plus_1 * a_n_plus_1;
 
 	for (K i = n_minus_order + static_cast<K>(1); i <= n_plus_order - static_cast<K>(1); ++i) // if we got to this branch then we know that n >= order - see previous branches  int -> K
 	{
-		a_n = this->series->operator()(i);
-		a_n_plus_1 = this->series->operator()(i + static_cast<K>(1));
+		a_n = this->series->an(i);
+		a_n_plus_1 = this->series->an(i + static_cast<K>(1));
 		tmp = -a_n_plus_1 * a_n_plus_1;
 
 		// For theory, see: Shanks (1955), Eq. (12) - Higher order transformation
@@ -119,7 +119,7 @@ T shanks_algorithm<T, K, series_templ>::operator()(const K n, const K order) con
 		T_n[i] = fma(
 			a_n * a_n_plus_1, 
 			(a_n + a_n_plus_1) / (fma(a_n, a_n, tmp) - fma(a_n_plus_1, a_n_plus_1, tmp)), 
-			this->series->S_n(i)
+			this->series->Sn(i)
 		);
 	}
 
@@ -188,20 +188,20 @@ public:
 	 * @return The accelerated partial sum after Shanks transformation
 	 * @throws std::overflow_error if division by zero or numerical instability occurs
 	 */
-	T operator()(K n, K order) const override;
+	T operator()(K n, K order) override;
 };
 
 template <Accepted T, std::unsigned_integral K, typename series_templ>
 shanks_transform_alternating<T, K, series_templ>::shanks_transform_alternating(const series_templ& series) : series_acceleration<T, K, series_templ>(series) {}
 
 template <Accepted T, std::unsigned_integral K, typename series_templ>
-T shanks_transform_alternating<T, K, series_templ>::operator()(const K n, const K order) const {
+T shanks_transform_alternating<T, K, series_templ>::operator()(const K n, const K order) {
 
 	using std::isfinite;
 	using std::fma;
 
 	if (order == static_cast<K>(0)) [[unlikely]] /*it is convenient to assume that transformation of order 0 is no transformation at all*/
-		return this->series->S_n(n);
+		return this->series->Sn(n);
 
 	if (n < order || n == static_cast<K>(0)) [[unlikely]]
 		return static_cast<T>(0); // TODO: диагностика
@@ -210,15 +210,15 @@ T shanks_transform_alternating<T, K, series_templ>::operator()(const K n, const 
 	{
 		T a_n, a_n_plus_1, result;
 
-		a_n = this->series->operator()(n);
-		a_n_plus_1 = this->series->operator()(n + static_cast<K>(1));
+		a_n = this->series->an(n);
+		a_n_plus_1 = this->series->an(n + static_cast<K>(1));
 
 		// For theory, see: Senhadji (2001), Section 3.2 - Alternating series case
 		// For alternating series: e₁(Sₙ) = Sₙ + (aₙaₙ₊₁)/(aₙ - aₙ₊₁)
 		result = fma(
 			a_n * a_n_plus_1, 
 			static_cast<T>(1) / (a_n - a_n_plus_1), 
-			this->series->S_n(n)
+			this->series->Sn(n)
 		);
 
 		if (!isfinite(result))
@@ -236,20 +236,20 @@ T shanks_transform_alternating<T, K, series_templ>::operator()(const K n, const 
 
 	T a_n, a_n_plus_1;
 
-	a_n = this->series->operator()(n_minus_order);
-	a_n_plus_1 = this->series->operator()(n_minus_order1);
+	a_n = this->series->an(n_minus_order);
+	a_n_plus_1 = this->series->an(n_minus_order1);
 
 	for (K i = n_minus_order1; i <= n_plus_order - static_cast<K>(1); ++i) // if we got to this branch then we know that n >= order - see previous branches int->K
 	{
-		a_n = this->series->operator()(i);
-		a_n_plus_1 = this->series->operator()(i + static_cast<K>(1));
+		a_n = this->series->an(i);
+		a_n_plus_1 = this->series->an(i + static_cast<K>(1));
 
 		// For theory, see: Senhadji (2001), Section 3.2 - Alternating series case
 		// e₁(Sᵢ) = Sᵢ + (aᵢaᵢ₊₁)/(aᵢ - aᵢ₊₁)
 		T_n[i] = fma(
 			a_n * a_n_plus_1, 
 			static_cast<T>(1) / (a_n - a_n_plus_1), 
-			this->series->S_n(n)
+			this->series->Sn(n)
 		);
 	}
 

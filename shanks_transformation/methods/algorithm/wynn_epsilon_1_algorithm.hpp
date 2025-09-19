@@ -72,14 +72,14 @@ public:
 	 * @throws std::domain_error if order=0 is provided
 	 * @throws std::overflow_error if division by zero or numerical instability occurs
 	 */
-    T operator()(K n, K order) const override;
+    T operator()(K n, K order) override;
 };
 
 template <Accepted T, std::unsigned_integral K, typename series_templ>
 wynn_epsilon_1_algorithm<T, K, series_templ>::wynn_epsilon_1_algorithm(const series_templ& series) : series_acceleration<T, K, series_templ>(series) {}
 
 template <Accepted T, std::unsigned_integral K, typename series_templ>
-T wynn_epsilon_1_algorithm<T, K, series_templ>::operator()(const K n, const K order) const
+T wynn_epsilon_1_algorithm<T, K, series_templ>::operator()(const K n, const K order)
 {
 
 	using std::isfinite;
@@ -90,7 +90,7 @@ T wynn_epsilon_1_algorithm<T, K, series_templ>::operator()(const K n, const K or
 		throw std::domain_error("n = 0 in the input");
 
 	if (order == static_cast<K>(0))
-		return this->series->S_n(n);
+		return this->series->Sn(n);
 
 	// For theory, see: Wynn (1956), Section 3 - Algorithm implementation
 	// The algorithm requires 2×order transformation steps to compute ε₂ₖ⁽ⁿ⁾
@@ -111,7 +111,7 @@ T wynn_epsilon_1_algorithm<T, K, series_templ>::operator()(const K n, const K or
 	// For theory, see: Wynn (1956), Eq. (2) - Initial conditions
 	K j = max_ind;
 	do {
-		e0[j] = this->series->S_n(j);
+		e0[j] = this->series->Sn(j);
 	} while (--j > static_cast<K>(0));
 
 	// Apply epsilon algorithm recurrence

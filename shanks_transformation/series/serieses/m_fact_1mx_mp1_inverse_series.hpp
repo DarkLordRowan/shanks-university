@@ -1,99 +1,89 @@
 #pragma once
-#include "../series_base.hpp"
+
+#include "../term_calculator.hpp"
 
 /**
-* @brief Maclaurin series of function m! / (1 - x) ^ (m + 1), where m - integer parameter
+* @brief Maclaurin series of hyperbolic cosine
 * @authors Pashkov B.B.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
 template <Accepted T, std::unsigned_integral K>
-class m_fact_1mx_mp1_inverse_series final : public series_base<T, K>, public recurrent_series_base<T, K>
+class m_fact_1mx_mp1_inverse_series final : public TermCalculatorBase<T, K>
 {
-public:
-	m_fact_1mx_mp1_inverse_series() = delete;
+protected:
 
-	/**
-	* @brief Parameterized constructor to initialize the series with function argument and sum
-	* @authors Pashkov B.B.
-	* @param x The argument for function series, m The integer constant parameter
-	* @tparam T The type of the elements in the series, K The type of enumerating integer
-	*/
-	m_fact_1mx_mp1_inverse_series(T x, K m);
+	K m;
 
-	/**
-	* @brief Computes the nth term of the Maclaurin series of  m! / (1 - x) ^ (m + 1)
-	* @authors Pashkov B.B.
-	* @param n The number of the term
-	* @tparam T The type of the elements in the series, K The type of enumerating integer
-	* @return nth term of the series
-	*/
-	[[nodiscard]] constexpr virtual T operator()(K n) const;
-private:
-
-	/**
-	* @brief The const parameter m of the series
-	* @authors Pashkov B.B.
-	*/
-	const K m;
-
-	/**
-	* @brief Computes nth term of the series
-	* @authors Kreynin R.G.
-	* @param n The number of the term
-	* @tparam T The type of the elements in the series, K The type of enumerating integer
-	* @return nth term of the series
-	*/
-	T access_row(K n);
-
-	constexpr inline bool domain_checker(T x) const{ 
+    /**
+     * @brief 
+     * 
+     * @param x 
+     * @return true 
+     * @return false 
+     */
+    inline bool domain_checker(const SeriesConfig<T,K>& config) const { 
 
 		if constexpr ( std::is_floating_point<T>::value || std::is_same<T, float_precision>::value)
-			return abs(x) >= static_cast<T>(1) || !isfinite(x); 
+			return abs(config.x) >= static_cast<T>(1) || !isfinite(config.x); 
 
 		if constexpr ( std::is_same<T, complex_precision<float_precision>>::value )
-			return abs(x) >= static_cast<float_precision>(1) || !isfinite(x); 
+			return abs(config.x) >= static_cast<float_precision>(1) || !isfinite(config.x); 
 		
 		return false;
 	}
-	
+
+    /**s
+	 * @brief 
+	 * 
+	 * @param x 
+	 * @return constexpr T 
+	 */
+	T calculate_sum() const  { return static_cast<T>(fact<K>(m)) / pow(static_cast<T>(1) - this->x, static_cast<T>(m + 1)); }
+
+public:
+
+	/**
+	 * @brief Construct a new cos series object
+	 * 
+	 */
+	m_fact_1mx_mp1_inverse_series() = delete;
+
+
+	/**
+	* @brief Computes the nth term of the Maclaurin series of the cosine function
+	* @authors Bolshakov M.P.
+	* @param n The number of the term
+	* @tparam T The type of the elements in the series, K The type of enumerating integer
+	* @return nth term of the Maclaurin series of the cosine functions
+	*/
+	[[nodiscard]] constexpr virtual T calculateTerm(K n) const override;
+
+	/**
+	 * @brief 
+	 * 
+	 * @param config 
+	 */
+	m_fact_1mx_mp1_inverse_series(const SeriesConfig<T,K>& config);
 };
 
 template <Accepted T, std::unsigned_integral K>
-m_fact_1mx_mp1_inverse_series<T, K>::m_fact_1mx_mp1_inverse_series(T x, K m) : 
-series_base<T, K>(
-	x, 
-	static_cast<T>(this->fact(m)) / pow(static_cast<T>(1) - x, static_cast<T>(m + 1))
-), m(m), recurrent_series_base<T, K>(static_cast<T>(this->fact(m))
-)
-{
-	this->series_name = "m!/(1-x)^(m+1)";
-	// Сходится при |x| < 1 (m-ая производная геометрического ряда)
-	// Расходится при |x| ≥ 1
+m_fact_1mx_mp1_inverse_series<T, K>::m_fact_1mx_mp1_inverse_series(const SeriesConfig<T,K>& config) {
 
-	if (!isfinite(series_base<T, K>::sum)) {
-		throw std::overflow_error("sum is too big");
+	if (domain_checker(config)){
+		this->throw_domain_error("|x| must be < 1");
 	}
 
-	if (domain_checker(x)) {
-		series_base<T, K>::throw_domain_error("|x| must be < 1");
-	}
+	TermCalculatorBase<T,K>::series_name = "m!/(1-x)^(m+1)";
+	TermCalculatorBase<T, K>::x = config.x;
+	m_fact_1mx_mp1_inverse_series<T, K>::m = config.addKParameter;
+	TermCalculatorBase<T, K>::sum = calculate_sum();
+
 }
 
 template <Accepted T, std::unsigned_integral K>
-T m_fact_1mx_mp1_inverse_series<T, K>::access_row(K n)
-{
-	auto& series_vec = this->series_vector;
-	auto old_size = series_vec.size();
-	series_vec.reserve(n);
+constexpr T m_fact_1mx_mp1_inverse_series<T, K>::calculateTerm(K n) const {
+	T coeff = m;
+	for(K j = 1; j <=n ; ++j){ coeff *= (m + static_cast<T>(j)) / static_cast<T>(j); }
 
-	for (auto i = old_size; i <= static_cast<typename std::vector<T>::size_type>(n); ++i)
-		series_vec.push_back(series_vec[i - 1] * this->x * static_cast<T>(this->m + static_cast<K>(i)) / static_cast<T>(i));
-
-	return series_vec[n];
-}
-
-template <Accepted T, std::unsigned_integral K>
-constexpr T m_fact_1mx_mp1_inverse_series<T, K>::operator()(K n) const
-{
-	return const_cast<m_fact_1mx_mp1_inverse_series<T, K>*>(this)->access_row(n);
+	return static_cast<T>(fact<K>(m)) * pow(this->x, static_cast<T>(n)) * coeff;
 }

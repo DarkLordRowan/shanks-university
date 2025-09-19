@@ -1,52 +1,75 @@
 #pragma once
-#include "../series_base.hpp"
+
+#include "../term_calculator.hpp"
 
 /**
-* @brief Numerical series representation of (pi/4 - ln2/2) * x
-* @authors Kreynin R.G.
+* @brief Maclaurin series of hyperbolic cosine
+* @authors Pashkov B.B.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
 template <Accepted T, std::unsigned_integral K>
-class pi_four_minus_ln2_halfed_series final : public series_base<T, K>
+class pi_four_minus_ln2_halfed_series final : public TermCalculatorBase<T, K>
 {
+protected:
+
+    /**
+     * @brief 
+     * 
+     * @param x 
+     * @return true 
+     * @return false 
+     */
+    inline bool domain_checker(const SeriesConfig<T,K>& config) const { return !isfinite(config.x); }
+
+    /**s
+	 * @brief 
+	 * 
+	 * @param x 
+	 * @return constexpr T 
+	 */
+	T calculate_sum() const  { return this->x * (static_cast<T>(PI * 0.25) - log(static_cast<T>(2)) * static_cast<T>(0.5)); }
+
 public:
-    pi_four_minus_ln2_halfed_series() = delete;
 
-    /**
-    * @brief Parameterized constructor to initialize the series with function argument and sum
-    * @authors Kreynin R.G.
-    * @param x The argument for function series
-    * @tparam T The type of the elements in the series, K The type of enumerating integer
-    */
-    pi_four_minus_ln2_halfed_series(T x);
+	/**
+	 * @brief Construct a new cos series object
+	 * 
+	 */
+	pi_four_minus_ln2_halfed_series() = delete;
 
-    /**
-    * @brief Computes the nth term of the Maclaurin series of the sine function
-    * @authors Kreynin R.G.
-    * @param n The number of the term
-    * @tparam T The type of the elements in the series, K The type of enumerating integer
-    * @return nth term of the Maclaurin series of the sine functions
-    */
-    [[nodiscard]] constexpr virtual T operator()(K n) const;
+
+	/**
+	* @brief Computes the nth term of the Maclaurin series of the cosine function
+	* @authors Bolshakov M.P.
+	* @param n The number of the term
+	* @tparam T The type of the elements in the series, K The type of enumerating integer
+	* @return nth term of the Maclaurin series of the cosine functions
+	*/
+	[[nodiscard]] constexpr virtual T calculateTerm(K n) const override;
+
+	/**
+	 * @brief 
+	 * 
+	 * @param config 
+	 */
+	pi_four_minus_ln2_halfed_series(const SeriesConfig<T,K>& config);
 };
 
 template <Accepted T, std::unsigned_integral K>
-pi_four_minus_ln2_halfed_series<T, K>::pi_four_minus_ln2_halfed_series(T x) : 
-series_base<T, K>(
-    x, 
-    x * (static_cast<T>(std::numbers::pi * 0.25) - log(static_cast<T>(2)) * static_cast<T>(0.5))
-)
-{
-    this->series_name = "(π/4 - ln(2)/2)*x";
-    // Сходится при ∀x ∈ ℝ (линейная функция)
+pi_four_minus_ln2_halfed_series<T, K>::pi_four_minus_ln2_halfed_series(const SeriesConfig<T,K>& config) {
 
-    if (!isfinite(x)) {
-        this->throw_domain_error("x is not finite");
-    }
+	if (domain_checker(config)){
+		this->throw_domain_error("x is not finite");
+	}
+
+	TermCalculatorBase<T,K>::series_name = "(π/4 - ln(2)/2)*x";
+	TermCalculatorBase<T, K>::x = config.x;
+	TermCalculatorBase<T, K>::sum = calculate_sum();
+
 }
 
 template <Accepted T, std::unsigned_integral K>
-constexpr T pi_four_minus_ln2_halfed_series<T, K>::operator()(K n) const
-{
-    return (n ? this->x * series_base<T, K>::minus_one_raised_to_power_n(static_cast<K>(std::trunc(n / 2))) / static_cast<T>(n) : static_cast<T>(0)); // (32.2) [Rows.pdf]
+constexpr T pi_four_minus_ln2_halfed_series<T, K>::calculateTerm(K n) const {
+	const T a = static_cast<T>(n * (n + static_cast<K>(1)));
+    return (n ? this->x * minus_one_raised_to_power_n<T,K>(static_cast<K>(std::trunc(n / 2))) / static_cast<T>(n) : static_cast<T>(0)); // (32.2) [Rows.pdf]
 }

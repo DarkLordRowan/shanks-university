@@ -89,11 +89,11 @@ public:
      * @throws std::domain_error if n=0 is provided as input
      * @throws std::overflow_error if division by zero or numerical instability occurs
      */
-    T operator() (K n, K order) const override;
+    T operator() (K n, K order) override;
 };
 
 template <Accepted T, std::unsigned_integral K, typename series_templ>
-T richardson_algorithm<T, K, series_templ>::operator()(const K n, const K order) const {
+T richardson_algorithm<T, K, series_templ>::operator()(const K n, const K order) {
 
     using std::isfinite;
     using std::fma;
@@ -115,7 +115,7 @@ T richardson_algorithm<T, K, series_templ>::operator()(const K n, const K order)
     // For theory, see: Richardson (1911), Eq. (2) - initialization with partial sums
     // Initialize the first row of the extrapolation table with partial sums
     for (K i = static_cast<K>(0); i <= n; ++i)
-        e[0][i] = this->series->S_n(i);
+        e[0][i] = this->series->Sn(i);
 
     // The Richardson method main function 
     T a, b;

@@ -73,14 +73,14 @@ public:
      * @throws std::domain_error if n=0 is provided as input.
      * @throws std::overflow_error if division by zero or numerical instability occurs.
      */
-    T operator()(K n, K k) const override;
+    T operator()(K n, K k) override;
 };
 
 template <Accepted T, std::unsigned_integral K, typename series_templ>
 ford_sidi_3_algorithm<T, K, series_templ>::ford_sidi_3_algorithm(const series_templ& series) : series_acceleration<T, K, series_templ>(series) {}
 
 template <Accepted T, std::unsigned_integral K, typename series_templ>
-T ford_sidi_3_algorithm<T, K, series_templ>::operator()(const K n, const K order) const {
+T ford_sidi_3_algorithm<T, K, series_templ>::operator()(const K n, const K order) {
 
     using std::isfinite;
 
@@ -114,7 +114,7 @@ T ford_sidi_3_algorithm<T, K, series_templ>::operator()(const K n, const K order
 
     // For theory, see: Osada (2000), Eq. (9) - Initial coefficient computation
     // G[0] = a_{n-1} * n, where a_{n-1} is the (n-1)-th series term
-    G[0] = this->series->operator()(n1) * static_cast<T>(n);
+    G[0] = this->series->an(n1) * static_cast<T>(n);
 
     // For theory, see: Ford & Sidi (1987), Eq. (2.3) - Recursive coefficient scaling
     // Te = 1/n used for recursive computation of G sequence
@@ -127,7 +127,7 @@ T ford_sidi_3_algorithm<T, K, series_templ>::operator()(const K n, const K order
 
     // For theory, see: Osada (2000), Section 4 - Initialization of transformation sequences
     // FSA[n1] = S_{n-1} (partial sum up to term n-1)
-    FSA[n1] = this->series->S_n(n1);
+    FSA[n1] = this->series->Sn(n1);
 
     // FSI[n1] = 1 (initial normalization factor)
     FSI[n1] = static_cast<T>(1);
