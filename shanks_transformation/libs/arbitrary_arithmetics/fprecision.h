@@ -2749,4 +2749,10 @@ inline std::string to_string(const float_precision& x) { return x.toString(); }
 
 inline float_precision hypot(const float_precision& x, const float_precision& y){ return sqrt(x * x + y * y ); }
 
+inline void set_global_precision(const size_t new_precision){ 
+	if(new_precision > 20){
+		float_precision_ctrl.precision(new_precision); 
+	}
+}
+
 #endif
