@@ -37,8 +37,8 @@
   *           - T S_n(K n) const: returns the n-th partial sum sₙ = a₀ + ... + aₙ
   *           The series object encapsulates the sequence whose convergence is to be accelerated.
   */
-template <Accepted T, std::unsigned_integral K, typename series_templ>
-class wynn_epsilon_3_algorithm final : public series_acceleration<T, K, series_templ>
+template <AcceptedLike T, std::unsigned_integral K>
+class wynn_epsilon_3_algorithm final : public series_acceleration<T, K>
 {
 private:
 
@@ -52,7 +52,7 @@ public:
      * @param epsilon_threshold_ Threshold for epsilon corrections. Controls numerical stability.
      *        Valid values: positive T values. Too small may cause overflow, too large may reduce acceleration.
      */
-    explicit wynn_epsilon_3_algorithm(const series_templ& series, T epsilon_threshold_ = static_cast<T>(1e-3));
+    explicit wynn_epsilon_3_algorithm(std::shared_ptr<series_base<T,K>> series, const T& epsilon_threshold_ = static_cast<T>(1e-3));
 
 	/**
 	* @brief Fast impimentation of Epsilon algorithm.
@@ -82,18 +82,18 @@ public:
 };
 
 // Constructor implementation
-template <Accepted T, std::unsigned_integral K, typename series_templ>
-wynn_epsilon_3_algorithm<T, K, series_templ>::wynn_epsilon_3_algorithm(
-    const series_templ& series,
-    const T epsilon_threshold_
+template <AcceptedLike T, std::unsigned_integral K>
+wynn_epsilon_3_algorithm<T, K>::wynn_epsilon_3_algorithm(
+    std::shared_ptr<series_base<T,K>> series,
+    const T& epsilon_threshold_
     ) :
-    series_acceleration<T, K, series_templ>(series),
+    series_acceleration<T, K>(series),
     epsilon_threshold(epsilon_threshold_)
 {}
 
 // Algorithm implementation
-template <Accepted T, std::unsigned_integral K, typename series_templ>
-T wynn_epsilon_3_algorithm<T, K, series_templ>::operator()(const K n, const K order) {
+template <AcceptedLike T, std::unsigned_integral K>
+T wynn_epsilon_3_algorithm<T, K>::operator()(const K n, const K order) {
 
     using std::isfinite;
     using std::max;

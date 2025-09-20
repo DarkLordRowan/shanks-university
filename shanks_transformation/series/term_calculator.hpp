@@ -14,7 +14,7 @@ using std::to_string;
 static const float_precision arbPI = float_precision(_float_table(_PI, float_precision_ctrl.precision()));
 static const double PI = std::numbers::pi;
 
-template<Accepted T, std::unsigned_integral K>
+template<AcceptedLike T, std::unsigned_integral K>
 struct SeriesConfig{
 	T x;
 	T addTParameter;
@@ -33,7 +33,7 @@ struct SeriesConfig{
  * @authors Bolshakov M.P.
  * @tparam T The type of the elements in the series, K The type of enumerating integer
  */
-template <Accepted T, std::unsigned_integral K>
+template <AcceptedLike T, std::unsigned_integral K>
 class TermCalculatorBase
 {
 
@@ -113,13 +113,13 @@ public:
 
 };
 
-template <Accepted T, std::unsigned_integral K>
+template <AcceptedLike T, std::unsigned_integral K>
 constexpr const T TermCalculatorBase<T, K>::get_x() const { return x; }
 
-template <Accepted T, std::unsigned_integral K>
+template <AcceptedLike T, std::unsigned_integral K>
 constexpr const T TermCalculatorBase<T, K>::get_sum() const { return sum; }
 
-template <Accepted T, std::unsigned_integral K>
+template <AcceptedLike T, std::unsigned_integral K>
 constexpr const std::string TermCalculatorBase<T, K>::get_name() const { return series_name; }
 
 
@@ -153,7 +153,7 @@ template<std::unsigned_integral K>
 * @authors Bolshakov M.P.
 * @return combinations(n,k)
 */
-template<Accepted T, std::unsigned_integral K>
+template<AcceptedLike T, std::unsigned_integral K>
 [[nodiscard]] constexpr const T binomial_coefficient(const T n, const K k){
 	T b_c = static_cast<T>(1);
 	for (K i = 0; i < k; ++i)
@@ -166,7 +166,7 @@ template<Accepted T, std::unsigned_integral K>
 * @authors Bolshakov M.P.
 * @return (-1)^n
 */
-template<Accepted T, std::unsigned_integral K>
+template<AcceptedLike T, std::unsigned_integral K>
 [[nodiscard]] constexpr const T minus_one_raised_to_power_n(K n){
 	return static_cast<T>(n & 1 ? -1.0 : 1.0);
 }
@@ -176,7 +176,7 @@ template<Accepted T, std::unsigned_integral K>
 * @authors Trudolyubov N.A.
 * @return phi(n)
 */
-template<Accepted T, std::unsigned_integral K>
+template<AcceptedLike T, std::unsigned_integral K>
 [[nodiscard]] constexpr const T phi(K n){
 	K result = n;
 	for (K i = 2; i * i <= n; ++i)

@@ -7,7 +7,7 @@
 * @authors Pashkov B.B.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <Accepted T, std::unsigned_integral K>
+template <AcceptedLike T, std::unsigned_integral K>
 class x_min_sqrt_x_series final : public TermCalculatorBase<T, K>
 {
 protected:
@@ -64,7 +64,7 @@ public:
 	x_min_sqrt_x_series(const SeriesConfig<T,K>& config);
 };
 
-template <Accepted T, std::unsigned_integral K>
+template <AcceptedLike T, std::unsigned_integral K>
 x_min_sqrt_x_series<T, K>::x_min_sqrt_x_series(const SeriesConfig<T,K>& config) {
 
 	if (domain_checker(config)){
@@ -77,7 +77,7 @@ x_min_sqrt_x_series<T, K>::x_min_sqrt_x_series(const SeriesConfig<T,K>& config) 
 
 }
 
-template <Accepted T, std::unsigned_integral K>
+template <AcceptedLike T, std::unsigned_integral K>
 constexpr T x_min_sqrt_x_series<T, K>::calculateTerm(K n) const {
 	if (n == 0 || n == 1)
         return (static_cast<T>(1) - binomial_coefficient<T,K>(static_cast<T>(0.5), n)) * pow(static_cast<T>(-1) + this->x, static_cast<T>(n)); // (79.1) [Rows.pdf]

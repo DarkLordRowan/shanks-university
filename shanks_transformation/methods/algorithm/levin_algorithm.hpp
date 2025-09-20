@@ -45,8 +45,8 @@
   *           - T minus_one_raised_to_power_n(K j) const: returns (-1)^j
   *           - T binomial_coefficient(T n, K k) const: returns binomial coefficient C(n, k)
   */
-template <Accepted T, std::unsigned_integral K, typename series_templ>
-class levin_algorithm final : public series_acceleration<T, K, series_templ>
+template <AcceptedLike T, std::unsigned_integral K>
+class levin_algorithm final : public series_acceleration<T, K>
 {
 protected:
 
@@ -97,7 +97,7 @@ public:
 	 *        For theory, see: Sidi & Levin (1981), Eq. (3.4) and surrounding discussion
 	 */
 	explicit levin_algorithm(
-		const series_templ& series,
+		std::shared_ptr<series_base<T,K>> series,
         remainder_type variant = remainder_type::u_variant,
         bool useRecFormulas = false,  
         T beta = static_cast<T>(1)
@@ -128,14 +128,14 @@ public:
 	T operator()(const K n, const K order) override;
 };
 
-template<Accepted T, std::unsigned_integral K, typename series_templ>
-levin_algorithm<T, K,series_templ>::levin_algorithm(
-	const series_templ& series,
+template<AcceptedLike T, std::unsigned_integral K>
+levin_algorithm<T, K>::levin_algorithm(
+	std::shared_ptr<series_base<T,K>> series,
     remainder_type variant,
     bool useRecFormulas,
     T beta
 ) :
-	series_acceleration<T, K, series_templ>(series),
+	series_acceleration<T, K>(series),
 	useRecFormulas(useRecFormulas),
 	variant(variant)
 	{//TODO: нужно ли проверять бету на допустимость?
@@ -183,8 +183,8 @@ levin_algorithm<T, K,series_templ>::levin_algorithm(
 	}
 	}
 
-template<Accepted T, std::unsigned_integral K, typename series_templ>
-inline T levin_algorithm<T, K,series_templ>::calc_result(K n, K order) {
+template<AcceptedLike T, std::unsigned_integral K>
+inline T levin_algorithm<T, K>::calc_result(K n, K order) {
 
 	using std::pow;
 	using std::isfinite;
@@ -212,7 +212,7 @@ inline T levin_algorithm<T, K,series_templ>::calc_result(K n, K order) {
 		g_n/= remainder->operator()(
             n + j, 
             j, 
-            this->series,
+            this->series.get(),
             (variant == remainder_type::u_variant ? beta : static_cast<T>(1))
         );
 
@@ -232,8 +232,8 @@ inline T levin_algorithm<T, K,series_templ>::calc_result(K n, K order) {
 	return numerator;
 }
 
-template<Accepted T, std::unsigned_integral K, typename series_templ>
-inline T levin_algorithm<T, K,series_templ>::calc_result_rec(K n, K order) {
+template<AcceptedLike T, std::unsigned_integral K>
+inline T levin_algorithm<T, K>::calc_result_rec(K n, K order) {
 
 	using std::isfinite;
 
@@ -249,7 +249,7 @@ inline T levin_algorithm<T, K,series_templ>::calc_result_rec(K n, K order) {
 		Denom[i] = remainder->operator()(
             n, 
             i, 
-            this->series,
+            this->series.get(),
             (variant == remainder_type::u_variant ? beta : static_cast<T>(1))
         );
 
@@ -283,8 +283,8 @@ inline T levin_algorithm<T, K,series_templ>::calc_result_rec(K n, K order) {
 	return Num[0];
 }
 
-template <Accepted T, std::unsigned_integral K, typename series_templ>
-T levin_algorithm<T, K, series_templ>::operator()(const K n, const K order) {
+template <AcceptedLike T, std::unsigned_integral K>
+T levin_algorithm<T, K>::operator()(const K n, const K order) {
 
 	using std::isfinite;
 

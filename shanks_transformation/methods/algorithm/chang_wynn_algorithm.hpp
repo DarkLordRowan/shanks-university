@@ -45,8 +45,8 @@
  *           Purpose: To abstract the series representation, allowing flexibility (e.g., user-defined series).
  *           Valid values: Any type meeting the above requirements.
  */
-template <Accepted T, std::unsigned_integral K, typename series_templ>
-class chang_wynn_algorithm final : public series_acceleration<T, K, series_templ>
+template <AcceptedLike T, std::unsigned_integral K>
+class chang_wynn_algorithm final : public series_acceleration<T, K>
 {
 public:
 
@@ -56,7 +56,7 @@ public:
      *        Must be a valid object implementing the required series interface.
      *        Purpose: To provide the series data for acceleration.
      */
-    explicit chang_wynn_algorithm(const series_templ& series) : series_acceleration<T, K, series_templ>(series) {}
+    explicit chang_wynn_algorithm(std::shared_ptr<series_base<T,K>> series) : series_acceleration<T, K>(series) {}
 
     /**
      * @brief Implementation of Chang-Wynn hybrid algorithm for series acceleration.
@@ -80,8 +80,8 @@ public:
 	T operator()(K n, K order) override;
 };
 
-template <Accepted T, std::unsigned_integral K, typename series_templ>
-T chang_wynn_algorithm<T, K, series_templ>::operator()(const K n, const K order) {
+template <AcceptedLike T, std::unsigned_integral K >
+T chang_wynn_algorithm<T, K>::operator()(const K n, const K order) {
 
     using std::isfinite;
     using std::fma;

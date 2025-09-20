@@ -7,7 +7,7 @@
 * @authors Pashkov B.B.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <Accepted T, std::unsigned_integral K>
+template <AcceptedLike T, std::unsigned_integral K>
 class minus_three_plus_ln3_three_devided_two_plus_two_ln2_series final : public TermCalculatorBase<T, K>
 {
 protected:
@@ -55,7 +55,7 @@ public:
 	minus_three_plus_ln3_three_devided_two_plus_two_ln2_series(const SeriesConfig<T,K>& config);
 };
 
-template <Accepted T, std::unsigned_integral K>
+template <AcceptedLike T, std::unsigned_integral K>
 minus_three_plus_ln3_three_devided_two_plus_two_ln2_series<T, K>::minus_three_plus_ln3_three_devided_two_plus_two_ln2_series(const SeriesConfig<T,K>& config) {
 
 	if (domain_checker(config)){
@@ -68,7 +68,7 @@ minus_three_plus_ln3_three_devided_two_plus_two_ln2_series<T, K>::minus_three_pl
 
 }
 
-template <Accepted T, std::unsigned_integral K>
+template <AcceptedLike T, std::unsigned_integral K>
 constexpr T minus_three_plus_ln3_three_devided_two_plus_two_ln2_series<T, K>::calculateTerm(K n) const {
 	const K n_temp = static_cast<K>(n + 1);
     return this->x / static_cast<T>(n_temp * fma(36, n_temp * n_temp, -1));  // (43.2) [Rows.pdf]

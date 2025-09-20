@@ -7,7 +7,7 @@
 * @authors Pashkov B.B.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <Accepted T, std::unsigned_integral K>
+template <AcceptedLike T, std::unsigned_integral K>
 class eighth_pi_m_one_third_series final : public TermCalculatorBase<T, K>
 {
 protected:
@@ -68,7 +68,7 @@ public:
 	eighth_pi_m_one_third_series(const SeriesConfig<T,K>& config);
 };
 
-template <Accepted T, std::unsigned_integral K>
+template <AcceptedLike T, std::unsigned_integral K>
 eighth_pi_m_one_third_series<T, K>::eighth_pi_m_one_third_series(const SeriesConfig<T,K>& config) {
 
 	if (domain_checker(config)){
@@ -81,7 +81,7 @@ eighth_pi_m_one_third_series<T, K>::eighth_pi_m_one_third_series(const SeriesCon
 
 }
 
-template <Accepted T, std::unsigned_integral K>
+template <AcceptedLike T, std::unsigned_integral K>
 constexpr T eighth_pi_m_one_third_series<T, K>::calculateTerm(K n) const {
 	const K a = static_cast<K>(fma(2, n, 1));
     return minus_one_raised_to_power_n<T,K>(n) * this->x / static_cast<T>(a * (a + static_cast<K>(2)) * (a + static_cast<K>(4))); // (28.2) [Rows.pdf]

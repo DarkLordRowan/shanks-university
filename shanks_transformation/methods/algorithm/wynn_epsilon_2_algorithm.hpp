@@ -42,8 +42,8 @@
   * - Wynn, P. (1956). On a device for computing the eₙ(Sₙ) transformation.
   * - Wynn, P. (1964). General Purpose Vector Epsilon Algorithm ALGOL Procedures.
   */
-template <Accepted T, std::unsigned_integral K, typename series_templ>
-class wynn_epsilon_2_algorithm final : public series_acceleration<T, K, series_templ>
+template <AcceptedLike T, std::unsigned_integral K>
+class wynn_epsilon_2_algorithm final : public series_acceleration<T, K>
 {
 public:
 
@@ -53,7 +53,7 @@ public:
 	 *        Must be a valid object implementing the required series interface.
 	 *        The series should provide term access and partial sum calculation.
 	 */
-    explicit wynn_epsilon_2_algorithm(const series_templ& series);
+    explicit wynn_epsilon_2_algorithm(std::shared_ptr<series_base<T,K>> series);
 
 	/**
 	 * @brief Implementation of Wynn's epsilon algorithm for series acceleration.
@@ -81,11 +81,11 @@ public:
     T operator()(K n, K order) override;
 };
 
-template <Accepted T, std::unsigned_integral K, typename series_templ>
-wynn_epsilon_2_algorithm<T, K, series_templ>::wynn_epsilon_2_algorithm(const series_templ& series) : series_acceleration<T, K, series_templ>(series) {}
+template <AcceptedLike T, std::unsigned_integral K>
+wynn_epsilon_2_algorithm<T, K>::wynn_epsilon_2_algorithm(std::shared_ptr<series_base<T,K>> series) : series_acceleration<T, K>(series) {}
 
-template <Accepted T, std::unsigned_integral K, typename series_templ>
-T wynn_epsilon_2_algorithm<T, K, series_templ>::operator()(const K n, const K order)
+template <AcceptedLike T, std::unsigned_integral K>
+T wynn_epsilon_2_algorithm<T, K>::operator()(const K n, const K order)
 {
 
 	using std::isfinite;

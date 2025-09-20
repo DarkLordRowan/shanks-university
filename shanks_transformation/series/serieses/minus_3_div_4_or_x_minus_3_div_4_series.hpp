@@ -7,7 +7,7 @@
 * @authors Pashkov B.B.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <Accepted T, std::unsigned_integral K>
+template <AcceptedLike T, std::unsigned_integral K>
 class minus_3_div_4_or_x_minus_3_div_4_series final : public TermCalculatorBase<T, K>
 {
 protected:
@@ -78,7 +78,7 @@ public:
 	minus_3_div_4_or_x_minus_3_div_4_series(const SeriesConfig<T,K>& config) ;
 };
 
-template <Accepted T, std::unsigned_integral K>
+template <AcceptedLike T, std::unsigned_integral K>
 minus_3_div_4_or_x_minus_3_div_4_series<T, K>::minus_3_div_4_or_x_minus_3_div_4_series(const SeriesConfig<T,K>& config) {
 
 	if (domain_checker(config)){
@@ -91,7 +91,7 @@ minus_3_div_4_or_x_minus_3_div_4_series<T, K>::minus_3_div_4_or_x_minus_3_div_4_
 
 }
 
-template <Accepted T, std::unsigned_integral K>
+template <AcceptedLike T, std::unsigned_integral K>
 constexpr T minus_3_div_4_or_x_minus_3_div_4_series<T, K>::calculateTerm(K n) const {
 	if( n == 0)
 		return static_cast<T>(0);

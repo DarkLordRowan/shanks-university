@@ -5,6 +5,8 @@
 
 #pragma once
 
+#include "custom_concepts.hpp"
+#include "series/series_base.hpp"
 #include <chrono>
 #include <iostream>
 
@@ -25,8 +27,8 @@
  * @param series The series class object to be accelerated
  * @param test The type of transformation that is being used
  */
-template <std::unsigned_integral K, typename series_templ, typename transform_type>
-void cmp_sum_and_transform(const K n, const K order, const series_templ& series, const transform_type& test)
+template <AcceptedLike T, std::unsigned_integral K, typename transform_type>
+void cmp_sum_and_transform(const K n, const K order, std::shared_ptr<series_base<T,K>> series, const transform_type& test)
 {
 	test->print_info();
 	for (K i = 1; i <= n; ++i) {
@@ -65,8 +67,8 @@ void cmp_sum_and_transform(const K n, const K order, const series_templ& series,
 * @param series The series class object to be accelerated
 * @param test The type of transformation that is being used
 */
-template <std::unsigned_integral K, typename series_templ, typename transform_type>
-void cmp_a_n_and_transform(const K n, const K order, const series_templ& series, const transform_type& test)
+template <AcceptedLike T, std::unsigned_integral K, typename transform_type>
+void cmp_a_n_and_transform(const K n, const K order, std::shared_ptr<series_base<T,K>> series, const transform_type& test)
 {
 	test->print_info();
 	for (K i = 1; i <= n; ++i) {
@@ -102,8 +104,8 @@ void cmp_a_n_and_transform(const K n, const K order, const series_templ& series,
 * @param series The series class object to be accelerated
 * @param test The type of transformation that is being used
 */
-template <std::unsigned_integral K, typename series_templ, typename transform_type>
-void transformation_remainders(const K n, const K order, const series_templ& series, const transform_type& test)
+template <AcceptedLike T, std::unsigned_integral K, typename transform_type>
+void transformation_remainders(const K n, const K order, std::shared_ptr<series_base<T,K>> series, const transform_type& test)
 {
 	std::cout << "Tranformation of order " << order << " remainders from i = 1 to " << n << '\n';
 	test->print_info();
@@ -138,12 +140,11 @@ void transformation_remainders(const K n, const K order, const series_templ& ser
 * @param test_1 The type of the first transformation that is being used
 * @param test_2 The type of the second transformation that is being used
 */
-template <std::unsigned_integral K, typename series_templ, typename transform_type_1, typename transform_type_2>
-void cmp_transformations(const K n, const K order, const series_templ& series, const transform_type_1& test_1, const transform_type_2& test_2)
+template <AcceptedLike T, std::unsigned_integral K, typename transform_type_1, typename transform_type_2>
+void cmp_transformations(const K n, const K order, std::shared_ptr<series_base<T,K>> series, const transform_type_1& test_1, const transform_type_2& test_2)
 {
 
 	using std::abs;
-
 
 	std::cout << "Tranformations of order " << order << " remainders from i = 1 to " << n << '\n';
 	std::cout << "The transformation #1 is ";
@@ -187,8 +188,8 @@ void cmp_transformations(const K n, const K order, const series_templ& series, c
 * @param series The series class object to be accelerated
 * @param test The type of the first transformation that is being used
 */
-template <std::unsigned_integral K, typename series_templ, typename transform_type>
-void eval_transform_time(const K n, const K order, const series_templ& series, const transform_type& test)
+template <AcceptedLike T, std::unsigned_integral K, typename transform_type>
+void eval_transform_time(const K n, const K order, std::shared_ptr<series_base<T,K>> series, const transform_type& test)
 {
 	const auto start_time = std::chrono::system_clock::now();
 	test->print_info();
@@ -222,8 +223,8 @@ void eval_transform_time(const K n, const K order, const series_templ& series, c
 * @tparam series_templ is the type of series whose convergence we accelerate, transform_type is the type of transformation we are using
 * @param n The number of terms
 */
-template <std::unsigned_integral K, typename series_templ>
-void print_sum(const K n, const series_templ& series)
+template <AcceptedLike T, std::unsigned_integral K>
+void print_sum(const K n, std::shared_ptr<series_base<T,K>> series)
 {
 	std::cout << "Sum of algo :" << series->get_sum() << '\n';
 	std::cout << "S_" << n << " : " << series->Sn(n) << '\n';

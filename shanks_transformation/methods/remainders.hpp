@@ -12,7 +12,7 @@
 #pragma once
 
 #include <concepts>
-#include "../series_base.hpp"
+#include "../series/series_base.hpp"
 
  /**
   * @brief Enum for remainder types to use in Levin-type transformations
@@ -46,7 +46,7 @@ enum remainder_type{
  * @tparam K Unsigned integral type for indices (must satisfy std::unsigned_integral)
  *           Used for counting and indexing operations
  */
-template<Accepted T, std::unsigned_integral K>
+template<AcceptedLike T, std::unsigned_integral K>
 class transform_base{
 public:
 
@@ -75,7 +75,7 @@ public:
  * @tparam T Floating-point type for series elements
  * @tparam K Unsigned integral type for indices
  */
-template<Accepted T, std::unsigned_integral K>
+template<AcceptedLike T, std::unsigned_integral K>
 class u_transform : public transform_base<T, K> {
 
     /**
@@ -94,7 +94,7 @@ class u_transform : public transform_base<T, K> {
     T operator() (K n, K order, series_base<T,K>* series, T scale = static_cast<T>(1)) override;
 };
 
-template<Accepted T, std::unsigned_integral K>
+template<AcceptedLike T, std::unsigned_integral K>
 T u_transform<T, K>::operator()(const K n, const K order, series_base<T,K>* series, T scale) {
 
     using std::isfinite;
@@ -117,7 +117,7 @@ T u_transform<T, K>::operator()(const K n, const K order, series_base<T,K>* seri
  * @tparam T Floating-point type for series elements
  * @tparam K Unsigned integral type for indices
  */
-template<Accepted T, std::unsigned_integral K>
+template<AcceptedLike T, std::unsigned_integral K>
 class t_transform : public transform_base<T, K> {
 
     /**
@@ -136,7 +136,7 @@ class t_transform : public transform_base<T, K> {
     T operator() (K n, K order, series_base<T,K>* series, T scale = static_cast<T>(1)) override;
 };
 
-template<Accepted T, std::unsigned_integral K>
+template<AcceptedLike T, std::unsigned_integral K>
 T t_transform<T, K>::operator()(const K n, const K order, series_base<T,K>* series, T scale) {
 
     using std::isfinite;
@@ -157,7 +157,7 @@ T t_transform<T, K>::operator()(const K n, const K order, series_base<T,K>* seri
  * @tparam T Floating-point type for series elements
  * @tparam K Unsigned integral type for indices
  */
-template<Accepted T, std::unsigned_integral K>
+template<AcceptedLike T, std::unsigned_integral K>
 class t_wave_transform : public transform_base<T, K>  {
 
     /**
@@ -176,7 +176,7 @@ class t_wave_transform : public transform_base<T, K>  {
     T operator() (K n, K order, series_base<T,K>* series, T scale = static_cast<T>(1)) override;
 };
 
-template<Accepted T, std::unsigned_integral K>
+template<AcceptedLike T, std::unsigned_integral K>
 T t_wave_transform<T,K>::operator()(const K n, const K order, series_base<T, K>* series, T scale ) {
 
     using std::isfinite;
@@ -198,7 +198,7 @@ T t_wave_transform<T,K>::operator()(const K n, const K order, series_base<T, K>*
  * @tparam T Floating-point type for series elements
  * @tparam K Unsigned integral type for indices
  */
-template<Accepted T, std::unsigned_integral K>
+template<AcceptedLike T, std::unsigned_integral K>
 class v_transform : public transform_base<T, K> {
 
     /**
@@ -217,7 +217,7 @@ class v_transform : public transform_base<T, K> {
     T operator() (K n, K order, series_base<T,K>* series, T scale = T(1)) override;
 };
 
-template<Accepted T, std::unsigned_integral K>
+template<AcceptedLike T, std::unsigned_integral K>
 T v_transform<T,K>::operator()(const K n, const K order, series_base<T,K>* series, T scale) {
 
     using std::isfinite;
@@ -239,7 +239,7 @@ T v_transform<T,K>::operator()(const K n, const K order, series_base<T,K>* serie
  * @tparam T Floating-point type for series elements
  * @tparam K Unsigned integral type for indices
  */
-template<Accepted T, std::unsigned_integral K>
+template<AcceptedLike T, std::unsigned_integral K>
 class v_wave_transform : public transform_base<T, K> {
     
     /**
@@ -258,7 +258,7 @@ class v_wave_transform : public transform_base<T, K> {
     T operator() (K n, K order, series_base<T,K>* series, T scale = static_cast<T>(1)) override;
 };
 
-template<Accepted T, std::unsigned_integral K>
+template<AcceptedLike T, std::unsigned_integral K>
 T v_wave_transform<T,K>::operator()(const K n, const K order, series_base<T,K>* series, T scale) {
 
     using std::isfinite;

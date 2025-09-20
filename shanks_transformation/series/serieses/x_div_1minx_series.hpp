@@ -7,7 +7,7 @@
 * @authors Pashkov B.B.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <Accepted T, std::unsigned_integral K>
+template <AcceptedLike T, std::unsigned_integral K>
 class x_div_1minx_series final : public TermCalculatorBase<T, K>
 {
 protected:
@@ -64,7 +64,7 @@ public:
 	x_div_1minx_series(const SeriesConfig<T,K>& config);
 };
 
-template <Accepted T, std::unsigned_integral K>
+template <AcceptedLike T, std::unsigned_integral K>
 x_div_1minx_series<T, K>::x_div_1minx_series(const SeriesConfig<T,K>& config) {
 
 	if (domain_checker(config)){
@@ -77,7 +77,7 @@ x_div_1minx_series<T, K>::x_div_1minx_series(const SeriesConfig<T,K>& config) {
 
 }
 
-template <Accepted T, std::unsigned_integral K>
+template <AcceptedLike T, std::unsigned_integral K>
 constexpr T x_div_1minx_series<T, K>::calculateTerm(K n) const {
 	return static_cast<T>(fact<K>(2 * n)) * pow(this->x, static_cast<T>(n + 1)) / static_cast<T>(fact<K>(n) * pow(4, n)); // (100.1) [Rows.pdf]
 }

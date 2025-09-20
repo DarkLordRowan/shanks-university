@@ -8,7 +8,7 @@
 * @authors Trudolyubov N.A.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <Accepted T, std::unsigned_integral K>
+template <AcceptedLike T, std::unsigned_integral K>
 class abs_sin_x_minus_2_div_pi_series final : public TermCalculatorBase<T, K>
 {
 protected:
@@ -91,7 +91,7 @@ public:
 
 };
 
-template <Accepted T, std::unsigned_integral K>
+template <AcceptedLike T, std::unsigned_integral K>
 abs_sin_x_minus_2_div_pi_series<T, K>::abs_sin_x_minus_2_div_pi_series(const SeriesConfig<T,K>& config){
 
 	if (domain_checker(config)){
@@ -104,7 +104,7 @@ abs_sin_x_minus_2_div_pi_series<T, K>::abs_sin_x_minus_2_div_pi_series(const Ser
 
 }
 
-template <Accepted T, std::unsigned_integral K>
+template <AcceptedLike T, std::unsigned_integral K>
 constexpr T abs_sin_x_minus_2_div_pi_series<T, K>::calculateTerm(K n) const {
 	const T a = static_cast<T>(fma(2, n, 1));
 	return static_cast<T>(-4) / static_cast<T>(PI) / static_cast<T>(4 * n * n - 1) * cos(static_cast<T>(2 * n) * this->x); // (57.2) [Rows.pdf]

@@ -7,7 +7,7 @@
 * @authors Pashkov B.B.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <Accepted T, std::unsigned_integral K>
+template <AcceptedLike T, std::unsigned_integral K>
 class xsquareplus3_div_xsquareplus2multix_minus_1_series final : public TermCalculatorBase<T, K>
 {
 protected:
@@ -65,7 +65,7 @@ public:
 	xsquareplus3_div_xsquareplus2multix_minus_1_series(const SeriesConfig<T,K>& config);
 };
 
-template <Accepted T, std::unsigned_integral K>
+template <AcceptedLike T, std::unsigned_integral K>
 xsquareplus3_div_xsquareplus2multix_minus_1_series<T, K>::xsquareplus3_div_xsquareplus2multix_minus_1_series(const SeriesConfig<T,K>& config) {
 
 	if (domain_checker(config)){
@@ -78,7 +78,7 @@ xsquareplus3_div_xsquareplus2multix_minus_1_series<T, K>::xsquareplus3_div_xsqua
 
 }
 
-template <Accepted T, std::unsigned_integral K>
+template <AcceptedLike T, std::unsigned_integral K>
 constexpr T xsquareplus3_div_xsquareplus2multix_minus_1_series<T, K>::calculateTerm(K n) const {
 	if (n == 0)
         return static_cast<T>(1.5) / this->x; //n = -1, но n отрицательным быть не может поэтому сдвигаю на 1

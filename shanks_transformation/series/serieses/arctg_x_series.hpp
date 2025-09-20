@@ -6,7 +6,7 @@
 * @authors Trudolyubov N.A.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <Accepted T, std::unsigned_integral K>
+template <AcceptedLike T, std::unsigned_integral K>
 class arctg_x_series final : public TermCalculatorBase<T, K>
 {
 protected:
@@ -65,7 +65,7 @@ public:
 
 };
 
-template <Accepted T, std::unsigned_integral K>
+template <AcceptedLike T, std::unsigned_integral K>
 arctg_x_series<T, K>::arctg_x_series(const SeriesConfig<T,K>& config) {
 
 	if (domain_checker(config)){
@@ -78,7 +78,7 @@ arctg_x_series<T, K>::arctg_x_series(const SeriesConfig<T,K>& config) {
 
 }
 
-template <Accepted T, std::unsigned_integral K>
+template <AcceptedLike T, std::unsigned_integral K>
 constexpr T arctg_x_series<T, K>::calculateTerm(K n) const {
     const T two_n_1 = static_cast<T>(fma(2, n, 1));
     return minus_one_raised_to_power_n<T,K>(n) * pow(this->x, two_n_1) / two_n_1; // (70.1) [Rows.pdf], (1 - 2 * (n & 1)) = (-1)^{n}

@@ -7,7 +7,7 @@
 * @authors Pashkov B.B.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <Accepted T, std::unsigned_integral K>
+template <AcceptedLike T, std::unsigned_integral K>
 class ln_cosx_series final : public TermCalculatorBase<T, K>
 {
 protected:
@@ -67,7 +67,7 @@ public:
 	ln_cosx_series(const SeriesConfig<T,K>& config);
 };
 
-template <Accepted T, std::unsigned_integral K>
+template <AcceptedLike T, std::unsigned_integral K>
 ln_cosx_series<T, K>::ln_cosx_series(const SeriesConfig<T,K>& config) {
 
 	if (domain_checker(config)){
@@ -80,7 +80,7 @@ ln_cosx_series<T, K>::ln_cosx_series(const SeriesConfig<T,K>& config) {
 
 }
 
-template <Accepted T, std::unsigned_integral K>
+template <AcceptedLike T, std::unsigned_integral K>
 constexpr T ln_cosx_series<T, K>::calculateTerm(K n) const {
 	const T a = static_cast<T>(fma(2, n, 2));
     return static_cast<T>(-1) * pow(sin(this->x), a) / a; // (50.2) [Rows.pdf]

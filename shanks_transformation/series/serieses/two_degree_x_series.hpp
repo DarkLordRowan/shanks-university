@@ -7,7 +7,7 @@
 * @authors Pashkov B.B.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <Accepted T, std::unsigned_integral K>
+template <AcceptedLike T, std::unsigned_integral K>
 class two_degree_x_series final : public TermCalculatorBase<T, K>
 {
 protected:
@@ -55,7 +55,7 @@ public:
 	two_degree_x_series(const SeriesConfig<T,K>& config);
 };
 
-template <Accepted T, std::unsigned_integral K>
+template <AcceptedLike T, std::unsigned_integral K>
 two_degree_x_series<T, K>::two_degree_x_series(const SeriesConfig<T,K>& config) {
 
 	if (domain_checker(config)){
@@ -68,7 +68,7 @@ two_degree_x_series<T, K>::two_degree_x_series(const SeriesConfig<T,K>& config) 
 
 }
 
-template <Accepted T, std::unsigned_integral K>
+template <AcceptedLike T, std::unsigned_integral K>
 constexpr T two_degree_x_series<T, K>::calculateTerm(K n) const {
 	return pow(log(static_cast<T>(2)), static_cast<T>(n)) * pow(this->x, static_cast<T>(n)) / static_cast<T>(fact<K>(n)); // (92.1) [Rows.pdf]
 }

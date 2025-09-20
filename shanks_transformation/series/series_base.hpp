@@ -8,8 +8,7 @@
 #include <chrono>
 #include <random>
 
-#include "series/term_calculator.hpp"
-#include "series/series.hpp"
+#include "term_calculator.hpp"
 
 
 using std::isfinite;
@@ -26,12 +25,10 @@ static std::uniform_real_distribution<double> uniformRNG(-0.001, 0.001);
  * @authors Bolshakov M.P.
  * @tparam T The type of the elements in the series, K The type of enumerating integer
  */
-template <Accepted T, std::unsigned_integral K>
+template <AcceptedLike T, std::unsigned_integral K>
 class series_base
 {
 public:
-
-	virtual ~series_base() = default;
 
 	/**
 	* @brief Parameterized constructor to initialize the series with function argument
@@ -41,7 +38,9 @@ public:
 
 	series_base() = delete;
 
-	explicit series_base(std::unique_ptr<TermCalculatorBase<T, K>> termCalculator) : termCalculator(std::move(termCalculator)) {}
+	explicit series_base(std::unique_ptr<TermCalculatorBase<T, K>> termCalculator, size_t size = 20) : termCalculator(std::move(termCalculator)), size(0) {
+		resize_vecs(size);
+	}
 
 
 	/**
@@ -79,7 +78,11 @@ public:
 	*/
 	[[nodiscard]] constexpr const T get_sum() const;
 
-	[[nodiscard]] constexpr const std::string get_name() const;
+	[[nodiscard]] constexpr const std::string get_name() const { return termCalculator->get_name(); };
+
+	~series_base(){
+		std::cout << "FINAL SIZE: " << size <<  " actual size " << a_nVec.size() << "\n";
+	}
 
 
 protected:
@@ -101,13 +104,13 @@ protected:
 	 * @brief 
 	 * 
 	 */
-	size_t size;
+	size_t size = 0;
 
 	/**
 	 * @brief 
 	 * 
 	 */
-	bool noise = true;
+	bool noise = false;
 
 	/**
 	 * @brief 
@@ -129,11 +132,16 @@ protected:
 
 };
 
-template<Accepted T, std::unsigned_integral K>
+template<AcceptedLike T, std::unsigned_integral K>
 constexpr void series_base<T, K>::resize_vecs(const K n){
 
-	size_t old_size = a_nVec.size();
+
+	size_t old_size = size;
 	size_t new_size = static_cast<size_t>(3 * n / 2 + 1);
+
+	size = new_size;
+
+	std::cout << "RESIZING IS IN PROCESS: old_size->" << old_size << " new_size->" << new_size << "\n";
 
 	a_nVec.resize(new_size, static_cast<T>(0));
 	S_nVec.resize(new_size, static_cast<T>(0));
@@ -142,7 +150,9 @@ constexpr void series_base<T, K>::resize_vecs(const K n){
 
 	for(size_t i = old_size; i < new_size; ++i ){
 
-		a_nVec[i] = termCalculator->calculateTerm(i);
+		try{
+			a_nVec[i] = termCalculator->calculateTerm(i);
+		} catch (...){} //заглушка
 
 		if(noise){
 			randomVec[i] = uniformRNG(pseudoRNG);
@@ -155,38 +165,32 @@ constexpr void series_base<T, K>::resize_vecs(const K n){
 }
 
 
-template <Accepted T, std::unsigned_integral K>
+template <AcceptedLike T, std::unsigned_integral K>
 constexpr T series_base<T, K>::Sn(K n) {
 
-	if(n < size){ resize_vecs(n); }
+	if(n >= size){ resize_vecs(n); }
 
 	return S_nVec[n];
 
 }
 
-template <Accepted T, std::unsigned_integral K>
+template <AcceptedLike T, std::unsigned_integral K>
 constexpr T series_base<T, K>::an(K n) {
 
-	if(n < size){ resize_vecs(n); }
+	if(n >= size){ resize_vecs(n); }
 
 	return a_nVec[n];
 
 }
 
-template <Accepted T, std::unsigned_integral K>
+template <AcceptedLike T, std::unsigned_integral K>
 constexpr const T series_base<T, K>::get_x() const
 {
 	return termCalculator->get_x();
 }
 
-template <Accepted T, std::unsigned_integral K>
+template <AcceptedLike T, std::unsigned_integral K>
 constexpr const T series_base<T, K>::get_sum() const
 {
 	return termCalculator->get_sum();
-}
-
-template <Accepted T, std::unsigned_integral K>
-constexpr const std::string series_base<T, K>::get_name() const
-{
-	return termCalculator->get_name();
 }

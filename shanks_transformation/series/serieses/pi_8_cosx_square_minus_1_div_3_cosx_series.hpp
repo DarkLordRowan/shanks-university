@@ -7,7 +7,7 @@
 * @authors Pashkov B.B.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <Accepted T, std::unsigned_integral K>
+template <AcceptedLike T, std::unsigned_integral K>
 class pi_8_cosx_square_minus_1_div_3_cosx_series final : public TermCalculatorBase<T, K>
 {
 protected:
@@ -66,7 +66,7 @@ public:
 	pi_8_cosx_square_minus_1_div_3_cosx_series(const SeriesConfig<T,K>& config);
 };
 
-template <Accepted T, std::unsigned_integral K>
+template <AcceptedLike T, std::unsigned_integral K>
 pi_8_cosx_square_minus_1_div_3_cosx_series<T, K>::pi_8_cosx_square_minus_1_div_3_cosx_series(const SeriesConfig<T,K>& config) {
 
 	if (domain_checker(config)){
@@ -79,7 +79,7 @@ pi_8_cosx_square_minus_1_div_3_cosx_series<T, K>::pi_8_cosx_square_minus_1_div_3
 
 }
 
-template <Accepted T, std::unsigned_integral K>
+template <AcceptedLike T, std::unsigned_integral K>
 constexpr T pi_8_cosx_square_minus_1_div_3_cosx_series<T, K>::calculateTerm(K n) const {
 	const T temp = static_cast<T>(fma(2, n, 1));
 	return minus_one_raised_to_power_n<T,K>(n) * cos(temp + static_cast<T>(2)) * this->x /(temp * (temp + static_cast<T>(2)) * (temp + static_cast<T>(4))); // (52.2) [Rows.pdf]

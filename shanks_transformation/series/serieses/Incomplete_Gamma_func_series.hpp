@@ -7,7 +7,7 @@
 * @authors Pashkov B.B.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <Accepted T, std::unsigned_integral K>
+template <AcceptedLike T, std::unsigned_integral K>
 class Incomplete_Gamma_func_series final : public TermCalculatorBase<T, K>
 {
 protected:
@@ -66,7 +66,7 @@ public:
 	Incomplete_Gamma_func_series(const SeriesConfig<T,K>& config);
 };
 
-template <Accepted T, std::unsigned_integral K>
+template <AcceptedLike T, std::unsigned_integral K>
 Incomplete_Gamma_func_series<T, K>::Incomplete_Gamma_func_series(const SeriesConfig<T,K>& config) {
 
 	if (domain_checker(config)){
@@ -79,7 +79,7 @@ Incomplete_Gamma_func_series<T, K>::Incomplete_Gamma_func_series(const SeriesCon
 
 }
 
-template <Accepted T, std::unsigned_integral K>
+template <AcceptedLike T, std::unsigned_integral K>
 constexpr T Incomplete_Gamma_func_series<T, K>::calculateTerm(K n) const {
 	//s(s+1)...(s+n)
     T coeff = s;

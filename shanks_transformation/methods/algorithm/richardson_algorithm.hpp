@@ -32,8 +32,8 @@
  *
  * @tparam T Floating-point type for series elements and computations
  *           - Purpose: Represents numerical precision for all calculations
- *           - Valid values: Any Accepted type (float, double, long double)
- *           - Constraints: Must satisfy Accepted concept
+ *           - Valid values: Any AcceptedLike type (float, double, long double)
+ *           - Constraints: Must satisfy AcceptedLike concept
  *           - Example usage: Stores partial sums, transformation results, and intermediate values
  *
  * @tparam K Unsigned integral type for indices and counting operations
@@ -49,8 +49,8 @@
  *               - T S_n(K n) const: returns the n-th partial sum sₙ = a₀ + ... + aₙ
  *           - Example usage: Convergent series with known partial sums
  */
-template <Accepted T, std::unsigned_integral K, typename series_templ>
-class richardson_algorithm final : public series_acceleration<T, K, series_templ>
+template <AcceptedLike T, std::unsigned_integral K>
+class richardson_algorithm final : public series_acceleration<T, K>
 {
 public:
 
@@ -62,7 +62,7 @@ public:
      *        - Constraints: Must be copy-constructible and provide S_n method
      *        - Example: Mathematical series with known convergence properties
      */
-    explicit richardson_algorithm(const series_templ& series) : series_acceleration<T, K, series_templ>(series) {}
+    explicit richardson_algorithm(std::shared_ptr<series_base<T,K>> series) : series_acceleration<T, K>(series) {}
 
     /**
      * @brief Richardson transformation for series acceleration
@@ -92,8 +92,8 @@ public:
     T operator() (K n, K order) override;
 };
 
-template <Accepted T, std::unsigned_integral K, typename series_templ>
-T richardson_algorithm<T, K, series_templ>::operator()(const K n, const K order) {
+template <AcceptedLike T, std::unsigned_integral K>
+T richardson_algorithm<T, K>::operator()(const K n, const K order) {
 
     using std::isfinite;
     using std::fma;

@@ -6,7 +6,7 @@
 * @authors Pavlova A.R.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <Accepted T, std::unsigned_integral K>
+template <AcceptedLike T, std::unsigned_integral K>
 class arctan_x3_series final : public TermCalculatorBase<T, K>
 {
 protected:
@@ -64,7 +64,7 @@ public:
 	arctan_x3_series(const SeriesConfig<T,K>& config);
 };
 
-template <Accepted T, std::unsigned_integral K>
+template <AcceptedLike T, std::unsigned_integral K>
 arctan_x3_series<T, K>::arctan_x3_series(const SeriesConfig<T,K>& config){
 
 	if (domain_checker(config)){
@@ -78,7 +78,7 @@ arctan_x3_series<T, K>::arctan_x3_series(const SeriesConfig<T,K>& config){
 }
 
 
-template <Accepted T, std::unsigned_integral K>
+template <AcceptedLike T, std::unsigned_integral K>
 constexpr T arctan_x3_series<T, K>::calculateTerm(K n) const
 {
     const T a = static_cast<T>(fma(static_cast <K>(2), n, static_cast <K>(1)));

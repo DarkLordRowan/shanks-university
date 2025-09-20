@@ -32,7 +32,7 @@
  * - Weniger, E. J. (2003). Nonlinear Sequence Transformations for the Acceleration of
  *   Convergence and the Summation of Divergent Series.
  *
- * @tparam T Floating-point type for series elements (must satisfy Accepted)
+ * @tparam T Floating-point type for series elements (must satisfy AcceptedLike)
  *           Represents numerical precision (float, double, long double)
  *           Used for all mathematical computations and storage of series terms
  * @tparam K Unsigned integral type for indices and order (must satisfy std::unsigned_integral)
@@ -41,8 +41,8 @@
  *           - T operator()(K n) const: returns the n-th series term a_n
  *           - T S_n(K n) const: returns the n-th partial sum s_n = a_0 + ... + a_n
  */
-template <Accepted T, std::unsigned_integral K, typename series_templ>
-class brezinski_theta_algorithm final : public series_acceleration<T, K, series_templ>
+template <AcceptedLike T, std::unsigned_integral K>
+class brezinski_theta_algorithm final : public series_acceleration<T, K>
 {
 protected:
 
@@ -78,7 +78,7 @@ public:
      *        Must be a valid object implementing the required series interface
      *        The series object is stored by reference for efficient access
      */
-    explicit brezinski_theta_algorithm(const series_templ& series) : series_acceleration<T, K, series_templ>(series) {}
+    explicit brezinski_theta_algorithm(std::shared_ptr<series_base<T,K>> series) : series_acceleration<T, K>(series) {}
 
     /**
      * @brief Fast implementation of Theta Brezinski algorithm.
@@ -103,8 +103,8 @@ public:
 };
 
 
-template <Accepted T, std::unsigned_integral K, typename series_templ>
-T brezinski_theta_algorithm<T, K, series_templ>::calculate(K n, const K order) const {
+template <AcceptedLike T, std::unsigned_integral K>
+T brezinski_theta_algorithm<T, K>::calculate(K n, const K order) const {
 
     using std::isfinite;
 
@@ -162,8 +162,8 @@ T brezinski_theta_algorithm<T, K, series_templ>::calculate(K n, const K order) c
     return theta_even[0];
 }
 
-template <Accepted T, std::unsigned_integral K, typename series_templ>
-T brezinski_theta_algorithm<T, K, series_templ>::operator()(const K n, const K order) {
+template <AcceptedLike T, std::unsigned_integral K>
+T brezinski_theta_algorithm<T, K>::operator()(const K n, const K order) {
 
     // For theory, see: Brezinski (2003), Section 10.2, Theorem 10.2.1
     // Only even orders have mathematical meaning in the final result

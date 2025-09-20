@@ -7,7 +7,7 @@
 * @authors Pashkov B.B.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <Accepted T, std::unsigned_integral K>
+template <AcceptedLike T, std::unsigned_integral K>
 class half_minus_sinx_multi_pi_4_series final : public TermCalculatorBase<T, K>
 {
 protected:
@@ -65,7 +65,7 @@ public:
 	half_minus_sinx_multi_pi_4_series(const SeriesConfig<T,K>& config);
 };
 
-template <Accepted T, std::unsigned_integral K>
+template <AcceptedLike T, std::unsigned_integral K>
 half_minus_sinx_multi_pi_4_series<T, K>::half_minus_sinx_multi_pi_4_series(const SeriesConfig<T,K>& config) {
 
 	if (domain_checker(config)){
@@ -78,7 +78,7 @@ half_minus_sinx_multi_pi_4_series<T, K>::half_minus_sinx_multi_pi_4_series(const
 
 }
 
-template <Accepted T, std::unsigned_integral K>
+template <AcceptedLike T, std::unsigned_integral K>
 constexpr T half_minus_sinx_multi_pi_4_series<T, K>::calculateTerm(K n) const {
 	const T a = static_cast<T>(fma(2, n, 1));
     return cos(this->x * static_cast<T>(fma(2,n,2))) / (a * (a + static_cast<T>(2))); // (48.2) [Rows.pdf]

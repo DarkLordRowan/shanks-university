@@ -7,7 +7,7 @@
 * @authors Pashkov B.B.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <Accepted T, std::unsigned_integral K>
+template <AcceptedLike T, std::unsigned_integral K>
 class exp_squared_erf_series final : public TermCalculatorBase<T, K>
 {
 protected:
@@ -64,7 +64,7 @@ public:
 	exp_squared_erf_series(const SeriesConfig<T,K>& config);
 };
 
-template <Accepted T, std::unsigned_integral K>
+template <AcceptedLike T, std::unsigned_integral K>
 exp_squared_erf_series<T, K>::exp_squared_erf_series(const SeriesConfig<T,K>& config) {
 
 	if (domain_checker(config)){
@@ -77,7 +77,7 @@ exp_squared_erf_series<T, K>::exp_squared_erf_series(const SeriesConfig<T,K>& co
 
 }
 
-template <Accepted T, std::unsigned_integral K>
+template <AcceptedLike T, std::unsigned_integral K>
 constexpr T exp_squared_erf_series<T, K>::calculateTerm(K n) const {
 	return pow(this->x, static_cast<T>(fma(2, n, 1))) / static_cast<T>(tgamma(n + 1.5)); // (10.3) [Rows.pdf]
 }

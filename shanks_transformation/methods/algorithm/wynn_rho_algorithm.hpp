@@ -40,8 +40,8 @@
   *           - T operator()(K n) const: returns the n-th series term a_n
   *           - T S_n(K n) const: returns the n-th partial sum s_n = a_0 + ... + a_n
   */
-template <Accepted T, std::unsigned_integral K, typename series_templ>
-class wynn_rho_algorithm final : public series_acceleration<T, K, series_templ>
+template <AcceptedLike T, std::unsigned_integral K>
+class wynn_rho_algorithm final : public series_acceleration<T, K>
 {
 protected:
 
@@ -88,10 +88,10 @@ public:
 
 	// Стал:
 	explicit wynn_rho_algorithm(
-		const series_templ& series,
+		std::shared_ptr<series_base<T,K>> series,
 		numerator_type variant = numerator_type::rho_variant,
-		const T& gamma_ = T(1), // Передача по константной ссылке
-		const T& RHO_ = T(0)    // Передача по константной ссылке
+		const T& gamma_ = static_cast<T>(1), // Передача по константной ссылке
+		const T& RHO_ = static_cast<T>(0)    // Передача по константной ссылке
 	);
 
 	//Default destructor is sufficient since unique_ptr handles deletion
@@ -124,40 +124,16 @@ public:
 
 		return calculate(n, order); 
 	}
-
-	/**
-	 * @brief Compute transformed partial sum (extended version for arbitrary precision)
-	 *
-	 * Template version for compatibility with larger integer types while
-	 * maintaining the core algorithm implementation.
-	 *
-	 * @tparam BigK Type for term count (must be convertible to K)
-	 * @tparam BigOrder Type for order (must be convertible to int)
-	 * @param n Number of terms (passed by reference for large types)
-	 * @param order Transformation order (must be even)
-	 * @return The accelerated partial sum
-	 * @throws std::domain_error for invalid arguments
-	 * @throws std::overflow_error for division by zero
-	 */
-	template <typename BigK, typename BigOrder, typename = std::enable_if_t<!std::is_same_v<BigK, K> || !std::is_same_v<BigOrder, K>>> T operator()(const BigK& n, const BigOrder& order) const {
-		static_assert(std::is_constructible_v<K, BigK>, "Term count type must be convertible to K");
-
-		if( order & 1){
-			throw std::domain_error("order is odd");
-		}
-
-		return calculate(static_cast<K>(n), static_cast<int>(order)); // ЗАМЕНА calculate_impl НА calculate ... поскольку первого просто не существует, возможно предполагалось его использование
-	}
 };
 
-template <Accepted T, std::unsigned_integral K, typename series_templ>
-wynn_rho_algorithm<T, K, series_templ>::wynn_rho_algorithm(
-	const series_templ& series,
+template <AcceptedLike T, std::unsigned_integral K>
+wynn_rho_algorithm<T, K>::wynn_rho_algorithm(
+	std::shared_ptr<series_base<T,K>> series,
 	const numerator_type variant,
 	const T& gamma_,
 	const T& RHO_
 	) :
-	series_acceleration<T, K, series_templ>(series),
+	series_acceleration<T, K>(series),
 	gamma(gamma_),
 	RHO(RHO_)
 {
@@ -184,8 +160,8 @@ wynn_rho_algorithm<T, K, series_templ>::wynn_rho_algorithm(
 	}
 }
 
-template <Accepted T, std::unsigned_integral K, typename series_templ>
-inline T wynn_rho_algorithm<T, K, series_templ>::calculate(const K n, K order) { //const int order
+template <AcceptedLike T, std::unsigned_integral K>
+inline T wynn_rho_algorithm<T, K>::calculate(const K n, K order) { //const int order
 
 	using std::isfinite;
 
@@ -211,27 +187,29 @@ inline T wynn_rho_algorithm<T, K, series_templ>::calculate(const K n, K order) {
 
     for(K level = static_cast<K>(1); level <= order / static_cast<K>(2); ++level){
 
-        // transform odd vector
+		// transform odd vector
         for(K j = static_cast<K>(0); j < base_size - level; ++j){
 
             j1 = j + static_cast<K>(1);
 
             delta = rho_even[j1] - rho_even[j];
 
-			rho_odd[j] = rho_odd[j1] + numerator->operator()(j, level * 2 - 1, this->series, RHO, gamma) / delta;
+			rho_odd[j] = rho_odd[j1] + numerator->operator()(n+j, level * 2 - 1, this->series.get(), RHO, gamma) / delta;
+
 
         }
 
-        // transform even vector
+		// transform even vector
         for(K j = static_cast<K>(0); j < base_size - level; ++j){
 
             j1 = j + static_cast<K>(1);
 
             delta = rho_odd[j1] - rho_odd[j];
             
-			rho_even[j] = rho_even[j1] + numerator->operator()(j, level * 2, this->series, RHO, gamma) / delta;
+			rho_even[j] = rho_even[j1] + numerator->operator()(n+j, level * 2, this->series.get(), RHO, gamma) / delta;
 
         }
+
     }
 
     if(!isfinite(rho_even[0]))

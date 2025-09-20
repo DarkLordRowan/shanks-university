@@ -7,7 +7,7 @@
 * @authors Pashkov B.B.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <Accepted T, std::unsigned_integral K>
+template <AcceptedLike T, std::unsigned_integral K>
 class exp_m_cos_x_sinsin_x_series final : public TermCalculatorBase<T, K>
 {
 protected:
@@ -65,7 +65,7 @@ public:
 	exp_m_cos_x_sinsin_x_series(const SeriesConfig<T,K>& config);
 };
 
-template <Accepted T, std::unsigned_integral K>
+template <AcceptedLike T, std::unsigned_integral K>
 exp_m_cos_x_sinsin_x_series<T, K>::exp_m_cos_x_sinsin_x_series(const SeriesConfig<T,K>& config) {
 
 	if (domain_checker(config)){
@@ -78,7 +78,7 @@ exp_m_cos_x_sinsin_x_series<T, K>::exp_m_cos_x_sinsin_x_series(const SeriesConfi
 
 }
 
-template <Accepted T, std::unsigned_integral K>
+template <AcceptedLike T, std::unsigned_integral K>
 constexpr T exp_m_cos_x_sinsin_x_series<T, K>::calculateTerm(K n) const {
 	return minus_one_raised_to_power_n<T,K>(n + static_cast<K>(1)) * sin(static_cast<T>(n) * this->x) / static_cast<T>(fact<K>(n)); // (31.1) [Rows.pdf]
 }

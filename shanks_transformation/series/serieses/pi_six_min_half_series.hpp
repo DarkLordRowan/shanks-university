@@ -7,7 +7,7 @@
 * @authors Pashkov B.B.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <Accepted T, std::unsigned_integral K>
+template <AcceptedLike T, std::unsigned_integral K>
 class pi_six_min_half_series final : public TermCalculatorBase<T, K>
 {
 protected:
@@ -55,7 +55,7 @@ public:
 	pi_six_min_half_series(const SeriesConfig<T,K>& config);
 };
 
-template <Accepted T, std::unsigned_integral K>
+template <AcceptedLike T, std::unsigned_integral K>
 pi_six_min_half_series<T, K>::pi_six_min_half_series(const SeriesConfig<T,K>& config) {
 
 	if (domain_checker(config)){
@@ -68,7 +68,7 @@ pi_six_min_half_series<T, K>::pi_six_min_half_series(const SeriesConfig<T,K>& co
 
 }
 
-template <Accepted T, std::unsigned_integral K>
+template <AcceptedLike T, std::unsigned_integral K>
 constexpr T pi_six_min_half_series<T, K>::calculateTerm(K n) const {
 	const T a = static_cast<T>(fma(6, n, 5));
     return this->x * minus_one_raised_to_power_n<T,K>(n) / (a * (a + static_cast<T>(2))); // (35.2) [Rows.pdf]

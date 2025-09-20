@@ -7,7 +7,7 @@
 * @authors Pashkov B.B.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <Accepted T, std::unsigned_integral K>
+template <AcceptedLike T, std::unsigned_integral K>
 class pi_minus_x_2_series final : public TermCalculatorBase<T, K>
 {
 protected:
@@ -67,7 +67,7 @@ public:
 	pi_minus_x_2_series(const SeriesConfig<T,K>& config);
 };
 
-template <Accepted T, std::unsigned_integral K>
+template <AcceptedLike T, std::unsigned_integral K>
 pi_minus_x_2_series<T, K>::pi_minus_x_2_series(const SeriesConfig<T,K>& config) {
 
 	if (domain_checker(config)){
@@ -80,7 +80,7 @@ pi_minus_x_2_series<T, K>::pi_minus_x_2_series(const SeriesConfig<T,K>& config) 
 
 }
 
-template <Accepted T, std::unsigned_integral K>
+template <AcceptedLike T, std::unsigned_integral K>
 constexpr T pi_minus_x_2_series<T, K>::calculateTerm(K n) const {
 	const T a = static_cast<T>(n + 1);
     return sin(a * (this->x)) / a;  // (46.5) [Rows.pdf]
