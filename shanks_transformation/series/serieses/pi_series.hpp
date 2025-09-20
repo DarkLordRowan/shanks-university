@@ -7,7 +7,7 @@
 * @authors Pashkov B.B.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <Accepted T, std::unsigned_integral K>
+template <AcceptedLike T, std::unsigned_integral K>
 class pi_series final : public TermCalculatorBase<T, K>
 {
 protected:
@@ -55,7 +55,7 @@ public:
 	pi_series(const SeriesConfig<T,K>& config);
 };
 
-template <Accepted T, std::unsigned_integral K>
+template <AcceptedLike T, std::unsigned_integral K>
 pi_series<T, K>::pi_series(const SeriesConfig<T,K>& config) {
 
 	if (domain_checker(config)){
@@ -68,7 +68,7 @@ pi_series<T, K>::pi_series(const SeriesConfig<T,K>& config) {
 
 }
 
-template <Accepted T, std::unsigned_integral K>
+template <AcceptedLike T, std::unsigned_integral K>
 constexpr T pi_series<T, K>::calculateTerm(K n) const {
 	return minus_one_raised_to_power_n<T,K>(n) * this->x * sqrt(static_cast<T>(12)) / (static_cast<T>(fma(2,n,1)) * static_cast<T>(pow(3,n))); // (78.1) [Rows.pdf], (n + 1) % 2 is the same (n + 1) & 1
 }

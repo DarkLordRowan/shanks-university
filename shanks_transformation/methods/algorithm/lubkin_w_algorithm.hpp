@@ -42,8 +42,8 @@
  *           - T S_n(K n) const: returns the n-th partial sum s_n = a_0 + ... + a_n
  *           Represents the mathematical series to be accelerated
  */
-template<Accepted T, std::unsigned_integral K, typename series_templ>
-class lubkin_w_algorithm final : public series_acceleration<T, K, series_templ>
+template<AcceptedLike T, std::unsigned_integral K>
+class lubkin_w_algorithm final : public series_acceleration<T, K>
 {
 protected:
 
@@ -70,7 +70,7 @@ public:
 	 * @param series The series class object to be accelerated
 	 *        Must be a valid object implementing the required series interface
 	 */
-	explicit lubkin_w_algorithm(const series_templ& series) : series_acceleration<T, K, series_templ>(series) {}
+	explicit lubkin_w_algorithm(std::shared_ptr<series_base<T,K>> series) : series_acceleration<T, K>(series) {}
 
 	/**
 	 * @brief Applies Lubkin's W-transformation to accelerate series convergence.
@@ -97,14 +97,14 @@ public:
 	T operator()(K n, K order) override;
 };
 
-template<Accepted T, std::unsigned_integral K, typename series_templ>
-T lubkin_w_algorithm<T, K, series_templ>::operator()(const K n, const K order) {
+template<AcceptedLike T, std::unsigned_integral K>
+T lubkin_w_algorithm<T, K>::operator()(const K n, const K order) {
 
 	return calculate(n, order);
 }
 
-template<Accepted T, std::unsigned_integral K, typename series_templ>
-T lubkin_w_algorithm<T, K, series_templ>::calculate(K n, const K order) {
+template<AcceptedLike T, std::unsigned_integral K>
+T lubkin_w_algorithm<T, K>::calculate(K n, const K order) {
 
 	using std::isfinite;
 	using std::fma;

@@ -7,7 +7,7 @@
 * @authors Pashkov B.B.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <Accepted T, std::unsigned_integral K>
+template <AcceptedLike T, std::unsigned_integral K>
 class two_arcsin_square_x_halfed_series final : public TermCalculatorBase<T, K>
 {
 protected:
@@ -64,7 +64,7 @@ public:
 	two_arcsin_square_x_halfed_series(const SeriesConfig<T,K>& config);
 };
 
-template <Accepted T, std::unsigned_integral K>
+template <AcceptedLike T, std::unsigned_integral K>
 two_arcsin_square_x_halfed_series<T, K>::two_arcsin_square_x_halfed_series(const SeriesConfig<T,K>& config) {
 
 	if (domain_checker(config)){
@@ -77,7 +77,7 @@ two_arcsin_square_x_halfed_series<T, K>::two_arcsin_square_x_halfed_series(const
 
 }
 
-template <Accepted T, std::unsigned_integral K>
+template <AcceptedLike T, std::unsigned_integral K>
 constexpr T two_arcsin_square_x_halfed_series<T, K>::calculateTerm(K n) const {
 	const K a = static_cast<K>(fma(2, n, 1));
 	const T fact_N = static_cast<T>(fact<K>(n));

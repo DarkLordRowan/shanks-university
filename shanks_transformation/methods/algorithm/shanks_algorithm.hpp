@@ -31,8 +31,8 @@
  *           - T operator()(K n) const: returns the n-th series term a_n
  *           - T S_n(K n) const: returns the n-th partial sum s_n = a_0 + ... + a_n
  */
-template <Accepted T, std::unsigned_integral K, typename series_templ>
-class shanks_algorithm final : public series_acceleration<T, K, series_templ>
+template <AcceptedLike T, std::unsigned_integral K>
+class shanks_algorithm final : public series_acceleration<T, K>
 {
 public:
 
@@ -43,7 +43,7 @@ public:
 	 *        Must be a valid object implementing the required series interface
 	 *        Series terms should be non-alternating for optimal performance
 	 */
-	explicit shanks_algorithm(const series_templ& series);
+	explicit shanks_algorithm(std::shared_ptr<series_base<T,K>> series);
 
 	/**
 	 * @brief Shanks transformation for non-alternating series function.
@@ -60,11 +60,12 @@ public:
 	T operator()(K n, K order);
 };
 
-template <Accepted T, std::unsigned_integral K, typename series_templ>
-shanks_algorithm<T, K, series_templ>::shanks_algorithm(const series_templ& series) : series_acceleration<T, K, series_templ>(series) {}
+template <AcceptedLike T, std::unsigned_integral K>
+shanks_algorithm<T, K>::shanks_algorithm(std::shared_ptr<series_base<T,K>> series) : 
+series_acceleration<T, K>(series) {}
 
-template <Accepted T, std::unsigned_integral K, typename series_templ>
-T shanks_algorithm<T, K, series_templ>::operator()(const K n, const K order) {
+template <AcceptedLike T, std::unsigned_integral K>
+T shanks_algorithm<T, K>::operator()(const K n, const K order) {
 
 	using std::isfinite;
 	using std::fma;
@@ -162,8 +163,8 @@ T shanks_algorithm<T, K, series_templ>::operator()(const K n, const K order) {
  *           - T S_n(K n) const: returns the n-th partial sum s_n = a_0 + ... + a_n
  *           Series terms should alternate in sign for optimal performance
  */
-template <Accepted T, std::unsigned_integral K, typename series_templ>
-class shanks_transform_alternating : public series_acceleration<T, K, series_templ>
+template <AcceptedLike T, std::unsigned_integral K>
+class shanks_transform_alternating : public series_acceleration<T, K>
 {
 public:
 
@@ -174,7 +175,7 @@ public:
 	 *        Must be a valid object implementing the required series interface
 	 *        Series terms should alternate in sign for optimal performance
 	 */
-	explicit shanks_transform_alternating(const series_templ& series);
+	explicit shanks_transform_alternating(std::shared_ptr<series_base<T,K>> series);
 
 	/**
 	 * @brief Shanks transformation for alternating series function.
@@ -191,11 +192,11 @@ public:
 	T operator()(K n, K order) override;
 };
 
-template <Accepted T, std::unsigned_integral K, typename series_templ>
-shanks_transform_alternating<T, K, series_templ>::shanks_transform_alternating(const series_templ& series) : series_acceleration<T, K, series_templ>(series) {}
+template <AcceptedLike T, std::unsigned_integral K>
+shanks_transform_alternating<T, K>::shanks_transform_alternating(std::shared_ptr<series_base<T,K>> series) : series_acceleration<T, K>(series) {}
 
-template <Accepted T, std::unsigned_integral K, typename series_templ>
-T shanks_transform_alternating<T, K, series_templ>::operator()(const K n, const K order) {
+template <AcceptedLike T, std::unsigned_integral K>
+T shanks_transform_alternating<T, K>::operator()(const K n, const K order) {
 
 	using std::isfinite;
 	using std::fma;

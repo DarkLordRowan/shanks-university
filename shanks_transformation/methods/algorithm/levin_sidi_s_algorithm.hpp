@@ -39,8 +39,8 @@
   *           - T minus_one_raised_to_power_n(K j) const: returns (-1)^j
   *           - T binomial_coefficient(T n, K k) const: returns binomial coefficient C(n, k)
   */
-template<Accepted T, std::unsigned_integral K, typename series_templ>
-class levin_sidi_s_algorithm final : public series_acceleration<T, K, series_templ> {
+template<AcceptedLike T, std::unsigned_integral K>
+class levin_sidi_s_algorithm final : public series_acceleration<T, K> {
 protected:
 
     T beta;                                                 ///< Positive real parameter (β > 0). Default value is 1.0.
@@ -97,10 +97,10 @@ public:
      *        For theory, see: Sidi (2003, arXiv:math/0306302), p. 39
      */
     explicit levin_sidi_s_algorithm(
-        const series_templ& series,
+        std::shared_ptr<series_base<T,K>> series,
         remainder_type variant = remainder_type::u_variant,
         bool useRecFormulas = false,  
-        T parameter = static_cast<T>(1)
+        const T& parameter = static_cast<T>(1)
     );
 
 
@@ -125,8 +125,8 @@ public:
 
 };
 
-template<Accepted T, std::unsigned_integral K, typename series_templ>
-inline T levin_sidi_s_algorithm<T, K,series_templ>::calc_result(K n, K order) {
+template<AcceptedLike T, std::unsigned_integral K>
+inline T levin_sidi_s_algorithm<T, K>::calc_result(K n, K order) {
 
     using std::isfinite;
 
@@ -159,7 +159,7 @@ inline T levin_sidi_s_algorithm<T, K,series_templ>::calc_result(K n, K order) {
         rest *= (up_pochamer / down_pochamer);  // Multiply by Pochhammer ratio
         rest *= remainder->operator()(n,        // Multiply by remainder term 1/R_{n+j}
             j, 
-            this->series,
+            this->series.get(),
              (variant == remainder_type::u_variant ? beta : static_cast<T>(1))
             );
 
@@ -174,8 +174,8 @@ inline T levin_sidi_s_algorithm<T, K,series_templ>::calc_result(K n, K order) {
     return numerator;
 }
 
-template<Accepted T, std::unsigned_integral K, typename series_templ>
-inline T levin_sidi_s_algorithm<T, K,series_templ>::calc_result_rec(K n, K order) {
+template<AcceptedLike T, std::unsigned_integral K>
+inline T levin_sidi_s_algorithm<T, K>::calc_result_rec(K n, K order) {
 
     using std::isfinite;
 
@@ -190,7 +190,7 @@ inline T levin_sidi_s_algorithm<T, K,series_templ>::calc_result_rec(K n, K order
         Denom[i] = remainder->operator()(
             n, 
             i, 
-            this->series,
+            this->series.get(),
             (variant == remainder_type::u_variant ? beta : static_cast<T>(1))
         );
 
@@ -225,14 +225,14 @@ inline T levin_sidi_s_algorithm<T, K,series_templ>::calc_result_rec(K n, K order
     return Num[0];
 }
 
-template<Accepted T, std::unsigned_integral K, typename series_templ>
-levin_sidi_s_algorithm<T, K, series_templ>::levin_sidi_s_algorithm(
-    const series_templ& series, 
+template<AcceptedLike T, std::unsigned_integral K>
+levin_sidi_s_algorithm<T, K>::levin_sidi_s_algorithm(
+    std::shared_ptr<series_base<T,K>> series, 
     remainder_type variant, 
     bool useRecFormulas,  
-    T parameter
+    const T& parameter
 ) : 
-    series_acceleration<T, K, series_templ>(series),
+    series_acceleration<T, K>(series),
     variant(variant),
     useRecFormulas(useRecFormulas)
 
@@ -275,8 +275,8 @@ levin_sidi_s_algorithm<T, K, series_templ>::levin_sidi_s_algorithm(
     }
 }
 
-template<Accepted T, std::unsigned_integral K, typename series_templ>
-T levin_sidi_s_algorithm<T, K, series_templ>::operator()(const K n, const K order) { 
+template<AcceptedLike T, std::unsigned_integral K>
+T levin_sidi_s_algorithm<T, K>::operator()(const K n, const K order) { 
 
     using std::isfinite;
 

@@ -7,7 +7,7 @@
 * @authors Pashkov B.B.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <Accepted T, std::unsigned_integral K>
+template <AcceptedLike T, std::unsigned_integral K>
 class ln_sinx_minus_ln_x_series final : public TermCalculatorBase<T, K>
 {
 protected:
@@ -67,7 +67,7 @@ public:
 	ln_sinx_minus_ln_x_series(const SeriesConfig<T,K>& config);
 };
 
-template <Accepted T, std::unsigned_integral K>
+template <AcceptedLike T, std::unsigned_integral K>
 ln_sinx_minus_ln_x_series<T, K>::ln_sinx_minus_ln_x_series(const SeriesConfig<T,K>& config) {
 
 	if (domain_checker(config)){
@@ -80,7 +80,7 @@ ln_sinx_minus_ln_x_series<T, K>::ln_sinx_minus_ln_x_series(const SeriesConfig<T,
 
 }
 
-template <Accepted T, std::unsigned_integral K>
+template <AcceptedLike T, std::unsigned_integral K>
 constexpr T ln_sinx_minus_ln_x_series<T, K>::calculateTerm(K n) const {
 	const T a = this->x / (static_cast<T>(n + 1) * static_cast<T>(PI));
     return log(static_cast<T>(1) - a * a); // (51.2) [Rows.pdf]

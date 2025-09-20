@@ -24,7 +24,8 @@
 #endif
 
 #include "methods.hpp"
-#include "series_base.hpp"
+#include "series/series.hpp"
+#include "series/series_base.hpp"
 #include "test_functions.h"
 
 
@@ -1094,7 +1095,7 @@ static void input_value(T& value){
 /**
  * @brief Helper function to get series by ID
  */
-template <Accepted T, std::unsigned_integral K>
+template <AcceptedLike T, std::unsigned_integral K>
 inline static std::unique_ptr<TermCalculatorBase<T, K>> create_series_by_id(series_id_t id) {
 
 	T x = static_cast<T>(0), s = static_cast<T>(0), a = static_cast<T>(0), t = static_cast<T>(0), alpha = static_cast<T>(0);
@@ -1343,7 +1344,7 @@ inline static std::unique_ptr<TermCalculatorBase<T, K>> create_series_by_id(seri
 
 	#ifndef USE_COMPLEX
 	case gamma_series_id:
-		return std::make_unique<gamma_series<T, K>>(config);
+		return std::make_shared<gamma_series<T, K>>(config);
 	#endif
 
 	default: throw std::domain_error("Series not implemented");
@@ -1354,47 +1355,47 @@ inline static std::unique_ptr<TermCalculatorBase<T, K>> create_series_by_id(seri
 /**
  * @brief Helper function to get transformation by ID
  */
-template <Accepted T, std::unsigned_integral K, typename SeriesType>
-inline static std::unique_ptr<series_acceleration<T, K, SeriesType>>
-create_transformation_by_id(transformation_id_t id, SeriesType series, bool is_alternating = false) {
+template <AcceptedLike T, std::unsigned_integral K>
+inline static std::unique_ptr<series_acceleration<T, K>>
+create_transformation_by_id(transformation_id_t id, std::shared_ptr<series_base<T,K>> series, bool is_alternating = false) {
 
 	if (id == shanks_transformation_id) {
 		if (is_alternating)
-			return std::make_unique<shanks_transform_alternating<T, K, SeriesType>>(series);
+			return std::make_unique<shanks_transform_alternating<T, K>>(series);
 		else
-			return std::make_unique<shanks_algorithm<T, K, SeriesType>>(series);
+			return std::make_unique<shanks_algorithm<T, K>>(series);
 	}
 	switch (id) {
 	case epsilon_algorithm_id:
-		return std::make_unique<wynn_epsilon_1_algorithm<T, K, SeriesType>>(series);
+		return std::make_unique<wynn_epsilon_1_algorithm<T, K>>(series);
 	case epsilon_algorithm_2_id:
-		return std::make_unique<wynn_epsilon_2_algorithm<T, K, SeriesType>>(series);
+		return std::make_unique<wynn_epsilon_2_algorithm<T, K>>(series);
 	case S_algorithm_id:
-		return std::make_unique<levin_sidi_s_algorithm<T, K, SeriesType>>(series);
+		return std::make_unique<levin_sidi_s_algorithm<T, K>>(series);
 	case D_algorithm_id:
-		return std::make_unique<drummond_d_algorithm<T, K, SeriesType>>(series, remainder_type::t_variant);
+		return std::make_unique<drummond_d_algorithm<T, K>>(series, remainder_type::t_variant);
 	case chang_epsilon_algorithm_id:
-		return std::make_unique<chang_wynn_algorithm<T, K, SeriesType>>(series);
+		return std::make_unique<chang_wynn_algorithm<T, K>>(series);
 	case M_algorithm_id:
-		return std::make_unique<levin_sidi_m_algorithm<T, K, SeriesType>>(series);
+		return std::make_unique<levin_sidi_m_algorithm<T, K>>(series);
 	case weniger_transformation_id:
-		return std::make_unique<weniger_algorithm<T, K, SeriesType>>(series);
+		return std::make_unique<weniger_algorithm<T, K>>(series);
 	case rho_wynn_transformation_id:
-		return std::make_unique<wynn_rho_algorithm<T, K, SeriesType>>(series);
+		return std::make_unique<wynn_rho_algorithm<T, K>>(series);
 	case brezinski_theta_transformation_id:
-		return std::make_unique<brezinski_theta_algorithm<T, K, SeriesType>>(series);
+		return std::make_unique<brezinski_theta_algorithm<T, K>>(series);
 	case epsilon_algorithm_3_id:
-		return std::make_unique<wynn_epsilon_3_algorithm<T, K, SeriesType>>(series);
+		return std::make_unique<wynn_epsilon_3_algorithm<T, K>>(series);
 	case W_algorithm_id:
-		return std::make_unique<lubkin_w_algorithm<T, K, SeriesType>>(series);
+		return std::make_unique<lubkin_w_algorithm<T, K>>(series);
 	case richardson_algorithm_id:
-		return std::make_unique<richardson_algorithm<T, K, SeriesType>>(series);
+		return std::make_unique<richardson_algorithm<T, K>>(series);
 	case L_algorithm_id:
-		return std::make_unique<levin_algorithm<T, K, SeriesType>>(series);
+		return std::make_unique<levin_algorithm<T, K>>(series);
 	case Ford_Sidi_algorithm_two_id:
-		return std::make_unique<ford_sidi_2_algorithm<T, K, SeriesType>>(series);
+		return std::make_unique<ford_sidi_2_algorithm<T, K>>(series);
 	case Ford_Sidi_algorithm_three_id:
-		return std::make_unique<ford_sidi_3_algorithm<T, K, SeriesType>>(series);
+		return std::make_unique<ford_sidi_3_algorithm<T, K>>(series);
 	default:
 		throw std::domain_error("Invalid transformation ID");
 	}
@@ -1405,7 +1406,7 @@ create_transformation_by_id(transformation_id_t id, SeriesType series, bool is_a
  * This function provides a convenient and interactive way to test out the convergence acceleration of various series
  * @tparam T The type of the elements in the series, K The type of enumerating integer
  */
-template <Accepted T, std::unsigned_integral K>
+template <AcceptedLike T, std::unsigned_integral K>
 inline static void main_testing_function()
 {
 
@@ -1418,20 +1419,20 @@ inline static void main_testing_function()
 
 	// Create series using helper function
 	std::unique_ptr<TermCalculatorBase<T, K>> termBase = create_series_by_id<T, K>(static_cast<series_id_t>(series_id));
-	std::unique_ptr<series_base<T, K>> series = std::make_unique<series_base<T,K>>(std::move(termBase));
+	std::shared_ptr<series_base<T, K>> series = std::make_shared<series_base<T,K>>(std::move(termBase));
 
 	//choosing transformation
 	print_transformation_info();
 	K transformation_id = read_input<K>();
 
-	std::unique_ptr<series_acceleration<T, K, decltype(series.get())>> transform;
+	std::unique_ptr<series_acceleration<T, K>> transform;
 	std::set<K> alternating_series = { 2, 3, 7, 11, 15, 18, 19, 20, 21, 24, 26, 28, 30, 31 };
 	bool is_alternating = alternating_series.contains(series_id);
 
 	// Create transformation using helper function
-	transform = create_transformation_by_id<T, K, decltype(series.get())>(
+	transform = create_transformation_by_id<T, K>(
 		static_cast<transformation_id_t>(transformation_id),
-		series.get(),
+		series,
 		is_alternating
 	);
 
@@ -1452,124 +1453,124 @@ inline static void main_testing_function()
 	switch (function_id)
 	{
 	case test_function_id_t::cmp_sum_and_transform_id:
-		cmp_sum_and_transform(n, order, std::move(series.get()), std::move(transform.get()));
+		cmp_sum_and_transform(n, order, series, std::move(transform));
 		break;
 	case test_function_id_t::cmp_a_n_and_transform_id:
-		cmp_a_n_and_transform(n, order, std::move(series.get()), std::move(transform.get()));
+		cmp_a_n_and_transform(n, order, series, std::move(transform));
 		break;
 	case test_function_id_t::transformation_remainder_id:
-		transformation_remainders(n, order, std::move(series.get()), std::move(transform.get()));
+		transformation_remainders(n, order, series, std::move(transform));
 		break;
 	case test_function_id_t::cmp_transformations_id:
 	{
 		print_transformation_info();
 		K cmp_transformation_id = read_input<K>();
 
-		std::unique_ptr<series_acceleration<T, K, decltype(series.get())>> transform2;
-		transform2 = create_transformation_by_id<T, K, decltype(series.get())>(
+		std::unique_ptr<series_acceleration<T, K>> transform2;
+		transform2 = create_transformation_by_id<T, K>(
 			static_cast<transformation_id_t>(cmp_transformation_id),
-			series.get(),
+			series,
 			is_alternating
 		);
 
-		cmp_transformations(n, order, std::move(series.get()), std::move(transform.get()), std::move(transform2.get()));
+		cmp_transformations(n, order, series, std::move(transform), std::move(transform2));
 		break;
 	}
 	case test_function_id_t::eval_transform_time_id:
-		eval_transform_time(n, order, std::move(series.get()), std::move(transform.get()));
+		eval_transform_time(n, order, series, std::move(transform));
 		break;
 	case test_function_id_t::test_all_transforms_id:
 	{
 		// Testing all functions for series
 		auto create_all_transformations = [&]() {
-			std::vector<std::unique_ptr<series_acceleration<T, K, decltype(series.get())>>> transforms;
+			std::vector<std::unique_ptr<series_acceleration<T, K>>> transforms;
 
 			// shanks
 			if (alternating_series.contains(series_id))
-				transforms.push_back(std::make_unique<shanks_transform_alternating<T, K, decltype(series.get())>>(series.get()));
+				transforms.push_back(std::make_unique<shanks_transform_alternating<T, K>>(series));
 			else
-				transforms.push_back(std::make_unique<shanks_algorithm<T, K, decltype(series.get())>>(series.get()));
+				transforms.push_back(std::make_unique<shanks_algorithm<T, K>>(series));
 
 			// epsilon v-1
-			transforms.push_back(std::make_unique<wynn_epsilon_1_algorithm<T, K, decltype(series.get())>>(series.get()));
+			transforms.push_back(std::make_unique<wynn_epsilon_1_algorithm<T, K>>(series));
 
 			// epsilon v-2
-			transforms.push_back(std::make_unique<wynn_epsilon_2_algorithm<T, K, decltype(series.get())>>(series.get()));
+			transforms.push_back(std::make_unique<wynn_epsilon_2_algorithm<T, K>>(series));
 
 			// epsilon v-3
-			transforms.push_back(std::make_unique<wynn_epsilon_3_algorithm<T, K, decltype(series.get())>>(series.get(), epsilon_algorithm_3));
+			transforms.push_back(std::make_unique<wynn_epsilon_3_algorithm<T, K>>(series, epsilon_algorithm_3));
 
 			// rho-wynn classic
-			transforms.push_back(std::make_unique<wynn_rho_algorithm<T, K, decltype(series.get())>>(series.get(), numerator_type::rho_variant));
+			transforms.push_back(std::make_unique<wynn_rho_algorithm<T, K>>(series, numerator_type::rho_variant));
 
 			// rho-wynn generalized
-			transforms.push_back(std::make_unique<wynn_rho_algorithm<T, K, decltype(series.get())>>(series.get(), numerator_type::generalized_variant));
+			transforms.push_back(std::make_unique<wynn_rho_algorithm<T, K>>(series, numerator_type::generalized_variant));
 
 			// rho-wynn gamma-rho
-			transforms.push_back(std::make_unique<wynn_rho_algorithm<T, K, decltype(series.get())>>(series.get(), numerator_type::gamma_rho_variant));
+			transforms.push_back(std::make_unique<wynn_rho_algorithm<T, K>>(series, numerator_type::gamma_rho_variant));
 
 			// brezinski-theta
-			transforms.push_back(std::make_unique<brezinski_theta_algorithm<T, K, decltype(series.get())>>(series.get()));
+			transforms.push_back(std::make_unique<brezinski_theta_algorithm<T, K>>(series));
 
 			// chang epsilon wynn
-			transforms.push_back(std::make_unique<chang_wynn_algorithm<T, K, decltype(series.get())>>(series.get()));
+			transforms.push_back(std::make_unique<chang_wynn_algorithm<T, K>>(series));
 
 			// levin standart
-			transforms.push_back(std::make_unique<levin_algorithm<T, K, decltype(series.get())>>(series.get()));
+			transforms.push_back(std::make_unique<levin_algorithm<T, K>>(series));
 
 			// levin recurcive
-			transforms.push_back(std::make_unique<levin_algorithm<T, K, decltype(series.get())>>(series.get(), remainder_type::u_variant, true));
+			transforms.push_back(std::make_unique<levin_algorithm<T, K>>(series, remainder_type::u_variant, true));
 
 			// levin-sidi S U
-			transforms.push_back(std::make_unique<levin_sidi_s_algorithm<T, K, decltype(series.get())>>(series.get(), remainder_type::u_variant, false));
+			transforms.push_back(std::make_unique<levin_sidi_s_algorithm<T, K>>(series, remainder_type::u_variant, false));
 
 			// levin-sidi S T
-			transforms.push_back(std::make_unique<levin_sidi_s_algorithm<T, K, decltype(series.get())>>(series.get(), remainder_type::t_variant, false));
+			transforms.push_back(std::make_unique<levin_sidi_s_algorithm<T, K>>(series, remainder_type::t_variant, false));
 
 			// levin-sidi S T-WAVE
-			transforms.push_back(std::make_unique<levin_sidi_s_algorithm<T, K, decltype(series.get())>>(series.get(), remainder_type::t_wave_variant, false));
+			transforms.push_back(std::make_unique<levin_sidi_s_algorithm<T, K>>(series, remainder_type::t_wave_variant, false));
 
 			// levin-sidi S V
-			transforms.push_back(std::make_unique<levin_sidi_s_algorithm<T, K, decltype(series.get())>>(series.get(), remainder_type::v_variant, false));
+			transforms.push_back(std::make_unique<levin_sidi_s_algorithm<T, K>>(series, remainder_type::v_variant, false));
 
 			// levin-sidi D U
-			transforms.push_back(std::make_unique<drummond_d_algorithm<T, K, decltype(series.get())>>(series.get(), remainder_type::u_variant, false));
+			transforms.push_back(std::make_unique<drummond_d_algorithm<T, K>>(series, remainder_type::u_variant, false));
 
 			// levin-sidi D T
-			transforms.push_back(std::make_unique<drummond_d_algorithm<T, K, decltype(series.get())>>(series.get(), remainder_type::t_variant, false));
+			transforms.push_back(std::make_unique<drummond_d_algorithm<T, K>>(series, remainder_type::t_variant, false));
 
 			// levin-sidi D T-WAVE
-			transforms.push_back(std::make_unique<drummond_d_algorithm<T, K, decltype(series.get())>>(series.get(), remainder_type::t_wave_variant, false));
+			transforms.push_back(std::make_unique<drummond_d_algorithm<T, K>>(series, remainder_type::t_wave_variant, false));
 
 			// levin-sidi D V
-			transforms.push_back(std::make_unique<drummond_d_algorithm<T, K, decltype(series.get())>>(series.get(), remainder_type::v_variant, false));
+			transforms.push_back(std::make_unique<drummond_d_algorithm<T, K>>(series, remainder_type::v_variant, false));
 
 			// levin-sidi M U
-			transforms.push_back(std::make_unique<levin_sidi_m_algorithm<T, K, decltype(series.get())>>(series.get(), remainder_type::u_variant));
+			transforms.push_back(std::make_unique<levin_sidi_m_algorithm<T, K>>(series, remainder_type::u_variant));
 
 			// levin-sidi M T
-			transforms.push_back(std::make_unique<levin_sidi_m_algorithm<T, K, decltype(series.get())>>(series.get(), remainder_type::t_variant));
+			transforms.push_back(std::make_unique<levin_sidi_m_algorithm<T, K>>(series, remainder_type::t_variant));
 
 			// levin-sidi M T-WAVE
-			transforms.push_back(std::make_unique<levin_sidi_m_algorithm<T, K, decltype(series.get())>>(series.get(), remainder_type::t_wave_variant));
+			transforms.push_back(std::make_unique<levin_sidi_m_algorithm<T, K>>(series, remainder_type::t_wave_variant));
 
 			// levin-sidi M V-WAVE
-			transforms.push_back(std::make_unique<levin_sidi_m_algorithm<T, K, decltype(series.get())>>(series.get(), remainder_type::v_wave_variant));
+			transforms.push_back(std::make_unique<levin_sidi_m_algorithm<T, K>>(series, remainder_type::v_wave_variant));
 
 			// weniger
-			transforms.push_back(std::make_unique<weniger_algorithm<T, K, decltype(series.get())>>(series.get()));
+			transforms.push_back(std::make_unique<weniger_algorithm<T, K>>(series));
 
 			// lubkin W
-			transforms.push_back(std::make_unique<lubkin_w_algorithm<T, K, decltype(series.get())>>(series.get()));
+			transforms.push_back(std::make_unique<lubkin_w_algorithm<T, K>>(series));
 
 			// Richardson
-			transforms.push_back(std::make_unique<richardson_algorithm<T, K, decltype(series.get())>>(series.get()));
+			transforms.push_back(std::make_unique<richardson_algorithm<T, K>>(series));
 
 			// Ford-Sidi v-2
-			transforms.push_back(std::make_unique<ford_sidi_2_algorithm<T, K, decltype(series.get())>>(series.get()));
+			transforms.push_back(std::make_unique<ford_sidi_2_algorithm<T, K>>(series));
 
 			// Ford-Sidi v-3
-			transforms.push_back(std::make_unique<ford_sidi_3_algorithm<T, K, decltype(series.get())>>(series.get()));
+			transforms.push_back(std::make_unique<ford_sidi_3_algorithm<T, K>>(series));
 
 			return transforms;
 			};
@@ -1578,7 +1579,7 @@ inline static void main_testing_function()
 
 		for (K i = 1; i <= n; i++)
 		{
-			print_sum(i, std::move(series.get()));
+			print_sum(i, series);
 
 			for (auto& current_transform : all_transforms)
 			{

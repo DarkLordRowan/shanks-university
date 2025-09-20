@@ -15,8 +15,7 @@
 
 #pragma once
 
-#include "../series_base.hpp"
-
+#include "../series/series_base.hpp"
  /**
   * @brief Enum for remainder types to use in Levin-type transformations.
   *
@@ -42,7 +41,7 @@ enum numerator_type{
  * @tparam K Unsigned integral type for indices and counts.
  *           Must satisfy std::unsigned_integral. Used for indexing and order specification.
  */
-template<Accepted T, std::unsigned_integral K>
+template<AcceptedLike T, std::unsigned_integral K>
 class numerator_base {
 public:
 
@@ -79,7 +78,7 @@ public:
  * @tparam T Floating-point type for series elements.
  * @tparam K Unsigned integral type for indices.
  */
-template<Accepted T, std::unsigned_integral K>
+template<AcceptedLike T, std::unsigned_integral K>
 class rho_transform : public numerator_base<T, K> {
 public:
 
@@ -156,7 +155,7 @@ public:
  * @tparam T Floating-point type for series elements.
  * @tparam K Unsigned integral type for indices.
  */
-template<Accepted T, std::unsigned_integral K>
+template<AcceptedLike T, std::unsigned_integral K>
 class gamma_rho_transform : public numerator_base<T, K> {
 public:
 

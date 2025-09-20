@@ -7,7 +7,7 @@
 * @authors Pashkov B.B.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <Accepted T, std::unsigned_integral K>
+template <AcceptedLike T, std::unsigned_integral K>
 class ln_x_plus_one_x_minus_one_halfed_series final : public TermCalculatorBase<T, K>
 {
 protected:
@@ -64,7 +64,7 @@ public:
 	ln_x_plus_one_x_minus_one_halfed_series(const SeriesConfig<T,K>& config);
 };
 
-template <Accepted T, std::unsigned_integral K>
+template <AcceptedLike T, std::unsigned_integral K>
 ln_x_plus_one_x_minus_one_halfed_series<T, K>::ln_x_plus_one_x_minus_one_halfed_series(const SeriesConfig<T,K>& config) {
 
 	if (domain_checker(config)){
@@ -77,7 +77,7 @@ ln_x_plus_one_x_minus_one_halfed_series<T, K>::ln_x_plus_one_x_minus_one_halfed_
 
 }
 
-template <Accepted T, std::unsigned_integral K>
+template <AcceptedLike T, std::unsigned_integral K>
 constexpr T ln_x_plus_one_x_minus_one_halfed_series<T, K>::calculateTerm(K n) const {
 	const T a = static_cast<T>(fma(2, n, 1));
     return pow(this->x, a) / a; // (39.3) [Rows.pdf]

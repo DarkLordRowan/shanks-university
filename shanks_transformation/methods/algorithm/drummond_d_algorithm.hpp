@@ -40,8 +40,8 @@
   *           - T minus_one_raised_to_power_n(K n) const: returns (-1)^n
   *           - T binomial_coefficient(T n, K k) const: returns binomial coefficient C(n, k)
   */
-template<Accepted T, std::unsigned_integral K, typename series_templ>
-class drummond_d_algorithm final : public series_acceleration<T, K, series_templ>
+template<AcceptedLike T, std::unsigned_integral K>
+class drummond_d_algorithm final : public series_acceleration<T, K>
 {
 protected:
 
@@ -100,7 +100,7 @@ public:
 	 *        false: Use direct computation (simpler but potentially slower)
 	 */
 	explicit drummond_d_algorithm(
-		const series_templ& series,
+		std::shared_ptr<series_base<T,K>> series,
 		remainder_type variant = remainder_type::u_variant,
 		bool useRecFormulas = false
 	);
@@ -127,8 +127,8 @@ public:
 
 };
 
-template<Accepted T, std::unsigned_integral K, typename series_templ>
-inline T drummond_d_algorithm<T,K,series_templ>::calc_result(const K n, const K order) {
+template<AcceptedLike T, std::unsigned_integral K>
+inline T drummond_d_algorithm<T,K>::calc_result(const K n, const K order) {
 
     using std::isfinite;
 
@@ -142,7 +142,7 @@ inline T drummond_d_algorithm<T,K,series_templ>::calc_result(const K n, const K 
 		// Compute weight term: (-1)^j * C(n, j) * w_{n,j}
 		rest  = minus_one_raised_to_power_n<T,K>(j);
 		rest *= binomial_coefficient<T,K>(static_cast<T>(order), j);
-		rest *= remainder->operator()(n,j, this->series);
+		rest *= remainder->operator()(n,j, this->series.get());
 
 		numerator   += rest * this->series->Sn(n+j);
 		denominator += rest;
@@ -155,8 +155,8 @@ inline T drummond_d_algorithm<T,K,series_templ>::calc_result(const K n, const K 
 	return numerator;
 }
 
-template<Accepted T, std::unsigned_integral K, typename series_templ>
-inline T drummond_d_algorithm<T,K,series_templ>::calc_result_rec(const K n, const K order) {
+template<AcceptedLike T, std::unsigned_integral K>
+inline T drummond_d_algorithm<T,K>::calc_result_rec(const K n, const K order) {
 
     using std::isfinite;
 
@@ -167,7 +167,7 @@ inline T drummond_d_algorithm<T,K,series_templ>::calc_result_rec(const K n, cons
 
 	// Initialize base values: N_j^{(0)} = w_{n,j} S_{n+j}, D_j^{(0)} = w_{n,j}
 	for (K i = static_cast<K>(0); i < order+static_cast<K>(1); ++i) {
-		Denom[i] = remainder->operator()(n, i, this->series);
+		Denom[i] = remainder->operator()(n, i, this->series.get());
 		  Num[i] = this->series->Sn(n+i) * Denom[i];
 	}
 
@@ -189,13 +189,13 @@ inline T drummond_d_algorithm<T,K,series_templ>::calc_result_rec(const K n, cons
 	return Num[0];
 }
 
-template<Accepted T, std::unsigned_integral K, typename series_templ>
-drummond_d_algorithm<T,K,series_templ>::drummond_d_algorithm(
-	const series_templ& series, 
+template<AcceptedLike T, std::unsigned_integral K>
+drummond_d_algorithm<T,K>::drummond_d_algorithm(
+	std::shared_ptr<series_base<T,K>> series, 
 	const remainder_type variant, 
 	bool useRecFormulas
 	) : 
-	series_acceleration<T, K, series_templ>(series),
+	series_acceleration<T, K>(series),
 	variant(variant),
 	useRecFormulas(useRecFormulas)
 {
@@ -223,8 +223,8 @@ drummond_d_algorithm<T,K,series_templ>::drummond_d_algorithm(
     }
 }
 
-template<Accepted T, std::unsigned_integral K, typename series_templ>
-T drummond_d_algorithm<T,K,series_templ>::operator()(const K n, const K order) {
+template<AcceptedLike T, std::unsigned_integral K>
+T drummond_d_algorithm<T,K>::operator()(const K n, const K order) {
 
     using std::isfinite;
 

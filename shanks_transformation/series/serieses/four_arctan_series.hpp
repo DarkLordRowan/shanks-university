@@ -7,7 +7,7 @@
 * @authors Pashkov B.B.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <Accepted T, std::unsigned_integral K>
+template <AcceptedLike T, std::unsigned_integral K>
 class four_arctan_series final : public TermCalculatorBase<T, K>
 {
 protected:
@@ -65,7 +65,7 @@ public:
 	four_arctan_series(const SeriesConfig<T,K>& config);
 };
 
-template <Accepted T, std::unsigned_integral K>
+template <AcceptedLike T, std::unsigned_integral K>
 four_arctan_series<T, K>::four_arctan_series(const SeriesConfig<T,K>& config) {
 
 	if (domain_checker(config)){
@@ -78,7 +78,7 @@ four_arctan_series<T, K>::four_arctan_series(const SeriesConfig<T,K>& config) {
 
 }
 
-template <Accepted T, std::unsigned_integral K>
+template <AcceptedLike T, std::unsigned_integral K>
 constexpr T four_arctan_series<T, K>::calculateTerm(K n) const {
 	const T temp = static_cast<T>(fma(2, n, 1));
     return static_cast<T>(4) * minus_one_raised_to_power_n<T,K>(n) * pow(this->x, temp) / temp; // (7.1) Rows.pdf

@@ -39,8 +39,8 @@
   *           - T minus_one_raised_to_power_n(K j) const: returns (-1)^j
   *           - T binomial_coefficient(T n, K k) const: returns binomial coefficient C(n, k)
   */
-template<Accepted T, std::unsigned_integral K, typename series_templ>
-class levin_sidi_m_algorithm final : public series_acceleration<T, K, series_templ>
+template<AcceptedLike T, std::unsigned_integral K>
+class levin_sidi_m_algorithm final : public series_acceleration<T, K>
 {
 protected:
 
@@ -79,9 +79,9 @@ public:
 	 *        For theory, see: Sidi (2003, arXiv:math/0306302), p. 64
 	 */
 	explicit levin_sidi_m_algorithm(
-		const series_templ& series,
+		std::shared_ptr<series_base<T,K>> series,
 		remainder_type variant = remainder_type::u_variant,
-		T gamma_ = static_cast<T>(10)
+		const T& gamma_ = static_cast<T>(10)
 	);
 
 	// Default destructor is sufficient since unique_ptr handles deletion
@@ -109,8 +109,8 @@ public:
 	T operator()(K n, K order) override;
 };
 
-template<Accepted T, std::unsigned_integral K, typename series_templ>
-inline T levin_sidi_m_algorithm<T, K, series_templ>::calculate(const K n, const K order) const {
+template<AcceptedLike T, std::unsigned_integral K>
+inline T levin_sidi_m_algorithm<T, K>::calculate(const K n, const K order) const {
 
 	using std::isfinite;
 
@@ -170,7 +170,7 @@ inline T levin_sidi_m_algorithm<T, K, series_templ>::calculate(const K n, const 
 		rest *= remainder->operator()(
 			order, 
 			j, 
-			this->series, 
+			this->series.get(), 
 			-gamma-static_cast<T>(n)
 		);
 
@@ -194,18 +194,18 @@ inline T levin_sidi_m_algorithm<T, K, series_templ>::calculate(const K n, const 
 	return numerator;
 }
 
-template<Accepted T, std::unsigned_integral K, typename series_templ>
-T levin_sidi_m_algorithm<T, K, series_templ>::operator()(const K n, const K order) {
+template<AcceptedLike T, std::unsigned_integral K>
+T levin_sidi_m_algorithm<T, K>::operator()(const K n, const K order) {
 	return calculate(n, order);
 }
 
-template<Accepted T, std::unsigned_integral K, typename series_templ>
-levin_sidi_m_algorithm<T, K, series_templ>::levin_sidi_m_algorithm(
-	const series_templ& series, 
+template<AcceptedLike T, std::unsigned_integral K>
+levin_sidi_m_algorithm<T, K>::levin_sidi_m_algorithm(
+	std::shared_ptr<series_base<T,K>> series, 
 	const remainder_type variant, 
-	const T gamma_
+	const T& gamma_
 	) :
-	series_acceleration<T, K, series_templ>(series),
+	series_acceleration<T, K>(series),
 	variant(variant),
 	gamma(gamma_)
 {

@@ -7,7 +7,7 @@
 * @authors Pashkov B.B.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <Accepted T, std::unsigned_integral K>
+template <AcceptedLike T, std::unsigned_integral K>
 class m_fact_1mx_mp1_inverse_series final : public TermCalculatorBase<T, K>
 {
 protected:
@@ -66,7 +66,7 @@ public:
 	m_fact_1mx_mp1_inverse_series(const SeriesConfig<T,K>& config);
 };
 
-template <Accepted T, std::unsigned_integral K>
+template <AcceptedLike T, std::unsigned_integral K>
 m_fact_1mx_mp1_inverse_series<T, K>::m_fact_1mx_mp1_inverse_series(const SeriesConfig<T,K>& config) {
 
 	if (domain_checker(config)){
@@ -80,7 +80,7 @@ m_fact_1mx_mp1_inverse_series<T, K>::m_fact_1mx_mp1_inverse_series(const SeriesC
 
 }
 
-template <Accepted T, std::unsigned_integral K>
+template <AcceptedLike T, std::unsigned_integral K>
 constexpr T m_fact_1mx_mp1_inverse_series<T, K>::calculateTerm(K n) const {
 	T coeff = m;
 	for(K j = 1; j <=n ; ++j){ coeff *= (m + static_cast<T>(j)) / static_cast<T>(j); }

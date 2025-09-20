@@ -38,8 +38,8 @@
  *           - T minus_one_raised_to_power_n(K n) const: returns (-1)ⁿ
  *           - T binomial_coefficient(T n, K k) const: returns binomial coefficient C(n, k)
  */
-template<Accepted T, std::unsigned_integral K, typename series_templ>
-class weniger_algorithm final : public series_acceleration<T, K, series_templ>
+template<AcceptedLike T, std::unsigned_integral K>
+class weniger_algorithm final : public series_acceleration<T, K>
 {
 public:
 	
@@ -48,7 +48,7 @@ public:
 	 * @param series The series class object to be accelerated
 	 *        Must be a valid object implementing the required series interface
 	 */
-	explicit weniger_algorithm(const series_templ& series) : series_acceleration<T, K, series_templ>(series) {}
+	explicit weniger_algorithm(std::shared_ptr<series_base<T,K>> series) : series_acceleration<T, K>(series) {}
 
 	/**
 	 * @brief Implementation of Weniger transformation for series acceleration.
@@ -70,8 +70,8 @@ public:
 	T operator()(K n, K order) override;
 };
 
-template<Accepted T, std::unsigned_integral K, typename series_templ>
-T weniger_algorithm<T, K, series_templ>::operator()(const K n, const K order) {
+template<AcceptedLike T, std::unsigned_integral K>
+T weniger_algorithm<T, K>::operator()(const K n, const K order) {
 
 	using std::isfinite;
 

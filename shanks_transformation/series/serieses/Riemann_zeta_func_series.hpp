@@ -7,7 +7,7 @@
 * @authors Pashkov B.B.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <Accepted T, std::unsigned_integral K>
+template <AcceptedLike T, std::unsigned_integral K>
 class Riemann_zeta_func_series final : public TermCalculatorBase<T, K>
 {
 protected:
@@ -64,7 +64,7 @@ public:
 	Riemann_zeta_func_series(const SeriesConfig<T,K>& config);
 };
 
-template <Accepted T, std::unsigned_integral K>
+template <AcceptedLike T, std::unsigned_integral K>
 Riemann_zeta_func_series<T, K>::Riemann_zeta_func_series(const SeriesConfig<T,K>& config) {
 
 	if (domain_checker(config)){
@@ -77,7 +77,7 @@ Riemann_zeta_func_series<T, K>::Riemann_zeta_func_series(const SeriesConfig<T,K>
 
 }
 
-template <Accepted T, std::unsigned_integral K>
+template <AcceptedLike T, std::unsigned_integral K>
 constexpr T Riemann_zeta_func_series<T, K>::calculateTerm(K n) const {
 	if (n == 0)
         return static_cast<T>(0);

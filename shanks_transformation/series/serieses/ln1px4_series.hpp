@@ -7,7 +7,7 @@
 * @authors Pashkov B.B.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <Accepted T, std::unsigned_integral K>
+template <AcceptedLike T, std::unsigned_integral K>
 class ln1px4_series final : public TermCalculatorBase<T, K>
 {
 protected:
@@ -64,7 +64,7 @@ public:
 	ln1px4_series(const SeriesConfig<T,K>& config);
 };
 
-template <Accepted T, std::unsigned_integral K>
+template <AcceptedLike T, std::unsigned_integral K>
 ln1px4_series<T, K>::ln1px4_series(const SeriesConfig<T,K>& config) {
 
 	if (domain_checker(config)){
@@ -77,7 +77,7 @@ ln1px4_series<T, K>::ln1px4_series(const SeriesConfig<T,K>& config) {
 
 }
 
-template <Accepted T, std::unsigned_integral K>
+template <AcceptedLike T, std::unsigned_integral K>
 constexpr T ln1px4_series<T, K>::calculateTerm(K n) const {
 	const T a = static_cast<T>(n + 1);
     return minus_one_raised_to_power_n<T,K>(n + 2) * pow(this->x, static_cast<T>(4) * a) / a; // (81.3) [Rows.pdf]

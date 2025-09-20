@@ -7,7 +7,7 @@
 * @authors Pashkov B.B.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <Accepted T, std::unsigned_integral K>
+template <AcceptedLike T, std::unsigned_integral K>
 class Ja_x_series final : public TermCalculatorBase<T, K>
 {
 protected:
@@ -57,7 +57,7 @@ public:
 	Ja_x_series(const SeriesConfig<T,K>& config);
 };
 
-template <Accepted T, std::unsigned_integral K>
+template <AcceptedLike T, std::unsigned_integral K>
 Ja_x_series<T, K>::Ja_x_series(const SeriesConfig<T,K>& config) {
 
 	if (domain_checker(config)){
@@ -71,7 +71,7 @@ Ja_x_series<T, K>::Ja_x_series(const SeriesConfig<T,K>& config) {
 
 }
 
-template <Accepted T, std::unsigned_integral K>
+template <AcceptedLike T, std::unsigned_integral K>
 constexpr T Ja_x_series<T, K>::calculateTerm(K n) const {
 	return minus_one_raised_to_power_n<T,K>(n) * pow(this->x * static_cast <T>(0.5), static_cast<T>(2 * n) + this->a) / (static_cast<T>(fact<K>(n)) * tgamma(this->a + static_cast<T>(n + 1))); // (95.1) [Rows.pdf]
 }

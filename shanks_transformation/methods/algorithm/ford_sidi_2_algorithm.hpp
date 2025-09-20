@@ -40,8 +40,8 @@
  *           - T S_n(K n) const: returns the n-th partial sum s_n = a_0 + ... + a_n
  *           The series object encapsulates the mathematical sequence to be accelerated.
  */
-template <Accepted T, std::unsigned_integral K, typename series_templ>
-class ford_sidi_2_algorithm final : public series_acceleration<T, K, series_templ>
+template <AcceptedLike T, std::unsigned_integral K>
+class ford_sidi_2_algorithm final : public series_acceleration<T, K>
 {
 public:
 
@@ -51,7 +51,7 @@ public:
 	 *        Must be a valid object implementing the required series interface.
 	 *        The series object should provide access to terms and partial sums.
 	 */
-	explicit ford_sidi_2_algorithm(const series_templ& series) : series_acceleration<T, K, series_templ>(series) {}
+	explicit ford_sidi_2_algorithm(std::shared_ptr<series_base<T,K>> series) : series_acceleration<T, K>(series) {}
 
 	/**
 	 * @brief Fast implementation of Ford-Sidi algorithm for series acceleration.
@@ -76,8 +76,8 @@ public:
 	T operator()(K n, K k) override;
 };
 
-template <Accepted T, std::unsigned_integral K, typename series_templ>
-T ford_sidi_2_algorithm<T, K, series_templ>::operator()(const K n, const K k) {
+template <AcceptedLike T, std::unsigned_integral K>
+T ford_sidi_2_algorithm<T, K>::operator()(const K n, const K k) {
 
 	using std::fma;
 	using std::isfinite;

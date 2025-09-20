@@ -6,7 +6,7 @@
 * @authors Bolshakov M.P.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <Accepted T, std::unsigned_integral K>
+template <AcceptedLike T, std::unsigned_integral K>
 class cos_series final : public TermCalculatorBase<T, K>
 {
 protected:
@@ -54,7 +54,7 @@ public:
 	cos_series(const SeriesConfig<T,K>& config);
 };
 
-template <Accepted T, std::unsigned_integral K>
+template <AcceptedLike T, std::unsigned_integral K>
 cos_series<T, K>::cos_series(const SeriesConfig<T,K>& config) {
 
 	if (domain_checker(config)){
@@ -67,7 +67,7 @@ cos_series<T, K>::cos_series(const SeriesConfig<T,K>& config) {
 
 }
 
-template <Accepted T, std::unsigned_integral K>
+template <AcceptedLike T, std::unsigned_integral K>
 constexpr T cos_series<T, K>::calculateTerm(K n) const {
 	return minus_one_raised_to_power_n<T,K>(n) * pow(this->x, static_cast<T>(2*n)) / static_cast<T>(fact<K>(2*n));
 }

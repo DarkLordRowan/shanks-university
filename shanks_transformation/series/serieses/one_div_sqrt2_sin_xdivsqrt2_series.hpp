@@ -7,7 +7,7 @@
 * @authors Pashkov B.B.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <Accepted T, std::unsigned_integral K>
+template <AcceptedLike T, std::unsigned_integral K>
 class one_div_sqrt2_sin_xdivsqrt2_series final : public TermCalculatorBase<T, K>
 {
 protected:
@@ -55,7 +55,7 @@ public:
 	one_div_sqrt2_sin_xdivsqrt2_series(const SeriesConfig<T,K>& config);
 };
 
-template <Accepted T, std::unsigned_integral K>
+template <AcceptedLike T, std::unsigned_integral K>
 one_div_sqrt2_sin_xdivsqrt2_series<T, K>::one_div_sqrt2_sin_xdivsqrt2_series(const SeriesConfig<T,K>& config) {
 
 	if (domain_checker(config)){
@@ -68,7 +68,7 @@ one_div_sqrt2_sin_xdivsqrt2_series<T, K>::one_div_sqrt2_sin_xdivsqrt2_series(con
 
 }
 
-template <Accepted T, std::unsigned_integral K>
+template <AcceptedLike T, std::unsigned_integral K>
 constexpr T one_div_sqrt2_sin_xdivsqrt2_series<T, K>::calculateTerm(K n) const {
 	#ifdef _WIN32
         return static_cast<T>(pow(-1, n / 2) * _jn(static_cast<int>(2 * n + 1), this->x)); // (96.1) [Rows.pdf]

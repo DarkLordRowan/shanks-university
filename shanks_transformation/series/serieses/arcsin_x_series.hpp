@@ -6,7 +6,7 @@
 * @authors Trudolyubov N.A.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <Accepted T, std::unsigned_integral K>
+template <AcceptedLike T, std::unsigned_integral K>
 class arcsin_x_series final : public TermCalculatorBase<T, K>
 {
 protected:
@@ -63,7 +63,7 @@ public:
     
 };
 
-template <Accepted T, std::unsigned_integral K>
+template <AcceptedLike T, std::unsigned_integral K>
 arcsin_x_series<T, K>::arcsin_x_series(const SeriesConfig<T,K>& config){
 
 	if (domain_checker(config)){
@@ -76,7 +76,7 @@ arcsin_x_series<T, K>::arcsin_x_series(const SeriesConfig<T,K>& config){
 
 }
 
-template <Accepted T, std::unsigned_integral K>
+template <AcceptedLike T, std::unsigned_integral K>
 constexpr T arcsin_x_series<T, K>::calculateTerm(K n) const {
     const T factorial = static_cast<T>(fact<K>(n));
     const T coeff = static_cast<T>(fact<K>(2*n)) / factorial / factorial / static_cast<T>(pow(2, 2*n));

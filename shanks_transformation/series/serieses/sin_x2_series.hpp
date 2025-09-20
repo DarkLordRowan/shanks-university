@@ -7,7 +7,7 @@
 * @authors Pashkov B.B.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <Accepted T, std::unsigned_integral K>
+template <AcceptedLike T, std::unsigned_integral K>
 class sin_x2_series final : public TermCalculatorBase<T, K>
 {
 protected:
@@ -55,7 +55,7 @@ public:
 	sin_x2_series(const SeriesConfig<T,K>& config);
 };
 
-template <Accepted T, std::unsigned_integral K>
+template <AcceptedLike T, std::unsigned_integral K>
 sin_x2_series<T, K>::sin_x2_series(const SeriesConfig<T,K>& config) {
 
 	if (domain_checker(config)){
@@ -68,7 +68,7 @@ sin_x2_series<T, K>::sin_x2_series(const SeriesConfig<T,K>& config) {
 
 }
 
-template <Accepted T, std::unsigned_integral K>
+template <AcceptedLike T, std::unsigned_integral K>
 constexpr T sin_x2_series<T, K>::calculateTerm(K n) const {
 	const K a = static_cast<K>(fma(2, n, 1));
     return minus_one_raised_to_power_n<T,K>(n) * pow(this->x, static_cast<T>(static_cast<K>(2) * a)) / static_cast<T>(fact<K>(a)); // (82.2) [Rows.pdf]

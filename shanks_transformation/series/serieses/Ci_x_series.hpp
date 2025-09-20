@@ -6,7 +6,7 @@
 * @authors Pavlova A.R.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <Accepted T, std::unsigned_integral K>
+template <AcceptedLike T, std::unsigned_integral K>
 class Ci_x_series final : public TermCalculatorBase<T, K>
 {
 protected:
@@ -56,7 +56,7 @@ public:
 
 };
 
-template <Accepted T, std::unsigned_integral K>
+template <AcceptedLike T, std::unsigned_integral K>
 Ci_x_series<T, K>::Ci_x_series(const SeriesConfig<T,K>& config) {
 
 	if (domain_checker(config)){
@@ -69,7 +69,7 @@ Ci_x_series<T, K>::Ci_x_series(const SeriesConfig<T,K>& config) {
 
 }
 
-template <Accepted T, std::unsigned_integral K>
+template <AcceptedLike T, std::unsigned_integral K>
 constexpr T Ci_x_series<T, K>::calculateTerm(K n) const {
     if (n == 0)
         return gamma + log(this->x); // (65.1) [Rows.pdf]
