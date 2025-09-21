@@ -91,6 +91,26 @@
 \usepackage{chngcntr}
 % \counterwithout{subsection}{section}
 
+% \bibliographystyle{gost-numeric.bbx}
+\bibliographystyle{gost-numeric.bbx}
+\usepackage[parentracker=true,
+backend=biber,
+hyperref=false,
+bibencoding=utf8,
+style=numeric-comp,
+language=auto,
+autolang=other,
+citestyle=gost-numeric,
+defernumbers=true,
+bibstyle=gost-numeric,
+sorting=ntvy,
+]{biblatex}
+\addbibresource{library.bib}
+
+
+\usepackage{algorithm,algpseudocode}
+\usepackage{geometry}
+
 
 \begin{document}
 
@@ -168,9 +188,7 @@ f(z)=O\bigl(g(z)\bigr),\quad z\to z_0
 \[
 |f(z)|\le A\,|g(z)|.
 \]
-Следствие: если \(g(z)\neq 0\) на \(U(z_0)\cap D\), то функция \(\dfrac{f(z)}{g(z)}\) ограничена на \(U(z_0)\cap D\).
-
-Аналогично,\
+Следствие: если \(g(z)\neq 0\) на \(U(z_0)\cap D\), то функция \(\dfrac{f(z)}{g(z)}\) ограничена на \(U(z_0)\cap D\). Аналогично,\
 $$
 f(z)=o\bigl(g(z)\bigr),\quad z\to z_0
 $$
@@ -186,7 +204,6 @@ $$
 \[
 \Phi_{n+1}(z)=o\bigl(\Phi_n(z)\bigr),\quad z\to z_0.
 \]
-
 Формальный ряд \(f(z)\sim\sum_{n=0}^{\infty} c_n \Phi_n(z)\) называется асимптотическим разложением (в смысле Пуанкаре) относительно последовательности \(\{\Phi_n\}\), если для любого \(m\in\mathbb{N}_0\)
 \[
 f(z)-\sum_{n=0}^{m-1} c_n\Phi_n(z)=o\bigl(\Phi_m(z)\bigr),\quad z\to z_0.
@@ -195,7 +212,7 @@ f(z)-\sum_{n=0}^{m-1} c_n\Phi_n(z)=o\bigl(\Phi_m(z)\bigr),\quad z\to z_0.
 \[
 c_m=\lim_{z\to z_0}\frac{f(z)-\sum_{n=0}^{m-1} c_n\Phi_n(z)}{\Phi_m(z)},\qquad m\in\mathbb{N}_0,
 \]
-при условии существования соответствующих пределов.
+при условии существования соответствующих пределов \cite{Weniger2003}.
 
 \subsection*{Сходящиеся и расходящиеся последовательности}
 
@@ -209,7 +226,7 @@ c_m=\lim_{z\to z_0}\frac{f(z)-\sum_{n=0}^{m-1} c_n\Phi_n(z)}{\Phi_m(z)},\qquad m
 
 
 
-\textbf{Важные утверждения о расходящихся последовательностях}
+\textbf{Важные утверждения о расходящихся последовательностях:}
 
 \begin{itemize}
 \item
@@ -225,7 +242,7 @@ c_m=\lim_{z\to z_0}\frac{f(z)-\sum_{n=0}^{m-1} c_n\Phi_n(z)}{\Phi_m(z)},\qquad m
   так и с теоретической точки зрения.
 \end{itemize}
 
-Примеры антипределов рядов
+\textbf{Примеры антипределов рядов:}
 \begin{enumerate}
   \item Гармонический ряд натуральных чисел:
   \[
@@ -252,14 +269,11 @@ c_m=\lim_{z\to z_0}\frac{f(z)-\sum_{n=0}^{m-1} c_n\Phi_n(z)}{\Phi_m(z)},\qquad m
 
 
 \subsection*{Остаток последовательности и его оценка}
-
 Пусть \(\{S_n\}\) либо сходится к пределу \(S\), либо, если она расходится, может быть просуммирована подходящим методом для получения \(S\).
-
 Тогда элемент последовательности \(S_n\) для всех \(n \in \mathbb{N}_0\) может быть представлен в виде суммы предела (или антипредела) \(S\) и остатка \(r_n\):
 \[
 S_n = S + r_n.
 \]
-
 Так как \(S_n\) — частичные суммы ряда
 \[
 S_n = \sum_{k=0}^{n} a_k,
@@ -268,9 +282,7 @@ S_n = \sum_{k=0}^{n} a_k,
 \[
 r_n = - \sum_{k=n+1}^{\infty} a_k.
 \]
-
 Преобразования последовательностей различаются в зависимости от предположений о поведении остатков \(r_n\) как функций от \(n\). Эти предположения приводят к различным стратегиям частичного исключения остатков \(r_n\).
-
 Пусть функция \(f(z)\) имеет асимптотическое разложение по асимптотической последовательности \(\{\Phi_n(z)\}_{n\in\mathbb{N}_0}\). Тогда первый член ряда \(\Phi_0(z)\) называется ведущим членом и обозначается
 \[
 f(z) \sim \Phi_0(z),
@@ -279,7 +291,6 @@ f(z) \sim \Phi_0(z),
 \[
 \frac{f(z)}{\Phi_0(z)} \to c_0 \quad \text{при } z \to z_0.
 \]
-
 В рассматриваемых трансформациях используются функции \(\omega_n\):
 \[
 \frac{r_n}{\omega_n} \sim \sum_{k=0}^{\infty} c_k \varphi_k(n), \quad n \to \infty,
@@ -288,13 +299,11 @@ f(z) \sim \Phi_0(z),
 
 
 \subsection*{Виды сходимости}
-
 Поведение многих сходящихся последовательностей \({\{ S}_{n}\}\),
 сходящихся к некоторому пределу \(S\) можно охарактеризовать
 асимптотическим условием:
 
 \[\lim_{n \rightarrow \infty}\frac{s_{n + 1} - s}{s_{n} - s} = \lim_{n \rightarrow \infty}\frac{r_{n + 1}}{r_{n}} = \rho\]
-
 Последовательность \({\{ S}_{n}\}\) сходится:
 
 \begin{itemize}
@@ -314,7 +323,6 @@ f(z) \sim \Phi_0(z),
 \[
 A(y) = A + \sum_{k=1}^{m} \phi_k(y)\, \beta_k(y).
 \]
-
 Функции \(\phi_k(y)\) определены для \(y \in (0,b]\), а функции \(\beta_k(\xi)\), где \(\xi\) — непрерывная переменная, непрерывны на \([0,\xi_0]\) (\(\xi_0 \le b\)) и имеют асимптотическое разложение
 \[
 \beta_k(\xi) \sim \sum_{i=0}^{\infty} \beta_{ki}\, \xi^{i r_k}, \quad \text{при } \xi \to 0^+, \quad k=1,\dots,m, \quad r_k>0 \text{ — константы.}
@@ -333,12 +341,10 @@ A_1(y) + A_2(y) \in F^{(m)}, \quad m \le m_1 + m_2,
 асимптотическое разложение формы:
 
 \[\alpha(x)\sim x^{\gamma}\sum_{i = 0}^{\infty}\frac{\alpha_{i}}{x^{i}}\ \text{ при }\ x \rightarrow \infty,\ \ \gamma\ \epsilon\mathbb{\ C}\]
-
 Если \(\alpha_{0} \neq 0\), то \(\alpha(x) \in \ A_{0}^{(\gamma)}\)
 строго.
 
 \subsection*{Класс b\textsuperscript{(m)}}
-
 Последовательность \({\{ a}_{n}\}\) принадлежит множеству \(b^{(m)}\),
 если она удовлетворяет линейному однородному разностному уравнению
 порядка m:
@@ -403,7 +409,6 @@ S_{n} \sim
 последовательность \{\(S_{n}^{'}\)\}, которая сходится быстрее:
 
 \(T\):\{\(\ S_{n}\)\}→\{\(S_{n}^{'}\)\}, \(n \in \mathbb{N}_{0}\)
-
 Вычислительные алгоритмы могут выполнять только конечное число операций,
 поэтому будут работать лишь с конечными подмножествами
 последовательностей, содержащими последовательные элементы \{\(S_{n}\),
@@ -413,11 +418,9 @@ S_{n} \sim
 Преобразование \(T\) представляется как функция:
 
 \(T\): \(\mathbb{R}^{l + 1}\) → \(\mathbb{R}\).
-
 Каждое преобразование может быть записано в виде двумерной таблицы
 \(T_{k}^{(n)}\), где верхний индекс \(n\) указывает строку, а нижний
 индекс \(k\) --- столбец:
-
 \[\begin{matrix}
 T_{0}^{(0)} & T_{1}^{(0)} & T_{2}^{(0)} & \ldots & T_{n}^{(0)} & \ldots \\
 T_{0}^{(1)} & T_{1}^{(1)} & T_{2}^{(1)} & \ldots & T_{n}^{(1)} & \ldots \\
@@ -433,16 +436,13 @@ T_{0}^{(n)} & T_{1}^{(n)} & T_{2}^{(n)} & \ldots & T_{n}^{(2)} & \ldots \\
 \(k_{j + 1} \geq \ k_{j}\), причем хотя бы одно из отношений
 \(n_{j + 1} = n_{j} + 1\) и \(k_{j + 1} = k_{j} + 1\) должно быть
 истинным.
-
 Преобразование \(T\) является регулярным на пути \(P\), если для любой
 сходящейся последовательности \{\(S_{n}\)\} выполняется:
 
 \[\lim_{j \rightarrow \infty}T_{k_{j}}^{{(n}_{j})} = S\]
-
 Функция \(T\) называется ускоряющей сходимость, если:
 
 \[\lim_{j \rightarrow \infty}\frac{T_{k_{j}}^{{(n}_{j})} - S}{S_{n_{j}} - S} = 0\]
-
 Иначе говоря, \(T\) ускоряет сходимость последовательности
 \(\{ S_{n}\}\) при преобразовании в \(\{ S_{n}^{'}\}\), если
 \(\{ S_{n}^{'}\}\) сходится к \(S\) быстрее, чем \(\{ S_{n}\}\), то
@@ -451,9 +451,7 @@ T_{0}^{(n)} & T_{1}^{(n)} & T_{2}^{(n)} & \ldots & T_{n}^{(2)} & \ldots \\
 \[\lim_{n \rightarrow \infty}\frac{\left| S_{n}^{'} - S \right|}{\left| S_{n} - S \right|} = 0\]
 
 \subsection*{Символ Похгаммера}
-
-Пусть \(\Omega(z)\) -- функция, стремящаяся к нулю при \(z \to\infty \) .
-Факториальный ряд для \(\Omega(z)\) представляет собой разложение
+Пусть \(\Omega(z)\) -- функция, стремящаяся к нулю при \(z \to\infty \) . Факториальный ряд для \(\Omega(z)\) представляет собой разложение
 следующего типа:
 
 \[\Omega(z)\  = \frac{b_{0}}{z} + \frac{1!b_{1}}{z(z + 1)} + \frac{2!b_{2}}{z(z + 1)(z + 2)} + \ldots = \sum_{v = 0}^{\infty}\frac{v!b_{v}}{{(z)}_{v + 1}}\]
@@ -478,9 +476,7 @@ T_{0}^{(n)} & T_{1}^{(n)} & T_{2}^{(n)} & \ldots & T_{n}^{(2)} & \ldots \\
 \subsubsection*{\(\rho\) — алгоритм Винна}
 
 Алгоритм \(\rho\)-Винна предназначен для вычисления чётных сходящихся
-интерполирующих дробей Тиле и их экстраполяции к бесконечности.
-
-Интерполирующая дробь Тиле, или чётная сходящаяся дробь, имеет вид
+интерполирующих дробей Тиле и их экстраполяции к бесконечности. Интерполирующая дробь Тиле, или чётная сходящаяся дробь, имеет вид
 рациональной функции:
 
 \[
@@ -489,7 +485,6 @@ T_{0}^{(n)} & T_{1}^{(n)} & T_{2}^{(n)} & \ldots & T_{n}^{(2)} & \ldots \\
      {b_{k}x^{k} + b_{k - 1}x^{k - 1} + \ldots + b_{1}x + b_{0}},
 \quad k \in \mathbb{N}_{0}.
 \]
-
 Здесь отношение \(\frac{a_{k}}{b_{k}}\) представляет собой приближение к
 пределу. Чётные порядки конвергентов являются рациональными функциями,
 представленными в виде частного двух полиномов. Алгоритм Винна позволяет
@@ -505,7 +500,7 @@ T_{0}^{(n)} & T_{1}^{(n)} & T_{2}^{(n)} & \ldots & T_{n}^{(2)} & \ldots \\
 S_{n} \sim S + \sum_{i = 1}^{\infty} \delta_{i} n^{-i},
 \qquad n \to \infty.
 \]
-
+Этот факт продемонстрирован в работе \cite{Weniger2003}
 Поскольку \(S_{n} = h(n) \in A_{0}^{(0)}\),
 \(h(n)\) ведёт себя плавно при \(n \to \infty\).
 Следовательно, вблизи \(n = \infty\) функцию \(h(n)\)
@@ -519,8 +514,7 @@ S = \lim_{n \to \infty} h(n) = \lim_{n \to \infty} S_{n}.
 
 В частности, функцию \(R(n)\) можно подобрать так, чтобы она интерполировала
 \(h(n)\) в \(2k+1\) точках.
-
-Как указали Смит и Форд, \(\rho\)-алгоритм Винна хорошо работает с
+Как указали Смит и Форд \cite{Smith-Ford},  \(\rho\)-алгоритм Винна хорошо работает с
 некоторыми логарифмическими последовательностями, но не работает с
 другими, что и требует отдельного пояснения.
 
@@ -528,13 +522,11 @@ S = \lim_{n \to \infty} h(n) = \lim_{n \to \infty} S_{n}.
 полинома степени \(k\) через \(k + 1\) пар \((x_{n}, S_{n}), \ldots,
 (x_{n+k}, S_{n+k})\) с использованием формулы Невилла–Эйткена,
 затем вычисляют значение этого полинома при \(x = 0\).
-
 Алгоритм \(\rho\) состоит из построения рациональной интерполяционной
 дроби, числитель и знаменатель которой являются многочленами степени \(k\),
 по \(2k+1\) парам точек \((x_{n}, S_{n}), \ldots, (x_{n+2k}, S_{n+2k})\)
 с использованием интерполяционной формулы Тиле, а затем вычисления значения
 этой рациональной дроби при \(x\).
-
 Поскольку \(\rho\)-алгоритм — частный случай \emph{взаимных разностей},
 начнём с их определения. Пусть \(f(x)\) — функция, взаимные разности которой
 с аргументами \(x_{0}, x_{1}, \ldots\) определяются рекурсивно:
@@ -548,16 +540,17 @@ S = \lim_{n \to \infty} h(n) = \lim_{n \to \infty} S_{n}.
 = \frac{x_{0}-x_{1}}{\rho_{0}(x_{0}) - \rho_{0}(x_{1})}.
 \]
 
-\[
+\begin{equation*}
 \rho_{k}(x_{0},\ldots,x_{k})
 =
 \rho_{k-2}(x_{1},\ldots,x_{k-1})
 +
+\end{equation*}
+\begin{equation*}
++    
 \frac{x_{0}-x_{k}}{\rho_{k-2}(x_{1},\ldots,x_{k-1}) - \rho_{k-1}(x_{1}, \ldots,x_{k-1})},
 \qquad k = 2,3,\ldots
-\tag{2c}
-\]
-
+\end{equation*}
 Заменив \(x_{0}\) на \(x\) в \((2c)\), получим следующую цепную дробь:
 
 \[
@@ -567,7 +560,6 @@ f(x_{1})
 \frac{x-x_{2}}{\rho_{2}(x_{1},x_{2},x_{3}) - \rho_{0}(x_{1}) +
 \frac{x-x_{3}}{\ddots}}}.
 \]
-
 Последние две составляющие простейшие дроби в данной формуле цепной дроби имеют следующий вид:
 
 \[
@@ -587,56 +579,36 @@ f(x_{1})
 
 Рассмотрим функцию \(f(x_{n})\), значение \(S_{n}\) которой известно в некотором числе точек \(x_{n}\), \(n \in \mathbb{N}_{0}\). $\rho$-алгоритм Винна определяется заменой \(S_{n}\) вместо \(f(x_{n})\) и \(\rho_{k}^{(n)}\) вместо \(\rho_{k}(x_{n},\ldots,x_{n+k})\) во взаимной разности:
 
-\begin{subequations}
-\begin{align}
+\begin{align*}
 \rho_{0}^{(n)} = S_{n},
-
-\rho_{1}^{(n)} = \frac{x_{n} - x_{n+1}}{\rho_{0}^{(n)} - \rho_{0}^{(n+1)}}, 
-
-
-\rho_{2}^{(n)} = \rho_{0}^{(n+1)} + \frac{x_{n} - x_{n+2}}{\rho_{1}^{(n)} - \rho_{1}^{(n+1)}},
-
-
+\rho_{1}^{(n)} = \frac{x_{n} - x_{n+1}}{\rho_{0}^{(n)} - \rho_{0}^{(n+1)}}, \\
+\rho_{2}^{(n)} = \rho_{0}^{(n+1)} + \frac{x_{n} - x_{n+2}}{\rho_{1}^{(n)} - \rho_{1}^{(n+1)}}, \\
 \rho_{k}^{(n)} = \rho_{k-2}^{(n+1)} + \frac{x_{n} - x_{n+k}}{\rho_{k-1}^{(n)} - \rho_{k-1}^{(n+1)}}, \quad k = 2,3,\ldots
-\end{align}
-\end{subequations}
-
-
+\end{align*}
 Покажем, что рациональная дробь \(R(x)\), числитель и знаменатель которой являются полиномами степени \(k\) и такая, что
-
 \[
 R(x_{p}) = S_{p}, \quad \forall p = n,\ldots,n+2k, 
 \]
-
 может быть записана в виде:
-
 \[
 R(x) = \frac{\rho_{2k}^{(n)} x^{k} + a_{1} x^{k-1} + \ldots + a_{k}}{x^{k} + b_{1} x^{k-1} + \ldots + b_{k}},
 \]
-
 Тогда получаем, что 
-
 \[
 \lim_{n \to \infty} R(x) = \rho_{2k}^{(n)},
 \]
-
-что позволяет использовать величину \(\rho_{2k}^{(n)}\) как приближение предела последовательности \(\{ S_{n} \}\) при \(n \to \infty\). Расчёт \(\rho_{2k}^{(n)}\) осуществляется с использованием расширенной формы \emph{$\rho$}-алгоритма, который по сути является расчётом взаимных разностей.
+это утверждение позволяет использовать величину \(\rho_{2k}^{(n)}\) как приближение предела последовательности \(\{ S_{n} \}\) при \(n \to \infty\). Расчёт \(\rho_{2k}^{(n)}\) осуществляется с использованием расширенной формы \emph{$\rho$}-алгоритма, который по сути является расчётом взаимных разностей.
 
 
 Нелинейная рекурсивная стандартная схема алгоритма \emph{$\rho$} Винна выглядит следующим образом:
-
 \[
 \rho_{k+1}^{(n)} = \rho_{k-1}^{(n+1)} + \frac{x_{n+k+1} - x_n}{\rho_{k}^{(n+1)} - \rho_{k}^{(n)}}, \quad k,n \in \mathbb{N}_{0},
 \]
-
 при этом учитывается, что 
-
 \[
 \rho_{-1}^{(n)} = 0, \quad \rho_0^{(n)} = S_n, \quad n \in \mathbb{N}_{0}.
 \]
-
 Данный метод работает с последовательностью строго возрастающих и неограниченных с ростом \(n\) интерполяционных точек \(\{x_n\}\), которые должны быть положительными и различными для всех \(n \in \mathbb{N}_{0}\):
-
 \[
 0 < x_0 < x_1 < x_2 < \ldots < x_m < x_{m+1} < \ldots, \quad \lim_{n \to \infty} x_n = \infty.
 \]
@@ -649,19 +621,14 @@ R(x) = \frac{\rho_{2k}^{(n)} x^{k} + a_{1} x^{k-1} + \ldots + a_{k}}{x^{k} + b_{
 величинами и могут расходиться, если вcя последовательность сходится, то
 есть величины с нечетным нижним индексом являются лишь промежуточными
 расчетами и не имеют никакого значения.
-
 Несмотря на формальное сходство, алгоритмы Винна \(\epsilon\) и \emph{$\rho$}
 существенно различаются по способности ускорять сходимость. Алгоритм
 \emph{$\rho$} Винна эффективен для логарифмически сходящихся
 последовательностей, но не подходит для линейно сходящихся или
 расходящихся последовательностей, в случае которых выгоднее будет
 применять \(\epsilon\) алгоритм.
-
 Поскольку дроби четного порядка \(\mathcal{S}_{2k}(x)\) интерполяционной цепной дроби построены таким образом, что они удовлетворяют условиям
 интерполяции \(2k + 1\), то
-
-Поскольку дроби четного порядка \(\mathcal{S}_{2k}(x)\) интерполяционной цепной дроби построены так, что они удовлетворяют условиям интерполяции в \(2k + 1\) точках, имеем:
-
 \[
 \mathcal{S}_{2k}\left(x_{n+j}\right) = S_{n+j}, \quad 0 \leq j \leq 2k. 
 \]
@@ -680,19 +647,16 @@ S_n = \frac{S x_n^k + a_1 x_n^{k-1} + \dots + a_k}{x_n^k + b_1 x_n^{k-1} + \dots
 \[
 S_n = S_m + \cfrac{n-m}{\rho_1^{(m)} + \cfrac{n-m-1}{\rho_2^{(m)} - \rho_0^{(m)} + \cfrac{n-m-2}{\rho_3^{(m)} - \rho_1^{(m)} + \ddots}}}
 \]
-
 Учитывая значение для \(2k+1\) дроби в цепочке Тиля:
 
 \[
 \cfrac{n-m-2k}{\rho_{2k+1}^{(m)} - \rho_{2k-1}^{(m)} + \cfrac{n-m-2k-1}{\ddots}}
 \]
-
 получаем:
 
 \[
 S_n = \frac{\rho_{2k}^{(m)} n^k + a_1 n^{k-1} + \dots + a_k}{n^k + b_1 n^{k-1} + \dots + b_k}.
 \]
-
 Следовательно, \(\rho_{2k}^{(m)} = S\) для всех \(m \in \mathbb{N}_0\). Таким образом, \(\rho\)-алгоритм представляет собой рациональную экстраполяцию, точную на последовательности, удовлетворяющей условию выше.
 \end{proof}
 \end{theorem}
@@ -703,6 +667,11 @@ S_n = \frac{\rho_{2k}^{(m)} n^k + a_1 n^{k-1} + \dots + a_k}{n^k + b_1 n^{k-1} +
 
 \textbf{Свойство 1.}  
 
+Для чётных индексов преобразованная последовательность \(\rho_{2k}^{(n)}\) может быть представлена в виде отношения определителей.  
+Такое представление полезно для анализа устойчивости и сходимости алгоритма,
+а также демонстрирует его связь с классическими методами аппроксимации Паде.
+
+
 \[\rho_{2k}^{(n)} = \frac{\left| \begin{matrix}
 1 & S_{n} & x_{n} & {x_{n}S}_{n} & \cdots & x_{n}^{k - 1} & x_{n}^{k - 1}S_{n} & {x_{n}^{k}S}_{n} \\
  \vdots & \vdots & \vdots & \vdots & \vdots & \vdots & \vdots & \vdots \\
@@ -712,6 +681,7 @@ S_n = \frac{\rho_{2k}^{(m)} n^k + a_1 n^{k-1} + \dots + a_k}{n^k + b_1 n^{k-1} +
  \vdots & \vdots & \vdots & \vdots & \vdots & \vdots & \vdots & \vdots \\
 1 & S_{n + 2k} & x_{n + 2k} & {x_{n + 2k}S}_{n + 2k} & \cdots & x_{n + 2k}^{k - 1} & x_{n + 2k}^{k - 1}S_{n + 2k} & x_{n + 2k}^{k} \\
 \end{matrix} \right|}\ \]
+
 
 \textbf{Свойство 2 (Алгебраические).}  
 
@@ -736,174 +706,136 @@ S_n = \frac{\rho_{2k}^{(m)} n^k + a_1 n^{k-1} + \dots + a_k}{n^k + b_1 n^{k-1} +
 
 где \(\theta\) — отрицательное целое число, а \(c_j\) — константы, не зависящие от \(n\).
 
+
+
 \subsection*{Асимптотическое поведение $\rho$-алгоритма}
 
 Чтобы описать асимптотическое поведение $\rho$ алгоритма, мы будем использовать следующую последовательность. Для заданного нецелого числа $\theta$ и заданного ненулевого действительного числа $c$ мы определяем последовательность $(C_n)$ следующим образом:
 
-\begin{subequations}
-\begin{align}
+\begin{align*}
 C_{-1} &= 0, \\
 C_0 &= c, \\
 C_{2k-1} &= C_{2k-3} + \frac{2k - 1}{\theta C_{2k-2}}, \quad k = 1, 2, \dots, \\
 C_{2k} &= C_{2k-2} + \frac{2k}{(1 - \theta) C_{2k-1}}, \quad k = 1, 2, \dots
-\end{align}
-\end{subequations}
+\end{align*}
+Эта последовательность  $(C_n)$ называется \emph{ассоциированной последовательностью $\rho$ алгоритма относительно $\theta$ и $c$}. 
 
-Эта последовательность $(C_n)$ называется \emph{ассоциированной последовательностью $\rho$ алгоритма относительно $\theta$ и $c$}.
-Асимптотическое поведение $\rho$ алгоритма и ассоциированную последовательность связывают следующие 2 формулы
-\begin{equation}
+Асимптотическое поведение $\rho$ алгоритма и ассоциированную последовательность связывают следующие две формулы
+\begin{equation*}
 \frac{\rho_{2 k}^{(n)}-s}{s_{n+2 k}-s} \sim C_{2 k} \quad \text { при } n \rightarrow \infty, \theta \not \in \mathbb{Z}\
-\end{equation} 
+\end{equation*} 
 
-\begin{equation}
+\begin{equation*}
 \rho_{2 k}^{(n)}=s+O\left((n+k)^{-k-2}\right), \quad \text { при } n \rightarrow \infty, \theta  \in \mathbb{Z}
-\end{equation}
-
+\end{equation*}
 
 Для ассоциированной последовательности $\rho$ алгоритма справедливы следующие две теоремы.
 
 \begin{theorem}
 В соответствии с приведенной выше нотацией,
-\begin{subequations}
-\begin{align}
+\begin{align*}
 C_{2k-1} &= \frac{k (2 - \theta) (3 - \theta) \cdots (k - \theta)}{c \, \theta (1 + \theta) \cdots (k - 1 + \theta)}, \quad k = 1, 2, \dots, \\
-C_{2k} &= \frac{c (1 + \theta) \cdots (k + \theta)}{(1 - \theta) (2 - \theta) \cdots (k - \theta)}, \quad k = 1, 2, \dots
-\end{align}
-\end{subequations}
+C_{2k} &= \frac{c (1 + \theta) \cdots (k + \theta)}{(1 - \theta) (2 - \theta) \cdots (k - \theta)}, \quad k = 1, 2, \dots .
+\end{align*}
+
 
 \begin{proof}
 Индукция по $k$. Для $k=1, C_{1}=C_{-1}+1 / c \theta=1 / c \theta, C_{2}=C_{0}+2 /(1-\theta) C_{1}= c(1+\theta) /(1-\theta)$. Предположим, что они верны для $k>1$. По предположению индукции имеем
 
-\begin{subequations}
-\begin{align}
+\begin{align*}
 C_{2 k+1} & =C_{2 k-1}+\frac{2 k+1}{\theta C_{2 k}} \\
 & =\frac{k(2-\theta) \cdots(k-\theta)}{c \theta(1+\theta) \cdots(k-1+\theta)}+\frac{(2 k+1)(1-\theta) \cdots(k-\theta)}{c \theta(1+\theta) \cdots(k+\theta)} \\
-& =\frac{(k+1)(2-\theta) \cdots(k-\theta)(k+1-\theta)}{c \theta(1+\theta) \cdots(k+\theta)} 
-\end{align}
-\end{subequations}
-
-
+& =\frac{(k+1)(2-\theta) \cdots(k-\theta)(k+1-\theta)}{c \theta(1+\theta) \cdots(k+\theta)} .
+\end{align*}
 Аналогично,
-
-
-\begin{equation}
+\begin{equation*}
 C_{2 k+2}=\frac{c(1+\theta)(2+\theta) \cdots(k+1+\theta)}{(1-\theta) \cdots(k+1-\theta)} .
-\end{equation}
+\end{equation*}
 
 \end{proof}
 
 \end{theorem}
+Заметим, что теорема 3.2 остается верной, когда $\theta$ является целым числом и $k<|\theta|$.
 
-Заметим, что теорема 3.2 остается верной, когда $\theta$ является целым числом и $k<|\theta|$.\\
 \begin{theorem}(Об асимптотике ассоциированной последовательности)
-\begin{equation}
+\begin{equation*}
 \lim _{k \rightarrow \infty} \frac{C_{2 k}}{k^{2 \theta}}=-\frac{c \Gamma(-\theta)} {\Gamma(\theta)},
-\end{equation}
-
-
+\end{equation*}
 где $\Gamma(x)$ — гамма-функция.\\
 Доказательство. С помощью предельной формулы Эйлера для гамма-функции
-
-
-\begin{equation}
+\begin{equation*}
 \Gamma(x)=\lim _{k \rightarrow \infty} \frac{k!k^{x}}{x(x+1) \cdots(x+k)}
-\end{equation}
-
-
-
-
+\end{equation*}
 \end{theorem}
-
-
 Теперь мы имеем асимптотическое поведение алгоритма $\rho$.\\
-\begin{theorem}
+\begin{theorem} \label{rho and cn formula}
     
- Пусть ( $S_{n}$ ) — последовательность, удовлетворяющая
-
-
-\begin{equation}
+Пусть ( $S_{n}$ ) — последовательность, удовлетворяющая
+\begin{equation} \label{asymptotic_sn}
 S_{n} \sim S+n^{\theta}\left(c_{0}+\frac{c_{1}}{n}+\frac{c_{2}}{n^{2}}+\ldots\right), \quad \text { при } n \rightarrow \infty .
 \end{equation}
+Пусть ($C_{n}$) — ассоциированная последовательность алгоритма $\rho$ относительно $\theta$ и $c_{0}$ в \eqref{asymptotic_sn}. Пусть $A=(1-\theta)\left(-1 / 2+c_{1} / c_{0} \theta\right)$. Тогда справедливы следующие формулы.\\
 
-
-Пусть ($C_{n}$) — ассоциированная последовательность алгоритма $\rho$ относительно $\theta$ и $c_{0}$ в (9). Пусть $A=(1-\theta)\left(-1 / 2+c_{1} / c_{0} \theta\right)$. Тогда справедливы следующие формулы.\\
-
-\begin{equation}
-\rho_{1}^{(n)}=C_{1}(n+1)^{1-\theta}\left[1+\frac{A}{n+1}+\frac{B_{1}}{(n+1)^{2}}+O\left((n+1)^{-3}\right)\right]
+\begin{equation} \label{rho1n}
+\rho_{1}^{(n)}=C_{1}(n+1)^{1-\theta}\left[1+\frac{A}{n+1}+\frac{B_{1}}{(n+1)^{2}}+O\left((n+1)^{-3}\right)\right],
 \end{equation}
-
-
 где
-
-
-\begin{equation}
+\begin{equation*} 
 B_{1}=\frac{\theta^{2}-1}{12}+\frac{c_{1}(1-\theta)}{2 c_{0}}+\frac{(1-\theta)^{2} c_{1}^{2}}{c_{0}^ {2} \theta^{2}}+\frac{c_{2}(2-\theta)}{c_{0} \theta} .
-\end{equation}
+\end{equation*}
 
 
-\begin{equation}
+\begin{equation} \label{rho2n}
 \rho_{2}^{(n)}=s+C_{2}(n+1)^{\theta}\left[1+\frac{c_{1}}{c_{0}(n+1)}+\frac{B_{2}}{(n+1)^{2}}+O\left((n+1)^{-3}\right)\right],
 \end{equation}
 
 где
 
-\begin{equation}
+\begin{equation*}
 B_{2}=-\frac{c_{0} \theta(1+\theta)}{6(1-\theta)}+\frac{2 c_{1}^{2}}{c_{0} \theta(1-\theta)}+\frac{c_{2}\left(5-\theta^{2}\right)}{(1-\theta)^{2}} .
-\end{equation}
-
+\end{equation*}
 
 Предположим, что $\theta \neq-1, \ldots, 1-k$. Для $j=1, \ldots, k$,
 
 \begin{subequations}
     
-\begin{align}
-\rho_{2 j-1}^{(n)} & =C_{2 j-1}(n+j)^{1-\theta}\left[1+\frac{A}{n+j}\right]+O\left((n+j)^{-1-\theta}\right)  \\
-\rho_{2 j}^{(n)} & =s+C_{2 j}(n+j)^{\theta}\left[1+\frac{c_{1}}{c_{0}(n+j)}\right]+O\left((n+j)^{\theta-2}\right) 
+\begin{align} \label{rhojn}
+\rho_{2 j-1}^{(n)} & =C_{2 j-1}(n+j)^{1-\theta}\left[1+\frac{A}{n+j}\right]+O\left((n+j)^{-1-\theta}\right),  \\
+\rho_{2 j}^{(n)} & =s+C_{2 j}(n+j)^{\theta}\left[1+\frac{c_{1}}{c_{0}(n+j)}\right]+O\left((n+j)^{\theta-2}\right).
 \end{align}
 \end{subequations}
 
 
 \begin{proof}
-    
-(10) Используя биномиальное разложение, получаем
+Используя биномиальное разложение и выражение \eqref{rho1n}, получаем
 
-\begin{subequations}
-\begin{align}
+\begin{align*}
 & s_{n+1}-s_{n} \\
 & =c_{0} \theta(n+1)^{\theta-1}\left[1-\frac{A}{n+1}+\left(-\frac{1-\theta}{6}+\frac{c_{1}(1-\theta)}{2 c_{0} \theta} +\frac{c_{2}}{c_{0} \theta}\right) \frac{\theta-2}{(n+1)^{2}}\right] \\
-& \quad+O\left((n+1)^{\theta-3}\right)
-\end{align}
-    
-\end{subequations}
-
-
+& \quad+O\left((n+1)^{\theta-3}\right).
+\end{align*}
 Следовательно, получаем
 
 
-\begin{equation}
-\rho_{1}^{(n)}=C_{1}(n+1)^{1-\theta}\left[1+\frac{A}{n+1}+\frac{B_{1}}{(n+1)^{2}}+O\left((n+1)^{-3}\right)\right]
-\end{equation}
+\begin{equation*}
+\rho_{1}^{(n)}=C_{1}(n+1)^{1-\theta}\left[1+\frac{A}{n+1}+\frac{B_{1}}{(n+1)^{2}}+O\left((n+1)^{-3}\right)\right].
+\end{equation*}
 
 
-(12), (14). Аналогично (10).
-
-По теореме 3.4, когда $\theta$ в (9) не является целым числом, для фиксированного $k$,
+\eqref{rho2n} и \eqref{rhojn} доказываются аналогично \eqref{rho1n}.
+По теореме \eqref{rho and cn formula}, когда $\theta$ в \eqref{asymptotic_sn} не является целым числом, для фиксированного $k$,
 \end{proof}
 
 \begin{equation}
-\frac{\rho_{2 k}^{(n)}-s}{s_{n+2 k}-s} \sim C_{2 k} \quad \text { при } n \rightarrow \infty 
+\frac{\rho_{2 k}^{(n)}-s}{s_{n+2 k}-s} \sim C_{2 k} \quad \text { при } n \rightarrow \infty .
 \end{equation}
-
-
-Когда $\theta$ является отрицательным целым числом, а именно $-k$, мы имеем $C_{0} \neq 0, \ldots, C_{2 k-2} \neq 0$ и $C_{2 k}=0$. Таким образом, из теоремы 3.4 следует, что
-
-
-\begin{equation}
+Когда $\theta$ является отрицательным целым числом, а именно $-k$, мы имеем $C_{0} \neq 0, \ldots, C_{2 k-2} \neq 0$ и $C_{2 k}=0$. Таким образом, из теоремы \eqref{rho and cn formula} следует, что
+\begin{equation}\label{rho_asymp3}
 \rho_{2 k}^{(n)}=s+O\left((n+k)^{-k-2}\right), \quad \text { при } n \rightarrow \infty . 
 \end{equation}
 
 \end{theorem}
-\uline{Примечание}:
+\textit{Примечание}:
 
 \emph{$\rho$}-алгоритм --- алгоритм экстраполяции рациональной дроби,
 числитель и знаменатель которой имеют одинаковую степень. Можно
@@ -950,55 +882,182 @@ B_{2}=-\frac{c_{0} \theta(1+\theta)}{6(1-\theta)}+\frac{2 c_{1}^{2}}{c_{0} \thet
 рядов.
 \end{enumerate}
 
-\subsection*{Модификации $\rho$ -- алгоритма}
+\subsection*{Модификации $\rho$-алгоритма}
 
-\subsection{$\theta$ -- алгоритм Брезински}
+Классический $\rho$--алгоритм хорошо работает для последовательностей вида
+\eqref{asymptotic_sn} только тогда, когда параметр $\theta$ является отрицательным целым числом. 
+Для расширения применимости метода Осадой был предложен \emph{обобщённый $\rho$--алгоритм} с дополнительным параметром $\alpha$~\cite{osada1990}. 
+Его рекуррентные соотношения имеют вид
+\begin{align}
+\rho_{-1}^{(n)} & = 0, \label{eq:rho_gen_a}\\
+\rho_{0}^{(n)} & = s_n, \label{eq:rho_gen_b}\\
+\rho_{k}^{(n)} & = \rho_{k-2}^{(n+1)} + \frac{k-1-\alpha}{\rho_{k-1}^{(n+1)} - \rho_{k-1}^{(n)}}, 
+\quad k=1,2,\dots \label{eq:rho_gen_c}
+\end{align}
+и при $\alpha = -1$ он совпадает с исходным алгоритмом.
 
-\[\vartheta_{- 1}^{(n)} = 0,\ \ \vartheta_{0}^{(n)} = S_{n},\ \]
+Основные результаты анализа состоят в описании асимптотики величин $\rho_k^{(n)}$. 
+\begin{theorem}[Осада]
+Если $\rho_{2 k-1}^{(n)}$ и $\rho_{2 k}^{(n)}$ имеют следующие асимптотики:
 
-\[\vartheta_{2k + 1}^{(n)} = \vartheta_{2k - 1}^{(n + 1)} + \ \frac{1}{\Delta\vartheta_{2k}^{(n)}},\ \ \]
 
-\[\vartheta_{2k + 2}^{(n)} = \vartheta_{2k}^{(n + 1)} + \ \frac{\lbrack\Delta\vartheta_{2k}^{(n + 1)}\rbrack\lbrack\Delta\vartheta_{2k + 1}^{(n + 1)}\rbrack}{\Delta^{2}\vartheta_{2k + 1}^{(n)}},\ \ k,n = 0,\ 1,\ \ldots\]
+\begin{align*}
+\rho_{2 k-1}^{(n)} & =-\frac{1}{d_{0}^{(k-1)}}(n+k-1)^{2 k-1-\theta}\left[1+O\left((n+k-1)^{-1}\right)\right], \\
+\rho_{2 k}^{(n)} & =s+(n+k)^{\theta-2 k}\left[d_{0}^{(k)}+\frac{d_{1}^{(k)}}{n+k}+\frac{d_{2}^{(k)}}{(n+k)^{2}}+O\left((n+k)^{-3}\right)\right] ,
+\end{align*}
+
+
+$d_{0}^{(k-1)} \neq 0$ и $d_{0}^{(k)} \neq 0$, тогда
+
+
+\begin{equation*}
+\rho_{2 k+2}^{(n)}=s+(n+k+1)^{\theta-2 k-2}\left[d_{0}^{(k+1)}+O\left((n+k+1)^{-1}\right)\right],
+\end{equation*}
+где
+\begin{align*}
+d_{0}^{(k+1)}= & -\frac{d_{0}^{(k)}}{12}(2 k-\theta-1)-\frac{\left(d_{1}^{(k)}\right)^{2}}{d_{0}^{(k)}(2 k-\theta)^{2}}+\frac{2 d_{2}^{(k)}}{(2 k-\theta)(2 k-\theta+1)} \\
+& +\frac{\left(d_{0}^{(k)}\right)^{2}(2 k-\theta-1)}{d_{0}^{(k-1)}(2 k-\theta+1)}.
+\end{align*}
+
+\begin{proof}
+Доказательство теоремы содержится в работе~\cite{Osada1993}, см. теорему 13.1.
+\end{proof}
+
+
+\end{theorem}$\rho_{2k-1}^{(n)}$ и $\rho_{2k}^{(n)}$ обладают разложениями \eqref{rhojn}, а 
+переход от $\rho_{2k}^{(n)}$ к $\rho_{2k+2}^{(n)}$ подчиняется формуле \eqref{rho_asymp3}. 
+Это позволяет контролировать скорость сходимости обобщённого $\rho$--алгоритма.
+
+
+\begin{theorem}(Осада)~\cite{Osada1993}
+Если $d_{0}^{(j)} \neq 0$ для $j=0,1, \ldots, k$, тогда
+
+\begin{equation*}
+\rho_{2 k}^{(n)}=s+O\left((n+k)^{\theta-2 k}\right) .
+\end{equation*}
+
+\end{theorem}
+Таким образом, чем больше $k$, тем быстрее достигается приближение к пределу, при любых $\theta$
+
+\subsection{Псевдокод $\rho$ алгоритма}
+
+\begin{algorithm}[H]
+\caption{Алгоритм Винна ($\rho$-алгоритм)}
+\textbf{Вход:} последовательность частичных сумм $S_n$, порядок преобразования $k \geq 1$ \\
+\textbf{Выход:} ускоренная последовательность $\rho_{2k}^{(n)}$
+
+\begin{algorithmic}[1]
+\State Инициализировать: $\rho_{-1}^{(n)} \gets 0,\; \rho_{0}^{(n)} \gets S_n$ для всех $n$
+\For{$m = 0, 1, 2, \dots, k-1$}
+    \For{$n = 0, 1, 2, \dots$}
+        \If{$\rho_{2m}^{(n+1)} - \rho_{2m}^{(n)} = 0$}
+            \State \Return ``Ошибка: деление на ноль''
+        \EndIf
+        \State Вычислить
+        \[
+        \rho_{2m+1}^{(n)} = \rho_{2m-1}^{(n+1)} + 
+        \frac{1}{\rho_{2m}^{(n+1)} - \rho_{2m}^{(n)}}
+        \]
+        \State и
+        \[
+        \rho_{2m+2}^{(n)} = \rho_{2m}^{(n+1)} + 
+        \frac{S_{n+m+1} - S_{n}}{\rho_{2m+1}^{(n+1)} - \rho_{2m+1}^{(n)}}
+        \]
+    \EndFor
+\EndFor
+\State \Return $\rho_{2k}^{(0)}$
+\end{algorithmic}
+\end{algorithm}
+
+
+% \subsection{$\theta$ -- алгоритм Брезински}
+
+% \[\vartheta_{- 1}^{(n)} = 0,\ \ \vartheta_{0}^{(n)} = S_{n},\ \]
+
+% \[\vartheta_{2k + 1}^{(n)} = \vartheta_{2k - 1}^{(n + 1)} + \ \frac{1}{\Delta\vartheta_{2k}^{(n)}},\ \ \]
+
+% \[\vartheta_{2k + 2}^{(n)} = \vartheta_{2k}^{(n + 1)} + \ \frac{\lbrack\Delta\vartheta_{2k}^{(n + 1)}\rbrack\lbrack\Delta\vartheta_{2k + 1}^{(n + 1)}\rbrack}{\Delta^{2}\vartheta_{2k + 1}^{(n)}},\ \ k,n = 0,\ 1,\ \ldots\]
 
 \section{Заключение}
 
-\section{Список
-литературы}
+В работе были рассмотрены методы ускорения сходимости последовательностей и
+рядов, в частности $\rho$-алгоритм Винна. Основное внимание уделялось его
+применению к логарифмически сходящимся последовательностям, где данный метод
+демонстрирует наибольшую эффективность. 
 
-\begin{enumerate}
-\def\labelenumi{\arabic{enumi}.}
-\item
-  Brezinski, C. (1977). \emph{Acceleration de la Convergence en Analyse
-  Numerique}. Springer-Verlag.
-\item
-  Osada, Naoki. \emph{Acceleration Methods for Slowly Convergent
-  Sequences and Their Applications}. January 1993.
-\item
-  Weniger, E. J. (2003). Nonlinear Sequence Transformations for the
-  Acceleration of Convergence and the Summation of Divergent Series.
-  \emph{Computer Physics Repor}ts, 1(1), 1-123.
-\item
-  Brezinski, C., \& Redivo Zaglia, M. (2003). \emph{Extrapolation
-  Methods: Theory and Practice}. Amsterdam: North-Holland.
-\item
-  Sidi, A. (2003). \emph{Practical Extrapolation Methods: Theory and
-  Applications}. Cambridge: Cambridge University Press.
-\item
-  Van Tuyl, A. H. (1994). Acceleration of Convergence of a Family of
-  Logarithmically Convergent Sequences. \emph{Mathematics of
-  Computation}, 63(207), 229-246. American Mathematical Society.
-\item
-  Weniger, E. J. (1990). On the derivation of iterated sequence
-  transformations for the acceleration of convergence and the summation
-  of divergent series. \emph{Institut für Physikalische und Theoretische
-  Chemie, Universität Regensburg}, W-8400 Regensburg, Germany.
-\item
-  Borghi, R., \& Weniger, E. J. (2015). Convergence analysis of the
-  summation of the factorially divergent Euler series by Padé
-  approximants and the delta transformation. \emph{Dipartimento di
-  Ingegneria, Università "Roma Tre", I-00144 Rome, Italy and Institut
-  für Physikalische und Theoretische Chemie, Universität Regensburg,
-  D-93040 Regensburg, Germany.}
-\end{enumerate}
+Особое значение $\rho$-алгоритм приобретает при работе с последовательностями
+вида
+\[
+S_{n} \sim S + \sum_{i = 1}^{\infty} \delta_{i} n^{-i}, \qquad n \to \infty,
+\]
+для которых характерна медленная сходимость. Как отмечено в работе
+\cite{Weniger2003}, члены таких последовательностей обладают гладким
+поведением на бесконечности, что позволяет аппроксимировать их рациональными
+функциями $R(n)$ и использовать предел $\lim_{n \to \infty} R(n)$ как точное
+приближение к искомому пределу $S$.
+
+Применение $\rho$-алгоритма оправдано по нескольким причинам. Во-первых,
+введение интерполяционных точек $\{x_n\}$ обеспечивает гибкость в обработке
+рядов и улучшает аппроксимацию пределов. Во-вторых, использование чётных
+порядков элементов $\rho_{2k}^{(n)}$ позволяет адаптироваться к форме
+логарифмической сходимости. В-третьих, алгоритм эффективно дополняет
+$\epsilon$-алгоритм Винна, расширяя его возможности для случаев, где линейное
+ускорение оказывается недостаточным. Наконец, устойчивость к осцилляциям и
+надёжность в аппроксимации пределов делают $\rho$-алгоритм важным инструментом
+в численных вычислениях.
+
+
+Работы Наоки Осадa \cite{Osada1993} существенно дополняют классический подход, вводя обобщённые версии $\rho$-алгоритма. Эти модификации позволяют адаптировать алгоритм к более широким классам последовательностей, улучшая его точность и расширяя сферу применения. В частности, введение параметров и специальные процедуры выбора шагов позволяют компенсировать недостатки исходной схемы.
+
+\newpage
+\nocite{*}
+\printbibliography[
+heading=bibintoc,
+title={Список литературы}
+]
+% \begin{thebibliography}{99}
+
+% \bibitem{Brezinski1977}
+% C.~Brezinski.
+% \newblock \emph{Acceleration de la Convergence en Analyse Numerique}.
+% \newblock 1977, 251~p.
+
+% \bibitem{Osada1993}
+% Naoki Осада.
+% \newblock \emph{Acceleration Methods for Slowly Convergent Sequences and Their Applications}.
+% \newblock 1993, 198~p.
+
+% \bibitem{Weniger2003}
+% E.~J. Weniger.
+% \newblock Nonlinear Sequence Transformations for the Acceleration of Convergence and the Summation of Divergent Series.
+% \newblock \emph{Computer Physics Reports}, 2003, Vol.~1, No.~1, pp.~1--123.
+
+% \bibitem{Brezinski2003}
+% C.~Brezinski, M.~Redivo Zaglia.
+% \newblock \emph{Extrapolation Methods: Theory and Practice}.
+% \newblock 2003, 400~p.
+
+% \bibitem{Sidi2003}
+% A.~Sidi.
+% \newblock \emph{Practical Extrapolation Methods: Theory and Applications}.
+% \newblock 2003, 470~p.
+
+% \bibitem{VanTuyl1994}
+% A.~H. Van Tuyl.
+% \newblock Acceleration of Convergence of a Family of Logarithmically Convergent Sequences.
+% \newblock \emph{Mathematics of Computation}, 1994, Vol.~63, No.~207, pp.~229--246.
+
+% \bibitem{Weniger1990}
+% E.~J. Weniger.
+% \newblock On the derivation of iterated sequence transformations for the acceleration of convergence and the summation of divergent series.
+% \newblock Institut für Physikalische und Theoretische Chemie, Universität Regensburg, 1990, 150~p.
+
+% \bibitem{Borghi2015}
+% R.~Borghi, E.~J. Weniger.
+% \newblock Convergence analysis of the summation of the factorially divergent Euler series by Padé approximants and the delta transformation.
+% \newblock Dipartimento di Ingegneria, Università “Roma Tre”; Institut für Physikalische und Theoretische Chemie, Universität Regensburg, 2015, 320~p.
+
+% \end{thebibliography}
+
 
 \end{document}
