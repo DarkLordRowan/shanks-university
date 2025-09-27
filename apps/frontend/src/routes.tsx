@@ -2,12 +2,14 @@ import type { RouteObject } from "react-router-dom";
 import Layout from "./components/Layout";
 import Home from "./pages/Home";
 import Experiments from "./pages/Experiments";
-import Algorithms from "./pages/Algorithms";
-import Docs from "./pages/Docs";
-import NotFound from "./pages/NotFound";
-import Algorithm from "./pages/Algorithm";
-import SeriesList from "./pages/Series";
-import SeriesPage from "./pages/Series/[id]";
+import { lazy } from "react";
+
+const Algorithms = lazy(() => import("./pages/Algorithms"));
+const Algorithm = lazy(() => import("./pages/Algorithm"));
+const Docs = lazy(() => import("./pages/Docs"));
+const SeriesList = lazy(() => import("./pages/Series"));
+const SeriesPage = lazy(() => import("./pages/Series/[id]"));
+const NotFound = lazy(() => import("./pages/NotFound"));
 
 export const routes: RouteObject[] = [
     {
