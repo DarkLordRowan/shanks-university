@@ -10,7 +10,7 @@ const Home: React.FC = () => (
         <p className="text-textDim">
             Зайдите на страницу{" "}
             <Link to="/experiments" className="link">
-                эксперементов
+                экспериментов
             </Link>
             ,
         </p>
