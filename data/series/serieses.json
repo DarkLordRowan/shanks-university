@@ -121,8 +121,8 @@
     },
     {
         "id": "exp_series",
-        "title": "",
-        "formula": "",
+        "title": "e^{x}",
+        "formula": "e^{x}=\\sum_{n=0}^{\\infty}\\frac{x^{n}}{n!}",
         "document": "Rows.docx"
     },
     {
