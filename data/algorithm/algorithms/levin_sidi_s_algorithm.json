@@ -1,6 +1,9 @@
 {
-    "id": "levin_sidi_s_algorithm",
-    "title": "levin_sidi_s_algorithm",
-    "subtitle": "",
-    "authorIds": []
+  "id": "levin_sidi_s_algorithm",
+  "title": "Levin–Sidi’s s-algorithm",
+  "subtitle": "S-алгоритм Левина–Сиди",
+  "authorIds": [
+    "levin",
+    "sidi"
+  ]
 }

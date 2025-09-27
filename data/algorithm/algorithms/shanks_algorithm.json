@@ -1,6 +1,8 @@
 {
-    "id": "shanks_algorithm",
-    "title": "shanks_algorithm",
-    "subtitle": "",
-    "authorIds": []
+  "id": "shanks_algorithm",
+  "title": "Shanks’ algorithm",
+  "subtitle": "Алгоритм Шенкса",
+  "authorIds": [
+    "shanks"
+  ]
 }

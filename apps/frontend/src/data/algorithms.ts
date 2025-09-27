@@ -94,7 +94,6 @@ export const TREE: AlgNode[] = [
         id: "weniger_algorithm",
         title: "weniger_algorithm",
         subtitle: "Алгоритм Венигера (Weniger’s algorithm)",
-        document: "Weniger.pdf -> weniger_algorithm.pdf",
         authorIds: ["weniger"],
         children: [],
     },

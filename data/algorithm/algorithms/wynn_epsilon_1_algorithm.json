@@ -1,6 +1,8 @@
 {
-    "id": "wynn_epsilon_1_algorithm",
-    "title": "wynn_epsilon_1_algorithm",
-    "subtitle": "",
-    "authorIds": []
+  "id": "wynn_epsilon_1_algorithm",
+  "title": "Wynn’s ε-algorithm (first version)",
+  "subtitle": "Эпсилон-алгоритм Винна (первая версия)",
+  "authorIds": [
+    "wynn"
+  ]
 }

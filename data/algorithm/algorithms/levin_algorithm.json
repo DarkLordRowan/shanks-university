@@ -1,6 +1,8 @@
 {
-    "id": "levin_algorithm",
-    "title": "levin_algorithm",
-    "subtitle": "",
-    "authorIds": []
+  "id": "levin_algorithm",
+  "title": "Levin’s algorithm",
+  "subtitle": "Алгоритм Левина",
+  "authorIds": [
+    "levin"
+  ]
 }
