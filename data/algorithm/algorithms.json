@@ -1,0 +1,135 @@
+[
+    {
+        "id": "brezinski_theta_algorithm",
+        "title": "Brezinski’s θ-algorithm",
+        "subtitle": "ета-алгоритм Брезински",
+        "authorIds": [
+            "brezinski"
+        ]
+    },
+    {
+        "id": "chang_wynn_algorithm",
+        "title": "Chang–Wynn algorithm",
+        "subtitle": "Алгоритм Чанг–Винна",
+        "authorIds": [
+            "chang",
+            "wynn"
+        ]
+    },
+    {
+        "id": "drummond_d_algorithm",
+        "title": "Drummond’s algorithm",
+        "subtitle": "Алгоритм Драммонда",
+        "authorIds": [
+            "drummond"
+        ]
+    },
+    {
+        "id": "ford_sidi_2_algorithm",
+        "title": "Ford–Sidi's algorithm (second version)",
+        "subtitle": "Алгоритм Форд–Сиди (вторая версия)",
+        "authorIds": [
+            "ford",
+            "sidi"
+        ]
+    },
+    {
+        "id": "ford_sidi_3_algorithm",
+        "title": "Ford–Sidi's algorithm (third version)",
+        "subtitle": "Алгоритм Форд–Сиди (третья версия)",
+        "authorIds": [
+            "ford",
+            "sidi"
+        ]
+    },
+    {
+        "id": "levin_algorithm",
+        "title": "Levin’s algorithm",
+        "subtitle": "Алгоритм Левина",
+        "authorIds": [
+            "levin"
+        ]
+    },
+    {
+        "id": "levin_sidi_m_algorithm",
+        "title": "Levin–Sidi’s m-algorithm",
+        "subtitle": "M-алгоритм Левина–Сиди",
+        "authorIds": [
+            "levin",
+            "sidi"
+        ]
+    },
+    {
+        "id": "levin_sidi_s_algorithm",
+        "title": "Levin–Sidi’s s-algorithm",
+        "subtitle": "S-алгоритм Левина–Сиди",
+        "authorIds": [
+            "levin",
+            "sidi"
+        ]
+    },
+    {
+        "id": "lubkin_w_algorithm",
+        "title": "Lubkin’s W-algorithm",
+        "subtitle": "W-алгоритм Лубкина",
+        "authorIds": [
+            "lubkin"
+        ]
+    },
+    {
+        "id": "richardson_algorithm",
+        "title": "Richardson algorithm",
+        "subtitle": "Алгоритм Ричардсона",
+        "authorIds": [
+            "richardson"
+        ]
+    },
+    {
+        "id": "shanks_algorithm",
+        "title": "Shanks’ algorithm",
+        "subtitle": "Алгоритм Шенкса",
+        "authorIds": [
+            "shanks"
+        ]
+    },
+    {
+        "id": "weniger_algorithm",
+        "title": "Weniger’s algorithm",
+        "subtitle": "Алгоритм Венигера",
+        "authorIds": [
+            "weniger"
+        ]
+    },
+    {
+        "id": "wynn_epsilon_1_algorithm",
+        "title": "Wynn’s ε-algorithm (first version)",
+        "subtitle": "Эпсилон-алгоритм Винна (первая версия)",
+        "authorIds": [
+            "wynn"
+        ]
+    },
+    {
+        "id": "wynn_epsilon_2_algorithm",
+        "title": "Wynn’s ε-algorithm (second version)",
+        "subtitle": "Эпсилон-алгоритм Винна (вторая версия)",
+        "authorIds": [
+            "wynn"
+        ]
+    },
+    {
+        "id": "wynn_epsilon_3_algorithm",
+        "title": "Wynn’s ε-algorithm (third version)",
+        "subtitle": "Эпсилон-алгоритм Винна (третья версия)",
+        "authorIds": [
+            "wynn"
+        ]
+    },
+    {
+        "id": "wynn_rho_algorithm",
+        "title": "Wynn’s ρ-algorithm",
+        "subtitle": "Ро-алгоритм Винна",
+        "authorIds": [
+            "wynn"
+        ]
+    }
+]
