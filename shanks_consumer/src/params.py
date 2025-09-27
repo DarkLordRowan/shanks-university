@@ -16,7 +16,6 @@ from typing import Iterable, Any, Mapping
 from collections.abc import Callable
 
 def autowrap(x: Any) -> Iterable[Any]:
-    print(x)
     if x is not None and (isinstance(x, str) or not isinstance(x, Iterable)):
         return [x]
     if isinstance(x, dict):

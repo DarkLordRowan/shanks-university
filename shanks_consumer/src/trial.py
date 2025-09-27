@@ -5,9 +5,10 @@ from src.params import (
 
 import itertools
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, Generator, Iterable, Mapping
 from pyshanks import Arb
+import multiprocessing as mp
 
 
 def cartesian_dicts(
@@ -124,15 +125,56 @@ class Trial:
             )
         return results
 
-
 @dataclass
 class ComplexTrial:
     series_params: list[BaseSeriesParam]
     accel_params: list[BaseAccelParam]
-
-    def execute(self) -> list[TrialResult]:
+    
+    chunk_size: int = 1
+    process_count: int | None = None
+    
+    _trial_combinations: list[tuple[BaseSeriesParam, BaseAccelParam]] = field(init=False)
+    
+    def __post_init__(self):
+        self._trial_combinations = list(itertools.product(self.series_params, self.accel_params))
+        
+    @staticmethod
+    def _run_trial(series_accel: tuple[BaseSeriesParam, BaseAccelParam]):
+        return Trial(*series_accel).execute()
+    
+    def _execute_sequential(self) -> list[TrialResult]:
         results = []
-        for series, accel in itertools.product(self.series_params, self.accel_params):
+        for series, accel in self._trial_combinations:
             result = Trial(series, accel).execute()
             results += result
         return results
+    
+    def _execute_parallel(self) -> list[TrialResult]:
+        if not self._trial_combinations:
+            return []
+        
+        num_processes = self.process_count or min(mp.cpu_count(), len(self._trial_combinations))
+        
+        if num_processes == 1:
+            return self._execute_sequential()
+        
+        try:
+            with mp.Pool(processes=num_processes) as pool:
+                chunked_results = pool.imap_unordered(
+                    ComplexTrial._run_trial, 
+                    self._trial_combinations,
+                    chunksize=self.chunk_size
+                )
+                results = []
+                for trial_results in chunked_results:
+                    results.extend(trial_results)
+                
+                return results
+        except Exception as e:
+            # TODO log it pls
+            return self._execute_sequential()
+
+    def execute(self) -> list[TrialResult]:
+        if self.process_count:
+            return self._execute_parallel()
+        return self._execute_sequential()

@@ -41,6 +41,8 @@ def main():
     parser.add_argument("--results-csv", type=pathlib.Path, default=None)
     parser.add_argument("--events-json", type=pathlib.Path, default=None)
     parser.add_argument("--events-csv", type=pathlib.Path, default=None)
+    
+    parser.add_argument("--trial-process-count", type=int, default=1)
 
     parser.add_argument("--no-events", action="store_true")
     parser.add_argument("--no-plots", action="store_true")
@@ -98,7 +100,7 @@ def main():
             print(f"Loaded {len(accel_params)} acceleration parameters")
             print("Executing complex trial...")
 
-        st = ComplexTrial(series_params, accel_params)
+        st = ComplexTrial(series_params, accel_params, process_count=args.trial_process_count)
         results = st.execute()
 
         results_exporter = ExportTrialResults(results)
