@@ -1,6 +1,8 @@
 {
-    "id": "richardson_algorithm",
-    "title": "richardson_algorithm",
-    "subtitle": "",
-    "authorIds": []
+  "id": "richardson_algorithm",
+  "title": "Richardson algorithm",
+  "subtitle": "Алгоритм Ричардсона",
+  "authorIds": [
+    "richardson"
+  ]
 }

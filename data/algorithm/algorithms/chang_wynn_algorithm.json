@@ -1,6 +1,9 @@
 {
-    "id": "chang_wynn_algorithm",
-    "title": "chang_wynn_algorithm",
-    "subtitle": "",
-    "authorIds": []
+  "id": "chang_wynn_algorithm",
+  "title": "Chang–Wynn algorithm",
+  "subtitle": "Алгоритм Чанг–Винна",
+  "authorIds": [
+    "chang",
+    "wynn"
+  ]
 }

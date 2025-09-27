@@ -1,6 +1,8 @@
 {
-    "id": "lubkin_w_algorithm",
-    "title": "lubkin_w_algorithm",
-    "subtitle": "",
-    "authorIds": []
+  "id": "lubkin_w_algorithm",
+  "title": "Lubkin’s W-algorithm",
+  "subtitle": "W-алгоритм Лубкина",
+  "authorIds": [
+    "lubkin"
+  ]
 }

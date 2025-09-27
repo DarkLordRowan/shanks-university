@@ -1,6 +1,8 @@
 {
-    "id": "brezinski_theta_algorithm",
-    "title": "brezinski_theta_algorithm",
-    "subtitle": "",
-    "authorIds": []
+  "id": "brezinski_theta_algorithm",
+  "title": "Brezinski’s θ-algorithm",
+  "subtitle": "ета-алгоритм Брезински",
+  "authorIds": [
+    "brezinski"
+  ]
 }

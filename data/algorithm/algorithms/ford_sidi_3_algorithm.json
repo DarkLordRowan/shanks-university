@@ -1,6 +1,9 @@
 {
-    "id": "ford_sidi_3_algorithm",
-    "title": "ford_sidi_3_algorithm",
-    "subtitle": "",
-    "authorIds": []
+  "id": "ford_sidi_3_algorithm",
+  "title": "Ford–Sidi's algorithm (third version)",
+  "subtitle": "Алгоритм Форд–Сиди (третья версия)",
+  "authorIds": [
+    "ford",
+    "sidi"
+  ]
 }

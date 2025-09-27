@@ -1,6 +1,8 @@
 {
-    "id": "wynn_epsilon_3_algorithm",
-    "title": "wynn_epsilon_3_algorithm",
-    "subtitle": "",
-    "authorIds": []
+  "id": "wynn_epsilon_3_algorithm",
+  "title": "Wynn’s ε-algorithm (third version)",
+  "subtitle": "Эпсилон-алгоритм Винна (третья версия)",
+  "authorIds": [
+    "wynn"
+  ]
 }

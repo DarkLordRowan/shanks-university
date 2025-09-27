@@ -1,6 +1,8 @@
 {
-    "id": "weniger_algorithm",
-    "title": "weniger_algorithm",
-    "subtitle": "",
-    "authorIds": []
+  "id": "weniger_algorithm",
+  "title": "Weniger’s algorithm",
+  "subtitle": "Алгоритм Венигера",
+  "authorIds": [
+    "weniger"
+  ]
 }

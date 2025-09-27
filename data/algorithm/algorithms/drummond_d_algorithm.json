@@ -1,6 +1,8 @@
 {
-    "id": "drummond_d_algorithm",
-    "title": "drummond_d_algorithm",
-    "subtitle": "",
-    "authorIds": []
+  "id": "drummond_d_algorithm",
+  "title": "Drummond’s algorithm",
+  "subtitle": "Алгоритм Драммонда",
+  "authorIds": [
+    "drummond"
+  ]
 }
