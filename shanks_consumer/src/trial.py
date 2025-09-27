@@ -81,7 +81,7 @@ class Trial:
                 for n_value in self.accel.n_values:
                     error_n_value = n_value
                     accel_value = self.accel.executable(
-                        ready_series,
+                        ready_series,  # type: ignore
                         *[additional_args[key] for key in additional_args]
                     )(n_value, m_value)
 
@@ -132,9 +132,7 @@ class ComplexTrial:
 
     def execute(self) -> list[TrialResult]:
         results = []
-        for series, accel in itertools.product(
-            self.series_params, self.accel_params
-        ):
+        for series, accel in itertools.product(self.series_params, self.accel_params):
             result = Trial(series, accel).execute()
             results += result
         return results

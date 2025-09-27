@@ -12,8 +12,6 @@ from src.export import ExportTrialResults, ExportTrialEvents
 from src.events import TrialEventScanner
 from src.plot import save_all_plots
 
-ARB = True
-
 def main():
     parser = argparse.ArgumentParser(description="Complex Trial Analysis Tool")
 
@@ -46,6 +44,8 @@ def main():
 
     parser.add_argument("--no-events", action="store_true")
     parser.add_argument("--no-plots", action="store_true")
+    parser.add_argument("--with-arb", action="store_true")
+    
     parser.add_argument("--verbose", "-v", action="count", default=0)
 
     args = parser.parse_args()
@@ -72,18 +72,18 @@ def main():
     try:
         series_params = []
         if args.series_json.exists():
-            series_params.extend(get_series_params_from_json(args.series_json, ARB))
+            series_params.extend(get_series_params_from_json(args.series_json, args.with_arb))
         else:
             print(f"Warning: Series JSON file not found: {args.series_json}")
 
         if args.series_csv.exists():
-            series_params.extend(get_series_params_from_csv(args.series_csv, ARB))
+            series_params.extend(get_series_params_from_csv(args.series_csv, args.with_arb))
         else:
             print(f"Warning: Series CSV file not found: {args.series_csv}")
 
         accel_params = []
         if args.accel_json.exists():
-            accel_params.extend(get_accel_params_from_json(args.accel_json, ARB))
+            accel_params.extend(get_accel_params_from_json(args.accel_json, args.with_arb))
         else:
             print(
                 f"Warning: Acceleration JSON file not found: {args.accel_json}"
