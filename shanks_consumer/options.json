@@ -1,0 +1,16 @@
+{
+  "series_json": "data/example.json",
+  "series_csv": "data/example_series.csv",
+  "accel_json": "data/example.json",
+  "output_dir": "output",
+  "plots_dir": "plots",
+  "results_json": "output/output.json",
+  "results_csv": "output/output.csv",
+  "events_json": "output/events.json",
+  "events_csv": "output/events.csv",
+  "trial_process_count": 1,
+  "no_events": false,
+  "no_plots": true,
+  "with_arb": false,
+  "verbose": 0
+}

@@ -5,7 +5,7 @@ import json
 import csv
 from dataclasses import asdict, fields
 
-from shanks_consumer.src.loaders import ArbEncoder
+from src.loaders import ArbEncoder
 
 from src.trial import (
     TrialResult,
@@ -67,7 +67,7 @@ class ExportTrialResults(BaseExport):
     def as_dict(self) -> list[dict]:
         return [asdict(result) for result in self.results]
 
-    def to_csv(self, override_location: pathlib.Path):
+    def to_csv(self, override_location: pathlib.Path | None = None):
         with open(
             self._verify_location(override_location),
             mode="w",
@@ -144,7 +144,7 @@ class ExportTrialEvents(BaseExport):
     def as_dict(self) -> list[dict]:
         return [asdict(event) for event in self.events]
 
-    def to_csv(self, override_location: pathlib.Path):
+    def to_csv(self, override_location: pathlib.Path | None = None):
         with open(
             self._verify_location(override_location),
             mode="w",

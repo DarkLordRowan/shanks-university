@@ -1,8 +1,9 @@
 import argparse
 import pathlib
 import sys
+import logging
 
-from shanks_consumer.src.loaders import (
+from src.loaders import (
     get_accel_params_from_json,
     get_series_params_from_json,
     get_series_params_from_csv,
@@ -11,150 +12,195 @@ from src.trial import ComplexTrial
 from src.export import ExportTrialResults, ExportTrialEvents
 from src.events import TrialEventScanner
 from src.plot import save_all_plots
+from src.logger import setup_logging
+from src.config import TrialConfig, ConfigLoader
 
-def main():
-    parser = argparse.ArgumentParser(description="Complex Trial Analysis Tool")
 
-    parser.add_argument(
+def load_parameters(config: TrialConfig):
+    series_params = []
+    accel_params = []
+    
+    if config.series_json.exists():
+        logging.info(f"Loading series from JSON: {config.series_json}")
+        series_params.extend(get_series_params_from_json(config.series_json, config.with_arb))
+    else:
+        logging.warning(f"Series JSON file not found: {config.series_json}")
+
+    if config.series_csv.exists():
+        logging.info(f"Loading series from CSV: {config.series_csv}")
+        series_params.extend(get_series_params_from_csv(config.series_csv, config.with_arb))
+    else:
+        logging.warning(f"Series CSV file not found: {config.series_csv}")
+
+    if config.accel_json.exists():
+        logging.info(f"Loading acceleration methods from: {config.accel_json}")
+        accel_params.extend(get_accel_params_from_json(config.accel_json, config.with_arb))
+    else:
+        logging.warning(f"Acceleration JSON file not found: {config.accel_json}")
+
+    if not series_params:
+        raise ValueError("No series parameters found!")
+    
+    logging.info(f"Loaded {len(series_params)} series parameters")
+    logging.info(f"Loaded {len(accel_params)} acceleration parameters")
+    
+    return series_params, accel_params
+
+
+def execute_trial(config: TrialConfig):
+    logging.info("Starting trial execution...")
+    logging.info(f"Arb precision: {config.with_arb}")
+    logging.info(f"Process count: {config.trial_process_count}")
+    
+    series_params, accel_params = load_parameters(config)
+    
+    trial = ComplexTrial(series_params, accel_params, process_count=config.trial_process_count)
+    results = trial.execute()
+    
+    return results
+
+
+def export_results(results, config: TrialConfig):
+    logging.info("Exporting results...")
+    
+    results_exporter = ExportTrialResults(results)
+    results_exporter.to_json(config.results_json)
+    results_exporter.to_csv(config.results_csv)
+    
+    logging.info(f"Results exported to: {config.results_json}, {config.results_csv}")
+
+
+def generate_plots(results, config: TrialConfig):
+    if config.no_plots:
+        logging.info("Skipping plots as requested")
+        return
+    
+    logging.info("Generating plots...")
+    
+    save_all_plots(results, save_dir=config.plots_dir)
+    
+    logging.info(f"Plots saved to: {config.plots_dir}")
+
+
+def scan_events(results, config: TrialConfig):
+    if config.no_events:
+        logging.info("Skipping event scanning as requested")
+        return
+    
+    logging.info("Scanning for events...")
+    
+    scanner = TrialEventScanner(results)
+    events = scanner.execute()
+    
+    events_exporter = ExportTrialEvents(events)
+    events_exporter.to_json(config.events_json)
+    events_exporter.to_csv(config.events_csv)
+    
+    logging.info(f"Events exported to: {config.events_json}, {config.events_csv}")
+
+def create_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(description="pyshanks_consumer CLI")
+    
+    config_group = parser.add_argument_group("Configuration")
+    config_group.add_argument(
+        "--options-json",
+        type=pathlib.Path,
+        help="Load configuration from JSON file"
+    )
+    
+    input_group = parser.add_argument_group("Input Sources")
+    input_group.add_argument(
         "--series-json",
         type=pathlib.Path,
         default=pathlib.Path("data/example.json"),
     )
-    parser.add_argument(
+    input_group.add_argument(
         "--series-csv",
         type=pathlib.Path,
         default=pathlib.Path("data/example_series.csv"),
     )
-    parser.add_argument(
+    input_group.add_argument(
         "--accel-json",
         type=pathlib.Path,
         default=pathlib.Path("data/example.json"),
     )
-
-    parser.add_argument(
-        "--output-dir", type=pathlib.Path, default=pathlib.Path("output")
-    )
-    parser.add_argument(
-        "--plots-dir", type=pathlib.Path, default=pathlib.Path("plots")
-    )
-    parser.add_argument("--results-json", type=pathlib.Path, default=None)
-    parser.add_argument("--results-csv", type=pathlib.Path, default=None)
-    parser.add_argument("--events-json", type=pathlib.Path, default=None)
-    parser.add_argument("--events-csv", type=pathlib.Path, default=None)
     
-    parser.add_argument("--trial-process-count", type=int, default=1)
-
-    parser.add_argument("--no-events", action="store_true")
-    parser.add_argument("--no-plots", action="store_true")
-    parser.add_argument("--with-arb", action="store_true")
+    output_group = parser.add_argument_group("Output Destinations")
+    output_group.add_argument(
+        "--output-dir", 
+        type=pathlib.Path, 
+        default=pathlib.Path("output"),
+    )
+    output_group.add_argument(
+        "--plots-dir", 
+        type=pathlib.Path, 
+        default=pathlib.Path("plots"),
+    )
+    output_group.add_argument("--results-json", type=pathlib.Path, default=None)
+    output_group.add_argument("--results-csv", type=pathlib.Path, default=None)
+    output_group.add_argument("--events-json", type=pathlib.Path, default=None)
+    output_group.add_argument("--events-csv", type=pathlib.Path, default=None)
     
-    parser.add_argument("--verbose", "-v", action="count", default=0)
+    execution_group = parser.add_argument_group("Execution Settings")
+    execution_group.add_argument(
+        "--trial-process-count", 
+        type=int, 
+        default=1,
+    )
+    
+    feature_group = parser.add_argument_group("Feature Toggles")
+    feature_group.add_argument(
+        "--no-events", 
+        action="store_true",
+    )
+    feature_group.add_argument(
+        "--no-plots", 
+        action="store_true",
+    )
+    feature_group.add_argument(
+        "--with-arb", 
+        action="store_true",
+    )
+    
+    verbosity_group = parser.add_argument_group("Verbosity")
+    verbosity_group.add_argument(
+        "--verbose", "-v", 
+        action="count", 
+        default=0,
+    )
+    
+    return parser
 
+
+def main():
+    parser = create_parser()
     args = parser.parse_args()
-
-    if args.results_json is None:
-        args.results_json = args.output_dir / "output.json"
-    if args.results_csv is None:
-        args.results_csv = args.output_dir / "output.csv"
-    if args.events_json is None:
-        args.events_json = args.output_dir / "events.json"
-    if args.events_csv is None:
-        args.events_csv = args.output_dir / "events.csv"
-
-    args.output_dir.mkdir(parents=True, exist_ok=True)
-    args.plots_dir.mkdir(parents=True, exist_ok=True)
-
-    if args.verbose >= 1:
-        print(f"Series JSON: {args.series_json}")
-        print(f"Series CSV: {args.series_csv}")
-        print(f"Acceleration JSON: {args.accel_json}")
-        print(f"Output directory: {args.output_dir}")
-        print(f"Plots directory: {args.plots_dir}")
-
-    try:
-        series_params = []
-        if args.series_json.exists():
-            series_params.extend(get_series_params_from_json(args.series_json, args.with_arb))
-        else:
-            print(f"Warning: Series JSON file not found: {args.series_json}")
-
-        if args.series_csv.exists():
-            series_params.extend(get_series_params_from_csv(args.series_csv, args.with_arb))
-        else:
-            print(f"Warning: Series CSV file not found: {args.series_csv}")
-
-        accel_params = []
-        if args.accel_json.exists():
-            accel_params.extend(get_accel_params_from_json(args.accel_json, args.with_arb))
-        else:
-            print(
-                f"Warning: Acceleration JSON file not found: {args.accel_json}"
-            )
-
-        if not series_params:
-            print("Error: No series parameters found!")
+    
+    if args.options_json:
+        if not args.options_json.exists():
+            logging.error(f"Configuration file not found: {args.options_json}")
             sys.exit(1)
-
-        if args.verbose >= 1:
-            print(f"Loaded {len(series_params)} series parameters")
-            print(f"Loaded {len(accel_params)} acceleration parameters")
-            print("Executing complex trial...")
-
-        st = ComplexTrial(series_params, accel_params, process_count=args.trial_process_count)
-        results = st.execute()
-
-        results_exporter = ExportTrialResults(results)
-        results_exporter.to_json(args.results_json)
-        results_exporter.to_csv(args.results_csv)
-
-        if args.verbose >= 1:
-            print(
-                f"Results exported to: {args.results_json}, {args.results_csv}"
-            )
-
-        if not args.no_plots:
-            if args.verbose >= 1:
-                print("Saving plots...")
-            save_all_plots(results, save_dir=args.plots_dir)
-            if args.verbose >= 1:
-                print(f"Plots saved to: {args.plots_dir}")
-        else:
-            if args.verbose >= 1:
-                print("Skipping plots as requested")
-
-        if not args.no_events:
-            if args.verbose >= 1:
-                print("Scanning for events...")
-
-            scanner = TrialEventScanner(results)
-            events = scanner.execute()
-
-            events_exporter = ExportTrialEvents(events)
-            events_exporter.to_json(args.events_json)
-            events_exporter.to_csv(args.events_csv)
-
-            if args.verbose >= 1:
-                print(
-                    f"Events exported to: {args.events_json}, {args.events_csv}"
-                )
-        else:
-            if args.verbose >= 1:
-                print("Skipping event scanning as requested")
-
-        if args.verbose >= 1:
-            print("Processing completed successfully!")
-
-    except FileNotFoundError as e:
-        print(f"Error: File not found - {e}")
-        sys.exit(1)
-    except Exception as e:
-        print(f"Error during execution: {e}")
-        if args.verbose >= 2:
-            import traceback
-
-            traceback.print_exc()
-        sys.exit(1)
-
+        
+        config = ConfigLoader.from_json(args.options_json)
+        setup_logging(config.verbose)
+        logging.info(f"Loaded configuration from: {args.options_json}")
+    else:
+        config = ConfigLoader.from_args(args)
+        setup_logging(config.verbose)
+        logging.info("Reading CLI arguments")
+    
+    logging.info("Configuration Summary:")
+    logging.info(f"  Series JSON: {config.series_json}")
+    logging.info(f"  Series CSV: {config.series_csv}")
+    logging.info(f"  Acceleration JSON: {config.accel_json}")
+    logging.info(f"  Output directory: {config.output_dir}")
+    logging.info(f"  Plots directory: {config.plots_dir}")
+    
+    results = execute_trial(config)
+    export_results(results, config)
+    generate_plots(results, config)
+    scan_events(results, config)
+        
 
 if __name__ == "__main__":
     main()
