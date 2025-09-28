@@ -5,44 +5,43 @@ This module provides classes and functions to define and load parameters
 for numerical series and acceleration methods from various sources including
 JSON files, CSV files, and direct Python module references.
 """
-import inspect
-from dataclasses import dataclass
-import pathlib
-import json
-import pyshanks as ps
-import csv
-from abc import ABC, abstractmethod
-from typing import Iterable, Any, Mapping
-from collections.abc import Callable
 
-def autowrap(x: Any) -> Iterable[Any]:
-    if x is not None and (isinstance(x, str) or not isinstance(x, Iterable)):
-        return [x]
-    if isinstance(x, dict):
-        # ? consider as range value
-        return [
-            x["start"] + i * x["step"]
-            for i in range(int((x["stop"] - x["start"]) / x["step"]))
-        ]
-    return x
+from dataclasses import dataclass
+import pyshanks as ps
+from abc import ABC, abstractmethod
+from typing import Iterable, Any, Mapping, TypeAlias, ClassVar
+from collections.abc import Callable
+from functools import cached_property
+
+NumericArg: TypeAlias = float | ps.Arb
+SeriesData: TypeAlias = ps.ArraySeriesF64 | ps.ArraySeriesArb
+SeriesExc: TypeAlias = (type[ps.SeriesBaseF64] | 
+                        type[ps.SeriesBaseArb] | 
+                        Callable[..., SeriesData])
+AccelExc: TypeAlias = type[ps.SeriesAccelerationF64 | ps.SeriesAccelerationArb]
 
 class BaseSeriesParam(ABC):
     """Abstract base class for series parameter configurations."""
 
-    @property
+    @cached_property
     @abstractmethod
     def series_name(self) -> str: ...
 
-    @property
+    @cached_property
     @abstractmethod
-    def arguments(self) -> Mapping[str, Iterable[float | ps.Arb]]: ...
+    def arguments(self) -> Mapping[str, Iterable[NumericArg]]: ...
 
-    @property
+    @cached_property
     @abstractmethod
     def executable(
         self,
-    ) -> type[ps.SeriesBaseF64] | type[ps.SeriesBaseArb] | Callable[..., ps.ArraySeriesF64 | ps.ArraySeriesArb]: ...
-
+    ) -> SeriesExc: ...
+    
+    def __str__(self) -> str:
+        return f"{self.__class__.__name__}({self.series_name})"
+    
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}(series_name={self.series_name!r})"
 
 @dataclass
 class SeriesParamJSON(BaseSeriesParam):
@@ -56,17 +55,17 @@ class SeriesParamJSON(BaseSeriesParam):
     name: str
     args: Mapping[str, Iterable[float | ps.Arb]]
 
-    @property
+    @cached_property
     def arguments(self):
         """Implementation of abstract method - returns the x arguments."""
         return self.args
 
-    @property
+    @cached_property
     def series_name(self):
         """Implementation of abstract method - returns the series name."""
         return self.name
 
-    @property
+    @cached_property
     def executable(self):
         """Implementation of abstract method - gets executable from pyshanks."""
         return getattr(ps, self.name)
@@ -101,17 +100,17 @@ class SeriesParamModule(BaseSeriesParam):
         self.args = kwargs
         super().__init__()
 
-    @property
+    @cached_property
     def arguments(self):
         """Implementation of abstract method - returns the x arguments."""
         return self.args
 
-    @property
+    @cached_property
     def series_name(self):
         """Implementation of abstract method - returns caller's name."""
         return self.caller.__name__
 
-    @property
+    @cached_property
     def executable(self):
         """Implementation of abstract method - returns the caller directly."""
         return self.caller
@@ -127,21 +126,21 @@ class SeriesParamCSV(BaseSeriesParam):
         data: ArraySeries containing the numerical data from the CSV row.
     """
 
-    location: pathlib.Path
+    source_name: str
     row: int
-    data: ps.ArraySeriesF64 | ps.ArraySeriesArb
+    data: SeriesData
 
-    @property
+    @cached_property
     def arguments(self):
         """Implementation of abstract method - returns dummy arguments."""
         return {}
 
-    @property
+    @cached_property
     def series_name(self):
         """Implementation of abstract method - generates name from filename and row."""
-        return f"{self.location.name}#{self.row}"
+        return f"{self.source_name}#{self.row}"
 
-    @property
+    @cached_property
     def executable(self):
         """Implementation of abstract method - returns lambda with pre-loaded data."""
         return lambda _: self.data
@@ -150,27 +149,33 @@ class SeriesParamCSV(BaseSeriesParam):
 class BaseAccelParam(ABC):
     """Abstract base class for acceleration method parameters."""
 
-    @property
+    @cached_property
     @abstractmethod
     def accel_name(self) -> str: ...
 
-    @property
+    @cached_property
     @abstractmethod
     def executable(
         self,
-    ) -> type[ps.SeriesAccelerationF64 | ps.SeriesAccelerationArb]: ...
+    ) -> AccelExc: ...
 
-    @property
+    @cached_property
     @abstractmethod
     def n_values(self) -> Iterable[int]: ...
 
-    @property
+    @cached_property
     @abstractmethod
     def m_values(self) -> Iterable[int]: ...
 
-    @property
+    @cached_property
     @abstractmethod
     def additional_args(self) -> dict[str, Iterable[Any]]: ...
+    
+    def __str__(self) -> str:
+        return f"{self.__class__.__name__}({self.accel_name})"
+    
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}(accel_name={self.accel_name!r})"
 
 
 @dataclass
@@ -185,12 +190,12 @@ class StandardAccelParam(BaseAccelParam):
     n: Iterable[int]
     m: Iterable[int]
 
-    @property
+    @cached_property
     def n_values(self):
         """Implementation of abstract method - returns n values."""
         return self.n
 
-    @property
+    @cached_property
     def m_values(self):
         """Implementation of abstract method - returns m values."""
         return self.m
@@ -215,32 +220,33 @@ class AccelParamJSON(StandardAccelParam):
     def __post_init__(self):
         """Post-initialization processing for complex argument types."""
         self.expanded_init_args = {}
-        if self.init_args:
-            for key, value in self.init_args.items():
-                value = autowrap(value)
-                def value_as_variants_of(of):
-                    res = []
-                    for v in value:
-                        res.append(getattr(of, v))
-                    return res
-                if key == "remainder":
-                    self.expanded_init_args[key] = value_as_variants_of(ps.RemainderType)
-                elif key == "numerator":
-                    self.expanded_init_args[key] = value_as_variants_of(ps.NumeratorType)
-                else:
-                    self.expanded_init_args[key] = autowrap(value)
+        
+        if not self.init_args:
+            return
+            
+        ENUM_MAPPINGS = {
+            "remainder": ps.RemainderType,
+            "numerator": ps.NumeratorType,
+        }
+        
+        for key, value in self.init_args.items():
+            if key in ENUM_MAPPINGS:
+                enum_type = ENUM_MAPPINGS[key]
+                self.expanded_init_args[key] = [getattr(enum_type, str(v)) for v in value]
+            else:
+                self.expanded_init_args[key] = value
 
-    @property
+    @cached_property
     def accel_name(self):
         """Implementation of abstract method - returns method name."""
         return self.name
 
-    @property
+    @cached_property
     def executable(self):
         """Implementation of abstract method - gets executable from pyshanks."""
         return getattr(ps, self.name)
 
-    @property
+    @cached_property
     def additional_args(self):
         """Implementation of abstract method - returns expanded init args."""
         return self.expanded_init_args
@@ -255,7 +261,7 @@ class AccelParamModule(StandardAccelParam):
 
     def __init__(
         self,
-        caller: type[ps.SeriesAccelerationF64 | ps.SeriesAccelerationArb],
+        caller: AccelExc,
         n: Iterable[int],
         m: Iterable[int],
         **kwargs,
@@ -272,183 +278,19 @@ class AccelParamModule(StandardAccelParam):
         self.init_args = kwargs
         super().__init__(n, m)
 
-    @property
+    @cached_property
     def accel_name(self):
         """Implementation of abstract method - returns caller's name."""
         return self.caller.__name__
 
-    @property
+    @cached_property
     def executable(self):
         """Implementation of abstract method - returns the caller directly."""
         return self.caller
 
-    @property
+    @cached_property
     def additional_args(self):
         """Implementation of abstract method - returns init args or empty dict."""
         return self.init_args or {}
 
-class ArbEncoder(json.JSONEncoder):
-    def default(self, o):
-        if isinstance(o, ps.Arb):
-            return str(o)
-        return super().default(o)
 
-class ArbDecoder(json.JSONDecoder):
-    def __init__(self, *args, **kwargs):
-        super().__init__(
-            parse_float=self._parse_number,
-            parse_int=self._parse_number,
-            *args,
-            **kwargs,
-        )
-    @staticmethod
-    def _parse_number(value):
-        """Convert a JSON numeric literal to a high‑precision FP instance."""
-        return ps.Arb(str(value))
-
-
-def get_series_params_from_json(
-    json_location: pathlib.Path,
-    arb: bool
-) -> list[SeriesParamJSON]:
-    """Load series parameters from a JSON configuration file.
-
-    Args:
-        json_location: Path to the JSON configuration file.
-
-    Returns:
-        List of SeriesParamJSON objects configured from the JSON data.
-
-    Raises:
-        FileNotFoundError: If the JSON file doesn't exist.
-        JSONDecodeError: If the JSON file is malformed.
-    """
-    with open(json_location, encoding="utf-8") as f:
-        data = json.load(f, cls=ArbDecoder) if arb else json.load(f)
-    return load_series_params_from_data(data, arb)
-
-
-def load_series_params_from_data(
-    data: dict,
-    arb: bool,
-) -> list[SeriesParamJSON]:
-    series_list: list[SeriesParamJSON] = []
-    for series_data in data["series"]:
-        args = series_data.get("args", {})
-        if not isinstance(args, dict):
-            args = {"x": autowrap(args) }
-        else:
-            args = {
-                str(key): autowrap(value)
-                for key, value in args.items()
-            }
-        series_list.append(
-            SeriesParamJSON(name=series_data.get("name")+("Arb" if arb else "F64"), args=args)
-        )
-    return series_list
-
-
-def get_accel_params_from_json(
-    json_location: pathlib.Path,
-    arb: bool,
-) -> list[AccelParamJSON]:
-    """Load acceleration parameters from a JSON configuration file.
-
-    Args:
-        json_location: Path to the JSON configuration file.
-
-    Returns:
-        List of AccelParamJSON objects configured from the JSON data.
-
-    Raises:
-        FileNotFoundError: If the JSON file doesn't exist.
-        JSONDecodeError: If the JSON file is malformed.
-    """
-    with open(json_location, encoding="utf-8") as f:
-        data = json.load(f, cls=ArbDecoder) if arb else json.load(f)
-    return load_accel_params_from_data(data, arb)
-
-
-def load_accel_params_from_data(
-    data: dict,
-    arb: bool,
-) -> list[AccelParamJSON]:
-    methods_list: list[AccelParamJSON] = []
-    for method_data in data["methods"]:
-        n_value = autowrap(method_data["n"])
-        m_value = autowrap(method_data["m"])
-        methods_list.append(
-            AccelParamJSON(
-                name=method_data["name"] + ("Arb" if arb else "F64"),
-                n=n_value,
-                m=m_value,
-                init_args=method_data.get("args", {}),
-            )
-        )
-    return methods_list
-
-
-def get_series_params_from_csv(
-    csv_location: pathlib.Path,
-    arb: bool
-) -> Iterable[SeriesParamCSV]:
-    """Load series parameters from a CSV file.
-
-    Each row in the CSV file becomes a separate series parameter.
-
-    Args:
-        csv_location: Path to the CSV file.
-
-    Returns:
-        Iterable of SeriesParamCSV objects, one for each row in the CSV.
-
-    Raises:
-        FileNotFoundError: If the CSV file doesn't exist.
-    """
-    with open(csv_location, encoding="utf-8") as f:
-        return [
-            SeriesParamCSV(
-                location=csv_location,
-                row=i,
-                data=ps.ArraySeriesArb(row) if arb else ps.ArraySeriesF64(
-                    list(map(float, row))
-                ),
-            )
-            for i, row in enumerate(csv.reader(f), 1)
-        ]
-
-
-def _is_concrete_subclass(cls: type, base: type) -> bool:
-    """
-    Return ``True`` if *cls* is a non‑abstract subclass of *base*.
-    """
-    return (
-        inspect.isclass(cls)
-        and issubclass(cls, base)
-        and cls is not base
-        and not inspect.isabstract(cls)
-    )
-
-
-def all_accel(
-    n: int | Iterable[int],
-    m: int | Iterable[int],
-    arb: bool,
-    extra_args: dict[str, Any] | None = None,
-) -> list[BaseAccelParam]:
-    extra_args = extra_args or {}
-
-    accel_params: list[BaseAccelParam] = []
-
-    for _, cls in inspect.getmembers(ps, inspect.isclass):
-        if _is_concrete_subclass(cls, ps.SeriesAccelerationArb if arb else ps.SeriesAccelerationF64):
-            kwargs: dict[str, Any] = dict(extra_args.get(cls.__name__, {}))
-            accel_params.append(
-                AccelParamModule(
-                    caller=cls,
-                    n=autowrap(n),
-                    m=autowrap(m),
-                    **kwargs,
-                )
-            )
-    return accel_params
