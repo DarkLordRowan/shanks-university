@@ -292,5 +292,3 @@ class AccelParamModule(StandardAccelParam):
     def additional_args(self):
         """Implementation of abstract method - returns init args or empty dict."""
         return self.init_args or {}
-
-

@@ -5,7 +5,7 @@ import json
 import csv
 from dataclasses import asdict, fields
 
-from src.param_utils import ArbEncoder
+from shanks_consumer.src.loaders import ArbEncoder
 
 from src.trial import (
     TrialResult,

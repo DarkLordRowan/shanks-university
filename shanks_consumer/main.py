@@ -2,7 +2,7 @@ import argparse
 import pathlib
 import sys
 
-from src.param_utils import (
+from shanks_consumer.src.loaders import (
     get_accel_params_from_json,
     get_series_params_from_json,
     get_series_params_from_csv,
