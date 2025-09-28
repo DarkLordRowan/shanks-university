@@ -10,12 +10,6 @@ import pyshanks as ps
 
 from src.params import SeriesParamJSON, AccelParamJSON, SeriesParamCSV
 
-@dataclass
-class ConfigOptions:
-    arb_precision: bool = False
-    encoding: str = "utf-8"
-    strict_validation: bool = True
-
 class JSONConfigHandler:
     class ArbEncoder(json.JSONEncoder):
         def default(self, o):
@@ -39,26 +33,26 @@ class JSONConfigHandler:
             return ps.Arb(str(value))
     
     @classmethod
-    def load_config(cls, json_location: pathlib.Path, arb: bool) -> dict:
+    def load_config(cls, json_location: pathlib.Path, arb: bool = False) -> dict:
         with open(json_location, encoding="utf-8") as f:
             return json.load(f, cls=cls.ArbDecoder) if arb else json.load(f)
 
 
 class SeriesParamLoader:
     @staticmethod
-    def from_json(json_location: pathlib.Path, arb: bool) -> list[SeriesParamJSON]:
+    def from_json(json_location: pathlib.Path, arb: bool = False) -> list[SeriesParamJSON]:
         data = JSONConfigHandler.load_config(json_location, arb)
         return SeriesParamLoader._from_data(data, arb)
     
     @staticmethod
-    def _from_data(data: dict, arb: bool) -> list[SeriesParamJSON]:
+    def _from_data(data: dict, arb: bool = False) -> list[SeriesParamJSON]:
         return [
             SeriesParamLoader._create_series_param(series_data, arb)
             for series_data in data["series"]
         ]
     
     @staticmethod
-    def _create_series_param(series_data: dict, arb: bool) -> SeriesParamJSON:
+    def _create_series_param(series_data: dict, arb: bool = False) -> SeriesParamJSON:
         name_suffix = "Arb" if arb else "F64"
         return SeriesParamJSON(
             name=series_data["name"] + name_suffix, 
@@ -72,13 +66,13 @@ class SeriesParamLoader:
         return {str(key): autowrap(value) for key, value in args.items()}
     
     @staticmethod
-    def from_csv(csv_location: pathlib.Path, arb: bool) -> Iterator[SeriesParamCSV]:
+    def from_csv(csv_location: pathlib.Path, arb: bool = False) -> Iterator[SeriesParamCSV]:
         with open(csv_location, encoding="utf-8") as f:
             for i, row in enumerate(csv.reader(f), 1):
                 yield SeriesParamLoader._create_csv_series(csv_location.name, i, row, arb)
     
     @staticmethod
-    def _create_csv_series(source_name: str, row_num: int, row_data: list, arb: bool) -> SeriesParamCSV:
+    def _create_csv_series(source_name: str, row_num: int, row_data: list, arb: bool = False) -> SeriesParamCSV:
         data = (
             ps.ArraySeriesArb(row_data) 
             if arb else 
@@ -89,12 +83,12 @@ class SeriesParamLoader:
 
 class AccelParamLoader:
     @staticmethod
-    def from_json(json_location: pathlib.Path, arb: bool) -> list[AccelParamJSON]:
+    def from_json(json_location: pathlib.Path, arb: bool = False) -> list[AccelParamJSON]:
         data = JSONConfigHandler.load_config(json_location, arb)
         return AccelParamLoader._from_data(data, arb)
     
     @staticmethod
-    def _from_data(data: dict, arb: bool) -> list[AccelParamJSON]:
+    def _from_data(data: dict, arb: bool = False) -> list[AccelParamJSON]:
         methods_list = []
         for method_data in data["methods"]:
             methods_list.append(
@@ -103,7 +97,7 @@ class AccelParamLoader:
         return methods_list
     
     @staticmethod
-    def _create_accel_param(method_data: dict, arb: bool) -> AccelParamJSON:
+    def _create_accel_param(method_data: dict, arb: bool = False) -> AccelParamJSON:
         name_suffix = "Arb" if arb else "F64"
         init_args = {
             key: autowrap(value) 

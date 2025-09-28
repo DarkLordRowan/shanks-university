@@ -4,9 +4,8 @@ import sys
 import logging
 
 from src.loaders import (
-    get_accel_params_from_json,
-    get_series_params_from_json,
-    get_series_params_from_csv,
+    AccelParamLoader,
+    SeriesParamLoader
 )
 from src.trial import ComplexTrial
 from src.export import ExportTrialResults, ExportTrialEvents
@@ -22,19 +21,19 @@ def load_parameters(config: TrialConfig):
     
     if config.series_json.exists():
         logging.info(f"Loading series from JSON: {config.series_json}")
-        series_params.extend(get_series_params_from_json(config.series_json, config.with_arb))
+        series_params.extend(SeriesParamLoader.from_json(config.series_json, config.with_arb))
     else:
         logging.warning(f"Series JSON file not found: {config.series_json}")
 
     if config.series_csv.exists():
         logging.info(f"Loading series from CSV: {config.series_csv}")
-        series_params.extend(get_series_params_from_csv(config.series_csv, config.with_arb))
+        series_params.extend(SeriesParamLoader.from_csv(config.series_csv, config.with_arb))
     else:
         logging.warning(f"Series CSV file not found: {config.series_csv}")
 
     if config.accel_json.exists():
         logging.info(f"Loading acceleration methods from: {config.accel_json}")
-        accel_params.extend(get_accel_params_from_json(config.accel_json, config.with_arb))
+        accel_params.extend(AccelParamLoader.from_json(config.accel_json, config.with_arb))
     else:
         logging.warning(f"Acceleration JSON file not found: {config.accel_json}")
 

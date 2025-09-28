@@ -6,7 +6,6 @@ import json
 
 @dataclass
 class TrialConfig:
-    
     series_json: pathlib.Path = field(default=pathlib.Path("data/example.json"))
     series_csv: pathlib.Path = field(default=pathlib.Path("data/example_series.csv"))
     accel_json: pathlib.Path = field(default=pathlib.Path("data/example.json"))
