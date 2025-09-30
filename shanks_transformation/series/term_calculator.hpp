@@ -1,14 +1,11 @@
 #pragma once
 
-#include <math.h>
-#include <cmath>
 #include <concepts>
 #include <string>
 #include <numbers>
 
 #include "../custom_concepts.hpp"
 
-using std::isfinite;
 using std::to_string;
 
 static const float_precision arbPI = float_precision(_float_table(_PI, float_precision_ctrl.precision()));
@@ -145,6 +142,7 @@ template<std::unsigned_integral K>
 [[nodiscard]] constexpr const K double_fact(K n){
 	if (n == 0 || n == 1)
 		return 1;
+
 	return n * double_fact(n - 2);
 }
 
@@ -155,10 +153,11 @@ template<std::unsigned_integral K>
 */
 template<AcceptedLike T, std::unsigned_integral K>
 [[nodiscard]] constexpr const T binomial_coefficient(const T n, const K k){
-	T b_c = static_cast<T>(1);
-	for (K i = 0; i < k; ++i)
-		b_c *= (n - static_cast<T>(i)) / static_cast<T>(i + 1);
-	return b_c;
+	T res = static_cast<T>(1);
+	for (K i = 0; i < k; ++i){
+		res *= (n - static_cast<T>(i)) / static_cast<T>(i + 1);
+	}
+	return res;
 }
 
 /**

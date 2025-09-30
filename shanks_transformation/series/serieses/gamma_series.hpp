@@ -83,6 +83,17 @@ gamma_series<T, K>::gamma_series(const SeriesConfig<T,K>& config) {
 
 template <AcceptedLike T, std::unsigned_integral K>
 constexpr T gamma_series<T, K>::calculateTerm(K n) const {
-	const T n_1 = static_cast<T>(n+1);
-    return n_1 * pow(this->t, static_cast<T>(n)) * tgamma(n_1); // (102.1) [Rows.pdf]
+	if constexpr(std::is_same<T, float_precision>::value || std::is_floating_point<T>::value){
+		return static_cast<T>(n + 1) * pow(this->t, static_cast<T>(n)) * tgamma(t + static_cast<T>(n+1)); // (102.1) [Rows.pdf]
+	} else if constexpr(std::is_same<T, complex_precision<float_precision>>::value) {
+		//using approximation for gamma function from https://en.wikipedia.org/wiki/Stirling%27s_approximation
+		const T z = t + static_cast<T>(n + 1);
+		T result = static_cast<T>(n + 1) * pow(this->t, static_cast<T>(n));
+		result *= sqrt(static_cast<T>(2) * static_cast<T>(arbPI) / z) * pow( 
+			static_cast<T>(1/std::numbers::e) * (z + static_cast<T>(1)/(static_cast<T>(12)*z - static_cast<T>(0.1)/z)),
+			z
+		); //using Gego Nemes approximation
+		return result;
+	}
+    
 }

@@ -31,14 +31,14 @@ template <AcceptedLike T, std::unsigned_integral K, typename transform_type>
 void cmp_sum_and_transform(const K n, const K order, std::shared_ptr<series_base<T,K>> series, const transform_type& test)
 {
 	test->print_info();
-	for (K i = 1; i <= n; ++i) {
+	for (K i = 0; i <= order; ++i) {
 		try 
 		{
 			std::cout << "Sum of algo : " << series->get_sum() << '\n';
-			std::cout << "S_" << i << " : " << series->Sn(i) << '\n';
-			std::cout << "T_" << i << " of order " << order << " : " << test->operator()(i, order) << '\n';
-			std::cout << "T_" << i << " of order " << order << " - S_" << i
-			<< " : " << test->operator()(i, order) - series->Sn(i) << '\n';
+			std::cout << "S_" << i << " : " << series->Sn(n + i) << '\n';
+			std::cout << "T_" << n << " of order " << i << " : " << test->operator()(n, i) << '\n';
+			std::cout << "T_" << n << " of order " << i << " - S_" << i
+			<< " : " << test->operator()(n, i) - series->Sn(n + i) << '\n';
 
 		}
 		catch (std::domain_error& e)

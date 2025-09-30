@@ -89,8 +89,8 @@ public:
 	// Стал:
 	explicit wynn_rho_algorithm(
 		std::shared_ptr<series_base<T,K>> series,
-		numerator_type variant = numerator_type::rho_variant,
-		const T& gamma_ = static_cast<T>(1), // Передача по константной ссылке
+		numerator_type variant = numerator_type::generalized_variant,
+		const T& gamma_ = static_cast<T>(-1), // Передача по константной ссылке
 		const T& RHO_ = static_cast<T>(0)    // Передача по константной ссылке
 	);
 
@@ -119,7 +119,7 @@ public:
 	T operator()(const K n, const K order) override { 
 
 		if(order & 1){
-			throw std::domain_error("order is odd");
+			return calculate(n + 1, order);
 		}
 
 		return calculate(n, order); 
@@ -156,7 +156,7 @@ wynn_rho_algorithm<T, K>::wynn_rho_algorithm(
 			numerator.reset(new gamma_rho_transform<T, K>());
 			break;
 		default:
-			numerator.reset(new rho_transform<T, K>());
+			numerator.reset(new generilized_transform<T, K>());
 	}
 }
 
@@ -178,8 +178,9 @@ inline T wynn_rho_algorithm<T, K>::calculate(const K n, K order) { //const int o
     ); //vector for theta_(2n), in the beginning it is theta_(-1) which is zero for all i
 
     // init theta_(0)
-    for(K j = static_cast<K>(0); j < base_size; ++j)
+    for(K j = static_cast<K>(0); j < base_size; ++j){
         rho_even[j] = this->series->Sn(n + j);
+	}
 
 
     K j1, j2;
@@ -194,10 +195,10 @@ inline T wynn_rho_algorithm<T, K>::calculate(const K n, K order) { //const int o
 
             delta = rho_even[j1] - rho_even[j];
 
-			rho_odd[j] = rho_odd[j1] + numerator->operator()(n+j, level * 2 - 1, this->series.get(), RHO, gamma) / delta;
-
+			rho_odd[j] = rho_odd[j1] + numerator->operator()(n+j, level * 2 - 1, this->series.get(), gamma, RHO) / delta;
 
         }
+
 
 		// transform even vector
         for(K j = static_cast<K>(0); j < base_size - level; ++j){
@@ -206,7 +207,7 @@ inline T wynn_rho_algorithm<T, K>::calculate(const K n, K order) { //const int o
 
             delta = rho_odd[j1] - rho_odd[j];
             
-			rho_even[j] = rho_even[j1] + numerator->operator()(n+j, level * 2, this->series.get(), RHO, gamma) / delta;
+			rho_even[j] = rho_even[j1] + numerator->operator()(n+j, level * 2, this->series.get(), gamma, RHO) / delta;
 
         }
 

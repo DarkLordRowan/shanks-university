@@ -70,9 +70,28 @@ one_div_sqrt2_sin_xdivsqrt2_series<T, K>::one_div_sqrt2_sin_xdivsqrt2_series(con
 
 template <AcceptedLike T, std::unsigned_integral K>
 constexpr T one_div_sqrt2_sin_xdivsqrt2_series<T, K>::calculateTerm(K n) const {
-	#ifdef _WIN32
-        return static_cast<T>(pow(-1, n / 2) * _jn(static_cast<int>(2 * n + 1), this->x)); // (96.1) [Rows.pdf]
-    #else
-        return static_cast<T>(pow(-1, n / 2) * jn(static_cast<T>(2 * n + 1), this->x));
-    #endif
+
+	if constexpr (std::is_floating_point<T>::value || std::is_same<T, float_precision>::value){
+
+		//float_precision could be converted to double
+		#ifdef _WIN32
+    	    return static_cast<T>(pow(-1, n / 2) * _jn(static_cast<int>(2 * n + 1), this->x)); // (96.1) [Rows.pdf]
+    	#else
+    	    return static_cast<T>(pow(-1, n / 2) * jn(static_cast<T>(2 * n + 1), this->x));
+    	#endif
+
+	} else if constexpr ( std::is_same<T, complex_precision<float_precision>>::value){
+
+		T term = pow(this->x * static_cast<T>(0.5), static_cast<T>(2*n + 1))/static_cast<T>(fact<K>(2*n + 1));
+		T result = term;
+		K k=1;
+
+		while (abs(term) > float_precision(1e-16)){
+			term *= static_cast<T>(-0.25) * this->x * this->x / static_cast<T>(k * (2*n + 1 + k));
+			result += term;
+			++k;
+		}
+
+		return static_cast<T>(pow(-1, n / 2)) * result;
+	}
 }

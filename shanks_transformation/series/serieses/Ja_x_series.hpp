@@ -1,6 +1,8 @@
 #pragma once
 
 #include "../term_calculator.hpp"
+#include <cmath>
+#include <type_traits>
 
 /**
 * @brief Maclaurin series of hyperbolic cosine
@@ -73,5 +75,18 @@ Ja_x_series<T, K>::Ja_x_series(const SeriesConfig<T,K>& config) {
 
 template <AcceptedLike T, std::unsigned_integral K>
 constexpr T Ja_x_series<T, K>::calculateTerm(K n) const {
-	return minus_one_raised_to_power_n<T,K>(n) * pow(this->x * static_cast <T>(0.5), static_cast<T>(2 * n) + this->a) / (static_cast<T>(fact<K>(n)) * tgamma(this->a + static_cast<T>(n + 1))); // (95.1) [Rows.pdf]
+	if constexpr(std::is_same<T, float_precision>::value || std::is_floating_point<T>::value){
+		return minus_one_raised_to_power_n<T,K>(n) * pow(this->x * static_cast <T>(0.5), static_cast<T>(2 * n) + this->a) / 
+		(static_cast<T>(fact<K>(n)) * tgamma(this->a + static_cast<T>(n + 1))); // (95.1) [Rows.pdf]
+	} else if constexpr(std::is_same<T, complex_precision<float_precision>>::value) {
+		//using approximation for gamma function from https://en.wikipedia.org/wiki/Stirling%27s_approximation
+		const T z = this->a + static_cast<T>(n + 1);
+		T result = minus_one_raised_to_power_n<T,K>(n) * pow(this->x * static_cast <T>(0.5), static_cast<T>(2 * n) + this->a);
+		result /= static_cast<T>(fact<K>(n));
+		result /= sqrt(static_cast<T>(2) * static_cast<T>(arbPI) / z) * pow( 
+			static_cast<T>(1/std::numbers::e) * (z + static_cast<T>(1)/(static_cast<T>(12)*z - static_cast<T>(0.1)/z)),
+			z
+		); //using Gego Nemes approximation
+		return result;
+	}
 }

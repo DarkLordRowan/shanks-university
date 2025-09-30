@@ -190,7 +190,7 @@ inline T levin_algorithm<T, K>::calc_result(K n, K order) {
 	using std::isfinite;
 
 	T numerator = static_cast<T>(0), denominator = static_cast<T>(0);
-	T C_njk, S_nj, g_n, rest;
+	T C_njk, g_n, rest;
 
 	// For theory, see: Levin (1973), Eq. (2.3)
 	// T_{k,n} = [∑_{j=0}^k (-1)^j C(k,j) (n+j+1)^{k-1}/(n+k+1)^{k-1} S_{n+j}/R_{n+j}] /
@@ -201,19 +201,18 @@ inline T levin_algorithm<T, K>::calc_result(K n, K order) {
 		rest *= binomial_coefficient<T,K>(static_cast<T>(order), j);
 
 		// Compute (n+j+1)^{k-1}/(n+k+1)^{k-1}
-		C_njk  = static_cast<T>(pow(n + j     + static_cast<K>(1), order - static_cast<K>(1)));
-		C_njk /= static_cast<T>(pow(n + order + static_cast<K>(1), order - static_cast<K>(1)));
+		C_njk  = pow(
+			(beta + static_cast<T>(n + j)) / (beta + static_cast<T>(n + order)),
+			static_cast<T>(order - 1)
+		);
 
-		// Get partial sum S_{n+j}
-		S_nj = this->series->Sn(n + j);
 
 		// Compute 1/R_{n+j} where R_{n+j} is the remainder estimate
-		g_n = static_cast<T>(1);
-		g_n/= remainder->operator()(
-            n + j, 
+		g_n = remainder->operator()(
+            n, 
             j, 
             this->series.get(),
-            (variant == remainder_type::u_variant ? beta : static_cast<T>(1))
+            (variant == remainder_type::u_variant ? beta + static_cast<T>(n + j) : static_cast<T>(1))
         );
 
 		// Combine all terms
@@ -221,7 +220,7 @@ inline T levin_algorithm<T, K>::calc_result(K n, K order) {
 		rest *= g_n;
 
 		denominator += rest;
-		  numerator += rest * S_nj;
+		  numerator += rest * this->series->Sn(n + j);
 	}
 
 	numerator /= denominator;
@@ -250,29 +249,26 @@ inline T levin_algorithm<T, K>::calc_result_rec(K n, K order) {
             n, 
             i, 
             this->series.get(),
-            (variant == remainder_type::u_variant ? beta : static_cast<T>(1))
+            (variant == remainder_type::u_variant ? beta + static_cast<T>(n + i): static_cast<T>(1))
         );
 
 		Num[i] = this->series->Sn(n+i) * Denom[i];
 	}
 
 	// Recursive computation using the E-algorithm scheme
-	T scale, nj;
-	const T order1 = static_cast<T>(order - static_cast<K>(1));
+	T scale;
 
 	for (K i = static_cast<K>(1); i <= order; ++i)
 		for (K j = static_cast<K>(0); j <= order - i; ++j) {
 
-			nj = static_cast<T>(n + j);
-
 			// For theory, see: Brezinski's E-algorithm recurrence
 			// E_k^{(n)} = E_{k-1}^{(n)} - g_{k-1,k}^{(n)} * ΔE_{k-1}^{(n)} / Δg_{k-1,k}^{(n)}
-			scale = -(beta + static_cast<T>(n));
-			scale*= pow(static_cast<T>(1) - static_cast<T>(1) / (beta + nj + static_cast<T>(1)), order1);
-			scale/=(beta + nj + static_cast<T>(1));
+			scale = static_cast<T>(-1)*(beta + static_cast<T>(n + j)) / (beta  + static_cast<T>(n + i - 1 + j));
+			scale*= pow(static_cast<T>(1) - static_cast<T>(1) / (beta + static_cast<T>(i + n + j)), static_cast<T>(i - 1));
 
-			Denom[j] = fma(-scale,Denom[j],Denom[j+static_cast<K>(1)]);
-              Num[j] = fma(-scale,  Num[j],  Num[j+static_cast<K>(1)]);
+
+			Denom[j] = fma(scale,Denom[j],Denom[j+static_cast<K>(1)]);
+              Num[j] = fma(scale,  Num[j],  Num[j+static_cast<K>(1)]);
 		}
 
 	Num[0] /= Denom[0];
@@ -287,9 +283,6 @@ template <AcceptedLike T, std::unsigned_integral K>
 T levin_algorithm<T, K>::operator()(const K n, const K order) {
 
 	using std::isfinite;
-
-	if (n == static_cast<K>(0)) 
-		throw std::domain_error("n = 0 in the input");
 
 	if (order == static_cast<K>(0)) return this->series->Sn(n);
 

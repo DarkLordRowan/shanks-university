@@ -79,8 +79,7 @@ Riemann_zeta_func_series<T, K>::Riemann_zeta_func_series(const SeriesConfig<T,K>
 
 template <AcceptedLike T, std::unsigned_integral K>
 constexpr T Riemann_zeta_func_series<T, K>::calculateTerm(K n) const {
-	if (n == 0)
-        return static_cast<T>(0);
 
+	if (n == 0) return static_cast<T>(0);
     return static_cast<T>(1)/ pow(static_cast<T>(n), this->x); // (66.2) [Rows.pdf]
 }

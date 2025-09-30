@@ -246,13 +246,9 @@ enum series_id_t {
 #include "serieses/Incomplete_Gamma_func_series.hpp"
 #include "serieses/inverse_1mx_series.hpp"
 #include "serieses/inverse_sqrt_1m4x_series.hpp"
-
-#ifndef USE_COMPLEX
-	#include "serieses/gamma_series.hpp"
-	#include "serieses/Ja_x_series.hpp"
-	#include "serieses/one_div_sqrt2_sin_xdivsqrt2_series.hpp"
-#endif
-
+#include "serieses/gamma_series.hpp"
+#include "serieses/Ja_x_series.hpp" //using approximation for gamma func not libs
+#include "serieses/one_div_sqrt2_sin_xdivsqrt2_series.hpp" // calculating straightforward bessel func for complex
 #include "serieses/K_x_series.hpp"
 #include "serieses/Lambert_W_func_series.hpp"
 #include "serieses/ln1_m_x2_series.hpp"
