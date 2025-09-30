@@ -160,7 +160,7 @@ inline T levin_sidi_s_algorithm<T, K>::calc_result(K n, K order) {
         rest *= remainder->operator()(n,        // Multiply by remainder term 1/R_{n+j}
             j, 
             this->series.get(),
-             (variant == remainder_type::u_variant ? beta : static_cast<T>(1))
+             (variant == remainder_type::u_variant ? beta + static_cast<T>(n + j): static_cast<T>(1))
             );
 
         // Accumulate numerator and denominator
@@ -191,7 +191,7 @@ inline T levin_sidi_s_algorithm<T, K>::calc_result_rec(K n, K order) {
             n, 
             i, 
             this->series.get(),
-            (variant == remainder_type::u_variant ? beta : static_cast<T>(1))
+            (variant == remainder_type::u_variant ? beta + + static_cast<T>(n + i): static_cast<T>(1))
         );
 
         Num[i] = this->series->Sn(n + i); Num[i] *= Denom[i];

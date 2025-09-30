@@ -26,9 +26,9 @@ int main()
 	while(true){
 		try
 		{
-			set_global_precision(100);
-			//main_testing_function<complex_precision<float_precision>, unsigned long long int>();
-			main_testing_function<float_precision, unsigned long long int >();
+			set_global_precision(300);
+			main_testing_function<complex_precision<float_precision>, unsigned long long int>();
+			//main_testing_function<float_precision, unsigned long long int >();
 			//main_testing_function<long double, unsigned long long int>();
 			//main_testing_function<double, unsigned int>();
 			//main_testing_function<float, unsigned short int>();

@@ -82,8 +82,8 @@ m_fact_1mx_mp1_inverse_series<T, K>::m_fact_1mx_mp1_inverse_series(const SeriesC
 
 template <AcceptedLike T, std::unsigned_integral K>
 constexpr T m_fact_1mx_mp1_inverse_series<T, K>::calculateTerm(K n) const {
-	T coeff = m;
-	for(K j = 1; j <=n ; ++j){ coeff *= (m + static_cast<T>(j)) / static_cast<T>(j); }
+	T coeff = static_cast<T>(m);
+	for(K j = 1; j <=n ; ++j){ coeff *= static_cast<T>(m + j) / static_cast<T>(j); }
 
 	return static_cast<T>(fact<K>(m)) * pow(this->x, static_cast<T>(n)) * coeff;
 }

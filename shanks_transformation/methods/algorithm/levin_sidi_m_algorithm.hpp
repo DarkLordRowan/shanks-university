@@ -81,7 +81,7 @@ public:
 	explicit levin_sidi_m_algorithm(
 		std::shared_ptr<series_base<T,K>> series,
 		remainder_type variant = remainder_type::u_variant,
-		const T& gamma_ = static_cast<T>(10)
+		const T& gamma_ = static_cast<T>(45.5)
 	);
 
 	// Default destructor is sufficient since unique_ptr handles deletion
@@ -118,11 +118,11 @@ inline T levin_sidi_m_algorithm<T, K>::calculate(const K n, const K order) const
     // Validate parameter constraint: gamma >= n - 1
 
 	if constexpr (std::is_floating_point<T>::value || std::is_same<T, float_precision>::value){
-		if(gamma - static_cast<T>(n - 1) < static_cast<T>(0)){
+		if(gamma - static_cast<T>(order) - static_cast<T>(1) < static_cast<T>(0)){
 			throw std::domain_error("gamma cannot be lesser than n - 1");
 		}
 	}  else if constexpr (std::is_same<T, complex_precision<float_precision>>::value){
-		if (gamma.real() - static_cast<float_precision>(n-1) < static_cast<float_precision>(0)){
+		if (gamma.real() - static_cast<float_precision>(n)-static_cast<float_precision>(1) < static_cast<float_precision>(0)){
 			throw std::domain_error("gamma cannot be lesser than n - 1");
 		}
 	}
@@ -143,9 +143,11 @@ inline T levin_sidi_m_algorithm<T, K>::calculate(const K n, const K order) const
 
 	// Compute (γ+k+2)_{n-1} = ∏_{m=0}^{n-2} (γ+k+2+m)
 	// Compute (γ+k+1)_{n} = ∏_{m=0}^{n-1} (γ+k+1+m)
-	for (K m = static_cast<K>(0); m < n - static_cast<K>(1); ++m) {
-		up   *= (up_coef   + static_cast<T>(m));
-		down *= (down_coef + static_cast<T>(m));
+	if(n > 1){
+		for (K m = static_cast<K>(0); m < n - static_cast<K>(1); ++m) {
+			up   *= (up_coef   + static_cast<T>(m));
+			down *= (down_coef + static_cast<T>(m));
+		}
 	}
 	up /= down;
 

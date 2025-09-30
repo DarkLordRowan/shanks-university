@@ -62,7 +62,7 @@ public:
 	 *        Meaning depends on the specific variant. Default: 0.0.
 	 * @return The computed numerator value for the transformation.
 	 */
-	virtual T operator()(K n, K order, series_base<T, K>* series, T gamma = T(1), T rho = T(0)) = 0;
+	virtual T operator()(K n, K order, series_base<T, K>* series, T gamma = T(0), T rho = T(0)) = 0;
 
 };
 
@@ -98,7 +98,7 @@ public:
 	 * @param rho Unused parameter (maintained for interface consistency).
 	 * @return The computed difference: series(n+order) - series(n).
 	 */
-	T operator()(const K n, const K order, series_base<T, K>* series, const T gamma = static_cast<T>(1), const T rho = static_cast<T>(0)) {
+	T operator()(const K n, const K order, series_base<T, K>* series, const T gamma = static_cast<T>(0), const T rho = static_cast<T>(0)) {
 
 		// For theory, see: Wynn (1956), Eq. (2.6b): ΔS_n = S_{n+1} - S_n
 		return (series->an(n + order) - series->an(n)); //p.35 6.2-4b [https://arxiv.org/pdf/math/0306302]
@@ -124,7 +124,8 @@ public:
 	/**
 	 * @brief Compute the generalized-variant numerator.
 	 *
-	 * Implements: numerator = order - gamma - 1 
+	 * Implements: numerator = order - gamma
+	 * gamma != 0, 1, 2, ...
 	 * This provides a order-dependent constant numerator.
 	 *
 	 * @param n Unused parameter (maintained for interface consistency).
@@ -136,9 +137,8 @@ public:
 	 * @param rho Unused parameter (maintained for interface consistency).
 	 * @return The computed constant: order - gamma - 1.
 	 */
-	T operator()(const K n, const K order, series_base<T, K>* series, const T gamma = static_cast<T>(1), const T rho = static_cast<T>(0)) {
-	
-		return static_cast<T>(order - static_cast<K>(1)) - gamma; //p.377 Algorithm 20.1.3 [http://servidor.demec.ufpr.br/CFD/bibliografia/MER/Sidi_2003.pdf]
+	T operator()(const K n, const K order, series_base<T, K>* series, const T gamma = static_cast<T>(-1), const T rho = static_cast<T>(0)) {
+		return static_cast<T>(order) - gamma; //p.377 Algorithm 20.1.3 [http://servidor.demec.ufpr.br/CFD/bibliografia/MER/Sidi_2003.pdf]
 	}
 };
 
@@ -177,7 +177,7 @@ public:
 	 * @return The computed parameter-dependent numerator.
 	 * @throws std::invalid_argument if rho = 0.0.
 	 */
-	T operator()(const K n, const K order, series_base<T, K>* series, const T gamma = static_cast<T>(1), const T rho = static_cast<T>(0)) {
+	T operator()(const K n, const K order, series_base<T, K>* series, const T gamma = static_cast<T>(0), const T rho = static_cast<T>(0)) {
 
 		// insight: order % 2 is the same order & 1
 		// if order is even:

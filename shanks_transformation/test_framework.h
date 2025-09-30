@@ -1321,16 +1321,10 @@ inline static std::unique_ptr<TermCalculatorBase<T, K>> create_series_by_id(seri
 		return std::make_unique<sqrt_1plusx_min_1_min_x_div_2_series<T, K>>(config);
 	case ln13_min_ln7_div_7_series_id:
 		return std::make_unique<ln13_min_ln7_div_7_series<T, K>>(config);
-
-	#ifndef USE_COMPLEX
-
 	case Ja_x_series_id:
 		return std::make_unique<Ja_x_series<T, K>>(config);
 	case one_div_sqrt2_sin_xdivsqrt2_series_id:
 		return std::make_unique<one_div_sqrt2_sin_xdivsqrt2_series<T, K>>(config);
-
-	#endif
-
 	case ln_1plusx_div_1plusx2_series_id:
 		return std::make_unique<ln_1plusx_div_1plusx2_series<T, K>>(config);
 	case cos_sqrt_x_series_id:
@@ -1341,11 +1335,8 @@ inline static std::unique_ptr<TermCalculatorBase<T, K>> create_series_by_id(seri
 		return std::make_unique<x_div_1minx_series<T, K>>(config);
 	case x_div_1minx2_series_id:
 		return std::make_unique<x_div_1minx2_series<T, K>>(config);
-
-	#ifndef USE_COMPLEX
 	case gamma_series_id:
-		return std::make_shared<gamma_series<T, K>>(config);
-	#endif
+		return std::make_unique<gamma_series<T, K>>(config);
 
 	default: throw std::domain_error("Series not implemented");
 
@@ -1391,7 +1382,7 @@ create_transformation_by_id(transformation_id_t id, std::shared_ptr<series_base<
 	case richardson_algorithm_id:
 		return std::make_unique<richardson_algorithm<T, K>>(series);
 	case L_algorithm_id:
-		return std::make_unique<levin_algorithm<T, K>>(series);
+		return std::make_unique<levin_algorithm<T, K>>(series, t_variant, true);
 	case Ford_Sidi_algorithm_two_id:
 		return std::make_unique<ford_sidi_2_algorithm<T, K>>(series);
 	case Ford_Sidi_algorithm_three_id:
@@ -1519,7 +1510,7 @@ inline static void main_testing_function()
 			transforms.push_back(std::make_unique<levin_algorithm<T, K>>(series));
 
 			// levin recurcive
-			transforms.push_back(std::make_unique<levin_algorithm<T, K>>(series, remainder_type::u_variant, true));
+			transforms.push_back(std::make_unique<levin_algorithm<T, K>>(series, remainder_type::t_variant, true));
 
 			// levin-sidi S U
 			transforms.push_back(std::make_unique<levin_sidi_s_algorithm<T, K>>(series, remainder_type::u_variant, false));
@@ -1577,7 +1568,7 @@ inline static void main_testing_function()
 
 		auto all_transforms = create_all_transformations();
 
-		for (K i = 1; i <= n; i++)
+		for (K i = 0; i <= n; i++)
 		{
 			print_sum(i, series);
 

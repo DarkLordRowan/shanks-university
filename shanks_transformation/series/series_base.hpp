@@ -1,23 +1,12 @@
 #pragma once
 
-#include <math.h>
-#include <cmath>
 #include <vector>
 #include <concepts>
 #include <string>
-#include <chrono>
-#include <random>
+#include <memory>
 
 #include "term_calculator.hpp"
-
-
-using std::isfinite;
-
-#define USE_NOISE true
-
-static const unsigned long long int seed = std::chrono::system_clock::now().time_since_epoch().count() + std::rand();
-static std::mt19937_64 pseudoRNG(seed);
-static std::uniform_real_distribution<double> uniformRNG(-0.001, 0.001);
+#include "noise_generators/uniform_noise_gen.hpp"
 
 
  /**
@@ -38,7 +27,17 @@ public:
 
 	series_base() = delete;
 
-	explicit series_base(std::unique_ptr<TermCalculatorBase<T, K>> termCalculator, size_t size = 20) : termCalculator(std::move(termCalculator)), size(0) {
+	explicit series_base(
+		std::unique_ptr<TermCalculatorBase<T, K>> termCalculator, 
+		noise_gen_id gen_id = noise_gen_id::none_id, 
+		size_t size = 20
+	) : termCalculator(std::move(termCalculator)), size(0) {
+
+		if(noise_gen_id::uniform_id == noiseGenId){
+			//пока так я не знаю что делать
+			noiseGenerator.reset(new UniformNoiseGenerator<T>(static_cast<T>(-0.005), static_cast<T>(0.005)));
+		}
+
 		resize_vecs(size);
 	}
 
@@ -80,10 +79,6 @@ public:
 
 	[[nodiscard]] constexpr const std::string get_name() const { return termCalculator->get_name(); };
 
-	~series_base(){
-		std::cout << "FINAL SIZE: " << size <<  " actual size " << a_nVec.size() << "\n";
-	}
-
 
 protected:
 
@@ -110,12 +105,6 @@ protected:
 	 * @brief 
 	 * 
 	 */
-	bool noise = false;
-
-	/**
-	 * @brief 
-	 * 
-	 */
 	std::vector<T> a_nVec;
 
 	/**
@@ -130,6 +119,15 @@ protected:
 	 */
 	std::vector<T> randomVec;
 
+	noise_gen_id noiseGenId = noise_gen_id::none_id;
+
+	/**
+	 * @brief 
+	 * 
+	*/
+	std::unique_ptr<BaseNoiseGenerator<T>> noiseGenerator;
+	//UniformNoiseGenerator<T> noiseGenerator = UniformNoiseGenerator<T>
+
 };
 
 template<AcceptedLike T, std::unsigned_integral K>
@@ -141,12 +139,10 @@ constexpr void series_base<T, K>::resize_vecs(const K n){
 
 	size = new_size;
 
-	std::cout << "RESIZING IS IN PROCESS: old_size->" << old_size << " new_size->" << new_size << "\n";
-
 	a_nVec.resize(new_size, static_cast<T>(0));
 	S_nVec.resize(new_size, static_cast<T>(0));
 
-	if(noise){ randomVec.resize(new_size, static_cast<T>(0)); }
+	if(noise_gen_id::none_id != noiseGenId){ randomVec.resize(new_size, static_cast<T>(0)); }
 
 	for(size_t i = old_size; i < new_size; ++i ){
 
@@ -154,8 +150,8 @@ constexpr void series_base<T, K>::resize_vecs(const K n){
 			a_nVec[i] = termCalculator->calculateTerm(i);
 		} catch (...){} //заглушка
 
-		if(noise){
-			randomVec[i] = uniformRNG(pseudoRNG);
+		if(noise_gen_id::none_id != noiseGenId){
+			randomVec[i] = noiseGenerator->operator()(i);
 			a_nVec[i] += randomVec[i];
 		}
 
