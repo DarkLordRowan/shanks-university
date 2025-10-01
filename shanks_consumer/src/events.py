@@ -3,10 +3,9 @@ from typing import Iterable
 from collections.abc import Callable
 from dataclasses import dataclass, asdict
 
-
 @dataclass
 class TrialEvent:
-    result: TrialResult
+    result_id: str
     event: str
     data: dict
 
@@ -24,6 +23,7 @@ class TrialEventScanner:
         for compute in result.computed:
             if compute.accel_value_deviation < compute.partial_sum_deviation:
                 return asdict(compute)
+        return None
 
     def _divergent_accel_method(self, result: TrialResult):
         for i in range(1, len(result.computed)):
@@ -32,6 +32,7 @@ class TrialEventScanner:
                 < result.computed[i].accel_value_deviation
             ):
                 return asdict(result.computed[i])
+        return None
 
     def execute(self) -> list[TrialEvent]:
         events = []
@@ -39,5 +40,5 @@ class TrialEventScanner:
             for name, method in self._scan_methods.items():
                 event_data = method(result)
                 if event_data:
-                    events.append(TrialEvent(result, name, event_data))
+                    events.append(TrialEvent(result.id, name, event_data))
         return events

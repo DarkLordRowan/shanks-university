@@ -9,7 +9,7 @@ JSON files, CSV files, and direct Python module references.
 from dataclasses import dataclass
 import pyshanks as ps
 from abc import ABC, abstractmethod
-from typing import Iterable, Any, Mapping, TypeAlias, ClassVar
+from typing import Iterable, Any, Mapping, TypeAlias
 from collections.abc import Callable
 from functools import cached_property
 

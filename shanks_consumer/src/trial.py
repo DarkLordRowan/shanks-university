@@ -10,6 +10,7 @@ from typing import Any, Generator, Iterable, Mapping
 from pyshanks import Arb
 import multiprocessing as mp
 
+import uuid
 
 def cartesian_dicts(
     d: dict[str, Iterable[Any]],
@@ -31,10 +32,10 @@ class ComputedTrialResult:
 
 @dataclass
 class ErrorTrialResult:
-    description: str
+    description: str | None
     data: Mapping[str, Any]
 
-
+NoErrorTrialResult = ErrorTrialResult(None, {})
 @dataclass
 class SeriesTrialResult:
     name: str
@@ -54,7 +55,8 @@ class TrialResult:
     series: SeriesTrialResult
     accel: AccelTrialResult
     computed: list[ComputedTrialResult]
-    error: ErrorTrialResult | None
+    error: ErrorTrialResult
+    id: str = field(default_factory=lambda: str(uuid.uuid4()))
 
 
 @dataclass
@@ -80,6 +82,7 @@ class Trial:
                 )
                 series_lim = ready_series.get_sum()
                 for n_value in self.accel.n_values:
+                    # ? stub strange signature
                     error_n_value = n_value
                     accel_value = self.accel.executable(
                         ready_series,  # type: ignore
@@ -88,17 +91,18 @@ class Trial:
 
                     partial_sum = ready_series.S_n(n_value)
                     computed.append(
+                        # ? for now, we assume partial_sum, accel_value, and series_lim are all of the same type, either float or Arb
                         ComputedTrialResult(
                             n=n_value,
                             partial_sum=partial_sum,
                             partial_sum_deviation=abs(
                                 partial_sum - series_lim
-                            ),
+                            ),  # type: ignore
                             series_value=ready_series(n_value),
-                            accel_value=accel_value,  # type: ignore
+                            accel_value=accel_value,
                             accel_value_deviation=abs(
                                 accel_value - series_lim
-                            ),
+                            ),  # type: ignore
                         )
                     )
             except Exception as e:  # TODO more debug info
@@ -120,7 +124,7 @@ class Trial:
                         },
                     ),
                     computed=computed,
-                    error=error,
+                    error=error or NoErrorTrialResult,
                 )
             )
         return results
@@ -129,35 +133,35 @@ class Trial:
 class ComplexTrial:
     series_params: list[BaseSeriesParam]
     accel_params: list[BaseAccelParam]
-    
+
     chunk_size: int = 1
     process_count: int | None = None
-    
+
     _trial_combinations: list[tuple[BaseSeriesParam, BaseAccelParam]] = field(init=False)
-    
+
     def __post_init__(self):
         self._trial_combinations = list(itertools.product(self.series_params, self.accel_params))
-        
+
     @staticmethod
     def _run_trial(series_accel: tuple[BaseSeriesParam, BaseAccelParam]):
         return Trial(*series_accel).execute()
-    
+
     def _execute_sequential(self) -> list[TrialResult]:
         results = []
         for series, accel in self._trial_combinations:
             result = Trial(series, accel).execute()
             results += result
         return results
-    
+
     def _execute_parallel(self) -> list[TrialResult]:
         if not self._trial_combinations:
             return []
-        
+
         num_processes = self.process_count or min(mp.cpu_count(), len(self._trial_combinations))
-        
+
         if num_processes == 1:
             return self._execute_sequential()
-        
+
         try:
             with mp.Pool(processes=num_processes) as pool:
                 chunked_results = pool.imap_unordered(
@@ -168,7 +172,7 @@ class ComplexTrial:
                 results = []
                 for trial_results in chunked_results:
                     results.extend(trial_results)
-                
+
                 return results
         except Exception as e:
             # TODO log it pls

@@ -12,5 +12,5 @@
   "no_events": false,
   "no_plots": true,
   "with_arb": false,
-  "verbose": 0
+  "verbose": 1
 }

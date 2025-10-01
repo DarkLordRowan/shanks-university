@@ -18,84 +18,92 @@ from src.config import TrialConfig, ConfigLoader
 def load_parameters(config: TrialConfig):
     series_params = []
     accel_params = []
-    
+
     if config.series_json.exists():
-        logging.info(f"Loading series from JSON: {config.series_json}")
+        logging.info("Loading series from JSON: %s", config.series_json)
         series_params.extend(SeriesParamLoader.from_json(config.series_json, config.with_arb))
     else:
-        logging.warning(f"Series JSON file not found: {config.series_json}")
+        logging.warning("Series JSON file not found: %s", config.series_json)
 
     if config.series_csv.exists():
-        logging.info(f"Loading series from CSV: {config.series_csv}")
+        logging.info("Loading series from CSV: %s", config.series_csv)
         series_params.extend(SeriesParamLoader.from_csv(config.series_csv, config.with_arb))
     else:
-        logging.warning(f"Series CSV file not found: {config.series_csv}")
+        logging.warning("Series CSV file not found: %s", config.series_csv)
 
     if config.accel_json.exists():
-        logging.info(f"Loading acceleration methods from: {config.accel_json}")
+        logging.info(
+            "Loading acceleration methods from: %s", config.accel_json
+        )
         accel_params.extend(AccelParamLoader.from_json(config.accel_json, config.with_arb))
     else:
-        logging.warning(f"Acceleration JSON file not found: {config.accel_json}")
+        logging.warning(
+            "Acceleration JSON file not found: %s", config.accel_json
+        )
 
     if not series_params:
         raise ValueError("No series parameters found!")
-    
-    logging.info(f"Loaded {len(series_params)} series parameters")
-    logging.info(f"Loaded {len(accel_params)} acceleration parameters")
-    
+
+    logging.info("Loaded %d series parameters", len(series_params))
+    logging.info("Loaded %d acceleration parameters", len(accel_params))
+
     return series_params, accel_params
 
 
 def execute_trial(config: TrialConfig):
     logging.info("Starting trial execution...")
-    logging.info(f"Arb precision: {config.with_arb}")
-    logging.info(f"Process count: {config.trial_process_count}")
-    
+    logging.info("Arb precision: %s", config.with_arb)
+    logging.info("Process count: %d", config.trial_process_count)
+
     series_params, accel_params = load_parameters(config)
-    
+
     trial = ComplexTrial(series_params, accel_params, process_count=config.trial_process_count)
     results = trial.execute()
-    
+
     return results
 
 
 def export_results(results, config: TrialConfig):
     logging.info("Exporting results...")
-    
+
     results_exporter = ExportTrialResults(results)
     results_exporter.to_json(config.results_json)
     results_exporter.to_csv(config.results_csv)
-    
-    logging.info(f"Results exported to: {config.results_json}, {config.results_csv}")
+
+    logging.info(
+        "Results exported to: %s, %s", config.results_json, config.results_csv
+    )
 
 
 def generate_plots(results, config: TrialConfig):
     if config.no_plots:
         logging.info("Skipping plots as requested")
         return
-    
+
     logging.info("Generating plots...")
-    
+
     save_all_plots(results, save_dir=config.plots_dir)
-    
-    logging.info(f"Plots saved to: {config.plots_dir}")
+
+    logging.info("Plots saved to: %s", config.plots_dir)
 
 
 def scan_events(results, config: TrialConfig):
     if config.no_events:
         logging.info("Skipping event scanning as requested")
         return
-    
+
     logging.info("Scanning for events...")
-    
+
     scanner = TrialEventScanner(results)
     events = scanner.execute()
-    
+
     events_exporter = ExportTrialEvents(events)
     events_exporter.to_json(config.events_json)
     events_exporter.to_csv(config.events_csv)
-    
-    logging.info(f"Events exported to: {config.events_json}, {config.events_csv}")
+
+    logging.info(
+        "Events exported to: %s, %s", config.events_json, config.events_csv
+    )
 
 def create_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="pyshanks_consumer CLI")
@@ -174,32 +182,34 @@ def create_parser() -> argparse.ArgumentParser:
 def main():
     parser = create_parser()
     args = parser.parse_args()
-    
+
     if args.options_json:
         if not args.options_json.exists():
-            logging.error(f"Configuration file not found: {args.options_json}")
+            logging.error(
+                "Configuration file not found: %s", args.options_json
+            )
             sys.exit(1)
-        
+
         config = ConfigLoader.from_json(args.options_json)
         setup_logging(config.verbose)
-        logging.info(f"Loaded configuration from: {args.options_json}")
+        logging.info("Loaded configuration from: %s", args.options_json)
     else:
         config = ConfigLoader.from_args(args)
         setup_logging(config.verbose)
         logging.info("Reading CLI arguments")
-    
+
     logging.info("Configuration Summary:")
-    logging.info(f"  Series JSON: {config.series_json}")
-    logging.info(f"  Series CSV: {config.series_csv}")
-    logging.info(f"  Acceleration JSON: {config.accel_json}")
-    logging.info(f"  Output directory: {config.output_dir}")
-    logging.info(f"  Plots directory: {config.plots_dir}")
-    
+    logging.info("  Series JSON: %s", config.series_json)
+    logging.info("  Series CSV: %s", config.series_csv)
+    logging.info("  Acceleration JSON: %s", config.accel_json)
+    logging.info("  Output directory: %s", config.output_dir)
+    logging.info("  Plots directory: %s", config.plots_dir)
+
     results = execute_trial(config)
     export_results(results, config)
     generate_plots(results, config)
     scan_events(results, config)
-        
+
 
 if __name__ == "__main__":
     main()
