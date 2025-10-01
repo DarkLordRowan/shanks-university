@@ -18,8 +18,13 @@ class TrialEventScanner:
         self._scan_methods: dict[str, Callable] = {
             "slow_accel_method": self._slow_accel_method,
             "divergent_accel_method": self._divergent_accel_method,
+            "execution_error": self._execution_error,
         }
 
+    def _execution_error(self, result: TrialResult) -> dict | None:
+        if result.error:
+            return asdict(result.error)
+    
     def _slow_accel_method(self, result: TrialResult) -> dict | None:
         for compute in result.computed:
             if compute.accel_value_deviation < compute.partial_sum_deviation:
