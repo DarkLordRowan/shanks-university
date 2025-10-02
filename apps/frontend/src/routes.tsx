@@ -10,6 +10,8 @@ const Docs = lazy(() => import("./pages/Docs"));
 const SeriesList = lazy(() => import("./pages/Series"));
 const SeriesPage = lazy(() => import("./pages/Series/[id]"));
 const NotFound = lazy(() => import("./pages/NotFound"));
+const Experiments_v2 = lazy(() => import("./pages/Experiments_v2"));
+
 
 export const routes: RouteObject[] = [
     {
@@ -18,6 +20,7 @@ export const routes: RouteObject[] = [
         children: [
             {index: true, element: <Home/>},
             {path: "experiments", element: <Experiments/>},
+            {path: "experiments_v2", element: <Experiments_v2/>},
             {path: "algorithms", element: <Algorithms/>},
             {path: "algorithms/:id", element: <Algorithm/>},
             {path: "series", element: <SeriesList/>},
