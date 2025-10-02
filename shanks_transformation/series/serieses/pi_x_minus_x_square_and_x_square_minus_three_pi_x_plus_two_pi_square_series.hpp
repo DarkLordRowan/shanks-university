@@ -30,17 +30,17 @@ public:
 	*/
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 
-	constexpr inline bool domain_checker(T x) const{ 
+	constexpr inline bool domain_checker(T x) const{
 
 		if constexpr ( std::is_floating_point<T>::value)
 			return x <= static_cast<T>(0) || x >= static_cast<T>(2.0 * PI) || !isfinite(x);
-        
+
         if constexpr ( std::is_same<T, float_precision>::value)
 			return x <= static_cast<T>(0) || x >= static_cast<T>(2.0) * arbPI || !isfinite(x);
 
 		if constexpr ( std::is_same<T, complex_precision<float_precision>>::value)
 			return x.real() <= static_cast<float_precision>(0) || x.real() >= static_cast<float_precision>(2.0) * arbPI || !isfinite(x);
-		
+
 		return false;
 	}
 
@@ -48,21 +48,21 @@ public:
 		if(domain_checker(x)){ return static_cast<T>(0);}
 
 		if constexpr ( std::is_floating_point<T>::value ){
-			return static_cast<T>(0) < x && x < static_cast<T>(PI) ? 
-				   static_cast<T>(PI) * x - x * x : 
+			return static_cast<T>(0) < x && x < static_cast<T>(PI) ?
+				   static_cast<T>(PI) * x - x * x :
 				   (x * x) - static_cast<T>(3.0 * PI) * x + static_cast<T>(2.0 * PI) * static_cast<T>(PI);
 		}
 
 		if constexpr ( std::is_same<T, float_precision>::value){
-			return static_cast<T>(0) < x && x < arbPI ? 
-				   arbPI * x - x * x : 
+			return static_cast<T>(0) < x && x < arbPI ?
+				   arbPI * x - x * x :
 				   (x * x) - static_cast<T>(3.0) * arbPI * x + static_cast<T>(2.0) * arbPI * arbPI;
 		}
 
 
 		if constexpr ( std::is_same<T, complex_precision<float_precision>>::value ){
-			return static_cast<float_precision>(0) < x.real() && x.real() < arbPI ? 
-				   static_cast<T>(arbPI) * x - x * x : 
+			return static_cast<float_precision>(0) < x.real() && x.real() < arbPI ?
+				   static_cast<T>(arbPI) * x - x * x :
 				   (x * x) - static_cast<T>(3.0) * static_cast<T>(arbPI) * x + static_cast<T>(2.0) * static_cast<T>(arbPI * arbPI);
 		}
 	}
@@ -70,9 +70,9 @@ public:
 };
 
 template <Accepted T, std::unsigned_integral K>
-pi_x_minus_x_square_and_x_square_minus_three_pi_x_plus_two_pi_square_series<T, K>::pi_x_minus_x_square_and_x_square_minus_three_pi_x_plus_two_pi_square_series(T x) : 
+pi_x_minus_x_square_and_x_square_minus_three_pi_x_plus_two_pi_square_series<T, K>::pi_x_minus_x_square_and_x_square_minus_three_pi_x_plus_two_pi_square_series(T x) :
 series_base<T, K>(
-	x, 
+	x,
 	calculate_sum(x)
 )
 {

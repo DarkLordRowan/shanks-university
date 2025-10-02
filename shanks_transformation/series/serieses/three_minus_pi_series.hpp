@@ -25,7 +25,7 @@ public:
     * @return nth term of the series
     */
     [[nodiscard]] constexpr virtual T operator()(K n) const;
-    
+
 };
 
 template <Accepted T, std::unsigned_integral K>

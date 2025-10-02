@@ -6,8 +6,8 @@
 
  // For theory, see:
  // Brezinski, C. (1977). Acceleration de la Convergence en Analyse Numerique. Springer-Verlag.
- // Brezinski, C., & Redivo Zaglia, M. (2003). Extrapolation Methods: Theory and Practice. 
- // Weniger, E. J. (2003). Nonlinear Sequence Transformations for the Acceleration of 
+ // Brezinski, C., & Redivo Zaglia, M. (2003). Extrapolation Methods: Theory and Practice.
+ // Weniger, E. J. (2003). Nonlinear Sequence Transformations for the Acceleration of
  // Convergence and the Summation of Divergent Series. Computer Physics Reports, 1(1), 1-123.
 
 #pragma once
@@ -149,7 +149,7 @@ T brezinski_theta_algorithm<T, K, series_templ>::calculate(K n, const K order) c
             j2 = j + static_cast<K>(2);
 
             delta = theta_odd[j2] - theta_odd[j1];
-            
+
             theta_even[j] = theta_even[j+1];
             theta_even[j]-= (theta_even[j+2]-theta_even[j+1]) * delta / (theta_odd[j+1] - theta_odd[j] - delta);
 

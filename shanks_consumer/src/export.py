@@ -1,24 +1,17 @@
+import csv
 import io
 import json
-import csv
-from dataclasses import asdict, fields, is_dataclass, Field
-
 import pathlib
-
+from dataclasses import Field, asdict, fields, is_dataclass
 from typing import Any
 
-from src.trial import TrialResult
 from src.events import TrialEvent
-
 from src.loaders import ArbEncoder
+from src.trial import TrialResult
 
 
 def auto_field_prefix(field: Field, prefix: str = "", separator: str = "_"):
-    return (
-        f"{prefix}{field.name}{separator}"
-        if prefix
-        else f"{field.name}{separator}"
-    )
+    return f"{prefix}{field.name}{separator}" if prefix else f"{field.name}{separator}"
 
 
 def flatten_dataclass(
@@ -65,9 +58,7 @@ def get_flattened_headers(
         field_prefix = auto_field_prefix(field, prefix, separator)
 
         if is_dataclass(field_type):
-            nested_headers = get_flattened_headers(
-                field_type, field_prefix, separator
-            )
+            nested_headers = get_flattened_headers(field_type, field_prefix, separator)
             headers.extend(nested_headers)
         else:
             headers.append(field_prefix.rstrip(separator))
@@ -96,9 +87,7 @@ def get_expanded_field_headers(dataclass_type, field_name, separator="_"):
     return []
 
 
-def _write_dataclasses_to_csv_writer(
-    dataclasses, writer, expand_field, separator
-):
+def _write_dataclasses_to_csv_writer(dataclasses, writer, expand_field, separator):
     if not dataclasses:
         return
 
@@ -128,22 +117,18 @@ def _write_dataclasses_to_csv_writer(
                 )
                 row_data = {**base_data, **item_flattened}
                 final_row = {
-                    header: row_data.get(header, "")
-                    for header in writer.fieldnames
+                    header: row_data.get(header, "") for header in writer.fieldnames
                 }
                 writer.writerow(final_row)
         else:
             flattened = flatten_dataclass(dataclass_obj, separator=separator)
             final_row = {
-                header: flattened.get(header, "")
-                for header in writer.fieldnames
+                header: flattened.get(header, "") for header in writer.fieldnames
             }
             writer.writerow(final_row)
 
 
-def dataclasses_to_csv(
-    dataclasses, location, expand_field=None, separator="_"
-):
+def dataclasses_to_csv(dataclasses, location, expand_field=None, separator="_"):
     if not dataclasses:
         return
 
@@ -163,9 +148,7 @@ def dataclasses_to_csv(
     with open(location, mode="w", encoding="utf-8", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=headers)
         writer.writeheader()
-        _write_dataclasses_to_csv_writer(
-            dataclasses, writer, expand_field, separator
-        )
+        _write_dataclasses_to_csv_writer(dataclasses, writer, expand_field, separator)
 
 
 def dataclasses_to_csv_text(dataclasses, expand_field=None, separator="_"):
@@ -188,9 +171,7 @@ def dataclasses_to_csv_text(dataclasses, expand_field=None, separator="_"):
     buf = io.StringIO()
     writer = csv.DictWriter(buf, fieldnames=headers)
     writer.writeheader()
-    _write_dataclasses_to_csv_writer(
-        dataclasses, writer, expand_field, separator
-    )
+    _write_dataclasses_to_csv_writer(dataclasses, writer, expand_field, separator)
 
     return buf.getvalue()
 
@@ -219,7 +200,6 @@ class BaseExport:
 
 
 class ExportTrialResults(BaseExport):
-
     def __init__(
         self, results: list[TrialResult], location: pathlib.Path | None = None
     ):
@@ -227,9 +207,7 @@ class ExportTrialResults(BaseExport):
         super().__init__(location)
 
     def to_json(self, override_location=None):
-        dataclasses_to_json(
-            self.results, self._verify_location(override_location)
-        )
+        dataclasses_to_json(self.results, self._verify_location(override_location))
 
     def as_dict(self):
         return [asdict(result) for result in self.results]
@@ -252,17 +230,12 @@ class ExportTrialResults(BaseExport):
 
 
 class ExportTrialEvents(BaseExport):
-
-    def __init__(
-        self, events: list[TrialEvent], location: pathlib.Path | None = None
-    ):
+    def __init__(self, events: list[TrialEvent], location: pathlib.Path | None = None):
         self.events = events
         super().__init__(location)
 
     def to_json(self, override_location=None):
-        dataclasses_to_json(
-            self.events, self._verify_location(override_location)
-        )
+        dataclasses_to_json(self.events, self._verify_location(override_location))
 
     def as_dict(self):
         return [asdict(event) for event in self.events]
@@ -276,9 +249,7 @@ class ExportTrialEvents(BaseExport):
         )
 
     def to_csv_text(self):
-        return dataclasses_to_csv_text(
-            self.events, expand_field=None, separator="_"
-        )
+        return dataclasses_to_csv_text(self.events, expand_field=None, separator="_")
 
     def to_csv_bytes(self, encoding="utf-8"):
         return self.to_csv_text().encode(encoding)

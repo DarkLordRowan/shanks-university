@@ -162,13 +162,13 @@ python script.py --no-events --no-plots --output-dir test_run
 ```json
 {
   // Список рядов
-  "series": [ 
+  "series": [
     {
       // Точное название ряда
       "name": "ExpSeries",
       // Словарь аргументов ряда
       "args": {
-        // Можно присвоить значение списка, тогда для каждого из параметров 
+        // Можно присвоить значение списка, тогда для каждого из параметров
         // будет создан соответствующий ряд
         "x": [1, 2, 3, 4]
       }
@@ -238,3 +238,49 @@ python script.py --no-events --no-plots --output-dir test_run
 }
 
 ```
+
+## Разработка
+
+### 0. Установите проект:
+
+```sh
+git clone https://github.com/DarkLordRowan/shanks-university.git
+git checkout concept-proved
+cd shanks_consumer
+
+bash install_pyshanks.sh
+```
+
+### 1. Установите [Poetry](https://python-poetry.org/docs/)
+
+```sh
+# Linux/macOS/WSL
+curl -sSL https://install.python-poetry.org | python3 -
+
+# Windows (PowerShell)
+(Invoke-WebRequest -Uri https://install.python-poetry.org -UseBasicParsing).Content | python -
+
+poetry --version
+```
+
+### 2. Загрузите зависимости:
+
+```sh
+poetry install
+```
+
+### 3. Установите pre-commit хуки (сделайте это ОДИН РАЗ после poetry install):
+
+```sh
+poetry run pre-commit install
+
+# При необходимости установите хуки для pre-push
+poetry run pre-commit install --hook-type pre-push
+```
+
+### 4. Запуск скрипта без входа в окружение:
+
+```sh
+poetry run python main.py
+```
+...

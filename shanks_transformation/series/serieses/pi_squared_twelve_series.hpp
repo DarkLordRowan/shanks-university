@@ -29,9 +29,9 @@ public:
 };
 
 template <Accepted T, std::unsigned_integral K>
-pi_squared_twelve_series<T, K>::pi_squared_twelve_series(T x) : 
+pi_squared_twelve_series<T, K>::pi_squared_twelve_series(T x) :
 series_base<T, K>(
-    x, 
+    x,
     x * static_cast<T>(PI) * static_cast<T>(PI) / static_cast<T>(12)
 )
 {

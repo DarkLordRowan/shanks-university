@@ -29,23 +29,23 @@ public:
 	*/
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 
-	constexpr inline bool domain_checker(T x) const{ 
+	constexpr inline bool domain_checker(T x) const{
 
 		if constexpr ( std::is_floating_point<T>::value || std::is_same<T, float_precision>::value)
 			return abs(x) > static_cast<T>(2) || !isfinite(x);
 
 		if constexpr ( std::is_same<T, complex_precision<float_precision>>::value)
 			return abs(x) > static_cast<float_precision>(2) || !isfinite(x);
-		
+
 		return false;
 	}
 
 };
 
 template <Accepted T, std::unsigned_integral K>
-two_arcsin_square_x_halfed_series<T, K>::two_arcsin_square_x_halfed_series(T x) : 
+two_arcsin_square_x_halfed_series<T, K>::two_arcsin_square_x_halfed_series(T x) :
 series_base<T, K>(
-	x, 
+	x,
 	static_cast<T>(2) * asin(x * static_cast<T>(0.5)) * asin(x * static_cast<T>(0.5))
 )
 {

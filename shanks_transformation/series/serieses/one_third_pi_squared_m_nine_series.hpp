@@ -28,9 +28,9 @@ public:
 };
 
 template <Accepted T, std::unsigned_integral K>
-one_third_pi_squared_m_nine_series<T, K>::one_third_pi_squared_m_nine_series(T x) : 
+one_third_pi_squared_m_nine_series<T, K>::one_third_pi_squared_m_nine_series(T x) :
 series_base<T, K>(
-    x, 
+    x,
     fma(static_cast<T>(std::numbers::pi), static_cast<T>(std::numbers::pi), static_cast<T>(-9)) * x / static_cast<T>(3)
 )
 {

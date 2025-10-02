@@ -31,9 +31,9 @@ public:
 };
 
 template <Accepted T, std::unsigned_integral K>
-one_div_sqrt2_sin_xdivsqrt2_series<T, K>::one_div_sqrt2_sin_xdivsqrt2_series(T x) : 
+one_div_sqrt2_sin_xdivsqrt2_series<T, K>::one_div_sqrt2_sin_xdivsqrt2_series(T x) :
 series_base<T, K>(
-    x, 
+    x,
     sin(x / sqrt(static_cast<T>(2))) / sqrt(static_cast<T>(2))
 )
 {

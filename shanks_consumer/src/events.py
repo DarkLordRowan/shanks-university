@@ -1,7 +1,9 @@
-from src.trial import TrialResult
-from typing import Iterable
 from collections.abc import Callable
-from dataclasses import dataclass, asdict
+from dataclasses import asdict, dataclass
+from typing import Iterable
+
+from src.trial import TrialResult
+
 
 @dataclass
 class TrialEvent:
@@ -11,7 +13,6 @@ class TrialEvent:
 
 
 class TrialEventScanner:
-
     def __init__(self, results: Iterable[TrialResult]):
         self.results = results
         self._scan_methods: dict[str, Callable] = {

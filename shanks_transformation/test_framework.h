@@ -1287,7 +1287,7 @@ inline static std::unique_ptr<series_base<T, K>> create_series_by_id(series_id_t
 		std::cin >> a;
 		return std::make_unique<Ja_x_series<T, K>>(x, a);
 	}
-	
+
 	case one_div_sqrt2_sin_xdivsqrt2_series_id:
 		return std::make_unique<one_div_sqrt2_sin_xdivsqrt2_series<T, K>>(x);
 
@@ -1399,7 +1399,7 @@ inline static void main_testing_function()
 		std::cout << "Imag part: "; std::cin>>imag_p;
 
 		x = complex_precision<float_precision>(real_p, imag_p);
-		
+
 	} else {
 		std::cin >> x;
 	}

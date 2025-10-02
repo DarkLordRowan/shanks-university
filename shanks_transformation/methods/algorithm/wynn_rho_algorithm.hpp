@@ -202,7 +202,7 @@ inline T wynn_rho_algorithm<T, K, series_templ>::calculate(const K n, K order) c
 
 	// For theory, see: Wynn (1966), Eq. (3.5) - Main recurrence relation
 	// ρₖ⁽ⁿ⁾ = ρₖ₋₂⁽ⁿ⁺¹⁾ + Nₖ⁽ⁿ⁾ / (ρₖ₋₁⁽ⁿ⁺¹⁾ - ρₖ₋₁⁽ⁿ⁾)
-	const T res = 
+	const T res =
 		recursive_calculate_body(
 			n,
 			order1 - static_cast<K>(1),
@@ -261,7 +261,7 @@ T wynn_rho_algorithm<T, K, series_templ>::recursive_calculate_body(const K n, co
 
 	// For theory, see: Wynn (1966), Eq. (3.5) - Recursive computation
 	// ρₖ⁽ⁿ⁾ = ρₖ₋₂⁽ⁿ⁺¹⁾ + Nₖ⁽ⁿ⁾ / (ρₖ₋₁⁽ⁿ⁺¹⁾ - ρₖ₋₁⁽ⁿ⁾)
-	const T res = 
+	const T res =
 		recursive_calculate_body(
 			nj,
 			order1 - static_cast<K>(1),

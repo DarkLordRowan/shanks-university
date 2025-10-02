@@ -5,7 +5,7 @@
  *        that requires fewer arithmetic operations than the E-algorithm.
  */
 
- // For theory, see: 
+ // For theory, see:
  // Ford, W.F., Sidi, A. (1987). An algorithm for a generalization of the Richardson extrapolation process.
  // Osada, N. (2000). The E-algorithm and the Ford-Sidi algorithm.
 

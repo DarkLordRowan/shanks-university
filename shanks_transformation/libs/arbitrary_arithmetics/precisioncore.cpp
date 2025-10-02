@@ -21,11 +21,11 @@
  *
  *
  * Module name     :precisioncore.cpp
- * Module ID Nbr   :   
+ * Module ID Nbr   :
  * Description     :Arbitrary precision core functions for integer and floating
  *					point precision class
  * -----------------------------------------------------------------------------
- * Change Record   :   
+ * Change Record   :
  *
  * Version	Author/Date		Description of changes
  * -------  ---------------	----------------------------------------------------
@@ -39,15 +39,15 @@
  * 03.07	HVE/26-Nov-2021 Added 1/sqrt(2) and sqrt(2) to the "constant" _float_table
  * 03.08	HVE/5-Dec-2021	Improved the algorithm for float_precion_ftoa() that improved performanen for a 100K digits varianble
  *							from more than 21000sec -> 300msec.
- * 03.09	HVE/6-Dec-2021	Fix an float_precision issue where numbers with small precision but high negative exponent was converted to 
- *							0E0 instead of a very small number. Also added gigatrunk splitting in float_precision_fptoa 
+ * 03.09	HVE/6-Dec-2021	Fix an float_precision issue where numbers with small precision but high negative exponent was converted to
+ *							0E0 instead of a very small number. Also added gigatrunk splitting in float_precision_fptoa
  * 03.10	HVE/8-Dec-2021	Change eptype to an intmax_t insead of int to raise the exponent limit to more than 300M digits
  * 03.11	HVE/10-Dec-2021	Added two more trunking levels for faster handling of digits exceedig 10-100M decimal digits
  * 03.12	HVE/11-Dec-2021	Allowed separaors ' symbols to be part of a string based number for atoip() and atofp(). atofp() can be called with a std::string or a char *
- * 03.13	HVE/25-Dec-2021	remove of double *a,*b with new and replaced it with vector<double> va, vb. 
- * 03.14	HVE/25-Dec-2021 Added _float_precision_schonhagen_strassen_umul() to add better multiplication for medium size multiplication of digits<6,000 the function was modified 
+ * 03.13	HVE/25-Dec-2021	remove of double *a,*b with new and replaced it with vector<double> va, vb.
+ * 03.14	HVE/25-Dec-2021 Added _float_precision_schonhagen_strassen_umul() to add better multiplication for medium size multiplication of digits<6,000 the function was modified
  *							from the int_precision counterpart
- * 03.15	HVE/26-Dec-2021	Change the FFT _int_precision_umul_fourier() and _float_precision_umul_fourier() to be able to handle digits in excess of 25E9 digits 
+ * 03.15	HVE/26-Dec-2021	Change the FFT _int_precision_umul_fourier() and _float_precision_umul_fourier() to be able to handle digits in excess of 25E9 digits
  * 03.16	HVE/29-Dec-2021 Fixed a few smaller bugs in _flot_precision_fptoa()
  * 03.17	HVE/3-Jan-2022	Special test version plus a fix in _umul_fourier() where the 4bit version was kicked in aftter 18M digits instead of >150M digits
  * 03.18	HVE/3-Jan-2022	A bug was found in the float_precision_schonhage-straasen_umul() and was change to just a call the _umul_fourier() as a temporary fix
@@ -55,7 +55,7 @@
  * 03.20	HVE/6-Jan-2022	Added _INVSQRT3 and SQRT3 as a build in constant
  * 03.21	HVE/8-Jan-2022	Added Multi threading in _int_multiplication_umul_fourier(), _float_precision_umul_fourier() and float_table(_PI)
  * 03.22	HVE/10-Jan-2022	Minor optimazation when multiply by power of 2. It is faster to do x.exponent(x.exponent()+'power of two');
- * 03.23	HVE/19-Jan-2022	Change name of schoonhage-strassen to just _umul_linear to followed the name convention. change _umul to _umul_school nd added a new _umul as the entry point 
+ * 03.23	HVE/19-Jan-2022	Change name of schoonhage-strassen to just _umul_linear to followed the name convention. change _umul to _umul_school nd added a new _umul as the entry point
  *							for all multiplication algorithm
  * 03.24	HVE/21-Jan-2022	Use string2number in the _float_precision_atofp for higher performance, particular when digits exceed 100,000+ digits
  * 03.25	HVE/4-Feb-2022	Added method adjustExponent() for a faster way to multiply or divide by any power of 2
@@ -91,24 +91,24 @@
  * 03.53	HVE/13-Dec-2022	Added bernoulli() function
  * 03.54	HVE/15-Dec-2022 The same issue in ver 3.46 just for the umulsq_lineare() was fixed
  * 03.55	HVE/20-Dec-2022	Added Bernoulli Polynomials functions
- * 03.56	HVE/1-Jan-2023	Added the Euler-Mascheroni constant to the _float_table() function 
+ * 03.56	HVE/1-Jan-2023	Added the Euler-Mascheroni constant to the _float_table() function
  * 03.57	HVE/10-Jan-2023	Added the Catalan Constant to the float_table() function and the tgamma() function
  * 03.58	HVE/13-Jan-2023	Added the beta and the two error functions erf() and erfc()
  * 03.59	HVE/20-Jan-2023 Added the Lambert Wo function and the zeta() function
  * 03.60	HVE/25-Mar-2023	Added Stirling number of the first, second and third kind (last also known as Lah number)
- * 03.61	HVE/1-Apr-2023	Cosmetic changes to reduce number of warnings 
+ * 03.61	HVE/1-Apr-2023	Cosmetic changes to reduce number of warnings
  * 03.62	HVE/11-Apr-2023	Fix an error in isprime() that report 1 was a prime. (false)
  * 03.63	HVE/1-May-2023	Fix an issue in_int_precisiuon_usb(), _float_precision_usb and _int_precision_udiv
  * 03.64	HVE/4-May-2023	Added the int_precision function jacobi(a,n) to compute the Jacobi symbol
  * 03.65	HVE/11-May-2023 Added the primality testers. Miller-Rabin and Baillie PSW.
  * 03.66	HVE/24-May-2023	Reintroduce the integer fast / and % using float_precision / and %
  * 03.67	HVE/15-Jul-2023	Fix an issue in the 64bit version of ipow_module to allow it to woek correct for numbers between 2^63 and 2^64-1
- * 03.68	HVE/03-Aug-2023	added the fibonacci function 
+ * 03.68	HVE/03-Aug-2023	added the fibonacci function
  * 03.69	HVE/04-Aug-2023 Minor cleaning of code and replacing pointer argument with reference argument
  * 03.70	HVE/07-Mar-2024	Added the fma() Fused-multiply-add
  * 03.71	HVE/20-Mar-2024	Added shortcuts for arccos(x), arcsin(x) if x=-1,x=0 or x=1
  * 03.72	HVE/24-Mar-2024	Added support for handling of NaN and Infinity for functions
- * 
+ *
  * End of Change Record
  * --------------------------------------------------------------------------
 */
@@ -118,7 +118,7 @@ static char _VIP_[] = "@(#)precisioncore.cpp 03.72 -- Copyright (C) Henrik Veste
 
 #include <cstdint>
 #include <ctime>
-#include <cmath> 
+#include <cmath>
 #include <random>
 #include <cstring>
 #include <array>
@@ -169,7 +169,7 @@ const size_t THREAD_FALLINGFACTORIAL_LIMIT = 5'000; // This is the size limit wh
 //	@return		std::string -	The arbitrary precision version of this source
 //
 // Description:
-// Return the arbitrary precision version of the various header file and the precisioncore 
+// Return the arbitrary precision version of the various header file and the precisioncore
 //
 extern std::string arbitrary_precision_version()
 {
@@ -182,7 +182,7 @@ extern std::string arbitrary_precision_version()
 		std::string(_VIP_) + std::string("\n");
 }
 
-// Default max number of digits to convert natively to decimal 
+// Default max number of digits to convert natively to decimal
 static const int MAX_DECIMAL_DIGITS = sizeof(uintmax_t) >= 8 ? 19 : 9;
 static const int MAX_OCTAL_DIGITS = sizeof(uintmax_t) >= 8 ? 21 : 10;
 static const int MAX_BINARY_DIGITS = sizeof(uintmax_t) >= 8 ? 64 : 32;
@@ -213,23 +213,23 @@ static const int MAX_GIGATRUNK_SIZE = 10;
 
 
 // std::cin stream for int_precision variables
-std::ostream& operator<<( std::ostream& strm, const int_precision& d ) 
+std::ostream& operator<<( std::ostream& strm, const int_precision& d )
 	{
 	return strm << _int_precision_itoa(const_cast<int_precision *>(&d)).c_str();
 	}
 
 // std::cout stream for int_precision variables
 std::istream& operator>>( std::istream& strm, int_precision& d )
-         { 
+         {
          char ch; std::string s;
-         strm.get(ch);// strm >> ch; 
-         while( ch == ' ' ) 
+         strm.get(ch);// strm >> ch;
+         while( ch == ' ' )
 			 strm.get(ch);  // Ignore leading white space.
-         if( ch == '+' || ch == '-' ) 
-		 { 
+         if( ch == '+' || ch == '-' )
+		 {
 			 s += ch; strm.get(ch);
 		 }
-		 else 
+		 else
 			 s += '+';  // Parse sign
 
          if( ch == '0' ) // Octal, Binary or Hexadecimal number
@@ -243,7 +243,7 @@ std::istream& operator>>( std::istream& strm, int_precision& d )
 			else
 				if (ch == 'b' || ch == 'B')  // Parse Binary
 				{
-					for (s += "0b"; ch >= '0' && ch <= '1'; strm.get(ch)) 
+					for (s += "0b"; ch >= '0' && ch <= '1'; strm.get(ch))
 						s += ch;
 				}
 				else // Parse Octal
@@ -254,7 +254,7 @@ std::istream& operator>>( std::istream& strm, int_precision& d )
             }
 		 else // Parse Decimal number
 		 {
-			 for (; ch >= '0' && ch <= '9'; strm.get(ch) /*strm >> ch*/) 
+			 for (; ch >= '0' && ch <= '9'; strm.get(ch) /*strm >> ch*/)
 				 s += ch;
 		 }
 
@@ -313,7 +313,7 @@ std::string _int_precision_itoa( int_precision& a, const int base)
 ///////////////////////////////////////////////
 //
 //
-//    Core Support Functions. 
+//    Core Support Functions.
 //
 // The core functions all perform unsigned arithmetic un elements of the string class!
 //    _int_precision_strip_leading_zeros	-- Strips non significant leading zeros
@@ -327,7 +327,7 @@ std::string _int_precision_itoa( int_precision& a, const int base)
 //	@author Henrik Vestermark (hve@hvks.com)
 //	@date  1/19/2005
 //	@brief 	_int_reverse_binary
-//	@return 	void	-	
+//	@return 	void	-
 //	@param   "data[]"	-	array of double complex number to permute
 //	@param   "n"	-	number of element in data[]
 //
@@ -360,7 +360,7 @@ static void _vector_reverse_binary(std::complex<double> data[], const size_t n)
 //	@author Henrik Vestermark (hve@hvks.com)
 //	@date  1/19/2005
 //	@brief 	_int_fourier do the fourier transformation
-//	@return 	static void	-	
+//	@return 	static void	-
 //	@param   "data[]"	-	complex<double> fourie data
 //	@param   "n"	-	number of element in data (must be a power of 2)
 //	@param   "isign"	-	transform in(1) or out(-1)
@@ -410,8 +410,8 @@ static void _vector_fourier(std::complex<double> data[], const size_t n, const i
 //	@author Henrik Vestermark (hve@hvks.com)
 //	@date  1/19/2005
 //	@brief 			_int_real_fourier
-//	@return 			static void	-	
-//	@param   "data[]"	-	
+//	@return 			static void	-
+//	@param   "data[]"	-
 //	@param   "n"	-	number of data element in data. n must be a power of 2)
 //	@param   "isign"	-	Converting in(1) or out(-1)
 //
@@ -508,7 +508,7 @@ static void _vector_real_fourier(std::vector<double>& data, const size_t n, cons
 //	  _int_precision_xor				-- Xor the beinary numbers together
 //	  _int_precision_unegate			-- Negate the binary number
 //    _build_i_number					-- Build the binary number from string representation
-//	
+//
 //	  _vector_reverse_binary			-- Reverse bit in the data buffer
 //    _vector_fourier					-- Fourier transformn the data
 //    _vector_real_fourier				-- Convert n discrete double data into a fourier transform data set
@@ -523,7 +523,7 @@ static void _vector_real_fourier(std::vector<double>& data, const size_t n, cons
 //		stringbase2number
 //		stringbase8_2number
 //		_int_precision_iptod			- Convert int_precision number to double
-//		
+//
 ///////////////////////////////////////////////
 
 // Use for various conversions to and from strings
@@ -536,7 +536,7 @@ static const uintmax_t _powerof10Table[20] = { 1ull,10ull,100ull,1'000ull,10'000
 //	@author Henrik Vestermark (hve@hvks.com)
 //	@date		8/Aug/2021
 //	@brief		Build a binary repesentation of signle digit number
-//	@return		std::vector<iptype>	- The integer precision string	
+//	@return		std::vector<iptype>	- The integer precision string
 //	@param		"digit"		- The next digit to be added to the integer point number to convert. Is always positive
 // @param		"base"		- The base of the digit being added
 //
@@ -545,7 +545,7 @@ static const uintmax_t _powerof10Table[20] = { 1ull,10ull,100ull,1'000ull,10'000
 //   The function dosnt create any leading significant zeros
 //   To run it efficiently is is better to take advantages of iptype (64bit) instead of just one decimal,
 //		binary,octal or hexdecimal digit at a time
-//    
+//
 static inline std::vector<iptype> build_i_number(std::vector<iptype> &number, iptype digit, iptype base)
 	{
 	number = _int_precision_umul_short(number, base);
@@ -557,8 +557,8 @@ static inline std::vector<iptype> build_i_number(std::vector<iptype> &number, ip
 //	@date		3/Dec/2021
 //	@brief		Build a binary repesentation of a string of single digit number
 //	@return		std::vector<iptype>	- The integer precision string
-//  @param		"s"			- The decimal string 
-//	@param		"start"		- The start index of the string 
+//  @param		"s"			- The decimal string
+//	@param		"start"		- The start index of the string
 //  @param		"end"		- The End index of the string
 //
 // Description:
@@ -577,7 +577,7 @@ static std::vector<iptype> decimal2number(std::vector<iptype>& number, std::stri
 		pwr = _powerof10Table[max_digits];
 		build_i_number(number, n, pwr);
 		}
-	
+
 	if (length!= 0)
 		{
 		std::string s2 = s.substr(i, length);
@@ -652,8 +652,8 @@ static std::vector<iptype> kilo2number(std::vector<iptype>& number, std::string 
 //	@date		21/Jan/2022
 //	@brief		Build a binary repesentation of a string of single digit decimal numbers
 //	@return		std::vector<iptype>	- The integer precision number
-//  @param		"s"			- The decimal string 
-//	@param		"start"		- The start index of the string 
+//  @param		"s"			- The decimal string
+//	@param		"start"		- The start index of the string
 //  @param		"end"		- The End index of the string
 //
 // Description:
@@ -666,9 +666,9 @@ static std::vector<iptype> string2number(const std::string s, const size_t start
 	std::vector<std::vector<iptype> > vn(0);
 	std::vector<iptype> num(1);
 	static std::vector<std::vector<iptype> > radix;
-	
+
 	vn.reserve(i/MAX_DECIMAL_DIGITS+16);
-	// Step 1 partition the string into a binary vector with 1 binary digit in order of least to most significant 
+	// Step 1 partition the string into a binary vector with 1 binary digit in order of least to most significant
 	for (; i > MAX_DECIMAL_DIGITS; i -= MAX_DECIMAL_DIGITS, end-= MAX_DECIMAL_DIGITS)
 		{
 		s2 = s.substr(end - MAX_DECIMAL_DIGITS, MAX_DECIMAL_DIGITS);
@@ -678,7 +678,7 @@ static std::vector<iptype> string2number(const std::string s, const size_t start
 	s2 = s.substr(start, i);
 	num[0] = strtoull(s2.c_str(), NULL, BASE_10);
 	vn.push_back(num);
-	
+
 	// Step2 collected into higher binary values by reducing the vector with 2,3,...,n MAX_DECIMAL_DIGITS
 	if (radix.size() == 0)
 		{
@@ -690,7 +690,7 @@ static std::vector<iptype> string2number(const std::string s, const size_t start
 		if (radix_inx >= radix.size())
 			{
 			num = _int_precision_umul(radix[radix_inx - 1], radix[radix_inx - 1]); // replace by _int_precision_square_fourier() when ready
-			radix.push_back(num);  
+			radix.push_back(num);
 			}
 		for (i = 0, j = 0; j < vn.size(); ++i, j += 2)
 			{
@@ -713,8 +713,8 @@ static std::vector<iptype> string2number(const std::string s, const size_t start
 //	@date		21/Jan/2022
 //	@brief		Build a binary repesentation of a string of single digit numbers in base  or base 16
 //	@return		std::vector<iptype>	- The integer precision number
-//  @param		"s"			- The decimal string 
-//	@param		"start"		- The start index of the string 
+//  @param		"s"			- The decimal string
+//	@param		"start"		- The start index of the string
 //  @param		"end"		- The End index of the string
 //	@param		"base"		- The base of the string number (either base 2 or base 16)
 //
@@ -731,7 +731,7 @@ static std::vector<iptype> stringbase2number(const std::string s, const size_t s
 	iptype n;
 
 	vn.reserve(i / baselength + 16);
-	// Step 1 partition the string into a binary vector with 1 binary digit in order of least to most significant 
+	// Step 1 partition the string into a binary vector with 1 binary digit in order of least to most significant
 	for (; i > baselength; i -= baselength, end -= baselength)
 		{
 		s2 = s.substr(end - baselength, baselength);
@@ -749,8 +749,8 @@ static std::vector<iptype> stringbase2number(const std::string s, const size_t s
 //	@date		22/Jan/2022
 //	@brief		Build a binary repesentation of a string of single digit numbers in base 8 (octal)
 //	@return		std::vector<iptype>	- The integer precision number
-//  @param		"s"			- The decimal string 
-//	@param		"start"		- The start index of the string 
+//  @param		"s"			- The decimal string
+//	@param		"start"		- The start index of the string
 //  @param		"end"		- The End index of the string
 //
 // Description:
@@ -766,7 +766,7 @@ static std::vector<iptype> stringbase8_2number(const std::string s, const size_t
 	static std::vector<std::vector<iptype> > radix;
 
 	vn.reserve(i / MAX_OCTAL_DIGITS + 16);
-	// Step 1 partition the string into a binary vector with 1 binary digit in order of least to most significant 
+	// Step 1 partition the string into a binary vector with 1 binary digit in order of least to most significant
 	for (; i > MAX_OCTAL_DIGITS; i -= MAX_OCTAL_DIGITS, end -= MAX_OCTAL_DIGITS)
 		{
 		s2 = s.substr(end - MAX_OCTAL_DIGITS, MAX_OCTAL_DIGITS);
@@ -808,7 +808,7 @@ static std::vector<iptype> stringbase8_2number(const std::string s, const size_t
 
 // @author Henrik Vestermark(hve@hvks.com)
 //	@date		26/Aug/2022
-//	@brief 		Convert inp_precision to double (IEE754) 
+//	@brief 		Convert inp_precision to double (IEE754)
 //	@return 	double		- The converted int_precision number
 //
 // Description:
@@ -831,7 +831,7 @@ double _int_precision_iptod(const int_precision* ip)
 	expo = _float_precision_normalize(fnum);
 	expo += (eptype)((inum.size() - 1) * Bitsfptype);
 	expo += _float_precision_rounding(fnum, ip->sign(), 16, ROUND_NEAR);// IEEE754 double can hold 15.955 decimal digit
-	expo += 1023;  // Biased double exponent format 
+	expo += 1023;  // Biased double exponent format
 	if (fnum.size()>1)
 		t = (uintmax_t)fnum[1];
 	t >>= 12;				// Make room for exponent
@@ -846,7 +846,7 @@ double _int_precision_iptod(const int_precision* ip)
 //	@author Henrik Vestermark (hve@hvks.com)
 //	@date		4/Aug/2021
 //	@brief 		_int_precision_strip_leading_zeros
-//	@return		void	-	
+//	@return		void	-
 //	@param		"s"	-	reference to source operand
 //
 // Description:
@@ -871,12 +871,12 @@ void _int_precision_strip_leading_zeros(std::vector<iptype> &s)
 //	@author Henrik Vestermark (hve@hvks.com)
 //	@date		13/Aug/2021
 //	@brief 		_int_precision_strip_trailing_zeros
-//	@return		void	-	
+//	@return		void	-
 //	@param		"s"	-	reference to source operand
 //
 // Description:
 //   Remove trailing nosignificant zeros of the binary number
-//		this is from the top of the vector<iptype> 
+//		this is from the top of the vector<iptype>
 //
 void _int_precision_strip_trailing_zeros(std::vector<iptype>& s)
 	{
@@ -898,7 +898,7 @@ void _int_precision_strip_trailing_zeros(std::vector<iptype>& s)
 //	@param		"a"	-	iptype operand
 //
 // Description:
-//   Count leading nosignificant zeros of the binary iptype 
+//   Count leading nosignificant zeros of the binary iptype
 //
 size_t _int_precision_clz(const iptype a)
 	{
@@ -928,9 +928,9 @@ size_t _int_precision_clz(const iptype a)
 //	@param		"mb"	-	vector<iptype> operand
 //
 // Description:
-//   Count leading nosignificant zeros of the binary iptype 
+//   Count leading nosignificant zeros of the binary iptype
 //
-size_t _int_precision_clz(const std::vector<iptype> &mb ) 
+size_t _int_precision_clz(const std::vector<iptype> &mb )
 	{
 	size_t tot_cnt = 0, cnt;
 	for (size_t i = mb.size(); i > 0; --i)
@@ -949,19 +949,19 @@ size_t _int_precision_clz(const std::vector<iptype> &mb )
 //	@param		"a"	-	iptype operand
 //
 // Description:
-//   Count trailing nosignificant zeros of the binary iptype 
+//   Count trailing nosignificant zeros of the binary iptype
 //	  iptype bit word input to count zero bits on right
 //   cnt will be the number of zero bits on the right,
 //   so if a is 1101000 (base 2), then c will be 3
 // NOTE: if 0 == a, then c = 64.
 //
-size_t _int_precision_ctz(const iptype a) 
+size_t _int_precision_ctz(const iptype a)
 	{
-	iptype x = a;  // sizeof(iptype) can be 8, 4, 2, or 1 
+	iptype x = a;  // sizeof(iptype) can be 8, 4, 2, or 1
 	size_t cnt;
 	if (x == 0)
 		return Bitsiptype;
-	if (x & 0x1) 
+	if (x & 0x1)
 		cnt = 0;
 	else
 		{
@@ -988,7 +988,7 @@ size_t _int_precision_ctz(const iptype a)
 			}
 		cnt -= x & 0x1;
 		}
-	
+
 	return cnt;
 	}
 
@@ -999,20 +999,20 @@ size_t _int_precision_ctz(const iptype a)
 //	@param		"mb"	-	vector<iptype> operand
 //
 // Description:
-//   Count trailing nosignificant zeros of the binary iptype 
+//   Count trailing nosignificant zeros of the binary iptype
 //	  iptype bit word input to count zero bits on right
 //   cnt will be the number of zero bits on the right,
 //   so if a is 1101000 (base 2), then c will be 3
 // NOTE: if 0 == a, then c = 64.
 //
-size_t _int_precision_ctz( const std::vector<iptype> &mb ) 
+size_t _int_precision_ctz( const std::vector<iptype> &mb )
 	{
 	size_t tot_cnt = 0, cnt;
 	for (size_t i = 0; i < mb.size(); ++i)
 		{
 		cnt = _int_precision_ctz(mb[i]);
 		tot_cnt += cnt;
-		if (cnt != Bitsiptype) 
+		if (cnt != Bitsiptype)
 			break;
 		}
 	return tot_cnt;
@@ -1035,7 +1035,7 @@ size_t _int_precision_csb(const std::vector<iptype> &a)
 		if (a[i - 1] == 0) continue;
 		cnt = _int_precision_clz(a[i - 1]);
 		bit_pos = Bitsiptype - cnt;
-		if (i - 1 > 0) 
+		if (i - 1 > 0)
 			bit_pos += Bitsiptype * (i - 1);
 		break;
 		}
@@ -1050,7 +1050,7 @@ size_t _int_precision_csb(const std::vector<iptype> &a)
 //	@param		"s2"	-	Second operand to compare
 //
 // Description:
-//   Compare two unsigned vector<iptype> binary numbers 
+//   Compare two unsigned vector<iptype> binary numbers
 //   and return 0 is equal, 1 if s1 > s2 otherwise -1
 //   Optimized check length first and determine 1 or -1 if equal
 //   compare the digits until a determination can be made.
@@ -1094,7 +1094,7 @@ int _int_precision_compare(const std::vector<iptype> *s1, const std::vector<ipty
 //	@param		"s2"	-	Second operand to compare
 //
 // Description:
-//   Compare two unsigned vector<iptype> binary numbers 
+//   Compare two unsigned vector<iptype> binary numbers
 //   and return 0 is equal, 1 if s1 > s2 otherwise -1
 //   Optimized check length first and determine 1 or -1 if equal
 //   compare the digits until a determination can be made.
@@ -1137,7 +1137,7 @@ int _int_precision_compare2( std::vector<iptype>& s1,  std::vector<iptype>& s2)
 //	@brief 		std::vector<_TY> _precision_uadd64
 //	@return 	std::vector<_TY> - 	the result of the addition. 2 dimensional vector
 //	@param      "a"		-	_TY operand a
-//	@param      "b"	   -	_TY operand b   
+//	@param      "b"	   -	_TY operand b
 //
 // Description:
 //	 Generic Addition function for two vector<iptype> or vector<fptype> numbers
@@ -1158,10 +1158,10 @@ template<class _TY> std::vector<_TY> _precision_uadd64(const _TY a, const _TY b)
 //	@brief 		std::vector<iptype> _int_precision_uadd_short
 //	@return 	std::vector<iptype> - 	the result of the add
 //	@param      "src1"	-	Source binary to add short number
-//	@param      "d"	   -	Number to add.   
+//	@param      "d"	   -	Number to add.
 //
 // Description:
-//   Short Add: The digit d of iptype [0..2^64] for iptype=uint64_t is added to the unsigned binary vector 
+//   Short Add: The digit d of iptype [0..2^64] for iptype=uint64_t is added to the unsigned binary vector
 //   Optimized 0 add or early out add is implemented
 //
 std::vector<iptype> _int_precision_uadd_short(const std::vector<iptype>& src1, const iptype d)
@@ -1177,12 +1177,12 @@ std::vector<iptype> _int_precision_uadd_short(const std::vector<iptype>& src1, c
 	carry = d;
 	des = src1; // *const_cast<std::vector<iptype>*> (src1);		// Copy source to des1
 	d_pos = des.begin();
-	s_pos = src1.begin(); 
+	s_pos = src1.begin();
 
 	for (; carry != 0 && d_pos != des.end(); ++s_pos, ++d_pos)
 		{
 		*d_pos += carry;
-		if (*d_pos < *s_pos ) 
+		if (*d_pos < *s_pos )
 			carry = 1;  // Set Carry
 		else carry = 0;
 		}
@@ -1192,15 +1192,15 @@ std::vector<iptype> _int_precision_uadd_short(const std::vector<iptype>& src1, c
 		{
 		iptype tmp = *d_pos;
 		*d_pos = tmp + carry;
-		if (*d_pos < tmp) 
+		if (*d_pos < tmp)
 			carry = 1;  // Set Carry
 		else carry = 0;
 		++d_pos;
 		}
 
-	// No more carry or end of upper radix number. 
+	// No more carry or end of upper radix number.
 	if (carry != 0) // If carry add the carry as a extra digit to the front of the number
-		des.push_back(1); 
+		des.push_back(1);
 
 	_int_precision_strip_trailing_zeros(des);
 
@@ -1229,14 +1229,14 @@ std::vector<iptype> _int_precision_uadd(const std::vector<iptype>& src1, const s
 	if (src1.size() >= src2.size())
 		{
 		des = src1;
-		pos = src2.begin();  
-		end = src2.end(); 
+		pos = src2.begin();
+		end = src2.end();
 		}
 	else
 		{
 		des = src2;
-		pos = src1.begin(); 
-		end = src1.end(); 
+		pos = src1.begin();
+		end = src1.end();
 		}
 	d_pos = des.begin();
 
@@ -1257,11 +1257,11 @@ std::vector<iptype> _int_precision_uadd(const std::vector<iptype>& src1, const s
 		{
 		tmp = *d_pos;
 		*d_pos = tmp + carry;
-		carry = *d_pos < tmp ? 1 : 0; 
+		carry = *d_pos < tmp ? 1 : 0;
 		++d_pos;
 		}
 
-	// No more carry or end of upper radix number. 
+	// No more carry or end of upper radix number.
 	if (carry != 0) // If carry add the carry as a extra digit to the front of the number
 		des.push_back(1);
 
@@ -1275,11 +1275,11 @@ std::vector<iptype> _int_precision_uadd(const std::vector<iptype>& src1, const s
 //	@brief 		std::vector<iptype> _int_precision_usub_short
 //	@return 	std::vector<iptype> - 	the result of the add
 //	@param      "src1"	-	Source string to add short number
-//	@param      "d"	   -	iptype Number to add.   
+//	@param      "d"	   -	iptype Number to add.
 // @param		"result" - Indicated wrap around (1) or not (0)
 //
 // Description:
-//   Short subtract: The iptype digit d [0..2^64] is subtracted from the unsigned vector 
+//   Short subtract: The iptype digit d [0..2^64] is subtracted from the unsigned vector
 //   if src1 < d result is set to -1 (wrap around) otherwise result is set to  0 (no wrap around)
 //   Optimized for 0 subtract
 std::vector<iptype> _int_precision_usub_short(int *result, const std::vector<iptype>& src1, const iptype d)
@@ -1351,7 +1351,7 @@ std::vector<iptype> _int_precision_usub(int *result, const std::vector<iptype>& 
 			else
 				borrow = 0;
 			//r = *pos1 - (*pos2 + borrow);
-			//borrow = *pos1 < (*pos2 + borrow) ? 1 : 
+			//borrow = *pos1 < (*pos2 + borrow) ? 1 :
 			//		 *pos1==0? borrow : 0;      // if borrow was not paid then propagate it to next iptype subtraction
 			++pos1; ++pos2;
 			}
@@ -1359,7 +1359,7 @@ std::vector<iptype> _int_precision_usub(int *result, const std::vector<iptype>& 
 			if ( pos1 != src1.end())
 				{
 				r = *pos1 - (borrow);
-				borrow = *pos1 < borrow ? 1 : 0; 
+				borrow = *pos1 < borrow ? 1 : 0;
 				++pos1;
 				}
 			else
@@ -1383,7 +1383,7 @@ std::vector<iptype> _int_precision_usub(int *result, const std::vector<iptype>& 
 //	@brief 		std::vector<_TY> _precision_umul64
 //	@return 	std::vector<_TY> - 	the result of the multiplication. 2 dimensional vector
 //	@param      "a"		-	_TY operand a
-//	@param      "b"	   -	_TY operand b   
+//	@param      "b"	   -	_TY operand b
 //
 // Description:
 //	 Generic multiplication function for two vector<iptype> or vector<fptype> numbers
@@ -1410,12 +1410,12 @@ template<class _TY> inline std::vector<_TY> _precision_umul64(const _TY a, const
 //	@brief 		std::string _int_precision_umul_short
 //	@return 	std::string - 	the result of the short multiplication
 //	@param      "src1"	-	Source string to multiply short number
-//	@param      "d"	   -	Number to multiply   
+//	@param      "d"	   -	Number to multiply
 //
 // Description:
 //   Short Add: The digit d [0..RADIX] is multiplied to the unsigned decimal string
-//   Optimized Multiply with zero yields zero, Multiply with one return the original 
-//   
+//   Optimized Multiply with zero yields zero, Multiply with one return the original
+//
 //
 std::vector<iptype> _int_precision_umul_short(const std::vector<iptype>& src1, const iptype d)
 	{
@@ -1437,9 +1437,9 @@ std::vector<iptype> _int_precision_umul_short(const std::vector<iptype>& src1, c
 		return des;
 		}
 
-	des.reserve(src1.capacity());  // Reserver space to avoid time consuming reallocation   
+	des.reserve(src1.capacity());  // Reserver space to avoid time consuming reallocation
 	pos = src1.begin();
-	end = src1.end(); 
+	end = src1.end();
 
 	for (; pos != end; ++pos)
 		{
@@ -1492,7 +1492,7 @@ std::vector<iptype> _int_precision_umul(const std::vector<iptype>& src1, const s
 	}
 
 //	@author Henrik Vestermark (hve@hvks.com)
-//	@date		6/Aug/2021 
+//	@date		6/Aug/2021
 //	@brief 		std::vector<iptype>  _int_precision_umul_school
 //	@return		std::vector<iptype> -	the result of multiplying src1 and src2
 //	@param		"src1"	-	First unsigned source argument
@@ -1532,7 +1532,7 @@ std::vector<iptype> _int_precision_umul_school(const std::vector<iptype>& src1, 
 //	@author Henrik Vestermark (hve@hvks.com)
 //	@date		16/Aug/2021
 //	@brief 		void convertbinary2double
-//	@return		void	-	
+//	@return		void	-
 //	@param		"dp"	-	pointer to array of doubles
 //	@param		"d"		-	the binary iptype or fptype
 //	@param	`   "bits"  -	Splitting bits (8 or 4)
@@ -1557,7 +1557,7 @@ template<class _TY> static size_t convertbinary2double(double *dp,  _TY d, const
 //	@author Henrik Vestermark (hve@hvks.com)
 //	@date		16/Aug/2021
 //	@brief 		void convertbinary2double
-//	@return		void	-	
+//	@return		void	-
 //	@param		"dp"	-	pointer to array of doubles
 //	@param		"d"		-	the binary iptype or fptype
 //	@param	`   "bits"  -	Splitting bits (8 or 4)
@@ -1584,7 +1584,7 @@ template<class _TY> static size_t convertbinary2double(std::vector<double>::iter
 //	@author Henrik Vestermark (hve@hvks.com)
 //	@date		16/Aug/2021
 //	@brief 		void convertbinary2uint8
-//	@return		void	-	
+//	@return		void	-
 //	@param		"dp"	-	pointer to array of unsigned chars
 //	@param		"d"		-	the binary iptype
 //
@@ -1607,7 +1607,7 @@ static inline size_t convertbinary2uint8(unsigned char *dp, iptype d, const bool
 //	@author Henrik Vestermark (hve@hvks.com)
 //	@date		16/Oct/2021
 //	@brief 		void convertbinary2uint16
-//	@return		void	-	
+//	@return		void	-
 //	@param		"dp"	-	pointer to array of unsigned shorts (16bits)
 //	@param		"d"		-	the binary iptype
 //
@@ -1630,7 +1630,7 @@ static inline size_t convertbinary2uint16(unsigned short *dp, iptype d, const bo
 //	@author Henrik Vestermark (hve@hvks.com)
 //	@date		17/Oct/2021
 //	@brief 		void convertbinary2Halfiptype
-//	@return		void	-	
+//	@return		void	-
 //	@param		"dp"	-	pointer to array of unsigned shorts (16bits)
 //	@param		"d"		-	the binary iptype
 //
@@ -1680,7 +1680,7 @@ static iptype convertdouble2binary(double *dp, size_t maxinx, const double cy=0,
 //	@date		17/Aug/2021
 //	@brief 		void convertHalfiptype2binary
 //	@return		iptype	-	return the binary constructed number
-//	@param		"dp"	-	pointer to array of half iptypes 
+//	@param		"dp"	-	pointer to array of half iptypes
 //
 // Description:
 // convert an an array of half iptypes [] into a binary iptype. Used in Schonhagen-Strassen
@@ -1712,7 +1712,7 @@ static inline iptype convertHalfiptype2binary( uintmax_t *dp, const size_t maxin
 //			16+30+4.9=50.9  which should be just Ok for 1 byte binary digits.
 //		2byte binary:
 //			log2(256^2^2)+log2(N)+safeguard*log2(log2(N))< digits in double which is 53. using safeguard as 1 we get for N=10^5 digits
-//			32+16.6+4.05=52.65  10^5 digits is not enough for arbitrary precsion so we are only using 1byte.	
+//			32+16.6+4.05=52.65  10^5 digits is not enough for arbitrary precsion so we are only using 1byte.
 //
 std::vector<iptype> _int_precision_umul_fourier(const std::vector<iptype>& src1, const std::vector<iptype>& src2, int nbits)
 	{
@@ -1727,9 +1727,9 @@ std::vector<iptype> _int_precision_umul_fourier(const std::vector<iptype>& src1,
 	l1 = src1.size();
 	l2 = src2.size();
 	des.reserve(l1 + l2 + 16);  // Ensure enough space to hold the Multiplication result to avoid reallocation of des
-	l = l1 < l2 ? l2 : l1;  
-	// Since we split the 64bit numbers into chunk of 8bit to ensure we have enough accuray when using double 
-	l *= sizeof(iptype);  // Convert to byte 
+	l = l1 < l2 ? l2 : l1;
+	// Since we split the 64bit numbers into chunk of 8bit to ensure we have enough accuray when using double
+	l *= sizeof(iptype);  // Convert to byte
 	if (l > 6'000'000*sizeof(iptype) || bits == 4)
 		{
 		bits = 4; l <<= 1; radix = 16; sz *= 2;  // use 2^4 instead of 2^8
@@ -1737,9 +1737,9 @@ std::vector<iptype> _int_precision_umul_fourier(const std::vector<iptype>& src1,
 		}
 	for (n = 1; n < l; n <<= 1) ;
 	n <<= 1;
-	
+
 #ifdef HVE_THREAD
-	// Using parallel sections below speeds up the performance of the two calls to _int_real_Fourier() with a factor of 1.8 
+	// Using parallel sections below speeds up the performance of the two calls to _int_real_Fourier() with a factor of 1.8
 	if (nbits == 0 || l1 + l2>THREAD_FOURIER_LIMIT)
 		{// Starting thread using lambda expressions
 		// L1, l2, va, vb by reference since it is used after the thread has terminated
@@ -1892,14 +1892,14 @@ std::vector<iptype> _int_precision_umul_karatsuba(const std::vector<iptype>& lhs
 
 	if (r_length <= half_length)
 		{
-		rhshigh.insert(rhshigh.begin(), 1, 0); 
+		rhshigh.insert(rhshigh.begin(), 1, 0);
 		rhslow.insert(rhslow.begin(),rhs.begin(), rhs.end() );
 		}
 	else if (r_length < length)
 		{
-		if (half_length >= r_length ) 
+		if (half_length >= r_length )
 			rhshigh.insert(rhshigh.begin(), 1, 0);
-		else 
+		else
 			rhshigh.insert(rhshigh.begin(), rhs.begin()+half_length, rhs.end());
 		rhslow.insert(rhslow.begin(), rhs.begin(), rhs.begin()+half_length);
 		}
@@ -1950,9 +1950,9 @@ std::vector<iptype> _int_precision_umul_linear(const std::vector<iptype>& lhs, c
 	std::vector<iptype> ua( l_length * 2), ub( r_length * 2 );
 	uintmax_t nextCarry = 0;
 
-	// Convert to half iptype from vector<iptype> and notice we stored in reverse order 
+	// Convert to half iptype from vector<iptype> and notice we stored in reverse order
 	// by first converting lhs onto ua and then rhs into ub
-	// e.g. lhs=a0+a1*R+a2*R^2,...an-1*R^n-1, a0 can be subdivied into half iptype  from iptype by mapping each mNumber number into 2 half iptype numbers 
+	// e.g. lhs=a0+a1*R+a2*R^2,...an-1*R^n-1, a0 can be subdivied into half iptype  from iptype by mapping each mNumber number into 2 half iptype numbers
 	// the function convertbinary2Halfiptype() does this job per mNumber iptype number
 	for (i = 0, pos = lhs.rbegin(), end=lhs.rend(); pos != end; ++pos)
 		i += convertbinary2Halfiptype(&ua[i], *pos, i == 0);
@@ -2022,7 +2022,7 @@ std::vector<iptype> _int_precision_umul_linear(const std::vector<iptype>& lhs, c
 	//linearconvolution now holds the result with [0] as the most significant byte number and [i-1] as the least sinificant byte as Halfbitsiptype numbers
 	// Now convert then back into a vector<iptype> format. i is the number of HalfBitsiptype's in the result
 	// do the full 64bit integers first starting from least significant HalfBitsiptype
-	for ( j = 0; j < i; j+=2 ) 
+	for ( j = 0; j < i; j+=2 )
 		{
 		iptype num;
 		num = convertHalfiptype2binary(&linearconvolution[j], 2);
@@ -2044,7 +2044,7 @@ std::vector<iptype> _int_precision_umul_linear(const std::vector<iptype>& lhs, c
 //	@param		"remaind"			- The remaind of the short division
 //
 // Description:
-//   Short divide: The ptype digit d [0..2^32] is divided up in the unsigned vector<iptype> 
+//   Short divide: The ptype digit d [0..2^32] is divided up in the unsigned vector<iptype>
 //	  Notice only up to int 32bit can be handle as short div.
 //   Divide with zero throw an exception
 //
@@ -2086,7 +2086,7 @@ std::vector<iptype> _int_precision_udiv_short(iptype *remaind, const std::vector
 			n |= ir << shifts;
 			qh = n / d;	ir = n % d;
 			n = *s_pos & mask;
-			n |= ir << shifts; 
+			n |= ir << shifts;
 			ql = n / d;	ir = n % d;
 			n = (qh << shifts) | ql;
 			des.push_back(n);
@@ -2108,7 +2108,7 @@ std::vector<iptype> _int_precision_udiv_short(iptype *remaind, const std::vector
 //
 // Description:
 //   Divide two unsigned binary numbers
-//   Optimized: 
+//   Optimized:
 //
 std::vector<iptype> _int_precision_udiv(const std::vector<iptype>& src1, const std::vector<iptype>& src2)
 	{
@@ -2128,11 +2128,11 @@ std::vector<iptype> _int_precision_udiv(const std::vector<iptype>& src1, const s
 	// Calculate the difference in bits size. we know that divisor is larger than src2
 	plusbits = divisor.size() * Bitsiptype - (int)_int_precision_clz(divisor.back());
 	bitssrc2 = src2.size() * Bitsiptype - (int)_int_precision_clz(src2.back());
-	plusbits -= bitssrc2; 
+	plusbits -= bitssrc2;
 	if(plusbits>0)
 		des.reserve(plusbits / Bitsiptype + 16);  // Reserve space to avoid reallocating
- 
-	for(i=0; plusbits >= 1 ;++i ) 
+
+	for(i=0; plusbits >= 1 ;++i )
 		{
 		tmp = _int_precision_ushiftleft(src2, plusbits);
 		if (_int_precision_compare(&divisor, &tmp) < 0)
@@ -2253,10 +2253,10 @@ std::vector<iptype> _int_precision_urem(const std::vector<iptype>& src1, const s
 	std::vector<iptype> des, tmp;
 
 	des.push_back(0);
-	if (src2.size() == 1 &&  (src2.front() >> 32) == 0 ) // Make short rem 
+	if (src2.size() == 1 &&  (src2.front() >> 32) == 0 ) // Make short rem
 		{
 		iptype rem;
-	
+
 		_int_precision_udiv_short(&rem, src1, src2.front());
 		des[0] = rem;
 		return des;
@@ -2280,7 +2280,7 @@ std::vector<iptype> _int_precision_urem(const std::vector<iptype>& src1, const s
 //
 // Description:
 //   Find both the remainder and the qoutient when divide two unsigned vector<iptype> numbers
-//   
+//
 //
 std::vector<iptype> _int_precision_udivrem(std::vector<iptype>& src1, std::vector<iptype>& src2, std::vector<iptype> *r )
 	{
@@ -2288,10 +2288,10 @@ std::vector<iptype> _int_precision_udivrem(std::vector<iptype>& src1, std::vecto
 	std::vector<iptype> des, tmp;
 
 	des.push_back(0);
-	if (src2.size() == 1 && (src2.front() >> 32) == 0) // Make short rem 
+	if (src2.size() == 1 && (src2.front() >> 32) == 0) // Make short rem
 		{
 		iptype rem;
- 
+
 		des = _int_precision_udiv_short(&rem, src1, src2.front());
 		tmp.assign(1, rem);
 		*r = tmp;
@@ -2310,7 +2310,7 @@ std::vector<iptype> _int_precision_udivrem(std::vector<iptype>& src1, std::vecto
 //	@author Henrik Vestermark (hve@hvks.com)
 //	@date		11/Aug/2021
 //	@brief 		std::vector<iptype> _int_precision_ushiftright
-//	@return 	std::vector<iptype> - The negated number	
+//	@return 	std::vector<iptype> - The negated number
 //	@param      "src"	-	The number to be shifted
 // @param		"shift"	-	The shift count
 //
@@ -2321,11 +2321,11 @@ std::vector<iptype> _int_precision_ushiftright(const std::vector<iptype> &src, c
 	{
 	size_t shiftwidth = Bitsiptype;
 	std::vector<iptype>::const_reverse_iterator pos, end;
-	std::vector<iptype> des; 
+	std::vector<iptype> des;
 	size_t discard, within;
 	size_t i;
 	iptype carry, mask;
-	
+
 	// Determine how many full digit shift and the last shift (last shift = shift count % Bitsiptype
 	if (src.size()==1 && src[0]==0)  // Short cut: a zero number zero shifting right is still zero.
 		return src;
@@ -2346,7 +2346,7 @@ std::vector<iptype> _int_precision_ushiftright(const std::vector<iptype> &src, c
 		if (shiftwidth == Bitsiptype)	// check shiftwidth==64 then force zero instead of unchanged that is most miroporcessor repsonse (undefined bahavior)
 			carry = 0;
 		else
-			carry <<= shiftwidth;  
+			carry <<= shiftwidth;
 		n |= carry;
 		carry = nextcarry;
 		des.push_back(n);
@@ -2355,14 +2355,14 @@ std::vector<iptype> _int_precision_ushiftright(const std::vector<iptype> &src, c
 	if (des.size() == 0)
 		des.push_back(0);
 	_int_precision_strip_trailing_zeros(des);
-	
+
 	return des;
 	}
 
 //	@author Henrik Vestermark (hve@hvks.com)
 //	@date		11/Aug/2021
 //	@brief 		std::vector<iptype> _int_precision_ushiftleft
-//	@return 	std::vector<iptype> - The negated number	
+//	@return 	std::vector<iptype> - The negated number
 //	@param      "src"	-	The number to be shifted
 // @param		"shift"	-	The shift count
 //
@@ -2379,9 +2379,9 @@ std::vector<iptype> _int_precision_ushiftleft(const std::vector<iptype>& src, co
 
 	// Determine how many full digit shift and the last shift (last shift = shift count % sizeof(iptype)*8
 	if (src.size() == 1 && src[0] == 0)  // Short cut: a zero number zero shifting left is still zero.
-		return src; 
+		return src;
 	if (shift == 0)  // Short cut: shift zero left does not change the number.
-		return src; 
+		return src;
 
 	adding = shift / Bitsiptype;
 	within = shift % Bitsiptype;
@@ -2397,15 +2397,15 @@ std::vector<iptype> _int_precision_ushiftleft(const std::vector<iptype>& src, co
 		nextcarry = n & mask;
 		n <<= within;
 		if (shiftwidth-within != Bitsiptype)	// check shiftingh==64 then force zero instead of unchanged that is most miroporcessor repsonse (undefined bahavior)
-			n |= carry >> (shiftwidth - within);   
+			n |= carry >> (shiftwidth - within);
 		carry = nextcarry;
 		des.push_back(n);
 		}
 	if (carry != 0)
 		if (shiftwidth - within != Bitsiptype)
 			des.push_back(carry >> (shiftwidth - within)); // check shiftwidth 64 and witin == 0
-	_int_precision_strip_trailing_zeros(des);	
-	
+	_int_precision_strip_trailing_zeros(des);
+
 	return des;
 	}
 
@@ -2428,7 +2428,7 @@ std::vector<iptype> _int_precision_uand(const std::vector<iptype>& src1, const s
 	std::vector<iptype>::iterator d_end, d_pos;
 
 	// Making the shortest operand the result operand since that will be the maximum number of digits
-	if (src1.size() >= src2.size()) 
+	if (src1.size() >= src2.size())
 		{
 		des = src2; // *const_cast<std::vector<iptype> *>(src2);
 		pos = src1.begin();
@@ -2468,7 +2468,7 @@ std::vector<iptype> _int_precision_uor(const std::vector<iptype>& src1, const st
 	std::vector<iptype>::iterator d_pos;
 
 	// Making the shortest operand the result operand since that will be the maximum number of digits
-	if (src1.size() >= src2.size()) 
+	if (src1.size() >= src2.size())
 		{
 		des = src1; //  *const_cast<std::vector<iptype> *>(src1);
 		pos = src2.begin();
@@ -2509,7 +2509,7 @@ std::vector<iptype> _int_precision_uxor(const std::vector<iptype>& src1, const s
 	std::vector<iptype>::iterator d_pos;
 
 	// Making the shortest operand the result operand since that will be the maximum number of digits
-	if (src1.size() >= src2.size()) 
+	if (src1.size() >= src2.size())
 		{
 		des = src1; // *const_cast<std::vector<iptype> *>(src1);
 		pos = src2.begin();
@@ -2534,7 +2534,7 @@ std::vector<iptype> _int_precision_uxor(const std::vector<iptype>& src1, const s
 //	@author Henrik Vestermark (hve@hvks.com)
 //	@date		3/Sep/2021
 //	@brief 		std::vector<iptype> _int_precision_unegate
-//	@return		std::vector<iptype>	-	the result of negating src1 
+//	@return		std::vector<iptype>	-	the result of negating src1
 //	@param		"src1"	-	First unsigned source argument
 //
 // Description:
@@ -2565,14 +2565,14 @@ std::vector<iptype> _int_precision_unegate(const std::vector<iptype>& src1)
 
 // Same table as the _powerof10Table for uintmax_t but converted to float_precisions.
 // Need to be sure that defaul precision is >=20 to ensure that a 64bit unsigned integer can be accomodated
-// SInce default precision can be change to something less than 20 we would need to explicit state the precision 
+// SInce default precision can be change to something less than 20 we would need to explicit state the precision
 // for each table entry
 static const float_precision _fpPowerof10Table[20] = {
 		float_precision(_powerof10Table[0],20),float_precision(_powerof10Table[1],20),float_precision(_powerof10Table[2],20),
 		float_precision(_powerof10Table[3],20),float_precision(_powerof10Table[4],20),float_precision(_powerof10Table[5],20),
 		float_precision(_powerof10Table[6],20),float_precision(_powerof10Table[7],20),float_precision(_powerof10Table[8],20),
 		float_precision(_powerof10Table[9],20),float_precision(_powerof10Table[10],20),float_precision(_powerof10Table[11],20),
-		float_precision(_powerof10Table[12],20),float_precision(_powerof10Table[13],20),float_precision(_powerof10Table[14],20), 
+		float_precision(_powerof10Table[12],20),float_precision(_powerof10Table[13],20),float_precision(_powerof10Table[14],20),
 		float_precision(_powerof10Table[15],20),float_precision(_powerof10Table[16],20),float_precision(_powerof10Table[17],20),
 		float_precision(_powerof10Table[18],20),float_precision(_powerof10Table[19],20) };
 
@@ -2587,7 +2587,7 @@ float_precision gettable(const int i)
 //	@return 	bool	-	Return true if digits is valid other throw an exception and return false
 //	@param		"s"	-		String of digits to check
 //	@param		"start"	-	Value to convert to ascii string based on RADIX
-//	@param		"end"	-	RADIX value of conversion 
+//	@param		"end"	-	RADIX value of conversion
 //	@param		"base"	-	Check for base (default BASE_10)
 //
 // Description:
@@ -2713,11 +2713,11 @@ static inline std::string uitostringbase(const uintmax_t value, const unsigned r
 //	@brief 		std::string itostring
 //	@return 	static std::string	-	Return the ascii representation of number
 //	@param		"value"	-	Value to convert to ascii string based on RADIX
-//	@param		"radix"	-	RADIX value of conversion 
+//	@param		"radix"	-	RADIX value of conversion
 //
 // Description:
 //   This function replace Microsoft _itoa() to a generic function that return the
-//   string representation of the number in Base Radix. 
+//   string representation of the number in Base Radix.
 //   Radix can be in the range from 2..256 (only 2..36 deliveres a readable string)
 //   only if value is < 0 will it return with a leading sign
 std::string itostring( const int value, const unsigned radix )
@@ -2725,7 +2725,7 @@ std::string itostring( const int value, const unsigned radix )
    std::string s;
    unsigned digit;
    unsigned uvalue;
-   
+
    if (radix < BASE_2 || radix > 36 )
       return s;  // Conversion not supported
 
@@ -2734,7 +2734,7 @@ std::string itostring( const int value, const unsigned radix )
    else
       uvalue = (unsigned)value;
 
-   do 
+   do
       {
       digit = (unsigned) (uvalue % radix);
       uvalue /= radix;
@@ -2743,13 +2743,13 @@ std::string itostring( const int value, const unsigned radix )
          {
          // Convert to ascii and store
          if( digit < 10 )
-            s.push_back( (char)ICHARACTER10( (unsigned char)digit ) );      
+            s.push_back( (char)ICHARACTER10( (unsigned char)digit ) );
          else
-            s.push_back( (char)( digit - 10 + 'a' ) );      
+            s.push_back( (char)( digit - 10 + 'a' ) );
          }
       else
          { // Keep it 'binary' not readable string
-         s.push_back( (unsigned char)digit );      
+         s.push_back( (unsigned char)digit );
          }
    } while (uvalue > 0);
 
@@ -2770,7 +2770,7 @@ std::string itostring( const int value, const unsigned radix )
 // Description:
 // Convert ascii string to vector<iptype> number
 // A leading 0 is intepreted as a octal number
-// a leading 0x is interpreted as a hexadecimal number 
+// a leading 0x is interpreted as a hexadecimal number
 // a leading 0b is interpreted as a binary number
 // otherwise it's a decimal number.
 //
@@ -2906,10 +2906,10 @@ std::string _int_precision_itoa(const std::vector<iptype>  *a, const int base )
 		case BASE_8:
 			{std::vector<iptype> cbase(1, 1 << 30);
 			for (; src.size() > 1;)
-				{// Take 10 octal digit at  time. 
+				{// Take 10 octal digit at  time.
 				src = _int_precision_udivrem(src, cbase, &tmp_rem);
 				s += uitostringbase((uintmax_t)tmp_rem[0], BASE_8, 10);
-				}	
+				}
 			if (src[0] != 0)
 				{// Do the last iptype directly via "native" functions. yielding up to 21 octal digits
 				s += uitostringbase((uintmax_t)src[0], BASE_8);
@@ -2921,7 +2921,7 @@ std::string _int_precision_itoa(const std::vector<iptype>  *a, const int base )
 		  // All other bases
 		  std::vector<iptype> cbase(1, base);
 		  for (; src.size() > 1 || src[0] != 0;)
-				{// Take one digit at  time. 
+				{// Take one digit at  time.
 				tmp_rem = _int_precision_urem(src, cbase);
 				src = _int_precision_udiv(src, cbase);
 				if (base == BASE_16 && tmp_rem[0] >= BASE_10)
@@ -2992,7 +2992,7 @@ std::string _int_precision_itoa(const std::vector<iptype>& a, const int base)
 		case BASE_8:
 			{std::vector<iptype> cbase(1, 1 << 30);
 			for (; src.size() > 1;)
-				{// Take 10 octal digit at  time. 
+				{// Take 10 octal digit at  time.
 				src = _int_precision_udivrem(src, cbase, &tmp_rem);
 				s += uitostringbase((uintmax_t)tmp_rem[0], BASE_8, 10);
 				}
@@ -3007,7 +3007,7 @@ std::string _int_precision_itoa(const std::vector<iptype>& a, const int base)
 			// All other bases
 			std::vector<iptype> cbase(1, base);
 			for (; src.size() > 1 || src[0] != 0;)
-				{// Take one digit at  time. 
+				{// Take one digit at  time.
 				tmp_rem = _int_precision_urem(src, cbase);
 				src = _int_precision_udiv(src, cbase);
 				if (base == BASE_16 && tmp_rem[0] >= BASE_10)
@@ -3058,7 +3058,7 @@ std::string _int_precision_itoa(const std::vector<iptype>& a, const int base)
 //
 // Description:
 //   int precision abs()
-//    
+//
 //
 int_precision abs(const int_precision& x)
 	{
@@ -3078,7 +3078,7 @@ int_precision abs(const int_precision& x)
 //	@brief 		return the integer power of x^y
 //	@return 	int_precision	-	The integer precision power of x^y
 //	@param		"x"	-	The int precision x
-//	@param		"y"	-	The int precision y. 
+//	@param		"y"	-	The int precision y.
 //
 // Description:
 // Return the integer power of x^y. The previous version only support the power y to be less 2^64-1
@@ -3095,22 +3095,22 @@ int_precision ipow( const int_precision& x, const int_precision& y )
    if (y.size() > 1)
 	   std::cout << "64bit overflow in ipow for the power y="<<y<<"\n";
 #endif
-  
+
    // The first loop handle all power computation exceeding y>64-bit
    for (; nip.size() > 1; nip >>= 1)
    {
 	   if (nip.odd())
 		   r *= p;  // Odd
-	   p *= p;	// Square it				 
+	   p *= p;	// Square it
    }
    // Now nip can be handle by the native 64-bit variable
-   for(uintmax_t n = uintmax_t(nip); n > 1; n >>= 1) 
+   for(uintmax_t n = uintmax_t(nip); n > 1; n >>= 1)
         {
-        if( ( n & 0x1 ) != 0 ) 
+        if( ( n & 0x1 ) != 0 )
 			r *= p;  // Odd
-       	p *= p;	// Square it				 
+       	p *= p;	// Square it
         }
-   
+
    r *= p;  // Odd. Last is always for n==1
    return r;
    }
@@ -3121,7 +3121,7 @@ int_precision ipow( const int_precision& x, const int_precision& y )
 //	@brief 		return the integer power of x^y%z
 //	@return 	int_precision	-	The integer precision power of x^y%z
 //	@param		"x"	-	The int precision x
-//	@param		"y"	-	The int precision y. 
+//	@param		"y"	-	The int precision y.
 //	@param		"z"	-	The int precision z.
 //
 // Description:
@@ -3150,7 +3150,7 @@ int_precision ipow_modulo(const int_precision& x, const int_precision& y, const 
 		{	// Odd
 			r *= p;
 			r %= z;	// Take modulo z
-		} 
+		}
 		p *= p;	// Square it
 		p %= z;	// Take modulo z
 	}
@@ -3162,7 +3162,7 @@ int_precision ipow_modulo(const int_precision& x, const int_precision& y, const 
 		{ // Odd
 			r *= p;
 			r %= z;  // Take modulo z
-		} 
+		}
 		p *= p;	// square it
 		p %= z;	// Take modulo z
 	}
@@ -3174,15 +3174,15 @@ int_precision ipow_modulo(const int_precision& x, const int_precision& y, const 
 
 //	@author Henrik Vestermark (hve@hvks.com)
 //	@date		10-May-2023
-//	@brief 		Check a number for a prime. 
+//	@brief 		Check a number for a prime.
 //	@return 	bool-	true is the integer is a prime number false otherwise
 //	@param		"prime"	-	The uintmax_t prime
 //
 // Description:
 // Return true if the integer prime is a prime number.
-// All prime integers, n are of the form 6n-1 or 6n+1 
+// All prime integers, n are of the form 6n-1 or 6n+1
 // This is the 64-bit version that can handle primes up to (2^64)-1
-// This is the internal stativ version that will only be called from isprime int_precision version when 
+// This is the internal stativ version that will only be called from isprime int_precision version when
 //  prime number can be evaluated within 64-bit arithmetic
 //
 static bool isprime(const uintmax_t prime)
@@ -3215,8 +3215,8 @@ static bool isprime(const uintmax_t prime)
 //
 // Description:
 // Return true if the integer prime is a prime number.
-// All integers are of the form 30k + i for i = 0, 1, 2,...,29 and k an integer from 0..  However, 2 divides 0, 2, 4,...,28 and 3 divides 0, 3, 6,...,27 and 5 divides 0, 5, 10,...,25. 
-// So all prime numbers are of the form 30k + i for i = 1, 7, 11, 13, 17, 19, 23, 29 (i.e. for i < 30 such that gcd(i,30) = 1). 
+// All integers are of the form 30k + i for i = 0, 1, 2,...,29 and k an integer from 0..  However, 2 divides 0, 2, 4,...,28 and 3 divides 0, 3, 6,...,27 and 5 divides 0, 5, 10,...,25.
+// So all prime numbers are of the form 30k + i for i = 1, 7, 11, 13, 17, 19, 23, 29 (i.e. for i < 30 such that gcd(i,30) = 1).
 // Note that if i and 30 are not coprime, then 30k + i is divisible by a prime divisor of 30, namely 2, 3 or 5, and is therefore not a prime.
 // If prime number to test is within 64-bit arithmetic then call the 64-bvit version. This speed up the previous version that
 // only use arbitrary precision arithmetic irespectively what the prime number was.
@@ -3228,7 +3228,7 @@ bool isprime(const int_precision& prime, const int k)
 		return false;
 	if (k > 0)  // if k>0 then use the miller_rabin test instead
 		return miller_rabin(prime, k);
-	
+
 	if (prime.size() <= 1)
 		return isprime(uintmax_t(prime));		// Handle when prime less or equal to an unsigned 64-bit integer
 
@@ -3278,7 +3278,7 @@ int_precision gcd( const int_precision& a, const int_precision& b )
 	// GCD(0,v)==v; GCD(u,0)==0; GCD(0,0)==0
 	if (a.iszero() ) return b;
 	if (b.iszero() ) return a;
-	u = a; v = b; 
+	u = a; v = b;
 	u.sign(+1); // force +
 	v.sign(+1); // force +
 #if false
@@ -3297,15 +3297,15 @@ int_precision gcd( const int_precision& a, const int_precision& b )
 			//	tmp = v.ctz();	// DEBUG
 			//if (u.even())		// DEBUG
 			//	tmp = u.ctz();	// DEBUG
-			if (u > v) {	// Swap if u>v 
+			if (u > v) {	// Swap if u>v
 				tmp = v; v = u; u = tmp;
 				}
 			v -= u;		// v becomes even and u is still odd
 		} while (!v.iszero());
-#if false	
+#if false
 		// Double check the result for testing
-			{int_precision uu, vv; 
-			uu = a; vv = b; 
+			{int_precision uu, vv;
+			uu = a; vv = b;
 			if (uu < 0) uu = -uu; if (vv < 0) vv = -vv;
 			while (!vv.iszero())
 			{
@@ -3333,7 +3333,7 @@ int_precision gcd( const int_precision& a, const int_precision& b )
 // Description:
 // Return the least common multiplier of the two numbers a & b.
 // It used the Binary lcm method only using shifting, subtraction and one multiplication and one division
-// 
+//
 //
 int_precision lcm(const int_precision& a, const int_precision& b)
 	{
@@ -3428,7 +3428,7 @@ int_precision factorial(const int_precision& n)
 		const int_precision diff = a - b;
 
 		if (diff.size() <= 1)
-		{	// Diff is less than uintmax_t (2^64-1) so safe to use 64bot arithmetic 
+		{	// Diff is less than uintmax_t (2^64-1) so safe to use 64bot arithmetic
 			switch (static_cast<uintmax_t>(diff))
 			{// Base cases
 			case 0: return c1; break;
@@ -3463,7 +3463,7 @@ int_precision factorial(const int_precision& n)
 		});		// interval [m...0]
 	first.join();
 	second.join();
-#else	
+#else
 	// No threading. Just do a regular binary splitting
 	high = factorial_binary_splitting(n, m);
 	low = factorial_binary_splitting(m, c0);
@@ -3595,8 +3595,8 @@ int_precision risingfactorial(const int_precision& n, const int_precision& m)
 //	@date		12/Dec/2022, 5/Sep/2023
 //	@brief 		binomial
 //	@return 	int_precision - factorial(n)
-//	@param		"n"	-	 
-//  @param		"m"	-	
+//	@param		"n"	-
+//  @param		"m"	-
 //
 // Description:
 //		Do the binomial of (n,m) using factorial and fallingfactorial
@@ -3699,7 +3699,7 @@ int_precision stirling_second(const int_precision& nip, const int_precision& kip
 //
 // Stirling number of the third kind or Lah number
 //
-// L(n,k)=binomial(n-1,k-1)*n!/k!			// Unsigned 
+// L(n,k)=binomial(n-1,k-1)*n!/k!			// Unsigned
 // L'(n,k)=(-1)^n*binomial(n-1,k-1)*n!/k!  // Signed
 //
 int_precision stirling_third(const int_precision& n, const int_precision& k, const bool sign)
@@ -3717,8 +3717,8 @@ int_precision stirling_third(const int_precision& n, const int_precision& k, con
 //	@date		4/May/2023
 //	@brief 		Computation of the Jacobi symbol
 //	@return 	int - return jacobi(a/n)
-//	@param		"a"	-	
-//  @param		"n"	-	
+//	@param		"a"	-
+//  @param		"n"	-
 //
 // Description:
 //		Calculate of the Jacobi symbol
@@ -3730,7 +3730,7 @@ int_precision stirling_third(const int_precision& n, const int_precision& k, con
 // modified and optimized for the use in arbitrary precision.
 // One of the modification was to also handle negative a
 // The jacobi symbol is defined for all odd integers a and all odd prime n. Jacobi(a/n)
-// 
+//
 // Calculate the Jacobian symbol for a given number (a/n)
 // the result is either -1,0 or 1
 // this is a 64-bit version of the int_precision version and is only used internally
@@ -3773,8 +3773,8 @@ static int jacobi(intmax_t a, intmax_t n)
 //	@date		4/May/2023
 //	@brief 		Computation of the Jacobi symbol
 //	@return 	int_precision - jacobi(a/n)
-//	@param		"a"	-	
-//  @param		"n"	-	
+//	@param		"a"	-
+//  @param		"n"	-
 //
 // Description:
 //		Calculate of the Jacobi symbol
@@ -3787,7 +3787,7 @@ static int jacobi(intmax_t a, intmax_t n)
 // One of the modification was to also handle negative a
 // The jacobi symbol is defined for all odd integers a and all odd prime n. Jacobi(a/n)
 // if a and n can fit into a 64-bit intmax_t then the 64-bit version will be called.
-// 
+//
 int_precision jacobi(const int_precision& a, const int_precision& n)
 {
 	const int_precision c2(2), c4(4), c8(8);
@@ -3828,17 +3828,17 @@ int_precision jacobi(const int_precision& a, const int_precision& n)
 }
 
 ///////////////////////////////////////////////////////////////////////
-// 
+//
 // Miller-Rabin Primality test
-// 
+//
 ///////////////////////////////////////////////////////////////////////
 
 //	@author Henrik Vestermark (hve@hvks.com)
 //	@date		14/Jul/2023
 //	@brief 		Computation of the unsigned (a^b mod c)
 //	@return 	uintmax_t - (a^b)%c
-//	@param		"a"	-	
-//  @param		"b"	-	
+//	@param		"a"	-
+//  @param		"b"	-
 //	@param		"c"	-
 //
 // Description:
@@ -3897,8 +3897,8 @@ static uintmax_t ipow_modulo(uintmax_t a, uintmax_t b, uintmax_t c)
 //	@date		14/Jul/2023
 //	@brief 		Computation of the signed (a^b mod c)
 //	@return 	uintmax_t - (a^b)%c
-//	@param		"a"	-	
-//  @param		"b"	-	
+//	@param		"a"	-
+//  @param		"b"	-
 //	@param		"c"	-
 //
 // Description:
@@ -3914,9 +3914,9 @@ static intmax_t ipow_modulo(intmax_t a, intmax_t b, intmax_t c)
 
 	// Lambda function for (a*b)%c without causing overflow
 	auto imul_mod = [](intmax_t a, intmax_t b, const intmax_t c)
-	{	// Since we have signed integers there should be no intermitten overflow 
-		// in the result assignment or the a assignment. 
-		// See the ipow_module for unsignend integer, where this function was modified to handle 
+	{	// Since we have signed integers there should be no intermitten overflow
+		// in the result assignment or the a assignment.
+		// See the ipow_module for unsignend integer, where this function was modified to handle
 		// Potential overflow
 		intmax_t result = 0;
 		for (; b > 0; b >>= 1)
@@ -3948,20 +3948,20 @@ static intmax_t ipow_modulo(intmax_t a, intmax_t b, intmax_t c)
 	}
 	return res;
 }
- 
+
 //	@author Henrik Vestermark (hve@hvks.com)
 //	@date		10/May/2023
 //	@brief 		Miller Rabin primality tester
 //	@return 	bool -	true is a prime otherwise false
-//	@param		"n"	-	Number to be tested for a prime or not	
+//	@param		"n"	-	Number to be tested for a prime or not
 //  @param		"k"	-	Number of rounds (iterartions) of the Miller-Rabin method
 //
 // Description:
 //		Check if a number is a prime or not using the Miller-Rabin primality test
-// 
-//	This is the internal 64-bit version. It is static o it can only be called from the int_precision version 
+//
+//	This is the internal 64-bit version. It is static o it can only be called from the int_precision version
 //	of the same test
-// 
+//
 //
 static bool miller_rabin(const uintmax_t n, const int k)
 {
@@ -4006,12 +4006,12 @@ static bool miller_rabin(const uintmax_t n, const int k)
 //	@date		10/May/2023
 //	@brief 		Miller Rabin primality tester
 //	@return 	bool -	true is a prime otherwise false
-//	@param		"n"	-	Number to be tested for a prime or not	
+//	@param		"n"	-	Number to be tested for a prime or not
 //  @param		"k"	-	Number of rounds (iterartions) of the Miller-Rabin method
 //
 // Description:
 //		Check if a number is a prime or not using the Miller-Rabin primality test
-// 
+//
 //	If the number in question can be handle using 64-bit arithmetic then it is switched to the static version on the
 //	the same method using only 64-bit arithmetic
 //
@@ -4094,15 +4094,15 @@ bool miller_rabin(const int_precision& n, const int k)
 //	@date		10/May/2023
 //	@brief 		Baillie PSW primality tester
 //	@return 	bool -	true is a Lucas test reveal it is a strong probable prime otherwise false
-//	@param		"n"	-	Number to be tested for a prime or not	
+//	@param		"n"	-	Number to be tested for a prime or not
 //  @param		"D"	-	D variable in Lucas spp test
 //  @param		"P"	-	P variable in Lucas spp test
 //  @param		"Q"	-	Q variable in Lucas spp test
 //  @param		"spp"	-	Boolean to dertmine use of strong or extra striong lucas strong probable prime tester
-// 
+//
 // Description:
 //		Check if a number is a prime or not using the Lucas strong probable prime test
-// 
+//
 //	This is the 64-bit version. It is internal and will only be called from the baillie_PSW if needed
 //	Lucas strong probable prime test
 //
@@ -4114,9 +4114,9 @@ static bool lucas_spp(uintmax_t n, intmax_t D, intmax_t P, intmax_t Q, bool spp)
 
 	// Lambda function for (a*b)%n without overflow
 	auto mod_mul = [](intmax_t a, intmax_t b, const intmax_t n)
-	{	// Since we have signed integers there should be no intermitten overflow 
-		// in the result assignment or the a assignment. 
-		// See the ipow_module for unsignend integer, where this function was modified to handle 
+	{	// Since we have signed integers there should be no intermitten overflow
+		// in the result assignment or the a assignment.
+		// See the ipow_module for unsignend integer, where this function was modified to handle
 		// Potential overflow
 		intmax_t result = 0;
 		for (; b > 0; b >>= 1)
@@ -4226,7 +4226,7 @@ static bool lucas_spp(uintmax_t n, intmax_t D, intmax_t P, intmax_t Q, bool spp)
 	// Compute the strong lucas
 	Q = ipow_modulo(Q, intmax_t(d), intmax_t(n));
 	while (Q < 0)
-		Q += n;		// Ensured correct flored division 
+		Q += n;		// Ensured correct flored division
 
 	for (; s > 0; --s)
 	{
@@ -4244,11 +4244,11 @@ static bool lucas_spp(uintmax_t n, intmax_t D, intmax_t P, intmax_t Q, bool spp)
 			//	V %= n; not needed
 		}
 		if (V == 0)
-		{	
+		{
 			return true;
 		}
 		// Double the subscript. Q square is always positive so c++ % operator is safe to use
-		Q = ipow_modulo(Q, intmax_t(2), intmax_t(n)); // (Q * Q) % n;			
+		Q = ipow_modulo(Q, intmax_t(2), intmax_t(n)); // (Q * Q) % n;
 	}
 	return false;
 }
@@ -4257,16 +4257,16 @@ static bool lucas_spp(uintmax_t n, intmax_t D, intmax_t P, intmax_t Q, bool spp)
 //	@date		10/May/2023
 //	@brief 		Baillie PSW primality tester
 //	@return 	bool -	true is a Lucas test reveal it is a strong probable prime otherwise false
-//	@param		"n"	-	Number to be tested for a prime or not	
+//	@param		"n"	-	Number to be tested for a prime or not
 //  @param		"D"	-	D variable in Lucas spp test
 //  @param		"P"	-	P variable in Lucas spp test
 //  @param		"Q"	-	Q variable in Lucas spp test
 //  @param		"spp"	-	Boolean to dertmine use of strong or extra striong lucas strong probable prime tester
-// 
+//
 // Description:
 //		Check if a number is a prime or not using the Lucas strong probable prime test
-// 
-//	This is the int_precision version and is internal since it will only be called from baillie_PSW 
+//
+//	This is the int_precision version and is internal since it will only be called from baillie_PSW
 // 	Lucas strong probable prime test
 //
 // Lucas strong probable prime test for arbitrary precision
@@ -4353,7 +4353,7 @@ static bool lucas_spp(const int_precision& n, const intmax_t D, const intmax_t P
 	int_precision Q(QQ);
 	Q = ipow_modulo(Q, d, n);
 	while (Q < 0)
-		Q += n;		// Ensured correct flored division 
+		Q += n;		// Ensured correct flored division
 
 	for (; s > 0; --s)
 	{
@@ -4378,12 +4378,12 @@ static bool lucas_spp(const int_precision& n, const intmax_t D, const intmax_t P
 //	@date		10/May/2023
 //	@brief 		Baillie PSW primality tester
 //	@return 	bool -	true if a prime otherwise false
-//	@param		"n"	-	Number to be tested for a prime or not	
+//	@param		"n"	-	Number to be tested for a prime or not
 //  @param		"spp"	-	Boolean to dertmine use of strong or extra striong lucas strong probable prime tester
-// 
+//
 // Description:
 //		Check if a number is a prime or not using the Baillie PSW primality test
-// 
+//
 // Function to compute the Baillie-PSW test. This is the internal 64-bit version that can be called when needed
 // from the int_precision version of Baillie PSW primality test
 //
@@ -4449,7 +4449,7 @@ static bool baillie_PSW(const uintmax_t n, const bool spp = false)
 	if (Dj.second == 0)
 		return false;
 
-	// Check for normal or strong lucas 
+	// Check for normal or strong lucas
 	return lucas_spp(n, Dj.first, 1, (1 - Dj.first) / 4, spp);
 }
 
@@ -4458,14 +4458,14 @@ static bool baillie_PSW(const uintmax_t n, const bool spp = false)
 //	@date		10/May/2023
 //	@brief 		Baillie PSW primality tester
 //	@return 	bool -	true if a prime otherwise false
-//	@param		"n"	-	Number to be tested for a prime or not	
+//	@param		"n"	-	Number to be tested for a prime or not
 //  @param		"spp"	-	Boolean to dertmine use of strong or extra striong lucas strong probable prime tester
-// 
+//
 // Description:
 //		Check if a number is a prime or not using the Baillie PSW primality test
-// 
-// Function to compute the Baillie-PSW test. This is the int_precision version that will vcall the internal 64-bit version 
-// if n is less than 2^63.  
+//
+// Function to compute the Baillie-PSW test. This is the int_precision version that will vcall the internal 64-bit version
+// if n is less than 2^63.
 //
 bool baillie_PSW(const int_precision& n, const bool spp)
 {
@@ -4557,7 +4557,7 @@ bool baillie_PSW(const int_precision& n, const bool spp)
 	if (Dj.second == 0)
 		return false;
 
-	// Check for normal or strong lucas 
+	// Check for normal or strong lucas
 	return lucas_spp(n, Dj.first, 1, (1 - Dj.first) / 4, spp);
 }
 
@@ -4565,13 +4565,13 @@ bool baillie_PSW(const int_precision& n, const bool spp)
 //	@date		4/Aug/2023
 //	@brief 		Fibonacci number
 //	@param		"n"	-	The nth fibonacci Number to calculated
-// 
+//
 // Description:
 //		Calculate the nth Fibonacci number
 //
 // Hydbrid version of the Fibonacci sequence F(n)
 // If n <= 93 then use 64-bit arithmetic and the loop based Finbonacci method
-// otherwise we use the Fast doubling method with memorization and call of 
+// otherwise we use the Fast doubling method with memorization and call of
 // 64-bit fibonacci loop when needed
 //
 int_precision fibonacci(const int_precision& n)
@@ -4655,7 +4655,7 @@ const float_precision FP_QUIET_NAN(0ul, float_precision_ctrl.precision(), float_
 
 // std::cin input stream to float_precision
 std::ostream& operator<<( std::ostream& strm, const float_precision& d )
-{ 
+{
 	if(isnan(d))
 		return strm << "-nan";
 	if(isinf(d))
@@ -4667,36 +4667,36 @@ std::ostream& operator<<( std::ostream& strm, const float_precision& d )
 // std::cout stream for float_precision variable
 std::istream& operator>>( std::istream& strm, float_precision& d )
          { char ch; std::string s; int cnt, exp_cnt=0;
-         strm >> ch;  
+         strm >> ch;
 		 while( ch == ' ' )
 			 strm.get(ch);  // Ignore leading white space.
          if( ch == '+' || ch == '-' )
 		 {
 			 s += ch; strm >> ch;
-		 } 
+		 }
 		 else
 			 s += '+';  // Parse sign
-         for( cnt = 0; ch >= '0' && ch <= '9'; cnt++, strm >> ch ) 
+         for( cnt = 0; ch >= '0' && ch <= '9'; cnt++, strm >> ch )
 			 s += ch;  // Parse integer part
          if( ch == '.' )  // Any fraction?
 		 {// Parse fraction part
 			 for (s += '.', strm >> ch; ch >= '0' && ch <= '9'; cnt++, strm >> ch)
-				 s += ch;   
-		 } 
+				 s += ch;
+		 }
 		 if (ch == 'e' || ch == 'E')	// Any exponent?
             {// Parse exponent part
             s += 'e'; strm >> ch;
 			if( ch == '+' || ch == '-' )	// Any exponent sign?
 			{ // parse exponent sign
-				s += ch; strm >> ch; } 
-			else 
-				s += '+';  // Parse Expo sign 
-            for( exp_cnt =0; ch >= '0' && ch <= '9'; exp_cnt++, strm >> ch ) 
+				s += ch; strm >> ch; }
+			else
+				s += '+';  // Parse Expo sign
+            for( exp_cnt =0; ch >= '0' && ch <= '9'; exp_cnt++, strm >> ch )
 				s += ch;  // Parse expo number
             }
 
          std::cin.putback( ch );  // ch contains the first character not part of the number, so put it back
-         if( !strm.fail() && ( cnt > 0 || exp_cnt > 0 ) )  // Valid number 
+         if( !strm.fail() && ( cnt > 0 || exp_cnt > 0 ) )  // Valid number
             d = float_precision( const_cast<char *>( s.c_str() ), float_precision_ctrl.precision(), float_precision_ctrl.mode() );
          return strm;
          }
@@ -4720,7 +4720,7 @@ std::istream& operator>>( std::istream& strm, float_precision& d )
 //	@return 	bool	-	Return true if digits is valid other throw an exception and return false
 //	@param		"s"	-		String of digits to check
 //	@param		"start"	-	Value to convert to ascii string based on RADIX
-//	@param		"end"	-	RADIX value of conversion 
+//	@param		"end"	-	RADIX value of conversion
 //
 // Description:
 //		Check the ascii string for valid digits according to base.
@@ -4745,9 +4745,9 @@ static bool check_float_digits(const std::string& s, const size_t start, const s
 //	@author Henrik Vestermark (hve@hvks.com)
 //	@date		4/Dec/2021
 //	@brief 		Convert part of float_precision numbers into string (decimal representation)
-//	@return		std::string -	The partly converted decimal floating point string	
+//	@return		std::string -	The partly converted decimal floating point string
 //	@param		"fp"		-	float_precision number to partly convert
-//	@param		"digits"	-	The remainf digis in the float_precision number 
+//	@param		"digits"	-	The remainf digis in the float_precision number
 //
 // Description:
 //   Convert partly a float_precision numbers into string (decimal representation)
@@ -4763,7 +4763,7 @@ static std::string number2Decimal(float_precision& fp, const int digits )
 	if (min_width <= 0) min_width = 1;					// at least 1
 	if (min_width > MAX_DECIMAL_DIGITS) min_width = MAX_DECIMAL_DIGITS;	// Take max 18 digits at a time
 	fp *= _fpPowerof10Table[min_width];			// float_precision(_powerof10table[min_width]);
-	di = (uintmax_t)fp.toFraction();  			// Get the next max digit decimal number										
+	di = (uintmax_t)fp.toFraction();  			// Get the next max digit decimal number
 	fp.precision(fp.precision() - min_width);	// Reduce precision with min_width decimal digits
 	return uitostring10(di, min_width);			// Return min_width length string
 	}
@@ -4771,7 +4771,7 @@ static std::string number2Decimal(float_precision& fp, const int digits )
 //	@author Henrik Vestermark (hve@hvks.com)
 //	@date		4/Dec/2021
 //	@brief 		Convert a trunk of float_precision numbers into string (decimal representation)
-//	@return		std::string -	The trunk converted to a decimal floating point string	
+//	@return		std::string -	The trunk converted to a decimal floating point string
 //	@param		"fp"		-	float_precision number to partly convert
 //
 // Description:
@@ -4785,13 +4785,13 @@ static std::string trunk2Decimal(float_precision& fp)
 	{
 	int i;
 	std::string str;
-	float_precision trunk(fp); 
+	float_precision trunk(fp);
 	static float_precision _trunkPowerof10(0, MAX_TRUNK_SIZE * 20, ROUND_DOWN);
 
 	if (_trunkPowerof10.iszero())// is _trunkPowerof10 build or created
 		{
 		float_precision p(_powerof10Table[MAX_DECIMAL_DIGITS], fp.precision(), fp.mode());
-		for (i = MAX_TRUNK_SIZE, _trunkPowerof10 = float_precision(1); i > 0; i >>= 1 )	
+		for (i = MAX_TRUNK_SIZE, _trunkPowerof10 = float_precision(1); i > 0; i >>= 1 )
 			{// Build multiply factor for trunk size
 			if (i & 1) _trunkPowerof10 *= p;	// Odd
 			if (i > 1) p *= p;					// square it
@@ -4815,7 +4815,7 @@ static std::string trunk2Decimal(float_precision& fp)
 //	@author Henrik Vestermark (hve@hvks.com)
 //	@date		4/Dec/2021
 //	@brief 		Convert a Megatrunk of float_precision numbers into string (decimal representation)
-//	@return		std::string -	The trunk converted to a decimal floating point string	
+//	@return		std::string -	The trunk converted to a decimal floating point string
 //	@param		"fp"		-	float_precision number to partly convert
 //
 // Description:
@@ -4859,7 +4859,7 @@ static std::string kilotrunk2Decimal(float_precision& fp)
 //	@author Henrik Vestermark (hve@hvks.com)
 //	@date		4/Dec/2021
 //	@brief 		Convert a Megatrunk of float_precision numbers into string (decimal representation)
-//	@return		std::string -	The trunk converted to a decimal floating point string	
+//	@return		std::string -	The trunk converted to a decimal floating point string
 //	@param		"fp"		-	float_precision number to partly convert
 //
 // Description:
@@ -4902,7 +4902,7 @@ static std::string megatrunk2Decimal(float_precision& fp)
 //	@author Henrik Vestermark (hve@hvks.com)
 //	@date		8/Dec/2021
 //	@brief 		Convert a Mega10trunk of float_precision numbers into string (decimal representation)
-//	@return		std::string -	The trunk converted to a decimal floating point string	
+//	@return		std::string -	The trunk converted to a decimal floating point string
 //	@param		"fp"		-	float_precision number to partly convert
 //
 // Description:
@@ -4946,7 +4946,7 @@ static std::string mega10trunk2Decimal(float_precision& fp)
 //	@author Henrik Vestermark (hve@hvks.com)
 //	@date		8/Dec/2021
 //	@brief 		Convert a Mega100trunk of float_precision numbers into string (decimal representation)
-//	@return		std::string -	The trunk converted to a decimal floating point string	
+//	@return		std::string -	The trunk converted to a decimal floating point string
 //	@param		"fp"		-	float_precision number to partly convert
 //
 // Description:
@@ -4990,7 +4990,7 @@ static std::string mega100trunk2Decimal(float_precision& fp)
 //	@author Henrik Vestermark (hve@hvks.com)
 //	@date		8/Dec/2021
 //	@brief 		Convert a Gigatrunk of float_precision numbers into string (decimal representation)
-//	@return		std::string -	The trunk converted to a decimal floating point string	
+//	@return		std::string -	The trunk converted to a decimal floating point string
 //	@param		"fp"		-	float_precision number to partly convert
 //
 // Description:
@@ -5038,7 +5038,7 @@ static std::string gigatrunk2Decimal(float_precision& fp)
 //	@param		"f"		-	float_precision number to partly convert
 //
 // Description:
-//   The number f much be less than 1. e.g. exponent() < 0 
+//   The number f much be less than 1. e.g. exponent() < 0
 //	 This claulate the decimal exponent reducion from he base 2 internal exponent
 //
 static int exponent2reduction(float_precision& f)
@@ -5110,7 +5110,7 @@ static int exponent2reduction(float_precision& f)
 //	@author Henrik Vestermark (hve@hvks.com)
 //	@date		2/Dec/2021
 //	@brief 		Convert float_precision numbers into string (decimal representation)
-//	@return		std::string -	The decimal floating point string	
+//	@return		std::string -	The decimal floating point string
 //	@param		"a"			-	float_precision number to convert
 //
 // Description:
@@ -5118,10 +5118,10 @@ static int exponent2reduction(float_precision& f)
 //   We do it in multiple steps.
 //	 1)	Repeat doing a megatrunk size by extrating a megatrunk size from the fptoa number
 //		in the same manner as step 2
-//   2) Repeat doing a trunk size by extracting a trunk size from fptoa number 
+//   2) Repeat doing a trunk size by extracting a trunk size from fptoa number
 //		Then repeat multiple group within the trunk size of max_digis number at the time
 //		The most efficient trunk size has be found to be 50*max_digits decimal in a trunk size
-//		For every loop we reduce the original fptoa precision  with the trunk size precision 
+//		For every loop we reduce the original fptoa precision  with the trunk size precision
 //	 3)	Take the remaning fpto number in the range 0..max_digits
 //
 std::string _float_precision_fptoa(const float_precision *a)
@@ -5136,15 +5136,15 @@ std::string _float_precision_fptoa(const float_precision *a)
 	std::string str;
 	int expo10, sign = 1;
 	size_t found, len;
-	
-	if (a->iszero() ) 
+
+	if (a->iszero() )
 		return std::string("0E0");
 	sign = a->sign();
 	fracp.precision(a->precision());		// ensure fracp and intp has the same precision as a
 	intp.precision(a->precision());
-	fracp = modf(*a, &intp);				// Separate the integer and fraction 
+	fracp = modf(*a, &intp);				// Separate the integer and fraction
 	intp = fabs(intp);
-	str += _float_precision_fptoainteger(&intp);  // Convert integer part to string 
+	str += _float_precision_fptoainteger(&intp);  // Convert integer part to string
 	expo10 = (int)(str.size() - 1);			// Extract Expo as the size of string - 1
 	if (!fracp.iszero() || str.size() > 1)	// If fraction part then add "." to string
 		str.insert(str.begin() + 1, '.');
@@ -5156,10 +5156,10 @@ std::string _float_precision_fptoa(const float_precision *a)
 	// Check for large negative exponent to avoid generating leading zero that will be cut of anyway at the end
 	if(intp.iszero())
 		expo10 -= exponent2reduction(fracp);	// remove large negative exponent from fracp and adjust fracp accordingly
-	
+
 	str.reserve(fracp.precision() + str.length() + 32);  // Ensure enough room,for the string to avoid reallocating
 	len = fracp.precision() -2 + str.length();// The expected len of the fraction before we have enough
-	 
+
 	// Do it in Giga trunks size
 	for (; (str.length() + gigathr < len) && !fracp.iszero(); )
 		str += gigatrunk2Decimal(fracp);
@@ -5175,7 +5175,7 @@ std::string _float_precision_fptoa(const float_precision *a)
 	// Do it in mega trunks size
 	for (; (str.length() + mthr < len) && !fracp.iszero(); )
 		str += megatrunk2Decimal(fracp);
-			
+
 	// Do it in kilo trunks size
 	for (; (str.length() + kthr < len) && !fracp.iszero(); )
 		str += kilotrunk2Decimal(fracp);
@@ -5231,19 +5231,19 @@ std::string _float_precision_fptoa(const float_precision *a)
 	str = (sign < 0 ? "-" : "") + str+"E"+ itostring(expo10, BASE_10);
 	return str;
 	}
-   
+
 //	@author Henrik Vestermark (hve@hvks.com)
 //	@date		7/Sep/2021
 //	@brief 		Convert a string decimal number into a float_precision number
-//	@return 	std::string - The decimal floating point string	
+//	@return 	std::string - The decimal floating point string
 //	@param		"str"		-	ascii string of floating point number to convert
 // @param		"p"			- The precision of the number
 // @param		"m"			- The round mode of the number
 //
 // Description:
-//   Convert ascii string into a float_precision numbers 
+//   Convert ascii string into a float_precision numbers
 //    The ascii float format is based on standard C notation
-//	
+//
 //
 float_precision _float_precision_atofp(const std::string& str, size_t p, enum round_mode m)
 	{
@@ -5253,13 +5253,13 @@ float_precision _float_precision_atofp(const std::string& str, size_t p, enum ro
 //	@author Henrik Vestermark (hve@hvks.com)
 //	@date		7/Sep/2021
 //	@brief 		Convert a string decimal number into a float_precision number
-//	@return 	std::string - The decimal floating point string	
+//	@return 	std::string - The decimal floating point string
 //	@param		"str"		-	ascii string of floating point number to convert
 // @param		"p"			- The precision of the number
 // @param		"m"			- The round mode of the number
 //
 // Description:
-//  Convert ascii string into a float_precision numbers 
+//  Convert ascii string into a float_precision numbers
 //  The ascii float format is based on standard C notation
 //	Using the string2number function for better performance
 //	However hexadecimal float is aso supported
@@ -5280,7 +5280,7 @@ float_precision _float_precision_atofp(const char *str, size_t p, enum round_mod
 	sign = +1;
 	// Parse leading sign if any
 	pos = s.begin();
-	if (*pos == '+' || *pos == '-')  // 
+	if (*pos == '+' || *pos == '-')  //
 		{
 		sign = CHAR_SIGN(*pos);
 		pos++;
@@ -5294,19 +5294,19 @@ float_precision _float_precision_atofp(const char *str, size_t p, enum round_mod
 	if (nidx == std::string::npos) // Only digits (INTEGER) if any
 		{
 		int_precision ip(str);			// Construct integer to int_precision
-		float_precision fp(ip, p, m );	// Construct float_precision from int_precision 
+		float_precision fp(ip, p, m );	// Construct float_precision from int_precision
 		return fp;
 		} // End of Integer parsing
 
 	// Check for hexadecimal or decimal constant
 	if (pos[0] == '0' && pos + 1 != s.end() && tolower(pos[1]) == 'x')
 		{
-		base = 16; 
-		idx += 2; 
+		base = 16;
+		idx += 2;
 		}
 
 	// Floating point number starts here
-	// Pick up significant beteen idx and nidx 
+	// Pick up significant beteen idx and nidx
 	if (nidx > idx) // Number of digits before the . sign or exponent Ee
 		{
 		ipart = true;
@@ -5386,7 +5386,7 @@ float_precision _float_precision_atofp(const char *str, size_t p, enum round_mod
 		//	epart = true;
 		if (check_float_digits(s, idx, nidx, base))
 			{
-			// Collect exponent using base 
+			// Collect exponent using base
 			//std::cout << "Exponent length=" << (nidx - idx) << std::endl;  // DEBUG HVE
 			for (i = idx; i < nidx; i++)
 				{
@@ -5407,7 +5407,7 @@ float_precision _float_precision_atofp(const char *str, size_t p, enum round_mod
 	// Build the float_precision number
 	int_precision ip(number);
 	float_precision fp(ip, p+2+(size_t)ceil(log10(p)), m), fppow(0,p+2+(size_t)ceil(log10(p)),m);
-	expo_e10 -= (eptype)f_digits; 
+	expo_e10 -= (eptype)f_digits;
 	//std::string sschk;//DEBUG
 	//if (p == 298)		//DEBUG
 	//{
@@ -5417,10 +5417,10 @@ float_precision _float_precision_atofp(const char *str, size_t p, enum round_mod
 	//extern std::string formatInt(uintmax_t, int=10);
 	//float_precision fp2(10); fp2 = fp; fp2.exponent(0); double fu = fp;   // DEBUG
 	//std::cout << "atofp: control entry=" << log10(fu) + fp.exponent()*log10(2) << std::endl;   // DEBUG
-	
+
 	// Build the correct power adjustment if needed
  	if (expo_e10 != 0)
-		{	
+		{
 		// Correct for expo
 		if (expo_e10 > 0)
 			{
@@ -5449,7 +5449,7 @@ float_precision _float_precision_atofp(const char *str, size_t p, enum round_mod
 				//	sschk = fp.toString();
 				//}
 				}
-		} 
+		}
 	fp.sign(sign);
 	fp.precision(p);
 	return fp;
@@ -5459,13 +5459,13 @@ float_precision _float_precision_atofp(const char *str, size_t p, enum round_mod
 //	@author Henrik Vestermark (hve@hvks.com)
 //	@date		7/Sep/2021
 //	@brief 		Convert a string decimal number into a float_precision number
-//	@return 	std::string - The decimal floating point string	
+//	@return 	std::string - The decimal floating point string
 //	@param		"str"		-	ascii string of floating point number to convert
 // @param		"p"			- The precision of the number
 // @param		"m"			- The round mode of the number
 //
 // Description:
-//   Convert ascii string into a float_precision numbers 
+//   Convert ascii string into a float_precision numbers
 //    The ascii float format is based on standard C notation
 //
 float_precision _float_precision_atofp2(const char *str, size_t p, enum round_mode m)
@@ -5484,7 +5484,7 @@ float_precision _float_precision_atofp2(const char *str, size_t p, enum round_mo
 	sign = +1;
 	// Parse leading sign if any
 	pos = s.begin();
-	if (*pos == '+' || *pos == '-')  // 
+	if (*pos == '+' || *pos == '-')  //
 	{
 		sign = CHAR_SIGN(*pos);
 		pos++;
@@ -5498,12 +5498,12 @@ float_precision _float_precision_atofp2(const char *str, size_t p, enum round_mo
 	if (nidx == std::string::npos) // Only digits (INTEGER) if any
 	{
 		int_precision ip(str);			// Construct integer to int_precision
-		float_precision fp(ip, p, m);	// Construct float_precision from int_precision 
+		float_precision fp(ip, p, m);	// Construct float_precision from int_precision
 		return fp;
 	} // End of Integer parsing
 
 		// Floating point number starts here
-		// Pick up significant beteen idx and nidx 
+		// Pick up significant beteen idx and nidx
 	if (nidx > idx) // Number of digits before the . sign or exponent Ee
 	{
 		ipart = true;
@@ -5613,14 +5613,14 @@ float_precision _float_precision_atofp2(const char *str, size_t p, enum round_mo
 //	@return		int_precision - The int_precision of the floating point
 //	@param		"a"			- float_precision number to convert
 //
-//	@todo 	
-//		Can posible be optimzed by 
+//	@todo
+//		Can posible be optimzed by
 //		by vector<iptype> x.insert(x.begin(), fp.x.begin(), fp.x.begin()+chunk+1)
 //			ip >>= 64-within; or similar
 //
 // Description:
 //   Convert float_precision numbers into int_precision
-//		
+//
 //
 int_precision _float_precision_fptoip(const float_precision *fp)
 	{
@@ -5653,7 +5653,7 @@ int_precision _float_precision_fptoip(const float_precision *fp)
 //	@author Henrik Vestermark (hve@hvks.com)
 //	@date		10/Sep/2021
 //	@brief 		Convert float_precision numbers into string (integer representation)
-//	@return		std::string - The decimal floating point string	
+//	@return		std::string - The decimal floating point string
 //	@param		"a"			- float_precision number to convert
 //
 // Description:
@@ -5687,7 +5687,7 @@ std::string _float_precision_fptoainteger(const float_precision *a)
 //	@author Henrik Vestermark (hve@hvks.com)
 //	@date		1/21/2005
 //	@brief 		Remove trailingnosignificant zeros from the string
-//	@return 	nothing	
+//	@return 	nothing
 //	@param		"s"	-	digital string
 //
 // Description:
@@ -5701,7 +5701,7 @@ void _float_precision_strip_trailing_zeros( std::string *s )
 	// Strip trailing zeros
 	for( count = 0, pos = s->rbegin(); pos != s->rend() && FDIGIT( *pos ) == 0; pos++ )
          count++;
-      
+
 	s->erase( s->length() - count, count );
 	if( s->length() == 0 )
 		*s = FCHARACTER(0);
@@ -5712,34 +5712,34 @@ void _float_precision_strip_trailing_zeros( std::string *s )
 //	@author Henrik Vestermark (hve@hvks.com)
 //	@date		1/21/2005
 //	@brief 		Round the mantisaa to significant digits and rounding control
-//	@return 	int - Return the exponent adjustment (0 or 1) 
+//	@return 	int - Return the exponent adjustment (0 or 1)
 //	@param		"m"	-	digital string
 //  @param		"sign"   - The sign of the number
 //	@param		"precision" - The digital precision
-//	@param		 "mode"   - Rounding mode 
+//	@param		 "mode"   - Rounding mode
 //
 // Description:
 //   Rounding control
-//   Round the fraction to the number of precision based on the round mode 
+//   Round the fraction to the number of precision based on the round mode
 //   Note that the mantissa number has ALWAYS been normalize prior to rounding
 //   The mantissa NEVER contain a leading sign
-//   Rounding Mode Positive numnber   Result    
-//   Rounding to nearest              +�   
-//   Rounding toward zero (Truncate)  Maximum, positive finite value   
-//   Rounding up (toward +�)          +�   
-//   Rounding down) (toward -�)       Maximum, positive finite value   
+//   Rounding Mode Positive numnber   Result
+//   Rounding to nearest              +�
+//   Rounding toward zero (Truncate)  Maximum, positive finite value
+//   Rounding up (toward +�)          +�
+//   Rounding down) (toward -�)       Maximum, positive finite value
 //
-//   Rounding Mode Negative number    Result    
-//   Rounding to nearest              -�   
-//   Rounding toward zero (Truncate)  Maximum, negative finite value   
-//   Rounding up (toward +�)          Maximum, negative finite value   
-//   Rounding down) (toward -�)       -�   
+//   Rounding Mode Negative number    Result
+//   Rounding to nearest              -�
+//   Rounding toward zero (Truncate)  Maximum, negative finite value
+//   Rounding up (toward +�)          Maximum, negative finite value
+//   Rounding down) (toward -�)       -�
 //
 int _float_precision_rounding( std::string *m, int sign, size_t precision, enum round_mode mode )
    {
    enum round_mode rm = mode;
 
-   if( m->length() > precision )  // More digits than we need 
+   if( m->length() > precision )  // More digits than we need
       {
       if( rm == ROUND_NEAR )
          {
@@ -5758,7 +5758,7 @@ int _float_precision_rounding( std::string *m, int sign, size_t precision, enum 
       // Cut excessive digits
       m->erase( (std::string::size_type)precision, m->length() - precision );
 
-      if( rm == ROUND_UP ) 
+      if( rm == ROUND_UP )
          {
          size_t before;
 
@@ -5769,13 +5769,13 @@ int _float_precision_rounding( std::string *m, int sign, size_t precision, enum 
             if( m->length() > precision )
                m->erase( (std::string::size_type)precision, m->length() - precision );
 
-            _float_precision_strip_trailing_zeros( m );            
+            _float_precision_strip_trailing_zeros( m );
             return 1;
             }
          }
       }
 
-   _float_precision_strip_trailing_zeros( m );            
+   _float_precision_strip_trailing_zeros( m );
    return 0;
    }
 
@@ -5809,10 +5809,10 @@ std::string _float_precision_uadd_short( std::string *src1, unsigned int d )
    ireg = (unsigned short)( BASE_10 * d );
    rd_pos = des1.rbegin();
    r1_pos = src1->rbegin();
-   
+
    for(; r1_pos != src1->rend(); r1_pos++, rd_pos++ )
       {
-      ireg = (unsigned short)( FDIGIT( *r1_pos ) + FCARRY( ireg ) ); 
+      ireg = (unsigned short)( FDIGIT( *r1_pos ) + FCARRY( ireg ) );
       *rd_pos = FCHARACTER( (unsigned char)FSINGLE( ireg ) );
       if( FCARRY( ireg ) == 0 ) // Early out add
          break;
@@ -5841,7 +5841,7 @@ std::string _float_precision_uadd_short( std::string *src1, unsigned int d )
 //	 _float_precision_ctz						-- Count trailing zeros starting in vector<fptype>
 //	 _float_precision_strip_leading_zeros		-- Strip leading significant zeros
 //   _float_precision_strip_trailing_zeros		-- Strip trailing zeros
-//   _float_precision_normalize					-- Normalize the float number 
+//   _float_precision_normalize					-- Normalize the float number
 //   _float_precision_rounding					-- Round the number to given precision
 //   _float_precision_right_shift				-- >> shift a vector<fptype> number
 //   _float_precision_left_shift				-- <<  shift a vecotr<fptype> number
@@ -5858,7 +5858,7 @@ std::string _float_precision_uadd_short( std::string *src1, unsigned int d )
 //   _float_precision_udiv_short				-- Divide vector<fptype> with a fptype number
 //   _float_precision_udiv						-- Divide two vector<fptype> numbers
 //   _float_precision_urem_short				-- Rem vector<fptype> with fptype number
-//	 _float_precision_urem						-- Rem two vector<fptype> numbers 
+//	 _float_precision_urem						-- Rem two vector<fptype> numbers
 //
 //   Works Directly on the string class of the float number
 //
@@ -5871,7 +5871,7 @@ std::string _float_precision_uadd_short( std::string *src1, unsigned int d )
 //	@param		"a"	-	fptype operand
 //
 // Description:
-//   Count leading nosignificant zeros of the binary fptype 
+//   Count leading nosignificant zeros of the binary fptype
 //
 size_t _float_precision_clz(const fptype a)
 	{
@@ -5901,7 +5901,7 @@ size_t _float_precision_clz(const fptype a)
 //	@param		"mb"	-	vector<fptype> operand
 //
 // Description:
-//   Count leading nosignificant zeros of the binary fptype 
+//   Count leading nosignificant zeros of the binary fptype
 //
 size_t _float_precision_clz(const std::vector<fptype> &mb, size_t start)
 	{
@@ -5910,7 +5910,7 @@ size_t _float_precision_clz(const std::vector<fptype> &mb, size_t start)
 		{
 		cnt = _float_precision_clz(mb[i]);
 		tot_cnt += cnt;
-		if (cnt != Bitsfptype ) 
+		if (cnt != Bitsfptype )
 			break;
 		}
 	return tot_cnt;
@@ -5923,7 +5923,7 @@ size_t _float_precision_clz(const std::vector<fptype> &mb, size_t start)
 //	@param		"a"	-	fptype operand
 //
 // Description:
-//   Count trailing nosignificant zeros of the binary fptype 
+//   Count trailing nosignificant zeros of the binary fptype
 //	  fptype bit word input to count zero bits on right
 //   cnt will be the number of zero bits on the right,
 //   so if a is 1101000 (base 2), then c will be 3
@@ -5931,7 +5931,7 @@ size_t _float_precision_clz(const std::vector<fptype> &mb, size_t start)
 //
 size_t _float_precision_ctz(const fptype a)
 	{
-	fptype x = a;  // sizeof(fptype) can be 8, 4, 2, or 1 
+	fptype x = a;  // sizeof(fptype) can be 8, 4, 2, or 1
 	size_t cnt;
 	if (x == 0)
 		return Bitsfptype;
@@ -5943,7 +5943,7 @@ size_t _float_precision_ctz(const fptype a)
 		if (sizeof(fptype) >= 8 && (x & 0xffffffffu) == 0)
 			{
 			x >>= 32; cnt += 32;
-			}		
+			}
 		if (sizeof(fptype) >= 4 && (x & 0xffffu) == 0)
 			{
 			x >>= 16; cnt += 16;
@@ -5973,7 +5973,7 @@ size_t _float_precision_ctz(const fptype a)
 //	@param		"mb"	-	vector<fptype> operand
 //
 // Description:
-//   Count trailing nosignificant zeros of the binary fptype 
+//   Count trailing nosignificant zeros of the binary fptype
 //	  fptype bit word input to count zero bits on right
 //   cnt will be the number of zero bits on the right,
 //   so if a is 1101000 (base 2), then c will be 3
@@ -5996,7 +5996,7 @@ size_t _float_precision_ctz(const std::vector<fptype> &mb)
 //	@author Henrik Vestermark (hve@hvks.com)
 //	@date		5/Sep/2021
 //	@brief 		_float_precision_strip_leading_zeros
-//	@return		void	-	
+//	@return		void	-
 //	@param		"s"	-	reference to source operand
 //
 // Description:
@@ -6021,12 +6021,12 @@ void _float_precision_strip_leading_zeros(std::vector<fptype>& s)
 //	@author Henrik Vestermark (hve@hvks.com)
 //	@date		3/Sep/2021
 //	@brief 		_float_precision_strip_trailing_zeros
-//	@return		void	-	
+//	@return		void	-
 //	@param		"s"	-	reference to source operand
 //
 // Description:
 //   Remove trailing nosignificant zeros of the binary number
-//		this is from the top of the vector<fptype> 
+//		this is from the top of the vector<fptype>
 //
 void _float_precision_strip_trailing_zeros(std::vector<fptype>& s)
 {
@@ -6043,8 +6043,8 @@ void _float_precision_strip_trailing_zeros(std::vector<fptype>& s)
 
 //	@author Henrik Vestermark (hve@hvks.com)
 //	@date		9/Sep/2021
-//	@brief 		Right shift a string number 
-//	@return 	the result of the shift	
+//	@brief 		Right shift a string number
+//	@return 	the result of the shift
 //	@param		"src"	-	digital string
 //	@param		"shift" - Number of digital shifts
 //
@@ -6098,8 +6098,8 @@ std::vector<fptype> _float_precision_right_shift(const std::vector<fptype>& src,
 
 //	@author Henrik Vestermark (hve@hvks.com)
 //	@date		9/Sep/2021
-//	@brief 		Left shift a string number 
-//	@return 	The result of the shift	
+//	@brief 		Left shift a string number
+//	@return 	The result of the shift
 //	@param		"src"	-	digital string
 //	@param		"shift" - Number of digital binary shifts
 //
@@ -6132,7 +6132,7 @@ std::vector<fptype> _float_precision_left_shift(const std::vector<fptype>& src, 
 			nextcarry = n & mask;
 			n <<= within;
 			if(shiftwidth-within!=Bitsfptype) // shifting 64 leave operations unchanges (undefined behavior) on most microprocessor
-				n |= carry >> (shiftwidth - within);  
+				n |= carry >> (shiftwidth - within);
 			carry = nextcarry;
 			des.push_back(n);
 			}
@@ -6154,7 +6154,7 @@ std::vector<fptype> _float_precision_left_shift(const std::vector<fptype>& src, 
 //
 // Description:
 //   Normalize the mantissa
-//   1) If a number does not have a leading digit != 0 then left shift until 
+//   1) If a number does not have a leading digit != 0 then left shift until
 //   it has and adjust the exponent accordingly.
 //   or 2) if a number does have more than one leading digits then right shift until it has ony one
 //	  and adjust the exponent accordingly
@@ -6171,14 +6171,14 @@ eptype _float_precision_normalize(std::vector<fptype>& m)
 	shift = _float_precision_clz(m);
 	if (m.size()*Bitsfptype == shift) // All zeros (also a special case)
 		{
-		m.erase(m.begin()+1, m.end());  
+		m.erase(m.begin()+1, m.end());
 		return 0;
 		}
 	if (shift != offset)
 		{
 		if (shift < offset)
 			{
-			m = _float_precision_right_shift(m, offset - shift); 
+			m = _float_precision_right_shift(m, offset - shift);
 			expo += (eptype)(offset - shift);
 			}
 		else
@@ -6193,33 +6193,33 @@ eptype _float_precision_normalize(std::vector<fptype>& m)
 //	@author Henrik Vestermark (hve@hvks.com)
 //	@date		9/Sep/2021
 //	@brief 		Round the mantisaa to significant digits and rounding control
-//	@return 	int - Return the exponent adjustment (0 or 1) 
+//	@return 	int - Return the exponent adjustment (0 or 1)
 //	@param		"m"	-	digital string
 //	@param		"sign"   - The sign of the number
 //	@param		"precision" - The digital precision
-//	@param		"mode"   - Rounding mode 
+//	@param		"mode"   - Rounding mode
 //
 // Description:
 //   Rounding control
-//   Round the fraction to the number of precision based on the round mode 
+//   Round the fraction to the number of precision based on the round mode
 //   Note that the fptype number has ALWAYS been normalize prior to rounding
-//   Rounding Mode Positive numnber   Result    
-//   Rounding to nearest              +�   
-//   Rounding toward zero (Truncate)  Maximum, positive finite value   
-//   Rounding up (toward +�)          +�   
-//   Rounding down) (toward -�)       Maximum, positive finite value   
+//   Rounding Mode Positive numnber   Result
+//   Rounding to nearest              +�
+//   Rounding toward zero (Truncate)  Maximum, positive finite value
+//   Rounding up (toward +�)          +�
+//   Rounding down) (toward -�)       Maximum, positive finite value
 //
-//   Rounding Mode Negative number    Result    
-//   Rounding to nearest              -�   
-//   Rounding toward zero (Truncate)  Maximum, negative finite value   
-//   Rounding up (toward +�)          Maximum, negative finite value   
-//   Rounding down) (toward -�) 
+//   Rounding Mode Negative number    Result
+//   Rounding to nearest              -�
+//   Rounding toward zero (Truncate)  Maximum, negative finite value
+//   Rounding up (toward +�)          Maximum, negative finite value
+//   Rounding down) (toward -�)
 //		1) first check if we need to do any rounding at all
 //		2) If mode == ROUND_NEAR determine if we are doing ROUND_DOWn or ROUND_UP
 //		3) Discard excesive fptype digits that is beyond the precision
 //		4) Discard excessive bits that is beyond precision
-//		5) if Round up add one to the last bit of the precision. 
-//		6) if 5) carry a digit to the most significant bit then >> shift 1 bit and return 1 for expoenent adjustment 
+//		5) if Round up add one to the last bit of the precision.
+//		6) if 5) carry a digit to the most significant bit then >> shift 1 bit and return 1 for expoenent adjustment
 //		7) otherwise retun 0 for expoenent adjustment
 //
 int _float_precision_rounding(std::vector<fptype>& m, const int sign, const size_t precision, const enum round_mode mode)
@@ -6230,12 +6230,12 @@ int _float_precision_rounding(std::vector<fptype>& m, const int sign, const size
 	const size_t bn = pbits % Bitsfptype;
 	const size_t extra = bn == 0 ? 0 : 1;
 
-	if ((m.size() - 1)*Bitsfptype + 1 > pbits)  // More digits than we need 
+	if ((m.size() - 1)*Bitsfptype + 1 > pbits)  // More digits than we need
 		{
-		//fptype check0; 
+		//fptype check0;
 		size_t n1, bn1;
 		switch (rm)
-			{	
+			{
 			case ROUND_NEAR:
 				n1 = (pbits+1) / Bitsfptype + 1;
 				bn1 = (pbits+1) % Bitsfptype;
@@ -6283,7 +6283,7 @@ int _float_precision_rounding(std::vector<fptype>& m, const int sign, const size
 			if ((m)[0] > (fptype)1 )
 				{ // a carry was added to the most significant bit (now 2 instead of 1)
 				// dont do comparison like: != 1 since it can also be zero when doing adding
-				// Shift everything one to the right 
+				// Shift everything one to the right
 				m = _float_precision_right_shift( m, 1 );
  				if (m.size() > n+1 )
 					m.erase(m.begin()+n+1, m.end() );
@@ -6318,9 +6318,9 @@ int _float_precision_compare(const std::vector<fptype>& s1, const std::vector<fp
 
 	for (p1 = s1.begin(), p2 = s2.begin(), p1_end=s1.end(), p2_end=s2.end(); p1 != p1_end && p2 != p2_end; ++p1, ++p2)
 		{
-		if (*p1 > *p2 ) 
+		if (*p1 > *p2 )
 			return 1;	// s1 > s
-		if (*p1 < *p2 ) 
+		if (*p1 < *p2 )
 			return -1;	// s1 < s2
 		}
 	// The are still the same and one or both is exhausted
@@ -6336,7 +6336,7 @@ int _float_precision_compare(const std::vector<fptype>& s1, const std::vector<fp
 		if (*p2 > 0) return -1;  // s1 < s2
 		}
 
-	return 0;  // Same 
+	return 0;  // Same
 	}
 
 //	@author Henrik Vestermark (hve@hvks.com)
@@ -6385,7 +6385,7 @@ std::vector<fptype> _float_precision_uadd_short(const std::vector<fptype>& src, 
 		++d_pos;
 		}
 
-	// No more carry or end of upper radix number. 
+	// No more carry or end of upper radix number.
 	if (carry != 0) // If carry add the carry as a extra digit to the front of the number
 		des.insert(des.begin(),1,carry);
 
@@ -6513,7 +6513,7 @@ std::vector<fptype> _float_precision_usub(int *result, const std::vector<fptype>
 		des.reserve(src2.capacity());  // Reserver space to avoid time consuming reallocation
 	pos1 = src1.rbegin();
 	pos2 = src2.rbegin();
-	
+
 	for ( ; icur > 0; --icur )
 		{
 		if (icur<=s1len && icur <= s2len )
@@ -6525,7 +6525,7 @@ std::vector<fptype> _float_precision_usub(int *result, const std::vector<fptype>
 				borrow = 0;
 		/*	Not correct. please with sequence above.
 			r = *pos1 - (*pos2 + borrow);
-			borrow = *pos1 < (*pos2 + borrow) ? 1 : 
+			borrow = *pos1 < (*pos2 + borrow) ? 1 :
 					 *pos1 == 0 ? borrow : 0;      // if borrow was not paid then propagate it to next fptype subtraction
 					 * */
 			++pos1; ++pos2;
@@ -6557,7 +6557,7 @@ std::vector<fptype> _float_precision_usub(int *result, const std::vector<fptype>
 //	@brief 		std::vector<fptype> _float_precision_umul_short
 //	@return 	std::vector<fptype> - 	the result of the short multiplication
 //	@param      "src1"	-	Source string to multiply short number
-//	@param      "d"	   -	Number to multiply   
+//	@param      "d"	   -	Number to multiply
 //
 // Description:
 //   Short Mul: The digit d [0..2^64] is multiplied to the unsigned vector<fptype> number
@@ -6583,7 +6583,7 @@ std::vector<fptype> _float_precision_umul_short(const std::vector<fptype>& src1,
 		return des;
 		}
 
-	des.reserve(src1.capacity());  // Reserver space to avoid time consuming reallocation   
+	des.reserve(src1.capacity());  // Reserver space to avoid time consuming reallocation
 	pos = src1.rbegin();
 	end = src1.rend();
 
@@ -6597,7 +6597,7 @@ std::vector<fptype> _float_precision_umul_short(const std::vector<fptype>& src1,
 
 	if (carry != 0)
 		des.push_back(carry);
-	reverse(des.begin(), des.end()); 
+	reverse(des.begin(), des.end());
 	_float_precision_strip_trailing_zeros(des);
 
 	return des;
@@ -6635,7 +6635,7 @@ std::vector<fptype> _float_precision_umul(const std::vector<fptype>& src1, const
 				des = src1; // Mutiply with 1 or any true power of 2
 				}
 			else
-				{// src1 and src2 size > 1. 
+				{// src1 and src2 size > 1.
 				if (s2len == 2 || s1len + s2len < 20)	// Measured for best performance .
 					{
 					des = _float_precision_umul_school(src1, src2);
@@ -6729,7 +6729,7 @@ std::vector<fptype> _float_precision_umul_school(const std::vector<fptype>& src1
 //			16+30+4.9=50.9  which should be just Ok for 1 byte binary digits.
 //		2byte binary:
 //			log2(256^2^2)+log2(N)+safeguard*log2(log2(N))< digits in double which is 53. using safeguard as 1 we get for N=10^5 digits
-//			32+16.6+4.05=52.65 Only 10^5 decimal digits is usualy not enough for arbitrary precsion so we are using a max of 1 byte.	
+//			32+16.6+4.05=52.65 Only 10^5 decimal digits is usualy not enough for arbitrary precsion so we are using a max of 1 byte.
 //
 std::vector<fptype> _float_precision_umul_fourier(const std::vector<fptype>& src1, const std::vector<fptype>& src2, int nbits)
 	{
@@ -6745,9 +6745,9 @@ std::vector<fptype> _float_precision_umul_fourier(const std::vector<fptype>& src
 	l2 = src2.size();
 	des.reserve(l1 + l2 + 16);  // Ensure enough space to hold the Multiplication result to avoid reallocation of des
 	l = l1 < l2 ? l2 : l1;
-	// Since we split the 64bit numbers into chunk of 8bit to ensure we have enough accuray when using double 
-	l *= sizeof(fptype);  // Convert to byte size 
-	if (l > 6'000'000*sizeof(fptype) || bits==4)  
+	// Since we split the 64bit numbers into chunk of 8bit to ensure we have enough accuray when using double
+	l *= sizeof(fptype);  // Convert to byte size
+	if (l > 6'000'000*sizeof(fptype) || bits==4)
 		{
 		bits = 4; l <<= 1; radix = 16; sz *= 2; // use 2^4 instead of 2^8
 		//std::cout << "float_umul_fourier" << " do 4bit" << std::endl;  // DEBUG
@@ -6756,11 +6756,11 @@ std::vector<fptype> _float_precision_umul_fourier(const std::vector<fptype>& src
 	n <<= 1;
 
 #ifdef HVE_THREAD
-	// Using parallel sections below speeds up the performance of the two calls to _int_real_Fourier() with a factor of 1.8 
+	// Using parallel sections below speeds up the performance of the two calls to _int_real_Fourier() with a factor of 1.8
 	if (nbits == 0|| l1+l2>THREAD_FOURIER_LIMIT)
 		{// Starting thread using lambda expressions
 		// L1, l2, va, vb by reference since it is used after the thread has terminated
-		std::thread first( [&, n, bits]() 
+		std::thread first( [&, n, bits]()
 			{std::vector<fptype>::const_iterator pos, end;
 			size_t i;
 			va.resize(n);
@@ -6769,8 +6769,8 @@ std::vector<fptype> _float_precision_umul_fourier(const std::vector<fptype>& src
 			l1 = i; // L1 now Number of bytes or nibbles
 			_vector_real_fourier(va, n, 1); // FFT va
 			} );
-		
-		std::thread second([&, n, bits]() 
+
+		std::thread second([&, n, bits]()
 			{std::vector<fptype>::const_iterator pos, end;
 			size_t i;
 			vb.resize(n);
@@ -6839,7 +6839,7 @@ std::vector<fptype> _float_precision_umul_fourier(const std::vector<fptype>& src
 		}
 	reverse(des.begin(), des.end());
 	_float_precision_strip_trailing_zeros(des);
-	
+
 	return des;
 	}
 
@@ -6865,11 +6865,11 @@ std::vector<fptype> _float_precision_umul_linear(const std::vector<fptype>& lhs,
 	std::vector<fptype>::const_iterator pos, end;
 	std::vector<uintmax_t> linearconvolution(2 * (l_length + r_length), 0);  // initialize it with zero
 	std::vector<fptype> ua(l_length * 2), ub(r_length * 2);
-	uintmax_t Carry = 0; 
+	uintmax_t Carry = 0;
 
 	// Convert to half fptype from vector<fptype> and notice we dont stored in reverse order as we did for integers
 	// by first converting lhs onto ua and then rhs into ub
-	// e.g. lhs=a0+a1*R+a2*R^2,...an-1*R^n-1, a0 can be subdivied into half fptype  from fptype by mapping each mNumber number into 2 half fptype numbers 
+	// e.g. lhs=a0+a1*R+a2*R^2,...an-1*R^n-1, a0 can be subdivied into half fptype  from fptype by mapping each mNumber number into 2 half fptype numbers
 	// the function convertbinary2Halfiptype() does this job per mNumber fptype number
 	for (i = 0, pos = lhs.begin(), end = lhs.end(); pos != end; ++pos)
 		i += convertbinary2Halfiptype(&ua[i], *pos, i == 0);
@@ -6966,7 +6966,7 @@ std::vector<fptype> _float_precision_umul_linear(const std::vector<fptype>& lhs,
 //			16+30+4.9=50.9  which should be just Ok for 1 byte binary digits.
 //		2byte binary:
 //			log2(256^2^2)+log2(N)+safeguard*log2(log2(N))< digits in double which is 53. using safeguard as 1 we get for N=10^5 digits
-//			32+16.6+4.05=52.65 Only 10^5 decimal digits is usualy not enough for arbitrary precsion so we are using a max of 1 byte.	
+//			32+16.6+4.05=52.65 Only 10^5 decimal digits is usualy not enough for arbitrary precsion so we are using a max of 1 byte.
 //
 std::vector<fptype> _float_precision_umulsq_fourier(const std::vector<fptype>& src, int nbits)
 	{
@@ -6981,8 +6981,8 @@ std::vector<fptype> _float_precision_umulsq_fourier(const std::vector<fptype>& s
 	l1 = src.size();
 	des.reserve(l1 + l1 + 16);  // Ensure enough space to hold the Multiplication result to avoid reallocation of des
 	l = l1;
-	// Since we split the 64bit numbers into chunk of 8bit to ensure we have enough accuray when using double 
-	l *= sizeof(fptype);  // Convert to byte size 
+	// Since we split the 64bit numbers into chunk of 8bit to ensure we have enough accuray when using double
+	l *= sizeof(fptype);  // Convert to byte size
 	if (l > 6'000'000 * sizeof(fptype) || bits == 4)
 		{
 		bits = 4; l <<= 1; radix = 16; sz *= 2; // use 2^4 instead of 2^8
@@ -7065,7 +7065,7 @@ std::vector<fptype> _float_precision_umulsq_linear(const std::vector<fptype>& sr
 
 	// Convert to half fptype from vector<fptype> and notice we dont stored in reverse order as we did for integers
 	// by first converting lhs onto ua and then rhs into ub
-	// e.g. lhs=a0+a1*R+a2*R^2,...an-1*R^n-1, a0 can be subdivied into half fptype  from fptype by mapping each mNumber number into 2 half fptype numbers 
+	// e.g. lhs=a0+a1*R+a2*R^2,...an-1*R^n-1, a0 can be subdivied into half fptype  from fptype by mapping each mNumber number into 2 half fptype numbers
 	// the function convertbinary2Halfiptype() does this job per mNumber fptype number
 	for (i = 0, pos = src.begin(), end = src.end(); pos != end; ++pos)
 		i += convertbinary2Halfiptype(&ua[i], *pos, i == 0);
@@ -7141,7 +7141,7 @@ std::vector<fptype> _float_precision_umulsq_linear(const std::vector<fptype>& sr
 //
 ///////////////////////////////////////////////////////////////////////////////////////
 
-	 
+
 // Short Division: The fptype digit d  is divide up into the unsigned fptype vector
 //
 //	@author Henrik Vestermark (hve@hvks.com)
@@ -7153,7 +7153,7 @@ std::vector<fptype> _float_precision_umulsq_linear(const std::vector<fptype>& sr
 //	@param		"remaind"			- The remaind of the short division
 //
 // Description:
-//   Short divide: The fptype digit d [0..2^32] is divided up in the unsigned vector<fptype> 
+//   Short divide: The fptype digit d [0..2^32] is divided up in the unsigned vector<fptype>
 //	  Notice only up to int 32bit can be handle as short div.
 //   Divide with zero throw an exception
 //
@@ -7348,13 +7348,13 @@ std::vector<fptype> _float_precision_urem(const std::vector<fptype>& src1, const
 	std::vector<fptype> des, tmp;
 
 	des.push_back(0);
-	if (src2.size() == 1 /* && (src2->front() >> 32) == 0*/ ) // Make short rem 
+	if (src2.size() == 1 /* && (src2->front() >> 32) == 0*/ ) // Make short rem
 		{
 		//fptype rem;
 		//_float_precision_udiv_short(&rem, *src1, src2->front());
 		//des[0] = rem;
 		// Urem_short below can handle the entire 2^63-1 range. It is therefore better to use than udiv_short
-		des = _float_precision_urem_short(src1, src2.front());	
+		des = _float_precision_urem_short(src1, src2.front());
 		return des;
 		}
 
@@ -7392,15 +7392,15 @@ std::vector<fptype> _float_precision_urem(const std::vector<fptype>& src1, const
 
 //	@author Henrik Vestermark (hve@hvks.com)
 //	@date		4/Oct/2021
-//	@brief 		Calculate the inverse of a 
+//	@brief 		Calculate the inverse of a
 //	@return 	float_precision -	Return 1/a
 //	@param      "a"	-	The float_precision number to inverse
 //
 // Description:
 //   Inverse of V
-//  
+//
 //	Optimized for inverting a true power of 2.
-//	Using Brent suggestion with small performance enchancement 
+//	Using Brent suggestion with small performance enchancement
 //
 //	Hybrid 3rd order method for calculation of the inverse of a float_precision number
 //	with improve stopping criteria to avoid unnecessary calculation
@@ -7457,7 +7457,7 @@ float_precision _float_precision_inverse(const float_precision& a)
 			r -= s;		// r=(1-yx)
 			s = x;		// Build s
 			s *= r;		// s=x(1-yx)
-			x += s;		// x=x+x(1-yx) 
+			x += s;		// x=x+x(1-yx)
 			s *= r;		// s=x(1-yx)^2
 			x += s;		// x=x+x(1-yx)+x(1-yx)^2
 
@@ -7486,7 +7486,7 @@ float_precision _float_precision_inverse(const float_precision& a)
 				s.precision(precision + 1);	// round to final precision
 				if (s == c1)
 					break;	// No more improvement
-				// Next check if this iteration will be within limit 
+				// Next check if this iteration will be within limit
 				std::vector<fptype> *mp = s.pointer();
 				size_t offset = _float_precision_clz(*mp, 1) + 1 + s.exponent();
 				fx = -(double)limit / offset;
@@ -7551,7 +7551,7 @@ float_precision _float_precision_inverse(const float_precision& a)
 
 		s = y;	s *= x;	r = c1;	r -= s;		//r = c1 - y * x;		// (1-yx)
 		s = x; 	s *= r;		//s = x * r;			// x(1-yx)
-		x += s;				// x = x + x(1 - yx) 
+		x += s;				// x = x + x(1 - yx)
 		if (2 * r.exponent() > limit)
 			{ s *= r;	x += s; }	// x=x+x(1-yx)+x(1-yx)^2
 		if (digits == precision + extra && (r.iszero() || 2 * r.exponent() < limit))
@@ -7587,7 +7587,7 @@ float_precision _float_precision_inverse(const float_precision& a)
 float_precision sqrt(const float_precision& a)
 	{
 	// Handle NaN argument ansd -infinity
-	if (isnan(a)||(isinf(a)&&a.sign()<0)) 
+	if (isnan(a)||(isinf(a)&&a.sign()<0))
 		return FP_QUIET_NAN;
 	// Handle +infinity
 	if (isinf(a))
@@ -7627,7 +7627,7 @@ float_precision sqrt(const float_precision& a)
 	r.precision(precision + extra);
 	x.precision(precision + extra);
 	// Get a initial guess using ordinary floating point
-	fx = (double)y;				// Convert to double	
+	fx = (double)y;				// Convert to double
 	// set the initial guess with at approx 16 correct digits
 	fx = 1 / sqrt(fx);
 	x = float_precision(fx);
@@ -7643,12 +7643,12 @@ float_precision sqrt(const float_precision& a)
 		if (halley == true)
 			{// Use Halley 3rd order iteration
 			z.precision(digits);
-			r = y;						// y 
+			r = y;						// y
 			r *= x.square();			// yx^2
 			z = c3; z *= r; z = c10 - z;
 			r *= z;						//r *= c10 - c3*r or r=yx^2(10-3yx^2)
 			r = c15 - r;				// 15-yx^2*(10-3*yx^2)
-			r.adjustExponent(-3);		// r=r/8   	
+			r.adjustExponent(-3);		// r=r/8
 			x *= r;						// x=x/8(15-yx^2*(10-3*yx^2)
 			if (digits == precision + extra) // Reach final iteration step in regards to precision
 				{// Reach maximum precision
@@ -7672,7 +7672,7 @@ float_precision sqrt(const float_precision& a)
 			r = y;						// y
 			r *= x.square();			// yx^2
 			r = c3 - r;					// 3-yx^2
-			r.adjustExponent(-1);		// (3-yx^2)/2  	
+			r.adjustExponent(-1);		// (3-yx^2)/2
 			x *= r;						// x=x(3-yx^2)/2
 			if (digits == precision + extra) // Reach final iteration step in regards to precision
 				{// Reach maximum precision
@@ -7729,7 +7729,7 @@ float_precision sqrt(const float_precision& a)
 	r.precision(precision + extra);
 	x.precision(precision + extra);
 	// Get a initial guess using ordinary floating point
-	fv = (double)y;				// Convert to double	
+	fv = (double)y;				// Convert to double
 								// set the initial guess with at approx 16 correct digits
 	fv = 1 / sqrt(fv);
 	x = float_precision(fv);
@@ -7742,7 +7742,7 @@ float_precision sqrt(const float_precision& a)
 		x.precision(digits);
 		r = y * x * x;				// yx^2
 		r = (c15 - r*(c10 - c3*r)); // 15-yx^2*(10-3*yx^2)
-		r.adjustExponent(-3);		// r=r/8   	
+		r.adjustExponent(-3);		// r=r/8
 		x *= r;						// x=x/8(15-yx^2*(10-3*yx^2)
 		if (digits == precision + extra) // Reach final iteration step in regards to precision
 			{
@@ -7781,7 +7781,7 @@ float_precision sqrt(const float_precision& a)
 //
 // Description:
 //   Use Binary splitting method for e
-//   e^1=p(k)/q(k)), where k is the number of Taylor terms needed	
+//   e^1=p(k)/q(k)), where k is the number of Taylor terms needed
 //	Speed up by calculating p & q for range [a..b] <= 4
 //
 static void binarysplittingE(const uintmax_t a, const uintmax_t b, int_precision& p, int_precision& q)
@@ -7825,7 +7825,7 @@ static void binarysplittingE(const uintmax_t a, const uintmax_t b, int_precision
 
 //	@author Henrik Vestermark (hve@hvks.com)
 //	@date		17/Jul/2022
-//	@brief 		Calculate  the number of Taylor terms needed using Stirling approximation 
+//	@brief 		Calculate  the number of Taylor terms needed using Stirling approximation
 //	@return 	The number of needed Taylor terms for e
 //	@param      "digits"	- The precision in decimal digits
 //
@@ -7833,7 +7833,7 @@ static void binarysplittingE(const uintmax_t a, const uintmax_t b, int_precision
 //   Use Binary splitting method for e
 //   Firt calculate the needed number of Taylor terms and then feed that into
 //	the binary splitting method for e
-// 
+//
 static uintmax_t stirling_approx(uintmax_t digits)
 	{
 	double xnew, xold;
@@ -7858,13 +7858,13 @@ static uintmax_t stirling_approx(uintmax_t digits)
 //	@return 	e			- e for the requested precision
 //	@param      "digits"	- The precision in decimal digits
 //
-//	@todo  
+//	@todo
 //
 // Description:
 //   Use Binary splitting method for e
 //   First calculate the needed number of Taylor terms and then feed that into
 //	the binary splitting method for e
-// 
+//
 static float_precision computeEdigits(const uintmax_t digits)
 	{
 	uintmax_t k;
@@ -7893,10 +7893,10 @@ static float_precision computeEdigits(const uintmax_t digits)
 
 		std::thread third([=, &p3, &q3]()
 		{binarysplittingE(k/2, 3*k/4, p3, q3);});	// interval [k/2..3k/4]
-		
+
 		std::thread fourth([=, &p4, &q4]()
 		{binarysplittingE(3*k/4, k, p4, q4);});		// interval [3k/4..k]
-		
+
 		first.join();
 		second.join();
 		// Reconstruct [0..k/2]
@@ -7911,10 +7911,10 @@ static float_precision computeEdigits(const uintmax_t digits)
 		p = p*q3 + p3;
 		q *= q3;
 		}
-#else		
+#else
 	binarysplittingE(0, k, p, q);
 #endif
-	
+
 	fp = float_precision(p + q, digits + 1); fq = float_precision(q, digits + 1);
 	fp /= fq;
 	fp.precision(digits);
@@ -7936,7 +7936,7 @@ static float_precision computeEdigits(const uintmax_t digits)
 //
 // Description:
 //
-// 64 bit version of spigot algorithm for LN(x/y) fraction 
+// 64 bit version of spigot algorithm for LN(x/y) fraction
 // It has automatic 64bit integer overflow detection in which case the result start with the string "Overflow...."
 // A Column: x-1,x-1,x-1,...,x-1
 // B Column: x,x,x,x,x,...,x
@@ -7997,7 +7997,7 @@ static std::string spigot_lnxy_64(const unsigned int x, const unsigned int y, co
 			if (tmp_n > (ULLONG_MAX) / f)
 				overflow_flag = true;
 			tmp_n *= f;		// Scale it
-			// Check for 64bit overflow. Not very likely 
+			// Check for 64bit overflow. Not very likely
 			if (carry > 0 && tmp_dn > (ULLONG_MAX - tmp_n) / carry)
 				overflow_flag = true;
 			tmp_n += carry * tmp_dn;
@@ -8075,7 +8075,7 @@ static std::string spigot_lnxy_64(const unsigned int x, const unsigned int y, co
 // Description:
 //
 // Implement the binary splitting method for Chudnovsky PI method
-// It call the function recursively until the index (a+1==b) 
+// It call the function recursively until the index (a+1==b)
 // The function is declare static since it only serve as a sub function for the function in _float_table()
 //
 static void binarysplittingChudnovskiPI(const uintmax_t a, const uintmax_t b, int_precision& p, int_precision& q, int_precision& r)
@@ -8112,7 +8112,7 @@ static void binarysplittingChudnovskiPI(const uintmax_t a, const uintmax_t b, in
 	r *= rr;
 	}
 
-//End Chudnovsky Binary Splitting 
+//End Chudnovsky Binary Splitting
 
 //	@author Henrik Vestermark (hve@hvks.com)
 //	@date		1/Jan/2023
@@ -8173,7 +8173,7 @@ static void binarysplittingEuler(const uintmax_t a, const uintmax_t b, const uin
 //	@author Henrik Vestermark (hve@hvks.com)
 //	@date		1/Jan/2023
 //	@brief 		Calculate the Euler-Mascheroni constant using the Binary Splittting method
-//	@param		"precision"	-	Number of decimal precision 
+//	@param		"precision"	-	Number of decimal precision
 //
 // Description:
 //	The function compute the Euler-Mascheroni constant
@@ -8185,7 +8185,7 @@ static float_precision computeEulerdigits(const uintmax_t precision)
 	const uintmax_t n = (uintmax_t)ceil((precision * log(10) + log(3.14159265)) / 4);
 	uintmax_t k = uintmax_t(ceil(n * 3.5911214766686221366));
 	int_precision p, q, r, t, u;
-	
+
 	float_precision fp, fq;
 
 	fp.precision(precision + 1);
@@ -8220,7 +8220,7 @@ static float_precision computeEulerdigits(const uintmax_t precision)
 		//t *= tt;
 	}
 #else
-	// Do no threading 
+	// Do no threading
 	binarysplittingEuler(0, k, n * n, p, q, r, t, u);
 #endif
 	// Finalize Calculation
@@ -8262,7 +8262,7 @@ static void binarysplittingCatalan(const uintmax_t a, const uintmax_t b, int_pre
 		if (b <= 178'338'809) // Check for overflow
 			p = int_precision((580 * b - 184) * b + 15);	// 580b^2-184b+15
 		else
-		{	// Handle b >178'338'809. 
+		{	// Handle b >178'338'809.
 			p = int_precision(580 * b - 184);			// 580b-184
 			p *= int_precision(b);					// (580b-184)b
 			p += int_precision(15);					// (580b-184)b+15
@@ -8320,7 +8320,7 @@ static void binarysplittingCatalan(const uintmax_t a, const uintmax_t b, int_pre
 //	@author Henrik Vestermark (hve@hvks.com)
 //	@date		9/Jan/2023
 //	@brief 		Calculate the Catalan constant using the Bradhurst method
-//	@param		"precision"	-	Number of decimal precision 
+//	@param		"precision"	-	Number of decimal precision
 //
 // Description:
 //		Using the Pilehrood 2010 short version with two way threading for calculating the Catalan constant
@@ -8359,7 +8359,7 @@ static float_precision computeCatalandigits(const uintmax_t precision)
 		//r *= rr;	// not used in final calculation below
 	}
 #else
-	// Do no threading 
+	// Do no threading
 	binarysplittingCatalan(0, k, p, q, r);
 #endif
 
@@ -8475,8 +8475,8 @@ static void binarysplittingZeta3(const uintmax_t a, const uintmax_t b, int_preci
 
 //	@author Henrik Vestermark (hve@hvks.com)
 //	@date		24/Jan/2023
-//	@brief 		Calculate the Apery (zeta(3)) constant using the Amdeberhan-Zeitberger method from 1997 
-//	@param		"precision"	-	Number of decimal precision 
+//	@brief 		Calculate the Apery (zeta(3)) constant using the Amdeberhan-Zeitberger method from 1997
+//	@param		"precision"	-	Number of decimal precision
 //
 // Description:
 //		Using the Amdeberhan-Zeilberger 1997 version with two way threading for calculating the Zeta(3) constant
@@ -8514,7 +8514,7 @@ static float_precision computeZeta3digits(const uintmax_t precision)
 		//r *= rr;	// not used in final calculation below
 	}
 #else
-	// Do no threading 
+	// Do no threading
 	binarysplittingZeta3(0, kmax, p, q, r);
 #endif
 
@@ -8541,9 +8541,9 @@ static float_precision computeZeta3digits(const uintmax_t precision)
 //
 // Description:
 //   Dynamic tables for "fixed" constant like ln(2), ln(10), e, PI, 1/Sqrt(2), sqrt(2), euler-mascheroni
-//   If a higher precision is requested we create it and return otherwise 
+//   If a higher precision is requested we create it and return otherwise
 //   we just the "constant" at a higher precision which eventually will be
-//   rounded to the destination variables precision 
+//   rounded to the destination variables precision
 //	Added 1/sqrt(2) and sqrt(2) as constants
 //	Added Euler-Mascheroni constant
 //  Notice precision and round_mode is optinal parameters if missing default value will apply
@@ -8606,13 +8606,13 @@ float_precision _float_table( enum table_type tt, size_t precision, const enum r
 				res = ln10;								// Save the result
 				}
 			break;
-		case _PI: 
+		case _PI:
 			if( pi.precision() > precision )
 			res = pi;
 			else
 				{// Binary splitting with recursion
 				size_t prec = std::max((size_t)20U, precision + 2);
-				const uintmax_t k = (uintmax_t)ceil(prec*log(10) / log(151931373056000ull)); //(uintmax_t)ceil(precision / 14.18); // 
+				const uintmax_t k = (uintmax_t)ceil(prec*log(10) / log(151931373056000ull)); //(uintmax_t)ceil(precision / 14.18); //
 				int_precision p, q, r;
 #ifdef HVE_THREAD
 				if (k <= TREAT_CHUDNOVSKI_LIMIT)
@@ -8675,9 +8675,9 @@ float_precision _float_table( enum table_type tt, size_t precision, const enum r
 				const intmax_t limit = -(intmax_t)((precision + 1)*log2(10)) - 1;
 				size_t digits;
 				float_precision r;
-	 
+
 				digits = invsqrt2.precision();  // Get current precision
-				if (invsqrt2.iszero() == true)  // First time, do initialization 
+				if (invsqrt2.iszero() == true)  // First time, do initialization
 					{
 					digits = 16;
 					invsqrt2.precision(std::max(precision, digits));  // Ensure minimum as 16 decimal digits
@@ -8686,7 +8686,7 @@ float_precision _float_table( enum table_type tt, size_t precision, const enum r
 					invsqrt2 = float_precision(1.0 / sqrt(2.0),digits); // Ensure same precision as standard IEEE754
 					}
 				precision = std::max(precision, digits); // Keep maxium precision already calculated
-				invsqrt2.precision(precision);	
+				invsqrt2.precision(precision);
 #ifdef HVE_DEBUG
 				std::cout << "INVSQRT2 Max precision=" << precision+extra << " start Precision=" << digits*2 << std::endl;  // Debug
 				int tadd = clock();
@@ -8694,15 +8694,15 @@ float_precision _float_table( enum table_type tt, size_t precision, const enum r
 				// Now iterate using Netwon x=0.5x(3-2x^2), where x=invsqrt2
 				for (digits *= 2; ; digits = std::min(precision + extra, digits * 2), ++loopcnt)
 					{
-					// Increase precision by a factor of two for the working variable s r & u. 
+					// Increase precision by a factor of two for the working variable s r & u.
 					r.precision(digits);
 					invsqrt2.precision(digits);
-					// Notice 2 is the original number to squareroot which has the full precision 
+					// Notice 2 is the original number to squareroot which has the full precision
 					// so we start by assigning it to r, rounding it to the precision of r
 					r = invsqrt2.square();		// x^2
 					r.adjustExponent(+1);		// 2x^2
 					r = c3 - r;					// 3-2x^2
- 					r.adjustExponent(-1);		// r *= c05; 
+ 					r.adjustExponent(-1);		// r *= c05;
 					invsqrt2 *= r;				// (3-2x^2)/2
 #ifdef HVE_DEBUG
 					tadd = clock() - tadd;
@@ -8752,7 +8752,7 @@ float_precision _float_table( enum table_type tt, size_t precision, const enum r
 				float_precision r;
 
 				digits = invsqrt3.precision();  // Get current precision
-				if (invsqrt3.iszero() == true)  // First time, do initialization 
+				if (invsqrt3.iszero() == true)  // First time, do initialization
 					{
 					digits = 16;
 					invsqrt3.precision(std::max(precision, digits));  // Ensure minimum as 16 decimal digits
@@ -8765,10 +8765,10 @@ float_precision _float_table( enum table_type tt, size_t precision, const enum r
 				// Now iterate using Netwon Un=0.5U(3-2U^2), where U=invsqrt2
 				for (digits *= 2; ; digits = std::min(precision + extra, digits * 2), ++loopcnt)
 					{
-					// Increase precision by a factor of two for the working variable s r & u. 
+					// Increase precision by a factor of two for the working variable s r & u.
 					r.precision(digits);
 					invsqrt3.precision(digits);
-					// Notice V is the original number to squareroot which has the full precision 
+					// Notice V is the original number to squareroot which has the full precision
 					// so we start by assigning it to r, rounding it to the precision of r
 					r = c3;						// 3
 					r *= invsqrt3.square();		// 3x^2
@@ -8894,7 +8894,7 @@ float_precision exp(const float_precision& x)
 		return x;
 
 	const float_precision c0(0);
-	float_precision v(x); 
+	float_precision v(x);
 	// Handle -infinity, +infinity has already been handle above
 	if (isinf(x))
 		return v = c0;
@@ -8940,7 +8940,7 @@ float_precision exp(const float_precision& x)
 static float_precision AGM(const float_precision&, const float_precision&);// Forward declaration
 static float_precision logAGM(const float_precision& x)
 	{
-	
+
 	const size_t guard = 5;
 	const size_t precision = x.precision() + (size_t)ceil(log10(x.precision())) + guard;
 	const uintmax_t s = (uintmax_t)ceil(precision*log(10) / (2 * log(2)) + 1 - log((double)x) / log(2));
@@ -9057,7 +9057,7 @@ static float_precision logTaylor(const float_precision& x)
 
 	// In order to get a fast Taylor series result we need to get the fraction closer to one
 	// The fraction part is [1...1.1) (base 10) at this point
-	// Repeat a series of no_reduction square root 
+	// Repeat a series of no_reduction square root
 #define HVE_USE_NROOT
 #ifdef HVE_USE_NROOT
 	if (no_reduction > 0) { z = nroot(z, 2ull << (no_reduction - 1)); }
@@ -9096,7 +9096,7 @@ static float_precision logTaylor(const float_precision& x)
 			if (i == 0) vn[i] = zsq;
 			if (i > 0) vn[i] = vn[i - 1] * zsq;
 			}
-		// Now iterate 
+		// Now iterate
 		for (i = 3; ; )
 			{
 			for (j = 0; j < group; ++j)
@@ -9123,7 +9123,7 @@ static float_precision logTaylor(const float_precision& x)
 	// Adjust result from the reduction by multiply it with 2^(k+1)
 	logx *= float_precision(pow(2.0, (double)(k + 1)));
 	if (expo != 0)  // Adjust for original exponent
-		{// Ln(x^y) = Ln(x) + Ln(2^y) = Ln(x) + y * ln(2) 
+		{// Ln(x^y) = Ln(x) + Ln(2^y) = Ln(x) + y * ln(2)
 		logx += float_precision(expo) * _float_table(_LN2, precision + 1);
 		}
 
@@ -9178,19 +9178,19 @@ float_precision log10( const float_precision& x )
 		return x;
 
 	// Handle x<=0 arguments
-	if( x.iszero() || x.sign()<0) 
+	if( x.iszero() || x.sign()<0)
 		{ // this also handle the case when x==-infinity
 		throw float_precision::domain_error();
 	}
 
-	size_t precision = x.precision();  
+	size_t precision = x.precision();
 	float_precision res( 0, precision + 1 );
 	res = x;
 	res = log( res ) / _float_table( _LN10, precision + 1 );
-   
+
 	// Round to same precision as argument and rounding mode
 	res.mode( x.mode() );
-	res.precision( x.precision() );  
+	res.precision( x.precision() );
 	return res;
 	}
 
@@ -9232,7 +9232,7 @@ float_precision log2(const float_precision& x)
 ///////////////////////////////////////
 //
 // FLOAT PRECISION FUNCTIONS
-//    Special functions: 
+//    Special functions:
 //		pow()
 //		fmod()
 //		floor()
@@ -9263,8 +9263,8 @@ float_precision log2(const float_precision& x)
 //	Update to use the new method .toInteger()
 //	Special case is when x is a true power of 2 and y is an integer is added. It now also check for x==0 and y==0
 //	and throw an exception domain error if both argument is zero or x<0 and y not an integer
-//  Notice: the working precision is derived out of x.precision()  
-// 
+//  Notice: the working precision is derived out of x.precision()
+//
 float_precision pow( const float_precision& x, const float_precision& y )
    {
 	// Handle NaN
@@ -9276,8 +9276,8 @@ float_precision pow( const float_precision& x, const float_precision& y )
 
 	if (isinf(x))
 	{
-		// x==+-infinity and y==0 => return x^0=1;  
-		if (y.iszero())  
+		// x==+-infinity and y==0 => return x^0=1;
+		if (y.iszero())
 			return float_precision(1, x.precision(), x.mode());
 		//  x== +-infinity and y<0 then return zer0
 		if( y.sign()<0)
@@ -9287,7 +9287,7 @@ float_precision pow( const float_precision& x, const float_precision& y )
 		if (x.sign() < 0)
 		{ // x=-infinity
 			float_precision i(y);
-			i.toInteger(); // now i is the integer part of y. 
+			i.toInteger(); // now i is the integer part of y.
 			// Check that y is a true integer, with a max range of a 64 bit integer
 			if (y == i && abs(i) <= float_precision(LLONG_MAX))
 			{  // y is an integer
@@ -9309,7 +9309,7 @@ float_precision pow( const float_precision& x, const float_precision& y )
 		}
 
 	}
-	
+
 	// Handle when both x and y is zero
 	if(x.iszero() && y.iszero())
    {
@@ -9330,18 +9330,18 @@ float_precision pow( const float_precision& x, const float_precision& y )
    // Now both x and y is non-zero
    // add two extra guard digits to avoid loss of precision when performing  exp( y * ln(x) ) )
   // size_t precision = x.precision() + 2 + (size_t)ceil(log10(x.precision()));
-   res.precision( x.precision()+4 );  
+   res.precision( x.precision()+4 );
    expo = y.exponent();
    if( expo >= 0 )
       {
       i.precision( y.precision() );
       i = y;
-	  i.toInteger(); // now i is the integer part of y. 
+	  i.toInteger(); // now i is the integer part of y.
 	  // Check that y is a true integer, with a max range of a 64 bit integer
 	  if( y == i && abs(i) <= float_precision( LLONG_MAX ) )
 		  yinteger = true;
       }
-   
+
    if( yinteger == false ) // y is not an integer so do x^y= exp^(y*log(x)) the regular way
       {
 	   if (x.sign() < 0)
@@ -9355,7 +9355,7 @@ float_precision pow( const float_precision& x, const float_precision& y )
       }
    else
    {	// raise to the power of y when y is an integer. Use optimized method.
-		// This can be further optimzed if x is a true power of 2. 
+		// This can be further optimzed if x is a true power of 2.
 	   int sign = i.sign();
 	   if (sign < 0)
 		   i.change_sign();
@@ -9374,8 +9374,8 @@ float_precision pow( const float_precision& x, const float_precision& y )
 		   {
 			   if ((n & 0x1) != 0)
 				   res *= p;		// Odd
-			   if (n > 1)	p *= p;		// Square it						 
-		   }  
+			   if (n > 1)	p *= p;		// Square it
+		   }
 		}
 		if (sign < 0)
 			   res = res.inverse();
@@ -9384,7 +9384,7 @@ float_precision pow( const float_precision& x, const float_precision& y )
    res.precision(x.precision());
    return res;
    }
- 
+
 //	@author Henrik Vestermark (hve@hvks.com)
 //	@date		27/Sep/2021
 //	@brief 		Calculate fmod(x,y)
@@ -9408,7 +9408,7 @@ float_precision fmod( const float_precision& x, const float_precision& y )
 		return y;
 
    float_precision i, f;
-   
+
    f.precision( x.precision() );
    i.precision( x.precision() );
    i = x / y;
@@ -9418,7 +9418,7 @@ float_precision fmod( const float_precision& x, const float_precision& y )
 		{
 		i.toInteger();
 		f = x - i * y;
-		}	
+		}
 
    return f;
    }
@@ -9456,7 +9456,7 @@ float_precision floor( const float_precision& x )
 		if (f.sign() < 0 && (x - f).iszero() == false )
 			f -= c1;
 		}
- 
+
 	return f;
 	}
 
@@ -9638,7 +9638,7 @@ float_precision abs( const float_precision& x )
 //
 // Description:
 //   The ldexp function returns the value of x * 2^exp
-// Optimized Nov-2022 bu just adjusting the exponent of x. 
+// Optimized Nov-2022 bu just adjusting the exponent of x.
 //
 float_precision ldexp( const float_precision& x, eptype exp )
 	{
@@ -9662,9 +9662,9 @@ float_precision ldexp( const float_precision& x, eptype exp )
 //
 // Description:
 //   The frexp()
-//   The frexp function breaks down the floating-point value (x) into a mantissa (m) and an exponent (n), 
-//   such that the absolute value of m is greater than or equal to 1/RADIX and less than RADIX, and x = m*Radix^n. 
-//   The integer exponent n is stored at the location pointed to by expptr. 
+//   The frexp function breaks down the floating-point value (x) into a mantissa (m) and an exponent (n),
+//   such that the absolute value of m is greater than or equal to 1/RADIX and less than RADIX, and x = m*Radix^n.
+//   The integer exponent n is stored at the location pointed to by expptr.
 //	The mantissa is returned in the range of [1.0,2.0)
 //
 float_precision frexp( const float_precision& x, eptype *expptr )
@@ -9678,7 +9678,7 @@ float_precision frexp( const float_precision& x, eptype *expptr )
 
    if(expptr!=NULL)
 	  *expptr = x.exponent()+1;
-   
+
    float_precision res(x);
    res.exponent(-1);
 
@@ -9722,7 +9722,7 @@ float_precision nextafter(const float_precision& x, const float_precision& towar
 		return x;
 
 	float_precision na(x);
-	
+
 	if (x == towards)
 		return x;
 
@@ -9744,7 +9744,7 @@ float_precision nextafter(const float_precision& x, const float_precision& towar
 //
 // Description:
 // Fused Multiply-Add (FMA) is a computing operation that performs multiplication and addition in a single step,
-// with a single rounding of the result. 
+// with a single rounding of the result.
 // This operation is crucial in various computing tasks like interval arithmetic.
 // see intervalprecision.h template file
 // perform result=a*b+c where a*b intermediate computation is done without loosing precision and the add is conducted with
@@ -9901,10 +9901,10 @@ float_precision asin(const float_precision& x)
 	k = 2 * (intmax_t)ceil(log(2)*log(precision));
 	k = std::min((intmax_t)30, k);  // Top of a maximum 30 reduction. only relevant if the multipier for k>2
 									// Adjust k for final value of v when v is small (less than 1). we know it is in the interval between [0..1]
-									// This indicate that the exponent is in the range [-inf..0] 
+									// This indicate that the exponent is in the range [-inf..0]
 	k += v.exponent();				// Avoid uncessary argument reduction if v is small
 	k = std::max((intmax_t)0, k);
-	
+
 	// Adjust the precision
 	precision += k / 4;
 	r.precision(precision);
@@ -9957,7 +9957,7 @@ float_precision asin(const float_precision& x)
 			if (i == 1) vn[1] = vsq;
 			if (i > 1) vn[i] = vn[i - 1] * vsq;
 			}
-		// Now iterate 
+		// Now iterate
 		for (i = 3;; )
 			{
 			// Recalulate the coefficients
@@ -10037,7 +10037,7 @@ float_precision acos(const float_precision& x)
 		throw float_precision::domain_error();
 	}
 
-	float_precision y(x); 
+	float_precision y(x);
 	// shortcut x==1 return 0
 	if (x == c1)
 	{	// acos(1)==0
@@ -10047,10 +10047,10 @@ float_precision acos(const float_precision& x)
 	y = _float_table(_PI, y.precision());
 	if (x == -c1)
 		return y;  // acos(-1)==PI
-	
+
 	y.adjustExponent(-1); // y=PI/2 and if x=0 then that is the result
 	if(!x.iszero())
-		y -= asin(x);	
+		y -= asin(x);
 
 	return y;
 	}
@@ -10063,7 +10063,7 @@ float_precision acos(const float_precision& x)
 //
 // Description:
 //   Use the taylot series. ArcTan(x) = x - x^3/3 + x^5/5 ...
-//   With moderate use of argument reduction  using the identity. ArcTan(x)=2*ArcTan(x/(1+sqrt(1+x^2))) 
+//   With moderate use of argument reduction  using the identity. ArcTan(x)=2*ArcTan(x/(1+sqrt(1+x^2)))
 //	And Taylor terms grouping of 5 Taylor terms at a time
 //	atan(0)==0
 //
@@ -10088,9 +10088,9 @@ float_precision atan(const float_precision& x)
 	if (v.exponent() >= 0)
 		++k;	// We only need one reduction to get x below 1
 	else
-		k += v.exponent(); // Avoid uncessary argument reduction if v is small 
+		k += v.exponent(); // Avoid uncessary argument reduction if v is small
 	k = std::max((intmax_t)0, k);
-	
+
 	// Adjust the precision
 	if (k > 0)
 		precision += k / 4; ;
@@ -10132,7 +10132,7 @@ float_precision atan(const float_precision& x)
 			if (i > 1) vn[i] = vn[i - 1] * vsq;
 			}
 		cn[group].precision(precision);
-		// Now iterate 
+		// Now iterate
 		for (i = 3;; )
 			{
 			// Recalulate the coefficients
@@ -10230,12 +10230,12 @@ float_precision atan2( const float_precision& y, const float_precision& x )
 
 	// Round to same precision as argument and rounding mode
    atan2x.mode( x.mode() );
-   atan2x.precision( x.precision() );  
+   atan2x.precision( x.precision() );
 
    return atan2x;
    }
 
- 
+
 //	@author Henrik Vestermark (hve@hvks.com)
 //	@date		1/21/2005 & 11-Jun-2022
 //	@brief 		sin
@@ -10244,13 +10244,13 @@ float_precision atan2( const float_precision& y, const float_precision& x )
 //
 // Description:
 //   Use the taylor series. Sin(x) = x - x^3/3! + x^5/5! ...
-//   1) However first reduce x to between 0..2*PI 
+//   1) However first reduce x to between 0..2*PI
 //   2) Then reduced further to between 0..PI using sin(x+PI)=-Sin(x) or an extra reduction of argument
 //   3) Finally reduced it to a small number using 8*ceil(log(2)*log(precision)) as reduction factor,
 //		using the trisection identity: sin(3x)=3*sin(x)-4*sin(x)^3
 //   4) Then Do the taylor using a coefficient scaling of 5 Taylor terms at a time
 //	 5) Then reverse the reduction factor
-//   The argument reduction is used to reduced the number of Taylor iterations 
+//   The argument reduction is used to reduced the number of Taylor iterations
 //   and to minimize round off erros and calculation time
 //	sin(0)==0
 //
@@ -10274,7 +10274,7 @@ float_precision sin(const float_precision& x )
 	// Check for augument reduction and increase precision if necessary
 	// Automatically calculate optimal reduction factor as a power of two
 	k = 8 * (intmax_t)ceil(log(2)*log(precision));
-	
+
 	// Now use the trisection identity sin(3x)=sin(x)(3+4Sin^2(x))
 	// until argument has been reduced 2/3*k times. Converting power of 2 to power of 3.
 	k = (intmax_t)ceil(2.0*k / 3);
@@ -10289,7 +10289,7 @@ float_precision sin(const float_precision& x )
 	if (sign < 0)
 		v.change_sign();
 
-	// Check that argument is larger than 2*PI and reduce it if needed to the range [0..2*PI]. 
+	// Check that argument is larger than 2*PI and reduce it if needed to the range [0..2*PI].
 	// No need for high perecision. we just need to figure out if we need to Calculate PI with a higher precision
 	if (v > float_precision(2 * 3.14159265))
 		{
@@ -10317,7 +10317,7 @@ float_precision sin(const float_precision& x )
 			}
 		else
 			{	// We dont need to worry that we called it a second time since it will be cached from the first calculation
-			sinx = _float_table(_PI, precision); 
+			sinx = _float_table(_PI, precision);
 			if (v > sinx)
 				{
 				v -= sinx;
@@ -10328,7 +10328,7 @@ float_precision sin(const float_precision& x )
 
 	// Adjust k for final value of v when v is small (less than 1). we know it is in the interval between [0..PI]
 	// This indicate that the exponent is in the range [-inf..1]
-	// Avoid uncessary argument reduction if v is small 
+	// Avoid uncessary argument reduction if v is small
 	k += v.exponent();
 	k = std::max((intmax_t)0, k);
 
@@ -10354,9 +10354,9 @@ float_precision sin(const float_precision& x )
 			}
 		}
 	else
-		{ 
+		{
 		std::vector<float_precision> vn(group);  // vn[0] is not used
-		std::vector<float_precision> cn(group);  // 
+		std::vector<float_precision> cn(group);  //
 
 		for (i = 0; i < group; ++i)
 			{
@@ -10364,7 +10364,7 @@ float_precision sin(const float_precision& x )
 			if (i == 1) vn[1] = vsq;
 			if (i > 1) vn[i] = vn[i - 1] * vsq;
 			}
-		// Now iterate 
+		// Now iterate
 		for (i = 3; ; )
 			{
 			intmax_t j;
@@ -10456,7 +10456,7 @@ float_precision cos(const float_precision& x)
 //   Use the identity tan(x)=Sin(x)/Sqrt(1-Sin(x)^2)
 //   However first reduce x to between 0..2*PI so we can checkfor domain error
 //	tan(0)==0
-//   
+//
 //
 float_precision tan( const float_precision& x )
    {
@@ -10474,33 +10474,33 @@ float_precision tan( const float_precision& x )
    tanx.precision( precision );
    v.precision( precision );
    pi.precision( precision );
-  
-   // Check that argument is larger than 2*PI and reduce it if needed. 
+
+   // Check that argument is larger than 2*PI and reduce it if needed.
    pi = _float_table( _PI, precision );
    tanx = pi;
    tanx.adjustExponent(+1);		// 2*PI
    if( abs( v ) > tanx )
       {
-      r = v / tanx; 
-      (void)modf( r, &r ); 
+      r = v / tanx;
+      (void)modf( r, &r );
       v -= r * tanx;
       }
    if( v < float_precision( 0 ) )
       v += tanx;
-    
+
    pi.adjustExponent(-1);	// pi *= 0.5;
    if( v == pi || v ==  pi * c3 )
       { throw float_precision::domain_error(); }
 
-   tanx = sin( v ); 
-   if( v < pi || v > pi * c3 ) 
+   tanx = sin( v );
+   if( v < pi || v > pi * c3 )
       tanx /= sqrt( c1 - tanx.square() );
    else
       tanx /= -sqrt( c1 - tanx.square() );
-   
+
    // Round to same precision as argument and rounding mode
    tanx.mode( x.mode() );
-   tanx.precision( x.precision() );  
+   tanx.precision( x.precision() );
 
    return tanx;
    }
@@ -10514,7 +10514,7 @@ float_precision tan( const float_precision& x )
 ///////////////////////////////////////
 //
 // HYPERBOLIC FUNCTIONS
-// 
+//
 //	sinh()
 //	cosh()
 //	tanh()
@@ -10600,7 +10600,7 @@ float_precision sinh(const float_precision& x)
 			if (i == 1) vn[i] = vsq;
 			if (i > 1) vn[i] = vn[i - 1] * vsq;
 			}
-		// Now iterate 
+		// Now iterate
 		for (i = 3; ; )
 			{
 			int j;
@@ -10650,7 +10650,7 @@ float_precision sinh(const float_precision& x)
 // Description:
 //   Use a taylor series until their is no more change in the result
 //   cosh(x) == 1 + x^2/2!+x^4/4!+....
-//   Use argument reduction via cosh(3x)=cosh(x)(4cosh^2(x)-3)	
+//   Use argument reduction via cosh(3x)=cosh(x)(4cosh^2(x)-3)
 //   and coefficient rescalling (grouping of 5 terms has been added)
 //	 cosh(0)==1
 //
@@ -10704,7 +10704,7 @@ float_precision cosh(const float_precision& x)
 			if (coshx + r == coshx)
 				break;
 			coshx += r;
-			}	
+			}
 		}
 	else
 		{
@@ -10717,7 +10717,7 @@ float_precision cosh(const float_precision& x)
 			if (i == 1) vn[i] = vsq;
 			if (i > 1) vn[i] = vn[i - 1] * vsq;
 			}
-		// Now iterate 
+		// Now iterate
 		for (i = 2; ; )
 			{
 			intmax_t j;
@@ -10765,14 +10765,14 @@ float_precision cosh(const float_precision& x)
 // Description:
 //	tanh = ( exp(x) - exp(-x) ) / ( exp( x) + exp(-x) )=(e^(2x)-1/(e^(2x)+1)
 //	tanh(0)==0
-// 
+//
 //
 float_precision tanh( const float_precision& x )
    {
 	// Handle NaN
 	if (isnan(x))
-		return x; 
-	
+		return x;
+
 	const float_precision c1(1);
 	float_precision v(x);
 	// Handle infinity
@@ -10788,7 +10788,7 @@ float_precision tanh( const float_precision& x )
 
    // Round to same precision as argument and rounding mode
    v.mode( x.mode() );
-   v.precision( x.precision() );  
+   v.precision( x.precision() );
    return v;
    }
 
@@ -10801,7 +10801,7 @@ float_precision tanh( const float_precision& x )
 // Description:
 //	ArcSinh=Ln(x+Sqrt(x^2+1))
 //	asinh(0)==0
-// 
+//
 float_precision asinh( const float_precision& x )
    {
 	// Handle NaN
@@ -10815,10 +10815,10 @@ float_precision asinh( const float_precision& x )
 	   return v;
    v.precision( x.precision() + 1 );
    v = log(v+sqrt(v.square()+c1));
-   
+
    // Round to same precision as argument and rounding mode
    v.mode( x.mode() );
-   v.precision( x.precision() );  
+   v.precision( x.precision() );
    return v;
    }
 
@@ -10831,7 +10831,7 @@ float_precision asinh( const float_precision& x )
 //
 // Description:
 //	ArcCosh=Ln(x+Sqrt(x^2-1))
-// 
+//
 //
 float_precision acosh( const float_precision& x )
    {
@@ -10844,13 +10844,13 @@ float_precision acosh( const float_precision& x )
 
    if( x < c1 )
       { throw float_precision::domain_error(); }
-   
+
    v.precision( x.precision() + 1 );
    v = log(v+sqrt(v.square()-c1));
-   
+
    // Round to same precision as argument and rounding mode
    v.mode( x.mode() );
-   v.precision( x.precision() );  
+   v.precision( x.precision() );
    return v;
    }
 
@@ -10863,7 +10863,7 @@ float_precision acosh( const float_precision& x )
 // Description:
 //	ArcTanh=0.5*Ln((1+x)/(1-x))
 //	Atanh(0)==0
-// 
+//
 //
 float_precision atanh( const float_precision& x )
    {
@@ -10881,10 +10881,10 @@ float_precision atanh( const float_precision& x )
    v.precision( x.precision() + 1 );
    v = log((c1+v)/(c1-v));
    v.adjustExponent(-1);   // v *= c05;
-   
+
    // Round to same precision as argument and rounding mode
    v.mode( x.mode() );
-   v.precision( x.precision() );  
+   v.precision( x.precision() );
    return v;
    }
 
@@ -10912,7 +10912,7 @@ float_precision atanh( const float_precision& x )
 // Description:
 //	return s1/s2 using float_precision division
 // This is approx. 50 times faster than using the int_precision division function
-//	
+//
 int_precision _int_precision_fastdiv( const int_precision &s1, const int_precision &s2 )
 	{
 	const int extra = 3;
@@ -10920,7 +10920,7 @@ int_precision _int_precision_fastdiv( const int_precision &s1, const int_precisi
 	const size_t ss=size_t((ceil(Bitsiptype*maxsize / log2(BASE_10))));
 	float_precision f1(s1,ss+extra), f2(s2,ss+extra);
 	int_precision r;
-	
+
 	f1/=f2;		// Do float_precision division
 	r = f1;		// gcc doesnt compile with the more direct return (int_prtecision)f1
 	return r;
@@ -10934,7 +10934,7 @@ int_precision _int_precision_fastdiv( const int_precision &s1, const int_precisi
 //  @param		"s2"	-	The second argument
 //
 // Description:
-//	return s1%s2 using float_precision division, multiplication and subtraction 
+//	return s1%s2 using float_precision division, multiplication and subtraction
 // This is approx 50% faster than using the int_precisin % function
 //
 int_precision _int_precision_fastrem( const int_precision &s1, const int_precision &s2 )
@@ -10946,7 +10946,7 @@ int_precision _int_precision_fastrem( const int_precision &s1, const int_precisi
 	float_precision f1(s1, ss + extra), f2(s2, ss + extra);
 
 	f1=f1/f2;
-	r2 = f1; 
+	r2 = f1;
 	r2=s1-s2*r2;
 	return r2;
 	}
@@ -10956,7 +10956,7 @@ int_precision _int_precision_fastrem( const int_precision &s1, const int_precisi
 //
 //
 // Auxillary functions:
-//		AGM, nrooth, 
+//		AGM, nrooth,
 //		bernoulli, bernoulliPolynomails
 //		tgamma
 //
@@ -10971,7 +10971,7 @@ int_precision _int_precision_fastrem( const int_precision &s1, const int_precisi
 //
 // Description:
 //	Calculate the Arithmetic-Geometric mean, through iteration
-// 
+//
 //
 static float_precision AGM(const float_precision& a, const float_precision& b)
 	{
@@ -11071,7 +11071,7 @@ float_precision nroot(const float_precision& a, const uintmax_t n)
 			if (i>1)
 				p *= p;
 			}
-		// Notice y is the original number to nroot which has the full precision 
+		// Notice y is the original number to nroot which has the full precision
 		r = float_precision(n + 1) - y*res; // (n+1)-yx^n
 		r *= fn;							// (-yx^n+(n+1))/n
 		x *= r;								// x=x*(-yx^n+(n+1))/n
@@ -11181,7 +11181,7 @@ static float_precision gammaHalfinteger(const int_precision& ip, const intmax_t 
 	sqpi = _float_table(_PI, precision);		// pi
 	sqpi = sqrt(sqpi);							// sqrt(pi)
 	ip2 = abs(ip2);							// ip2=n
-	ip1 *= ip2;								// ip1=2n	
+	ip1 *= ip2;								// ip1=2n
 	fp1 = float_precision(factorial(ip1), precision);	// (2n)!
 	fp2 = float_precision(factorial(ip2), precision);	// n!
 
@@ -11207,7 +11207,7 @@ static float_precision gammaHalfinteger(const int_precision& ip, const intmax_t 
 //	@date		10/Dec/2022
 //	@brief 		Compute and return the gamma value as a float_precision number
 //	@return 	float_precision -	Return the gamma function of x
-//	@param      "x"		-	The x parameter for the gamma function 
+//	@param      "x"		-	The x parameter for the gamma function
 //
 // Description:
 //
@@ -11268,7 +11268,7 @@ float_precision tgamma(const float_precision& x)
 	// Step 2
 	// calculate how many shifts is needed to bring x within [1-2]. x can in in the range 0<x<inf
 	shifts = 0;					// Default for 1<=x<=2
-	if (x < c1) 
+	if (x < c1)
 		shifts = +1;	// x<1 set shifts to 1;
 	else
 		if (x > c2)		// if x>2 then set shifts to -floor(x)+1
@@ -11314,8 +11314,8 @@ float_precision tgamma(const float_precision& x)
 //	@date		13/Dec/2022
 //	@brief 		Compute and return the beta value as a float_precision number
 //	@return 	float_precision -	Return the beta function of z, w
-//	@param      "z"		-	The z paramter for the beta function 
-//	@param      "w"		-	The w paramter for the beta function 
+//	@param      "z"		-	The z paramter for the beta function
+//	@param      "w"		-	The w paramter for the beta function
 //
 // Description:
 //
@@ -11337,13 +11337,13 @@ float_precision beta(const float_precision& z, const float_precision& w)
 //	@date		13/Dec/2022
 //	@brief 		Compute and return the error function as a float_precision number
 //	@return 	float_precision -	Return the erf function of x
-//	@param      "x"		-	The x paramter for the erf function 
+//	@param      "x"		-	The x paramter for the erf function
 //
 // Description:
 //
 // This formula optimal for |x|>0
 //	for x< 0 use the identity erf(-x)=-erf(x)
-//	This is formula 2 implement with the Concurrent series summation technique 
+//	This is formula 2 implement with the Concurrent series summation technique
 //	the paramet x is not typical large in a arbitrary precision since erf(x) for large x is 1
 //
 float_precision erf(const float_precision& x)
@@ -11361,7 +11361,7 @@ float_precision erf(const float_precision& x)
 	double dsq, a, e1, e1xsq;
 	const int extra = 9;
 
-	xsq = x; xsq = xsq.square();		// x^2  
+	xsq = x; xsq = xsq.square();		// x^2
 	y *= xsq;							// 2x^2
 	yexpo = y.exponent();				// y bit exponent
 	eps = bitprecision + extra;
@@ -11433,7 +11433,7 @@ float_precision erf(const float_precision& x)
 //	@date		13/Dec/2022
 //	@brief 		Compute and return the complementary error function as a float_precision number
 //	@return 	float_precision -	Return the erfc function of x
-//	@param      "x"		-	The x paramter for the erfc function 
+//	@param      "x"		-	The x paramter for the erfc function
 //
 // Description:
 //
@@ -11451,7 +11451,7 @@ float_precision erfc(const float_precision& x)
 //	@date		17/Jan/2023
 //	@brief 		Compute and return the Lambert W0 function as a float_precision number
 //	@return 	float_precision -	Return the W0(x)
-//	@param      "x"		-	The x paramter for the Lambert W0 function 
+//	@param      "x"		-	The x paramter for the Lambert W0 function
 //
 // Description:
 //
@@ -11520,7 +11520,7 @@ float_precision LambertW0(const float_precision& x)
 		{
 			wtmp.precision(np); wn.precision(np); wpre.precision(np);
 		}
-		
+
 	}
 
 	wn.precision(precision);
@@ -11532,7 +11532,7 @@ float_precision LambertW0(const float_precision& x)
 //	@date		20/Jan/2023
 //	@brief 		Compute and return the zetadef(x) function as a float_precision number
 //	@return 	float_precision -	Return the zeta(x)
-//	@param      "x"		-	The x paramter for the Lambert W0 function 
+//	@param      "x"		-	The x paramter for the Lambert W0 function
 //
 // Description:
 //
@@ -11567,7 +11567,7 @@ static float_precision _zetadef(const float_precision& x)
 //	@date		20/Jan/2023
 //	@brief 		Compute and return the zeta(x) function as a float_precision number
 //	@return 	float_precision -	Return the zeta(x)
-//	@param      "x"		-	The x paramter for the Lambert W0 function 
+//	@param      "x"		-	The x paramter for the Lambert W0 function
 //
 // Description:
 //
@@ -11785,7 +11785,7 @@ fraction_precision<int_precision> bernoulli(size_t bno)
 		divisible(n, dv);				// divisible set vector dv
 		for (i = 0; i < dv.size(); ++i)
 		{
-			if (isprime(dv[i] + 1))		// To do Check for overflow in 64-bit 
+			if (isprime(dv[i] + 1))		// To do Check for overflow in 64-bit
 			{
 				if ((~0ull) / (dv[i] + 1) > N)
 					N *= dv[i] + 1;
@@ -11822,14 +11822,14 @@ fraction_precision<int_precision> bernoulli(size_t bno)
 		pw = pow(pi, pw);											// pw=(PI)^n
 		K = float_precision(factorial(int_precision(n)), workprec) / pw; // K=(n!)/((PI)^n
 		K.adjustExponent(1 - n);									// K=2K/2^n=2(n!)/((2PI)^n
-		//if (n >= st) 
+		//if (n >= st)
 		//	cout << "\tK 0=" << K.toString() << endl << "\tfactorial="<<factorial(int_precision(n)) << endl;			// DEBUG
 		K *= float_precision(dip, precision);						// K=Kd
 
 		// Step 3 Calculate N. No need for higher precision
 		N = (uintmax_t)ceil(pow(float_precision(K), float_precision(n - 1).inverse()));// N=ceil((Kd)^(1/n-1))
 
-		// Step 4 Calculate z and update K 
+		// Step 4 Calculate z and update K
 		z.precision(workprec);	// Set adequate working precision, same as K
 		z = float_precision(1);
 		for (i = 2; i <= N; ++i)
@@ -11845,7 +11845,7 @@ fraction_precision<int_precision> bernoulli(size_t bno)
 		// Step 5 Calculate a
 		if ((n / 2 + 1) & 0x1)  // Odd
 			K.change_sign();
-		//if (n >= st) 
+		//if (n >= st)
 		//	cout << "\tz=" << z.toString() << endl << "\tdKz=" << K.toString() << "\t\nRound=" << round(K).toString() << endl;		// DEBUG
 		K = round(K);
 		aip = K;

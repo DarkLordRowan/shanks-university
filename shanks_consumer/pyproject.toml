@@ -6,7 +6,7 @@ authors = [
     {name = "abyssal",email = "abyssal@example.com"}
 ]
 readme = "README.md"
-requires-python = "^3.11"
+requires-python = ">=3.13"
 dependencies = [
     "numpy (>=2.3.3,<3.0.0)",
     "matplotlib (>=3.10.6,<4.0.0)",
@@ -25,6 +25,7 @@ packages = [
 
 [tool.poetry.group.dev.dependencies]
 mypy = "^1.18.2"
+pre-commit = "^4.3.0"
 
 [tool.pylint.MASTER]
 extension-pkg-allow-list = ["pyshanks"]

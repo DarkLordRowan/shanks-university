@@ -57,7 +57,7 @@ public:
 	/**
 	* @brief Fast impimentation of Epsilon algorithm.
 	* Computes the partial sum after the transformation using the Epsilon Algorithm.
-	* For more information, see 612.zip 
+	* For more information, see 612.zip
 	* @param n The number of terms in the partial sum.
 	* @param order The order of transformation.
 	* @return The partial sum after the transformation.
@@ -150,7 +150,7 @@ T wynn_epsilon_3_algorithm<T, K, series_templ>::operator()(const K n, const K or
             //ERR2 = abs(DELTA2);                 // Absolute difference
 
             TOL2 = static_cast<T>(max(          // Tolerance based on machine precision
-                abs(E2), 
+                abs(E2),
                 abs(E1)
             ));
             TOL2*=EMACH;
@@ -158,7 +158,7 @@ T wynn_epsilon_3_algorithm<T, K, series_templ>::operator()(const K n, const K or
             DELTA3 = E1 - E0;                   // εₛ₋₁⁽ⁿ⁾ - εₛ₋₂⁽ⁿ⁾
             //ERR3 = abs(DELTA3);
             TOL3 = static_cast<T>(max(
-                abs(E1), 
+                abs(E1),
                 abs(E0)
             ));
             TOL3*= EMACH;
@@ -174,7 +174,7 @@ T wynn_epsilon_3_algorithm<T, K, series_templ>::operator()(const K n, const K or
                 //ERR1 = abs(DELTA1);
 
                 TOL1 = static_cast<T>(max(
-                    abs(E1), 
+                    abs(E1),
                     abs(E3)
                 ));
                 TOL1*= EMACH;
@@ -219,7 +219,7 @@ T wynn_epsilon_3_algorithm<T, K, series_templ>::operator()(const K n, const K or
 
         // Compact the epsilon table for next iteration
         ib = (num & static_cast<K>(1)) ? static_cast<K>(1) : static_cast<K>(2);  // Start index: 1 for odd, 2 for even
-        
+
         // Start index: 1 (odd) or 2 (even)
         ie = newelm + static_cast<K>(1);
 
@@ -236,7 +236,7 @@ T wynn_epsilon_3_algorithm<T, K, series_templ>::operator()(const K n, const K or
 
         // Update error estimate and previous result
         abs_error = static_cast<T>(max(
-            abs(result - resla), 
+            abs(result - resla),
             abs(EPRN) * abs(result)
         ));
 

@@ -241,7 +241,7 @@ T v_transform<T,K>::operator()(const K n, const K order, const series_base<T,K>*
  */
 template<Accepted T, std::unsigned_integral K>
 class v_wave_transform : public transform_base<T, K> {
-    
+
     /**
      * @brief Computes v-wave variant remainder estimate: ωₙ = (ΔSₙΔSₙ₊₁)/(ΔSₙ - ΔSₙ₊₁)
      *

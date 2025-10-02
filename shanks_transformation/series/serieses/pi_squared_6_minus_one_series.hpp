@@ -29,9 +29,9 @@ public:
 };
 
 template <Accepted T, std::unsigned_integral K>
-pi_squared_6_minus_one_series<T, K>::pi_squared_6_minus_one_series(T x) : 
+pi_squared_6_minus_one_series<T, K>::pi_squared_6_minus_one_series(T x) :
 series_base<T, K>(
-    x, 
+    x,
     x * fma(static_cast<T>(std::numbers::pi) / static_cast<T>(6), static_cast<T>(PI), static_cast<T>(-1))
 )
 {

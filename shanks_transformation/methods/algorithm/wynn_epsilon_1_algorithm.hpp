@@ -5,10 +5,10 @@
  */
 
  // For theory, see:
- // Wynn, P. (1956). On a device for computing the eₙ(Sₙ) transformation. 
+ // Wynn, P. (1956). On a device for computing the eₙ(Sₙ) transformation.
  // Mathematical Tables and Other Aids to Computation, 10(54), 91-96.
- // Wynn, P. (1962). A comparison technique for the numerical transformation of 
- // slowly convergent series based on the use of rational functions. 
+ // Wynn, P. (1962). A comparison technique for the numerical transformation of
+ // slowly convergent series based on the use of rational functions.
  // Numerische Mathematik, 4(1), 8-14.
 
 #include "../series_acceleration.hpp"

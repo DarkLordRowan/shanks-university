@@ -6,7 +6,7 @@
  */
 
  // For theory, see:
- // Weniger, E.J. (1989). Nonlinear sequence transformations for the acceleration of convergence 
+ // Weniger, E.J. (1989). Nonlinear sequence transformations for the acceleration of convergence
  // and the summation of divergent series. Computer Physics Reports, 10(5-6), 189-371.
  // Weniger, E.J. (1992). Interpolation between sequence transformations. Numerical Algorithms, 3(1-4), 477-486.
 
@@ -42,7 +42,7 @@ template<Accepted T, std::unsigned_integral K, typename series_templ>
 class weniger_algorithm final : public series_acceleration<T, K, series_templ>
 {
 public:
-	
+
 	/**
 	 * @brief Parameterized constructor to initialize the weniger_algorithm
 	 * @param series The series class object to be accelerated
@@ -96,9 +96,9 @@ T weniger_algorithm<T, K, series_templ>::operator()(const K n, const K order) co
 	T S_n = this->series->S_n(0);
 
 	// Precompute initial value: (1)ₖ₋₁ = (k-1)!
-	for (K m = static_cast<K>(0); m < order - static_cast<K>(1); ++m) 
+	for (K m = static_cast<K>(0); m < order - static_cast<K>(1); ++m)
 		coef *= static_cast<T>(static_cast<K>(1) + m);
-	
+
 	K j1;
 
 	// For theory, see: Weniger (1989), Eq. (8.2-7) explicit summation form
@@ -147,7 +147,7 @@ T weniger_algorithm<T, K, series_templ>::operator()(const K n, const K order) co
 		// For theory, see: Weniger (1989), Eq. (8.2-7) partial sum update
 		// Update partial sum: S_{j+1} = S_j + a_{j+1}
 		S_n += this->series->operator()(j + static_cast<K>(1));
-		
+
 	}
 
 	// For theory, see: Weniger (1989), Eq. (8.2-7) final ratio
@@ -156,6 +156,6 @@ T weniger_algorithm<T, K, series_templ>::operator()(const K n, const K order) co
 
 	if (!isfinite(numerator))
 		throw std::overflow_error("division by zero");
-	
+
 	return numerator;
 }

@@ -5,10 +5,10 @@
  */
 
  // For theory, see:
- // Richardson, L.F. (1911). The approximate arithmetical solution by finite differences 
- // of physical problems including differential equations with an application to the stresses 
+ // Richardson, L.F. (1911). The approximate arithmetical solution by finite differences
+ // of physical problems including differential equations with an application to the stresses
  // in a masonry dam. Philosophical Transactions of the Royal Society of London. Series A, 210, 459-470.
- // Richardson, L.F., & Gaunt, J.A. (1927). The deferred approach to the limit. 
+ // Richardson, L.F., & Gaunt, J.A. (1927). The deferred approach to the limit.
  // Philosophical Transactions of the Royal Society of London. Series A, 226, 299-361.
 
 #pragma once
@@ -98,8 +98,8 @@ T richardson_algorithm<T, K, series_templ>::operator()(const K n, const K order)
     using std::isfinite;
     using std::fma;
 
-    // in the method we don't use order, it's only a stub 
-    if (n == static_cast<K>(0)) 
+    // in the method we don't use order, it's only a stub
+    if (n == static_cast<K>(0))
         throw std::domain_error("n = 0 in the input");
 
     // For theory, see: Richardson (1911) - construction of extrapolation table
@@ -110,14 +110,14 @@ T richardson_algorithm<T, K, series_templ>::operator()(const K n, const K order)
             n + static_cast<K>(1),
             static_cast<T>(0)
         )
-    ); // Two vectors n + 1 length containing Richardson table next and previous 
+    ); // Two vectors n + 1 length containing Richardson table next and previous
 
     // For theory, see: Richardson (1911), Eq. (2) - initialization with partial sums
     // Initialize the first row of the extrapolation table with partial sums
     for (K i = static_cast<K>(0); i <= n; ++i)
         e[0][i] = this->series->S_n(i);
 
-    // The Richardson method main function 
+    // The Richardson method main function
     T a, b;
     a = static_cast<T>(1);
 
@@ -130,7 +130,7 @@ T richardson_algorithm<T, K, series_templ>::operator()(const K n, const K order)
         for (K m = l; m <= n; ++m){
             // For theory, see: Richardson & Gaunt (1927), Eq. (3.5)
             // Richardson extrapolation formula: Tₖ⁽ⁿ⁾ = (4ᵏTₖ₋₁⁽ⁿ⁺¹⁾ - Tₖ₋₁⁽ⁿ⁾) / (4ᵏ - 1)
-            e[1][m] = fma(a, e[0][m], -e[0][m - static_cast<K>(1)]); 
+            e[1][m] = fma(a, e[0][m], -e[0][m - static_cast<K>(1)]);
             e[1][m]/= b;
         }
 

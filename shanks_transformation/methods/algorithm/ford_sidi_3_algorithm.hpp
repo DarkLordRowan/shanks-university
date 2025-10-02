@@ -5,7 +5,7 @@
  *        that requires fewer arithmetic operations than the E-algorithm.
  */
 
- // For theory, see: 
+ // For theory, see:
  // Ford, W.F., Sidi, A. (1987). An algorithm for a generalization of the Richardson extrapolation process.
  // Osada, N. (2000). The E-algorithm and the Ford-Sidi algorithm.
 
@@ -88,7 +88,7 @@ T ford_sidi_3_algorithm<T, K, series_templ>::operator()(const K n, const K order
     // The algorithm requires at least one term for meaningful computation
     if (n == static_cast<K>(0))
         throw std::domain_error("n = 0 in the input");
-    
+
     //TODO спросить у Парфенова, ибо жертвуем читаемостью кода, ради его небольшого ускорения
 
     // For theory, see: Osada (2000), Section 4 - Efficient implementation
@@ -108,7 +108,7 @@ T ford_sidi_3_algorithm<T, K, series_templ>::operator()(const K n, const K order
 
     // FSG matrix: Stores intermediate transformation values
     std::vector<std::vector<T>> FSG(
-        m + static_cast<K>(2), 
+        m + static_cast<K>(2),
         std::vector<T>(G.size())
     );
 
@@ -139,7 +139,7 @@ T ford_sidi_3_algorithm<T, K, series_templ>::operator()(const K n, const K order
         FSI[n1] /= G[0];
         for (K i = static_cast<K>(1); i <= m; ++i)
             FSG[i][n1] = G[i] / G[0];
-    } 
+    }
     else {
         // For theory, see: Ford & Sidi (1987), Section 3 - Alternative initialization
         // When G[0] = 0, use direct values without normalization
@@ -175,7 +175,7 @@ T ford_sidi_3_algorithm<T, K, series_templ>::operator()(const K n, const K order
         FSA[MM] = FSA[MM1] - FSA[MM];
         FSA[MM]/= D;
 
-        // For theory, see: Osada (2000), Section 4 - FSI sequence update  
+        // For theory, see: Osada (2000), Section 4 - FSI sequence update
         // FSI[MM] = (FSI[MM1] - FSI[MM]) / D (normalization factor update)
         FSI[MM] = FSI[MM1] - FSI[MM];
         FSI[MM]/= D;

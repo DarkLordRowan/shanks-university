@@ -45,9 +45,9 @@ public:
 };
 
 template <Accepted T, std::unsigned_integral K>
-eighth_pi_m_one_third_series<T, K>::eighth_pi_m_one_third_series(T x) : 
+eighth_pi_m_one_third_series<T, K>::eighth_pi_m_one_third_series(T x) :
 series_base<T, K>(
-    x, 
+    x,
     calculate_sum(x)
 )
 {

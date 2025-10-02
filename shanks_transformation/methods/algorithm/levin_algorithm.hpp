@@ -99,7 +99,7 @@ public:
 	explicit levin_algorithm(
 		const series_templ& series,
         remainder_type variant = remainder_type::u_variant,
-        bool useRecFormulas = false,  
+        bool useRecFormulas = false,
         T beta = static_cast<T>(1)
 	);
 
@@ -153,10 +153,10 @@ levin_algorithm<T, K,series_templ>::levin_algorithm(
 				beta :
 				complex_precision<float_precision>(1)
 			);
-			
-		}	
 
-		
+		}
+
+
 
 	//check variant else default 'u'
     //TODO: тоже самое наверное
@@ -210,8 +210,8 @@ inline T levin_algorithm<T, K,series_templ>::calc_result(K n, K order) const{
 		// Compute 1/R_{n+j} where R_{n+j} is the remainder estimate
 		g_n = static_cast<T>(1);
 		g_n/= remainder->operator()(
-            n + j, 
-            j, 
+            n + j,
+            j,
             this->series,
             (variant == remainder_type::u_variant ? beta : static_cast<T>(1))
         );
@@ -247,8 +247,8 @@ inline T levin_algorithm<T, K,series_templ>::calc_result_rec(K n, K order) const
 	// Initialize base values: E_0^{(n)} = S_n, g_0^{(n)} = 1/R_n
 	for (K i = static_cast<K>(0); i < order+static_cast<K>(1); ++i) {
 		Denom[i] = remainder->operator()(
-            n, 
-            i, 
+            n,
+            i,
             this->series,
             (variant == remainder_type::u_variant ? beta : static_cast<T>(1))
         );
@@ -279,7 +279,7 @@ inline T levin_algorithm<T, K,series_templ>::calc_result_rec(K n, K order) const
 
 	if (!isfinite(Num[0]))
 		throw std::overflow_error("division by zero");
-    
+
 	return Num[0];
 }
 
@@ -288,7 +288,7 @@ T levin_algorithm<T, K, series_templ>::operator()(const K n, const K order) cons
 
 	using std::isfinite;
 
-	if (n == static_cast<K>(0)) 
+	if (n == static_cast<K>(0))
 		throw std::domain_error("n = 0 in the input");
 
 	if (order == static_cast<K>(0)) return this->series->S_n(n);

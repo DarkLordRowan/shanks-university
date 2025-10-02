@@ -29,7 +29,7 @@ public:
     */
     [[nodiscard]] constexpr virtual T operator()(K n) const;
 
-    constexpr inline bool domain_checker(T x, T s) const{ 
+    constexpr inline bool domain_checker(T x, T s) const{
 
 		if constexpr ( std::is_floating_point<T>::value || std::is_same<T, float_precision>::value)
 			return s <= static_cast<T>(0) || !isfinite(x) || !isfinite(s);

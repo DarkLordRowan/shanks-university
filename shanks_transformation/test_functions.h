@@ -27,7 +27,7 @@ void cmp_sum_and_transform(const K n, const K order, const series_templ& series,
 {
 	test->print_info();
 	for (K i = 1; i <= n; ++i) {
-		try 
+		try
 		{
 			std::cout << "Sum of algo : " << series->get_sum() << '\n';
 			std::cout << "S_" << i << " : " << series->S_n(i) << '\n';

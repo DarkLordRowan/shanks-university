@@ -52,7 +52,7 @@ protected:
 	 * @brief Core implementation of the M-transformation using direct summation.
 	 *
 	 * For theory, see: Sidi (2003, arXiv:math/0306302), pp. 64-65, Eqs. (9.2)-(9.6)
-	 * General form: M_{n}^{(k)} = 
+	 * General form: M_{n}^{(k)} =
 	 [∑_{j=0}^n (-1)^j C(n,j) (n-j) (γ+k+2)_{n-1}/(γ+k+1)_{n} × (γ+k+1-j)_{j}/(γ+k+2-n)_{j} × 1/(j+1) × S_{k+j}/R_{k+j}] /
 	 [∑_{j=0}^n (-1)^j C(n,j) (n-j) (γ+k+2)_{n-1}/(γ+k+1)_{n} × (γ+k+1-j)_{j}/(γ+k+2-n)_{j} × 1/(j+1) × 1/R_{k+j}]
 	 *
@@ -158,7 +158,7 @@ inline T levin_sidi_m_algorithm<T, K, series_templ>::calculate(const K n, const 
 	for (K j = static_cast<K>(0); j <= n; ++j) {
 
 		// Compute (-1)^j * C(n,j) * (n-j)
-		rest  = this->series->minus_one_raised_to_power_n(j); 
+		rest  = this->series->minus_one_raised_to_power_n(j);
 		rest *= binomial_coef * static_cast<T>(n - j);
 		rest *= up;										// Multiply by Pochhammer ratio term
 		rest /= static_cast<T>(j + static_cast<K>(1));  // Multiply by 1/(j+1) factor
@@ -168,9 +168,9 @@ inline T levin_sidi_m_algorithm<T, K, series_templ>::calculate(const K n, const 
 
 		// Multiply by remainder term 1/R_{k+j}
 		rest *= remainder->operator()(
-			order, 
-			j, 
-			this->series, 
+			order,
+			j,
+			this->series,
 			-gamma-static_cast<T>(n)
 		);
 
@@ -201,8 +201,8 @@ T levin_sidi_m_algorithm<T, K, series_templ>::operator()(const K n, const K orde
 
 template<Accepted T, std::unsigned_integral K, typename series_templ>
 levin_sidi_m_algorithm<T, K, series_templ>::levin_sidi_m_algorithm(
-	const series_templ& series, 
-	const remainder_type variant, 
+	const series_templ& series,
+	const remainder_type variant,
 	const T gamma_
 	) :
 	series_acceleration<T, K, series_templ>(series),

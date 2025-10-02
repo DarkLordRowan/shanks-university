@@ -70,4 +70,3 @@ constexpr T sin_series<T, K>::operator()(K n) const
 {
 	return const_cast<sin_series<T, K>*>(this)->access_row(n);
 }
-

@@ -40,11 +40,11 @@ jobs:
 
       - name: Install Graphviz
         run: sudo apt install graphviz
-        
-      # Create documentation   
-      - name: Create documentation     
+
+      # Create documentation
+      - name: Create documentation
         run: doxygen
-        
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:

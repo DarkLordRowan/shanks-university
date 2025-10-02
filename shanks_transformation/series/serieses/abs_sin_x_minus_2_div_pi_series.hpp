@@ -31,17 +31,17 @@ public:
 	*/
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 
-	constexpr inline bool domain_checker(T x) const{ 
+	constexpr inline bool domain_checker(T x) const{
 
 		if constexpr ( std::is_floating_point<T>::value)
-			return x < 0 || x > static_cast<T>(2.0 * PI) || !isfinite(x); 
+			return x < 0 || x > static_cast<T>(2.0 * PI) || !isfinite(x);
 
 		if constexpr ( std::is_same<T, float_precision>::value)
 			return x < static_cast<float_precision>(0) || x > static_cast<float_precision>(2.0) * arbPI || !isfinite(x);
 
 		if constexpr ( std::is_same<T, complex_precision<float_precision>>::value )
-			return x.real() < static_cast<float_precision>(0) || x.real() > static_cast<float_precision>(2.0) * arbPI || !isfinite(x); 
-		
+			return x.real() < static_cast<float_precision>(0) || x.real() > static_cast<float_precision>(2.0) * arbPI || !isfinite(x);
+
 		return false;
 
 	}
@@ -50,19 +50,19 @@ public:
 		if(domain_checker(x)){ return static_cast<T>(0);}
 
 		if constexpr ( std::is_floating_point<T>::value){
-			return x < static_cast<T>(PI) ? 
+			return x < static_cast<T>(PI) ?
 			 sin(x) - static_cast<T>(2.0)/static_cast<T>(PI) :
 			-sin(x) - static_cast<T>(2.0)/static_cast<T>(PI);
 		}
 
 		if constexpr ( std::is_same<T, float_precision>::value){
-			return x < arbPI ? 
+			return x < arbPI ?
 			 sin(x) - static_cast<T>(2.0)/static_cast<T>(arbPI) :
 			-sin(x) - static_cast<T>(2.0)/static_cast<T>(arbPI);
 		}
 
 		if constexpr ( std::is_same<T, complex_precision<float_precision>>::value ){
-			return x.real() < arbPI ? 
+			return x.real() < arbPI ?
 			 sin(x) - static_cast<T>(2.0)/static_cast<T>(arbPI) :
 			-sin(x) - static_cast<T>(2.0)/static_cast<T>(arbPI);
 		}
@@ -72,9 +72,9 @@ public:
 
 
 template <Accepted T, std::unsigned_integral K>
-abs_sin_x_minus_2_div_pi_series<T, K>::abs_sin_x_minus_2_div_pi_series(T x) : 
+abs_sin_x_minus_2_div_pi_series<T, K>::abs_sin_x_minus_2_div_pi_series(T x) :
 series_base<T, K>(
-	x, 
+	x,
 	calculate_sum(x)
 )
 {

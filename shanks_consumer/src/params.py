@@ -6,42 +6,48 @@ for numerical series and acceleration methods from various sources including
 JSON files, CSV files, and direct Python module references.
 """
 
-from dataclasses import dataclass
-import pyshanks as ps
 from abc import ABC, abstractmethod
-from typing import Iterable, Any, Mapping, TypeAlias
 from collections.abc import Callable
+from dataclasses import dataclass
 from functools import cached_property
+from typing import Any, Iterable, Mapping, TypeAlias
+
+import pyshanks as ps
 
 NumericArg: TypeAlias = float | ps.Arb
 SeriesData: TypeAlias = ps.ArraySeriesF64 | ps.ArraySeriesArb
-SeriesExc: TypeAlias = (type[ps.SeriesBaseF64] | 
-                        type[ps.SeriesBaseArb] | 
-                        Callable[..., SeriesData])
+SeriesExc: TypeAlias = (
+    type[ps.SeriesBaseF64] | type[ps.SeriesBaseArb] | Callable[..., SeriesData]
+)
 AccelExc: TypeAlias = type[ps.SeriesAccelerationF64 | ps.SeriesAccelerationArb]
+
 
 class BaseSeriesParam(ABC):
     """Abstract base class for series parameter configurations."""
 
     @cached_property
     @abstractmethod
-    def series_name(self) -> str: ...
+    def series_name(self) -> str:
+        ...
 
     @cached_property
     @abstractmethod
-    def arguments(self) -> Mapping[str, Iterable[NumericArg]]: ...
+    def arguments(self) -> Mapping[str, Iterable[NumericArg]]:
+        ...
 
     @cached_property
     @abstractmethod
     def executable(
         self,
-    ) -> SeriesExc: ...
-    
+    ) -> SeriesExc:
+        ...
+
     def __str__(self) -> str:
         return f"{self.__class__.__name__}({self.series_name})"
-    
+
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(series_name={self.series_name!r})"
+
 
 @dataclass
 class SeriesParamJSON(BaseSeriesParam):
@@ -151,29 +157,34 @@ class BaseAccelParam(ABC):
 
     @cached_property
     @abstractmethod
-    def accel_name(self) -> str: ...
+    def accel_name(self) -> str:
+        ...
 
     @cached_property
     @abstractmethod
     def executable(
         self,
-    ) -> AccelExc: ...
+    ) -> AccelExc:
+        ...
 
     @cached_property
     @abstractmethod
-    def n_values(self) -> Iterable[int]: ...
+    def n_values(self) -> Iterable[int]:
+        ...
 
     @cached_property
     @abstractmethod
-    def m_values(self) -> Iterable[int]: ...
+    def m_values(self) -> Iterable[int]:
+        ...
 
     @cached_property
     @abstractmethod
-    def additional_args(self) -> dict[str, Iterable[Any]]: ...
-    
+    def additional_args(self) -> dict[str, Iterable[Any]]:
+        ...
+
     def __str__(self) -> str:
         return f"{self.__class__.__name__}({self.accel_name})"
-    
+
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(accel_name={self.accel_name!r})"
 
@@ -220,19 +231,21 @@ class AccelParamJSON(StandardAccelParam):
     def __post_init__(self):
         """Post-initialization processing for complex argument types."""
         self.expanded_init_args = {}
-        
+
         if not self.init_args:
             return
-            
+
         ENUM_MAPPINGS = {
             "remainder": ps.RemainderType,
             "numerator": ps.NumeratorType,
         }
-        
+
         for key, value in self.init_args.items():
             if key in ENUM_MAPPINGS:
                 enum_type = ENUM_MAPPINGS[key]
-                self.expanded_init_args[key] = [getattr(enum_type, str(v)) for v in value]
+                self.expanded_init_args[key] = [
+                    getattr(enum_type, str(v)) for v in value
+                ]
             else:
                 self.expanded_init_args[key] = value
 

@@ -4,7 +4,7 @@
  *        and specialization of this transformation for alternating series.
  */
 
- // For theory, see: 
+ // For theory, see:
  // Shanks, D. (1955). Non-linear transformations of divergent and slowly convergent sequences.
  // Journal of Mathematics and Physics, 34(1-4), 1-42.
  // Senhadji, M.N. (2001). On condition numbers of the Shanks transformation.
@@ -75,7 +75,7 @@ T shanks_algorithm<T, K, series_templ>::operator()(const K n, const K order) con
 	if (n < order || n == static_cast<K>(0)) [[unlikely]]
 		return static_cast<T>(0); // TODO: диагностика
 
-	if (order == static_cast<K>(1)) [[unlikely]] 
+	if (order == static_cast<K>(1)) [[unlikely]]
 	{
 		T a_n, a_n_plus_1, tmp;
 
@@ -87,7 +87,7 @@ T shanks_algorithm<T, K, series_templ>::operator()(const K n, const K order) con
 		// e₁(Sₙ) = (SₙSₙ₊₂ - Sₙ₊₁²)/(Sₙ₊₂ - 2Sₙ₊₁ + Sₙ) = Sₙ + (aₙaₙ₊₁)/(aₙ - aₙ₊₁)
 		const T result = fma(
 			a_n * a_n_plus_1,
-			(a_n + a_n_plus_1) / (fma(a_n, a_n, tmp) - fma(a_n_plus_1, a_n_plus_1, tmp)), 
+			(a_n + a_n_plus_1) / (fma(a_n, a_n, tmp) - fma(a_n_plus_1, a_n_plus_1, tmp)),
 			this->series->S_n(n)
 		);
 		//n > order >= 1
@@ -117,8 +117,8 @@ T shanks_algorithm<T, K, series_templ>::operator()(const K n, const K order) con
 		// For theory, see: Shanks (1955), Eq. (12) - Higher order transformation
 		// eₖ(Sₙ) = eₖ₋₁(Sₙ) + [eₖ₋₁(Sₙ₊₁) - eₖ₋₁(Sₙ)] / [1 - (eₖ₋₁(Sₙ₊₁) - eₖ₋₁(Sₙ))/(eₖ₋₁(Sₙ₊₂) - eₖ₋₁(Sₙ₊₁))]
 		T_n[i] = fma(
-			a_n * a_n_plus_1, 
-			(a_n + a_n_plus_1) / (fma(a_n, a_n, tmp) - fma(a_n_plus_1, a_n_plus_1, tmp)), 
+			a_n * a_n_plus_1,
+			(a_n + a_n_plus_1) / (fma(a_n, a_n, tmp) - fma(a_n_plus_1, a_n_plus_1, tmp)),
 			this->series->S_n(i)
 		);
 	}
@@ -135,8 +135,8 @@ T shanks_algorithm<T, K, series_templ>::operator()(const K n, const K order) con
 			// For theory, see: Shanks (1955), Eq. (12) - Higher order transformation
 			// eₖ(Sₙ) = eₖ₋₁(Sₙ) + [eₖ₋₁(Sₙ₊₁) - eₖ₋₁(Sₙ)] / [1 - (eₖ₋₁(Sₙ₊₁) - eₖ₋₁(Sₙ))/(eₖ₋₁(Sₙ₊₂) - eₖ₋₁(Sₙ₊₁))]
 			T_n_plus_1[i] = fma(
-				fma(a, c + b - a, -b * c), 
-				static_cast<T>(1) / (fma(static_cast<T>(2), a, -b - c)), 
+				fma(a, c + b - a, -b * c),
+				static_cast<T>(1) / (fma(static_cast<T>(2), a, -b - c)),
 				a
 			);
 		}
@@ -216,8 +216,8 @@ T shanks_transform_alternating<T, K, series_templ>::operator()(const K n, const 
 		// For theory, see: Senhadji (2001), Section 3.2 - Alternating series case
 		// For alternating series: e₁(Sₙ) = Sₙ + (aₙaₙ₊₁)/(aₙ - aₙ₊₁)
 		result = fma(
-			a_n * a_n_plus_1, 
-			static_cast<T>(1) / (a_n - a_n_plus_1), 
+			a_n * a_n_plus_1,
+			static_cast<T>(1) / (a_n - a_n_plus_1),
 			this->series->S_n(n)
 		);
 
@@ -247,8 +247,8 @@ T shanks_transform_alternating<T, K, series_templ>::operator()(const K n, const 
 		// For theory, see: Senhadji (2001), Section 3.2 - Alternating series case
 		// e₁(Sᵢ) = Sᵢ + (aᵢaᵢ₊₁)/(aᵢ - aᵢ₊₁)
 		T_n[i] = fma(
-			a_n * a_n_plus_1, 
-			static_cast<T>(1) / (a_n - a_n_plus_1), 
+			a_n * a_n_plus_1,
+			static_cast<T>(1) / (a_n - a_n_plus_1),
 			this->series->S_n(n)
 		);
 	}
@@ -257,7 +257,7 @@ T shanks_transform_alternating<T, K, series_templ>::operator()(const K n, const 
 	T a, b, c;
 
 	for (K j = static_cast<K>(2); j <= order; ++j) {
-		for (K i = n_minus_order + j; i <= n_plus_order - j; ++i) { 
+		for (K i = n_minus_order + j; i <= n_plus_order - j; ++i) {
 
 			a = T_n[i];
 			b = T_n[i - static_cast<K>(1)];
@@ -267,14 +267,14 @@ T shanks_transform_alternating<T, K, series_templ>::operator()(const K n, const 
 			// Higher order transformation for alternating series
 			// eₖ(Sₙ) = eₖ₋₁(Sₙ) + [eₖ₋₁(Sₙ₊₁) - eₖ₋₁(Sₙ)] / [1 - (eₖ₋₁(Sₙ₊₁) - eₖ₋₁(Sₙ))/(eₖ₋₁(Sₙ₊₂) - eₖ₋₁(Sₙ₊₁))]
 			T_n_plus_1[i] = fma(
-				fma(a, c + b - a, -b * c), 
-				static_cast<T>(1) / (static_cast<T>(2) * a - b - c), 
+				fma(a, c + b - a, -b * c),
+				static_cast<T>(1) / (static_cast<T>(2) * a - b - c),
 				a
 			);
 		}
 		T_n = T_n_plus_1;
 	}
-	
+
 	if (!isfinite(T_n[n]))
 		throw std::overflow_error("division by zero");
 

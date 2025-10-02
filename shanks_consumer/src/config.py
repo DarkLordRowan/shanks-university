@@ -1,8 +1,8 @@
+import json
 import pathlib
 from dataclasses import dataclass, field
 from typing import Optional
 
-import json
 
 @dataclass
 class TrialConfig:
@@ -16,13 +16,13 @@ class TrialConfig:
     results_csv: Optional[pathlib.Path] = None
     events_json: Optional[pathlib.Path] = None
     events_csv: Optional[pathlib.Path] = None
-    
+
     trial_process_count: int = 1
     with_arb: bool = False
     no_events: bool = False
     no_plots: bool = False
     verbose: int = 0
-    
+
     def __post_init__(self):
         if self.results_json is None:
             self.results_json = self.output_dir / "output.json"
@@ -32,7 +32,7 @@ class TrialConfig:
             self.events_json = self.output_dir / "events.json"
         if self.events_csv is None:
             self.events_csv = self.output_dir / "events.csv"
-        
+
         self.output_dir.mkdir(parents=True, exist_ok=True)
         self.plots_dir.mkdir(parents=True, exist_ok=True)
 
@@ -56,25 +56,25 @@ class ConfigLoader:
             no_plots=args.no_plots,
             verbose=args.verbose,
         )
-    
+
     @staticmethod
     def from_dict(data: dict) -> TrialConfig:
         return TrialConfig(**data)
-    
+
     @staticmethod
     def from_json(json_location: pathlib.Path) -> TrialConfig:
         with open(json_location, encoding="utf-8") as f:
             data = json.load(f)
-        
+
         config_dict = {}
         for key, value in data.items():
-            if key.endswith(('_json', '_csv', '_dir')):
+            if key.endswith(("_json", "_csv", "_dir")):
                 config_dict[key] = pathlib.Path(value)
             else:
                 config_dict[key] = value
-        
+
         return ConfigLoader.from_dict(config_dict)
-    
+
     @staticmethod
     def default() -> TrialConfig:
         return TrialConfig()

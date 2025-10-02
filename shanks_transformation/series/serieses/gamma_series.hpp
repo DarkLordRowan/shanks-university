@@ -30,14 +30,14 @@ public:
     */
     [[nodiscard]] constexpr virtual T operator()(K n) const;
 
-    constexpr inline bool domain_checker(T x, T t) const{ 
+    constexpr inline bool domain_checker(T x, T t) const{
 
 		if constexpr ( std::is_floating_point<T>::value || std::is_same<T, float_precision>::value)
-			return t < static_cast<T>(0) || !isfinite(x) || !isfinite(t); 
+			return t < static_cast<T>(0) || !isfinite(x) || !isfinite(t);
 
 		if constexpr ( std::is_same<T, complex_precision<float_precision>>::value )
-			return t.real() < static_cast<float_precision>(0) || !isfinite(x) || !isfinite(t); 
-		
+			return t.real() < static_cast<float_precision>(0) || !isfinite(x) || !isfinite(t);
+
 		return false;
 
 	}
@@ -72,4 +72,3 @@ constexpr T gamma_series<T, K>::operator()(K n) const
     T a_k_n = a_k(n);
     return a_k_n * pow(this->t, static_cast<T>(n)) * tgamma(a_k_n); // (102.1) [Rows.pdf]
 }
-

@@ -65,7 +65,7 @@ public:
 	 * Mathematical Formulation:
 	 * For theory, see: Wynn (1956), Eq. (4) - Epsilon algorithm recurrence relation ()
 	 * More information, see page 20 - 21 in[https://hal.science/hal-04207550/document]
-	 * 
+	 *
 	 * εₖ₊₁⁽ᵐ⁾ = εₖ₋₁⁽ᵐ⁺¹⁾ + 1/(εₖ⁽ᵐ⁺¹⁾ - εₖ⁽ᵐ⁾)
 	 *
 	 * @param n The number of terms to use in the transformation (n ≥ 1)
@@ -133,7 +133,7 @@ T wynn_epsilon_2_algorithm<T, K, series_templ>::operator()(const K n, const K or
 			// For theory, see: Wynn (1956), Eq. (4) - Main recurrence relation
 			// εₖ₊₁⁽ᵐ⁾ = εₖ₋₁⁽ᵐ⁺¹⁾ + 1/(εₖ⁽ᵐ⁺¹⁾ - εₖ⁽ᵐ⁾)
 			eps[0][i] = eps[2][i1] + static_cast<T>(1) / (eps[3][i1] - eps[3][i]);
-			
+
 			// For theory, see: Wynn (1964) - Numerical stability improvements
 		    // Additional checks and corrections for finite precision arithmetic
 			if (!isfinite(eps[0][i]) && i2 <= k) // Stability check and correction

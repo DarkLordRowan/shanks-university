@@ -125,7 +125,7 @@ public:
 	/**
 	 * @brief Compute the generalized-variant numerator.
 	 *
-	 * Implements: numerator = order - gamma - 1 
+	 * Implements: numerator = order - gamma - 1
 	 * This provides a order-dependent constant numerator.
 	 *
 	 * @param n Unused parameter (maintained for interface consistency).
@@ -138,7 +138,7 @@ public:
 	 * @return The computed constant: order - gamma - 1.
 	 */
 	T operator()(const K n, const K order, const series_base<T, K>* series, const T gamma = static_cast<T>(1), const T rho = static_cast<T>(0)) const {
-	
+
 		return static_cast<T>(order - static_cast<K>(1)) - gamma; //p.377 Algorithm 20.1.3 [http://servidor.demec.ufpr.br/CFD/bibliografia/MER/Sidi_2003.pdf]
 	}
 };

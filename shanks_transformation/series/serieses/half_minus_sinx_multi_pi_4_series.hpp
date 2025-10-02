@@ -29,25 +29,25 @@ public:
     */
     [[nodiscard]] constexpr virtual T operator()(K n) const;
 
-    constexpr inline bool domain_checker(T x) const{ 
+    constexpr inline bool domain_checker(T x) const{
 
 		if constexpr ( std::is_floating_point<T>::value || std::is_same<T, float_precision>::value)
-			return x < static_cast<T>(0) || x > static_cast<T>(PI * 0.5) || !isfinite(x); 
+			return x < static_cast<T>(0) || x > static_cast<T>(PI * 0.5) || !isfinite(x);
 
 		if constexpr ( std::is_same<T, complex_precision<float_precision>>::value )
-			return x.real() < static_cast<float_precision>(0) || x.real() > static_cast<float_precision>(0.5) * arbPI || !isfinite(x); 
-		
+			return x.real() < static_cast<float_precision>(0) || x.real() > static_cast<float_precision>(0.5) * arbPI || !isfinite(x);
+
 		return false;
 
 	}
 
-    
+
 };
 
 template <Accepted T, std::unsigned_integral K>
-half_minus_sinx_multi_pi_4_series<T, K>::half_minus_sinx_multi_pi_4_series(T x) : 
+half_minus_sinx_multi_pi_4_series<T, K>::half_minus_sinx_multi_pi_4_series(T x) :
 series_base<T, K>(
-    x, 
+    x,
     static_cast<T>(0.5) - static_cast<T>(0.25 * std::numbers::pi) * sin(x)
 )
 {

@@ -1,6 +1,6 @@
 import io
 
-from fastapi import FastAPI, Body
+from fastapi import Body, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, StreamingResponse
 from src import export, params, trial
@@ -48,5 +48,5 @@ async def process_csv(payload: dict = Body(...)):
     return StreamingResponse(
         io.BytesIO(content),
         media_type="text/csv",
-        headers={"Content-Disposition": 'attachment; filename="results.csv"'}
+        headers={"Content-Disposition": 'attachment; filename="results.csv"'},
     )

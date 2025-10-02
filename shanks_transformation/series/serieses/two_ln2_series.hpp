@@ -29,9 +29,9 @@ public:
 };
 
 template <Accepted T, std::unsigned_integral K>
-two_ln2_series<T, K>::two_ln2_series(T x) : 
+two_ln2_series<T, K>::two_ln2_series(T x) :
 series_base<T, K>(
-    x, 
+    x,
     x * log(static_cast<T>(4))
 )
 {

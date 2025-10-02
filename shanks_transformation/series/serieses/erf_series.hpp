@@ -53,7 +53,7 @@ private:
 	*/
 	T access_row(K n);
 
-	
+
 };
 
 template <Accepted T, std::unsigned_integral K>

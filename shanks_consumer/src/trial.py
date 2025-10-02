@@ -1,16 +1,12 @@
-from src.params import (
-    BaseAccelParam,
-    BaseSeriesParam,
-)
-
 import itertools
-
+import multiprocessing as mp
+import uuid
 from dataclasses import dataclass, field
 from typing import Any, Generator, Iterable, Mapping
-from pyshanks import Arb
-import multiprocessing as mp
 
-import uuid
+from pyshanks import Arb
+from src.params import BaseAccelParam, BaseSeriesParam
+
 
 def cartesian_dicts(
     d: dict[str, Iterable[Any]],
@@ -35,7 +31,10 @@ class ErrorTrialResult:
     description: str | None
     data: Mapping[str, Any]
 
+
 NoErrorTrialResult = ErrorTrialResult(None, {})
+
+
 @dataclass
 class SeriesTrialResult:
     name: str
@@ -91,7 +90,8 @@ class Trial:
 
                     partial_sum = ready_series.S_n(n_value)
                     computed.append(
-                        # ? for now, we assume partial_sum, accel_value, and series_lim are all of the same type, either float or Arb
+                        # ? for now, we assume partial_sum, accel_value,
+                        # ? and series_lim are all of the same type, either float or Arb
                         ComputedTrialResult(
                             n=n_value,
                             partial_sum=partial_sum,
@@ -119,8 +119,7 @@ class Trial:
                         name=self.accel.accel_name,
                         m_value=m_value,
                         additional_args={
-                            key: str(value)
-                            for key, value in additional_args.items()
+                            key: str(value) for key, value in additional_args.items()
                         },
                     ),
                     computed=computed,
@@ -128,6 +127,7 @@ class Trial:
                 )
             )
         return results
+
 
 @dataclass
 class ComplexTrial:
@@ -137,10 +137,14 @@ class ComplexTrial:
     chunk_size: int = 1
     process_count: int | None = None
 
-    _trial_combinations: list[tuple[BaseSeriesParam, BaseAccelParam]] = field(init=False)
+    _trial_combinations: list[tuple[BaseSeriesParam, BaseAccelParam]] = field(
+        init=False
+    )
 
     def __post_init__(self):
-        self._trial_combinations = list(itertools.product(self.series_params, self.accel_params))
+        self._trial_combinations = list(
+            itertools.product(self.series_params, self.accel_params)
+        )
 
     @staticmethod
     def _run_trial(series_accel: tuple[BaseSeriesParam, BaseAccelParam]):
@@ -157,7 +161,9 @@ class ComplexTrial:
         if not self._trial_combinations:
             return []
 
-        num_processes = self.process_count or min(mp.cpu_count(), len(self._trial_combinations))
+        num_processes = self.process_count or min(
+            mp.cpu_count(), len(self._trial_combinations)
+        )
 
         if num_processes == 1:
             return self._execute_sequential()
@@ -165,16 +171,16 @@ class ComplexTrial:
         try:
             with mp.Pool(processes=num_processes) as pool:
                 chunked_results = pool.imap_unordered(
-                    ComplexTrial._run_trial, 
+                    ComplexTrial._run_trial,
                     self._trial_combinations,
-                    chunksize=self.chunk_size
+                    chunksize=self.chunk_size,
                 )
                 results = []
                 for trial_results in chunked_results:
                     results.extend(trial_results)
 
                 return results
-        except Exception as e:
+        except Exception:
             # TODO log it pls
             return self._execute_sequential()
 

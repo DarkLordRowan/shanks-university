@@ -31,9 +31,9 @@ public:
 };
 
 template <Accepted T, std::unsigned_integral K>
-pi_four_minus_ln2_halfed_series<T, K>::pi_four_minus_ln2_halfed_series(T x) : 
+pi_four_minus_ln2_halfed_series<T, K>::pi_four_minus_ln2_halfed_series(T x) :
 series_base<T, K>(
-    x, 
+    x,
     x * (static_cast<T>(std::numbers::pi * 0.25) - log(static_cast<T>(2)) * static_cast<T>(0.5))
 )
 {

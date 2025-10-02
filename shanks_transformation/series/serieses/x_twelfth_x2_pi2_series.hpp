@@ -29,23 +29,23 @@ public:
     */
     [[nodiscard]] constexpr virtual T operator()(K n) const;
 
-    constexpr inline bool domain_checker(T x) const{ 
+    constexpr inline bool domain_checker(T x) const{
 
 		if constexpr ( std::is_floating_point<T>::value)
 			return abs(x) > static_cast<T>(PI) || !isfinite(x);
 
 		if constexpr ( std::is_same<T, complex_precision<float_precision>>::value || std::is_same<T, float_precision>::value)
 			return abs(x) > arbPI || !isfinite(x);
-		
+
 		return false;
 	}
-    
+
 };
 
 template <Accepted T, std::unsigned_integral K>
-x_twelfth_x2_pi2_series<T, K>::x_twelfth_x2_pi2_series(T x) : 
+x_twelfth_x2_pi2_series<T, K>::x_twelfth_x2_pi2_series(T x) :
 series_base<T, K>(
-    x, 
+    x,
     x * fma(x, x, static_cast<T>(-std::numbers::pi) * static_cast<T>(std::numbers::pi)) / static_cast<T>(12)
 )
 {

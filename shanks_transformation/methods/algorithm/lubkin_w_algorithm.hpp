@@ -62,7 +62,7 @@ protected:
 	 * @return The accelerated partial sum after Lubkin transformation
 	 */
 	T calculate(K n, K order) const;
-	
+
 public:
 
 	/**
@@ -114,7 +114,7 @@ T lubkin_w_algorithm<T, K, series_templ>::calculate(K n, const K order) const {
 	const K base_size = static_cast<K>(3) * order + static_cast<K>(1);
 
 	std::vector<T> W(
-		base_size, 
+		base_size,
 		static_cast<T>(0)
 	);
 
@@ -127,7 +127,7 @@ T lubkin_w_algorithm<T, K, series_templ>::calculate(K n, const K order) const {
 
 	K j1, j2, j3;     // Index variables
 
-	// For theory, see: 
+	// For theory, see:
 	// - Lubkin (1952), Eq. (5.2)
 	// - Osada (1992), Theorem 2 and Eq. (5.2)
 	// - Sidi (2003), Chapter 15.4, Eq. (15.4.1)
@@ -156,7 +156,7 @@ T lubkin_w_algorithm<T, K, series_templ>::calculate(K n, const K order) const {
 			// W_n = S_{n+1} - [Numerator] / [Denominator]
 			// Optimized computation using fused multiply-add for better numerical stability
 			W[j] = fma(
-				-Wo1, 
+				-Wo1,
 				Woo1 / (Woo2 - Woo1),
 				 W[j1]
 			);

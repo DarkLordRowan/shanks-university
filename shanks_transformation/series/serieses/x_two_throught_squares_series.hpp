@@ -43,8 +43,8 @@ x_two_throught_squares_series<T, K>::x_two_throught_squares_series(T x) : series
 template <Accepted T, std::unsigned_integral K>
 constexpr T x_two_throught_squares_series<T, K>::operator()(K n) const
 {
-    return (n ? 
-        this->x * static_cast<T>(fma(2, n * n, -1)) / static_cast<T>(fma(4, pow(n, 4), 1)) : 
+    return (n ?
+        this->x * static_cast<T>(fma(2, n * n, -1)) / static_cast<T>(fma(4, pow(n, 4), 1)) :
         static_cast<T>(0)
     ); // (36.2) [Rows.pdf]
 }

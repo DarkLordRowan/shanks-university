@@ -4,10 +4,10 @@
  *        which combines elements of Wynn's epsilon algorithm with Chang's modifications.
  */
 
- // For theory, see: 
+ // For theory, see:
  // Wynn, P. (1956). On a device for computing the eₙ(Sₙ) transformation.
- // Chang, X.K., He, Y., Hu, X.B., Sun, J.Q., & Weniger, E.J. (2019). 
- // Construction of new generalizations of Wynn's epsilon and rho algorithm by solving 
+ // Chang, X.K., He, Y., Hu, X.B., Sun, J.Q., & Weniger, E.J. (2019).
+ // Construction of new generalizations of Wynn's epsilon and rho algorithm by solving
  // finite difference equations in the transformation order. Numerical Algorithms.
 
 #pragma once
@@ -92,7 +92,7 @@ T chang_wynn_algorithm<T, K, series_templ>::operator()(const K n, const K order)
     T up, down, coef, coef2;
 
     //TODO спросить у Парфенова, ибо жертвуем читаемостью кода, ради его небольшого ускорения
-    
+
     // For theory, see: Chang et al. (2019), Section 3.4, Eq. (3.20)
     // Initialization of epsilon table with modified initial conditions.
     K i1, i2, i3, k1;
@@ -101,9 +101,9 @@ T chang_wynn_algorithm<T, K, series_templ>::operator()(const K n, const K order)
     // For theory, see: Wynn (1956), Section 3 (Algorithm)
     // Epsilon table structure: two rows to store intermediate transformations.
     std::vector<std::vector<T>> e(
-        2, 
+        2,
         std::vector<T>(
-            n, 
+            n,
             static_cast<T>(0)
         )
     ); // Two vectors of length n containing Epsilon table (current and previous rows).
@@ -133,15 +133,15 @@ T chang_wynn_algorithm<T, K, series_templ>::operator()(const K n, const K order)
         // T₂⁽ⁿ⁾ = T₀⁽ⁿ⁺¹⁾ - [ΔT₀⁽ⁿ⁾ ΔT₀⁽ⁿ⁺¹⁾ Δ²T₀⁽ⁿ⁺¹⁾] / [ΔT₀⁽ⁿ⁺²⁾ Δ²T₀⁽ⁿ⁾ - ΔT₀⁽ⁿ⁾ Δ²T₀⁽ⁿ⁺¹⁾]
         // Compute second differences: Δ²S_{n+1} = S_{n+3} - 2S_{n+2} + S_{n+1}
         coef = fma(
-            static_cast<T>(-2), 
-            this->series->S_n(i2), 
+            static_cast<T>(-2),
+            this->series->S_n(i2),
             this->series->S_n(i3) + this->series->S_n(i1)
-        ); 
+        );
 
         // Compute Δ²S_n = S_{n+2} - 2S_{n+1} + S_n
         coef2 = fma(
-            static_cast<T>(-2), 
-            this->series->S_n(i1), 
+            static_cast<T>(-2),
+            this->series->S_n(i1),
             this->series->S_n(i2) + this->series->S_n(i)
         );
 
@@ -154,7 +154,7 @@ T chang_wynn_algorithm<T, K, series_templ>::operator()(const K n, const K order)
         down = this->series->operator()(i3) * coef2;
         down -= this->series->operator()(i1) * coef;
         down = static_cast<T>(1) / down; // Reciprocal for division.
-         
+
         // Compute T₂⁽ⁿ⁾ = S_{n+1} - (up * down)
         e[1][i] = static_cast<T>(fma(-up, down, this->series->S_n(i1)));
 

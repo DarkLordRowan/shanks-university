@@ -29,9 +29,9 @@ public:
 };
 
 template <Accepted T, std::unsigned_integral K>
-minus_three_plus_ln3_three_devided_two_plus_two_ln2_series<T, K>::minus_three_plus_ln3_three_devided_two_plus_two_ln2_series(T x) : 
+minus_three_plus_ln3_three_devided_two_plus_two_ln2_series<T, K>::minus_three_plus_ln3_three_devided_two_plus_two_ln2_series(T x) :
 series_base<T, K>(
-    x, 
+    x,
     x * (static_cast<T>(-3)  + static_cast<T>(1.5) * log(static_cast<T>(3)) +  log(static_cast<T>(4)))
 )
 {

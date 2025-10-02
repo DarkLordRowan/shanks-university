@@ -7,4 +7,3 @@ export type Author = {
 };
 
 export type AuthorId = keyof typeof AUTHORS;
-

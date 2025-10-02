@@ -32,9 +32,9 @@ public:
 };
 
 template <Accepted T, std::unsigned_integral K>
-pi_x_multi_e_xpi_plus_e_minusxpi_divided_e_xpi_minus_e_minusxpi_minus_one_series<T, K>::pi_x_multi_e_xpi_plus_e_minusxpi_divided_e_xpi_minus_e_minusxpi_minus_one_series(T x) : 
+pi_x_multi_e_xpi_plus_e_minusxpi_divided_e_xpi_minus_e_minusxpi_minus_one_series<T, K>::pi_x_multi_e_xpi_plus_e_minusxpi_divided_e_xpi_minus_e_minusxpi_minus_one_series(T x) :
 series_base<T, K>(
-	x, 
+	x,
 	static_cast<T>(PI) * x / tanh(static_cast<T>(PI) * x) - static_cast<T>(1)
 )
 {

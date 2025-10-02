@@ -29,22 +29,22 @@ public:
 	*/
 	[[nodiscard]] constexpr virtual T operator()(K n) const;
 
-	constexpr inline bool domain_checker(T x) const{ 
+	constexpr inline bool domain_checker(T x) const{
 
 		if constexpr ( std::is_floating_point<T>::value)
 			return abs(x) > static_cast<T>(PI * 0.5) || !isfinite(x);
-        
+
         if constexpr ( std::is_same<T, float_precision>::value || std::is_same<T, complex_precision<float_precision>>::value)
 			return abs(x) > arbPI * static_cast<float_precision>(0.5) || !isfinite(x);
-		
+
 		return false;
 	}
 };
 
 template <Accepted T, std::unsigned_integral K>
-pi_8_cosx_square_minus_1_div_3_cosx_series<T, K>::pi_8_cosx_square_minus_1_div_3_cosx_series(T x) : 
+pi_8_cosx_square_minus_1_div_3_cosx_series<T, K>::pi_8_cosx_square_minus_1_div_3_cosx_series(T x) :
 series_base<T, K>(
-	x, 
+	x,
 	static_cast<T>(std::numbers::pi * 0.125) * cos(x) * cos(x) - (static_cast<T>(1) / static_cast<T>(3)) * cos(x)
 )
 {

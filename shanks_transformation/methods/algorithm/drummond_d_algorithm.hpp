@@ -171,7 +171,7 @@ inline T drummond_d_algorithm<T,K,series_templ>::calc_result_rec(const K n, cons
 		  Num[i] = this->series->S_n(n+i) * Denom[i];
 	}
 
-	// Apply forward difference recurrence: 
+	// Apply forward difference recurrence:
 	// N_j^{(i)} = N_{j+1}^{(i-1)} - N_j^{(i-1)}
 	// D_j^{(i)} = D_{j+1}^{(i-1)} - D_j^{(i-1)}
 	for (K i = static_cast<K>(1); i <= order; ++i)
@@ -185,16 +185,16 @@ inline T drummond_d_algorithm<T,K,series_templ>::calc_result_rec(const K n, cons
 
 	if (!isfinite(Num[0]))
 		throw std::overflow_error("division by zero");
-    
+
 	return Num[0];
 }
 
 template<Accepted T, std::unsigned_integral K, typename series_templ>
 drummond_d_algorithm<T,K,series_templ>::drummond_d_algorithm(
-	const series_templ& series, 
-	const remainder_type variant, 
+	const series_templ& series,
+	const remainder_type variant,
 	bool useRecFormulas
-	) : 
+	) :
 	series_acceleration<T, K, series_templ>(series),
 	variant(variant),
 	useRecFormulas(useRecFormulas)

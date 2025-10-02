@@ -62,7 +62,7 @@ protected:
     inline T calc_result(K n, K order) const;
 
     /**
-	* @brief Function to calculate S-tranformation using recurrence formula. 
+	* @brief Function to calculate S-tranformation using recurrence formula.
 	* @param n The partial sum number (S_n) from which the calculations will be done
 	* @param order the order of transformation
 	* @return The partial sum after the transformation.
@@ -70,7 +70,7 @@ protected:
 
     /**
      * @brief Computes the S-transformation using recurrence formulas.
-     * 
+     *
      * For theory, see: Sidi (2003, arXiv:math/0306302), pp. 57-58, Eqs. (8.3)-(8.5) ([https://arxiv.org/pdf/math/0306302.pdf])
      * Recursive implementation for better numerical stability in some cases.
      *
@@ -99,7 +99,7 @@ public:
     explicit levin_sidi_s_algorithm(
         const series_templ& series,
         remainder_type variant = remainder_type::u_variant,
-        bool useRecFormulas = false,  
+        bool useRecFormulas = false,
         T parameter = static_cast<T>(1)
     );
 
@@ -132,7 +132,7 @@ inline T levin_sidi_s_algorithm<T, K,series_templ>::calc_result(K n, K order) co
 
     T numerator = static_cast<T>(0), denominator = static_cast<T>(0);
     T rest;
-    T up_pochamer, down_pochamer; 
+    T up_pochamer, down_pochamer;
 
     // For theory, see: Sidi (2003, arXiv:math/0306302), Eq. (8.2)
     // S_{k,n} = [∑_{j=0}^k (-1)^j C(k,j) (β+n+j)_{k-1}/(β+n+k)_{k-1} S_{n+j}/R_{n+j}] /
@@ -155,10 +155,10 @@ inline T levin_sidi_s_algorithm<T, K,series_templ>::calc_result(K n, K order) co
             down_pochamer *= (beta + static_cast<T>(n + order + i));
         }
 
-        
+
         rest *= (up_pochamer / down_pochamer);  // Multiply by Pochhammer ratio
         rest *= remainder->operator()(n,        // Multiply by remainder term 1/R_{n+j}
-            j, 
+            j,
             this->series,
              (variant == remainder_type::u_variant ? beta : static_cast<T>(1))
             );
@@ -169,7 +169,7 @@ inline T levin_sidi_s_algorithm<T, K,series_templ>::calc_result(K n, K order) co
     }
 
     numerator /= denominator;
-    
+
     if (!isfinite(numerator)) throw std::overflow_error("division by zero");
     return numerator;
 }
@@ -188,15 +188,15 @@ inline T levin_sidi_s_algorithm<T, K,series_templ>::calc_result_rec(K n, K order
     for (K i = static_cast<K>(0); i <= order; ++i){
 
         Denom[i] = remainder->operator()(
-            n, 
-            i, 
+            n,
+            i,
             this->series,
             (variant == remainder_type::u_variant ? beta : static_cast<T>(1))
         );
 
         Num[i] = this->series->S_n(n + i); Num[i] *= Denom[i];
     }
-    
+
     T scale1, scale2;
 
     // Recursive computation using the E-algorithm recurrence
@@ -218,20 +218,20 @@ inline T levin_sidi_s_algorithm<T, K,series_templ>::calc_result_rec(K n, K order
             Denom[j] = fma(-scale1,Denom[j]/scale2,Denom[j+static_cast<K>(1)]);
               Num[j] = fma(-scale1,  Num[j]/scale2,  Num[j+static_cast<K>(1)]);
         }
-    
+
     Num[0] /= Denom[0];
-    
+
     if (!isfinite(Num[0])) throw std::overflow_error("division by zero");
     return Num[0];
 }
 
 template<Accepted T, std::unsigned_integral K, typename series_templ>
 levin_sidi_s_algorithm<T, K, series_templ>::levin_sidi_s_algorithm(
-    const series_templ& series, 
-    remainder_type variant, 
-    bool useRecFormulas,  
+    const series_templ& series,
+    remainder_type variant,
+    bool useRecFormulas,
     T parameter
-) : 
+) :
     series_acceleration<T, K, series_templ>(series),
     variant(variant),
     useRecFormulas(useRecFormulas)
@@ -251,7 +251,7 @@ levin_sidi_s_algorithm<T, K, series_templ>::levin_sidi_s_algorithm(
             complex_precision<float_precision>(1)
         );
     }
-    
+
     //TODO: тоже самое наверное
     // Initialize the appropriate remainder transformation based on variant
     switch(variant){
@@ -276,7 +276,7 @@ levin_sidi_s_algorithm<T, K, series_templ>::levin_sidi_s_algorithm(
 }
 
 template<Accepted T, std::unsigned_integral K, typename series_templ>
-T levin_sidi_s_algorithm<T, K, series_templ>::operator()(const K n, const K order) const{ 
+T levin_sidi_s_algorithm<T, K, series_templ>::operator()(const K n, const K order) const{
 
     using std::isfinite;
 

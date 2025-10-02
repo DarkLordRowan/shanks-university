@@ -43,9 +43,9 @@ public:
 };
 
 template <Accepted T, std::unsigned_integral K>
-exp_squared_erf_series<T, K>::exp_squared_erf_series(T x) : 
+exp_squared_erf_series<T, K>::exp_squared_erf_series(T x) :
 series_base<T, K>(
-    x, 
+    x,
     calculate_sum(x)
 )
 {

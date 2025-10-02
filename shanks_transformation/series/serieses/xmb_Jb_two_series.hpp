@@ -53,7 +53,7 @@ private:
 };
 
 template <Accepted T, std::unsigned_integral K>
-xmb_Jb_two_series<T, K>::xmb_Jb_two_series(T x, K b) : 
+xmb_Jb_two_series<T, K>::xmb_Jb_two_series(T x, K b) :
 series_base<T, K>(
     x,
     calculate_sum(x, b)

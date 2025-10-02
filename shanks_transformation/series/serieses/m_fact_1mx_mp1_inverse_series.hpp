@@ -45,23 +45,23 @@ private:
 	*/
 	T access_row(K n);
 
-	constexpr inline bool domain_checker(T x) const{ 
+	constexpr inline bool domain_checker(T x) const{
 
 		if constexpr ( std::is_floating_point<T>::value || std::is_same<T, float_precision>::value)
-			return abs(x) >= static_cast<T>(1) || !isfinite(x); 
+			return abs(x) >= static_cast<T>(1) || !isfinite(x);
 
 		if constexpr ( std::is_same<T, complex_precision<float_precision>>::value )
-			return abs(x) >= static_cast<float_precision>(1) || !isfinite(x); 
-		
+			return abs(x) >= static_cast<float_precision>(1) || !isfinite(x);
+
 		return false;
 	}
-	
+
 };
 
 template <Accepted T, std::unsigned_integral K>
-m_fact_1mx_mp1_inverse_series<T, K>::m_fact_1mx_mp1_inverse_series(T x, K m) : 
+m_fact_1mx_mp1_inverse_series<T, K>::m_fact_1mx_mp1_inverse_series(T x, K m) :
 series_base<T, K>(
-	x, 
+	x,
 	static_cast<T>(this->fact(m)) / pow(static_cast<T>(1) - x, static_cast<T>(m + 1))
 ), m(m), recurrent_series_base<T, K>(static_cast<T>(this->fact(m))
 )

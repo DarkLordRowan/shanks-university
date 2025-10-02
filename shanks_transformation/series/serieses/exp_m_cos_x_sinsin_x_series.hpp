@@ -32,14 +32,14 @@ public:
     */
     [[nodiscard]] constexpr virtual T operator()(K n) const;
 
-    constexpr inline bool domain_checker(T x) const{ 
+    constexpr inline bool domain_checker(T x) const{
 
 		if constexpr ( std::is_floating_point<T>::value || std::is_same<T, float_precision>::value)
-			return abs(x) >= static_cast<T>(PI) || !isfinite(x); 
+			return abs(x) >= static_cast<T>(PI) || !isfinite(x);
 
 		if constexpr ( std::is_same<T, complex_precision<float_precision>>::value )
-			return abs(x.real()) >= arbPI || !isfinite(x); 
-		
+			return abs(x.real()) >= arbPI || !isfinite(x);
+
 		return false;
 
 	}
