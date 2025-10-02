@@ -1,7 +1,7 @@
 {
-  "series_json": "data/example.json",
+  "series_json": "data/big_boy.json",
   "series_csv": "data/example_series.csv",
-  "accel_json": "data/example.json",
+  "accel_json": "data/big_boy.json",
   "output_dir": "output",
   "plots_dir": "plots",
   "results_json": "output/output.json",

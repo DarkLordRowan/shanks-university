@@ -6,7 +6,7 @@
 
 ```bash
 git clone https://github.com/DarkLordRowan/shanks-university.git
-git checkout Fixes
+git checkout concept-proved
 cd shanks_consumer
 
 bash install_pyshanks.sh
@@ -31,6 +31,14 @@ python main.py
 * Вывод: `output/output.json`, `output/output.csv`, `output/events.json`, `output/events.csv`
 
 * Графики: `plots/`
+
+### Файл конфигурации испытания
+
+```bash
+python main.py --options-json options.json
+```
+
+Запускает испытание с настройками в файле `options.json`. Подробнее о настройках ниже.
 
 ### Пользовательские входные файлы
 
@@ -78,6 +86,8 @@ python script.py -vv
 
 ### Опции ввода
 
+* `--options-json`: JSON файл для параметров испытания (вместо CLI флагов)
+
 * `--series-json`: JSON файл для параметров серий (по умолчанию: `data/example.json`)
 
 * `--series-csv`: CSV файл для параметров серий (по умолчанию: `data/example_series.csv`)
@@ -105,6 +115,10 @@ python script.py -vv
 * `--no-plots`: Пропустить генерацию графиков
 
 * `--verbose/-v`: Увеличить уровень детализации (используйте `-v` для базового, `-vv` для детального)
+
+### Флаги выполнения
+
+* `--trial-process-count`: количество создаваемых процессов для обработки испытания (по умолчанию `1`)
 
 ## Выходные файлы
 
