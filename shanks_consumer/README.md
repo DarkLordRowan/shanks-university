@@ -273,9 +273,6 @@ poetry install
 
 ```sh
 poetry run pre-commit install
-
-# При необходимости установите хуки для pre-push
-poetry run pre-commit install --hook-type pre-push
 ```
 
 ### 4. Запуск скрипта без входа в окружение:
