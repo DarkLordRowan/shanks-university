@@ -80,6 +80,9 @@ protected:
     const std::vector<T>* an = nullptr;
 
     std::string acceleration_name = "series acceleration base class";
+
+    size_t arbPrecision = 0;
+
 };
 
 
@@ -112,4 +115,11 @@ void series_acceleration<T, K>::reset(
 ) {
     Sn = &newSn;
     an = &newAn;
+
+    if constexpr (std::is_same<T, float_precision>::value){
+        arbPrecision = newSn.at(0).precision();
+    } else if constexpr (std::is_same<T, complex_precision<float_precision>>::value){
+        arbPrecision = std::max(newSn.at(0).real().precision(), newSn.at(0).imag().precision());
+    }
+
 }

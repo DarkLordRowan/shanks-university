@@ -37,8 +37,8 @@
   *           - T S_n(K n) const: returns the n-th partial sum sₙ = a₀ + ... + aₙ
   *           The series object encapsulates the sequence whose convergence is to be accelerated.
   */
-template <Accepted T, std::unsigned_integral K, typename series_templ>
-class wynn_epsilon_3_algorithm final : public series_acceleration<T, K, series_templ>
+template <AcceptedLike T, UnsignedIntLike K>
+class wynn_epsilon_3_algorithm final : public series_acceleration<T, K>
 {
 private:
 
@@ -52,7 +52,7 @@ public:
      * @param epsilon_threshold_ Threshold for epsilon corrections. Controls numerical stability.
      *        Valid values: positive T values. Too small may cause overflow, too large may reduce acceleration.
      */
-    explicit wynn_epsilon_3_algorithm(const series_templ& series, T epsilon_threshold_ = static_cast<T>(1e-3));
+    explicit wynn_epsilon_3_algorithm(T epsilon_threshold_ = static_cast<T>(1e-3));
 
 	/**
 	* @brief Fast impimentation of Epsilon algorithm.
@@ -82,38 +82,40 @@ public:
 };
 
 // Constructor implementation
-template <Accepted T, std::unsigned_integral K, typename series_templ>
-wynn_epsilon_3_algorithm<T, K, series_templ>::wynn_epsilon_3_algorithm(
-    const series_templ& series,
+template <AcceptedLike T, UnsignedIntLike K>
+wynn_epsilon_3_algorithm<T, K>::wynn_epsilon_3_algorithm(
     const T epsilon_threshold_
     ) :
-    series_acceleration<T, K, series_templ>(series),
+    series_acceleration<T, K>("wynn epsilon 3"),
     epsilon_threshold(epsilon_threshold_)
 {}
 
 // Algorithm implementation
-template <Accepted T, std::unsigned_integral K, typename series_templ>
-T wynn_epsilon_3_algorithm<T, K, series_templ>::operator()(const K n, const K order) const {
+template <AcceptedLike T, UnsignedIntLike K>
+T wynn_epsilon_3_algorithm<T, K>::operator()(const K n, const K order) const {
 
     using std::isfinite;
     using std::max;
     using std::abs;
 
-    if (n == static_cast<K>(0))
+    if (n == static_cast<K>(0)){
         throw std::domain_error("n = 0 in the input");
+    }
 
-    if (order == static_cast<K>(0)) return this->series->S_n(n);
+    if (order == static_cast<K>(0)) {
+        return series_acceleration<T,K>::Sn->at(n);
+    }
 
     K N = n; // Number of terms used in transformation
 
     // Machine constants for numerical stability
-    const T EMACH = std::numeric_limits<T>::epsilon(); ///< Machine epsilon: smallest number such that 1.0 + ε ≠ 1.0.
+    const T EMACH = convertArbWithPrecision<T>(std::numeric_limits<T>::epsilon(), series_acceleration<T, K>::arbPrecision); ///< Machine epsilon: smallest number such that 1.0 + ε ≠ 1.0.
     const T EPRN = static_cast<T>(50) * EMACH;         ///< Relative error tolerance (50 * machine epsilon).
-    const T OFRN = std::numeric_limits<T>::max();      ///< Overflow threshold (largest finite value).
+    const T OFRN = convertArbWithPrecision<T>(std::numeric_limits<T>::max(), series_acceleration<T, K>::arbPrecision);      ///< Overflow threshold (largest finite value).
 
-    T result = static_cast<T>(0);       ///< Current best accelerated estimate.
-    T abs_error = static_cast<T>(0);    ///< Absolute error estimate for current result.
-    T resla = static_cast<T>(0);        ///< Previous result for error comparison.
+    T result = convertArbWithPrecision<T>(0.0, series_acceleration<T, K>::arbPrecision);       ///< Current best accelerated estimate.
+    T abs_error = convertArbWithPrecision<T>(0.0, series_acceleration<T, K>::arbPrecision);    ///< Absolute error estimate for current result.
+    T resla = convertArbWithPrecision<T>(0.0, series_acceleration<T, K>::arbPrecision);        ///< Previous result for error comparison.
     K newelm, num, NUM, K1, ib, ie, in; // Loop indices and counters.
     T RES, E0, E1, E2, E3, DELTA1, DELTA2, DELTA3, ERR1, ERR2, ERR3, TOL1, TOL2, TOL3, SS, EPSINF; // int -> K
 
@@ -121,12 +123,12 @@ T wynn_epsilon_3_algorithm<T, K, series_templ>::operator()(const K n, const K or
     // The epsilon table e[0..N+2] stores intermediate values εₛ⁽ⁿ⁾.
     std::vector<T> e(
         N + static_cast<K>(3),
-        static_cast<T>(0)
+        convertArbWithPrecision<T>(0.0, series_acceleration<T, K>::arbPrecision)
     ); //First N eliments of epsilon table + 2 elements for math
 
     // Initialize epsilon table with partial sums: ε₀⁽ⁱ⁾ = S_i for i=0,...,N
     for (K i = static_cast<K>(0); i <= N; ++i) //Filling up Epsilon Table
-        e[i] = this->series->S_n(i);
+        e[i] = series_acceleration<T,K>::Sn->at(i);
 
     // Apply epsilon algorithm for 'order' iterations
     for (K i = static_cast<K>(0); i <= order; ++i) { //Working with Epsilon Table order times
@@ -173,10 +175,9 @@ T wynn_epsilon_3_algorithm<T, K, series_templ>::operator()(const K n, const K or
 
                 //ERR1 = abs(DELTA1);
 
-                TOL1 = static_cast<T>(max(
-                    abs(E1),
-                    abs(E3)
-                ));
+                TOL1 = convertArbWithPrecision<T>(
+                max(abs(E1), abs(E3)), 
+                series_acceleration<T, K>::arbPrecision);
                 TOL1*= EMACH;
 
                 // If differences are insignificant, terminate early
@@ -214,11 +215,27 @@ T wynn_epsilon_3_algorithm<T, K, series_templ>::operator()(const K n, const K or
         }
 
         // Adjust N to be the greatest odd number <= n if no change
-        if (N == n) // making N the greatest odd number <= n
-            N = (n & static_cast<K>(1)) ? n : n - static_cast<K>(1);
+        if (N == n){ // making N the greatest odd number <= n
+            //N = (n & static_cast<K>(1)) ? n : n - static_cast<K>(1);
+            if constexpr (std::is_same<K, int_precision>::value){
+
+                N = n - static_cast<K>(n.even());
+
+            } else {
+
+                N = n - static_cast<K>(n & 1);
+
+            }
+        }
 
         // Compact the epsilon table for next iteration
-        ib = (num & static_cast<K>(1)) ? static_cast<K>(1) : static_cast<K>(2);  // Start index: 1 for odd, 2 for even
+        //ib = (num & static_cast<K>(1)) ? static_cast<K>(1) : static_cast<K>(2);  // Start index: 1 for odd, 2 for even
+        ib = static_cast<K>(2);
+        if constexpr (std::is_same<K, int_precision>::value) {
+            ib -= (num & static_cast<K>(1));
+        } else {
+            ib -= static_cast<K>(num.even());
+        }
 
         // Start index: 1 (odd) or 2 (even)
         ie = newelm + static_cast<K>(1);

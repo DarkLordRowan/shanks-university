@@ -23,10 +23,16 @@ public:
 	virtual SeriesResult<T> generateSeries(K vecSize) const override;
 
 	inline constexpr bool checkDomain(const T& x){
+		
+		using std::isfinite;
+
 		return !isfinite(x);
 	}
 
 	inline constexpr T calculateSum(const T& x){
+
+		using std::exp;
+
 		return exp(x);
 	}
 
@@ -43,14 +49,20 @@ exp_series<T, K>::exp_series(T x) : series_base<T, K>(x)
 	}
 
 	series_base<T,K>::sum = calculateSum(x);
+
+	if constexpr ( std::is_same<T, float_precision> :: value ){
+		series_base<T, K>::precision = x.precision();
+	} else if constexpr (std::is_same<T, complex_precision<float_precision>>::value){
+		series_base<T, K>::precision = max(x.real().precision(), x.imag().precision());
+	}
 	
 }
 
 template<AcceptedLike T, UnsignedIntLike K>
 SeriesResult<T> exp_series<T, K>::generateSeries(K vecSize) const {
 
-	std::vector vecAn = std::vector(vecSize, static_cast<T>(0)); vecAn[0] = static_cast<T>(1);
-	std::vector vecSn = std::vector(vecSize, static_cast<T>(0)); vecSn[0] = static_cast<T>(1);
+	std::vector<T> vecAn(vecSize, convertArbWithPrecision<T>(0.0, series_base<T, K>::precision)); vecAn[0] = static_cast<T>(1);
+	std::vector<T> vecSn(vecSize, convertArbWithPrecision<T>(0.0, series_base<T, K>::precision)); vecSn[0] = static_cast<T>(1);
 
 	for(K j = static_cast<K>(1); j < vecSize; ++j){
 		vecAn[j] += vecAn[j-static_cast<K>(1)] * series_base<T,K>::x / static_cast<T>(j);

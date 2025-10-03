@@ -128,6 +128,8 @@ protected:
     * @authors Maximov A.K.
     */
 	std::string series_name;
+
+	size_t precision;
 };
 
 template <AcceptedLike T, UnsignedIntLike K>
