@@ -5,7 +5,7 @@
  *        that requires fewer arithmetic operations than the E-algorithm.
  */
 
- // For theory, see: 
+ // For theory, see:
  // Ford, W.F., Sidi, A. (1987). An algorithm for a generalization of the Richardson extrapolation process.
  // Osada, N. (2000). The E-algorithm and the Ford-Sidi algorithm.
 
@@ -41,8 +41,8 @@
  *           - T S_n(K n) const: returns the n-th partial sum s_n = a_0 + ... + a_n
  *           The series object encapsulates the mathematical sequence to be accelerated.
  */
-template <AcceptedLike T, std::unsigned_integral K>
-class ford_sidi_3_algorithm final : public series_acceleration<T, K>{
+template <Accepted T, std::unsigned_integral K, typename series_templ>
+class ford_sidi_3_algorithm final : public series_acceleration<T, K, series_templ>{
 public:
 
     /**
@@ -51,7 +51,7 @@ public:
     *        Must be a valid object implementing the required series interface.
     *        The series object should provide access to terms and partial sums.
     */
-    explicit ford_sidi_3_algorithm(std::shared_ptr<series_base<T,K>> series);
+    explicit ford_sidi_3_algorithm(const series_templ& series);
 
     /**
      * @brief Fast implementation of Ford-Sidi algorithm for series acceleration.
@@ -73,14 +73,14 @@ public:
      * @throws std::domain_error if n=0 is provided as input.
      * @throws std::overflow_error if division by zero or numerical instability occurs.
      */
-    T operator()(K n, K k) override;
+    T operator()(K n, K k) const override;
 };
 
-template <AcceptedLike T, std::unsigned_integral K>
-ford_sidi_3_algorithm<T, K>::ford_sidi_3_algorithm(std::shared_ptr<series_base<T,K>> series) : series_acceleration<T, K>(series) {}
+template <Accepted T, std::unsigned_integral K, typename series_templ>
+ford_sidi_3_algorithm<T, K, series_templ>::ford_sidi_3_algorithm(const series_templ& series) : series_acceleration<T, K, series_templ>(series) {}
 
-template <AcceptedLike T, std::unsigned_integral K>
-T ford_sidi_3_algorithm<T, K>::operator()(const K n, const K order) {
+template <Accepted T, std::unsigned_integral K, typename series_templ>
+T ford_sidi_3_algorithm<T, K, series_templ>::operator()(const K n, const K order) const {
 
     using std::isfinite;
 
@@ -88,7 +88,7 @@ T ford_sidi_3_algorithm<T, K>::operator()(const K n, const K order) {
     // The algorithm requires at least one term for meaningful computation
     if (n == static_cast<K>(0))
         throw std::domain_error("n = 0 in the input");
-    
+
     //TODO спросить у Парфенова, ибо жертвуем читаемостью кода, ради его небольшого ускорения
 
     // For theory, see: Osada (2000), Section 4 - Efficient implementation
@@ -108,13 +108,13 @@ T ford_sidi_3_algorithm<T, K>::operator()(const K n, const K order) {
 
     // FSG matrix: Stores intermediate transformation values
     std::vector<std::vector<T>> FSG(
-        m + static_cast<K>(2), 
+        m + static_cast<K>(2),
         std::vector<T>(G.size())
     );
 
     // For theory, see: Osada (2000), Eq. (9) - Initial coefficient computation
     // G[0] = a_{n-1} * n, where a_{n-1} is the (n-1)-th series term
-    G[0] = this->series->an(n1) * static_cast<T>(n);
+    G[0] = this->series->operator()(n1) * static_cast<T>(n);
 
     // For theory, see: Ford & Sidi (1987), Eq. (2.3) - Recursive coefficient scaling
     // Te = 1/n used for recursive computation of G sequence
@@ -127,7 +127,7 @@ T ford_sidi_3_algorithm<T, K>::operator()(const K n, const K order) {
 
     // For theory, see: Osada (2000), Section 4 - Initialization of transformation sequences
     // FSA[n1] = S_{n-1} (partial sum up to term n-1)
-    FSA[n1] = this->series->Sn(n1);
+    FSA[n1] = this->series->S_n(n1);
 
     // FSI[n1] = 1 (initial normalization factor)
     FSI[n1] = static_cast<T>(1);
@@ -139,7 +139,7 @@ T ford_sidi_3_algorithm<T, K>::operator()(const K n, const K order) {
         FSI[n1] /= G[0];
         for (K i = static_cast<K>(1); i <= m; ++i)
             FSG[i][n1] = G[i] / G[0];
-    } 
+    }
     else {
         // For theory, see: Ford & Sidi (1987), Section 3 - Alternative initialization
         // When G[0] = 0, use direct values without normalization
@@ -175,7 +175,7 @@ T ford_sidi_3_algorithm<T, K>::operator()(const K n, const K order) {
         FSA[MM] = FSA[MM1] - FSA[MM];
         FSA[MM]/= D;
 
-        // For theory, see: Osada (2000), Section 4 - FSI sequence update  
+        // For theory, see: Osada (2000), Section 4 - FSI sequence update
         // FSI[MM] = (FSI[MM1] - FSI[MM]) / D (normalization factor update)
         FSI[MM] = FSI[MM1] - FSI[MM];
         FSI[MM]/= D;

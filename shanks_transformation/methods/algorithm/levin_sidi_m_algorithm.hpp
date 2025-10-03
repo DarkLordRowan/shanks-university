@@ -39,20 +39,20 @@
   *           - T minus_one_raised_to_power_n(K j) const: returns (-1)^j
   *           - T binomial_coefficient(T n, K k) const: returns binomial coefficient C(n, k)
   */
-template<AcceptedLike T, std::unsigned_integral K>
-class levin_sidi_m_algorithm final : public series_acceleration<T, K>
+template<Accepted T, std::unsigned_integral K, typename series_templ>
+class levin_sidi_m_algorithm final : public series_acceleration<T, K, series_templ>
 {
 protected:
 
 	const T gamma;											///< Positive real parameter such that gamma >= order - 1
-	std::unique_ptr<transform_base<T, K>> remainder;	///< Pointer to remainder transformation object
+	std::unique_ptr<const transform_base<T, K>> remainder;	///< Pointer to remainder transformation object
 	remainder_type variant;
 
 	/**
 	 * @brief Core implementation of the M-transformation using direct summation.
 	 *
 	 * For theory, see: Sidi (2003, arXiv:math/0306302), pp. 64-65, Eqs. (9.2)-(9.6)
-	 * General form: M_{n}^{(k)} = 
+	 * General form: M_{n}^{(k)} =
 	 [∑_{j=0}^n (-1)^j C(n,j) (n-j) (γ+k+2)_{n-1}/(γ+k+1)_{n} × (γ+k+1-j)_{j}/(γ+k+2-n)_{j} × 1/(j+1) × S_{k+j}/R_{k+j}] /
 	 [∑_{j=0}^n (-1)^j C(n,j) (n-j) (γ+k+2)_{n-1}/(γ+k+1)_{n} × (γ+k+1-j)_{j}/(γ+k+2-n)_{j} × 1/(j+1) × 1/R_{k+j}]
 	 *
@@ -79,9 +79,9 @@ public:
 	 *        For theory, see: Sidi (2003, arXiv:math/0306302), p. 64
 	 */
 	explicit levin_sidi_m_algorithm(
-		std::shared_ptr<series_base<T,K>> series,
+		const series_templ& series,
 		remainder_type variant = remainder_type::u_variant,
-		const T& gamma_ = static_cast<T>(45.5)
+		T gamma_ = static_cast<T>(10)
 	);
 
 	// Default destructor is sufficient since unique_ptr handles deletion
@@ -106,11 +106,11 @@ public:
 	 * @throws std::domain_error if n=0 or gamma < n-1
 	 * @throws std::overflow_error if division by zero or numerical instability occurs
 	 */
-	T operator()(K n, K order) override;
+	T operator()(K n, K order) const override;
 };
 
-template<AcceptedLike T, std::unsigned_integral K>
-inline T levin_sidi_m_algorithm<T, K>::calculate(const K n, const K order) const {
+template<Accepted T, std::unsigned_integral K, typename series_templ>
+inline T levin_sidi_m_algorithm<T, K, series_templ>::calculate(const K n, const K order) const {
 
 	using std::isfinite;
 
@@ -118,11 +118,11 @@ inline T levin_sidi_m_algorithm<T, K>::calculate(const K n, const K order) const
     // Validate parameter constraint: gamma >= n - 1
 
 	if constexpr (std::is_floating_point<T>::value || std::is_same<T, float_precision>::value){
-		if(gamma - static_cast<T>(order) - static_cast<T>(1) < static_cast<T>(0)){
+		if(gamma - static_cast<T>(n - 1) < static_cast<T>(0)){
 			throw std::domain_error("gamma cannot be lesser than n - 1");
 		}
 	}  else if constexpr (std::is_same<T, complex_precision<float_precision>>::value){
-		if (gamma.real() - static_cast<float_precision>(n)-static_cast<float_precision>(1) < static_cast<float_precision>(0)){
+		if (gamma.real() - static_cast<float_precision>(n-1) < static_cast<float_precision>(0)){
 			throw std::domain_error("gamma cannot be lesser than n - 1");
 		}
 	}
@@ -135,19 +135,17 @@ inline T levin_sidi_m_algorithm<T, K>::calculate(const K n, const K order) const
 	// For theory, see: Sidi (2003, arXiv:math/0306302), Eq. (9.4)
 	// Compute: (γ+k+2)_{n-1}/(γ+k+1)_{n} = Γ(γ+k+n+1)/Γ(γ+k+2) × Γ(γ+k+1)/Γ(γ+k+n+1)
 	T up = static_cast<T>(1), down = static_cast<T>(1);
-	T binomial_coef = binomial_coefficient<T,K>(static_cast<T>(n), static_cast<K>(0));
-	T S_n = this->series->Sn(order);
+	T binomial_coef = this->series->binomial_coefficient(static_cast<T>(n), static_cast<K>(0));
+	T S_n = this->series->S_n(order);
 
 	T down_coef = gamma + static_cast<T>(order + static_cast<K>(2));
 	T   up_coef = down_coef - static_cast<T>(n);
 
 	// Compute (γ+k+2)_{n-1} = ∏_{m=0}^{n-2} (γ+k+2+m)
 	// Compute (γ+k+1)_{n} = ∏_{m=0}^{n-1} (γ+k+1+m)
-	if(n > 1){
-		for (K m = static_cast<K>(0); m < n - static_cast<K>(1); ++m) {
-			up   *= (up_coef   + static_cast<T>(m));
-			down *= (down_coef + static_cast<T>(m));
-		}
+	for (K m = static_cast<K>(0); m < n - static_cast<K>(1); ++m) {
+		up   *= (up_coef   + static_cast<T>(m));
+		down *= (down_coef + static_cast<T>(m));
 	}
 	up /= down;
 
@@ -160,7 +158,7 @@ inline T levin_sidi_m_algorithm<T, K>::calculate(const K n, const K order) const
 	for (K j = static_cast<K>(0); j <= n; ++j) {
 
 		// Compute (-1)^j * C(n,j) * (n-j)
-		rest  = minus_one_raised_to_power_n<T,K>(j); 
+		rest  = this->series->minus_one_raised_to_power_n(j);
 		rest *= binomial_coef * static_cast<T>(n - j);
 		rest *= up;										// Multiply by Pochhammer ratio term
 		rest /= static_cast<T>(j + static_cast<K>(1));  // Multiply by 1/(j+1) factor
@@ -170,9 +168,9 @@ inline T levin_sidi_m_algorithm<T, K>::calculate(const K n, const K order) const
 
 		// Multiply by remainder term 1/R_{k+j}
 		rest *= remainder->operator()(
-			order, 
-			j, 
-			this->series.get(), 
+			order,
+			j,
+			this->series,
 			-gamma-static_cast<T>(n)
 		);
 
@@ -181,7 +179,7 @@ inline T levin_sidi_m_algorithm<T, K>::calculate(const K n, const K order) const
 		denominator += rest;
 
 		// Update partial sum for next iteration: S_{k+j+1} = S_{k+j} + a_{k+j+1}
-		S_n += this->series->an(order + j + static_cast<K>(1));
+		S_n += this->series->operator()(order + j + static_cast<K>(1));
 
 		// TODO проверить корректность пересчета бин. коэф.
 		//// Update binomial coefficient for next iteration: C(n, j+1) = C(n, j) * (n-j)/(j+1)
@@ -196,18 +194,18 @@ inline T levin_sidi_m_algorithm<T, K>::calculate(const K n, const K order) const
 	return numerator;
 }
 
-template<AcceptedLike T, std::unsigned_integral K>
-T levin_sidi_m_algorithm<T, K>::operator()(const K n, const K order) {
+template<Accepted T, std::unsigned_integral K, typename series_templ>
+T levin_sidi_m_algorithm<T, K, series_templ>::operator()(const K n, const K order) const {
 	return calculate(n, order);
 }
 
-template<AcceptedLike T, std::unsigned_integral K>
-levin_sidi_m_algorithm<T, K>::levin_sidi_m_algorithm(
-	std::shared_ptr<series_base<T,K>> series, 
-	const remainder_type variant, 
-	const T& gamma_
+template<Accepted T, std::unsigned_integral K, typename series_templ>
+levin_sidi_m_algorithm<T, K, series_templ>::levin_sidi_m_algorithm(
+	const series_templ& series,
+	const remainder_type variant,
+	const T gamma_
 	) :
-	series_acceleration<T, K>(series),
+	series_acceleration<T, K, series_templ>(series),
 	variant(variant),
 	gamma(gamma_)
 {

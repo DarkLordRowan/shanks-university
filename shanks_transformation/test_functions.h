@@ -5,14 +5,9 @@
 
 #pragma once
 
-#include "custom_concepts.hpp"
-#include "series/series_base.hpp"
+//#include "series.h"
 #include <chrono>
 #include <iostream>
-
-#ifndef INC_FPRECISION
-	#include "libs/arbitrary_arithmetics/fprecision.h"
-#endif
 
  /**
  * @brief Function that prints out comparesment between transformed and nontransformed partial sums
@@ -27,18 +22,18 @@
  * @param series The series class object to be accelerated
  * @param test The type of transformation that is being used
  */
-template <AcceptedLike T, std::unsigned_integral K, typename transform_type>
-void cmp_sum_and_transform(const K n, const K order, std::shared_ptr<series_base<T,K>> series, const transform_type& test)
+template <std::unsigned_integral K, typename series_templ, typename transform_type>
+void cmp_sum_and_transform(const K n, const K order, const series_templ& series, const transform_type& test)
 {
 	test->print_info();
-	for (K i = 0; i <= order; ++i) {
-		try 
+	for (K i = 1; i <= n; ++i) {
+		try
 		{
 			std::cout << "Sum of algo : " << series->get_sum() << '\n';
-			std::cout << "S_" << i << " : " << series->Sn(n + i) << '\n';
-			std::cout << "T_" << n << " of order " << i << " : " << test->operator()(n, i) << '\n';
-			std::cout << "T_" << n << " of order " << i << " - S_" << i
-			<< " : " << test->operator()(n, i) - series->Sn(n + i) << '\n';
+			std::cout << "S_" << i << " : " << series->S_n(i) << '\n';
+			std::cout << "T_" << i << " of order " << order << " : " << test->operator()(i, order) << '\n';
+			std::cout << "T_" << i << " of order " << order << " - S_" << i
+			<< " : " << test->operator()(i, order) - series->S_n(i) << '\n';
 
 		}
 		catch (std::domain_error& e)
@@ -48,9 +43,6 @@ void cmp_sum_and_transform(const K n, const K order, std::shared_ptr<series_base
 		catch (std::overflow_error& e)
 		{
 			std::cout << e.what() << '\n';
-		}
-		catch (float_precision::divide_by_zero){
-			std::cout <<"divide by zero\n";
 		}
 	}
 }
@@ -67,17 +59,17 @@ void cmp_sum_and_transform(const K n, const K order, std::shared_ptr<series_base
 * @param series The series class object to be accelerated
 * @param test The type of transformation that is being used
 */
-template <AcceptedLike T, std::unsigned_integral K, typename transform_type>
-void cmp_a_n_and_transform(const K n, const K order, std::shared_ptr<series_base<T,K>> series, const transform_type& test)
+template <std::unsigned_integral K, typename series_templ, typename transform_type>
+void cmp_a_n_and_transform(const K n, const K order, const series_templ& series, const transform_type& test)
 {
 	test->print_info();
 	for (K i = 1; i <= n; ++i) {
 		try
 		{
-			std::cout << "a_" << i << " : " << series->an(i) << '\n';
+			std::cout << "a_" << i << " : " << (*series)(i) << '\n';
 			std::cout << "t_" << i << " : " << test->operator()(i, order) - test->operator()(i - 1, order) << '\n';
 			std::cout << "t_" << i << " of order " << order << " - a_" << i
-				<< " : " << (test->operator()(i, order) - test->operator()(i - 1, order)) - series->an(i) << '\n';
+				<< " : " << (test->operator()(i, order) - test->operator()(i - 1, order)) - (*series)(i) << '\n';
 		}
 		catch (std::domain_error& e)
 		{
@@ -86,9 +78,6 @@ void cmp_a_n_and_transform(const K n, const K order, std::shared_ptr<series_base
 		catch (std::overflow_error& e)
 		{
 			std::cout << e.what() << '\n';
-		}
-		catch (float_precision::divide_by_zero){
-			std::cout <<"divide by zero\n";
 		}
 	}
 }
@@ -104,8 +93,8 @@ void cmp_a_n_and_transform(const K n, const K order, std::shared_ptr<series_base
 * @param series The series class object to be accelerated
 * @param test The type of transformation that is being used
 */
-template <AcceptedLike T, std::unsigned_integral K, typename transform_type>
-void transformation_remainders(const K n, const K order, std::shared_ptr<series_base<T,K>> series, const transform_type& test)
+template <std::unsigned_integral K, typename series_templ, typename transform_type>
+void transformation_remainders(const K n, const K order, const series_templ& series, const transform_type& test)
 {
 	std::cout << "Tranformation of order " << order << " remainders from i = 1 to " << n << '\n';
 	test->print_info();
@@ -122,9 +111,6 @@ void transformation_remainders(const K n, const K order, std::shared_ptr<series_
 		{
 			std::cout << e.what() << '\n';
 		}
-		catch (float_precision::divide_by_zero){
-			std::cout <<"divide by zero\n";
-		}
 	}
 }
 
@@ -140,19 +126,20 @@ void transformation_remainders(const K n, const K order, std::shared_ptr<series_
 * @param test_1 The type of the first transformation that is being used
 * @param test_2 The type of the second transformation that is being used
 */
-template <AcceptedLike T, std::unsigned_integral K, typename transform_type_1, typename transform_type_2>
-void cmp_transformations(const K n, const K order, std::shared_ptr<series_base<T,K>> series, const transform_type_1& test_1, const transform_type_2& test_2)
+template <std::unsigned_integral K, typename series_templ, typename transform_type_1, typename transform_type_2>
+void cmp_transformations(const K n, const K order, const series_templ& series, const transform_type_1& test_1, const transform_type_2& test_2)
 {
 
 	using std::abs;
+
 
 	std::cout << "Tranformations of order " << order << " remainders from i = 1 to " << n << '\n';
 	std::cout << "The transformation #1 is ";
 	test_1->print_info();
 	std::cout << "The transformation #2 is ";
 	test_2->print_info();
-	auto diff_1 = series->an(0);
-	auto diff_2 = series->an(0);
+	auto diff_1 = (*series)(0);
+	auto diff_2 = (*series)(0);
 	for (K i = 1; i <= n; ++i) {
 		try
 		{
@@ -173,9 +160,6 @@ void cmp_transformations(const K n, const K order, std::shared_ptr<series_base<T
 		{
 			std::cout << e.what() << '\n';
 		}
-		catch (float_precision::divide_by_zero){
-			std::cout <<"divide by zero\n";
-		}
 	}
 }
 
@@ -188,8 +172,8 @@ void cmp_transformations(const K n, const K order, std::shared_ptr<series_base<T
 * @param series The series class object to be accelerated
 * @param test The type of the first transformation that is being used
 */
-template <AcceptedLike T, std::unsigned_integral K, typename transform_type>
-void eval_transform_time(const K n, const K order, std::shared_ptr<series_base<T,K>> series, const transform_type& test)
+template <std::unsigned_integral K, typename series_templ, typename transform_type>
+void eval_transform_time(const K n, const K order, const series_templ& series, const transform_type& test)
 {
 	const auto start_time = std::chrono::system_clock::now();
 	test->print_info();
@@ -206,9 +190,6 @@ void eval_transform_time(const K n, const K order, std::shared_ptr<series_base<T
 		{
 			std::cout << e.what() << '\n';
 		}
-		catch (float_precision::divide_by_zero){
-			std::cout <<"divide by zero\n";
-		}
 	}
 	const auto end_time = std::chrono::system_clock::now();
 	const std::chrono::duration<double, std::milli> diff = end_time - start_time;
@@ -223,11 +204,11 @@ void eval_transform_time(const K n, const K order, std::shared_ptr<series_base<T
 * @tparam series_templ is the type of series whose convergence we accelerate, transform_type is the type of transformation we are using
 * @param n The number of terms
 */
-template <AcceptedLike T, std::unsigned_integral K>
-void print_sum(const K n, std::shared_ptr<series_base<T,K>> series)
+template <std::unsigned_integral K, typename series_templ>
+void print_sum(const K n, const series_templ& series)
 {
 	std::cout << "Sum of algo :" << series->get_sum() << '\n';
-	std::cout << "S_" << n << " : " << series->Sn(n) << '\n';
+	std::cout << "S_" << n << " : " << series->S_n(n) << '\n';
 }
 
 /**
@@ -256,8 +237,5 @@ void print_transform(const K n, const K order, const transform_type& test)
 	catch (std::overflow_error& e)
 	{
 		std::cout << e.what() << '\n';
-	}
-	catch (float_precision::divide_by_zero){
-			std::cout <<"divide by zero\n";
 	}
 }

@@ -45,13 +45,13 @@
   *           - T minus_one_raised_to_power_n(K j) const: returns (-1)^j
   *           - T binomial_coefficient(T n, K k) const: returns binomial coefficient C(n, k)
   */
-template <AcceptedLike T, std::unsigned_integral K>
-class levin_algorithm final : public series_acceleration<T, K>
+template <Accepted T, std::unsigned_integral K, typename series_templ>
+class levin_algorithm final : public series_acceleration<T, K, series_templ>
 {
 protected:
 
 	T beta;													///< Parameter for u-variant transformation (β > 0). Default value is 1.0.
-    std::unique_ptr<transform_base<T, K>> remainder;	///< Pointer to remainder transformation object
+    std::unique_ptr<const transform_base<T, K>> remainder;	///< Pointer to remainder transformation object
     bool useRecFormulas = false;							///< Flag to use recurrence formulas (true) or direct formulas (false)
     remainder_type variant = remainder_type::u_variant;		///< Type of Levin transformation variant (u, t, v, t~, v~)
 
@@ -66,7 +66,7 @@ protected:
 	 * @param order Order of transformation (k value)
 	 * @return Accelerated sum estimate T_{k,n}
 	 */
-	inline T calc_result(K n, K order);
+	inline T calc_result(K n, K order) const;
 
 	/**
 	 * @brief Computes the Levin transformation using recurrence formulas.
@@ -78,7 +78,7 @@ protected:
 	 * @param order Order of transformation (k value)
 	 * @return Accelerated sum estimate T_{k,n}
 	 */
-	inline T calc_result_rec(K n, K order);
+	inline T calc_result_rec(K n, K order) const;
 
 public:
 
@@ -97,9 +97,9 @@ public:
 	 *        For theory, see: Sidi & Levin (1981), Eq. (3.4) and surrounding discussion
 	 */
 	explicit levin_algorithm(
-		std::shared_ptr<series_base<T,K>> series,
+		const series_templ& series,
         remainder_type variant = remainder_type::u_variant,
-        bool useRecFormulas = false,  
+        bool useRecFormulas = false,
         T beta = static_cast<T>(1)
 	);
 
@@ -125,17 +125,17 @@ public:
 	 * @throws std::domain_error if n=0 is provided as input
 	 * @throws std::overflow_error if division by zero or numerical instability occurs
 	 */
-	T operator()(const K n, const K order) override;
+	T operator()(const K n, const K order) const override;
 };
 
-template<AcceptedLike T, std::unsigned_integral K>
-levin_algorithm<T, K>::levin_algorithm(
-	std::shared_ptr<series_base<T,K>> series,
+template<Accepted T, std::unsigned_integral K, typename series_templ>
+levin_algorithm<T, K,series_templ>::levin_algorithm(
+	const series_templ& series,
     remainder_type variant,
     bool useRecFormulas,
     T beta
 ) :
-	series_acceleration<T, K>(series),
+	series_acceleration<T, K, series_templ>(series),
 	useRecFormulas(useRecFormulas),
 	variant(variant)
 	{//TODO: нужно ли проверять бету на допустимость?
@@ -153,10 +153,10 @@ levin_algorithm<T, K>::levin_algorithm(
 				beta :
 				complex_precision<float_precision>(1)
 			);
-			
-		}	
 
-		
+		}
+
+
 
 	//check variant else default 'u'
     //TODO: тоже самое наверное
@@ -183,36 +183,37 @@ levin_algorithm<T, K>::levin_algorithm(
 	}
 	}
 
-template<AcceptedLike T, std::unsigned_integral K>
-inline T levin_algorithm<T, K>::calc_result(K n, K order) {
+template<Accepted T, std::unsigned_integral K, typename series_templ>
+inline T levin_algorithm<T, K,series_templ>::calc_result(K n, K order) const{
 
 	using std::pow;
 	using std::isfinite;
 
 	T numerator = static_cast<T>(0), denominator = static_cast<T>(0);
-	T C_njk, g_n, rest;
+	T C_njk, S_nj, g_n, rest;
 
 	// For theory, see: Levin (1973), Eq. (2.3)
 	// T_{k,n} = [∑_{j=0}^k (-1)^j C(k,j) (n+j+1)^{k-1}/(n+k+1)^{k-1} S_{n+j}/R_{n+j}] /
 	//           [∑_{j=0}^k (-1)^j C(k,j) (n+j+1)^{k-1}/(n+k+1)^{k-1} 1/R_{n+j}]
 	for (K j = static_cast<K>(0); j <= order; ++j) {
 		// Compute (-1)^j * C(k,j)
-		rest  = minus_one_raised_to_power_n<T,K>(j);
-		rest *= binomial_coefficient<T,K>(static_cast<T>(order), j);
+		rest  = this->series->minus_one_raised_to_power_n(j);
+		rest *= this->series->binomial_coefficient(static_cast<T>(order), j);
 
 		// Compute (n+j+1)^{k-1}/(n+k+1)^{k-1}
-		C_njk  = pow(
-			(beta + static_cast<T>(n + j)) / (beta + static_cast<T>(n + order)),
-			static_cast<T>(order - 1)
-		);
+		C_njk  = static_cast<T>(pow(n + j     + static_cast<K>(1), order - static_cast<K>(1)));
+		C_njk /= static_cast<T>(pow(n + order + static_cast<K>(1), order - static_cast<K>(1)));
 
+		// Get partial sum S_{n+j}
+		S_nj = this->series->S_n(n + j);
 
 		// Compute 1/R_{n+j} where R_{n+j} is the remainder estimate
-		g_n = remainder->operator()(
-            n, 
-            j, 
-            this->series.get(),
-            (variant == remainder_type::u_variant ? beta + static_cast<T>(n + j) : static_cast<T>(1))
+		g_n = static_cast<T>(1);
+		g_n/= remainder->operator()(
+            n + j,
+            j,
+            this->series,
+            (variant == remainder_type::u_variant ? beta : static_cast<T>(1))
         );
 
 		// Combine all terms
@@ -220,7 +221,7 @@ inline T levin_algorithm<T, K>::calc_result(K n, K order) {
 		rest *= g_n;
 
 		denominator += rest;
-		  numerator += rest * this->series->Sn(n + j);
+		  numerator += rest * S_nj;
 	}
 
 	numerator /= denominator;
@@ -231,8 +232,8 @@ inline T levin_algorithm<T, K>::calc_result(K n, K order) {
 	return numerator;
 }
 
-template<AcceptedLike T, std::unsigned_integral K>
-inline T levin_algorithm<T, K>::calc_result_rec(K n, K order) {
+template<Accepted T, std::unsigned_integral K, typename series_templ>
+inline T levin_algorithm<T, K,series_templ>::calc_result_rec(K n, K order) const{
 
 	using std::isfinite;
 
@@ -246,45 +247,51 @@ inline T levin_algorithm<T, K>::calc_result_rec(K n, K order) {
 	// Initialize base values: E_0^{(n)} = S_n, g_0^{(n)} = 1/R_n
 	for (K i = static_cast<K>(0); i < order+static_cast<K>(1); ++i) {
 		Denom[i] = remainder->operator()(
-            n, 
-            i, 
-            this->series.get(),
-            (variant == remainder_type::u_variant ? beta + static_cast<T>(n + i): static_cast<T>(1))
+            n,
+            i,
+            this->series,
+            (variant == remainder_type::u_variant ? beta : static_cast<T>(1))
         );
 
-		Num[i] = this->series->Sn(n+i) * Denom[i];
+		Num[i] = this->series->S_n(n+i) * Denom[i];
 	}
 
 	// Recursive computation using the E-algorithm scheme
-	T scale;
+	T scale, nj;
+	const T order1 = static_cast<T>(order - static_cast<K>(1));
 
 	for (K i = static_cast<K>(1); i <= order; ++i)
 		for (K j = static_cast<K>(0); j <= order - i; ++j) {
 
+			nj = static_cast<T>(n + j);
+
 			// For theory, see: Brezinski's E-algorithm recurrence
 			// E_k^{(n)} = E_{k-1}^{(n)} - g_{k-1,k}^{(n)} * ΔE_{k-1}^{(n)} / Δg_{k-1,k}^{(n)}
-			scale = static_cast<T>(-1)*(beta + static_cast<T>(n + j)) / (beta  + static_cast<T>(n + i - 1 + j));
-			scale*= pow(static_cast<T>(1) - static_cast<T>(1) / (beta + static_cast<T>(i + n + j)), static_cast<T>(i - 1));
+			scale = -(beta + static_cast<T>(n));
+			scale*= pow(static_cast<T>(1) - static_cast<T>(1) / (beta + nj + static_cast<T>(1)), order1);
+			scale/=(beta + nj + static_cast<T>(1));
 
-
-			Denom[j] = fma(scale,Denom[j],Denom[j+static_cast<K>(1)]);
-              Num[j] = fma(scale,  Num[j],  Num[j+static_cast<K>(1)]);
+			Denom[j] = fma(-scale,Denom[j],Denom[j+static_cast<K>(1)]);
+              Num[j] = fma(-scale,  Num[j],  Num[j+static_cast<K>(1)]);
 		}
 
 	Num[0] /= Denom[0];
 
 	if (!isfinite(Num[0]))
 		throw std::overflow_error("division by zero");
-    
+
 	return Num[0];
 }
 
-template <AcceptedLike T, std::unsigned_integral K>
-T levin_algorithm<T, K>::operator()(const K n, const K order) {
+template <Accepted T, std::unsigned_integral K, typename series_templ>
+T levin_algorithm<T, K, series_templ>::operator()(const K n, const K order) const {
 
 	using std::isfinite;
 
-	if (order == static_cast<K>(0)) return this->series->Sn(n);
+	if (n == static_cast<K>(0))
+		throw std::domain_error("n = 0 in the input");
+
+	if (order == static_cast<K>(0)) return this->series->S_n(n);
 
     const T result = (useRecFormulas ? calc_result_rec(n,order) : calc_result(n, order));
     if (!isfinite(result)) throw std::overflow_error("division by zero");

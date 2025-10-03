@@ -1,20 +1,66 @@
 #pragma once
 
+#include <stdexcept>
 #include <vector>
-#include <concepts>
 #include <string>
-#include <memory>
 
-#include "term_calculator.hpp"
-#include "noise_generators/uniform_noise_gen.hpp"
+#include "../custom_concepts.hpp"
 
+template<UnsignedIntLike K>
+constexpr const K fact(const K n) {
+
+	if constexpr (std::is_same<K, int_precision>::value){
+		return factorial(n);
+	} else {
+
+		K fact = static_cast<K>(1);
+		for(K j = static_cast<K>(2); j <= n; ++j){
+			fact *= j;
+		}
+
+		return fact;
+	}
+}
+
+template<UnsignedIntLike K>
+constexpr const K double_fact(const K n) {
+
+	K double_fact = static_cast<K>(1);
+
+	for (K j = n & static_cast<K>(1) + static_cast<K>(2); j <= n; j+=2){
+		double_fact *= j;
+	}
+
+	return double_fact;
+}
+
+template<UnsignedIntLike K>
+constexpr const K binomial_coefficient(const K n, const K k) {
+
+	if constexpr (std::is_same<K, int_precision>::value ){
+		return binomial(n,k);
+
+	} else {
+
+		if (k == 0 || k == n) return 1;
+
+		return binomial_coefficient<K>(n - 1, k - 1) + binomial_coefficient<K>(n - 1, k);
+	}
+
+}
+
+template<AcceptedLike T>
+struct SeriesResult{
+	std::vector<T> an;
+	std::vector<T> Sn;
+};
 
  /**
  * @brief Abstract class for series
  * @authors Bolshakov M.P.
  * @tparam T The type of the elements in the series, K The type of enumerating integer
  */
-template <AcceptedLike T, std::unsigned_integral K>
+template <AcceptedLike T, UnsignedIntLike K>
 class series_base
 {
 public:
@@ -24,23 +70,7 @@ public:
 	* @authors Bolshakov M.P.
 	* @param x The argument for function series
 	*/
-
-	series_base() = delete;
-
-	explicit series_base(
-		std::unique_ptr<TermCalculatorBase<T, K>> termCalculator, 
-		noise_gen_id gen_id = noise_gen_id::none_id, 
-		size_t size = 20
-	) : termCalculator(std::move(termCalculator)), size(0) {
-
-		if(noise_gen_id::uniform_id == noiseGenId){
-			//пока так я не знаю что делать
-			noiseGenerator.reset(new UniformNoiseGenerator<T>(static_cast<T>(-0.005), static_cast<T>(0.005)));
-		}
-
-		resize_vecs(size);
-	}
-
+	series_base(T x = static_cast<T>(0));
 
 	/**
     * @brief Throws domain error with unified message format
@@ -48,145 +78,57 @@ public:
     * @param condition Description of the divergence condition
     * @throws std::domain_error with formatted message containing series name, x value and condition
     */
+	void throw_domain_error(const std::string& condition) const {
 
-	/**
-	* @brief Computes partial sum of the first n terms
-	* @authors Bolshakov M.P.
-	* @param n The amount of terms in the partial sum
-	* @return Partial sum of the first n terms
-	*/
-	[[nodiscard]] constexpr T Sn(K n);
+		using std::to_string;
 
-	/**
-	* @brief Computes nth term of the series
-	* @authors Bolshakov M.P.
-	* @param n The number of the term
-	* @return nth term of the series
-	*/
-	[[nodiscard]] constexpr T an(K n);
+		throw std::domain_error(series_name + " series diverges at x = " + to_string(x) + " (" + condition + ")");
+	}
 
 	/**
 	* @brief x getter
 	* @authors Bolshakov M.P.
 	*/
-	[[nodiscard]] constexpr const T get_x() const;
+	[[nodiscard]] constexpr const T get_x() const { return x; }
 
 	/**
 	* @brief sum getter
 	* @authors Bolshakov M.P.
 	*/
-	[[nodiscard]] constexpr const T get_sum() const;
+	[[nodiscard]] constexpr const T get_sum() const { return sum; }
 
-	[[nodiscard]] constexpr const std::string get_name() const { return termCalculator->get_name(); };
+	/**
+	 * @brief 
+	 * 
+	 * @param vecSize 
+	 * @return std::vector<T> 
+	 */
+	virtual SeriesResult<T> generateSeries(K vecSize) const = 0;
 
 
 protected:
 
 	/**
-	 * @brief 
-	 * 
-	 */
-	std::unique_ptr<TermCalculatorBase<T, K>> termCalculator;
-
-	/**
-	 * @brief 
-	 * 
-	 * @param new_size 
-	 */
-	inline constexpr void resize_vecs(const K new_size);
-
-	/**
-	 * @brief 
-	 * 
-	 */
-	size_t size = 0;
-
-	/**
-	 * @brief 
-	 * 
-	 */
-	std::vector<T> a_nVec;
-
-	/**
-	 * @brief 
-	 * 
-	 */
-	std::vector<T> S_nVec;
-
-	/**
-	 * @brief 
-	 * 
-	 */
-	std::vector<T> randomVec;
-
-	noise_gen_id noiseGenId = noise_gen_id::none_id;
-
-	/**
-	 * @brief 
-	 * 
+	* @brief function series argument
+	* It's set to 0 by default
+	* @authors Bolshakov M.P.
 	*/
-	std::unique_ptr<BaseNoiseGenerator<T>> noiseGenerator;
-	//UniformNoiseGenerator<T> noiseGenerator = UniformNoiseGenerator<T>
+	T x;
 
+	/**
+	* @brief sum of the series
+	* It's set to 0 by default
+	* @authors Bolshakov M.P.
+	*/
+	T sum;
+
+	/**
+    * @brief Name of the series for unified error messages
+    * Used to generate consistent error output format
+    * @authors Maximov A.K.
+    */
+	std::string series_name;
 };
 
-template<AcceptedLike T, std::unsigned_integral K>
-constexpr void series_base<T, K>::resize_vecs(const K n){
-
-
-	size_t old_size = size;
-	size_t new_size = static_cast<size_t>(3 * n / 2 + 1);
-
-	size = new_size;
-
-	a_nVec.resize(new_size, static_cast<T>(0));
-	S_nVec.resize(new_size, static_cast<T>(0));
-
-	if(noise_gen_id::none_id != noiseGenId){ randomVec.resize(new_size, static_cast<T>(0)); }
-
-	for(size_t i = old_size; i < new_size; ++i ){
-
-		try{
-			a_nVec[i] = termCalculator->calculateTerm(i);
-		} catch (...){} //заглушка
-
-		if(noise_gen_id::none_id != noiseGenId){
-			randomVec[i] = noiseGenerator->operator()(i);
-			a_nVec[i] += randomVec[i];
-		}
-
-		S_nVec[i] = (i ? S_nVec[i - 1] : static_cast<T>(0)) + a_nVec[i];
-	}
-
-}
-
-
-template <AcceptedLike T, std::unsigned_integral K>
-constexpr T series_base<T, K>::Sn(K n) {
-
-	if(n >= size){ resize_vecs(n); }
-
-	return S_nVec[n];
-
-}
-
-template <AcceptedLike T, std::unsigned_integral K>
-constexpr T series_base<T, K>::an(K n) {
-
-	if(n >= size){ resize_vecs(n); }
-
-	return a_nVec[n];
-
-}
-
-template <AcceptedLike T, std::unsigned_integral K>
-constexpr const T series_base<T, K>::get_x() const
-{
-	return termCalculator->get_x();
-}
-
-template <AcceptedLike T, std::unsigned_integral K>
-constexpr const T series_base<T, K>::get_sum() const
-{
-	return termCalculator->get_sum();
-}
+template <AcceptedLike T, UnsignedIntLike K>
+series_base<T, K>::series_base(T x) : x(x), sum(0), series_name("unknown") {}

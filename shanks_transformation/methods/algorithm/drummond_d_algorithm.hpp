@@ -40,12 +40,12 @@
   *           - T minus_one_raised_to_power_n(K n) const: returns (-1)^n
   *           - T binomial_coefficient(T n, K k) const: returns binomial coefficient C(n, k)
   */
-template<AcceptedLike T, std::unsigned_integral K>
-class drummond_d_algorithm final : public series_acceleration<T, K>
+template<Accepted T, std::unsigned_integral K, typename series_templ>
+class drummond_d_algorithm final : public series_acceleration<T, K, series_templ>
 {
 protected:
 
-    std::unique_ptr<transform_base<T, K>> remainder;  /**< Remainder estimator object */
+    std::unique_ptr<const transform_base<T, K>> remainder;  /**< Remainder estimator object */
     bool useRecFormulas = false;							/**< Flag indicating whether to use recurrence formulas */
     remainder_type variant = remainder_type::u_variant;		/**< Type of remainder variant to use */
 
@@ -63,7 +63,7 @@ protected:
 	 * @return The accelerated partial sum after D-transformation
 	 * @throws std::overflow_error if division by zero occurs
 	 */
-	inline T calc_result(K n, K order);
+	inline T calc_result(K n, K order) const;
 
 	/**
 	 * @brief Calculates D-transformation using recurrence relations for improved efficiency.
@@ -79,7 +79,7 @@ protected:
 	 * @return The accelerated partial sum after D-transformation
 	 * @throws std::overflow_error if division by zero occurs
 	 */
-	inline T calc_result_rec(K n, K order);
+	inline T calc_result_rec(K n, K order) const;
 
 public:
 
@@ -100,7 +100,7 @@ public:
 	 *        false: Use direct computation (simpler but potentially slower)
 	 */
 	explicit drummond_d_algorithm(
-		std::shared_ptr<series_base<T,K>> series,
+		const series_templ& series,
 		remainder_type variant = remainder_type::u_variant,
 		bool useRecFormulas = false
 	);
@@ -123,12 +123,12 @@ public:
 	 * @return The accelerated partial sum after Drummond transformation
 	 * @throws std::overflow_error if division by zero or numerical instability occurs
 	 */
-    T operator()(K n, K order) override;
+    T operator()(K n, K order) const override;
 
 };
 
-template<AcceptedLike T, std::unsigned_integral K>
-inline T drummond_d_algorithm<T,K>::calc_result(const K n, const K order) {
+template<Accepted T, std::unsigned_integral K, typename series_templ>
+inline T drummond_d_algorithm<T,K,series_templ>::calc_result(const K n, const K order) const {
 
     using std::isfinite;
 
@@ -140,11 +140,11 @@ inline T drummond_d_algorithm<T,K>::calc_result(const K n, const K order) {
 	for (K j = static_cast<K>(0); j <= order; ++j) {
 
 		// Compute weight term: (-1)^j * C(n, j) * w_{n,j}
-		rest  = minus_one_raised_to_power_n<T,K>(j);
-		rest *= binomial_coefficient<T,K>(static_cast<T>(order), j);
-		rest *= remainder->operator()(n,j, this->series.get());
+		rest  = this->series->minus_one_raised_to_power_n(j);
+		rest *= this->series->binomial_coefficient(static_cast<T>(order), j);
+		rest *= remainder->operator()(n,j, this->series);
 
-		numerator   += rest * this->series->Sn(n+j);
+		numerator   += rest * this->series->S_n(n+j);
 		denominator += rest;
 	}
 
@@ -155,8 +155,8 @@ inline T drummond_d_algorithm<T,K>::calc_result(const K n, const K order) {
 	return numerator;
 }
 
-template<AcceptedLike T, std::unsigned_integral K>
-inline T drummond_d_algorithm<T,K>::calc_result_rec(const K n, const K order) {
+template<Accepted T, std::unsigned_integral K, typename series_templ>
+inline T drummond_d_algorithm<T,K,series_templ>::calc_result_rec(const K n, const K order) const {
 
     using std::isfinite;
 
@@ -167,11 +167,11 @@ inline T drummond_d_algorithm<T,K>::calc_result_rec(const K n, const K order) {
 
 	// Initialize base values: N_j^{(0)} = w_{n,j} S_{n+j}, D_j^{(0)} = w_{n,j}
 	for (K i = static_cast<K>(0); i < order+static_cast<K>(1); ++i) {
-		Denom[i] = remainder->operator()(n, i, this->series.get());
-		  Num[i] = this->series->Sn(n+i) * Denom[i];
+		Denom[i] = remainder->operator()(n, i, this->series);
+		  Num[i] = this->series->S_n(n+i) * Denom[i];
 	}
 
-	// Apply forward difference recurrence: 
+	// Apply forward difference recurrence:
 	// N_j^{(i)} = N_{j+1}^{(i-1)} - N_j^{(i-1)}
 	// D_j^{(i)} = D_{j+1}^{(i-1)} - D_j^{(i-1)}
 	for (K i = static_cast<K>(1); i <= order; ++i)
@@ -185,17 +185,17 @@ inline T drummond_d_algorithm<T,K>::calc_result_rec(const K n, const K order) {
 
 	if (!isfinite(Num[0]))
 		throw std::overflow_error("division by zero");
-    
+
 	return Num[0];
 }
 
-template<AcceptedLike T, std::unsigned_integral K>
-drummond_d_algorithm<T,K>::drummond_d_algorithm(
-	std::shared_ptr<series_base<T,K>> series, 
-	const remainder_type variant, 
+template<Accepted T, std::unsigned_integral K, typename series_templ>
+drummond_d_algorithm<T,K,series_templ>::drummond_d_algorithm(
+	const series_templ& series,
+	const remainder_type variant,
 	bool useRecFormulas
-	) : 
-	series_acceleration<T, K>(series),
+	) :
+	series_acceleration<T, K, series_templ>(series),
 	variant(variant),
 	useRecFormulas(useRecFormulas)
 {
@@ -223,8 +223,8 @@ drummond_d_algorithm<T,K>::drummond_d_algorithm(
     }
 }
 
-template<AcceptedLike T, std::unsigned_integral K>
-T drummond_d_algorithm<T,K>::operator()(const K n, const K order) {
+template<Accepted T, std::unsigned_integral K, typename series_templ>
+T drummond_d_algorithm<T,K,series_templ>::operator()(const K n, const K order) const {
 
     using std::isfinite;
 

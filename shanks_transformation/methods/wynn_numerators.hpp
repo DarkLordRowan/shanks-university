@@ -15,7 +15,8 @@
 
 #pragma once
 
-#include "../series/series_base.hpp"
+#include "../custom_concepts.hpp"
+
  /**
   * @brief Enum for remainder types to use in Levin-type transformations.
   *
@@ -41,7 +42,8 @@ enum numerator_type{
  * @tparam K Unsigned integral type for indices and counts.
  *           Must satisfy std::unsigned_integral. Used for indexing and order specification.
  */
-template<AcceptedLike T, std::unsigned_integral K>
+
+template<AcceptedLike T, UnsignedIntLike K>
 class numerator_base {
 public:
 
@@ -54,7 +56,7 @@ public:
 	 *        Valid values: n >= 0. Determines the position in the series.
 	 * @param order Order of the transformation (number of terms used).
 	 *        Valid values: order >= 0. Higher orders use more terms.
-	 * @param series Pointer to the series object providing term access.
+	 * @param an Constant pointer to the an vector providing term access.
 	 *        Must be non-null and valid throughout the computation.
 	 * @param gamma Gamma parameter for parameterized variants.
 	 *        Meaning depends on the specific variant. Default: 1.0.
@@ -62,7 +64,8 @@ public:
 	 *        Meaning depends on the specific variant. Default: 0.0.
 	 * @return The computed numerator value for the transformation.
 	 */
-	virtual T operator()(K n, K order, series_base<T, K>* series, T gamma = T(0), T rho = T(0)) = 0;
+	
+	virtual T operator()(K n, K order, const T* const an, T gamma = static_cast<T>(1), T rho = static_cast<T>(0)) const = 0;
 
 };
 
@@ -78,7 +81,7 @@ public:
  * @tparam T Floating-point type for series elements.
  * @tparam K Unsigned integral type for indices.
  */
-template<AcceptedLike T, std::unsigned_integral K>
+template<AcceptedLike T, UnsignedIntLike K>
 class rho_transform : public numerator_base<T, K> {
 public:
 
@@ -92,16 +95,18 @@ public:
 	 *        Valid values: n >= 0, n + order within series bounds.
 	 * @param order Order of the difference.
 	 *        Valid values: order >= 0.
-	 * @param series Pointer to the series object for term access.
+	 * @param an Constant pointer to the an vector providing term access.
 	 *        Must provide operator()(K) for term retrieval.
 	 * @param gamma Unused parameter (maintained for interface consistency).
 	 * @param rho Unused parameter (maintained for interface consistency).
 	 * @return The computed difference: series(n+order) - series(n).
 	 */
-	T operator()(const K n, const K order, series_base<T, K>* series, const T gamma = static_cast<T>(0), const T rho = static_cast<T>(0)) {
+
+	T operator()(const K n, const K order, const T* const an, const T gamma = static_cast<T>(1), const T rho = static_cast<T>(0)) const {
 
 		// For theory, see: Wynn (1956), Eq. (2.6b): ΔS_n = S_{n+1} - S_n
-		return (series->an(n + order) - series->an(n)); //p.35 6.2-4b [https://arxiv.org/pdf/math/0306302]
+		return an->at(n + order) - an->at(n); //p.35 6.2-4b [https://arxiv.org/pdf/math/0306302]
+
 	}
 };
 
@@ -124,21 +129,21 @@ public:
 	/**
 	 * @brief Compute the generalized-variant numerator.
 	 *
-	 * Implements: numerator = order - gamma
-	 * gamma != 0, 1, 2, ...
+	 * Implements: numerator = order - gamma - 1
 	 * This provides a order-dependent constant numerator.
 	 *
 	 * @param n Unused parameter (maintained for interface consistency).
 	 * @param order Order of the transformation.
 	 *        Valid values: order >= 0.
-	 * @param series Unused parameter (maintained for interface consistency).
+	 * @param an Unused parameter (maintained for interface consistency).
 	 * @param gamma Gamma parameter offset.
 	 *        Valid values: any finite T value. Typical range: 0.0 to 2.0.
 	 * @param rho Unused parameter (maintained for interface consistency).
 	 * @return The computed constant: order - gamma - 1.
 	 */
-	T operator()(const K n, const K order, series_base<T, K>* series, const T gamma = static_cast<T>(-1), const T rho = static_cast<T>(0)) {
-		return static_cast<T>(order) - gamma; //p.377 Algorithm 20.1.3 [http://servidor.demec.ufpr.br/CFD/bibliografia/MER/Sidi_2003.pdf]
+	T operator()(const K n, const K order, const T* const an, const T gamma = static_cast<T>(1), const T rho = static_cast<T>(0)) const {
+
+		return static_cast<T>(order - static_cast<K>(1)) - gamma; //p.377 Algorithm 20.1.3 [http://servidor.demec.ufpr.br/CFD/bibliografia/MER/Sidi_2003.pdf]
 	}
 };
 
@@ -155,7 +160,7 @@ public:
  * @tparam T Floating-point type for series elements.
  * @tparam K Unsigned integral type for indices.
  */
-template<AcceptedLike T, std::unsigned_integral K>
+template<AcceptedLike T, UnsignedIntLike K>
 class gamma_rho_transform : public numerator_base<T, K> {
 public:
 
@@ -169,7 +174,7 @@ public:
 	 * @param n Unused parameter (maintained for interface consistency).
 	 * @param order Order of the transformation.
 	 *        Valid values: order >= 0.
-	 * @param series Unused parameter (maintained for interface consistency).
+	 * @param an Unused parameter (maintained for interface consistency).
 	 * @param gamma Gamma parameter (additive offset).
 	 *        Valid values: any finite T value. Typical range: -10.0 to 10.0.
 	 * @param rho Rho parameter (divisor scaling).
@@ -177,7 +182,8 @@ public:
 	 * @return The computed parameter-dependent numerator.
 	 * @throws std::invalid_argument if rho = 0.0.
 	 */
-	T operator()(const K n, const K order, series_base<T, K>* series, const T gamma = static_cast<T>(0), const T rho = static_cast<T>(0)) {
+	
+	T operator()(const K n, const K order, const T* const an, const T gamma = static_cast<T>(1), const T rho = static_cast<T>(0)) const {
 
 		// insight: order % 2 is the same order & 1
 		// if order is even:
@@ -191,9 +197,7 @@ public:
 		//p.377 Algorithm 20.1.6 [http://servidor.demec.ufpr.br/CFD/bibliografia/MER/Sidi_2003.pdf]
 
 		// For theory, see: Wynn (1962), Section 2: Parameterized transformations
-		T base = -gamma + static_cast<T>(order) / static_cast<T>(2) / rho;
-
 		// Add 1 for odd orders (order & 1 checks parity)
-		return base + static_cast<T>(order & static_cast<K>(1));
+		return -gamma + static_cast<T>(order) / (static_cast<T>(2) * rho) + static_cast<T>(order & static_cast<K>(1));
 	}
 };

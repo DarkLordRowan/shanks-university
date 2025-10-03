@@ -37,8 +37,8 @@
   *           - T S_n(K n) const: returns the n-th partial sum sₙ = a₀ + ... + aₙ
   *           The series object encapsulates the sequence whose convergence is to be accelerated.
   */
-template <AcceptedLike T, std::unsigned_integral K>
-class wynn_epsilon_3_algorithm final : public series_acceleration<T, K>
+template <Accepted T, std::unsigned_integral K, typename series_templ>
+class wynn_epsilon_3_algorithm final : public series_acceleration<T, K, series_templ>
 {
 private:
 
@@ -52,12 +52,12 @@ public:
      * @param epsilon_threshold_ Threshold for epsilon corrections. Controls numerical stability.
      *        Valid values: positive T values. Too small may cause overflow, too large may reduce acceleration.
      */
-    explicit wynn_epsilon_3_algorithm(std::shared_ptr<series_base<T,K>> series, const T& epsilon_threshold_ = static_cast<T>(1e-3));
+    explicit wynn_epsilon_3_algorithm(const series_templ& series, T epsilon_threshold_ = static_cast<T>(1e-3));
 
 	/**
 	* @brief Fast impimentation of Epsilon algorithm.
 	* Computes the partial sum after the transformation using the Epsilon Algorithm.
-	* For more information, see 612.zip 
+	* For more information, see 612.zip
 	* @param n The number of terms in the partial sum.
 	* @param order The order of transformation.
 	* @return The partial sum after the transformation.
@@ -78,22 +78,22 @@ public:
      * @throws std::domain_error if n=0.
      * @throws std::overflow_error if numerical instability (e.g., division by zero) occurs.
      */
-	T operator()(K n, K order) override;
+	T operator()(K n, K order) const override;
 };
 
 // Constructor implementation
-template <AcceptedLike T, std::unsigned_integral K>
-wynn_epsilon_3_algorithm<T, K>::wynn_epsilon_3_algorithm(
-    std::shared_ptr<series_base<T,K>> series,
-    const T& epsilon_threshold_
+template <Accepted T, std::unsigned_integral K, typename series_templ>
+wynn_epsilon_3_algorithm<T, K, series_templ>::wynn_epsilon_3_algorithm(
+    const series_templ& series,
+    const T epsilon_threshold_
     ) :
-    series_acceleration<T, K>(series),
+    series_acceleration<T, K, series_templ>(series),
     epsilon_threshold(epsilon_threshold_)
 {}
 
 // Algorithm implementation
-template <AcceptedLike T, std::unsigned_integral K>
-T wynn_epsilon_3_algorithm<T, K>::operator()(const K n, const K order) {
+template <Accepted T, std::unsigned_integral K, typename series_templ>
+T wynn_epsilon_3_algorithm<T, K, series_templ>::operator()(const K n, const K order) const {
 
     using std::isfinite;
     using std::max;
@@ -102,7 +102,7 @@ T wynn_epsilon_3_algorithm<T, K>::operator()(const K n, const K order) {
     if (n == static_cast<K>(0))
         throw std::domain_error("n = 0 in the input");
 
-    if (order == static_cast<K>(0)) return this->series->Sn(n);
+    if (order == static_cast<K>(0)) return this->series->S_n(n);
 
     K N = n; // Number of terms used in transformation
 
@@ -126,7 +126,7 @@ T wynn_epsilon_3_algorithm<T, K>::operator()(const K n, const K order) {
 
     // Initialize epsilon table with partial sums: ε₀⁽ⁱ⁾ = S_i for i=0,...,N
     for (K i = static_cast<K>(0); i <= N; ++i) //Filling up Epsilon Table
-        e[i] = this->series->Sn(i);
+        e[i] = this->series->S_n(i);
 
     // Apply epsilon algorithm for 'order' iterations
     for (K i = static_cast<K>(0); i <= order; ++i) { //Working with Epsilon Table order times
@@ -150,7 +150,7 @@ T wynn_epsilon_3_algorithm<T, K>::operator()(const K n, const K order) {
             //ERR2 = abs(DELTA2);                 // Absolute difference
 
             TOL2 = static_cast<T>(max(          // Tolerance based on machine precision
-                abs(E2), 
+                abs(E2),
                 abs(E1)
             ));
             TOL2*=EMACH;
@@ -158,7 +158,7 @@ T wynn_epsilon_3_algorithm<T, K>::operator()(const K n, const K order) {
             DELTA3 = E1 - E0;                   // εₛ₋₁⁽ⁿ⁾ - εₛ₋₂⁽ⁿ⁾
             //ERR3 = abs(DELTA3);
             TOL3 = static_cast<T>(max(
-                abs(E1), 
+                abs(E1),
                 abs(E0)
             ));
             TOL3*= EMACH;
@@ -174,7 +174,7 @@ T wynn_epsilon_3_algorithm<T, K>::operator()(const K n, const K order) {
                 //ERR1 = abs(DELTA1);
 
                 TOL1 = static_cast<T>(max(
-                    abs(E1), 
+                    abs(E1),
                     abs(E3)
                 ));
                 TOL1*= EMACH;
@@ -219,7 +219,7 @@ T wynn_epsilon_3_algorithm<T, K>::operator()(const K n, const K order) {
 
         // Compact the epsilon table for next iteration
         ib = (num & static_cast<K>(1)) ? static_cast<K>(1) : static_cast<K>(2);  // Start index: 1 for odd, 2 for even
-        
+
         // Start index: 1 (odd) or 2 (even)
         ie = newelm + static_cast<K>(1);
 
@@ -236,7 +236,7 @@ T wynn_epsilon_3_algorithm<T, K>::operator()(const K n, const K order) {
 
         // Update error estimate and previous result
         abs_error = static_cast<T>(max(
-            abs(result - resla), 
+            abs(result - resla),
             abs(EPRN) * abs(result)
         ));
 

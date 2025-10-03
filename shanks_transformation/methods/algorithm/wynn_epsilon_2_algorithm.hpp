@@ -42,8 +42,8 @@
   * - Wynn, P. (1956). On a device for computing the eₙ(Sₙ) transformation.
   * - Wynn, P. (1964). General Purpose Vector Epsilon Algorithm ALGOL Procedures.
   */
-template <AcceptedLike T, std::unsigned_integral K>
-class wynn_epsilon_2_algorithm final : public series_acceleration<T, K>
+template <Accepted T, std::unsigned_integral K, typename series_templ>
+class wynn_epsilon_2_algorithm final : public series_acceleration<T, K, series_templ>
 {
 public:
 
@@ -53,7 +53,7 @@ public:
 	 *        Must be a valid object implementing the required series interface.
 	 *        The series should provide term access and partial sum calculation.
 	 */
-    explicit wynn_epsilon_2_algorithm(std::shared_ptr<series_base<T,K>> series);
+    explicit wynn_epsilon_2_algorithm(const series_templ& series);
 
 	/**
 	 * @brief Implementation of Wynn's epsilon algorithm for series acceleration.
@@ -65,7 +65,7 @@ public:
 	 * Mathematical Formulation:
 	 * For theory, see: Wynn (1956), Eq. (4) - Epsilon algorithm recurrence relation ()
 	 * More information, see page 20 - 21 in[https://hal.science/hal-04207550/document]
-	 * 
+	 *
 	 * εₖ₊₁⁽ᵐ⁾ = εₖ₋₁⁽ᵐ⁺¹⁾ + 1/(εₖ⁽ᵐ⁺¹⁾ - εₖ⁽ᵐ⁾)
 	 *
 	 * @param n The number of terms to use in the transformation (n ≥ 1)
@@ -78,14 +78,14 @@ public:
 	 * @throws std::domain_error if n=0 is provided as input
 	 * @throws std::overflow_error if numerical instability occurs
 	 */
-    T operator()(K n, K order) override;
+    T operator()(K n, K order) const override;
 };
 
-template <AcceptedLike T, std::unsigned_integral K>
-wynn_epsilon_2_algorithm<T, K>::wynn_epsilon_2_algorithm(std::shared_ptr<series_base<T,K>> series) : series_acceleration<T, K>(series) {}
+template <Accepted T, std::unsigned_integral K, typename series_templ>
+wynn_epsilon_2_algorithm<T, K, series_templ>::wynn_epsilon_2_algorithm(const series_templ& series) : series_acceleration<T, K, series_templ>(series) {}
 
-template <AcceptedLike T, std::unsigned_integral K>
-T wynn_epsilon_2_algorithm<T, K>::operator()(const K n, const K order)
+template <Accepted T, std::unsigned_integral K, typename series_templ>
+T wynn_epsilon_2_algorithm<T, K, series_templ>::operator()(const K n, const K order) const
 {
 
 	using std::isfinite;
@@ -94,7 +94,7 @@ T wynn_epsilon_2_algorithm<T, K>::operator()(const K n, const K order)
 	if (n == static_cast<K>(0))
 		throw std::domain_error("n = 0 in the input");
 	if (order == static_cast<K>(0))
-		return this->series->Sn(n);
+		return this->series->S_n(n);
 
 	// For theory, see: Wynn (1956), Section 3 - Algorithm construction and table size
 	// Total number of entries needed in the epsilon table: k = 2*order + n
@@ -113,7 +113,7 @@ T wynn_epsilon_2_algorithm<T, K>::operator()(const K n, const K order)
 	// For theory, see: Wynn (1956), Eq. (2) - Initialization with partial sums
 	// Initialize the bottom row with partial sums: ε₀⁽ᵐ⁾ = Sₙ for m = 0,1,...,k
 	for (K i = static_cast<K>(0); i <= k; ++i)
-		eps[3][i] = this->series->Sn(i);
+		eps[3][i] = this->series->S_n(i);
 
 
 	T a, a1, a2;
@@ -133,7 +133,7 @@ T wynn_epsilon_2_algorithm<T, K>::operator()(const K n, const K order)
 			// For theory, see: Wynn (1956), Eq. (4) - Main recurrence relation
 			// εₖ₊₁⁽ᵐ⁾ = εₖ₋₁⁽ᵐ⁺¹⁾ + 1/(εₖ⁽ᵐ⁺¹⁾ - εₖ⁽ᵐ⁾)
 			eps[0][i] = eps[2][i1] + static_cast<T>(1) / (eps[3][i1] - eps[3][i]);
-			
+
 			// For theory, see: Wynn (1964) - Numerical stability improvements
 		    // Additional checks and corrections for finite precision arithmetic
 			if (!isfinite(eps[0][i]) && i2 <= k) // Stability check and correction
