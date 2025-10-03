@@ -47,3 +47,12 @@ T convertArbWithPrecision(float realPart, size_t precision) {
         return static_cast<T>(realPart);
     }
 }
+
+template<AcceptedLike T, UnsignedIntLike K>
+T minus_one_raised_to_power_n(K j){
+    if constexpr (std::is_same<K, int_precision>::value){
+        return static_cast<T>(j.even() ? -1 : 1);
+    } else {
+        return static_cast<T>(j & 1 ? -1 : 1);
+    }
+}

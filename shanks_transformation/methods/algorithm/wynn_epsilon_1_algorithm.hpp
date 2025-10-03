@@ -39,8 +39,8 @@
  *           - T operator()(K n) const: returns the n-th series term a_n
  *           - T S_n(K n) const: returns the n-th partial sum s_n = a_0 + ... + a_n
  */
-template <Accepted T, std::unsigned_integral K, typename series_templ>
-class wynn_epsilon_1_algorithm final : public series_acceleration<T, K, series_templ>
+template <AcceptedLike T, UnsignedIntLike K>
+class wynn_epsilon_1_algorithm final : public series_acceleration<T, K>
 {
 public:
 
@@ -50,7 +50,7 @@ public:
 	 *        Must be a valid object implementing the required series interface.
 	 *        The series should represent a slowly convergent sequence for effective acceleration.
 	 */
-	explicit wynn_epsilon_1_algorithm(const series_templ& series);
+	explicit wynn_epsilon_1_algorithm();
 
 	/**
 	 * @brief Applies the Wynn Epsilon Algorithm to accelerate series convergence.
@@ -75,11 +75,11 @@ public:
     T operator()(K n, K order) const override;
 };
 
-template <Accepted T, std::unsigned_integral K, typename series_templ>
-wynn_epsilon_1_algorithm<T, K, series_templ>::wynn_epsilon_1_algorithm(const series_templ& series) : series_acceleration<T, K, series_templ>(series) {}
+template <AcceptedLike T, UnsignedIntLike K>
+wynn_epsilon_1_algorithm<T, K>::wynn_epsilon_1_algorithm() : series_acceleration<T, K>("wynn epsilon 1") {}
 
-template <Accepted T, std::unsigned_integral K, typename series_templ>
-T wynn_epsilon_1_algorithm<T, K, series_templ>::operator()(const K n, const K order) const
+template <AcceptedLike T, UnsignedIntLike K>
+T wynn_epsilon_1_algorithm<T, K>::operator()(const K n, const K order) const
 {
 
 	using std::isfinite;
@@ -90,7 +90,7 @@ T wynn_epsilon_1_algorithm<T, K, series_templ>::operator()(const K n, const K or
 		throw std::domain_error("n = 0 in the input");
 
 	if (order == static_cast<K>(0))
-		return this->series->S_n(n);
+		return series_acceleration<T,K>::Sn->at(n);
 
 	// For theory, see: Wynn (1956), Section 3 - Algorithm implementation
 	// The algorithm requires 2×order transformation steps to compute ε₂ₖ⁽ⁿ⁾
@@ -101,8 +101,14 @@ T wynn_epsilon_1_algorithm<T, K, series_templ>::operator()(const K n, const K or
 
 	// Initialize epsilon tables: e0 for current column, e1 for next column
 	// For theory, see: Wynn (1956), Section 3 - Table construction
-	std::vector<T> e0(max_ind + static_cast<K>(1), static_cast<T>(0));
-	std::vector<T> e1(max_ind                    , static_cast<T>(0));
+	std::vector<T> e0(
+		max_ind + static_cast<K>(1), 
+		convertArbWithPrecision<T>(0.0, series_acceleration<T, K>::arbPrecision)
+	);
+	std::vector<T> e1(
+		max_ind, 
+		convertArbWithPrecision<T>(0.0, series_acceleration<T, K>::arbPrecision)
+	);
 
 	auto e0_add = &e0; // Pointer to current epsilon column
 	auto e1_add = &e1; // Pointer to next epsilon column
@@ -111,7 +117,7 @@ T wynn_epsilon_1_algorithm<T, K, series_templ>::operator()(const K n, const K or
 	// For theory, see: Wynn (1956), Eq. (2) - Initial conditions
 	K j = max_ind;
 	do {
-		e0[j] = this->series->S_n(j);
+		e0[j] = series_acceleration<T,K>::Sn->at(j);
 	} while (--j > static_cast<K>(0));
 
 	// Apply epsilon algorithm recurrence
