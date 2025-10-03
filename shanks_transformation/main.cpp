@@ -69,6 +69,9 @@ constexpr void testCompatability(const T& x){
 
 	std::unordered_map<transformation_id_t, std::function<std::unique_ptr<series_acceleration<T,K>>(void)>> algoInit = {
 	    {     brezinski_theta_transformation_id, [](){ return std::make_unique<brezinski_theta_algorithm<T, K>>();                             }},
+		{             weniger_tramsformation_id, [](){ return std::make_unique<weniger_algorithm<T,K>>();                                      }},
+		{      wynn_epsilon_1_transforamtion_id, [](){ return std::make_unique<wynn_epsilon_1_algorithm<T,K>>();                               }},
+		{      wynn_epsilon_2_transforamtion_id, [](){ return std::make_unique<wynn_epsilon_2_algorithm<T,K>>();                               }},
 		{      wynn_epsilon_3_transforamtion_id, [](){ return std::make_unique<wynn_epsilon_3_algorithm<T,K>>();                               }},
         {        wynn_rho_rho_transformation_id, [](){ return std::make_unique<wynn_rho_algorithm<T, K>>(numerator_type::rho_variant);         }},
   		{wynn_rho_generalized_transformation_id, [](){ return std::make_unique<wynn_rho_algorithm<T, K>>(numerator_type::generalized_variant); }},
@@ -94,7 +97,7 @@ constexpr void testCompatability(const T& x){
 		for (size_t j = 0; j <= 12; ++j) {
 			
 			try{
-				std::cout << "n = order = " << j << " : " << algos[i]->operator()(j,j) << "\n";
+				std::cout << "n = order = " << j << " : " << algos[i]->operator()(j,j).precision() << "\n";
 			} catch (std::overflow_error& e){
 				std::cout << e.what() << "\n";
 			} catch (std::domain_error& e){
@@ -158,10 +161,12 @@ void TestNoise() {
 int main()
 {
 
+	//using typeA = double;
 	using typeA = float_precision;
 	using typeB = int_precision;
 
 	typeA x(1, 200);
+	//typeA x(1.0);
 
 	//std::cout << fact<typeB>(6) << "\n";
 	//std::cout << double_fact<typeB>(6) << "\n";
@@ -173,7 +178,7 @@ int main()
 
 	testCompatability<typeA, typeB>(x);
 
-	TestNoise();
+	//TestNoise();
 
 	/*
 	while(true){

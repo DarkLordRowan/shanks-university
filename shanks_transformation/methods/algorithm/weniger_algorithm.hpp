@@ -38,8 +38,8 @@
  *           - T minus_one_raised_to_power_n(K n) const: returns (-1)ⁿ
  *           - T binomial_coefficient(T n, K k) const: returns binomial coefficient C(n, k)
  */
-template<Accepted T, std::unsigned_integral K, typename series_templ>
-class weniger_algorithm final : public series_acceleration<T, K, series_templ>
+template<AcceptedLike T, UnsignedIntLike K>
+class weniger_algorithm final : public series_acceleration<T, K>
 {
 public:
 
@@ -48,7 +48,7 @@ public:
 	 * @param series The series class object to be accelerated
 	 *        Must be a valid object implementing the required series interface
 	 */
-	explicit weniger_algorithm(const series_templ& series) : series_acceleration<T, K, series_templ>(series) {}
+	explicit weniger_algorithm() : series_acceleration<T, K>("weniger") {}
 
 	/**
 	 * @brief Implementation of Weniger transformation for series acceleration.
@@ -70,30 +70,27 @@ public:
 	T operator()(K n, K order) const override;
 };
 
-template<Accepted T, std::unsigned_integral K, typename series_templ>
-T weniger_algorithm<T, K, series_templ>::operator()(const K n, const K order) const {
+template<AcceptedLike T, UnsignedIntLike K>
+T weniger_algorithm<T, K>::operator()(const K n, const K order) const {
 
 	using std::isfinite;
 
 	// For theory, see: Weniger (1989), Section 8.2, Eq. (8.2-7)
 	// Weniger transformation as ratio of binomial sums with Pochhammer symbols
-	T numerator = static_cast<T>(0), denominator = static_cast<T>(0);
+	T numerator = convertArbWithPrecision<T>(0.0, series_acceleration<T, K>::arbPrecision);
+	T denominator = convertArbWithPrecision<T>(0.0, series_acceleration<T, K>::arbPrecision);;
 
 	// For theory, see: Weniger (1989), Eq. (8.2-7) term components
-	T a_n, rest;	// Weight factor for current term: (-1)ʲ × C(order, j) × (β+n+j)ₖ₋₁
+	T rest;	// Weight factor for current term: (-1)ʲ × C(order, j) × (β+n+j)ₖ₋₁
 					// Remainder estimate: 1/Δsₙ = 1/a_{n+1}
 
 	// For theory, see: Weniger (1989), Eq. (8.2-7) weight factor
 	// Initial Pochhammer-like term: (β+n)ₖ₋₁ with β=1, equivalent to (n+1)ₖ₋₁ = Γ(n+k)/Γ(n+1)
-	T coef = static_cast<T>(1);
+	T coef = convertArbWithPrecision<T>(1.0, series_acceleration<T, K>::arbPrecision);
 
 	// For theory, see: Weniger (1989), Eq. (8.2-7) recursive computation
 	// Initial binomial coefficient: C(order, 0) = 1
-	T binomial_coef = this->series->binomial_coefficient(static_cast<T>(n), static_cast<K>(0));
-
-	// For theory, see: Weniger (1989), Eq. (8.2-7) partial sum initialization
-	// Initial partial sum Sₙ
-	T S_n = this->series->S_n(0);
+	T binomial_coef = static_cast<T>(binomial_coefficient(n, static_cast<K>(0)));
 
 	// Precompute initial value: (1)ₖ₋₁ = (k-1)!
 	for (K m = static_cast<K>(0); m < order - static_cast<K>(1); ++m)
@@ -109,7 +106,9 @@ T weniger_algorithm<T, K, series_templ>::operator()(const K n, const K order) co
 
 		// For theory, see: Weniger (1989), Eq. (8.2-7) term structure
 		// Term sign: (-1)ʲ
-		rest  = this->series->minus_one_raised_to_power_n(j);
+
+		rest = convertArbWithPrecision<T>(1.0, series_acceleration<T, K>::arbPrecision); //need to set precision before doing anything
+		rest*= minus_one_raised_to_power_n<T,K>(j);
 
 		// Binomial coefficient: C(order, j)
 		rest *= binomial_coef;
@@ -131,22 +130,15 @@ T weniger_algorithm<T, K, series_templ>::operator()(const K n, const K order) co
 
 		// For theory, see: Weniger (1989), Eq. (8.2-7) remainder estimate
 		// Remainder estimate: ωₙ = Δsₙ = a_{n+1}, so 1/ωₙ = 1/a_{j+1}
-		a_n = static_cast<T>(1);
-		a_n/= this->series->operator()(j1);
-
-		rest *= a_n;
+		rest /= series_acceleration<T,K>::an->at(j1);
 
 		// For theory, see: Weniger (1989), Eq. (8.2-7) numerator term
 		// Numerator term: rest × s_{n+j}
-		numerator   += rest * S_n;
+		numerator   += rest * series_acceleration<T,K>::Sn->at(j);
 
 		// For theory, see: Weniger (1989), Eq. (8.2-7) denominator term
 		// Denominator term: rest
 		denominator += rest;
-
-		// For theory, see: Weniger (1989), Eq. (8.2-7) partial sum update
-		// Update partial sum: S_{j+1} = S_j + a_{j+1}
-		S_n += this->series->operator()(j + static_cast<K>(1));
 
 	}
 
