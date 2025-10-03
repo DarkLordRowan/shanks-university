@@ -20,6 +20,7 @@
 #include "series.hpp"
 #include "methods.hpp"
 #include "series/series_base.hpp"
+#include "noise/noise_generator.hpp"
 
 template<UnsignedIntLike K>
 void test_on_types(){
@@ -80,11 +81,53 @@ void testCompatability(){
 
 }
 
+void TestNoise() {
+	Noise <float_t> noise_normal(30, -0.1, 0.1, normal);
+	exp_series<float_t, size_t> series(10);
+	SeriesResult<float_t> result = series.generateSeries(30);
+	Noise <float_t> noise_uniform(30, -0.1, 0.1, uniform);
+	SeriesResult<float_t> result_jittered_normal = result;
+	SeriesResult<float_t> result_jittered_uniform = result;
+	result_jittered_normal.Sn[0] += noise_normal.seq[0];
+	result_jittered_uniform.Sn[0] += noise_uniform.seq[0];
+	for (int j = 1; j < 30; ++j) {
+		result_jittered_normal.Sn[j] += noise_normal.seq[j];
+		result_jittered_normal.an[j] += noise_normal.seq[j] - noise_normal.seq[j-1];
+		result_jittered_uniform.Sn[j] += noise_uniform.seq[j];
+		result_jittered_uniform.an[j] += noise_uniform.seq[j] - noise_uniform.seq[j-1];
+	}
+	brezinski_theta_algorithm<float_t, size_t> algo{};
+
+	algo.reset(result.Sn, result.an);
+	algo.print_info();
+	std::cout << "Without noise:\n";
+	for(size_t j = 0; j <= 10; j+= 2) {
+		std::cout << "n = order = " << j << " : " << algo(j,j) << "\n";
+	}
+
+	algo.reset(result_jittered_normal.Sn, result_jittered_normal.an);
+	std::cout << "With normal noise:\n";
+	for(size_t j = 0; j <= 10; j+= 2) {
+		std::cout << "n = order = " << j << " : " << algo(j,j) << "\n";
+	}
+
+	algo.reset(result_jittered_uniform.Sn, result_jittered_uniform.an);
+	std::cout << "With uniform noise:\n";
+	for(size_t j = 0; j <= 10; j+= 2) {
+		std::cout << "n = order = " << j << " : " << algo(j,j) << "\n";
+	}
+}
+
+
 int main()
 {
 
 	using typeA = complex_precision<long double>;
 	using typeB = int_precision;
+
+
+	// using typeA = complex_precision<long double>;
+	// using typeB = int_precision;
 
 	//std::cout << fact<typeB>(6) << "\n";
 	//std::cout << double_fact<typeB>(6) << "\n";
@@ -94,7 +137,17 @@ int main()
 	//std::cout << double_fact<typeB>(7) << "\n";
 	//std::cout << binomial_coefficient<typeB>(13, 5) << "\n";
 
-	testCompatability<typeA, typeB>();
+	// testCompatability<typeA, typeB>();
+	//std::cout << fact<typeB>(6) << "\n";
+	//std::cout << double_fact<typeB>(6) << "\n";
+	//std::cout << binomial_coefficient<typeB>(12, 5) << "\n";
+
+	//std::cout << fact<typeB>(7) << "\n";
+	//std::cout << double_fact<typeB>(7) << "\n";
+	//std::cout << binomial_coefficient<typeB>(13, 5) << "\n";
+
+
+	// testCompatability<typeA, typeB>();
 
 	/*
 	while(true){
