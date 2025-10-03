@@ -5,10 +5,10 @@
  */
 
  // For theory, see:
- // Wynn, P. (1956). On a device for computing the eₙ(Sₙ) transformation. 
+ // Wynn, P. (1956). On a device for computing the eₙ(Sₙ) transformation.
  // Mathematical Tables and Other Aids to Computation, 10(54), 91-96.
- // Wynn, P. (1962). A comparison technique for the numerical transformation of 
- // slowly convergent series based on the use of rational functions. 
+ // Wynn, P. (1962). A comparison technique for the numerical transformation of
+ // slowly convergent series based on the use of rational functions.
  // Numerische Mathematik, 4(1), 8-14.
 
 #include "../series_acceleration.hpp"
@@ -39,8 +39,8 @@
  *           - T operator()(K n) const: returns the n-th series term a_n
  *           - T S_n(K n) const: returns the n-th partial sum s_n = a_0 + ... + a_n
  */
-template <AcceptedLike T, std::unsigned_integral K>
-class wynn_epsilon_1_algorithm final : public series_acceleration<T, K>
+template <Accepted T, std::unsigned_integral K, typename series_templ>
+class wynn_epsilon_1_algorithm final : public series_acceleration<T, K, series_templ>
 {
 public:
 
@@ -50,7 +50,7 @@ public:
 	 *        Must be a valid object implementing the required series interface.
 	 *        The series should represent a slowly convergent sequence for effective acceleration.
 	 */
-	explicit wynn_epsilon_1_algorithm(std::shared_ptr<series_base<T,K>> series);
+	explicit wynn_epsilon_1_algorithm(const series_templ& series);
 
 	/**
 	 * @brief Applies the Wynn Epsilon Algorithm to accelerate series convergence.
@@ -72,15 +72,14 @@ public:
 	 * @throws std::domain_error if order=0 is provided
 	 * @throws std::overflow_error if division by zero or numerical instability occurs
 	 */
-    T operator()(K n, K order) override;
+    T operator()(K n, K order) const override;
 };
 
-template <AcceptedLike T, std::unsigned_integral K>
-wynn_epsilon_1_algorithm<T, K>::wynn_epsilon_1_algorithm(std::shared_ptr<series_base<T,K>> series) : 
-series_acceleration<T, K>(series) {}
+template <Accepted T, std::unsigned_integral K, typename series_templ>
+wynn_epsilon_1_algorithm<T, K, series_templ>::wynn_epsilon_1_algorithm(const series_templ& series) : series_acceleration<T, K, series_templ>(series) {}
 
-template <AcceptedLike T, std::unsigned_integral K>
-T wynn_epsilon_1_algorithm<T, K>::operator()(const K n, const K order)
+template <Accepted T, std::unsigned_integral K, typename series_templ>
+T wynn_epsilon_1_algorithm<T, K, series_templ>::operator()(const K n, const K order) const
 {
 
 	using std::isfinite;
@@ -91,7 +90,7 @@ T wynn_epsilon_1_algorithm<T, K>::operator()(const K n, const K order)
 		throw std::domain_error("n = 0 in the input");
 
 	if (order == static_cast<K>(0))
-		return this->series->Sn(n);
+		return this->series->S_n(n);
 
 	// For theory, see: Wynn (1956), Section 3 - Algorithm implementation
 	// The algorithm requires 2×order transformation steps to compute ε₂ₖ⁽ⁿ⁾
@@ -112,7 +111,7 @@ T wynn_epsilon_1_algorithm<T, K>::operator()(const K n, const K order)
 	// For theory, see: Wynn (1956), Eq. (2) - Initial conditions
 	K j = max_ind;
 	do {
-		e0[j] = this->series->Sn(j);
+		e0[j] = this->series->S_n(j);
 	} while (--j > static_cast<K>(0));
 
 	// Apply epsilon algorithm recurrence

@@ -11,7 +11,8 @@
 #pragma once
 
 #include "../custom_concepts.hpp"
-#include "../series/series_base.hpp"
+
+#include <iostream>
 
  /**
   * @brief Base class for series acceleration transformations
@@ -31,11 +32,10 @@
   *           Used for counting and indexing operations (typically size_t, unsigned int, etc.)
   * @tparam series_templ Type of series object to accelerate. Must provide the required interface.
   */
-template<AcceptedLike T, std::unsigned_integral K>
+template<AcceptedLike T, UnsignedIntLike K>
 class series_acceleration
 {
 public:
-    virtual ~series_acceleration() = default;
 
     /**
      * @brief Parameterized constructor to initialize the series acceleration object
@@ -43,7 +43,7 @@ public:
      * @param series The series class object to be accelerated
      *        Must be a valid object implementing the required series interface
      */
-    explicit series_acceleration(std::shared_ptr<series_base<T,K>> series);
+    explicit series_acceleration(std::string name  = "unknown");
 
     /**
      * @brief Method for printing basic information about the acceleration object
@@ -70,19 +70,18 @@ public:
      * @return The accelerated partial sum after applying the transformation
      * @throws May throw domain_error or overflow_error in derived implementations
      */
-    virtual T operator()(K n, K order) = 0;
+    virtual T operator()(K n, K order) const = 0;
+
+    void reset(const std::vector<T>& newSn, const std::vector<T>& newAn = nullptr);
 
 protected:
 
-    /**
-     * @brief Series object whose convergence is being accelerated
-     * @authors Bolshakov M.P.
-     *
-     * This protected member stores the series to be accelerated. Derived classes
-     * can access this member to compute terms and partial sums of the series.
-     */
-    std::shared_ptr<series_base<T,K>> series;
+    const std::vector<T>* Sn = nullptr;
+    const std::vector<T>* an = nullptr;
+
+    std::string acceleration_name = "series acceleration base class";
 };
+
 
 /**
  * @brief Constructor implementation for series_acceleration
@@ -92,8 +91,9 @@ protected:
  *
  * @param series The series object to be accelerated
  */
-template<AcceptedLike T, std::unsigned_integral K>
-series_acceleration<T, K>::series_acceleration(std::shared_ptr<series_base<T,K>> series) : series(series) {}
+template<AcceptedLike T, UnsignedIntLike K>
+series_acceleration<T, K>::series_acceleration(std::string name) : acceleration_name(name){}
+
 
 /**
  * @brief Implementation of print_info method
@@ -101,8 +101,15 @@ series_acceleration<T, K>::series_acceleration(std::shared_ptr<series_base<T,K>>
  * Outputs the name of the actual derived class type using RTTI (run-time type information).
  * This helps identify which specific acceleration method is being used.
  */
-template<AcceptedLike T, std::unsigned_integral K>
-constexpr void series_acceleration<T, K>::print_info() const
-{
-    std::cout << "transformation: " << typeid(*this).name() << '\n';
+template<AcceptedLike T, UnsignedIntLike K>
+constexpr void series_acceleration<T, K>::print_info() const { std::cout << this->acceleration_name << '\n'; }
+
+
+template<AcceptedLike T, UnsignedIntLike K>
+void series_acceleration<T, K>::reset(
+    const std::vector<T>& newSn, 
+    const std::vector<T>& newAn //for some algo it is unnecessary so it could be nullptr
+) {
+    Sn = &newSn;
+    an = &newAn;
 }

@@ -334,14 +334,16 @@ PYBIND11_MODULE(pyshanks, m) {
         S(SER92, two_degree_x_series, "TwoDegreeXSeriesF64", (T))
         S(SER93, sqrt_1plusx_min_1_min_x_div_2_series, "Sqrt1plusXMinus1MinusXDiv2SeriesF64", (T))
         S(SER94, ln13_min_ln7_div_7_series, "Ln13MinusLn7Div7SeriesF64", (T))
-        S(SER95, Ja_x_series, "JaXSeriesF64", (T,T))
-        S(SER96, one_div_sqrt2_sin_xdivsqrt2_series, "OneDivSqrt2SinXDivSqrt2SeriesF64", (T))
         S(SER97, ln_1plusx_div_1plusx2_series, "Ln1plusXDiv1plusX2SeriesF64", (T))
         S(SER98, cos_sqrt_x_series, "CosSqrtXSeriesF64", (T))
         S(SER99, ln_1_plus_x3_series, "Ln1PlusX3SeriesF64", (T))
         S(SER100, x_div_1minx_series, "XDiv1minXSeriesF64", (T))
         S(SER101, x_div_1minx2_series, "XDiv1minX2SeriesF64", (T))
-        S(SER102, gamma_series, "GammaSeriesF64", (T,T))
+       	#ifndef USE_COMPLEX
+            S(SER95, Ja_x_series, "JaXSeriesF64", (T,T))
+            S(SER96, one_div_sqrt2_sin_xdivsqrt2_series, "OneDivSqrt2SinXDivSqrt2SeriesF64", (T))
+            S(SER102, gamma_series, "GammaSeriesF64", (T,T))
+        #endif
 
         #undef BIND_SERIES
         #undef UNPAREN
@@ -608,14 +610,16 @@ PYBIND11_MODULE(pyshanks, m) {
         S_(SER92, two_degree_x_series, "TwoDegreeXSeriesArb", (T))
         S_(SER93, sqrt_1plusx_min_1_min_x_div_2_series, "Sqrt1plusXMinus1MinusXDiv2SeriesArb", (T))
         S_(SER94, ln13_min_ln7_div_7_series, "Ln13MinusLn7Div7SeriesArb", (T))
-        S_(SER95, Ja_x_series, "JaXSeriesArb", (T,T))
-        S_(SER96, one_div_sqrt2_sin_xdivsqrt2_series, "OneDivSqrt2SinXDivSqrt2SeriesArb", (T))
         S_(SER97, ln_1plusx_div_1plusx2_series, "Ln1plusXDiv1plusX2SeriesArb", (T))
         S_(SER98, cos_sqrt_x_series, "CosSqrtXSeriesArb", (T))
         S_(SER99, ln_1_plus_x3_series, "Ln1PlusX3SeriesArb", (T))
         S_(SER100, x_div_1minx_series, "XDiv1minXSeriesArb", (T))
         S_(SER101, x_div_1minx2_series, "XDiv1minX2SeriesArb", (T))
-        S_(SER102, gamma_series, "GammaSeriesArb", (T,T))
+       	#ifndef USE_COMPLEX
+            S_(SER95, Ja_x_series, "JaXSeriesArb", (T,T))
+            S_(SER96, one_div_sqrt2_sin_xdivsqrt2_series, "OneDivSqrt2SinXDivSqrt2SeriesArb", (T))
+            S_(SER102, gamma_series, "GammaSeriesArb", (T,T))
+        #endif
 
         #undef BIND_SERIES_
         #undef UNPAREN_

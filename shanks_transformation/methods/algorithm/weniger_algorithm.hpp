@@ -6,7 +6,7 @@
  */
 
  // For theory, see:
- // Weniger, E.J. (1989). Nonlinear sequence transformations for the acceleration of convergence 
+ // Weniger, E.J. (1989). Nonlinear sequence transformations for the acceleration of convergence
  // and the summation of divergent series. Computer Physics Reports, 10(5-6), 189-371.
  // Weniger, E.J. (1992). Interpolation between sequence transformations. Numerical Algorithms, 3(1-4), 477-486.
 
@@ -38,17 +38,17 @@
  *           - T minus_one_raised_to_power_n(K n) const: returns (-1)ⁿ
  *           - T binomial_coefficient(T n, K k) const: returns binomial coefficient C(n, k)
  */
-template<AcceptedLike T, std::unsigned_integral K>
-class weniger_algorithm final : public series_acceleration<T, K>
+template<Accepted T, std::unsigned_integral K, typename series_templ>
+class weniger_algorithm final : public series_acceleration<T, K, series_templ>
 {
 public:
-	
+
 	/**
 	 * @brief Parameterized constructor to initialize the weniger_algorithm
 	 * @param series The series class object to be accelerated
 	 *        Must be a valid object implementing the required series interface
 	 */
-	explicit weniger_algorithm(std::shared_ptr<series_base<T,K>> series) : series_acceleration<T, K>(series) {}
+	explicit weniger_algorithm(const series_templ& series) : series_acceleration<T, K, series_templ>(series) {}
 
 	/**
 	 * @brief Implementation of Weniger transformation for series acceleration.
@@ -67,11 +67,11 @@ public:
 	 * @return The accelerated partial sum after Weniger transformation
 	 * @throws std::overflow_error if division by zero or numerical instability occurs
 	 */
-	T operator()(K n, K order) override;
+	T operator()(K n, K order) const override;
 };
 
-template<AcceptedLike T, std::unsigned_integral K>
-T weniger_algorithm<T, K>::operator()(const K n, const K order) {
+template<Accepted T, std::unsigned_integral K, typename series_templ>
+T weniger_algorithm<T, K, series_templ>::operator()(const K n, const K order) const {
 
 	using std::isfinite;
 
@@ -89,16 +89,16 @@ T weniger_algorithm<T, K>::operator()(const K n, const K order) {
 
 	// For theory, see: Weniger (1989), Eq. (8.2-7) recursive computation
 	// Initial binomial coefficient: C(order, 0) = 1
-	T binomial_coef = binomial_coefficient<T,K>(static_cast<T>(n), static_cast<K>(0));
+	T binomial_coef = this->series->binomial_coefficient(static_cast<T>(n), static_cast<K>(0));
 
 	// For theory, see: Weniger (1989), Eq. (8.2-7) partial sum initialization
 	// Initial partial sum Sₙ
-	T S_n = this->series->Sn(0);
+	T S_n = this->series->S_n(0);
 
 	// Precompute initial value: (1)ₖ₋₁ = (k-1)!
-	for (K m = static_cast<K>(0); m < order - static_cast<K>(1); ++m) 
+	for (K m = static_cast<K>(0); m < order - static_cast<K>(1); ++m)
 		coef *= static_cast<T>(static_cast<K>(1) + m);
-	
+
 	K j1;
 
 	// For theory, see: Weniger (1989), Eq. (8.2-7) explicit summation form
@@ -109,7 +109,7 @@ T weniger_algorithm<T, K>::operator()(const K n, const K order) {
 
 		// For theory, see: Weniger (1989), Eq. (8.2-7) term structure
 		// Term sign: (-1)ʲ
-		rest  = minus_one_raised_to_power_n<T,K>(j);
+		rest  = this->series->minus_one_raised_to_power_n(j);
 
 		// Binomial coefficient: C(order, j)
 		rest *= binomial_coef;
@@ -132,7 +132,7 @@ T weniger_algorithm<T, K>::operator()(const K n, const K order) {
 		// For theory, see: Weniger (1989), Eq. (8.2-7) remainder estimate
 		// Remainder estimate: ωₙ = Δsₙ = a_{n+1}, so 1/ωₙ = 1/a_{j+1}
 		a_n = static_cast<T>(1);
-		a_n/= this->series->an(j1);
+		a_n/= this->series->operator()(j1);
 
 		rest *= a_n;
 
@@ -146,8 +146,8 @@ T weniger_algorithm<T, K>::operator()(const K n, const K order) {
 
 		// For theory, see: Weniger (1989), Eq. (8.2-7) partial sum update
 		// Update partial sum: S_{j+1} = S_j + a_{j+1}
-		S_n += this->series->an(j + static_cast<K>(1));
-		
+		S_n += this->series->operator()(j + static_cast<K>(1));
+
 	}
 
 	// For theory, see: Weniger (1989), Eq. (8.2-7) final ratio
@@ -156,6 +156,6 @@ T weniger_algorithm<T, K>::operator()(const K n, const K order) {
 
 	if (!isfinite(numerator))
 		throw std::overflow_error("division by zero");
-	
+
 	return numerator;
 }

@@ -24,10 +24,10 @@
  *
  *
  * Module name     :   mathprecision.h
- * Module ID Nbr   :   
+ * Module ID Nbr   :
  * Description     :   Arbitrary floating poiint precision class
  * --------------------------------------------------------------------------
- * Change Record   :   
+ * Change Record   :
  *
  * Version	Author/Date		Description of changes
  * -------  -----------		----------------------
@@ -64,7 +64,7 @@ static float_precision sinh2( float_precision x )
 
    // Round to same precision as argument and rounding mode
    v.mode( x.mode() );
-   v.precision( x.precision() );  
+   v.precision( x.precision() );
 
    return v;
    }
@@ -84,7 +84,7 @@ static float_precision cosh2( float_precision x )
 
    // Round to same precision as argument and rounding mode
    v.mode( x.mode() );
-   v.precision( x.precision() );  
+   v.precision( x.precision() );
 
    return v;
    }
@@ -107,7 +107,7 @@ static float_precision tanh2( float_precision x )
 
    // Round to same precision as argument and rounding mode
    v.mode( x.mode() );
-   v.precision( x.precision() );  
+   v.precision( x.precision() );
 
    return v;
    }
@@ -144,7 +144,7 @@ static int_precision factorial( int_precision &x )
          {
          for( n = (int)np, ++n, n_fac = 1; n_fac < 0x7fffffff / n && n <= limit; ++n )
             n_fac *= n;
-         
+
          np_fac *= int_precision( n_fac );
          np = int_precision( n );
          }

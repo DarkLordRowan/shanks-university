@@ -1,78 +1,62 @@
 #pragma once
 
-#include "../term_calculator.hpp"
+#include "../series_base.hpp"
 
 /**
-* @brief Maclaurin series of hyperbolic cosine
-* @authors Pashkov B.B.
+* @brief Maclaurin series of exp(x) function
+* @authors Bolshakov M.P.
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
-template <AcceptedLike T, std::unsigned_integral K>
-class exp_series final : public TermCalculatorBase<T, K>
+template <AcceptedLike T, UnsignedIntLike K>
+class exp_series final : public series_base<T, K>
 {
-protected:
-
-    /**
-     * @brief 
-     * 
-     * @param x 
-     * @return true 
-     * @return false 
-     */
-    inline bool domain_checker(const SeriesConfig<T,K>& config) const { return !isfinite(config.x); }
-
-    /**s
-	 * @brief 
-	 * 
-	 * @param x 
-	 * @return constexpr T 
-	 */
-	T calculate_sum() const { return exp(this->x); }
-
 public:
 
 	/**
-	 * @brief Construct a new cos series object
-	 * 
-	 */
-	exp_series() = delete;
-
-
-	/**
-	* @brief Computes the nth term of the Maclaurin series of the cosine function
+	* @brief Parameterized constructor to initialize the series with function argument and sum
 	* @authors Bolshakov M.P.
-	* @param n The number of the term
 	* @tparam T The type of the elements in the series, K The type of enumerating integer
-	* @return nth term of the Maclaurin series of the cosine functions
+	* @param x The argument for function series
 	*/
-	[[nodiscard]] constexpr virtual T calculateTerm(K n) const override;
+	explicit exp_series(T x = static_cast<T>(0));
 
-	/**
-	 * @brief 
-	 * 
-	 * @param config 
-	 */
-	exp_series(const SeriesConfig<T,K>& config);
-};
+	virtual SeriesResult<T> generateSeries(K vecSize) const override;
 
-template <AcceptedLike T, std::unsigned_integral K>
-exp_series<T, K>::exp_series(const SeriesConfig<T,K>& config) {
-
-	if (domain_checker(config)){
-		this->throw_domain_error("x is not finite");
+	inline constexpr bool checkDomain(const T& x){
+		return !isfinite(x);
 	}
 
-	TermCalculatorBase<T,K>::series_name = "exp(x)";
-	TermCalculatorBase<T, K>::x = config.x;
-	TermCalculatorBase<T, K>::sum = calculate_sum();
+	inline constexpr T calculateSum(const T& x){
+		return exp(x);
+	}
 
+};
+
+template <AcceptedLike T, UnsignedIntLike K>
+exp_series<T, K>::exp_series(T x) : series_base<T, K>(x)
+{
+	series_base<T,K>::series_name = "exp(x)";
+	// Сходится при ∀x ∈ ℝ
+
+	if(checkDomain(x)){
+		series_base<T, K>::throw_domain_error("x is not finite");
+	}
+
+	series_base<T,K>::sum = calculateSum(x);
+	
 }
 
-template <AcceptedLike T, std::unsigned_integral K>
-constexpr T exp_series<T, K>::calculateTerm(K n) const {
-	if (n == 0){ return static_cast<T>(1); }
-	if (n == 1){ return this->x; }
-	if (n == 2){ return this->x * this->x / static_cast<T>(2);}
+template<AcceptedLike T, UnsignedIntLike K>
+SeriesResult<T> exp_series<T, K>::generateSeries(K vecSize) const {
 
-	return pow(this->x, static_cast<T>(n)) / static_cast<T>(fact<K>(n));
+	std::vector vecAn = std::vector(vecSize, static_cast<T>(0)); vecAn[0] = static_cast<T>(1);
+	std::vector vecSn = std::vector(vecSize, static_cast<T>(0)); vecSn[0] = static_cast<T>(1);
+
+	for(K j = static_cast<K>(1); j < vecSize; ++j){
+		vecAn[j] += vecAn[j-static_cast<K>(1)] * series_base<T,K>::x / static_cast<T>(j);
+		vecSn[j] += vecSn[j-static_cast<K>(1)] + vecAn[j];
+	}
+
+	return SeriesResult<T>{.an = vecAn, .Sn = vecSn};
+
 }

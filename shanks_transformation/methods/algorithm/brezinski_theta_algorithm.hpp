@@ -6,8 +6,8 @@
 
  // For theory, see:
  // Brezinski, C. (1977). Acceleration de la Convergence en Analyse Numerique. Springer-Verlag.
- // Brezinski, C., & Redivo Zaglia, M. (2003). Extrapolation Methods: Theory and Practice. 
- // Weniger, E. J. (2003). Nonlinear Sequence Transformations for the Acceleration of 
+ // Brezinski, C., & Redivo Zaglia, M. (2003). Extrapolation Methods: Theory and Practice.
+ // Weniger, E. J. (2003). Nonlinear Sequence Transformations for the Acceleration of
  // Convergence and the Summation of Divergent Series. Computer Physics Reports, 1(1), 1-123.
 
 #pragma once
@@ -32,7 +32,7 @@
  * - Weniger, E. J. (2003). Nonlinear Sequence Transformations for the Acceleration of
  *   Convergence and the Summation of Divergent Series.
  *
- * @tparam T Floating-point type for series elements (must satisfy AcceptedLike)
+ * @tparam T Floating-point type for series elements (must satisfy Accepted)
  *           Represents numerical precision (float, double, long double)
  *           Used for all mathematical computations and storage of series terms
  * @tparam K Unsigned integral type for indices and order (must satisfy std::unsigned_integral)
@@ -41,7 +41,7 @@
  *           - T operator()(K n) const: returns the n-th series term a_n
  *           - T S_n(K n) const: returns the n-th partial sum s_n = a_0 + ... + a_n
  */
-template <AcceptedLike T, std::unsigned_integral K>
+template <AcceptedLike T, UnsignedIntLike K>
 class brezinski_theta_algorithm final : public series_acceleration<T, K>
 {
 protected:
@@ -78,7 +78,7 @@ public:
      *        Must be a valid object implementing the required series interface
      *        The series object is stored by reference for efficient access
      */
-    explicit brezinski_theta_algorithm(std::shared_ptr<series_base<T,K>> series) : series_acceleration<T, K>(series) {}
+    explicit brezinski_theta_algorithm() : series_acceleration<T, K>("brezinski theta algorithm") {}
 
     /**
      * @brief Fast implementation of Theta Brezinski algorithm.
@@ -99,11 +99,12 @@ public:
      * @throws std::domain_error if n=0 or order is odd
      * @throws std::overflow_error if division by zero occurs during computation
      */
-    T operator()(K n, K order) override;
+
+    T operator()(K n, K order) const override;
 };
 
 
-template <AcceptedLike T, std::unsigned_integral K>
+template <AcceptedLike T, UnsignedIntLike K>
 T brezinski_theta_algorithm<T, K>::calculate(K n, const K order) const {
 
     using std::isfinite;
@@ -122,7 +123,7 @@ T brezinski_theta_algorithm<T, K>::calculate(K n, const K order) const {
 
     // init theta_(0)
     for(K j = static_cast<K>(0); j < base_size; ++j)
-        theta_even[j] = this->series->Sn(n + j);
+        theta_even[j] = series_acceleration<T,K>::Sn->at(n + j);
 
 
     K j1, j2;
@@ -149,9 +150,9 @@ T brezinski_theta_algorithm<T, K>::calculate(K n, const K order) const {
             j2 = j + static_cast<K>(2);
 
             delta = theta_odd[j2] - theta_odd[j1];
-            
-            theta_even[j] = theta_even[j+1];
-            theta_even[j]-= (theta_even[j+2]-theta_even[j+1]) * delta / (theta_odd[j+1] - theta_odd[j] - delta);
+
+            theta_even[j] = theta_even[j1];
+            theta_even[j]-= (theta_even[j2]-theta_even[j1]) * delta / (theta_odd[j1] - theta_odd[j] - delta);
 
         }
     }
@@ -162,19 +163,37 @@ T brezinski_theta_algorithm<T, K>::calculate(K n, const K order) const {
     return theta_even[0];
 }
 
-template <AcceptedLike T, std::unsigned_integral K>
-T brezinski_theta_algorithm<T, K>::operator()(const K n, const K order) {
+template <AcceptedLike T, UnsignedIntLike K>
+T brezinski_theta_algorithm<T, K>::operator()(const K n, const K order) const{
+
+    if (series_acceleration<T,K>::Sn == nullptr)
+        throw std::domain_error("Sn is nullptr");
+
+    K required_size = static_cast<K>(3) * order / static_cast<K>(2) + static_cast<K>(1) + n;
+
+    if (series_acceleration<T,K>::Sn->size() < required_size)
+        throw std::domain_error("Sn is smaller than required to calculate theta_{" + to_string(order) + "}^{" + to_string(n) + "}");
 
     // For theory, see: Brezinski (2003), Section 10.2, Theorem 10.2.1
     // Only even orders have mathematical meaning in the final result
-    if (order & static_cast<K>(1)) // is order odd?
-        throw std::domain_error("order should be even number");
+    if constexpr (std::is_same<K, int_precision>::value){
+
+        if (!order.even())
+            throw std::domain_error("order should be even number");
+
+    } else {
+
+        if (order & 1) // is order odd?
+            throw std::domain_error("order should be even number");
+
+    }
+    
 
     // For theory, see: Brezinski (1977), Chapter 4, Eq. (4.10)
     // Base cases: return partial sum for n=0 or order=0
     //if (n == static_cast<K>(0) || order == static_cast<K>(0))
     if (order == static_cast<K>(0))
-        return this->series->Sn(n);
+        return series_acceleration<T,K>::Sn->at(n);
 
     // For theory, see: Brezinski (2003), Section 10.2, Eq. (10.2.4)
     // Start computation with initial parameters
