@@ -113,18 +113,18 @@ T brezinski_theta_algorithm<T, K>::calculate(K n, const K order) const {
 
     std::vector<T> theta_odd(
         base_size,
-        static_cast<T>(0)
-    ); // vector for theta_(2n + 1)
+        convertArbWithPrecision<T>(0.0, series_acceleration<T, K>::arbPrecision)
+    ); // vector for theta_(2n + 1);
 
     std::vector<T> theta_even(
         base_size,
-        static_cast<T>(0)
+        convertArbWithPrecision<T>(0.0, series_acceleration<T, K>::arbPrecision)
     ); //vector for theta_(2n), in the beginning it is theta_(-1) which is zero for all i
 
     // init theta_(0)
-    for(K j = static_cast<K>(0); j < base_size; ++j)
-        theta_even[j] = series_acceleration<T,K>::Sn->at(n + j);
-
+    for(K j = static_cast<K>(0); j < base_size; ++j){
+        theta_even[j] += series_acceleration<T,K>::Sn->at(n + j);
+    }
 
     K j1, j2;
     T delta; //temporary varaible
@@ -172,7 +172,7 @@ T brezinski_theta_algorithm<T, K>::operator()(const K n, const K order) const{
     K required_size = static_cast<K>(3) * order / static_cast<K>(2) + static_cast<K>(1) + n;
 
     if (series_acceleration<T,K>::Sn->size() < required_size)
-        throw std::domain_error("Sn is smaller than required to calculate theta_{" + to_string(order) + "}^{" + to_string(n) + "}");
+        throw std::out_of_range("Sn is smaller than required to calculate theta_{" + to_string(order) + "}^{" + to_string(n) + "}");
 
     // For theory, see: Brezinski (2003), Section 10.2, Theorem 10.2.1
     // Only even orders have mathematical meaning in the final result

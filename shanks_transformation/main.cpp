@@ -9,17 +9,19 @@
  * It is recommended you look up doxygen documentation on our repository https://katerina-evdokimova.github.io/shanks-university/ to convinently figure out what's everything for
  */
 
-#include <math.h>
+#include <unordered_map>
 
+#include <math.h> // is needed
+
+#include "custom_concepts.hpp"
 #include "libs/arbitrary_arithmetics/complexprecision.h"
 #include "libs/arbitrary_arithmetics/fprecision.h"
 #include "libs/arbitrary_arithmetics/iprecision.h"
 #include "libs/arbitrary_arithmetics/precisioncore.cpp"
 
 #include "methods/algorithm/brezinski_theta_algorithm.hpp"
-#include "series.hpp"
 #include "methods.hpp"
-#include "series/series_base.hpp"
+#include "series.hpp"
 #include "noise/noise_generator.hpp"
 
 template<UnsignedIntLike K>
@@ -61,22 +63,57 @@ void test_on_types(){
 
 }
 
+
 template<AcceptedLike T, UnsignedIntLike K>
-void testCompatability(){
+constexpr void testCompatability(const T& x){
 
-	test_on_types<size_t>();
-	test_on_types<int_precision>();
+	std::unordered_map<transformation_id_t, std::function<std::unique_ptr<series_acceleration<T,K>>(void)>> algoInit = {
+	    {     brezinski_theta_transformation_id, [](){ return std::make_unique<brezinski_theta_algorithm<T, K>>();                             }},
+		{      wynn_epsilon_3_transforamtion_id, [](){ return std::make_unique<wynn_epsilon_3_algorithm<T,K>>();                               }},
+        {        wynn_rho_rho_transformation_id, [](){ return std::make_unique<wynn_rho_algorithm<T, K>>(numerator_type::rho_variant);         }},
+  		{wynn_rho_generalized_transformation_id, [](){ return std::make_unique<wynn_rho_algorithm<T, K>>(numerator_type::generalized_variant); }},
+    	{  wynn_rho_gamma_rho_transformation_id, [](){ return std::make_unique<wynn_rho_algorithm<T, K>>(numerator_type::gamma_rho_variant);   }},
+	};
 
-	brezinski_theta_algorithm<T, K> testAlgo{};
+	std::vector<std::unique_ptr<series_acceleration<T,K>>> algos(algoInit.size());
+	for (size_t j = 1; j <= algoInit.size(); ++j){
+		algos[j-1] = algoInit[static_cast<transformation_id_t>(j)]();
+	}
 
-	exp_series<T, K> testSeries = exp_series<T, K>(static_cast<T>(6));
-	SeriesResult<T> result = testSeries.generateSeries(30);
+	exp_series<T,K> testSeries = exp_series<T,K>(x);
+	SeriesResult<T> result = testSeries.generateSeries(150);
 
-	testAlgo.reset(result.Sn, result.an);
-	testAlgo.print_info();
+	for (size_t j = 0; j < algos.size(); ++j){
+		algos[j]->reset(result.Sn, result.an);
+	}
 
-	for(size_t j = 0; j <= 14; j+= 2){
-		std::cout << "n = order = " << j << " : " << testAlgo(j,j) << "\n";
+	for (size_t i = 0; i < algos.size(); ++i){
+
+		algos[i]->print_info();
+
+		for (size_t j = 0; j <= 12; ++j) {
+			
+			try{
+				std::cout << "n = order = " << j << " : " << algos[i]->operator()(j,j) << "\n";
+			} catch (std::overflow_error& e){
+				std::cout << e.what() << "\n";
+			} catch (std::domain_error& e){
+				std::cout << e.what() << "\n";
+			} catch (float_precision::divide_by_zero& e){
+				std::cout << "Division by zero in float_precision" << "\n";
+			} catch (complex_precision<float>::divide_by_zero& e){
+				std::cout << e.what() << "\n";
+			} catch (complex_precision<double>::divide_by_zero& e){
+				std::cout << e.what() << "\n";
+			} catch (complex_precision<long double>::divide_by_zero& e){
+				std::cout << e.what() << "\n";
+			} catch (complex_precision<float_precision>::divide_by_zero& e){
+				std::cout << e.what() << "\n";
+			} catch (std::out_of_range& e){
+				std::cout << e.what() << "\n";
+			}
+
+		}
 	}
 
 }
@@ -118,16 +155,13 @@ void TestNoise() {
 	}
 }
 
-
 int main()
 {
 
-	using typeA = complex_precision<long double>;
+	using typeA = float_precision;
 	using typeB = int_precision;
 
-
-	// using typeA = complex_precision<long double>;
-	// using typeB = int_precision;
+	typeA x(1, 200);
 
 	//std::cout << fact<typeB>(6) << "\n";
 	//std::cout << double_fact<typeB>(6) << "\n";
@@ -137,17 +171,9 @@ int main()
 	//std::cout << double_fact<typeB>(7) << "\n";
 	//std::cout << binomial_coefficient<typeB>(13, 5) << "\n";
 
-	// testCompatability<typeA, typeB>();
-	//std::cout << fact<typeB>(6) << "\n";
-	//std::cout << double_fact<typeB>(6) << "\n";
-	//std::cout << binomial_coefficient<typeB>(12, 5) << "\n";
+	testCompatability<typeA, typeB>(x);
 
-	//std::cout << fact<typeB>(7) << "\n";
-	//std::cout << double_fact<typeB>(7) << "\n";
-	//std::cout << binomial_coefficient<typeB>(13, 5) << "\n";
-
-
-	// testCompatability<typeA, typeB>();
+	TestNoise();
 
 	/*
 	while(true){

@@ -31,3 +31,19 @@ template<typename K>
 concept UnsignedIntLike = requires {
     std::is_integral<K>::value && !std::is_signed<K>::value || std::is_same<K, int_precision>::value;
 };
+
+template<AcceptedLike T>
+T convertArbWithPrecision(float realPart, size_t precision) {
+
+    if constexpr(std::is_same<T, float_precision>::value){
+        return float_precision(realPart, precision);
+    } else if constexpr(std::is_same<T, complex_precision<float_precision>>::value){
+        
+        return complex_precision<float_precision>(
+            float_precision(realPart, precision), 
+            float_precision(0, precision)
+        );
+    } else {
+        return static_cast<T>(realPart);
+    }
+}
