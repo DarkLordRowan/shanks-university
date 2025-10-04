@@ -45,9 +45,19 @@
  *           Purpose: To abstract the series representation, allowing flexibility (e.g., user-defined series).
  *           Valid values: Any type meeting the above requirements.
  */
-template <Accepted T, std::unsigned_integral K, typename series_templ>
-class chang_wynn_algorithm final : public series_acceleration<T, K, series_templ>
+template <AcceptedLike T, UnsignedIntLike K>
+class chang_wynn_algorithm final : public series_acceleration<T, K>
 {
+protected:
+
+    inline T calculate(
+        K n, 
+        K order, 
+        std::shared_ptr<std::vector<T>> sharedSn,
+        std::shared_ptr<std::vector<T>> sharedAn,
+        K offset = static_cast<K>(0)
+    ) const;
+
 public:
 
     /**
@@ -56,7 +66,7 @@ public:
      *        Must be a valid object implementing the required series interface.
      *        Purpose: To provide the series data for acceleration.
      */
-    explicit chang_wynn_algorithm(const series_templ& series) : series_acceleration<T, K, series_templ>(series) {}
+    explicit chang_wynn_algorithm() : series_acceleration<T, K>("chang wynn") {}
 
     /**
      * @brief Implementation of Chang-Wynn hybrid algorithm for series acceleration.
@@ -77,21 +87,25 @@ public:
      * @throws std::domain_error if n=0 is provided as input.
      * @throws std::overflow_error if division by zero or numerical instability occurs.
      */
-	T operator()(K n, K order) const override;
+	T operator()(K n, K order, K offset) const override;
 };
 
-template <Accepted T, std::unsigned_integral K, typename series_templ>
-T chang_wynn_algorithm<T, K, series_templ>::operator()(const K n, const K order) const {
+template <AcceptedLike T, UnsignedIntLike K>
+T chang_wynn_algorithm<T, K>::calculate(
+    K n, 
+    K order, 
+    std::shared_ptr<std::vector<T>> sharedSn,
+    std::shared_ptr<std::vector<T>> sharedAn, 
+    K offset
+) const {
 
     using std::isfinite;
     using std::fma;
 
-    if (n == static_cast<K>(0))
-        throw std::domain_error("n = 0 in the input");
-
-    T up, down, coef, coef2;
-
-    //TODO спросить у Парфенова, ибо жертвуем читаемостью кода, ради его небольшого ускорения
+    T up = convertWithPrec<T>(0.0, series_acceleration<T, K>::precision);
+    T down = convertWithPrec<T>(0.0, series_acceleration<T, K>::precision);
+    T coef = convertWithPrec<T>(0.0, series_acceleration<T, K>::precision);
+    T coef2 = convertWithPrec<T>(0.0, series_acceleration<T, K>::precision);
 
     // For theory, see: Chang et al. (2019), Section 3.4, Eq. (3.20)
     // Initialization of epsilon table with modified initial conditions.
@@ -104,13 +118,16 @@ T chang_wynn_algorithm<T, K, series_templ>::operator()(const K n, const K order)
         2,
         std::vector<T>(
             n,
-            static_cast<T>(0)
+            convertWithPrec<T>(0.0, series_acceleration<T, K>::precision)
         )
     ); // Two vectors of length n containing Epsilon table (current and previous rows).
 
     // For theory, see: Chang et al. (2019), Eq. (3.20d)
     // Vector F stores intermediate factors F₁⁽ⁿ⁾ used in the recursion.
-    std::vector<T> f(n, static_cast<T>(0)); // Vector for containing F results from index 0 to n-1.
+    std::vector<T> f(
+        n, 
+        convertWithPrec<T>(0.0, series_acceleration<T, K>::precision)
+    ); // Vector for containing F results from index 0 to n-1.
 
     // For theory, see: Wynn (1956), Eq. (2.6b)
     // Epsilon algorithm recursion: εₖ₊₁⁽ⁿ⁾ = εₖ₋₁⁽ⁿ⁺¹⁾ + 1/(εₖ⁽ⁿ⁺¹⁾ - εₖ⁽ⁿ⁾)
@@ -118,7 +135,7 @@ T chang_wynn_algorithm<T, K, series_templ>::operator()(const K n, const K order)
     for (K i = static_cast<K>(0); i < max; ++i) {
         // For theory, see: Wynn (1956), Eq. (2.8)
         // ε₁⁽ⁿ⁾ = 1 / ΔSₙ for n >= 0.
-        e[0][i] = static_cast<T>(1) / (this->series->operator()(i + static_cast<K>(1)));
+        e[0][i] = static_cast<T>(1) / (sharedAn->at(i + static_cast<K>(1)));
     }
 
     // For theory, see: Chang et al. (2019), Eq. (3.20d)
@@ -134,29 +151,29 @@ T chang_wynn_algorithm<T, K, series_templ>::operator()(const K n, const K order)
         // Compute second differences: Δ²S_{n+1} = S_{n+3} - 2S_{n+2} + S_{n+1}
         coef = fma(
             static_cast<T>(-2),
-            this->series->S_n(i2),
-            this->series->S_n(i3) + this->series->S_n(i1)
+            sharedSn->at(i2),
+            sharedSn->at(i3) + sharedSn->at(i1)
         );
 
         // Compute Δ²S_n = S_{n+2} - 2S_{n+1} + S_n
         coef2 = fma(
             static_cast<T>(-2),
-            this->series->S_n(i1),
-            this->series->S_n(i2) + this->series->S_n(i)
+            sharedSn->at(i1),
+            sharedSn->at(i2) + sharedSn->at(i)
         );
 
         // Numerator: ΔS_n * ΔS_{n+1} * Δ²S_{n+1}
-        up = this->series->operator()(i1);
-        up*= this->series->operator()(i2);
+        up = sharedAn->at(i1);
+        up*= sharedAn->at(i2);
         up*= coef;
 
         // Denominator: ΔS_{n+2} * Δ²S_n - ΔS_n * Δ²S_{n+1}
-        down = this->series->operator()(i3) * coef2;
-        down -= this->series->operator()(i1) * coef;
+        down = sharedAn->at(i3) * coef2;
+        down -= sharedAn->at(i1) * coef;
         down = static_cast<T>(1) / down; // Reciprocal for division.
 
         // Compute T₂⁽ⁿ⁾ = S_{n+1} - (up * down)
-        e[1][i] = static_cast<T>(fma(-up, down, this->series->S_n(i1)));
+        e[1][i] = static_cast<T>(fma(-up, down, sharedSn->at(i1)));
 
         // Compute F₁⁽ⁿ⁾ = Δ²S_{n+1} * Δ²S_n * down
         f[i] = coef * coef2 * down;
@@ -196,4 +213,33 @@ T chang_wynn_algorithm<T, K, series_templ>::operator()(const K n, const K order)
     }
 
     return e[max & static_cast<K>(1)][0]; // Return the transformed value.
+
+}
+
+template <AcceptedLike T, UnsignedIntLike K>
+T chang_wynn_algorithm<T, K>::operator()(K n, K order, K offset) const {
+
+    if (series_acceleration<T,K>::Sn.expired() || series_acceleration<T,K>::an.expired()){
+    	throw std::domain_error("Sn or an is expired");
+	}
+
+    std::shared_ptr<std::vector<T>> sharedSn = series_acceleration<T,K>::Sn.lock();
+    std::shared_ptr<std::vector<T>> sharedAn = series_acceleration<T,K>::an.lock();
+
+    K required_size = n + static_cast<K>(1);
+
+    if (sharedSn->size() < required_size || sharedAn->size() < required_size){
+        throw std::out_of_range("Sn or an is smaller than required to calculate chang_wynn_{" + to_string(order) + "}^{" + to_string(n) + "}");
+	}
+
+	// For theory, see: Ford & Sidi (1987), Section 1 - Input validation
+	// The algorithm requires at least one term for meaningful computation
+	if (n == static_cast<K>(0))
+		throw std::domain_error("n = 0 in the input");
+
+	const T result = calculate(n, order, sharedSn, sharedAn, offset);
+    if (!isfinite(result)) throw std::overflow_error("division by zero");
+    return result;
+
+    
 }

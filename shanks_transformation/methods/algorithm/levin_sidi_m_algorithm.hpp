@@ -39,8 +39,8 @@
   *           - T minus_one_raised_to_power_n(K j) const: returns (-1)^j
   *           - T binomial_coefficient(T n, K k) const: returns binomial coefficient C(n, k)
   */
-template<Accepted T, std::unsigned_integral K, typename series_templ>
-class levin_sidi_m_algorithm final : public series_acceleration<T, K, series_templ>
+template<AcceptedLike T, UnsignedIntLike K>
+class levin_sidi_m_algorithm final : public series_acceleration<T, K>
 {
 protected:
 
@@ -62,7 +62,13 @@ protected:
 	 * @param order Order of transformation (starting index)
 	 * @return Accelerated sum estimate M_{n}^{(k)}
 	 */
-	inline T calculate(K n, K order) const;
+	inline T calculate(
+		K n, 
+		K order, 
+		std::shared_ptr<std::vector<T>> sharedSn,
+		std::shared_ptr<std::vector<T>> sharedAn,
+		K offset = static_cast<T>(0)
+	) const;
 
 public:
 
@@ -79,7 +85,6 @@ public:
 	 *        For theory, see: Sidi (2003, arXiv:math/0306302), p. 64
 	 */
 	explicit levin_sidi_m_algorithm(
-		const series_templ& series,
 		remainder_type variant = remainder_type::u_variant,
 		T gamma_ = static_cast<T>(10)
 	);
@@ -106,11 +111,17 @@ public:
 	 * @throws std::domain_error if n=0 or gamma < n-1
 	 * @throws std::overflow_error if division by zero or numerical instability occurs
 	 */
-	T operator()(K n, K order) const override;
+	T operator()(K n, K order, K offset = static_cast<K>(0)) const override;
 };
 
-template<Accepted T, std::unsigned_integral K, typename series_templ>
-inline T levin_sidi_m_algorithm<T, K, series_templ>::calculate(const K n, const K order) const {
+template<AcceptedLike T, UnsignedIntLike K>
+inline T levin_sidi_m_algorithm<T, K>::calculate(
+	K n, 
+	K order, 
+	std::shared_ptr<std::vector<T>> sharedSn,
+	std::shared_ptr<std::vector<T>> sharedAn,
+	K offset
+) const {
 
 	using std::isfinite;
 
@@ -127,16 +138,17 @@ inline T levin_sidi_m_algorithm<T, K, series_templ>::calculate(const K n, const 
 		}
 	}
 
-	T numerator = static_cast<T>(0), denominator = static_cast<T>(0);
+	T numerator   = convertWithPrec<T>(0, series_acceleration<T, K>::precision);
+	T denominator = convertWithPrec<T>(0, series_acceleration<T, K>::precision);
 
-	T rest;
+	T rest = convertWithPrec<T>(0, series_acceleration<T, K>::precision);;
 
 	// Precompute initial Pochhammer symbol terms
 	// For theory, see: Sidi (2003, arXiv:math/0306302), Eq. (9.4)
 	// Compute: (γ+k+2)_{n-1}/(γ+k+1)_{n} = Γ(γ+k+n+1)/Γ(γ+k+2) × Γ(γ+k+1)/Γ(γ+k+n+1)
-	T up = static_cast<T>(1), down = static_cast<T>(1);
-	T binomial_coef = this->series->binomial_coefficient(static_cast<T>(n), static_cast<K>(0));
-	T S_n = this->series->S_n(order);
+	T up = convertWithPrec<T>(1.0, series_acceleration<T, K>::precision);
+	T down = convertWithPrec<T>(1.0, series_acceleration<T, K>::precision);
+	T binomial_coef = static_cast<T>(binomial_coefficient(n, static_cast<K>(0)));
 
 	T down_coef = gamma + static_cast<T>(order + static_cast<K>(2));
 	T   up_coef = down_coef - static_cast<T>(n);
@@ -158,7 +170,7 @@ inline T levin_sidi_m_algorithm<T, K, series_templ>::calculate(const K n, const 
 	for (K j = static_cast<K>(0); j <= n; ++j) {
 
 		// Compute (-1)^j * C(n,j) * (n-j)
-		rest  = this->series->minus_one_raised_to_power_n(j);
+		rest  = minus_one_raised_to_power_n<T,K>(j);
 		rest *= binomial_coef * static_cast<T>(n - j);
 		rest *= up;										// Multiply by Pochhammer ratio term
 		rest /= static_cast<T>(j + static_cast<K>(1));  // Multiply by 1/(j+1) factor
@@ -169,17 +181,14 @@ inline T levin_sidi_m_algorithm<T, K, series_templ>::calculate(const K n, const 
 		// Multiply by remainder term 1/R_{k+j}
 		rest *= remainder->operator()(
 			order,
-			j,
-			this->series,
+			offset + j,
+			sharedAn,
 			-gamma-static_cast<T>(n)
 		);
 
 		// Accumulate numerator and denominator
-		numerator	+= rest * S_n ;
+		numerator	+= rest * sharedSn->at(order + j ) ;
 		denominator += rest;
-
-		// Update partial sum for next iteration: S_{k+j+1} = S_{k+j} + a_{k+j+1}
-		S_n += this->series->operator()(order + j + static_cast<K>(1));
 
 		// TODO проверить корректность пересчета бин. коэф.
 		//// Update binomial coefficient for next iteration: C(n, j+1) = C(n, j) * (n-j)/(j+1)
@@ -194,18 +203,36 @@ inline T levin_sidi_m_algorithm<T, K, series_templ>::calculate(const K n, const 
 	return numerator;
 }
 
-template<Accepted T, std::unsigned_integral K, typename series_templ>
-T levin_sidi_m_algorithm<T, K, series_templ>::operator()(const K n, const K order) const {
-	return calculate(n, order);
+template<AcceptedLike T, UnsignedIntLike K>
+T levin_sidi_m_algorithm<T, K>::operator()(K n, K order, K offset) const {
+	if (series_acceleration<T,K>::Sn.expired() || series_acceleration<T,K>::an.expired()){
+    	throw std::domain_error("Sn or an is expired");
+	}
+
+    std::shared_ptr<std::vector<T>> sharedSn = series_acceleration<T,K>::Sn.lock();
+	std::shared_ptr<std::vector<T>> sharedAn = series_acceleration<T,K>::an.lock();
+
+    K required_size = order + offset + static_cast<K>(1);
+
+    if (sharedSn->size() < required_size || sharedSn->size() < required_size){
+        throw std::out_of_range("Sn is smaller than required to calculate M_{" + to_string(order) + "}^{" + to_string(n) + "}");
+	}
+
+    if (order == static_cast<K>(0)) {
+        return sharedSn->at(n);
+    }
+
+	const T result = calculate(n, order, sharedSn, sharedAn, offset);
+	if (!isfinite(result)) throw std::overflow_error("division by zero");
+    return result;
 }
 
-template<Accepted T, std::unsigned_integral K, typename series_templ>
-levin_sidi_m_algorithm<T, K, series_templ>::levin_sidi_m_algorithm(
-	const series_templ& series,
+template<AcceptedLike T, UnsignedIntLike K>
+levin_sidi_m_algorithm<T, K>::levin_sidi_m_algorithm(
 	const remainder_type variant,
 	const T gamma_
 	) :
-	series_acceleration<T, K, series_templ>(series),
+	series_acceleration<T, K>(),
 	variant(variant),
 	gamma(gamma_)
 {
@@ -213,21 +240,39 @@ levin_sidi_m_algorithm<T, K, series_templ>::levin_sidi_m_algorithm(
 	// Initialize the appropriate remainder transformation based on variant
 	switch(variant){
         case remainder_type::u_variant :
+		{
+			series_acceleration<T,K>::acceleration_name = "m algorithm with u-variant";
             remainder.reset(new u_transform<T, K>());
             break;
+		}
         case remainder_type::t_variant :
+		{
+			series_acceleration<T,K>::acceleration_name = "m algorithm with t-variant";
             remainder.reset(new t_transform<T, K>());
             break;
+		}
         case remainder_type::v_variant :
+		{
+			series_acceleration<T,K>::acceleration_name = "m algorithm with v-variant";
             remainder.reset(new v_transform<T, K>());
             break;
+		}
         case remainder_type::t_wave_variant:
+		{
+			series_acceleration<T,K>::acceleration_name = "m algorithm with t-wave-variant";
             remainder.reset(new t_wave_transform<T, K>());
             break;
+		}
         case remainder_type::v_wave_variant:
+		{
+			series_acceleration<T,K>::acceleration_name = "m algorithm with v-wave-variant";
             remainder.reset(new v_wave_transform<T, K>());
             break;
+		}
         default:
+		{
+			series_acceleration<T,K>::acceleration_name = "m algorithm with u-variant";
             remainder.reset(new u_transform<T, K>()); // Default to u-variant
+		}
     }
 }

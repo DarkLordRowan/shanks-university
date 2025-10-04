@@ -13,8 +13,6 @@
 
 #include "../remainders.hpp"
 #include "../series_acceleration.hpp"
-#include <memory>                    // Include for unique ptr
-#include <type_traits>
 
  /**
   * @brief Levin-Sidi S-transformation class template (Drummond's D-transformation).
@@ -39,8 +37,8 @@
   *           - T minus_one_raised_to_power_n(K j) const: returns (-1)^j
   *           - T binomial_coefficient(T n, K k) const: returns binomial coefficient C(n, k)
   */
-template<Accepted T, std::unsigned_integral K, typename series_templ>
-class levin_sidi_s_algorithm final : public series_acceleration<T, K, series_templ> {
+template<AcceptedLike T, UnsignedIntLike K>
+class levin_sidi_s_algorithm final : public series_acceleration<T, K> {
 protected:
 
     T beta;                                                 ///< Positive real parameter (β > 0). Default value is 1.0.
@@ -59,7 +57,13 @@ protected:
      * @param order Order of transformation (k value)
      * @return Accelerated sum estimate S_{k,n}
      */
-    inline T calc_result(K n, K order) const;
+    inline T calc_result(
+        K n, 
+        K order, 
+        std::shared_ptr<std::vector<T>> sharedSn, 
+        std::shared_ptr<std::vector<T>> sharedAn, 
+        K offset = static_cast<K>(0)
+    ) const;
 
     /**
 	* @brief Function to calculate S-tranformation using recurrence formula.
@@ -78,7 +82,13 @@ protected:
      * @param order Order of transformation (k value)
      * @return Accelerated sum estimate S_{k,n}
      */
-    inline T calc_result_rec(K n, K order) const;
+    inline T calc_result_rec(
+        K n, 
+        K order, 
+        std::shared_ptr<std::vector<T>> sharedSn, 
+        std::shared_ptr<std::vector<T>> sharedAn, 
+        K offset = static_cast<K>(0)
+    ) const;
 
 public:
 
@@ -97,7 +107,6 @@ public:
      *        For theory, see: Sidi (2003, arXiv:math/0306302), p. 39
      */
     explicit levin_sidi_s_algorithm(
-        const series_templ& series,
         remainder_type variant = remainder_type::u_variant,
         bool useRecFormulas = false,
         T parameter = static_cast<T>(1)
@@ -121,16 +130,23 @@ public:
      * @return The accelerated partial sum after S-transformation
      * @throws std::overflow_error if division by zero or numerical instability occurs
      */
-    T operator()(K n, K order) const override;
+    T operator()(K n, K order, K offset = static_cast<K>(0)) const override;
 
 };
 
-template<Accepted T, std::unsigned_integral K, typename series_templ>
-inline T levin_sidi_s_algorithm<T, K,series_templ>::calc_result(K n, K order) const{
+template<AcceptedLike T, UnsignedIntLike K>
+inline T levin_sidi_s_algorithm<T, K>::calc_result(
+    K n, 
+    K order, 
+    std::shared_ptr<std::vector<T>> sharedSn, 
+    std::shared_ptr<std::vector<T>> sharedAn, 
+    K offset
+) const {
 
     using std::isfinite;
 
-    T numerator = static_cast<T>(0), denominator = static_cast<T>(0);
+    T numerator   = convertWithPrec<T>(0.0, series_acceleration<T, K>::precision);
+    T denominator = convertWithPrec<T>(0.0, series_acceleration<T, K>::precision);
     T rest;
     T up_pochamer, down_pochamer;
 
@@ -140,11 +156,12 @@ inline T levin_sidi_s_algorithm<T, K,series_templ>::calc_result(K n, K order) co
     for (K j = static_cast<K>(0); j <= order; ++j){
 
         // Compute (-1)^j * C(k,j)
-        rest  = this->series->minus_one_raised_to_power_n(j);
-        rest *= this->series->binomial_coefficient(static_cast<T>(order), j);
+        rest  = convertWithPrec<T>(1.0, series_acceleration<T, K>::precision);
+        rest *= minus_one_raised_to_power_n<T,K>(j);
+        rest *= static_cast<T>(binomial_coefficient<K>(order, j));
 
         // Compute Pochhammer symbols: (β+n+j)_{k-1} and (β+n+k)_{k-1}
-        up_pochamer = down_pochamer = static_cast<T>(1);
+        up_pochamer = down_pochamer = convertWithPrec<T>(1.0, series_acceleration<T, K>::precision);
         //up_pochamer   (beta + n + j)_(order - 1)     = (beta + n + j)(beta + n + j + 1)...(beta + n + j + order - 2)
         //down_pochamer (beta + n + order)_(order - 1) = (beta + n + order)(beta + n + order + 1)...(beta + n + order + oreder - 2)
 
@@ -157,14 +174,15 @@ inline T levin_sidi_s_algorithm<T, K,series_templ>::calc_result(K n, K order) co
 
 
         rest *= (up_pochamer / down_pochamer);  // Multiply by Pochhammer ratio
-        rest *= remainder->operator()(n,        // Multiply by remainder term 1/R_{n+j}
-            j,
-            this->series,
-             (variant == remainder_type::u_variant ? beta : static_cast<T>(1))
-            );
+        rest *= remainder->operator()(
+            n,        // Multiply by remainder term 1/R_{n+j}
+            offset + j,
+            sharedAn,
+            (variant == remainder_type::u_variant ? beta : static_cast<T>(1))
+        );
 
         // Accumulate numerator and denominator
-        numerator   += rest * this->series->S_n(n + j);
+        numerator   += rest * sharedSn->at(offset + j);
         denominator += rest;
     }
 
@@ -174,27 +192,40 @@ inline T levin_sidi_s_algorithm<T, K,series_templ>::calc_result(K n, K order) co
     return numerator;
 }
 
-template<Accepted T, std::unsigned_integral K, typename series_templ>
-inline T levin_sidi_s_algorithm<T, K,series_templ>::calc_result_rec(K n, K order) const{
+template<AcceptedLike T, UnsignedIntLike K>
+inline T levin_sidi_s_algorithm<T, K>::calc_result_rec(
+    K n, 
+    K order, 
+    std::shared_ptr<std::vector<T>> sharedSn, 
+    std::shared_ptr<std::vector<T>> sharedAn, 
+    K offset
+) const {
 
     using std::isfinite;
 
     // For theory, see: Sidi (2003, arXiv:math/0306302), Eqs. (8.3)-(8.5)
     // Recursive implementation using the E-algorithm scheme
-    std::vector<T>   Num(order + static_cast<K>(1), static_cast<T>(0));
-    std::vector<T> Denom(order + static_cast<K>(1), static_cast<T>(0));
+    std::vector<T>   Num(
+        order + static_cast<K>(1), 
+        convertWithPrec<T>(0.0, series_acceleration<T, K>::precision)
+    );
+    std::vector<T> Denom(
+        order + static_cast<K>(1), 
+        convertWithPrec<T>(0.0, series_acceleration<T, K>::precision)
+    );
 
     // Initialize base values: E_0^{(n)} = S_n, g_0^{(n)} = 1/R_n
     for (K i = static_cast<K>(0); i <= order; ++i){
 
         Denom[i] = remainder->operator()(
             n,
-            i,
-            this->series,
+            offset + i,
+            sharedAn,
             (variant == remainder_type::u_variant ? beta : static_cast<T>(1))
         );
 
-        Num[i] = this->series->S_n(n + i); Num[i] *= Denom[i];
+        Num[i] = sharedSn->at(offset + i) * Denom[i];
+
     }
 
     T scale1, scale2;
@@ -208,7 +239,7 @@ inline T levin_sidi_s_algorithm<T, K,series_templ>::calc_result_rec(K n, K order
 
             // For theory, see: Sidi (2003), Eqs. (8.4)-(8.5)
             // Compute scaling factors based on Pochhammer symbol ratios
-            scale1 = beta + static_cast<T>(i + j);
+            scale1 = beta + static_cast<T>(n + i + j);
             scale1*= (scale1 - static_cast<T>(1));
 
             scale2 = scale1 + static_cast<T>(i);
@@ -225,14 +256,13 @@ inline T levin_sidi_s_algorithm<T, K,series_templ>::calc_result_rec(K n, K order
     return Num[0];
 }
 
-template<Accepted T, std::unsigned_integral K, typename series_templ>
-levin_sidi_s_algorithm<T, K, series_templ>::levin_sidi_s_algorithm(
-    const series_templ& series,
+template<AcceptedLike T, UnsignedIntLike K>
+levin_sidi_s_algorithm<T, K>::levin_sidi_s_algorithm(
     remainder_type variant,
     bool useRecFormulas,
     T parameter
 ) :
-    series_acceleration<T, K, series_templ>(series),
+    series_acceleration<T, K>(),
     variant(variant),
     useRecFormulas(useRecFormulas)
 
@@ -243,44 +273,74 @@ levin_sidi_s_algorithm<T, K, series_templ>::levin_sidi_s_algorithm(
     // check parameter else default
 
     if constexpr (std::is_floating_point<T>::value || std::is_same<T, float_precision>::value){
-        this->beta = (parameter > static_cast<T>(0) ?  parameter : static_cast<T>(1));
+        this->beta = (parameter > static_cast<T>(0) ?  parameter : float_precision(1.0, series_acceleration<T, K>::precision));
     } else if constexpr (std::is_same<T, complex_precision<float_precision>>::value){
         this->beta = (
             parameter.real() > static_cast<float_precision>(0) && parameter.imag() == static_cast<float_precision>(0) ?
             parameter :
-            complex_precision<float_precision>(1)
+            complex_precision<float_precision>(
+                float_precision(1.0, series_acceleration<T, K>::precision),
+                float_precision(0.0, series_acceleration<T, K>::precision)
+            )
         );
     }
+
+    series_acceleration<T,K>::acceleration_name = (useRecFormulas ? "recurrent " : "");
 
     //TODO: тоже самое наверное
     // Initialize the appropriate remainder transformation based on variant
     switch(variant){
         case remainder_type::u_variant :
             remainder.reset(new u_transform<T, K>());
+            series_acceleration<T,K>::acceleration_name += "sidi s with u-variant and beta = " + to_string(this->beta);
             break;
         case remainder_type::t_variant :
             remainder.reset(new t_transform<T, K>());
+            series_acceleration<T,K>::acceleration_name += "sidi s with t-variant and beta = " + to_string(this->beta);
             break;
         case remainder_type::v_variant :
             remainder.reset(new v_transform<T, K>());
+            series_acceleration<T,K>::acceleration_name += "sidi s with v-variant and beta = " + to_string(this->beta);
             break;
         case remainder_type::t_wave_variant:
             remainder.reset(new t_wave_transform<T, K>());
+            series_acceleration<T,K>::acceleration_name += "sidi s with t-wave-variant and beta = " + to_string(this->beta);
             break;
         case remainder_type::v_wave_variant:
             remainder.reset(new v_wave_transform<T, K>());
+            series_acceleration<T,K>::acceleration_name += "sidi s with v-wave-variant and beta = " + to_string(this->beta);
             break;
         default:
             remainder.reset(new u_transform<T, K>()); // Default to u-variant
+            series_acceleration<T,K>::acceleration_name += "sidi s with u-variant and beta = " + to_string(this->beta);
     }
+
+
 }
 
-template<Accepted T, std::unsigned_integral K, typename series_templ>
-T levin_sidi_s_algorithm<T, K, series_templ>::operator()(const K n, const K order) const{
+template<AcceptedLike T, UnsignedIntLike K>
+T levin_sidi_s_algorithm<T, K>::operator()(K n, K order, K offset) const{
+
+    if (series_acceleration<T,K>::Sn.expired() || series_acceleration<T,K>::an.expired()){
+    	throw std::domain_error("Sn or an is expired");
+	}
+
+    std::shared_ptr<std::vector<T>> sharedSn = series_acceleration<T,K>::Sn.lock();
+	std::shared_ptr<std::vector<T>> sharedAn = series_acceleration<T,K>::an.lock();
+
+    K required_size = order + offset + static_cast<K>(1);
+
+    if (sharedSn->size() < required_size || sharedSn->size() < required_size){
+        throw std::out_of_range("Sn is smaller than required to calculate S_{" + to_string(order) + "}^{" + to_string(n) + "}");
+	}
+
+    if (order == static_cast<K>(0)) {
+        return sharedSn->at(n);
+    }
 
     using std::isfinite;
 
-    const T result = (useRecFormulas ? calc_result_rec(n,order) : calc_result(n, order));
+    const T result = (useRecFormulas ? calc_result_rec(n,order, sharedSn, sharedAn, offset) : calc_result(n, order, sharedSn, sharedAn, offset));
     if (!isfinite(result)) throw std::overflow_error("division by zero");
     return result;
 }

@@ -41,8 +41,18 @@
  *           - T S_n(K n) const: returns the n-th partial sum s_n = a_0 + ... + a_n
  *           The series object encapsulates the mathematical sequence to be accelerated.
  */
-template <Accepted T, std::unsigned_integral K, typename series_templ>
-class ford_sidi_3_algorithm final : public series_acceleration<T, K, series_templ>{
+template <AcceptedLike T, UnsignedIntLike K>
+class ford_sidi_3_algorithm final : public series_acceleration<T, K>{
+protected:
+
+	inline T calculate(
+		K n, 
+		K order, 
+		std::shared_ptr<std::vector<T>> sharedSn,
+        std::shared_ptr<std::vector<T>> sharedAn,
+		K offset = static_cast<K>(0)
+	) const;
+
 public:
 
     /**
@@ -51,7 +61,7 @@ public:
     *        Must be a valid object implementing the required series interface.
     *        The series object should provide access to terms and partial sums.
     */
-    explicit ford_sidi_3_algorithm(const series_templ& series);
+    explicit ford_sidi_3_algorithm() : series_acceleration<T, K>("ford sidi 3") {};
 
     /**
      * @brief Fast implementation of Ford-Sidi algorithm for series acceleration.
@@ -73,23 +83,17 @@ public:
      * @throws std::domain_error if n=0 is provided as input.
      * @throws std::overflow_error if division by zero or numerical instability occurs.
      */
-    T operator()(K n, K k) const override;
+    T operator()(K n, K k, K offset = static_cast<K>(0)) const override;
 };
 
-template <Accepted T, std::unsigned_integral K, typename series_templ>
-ford_sidi_3_algorithm<T, K, series_templ>::ford_sidi_3_algorithm(const series_templ& series) : series_acceleration<T, K, series_templ>(series) {}
-
-template <Accepted T, std::unsigned_integral K, typename series_templ>
-T ford_sidi_3_algorithm<T, K, series_templ>::operator()(const K n, const K order) const {
-
-    using std::isfinite;
-
-    // For theory, see: Ford & Sidi (1987), Section 1 - Input validation
-    // The algorithm requires at least one term for meaningful computation
-    if (n == static_cast<K>(0))
-        throw std::domain_error("n = 0 in the input");
-
-    //TODO спросить у Парфенова, ибо жертвуем читаемостью кода, ради его небольшого ускорения
+template <AcceptedLike T, UnsignedIntLike K>
+T ford_sidi_3_algorithm<T, K>::calculate(
+	K n, 
+	K order, 
+	std::shared_ptr<std::vector<T>> sharedSn,
+    std::shared_ptr<std::vector<T>> sharedAn, 
+	K offset
+) const {
 
     // For theory, see: Osada (2000), Section 4 - Efficient implementation
     // Algorithm uses auxiliary sequences for improved computational efficiency
@@ -98,27 +102,39 @@ T ford_sidi_3_algorithm<T, K, series_templ>::operator()(const K n, const K order
 
     // For theory, see: Ford & Sidi (1987), Section 2 - Auxiliary sequence initialization
     // G sequence: Used for storing transformation coefficients
-    std::vector<T> G(m + static_cast<K>(1));
+    std::vector<T> G(
+        m + static_cast<K>(1),
+        convertWithPrec<T>(0.0, series_acceleration<T,K>::precision)
+    );
 
     // FSA sequence: Stores accelerated partial sums
-    std::vector<T> FSA(G.size());
+    std::vector<T> FSA(
+        G.size(),
+        convertWithPrec<T>(0.0, series_acceleration<T,K>::precision)
+    );
 
     // FSI sequence: Stores normalization factors
-    std::vector<T> FSI(G.size());
+    std::vector<T> FSI(
+        G.size(),
+        convertWithPrec<T>(0.0, series_acceleration<T,K>::precision)
+    );
 
     // FSG matrix: Stores intermediate transformation values
     std::vector<std::vector<T>> FSG(
         m + static_cast<K>(2),
-        std::vector<T>(G.size())
+        std::vector<T>(
+            G.size(),
+            convertWithPrec<T>(0.0, series_acceleration<T,K>::precision)
+        )
     );
 
     // For theory, see: Osada (2000), Eq. (9) - Initial coefficient computation
     // G[0] = a_{n-1} * n, where a_{n-1} is the (n-1)-th series term
-    G[0] = this->series->operator()(n1) * static_cast<T>(n);
+    G[0] = sharedAn->at(n1) * static_cast<T>(n);
 
     // For theory, see: Ford & Sidi (1987), Eq. (2.3) - Recursive coefficient scaling
     // Te = 1/n used for recursive computation of G sequence
-    T Te = static_cast<T>(1) / static_cast<T>(n);
+    T Te = convertWithPrec<T>(1.0, series_acceleration<T,K>::precision); Te /= static_cast<T>(n);
 
     // For theory, see: Osada (2000), Section 2.2 - Recursive G sequence computation
     // G[k] = (1/n) * G[k-1] for k = 1, 2, ..., m
@@ -127,7 +143,7 @@ T ford_sidi_3_algorithm<T, K, series_templ>::operator()(const K n, const K order
 
     // For theory, see: Osada (2000), Section 4 - Initialization of transformation sequences
     // FSA[n1] = S_{n-1} (partial sum up to term n-1)
-    FSA[n1] = this->series->S_n(n1);
+    FSA[n1] = sharedSn->at(n1);
 
     // FSI[n1] = 1 (initial normalization factor)
     FSI[n1] = static_cast<T>(1);
@@ -151,7 +167,7 @@ T ford_sidi_3_algorithm<T, K, series_templ>::operator()(const K n, const K order
     // For theory, see: Osada (2000), Section 4 - Main algorithm loop
     // Main Ford-Sidi transformation computation
     K MM, MM1, k2;
-    T D;
+    T D = convertWithPrec<T>(0.0, series_acceleration<T,K>::precision);
 
     // Основной цикл алгоритма Ford-Sidi
     for (K k = static_cast<K>(0); k <= n1; ++k) {
@@ -191,4 +207,32 @@ T ford_sidi_3_algorithm<T, K, series_templ>::operator()(const K n, const K order
         throw std::overflow_error("division by zero");
 
     return FSA[0];
+
+}
+
+template <AcceptedLike T, UnsignedIntLike K>
+T ford_sidi_3_algorithm<T, K>::operator()(K n, K order, K offset) const {
+
+    if (series_acceleration<T,K>::Sn.expired() || series_acceleration<T,K>::an.expired()){
+    	throw std::domain_error("Sn or an is expired");
+	}
+
+    std::shared_ptr<std::vector<T>> sharedSn = series_acceleration<T,K>::Sn.lock();
+    std::shared_ptr<std::vector<T>> sharedAn = series_acceleration<T,K>::an.lock();
+
+    K required_size = n - static_cast<K>(1);
+
+    if (sharedSn->size() < required_size || sharedAn->size() < required_size){
+        throw std::out_of_range("Sn or an is smaller than required to calculate ford_sidi3_{" + to_string(order) + "}^{" + to_string(n) + "}");
+	}
+
+    // For theory, see: Ford & Sidi (1987), Section 1 - Input validation
+    // The algorithm requires at least one term for meaningful computation
+    if (n == static_cast<K>(0)){
+        throw std::domain_error("n = 0 in the input");
+    }
+
+    const T result = calculate(n, order, sharedSn, sharedAn, offset);
+    if (!isfinite(result)) throw std::overflow_error("division by zero");
+    return result;
 }

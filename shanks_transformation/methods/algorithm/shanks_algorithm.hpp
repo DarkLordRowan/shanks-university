@@ -31,9 +31,19 @@
  *           - T operator()(K n) const: returns the n-th series term a_n
  *           - T S_n(K n) const: returns the n-th partial sum s_n = a_0 + ... + a_n
  */
-template <Accepted T, std::unsigned_integral K, typename series_templ>
-class shanks_algorithm final : public series_acceleration<T, K, series_templ>
+template <AcceptedLike T, UnsignedIntLike K>
+class shanks_algorithm final : public series_acceleration<T, K>
 {
+protected:
+
+	inline T calculate(
+		K n, 
+		K order, 
+		std::shared_ptr<std::vector<T>> sharedSn, 
+		std::shared_ptr<std::vector<T>> sharedAn,
+		K offset = static_cast<K>(0)
+	) const;  
+
 public:
 
 	/**
@@ -43,7 +53,7 @@ public:
 	 *        Must be a valid object implementing the required series interface
 	 *        Series terms should be non-alternating for optimal performance
 	 */
-	explicit shanks_algorithm(const series_templ& series);
+	explicit shanks_algorithm() : series_acceleration<T, K>("shanks original") {};
 
 	/**
 	 * @brief Shanks transformation for non-alternating series function.
@@ -57,38 +67,38 @@ public:
 	 * @return The accelerated partial sum after Shanks transformation
 	 * @throws std::overflow_error if division by zero or numerical instability occurs
 	 */
-	T operator()(K n, K order) const;
+	T operator()(K n, K order, K offset = static_cast<K>(0)) const;
 };
 
-template <Accepted T, std::unsigned_integral K, typename series_templ>
-shanks_algorithm<T, K, series_templ>::shanks_algorithm(const series_templ& series) : series_acceleration<T, K, series_templ>(series) {}
+template <AcceptedLike T, UnsignedIntLike K>
+T shanks_algorithm<T, K>::calculate(
+	K n, 
+	K order, 
+	std::shared_ptr<std::vector<T>> sharedSn, 
+	std::shared_ptr<std::vector<T>> sharedAn,
 
-template <Accepted T, std::unsigned_integral K, typename series_templ>
-T shanks_algorithm<T, K, series_templ>::operator()(const K n, const K order) const{
+	K offset
+) const {
 
 	using std::isfinite;
 	using std::fma;
 
-	if (order == static_cast<K>(0)) [[unlikely]] /*it is convenient to assume that transformation of order 0 is no transformation at all*/
-		return this->series->S_n(n);
-
-	if (n < order || n == static_cast<K>(0)) [[unlikely]]
-		return static_cast<T>(0); // TODO: диагностика
-
 	if (order == static_cast<K>(1)) [[unlikely]]
 	{
-		T a_n, a_n_plus_1, tmp;
+		T a_n = convertWithPrec<T>(0.0, series_acceleration<T, K>::precision);
+		T a_n_plus_1 =convertWithPrec<T>(0.0, series_acceleration<T, K>::precision);
+		T tmp = convertWithPrec<T>(0.0, series_acceleration<T, K>::precision);
 
-		a_n = this->series->operator()(n);
-		a_n_plus_1 = this->series->operator()(n + static_cast<K>(1));
-		tmp = -a_n_plus_1 * a_n_plus_1;
+		a_n += sharedAn->at(n);
+		a_n_plus_1 += sharedAn->at(n + static_cast<K>(1));
+		tmp -= a_n_plus_1 * a_n_plus_1;
 
 		// For theory, see: Shanks (1955), Eq. (6) - Aitken's Δ² process
 		// e₁(Sₙ) = (SₙSₙ₊₂ - Sₙ₊₁²)/(Sₙ₊₂ - 2Sₙ₊₁ + Sₙ) = Sₙ + (aₙaₙ₊₁)/(aₙ - aₙ₊₁)
 		const T result = fma(
 			a_n * a_n_plus_1,
 			(a_n + a_n_plus_1) / (fma(a_n, a_n, tmp) - fma(a_n_plus_1, a_n_plus_1, tmp)),
-			this->series->S_n(n)
+			sharedSn->at(n)
 		);
 		//n > order >= 1
 
@@ -101,17 +111,19 @@ T shanks_algorithm<T, K, series_templ>::operator()(const K n, const K order) con
 	const K n_minus_order = n - order;
 	const K n_plus_order = n + order;
 
-	std::vector<T> T_n(n_plus_order, static_cast<T>(0));
+	std::vector<T> T_n(
+		n_plus_order, 
+		convertWithPrec<T>(0.0, series_acceleration<T, K>::precision)
+	);
 
-	T a_n, a_n_plus_1, tmp;
-	a_n = this->series->operator()(n_minus_order);
-	a_n_plus_1 = this->series->operator()(n_minus_order + static_cast<K>(1));
-	tmp = -a_n_plus_1 * a_n_plus_1;
+	T a_n = convertWithPrec<T>(0.0, series_acceleration<T, K>::precision);
+	T a_n_plus_1 = convertWithPrec<T>(0.0, series_acceleration<T, K>::precision);
+	T tmp = convertWithPrec<T>(0.0, series_acceleration<T, K>::precision);
 
 	for (K i = n_minus_order + static_cast<K>(1); i <= n_plus_order - static_cast<K>(1); ++i) // if we got to this branch then we know that n >= order - see previous branches  int -> K
 	{
-		a_n = this->series->operator()(i);
-		a_n_plus_1 = this->series->operator()(i + static_cast<K>(1));
+		a_n = sharedAn->at(i);
+		a_n_plus_1 = sharedAn->at(i + static_cast<K>(1));
 		tmp = -a_n_plus_1 * a_n_plus_1;
 
 		// For theory, see: Shanks (1955), Eq. (12) - Higher order transformation
@@ -119,12 +131,18 @@ T shanks_algorithm<T, K, series_templ>::operator()(const K n, const K order) con
 		T_n[i] = fma(
 			a_n * a_n_plus_1,
 			(a_n + a_n_plus_1) / (fma(a_n, a_n, tmp) - fma(a_n_plus_1, a_n_plus_1, tmp)),
-			this->series->S_n(i)
+			sharedSn->at(i)
 		);
 	}
 
-	std::vector<T> T_n_plus_1(n + order, static_cast<T>(0));
-	T a, b, c;
+	std::vector<T> T_n_plus_1(
+		n + order, 
+		convertWithPrec<T>(0.0, series_acceleration<T, K>::precision)
+	);
+
+	T a = convertWithPrec<T>(0.0, series_acceleration<T, K>::precision);
+	T b = convertWithPrec<T>(0.0, series_acceleration<T, K>::precision);
+	T c = convertWithPrec<T>(0.0, series_acceleration<T, K>::precision);;
 
 	for (K j = static_cast<K>(2); j <= order; ++j) {
 		for (K i = n_minus_order + j; i <= n_plus_order - j; ++i) {
@@ -147,6 +165,31 @@ T shanks_algorithm<T, K, series_templ>::operator()(const K n, const K order) con
 		throw std::overflow_error("division by zero");
 
 	return T_n[n];
+
+}
+
+template <AcceptedLike T, UnsignedIntLike K>
+T shanks_algorithm<T, K>::operator()(K n, K order, K offset) const{
+
+	if (series_acceleration<T,K>::Sn.expired() || series_acceleration<T,K>::an.expired()){
+    	throw std::domain_error("Sn or an is expired");
+	}
+
+    std::shared_ptr<std::vector<T>> sharedSn = series_acceleration<T,K>::Sn.lock();
+	std::shared_ptr<std::vector<T>> sharedAn = series_acceleration<T,K>::an.lock();
+
+    K required_size = order + offset + static_cast<K>(1);
+
+    if (sharedSn->size() < required_size || sharedAn->size() < required_size){
+        throw std::out_of_range("Sn or an is smaller than required to calculate shanks_{" + to_string(order) + "}^{" + to_string(n) + "}");
+	}
+
+    if (order == static_cast<K>(0)) {
+        return sharedSn->at(n);
+    }
+
+    return calculate(n, order, sharedSn, sharedAn, offset);
+	
 }
 
 /**
@@ -162,9 +205,19 @@ T shanks_algorithm<T, K, series_templ>::operator()(const K n, const K order) con
  *           - T S_n(K n) const: returns the n-th partial sum s_n = a_0 + ... + a_n
  *           Series terms should alternate in sign for optimal performance
  */
-template <Accepted T, std::unsigned_integral K, typename series_templ>
-class shanks_transform_alternating : public series_acceleration<T, K, series_templ>
+template <AcceptedLike T, UnsignedIntLike K>
+class shanks_transform_alternating : public series_acceleration<T, K>
 {
+protected:
+
+	inline T calculate(
+		K n, 
+		K order, 
+		std::shared_ptr<std::vector<T>> sharedSn, 
+		std::shared_ptr<std::vector<T>> sharedAn,
+		K offset = static_cast<K>(0)
+	) const;  
+
 public:
 
 	/**
@@ -174,7 +227,7 @@ public:
 	 *        Must be a valid object implementing the required series interface
 	 *        Series terms should alternate in sign for optimal performance
 	 */
-	explicit shanks_transform_alternating(const series_templ& series);
+	explicit shanks_transform_alternating() : series_acceleration<T, K>("shanks alternating") {};
 
 	/**
 	 * @brief Shanks transformation for alternating series function.
@@ -188,37 +241,34 @@ public:
 	 * @return The accelerated partial sum after Shanks transformation
 	 * @throws std::overflow_error if division by zero or numerical instability occurs
 	 */
-	T operator()(K n, K order) const override;
+	T operator()(K n, K order, K offset = static_cast<K>(0)) const override;
+
 };
 
-template <Accepted T, std::unsigned_integral K, typename series_templ>
-shanks_transform_alternating<T, K, series_templ>::shanks_transform_alternating(const series_templ& series) : series_acceleration<T, K, series_templ>(series) {}
-
-template <Accepted T, std::unsigned_integral K, typename series_templ>
-T shanks_transform_alternating<T, K, series_templ>::operator()(const K n, const K order) const {
+template <AcceptedLike T, UnsignedIntLike K>
+T shanks_transform_alternating<T, K>::calculate(
+	K n, 
+	K order, 
+	std::shared_ptr<std::vector<T>> sharedSn, 
+	std::shared_ptr<std::vector<T>> sharedAn,
+	K offset
+) const {
 
 	using std::isfinite;
 	using std::fma;
 
-	if (order == static_cast<K>(0)) [[unlikely]] /*it is convenient to assume that transformation of order 0 is no transformation at all*/
-		return this->series->S_n(n);
-
-	if (n < order || n == static_cast<K>(0)) [[unlikely]]
-		return static_cast<T>(0); // TODO: диагностика
-
 	if (order == static_cast<K>(1)) [[unlikely]]
 	{
-		T a_n, a_n_plus_1, result;
-
-		a_n = this->series->operator()(n);
-		a_n_plus_1 = this->series->operator()(n + static_cast<K>(1));
+		T a_n = sharedAn->at(n);
+		T a_n_plus_1 = sharedAn->at(n + static_cast<K>(1));
+		T result = convertWithPrec<T>(0.0, series_acceleration<T, K>::precision);
 
 		// For theory, see: Senhadji (2001), Section 3.2 - Alternating series case
 		// For alternating series: e₁(Sₙ) = Sₙ + (aₙaₙ₊₁)/(aₙ - aₙ₊₁)
-		result = fma(
+		result += fma(
 			a_n * a_n_plus_1,
 			static_cast<T>(1) / (a_n - a_n_plus_1),
-			this->series->S_n(n)
+			sharedSn->at(n)
 		);
 
 		if (!isfinite(result))
@@ -232,29 +282,36 @@ T shanks_transform_alternating<T, K, series_templ>::operator()(const K n, const 
 	const K n_minus_order1 = n_minus_order + static_cast<K>(1);
 	const K n_plus_order = n + order;
 
-	std::vector<T> T_n(n_plus_order, static_cast<T>(0));
+	std::vector<T> T_n(
+		n_plus_order, 
+		convertWithPrec<T>(0.0, series_acceleration<T, K>::precision)
+	);
 
-	T a_n, a_n_plus_1;
-
-	a_n = this->series->operator()(n_minus_order);
-	a_n_plus_1 = this->series->operator()(n_minus_order1);
+	T a_n = convertWithPrec<T>(0.0, series_acceleration<T, K>::precision);
+	T a_n_plus_1 = convertWithPrec<T>(0.0, series_acceleration<T, K>::precision);
 
 	for (K i = n_minus_order1; i <= n_plus_order - static_cast<K>(1); ++i) // if we got to this branch then we know that n >= order - see previous branches int->K
 	{
-		a_n = this->series->operator()(i);
-		a_n_plus_1 = this->series->operator()(i + static_cast<K>(1));
+		a_n = sharedAn->at(i);
+		a_n_plus_1 = sharedAn->at(i + static_cast<K>(1));
 
 		// For theory, see: Senhadji (2001), Section 3.2 - Alternating series case
 		// e₁(Sᵢ) = Sᵢ + (aᵢaᵢ₊₁)/(aᵢ - aᵢ₊₁)
 		T_n[i] = fma(
 			a_n * a_n_plus_1,
 			static_cast<T>(1) / (a_n - a_n_plus_1),
-			this->series->S_n(n)
+			sharedSn->at(n)
 		);
 	}
 
-	std::vector<T> T_n_plus_1(n_plus_order, static_cast<T>(0));
-	T a, b, c;
+	std::vector<T> T_n_plus_1(
+		n_plus_order, 
+		convertWithPrec<T>(0.0, series_acceleration<T, K>::precision)
+	);
+
+	T a = convertWithPrec<T>(0.0, series_acceleration<T, K>::precision);
+	T b = convertWithPrec<T>(0.0, series_acceleration<T, K>::precision);
+	T c = convertWithPrec<T>(0.0, series_acceleration<T, K>::precision);
 
 	for (K j = static_cast<K>(2); j <= order; ++j) {
 		for (K i = n_minus_order + j; i <= n_plus_order - j; ++i) {
@@ -279,4 +336,30 @@ T shanks_transform_alternating<T, K, series_templ>::operator()(const K n, const 
 		throw std::overflow_error("division by zero");
 
 	return T_n[n];
+
+}
+
+template <AcceptedLike T, UnsignedIntLike K>
+T shanks_transform_alternating<T, K>::operator()(K n, K order, K offset) const {
+
+	if (series_acceleration<T,K>::Sn.expired() || series_acceleration<T,K>::an.expired()){
+    	throw std::domain_error("Sn or an is expired");
+	}
+
+    std::shared_ptr<std::vector<T>> sharedSn = series_acceleration<T,K>::Sn.lock();
+	std::shared_ptr<std::vector<T>> sharedAn = series_acceleration<T,K>::an.lock();
+
+    K required_size = order + offset + static_cast<K>(1);
+
+    if (sharedSn->size() < required_size || sharedAn->size() < required_size){
+        throw std::out_of_range("Sn or an is smaller than required to calculate theta_{" + to_string(order) + "}^{" + to_string(n) + "}");
+	}
+
+    if (order == static_cast<K>(0)) {
+        return sharedSn->at(n);
+    }
+
+    return calculate(n, order, sharedSn, sharedAn, offset);
+
+	
 }

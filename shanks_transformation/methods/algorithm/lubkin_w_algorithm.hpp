@@ -42,8 +42,8 @@
  *           - T S_n(K n) const: returns the n-th partial sum s_n = a_0 + ... + a_n
  *           Represents the mathematical series to be accelerated
  */
-template<Accepted T, std::unsigned_integral K, typename series_templ>
-class lubkin_w_algorithm final : public series_acceleration<T, K, series_templ>
+template<AcceptedLike T, UnsignedIntLike K>
+class lubkin_w_algorithm final : public series_acceleration<T, K>
 {
 protected:
 
@@ -61,7 +61,12 @@ protected:
 	 * @param order The order of transformation (number of iterations)
 	 * @return The accelerated partial sum after Lubkin transformation
 	 */
-	T calculate(K n, K order) const;
+	inline T calculate(
+		K n, 
+		K order, 
+		std::shared_ptr<std::vector<T>> sharedSn, 
+		K offset = static_cast<K>(0)
+	) const;
 
 public:
 
@@ -70,7 +75,7 @@ public:
 	 * @param series The series class object to be accelerated
 	 *        Must be a valid object implementing the required series interface
 	 */
-	explicit lubkin_w_algorithm(const series_templ& series) : series_acceleration<T, K, series_templ>(series) {}
+	explicit lubkin_w_algorithm() : series_acceleration<T, K>("lubkin W transformation") {}
 
 	/**
 	 * @brief Applies Lubkin's W-transformation to accelerate series convergence.
@@ -94,17 +99,39 @@ public:
 	 * @throws std::domain_error if negative order is provided
 	 * @throws std::overflow_error if division by zero or numerical instability occurs
 	 */
-	T operator()(K n, K order) const override;
+	T operator()(K n, K order, K offset = static_cast<K>(0)) const override;
 };
 
-template<Accepted T, std::unsigned_integral K, typename series_templ>
-T lubkin_w_algorithm<T, K, series_templ>::operator()(const K n, const K order) const {
+template<AcceptedLike T, UnsignedIntLike K>
+T lubkin_w_algorithm<T, K>::operator()(K n, K order, K offset) const {
 
-	return calculate(n, order);
+	if (series_acceleration<T,K>::Sn.expired()){
+    	throw std::domain_error("Sn is expired");
+	}
+
+    std::shared_ptr<std::vector<T>> sharedSn = series_acceleration<T,K>::Sn.lock();
+	std::shared_ptr<std::vector<T>> sharedAn = series_acceleration<T,K>::an.lock();
+
+    K required_size = static_cast<K>(3) * order + offset + static_cast<K>(1);
+
+    if (sharedSn->size() < required_size){
+        throw std::out_of_range("Sn is smaller than required to calculate richardson_{" + to_string(order) + "}^{" + to_string(n) + "}");
+	}
+
+    if (order == static_cast<K>(0)) {
+        return sharedSn->at(n);
+    }
+
+	return calculate(n, order, sharedSn, offset);
 }
 
-template<Accepted T, std::unsigned_integral K, typename series_templ>
-T lubkin_w_algorithm<T, K, series_templ>::calculate(K n, const K order) const {
+template<AcceptedLike T, UnsignedIntLike K>
+T lubkin_w_algorithm<T, K>::calculate(
+	K n, 
+	K order, 
+	std::shared_ptr<std::vector<T>> sharedSn, 
+	K offset
+) const {
 
 	using std::isfinite;
 	using std::fma;
@@ -115,15 +142,18 @@ T lubkin_w_algorithm<T, K, series_templ>::calculate(K n, const K order) const {
 
 	std::vector<T> W(
 		base_size,
-		static_cast<T>(0)
+		convertWithPrec<T>(0.0, series_acceleration<T, K>::precision)
 	);
 
 	for(K i = static_cast<K>(0); i < base_size; ++i){
-		W[i] = this->series->S_n(n + i);
+		W[i] = sharedSn->at(offset + i);
 	}
 
-	T Wo0, Wo1, Wo2;  // First differences: ΔS_n, ΔS_{n+1}, ΔS_{n+2}
-	T Woo1, Woo2;     // Compound terms for denominator calculation
+	T Wo0 = convertWithPrec<T>(0.0, series_acceleration<T, K>::precision);
+	T Wo1 = convertWithPrec<T>(0.0, series_acceleration<T, K>::precision);
+	T Wo2 = convertWithPrec<T>(0.0, series_acceleration<T, K>::precision);  // First differences: ΔS_n, ΔS_{n+1}, ΔS_{n+2}
+	T Woo1 = convertWithPrec<T>(0.0, series_acceleration<T, K>::precision);
+	T Woo2 = convertWithPrec<T>(0.0, series_acceleration<T, K>::precision);     // Compound terms for denominator calculation
 
 	K j1, j2, j3;     // Index variables
 

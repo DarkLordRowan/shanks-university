@@ -49,9 +49,18 @@
  *               - T S_n(K n) const: returns the n-th partial sum sₙ = a₀ + ... + aₙ
  *           - Example usage: Convergent series with known partial sums
  */
-template <Accepted T, std::unsigned_integral K, typename series_templ>
-class richardson_algorithm final : public series_acceleration<T, K, series_templ>
+template <AcceptedLike T, UnsignedIntLike K>
+class richardson_algorithm final : public series_acceleration<T, K>
 {
+protected:
+
+	inline T calculate(
+		K n, 
+		K order, 
+		std::shared_ptr<std::vector<T>> sharedSn, 
+		K offset = static_cast<K>(0)
+	) const;
+
 public:
 
     /**
@@ -62,7 +71,7 @@ public:
      *        - Constraints: Must be copy-constructible and provide S_n method
      *        - Example: Mathematical series with known convergence properties
      */
-    explicit richardson_algorithm(const series_templ& series) : series_acceleration<T, K, series_templ>(series) {}
+    explicit richardson_algorithm() : series_acceleration<T, K>("richardson") {}
 
     /**
      * @brief Richardson transformation for series acceleration
@@ -89,18 +98,19 @@ public:
      * @throws std::domain_error if n=0 is provided as input
      * @throws std::overflow_error if division by zero or numerical instability occurs
      */
-    T operator() (K n, K order) const override;
+    T operator() (K n, K order, K offset = static_cast<K>(0)) const override;
 };
 
-template <Accepted T, std::unsigned_integral K, typename series_templ>
-T richardson_algorithm<T, K, series_templ>::operator()(const K n, const K order) const {
+template <AcceptedLike T, UnsignedIntLike K>
+T richardson_algorithm<T, K>::calculate(
+	K n, 
+	K order, 
+	std::shared_ptr<std::vector<T>> sharedSn, 
+	K offset
+) const {
 
     using std::isfinite;
     using std::fma;
-
-    // in the method we don't use order, it's only a stub
-    if (n == static_cast<K>(0))
-        throw std::domain_error("n = 0 in the input");
 
     // For theory, see: Richardson (1911) - construction of extrapolation table
     // Storage for Richardson extrapolation table with two rows for efficient computation
@@ -108,18 +118,18 @@ T richardson_algorithm<T, K, series_templ>::operator()(const K n, const K order)
         2,
         std::vector<T>(
             n + static_cast<K>(1),
-            static_cast<T>(0)
+            convertWithPrec<T>(0.0, series_acceleration<T, K>::precision)
         )
     ); // Two vectors n + 1 length containing Richardson table next and previous
 
     // For theory, see: Richardson (1911), Eq. (2) - initialization with partial sums
     // Initialize the first row of the extrapolation table with partial sums
     for (K i = static_cast<K>(0); i <= n; ++i)
-        e[0][i] = this->series->S_n(i);
+        e[0][i] = sharedSn->at(i);
 
     // The Richardson method main function
-    T a, b;
-    a = static_cast<T>(1);
+    T a = convertWithPrec<T>(1.0, series_acceleration<T, K>::precision);
+    T b = convertWithPrec<T>(0.0, series_acceleration<T, K>::precision);
 
     // For theory, see: Richardson & Gaunt (1927), Section 3 - recursive extrapolation
     // Richardson extrapolation recursion: Tₖ⁽ⁿ⁾ = (4ᵏTₖ₋₁⁽ⁿ⁺¹⁾ - Tₖ₋₁⁽ⁿ⁾) / (4ᵏ - 1)
@@ -141,4 +151,34 @@ T richardson_algorithm<T, K, series_templ>::operator()(const K n, const K order)
         throw std::overflow_error("division by zero");
 
     return e[n & static_cast<K>(1)][n];
+
+}
+
+template <AcceptedLike T, UnsignedIntLike K>
+T richardson_algorithm<T, K>::operator()(K n, K order, K offset) const {
+
+    if (series_acceleration<T,K>::Sn.expired() || series_acceleration<T,K>::an.expired()){
+    	throw std::domain_error("Sn or an is expired");
+	}
+
+    std::shared_ptr<std::vector<T>> sharedSn = series_acceleration<T,K>::Sn.lock();
+	std::shared_ptr<std::vector<T>> sharedAn = series_acceleration<T,K>::an.lock();
+
+    K required_size = n + offset + static_cast<K>(1);
+
+    if (sharedSn->size() < required_size){
+        throw std::out_of_range("Sn is smaller than required to calculate richardson_{" + to_string(order) + "}^{" + to_string(n) + "}");
+	}
+
+    if (order == static_cast<K>(0)) {
+        return sharedSn->at(n);
+    }
+
+    // in the method we don't use order, it's only a stub
+    if (n == static_cast<K>(0))
+        throw std::domain_error("n = 0 in the input");
+
+    
+    return calculate(n, order, sharedSn, offset);
+
 }

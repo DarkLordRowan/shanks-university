@@ -45,8 +45,8 @@
   *           - T minus_one_raised_to_power_n(K j) const: returns (-1)^j
   *           - T binomial_coefficient(T n, K k) const: returns binomial coefficient C(n, k)
   */
-template <Accepted T, std::unsigned_integral K, typename series_templ>
-class levin_algorithm final : public series_acceleration<T, K, series_templ>
+template <AcceptedLike T, UnsignedIntLike K>
+class levin_algorithm final : public series_acceleration<T, K>
 {
 protected:
 
@@ -66,7 +66,13 @@ protected:
 	 * @param order Order of transformation (k value)
 	 * @return Accelerated sum estimate T_{k,n}
 	 */
-	inline T calc_result(K n, K order) const;
+	inline T calc_result(
+		K n, 
+		K order, 
+		std::shared_ptr<std::vector<T>> sharedSn,
+		std::shared_ptr<std::vector<T>> sharedAn,
+		K offset = static_cast<T>(0)
+	) const;
 
 	/**
 	 * @brief Computes the Levin transformation using recurrence formulas.
@@ -78,7 +84,13 @@ protected:
 	 * @param order Order of transformation (k value)
 	 * @return Accelerated sum estimate T_{k,n}
 	 */
-	inline T calc_result_rec(K n, K order) const;
+	inline T calc_result_rec(
+		K n, 
+		K order, 
+		std::shared_ptr<std::vector<T>> sharedSn,
+		std::shared_ptr<std::vector<T>> sharedAn,
+		K offset = static_cast<T>(0)
+	) const;
 
 public:
 
@@ -97,7 +109,6 @@ public:
 	 *        For theory, see: Sidi & Levin (1981), Eq. (3.4) and surrounding discussion
 	 */
 	explicit levin_algorithm(
-		const series_templ& series,
         remainder_type variant = remainder_type::u_variant,
         bool useRecFormulas = false,
         T beta = static_cast<T>(1)
@@ -125,17 +136,16 @@ public:
 	 * @throws std::domain_error if n=0 is provided as input
 	 * @throws std::overflow_error if division by zero or numerical instability occurs
 	 */
-	T operator()(const K n, const K order) const override;
+	T operator()(K n, K order, K offset = static_cast<K>(0)) const override;
 };
 
-template<Accepted T, std::unsigned_integral K, typename series_templ>
-levin_algorithm<T, K,series_templ>::levin_algorithm(
-	const series_templ& series,
+template<AcceptedLike T, UnsignedIntLike K>
+levin_algorithm<T, K>::levin_algorithm(
     remainder_type variant,
     bool useRecFormulas,
     T beta
 ) :
-	series_acceleration<T, K, series_templ>(series),
+	series_acceleration<T, K>(),
 	useRecFormulas(useRecFormulas),
 	variant(variant)
 	{//TODO: нужно ли проверять бету на допустимость?
@@ -161,67 +171,93 @@ levin_algorithm<T, K,series_templ>::levin_algorithm(
 	//check variant else default 'u'
     //TODO: тоже самое наверное
 
+	series_acceleration<T, K>::acceleration_name = (useRecFormulas ? "recurrent " : "");
+
 	// Initialize the appropriate remainder transformation based on variant
     switch(variant){
         case remainder_type::u_variant :
+		{
+			series_acceleration<T, K>::acceleration_name += "levin l with u-variant and beta = " + to_string(this->beta);
             remainder.reset(new u_transform<T, K>());
             break;
+		}
         case remainder_type::t_variant :
+		{
+			series_acceleration<T, K>::acceleration_name += "levin l with t-variant and beta = " + to_string(this->beta);
             remainder.reset(new t_transform<T, K>());
             break;
+		}
         case remainder_type::v_variant :
+		{
+			series_acceleration<T, K>::acceleration_name += "levin l with v-variant and beta = " + to_string(this->beta);
             remainder.reset(new v_transform<T, K>());
             break;
+		}
         case remainder_type::t_wave_variant:
+		{
+			series_acceleration<T, K>::acceleration_name += "levin l with t-wave-variant and beta = " + to_string(this->beta);
             remainder.reset(new t_wave_transform<T, K>());
             break;
+		}
         case remainder_type::v_wave_variant:
+		{
+			series_acceleration<T, K>::acceleration_name += "levin l with v-wave-variant and beta = " + to_string(this->beta);
             remainder.reset(new v_wave_transform<T, K>());
             break;
-        default:
+		}
+        default:{
+			series_acceleration<T, K>::acceleration_name += "levin l with u-variant and beta = " + to_string(this->beta);
             remainder.reset(new u_transform<T, K>()); // Default to u-variant
+		}
 	}
 	}
 
-template<Accepted T, std::unsigned_integral K, typename series_templ>
-inline T levin_algorithm<T, K,series_templ>::calc_result(K n, K order) const{
+template<AcceptedLike T, UnsignedIntLike K>
+inline T levin_algorithm<T, K>::calc_result(
+	K n, 
+	K order, 
+	std::shared_ptr<std::vector<T>> sharedSn,
+	std::shared_ptr<std::vector<T>> sharedAn,
+	K offset
+) const {
 
 	using std::pow;
 	using std::isfinite;
 
-	T numerator = static_cast<T>(0), denominator = static_cast<T>(0);
-	T C_njk, S_nj, g_n, rest;
+	T numerator = convertWithPrec<T>(0.0, series_acceleration<T,K>::precision);
+	T denominator = convertWithPrec<T>(0.0, series_acceleration<T,K>::precision);
+	T C_njk = convertWithPrec<T>(0.0, series_acceleration<T,K>::precision);
+	T rest = convertWithPrec<T>(0.0, series_acceleration<T,K>::precision);
 
 	// For theory, see: Levin (1973), Eq. (2.3)
 	// T_{k,n} = [∑_{j=0}^k (-1)^j C(k,j) (n+j+1)^{k-1}/(n+k+1)^{k-1} S_{n+j}/R_{n+j}] /
 	//           [∑_{j=0}^k (-1)^j C(k,j) (n+j+1)^{k-1}/(n+k+1)^{k-1} 1/R_{n+j}]
 	for (K j = static_cast<K>(0); j <= order; ++j) {
 		// Compute (-1)^j * C(k,j)
-		rest  = this->series->minus_one_raised_to_power_n(j);
-		rest *= this->series->binomial_coefficient(static_cast<T>(order), j);
+		rest  = minus_one_raised_to_power_n<T,K>(j);
+		rest *= static_cast<T>(binomial_coefficient<K>(order, j));
 
 		// Compute (n+j+1)^{k-1}/(n+k+1)^{k-1}
-		C_njk  = static_cast<T>(pow(n + j     + static_cast<K>(1), order - static_cast<K>(1)));
-		C_njk /= static_cast<T>(pow(n + order + static_cast<K>(1), order - static_cast<K>(1)));
-
-		// Get partial sum S_{n+j}
-		S_nj = this->series->S_n(n + j);
+		if constexpr (std::is_same<K, int_precision>::value){
+			C_njk  = static_cast<T>(ipow(n + j     + static_cast<K>(1), order - static_cast<K>(1)));
+			C_njk /= static_cast<T>(ipow(n + order + static_cast<K>(1), order - static_cast<K>(1)));
+		} else {
+			C_njk  = static_cast<T>(pow(n + j     + static_cast<K>(1), order - static_cast<K>(1)));
+			C_njk /= static_cast<T>(pow(n + order + static_cast<K>(1), order - static_cast<K>(1)));
+		}
 
 		// Compute 1/R_{n+j} where R_{n+j} is the remainder estimate
-		g_n = static_cast<T>(1);
-		g_n/= remainder->operator()(
-            n + j,
-            j,
-            this->series,
+		rest*= remainder->operator()(
+            n,
+            offset + j,
+            sharedAn,
             (variant == remainder_type::u_variant ? beta : static_cast<T>(1))
         );
 
-		// Combine all terms
 		rest *= C_njk;
-		rest *= g_n;
 
 		denominator += rest;
-		  numerator += rest * S_nj;
+		numerator += rest * sharedSn->at(offset + j);
 	}
 
 	numerator /= denominator;
@@ -232,33 +268,46 @@ inline T levin_algorithm<T, K,series_templ>::calc_result(K n, K order) const{
 	return numerator;
 }
 
-template<Accepted T, std::unsigned_integral K, typename series_templ>
-inline T levin_algorithm<T, K,series_templ>::calc_result_rec(K n, K order) const{
+template<AcceptedLike T, UnsignedIntLike K>
+inline T levin_algorithm<T, K>::calc_result_rec(
+	K n, 
+	K order, 
+	std::shared_ptr<std::vector<T>> sharedSn,
+	std::shared_ptr<std::vector<T>> sharedAn,
+	K offset
+) const{
 
 	using std::isfinite;
+	using std::pow;
 
-    //const T result = (*this)(n, order, beta, false) / (*this)(n, order, beta, true);
 
 	// For theory, see: Sidi (1979), Section 3 - Recursive implementation using E-algorithm
 	// Initialize arrays for recursive computation
-	std::vector<T>   Num(order + static_cast<K>(1), static_cast<T>(0));
-	std::vector<T> Denom(order + static_cast<K>(1), static_cast<T>(0));
+	std::vector<T>   Num(
+		order + static_cast<K>(1), 
+		convertWithPrec<T>(0.0, series_acceleration<T,K>::precision)
+	);
+	std::vector<T> Denom(
+		order + static_cast<K>(1), 
+		convertWithPrec<T>(0.0, series_acceleration<T,K>::precision)
+	);
 
 	// Initialize base values: E_0^{(n)} = S_n, g_0^{(n)} = 1/R_n
 	for (K i = static_cast<K>(0); i < order+static_cast<K>(1); ++i) {
 		Denom[i] = remainder->operator()(
             n,
-            i,
-            this->series,
+            offset + i,
+            sharedAn,
             (variant == remainder_type::u_variant ? beta : static_cast<T>(1))
         );
 
-		Num[i] = this->series->S_n(n+i) * Denom[i];
+		Num[i] = sharedSn->at(offset+i) * Denom[i];
 	}
 
 	// Recursive computation using the E-algorithm scheme
-	T scale, nj;
-	const T order1 = static_cast<T>(order - static_cast<K>(1));
+	T scale = convertWithPrec<T>(0.0, series_acceleration<T,K>::precision);
+	T nj = convertWithPrec<T>(0.0, series_acceleration<T,K>::precision);
+	const T order1 = convertWithPrec<T>(order - static_cast<K>(1), series_acceleration<T,K>::precision);
 
 	for (K i = static_cast<K>(1); i <= order; ++i)
 		for (K j = static_cast<K>(0); j <= order - i; ++j) {
@@ -283,17 +332,29 @@ inline T levin_algorithm<T, K,series_templ>::calc_result_rec(K n, K order) const
 	return Num[0];
 }
 
-template <Accepted T, std::unsigned_integral K, typename series_templ>
-T levin_algorithm<T, K, series_templ>::operator()(const K n, const K order) const {
+template <AcceptedLike T, UnsignedIntLike K>
+T levin_algorithm<T, K>::operator()(K n, K order, K offset) const {
 
-	using std::isfinite;
+	if (series_acceleration<T,K>::Sn.expired() || series_acceleration<T,K>::an.expired()){
+    	throw std::domain_error("Sn or an is expired");
+	}
 
-	if (n == static_cast<K>(0))
-		throw std::domain_error("n = 0 in the input");
+    std::shared_ptr<std::vector<T>> sharedSn = series_acceleration<T,K>::Sn.lock();
+	std::shared_ptr<std::vector<T>> sharedAn = series_acceleration<T,K>::an.lock();
 
-	if (order == static_cast<K>(0)) return this->series->S_n(n);
+    K required_size = order + offset + static_cast<K>(1);
 
-    const T result = (useRecFormulas ? calc_result_rec(n,order) : calc_result(n, order));
+    if (sharedSn->size() < required_size || sharedSn->size() < required_size){
+        throw std::out_of_range("Sn is smaller than required to calculate L_{" + to_string(order) + "}^{" + to_string(n) + "}");
+	}
+
+    if (order == static_cast<K>(0)) {
+        return sharedSn->at(n);
+    }
+
+    using std::isfinite;
+
+    const T result = (useRecFormulas ? calc_result_rec(n,order, sharedSn, sharedAn, offset) : calc_result(n, order, sharedSn, sharedAn, offset));
     if (!isfinite(result)) throw std::overflow_error("division by zero");
     return result;
 }

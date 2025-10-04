@@ -64,7 +64,12 @@ protected:
      * @throws std::overflow_error if division by zero occurs during computation
      */
 
-    inline T calculate(K n, K order, std::shared_ptr<std::vector<T>> sharedSn, K offset = static_cast<K>(0)) const;
+    inline T calculate(
+        K n, 
+        K order, 
+        std::shared_ptr<std::vector<T>> sharedSn, 
+        K offset = static_cast<K>(0)
+    ) const;
 
 public:
 
@@ -113,12 +118,12 @@ T brezinski_theta_algorithm<T, K>::calculate(K n, const K order, std::shared_ptr
 
     std::vector<T> theta_odd(
         base_size,
-        convertArbWithPrecision<T>(0.0, series_acceleration<T, K>::precision)
+        convertWithPrec<T>(0.0, series_acceleration<T, K>::precision)
     ); // vector for theta_(2n + 1);
 
     std::vector<T> theta_even(
         base_size,
-        convertArbWithPrecision<T>(0.0, series_acceleration<T, K>::precision)
+        convertWithPrec<T>(0.0, series_acceleration<T, K>::precision)
     ); //vector for theta_(2n), in the beginning it is theta_(-1) which is zero for all i
 
     // init theta_(0)
@@ -127,7 +132,7 @@ T brezinski_theta_algorithm<T, K>::calculate(K n, const K order, std::shared_ptr
     }
 
     K j1, j2;
-    T delta; //temporary varaible
+    T delta = convertWithPrec<T>(0.0, series_acceleration<T, K>::precision); //temporary varaible
 
     for(K level = static_cast<K>(1); level <= order / static_cast<K>(2); ++level){
 

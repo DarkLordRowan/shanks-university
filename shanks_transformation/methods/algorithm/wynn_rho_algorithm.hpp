@@ -201,12 +201,12 @@ inline T wynn_rho_algorithm<T, K>::calculate(
 
     std::vector<T> rho_odd(
         base_size,
-        convertArbWithPrecision<T>(0.0, series_acceleration<T, K>::precision)
+        convertWithPrec<T>(0.0, series_acceleration<T, K>::precision)
     ); // vector for theta_(2n + 1)
 
     std::vector<T> rho_even(
         base_size,
-        convertArbWithPrecision<T>(0.0,series_acceleration<T, K>::precision)
+        convertWithPrec<T>(0.0,series_acceleration<T, K>::precision)
     ); //vector for theta_(2n), in the beginning it is theta_(-1) which is zero for all i
 
     // init theta_(0)

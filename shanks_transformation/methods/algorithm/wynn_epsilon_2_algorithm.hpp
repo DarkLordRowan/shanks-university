@@ -105,7 +105,7 @@ T wynn_epsilon_2_algorithm<T, K>::operator()(K n, K order, K offset) const {
     K required_size = order + static_cast<K>(1) + offset;
 
     if (sharedSn->size() < required_size){
-        throw std::out_of_range("Sn or an is smaller than required to calculate theta_{" + to_string(order) + "}^{" + to_string(n) + "}");
+        throw std::out_of_range("Sn or an is smaller than required to calculate e2_{" + to_string(order) + "}^{" + to_string(n) + "}");
 	}
 
     if (n == static_cast<K>(0)){
@@ -146,7 +146,7 @@ T wynn_epsilon_2_algorithm<T, K>::calculate(
 		4,
 		std::vector<T>(
 			k + static_cast<K>(1),
-			convertArbWithPrecision<T>(0.0, series_acceleration<T, K>::precision)
+			convertWithPrec<T>(0.0, series_acceleration<T, K>::precision)
 		)
 	);
 
@@ -157,7 +157,7 @@ T wynn_epsilon_2_algorithm<T, K>::calculate(
 
 
 	T a, a1, a2;
-	a = a1 = a2 = convertArbWithPrecision<T>(0.0, series_acceleration<T, K>::precision);
+	a = a1 = a2 = convertWithPrec<T>(0.0, series_acceleration<T, K>::precision);
 
 	K i1, i2;
 
