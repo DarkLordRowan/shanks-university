@@ -66,7 +66,7 @@ void test_on_types(){
 
 template<AcceptedLike T, UnsignedIntLike K>
 constexpr void testCompatability(const T& x){
-
+	
 	std::unordered_map<transformation_id_t, std::function<std::unique_ptr<series_acceleration<T,K>>(void)>> algoInit = {
 	    {     brezinski_theta_transformation_id, [](){ return std::make_unique<brezinski_theta_algorithm<T, K>>();                             }},
 		{             weniger_tramsformation_id, [](){ return std::make_unique<weniger_algorithm<T,K>>();                                      }},
@@ -87,8 +87,10 @@ constexpr void testCompatability(const T& x){
 	SeriesResult<T> result = testSeries.generateSeries(150);
 
 	for (size_t j = 0; j < algos.size(); ++j){
-		algos[j]->reset(result.Sn, result.an);
+		algos[j]->reset(result);
 	}
+
+	std::cout << "EXP(x) = " << testSeries.get_sum() << "\n";
 
 	for (size_t i = 0; i < algos.size(); ++i){
 
@@ -97,7 +99,7 @@ constexpr void testCompatability(const T& x){
 		for (size_t j = 0; j <= 12; ++j) {
 			
 			try{
-				std::cout << "n = order = " << j << " : " << algos[i]->operator()(j,j).precision() << "\n";
+				std::cout << "n = order = " << j << " : " << algos[i]->operator()(j,j,j) << "\n";
 			} catch (std::overflow_error& e){
 				std::cout << e.what() << "\n";
 			} catch (std::domain_error& e){
@@ -117,55 +119,58 @@ constexpr void testCompatability(const T& x){
 			}
 
 		}
+		std::cout << "\n";
 	}
 
 }
 
-void TestNoise() {
-	Noise <float_t> noise_normal(30, -0.1, 0.1, normal);
-	exp_series<float_t, size_t> series(10);
-	SeriesResult<float_t> result = series.generateSeries(30);
-	Noise <float_t> noise_uniform(30, -0.1, 0.1, uniform);
-	SeriesResult<float_t> result_jittered_normal = result;
-	SeriesResult<float_t> result_jittered_uniform = result;
-	result_jittered_normal.Sn[0] += noise_normal.seq[0];
-	result_jittered_uniform.Sn[0] += noise_uniform.seq[0];
-	for (int j = 1; j < 30; ++j) {
-		result_jittered_normal.Sn[j] += noise_normal.seq[j];
-		result_jittered_normal.an[j] += noise_normal.seq[j] - noise_normal.seq[j-1];
-		result_jittered_uniform.Sn[j] += noise_uniform.seq[j];
-		result_jittered_uniform.an[j] += noise_uniform.seq[j] - noise_uniform.seq[j-1];
-	}
-	brezinski_theta_algorithm<float_t, size_t> algo{};
-
-	algo.reset(result.Sn, result.an);
-	algo.print_info();
-	std::cout << "Without noise:\n";
-	for(size_t j = 0; j <= 10; j+= 2) {
-		std::cout << "n = order = " << j << " : " << algo(j,j) << "\n";
-	}
-
-	algo.reset(result_jittered_normal.Sn, result_jittered_normal.an);
-	std::cout << "With normal noise:\n";
-	for(size_t j = 0; j <= 10; j+= 2) {
-		std::cout << "n = order = " << j << " : " << algo(j,j) << "\n";
-	}
-
-	algo.reset(result_jittered_uniform.Sn, result_jittered_uniform.an);
-	std::cout << "With uniform noise:\n";
-	for(size_t j = 0; j <= 10; j+= 2) {
-		std::cout << "n = order = " << j << " : " << algo(j,j) << "\n";
-	}
-}
+//void TestNoise() {
+//	Noise <float_t> noise_normal(30, -0.1, 0.1, normal);
+//	exp_series<float_t, size_t> series(10);
+//	SeriesResult<float_t> result = series.generateSeries(30);
+//	Noise <float_t> noise_uniform(30, -0.1, 0.1, uniform);
+//	SeriesResult<float_t> result_jittered_normal = result;
+//	SeriesResult<float_t> result_jittered_uniform = result;
+//	result_jittered_normal.Sn[0] += noise_normal.seq[0];
+//	result_jittered_uniform.Sn[0] += noise_uniform.seq[0];
+//	for (int j = 1; j < 30; ++j) {
+//		result_jittered_normal.Sn[j] += noise_normal.seq[j];
+//		result_jittered_normal.an[j] += noise_normal.seq[j] - noise_normal.seq[j-1];
+//		result_jittered_uniform.Sn[j] += noise_uniform.seq[j];
+//		result_jittered_uniform.an[j] += noise_uniform.seq[j] - noise_uniform.seq[j-1];
+//	}
+//	brezinski_theta_algorithm<float_t, size_t> algo{};
+//
+//	algo.reset(result.Sn, result.an);
+//	algo.print_info();
+//	std::cout << "Without noise:\n";
+//	for(size_t j = 0; j <= 10; j+= 2) {
+//		std::cout << "n = order = " << j << " : " << algo(j,j) << "\n";
+//	}
+//
+//	algo.reset(result_jittered_normal.Sn, result_jittered_normal.an);
+//	std::cout << "With normal noise:\n";
+//	for(size_t j = 0; j <= 10; j+= 2) {
+//		std::cout << "n = order = " << j << " : " << algo(j,j) << "\n";
+//	}
+//
+//	algo.reset(result_jittered_uniform.Sn, result_jittered_uniform.an);
+//	std::cout << "With uniform noise:\n";
+//	for(size_t j = 0; j <= 10; j+= 2) {
+//		std::cout << "n = order = " << j << " : " << algo(j,j) << "\n";
+//	}
+//}
 
 int main()
 {
 
 	//using typeA = double;
-	using typeA = float_precision;
+	using typeA = complex_precision<float_precision>;
 	using typeB = int_precision;
 
-	typeA x(1, 200);
+	//typeA x(1, 200);
+	typeA x(float_precision(1, 100), float_precision(1, 100));
+	std::cout << x << "\n";
 	//typeA x(1.0);
 
 	//std::cout << fact<typeB>(6) << "\n";

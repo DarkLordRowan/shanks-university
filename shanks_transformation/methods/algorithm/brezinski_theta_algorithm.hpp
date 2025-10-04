@@ -64,7 +64,7 @@ protected:
      * @throws std::overflow_error if division by zero occurs during computation
      */
 
-    inline T calculate(K n, K order) const;
+    inline T calculate(K n, K order, std::shared_ptr<std::vector<T>> sharedSn, K offset = static_cast<K>(0)) const;
 
 public:
 
@@ -100,12 +100,12 @@ public:
      * @throws std::overflow_error if division by zero occurs during computation
      */
 
-    T operator()(K n, K order) const override;
+    T operator()(K n, K order, K offset = static_cast<K>(0)) const override;
 };
 
 
 template <AcceptedLike T, UnsignedIntLike K>
-T brezinski_theta_algorithm<T, K>::calculate(K n, const K order) const {
+T brezinski_theta_algorithm<T, K>::calculate(K n, const K order, std::shared_ptr<std::vector<T>> sharedSn, K offset) const {
 
     using std::isfinite;
 
@@ -113,17 +113,17 @@ T brezinski_theta_algorithm<T, K>::calculate(K n, const K order) const {
 
     std::vector<T> theta_odd(
         base_size,
-        convertArbWithPrecision<T>(0.0, series_acceleration<T, K>::arbPrecision)
+        convertArbWithPrecision<T>(0.0, series_acceleration<T, K>::precision)
     ); // vector for theta_(2n + 1);
 
     std::vector<T> theta_even(
         base_size,
-        convertArbWithPrecision<T>(0.0, series_acceleration<T, K>::arbPrecision)
+        convertArbWithPrecision<T>(0.0, series_acceleration<T, K>::precision)
     ); //vector for theta_(2n), in the beginning it is theta_(-1) which is zero for all i
 
     // init theta_(0)
     for(K j = static_cast<K>(0); j < base_size; ++j){
-        theta_even[j] += series_acceleration<T,K>::Sn->at(n + j);
+        theta_even[j] += sharedSn->at(offset + j);
     }
 
     K j1, j2;
@@ -164,38 +164,41 @@ T brezinski_theta_algorithm<T, K>::calculate(K n, const K order) const {
 }
 
 template <AcceptedLike T, UnsignedIntLike K>
-T brezinski_theta_algorithm<T, K>::operator()(const K n, const K order) const{
+T brezinski_theta_algorithm<T, K>::operator()(const K n, const K order, K offset) const{
 
-    if (series_acceleration<T,K>::Sn == nullptr)
-        throw std::domain_error("Sn is nullptr");
+    if (series_acceleration<T,K>::Sn.expired()){
+        throw std::domain_error("Sn is expired");
+    }
+
+    std::shared_ptr<std::vector<T>> sharedSn = series_acceleration<T,K>::Sn.lock();
 
     K required_size = static_cast<K>(3) * order / static_cast<K>(2) + static_cast<K>(1) + n;
 
-    if (series_acceleration<T,K>::Sn->size() < required_size)
+    if (sharedSn->size() < required_size){
         throw std::out_of_range("Sn is smaller than required to calculate theta_{" + to_string(order) + "}^{" + to_string(n) + "}");
+    }
 
     // For theory, see: Brezinski (2003), Section 10.2, Theorem 10.2.1
     // Only even orders have mathematical meaning in the final result
     if constexpr (std::is_same<K, int_precision>::value){
-
-        if (!order.even())
+        if (!order.even()){
             throw std::domain_error("order should be even number");
-
+        }
     } else {
-
-        if (order & 1) // is order odd?
+        if (order & 1){ // is order odd?
             throw std::domain_error("order should be even number");
-
+        }
     }
     
 
     // For theory, see: Brezinski (1977), Chapter 4, Eq. (4.10)
     // Base cases: return partial sum for n=0 or order=0
     //if (n == static_cast<K>(0) || order == static_cast<K>(0))
-    if (order == static_cast<K>(0))
-        return series_acceleration<T,K>::Sn->at(n);
+    if (order == static_cast<K>(0)){
+        return sharedSn->at(n);
+    }
 
     // For theory, see: Brezinski (2003), Section 10.2, Eq. (10.2.4)
     // Start computation with initial parameters
-    return calculate(n, order);
+    return calculate(n, order, sharedSn, offset);
 }

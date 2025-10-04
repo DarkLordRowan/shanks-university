@@ -44,6 +44,14 @@ private:
 
     const T epsilon_threshold;  ///< Threshold for epsilon correction terms to prevent division by near-zero values.
                                 ///< Default: 1e-3. Smaller values may increase sensitivity but risk instability.
+
+    inline T calculate(
+		K n, 
+		K order, 
+		std::shared_ptr<std::vector<T>> sharedSn, 
+		K offset = static_cast<K>(0)
+	) const;       
+
 public:
 
     /**
@@ -78,7 +86,7 @@ public:
      * @throws std::domain_error if n=0.
      * @throws std::overflow_error if numerical instability (e.g., division by zero) occurs.
      */
-	T operator()(K n, K order) const override;
+	T operator()(K n, K order, K offset = static_cast<K>(0)) const override;
 };
 
 // Constructor implementation
@@ -90,45 +98,43 @@ wynn_epsilon_3_algorithm<T, K>::wynn_epsilon_3_algorithm(
     epsilon_threshold(epsilon_threshold_)
 {}
 
-// Algorithm implementation
 template <AcceptedLike T, UnsignedIntLike K>
-T wynn_epsilon_3_algorithm<T, K>::operator()(const K n, const K order) const {
+T wynn_epsilon_3_algorithm<T, K>::calculate(
+	K n, 
+	K order, 
+	std::shared_ptr<std::vector<T>> sharedSn, 
+	K offset
+) const {
 
     using std::isfinite;
     using std::max;
     using std::abs;
 
-    if (n == static_cast<K>(0)){
-        throw std::domain_error("n = 0 in the input");
-    }
-
-    if (order == static_cast<K>(0)) {
-        return series_acceleration<T,K>::Sn->at(n);
-    }
-
     K N = n; // Number of terms used in transformation
 
     // Machine constants for numerical stability
-    const T EMACH = convertArbWithPrecision<T>(std::numeric_limits<T>::epsilon(), series_acceleration<T, K>::arbPrecision); ///< Machine epsilon: smallest number such that 1.0 + ε ≠ 1.0.
+    const T EMACH = std::numeric_limits<T>::epsilon(); ///< Machine epsilon: smallest number such that 1.0 + ε ≠ 1.0.
     const T EPRN = static_cast<T>(50) * EMACH;         ///< Relative error tolerance (50 * machine epsilon).
-    const T OFRN = convertArbWithPrecision<T>(std::numeric_limits<T>::max(), series_acceleration<T, K>::arbPrecision);      ///< Overflow threshold (largest finite value).
+    const T OFRN = std::numeric_limits<T>::max();      ///< Overflow threshold (largest finite value).
 
-    T result = convertArbWithPrecision<T>(0.0, series_acceleration<T, K>::arbPrecision);       ///< Current best accelerated estimate.
-    T abs_error = convertArbWithPrecision<T>(0.0, series_acceleration<T, K>::arbPrecision);    ///< Absolute error estimate for current result.
-    T resla = convertArbWithPrecision<T>(0.0, series_acceleration<T, K>::arbPrecision);        ///< Previous result for error comparison.
+    T result = convertArbWithPrecision<T>(0.0, series_acceleration<T, K>::precision);       ///< Current best accelerated estimate.
+    T abs_error = convertArbWithPrecision<T>(0.0, series_acceleration<T, K>::precision);    ///< Absolute error estimate for current result.
+    T resla = convertArbWithPrecision<T>(0.0, series_acceleration<T, K>::precision);        ///< Previous result for error comparison.
     K newelm, num, NUM, K1, ib, ie, in; // Loop indices and counters.
     T RES, E0, E1, E2, E3, DELTA1, DELTA2, DELTA3, ERR1, ERR2, ERR3, TOL1, TOL2, TOL3, SS, EPSINF; // int -> K
 
     // For theory, see: Wynn (1956), Section 3: Algorithm and lozenge diagram.
     // The epsilon table e[0..N+2] stores intermediate values εₛ⁽ⁿ⁾.
+    // For theory, see: Wynn (1956), Section 3: Algorithm and lozenge diagram.
+    // The epsilon table e[0..N+2] stores intermediate values εₛ⁽ⁿ⁾.
     std::vector<T> e(
         N + static_cast<K>(3),
-        convertArbWithPrecision<T>(0.0, series_acceleration<T, K>::arbPrecision)
+        convertArbWithPrecision<T>(0.0, series_acceleration<T, K>::precision)  
     ); //First N eliments of epsilon table + 2 elements for math
 
     // Initialize epsilon table with partial sums: ε₀⁽ⁱ⁾ = S_i for i=0,...,N
     for (K i = static_cast<K>(0); i <= N; ++i) //Filling up Epsilon Table
-        e[i] = series_acceleration<T,K>::Sn->at(i);
+        e[i] = sharedSn->at(i);
 
     // Apply epsilon algorithm for 'order' iterations
     for (K i = static_cast<K>(0); i <= order; ++i) { //Working with Epsilon Table order times
@@ -149,53 +155,56 @@ T wynn_epsilon_3_algorithm<T, K>::operator()(const K n, const K order) const {
 
             DELTA2 = E2 - E1;                   // εₛ⁽ⁿ⁺¹⁾ - εₛ₋₁⁽ⁿ⁾
 
-            //ERR2 = abs(DELTA2);                 // Absolute difference
+            ERR2 = abs(DELTA2);                 // Absolute difference
 
             TOL2 = static_cast<T>(max(          // Tolerance based on machine precision
-                abs(E2),
+                abs(E2), 
                 abs(E1)
             ));
             TOL2*=EMACH;
 
             DELTA3 = E1 - E0;                   // εₛ₋₁⁽ⁿ⁾ - εₛ₋₂⁽ⁿ⁾
-            //ERR3 = abs(DELTA3);
+            ERR3 = abs(DELTA3);
             TOL3 = static_cast<T>(max(
-                abs(E1),
+                abs(E1), 
                 abs(E0)
             ));
             TOL3*= EMACH;
 
             // Check if differences are significant relative to tolerances
-            if (abs(DELTA2) > abs(TOL2) || abs(DELTA3) > abs(TOL3)) {
+            if (abs(ERR2) > abs(TOL2) || abs(ERR3) > abs(TOL3)) {
 
                 E3 = e[K1];                     // εₛ⁽ⁿ⁾
                 e[K1] = E1;                     // Store εₛ₋₁⁽ⁿ⁾ temporarily
 
                 DELTA1 = E1 - E3;               // εₛ₋₁⁽ⁿ⁾ - εₛ⁽ⁿ⁾
 
-                //ERR1 = abs(DELTA1);
+                ERR1 = abs(DELTA1);
 
-                TOL1 = convertArbWithPrecision<T>(
-                max(abs(E1), abs(E3)), 
-                series_acceleration<T, K>::arbPrecision);
+                TOL1 = static_cast<T>(max(
+                    abs(E1), 
+                    abs(E3)
+                ));
                 TOL1*= EMACH;
 
                 // If differences are insignificant, terminate early
-                if (abs(DELTA1) <= abs(TOL1) || abs(DELTA2) <= abs(TOL2) || abs(DELTA3) <= abs(TOL3)) {
+                if (abs(ERR1) <= abs(TOL1) || abs(ERR2) <= abs(TOL2) || abs(ERR3) <= abs(TOL3)) {
                     N = static_cast<K>(2) * I - static_cast<K>(1);
                     break;
                 }
 
                 // For theory, see: Wynn (1962), Eq. (13): Rational function extrapolation step.
                 SS = static_cast<T>(1) / DELTA1 + static_cast<T>(1) / DELTA2 - static_cast<T>(1) / DELTA3;
+                //EPSINF = abs(SS * E1);
 
                 // Check if correction term is within threshold
                 if (abs(SS * E1) > abs(epsilon_threshold)) {
                     RES = E1 + static_cast<T>(1) / SS;      // Apply epsilon correction
                     e[K1] = RES;                            // Store updated value
                     K1 -= static_cast<K>(2);                // Move to previous position in table
-                    if (abs(DELTA2) + abs(RES - E2) + abs(DELTA3) <= abs(abs_error)) {
-                        abs_error = static_cast<T>(abs(DELTA2) + abs(RES - E2) + abs(DELTA3));
+                    T ERROR = ERR2 + static_cast<T>(abs(RES - E2)) + ERR3;  // Total error estimat
+                    if (abs(ERROR) <= abs(abs_error)) {
+                        abs_error = ERROR;
                         result = RES;                       // Update best result
                     }
                 }
@@ -208,35 +217,19 @@ T wynn_epsilon_3_algorithm<T, K>::operator()(const K n, const K order) const {
             else {
                 // Differences are insignificant; accept current value
                 result = RES;
-                abs_error = abs(DELTA2) + abs(DELTA3);
+                abs_error = ERR2 + ERR3;
                 e[K1] = result;
                 break;
             }
         }
 
         // Adjust N to be the greatest odd number <= n if no change
-        if (N == n){ // making N the greatest odd number <= n
-            //N = (n & static_cast<K>(1)) ? n : n - static_cast<K>(1);
-            if constexpr (std::is_same<K, int_precision>::value){
-
-                N = n - static_cast<K>(n.even());
-
-            } else {
-
-                N = n - static_cast<K>(n & 1);
-
-            }
-        }
+        if (N == n) // making N the greatest odd number <= n
+            N = (n % static_cast<K>(2) == static_cast<K>(1)) ? n : n - static_cast<K>(1);
 
         // Compact the epsilon table for next iteration
-        //ib = (num & static_cast<K>(1)) ? static_cast<K>(1) : static_cast<K>(2);  // Start index: 1 for odd, 2 for even
-        ib = static_cast<K>(2);
-        if constexpr (std::is_same<K, int_precision>::value) {
-            ib -= (num & static_cast<K>(1));
-        } else {
-            ib -= static_cast<K>(num.even());
-        }
-
+        ib = (num % static_cast<K>(2) == static_cast<K>(1) ) ? static_cast<K>(1) : static_cast<K>(2);  // Start index: 1 for odd, 2 for even
+        
         // Start index: 1 (odd) or 2 (even)
         ie = newelm + static_cast<K>(1);
 
@@ -252,10 +245,10 @@ T wynn_epsilon_3_algorithm<T, K>::operator()(const K n, const K order) const {
         }
 
         // Update error estimate and previous result
-        abs_error = static_cast<T>(max(
-            abs(result - resla),
+        abs_error = max(
+            abs(result - resla), 
             abs(EPRN) * abs(result)
-        ));
+        );
 
         resla = result;
     }
@@ -265,4 +258,33 @@ T wynn_epsilon_3_algorithm<T, K>::operator()(const K n, const K order) const {
         throw std::overflow_error("division by zero");
 
     return result;
+
+}
+
+// Algorithm implementation
+template <AcceptedLike T, UnsignedIntLike K>
+T wynn_epsilon_3_algorithm<T, K>::operator()(K n, K order, K offset) const {
+
+    if (series_acceleration<T,K>::Sn.expired()){
+    	throw std::domain_error("Sn or an is expired");
+	}
+
+    std::shared_ptr<std::vector<T>> sharedSn = series_acceleration<T,K>::Sn.lock();
+
+    K required_size = order + static_cast<K>(1) + offset;
+
+    if (sharedSn->size() < required_size){
+        throw std::out_of_range("Sn or an is smaller than required to calculate theta_{" + to_string(order) + "}^{" + to_string(n) + "}");
+	}
+
+    if (n == static_cast<K>(0)){
+        throw std::domain_error("n = 0 in the input");
+    }
+
+    if (order == static_cast<K>(0)) {
+        return sharedSn->at(n);
+    }
+
+    return calculate(n, order, sharedSn, offset);
+
 }

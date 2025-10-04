@@ -45,6 +45,15 @@
 template <AcceptedLike T, UnsignedIntLike K>
 class wynn_epsilon_2_algorithm final : public series_acceleration<T, K>
 {
+protected:
+
+	inline T calculate(
+		K n, 
+		K order, 
+		std::shared_ptr<std::vector<T>> sharedSn, 
+		K offset = static_cast<K>(0)
+	) const;    
+
 public:
 
 	/**
@@ -78,15 +87,45 @@ public:
 	 * @throws std::domain_error if n=0 is provided as input
 	 * @throws std::overflow_error if numerical instability occurs
 	 */
-    T operator()(K n, K order) const override;
+    T operator()(K n, K order, K offset = static_cast<K>(0)) const override;
 };
 
 template <AcceptedLike T, UnsignedIntLike K>
 wynn_epsilon_2_algorithm<T, K>::wynn_epsilon_2_algorithm() : series_acceleration<T, K>("wynn epsilon 2") {}
 
 template <AcceptedLike T, UnsignedIntLike K>
-T wynn_epsilon_2_algorithm<T, K>::operator()(const K n, const K order) const
-{
+T wynn_epsilon_2_algorithm<T, K>::operator()(K n, K order, K offset) const {
+
+	if (series_acceleration<T,K>::Sn.expired()){
+    	throw std::domain_error("Sn or an is expired");
+	}
+
+    std::shared_ptr<std::vector<T>> sharedSn = series_acceleration<T,K>::Sn.lock();
+
+    K required_size = order + static_cast<K>(1) + offset;
+
+    if (sharedSn->size() < required_size){
+        throw std::out_of_range("Sn or an is smaller than required to calculate theta_{" + to_string(order) + "}^{" + to_string(n) + "}");
+	}
+
+    if (n == static_cast<K>(0)){
+        throw std::domain_error("n = 0 in the input");
+    }
+
+    if (order == static_cast<K>(0)) {
+        return sharedSn->at(n);
+    }
+
+    return calculate(n, order, sharedSn, offset);
+}
+
+template <AcceptedLike T, UnsignedIntLike K>
+T wynn_epsilon_2_algorithm<T, K>::calculate(
+		K n, 
+		K order, 
+		std::shared_ptr<std::vector<T>> sharedSn, 
+		K offset
+) const {
 
 	using std::isfinite;
 
@@ -95,7 +134,7 @@ T wynn_epsilon_2_algorithm<T, K>::operator()(const K n, const K order) const
 		throw std::domain_error("n = 0 in the input");
 
 	if (order == static_cast<K>(0))
-		return series_acceleration<T, K>::Sn->at(n);
+		return sharedSn->at(n);
 
 	// For theory, see: Wynn (1956), Section 3 - Algorithm construction and table size
 	// Total number of entries needed in the epsilon table: k = 2*order + n
@@ -107,18 +146,18 @@ T wynn_epsilon_2_algorithm<T, K>::operator()(const K n, const K order) const
 		4,
 		std::vector<T>(
 			k + static_cast<K>(1),
-			convertArbWithPrecision<T>(0.0, series_acceleration<T, K>::arbPrecision)
+			convertArbWithPrecision<T>(0.0, series_acceleration<T, K>::precision)
 		)
 	);
 
 	// For theory, see: Wynn (1956), Eq. (2) - Initialization with partial sums
 	// Initialize the bottom row with partial sums: ε₀⁽ᵐ⁾ = Sₙ for m = 0,1,...,k
 	for (K i = static_cast<K>(0); i <= k; ++i)
-		eps[3][i] = series_acceleration<T, K>::Sn->at(i);
+		eps[3][i] = sharedSn->at(i);
 
 
 	T a, a1, a2;
-	a = a1 = a2 = convertArbWithPrecision<T>(0.0, series_acceleration<T, K>::arbPrecision);
+	a = a1 = a2 = convertArbWithPrecision<T>(0.0, series_acceleration<T, K>::precision);
 
 	K i1, i2;
 

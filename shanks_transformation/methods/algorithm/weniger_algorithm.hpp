@@ -41,6 +41,14 @@
 template<AcceptedLike T, UnsignedIntLike K>
 class weniger_algorithm final : public series_acceleration<T, K>
 {
+inline T calculate(
+		K n, 
+		K order, 
+		std::shared_ptr<std::vector<T>> sharedSn, 
+		std::shared_ptr<std::vector<T>> sharedAn,
+		K offset = static_cast<K>(0)
+	) const;   
+
 public:
 
 	/**
@@ -67,18 +75,46 @@ public:
 	 * @return The accelerated partial sum after Weniger transformation
 	 * @throws std::overflow_error if division by zero or numerical instability occurs
 	 */
-	T operator()(K n, K order) const override;
+	T operator()(K n, K order, K offset = static_cast<K>(0)) const override;
 };
 
 template<AcceptedLike T, UnsignedIntLike K>
-T weniger_algorithm<T, K>::operator()(const K n, const K order) const {
+T weniger_algorithm<T, K>::operator()(K n, K order, K offset) const {
+	if (series_acceleration<T,K>::Sn.expired()){
+    	throw std::domain_error("Sn or an is expired");
+	}
+
+    std::shared_ptr<std::vector<T>> sharedSn = series_acceleration<T,K>::Sn.lock();
+	std::shared_ptr<std::vector<T>> sharedAn = series_acceleration<T,K>::an.lock();
+
+    K required_size = order + offset + static_cast<K>(1);
+
+    if (sharedSn->size() < required_size || sharedAn->size() < required_size){
+        throw std::out_of_range("Sn or an is smaller than required to calculate theta_{" + to_string(order) + "}^{" + to_string(n) + "}");
+	}
+
+    if (order == static_cast<K>(0)) {
+        return sharedSn->at(n);
+    }
+
+    return calculate(n, order, sharedSn, sharedAn, offset);
+}
+
+template<AcceptedLike T, UnsignedIntLike K>
+T weniger_algorithm<T, K>::calculate(
+	K n, 
+	K order, 
+	std::shared_ptr<std::vector<T>> sharedSn,
+	std::shared_ptr<std::vector<T>> sharedAn, 
+	K offset
+) const {
 
 	using std::isfinite;
 
 	// For theory, see: Weniger (1989), Section 8.2, Eq. (8.2-7)
 	// Weniger transformation as ratio of binomial sums with Pochhammer symbols
-	T numerator = convertArbWithPrecision<T>(0.0, series_acceleration<T, K>::arbPrecision);
-	T denominator = convertArbWithPrecision<T>(0.0, series_acceleration<T, K>::arbPrecision);;
+	T numerator = convertArbWithPrecision<T>(0.0, series_acceleration<T, K>::precision);
+	T denominator = convertArbWithPrecision<T>(0.0, series_acceleration<T, K>::precision);;
 
 	// For theory, see: Weniger (1989), Eq. (8.2-7) term components
 	T rest;	// Weight factor for current term: (-1)ʲ × C(order, j) × (β+n+j)ₖ₋₁
@@ -86,7 +122,7 @@ T weniger_algorithm<T, K>::operator()(const K n, const K order) const {
 
 	// For theory, see: Weniger (1989), Eq. (8.2-7) weight factor
 	// Initial Pochhammer-like term: (β+n)ₖ₋₁ with β=1, equivalent to (n+1)ₖ₋₁ = Γ(n+k)/Γ(n+1)
-	T coef = convertArbWithPrecision<T>(1.0, series_acceleration<T, K>::arbPrecision);
+	T coef = convertArbWithPrecision<T>(1.0, series_acceleration<T, K>::precision);
 
 	// For theory, see: Weniger (1989), Eq. (8.2-7) recursive computation
 	// Initial binomial coefficient: C(order, 0) = 1
@@ -107,7 +143,7 @@ T weniger_algorithm<T, K>::operator()(const K n, const K order) const {
 		// For theory, see: Weniger (1989), Eq. (8.2-7) term structure
 		// Term sign: (-1)ʲ
 
-		rest = convertArbWithPrecision<T>(1.0, series_acceleration<T, K>::arbPrecision); //need to set precision before doing anything
+		rest = convertArbWithPrecision<T>(1.0, series_acceleration<T, K>::precision); //need to set precision before doing anything
 		rest*= minus_one_raised_to_power_n<T,K>(j);
 
 		// Binomial coefficient: C(order, j)
@@ -130,11 +166,11 @@ T weniger_algorithm<T, K>::operator()(const K n, const K order) const {
 
 		// For theory, see: Weniger (1989), Eq. (8.2-7) remainder estimate
 		// Remainder estimate: ωₙ = Δsₙ = a_{n+1}, so 1/ωₙ = 1/a_{j+1}
-		rest /= series_acceleration<T,K>::an->at(j1);
+		rest /= sharedAn->at(j1);
 
 		// For theory, see: Weniger (1989), Eq. (8.2-7) numerator term
 		// Numerator term: rest × s_{n+j}
-		numerator   += rest * series_acceleration<T,K>::Sn->at(j);
+		numerator   += rest * sharedSn->at(j);
 
 		// For theory, see: Weniger (1989), Eq. (8.2-7) denominator term
 		// Denominator term: rest

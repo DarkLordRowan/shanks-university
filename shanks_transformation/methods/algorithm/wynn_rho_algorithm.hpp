@@ -54,7 +54,13 @@ protected:
 	 * @param order Transformation order (must be even)
 	 * @return Accelerated partial sum
 	 */
-	inline T calculate(K n, K order) const;
+	inline T calculate(
+		K n, 
+		K order, 
+		std::shared_ptr<std::vector<T>> sharedSn, 
+		std::shared_ptr<std::vector<T>> sharedAn, 
+		K offset = static_cast<K>(0)
+	) const;
 
 public:
 
@@ -106,8 +112,29 @@ public:
 	 * @throws std::domain_error if order is odd
 	 * @throws std::overflow_error if division by zero occurs
 	 */
-	T operator()(const K n, const K order) const override { 
-		return calculate(n, order); 
+	T operator()(K n, K order, K offset = static_cast<K>(0)) const override { 
+
+		if (series_acceleration<T,K>::Sn.expired() || series_acceleration<T,K>::an.expired()){
+    	    throw std::domain_error("Sn or an is expired");
+		}
+
+    	std::shared_ptr<std::vector<T>> sharedSn = series_acceleration<T,K>::Sn.lock();
+		std::shared_ptr<std::vector<T>> sharedAn = series_acceleration<T,K>::an.lock();
+
+    	K required_size = order + static_cast<K>(1) + offset;
+
+    	if (sharedSn->size() < required_size || sharedAn->size() < required_size){
+    	    throw std::out_of_range("Sn or an is smaller than required to calculate theta_{" + to_string(order) + "}^{" + to_string(n) + "}");
+		}
+
+    	// For theory, see: Brezinski (1977), Chapter 4, Eq. (4.10)
+    	// Base cases: return partial sum for n=0 or order=0
+    	//if (n == static_cast<K>(0) || order == static_cast<K>(0))
+    	if (order == static_cast<K>(0)){
+        	return sharedSn->at(n);
+		}
+
+		return calculate(n, order, sharedSn, sharedAn, offset); 
 	}
 
 };
@@ -160,7 +187,13 @@ wynn_rho_algorithm<T, K>::wynn_rho_algorithm(
 }
 
 template <AcceptedLike T, UnsignedIntLike K>
-inline T wynn_rho_algorithm<T, K>::calculate(const K n, K order) const { //const int order
+inline T wynn_rho_algorithm<T, K>::calculate(
+	K n, 
+	K order, 
+	std::shared_ptr<std::vector<T>> sharedSn, 
+	std::shared_ptr<std::vector<T>> sharedAn, 
+	K offset
+) const { //const int order
 
 	using std::isfinite;
 
@@ -168,17 +201,17 @@ inline T wynn_rho_algorithm<T, K>::calculate(const K n, K order) const { //const
 
     std::vector<T> rho_odd(
         base_size,
-        convertArbWithPrecision<T>(0.0, series_acceleration<T, K>::arbPrecision)
+        convertArbWithPrecision<T>(0.0, series_acceleration<T, K>::precision)
     ); // vector for theta_(2n + 1)
 
     std::vector<T> rho_even(
         base_size,
-        convertArbWithPrecision<T>(0.0,series_acceleration<T, K>::arbPrecision)
+        convertArbWithPrecision<T>(0.0,series_acceleration<T, K>::precision)
     ); //vector for theta_(2n), in the beginning it is theta_(-1) which is zero for all i
 
     // init theta_(0)
     for(K j = static_cast<K>(0); j < base_size; ++j) {
-        rho_even[j] = series_acceleration<T, K>::Sn->at(n + j);
+        rho_even[j] = sharedSn->at(offset + j);
 	}
 
 
@@ -197,7 +230,7 @@ inline T wynn_rho_algorithm<T, K>::calculate(const K n, K order) const { //const
 			rho_odd[j] = rho_odd[j1] + numerator->operator()(
 				n + j, 
 				level * static_cast<K>(2) - static_cast<K>(1), 
-				series_acceleration<T,K>::an, 
+				sharedAn, 
 				gamma, 
 				RHO
 			) / delta;
@@ -215,7 +248,7 @@ inline T wynn_rho_algorithm<T, K>::calculate(const K n, K order) const { //const
 			rho_even[j] = rho_even[j1] + numerator->operator()(
 				n + j, 
 				level * static_cast<K>(2), 
-				series_acceleration<T,K>::an, 
+				sharedAn, 
 				gamma, 
 				RHO
 			) / delta;

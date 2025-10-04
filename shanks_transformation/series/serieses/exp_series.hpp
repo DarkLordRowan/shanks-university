@@ -53,7 +53,7 @@ exp_series<T, K>::exp_series(T x) : series_base<T, K>(x)
 	if constexpr ( std::is_same<T, float_precision> :: value ){
 		series_base<T, K>::precision = x.precision();
 	} else if constexpr (std::is_same<T, complex_precision<float_precision>>::value){
-		series_base<T, K>::precision = max(x.real().precision(), x.imag().precision());
+		series_base<T, K>::precision = std::max(x.real().precision(), x.imag().precision());
 	}
 	
 }
@@ -69,6 +69,6 @@ SeriesResult<T> exp_series<T, K>::generateSeries(K vecSize) const {
 		vecSn[j] += vecSn[j-static_cast<K>(1)] + vecAn[j];
 	}
 
-	return SeriesResult<T>{.an = vecAn, .Sn = vecSn};
+	return SeriesResult<T>{.Sn = std::make_shared<std::vector<T>>(vecSn), .an = std::make_shared<std::vector<T>>(vecAn) };
 
 }

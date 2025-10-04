@@ -17,6 +17,8 @@
 
 #include "../custom_concepts.hpp"
 
+#include <memory>
+
  /**
   * @brief Enum for remainder types to use in Levin-type transformations.
   *
@@ -65,7 +67,7 @@ public:
 	 * @return The computed numerator value for the transformation.
 	 */
 	
-	virtual T operator()(K n, K order, const std::vector<T>* const an, T gamma = static_cast<T>(-1), T rho = static_cast<T>(1)) const = 0;
+	virtual T operator()(K n, K order, std::shared_ptr<std::vector<T>> an, T gamma = static_cast<T>(-1), T rho = static_cast<T>(1)) const = 0;
 
 };
 
@@ -102,7 +104,7 @@ public:
 	 * @return The computed difference: series(n+order) - series(n).
 	 */
 
-	T operator()(const K n, const K order, const std::vector<T>* const an, const T gamma = static_cast<T>(-1), const T rho = static_cast<T>(1)) const {
+	T operator()(const K n, const K order, std::shared_ptr<std::vector<T>> an, const T gamma = static_cast<T>(-1), const T rho = static_cast<T>(1)) const {
 
 		// For theory, see: Wynn (1956), Eq. (2.6b): ΔS_n = S_{n+1} - S_n
 		return an->at(n + order) - an->at(n); //p.34 6.2-2b [https://arxiv.org/pdf/math/0306302]
@@ -141,7 +143,7 @@ public:
 	 * @param rho Unused parameter (maintained for interface consistency).
 	 * @return The computed constant: order - gamma - 1.
 	 */
-	T operator()(const K n, const K order, const std::vector<T>* const an, const T gamma = static_cast<T>(-1), const T rho = static_cast<T>(1)) const {
+	T operator()(const K n, const K order, std::shared_ptr<std::vector<T>>  an, const T gamma = static_cast<T>(-1), const T rho = static_cast<T>(1)) const {
 
 		return static_cast<T>(order - static_cast<K>(1)) - gamma; //p.377 rhi(gamma)-algorithm [http://servidor.demec.ufpr.br/CFD/bibliografia/MER/Sidi_2003.pdf]
 	}
@@ -183,7 +185,7 @@ public:
 	 * @throws std::invalid_argument if rho = 0.0.
 	 */
 	
-	T operator()(const K n, const K order, const std::vector<T>* const an, const T gamma = static_cast<T>(-1), const T rho = static_cast<T>(1)) const {
+	T operator()(const K n, const K order, std::shared_ptr<std::vector<T>> an, const T gamma = static_cast<T>(-1), const T rho = static_cast<T>(1)) const {
 
 		// insight: order % 2 is the same order & 1
 		// if order is even:
