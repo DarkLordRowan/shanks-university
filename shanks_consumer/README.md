@@ -6,6 +6,7 @@
 
 ```bash
 git clone https://github.com/DarkLordRowan/shanks-university.git
+cd shanks-university
 git checkout concept-proved
 cd shanks_consumer
 
@@ -245,9 +246,17 @@ python script.py --no-events --no-plots --output-dir test_run
 
 ```sh
 git clone https://github.com/DarkLordRowan/shanks-university.git
+cd shanks-university
 git checkout concept-proved
 cd shanks_consumer
 
+# Убедитесь, что у вас установлены зависимости:
+sudo apt update
+sudo apt install python3 python3-pip cmake build-essential
+```
+
+Для работы нужно собрать библиотеку **pyshanks*
+```
 bash install_pyshanks.sh
 ```
 
