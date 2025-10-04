@@ -11,8 +11,10 @@
 #pragma once
 
 #include "../custom_concepts.hpp"
+#include "../series/series_base.hpp"
 
 #include <iostream>
+#include <memory>
 
  /**
   * @brief Base class for series acceleration transformations
@@ -70,18 +72,20 @@ public:
      * @return The accelerated partial sum after applying the transformation
      * @throws May throw domain_error or overflow_error in derived implementations
      */
-    virtual T operator()(K n, K order) const = 0;
+    virtual T operator()(K n, K order, K offset = static_cast<K>(0)) const = 0;
 
-    void reset(const std::vector<T>& newSn, const std::vector<T>& newAn = nullptr);
+    void reset(const SeriesResult<T>& series, unsigned short int precision = 0);
 
 protected:
 
-    const std::vector<T>* Sn = nullptr;
-    const std::vector<T>* an = nullptr;
+    //const std::vector<T>* Sn = nullptr;
+    //const std::vector<T>* an = nullptr;
+    std::weak_ptr<std::vector<T>> Sn;
+    std::weak_ptr<std::vector<T>> an;
 
     std::string acceleration_name = "series acceleration base class";
 
-    size_t arbPrecision = 0;
+    unsigned short precision = 0;
 
 };
 
@@ -107,19 +111,33 @@ series_acceleration<T, K>::series_acceleration(std::string name) : acceleration_
 template<AcceptedLike T, UnsignedIntLike K>
 constexpr void series_acceleration<T, K>::print_info() const { std::cout << this->acceleration_name << '\n'; }
 
-
 template<AcceptedLike T, UnsignedIntLike K>
-void series_acceleration<T, K>::reset(
-    const std::vector<T>& newSn, 
-    const std::vector<T>& newAn //for some algo it is unnecessary so it could be nullptr
-) {
-    Sn = &newSn;
-    an = &newAn;
+void series_acceleration<T, K>::reset(const SeriesResult<T>& series, unsigned short int precision){
+
+    Sn.reset(); an.reset();
+
+    Sn = series.Sn;
+    an = series.an;
 
     if constexpr (std::is_same<T, float_precision>::value){
-        arbPrecision = newSn.at(0).precision();
-    } else if constexpr (std::is_same<T, complex_precision<float_precision>>::value){
-        arbPrecision = std::max(newSn.at(0).real().precision(), newSn.at(0).imag().precision());
-    }
 
-}
+        if(precision == 0){
+            this->precision =  series.Sn->at(0).precision();
+        } else {
+            this->precision = precision;
+        }
+
+    } else if constexpr (std::is_same<T, complex_precision<float_precision>>::value){
+
+        if(precision == 0){
+            this->precision =  std::max(series.Sn->at(0).real().precision(), series.Sn->at(0).imag().precision());
+        } else {
+            this->precision = precision;
+        }
+
+    } else {
+
+        this->precision = 0;
+    }
+    
+};

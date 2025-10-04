@@ -2,6 +2,7 @@
 
 #include <stdexcept>
 #include <vector>
+#include <memory>
 #include <string>
 
 #include "../custom_concepts.hpp"
@@ -51,8 +52,8 @@ constexpr const K binomial_coefficient(const K n, const K k) {
 
 template<AcceptedLike T>
 struct SeriesResult{
-	std::vector<T> an;
-	std::vector<T> Sn;
+	std::shared_ptr<std::vector<T>> Sn;
+	std::shared_ptr<std::vector<T>> an;
 };
 
  /**
