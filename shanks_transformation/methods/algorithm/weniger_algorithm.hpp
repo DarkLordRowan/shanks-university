@@ -41,7 +41,9 @@
 template<AcceptedLike T, UnsignedIntLike K>
 class weniger_algorithm final : public series_acceleration<T, K>
 {
-inline T calculate(
+protected:
+
+	inline T calculate(
 		K n, 
 		K order, 
 		std::shared_ptr<std::vector<T>> sharedSn, 
@@ -80,7 +82,8 @@ public:
 
 template<AcceptedLike T, UnsignedIntLike K>
 T weniger_algorithm<T, K>::operator()(K n, K order, K offset) const {
-	if (series_acceleration<T,K>::Sn.expired()){
+
+	if (series_acceleration<T,K>::Sn.expired() || series_acceleration<T,K>::an.expired()){
     	throw std::domain_error("Sn or an is expired");
 	}
 
@@ -90,7 +93,7 @@ T weniger_algorithm<T, K>::operator()(K n, K order, K offset) const {
     K required_size = order + offset + static_cast<K>(1);
 
     if (sharedSn->size() < required_size || sharedAn->size() < required_size){
-        throw std::out_of_range("Sn or an is smaller than required to calculate theta_{" + to_string(order) + "}^{" + to_string(n) + "}");
+        throw std::out_of_range("Sn or an is smaller than required to calculate weniger_{" + to_string(order) + "}^{" + to_string(n) + "}");
 	}
 
     if (order == static_cast<K>(0)) {
@@ -113,8 +116,8 @@ T weniger_algorithm<T, K>::calculate(
 
 	// For theory, see: Weniger (1989), Section 8.2, Eq. (8.2-7)
 	// Weniger transformation as ratio of binomial sums with Pochhammer symbols
-	T numerator = convertArbWithPrecision<T>(0.0, series_acceleration<T, K>::precision);
-	T denominator = convertArbWithPrecision<T>(0.0, series_acceleration<T, K>::precision);;
+	T numerator = convertWithPrec<T>(0.0, series_acceleration<T, K>::precision);
+	T denominator = convertWithPrec<T>(0.0, series_acceleration<T, K>::precision);
 
 	// For theory, see: Weniger (1989), Eq. (8.2-7) term components
 	T rest;	// Weight factor for current term: (-1)ʲ × C(order, j) × (β+n+j)ₖ₋₁
@@ -122,7 +125,7 @@ T weniger_algorithm<T, K>::calculate(
 
 	// For theory, see: Weniger (1989), Eq. (8.2-7) weight factor
 	// Initial Pochhammer-like term: (β+n)ₖ₋₁ with β=1, equivalent to (n+1)ₖ₋₁ = Γ(n+k)/Γ(n+1)
-	T coef = convertArbWithPrecision<T>(1.0, series_acceleration<T, K>::precision);
+	T coef = convertWithPrec<T>(1.0, series_acceleration<T, K>::precision);
 
 	// For theory, see: Weniger (1989), Eq. (8.2-7) recursive computation
 	// Initial binomial coefficient: C(order, 0) = 1
@@ -143,7 +146,7 @@ T weniger_algorithm<T, K>::calculate(
 		// For theory, see: Weniger (1989), Eq. (8.2-7) term structure
 		// Term sign: (-1)ʲ
 
-		rest = convertArbWithPrecision<T>(1.0, series_acceleration<T, K>::precision); //need to set precision before doing anything
+		rest = convertWithPrec<T>(1.0, series_acceleration<T, K>::precision); //need to set precision before doing anything
 		rest*= minus_one_raised_to_power_n<T,K>(j);
 
 		// Binomial coefficient: C(order, j)

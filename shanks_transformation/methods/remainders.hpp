@@ -46,7 +46,7 @@ enum remainder_type{
  * @tparam T Floating-point type for series elements (must satisfy Accepted)
  *           Represents numerical precision (float, double, long double)
  * @tparam K Unsigned integral type for indices (must satisfy std::unsigned_integral)
- *           Used for counting and indexing operations
+ *           Used for counting and ordering operations
  */
 template<AcceptedLike T, UnsignedIntLike K>
 class transform_base{
@@ -58,14 +58,14 @@ public:
      * Computes the remainder estimate ωₙ for Levin-type transformations.
      * The specific formula depends on the concrete implementation.
      *
-     * @param n Index of the partial sum Sₙ from which calculation begins
-     * @param order Order of the transformation (number of terms used)
+     * @param n order of the partial sum Sₙ from which calculation begins
+     * @param order order of the transformation (number of terms used)
      * @param an Constant pointer to the an vector providing term access
      * @param scale Scaling factor (used primarily for u-variant with β parameter)
      * @return The computed remainder estimate ωₙ
      * @throws std::overflow_error if division by zero or numerical instability occurs
      */
-    virtual T operator() (K n, K order, std::shared_ptr<std::vector<T>> an, T scale = static_cast<T>(0)) const = 0;
+    virtual T operator() (K n, K index, std::shared_ptr<std::vector<T>> an, T scale = static_cast<T>(0)) const = 0;
 };
 
 /**
@@ -86,24 +86,24 @@ class u_transform : public transform_base<T, K> {
      * For theory, see: Levin (1973), Eq. (3.3)
      * Formula: ωₙ = (β + n) * aₙ, where aₙ = ΔSₙ₋₁ = Sₙ - Sₙ₋₁
      *
-     * @param n Index of the partial sum Sₙ
-     * @param order Order of transformation (unused in this implementation)
+     * @param n order of the partial sum Sₙ
+     * @param order order of transformation (unused in this implementation)
      * @param series Series object providing term access
      * @param scale Represents β parameter: ωₙ = (scale + n) * aₙ
      * @return u-variant remainder estimate ωₙ = 1/[(scale + n) * aₙ]
      * @throws std::overflow_error if aₙ = 0 causing division by zero
      */
-    T operator() (K n, K order, std::shared_ptr<std::vector<T>> an, T scale = static_cast<T>(0)) const override;
+    T operator() (K n, K index, std::shared_ptr<std::vector<T>> an, T scale = static_cast<T>(0)) const override;
 };
 
 template<AcceptedLike T, UnsignedIntLike K>
-T u_transform<T, K>::operator()(const K n, const K order, std::shared_ptr<std::vector<T>> an, T scale) const {
+T u_transform<T, K>::operator()(const K n, const K index, std::shared_ptr<std::vector<T>> an, T scale) const {
 
     using std::isfinite;
 
     // For theory, see: Levin (1973), Eq. (3.3) - u transform
     // ωₙ = (β + n) * aₙ, where aₙ = ΔSₙ₋₁
-    const T result = static_cast<T>(1) / ((scale + n) * an->at(n+order));
+    const T result = static_cast<T>(1) / ((scale + static_cast<T>(n)) * an->at(index));
 
     if (!isfinite(result)) throw std::overflow_error("division by zero");
 
@@ -128,24 +128,24 @@ class t_transform : public transform_base<T, K> {
      * For theory, see: Levin (1973), Eq. (3.2)
      * Formula: ωₙ = aₙ, where aₙ = ΔSₙ₋₁ = Sₙ - Sₙ₋₁
      *
-     * @param n Index of the partial sum Sₙ
-     * @param order Order of transformation (determines which term aₙ₊ₖ is used)
+     * @param n order of the partial sum Sₙ
+     * @param order order of transformation (determines which term aₙ₊ₖ is used)
      * @param series Series object providing term access
      * @param scale Unused parameter (maintained for interface consistency)
      * @return t-variant remainder estimate ωₙ = 1/aₙ₊ₖ
      * @throws std::overflow_error if aₙ₊ₖ = 0 causing division by zero
      */
-    T operator() (K n, K order, std::shared_ptr<std::vector<T>> an, T scale = static_cast<T>(0)) const override;
+    T operator() (K n, K index, std::shared_ptr<std::vector<T>> an, T scale = static_cast<T>(0)) const override;
 };
 
 template<AcceptedLike T, UnsignedIntLike K>
-T t_transform<T, K>::operator()(const K n, const K order, std::shared_ptr<std::vector<T>> an, T scale) const {
+T t_transform<T, K>::operator()(const K n, const K index, std::shared_ptr<std::vector<T>> an, T scale) const {
 
     using std::isfinite;
 
     // For theory, see: Levin (1973), Eq. (3.2) - t transform
     // ωₙ = aₙ, where aₙ = ΔSₙ₋₁
-    const T result = static_cast<T>(1) / an->at(n+order);
+    const T result = static_cast<T>(1) / an->at(n + index);
 
     if (!isfinite(result)) throw std::overflow_error("division by zero");
     return result;
@@ -169,24 +169,24 @@ class t_wave_transform : public transform_base<T, K>  {
      * For theory, see: Smith & Ford (1979), Eq. (2.4) - d variant
      * Formula: ωₙ = aₙ₊₁, where aₙ = ΔSₙ₋₁
      *
-     * @param n Index of the partial sum Sₙ
-     * @param order Order of transformation (shifts the index further)
+     * @param n order of the partial sum Sₙ
+     * @param order order of transformation (shifts the order further)
      * @param series Series object providing term access
      * @param scale Unused parameter (maintained for interface consistency)
      * @return t-wave variant remainder estimate ωₙ = 1/aₙ₊ₖ₊₁
      * @throws std::overflow_error if aₙ₊ₖ₊₁ = 0 causing division by zero
      */
-    T operator() (K n, K order, std::shared_ptr<std::vector<T>> an, T scale = static_cast<T>(0)) const override;
+    T operator() (K n, K index, std::shared_ptr<std::vector<T>> an, T scale = static_cast<T>(0)) const override;
 };
 
 template<AcceptedLike T, UnsignedIntLike K>
-T t_wave_transform<T,K>::operator()(const K n, const K order, std::shared_ptr<std::vector<T>> an, T scale ) const {
+T t_wave_transform<T,K>::operator()(const K n, const K index, std::shared_ptr<std::vector<T>> an, T scale ) const {
 
     using std::isfinite;
 
     // For theory, see: Smith & Ford (1979), Eq. (2.4) - d variant
     // ωₙ = aₙ₊₁ (shifted t-variant)
-	const T result = static_cast<T>(1) / an->at(n + order + static_cast<K>(1));
+	const T result = static_cast<T>(1) / an->at(index + static_cast<K>(1));
 
 	if (!isfinite(result)) throw std::overflow_error("division by zero");
 	return result;
@@ -210,24 +210,24 @@ class v_transform : public transform_base<T, K> {
      * For theory, see: Levin (1973), Eq. (3.4) - v transform
      * Formula: ωₙ = (aₙ * aₙ₊₁)/(aₙ₊₁ - aₙ), where aₙ = ΔSₙ₋₁
      *
-     * @param n Index of the partial sum Sₙ
-     * @param order Order of transformation (determines starting index)
+     * @param n order of the partial sum Sₙ
+     * @param order order of transformation (determines starting order)
      * @param series Series object providing term access
      * @param scale Unused parameter (maintained for interface consistency)
      * @return v-variant remainder estimate ωₙ = (aₙ₊ₖ₊₁ - aₙ₊ₖ)/(aₙ₊ₖ * aₙ₊ₖ₊₁)
      * @throws std::overflow_error if aₙ₊ₖ = 0 or aₙ₊ₖ₊₁ = 0 causing division by zero
      */
-    T operator() (K n, K order, std::shared_ptr<std::vector<T>> an, T scale = static_cast<T>(0)) const override;
+    T operator() (K n, K index, std::shared_ptr<std::vector<T>> an, T scale = static_cast<T>(0)) const override;
 };
 
 template<AcceptedLike T, UnsignedIntLike K>
-T v_transform<T,K>::operator()(const K n, const K order, std::shared_ptr<std::vector<T>> an, T scale) const {
+T v_transform<T,K>::operator()(const K n, const K index, std::shared_ptr<std::vector<T>> an, T scale) const {
 
     using std::isfinite;
 
     // For theory, see: Levin (1973), Eq. (3.4) - v transform
     // ωₙ = (aₙ * aₙ₊₁)/(aₙ₊₁ - aₙ)
-    const T a1 = an->at(n+order), a2  = an->at(n+order+static_cast<K>(1));
+    const T a1 = an->at(index), a2  = an->at(index + static_cast<K>(1));
     const T result = (a2-a1) / (a1 * a2);
 
 	if (!isfinite(result)) throw std::overflow_error("division by zero");
@@ -252,24 +252,24 @@ class v_wave_transform : public transform_base<T, K> {
      * Similar to v-variant but with shifted indices:
      * Formula: ωₙ = (aₙ₊₁ * aₙ₊₂)/(aₙ₊₁ - aₙ₊₂)
      *
-     * @param n Index of the partial sum Sₙ
-     * @param order Order of transformation (determines starting index)
+     * @param n order of the partial sum Sₙ
+     * @param order order of transformation (determines starting order)
      * @param series Series object providing term access
      * @param scale Unused parameter (maintained for interface consistency)
      * @return v-wave variant remainder estimate ωₙ = (aₙ₊ₖ - aₙ₊ₖ₊₁)/(aₙ₊ₖ * aₙ₊ₖ₊₁)
      * @throws std::overflow_error if aₙ₊ₖ = 0 or aₙ₊ₖ₊₁ = 0 causing division by zero
      */
-    T operator() (K n, K order, std::shared_ptr<std::vector<T>> an, T scale = static_cast<T>(0)) const override;
+    T operator() (K n, K index, std::shared_ptr<std::vector<T>> an, T scale = static_cast<T>(0)) const override;
 };
 
 template<AcceptedLike T, UnsignedIntLike K>
-T v_wave_transform<T,K>::operator()(const K n, const K order, std::shared_ptr<std::vector<T>> an, T scale) const  {
+T v_wave_transform<T,K>::operator()(const K n, const K index, std::shared_ptr<std::vector<T>> an, T scale) const  {
 
     using std::isfinite;
 
     // For theory, see: Modified v-transform with shifted indices
     // ωₙ = (aₙ₊₁ * aₙ₊₂)/(aₙ₊₁ - aₙ₊₂)
-    const T a1 = an->at(n+order), a2 = an->at(n+order+static_cast<K>(1));
+    const T a1 = an->at(index), a2 = an->at(index + static_cast<K>(1));
     const T result = (a1 - a2) / (a1 * a2);
 
 	if (!isfinite(result)) throw std::overflow_error("division by zero");

@@ -99,7 +99,7 @@ T wynn_epsilon_1_algorithm<T, K>::operator()(K n, K order, K offset) const {
     K required_size = static_cast<K>(2) * order + offset + static_cast<K>(1);
 
     if (sharedSn->size() < required_size){
-        throw std::out_of_range("Sn or an is smaller than required to calculate theta_{" + to_string(order) + "}^{" + to_string(n) + "}");
+        throw std::out_of_range("Sn or an is smaller than required to calculate e1_{" + to_string(order) + "}^{" + to_string(n) + "}");
 	}
 
     if (n == static_cast<K>(0)){
@@ -134,11 +134,11 @@ T wynn_epsilon_1_algorithm<T, K>::calculate(
 	// For theory, see: Wynn (1956), Section 3 - Table construction
 	std::vector<T> e0(
 		max_ind + static_cast<K>(1), 
-		convertArbWithPrecision<T>(0.0, series_acceleration<T, K>::precision)
+		convertWithPrec<T>(0.0, series_acceleration<T, K>::precision)
 	);
 	std::vector<T> e1(
 		max_ind, 
-		convertArbWithPrecision<T>(0.0, series_acceleration<T, K>::precision)
+		convertWithPrec<T>(0.0, series_acceleration<T, K>::precision)
 	);
 
 	auto e0_add = &e0; // Pointer to current epsilon column

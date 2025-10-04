@@ -33,7 +33,7 @@ concept UnsignedIntLike = requires {
 };
 
 template<AcceptedLike T>
-T convertArbWithPrecision(float realPart, size_t precision) {
+T convertWithPrec(float realPart, size_t precision) {
 
     if constexpr(std::is_same<T, float_precision>::value){
         return float_precision(realPart, precision);

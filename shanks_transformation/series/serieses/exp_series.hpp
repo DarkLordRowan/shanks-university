@@ -61,8 +61,8 @@ exp_series<T, K>::exp_series(T x) : series_base<T, K>(x)
 template<AcceptedLike T, UnsignedIntLike K>
 SeriesResult<T> exp_series<T, K>::generateSeries(K vecSize) const {
 
-	std::vector<T> vecAn(vecSize, convertArbWithPrecision<T>(0.0, series_base<T, K>::precision)); vecAn[0] = static_cast<T>(1);
-	std::vector<T> vecSn(vecSize, convertArbWithPrecision<T>(0.0, series_base<T, K>::precision)); vecSn[0] = static_cast<T>(1);
+	std::vector<T> vecAn(vecSize, convertWithPrec<T>(0.0, series_base<T, K>::precision)); vecAn[0] = static_cast<T>(1);
+	std::vector<T> vecSn(vecSize, convertWithPrec<T>(0.0, series_base<T, K>::precision)); vecSn[0] = static_cast<T>(1);
 
 	for(K j = static_cast<K>(1); j < vecSize; ++j){
 		vecAn[j] += vecAn[j-static_cast<K>(1)] * series_base<T,K>::x / static_cast<T>(j);

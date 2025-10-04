@@ -512,7 +512,7 @@ template<class _Ty> inline complex_precision<_Ty> fma(complex_precision<_Ty> x, 
 
 template<class _Ty> inline std::string to_string(const complex_precision<_Ty>& x){ 
    using std::to_string;
-   return to_string(x.real()) + to_string(x.imag()) + " * i";
+   return to_string(x.real()) + " + " +to_string(x.imag()) + " * i";
  }
 
 #endif

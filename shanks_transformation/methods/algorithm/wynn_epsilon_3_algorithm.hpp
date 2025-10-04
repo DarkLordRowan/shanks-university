@@ -117,11 +117,26 @@ T wynn_epsilon_3_algorithm<T, K>::calculate(
     const T EPRN = static_cast<T>(50) * EMACH;         ///< Relative error tolerance (50 * machine epsilon).
     const T OFRN = std::numeric_limits<T>::max();      ///< Overflow threshold (largest finite value).
 
-    T result = convertArbWithPrecision<T>(0.0, series_acceleration<T, K>::precision);       ///< Current best accelerated estimate.
-    T abs_error = convertArbWithPrecision<T>(0.0, series_acceleration<T, K>::precision);    ///< Absolute error estimate for current result.
-    T resla = convertArbWithPrecision<T>(0.0, series_acceleration<T, K>::precision);        ///< Previous result for error comparison.
+    T result = convertWithPrec<T>(0.0, series_acceleration<T, K>::precision);       ///< Current best accelerated estimate.
+    T abs_error = convertWithPrec<T>(0.0, series_acceleration<T, K>::precision);    ///< Absolute error estimate for current result.
+    T resla = convertWithPrec<T>(0.0, series_acceleration<T, K>::precision);        ///< Previous result for error comparison.
     K newelm, num, NUM, K1, ib, ie, in; // Loop indices and counters.
-    T RES, E0, E1, E2, E3, DELTA1, DELTA2, DELTA3, ERR1, ERR2, ERR3, TOL1, TOL2, TOL3, SS, EPSINF; // int -> K
+    T RES = convertWithPrec<T>(0.0, series_acceleration<T, K>::precision);
+    T E0 = convertWithPrec<T>(0.0, series_acceleration<T, K>::precision);
+    T E1 = convertWithPrec<T>(0.0, series_acceleration<T, K>::precision);
+    T E2 = convertWithPrec<T>(0.0, series_acceleration<T, K>::precision);
+    T E3 = convertWithPrec<T>(0.0, series_acceleration<T, K>::precision);
+    T DELTA1 = convertWithPrec<T>(0.0, series_acceleration<T, K>::precision);
+    T DELTA2 = convertWithPrec<T>(0.0, series_acceleration<T, K>::precision);
+    T DELTA3 = convertWithPrec<T>(0.0, series_acceleration<T, K>::precision);
+    T ERR1 = convertWithPrec<T>(0.0, series_acceleration<T, K>::precision);
+    T ERR2 = convertWithPrec<T>(0.0, series_acceleration<T, K>::precision);
+    T ERR3 = convertWithPrec<T>(0.0, series_acceleration<T, K>::precision); 
+    T TOL1 = convertWithPrec<T>(0.0, series_acceleration<T, K>::precision);
+    T TOL2 = convertWithPrec<T>(0.0, series_acceleration<T, K>::precision);
+    T TOL3 = convertWithPrec<T>(0.0, series_acceleration<T, K>::precision); 
+    T SS = convertWithPrec<T>(0.0, series_acceleration<T, K>::precision);
+    T EPSINF = convertWithPrec<T>(0.0, series_acceleration<T, K>::precision); // int -> K
 
     // For theory, see: Wynn (1956), Section 3: Algorithm and lozenge diagram.
     // The epsilon table e[0..N+2] stores intermediate values εₛ⁽ⁿ⁾.
@@ -129,7 +144,7 @@ T wynn_epsilon_3_algorithm<T, K>::calculate(
     // The epsilon table e[0..N+2] stores intermediate values εₛ⁽ⁿ⁾.
     std::vector<T> e(
         N + static_cast<K>(3),
-        convertArbWithPrecision<T>(0.0, series_acceleration<T, K>::precision)  
+        convertWithPrec<T>(0.0, series_acceleration<T, K>::precision)  
     ); //First N eliments of epsilon table + 2 elements for math
 
     // Initialize epsilon table with partial sums: ε₀⁽ⁱ⁾ = S_i for i=0,...,N
@@ -274,7 +289,7 @@ T wynn_epsilon_3_algorithm<T, K>::operator()(K n, K order, K offset) const {
     K required_size = order + static_cast<K>(1) + offset;
 
     if (sharedSn->size() < required_size){
-        throw std::out_of_range("Sn or an is smaller than required to calculate theta_{" + to_string(order) + "}^{" + to_string(n) + "}");
+        throw std::out_of_range("Sn or an is smaller than required to calculate e3_{" + to_string(order) + "}^{" + to_string(n) + "}");
 	}
 
     if (n == static_cast<K>(0)){

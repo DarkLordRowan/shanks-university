@@ -14,7 +14,6 @@
 #include "../series_acceleration.hpp"
 #include "../remainders.hpp"
 #include <memory>					  // Include for unique ptr
-#include <stdexcept>
 
  /**
   * @brief Drummond's D-transformation class template for accelerating slowly convergent series.
@@ -40,8 +39,8 @@
   *           - T minus_one_raised_to_power_n(K n) const: returns (-1)^n
   *           - T binomial_coefficient(T n, K k) const: returns binomial coefficient C(n, k)
   */
-template<Accepted T, std::unsigned_integral K, typename series_templ>
-class drummond_d_algorithm final : public series_acceleration<T, K, series_templ>
+template<AcceptedLike T, UnsignedIntLike K>
+class drummond_d_algorithm final : public series_acceleration<T, K>
 {
 protected:
 
@@ -63,7 +62,13 @@ protected:
 	 * @return The accelerated partial sum after D-transformation
 	 * @throws std::overflow_error if division by zero occurs
 	 */
-	inline T calc_result(K n, K order) const;
+	inline T calc_result(
+        K n, 
+        K order, 
+        std::shared_ptr<std::vector<T>> sharedSn,
+        std::shared_ptr<std::vector<T>> sharedAn,
+        K offset = static_cast<K>(0)
+    ) const;
 
 	/**
 	 * @brief Calculates D-transformation using recurrence relations for improved efficiency.
@@ -79,7 +84,13 @@ protected:
 	 * @return The accelerated partial sum after D-transformation
 	 * @throws std::overflow_error if division by zero occurs
 	 */
-	inline T calc_result_rec(K n, K order) const;
+	inline T calc_result_rec(
+        K n, 
+        K order, 
+        std::shared_ptr<std::vector<T>> sharedSn,
+        std::shared_ptr<std::vector<T>> sharedAn,
+        K offset = static_cast<K>(0)
+    ) const;
 
 public:
 
@@ -100,7 +111,6 @@ public:
 	 *        false: Use direct computation (simpler but potentially slower)
 	 */
 	explicit drummond_d_algorithm(
-		const series_templ& series,
 		remainder_type variant = remainder_type::u_variant,
 		bool useRecFormulas = false
 	);
@@ -123,28 +133,35 @@ public:
 	 * @return The accelerated partial sum after Drummond transformation
 	 * @throws std::overflow_error if division by zero or numerical instability occurs
 	 */
-    T operator()(K n, K order) const override;
+    T operator()(K n, K order, K offset) const override;
 
 };
 
-template<Accepted T, std::unsigned_integral K, typename series_templ>
-inline T drummond_d_algorithm<T,K,series_templ>::calc_result(const K n, const K order) const {
+template<AcceptedLike T, UnsignedIntLike K>
+inline T drummond_d_algorithm<T,K>::calc_result(
+    K n, 
+    K order, 
+    std::shared_ptr<std::vector<T>> sharedSn,
+    std::shared_ptr<std::vector<T>> sharedAn,
+    K offset
+) const {
 
     using std::isfinite;
 
-	T numerator = static_cast<T>(0), denominator = static_cast<T>(0);
-	T rest;
+	T numerator = convertWithPrec<T>(0.0, series_acceleration<T,K>::precision);
+	T denominator = convertWithPrec<T>(0.0, series_acceleration<T,K>::precision);
+	T rest = convertWithPrec<T>(0.0, series_acceleration<T,K>::precision);
 
 	// For theory, see: Drummond (1976), Eq. (2.1)
 	// D_n^{(k)} = [Σ_{j=0}^n (-1)^j C(n, j) w_{n,j} S_{n+j}] / [Σ_{j=0}^n (-1)^j C(n, j) w_{n,j}]
 	for (K j = static_cast<K>(0); j <= order; ++j) {
 
 		// Compute weight term: (-1)^j * C(n, j) * w_{n,j}
-		rest  = this->series->minus_one_raised_to_power_n(j);
-		rest *= this->series->binomial_coefficient(static_cast<T>(order), j);
-		rest *= remainder->operator()(n,j, this->series);
+		rest  = minus_one_raised_to_power_n<T,K>(j);
+		rest *= static_cast<T>(binomial_coefficient(order, j));
+		rest *= remainder->operator()(n,offset + j, sharedAn);
 
-		numerator   += rest * this->series->S_n(n+j);
+		numerator   += rest * sharedSn->at(n+j);
 		denominator += rest;
 	}
 
@@ -155,20 +172,32 @@ inline T drummond_d_algorithm<T,K,series_templ>::calc_result(const K n, const K 
 	return numerator;
 }
 
-template<Accepted T, std::unsigned_integral K, typename series_templ>
-inline T drummond_d_algorithm<T,K,series_templ>::calc_result_rec(const K n, const K order) const {
+template<AcceptedLike T, UnsignedIntLike K>
+inline T drummond_d_algorithm<T,K>::calc_result_rec(
+    K n, 
+    K order, 
+    std::shared_ptr<std::vector<T>> sharedSn,
+    std::shared_ptr<std::vector<T>> sharedAn,
+    K offset
+) const {
 
     using std::isfinite;
 
 	// For theory, see: Sidi (2003), Section 9.5-5
 	// Recursive computation using forward differences
-	std::vector<T>   Num(order + static_cast<K>(1), static_cast<T>(0));
-	std::vector<T> Denom(order + static_cast<K>(1), static_cast<T>(0));
+	std::vector<T>   Num(
+		order + static_cast<K>(1), 
+		convertWithPrec<T>(0.0, series_acceleration<T,K>::precision)
+	);
+	std::vector<T> Denom(
+		order + static_cast<K>(1), 
+		convertWithPrec<T>(0.0, series_acceleration<T,K>::precision)
+	);
 
 	// Initialize base values: N_j^{(0)} = w_{n,j} S_{n+j}, D_j^{(0)} = w_{n,j}
 	for (K i = static_cast<K>(0); i < order+static_cast<K>(1); ++i) {
-		Denom[i] = remainder->operator()(n, i, this->series);
-		  Num[i] = this->series->S_n(n+i) * Denom[i];
+		Denom[i] = remainder->operator()(n, offset + i, sharedAn);
+		  Num[i] = sharedSn->at(offset + i) * Denom[i];
 	}
 
 	// Apply forward difference recurrence:
@@ -189,51 +218,82 @@ inline T drummond_d_algorithm<T,K,series_templ>::calc_result_rec(const K n, cons
 	return Num[0];
 }
 
-template<Accepted T, std::unsigned_integral K, typename series_templ>
-drummond_d_algorithm<T,K,series_templ>::drummond_d_algorithm(
-	const series_templ& series,
+template<AcceptedLike T, UnsignedIntLike K>
+drummond_d_algorithm<T,K>::drummond_d_algorithm(
 	const remainder_type variant,
 	bool useRecFormulas
 	) :
-	series_acceleration<T, K, series_templ>(series),
+	series_acceleration<T, K>(),
 	variant(variant),
 	useRecFormulas(useRecFormulas)
 {
 
+	series_acceleration<T, K>::acceleration_name = (useRecFormulas ? "recurrent " : "");
+
 	// Initialize the appropriate remainder estimator based on variant
     switch(variant){
         case remainder_type::u_variant :
+		{
+			series_acceleration<T, K>::acceleration_name += "drummond d algorithm with u-variant";
             remainder.reset(new u_transform<T, K>());
             break;
+		}
         case remainder_type::t_variant :
+		{
+			series_acceleration<T, K>::acceleration_name += "drummond d algorithm with t-variant";
             remainder.reset(new t_transform<T, K>());
             break;
+		}
         case remainder_type::v_variant :
+		{
+			series_acceleration<T, K>::acceleration_name += "drummond d algorithm with v-variant";
             remainder.reset(new v_transform<T, K>());
             break;
+		}
         case remainder_type::t_wave_variant:
+		{
+			series_acceleration<T, K>::acceleration_name += "drummond d algorithm with t-wave-variant";
             remainder.reset(new t_wave_transform<T, K>());
             break;
+		}
         case remainder_type::v_wave_variant:
+		{
+			series_acceleration<T, K>::acceleration_name += "drummond d algorithm with v-wave-variant";
             remainder.reset(new v_wave_transform<T, K>());
             break;
+		}
         default:
+		{
+			series_acceleration<T, K>::acceleration_name += "drummond d algorithm with u-variant";
             remainder.reset(new u_transform<T, K>());
             break;
+		}
     }
 }
 
-template<Accepted T, std::unsigned_integral K, typename series_templ>
-T drummond_d_algorithm<T,K,series_templ>::operator()(const K n, const K order) const {
+template<AcceptedLike T, UnsignedIntLike K>
+T drummond_d_algorithm<T,K>::operator()(K n, K order, K offset) const {
+
+    if (series_acceleration<T,K>::Sn.expired() || series_acceleration<T,K>::an.expired()){
+    	throw std::domain_error("Sn or an is expired");
+	}
+
+    std::shared_ptr<std::vector<T>> sharedSn = series_acceleration<T,K>::Sn.lock();
+	std::shared_ptr<std::vector<T>> sharedAn = series_acceleration<T,K>::an.lock();
+
+    K required_size = order + offset + static_cast<K>(1);
+
+    if (sharedSn->size() < required_size || sharedSn->size() < required_size){
+        throw std::out_of_range("Sn is smaller than required to calculate D_{" + to_string(order) + "}^{" + to_string(n) + "}");
+	}
+
+    if (order == static_cast<K>(0)) {
+        return sharedSn->at(n);
+    }
 
     using std::isfinite;
 
-
-	if (n == static_cast<K>(0) && variant == remainder_type::u_variant)
-		throw std::domain_error("n = 0 in the input and remainder type is u");
-
-
-    const T result = (useRecFormulas ? calc_result_rec(n,order) : calc_result(n, order));
+    const T result = (useRecFormulas ? calc_result_rec(n,order, sharedSn, sharedAn, offset) : calc_result(n, order, sharedSn, sharedAn, offset));
     if (!isfinite(result)) throw std::overflow_error("division by zero");
     return result;
 }
