@@ -153,11 +153,11 @@ public:
 template<AcceptedLike T>
 SeriesResult<T> jitter(const SeriesResult<T>& source, T bottom_border = static_cast<T>(-1.0), T top_border = static_cast<T>(1.0), noise_type type = uniform) {
 
-    const size_t n = source.Sn->size();
+    const size_t n = source.Sn.size();
 
     SeriesResult<T> result;
-    result.Sn = std::make_shared<std::vector<T>>(*source.Sn);
-    result.an = std::make_shared<std::vector<T>>(*source.an);
+    result.Sn = source.Sn;
+    result.an = source.an;
 
     if (n == 0) {
         return result;
@@ -165,12 +165,12 @@ SeriesResult<T> jitter(const SeriesResult<T>& source, T bottom_border = static_c
 
     Noise<T> noise(n, bottom_border, top_border, type);
 
-    (*result.Sn)[0] += noise.seq[0];
-    (*result.an)[0] += noise.seq[0];
+    result.Sn[0] += noise.seq[0];
+    result.an[0] += noise.seq[0];
 
     for (size_t j = 1; j < n; ++j) {
-        (*result.Sn)[j] += noise.seq[j];
-        (*result.an)[j] += (noise.seq[j] - noise.seq[j - 1]);
+        result.Sn[j] += noise.seq[j];
+        result.an[j] += (noise.seq[j] - noise.seq[j - 1]);
     }
 
     return result;

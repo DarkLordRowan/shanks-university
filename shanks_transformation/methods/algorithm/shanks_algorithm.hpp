@@ -39,8 +39,6 @@ protected:
 	inline T calculate(
 		K n, 
 		K order, 
-		std::shared_ptr<std::vector<T>> sharedSn, 
-		std::shared_ptr<std::vector<T>> sharedAn,
 		K offset = static_cast<K>(0)
 	) const;  
 
@@ -74,9 +72,6 @@ template <AcceptedLike T, UnsignedIntLike K>
 T shanks_algorithm<T, K>::calculate(
 	K n, 
 	K order, 
-	std::shared_ptr<std::vector<T>> sharedSn, 
-	std::shared_ptr<std::vector<T>> sharedAn,
-
 	K offset
 ) const {
 
@@ -89,8 +84,8 @@ T shanks_algorithm<T, K>::calculate(
 		T a_n_plus_1 =convertWithPrec<T>(0.0, series_acceleration<T, K>::precision);
 		T tmp = convertWithPrec<T>(0.0, series_acceleration<T, K>::precision);
 
-		a_n += sharedAn->at(n);
-		a_n_plus_1 += sharedAn->at(n + static_cast<K>(1));
+		a_n += series_acceleration<T, K>::an.at(n);
+		a_n_plus_1 += series_acceleration<T, K>::an.at(n + static_cast<K>(1));
 		tmp -= a_n_plus_1 * a_n_plus_1;
 
 		// For theory, see: Shanks (1955), Eq. (6) - Aitken's Δ² process
@@ -98,7 +93,7 @@ T shanks_algorithm<T, K>::calculate(
 		const T result = fma(
 			a_n * a_n_plus_1,
 			(a_n + a_n_plus_1) / (fma(a_n, a_n, tmp) - fma(a_n_plus_1, a_n_plus_1, tmp)),
-			sharedSn->at(n)
+			series_acceleration<T, K>::Sn.at(n)
 		);
 		//n > order >= 1
 
@@ -122,8 +117,8 @@ T shanks_algorithm<T, K>::calculate(
 
 	for (K i = n_minus_order + static_cast<K>(1); i <= n_plus_order - static_cast<K>(1); ++i) // if we got to this branch then we know that n >= order - see previous branches  int -> K
 	{
-		a_n = sharedAn->at(i);
-		a_n_plus_1 = sharedAn->at(i + static_cast<K>(1));
+		a_n = series_acceleration<T, K>::an.at(i);
+		a_n_plus_1 = series_acceleration<T, K>::an.at(i + static_cast<K>(1));
 		tmp = -a_n_plus_1 * a_n_plus_1;
 
 		// For theory, see: Shanks (1955), Eq. (12) - Higher order transformation
@@ -131,7 +126,7 @@ T shanks_algorithm<T, K>::calculate(
 		T_n[i] = fma(
 			a_n * a_n_plus_1,
 			(a_n + a_n_plus_1) / (fma(a_n, a_n, tmp) - fma(a_n_plus_1, a_n_plus_1, tmp)),
-			sharedSn->at(i)
+			series_acceleration<T, K>::Sn.at(i)
 		);
 	}
 
@@ -171,24 +166,17 @@ T shanks_algorithm<T, K>::calculate(
 template <AcceptedLike T, UnsignedIntLike K>
 T shanks_algorithm<T, K>::operator()(K n, K order, K offset) const{
 
-	if (series_acceleration<T,K>::Sn.expired() || series_acceleration<T,K>::an.expired()){
-    	throw std::domain_error("Sn or an is expired");
-	}
-
-    std::shared_ptr<std::vector<T>> sharedSn = series_acceleration<T,K>::Sn.lock();
-	std::shared_ptr<std::vector<T>> sharedAn = series_acceleration<T,K>::an.lock();
-
     K required_size = order + offset + static_cast<K>(1);
 
-    if (sharedSn->size() < required_size || sharedAn->size() < required_size){
+    if (series_acceleration<T, K>::Sn.size() < required_size || series_acceleration<T, K>::an.size() < required_size){
         throw std::out_of_range("Sn or an is smaller than required to calculate shanks_{" + to_string(order) + "}^{" + to_string(n) + "}");
 	}
 
     if (order == static_cast<K>(0)) {
-        return sharedSn->at(n);
+        return series_acceleration<T, K>::Sn.at(n);
     }
 
-    return calculate(n, order, sharedSn, sharedAn, offset);
+    return calculate(n, order,  offset);
 	
 }
 
@@ -213,8 +201,6 @@ protected:
 	inline T calculate(
 		K n, 
 		K order, 
-		std::shared_ptr<std::vector<T>> sharedSn, 
-		std::shared_ptr<std::vector<T>> sharedAn,
 		K offset = static_cast<K>(0)
 	) const;  
 
@@ -249,8 +235,6 @@ template <AcceptedLike T, UnsignedIntLike K>
 T shanks_transform_alternating<T, K>::calculate(
 	K n, 
 	K order, 
-	std::shared_ptr<std::vector<T>> sharedSn, 
-	std::shared_ptr<std::vector<T>> sharedAn,
 	K offset
 ) const {
 
@@ -259,8 +243,8 @@ T shanks_transform_alternating<T, K>::calculate(
 
 	if (order == static_cast<K>(1)) [[unlikely]]
 	{
-		T a_n = sharedAn->at(n);
-		T a_n_plus_1 = sharedAn->at(n + static_cast<K>(1));
+		T a_n = series_acceleration<T, K>::an.at(n);
+		T a_n_plus_1 = series_acceleration<T, K>::an.at(n + static_cast<K>(1));
 		T result = convertWithPrec<T>(0.0, series_acceleration<T, K>::precision);
 
 		// For theory, see: Senhadji (2001), Section 3.2 - Alternating series case
@@ -268,7 +252,7 @@ T shanks_transform_alternating<T, K>::calculate(
 		result += fma(
 			a_n * a_n_plus_1,
 			static_cast<T>(1) / (a_n - a_n_plus_1),
-			sharedSn->at(n)
+			series_acceleration<T, K>::Sn.at(n)
 		);
 
 		if (!isfinite(result))
@@ -292,15 +276,15 @@ T shanks_transform_alternating<T, K>::calculate(
 
 	for (K i = n_minus_order1; i <= n_plus_order - static_cast<K>(1); ++i) // if we got to this branch then we know that n >= order - see previous branches int->K
 	{
-		a_n = sharedAn->at(i);
-		a_n_plus_1 = sharedAn->at(i + static_cast<K>(1));
+		a_n = series_acceleration<T, K>::an.at(i);
+		a_n_plus_1 = series_acceleration<T, K>::an.at(i + static_cast<K>(1));
 
 		// For theory, see: Senhadji (2001), Section 3.2 - Alternating series case
 		// e₁(Sᵢ) = Sᵢ + (aᵢaᵢ₊₁)/(aᵢ - aᵢ₊₁)
 		T_n[i] = fma(
 			a_n * a_n_plus_1,
 			static_cast<T>(1) / (a_n - a_n_plus_1),
-			sharedSn->at(n)
+			series_acceleration<T, K>::Sn.at(n)
 		);
 	}
 
@@ -342,24 +326,17 @@ T shanks_transform_alternating<T, K>::calculate(
 template <AcceptedLike T, UnsignedIntLike K>
 T shanks_transform_alternating<T, K>::operator()(K n, K order, K offset) const {
 
-	if (series_acceleration<T,K>::Sn.expired() || series_acceleration<T,K>::an.expired()){
-    	throw std::domain_error("Sn or an is expired");
-	}
-
-    std::shared_ptr<std::vector<T>> sharedSn = series_acceleration<T,K>::Sn.lock();
-	std::shared_ptr<std::vector<T>> sharedAn = series_acceleration<T,K>::an.lock();
-
     K required_size = order + offset + static_cast<K>(1);
 
-    if (sharedSn->size() < required_size || sharedAn->size() < required_size){
+    if (series_acceleration<T, K>::Sn.size() < required_size || series_acceleration<T, K>::an.size() < required_size){
         throw std::out_of_range("Sn or an is smaller than required to calculate theta_{" + to_string(order) + "}^{" + to_string(n) + "}");
 	}
 
     if (order == static_cast<K>(0)) {
-        return sharedSn->at(n);
+        return series_acceleration<T, K>::Sn.at(n);
     }
 
-    return calculate(n, order, sharedSn, sharedAn, offset);
+    return calculate(n, order,  offset);
 
 	
 }

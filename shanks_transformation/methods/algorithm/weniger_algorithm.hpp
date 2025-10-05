@@ -46,8 +46,6 @@ protected:
 	inline T calculate(
 		K n, 
 		K order, 
-		std::shared_ptr<std::vector<T>> sharedSn, 
-		std::shared_ptr<std::vector<T>> sharedAn,
 		K offset = static_cast<K>(0)
 	) const;   
 
@@ -83,32 +81,23 @@ public:
 template<AcceptedLike T, UnsignedIntLike K>
 T weniger_algorithm<T, K>::operator()(K n, K order, K offset) const {
 
-	if (series_acceleration<T,K>::Sn.expired() || series_acceleration<T,K>::an.expired()){
-    	throw std::domain_error("Sn or an is expired");
-	}
-
-    std::shared_ptr<std::vector<T>> sharedSn = series_acceleration<T,K>::Sn.lock();
-	std::shared_ptr<std::vector<T>> sharedAn = series_acceleration<T,K>::an.lock();
-
     K required_size = order + offset + static_cast<K>(1);
 
-    if (sharedSn->size() < required_size || sharedAn->size() < required_size){
+    if (series_acceleration<T, K>::Sn.size() < required_size || series_acceleration<T, K>::an.size() < required_size){
         throw std::out_of_range("Sn or an is smaller than required to calculate weniger_{" + to_string(order) + "}^{" + to_string(n) + "}");
 	}
 
     if (order == static_cast<K>(0)) {
-        return sharedSn->at(n);
+        return series_acceleration<T, K>::Sn.at(n);
     }
 
-    return calculate(n, order, sharedSn, sharedAn, offset);
+    return calculate(n, order, offset);
 }
 
 template<AcceptedLike T, UnsignedIntLike K>
 T weniger_algorithm<T, K>::calculate(
 	K n, 
 	K order, 
-	std::shared_ptr<std::vector<T>> sharedSn,
-	std::shared_ptr<std::vector<T>> sharedAn, 
 	K offset
 ) const {
 
@@ -169,11 +158,11 @@ T weniger_algorithm<T, K>::calculate(
 
 		// For theory, see: Weniger (1989), Eq. (8.2-7) remainder estimate
 		// Remainder estimate: ωₙ = Δsₙ = a_{n+1}, so 1/ωₙ = 1/a_{j+1}
-		rest /= sharedAn->at(j1);
+		rest /= series_acceleration<T, K>::an.at(j1);
 
 		// For theory, see: Weniger (1989), Eq. (8.2-7) numerator term
 		// Numerator term: rest × s_{n+j}
-		numerator   += rest * sharedSn->at(j);
+		numerator   += rest * series_acceleration<T, K>::Sn.at(j);
 
 		// For theory, see: Weniger (1989), Eq. (8.2-7) denominator term
 		// Denominator term: rest

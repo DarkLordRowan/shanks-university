@@ -67,7 +67,6 @@ protected:
     inline T calculate(
         K n, 
         K order, 
-        std::shared_ptr<std::vector<T>> sharedSn, 
         K offset = static_cast<K>(0)
     ) const;
 
@@ -110,7 +109,7 @@ public:
 
 
 template <AcceptedLike T, UnsignedIntLike K>
-T brezinski_theta_algorithm<T, K>::calculate(K n, const K order, std::shared_ptr<std::vector<T>> sharedSn, K offset) const {
+T brezinski_theta_algorithm<T, K>::calculate(K n, const K order, K offset) const {
 
     using std::isfinite;
 
@@ -128,7 +127,7 @@ T brezinski_theta_algorithm<T, K>::calculate(K n, const K order, std::shared_ptr
 
     // init theta_(0)
     for(K j = static_cast<K>(0); j < base_size; ++j){
-        theta_even[j] += sharedSn->at(offset + j);
+        theta_even[j] += series_acceleration<T, K>::Sn.at(offset + j);
     }
 
     K j1, j2;
@@ -171,15 +170,10 @@ T brezinski_theta_algorithm<T, K>::calculate(K n, const K order, std::shared_ptr
 template <AcceptedLike T, UnsignedIntLike K>
 T brezinski_theta_algorithm<T, K>::operator()(const K n, const K order, K offset) const{
 
-    if (series_acceleration<T,K>::Sn.expired()){
-        throw std::domain_error("Sn is expired");
-    }
-
-    std::shared_ptr<std::vector<T>> sharedSn = series_acceleration<T,K>::Sn.lock();
 
     K required_size = static_cast<K>(3) * order / static_cast<K>(2) + static_cast<K>(1) + n;
 
-    if (sharedSn->size() < required_size){
+    if (series_acceleration<T, K>::Sn.size() < required_size){
         throw std::out_of_range("Sn is smaller than required to calculate theta_{" + to_string(order) + "}^{" + to_string(n) + "}");
     }
 
@@ -200,10 +194,10 @@ T brezinski_theta_algorithm<T, K>::operator()(const K n, const K order, K offset
     // Base cases: return partial sum for n=0 or order=0
     //if (n == static_cast<K>(0) || order == static_cast<K>(0))
     if (order == static_cast<K>(0)){
-        return sharedSn->at(n);
+        return series_acceleration<T, K>::Sn.at(n);
     }
 
     // For theory, see: Brezinski (2003), Section 10.2, Eq. (10.2.4)
     // Start computation with initial parameters
-    return calculate(n, order, sharedSn, offset);
+    return calculate(n, order, offset);
 }

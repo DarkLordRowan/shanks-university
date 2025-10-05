@@ -8,6 +8,8 @@
     #include "libs/arbitrary_arithmetics/complexprecision.h"
 #endif
 
+#include <memory>
+
 template<typename T>
 concept FloatLike = requires{ std::is_floating_point<T>::value || std::is_same<T, float_precision>::value; };
 
@@ -56,3 +58,9 @@ T minus_one_raised_to_power_n(K j){
         return static_cast<T>(j & 1 ? -1 : 1);
     }
 }
+
+template<AcceptedLike T>
+struct SeriesResult{
+	std::vector<T> Sn;
+	std::vector<T> an;
+};

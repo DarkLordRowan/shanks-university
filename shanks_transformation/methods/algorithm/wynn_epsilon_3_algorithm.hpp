@@ -48,7 +48,6 @@ private:
     inline T calculate(
 		K n, 
 		K order, 
-		std::shared_ptr<std::vector<T>> sharedSn, 
 		K offset = static_cast<K>(0)
 	) const;       
 
@@ -102,7 +101,6 @@ template <AcceptedLike T, UnsignedIntLike K>
 T wynn_epsilon_3_algorithm<T, K>::calculate(
 	K n, 
 	K order, 
-	std::shared_ptr<std::vector<T>> sharedSn, 
 	K offset
 ) const {
 
@@ -149,7 +147,7 @@ T wynn_epsilon_3_algorithm<T, K>::calculate(
 
     // Initialize epsilon table with partial sums: ε₀⁽ⁱ⁾ = S_i for i=0,...,N
     for (K i = static_cast<K>(0); i <= N; ++i) //Filling up Epsilon Table
-        e[i] = sharedSn->at(i);
+        e[i] = series_acceleration<T, K>::Sn.at(i);
 
     // Apply epsilon algorithm for 'order' iterations
     for (K i = static_cast<K>(0); i <= order; ++i) { //Working with Epsilon Table order times
@@ -280,15 +278,9 @@ T wynn_epsilon_3_algorithm<T, K>::calculate(
 template <AcceptedLike T, UnsignedIntLike K>
 T wynn_epsilon_3_algorithm<T, K>::operator()(K n, K order, K offset) const {
 
-    if (series_acceleration<T,K>::Sn.expired()){
-    	throw std::domain_error("Sn or an is expired");
-	}
-
-    std::shared_ptr<std::vector<T>> sharedSn = series_acceleration<T,K>::Sn.lock();
-
     K required_size = order + static_cast<K>(1) + offset;
 
-    if (sharedSn->size() < required_size){
+    if (series_acceleration<T, K>::Sn.size() < required_size){
         throw std::out_of_range("Sn or an is smaller than required to calculate e3_{" + to_string(order) + "}^{" + to_string(n) + "}");
 	}
 
@@ -297,9 +289,9 @@ T wynn_epsilon_3_algorithm<T, K>::operator()(K n, K order, K offset) const {
     }
 
     if (order == static_cast<K>(0)) {
-        return sharedSn->at(n);
+        return series_acceleration<T, K>::Sn.at(n);
     }
 
-    return calculate(n, order, sharedSn, offset);
+    return calculate(n, order, offset);
 
 }

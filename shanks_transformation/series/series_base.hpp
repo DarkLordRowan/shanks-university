@@ -1,8 +1,6 @@
 #pragma once
 
 #include <stdexcept>
-#include <vector>
-#include <memory>
 #include <string>
 
 #include "../custom_concepts.hpp"
@@ -50,12 +48,6 @@ constexpr const K binomial_coefficient(const K n, const K k) {
 
 }
 
-template<AcceptedLike T>
-struct SeriesResult{
-	std::shared_ptr<std::vector<T>> Sn;
-	std::shared_ptr<std::vector<T>> an;
-};
-
  /**
  * @brief Abstract class for series
  * @authors Bolshakov M.P.
@@ -72,19 +64,6 @@ public:
 	* @param x The argument for function series
 	*/
 	series_base(T x = static_cast<T>(0));
-
-	/**
-    * @brief Throws domain error with unified message format
-    * @authors Maximov A.K.
-    * @param condition Description of the divergence condition
-    * @throws std::domain_error with formatted message containing series name, x value and condition
-    */
-	void throw_domain_error(const std::string& condition) const {
-
-		using std::to_string;
-
-		throw std::domain_error(series_name + " series diverges at x = " + to_string(x) + " (" + condition + ")");
-	}
 
 	/**
 	* @brief x getter
@@ -108,6 +87,19 @@ public:
 
 
 protected:
+
+	/**
+    * @brief Throws domain error with unified message format
+    * @authors Maximov A.K.
+    * @param condition Description of the divergence condition
+    * @throws std::domain_error with formatted message containing series name, x value and condition
+    */
+	void throw_domain_error(const std::string& condition) const {
+
+		using std::to_string;
+
+		throw std::domain_error(series_name + " series diverges at x = " + to_string(x) + " (" + condition + ")");
+	}
 
 	/**
 	* @brief function series argument

@@ -65,7 +65,7 @@ public:
      * @return The computed remainder estimate ωₙ
      * @throws std::overflow_error if division by zero or numerical instability occurs
      */
-    virtual T operator() (K n, K index, std::shared_ptr<std::vector<T>> an, T scale = static_cast<T>(0)) const = 0;
+    virtual T operator() (K n, K index, const std::vector<T>&, T scale = static_cast<T>(0)) const = 0;
 };
 
 /**
@@ -93,17 +93,17 @@ class u_transform : public transform_base<T, K> {
      * @return u-variant remainder estimate ωₙ = 1/[(scale + n) * aₙ]
      * @throws std::overflow_error if aₙ = 0 causing division by zero
      */
-    T operator() (K n, K index, std::shared_ptr<std::vector<T>> an, T scale = static_cast<T>(0)) const override;
+    T operator() (K n, K index, const std::vector<T>& an, T scale = static_cast<T>(0)) const override;
 };
 
 template<AcceptedLike T, UnsignedIntLike K>
-T u_transform<T, K>::operator()(const K n, const K index, std::shared_ptr<std::vector<T>> an, T scale) const {
+T u_transform<T, K>::operator()(const K n, const K index, const std::vector<T>& an, T scale) const {
 
     using std::isfinite;
 
     // For theory, see: Levin (1973), Eq. (3.3) - u transform
     // ωₙ = (β + n) * aₙ, where aₙ = ΔSₙ₋₁
-    const T result = static_cast<T>(1) / ((scale + static_cast<T>(n)) * an->at(index));
+    const T result = static_cast<T>(1) / ((scale + static_cast<T>(n)) * an.at(index));
 
     if (!isfinite(result)) throw std::overflow_error("division by zero");
 
@@ -135,17 +135,17 @@ class t_transform : public transform_base<T, K> {
      * @return t-variant remainder estimate ωₙ = 1/aₙ₊ₖ
      * @throws std::overflow_error if aₙ₊ₖ = 0 causing division by zero
      */
-    T operator() (K n, K index, std::shared_ptr<std::vector<T>> an, T scale = static_cast<T>(0)) const override;
+    T operator() (K n, K index, const std::vector<T>& an, T scale = static_cast<T>(0)) const override;
 };
 
 template<AcceptedLike T, UnsignedIntLike K>
-T t_transform<T, K>::operator()(const K n, const K index, std::shared_ptr<std::vector<T>> an, T scale) const {
+T t_transform<T, K>::operator()(const K n, const K index, const std::vector<T>& an, T scale) const {
 
     using std::isfinite;
 
     // For theory, see: Levin (1973), Eq. (3.2) - t transform
     // ωₙ = aₙ, where aₙ = ΔSₙ₋₁
-    const T result = static_cast<T>(1) / an->at(n + index);
+    const T result = static_cast<T>(1) / an.at(index);
 
     if (!isfinite(result)) throw std::overflow_error("division by zero");
     return result;
@@ -176,17 +176,17 @@ class t_wave_transform : public transform_base<T, K>  {
      * @return t-wave variant remainder estimate ωₙ = 1/aₙ₊ₖ₊₁
      * @throws std::overflow_error if aₙ₊ₖ₊₁ = 0 causing division by zero
      */
-    T operator() (K n, K index, std::shared_ptr<std::vector<T>> an, T scale = static_cast<T>(0)) const override;
+    T operator() (K n, K index, const std::vector<T>& an, T scale = static_cast<T>(0)) const override;
 };
 
 template<AcceptedLike T, UnsignedIntLike K>
-T t_wave_transform<T,K>::operator()(const K n, const K index, std::shared_ptr<std::vector<T>> an, T scale ) const {
+T t_wave_transform<T,K>::operator()(const K n, const K index, const std::vector<T>& an, T scale ) const {
 
     using std::isfinite;
 
     // For theory, see: Smith & Ford (1979), Eq. (2.4) - d variant
     // ωₙ = aₙ₊₁ (shifted t-variant)
-	const T result = static_cast<T>(1) / an->at(index + static_cast<K>(1));
+	const T result = static_cast<T>(1) / an.at(index + static_cast<K>(1));
 
 	if (!isfinite(result)) throw std::overflow_error("division by zero");
 	return result;
@@ -217,17 +217,17 @@ class v_transform : public transform_base<T, K> {
      * @return v-variant remainder estimate ωₙ = (aₙ₊ₖ₊₁ - aₙ₊ₖ)/(aₙ₊ₖ * aₙ₊ₖ₊₁)
      * @throws std::overflow_error if aₙ₊ₖ = 0 or aₙ₊ₖ₊₁ = 0 causing division by zero
      */
-    T operator() (K n, K index, std::shared_ptr<std::vector<T>> an, T scale = static_cast<T>(0)) const override;
+    T operator() (K n, K index, const std::vector<T>& an, T scale = static_cast<T>(0)) const override;
 };
 
 template<AcceptedLike T, UnsignedIntLike K>
-T v_transform<T,K>::operator()(const K n, const K index, std::shared_ptr<std::vector<T>> an, T scale) const {
+T v_transform<T,K>::operator()(const K n, const K index, const std::vector<T>& an, T scale) const {
 
     using std::isfinite;
 
     // For theory, see: Levin (1973), Eq. (3.4) - v transform
     // ωₙ = (aₙ * aₙ₊₁)/(aₙ₊₁ - aₙ)
-    const T a1 = an->at(index), a2  = an->at(index + static_cast<K>(1));
+    const T a1 = an.at(index), a2  = an.at(index + static_cast<K>(1));
     const T result = (a2-a1) / (a1 * a2);
 
 	if (!isfinite(result)) throw std::overflow_error("division by zero");
@@ -259,17 +259,17 @@ class v_wave_transform : public transform_base<T, K> {
      * @return v-wave variant remainder estimate ωₙ = (aₙ₊ₖ - aₙ₊ₖ₊₁)/(aₙ₊ₖ * aₙ₊ₖ₊₁)
      * @throws std::overflow_error if aₙ₊ₖ = 0 or aₙ₊ₖ₊₁ = 0 causing division by zero
      */
-    T operator() (K n, K index, std::shared_ptr<std::vector<T>> an, T scale = static_cast<T>(0)) const override;
+    T operator() (K n, K index, const std::vector<T>& an, T scale = static_cast<T>(0)) const override;
 };
 
 template<AcceptedLike T, UnsignedIntLike K>
-T v_wave_transform<T,K>::operator()(const K n, const K index, std::shared_ptr<std::vector<T>> an, T scale) const  {
+T v_wave_transform<T,K>::operator()(const K n, const K index, const std::vector<T>& an, T scale) const  {
 
     using std::isfinite;
 
     // For theory, see: Modified v-transform with shifted indices
     // ωₙ = (aₙ₊₁ * aₙ₊₂)/(aₙ₊₁ - aₙ₊₂)
-    const T a1 = an->at(index), a2 = an->at(index + static_cast<K>(1));
+    const T a1 = an.at(index), a2 = an.at(index + static_cast<K>(1));
     const T result = (a1 - a2) / (a1 * a2);
 
 	if (!isfinite(result)) throw std::overflow_error("division by zero");

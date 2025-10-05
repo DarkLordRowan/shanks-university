@@ -57,7 +57,6 @@ protected:
 	inline T calculate(
 		K n, 
 		K order, 
-		std::shared_ptr<std::vector<T>> sharedSn, 
 		K offset = static_cast<K>(0)
 	) const;
 
@@ -105,7 +104,6 @@ template <AcceptedLike T, UnsignedIntLike K>
 T richardson_algorithm<T, K>::calculate(
 	K n, 
 	K order, 
-	std::shared_ptr<std::vector<T>> sharedSn, 
 	K offset
 ) const {
 
@@ -125,7 +123,7 @@ T richardson_algorithm<T, K>::calculate(
     // For theory, see: Richardson (1911), Eq. (2) - initialization with partial sums
     // Initialize the first row of the extrapolation table with partial sums
     for (K i = static_cast<K>(0); i <= n; ++i)
-        e[0][i] = sharedSn->at(i);
+        e[0][i] = series_acceleration<T, K>::Sn.at(i);
 
     // The Richardson method main function
     T a = convertWithPrec<T>(1.0, series_acceleration<T, K>::precision);
@@ -157,21 +155,14 @@ T richardson_algorithm<T, K>::calculate(
 template <AcceptedLike T, UnsignedIntLike K>
 T richardson_algorithm<T, K>::operator()(K n, K order, K offset) const {
 
-    if (series_acceleration<T,K>::Sn.expired() || series_acceleration<T,K>::an.expired()){
-    	throw std::domain_error("Sn or an is expired");
-	}
-
-    std::shared_ptr<std::vector<T>> sharedSn = series_acceleration<T,K>::Sn.lock();
-	std::shared_ptr<std::vector<T>> sharedAn = series_acceleration<T,K>::an.lock();
-
     K required_size = n + offset + static_cast<K>(1);
 
-    if (sharedSn->size() < required_size){
+    if (series_acceleration<T, K>::Sn.size() < required_size){
         throw std::out_of_range("Sn is smaller than required to calculate richardson_{" + to_string(order) + "}^{" + to_string(n) + "}");
 	}
 
     if (order == static_cast<K>(0)) {
-        return sharedSn->at(n);
+        return series_acceleration<T, K>::Sn.at(n);
     }
 
     // in the method we don't use order, it's only a stub
@@ -179,6 +170,6 @@ T richardson_algorithm<T, K>::operator()(K n, K order, K offset) const {
         throw std::domain_error("n = 0 in the input");
 
     
-    return calculate(n, order, sharedSn, offset);
+    return calculate(n, order, offset);
 
 }

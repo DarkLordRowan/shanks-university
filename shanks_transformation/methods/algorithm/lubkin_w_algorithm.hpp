@@ -64,7 +64,6 @@ protected:
 	inline T calculate(
 		K n, 
 		K order, 
-		std::shared_ptr<std::vector<T>> sharedSn, 
 		K offset = static_cast<K>(0)
 	) const;
 
@@ -105,31 +104,23 @@ public:
 template<AcceptedLike T, UnsignedIntLike K>
 T lubkin_w_algorithm<T, K>::operator()(K n, K order, K offset) const {
 
-	if (series_acceleration<T,K>::Sn.expired()){
-    	throw std::domain_error("Sn is expired");
-	}
-
-    std::shared_ptr<std::vector<T>> sharedSn = series_acceleration<T,K>::Sn.lock();
-	std::shared_ptr<std::vector<T>> sharedAn = series_acceleration<T,K>::an.lock();
-
     K required_size = static_cast<K>(3) * order + offset + static_cast<K>(1);
 
-    if (sharedSn->size() < required_size){
+    if (series_acceleration<T, K>::Sn.size() < required_size){
         throw std::out_of_range("Sn is smaller than required to calculate richardson_{" + to_string(order) + "}^{" + to_string(n) + "}");
 	}
 
     if (order == static_cast<K>(0)) {
-        return sharedSn->at(n);
+        return series_acceleration<T, K>::Sn.at(n);
     }
 
-	return calculate(n, order, sharedSn, offset);
+	return calculate(n, order, offset);
 }
 
 template<AcceptedLike T, UnsignedIntLike K>
 T lubkin_w_algorithm<T, K>::calculate(
 	K n, 
 	K order, 
-	std::shared_ptr<std::vector<T>> sharedSn, 
 	K offset
 ) const {
 
@@ -146,7 +137,7 @@ T lubkin_w_algorithm<T, K>::calculate(
 	);
 
 	for(K i = static_cast<K>(0); i < base_size; ++i){
-		W[i] = sharedSn->at(offset + i);
+		W[i] = series_acceleration<T, K>::Sn.at(offset + i);
 	}
 
 	T Wo0 = convertWithPrec<T>(0.0, series_acceleration<T, K>::precision);
