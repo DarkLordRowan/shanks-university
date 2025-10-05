@@ -9,8 +9,6 @@
 #include <random>
 #include <vector>
 
-#include "../../../../Users/user/AppData/Local/Programs/Python/Python313/Include/pymacro.h"
-
 #ifndef SHANKS_TRANSFORMATION_NOISE_GENERATOR_HPP
 #define SHANKS_TRANSFORMATION_NOISE_GENERATOR_HPP
 
