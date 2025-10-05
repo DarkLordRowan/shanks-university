@@ -171,42 +171,48 @@ constexpr void testCompatability(const T& x){
 
 }
 
-//void TestNoise() {
-//	Noise <float_t> noise_normal(30, -0.1, 0.1, normal);
-//	exp_series<float_t, size_t> series(10);
-//	SeriesResult<float_t> result = series.generateSeries(30);
-//	Noise <float_t> noise_uniform(30, -0.1, 0.1, uniform);
-//	SeriesResult<float_t> result_jittered_normal = result;
-//	SeriesResult<float_t> result_jittered_uniform = result;
-//	result_jittered_normal.Sn[0] += noise_normal.seq[0];
-//	result_jittered_uniform.Sn[0] += noise_uniform.seq[0];
-//	for (int j = 1; j < 30; ++j) {
-//		result_jittered_normal.Sn[j] += noise_normal.seq[j];
-//		result_jittered_normal.an[j] += noise_normal.seq[j] - noise_normal.seq[j-1];
-//		result_jittered_uniform.Sn[j] += noise_uniform.seq[j];
-//		result_jittered_uniform.an[j] += noise_uniform.seq[j] - noise_uniform.seq[j-1];
-//	}
-//	brezinski_theta_algorithm<float_t, size_t> algo{};
-//
-//	algo.reset(result.Sn, result.an);
-//	algo.print_info();
-//	std::cout << "Without noise:\n";
-//	for(size_t j = 0; j <= 10; j+= 2) {
-//		std::cout << "n = order = " << j << " : " << algo(j,j) << "\n";
-//	}
-//
-//	algo.reset(result_jittered_normal.Sn, result_jittered_normal.an);
-//	std::cout << "With normal noise:\n";
-//	for(size_t j = 0; j <= 10; j+= 2) {
-//		std::cout << "n = order = " << j << " : " << algo(j,j) << "\n";
-//	}
-//
-//	algo.reset(result_jittered_uniform.Sn, result_jittered_uniform.an);
-//	std::cout << "With uniform noise:\n";
-//	for(size_t j = 0; j <= 10; j+= 2) {
-//		std::cout << "n = order = " << j << " : " << algo(j,j) << "\n";
-//	}
-//}
+void TestNoise() {
+	using typeA = complex_precision<float_precision>;
+	using typeB = int_precision;
+
+	typeA x(float_precision(6, 50), float_precision(6, 50));
+	std::cout << x << "\n";
+
+	exp_series<typeA, typeB> testSeries = exp_series<typeA, typeB>(x);
+	SeriesResult<typeA> result = testSeries.generateSeries(30);
+
+	std::cout << "EXP(x) = " << testSeries.get_sum() << "\n";
+
+	SeriesResult<typeA> noisyResult = jitter(result, typeA(float_precision(-1, 50), float_precision(-1, 50)), typeA(float_precision(1, 50), float_precision(1, 50)), uniform);
+
+
+
+	std::cout << "\n";
+
+	std::unique_ptr<series_acceleration<typeA, typeB>> algo = std::make_unique<brezinski_theta_algorithm<typeA, typeB>>();
+	algo->reset(result);
+
+	algo->print_info();
+
+	for (size_t j = 0; j <= 10; ++j) {
+		try{
+			std::cout << "n = order = " << j << " : " << algo->operator()(j,j, j) << "\n";
+		} catch (...){
+			std::cout << "Exception caught\n";
+		}
+	}
+	std::cout << "\n";
+
+	algo->reset(noisyResult);
+
+	for (size_t j = 0; j <= 10; ++j) {
+		try{
+			std::cout << "n = order = " << j << " : " << algo->operator()(j,j, j) << "\n";
+		} catch (...){
+			std::cout << "Exception caught\n";
+		}
+	}
+}
 
 int main()
 {
@@ -217,8 +223,8 @@ int main()
 	using typeB = int_precision;
 
 	//typeA x(1, 600);
-	typeA x(float_precision(1, 50), float_precision(1, 50));
-	std::cout << x << "\n";
+	// typeA x(float_precision(1, 50), float_precision(1, 50));
+	// std::cout << x << "\n";
 	//typeA x(1.0);
 
 	//std::cout << fact<typeB>(6) << "\n";
@@ -229,9 +235,9 @@ int main()
 	//std::cout << double_fact<typeB>(7) << "\n";
 	//std::cout << binomial_coefficient<typeB>(13, 5) << "\n";
 
-	testCompatability<typeA, typeB>(x);
+	// testCompatability<typeA, typeB>(x);
 
-	//TestNoise();
+	TestNoise();
 
 	/*
 	while(true){
