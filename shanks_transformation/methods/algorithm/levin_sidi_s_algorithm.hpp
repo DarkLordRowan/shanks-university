@@ -58,9 +58,10 @@ protected:
      * @return Accelerated sum estimate S_{k,n}
      */
     inline T calc_result(
-        K n, 
-        K order, 
-        K offset = static_cast<K>(0)
+        const K n, 
+        const K order,
+		const SeriesResult<T>& data,
+        const K offset = static_cast<K>(0)
     ) const;
 
     /**
@@ -81,9 +82,10 @@ protected:
      * @return Accelerated sum estimate S_{k,n}
      */
     inline T calc_result_rec(
-        K n, 
-        K order, 
-        K offset = static_cast<K>(0)
+        const K n, 
+        const K order,
+		const SeriesResult<T>& data,
+        const K offset = static_cast<K>(0)
     ) const;
 
 public:
@@ -126,21 +128,32 @@ public:
      * @return The accelerated partial sum after S-transformation
      * @throws std::overflow_error if division by zero or numerical instability occurs
      */
-    T operator()(K n, K order, K offset = static_cast<K>(0)) const override;
+    T operator()(
+        const K n, 
+        const K order,
+		const SeriesResult<T>& data,
+        const K offset = static_cast<K>(0)
+    ) const override;
 
 };
 
 template<AcceptedLike T, UnsignedIntLike K>
 inline T levin_sidi_s_algorithm<T, K>::calc_result(
-    K n, 
-    K order, 
-    K offset
+    const K n, 
+    const K order,
+	const SeriesResult<T>& data,
+    const K offset
 ) const {
 
     using std::isfinite;
 
-    T numerator   = convertWithPrec<T>(0.0, series_acceleration<T, K>::precision);
-    T denominator = convertWithPrec<T>(0.0, series_acceleration<T, K>::precision);
+    size_t currentPrecision = std::max(
+        series_acceleration<T, K>::define_precision(data.Sn[0]), 
+        series_acceleration<T, K>::define_precision(data.an[0])
+    );
+
+    T numerator   = convertWithPrec<T>(0.0, currentPrecision);
+    T denominator = convertWithPrec<T>(0.0, currentPrecision);
     T rest;
     T up_pochamer, down_pochamer;
 
@@ -150,12 +163,12 @@ inline T levin_sidi_s_algorithm<T, K>::calc_result(
     for (K j = static_cast<K>(0); j <= order; ++j){
 
         // Compute (-1)^j * C(k,j)
-        rest  = convertWithPrec<T>(1.0, series_acceleration<T, K>::precision);
+        rest  = convertWithPrec<T>(1.0, currentPrecision);
         rest *= minus_one_raised_to_power_n<T,K>(j);
         rest *= static_cast<T>(binomial_coefficient<K>(order, j));
 
         // Compute Pochhammer symbols: (β+n+j)_{k-1} and (β+n+k)_{k-1}
-        up_pochamer = down_pochamer = convertWithPrec<T>(1.0, series_acceleration<T, K>::precision);
+        up_pochamer = down_pochamer = convertWithPrec<T>(1.0, currentPrecision);
         //up_pochamer   (beta + n + j)_(order - 1)     = (beta + n + j)(beta + n + j + 1)...(beta + n + j + order - 2)
         //down_pochamer (beta + n + order)_(order - 1) = (beta + n + order)(beta + n + order + 1)...(beta + n + order + oreder - 2)
 
@@ -171,12 +184,12 @@ inline T levin_sidi_s_algorithm<T, K>::calc_result(
         rest *= remainder->operator()(
             n,        // Multiply by remainder term 1/R_{n+j}
             offset + j,
-            series_acceleration<T, K>::an,
+            data.an,
             (variant == remainder_type::u_variant ? beta : static_cast<T>(1))
         );
 
         // Accumulate numerator and denominator
-        numerator   += rest * series_acceleration<T, K>::Sn.at(offset + j);
+        numerator   += rest * data.Sn.at(offset + j);
         denominator += rest;
     }
 
@@ -188,22 +201,28 @@ inline T levin_sidi_s_algorithm<T, K>::calc_result(
 
 template<AcceptedLike T, UnsignedIntLike K>
 inline T levin_sidi_s_algorithm<T, K>::calc_result_rec(
-    K n, 
-    K order, 
-    K offset
+    const K n, 
+    const K order,
+	const SeriesResult<T>& data,
+    const K offset
 ) const {
 
     using std::isfinite;
+
+    size_t currentPrecision = std::max(
+        series_acceleration<T, K>::define_precision(data.Sn[0]), 
+        series_acceleration<T, K>::define_precision(data.an[0])
+    );
 
     // For theory, see: Sidi (2003, arXiv:math/0306302), Eqs. (8.3)-(8.5)
     // Recursive implementation using the E-algorithm scheme
     std::vector<T>   Num(
         order + static_cast<K>(1), 
-        convertWithPrec<T>(0.0, series_acceleration<T, K>::precision)
+        convertWithPrec<T>(0.0, currentPrecision)
     );
     std::vector<T> Denom(
         order + static_cast<K>(1), 
-        convertWithPrec<T>(0.0, series_acceleration<T, K>::precision)
+        convertWithPrec<T>(0.0, currentPrecision)
     );
 
     // Initialize base values: E_0^{(n)} = S_n, g_0^{(n)} = 1/R_n
@@ -212,11 +231,11 @@ inline T levin_sidi_s_algorithm<T, K>::calc_result_rec(
         Denom[i] = remainder->operator()(
             n,
             offset + i,
-            series_acceleration<T, K>::an,
+            data.an,
             (variant == remainder_type::u_variant ? beta : static_cast<T>(1))
         );
 
-        Num[i] = series_acceleration<T, K>::Sn.at(offset + i) * Denom[i];
+        Num[i] = data.Sn.at(offset + i) * Denom[i];
 
     }
 
@@ -264,15 +283,17 @@ levin_sidi_s_algorithm<T, K>::levin_sidi_s_algorithm(
     // beta = 1 is default
     // check parameter else default
 
-    if constexpr (std::is_floating_point<T>::value || std::is_same<T, float_precision>::value){
-        this->beta = (parameter > static_cast<T>(0) ?  parameter : float_precision(1.0, series_acceleration<T, K>::precision));
+    if constexpr ( std::is_floating_point<T>::value) {
+        this->beta = (parameter > static_cast<T>(0) ?  parameter : static_cast<T>(1));
+    } else if constexpr ( std::is_same<T, float_precision>::value){
+        this->beta = (parameter > static_cast<T>(0) ?  parameter : float_precision(1.0, series_acceleration<T,K>::precision));
     } else if constexpr (std::is_same<T, complex_precision<float_precision>>::value){
         this->beta = (
             parameter.real() > static_cast<float_precision>(0) && parameter.imag() == static_cast<float_precision>(0) ?
             parameter :
             complex_precision<float_precision>(
-                float_precision(1.0, series_acceleration<T, K>::precision),
-                float_precision(0.0, series_acceleration<T, K>::precision)
+                float_precision(1.0, series_acceleration<T,K>::precision),
+                float_precision(0.0, series_acceleration<T,K>::precision)
             )
         );
     }
@@ -311,21 +332,26 @@ levin_sidi_s_algorithm<T, K>::levin_sidi_s_algorithm(
 }
 
 template<AcceptedLike T, UnsignedIntLike K>
-T levin_sidi_s_algorithm<T, K>::operator()(K n, K order, K offset) const{
+T levin_sidi_s_algorithm<T, K>::operator()(
+    const K n, 
+    const K order,
+	const SeriesResult<T>& data,
+    const K offset
+) const{
 
     K required_size = order + offset + static_cast<K>(1);
 
-    if (series_acceleration<T, K>::Sn.size() < required_size || series_acceleration<T, K>::an.size() < required_size){
+    if (data.Sn.size() < required_size || data.an.size() < required_size){
         throw std::out_of_range("Sn is smaller than required to calculate S_{" + to_string(order) + "}^{" + to_string(n) + "}");
 	}
 
     if (order == static_cast<K>(0)) {
-        return series_acceleration<T, K>::Sn.at(n);
+        return data.Sn.at(n);
     }
 
     using std::isfinite;
 
-    const T result = (useRecFormulas ? calc_result_rec(n,order, offset) : calc_result(n, order, offset));
+    const T result = (useRecFormulas ? calc_result_rec(n,order, data, offset) : calc_result(n, order, data, offset));
     if (!isfinite(result)) throw std::overflow_error("division by zero");
     return result;
 }

@@ -52,14 +52,6 @@
 template <AcceptedLike T, UnsignedIntLike K>
 class richardson_algorithm final : public series_acceleration<T, K>
 {
-protected:
-
-	inline T calculate(
-		K n, 
-		K order, 
-		K offset = static_cast<K>(0)
-	) const;
-
 public:
 
     /**
@@ -97,16 +89,39 @@ public:
      * @throws std::domain_error if n=0 is provided as input
      * @throws std::overflow_error if division by zero or numerical instability occurs
      */
-    T operator() (K n, K order, K offset = static_cast<K>(0)) const override;
+    T operator()(
+        const K n, 
+        const K order,
+		const SeriesResult<T>& data,
+        const K offset = static_cast<K>(0)
+    ) const override;
 };
 
 template <AcceptedLike T, UnsignedIntLike K>
-T richardson_algorithm<T, K>::calculate(
-	K n, 
-	K order, 
-	K offset
+T richardson_algorithm<T, K>::operator()(
+    const K n, 
+    const K order,
+	const SeriesResult<T>& data,
+    const K offset
 ) const {
 
+    K required_size = n + offset + static_cast<K>(1);
+
+    if (data.Sn.size() < required_size){
+        throw std::out_of_range("Sn is smaller than required to calculate richardson_{" + to_string(order) + "}^{" + to_string(n) + "}");
+	}
+
+    if (order == static_cast<K>(0)) {
+        return data.Sn.at(n);
+    }
+
+    // in the method we don't use order, it's only a stub
+    if (n == static_cast<K>(0))
+        throw std::domain_error("n = 0 in the input");
+
+    size_t currentPrecision = series_acceleration<T, K>::define_precision(data.Sn[0]);
+
+    
     using std::isfinite;
     using std::fma;
 
@@ -116,18 +131,18 @@ T richardson_algorithm<T, K>::calculate(
         2,
         std::vector<T>(
             n + static_cast<K>(1),
-            convertWithPrec<T>(0.0, series_acceleration<T, K>::precision)
+            convertWithPrec<T>(0.0, currentPrecision)
         )
     ); // Two vectors n + 1 length containing Richardson table next and previous
 
     // For theory, see: Richardson (1911), Eq. (2) - initialization with partial sums
     // Initialize the first row of the extrapolation table with partial sums
     for (K i = static_cast<K>(0); i <= n; ++i)
-        e[0][i] = series_acceleration<T, K>::Sn.at(i);
+        e[0][i] = data.Sn.at(i);
 
     // The Richardson method main function
-    T a = convertWithPrec<T>(1.0, series_acceleration<T, K>::precision);
-    T b = convertWithPrec<T>(0.0, series_acceleration<T, K>::precision);
+    T a = convertWithPrec<T>(1.0, currentPrecision);
+    T b = convertWithPrec<T>(0.0, currentPrecision);
 
     // For theory, see: Richardson & Gaunt (1927), Section 3 - recursive extrapolation
     // Richardson extrapolation recursion: Tₖ⁽ⁿ⁾ = (4ᵏTₖ₋₁⁽ⁿ⁺¹⁾ - Tₖ₋₁⁽ⁿ⁾) / (4ᵏ - 1)
@@ -149,27 +164,5 @@ T richardson_algorithm<T, K>::calculate(
         throw std::overflow_error("division by zero");
 
     return e[n & static_cast<K>(1)][n];
-
-}
-
-template <AcceptedLike T, UnsignedIntLike K>
-T richardson_algorithm<T, K>::operator()(K n, K order, K offset) const {
-
-    K required_size = n + offset + static_cast<K>(1);
-
-    if (series_acceleration<T, K>::Sn.size() < required_size){
-        throw std::out_of_range("Sn is smaller than required to calculate richardson_{" + to_string(order) + "}^{" + to_string(n) + "}");
-	}
-
-    if (order == static_cast<K>(0)) {
-        return series_acceleration<T, K>::Sn.at(n);
-    }
-
-    // in the method we don't use order, it's only a stub
-    if (n == static_cast<K>(0))
-        throw std::domain_error("n = 0 in the input");
-
-    
-    return calculate(n, order, offset);
 
 }

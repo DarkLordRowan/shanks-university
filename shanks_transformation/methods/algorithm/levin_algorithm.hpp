@@ -67,9 +67,10 @@ protected:
 	 * @return Accelerated sum estimate T_{k,n}
 	 */
 	inline T calc_result(
-		K n, 
-		K order, 
-		K offset = static_cast<T>(0)
+		const K n, 
+        const K order,
+		const SeriesResult<T>& data,
+        const K offset = static_cast<T>(0)
 	) const;
 
 	/**
@@ -83,9 +84,10 @@ protected:
 	 * @return Accelerated sum estimate T_{k,n}
 	 */
 	inline T calc_result_rec(
-		K n, 
-		K order, 
-		K offset = static_cast<T>(0)
+		const K n, 
+        const K order,
+		const SeriesResult<T>& data,
+        const K offset = static_cast<T>(0)
 	) const;
 
 public:
@@ -132,7 +134,11 @@ public:
 	 * @throws std::domain_error if n=0 is provided as input
 	 * @throws std::overflow_error if division by zero or numerical instability occurs
 	 */
-	T operator()(K n, K order, K offset = static_cast<K>(0)) const override;
+	T operator()(const K n, 
+        const K order,
+		const SeriesResult<T>& data,
+        const K offset
+	) const override;
 };
 
 template<AcceptedLike T, UnsignedIntLike K>
@@ -210,18 +216,24 @@ levin_algorithm<T, K>::levin_algorithm(
 
 template<AcceptedLike T, UnsignedIntLike K>
 inline T levin_algorithm<T, K>::calc_result(
-	K n, 
-	K order, 
-	K offset
+	const K n, 
+    const K order,
+	const SeriesResult<T>& data,
+    const K offset
 ) const {
 
 	using std::pow;
 	using std::isfinite;
 
-	T numerator = convertWithPrec<T>(0.0, series_acceleration<T,K>::precision);
-	T denominator = convertWithPrec<T>(0.0, series_acceleration<T,K>::precision);
-	T C_njk = convertWithPrec<T>(0.0, series_acceleration<T,K>::precision);
-	T rest = convertWithPrec<T>(0.0, series_acceleration<T,K>::precision);
+	size_t currentPrecision = std::max(
+        series_acceleration<T, K>::define_precision(data.Sn[0]), 
+        series_acceleration<T, K>::define_precision(data.an[0])
+    );
+
+	T numerator = convertWithPrec<T>(0.0, currentPrecision);
+	T denominator = convertWithPrec<T>(0.0, currentPrecision);
+	T C_njk = convertWithPrec<T>(0.0, currentPrecision);
+	T rest = convertWithPrec<T>(0.0, currentPrecision);
 
 	// For theory, see: Levin (1973), Eq. (2.3)
 	// T_{k,n} = [∑_{j=0}^k (-1)^j C(k,j) (n+j+1)^{k-1}/(n+k+1)^{k-1} S_{n+j}/R_{n+j}] /
@@ -244,14 +256,14 @@ inline T levin_algorithm<T, K>::calc_result(
 		rest*= remainder->operator()(
             n,
             offset + j,
-            series_acceleration<T, K>::an,
+            data.an,
             (variant == remainder_type::u_variant ? beta : static_cast<T>(1))
         );
 
 		rest *= C_njk;
 
 		denominator += rest;
-		numerator += rest * series_acceleration<T, K>::Sn.at(offset + j);
+		numerator += rest * data.Sn.at(offset + j);
 	}
 
 	numerator /= denominator;
@@ -264,24 +276,29 @@ inline T levin_algorithm<T, K>::calc_result(
 
 template<AcceptedLike T, UnsignedIntLike K>
 inline T levin_algorithm<T, K>::calc_result_rec(
-	K n, 
-	K order, 
-	K offset
+	const K n, 
+    const K order,
+	const SeriesResult<T>& data,
+    const K offset
 ) const{
 
 	using std::isfinite;
 	using std::pow;
 
+	size_t currentPrecision = std::max(
+        series_acceleration<T, K>::define_precision(data.Sn[0]), 
+        series_acceleration<T, K>::define_precision(data.an[0])
+    );
 
 	// For theory, see: Sidi (1979), Section 3 - Recursive implementation using E-algorithm
 	// Initialize arrays for recursive computation
 	std::vector<T>   Num(
 		order + static_cast<K>(1), 
-		convertWithPrec<T>(0.0, series_acceleration<T,K>::precision)
+		convertWithPrec<T>(0.0, currentPrecision)
 	);
 	std::vector<T> Denom(
 		order + static_cast<K>(1), 
-		convertWithPrec<T>(0.0, series_acceleration<T,K>::precision)
+		convertWithPrec<T>(0.0, currentPrecision)
 	);
 
 	// Initialize base values: E_0^{(n)} = S_n, g_0^{(n)} = 1/R_n
@@ -289,17 +306,17 @@ inline T levin_algorithm<T, K>::calc_result_rec(
 		Denom[i] = remainder->operator()(
             n,
             offset + i,
-            series_acceleration<T, K>::an,
+            data.an,
             (variant == remainder_type::u_variant ? beta : static_cast<T>(1))
         );
 
-		Num[i] = series_acceleration<T, K>::Sn.at(offset+i) * Denom[i];
+		Num[i] = data.Sn.at(offset+i) * Denom[i];
 	}
 
 	// Recursive computation using the E-algorithm scheme
-	T scale = convertWithPrec<T>(0.0, series_acceleration<T,K>::precision);
-	T nj = convertWithPrec<T>(0.0, series_acceleration<T,K>::precision);
-	const T order1 = convertWithPrec<T>(order - static_cast<K>(1), series_acceleration<T,K>::precision);
+	T scale = convertWithPrec<T>(0.0, currentPrecision);
+	T nj = convertWithPrec<T>(0.0, currentPrecision);
+	const T order1 = convertWithPrec<T>(order - static_cast<K>(1), currentPrecision);
 
 	for (K i = static_cast<K>(1); i <= order; ++i)
 		for (K j = static_cast<K>(0); j <= order - i; ++j) {
@@ -325,21 +342,26 @@ inline T levin_algorithm<T, K>::calc_result_rec(
 }
 
 template <AcceptedLike T, UnsignedIntLike K>
-T levin_algorithm<T, K>::operator()(K n, K order, K offset) const {
+T levin_algorithm<T, K>::operator()(
+	const K n, 
+    const K order,
+	const SeriesResult<T>& data,
+    const K offset
+) const {
 
     K required_size = order + offset + static_cast<K>(1);
 
-    if (series_acceleration<T, K>::Sn.size() < required_size || series_acceleration<T, K>::an.size() < required_size){
+    if (data.Sn.size() < required_size || data.an.size() < required_size){
         throw std::out_of_range("Sn is smaller than required to calculate L_{" + to_string(order) + "}^{" + to_string(n) + "}");
 	}
 
     if (order == static_cast<K>(0)) {
-        return series_acceleration<T, K>::Sn.at(n);
+        return data.Sn.at(n);
     }
 
     using std::isfinite;
 
-    const T result = (useRecFormulas ? calc_result_rec(n,order, offset) : calc_result(n, order, offset));
+    const T result = (useRecFormulas ? calc_result_rec(n,order, data, offset) : calc_result(n, order, data, offset));
     if (!isfinite(result)) throw std::overflow_error("division by zero");
     return result;
 }

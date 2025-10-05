@@ -44,32 +44,6 @@
 template <AcceptedLike T, UnsignedIntLike K>
 class brezinski_theta_algorithm final : public series_acceleration<T, K>
 {
-protected:
-
-    /**
-     * @brief Function to compute theta transformation values.
-     *
-     * Computes the value of theta according to Brezinski's recursive formulas.
-     * This function implements the core recursive structure of the theta algorithm.
-     *
-     * @param n The starting index for the transformation computation
-     *        Valid values: n >= 0, represents the starting point in the sequence
-     * @param order The order of transformation to compute
-     *        Valid values: order >= 0, higher orders provide more acceleration
-     * @param S_n The partial sum at index n (S_n = a_0 + ... + a_n)
-     *        Used as initial value for recursive computations
-     * @param j An offset parameter for recursive computations
-     *        Valid values: j >= 0, used to shift the computation window
-     * @return The transformed value at the specified order and parameters
-     * @throws std::overflow_error if division by zero occurs during computation
-     */
-
-    inline T calculate(
-        K n, 
-        K order, 
-        K offset = static_cast<K>(0)
-    ) const;
-
 public:
 
     /**
@@ -104,34 +78,68 @@ public:
      * @throws std::overflow_error if division by zero occurs during computation
      */
 
-    T operator()(K n, K order, K offset = static_cast<K>(0)) const override;
+    T operator()(
+        const K n, 
+        const K order,
+		const SeriesResult<T>& data,
+        const K offset = static_cast<K>(0)
+    ) const override;
 };
 
-
 template <AcceptedLike T, UnsignedIntLike K>
-T brezinski_theta_algorithm<T, K>::calculate(K n, const K order, K offset) const {
+T brezinski_theta_algorithm<T, K>::operator()(const K n, const K order, const SeriesResult<T>& data, K offset) const{
 
+
+    K required_size = static_cast<K>(3) * order / static_cast<K>(2) + static_cast<K>(1) + n;
+    size_t currentPrecision = series_acceleration<T, K>::define_precision(data.Sn[0]);
+
+    if (data.Sn.size() < required_size){
+        throw std::out_of_range("Sn is smaller than required to calculate theta_{" + to_string(order) + "}^{" + to_string(n) + "}");
+    }
+
+    // For theory, see: Brezinski (2003), Section 10.2, Theorem 10.2.1
+    // Only even orders have mathematical meaning in the final result
+    if constexpr (std::is_same<K, int_precision>::value){
+        if (!order.even()){
+            throw std::domain_error("order should be even number");
+        }
+    } else {
+        if (order & 1){ // is order odd?
+            throw std::domain_error("order should be even number");
+        }
+    }
+    
+
+    // For theory, see: Brezinski (1977), Chapter 4, Eq. (4.10)
+    // Base cases: return partial sum for n=0 or order=0
+    //if (n == static_cast<K>(0) || order == static_cast<K>(0))
+    if (order == static_cast<K>(0)){
+        return data.Sn.at(n);
+    }
+
+    // For theory, see: Brezinski (2003), Section 10.2, Eq. (10.2.4)
+    // Start computation with initial parameters
     using std::isfinite;
 
     const K base_size = static_cast<K>(3) * order / static_cast<K>(2) + static_cast<K>(1);
 
     std::vector<T> theta_odd(
         base_size,
-        convertWithPrec<T>(0.0, series_acceleration<T, K>::precision)
+        convertWithPrec<T>(0.0, currentPrecision)
     ); // vector for theta_(2n + 1);
 
     std::vector<T> theta_even(
         base_size,
-        convertWithPrec<T>(0.0, series_acceleration<T, K>::precision)
+        convertWithPrec<T>(0.0, currentPrecision)
     ); //vector for theta_(2n), in the beginning it is theta_(-1) which is zero for all i
 
     // init theta_(0)
     for(K j = static_cast<K>(0); j < base_size; ++j){
-        theta_even[j] += series_acceleration<T, K>::Sn.at(offset + j);
+        theta_even[j] += data.Sn.at(offset + j);
     }
 
     K j1, j2;
-    T delta = convertWithPrec<T>(0.0, series_acceleration<T, K>::precision); //temporary varaible
+    T delta = convertWithPrec<T>(0.0, currentPrecision); //temporary varaible
 
     for(K level = static_cast<K>(1); level <= order / static_cast<K>(2); ++level){
 
@@ -165,39 +173,4 @@ T brezinski_theta_algorithm<T, K>::calculate(K n, const K order, K offset) const
         throw std::overflow_error("division by zero");
 
     return theta_even[0];
-}
-
-template <AcceptedLike T, UnsignedIntLike K>
-T brezinski_theta_algorithm<T, K>::operator()(const K n, const K order, K offset) const{
-
-
-    K required_size = static_cast<K>(3) * order / static_cast<K>(2) + static_cast<K>(1) + n;
-
-    if (series_acceleration<T, K>::Sn.size() < required_size){
-        throw std::out_of_range("Sn is smaller than required to calculate theta_{" + to_string(order) + "}^{" + to_string(n) + "}");
-    }
-
-    // For theory, see: Brezinski (2003), Section 10.2, Theorem 10.2.1
-    // Only even orders have mathematical meaning in the final result
-    if constexpr (std::is_same<K, int_precision>::value){
-        if (!order.even()){
-            throw std::domain_error("order should be even number");
-        }
-    } else {
-        if (order & 1){ // is order odd?
-            throw std::domain_error("order should be even number");
-        }
-    }
-    
-
-    // For theory, see: Brezinski (1977), Chapter 4, Eq. (4.10)
-    // Base cases: return partial sum for n=0 or order=0
-    //if (n == static_cast<K>(0) || order == static_cast<K>(0))
-    if (order == static_cast<K>(0)){
-        return series_acceleration<T, K>::Sn.at(n);
-    }
-
-    // For theory, see: Brezinski (2003), Section 10.2, Eq. (10.2.4)
-    // Start computation with initial parameters
-    return calculate(n, order, offset);
 }

@@ -47,11 +47,59 @@ PYBIND11_MODULE(pyshanks, m) {
 
     py::class_<series_acceleration<T,K>>(m, "SeriesAcceleration")
         .def("printInfo", &series_acceleration<T, K>::print_info)
-        .def("__call__", &series_acceleration<T,K>::operator(), py::arg("n"), py::arg("order"), py::arg("offset") = static_cast<K>(0))
-        .def("reset", &series_acceleration<T,K>::reset, py::arg("result"), py::arg("precision") = 0);
+        .def("__call__", &series_acceleration<T,K>::operator(), py::arg("n"), py::arg("order"), py::arg("data"), py::arg("offset") = static_cast<K>(0));
 
+    //init algos
     py::class_<brezinski_theta_algorithm<T,K>, series_acceleration<T,K>>(m, "BrezinskiThetaAlgorithm")
         .def(py::init<>());
+
+    py::class_<chang_wynn_algorithm<T,K>, series_acceleration<T,K>>(m, "ChangWynnAlgorithm")
+        .def(py::init<>());
+    
+    py::class_<drummond_d_algorithm<T,K>, series_acceleration<T,K>>(m, "DrummondDAlgorithm")
+        .def(py::init<remainder_type, bool>(), py::arg("remainder") = remainder_type::t_variant, py::arg("useRecurrentFormula") = false);
+
+    py::class_<ford_sidi_2_algorithm<T,K>, series_acceleration<T,K>>(m, "FordSidi2Algorithm")
+        .def(py::init<>());
+
+    py::class_<ford_sidi_3_algorithm<T,K>, series_acceleration<T,K>>(m, "FordSidi3Algorithm")
+        .def(py::init<>());
+
+    py::class_<levin_algorithm<T,K>, series_acceleration<T,K>>(m, "LevinLAlgorithm")
+        .def(py::init<remainder_type, bool, T>(), py::arg("remainder") = remainder_type::t_variant, py::arg("useRecurrentFormula") = false, py::arg("beta") = static_cast<T>(1)); //ADD
+    
+    py::class_<levin_sidi_m_algorithm<T,K>, series_acceleration<T,K>>(m, "LevinSidiMAlgorithm")
+        .def(py::init<remainder_type, T>(), py::arg("remainder") = remainder_type::t_variant, py::arg("gamma") = static_cast<T>(10)); //ADD
+
+    py::class_<levin_sidi_s_algorithm<T,K>, series_acceleration<T,K>>(m, "LevinSidiSAlgorithm")
+        .def(py::init<remainder_type, bool, T>(), py::arg("remainder") = remainder_type::t_variant, py::arg("useRecurrentFormula") = false, py::arg("beta") = static_cast<T>(1)); //ADD
+
+    py::class_<lubkin_w_algorithm<T,K>, series_acceleration<T,K>>(m, "LubkinWAlgorithm")
+        .def(py::init<>());
+
+    py::class_<richardson_algorithm<T,K>, series_acceleration<T,K>>(m, "RichardsonAlgorithm")
+        .def(py::init<>());
+
+    py::class_<shanks_algorithm<T,K>, series_acceleration<T,K>>(m, "ShanksAlgorithm")
+        .def(py::init<>());
+
+    py::class_<shanks_transform_alternating<T,K>, series_acceleration<T,K>>(m, "AlternatingShanksAlgorithm")
+        .def(py::init<>());
+
+    py::class_<weniger_algorithm<T,K>, series_acceleration<T,K>>(m, "WenigerAlgorithm")
+        .def(py::init<>());
+
+    py::class_<wynn_epsilon_1_algorithm<T,K>, series_acceleration<T,K>>(m, "WynnEpsilon1Algorithm")
+        .def(py::init<>());
+
+    py::class_<wynn_epsilon_2_algorithm<T,K>, series_acceleration<T,K>>(m, "WynnEpsilon2Algorithm")
+        .def(py::init<>());
+
+    py::class_<wynn_epsilon_3_algorithm<T,K>, series_acceleration<T,K>>(m, "WynnEpsilon3Algorithm")
+        .def(py::init<T>(), py::arg("epsilon_threshold") = static_cast<T>(1e-3));
+
+    py::class_<wynn_rho_algorithm<T,K>, series_acceleration<T,K>>(m, "WynnRhoAlgorithm")
+        .def(py::init<numerator_type, T, T>(), py::arg("numerator") = remainder_type::t_variant, py::arg("gamma") = static_cast<T>(-1), py::arg("rho") = static_cast<T>(1));
 
 
 }

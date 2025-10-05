@@ -75,38 +75,43 @@ public:
 	 * @return The accelerated partial sum after Weniger transformation
 	 * @throws std::overflow_error if division by zero or numerical instability occurs
 	 */
-	T operator()(K n, K order, K offset = static_cast<K>(0)) const override;
+	T operator()(
+		const K n, 
+        const K order,
+		const SeriesResult<T>& data,
+        const K offset = static_cast<K>(0)
+	) const override;
 };
 
 template<AcceptedLike T, UnsignedIntLike K>
-T weniger_algorithm<T, K>::operator()(K n, K order, K offset) const {
+T weniger_algorithm<T, K>::operator()(
+	const K n, 
+    const K order,
+	const SeriesResult<T>& data,
+    const K offset
+) const {
 
     K required_size = order + offset + static_cast<K>(1);
 
-    if (series_acceleration<T, K>::Sn.size() < required_size || series_acceleration<T, K>::an.size() < required_size){
+    if (data.Sn.size() < required_size || data.an.size() < required_size){
         throw std::out_of_range("Sn or an is smaller than required to calculate weniger_{" + to_string(order) + "}^{" + to_string(n) + "}");
 	}
 
     if (order == static_cast<K>(0)) {
-        return series_acceleration<T, K>::Sn.at(n);
+        return data.Sn.at(n);
     }
 
-    return calculate(n, order, offset);
-}
+	size_t currentPrecision = std::max(
+        series_acceleration<T, K>::define_precision(data.Sn[0]), 
+        series_acceleration<T, K>::define_precision(data.an[0])
+    );
 
-template<AcceptedLike T, UnsignedIntLike K>
-T weniger_algorithm<T, K>::calculate(
-	K n, 
-	K order, 
-	K offset
-) const {
-
-	using std::isfinite;
+    using std::isfinite;
 
 	// For theory, see: Weniger (1989), Section 8.2, Eq. (8.2-7)
 	// Weniger transformation as ratio of binomial sums with Pochhammer symbols
-	T numerator = convertWithPrec<T>(0.0, series_acceleration<T, K>::precision);
-	T denominator = convertWithPrec<T>(0.0, series_acceleration<T, K>::precision);
+	T numerator = convertWithPrec<T>(0.0, currentPrecision);
+	T denominator = convertWithPrec<T>(0.0, currentPrecision);
 
 	// For theory, see: Weniger (1989), Eq. (8.2-7) term components
 	T rest;	// Weight factor for current term: (-1)ʲ × C(order, j) × (β+n+j)ₖ₋₁
@@ -114,7 +119,7 @@ T weniger_algorithm<T, K>::calculate(
 
 	// For theory, see: Weniger (1989), Eq. (8.2-7) weight factor
 	// Initial Pochhammer-like term: (β+n)ₖ₋₁ with β=1, equivalent to (n+1)ₖ₋₁ = Γ(n+k)/Γ(n+1)
-	T coef = convertWithPrec<T>(1.0, series_acceleration<T, K>::precision);
+	T coef = convertWithPrec<T>(1.0, currentPrecision);
 
 	// For theory, see: Weniger (1989), Eq. (8.2-7) recursive computation
 	// Initial binomial coefficient: C(order, 0) = 1
@@ -135,7 +140,7 @@ T weniger_algorithm<T, K>::calculate(
 		// For theory, see: Weniger (1989), Eq. (8.2-7) term structure
 		// Term sign: (-1)ʲ
 
-		rest = convertWithPrec<T>(1.0, series_acceleration<T, K>::precision); //need to set precision before doing anything
+		rest = convertWithPrec<T>(1.0, currentPrecision); //need to set precision before doing anything
 		rest*= minus_one_raised_to_power_n<T,K>(j);
 
 		// Binomial coefficient: C(order, j)
@@ -158,11 +163,11 @@ T weniger_algorithm<T, K>::calculate(
 
 		// For theory, see: Weniger (1989), Eq. (8.2-7) remainder estimate
 		// Remainder estimate: ωₙ = Δsₙ = a_{n+1}, so 1/ωₙ = 1/a_{j+1}
-		rest /= series_acceleration<T, K>::an.at(j1);
+		rest /= data.an.at(j1);
 
 		// For theory, see: Weniger (1989), Eq. (8.2-7) numerator term
 		// Numerator term: rest × s_{n+j}
-		numerator   += rest * series_acceleration<T, K>::Sn.at(j);
+		numerator   += rest * data.Sn.at(j);
 
 		// For theory, see: Weniger (1989), Eq. (8.2-7) denominator term
 		// Denominator term: rest
@@ -179,3 +184,4 @@ T weniger_algorithm<T, K>::calculate(
 
 	return numerator;
 }
+
