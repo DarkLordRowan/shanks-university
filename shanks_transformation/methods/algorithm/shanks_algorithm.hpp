@@ -34,14 +34,6 @@
 template <AcceptedLike T, UnsignedIntLike K>
 class shanks_algorithm final : public series_acceleration<T, K>
 {
-protected:
-
-	inline T calculate(
-		K n, 
-		K order, 
-		K offset = static_cast<K>(0)
-	) const;  
-
 public:
 
 	/**
@@ -65,27 +57,48 @@ public:
 	 * @return The accelerated partial sum after Shanks transformation
 	 * @throws std::overflow_error if division by zero or numerical instability occurs
 	 */
-	T operator()(K n, K order, K offset = static_cast<K>(0)) const;
+	T operator()(
+		const K n, 
+        const K order,
+		const SeriesResult<T>& data,
+        const K offset = static_cast<K>(0)
+	) const;
 };
 
 template <AcceptedLike T, UnsignedIntLike K>
-T shanks_algorithm<T, K>::calculate(
-	K n, 
-	K order, 
-	K offset
-) const {
+T shanks_algorithm<T, K>::operator()(
+	const K n, 
+    const K order,
+	const SeriesResult<T>& data,
+    const K offset
+) const{
 
-	using std::isfinite;
+    K required_size = order + offset + static_cast<K>(1);
+
+    if (data.Sn.size() < required_size || data.an.size() < required_size){
+        throw std::out_of_range("Sn or an is smaller than required to calculate shanks_{" + to_string(order) + "}^{" + to_string(n) + "}");
+	}
+
+    if (order == static_cast<K>(0)) {
+        return data.Sn.at(n);
+    }
+
+    using std::isfinite;
 	using std::fma;
+
+	size_t currentPrecision = std::max(
+        series_acceleration<T, K>::define_precision(data.Sn[0]), 
+        series_acceleration<T, K>::define_precision(data.an[0])
+    );
 
 	if (order == static_cast<K>(1)) [[unlikely]]
 	{
-		T a_n = convertWithPrec<T>(0.0, series_acceleration<T, K>::precision);
-		T a_n_plus_1 =convertWithPrec<T>(0.0, series_acceleration<T, K>::precision);
-		T tmp = convertWithPrec<T>(0.0, series_acceleration<T, K>::precision);
+		T a_n = convertWithPrec<T>(0.0, currentPrecision);
+		T a_n_plus_1 =convertWithPrec<T>(0.0, currentPrecision);
+		T tmp = convertWithPrec<T>(0.0, currentPrecision);
 
-		a_n += series_acceleration<T, K>::an.at(n);
-		a_n_plus_1 += series_acceleration<T, K>::an.at(n + static_cast<K>(1));
+		a_n += data.an.at(n);
+		a_n_plus_1 += data.an.at(n + static_cast<K>(1));
 		tmp -= a_n_plus_1 * a_n_plus_1;
 
 		// For theory, see: Shanks (1955), Eq. (6) - Aitken's Δ² process
@@ -93,7 +106,7 @@ T shanks_algorithm<T, K>::calculate(
 		const T result = fma(
 			a_n * a_n_plus_1,
 			(a_n + a_n_plus_1) / (fma(a_n, a_n, tmp) - fma(a_n_plus_1, a_n_plus_1, tmp)),
-			series_acceleration<T, K>::Sn.at(n)
+			data.Sn.at(n)
 		);
 		//n > order >= 1
 
@@ -108,17 +121,17 @@ T shanks_algorithm<T, K>::calculate(
 
 	std::vector<T> T_n(
 		n_plus_order, 
-		convertWithPrec<T>(0.0, series_acceleration<T, K>::precision)
+		convertWithPrec<T>(0.0, currentPrecision)
 	);
 
-	T a_n = convertWithPrec<T>(0.0, series_acceleration<T, K>::precision);
-	T a_n_plus_1 = convertWithPrec<T>(0.0, series_acceleration<T, K>::precision);
-	T tmp = convertWithPrec<T>(0.0, series_acceleration<T, K>::precision);
+	T a_n = convertWithPrec<T>(0.0, currentPrecision);
+	T a_n_plus_1 = convertWithPrec<T>(0.0, currentPrecision);
+	T tmp = convertWithPrec<T>(0.0, currentPrecision);
 
 	for (K i = n_minus_order + static_cast<K>(1); i <= n_plus_order - static_cast<K>(1); ++i) // if we got to this branch then we know that n >= order - see previous branches  int -> K
 	{
-		a_n = series_acceleration<T, K>::an.at(i);
-		a_n_plus_1 = series_acceleration<T, K>::an.at(i + static_cast<K>(1));
+		a_n = data.an.at(i);
+		a_n_plus_1 = data.an.at(i + static_cast<K>(1));
 		tmp = -a_n_plus_1 * a_n_plus_1;
 
 		// For theory, see: Shanks (1955), Eq. (12) - Higher order transformation
@@ -126,18 +139,18 @@ T shanks_algorithm<T, K>::calculate(
 		T_n[i] = fma(
 			a_n * a_n_plus_1,
 			(a_n + a_n_plus_1) / (fma(a_n, a_n, tmp) - fma(a_n_plus_1, a_n_plus_1, tmp)),
-			series_acceleration<T, K>::Sn.at(i)
+			data.Sn.at(i)
 		);
 	}
 
 	std::vector<T> T_n_plus_1(
 		n + order, 
-		convertWithPrec<T>(0.0, series_acceleration<T, K>::precision)
+		convertWithPrec<T>(0.0, currentPrecision)
 	);
 
-	T a = convertWithPrec<T>(0.0, series_acceleration<T, K>::precision);
-	T b = convertWithPrec<T>(0.0, series_acceleration<T, K>::precision);
-	T c = convertWithPrec<T>(0.0, series_acceleration<T, K>::precision);;
+	T a = convertWithPrec<T>(0.0, currentPrecision);
+	T b = convertWithPrec<T>(0.0, currentPrecision);
+	T c = convertWithPrec<T>(0.0, currentPrecision);;
 
 	for (K j = static_cast<K>(2); j <= order; ++j) {
 		for (K i = n_minus_order + j; i <= n_plus_order - j; ++i) {
@@ -160,23 +173,6 @@ T shanks_algorithm<T, K>::calculate(
 		throw std::overflow_error("division by zero");
 
 	return T_n[n];
-
-}
-
-template <AcceptedLike T, UnsignedIntLike K>
-T shanks_algorithm<T, K>::operator()(K n, K order, K offset) const{
-
-    K required_size = order + offset + static_cast<K>(1);
-
-    if (series_acceleration<T, K>::Sn.size() < required_size || series_acceleration<T, K>::an.size() < required_size){
-        throw std::out_of_range("Sn or an is smaller than required to calculate shanks_{" + to_string(order) + "}^{" + to_string(n) + "}");
-	}
-
-    if (order == static_cast<K>(0)) {
-        return series_acceleration<T, K>::Sn.at(n);
-    }
-
-    return calculate(n, order,  offset);
 	
 }
 
@@ -196,14 +192,6 @@ T shanks_algorithm<T, K>::operator()(K n, K order, K offset) const{
 template <AcceptedLike T, UnsignedIntLike K>
 class shanks_transform_alternating : public series_acceleration<T, K>
 {
-protected:
-
-	inline T calculate(
-		K n, 
-		K order, 
-		K offset = static_cast<K>(0)
-	) const;  
-
 public:
 
 	/**
@@ -227,32 +215,52 @@ public:
 	 * @return The accelerated partial sum after Shanks transformation
 	 * @throws std::overflow_error if division by zero or numerical instability occurs
 	 */
-	T operator()(K n, K order, K offset = static_cast<K>(0)) const override;
+	T operator()(const K n, 
+        const K order,
+		const SeriesResult<T>& data,
+        const K offset = static_cast<K>(0)
+	) const override;
 
 };
 
 template <AcceptedLike T, UnsignedIntLike K>
-T shanks_transform_alternating<T, K>::calculate(
-	K n, 
-	K order, 
-	K offset
+T shanks_transform_alternating<T, K>::operator()(
+	const K n, 
+    const K order,
+	const SeriesResult<T>& data,
+    const K offset
 ) const {
 
-	using std::isfinite;
+    K required_size = order + offset + static_cast<K>(1);
+
+    if (data.Sn.size() < required_size || data.an.size() < required_size){
+        throw std::out_of_range("Sn or an is smaller than required to calculate theta_{" + to_string(order) + "}^{" + to_string(n) + "}");
+	}
+
+    if (order == static_cast<K>(0)) {
+        return data.Sn.at(n);
+    }
+
+    using std::isfinite;
 	using std::fma;
+
+	size_t currentPrecision = std::max(
+        series_acceleration<T, K>::define_precision(data.Sn[0]), 
+        series_acceleration<T, K>::define_precision(data.an[0])
+    );
 
 	if (order == static_cast<K>(1)) [[unlikely]]
 	{
-		T a_n = series_acceleration<T, K>::an.at(n);
-		T a_n_plus_1 = series_acceleration<T, K>::an.at(n + static_cast<K>(1));
-		T result = convertWithPrec<T>(0.0, series_acceleration<T, K>::precision);
+		T a_n = data.an.at(n);
+		T a_n_plus_1 = data.an.at(n + static_cast<K>(1));
+		T result = convertWithPrec<T>(0.0, currentPrecision);
 
 		// For theory, see: Senhadji (2001), Section 3.2 - Alternating series case
 		// For alternating series: e₁(Sₙ) = Sₙ + (aₙaₙ₊₁)/(aₙ - aₙ₊₁)
 		result += fma(
 			a_n * a_n_plus_1,
 			static_cast<T>(1) / (a_n - a_n_plus_1),
-			series_acceleration<T, K>::Sn.at(n)
+			data.Sn.at(n)
 		);
 
 		if (!isfinite(result))
@@ -268,34 +276,34 @@ T shanks_transform_alternating<T, K>::calculate(
 
 	std::vector<T> T_n(
 		n_plus_order, 
-		convertWithPrec<T>(0.0, series_acceleration<T, K>::precision)
+		convertWithPrec<T>(0.0, currentPrecision)
 	);
 
-	T a_n = convertWithPrec<T>(0.0, series_acceleration<T, K>::precision);
-	T a_n_plus_1 = convertWithPrec<T>(0.0, series_acceleration<T, K>::precision);
+	T a_n = convertWithPrec<T>(0.0, currentPrecision);
+	T a_n_plus_1 = convertWithPrec<T>(0.0, currentPrecision);
 
 	for (K i = n_minus_order1; i <= n_plus_order - static_cast<K>(1); ++i) // if we got to this branch then we know that n >= order - see previous branches int->K
 	{
-		a_n = series_acceleration<T, K>::an.at(i);
-		a_n_plus_1 = series_acceleration<T, K>::an.at(i + static_cast<K>(1));
+		a_n = data.an.at(i);
+		a_n_plus_1 = data.an.at(i + static_cast<K>(1));
 
 		// For theory, see: Senhadji (2001), Section 3.2 - Alternating series case
 		// e₁(Sᵢ) = Sᵢ + (aᵢaᵢ₊₁)/(aᵢ - aᵢ₊₁)
 		T_n[i] = fma(
 			a_n * a_n_plus_1,
 			static_cast<T>(1) / (a_n - a_n_plus_1),
-			series_acceleration<T, K>::Sn.at(n)
+			data.Sn.at(n)
 		);
 	}
 
 	std::vector<T> T_n_plus_1(
 		n_plus_order, 
-		convertWithPrec<T>(0.0, series_acceleration<T, K>::precision)
+		convertWithPrec<T>(0.0, currentPrecision)
 	);
 
-	T a = convertWithPrec<T>(0.0, series_acceleration<T, K>::precision);
-	T b = convertWithPrec<T>(0.0, series_acceleration<T, K>::precision);
-	T c = convertWithPrec<T>(0.0, series_acceleration<T, K>::precision);
+	T a = convertWithPrec<T>(0.0, currentPrecision);
+	T b = convertWithPrec<T>(0.0, currentPrecision);
+	T c = convertWithPrec<T>(0.0, currentPrecision);
 
 	for (K j = static_cast<K>(2); j <= order; ++j) {
 		for (K i = n_minus_order + j; i <= n_plus_order - j; ++i) {
@@ -320,23 +328,6 @@ T shanks_transform_alternating<T, K>::calculate(
 		throw std::overflow_error("division by zero");
 
 	return T_n[n];
-
-}
-
-template <AcceptedLike T, UnsignedIntLike K>
-T shanks_transform_alternating<T, K>::operator()(K n, K order, K offset) const {
-
-    K required_size = order + offset + static_cast<K>(1);
-
-    if (series_acceleration<T, K>::Sn.size() < required_size || series_acceleration<T, K>::an.size() < required_size){
-        throw std::out_of_range("Sn or an is smaller than required to calculate theta_{" + to_string(order) + "}^{" + to_string(n) + "}");
-	}
-
-    if (order == static_cast<K>(0)) {
-        return series_acceleration<T, K>::Sn.at(n);
-    }
-
-    return calculate(n, order,  offset);
 
 	
 }

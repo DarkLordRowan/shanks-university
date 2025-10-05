@@ -48,18 +48,6 @@ protected:
 	const T gamma;											/**< Gamma parameter for generalized rho transformation */
 	const T RHO;											/**< Rho parameter for gamma-rho variant */
 
-	/**
-	 * @brief Main calculation method for Wynn's rho algorithm.
-	 * @param n Starting index for partial sums
-	 * @param order Transformation order (must be even)
-	 * @return Accelerated partial sum
-	 */
-	inline T calculate(
-		K n, 
-		K order, 
-		K offset = static_cast<K>(0)
-	) const;
-
 public:
 
 	/**
@@ -110,23 +98,12 @@ public:
 	 * @throws std::domain_error if order is odd
 	 * @throws std::overflow_error if division by zero occurs
 	 */
-	T operator()(K n, K order, K offset = static_cast<K>(0)) const override { 
-
-    	K required_size = order + static_cast<K>(1) + offset;
-
-    	if (series_acceleration<T, K>::Sn.size() < required_size || series_acceleration<T, K>::an.size() < required_size){
-    	    throw std::out_of_range("Sn or an is smaller than required to calculate theta_{" + to_string(order) + "}^{" + to_string(n) + "}");
-		}
-
-    	// For theory, see: Brezinski (1977), Chapter 4, Eq. (4.10)
-    	// Base cases: return partial sum for n=0 or order=0
-    	//if (n == static_cast<K>(0) || order == static_cast<K>(0))
-    	if (order == static_cast<K>(0)){
-        	return series_acceleration<T, K>::Sn.at(n);
-		}
-
-		return calculate(n, order, offset); 
-	}
+	T operator()(
+		const K n, 
+        const K order,
+		const SeriesResult<T>& data,
+        const K offset = static_cast<K>(0)
+	) const override;
 
 };
 
@@ -178,29 +155,44 @@ wynn_rho_algorithm<T, K>::wynn_rho_algorithm(
 }
 
 template <AcceptedLike T, UnsignedIntLike K>
-inline T wynn_rho_algorithm<T, K>::calculate(
-	K n, 
-	K order, 
-	K offset
+inline T wynn_rho_algorithm<T, K>::operator()(
+	const K n, 
+	const K order,
+	const SeriesResult<T>& data,
+	const K offset
 ) const { //const int order
+
+	const K base_size = order + static_cast<K>(1) + offset;
+
+    if (data.Sn.size() < base_size || data.an.size() < base_size){
+        throw std::out_of_range("Sn or an is smaller than required to calculate theta_{" + to_string(order) + "}^{" + to_string(n) + "}");
+	}
+    // For theory, see: Brezinski (1977), Chapter 4, Eq. (4.10)
+    // Base cases: return partial sum for n=0 or order=0
+    if (order == static_cast<K>(0)){
+    	return data.Sn.at(n);
+	}
+
+	size_t currentPrecision = std::max(
+        series_acceleration<T, K>::define_precision(data.Sn[0]), 
+        series_acceleration<T, K>::define_precision(data.an[0])
+    );
 
 	using std::isfinite;
 
-	const K base_size = order + static_cast<K>(1);
-
     std::vector<T> rho_odd(
         base_size,
-        convertWithPrec<T>(0.0, series_acceleration<T, K>::precision)
+        convertWithPrec<T>(0.0, currentPrecision)
     ); // vector for theta_(2n + 1)
 
     std::vector<T> rho_even(
         base_size,
-        convertWithPrec<T>(0.0,series_acceleration<T, K>::precision)
+        convertWithPrec<T>(0.0,currentPrecision)
     ); //vector for theta_(2n), in the beginning it is theta_(-1) which is zero for all i
 
     // init theta_(0)
     for(K j = static_cast<K>(0); j < base_size; ++j) {
-        rho_even[j] = series_acceleration<T, K>::Sn.at(offset + j);
+        rho_even[j] = data.Sn.at(offset + j);
 	}
 
 
@@ -219,7 +211,7 @@ inline T wynn_rho_algorithm<T, K>::calculate(
 			rho_odd[j] = rho_odd[j1] + numerator->operator()(
 				n + j, 
 				level * static_cast<K>(2) - static_cast<K>(1), 
-				series_acceleration<T, K>::an, 
+				data.an, 
 				gamma, 
 				RHO
 			) / delta;
@@ -237,7 +229,7 @@ inline T wynn_rho_algorithm<T, K>::calculate(
 			rho_even[j] = rho_even[j1] + numerator->operator()(
 				n + j, 
 				level * static_cast<K>(2), 
-				series_acceleration<T, K>::an, 
+				data.an, 
 				gamma, 
 				RHO
 			) / delta;

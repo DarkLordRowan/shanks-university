@@ -45,7 +45,7 @@ public:
      * @param series The series class object to be accelerated
      *        Must be a valid object implementing the required series interface
      */
-    explicit series_acceleration(std::string name  = "unknown");
+    explicit series_acceleration(std::string name  = "unknown", size_t precision = 20);
 
     /**
      * @brief Method for printing basic information about the acceleration object
@@ -72,20 +72,23 @@ public:
      * @return The accelerated partial sum after applying the transformation
      * @throws May throw domain_error or overflow_error in derived implementations
      */
-    virtual T operator()(K n, K order, K offset = static_cast<K>(0)) const = 0;
-
-    void reset(const SeriesResult<T>& series, unsigned short int precision = 0);
+    virtual T operator()(const K n, const K order, const SeriesResult<T>& data, const K offset = static_cast<K>(0)) const = 0;
 
 protected:
 
-    //const std::vector<T>* Sn = nullptr;
-    //const std::vector<T>* an = nullptr;
-    std::vector<T> Sn;
-    std::vector<T> an;
+    inline size_t define_precision(const T& example) const {
+        if constexpr (std::is_same<T, float_precision>::value){
+            return std::max(precision, example.precision());
+        } else if constexpr (std::is_same<T, complex_precision<float_precision>>::value){
+            return std::max(precision, std::max(example.real().precision(), example.imag().precision()));
+        } else {
+            return precision;
+        }
+    }
 
     std::string acceleration_name = "series acceleration base class";
 
-    unsigned short precision = 0;
+    size_t precision = 20;
 
 };
 
@@ -99,7 +102,7 @@ protected:
  * @param series The series object to be accelerated
  */
 template<AcceptedLike T, UnsignedIntLike K>
-series_acceleration<T, K>::series_acceleration(std::string name) : acceleration_name(name){}
+series_acceleration<T, K>::series_acceleration(std::string name, size_t precision) : acceleration_name(name), precision(precision) {}
 
 
 /**
@@ -110,32 +113,3 @@ series_acceleration<T, K>::series_acceleration(std::string name) : acceleration_
  */
 template<AcceptedLike T, UnsignedIntLike K>
 constexpr void series_acceleration<T, K>::print_info() const { std::cout << this->acceleration_name << '\n'; }
-
-template<AcceptedLike T, UnsignedIntLike K>
-void series_acceleration<T, K>::reset(const SeriesResult<T>& series, unsigned short int precision){
-
-    Sn = series.Sn;
-    an = series.an;
-
-    if constexpr (std::is_same<T, float_precision>::value){
-
-        if(precision == 0){
-            this->precision = series.Sn.at(0).precision();
-        } else {
-            this->precision = precision;
-        }
-
-    } else if constexpr (std::is_same<T, complex_precision<float_precision>>::value){
-
-        if(precision == 0){
-            this->precision =  std::max(series.Sn.at(0).real().precision(), series.Sn.at(0).imag().precision());
-        } else {
-            this->precision = precision;
-        }
-
-    } else {
-
-        this->precision = 0;
-    }
-    
-};

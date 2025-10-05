@@ -44,13 +44,6 @@ private:
 
     const T epsilon_threshold;  ///< Threshold for epsilon correction terms to prevent division by near-zero values.
                                 ///< Default: 1e-3. Smaller values may increase sensitivity but risk instability.
-
-    inline T calculate(
-		K n, 
-		K order, 
-		K offset = static_cast<K>(0)
-	) const;       
-
 public:
 
     /**
@@ -85,24 +78,46 @@ public:
      * @throws std::domain_error if n=0.
      * @throws std::overflow_error if numerical instability (e.g., division by zero) occurs.
      */
-	T operator()(K n, K order, K offset = static_cast<K>(0)) const override;
+	T operator()(
+        const K n, 
+        const K order,
+		const SeriesResult<T>& data,
+        const K offset = static_cast<K>(0)
+    ) const override;
 };
 
 // Constructor implementation
 template <AcceptedLike T, UnsignedIntLike K>
-wynn_epsilon_3_algorithm<T, K>::wynn_epsilon_3_algorithm(
-    const T epsilon_threshold_
-    ) :
-    series_acceleration<T, K>("wynn epsilon 3"),
-    epsilon_threshold(epsilon_threshold_)
+wynn_epsilon_3_algorithm<T, K>::wynn_epsilon_3_algorithm(const T epsilon_threshold_) :
+series_acceleration<T, K>("wynn epsilon 3"),
+epsilon_threshold(epsilon_threshold_)
 {}
 
+
+// Algorithm implementation
 template <AcceptedLike T, UnsignedIntLike K>
-T wynn_epsilon_3_algorithm<T, K>::calculate(
-	K n, 
-	K order, 
-	K offset
+T wynn_epsilon_3_algorithm<T, K>::operator()(
+    const K n, 
+    const K order,
+	const SeriesResult<T>& data,
+    const K offset
 ) const {
+
+    K required_size = order + static_cast<K>(1) + offset;
+
+    if (data.Sn.size() < required_size){
+        throw std::out_of_range("Sn or an is smaller than required to calculate e3_{" + to_string(order) + "}^{" + to_string(n) + "}");
+	}
+
+    if (n == static_cast<K>(0)){
+        throw std::domain_error("n = 0 in the input");
+    }
+
+    if (order == static_cast<K>(0)) {
+        return data.Sn.at(n);
+    }
+
+    size_t currentPrecision = series_acceleration<T, K>::define_precision(data.Sn[0]);
 
     using std::isfinite;
     using std::max;
@@ -115,26 +130,26 @@ T wynn_epsilon_3_algorithm<T, K>::calculate(
     const T EPRN = static_cast<T>(50) * EMACH;         ///< Relative error tolerance (50 * machine epsilon).
     const T OFRN = std::numeric_limits<T>::max();      ///< Overflow threshold (largest finite value).
 
-    T result = convertWithPrec<T>(0.0, series_acceleration<T, K>::precision);       ///< Current best accelerated estimate.
-    T abs_error = convertWithPrec<T>(0.0, series_acceleration<T, K>::precision);    ///< Absolute error estimate for current result.
-    T resla = convertWithPrec<T>(0.0, series_acceleration<T, K>::precision);        ///< Previous result for error comparison.
+    T result = convertWithPrec<T>(0.0, currentPrecision);       ///< Current best accelerated estimate.
+    T abs_error = convertWithPrec<T>(0.0, currentPrecision);    ///< Absolute error estimate for current data.
+    T resla = convertWithPrec<T>(0.0, currentPrecision);        ///< Previous result for error comparison.
     K newelm, num, NUM, K1, ib, ie, in; // Loop indices and counters.
-    T RES = convertWithPrec<T>(0.0, series_acceleration<T, K>::precision);
-    T E0 = convertWithPrec<T>(0.0, series_acceleration<T, K>::precision);
-    T E1 = convertWithPrec<T>(0.0, series_acceleration<T, K>::precision);
-    T E2 = convertWithPrec<T>(0.0, series_acceleration<T, K>::precision);
-    T E3 = convertWithPrec<T>(0.0, series_acceleration<T, K>::precision);
-    T DELTA1 = convertWithPrec<T>(0.0, series_acceleration<T, K>::precision);
-    T DELTA2 = convertWithPrec<T>(0.0, series_acceleration<T, K>::precision);
-    T DELTA3 = convertWithPrec<T>(0.0, series_acceleration<T, K>::precision);
-    T ERR1 = convertWithPrec<T>(0.0, series_acceleration<T, K>::precision);
-    T ERR2 = convertWithPrec<T>(0.0, series_acceleration<T, K>::precision);
-    T ERR3 = convertWithPrec<T>(0.0, series_acceleration<T, K>::precision); 
-    T TOL1 = convertWithPrec<T>(0.0, series_acceleration<T, K>::precision);
-    T TOL2 = convertWithPrec<T>(0.0, series_acceleration<T, K>::precision);
-    T TOL3 = convertWithPrec<T>(0.0, series_acceleration<T, K>::precision); 
-    T SS = convertWithPrec<T>(0.0, series_acceleration<T, K>::precision);
-    T EPSINF = convertWithPrec<T>(0.0, series_acceleration<T, K>::precision); // int -> K
+    T RES = convertWithPrec<T>(0.0, currentPrecision);
+    T E0 = convertWithPrec<T>(0.0, currentPrecision);
+    T E1 = convertWithPrec<T>(0.0, currentPrecision);
+    T E2 = convertWithPrec<T>(0.0, currentPrecision);
+    T E3 = convertWithPrec<T>(0.0, currentPrecision);
+    T DELTA1 = convertWithPrec<T>(0.0, currentPrecision);
+    T DELTA2 = convertWithPrec<T>(0.0, currentPrecision);
+    T DELTA3 = convertWithPrec<T>(0.0, currentPrecision);
+    T ERR1 = convertWithPrec<T>(0.0, currentPrecision);
+    T ERR2 = convertWithPrec<T>(0.0, currentPrecision);
+    T ERR3 = convertWithPrec<T>(0.0, currentPrecision); 
+    T TOL1 = convertWithPrec<T>(0.0, currentPrecision);
+    T TOL2 = convertWithPrec<T>(0.0, currentPrecision);
+    T TOL3 = convertWithPrec<T>(0.0, currentPrecision); 
+    T SS = convertWithPrec<T>(0.0, currentPrecision);
+    T EPSINF = convertWithPrec<T>(0.0, currentPrecision); // int -> K
 
     // For theory, see: Wynn (1956), Section 3: Algorithm and lozenge diagram.
     // The epsilon table e[0..N+2] stores intermediate values εₛ⁽ⁿ⁾.
@@ -142,12 +157,12 @@ T wynn_epsilon_3_algorithm<T, K>::calculate(
     // The epsilon table e[0..N+2] stores intermediate values εₛ⁽ⁿ⁾.
     std::vector<T> e(
         N + static_cast<K>(3),
-        convertWithPrec<T>(0.0, series_acceleration<T, K>::precision)  
+        convertWithPrec<T>(0.0, currentPrecision)  
     ); //First N eliments of epsilon table + 2 elements for math
 
     // Initialize epsilon table with partial sums: ε₀⁽ⁱ⁾ = S_i for i=0,...,N
     for (K i = static_cast<K>(0); i <= N; ++i) //Filling up Epsilon Table
-        e[i] = series_acceleration<T, K>::Sn.at(i);
+        e[i] = data.Sn.at(i);
 
     // Apply epsilon algorithm for 'order' iterations
     for (K i = static_cast<K>(0); i <= order; ++i) { //Working with Epsilon Table order times
@@ -271,27 +286,5 @@ T wynn_epsilon_3_algorithm<T, K>::calculate(
         throw std::overflow_error("division by zero");
 
     return result;
-
-}
-
-// Algorithm implementation
-template <AcceptedLike T, UnsignedIntLike K>
-T wynn_epsilon_3_algorithm<T, K>::operator()(K n, K order, K offset) const {
-
-    K required_size = order + static_cast<K>(1) + offset;
-
-    if (series_acceleration<T, K>::Sn.size() < required_size){
-        throw std::out_of_range("Sn or an is smaller than required to calculate e3_{" + to_string(order) + "}^{" + to_string(n) + "}");
-	}
-
-    if (n == static_cast<K>(0)){
-        throw std::domain_error("n = 0 in the input");
-    }
-
-    if (order == static_cast<K>(0)) {
-        return series_acceleration<T, K>::Sn.at(n);
-    }
-
-    return calculate(n, order, offset);
 
 }

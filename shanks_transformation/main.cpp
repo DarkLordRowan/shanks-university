@@ -133,10 +133,6 @@ constexpr void testCompatability(const T& x){
 	exp_series<T,K> testSeries = exp_series<T,K>(x);
 	SeriesResult<T> result = testSeries.generateSeries(150);
 
-	for (size_t j = 0; j < algos.size(); ++j){
-		algos[j]->reset(result);
-	}
-
 	std::cout << "EXP(x) = " << testSeries.get_sum() << "\n";
 
 	for (size_t i = 0; i < algos.size(); ++i){
@@ -146,7 +142,7 @@ constexpr void testCompatability(const T& x){
 		for (size_t j = 0; j <= 10; ++j) {
 			
 			try{
-				std::cout << "n = order = " << j << " : " << algos[i]->operator()(j,j,j) << "\n";
+				std::cout << "n = order = " << j << " : " << algos[i]->operator()(j,j, result, j) << "\n";
 			} catch (std::overflow_error& e){
 				std::cout << e.what() << "\n";
 			} catch (std::domain_error& e){
@@ -190,24 +186,22 @@ void TestNoise() {
 	std::cout << "\n";
 
 	std::unique_ptr<series_acceleration<typeA, typeB>> algo = std::make_unique<brezinski_theta_algorithm<typeA, typeB>>();
-	algo->reset(result);
 
 	algo->print_info();
 
 	for (size_t j = 0; j <= 10; ++j) {
 		try{
-			std::cout << "n = order = " << j << " : " << algo->operator()(j,j, j) << "\n";
+			std::cout << "n = order = " << j << " : " << algo->operator()(j,j, result, j) << "\n";
 		} catch (...){
 			std::cout << "Exception caught\n";
 		}
 	}
 	std::cout << "\n";
 
-	algo->reset(noisyResult);
 
 	for (size_t j = 0; j <= 10; ++j) {
 		try{
-			std::cout << "n = order = " << j << " : " << algo->operator()(j,j, j) << "\n";
+			std::cout << "n = order = " << j << " : " << algo->operator()(j,j, result, j) << "\n";
 		} catch (...){
 			std::cout << "Exception caught\n";
 		}
@@ -235,7 +229,7 @@ int main()
 	//std::cout << double_fact<typeB>(7) << "\n";
 	//std::cout << binomial_coefficient<typeB>(13, 5) << "\n";
 
-	//testCompatability<typeA, typeB>(x);
+	testCompatability<typeA, typeB>(x);
 
 	TestNoise();
 

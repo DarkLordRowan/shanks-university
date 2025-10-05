@@ -48,26 +48,6 @@ protected:
 	std::unique_ptr<const transform_base<T, K>> remainder;	///< Pointer to remainder transformation object
 	remainder_type variant;
 
-	/**
-	 * @brief Core implementation of the M-transformation using direct summation.
-	 *
-	 * For theory, see: Sidi (2003, arXiv:math/0306302), pp. 64-65, Eqs. (9.2)-(9.6)
-	 * General form: M_{n}^{(k)} =
-	 [∑_{j=0}^n (-1)^j C(n,j) (n-j) (γ+k+2)_{n-1}/(γ+k+1)_{n} × (γ+k+1-j)_{j}/(γ+k+2-n)_{j} × 1/(j+1) × S_{k+j}/R_{k+j}] /
-	 [∑_{j=0}^n (-1)^j C(n,j) (n-j) (γ+k+2)_{n-1}/(γ+k+1)_{n} × (γ+k+1-j)_{j}/(γ+k+2-n)_{j} × 1/(j+1) × 1/R_{k+j}]
-	 *
-	 * Note: We assume the Pochhammer symbol satisfies (-x)_n = (-1)^n*(x-n+1)_n
-	 *
-	 * @param n Number of terms used in the transformation
-	 * @param order Order of transformation (starting index)
-	 * @return Accelerated sum estimate M_{n}^{(k)}
-	 */
-	inline T calculate(
-		K n, 
-		K order, 
-		K offset = static_cast<T>(0)
-	) const;
-
 public:
 
 	/**
@@ -109,15 +89,36 @@ public:
 	 * @throws std::domain_error if n=0 or gamma < n-1
 	 * @throws std::overflow_error if division by zero or numerical instability occurs
 	 */
-	T operator()(K n, K order, K offset = static_cast<K>(0)) const override;
+	T operator()(
+		const K n, 
+        const K order,
+		const SeriesResult<T>& data,
+        const K offset = static_cast<K>(0)
+	) const override;
 };
 
 template<AcceptedLike T, UnsignedIntLike K>
-inline T levin_sidi_m_algorithm<T, K>::calculate(
-	K n, 
-	K order, 
-	K offset
+T levin_sidi_m_algorithm<T, K>::operator()(
+	const K n, 
+    const K order,
+	const SeriesResult<T>& data,
+    const K offset
 ) const {
+
+    K required_size = order + offset + static_cast<K>(1);
+
+    if (data.Sn.size() < required_size || data.an.size() < required_size){
+        throw std::out_of_range("Sn is smaller than required to calculate M_{" + to_string(order) + "}^{" + to_string(n) + "}");
+	}
+
+	size_t currentPrecision = std::max(
+        series_acceleration<T, K>::define_precision(data.Sn[0]), 
+        series_acceleration<T, K>::define_precision(data.an[0])
+    );
+
+    if (order == static_cast<K>(0)) {
+        return data.Sn.at(n);
+    }
 
 	using std::isfinite;
 
@@ -125,7 +126,7 @@ inline T levin_sidi_m_algorithm<T, K>::calculate(
     // Validate parameter constraint: gamma >= n - 1
 
 	if constexpr (std::is_floating_point<T>::value || std::is_same<T, float_precision>::value){
-		if(gamma - static_cast<T>(n - 1) < static_cast<T>(0)){
+		if(gamma - static_cast<T>(n - static_cast<K>(1)) < static_cast<T>(0)){
 			throw std::domain_error("gamma cannot be lesser than n - 1");
 		}
 	}  else if constexpr (std::is_same<T, complex_precision<float_precision>>::value){
@@ -134,16 +135,16 @@ inline T levin_sidi_m_algorithm<T, K>::calculate(
 		}
 	}
 
-	T numerator   = convertWithPrec<T>(0, series_acceleration<T, K>::precision);
-	T denominator = convertWithPrec<T>(0, series_acceleration<T, K>::precision);
+	T numerator   = convertWithPrec<T>(0, currentPrecision);
+	T denominator = convertWithPrec<T>(0, currentPrecision);
 
-	T rest = convertWithPrec<T>(0, series_acceleration<T, K>::precision);;
+	T rest = convertWithPrec<T>(0, currentPrecision);;
 
 	// Precompute initial Pochhammer symbol terms
 	// For theory, see: Sidi (2003, arXiv:math/0306302), Eq. (9.4)
 	// Compute: (γ+k+2)_{n-1}/(γ+k+1)_{n} = Γ(γ+k+n+1)/Γ(γ+k+2) × Γ(γ+k+1)/Γ(γ+k+n+1)
-	T up = convertWithPrec<T>(1.0, series_acceleration<T, K>::precision);
-	T down = convertWithPrec<T>(1.0, series_acceleration<T, K>::precision);
+	T up = convertWithPrec<T>(1.0, currentPrecision);
+	T down = convertWithPrec<T>(1.0, currentPrecision);
 	T binomial_coef = static_cast<T>(binomial_coefficient(n, static_cast<K>(0)));
 
 	T down_coef = gamma + static_cast<T>(order + static_cast<K>(2));
@@ -178,12 +179,12 @@ inline T levin_sidi_m_algorithm<T, K>::calculate(
 		rest *= remainder->operator()(
 			order,
 			offset + j,
-			series_acceleration<T, K>::an,
+			data.an,
 			-gamma-static_cast<T>(n)
 		);
 
 		// Accumulate numerator and denominator
-		numerator	+= rest * series_acceleration<T, K>::Sn.at(order + j ) ;
+		numerator	+= rest * data.Sn.at(order + j ) ;
 		denominator += rest;
 
 		// TODO проверить корректность пересчета бин. коэф.
@@ -197,24 +198,6 @@ inline T levin_sidi_m_algorithm<T, K>::calculate(
 	if (!isfinite(numerator))
 		throw std::overflow_error("division by zero");
 	return numerator;
-}
-
-template<AcceptedLike T, UnsignedIntLike K>
-T levin_sidi_m_algorithm<T, K>::operator()(K n, K order, K offset) const {
-
-    K required_size = order + offset + static_cast<K>(1);
-
-    if (series_acceleration<T, K>::Sn.size() < required_size || series_acceleration<T, K>::an.size() < required_size){
-        throw std::out_of_range("Sn is smaller than required to calculate M_{" + to_string(order) + "}^{" + to_string(n) + "}");
-	}
-
-    if (order == static_cast<K>(0)) {
-        return series_acceleration<T, K>::Sn.at(n);
-    }
-
-	const T result = calculate(n, order, offset);
-	if (!isfinite(result)) throw std::overflow_error("division by zero");
-    return result;
 }
 
 template<AcceptedLike T, UnsignedIntLike K>

@@ -45,14 +45,6 @@
 template <AcceptedLike T, UnsignedIntLike K>
 class wynn_epsilon_2_algorithm final : public series_acceleration<T, K>
 {
-protected:
-
-	inline T calculate(
-		K n, 
-		K order, 
-		K offset = static_cast<K>(0)
-	) const;    
-
 public:
 
 	/**
@@ -86,18 +78,28 @@ public:
 	 * @throws std::domain_error if n=0 is provided as input
 	 * @throws std::overflow_error if numerical instability occurs
 	 */
-    T operator()(K n, K order, K offset = static_cast<K>(0)) const override;
+    T operator()(
+		const K n, 
+        const K order,
+		const SeriesResult<T>& data,
+        const K offset = static_cast<K>(0)
+	) const override;
 };
 
 template <AcceptedLike T, UnsignedIntLike K>
 wynn_epsilon_2_algorithm<T, K>::wynn_epsilon_2_algorithm() : series_acceleration<T, K>("wynn epsilon 2") {}
 
 template <AcceptedLike T, UnsignedIntLike K>
-T wynn_epsilon_2_algorithm<T, K>::operator()(K n, K order, K offset) const {
+T wynn_epsilon_2_algorithm<T, K>::operator()(
+	const K n, 
+    const K order,
+	const SeriesResult<T>& data,
+    const K offset
+) const {
 
     K required_size = order + static_cast<K>(1) + offset;
 
-    if (series_acceleration<T, K>::Sn.size() < required_size){
+    if (data.Sn.size() < required_size){
         throw std::out_of_range("Sn or an is smaller than required to calculate e2_{" + to_string(order) + "}^{" + to_string(n) + "}");
 	}
 
@@ -107,20 +109,12 @@ T wynn_epsilon_2_algorithm<T, K>::operator()(K n, K order, K offset) const {
     }
 
     if (order == static_cast<K>(0)) {
-        return series_acceleration<T, K>::Sn.at(n);
+        return data.Sn.at(n);
     }
 
-    return calculate(n, order, offset);
-}
+	size_t currentPrecision = series_acceleration<T, K>::define_precision(data.Sn[0]);
 
-template <AcceptedLike T, UnsignedIntLike K>
-T wynn_epsilon_2_algorithm<T, K>::calculate(
-		K n, 
-		K order, 
-		K offset
-) const {
-
-	using std::isfinite;
+    using std::isfinite;
 
 	// For theory, see: Wynn (1956), Section 3 - Algorithm construction and table size
 	// Total number of entries needed in the epsilon table: k = 2*order + n
@@ -132,18 +126,18 @@ T wynn_epsilon_2_algorithm<T, K>::calculate(
 		4,
 		std::vector<T>(
 			k + static_cast<K>(1),
-			convertWithPrec<T>(0.0, series_acceleration<T, K>::precision)
+			convertWithPrec<T>(0.0, currentPrecision)
 		)
 	);
 
 	// For theory, see: Wynn (1956), Eq. (2) - Initialization with partial sums
 	// Initialize the bottom row with partial sums: ε₀⁽ᵐ⁾ = Sₙ for m = 0,1,...,k
 	for (K i = static_cast<K>(0); i <= k; ++i)
-		eps[3][i] = series_acceleration<T, K>::Sn.at(i);
+		eps[3][i] = data.Sn.at(i);
 
 
 	T a, a1, a2;
-	a = a1 = a2 = convertWithPrec<T>(0.0, series_acceleration<T, K>::precision);
+	a = a1 = a2 = convertWithPrec<T>(0.0, currentPrecision);
 
 	K i1, i2;
 
@@ -206,5 +200,4 @@ T wynn_epsilon_2_algorithm<T, K>::calculate(
 		return eps[3][0];
 
 	return eps[0][0];
-
 }

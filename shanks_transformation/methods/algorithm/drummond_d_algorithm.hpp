@@ -63,9 +63,10 @@ protected:
 	 * @throws std::overflow_error if division by zero occurs
 	 */
 	inline T calc_result(
-        K n, 
-        K order, 
-        K offset = static_cast<K>(0)
+        const K n, 
+        const K order, 
+		const SeriesResult<T>& data,
+        const K offset = static_cast<K>(0)
     ) const;
 
 	/**
@@ -83,9 +84,10 @@ protected:
 	 * @throws std::overflow_error if division by zero occurs
 	 */
 	inline T calc_result_rec(
-        K n, 
-        K order, 
-        K offset = static_cast<K>(0)
+        const K n, 
+        const K order,
+		const SeriesResult<T>& data,
+        const K offset = static_cast<K>(0)
     ) const;
 
 public:
@@ -129,22 +131,25 @@ public:
 	 * @return The accelerated partial sum after Drummond transformation
 	 * @throws std::overflow_error if division by zero or numerical instability occurs
 	 */
-    T operator()(K n, K order, K offset) const override;
+    T operator()(const K n, const K order, const SeriesResult<T>& data, const K offset = static_cast<K>(0)) const override;
 
 };
 
 template<AcceptedLike T, UnsignedIntLike K>
 inline T drummond_d_algorithm<T,K>::calc_result(
-    K n, 
-    K order, 
-    K offset
+    const K n, 
+    const K order,
+	const SeriesResult<T>& data,
+    const K offset
 ) const {
 
     using std::isfinite;
 
-	T numerator = convertWithPrec<T>(0.0, series_acceleration<T,K>::precision);
-	T denominator = convertWithPrec<T>(0.0, series_acceleration<T,K>::precision);
-	T rest = convertWithPrec<T>(0.0, series_acceleration<T,K>::precision);
+	size_t currentPrecision = series_acceleration<T, K>::define_precision(data.Sn[0]);
+
+	T numerator = convertWithPrec<T>(0.0, currentPrecision);
+	T denominator = convertWithPrec<T>(0.0, currentPrecision);
+	T rest = convertWithPrec<T>(0.0, currentPrecision);
 
 	// For theory, see: Drummond (1976), Eq. (2.1)
 	// D_n^{(k)} = [Σ_{j=0}^n (-1)^j C(n, j) w_{n,j} S_{n+j}] / [Σ_{j=0}^n (-1)^j C(n, j) w_{n,j}]
@@ -153,9 +158,9 @@ inline T drummond_d_algorithm<T,K>::calc_result(
 		// Compute weight term: (-1)^j * C(n, j) * w_{n,j}
 		rest  = minus_one_raised_to_power_n<T,K>(j);
 		rest *= static_cast<T>(binomial_coefficient(order, j));
-		rest *= remainder->operator()(n,offset + j, series_acceleration<T, K>::an);
+		rest *= remainder->operator()(n,offset + j, data.an);
 
-		numerator   += rest * series_acceleration<T, K>::Sn.at(n+j);
+		numerator   += rest * data.Sn.at(n+j);
 		denominator += rest;
 	}
 
@@ -168,28 +173,31 @@ inline T drummond_d_algorithm<T,K>::calc_result(
 
 template<AcceptedLike T, UnsignedIntLike K>
 inline T drummond_d_algorithm<T,K>::calc_result_rec(
-    K n, 
-    K order, 
-    K offset
+    const K n, 
+    const K order,
+	const SeriesResult<T>& data,
+    const K offset
 ) const {
 
     using std::isfinite;
+
+	size_t currentPrecision = series_acceleration<T, K>::define_precision(data.Sn[0]);
 
 	// For theory, see: Sidi (2003), Section 9.5-5
 	// Recursive computation using forward differences
 	std::vector<T>   Num(
 		order + static_cast<K>(1), 
-		convertWithPrec<T>(0.0, series_acceleration<T,K>::precision)
+		convertWithPrec<T>(0.0, currentPrecision)
 	);
 	std::vector<T> Denom(
 		order + static_cast<K>(1), 
-		convertWithPrec<T>(0.0, series_acceleration<T,K>::precision)
+		convertWithPrec<T>(0.0, currentPrecision)
 	);
 
 	// Initialize base values: N_j^{(0)} = w_{n,j} S_{n+j}, D_j^{(0)} = w_{n,j}
 	for (K i = static_cast<K>(0); i < order+static_cast<K>(1); ++i) {
-		Denom[i] = remainder->operator()(n, offset + i, series_acceleration<T, K>::an);
-		  Num[i] = series_acceleration<T, K>::Sn.at(offset + i) * Denom[i];
+		Denom[i] = remainder->operator()(n, offset + i, data.an);
+		  Num[i] = data.Sn.at(offset + i) * Denom[i];
 	}
 
 	// Apply forward difference recurrence:
@@ -264,21 +272,26 @@ drummond_d_algorithm<T,K>::drummond_d_algorithm(
 }
 
 template<AcceptedLike T, UnsignedIntLike K>
-T drummond_d_algorithm<T,K>::operator()(K n, K order, K offset) const {
+T drummond_d_algorithm<T,K>::operator()(
+	const K n, 
+    const K order,
+	const SeriesResult<T>& data,
+    const K offset
+) const {
 
     K required_size = order + offset + static_cast<K>(1);
 
-    if (series_acceleration<T, K>::Sn.size() < required_size || series_acceleration<T, K>::an.size() < required_size){
+    if (data.Sn.size() < required_size || data.an.size() < required_size){
         throw std::out_of_range("Sn or an is smaller than required to calculate D_{" + to_string(order) + "}^{" + to_string(n) + "}");
 	}
 
     if (order == static_cast<K>(0)) {
-        return series_acceleration<T, K>::Sn.at(n);
+        return data.Sn.at(n);
     }
 
     using std::isfinite;
 
-    const T result = (useRecFormulas ? calc_result_rec(n,order, offset) : calc_result(n, order, offset));
+    const T result = (useRecFormulas ? calc_result_rec(n,order, data, offset) : calc_result(n, order, data, offset));
     if (!isfinite(result)) throw std::overflow_error("division by zero");
     return result;
 }

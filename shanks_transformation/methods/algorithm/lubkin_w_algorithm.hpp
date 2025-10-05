@@ -45,28 +45,6 @@
 template<AcceptedLike T, UnsignedIntLike K>
 class lubkin_w_algorithm final : public series_acceleration<T, K>
 {
-protected:
-
-	/**
-	 * @brief Core implementation of Lubkin's W-transformation.
-	 *
-	 * For theory, see:
-	 * - Lubkin (1952), Eq. (5.2)
-	 * - Osada (1992), Section 5
-	 * - Sidi (2003), Chapter 15.4, Eq. (15.4.1)
-	 * W-transformation formula:
-	 * W_n = S_{n+1} - [ΔS_n·ΔS_{n-1}·Δ²S_{n-2}] / [ΔS_n·Δ²S_{n-2} - ΔS_{n-2}·Δ²S_{n-1}]
-	 *
-	 * @param n The starting index for the transformation
-	 * @param order The order of transformation (number of iterations)
-	 * @return The accelerated partial sum after Lubkin transformation
-	 */
-	inline T calculate(
-		K n, 
-		K order, 
-		K offset = static_cast<K>(0)
-	) const;
-
 public:
 
 	/**
@@ -98,31 +76,33 @@ public:
 	 * @throws std::domain_error if negative order is provided
 	 * @throws std::overflow_error if division by zero or numerical instability occurs
 	 */
-	T operator()(K n, K order, K offset = static_cast<K>(0)) const override;
+	T operator()(
+		const K n, 
+        const K order,
+		const SeriesResult<T>& data,
+        const K offset = static_cast<K>(0)
+	) const override;
 };
 
 template<AcceptedLike T, UnsignedIntLike K>
-T lubkin_w_algorithm<T, K>::operator()(K n, K order, K offset) const {
+T lubkin_w_algorithm<T, K>::operator()(
+	const K n, 
+    const K order,
+	const SeriesResult<T>& data,
+    const K offset
+) const {
 
     K required_size = static_cast<K>(3) * order + offset + static_cast<K>(1);
 
-    if (series_acceleration<T, K>::Sn.size() < required_size){
+    if (data.Sn.size() < required_size){
         throw std::out_of_range("Sn is smaller than required to calculate richardson_{" + to_string(order) + "}^{" + to_string(n) + "}");
 	}
 
     if (order == static_cast<K>(0)) {
-        return series_acceleration<T, K>::Sn.at(n);
+        return data.Sn.at(n);
     }
 
-	return calculate(n, order, offset);
-}
-
-template<AcceptedLike T, UnsignedIntLike K>
-T lubkin_w_algorithm<T, K>::calculate(
-	K n, 
-	K order, 
-	K offset
-) const {
+	size_t currentPrecision = series_acceleration<T, K>::define_precision(data.Sn[0]);
 
 	using std::isfinite;
 	using std::fma;
@@ -133,18 +113,18 @@ T lubkin_w_algorithm<T, K>::calculate(
 
 	std::vector<T> W(
 		base_size,
-		convertWithPrec<T>(0.0, series_acceleration<T, K>::precision)
+		convertWithPrec<T>(0.0, currentPrecision)
 	);
 
 	for(K i = static_cast<K>(0); i < base_size; ++i){
-		W[i] = series_acceleration<T, K>::Sn.at(offset + i);
+		W[i] = data.Sn.at(offset + i);
 	}
 
-	T Wo0 = convertWithPrec<T>(0.0, series_acceleration<T, K>::precision);
-	T Wo1 = convertWithPrec<T>(0.0, series_acceleration<T, K>::precision);
-	T Wo2 = convertWithPrec<T>(0.0, series_acceleration<T, K>::precision);  // First differences: ΔS_n, ΔS_{n+1}, ΔS_{n+2}
-	T Woo1 = convertWithPrec<T>(0.0, series_acceleration<T, K>::precision);
-	T Woo2 = convertWithPrec<T>(0.0, series_acceleration<T, K>::precision);     // Compound terms for denominator calculation
+	T Wo0 = convertWithPrec<T>(0.0, currentPrecision);
+	T Wo1 = convertWithPrec<T>(0.0, currentPrecision);
+	T Wo2 = convertWithPrec<T>(0.0, currentPrecision);  // First differences: ΔS_n, ΔS_{n+1}, ΔS_{n+2}
+	T Woo1 = convertWithPrec<T>(0.0, currentPrecision);
+	T Woo2 = convertWithPrec<T>(0.0, currentPrecision);     // Compound terms for denominator calculation
 
 	K j1, j2, j3;     // Index variables
 

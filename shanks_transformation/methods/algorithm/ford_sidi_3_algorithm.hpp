@@ -43,14 +43,6 @@
  */
 template <AcceptedLike T, UnsignedIntLike K>
 class ford_sidi_3_algorithm final : public series_acceleration<T, K>{
-protected:
-
-	inline T calculate(
-		K n, 
-		K order,
-		K offset = static_cast<K>(0)
-	) const;
-
 public:
 
     /**
@@ -81,15 +73,37 @@ public:
      * @throws std::domain_error if n=0 is provided as input.
      * @throws std::overflow_error if division by zero or numerical instability occurs.
      */
-    T operator()(K n, K k, K offset = static_cast<K>(0)) const override;
+    T operator()(const K n, 
+        const K order,
+		const SeriesResult<T>& data,
+        const K offset = static_cast<K>(0)
+    ) const override;
 };
 
 template <AcceptedLike T, UnsignedIntLike K>
-T ford_sidi_3_algorithm<T, K>::calculate(
-	K n, 
-	K order, 
-	K offset
+T ford_sidi_3_algorithm<T, K>::operator()(
+    const K n, 
+    const K order,
+	const SeriesResult<T>& data,
+    const K offset
 ) const {
+
+    K required_size = n - static_cast<K>(1);
+
+    if (data.Sn.size() < required_size || data.an.size() < required_size){
+        throw std::out_of_range("Sn or an is smaller than required to calculate ford_sidi3_{" + to_string(order) + "}^{" + to_string(n) + "}");
+	}
+
+    size_t currentPrecision = std::max(
+        series_acceleration<T, K>::define_precision(data.Sn[0]), 
+        series_acceleration<T, K>::define_precision(data.an[0])
+    );
+
+    // For theory, see: Ford & Sidi (1987), Section 1 - Input validation
+    // The algorithm requires at least one term for meaningful computation
+    if (n == static_cast<K>(0)){
+        throw std::domain_error("n = 0 in the input");
+    }
 
     // For theory, see: Osada (2000), Section 4 - Efficient implementation
     // Algorithm uses auxiliary sequences for improved computational efficiency
@@ -100,19 +114,19 @@ T ford_sidi_3_algorithm<T, K>::calculate(
     // G sequence: Used for storing transformation coefficients
     std::vector<T> G(
         m + static_cast<K>(1),
-        convertWithPrec<T>(0.0, series_acceleration<T,K>::precision)
+        convertWithPrec<T>(0.0, currentPrecision)
     );
 
     // FSA sequence: Stores accelerated partial sums
     std::vector<T> FSA(
         G.size(),
-        convertWithPrec<T>(0.0, series_acceleration<T,K>::precision)
+        convertWithPrec<T>(0.0, currentPrecision)
     );
 
     // FSI sequence: Stores normalization factors
     std::vector<T> FSI(
         G.size(),
-        convertWithPrec<T>(0.0, series_acceleration<T,K>::precision)
+        convertWithPrec<T>(0.0, currentPrecision)
     );
 
     // FSG matrix: Stores intermediate transformation values
@@ -120,17 +134,17 @@ T ford_sidi_3_algorithm<T, K>::calculate(
         m + static_cast<K>(2),
         std::vector<T>(
             G.size(),
-            convertWithPrec<T>(0.0, series_acceleration<T,K>::precision)
+            convertWithPrec<T>(0.0, currentPrecision)
         )
     );
 
     // For theory, see: Osada (2000), Eq. (9) - Initial coefficient computation
     // G[0] = a_{n-1} * n, where a_{n-1} is the (n-1)-th series term
-    G[0] = series_acceleration<T, K>::an.at(n1) * static_cast<T>(n);
+    G[0] = data.an.at(n1) * static_cast<T>(n);
 
     // For theory, see: Ford & Sidi (1987), Eq. (2.3) - Recursive coefficient scaling
     // Te = 1/n used for recursive computation of G sequence
-    T Te = convertWithPrec<T>(1.0, series_acceleration<T,K>::precision); Te /= static_cast<T>(n);
+    T Te = convertWithPrec<T>(1.0, currentPrecision); Te /= static_cast<T>(n);
 
     // For theory, see: Osada (2000), Section 2.2 - Recursive G sequence computation
     // G[k] = (1/n) * G[k-1] for k = 1, 2, ..., m
@@ -139,7 +153,7 @@ T ford_sidi_3_algorithm<T, K>::calculate(
 
     // For theory, see: Osada (2000), Section 4 - Initialization of transformation sequences
     // FSA[n1] = S_{n-1} (partial sum up to term n-1)
-    FSA[n1] = series_acceleration<T, K>::Sn.at(n1);
+    FSA[n1] = data.Sn.at(n1);
 
     // FSI[n1] = 1 (initial normalization factor)
     FSI[n1] = static_cast<T>(1);
@@ -163,7 +177,7 @@ T ford_sidi_3_algorithm<T, K>::calculate(
     // For theory, see: Osada (2000), Section 4 - Main algorithm loop
     // Main Ford-Sidi transformation computation
     K MM, MM1, k2;
-    T D = convertWithPrec<T>(0.0, series_acceleration<T,K>::precision);
+    T D = convertWithPrec<T>(0.0, currentPrecision);
 
     // Основной цикл алгоритма Ford-Sidi
     for (K k = static_cast<K>(0); k <= n1; ++k) {
@@ -203,25 +217,4 @@ T ford_sidi_3_algorithm<T, K>::calculate(
         throw std::overflow_error("division by zero");
 
     return FSA[0];
-
-}
-
-template <AcceptedLike T, UnsignedIntLike K>
-T ford_sidi_3_algorithm<T, K>::operator()(K n, K order, K offset) const {
-
-    K required_size = n - static_cast<K>(1);
-
-    if (series_acceleration<T, K>::Sn.size() < required_size || series_acceleration<T, K>::an.size() < required_size){
-        throw std::out_of_range("Sn or an is smaller than required to calculate ford_sidi3_{" + to_string(order) + "}^{" + to_string(n) + "}");
-	}
-
-    // For theory, see: Ford & Sidi (1987), Section 1 - Input validation
-    // The algorithm requires at least one term for meaningful computation
-    if (n == static_cast<K>(0)){
-        throw std::domain_error("n = 0 in the input");
-    }
-
-    const T result = calculate(n, order,  offset);
-    if (!isfinite(result)) throw std::overflow_error("division by zero");
-    return result;
 }
