@@ -218,11 +218,11 @@ int main()
 {
 
 	//using typeA = double;
-	using typeA = complex_precision<float_precision>;
-	//using typeA = float_precision;
+	//using typeA = complex_precision<float_precision>;
+	using typeA = float_precision;
 	using typeB = int_precision;
 
-	//typeA x(1, 600);
+	typeA x(1, 600);
 	// typeA x(float_precision(1, 50), float_precision(1, 50));
 	// std::cout << x << "\n";
 	//typeA x(1.0);
@@ -235,7 +235,7 @@ int main()
 	//std::cout << double_fact<typeB>(7) << "\n";
 	//std::cout << binomial_coefficient<typeB>(13, 5) << "\n";
 
-	// testCompatability<typeA, typeB>(x);
+	//testCompatability<typeA, typeB>(x);
 
 	TestNoise();
 

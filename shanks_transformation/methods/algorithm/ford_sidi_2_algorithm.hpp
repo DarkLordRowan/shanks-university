@@ -48,7 +48,6 @@ protected:
 	inline T calculate(
 		K n, 
 		K order, 
-		std::shared_ptr<std::vector<T>> sharedSn,
 		K offset = static_cast<K>(0)
 	) const;
 
@@ -89,7 +88,6 @@ template <AcceptedLike T, UnsignedIntLike K>
 T ford_sidi_2_algorithm<T, K>::calculate(
 	K n, 
 	K order, 
-	std::shared_ptr<std::vector<T>> sharedSn,
 	K offset
 ) const {
 
@@ -104,9 +102,9 @@ T ford_sidi_2_algorithm<T, K>::calculate(
 	do{
 		// For theory, see: Ford & Sidi (1987), Eq. (1.8) - Finite difference computation
 		// Second difference formula: Δ²S_m = S_{m+2} - 2S_{m+1} + S_m
-		delta_squared_S_n = sharedSn->at(m + static_cast<K>(2));
-		delta_squared_S_n-= static_cast<T>(2) * sharedSn->at(m + static_cast<K>(1));
-		delta_squared_S_n+= sharedSn->at(m);
+		delta_squared_S_n = series_acceleration<T, K>::Sn.at(m + static_cast<K>(2));
+		delta_squared_S_n-= static_cast<T>(2) * series_acceleration<T, K>::Sn.at(m + static_cast<K>(1));
+		delta_squared_S_n+= series_acceleration<T, K>::Sn.at(m);
 
 	} while (delta_squared_S_n == static_cast<T>(0) && --m > static_cast<K>(0));
 
@@ -118,12 +116,12 @@ T ford_sidi_2_algorithm<T, K>::calculate(
 	// For theory, see: Ford & Sidi (1987), Eq. (1.9) - First difference computation
 	// First difference formula: ΔS_m = S_{m+1} - S_m
 	T delta_S_n = convertWithPrec<T>(0.0, series_acceleration<T,K>::precision);
-	delta_S_n +=  sharedSn->at(m + static_cast<K>(1)) - sharedSn->at(m);
+	delta_S_n +=  series_acceleration<T, K>::Sn.at(m + static_cast<K>(1)) - series_acceleration<T, K>::Sn.at(m);
 
 	// For theory, see: Osada (2000), Eq. (20) - Main transformation formula
 	// Ford-Sidi acceleration: T_n = S_m - [(ΔS_m)² / Δ²S_m]
 	T T_n = convertWithPrec<T>(0.0, series_acceleration<T,K>::precision);
-	T_n += fma(-delta_S_n, delta_S_n / delta_squared_S_n, sharedSn->at(m)), series_acceleration<T,K>::precision;
+	T_n += fma(-delta_S_n, delta_S_n / delta_squared_S_n, series_acceleration<T, K>::Sn.at(m)), series_acceleration<T,K>::precision;
 
 	// For theory, see: Ford & Sidi (1987), Section 3 - Numerical stability check
 	// Ensures the result is a finite floating-point value
@@ -136,15 +134,9 @@ T ford_sidi_2_algorithm<T, K>::calculate(
 template <AcceptedLike T, UnsignedIntLike K>
 T ford_sidi_2_algorithm<T, K>::operator()(K n, K order, K offset) const {
 
-	if (series_acceleration<T,K>::Sn.expired()){
-    	throw std::domain_error("Sn is expired");
-	}
-
-    std::shared_ptr<std::vector<T>> sharedSn = series_acceleration<T,K>::Sn.lock();
-
     K required_size = n + static_cast<K>(1);
 
-    if (sharedSn->size() < required_size ){
+    if (series_acceleration<T, K>::Sn.size() < required_size ){
         throw std::out_of_range("Sn or an is smaller than required to calculate ford_sidi3_{" + to_string(order) + "}^{" + to_string(n) + "}");
 	}
 
@@ -153,7 +145,7 @@ T ford_sidi_2_algorithm<T, K>::operator()(K n, K order, K offset) const {
 	if (n == static_cast<K>(0))
 		throw std::domain_error("n = 0 in the input");
 
-	const T result = calculate(n, order, sharedSn, offset);
+	const T result = calculate(n, order, offset);
     if (!isfinite(result)) throw std::overflow_error("division by zero");
     return result;
 }

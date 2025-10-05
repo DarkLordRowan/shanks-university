@@ -57,8 +57,6 @@ protected:
 	inline T calculate(
 		K n, 
 		K order, 
-		std::shared_ptr<std::vector<T>> sharedSn, 
-		std::shared_ptr<std::vector<T>> sharedAn, 
 		K offset = static_cast<K>(0)
 	) const;
 
@@ -114,16 +112,9 @@ public:
 	 */
 	T operator()(K n, K order, K offset = static_cast<K>(0)) const override { 
 
-		if (series_acceleration<T,K>::Sn.expired() || series_acceleration<T,K>::an.expired()){
-    	    throw std::domain_error("Sn or an is expired");
-		}
-
-    	std::shared_ptr<std::vector<T>> sharedSn = series_acceleration<T,K>::Sn.lock();
-		std::shared_ptr<std::vector<T>> sharedAn = series_acceleration<T,K>::an.lock();
-
     	K required_size = order + static_cast<K>(1) + offset;
 
-    	if (sharedSn->size() < required_size || sharedAn->size() < required_size){
+    	if (series_acceleration<T, K>::Sn.size() < required_size || series_acceleration<T, K>::an.size() < required_size){
     	    throw std::out_of_range("Sn or an is smaller than required to calculate theta_{" + to_string(order) + "}^{" + to_string(n) + "}");
 		}
 
@@ -131,10 +122,10 @@ public:
     	// Base cases: return partial sum for n=0 or order=0
     	//if (n == static_cast<K>(0) || order == static_cast<K>(0))
     	if (order == static_cast<K>(0)){
-        	return sharedSn->at(n);
+        	return series_acceleration<T, K>::Sn.at(n);
 		}
 
-		return calculate(n, order, sharedSn, sharedAn, offset); 
+		return calculate(n, order, offset); 
 	}
 
 };
@@ -190,8 +181,6 @@ template <AcceptedLike T, UnsignedIntLike K>
 inline T wynn_rho_algorithm<T, K>::calculate(
 	K n, 
 	K order, 
-	std::shared_ptr<std::vector<T>> sharedSn, 
-	std::shared_ptr<std::vector<T>> sharedAn, 
 	K offset
 ) const { //const int order
 
@@ -211,7 +200,7 @@ inline T wynn_rho_algorithm<T, K>::calculate(
 
     // init theta_(0)
     for(K j = static_cast<K>(0); j < base_size; ++j) {
-        rho_even[j] = sharedSn->at(offset + j);
+        rho_even[j] = series_acceleration<T, K>::Sn.at(offset + j);
 	}
 
 
@@ -230,7 +219,7 @@ inline T wynn_rho_algorithm<T, K>::calculate(
 			rho_odd[j] = rho_odd[j1] + numerator->operator()(
 				n + j, 
 				level * static_cast<K>(2) - static_cast<K>(1), 
-				sharedAn, 
+				series_acceleration<T, K>::an, 
 				gamma, 
 				RHO
 			) / delta;
@@ -248,7 +237,7 @@ inline T wynn_rho_algorithm<T, K>::calculate(
 			rho_even[j] = rho_even[j1] + numerator->operator()(
 				n + j, 
 				level * static_cast<K>(2), 
-				sharedAn, 
+				series_acceleration<T, K>::an, 
 				gamma, 
 				RHO
 			) / delta;

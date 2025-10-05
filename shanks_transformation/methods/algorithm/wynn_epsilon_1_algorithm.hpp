@@ -47,7 +47,6 @@ protected:
 	inline T calculate(
 		K n, 
 		K order, 
-		std::shared_ptr<std::vector<T>> sharedSn, 
 		K offset = static_cast<K>(0)
 	) const;    
 
@@ -90,15 +89,9 @@ wynn_epsilon_1_algorithm<T, K>::wynn_epsilon_1_algorithm() : series_acceleration
 template <AcceptedLike T, UnsignedIntLike K>
 T wynn_epsilon_1_algorithm<T, K>::operator()(K n, K order, K offset) const {
 
-	if (series_acceleration<T,K>::Sn.expired()){
-    	throw std::domain_error("Sn or an is expired");
-	}
-
-    std::shared_ptr<std::vector<T>> sharedSn = series_acceleration<T,K>::Sn.lock();
-
     K required_size = static_cast<K>(2) * order + offset + static_cast<K>(1);
 
-    if (sharedSn->size() < required_size){
+    if (series_acceleration<T, K>::Sn.size() < required_size){
         throw std::out_of_range("Sn or an is smaller than required to calculate e1_{" + to_string(order) + "}^{" + to_string(n) + "}");
 	}
 
@@ -107,17 +100,16 @@ T wynn_epsilon_1_algorithm<T, K>::operator()(K n, K order, K offset) const {
     }
 
     if (order == static_cast<K>(0)) {
-        return sharedSn->at(n);
+        return series_acceleration<T, K>::Sn.at(n);
     }
 
-    return calculate(n, order, sharedSn, offset);
+    return calculate(n, order, offset);
 }
 
 template <AcceptedLike T, UnsignedIntLike K>
 T wynn_epsilon_1_algorithm<T, K>::calculate(
 		K n, 
 		K order, 
-		std::shared_ptr<std::vector<T>> sharedSn, 
 		K offset
 ) const {
 
@@ -148,7 +140,7 @@ T wynn_epsilon_1_algorithm<T, K>::calculate(
 	// For theory, see: Wynn (1956), Eq. (2) - Initial conditions
 	K j = max_ind;
 	do {
-		e0[j] = sharedSn->at(j);
+		e0[j] = series_acceleration<T, K>::Sn.at(j);
 	} while (--j > static_cast<K>(0));
 
 	// Apply epsilon algorithm recurrence

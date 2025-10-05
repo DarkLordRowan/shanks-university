@@ -69,8 +69,6 @@ protected:
 	inline T calc_result(
 		K n, 
 		K order, 
-		std::shared_ptr<std::vector<T>> sharedSn,
-		std::shared_ptr<std::vector<T>> sharedAn,
 		K offset = static_cast<T>(0)
 	) const;
 
@@ -87,8 +85,6 @@ protected:
 	inline T calc_result_rec(
 		K n, 
 		K order, 
-		std::shared_ptr<std::vector<T>> sharedSn,
-		std::shared_ptr<std::vector<T>> sharedAn,
 		K offset = static_cast<T>(0)
 	) const;
 
@@ -216,8 +212,6 @@ template<AcceptedLike T, UnsignedIntLike K>
 inline T levin_algorithm<T, K>::calc_result(
 	K n, 
 	K order, 
-	std::shared_ptr<std::vector<T>> sharedSn,
-	std::shared_ptr<std::vector<T>> sharedAn,
 	K offset
 ) const {
 
@@ -250,14 +244,14 @@ inline T levin_algorithm<T, K>::calc_result(
 		rest*= remainder->operator()(
             n,
             offset + j,
-            sharedAn,
+            series_acceleration<T, K>::an,
             (variant == remainder_type::u_variant ? beta : static_cast<T>(1))
         );
 
 		rest *= C_njk;
 
 		denominator += rest;
-		numerator += rest * sharedSn->at(offset + j);
+		numerator += rest * series_acceleration<T, K>::Sn.at(offset + j);
 	}
 
 	numerator /= denominator;
@@ -272,8 +266,6 @@ template<AcceptedLike T, UnsignedIntLike K>
 inline T levin_algorithm<T, K>::calc_result_rec(
 	K n, 
 	K order, 
-	std::shared_ptr<std::vector<T>> sharedSn,
-	std::shared_ptr<std::vector<T>> sharedAn,
 	K offset
 ) const{
 
@@ -297,11 +289,11 @@ inline T levin_algorithm<T, K>::calc_result_rec(
 		Denom[i] = remainder->operator()(
             n,
             offset + i,
-            sharedAn,
+            series_acceleration<T, K>::an,
             (variant == remainder_type::u_variant ? beta : static_cast<T>(1))
         );
 
-		Num[i] = sharedSn->at(offset+i) * Denom[i];
+		Num[i] = series_acceleration<T, K>::Sn.at(offset+i) * Denom[i];
 	}
 
 	// Recursive computation using the E-algorithm scheme
@@ -335,26 +327,19 @@ inline T levin_algorithm<T, K>::calc_result_rec(
 template <AcceptedLike T, UnsignedIntLike K>
 T levin_algorithm<T, K>::operator()(K n, K order, K offset) const {
 
-	if (series_acceleration<T,K>::Sn.expired() || series_acceleration<T,K>::an.expired()){
-    	throw std::domain_error("Sn or an is expired");
-	}
-
-    std::shared_ptr<std::vector<T>> sharedSn = series_acceleration<T,K>::Sn.lock();
-	std::shared_ptr<std::vector<T>> sharedAn = series_acceleration<T,K>::an.lock();
-
     K required_size = order + offset + static_cast<K>(1);
 
-    if (sharedSn->size() < required_size || sharedSn->size() < required_size){
+    if (series_acceleration<T, K>::Sn.size() < required_size || series_acceleration<T, K>::an.size() < required_size){
         throw std::out_of_range("Sn is smaller than required to calculate L_{" + to_string(order) + "}^{" + to_string(n) + "}");
 	}
 
     if (order == static_cast<K>(0)) {
-        return sharedSn->at(n);
+        return series_acceleration<T, K>::Sn.at(n);
     }
 
     using std::isfinite;
 
-    const T result = (useRecFormulas ? calc_result_rec(n,order, sharedSn, sharedAn, offset) : calc_result(n, order, sharedSn, sharedAn, offset));
+    const T result = (useRecFormulas ? calc_result_rec(n,order, offset) : calc_result(n, order, offset));
     if (!isfinite(result)) throw std::overflow_error("division by zero");
     return result;
 }

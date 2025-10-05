@@ -47,9 +47,7 @@ protected:
 
 	inline T calculate(
 		K n, 
-		K order, 
-		std::shared_ptr<std::vector<T>> sharedSn,
-        std::shared_ptr<std::vector<T>> sharedAn,
+		K order,
 		K offset = static_cast<K>(0)
 	) const;
 
@@ -90,8 +88,6 @@ template <AcceptedLike T, UnsignedIntLike K>
 T ford_sidi_3_algorithm<T, K>::calculate(
 	K n, 
 	K order, 
-	std::shared_ptr<std::vector<T>> sharedSn,
-    std::shared_ptr<std::vector<T>> sharedAn, 
 	K offset
 ) const {
 
@@ -130,7 +126,7 @@ T ford_sidi_3_algorithm<T, K>::calculate(
 
     // For theory, see: Osada (2000), Eq. (9) - Initial coefficient computation
     // G[0] = a_{n-1} * n, where a_{n-1} is the (n-1)-th series term
-    G[0] = sharedAn->at(n1) * static_cast<T>(n);
+    G[0] = series_acceleration<T, K>::an.at(n1) * static_cast<T>(n);
 
     // For theory, see: Ford & Sidi (1987), Eq. (2.3) - Recursive coefficient scaling
     // Te = 1/n used for recursive computation of G sequence
@@ -143,7 +139,7 @@ T ford_sidi_3_algorithm<T, K>::calculate(
 
     // For theory, see: Osada (2000), Section 4 - Initialization of transformation sequences
     // FSA[n1] = S_{n-1} (partial sum up to term n-1)
-    FSA[n1] = sharedSn->at(n1);
+    FSA[n1] = series_acceleration<T, K>::Sn.at(n1);
 
     // FSI[n1] = 1 (initial normalization factor)
     FSI[n1] = static_cast<T>(1);
@@ -213,16 +209,9 @@ T ford_sidi_3_algorithm<T, K>::calculate(
 template <AcceptedLike T, UnsignedIntLike K>
 T ford_sidi_3_algorithm<T, K>::operator()(K n, K order, K offset) const {
 
-    if (series_acceleration<T,K>::Sn.expired() || series_acceleration<T,K>::an.expired()){
-    	throw std::domain_error("Sn or an is expired");
-	}
-
-    std::shared_ptr<std::vector<T>> sharedSn = series_acceleration<T,K>::Sn.lock();
-    std::shared_ptr<std::vector<T>> sharedAn = series_acceleration<T,K>::an.lock();
-
     K required_size = n - static_cast<K>(1);
 
-    if (sharedSn->size() < required_size || sharedAn->size() < required_size){
+    if (series_acceleration<T, K>::Sn.size() < required_size || series_acceleration<T, K>::an.size() < required_size){
         throw std::out_of_range("Sn or an is smaller than required to calculate ford_sidi3_{" + to_string(order) + "}^{" + to_string(n) + "}");
 	}
 
@@ -232,7 +221,7 @@ T ford_sidi_3_algorithm<T, K>::operator()(K n, K order, K offset) const {
         throw std::domain_error("n = 0 in the input");
     }
 
-    const T result = calculate(n, order, sharedSn, sharedAn, offset);
+    const T result = calculate(n, order,  offset);
     if (!isfinite(result)) throw std::overflow_error("division by zero");
     return result;
 }

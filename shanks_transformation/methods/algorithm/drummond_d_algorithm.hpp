@@ -65,8 +65,6 @@ protected:
 	inline T calc_result(
         K n, 
         K order, 
-        std::shared_ptr<std::vector<T>> sharedSn,
-        std::shared_ptr<std::vector<T>> sharedAn,
         K offset = static_cast<K>(0)
     ) const;
 
@@ -87,8 +85,6 @@ protected:
 	inline T calc_result_rec(
         K n, 
         K order, 
-        std::shared_ptr<std::vector<T>> sharedSn,
-        std::shared_ptr<std::vector<T>> sharedAn,
         K offset = static_cast<K>(0)
     ) const;
 
@@ -141,8 +137,6 @@ template<AcceptedLike T, UnsignedIntLike K>
 inline T drummond_d_algorithm<T,K>::calc_result(
     K n, 
     K order, 
-    std::shared_ptr<std::vector<T>> sharedSn,
-    std::shared_ptr<std::vector<T>> sharedAn,
     K offset
 ) const {
 
@@ -159,9 +153,9 @@ inline T drummond_d_algorithm<T,K>::calc_result(
 		// Compute weight term: (-1)^j * C(n, j) * w_{n,j}
 		rest  = minus_one_raised_to_power_n<T,K>(j);
 		rest *= static_cast<T>(binomial_coefficient(order, j));
-		rest *= remainder->operator()(n,offset + j, sharedAn);
+		rest *= remainder->operator()(n,offset + j, series_acceleration<T, K>::an);
 
-		numerator   += rest * sharedSn->at(n+j);
+		numerator   += rest * series_acceleration<T, K>::Sn.at(n+j);
 		denominator += rest;
 	}
 
@@ -176,8 +170,6 @@ template<AcceptedLike T, UnsignedIntLike K>
 inline T drummond_d_algorithm<T,K>::calc_result_rec(
     K n, 
     K order, 
-    std::shared_ptr<std::vector<T>> sharedSn,
-    std::shared_ptr<std::vector<T>> sharedAn,
     K offset
 ) const {
 
@@ -196,8 +188,8 @@ inline T drummond_d_algorithm<T,K>::calc_result_rec(
 
 	// Initialize base values: N_j^{(0)} = w_{n,j} S_{n+j}, D_j^{(0)} = w_{n,j}
 	for (K i = static_cast<K>(0); i < order+static_cast<K>(1); ++i) {
-		Denom[i] = remainder->operator()(n, offset + i, sharedAn);
-		  Num[i] = sharedSn->at(offset + i) * Denom[i];
+		Denom[i] = remainder->operator()(n, offset + i, series_acceleration<T, K>::an);
+		  Num[i] = series_acceleration<T, K>::Sn.at(offset + i) * Denom[i];
 	}
 
 	// Apply forward difference recurrence:
@@ -274,26 +266,19 @@ drummond_d_algorithm<T,K>::drummond_d_algorithm(
 template<AcceptedLike T, UnsignedIntLike K>
 T drummond_d_algorithm<T,K>::operator()(K n, K order, K offset) const {
 
-    if (series_acceleration<T,K>::Sn.expired() || series_acceleration<T,K>::an.expired()){
-    	throw std::domain_error("Sn or an is expired");
-	}
-
-    std::shared_ptr<std::vector<T>> sharedSn = series_acceleration<T,K>::Sn.lock();
-	std::shared_ptr<std::vector<T>> sharedAn = series_acceleration<T,K>::an.lock();
-
     K required_size = order + offset + static_cast<K>(1);
 
-    if (sharedSn->size() < required_size || sharedSn->size() < required_size){
-        throw std::out_of_range("Sn is smaller than required to calculate D_{" + to_string(order) + "}^{" + to_string(n) + "}");
+    if (series_acceleration<T, K>::Sn.size() < required_size || series_acceleration<T, K>::an.size() < required_size){
+        throw std::out_of_range("Sn or an is smaller than required to calculate D_{" + to_string(order) + "}^{" + to_string(n) + "}");
 	}
 
     if (order == static_cast<K>(0)) {
-        return sharedSn->at(n);
+        return series_acceleration<T, K>::Sn.at(n);
     }
 
     using std::isfinite;
 
-    const T result = (useRecFormulas ? calc_result_rec(n,order, sharedSn, sharedAn, offset) : calc_result(n, order, sharedSn, sharedAn, offset));
+    const T result = (useRecFormulas ? calc_result_rec(n,order, offset) : calc_result(n, order, offset));
     if (!isfinite(result)) throw std::overflow_error("division by zero");
     return result;
 }

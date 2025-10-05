@@ -65,8 +65,6 @@ protected:
 	inline T calculate(
 		K n, 
 		K order, 
-		std::shared_ptr<std::vector<T>> sharedSn,
-		std::shared_ptr<std::vector<T>> sharedAn,
 		K offset = static_cast<T>(0)
 	) const;
 
@@ -118,8 +116,6 @@ template<AcceptedLike T, UnsignedIntLike K>
 inline T levin_sidi_m_algorithm<T, K>::calculate(
 	K n, 
 	K order, 
-	std::shared_ptr<std::vector<T>> sharedSn,
-	std::shared_ptr<std::vector<T>> sharedAn,
 	K offset
 ) const {
 
@@ -182,12 +178,12 @@ inline T levin_sidi_m_algorithm<T, K>::calculate(
 		rest *= remainder->operator()(
 			order,
 			offset + j,
-			sharedAn,
+			series_acceleration<T, K>::an,
 			-gamma-static_cast<T>(n)
 		);
 
 		// Accumulate numerator and denominator
-		numerator	+= rest * sharedSn->at(order + j ) ;
+		numerator	+= rest * series_acceleration<T, K>::Sn.at(order + j ) ;
 		denominator += rest;
 
 		// TODO проверить корректность пересчета бин. коэф.
@@ -205,24 +201,18 @@ inline T levin_sidi_m_algorithm<T, K>::calculate(
 
 template<AcceptedLike T, UnsignedIntLike K>
 T levin_sidi_m_algorithm<T, K>::operator()(K n, K order, K offset) const {
-	if (series_acceleration<T,K>::Sn.expired() || series_acceleration<T,K>::an.expired()){
-    	throw std::domain_error("Sn or an is expired");
-	}
-
-    std::shared_ptr<std::vector<T>> sharedSn = series_acceleration<T,K>::Sn.lock();
-	std::shared_ptr<std::vector<T>> sharedAn = series_acceleration<T,K>::an.lock();
 
     K required_size = order + offset + static_cast<K>(1);
 
-    if (sharedSn->size() < required_size || sharedSn->size() < required_size){
+    if (series_acceleration<T, K>::Sn.size() < required_size || series_acceleration<T, K>::an.size() < required_size){
         throw std::out_of_range("Sn is smaller than required to calculate M_{" + to_string(order) + "}^{" + to_string(n) + "}");
 	}
 
     if (order == static_cast<K>(0)) {
-        return sharedSn->at(n);
+        return series_acceleration<T, K>::Sn.at(n);
     }
 
-	const T result = calculate(n, order, sharedSn, sharedAn, offset);
+	const T result = calculate(n, order, offset);
 	if (!isfinite(result)) throw std::overflow_error("division by zero");
     return result;
 }

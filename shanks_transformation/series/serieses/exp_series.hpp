@@ -69,6 +69,6 @@ SeriesResult<T> exp_series<T, K>::generateSeries(K vecSize) const {
 		vecSn[j] += vecSn[j-static_cast<K>(1)] + vecAn[j];
 	}
 
-	return SeriesResult<T>{.Sn = std::make_shared<std::vector<T>>(vecSn), .an = std::make_shared<std::vector<T>>(vecAn) };
+	return SeriesResult<T>{.Sn = vecSn, .an = vecAn };
 
 }

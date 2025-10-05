@@ -80,8 +80,8 @@ protected:
 
     //const std::vector<T>* Sn = nullptr;
     //const std::vector<T>* an = nullptr;
-    std::weak_ptr<std::vector<T>> Sn;
-    std::weak_ptr<std::vector<T>> an;
+    std::vector<T> Sn;
+    std::vector<T> an;
 
     std::string acceleration_name = "series acceleration base class";
 
@@ -114,15 +114,13 @@ constexpr void series_acceleration<T, K>::print_info() const { std::cout << this
 template<AcceptedLike T, UnsignedIntLike K>
 void series_acceleration<T, K>::reset(const SeriesResult<T>& series, unsigned short int precision){
 
-    Sn.reset(); an.reset();
-
     Sn = series.Sn;
     an = series.an;
 
     if constexpr (std::is_same<T, float_precision>::value){
 
         if(precision == 0){
-            this->precision =  series.Sn->at(0).precision();
+            this->precision = series.Sn.at(0).precision();
         } else {
             this->precision = precision;
         }
@@ -130,7 +128,7 @@ void series_acceleration<T, K>::reset(const SeriesResult<T>& series, unsigned sh
     } else if constexpr (std::is_same<T, complex_precision<float_precision>>::value){
 
         if(precision == 0){
-            this->precision =  std::max(series.Sn->at(0).real().precision(), series.Sn->at(0).imag().precision());
+            this->precision =  std::max(series.Sn.at(0).real().precision(), series.Sn.at(0).imag().precision());
         } else {
             this->precision = precision;
         }
