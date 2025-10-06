@@ -99,14 +99,8 @@ T brezinski_theta_algorithm<T, K>::operator()(const K n, const K order, const Se
 
     // For theory, see: Brezinski (2003), Section 10.2, Theorem 10.2.1
     // Only even orders have mathematical meaning in the final result
-    if constexpr (std::is_same<K, int_precision>::value){
-        if (!order.even()){
-            throw std::domain_error("order should be even number");
-        }
-    } else {
-        if (order & 1){ // is order odd?
-            throw std::domain_error("order should be even number");
-        }
+    if (order & 1){ // is order odd?
+        throw std::domain_error("order should be even number");
     }
     
 
