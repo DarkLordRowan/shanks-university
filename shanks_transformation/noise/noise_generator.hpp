@@ -40,9 +40,6 @@ public:
         switch (type) {
             case uniform:
                 generate_uniform_noise(*this, bottom_border, top_border, seed);
-                for (size_t i = 0; i < size; ++i) {
-                    std::cout << Sn[i] << " ";
-                }
                 break;
             case normal:
                 generate_normal_noise(*this, bottom_border, top_border, seed);
@@ -51,10 +48,9 @@ public:
                 generate_poisson_noise(*this, bottom_border, top_border, seed);
                 break;
         }
-
     }
-
 };
+
 
 template<AcceptedLike T>
 SeriesResult<T> jitter(const SeriesResult<T>& source, T bottom_border = static_cast<T>(-1.0), T top_border = static_cast<T>(1.0), noise_type type = uniform) {
@@ -82,6 +78,7 @@ SeriesResult<T> jitter(const SeriesResult<T>& source, T bottom_border = static_c
     return result;
 }
 
+
 template<ComplexLike T>
 void generate_uniform_noise(Noise<T>& N, const T bottom_border, const T top_border, const size_t seed) {
     if (bottom_border.real() >= top_border.real() || bottom_border.imag() >= top_border.imag()) {
@@ -105,6 +102,7 @@ void generate_uniform_noise(Noise<T>& N, const T bottom_border, const T top_bord
         }
     }
 }
+
 
 template<ComplexLike T>
 void generate_normal_noise(Noise<T>& N, const T bottom_border, const T top_border, const size_t seed) {
@@ -130,10 +128,12 @@ void generate_normal_noise(Noise<T>& N, const T bottom_border, const T top_borde
     }
 }
 
+
 template<ComplexLike T>
 void generate_poisson_noise(Noise<T>& N, const T bottom_border, const T top_border, const size_t seed) {
     throw std::invalid_argument("Invalid poisson noise generation.");
 }
+
 
 template<FloatLike T>
 requires (!ComplexLike<T>)
@@ -150,6 +150,7 @@ void generate_uniform_noise(Noise<T>& N,const T bottom_border,const T top_border
         N.an[i] = N.Sn[i] - N.Sn[i - 1];
     }
 };
+
 
 template<FloatLike T>
 requires (!ComplexLike<T>)
@@ -168,6 +169,7 @@ void generate_normal_noise(Noise<T>& N,const T bottom_border,const T top_border,
         N.an[i] = N.Sn[i] - N.Sn[i - 1];
     }
 };
+
 
 template<FloatLike T>
 requires (!ComplexLike<T>)
