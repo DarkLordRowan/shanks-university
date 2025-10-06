@@ -7,18 +7,11 @@
 
 template<UnsignedIntLike K>
 constexpr const K fact(const K n) {
-
-	if constexpr (std::is_same<K, int_precision>::value){
-		return factorial(n);
-	} else {
-
-		K fact = static_cast<K>(1);
-		for(K j = static_cast<K>(2); j <= n; ++j){
-			fact *= j;
-		}
-
-		return fact;
+	K fact = static_cast<K>(1);
+	for(K j = static_cast<K>(2); j <= n; ++j){
+		fact *= j;
 	}
+	return fact;
 }
 
 template<UnsignedIntLike K>
@@ -36,15 +29,10 @@ constexpr const K double_fact(const K n) {
 template<UnsignedIntLike K>
 constexpr const K binomial_coefficient(const K n, const K k) {
 
-	if constexpr (std::is_same<K, int_precision>::value ){
-		return binomial(n,k);
 
-	} else {
+	if (k == 0 || k == n) return 1;
 
-		if (k == 0 || k == n) return 1;
-
-		return binomial_coefficient<K>(n - 1, k - 1) + binomial_coefficient<K>(n - 1, k);
-	}
+	return binomial_coefficient<K>(n - 1, k - 1) + binomial_coefficient<K>(n - 1, k);
 
 }
 
