@@ -29,7 +29,7 @@ concept AcceptedLike = requires{
 
 template<typename K>
 concept UnsignedIntLike = requires {
-    std::is_integral<K>::value && !std::is_signed<K>::value || std::is_same<K, int_precision>::value;
+    std::is_integral<K>::value && !std::is_signed<K>::value;
 };
 
 template<AcceptedLike T>
