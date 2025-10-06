@@ -14,7 +14,6 @@
 #include "../series/series_base.hpp"
 
 #include <iostream>
-#include <memory>
 
  /**
   * @brief Base class for series acceleration transformations

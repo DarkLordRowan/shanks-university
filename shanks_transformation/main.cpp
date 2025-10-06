@@ -13,19 +13,11 @@
 
 #include <math.h> // is needed
 
-#include "custom_concepts.hpp"
 #include "libs/arbitrary_arithmetics/complexprecision.h"
 #include "libs/arbitrary_arithmetics/fprecision.h"
-#include "libs/arbitrary_arithmetics/iprecision.h"
 #include "libs/arbitrary_arithmetics/precisioncore.cpp"
 
-#include "methods/algorithm/brezinski_theta_algorithm.hpp"
 #include "methods.hpp"
-#include "methods/algorithm/chang_wynn_algorithm.hpp"
-#include "methods/algorithm/ford_sidi_3_algorithm.hpp"
-#include "methods/algorithm/richardson_algorithm.hpp"
-#include "methods/algorithm/shanks_algorithm.hpp"
-#include "methods/remainders.hpp"
 #include "series.hpp"
 #include "noise/noise_generator.hpp"
 
@@ -169,7 +161,7 @@ constexpr void testCompatability(const T& x){
 
 void TestNoise() {
 	using typeA = complex_precision<float_precision>;
-	using typeB = int_precision;
+	using typeB = unsigned long long int;
 
 	typeA x(float_precision(6, 50), float_precision(6, 50));
 	std::cout << x << "\n";
@@ -214,9 +206,9 @@ int main()
 	//using typeA = double;
 	//using typeA = complex_precision<float_precision>;
 	using typeA = float_precision;
-	using typeB = int_precision;
+	using typeB = unsigned long long int;
 
-	typeA x(1, 600);
+	typeA x(1, 200);
 	// typeA x(float_precision(1, 50), float_precision(1, 50));
 	// std::cout << x << "\n";
 	//typeA x(1.0);

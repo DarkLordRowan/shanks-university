@@ -244,13 +244,8 @@ inline T levin_algorithm<T, K>::calc_result(
 		rest *= static_cast<T>(binomial_coefficient<K>(order, j));
 
 		// Compute (n+j+1)^{k-1}/(n+k+1)^{k-1}
-		if constexpr (std::is_same<K, int_precision>::value){
-			C_njk  = static_cast<T>(ipow(n + j     + static_cast<K>(1), order - static_cast<K>(1)));
-			C_njk /= static_cast<T>(ipow(n + order + static_cast<K>(1), order - static_cast<K>(1)));
-		} else {
-			C_njk  = static_cast<T>(pow(n + j     + static_cast<K>(1), order - static_cast<K>(1)));
-			C_njk /= static_cast<T>(pow(n + order + static_cast<K>(1), order - static_cast<K>(1)));
-		}
+		C_njk  = static_cast<T>(pow(n + j     + static_cast<K>(1), order - static_cast<K>(1)));
+		C_njk /= static_cast<T>(pow(n + order + static_cast<K>(1), order - static_cast<K>(1)));
 
 		// Compute 1/R_{n+j} where R_{n+j} is the remainder estimate
 		rest*= remainder->operator()(
