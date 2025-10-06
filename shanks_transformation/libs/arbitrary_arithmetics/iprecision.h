@@ -275,7 +275,7 @@ class int_precision
 	template <class _Ty> inline bool operator==(int_precision&, const _Ty&);
 	template <class _Ty> inline bool operator==(const _Ty&, const int_precision&);
 	template <class _Ty> inline bool operator!=(int_precision&, const _Ty&);
-	template <class _Ty> inline bool operator!=(const _Ty&, const int_precision&);
+	//template <class _Ty> inline bool operator!=(const _Ty&, const int_precision&); KOSTIL
 	template <class _Ty> inline bool operator>(int_precision&, const _Ty&);
 	template <class _Ty> inline bool operator>(const _Ty&, const int_precision&);
 	template <class _Ty> inline bool operator>=(int_precision&, const _Ty&);
@@ -2166,11 +2166,11 @@ template <class _Ty> inline bool operator!=( int_precision& a, const _Ty& b )
 //
 // Description:
 //  Boolean not equal of two precision numbers
-//
-template <class _Ty> inline bool operator!=( const _Ty& a, const int_precision& b )
-	{
-	return a == b ? false : true;
-	}
+// KOSTIL
+//template <class _Ty> inline bool operator!=( const _Ty& a, const int_precision& b )
+//	{
+//	return a == b ? false : true;
+//	}
 
 //	@author Henrik Vestermark (hve@hvks.com)
 //	@date		1/19/2005
