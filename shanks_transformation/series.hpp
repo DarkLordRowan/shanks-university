@@ -110,7 +110,24 @@
 
 enum series_id_t {
 	null_series_id,
+	bin_series_id,
 	exp_series_id,
+	exp_squared_erf_series_id,
+	four_arctan_series_id,
+	ln1mx_series_id,
+	mean_sinh_sin_series_id,
+	cos_series_id,
+	cosh_series_id,
+	sin_series_id,
+	sinh_series_id,
 };
 
+#include "series/serieses/bin_series.hpp"
 #include "series/serieses/exp_series.hpp"
+#include "series/serieses/exp_squared_erf_series.hpp"
+#include "series/serieses/four_arctan_series.hpp"
+#include "series/serieses/ln1mx_series.hpp"
+#include "series/serieses/cos_series.hpp"
+#include "series/serieses/cosh_series.hpp"
+#include "series/serieses/sin_series.hpp"
+#include "series/serieses/sinh_series.hpp"

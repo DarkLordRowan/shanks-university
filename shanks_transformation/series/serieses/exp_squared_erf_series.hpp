@@ -8,7 +8,7 @@
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
 template <AcceptedLike T, UnsignedIntLike K>
-class exp_series final : public series_base<T, K>
+class exp_squared_erf_series final : public series_base<T, K>
 {
 public:
 
@@ -18,37 +18,38 @@ public:
 	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	* @param x The argument for function series
 	*/
-	explicit exp_series() : series_base<T, K>() {};
+	explicit exp_squared_erf_series() : series_base<T, K>() {};
 
 	virtual SeriesResult<T> generateSeries(
-		const T& x , 
+        const T& x , 
 		const K vecSize, 
 		const T& addTParameter = static_cast<T>(1),
 		const K addKParameter = static_cast<K>(1)
-	) override;
+    ) override;
 
-	inline constexpr bool checkDomain(const T& x) const{
+	inline constexpr bool checkDomain(const T& x){
 		
 		using std::isfinite;
 
 		return !isfinite(x);
 	}
 
-	inline constexpr T calculateSum(const T& x) const {
+	inline constexpr T calculateSum(const T& x){
 
+		using std::erf;
 		using std::exp;
 
-		return exp(x);
+		return erf(x) * exp(x*x);
 	}
 
 };
 
 template<AcceptedLike T, UnsignedIntLike K>
-SeriesResult<T> exp_series<T, K>::generateSeries(
-	const T& x , 
+SeriesResult<T> exp_squared_erf_series<T, K>::generateSeries(
+    const T& x , 
 	const K vecSize, 
 	const T& addTParameter,
-	const K addKParameter 
+	const K addKParameter
 ) {
 
 	if(checkDomain(x)){
@@ -57,19 +58,22 @@ SeriesResult<T> exp_series<T, K>::generateSeries(
 
 	series_base<T,K>::x_ = x;
 	series_base<T,K>::sum = calculateSum(x);
-	series_base<T,K>::series_name = "exp_series";
+    series_base<T,K>::series_name = "exp_squared_erf_series";
 
 	if constexpr ( std::is_same<T, float_precision> :: value ){
 		series_base<T, K>::precision = x.precision();
 	} else if constexpr (std::is_same<T, complex_precision<float_precision>>::value){
 		series_base<T, K>::precision = std::max(x.real().precision(), x.imag().precision());
 	}
+	
+	using std::sqrt;
 
-	std::vector<T> vecAn(vecSize, convertWithPrec<T>(0.0, series_base<T, K>::precision)); vecAn[0] = static_cast<T>(1);
-	std::vector<T> vecSn(vecSize, convertWithPrec<T>(0.0, series_base<T, K>::precision)); vecSn[0] = static_cast<T>(1);
+	std::vector<T> vecAn(vecSize, convertWithPrec<T>(0.0, series_base<T, K>::precision)); vecAn[0] = static_cast<T>(2) * x / sqrt(static_cast<T>(std::numbers::pi));
+	std::vector<T> vecSn(vecSize, convertWithPrec<T>(0.0, series_base<T, K>::precision)); vecSn[0] = static_cast<T>(2) * x / sqrt(static_cast<T>(std::numbers::pi));
+
 
 	for(K j = static_cast<K>(1); j < vecSize; ++j){
-		vecAn[j] += vecAn[j-static_cast<K>(1)] * x / static_cast<T>(j);
+		vecAn[j] += static_cast<T>(2) * vecAn[j-static_cast<K>(1)] * x * x / static_cast<T>(fma(2,j,1));
 		vecSn[j] += vecSn[j-static_cast<K>(1)] + vecAn[j];
 	}
 
