@@ -7,6 +7,9 @@ import { buildChartGroups } from "./utils/chartUtils";
 import { parseCsv } from "../../utils/csv";
 import { DataTable } from "../../components/ui/DataTable";
 import { ChartsSection } from "./components/ChartsSection";
+import { PivotMatrixSwitcher } from "../../components/PivotMatrixSwitcher.tsx";
+import { pivotByX } from "../../utils/itemToPivotByX.ts";
+import { normalizeFromJson } from "../../utils/responseToItem.ts";
 
 const Experiments: React.FC = () => {
     // входные данные
@@ -211,8 +214,7 @@ const Experiments: React.FC = () => {
 
                                 {/* Графики */}
                                 {(() => {
-
-                                    return <ChartsSection groups={chartGroups}/>;
+                                    return <PivotMatrixSwitcher pivots={pivotByX(normalizeFromJson(jsonResult))}/>;
                                 })()}
                             </>
                         ) : (

@@ -3,7 +3,7 @@ import { z } from "zod";
 export const ResponseSeriesSchema = z.object({
     name: z.string(),
     arguments: z.object({x: z.number()}),
-    lim: z.number().nullable(),
+    lim: z.number().nullable().optional(),
 });
 
 export const ResponseAccelSchema = z.object({
@@ -11,9 +11,9 @@ export const ResponseAccelSchema = z.object({
     m_value: z.number(),
     additional_args: z
         .object({
-            remainder: z.string(),
-            useRecFormulas: z.string(),
-            beta: z.string(),
+            remainder: z.string().optional(),
+            useRecFormulas: z.string().optional(),
+            beta: z.string().optional(),
         })
         .nullable(),
 });
