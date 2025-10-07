@@ -20,6 +20,7 @@
 #include "methods.hpp"
 #include "series.hpp"
 #include "noise/noise_generator.hpp"
+#include "series/serieses/mean_sinh_sin_series.hpp"
 
 template<UnsignedIntLike K>
 void test_on_types(){
@@ -122,8 +123,8 @@ constexpr void testCompatability(const T& x){
 		algos[j-1] = algoInit[static_cast<transformation_id_t>(j)]();
 	}
 
-	exp_series<T,K> testSeries = exp_series<T,K>(x);
-	SeriesResult<T> result = testSeries.generateSeries(150);
+	exp_series<T,K> testSeries = exp_series<T,K>();
+	SeriesResult<T> result = testSeries.generateSeries(x, 150);
 
 	std::cout << "EXP(x) = " << testSeries.get_sum() << "\n";
 
@@ -159,6 +160,44 @@ constexpr void testCompatability(const T& x){
 
 }
 
+template<AcceptedLike T, UnsignedIntLike K>
+void testRows(){
+	std::unordered_map<series_id_t, std::function<std::unique_ptr<series_base<T,K>>(void)>> rowsInit = {
+		{bin_series_id, [](){ return std::make_unique<bin_series<T,K>>();}},
+		{exp_series_id, [](){ return std::make_unique<exp_series<T,K>>();}},
+		{exp_squared_erf_series_id, [](){ return std::make_unique<exp_squared_erf_series<T,K>>();}},
+		{four_arctan_series_id, [](){ return std::make_unique<four_arctan_series<T,K>>();}},
+		{ln1mx_series_id, [](){ return std::make_unique<ln1mx_series<T,K>>();}},
+		{mean_sinh_sin_series_id, [](){ return std::make_unique<mean_sinh_sin_series<T,K>>();}},
+		{cos_series_id, [](){ return std::make_unique<cos_series<T,K>>();}},
+		{cosh_series_id, [](){ return std::make_unique<cosh_series<T,K>>();}},
+		{sin_series_id, [](){ return std::make_unique<sin_series<T,K>>();}},
+		{sinh_series_id, [](){ return std::make_unique<sinh_series<T,K>>();}},
+	};
+
+	T x = static_cast<T>(0.5);
+	size_t length = 7;
+
+	std::vector<std::unique_ptr<series_base<T,K>>> seriesVec(rowsInit.size());
+	std::vector<SeriesResult<T>> seriesResults(rowsInit.size());
+
+	size_t counter = 0;
+	for (auto& it : rowsInit){
+		seriesVec[counter] = it.second();
+		seriesResults[counter] = seriesVec[counter]->generateSeries(x, length);
+		counter++;
+	}
+
+	for (size_t j = 0 ; j < seriesResults.size(); ++j){
+		std::cout << seriesVec[j]->get_name() << " ;SUM IS " << seriesVec[j]->get_sum() << "\n";
+		for (size_t k = 0; k < length; ++k){
+			std::cout << seriesResults[j].Sn[k] << " ";
+		}
+		std::cout << "\n";
+	}
+	
+}
+
 void TestNoise() {
 	using typeA = complex_precision<float_precision>;
 	using typeB = unsigned long long int;
@@ -166,8 +205,8 @@ void TestNoise() {
 	typeA x(float_precision(6, 50), float_precision(6, 50));
 	std::cout << x << "\n";
 
-	exp_series<typeA, typeB> testSeries = exp_series<typeA, typeB>(x);
-	SeriesResult<typeA> result = testSeries.generateSeries(30);
+	exp_series<typeA, typeB> testSeries = exp_series<typeA, typeB>();
+	SeriesResult<typeA> result = testSeries.generateSeries(x, 30);
 
 	std::cout << "EXP(x) = " << testSeries.get_sum() << "\n";
 
@@ -221,9 +260,10 @@ int main()
 	//std::cout << double_fact<typeB>(7) << "\n";
 	//std::cout << binomial_coefficient<typeB>(13, 5) << "\n";
 
-	testCompatability<typeA, typeB>(x);
+	//testCompatability<typeA, typeB>(x);
 
-	TestNoise();
+	//TestNoise();
+	testRows<typeA,typeB>();
 
 	/*
 	while(true){

@@ -51,13 +51,13 @@ public:
 	* @authors Bolshakov M.P.
 	* @param x The argument for function series
 	*/
-	series_base(T x = static_cast<T>(0));
+	series_base();
 
 	/**
 	* @brief x getter
 	* @authors Bolshakov M.P.
 	*/
-	[[nodiscard]] constexpr const T get_x() const { return x; }
+	[[nodiscard]] constexpr const T get_x() const { return x_; }
 
 	/**
 	* @brief sum getter
@@ -66,12 +66,23 @@ public:
 	[[nodiscard]] constexpr const T get_sum() const { return sum; }
 
 	/**
+	* @brief sum getter
+	* @authors Bolshakov M.P.
+	*/
+	[[nodiscard]] constexpr const std::string get_name() const { return series_name; }
+
+	/**
 	 * @brief 
 	 * 
 	 * @param vecSize 
 	 * @return std::vector<T> 
 	 */
-	virtual SeriesResult<T> generateSeries(K vecSize) const = 0;
+	virtual SeriesResult<T> generateSeries(
+		const T& x , 
+		const K vecSize, 
+		const T& addTParameter = static_cast<T>(1),
+		const K addKParameter = static_cast<K>(1)
+	) = 0;
 
 
 protected:
@@ -86,7 +97,7 @@ protected:
 
 		using std::to_string;
 
-		throw std::domain_error(series_name + " series diverges at x = " + to_string(x) + " (" + condition + ")");
+		throw std::domain_error(series_name + " series diverges at x = " + to_string(x_) + " (" + condition + ")");
 	}
 
 	/**
@@ -94,7 +105,7 @@ protected:
 	* It's set to 0 by default
 	* @authors Bolshakov M.P.
 	*/
-	T x;
+	T x_;
 
 	/**
 	* @brief sum of the series
@@ -114,4 +125,4 @@ protected:
 };
 
 template <AcceptedLike T, UnsignedIntLike K>
-series_base<T, K>::series_base(T x) : x(x), sum(0), series_name("unknown") {}
+series_base<T, K>::series_base() : x_(0), sum(0), series_name("unknown") {}
