@@ -46,6 +46,7 @@ def main():
     parser.add_argument("--no-events", action="store_true")
     parser.add_argument("--no-plots", action="store_true")
     parser.add_argument("--verbose", "-v", action="count", default=0)
+    parser.add_argument("--plot-events-only", action="store_true")
 
     args = parser.parse_args()
 
@@ -108,17 +109,9 @@ def main():
             print(
                 f"Results exported to: {args.results_json}, {args.results_csv}"
             )
-
-        if not args.no_plots:
-            if args.verbose >= 1:
-                print("Saving plots...")
-            save_all_plots(results, save_dir=args.plots_dir)
-            if args.verbose >= 1:
-                print(f"Plots saved to: {args.plots_dir}")
-        else:
-            if args.verbose >= 1:
-                print("Skipping plots as requested")
-
+        
+        events = None
+            
         if not args.no_events:
             if args.verbose >= 1:
                 print("Scanning for events...")
@@ -138,18 +131,25 @@ def main():
             if args.verbose >= 1:
                 print("Skipping event scanning as requested")
 
+        if not args.no_plots:
+            if args.verbose >= 1:
+                print("Saving plots...")
+            if events and args.plot_events_only:
+                evented_result_ids = [event.result_id for event in events]
+                results = list(filter(lambda result: result.id in evented_result_ids, results))
+                
+            save_all_plots(results, save_dir=args.plots_dir)
+            if args.verbose >= 1:
+                print(f"Plots saved to: {args.plots_dir}")
+        else:
+            if args.verbose >= 1:
+                print("Skipping plots as requested")
+
         if args.verbose >= 1:
             print("Processing completed successfully!")
 
     except FileNotFoundError as e:
         print(f"Error: File not found - {e}")
-        sys.exit(1)
-    except Exception as e:
-        print(f"Error during execution: {e}")
-        if args.verbose >= 2:
-            import traceback
-
-            traceback.print_exc()
         sys.exit(1)
 
 

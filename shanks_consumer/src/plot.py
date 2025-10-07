@@ -3,14 +3,18 @@ from matplotlib import rcParams
 import os
 import pathlib
 
+from src.trial import TrialResult
+from src.events import TrialEvent
+
 class InteractiveConvergencePlot:
 
-    def __init__(self, results, save_dir: pathlib.Path | None = None):
+    def __init__(self, results: list[TrialResult], save_dir: pathlib.Path | None = None, result_id_whitelist: list[str] | None = None):
         self.results = list(results)
         self.current_index = 0
         self.fig = None
         self.axes = None
         self.save_dir = save_dir
+        self.result_id_whitelist = result_id_whitelist
 
         if self.save_dir:
             os.makedirs(self.save_dir, exist_ok=True)
@@ -72,15 +76,15 @@ class InteractiveConvergencePlot:
             ax.clear()
 
         colors = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd"]
-
-        self.ax1.axhline(
-            y=true_value,
-            color="red",
-            linestyle="--",
-            linewidth=3,
-            alpha=0.9,
-            label=f"Предел: {true_value:.8f}",
-        )
+        if true_value:
+            self.ax1.axhline(
+                y=true_value,
+                color="red",
+                linestyle="--",
+                linewidth=3,
+                alpha=0.9,
+                label=f"Предел: {true_value:.8f}",
+            )
         self.ax1.plot(
             n_values,
             partial_sums,
@@ -200,7 +204,7 @@ class InteractiveConvergencePlot:
         stats_text = (
             f"Ряд: {trial.series.name}\n"
             f"Метод: {trial.accel.name}\n"
-            f"Предел: {true_value:.12f}\n"
+            f"Предел: {true_value:.12f}\n" if true_value else "Предел: N/A"
             f"Лучшее ускоренное: {best_accel:.2e}\n"
             f"Лучшая частичная: {best_partial:.2e}"
         )
@@ -244,7 +248,7 @@ class InteractiveConvergencePlot:
 
 
 # Alternative function for batch saving without interactive display
-def save_all_plots(results, save_dir):
+def save_all_plots(results: list[TrialResult], save_dir, result_id_whitelist: list[str] | None = None):
     """
     Save all trial plots to the specified directory without interactive display.
 
@@ -252,5 +256,5 @@ def save_all_plots(results, save_dir):
     results: List of trial results
     save_dir: Directory to save plots (default: "convergence_plots")
     """
-    plotter = InteractiveConvergencePlot(results, save_dir=save_dir)
+    plotter = InteractiveConvergencePlot(results, save_dir, result_id_whitelist)
     plotter.show()  # This will save all plots and exit
