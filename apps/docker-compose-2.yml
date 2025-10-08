@@ -46,7 +46,7 @@ services:
       GATEWAY_TOKEN: ${GATEWAY_TOKEN}
       CORS_ORIGINS: http://localhost:5173,http://127.0.0.1:5173,http://localhost:3000,http://127.0.0.1:3000
     ports:
-      - "8002:8002"
+      - "8002:8000"
     depends_on: [mongo]
     # для Linux Docker: сопоставление host.docker.internal -> gateway IP хоста
     extra_hosts:

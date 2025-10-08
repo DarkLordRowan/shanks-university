@@ -1,11 +1,14 @@
 import io
 import os as _os
+import json as _json
+import gzip as _gzip
 from datetime import datetime as _dt
 from typing import Dict as _Dict, Any as _Any
 
 from fastapi import FastAPI as _FastAPI, Body as _Body, Header as _Header, HTTPException as _HTTPException
 from fastapi.middleware.cors import CORSMiddleware as _CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient as _AsyncIOMotorClient
+from motor.motor_asyncio import AsyncIOMotorGridFSBucket as _AsyncIOMotorGridFSBucket
 import httpx as _httpx
 from bson import Binary as _Binary
 import logging as _logging
@@ -27,10 +30,10 @@ _GATEWAY_TOKEN = _os.getenv("GATEWAY_TOKEN", "super-secret-gateway-token")
 _WORKER_TOKEN = _os.getenv("WORKER_TOKEN", "super-secret-worker-token")
 
 # Параметры управления нагрузкой
-_WORKER_MAX_JOBS = int(_os.getenv("WORKER_MAX_JOBS", "2"))           # одновременных задач в обработке
-_WORKER_MAX_PROCS = int(_os.getenv("WORKER_MAX_PROCS", "2"))         # процессов в пуле
-_WORKER_NICE = int(_os.getenv("WORKER_NICE", "10"))                  # nice дочерних процессов (POSIX)
-_WORKER_CHILD_MEM_MB = int(_os.getenv("WORKER_CHILD_MEM_MB", "0"))   # лимит адресного пространства на процесс (0=выкл)
+_WORKER_MAX_JOBS = int(_os.getenv("WORKER_MAX_JOBS", "2"))
+_WORKER_MAX_PROCS = int(_os.getenv("WORKER_MAX_PROCS", "2"))
+_WORKER_NICE = int(_os.getenv("WORKER_NICE", "10"))
+_WORKER_CHILD_MEM_MB = int(_os.getenv("WORKER_CHILD_MEM_MB", "0"))
 
 _worker_app = _FastAPI(title="Shanks Worker Service", version="1.0.0", root_path="/api")
 
@@ -56,11 +59,11 @@ _mongo_client = _AsyncIOMotorClient(_MONGODB_URI)
 _db = _mongo_client[_MONGODB_DB]
 _jobs = _db["jobs"]
 _documents = _db["documents"]
+_fs = _AsyncIOMotorGridFSBucket(_db, bucket_name="artifacts")
 
-# ----- CPU-тяжёлые функции (выполняются в отдельном процессе) -----
+# ----- CPU-тяжёлые функции -----
 
 def _compute_results(_payload: dict):
-    """Возвращает объект результатов (внутренняя структура st.execute())."""
     st = trial.ComplexTrial(
         [*params.load_series_params_from_data(_payload)],
         [*params.load_accel_params_from_data(_payload)],
@@ -68,17 +71,14 @@ def _compute_results(_payload: dict):
     return st.execute()
 
 def _compute_results_json(_payload: dict):
-    """Возвращает сериализованный словарь результатов."""
     results = _compute_results(_payload)
     return export.ExportTrialResults(results).as_dict()
 
 def _compute_results_csv_bytes(_payload: dict):
-    """Возвращает CSV в виде bytes."""
     results = _compute_results(_payload)
     return export.ExportTrialResults(results).to_csv_bytes()
 
 def _compute_and_export(_payload: dict):
-    """Полный расчёт результатов и событий + экспорт всех артефактов."""
     results = _compute_results(_payload)
 
     results_exporter = export.ExportTrialResults(results)
@@ -93,10 +93,20 @@ def _compute_and_export(_payload: dict):
 
     return results_json, results_csv_bytes, events_json, events_csv_bytes
 
-# ----- настройка процессного пула и ограничение параллелизма -----
+# ----- вспомогательные функции хранения -----
+
+def _to_gz_bytes(obj: _Any) -> bytes:
+    raw = _json.dumps(obj, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+    return _gzip.compress(raw, mtime=0)
+
+async def _store_bytes(_name: str, _data: bytes, _content_type: str, _encoding: str | None = None):
+    _bio = io.BytesIO(_data)
+    _file_id = await _fs.upload_from_stream(_name, _bio, metadata={"content_type": _content_type, "encoding": _encoding})
+    return {"storage": "gridfs", "file_id": _file_id, "filename": _name, "content_type": _content_type, "encoding": _encoding, "size": len(_data)}
+
+# ----- настройка процессного пула -----
 
 def _child_initializer():
-    # понижаем приоритет и, при необходимости, ограничиваем память
     try:
         if _os.name == "posix":
             try:
@@ -119,7 +129,7 @@ _EXECUTOR = _ProcessPoolExecutor(
 
 _CONCURRENCY_SEM = asyncio.Semaphore(_WORKER_MAX_JOBS)
 
-# ----- основной конвейер обработки заданий -----
+# ----- основной конвейер -----
 
 async def _process_job(_uuid: str, payload: dict):
     async with _CONCURRENCY_SEM:
@@ -130,15 +140,29 @@ async def _process_job(_uuid: str, payload: dict):
             results_json, results_csv_bytes, events_json, events_csv_bytes = await loop.run_in_executor(
                 _EXECUTOR, _compute_and_export, payload
             )
+            print("req")
 
             now = _dt.utcnow()
             await _documents.delete_many({"uuid": _uuid})
-            await _documents.insert_many([
-                {"uuid": _uuid, "kind": "results", "format": "json", "content": results_json,               "created_at": now},
-                {"uuid": _uuid, "kind": "results", "format": "csv",  "content": _Binary(results_csv_bytes), "created_at": now},
-                {"uuid": _uuid, "kind": "events",  "format": "json", "content": events_json,                "created_at": now},
-                {"uuid": _uuid, "kind": "events",  "format": "csv",  "content": _Binary(events_csv_bytes),  "created_at": now},
-            ])
+
+            results_json_gz = _to_gz_bytes(results_json)
+            events_json_gz = _to_gz_bytes(events_json)
+            results_csv = results_csv_bytes
+            events_csv = events_csv_bytes
+
+            rj_meta = await _store_bytes(f"{_uuid}__results.json.gz", results_json_gz, "application/json", "gzip")
+            ej_meta = await _store_bytes(f"{_uuid}__events.json.gz",  events_json_gz,  "application/json", "gzip")
+            rc_meta = await _store_bytes(f"{_uuid}__results.csv",     results_csv,     "text/csv", None)
+            ec_meta = await _store_bytes(f"{_uuid}__events.csv",      events_csv,      "text/csv", None)
+
+            docs = [
+                {"uuid": _uuid, "kind": "results", "format": "json", **rj_meta, "created_at": now},
+                {"uuid": _uuid, "kind": "results", "format": "csv",  **rc_meta, "created_at": now},
+                {"uuid": _uuid, "kind": "events",  "format": "json", **ej_meta, "created_at": now},
+                {"uuid": _uuid, "kind": "events",  "format": "csv",  **ec_meta, "created_at": now},
+            ]
+            await _documents.insert_many(docs)
+
             await _jobs.update_one({"uuid": _uuid}, {"$set": {"status": "ready", "completed_at": now, "error": None}})
 
             timeout = _httpx.Timeout(connect=2.0, read=5.0, write=5.0, pool=None)
@@ -159,7 +183,7 @@ async def _process_job(_uuid: str, payload: dict):
 
 # ----- API -----
 
-@_worker_app.post("/jobs", status_code=202)  # 202 Accepted — принято к обработке
+@_worker_app.post("/jobs", status_code=202)
 async def create_job(body: _Dict[str, _Any] = _Body(...), authorization: str | None = _Header(default=None)):
     if authorization != f"Bearer {_WORKER_TOKEN}":
         raise _HTTPException(status_code=401, detail="unauthorized")
@@ -182,14 +206,12 @@ async def create_job(body: _Dict[str, _Any] = _Body(...), authorization: str | N
 
 @_worker_app.post("/process/json")
 async def legacy_process_json(payload: dict = _Body(...)):
-    # Изоляция тяжёлой библиотеки: считаем в процессе, возвращаем только results_json
     loop = asyncio.get_running_loop()
     results_json = await loop.run_in_executor(_EXECUTOR, _compute_results_json, payload)
     return JSONResponse(content=results_json)
 
 @_worker_app.post("/process/csv2")
 async def legacy_process_csv(payload: dict = _Body(...)):
-    # Изоляция тяжёлой библиотеки: считаем в процессе, возвращаем CSV
     loop = asyncio.get_running_loop()
     content = await loop.run_in_executor(_EXECUTOR, _compute_results_csv_bytes, payload)
     return StreamingResponse(
@@ -204,7 +226,6 @@ async def _health():
 
 app = _worker_app
 
-# в самом конце:
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("main:app", host="0.0.0.0", port=8000)
