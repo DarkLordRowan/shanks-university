@@ -210,8 +210,7 @@ void TestNoise() {
 
 	std::cout << "EXP(x) = " << testSeries.get_sum() << "\n";
 
-	SeriesResult<typeA> noisyResult = jitter(result, typeA(float_precision(-1, 50), float_precision(-1, 50)), typeA(float_precision(1, 50), float_precision(1, 50)), uniform);
-
+	JitterSeries<typeA, normal> js(result);
 
 
 	std::cout << "\n";
@@ -232,7 +231,7 @@ void TestNoise() {
 
 	for (size_t j = 0; j <= 10; ++j) {
 		try{
-			std::cout << "n = order = " << j << " : " << algo->operator()(j,j, result, j) << "\n";
+			std::cout << "n = order = " << j << " : " << algo->operator()(j,j, js.getResult(), j) << "\n";
 		} catch (...){
 			std::cout << "Exception caught\n";
 		}
@@ -247,7 +246,7 @@ int main()
 	using typeA = float_precision;
 	using typeB = unsigned long long int;
 
-	typeA x(1, 200);
+	// typeA x(1, 200);
 	// typeA x(float_precision(1, 50), float_precision(1, 50));
 	// std::cout << x << "\n";
 	//typeA x(1.0);
@@ -262,8 +261,8 @@ int main()
 
 	//testCompatability<typeA, typeB>(x);
 
-	//TestNoise();
-	testRows<typeA,typeB>();
+	TestNoise();
+	// testRows<typeA,typeB>();
 
 	/*
 	while(true){
