@@ -20,6 +20,7 @@
 #include "methods.hpp"
 #include "series.hpp"
 #include "noise/noise_generator.hpp"
+#include "series/serieses/half_asin_two_x_series.hpp"
 #include "series/serieses/mean_sinh_sin_series.hpp"
 
 template<UnsignedIntLike K>
@@ -167,6 +168,8 @@ void testRows(){
 		{exp_series_id, [](){ return std::make_unique<exp_series<T,K>>();}},
 		{exp_squared_erf_series_id, [](){ return std::make_unique<exp_squared_erf_series<T,K>>();}},
 		{four_arctan_series_id, [](){ return std::make_unique<four_arctan_series<T,K>>();}},
+		{half_asin_two_x_series_id, [](){ return std::make_unique<half_asin_two_x_series<T,K>>();}},
+		{inverse_1mx_series_id, [](){ return std::make_unique<inverse_1mx_series<T,K>>();}},
 		{ln1mx_series_id, [](){ return std::make_unique<ln1mx_series<T,K>>();}},
 		{mean_sinh_sin_series_id, [](){ return std::make_unique<mean_sinh_sin_series<T,K>>();}},
 		{cos_series_id, [](){ return std::make_unique<cos_series<T,K>>();}},
@@ -175,7 +178,7 @@ void testRows(){
 		{sinh_series_id, [](){ return std::make_unique<sinh_series<T,K>>();}},
 	};
 
-	T x = static_cast<T>(0.5);
+	T x = static_cast<T>(0.2);
 	size_t length = 7;
 
 	std::vector<std::unique_ptr<series_base<T,K>>> seriesVec(rowsInit.size());
