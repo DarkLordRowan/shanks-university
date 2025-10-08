@@ -293,7 +293,7 @@ public:
     // js = sr[n-1]; Получаем результат с шумом и одинаковыми параметрами
 
     JitterSeries(T bottom_border = (ComplexLike<T>?T(-1,-1):static_cast<T>(-1)) , T top_border = (ComplexLike<T>?T(1,1):static_cast<T>(-1)),
-        T seed = std::chrono::system_clock::now().time_since_epoch().count() + std::rand(), SeriesResult<T> src = nullptr):
+        T seed = std::chrono::system_clock::now().time_since_epoch().count() + std::rand(), SeriesResult<T> src = SeriesResult<T>()):
         source(src), bottom_border(bottom_border), top_border(top_border), seed(seed){
         if (!source.Sn.empty()) {
             result = jitter(source, bottom_border, top_border, type);
