@@ -18,7 +18,7 @@ public:
 	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	* @param x The argument for function series
 	*/
-	explicit abs_sin_x_minus_2_div_pi_series() : series_base<T, K>() {};
+	explicit abs_sin_x_minus_2_div_pi_series() : series_base<T, K>("abs_sin_x_minus_2_div_pi_series") {};
 
 	virtual SeriesResult<T> generateSeries(
         const T& x , 
@@ -31,9 +31,9 @@ public:
 		
 		using std::isfinite;
         if constexpr (std::is_same<T, complex_precision<float_precision>>::value){
-            return !isfinite(x) && (x.real() < float_precision(0)) && (x.real() > float_precision(2 * std::numbers::pi));
+            return !isfinite(x) && (x.real() < float_precision(0) || x.real() > float_precision(2 * std::numbers::pi));
         } else {
-            return !isfinite(x) && (x < static_cast<T>(0)) && (x > static_cast<T>(2 * std::numbers::pi));
+            return !isfinite(x) && (x < static_cast<T>(0) || x > static_cast<T>(2 * std::numbers::pi));
         }
 
 
@@ -89,7 +89,6 @@ SeriesResult<T> abs_sin_x_minus_2_div_pi_series<T, K>::generateSeries(
 
 	series_base<T,K>::x_ = x;
 	series_base<T,K>::sum = calculateSum(x);
-    series_base<T,K>::series_name = "abs_sin_x_minus_2_div_pi_series";
 
 	std::vector<T> vecAn(vecSize, convertWithPrec<T>(0.0, series_base<T, K>::precision));
 	std::vector<T> vecSn(vecSize, convertWithPrec<T>(0.0, series_base<T, K>::precision));

@@ -19,7 +19,7 @@ public:
 	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	* @param x The argument for function series
 	*/
-	explicit half_asin_two_x_series() : series_base<T, K>() {};
+	explicit half_asin_two_x_series() : series_base<T, K>("half_asin_two_x_series") {};
 
 	virtual SeriesResult<T> generateSeries(
         const T& x , 
@@ -66,7 +66,6 @@ SeriesResult<T> half_asin_two_x_series<T, K>::generateSeries(
 
 	series_base<T,K>::x_ = x;
 	series_base<T,K>::sum = calculateSum(x);
-    series_base<T,K>::series_name = "half_asin_two_x_series";
 
 	if constexpr ( std::is_same<T, float_precision> :: value ){
 		series_base<T, K>::precision = x.precision();

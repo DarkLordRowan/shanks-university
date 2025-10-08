@@ -18,7 +18,7 @@ public:
 	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	* @param x The argument for function series
 	*/
-	explicit arcsinh_x_series() : series_base<T, K>() {};
+	explicit arcsinh_x_series() : series_base<T, K>("arcsinh_x_series") {};
 
 	virtual SeriesResult<T> generateSeries(
         const T& x , 
@@ -68,14 +68,13 @@ SeriesResult<T> arcsinh_x_series<T, K>::generateSeries(
 
 	series_base<T,K>::x_ = x;
 	series_base<T,K>::sum = calculateSum(x);
-    series_base<T,K>::series_name = "arcsinh_x_series";
 
 	std::vector<T> vecAn(vecSize, convertWithPrec<T>(0.0, series_base<T, K>::precision)); vecAn[0] = x * x;
 	std::vector<T> vecSn(vecSize, convertWithPrec<T>(0.0, series_base<T, K>::precision)); vecSn[0] = x * x;
 
 
 	for(K j = static_cast<K>(1); j < vecSize; ++j){
-		vecAn[j] += vecAn[j-1] * x * x * static_cast<T>(fma(2,j-1,1)) / static_cast<T>(2*j);
+		vecAn[j] += static_cast<T>(-1) * vecAn[j-1] * x * x * static_cast<T>(fma(2,j,1)) / static_cast<T>(2*j);
 		vecSn[j] += vecSn[j-static_cast<K>(1)] + vecAn[j];
 	}
 

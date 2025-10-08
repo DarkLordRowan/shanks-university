@@ -51,7 +51,7 @@ public:
 	* @authors Bolshakov M.P.
 	* @param x The argument for function series
 	*/
-	series_base();
+	series_base(std::string name = "unknown") : x_(0), sum(0), series_name(name) {}
 
 	/**
 	* @brief x getter
@@ -123,6 +123,3 @@ protected:
 
 	size_t precision;
 };
-
-template <AcceptedLike T, UnsignedIntLike K>
-series_base<T, K>::series_base() : x_(0), sum(0), series_name("unknown") {}

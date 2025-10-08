@@ -18,7 +18,7 @@ public:
 	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	* @param x The argument for function series
 	*/
-	explicit four_ln2_m_3_series() : series_base<T, K>() {};
+	explicit four_ln2_m_3_series() : series_base<T, K>("four_ln2_m_3_series") {};
 
 	virtual SeriesResult<T> generateSeries(
         const T& x , 
@@ -57,7 +57,6 @@ SeriesResult<T> four_ln2_m_3_series<T, K>::generateSeries(
 
 	series_base<T,K>::x_ = x;
 	series_base<T,K>::sum = calculateSum(x);
-    series_base<T,K>::series_name = "four_ln2_m_3_series";
 
 	if constexpr ( std::is_same<T, float_precision> :: value ){
 		series_base<T, K>::precision = x.precision();
