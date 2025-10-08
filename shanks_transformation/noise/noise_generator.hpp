@@ -12,7 +12,7 @@
 #ifndef SHANKS_TRANSFORMATION_NOISE_GENERATOR_HPP
 #define SHANKS_TRANSFORMATION_NOISE_GENERATOR_HPP
 
-enum noise_type {
+enum NoiseType {
     uniform,
     normal,
     poisson,
@@ -22,7 +22,7 @@ enum noise_type {
 template<AcceptedLike T>
 class Noise {
 private:
-    noise_type type;
+    NoiseType type;
     size_t seed;
     size_t size;
 
@@ -32,7 +32,7 @@ public:
 
     Noise() = delete;
 
-    Noise(const size_t size, T bottom_border = static_cast<T>(-1.0), T top_border = static_cast<T>(1), const noise_type type = uniform,
+    Noise(const size_t size, T bottom_border = static_cast<T>(-1.0), T top_border = static_cast<T>(1), const NoiseType type = uniform,
         const size_t seed = std::chrono::system_clock::now().time_since_epoch().count() + std::rand()) : type(type), seed(seed), size(size) {
 
         an = std::vector<T>(size);
@@ -53,7 +53,7 @@ public:
 
 
 template<AcceptedLike T>
-SeriesResult<T> jitter(const SeriesResult<T>& source, T bottom_border = static_cast<T>(-1.0), T top_border = static_cast<T>(1.0), noise_type type = uniform) {
+SeriesResult<T> jitter(const SeriesResult<T>& source, T bottom_border = static_cast<T>(-1.0), T top_border = static_cast<T>(1.0), NoiseType type = uniform) {
 
     const size_t n = source.Sn.size();
 
@@ -189,6 +189,116 @@ void generate_poisson_noise(Noise<T>& N,const T bottom_border,const T top_border
         N.Sn[i] = N.Sn[0] + static_cast<T>(distribution(rng));
         N.an[i] = N.Sn[i] - N.Sn[i - 1];
     }
+};
+
+template <AcceptedLike T, NoiseType NT = normal>
+class JitterSeries {
+private:
+    SeriesResult<T> source;
+    T bottom_border = ComplexLike<T>?T(-1,-1):static_cast<T>(-1);
+    T top_border = ComplexLike<T>?T(1,1):static_cast<T>(1);
+    size_t seed = std::chrono::system_clock::now().time_since_epoch().count() + std::rand();
+    NoiseType type = NT;
+    SeriesResult<T> result;
+public:
+    JitterSeries& operator = (const SeriesResult<T>& src) {
+        source = src;
+        result = jitter(source, bottom_border, top_border, type);
+        return *this;
+    }
+
+    JitterSeries& setBorders(const T bottom, const T top) {
+        if constexpr (ComplexLike<T>) {
+            if (bottom.real() >= top.real() || bottom.imag() >= top.imag()) {
+                throw std::invalid_argument("Invalid borders");
+            }
+        }
+        else {
+            if (bottom >= top) {
+                throw std::invalid_argument("Invalid borders");
+            }
+        }
+        bottom_border = bottom;
+        top_border = top;
+        if (!source.Sn.empty()) {
+            result = jitter(source, bottom_border, top_border, type);
+        }
+        return *this;
+    }
+
+    JitterSeries& setSeed(const size_t s) {
+        seed = s;
+        if (!source.Sn.empty()) {
+            result = jitter(source, bottom_border, top_border, type);
+        }
+        return *this;
+    }
+
+    JitterSeries& setType(const NoiseType t) {
+        type = t;
+        if (!source.Sn.empty()) {
+            result = jitter(source, bottom_border, top_border, type);
+        }
+        return *this;
+    }
+
+    JitterSeries& setSource(const SeriesResult<T>& src) {
+        source = src;
+        result = jitter(source, bottom_border, top_border, type);
+        return *this;
+    }
+
+    SeriesResult<T>& getResult() {
+        if (result.an.empty()) {
+            throw std::runtime_error("Source series is empty or isn`t assigned. Please assign a source series first.");
+        }
+        return result;
+    }
+
+    std::vector<T>& Sn() {
+        if (result.an.empty()) {
+            throw std::runtime_error("Source series is empty or isn`t assigned. Please assign a source series first.");
+        }
+        return result.Sn;
+    }
+
+    std::vector<T>& an() {
+        if (result.an.empty()) {
+            throw std::runtime_error("Source series is empty or isn`t assigned. Please assign a source series first.");
+        }
+        return result.an;
+    }
+
+    JitterSeries& reroll(){
+        if (source.Sn.empty()) {
+            throw std::runtime_error("Source series is empty or isn`t assigned. Please assign a source series first.");
+        }
+        result = jitter(source, bottom_border, top_border, type);
+        return *this;
+    }
+
+    JitterSeries() = default;
+
+    JitterSeries(SeriesResult<T>& src) {
+        source = src;
+        result = jitter(source, bottom_border, top_border, type);
+    }
+
+
+    // Конструктор для работы вида
+    // JitterSeries<double, uniform> js(-0.1, 0.1, 12345);
+    // vector<SeriesResult<double>> sr = a[1..n].generateSeries(....);
+    // js = sr[0]; Получаем результат с шумом
+    // ...
+    // js = sr[n-1]; Получаем результат с шумом и одинаковыми параметрами
+
+    JitterSeries(T bottom_border = (ComplexLike<T>?T(-1,-1):static_cast<T>(-1)) , T top_border = (ComplexLike<T>?T(1,1):static_cast<T>(-1)),
+        T seed = std::chrono::system_clock::now().time_since_epoch().count() + std::rand(), SeriesResult<T> src = nullptr):
+        source(src), bottom_border(bottom_border), top_border(top_border), seed(seed){
+        if (!source.Sn.empty()) {
+            result = jitter(source, bottom_border, top_border, type);
+        }
+    };
 };
 
 #endif //SHANKS_TRANSFORMATION_NOISE_GENERATOR_HPP
