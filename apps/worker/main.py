@@ -12,7 +12,6 @@ import logging as _logging
 import asyncio
 from concurrent.futures import ProcessPoolExecutor as _ProcessPoolExecutor
 
-# RLIMIT (POSIX); на Windows безопасно игнорируется
 try:
     import resource as _resource
 except Exception:
@@ -188,7 +187,7 @@ async def legacy_process_json(payload: dict = _Body(...)):
     results_json = await loop.run_in_executor(_EXECUTOR, _compute_results_json, payload)
     return JSONResponse(content=results_json)
 
-@_worker_app.post("/process/csv")
+@_worker_app.post("/process/csv2")
 async def legacy_process_csv(payload: dict = _Body(...)):
     # Изоляция тяжёлой библиотеки: считаем в процессе, возвращаем CSV
     loop = asyncio.get_running_loop()
