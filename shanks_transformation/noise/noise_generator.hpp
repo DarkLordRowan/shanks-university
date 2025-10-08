@@ -301,4 +301,66 @@ public:
     };
 };
 
+/*
+//для частичной специализации, например для комплексных
+//меньше методов, меньше хранения, меньше функций, чтобы было легче биндить и разбираться в коде
+//поменьше функционала, чтобы проще было тестить
+//геттеры и сеттеры пока не нужны
+//меньше классов и абстракций, если это не необходимо
+//подаются вектора, возвращаются вектора
+//обобщать однотипные моменты, т.к. глаза кровят от сплошного однотипного текста и трудно уследить, что куда передаётся и возвращается
+//за включения типов из arb огромное спасибо и комплексных
+//не сокращай названия переменных (типо N, dist_r, dist_m), и top и bottom borders для нормального и пуассона путают
+template<AcceptedLike T>
+class NoiseGenerator {
+protected:
+
+    unsigned long long int seed;
+
+    std::mt19937_64 randomNumberGen;
+
+    NoiseType type;
+
+    inline T normal() const;
+    inline T uniform() const
+    inline T poisson() const;
+
+
+public:
+
+    NoiseGenerator(const NoiseType type) : type(type) {
+
+        seed = std::chrono::system_clock::now().time_since_epoch().count() + std::rand();
+
+        randomNumberGen = std::mt19937_64(seed);
+
+    }
+    NoiseGenerator(const NoiseType type, unsigned long long int seed) : seed(seed), type(type) {
+
+        randomNumberGen = std::mt19937_64(seed);
+
+    }
+
+    SeriesResult<T> jitter(const SeriesResult<T>& result, const T& tParam1, const T& tParam2) {
+
+        std::vector<T> newSn;
+        std::vector<T> newAn;
+
+        for() {
+            switch(type){
+                case :...
+
+            }
+        }
+
+        return SeriesResult<T>{.Sn = newSn, .an = newAn};
+    };
+    //tParam1 = low, tParam2 = high for uniform
+    //tParam1 = mean, tParam2 = std for normal
+    //tParam1 = lambda for poisson
+
+
+};
+*/
+
 #endif //SHANKS_TRANSFORMATION_NOISE_GENERATOR_HPP
