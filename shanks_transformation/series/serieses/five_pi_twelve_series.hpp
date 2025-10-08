@@ -18,7 +18,7 @@ public:
 	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	* @param x The argument for function series
 	*/
-	explicit five_pi_twelve_series() : series_base<T, K>() {};
+	explicit five_pi_twelve_series() : series_base<T, K>("five_pi_twelve_series") {};
 
 	virtual SeriesResult<T> generateSeries(
         const T& x , 
@@ -56,7 +56,6 @@ SeriesResult<T> five_pi_twelve_series<T, K>::generateSeries(
 
 	series_base<T,K>::x_ = x;
 	series_base<T,K>::sum = calculateSum(x);
-    series_base<T,K>::series_name = "five_pi_twelve_series";
 
 	if constexpr ( std::is_same<T, float_precision> :: value ){
 		series_base<T, K>::precision = x.precision();
@@ -68,7 +67,7 @@ SeriesResult<T> five_pi_twelve_series<T, K>::generateSeries(
 	std::vector<T> vecSn(vecSize, convertWithPrec<T>(0.0, series_base<T, K>::precision)); vecSn[0] = static_cast<T>(-1) * x;
 
 	for(K j = static_cast<K>(1); j < vecSize; ++j){
-		vecAn[j] += minus_one_raised_to_power_n<T,K>((j - 1) % 3) * x / static_cast<T>(fma(2,j,1));
+		vecAn[j] += minus_one_raised_to_power_n<T,K>((j - 1) / 3) * x / static_cast<T>(fma(2,j,1));
 		vecSn[j] += vecSn[j-static_cast<K>(1)] + vecAn[j];
 	}
 

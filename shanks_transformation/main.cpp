@@ -164,39 +164,130 @@ constexpr void testCompatability(const T& x){
 template<AcceptedLike T, UnsignedIntLike K>
 void testRows(){
 	std::unordered_map<series_id_t, std::function<std::unique_ptr<series_base<T,K>>(void)>> rowsInit = {
-		{bin_series_id, [](){ return std::make_unique<bin_series<T,K>>();}},
-		{exp_series_id, [](){ return std::make_unique<exp_series<T,K>>();}},
-		{exp_squared_erf_series_id, [](){ return std::make_unique<exp_squared_erf_series<T,K>>();}},
-		{four_arctan_series_id, [](){ return std::make_unique<four_arctan_series<T,K>>();}},
-		{half_asin_two_x_series_id, [](){ return std::make_unique<half_asin_two_x_series<T,K>>();}},
-		{inverse_1mx_series_id, [](){ return std::make_unique<inverse_1mx_series<T,K>>();}},
-		{ln1mx_series_id, [](){ return std::make_unique<ln1mx_series<T,K>>();}},
-		{mean_sinh_sin_series_id, [](){ return std::make_unique<mean_sinh_sin_series<T,K>>();}},
-		{cos_series_id, [](){ return std::make_unique<cos_series<T,K>>();}},
-		{cosh_series_id, [](){ return std::make_unique<cosh_series<T,K>>();}},
-		{sin_series_id, [](){ return std::make_unique<sin_series<T,K>>();}},
-		{sinh_series_id, [](){ return std::make_unique<sinh_series<T,K>>();}},
+	{								 abs_sin_x_minus_2_div_pi_series_id,[](){ return std::make_unique<abs_sin_x_minus_2_div_pi_series<T,K>>();}},
+	{									 		    arcsinh_x_series_id,[](){ return std::make_unique<arcsinh_x_series<T,K>>();}},
+	{									 		    arcsin_x2_series_id,[](){ return std::make_unique<arcsin_x2_series<T,K>>();}},
+	{									 	 arcsin_x_minus_x_series_id,[](){ return std::make_unique<arcsin_x_minus_x_series<T,K>>();}},
+	{									 		  	 arcsin_x_series_id,[](){ return std::make_unique<arcsin_x_series<T,K>>();}},
+	{									 		   arctanh_x2_series_id,[](){ return std::make_unique<arctanh_x2_series<T,K>>();}},
+	{									 			 arctg_x2_series_id,[](){ return std::make_unique<arctg_x2_series<T,K>>();}},
+	{									 			 arctg_x3_series_id,[](){ return std::make_unique<arctg_x3_series<T,K>>();}},
+	{									 			  arctg_x_series_id,[](){ return std::make_unique<arctg_x_series<T,K>>();}},
+	{									 			      bin_series_id,[](){ return std::make_unique<bin_series<T,K>>();}},
+	{									 			     ci_x_series_id,[](){ return std::make_unique<ci_x_series<T,K>>();}},
+	{								    cos3xmin1_div_xsquare_series_id,[](){ return std::make_unique<cos3xmin1_div_xsquare_series<T,K>>();}},
+	{									 			     cosh_series_id,[](){ return std::make_unique<cosh_series<T,K>>();}},
+	{									 			      cos_series_id,[](){ return std::make_unique<cos_series<T,K>>();}},
+	{									 		   cos_sqrt_x_series_id,[](){ return std::make_unique<cos_sqrt_x_series<T,K>>();}},
+	{									 			   cos_x2_series_id,[](){ return std::make_unique<cos_x2_series<T,K>>();}},
+	{								    eighth_pi_m_one_third_series_id,[](){ return std::make_unique<eighth_pi_m_one_third_series<T,K>>();}},
+//	{									 				  erf_series_id,[](){ return std::make_unique<erf_series<T,K>>();}},
+	{								   	 exp_m_cos_x_sinsin_x_series_id,[](){ return std::make_unique<exp_m_cos_x_sinsin_x_series<T,K>>();}},
+	{									 			      exp_series_id,[](){ return std::make_unique<exp_series<T,K>>();}},
+	{									 	  exp_squared_erf_series_id,[](){ return std::make_unique<exp_squared_erf_series<T,K>>();}},
+	{									     			  e_x_series_id,[](){ return std::make_unique<e_x_series<T,K>>();}},
+	{									       five_pi_twelve_series_id,[](){ return std::make_unique<five_pi_twelve_series<T,K>>();}},
+	{									          four_arctan_series_id,[](){ return std::make_unique<four_arctan_series<T,K>>();}},
+	{									         four_ln2_m_3_series_id,[](){ return std::make_unique<four_ln2_m_3_series<T,K>>();}},
+	{									      half_asin_two_x_series_id,[](){ return std::make_unique<half_asin_two_x_series<T,K>>();}},
+	{									  half_minus_sinx_multi_pi_4_id,[](){ return std::make_unique<half_minus_sinx_multi_pi_4<T,K>>();}},
+	{					   half_multi_ln_1div2multi1minuscosx_series_id,[](){ return std::make_unique<half_multi_ln_1div2multi1minuscosx_series<T,K>>();}},
+	{								    incomplete_Gamma_func_series_id,[](){ return std::make_unique<incomplete_Gamma_func_series<T,K>>();}},
+	{											  inverse_1mx_series_id,[](){ return std::make_unique<inverse_1mx_series<T,K>>();}},
+	{									    inverse_sqrt_1m4x_series_id,[](){ return std::make_unique<inverse_sqrt_1m4x_series<T,K>>();}},
+	//{													 Ja_x_series_id,[](){ return std::make_unique<Ja_x_series<T,K>>();}},
+	{												      k_x_series_id,[](){ return std::make_unique<k_x_series<T,K>>();}},
+	{									   	   lambert_W_func_series_id,[](){ return std::make_unique<lambert_W_func_series<T,K>>();}},
+	{									   ln13_min_ln7_div_7_series_id,[](){ return std::make_unique<ln13_min_ln7_div_7_series<T,K>>();}},
+	{									   			 ln1_m_x2_series_id,[](){ return std::make_unique<ln1_m_x2_series<T,K>>();}},
+	{									   			    ln1mx_series_id,[](){ return std::make_unique<ln1mx_series<T,K>>();}},
+	{					  ln_1plussqrt1plusxsquare_minus_ln_2_series_id,[](){ return std::make_unique<ln_1plussqrt1plusxsquare_minus_ln_2_series<T,K>>();}},
+	{								    ln_1plusx_div_1plusx2_series_id,[](){ return std::make_unique<ln_1plusx_div_1plusx2_series<T,K>>();}},
+	{									   			   ln1px4_series_id,[](){ return std::make_unique<ln1px4_series<T,K>>();}},
+	{									   				  ln2_series_id,[](){ return std::make_unique<ln2_series<T,K>>();}},
+	{									 			  ln_cosx_series_id,[](){ return std::make_unique<ln_cosx_series<T,K>>();}},
+	{									   ln_sinx_minus_ln_x_series_id,[](){ return std::make_unique<ln_sinx_minus_ln_x_series<T,K>>();}},
+	{						 ln_x_plus_one_x_minus_one_halfed_series_id,[](){ return std::make_unique<ln_x_plus_one_x_minus_one_halfed_series<T,K>>();}},
+	{										    mean_sinh_sin_series_id,[](){ return std::make_unique<mean_sinh_sin_series<T,K>>();}},
+	//{								   m_fact_1mx_mp1_inverse_series_id,[](){ return std::make_unique<m_fact_1mx_mp1_inverse_series<T,K>>();}},
+	//{						 minus_3_div_4_or_x_minus_3_div_4_series_id,[](){ return std::make_unique<minus_3_div_4_or_x_minus_3_div_4_series<T,K>>();}},
+	{									   minus_one_ned_in_n_series_id,[](){ return std::make_unique<minus_one_ned_in_n_series<T,K>>();}},
+	{								  minus_one_n_fact_n_in_n_series_id,[](){ return std::make_unique<minus_one_n_fact_n_in_n_series<T,K>>();}},
+	{									    minus_one_quarter_series_id,[](){ return std::make_unique<minus_one_quarter_series<T,K>>();}},
+	{	  minus_three_plus_ln3_three_devided_two_plus_two_ln2_series_id,[](){ return std::make_unique<minus_three_plus_ln3_three_devided_two_plus_two_ln2_series<T,K>>();}},
+	{					     minus_x_minus_pi_4_or_minus_pi_4_series_id,[](){ return std::make_unique<minus_x_minus_pi_4_or_minus_pi_4_series<T,K>>();}},
+	{				   			  one_div_sqrt2_sin_xdivsqrt2_series_id,[](){ return std::make_unique<one_div_sqrt2_sin_xdivsqrt2_series<T,K>>();}},
+	{				   one_div_two_minus_x_multi_three_plus_x_series_id,[](){ return std::make_unique<one_div_two_minus_x_multi_three_plus_x_series<T,K>>();}},
+	//{						   one_minus_sqrt_1minus4x_div_2x_series_id,[](){ return std::make_unique<one_minus_sqrt_1minus4x_div_2x_series<T,K>>();}},
+	{									 				  one_series_id,[](){ return std::make_unique<one_series<T,K>>();}},
+	{							  one_third_pi_squared_m_nine_series_id,[](){ return std::make_unique<one_third_pi_squared_m_nine_series<T,K>>();}},
+	{									  one_twelfth_3x2_pi2_series_id,[](){ return std::make_unique<one_twelfth_3x2_pi2_series<T,K>>();}},
+	{										      one_twelfth_series_id,[](){ return std::make_unique<one_twelfth_series<T,K>>();}},
+	{									   one_twelfth_x2_pi2_series_id,[](){ return std::make_unique<one_twelfth_x2_pi2_series<T,K>>();}},
+	{												 	 pi_3_series_id,[](){ return std::make_unique<pi_3_series<T,K>>();}},
+	{													 pi_4_series_id,[](){ return std::make_unique<pi_4_series<T,K>>();}},
+	{				      pi_8_cosx_square_minus_1_div_3_cosx_series_id,[](){ return std::make_unique<pi_8_cosx_square_minus_1_div_3_cosx_series<T,K>>();}},
+	//{											  pi_cubed_32_series_id,[](){ return std::make_unique<pi_cubed_32_series<T,K>>();}},
+	{								 pi_four_minus_ln2_halfed_series_id,[](){ return std::make_unique<pi_four_minus_ln2_halfed_series<T,K>>();}},
+	{			    pi_minus_3pi_4_and_pi_minus_x_minus_3pi_4_series_id,[](){ return std::make_unique<pi_minus_3pi_4_and_pi_minus_x_minus_3pi_4_series<T,K>>();}},
+	{											 pi_minus_x_2_series_id,[](){ return std::make_unique<pi_minus_x_2_series<T,K>>();}},
+	{												 	   pi_series_id,[](){ return std::make_unique<pi_series<T,K>>();}},
+	{										  pi_six_min_half_series_id,[](){ return std::make_unique<pi_six_min_half_series<T,K>>();}},
+	{							       pi_squared_6_minus_one_series_id,[](){ return std::make_unique<pi_squared_6_minus_one_series<T,K>>();}},
+	{				 					    pi_squared_twelve_series_id,[](){ return std::make_unique<pi_squared_twelve_series<T,K>>();}},
+	{ pi_x_minus_x_square_square_minus_three_pi_x_plus_two_pi_square_id,[](){ return std::make_unique<pi_x_minus_x_square_square_minus_three_pi_x_plus_two_pi_square_series<T,K>>();}},
+	{pi_x_multi_e_xpi_plus_e_minusxpi_divided_e_xpi_minus_e_minusxpi_id,[](){ return std::make_unique<pi_x_multi_e_xpi_plus_e_minusxpi_divided_e_xpi_minus_e_minusxpi_series<T,K>>();}},
+	{		 							    riemann_zeta_func_series_id,[](){ return std::make_unique<riemann_zeta_func_series<T,K>>();}},
+	//{		  riemann_zeta_func_xmin1_div_Riemann_zeta_func_x_series_id,[](){ return std::make_unique<riemann_zeta_func_xmin1_div_Riemann_zeta_func_x_series<T,K>>();}},
+	{		 					       series_with_ln_number1_series_id,[](){ return std::make_unique<series_with_ln_number1_series<T,K>>();}},
+	{		                           series_with_ln_number2_series_id,[](){ return std::make_unique<series_with_ln_number2_series<T,K>>();}},
+	{		                          				 	 sinh_series_id,[](){ return std::make_unique<sinh_series<T,K>>();}},
+	{		                          				  sinh_x2_series_id,[](){ return std::make_unique<sinh_x2_series<T,K>>();}},
+	{		                          					  sin_series_id,[](){ return std::make_unique<sin_series<T,K>>();}},
+	{		                          				   sin_x2_series_id,[](){ return std::make_unique<sin_x2_series<T,K>>();}},
+	{		                          				   	 si_x_series_id,[](){ return std::make_unique<si_x_series<T,K>>();}},
+	//{		                    sqrt_1plusx_min_1_min_x_div_2_series_id,[](){ return std::make_unique<sqrt_1plusx_min_1_min_x_div_2_series<T,K>>();}},
+	{		                          			  sqrt_1plusx_series_id,[](){ return std::make_unique<sqrt_1plusx_series<T,K>>();}},
+	{		                 sqrt_oneminussqrtoneminusx_div_x_series_id,[](){ return std::make_unique<sqrt_oneminussqrtoneminusx_div_x_series<T,K>>();}},
+	{		                       				  ten_minus_x_series_id,[](){ return std::make_unique<ten_minus_x_series<T,K>>();}},
+	{		                      			   three_minus_pi_series_id,[](){ return std::make_unique<three_minus_pi_series<T,K>>();}},
+	{		                       two_arcsin_square_x_halfed_series_id,[](){ return std::make_unique<two_arcsin_square_x_halfed_series<T,K>>();}},
+	{		                      				 two_degree_x_series_id,[](){ return std::make_unique<two_degree_x_series<T,K>>();}},
+	{		                      					  two_ln2_series_id,[](){ return std::make_unique<two_ln2_series<T,K>>();}},
+	{		                      			    x_1mx_squared_series_id,[](){ return std::make_unique<x_1mx_squared_series<T,K>>();}},
+	{		                      				 x_div_1minx2_series_id,[](){ return std::make_unique<x_div_1minx2_series<T,K>>();}},
+	{		                      				  x_div_1minx_series_id,[](){ return std::make_unique<x_div_1minx_series<T,K>>();}},
+	//{		                      				   xmb_Jb_two_series_id,[](){ return std::make_unique<xmb_Jb_two_series<T,K>>();}},
+	//{		                      				 x_min_sqrt_x_series_id,[](){ return std::make_unique<x_min_sqrt_x_series<T,K>>();}},
+	{		                      					 	    x_series_id,[](){ return std::make_unique<x_series<T,K>>();}},
+	{		      xsquareplus3_div_xsquareplus2multix_minus_1_series_id,[](){ return std::make_unique<xsquareplus3_div_xsquareplus2multix_minus_1_series<T,K>>();}},
+	{		    									    x_two_series_id,[](){ return std::make_unique<x_two_series<T,K>>();}},
+	{		    					   x_two_throught_squares_series_id,[](){ return std::make_unique<x_two_throught_squares_series<T,K>>();}},
 	};
 
 	T x = static_cast<T>(0.2);
-	size_t length = 7;
+	size_t length = 60;
 
 	std::vector<std::unique_ptr<series_base<T,K>>> seriesVec(rowsInit.size());
 	std::vector<SeriesResult<T>> seriesResults(rowsInit.size());
 
+
 	size_t counter = 0;
 	for (auto& it : rowsInit){
 		seriesVec[counter] = it.second();
+		std::cout << seriesVec[counter]->get_name() << "\n";
 		seriesResults[counter] = seriesVec[counter]->generateSeries(x, length);
 		counter++;
 	}
 
+	
+
 	for (size_t j = 0 ; j < seriesResults.size(); ++j){
-		std::cout << seriesVec[j]->get_name() << " ;SUM IS " << seriesVec[j]->get_sum() << "\n";
-		for (size_t k = 0; k < length; ++k){
+		std::cout << j + 1 << " : " << seriesVec[j]->get_name() << "\n";
+		for (size_t k = 57; k < length; ++k){
 			std::cout << seriesResults[j].Sn[k] << " ";
 		}
-		std::cout << "\n";
+		std::cout << " = " << seriesVec[j]->get_sum() << "\n";
 	}
 	
 }
@@ -264,8 +355,8 @@ int main()
 
 	//testCompatability<typeA, typeB>(x);
 
-	TestNoise();
-	// testRows<typeA,typeB>();
+	//TestNoise();
+	testRows<typeA,typeB>();
 
 	/*
 	while(true){

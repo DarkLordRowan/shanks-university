@@ -8,7 +8,7 @@
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
 template <AcceptedLike T, UnsignedIntLike K>
-class arcsin_x_minus_x final : public series_base<T, K>
+class arcsin_x_minus_x_series final : public series_base<T, K>
 {
 public:
 
@@ -18,7 +18,7 @@ public:
 	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	* @param x The argument for function series
 	*/
-	explicit arcsin_x_minus_x() : series_base<T, K>() {};
+	explicit arcsin_x_minus_x_series() : series_base<T, K>("arcsin_x_minus_x_series") {};
 
 	virtual SeriesResult<T> generateSeries(
         const T& x , 
@@ -50,7 +50,7 @@ public:
 };
 
 template<AcceptedLike T, UnsignedIntLike K>
-SeriesResult<T> arcsin_x_minus_x<T, K>::generateSeries(
+SeriesResult<T> arcsin_x_minus_x_series<T, K>::generateSeries(
     const T& x , 
 	const K vecSize, 
 	const T& addTParameter,
@@ -69,7 +69,6 @@ SeriesResult<T> arcsin_x_minus_x<T, K>::generateSeries(
 
 	series_base<T,K>::x_ = x;
 	series_base<T,K>::sum = calculateSum(x);
-    series_base<T,K>::series_name = "arcsin_x_minus_x";
 
     using std::pow;
 

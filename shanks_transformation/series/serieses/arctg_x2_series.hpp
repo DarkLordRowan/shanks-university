@@ -18,7 +18,7 @@ public:
 	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	* @param x The argument for function series
 	*/
-	explicit arctg_x2_series() : series_base<T, K>() {};
+	explicit arctg_x2_series() : series_base<T, K>("arctg_x2_series") {};
 
 	virtual SeriesResult<T> generateSeries(
         const T& x , 
@@ -35,7 +35,6 @@ public:
         } else {
             return !isfinite(x) && abs(x) > static_cast<T>(1);
         }
-
 
 	}
 
@@ -68,7 +67,6 @@ SeriesResult<T> arctg_x2_series<T, K>::generateSeries(
 
 	series_base<T,K>::x_ = x;
 	series_base<T,K>::sum = calculateSum(x);
-    series_base<T,K>::series_name = "arctg_x2_series";
 
 	std::vector<T> vecAn(vecSize, convertWithPrec<T>(0.0, series_base<T, K>::precision)); vecAn[0] = x*x;
 	std::vector<T> vecSn(vecSize, convertWithPrec<T>(0.0, series_base<T, K>::precision)); vecSn[0] = x*x;

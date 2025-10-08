@@ -18,7 +18,7 @@ public:
 	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	* @param x The argument for function series
 	*/
-	explicit exp_m_cos_x_sinsin_x_series() : series_base<T, K>() {};
+	explicit exp_m_cos_x_sinsin_x_series() : series_base<T, K>("exp_m_cos_x_sinsin_x_series") {};
 
 	virtual SeriesResult<T> generateSeries(
         const T& x , 
@@ -59,7 +59,6 @@ SeriesResult<T> exp_m_cos_x_sinsin_x_series<T, K>::generateSeries(
 
 	series_base<T,K>::x_ = x;
 	series_base<T,K>::sum = calculateSum(x);
-    series_base<T,K>::series_name = "exp_m_cos_x_sinsin_x_series";
 
 	if constexpr ( std::is_same<T, float_precision> :: value ){
 		series_base<T, K>::precision = x.precision();
@@ -76,7 +75,7 @@ SeriesResult<T> exp_m_cos_x_sinsin_x_series<T, K>::generateSeries(
 
 	for(K j = static_cast<K>(1); j < vecSize; ++j){
         fact *= j;
-		vecAn[j] += minus_one_raised_to_power_n<T, K>(j) * sin(static_cast<T>(j) * x) / fact;
+		vecAn[j] += minus_one_raised_to_power_n<T, K>(j) * sin(static_cast<T>(j) * x) / static_cast<T>(fact);
 		vecSn[j] += vecSn[j-static_cast<K>(1)] + vecAn[j];
 	}
 

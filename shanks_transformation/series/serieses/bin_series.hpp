@@ -18,7 +18,7 @@ public:
 	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	* @param x The argument for function series
 	*/
-	explicit bin_series() : series_base<T, K>() {};
+	explicit bin_series() : series_base<T, K>("bin_series") {};
 
 	virtual SeriesResult<T> generateSeries(
         const T& x , 
@@ -65,7 +65,7 @@ SeriesResult<T> bin_series<T, K>::generateSeries(
 
 	series_base<T,K>::x_ = x;
 	series_base<T,K>::sum = calculateSum(x, addTParameter); 
-    series_base<T,K>::series_name = "bin_series " + to_string(addTParameter);
+    series_base<T,K>::series_name +=  " " + to_string(addTParameter);
 
 	if constexpr ( std::is_same<T, float_precision> :: value ){
 		series_base<T, K>::precision = x.precision();
