@@ -29,21 +29,7 @@ services:
       - "8081:8081"
     depends_on: [mongo]
 
-  worker:
-    build:
-      context: ..
-      dockerfile: apps/worker/Dockerfile
-    container_name: shanks-worker
-    restart: unless-stopped
-    environment:
-      MONGODB_URI: mongodb://app_user:${APP_USER_PASSWORD}@mongo:27017/shanks?authSource=admin
-      MONGODB_DB: shanks
-      GATEWAY_URL: http://gateway:8000
-      GATEWAY_TOKEN: ${GATEWAY_TOKEN}
-      WORKER_TOKEN: ${WORKER_TOKEN}
-    expose:
-      - "8000"
-    depends_on: [mongo]
+  # worker убираем (вы запускаете локально из IDE)
 
   gateway:
     build:
@@ -54,13 +40,17 @@ services:
     environment:
       MONGODB_URI: mongodb://app_user:${APP_USER_PASSWORD}@mongo:27017/shanks?authSource=admin
       MONGODB_DB: shanks
-      WORKER_URL: http://worker:8000/api
+      # ключевая строка: доступ к локальному worker на хосте
+      WORKER_URL: http://host.docker.internal:8000/api
       WORKER_TOKEN: ${WORKER_TOKEN}
       GATEWAY_TOKEN: ${GATEWAY_TOKEN}
       CORS_ORIGINS: http://localhost:5173,http://127.0.0.1:5173,http://localhost:3000,http://127.0.0.1:3000
     ports:
-      - "8000:8000"
-    depends_on: [mongo, worker]
+      - "8002:8002"
+    depends_on: [mongo]
+    # для Linux Docker: сопоставление host.docker.internal -> gateway IP хоста
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
 volumes:
   mongo_data:
