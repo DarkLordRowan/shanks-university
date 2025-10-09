@@ -31,15 +31,21 @@ public:
 		
 		using std::isfinite;
 
-		return !isfinite(x);
+		if constexpr (std::is_same<T, complex_precision<float_precision>>::value){
+            return !isfinite(x) || x.real() < float_precision(2);
+        } else {
+            return !isfinite(x) || x < static_cast<T>(2);
+        }
 	}
 
-	inline constexpr T calculateSum(const T& x){
+	inline T calculateSum(const T& x){
 
-		using std::sinh;
-        using std::sin;
-
-		return (sinh(x) + sin(x)) * static_cast<T>(0.5);
+		if constexpr(std::is_floating_point<T>::value || std::is_same<T, float_precision>::value){
+			const float_precision value = float_precision(x, series_base<T,K>::precision);
+			return static_cast<T>(zeta(value - static_cast<T>(1))) / static_cast<T>(zeta(value));
+		} else {
+			return 0;  aa
+		}
 	}
 
 };
@@ -53,7 +59,7 @@ SeriesResult<T> riemann_zeta_func_xmin1_div_Riemann_zeta_func_x_series<T, K>::ge
 ) {
 
 	if(checkDomain(x)){
-		series_base<T, K>::throw_domain_error("x is not finite");
+		series_base<T, K>::throw_domain_error("x is not finite or Re(x)<2");
 	}
 
 	series_base<T,K>::x_ = x;

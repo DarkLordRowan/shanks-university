@@ -30,12 +30,12 @@ public:
 	inline constexpr bool checkDomain(const T& x){
 		
 		using std::isfinite;
+		
         if constexpr (std::is_same<T, complex_precision<float_precision>>::value){
-            return !isfinite(x) && (x.real() < float_precision(0) || x.real() > float_precision(2 * std::numbers::pi));
+            return !isfinite(x) || x.real() < float_precision(0) || x.real() > float_precision(2.0 * std::numbers::pi);
         } else {
-            return !isfinite(x) && (x < static_cast<T>(0) || x > static_cast<T>(2 * std::numbers::pi));
+            return !isfinite(x) || x < static_cast<T>(0) || x > static_cast<T>(2.0 * std::numbers::pi);
         }
-
 
 	}
 
@@ -78,7 +78,7 @@ SeriesResult<T> abs_sin_x_minus_2_div_pi_series<T, K>::generateSeries(
 ) {
 
 	if(checkDomain(x)){
-		series_base<T, K>::throw_domain_error("x is not finite");
+		series_base<T, K>::throw_domain_error("x is not finite or did not in [0, 2pi]");
 	}
 
     if constexpr ( std::is_same<T, float_precision> :: value ){

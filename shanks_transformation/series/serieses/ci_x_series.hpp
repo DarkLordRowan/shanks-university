@@ -36,7 +36,28 @@ public:
 
 	inline constexpr T calculateSum(const T& x){
 
-		return 0;
+		using std::log;
+
+		T res = static_cast<T>(std::numbers::egamma) + log(x);
+		T an = static_cast<T>(-0.25) * x * x;
+		size_t j = 1;
+		
+		if constexpr (std::is_same<T, complex_precision<float_precision>>::value || std::is_same<T, float_precision>::value){
+			while (abs(an) > float_precision(1e-8)){
+				res+=an;
+				an*=x*x*static_cast<T>(-1) * static_cast<T>(j) / static_cast<T>(2 * fma(2,j,1) * (j + 1));
+				++j;
+			}
+		} else {
+			while (abs(an) > static_cast<T>(1e-8)){
+				res+=an;
+				an*=x*x*static_cast<T>(-1) * static_cast<T>(j) / static_cast<T>(2 * fma(2,j,1) * (j + 1));
+				++j;
+			}
+		}
+
+		return res;
+
 	}
 
 };
@@ -71,7 +92,7 @@ SeriesResult<T> ci_x_series<T, K>::generateSeries(
     vecSn[0] = static_cast<T>(std::numbers::egamma);
 
     vecAn[1] = log(x);
-    vecSn[1] += vecAn[1];
+    vecSn[1] += vecSn[0] + vecAn[1];
 
 	for(K j = static_cast<K>(2); j < vecSize; ++j){
 		vecAn[j] += vecAn[j-static_cast<K>(1)] * x * x * static_cast<T>(j-1) / static_cast<T>(2*j*j*fma(2,j-1,1));

@@ -33,10 +33,11 @@ public:
 		using std::isfinite;
 
         if constexpr (std::is_same<T, complex_precision<float_precision>>::value){
-            return !isfinite(x) && (x.real() < float_precision(0)) && (x.real() > float_precision(0.5 * std::numbers::pi));
+            return !isfinite(x) || abs(x) >= float_precision(std::numbers::pi);
         } else {
-            return !isfinite(x) && (x < static_cast<T>(0)) && (x > static_cast<T>(0.5 * std::numbers::pi));
+            return !isfinite(x) || abs(x) >= static_cast<T>(std::numbers::pi);
         }
+
 	}
 
 	inline constexpr T calculateSum(const T& x){
@@ -58,7 +59,7 @@ SeriesResult<T> half_multi_ln_1div2multi1minuscosx_series<T, K>::generateSeries(
 ) {
 
 	if(checkDomain(x)){
-		series_base<T, K>::throw_domain_error("x is not finite");
+		series_base<T, K>::throw_domain_error("x is not finite or |x| >= pi");
 	}
 
 	series_base<T,K>::x_ = x;

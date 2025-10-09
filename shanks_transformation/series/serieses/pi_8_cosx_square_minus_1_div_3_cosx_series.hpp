@@ -31,7 +31,11 @@ public:
 		
 		using std::isfinite;
 
-		return !isfinite(x);
+		if constexpr(std::is_same<T, complex_precision<float_precision>>::value){
+            return !isfinite(x) || abs(x) > float_precision(std::numbers::pi * 0.5);
+        } else {
+		    return !isfinite(x) || abs(x) > static_cast<T>(std::numbers::pi * 0.5);
+        }
 	}
 
 	inline constexpr T calculateSum(const T& x){
@@ -52,7 +56,7 @@ SeriesResult<T> pi_8_cosx_square_minus_1_div_3_cosx_series<T, K>::generateSeries
 ) {
 
 	if(checkDomain(x)){
-		series_base<T, K>::throw_domain_error("x is not finite");
+		series_base<T, K>::throw_domain_error("x is not finite or |x|>pi/2");
 	}
 
 	series_base<T,K>::x_ = x;
@@ -68,9 +72,9 @@ SeriesResult<T> pi_8_cosx_square_minus_1_div_3_cosx_series<T, K>::generateSeries
 	std::vector<T> vecSn(vecSize, convertWithPrec<T>(0.0, series_base<T, K>::precision));
 
 
-	for(K j = static_cast<K>(1); j < vecSize; ++j){
+	for(K j = static_cast<K>(0); j < vecSize; ++j){
 		vecAn[j] += minus_one_raised_to_power_n<T, K>(j) * cos(static_cast<T>(fma(2,j,3)) * x) / static_cast<T>(fma(2,j,1) * fma(2,j,3) * fma(2,j,5));
-		vecSn[j] += vecSn[j-static_cast<K>(1)] + vecAn[j];
+		vecSn[j] += vecSn[j == static_cast<K>(0) ? j : j-static_cast<K>(1)] + vecAn[j];
 	}
 
 	return SeriesResult<T>{.Sn = vecSn, .an = vecAn };

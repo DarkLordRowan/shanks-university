@@ -32,11 +32,10 @@ public:
 		
 		using std::isfinite;
 
-		using std::isfinite;
         if constexpr (std::is_same<T, complex_precision<float_precision>>::value){
-            return !isfinite(x) && (x.real() > float_precision(std::numbers::pi) ||  x.real() < float_precision(0) );
+            return !isfinite(x) || x.real() > float_precision(std::numbers::pi) ||  x.real() < float_precision(0);
         } else {
-            return !isfinite(x) && (x > static_cast<T>(std::numbers::pi) ||  x < static_cast<T>(0) );
+            return !isfinite(x) || x > static_cast<T>(std::numbers::pi) ||  x < static_cast<T>(0);
         }
 	}
 
@@ -59,7 +58,7 @@ SeriesResult<T> ln_sinx_minus_ln_x_series<T, K>::generateSeries(
 ) {
 
 	if(checkDomain(x)){
-		series_base<T, K>::throw_domain_error("x is not finite");
+		series_base<T, K>::throw_domain_error("x is not finite or Re(x)<0 or Re(x)>pi");
 	}
 
 	series_base<T,K>::x_ = x;

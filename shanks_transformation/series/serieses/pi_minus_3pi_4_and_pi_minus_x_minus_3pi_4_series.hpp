@@ -30,13 +30,35 @@ public:
 	inline constexpr bool checkDomain(const T& x){
 		
 		using std::isfinite;
+        if constexpr (std::is_same<T, complex_precision<float_precision>>::value){
+            return !isfinite(x) || abs(x) >= float_precision(std::numbers::pi);
+        } else {
+            return !isfinite(x) || abs(x) >= static_cast<T>(std::numbers::pi);;
+        }
 
-		return !isfinite(x);
+
 	}
 
 	inline constexpr T calculateSum(const T& x){
 
-		return 0;
+		using std::sin;
+
+        using Complex = complex_precision<float_precision>;
+
+		if constexpr (std::is_same<T, Complex>::value){
+            if (x.real() <= float_precision(0)){
+                return static_cast<T>(0.25 * std::numbers::pi);
+            } else {
+                return static_cast<T>(0.25 * std::numbers::pi) - x;
+            }
+
+        } else {
+            if (x <= static_cast<T>(0)){
+                return static_cast<T>(0.25 * std::numbers::pi);
+            } else {
+                return static_cast<T>(0.25 * std::numbers::pi) - x;
+            }
+        }
 	}
 
 };
@@ -50,7 +72,7 @@ SeriesResult<T> pi_minus_3pi_4_and_pi_minus_x_minus_3pi_4_series<T, K>::generate
 ) {
 
 	if(checkDomain(x)){
-		series_base<T, K>::throw_domain_error("x is not finite");
+		series_base<T, K>::throw_domain_error("x is not finite or |x|>pi");
 	}
 
 	series_base<T,K>::x_ = x;
@@ -62,16 +84,16 @@ SeriesResult<T> pi_minus_3pi_4_and_pi_minus_x_minus_3pi_4_series<T, K>::generate
 		series_base<T, K>::precision = std::max(x.real().precision(), x.imag().precision());
 	}
 
-	std::vector<T> vecAn(vecSize, convertWithPrec<T>(0.0, series_base<T, K>::precision)); vecAn[0] = static_cast<T>(-std::numbers::pi * 0.125);
-	std::vector<T> vecSn(vecSize, convertWithPrec<T>(0.0, series_base<T, K>::precision)); vecSn[0] = static_cast<T>(-std::numbers::pi * 0.125);
+	std::vector<T> vecAn(vecSize, convertWithPrec<T>(0.0, series_base<T, K>::precision));
+	std::vector<T> vecSn(vecSize, convertWithPrec<T>(0.0, series_base<T, K>::precision));
 
     using std::sin;
 	using std::cos;
 
-	for(K j = static_cast<K>(1); j < vecSize; ++j){
-		vecAn[j] += (static_cast<T>(1) + minus_one_raised_to_power_n<T, K>(j+1)) / (static_cast<T>(std::numbers::pi) * static_cast<T>(j * j)) * cos(static_cast<T>(j) * x) +
-		minus_one_raised_to_power_n<T,K>(j) / static_cast<T>(j) * sin(static_cast<T>(j) * x);
-		vecSn[j] += vecSn[j-static_cast<K>(1)] + vecAn[j];
+	for(K j = static_cast<K>(0); j < vecSize; ++j){
+		vecAn[j] += (static_cast<T>(1) + minus_one_raised_to_power_n<T, K>(j)) / (static_cast<T>(std::numbers::pi) * static_cast<T>((j+1) * (j+1))) * cos(static_cast<T>(j+1) * x) +
+		minus_one_raised_to_power_n<T,K>(j+1) / static_cast<T>(j+1) * sin(static_cast<T>(j+1) * x);
+		vecSn[j] += vecSn[j == static_cast<K>(0) ? j : j-static_cast<K>(1)] + vecAn[j];
 	}
 
 	return SeriesResult<T>{.Sn = vecSn, .an = vecAn };

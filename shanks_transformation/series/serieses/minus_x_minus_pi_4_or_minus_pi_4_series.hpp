@@ -31,12 +31,30 @@ public:
 		
 		using std::isfinite;
 
-		return !isfinite(x);
+		if constexpr(std::is_same<T, complex_precision<float_precision>>::value){
+            return !isfinite(x) || abs(x) >= float_precision(std::numbers::pi);
+        } else {
+		    return !isfinite(x) || abs(x) >= static_cast<T>(std::numbers::pi);
+        }
 	}
 
 	inline constexpr T calculateSum(const T& x){
 
-		return 0;
+		using Complex = complex_precision<float_precision>;
+
+		if constexpr (std::is_same<T, Complex>::value){
+            if (x <= static_cast<T>(0)){
+                return static_cast<T>(-1) * x;
+            } else {
+                return static_cast<T>(0);
+            }
+        } else {
+            if (x <= static_cast<T>(0)){
+                return static_cast<T>(-1) * x;
+            } else {
+                return static_cast<T>(0);
+            }
+        }
 
 	}
 
@@ -51,7 +69,7 @@ SeriesResult<T> minus_x_minus_pi_4_or_minus_pi_4_series<T, K>::generateSeries(
 ) {
 
 	if(checkDomain(x)){
-		series_base<T, K>::throw_domain_error("x is not finite");
+		series_base<T, K>::throw_domain_error("x is not finite or |x| >= pi");
 	}
 
 	series_base<T,K>::x_ = x;

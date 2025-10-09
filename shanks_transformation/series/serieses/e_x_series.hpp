@@ -55,7 +55,7 @@ SeriesResult<T> e_x_series<T, K>::generateSeries(
 ) {
 
 	if(checkDomain(x)){
-		series_base<T, K>::throw_domain_error("x is not finite");
+		series_base<T, K>::throw_domain_error("x is not finite or |x|>=1");
 	}
 
 	series_base<T,K>::x_ = x;

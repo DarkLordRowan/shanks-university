@@ -28,15 +28,13 @@ public:
     ) override;
 
 	inline constexpr bool checkDomain(const T& x){
+
+		using std::isfinite;
 		
 		if constexpr(std::is_same<T, complex_precision<float_precision>>::value){
-
-            return !isfinite(x) && abs(x) >= float_precision(1);
-
+            return !isfinite(x) || abs(x) >= float_precision(1);
         } else {
-
-		    return !isfinite(x) && abs(x) >= static_cast<T>(1);
-
+		    return !isfinite(x) || abs(x) >= static_cast<T>(1);
         }
 
 
@@ -62,7 +60,7 @@ SeriesResult<T> m_fact_1mx_mp1_inverse_series<T, K>::generateSeries(
 ) {
 
 	if(checkDomain(x)){
-		series_base<T, K>::throw_domain_error("x is not finite");
+		series_base<T, K>::throw_domain_error("x is not finite or |x|>=1");
 	}
 
     if constexpr ( std::is_same<T, float_precision> :: value ){

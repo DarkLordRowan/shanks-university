@@ -28,10 +28,14 @@ public:
     ) override;
 
 	inline constexpr bool checkDomain(const T& x){
-		
+
 		using std::isfinite;
 
-		return !isfinite(x);
+		if constexpr (std::is_same<T, complex_precision<float_precision>> :: value){
+			return !isfinite(x) || abs(x - static_cast<T>(10)) > float_precision(5, series_base<T,K>::precision);
+		} else {
+			return !isfinite(x) || abs(x - static_cast<T>(10)) > static_cast<T>(5);
+		}
 	}
 
 	inline constexpr T calculateSum(const T& x){
@@ -50,7 +54,7 @@ SeriesResult<T> ten_minus_x_series<T, K>::generateSeries(
 ) {
 
 	if(checkDomain(x)){
-		series_base<T, K>::throw_domain_error("x is not finite");
+		series_base<T, K>::throw_domain_error("x is not finite or x <=5 or x >=15");
 	}
 
 	series_base<T,K>::x_ = x;

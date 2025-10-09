@@ -36,7 +36,27 @@ public:
 
 	inline constexpr T calculateSum(const T& x){
 
-		return 0;
+		using std::log;
+
+		T res = x;
+		T an = x;
+		size_t j = 1;
+		
+		if constexpr (std::is_same<T, complex_precision<float_precision>>::value || std::is_same<T, float_precision>::value){
+			while (abs(an) > float_precision(1e-8)){
+				an*=x*x*static_cast<T>(-1) * static_cast<T>(fma(2,j,1)) / static_cast<T>(fma(2,j,3)*fma(2,j,3)*fma(2,j,2));
+				res+=an;
+				++j;
+			}
+		} else {
+			while (abs(an) > static_cast<T>(1e-8)){
+				an*=x*x*static_cast<T>(-1) * static_cast<T>(fma(2,j,1)) / static_cast<T>(fma(2,j,3)*fma(2,j,3)*fma(2,j,2));
+				res+=an;
+				++j;
+			}
+		}
+
+		return res;
 	}
 
 };
@@ -69,8 +89,8 @@ SeriesResult<T> si_x_series<T, K>::generateSeries(
     vecSn[0] = x;
 
 
-	for(K j = static_cast<K>(2); j < vecSize; ++j){
-		vecAn[j] += static_cast<T>(-1) * vecAn[j-static_cast<K>(1)] * x * x * static_cast<T>(fma(2,j-1,1)) / static_cast<T>(fma(2,j,1) * 4 * j * j);
+	for(K j = static_cast<K>(1); j < vecSize; ++j){
+		vecAn[j] += static_cast<T>(-1) * vecAn[j-static_cast<K>(1)] * x * x * static_cast<T>(fma(2,j-1,1)) / static_cast<T>(fma(2,j,1) * 2 * fma(2,j,1) * j);
 		vecSn[j] += vecSn[j-static_cast<K>(1)] + vecAn[j];
 	}
 
