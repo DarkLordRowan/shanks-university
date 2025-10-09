@@ -83,15 +83,13 @@ def _compute_and_export(_payload: dict):
 
     results_exporter = export.ExportTrialResults(results)
     results_json = results_exporter.as_dict()
-    results_csv_bytes = results_exporter.to_csv_bytes()
 
     scanner = events.TrialEventScanner(results)
     eventse = scanner.execute()
     events_exporter = export.ExportTrialEvents(eventse)
     events_json = events_exporter.as_dict()
-    events_csv_bytes = events_exporter.to_csv_bytes()
 
-    return results_json, results_csv_bytes, events_json, events_csv_bytes
+    return results_json, events_json
 
 # ----- вспомогательные функции хранения -----
 
@@ -137,7 +135,7 @@ async def _process_job(_uuid: str, payload: dict):
             await _jobs.update_one({"uuid": _uuid}, {"$set": {"status": "processing"}})
 
             loop = asyncio.get_running_loop()
-            results_json, results_csv_bytes, events_json, events_csv_bytes = await loop.run_in_executor(
+            results_json, events_json = await loop.run_in_executor(
                 _EXECUTOR, _compute_and_export, payload
             )
             print("req")
@@ -147,19 +145,13 @@ async def _process_job(_uuid: str, payload: dict):
 
             results_json_gz = _to_gz_bytes(results_json)
             events_json_gz = _to_gz_bytes(events_json)
-            # results_csv = results_csv_bytes
-            # events_csv = events_csv_bytes
 
             rj_meta = await _store_bytes(f"{_uuid}__results.json.gz", results_json_gz, "application/json", "gzip")
             ej_meta = await _store_bytes(f"{_uuid}__events.json.gz",  events_json_gz,  "application/json", "gzip")
-            # rc_meta = await _store_bytes(f"{_uuid}__results.csv",     results_csv,     "text/csv", None)
-            # ec_meta = await _store_bytes(f"{_uuid}__events.csv",      events_csv,      "text/csv", None)
 
             docs = [
                 {"uuid": _uuid, "kind": "results", "format": "json", **rj_meta, "created_at": now},
-                # {"uuid": _uuid, "kind": "results", "format": "csv",  **rc_meta, "created_at": now},
                 {"uuid": _uuid, "kind": "events",  "format": "json", **ej_meta, "created_at": now},
-                # {"uuid": _uuid, "kind": "events",  "format": "csv",  **ec_meta, "created_at": now},
             ]
             await _documents.insert_many(docs)
 
@@ -203,22 +195,6 @@ async def create_job(body: _Dict[str, _Any] = _Body(...), authorization: str | N
     asyncio.create_task(_process_job(_uuid, payload))
 
     return {"ok": True, "uuid": _uuid, "status": "queued"}
-
-# @_worker_app.post("/process/json")
-# async def legacy_process_json(payload: dict = _Body(...)):
-#     loop = asyncio.get_running_loop()
-#     results_json = await loop.run_in_executor(_EXECUTOR, _compute_results_json, payload)
-#     return JSONResponse(content=results_json)
-#
-# @_worker_app.post("/process/csv2")
-# async def legacy_process_csv(payload: dict = _Body(...)):
-#     loop = asyncio.get_running_loop()
-#     content = await loop.run_in_executor(_EXECUTOR, _compute_results_csv_bytes, payload)
-#     return StreamingResponse(
-#         io.BytesIO(content),
-#         media_type="text/csv",
-#         headers={"Content-Disposition": 'attachment; filename="results.csv"'}
-#     )
 
 @_worker_app.get("/health")
 async def _health():
