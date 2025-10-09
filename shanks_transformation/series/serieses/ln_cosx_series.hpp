@@ -32,11 +32,10 @@ public:
 		
 		using std::isfinite;
 
-		using std::isfinite;
         if constexpr (std::is_same<T, complex_precision<float_precision>>::value){
-            return !isfinite(x) && abs(x) >= float_precision(std::numbers::pi * 0.5);
+            return !isfinite(x) || abs(x) >= float_precision(std::numbers::pi * 0.5);
         } else {
-            return !isfinite(x) && abs(x) >= static_cast<T>(std::numbers::pi * 0.5);
+            return !isfinite(x) || abs(x) >= static_cast<T>(std::numbers::pi * 0.5);
         }
 	}
 
@@ -59,7 +58,7 @@ SeriesResult<T> ln_cosx_series<T, K>::generateSeries(
 ) {
 
 	if(checkDomain(x)){
-		series_base<T, K>::throw_domain_error("x is not finite");
+		series_base<T, K>::throw_domain_error("x is not finite or |x|>=pi/2");
 	}
 
 	series_base<T,K>::x_ = x;

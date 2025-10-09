@@ -67,7 +67,7 @@ SeriesResult<T> pi_4_series<T, K>::generateSeries(
 
 
 	for(K j = static_cast<K>(0); j < vecSize; ++j){
-		vecAn[j] += x / static_cast<T>(fma(2,j,1));
+		vecAn[j] += minus_one_raised_to_power_n<T , K>(j) * x / static_cast<T>(fma(2,j,1));
 		vecSn[j] += vecSn[j == static_cast<K>(0) ? j : j-static_cast<K>(1)] + vecAn[j];
 	}
 

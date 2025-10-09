@@ -34,9 +34,9 @@ public:
 
 		using std::isfinite;
         if constexpr (std::is_same<T, complex_precision<float_precision>>::value){
-            return !isfinite(x) && abs(x) >= float_precision(1);
+            return !isfinite(x) || abs(x) >= float_precision(1);
         } else {
-            return !isfinite(x) && abs(x) >= static_cast<T>(1);
+            return !isfinite(x) || abs(x) >= static_cast<T>(1);
         }
 	}
 
@@ -58,7 +58,7 @@ SeriesResult<T> ln1_m_x2_series<T, K>::generateSeries(
 ) {
 
 	if(checkDomain(x)){
-		series_base<T, K>::throw_domain_error("x is not finite");
+		series_base<T, K>::throw_domain_error("x is not finite or |x|>=1");
 	}
 
 	series_base<T,K>::x_ = x;

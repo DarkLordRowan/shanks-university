@@ -31,11 +31,10 @@ public:
 		
 		using std::isfinite;
         if constexpr (std::is_same<T, complex_precision<float_precision>>::value){
-            return !isfinite(x) && (x.real() <= float_precision(0));
+            return !isfinite(x) || x.real() <= float_precision(0);
         } else {
-            return !isfinite(x) && (x < static_cast<T>(0));
+            return !isfinite(x) || x < static_cast<T>(0);
         }
-
 
 	}
 
@@ -58,7 +57,7 @@ SeriesResult<T> cos_sqrt_x_series<T, K>::generateSeries(
 ) {
 
 	if(checkDomain(x)){
-		series_base<T, K>::throw_domain_error("x is not finite");
+		series_base<T, K>::throw_domain_error("x is not finite or Re(x)<0");
 	}
 
 	series_base<T,K>::x_ = x;

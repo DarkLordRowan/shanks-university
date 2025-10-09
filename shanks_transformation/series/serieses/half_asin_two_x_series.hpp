@@ -61,7 +61,7 @@ SeriesResult<T> half_asin_two_x_series<T, K>::generateSeries(
 ) {
 
 	if(checkDomain(x)){
-		series_base<T, K>::throw_domain_error("x is not finite");
+		series_base<T, K>::throw_domain_error("x is not finite or |x|>0.5");
 	}
 
 	series_base<T,K>::x_ = x;

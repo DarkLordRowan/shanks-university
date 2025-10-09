@@ -32,13 +32,9 @@ public:
 		using std::isfinite;
 
 		if constexpr(std::is_same<T, complex_precision<float_precision>>::value){
-
             return !isfinite(x) || abs(x) > float_precision(1);
-
         } else {
-
 		    return !isfinite(x) || abs(x) > static_cast<T>(1);
-
         }
 	}
 
@@ -60,7 +56,7 @@ SeriesResult<T> sqrt_1plusx_min_1_min_x_div_2_series<T, K>::generateSeries(
 ) {
 
 	if(checkDomain(x)){
-		series_base<T, K>::throw_domain_error("x is not finite");
+		series_base<T, K>::throw_domain_error("x is not finite or |x|>1");
 	}
 
 	series_base<T,K>::x_ = x;
@@ -72,15 +68,16 @@ SeriesResult<T> sqrt_1plusx_min_1_min_x_div_2_series<T, K>::generateSeries(
 		series_base<T, K>::precision = std::max(x.real().precision(), x.imag().precision());
 	}
 
-	std::vector<T> vecAn(vecSize, convertWithPrec<T>(0.0, series_base<T, K>::precision)); vecAn[0] = x;
-	std::vector<T> vecSn(vecSize, convertWithPrec<T>(0.0, series_base<T, K>::precision)); vecSn[0] = x;
 
+	std::vector<T> vecAn(vecSize, convertWithPrec<T>(0.0, series_base<T, K>::precision)); vecAn[0] = x*x * static_cast<T>(-0.125);
+	std::vector<T> vecSn(vecSize, convertWithPrec<T>(0.0, series_base<T, K>::precision)); vecSn[0] = x*x * static_cast<T>(-0.125);
+
+	//j+2
 	for(K j = static_cast<K>(1); j < vecSize; ++j){
-		vecAn[j] += static_cast<T>(-1) * vecAn[j-static_cast<K>(1)] * x * x / static_cast<T>(j * (static_cast<K>(4) * j + static_cast<K>(2)));
+		vecAn[j] += static_cast<T>(-1) * vecAn[j-static_cast<K>(1)] * x * static_cast<T>(fma(2,j,1)) / static_cast<T>(fma(2,j,2));
 		vecSn[j] += vecSn[j-static_cast<K>(1)] + vecAn[j];
 	}
 
 	return SeriesResult<T>{.Sn = vecSn, .an = vecAn };
 
-    aa
 }

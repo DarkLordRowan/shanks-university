@@ -38,7 +38,7 @@ public:
 
 		using std::log;
 
-		return x * (log(static_cast<T>(4) + static_cast<T>(1.5) * log(static_cast<T>(3)) - static_cast<T>(3)));
+		return x * (log(static_cast<T>(4)) + static_cast<T>(1.5) * log(static_cast<T>(3)) - static_cast<T>(3));
 	}
 
 };

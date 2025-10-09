@@ -38,7 +38,7 @@ public:
 
 		using std::sin;
 
-		return sin(x);
+		return sin(x); aa
 	}
 
 };
@@ -75,5 +75,4 @@ SeriesResult<T> xmb_Jb_two_series<T, K>::generateSeries(
 
 	return SeriesResult<T>{.Sn = vecSn, .an = vecAn };
 
-    aa
 }

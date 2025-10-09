@@ -31,13 +31,7 @@ public:
 		
 		using std::isfinite;
 
-		if constexpr(std::is_same<T, complex_precision<float_precision>>::value){
-
-            return !isfinite(x) && abs(x) >= float_precision(std::numbers::pi);
-
-        } else {
-		    return !isfinite(x) && abs(x) >= static_cast<T>(std::numbers::pi);
-        }
+		return !isfinite(x);
 	}
 
 	inline constexpr T calculateSum(const T& x){

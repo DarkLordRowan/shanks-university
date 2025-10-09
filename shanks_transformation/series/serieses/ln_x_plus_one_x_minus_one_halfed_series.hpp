@@ -34,9 +34,9 @@ public:
 
 		using std::isfinite;
         if constexpr (std::is_same<T, complex_precision<float_precision>>::value){
-            return !isfinite(x) && abs(x) >= float_precision(std::numbers::pi * 0.5);
+            return !isfinite(x) || abs(x) >= float_precision(std::numbers::pi * 0.5);
         } else {
-            return !isfinite(x) && abs(x) >= static_cast<T>(std::numbers::pi * 0.5);
+            return !isfinite(x) || abs(x) >= static_cast<T>(std::numbers::pi * 0.5);
         }
 	}
 
@@ -59,7 +59,7 @@ SeriesResult<T> ln_x_plus_one_x_minus_one_halfed_series<T, K>::generateSeries(
 ) {
 
 	if(checkDomain(x)){
-		series_base<T, K>::throw_domain_error("x is not finite");
+		series_base<T, K>::throw_domain_error("x is not finite or |x|>=1");
 	}
 
 	series_base<T,K>::x_ = x;

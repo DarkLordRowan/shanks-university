@@ -1,7 +1,6 @@
 #pragma once
 
 #include "../series_base.hpp"
-#include <cmath>
 
 /**
 * @brief Maclaurin series of exp(x) function
@@ -9,7 +8,7 @@
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
 template <AcceptedLike T, UnsignedIntLike K>
-class half_minus_sinx_multi_pi_4 final : public series_base<T, K>
+class arctanh_x_series final : public series_base<T, K>
 {
 public:
 
@@ -19,7 +18,7 @@ public:
 	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	* @param x The argument for function series
 	*/
-	explicit half_minus_sinx_multi_pi_4() : series_base<T, K>("half_minus_sinx_multi_pi_4") {};
+	explicit arctanh_x_series() : series_base<T, K>("arctanh_x_series") {};
 
 	virtual SeriesResult<T> generateSeries(
         const T& x , 
@@ -31,25 +30,25 @@ public:
 	inline constexpr bool checkDomain(const T& x){
 		
 		using std::isfinite;
-
         if constexpr (std::is_same<T, complex_precision<float_precision>>::value){
-            return !isfinite(x) && (x.real() < float_precision(0)) && (x.real() > float_precision(0.5 * std::numbers::pi));
+            return !isfinite(x) || abs(x) > float_precision(1);
         } else {
-            return !isfinite(x) && (x < static_cast<T>(0)) && (x > static_cast<T>(0.5 * std::numbers::pi));
+            return !isfinite(x) || abs(x) > static_cast<T>(1);
         }
+
 	}
 
 	inline constexpr T calculateSum(const T& x){
 
-		using std::sin;
+		using std::atanh;
 
-		return static_cast<T>(0.5) - static_cast<T>(std::numbers::pi * 0.25) * sin(x);
+        return atanh(x);
 	}
 
 };
 
 template<AcceptedLike T, UnsignedIntLike K>
-SeriesResult<T> half_minus_sinx_multi_pi_4<T, K>::generateSeries(
+SeriesResult<T> arctanh_x_series<T, K>::generateSeries(
     const T& x , 
 	const K vecSize, 
 	const T& addTParameter,
@@ -57,26 +56,25 @@ SeriesResult<T> half_minus_sinx_multi_pi_4<T, K>::generateSeries(
 ) {
 
 	if(checkDomain(x)){
-		series_base<T, K>::throw_domain_error("x is not finite");
+		series_base<T, K>::throw_domain_error("x is not finite or |x|>1");
 	}
 
-	series_base<T,K>::x_ = x;
-	series_base<T,K>::sum = calculateSum(x);
-
-	if constexpr ( std::is_same<T, float_precision> :: value ){
+    if constexpr ( std::is_same<T, float_precision> :: value ){
 		series_base<T, K>::precision = x.precision();
 	} else if constexpr (std::is_same<T, complex_precision<float_precision>>::value){
 		series_base<T, K>::precision = std::max(x.real().precision(), x.imag().precision());
 	}
 
-	std::vector<T> vecAn(vecSize, convertWithPrec<T>(0.0, series_base<T, K>::precision));
-	std::vector<T> vecSn(vecSize, convertWithPrec<T>(0.0, series_base<T, K>::precision));
+	series_base<T,K>::x_ = x;
+	series_base<T,K>::sum = calculateSum(x);
 
-    using std::cos;
+	std::vector<T> vecAn(vecSize, convertWithPrec<T>(0.0, series_base<T, K>::precision)); vecAn[0] = x ;
+	std::vector<T> vecSn(vecSize, convertWithPrec<T>(0.0, series_base<T, K>::precision)); vecSn[0] = x ;
 
-	for(K j = static_cast<K>(0); j < vecSize; ++j){
-		vecAn[j] += cos(static_cast<T>(fma(2,j,2)) * x) / static_cast<T>(fma(2,j,1) * fma(2,j,3));
-		vecSn[j] += vecSn[j == static_cast<K>(0) ? j : j-static_cast<K>(1)] + vecAn[j];
+
+	for(K j = static_cast<K>(1); j < vecSize; ++j){
+		vecAn[j] += vecAn[j-1] * x * x * static_cast<T>(fma(2,j-1,1)) / static_cast<T>(fma(2,j,1));
+		vecSn[j] += vecSn[j-static_cast<K>(1)] + vecAn[j];
 	}
 
 	return SeriesResult<T>{.Sn = vecSn, .an = vecAn };

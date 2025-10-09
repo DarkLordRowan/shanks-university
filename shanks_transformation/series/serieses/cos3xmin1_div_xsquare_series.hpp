@@ -29,7 +29,7 @@ public:
 
 	inline constexpr bool checkDomain(const T& x){
 		
-        return !isfinite(x) && x!=static_cast<T>(0);
+        return !isfinite(x) || x==static_cast<T>(0);
 
 	}
 
@@ -51,7 +51,7 @@ SeriesResult<T> cos3xmin1_div_xsquare_series<T, K>::generateSeries(
 ) {
 
 	if(checkDomain(x)){
-		series_base<T, K>::throw_domain_error("x is not finite");
+		series_base<T, K>::throw_domain_error("x is not finite or x = 0");
 	}
 
 	series_base<T,K>::x_ = x;

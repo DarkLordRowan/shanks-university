@@ -31,7 +31,11 @@ public:
 		
 		using std::isfinite;
 
-		return !isfinite(x);
+		if constexpr (std::is_same<T, complex_precision<float_precision>>::value){
+            return !isfinite(x) || x.real() <= float_precision(0) || x.real() >= float_precision(std::numbers::pi);
+        } else {
+            return !isfinite(x) || x <= static_cast<T>(0) || x >= static_cast<T>(std::numbers::pi);
+        }
 	}
 
 	inline constexpr T calculateSum(const T& x){
@@ -50,7 +54,7 @@ SeriesResult<T> pi_minus_x_2_series<T, K>::generateSeries(
 ) {
 
 	if(checkDomain(x)){
-		series_base<T, K>::throw_domain_error("x is not finite");
+		series_base<T, K>::throw_domain_error("x is not finite or Re(x)<=0 or Re(x)>=pi");
 	}
 
 	series_base<T,K>::x_ = x;

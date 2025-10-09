@@ -32,7 +32,11 @@ public:
 		
 		using std::isfinite;
 
-		return !isfinite(x);
+		if constexpr(std::is_same<T, complex_precision<float_precision>>::value){
+            return !isfinite(x) && abs(x) >= float_precision(3);
+        } else {
+		    return !isfinite(x) && abs(x) >= static_cast<T>(3);
+        }
 	}
 
 	inline constexpr T calculateSum(const T& x){
@@ -51,7 +55,7 @@ SeriesResult<T> minus_3_div_4_or_x_minus_3_div_4_series<T, K>::generateSeries(
 ) {
 
 	if(checkDomain(x)){
-		series_base<T, K>::throw_domain_error("x is not finite");
+		series_base<T, K>::throw_domain_error("x is not finite or |x|>=3");
 	}
 
 	series_base<T,K>::x_ = x;

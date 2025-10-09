@@ -8,7 +8,7 @@
 * @tparam T The type of the elements in the series, K The type of enumerating integer
 */
 template <AcceptedLike T, UnsignedIntLike K>
-class cos_series final : public series_base<T, K>
+class erf_series final : public series_base<T, K>
 {
 public:
 
@@ -18,7 +18,7 @@ public:
 	* @tparam T The type of the elements in the series, K The type of enumerating integer
 	* @param x The argument for function series
 	*/
-	explicit cos_series() : series_base<T, K>("erf_series") {};
+	explicit erf_series() : series_base<T, K>("erf_series") {};
 
 	virtual SeriesResult<T> generateSeries(
         const T& x , 
@@ -44,7 +44,7 @@ public:
 };
 
 template<AcceptedLike T, UnsignedIntLike K>
-SeriesResult<T> cos_series<T, K>::generateSeries(
+SeriesResult<T> erf_series<T, K>::generateSeries(
     const T& x , 
 	const K vecSize, 
 	const T& addTParameter,
