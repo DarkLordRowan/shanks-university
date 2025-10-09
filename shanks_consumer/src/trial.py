@@ -137,7 +137,6 @@ class ComplexTrial:
         for series, accel in itertools.product(
             self.series_params, self.accel_params
         ):
-            print(count)
             count += 1
             result = Trial(series, accel).execute()
             results += result
