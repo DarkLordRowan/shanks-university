@@ -7,10 +7,12 @@ from typing import Dict, Any
 import httpx
 from fastapi import FastAPI, Body, WebSocket, WebSocketDisconnect, Header, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse, StreamingResponse
 from pydantic import BaseModel
 from motor.motor_asyncio import AsyncIOMotorClient
-from bson import Binary
+from motor.motor_asyncio import AsyncIOMotorGridFSBucket
+from fastapi import HTTPException
+from starlette.responses import JSONResponse, StreamingResponse
+import io
 
 MONGODB_URI = os.getenv("MONGODB_URI", "mongodb://localhost:27017")
 MONGODB_DB = os.getenv("MONGODB_DB", "shanks")
@@ -39,6 +41,7 @@ mongo_client = AsyncIOMotorClient(MONGODB_URI)
 db = mongo_client[MONGODB_DB]
 jobs = db["jobs"]
 documents = db["documents"]
+fs = AsyncIOMotorGridFSBucket(db, bucket_name="artifacts")
 
 
 class ConnectionManager:
@@ -119,6 +122,7 @@ async def get_status(uuid: str):
 
 @app.get("/jobs/{uuid}/docs/{doc_name}")
 async def get_document(uuid: str, doc_name: str):
+    # doc_name: "results.json" | "events.csv"
     try:
         kind, fmt = doc_name.split(".")
     except ValueError:
@@ -128,12 +132,41 @@ async def get_document(uuid: str, doc_name: str):
     if not doc:
         raise HTTPException(status_code=404, detail="document not found")
 
+    if doc.get("storage") == "gridfs":
+        file_id = doc.get("file_id")
+        if not file_id:
+            raise HTTPException(status_code=500, detail="gridfs file_id missing")
+
+        # читаем в память и стримим клиенту
+        buf = io.BytesIO()
+        await fs.download_to_stream(file_id, buf)
+        buf.seek(0)
+
+        filename = doc.get("filename") or f"{kind}.{fmt}"
+        headers = {"Content-Disposition": f'attachment; filename="{filename}"'}
+
+        encoding = doc.get("encoding")
+        if encoding:
+            headers["Content-Encoding"] = encoding
+
+        media_type = doc.get("content_type") or ("application/json" if fmt == "json" else "text/csv")
+        return StreamingResponse(buf, media_type=media_type, headers=headers)
+
+    # Старый путь: маленькие документы могли храниться прямо в поле content
     if fmt == "json":
         return JSONResponse(content=doc.get("content", {}))
     elif fmt == "csv":
-        content = bytes(doc.get("content") or b"")
+        content = doc.get("content")
+        # если content — bson.Binary, получить bytes
+        if content is None:
+            raise HTTPException(status_code=500, detail="empty content")
+        if isinstance(content, bytes):
+            data = content
+        else:
+            # bson.Binary -> bytes
+            data = bytes(content)
         return StreamingResponse(
-            iter([content]),
+            io.BytesIO(data),
             media_type="text/csv",
             headers={"Content-Disposition": f'attachment; filename="{kind}.csv"'}
         )
