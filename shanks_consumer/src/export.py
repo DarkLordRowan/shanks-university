@@ -9,6 +9,8 @@ from src.events import TrialEvent
 from src.loaders import ArbEncoder
 from src.trial import TrialResult
 
+from pymongo import MongoClient
+
 
 def auto_field_prefix(field: Field, prefix: str = "", separator: str = "_"):
     return f"{prefix}{field.name}{separator}" if prefix else f"{field.name}{separator}"
@@ -189,8 +191,13 @@ def dataclasses_to_json(dataclasses, location):
 
 
 class BaseExport:
-    def __init__(self, location: pathlib.Path | None = None):
+
+    def __init__(self, data: list, location: pathlib.Path | None = None):
         self.location = location
+        self.data = data
+
+        self.expand_field: str = None
+        self.separator: str = "_"
 
     def _verify_location(self, override_location):
         location = override_location or self.location
@@ -198,58 +205,44 @@ class BaseExport:
             raise ValueError("Provide location to export")
         return location
 
+    def as_dict(self):
+        return [asdict(data) for data in self.data]
+
+    def to_mongodb(self, mongo_client: MongoClient): ...
+
+    def to_json(self, override_location=None):
+        dataclasses_to_json(
+            self.data, self._verify_location(override_location)
+        )
+
+    def to_csv(
+        self,
+        override_location: str | None = None,
+    ):
+        dataclasses_to_csv(
+            self.data,
+            self._verify_location(override_location),
+            expand_field=self.expand_field,
+            separator=self.separator,
+        )
+
+    def to_csv_text(self):
+        return dataclasses_to_csv_text(
+            self.data, expand_field=self.expand_field, separator=self.separator
+        )
+
+    def to_csv_bytes(self, encoding: str = "utf-8"):
+        return self.to_csv_text().encode(encoding)
+
 
 class ExportTrialResults(BaseExport):
     def __init__(
         self, results: list[TrialResult], location: pathlib.Path | None = None
     ):
-        self.results = results
-        super().__init__(location)
-
-    def to_json(self, override_location=None):
-        dataclasses_to_json(self.results, self._verify_location(override_location))
-
-    def as_dict(self):
-        return [asdict(result) for result in self.results]
-
-    def to_csv(self, override_location=None):
-        dataclasses_to_csv(
-            self.results,
-            self._verify_location(override_location),
-            expand_field="computed",
-            separator="_",
-        )
-
-    def to_csv_text(self):
-        return dataclasses_to_csv_text(
-            self.results, expand_field="computed", separator="_"
-        )
-
-    def to_csv_bytes(self, encoding="utf-8"):
-        return self.to_csv_text().encode(encoding)
+        super().__init__(results, location)
+        self.expand_field = "computed"
 
 
 class ExportTrialEvents(BaseExport):
     def __init__(self, events: list[TrialEvent], location: pathlib.Path | None = None):
-        self.events = events
-        super().__init__(location)
-
-    def to_json(self, override_location=None):
-        dataclasses_to_json(self.events, self._verify_location(override_location))
-
-    def as_dict(self):
-        return [asdict(event) for event in self.events]
-
-    def to_csv(self, override_location=None):
-        dataclasses_to_csv(
-            self.events,
-            self._verify_location(override_location),
-            expand_field=None,
-            separator="_",
-        )
-
-    def to_csv_text(self):
-        return dataclasses_to_csv_text(self.events, expand_field=None, separator="_")
-
-    def to_csv_bytes(self, encoding="utf-8"):
-        return self.to_csv_text().encode(encoding)
+        super().__init__(events, location)
