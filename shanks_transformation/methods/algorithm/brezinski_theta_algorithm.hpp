@@ -134,12 +134,10 @@ T brezinski_theta_algorithm<T, K, series_templ>::calculate(K n, const K order) c
         for(K j = static_cast<K>(0); j < base_size + static_cast<K>(2) - static_cast<K>(3) * level; ++j){
 
             j1 = j + static_cast<K>(1);
-            j2 = j + static_cast<K>(2);
 
             delta = theta_even[j1] - theta_even[j];
 
-            theta_odd[j] = fma(theta_odd[j1], delta, static_cast<T>(1));
-            theta_odd[j]/= delta;
+            theta_odd[j] = theta_odd[j1] + static_cast<T>(1) / delta;
         }
 
         // transform even vector
@@ -150,9 +148,8 @@ T brezinski_theta_algorithm<T, K, series_templ>::calculate(K n, const K order) c
 
             delta = theta_odd[j2] - theta_odd[j1];
             
-            theta_even[j] = theta_even[j+1];
-            theta_even[j]-= (theta_even[j+2]-theta_even[j+1]) * delta / (theta_odd[j+1] - theta_odd[j] - delta);
-
+            theta_even[j] = theta_even[j1];
+            theta_even[j]-= (theta_even[j2]-theta_even[j1]) * delta / (theta_odd[j1] - theta_odd[j] - delta);
         }
     }
 

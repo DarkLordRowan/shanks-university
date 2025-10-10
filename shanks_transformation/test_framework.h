@@ -27,6 +27,7 @@ enum test_function_id_t {
 	cmp_transformations_id,
 	eval_transform_time_id,
 	test_all_transforms_id,
+	cmp_sum_difference_and_transform_id,
 };
 
 
@@ -846,6 +847,15 @@ public:
 	}
 };
 
+class CmpSumAndDifferenceAndTransformInfo : public ITestFunctionInfo {
+public:
+	test_function_id_t getId() const override { return cmp_sum_difference_and_transform_id; }
+	std::string getName() const override { return "test_converge_of_transforms"; }
+	std::string getDescription() const override {
+		return "test |T_n - S_n|, |S - S_n|, |S - T_n| differences";
+	}
+};
+
 /**
  * @brief Factory functions to create all available items
  */
@@ -994,7 +1004,8 @@ inline static std::vector<std::unique_ptr<ITestFunctionInfo>> create_test_functi
 		std::make_unique<TransformationRemainderInfo>(),
 		std::make_unique<CmpTransformationsInfo>(),
 		std::make_unique<EvalTransformTimeInfo>(),
-		std::make_unique<TestAllTransformsInfo>()
+		std::make_unique<TestAllTransformsInfo>(),
+		std::make_unique<CmpSumAndDifferenceAndTransformInfo>()
 	};
 
 	return std::vector<std::unique_ptr<ITestFunctionInfo>>(
@@ -1300,12 +1311,37 @@ inline static std::unique_ptr<series_base<T, K>> create_series_by_id(series_id_t
 	}
 }
 
+inline remainder_type get_variant(std::string type) {
+	if (type == "u")
+		return remainder_type::u_variant;
+	if (type == "t")
+		return remainder_type::t_variant;
+	if (type == "v")
+		return remainder_type::v_variant;
+	if (type == "t_wave")
+		return remainder_type::t_wave_variant;
+	if (type == "v_wave")
+		return remainder_type::v_wave_variant;
+	return remainder_type::u_variant;
+}
+
 /**
  * @brief Helper function to get transformation by ID
  */
 template <std::floating_point T, std::unsigned_integral K, typename SeriesType>
 inline static std::unique_ptr<series_acceleration<T, K, SeriesType>>
 create_transformation_by_id(transformation_id_t id, SeriesType series, bool is_alternating = false) {
+	// Common parameters that might be needed
+	T BETA_Levin_S_algorithm			= static_cast<T>(1);	//parameter for LevinType transformations algorithm
+	T BETA_Levin_algorithm				= static_cast<T>(1);	//parameter for LevinType transformations algorithm
+	T GAMMA_Levin_M_algorithm			= static_cast<T>(10);	//parameter for LevinType transformations algorithm
+	T GAMMA_rho_Wynn_algorithm			= static_cast<T>(2);	//parameter for gamma modification
+	T RHO_rho_Wynn_algorithm			= static_cast<T>(1);	//parameter for gamma-rho modification
+	T EPSILON_algorithm_3				= static_cast<T>(1e-3);	//parameter for levin_recursion algorithm
+
+	bool use_standard	= false;
+	bool recursive		= false;
+	std::string type;
 
 	if (id == shanks_transformation_id) {
 		if (is_alternating)
@@ -1319,27 +1355,68 @@ create_transformation_by_id(transformation_id_t id, SeriesType series, bool is_a
 	case epsilon_algorithm_2_id:
 		return std::make_unique<wynn_epsilon_2_algorithm<T, K, SeriesType>>(series);
 	case S_algorithm_id:
-		return std::make_unique<levin_sidi_s_algorithm<T, K, SeriesType>>(series);
+		std::cout << "Choose what type of transformation u, t, v, t_wave, v_wave: ";	std::cin >> type;
+		std::cout << "Use standart BETA value? 1<-true or 0<-false : ";					std::cin >> use_standard;
+		if (!use_standard) {
+			std::cout << "Enter parameter BETA: "; std::cin >> BETA_Levin_S_algorithm;
+		}
+		return std::make_unique<levin_sidi_s_algorithm<T, K, SeriesType>>(series, get_variant(type), false, BETA_Levin_S_algorithm);
 	case D_algorithm_id:
-		return std::make_unique<drummond_d_algorithm<T, K, SeriesType>>(series, remainder_type::t_variant);
+		std::cout << "Choose what type of transformation u, t, v, t_wave, v_wave: ";	std::cin >> type;
+		return std::make_unique<drummond_d_algorithm<T, K, SeriesType>>(series, get_variant(type), false);
 	case chang_epsilon_algorithm_id:
 		return std::make_unique<chang_wynn_algorithm<T, K, SeriesType>>(series);
 	case M_algorithm_id:
-		return std::make_unique<levin_sidi_m_algorithm<T, K, SeriesType>>(series);
+		std::cout << "Choose what type of transformation u, t, v, t_wave, v_wave: ";	std::cin >> type;
+		std::cout << "Use standart GAMMA value? 1<-true or 0<-false : ";				std::cin >> use_standard;
+		if (!use_standard) {
+			std::cout << "Enter parameter GAMMA: "; std::cin >> GAMMA_Levin_M_algorithm;
+		}
+		return std::make_unique<levin_sidi_m_algorithm<T, K, SeriesType>>(series, get_variant(type), GAMMA_Levin_M_algorithm);
 	case weniger_transformation_id:
 		return std::make_unique<weniger_algorithm<T, K, SeriesType>>(series);
 	case rho_wynn_transformation_id:
+		std::cout << "Classic (0), gamma (1), gamma-rho (2): "; std::cin >> type;
+		if (type == "0")
+			return std::make_unique<wynn_rho_algorithm<T, K, SeriesType>>(series, numerator_type::rho_variant);
+		if (type == "1") {
+			std::cout << "Use standart GAMMA value? 1<-true or 0<-false : "; std::cin >> use_standard;
+			if (!use_standard) {
+				std::cout << "Enter parameter GAMMA: "; std::cin >> GAMMA_rho_Wynn_algorithm;
+			}
+			return std::make_unique<wynn_rho_algorithm<T, K, SeriesType>>(series, numerator_type::generalized_variant, GAMMA_rho_Wynn_algorithm);
+		}
+		if (type == "2") {
+			std::cout << "Use standart GAMMA value? 1<-true or 0<-false : "; std::cin >> use_standard;
+			if (!use_standard) {
+				std::cout << "Enter parameter GAMMA: "; std::cin >> GAMMA_rho_Wynn_algorithm;
+			}
+			std::cout << "Use standart RHO value? 1<-true or 0<-false : "; std::cin >> use_standard;
+			if (!use_standard) {
+				std::cout << "Enter parameter rho: "; std::cin >> RHO_rho_Wynn_algorithm;
+			}
+			return std::make_unique<wynn_rho_algorithm<T, K, SeriesType>>(series, numerator_type::gamma_rho_variant, GAMMA_rho_Wynn_algorithm, RHO_rho_Wynn_algorithm);
+		}
 		return std::make_unique<wynn_rho_algorithm<T, K, SeriesType>>(series);
 	case brezinski_theta_transformation_id:
 		return std::make_unique<brezinski_theta_algorithm<T, K, SeriesType>>(series);
 	case epsilon_algorithm_3_id:
-		return std::make_unique<wynn_epsilon_3_algorithm<T, K, SeriesType>>(series);
+		std::cout << "Use standart EPSILON value? 1<-true or 0<-false : "; std::cin >> use_standard;
+		if (!use_standard) {
+			std::cout << "Enter parameter EPSILON: "; std::cin >> EPSILON_algorithm_3;
+		}
+		return std::make_unique<wynn_epsilon_3_algorithm<T, K, SeriesType>>(series, EPSILON_algorithm_3);
 	case W_algorithm_id:
 		return std::make_unique<lubkin_w_algorithm<T, K, SeriesType>>(series);
 	case richardson_algorithm_id:
 		return std::make_unique<richardson_algorithm<T, K, SeriesType>>(series);
 	case L_algorithm_id:
-		return std::make_unique<levin_algorithm<T, K, SeriesType>>(series);
+		std::cout << "Choose what type of transformation u, t, v, t_wave, v_wave: ";	std::cin >> type;
+		std::cout << "Use standart BETA value? 1<-true or 0<-false : ";					std::cin >> use_standard;
+		if (!use_standard) {
+			std::cout << "Enter parameter BETA: "; std::cin >> BETA_Levin_algorithm;
+		}
+		return std::make_unique<levin_algorithm<T, K, SeriesType>>(series, get_variant(type), false, BETA_Levin_algorithm);
 	case Ford_Sidi_algorithm_two_id:
 		return std::make_unique<ford_sidi_2_algorithm<T, K, SeriesType>>(series);
 	case Ford_Sidi_algorithm_three_id:
@@ -1386,12 +1463,14 @@ inline static void main_testing_function()
 	);
 
 	//choosing testing function
-	T beta_Levin_S_algorithm = T{};
-	T gamma_Levin_M_algorithm = T{};
-	T gamma_rho_Wynn_algorithm = T{};
-	T RHO_rho_Wynn_algorithm = T{};
-	T beta_levin_recursion_algorithm = T{};
-	T epsilon_algorithm_3 = T{};
+	T BETA_Levin_S_algorithm			= static_cast<T>(1);	//parameter for LevinType transformations algorithm
+	T BETA_Levin_algorithm				= static_cast<T>(1);	//parameter for LevinType transformations algorithm
+	T GAMMA_Levin_M_algorithm			= static_cast<T>(10);	//parameter for LevinType transformations algorithm
+	T GAMMA_rho_Wynn_algorithm			= static_cast<T>(2);	//parameter for gamma modification
+	T RHO_rho_Wynn_algorithm			= static_cast<T>(1);	//parameter for gamma-rho modification
+	T EPSILON_algorithm_3				= static_cast<T>(1e-3);	//parameter for levin_recursion algorithm
+
+	bool use_standard = false;		
 
 	print_test_function_info();
 	K function_id = read_input<K>();
@@ -1430,6 +1509,41 @@ inline static void main_testing_function()
 		break;
 	case test_function_id_t::test_all_transforms_id:
 	{
+		std::cout << "Use standart BETA_Levin_S_algorithm value? 1<-true or 0<-false : "; std::cin >> use_standard;
+
+		if (!use_standard) {
+			std::cout << "Enter parameter BETA_Levin_S_algorithm: "; std::cin >> BETA_Levin_S_algorithm;
+		}
+		else BETA_Levin_S_algorithm = 1;
+
+		std::cout << "Use standart GAMMA_Levin_M_algorithm value? 1<-true or 0<-false : "; std::cin >> use_standard;
+
+		if (!use_standard) {
+			std::cout << "Enter parameter GAMMA_Levin_M_algorithm: "; std::cin >> GAMMA_Levin_M_algorithm;
+		}
+		else GAMMA_Levin_M_algorithm = 10;
+
+		std::cout << "Use standart GAMMA_rho_Wynn_algorithm value? 1<-true or 0<-false : "; std::cin >> use_standard;
+
+		if (!use_standard) {
+			std::cout << "Enter parameter GAMMA_rho_Wynn_algorithm: "; std::cin >> GAMMA_rho_Wynn_algorithm;
+		}
+		else GAMMA_rho_Wynn_algorithm = 2;
+
+		std::cout << "Use standart RHO_rho_Wynn_algorithm value? 1<-true or 0<-false : "; std::cin >> use_standard;
+
+		if (!use_standard) {
+			std::cout << "Enter parameter RHO_rho_Wynn_algorithm: "; std::cin >> RHO_rho_Wynn_algorithm;
+		}
+		else RHO_rho_Wynn_algorithm = 1;
+
+		std::cout << "Use standart EPSILON_algorithm_3 value? 1<-true or 0<-false : "; std::cin >> use_standard;
+
+		if (!use_standard) {
+			std::cout << "Enter parameter EPSILON_algorithm_3: "; std::cin >> EPSILON_algorithm_3;
+		}
+		else EPSILON_algorithm_3 = T(1e-3);
+
 		// Testing all functions for series
 		auto create_all_transformations = [&]() {
 			std::vector<std::unique_ptr<series_acceleration<T, K, decltype(series.get())>>> transforms;
@@ -1447,16 +1561,16 @@ inline static void main_testing_function()
 			transforms.push_back(std::make_unique<wynn_epsilon_2_algorithm<T, K, decltype(series.get())>>(series.get()));
 
 			// epsilon v-3
-			transforms.push_back(std::make_unique<wynn_epsilon_3_algorithm<T, K, decltype(series.get())>>(series.get(), epsilon_algorithm_3));
+			transforms.push_back(std::make_unique<wynn_epsilon_3_algorithm<T, K, decltype(series.get())>>(series.get(), EPSILON_algorithm_3));
 
 			// rho-wynn classic
 			transforms.push_back(std::make_unique<wynn_rho_algorithm<T, K, decltype(series.get())>>(series.get(), numerator_type::rho_variant));
 
 			// rho-wynn generalized
-			transforms.push_back(std::make_unique<wynn_rho_algorithm<T, K, decltype(series.get())>>(series.get(), numerator_type::generalized_variant));
+			transforms.push_back(std::make_unique<wynn_rho_algorithm<T, K, decltype(series.get())>>(series.get(), numerator_type::generalized_variant, GAMMA_rho_Wynn_algorithm));
 
 			// rho-wynn gamma-rho
-			transforms.push_back(std::make_unique<wynn_rho_algorithm<T, K, decltype(series.get())>>(series.get(), numerator_type::gamma_rho_variant));
+			transforms.push_back(std::make_unique<wynn_rho_algorithm<T, K, decltype(series.get())>>(series.get(), numerator_type::gamma_rho_variant, GAMMA_rho_Wynn_algorithm, RHO_rho_Wynn_algorithm));
 
 			// brezinski-theta
 			transforms.push_back(std::make_unique<brezinski_theta_algorithm<T, K, decltype(series.get())>>(series.get()));
@@ -1464,23 +1578,35 @@ inline static void main_testing_function()
 			// chang epsilon wynn
 			transforms.push_back(std::make_unique<chang_wynn_algorithm<T, K, decltype(series.get())>>(series.get()));
 
-			// levin standart
-			transforms.push_back(std::make_unique<levin_algorithm<T, K, decltype(series.get())>>(series.get()));
-
-			// levin recurcive
-			transforms.push_back(std::make_unique<levin_algorithm<T, K, decltype(series.get())>>(series.get(), remainder_type::u_variant, true));
-
 			// levin-sidi S U
-			transforms.push_back(std::make_unique<levin_sidi_s_algorithm<T, K, decltype(series.get())>>(series.get(), remainder_type::u_variant, false));
+			transforms.push_back(std::make_unique<levin_algorithm<T, K, decltype(series.get())>>(series.get(), remainder_type::u_variant, false, BETA_Levin_algorithm));
 
 			// levin-sidi S T
-			transforms.push_back(std::make_unique<levin_sidi_s_algorithm<T, K, decltype(series.get())>>(series.get(), remainder_type::t_variant, false));
-
-			// levin-sidi S T-WAVE
-			transforms.push_back(std::make_unique<levin_sidi_s_algorithm<T, K, decltype(series.get())>>(series.get(), remainder_type::t_wave_variant, false));
+			transforms.push_back(std::make_unique<levin_algorithm<T, K, decltype(series.get())>>(series.get(), remainder_type::t_variant, false, BETA_Levin_algorithm));
 
 			// levin-sidi S V
-			transforms.push_back(std::make_unique<levin_sidi_s_algorithm<T, K, decltype(series.get())>>(series.get(), remainder_type::v_variant, false));
+			transforms.push_back(std::make_unique<levin_algorithm<T, K, decltype(series.get())>>(series.get(), remainder_type::v_variant, false, BETA_Levin_algorithm));
+
+			// levin-sidi S T-WAVE
+			transforms.push_back(std::make_unique<levin_algorithm<T, K, decltype(series.get())>>(series.get(), remainder_type::t_wave_variant, false, BETA_Levin_algorithm));
+
+			// levin-sidi S V-WAVE
+			transforms.push_back(std::make_unique<levin_algorithm<T, K, decltype(series.get())>>(series.get(), remainder_type::v_wave_variant, false, BETA_Levin_algorithm));
+
+			// levin-sidi S U
+			transforms.push_back(std::make_unique<levin_sidi_s_algorithm<T, K, decltype(series.get())>>(series.get(), remainder_type::u_variant, false, BETA_Levin_S_algorithm));
+
+			// levin-sidi S T
+			transforms.push_back(std::make_unique<levin_sidi_s_algorithm<T, K, decltype(series.get())>>(series.get(), remainder_type::t_variant, false, BETA_Levin_S_algorithm));
+
+			// levin-sidi S V
+			transforms.push_back(std::make_unique<levin_sidi_s_algorithm<T, K, decltype(series.get())>>(series.get(), remainder_type::v_variant, false, BETA_Levin_S_algorithm));
+
+			// levin-sidi S T-WAVE
+			transforms.push_back(std::make_unique<levin_sidi_s_algorithm<T, K, decltype(series.get())>>(series.get(), remainder_type::t_wave_variant, false, BETA_Levin_S_algorithm));
+
+			// levin-sidi S V-WAVE
+			transforms.push_back(std::make_unique<levin_sidi_s_algorithm<T, K, decltype(series.get())>>(series.get(), remainder_type::v_wave_variant, false, BETA_Levin_S_algorithm));
 
 			// levin-sidi D U
 			transforms.push_back(std::make_unique<drummond_d_algorithm<T, K, decltype(series.get())>>(series.get(), remainder_type::u_variant, false));
@@ -1488,23 +1614,29 @@ inline static void main_testing_function()
 			// levin-sidi D T
 			transforms.push_back(std::make_unique<drummond_d_algorithm<T, K, decltype(series.get())>>(series.get(), remainder_type::t_variant, false));
 
-			// levin-sidi D T-WAVE
-			transforms.push_back(std::make_unique<drummond_d_algorithm<T, K, decltype(series.get())>>(series.get(), remainder_type::t_wave_variant, false));
-
 			// levin-sidi D V
 			transforms.push_back(std::make_unique<drummond_d_algorithm<T, K, decltype(series.get())>>(series.get(), remainder_type::v_variant, false));
 
+			// levin-sidi D T-WAVE
+			transforms.push_back(std::make_unique<drummond_d_algorithm<T, K, decltype(series.get())>>(series.get(), remainder_type::t_wave_variant, false));
+
+			// levin-sidi D V-WAVE
+			transforms.push_back(std::make_unique<drummond_d_algorithm<T, K, decltype(series.get())>>(series.get(), remainder_type::v_wave_variant, false));
+
 			// levin-sidi M U
-			transforms.push_back(std::make_unique<levin_sidi_m_algorithm<T, K, decltype(series.get())>>(series.get(), remainder_type::u_variant));
+			transforms.push_back(std::make_unique<levin_sidi_m_algorithm<T, K, decltype(series.get())>>(series.get(), remainder_type::u_variant, GAMMA_Levin_M_algorithm));
 
 			// levin-sidi M T
-			transforms.push_back(std::make_unique<levin_sidi_m_algorithm<T, K, decltype(series.get())>>(series.get(), remainder_type::t_variant));
+			transforms.push_back(std::make_unique<levin_sidi_m_algorithm<T, K, decltype(series.get())>>(series.get(), remainder_type::t_variant, GAMMA_Levin_M_algorithm));
+
+			// levin-sidi M V
+			transforms.push_back(std::make_unique<levin_sidi_m_algorithm<T, K, decltype(series.get())>>(series.get(), remainder_type::v_variant, GAMMA_Levin_M_algorithm));
 
 			// levin-sidi M T-WAVE
-			transforms.push_back(std::make_unique<levin_sidi_m_algorithm<T, K, decltype(series.get())>>(series.get(), remainder_type::t_wave_variant));
+			transforms.push_back(std::make_unique<levin_sidi_m_algorithm<T, K, decltype(series.get())>>(series.get(), remainder_type::t_wave_variant, GAMMA_Levin_M_algorithm));
 
 			// levin-sidi M V-WAVE
-			transforms.push_back(std::make_unique<levin_sidi_m_algorithm<T, K, decltype(series.get())>>(series.get(), remainder_type::v_wave_variant));
+			transforms.push_back(std::make_unique<levin_sidi_m_algorithm<T, K, decltype(series.get())>>(series.get(), remainder_type::v_wave_variant, GAMMA_Levin_M_algorithm));
 
 			// weniger
 			transforms.push_back(std::make_unique<weniger_algorithm<T, K, decltype(series.get())>>(series.get()));
@@ -1539,6 +1671,11 @@ inline static void main_testing_function()
 		}
 		break;
 	}
+	case test_function_id_t::cmp_sum_difference_and_transform_id:
+		T S;
+		std::cout << "Enter the S to which the series converges : "; std::cin >> S;
+		cmp_sum_difference_and_transform(S, n, order, std::move(series.get()), std::move(transform.get()));
+		break;
 	default:
 		throw std::domain_error("wrong function_id");
 	}

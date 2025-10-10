@@ -150,7 +150,7 @@ T chang_wynn_algorithm<T, K, series_templ>::operator()(const K n, const K order)
 
         // Denominator: ΔS_{n+2} * Δ²S_n - ΔS_n * Δ²S_{n+1}
         down = this->series->operator()(i3) * coef2;
-        down -= this->series->operator()(i1) * coef;
+        down-= this->series->operator()(i1) * coef;
         down = static_cast<T>(1) / down; // Reciprocal for division.
          
         // Compute T₂⁽ⁿ⁾ = S_{n+1} - (up * down)
