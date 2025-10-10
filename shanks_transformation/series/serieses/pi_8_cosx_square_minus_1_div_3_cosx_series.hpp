@@ -45,7 +45,7 @@ pi_8_cosx_square_minus_1_div_3_cosx_series<T, K>::pi_8_cosx_square_minus_1_div_3
 template <std::floating_point T, std::unsigned_integral K>
 constexpr T pi_8_cosx_square_minus_1_div_3_cosx_series<T, K>::operator()(K n) const
 {
-	const K temp = static_cast<K>(std::fma(2, n, 1));
-	return this->minus_one_raised_to_power_n(n) * static_cast<T>(std::cos(temp + static_cast<T>(2))) * static_cast<T>(this->x) /
-		static_cast<T>((temp * (temp + 2) * (temp + 4))); // (52.2) [Rows.pdf]
+	const T temp = static_cast<T>(std::fma(2, n, 1));
+	return this->minus_one_raised_to_power_n(n) * static_cast<T>(std::cos((temp + static_cast<T>(2)) * this->x)) /
+		static_cast<T>(temp * (temp + static_cast<T>(2)) * (temp + static_cast<T>(4))); // (52.2) [Rows.pdf]
 }
