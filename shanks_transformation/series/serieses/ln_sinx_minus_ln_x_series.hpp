@@ -76,7 +76,7 @@ SeriesResult<T> ln_sinx_minus_ln_x_series<T, K>::generateSeries(
 	std::vector<T> vecSn(vecSize, convertWithPrec<T>(0.0, series_base<T, K>::precision));
 
 	for(K j = static_cast<K>(0); j < vecSize; ++j){
-		vecAn[j] += log(static_cast<T>(1) - x * x / static_cast<T>((j+1)*(j+1)) / static_cast<T>(std::numbers::pi) / static_cast<T>(std::numbers::pi));
+		vecAn[j] += log(static_cast<T>(1) - x * x  / (static_cast<T>((j+1)*(j+1)) * static_cast<T>(std::numbers::pi) * static_cast<T>(std::numbers::pi)));
 		vecSn[j] += vecSn[j == static_cast<K>(0) ? j : j-static_cast<K>(1)] + vecAn[j];
 	}
 

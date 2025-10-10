@@ -72,9 +72,12 @@ SeriesResult<T> arcsin_x2_series<T, K>::generateSeries(
 	std::vector<T> vecAn(vecSize, convertWithPrec<T>(0.0, series_base<T, K>::precision)); vecAn[0] = x * x;
 	std::vector<T> vecSn(vecSize, convertWithPrec<T>(0.0, series_base<T, K>::precision)); vecSn[0] = x * x;
 
+	using std::pow;
+
+	const T x_4 = pow(x, static_cast<T>(4));
 
 	for(K j = static_cast<K>(1); j < vecSize; ++j){
-		vecAn[j] += vecAn[j-1] * x * x * static_cast<T>(fma(2,j-1,1)*fma(2,j-1,1)) / static_cast<T>(2*j*fma(2,j,1));
+		vecAn[j] += vecAn[j-1] * x_4 * static_cast<T>(fma(2,j-1,1)*fma(2,j-1,1)) / static_cast<T>(2*j*fma(2,j,1));
 		vecSn[j] += vecSn[j-static_cast<K>(1)] + vecAn[j];
 	}
 

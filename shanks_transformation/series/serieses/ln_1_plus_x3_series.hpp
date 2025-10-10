@@ -77,7 +77,7 @@ SeriesResult<T> ln_1_plus_x3_series<T, K>::generateSeries(
 	std::vector<T> vecSn(vecSize, convertWithPrec<T>(0.0, series_base<T, K>::precision)); vecSn[0] = x_3;
 
 	for(K j = static_cast<K>(1); j < vecSize; ++j){
-		vecAn[j] += vecAn[j-static_cast<K>(1)] * x_3  * static_cast<T>(j) / static_cast<T>(j + 1);
+		vecAn[j] += static_cast<T>(-1) * vecAn[j-static_cast<K>(1)] * x_3  * static_cast<T>(j) / static_cast<T>(j + 1);
 		vecSn[j] += vecSn[j-static_cast<K>(1)] + vecAn[j];
 	}
 

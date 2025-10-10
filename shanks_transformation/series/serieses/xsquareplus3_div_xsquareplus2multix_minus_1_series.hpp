@@ -71,9 +71,9 @@ SeriesResult<T> xsquareplus3_div_xsquareplus2multix_minus_1_series<T, K>::genera
 
 	using std::pow;
 
-	for(K j = static_cast<K>(1); j < vecSize; ++j){
+	for(K j = static_cast<K>(0); j < vecSize; ++j){
 		vecAn[j] += static_cast<T>(0.5) * minus_one_raised_to_power_n<T, K>(j) * static_cast<T>(pow(3, j+2) - 7) * pow(x - static_cast<T>(1), static_cast<T>(j)) / static_cast<T>(pow(3, j+1));
-		vecSn[j] += vecSn[j-static_cast<K>(1)] + vecAn[j];
+		vecSn[j] += vecSn[j == static_cast<K>(0) ? j : j-static_cast<K>(1)] + vecAn[j];
 	}
 
 	return SeriesResult<T>{.Sn = vecSn, .an = vecAn };

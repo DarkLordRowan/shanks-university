@@ -44,13 +44,13 @@ public:
             if (x.real() <= float_precision(std::numbers::pi)){
                 return  static_cast<T>(float_precision(std::numbers::pi, series_base<T, K>::precision)) * x - x * x;
             } else {
-                return x * x - static_cast<T>(3 * float_precision(std::numbers::pi, series_base<T, K>::precision)) * x 
-				+ static_cast<T>(2 * float_precision(std::numbers::pi, series_base<T, K>::precision)) *
+                return x * x - static_cast<T>(float_precision(3.0 * std::numbers::pi, series_base<T, K>::precision)) * x 
+				+ static_cast<T>(float_precision(2.0*std::numbers::pi, series_base<T, K>::precision)) *
 				 static_cast<T>(float_precision(std::numbers::pi, series_base<T, K>::precision));
             }
 
         } else {
-            if (x <= static_cast<T>(0)){
+            if (x <= static_cast<T>(std::numbers::pi)){
                 return static_cast<T>(std::numbers::pi) * x - x * x;
             } else {
                 return x * x - static_cast<T>(3.0 * std::numbers::pi) * x + static_cast<T>(2.0 * std::numbers::pi) * static_cast<T>(std::numbers::pi);

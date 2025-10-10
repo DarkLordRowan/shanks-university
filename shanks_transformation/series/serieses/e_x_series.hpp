@@ -42,6 +42,7 @@ public:
 	inline constexpr T calculateSum(const T& x){
 
 		return 0;
+
 	}
 
 };

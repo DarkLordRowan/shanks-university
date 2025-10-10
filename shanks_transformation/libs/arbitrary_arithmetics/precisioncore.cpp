@@ -11457,7 +11457,7 @@ float_precision erfc(const float_precision& x)
 //
 // Lambert function in float_precision using Boyd quadratic iteration
 //
-float_precision LambertW0(const float_precision& x)
+float_precision lambertW0(const float_precision& x)
 {
 	// Handle NaN
 	if (isnan(x))

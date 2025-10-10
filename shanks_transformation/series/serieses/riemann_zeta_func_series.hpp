@@ -41,11 +41,12 @@ public:
 
 	inline T calculateSum(const T& x){
 
-		if constexpr(std::is_floating_point<T>::value || std::is_same<T, float_precision>::value){
-			const float_precision value = float_precision(x, series_base<T,K>::precision);
-			return static_cast<T>(zeta(value));
-		} else {
-			return 0;  aa
+		if constexpr (std::is_same<T, complex_precision<float_precision>>::value){
+            return 0;
+        } else if constexpr (std::is_same<T, float_precision>::value){
+            return abs(zeta(x));
+        } else {
+			return static_cast<T>(abs(zeta(float_precision(x, series_base<T,K>::precision))));
 		}
 
 	}
@@ -78,9 +79,9 @@ SeriesResult<T> riemann_zeta_func_series<T, K>::generateSeries(
 
     using std::pow;
 
-	for(K j = static_cast<K>(1); j < vecSize; ++j){
+	for(K j = static_cast<K>(0); j < vecSize; ++j){
 		vecAn[j] += pow(static_cast<T>(j+1), -x);
-		vecSn[j] += vecSn[j-static_cast<K>(1)] + vecAn[j];
+		vecSn[j] += vecSn[j == static_cast<K>(0) ? j : j-static_cast<K>(1)] + vecAn[j];
 	}
 
 	return SeriesResult<T>{.Sn = vecSn, .an = vecAn };

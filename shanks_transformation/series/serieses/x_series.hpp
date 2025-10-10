@@ -67,12 +67,14 @@ SeriesResult<T> x_series<T, K>::generateSeries(
 		series_base<T, K>::precision = std::max(x.real().precision(), x.imag().precision());
 	}
 
-	std::vector<T> vecAn(vecSize, convertWithPrec<T>(0.0, series_base<T, K>::precision)); vecAn[0] = x;
-	std::vector<T> vecSn(vecSize, convertWithPrec<T>(0.0, series_base<T, K>::precision)); vecSn[0] = x;
+	using std::sin;
 
-	for(K j = static_cast<K>(1); j < vecSize; ++j){
-		vecAn[j] += static_cast<T>(-1) * vecAn[j-static_cast<K>(1)] * x * x / static_cast<T>(j * (static_cast<K>(4) * j + static_cast<K>(2)));
-		vecSn[j] += vecSn[j-static_cast<K>(1)] + vecAn[j];
+	std::vector<T> vecAn(vecSize, convertWithPrec<T>(0.0, series_base<T, K>::precision));
+	std::vector<T> vecSn(vecSize, convertWithPrec<T>(0.0, series_base<T, K>::precision));
+
+	for(K j = static_cast<K>(0); j < vecSize; ++j){
+		vecAn[j] += static_cast<T>(2) * minus_one_raised_to_power_n<T, K>(j) / static_cast<T>(j+1) * sin(static_cast<T>(j+1) * x);
+		vecSn[j] += vecSn[j == static_cast<K>(0) ? j : j-static_cast<K>(1)] + vecAn[j];
 	}
 
 	return SeriesResult<T>{.Sn = vecSn, .an = vecAn };

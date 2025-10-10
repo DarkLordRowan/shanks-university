@@ -44,9 +44,7 @@ public:
 
         using std::pow;
 
-        static_cast<T>(fact<K>(m)) / std::pow(static_cast<T>(1) - x, static_cast<T>(m+1));
-
-
+        return static_cast<T>(fact<K>(m)) / pow(static_cast<T>(1) - x, static_cast<T>(m+1));
 	}
 
 };
@@ -55,10 +53,9 @@ template<AcceptedLike T, UnsignedIntLike K>
 SeriesResult<T> m_fact_1mx_mp1_inverse_series<T, K>::generateSeries(
     const T& x , 
 	const K vecSize, 
-	const T& addTParameter,
-	const K addKParameter
+	const T& addTParameter, //not needed
+	const K addKParameter //m 
 ) {
-
 	if(checkDomain(x)){
 		series_base<T, K>::throw_domain_error("x is not finite or |x|>=1");
 	}
@@ -70,22 +67,15 @@ SeriesResult<T> m_fact_1mx_mp1_inverse_series<T, K>::generateSeries(
 	}
 
 	series_base<T,K>::x_ = x;
-	series_base<T,K>::sum = calculateSum(x);
+	series_base<T,K>::sum = calculateSum(x, addKParameter);
+	std::vector<T> vecAn(vecSize, convertWithPrec<T>(0.0, series_base<T, K>::precision)); vecAn[0] = static_cast<T>(fact<K>(addKParameter));
+	std::vector<T> vecSn(vecSize, convertWithPrec<T>(0.0, series_base<T, K>::precision)); vecSn[0] = static_cast<T>(fact<K>(addKParameter));
 
-	std::vector<T> vecAn(vecSize, convertWithPrec<T>(0.0, series_base<T, K>::precision));
-	std::vector<T> vecSn(vecSize, convertWithPrec<T>(0.0, series_base<T, K>::precision));
-
-    using std::cos;
-
-    vecAn[0] = static_cast<T>(-4) * cos(static_cast<T>(2)*x) / static_cast<T>(3.0 * std::numbers::pi);
-    vecSn[0] = static_cast<T>(-4) * cos(static_cast<T>(2)*x) / static_cast<T>(3.0 * std::numbers::pi);
 	for(K j = static_cast<K>(1); j < vecSize; ++j){
-		vecAn[j] += static_cast<T>(-4) * cos(static_cast<T>(fma(2,j,2))*x) / static_cast<T>(fma(2,j,1)*fma(2,j,3)) / static_cast<T>(std::numbers::pi);
+		vecAn[j] += vecAn[j-1] * x * static_cast<T>(addKParameter + j) / static_cast<T>(j);
 		vecSn[j] += vecSn[j-static_cast<K>(1)] + vecAn[j];
 	}
 
 	return SeriesResult<T>{.Sn = vecSn, .an = vecAn };
-
-    aaaaa
 
 }

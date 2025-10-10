@@ -40,11 +40,14 @@ public:
 
 	inline T calculateSum(const T& x){
 
-		if constexpr(std::is_floating_point<T>::value || std::is_same<T, float_precision>::value){
-			const float_precision value = float_precision(x, series_base<T,K>::precision);
-			return static_cast<T>(zeta(value - static_cast<T>(1))) / static_cast<T>(zeta(value));
-		} else {
-			return 0;  aa
+		//поменять библу на CLN
+
+		if constexpr (std::is_same<T, complex_precision<float_precision>>::value){
+            return 0;
+        } else if constexpr (std::is_same<T, float_precision>::value){
+            return abs(zeta(x - static_cast<T>(1)) / zeta(x));
+        } else {
+			return abs(static_cast<T>(zeta(x - static_cast<T>(1))) / static_cast<T>(zeta(x)));
 		}
 	}
 
@@ -76,9 +79,9 @@ SeriesResult<T> riemann_zeta_func_xmin1_div_Riemann_zeta_func_x_series<T, K>::ge
 
     using std::pow;
 
-	for(K j = static_cast<K>(1); j < vecSize; ++j){
-		vecAn[j] += ;
-		vecSn[j] += vecSn[j-static_cast<K>(1)] + vecAn[j];
+	for(K j = static_cast<K>(0); j < vecSize; ++j){
+		vecAn[j] += phi<T,K>(j+1) / pow(static_cast<T>(j+1), x);
+		vecSn[j] += vecSn[j == static_cast<K>(0) ? j : j-static_cast<K>(1)] + vecAn[j];
 	}
 
 	return SeriesResult<T>{.Sn = vecSn, .an = vecAn };
