@@ -41,8 +41,6 @@ public:
 
 	inline constexpr T calculateSum(const T& x){
 
-		using std::sin;
-
         using Complex = complex_precision<float_precision>;
 
 		if constexpr (std::is_same<T, Complex>::value){

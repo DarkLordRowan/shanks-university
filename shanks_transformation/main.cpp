@@ -20,8 +20,6 @@
 #include "methods.hpp"
 #include "series.hpp"
 #include "noise/noise_generator.hpp"
-#include "series/serieses/half_asin_two_x_series.hpp"
-#include "series/serieses/mean_sinh_sin_series.hpp"
 
 template<UnsignedIntLike K>
 void test_on_types(){
@@ -194,12 +192,12 @@ void testRows(){
 		{											     half_asin_two_x_series_id,[]() { return std::make_unique<half_asin_two_x_series<T,K>>();}},
 		{									  half_minus_sinx_multi_pi_4_series_id,[]() { return std::make_unique<half_minus_sinx_multi_pi_4_series<T,K>>();}},
 		{							  half_multi_ln_1div2multi1minuscosx_series_id,[]() { return std::make_unique<half_multi_ln_1div2multi1minuscosx_series<T,K>>();}},
-		//{										   incomplete_Gamma_func_series_id,[]() { return std::make_unique<incomplete_Gamma_func_series<T,K>>();}},
+		{										   incomplete_Gamma_func_series_id,[]() { return std::make_unique<incomplete_Gamma_func_series<T,K>>();}},
 		{												     inverse_1mx_series_id,[]() { return std::make_unique<inverse_1mx_series<T,K>>();}},
 		{											   inverse_sqrt_1m4x_series_id,[]() { return std::make_unique<inverse_sqrt_1m4x_series<T,K>>();}},
 		//{														    Ja_x_series_id,[]() { return std::make_unique<Ja_x_series<T,K>>();}},
 		{															 k_x_series_id,[]() { return std::make_unique<k_x_series<T,K>>();}},
-		//{												  lambert_W_func_series_id,[]() { return std::make_unique<lambert_W_func_series<T,K>>();}},
+		{												  lambert_W_func_series_id,[]() { return std::make_unique<lambert_W_func_series<T,K>>();}},
 		{											  ln13_min_ln7_div_7_series_id,[]() { return std::make_unique<ln13_min_ln7_div_7_series<T,K>>();}},
 		{													    ln1_m_x2_series_id,[]() { return std::make_unique<ln1_m_x2_series<T,K>>();}},
 		{														   ln1mx_series_id,[]() { return std::make_unique<ln1mx_series<T,K>>();}},
@@ -212,8 +210,8 @@ void testRows(){
 		{											  ln_sinx_minus_ln_x_series_id,[]() { return std::make_unique<ln_sinx_minus_ln_x_series<T,K>>();}},
 		{							    ln_x_plus_one_x_minus_one_halfed_series_id,[]() { return std::make_unique<ln_x_plus_one_x_minus_one_halfed_series<T,K>>();}},
 		{												   mean_sinh_sin_series_id,[]() { return std::make_unique<mean_sinh_sin_series<T,K>>();}},
-		//{										  m_fact_1mx_mp1_inverse_series_id,[]() { return std::make_unique<m_fact_1mx_mp1_inverse_series<T,K>>();}},
-		//{							    minus_3_div_4_or_x_minus_3_div_4_series_id,[]() { return std::make_unique<minus_3_div_4_or_x_minus_3_div_4_series<T,K>>();}},
+		{										  m_fact_1mx_mp1_inverse_series_id,[]() { return std::make_unique<m_fact_1mx_mp1_inverse_series<T,K>>();}},
+		{							    minus_3_div_4_or_x_minus_3_div_4_series_id,[]() { return std::make_unique<minus_3_div_4_or_x_minus_3_div_4_series<T,K>>();}},
 		{											  minus_one_ned_in_n_series_id,[]() { return std::make_unique<minus_one_ned_in_n_series<T,K>>();}},
 		{										 minus_one_n_fact_n_in_n_series_id,[]() { return std::make_unique<minus_one_n_fact_n_in_n_series<T,K>>();}},
 		{											   minus_one_quarter_series_id,[]() { return std::make_unique<minus_one_quarter_series<T,K>>();}},
@@ -221,7 +219,7 @@ void testRows(){
 		{							    minus_x_minus_pi_4_or_minus_pi_4_series_id,[]() { return std::make_unique<minus_x_minus_pi_4_or_minus_pi_4_series<T,K>>();}},
 		{									 one_div_sqrt2_sin_xdivsqrt2_series_id,[]() { return std::make_unique<one_div_sqrt2_sin_xdivsqrt2_series<T,K>>();}},
 		{						  one_div_two_minus_x_multi_three_plus_x_series_id,[]() { return std::make_unique<one_div_two_minus_x_multi_three_plus_x_series<T,K>>();}},
-		//{								  one_minus_sqrt_1minus4x_div_2x_series_id,[]() { return std::make_unique<one_minus_sqrt_1minus4x_div_2x_series<T,K>>();}},
+		{								  one_minus_sqrt_1minus4x_div_2x_series_id,[]() { return std::make_unique<one_minus_sqrt_1minus4x_div_2x_series<T,K>>();}},
 		{															 one_series_id,[]() { return std::make_unique<one_series<T,K>>();}},
 		{									 one_third_pi_squared_m_nine_series_id,[]() { return std::make_unique<one_third_pi_squared_m_nine_series<T,K>>();}},
 		{										     one_twelfth_3x2_pi2_series_id,[]() { return std::make_unique<one_twelfth_3x2_pi2_series<T,K>>();}},
@@ -240,8 +238,8 @@ void testRows(){
 		{						    				   pi_squared_twelve_series_id,[]() { return std::make_unique<pi_squared_twelve_series<T,K>>();}},
 		{ pi_x_minus_x_square_square_minus_three_pi_x_plus_two_pi_square_series_id,[]() { return std::make_unique<pi_x_minus_x_square_square_minus_three_pi_x_plus_two_pi_square_series<T,K>>();}},
 		{pi_x_multi_e_xpi_plus_e_minusxpi_divided_e_xpi_minus_e_minusxpi_series_id,[]() { return std::make_unique<pi_x_multi_e_xpi_plus_e_minusxpi_divided_e_xpi_minus_e_minusxpi_series<T,K>>();}},
-		//{ 			  								   riemann_zeta_func_series_id,[]() { return std::make_unique<riemann_zeta_func_series<T,K>>();}},
-		//{ 			  	 riemann_zeta_func_xmin1_div_Riemann_zeta_func_x_series_id,[]() { return std::make_unique<riemann_zeta_func_xmin1_div_Riemann_zeta_func_x_series<T,K>>();}},
+		{ 			  								   riemann_zeta_func_series_id,[]() { return std::make_unique<riemann_zeta_func_series<T,K>>();}},
+		{ 			  	 riemann_zeta_func_xmin1_div_Riemann_zeta_func_x_series_id,[]() { return std::make_unique<riemann_zeta_func_xmin1_div_Riemann_zeta_func_x_series<T,K>>();}},
 		{ 			  	      					  series_with_ln_number1_series_id,[]() { return std::make_unique<series_with_ln_number1_series<T,K>>();}},
 		{ 			  	      					  series_with_ln_number2_series_id,[]() { return std::make_unique<series_with_ln_number2_series<T,K>>();}},
 		{ 			  	      									    sinh_series_id,[]() { return std::make_unique<sinh_series<T,K>>();}},
@@ -268,7 +266,7 @@ void testRows(){
 		{ 			  	    					  x_two_throught_squares_series_id,[]() { return std::make_unique<x_two_throught_squares_series<T,K>>();}},
 	};
 
-	T x = static_cast<T>(0.2);
+	T x = static_cast<T>(10);
 	size_t length = 60;
 
 	std::vector<std::unique_ptr<series_base<T,K>>> seriesVec;

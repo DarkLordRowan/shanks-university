@@ -141,7 +141,7 @@ enum series_id_t {
 										  incomplete_Gamma_func_series_id,
 												    inverse_1mx_series_id,
 											  inverse_sqrt_1m4x_series_id,
-														   Ja_x_series_id,
+//														   Ja_x_series_id,
 															k_x_series_id,
 												 lambert_W_func_series_id,
 											 ln13_min_ln7_div_7_series_id,
@@ -204,7 +204,7 @@ pi_x_multi_e_xpi_plus_e_minusxpi_divided_e_xpi_minus_e_minusxpi_series_id,
 				    							  x_1mx_squared_series_id,
 				    							   x_div_1minx2_series_id,
 				    								x_div_1minx_series_id,
-				    								 xmb_Jb_two_series_id,
+//				    								 xmb_Jb_two_series_id,
 				    							   x_min_sqrt_x_series_id,
 				    								 		  x_series_id,
 				    xsquareplus3_div_xsquareplus2multix_minus_1_series_id,
@@ -242,12 +242,12 @@ pi_x_multi_e_xpi_plus_e_minusxpi_divided_e_xpi_minus_e_minusxpi_series_id,
 #include "./series/serieses/half_asin_two_x_series.hpp"
 #include "./series/serieses/half_minus_sinx_multi_pi_4_series.hpp"
 #include "./series/serieses/half_multi_ln_1div2multi1minuscosx_series.hpp"
-//#include "./series/serieses/incomplete_Gamma_func_series.hpp"
+#include "./series/serieses/incomplete_Gamma_func_series.hpp"
 #include "./series/serieses/inverse_1mx_series.hpp"
 #include "./series/serieses/inverse_sqrt_1m4x_series.hpp"
 //#include "./series/serieses/Ja_x_series.hpp"
 #include "./series/serieses/k_x_series.hpp"
-//#include "./series/serieses/lambert_W_func_series.hpp"
+#include "./series/serieses/lambert_W_func_series.hpp"
 #include "./series/serieses/ln13_min_ln7_div_7_series.hpp"
 #include "./series/serieses/ln1_m_x2_series.hpp"
 #include "./series/serieses/ln1mx_series.hpp"
@@ -260,8 +260,8 @@ pi_x_multi_e_xpi_plus_e_minusxpi_divided_e_xpi_minus_e_minusxpi_series_id,
 #include "./series/serieses/ln_sinx_minus_ln_x_series.hpp"
 #include "./series/serieses/ln_x_plus_one_x_minus_one_halfed_series.hpp"
 #include "./series/serieses/mean_sinh_sin_series.hpp"
-//#include "./series/serieses/m_fact_1mx_mp1_inverse_series.hpp"
-//#include "./series/serieses/minus_3_div_4_or_x_minus_3_div_4_series.hpp"
+#include "./series/serieses/m_fact_1mx_mp1_inverse_series.hpp"
+#include "./series/serieses/minus_3_div_4_or_x_minus_3_div_4_series.hpp"
 #include "./series/serieses/minus_one_ned_in_n_series.hpp"
 #include "./series/serieses/minus_one_n_fact_n_in_n_series.hpp"
 #include "./series/serieses/minus_one_quarter_series.hpp"
@@ -269,7 +269,7 @@ pi_x_multi_e_xpi_plus_e_minusxpi_divided_e_xpi_minus_e_minusxpi_series_id,
 #include "./series/serieses/minus_x_minus_pi_4_or_minus_pi_4_series.hpp"
 #include "./series/serieses/one_div_sqrt2_sin_xdivsqrt2_series.hpp"
 #include "./series/serieses/one_div_two_minus_x_multi_three_plus_x_series.hpp"
-//#include "./series/serieses/one_minus_sqrt_1minus4x_div_2x_series.hpp"
+#include "./series/serieses/one_minus_sqrt_1minus4x_div_2x_series.hpp"
 #include "./series/serieses/one_series.hpp"
 #include "./series/serieses/one_third_pi_squared_m_nine_series.hpp"
 #include "./series/serieses/one_twelfth_3x2_pi2_series.hpp"
@@ -288,8 +288,8 @@ pi_x_multi_e_xpi_plus_e_minusxpi_divided_e_xpi_minus_e_minusxpi_series_id,
 #include "./series/serieses/pi_squared_twelve_series.hpp"
 #include "./series/serieses/pi_x_minus_x_square_square_minus_three_pi_x_plus_two_pi_square_series.hpp"
 #include "./series/serieses/pi_x_multi_e_xpi_plus_e_minusxpi_divided_e_xpi_minus_e_minusxpi_series.hpp"
-//#include "./series/serieses/riemann_zeta_func_series.hpp"
-//#include "./series/serieses/riemann_zeta_func_xmin1_div_Riemann_zeta_func_x_series.hpp"
+#include "./series/serieses/riemann_zeta_func_series.hpp"
+#include "./series/serieses/riemann_zeta_func_xmin1_div_Riemann_zeta_func_x_series.hpp"
 #include "./series/serieses/series_with_ln_number1_series.hpp"
 #include "./series/serieses/series_with_ln_number2_series.hpp"
 #include "./series/serieses/sinh_series.hpp"

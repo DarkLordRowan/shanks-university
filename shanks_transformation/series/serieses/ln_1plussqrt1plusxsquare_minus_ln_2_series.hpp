@@ -75,7 +75,7 @@ SeriesResult<T> ln_1plussqrt1plusxsquare_minus_ln_2_series<T, K>::generateSeries
 	std::vector<T> vecSn(vecSize, convertWithPrec<T>(0.0, series_base<T, K>::precision)); vecSn[0] = x * x * static_cast<T>(0.25);
 
 	for(K j = static_cast<K>(1); j < vecSize; ++j){
-		vecAn[j] += static_cast<T>(-1) * vecAn[j-static_cast<K>(1)] * x * x * static_cast<T>(fma(2,j,1)) / static_cast<T>(2 * j);
+		vecAn[j] += static_cast<T>(-1) * vecAn[j-static_cast<K>(1)] * x * x * static_cast<T>(fma(2,j,1) * j) / static_cast<T>(2 * (j+1)*(j+1));
 		vecSn[j] += vecSn[j-static_cast<K>(1)] + vecAn[j];
 	}
 

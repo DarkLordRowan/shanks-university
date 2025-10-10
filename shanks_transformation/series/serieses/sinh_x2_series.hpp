@@ -72,7 +72,7 @@ SeriesResult<T> sinh_x2_series<T, K>::generateSeries(
     const T x_4 = pow(x, static_cast<T>(4));
 
 	for(K j = static_cast<K>(1); j < vecSize; ++j){
-		vecAn[j] += vecAn[j-static_cast<K>(1)] * x_4 / static_cast<T>(fma(2,j,1));
+		vecAn[j] += vecAn[j-static_cast<K>(1)] * x_4 / static_cast<T>(fma(2,j,1) * 2 * j);
 		vecSn[j] += vecSn[j-static_cast<K>(1)] + vecAn[j];
 	}
 

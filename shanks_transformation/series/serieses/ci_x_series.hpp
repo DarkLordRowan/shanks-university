@@ -36,27 +36,7 @@ public:
 
 	inline constexpr T calculateSum(const T& x){
 
-		using std::log;
-
-		T res = static_cast<T>(std::numbers::egamma) + log(x);
-		T an = static_cast<T>(-0.25) * x * x;
-		size_t j = 1;
-		
-		if constexpr (std::is_same<T, complex_precision<float_precision>>::value || std::is_same<T, float_precision>::value){
-			while (abs(an) > float_precision(1e-8)){
-				res+=an;
-				an*=x*x*static_cast<T>(-1) * static_cast<T>(j) / static_cast<T>(2 * fma(2,j,1) * (j + 1));
-				++j;
-			}
-		} else {
-			while (abs(an) > static_cast<T>(1e-8)){
-				res+=an;
-				an*=x*x*static_cast<T>(-1) * static_cast<T>(j) / static_cast<T>(2 * fma(2,j,1) * (j + 1));
-				++j;
-			}
-		}
-
-		return res;
+		return 0;
 
 	}
 

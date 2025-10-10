@@ -31,17 +31,33 @@ public:
 	inline constexpr bool checkDomain(const T& x){
 		
 		using std::isfinite;
-
-		if constexpr(std::is_same<T, complex_precision<float_precision>>::value){
-            return !isfinite(x) && abs(x) >= float_precision(3);
+		
+        if constexpr (std::is_same<T, complex_precision<float_precision>>::value){
+            return !isfinite(x) || abs(x) >= float_precision(3); 
         } else {
-		    return !isfinite(x) && abs(x) >= static_cast<T>(3);
+            return !isfinite(x) || abs(x) >= static_cast<T>(3);
         }
+
 	}
 
 	inline constexpr T calculateSum(const T& x){
 
-		return 0;
+        using Complex = complex_precision<float_precision>;
+
+		if constexpr (std::is_same<T, Complex>::value){
+            if (x.real() <= float_precision(0)){
+                return static_cast<T>(-0.75);
+            } else {
+                return x - static_cast<T>(-0.75);
+            }
+
+        } else {
+            if (x <= static_cast<T>(0)){
+                return static_cast<T>(-0.75);
+            } else {
+                return x - static_cast<T>(0.75);
+            }
+        }
 	}
 
 };
@@ -67,17 +83,20 @@ SeriesResult<T> minus_3_div_4_or_x_minus_3_div_4_series<T, K>::generateSeries(
 		series_base<T, K>::precision = std::max(x.real().precision(), x.imag().precision());
 	}
 
-	std::vector<T> vecAn(vecSize, convertWithPrec<T>(0.0, series_base<T, K>::precision)); vecAn[0] = static_cast<T>(-0.375);
-	std::vector<T> vecSn(vecSize, convertWithPrec<T>(0.0, series_base<T, K>::precision)); vecSn[0] = static_cast<T>(-0.375);
+	std::vector<T> vecAn(vecSize, convertWithPrec<T>(0.0, series_base<T, K>::precision));
+	std::vector<T> vecSn(vecSize, convertWithPrec<T>(0.0, series_base<T, K>::precision));
 
-	const T xPiDiv3 = x * static_cast<T>(std::numbers::pi) / static_cast<T>(3);
+	const T piDiv3 = static_cast<T>(std::numbers::pi) / static_cast<T>(3);
 
-	for(K j = static_cast<K>(1); j < vecSize; ++j){
-		vecAn[j] += 
-		vecSn[j] += vecSn[j-static_cast<K>(1)] + vecAn[j];
+	using std::cos;
+	using std::sin;
+
+	for(K j = static_cast<K>(0); j < vecSize; ++j){
+		vecAn[j] += static_cast<T>(-2) / (piDiv3 * piDiv3 * static_cast<T>(3 * fma(2,j,1)*fma(2,j,1)))*cos(static_cast<T>(j+1)*piDiv3*x)+
+		minus_one_raised_to_power_n<T, K>(j) / (piDiv3 * static_cast<T>(j+1)) * sin(static_cast<T>(j+1) * piDiv3 * x);
+		vecSn[j] += vecSn[j == static_cast<K>(0) ? j : j-static_cast<K>(1)] + vecAn[j];
 	}
 
 	return SeriesResult<T>{.Sn = vecSn, .an = vecAn };
 
-    aa
 }

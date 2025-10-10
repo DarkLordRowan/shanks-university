@@ -34,11 +34,11 @@ public:
 
         if constexpr(std::is_same<T, complex_precision<float_precision>>::value){
 
-            return !isfinite(x) && abs(x) > float_precision(0.5);
+            return !isfinite(x) || abs(x) > float_precision(0.5);
 
         } else {
 
-		    return !isfinite(x) && abs(x) > static_cast<T>(0.5);
+		    return !isfinite(x) || abs(x) > static_cast<T>(0.5);
 
         }
 	}

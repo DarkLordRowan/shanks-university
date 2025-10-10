@@ -63,11 +63,11 @@ SeriesResult<T> five_pi_twelve_series<T, K>::generateSeries(
 		series_base<T, K>::precision = std::max(x.real().precision(), x.imag().precision());
 	}
 
-	std::vector<T> vecAn(vecSize, convertWithPrec<T>(0.0, series_base<T, K>::precision)); vecAn[0] = static_cast<T>(-1) * x;
-	std::vector<T> vecSn(vecSize, convertWithPrec<T>(0.0, series_base<T, K>::precision)); vecSn[0] = static_cast<T>(-1) * x;
+	std::vector<T> vecAn(vecSize, convertWithPrec<T>(0.0, series_base<T, K>::precision)); vecAn[0] = static_cast<T>(-5) * x / static_cast<T>(3);
+	std::vector<T> vecSn(vecSize, convertWithPrec<T>(0.0, series_base<T, K>::precision)); vecSn[0] = static_cast<T>(-5) * x / static_cast<T>(3);
 
 	for(K j = static_cast<K>(1); j < vecSize; ++j){
-		vecAn[j] += minus_one_raised_to_power_n<T,K>((j - 1) / 3) * x / static_cast<T>(fma(2,j,1));
+		vecAn[j] += minus_one_raised_to_power_n<T,K>(j % 3) * x / static_cast<T>(fma(2,j,1));
 		vecSn[j] += vecSn[j-static_cast<K>(1)] + vecAn[j];
 	}
 

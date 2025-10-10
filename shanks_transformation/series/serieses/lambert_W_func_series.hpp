@@ -2,6 +2,10 @@
 
 #include "../series_base.hpp"
 
+#ifndef INC_FPRECISION
+    #include "libs/arbitrary_arithmetics/fprecision.h"
+#endif
+
 /**
 * @brief Maclaurin series of exp(x) function
 * @authors Bolshakov M.P.
@@ -31,7 +35,6 @@ public:
 		
 		using std::isfinite;
 
-		using std::isfinite;
         if constexpr (std::is_same<T, complex_precision<float_precision>>::value){
             return !isfinite(x) || abs(x) >= float_precision(1) / float_precision(std::numbers::e);
         } else {
@@ -41,7 +44,14 @@ public:
 
 	inline constexpr T calculateSum(const T& x){
 
-		return 0;
+		if constexpr (std::is_same<T, complex_precision<float_precision>>::value){
+            return 0;
+        } else if constexpr (std::is_same<T, float_precision>::value){
+            return lambertW0(float_precision(x));
+        } else {
+			return static_cast<T>(lambertW0(float_precision(x, series_base<T,K>::precision)));
+		}
+
 	}
 
 };
@@ -76,7 +86,5 @@ SeriesResult<T> lambert_W_func_series<T, K>::generateSeries(
 	}
 
 	return SeriesResult<T>{.Sn = vecSn, .an = vecAn };
-
-	aa
 
 }

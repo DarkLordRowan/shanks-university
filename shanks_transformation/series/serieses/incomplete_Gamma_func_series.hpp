@@ -77,6 +77,4 @@ SeriesResult<T> incomplete_Gamma_func_series<T, K>::generateSeries(
 
 	return SeriesResult<T>{.Sn = vecSn, .an = vecAn };
 
-	aa
-
 }

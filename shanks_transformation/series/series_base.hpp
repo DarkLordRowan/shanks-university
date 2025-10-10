@@ -5,6 +5,21 @@
 
 #include "../custom_concepts.hpp"
 
+template <AcceptedLike T, UnsignedIntLike K>
+constexpr const T phi(K n)
+{
+	K result = n;
+	for (K i = 2; i * i <= n; ++i)
+		if (n % i == 0) {
+			while (n % i == 0)
+				n /= i;
+			result -= result / i;
+		}
+
+	result -= n > 1 ? result / n : 0;
+	return static_cast<T>(result);
+}
+
 template<UnsignedIntLike K>
 constexpr const K fact(const K n) {
 	K fact = static_cast<K>(1);
@@ -35,6 +50,7 @@ constexpr const K binomial_coefficient(const K n, const K k) {
 	return binomial_coefficient<K>(n - 1, k - 1) + binomial_coefficient<K>(n - 1, k);
 
 }
+
 
  /**
  * @brief Abstract class for series
