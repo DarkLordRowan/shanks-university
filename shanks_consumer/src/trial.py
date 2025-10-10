@@ -133,12 +133,9 @@ class ComplexTrial:
 
     def execute(self) -> list[TrialResult]:
         results = []
-        count = 0;
         for series, accel in itertools.product(
             self.series_params, self.accel_params
         ):
-            print(count)
-            count += 1
             result = Trial(series, accel).execute()
             results += result
         return results
