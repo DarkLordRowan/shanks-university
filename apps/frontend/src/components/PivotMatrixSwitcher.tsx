@@ -4,23 +4,14 @@ import type { PivotByX } from "../types/pivotByX.ts";
 
 type Props = { pivots: PivotByX[]; initialIndex?: number };
 
-export const PivotMatrixSwitcher: React.FC<Props> = ({pivots, initialIndex = 0}) => {
+export const PivotMatrixSwitcher: React.FC<Props> = ({ pivots, initialIndex = 0 }) => {
     const [idx, setIdx] = React.useState(() =>
         Math.min(Math.max(0, initialIndex), Math.max(0, pivots.length - 1))
     );
 
     if (pivots.length === 0) {
-        return (
-            <div className="p-3 text-textDim bg-panel border border-border rounded-xl2">
-                Нет данных
-            </div>
-        );
+        return <div className="p-3 text-textDim bg-panel border border-border rounded-xl2">Нет данных</div>;
     }
-
-    const options = pivots.map((p, i) => ({
-        label: Number.isNaN(p.x) ? "NaN" : String(p.x),
-        value: i,
-    }));
 
     return (
         <div className="space-y-3">
@@ -34,15 +25,15 @@ export const PivotMatrixSwitcher: React.FC<Props> = ({pivots, initialIndex = 0})
                     onChange={(e) => setIdx(Number(e.target.value))}
                     className="form-select rounded-xl2 border-border bg-panel text-textDim focus:border-primary focus:ring-primary"
                 >
-                    {options.map((o) => (
-                        <option key={o.value} value={o.value}>
-                            {o.label}
+                    {pivots.map((p, i) => (
+                        <option key={`${p.x}_${i}`} value={i}>
+                            {Number.isNaN(p.x) ? "NaN" : p.x}
                         </option>
                     ))}
                 </select>
             </div>
 
-            <PivotMatrix pivot={pivots[idx]}/>
+            <PivotMatrix pivot={pivots[idx]} />
         </div>
     );
 };

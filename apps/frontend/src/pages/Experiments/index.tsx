@@ -6,13 +6,13 @@ import { buildJsonTable, filterByError } from "./utils/tables";
 import { buildChartGroups } from "./utils/chartUtils";
 import { parseCsv } from "../../utils/csv";
 import { DataTable } from "../../components/ui/DataTable";
-import { ChartsSection } from "./components/ChartsSection";
 import { PivotMatrixSwitcher } from "../../components/PivotMatrixSwitcher.tsx";
 import { pivotByX } from "../../utils/itemToPivotByX.ts";
 import { normalizeFromJson } from "../../utils/responseToItem.ts";
 
 const Experiments: React.FC = () => {
     // входные данные
+    const [uuidInput, setUuidInput] = useState<string>("");
     const {
         state: {rawText, fileName, jsonPayload, prettyPayload},
         actions: {setRawText, onFileChange, onDrop, applyPasted, reset},
@@ -22,7 +22,7 @@ const Experiments: React.FC = () => {
     // результаты API
     const {
         state: {isSending, jsonResult, jsonError, csvBlobUrl, csvText, csvError},
-        actions: {sendForJsonAndCsv, resetResults},
+        actions: { sendForJsonAndCsv, loadByUuid, resetResults },
     } = useApiProcessing();
 
     const [generalError, setGeneralError] = useState<string | null>(null);
@@ -34,7 +34,6 @@ const Experiments: React.FC = () => {
         headers: [] as string[],
         rows: [] as string[][]
     }), [csvText]);
-    const chartGroups = useMemo(() => buildChartGroups(jsonResult), [jsonResult]);
 
     const onUsePasted = () => {
         applyPasted((msg) => setGeneralError(msg || null));
@@ -119,6 +118,35 @@ const Experiments: React.FC = () => {
                     >
                         {isSending ? "Отправка… (JSON/CSV)" : "Отправить (JSON/CSV)"}
                     </button>
+                    {/* Загрузка по UUID */}
+                    <div className="mt-3 flex gap-2 items-center">
+                        <input
+                            type="text"
+                            inputMode="text"
+                            placeholder="UUID"
+                            value={uuidInput}
+                            onChange={(e) => setUuidInput(e.target.value.trim())}
+                            className="w-[28rem] rounded-lg border border-border/60 bg-surface px-3 py-2 text-sm outline-none"
+                        />
+                        <button
+                            type="button"
+                            disabled={isSending || !uuidInput}
+                            onClick={async () => {
+                                const uuid = uuidInput;
+                                // примитивная валидация формата
+                                const ok = /^[0-9a-fA-F-]{36}$/.test(uuid);
+                                if (!ok) {
+                                    alert("Некорректный UUID");
+                                    return;
+                                }
+                                await loadByUuid(uuid);
+                            }}
+                            className="rounded-lg border border-border/60 bg-panel px-4 py-2 text-sm hover:brightness-110 disabled:opacity-50"
+                        >
+                            {isSending ? "Запрос… (UUID)" : "Загрузить по UUID"}
+                        </button>
+                    </div>
+
                 </div>
 
                 {prettyPayload && (

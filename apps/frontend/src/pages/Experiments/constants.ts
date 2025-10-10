@@ -1,1 +1,1 @@
-export const API_BASE = "https://shanks-worker.mirea-kmbo.ru/api";
+export const API_BASE = "https://shanks-gateway.mirea-kmbo.ru";
