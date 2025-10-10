@@ -1510,35 +1510,36 @@ inline static void main_testing_function()
 	case test_function_id_t::test_all_transforms_id:
 	{
 		std::cout << "Use standart BETA_Levin_S_algorithm value? 1<-true or 0<-false : "; std::cin >> use_standard;
-
 		if (!use_standard) {
 			std::cout << "Enter parameter BETA_Levin_S_algorithm: "; std::cin >> BETA_Levin_S_algorithm;
 		}
 		else BETA_Levin_S_algorithm = 1;
 
-		std::cout << "Use standart GAMMA_Levin_M_algorithm value? 1<-true or 0<-false : "; std::cin >> use_standard;
+		std::cout << "Use standart BETA_Levin_algorithm value? 1<-true or 0<-false : "; std::cin >> use_standard;
+		if (!use_standard) {
+			std::cout << "Enter parameter BETA_Levin_algorithm: "; std::cin >> BETA_Levin_algorithm;
+		}
+		else BETA_Levin_S_algorithm = 1;
 
+		std::cout << "Use standart GAMMA_Levin_M_algorithm value? 1<-true or 0<-false : "; std::cin >> use_standard;
 		if (!use_standard) {
 			std::cout << "Enter parameter GAMMA_Levin_M_algorithm: "; std::cin >> GAMMA_Levin_M_algorithm;
 		}
 		else GAMMA_Levin_M_algorithm = 10;
 
 		std::cout << "Use standart GAMMA_rho_Wynn_algorithm value? 1<-true or 0<-false : "; std::cin >> use_standard;
-
 		if (!use_standard) {
 			std::cout << "Enter parameter GAMMA_rho_Wynn_algorithm: "; std::cin >> GAMMA_rho_Wynn_algorithm;
 		}
 		else GAMMA_rho_Wynn_algorithm = 2;
 
 		std::cout << "Use standart RHO_rho_Wynn_algorithm value? 1<-true or 0<-false : "; std::cin >> use_standard;
-
 		if (!use_standard) {
 			std::cout << "Enter parameter RHO_rho_Wynn_algorithm: "; std::cin >> RHO_rho_Wynn_algorithm;
 		}
 		else RHO_rho_Wynn_algorithm = 1;
 
 		std::cout << "Use standart EPSILON_algorithm_3 value? 1<-true or 0<-false : "; std::cin >> use_standard;
-
 		if (!use_standard) {
 			std::cout << "Enter parameter EPSILON_algorithm_3: "; std::cin >> EPSILON_algorithm_3;
 		}
