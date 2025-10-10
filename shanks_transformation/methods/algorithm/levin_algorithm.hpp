@@ -282,6 +282,5 @@ T levin_algorithm<T, K, series_templ>::operator()(const K n, const K order) cons
 
     const T result = (useRecFormulas ? calc_result_rec(n,order) : calc_result(n, order));
     if (!isfinite(result)) throw std::overflow_error("division by zero");
-	std::cout << " <<ITS ME>> ";
     return result;
 }
