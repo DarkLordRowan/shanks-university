@@ -46,5 +46,5 @@ template <std::floating_point T, std::unsigned_integral K>
 constexpr T ln_1_plus_x3_series<T, K>::operator()(K n) const
 {
     const K a = n + 1;
-    return -static_cast<T>(this->minus_one_raised_to_power_n(a) * std::pow(this->x, 3 * a) / a); // (99.3) [Rows.pdf]
+    return this->minus_one_raised_to_power_n(n) * static_cast<T>(std::pow(this->x, 3 * a)) / static_cast<T>(a); // (99.3) [Rows.pdf]
 }

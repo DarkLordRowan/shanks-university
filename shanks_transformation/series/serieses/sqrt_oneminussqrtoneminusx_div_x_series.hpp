@@ -47,5 +47,5 @@ constexpr T sqrt_oneminussqrtoneminusx_div_x_series<T, K>::operator()(K n) const
 {
     const K a = 2 * n;
     const K b = 2 * a;
-    return static_cast<T>(this->fact(b) * pow(this->x, n) / (pow(2, b) * sqrt(2) * (this->fact(a)) * (this->fact(a + 1)))); // (53.1) [Rows.pdf]
+    return (static_cast<T>(this->fact(b)) * static_cast<T>(pow(this->x, n))) / (static_cast<T>(pow(2, b)) * static_cast<T>(sqrt(2)) * static_cast<T>(this->fact(a)) * static_cast<T>(this->fact(a + 1))); // (53.1) [Rows.pdf]
 }

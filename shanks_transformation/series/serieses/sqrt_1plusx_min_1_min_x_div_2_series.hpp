@@ -31,7 +31,7 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-sqrt_1plusx_min_1_min_x_div_2_series<T, K>::sqrt_1plusx_min_1_min_x_div_2_series(T x) : series_base<T, K>(x, std::sqrt(1 + x) - 1 - x / 2)
+sqrt_1plusx_min_1_min_x_div_2_series<T, K>::sqrt_1plusx_min_1_min_x_div_2_series(T x) : series_base<T, K>(x, static_cast<T>(std::sqrt(static_cast<T>(1) + x)) - static_cast<T>(1) - (x / static_cast<T>(2)))
 {
     this->series_name = "√(1+x)-1-x/2";
     // Сходится при |x| ≤ 1 (биномиальный ряд, абсолютно при |x| < 1, условно при x = -1)
@@ -45,5 +45,5 @@ sqrt_1plusx_min_1_min_x_div_2_series<T, K>::sqrt_1plusx_min_1_min_x_div_2_series
 template <std::floating_point T, std::unsigned_integral K>
 constexpr T sqrt_1plusx_min_1_min_x_div_2_series<T, K>::operator()(K n) const
 {
-    return static_cast<T>(this->binomial_coefficient(static_cast<T>(0.5), n + 2) * std::pow(this->x, n + 2)); // (93.2) [Rows.pdf]
+    return static_cast<T>(this->binomial_coefficient(static_cast<T>(0.5), n + 2)) * static_cast<T>(std::pow(this->x, n + 2)); // (93.2) [Rows.pdf]
 }

@@ -29,7 +29,7 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-ln13_min_ln7_div_7_series<T, K>::ln13_min_ln7_div_7_series(T x) : series_base<T, K>(x, x* static_cast<T>(std::log(13 / 7) / 7))
+ln13_min_ln7_div_7_series<T, K>::ln13_min_ln7_div_7_series(T x) : series_base<T, K>(x, x * (static_cast<T>(std::log(static_cast<T>(13) / static_cast<T>(7))) / static_cast<T>(7)))
 {
     this->series_name = "(ln(13 / 7))·x/7";
     // Сходится при ∀x ∈ ℝ (линейная функция)
@@ -44,5 +44,5 @@ constexpr T ln13_min_ln7_div_7_series<T, K>::operator()(K n) const
 {
     const K a = n + 1;
     const K b = n + 2;
-    return static_cast<T>(this->minus_one_raised_to_power_n(b) * static_cast<T>(std::pow(6, a)) * this->x / static_cast<T>(a * std::pow(7, b))); // (94.2) [Rows.pdf]
+    return (this->minus_one_raised_to_power_n(b) * static_cast<T>(std::pow(6, a)) * this->x) / (static_cast<T>(a) * static_cast<T>(std::pow(7, b))); // (94.2) [Rows.pdf]
 }
