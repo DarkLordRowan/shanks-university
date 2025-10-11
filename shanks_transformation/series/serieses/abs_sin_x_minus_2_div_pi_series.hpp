@@ -47,6 +47,5 @@ template <std::floating_point T, std::unsigned_integral K>
 constexpr T abs_sin_x_minus_2_div_pi_series<T, K>::operator()(K n) const
 {
 	const T a = static_cast<T>(std::fma(2, n, 1));
-	//a_n = -4 / ( pi * (4 * n * n - 1))
-	return static_cast<T>(-4) / static_cast<T>(std::numbers::pi) / static_cast<T>(4 * n * n - 1) * std::cos(static_cast<T>(2 * n) * this->x); // (57.2) [Rows.pdf]
+	return (static_cast<T>(-4) * std::cos(static_cast<T>(a + 1) * this->x)) / (static_cast<T>(std::numbers::pi) * static_cast<T>(a) * static_cast<T>(a+2)); // (57.2) [Rows.pdf]
 }

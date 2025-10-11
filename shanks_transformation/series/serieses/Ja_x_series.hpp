@@ -37,7 +37,7 @@ private:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-Ja_x_series<T, K>::Ja_x_series(T x, T a) : series_base<T, K>(x), a(a)
+Ja_x_series<T, K>::Ja_x_series(T x, T a) : series_base<T, K>(x, static_cast<T>(std::cyl_bessel_j(a, x))), a(a)
 {
     this->series_name = "Jₐ(x)";
     // Сходится при ∀x ∈ ℝ (функция Бесселя первого рода)
@@ -51,5 +51,5 @@ Ja_x_series<T, K>::Ja_x_series(T x, T a) : series_base<T, K>(x), a(a)
 template <std::floating_point T, std::unsigned_integral K>
 constexpr T Ja_x_series<T, K>::operator()(K n) const
 {
-    return this->minus_one_raised_to_power_n(n) * std::pow(this->x / static_cast <T>(2), 2 * n + this->a) / static_cast<T>(this->fact(n) * std::tgamma(n + this->a + 1)); // (95.1) [Rows.pdf]
+    return (this->minus_one_raised_to_power_n(n) * static_cast<T>(std::pow(this->x / static_cast<T>(2), std::fma(2, n, this->a)))) / (static_cast<T>(this->fact(n)) * static_cast<T>(std::tgamma(n + this->a + 1))); // (95.1) [Rows.pdf]
 }

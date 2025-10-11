@@ -31,7 +31,7 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-x_div_1minx_series<T, K>::x_div_1minx_series(T x) : series_base<T, K>(x, static_cast<T>(x / std::sqrt(1 - x)))
+x_div_1minx_series<T, K>::x_div_1minx_series(T x) : series_base<T, K>(x, x / static_cast<T>(std::sqrt(1 - static_cast<T>(x))))
 {
     this->series_name = "x/√(1-x)";
     // Сходится при |x| < 1 (биномиальный ряд в знаменателе)
@@ -45,5 +45,5 @@ x_div_1minx_series<T, K>::x_div_1minx_series(T x) : series_base<T, K>(x, static_
 template <std::floating_point T, std::unsigned_integral K>
 constexpr T x_div_1minx_series<T, K>::operator()(K n) const
 {
-    return static_cast<T>(this->fact(2 * n) * std::pow(this->x, n + 1) / (this->fact(n) * std::pow(4, n))); // (100.1) [Rows.pdf]
+    return (static_cast<T>(this->fact(2 * n)) * static_cast<T>(std::pow(this->x, n + 1))) / (static_cast<T>(this->fact(n) * this->fact(n)) * static_cast<T>(std::pow(4, n))); // (100.1) [Rows.pdf]
 }
