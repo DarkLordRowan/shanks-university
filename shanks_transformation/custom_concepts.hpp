@@ -9,18 +9,17 @@
 #endif
 
 template<typename T>
-concept FloatLike = requires{ std::is_floating_point<T>::value || std::is_same<T, float_precision>::value; };
+concept FloatLike = std::is_floating_point<T>::value || std::is_same<T, float_precision>::value;
 
 template<typename T>
-concept ComplexLike = requires{
+concept ComplexLike =
     //std::is_same<T, std::complex<float>>::value  ||
     //std::is_same<T, std::complex<double>>::value ||
     //std::is_same<T, std::complex<long double>>::value ||
     std::is_same<T, complex_precision<float>>::value  ||
     std::is_same<T, complex_precision<double>>::value ||
     std::is_same<T, complex_precision<long double>>::value ||
-    std::is_same<T, complex_precision<float_precision>>::value;
-};
+    std::is_same<T, complex_precision<float_precision>>::value;;
 
 template<typename T>
 concept AcceptedLike = requires{ 
@@ -36,12 +35,12 @@ template<AcceptedLike T>
 T convertWithPrec(float realPart, size_t precision) {
 
     if constexpr(std::is_same<T, float_precision>::value){
-        return float_precision(realPart, precision);
+        return float_precision(realPart, precision, ROUND_NEAR);
     } else if constexpr(std::is_same<T, complex_precision<float_precision>>::value){
         
         return complex_precision<float_precision>(
-            float_precision(realPart, precision), 
-            float_precision(0, precision)
+            float_precision(realPart, precision, ROUND_NEAR),
+            float_precision(0, precision, ROUND_NEAR)
         );
     } else {
         return static_cast<T>(realPart);

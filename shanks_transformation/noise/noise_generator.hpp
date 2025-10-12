@@ -1,3 +1,4 @@
+// cpp
 //
 // Created by user on 03.10.2025.
 //
@@ -12,344 +13,193 @@
 #ifndef SHANKS_TRANSFORMATION_NOISE_GENERATOR_HPP
 #define SHANKS_TRANSFORMATION_NOISE_GENERATOR_HPP
 
+#define pseudo_random_seed (std::chrono::system_clock::now().time_since_epoch().count() + std::rand());
+
 enum NoiseType {
     uniform,
     normal,
     poisson,
 };
 
-
-template<AcceptedLike T>
-class Noise {
-private:
-    NoiseType type;
-    size_t seed;
-    size_t size;
-
-public:
-    std::vector<T> Sn;
-    std::vector<T> an;
-
-    Noise() = delete;
-
-    Noise(const size_t size, T bottom_border = static_cast<T>(-1.0), T top_border = static_cast<T>(1), const NoiseType type = uniform,
-        const size_t seed = std::chrono::system_clock::now().time_since_epoch().count() + std::rand()) : type(type), seed(seed), size(size) {
-
-        an = std::vector<T>(size);
-        Sn = std::vector<T>(size);
-        switch (type) {
-            case uniform:
-                generate_uniform_noise(*this, bottom_border, top_border, seed);
-                break;
-            case normal:
-                generate_normal_noise(*this, bottom_border, top_border, seed);
-                break;
-            case poisson:
-                generate_poisson_noise(*this, bottom_border, top_border, seed);
-                break;
-        }
-    }
-};
-
-
-template<AcceptedLike T>
-SeriesResult<T> jitter(const SeriesResult<T>& source, T bottom_border = static_cast<T>(-1.0), T top_border = static_cast<T>(1.0), NoiseType type = uniform) {
-
-    const size_t n = source.Sn.size();
-
-    SeriesResult<T> result;
-    result.Sn = source.Sn;
-    result.an = source.an;
-
-    if (n == 0) {
-        return result;
-    }
-
-    Noise<T> noise(n, bottom_border, top_border, type);
-
-    result.Sn[0] += noise.Sn[0];
-    result.an[0] += noise.an[0];
-
-    for (size_t j = 1; j < n; ++j) {
-        result.Sn[j] += noise.Sn[j];
-        result.an[j] += noise.an[j];
-    }
-
-    return result;
-}
-
-
-template<ComplexLike T>
-void generate_uniform_noise(Noise<T>& N, const T bottom_border, const T top_border, const size_t seed) {
-    if (bottom_border.real() >= top_border.real() || bottom_border.imag() >= top_border.imag()) {
+template<ComplexLike CT, FloatLike FT>
+requires (!ComplexLike<FT>)
+CT generate_uniform_noise(const FT& inf, const FT& sup, std::mt19937_64& rng) {
+    if (inf >= sup) {
         throw std::invalid_argument("Invalid borders for uniform noise generation.");
     }
-    std::mt19937_64 rng(seed);
-    double lo_r = static_cast<double>(bottom_border.real());
-    double hi_r = static_cast<double>(top_border.real());
-    double lo_i = static_cast<double>(bottom_border.imag());
-    double hi_i = static_cast<double>(top_border.imag());
 
-    std::uniform_real_distribution<double> dist_r(lo_r, hi_r);
-    std::uniform_real_distribution<double> dist_i(lo_i, hi_i);
+    std::uniform_real_distribution<float_t> distribution(inf, sup);
 
-    if (!N.Sn.empty()) {
-        N.Sn[0] = T(dist_r(rng), dist_i(rng));
-        N.an[0] = N.Sn[0];
-        for (size_t i = 1; i < N.Sn.size(); ++i) {
-            N.Sn[i] = N.Sn[0] + T(dist_r(rng), dist_i(rng));
-            N.an[i] = N.Sn[i] - N.Sn[i - 1];
-        }
-    }
-}
-
+    return CT(distribution(rng), distribution(rng));
+};
 
 template<ComplexLike T>
-void generate_normal_noise(Noise<T>& N, const T bottom_border, const T top_border, const size_t seed) {
-    if (bottom_border.real() >= top_border.real() || bottom_border.imag() >= top_border.imag()) {
-        throw std::invalid_argument("Invalid borders for normal noise generation.");
-    }
-    std::mt19937_64 rng(seed);
-    double mean_r = (static_cast<double>(bottom_border.real()) + static_cast<double>(top_border.real())) / 2.0;
-    double std_r = (static_cast<double>(top_border.real()) - static_cast<double>(bottom_border.real())) / 6.0;
-    double mean_i = (static_cast<double>(bottom_border.imag()) + static_cast<double>(top_border.imag())) / 2.0;
-    double std_i = (static_cast<double>(top_border.imag()) - static_cast<double>(bottom_border.imag())) / 6.0;
-
-    std::normal_distribution<double> dist_r(mean_r, std_r);
-    std::normal_distribution<double> dist_i(mean_i, std_i);
-
-    if (!N.Sn.empty()) {
-        N.Sn[0] = T(dist_r(rng), dist_i(rng));
-        N.an[0] = N.Sn[0];
-        for (size_t i = 1; i < N.Sn.size(); ++i) {
-            N.Sn[i] = N.Sn[0] + T(dist_r(rng), dist_i(rng));
-            N.an[i] = N.Sn[i] - N.Sn[i - 1];
-        }
-    }
-}
-
-
-template<ComplexLike T>
-void generate_poisson_noise(Noise<T>& N, const T bottom_border, const T top_border, const size_t seed) {
-    throw std::invalid_argument("Invalid poisson noise generation.");
-}
-
-
-template<FloatLike T>
-requires (!ComplexLike<T>)
-void generate_uniform_noise(Noise<T>& N,const T bottom_border,const T top_border,const size_t seed) {
-    if (bottom_border >= top_border) {
+T generate_uniform_noise(const T& inf, const T& sup, std::mt19937_64& rng) {
+    if (inf.real() >= sup.real() || inf.imag() >= sup.imag()) {
         throw std::invalid_argument("Invalid borders for uniform noise generation.");
     }
-    std::mt19937_64 rng(seed);
-    std::uniform_real_distribution<float_t> distribution(bottom_border, top_border);
-    N.Sn[0] = distribution(rng);
-    N.an[0] = N.Sn[0];
-    for (size_t i = 1; i < N.Sn.size(); ++i) {
-        N.Sn[i] = N.Sn[0] + distribution(rng);
-        N.an[i] = N.Sn[i] - N.Sn[i - 1];
-    }
-};
 
+    std::uniform_real_distribution<float_t> distribution_real(static_cast<float_t>(inf.real()), static_cast<float_t>(sup.real()));
+    std::uniform_real_distribution<float_t> distribution_imag(static_cast<float_t>(inf.imag()), static_cast<float_t>(sup.imag()));
+
+    return T(static_cast<typename T::value_type>(distribution_real(rng)), static_cast<typename T::value_type>(distribution_imag(rng)));
+};
 
 template<FloatLike T>
 requires (!ComplexLike<T>)
-void generate_normal_noise(Noise<T>& N,const T bottom_border,const T top_border,const size_t seed) {
-    if (bottom_border >= top_border) {
-        throw std::invalid_argument("Invalid borders for normal noise generation.");
+T generate_uniform_noise(const T& inf, const T& sup, std::mt19937_64& rng) {
+    if (inf >= sup) {
+        throw std::invalid_argument("Invalid borders for uniform noise generation.");
     }
-    std::mt19937_64 rng(seed);
-    T mean = (bottom_border + top_border) / static_cast<T>(2);
-    T stddev = (top_border - bottom_border) / static_cast<T>(6);
-    std::normal_distribution<float_t> distribution(mean, stddev);
-    N.Sn[0] = distribution(rng);
-    N.an[0] = N.Sn[0];
-    for (size_t i = 1; i < N.Sn.size(); ++i) {
-        N.Sn[i] = N.Sn[0] + distribution(rng);
-        N.an[i] = N.Sn[i] - N.Sn[i - 1];
-    }
+
+    std::uniform_real_distribution<float_t> distribution(static_cast<float_t>(inf), static_cast<float_t>(sup));
+
+    return static_cast<T>(distribution(rng));
 };
 
+template<ComplexLike CT, FloatLike FT>
+requires (!ComplexLike<FT>)
+CT generate_normal_noise(const FT& mean, const FT& std, std::mt19937_64& rng) {
+    if (std <= 0) {
+        throw std::invalid_argument("Standard deviation must be positive for normal distribution.");
+    }
+
+    std::normal_distribution<float_t> distribution(mean,std);
+
+    return CT(distribution(rng), distribution(rng));
+};
+
+template<ComplexLike T>
+T generate_normal_noise(const T& mean, const T& std, std::mt19937_64& rng) {
+    if (std.real() <= static_cast<typename T::value_type>(0) || std.imag() <= static_cast<typename T::value_type>(0)) {
+        throw std::invalid_argument("Standard deviation must be positive for normal distribution.");
+    }
+
+    std::normal_distribution<float_t> distribution_real(mean.real(),std.real());
+    std::normal_distribution<float_t> distribution_imag(mean.imag(),std.imag());
+
+    return T(static_cast<typename T::value_type>(distribution_real(rng)), static_cast<typename T::value_type>(distribution_imag(rng)));
+}
 
 template<FloatLike T>
 requires (!ComplexLike<T>)
-void generate_poisson_noise(Noise<T>& N,const T bottom_border,const T top_border,const size_t seed) {
-    if (bottom_border < static_cast<T>(0) || top_border < static_cast<T>(0)) {
-        throw std::invalid_argument("Poisson distribution requires non-negative borders.");
+T generate_normal_noise(const T& mean, const T& std, std::mt19937_64& rng) {
+    if (std <= static_cast<T>(0)) {
+        throw std::invalid_argument("Standard deviation must be positive for normal distribution.");
     }
-    if (bottom_border >= top_border) {
-        throw std::invalid_argument("Invalid borders for Poisson noise generation.");
-    }
-    std::mt19937_64 rng(seed);
-    T mean = (bottom_border + top_border) / static_cast<T>(2);
-    std::poisson_distribution<int> distribution(static_cast<int>(mean));
-    N.Sn[0] = static_cast<T>(distribution(rng));
-    N.an[0] = N.Sn[0];
-    for (size_t i = 1; i < N.Sn.size(); ++i) {
-        N.Sn[i] = N.Sn[0] + static_cast<T>(distribution(rng));
-        N.an[i] = N.Sn[i] - N.Sn[i - 1];
-    }
+
+    std::normal_distribution<float_t> distribution(static_cast<float_t>(mean), static_cast<float_t>(std));
+
+    return static_cast<T>(distribution(rng));
 };
 
-template <AcceptedLike T, NoiseType NT = normal>
-class JitterSeries {
-private:
-    SeriesResult<T> source;
-    T bottom_border = ComplexLike<T>?T(-1,-1):static_cast<T>(-1);
-    T top_border = ComplexLike<T>?T(1,1):static_cast<T>(1);
-    size_t seed = std::chrono::system_clock::now().time_since_epoch().count() + std::rand();
-    NoiseType type = NT;
-    SeriesResult<T> result;
-public:
-    JitterSeries& operator = (const SeriesResult<T>& src) {
-        source = src;
-        result = jitter(source, bottom_border, top_border, type);
-        return *this;
+//std::poisson_distribution - only for int
+template<ComplexLike CT, FloatLike FT>
+requires (!ComplexLike<FT>)
+CT generate_poisson_noise(const FT& lambda, std::mt19937_64& rng) {
+    if (lambda <= static_cast<FT>(0)) {
+        throw std::invalid_argument("Lambda must be positive for Poisson distribution.");
     }
 
-    JitterSeries& setBorders(const T bottom, const T top) {
-        if constexpr (ComplexLike<T>) {
-            if (bottom.real() >= top.real() || bottom.imag() >= top.imag()) {
-                throw std::invalid_argument("Invalid borders");
-            }
-        }
-        else {
-            if (bottom >= top) {
-                throw std::invalid_argument("Invalid borders");
-            }
-        }
-        bottom_border = bottom;
-        top_border = top;
-        if (!source.Sn.empty()) {
-            result = jitter(source, bottom_border, top_border, type);
-        }
-        return *this;
-    }
+    std::poisson_distribution<uint64_t> distribution(static_cast<uint64_t>(lambda));
 
-    JitterSeries& setSeed(const size_t s) {
-        seed = s;
-        if (!source.Sn.empty()) {
-            result = jitter(source, bottom_border, top_border, type);
-        }
-        return *this;
-    }
-
-    JitterSeries& setType(const NoiseType t) {
-        type = t;
-        if (!source.Sn.empty()) {
-            result = jitter(source, bottom_border, top_border, type);
-        }
-        return *this;
-    }
-
-    JitterSeries& setSource(const SeriesResult<T>& src) {
-        source = src;
-        result = jitter(source, bottom_border, top_border, type);
-        return *this;
-    }
-
-    SeriesResult<T>& getResult() {
-        if (result.an.empty()) {
-            throw std::runtime_error("Source series is empty or isn`t assigned. Please assign a source series first.");
-        }
-        return result;
-    }
-
-    std::vector<T>& Sn() {
-        if (result.an.empty()) {
-            throw std::runtime_error("Source series is empty or isn`t assigned. Please assign a source series first.");
-        }
-        return result.Sn;
-    }
-
-    std::vector<T>& an() {
-        if (result.an.empty()) {
-            throw std::runtime_error("Source series is empty or isn`t assigned. Please assign a source series first.");
-        }
-        return result.an;
-    }
-
-    JitterSeries& reroll(){
-        if (source.Sn.empty()) {
-            throw std::runtime_error("Source series is empty or isn`t assigned. Please assign a source series first.");
-        }
-        result = jitter(source, bottom_border, top_border, type);
-        return *this;
-    }
-
-    JitterSeries() = default;
-
-    JitterSeries(SeriesResult<T>& src) {
-        source = src;
-        result = jitter(source, bottom_border, top_border, type);
-    }
-
-
-    // Конструктор для работы вида
-    // JitterSeries<double, uniform> js(-0.1, 0.1, 12345);
-    // vector<SeriesResult<double>> sr = a[1..n].generateSeries(....);
-    // js = sr[0]; Получаем результат с шумом
-    // ...
-    // js = sr[n-1]; Получаем результат с шумом и одинаковыми параметрами
-
-    JitterSeries(T bottom_border = (ComplexLike<T>?T(-1,-1):static_cast<T>(-1)) , T top_border = (ComplexLike<T>?T(1,1):static_cast<T>(-1)),
-        T seed = std::chrono::system_clock::now().time_since_epoch().count() + std::rand(), SeriesResult<T> src = SeriesResult<T>()):
-        source(src), bottom_border(bottom_border), top_border(top_border), seed(seed){
-        if (!source.Sn.empty()) {
-            result = jitter(source, bottom_border, top_border, type);
-        }
-    };
+    return CT(distribution(rng), distribution(rng));
 };
 
-/*
-//для частичной специализации, например для комплексных
-//меньше методов, меньше хранения, меньше функций, чтобы было легче биндить и разбираться в коде
-//поменьше функционала, чтобы проще было тестить
-//геттеры и сеттеры пока не нужны
-//меньше классов и абстракций, если это не необходимо
-//подаются вектора, возвращаются вектора
-//обобщать однотипные моменты, т.к. глаза кровят от сплошного однотипного текста и трудно уследить, что куда передаётся и возвращается
-//за включения типов из arb огромное спасибо и комплексных
-//не сокращай названия переменных (типо N, dist_r, dist_m), и top и bottom borders для нормального и пуассона путают
+template<FloatLike T>
+requires (!ComplexLike<T>)
+T generate_poisson_noise(const T& lambda, std::mt19937_64& rng) {
+    if (lambda <= static_cast<T>(0)) {
+        throw std::invalid_argument("Lambda must be positive for Poisson distribution.");
+    }
+
+    std::poisson_distribution<uint64_t> distribution(static_cast<uint64_t>(lambda));
+
+    return static_cast<T>(distribution(rng));
+};
+
+template<ComplexLike T>
+T generate_poisson_noise(const T& lambda, std::mt19937_64& rng) {
+    if (lambda.real() <= static_cast<typename T::value_type>(0) || lambda.imag() <= static_cast<typename T::value_type>(0)) {
+        throw std::invalid_argument("Lambda must be positive for Poisson distribution.");
+    }
+
+    std::poisson_distribution<uint64_t> distribution_real(static_cast<uint64_t>(lambda.real()));
+    std::poisson_distribution<uint64_t> distribution_imag(static_cast<uint64_t>(lambda.imag()));
+
+    return T(static_cast<typename T::value_type>(distribution_real(rng)), static_cast<typename T::value_type>(distribution_imag(rng)));
+};
+
+
+
 template<AcceptedLike T>
 class NoiseGenerator {
 protected:
 
     unsigned long long int seed;
 
-    std::mt19937_64 randomNumberGen;
+    std::unique_ptr<std::mt19937_64> randomNumberGen;
 
     NoiseType type;
 
-    inline T normal() const;
-    inline T uniform() const
-    inline T poisson() const;
+
+    template<AcceptedLike paramType>
+    inline T uniform(const paramType& inf, const paramType& sup) const {
+        return generate_uniform_noise<T>(inf, sup, *randomNumberGen);
+    }
+
+    template<AcceptedLike paramType>
+    inline T normal(const paramType& inf,const paramType& sup) const {
+        return generate_normal_noise<T>(inf, sup, *randomNumberGen);
+    };
+
+    template<AcceptedLike paramType>
+    inline T poisson(const paramType& lamda) const {
+        return generate_poisson_noise<T>(lamda, *randomNumberGen);
+    };
 
 
 public:
 
     NoiseGenerator(const NoiseType type) : type(type) {
 
-        seed = std::chrono::system_clock::now().time_since_epoch().count() + std::rand();
+        seed = pseudo_random_seed;
 
-        randomNumberGen = std::mt19937_64(seed);
-
-    }
-    NoiseGenerator(const NoiseType type, unsigned long long int seed) : seed(seed), type(type) {
-
-        randomNumberGen = std::mt19937_64(seed);
+        randomNumberGen = std::make_unique<std::mt19937_64>(seed);
 
     }
 
-    SeriesResult<T> jitter(const SeriesResult<T>& result, const T& tParam1, const T& tParam2) {
+    NoiseGenerator(const NoiseType type, const unsigned long long int seed) : seed(seed), type(type) {
+
+        randomNumberGen = std::make_unique<std::mt19937_64>(seed);
+
+    }
+
+    template<AcceptedLike paramType>
+    SeriesResult<T> jitter(const SeriesResult<T>& result, const paramType& tParam1, const paramType& tParam2 = T{}) {
 
         std::vector<T> newSn;
         std::vector<T> newAn;
 
-        for() {
+        for (size_t i = 0; i < result.Sn.size(); ++i) {
+            T noise;
             switch(type){
-                case :...
-
+                case NoiseType::uniform:
+                    noise = uniform(tParam1, tParam2);
+                    break;
+                case NoiseType::normal:
+                    noise = normal(tParam1, tParam2);
+                    break;
+                case NoiseType::poisson:
+                    noise = poisson(tParam1);
+                    break;
+            }
+            if (i == 0) {
+                newSn.push_back(result.Sn[0] + noise);
+                newAn.push_back(newSn[0]);
+            } else {
+                newSn.push_back(result.Sn[i] + noise);
+                newAn.push_back(newSn[i] - newSn[i - 1]);
             }
         }
 
@@ -358,9 +208,6 @@ public:
     //tParam1 = low, tParam2 = high for uniform
     //tParam1 = mean, tParam2 = std for normal
     //tParam1 = lambda for poisson
-
-
 };
-*/
 
 #endif //SHANKS_TRANSFORMATION_NOISE_GENERATOR_HPP

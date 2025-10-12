@@ -305,8 +305,11 @@ void TestNoise() {
 
 	std::cout << "EXP(x) = " << testSeries.get_sum() << "\n";
 
-	JitterSeries<typeA, normal> js(result);
+	NoiseGenerator<typeA> ng(normal);
 
+	SeriesResult<typeA> noisyResult = ng.jitter(result, 0.1, 0.1);
+
+	SeriesResult<typeA> complexNoisyResult = ng.jitter(result, typeA(-0.5, -0.5), typeA(0.5, 0.5));
 
 	std::cout << "\n";
 
@@ -326,7 +329,7 @@ void TestNoise() {
 
 	for (size_t j = 0; j <= 10; ++j) {
 		try{
-			std::cout << "n = order = " << j << " : " << algo->operator()(j,j, js.getResult(), j) << "\n";
+			std::cout << "n = order = " << j << " : " << algo->operator()(j,j, noisyResult, j) << "\n";
 		} catch (...){
 			std::cout << "Exception caught\n";
 		}
@@ -356,8 +359,8 @@ int main()
 
 	//testCompatability<typeA, typeB>(x);
 
-	//TestNoise();
-	testRows<typeA,typeB>();
+	TestNoise();
+	//testRows<typeA,typeB>();
 
 	/*
 	while(true){
