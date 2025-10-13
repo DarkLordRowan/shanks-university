@@ -121,7 +121,7 @@ class Trial:
                     )
                     # Call the acceleration method using operator()
                     accel_value = accel_instance(
-                        n_value, m_value, series_result, 0
+                        n_value, m_value, series_result
                     )
 
                     partial_sum = series_result.Sn[n_value] if n_value < len(series_result.Sn) else series_result.Sn[-1]
