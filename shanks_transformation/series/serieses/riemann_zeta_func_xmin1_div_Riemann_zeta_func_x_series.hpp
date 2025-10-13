@@ -45,7 +45,7 @@ public:
         } else if constexpr (std::is_same<T, float_precision>::value){
             return abs(zeta(x - static_cast<T>(1)) / zeta(x));
         } else {
-			return abs(static_cast<T>(zeta(isComplexLike<T>::value(x - 1)))) / static_cast<T>(zeta(isComplexLike<T>::value(x)));
+			return abs(static_cast<T>(zeta(float_precision(x - 1)))) / static_cast<T>(zeta(float_precision(x)));
 		}
 	}
 
