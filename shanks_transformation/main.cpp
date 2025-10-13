@@ -293,58 +293,163 @@ void testRows(){
 	
 }
 
-void TestNoise() {
-	using typeA = complex_precision<float_precision>;
-	using typeB = unsigned long long int;
-
-	typeA x(float_precision(6, 50), float_precision(6, 50));
-	std::cout << x << "\n";
-
-	exp_series<typeA, typeB> testSeries = exp_series<typeA, typeB>();
-	SeriesResult<typeA> result = testSeries.generateSeries(x, 30);
-
-	std::cout << "EXP(x) = " << testSeries.get_sum() << "\n";
-
-	NoiseGenerator<typeA> ng(normal);
-
-	SeriesResult<typeA> noisyResult = ng.jitter(result, 0.1, 0.1);
-
-	SeriesResult<typeA> complexNoisyResult = ng.jitter(result, typeA(-0.5, -0.5), typeA(0.5, 0.5));
-
-	std::cout << "\n";
-
-	std::unique_ptr<series_acceleration<typeA, typeB>> algo = std::make_unique<brezinski_theta_algorithm<typeA, typeB>>();
+template<AcceptedLike T, UnsignedIntLike K>
+constexpr void testAlgorithm(std::unique_ptr<series_acceleration<T,K>>& algo, const SeriesResult<T>& series){
 
 	algo->print_info();
-
 	for (size_t j = 0; j <= 10; ++j) {
+
 		try{
-			std::cout << "n = order = " << j << " : " << algo->operator()(j,j, result, j) << "\n";
-		} catch (...){
-			std::cout << "Exception caught\n";
+			std::cout << "n = order = " << j << " : " << algo->operator()(j,j, series, j) << "\n";
+		} catch (std::overflow_error& e){
+			std::cout << e.what() << "\n";
+		} catch (std::domain_error& e){
+			std::cout << e.what() << "\n";
+		} catch (float_precision::divide_by_zero& e){
+			std::cout << "Division by zero in float_precision" << "\n";
+		} catch (complex_precision<float>::divide_by_zero& e){
+			std::cout << e.what() << "\n";
+		} catch (complex_precision<double>::divide_by_zero& e){
+			std::cout << e.what() << "\n";
+		} catch (complex_precision<long double>::divide_by_zero& e){
+			std::cout << e.what() << "\n";
+		} catch (complex_precision<float_precision>::divide_by_zero& e){
+			std::cout << e.what() << "\n";
+		} catch (std::out_of_range& e){
+			std::cout << e.what() << "\n";
 		}
+
 	}
 	std::cout << "\n";
 
-
-	for (size_t j = 0; j <= 10; ++j) {
-		try{
-			std::cout << "n = order = " << j << " : " << algo->operator()(j,j, noisyResult, j) << "\n";
-		} catch (...){
-			std::cout << "Exception caught\n";
-		}
-	}
 }
+
+template<AcceptedLike T, UnsignedIntLike K>
+constexpr void testNoise(const T& x){
+
+	std::unordered_map<transformation_id_t, std::function<std::unique_ptr<series_acceleration<T,K>>(void)>> algoInit = {
+	    {              brezinski_theta_transformation_id, [](){ return std::make_unique<brezinski_theta_algorithm<T, K>>();                                  }},
+		{                 drummond_d_u_transformation_id, [](){ return std::make_unique<drummond_d_algorithm<T, K>>(remainder_type::u_variant       , false);}},
+        {                 drummond_d_t_transformation_id, [](){ return std::make_unique<drummond_d_algorithm<T, K>>(remainder_type::t_variant       , false);}},
+        {            drummond_d_t_wave_transformation_id, [](){ return std::make_unique<drummond_d_algorithm<T, K>>(remainder_type::t_wave_variant  , false);}},
+        {                 drummond_d_v_transformation_id, [](){ return std::make_unique<drummond_d_algorithm<T, K>>(remainder_type::v_variant       , false);}},
+        {            drummond_d_v_wave_transformation_id, [](){ return std::make_unique<drummond_d_algorithm<T, K>>(remainder_type::v_wave_variant  , false);}},
+		{       recurrent_drummond_d_u_transformation_id, [](){ return std::make_unique<drummond_d_algorithm<T, K>>(remainder_type::u_variant       ,  true);}},
+    	{       recurrent_drummond_d_t_transformation_id, [](){ return std::make_unique<drummond_d_algorithm<T, K>>(remainder_type::t_variant       ,  true);}},
+     	{       recurrent_drummond_d_v_transformation_id, [](){ return std::make_unique<drummond_d_algorithm<T, K>>(remainder_type::t_wave_variant  ,  true);}},
+		{  recurrent_drummond_d_t_wave_transformation_id, [](){ return std::make_unique<drummond_d_algorithm<T, K>>(remainder_type::v_variant       ,  true);}},
+		{  recurrent_drummond_d_v_wave_transformation_id, [](){ return std::make_unique<drummond_d_algorithm<T, K>>(remainder_type::v_wave_variant  ,  true);}},
+		{                   chang_wynn_transformation_id, [](){ return std::make_unique<chang_wynn_algorithm<T, K>>();                                       }},
+		{                  ford_sidi_2_transformation_id, [](){ return std::make_unique<ford_sidi_2_algorithm<T, K>>();                                      }},
+		{                  ford_sidi_3_transformation_id, [](){ return std::make_unique<ford_sidi_3_algorithm<T, K>>();                                      }},
+		{               levin_sidi_l_u_transformation_id, [](){ return std::make_unique<levin_algorithm<T, K>>(remainder_type::u_variant            , false);}},
+		{               levin_sidi_l_t_transformation_id, [](){ return std::make_unique<levin_algorithm<T, K>>(remainder_type::t_variant            , false);}},
+		{          levin_sidi_l_t_wave_transformation_id, [](){ return std::make_unique<levin_algorithm<T, K>>(remainder_type::t_wave_variant       , false);}},
+		{               levin_sidi_l_v_transformation_id, [](){ return std::make_unique<levin_algorithm<T, K>>(remainder_type::v_variant            , false);}},
+		{          levin_sidi_l_v_wave_transformation_id, [](){ return std::make_unique<levin_algorithm<T, K>>(remainder_type::v_wave_variant       , false);}},
+		{     recurrent_levin_sidi_l_u_transformation_id, [](){ return std::make_unique<levin_algorithm<T, K>>(remainder_type::u_variant            , true); }},
+		{     recurrent_levin_sidi_l_t_transformation_id, [](){ return std::make_unique<levin_algorithm<T, K>>(remainder_type::t_variant            , true); }},
+		{recurrent_levin_sidi_l_t_wave_transformation_id, [](){ return std::make_unique<levin_algorithm<T, K>>(remainder_type::t_wave_variant       , true); }},
+		{     recurrent_levin_sidi_l_v_transformation_id, [](){ return std::make_unique<levin_algorithm<T, K>>(remainder_type::v_variant            , true); }},
+		{recurrent_levin_sidi_l_v_wave_transformation_id, [](){ return std::make_unique<levin_algorithm<T, K>>(remainder_type::v_wave_variant       , true); }},
+		{               levin_sidi_m_u_transformation_id, [](){ return std::make_unique<levin_sidi_m_algorithm<T, K>>(remainder_type::u_variant     );       }},
+		{               levin_sidi_m_t_transformation_id, [](){ return std::make_unique<levin_sidi_m_algorithm<T, K>>(remainder_type::t_variant     );       }},
+		{          levin_sidi_m_t_wave_transformation_id, [](){ return std::make_unique<levin_sidi_m_algorithm<T, K>>(remainder_type::t_wave_variant);       }},
+		{               levin_sidi_m_v_transformation_id, [](){ return std::make_unique<levin_sidi_m_algorithm<T, K>>(remainder_type::v_variant     );       }},
+		{          levin_sidi_m_v_wave_transformation_id, [](){ return std::make_unique<levin_sidi_m_algorithm<T, K>>(remainder_type::v_wave_variant);       }},
+		{               levin_sidi_s_u_transformation_id, [](){ return std::make_unique<levin_sidi_s_algorithm<T, K>>(remainder_type::u_variant     , false);}},
+		{               levin_sidi_s_t_transformation_id, [](){ return std::make_unique<levin_sidi_s_algorithm<T, K>>(remainder_type::t_variant     , false);}},
+		{          levin_sidi_s_t_wave_transformation_id, [](){ return std::make_unique<levin_sidi_s_algorithm<T, K>>(remainder_type::t_wave_variant, false);}},
+		{               levin_sidi_s_v_transformation_id, [](){ return std::make_unique<levin_sidi_s_algorithm<T, K>>(remainder_type::v_variant     , false);}},
+		{          levin_sidi_s_v_wave_transformation_id, [](){ return std::make_unique<levin_sidi_s_algorithm<T, K>>(remainder_type::v_wave_variant, false);}},
+		{     recurrent_levin_sidi_s_u_transformation_id, [](){ return std::make_unique<levin_sidi_s_algorithm<T, K>>(remainder_type::u_variant     , true); }},
+		{     recurrent_levin_sidi_s_t_transformation_id, [](){ return std::make_unique<levin_sidi_s_algorithm<T, K>>(remainder_type::t_variant     , true); }},
+		{recurrent_levin_sidi_s_t_wave_transformation_id, [](){ return std::make_unique<levin_sidi_s_algorithm<T, K>>(remainder_type::t_wave_variant, true); }},
+		{     recurrent_levin_sidi_s_v_transformation_id, [](){ return std::make_unique<levin_sidi_s_algorithm<T, K>>(remainder_type::v_variant     , true); }},
+		{recurrent_levin_sidi_s_v_wave_transformation_id, [](){ return std::make_unique<levin_sidi_s_algorithm<T, K>>(remainder_type::v_wave_variant, true); }},
+		{                     lubkin_w_transformation_id, [](){ return std::make_unique<lubkin_w_algorithm<T,K>>();                                          }},
+		{                   richardson_transformation_id, [](){ return std::make_unique<richardson_algorithm<T,K>>();                                        }},
+		{                       shanks_transformation_id, [](){ return std::make_unique<shanks_algorithm<T,K>>();                                            }},
+		{           shanks_alternating_transformation_id, [](){ return std::make_unique<shanks_transform_alternating<T,K>>();                                }},
+		{                      weniger_tramsformation_id, [](){ return std::make_unique<weniger_algorithm<T,K>>();                                           }},
+		{               wynn_epsilon_1_transforamtion_id, [](){ return std::make_unique<wynn_epsilon_1_algorithm<T,K>>();                                    }},
+		{               wynn_epsilon_2_transforamtion_id, [](){ return std::make_unique<wynn_epsilon_2_algorithm<T,K>>();                                    }},
+		{               wynn_epsilon_3_transforamtion_id, [](){ return std::make_unique<wynn_epsilon_3_algorithm<T,K>>();                                    }},
+        {                 wynn_rho_rho_transformation_id, [](){ return std::make_unique<wynn_rho_algorithm<T, K>>(numerator_type::rho_variant);              }},
+  		{         wynn_rho_generalized_transformation_id, [](){ return std::make_unique<wynn_rho_algorithm<T, K>>(numerator_type::generalized_variant);      }},
+    	{           wynn_rho_gamma_rho_transformation_id, [](){ return std::make_unique<wynn_rho_algorithm<T, K>>(numerator_type::gamma_rho_variant);        }},
+	};
+
+	std::vector<std::unique_ptr<series_acceleration<T,K>>> algos(algoInit.size());
+	for (size_t j = 1; j <= algoInit.size(); ++j){
+		algos[j-1] = algoInit[static_cast<transformation_id_t>(j)]();
+	}
+
+	exp_series<T,K> testSeries = exp_series<T,K>();
+	SeriesResult<T> result = testSeries.generateSeries(x, 150);
+
+	NoiseGenerator<T> noiseGen = NoiseGenerator<T>(NoiseType::normal, 42);
+	SeriesResult<T> noisyResult = noiseGen.jitter(result, 0.0, 1e-5);
+
+
+	// std::cout << "EXP(x) = " << testSeries.get_sum() << "\n";
+
+	std::cout << "BASIC NOISE\n";
+	for (size_t i = 0; i < algos.size(); ++i){
+		testAlgorithm(algos[i], noisyResult);
+	}
+
+
+	std::cout << "\n--------------------------------------------------------------------------------------------\n";
+	std::cout << "STRONGER NOISE\n";
+
+	SeriesResult<T> strongerNoisyResult = noiseGen.jitter(result, 0.0, 1e-3);
+
+	for (size_t i = 0; i < algos.size(); ++i){
+		testAlgorithm(algos[i], strongerNoisyResult);
+	}
+
+	std::cout << "\n--------------------------------------------------------------------------------------------\n";
+	std::cout << "EXTREME NOISE\n";
+
+	SeriesResult<T> extremeNoisyResult = noiseGen.jitter(result, 0.0, 1e-1);
+
+	for (size_t i = 0; i < algos.size(); ++i){
+		testAlgorithm(algos[i], extremeNoisyResult);
+	}
+
+	std::cout << "\n--------------------------------------------------------------------------------------------\n";
+	std::cout << "SHIFTED DOWN NOISE\n";
+
+	SeriesResult<T> shiftedDownNoisyResult = noiseGen.jitter(result, -1.0, 1e-5);
+	for (size_t i = 0; i < algos.size(); ++i){
+		testAlgorithm(algos[i], shiftedDownNoisyResult);
+	}
+
+	std::cout << "\n--------------------------------------------------------------------------------------------\n";
+	std::cout << "SHIFTED UP NOISE\n";
+
+	SeriesResult<T> shiftedUpNoisyResult = noiseGen.jitter(result, 1.0, 1e-5);
+	for (size_t i = 0; i < algos.size(); ++i){
+		testAlgorithm(algos[i], shiftedUpNoisyResult);
+	}
+
+}
+/* Вроде ошибок не возникает (Даже при шуме около +-1)
+ * РезулЬтаты алгоритмов выглядят похоже на обычные
+ * Надо понять какие значения брать для генерации шума для каждой серии (наверно?)
+ */
 
 int main()
 {
+
 
 	//using typeA = double;
 	//using typeA = complex_precision<float_precision>;
 	using typeA = float_precision;
 	using typeB = unsigned long long int;
 
-	// typeA x(1, 200);
+	typeA x(1, 200);
 	// typeA x(float_precision(1, 50), float_precision(1, 50));
 	// std::cout << x << "\n";
 	//typeA x(1.0);
@@ -357,9 +462,9 @@ int main()
 	//std::cout << double_fact<typeB>(7) << "\n";
 	//std::cout << binomial_coefficient<typeB>(13, 5) << "\n";
 
-	//testCompatability<typeA, typeB>(x);
+	testNoise<typeA, typeB>(x);
 
-	TestNoise();
+	// TestNoise();
 	//testRows<typeA,typeB>();
 
 	/*
