@@ -496,7 +496,7 @@ template<class _Ty> inline bool isfinite(const complex_precision<_Ty>& x){ retur
 template<class _Ty> inline complex_precision<_Ty> fma(complex_precision<_Ty> x, complex_precision<_Ty> y, complex_precision<_Ty> z){
 
    _Ty real_part = x.real() * y.real() - x.imag() * y.imag() + z.real();
-   _Ty imag_part = x.real() * x.imag() + y.real() * y.imag() + z.imag() ;
+   _Ty imag_part = x.real() * y.imag() + y.real() * x.imag() + z.imag() ;
 
    complex_precision<_Ty> res(real_part, imag_part);
 
