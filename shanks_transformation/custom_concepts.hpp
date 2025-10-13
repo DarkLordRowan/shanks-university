@@ -11,11 +11,19 @@
 template<typename T>
 concept FloatLike = std::is_floating_point<T>::value || std::is_same<T, float_precision>::value;
 
+#ifdef INC_COMPLEXPRECISION
+template<typename T>
+struct isComplexLike : std::integral_constant<bool,
+        std::is_same<T, complex_precision<float>>::value  ||
+        std::is_same<T, complex_precision<double>>::value ||
+        std::is_same<T, complex_precision<long double>>::value ||
+        #ifdef INC_FPRECISION
+            std::is_same<T, complex_precision<float_precision>>::value>{};
+        #endif
+#endif
+
 template<typename T>
 concept ComplexLike =
-    //std::is_same<T, std::complex<float>>::value  ||
-    //std::is_same<T, std::complex<double>>::value ||
-    //std::is_same<T, std::complex<long double>>::value ||
     std::is_same<T, complex_precision<float>>::value  ||
     std::is_same<T, complex_precision<double>>::value ||
     std::is_same<T, complex_precision<long double>>::value ||

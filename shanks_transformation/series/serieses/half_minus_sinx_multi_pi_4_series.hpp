@@ -32,8 +32,9 @@ public:
 		
 		using std::isfinite;
 
-        if constexpr (std::is_same<T, complex_precision<float_precision>>::value){
-            return !isfinite(x) || x.real() < float_precision(0) || x.real() > float_precision(0.5 * std::numbers::pi);
+        if constexpr (isComplexLike<T>::value){
+    		return !isfinite(x.real()) || !isfinite(x.imag()) || float_precision(x.real()) < float_precision(0) || 
+			float_precision(x.real()) > float_precision(0.5 * std::numbers::pi);
         } else {
             return !isfinite(x) || x < static_cast<T>(0) || x > static_cast<T>(0.5 * std::numbers::pi);
         }
@@ -63,14 +64,10 @@ SeriesResult<T> half_minus_sinx_multi_pi_4_series<T, K>::generateSeries(
 	series_base<T,K>::x_ = x;
 	series_base<T,K>::sum = calculateSum(x);
 
-	if constexpr ( std::is_same<T, float_precision> :: value ){
-		series_base<T, K>::precision = x.precision();
-	} else if constexpr (std::is_same<T, complex_precision<float_precision>>::value){
-		series_base<T, K>::precision = std::max(x.real().precision(), x.imag().precision());
-	}
+	std::vector<T> vecAn;
+	std::vector<T> vecSn;
 
-	std::vector<T> vecAn(vecSize, convertWithPrec<T>(0.0, series_base<T, K>::precision));
-	std::vector<T> vecSn(vecSize, convertWithPrec<T>(0.0, series_base<T, K>::precision));
+	series_base<T,K>::initVecsWithPrec(vecSn,vecAn, vecSize, x);
 
     using std::cos;
 

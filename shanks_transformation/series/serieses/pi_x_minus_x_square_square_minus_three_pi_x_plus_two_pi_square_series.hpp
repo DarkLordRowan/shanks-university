@@ -31,8 +31,9 @@ public:
 		
 		using std::isfinite;
 
-		if constexpr (std::is_same<T, complex_precision<float_precision>>::value){
-            return !isfinite(x) || x.real() < float_precision(0) || x.real() > float_precision(2.0 * std::numbers::pi);
+		if constexpr (isComplexLike<T>::value){
+    		return !isfinite(x.real()) || !isfinite(x.imag()) || float_precision(x.real()) < float_precision(0) || 
+			float_precision(x.real()) > float_precision(2.0 * std::numbers::pi);
         } else {
             return !isfinite(x) || x < static_cast<T>(0) || x > static_cast<T>(2.0 * std::numbers::pi);
         }
@@ -40,13 +41,11 @@ public:
 
 	inline constexpr T calculateSum(const T& x){
 
-		if constexpr (std::is_same<T, complex_precision<float_precision>>::value){
-            if (x.real() <= float_precision(std::numbers::pi)){
-                return  static_cast<T>(float_precision(std::numbers::pi, series_base<T, K>::precision)) * x - x * x;
+		if constexpr (isComplexLike<T>::value){
+            if (float_precision(x.real()) <= float_precision(std::numbers::pi)){
+                return  static_cast<T>(float_precision(std::numbers::pi)) * x - x * x;
             } else {
-                return x * x - static_cast<T>(float_precision(3.0 * std::numbers::pi, series_base<T, K>::precision)) * x 
-				+ static_cast<T>(float_precision(2.0*std::numbers::pi, series_base<T, K>::precision)) *
-				 static_cast<T>(float_precision(std::numbers::pi, series_base<T, K>::precision));
+                return x * x - static_cast<T>(3.0 * std::numbers::pi) * x + static_cast<T>(2.0*std::numbers::pi) * static_cast<T>(std::numbers::pi);
             }
 
         } else {
@@ -75,14 +74,10 @@ SeriesResult<T> pi_x_minus_x_square_square_minus_three_pi_x_plus_two_pi_square_s
 	series_base<T,K>::x_ = x;
 	series_base<T,K>::sum = calculateSum(x);
 
-	if constexpr ( std::is_same<T, float_precision> :: value ){
-		series_base<T, K>::precision = x.precision();
-	} else if constexpr (std::is_same<T, complex_precision<float_precision>>::value){
-		series_base<T, K>::precision = std::max(x.real().precision(), x.imag().precision());
-	}
+	std::vector<T> vecAn;
+	std::vector<T> vecSn;
 
-	std::vector<T> vecAn(vecSize, convertWithPrec<T>(0.0, series_base<T, K>::precision));
-	std::vector<T> vecSn(vecSize, convertWithPrec<T>(0.0, series_base<T, K>::precision));
+	series_base<T,K>::initVecsWithPrec(vecSn,vecAn, vecSize, x);
 
     using std::sin;
 

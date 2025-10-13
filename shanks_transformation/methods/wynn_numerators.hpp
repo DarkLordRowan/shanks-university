@@ -17,8 +17,6 @@
 
 #include "../custom_concepts.hpp"
 
-#include <memory>
-
  /**
   * @brief Enum for remainder types to use in Levin-type transformations.
   *
@@ -138,7 +136,7 @@ public:
 	 * @param order Order of the transformation.
 	 *        Valid values: order >= 0.
 	 * @param an Unused parameter (maintained for interface consistency).
-	 * @param gamma Gamma parameter offset.
+	 * @param gamma Gamma parameter .
 	 *        Valid values: any finite T value. Typical range: 0.0 to 2.0. (gamma != 0, 1, 2, ...)
 	 * @param rho Unused parameter (maintained for interface consistency).
 	 * @return The computed constant: order - gamma - 1.
@@ -177,7 +175,7 @@ public:
 	 * @param order Order of the transformation.
 	 *        Valid values: order >= 0.
 	 * @param an Unused parameter (maintained for interface consistency).
-	 * @param gamma Gamma parameter (additive offset).
+	 * @param gamma Gamma parameter (additive ).
 	 *        Valid values: any finite T value. Typical range: -10.0 to 10.0. (gamma != i/rho, i= 0, 1, ...)
 	 * @param rho Rho parameter (divisor scaling).
 	 *        Valid values: rho ≠ 0.0 to avoid division by zero.

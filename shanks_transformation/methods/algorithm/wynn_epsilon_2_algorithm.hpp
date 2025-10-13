@@ -53,7 +53,7 @@ public:
 	 *        Must be a valid object implementing the required series interface.
 	 *        The series should provide term access and partial sum calculation.
 	 */
-    explicit wynn_epsilon_2_algorithm();
+    explicit wynn_epsilon_2_algorithm() : series_acceleration<T, K>("wynn epsilon 2") {};
 
 	/**
 	 * @brief Implementation of Wynn's epsilon algorithm for series acceleration.
@@ -80,24 +80,20 @@ public:
 	 */
     T operator()(
 		const K n, 
-        const K order,
-		const SeriesResult<T>& data,
-        const K offset = static_cast<K>(0)
+        const K order, 
+         
+        const SeriesResult<T>& data
 	) const override;
 };
 
 template <AcceptedLike T, UnsignedIntLike K>
-wynn_epsilon_2_algorithm<T, K>::wynn_epsilon_2_algorithm() : series_acceleration<T, K>("wynn epsilon 2") {}
-
-template <AcceptedLike T, UnsignedIntLike K>
 T wynn_epsilon_2_algorithm<T, K>::operator()(
 	const K n, 
-    const K order,
-	const SeriesResult<T>& data,
-    const K offset
+    const K order, 
+    const SeriesResult<T>& data
 ) const {
 
-    K required_size = order + static_cast<K>(1) + offset;
+    K required_size = static_cast<K>(2) * order + n + static_cast<K>(1);
 
     if (data.Sn.size() < required_size){
         throw std::out_of_range("Sn or an is smaller than required to calculate e2_{" + to_string(order) + "}^{" + to_string(n) + "}");
@@ -112,8 +108,6 @@ T wynn_epsilon_2_algorithm<T, K>::operator()(
         return data.Sn.at(n);
     }
 
-	size_t currentPrecision = series_acceleration<T, K>::define_precision(data.Sn[0]);
-
     using std::isfinite;
 
 	// For theory, see: Wynn (1956), Section 3 - Algorithm construction and table size
@@ -126,23 +120,24 @@ T wynn_epsilon_2_algorithm<T, K>::operator()(
 		4,
 		std::vector<T>(
 			k + static_cast<K>(1),
-			convertWithPrec<T>(0.0, currentPrecision)
+			static_cast<T>(0.0)
 		)
 	);
 
 	// For theory, see: Wynn (1956), Eq. (2) - Initialization with partial sums
 	// Initialize the bottom row with partial sums: ε₀⁽ᵐ⁾ = Sₙ for m = 0,1,...,k
 	for (K i = static_cast<K>(0); i <= k; ++i)
-		eps[3][i] = data.Sn.at(i);
+		eps[3][i] = data.Sn.at( + i);
 
 
 	T a, a1, a2;
-	a = a1 = a2 = convertWithPrec<T>(0.0, currentPrecision);
+	a = a1 = a2 = static_cast<T>(0.0);
 
 	K i1, i2;
 
 	// For theory, see: Wynn (1956), Section 3 - Lozenge computation process
     // Build the epsilon table from bottom to top using the recurrence relation
+	bool stable = false;
 	while (k > static_cast<K>(0))
 	{
 		for (K i = static_cast<K>(0); i != k; ++i)
@@ -156,7 +151,14 @@ T wynn_epsilon_2_algorithm<T, K>::operator()(
 
 			// For theory, see: Wynn (1964) - Numerical stability improvements
 		    // Additional checks and corrections for finite precision arithmetic
-			if (!isfinite(eps[0][i]) && i2 <= k) // Stability check and correction
+
+			if constexpr (isComplexLike<T>::value){
+				stable = (isfinite(eps[0][i].real()) || isfinite(eps[0][i].imag()));
+    		} else {
+				stable = isfinite(eps[0][i]);
+    		}
+
+			if (!stable && i2 <= k) // Stability check and correction
 			{
 				a2 = static_cast<T>(1) / eps[2][i1];
 
@@ -171,6 +173,173 @@ T wynn_epsilon_2_algorithm<T, K>::operator()(
 
 				eps[0][i] = static_cast<T>(1) / eps[2][i1];
 				eps[0][i] = static_cast<T>(1) / (static_cast<T>(1) + a * eps[0][i]);
+				eps[0][i] = eps[0][i] * a;
+			}
+
+			if constexpr (isComplexLike<T>::value){
+				stable = (isfinite(eps[0][i].real()) || isfinite(eps[0][i].imag()));
+    		} else {
+				stable = isfinite(eps[0][i]);
+    		}
+
+			// Fallback to previous value if correction fails
+			if (!stable)
+				eps[0][i] = eps[2][i];
+
+		}
+
+		// For theory, see: Wynn (1956), Section 3 - Table updating procedure
+		// Shift rows upward in the circular buffer for the next iteration
+		std::swap(eps[0], eps[1]);
+		std::swap(eps[1], eps[2]);
+		std::swap(eps[2], eps[3]);
+
+		--k;
+	}
+
+	// Final row shifts to position the result correctly
+	std::swap(eps[0], eps[1]);
+	std::swap(eps[1], eps[2]);
+	std::swap(eps[2], eps[3]);
+
+	// For theory, see: Wynn (1956), Section 3 - Result extraction
+	// Even columns (ε₂ₖ⁽ᵐ⁾) contain the accelerated approximations
+	
+
+	if (n % static_cast<K>(2) != static_cast<K>(0))
+		return eps[3][0];
+
+	return eps[0][0];
+}
+
+#ifdef INC_FPRECISION
+
+template <UnsignedIntLike K>
+class wynn_epsilon_2_algorithm<float_precision, K> final : public series_acceleration<float_precision, K>
+{
+public:
+
+	/**
+	 * @brief Parameterized constructor to initialize the Epsilon Algorithm.
+	 * @param series The series class object to be accelerated.
+	 *        Must be a valid object implementing the required series interface.
+	 *        The series should provide term access and partial sum calculation.
+	 */
+    explicit wynn_epsilon_2_algorithm() : series_acceleration<float_precision, K>("wynn epsilon 2") {};
+
+	/**
+	 * @brief Implementation of Wynn's epsilon algorithm for series acceleration.
+	 *
+	 * Computes the accelerated sum using Wynn's epsilon algorithm with improved
+	 * numerical stability checks. The algorithm constructs a table of approximations
+	 * and returns the most accurate estimate from the even columns.
+	 *
+	 * Mathematical Formulation:
+	 * For theory, see: Wynn (1956), Eq. (4) - Epsilon algorithm recurrence relation ()
+	 * More information, see page 20 - 21 in[https://hal.science/hal-04207550/document]
+	 *
+	 * εₖ₊₁⁽ᵐ⁾ = εₖ₋₁⁽ᵐ⁺¹⁾ + 1/(εₖ⁽ᵐ⁺¹⁾ - εₖ⁽ᵐ⁾)
+	 *
+	 * @param n The number of terms to use in the transformation (n ≥ 1)
+	 *        Valid values: n > 0 (algorithm requires at least 1 term)
+	 *        Higher values use more terms but may provide better acceleration
+	 * @param order The order of transformation (typically order ≤ n/2)
+	 *        Valid values: order >= 0
+	 *        Higher orders use more terms from the epsilon table
+	 * @return The accelerated partial sum after Wynn's epsilon transformation
+	 * @throws std::domain_error if n=0 is provided as input
+	 * @throws std::overflow_error if numerical instability occurs
+	 */
+    float_precision operator()(
+		const K n, 
+        const K order, 
+        const SeriesResult<float_precision>& data
+	) const override;
+};
+
+template <UnsignedIntLike K>
+float_precision wynn_epsilon_2_algorithm<float_precision, K>::operator()(
+	const K n, 
+    const K order, 
+    const SeriesResult<float_precision>& data
+) const {
+
+    K required_size = static_cast<K>(2) * order + n + static_cast<K>(1);
+
+    if (data.Sn.size() < required_size){
+        throw std::out_of_range("Sn or an is smaller than required to calculate e2_{" + to_string(order) + "}^{" + to_string(n) + "}");
+	}
+
+	// For theory, see: Wynn (1956), Section 2 - Initial conditions and algorithm setup
+    if (n == static_cast<K>(0)){
+        throw std::domain_error("n = 0 in the input");
+    }
+
+    if (order == static_cast<K>(0)) {
+        return data.Sn.at(n);
+    }
+
+    using std::isfinite;
+
+	const size_t precision = data.Sn[0].precision();
+
+	// For theory, see: Wynn (1956), Section 3 - Algorithm construction and table size
+	// Total number of entries needed in the epsilon table: k = 2*order + n
+	K k = static_cast<K>(2) * order + n;
+
+	// For theory, see: Wynn (1956), Section 3 - Epsilon table structure
+	// The epsilon table is stored as a 4-row circular buffer to save memory
+	std::vector<std::vector<float_precision>> eps(
+		4,
+		std::vector<float_precision>(
+			k + static_cast<K>(1),
+			float_precision(0.0, precision)
+		)
+	);
+
+	// For theory, see: Wynn (1956), Eq. (2) - Initialization with partial sums
+	// Initialize the bottom row with partial sums: ε₀⁽ᵐ⁾ = Sₙ for m = 0,1,...,k
+	for (K i = static_cast<K>(0); i <= k; ++i)
+		eps[3][i] = data.Sn.at(i);
+
+
+	float_precision a, a1, a2;
+	a = a1 = a2 = float_precision(0.0, precision);
+
+	K i1, i2;
+
+	// For theory, see: Wynn (1956), Section 3 - Lozenge computation process
+    // Build the epsilon table from bottom to top using the recurrence relation
+	while (k > static_cast<K>(0))
+	{
+		for (K i = static_cast<K>(0); i != k; ++i)
+		{
+			i1 = i + static_cast<K>(1);
+			i2 = i + static_cast<K>(2);
+
+			// For theory, see: Wynn (1956), Eq. (4) - Main recurrence relation
+			// εₖ₊₁⁽ᵐ⁾ = εₖ₋₁⁽ᵐ⁺¹⁾ + 1/(εₖ⁽ᵐ⁺¹⁾ - εₖ⁽ᵐ⁾)
+			eps[0][i] = eps[2][i1] + float_precision(1) / (eps[3][i1] - eps[3][i]);
+
+			// For theory, see: Wynn (1964) - Numerical stability improvements
+		    // Additional checks and corrections for finite precision arithmetic
+
+
+			if (!isfinite(eps[0][i]) && i2 <= k) // Stability check and correction
+			{
+				a2 = float_precision(1) / eps[2][i1];
+
+				a1 = float_precision(1) / (float_precision(1) - (a2 * eps[2][i2]));
+				a = eps[2][i2] * a1;
+
+				a1 = float_precision(1) / (float_precision(1) - (a2 * eps[2][i]));
+				a += eps[2][i] * a1;
+
+				a1 = float_precision(1) / (float_precision(1) - (a2 * eps[0][i2]));
+				a -= eps[0][i2] * a1;
+
+				eps[0][i] = float_precision(1) / eps[2][i1];
+				eps[0][i] = float_precision(1) / (float_precision(1) + a * eps[0][i]);
 				eps[0][i] = eps[0][i] * a;
 			}
 
@@ -196,8 +365,180 @@ T wynn_epsilon_2_algorithm<T, K>::operator()(
 
 	// For theory, see: Wynn (1956), Section 3 - Result extraction
 	// Even columns (ε₂ₖ⁽ᵐ⁾) contain the accelerated approximations
+	
+
 	if (n % static_cast<K>(2) != static_cast<K>(0))
 		return eps[3][0];
 
 	return eps[0][0];
 }
+
+#ifdef INC_COMPLEXPRECISION
+
+template <UnsignedIntLike K>
+class wynn_epsilon_2_algorithm<complex_precision<float_precision>, K> final : public series_acceleration<complex_precision<float_precision>, K>
+{
+public:
+
+	/**
+	 * @brief Parameterized constructor to initialize the Epsilon Algorithm.
+	 * @param series The series class object to be accelerated.
+	 *        Must be a valid object implementing the required series interface.
+	 *        The series should provide term access and partial sum calculation.
+	 */
+    explicit wynn_epsilon_2_algorithm() : series_acceleration<complex_precision<float_precision>, K>("wynn epsilon 2") {};
+
+	/**
+	 * @brief Implementation of Wynn's epsilon algorithm for series acceleration.
+	 *
+	 * Computes the accelerated sum using Wynn's epsilon algorithm with improved
+	 * numerical stability checks. The algorithm constructs a table of approximations
+	 * and returns the most accurate estimate from the even columns.
+	 *
+	 * Mathematical Formulation:
+	 * For theory, see: Wynn (1956), Eq. (4) - Epsilon algorithm recurrence relation ()
+	 * More information, see page 20 - 21 in[https://hal.science/hal-04207550/document]
+	 *
+	 * εₖ₊₁⁽ᵐ⁾ = εₖ₋₁⁽ᵐ⁺¹⁾ + 1/(εₖ⁽ᵐ⁺¹⁾ - εₖ⁽ᵐ⁾)
+	 *
+	 * @param n The number of terms to use in the transformation (n ≥ 1)
+	 *        Valid values: n > 0 (algorithm requires at least 1 term)
+	 *        Higher values use more terms but may provide better acceleration
+	 * @param order The order of transformation (typically order ≤ n/2)
+	 *        Valid values: order >= 0
+	 *        Higher orders use more terms from the epsilon table
+	 * @return The accelerated partial sum after Wynn's epsilon transformation
+	 * @throws std::domain_error if n=0 is provided as input
+	 * @throws std::overflow_error if numerical instability occurs
+	 */
+    complex_precision<float_precision> operator()(
+		const K n, 
+        const K order, 
+        const SeriesResult<complex_precision<float_precision>>& data
+	) const override;
+};
+
+template <UnsignedIntLike K>
+complex_precision<float_precision> wynn_epsilon_2_algorithm<complex_precision<float_precision>, K>::operator()(
+	const K n, 
+    const K order, 
+    const SeriesResult<complex_precision<float_precision>>& data
+) const {
+
+    K required_size = static_cast<K>(2) * order + n + static_cast<K>(1);
+
+    if (data.Sn.size() < required_size){
+        throw std::out_of_range("Sn or an is smaller than required to calculate e2_{" + to_string(order) + "}^{" + to_string(n) + "}");
+	}
+
+	// For theory, see: Wynn (1956), Section 2 - Initial conditions and algorithm setup
+    if (n == static_cast<K>(0)){
+        throw std::domain_error("n = 0 in the input");
+    }
+
+    if (order == static_cast<K>(0)) {
+        return data.Sn.at(n);
+    }
+
+    using std::isfinite;
+
+	const size_t precision = std::max(data.Sn[0].real().precision(), data.Sn[0].imag().precision());
+
+	// For theory, see: Wynn (1956), Section 3 - Algorithm construction and table size
+	// Total number of entries needed in the epsilon table: k = 2*order + n
+	K k = static_cast<K>(2) * order + n;
+
+	// For theory, see: Wynn (1956), Section 3 - Epsilon table structure
+	// The epsilon table is stored as a 4-row circular buffer to save memory
+	std::vector<std::vector<complex_precision<float_precision>>> eps(
+		4,
+		std::vector<complex_precision<float_precision>>(
+			k + static_cast<K>(1),
+			complex_precision<float_precision>(
+				float_precision(0.0, precision),
+				float_precision(0.0, precision)
+			)
+		)
+	);
+
+	// For theory, see: Wynn (1956), Eq. (2) - Initialization with partial sums
+	// Initialize the bottom row with partial sums: ε₀⁽ᵐ⁾ = Sₙ for m = 0,1,...,k
+	for (K i = static_cast<K>(0); i <= k; ++i)
+		eps[3][i] = data.Sn.at(i);
+
+
+	complex_precision<float_precision> a, a1, a2;
+	a = a1 = a2 = complex_precision<float_precision>(
+		float_precision(0.0, precision),
+		float_precision(0.0, precision)
+	);
+
+	K i1, i2;
+
+	// For theory, see: Wynn (1956), Section 3 - Lozenge computation process
+    // Build the epsilon table from bottom to top using the recurrence relation
+	while (k > static_cast<K>(0))
+	{
+		for (K i = static_cast<K>(0); i != k; ++i)
+		{
+			i1 = i + static_cast<K>(1);
+			i2 = i + static_cast<K>(2);
+
+			// For theory, see: Wynn (1956), Eq. (4) - Main recurrence relation
+			// εₖ₊₁⁽ᵐ⁾ = εₖ₋₁⁽ᵐ⁺¹⁾ + 1/(εₖ⁽ᵐ⁺¹⁾ - εₖ⁽ᵐ⁾)
+			eps[0][i] = eps[2][i1] + complex_precision<float_precision>(1) / (eps[3][i1] - eps[3][i]);
+
+			// For theory, see: Wynn (1964) - Numerical stability improvements
+		    // Additional checks and corrections for finite precision arithmetic
+
+
+			if ((!isfinite(eps[0][i].real()) || !isfinite(eps[0][i].imag()))&& i2 <= k) // Stability check and correction
+			{
+				a2 = complex_precision<float_precision>(1) / eps[2][i1];
+
+				a1 = complex_precision<float_precision>(1) / (complex_precision<float_precision>(1) - (a2 * eps[2][i2]));
+				a = eps[2][i2] * a1;
+
+				a1 = complex_precision<float_precision>(1) / (complex_precision<float_precision>(1) - (a2 * eps[2][i]));
+				a += eps[2][i] * a1;
+
+				a1 = complex_precision<float_precision>(1) / (complex_precision<float_precision>(1) - (a2 * eps[0][i2]));
+				a -= eps[0][i2] * a1;
+
+				eps[0][i] = complex_precision<float_precision>(1) / eps[2][i1];
+				eps[0][i] = complex_precision<float_precision>(1) / (complex_precision<float_precision>(1) + a * eps[0][i]);
+				eps[0][i] = eps[0][i] * a;
+			}
+
+			// Fallback to previous value if correction fails
+			if (!isfinite(eps[0][i].real()) || !isfinite(eps[0][i].imag()))
+				eps[0][i] = eps[2][i];
+
+		}
+
+		// For theory, see: Wynn (1956), Section 3 - Table updating procedure
+		// Shift rows upward in the circular buffer for the next iteration
+		std::swap(eps[0], eps[1]);
+		std::swap(eps[1], eps[2]);
+		std::swap(eps[2], eps[3]);
+
+		--k;
+	}
+
+	// Final row shifts to position the result correctly
+	std::swap(eps[0], eps[1]);
+	std::swap(eps[1], eps[2]);
+	std::swap(eps[2], eps[3]);
+
+	// For theory, see: Wynn (1956), Section 3 - Result extraction
+	// Even columns (ε₂ₖ⁽ᵐ⁾) contain the accelerated approximations
+	
+
+	if (n % static_cast<K>(2) != static_cast<K>(0))
+		return eps[3][0];
+
+	return eps[0][0];
+}
+
+#endif
+#endif

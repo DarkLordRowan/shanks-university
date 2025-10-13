@@ -44,7 +44,7 @@ public:
      * @param series The series class object to be accelerated
      *        Must be a valid object implementing the required series interface
      */
-    explicit series_acceleration(std::string name  = "unknown", size_t precision = 20);
+    explicit series_acceleration(std::string name  = "unknown") : acceleration_name(name) {};
 
     /**
      * @brief Method for printing basic information about the acceleration object
@@ -53,7 +53,7 @@ public:
      * Outputs the type name of the derived transformation class to standard output.
      * This is primarily used for debugging and identification purposes.
      */
-    constexpr void print_info() const;
+    constexpr void print_info() const { std::cout << this->acceleration_name << '\n'; }
 
     /**
      * @brief Virtual function operator for computing the accelerated partial sum
@@ -71,44 +71,10 @@ public:
      * @return The accelerated partial sum after applying the transformation
      * @throws May throw domain_error or overflow_error in derived implementations
      */
-    virtual T operator()(const K n, const K order, const SeriesResult<T>& data, const K offset = static_cast<K>(0)) const = 0;
+    virtual T operator()(const K n, const K order, const SeriesResult<T>& data) const = 0;
 
 protected:
 
-    inline size_t define_precision(const T& example) const {
-        if constexpr (std::is_same<T, float_precision>::value){
-            return std::max(precision, example.precision());
-        } else if constexpr (std::is_same<T, complex_precision<float_precision>>::value){
-            return std::max(precision, std::max(example.real().precision(), example.imag().precision()));
-        } else {
-            return precision;
-        }
-    }
-
     std::string acceleration_name = "series acceleration base class";
 
-    size_t precision = 20;
-
 };
-
-
-/**
- * @brief Constructor implementation for series_acceleration
- *
- * Initializes the base class with the provided series object. This constructor
- * is typically called by derived classes through their constructor initializer lists.
- *
- * @param series The series object to be accelerated
- */
-template<AcceptedLike T, UnsignedIntLike K>
-series_acceleration<T, K>::series_acceleration(std::string name, size_t precision) : acceleration_name(name), precision(precision) {}
-
-
-/**
- * @brief Implementation of print_info method
- *
- * Outputs the name of the actual derived class type using RTTI (run-time type information).
- * This helps identify which specific acceleration method is being used.
- */
-template<AcceptedLike T, UnsignedIntLike K>
-constexpr void series_acceleration<T, K>::print_info() const { std::cout << this->acceleration_name << '\n'; }

@@ -31,8 +31,8 @@ public:
 		
 		using std::isfinite;
 
-		if constexpr (std::is_same<T, complex_precision<float_precision>>::value){
-            return !isfinite(x) || x.real() < float_precision(2);
+		if constexpr (isComplexLike<T>::value){
+    		return !isfinite(x.real()) || !isfinite(x.imag()) || float_precision(x.real()) < float_precision(2);
         } else {
             return !isfinite(x) || x < static_cast<T>(2);
         }
@@ -40,14 +40,12 @@ public:
 
 	inline T calculateSum(const T& x){
 
-		//поменять библу на CLN
-
-		if constexpr (std::is_same<T, complex_precision<float_precision>>::value){
-            return 0;
+		if constexpr (isComplexLike<T>::value){
+            return static_cast<T>(0);
         } else if constexpr (std::is_same<T, float_precision>::value){
             return abs(zeta(x - static_cast<T>(1)) / zeta(x));
         } else {
-			return abs(static_cast<T>(zeta(x - static_cast<T>(1))) / static_cast<T>(zeta(x)));
+			return abs(static_cast<T>(zeta(isComplexLike<T>::value(x - 1)))) / static_cast<T>(zeta(isComplexLike<T>::value(x)));
 		}
 	}
 
@@ -68,14 +66,10 @@ SeriesResult<T> riemann_zeta_func_xmin1_div_Riemann_zeta_func_x_series<T, K>::ge
 	series_base<T,K>::x_ = x;
 	series_base<T,K>::sum = calculateSum(x);
 
-	if constexpr ( std::is_same<T, float_precision> :: value ){
-		series_base<T, K>::precision = x.precision();
-	} else if constexpr (std::is_same<T, complex_precision<float_precision>>::value){
-		series_base<T, K>::precision = std::max(x.real().precision(), x.imag().precision());
-	}
+	std::vector<T> vecAn;
+	std::vector<T> vecSn;
 
-	std::vector<T> vecAn(vecSize, convertWithPrec<T>(0.0, series_base<T, K>::precision));
-	std::vector<T> vecSn(vecSize, convertWithPrec<T>(0.0, series_base<T, K>::precision));
+	series_base<T,K>::initVecsWithPrec(vecSn,vecAn, vecSize, x);
 
     using std::pow;
 

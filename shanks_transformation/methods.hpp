@@ -8,6 +8,7 @@
 enum transformation_id_t {
 	        		     null_transformation_id,
               brezinski_theta_transformation_id,
+                   chang_wynn_transformation_id,
                  drummond_d_u_transformation_id,
                  drummond_d_t_transformation_id,
             drummond_d_t_wave_transformation_id,
@@ -18,7 +19,6 @@ enum transformation_id_t {
        recurrent_drummond_d_v_transformation_id,
   recurrent_drummond_d_t_wave_transformation_id,
   recurrent_drummond_d_v_wave_transformation_id,
-                   chang_wynn_transformation_id,
                   ford_sidi_2_transformation_id,
                   ford_sidi_3_transformation_id,
                levin_sidi_l_u_transformation_id,
@@ -61,8 +61,8 @@ recurrent_levin_sidi_s_v_wave_transformation_id,
 
 //INCLUDE TRANSFORMATIONS AND ALGORITHMS
 #include "./methods/algorithm/brezinski_theta_algorithm.hpp"
-#include "./methods/algorithm/drummond_d_algorithm.hpp"
 #include "./methods/algorithm/chang_wynn_algorithm.hpp"
+#include "./methods/algorithm/drummond_d_algorithm.hpp"
 #include "./methods/algorithm/ford_sidi_2_algorithm.hpp"
 #include "./methods/algorithm/ford_sidi_3_algorithm.hpp"
 #include "./methods/algorithm/levin_algorithm.hpp"
@@ -71,6 +71,7 @@ recurrent_levin_sidi_s_v_wave_transformation_id,
 #include "./methods/algorithm/lubkin_w_algorithm.hpp"
 #include "./methods/algorithm/richardson_algorithm.hpp"
 #include "./methods/algorithm/shanks_algorithm.hpp"
+#include "./methods/algorithm/shanks_alternating_algorithm.hpp"
 #include "./methods/algorithm/weniger_algorithm.hpp"
 #include "./methods/algorithm/wynn_epsilon_1_algorithm.hpp"
 #include "./methods/algorithm/wynn_epsilon_2_algorithm.hpp"
