@@ -16,7 +16,6 @@ from typing import Iterable, Any, Mapping
 from collections.abc import Callable
 
 def autowrap(x: Any) -> Iterable[Any]:
-    print(x)
     if x is not None and (isinstance(x, str) or not isinstance(x, Iterable)):
         return [x]
     if isinstance(x, dict):
@@ -42,7 +41,7 @@ class BaseSeriesParam(ABC):
     @abstractmethod
     def executable(
         self,
-    ) -> type[ps.SeriesBaseF64] | type[ps.SeriesBaseArb] | Callable[..., ps.ArraySeriesF64 | ps.ArraySeriesArb]: ...
+    ) -> type[ps.SeriesBaseF64] | type[ps.SeriesBaseArb] | Callable[..., ps.SeriesResultF64 | ps.SeriesResultArb]: ...
 
 
 @dataclass
@@ -93,10 +92,8 @@ class SeriesParamModule(BaseSeriesParam):
         """Initialize with direct caller reference and optional kwargs.
 
         Args:
-            caller: SeriesAcceleration class reference.
-            n: Iterable of integer n values.
-            m: Iterable of integer m values.
-            **kwargs: Additional initialization arguments.
+            caller: SeriesBase class reference.
+            **kwargs: Additional initialization arguments for generateSeries.
         """
         self.caller = caller
         self.args = kwargs
@@ -130,7 +127,7 @@ class SeriesParamCSV(BaseSeriesParam):
 
     location: pathlib.Path
     row: int
-    data: ps.ArraySeriesF64 | ps.ArraySeriesArb
+    data: ps.SeriesResultF64 | ps.SeriesResultArb
 
     @property
     def arguments(self):
@@ -145,7 +142,21 @@ class SeriesParamCSV(BaseSeriesParam):
     @property
     def executable(self):
         """Implementation of abstract method - returns lambda with pre-loaded data."""
-        return lambda _: self.data
+        class CSVSeriesWrapper:
+            def __init__(self, data):
+                self.data = data
+                self._sum = data.Sn[-1] if hasattr(data, 'Sn') and data.Sn else 0.0
+
+            def generateSeries(self, x, vecSize, addTParameter, addKParameter):
+                return self.data
+
+            def get_sum(self):
+                return self._sum
+
+            def get_name(self):
+                return f"CSVSeries_{self.data.__class__.__name__}"
+
+        return lambda: CSVSeriesWrapper(self.data)
 
 
 class BaseAccelParam(ABC):
@@ -175,7 +186,7 @@ class BaseAccelParam(ABC):
 
 
 @dataclass
-class StandardAccelParam(BaseAccelParam):
+class StandardAccelParam(BaseAccelParam, ABC):
     """Base class for acceleration parameters with standard n and m values.
 
     Attributes:
@@ -267,7 +278,7 @@ class AccelParamModule(StandardAccelParam):
             caller: SeriesAcceleration class reference.
             n: Iterable of integer n values.
             m: Iterable of integer m values.
-            **kwargs: Additional initialization arguments.
+            **kwargs: Additional initialization arguments for constructor.
         """
         self.caller = caller
         self.init_args = kwargs
@@ -376,8 +387,8 @@ def load_accel_params_from_data(
 ) -> list[AccelParamJSON]:
     methods_list: list[AccelParamJSON] = []
     for method_data in data["methods"]:
-        n_value = autowrap(method_data["n"])
-        m_value = autowrap(method_data["m"])
+        n_value = [int(x) if isinstance(x, ps.Arb) else x for x in autowrap(method_data["n"])]
+        m_value = [int(x) if isinstance(x, ps.Arb) else x for x in autowrap(method_data["m"])]
         methods_list.append(
             AccelParamJSON(
                 name=method_data["name"] + ("Arb" if arb else "F64"),
@@ -399,6 +410,7 @@ def get_series_params_from_csv(
 
     Args:
         csv_location: Path to the CSV file.
+        arb: Flag indicating whether to use arbitrary‑precision types.
 
     Returns:
         Iterable of SeriesParamCSV objects, one for each row in the CSV.
@@ -406,16 +418,36 @@ def get_series_params_from_csv(
     Raises:
         FileNotFoundError: If the CSV file doesn't exist.
     """
+    def _cumulative(vals: list[ps.Arb] | list[float]) -> list[ps.Arb] | list[float]:
+        """Return a list of cumulative sums for the given iterable."""
+        cum = []
+        total = ps.Arb(0) if arb else 0.0
+        for v in vals:
+            total = total + v
+            cum.append(total)
+        return cum
+
     with open(csv_location, encoding="utf-8") as f:
         return [
             SeriesParamCSV(
-                location=csv_location,
+                location=pathlib.Path(csv_location),
                 row=i,
-                data=ps.ArraySeriesArb(row) if arb else ps.ArraySeriesF64(
-                    list(map(float, row))
+                data=(
+                    ps.SeriesResultArb(
+                        _cumulative(an_vals),  # type: ignore
+                        an_vals,  # type: ignore
+                    )
+                    if arb
+                    else ps.SeriesResultF64(
+                        _cumulative(an_vals),  # type: ignore
+                        an_vals,  # type: ignore
+                    )
                 ),
             )
             for i, row in enumerate(csv.reader(f), 1)
+            for an_vals in [
+                [ps.Arb(val) for val in row] if arb else [float(val) for val in row]
+            ]
         ]
 
 
@@ -447,8 +479,8 @@ def all_accel(
             accel_params.append(
                 AccelParamModule(
                     caller=cls,
-                    n=autowrap(n),
-                    m=autowrap(m),
+                    n=[int(x) if isinstance(x, ps.Arb) else x for x in autowrap(n)],
+                    m=[int(x) if isinstance(x, ps.Arb) else x for x in autowrap(m)],
                     **kwargs,
                 )
             )

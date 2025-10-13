@@ -33,9 +33,10 @@ class InteractiveConvergencePlot:
         # Only connect keyboard events if we're showing interactively
         if not self.save_dir:
             self.fig.canvas.mpl_connect("key_press_event", self.on_key_press)
-            self.fig.canvas.manager.set_window_title(
-                "Анализатор сходимости методов"
-            )
+            if hasattr(self.fig.canvas, 'manager') and self.fig.canvas.manager is not None:
+                self.fig.canvas.manager.set_window_title(
+                    "Анализатор сходимости методов"
+                )
 
         self.update_plot()
 
@@ -58,14 +59,16 @@ class InteractiveConvergencePlot:
         computed = trial.computed
         true_value = trial.series.lim
 
+
+
         n_values = [point.n for point in computed]
         partial_sums = [point.partial_sum for point in computed]
         accel_values = [point.accel_value for point in computed]
         partial_deviations = [
-            abs(point.partial_sum - true_value) for point in computed
+            abs(point.partial_sum - true_value) if true_value is not None else None for point in computed
         ]
         accel_deviations = [
-            abs(point.accel_value - true_value) for point in computed
+            abs(point.accel_value - true_value) if true_value is not None else None for point in computed
         ]
 
         for ax in [self.ax1, self.ax2, self.ax3]:
@@ -73,14 +76,15 @@ class InteractiveConvergencePlot:
 
         colors = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd"]
 
-        self.ax1.axhline(
-            y=true_value,
-            color="red",
-            linestyle="--",
-            linewidth=3,
-            alpha=0.9,
-            label=f"Предел: {true_value:.8f}",
-        )
+        if true_value is not None:
+            self.ax1.axhline(
+                y=true_value,
+                color="red",
+                linestyle="--",
+                linewidth=3,
+                alpha=0.9,
+                label=f"Предел: {true_value:.8f}",
+            )
         self.ax1.plot(
             n_values,
             partial_sums,
@@ -130,18 +134,23 @@ class InteractiveConvergencePlot:
         self.ax2.legend()
         self.ax2.grid(True, alpha=0.3, linestyle="--", which="both")
 
-        valid_indices = [
-            i
-            for i in range(len(n_values))
-            if partial_deviations[i] > 1e-16 and accel_deviations[i] > 1e-16
-        ]
+        valid_indices = []
+        for i in range(len(n_values)):
+            pd = partial_deviations[i]
+            ad = accel_deviations[i]
+            if pd is not None and ad is not None and pd > 1e-16 and ad > 1e-16:
+                valid_indices.append(i)
 
         if valid_indices:
             valid_n = [n_values[i] for i in valid_indices]
-            acceleration_ratio = [
-                partial_deviations[i] / accel_deviations[i]
-                for i in valid_indices
-            ]
+            acceleration_ratio = []
+            for i in valid_indices:
+                pd = partial_deviations[i]
+                ad = accel_deviations[i]
+                if pd is not None and ad is not None and ad != 0:
+                    acceleration_ratio.append(pd / ad)
+                else:
+                    acceleration_ratio.append(0)
 
             self.ax3.plot(
                 valid_n,
@@ -188,48 +197,66 @@ class InteractiveConvergencePlot:
             f"←/→: навигация | Home/End: первое/последнее испытание"
         )
 
-        self.fig.suptitle(title, fontsize=13, fontweight="bold")
+        if self.fig is not None:
+            self.fig.suptitle(title, fontsize=13, fontweight="bold")
 
         best_accel = (
-            min(accel_deviations) if accel_deviations else float("inf")
+            min([d for d in accel_deviations if d is not None]) if accel_deviations and any(d is not None for d in accel_deviations) else float("inf")
         )
         best_partial = (
-            min(partial_deviations) if partial_deviations else float("inf")
+            min([d for d in partial_deviations if d is not None]) if partial_deviations and any(d is not None for d in partial_deviations) else float("inf")
         )
 
+        # Format parameters for stats text
+        series_params_stats = ""
+        if series_params:
+            series_params_stats = "\n" + "\n".join([f"  {k}: {v}" for k, v in series_params.items()])
+
+        accel_params_stats = ""
+        if accel_params:
+            accel_params_stats = "\n" + "\n".join([f"  {k}: {v}" for k, v in accel_params.items()])
+
+        limit_text = f"Предел: {true_value:.12f}\n" if true_value is not None else "Предел: N/A\n"
         stats_text = (
-            f"Ряд: {trial.series.name}\n"
-            f"Метод: {trial.accel.name}\n"
-            f"Предел: {true_value:.12f}\n"
+            f"Ряд: {trial.series.name}{series_params_stats}\n"
+            f"Метод: {trial.accel.name} [m={trial.accel.m_value}]{accel_params_stats}\n"
+            f"{limit_text}"
             f"Лучшее ускоренное: {best_accel:.2e}\n"
             f"Лучшая частичная: {best_partial:.2e}"
         )
 
-        self.fig.text(
-            0.02,
-            0.02,
-            stats_text,
-            fontsize=10,
-            bbox=dict(
-                boxstyle="round,pad=0.5",
-                facecolor="lightblue",
-                alpha=0.8,
-                edgecolor="navy",
-                linewidth=1.5,
-            ),
-        )
-
+        if self.fig is not None:
+            self.fig.text(
+                0.02,
+                0.02,
+                stats_text,
+                fontsize=10,
+                bbox=dict(
+                    boxstyle="round,pad=0.5",
+                    facecolor="lightblue",
+                    alpha=0.8,
+                    edgecolor="navy",
+                    linewidth=1.5,
+                ),
+            )
         plt.tight_layout()
         plt.subplots_adjust(top=0.90, bottom=0.15)
 
         # Save the plot if save directory is specified
         if self.save_dir:
-            filename = f"trial_{self.current_index + 1:03d}_{trial.series.name}_{trial.accel.name}.png"
+            # Create parameter string for filename
+            accel_params = getattr(trial.accel, "additional_args", {})
+            param_str = ""
+            if accel_params:
+                param_str = "_" + "_".join([f"{k}_{v}" for k, v in accel_params.items()])
+
+            filename = f"trial_{self.current_index + 1:03d}_{trial.series.name}_{trial.accel.name}{param_str}.png"
             filepath = os.path.join(self.save_dir, filename)
             plt.savefig(filepath, dpi=150, bbox_inches="tight")
             print(f"Saved: {filepath}")
 
-        self.fig.canvas.draw()
+        if self.fig is not None and hasattr(self.fig.canvas, 'draw'):
+            self.fig.canvas.draw()
 
     def show(self):
         if self.save_dir:

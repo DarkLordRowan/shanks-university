@@ -1,14 +1,14 @@
 """
-pybind11: polymorphic series + all Shanks‑type transformations (double + float_precision)
+pybind11: polymorphic series (double + float_precision), helper-organized, no-arg constructors, backward-compatible
 """
 from __future__ import annotations
 import typing
-__all__: list[str] = ['AbsSinXMinus2DivPiSeriesArb', 'AbsSinXMinus2DivPiSeriesF64', 'Arb', 'ArcsinX2SeriesArb', 'ArcsinX2SeriesF64', 'ArcsinXMinusXSeriesArb', 'ArcsinXMinusXSeriesF64', 'ArcsinXSeriesArb', 'ArcsinXSeriesF64', 'ArcsinhXSeriesArb', 'ArcsinhXSeriesF64', 'ArctanX2SeriesArb', 'ArctanX2SeriesF64', 'ArctanX3SeriesArb', 'ArctanX3SeriesF64', 'ArctanhX2SeriesArb', 'ArctanhX2SeriesF64', 'ArctgXSeriesArb', 'ArctgXSeriesF64', 'ArraySeriesArb', 'ArraySeriesF64', 'ArtanhXSeriesArb', 'ArtanhXSeriesF64', 'BinSeriesArb', 'BinSeriesF64', 'BrezinskiThetaAlgorithmArb', 'BrezinskiThetaAlgorithmF64', 'ChangWynnAlgorithmArb', 'ChangWynnAlgorithmF64', 'CiXSeriesArb', 'CiXSeriesF64', 'Cos3xMinus1DivXsquareSeriesArb', 'Cos3xMinus1DivXsquareSeriesF64', 'CosSeriesArb', 'CosSeriesF64', 'CosSqrtXSeriesArb', 'CosSqrtXSeriesF64', 'CosX2SeriesArb', 'CosX2SeriesF64', 'CoshSeriesArb', 'CoshSeriesF64', 'DrummondDAlgorithmArb', 'DrummondDAlgorithmF64', 'EXSeriesArb', 'EXSeriesF64', 'EighthPiMOneThirdSeriesArb', 'EighthPiMOneThirdSeriesF64', 'ErfSeriesArb', 'ErfSeriesF64', 'ExpMCosXSinsinXSeriesArb', 'ExpMCosXSinsinXSeriesF64', 'ExpSeriesArb', 'ExpSeriesF64', 'ExpSquaredErfSeriesArb', 'ExpSquaredErfSeriesF64', 'FivePiTwelveSeriesArb', 'FivePiTwelveSeriesF64', 'FordSidi2AlgorithmArb', 'FordSidi2AlgorithmF64', 'FordSidi3AlgorithmArb', 'FordSidi3AlgorithmF64', 'FourArctanSeriesArb', 'FourArctanSeriesF64', 'FourLn2M3SeriesArb', 'FourLn2M3SeriesF64', 'GammaSeriesArb', 'GammaSeriesF64', 'HalfAsinTwoXSeriesArb', 'HalfAsinTwoXSeriesF64', 'HalfMinusSinxMultiPi4SeriesArb', 'HalfMinusSinxMultiPi4SeriesF64', 'HalfMultiLn1Div2Multi1MinusCosxSeriesArb', 'HalfMultiLn1Div2Multi1MinusCosxSeriesF64', 'IncompleteGammaFuncSeriesArb', 'IncompleteGammaFuncSeriesF64', 'InvSqrt1m4xSeriesArb', 'InvSqrt1m4xSeriesF64', 'Inverse1mxSeriesArb', 'Inverse1mxSeriesF64', 'JaXSeriesArb', 'JaXSeriesF64', 'KXSeriesArb', 'KXSeriesF64', 'LambertWFuncSeriesArb', 'LambertWFuncSeriesF64', 'LevinAlgorithmArb', 'LevinAlgorithmF64', 'LevinSidiMAlgorithmArb', 'LevinSidiMAlgorithmF64', 'LevinSidiSAlgorithmArb', 'LevinSidiSAlgorithmF64', 'Ln13MinusLn7Div7SeriesArb', 'Ln13MinusLn7Div7SeriesF64', 'Ln1MinusX2SeriesArb', 'Ln1MinusX2SeriesF64', 'Ln1PlusSqrt1PlusXsquareMinusLn2SeriesArb', 'Ln1PlusSqrt1PlusXsquareMinusLn2SeriesF64', 'Ln1PlusX3SeriesArb', 'Ln1PlusX3SeriesF64', 'Ln1mxSeriesArb', 'Ln1mxSeriesF64', 'Ln1plusXDiv1plusX2SeriesArb', 'Ln1plusXDiv1plusX2SeriesF64', 'Ln1px4SeriesArb', 'Ln1px4SeriesF64', 'Ln2SeriesArb', 'Ln2SeriesF64', 'LnCosxSeriesArb', 'LnCosxSeriesF64', 'LnSinxMinusLnXSeriesArb', 'LnSinxMinusLnXSeriesF64', 'LnXPlusOneXMinusOneHalfedSeriesArb', 'LnXPlusOneXMinusOneHalfedSeriesF64', 'LubkinWAlgorithmArb', 'LubkinWAlgorithmF64', 'MFact1mxMp1InverseSeriesArb', 'MFact1mxMp1InverseSeriesF64', 'MeanSinhSinSeriesArb', 'MeanSinhSinSeriesF64', 'Minus3Div4OrXMinus3Div4SeriesArb', 'Minus3Div4OrXMinus3Div4SeriesF64', 'MinusOneNFactNInNSeriesArb', 'MinusOneNFactNInNSeriesF64', 'MinusOneNedInNSeriesArb', 'MinusOneNedInNSeriesF64', 'MinusOneQuarterSeriesArb', 'MinusOneQuarterSeriesF64', 'MinusThreePlusLn3ThreeDividedTwoPlusTwoLn2SeriesArb', 'MinusThreePlusLn3ThreeDividedTwoPlusTwoLn2SeriesF64', 'MinusXMinusPi4OrMinusPi4SeriesArb', 'MinusXMinusPi4OrMinusPi4SeriesF64', 'NumeratorType', 'OneDivSqrt2SinXDivSqrt2SeriesArb', 'OneDivSqrt2SinXDivSqrt2SeriesF64', 'OneDivTwoMinusXMultiThreePlusXSeriesArb', 'OneDivTwoMinusXMultiThreePlusXSeriesF64', 'OneMinusSqrt1minus4xDiv2xSeriesArb', 'OneMinusSqrt1minus4xDiv2xSeriesF64', 'OneSeriesArb', 'OneSeriesF64', 'OneThirdPiSquaredMNineSeriesArb', 'OneThirdPiSquaredMNineSeriesF64', 'OneTwelfth3x2Pi2SeriesArb', 'OneTwelfth3x2Pi2SeriesF64', 'OneTwelfthSeriesArb', 'OneTwelfthSeriesF64', 'Pi3SeriesArb', 'Pi3SeriesF64', 'Pi4SeriesArb', 'Pi4SeriesF64', 'Pi8CosxSquareMinus1Div3CosxSeriesArb', 'Pi8CosxSquareMinus1Div3CosxSeriesF64', 'PiCubed32SeriesArb', 'PiCubed32SeriesF64', 'PiFourMinusLn2HalfedSeriesArb', 'PiFourMinusLn2HalfedSeriesF64', 'PiMinus3pi4AndPiMinusXMinus3pi4SeriesArb', 'PiMinus3pi4AndPiMinusXMinus3pi4SeriesF64', 'PiMinusX2SeriesArb', 'PiMinusX2SeriesF64', 'PiSeriesArb', 'PiSeriesF64', 'PiSixMinHalfSeriesArb', 'PiSixMinHalfSeriesF64', 'PiSquared6MinusOneSeriesArb', 'PiSquared6MinusOneSeriesF64', 'PiSquaredTwelveSeriesArb', 'PiSquaredTwelveSeriesF64', 'PiXMinusXSquareAndXSquareMinusThreePiXPlusTwoPiSquareSeriesArb', 'PiXMinusXSquareAndXSquareMinusThreePiXPlusTwoPiSquareSeriesF64', 'PiXMultiE_XpiPlusEMinusXpiDividedE_XpiMinusEMinusXpiMinusOneSeriesArb', 'PiXMultiE_XpiPlusEMinusXpiDividedE_XpiMinusEMinusXpiMinusOneSeriesF64', 'RemainderType', 'RichardsonAlgorithmArb', 'RichardsonAlgorithmF64', 'RiemannZetaFuncSeriesArb', 'RiemannZetaFuncSeriesF64', 'RiemannZetaFuncXmin1DivRiemannZetaFuncXSeriesArb', 'RiemannZetaFuncXmin1DivRiemannZetaFuncXSeriesF64', 'SeriesAccelerationArb', 'SeriesAccelerationF64', 'SeriesBaseArb', 'SeriesBaseF64', 'SeriesWithLnNumber1Arb', 'SeriesWithLnNumber1F64', 'SeriesWithLnNumber2Arb', 'SeriesWithLnNumber2F64', 'ShanksAlgorithmArb', 'ShanksAlgorithmF64', 'ShanksTransformAlternatingAlgorithmArb', 'ShanksTransformAlternatingAlgorithmF64', 'SiXSeriesArb', 'SiXSeriesF64', 'SinSeriesArb', 'SinSeriesF64', 'SinX2SeriesArb', 'SinX2SeriesF64', 'SinhSeriesArb', 'SinhSeriesF64', 'SinhX2SeriesArb', 'SinhX2SeriesF64', 'Sqrt1plusXMinus1MinusXDiv2SeriesArb', 'Sqrt1plusXMinus1MinusXDiv2SeriesF64', 'Sqrt1plusXSeriesArb', 'Sqrt1plusXSeriesF64', 'SqrtOneminusSqrtoneminusxDivXSeriesArb', 'SqrtOneminusSqrtoneminusxDivXSeriesF64', 'TenMinusXSeriesArb', 'TenMinusXSeriesF64', 'ThreeMinusPiSeriesArb', 'ThreeMinusPiSeriesF64', 'TwoArcsinSquareXHalfedSeriesArb', 'TwoArcsinSquareXHalfedSeriesF64', 'TwoDegreeXSeriesArb', 'TwoDegreeXSeriesF64', 'TwoLn2SeriesArb', 'TwoLn2SeriesF64', 'WenigerAlgorithmArb', 'WenigerAlgorithmF64', 'WhynnRhoAlgorithmArb', 'WhynnRhoAlgorithmF64', 'WynnEpsilon2AlgorithmArb', 'WynnEpsilon2AlgorithmF64', 'WynnEpsilon3AlgorithmArb', 'WynnEpsilon3AlgorithmF64', 'WynnEpsilonAlgorithmArb', 'WynnEpsilonAlgorithmF64', 'XDiv1minX2SeriesArb', 'XDiv1minX2SeriesF64', 'XDiv1minXSeriesArb', 'XDiv1minXSeriesF64', 'XMinSqrtXSeriesArb', 'XMinSqrtXSeriesF64', 'XSeriesArb', 'XSeriesF64', 'XTwelfthX2Pi2SeriesArb', 'XTwelfthX2Pi2SeriesF64', 'XTwoSeriesArb', 'XTwoSeriesF64', 'XTwoThroughtSquaresSeriesArb', 'XTwoThroughtSquaresSeriesF64', 'X_1mx_SquaredSeriesArb', 'X_1mx_SquaredSeriesF64', 'XmbJbTwoSeriesArb', 'XmbJbTwoSeriesF64', 'Xsquareplus3DivXsquareplus2multixMinus1SeriesArb', 'Xsquareplus3DivXsquareplus2multixMinus1SeriesF64', 'gamma_rho_variant', 'generalized_variant', 'rho_variant', 't_variant', 't_wave_variant', 'u_variant', 'v_variant', 'v_wave_variant']
+__all__: list[str] = ['AbsSinXMinus2DivPiSeriesArb', 'AbsSinXMinus2DivPiSeriesF64', 'Arb', 'ArcsinX2SeriesArb', 'ArcsinX2SeriesF64', 'ArcsinXMinusXSeriesArb', 'ArcsinXMinusXSeriesF64', 'ArcsinXSeriesArb', 'ArcsinXSeriesF64', 'ArcsinhXSeriesArb', 'ArcsinhXSeriesF64', 'ArctanhX2SeriesArb', 'ArctanhX2SeriesF64', 'ArctanhXSeriesArb', 'ArctanhXSeriesF64', 'ArctgX2SeriesArb', 'ArctgX2SeriesF64', 'ArctgX3SeriesArb', 'ArctgX3SeriesF64', 'ArctgXSeriesArb', 'ArctgXSeriesF64', 'BinSeriesArb', 'BinSeriesF64', 'BrezinskiThetaAlgorithmArb', 'BrezinskiThetaAlgorithmF64', 'ChangWynnAlgorithmArb', 'ChangWynnAlgorithmF64', 'CiXSeriesArb', 'CiXSeriesF64', 'Cos3xMinus1DivXsquareSeriesArb', 'Cos3xMinus1DivXsquareSeriesF64', 'CosSeriesArb', 'CosSeriesF64', 'CosSqrtXSeriesArb', 'CosSqrtXSeriesF64', 'CosX2SeriesArb', 'CosX2SeriesF64', 'CoshSeriesArb', 'CoshSeriesF64', 'DrummondDAlgorithmArb', 'DrummondDAlgorithmF64', 'EXSeriesArb', 'EXSeriesF64', 'EighthPiMOneThirdSeriesArb', 'EighthPiMOneThirdSeriesF64', 'ErfSeriesArb', 'ErfSeriesF64', 'ExpMCosXSinsinXSeriesArb', 'ExpMCosXSinsinXSeriesF64', 'ExpSeriesArb', 'ExpSeriesF64', 'ExpSquaredErfSeriesArb', 'ExpSquaredErfSeriesF64', 'FivePiTwelveSeriesArb', 'FivePiTwelveSeriesF64', 'FordSidi2AlgorithmArb', 'FordSidi2AlgorithmF64', 'FordSidi3AlgorithmArb', 'FordSidi3AlgorithmF64', 'FourArctanSeriesArb', 'FourArctanSeriesF64', 'FourLn2M3SeriesArb', 'FourLn2M3SeriesF64', 'HalfAsinTwoXSeriesArb', 'HalfAsinTwoXSeriesF64', 'HalfMinusSinxMultiPi4SeriesArb', 'HalfMinusSinxMultiPi4SeriesF64', 'HalfMultiLn1Div2Multi1MinusCosxSeriesArb', 'HalfMultiLn1Div2Multi1MinusCosxSeriesF64', 'IncompleteGammaFuncSeriesArb', 'IncompleteGammaFuncSeriesF64', 'InvSqrt1m4xSeriesArb', 'InvSqrt1m4xSeriesF64', 'Inverse1mxSeriesArb', 'Inverse1mxSeriesF64', 'KXSeriesArb', 'KXSeriesF64', 'LambertWFuncSeriesArb', 'LambertWFuncSeriesF64', 'LevinLAlgorithmArb', 'LevinLAlgorithmF64', 'LevinSidiMAlgorithmArb', 'LevinSidiMAlgorithmF64', 'LevinSidiSAlgorithmArb', 'LevinSidiSAlgorithmF64', 'Ln13MinusLn7Div7SeriesArb', 'Ln13MinusLn7Div7SeriesF64', 'Ln1MinusX2SeriesArb', 'Ln1MinusX2SeriesF64', 'Ln1PlusSqrt1PlusXsquareMinusLn2SeriesArb', 'Ln1PlusSqrt1PlusXsquareMinusLn2SeriesF64', 'Ln1PlusX3SeriesArb', 'Ln1PlusX3SeriesF64', 'Ln1mxSeriesArb', 'Ln1mxSeriesF64', 'Ln1plusXDiv1plusX2SeriesArb', 'Ln1plusXDiv1plusX2SeriesF64', 'Ln1px4SeriesArb', 'Ln1px4SeriesF64', 'Ln2SeriesArb', 'Ln2SeriesF64', 'LnCosxSeriesArb', 'LnCosxSeriesF64', 'LnSinxMinusLnXSeriesArb', 'LnSinxMinusLnXSeriesF64', 'LnXPlusOneXMinusOneHalfedSeriesArb', 'LnXPlusOneXMinusOneHalfedSeriesF64', 'LubkinWAlgorithmArb', 'LubkinWAlgorithmF64', 'MFact1mxMp1InverseSeriesArb', 'MFact1mxMp1InverseSeriesF64', 'MeanSinhSinSeriesArb', 'MeanSinhSinSeriesF64', 'Minus3Div4OrXMinus3Div4SeriesArb', 'Minus3Div4OrXMinus3Div4SeriesF64', 'MinusOneNFactNInNSeriesArb', 'MinusOneNFactNInNSeriesF64', 'MinusOneNedInNSeriesArb', 'MinusOneNedInNSeriesF64', 'MinusOneQuarterSeriesArb', 'MinusOneQuarterSeriesF64', 'MinusThreePlusLn3ThreeDividedTwoPlusTwoLn2SeriesArb', 'MinusThreePlusLn3ThreeDividedTwoPlusTwoLn2SeriesF64', 'MinusXMinusPi4OrMinusPi4SeriesArb', 'MinusXMinusPi4OrMinusPi4SeriesF64', 'NumeratorType', 'OneDivSqrt2SinXDivSqrt2SeriesArb', 'OneDivSqrt2SinXDivSqrt2SeriesF64', 'OneDivTwoMinusXMultiThreePlusXSeriesArb', 'OneDivTwoMinusXMultiThreePlusXSeriesF64', 'OneMinusSqrt1minus4xDiv2xSeriesArb', 'OneMinusSqrt1minus4xDiv2xSeriesF64', 'OneSeriesArb', 'OneSeriesF64', 'OneThirdPiSquaredMNineSeriesArb', 'OneThirdPiSquaredMNineSeriesF64', 'OneTwelfth3x2Pi2SeriesArb', 'OneTwelfth3x2Pi2SeriesF64', 'OneTwelfthSeriesArb', 'OneTwelfthSeriesF64', 'OneTwelfthX2Pi2SeriesArb', 'OneTwelfthX2Pi2SeriesF64', 'Pi3SeriesArb', 'Pi3SeriesF64', 'Pi4SeriesArb', 'Pi4SeriesF64', 'Pi8CosxSquareMinus1Div3CosxSeriesArb', 'Pi8CosxSquareMinus1Div3CosxSeriesF64', 'PiCubed32SeriesArb', 'PiCubed32SeriesF64', 'PiFourMinusLn2HalfedSeriesArb', 'PiFourMinusLn2HalfedSeriesF64', 'PiMinus3pi4AndPiMinusXMinus3pi4SeriesArb', 'PiMinus3pi4AndPiMinusXMinus3pi4SeriesF64', 'PiMinusX2SeriesArb', 'PiMinusX2SeriesF64', 'PiSeriesArb', 'PiSeriesF64', 'PiSixMinHalfSeriesArb', 'PiSixMinHalfSeriesF64', 'PiSquared6MinusOneSeriesArb', 'PiSquared6MinusOneSeriesF64', 'PiSquaredTwelveSeriesArb', 'PiSquaredTwelveSeriesF64', 'PiXMinusXSquareSquareMinusThreePiXPlusTwoPiSquareSeriesArb', 'PiXMinusXSquareSquareMinusThreePiXPlusTwoPiSquareSeriesF64', 'PiXMultiEXpiPlusEMinusXpiDividedEXpiMinusEMinusXpiSeriesArb', 'PiXMultiEXpiPlusEMinusXpiDividedEXpiMinusEMinusXpiSeriesF64', 'RemainderType', 'RichardsonAlgorithmArb', 'RichardsonAlgorithmF64', 'RiemannZetaFuncSeriesArb', 'RiemannZetaFuncSeriesF64', 'RiemannZetaFuncXmin1DivRiemannZetaFuncXSeriesArb', 'RiemannZetaFuncXmin1DivRiemannZetaFuncXSeriesF64', 'SeriesAccelerationArb', 'SeriesAccelerationF64', 'SeriesBaseArb', 'SeriesBaseF64', 'SeriesResultArb', 'SeriesResultF64', 'SeriesWithLnNumber1Arb', 'SeriesWithLnNumber1F64', 'SeriesWithLnNumber2Arb', 'SeriesWithLnNumber2F64', 'ShanksAlgorithmArb', 'ShanksAlgorithmF64', 'ShanksTransformAlternatingArb', 'ShanksTransformAlternatingF64', 'SiXSeriesArb', 'SiXSeriesF64', 'SinSeriesArb', 'SinSeriesF64', 'SinX2SeriesArb', 'SinX2SeriesF64', 'SinhSeriesArb', 'SinhSeriesF64', 'SinhX2SeriesArb', 'SinhX2SeriesF64', 'Sqrt1plusXMinus1MinusXDiv2SeriesArb', 'Sqrt1plusXMinus1MinusXDiv2SeriesF64', 'Sqrt1plusXSeriesArb', 'Sqrt1plusXSeriesF64', 'SqrtOneminusSqrtoneminusxDivXSeriesArb', 'SqrtOneminusSqrtoneminusxDivXSeriesF64', 'TenMinusXSeriesArb', 'TenMinusXSeriesF64', 'ThreeMinusPiSeriesArb', 'ThreeMinusPiSeriesF64', 'TwoArcsinSquareXHalfedSeriesArb', 'TwoArcsinSquareXHalfedSeriesF64', 'TwoDegreeXSeriesArb', 'TwoDegreeXSeriesF64', 'TwoLn2SeriesArb', 'TwoLn2SeriesF64', 'WenigerAlgorithmArb', 'WenigerAlgorithmF64', 'WynnEpsilon1AlgorithmArb', 'WynnEpsilon1AlgorithmF64', 'WynnEpsilon2AlgorithmArb', 'WynnEpsilon2AlgorithmF64', 'WynnEpsilon3AlgorithmArb', 'WynnEpsilon3AlgorithmF64', 'WynnRhoAlgorithmArb', 'WynnRhoAlgorithmF64', 'X1mxSquaredSeriesArb', 'X1mxSquaredSeriesF64', 'XDiv1minX2SeriesArb', 'XDiv1minX2SeriesF64', 'XDiv1minXSeriesArb', 'XDiv1minXSeriesF64', 'XMinSqrtXSeriesArb', 'XMinSqrtXSeriesF64', 'XSeriesArb', 'XSeriesF64', 'XTwoSeriesArb', 'XTwoSeriesF64', 'XTwoThroughtSquaresSeriesArb', 'XTwoThroughtSquaresSeriesF64', 'Xsquareplus3DivXsquareplus2multixMinus1SeriesArb', 'Xsquareplus3DivXsquareplus2multixMinus1SeriesF64', 'gamma_rho_variant', 'generalized_variant', 'rho_variant', 't_variant', 't_wave_variant', 'u_variant', 'v_variant', 'v_wave_variant']
 class AbsSinXMinus2DivPiSeriesArb(SeriesBaseArb):
-    def __init__(self, arg0: Arb) -> None:
+    def __init__(self) -> None:
         ...
 class AbsSinXMinus2DivPiSeriesF64(SeriesBaseF64):
-    def __init__(self, arg0: float) -> None:
+    def __init__(self) -> None:
         ...
 class Arb:
     __hash__: typing.ClassVar[None] = None
@@ -206,408 +206,370 @@ class Arb:
     def __truediv__(self, arg0: int) -> Arb:
         ...
 class ArcsinX2SeriesArb(SeriesBaseArb):
-    def __init__(self, arg0: Arb) -> None:
+    def __init__(self) -> None:
         ...
 class ArcsinX2SeriesF64(SeriesBaseF64):
-    def __init__(self, arg0: float) -> None:
+    def __init__(self) -> None:
         ...
 class ArcsinXMinusXSeriesArb(SeriesBaseArb):
-    def __init__(self, arg0: Arb) -> None:
+    def __init__(self) -> None:
         ...
 class ArcsinXMinusXSeriesF64(SeriesBaseF64):
-    def __init__(self, arg0: float) -> None:
+    def __init__(self) -> None:
         ...
 class ArcsinXSeriesArb(SeriesBaseArb):
-    def __init__(self, arg0: Arb) -> None:
+    def __init__(self) -> None:
         ...
 class ArcsinXSeriesF64(SeriesBaseF64):
-    def __init__(self, arg0: float) -> None:
+    def __init__(self) -> None:
         ...
 class ArcsinhXSeriesArb(SeriesBaseArb):
-    def __init__(self, arg0: Arb) -> None:
+    def __init__(self) -> None:
         ...
 class ArcsinhXSeriesF64(SeriesBaseF64):
-    def __init__(self, arg0: float) -> None:
-        ...
-class ArctanX2SeriesArb(SeriesBaseArb):
-    def __init__(self, arg0: Arb) -> None:
-        ...
-class ArctanX2SeriesF64(SeriesBaseF64):
-    def __init__(self, arg0: float) -> None:
-        ...
-class ArctanX3SeriesArb(SeriesBaseArb):
-    def __init__(self, arg0: Arb) -> None:
-        ...
-class ArctanX3SeriesF64(SeriesBaseF64):
-    def __init__(self, arg0: float) -> None:
+    def __init__(self) -> None:
         ...
 class ArctanhX2SeriesArb(SeriesBaseArb):
-    def __init__(self, arg0: Arb) -> None:
+    def __init__(self) -> None:
         ...
 class ArctanhX2SeriesF64(SeriesBaseF64):
-    def __init__(self, arg0: float) -> None:
+    def __init__(self) -> None:
+        ...
+class ArctanhXSeriesArb(SeriesBaseArb):
+    def __init__(self) -> None:
+        ...
+class ArctanhXSeriesF64(SeriesBaseF64):
+    def __init__(self) -> None:
+        ...
+class ArctgX2SeriesArb(SeriesBaseArb):
+    def __init__(self) -> None:
+        ...
+class ArctgX2SeriesF64(SeriesBaseF64):
+    def __init__(self) -> None:
+        ...
+class ArctgX3SeriesArb(SeriesBaseArb):
+    def __init__(self) -> None:
+        ...
+class ArctgX3SeriesF64(SeriesBaseF64):
+    def __init__(self) -> None:
         ...
 class ArctgXSeriesArb(SeriesBaseArb):
-    def __init__(self, arg0: Arb) -> None:
+    def __init__(self) -> None:
         ...
 class ArctgXSeriesF64(SeriesBaseF64):
-    def __init__(self, arg0: float) -> None:
-        ...
-class ArraySeriesArb(SeriesBaseArb):
-    @typing.overload
-    def __init__(self, buffer: typing_extensions.Buffer) -> None:
-        """
-        Construct from a Python buffer (numpy array/memoryview). Will copy/convert elements to arbitrary precision.
-        """
-    @typing.overload
-    def __init__(self, sequence: typing.Any) -> None:
-        """
-        Construct from a Python sequence (will copy).
-        """
-    def size(self) -> int:
-        ...
-class ArraySeriesF64(SeriesBaseF64):
-    @typing.overload
-    def __init__(self, buffer: typing_extensions.Buffer) -> None:
-        """
-        Construct from a Python buffer (numpy array/memoryview). Zero-copy when possible.
-        """
-    @typing.overload
-    def __init__(self, sequence: typing.Any) -> None:
-        """
-        Construct from a Python sequence (will copy).
-        """
-    def size(self) -> int:
-        ...
-class ArtanhXSeriesArb(SeriesBaseArb):
-    def __init__(self, arg0: Arb) -> None:
-        ...
-class ArtanhXSeriesF64(SeriesBaseF64):
-    def __init__(self, arg0: float) -> None:
+    def __init__(self) -> None:
         ...
 class BinSeriesArb(SeriesBaseArb):
-    def __init__(self, arg0: Arb, arg1: Arb) -> None:
+    def __init__(self) -> None:
         ...
 class BinSeriesF64(SeriesBaseF64):
-    def __init__(self, arg0: float, arg1: float) -> None:
+    def __init__(self) -> None:
         ...
 class BrezinskiThetaAlgorithmArb(SeriesAccelerationArb):
-    def __init__(self, series: SeriesBaseArb) -> None:
+    def __init__(self) -> None:
         ...
 class BrezinskiThetaAlgorithmF64(SeriesAccelerationF64):
-    def __init__(self, series: SeriesBaseF64) -> None:
+    def __init__(self) -> None:
         ...
 class ChangWynnAlgorithmArb(SeriesAccelerationArb):
-    def __init__(self, series: SeriesBaseArb) -> None:
+    def __init__(self) -> None:
         ...
 class ChangWynnAlgorithmF64(SeriesAccelerationF64):
-    def __init__(self, series: SeriesBaseF64) -> None:
+    def __init__(self) -> None:
         ...
 class CiXSeriesArb(SeriesBaseArb):
-    def __init__(self, arg0: Arb) -> None:
+    def __init__(self) -> None:
         ...
 class CiXSeriesF64(SeriesBaseF64):
-    def __init__(self, arg0: float) -> None:
+    def __init__(self) -> None:
         ...
 class Cos3xMinus1DivXsquareSeriesArb(SeriesBaseArb):
-    def __init__(self, arg0: Arb) -> None:
+    def __init__(self) -> None:
         ...
 class Cos3xMinus1DivXsquareSeriesF64(SeriesBaseF64):
-    def __init__(self, arg0: float) -> None:
+    def __init__(self) -> None:
         ...
 class CosSeriesArb(SeriesBaseArb):
-    def __init__(self, arg0: Arb) -> None:
+    def __init__(self) -> None:
         ...
 class CosSeriesF64(SeriesBaseF64):
-    def __init__(self, arg0: float) -> None:
+    def __init__(self) -> None:
         ...
 class CosSqrtXSeriesArb(SeriesBaseArb):
-    def __init__(self, arg0: Arb) -> None:
+    def __init__(self) -> None:
         ...
 class CosSqrtXSeriesF64(SeriesBaseF64):
-    def __init__(self, arg0: float) -> None:
+    def __init__(self) -> None:
         ...
 class CosX2SeriesArb(SeriesBaseArb):
-    def __init__(self, arg0: Arb) -> None:
+    def __init__(self) -> None:
         ...
 class CosX2SeriesF64(SeriesBaseF64):
-    def __init__(self, arg0: float) -> None:
+    def __init__(self) -> None:
         ...
 class CoshSeriesArb(SeriesBaseArb):
-    def __init__(self, arg0: Arb) -> None:
+    def __init__(self) -> None:
         ...
 class CoshSeriesF64(SeriesBaseF64):
-    def __init__(self, arg0: float) -> None:
+    def __init__(self) -> None:
         ...
 class DrummondDAlgorithmArb(SeriesAccelerationArb):
-    def __init__(self, series: SeriesBaseArb, remainder: RemainderType = ..., useRecFormulas: bool = False) -> None:
+    def __init__(self, remainder: RemainderType = ..., useRecurrentFormula: bool = False) -> None:
         ...
 class DrummondDAlgorithmF64(SeriesAccelerationF64):
-    def __init__(self, series: SeriesBaseF64, remainder: RemainderType = ..., useRecFormulas: bool = False) -> None:
+    def __init__(self, remainder: RemainderType = ..., useRecurrentFormula: bool = False) -> None:
         ...
 class EXSeriesArb(SeriesBaseArb):
-    def __init__(self, arg0: Arb) -> None:
+    def __init__(self) -> None:
         ...
 class EXSeriesF64(SeriesBaseF64):
-    def __init__(self, arg0: float) -> None:
+    def __init__(self) -> None:
         ...
 class EighthPiMOneThirdSeriesArb(SeriesBaseArb):
-    def __init__(self, arg0: Arb) -> None:
+    def __init__(self) -> None:
         ...
 class EighthPiMOneThirdSeriesF64(SeriesBaseF64):
-    def __init__(self, arg0: float) -> None:
+    def __init__(self) -> None:
         ...
 class ErfSeriesArb(SeriesBaseArb):
-    def __init__(self, arg0: Arb) -> None:
+    def __init__(self) -> None:
         ...
 class ErfSeriesF64(SeriesBaseF64):
-    def __init__(self, arg0: float) -> None:
+    def __init__(self) -> None:
         ...
 class ExpMCosXSinsinXSeriesArb(SeriesBaseArb):
-    def __init__(self, arg0: Arb) -> None:
+    def __init__(self) -> None:
         ...
 class ExpMCosXSinsinXSeriesF64(SeriesBaseF64):
-    def __init__(self, arg0: float) -> None:
+    def __init__(self) -> None:
         ...
 class ExpSeriesArb(SeriesBaseArb):
-    def __init__(self, arg0: Arb) -> None:
+    def __init__(self) -> None:
         ...
 class ExpSeriesF64(SeriesBaseF64):
-    def __init__(self, arg0: float) -> None:
+    def __init__(self) -> None:
         ...
 class ExpSquaredErfSeriesArb(SeriesBaseArb):
-    def __init__(self, arg0: Arb) -> None:
+    def __init__(self) -> None:
         ...
 class ExpSquaredErfSeriesF64(SeriesBaseF64):
-    def __init__(self, arg0: float) -> None:
+    def __init__(self) -> None:
         ...
 class FivePiTwelveSeriesArb(SeriesBaseArb):
-    def __init__(self, arg0: Arb) -> None:
+    def __init__(self) -> None:
         ...
 class FivePiTwelveSeriesF64(SeriesBaseF64):
-    def __init__(self, arg0: float) -> None:
+    def __init__(self) -> None:
         ...
 class FordSidi2AlgorithmArb(SeriesAccelerationArb):
-    def __init__(self, series: SeriesBaseArb) -> None:
+    def __init__(self) -> None:
         ...
 class FordSidi2AlgorithmF64(SeriesAccelerationF64):
-    def __init__(self, series: SeriesBaseF64) -> None:
+    def __init__(self) -> None:
         ...
 class FordSidi3AlgorithmArb(SeriesAccelerationArb):
-    def __init__(self, series: SeriesBaseArb) -> None:
+    def __init__(self) -> None:
         ...
 class FordSidi3AlgorithmF64(SeriesAccelerationF64):
-    def __init__(self, series: SeriesBaseF64) -> None:
+    def __init__(self) -> None:
         ...
 class FourArctanSeriesArb(SeriesBaseArb):
-    def __init__(self, arg0: Arb) -> None:
+    def __init__(self) -> None:
         ...
 class FourArctanSeriesF64(SeriesBaseF64):
-    def __init__(self, arg0: float) -> None:
+    def __init__(self) -> None:
         ...
 class FourLn2M3SeriesArb(SeriesBaseArb):
-    def __init__(self, arg0: Arb) -> None:
+    def __init__(self) -> None:
         ...
 class FourLn2M3SeriesF64(SeriesBaseF64):
-    def __init__(self, arg0: float) -> None:
-        ...
-class GammaSeriesArb(SeriesBaseArb):
-    def __init__(self, arg0: Arb, arg1: Arb) -> None:
-        ...
-class GammaSeriesF64(SeriesBaseF64):
-    def __init__(self, arg0: float, arg1: float) -> None:
+    def __init__(self) -> None:
         ...
 class HalfAsinTwoXSeriesArb(SeriesBaseArb):
-    def __init__(self, arg0: Arb) -> None:
+    def __init__(self) -> None:
         ...
 class HalfAsinTwoXSeriesF64(SeriesBaseF64):
-    def __init__(self, arg0: float) -> None:
+    def __init__(self) -> None:
         ...
 class HalfMinusSinxMultiPi4SeriesArb(SeriesBaseArb):
-    def __init__(self, arg0: Arb) -> None:
+    def __init__(self) -> None:
         ...
 class HalfMinusSinxMultiPi4SeriesF64(SeriesBaseF64):
-    def __init__(self, arg0: float) -> None:
+    def __init__(self) -> None:
         ...
 class HalfMultiLn1Div2Multi1MinusCosxSeriesArb(SeriesBaseArb):
-    def __init__(self, arg0: Arb) -> None:
+    def __init__(self) -> None:
         ...
 class HalfMultiLn1Div2Multi1MinusCosxSeriesF64(SeriesBaseF64):
-    def __init__(self, arg0: float) -> None:
+    def __init__(self) -> None:
         ...
 class IncompleteGammaFuncSeriesArb(SeriesBaseArb):
-    def __init__(self, arg0: Arb, arg1: Arb) -> None:
+    def __init__(self) -> None:
         ...
 class IncompleteGammaFuncSeriesF64(SeriesBaseF64):
-    def __init__(self, arg0: float, arg1: float) -> None:
+    def __init__(self) -> None:
         ...
 class InvSqrt1m4xSeriesArb(SeriesBaseArb):
-    def __init__(self, arg0: Arb) -> None:
+    def __init__(self) -> None:
         ...
 class InvSqrt1m4xSeriesF64(SeriesBaseF64):
-    def __init__(self, arg0: float) -> None:
+    def __init__(self) -> None:
         ...
 class Inverse1mxSeriesArb(SeriesBaseArb):
-    def __init__(self, arg0: Arb) -> None:
+    def __init__(self) -> None:
         ...
 class Inverse1mxSeriesF64(SeriesBaseF64):
-    def __init__(self, arg0: float) -> None:
-        ...
-class JaXSeriesArb(SeriesBaseArb):
-    def __init__(self, arg0: Arb, arg1: Arb) -> None:
-        ...
-class JaXSeriesF64(SeriesBaseF64):
-    def __init__(self, arg0: float, arg1: float) -> None:
+    def __init__(self) -> None:
         ...
 class KXSeriesArb(SeriesBaseArb):
-    def __init__(self, arg0: Arb) -> None:
+    def __init__(self) -> None:
         ...
 class KXSeriesF64(SeriesBaseF64):
-    def __init__(self, arg0: float) -> None:
+    def __init__(self) -> None:
         ...
 class LambertWFuncSeriesArb(SeriesBaseArb):
-    def __init__(self, arg0: Arb) -> None:
+    def __init__(self) -> None:
         ...
 class LambertWFuncSeriesF64(SeriesBaseF64):
-    def __init__(self, arg0: float) -> None:
+    def __init__(self) -> None:
         ...
-class LevinAlgorithmArb(SeriesAccelerationArb):
-    def __init__(self, series: SeriesBaseArb, remainder: RemainderType = ..., useRecFormulas: bool = False, beta: Arb = ...) -> None:
+class LevinLAlgorithmArb(SeriesAccelerationArb):
+    def __init__(self, remainder: RemainderType = ..., useRecurrentFormula: bool = False, beta: Arb = ...) -> None:
         ...
-class LevinAlgorithmF64(SeriesAccelerationF64):
-    def __init__(self, series: SeriesBaseF64, remainder: RemainderType = ..., useRecFormulas: bool = False, beta: float = 1.0) -> None:
+class LevinLAlgorithmF64(SeriesAccelerationF64):
+    def __init__(self, remainder: RemainderType = ..., useRecurrentFormula: bool = False, beta: float = 1.0) -> None:
         ...
 class LevinSidiMAlgorithmArb(SeriesAccelerationArb):
-    def __init__(self, series: SeriesBaseArb, remainder: RemainderType = ..., gamma: Arb = ...) -> None:
+    def __init__(self, remainder: RemainderType = ..., gamma: Arb = ...) -> None:
         ...
 class LevinSidiMAlgorithmF64(SeriesAccelerationF64):
-    def __init__(self, series: SeriesBaseF64, remainder: RemainderType = ..., gamma: float = 10.0) -> None:
+    def __init__(self, remainder: RemainderType = ..., gamma: float = 10.0) -> None:
         ...
 class LevinSidiSAlgorithmArb(SeriesAccelerationArb):
-    def __init__(self, series: SeriesBaseArb, remainder: RemainderType = ..., useRecFormulas: bool = False, parameter: Arb = ...) -> None:
+    def __init__(self, remainder: RemainderType = ..., useRecurrentFormula: bool = False, beta: Arb = ...) -> None:
         ...
 class LevinSidiSAlgorithmF64(SeriesAccelerationF64):
-    def __init__(self, series: SeriesBaseF64, remainder: RemainderType = ..., useRecFormulas: bool = False, parameter: float = 1.0) -> None:
+    def __init__(self, remainder: RemainderType = ..., useRecurrentFormula: bool = False, beta: float = 1.0) -> None:
         ...
 class Ln13MinusLn7Div7SeriesArb(SeriesBaseArb):
-    def __init__(self, arg0: Arb) -> None:
+    def __init__(self) -> None:
         ...
 class Ln13MinusLn7Div7SeriesF64(SeriesBaseF64):
-    def __init__(self, arg0: float) -> None:
+    def __init__(self) -> None:
         ...
 class Ln1MinusX2SeriesArb(SeriesBaseArb):
-    def __init__(self, arg0: Arb) -> None:
+    def __init__(self) -> None:
         ...
 class Ln1MinusX2SeriesF64(SeriesBaseF64):
-    def __init__(self, arg0: float) -> None:
+    def __init__(self) -> None:
         ...
 class Ln1PlusSqrt1PlusXsquareMinusLn2SeriesArb(SeriesBaseArb):
-    def __init__(self, arg0: Arb) -> None:
+    def __init__(self) -> None:
         ...
 class Ln1PlusSqrt1PlusXsquareMinusLn2SeriesF64(SeriesBaseF64):
-    def __init__(self, arg0: float) -> None:
+    def __init__(self) -> None:
         ...
 class Ln1PlusX3SeriesArb(SeriesBaseArb):
-    def __init__(self, arg0: Arb) -> None:
+    def __init__(self) -> None:
         ...
 class Ln1PlusX3SeriesF64(SeriesBaseF64):
-    def __init__(self, arg0: float) -> None:
+    def __init__(self) -> None:
         ...
 class Ln1mxSeriesArb(SeriesBaseArb):
-    def __init__(self, arg0: Arb) -> None:
+    def __init__(self) -> None:
         ...
 class Ln1mxSeriesF64(SeriesBaseF64):
-    def __init__(self, arg0: float) -> None:
+    def __init__(self) -> None:
         ...
 class Ln1plusXDiv1plusX2SeriesArb(SeriesBaseArb):
-    def __init__(self, arg0: Arb) -> None:
+    def __init__(self) -> None:
         ...
 class Ln1plusXDiv1plusX2SeriesF64(SeriesBaseF64):
-    def __init__(self, arg0: float) -> None:
+    def __init__(self) -> None:
         ...
 class Ln1px4SeriesArb(SeriesBaseArb):
-    def __init__(self, arg0: Arb) -> None:
+    def __init__(self) -> None:
         ...
 class Ln1px4SeriesF64(SeriesBaseF64):
-    def __init__(self, arg0: float) -> None:
+    def __init__(self) -> None:
         ...
 class Ln2SeriesArb(SeriesBaseArb):
-    def __init__(self, arg0: Arb) -> None:
+    def __init__(self) -> None:
         ...
 class Ln2SeriesF64(SeriesBaseF64):
-    def __init__(self, arg0: float) -> None:
+    def __init__(self) -> None:
         ...
 class LnCosxSeriesArb(SeriesBaseArb):
-    def __init__(self, arg0: Arb) -> None:
+    def __init__(self) -> None:
         ...
 class LnCosxSeriesF64(SeriesBaseF64):
-    def __init__(self, arg0: float) -> None:
+    def __init__(self) -> None:
         ...
 class LnSinxMinusLnXSeriesArb(SeriesBaseArb):
-    def __init__(self, arg0: Arb) -> None:
+    def __init__(self) -> None:
         ...
 class LnSinxMinusLnXSeriesF64(SeriesBaseF64):
-    def __init__(self, arg0: float) -> None:
+    def __init__(self) -> None:
         ...
 class LnXPlusOneXMinusOneHalfedSeriesArb(SeriesBaseArb):
-    def __init__(self, arg0: Arb) -> None:
+    def __init__(self) -> None:
         ...
 class LnXPlusOneXMinusOneHalfedSeriesF64(SeriesBaseF64):
-    def __init__(self, arg0: float) -> None:
+    def __init__(self) -> None:
         ...
 class LubkinWAlgorithmArb(SeriesAccelerationArb):
-    def __init__(self, series: SeriesBaseArb) -> None:
+    def __init__(self) -> None:
         ...
 class LubkinWAlgorithmF64(SeriesAccelerationF64):
-    def __init__(self, series: SeriesBaseF64) -> None:
+    def __init__(self) -> None:
         ...
 class MFact1mxMp1InverseSeriesArb(SeriesBaseArb):
-    def __init__(self, arg0: Arb, arg1: int) -> None:
+    def __init__(self) -> None:
         ...
 class MFact1mxMp1InverseSeriesF64(SeriesBaseF64):
-    def __init__(self, arg0: float, arg1: int) -> None:
+    def __init__(self) -> None:
         ...
 class MeanSinhSinSeriesArb(SeriesBaseArb):
-    def __init__(self, arg0: Arb) -> None:
+    def __init__(self) -> None:
         ...
 class MeanSinhSinSeriesF64(SeriesBaseF64):
-    def __init__(self, arg0: float) -> None:
+    def __init__(self) -> None:
         ...
 class Minus3Div4OrXMinus3Div4SeriesArb(SeriesBaseArb):
-    def __init__(self, arg0: Arb) -> None:
+    def __init__(self) -> None:
         ...
 class Minus3Div4OrXMinus3Div4SeriesF64(SeriesBaseF64):
-    def __init__(self, arg0: float) -> None:
+    def __init__(self) -> None:
         ...
 class MinusOneNFactNInNSeriesArb(SeriesBaseArb):
-    def __init__(self, arg0: Arb) -> None:
+    def __init__(self) -> None:
         ...
 class MinusOneNFactNInNSeriesF64(SeriesBaseF64):
-    def __init__(self, arg0: float) -> None:
+    def __init__(self) -> None:
         ...
 class MinusOneNedInNSeriesArb(SeriesBaseArb):
-    def __init__(self, arg0: Arb) -> None:
+    def __init__(self) -> None:
         ...
 class MinusOneNedInNSeriesF64(SeriesBaseF64):
-    def __init__(self, arg0: float) -> None:
+    def __init__(self) -> None:
         ...
 class MinusOneQuarterSeriesArb(SeriesBaseArb):
-    def __init__(self, arg0: Arb) -> None:
+    def __init__(self) -> None:
         ...
 class MinusOneQuarterSeriesF64(SeriesBaseF64):
-    def __init__(self, arg0: float) -> None:
+    def __init__(self) -> None:
         ...
 class MinusThreePlusLn3ThreeDividedTwoPlusTwoLn2SeriesArb(SeriesBaseArb):
-    def __init__(self, arg0: Arb) -> None:
+    def __init__(self) -> None:
         ...
 class MinusThreePlusLn3ThreeDividedTwoPlusTwoLn2SeriesF64(SeriesBaseF64):
-    def __init__(self, arg0: float) -> None:
+    def __init__(self) -> None:
         ...
 class MinusXMinusPi4OrMinusPi4SeriesArb(SeriesBaseArb):
-    def __init__(self, arg0: Arb) -> None:
+    def __init__(self) -> None:
         ...
 class MinusXMinusPi4OrMinusPi4SeriesF64(SeriesBaseF64):
-    def __init__(self, arg0: float) -> None:
+    def __init__(self) -> None:
         ...
 class NumeratorType:
     """
@@ -650,124 +612,130 @@ class NumeratorType:
     def value(self) -> int:
         ...
 class OneDivSqrt2SinXDivSqrt2SeriesArb(SeriesBaseArb):
-    def __init__(self, arg0: Arb) -> None:
+    def __init__(self) -> None:
         ...
 class OneDivSqrt2SinXDivSqrt2SeriesF64(SeriesBaseF64):
-    def __init__(self, arg0: float) -> None:
+    def __init__(self) -> None:
         ...
 class OneDivTwoMinusXMultiThreePlusXSeriesArb(SeriesBaseArb):
-    def __init__(self, arg0: Arb) -> None:
+    def __init__(self) -> None:
         ...
 class OneDivTwoMinusXMultiThreePlusXSeriesF64(SeriesBaseF64):
-    def __init__(self, arg0: float) -> None:
+    def __init__(self) -> None:
         ...
 class OneMinusSqrt1minus4xDiv2xSeriesArb(SeriesBaseArb):
-    def __init__(self, arg0: Arb) -> None:
+    def __init__(self) -> None:
         ...
 class OneMinusSqrt1minus4xDiv2xSeriesF64(SeriesBaseF64):
-    def __init__(self, arg0: float) -> None:
+    def __init__(self) -> None:
         ...
 class OneSeriesArb(SeriesBaseArb):
-    def __init__(self, arg0: Arb) -> None:
+    def __init__(self) -> None:
         ...
 class OneSeriesF64(SeriesBaseF64):
-    def __init__(self, arg0: float) -> None:
+    def __init__(self) -> None:
         ...
 class OneThirdPiSquaredMNineSeriesArb(SeriesBaseArb):
-    def __init__(self, arg0: Arb) -> None:
+    def __init__(self) -> None:
         ...
 class OneThirdPiSquaredMNineSeriesF64(SeriesBaseF64):
-    def __init__(self, arg0: float) -> None:
+    def __init__(self) -> None:
         ...
 class OneTwelfth3x2Pi2SeriesArb(SeriesBaseArb):
-    def __init__(self, arg0: Arb) -> None:
+    def __init__(self) -> None:
         ...
 class OneTwelfth3x2Pi2SeriesF64(SeriesBaseF64):
-    def __init__(self, arg0: float) -> None:
+    def __init__(self) -> None:
         ...
 class OneTwelfthSeriesArb(SeriesBaseArb):
-    def __init__(self, arg0: Arb) -> None:
+    def __init__(self) -> None:
         ...
 class OneTwelfthSeriesF64(SeriesBaseF64):
-    def __init__(self, arg0: float) -> None:
+    def __init__(self) -> None:
+        ...
+class OneTwelfthX2Pi2SeriesArb(SeriesBaseArb):
+    def __init__(self) -> None:
+        ...
+class OneTwelfthX2Pi2SeriesF64(SeriesBaseF64):
+    def __init__(self) -> None:
         ...
 class Pi3SeriesArb(SeriesBaseArb):
-    def __init__(self, arg0: Arb) -> None:
+    def __init__(self) -> None:
         ...
 class Pi3SeriesF64(SeriesBaseF64):
-    def __init__(self, arg0: float) -> None:
+    def __init__(self) -> None:
         ...
 class Pi4SeriesArb(SeriesBaseArb):
-    def __init__(self, arg0: Arb) -> None:
+    def __init__(self) -> None:
         ...
 class Pi4SeriesF64(SeriesBaseF64):
-    def __init__(self, arg0: float) -> None:
+    def __init__(self) -> None:
         ...
 class Pi8CosxSquareMinus1Div3CosxSeriesArb(SeriesBaseArb):
-    def __init__(self, arg0: Arb) -> None:
+    def __init__(self) -> None:
         ...
 class Pi8CosxSquareMinus1Div3CosxSeriesF64(SeriesBaseF64):
-    def __init__(self, arg0: float) -> None:
+    def __init__(self) -> None:
         ...
 class PiCubed32SeriesArb(SeriesBaseArb):
-    def __init__(self, arg0: Arb) -> None:
+    def __init__(self) -> None:
         ...
 class PiCubed32SeriesF64(SeriesBaseF64):
-    def __init__(self, arg0: float) -> None:
+    def __init__(self) -> None:
         ...
 class PiFourMinusLn2HalfedSeriesArb(SeriesBaseArb):
-    def __init__(self, arg0: Arb) -> None:
+    def __init__(self) -> None:
         ...
 class PiFourMinusLn2HalfedSeriesF64(SeriesBaseF64):
-    def __init__(self, arg0: float) -> None:
+    def __init__(self) -> None:
         ...
 class PiMinus3pi4AndPiMinusXMinus3pi4SeriesArb(SeriesBaseArb):
-    def __init__(self, arg0: Arb) -> None:
+    def __init__(self) -> None:
         ...
 class PiMinus3pi4AndPiMinusXMinus3pi4SeriesF64(SeriesBaseF64):
-    def __init__(self, arg0: float) -> None:
+    def __init__(self) -> None:
         ...
 class PiMinusX2SeriesArb(SeriesBaseArb):
-    def __init__(self, arg0: Arb) -> None:
+    def __init__(self) -> None:
         ...
 class PiMinusX2SeriesF64(SeriesBaseF64):
-    def __init__(self, arg0: float) -> None:
+    def __init__(self) -> None:
         ...
 class PiSeriesArb(SeriesBaseArb):
-    def __init__(self, arg0: Arb) -> None:
+    def __init__(self) -> None:
         ...
 class PiSeriesF64(SeriesBaseF64):
-    def __init__(self, arg0: float) -> None:
+    def __init__(self) -> None:
         ...
 class PiSixMinHalfSeriesArb(SeriesBaseArb):
-    def __init__(self, arg0: Arb) -> None:
+    def __init__(self) -> None:
         ...
 class PiSixMinHalfSeriesF64(SeriesBaseF64):
-    def __init__(self, arg0: float) -> None:
+    def __init__(self) -> None:
         ...
 class PiSquared6MinusOneSeriesArb(SeriesBaseArb):
-    def __init__(self, arg0: Arb) -> None:
+    def __init__(self) -> None:
         ...
 class PiSquared6MinusOneSeriesF64(SeriesBaseF64):
-    def __init__(self, arg0: float) -> None:
+    def __init__(self) -> None:
         ...
 class PiSquaredTwelveSeriesArb(SeriesBaseArb):
-    def __init__(self, arg0: Arb) -> None:
+    def __init__(self) -> None:
         ...
 class PiSquaredTwelveSeriesF64(SeriesBaseF64):
-    def __init__(self, arg0: float) -> None:
+    def __init__(self) -> None:
         ...
-class PiXMinusXSquareAndXSquareMinusThreePiXPlusTwoPiSquareSeriesArb(SeriesBaseArb):
-    def __init__(self, arg0: Arb) -> None:
+class PiXMinusXSquareSquareMinusThreePiXPlusTwoPiSquareSeriesArb(SeriesBaseArb):
+    def __init__(self) -> None:
         ...
-class PiXMinusXSquareAndXSquareMinusThreePiXPlusTwoPiSquareSeriesF64(SeriesBaseF64):
-    def __init__(self, arg0: float) -> None:
+class PiXMinusXSquareSquareMinusThreePiXPlusTwoPiSquareSeriesF64(SeriesBaseF64):
+    def __init__(self) -> None:
         ...
-class PiXMultiE_XpiPlusEMinusXpiDividedE_XpiMinusEMinusXpiMinusOneSeriesArb(SeriesBaseArb):
-    def __init__(self, arg0: Arb) -> None:
+class PiXMultiEXpiPlusEMinusXpiDividedEXpiMinusEMinusXpiSeriesArb(SeriesBaseArb):
+    def __init__(self) -> None:
         ...
-class PiXMultiE_XpiPlusEMinusXpiDividedE_XpiMinusEMinusXpiMinusOneSeriesF64(SeriesBaseF64):
-    def __init__(self, arg0: float) -> None:
+class PiXMultiEXpiPlusEMinusXpiDividedEXpiMinusEMinusXpiSeriesF64(SeriesBaseF64):
+    def __init__(self) -> None:
         ...
 class RemainderType:
     """
@@ -816,238 +784,248 @@ class RemainderType:
     def value(self) -> int:
         ...
 class RichardsonAlgorithmArb(SeriesAccelerationArb):
-    def __init__(self, series: SeriesBaseArb) -> None:
+    def __init__(self) -> None:
         ...
 class RichardsonAlgorithmF64(SeriesAccelerationF64):
-    def __init__(self, series: SeriesBaseF64) -> None:
+    def __init__(self) -> None:
         ...
 class RiemannZetaFuncSeriesArb(SeriesBaseArb):
-    def __init__(self, arg0: Arb) -> None:
+    def __init__(self) -> None:
         ...
 class RiemannZetaFuncSeriesF64(SeriesBaseF64):
-    def __init__(self, arg0: float) -> None:
+    def __init__(self) -> None:
         ...
 class RiemannZetaFuncXmin1DivRiemannZetaFuncXSeriesArb(SeriesBaseArb):
-    def __init__(self, arg0: Arb) -> None:
+    def __init__(self) -> None:
         ...
 class RiemannZetaFuncXmin1DivRiemannZetaFuncXSeriesF64(SeriesBaseF64):
-    def __init__(self, arg0: float) -> None:
+    def __init__(self) -> None:
         ...
 class SeriesAccelerationArb:
-    def __call__(self, arg0: int, arg1: int) -> Arb:
+    def __call__(self, n: int, order: int, data: SeriesResultArb, offset: int = 0) -> Arb:
+        ...
+    def printInfo(self) -> None:
         ...
 class SeriesAccelerationF64:
-    def __call__(self, arg0: int, arg1: int) -> float:
+    def __call__(self, n: int, order: int, data: SeriesResultF64, offset: int = 0) -> float:
+        ...
+    def printInfo(self) -> None:
         ...
 class SeriesBaseArb:
-    def S_n(self, arg0: int) -> Arb:
+    def generateSeries(self, x: Arb, vecSize: int, addTParameter: Arb = ..., addKParameter: int = 1) -> SeriesResultArb:
         ...
-    def __call__(self, arg0: int) -> Arb:
+    def get_name(self) -> str:
         ...
     def get_sum(self) -> Arb:
         ...
     def get_x(self) -> Arb:
         ...
 class SeriesBaseF64:
-    def S_n(self, arg0: int) -> float:
+    def generateSeries(self, x: float, vecSize: int, addTParameter: float = 1.0, addKParameter: int = 1) -> SeriesResultF64:
         ...
-    def __call__(self, arg0: int) -> float:
+    def get_name(self) -> str:
         ...
     def get_sum(self) -> float:
         ...
     def get_x(self) -> float:
         ...
+class SeriesResultArb:
+    Sn: list[Arb]
+    an: list[Arb]
+    @typing.overload
+    def __init__(self) -> None:
+        ...
+    @typing.overload
+    def __init__(self, arg0: list[Arb], arg1: list[Arb]) -> None:
+        ...
+class SeriesResultF64:
+    Sn: list[float]
+    an: list[float]
+    @typing.overload
+    def __init__(self) -> None:
+        ...
+    @typing.overload
+    def __init__(self, arg0: list[float], arg1: list[float]) -> None:
+        ...
 class SeriesWithLnNumber1Arb(SeriesBaseArb):
-    def __init__(self, arg0: Arb) -> None:
+    def __init__(self) -> None:
         ...
 class SeriesWithLnNumber1F64(SeriesBaseF64):
-    def __init__(self, arg0: float) -> None:
+    def __init__(self) -> None:
         ...
 class SeriesWithLnNumber2Arb(SeriesBaseArb):
-    def __init__(self, arg0: Arb) -> None:
+    def __init__(self) -> None:
         ...
 class SeriesWithLnNumber2F64(SeriesBaseF64):
-    def __init__(self, arg0: float) -> None:
+    def __init__(self) -> None:
         ...
 class ShanksAlgorithmArb(SeriesAccelerationArb):
-    def __init__(self, series: SeriesBaseArb) -> None:
+    def __init__(self) -> None:
         ...
 class ShanksAlgorithmF64(SeriesAccelerationF64):
-    def __init__(self, series: SeriesBaseF64) -> None:
+    def __init__(self) -> None:
         ...
-class ShanksTransformAlternatingAlgorithmArb(SeriesAccelerationArb):
-    def __init__(self, series: SeriesBaseArb) -> None:
+class ShanksTransformAlternatingArb(SeriesAccelerationArb):
+    def __init__(self) -> None:
         ...
-class ShanksTransformAlternatingAlgorithmF64(SeriesAccelerationF64):
-    def __init__(self, series: SeriesBaseF64) -> None:
+class ShanksTransformAlternatingF64(SeriesAccelerationF64):
+    def __init__(self) -> None:
         ...
 class SiXSeriesArb(SeriesBaseArb):
-    def __init__(self, arg0: Arb) -> None:
+    def __init__(self) -> None:
         ...
 class SiXSeriesF64(SeriesBaseF64):
-    def __init__(self, arg0: float) -> None:
+    def __init__(self) -> None:
         ...
 class SinSeriesArb(SeriesBaseArb):
-    def __init__(self, arg0: Arb) -> None:
+    def __init__(self) -> None:
         ...
 class SinSeriesF64(SeriesBaseF64):
-    def __init__(self, arg0: float) -> None:
+    def __init__(self) -> None:
         ...
 class SinX2SeriesArb(SeriesBaseArb):
-    def __init__(self, arg0: Arb) -> None:
+    def __init__(self) -> None:
         ...
 class SinX2SeriesF64(SeriesBaseF64):
-    def __init__(self, arg0: float) -> None:
+    def __init__(self) -> None:
         ...
 class SinhSeriesArb(SeriesBaseArb):
-    def __init__(self, arg0: Arb) -> None:
+    def __init__(self) -> None:
         ...
 class SinhSeriesF64(SeriesBaseF64):
-    def __init__(self, arg0: float) -> None:
+    def __init__(self) -> None:
         ...
 class SinhX2SeriesArb(SeriesBaseArb):
-    def __init__(self, arg0: Arb) -> None:
+    def __init__(self) -> None:
         ...
 class SinhX2SeriesF64(SeriesBaseF64):
-    def __init__(self, arg0: float) -> None:
+    def __init__(self) -> None:
         ...
 class Sqrt1plusXMinus1MinusXDiv2SeriesArb(SeriesBaseArb):
-    def __init__(self, arg0: Arb) -> None:
+    def __init__(self) -> None:
         ...
 class Sqrt1plusXMinus1MinusXDiv2SeriesF64(SeriesBaseF64):
-    def __init__(self, arg0: float) -> None:
+    def __init__(self) -> None:
         ...
 class Sqrt1plusXSeriesArb(SeriesBaseArb):
-    def __init__(self, arg0: Arb) -> None:
+    def __init__(self) -> None:
         ...
 class Sqrt1plusXSeriesF64(SeriesBaseF64):
-    def __init__(self, arg0: float) -> None:
+    def __init__(self) -> None:
         ...
 class SqrtOneminusSqrtoneminusxDivXSeriesArb(SeriesBaseArb):
-    def __init__(self, arg0: Arb) -> None:
+    def __init__(self) -> None:
         ...
 class SqrtOneminusSqrtoneminusxDivXSeriesF64(SeriesBaseF64):
-    def __init__(self, arg0: float) -> None:
+    def __init__(self) -> None:
         ...
 class TenMinusXSeriesArb(SeriesBaseArb):
-    def __init__(self, arg0: Arb) -> None:
+    def __init__(self) -> None:
         ...
 class TenMinusXSeriesF64(SeriesBaseF64):
-    def __init__(self, arg0: float) -> None:
+    def __init__(self) -> None:
         ...
 class ThreeMinusPiSeriesArb(SeriesBaseArb):
-    def __init__(self, arg0: Arb) -> None:
+    def __init__(self) -> None:
         ...
 class ThreeMinusPiSeriesF64(SeriesBaseF64):
-    def __init__(self, arg0: float) -> None:
+    def __init__(self) -> None:
         ...
 class TwoArcsinSquareXHalfedSeriesArb(SeriesBaseArb):
-    def __init__(self, arg0: Arb) -> None:
+    def __init__(self) -> None:
         ...
 class TwoArcsinSquareXHalfedSeriesF64(SeriesBaseF64):
-    def __init__(self, arg0: float) -> None:
+    def __init__(self) -> None:
         ...
 class TwoDegreeXSeriesArb(SeriesBaseArb):
-    def __init__(self, arg0: Arb) -> None:
+    def __init__(self) -> None:
         ...
 class TwoDegreeXSeriesF64(SeriesBaseF64):
-    def __init__(self, arg0: float) -> None:
+    def __init__(self) -> None:
         ...
 class TwoLn2SeriesArb(SeriesBaseArb):
-    def __init__(self, arg0: Arb) -> None:
+    def __init__(self) -> None:
         ...
 class TwoLn2SeriesF64(SeriesBaseF64):
-    def __init__(self, arg0: float) -> None:
+    def __init__(self) -> None:
         ...
 class WenigerAlgorithmArb(SeriesAccelerationArb):
-    def __init__(self, series: SeriesBaseArb) -> None:
+    def __init__(self) -> None:
         ...
 class WenigerAlgorithmF64(SeriesAccelerationF64):
-    def __init__(self, series: SeriesBaseF64) -> None:
+    def __init__(self) -> None:
         ...
-class WhynnRhoAlgorithmArb(SeriesAccelerationArb):
-    def __init__(self, series: SeriesBaseArb, numerator: NumeratorType = ..., gamma: Arb = ..., RHO: Arb = ...) -> None:
+class WynnEpsilon1AlgorithmArb(SeriesAccelerationArb):
+    def __init__(self) -> None:
         ...
-class WhynnRhoAlgorithmF64(SeriesAccelerationF64):
-    def __init__(self, series: SeriesBaseF64, numerator: NumeratorType = ..., gamma: float = 1.0, RHO: float = 0.0) -> None:
+class WynnEpsilon1AlgorithmF64(SeriesAccelerationF64):
+    def __init__(self) -> None:
         ...
 class WynnEpsilon2AlgorithmArb(SeriesAccelerationArb):
-    def __init__(self, series: SeriesBaseArb) -> None:
+    def __init__(self) -> None:
         ...
 class WynnEpsilon2AlgorithmF64(SeriesAccelerationF64):
-    def __init__(self, series: SeriesBaseF64) -> None:
+    def __init__(self) -> None:
         ...
 class WynnEpsilon3AlgorithmArb(SeriesAccelerationArb):
-    def __init__(self, series: SeriesBaseArb, epsilon_threshold: Arb = ...) -> None:
+    def __init__(self, epsilon_threshold: Arb = ...) -> None:
         ...
 class WynnEpsilon3AlgorithmF64(SeriesAccelerationF64):
-    def __init__(self, series: SeriesBaseF64, epsilon_threshold: float = 0.001) -> None:
+    def __init__(self, epsilon_threshold: float = 0.001) -> None:
         ...
-class WynnEpsilonAlgorithmArb(SeriesAccelerationArb):
-    def __init__(self, series: SeriesBaseArb) -> None:
+class WynnRhoAlgorithmArb(SeriesAccelerationArb):
+    def __init__(self, numerator: NumeratorType = ..., gamma: Arb = ..., rho: Arb = ...) -> None:
         ...
-class WynnEpsilonAlgorithmF64(SeriesAccelerationF64):
-    def __init__(self, series: SeriesBaseF64) -> None:
+class WynnRhoAlgorithmF64(SeriesAccelerationF64):
+    def __init__(self, numerator: NumeratorType = ..., gamma: float = -1.0, rho: float = 1.0) -> None:
+        ...
+class X1mxSquaredSeriesArb(SeriesBaseArb):
+    def __init__(self) -> None:
+        ...
+class X1mxSquaredSeriesF64(SeriesBaseF64):
+    def __init__(self) -> None:
         ...
 class XDiv1minX2SeriesArb(SeriesBaseArb):
-    def __init__(self, arg0: Arb) -> None:
+    def __init__(self) -> None:
         ...
 class XDiv1minX2SeriesF64(SeriesBaseF64):
-    def __init__(self, arg0: float) -> None:
+    def __init__(self) -> None:
         ...
 class XDiv1minXSeriesArb(SeriesBaseArb):
-    def __init__(self, arg0: Arb) -> None:
+    def __init__(self) -> None:
         ...
 class XDiv1minXSeriesF64(SeriesBaseF64):
-    def __init__(self, arg0: float) -> None:
+    def __init__(self) -> None:
         ...
 class XMinSqrtXSeriesArb(SeriesBaseArb):
-    def __init__(self, arg0: Arb) -> None:
+    def __init__(self) -> None:
         ...
 class XMinSqrtXSeriesF64(SeriesBaseF64):
-    def __init__(self, arg0: float) -> None:
+    def __init__(self) -> None:
         ...
 class XSeriesArb(SeriesBaseArb):
-    def __init__(self, arg0: Arb) -> None:
+    def __init__(self) -> None:
         ...
 class XSeriesF64(SeriesBaseF64):
-    def __init__(self, arg0: float) -> None:
-        ...
-class XTwelfthX2Pi2SeriesArb(SeriesBaseArb):
-    def __init__(self, arg0: Arb) -> None:
-        ...
-class XTwelfthX2Pi2SeriesF64(SeriesBaseF64):
-    def __init__(self, arg0: float) -> None:
+    def __init__(self) -> None:
         ...
 class XTwoSeriesArb(SeriesBaseArb):
-    def __init__(self, arg0: Arb) -> None:
+    def __init__(self) -> None:
         ...
 class XTwoSeriesF64(SeriesBaseF64):
-    def __init__(self, arg0: float) -> None:
+    def __init__(self) -> None:
         ...
 class XTwoThroughtSquaresSeriesArb(SeriesBaseArb):
-    def __init__(self, arg0: Arb) -> None:
+    def __init__(self) -> None:
         ...
 class XTwoThroughtSquaresSeriesF64(SeriesBaseF64):
-    def __init__(self, arg0: float) -> None:
-        ...
-class X_1mx_SquaredSeriesArb(SeriesBaseArb):
-    def __init__(self, arg0: Arb) -> None:
-        ...
-class X_1mx_SquaredSeriesF64(SeriesBaseF64):
-    def __init__(self, arg0: float) -> None:
-        ...
-class XmbJbTwoSeriesArb(SeriesBaseArb):
-    def __init__(self, arg0: Arb, arg1: int) -> None:
-        ...
-class XmbJbTwoSeriesF64(SeriesBaseF64):
-    def __init__(self, arg0: float, arg1: int) -> None:
+    def __init__(self) -> None:
         ...
 class Xsquareplus3DivXsquareplus2multixMinus1SeriesArb(SeriesBaseArb):
-    def __init__(self, arg0: Arb) -> None:
+    def __init__(self) -> None:
         ...
 class Xsquareplus3DivXsquareplus2multixMinus1SeriesF64(SeriesBaseF64):
-    def __init__(self, arg0: float) -> None:
+    def __init__(self) -> None:
         ...
 gamma_rho_variant: NumeratorType  # value = <NumeratorType.gamma_rho_variant: 2>
 generalized_variant: NumeratorType  # value = <NumeratorType.generalized_variant: 1>
