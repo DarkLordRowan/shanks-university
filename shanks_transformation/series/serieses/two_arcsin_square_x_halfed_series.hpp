@@ -46,6 +46,6 @@ template <std::floating_point T, std::unsigned_integral K>
 constexpr T two_arcsin_square_x_halfed_series<T, K>::operator()(K n) const
 {
 	const K a = static_cast<K>(std::fma(2, n, 1));
-	// return (this->binomial_coefficient(2 * n, n) * this->binomial_coefficient(2 * n, n) * std::pow(this->x, 2 * a)) / (a * a * std::pow(2, std::fma(3, a, -2)));
-	return static_cast<T>((std::pow(this->x, a - 1)) *  static_cast<T>(this->fact(n)) * static_cast<T>(this->fact(n))) / (static_cast<T>(2 * (n + 1)) * static_cast<T>(this->fact(a)));
+	const T coeff = static_cast<T>(this->binomial_coefficient(static_cast<T>(2 * n), n));
+	return (coeff * coeff * static_cast<T>(std::pow(this->x, 2 * a))) / (static_cast<T>(a * a) * static_cast<T>(std::pow(2, 3 * a - 2)));
 }

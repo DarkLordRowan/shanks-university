@@ -29,13 +29,13 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-Series_with_ln_number1_series<T, K>::Series_with_ln_number1_series(T x) : series_base<T, K>(x)
+Series_with_ln_number1_series<T, K>::Series_with_ln_number1_series(T x) : series_base<T, K>(x, static_cast<T>(0.545247) * x)
 {
     this->series_name = "series_with_ln";
     // Сходится при |x| < 1 (ряд с логарифмическими членами)
     // Расходится при |x| ≥ 1
 
-    if (std::abs(x) >= 1 || !std::isfinite(x)) {
+    if (std::abs(x) > 1 || !std::isfinite(x)) {
         this->throw_domain_error("|x| must be < 1");
     }
 }
@@ -43,6 +43,6 @@ Series_with_ln_number1_series<T, K>::Series_with_ln_number1_series(T x) : series
 template <std::floating_point T, std::unsigned_integral K>
 constexpr T Series_with_ln_number1_series<T, K>::operator()(K n) const
 {
-    const T tN = static_cast<T>(n);
-    return this->x * std::log(static_cast<T>(1) + std::pow(tN, tN*tN + tN * 0.5) / (std::pow(static_cast<T>(this->fact(n)), tN) * std::exp(tN * tN))); //(76.2) [Rows.pdf]
+    const T tN = static_cast<T>(n+1);
+    return this->x * static_cast<T>(std::log(static_cast<T>(1) + static_cast<T>(std::pow(tN, tN*tN + tN * 0.5)) / (static_cast<T>(std::pow(static_cast<T>(this->fact(n+1)), tN)) * static_cast<T>(std::exp(tN * tN))))); //(76.2) [Rows.pdf]
 }
