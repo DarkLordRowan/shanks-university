@@ -176,24 +176,28 @@ public:
     }
 
     template<AcceptedLike paramType>
-    SeriesResult<T> jitter(const SeriesResult<T>& result, const paramType& tParam1, const paramType& tParam2 = T{}) {
+    SeriesResult<T> jitter(const SeriesResult<T>& result, const paramType& tParam1, const paramType& tParam2 = paramType{}) {
 
         std::vector<T> newSn;
         std::vector<T> newAn;
 
+        std::function<T(const paramType&, const paramType&)> noiseFunc;
+
+        switch (type) {
+            case NoiseType::uniform:
+                noiseFunc = [this](const paramType& a, const paramType& b) { return this->uniform(a, b); };
+                break;
+            case NoiseType::normal:
+                noiseFunc = [this](const paramType& a, const paramType& b) { return this->normal(a, b); };
+                break;
+            case NoiseType::poisson:
+                noiseFunc = [this](const paramType& a, const paramType&) { return this->poisson(a); };
+                break;
+        }
+
         for (size_t i = 0; i < result.Sn.size(); ++i) {
-            T noise;
-            switch(type){
-                case NoiseType::uniform:
-                    noise = uniform(tParam1, tParam2);
-                    break;
-                case NoiseType::normal:
-                    noise = normal(tParam1, tParam2);
-                    break;
-                case NoiseType::poisson:
-                    noise = poisson(tParam1);
-                    break;
-            }
+            T noise = noiseFunc(tParam1, tParam2);
+
             if (i == 0) {
                 newSn.push_back(result.Sn[0] + noise);
                 newAn.push_back(newSn[0]);
