@@ -4,21 +4,13 @@
  */
 
 #include <pybind11/pybind11.h>
-#include <pybind11/numpy.h>
 #include <pybind11/stl.h>
-#include <pybind11/operators.h>
-
-#include <type_traits>
 #include <string>
-
-#include "methods/series_acceleration.hpp"
-#include "series.hpp"
-#include "methods.hpp"
-
-#include <math.h>
-
 #include "libs/arbitrary_arithmetics/fprecision.h"
 #include "libs/arbitrary_arithmetics/precisioncore.cpp"
+
+#include "series.hpp"
+#include "methods.hpp"
 
 namespace py = pybind11;
 
