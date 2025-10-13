@@ -45,5 +45,5 @@ x_div_1minx2_series<T, K>::x_div_1minx2_series(T x) : series_base<T, K>(x, x / s
 template <std::floating_point T, std::unsigned_integral K>
 constexpr T x_div_1minx2_series<T, K>::operator()(K n) const
 {
-    return (static_cast<T>(this->fact(2 * n)) * static_cast<T>(std::pow(this->x, std::fma(2, n, 1)))) / (static_cast<T>(this->fact(n) * this->fact(n)) * static_cast<T>(std::pow(4, n))); // (101.1) [Rows.pdf]
+    return (this->binomial_coefficient(static_cast<T>(2 * n), n) * static_cast<T>(std::pow(this->x, std::fma(2, n, 1)))) / (static_cast<T>(std::pow(4, n))); // (101.1) [Rows.pdf]
 }

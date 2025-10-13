@@ -45,7 +45,5 @@ arcsin_x_series<T, K>::arcsin_x_series(T x) : series_base<T, K>(x, std::asin(x))
 template <std::floating_point T, std::unsigned_integral K>
 constexpr T arcsin_x_series<T, K>::operator()(K n) const
 {
-    const T fact = static_cast<T>(this->fact(n));
-    const T coeff = static_cast<T>(this->fact(2*n)) / fact / fact / static_cast<T>(std::pow(2, 2*n));
-    return coeff * std::pow(this->x, static_cast<T>(fma(2,n,1))) / static_cast<T>(fma(2,n,1)); // (69.1) [Rows.pdf]
+    return (static_cast<T>(this->binomial_coefficient(static_cast<T>(2 * n), n)) * static_cast<T>(std::pow(this->x, static_cast<T>(fma(2,n,1))))) / (static_cast<T>(std::pow(4, n)) * static_cast<T>(fma(2,n,1))); // (69.1) [Rows.pdf]
 }
