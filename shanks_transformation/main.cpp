@@ -124,7 +124,7 @@ constexpr void testCompatability(const T& x){
 
 
 	exp_series<T,K> testSeries = exp_series<T,K>();
-	SeriesResult<T> result = testSeries.generateSeries(x, 150);
+	SeriesResult<T> result = testSeries.generateSeries(x, 300);
 
 	std::cout << "EXP(x) = " << testSeries.get_sum() << "\n";
 
@@ -136,7 +136,7 @@ constexpr void testCompatability(const T& x){
 		for (size_t j = 0; j <= 30; ++j) {
 			
 			try{
-				std::cout << "n = " << 1 << " order = " << j << " : " << algos[i]->operator()(1,j,result) << "\n";
+				std::cout << "n = " << 1 << " order = " << j << " : " << algos[i]->operator()(j,j,result) << "\n";
 			} catch (std::overflow_error& e){
 				std::cout << e.what() << "\n";
 			} catch (std::domain_error& e){
@@ -451,30 +451,29 @@ int main()
 
 
 	//using typeA = double;
-	using typeA = complex_precision<float_precision>;
-	//using typeA = float_precision;
+	//using typeA = complex_precision<float_precision>;
+	using typeA = float_precision;
 	//using typeA = complex_precision<double>;
 	using typeB = unsigned long long int;
-
-	//typeA x(1, 200);
-	typeA x(1,1);
+	typeA x(3, 20);
+	//typeA x(1,1);
 	//typeA x(float_precision(1, 50), float_precision(1, 50));
 	// std::cout << x << "\n";
 	//typeA x(1.0);
 
 	//std::cout << fact<typeB>(6) << "\n";
 	//std::cout << double_fact<typeB>(6) << "\n";
-	//std::cout << binomial_coefficient<typeB>(12, 5) << "\n";
+	//std::cout << binomial_coefficient<typeB>(12, 0) << "\n";
 
 	//std::cout << fact<typeB>(7) << "\n";
 	//std::cout << double_fact<typeB>(7) << "\n";
-	//std::cout << binomial_coefficient<typeB>(13, 5) << "\n";
+	//std::cout << binomial_coefficient<typeB>(0, 3) << "\n";
 
-	testNoise<typeA, typeB>(x);
+	//testNoise<typeA, typeB>(x);
 
 	// TestNoise();
-	testRows<typeA,typeB>();
-	//testCompatability<typeA, typeB>(x);
+	//testRows<typeA,typeB>();
+	testCompatability<typeA, typeB>(x);
 
 	/*
 	while(true){
