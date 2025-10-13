@@ -108,7 +108,7 @@ class InteractiveConvergencePlot:
         self.ax1.set_title("Сравнение значений методов")
         self.ax1.legend()
         self.ax1.grid(True, alpha=0.3, linestyle="--")
-        self.ax1.ticklabel_format(use=False)
+        self.ax1.ticklabel_format(useOffset=False)
 
         self.ax2.semilogy(
             n_values,
@@ -170,7 +170,7 @@ class InteractiveConvergencePlot:
                     f"Max: {max_accel:.1f}x",
                     xy=(valid_n[max_idx], max_accel),
                     xytext=(10, 10),
-                    textcoords=" points",
+                    textcoords=" offset points",
                     bbox=dict(
                         boxstyle="round,pad=0.3", facecolor="yellow", alpha=0.7
                     ),
