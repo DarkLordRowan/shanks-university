@@ -44,10 +44,25 @@ constexpr const K double_fact(const K n) {
 template<UnsignedIntLike K>
 constexpr const K binomial_coefficient(const K n, const K k) {
 
+	if(n<k)
+		throw std::invalid_argument("n>k");
 
-	if (k == 0 || k == n) return 1;
+	if (n==k || k==static_cast<K>(0))
+		return static_cast<K>(1);
 
-	return binomial_coefficient<K>(n - 1, k - 1) + binomial_coefficient<K>(n - 1, k);
+	K productNminusK = n; //n(n-1)(n-2)...(n-k)
+	K factK = k;
+
+	for(K j = static_cast<K>(1); j < k; j++){
+		factK*=j;
+		productNminusK*=(n-j);
+	}
+
+	return productNminusK/factK;
+
+	//if (k == 0 || k == n) return 1;
+
+	//return binomial_coefficient<K>(n - 1, k - 1) + binomial_coefficient<K>(n - 1, k);
 
 }
 
