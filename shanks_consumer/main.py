@@ -98,7 +98,7 @@ def main():
             print(f"Loaded {len(accel_params)} acceleration parameters")
             print("Executing complex trial...")
 
-        st = ComplexTrial(series_params, accel_params)
+        st = ComplexTrial(series_params, accel_params, arb=ARB)
         results = st.execute()
 
         results_exporter = ExportTrialResults(results)
