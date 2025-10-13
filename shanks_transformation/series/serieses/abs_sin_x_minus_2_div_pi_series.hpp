@@ -31,8 +31,9 @@ public:
 		
 		using std::isfinite;
 		
-        if constexpr (std::is_same<T, complex_precision<float_precision>>::value){
-            return !isfinite(x) || x.real() < float_precision(0) || x.real() > float_precision(2.0 * std::numbers::pi);
+        if constexpr (isComplexLike<T>::value){
+            return !isfinite(x.real()) || !isfinite(x.imag()) || float_precision(x.real()) < float_precision(0) || 
+			float_precision(x.real()) > float_precision(2.0 * std::numbers::pi);
         } else {
             return !isfinite(x) || x < static_cast<T>(0) || x > static_cast<T>(2.0 * std::numbers::pi);
         }
@@ -43,21 +44,13 @@ public:
 
 		using std::sin;
 
-        using Complex = complex_precision<float_precision>;
-
-		if constexpr (std::is_same<T, Complex>::value){
-            if (x.real() <= float_precision(std::numbers::pi)){
-                return sin(x) - Complex(float_precision(2, series_base<T, K>::precision)) / Complex(float_precision(std::numbers::pi, series_base<T, K>::precision));
+		if constexpr (isComplexLike<T>::value){
+            if (float_precision(x.real()) <= float_precision(std::numbers::pi)){
+                return sin(x) - static_cast<T>(2) / static_cast<T>(std::numbers::pi);
             } else {
-                return Complex(-1)*sin(x) - Complex(float_precision(2, series_base<T, K>::precision)) / Complex(float_precision(std::numbers::pi, series_base<T, K>::precision));
+                return static_cast<T>(-1)*sin(x) - static_cast<T>(2) / static_cast<T>(std::numbers::pi);
             }
 
-        } else  if constexpr (std::is_same<T, float_precision>::value){
-            if (x <= float_precision(std::numbers::pi)){
-                return sin(x) - float_precision(2, series_base<T, K>::precision) / float_precision(std::numbers::pi, series_base<T, K>::precision);
-            } else {
-                return float_precision(-1) * sin(x) - float_precision(2, series_base<T, K>::precision) / float_precision(std::numbers::pi, series_base<T, K>::precision);
-            }
         } else {
             if (x <= static_cast<T>(std::numbers::pi)){
                 return sin(x) - static_cast<T>(2) / static_cast<T>(std::numbers::pi);
@@ -81,17 +74,14 @@ SeriesResult<T> abs_sin_x_minus_2_div_pi_series<T, K>::generateSeries(
 		series_base<T, K>::throw_domain_error("x is not finite or did not in [0, 2pi]");
 	}
 
-    if constexpr ( std::is_same<T, float_precision> :: value ){
-		series_base<T, K>::precision = x.precision();
-	} else if constexpr (std::is_same<T, complex_precision<float_precision>>::value){
-		series_base<T, K>::precision = std::max(x.real().precision(), x.imag().precision());
-	}
 
 	series_base<T,K>::x_ = x;
 	series_base<T,K>::sum = calculateSum(x);
 
-	std::vector<T> vecAn(vecSize, convertWithPrec<T>(0.0, series_base<T, K>::precision));
-	std::vector<T> vecSn(vecSize, convertWithPrec<T>(0.0, series_base<T, K>::precision));
+	std::vector<T> vecAn;
+	std::vector<T> vecSn;
+
+	series_base<T,K>::initVecsWithPrec(vecSn,vecAn, vecSize, x);
 
     using std::cos;
 

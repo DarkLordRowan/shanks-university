@@ -31,12 +31,16 @@ public:
 		
 		using std::isfinite;
 
-        return !isfinite(x);
+        if constexpr (isComplexLike<T>::value){
+    		return !isfinite(x.real()) || !isfinite(x.imag());
+		} else {
+			return !isfinite(x);
+		}
 	}
 
 	inline constexpr T calculateSum(const T& x, const T& alpha){
 
-		return 0;
+		return static_cast<T>(0);
 	}
 
 };
@@ -59,16 +63,15 @@ SeriesResult<T> incomplete_Gamma_func_series<T, K>::generateSeries(
 	series_base<T,K>::sum = calculateSum(x, addTParameter); 
     series_base<T,K>::series_name += " " + to_string(addTParameter);
 
-	if constexpr ( std::is_same<T, float_precision> :: value ){
-		series_base<T, K>::precision = x.precision();
-	} else if constexpr (std::is_same<T, complex_precision<float_precision>>::value){
-		series_base<T, K>::precision = std::max(x.real().precision(), x.imag().precision());
-	}
+	std::vector<T> vecAn;
+	std::vector<T> vecSn;
+
+	series_base<T,K>::initVecsWithPrec(vecSn,vecAn, vecSize, x);
 
     using std::pow;
 
-	std::vector<T> vecAn(vecSize, convertWithPrec<T>(0.0, series_base<T, K>::precision)); vecAn[0] = pow(x, addTParameter) / addTParameter;
-	std::vector<T> vecSn(vecSize, convertWithPrec<T>(0.0, series_base<T, K>::precision)); vecSn[0] = pow(x, addTParameter) / addTParameter;
+	vecAn[0] = pow(x, addTParameter) / addTParameter;
+	vecSn[0] = pow(x, addTParameter) / addTParameter;
 
 	for(K j = static_cast<K>(1); j < vecSize; ++j){
 		vecAn[j] += static_cast<T>(-1) * vecAn[j-static_cast<K>(1)] * x * (addTParameter + static_cast<T>(j-1)) /((addTParameter + static_cast<T>(j)) * static_cast<T>(j));

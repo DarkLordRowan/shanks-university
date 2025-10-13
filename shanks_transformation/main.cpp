@@ -66,6 +66,7 @@ constexpr void testCompatability(const T& x){
 	
 	std::unordered_map<transformation_id_t, std::function<std::unique_ptr<series_acceleration<T,K>>(void)>> algoInit = {
 	    {              brezinski_theta_transformation_id, [](){ return std::make_unique<brezinski_theta_algorithm<T, K>>();                                  }},
+		{                   chang_wynn_transformation_id, [](){ return std::make_unique<chang_wynn_algorithm<T, K>>();                                       }},
 		{                 drummond_d_u_transformation_id, [](){ return std::make_unique<drummond_d_algorithm<T, K>>(remainder_type::u_variant       , false);}}, 
         {                 drummond_d_t_transformation_id, [](){ return std::make_unique<drummond_d_algorithm<T, K>>(remainder_type::t_variant       , false);}},
         {            drummond_d_t_wave_transformation_id, [](){ return std::make_unique<drummond_d_algorithm<T, K>>(remainder_type::t_wave_variant  , false);}},
@@ -76,7 +77,6 @@ constexpr void testCompatability(const T& x){
      	{       recurrent_drummond_d_v_transformation_id, [](){ return std::make_unique<drummond_d_algorithm<T, K>>(remainder_type::t_wave_variant  ,  true);}},
 		{  recurrent_drummond_d_t_wave_transformation_id, [](){ return std::make_unique<drummond_d_algorithm<T, K>>(remainder_type::v_variant       ,  true);}},
 		{  recurrent_drummond_d_v_wave_transformation_id, [](){ return std::make_unique<drummond_d_algorithm<T, K>>(remainder_type::v_wave_variant  ,  true);}},
-		{                   chang_wynn_transformation_id, [](){ return std::make_unique<chang_wynn_algorithm<T, K>>();                                       }},
 		{                  ford_sidi_2_transformation_id, [](){ return std::make_unique<ford_sidi_2_algorithm<T, K>>();                                      }},
 		{                  ford_sidi_3_transformation_id, [](){ return std::make_unique<ford_sidi_3_algorithm<T, K>>();                                      }},
 		{               levin_sidi_l_u_transformation_id, [](){ return std::make_unique<levin_algorithm<T, K>>(remainder_type::u_variant            , false);}},
@@ -122,19 +122,21 @@ constexpr void testCompatability(const T& x){
 		algos[j-1] = algoInit[static_cast<transformation_id_t>(j)]();
 	}
 
+
 	exp_series<T,K> testSeries = exp_series<T,K>();
 	SeriesResult<T> result = testSeries.generateSeries(x, 150);
 
 	std::cout << "EXP(x) = " << testSeries.get_sum() << "\n";
 
+
 	for (size_t i = 0; i < algos.size(); ++i){
 
 		algos[i]->print_info();
 
-		for (size_t j = 0; j <= 10; ++j) {
+		for (size_t j = 0; j <= 30; ++j) {
 			
 			try{
-				std::cout << "n = order = " << j << " : " << algos[i]->operator()(j,j, result, j) << "\n";
+				std::cout << "n = " << 1 << " order = " << j << " : " << algos[i]->operator()(1,j,result) << "\n";
 			} catch (std::overflow_error& e){
 				std::cout << e.what() << "\n";
 			} catch (std::domain_error& e){
@@ -150,6 +152,8 @@ constexpr void testCompatability(const T& x){
 			} catch (complex_precision<float_precision>::divide_by_zero& e){
 				std::cout << e.what() << "\n";
 			} catch (std::out_of_range& e){
+				std::cout << e.what() << "\n";
+			} catch (std::invalid_argument& e){
 				std::cout << e.what() << "\n";
 			}
 
@@ -266,7 +270,7 @@ void testRows(){
 		{ 			  	    					  x_two_throught_squares_series_id,[]() { return std::make_unique<x_two_throught_squares_series<T,K>>();}},
 	};
 
-	T x = static_cast<T>(10);
+	T x = static_cast<T>(0.3);
 	size_t length = 60;
 
 	std::vector<std::unique_ptr<series_base<T,K>>> seriesVec;
@@ -300,7 +304,7 @@ constexpr void testAlgorithm(std::unique_ptr<series_acceleration<T,K>>& algo, co
 	for (size_t j = 0; j <= 10; ++j) {
 
 		try{
-			std::cout << "n = order = " << j << " : " << algo->operator()(j,j, series, j) << "\n";
+			std::cout << "n = order = " << j << " : " << algo->operator()(j,j, series) << "\n";
 		} catch (std::overflow_error& e){
 			std::cout << e.what() << "\n";
 		} catch (std::domain_error& e){
@@ -316,6 +320,8 @@ constexpr void testAlgorithm(std::unique_ptr<series_acceleration<T,K>>& algo, co
 		} catch (complex_precision<float_precision>::divide_by_zero& e){
 			std::cout << e.what() << "\n";
 		} catch (std::out_of_range& e){
+			std::cout << e.what() << "\n";
+		} catch (std::invalid_argument& e){
 			std::cout << e.what() << "\n";
 		}
 
@@ -445,12 +451,14 @@ int main()
 
 
 	//using typeA = double;
-	//using typeA = complex_precision<float_precision>;
-	using typeA = float_precision;
+	using typeA = complex_precision<float_precision>;
+	//using typeA = float_precision;
+	//using typeA = complex_precision<double>;
 	using typeB = unsigned long long int;
 
-	typeA x(1, 200);
-	// typeA x(float_precision(1, 50), float_precision(1, 50));
+	//typeA x(1, 200);
+	typeA x(1,1);
+	//typeA x(float_precision(1, 50), float_precision(1, 50));
 	// std::cout << x << "\n";
 	//typeA x(1.0);
 
@@ -465,7 +473,8 @@ int main()
 	testNoise<typeA, typeB>(x);
 
 	// TestNoise();
-	//testRows<typeA,typeB>();
+	testRows<typeA,typeB>();
+	//testCompatability<typeA, typeB>(x);
 
 	/*
 	while(true){

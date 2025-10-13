@@ -105,7 +105,15 @@ T u_transform<T, K>::operator()(const K n, const K index, const std::vector<T>& 
     // ωₙ = (β + n) * aₙ, where aₙ = ΔSₙ₋₁
     const T result = static_cast<T>(1) / ((scale + static_cast<T>(n)) * an.at(index));
 
-    if (!isfinite(result)) throw std::overflow_error("division by zero");
+    if constexpr (isComplexLike<T>::value){
+        if (!isfinite(result.real()) || !isfinite(result.imag())){
+            throw std::overflow_error("division by zero");
+        }
+    } else {
+        if(!isfinite(result)){
+            throw std::overflow_error("division by zero");
+        }
+    }
 
     return result;
  }
@@ -147,7 +155,15 @@ T t_transform<T, K>::operator()(const K n, const K index, const std::vector<T>& 
     // ωₙ = aₙ, where aₙ = ΔSₙ₋₁
     const T result = static_cast<T>(1) / an.at(index);
 
-    if (!isfinite(result)) throw std::overflow_error("division by zero");
+    if constexpr (isComplexLike<T>::value){
+        if (!isfinite(result.real()) || !isfinite(result.imag())){
+            throw std::overflow_error("division by zero");
+        }
+    } else {
+        if(!isfinite(result)){
+            throw std::overflow_error("division by zero");
+        }
+    }
     return result;
 }
 
@@ -188,7 +204,15 @@ T t_wave_transform<T,K>::operator()(const K n, const K index, const std::vector<
     // ωₙ = aₙ₊₁ (shifted t-variant)
 	const T result = static_cast<T>(1) / an.at(index + static_cast<K>(1));
 
-	if (!isfinite(result)) throw std::overflow_error("division by zero");
+	if constexpr (isComplexLike<T>::value){
+        if (!isfinite(result.real()) || !isfinite(result.imag())){
+            throw std::overflow_error("division by zero");
+        }
+    } else {
+        if(!isfinite(result)){
+            throw std::overflow_error("division by zero");
+        }
+    }
 	return result;
 }
 
@@ -230,7 +254,15 @@ T v_transform<T,K>::operator()(const K n, const K index, const std::vector<T>& a
     const T a1 = an.at(index), a2  = an.at(index + static_cast<K>(1));
     const T result = (a2-a1) / (a1 * a2);
 
-	if (!isfinite(result)) throw std::overflow_error("division by zero");
+	if constexpr (isComplexLike<T>::value){
+        if (!isfinite(result.real()) || !isfinite(result.imag())){
+            throw std::overflow_error("division by zero");
+        }
+    } else {
+        if(!isfinite(result)){
+            throw std::overflow_error("division by zero");
+        }
+    }
 	return result;
 }
 
@@ -272,7 +304,15 @@ T v_wave_transform<T,K>::operator()(const K n, const K index, const std::vector<
     const T a1 = an.at(index), a2 = an.at(index + static_cast<K>(1));
     const T result = (a1 - a2) / (a1 * a2);
 
-	if (!isfinite(result)) throw std::overflow_error("division by zero");
+	if constexpr (isComplexLike<T>::value){
+        if (!isfinite(result.real()) || !isfinite(result.imag())){
+            throw std::overflow_error("division by zero");
+        }
+    } else {
+        if(!isfinite(result)){
+            throw std::overflow_error("division by zero");
+        }
+    }
 
 	return result;
 }

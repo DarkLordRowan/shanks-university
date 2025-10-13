@@ -46,7 +46,7 @@ protected:
 
     std::unique_ptr<const transform_base<T, K>> remainder;  /**< Remainder estimator object */
     bool useRecFormulas = false;							/**< Flag indicating whether to use recurrence formulas */
-    remainder_type variant = remainder_type::u_variant;		/**< Type of remainder variant to use */
+    remainder_type remainderType = remainder_type::u_variant;		/**< Type of remainder variant to use */
 
 	/**
 	 * @brief Calculates D-transformation directly using the explicit formula.
@@ -65,8 +65,7 @@ protected:
 	inline T calc_result(
         const K n, 
         const K order, 
-		const SeriesResult<T>& data,
-        const K offset = static_cast<K>(0)
+        const SeriesResult<T>& data
     ) const;
 
 	/**
@@ -85,10 +84,10 @@ protected:
 	 */
 	inline T calc_result_rec(
         const K n, 
-        const K order,
-		const SeriesResult<T>& data,
-        const K offset = static_cast<K>(0)
+        const K order, 
+        const SeriesResult<T>& data
     ) const;
+
 
 public:
 
@@ -109,9 +108,9 @@ public:
 	 *        false: Use direct computation (simpler but potentially slower)
 	 */
 	explicit drummond_d_algorithm(
-		remainder_type variant = remainder_type::u_variant,
-		bool useRecFormulas = false
-	);
+		const remainder_type remainderType = remainder_type::u_variant,
+		const bool useRecFormulas = false
+	) : series_acceleration<T, K>(), useRecFormulas(useRecFormulas) { updateType(remainderType); };
 
 	/**
 	 * @brief Applies Drummond's D-transformation to accelerate series convergence.
@@ -131,25 +130,77 @@ public:
 	 * @return The accelerated partial sum after Drummond transformation
 	 * @throws std::overflow_error if division by zero or numerical instability occurs
 	 */
-    T operator()(const K n, const K order, const SeriesResult<T>& data, const K offset = static_cast<K>(0)) const override;
+    T operator()(
+		const K n, 
+        const K order, 
+        const SeriesResult<T>& data
+	) const override;
+
+	void updateType(const remainder_type newType){
+
+		series_acceleration<T, K>::acceleration_name = (useRecFormulas ? "recurrent " : "");
+
+		// Initialize the appropriate remainder estimator based on variant
+    	switch(newType){
+    	    case remainder_type::u_variant :
+			{
+				remainderType = newType;
+				series_acceleration<T, K>::acceleration_name += "drummond d algorithm with u-variant";
+    	        remainder.reset(new u_transform<T, K>());
+    	        break;
+			}
+    	    case remainder_type::t_variant :
+			{
+				remainderType = newType;
+				series_acceleration<T, K>::acceleration_name += "drummond d algorithm with t-variant";
+    	        remainder.reset(new t_transform<T, K>());
+    	        break;
+			}
+    	    case remainder_type::v_variant :
+			{
+				remainderType = newType;
+				series_acceleration<T, K>::acceleration_name += "drummond d algorithm with v-variant";
+    	        remainder.reset(new v_transform<T, K>());
+    	        break;
+			}
+    	    case remainder_type::t_wave_variant:
+			{
+				remainderType = newType;
+				series_acceleration<T, K>::acceleration_name += "drummond d algorithm with t-wave-variant";
+    	        remainder.reset(new t_wave_transform<T, K>());
+    	        break;
+			}
+    	    case remainder_type::v_wave_variant:
+			{
+				remainderType = newType;
+				series_acceleration<T, K>::acceleration_name += "drummond d algorithm with v-wave-variant";
+    	        remainder.reset(new v_wave_transform<T, K>());
+    	        break;
+			}
+    	    default:
+			{
+				remainderType = remainder_type::u_variant;
+				series_acceleration<T, K>::acceleration_name += "drummond d algorithm with u-variant";
+    	        remainder.reset(new u_transform<T, K>());
+    	        break;
+			}
+    	}
+	}
 
 };
 
 template<AcceptedLike T, UnsignedIntLike K>
 inline T drummond_d_algorithm<T,K>::calc_result(
     const K n, 
-    const K order,
-	const SeriesResult<T>& data,
-    const K offset
+    const K order, 
+    const SeriesResult<T>& data
 ) const {
 
     using std::isfinite;
 
-	size_t currentPrecision = series_acceleration<T, K>::define_precision(data.Sn[0]);
-
-	T numerator = convertWithPrec<T>(0.0, currentPrecision);
-	T denominator = convertWithPrec<T>(0.0, currentPrecision);
-	T rest = convertWithPrec<T>(0.0, currentPrecision);
+	T numerator   = static_cast<T>(0);
+	T denominator = static_cast<T>(0);
+	T rest 		  = static_cast<T>(0);
 
 	// For theory, see: Drummond (1976), Eq. (2.1)
 	// D_n^{(k)} = [Σ_{j=0}^n (-1)^j C(n, j) w_{n,j} S_{n+j}] / [Σ_{j=0}^n (-1)^j C(n, j) w_{n,j}]
@@ -158,46 +209,41 @@ inline T drummond_d_algorithm<T,K>::calc_result(
 		// Compute weight term: (-1)^j * C(n, j) * w_{n,j}
 		rest  = minus_one_raised_to_power_n<T,K>(j);
 		rest *= static_cast<T>(binomial_coefficient(order, j));
-		rest *= remainder->operator()(n,offset + j, data.an);
+		rest *= remainder->operator()(n + j, n + j, data.an);
 
-		numerator   += rest * data.Sn.at(n+j);
+		numerator   += rest * data.Sn.at(n + j);
 		denominator += rest;
 	}
 
 	numerator /= denominator;
 
-	if (!isfinite(numerator))
-		throw std::overflow_error("division by zero");
 	return numerator;
 }
 
 template<AcceptedLike T, UnsignedIntLike K>
 inline T drummond_d_algorithm<T,K>::calc_result_rec(
     const K n, 
-    const K order,
-	const SeriesResult<T>& data,
-    const K offset
+    const K order, 
+    const SeriesResult<T>& data
 ) const {
 
     using std::isfinite;
-
-	size_t currentPrecision = series_acceleration<T, K>::define_precision(data.Sn[0]);
 
 	// For theory, see: Sidi (2003), Section 9.5-5
 	// Recursive computation using forward differences
 	std::vector<T>   Num(
 		order + static_cast<K>(1), 
-		convertWithPrec<T>(0.0, currentPrecision)
+		static_cast<T>(0)
 	);
 	std::vector<T> Denom(
 		order + static_cast<K>(1), 
-		convertWithPrec<T>(0.0, currentPrecision)
+		static_cast<T>(0)
 	);
 
 	// Initialize base values: N_j^{(0)} = w_{n,j} S_{n+j}, D_j^{(0)} = w_{n,j}
 	for (K i = static_cast<K>(0); i < order+static_cast<K>(1); ++i) {
-		Denom[i] = remainder->operator()(n, offset + i, data.an);
-		  Num[i] = data.Sn.at(offset + i) * Denom[i];
+		Denom[i] = remainder->operator()(n + i, n + i, data.an);
+		  Num[i] = data.Sn.at(i) * Denom[i];
 	}
 
 	// Apply forward difference recurrence:
@@ -212,74 +258,21 @@ inline T drummond_d_algorithm<T,K>::calc_result_rec(
 	// Final result: D_n^{(order)} = N_0^{(order)} / D_0^{(order)}
 	Num[0] /= Denom[0];
 
-	if (!isfinite(Num[0]))
-		throw std::overflow_error("division by zero");
-
 	return Num[0];
-}
-
-template<AcceptedLike T, UnsignedIntLike K>
-drummond_d_algorithm<T,K>::drummond_d_algorithm(
-	const remainder_type variant,
-	bool useRecFormulas
-	) :
-	series_acceleration<T, K>(),
-	variant(variant),
-	useRecFormulas(useRecFormulas)
-{
-
-	series_acceleration<T, K>::acceleration_name = (useRecFormulas ? "recurrent " : "");
-
-	// Initialize the appropriate remainder estimator based on variant
-    switch(variant){
-        case remainder_type::u_variant :
-		{
-			series_acceleration<T, K>::acceleration_name += "drummond d algorithm with u-variant";
-            remainder.reset(new u_transform<T, K>());
-            break;
-		}
-        case remainder_type::t_variant :
-		{
-			series_acceleration<T, K>::acceleration_name += "drummond d algorithm with t-variant";
-            remainder.reset(new t_transform<T, K>());
-            break;
-		}
-        case remainder_type::v_variant :
-		{
-			series_acceleration<T, K>::acceleration_name += "drummond d algorithm with v-variant";
-            remainder.reset(new v_transform<T, K>());
-            break;
-		}
-        case remainder_type::t_wave_variant:
-		{
-			series_acceleration<T, K>::acceleration_name += "drummond d algorithm with t-wave-variant";
-            remainder.reset(new t_wave_transform<T, K>());
-            break;
-		}
-        case remainder_type::v_wave_variant:
-		{
-			series_acceleration<T, K>::acceleration_name += "drummond d algorithm with v-wave-variant";
-            remainder.reset(new v_wave_transform<T, K>());
-            break;
-		}
-        default:
-		{
-			series_acceleration<T, K>::acceleration_name += "drummond d algorithm with u-variant";
-            remainder.reset(new u_transform<T, K>());
-            break;
-		}
-    }
 }
 
 template<AcceptedLike T, UnsignedIntLike K>
 T drummond_d_algorithm<T,K>::operator()(
 	const K n, 
-    const K order,
-	const SeriesResult<T>& data,
-    const K offset
+    const K order, 
+    const SeriesResult<T>& data
 ) const {
 
-    K required_size = order + offset + static_cast<K>(1);
+    K required_size = n + order + static_cast<K>(1) + static_cast<K>(
+		remainderType == remainder_type::t_wave_variant ||
+		remainderType == remainder_type::v_variant ||
+		remainderType == remainder_type::v_wave_variant
+	);
 
     if (data.Sn.size() < required_size || data.an.size() < required_size){
         throw std::out_of_range("Sn or an is smaller than required to calculate D_{" + to_string(order) + "}^{" + to_string(n) + "}");
@@ -291,7 +284,420 @@ T drummond_d_algorithm<T,K>::operator()(
 
     using std::isfinite;
 
-    const T result = (useRecFormulas ? calc_result_rec(n,order, data, offset) : calc_result(n, order, data, offset));
-    if (!isfinite(result)) throw std::overflow_error("division by zero");
+    const T result = (useRecFormulas ? calc_result_rec(n,order, data) : calc_result(n,order, data));
+
+    if constexpr (isComplexLike<T>::value){
+        if (!isfinite(result.real()) || !isfinite(result.imag())){
+            throw std::overflow_error("division by zero");
+        }
+    } else {
+        if(!isfinite(result)){
+            throw std::overflow_error("division by zero");
+        }
+    }
+	
     return result;
 }
+
+#ifdef INC_FPRECISION
+
+template<UnsignedIntLike K>
+class drummond_d_algorithm<float_precision, K> final : public series_acceleration<float_precision, K>
+{
+protected:
+
+    std::unique_ptr<const transform_base<float_precision, K>> remainder;  /**< Remainder estimator object */
+    bool useRecFormulas = false;							/**< Flag indicating whether to use recurrence formulas */
+    remainder_type remainderType = remainder_type::u_variant;		/**< Type of remainder variant to use */
+
+	inline float_precision calc_result(
+        const K n, 
+        const K order, 
+        const SeriesResult<float_precision>& data
+    ) const;
+
+	inline float_precision calc_result_rec(
+        const K n, 
+        const K order, 
+        const SeriesResult<float_precision>& data
+    ) const;
+
+
+public:
+
+	explicit drummond_d_algorithm(
+		const remainder_type remainderType = remainder_type::u_variant,
+		const bool useRecFormulas = false
+	) : series_acceleration<float_precision, K>(), useRecFormulas(useRecFormulas) { updateType(remainderType); };
+
+    float_precision operator()(
+		const K n, 
+        const K order, 
+        const SeriesResult<float_precision>& data
+	) const override;
+
+	void updateType(const remainder_type newType){
+
+		series_acceleration<float_precision, K>::acceleration_name = (useRecFormulas ? "recurrent " : "");
+
+		// Initialize the appropriate remainder estimator based on variant
+    	switch(newType){
+    	    case remainder_type::u_variant :
+			{
+				remainderType = newType;
+				series_acceleration<float_precision, K>::acceleration_name += "drummond d algorithm with u-variant";
+    	        remainder.reset(new u_transform<float_precision, K>());
+    	        break;
+			}
+    	    case remainder_type::t_variant :
+			{
+				remainderType = newType;
+				series_acceleration<float_precision, K>::acceleration_name += "drummond d algorithm with t-variant";
+    	        remainder.reset(new t_transform<float_precision, K>());
+    	        break;
+			}
+    	    case remainder_type::v_variant :
+			{
+				remainderType = newType;
+				series_acceleration<float_precision, K>::acceleration_name += "drummond d algorithm with v-variant";
+    	        remainder.reset(new v_transform<float_precision, K>());
+    	        break;
+			}
+    	    case remainder_type::t_wave_variant:
+			{
+				remainderType = newType;
+				series_acceleration<float_precision, K>::acceleration_name += "drummond d algorithm with t-wave-variant";
+    	        remainder.reset(new t_wave_transform<float_precision, K>());
+    	        break;
+			}
+    	    case remainder_type::v_wave_variant:
+			{
+				remainderType = newType;
+				series_acceleration<float_precision, K>::acceleration_name += "drummond d algorithm with v-wave-variant";
+    	        remainder.reset(new v_wave_transform<float_precision, K>());
+    	        break;
+			}
+    	    default:
+			{
+				remainderType = remainder_type::u_variant;
+				series_acceleration<float_precision, K>::acceleration_name += "drummond d algorithm with u-variant";
+    	        remainder.reset(new u_transform<float_precision, K>());
+    	        break;
+			}
+    	}
+	}
+
+};
+
+template<UnsignedIntLike K>
+inline float_precision drummond_d_algorithm<float_precision,K>::calc_result(
+    const K n, 
+    const K order, 
+    const SeriesResult<float_precision>& data
+) const {
+
+    using std::isfinite;
+
+	const size_t precision = std::max(data.Sn[0].precision(), data.an[0].precision());
+
+	float_precision numerator   = float_precision(0, precision);
+	float_precision denominator = float_precision(0, precision);
+	float_precision rest 		= float_precision(0, precision);
+
+	// For theory, see: Drummond (1976), Eq. (2.1)
+	// D_n^{(k)} = [Σ_{j=0}^n (-1)^j C(n, j) w_{n,j} S_{n+j}] / [Σ_{j=0}^n (-1)^j C(n, j) w_{n,j}]
+	for (K j = static_cast<K>(0); j <= order; ++j) {
+
+		// Compute weight term: (-1)^j * C(n, j) * w_{n,j}
+		rest  = minus_one_raised_to_power_n<float_precision,K>(j);
+		rest *= static_cast<float_precision>(binomial_coefficient(order, j));
+		rest *= remainder->operator()(n + j, n + j, data.an);
+
+		numerator   += rest * data.Sn.at(n+j);
+		denominator += rest;
+	}
+
+	numerator /= denominator;
+
+	return numerator;
+}
+
+template<UnsignedIntLike K>
+inline float_precision drummond_d_algorithm<float_precision,K>::calc_result_rec(
+    const K n, 
+    const K order, 
+    const SeriesResult<float_precision>& data
+) const {
+
+    using std::isfinite;
+
+	const size_t precision = std::max(data.Sn[0].precision(), data.an[0].precision());
+
+	// For theory, see: Sidi (2003), Section 9.5-5
+	// Recursive computation using forward differences
+	std::vector<float_precision>   Num(
+		order + static_cast<K>(1), 
+		float_precision(0, precision)
+	);
+	std::vector<float_precision> Denom(
+		order + static_cast<K>(1), 
+		float_precision(0, precision)
+	);
+
+	// Initialize base values: N_j^{(0)} = w_{n,j} S_{n+j}, D_j^{(0)} = w_{n,j}
+	for (K i = static_cast<K>(0); i < order+static_cast<K>(1); ++i) {
+		Denom[i] = remainder->operator()(n + i, n + i, data.an);
+		  Num[i] = data.Sn.at(n + i) * Denom[i];
+	}
+
+	// Apply forward difference recurrence:
+	// N_j^{(i)} = N_{j+1}^{(i-1)} - N_j^{(i-1)}
+	// D_j^{(i)} = D_{j+1}^{(i-1)} - D_j^{(i-1)}
+	for (K i = static_cast<K>(1); i <= order; ++i)
+		for (K j = static_cast<K>(0); j <= order - i; ++j) {
+			Denom[j] = Denom[j+static_cast<K>(1)] - Denom[j];
+			  Num[j] =   Num[j+static_cast<K>(1)] -   Num[j];
+		}
+
+	// Final result: D_n^{(order)} = N_0^{(order)} / D_0^{(order)}
+	Num[0] /= Denom[0];
+
+	return Num[0];
+}
+
+template<UnsignedIntLike K>
+float_precision drummond_d_algorithm<float_precision,K>::operator()(
+	const K n, 
+    const K order, 
+    const SeriesResult<float_precision>& data
+) const {
+
+    K required_size = n + order + static_cast<K>(1) + static_cast<K>(
+		remainderType == remainder_type::t_wave_variant ||
+		remainderType == remainder_type::v_variant ||
+		remainderType == remainder_type::v_wave_variant
+	);
+
+    if (data.Sn.size() < required_size || data.an.size() < required_size){
+        throw std::out_of_range("Sn or an is smaller than required to calculate D_{" + to_string(order) + "}^{" + to_string(n) + "}");
+	}
+
+    if (order == static_cast<K>(0)) {
+        return data.Sn.at(n);
+    }
+
+    using std::isfinite;
+
+    const float_precision result = (useRecFormulas ? calc_result_rec(n,order, data) : calc_result(n,order, data));
+
+    if(!isfinite(result)){
+        throw std::overflow_error("division by zero");
+    }
+	
+    return result;
+}
+
+#ifdef INC_COMPLEXPRECISION
+template<UnsignedIntLike K>
+class drummond_d_algorithm<complex_precision<float_precision>, K> final : public series_acceleration<complex_precision<float_precision>, K>
+{
+protected:
+
+    std::unique_ptr<const transform_base<complex_precision<float_precision>, K>> remainder;  /**< Remainder estimator object */
+    bool useRecFormulas = false;							/**< Flag indicating whether to use recurrence formulas */
+    remainder_type remainderType = remainder_type::u_variant;		/**< Type of remainder variant to use */
+
+	inline complex_precision<float_precision> calc_result(
+        const K n, 
+        const K order, 
+        const SeriesResult<complex_precision<float_precision>>& data
+    ) const;
+
+	inline complex_precision<float_precision> calc_result_rec(
+        const K n, 
+        const K order, 
+        const SeriesResult<complex_precision<float_precision>>& data
+    ) const;
+
+
+public:
+
+	explicit drummond_d_algorithm(
+		const remainder_type remainderType = remainder_type::u_variant,
+		const bool useRecFormulas = false
+	) : series_acceleration<complex_precision<float_precision>, K>(), useRecFormulas(useRecFormulas) { updateType(remainderType); };
+
+    complex_precision<float_precision> operator()(
+		const K n, 
+        const K order, 
+        const SeriesResult<complex_precision<float_precision>>& data
+	) const override;
+
+	void updateType(const remainder_type newType){
+
+		series_acceleration<complex_precision<float_precision>, K>::acceleration_name = (useRecFormulas ? "recurrent " : "");
+
+		// Initialize the appropriate remainder estimator based on variant
+    	switch(newType){
+    	    case remainder_type::u_variant :
+			{
+				remainderType = newType;
+				series_acceleration<complex_precision<float_precision>, K>::acceleration_name += "drummond d algorithm with u-variant";
+    	        remainder.reset(new u_transform<complex_precision<float_precision>, K>());
+    	        break;
+			}
+    	    case remainder_type::t_variant :
+			{
+				remainderType = newType;
+				series_acceleration<complex_precision<float_precision>, K>::acceleration_name += "drummond d algorithm with t-variant";
+    	        remainder.reset(new t_transform<complex_precision<float_precision>, K>());
+    	        break;
+			}
+    	    case remainder_type::v_variant :
+			{
+				remainderType = newType;
+				series_acceleration<complex_precision<float_precision>, K>::acceleration_name += "drummond d algorithm with v-variant";
+    	        remainder.reset(new v_transform<complex_precision<float_precision>, K>());
+    	        break;
+			}
+    	    case remainder_type::t_wave_variant:
+			{
+				remainderType = newType;
+				series_acceleration<complex_precision<float_precision>, K>::acceleration_name += "drummond d algorithm with t-wave-variant";
+    	        remainder.reset(new t_wave_transform<complex_precision<float_precision>, K>());
+    	        break;
+			}
+    	    case remainder_type::v_wave_variant:
+			{
+				remainderType = newType;
+				series_acceleration<complex_precision<float_precision>, K>::acceleration_name += "drummond d algorithm with v-wave-variant";
+    	        remainder.reset(new v_wave_transform<complex_precision<float_precision>, K>());
+    	        break;
+			}
+    	    default:
+			{
+				remainderType = remainder_type::u_variant;
+				series_acceleration<complex_precision<float_precision>, K>::acceleration_name += "drummond d algorithm with u-variant";
+    	        remainder.reset(new u_transform<complex_precision<float_precision>, K>());
+    	        break;
+			}
+    	}
+	}
+
+};
+
+template<UnsignedIntLike K>
+inline complex_precision<float_precision> drummond_d_algorithm<complex_precision<float_precision>,K>::calc_result(
+    const K n, 
+    const K order, 
+    const SeriesResult<complex_precision<float_precision>>& data
+) const {
+
+    using std::isfinite;
+
+	const size_t precision = std::max(
+		std::max(data.Sn[0].real().precision(), data.Sn[0].imag().precision()), 
+		std::max(data.an[0].real().precision(), data.an[0].imag().precision())
+	);
+
+	complex_precision<float_precision> numerator   = complex_precision<float_precision>(float_precision(0, precision), float_precision(0, precision));
+	complex_precision<float_precision> denominator = complex_precision<float_precision>(float_precision(0, precision), float_precision(0, precision));
+	complex_precision<float_precision> rest 		  = complex_precision<float_precision>(float_precision(0, precision), float_precision(0, precision));
+
+	// For theory, see: Drummond (1976), Eq. (2.1)
+	// D_n^{(k)} = [Σ_{j=0}^n (-1)^j C(n, j) w_{n,j} S_{n+j}] / [Σ_{j=0}^n (-1)^j C(n, j) w_{n,j}]
+	for (K j = static_cast<K>(0); j <= order; ++j) {
+
+		// Compute weight term: (-1)^j * C(n, j) * w_{n,j}
+		rest  = minus_one_raised_to_power_n<complex_precision<float_precision>,K>(j);
+		rest *= static_cast<complex_precision<float_precision>>(binomial_coefficient(order, j));
+		rest *= remainder->operator()(n + j, n + j, data.an);
+
+		numerator   += rest * data.Sn.at(n+j);
+		denominator += rest;
+	}
+
+	numerator /= denominator;
+
+	return numerator;
+}
+
+template<UnsignedIntLike K>
+inline complex_precision<float_precision> drummond_d_algorithm<complex_precision<float_precision>,K>::calc_result_rec(
+    const K n, 
+    const K order, 
+    const SeriesResult<complex_precision<float_precision>>& data
+) const {
+
+    using std::isfinite;
+
+	const size_t precision = std::max(
+		std::max(data.Sn[0].real().precision(), data.Sn[0].imag().precision()), 
+		std::max(data.an[0].real().precision(), data.an[0].imag().precision())
+	);
+
+	// For theory, see: Sidi (2003), Section 9.5-5
+	// Recursive computation using forward differences
+	std::vector<complex_precision<float_precision>>   Num(
+		order + static_cast<K>(1), 
+		complex_precision<float_precision>(float_precision(0, precision), float_precision(0, precision))
+	);
+	std::vector<complex_precision<float_precision>> Denom(
+		order + static_cast<K>(1), 
+		complex_precision<float_precision>(float_precision(0, precision), float_precision(0, precision))
+	);
+
+	// Initialize base values: N_j^{(0)} = w_{n,j} S_{n+j}, D_j^{(0)} = w_{n,j}
+	for (K i = static_cast<K>(0); i < order+static_cast<K>(1); ++i) {
+		Denom[i] = remainder->operator()(n + i, n + i, data.an);
+		  Num[i] = data.Sn.at(n + i) * Denom[i];
+	}
+
+	// Apply forward difference recurrence:
+	// N_j^{(i)} = N_{j+1}^{(i-1)} - N_j^{(i-1)}
+	// D_j^{(i)} = D_{j+1}^{(i-1)} - D_j^{(i-1)}
+	for (K i = static_cast<K>(1); i <= order; ++i)
+		for (K j = static_cast<K>(0); j <= order - i; ++j) {
+			Denom[j] = Denom[j+static_cast<K>(1)] - Denom[j];
+			  Num[j] =   Num[j+static_cast<K>(1)] -   Num[j];
+		}
+
+	// Final result: D_n^{(order)} = N_0^{(order)} / D_0^{(order)}
+	Num[0] /= Denom[0];
+
+	return Num[0];
+}
+
+template<UnsignedIntLike K>
+complex_precision<float_precision> drummond_d_algorithm<complex_precision<float_precision>,K>::operator()(
+	const K n, 
+    const K order, 
+    const SeriesResult<complex_precision<float_precision>>& data
+) const {
+
+    K required_size = n + order + static_cast<K>(1) + static_cast<K>(
+		remainderType == remainder_type::t_wave_variant ||
+		remainderType == remainder_type::v_variant ||
+		remainderType == remainder_type::v_wave_variant
+	);
+
+    if (data.Sn.size() < required_size || data.an.size() < required_size){
+        throw std::out_of_range("Sn or an is smaller than required to calculate D_{" + to_string(order) + "}^{" + to_string(n) + "}");
+	}
+
+    if (order == static_cast<K>(0)) {
+        return data.Sn.at(n);
+    }
+
+    using std::isfinite;
+
+    const complex_precision<float_precision> result = (useRecFormulas ? calc_result_rec(n,order, data) : calc_result(n,order, data));
+
+    if (!isfinite(result.real()) || !isfinite(result.imag())){
+       throw std::overflow_error("division by zero");
+    }
+	
+    return result;
+}
+#endif
+#endif

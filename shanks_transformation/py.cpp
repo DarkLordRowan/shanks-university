@@ -166,7 +166,7 @@ void bind_all(py::module_& m, const std::string& suffix) {
         .def("printInfo", &MSeriesAcceleration::print_info)
         .def("__call__", &MSeriesAcceleration::operator(),
              py::arg("n"), py::arg("order"), py::arg("data"),
-             py::arg("offset") = static_cast<K>(0));
+             py::arg("") = static_cast<K>(0));
 
     py::class_<brezinski_theta_algorithm<T,K>, MSeriesAcceleration>
         (m, name("BrezinskiThetaAlgorithm").c_str())

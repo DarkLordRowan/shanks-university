@@ -103,6 +103,25 @@ public:
 
 protected:
 
+	void initVecsWithPrec(std::vector<T>& vecSn, std::vector<T>& vecAn, size_t vecSize, const T& x){
+		size_t precision = 0;
+    	if constexpr ( std::is_same<T, float_precision> :: value ){
+			precision = x.precision();
+			vecAn = std::vector<float_precision>(vecSize, float_precision(0.0, precision));
+			vecSn = std::vector<float_precision>(vecSize, float_precision(0.0, precision));
+		} else if constexpr (
+			std::is_same<T, complex_precision<float_precision>>::value ||
+			std::is_same<T, std::complex<float_precision>>::value
+		){
+			precision = std::max(x.real().precision(), x.imag().precision());
+			vecAn = std::vector<T>(vecSize, T(float_precision(0.0, precision),float_precision(0.0, precision)));
+			vecSn = std::vector<T>(vecSize, T(float_precision(0.0, precision),float_precision(0.0, precision)));
+		} else {
+			vecSn = std::vector<T>(vecSize, static_cast<T>(0));
+			vecAn = std::vector<T>(vecSize, static_cast<T>(0));
+		}
+	}
+
 	/**
     * @brief Throws domain error with unified message format
     * @authors Maximov A.K.
@@ -136,6 +155,4 @@ protected:
     * @authors Maximov A.K.
     */
 	std::string series_name;
-
-	size_t precision;
 };

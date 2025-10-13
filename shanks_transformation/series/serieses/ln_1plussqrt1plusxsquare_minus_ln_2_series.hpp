@@ -32,9 +32,8 @@ public:
 		
 		using std::isfinite;
 
-		using std::isfinite;
-        if constexpr (std::is_same<T, complex_precision<float_precision>>::value){
-            return !isfinite(x) || abs(x) > float_precision(1);
+        if constexpr (isComplexLike<T>::value){
+    		return !isfinite(x.real()) || !isfinite(x.imag()) || abs(x) > abs(static_cast<T>(1));
         } else {
             return !isfinite(x) || abs(x) > static_cast<T>(1);
         }
@@ -45,7 +44,7 @@ public:
 		using std::log;
 		using std::sqrt;
 
-		return log(static_cast<T>(1)+sqrt(1 + x * x)) - log(static_cast<T>(2));
+		return log(static_cast<T>(1)+sqrt(static_cast<T>(1) + x * x)) - log(static_cast<T>(2));
 	}
 
 };
@@ -65,14 +64,13 @@ SeriesResult<T> ln_1plussqrt1plusxsquare_minus_ln_2_series<T, K>::generateSeries
 	series_base<T,K>::x_ = x;
 	series_base<T,K>::sum = calculateSum(x);
 
-	if constexpr ( std::is_same<T, float_precision> :: value ){
-		series_base<T, K>::precision = x.precision();
-	} else if constexpr (std::is_same<T, complex_precision<float_precision>>::value){
-		series_base<T, K>::precision = std::max(x.real().precision(), x.imag().precision());
-	}
+	std::vector<T> vecAn;
+	std::vector<T> vecSn;
 
-	std::vector<T> vecAn(vecSize, convertWithPrec<T>(0.0, series_base<T, K>::precision)); vecAn[0] = x * x * static_cast<T>(0.25);
-	std::vector<T> vecSn(vecSize, convertWithPrec<T>(0.0, series_base<T, K>::precision)); vecSn[0] = x * x * static_cast<T>(0.25);
+	series_base<T,K>::initVecsWithPrec(vecSn,vecAn, vecSize, x);
+
+	vecAn[0] = x * x * static_cast<T>(0.25);
+	vecSn[0] = x * x * static_cast<T>(0.25);
 
 	for(K j = static_cast<K>(1); j < vecSize; ++j){
 		vecAn[j] += static_cast<T>(-1) * vecAn[j-static_cast<K>(1)] * x * x * static_cast<T>(fma(2,j,1) * j) / static_cast<T>(2 * (j+1)*(j+1));

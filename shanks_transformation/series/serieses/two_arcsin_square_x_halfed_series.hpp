@@ -31,8 +31,8 @@ public:
 		
 		using std::isfinite;
 
-		if constexpr(std::is_same<T, complex_precision<float_precision>>::value){
-            return !isfinite(x) || abs(x) > float_precision(2);
+		if constexpr (isComplexLike<T>::value){
+    		return !isfinite(x.real()) || !isfinite(x.imag()) || float_precision(abs(x)) > float_precision(2);
         } else {
 		    return !isfinite(x) || abs(x) > static_cast<T>(2);
         }
@@ -62,14 +62,13 @@ SeriesResult<T> two_arcsin_square_x_halfed_series<T, K>::generateSeries(
 	series_base<T,K>::x_ = x;
 	series_base<T,K>::sum = calculateSum(x);
 
-	if constexpr ( std::is_same<T, float_precision> :: value ){
-		series_base<T, K>::precision = x.precision();
-	} else if constexpr (std::is_same<T, complex_precision<float_precision>>::value){
-		series_base<T, K>::precision = std::max(x.real().precision(), x.imag().precision());
-	}
+	std::vector<T> vecAn;
+	std::vector<T> vecSn;
 
-	std::vector<T> vecAn(vecSize, convertWithPrec<T>(0.0, series_base<T, K>::precision)); vecAn[0] = x * x * static_cast<T>(0.5);
-	std::vector<T> vecSn(vecSize, convertWithPrec<T>(0.0, series_base<T, K>::precision)); vecSn[0] = x * x * static_cast<T>(0.5);
+	series_base<T,K>::initVecsWithPrec(vecSn,vecAn, vecSize, x);
+
+	vecAn[0] = x * x * static_cast<T>(0.5);
+	vecSn[0] = x * x * static_cast<T>(0.5);
 
 	for(K j = static_cast<K>(1); j < vecSize; ++j){
 		vecAn[j] += vecAn[j-static_cast<K>(1)] * x * x * static_cast<T>(j*j) / static_cast<T>(fma(2,j,1) * fma(2,j,2));

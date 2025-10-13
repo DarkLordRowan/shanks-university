@@ -31,7 +31,11 @@ public:
 		
 		using std::isfinite;
 
-		return !isfinite(x);
+		if constexpr (isComplexLike<T>::value){
+    		return !isfinite(x.real()) || !isfinite(x.imag());
+		} else {
+			return !isfinite(x);
+		}
 	}
 
 	inline constexpr T calculateSum(const T& x){
@@ -39,7 +43,11 @@ public:
 		using std::erf;
 		using std::exp;
 
-		return erf(x) * exp(x*x);
+		if constexpr(isComplexLike<T>::value){
+			return static_cast<T>(0);
+		} else {
+			return erf(x) * exp(x*x);
+		}
 	}
 
 };
@@ -59,16 +67,15 @@ SeriesResult<T> exp_squared_erf_series<T, K>::generateSeries(
 	series_base<T,K>::x_ = x;
 	series_base<T,K>::sum = calculateSum(x);
 
-	if constexpr ( std::is_same<T, float_precision> :: value ){
-		series_base<T, K>::precision = x.precision();
-	} else if constexpr (std::is_same<T, complex_precision<float_precision>>::value){
-		series_base<T, K>::precision = std::max(x.real().precision(), x.imag().precision());
-	}
+	std::vector<T> vecAn;
+	std::vector<T> vecSn;
+
+	series_base<T,K>::initVecsWithPrec(vecSn,vecAn, vecSize, x);
 	
 	using std::sqrt;
 
-	std::vector<T> vecAn(vecSize, convertWithPrec<T>(0.0, series_base<T, K>::precision)); vecAn[0] = static_cast<T>(2) * x / sqrt(static_cast<T>(std::numbers::pi));
-	std::vector<T> vecSn(vecSize, convertWithPrec<T>(0.0, series_base<T, K>::precision)); vecSn[0] = static_cast<T>(2) * x / sqrt(static_cast<T>(std::numbers::pi));
+	vecAn[0] = static_cast<T>(2) * x / sqrt(static_cast<T>(std::numbers::pi));
+	vecSn[0] = static_cast<T>(2) * x / sqrt(static_cast<T>(std::numbers::pi));
 
 
 	for(K j = static_cast<K>(1); j < vecSize; ++j){

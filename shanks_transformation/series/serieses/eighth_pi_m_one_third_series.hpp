@@ -31,7 +31,11 @@ public:
 		
 		using std::isfinite;
 
-        return !isfinite(x);
+        if constexpr (isComplexLike<T>::value){
+    		return !isfinite(x.real()) || !isfinite(x.imag());
+		} else {
+			return !isfinite(x);
+		}
 	}
 
 	inline constexpr T calculateSum(const T& x){
@@ -56,14 +60,13 @@ SeriesResult<T> eighth_pi_m_one_third_series<T, K>::generateSeries(
 	series_base<T,K>::x_ = x;
 	series_base<T,K>::sum = calculateSum(x);
 
-	if constexpr ( std::is_same<T, float_precision> :: value ){
-		series_base<T, K>::precision = x.precision();
-	} else if constexpr (std::is_same<T, complex_precision<float_precision>>::value){
-		series_base<T, K>::precision = std::max(x.real().precision(), x.imag().precision());
-	}
+	std::vector<T> vecAn;
+	std::vector<T> vecSn;
 
-	std::vector<T> vecAn(vecSize, convertWithPrec<T>(0.0, series_base<T, K>::precision)); vecAn[0] = x / static_cast<T>(15);
-	std::vector<T> vecSn(vecSize, convertWithPrec<T>(0.0, series_base<T, K>::precision)); vecSn[0] = x / static_cast<T>(15);
+	series_base<T,K>::initVecsWithPrec(vecSn,vecAn, vecSize, x);
+
+	vecAn[0] = x / static_cast<T>(15);
+	vecSn[0] = x / static_cast<T>(15);
 
 	for(K j = static_cast<K>(1); j < vecSize; ++j){
 		vecAn[j] += minus_one_raised_to_power_n<T,K>(j) * x / static_cast<T>(fma(2,j,1) * fma(2,j,3) * fma(2,j,5));
