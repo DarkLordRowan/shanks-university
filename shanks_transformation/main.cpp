@@ -270,7 +270,7 @@ void testRows(){
 		{ 			  	    					  x_two_throught_squares_series_id,[]() { return std::make_unique<x_two_throught_squares_series<T,K>>();}},
 	};
 
-	T x = static_cast<T>(0.3);
+	T x = complex_precision<float_precision>(3,3);
 	size_t length = 60;
 
 	std::vector<std::unique_ptr<series_base<T,K>>> seriesVec;
@@ -298,13 +298,13 @@ void testRows(){
 }
 
 template<AcceptedLike T, UnsignedIntLike K>
-constexpr void testAlgorithm(std::unique_ptr<series_acceleration<T,K>>& algo, const SeriesResult<T>& series){
+constexpr void testAlgorithm(std::unique_ptr<series_acceleration<T,K>>& algo, const SeriesResult<T>& series, const T& sum){
 
 	algo->print_info();
-	for (size_t j = 0; j <= 10; ++j) {
+	for (size_t j = 0; j <= 30; ++j) {
 
 		try{
-			std::cout << "n = order = " << j << " : " << algo->operator()(j,j, series) << "\n";
+			std::cout << "n = order = " << j << " : " << abs(algo->operator()(j,j, series) - sum) << "\n";
 		} catch (std::overflow_error& e){
 			std::cout << e.what() << "\n";
 		} catch (std::domain_error& e){
@@ -355,7 +355,7 @@ constexpr void testNoise(const T& x){
 		{          levin_sidi_l_v_wave_transformation_id, [](){ return std::make_unique<levin_algorithm<T, K>>(remainder_type::v_wave_variant       , false);}},
 		{     recurrent_levin_sidi_l_u_transformation_id, [](){ return std::make_unique<levin_algorithm<T, K>>(remainder_type::u_variant            , true); }},
 		{     recurrent_levin_sidi_l_t_transformation_id, [](){ return std::make_unique<levin_algorithm<T, K>>(remainder_type::t_variant            , true); }},
-		{recurrent_levin_sidi_l_t_wave_transformation_id, [](){ return std::make_unique<levin_algorithm<T, K>>(remainder_type::t_wave_variant       , true, T(0.9)); }},
+		{recurrent_levin_sidi_l_t_wave_transformation_id, [](){ return std::make_unique<levin_algorithm<T, K>>(remainder_type::t_wave_variant       , true); }},
 		{     recurrent_levin_sidi_l_v_transformation_id, [](){ return std::make_unique<levin_algorithm<T, K>>(remainder_type::v_variant            , true); }},
 		{recurrent_levin_sidi_l_v_wave_transformation_id, [](){ return std::make_unique<levin_algorithm<T, K>>(remainder_type::v_wave_variant       , true); }},
 		{               levin_sidi_m_u_transformation_id, [](){ return std::make_unique<levin_sidi_m_algorithm<T, K>>(remainder_type::u_variant     );       }},
@@ -402,7 +402,7 @@ constexpr void testNoise(const T& x){
 
 	std::cout << "BASIC NOISE\n";
 	for (size_t i = 0; i < algos.size(); ++i){
-		testAlgorithm(algos[i], noisyResult);
+		testAlgorithm(algos[i], noisyResult, testSeries.get_sum());
 	}
 
 
@@ -412,7 +412,7 @@ constexpr void testNoise(const T& x){
 	SeriesResult<T> strongerNoisyResult = noiseGen.jitter(result, 0.0, 1e-3);
 
 	for (size_t i = 0; i < algos.size(); ++i){
-		testAlgorithm(algos[i], strongerNoisyResult);
+		testAlgorithm(algos[i], strongerNoisyResult, testSeries.get_sum());
 	}
 
 	std::cout << "\n--------------------------------------------------------------------------------------------\n";
@@ -421,7 +421,7 @@ constexpr void testNoise(const T& x){
 	SeriesResult<T> extremeNoisyResult = noiseGen.jitter(result, 0.0, 1e-1);
 
 	for (size_t i = 0; i < algos.size(); ++i){
-		testAlgorithm(algos[i], extremeNoisyResult);
+		testAlgorithm(algos[i], extremeNoisyResult, testSeries.get_sum());
 	}
 
 	std::cout << "\n--------------------------------------------------------------------------------------------\n";
@@ -429,7 +429,7 @@ constexpr void testNoise(const T& x){
 
 	SeriesResult<T> shiftedDownNoisyResult = noiseGen.jitter(result, -1.0, 1e-5);
 	for (size_t i = 0; i < algos.size(); ++i){
-		testAlgorithm(algos[i], shiftedDownNoisyResult);
+		testAlgorithm(algos[i], shiftedDownNoisyResult, testSeries.get_sum());
 	}
 
 	std::cout << "\n--------------------------------------------------------------------------------------------\n";
@@ -437,7 +437,7 @@ constexpr void testNoise(const T& x){
 
 	SeriesResult<T> shiftedUpNoisyResult = noiseGen.jitter(result, 1.0, 1e-5);
 	for (size_t i = 0; i < algos.size(); ++i){
-		testAlgorithm(algos[i], shiftedUpNoisyResult);
+		testAlgorithm(algos[i], shiftedUpNoisyResult, testSeries.get_sum());
 	}
 
 }
@@ -469,11 +469,10 @@ int main()
 	//std::cout << double_fact<typeB>(7) << "\n";
 	//std::cout << binomial_coefficient<typeB>(0, 3) << "\n";
 
-	//testNoise<typeA, typeB>(x);
+	testNoise<typeA, typeB>(x);
 
-	// TestNoise();
 	//testRows<typeA,typeB>();
-	testCompatability<typeA, typeB>(x);
+	//testCompatability<typeA, typeB>(x);
 
 	/*
 	while(true){
