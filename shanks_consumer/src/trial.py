@@ -1,13 +1,18 @@
 from src.params import (
     BaseAccelParam,
     BaseSeriesParam,
+    NumericLike,
+    SeriesParamCSV,
+    SeriesResultProto,
+    TNum,
+    PrecisionType,
 )
+import pyshanks as ps
 
 import itertools
 
 from dataclasses import dataclass
-from typing import Any, Generator, Iterable, Mapping
-from pyshanks import Arb
+from typing import Any, Generator, Iterable, Mapping, Generic
 
 
 def cartesian_dicts(
@@ -19,13 +24,13 @@ def cartesian_dicts(
 
 
 @dataclass
-class ComputedTrialResult:
+class ComputedTrialResult(Generic[TNum]):
     n: int
-    series_value: float | Arb
-    partial_sum: float | Arb
-    partial_sum_deviation: float | Arb
-    accel_value: float | Arb
-    accel_value_deviation: float | Arb
+    series_value: TNum
+    partial_sum: TNum
+    partial_sum_deviation: TNum
+    accel_value: TNum
+    accel_value_deviation: TNum
 
 
 @dataclass
@@ -35,9 +40,9 @@ class ErrorTrialResult:
 
 
 @dataclass
-class SeriesTrialResult:
+class SeriesTrialResult(Generic[TNum]):
     name: str
-    lim: Any
+    lim: TNum
     arguments: Mapping[str, Any]
 
 
@@ -49,20 +54,20 @@ class AccelTrialResult:
 
 
 @dataclass
-class TrialResult:
-    series: SeriesTrialResult
+class TrialResult(Generic[TNum]):
+    series: SeriesTrialResult[TNum]
     accel: AccelTrialResult
-    computed: list[ComputedTrialResult]
+    computed: list[ComputedTrialResult[TNum]]
     error: ErrorTrialResult | None
 
 
 @dataclass
-class Trial:
-    series: BaseSeriesParam
-    accel: BaseAccelParam
-    arb: bool = True
+class Trial(Generic[TNum]):
+    series: BaseSeriesParam[TNum]
+    accel: BaseAccelParam[TNum]
+    precision: PrecisionType = PrecisionType.F64
 
-    def execute(self) -> list[TrialResult]:
+    def execute(self) -> list[TrialResult[TNum]]:
         results = []
         # Handle series with no arguments (like CSV series)
         arguments_list = [
@@ -81,32 +86,18 @@ class Trial:
                 # For series that need generateSeries method
                 series_instance = self.series.executable()
 
-                # Check if this is a CSV series (has pre-computed data)
-                if hasattr(series_instance, 'data'):
+                if isinstance(series_instance, SeriesParamCSV):
                     # CSV series - use pre-computed data directly
                     series_result = series_instance.data
                     series_lim = series_instance.get_sum()
                 else:
                     # Regular series - generate using parameters
-                    # Extract arguments for generateSeries and convert types based on Arb flag
+                    # Extract arguments for generateSeries and convert types based on precision
                     x_arg = argument.get('x', 0.0)
                     vec_size_arg = argument.get('vecSize', 100)
                     add_t_param = argument.get('addTParameter', 1.0)
                     add_k_param = argument.get('addKParameter', 1)
 
-                    # Convert numeric parameters to appropriate type (Arb or float)
-                    if self.arb:
-                        if not isinstance(x_arg, Arb):
-                            x_arg = Arb(str(x_arg))
-                        if not isinstance(add_t_param, Arb):
-                            add_t_param = Arb(str(add_t_param))
-                    else:
-                        if isinstance(x_arg, Arb):
-                            x_arg = float(x_arg)
-                        if isinstance(add_t_param, Arb):
-                            add_t_param = float(add_t_param)
-
-                    # Generate the series using the new API
                     series_result = series_instance.generateSeries(
                         x_arg, vec_size_arg, add_t_param, add_k_param
                     )
@@ -166,16 +157,16 @@ class Trial:
 
 
 @dataclass
-class ComplexTrial:
-    series_params: list[BaseSeriesParam]
-    accel_params: list[BaseAccelParam]
-    arb: bool = True
+class ComplexTrial(Generic[TNum]):
+    series_params: list[BaseSeriesParam[TNum]]
+    accel_params: list[BaseAccelParam[TNum]]
+    precision: PrecisionType = PrecisionType.F64
 
-    def execute(self) -> list[TrialResult]:
+    def execute(self) -> list[TrialResult[TNum]]:
         results = []
         for series, accel in itertools.product(
             self.series_params, self.accel_params
         ):
-            result = Trial(series, accel, arb=self.arb).execute()
+            result = Trial(series, accel, precision=self.precision).execute()
             results += result
         return results

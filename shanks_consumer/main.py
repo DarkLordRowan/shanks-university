@@ -3,6 +3,7 @@ import pathlib
 import sys
 
 from src.params import (
+    PrecisionType,
     get_accel_params_from_json,
     get_series_params_from_json,
     get_series_params_from_csv,
@@ -12,7 +13,7 @@ from src.export import ExportTrialResults, ExportTrialEvents
 from src.events import TrialEventScanner
 from src.plot import save_all_plots
 
-ARB = True
+PRECISION = PrecisionType.CARB
 
 def main():
     parser = argparse.ArgumentParser(description="Complex Trial Analysis Tool")
@@ -72,18 +73,18 @@ def main():
     try:
         series_params = []
         if args.series_json.exists():
-            series_params.extend(get_series_params_from_json(args.series_json, ARB))
+            series_params.extend(get_series_params_from_json(args.series_json, PRECISION))
         else:
             print(f"Warning: Series JSON file not found: {args.series_json}")
 
         if args.series_csv.exists():
-            series_params.extend(get_series_params_from_csv(args.series_csv, ARB))
+            series_params.extend(get_series_params_from_csv(args.series_csv, PRECISION))
         else:
             print(f"Warning: Series CSV file not found: {args.series_csv}")
 
         accel_params = []
         if args.accel_json.exists():
-            accel_params.extend(get_accel_params_from_json(args.accel_json, ARB))
+            accel_params.extend(get_accel_params_from_json(args.accel_json, PRECISION))
         else:
             print(
                 f"Warning: Acceleration JSON file not found: {args.accel_json}"
@@ -98,7 +99,7 @@ def main():
             print(f"Loaded {len(accel_params)} acceleration parameters")
             print("Executing complex trial...")
 
-        st = ComplexTrial(series_params, accel_params, arb=ARB)
+        st = ComplexTrial(series_params, accel_params, precision=PRECISION)
         results = st.execute()
 
         results_exporter = ExportTrialResults(results)

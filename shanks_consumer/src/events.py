@@ -1,31 +1,31 @@
-from src.trial import TrialResult
-from typing import Iterable
+from src.trial import TrialResult, TNum
+from typing import Iterable, Generic
 from collections.abc import Callable
 from dataclasses import dataclass, asdict
 
 
 @dataclass
-class TrialEvent:
-    result: TrialResult
+class TrialEvent(Generic[TNum]):
+    result: TrialResult[TNum]
     event: str
     data: dict
 
 
-class TrialEventScanner:
+class TrialEventScanner(Generic[TNum]):
 
-    def __init__(self, results: Iterable[TrialResult]):
+    def __init__(self, results: Iterable[TrialResult[TNum]]):
         self.results = results
-        self._scan_methods: dict[str, Callable] = {
+        self._scan_methods: dict[str, Callable[[TrialResult[TNum]], dict | None]] = {
             "slow_accel_method": self._slow_accel_method,
             "divergent_accel_method": self._divergent_accel_method,
         }
 
-    def _slow_accel_method(self, result: TrialResult) -> dict | None:
+    def _slow_accel_method(self, result: TrialResult[TNum]) -> dict | None:
         for compute in result.computed:
             if compute.accel_value_deviation < compute.partial_sum_deviation:
                 return asdict(compute)
 
-    def _divergent_accel_method(self, result: TrialResult):
+    def _divergent_accel_method(self, result: TrialResult[TNum]) -> dict | None:
         for i in range(1, len(result.computed)):
             if (
                 result.computed[i - 1].accel_value_deviation
@@ -33,7 +33,7 @@ class TrialEventScanner:
             ):
                 return asdict(result.computed[i])
 
-    def execute(self) -> list[TrialEvent]:
+    def execute(self) -> list[TrialEvent[TNum]]:
         events = []
         for result in self.results:
             for name, method in self._scan_methods.items():

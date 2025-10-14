@@ -181,25 +181,27 @@ void bind_all(py::module_& m, const std::string& suffix) {
         (m, name("FordSidi3Algorithm").c_str())
         .def(py::init<>());
 
-    py::class_<levin_algorithm<T,K>, MSeriesAcceleration>
-        (m, name("LevinLAlgorithm").c_str())
-        .def(py::init<remainder_type, bool, T>(),
-             py::arg("remainder") = remainder_type::t_variant,
-             py::arg("useRecurrentFormula") = false,
-             py::arg("beta") = static_cast<T>(1));
+    if constexpr (!std::is_same_v<T, complex_precision<float_precision>>) {
+        py::class_<levin_algorithm<T,K>, MSeriesAcceleration>
+            (m, name("LevinAlgorithm").c_str())
+            .def(py::init<remainder_type, bool, T>(),
+                py::arg("remainder") = remainder_type::t_variant,
+                py::arg("useRecurrentFormula") = false,
+                py::arg("beta") = static_cast<T>(1));
 
-    py::class_<levin_sidi_m_algorithm<T,K>, MSeriesAcceleration>
-        (m, name("LevinSidiMAlgorithm").c_str())
-        .def(py::init<remainder_type, T>(),
-             py::arg("remainder") = remainder_type::t_variant,
-             py::arg("gamma") = static_cast<T>(10));
+        py::class_<levin_sidi_m_algorithm<T,K>, MSeriesAcceleration>
+            (m, name("LevinSidiMAlgorithm").c_str())
+            .def(py::init<remainder_type, T>(),
+                py::arg("remainder") = remainder_type::t_variant,
+                py::arg("gamma") = static_cast<T>(10));
 
-    py::class_<levin_sidi_s_algorithm<T,K>, MSeriesAcceleration>
-        (m, name("LevinSidiSAlgorithm").c_str())
-        .def(py::init<remainder_type, bool, T>(),
-             py::arg("remainder") = remainder_type::t_variant,
-             py::arg("useRecurrentFormula") = false,
-             py::arg("beta") = static_cast<T>(1));
+        py::class_<levin_sidi_s_algorithm<T,K>, MSeriesAcceleration>
+            (m, name("LevinSidiSAlgorithm").c_str())
+            .def(py::init<remainder_type, bool, T>(),
+                py::arg("remainder") = remainder_type::t_variant,
+                py::arg("useRecurrentFormula") = false,
+                py::arg("beta") = static_cast<T>(1));
+    }
 
     py::class_<lubkin_w_algorithm<T,K>, MSeriesAcceleration>
         (m, name("LubkinWAlgorithm").c_str())
@@ -229,16 +231,18 @@ void bind_all(py::module_& m, const std::string& suffix) {
         (m, name("WynnEpsilon2Algorithm").c_str())
         .def(py::init<>());
 
-    py::class_<wynn_epsilon_3_algorithm<T,K>, MSeriesAcceleration>
-        (m, name("WynnEpsilon3Algorithm").c_str())
-        .def(py::init<T>(), py::arg("epsilon_threshold") = static_cast<T>(1e-3));
+    if constexpr (!std::is_same_v<T, complex_precision<float_precision>>) {
+        py::class_<wynn_epsilon_3_algorithm<T,K>, MSeriesAcceleration>
+            (m, name("WynnEpsilon3Algorithm").c_str())
+            .def(py::init<T>(), py::arg("epsilon_threshold") = static_cast<T>(1e-3));
 
-    py::class_<wynn_rho_algorithm<T,K>, MSeriesAcceleration>
-        (m, name("WynnRhoAlgorithm").c_str())
-        .def(py::init<numerator_type, T, T>(),
-             py::arg("numerator") = numerator_type::rho_variant,
-             py::arg("gamma") = static_cast<T>(-1),
-             py::arg("rho") = static_cast<T>(1));
+        py::class_<wynn_rho_algorithm<T,K>, MSeriesAcceleration>
+            (m, name("WynnRhoAlgorithm").c_str())
+            .def(py::init<numerator_type, T, T>(),
+                py::arg("numerator") = numerator_type::rho_variant,
+                py::arg("gamma") = static_cast<T>(-1),
+                py::arg("rho") = static_cast<T>(1));
+    }
 }
 
 PYBIND11_MODULE(pyshanks, m) {
@@ -311,4 +315,70 @@ PYBIND11_MODULE(pyshanks, m) {
     #undef ADD_NUM_CMP
 
     bind_all<float_precision>(m, "Arb");
+
+    using CArb = complex_precision<float_precision>;
+
+    #define ADD_NUM_BINOP(pyname, rpyname, op) \
+        .def(pyname, [](const CArb& a, const CArb& b){ return a op b; }, py::is_operator()) \
+        .def(rpyname, [](const CArb& self, const CArb& other){ return other op self; }, py::is_operator()) \
+        .def(pyname, [](const CArb& self, const float_precision& r){ return self op CArb(r); }, py::is_operator()) \
+        .def(rpyname, [](const CArb& self, const float_precision& r){ return CArb(r) op self; }, py::is_operator()) \
+        .def(pyname, [](const CArb& self, double r){ return self op CArb(float_precision(r)); }, py::is_operator()) \
+        .def(rpyname, [](const CArb& self, double r){ return CArb(float_precision(r)) op self; }, py::is_operator()) \
+        .def(pyname, [](const CArb& self, long long r){ return self op CArb(float_precision((double)r)); }, py::is_operator()) \
+        .def(rpyname, [](const CArb& self, long long r){ return CArb(float_precision((double)r)) op self; }, py::is_operator())
+    #define ADD_NUM_INPLACE(pyname, op) \
+        .def(pyname, [](CArb& self, const CArb& other)->CArb&{ self = self op other; return self; }, py::is_operator()) \
+        .def(pyname, [](CArb& self, const float_precision& r)->CArb&{ self = self op CArb(r); return self; }, py::is_operator()) \
+        .def(pyname, [](CArb& self, double r)->CArb&{ self = self op CArb(float_precision(r)); return self; }, py::is_operator()) \
+        .def(pyname, [](CArb& self, long long r)->CArb&{ self = self op CArb(float_precision((double)r)); return self; }, py::is_operator())
+    py::class_<CArb>(m, "CArb")
+        .def(py::init<>())
+        .def(py::init([](double re){ return CArb(re, 0.0); }))
+        .def(py::init<const std::string&>(), py::arg("s"))
+        .def(py::init<float_precision>(), py::arg("re"))
+        .def(py::init<float_precision, float_precision>(), py::arg("re"), py::arg("im"))
+        .def(py::init([](double re, double im){ return CArb(float_precision(re), float_precision(im)); }),
+             py::arg("re"), py::arg("im"))
+        .def(py::init([](std::complex<double> z){
+             return CArb(float_precision(z.real()), float_precision(z.imag()));
+        }), py::arg("z"))
+        .def_property("real",
+            [](const CArb& z){ return z.real(); },
+            [](CArb& z, const float_precision& r){ z.real(r); })
+        .def_property("imag",
+            [](const CArb& z){ return z.imag(); },
+            [](CArb& z, const float_precision& i){ z.imag(i); })
+        .def("__str__", [](const CArb& z){ return to_string(z); })
+        .def("__format__", [](const CArb &x, const std::string &fmt) { return to_string(x); })
+        .def("__repr__", [](const CArb& z){
+            return "CArb(" + z.real().toString() + ", " + z.imag().toString() + ")";
+        })
+        .def("__complex__", [](const CArb& z){
+            return std::complex<double>((double)z.real(), (double)z.imag());
+        })
+        ADD_NUM_BINOP("__add__", "__radd__", +)
+        ADD_NUM_BINOP("__sub__", "__rsub__", -)
+        ADD_NUM_BINOP("__mul__", "__rmul__", *)
+        ADD_NUM_BINOP("__truediv__", "__rtruediv__", /)
+        ADD_NUM_INPLACE("__iadd__", +)
+        ADD_NUM_INPLACE("__isub__", -)
+        ADD_NUM_INPLACE("__imul__", *)
+        ADD_NUM_INPLACE("__itruediv__", /)
+        .def("__neg__", [](const CArb& a){ return CArb(-a.real(), -a.imag()); })
+        .def("__pos__", [](const CArb& a){ return a; })
+        .def("__abs__", [](const CArb& a){ return a.abs(); })
+        // THIS IS HORRIBLE
+        .def("__float__", [](const CArb &x){ return static_cast<double>(x.real()); })
+        .def("__int__", [](const CArb &x){ return static_cast<long>(static_cast<double>(x.real())); })
+        .def("__eq__", [](const CArb& a, const CArb& b){ return a == b; }, py::is_operator())
+        .def("__ne__", [](const CArb& a, const CArb& b){ return !(a == b); }, py::is_operator())
+        .def("__getstate__", [](const CArb& z){
+            return std::make_pair(z.real().toString(), z.imag().toString());
+        })
+        .def("__setstate__", [](CArb& z, const std::pair<std::string,std::string>& s){
+            new (&z) CArb(float_precision(s.first), float_precision(s.second));
+        });
+
+    bind_all<CArb>(m, "CArb");
 }
