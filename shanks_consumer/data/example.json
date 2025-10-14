@@ -21,7 +21,7 @@
   "methods": [
     {
       "name": "ShanksAlgorithm",
-      "n": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+      "n": [5, 6, 7, 8, 9, 10],
       "m": 4,
       "args": {}
     },
@@ -40,7 +40,7 @@
       "args": {}
     },
     {
-      "name": "LevinLAlgorithm",
+      "name": "LevinAlgorithm",
       "n": {
         "start": 1,
         "stop": 50,

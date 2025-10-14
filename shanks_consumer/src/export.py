@@ -1,25 +1,25 @@
 import io
-from typing import Iterable
+from typing import Iterable, Any
 import pathlib
 import json
 import csv
 from dataclasses import asdict, fields
 
-from src.params import ArbEncoder
-
+from src.params import XArbEncoder, PrecisionType
 from src.trial import (
     TrialResult,
     AccelTrialResult,
     ErrorTrialResult,
     SeriesTrialResult,
     ComputedTrialResult,
+    TNum,
 )
-
 from src.events import TrialEvent
 
 
 def dataclass_fields_with_prefix(dataclass_type, prefix: str) -> list[str]:
     return list(map(lambda s: prefix + s.name, fields(dataclass_type)))
+
 
 def dataclasses_to_json(dataclasses, location):
     with open(
@@ -32,7 +32,7 @@ def dataclasses_to_json(dataclasses, location):
                 [asdict(dataclass) for dataclass in dataclasses],
                 indent=4,
                 sort_keys=True,
-                cls=ArbEncoder
+                cls=XArbEncoder
             )
         )
 
@@ -53,7 +53,7 @@ class BaseExport:
 class ExportTrialResults(BaseExport):
     def __init__(
         self,
-        results: Iterable[TrialResult],
+        results: Iterable[TrialResult[Any]],
         location: pathlib.Path | None = None,
     ):
         self.results = results
@@ -130,7 +130,7 @@ class ExportTrialResults(BaseExport):
 class ExportTrialEvents(BaseExport):
     def __init__(
         self,
-        events: Iterable[TrialEvent],
+        events: Iterable[TrialEvent[Any]],
         location: pathlib.Path | None = None,
     ):
         self.events = events
