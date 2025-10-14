@@ -1,15 +1,16 @@
 import csv
+import datetime
 import io
 import json
 import pathlib
-from dataclasses import Field, asdict, fields, is_dataclass
+import uuid
+from dataclasses import Field, asdict, dataclass, field, fields, is_dataclass
 from typing import Any
 
+from pymongo.database import Database as MongoDatabase
 from src.events import TrialEvent
 from src.loaders import ArbEncoder
 from src.trial import TrialResult
-
-from pymongo import MongoClient
 
 
 def auto_field_prefix(field: Field, prefix: str = "", separator: str = "_"):
@@ -23,18 +24,18 @@ def flatten_dataclass(
         return {}
 
     result = {}
-    for field in fields(obj):
-        field_value = getattr(obj, field.name)
+    for _field in fields(obj):
+        field_value = getattr(obj, _field.name)
 
         if is_dataclass(field_value):
             nested = flatten_dataclass(
                 field_value,
-                auto_field_prefix(field, prefix, separator),
+                auto_field_prefix(_field, prefix, separator),
                 separator,
             )
             result.update(nested)
         else:
-            key = prefix + field.name if prefix else field.name
+            key = prefix + _field.name if prefix else _field.name
             result[key] = field_value
 
     return result
@@ -52,12 +53,12 @@ def get_flattened_headers(
     exclude_fields = exclude_fields or []
 
     headers = []
-    for field in fields(dataclass_type):
-        if field.name in exclude_fields:
+    for _field in fields(dataclass_type):
+        if _field.name in exclude_fields:
             continue
 
-        field_type = field.type
-        field_prefix = auto_field_prefix(field, prefix, separator)
+        field_type = _field.type
+        field_prefix = auto_field_prefix(_field, prefix, separator)
 
         if is_dataclass(field_type):
             nested_headers = get_flattened_headers(field_type, field_prefix, separator)
@@ -73,9 +74,9 @@ def get_expanded_field_headers(dataclass_type, field_name, separator="_"):
     if not is_dataclass(dataclass_type):
         return []
 
-    for field in fields(dataclass_type):
-        if field.name == field_name:
-            field_type = field.type
+    for _field in fields(dataclass_type):
+        if _field.name == field_name:
+            field_type = _field.type
             if (
                 hasattr(field_type, "__origin__")
                 and field_type.__origin__ is list
@@ -100,18 +101,18 @@ def _write_dataclasses_to_csv_writer(dataclasses, writer, expand_field, separato
                 raise ValueError(f"Field '{expand_field}' must be a list")
 
             base_data = {}
-            for field in fields(dataclass_obj):
-                if field.name != expand_field:
-                    field_value = getattr(dataclass_obj, field.name)
+            for _field in fields(dataclass_obj):
+                if _field.name != expand_field:
+                    field_value = getattr(dataclass_obj, _field.name)
                     if is_dataclass(field_value):
                         flattened_field = flatten_dataclass(
                             field_value,
-                            prefix=f"{field.name}_",
+                            prefix=f"{_field.name}_",
                             separator=separator,
                         )
                         base_data.update(flattened_field)
                     else:
-                        base_data[field.name] = field_value
+                        base_data[_field.name] = field_value
 
             for item in expand_data:
                 item_flattened = flatten_dataclass(
@@ -190,14 +191,31 @@ def dataclasses_to_json(dataclasses, location):
         )
 
 
-class BaseExport:
+@dataclass
+class ExportMeta:
+    timestamp: str = field(
+        default_factory=lambda: str(datetime.datetime.now().isoformat())
+    )
+    stack_id: str = field(default_factory=lambda: str(uuid.uuid4()))
 
+
+class BaseExport:
     def __init__(self, data: list, location: pathlib.Path | None = None):
         self.location = location
         self.data = data
 
-        self.expand_field: str = None
+        self.expand_field: str | None = None
         self.separator: str = "_"
+        self.mongodb_collection: str = "base"
+
+    def as_dict(self):
+        return [asdict(data) for data in self.data]
+
+    def to_mongodb(self, mongo_database: MongoDatabase):
+        meta = ExportMeta()
+        mongo_database.get_collection(self.mongodb_collection).insert_many(
+            [item | asdict(meta) for item in self.as_dict()],
+        )
 
     def _verify_location(self, override_location):
         location = override_location or self.location
@@ -205,19 +223,12 @@ class BaseExport:
             raise ValueError("Provide location to export")
         return location
 
-    def as_dict(self):
-        return [asdict(data) for data in self.data]
-
-    def to_mongodb(self, mongo_client: MongoClient): ...
-
-    def to_json(self, override_location=None):
-        dataclasses_to_json(
-            self.data, self._verify_location(override_location)
-        )
+    def to_json(self, override_location: pathlib.Path | None = None):
+        dataclasses_to_json(self.data, self._verify_location(override_location))
 
     def to_csv(
         self,
-        override_location: str | None = None,
+        override_location: pathlib.Path | None = None,
     ):
         dataclasses_to_csv(
             self.data,
@@ -241,8 +252,10 @@ class ExportTrialResults(BaseExport):
     ):
         super().__init__(results, location)
         self.expand_field = "computed"
+        self.mongodb_collection: str = "trial_results"
 
 
 class ExportTrialEvents(BaseExport):
     def __init__(self, events: list[TrialEvent], location: pathlib.Path | None = None):
         super().__init__(events, location)
+        self.mongodb_collection: str = "trial_events"

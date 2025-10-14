@@ -8,6 +8,7 @@ from src.trial import TrialResult
 @dataclass
 class TrialEvent:
     result_id: str
+    result: TrialResult
     event: str
     data: dict
 
@@ -41,5 +42,5 @@ class TrialEventScanner:
             for name, method in self._scan_methods.items():
                 event_data = method(result)
                 if event_data:
-                    events.append(TrialEvent(result.id, name, event_data))
+                    events.append(TrialEvent(result.id, result, name, event_data))
         return events

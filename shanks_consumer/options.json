@@ -1,7 +1,7 @@
 {
   "series_json": "data/big_boy.json",
   "series_csv": "data/example_series.csv",
-  "accel_json": "data/big_boy.json",
+  "accel_json": "data/example.json",
   "output_dir": "output",
   "plots_dir": "plots",
   "results_json": "output/output.json",
@@ -11,6 +11,9 @@
   "trial_process_count": 1,
   "no_events": false,
   "no_plots": true,
+  "no_json_export": true,
+  "no_csv_export": true,
   "with_arb": false,
+  "with_mongo": true,
   "verbose": 1
 }

@@ -3,6 +3,10 @@ import logging
 import pathlib
 import sys
 
+from dotenv import load_dotenv
+from pymongo import MongoClient
+from pymongo.database import Database as MongoDatabase
+from pymongo.errors import PyMongoError
 from src.config import ConfigLoader, TrialConfig
 from src.events import TrialEventScanner
 from src.export import ExportTrialEvents, ExportTrialResults
@@ -65,14 +69,29 @@ def execute_trial(config: TrialConfig):
     return results
 
 
-def export_results(results, config: TrialConfig):
+def export_results(
+    results: list,
+    config: TrialConfig,
+    mongo_database: MongoDatabase | None = None,
+):
     logging.info("Exporting results...")
 
     results_exporter = ExportTrialResults(results)
-    results_exporter.to_json(config.results_json)
-    results_exporter.to_csv(config.results_csv)
+    if not config.no_json_export:
+        results_exporter.to_json(config.results_json)
+        logging.info("Results exported to: %s", config.results_json)
+    else:
+        logging.info("Skipping export to JSON as requested")
 
-    logging.info("Results exported to: %s, %s", config.results_json, config.results_csv)
+    if not config.no_csv_export:
+        results_exporter.to_csv(config.results_csv)
+        logging.info("Results exported to: %s", config.results_csv)
+    else:
+        logging.info("Skipping export to CSV as requested")
+
+    if mongo_database is not None:
+        results_exporter.to_mongodb(mongo_database)
+        logging.info("Results exported to MongoDB")
 
 
 def generate_plots(results, config: TrialConfig):
@@ -87,7 +106,9 @@ def generate_plots(results, config: TrialConfig):
     logging.info("Plots saved to: %s", config.plots_dir)
 
 
-def scan_events(results, config: TrialConfig):
+def scan_events(
+    results, config: TrialConfig, mongo_database: MongoDatabase | None = None
+):
     if config.no_events:
         logging.info("Skipping event scanning as requested")
         return
@@ -97,11 +118,25 @@ def scan_events(results, config: TrialConfig):
     scanner = TrialEventScanner(results)
     events = scanner.execute()
 
-    events_exporter = ExportTrialEvents(events)
-    events_exporter.to_json(config.events_json)
-    events_exporter.to_csv(config.events_csv)
+    logging.info("Exporting events...")
 
-    logging.info("Events exported to: %s, %s", config.events_json, config.events_csv)
+    events_exporter = ExportTrialEvents(events)
+
+    if not config.no_json_export:
+        events_exporter.to_json(config.events_json)
+        logging.info("Events exported to: %s", config.results_json)
+    else:
+        logging.info("Skipping export to JSON as requested")
+
+    if not config.no_csv_export:
+        events_exporter.to_csv(config.events_csv)
+        logging.info("Events exported to: %s", config.results_csv)
+    else:
+        logging.info("Skipping export to CSV as requested")
+
+    if mongo_database is not None:
+        events_exporter.to_mongodb(mongo_database)
+        logging.info("Events exported to MongoDB")
 
 
 def create_parser() -> argparse.ArgumentParser:
@@ -154,6 +189,14 @@ def create_parser() -> argparse.ArgumentParser:
 
     feature_group = parser.add_argument_group("Feature Toggles")
     feature_group.add_argument(
+        "--no-json-export",
+        action="store_true",
+    )
+    feature_group.add_argument(
+        "--no-csv-export",
+        action="store_true",
+    )
+    feature_group.add_argument(
         "--no-events",
         action="store_true",
     )
@@ -163,6 +206,10 @@ def create_parser() -> argparse.ArgumentParser:
     )
     feature_group.add_argument(
         "--with-arb",
+        action="store_true",
+    )
+    feature_group.add_argument(
+        "--with-mongo",
         action="store_true",
     )
 
@@ -180,6 +227,8 @@ def create_parser() -> argparse.ArgumentParser:
 def main():
     parser = create_parser()
     args = parser.parse_args()
+
+    load_dotenv()
 
     if args.options_json:
         if not args.options_json.exists():
@@ -201,10 +250,32 @@ def main():
     logging.info("  Output directory: %s", config.output_dir)
     logging.info("  Plots directory: %s", config.plots_dir)
 
+    mongo_database = None
+
+    if config.with_mongo:
+        logging.info("MongoDB export specified, attempting to connect...")
+        try:
+            mongo_database = MongoClient(
+                host=config.mongo_host,
+                port=config.mongo_port,
+                serverSelectionTimeoutMS=5000,
+                connectTimeoutMS=5000,
+                username=config.mongo_username,
+                password=config.mongo_password,
+                authSource=config.mongo_auth_source,
+            ).get_database(config.mongo_database)
+
+            mongo_database.client.admin.command("ping")
+        except PyMongoError:
+            logging.error("Connection to MongoDB failed, skipping this option")
+            mongo_database = None
+        else:
+            logging.info("Connection to MongoDB successful")
+
     results = execute_trial(config)
-    export_results(results, config)
+    export_results(results, config, mongo_database)
     generate_plots(results, config)
-    scan_events(results, config)
+    scan_events(results, config, mongo_database)
 
 
 if __name__ == "__main__":

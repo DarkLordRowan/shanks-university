@@ -1,7 +1,7 @@
 import json
+import os
 import pathlib
 from dataclasses import dataclass, field
-from typing import Optional
 
 
 @dataclass
@@ -12,16 +12,38 @@ class TrialConfig:
 
     output_dir: pathlib.Path = field(default=pathlib.Path("output"))
     plots_dir: pathlib.Path = field(default=pathlib.Path("plots"))
-    results_json: Optional[pathlib.Path] = None
-    results_csv: Optional[pathlib.Path] = None
-    events_json: Optional[pathlib.Path] = None
-    events_csv: Optional[pathlib.Path] = None
+    results_json: pathlib.Path | None = None
+    results_csv: pathlib.Path | None = None
+    events_json: pathlib.Path | None = None
+    events_csv: pathlib.Path | None = None
 
     trial_process_count: int = 1
     with_arb: bool = False
     no_events: bool = False
     no_plots: bool = False
+    no_csv_export: bool = False
+    no_json_export: bool = False
     verbose: int = 0
+
+    with_mongo: bool = False
+
+    mongo_host: str = field(
+        init=False,
+        default_factory=lambda: os.getenv("MONGO_HOST") or "localhost",
+    )
+    mongo_port: int = field(
+        init=False,
+        default_factory=lambda: int(os.getenv("MONGO_PORT") or 27017),
+    )
+    mongo_username: str | None = field(
+        init=False, default_factory=lambda: os.getenv("MONGO_USERNAME")
+    )
+    mongo_password: str | None = field(
+        init=False, default_factory=lambda: os.getenv("MONGO_PASSWORD")
+    )
+    mongo_database: str = field(default="trial_db")
+
+    mongo_auth_source: str = field(default="admin")
 
     def __post_init__(self):
         if self.results_json is None:
@@ -54,7 +76,10 @@ class ConfigLoader:
             with_arb=args.with_arb,
             no_events=args.no_events,
             no_plots=args.no_plots,
+            no_json_export=args.no_json,
+            no_csv_export=args.no_csv,
             verbose=args.verbose,
+            with_mongo=args.with_mongo,
         )
 
     @staticmethod
