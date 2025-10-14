@@ -8,8 +8,7 @@ from pymongo import MongoClient
 from pymongo.database import Database as MongoDatabase
 from pymongo.errors import PyMongoError
 from src.config import ConfigLoader, TrialConfig
-from src.events import TrialEventScanner
-from src.export import ExportTrialEvents, ExportTrialResults
+from src.export import ExportTrialResults
 from src.loaders import AccelParamLoader, SeriesParamLoader
 from src.logger import setup_logging
 from src.params import BaseAccelParam, BaseSeriesParam
@@ -106,39 +105,6 @@ def generate_plots(results, config: TrialConfig):
     logging.info("Plots saved to: %s", config.plots_dir)
 
 
-def scan_events(
-    results, config: TrialConfig, mongo_database: MongoDatabase | None = None
-):
-    if config.no_events:
-        logging.info("Skipping event scanning as requested")
-        return
-
-    logging.info("Scanning for events...")
-
-    scanner = TrialEventScanner(results)
-    events = scanner.execute()
-
-    logging.info("Exporting events...")
-
-    events_exporter = ExportTrialEvents(events)
-
-    if not config.no_json_export:
-        events_exporter.to_json(config.events_json)
-        logging.info("Events exported to: %s", config.results_json)
-    else:
-        logging.info("Skipping export to JSON as requested")
-
-    if not config.no_csv_export:
-        events_exporter.to_csv(config.events_csv)
-        logging.info("Events exported to: %s", config.results_csv)
-    else:
-        logging.info("Skipping export to CSV as requested")
-
-    if mongo_database is not None:
-        events_exporter.to_mongodb(mongo_database)
-        logging.info("Events exported to MongoDB")
-
-
 def create_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="pyshanks_consumer CLI")
 
@@ -177,8 +143,6 @@ def create_parser() -> argparse.ArgumentParser:
     )
     output_group.add_argument("--results-json", type=pathlib.Path, default=None)
     output_group.add_argument("--results-csv", type=pathlib.Path, default=None)
-    output_group.add_argument("--events-json", type=pathlib.Path, default=None)
-    output_group.add_argument("--events-csv", type=pathlib.Path, default=None)
 
     execution_group = parser.add_argument_group("Execution Settings")
     execution_group.add_argument(
@@ -273,9 +237,10 @@ def main():
             logging.info("Connection to MongoDB successful")
 
     results = execute_trial(config)
+    if not config.no_events:
+        results = list(map(lambda r: r.load_events(), results))
     export_results(results, config, mongo_database)
     generate_plots(results, config)
-    scan_events(results, config, mongo_database)
 
 
 if __name__ == "__main__":

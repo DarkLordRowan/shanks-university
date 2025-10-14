@@ -1,20 +1,21 @@
 import csv
-import datetime
 import io
 import json
 import pathlib
-import uuid
-from dataclasses import Field, asdict, dataclass, field, fields, is_dataclass
+from dataclasses import Field, asdict, fields, is_dataclass
 from typing import Any
 
 from pymongo.database import Database as MongoDatabase
-from src.events import TrialEvent
 from src.loaders import ArbEncoder
 from src.trial import TrialResult
 
 
-def auto_field_prefix(field: Field, prefix: str = "", separator: str = "_"):
-    return f"{prefix}{field.name}{separator}" if prefix else f"{field.name}{separator}"
+def auto_field_prefix(outer_field: Field, prefix: str = "", separator: str = "_"):
+    return (
+        f"{prefix}{outer_field.name}{separator}"
+        if prefix
+        else f"{outer_field.name}{separator}"
+    )
 
 
 def flatten_dataclass(
@@ -191,14 +192,6 @@ def dataclasses_to_json(dataclasses, location):
         )
 
 
-@dataclass
-class ExportMeta:
-    timestamp: str = field(
-        default_factory=lambda: str(datetime.datetime.now().isoformat())
-    )
-    stack_id: str = field(default_factory=lambda: str(uuid.uuid4()))
-
-
 class BaseExport:
     def __init__(self, data: list, location: pathlib.Path | None = None):
         self.location = location
@@ -212,9 +205,8 @@ class BaseExport:
         return [asdict(data) for data in self.data]
 
     def to_mongodb(self, mongo_database: MongoDatabase):
-        meta = ExportMeta()
         mongo_database.get_collection(self.mongodb_collection).insert_many(
-            [item | asdict(meta) for item in self.as_dict()],
+            self.as_dict()
         )
 
     def _verify_location(self, override_location):
@@ -253,9 +245,3 @@ class ExportTrialResults(BaseExport):
         super().__init__(results, location)
         self.expand_field = "computed"
         self.mongodb_collection: str = "trial_results"
-
-
-class ExportTrialEvents(BaseExport):
-    def __init__(self, events: list[TrialEvent], location: pathlib.Path | None = None):
-        super().__init__(events, location)
-        self.mongodb_collection: str = "trial_events"

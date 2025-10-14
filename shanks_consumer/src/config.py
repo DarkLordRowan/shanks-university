@@ -14,8 +14,6 @@ class TrialConfig:
     plots_dir: pathlib.Path = field(default=pathlib.Path("plots"))
     results_json: pathlib.Path | None = None
     results_csv: pathlib.Path | None = None
-    events_json: pathlib.Path | None = None
-    events_csv: pathlib.Path | None = None
 
     trial_process_count: int = 1
     with_arb: bool = False
@@ -50,10 +48,6 @@ class TrialConfig:
             self.results_json = self.output_dir / "output.json"
         if self.results_csv is None:
             self.results_csv = self.output_dir / "output.csv"
-        if self.events_json is None:
-            self.events_json = self.output_dir / "events.json"
-        if self.events_csv is None:
-            self.events_csv = self.output_dir / "events.csv"
 
         self.output_dir.mkdir(parents=True, exist_ok=True)
         self.plots_dir.mkdir(parents=True, exist_ok=True)
@@ -70,8 +64,6 @@ class ConfigLoader:
             plots_dir=args.plots_dir,
             results_json=args.results_json,
             results_csv=args.results_csv,
-            events_json=args.events_json,
-            events_csv=args.events_csv,
             trial_process_count=args.trial_process_count,
             with_arb=args.with_arb,
             no_events=args.no_events,
