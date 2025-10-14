@@ -16,6 +16,8 @@ class TrialConfig:
     results_csv: pathlib.Path | None = None
 
     trial_process_count: int = 1
+    trial_task_timeout: int = 10
+
     with_arb: bool = False
     no_events: bool = False
     no_plots: bool = False
@@ -65,6 +67,7 @@ class ConfigLoader:
             results_json=args.results_json,
             results_csv=args.results_csv,
             trial_process_count=args.trial_process_count,
+            trial_task_timeout=args.trial_task_timeout,
             with_arb=args.with_arb,
             no_events=args.no_events,
             no_plots=args.no_plots,

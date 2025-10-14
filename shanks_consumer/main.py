@@ -61,7 +61,10 @@ def execute_trial(config: TrialConfig):
     series_params, accel_params = load_parameters(config)
 
     trial = ComplexTrial(
-        series_params, accel_params, process_count=config.trial_process_count
+        series_params,
+        accel_params,
+        process_count=config.trial_process_count,
+        task_timeout=config.trial_task_timeout,
     )
     results = trial.execute()
 
@@ -149,6 +152,12 @@ def create_parser() -> argparse.ArgumentParser:
         "--trial-process-count",
         type=int,
         default=1,
+    )
+
+    execution_group.add_argument(
+        "--trial-task-timeout",
+        type=int,
+        default=10,
     )
 
     feature_group = parser.add_argument_group("Feature Toggles")

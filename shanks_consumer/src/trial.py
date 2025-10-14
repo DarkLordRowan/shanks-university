@@ -1,4 +1,5 @@
 import itertools
+import logging
 import multiprocessing as mp
 import uuid
 from dataclasses import asdict, dataclass, field
@@ -6,6 +7,9 @@ from typing import Any, Callable, Generator, Iterable, Mapping
 
 from pyshanks import Arb
 from src.params import BaseAccelParam, BaseSeriesParam
+from tqdm import tqdm
+
+logger = logging.getLogger(__name__)
 
 
 def cartesian_dicts(
@@ -128,6 +132,7 @@ def execute_trial(
 ) -> list[TrialResult]:
     results = []
     series, accel = series_accel
+
     for argument, m_value, additional_args in itertools.product(
         [
             dict(zip(series.arguments.keys(), values))
@@ -197,7 +202,8 @@ class ComplexTrial:
 
     stack_id: str = field(default_factory=lambda: str(uuid.uuid4()))
     chunk_size: int = 1
-    process_count: int | None = None
+    process_count: int = 1
+    task_timeout: int = 10
 
     _trial_combinations: list[tuple[BaseSeriesParam, BaseAccelParam]] = field(
         init=False
@@ -226,30 +232,64 @@ class ComplexTrial:
             mp.cpu_count(), len(self._trial_combinations)
         )
 
-        if num_processes == 1:
-            return self._execute_sequential()
-
         try:
             with mp.Pool(processes=num_processes) as pool:
-                chunked_results = pool.imap_unordered(
-                    execute_trial,
-                    self._trial_combinations,
-                    chunksize=self.chunk_size,
-                )
                 results = []
-                for trial_results in chunked_results:
-                    results.extend(trial_results)
 
+                pending_tasks = [
+                    (
+                        pool.apply_async(execute_trial, (combination,)),
+                        combination,
+                    )
+                    for combination in self._trial_combinations
+                ]
+
+                with tqdm(
+                    total=len(self._trial_combinations),
+                    desc="Running trials",
+                    unit="trial",
+                    ncols=100,
+                ) as pbar:
+                    for async_result, combination in pending_tasks:
+                        try:
+                            trial_results = async_result.get(timeout=self.task_timeout)
+                            if trial_results:
+                                results.extend(trial_results)
+                        except mp.TimeoutError:
+                            series, accel = combination
+                            results.append(
+                                TrialResult(
+                                    SeriesTrialResult(
+                                        name=series.series_name,
+                                        lim=None,
+                                        arguments={},
+                                    ),
+                                    AccelTrialResult(
+                                        name=accel.accel_name,
+                                        m_value=-1,
+                                        additional_args={},
+                                    ),
+                                    computed=[],
+                                    error=ErrorTrialResult(
+                                        "Trial execution failed:"
+                                        " execution time exceeded "
+                                        f"{self.task_timeout} seconds",
+                                        data={
+                                            "series": series,
+                                            "accel": accel,
+                                        },
+                                    ),
+                                )
+                            )
+                        finally:
+                            pbar.update(1)
                 return results
         except Exception:
-            # TODO log it pls
+            # ! emergency fallback
             return self._execute_sequential()
 
     def execute(self) -> list[TrialResult]:
-        if self.process_count:
-            results = self._execute_parallel()
-        else:
-            results = self._execute_sequential()
+        results = self._execute_parallel()
 
         for result in results:
             result.stack_id = self.stack_id
