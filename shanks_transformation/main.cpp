@@ -451,13 +451,13 @@ int main()
 
 
 	//using typeA = double;
-	//using typeA = complex_precision<float_precision>;
-	using typeA = float_precision;
+	using typeA = complex_precision<float_precision>;
+	//using typeA = float_precision;
 	//using typeA = complex_precision<double>;
 	using typeB = unsigned long long int;
-	typeA x(4, 200);
+	//typeA x(4, 200);
 	//typeA x(1,1);
-	//typeA x(float_precision(1, 50), float_precision(1, 50));
+	typeA x(float_precision(1, 50), float_precision(1, 50));
 	// std::cout << x << "\n";
 	//typeA x(1.0);
 
