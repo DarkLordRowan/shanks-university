@@ -115,8 +115,8 @@ T shanks_algorithm<T, K>::operator()(
 		return result;
 	}
 	//n > order >= 1
-	if (n <= order){
-		throw std::invalid_argument("n is less or equal than order");
+	if (n < order){
+		throw std::invalid_argument("n is less than order");
 	}
 
 	std::vector<T> T_n(
@@ -257,8 +257,8 @@ float_precision shanks_algorithm<float_precision, K>::operator()(
 	}
 	//n > order >= 1
 
-	if (n <= order){
-		throw std::invalid_argument("n is less or equal than order");
+	if (n < order){
+		throw std::invalid_argument("n is less than order");
 	}
 
 	std::vector<float_precision> T_n(
@@ -361,8 +361,8 @@ complex_precision<float_precision> shanks_algorithm<complex_precision<float_prec
         return data.Sn.at(n);
     }
 
-	if (n <= order){
-		throw std::invalid_argument("n is less or equal than order");
+	if (n < order){
+		throw std::invalid_argument("n is less than order");
 	}
 
     using std::isfinite;

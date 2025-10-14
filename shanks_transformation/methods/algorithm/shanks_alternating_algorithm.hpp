@@ -98,8 +98,8 @@ T shanks_transform_alternating<T, K>::operator()(
 		return result;
 	}
 	//n > order >= 1
-	if (n <= order){
-		throw std::invalid_argument("n is less or equal than order");
+	if (n < order){
+		throw std::invalid_argument("n is less than order");
 	}
 
 	std::vector<T> T_n(
@@ -239,8 +239,8 @@ float_precision shanks_transform_alternating<float_precision, K>::operator()(
 		return result;
 	}
 	//n > order >= 1
-	if (n <= order){
-		throw std::invalid_argument("n is less or equal than order");
+	if (n < order){
+		throw std::invalid_argument("n is less than order");
 	}
 
 	std::vector<float_precision> T_n(
@@ -380,8 +380,8 @@ complex_precision<float_precision> shanks_transform_alternating<complex_precisio
 		return result;
 	}
 	//n > order >= 1
-	if (n <= order){
-		throw std::invalid_argument("n is less or equal than order");
+	if (n < order){
+		throw std::invalid_argument("n is less than order");
 	}
 
 	std::vector<complex_precision<float_precision>> T_n(
