@@ -9,7 +9,12 @@
 #endif
 
 template<typename T>
-concept FloatLike = std::is_floating_point<T>::value || std::is_same<T, float_precision>::value;
+concept FloatLike =
+    #ifdef INC_FPRECISION
+        std::is_same<T, float_precision>::value ||
+    #endif
+    std::is_floating_point<T>::value 
+    ;
 
 #ifdef INC_COMPLEXPRECISION
 template<typename T>
@@ -18,16 +23,20 @@ struct isComplexLike : std::integral_constant<bool,
         std::is_same<T, complex_precision<double>>::value ||
         std::is_same<T, complex_precision<long double>>::value ||
         #ifdef INC_FPRECISION
-            std::is_same<T, complex_precision<float_precision>>::value>{};
+            std::is_same<T, complex_precision<float_precision>>::value>
         #endif
-#endif
+        {};
 
 template<typename T>
 concept ComplexLike =
+    #ifdef INC_FPRECISION
+        std::is_same<T, complex_precision<float_precision>>::value ||
+    #endif
     std::is_same<T, complex_precision<float>>::value  ||
     std::is_same<T, complex_precision<double>>::value ||
-    std::is_same<T, complex_precision<long double>>::value ||
-    std::is_same<T, complex_precision<float_precision>>::value;;
+    std::is_same<T, complex_precision<long double>>::value;
+#endif
+
 
 template<typename T>
 concept AcceptedLike = requires{ 
@@ -39,29 +48,5 @@ concept UnsignedIntLike = requires {
     std::is_integral<K>::value && !std::is_signed<K>::value;
 };
 
-template<AcceptedLike T>
-T convertWithPrec(float realPart, size_t precision) {
-
-    if constexpr(std::is_same<T, float_precision>::value){
-        return float_precision(realPart, precision, ROUND_NEAR);
-    } else if constexpr(std::is_same<T, complex_precision<float_precision>>::value){
-        
-        return complex_precision<float_precision>(
-            float_precision(realPart, precision, ROUND_NEAR),
-            float_precision(0, precision, ROUND_NEAR)
-        );
-    } else {
-        return static_cast<T>(realPart);
-    }
-}
-
-template<AcceptedLike T, UnsignedIntLike K>
-T minus_one_raised_to_power_n(K j){
-    return static_cast<T>(j & 1 ? -1 : 1);
-}
-
-template<AcceptedLike T>
-struct SeriesResult{
-	std::vector<T> Sn;
-	std::vector<T> an;
-};
+template<typename K>
+struct isUnsignedIntLike : std::integral_constant<bool, std::is_integral<K>::value && !std::is_signed<K>::value>{};
