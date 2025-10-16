@@ -618,7 +618,7 @@ inline float_precision::float_precision( long i, const size_t p = float_precisio
 	mSign = +1;
 	//mNumber.resize(2, 0);
 	if (i < 0) mSign = -1;
-	mNumber.assign( 1, abs(i) );
+	mNumber.assign( 1, std::abs(i) );
 	if (i != 0)
 		mExpo += _float_precision_normalize(mNumber);
 	}
@@ -668,7 +668,7 @@ inline float_precision::float_precision( long long i, const size_t p = float_pre
 	mSign = +1;
 	//mNumber.resize(2, 0);
 	if (i < 0) mSign = -1;
-	mNumber.assign( 1, abs(i) );
+	mNumber.assign( 1, std::abs(i) );
 	if (i != 0)
 		mExpo += _float_precision_normalize(mNumber);
 	}

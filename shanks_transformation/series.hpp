@@ -13,7 +13,6 @@
  * 8 - ln1mx_series
  * 9 - mean_sinh_sin_series
  * 10 - exp_squared_erf_series
- * 11 - xmb_Jb_two_series
  * 12 - half_asin_two_x_series
  * 13 - inverse_1mx_series
  * 14 - x_1mx_squared_series
@@ -97,7 +96,6 @@
  *  92 - two_degree_x_series
  *  93 - sqrt_1plusx_min_1_min_x_div_2_series
  *  94 - ln13_min_ln7_div_7_series
- *  95 - Ja_x_series
  *  96 - one_div_sqrt2_sin_xdivsqrt2_series
  *  97 - ln_1plusx_div_1plusx2_series
  *  98 - cos_sqrt_x_series
@@ -141,7 +139,6 @@ enum series_id_t {
 										  incomplete_Gamma_func_series_id,
 												    inverse_1mx_series_id,
 											  inverse_sqrt_1m4x_series_id,
-//														   Ja_x_series_id,
 															k_x_series_id,
 												 lambert_W_func_series_id,
 											 ln13_min_ln7_div_7_series_id,
@@ -204,7 +201,6 @@ pi_x_multi_e_xpi_plus_e_minusxpi_divided_e_xpi_minus_e_minusxpi_series_id,
 				    							  x_1mx_squared_series_id,
 				    							   x_div_1minx2_series_id,
 				    								x_div_1minx_series_id,
-//				    								 xmb_Jb_two_series_id,
 				    							   x_min_sqrt_x_series_id,
 				    								 		  x_series_id,
 				    xsquareplus3_div_xsquareplus2multix_minus_1_series_id,
@@ -245,7 +241,6 @@ pi_x_multi_e_xpi_plus_e_minusxpi_divided_e_xpi_minus_e_minusxpi_series_id,
 #include "./series/serieses/incomplete_Gamma_func_series.hpp"
 #include "./series/serieses/inverse_1mx_series.hpp"
 #include "./series/serieses/inverse_sqrt_1m4x_series.hpp"
-//#include "./series/serieses/Ja_x_series.hpp"
 #include "./series/serieses/k_x_series.hpp"
 #include "./series/serieses/lambert_W_func_series.hpp"
 #include "./series/serieses/ln13_min_ln7_div_7_series.hpp"
@@ -308,7 +303,6 @@ pi_x_multi_e_xpi_plus_e_minusxpi_divided_e_xpi_minus_e_minusxpi_series_id,
 #include "./series/serieses/x_1mx_squared_series.hpp"
 #include "./series/serieses/x_div_1minx2_series.hpp"
 #include "./series/serieses/x_div_1minx_series.hpp"
-//#include "./series/serieses/xmb_Jb_two_series.hpp"
 #include "./series/serieses/x_min_sqrt_x_series.hpp"
 #include "./series/serieses/x_series.hpp"
 #include "./series/serieses/xsquareplus3_div_xsquareplus2multix_minus_1_series.hpp"

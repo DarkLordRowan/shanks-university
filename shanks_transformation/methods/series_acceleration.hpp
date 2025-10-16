@@ -12,6 +12,7 @@
 
 #include "../custom_concepts.hpp"
 #include "../series/series_base.hpp"
+#include "../utils.hpp"
 
 #include <iostream>
 
