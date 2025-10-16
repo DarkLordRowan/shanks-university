@@ -4,7 +4,7 @@ import pathlib
 from typing import Any, Iterable, Iterator
 
 import pyshanks as ps
-from src.params import AccelParamJSON, SeriesParamCSV, SeriesParamJSON
+from src.run.params import AccelParamJSON, SeriesParamCSV, SeriesParamJSON
 
 
 class JSONConfigHandler:

@@ -6,7 +6,7 @@ from dataclasses import asdict, dataclass, field
 from typing import Any, Callable, Generator, Iterable, Mapping
 
 from pyshanks import Arb
-from src.params import BaseAccelParam, BaseSeriesParam
+from src.run.params import BaseAccelParam, BaseSeriesParam
 from tqdm import tqdm
 
 logger = logging.getLogger(__name__)

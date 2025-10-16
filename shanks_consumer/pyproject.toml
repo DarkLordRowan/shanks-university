@@ -13,6 +13,8 @@ dependencies = [
     "mongo (>=0.2.0,<0.3.0)",
     "dotenv (>=0.9.9,<0.10.0)",
     "tqdm (>=4.67.1,<5.0.0)",
+    "seaborn (>=0.13.2,<0.14.0)",
+    "pandas (>=2.3.3,<3.0.0)",
 ]
 
 
@@ -26,8 +28,8 @@ packages = [
 ]
 
 [tool.poetry.group.dev.dependencies]
-mypy = "^1.18.2"
 pre-commit = "^4.3.0"
+mypy = "^1.18.2"
 
 [tool.pylint.MASTER]
 extension-pkg-allow-list = ["pyshanks"]

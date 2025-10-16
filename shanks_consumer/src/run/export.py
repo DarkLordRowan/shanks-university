@@ -6,8 +6,8 @@ from dataclasses import Field, asdict, fields, is_dataclass
 from typing import Any
 
 from pymongo.database import Database as MongoDatabase
-from src.loaders import ArbEncoder
-from src.trial import TrialResult
+from src.run.loaders import ArbEncoder
+from src.run.trial import TrialResult
 
 
 def auto_field_prefix(outer_field: Field, prefix: str = "", separator: str = "_"):
@@ -240,8 +240,11 @@ class BaseExport:
 
 class ExportTrialResults(BaseExport):
     def __init__(
-        self, results: list[TrialResult], location: pathlib.Path | None = None
+        self,
+        results: list[TrialResult],
+        mongodb_collection: str = "trial_results",
+        location: pathlib.Path | None = None,
     ):
         super().__init__(results, location)
         self.expand_field = "computed"
-        self.mongodb_collection: str = "trial_results"
+        self.mongodb_collection = mongodb_collection
