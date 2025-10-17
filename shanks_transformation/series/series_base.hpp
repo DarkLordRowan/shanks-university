@@ -47,7 +47,7 @@ public:
 	 * @param vecSize 
 	 * @return std::vector<T> 
 	 */
-	virtual SeriesResult<T> generateSeries(
+	virtual SeriesResult<T> generate_series(
 		const T& x , 
 		const K vecSize, 
 		const T& addTParameter = static_cast<T>(1),
@@ -57,7 +57,7 @@ public:
 
 protected:
 
-	void initVecsWithPrec(std::vector<T>& vecSn, std::vector<T>& vecAn, size_t vecSize, const T& x){
+	void init_vecs_with_prec(std::vector<T>& vecSn, std::vector<T>& vecAn, size_t vecSize, const T& x){
 		size_t precision = 0;
     	if constexpr ( std::is_same<T, float_precision> :: value ){
 			precision = x.precision();

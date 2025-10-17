@@ -20,14 +20,14 @@ public:
 	*/
 	explicit pi_x_minus_x_square_square_minus_three_pi_x_plus_two_pi_square_series() : series_base<T, K>("pi_x_minus_x_square_square_minus_three_pi_x_plus_two_pi_square_series") {};
 
-	virtual SeriesResult<T> generateSeries(
+	virtual SeriesResult<T> generate_series(
         const T& x , 
 		const K vecSize, 
 		const T& addTParameter = static_cast<T>(1),
 		const K addKParameter = static_cast<K>(1)
     ) override;
 
-	inline constexpr bool checkDomain(const T& x){
+	inline constexpr bool check_domain(const T& x){
 		
 		using std::isfinite;
 
@@ -39,7 +39,7 @@ public:
         }
 	}
 
-	inline constexpr T calculateSum(const T& x){
+	inline constexpr T calculate_summ(const T& x){
 
 		if constexpr (isComplexLike<T>::value){
             if (float_precision(x.real()) <= float_precision(std::numbers::pi)){
@@ -60,24 +60,24 @@ public:
 };
 
 template<AcceptedLike T, UnsignedIntLike K>
-SeriesResult<T> pi_x_minus_x_square_square_minus_three_pi_x_plus_two_pi_square_series<T, K>::generateSeries(
+SeriesResult<T> pi_x_minus_x_square_square_minus_three_pi_x_plus_two_pi_square_series<T, K>::generate_series(
     const T& x , 
 	const K vecSize, 
 	const T& addTParameter,
 	const K addKParameter
 ) {
 
-	if(checkDomain(x)){
+	if(check_domain(x)){
 		series_base<T, K>::throw_domain_error("x is not finite or Re(x)<=0 or Re(x)>=2pi");
 	}
 
 	series_base<T,K>::x_ = x;
-	series_base<T,K>::sum = calculateSum(x);
+	series_base<T,K>::sum = calculate_summ(x);
 
 	std::vector<T> vecAn;
 	std::vector<T> vecSn;
 
-	series_base<T,K>::initVecsWithPrec(vecSn,vecAn, vecSize, x);
+	series_base<T,K>::init_vecs_with_prec(vecSn,vecAn, vecSize, x);
 
     using std::sin;
 

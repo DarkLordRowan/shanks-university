@@ -1609,7 +1609,7 @@ inline static void main_testing_function()
 	std::cout << "Enter n and order:" << '\n';
 	K n = read_input<K>();
 	K order = read_input<K>();
-	SeriesResult<T> result = series->generateSeries(x, n + 3 * order + 1, tParam, kParam);
+	SeriesResult<T> result = series->generate_series(x, n + 3 * order + 1, tParam, kParam);
 
 	std::string answer = "ok";
 	while(answer != "Y" && answer != "Yes" && answer != "N" && answer != "No"){
@@ -1620,7 +1620,7 @@ inline static void main_testing_function()
 		size_t noise_type;
 		std::cout << "Noise type: uniform[0], normal[1], poisson[2]\n";
 		std::cin >> noise_type; std::cout << "\n";
-		NoiseGenerator<T> gen = NoiseGenerator<T>(static_cast<NoiseType>(noise_type), 42);
+		noise_generator<T> gen = noise_generator<T>(static_cast<NoiseType>(noise_type), 42);
 		result = gen.jitter(result, 0.05, 1e-6);
 	}
 
