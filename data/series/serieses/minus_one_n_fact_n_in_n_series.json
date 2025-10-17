@@ -1,6 +1,10 @@
 {
-    "id": "minus_one_n_fact_n_in_n_series",
-    "title": "",
-    "formula": "",
-    "document": "Rows.docx"
+  "id": "minus_one_n_fact_n_in_n_series",
+  "num": 38,
+  "title": "-0.65583160\\,x",
+  "formula": "\\sum_{n=0}^{\\infty}\\frac{(-1)^{n+1}(n+1)!\\,x}{(n+1)^{(n+1)}}=-0.65583160\\,x",
+  "x_from": "-\\infty",
+  "x_to": "+\\infty",
+  "speed": "superexponential",
+  "document": "series.docx"
 }
