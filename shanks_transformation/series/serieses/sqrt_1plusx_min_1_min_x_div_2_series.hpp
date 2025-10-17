@@ -20,7 +20,7 @@ public:
 	*/
 	explicit sqrt_1plusx_min_1_min_x_div_2_series() : series_base<T, K>("sqrt_1plusx_min_1_min_x_div_2_series") {};
 
-	virtual SeriesResult<T> generate_series(
+	virtual series_result<T> generate_series(
         const T& x , 
 		const K vecSize, 
 		const T& addTParameter = static_cast<T>(1),
@@ -48,7 +48,7 @@ public:
 };
 
 template<AcceptedLike T, UnsignedIntLike K>
-SeriesResult<T> sqrt_1plusx_min_1_min_x_div_2_series<T, K>::generate_series(
+series_result<T> sqrt_1plusx_min_1_min_x_div_2_series<T, K>::generate_series(
     const T& x , 
 	const K vecSize, 
 	const T& addTParameter,
@@ -76,6 +76,6 @@ SeriesResult<T> sqrt_1plusx_min_1_min_x_div_2_series<T, K>::generate_series(
 		vecSn[j] += vecSn[j-static_cast<K>(1)] + vecAn[j];
 	}
 
-	return SeriesResult<T>{.Sn = vecSn, .an = vecAn };
+	return series_result<T>{.Sn = vecSn, .an = vecAn };
 
 }

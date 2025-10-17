@@ -21,7 +21,7 @@ public:
 	*/
 	explicit ln_1plussqrt1plusxsquare_minus_ln_2_series() : series_base<T, K>("ln_1plussqrt1plusxsquare_minus_ln_2_series") {};
 
-	virtual SeriesResult<T> generate_series(
+	virtual series_result<T> generate_series(
         const T& x , 
 		const K vecSize, 
 		const T& addTParameter = static_cast<T>(1),
@@ -50,7 +50,7 @@ public:
 };
 
 template<AcceptedLike T, UnsignedIntLike K>
-SeriesResult<T> ln_1plussqrt1plusxsquare_minus_ln_2_series<T, K>::generate_series(
+series_result<T> ln_1plussqrt1plusxsquare_minus_ln_2_series<T, K>::generate_series(
     const T& x , 
 	const K vecSize, 
 	const T& addTParameter,
@@ -77,6 +77,6 @@ SeriesResult<T> ln_1plussqrt1plusxsquare_minus_ln_2_series<T, K>::generate_serie
 		vecSn[j] += vecSn[j-static_cast<K>(1)] + vecAn[j];
 	}
 
-	return SeriesResult<T>{.Sn = vecSn, .an = vecAn };
+	return series_result<T>{.Sn = vecSn, .an = vecAn };
 
 }

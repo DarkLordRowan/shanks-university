@@ -47,7 +47,7 @@ public:
 	 * @param vecSize 
 	 * @return std::vector<T> 
 	 */
-	virtual SeriesResult<T> generate_series(
+	virtual series_result<T> generate_series(
 		const T& x , 
 		const K vecSize, 
 		const T& addTParameter = static_cast<T>(1),

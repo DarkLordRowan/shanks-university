@@ -20,7 +20,7 @@ public:
 	*/
 	explicit x_min_sqrt_x_series() : series_base<T, K>("x_min_sqrt_x_series") {};
 
-	virtual SeriesResult<T> generate_series(
+	virtual series_result<T> generate_series(
         const T& x , 
 		const K vecSize, 
 		const T& addTParameter = static_cast<T>(1),
@@ -48,7 +48,7 @@ public:
 };
 
 template<AcceptedLike T, UnsignedIntLike K>
-SeriesResult<T> x_min_sqrt_x_series<T, K>::generate_series(
+series_result<T> x_min_sqrt_x_series<T, K>::generate_series(
     const T& x , 
 	const K vecSize, 
 	const T& addTParameter,
@@ -77,6 +77,6 @@ SeriesResult<T> x_min_sqrt_x_series<T, K>::generate_series(
 
 	vecAn[0]+=x;
 
-	return SeriesResult<T>{.Sn = vecSn, .an = vecAn };
+	return series_result<T>{.Sn = vecSn, .an = vecAn };
 
 }

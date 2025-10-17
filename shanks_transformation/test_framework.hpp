@@ -1609,7 +1609,7 @@ inline static void main_testing_function()
 	std::cout << "Enter n and order:" << '\n';
 	K n = read_input<K>();
 	K order = read_input<K>();
-	SeriesResult<T> result = series->generate_series(x, n + 3 * order + 1, tParam, kParam);
+	series_result<T> result = series->generate_series(x, n + 3 * order + 1, tParam, kParam);
 
 	std::string answer = "ok";
 	while(answer != "Y" && answer != "Yes" && answer != "N" && answer != "No"){

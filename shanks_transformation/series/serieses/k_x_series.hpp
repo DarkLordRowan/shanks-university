@@ -20,7 +20,7 @@ public:
 	*/
 	explicit k_x_series() : series_base<T, K>("k_x_series") {};
 
-	virtual SeriesResult<T> generate_series(
+	virtual series_result<T> generate_series(
         const T& x , 
 		const K vecSize, 
 		const T& addTParameter = static_cast<T>(1),
@@ -47,7 +47,7 @@ public:
 };
 
 template<AcceptedLike T, UnsignedIntLike K>
-SeriesResult<T> k_x_series<T, K>::generate_series(
+series_result<T> k_x_series<T, K>::generate_series(
     const T& x , 
 	const K vecSize, 
 	const T& addTParameter,
@@ -74,6 +74,6 @@ SeriesResult<T> k_x_series<T, K>::generate_series(
 		vecSn[j] += vecSn[j-static_cast<K>(1)] + vecAn[j];
 	}
 
-	return SeriesResult<T>{.Sn = vecSn, .an = vecAn };
+	return series_result<T>{.Sn = vecSn, .an = vecAn };
 
 }

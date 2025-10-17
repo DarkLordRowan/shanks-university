@@ -70,7 +70,7 @@ T inputCustomType(std::string varName = "x"){
 template <AcceptedLike T, std::unsigned_integral K>
 void cmp_sum_and_transform(const K n, const K order, 
 	series_base<T,K>* series,
-	SeriesResult<T>& result,
+	series_result<T>& result,
 	const series_acceleration<T,K>* test)
 {
 
@@ -111,7 +111,7 @@ void cmp_sum_and_transform(const K n, const K order,
 template <AcceptedLike T, std::unsigned_integral K>
 void cmp_a_n_and_transform(const K n, const K order,
 	series_base<T,K>* series, 
-	SeriesResult<T>& result,
+	series_result<T>& result,
 	const series_acceleration<T,K>* test
 )
 {
@@ -143,7 +143,7 @@ void cmp_a_n_and_transform(const K n, const K order,
  * @tparam ParamType The type of the noise parameters
  *
  * @param source The original series to which noise will be applied
- * Valid values: any SeriesResult<T>.
+ * Valid values: any series_result<T>.
  * @param noise_type The type of noise to apply
  * Valid values: NoiseType::uniform, NoiseType::normal, NoiseType::poisson.
  * @param param1 The first parameter for the noise generation.\n
@@ -159,11 +159,11 @@ void cmp_a_n_and_transform(const K n, const K order,
  * @param seed The seed for the random number generator (default is based on current time and random value)\n
  * Valid values: any positive integer.
  *
- * @return A new SeriesResult<T> with noise applied
+ * @return A new series_result<T> with noise applied
  */
 template<AcceptedLike T, AcceptedLike ParamType>
-inline static SeriesResult<T> jitter(
-	const SeriesResult<T>& source,
+inline static series_result<T> jitter(
+	const series_result<T>& source,
 	NoiseType noise_type,
 	ParamType param1,
 	ParamType param2 = ParamType{},
@@ -188,7 +188,7 @@ inline static SeriesResult<T> jitter(
 template <AcceptedLike T, std::unsigned_integral K>
 void transformation_remainders(const K n, const K order, 
 	series_base<T,K>* series,
-	SeriesResult<T>& result,
+	series_result<T>& result,
 	const series_acceleration<T,K>* test
 )
 {	
@@ -226,7 +226,7 @@ void transformation_remainders(const K n, const K order,
 template <AcceptedLike T, std::unsigned_integral K>
 void cmp_transformations(const K n, const K order, 
 	series_base<T,K>* series,
-	SeriesResult<T>& result,
+	series_result<T>& result,
 	const series_acceleration<T,K>* test_1, 
 	const series_acceleration<T,K>* test_2
 )
@@ -277,7 +277,7 @@ void cmp_transformations(const K n, const K order,
 template <AcceptedLike T, std::unsigned_integral K>
 void eval_transform_time(const K n, const K order, 
 	series_base<T,K>* series,
-	SeriesResult<T>& result,
+	series_result<T>& result,
 	const series_acceleration<T,K>* test
 )
 {
@@ -308,7 +308,7 @@ void test_all_transforms(
 	const K n, 
 	const K order, 
 	series_base<T,K>* series,
-	SeriesResult<T>& result
+	series_result<T>& result
 ){
 
 	std::unordered_map<transformation_id_t, std::function<std::unique_ptr<series_acceleration<T,K>>(void)>> algoInit = {

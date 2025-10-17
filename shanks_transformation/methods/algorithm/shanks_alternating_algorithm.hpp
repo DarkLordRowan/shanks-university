@@ -47,7 +47,7 @@ public:
 	T operator()(
         const K n, 
     	const K order,
-		const SeriesResult<T>& data
+		const series_result<T>& data
 	) const override;
 
 };
@@ -56,7 +56,7 @@ template <AcceptedLike T, UnsignedIntLike K>
 T shanks_transform_alternating<T, K>::operator()(
 	const K n, 
     const K order,
-	const SeriesResult<T>& data
+	const series_result<T>& data
 ) const {
 
     K required_size = order + n + static_cast<K>(1);
@@ -192,7 +192,7 @@ public:
 	float_precision operator()(
         const K n, 
     	const K order,
-		const SeriesResult<float_precision>& data
+		const series_result<float_precision>& data
 	) const override;
 
 };
@@ -201,7 +201,7 @@ template <UnsignedIntLike K>
 float_precision shanks_transform_alternating<float_precision, K>::operator()(
 	const K n, 
     const K order,
-	const SeriesResult<float_precision>& data
+	const series_result<float_precision>& data
 ) const {
 
     K required_size = order + n + static_cast<K>(1);
@@ -327,7 +327,7 @@ public:
 	complex_precision<float_precision> operator()(
         const K n, 
     	const K order,
-		const SeriesResult<complex_precision<float_precision>>& data
+		const series_result<complex_precision<float_precision>>& data
 	) const override;
 
 };
@@ -336,7 +336,7 @@ template <UnsignedIntLike K>
 complex_precision<float_precision> shanks_transform_alternating<complex_precision<float_precision>, K>::operator()(
 	const K n, 
     const K order,
-	const SeriesResult<complex_precision<float_precision>>& data
+	const series_result<complex_precision<float_precision>>& data
 ) const {
 
     K required_size = order + n + static_cast<K>(1);

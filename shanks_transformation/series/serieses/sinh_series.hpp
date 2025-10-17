@@ -20,7 +20,7 @@ public:
 	*/
 	explicit sinh_series() : series_base<T, K>("sinh_series") {};
 
-	virtual SeriesResult<T> generate_series(
+	virtual series_result<T> generate_series(
         const T& x, 
 		const K vecSize, 
 		const T& addTParameter,
@@ -48,7 +48,7 @@ public:
 };
 
 template<AcceptedLike T, UnsignedIntLike K>
-SeriesResult<T> sinh_series<T, K>::generate_series(
+series_result<T> sinh_series<T, K>::generate_series(
     const T& x , 
 	const K vecSize, 
 	const T& addTParameter,
@@ -75,6 +75,6 @@ SeriesResult<T> sinh_series<T, K>::generate_series(
 		vecSn[j] += vecSn[j-static_cast<K>(1)] + vecAn[j];
 	}
 
-	return SeriesResult<T>{.Sn = vecSn, .an = vecAn };
+	return series_result<T>{.Sn = vecSn, .an = vecAn };
 
 }

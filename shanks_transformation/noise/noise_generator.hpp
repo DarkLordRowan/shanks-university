@@ -384,10 +384,10 @@ public:
      * @param tParam1 First parameter for noise generation (e.g., lower bound for uniform, mean for normal, lambda for poisson).
      * @param tParam2 Second parameter for noise generation (e.g., upper bound for uniform, std deviation for normal). Not used for poisson.
      *
-     * @return A new SeriesResult with jitter noise applied.
+     * @return A new series_result with jitter noise applied.
      */
     template<AcceptedLike paramType>
-    SeriesResult<T> jitter(const SeriesResult<T>& result, const paramType& tParam1, const paramType& tParam2 = paramType{}) {
+    series_result<T> jitter(const series_result<T>& result, const paramType& tParam1, const paramType& tParam2 = paramType{}) {
 
         std::vector<T> newSn;
         std::vector<T> newAn;
@@ -418,7 +418,7 @@ public:
             }
         }
 
-        return SeriesResult<T>{.Sn = newSn, .an = newAn};
+        return series_result<T>{.Sn = newSn, .an = newAn};
     };
 
     /** @brief Applies scaling noise to a series result.
@@ -432,10 +432,10 @@ public:
      * @param tParam1 First parameter for noise generation (e.g., lower bound for uniform, mean for normal, lambda for poisson).
      * @param tParam2 Second parameter for noise generation (e.g., upper bound for uniform, std deviation for normal). Not used for poisson.
      *
-     * @return A new SeriesResult with scaling noise applied.
+     * @return A new series_result with scaling noise applied.
      */
     template<AcceptedLike paramType>
-    SeriesResult<T> scaling(const SeriesResult<T>& result, const paramType& tParam1, const paramType& tParam2 = paramType{}) {
+    series_result<T> scaling(const series_result<T>& result, const paramType& tParam1, const paramType& tParam2 = paramType{}) {
         std::vector<T> newSn;
         std::vector<T> newAn;
 
@@ -464,7 +464,7 @@ public:
                 newSn.push_back(newSn[i - 1] + newAn[i]);
             }
         }
-        return SeriesResult<T>{.Sn = newSn, .an = newAn};
+        return series_result<T>{.Sn = newSn, .an = newAn};
     }
 };
 

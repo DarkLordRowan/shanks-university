@@ -45,7 +45,7 @@ protected:
 
 	T gamma;											///< Positive real parameter such that gamma >= order - 1
 	std::unique_ptr<const transform_base<T, K>> remainder;	///< Pointer to remainder transformation object
-	remainder_type remainderType;
+	remainder_type remainder_type_in_use;
 
 public:
 
@@ -62,9 +62,9 @@ public:
 	 *        For theory, see: Sidi (2003, arXiv:math/0306302), p. 64
 	 */
 	explicit levin_sidi_m_algorithm(
-		remainder_type remainderType = remainder_type::u_variant,
+		remainder_type remainder_type_in_use = remainder_type::u_variant,
 		const T& gamma = static_cast<T>(10)
-	) : series_acceleration<T, K>() { updateGamma(gamma); updateType(remainderType); }
+	) : series_acceleration<T, K>() { updateGamma(gamma); updateType(remainder_type_in_use); }
 
 	// Default destructor is sufficient since unique_ptr handles deletion
 
@@ -91,56 +91,56 @@ public:
 	T operator()(
 		const K n, 
         const K order, 
-        const SeriesResult<T>& data
+        const series_result<T>& data
 	) const override;
 
-	void updateType(const remainder_type newType);
+	void updateType(const remainder_type remainder_type_to_use);
 	void updateGamma(const T& newGamma) { gamma = newGamma; }
 };
 
 template<AcceptedLike T, UnsignedIntLike K>
-void levin_sidi_m_algorithm<T, K>::updateType(const remainder_type newType){
+void levin_sidi_m_algorithm<T, K>::updateType(const remainder_type remainder_type_to_use){
 
 	// Initialize the appropriate remainder transformation based on variant
-	switch(newType){
+	switch(remainder_type_to_use){
         case remainder_type::u_variant :
 		{
-			remainderType = newType;
+			remainder_type_in_use = remainder_type_to_use;
 			series_acceleration<T,K>::acceleration_name = "m algorithm with u-variant";
             remainder.reset(new u_transform<T, K>());
             break;
 		}
         case remainder_type::t_variant :
 		{
-			remainderType = newType;
+			remainder_type_in_use = remainder_type_to_use;
 			series_acceleration<T,K>::acceleration_name = "m algorithm with t-variant";
             remainder.reset(new t_transform<T, K>());
             break;
 		}
         case remainder_type::v_variant :
 		{
-			remainderType = newType;
+			remainder_type_in_use = remainder_type_to_use;
 			series_acceleration<T,K>::acceleration_name = "m algorithm with v-variant";
             remainder.reset(new v_transform<T, K>());
             break;
 		}
         case remainder_type::t_wave_variant:
 		{
-			remainderType = newType;
+			remainder_type_in_use = remainder_type_to_use;
 			series_acceleration<T,K>::acceleration_name = "m algorithm with t-wave-variant";
             remainder.reset(new t_wave_transform<T, K>());
             break;
 		}
         case remainder_type::v_wave_variant:
 		{
-			remainderType = newType;
+			remainder_type_in_use = remainder_type_to_use;
 			series_acceleration<T,K>::acceleration_name = "m algorithm with v-wave-variant";
             remainder.reset(new v_wave_transform<T, K>());
             break;
 		}
         default:
 		{
-			remainderType = remainder_type::u_variant;
+			remainder_type_in_use = remainder_type::u_variant;
 			series_acceleration<T,K>::acceleration_name = "m algorithm with u-variant";
             remainder.reset(new u_transform<T, K>()); // Default to u-variant
 		}
@@ -151,13 +151,13 @@ template<AcceptedLike T, UnsignedIntLike K>
 T levin_sidi_m_algorithm<T, K>::operator()(
 	const K n, 
     const K order, 
-    const SeriesResult<T>& data
+    const series_result<T>& data
 ) const {
 
     K required_size = n + order + static_cast<K>(1) + static_cast<K>(
-		remainderType == remainder_type::t_wave_variant ||
-		remainderType == remainder_type::v_variant ||
-		remainderType == remainder_type::v_wave_variant
+		remainder_type_in_use == remainder_type::t_wave_variant ||
+		remainder_type_in_use == remainder_type::v_variant ||
+		remainder_type_in_use == remainder_type::v_wave_variant
 	);
 
     if (data.Sn.size() < required_size || data.an.size() < required_size){
@@ -253,68 +253,68 @@ protected:
 
 	float_precision gamma;											///< Positive real parameter such that gamma >= order - 1
 	std::unique_ptr<const transform_base<float_precision, K>> remainder;	///< Pointer to remainder transformation object
-	remainder_type remainderType;
+	remainder_type remainder_type_in_use;
 
 public:
 
 	explicit levin_sidi_m_algorithm(
-		remainder_type remainderType = remainder_type::u_variant,
+		remainder_type remainder_type_in_use = remainder_type::u_variant,
 		const float_precision& gamma = static_cast<float_precision>(10)
-	) : series_acceleration<float_precision, K>() { updateGamma(gamma); updateType(remainderType); }
+	) : series_acceleration<float_precision, K>() { updateGamma(gamma); updateType(remainder_type_in_use); }
 
 	float_precision operator()(
 		const K n, 
         const K order, 
-        const SeriesResult<float_precision>& data
+        const series_result<float_precision>& data
 	) const override;
 
-	void updateType(const remainder_type newType);
+	void updateType(const remainder_type remainder_type_to_use);
 	void updateGamma(const float_precision& newGamma) { gamma = newGamma; }
 };
 
 template<UnsignedIntLike K>
-void levin_sidi_m_algorithm<float_precision, K>::updateType(const remainder_type newType){
+void levin_sidi_m_algorithm<float_precision, K>::updateType(const remainder_type remainder_type_to_use){
 
 	// Initialize the appropriate remainder transformation based on variant
-	switch(newType){
+	switch(remainder_type_to_use){
         case remainder_type::u_variant :
 		{
-			remainderType = newType;
+			remainder_type_in_use = remainder_type_to_use;
 			series_acceleration<float_precision,K>::acceleration_name = "m algorithm with u-variant";
             remainder.reset(new u_transform<float_precision, K>());
             break;
 		}
         case remainder_type::t_variant :
 		{
-			remainderType = newType;
+			remainder_type_in_use = remainder_type_to_use;
 			series_acceleration<float_precision,K>::acceleration_name = "m algorithm with t-variant";
             remainder.reset(new t_transform<float_precision, K>());
             break;
 		}
         case remainder_type::v_variant :
 		{
-			remainderType = newType;
+			remainder_type_in_use = remainder_type_to_use;
 			series_acceleration<float_precision,K>::acceleration_name = "m algorithm with v-variant";
             remainder.reset(new v_transform<float_precision, K>());
             break;
 		}
         case remainder_type::t_wave_variant:
 		{
-			remainderType = newType;
+			remainder_type_in_use = remainder_type_to_use;
 			series_acceleration<float_precision,K>::acceleration_name = "m algorithm with t-wave-variant";
             remainder.reset(new t_wave_transform<float_precision, K>());
             break;
 		}
         case remainder_type::v_wave_variant:
 		{
-			remainderType = newType;
+			remainder_type_in_use = remainder_type_to_use;
 			series_acceleration<float_precision,K>::acceleration_name = "m algorithm with v-wave-variant";
             remainder.reset(new v_wave_transform<float_precision, K>());
             break;
 		}
         default:
 		{
-			remainderType = remainder_type::u_variant;
+			remainder_type_in_use = remainder_type::u_variant;
 			series_acceleration<float_precision,K>::acceleration_name = "m algorithm with u-variant";
             remainder.reset(new u_transform<float_precision, K>()); // Default to u-variant
 		}
@@ -325,13 +325,13 @@ template<UnsignedIntLike K>
 float_precision levin_sidi_m_algorithm<float_precision, K>::operator()(
 	const K n, 
     const K order, 
-    const SeriesResult<float_precision>& data
+    const series_result<float_precision>& data
 ) const {
 
     K required_size = n + order + static_cast<K>(1) + static_cast<K>(
-		remainderType == remainder_type::t_wave_variant ||
-		remainderType == remainder_type::v_variant ||
-		remainderType == remainder_type::v_wave_variant
+		remainder_type_in_use == remainder_type::t_wave_variant ||
+		remainder_type_in_use == remainder_type::v_variant ||
+		remainder_type_in_use == remainder_type::v_wave_variant
 	);
 
     if (data.Sn.size() < required_size || data.an.size() < required_size){
@@ -428,7 +428,7 @@ protected:
 
 	T gamma;											///< Positive real parameter such that gamma >= order - 1
 	std::unique_ptr<const transform_base<complex_precision<T>, K>> remainder;	///< Pointer to remainder transformation object
-	remainder_type remainderType;
+	remainder_type remainder_type_in_use;
 
 public:
 
@@ -445,9 +445,9 @@ public:
 	 *        For theory, see: Sidi (2003, arXiv:math/0306302), p. 64
 	 */
 	explicit levin_sidi_m_algorithm(
-		remainder_type remainderType = remainder_type::u_variant,
+		remainder_type remainder_type_in_use = remainder_type::u_variant,
 		const T& gamma = static_cast<T>(10)
-	) : series_acceleration<complex_precision<T>, K>() { updateGamma(gamma); updateType(remainderType); }
+	) : series_acceleration<complex_precision<T>, K>() { updateGamma(gamma); updateType(remainder_type_in_use); }
 
 	// Default destructor is sufficient since unique_ptr handles deletion
 
@@ -474,56 +474,56 @@ public:
 	complex_precision<T> operator()(
 		const K n, 
         const K order, 
-        const SeriesResult<complex_precision<T>>& data
+        const series_result<complex_precision<T>>& data
 	) const override;
 
-	void updateType(const remainder_type newType);
+	void updateType(const remainder_type remainder_type_to_use);
 	void updateGamma(const T& newGamma) { gamma = newGamma; }
 };
 
 template<std::floating_point T, UnsignedIntLike K>
-void levin_sidi_m_algorithm<complex_precision<T>, K>::updateType(const remainder_type newType){
+void levin_sidi_m_algorithm<complex_precision<T>, K>::updateType(const remainder_type remainder_type_to_use){
 
 	// Initialize the appropriate remainder transformation based on variant
-	switch(newType){
+	switch(remainder_type_to_use){
         case remainder_type::u_variant :
 		{
-			remainderType = newType;
+			remainder_type_in_use = remainder_type_to_use;
 			series_acceleration<complex_precision<T>,K>::acceleration_name = "m algorithm with u-variant";
             remainder.reset(new u_transform<complex_precision<T>, K>());
             break;
 		}
         case remainder_type::t_variant :
 		{
-			remainderType = newType;
+			remainder_type_in_use = remainder_type_to_use;
 			series_acceleration<complex_precision<T>,K>::acceleration_name = "m algorithm with t-variant";
             remainder.reset(new t_transform<complex_precision<T>, K>());
             break;
 		}
         case remainder_type::v_variant :
 		{
-			remainderType = newType;
+			remainder_type_in_use = remainder_type_to_use;
 			series_acceleration<complex_precision<T>,K>::acceleration_name = "m algorithm with v-variant";
             remainder.reset(new v_transform<complex_precision<T>, K>());
             break;
 		}
         case remainder_type::t_wave_variant:
 		{
-			remainderType = newType;
+			remainder_type_in_use = remainder_type_to_use;
 			series_acceleration<complex_precision<T>,K>::acceleration_name = "m algorithm with t-wave-variant";
             remainder.reset(new t_wave_transform<complex_precision<T>, K>());
             break;
 		}
         case remainder_type::v_wave_variant:
 		{
-			remainderType = newType;
+			remainder_type_in_use = remainder_type_to_use;
 			series_acceleration<complex_precision<T>,K>::acceleration_name = "m algorithm with v-wave-variant";
             remainder.reset(new v_wave_transform<complex_precision<T>, K>());
             break;
 		}
         default:
 		{
-			remainderType = remainder_type::u_variant;
+			remainder_type_in_use = remainder_type::u_variant;
 			series_acceleration<complex_precision<T>,K>::acceleration_name = "m algorithm with u-variant";
             remainder.reset(new u_transform<complex_precision<T>, K>()); // Default to u-variant
 		}
@@ -534,13 +534,13 @@ template<std::floating_point T, UnsignedIntLike K>
 complex_precision<T> levin_sidi_m_algorithm<complex_precision<T>, K>::operator()(
 	const K n, 
     const K order, 
-    const SeriesResult<complex_precision<T>>& data
+    const series_result<complex_precision<T>>& data
 ) const {
 
     K required_size = n + order + static_cast<K>(1) + static_cast<K>(
-		remainderType == remainder_type::t_wave_variant ||
-		remainderType == remainder_type::v_variant ||
-		remainderType == remainder_type::v_wave_variant
+		remainder_type_in_use == remainder_type::t_wave_variant ||
+		remainder_type_in_use == remainder_type::v_variant ||
+		remainder_type_in_use == remainder_type::v_wave_variant
 	);
 
     if (data.Sn.size() < required_size || data.an.size() < required_size){
@@ -633,68 +633,68 @@ protected:
 
 	float_precision gamma;											///< Positive real parameter such that gamma >= order - 1
 	std::unique_ptr<const transform_base<complex_precision<float_precision>, K>> remainder;	///< Pointer to remainder transformation object
-	remainder_type remainderType;
+	remainder_type remainder_type_in_use;
 
 public:
 
 	explicit levin_sidi_m_algorithm(
-		remainder_type remainderType = remainder_type::u_variant,
+		remainder_type remainder_type_in_use = remainder_type::u_variant,
 		const float_precision& gamma = static_cast<float_precision>(10)
-	) : series_acceleration<complex_precision<float_precision>, K>() { updateGamma(gamma); updateType(remainderType); }
+	) : series_acceleration<complex_precision<float_precision>, K>() { updateGamma(gamma); updateType(remainder_type_in_use); }
 
 	complex_precision<float_precision> operator()(
 		const K n, 
         const K order, 
-        const SeriesResult<complex_precision<float_precision>>& data
+        const series_result<complex_precision<float_precision>>& data
 	) const override;
 
-	void updateType(const remainder_type newType);
+	void updateType(const remainder_type remainder_type_to_use);
 	void updateGamma(const float_precision& newGamma) { gamma = newGamma; }
 };
 
 template<UnsignedIntLike K>
-void levin_sidi_m_algorithm<complex_precision<float_precision>, K>::updateType(const remainder_type newType){
+void levin_sidi_m_algorithm<complex_precision<float_precision>, K>::updateType(const remainder_type remainder_type_to_use){
 
 	// Initialize the appropriate remainder transformation based on variant
-	switch(newType){
+	switch(remainder_type_to_use){
         case remainder_type::u_variant :
 		{
-			remainderType = newType;
+			remainder_type_in_use = remainder_type_to_use;
 			series_acceleration<complex_precision<float_precision>,K>::acceleration_name = "m algorithm with u-variant";
             remainder.reset(new u_transform<complex_precision<float_precision>, K>());
             break;
 		}
         case remainder_type::t_variant :
 		{
-			remainderType = newType;
+			remainder_type_in_use = remainder_type_to_use;
 			series_acceleration<complex_precision<float_precision>,K>::acceleration_name = "m algorithm with t-variant";
             remainder.reset(new t_transform<complex_precision<float_precision>, K>());
             break;
 		}
         case remainder_type::v_variant :
 		{
-			remainderType = newType;
+			remainder_type_in_use = remainder_type_to_use;
 			series_acceleration<complex_precision<float_precision>,K>::acceleration_name = "m algorithm with v-variant";
             remainder.reset(new v_transform<complex_precision<float_precision>, K>());
             break;
 		}
         case remainder_type::t_wave_variant:
 		{
-			remainderType = newType;
+			remainder_type_in_use = remainder_type_to_use;
 			series_acceleration<complex_precision<float_precision>,K>::acceleration_name = "m algorithm with t-wave-variant";
             remainder.reset(new t_wave_transform<complex_precision<float_precision>, K>());
             break;
 		}
         case remainder_type::v_wave_variant:
 		{
-			remainderType = newType;
+			remainder_type_in_use = remainder_type_to_use;
 			series_acceleration<complex_precision<float_precision>,K>::acceleration_name = "m algorithm with v-wave-variant";
             remainder.reset(new v_wave_transform<complex_precision<float_precision>, K>());
             break;
 		}
         default:
 		{
-			remainderType = remainder_type::u_variant;
+			remainder_type_in_use = remainder_type::u_variant;
 			series_acceleration<complex_precision<float_precision>,K>::acceleration_name = "m algorithm with u-variant";
             remainder.reset(new u_transform<complex_precision<float_precision>, K>()); // Default to u-variant
 		}
@@ -705,13 +705,13 @@ template<UnsignedIntLike K>
 complex_precision<float_precision> levin_sidi_m_algorithm<complex_precision<float_precision>, K>::operator()(
 	const K n, 
     const K order, 
-    const SeriesResult<complex_precision<float_precision>>& data
+    const series_result<complex_precision<float_precision>>& data
 ) const {
 
     K required_size = n + order + static_cast<K>(1) + static_cast<K>(
-		remainderType == remainder_type::t_wave_variant ||
-		remainderType == remainder_type::v_variant ||
-		remainderType == remainder_type::v_wave_variant
+		remainder_type_in_use == remainder_type::t_wave_variant ||
+		remainder_type_in_use == remainder_type::v_variant ||
+		remainder_type_in_use == remainder_type::v_wave_variant
 	);
 
     if (data.Sn.size() < required_size || data.an.size() < required_size){
