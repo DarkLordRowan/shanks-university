@@ -1,6 +1,10 @@
 {
-    "id": "ln1mx_series",
-    "title": "",
-    "formula": "",
-    "document": "Rows.docx"
+  "id": "ln1mx_series",
+  "num": 8,
+  "title": "\\ln(1-x)",
+  "formula": "-\\sum_{n=1}^{\\infty}\\frac{x^{n}}{n}",
+  "x_from": "-1",
+  "x_to": "1",
+  "speed": "hyperlinear",
+  "document": "4d319cfa-4426-43e2-947c-b5878772d263.docx"
 }

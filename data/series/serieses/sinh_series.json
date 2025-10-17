@@ -1,6 +1,10 @@
 {
-    "id": "sinh_series",
-    "title": "",
-    "formula": "",
-    "document": "Rows.docx"
+  "id": "sinh_series",
+  "num": 5,
+  "title": "\\sinh x",
+  "formula": "\\sum_{n=0}^{\\infty}\\frac{x^{2n+1}}{(2n+1)!}",
+  "x_from": "-\\infty",
+  "x_to": "+\\infty",
+  "speed": "hyperlinear",
+  "document": "4d319cfa-4426-43e2-947c-b5878772d263.docx"
 }
