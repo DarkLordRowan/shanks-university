@@ -87,10 +87,11 @@ T ford_sidi_2_algorithm<T, K>::operator()(
     const series_result<T>& data
 ) const {
 
-    K required_size = n + static_cast<K>(1);
+    const K required_size = n + static_cast<K>(1);
 
     if (data.Sn.size() < required_size ){
-        throw std::out_of_range("Sn or an is smaller than required to calculate ford_sidi3_{" + to_string(order) + "}^{" + to_string(n) + "}");
+        throw std::out_of_range("The Sn smaller then required for ford_sidi2_{" + to_string(order) + "}^{" + to_string(n) + "}\n" +
+        "the size of Sn must be at least " + to_string(required_size));
 	}
 
 	// For theory, see: Ford & Sidi (1987), Section 1 - Input validation
@@ -166,10 +167,11 @@ float_precision ford_sidi_2_algorithm<float_precision, K>::operator()(
     const series_result<float_precision>& data
 ) const {
 
-    K required_size = n + static_cast<K>(1);
+    const K required_size = n + static_cast<K>(1);
 
     if (data.Sn.size() < required_size ){
-        throw std::out_of_range("Sn or an is smaller than required to calculate ford_sidi3_{" + to_string(order) + "}^{" + to_string(n) + "}");
+        throw std::out_of_range("The Sn smaller then required for ford_sidi_2_{" + to_string(order) + "}^{" + to_string(n) + "}\n" +
+        "the size of Sn must be at least " + to_string(required_size));
 	}
 
 	// For theory, see: Ford & Sidi (1987), Section 1 - Input validation
@@ -238,10 +240,11 @@ float_precision ford_sidi_2_algorithm<float_precision, K>::operator()(
 	    const series_result<complex_precision<float_precision>>& data
 	) const {
 
-	    K required_size = n + static_cast<K>(1);
+	    const K required_size = n + static_cast<K>(1);
 
 	    if (data.Sn.size() < required_size ){
-	        throw std::out_of_range("Sn or an is smaller than required to calculate ford_sidi3_{" + to_string(order) + "}^{" + to_string(n) + "}");
+	        throw std::out_of_range("The Sn smaller then required for ford_sidi_2_{" + to_string(order) + "}^{" + to_string(n) + "}\n" +
+        	"the size of Sn must be at least " + to_string(required_size));
 		}
 
 		// For theory, see: Ford & Sidi (1987), Section 1 - Input validation

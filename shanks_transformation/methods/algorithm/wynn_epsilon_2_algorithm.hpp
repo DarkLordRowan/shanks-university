@@ -93,10 +93,11 @@ T wynn_epsilon_2_algorithm<T, K>::operator()(
     const series_result<T>& data
 ) const {
 
-    K required_size = static_cast<K>(2) * order + n + static_cast<K>(1);
+    const K required_size = static_cast<K>(2) * order + n + static_cast<K>(1);
 
     if (data.Sn.size() < required_size){
-        throw std::out_of_range("Sn or an is smaller than required to calculate e2_{" + to_string(order) + "}^{" + to_string(n) + "}");
+        throw std::out_of_range("The Sn smaller then required for wynn_epsilon_2_{" + to_string(order) + "}^{" + to_string(n) + "}\n" +
+        "the size of Sn must be at least " + to_string(required_size));
 	}
 
 	// For theory, see: Wynn (1956), Section 2 - Initial conditions and algorithm setup
@@ -264,10 +265,11 @@ float_precision wynn_epsilon_2_algorithm<float_precision, K>::operator()(
     const series_result<float_precision>& data
 ) const {
 
-    K required_size = static_cast<K>(2) * order + n + static_cast<K>(1);
+    const K required_size = static_cast<K>(2) * order + n + static_cast<K>(1);
 
     if (data.Sn.size() < required_size){
-        throw std::out_of_range("Sn or an is smaller than required to calculate e2_{" + to_string(order) + "}^{" + to_string(n) + "}");
+        throw std::out_of_range("The Sn smaller then required for wynn_epsilon_2_{" + to_string(order) + "}^{" + to_string(n) + "}\n" +
+        "the size of Sn must be at least " + to_string(required_size));
 	}
 
 	// For theory, see: Wynn (1956), Section 2 - Initial conditions and algorithm setup
@@ -425,10 +427,11 @@ complex_precision<float_precision> wynn_epsilon_2_algorithm<complex_precision<fl
     const series_result<complex_precision<float_precision>>& data
 ) const {
 
-    K required_size = static_cast<K>(2) * order + n + static_cast<K>(1);
+    const K required_size = static_cast<K>(2) * order + n + static_cast<K>(1);
 
     if (data.Sn.size() < required_size){
-        throw std::out_of_range("Sn or an is smaller than required to calculate e2_{" + to_string(order) + "}^{" + to_string(n) + "}");
+        throw std::out_of_range("The Sn smaller then required for wynn_epsilon_2_{" + to_string(order) + "}^{" + to_string(n) + "}\n" +
+        "the size of Sn must be at least " + to_string(required_size));
 	}
 
 	// For theory, see: Wynn (1956), Section 2 - Initial conditions and algorithm setup

@@ -21,14 +21,14 @@
   * @brief Enum for remainder types to use in Levin-type transformations.
   *
   * Determines the type of numerator function used in the transformation:
-  * - rho_variant: Standard ρ-variant (difference-based)
-  * - generalized_variant: Generalized variant (order-dependent constant)
-  * - gamma_rho_variant: Gamma-ρ variant (parameter-dependent)
+  * - rho_type: Standard ρ-variant (difference-based)
+  * - generalized_type: Generalized variant (order-dependent constant)
+  * - gamma_rho_type: Gamma-ρ variant (parameter-dependent)
   */
 enum numerator_type{
-           rho_variant,
-   generalized_variant,
-     gamma_rho_variant,
+           rho_type,
+   generalized_type,
+     gamma_rho_type,
 };
 
 /**
