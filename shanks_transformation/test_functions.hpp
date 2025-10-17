@@ -164,12 +164,33 @@ void cmp_a_n_and_transform(const K n, const K order,
 template<AcceptedLike T, AcceptedLike ParamType>
 inline static series_result<T> jitter(
 	const series_result<T>& source,
-	NoiseType noise_type,
-	ParamType param1,
-	ParamType param2 = ParamType{},
-	unsigned long long int seed = std::chrono::system_clock::now().time_since_epoch().count() + std::rand()
+	const NoiseType noise_type
 	)
 {
+	ParamType param1;
+	ParamType param2;
+	unsigned long long seed;
+	std::cout << "Enter seed (0 for random, any other positive integer will be used as seed) : ";
+	std::cin >> seed;
+	if (seed == 0){
+		seed = std::chrono::system_clock::now().time_since_epoch().count() + std::rand();
+	}
+	switch (noise_type) {
+		case uniform:
+			param1 = inputCustomType<ParamType>("Lower bound");
+			param2 = inputCustomType<ParamType>("Upper bound");
+			break;
+		case normal:
+			param1 = inputCustomType<ParamType>("Mean");
+			param2 = inputCustomType<ParamType>("Standard deviation");
+			break;
+		case poisson:
+			param1 = inputCustomType<ParamType>("Lambda");
+			param2 = ParamType(); // Not used for poisson
+			break;
+		default:
+			throw std::invalid_argument("Invalid noise type");
+	}
 	noise_generator<T> gen = noise_generator<T>(noise_type,seed);
 	return gen.jitter(source, param1, param2);
 }
