@@ -18,9 +18,13 @@
 
 ```json
 {
-    "id": "",
-    "title": "",
-    "formula": "",
-    "document": ""
+  "id": "<идентификатор_раздела_из_документа>",
+  "num": "<порядковый_номер>",
+  "title": "<короткое название функции в LaTeX>",
+  "formula": "<основной ряд в LaTeX>",
+  "x_from": "<левый предел области сходимости>",
+  "x_to": "<правый предел области сходимости>",
+  "speed": "<скорость: logarithmic | linear | quadratic | cubic | hyperlinear | superexponential>",
+  "document": "<имя файла .docx>"
 }
 ```
