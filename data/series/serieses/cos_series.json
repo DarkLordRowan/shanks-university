@@ -1,6 +1,10 @@
 {
-    "id": "cos_series",
-    "title": "",
-    "formula": "",
-    "document": "Rows.docx"
+  "id": "cos_series",
+  "num": 2,
+  "title": "cos(x)",
+  "formula": "\\sum_{n=0}^{\\infty}(-1)^{n}\\frac{x^{2n}}{(2n)!}",
+  "x_from": "-\\infty",
+  "x_to": "+\\infty",
+  "speed": "hyperlinear",
+  "document": "Rows.docx"
 }
