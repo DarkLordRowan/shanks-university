@@ -27,13 +27,49 @@ void cmp_sum_and_transform(const K n, const K order, const series_templ& series,
 {
 	test->print_info();
 	for (K i = 0; i <= n; ++i) {
-		try 
+		try
 		{
 			std::cout << "Sum of algo : " << series->get_sum() << '\n';
 			std::cout << "S_" << i << " : " << series->S_n(i) << '\n';
 			std::cout << "T_" << i << " of order " << order << " : " << test->operator()(i, order) << '\n';
-			std::cout << "T_" << i << " of order " << order << " - S_" << i
-				<< " : " << test->operator()(i, order) - series->S_n(i) << '\n';
+			std::cout << "T_" << i << " of order " << order << " - S_" << i << " : " << test->operator()(i, order) - series->S_n(i) << '\n';
+			
+		}
+		catch (std::domain_error& e)
+		{
+			std::cout << e.what() << '\n';
+		}
+		catch (std::overflow_error& e)
+		{
+			std::cout << e.what() << '\n';
+		}
+	}
+}
+
+template <std::floating_point T, std::unsigned_integral K, typename series_templ, typename transform_type>
+void cmp_sum_difference_and_transform(const T S, const K n, const K order, const series_templ& series, const transform_type& test)
+{
+	test->print_info();
+	//S = series->S_n(1e6);
+	//T log5 = 1.6094379124341003746007593332261876395256013542685177219126478914741789877076577646301338780931796107999663030217155628997240052293246761996336166174637057275521796374971832456534928562023415250572702;
+	//T log2 = 0.69314718055994530941723212145817656807550013436025525412068000949339362196969471560586332699641868754200148102057068573368552023575;
+	//T pi4  = 0.78539816339744830961566084581987572104929234984377645524373614807695410157155224965700870633552926699553702162832057666177346115238764555793134;
+	//T pi_squared6 = 1.644934066848226436472415166646025189218949901206798437735558229370007470403201;
+	//T for_shenks = 0.7853981633974483096156608458198757210492923498437764552;
+	//S = for_shenks;
+	for (K i = 0; i <= n; ++i) {
+		try 
+		{
+			std::cout << "Sum of algo :"	<< series->get_sum()	<< '\n';
+			std::cout << "T of order  : "	<< order	<< ", i : " << i		<< '\n';
+			std::cout << "S :\t"			<< S					<< '\n';
+			std::cout << "S_"				<< i					<< " :\t"	<< series->S_n(i) << '\n';
+			std::cout << "T_"				<< i					<< " :\t"	<< test->operator()(i, order) << '\n';
+
+			std::cout << "|T_"	<< i	<< "\t- S_" << i << "| :\t" << abs(test->operator()(i, order)	- series->S_n(i))				<< '\n';
+			std::cout << "|S"			<< "\t- S_" << i << "| :\t" << abs(S							- series->S_n(i))				<< '\n';
+			std::cout << "|S"			<< "\t- T_" << i << "| :\t" << abs(S							- test->operator()(i, order))	<< '\n';
+			std::cout << '\n';
 		}
 		catch (std::domain_error& e)
 		{
@@ -219,11 +255,15 @@ void print_sum(const K n, const series_templ& series)
 */
 template <std::unsigned_integral K, typename transform_type>
 void print_transform(const K n, const K order, const transform_type& test)
-{
+{	
+
+	///*long*/ double S;
+	//S = 0.69314718055994530941723212145817656807550013436025525412068000949339362196969471560586332699641868754200148102057068573368552023575;
 	test->print_info();
 	try
 	{
 		std::cout << "T_" << n << " of order " << order << " : " << test->operator()(n, order) << '\n';
+		//std::cout << "|S" << "\t- T_" << n << "| :\t" << abs(S - test->operator()(n, order)) << '\n';
 	}
 	catch (std::domain_error& e)
 	{

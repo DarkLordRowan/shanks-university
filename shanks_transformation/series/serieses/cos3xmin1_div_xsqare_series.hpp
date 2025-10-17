@@ -31,7 +31,7 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-cos3xmin1_div_xsqare_series<T, K>::cos3xmin1_div_xsqare_series(T x) : series_base<T, K>(x, (std::cos(3 * x) - 1) / (x * x))
+cos3xmin1_div_xsqare_series<T, K>::cos3xmin1_div_xsqare_series(T x) : series_base<T, K>(x, static_cast<T>(std::cos(static_cast<T>(3) * x - static_cast<T>(1))) / (x * x))
 {
     this->series_name = "(cos(3x)-1)/x²";
     // Сходится при ∀x ∈ ℝ\{0} (ряд для (cos(z)-1)/z² сходится при ∀z ∈ ℝ\{0}, где z = 3x)
@@ -45,6 +45,6 @@ cos3xmin1_div_xsqare_series<T, K>::cos3xmin1_div_xsqare_series(T x) : series_bas
 template <std::floating_point T, std::unsigned_integral K>
 constexpr T cos3xmin1_div_xsqare_series<T, K>::operator()(K n) const
 {
-    const K a = 2 * n + 2;
-    return series_base<T, K>::minus_one_raised_to_power_n(n + 1) * static_cast<T>(std::pow(3, a) * std::pow(this->x, a - 2)) / this->fact(a);
+    const K a = static_cast<K>(2 * n);
+    return (series_base<T, K>::minus_one_raised_to_power_n(n) * static_cast<T>(std::pow(static_cast<T>(3) * this->x - static_cast<T>(1), a))) / (static_cast<T>(std::pow(this->x, 2)) * static_cast<T>(this->fact(a))); // (91.1) [Rows.pdf]
 }

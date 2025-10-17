@@ -45,9 +45,6 @@ sqrt_1plusx_series<T, K>::sqrt_1plusx_series(T x) : series_base<T, K>(x, std::sq
 template <std::floating_point T, std::unsigned_integral K>
 constexpr T sqrt_1plusx_series<T, K>::operator()(K n) const
 {
-    if(n == 0)
-        return static_cast<T>(1);
-
-    const T coeff = static_cast<T>(this->double_fact(fma(2,n,1))) / static_cast<T>(this->double_fact(2*n));
-    return this->minus_one_raised_to_power_n(n+1) * coeff * std::pow(this->x, static_cast<T>(n)) / static_cast<T>(fma(2,n,1)) / static_cast<T>(2*n-1); // (73.1) [Rows.pdf], (1 - 2 * (n & 1)) = (-1)^{n}
+    const T coeff = static_cast<T>(this->binomial_coefficient(static_cast<T>(2 * n), n));
+    return this->minus_one_raised_to_power_n(n) * coeff * static_cast<T>(std::pow(this->x, static_cast<T>(n))) / (static_cast<T>(fma(-2,n,1)) * static_cast<T>(std::pow(4, n))); // (73.1) [Rows.pdf], (1 - 2 * (n & 1)) = (-1)^{n}
 }

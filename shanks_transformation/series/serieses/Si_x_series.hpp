@@ -45,5 +45,5 @@ template <std::floating_point T, std::unsigned_integral K>
 constexpr T Si_x_series<T, K>::operator()(K n) const
 {
     const T two_n_1 = static_cast<T>(std::fma(2, n, 1));
-    return this->minus_one_raised_to_power_n(n) * std::pow(this->x, two_n_1) / two_n_1 / static_cast<T>( this->fact(std::fma(2,n,1)) ); // (64.1) [Rows.pdf], (1 - 2 * (n & 1)) = (-1)^{n}
+    return this->minus_one_raised_to_power_n(n) * static_cast<T>(std::pow(this->x, two_n_1)) / two_n_1 / static_cast<T>(this->fact(static_cast<K>(std::fma(2,n,1)))); // (64.1) [Rows.pdf], (1 - 2 * (n & 1)) = (-1)^{n}
 }

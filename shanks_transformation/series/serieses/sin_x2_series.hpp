@@ -45,5 +45,5 @@ template <std::floating_point T, std::unsigned_integral K>
 constexpr T sin_x2_series<T, K>::operator()(K n) const
 {
     const K a = static_cast<K>(std::fma(2, n, 1));
-    return series_base<T, K>::minus_one_raised_to_power_n(n) * std::pow(this->x, static_cast <K>(static_cast <K>(2) * a)) / this->fact(a); // (82.2) [Rows.pdf]
+    return (series_base<T, K>::minus_one_raised_to_power_n(n) * static_cast<T>(std::pow(this->x, static_cast<K>(2) * a))) / static_cast<T>(this->fact(a)); // (82.2) [Rows.pdf]
 }

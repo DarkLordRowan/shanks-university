@@ -44,5 +44,5 @@ two_degree_x_series<T, K>::two_degree_x_series(T x) : series_base<T, K>(x, stati
 template <std::floating_point T, std::unsigned_integral K>
 constexpr T two_degree_x_series<T, K>::operator()(K n) const
 {
-    return static_cast<T>(std::pow(static_cast<T>(std::log(2)), n) * std::pow(this->x, n) / this->fact(n)); // (92.1) [Rows.pdf]
+    return static_cast<T>(std::pow(static_cast<T>(std::log(2)), n)) * static_cast<T>(std::pow(this->x, n)) / static_cast<T>(this->fact(n)); // (92.1) [Rows.pdf]
 }
