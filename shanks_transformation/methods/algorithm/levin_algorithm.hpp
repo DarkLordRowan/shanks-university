@@ -53,8 +53,8 @@ protected:
 
 	T beta;													///< Parameter for u-variant transformation (β > 0). Default value is 1.0.
     std::unique_ptr<const transform_base<T, K>> remainder;	///< Pointer to remainder transformation object
-    bool useRecFormulas = false;							///< Flag to use recurrence formulas (true) or direct formulas (false)
-    remainder_type remainderType = remainder_type::u_variant;		///< Type of Levin transformation variant (u, t, v, t~, v~)
+    bool use_recurrent_formula = false;							///< Flag to use recurrence formulas (true) or direct formulas (false)
+    remainder_type remainder_type_in_use = remainder_type::u_variant;		///< Type of Levin transformation variant (u, t, v, t~, v~)
 
 	/**
 	 * @brief Computes the Levin transformation using direct summation formulas.
@@ -70,7 +70,7 @@ protected:
 	inline T calc_result(
 		const K n, 
         const K order, 
-        const SeriesResult<T>& data
+        const series_result<T>& data
 	) const;
 
 	/**
@@ -86,7 +86,7 @@ protected:
 	inline T calc_result_rec(
 		const K n, 
         const K order, 
-        const SeriesResult<T>& data
+        const series_result<T>& data
 	) const;
 
 public:
@@ -96,18 +96,18 @@ public:
 	 *
 	 * @param series The series class object to be accelerated
 	 *        Must be a valid object implementing the required series interface
-	 * @param variant Type of Levin transformation variant to use
+	 * @param remainder_type_to_use Type of Levin transformation variant to use
 	 *        Valid values: u_variant, t_variant, v_variant, t_wave_variant, v_wave_variant
 	 *        Determines the remainder estimate R_n used in the transformation
-	 * @param useRecFormulas Flag to use recurrence formulas instead of direct summation
+	 * @param use_recurrent_formula Flag to use recurrence formulas instead of direct summation
 	 *        true: use recursive implementation, false: use direct summation
 	 * @param beta Parameter for u-variant transformation (must be > 0)
 	 *        Default value: 1.0. Affects the remainder estimate in u-variant.
 	 *        For theory, see: Sidi & Levin (1981), Eq. (3.4) and surrounding discussion
 	 */
 	explicit levin_algorithm(
-        const remainder_type remainderType = remainder_type::u_variant,
-        const bool useRecFormulas = false,
+        const remainder_type remainder_type_to_use = remainder_type::u_variant,
+        const bool use_recurrent_formula = false,
         const T& beta = static_cast<T>(1)
 	);
 
@@ -136,51 +136,51 @@ public:
 	T operator()( 
         const K n, 
         const K order, 
-        const SeriesResult<T>& data
+        const series_result<T>& data
 	) const override;
 
-	void updateType(const remainder_type newType){
+	void updateType(const remainder_type remainder_type_to_use){
 
-		series_acceleration<T, K>::acceleration_name = (useRecFormulas ? "recurrent " : "");
+		series_acceleration<T, K>::acceleration_name = (use_recurrent_formula ? "recurrent " : "");
 
-		switch(newType){
+		switch(remainder_type_to_use){
         	case remainder_type::u_variant :
 			{
-				remainderType = newType;
+				remainder_type_in_use = remainder_type_to_use;
 				series_acceleration<T, K>::acceleration_name += "levin l with u-variant";
         	    remainder.reset(new u_transform<T, K>());
         	    break;
 			}
         	case remainder_type::t_variant :
 			{
-				remainderType = newType;
+				remainder_type_in_use = remainder_type_to_use;
 				series_acceleration<T, K>::acceleration_name += "levin l with t-variant";
         	    remainder.reset(new t_transform<T, K>());
         	    break;
 			}
         	case remainder_type::v_variant :
 			{
-				remainderType = newType;
+				remainder_type_in_use = remainder_type_to_use;
 				series_acceleration<T, K>::acceleration_name += "levin l with v-variant";
         	    remainder.reset(new v_transform<T, K>());
         	    break;
 			}
         	case remainder_type::t_wave_variant:
 			{
-				remainderType = newType;
+				remainder_type_in_use = remainder_type_to_use;
 				series_acceleration<T, K>::acceleration_name += "levin l with t-wave-variant";
         	    remainder.reset(new t_wave_transform<T, K>());
         	    break;
 			}
         	case remainder_type::v_wave_variant:
 			{
-				remainderType = newType;
+				remainder_type_in_use = remainder_type_to_use;
 				series_acceleration<T, K>::acceleration_name += "levin l with v-wave-variant";
         	    remainder.reset(new v_wave_transform<T, K>());
         	    break;
 			}
         	default:{
-				remainderType = remainder_type::u_variant;
+				remainder_type_in_use = remainder_type::u_variant;
 				series_acceleration<T, K>::acceleration_name += "levin l with u-variant";
         	    remainder.reset(new u_transform<T, K>()); // Default to u-variant
 			}
@@ -193,24 +193,24 @@ public:
 
 template<AcceptedLike T, UnsignedIntLike K>
 levin_algorithm<T, K>::levin_algorithm(
-    const remainder_type remainderType,
-    const bool useRecFormulas,
+    const remainder_type remainder_type_in_use,
+    const bool use_recurrent_formula,
     const T& beta
 ) :
 	series_acceleration<T, K>(),
-	useRecFormulas(useRecFormulas)
+	use_recurrent_formula(use_recurrent_formula)
 {//TODO: нужно ли проверять бету на допустимость?
 
 	updateBeta(beta);
 	// Initialize the appropriate remainder transformation based on variant
-    updateType(remainderType);
+    updateType(remainder_type_in_use);
 }
 
 template<AcceptedLike T, UnsignedIntLike K>
 inline T levin_algorithm<T, K>::calc_result(
 	const K n, 
     const K order, 
-    const SeriesResult<T>& data
+    const series_result<T>& data
 ) const {
 
 	using std::pow;
@@ -238,7 +238,7 @@ inline T levin_algorithm<T, K>::calc_result(
             n + j,
             n + j,
             data.an,
-            (remainderType == remainder_type::u_variant ? beta : static_cast<T>(1))
+            (remainder_type_in_use == remainder_type::u_variant ? beta : static_cast<T>(1))
         );
 
 		rest *= C_njk;
@@ -259,7 +259,7 @@ template<AcceptedLike T, UnsignedIntLike K>
 inline T levin_algorithm<T, K>::calc_result_rec(
 	const K n, 
     const K order, 
-    const SeriesResult<T>& data
+    const series_result<T>& data
 ) const{
 
 	using std::isfinite;
@@ -282,7 +282,7 @@ inline T levin_algorithm<T, K>::calc_result_rec(
             n+i,
             n+i,
             data.an,
-            (remainderType == remainder_type::u_variant ? beta : static_cast<T>(1))
+            (remainder_type_in_use == remainder_type::u_variant ? beta : static_cast<T>(1))
         );
 
 		Num[i] = data.Sn.at(n+i) * Denom[i];
@@ -315,13 +315,13 @@ template <AcceptedLike T, UnsignedIntLike K>
 T levin_algorithm<T, K>::operator()(
 	const K n, 
     const K order, 
-    const SeriesResult<T>& data
+    const series_result<T>& data
 ) const {
 
     K required_size = n + order + static_cast<K>(1) + static_cast<K>(
-		remainderType == remainder_type::t_wave_variant ||
-		remainderType == remainder_type::v_variant ||
-		remainderType == remainder_type::v_wave_variant
+		remainder_type_in_use == remainder_type::t_wave_variant ||
+		remainder_type_in_use == remainder_type::v_variant ||
+		remainder_type_in_use == remainder_type::v_wave_variant
 	);
 
     if (data.Sn.size() < required_size || data.an.size() < required_size){
@@ -334,7 +334,7 @@ T levin_algorithm<T, K>::operator()(
 
     using std::isfinite;
 
-    const T result = (useRecFormulas ? calc_result_rec(n,order, data) : calc_result(n, order, data));
+    const T result = (use_recurrent_formula ? calc_result_rec(n,order, data) : calc_result(n, order, data));
     if(!isfinite(result)){
         throw std::overflow_error("division by zero");
     }
@@ -350,8 +350,8 @@ protected:
 
 	float_precision beta;													///< Parameter for u-variant transformation (β > 0). Default value is 1.0.
     std::unique_ptr<const transform_base<float_precision, K>> remainder;	///< Pointer to remainder transformation object
-    bool useRecFormulas = false;							///< Flag to use recurrence formulas (true) or direct formulas (false)
-    remainder_type remainderType = remainder_type::u_variant;		///< Type of Levin transformation variant (u, t, v, t~, v~)
+    bool use_recurrent_formula = false;							///< Flag to use recurrence formulas (true) or direct formulas (false)
+    remainder_type remainder_type_in_use = remainder_type::u_variant;		///< Type of Levin transformation variant (u, t, v, t~, v~)
 
 	/**
 	 * @brief Computes the Levin transformation using direct summation formulas.
@@ -367,7 +367,7 @@ protected:
 	inline float_precision calc_result(
 		const K n, 
         const K order, 
-        const SeriesResult<float_precision>& data
+        const series_result<float_precision>& data
 	) const;
 
 	/**
@@ -383,7 +383,7 @@ protected:
 	inline float_precision calc_result_rec(
 		const K n, 
         const K order, 
-        const SeriesResult<float_precision>& data
+        const series_result<float_precision>& data
 	) const;
 
 public:
@@ -393,18 +393,18 @@ public:
 	 *
 	 * @param series The series class object to be accelerated
 	 *        Must be a valid object implementing the required series interface
-	 * @param variant Type of Levin transformation variant to use
+	 * @param remainder_type_to_use Type of Levin transformation variant to use
 	 *        Valid values: u_variant, t_variant, v_variant, t_wave_variant, v_wave_variant
 	 *        Determines the remainder estimate R_n used in the transformation
-	 * @param useRecFormulas Flag to use recurrence formulas instead of direct summation
+	 * @param use_recurrent_formula Flag to use recurrence formulas instead of direct summation
 	 *        true: use recursive implementation, false: use direct summation
 	 * @param beta Parameter for u-variant transformation (must be > 0)
 	 *        Default value: 1.0. Affects the remainder estimate in u-variant.
 	 *        For theory, see: Sidi & Levin (1981), Eq. (3.4) and surrounding discussion
 	 */
 	explicit levin_algorithm(
-        const remainder_type remainderType = remainder_type::u_variant,
-        const bool useRecFormulas = false,
+        const remainder_type remainder_type_to_use = remainder_type::u_variant,
+        const bool use_recurrent_formula = false,
         const float_precision& beta = static_cast<float_precision>(1)
 	);
 
@@ -433,51 +433,51 @@ public:
 	float_precision operator()( 
         const K n, 
         const K order, 
-        const SeriesResult<float_precision>& data
+        const series_result<float_precision>& data
 	) const override;
 
-	void updateType(const remainder_type newType){
+	void updateType(const remainder_type remainder_type_to_use){
 
-		series_acceleration<float_precision, K>::acceleration_name = (useRecFormulas ? "recurrent " : "");
+		series_acceleration<float_precision, K>::acceleration_name = (use_recurrent_formula ? "recurrent " : "");
 
-		switch(newType){
+		switch(remainder_type_to_use){
         	case remainder_type::u_variant :
 			{
-				remainderType = newType;
+				remainder_type_in_use = remainder_type_to_use;
 				series_acceleration<float_precision, K>::acceleration_name += "levin l with u-variant";
         	    remainder.reset(new u_transform<float_precision, K>());
         	    break;
 			}
         	case remainder_type::t_variant :
 			{
-				remainderType = newType;
+				remainder_type_in_use = remainder_type_to_use;
 				series_acceleration<float_precision, K>::acceleration_name += "levin l with t-variant";
         	    remainder.reset(new t_transform<float_precision, K>());
         	    break;
 			}
         	case remainder_type::v_variant :
 			{
-				remainderType = newType;
+				remainder_type_in_use = remainder_type_to_use;
 				series_acceleration<float_precision, K>::acceleration_name += "levin l with v-variant";
         	    remainder.reset(new v_transform<float_precision, K>());
         	    break;
 			}
         	case remainder_type::t_wave_variant:
 			{
-				remainderType = newType;
+				remainder_type_in_use = remainder_type_to_use;
 				series_acceleration<float_precision, K>::acceleration_name += "levin l with t-wave-variant";
         	    remainder.reset(new t_wave_transform<float_precision, K>());
         	    break;
 			}
         	case remainder_type::v_wave_variant:
 			{
-				remainderType = newType;
+				remainder_type_in_use = remainder_type_to_use;
 				series_acceleration<float_precision, K>::acceleration_name += "levin l with v-wave-variant";
         	    remainder.reset(new v_wave_transform<float_precision, K>());
         	    break;
 			}
         	default:{
-				remainderType = remainder_type::u_variant;
+				remainder_type_in_use = remainder_type::u_variant;
 				series_acceleration<float_precision, K>::acceleration_name += "levin l with u-variant";
         	    remainder.reset(new u_transform<float_precision, K>()); // Default to u-variant
 			}
@@ -490,24 +490,24 @@ public:
 
 template<UnsignedIntLike K>
 levin_algorithm<float_precision, K>::levin_algorithm(
-    const remainder_type remainderType,
-    const bool useRecFormulas,
+    const remainder_type remainder_type_in_use,
+    const bool use_recurrent_formula,
     const float_precision& beta
 ) :
 	series_acceleration<float_precision, K>(),
-	useRecFormulas(useRecFormulas)
+	use_recurrent_formula(use_recurrent_formula)
 {//TODO: нужно ли проверять бету на допустимость?
 
 	updateBeta(beta);
 	// Initialize the appropriate remainder transformation based on variant
-    updateType(remainderType);
+    updateType(remainder_type_in_use);
 }
 
 template<UnsignedIntLike K>
 inline float_precision levin_algorithm<float_precision, K>::calc_result(
 	const K n, 
     const K order, 
-    const SeriesResult<float_precision>& data
+    const series_result<float_precision>& data
 ) const {
 
 	using std::pow;
@@ -537,7 +537,7 @@ inline float_precision levin_algorithm<float_precision, K>::calc_result(
             n + j,
             n + j,
             data.an,
-            (remainderType == remainder_type::u_variant ? beta : static_cast<float_precision>(1))
+            (remainder_type_in_use == remainder_type::u_variant ? beta : static_cast<float_precision>(1))
         );
 
 		rest *= C_njk;
@@ -555,7 +555,7 @@ template<UnsignedIntLike K>
 inline float_precision levin_algorithm<float_precision, K>::calc_result_rec(
 	const K n, 
     const K order, 
-    const SeriesResult<float_precision>& data
+    const series_result<float_precision>& data
 ) const{
 
 	using std::isfinite;
@@ -580,7 +580,7 @@ inline float_precision levin_algorithm<float_precision, K>::calc_result_rec(
             n + i,
             n + i,
             data.an,
-            (remainderType == remainder_type::u_variant ? beta : static_cast<float_precision>(1))
+            (remainder_type_in_use == remainder_type::u_variant ? beta : static_cast<float_precision>(1))
         );
 
 		Num[i] = data.Sn.at(n+i) * Denom[i];
@@ -610,13 +610,13 @@ template <UnsignedIntLike K>
 float_precision levin_algorithm<float_precision, K>::operator()(
 	const K n, 
     const K order, 
-    const SeriesResult<float_precision>& data
+    const series_result<float_precision>& data
 ) const {
 
     K required_size = n + order + static_cast<K>(1) + static_cast<K>(
-		remainderType == remainder_type::t_wave_variant ||
-		remainderType == remainder_type::v_variant ||
-		remainderType == remainder_type::v_wave_variant
+		remainder_type_in_use == remainder_type::t_wave_variant ||
+		remainder_type_in_use == remainder_type::v_variant ||
+		remainder_type_in_use == remainder_type::v_wave_variant
 	);
 
     if (data.Sn.size() < required_size || data.an.size() < required_size){
@@ -629,7 +629,7 @@ float_precision levin_algorithm<float_precision, K>::operator()(
 
     using std::isfinite;
 
-    const float_precision result = (useRecFormulas ? calc_result_rec(n,order, data) : calc_result(n, order, data));
+    const float_precision result = (use_recurrent_formula ? calc_result_rec(n,order, data) : calc_result(n, order, data));
 
     if(!isfinite(result)){
         throw std::overflow_error("division by zero");
@@ -647,8 +647,8 @@ protected:
 
 	T beta;													///< Parameter for u-variant transformation (β > 0). Default value is 1.0.
     std::unique_ptr<const transform_base<complex_precision<T>, K>> remainder;	///< Pointer to remainder transformation object
-    bool useRecFormulas = false;							///< Flag to use recurrence formulas (true) or direct formulas (false)
-    remainder_type remainderType = remainder_type::u_variant;		///< Type of Levin transformation variant (u, t, v, t~, v~)
+    bool use_recurrent_formula = false;							///< Flag to use recurrence formulas (true) or direct formulas (false)
+    remainder_type remainder_type_in_use = remainder_type::u_variant;		///< Type of Levin transformation variant (u, t, v, t~, v~)
 
 	/**
 	 * @brief Computes the Levin transformation using direct summation formulas.
@@ -665,7 +665,7 @@ protected:
 		const K n, 
         const K order, 
          
-        const SeriesResult<complex_precision<T>>& data
+        const series_result<complex_precision<T>>& data
 	) const;
 
 	/**
@@ -681,7 +681,7 @@ protected:
 	inline complex_precision<T> calc_result_rec(
 		const K n, 
         const K order, 
-        const SeriesResult<complex_precision<T>>& data
+        const series_result<complex_precision<T>>& data
 	) const;
 
 public:
@@ -691,18 +691,18 @@ public:
 	 *
 	 * @param series The series class object to be accelerated
 	 *        Must be a valid object implementing the required series interface
-	 * @param variant Type of Levin transformation variant to use
+	 * @param remainder_type_to_use Type of Levin transformation variant to use
 	 *        Valid values: u_variant, t_variant, v_variant, t_wave_variant, v_wave_variant
 	 *        Determines the remainder estimate R_n used in the transformation
-	 * @param useRecFormulas Flag to use recurrence formulas instead of direct summation
+	 * @param use_recurrent_formula Flag to use recurrence formulas instead of direct summation
 	 *        true: use recursive implementation, false: use direct summation
 	 * @param beta Parameter for u-variant transformation (must be > 0)
 	 *        Default value: 1.0. Affects the remainder estimate in u-variant.
 	 *        For theory, see: Sidi & Levin (1981), Eq. (3.4) and surrounding discussion
 	 */
 	explicit levin_algorithm(
-        const remainder_type remainderType = remainder_type::u_variant,
-        const bool useRecFormulas = false,
+        const remainder_type remainder_type_to_use = remainder_type::u_variant,
+        const bool use_recurrent_formula = false,
         const T& beta = static_cast<float_precision>(1)
 	);
 
@@ -731,51 +731,51 @@ public:
 	complex_precision<T> operator()( 
         const K n, 
         const K order, 
-        const SeriesResult<complex_precision<T>>& data
+        const series_result<complex_precision<T>>& data
 	) const override;
 
-	void updateType(const remainder_type newType){
+	void updateType(const remainder_type remainder_type_to_use){
 
-		series_acceleration<complex_precision<T>, K>::acceleration_name = (useRecFormulas ? "recurrent " : "");
+		series_acceleration<complex_precision<T>, K>::acceleration_name = (use_recurrent_formula ? "recurrent " : "");
 
-		switch(newType){
+		switch(remainder_type_to_use){
         	case remainder_type::u_variant :
 			{
-				remainderType = newType;
+				remainder_type_in_use = remainder_type_to_use;
 				series_acceleration<complex_precision<T>, K>::acceleration_name += "levin l with u-variant";
         	    remainder.reset(new u_transform<complex_precision<T>, K>());
         	    break;
 			}
         	case remainder_type::t_variant :
 			{
-				remainderType = newType;
+				remainder_type_in_use = remainder_type_to_use;
 				series_acceleration<complex_precision<T>, K>::acceleration_name += "levin l with t-variant";
         	    remainder.reset(new t_transform<complex_precision<T>, K>());
         	    break;
 			}
         	case remainder_type::v_variant :
 			{
-				remainderType = newType;
+				remainder_type_in_use = remainder_type_to_use;
 				series_acceleration<complex_precision<T>, K>::acceleration_name += "levin l with v-variant";
         	    remainder.reset(new v_transform<complex_precision<T>, K>());
         	    break;
 			}
         	case remainder_type::t_wave_variant:
 			{
-				remainderType = newType;
+				remainder_type_in_use = remainder_type_to_use;
 				series_acceleration<complex_precision<T>, K>::acceleration_name += "levin l with t-wave-variant";
         	    remainder.reset(new t_wave_transform<complex_precision<T>, K>());
         	    break;
 			}
         	case remainder_type::v_wave_variant:
 			{
-				remainderType = newType;
+				remainder_type_in_use = remainder_type_to_use;
 				series_acceleration<complex_precision<T>, K>::acceleration_name += "levin l with v-wave-variant";
         	    remainder.reset(new v_wave_transform<complex_precision<T>, K>());
         	    break;
 			}
         	default:{
-				remainderType = remainder_type::u_variant;
+				remainder_type_in_use = remainder_type::u_variant;
 				series_acceleration<complex_precision<T>, K>::acceleration_name += "levin l with u-variant";
         	    remainder.reset(new u_transform<complex_precision<T>, K>()); // Default to u-variant
 			}
@@ -788,24 +788,24 @@ public:
 
 template<std::floating_point T, UnsignedIntLike K>
 levin_algorithm<complex_precision<T>, K>::levin_algorithm(
-    const remainder_type remainderType,
-    const bool useRecFormulas,
+    const remainder_type remainder_type_in_use,
+    const bool use_recurrent_formula,
     const T& beta
 ) :
 	series_acceleration<complex_precision<T>, K>(),
-	useRecFormulas(useRecFormulas)
+	use_recurrent_formula(use_recurrent_formula)
 {//TODO: нужно ли проверять бету на допустимость?
 
 	updateBeta(beta);
 	// Initialize the appropriate remainder transformation based on variant
-    updateType(remainderType);
+    updateType(remainder_type_in_use);
 }
 
 template<std::floating_point T, UnsignedIntLike K>
 inline complex_precision<T> levin_algorithm<complex_precision<T>, K>::calc_result(
 	const K n, 
     const K order, 
-    const SeriesResult<complex_precision<T>>& data
+    const series_result<complex_precision<T>>& data
 ) const {
 
 	using std::pow;
@@ -833,7 +833,7 @@ inline complex_precision<T> levin_algorithm<complex_precision<T>, K>::calc_resul
             n + j,
             n + j,
             data.an,
-            (remainderType == remainder_type::u_variant ? beta : static_cast<complex_precision<T>>(1))
+            (remainder_type_in_use == remainder_type::u_variant ? beta : static_cast<complex_precision<T>>(1))
         );
 
 		rest *= C_njk;
@@ -851,7 +851,7 @@ template<std::floating_point T, UnsignedIntLike K>
 inline complex_precision<T> levin_algorithm<complex_precision<T>, K>::calc_result_rec(
 	const K n, 
     const K order, 
-    const SeriesResult<complex_precision<T>>& data
+    const series_result<complex_precision<T>>& data
 ) const{
 
 	using std::isfinite;
@@ -874,7 +874,7 @@ inline complex_precision<T> levin_algorithm<complex_precision<T>, K>::calc_resul
             n + i,
             n + i,
             data.an,
-            (remainderType == remainder_type::u_variant ? beta : static_cast<complex_precision<T>>(1))
+            (remainder_type_in_use == remainder_type::u_variant ? beta : static_cast<complex_precision<T>>(1))
         );
 
 		Num[i] = data.Sn.at(n+i) * Denom[i];
@@ -904,13 +904,13 @@ template <std::floating_point T, UnsignedIntLike K>
 complex_precision<T> levin_algorithm<complex_precision<T>, K>::operator()(
 	const K n, 
     const K order, 
-    const SeriesResult<complex_precision<T>>& data
+    const series_result<complex_precision<T>>& data
 ) const {
 
     K required_size = n + order + static_cast<K>(1) + static_cast<K>(
-		remainderType == remainder_type::t_wave_variant ||
-		remainderType == remainder_type::v_variant ||
-		remainderType == remainder_type::v_wave_variant
+		remainder_type_in_use == remainder_type::t_wave_variant ||
+		remainder_type_in_use == remainder_type::v_variant ||
+		remainder_type_in_use == remainder_type::v_wave_variant
 	);
 
     if (data.Sn.size() < required_size || data.an.size() < required_size){
@@ -923,7 +923,7 @@ complex_precision<T> levin_algorithm<complex_precision<T>, K>::operator()(
 
     using std::isfinite;
 
-    const complex_precision<T> result = (useRecFormulas ? calc_result_rec(n,order, data) : calc_result(n, order, data));
+    const complex_precision<T> result = (use_recurrent_formula ? calc_result_rec(n,order, data) : calc_result(n, order, data));
 
     if(!isfinite(result.real()) || !isfinite(result.imag())){
         throw std::overflow_error("division by zero");
@@ -939,8 +939,8 @@ protected:
 
 	float_precision beta;													///< Parameter for u-variant transformation (β > 0). Default value is 1.0.
     std::unique_ptr<const transform_base<complex_precision<float_precision>, K>> remainder;	///< Pointer to remainder transformation object
-    bool useRecFormulas = false;							///< Flag to use recurrence formulas (true) or direct formulas (false)
-    remainder_type remainderType = remainder_type::u_variant;		///< Type of Levin transformation variant (u, t, v, t~, v~)
+    bool use_recurrent_formula = false;							///< Flag to use recurrence formulas (true) or direct formulas (false)
+    remainder_type remainder_type_in_use = remainder_type::u_variant;		///< Type of Levin transformation variant (u, t, v, t~, v~)
 
 	/**
 	 * @brief Computes the Levin transformation using direct summation formulas.
@@ -956,7 +956,7 @@ protected:
 	inline complex_precision<float_precision> calc_result(
 		const K n, 
         const K order, 
-        const SeriesResult<complex_precision<float_precision>>& data
+        const series_result<complex_precision<float_precision>>& data
 	) const;
 
 	/**
@@ -972,7 +972,7 @@ protected:
 	inline complex_precision<float_precision> calc_result_rec(
 		const K n, 
         const K order, 
-        const SeriesResult<complex_precision<float_precision>>& data
+        const series_result<complex_precision<float_precision>>& data
 	) const;
 
 public:
@@ -982,18 +982,18 @@ public:
 	 *
 	 * @param series The series class object to be accelerated
 	 *        Must be a valid object implementing the required series interface
-	 * @param variant Type of Levin transformation variant to use
+	 * @param remainder_type_to_use Type of Levin transformation variant to use
 	 *        Valid values: u_variant, t_variant, v_variant, t_wave_variant, v_wave_variant
 	 *        Determines the remainder estimate R_n used in the transformation
-	 * @param useRecFormulas Flag to use recurrence formulas instead of direct summation
+	 * @param use_recurrent_formula Flag to use recurrence formulas instead of direct summation
 	 *        true: use recursive implementation, false: use direct summation
 	 * @param beta Parameter for u-variant transformation (must be > 0)
 	 *        Default value: 1.0. Affects the remainder estimate in u-variant.
 	 *        For theory, see: Sidi & Levin (1981), Eq. (3.4) and surrounding discussion
 	 */
 	explicit levin_algorithm(
-        const remainder_type remainderType = remainder_type::u_variant,
-        const bool useRecFormulas = false,
+        const remainder_type remainder_type_to_use = remainder_type::u_variant,
+        const bool use_recurrent_formula = false,
         const float_precision& beta = static_cast<float_precision>(1)
 	);
 
@@ -1022,51 +1022,51 @@ public:
 	complex_precision<float_precision> operator()( 
         const K n, 
         const K order, 
-        const SeriesResult<complex_precision<float_precision>>& data
+        const series_result<complex_precision<float_precision>>& data
 	) const override;
 
-	void updateType(const remainder_type newType){
+	void updateType(const remainder_type remainder_type_to_use){
 
-		series_acceleration<complex_precision<float_precision>, K>::acceleration_name = (useRecFormulas ? "recurrent " : "");
+		series_acceleration<complex_precision<float_precision>, K>::acceleration_name = (use_recurrent_formula ? "recurrent " : "");
 
-		switch(newType){
+		switch(remainder_type_to_use){
         	case remainder_type::u_variant :
 			{
-				remainderType = newType;
+				remainder_type_in_use = remainder_type_to_use;
 				series_acceleration<complex_precision<float_precision>, K>::acceleration_name += "levin l with u-variant";
         	    remainder.reset(new u_transform<complex_precision<float_precision>, K>());
         	    break;
 			}
         	case remainder_type::t_variant :
 			{
-				remainderType = newType;
+				remainder_type_in_use = remainder_type_to_use;
 				series_acceleration<complex_precision<float_precision>, K>::acceleration_name += "levin l with t-variant";
         	    remainder.reset(new t_transform<complex_precision<float_precision>, K>());
         	    break;
 			}
         	case remainder_type::v_variant :
 			{
-				remainderType = newType;
+				remainder_type_in_use = remainder_type_to_use;
 				series_acceleration<complex_precision<float_precision>, K>::acceleration_name += "levin l with v-variant";
         	    remainder.reset(new v_transform<complex_precision<float_precision>, K>());
         	    break;
 			}
         	case remainder_type::t_wave_variant:
 			{
-				remainderType = newType;
+				remainder_type_in_use = remainder_type_to_use;
 				series_acceleration<complex_precision<float_precision>, K>::acceleration_name += "levin l with t-wave-variant";
         	    remainder.reset(new t_wave_transform<complex_precision<float_precision>, K>());
         	    break;
 			}
         	case remainder_type::v_wave_variant:
 			{
-				remainderType = newType;
+				remainder_type_in_use = remainder_type_to_use;
 				series_acceleration<complex_precision<float_precision>, K>::acceleration_name += "levin l with v-wave-variant";
         	    remainder.reset(new v_wave_transform<complex_precision<float_precision>, K>());
         	    break;
 			}
         	default:{
-				remainderType = remainder_type::u_variant;
+				remainder_type_in_use = remainder_type::u_variant;
 				series_acceleration<complex_precision<float_precision>, K>::acceleration_name += "levin l with u-variant";
         	    remainder.reset(new u_transform<complex_precision<float_precision>, K>()); // Default to u-variant
 			}
@@ -1079,24 +1079,24 @@ public:
 
 template<UnsignedIntLike K>
 levin_algorithm<complex_precision<float_precision>, K>::levin_algorithm(
-    const remainder_type remainderType,
-    const bool useRecFormulas,
+    const remainder_type remainder_type_in_use,
+    const bool use_recurrent_formula,
     const float_precision& beta
 ) :
 	series_acceleration<complex_precision<float_precision>, K>(),
-	useRecFormulas(useRecFormulas)
+	use_recurrent_formula(use_recurrent_formula)
 {//TODO: нужно ли проверять бету на допустимость?
 
 	updateBeta(beta);
 	// Initialize the appropriate remainder transformation based on variant
-    updateType(remainderType);
+    updateType(remainder_type_in_use);
 }
 
 template<UnsignedIntLike K>
 inline complex_precision<float_precision> levin_algorithm<complex_precision<float_precision>, K>::calc_result(
 	const K n, 
     const K order, 
-    const SeriesResult<complex_precision<float_precision>>& data
+    const series_result<complex_precision<float_precision>>& data
 ) const {
 
 	using std::pow;
@@ -1141,7 +1141,7 @@ inline complex_precision<float_precision> levin_algorithm<complex_precision<floa
             n + j,
             n + j,
             data.an,
-            (remainderType == remainder_type::u_variant ? beta : static_cast<float_precision>(1))
+            (remainder_type_in_use == remainder_type::u_variant ? beta : static_cast<float_precision>(1))
         );
 
 		rest *= C_njk;
@@ -1159,7 +1159,7 @@ template<UnsignedIntLike K>
 inline complex_precision<float_precision> levin_algorithm<complex_precision<float_precision>, K>::calc_result_rec(
 	const K n, 
     const K order, 
-    const SeriesResult<complex_precision<float_precision>>& data
+    const series_result<complex_precision<float_precision>>& data
 ) const{
 
 	using std::isfinite;
@@ -1193,7 +1193,7 @@ inline complex_precision<float_precision> levin_algorithm<complex_precision<floa
             n + i,
             n + i,
             data.an,
-            complex_precision<float_precision>(remainderType == remainder_type::u_variant ? beta : static_cast<float_precision>(1))
+            complex_precision<float_precision>(remainder_type_in_use == remainder_type::u_variant ? beta : static_cast<float_precision>(1))
         );
 
 		Num[i] = data.Sn.at(n+i) * Denom[i];
@@ -1225,13 +1225,13 @@ complex_precision<float_precision> levin_algorithm<complex_precision<float_preci
 	const K n, 
     const K order, 
      
-    const SeriesResult<complex_precision<float_precision>>& data
+    const series_result<complex_precision<float_precision>>& data
 ) const {
 
     K required_size = n + order + static_cast<K>(1) + static_cast<K>(
-		remainderType == remainder_type::t_wave_variant ||
-		remainderType == remainder_type::v_variant ||
-		remainderType == remainder_type::v_wave_variant
+		remainder_type_in_use == remainder_type::t_wave_variant ||
+		remainder_type_in_use == remainder_type::v_variant ||
+		remainder_type_in_use == remainder_type::v_wave_variant
 	);
 
     if (data.Sn.size() < required_size || data.an.size() < required_size){
@@ -1244,7 +1244,7 @@ complex_precision<float_precision> levin_algorithm<complex_precision<float_preci
 
     using std::isfinite;
 
-    const complex_precision<float_precision> result = (useRecFormulas ? calc_result_rec(n,order, data) : calc_result(n, order, data));
+    const complex_precision<float_precision> result = (use_recurrent_formula ? calc_result_rec(n,order, data) : calc_result(n, order, data));
 
     if(!isfinite(result.real()) || !isfinite(result.imag())){
         throw std::overflow_error("division by zero");

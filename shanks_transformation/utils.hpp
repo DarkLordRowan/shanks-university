@@ -4,7 +4,7 @@
 #include <numbers>
 
 template<AcceptedLike T>
-struct SeriesResult{
+struct series_result{
 	std::vector<T> Sn;
 	std::vector<T> an;
 };

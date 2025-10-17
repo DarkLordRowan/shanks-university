@@ -26,11 +26,11 @@ void bind_all(py::module_& m, const std::string& suffix) {
 
     auto name = [&](const char* base) { return std::string(base) + suffix; };
 
-    py::class_<SeriesResult<T>>(m, name("SeriesResult").c_str())
+    py::class_<series_result<T>>(m, name("SeriesResult").c_str())
         .def(py::init<>())
         .def(py::init<std::vector<T>, std::vector<T>>())
-        .def_readwrite("Sn", &SeriesResult<T>::Sn)
-        .def_readwrite("an", &SeriesResult<T>::an);
+        .def_readwrite("Sn", &series_result<T>::Sn)
+        .def_readwrite("an", &series_result<T>::an);
 
     // SeriesBase
     py::class_<MSeriesBase>(m, name("SeriesBase").c_str())

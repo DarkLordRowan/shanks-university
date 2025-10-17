@@ -45,10 +45,10 @@ class wynn_rho_algorithm final : public series_acceleration<T, K>
 {
 protected:
 
-	std::unique_ptr<const numerator_base<T, K>> numerator;	/**< Numerator computation strategy */
-	T gamma;												/**< Gamma parameter for generalized rho transformation */
-	T rho;													/**< Rho parameter for gamma-rho variant */
-	bool rhoNumeratorSelected = false;
+	std::unique_ptr<const numerator_base<T, K>> numerator;				/**< Numerator computation strategy */
+	T gamma;															/**< Gamma parameter for generalized rho transformation */
+	T rho;																/**< Rho parameter for gamma-rho variant */
+	numerator_type numerator_type_in_use = numerator_type::rho_variant;  /**< numerator type in use needed for calculating required size */
 
 public:
 
@@ -73,13 +73,13 @@ public:
 
 	// Стал:
 	explicit wynn_rho_algorithm(
-		numerator_type numeratorType = numerator_type::rho_variant,
+		numerator_type numerator_type_to_use = numerator_type::rho_variant,
 		const T& gamma = static_cast<T>(-1), // Передача по константной ссылке
 		const T& rho   = static_cast<T>(1)  // Передача по константной ссылке
 	) : series_acceleration<T, K>() {
 		updateGamma(gamma);
 		updateRho(rho);
-		updateNumerator(numeratorType);
+		updateNumerator(numerator_type_to_use);
 	};
 
 	//Default destructor is sufficient since unique_ptr handles deletion
@@ -107,20 +107,23 @@ public:
 	T operator()(
 		const K n, 
         const K order, 
-        const SeriesResult<T>& data
+        const series_result<T>& data
 	) const override;
 
-	void updateNumerator(const numerator_type newType);
-	void updateGamma(const T& newGamma) { gamma = newGamma;}
-	void updateRho(const T& newRho) {rho = newRho; }
+	void updateNumerator(const numerator_type numerator_type_to_use);
+	void updateGamma(const T& new_gamma) { gamma = new_gamma;}
+	void updateRho(const T& new_rho) {rho = new_rho; }
 };
 
 template <AcceptedLike T, UnsignedIntLike K>
-void wynn_rho_algorithm<T, K>::updateNumerator(const numerator_type newType){
-	switch(newType) {
+void wynn_rho_algorithm<T, K>::updateNumerator(const numerator_type numerator_type_to_use){
+
+	numerator_type_in_use = numerator_type_to_use;
+
+	switch(numerator_type_to_use) {
 		case numerator_type::rho_variant :
 		{
-			rhoNumeratorSelected = true;
+			numerator_type_in_use = numerator_type_to_use;
 			numerator.reset(new rho_transform<T, K>());
 			series_acceleration<T,K>::acceleration_name = "wynn rho with rho numerator";
 			break;
@@ -138,6 +141,7 @@ void wynn_rho_algorithm<T, K>::updateNumerator(const numerator_type newType){
 			break;
 		}
 		default:{
+			numerator_type_in_use = numerator_type::rho_variant;
 			series_acceleration<T,K>::acceleration_name = "wynn rho with rho numerator";
 			numerator.reset(new rho_transform<T, K>());
 		}
@@ -148,13 +152,12 @@ template <AcceptedLike T, UnsignedIntLike K>
 inline T wynn_rho_algorithm<T, K>::operator()(
 	const K n, 
     const K order, 
-    const SeriesResult<T>& data
-) const { //const int order
+    const series_result<T>& data
+) const {
 
-	const K base_size = order + static_cast<K>(1);
+	const K required_size = n + order + static_cast<K>(1) + order * static_cast<K>(numerator_type_in_use == numerator_type::rho_variant);
 
-    if (data.Sn.size() < n + base_size + static_cast<K>(rhoNumeratorSelected) * order || 
-		data.an.size() < n + base_size + static_cast<K>(rhoNumeratorSelected) * order){
+    if (data.Sn.size() < required_size || data.an.size() < required_size){
         throw std::out_of_range("Sn or an is smaller than required to calculate theta_{" + to_string(order) + "}^{" + to_string(n) + "}");
 	}
     // For theory, see: Brezinski (1977), Chapter 4, Eq. (4.10)
@@ -164,6 +167,8 @@ inline T wynn_rho_algorithm<T, K>::operator()(
 	}
 
 	using std::isfinite;
+
+	const K base_size = order + static_cast<K>(1);
 
     std::vector<T> rho_odd(
         base_size,
@@ -237,9 +242,9 @@ class wynn_rho_algorithm<float_precision, K> final : public series_acceleration<
 protected:
 
 	std::unique_ptr<const numerator_base<float_precision, K>> numerator;	/**< Numerator computation strategy */
-	float_precision gamma;											/**< Gamma parameter for generalized rho transformation */
-	float_precision rho;											/**< Rho parameter for gamma-rho variant */
-	bool rhoNumeratorSelected = false;
+	float_precision gamma;													/**< Gamma parameter for generalized rho transformation */
+	float_precision rho;													/**< Rho parameter for gamma-rho variant */
+	numerator_type numerator_type_in_use = numerator_type::rho_variant;		/**< numerator type in use needed for calculating required size */
 
 public:
 
@@ -264,13 +269,13 @@ public:
 
 	// Стал:
 	explicit wynn_rho_algorithm(
-		numerator_type numeratorType = numerator_type::rho_variant,
+		numerator_type numerator_type_to_use = numerator_type::rho_variant,
 		const float_precision& gamma = static_cast<float_precision>(-1), // Передача по константной ссылке
 		const float_precision& rho   = static_cast<float_precision>(1)  // Передача по константной ссылке
 	) : series_acceleration<float_precision, K>() {
 		updateGamma(gamma);
 		updateRho(rho);
-		updateNumerator(numeratorType);
+		updateNumerator(numerator_type_to_use);
 	};
 
 	//Default destructor is sufficient since unique_ptr handles deletion
@@ -298,20 +303,22 @@ public:
 	float_precision operator()(
 		const K n, 
         const K order, 
-        const SeriesResult<float_precision>& data
+        const series_result<float_precision>& data
 	) const override;
 
-	void updateNumerator(const numerator_type newType);
-	void updateGamma(const float_precision& newGamma) { gamma = newGamma;}
-	void updateRho(const float_precision& newRho) {rho = newRho; }
+	void updateNumerator(const numerator_type numerator_type_to_use);
+	void updateGamma(const float_precision& new_gamma) { gamma = new_gamma;}
+	void updateRho(const float_precision& new_rho) {rho = new_rho; }
 };
 
 template <UnsignedIntLike K>
-void wynn_rho_algorithm<float_precision, K>::updateNumerator(const numerator_type newType){
-	switch(newType) {
+void wynn_rho_algorithm<float_precision, K>::updateNumerator(const numerator_type numerator_type_to_use){
+
+	numerator_type_in_use = numerator_type_to_use;
+
+	switch(numerator_type_to_use) {
 		case numerator_type::rho_variant :
 		{
-			rhoNumeratorSelected = true;
 			numerator.reset(new rho_transform<float_precision, K>());
 			series_acceleration<float_precision,K>::acceleration_name = "wynn rho with rho numerator";
 			break;
@@ -329,6 +336,7 @@ void wynn_rho_algorithm<float_precision, K>::updateNumerator(const numerator_typ
 			break;
 		}
 		default:{
+			numerator_type_in_use = numerator_type::rho_variant;
 			series_acceleration<float_precision,K>::acceleration_name = "wynn rho with rho numerator";
 			numerator.reset(new rho_transform<float_precision, K>());
 		}
@@ -339,13 +347,12 @@ template <UnsignedIntLike K>
 inline float_precision wynn_rho_algorithm<float_precision, K>::operator()(
 	const K n, 
     const K order, 
-    const SeriesResult<float_precision>& data
-) const { //const int order
+    const series_result<float_precision>& data
+) const {
 
-	const K base_size = order + static_cast<K>(1);
+    const K required_size = n + order + static_cast<K>(1) + order * static_cast<K>(numerator_type_in_use == numerator_type::rho_variant);
 
-    if (data.Sn.size() < n + base_size + static_cast<K>(rhoNumeratorSelected) * order || 
-		data.an.size() < n + base_size + static_cast<K>(rhoNumeratorSelected) * order){
+    if (data.Sn.size() < required_size || data.an.size() < required_size){
         throw std::out_of_range("Sn or an is smaller than required to calculate theta_{" + to_string(order) + "}^{" + to_string(n) + "}");
 	}
     // For theory, see: Brezinski (1977), Chapter 4, Eq. (4.10)
@@ -355,6 +362,8 @@ inline float_precision wynn_rho_algorithm<float_precision, K>::operator()(
 	}
 
 	using std::isfinite;
+
+	const K base_size = order + static_cast<K>(1);
 
 	const size_t precision = std::max(data.Sn[0].precision(), data.an[0].precision());
 
@@ -430,14 +439,14 @@ class wynn_rho_algorithm<complex_precision<T>, K> final : public series_accelera
 protected:
 
 	std::unique_ptr<const numerator_base<complex_precision<T>, K>> numerator;	/**< Numerator computation strategy */
-	T gamma;											/**< Gamma parameter for generalized rho transformation */
-	T rho;											/**< Rho parameter for gamma-rho variant */
-	bool rhoNumeratorSelected = false;
+	T gamma;																	/**< Gamma parameter for generalized rho transformation */
+	T rho;																		/**< Rho parameter for gamma-rho variant */
+	numerator_type numerator_type_in_use = numerator_type::rho_variant;			/**< numerator type in use needed for calculating required size */
 
 public:
 
 	/**
-	 * @brief Parameterized constructor to initialize the Rho Wynn Algorithm.
+	 * @brief Constructor to initialize the Rho Wynn Algorithm for T - floating point.
 	 *
 	 * @param series The series class object to be accelerated
 	 *        Must be a valid object implementing the required series interface
@@ -457,13 +466,13 @@ public:
 
 	// Стал:
 	explicit wynn_rho_algorithm(
-		numerator_type numeratorType = numerator_type::rho_variant,
+		numerator_type numerator_type_to_use = numerator_type::rho_variant,
 		const T& gamma = static_cast<T>(-1), // Передача по константной ссылке
 		const T& rho   = static_cast<T>(1)  // Передача по константной ссылке
 	) : series_acceleration<complex_precision<T>, K>() {
 		updateGamma(gamma);
 		updateRho(rho);
-		updateNumerator(numeratorType);
+		updateNumerator(numerator_type_to_use);
 	};
 
 	//Default destructor is sufficient since unique_ptr handles deletion
@@ -491,20 +500,22 @@ public:
 	complex_precision<T> operator()(
 		const K n, 
         const K order, 
-        const SeriesResult<complex_precision<T>>& data
+        const series_result<complex_precision<T>>& data
 	) const override;
 
-	void updateNumerator(const numerator_type newType);
-	void updateGamma(const T& newGamma) { gamma = newGamma;}
-	void updateRho(const T& newRho) {rho = newRho; }
+	void updateNumerator(const numerator_type numerator_type_to_use);
+	void updateGamma(const T& new_gamma) { gamma = new_gamma;}
+	void updateRho(const T& new_rho) {rho = new_rho; }
 };
 
 template <std::floating_point T, UnsignedIntLike K>
-void wynn_rho_algorithm<complex_precision<T>, K>::updateNumerator(const numerator_type newType){
-	switch(newType) {
+void wynn_rho_algorithm<complex_precision<T>, K>::updateNumerator(const numerator_type numerator_type_to_use){
+
+	numerator_type_in_use = numerator_type_to_use;
+
+	switch(numerator_type_to_use) {
 		case numerator_type::rho_variant :
 		{
-			rhoNumeratorSelected = true;
 			numerator.reset(new rho_transform<complex_precision<T>, K>());
 			series_acceleration<complex_precision<T>,K>::acceleration_name = "wynn rho with rho numerator";
 			break;
@@ -522,6 +533,7 @@ void wynn_rho_algorithm<complex_precision<T>, K>::updateNumerator(const numerato
 			break;
 		}
 		default:{
+			numerator_type_in_use = numerator_type::rho_variant;
 			series_acceleration<complex_precision<T>,K>::acceleration_name = "wynn rho with rho numerator";
 			numerator.reset(new rho_transform<complex_precision<T>, K>());
 		}
@@ -532,13 +544,12 @@ template <std::floating_point T, UnsignedIntLike K>
 inline complex_precision<T> wynn_rho_algorithm<complex_precision<T>, K>::operator()(
 	const K n, 
     const K order, 
-    const SeriesResult<complex_precision<T>>& data
-) const { //const int order
+    const series_result<complex_precision<T>>& data
+) const { 
 
-	const K base_size = order + static_cast<K>(1);
+	const K required_size = n + order + static_cast<K>(1) + order * static_cast<K>(numerator_type_in_use == numerator_type::rho_variant);
 
-    if (data.Sn.size() < n + base_size + static_cast<K>(rhoNumeratorSelected) * order || 
-		data.an.size() < n + base_size + static_cast<K>(rhoNumeratorSelected) * order){
+    if (data.Sn.size() < required_size || data.an.size() < required_size){
         throw std::out_of_range("Sn or an is smaller than required to calculate theta_{" + to_string(order) + "}^{" + to_string(n) + "}");
 	}
     // For theory, see: Brezinski (1977), Chapter 4, Eq. (4.10)
@@ -546,6 +557,8 @@ inline complex_precision<T> wynn_rho_algorithm<complex_precision<T>, K>::operato
     if (order == static_cast<K>(0)){
     	return data.Sn.at(n);
 	}
+
+	const K base_size = order + static_cast<K>(1);
 
 	using std::isfinite;
 
@@ -619,9 +632,9 @@ class wynn_rho_algorithm<complex_precision<float_precision>, K> final : public s
 protected:
 
 	std::unique_ptr<const numerator_base<complex_precision<float_precision>, K>> numerator;	/**< Numerator computation strategy */
-	float_precision gamma;											/**< Gamma parameter for generalized rho transformation */
-	float_precision rho;											/**< Rho parameter for gamma-rho variant */
-	bool rhoNumeratorSelected = false;
+	float_precision gamma;																	/**< Gamma parameter for generalized rho transformation */
+	float_precision rho;																	/**< Rho parameter for gamma-rho variant */
+	numerator_type numerator_type_in_use = numerator_type::rho_variant;						/**< numerator type in use needed for calculating required size */
 
 public:
 
@@ -646,13 +659,13 @@ public:
 
 	// Стал:
 	explicit wynn_rho_algorithm(
-		numerator_type numeratorType = numerator_type::rho_variant,
+		numerator_type numerator_type_to_use = numerator_type::rho_variant,
 		const float_precision& gamma = static_cast<float_precision>(-1), // Передача по константной ссылке
 		const float_precision& rho   = static_cast<float_precision>(1)  // Передача по константной ссылке
 	) : series_acceleration<complex_precision<float_precision>, K>() {
 		updateGamma(gamma);
 		updateRho(rho);
-		updateNumerator(numeratorType);
+		updateNumerator(numerator_type_to_use);
 	};
 
 	//Default destructor is sufficient since unique_ptr handles deletion
@@ -680,20 +693,22 @@ public:
 	complex_precision<float_precision> operator()(
 		const K n, 
         const K order, 
-        const SeriesResult<complex_precision<float_precision>>& data
+        const series_result<complex_precision<float_precision>>& data
 	) const override;
 
-	void updateNumerator(const numerator_type newType);
-	void updateGamma(const float_precision& newGamma) { gamma = newGamma;}
-	void updateRho(const float_precision& newRho) {rho = newRho; }
+	void updateNumerator(const numerator_type numerator_type_to_use);
+	void updateGamma(const float_precision& new_gamma) { gamma = new_gamma;}
+	void updateRho(const float_precision& new_rho) {rho = new_rho; }
 };
 
 template <UnsignedIntLike K>
-void wynn_rho_algorithm<complex_precision<float_precision>, K>::updateNumerator(const numerator_type newType){
-	switch(newType) {
+void wynn_rho_algorithm<complex_precision<float_precision>, K>::updateNumerator(const numerator_type numerator_type_to_use){
+
+	numerator_type_in_use = numerator_type_to_use;
+
+	switch(numerator_type_to_use) {
 		case numerator_type::rho_variant :
 		{
-			rhoNumeratorSelected = true;
 			numerator.reset(new rho_transform<complex_precision<float_precision>, K>());
 			series_acceleration<complex_precision<float_precision>,K>::acceleration_name = "wynn rho with rho numerator";
 			break;
@@ -711,6 +726,7 @@ void wynn_rho_algorithm<complex_precision<float_precision>, K>::updateNumerator(
 			break;
 		}
 		default:{
+			numerator_type_in_use = numerator_type::rho_variant;
 			series_acceleration<complex_precision<float_precision>,K>::acceleration_name = "wynn rho with rho numerator";
 			numerator.reset(new rho_transform<complex_precision<float_precision>, K>());
 		}
@@ -721,13 +737,12 @@ template <UnsignedIntLike K>
 inline complex_precision<float_precision> wynn_rho_algorithm<complex_precision<float_precision>, K>::operator()(
 	const K n, 
     const K order, 
-    const SeriesResult<complex_precision<float_precision>>& data
-) const { //const int order
+    const series_result<complex_precision<float_precision>>& data
+) const {
 
-	const K base_size = order + static_cast<K>(1);
+    const K required_size = n + order + static_cast<K>(1) + order * static_cast<K>(numerator_type_in_use == numerator_type::rho_variant);
 
-    if (data.Sn.size() < n + base_size + static_cast<K>(rhoNumeratorSelected) * order || 
-		data.an.size() < n + base_size + static_cast<K>(rhoNumeratorSelected) * order){
+    if (data.Sn.size() < required_size || data.an.size() < required_size){
         throw std::out_of_range("Sn or an is smaller than required to calculate theta_{" + to_string(order) + "}^{" + to_string(n) + "}");
 	}
     // For theory, see: Brezinski (1977), Chapter 4, Eq. (4.10)
@@ -737,6 +752,8 @@ inline complex_precision<float_precision> wynn_rho_algorithm<complex_precision<f
 	}
 
 	using std::isfinite;
+
+	const K base_size = order + static_cast<K>(1);
 
 	const size_t precision = std::max(
 		std::max(data.Sn[0].real().precision(), data.Sn[0].imag().precision()), 

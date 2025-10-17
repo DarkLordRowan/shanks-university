@@ -72,7 +72,7 @@ public:
      * @return The accelerated partial sum after applying the transformation
      * @throws May throw domain_error or overflow_error in derived implementations
      */
-    virtual T operator()(const K n, const K order, const SeriesResult<T>& data) const = 0;
+    virtual T operator()(const K n, const K order, const series_result<T>& data) const = 0;
 
 protected:
 
