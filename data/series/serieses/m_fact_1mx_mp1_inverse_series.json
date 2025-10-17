@@ -1,6 +1,10 @@
 {
-    "id": "m_fact_1mx_mp1_inverse_series",
-    "title": "",
-    "formula": "",
-    "document": "Rows.docx"
+  "id": "m_fact_1mx_mp1_inverse_series",
+  "num": 16,
+  "title": "\\frac{m!}{(1 - x)^{m + 1}}",
+  "formula": "\\sum_{n=0}^{\\infty}\\frac{(n + m)!}{n!\\,m!}\\,x^{n} = \\frac{m!}{(1 - x)^{m + 1}}",
+  "x_from": "-1",
+  "x_to": "1",
+  "speed": "hyperlinear",
+  "document": "series.docx"
 }
