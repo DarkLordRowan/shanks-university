@@ -1,6 +1,10 @@
 {
-    "id": "three_minus_pi_series",
-    "title": "",
-    "formula": "",
-    "document": "Rows.docx"
+  "id": "three_minus_pi_series",
+  "num": 26,
+  "title": "(3-\\pi)\\,x",
+  "formula": "\\sum_{n=0}^{\\infty}\\frac{(-1)^{n+1} x}{(n+1)(n+2)(2n+3)} = (3-\\pi)\\,x",
+  "x_from": "-\\infty",
+  "x_to": "+\\infty",
+  "speed": "cubic",
+  "document": "series.docx"
 }

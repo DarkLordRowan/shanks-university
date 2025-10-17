@@ -1,0 +1,10 @@
+{
+  "id": "one_twelfth_x2_pi2_series",
+  "num": 19,
+  "title": "\\tfrac{x}{12}(x^{2}-\\pi^{2})",
+  "formula": "\\sum_{k=1}^{\\infty}\\frac{(-1)^{k}}{k^{3}}\\sin(kx)=\\tfrac{x}{12}(x^{2}-\\pi^{2})",
+  "x_from": "-\\pi",
+  "x_to": "\\pi",
+  "speed": "cubic",
+  "document": "series.docx"
+}

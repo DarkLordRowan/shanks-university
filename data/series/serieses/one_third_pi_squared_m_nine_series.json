@@ -1,6 +1,10 @@
 {
-    "id": "one_third_pi_squared_m_nine_series",
-    "title": "",
-    "formula": "",
-    "document": "Rows.docx"
+  "id": "one_third_pi_squared_m_nine_series",
+  "num": 29,
+  "title": "\\tfrac{\\pi^{2}-9}{3}\\,x",
+  "formula": "\\sum_{n=0}^{\\infty}\\frac{x}{(n+1)^{2}(n+2)^{2}} = \\tfrac{\\pi^{2}-9}{3}\\,x",
+  "x_from": "-\\infty",
+  "x_to": "+\\infty",
+  "speed": "cubic",
+  "document": "series.docx"
 }
