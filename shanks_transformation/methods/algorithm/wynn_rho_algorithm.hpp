@@ -46,9 +46,9 @@ class wynn_rho_algorithm final : public series_acceleration<T, K>
 protected:
 
 	std::unique_ptr<const numerator_base<T, K>> numerator;				/**< Numerator computation strategy */
-	T gamma;															/**< Gamma parameter for generalized rho transformation */
-	T rho;																/**< Rho parameter for gamma-rho variant */
-	numerator_type numerator_type_in_use = numerator_type::rho_variant;  /**< numerator type in use needed for calculating required size */
+	T gamma_in_use;															/**< Gamma parameter for generalized rho transformation */
+	T rho_in_use;																/**< Rho parameter for gamma-rho variant */
+	numerator_type numerator_type_in_use = numerator_type::rho_type;  /**< numerator type in use needed for calculating required size */
 
 public:
 
@@ -59,9 +59,9 @@ public:
 	 *        Must be a valid object implementing the required series interface
 	 * @param variant Type of numerator computation strategy
 	 *        Determines the specific variant of Wynn's rho algorithm:
-	 *        - rho_variant: Standard Wynn rho algorithm
-	 *        - generalized_variant: Generalized rho transformation
-	 *        - gamma_rho_variant: Gamma-rho variant with additional parameters
+	 *        - rho_type: Standard Wynn rho algorithm
+	 *        - generalized_type: Generalized rho transformation
+	 *        - gamma_rho_type: Gamma-rho variant with additional parameters
 	 * @param gamma_ Gamma parameter value (default: 1)
 	 *        Valid values: T > 0, typically 1 or 2
 	 *        Controls the transformation behavior in generalized variants
@@ -73,13 +73,13 @@ public:
 
 	// Стал:
 	explicit wynn_rho_algorithm(
-		numerator_type numerator_type_to_use = numerator_type::rho_variant,
-		const T& gamma = static_cast<T>(-1), // Передача по константной ссылке
-		const T& rho   = static_cast<T>(1)  // Передача по константной ссылке
+		numerator_type numerator_type_to_use = numerator_type::rho_type,
+		const T& gamma_to_use = static_cast<T>(-1), // Передача по константной ссылке
+		const T& rho_to_use   = static_cast<T>(1)  // Передача по константной ссылке
 	) : series_acceleration<T, K>() {
-		updateGamma(gamma);
-		updateRho(rho);
-		updateNumerator(numerator_type_to_use);
+		update_gamma(gamma_to_use);
+		update_rho(rho_to_use);
+		update_numerator(numerator_type_to_use);
 	};
 
 	//Default destructor is sufficient since unique_ptr handles deletion
@@ -110,43 +110,42 @@ public:
         const series_result<T>& data
 	) const override;
 
-	void updateNumerator(const numerator_type numerator_type_to_use);
-	void updateGamma(const T& new_gamma) { gamma = new_gamma;}
-	void updateRho(const T& new_rho) {rho = new_rho; }
-};
+	
+	void update_gamma(const T& new_gamma) { gamma_in_use = new_gamma;}
+	void update_rho(const T& new_rho) {rho_in_use = new_rho; }
 
-template <AcceptedLike T, UnsignedIntLike K>
-void wynn_rho_algorithm<T, K>::updateNumerator(const numerator_type numerator_type_to_use){
+	void update_numerator(const numerator_type numerator_type_to_use){
 
-	numerator_type_in_use = numerator_type_to_use;
+		numerator_type_in_use = numerator_type_to_use;
 
-	switch(numerator_type_to_use) {
-		case numerator_type::rho_variant :
-		{
-			numerator_type_in_use = numerator_type_to_use;
-			numerator.reset(new rho_transform<T, K>());
-			series_acceleration<T,K>::acceleration_name = "wynn rho with rho numerator";
-			break;
-		}
-		case numerator_type::generalized_variant :
-		{
-			numerator.reset(new generilized_transform<T, K>());
-			series_acceleration<T,K>::acceleration_name = "wynn rho with generalized numerator";
-			break;
-		}
-		case numerator_type::gamma_rho_variant :
-		{
-			numerator.reset(new gamma_rho_transform<T, K>());
-			series_acceleration<T,K>::acceleration_name = "wynn rho with rho numerator";
-			break;
-		}
-		default:{
-			numerator_type_in_use = numerator_type::rho_variant;
-			series_acceleration<T,K>::acceleration_name = "wynn rho with rho numerator";
-			numerator.reset(new rho_transform<T, K>());
+		switch(numerator_type_to_use){
+        	case numerator_type::rho_type 			: { numerator.reset(new rho_transform<T, K>()	   ); break; }
+        	case numerator_type::generalized_type 	: { numerator.reset(new generilized_transform<T, K>()	   ); break; }
+        	case numerator_type::gamma_rho_type 	: { numerator.reset(new gamma_rho_transform<T, K>()	   ); break; }
+        	default:{
+				numerator_type_in_use = numerator_type::rho_type;
+        	    numerator.reset(new rho_transform<T, K>()); // Default to u-variant
+			}
 		}
 	}
-}
+
+	std::string get_name() {
+
+		using std::to_string;
+
+		series_acceleration<T, K>::acceleration_name = "wynn rho algorithm ";
+		switch(numerator_type_in_use){
+			case numerator_type::rho_type 			: { series_acceleration<T, K>::acceleration_name += "with rho-numerator "; break; }
+			case numerator_type::generalized_type 	: { series_acceleration<T, K>::acceleration_name += "with generalized-numerator "; break; }
+			case numerator_type::gamma_rho_type 	: { series_acceleration<T, K>::acceleration_name += "with v-numerator "; break; }
+		}
+		series_acceleration<T, K>::acceleration_name += ", gamma = " + to_string(gamma_in_use);
+		series_acceleration<T, K>::acceleration_name += ", rho = " + to_string(rho_in_use);
+
+		return series_acceleration<T, K>::acceleration_name;
+	}
+
+};
 
 template <AcceptedLike T, UnsignedIntLike K>
 inline T wynn_rho_algorithm<T, K>::operator()(
@@ -155,10 +154,11 @@ inline T wynn_rho_algorithm<T, K>::operator()(
     const series_result<T>& data
 ) const {
 
-	const K required_size = n + order + static_cast<K>(1) + order * static_cast<K>(numerator_type_in_use == numerator_type::rho_variant);
+	const K required_size = n + order + static_cast<K>(1) + order * static_cast<K>(numerator_type_in_use == numerator_type::rho_type);
 
     if (data.Sn.size() < required_size || data.an.size() < required_size){
-        throw std::out_of_range("Sn or an is smaller than required to calculate theta_{" + to_string(order) + "}^{" + to_string(n) + "}");
+        throw std::out_of_range("The Sn or an smaller then required for wynn_rho_{" + to_string(order) + "}^{" + to_string(n) + "}\n" +
+        "the size of Sn and an must be at least " + to_string(required_size));
 	}
     // For theory, see: Brezinski (1977), Chapter 4, Eq. (4.10)
     // Base cases: return partial sum for n=0 or order=0
@@ -201,8 +201,8 @@ inline T wynn_rho_algorithm<T, K>::operator()(
 				n + j, 
 				level * static_cast<K>(2) - static_cast<K>(1), 
 				data.an, 
-				gamma, 
-				rho
+				gamma_in_use, 
+				rho_in_use
 			) / delta;
 
         }
@@ -219,8 +219,8 @@ inline T wynn_rho_algorithm<T, K>::operator()(
 				n + j, 
 				level * static_cast<K>(2), 
 				data.an, 
-				gamma, 
-				rho
+				gamma_in_use, 
+				rho_in_use
 			) / delta;
 
         }
@@ -242,9 +242,9 @@ class wynn_rho_algorithm<float_precision, K> final : public series_acceleration<
 protected:
 
 	std::unique_ptr<const numerator_base<float_precision, K>> numerator;	/**< Numerator computation strategy */
-	float_precision gamma;													/**< Gamma parameter for generalized rho transformation */
-	float_precision rho;													/**< Rho parameter for gamma-rho variant */
-	numerator_type numerator_type_in_use = numerator_type::rho_variant;		/**< numerator type in use needed for calculating required size */
+	float_precision gamma_in_use;													/**< Gamma parameter for generalized rho transformation */
+	float_precision rho_in_use;													/**< Rho parameter for gamma-rho variant */
+	numerator_type numerator_type_in_use = numerator_type::rho_type;		/**< numerator type in use needed for calculating required size */
 
 public:
 
@@ -255,9 +255,9 @@ public:
 	 *        Must be a valid object implementing the required series interface
 	 * @param variant Type of numerator computation strategy
 	 *        Determines the specific variant of Wynn's rho algorithm:
-	 *        - rho_variant: Standard Wynn rho algorithm
-	 *        - generalized_variant: Generalized rho transformation
-	 *        - gamma_rho_variant: Gamma-rho variant with additional parameters
+	 *        - rho_type: Standard Wynn rho algorithm
+	 *        - generalized_type: Generalized rho transformation
+	 *        - gamma_rho_type: Gamma-rho variant with additional parameters
 	 * @param gamma_ Gamma parameter value (default: 1)
 	 *        Valid values: T > 0, typically 1 or 2
 	 *        Controls the transformation behavior in generalized variants
@@ -269,13 +269,13 @@ public:
 
 	// Стал:
 	explicit wynn_rho_algorithm(
-		numerator_type numerator_type_to_use = numerator_type::rho_variant,
-		const float_precision& gamma = static_cast<float_precision>(-1), // Передача по константной ссылке
-		const float_precision& rho   = static_cast<float_precision>(1)  // Передача по константной ссылке
+		numerator_type numerator_type_to_use = numerator_type::rho_type,
+		const float_precision& gamma_to_use = static_cast<float_precision>(-1), // Передача по константной ссылке
+		const float_precision& rho_to_use   = static_cast<float_precision>(1)  // Передача по константной ссылке
 	) : series_acceleration<float_precision, K>() {
-		updateGamma(gamma);
-		updateRho(rho);
-		updateNumerator(numerator_type_to_use);
+		update_gamma(gamma_to_use);
+		update_rho(rho_to_use);
+		update_numerator(numerator_type_to_use);
 	};
 
 	//Default destructor is sufficient since unique_ptr handles deletion
@@ -306,42 +306,40 @@ public:
         const series_result<float_precision>& data
 	) const override;
 
-	void updateNumerator(const numerator_type numerator_type_to_use);
-	void updateGamma(const float_precision& new_gamma) { gamma = new_gamma;}
-	void updateRho(const float_precision& new_rho) {rho = new_rho; }
-};
+	void update_gamma(const float_precision& new_gamma) { gamma_in_use = new_gamma;}
+	void update_rho(const float_precision& new_rho) {rho_in_use = new_rho; }
 
-template <UnsignedIntLike K>
-void wynn_rho_algorithm<float_precision, K>::updateNumerator(const numerator_type numerator_type_to_use){
+	void update_numerator(const numerator_type numerator_type_to_use){
 
-	numerator_type_in_use = numerator_type_to_use;
+		numerator_type_in_use = numerator_type_to_use;
 
-	switch(numerator_type_to_use) {
-		case numerator_type::rho_variant :
-		{
-			numerator.reset(new rho_transform<float_precision, K>());
-			series_acceleration<float_precision,K>::acceleration_name = "wynn rho with rho numerator";
-			break;
-		}
-		case numerator_type::generalized_variant :
-		{
-			numerator.reset(new generilized_transform<float_precision, K>());
-			series_acceleration<float_precision,K>::acceleration_name = "wynn rho with generalized numerator";
-			break;
-		}
-		case numerator_type::gamma_rho_variant :
-		{
-			numerator.reset(new gamma_rho_transform<float_precision, K>());
-			series_acceleration<float_precision,K>::acceleration_name = "wynn rho with rho numerator";
-			break;
-		}
-		default:{
-			numerator_type_in_use = numerator_type::rho_variant;
-			series_acceleration<float_precision,K>::acceleration_name = "wynn rho with rho numerator";
-			numerator.reset(new rho_transform<float_precision, K>());
+		switch(numerator_type_to_use){
+        	case numerator_type::rho_type 			: { numerator.reset(new rho_transform<float_precision, K>()	   ); break; }
+        	case numerator_type::generalized_type 	: { numerator.reset(new generilized_transform<float_precision, K>()	   ); break; }
+        	case numerator_type::gamma_rho_type 	: { numerator.reset(new gamma_rho_transform<float_precision, K>()	   ); break; }
+        	default:{
+				numerator_type_in_use = numerator_type::rho_type;
+        	    numerator.reset(new rho_transform<float_precision, K>()); // Default to u-variant
+			}
 		}
 	}
-}
+
+	std::string get_name() {
+
+		using std::to_string;
+
+		series_acceleration<float_precision, K>::acceleration_name = "wynn rho algorithm ";
+		switch(numerator_type_in_use){
+			case numerator_type::rho_type 			: { series_acceleration<float_precision, K>::acceleration_name += "with rho-numerator "; break; }
+			case numerator_type::generalized_type 	: { series_acceleration<float_precision, K>::acceleration_name += "with generalized-numerator "; break; }
+			case numerator_type::gamma_rho_type 	: { series_acceleration<float_precision, K>::acceleration_name += "with v-numerator "; break; }
+		}
+		series_acceleration<float_precision, K>::acceleration_name += ", gamma = " + to_string(gamma_in_use);
+		series_acceleration<float_precision, K>::acceleration_name += ", rho = " + to_string(rho_in_use);
+
+		return series_acceleration<float_precision, K>::acceleration_name;
+	}
+};
 
 template <UnsignedIntLike K>
 inline float_precision wynn_rho_algorithm<float_precision, K>::operator()(
@@ -350,10 +348,11 @@ inline float_precision wynn_rho_algorithm<float_precision, K>::operator()(
     const series_result<float_precision>& data
 ) const {
 
-    const K required_size = n + order + static_cast<K>(1) + order * static_cast<K>(numerator_type_in_use == numerator_type::rho_variant);
+    const K required_size = n + order + static_cast<K>(1) + order * static_cast<K>(numerator_type_in_use == numerator_type::rho_type);
 
     if (data.Sn.size() < required_size || data.an.size() < required_size){
-        throw std::out_of_range("Sn or an is smaller than required to calculate theta_{" + to_string(order) + "}^{" + to_string(n) + "}");
+        throw std::out_of_range("The Sn or an smaller then required for wynn_rho_{" + to_string(order) + "}^{" + to_string(n) + "}\n" +
+        "the size of Sn and an must be at least " + to_string(required_size));
 	}
     // For theory, see: Brezinski (1977), Chapter 4, Eq. (4.10)
     // Base cases: return partial sum for n=0 or order=0
@@ -398,8 +397,8 @@ inline float_precision wynn_rho_algorithm<float_precision, K>::operator()(
 				n + j, 
 				level * static_cast<K>(2) - static_cast<K>(1), 
 				data.an, 
-				gamma, 
-				rho
+				gamma_in_use, 
+				rho_in_use
 			) / delta;
 
         }
@@ -416,8 +415,8 @@ inline float_precision wynn_rho_algorithm<float_precision, K>::operator()(
 				n + j, 
 				level * static_cast<K>(2), 
 				data.an, 
-				gamma, 
-				rho
+				gamma_in_use, 
+				rho_in_use
 			) / delta;
 
         }
@@ -439,9 +438,9 @@ class wynn_rho_algorithm<complex_precision<T>, K> final : public series_accelera
 protected:
 
 	std::unique_ptr<const numerator_base<complex_precision<T>, K>> numerator;	/**< Numerator computation strategy */
-	T gamma;																	/**< Gamma parameter for generalized rho transformation */
-	T rho;																		/**< Rho parameter for gamma-rho variant */
-	numerator_type numerator_type_in_use = numerator_type::rho_variant;			/**< numerator type in use needed for calculating required size */
+	T gamma_in_use;																	/**< Gamma parameter for generalized rho transformation */
+	T rho_in_use;																		/**< Rho parameter for gamma-rho variant */
+	numerator_type numerator_type_in_use = numerator_type::rho_type;			/**< numerator type in use needed for calculating required size */
 
 public:
 
@@ -452,9 +451,9 @@ public:
 	 *        Must be a valid object implementing the required series interface
 	 * @param variant Type of numerator computation strategy
 	 *        Determines the specific variant of Wynn's rho algorithm:
-	 *        - rho_variant: Standard Wynn rho algorithm
-	 *        - generalized_variant: Generalized rho transformation
-	 *        - gamma_rho_variant: Gamma-rho variant with additional parameters
+	 *        - rho_type: Standard Wynn rho algorithm
+	 *        - generalized_type: Generalized rho transformation
+	 *        - gamma_rho_type: Gamma-rho variant with additional parameters
 	 * @param gamma_ Gamma parameter value (default: 1)
 	 *        Valid values: T > 0, typically 1 or 2
 	 *        Controls the transformation behavior in generalized variants
@@ -466,13 +465,13 @@ public:
 
 	// Стал:
 	explicit wynn_rho_algorithm(
-		numerator_type numerator_type_to_use = numerator_type::rho_variant,
-		const T& gamma = static_cast<T>(-1), // Передача по константной ссылке
-		const T& rho   = static_cast<T>(1)  // Передача по константной ссылке
+		numerator_type numerator_type_to_use = numerator_type::rho_type,
+		const T& gamma_to_use = static_cast<T>(-1), // Передача по константной ссылке
+		const T& rho_to_use   = static_cast<T>(1)  // Передача по константной ссылке
 	) : series_acceleration<complex_precision<T>, K>() {
-		updateGamma(gamma);
-		updateRho(rho);
-		updateNumerator(numerator_type_to_use);
+		update_gamma(gamma_to_use);
+		update_rho(rho_to_use);
+		update_numerator(numerator_type_to_use);
 	};
 
 	//Default destructor is sufficient since unique_ptr handles deletion
@@ -503,42 +502,41 @@ public:
         const series_result<complex_precision<T>>& data
 	) const override;
 
-	void updateNumerator(const numerator_type numerator_type_to_use);
-	void updateGamma(const T& new_gamma) { gamma = new_gamma;}
-	void updateRho(const T& new_rho) {rho = new_rho; }
-};
+	void update_gamma(const T& new_gamma) { gamma_in_use = new_gamma;}
+	void update_rho(const T& new_rho) {rho_in_use = new_rho; }
 
-template <std::floating_point T, UnsignedIntLike K>
-void wynn_rho_algorithm<complex_precision<T>, K>::updateNumerator(const numerator_type numerator_type_to_use){
+	void update_numerator(const numerator_type numerator_type_to_use){
 
-	numerator_type_in_use = numerator_type_to_use;
+		numerator_type_in_use = numerator_type_to_use;
 
-	switch(numerator_type_to_use) {
-		case numerator_type::rho_variant :
-		{
-			numerator.reset(new rho_transform<complex_precision<T>, K>());
-			series_acceleration<complex_precision<T>,K>::acceleration_name = "wynn rho with rho numerator";
-			break;
-		}
-		case numerator_type::generalized_variant :
-		{
-			numerator.reset(new generilized_transform<complex_precision<T>, K>());
-			series_acceleration<complex_precision<T>,K>::acceleration_name = "wynn rho with generalized numerator";
-			break;
-		}
-		case numerator_type::gamma_rho_variant :
-		{
-			numerator.reset(new gamma_rho_transform<complex_precision<T>, K>());
-			series_acceleration<complex_precision<T>,K>::acceleration_name = "wynn rho with rho numerator";
-			break;
-		}
-		default:{
-			numerator_type_in_use = numerator_type::rho_variant;
-			series_acceleration<complex_precision<T>,K>::acceleration_name = "wynn rho with rho numerator";
-			numerator.reset(new rho_transform<complex_precision<T>, K>());
+		switch(numerator_type_to_use){
+        	case numerator_type::rho_type 			: { numerator.reset(new rho_transform<complex_precision<T>, K>()	   ); break; }
+        	case numerator_type::generalized_type 	: { numerator.reset(new generilized_transform<complex_precision<T>, K>()	   ); break; }
+        	case numerator_type::gamma_rho_type 	: { numerator.reset(new gamma_rho_transform<complex_precision<T>, K>()	   ); break; }
+        	default:{
+				numerator_type_in_use = numerator_type::rho_type;
+        	    numerator.reset(new rho_transform<complex_precision<T>, K>()); // Default to u-variant
+			}
 		}
 	}
-}
+
+	std::string get_name() {
+
+		using std::to_string;
+
+		series_acceleration<complex_precision<T>, K>::acceleration_name = "wynn rho algorithm ";
+		switch(numerator_type_in_use){
+			case numerator_type::rho_type 			: { series_acceleration<complex_precision<T>, K>::acceleration_name += "with rho-numerator "; break; }
+			case numerator_type::generalized_type 	: { series_acceleration<complex_precision<T>, K>::acceleration_name += "with generalized-numerator "; break; }
+			case numerator_type::gamma_rho_type 	: { series_acceleration<complex_precision<T>, K>::acceleration_name += "with v-numerator "; break; }
+		}
+		series_acceleration<complex_precision<T>, K>::acceleration_name += ", gamma = " + to_string(gamma_in_use);
+		series_acceleration<complex_precision<T>, K>::acceleration_name += ", rho = " + to_string(rho_in_use);
+
+		return series_acceleration<complex_precision<T>, K>::acceleration_name;
+	}
+
+};
 
 template <std::floating_point T, UnsignedIntLike K>
 inline complex_precision<T> wynn_rho_algorithm<complex_precision<T>, K>::operator()(
@@ -547,10 +545,11 @@ inline complex_precision<T> wynn_rho_algorithm<complex_precision<T>, K>::operato
     const series_result<complex_precision<T>>& data
 ) const { 
 
-	const K required_size = n + order + static_cast<K>(1) + order * static_cast<K>(numerator_type_in_use == numerator_type::rho_variant);
+	const K required_size = n + order + static_cast<K>(1) + order * static_cast<K>(numerator_type_in_use == numerator_type::rho_type);
 
     if (data.Sn.size() < required_size || data.an.size() < required_size){
-        throw std::out_of_range("Sn or an is smaller than required to calculate theta_{" + to_string(order) + "}^{" + to_string(n) + "}");
+        throw std::out_of_range("The Sn or an smaller then required for wynn_rho_{" + to_string(order) + "}^{" + to_string(n) + "}\n" +
+        "the size of Sn and an must be at least " + to_string(required_size));
 	}
     // For theory, see: Brezinski (1977), Chapter 4, Eq. (4.10)
     // Base cases: return partial sum for n=0 or order=0
@@ -593,8 +592,8 @@ inline complex_precision<T> wynn_rho_algorithm<complex_precision<T>, K>::operato
 				n + j, 
 				level * static_cast<K>(2) - static_cast<K>(1), 
 				data.an, 
-				complex_precision<T>(gamma), 
-				complex_precision<T>(rho)
+				complex_precision<T>(gamma_in_use), 
+				complex_precision<T>(rho_in_use)
 			) / delta;
 
         }
@@ -611,8 +610,8 @@ inline complex_precision<T> wynn_rho_algorithm<complex_precision<T>, K>::operato
 				n + j, 
 				level * static_cast<K>(2), 
 				data.an, 
-				complex_precision<T>(gamma), 
-				complex_precision<T>(rho)
+				complex_precision<T>(gamma_in_use), 
+				complex_precision<T>(rho_in_use)
 			) / delta;
 
         }
@@ -632,9 +631,9 @@ class wynn_rho_algorithm<complex_precision<float_precision>, K> final : public s
 protected:
 
 	std::unique_ptr<const numerator_base<complex_precision<float_precision>, K>> numerator;	/**< Numerator computation strategy */
-	float_precision gamma;																	/**< Gamma parameter for generalized rho transformation */
-	float_precision rho;																	/**< Rho parameter for gamma-rho variant */
-	numerator_type numerator_type_in_use = numerator_type::rho_variant;						/**< numerator type in use needed for calculating required size */
+	float_precision gamma_in_use;															/**< Gamma parameter for generalized rho transformation */
+	float_precision rho_in_use;																/**< Rho parameter for gamma-rho variant */
+	numerator_type numerator_type_in_use = numerator_type::rho_type;						/**< numerator type in use needed for calculating required size */
 
 public:
 
@@ -645,13 +644,13 @@ public:
 	 *        Must be a valid object implementing the required series interface
 	 * @param variant Type of numerator computation strategy
 	 *        Determines the specific variant of Wynn's rho algorithm:
-	 *        - rho_variant: Standard Wynn rho algorithm
-	 *        - generalized_variant: Generalized rho transformation
-	 *        - gamma_rho_variant: Gamma-rho variant with additional parameters
-	 * @param gamma_ Gamma parameter value (default: 1)
+	 *        - rho_type: Standard Wynn rho algorithm
+	 *        - generalized_type: Generalized rho transformation
+	 *        - gamma_rho_type: Gamma-rho variant with additional parameters
+	 * @param gamma_in_use Gamma parameter value (default: 1)
 	 *        Valid values: T > 0, typically 1 or 2
 	 *        Controls the transformation behavior in generalized variants
-	 * @param RHO_ Rho parameter value (default: 0)
+	 * @param rho_in_use Rho parameter value (default: 0)
 	 *        Valid values: T >= 0, typically 0 or 1
 	 *        Additional parameter for gamma-rho variant
 	 */
@@ -659,13 +658,13 @@ public:
 
 	// Стал:
 	explicit wynn_rho_algorithm(
-		numerator_type numerator_type_to_use = numerator_type::rho_variant,
-		const float_precision& gamma = static_cast<float_precision>(-1), // Передача по константной ссылке
-		const float_precision& rho   = static_cast<float_precision>(1)  // Передача по константной ссылке
+		numerator_type numerator_type_to_use = numerator_type::rho_type,
+		const float_precision& gamma_to_use = static_cast<float_precision>(-1), // Передача по константной ссылке
+		const float_precision& rho_to_use   = static_cast<float_precision>(1)  // Передача по константной ссылке
 	) : series_acceleration<complex_precision<float_precision>, K>() {
-		updateGamma(gamma);
-		updateRho(rho);
-		updateNumerator(numerator_type_to_use);
+		update_gamma(gamma_to_use);
+		update_rho(rho_to_use);
+		update_numerator(numerator_type_to_use);
 	};
 
 	//Default destructor is sufficient since unique_ptr handles deletion
@@ -696,42 +695,45 @@ public:
         const series_result<complex_precision<float_precision>>& data
 	) const override;
 
-	void updateNumerator(const numerator_type numerator_type_to_use);
-	void updateGamma(const float_precision& new_gamma) { gamma = new_gamma;}
-	void updateRho(const float_precision& new_rho) {rho = new_rho; }
-};
+	void update_gamma(const float_precision& new_gamma) { gamma_in_use = new_gamma;}
+	void update_rho(const float_precision& new_rho) {rho_in_use = new_rho; }
 
-template <UnsignedIntLike K>
-void wynn_rho_algorithm<complex_precision<float_precision>, K>::updateNumerator(const numerator_type numerator_type_to_use){
+	void update_numerator(const numerator_type numerator_type_to_use){
 
-	numerator_type_in_use = numerator_type_to_use;
+		numerator_type_in_use = numerator_type_to_use;
 
-	switch(numerator_type_to_use) {
-		case numerator_type::rho_variant :
-		{
-			numerator.reset(new rho_transform<complex_precision<float_precision>, K>());
-			series_acceleration<complex_precision<float_precision>,K>::acceleration_name = "wynn rho with rho numerator";
-			break;
-		}
-		case numerator_type::generalized_variant :
-		{
-			numerator.reset(new generilized_transform<complex_precision<float_precision>, K>());
-			series_acceleration<complex_precision<float_precision>,K>::acceleration_name = "wynn rho with generalized numerator";
-			break;
-		}
-		case numerator_type::gamma_rho_variant :
-		{
-			numerator.reset(new gamma_rho_transform<complex_precision<float_precision>, K>());
-			series_acceleration<complex_precision<float_precision>,K>::acceleration_name = "wynn rho with rho numerator";
-			break;
-		}
-		default:{
-			numerator_type_in_use = numerator_type::rho_variant;
-			series_acceleration<complex_precision<float_precision>,K>::acceleration_name = "wynn rho with rho numerator";
-			numerator.reset(new rho_transform<complex_precision<float_precision>, K>());
+		using ComplexFloatPrec = complex_precision<float_precision>;
+
+		switch(numerator_type_to_use){
+        	case numerator_type::rho_type 			: { numerator.reset(new rho_transform<ComplexFloatPrec, K>()	   ); break; }
+        	case numerator_type::generalized_type 	: { numerator.reset(new generilized_transform<ComplexFloatPrec, K>()	   ); break; }
+        	case numerator_type::gamma_rho_type 	: { numerator.reset(new gamma_rho_transform<ComplexFloatPrec, K>()	   ); break; }
+        	default:{
+				numerator_type_in_use = numerator_type::rho_type;
+        	    numerator.reset(new rho_transform<ComplexFloatPrec, K>()); // Default to u-variant
+			}
 		}
 	}
-}
+
+	std::string get_name() {
+
+		using std::to_string;
+
+		using ComplexFloatPrec = complex_precision<float_precision>;
+
+		series_acceleration<ComplexFloatPrec, K>::acceleration_name = "wynn rho algorithm ";
+		switch(numerator_type_in_use){
+			case numerator_type::rho_type 			: { series_acceleration<ComplexFloatPrec, K>::acceleration_name += "with rho-numerator "; break; }
+			case numerator_type::generalized_type 	: { series_acceleration<ComplexFloatPrec, K>::acceleration_name += "with generalized-numerator "; break; }
+			case numerator_type::gamma_rho_type 	: { series_acceleration<ComplexFloatPrec, K>::acceleration_name += "with v-numerator "; break; }
+		}
+		series_acceleration<ComplexFloatPrec, K>::acceleration_name += ", gamma = " + to_string(gamma_in_use);
+		series_acceleration<ComplexFloatPrec, K>::acceleration_name += ", rho = " + to_string(rho_in_use);
+
+		return series_acceleration<ComplexFloatPrec, K>::acceleration_name;
+	}
+
+};
 
 template <UnsignedIntLike K>
 inline complex_precision<float_precision> wynn_rho_algorithm<complex_precision<float_precision>, K>::operator()(
@@ -740,10 +742,11 @@ inline complex_precision<float_precision> wynn_rho_algorithm<complex_precision<f
     const series_result<complex_precision<float_precision>>& data
 ) const {
 
-    const K required_size = n + order + static_cast<K>(1) + order * static_cast<K>(numerator_type_in_use == numerator_type::rho_variant);
+    const K required_size = n + order + static_cast<K>(1) + order * static_cast<K>(numerator_type_in_use == numerator_type::rho_type);
 
     if (data.Sn.size() < required_size || data.an.size() < required_size){
-        throw std::out_of_range("Sn or an is smaller than required to calculate theta_{" + to_string(order) + "}^{" + to_string(n) + "}");
+        throw std::out_of_range("The Sn or an smaller then required for wynn_rho_{" + to_string(order) + "}^{" + to_string(n) + "}\n" +
+        "the size of Sn and an must be at least " + to_string(required_size));
 	}
     // For theory, see: Brezinski (1977), Chapter 4, Eq. (4.10)
     // Base cases: return partial sum for n=0 or order=0
@@ -799,8 +802,8 @@ inline complex_precision<float_precision> wynn_rho_algorithm<complex_precision<f
 				n + j, 
 				level * static_cast<K>(2) - static_cast<K>(1), 
 				data.an, 
-				complex_precision<float_precision>(gamma), 
-				complex_precision<float_precision>(rho)
+				complex_precision<float_precision>(gamma_in_use), 
+				complex_precision<float_precision>(rho_in_use)
 			) / delta;
 
         }
@@ -817,8 +820,8 @@ inline complex_precision<float_precision> wynn_rho_algorithm<complex_precision<f
 				n + j, 
 				level * static_cast<K>(2), 
 				data.an, 
-				complex_precision<float_precision>(gamma), 
-				complex_precision<float_precision>(rho)
+				complex_precision<float_precision>(gamma_in_use), 
+				complex_precision<float_precision>(rho_in_use)
 			) / delta;
 
         }

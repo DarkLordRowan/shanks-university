@@ -1277,61 +1277,61 @@ create_transformation_by_id(transformation_id_t id) {
 		case                  drummond_d_u_transformation_id:
 		{
 			return std::make_unique<drummond_d_algorithm<T,K>>(drummond_d_algorithm<T,K>(
-				remainder_type::u_variant, false
+				remainder_type::u_type, false
 			));
 		}
 		case                  drummond_d_t_transformation_id:
 		{
 			return std::make_unique<drummond_d_algorithm<T,K>>(drummond_d_algorithm<T,K>(
-				remainder_type::t_variant, false
+				remainder_type::t_type, false
 			));
 		}
 		case             drummond_d_t_wave_transformation_id:
 		{
 			return std::make_unique<drummond_d_algorithm<T,K>>(drummond_d_algorithm<T,K>(
-				remainder_type::t_wave_variant, false
+				remainder_type::t_wave_type, false
 			));
 		}
 		case                  drummond_d_v_transformation_id:
 		{
 			return std::make_unique<drummond_d_algorithm<T,K>>(drummond_d_algorithm<T,K>(
-				remainder_type::v_variant, false
+				remainder_type::v_type, false
 			));
 		}
 		case             drummond_d_v_wave_transformation_id:
 		{
 			return std::make_unique<drummond_d_algorithm<T,K>>(drummond_d_algorithm<T,K>(
-				remainder_type::v_wave_variant, false
+				remainder_type::v_wave_type, false
 			));
 		}
 		case        recurrent_drummond_d_u_transformation_id:
 		{
 			return std::make_unique<drummond_d_algorithm<T,K>>(drummond_d_algorithm<T,K>(
-				remainder_type::u_variant, true
+				remainder_type::u_type, true
 			));
 		}
 		case        recurrent_drummond_d_t_transformation_id:
 		{
 			return std::make_unique<drummond_d_algorithm<T,K>>(drummond_d_algorithm<T,K>(
-				remainder_type::t_variant, true
+				remainder_type::t_type, true
 			));
 		}
 		case        recurrent_drummond_d_v_transformation_id:
 		{
 			return std::make_unique<drummond_d_algorithm<T,K>>(drummond_d_algorithm<T,K>(
-				remainder_type::v_variant, true
+				remainder_type::v_type, true
 			));
 		}
 		case   recurrent_drummond_d_t_wave_transformation_id:
 		{
 			return std::make_unique<drummond_d_algorithm<T,K>>(drummond_d_algorithm<T,K>(
-				remainder_type::t_wave_variant, true
+				remainder_type::t_wave_type, true
 			));
 		}
 		case   recurrent_drummond_d_v_wave_transformation_id:
 		{
 			return std::make_unique<drummond_d_algorithm<T,K>>(drummond_d_algorithm<T,K>(
-				remainder_type::v_wave_variant, true
+				remainder_type::v_wave_type, true
 			));
 		}
 		case                   ford_sidi_2_transformation_id:
@@ -1345,151 +1345,151 @@ create_transformation_by_id(transformation_id_t id) {
 		case                levin_sidi_l_u_transformation_id:
 		{
 			return std::make_unique<levin_algorithm<T,K>>(levin_algorithm<T,K>(
-				remainder_type::u_variant, false
+				remainder_type::u_type, false
 			));
 		}
 		case                levin_sidi_l_t_transformation_id:
 		{
 			return std::make_unique<levin_algorithm<T,K>>(levin_algorithm<T,K>(
-				remainder_type::t_variant, false
+				remainder_type::t_type, false
 			));
 		}
 		case           levin_sidi_l_t_wave_transformation_id:
 		{
 			return std::make_unique<levin_algorithm<T,K>>(levin_algorithm<T,K>(
-				remainder_type::t_wave_variant, false
+				remainder_type::t_wave_type, false
 			));
 		}
 		case                levin_sidi_l_v_transformation_id:
 		{
 			return std::make_unique<levin_algorithm<T,K>>(levin_algorithm<T,K>(
-				remainder_type::v_variant, false
+				remainder_type::v_type, false
 			));
 		}
 		case           levin_sidi_l_v_wave_transformation_id:
 		{
 			return std::make_unique<levin_algorithm<T,K>>(levin_algorithm<T,K>(
-				remainder_type::v_wave_variant, false
+				remainder_type::v_wave_type, false
 			));
 		}
 		case      recurrent_levin_sidi_l_u_transformation_id:
 		{
 			return std::make_unique<levin_algorithm<T,K>>(levin_algorithm<T,K>(
-				remainder_type::u_variant, true
+				remainder_type::u_type, true
 			));
 		}
 		case      recurrent_levin_sidi_l_t_transformation_id:
 		{
 			return std::make_unique<levin_algorithm<T,K>>(levin_algorithm<T,K>(
-				remainder_type::t_variant, true
+				remainder_type::t_type, true
 			));
 		}
 		case      recurrent_levin_sidi_l_v_transformation_id:
 		{
 			return std::make_unique<levin_algorithm<T,K>>(levin_algorithm<T,K>(
-				remainder_type::v_variant, true
+				remainder_type::v_type, true
 			));
 		}
 		case recurrent_levin_sidi_l_t_wave_transformation_id:
 		{
 			return std::make_unique<levin_algorithm<T,K>>(levin_algorithm<T,K>(
-				remainder_type::t_wave_variant, true
+				remainder_type::t_wave_type, true
 			));
 		}
 		case recurrent_levin_sidi_l_v_wave_transformation_id:
 		{
 			return std::make_unique<levin_algorithm<T,K>>(levin_algorithm<T,K>(
-				remainder_type::v_wave_variant, true
+				remainder_type::v_wave_type, true
 			));
 		}
 		case                levin_sidi_m_u_transformation_id:
 		{
 			return std::make_unique<levin_sidi_m_algorithm<T,K>>(levin_sidi_m_algorithm<T,K>(
-				remainder_type::u_variant, false
+				remainder_type::u_type, false
 			));
 		}
 		case                levin_sidi_m_t_transformation_id:
 		{
 			return std::make_unique<levin_sidi_m_algorithm<T,K>>(levin_sidi_m_algorithm<T,K>(
-				remainder_type::t_variant, false
+				remainder_type::t_type, false
 			));
 		}
 		case           levin_sidi_m_t_wave_transformation_id:
 		{
 			return std::make_unique<levin_sidi_m_algorithm<T,K>>(levin_sidi_m_algorithm<T,K>(
-				remainder_type::t_wave_variant, false
+				remainder_type::t_wave_type, false
 			));
 		}
 		case                levin_sidi_m_v_transformation_id:
 		{
 			return std::make_unique<levin_sidi_m_algorithm<T,K>>(levin_sidi_m_algorithm<T,K>(
-				remainder_type::v_variant, false
+				remainder_type::v_type, false
 			));
 		}
 		case           levin_sidi_m_v_wave_transformation_id:
 		{
 			return std::make_unique<levin_sidi_m_algorithm<T,K>>(levin_sidi_m_algorithm<T,K>(
-				remainder_type::v_wave_variant, false
+				remainder_type::v_wave_type, false
 			));
 		}
 		case                levin_sidi_s_u_transformation_id:
 		{
 			return std::make_unique<levin_sidi_s_algorithm<T,K>>(levin_sidi_s_algorithm<T,K>(
-				remainder_type::u_variant, false
+				remainder_type::u_type, false
 			));
 		}
 		case                levin_sidi_s_t_transformation_id:
 		{
 			return std::make_unique<levin_sidi_s_algorithm<T,K>>(levin_sidi_s_algorithm<T,K>(
-				remainder_type::t_variant, false
+				remainder_type::t_type, false
 			));
 		}
 		case           levin_sidi_s_t_wave_transformation_id:
 		{
 			return std::make_unique<levin_sidi_s_algorithm<T,K>>(levin_sidi_s_algorithm<T,K>(
-				remainder_type::t_wave_variant, false
+				remainder_type::t_wave_type, false
 			));
 		}
 		case                levin_sidi_s_v_transformation_id:
 		{
 			return std::make_unique<levin_sidi_s_algorithm<T,K>>(levin_sidi_s_algorithm<T,K>(
-				remainder_type::v_variant, false
+				remainder_type::v_type, false
 			));
 		}
 		case           levin_sidi_s_v_wave_transformation_id:
 		{
 			return std::make_unique<levin_sidi_s_algorithm<T,K>>(levin_sidi_s_algorithm<T,K>(
-				remainder_type::v_wave_variant, false
+				remainder_type::v_wave_type, false
 			));
 		}
 		case      recurrent_levin_sidi_s_u_transformation_id:
 		{
 			return std::make_unique<levin_sidi_s_algorithm<T,K>>(levin_sidi_s_algorithm<T,K>(
-				remainder_type::u_variant, true
+				remainder_type::u_type, true
 			));
 		}
 		case      recurrent_levin_sidi_s_t_transformation_id:
 		{
 			return std::make_unique<levin_sidi_s_algorithm<T,K>>(levin_sidi_s_algorithm<T,K>(
-				remainder_type::t_variant, true
+				remainder_type::t_type, true
 			));
 		}
 		case      recurrent_levin_sidi_s_v_transformation_id:
 		{
 			return std::make_unique<levin_sidi_s_algorithm<T,K>>(levin_sidi_s_algorithm<T,K>(
-				remainder_type::v_variant, true
+				remainder_type::v_type, true
 			));
 		}
 		case recurrent_levin_sidi_s_t_wave_transformation_id:
 		{
 			return std::make_unique<levin_sidi_s_algorithm<T,K>>(levin_sidi_s_algorithm<T,K>(
-				remainder_type::t_wave_variant, true
+				remainder_type::t_wave_type, true
 			));
 		}
 		case recurrent_levin_sidi_s_v_wave_transformation_id:
 		{
 			return std::make_unique<levin_sidi_s_algorithm<T,K>>(levin_sidi_s_algorithm<T,K>(
-				remainder_type::v_wave_variant, true
+				remainder_type::v_wave_type, true
 			));
 		}
 		case                      lubkin_w_transformation_id:
@@ -1527,19 +1527,19 @@ create_transformation_by_id(transformation_id_t id) {
 		case                  wynn_rho_rho_transformation_id:
 		{
 			return std::make_unique<wynn_rho_algorithm<T,K>>(wynn_rho_algorithm<T,K>(
-				numerator_type::rho_variant
+				numerator_type::rho_type
 			));
 		}
 		case          wynn_rho_generalized_transformation_id:
 		{
 			return std::make_unique<wynn_rho_algorithm<T,K>>(wynn_rho_algorithm<T,K>(
-				numerator_type::generalized_variant
+				numerator_type::generalized_type
 			));
 		}
 		case            wynn_rho_gamma_rho_transformation_id:
 		{
 			return std::make_unique<wynn_rho_algorithm<T,K>>(wynn_rho_algorithm<T,K>(
-				numerator_type::gamma_rho_variant
+				numerator_type::gamma_rho_type
 			));
 		}
 		default:
@@ -1603,7 +1603,7 @@ inline static void main_testing_function()
 	// Create transformation using helper function
 	transform = create_transformation_by_id<T, K>(static_cast<transformation_id_t>(transformation_id));
 
-	transform->print_info();
+	std::cout << "transformation : " << transform->get_name() << "\n";
 	print_test_function_info();
 	K function_id = read_input<K>();
 	std::cout << "Enter n and order:" << '\n';
@@ -1617,14 +1617,12 @@ inline static void main_testing_function()
 	};
 
 	if (answer == "Y" || answer == "Yes"){
-		size_t noise_type;
+		size_t noise_type_to_use;
 		std::cout << "Noise type: uniform[0], normal[1], poisson[2]\n";
-		std::cin >> noise_type; std::cout << "\n";
-		noise_generator<T> gen = noise_generator<T>(static_cast<NoiseType>(noise_type), 42);
-		result = gen.jitter(result, 0.05, 1e-6);
-	}
+		std::cin >> noise_type_to_use; std::cout << "\n";
 
-	//result = applyNose(result, noise_type);
+		result = jitter<T,T>(result, static_cast<NoiseType>(noise_type_to_use));
+	}
 
 	switch (function_id)
 	{

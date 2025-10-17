@@ -81,10 +81,11 @@ T weniger_algorithm<T, K>::operator()(
     const series_result<T>& data
 ) const {
 
-    K required_size = n + order + static_cast<K>(1);
+    const K required_size = n + order + static_cast<K>(1);
 
     if (data.Sn.size() < required_size || data.an.size() < required_size){
-        throw std::out_of_range("Sn or an is smaller than required to calculate weniger_{" + to_string(order) + "}^{" + to_string(n) + "}");
+        throw std::out_of_range("The Sn or an smaller then required for Weniger_{" + to_string(order) + "}^{" + to_string(n) + "}\n" +
+        "the size of Sn and an must be at least " + to_string(required_size));
 	}
 
     if (order == static_cast<K>(0)) {
@@ -223,10 +224,11 @@ float_precision weniger_algorithm<float_precision, K>::operator()(
     const series_result<float_precision>& data
 ) const {
 
-    K required_size = n + order + static_cast<K>(1);
+    const K required_size = n + order + static_cast<K>(1);
 
     if (data.Sn.size() < required_size || data.an.size() < required_size){
-        throw std::out_of_range("Sn or an is smaller than required to calculate weniger_{" + to_string(order) + "}^{" + to_string(n) + "}");
+        throw std::out_of_range("The Sn or an smaller then required for Weniger_{" + to_string(order) + "}^{" + to_string(n) + "}\n" +
+        "the size of Sn and an must be at least " + to_string(required_size));
 	}
 
     if (order == static_cast<K>(0)) {
@@ -360,10 +362,11 @@ complex_precision<float_precision> weniger_algorithm<complex_precision<float_pre
     const series_result<complex_precision<float_precision>>& data
 ) const {
 
-    K required_size = n + order + static_cast<K>(1);
+    const K required_size = n + order + static_cast<K>(1);
 
     if (data.Sn.size() < required_size || data.an.size() < required_size){
-        throw std::out_of_range("Sn or an is smaller than required to calculate weniger_{" + to_string(order) + "}^{" + to_string(n) + "}");
+        throw std::out_of_range("The Sn or an smaller then required for Weniger_{" + to_string(order) + "}^{" + to_string(n) + "}\n" +
+        "the size of Sn and an must be at least " + to_string(required_size));
 	}
 
     if (order == static_cast<K>(0)) {

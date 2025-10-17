@@ -16,6 +16,8 @@
 
 #include <iostream>
 
+using std::to_string;
+
  /**
   * @brief Base class for series acceleration transformations
   * @authors Bolshakov M.P.
@@ -48,15 +50,6 @@ public:
     explicit series_acceleration(std::string name  = "unknown") : acceleration_name(name) {};
 
     /**
-     * @brief Method for printing basic information about the acceleration object
-     * @authors Bolshakov M.P.
-     *
-     * Outputs the type name of the derived transformation class to standard output.
-     * This is primarily used for debugging and identification purposes.
-     */
-    constexpr void print_info() const { std::cout << this->acceleration_name << '\n'; }
-
-    /**
      * @brief Virtual function operator for computing the accelerated partial sum
      * @authors Bolshakov M.P., Pashkov B.B.
      *
@@ -73,6 +66,8 @@ public:
      * @throws May throw domain_error or overflow_error in derived implementations
      */
     virtual T operator()(const K n, const K order, const series_result<T>& data) const = 0;
+
+    virtual std::string get_name() { return this->acceleration_name; }
 
 protected:
 

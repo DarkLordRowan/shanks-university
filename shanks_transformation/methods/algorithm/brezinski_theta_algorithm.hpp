@@ -93,10 +93,11 @@ T brezinski_theta_algorithm<T, K>::operator()(
 ) const{
 
 
-    K required_size = static_cast<K>(3) * order / static_cast<K>(2) + static_cast<K>(1) + n;
+    const K required_size = static_cast<K>(3) * order / static_cast<K>(2) + static_cast<K>(1) + n;
 
     if (data.Sn.size() < required_size){
-        throw std::out_of_range("Sn is smaller than required to calculate theta_{" + to_string(order) + "}^{" + to_string(n) + "}");
+        throw std::out_of_range("The Sn is smaller then required for theta_{" + to_string(order) + "}^{" + to_string(n) + "}\n" +
+        "the size of Sn must be at least " + to_string(required_size));
     }
 
     // For theory, see: Brezinski (2003), Section 10.2, Theorem 10.2.1
@@ -203,7 +204,8 @@ T brezinski_theta_algorithm<T, K>::operator()(
         K required_size = static_cast<K>(3) * order / static_cast<K>(2) + static_cast<K>(1) + n;
     
         if (data.Sn.size() < required_size){
-            throw std::out_of_range("Sn is smaller than required to calculate theta_{" + to_string(order) + "}^{" + to_string(n) + "}");
+            throw std::out_of_range("The Sn is smaller then required for theta_{" + to_string(order) + "}^{" + to_string(n) + "}\n" +
+            "the size of Sn must be at least " + to_string(required_size));
         }
     
         // For theory, see: Brezinski (2003), Section 10.2, Theorem 10.2.1
@@ -303,7 +305,8 @@ T brezinski_theta_algorithm<T, K>::operator()(
             K required_size = static_cast<K>(3) * order / static_cast<K>(2) + static_cast<K>(1) + n;
         
             if (data.Sn.size() < required_size){
-                throw std::out_of_range("Sn is smaller than required to calculate theta_{" + to_string(order) + "}^{" + to_string(n) + "}");
+                throw std::out_of_range("The Sn is smaller then required for theta_{" + to_string(order) + "}^{" + to_string(n) + "}\n" +
+                "the size of Sn must be at least " + to_string(required_size));
             }
         
             // For theory, see: Brezinski (2003), Section 10.2, Theorem 10.2.1

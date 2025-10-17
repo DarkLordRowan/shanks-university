@@ -20,21 +20,21 @@
   * @brief Enum for remainder types to use in Levin-type transformations
   *
   * Defines different variants of remainder estimates for Levin transformations:
-  * - u_variant: ωₙ = (n+β)ΔSₙ₋₁ (for series acceleration)
-  * - t_variant: ωₙ = ΔSₙ (term difference)
-  * - v_variant: ωₙ = (ΔSₙ₋₁ΔSₙ)/(ΔSₙ - ΔSₙ₋₁) (modified Aitken δ²-process)
-  * - t_wave_variant: ωₙ = ΔSₙ₊₁ (forward-shifted term difference)
-  * - v_wave_variant: ωₙ = (ΔSₙΔSₙ₊₁)/(ΔSₙ - ΔSₙ₊₁) (shifted v-variant)
+  * - u_type: ωₙ = (n+β)ΔSₙ₋₁ (for series acceleration)
+  * - t_type: ωₙ = ΔSₙ (term difference)
+  * - v_type: ωₙ = (ΔSₙ₋₁ΔSₙ)/(ΔSₙ - ΔSₙ₋₁) (modified Aitken δ²-process)
+  * - t_wave_type: ωₙ = ΔSₙ₊₁ (forward-shifted term difference)
+  * - v_wave_type: ωₙ = (ΔSₙΔSₙ₊₁)/(ΔSₙ - ΔSₙ₊₁) (shifted v-variant)
   *
   * @authors Bolshakov M.P.
   * @edited by Kreynin R.G.
   */
 enum remainder_type{
-         u_variant,
-         t_variant,
-         v_variant,
-    t_wave_variant,
-    v_wave_variant,
+         u_type,
+         t_type,
+         v_type,
+    t_wave_type,
+    v_wave_type,
 };
 
 /**
