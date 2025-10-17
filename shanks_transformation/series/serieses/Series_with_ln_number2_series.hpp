@@ -29,13 +29,13 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-Series_with_ln_number2_series<T, K>::Series_with_ln_number2_series(T x) : series_base<T, K>(x)
+Series_with_ln_number2_series<T, K>::Series_with_ln_number2_series(T x) : series_base<T, K>(x, static_cast<T>(5.58397) * x)
 {
     this->series_name = "series_with_ln2";
     // Сходится при |x| < 1 (ряд с логарифмическими членами)
     // Расходится при |x| ≥ 1
 
-    if (std::abs(x) >= 1 || !std::isfinite(x)) {
+    if (std::abs(x) > 1 || !std::isfinite(x)) {
         this->throw_domain_error("|x| must be < 1");
     }
 }

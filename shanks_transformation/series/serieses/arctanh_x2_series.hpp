@@ -31,7 +31,7 @@ public:
 };
 
 template <std::floating_point T, std::unsigned_integral K>
-arctanh_x2_series<T, K>::arctanh_x2_series(T x) : series_base<T, K>(x, std::atanh(x* x))
+arctanh_x2_series<T, K>::arctanh_x2_series(T x) : series_base<T, K>(x, static_cast<T>(std::atanh(x * x)))
 {
     this->series_name = "arctanh(x²)";
     // Сходится при |x| < 1 (ряд для гиперболического арктангенса, где z = x²)
@@ -46,5 +46,5 @@ template <std::floating_point T, std::unsigned_integral K>
 constexpr T arctanh_x2_series<T, K>::operator()(K n) const
 {
     const K a = static_cast<K>(std::fma(2, n, 1));
-    return static_cast<T>(std::pow(this->x, 2 * a) / a); // (90.2) [Rows.pdf]
+    return static_cast<T>(std::pow(this->x, 2 * a)) / static_cast<T>(a); // (90.2) [Rows.pdf]
 }
