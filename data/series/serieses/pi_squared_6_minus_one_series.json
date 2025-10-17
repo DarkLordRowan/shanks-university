@@ -1,6 +1,10 @@
 {
-    "id": "pi_squared_6_minus_one_series",
-    "title": "",
-    "formula": "",
-    "document": "Rows.docx"
+  "id": "pi_squared_6_minus_one_series",
+  "num": 25,
+  "title": "\\left(\\tfrac{\\pi^{2}}{6}-1\\right)\\,x",
+  "formula": "\\sum_{n=0}^{\\infty}\\frac{x}{(n+1)^{2}(n+2)} = \\left(\\tfrac{\\pi^{2}}{6}-1\\right)\\,x",
+  "x_from": "-\\infty",
+  "x_to": "+\\infty",
+  "speed": "cubic",
+  "document": "series.docx"
 }

@@ -1,6 +1,10 @@
 {
-    "id": "one_twelfth_3x2_pi2_series",
-    "title": "",
-    "formula": "",
-    "document": "Rows.docx"
+  "id": "one_twelfth_3x2_pi2_series",
+  "num": 18,
+  "title": "\\tfrac{1}{12}\\bigl(3x^{2}-\\pi^{2}\\bigr)",
+  "formula": "\\sum_{k=1}^{\\infty} \\frac{(-1)^{k}}{k^{2}}\\cos(kx) = \\tfrac{1}{12}\\bigl(3x^{2}-\\pi^{2}\\bigr)",
+  "x_from": "-\\pi",
+  "x_to": "\\pi",
+  "speed": "quadratic",
+  "document": "series.docx"
 }

@@ -1,6 +1,10 @@
 {
-    "id": "eighth_pi_m_one_third_series",
-    "title": "",
-    "formula": "",
-    "document": "Rows.docx"
+  "id": "eighth_pi_m_one_third_series",
+  "num": 28,
+  "title": "\\left(\\tfrac{\\pi}{8}-\\tfrac{1}{3}\\right)\\,x",
+  "formula": "\\sum_{n=0}^{\\infty}\\frac{(-1)^{n} x}{(2n+1)(2n+3)(2n+5)} = \\left(\\tfrac{\\pi}{8}-\\tfrac{1}{3}\\right)\\,x",
+  "x_from": "-\\infty",
+  "x_to": "+\\infty",
+  "speed": "cubic",
+  "document": "series.docx"
 }
