@@ -1,6 +1,10 @@
 {
-    "id": "pi_x_multi_e_xpi_plus_e_minusxpi_divided_e_xpi_minus_e_minusxpi_minus_one_series",
-    "title": "",
-    "formula": "",
-    "document": "Rows.docx"
+  "id": "pi_x_multi_e_xpi_plus_e_minusxpi_divided_e_xpi_minus_e_minusxpi_minus_one_series",
+  "num": 45,
+  "title": "\\pi x\\,\\frac{e^{\\pi x}+e^{-\\pi x}}{e^{\\pi x}-e^{-\\pi x}}-1",
+  "formula": "\\sum_{n=0}^{\\infty}\\frac{2x^{2}}{x^{2}+(n+1)^{2}}=\\pi x\\,\\frac{e^{\\pi x}+e^{-\\pi x}}{e^{\\pi x}-e^{-\\pi x}}-1",
+  "x_from": "-\\infty",
+  "x_to": "+\\infty",
+  "speed": "quadratic",
+  "document": "series.docx"
 }
