@@ -38,7 +38,7 @@ void bind_all(py::module_& m, const std::string& suffix) {
         .def("get_sum", &MSeriesBase::get_sum)
         .def("get_name", &MSeriesBase::get_name)
         .def("generateSeries",
-             &MSeriesBase::generateSeries,
+             &MSeriesBase::generate_series,
              py::arg("x"),
              py::arg("vecSize"),
              py::arg("addTParameter") = static_cast<T>(1),

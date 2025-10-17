@@ -20,14 +20,14 @@ public:
 	*/
 	explicit incomplete_Gamma_func_series() : series_base<T, K>("incomplete_Gamma_func_series") {};
 
-	virtual SeriesResult<T> generateSeries(
+	virtual SeriesResult<T> generate_series(
         const T& x , 
 		const K vecSize, 
 		const T& addTParameter = static_cast<T>(1),
 		const K addKParameter = static_cast<K>(1)
     ) override;
 
-	inline constexpr bool checkDomain(const T& x){
+	inline constexpr bool check_domain(const T& x){
 		
 		using std::isfinite;
 
@@ -38,7 +38,7 @@ public:
 		}
 	}
 
-	inline constexpr T calculateSum(const T& x, const T& alpha){
+	inline constexpr T calculate_sum(const T& x, const T& alpha){
 
 		return static_cast<T>(0);
 	}
@@ -46,7 +46,7 @@ public:
 };
 
 template<AcceptedLike T, UnsignedIntLike K>
-SeriesResult<T> incomplete_Gamma_func_series<T, K>::generateSeries(
+SeriesResult<T> incomplete_Gamma_func_series<T, K>::generate_series(
     const T& x, 
 	const K vecSize, 
 	const T& addTParameter, //s
@@ -55,18 +55,18 @@ SeriesResult<T> incomplete_Gamma_func_series<T, K>::generateSeries(
 
     using std::to_string;
 
-	if(checkDomain(x)){
+	if(check_domain(x)){
 		series_base<T, K>::throw_domain_error("x is not finite");
 	}
 
 	series_base<T,K>::x_ = x;
-	series_base<T,K>::sum = calculateSum(x, addTParameter); 
+	series_base<T,K>::sum = calculate_sum(x, addTParameter); 
     series_base<T,K>::series_name += " " + to_string(addTParameter);
 
 	std::vector<T> vecAn;
 	std::vector<T> vecSn;
 
-	series_base<T,K>::initVecsWithPrec(vecSn,vecAn, vecSize, x);
+	series_base<T,K>::init_vecs_with_prec(vecSn,vecAn, vecSize, x);
 
     using std::pow;
 
