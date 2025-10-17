@@ -20,14 +20,14 @@ public:
 	*/
 	explicit m_fact_1mx_mp1_inverse_series() : series_base<T, K>("m_fact_1mx_mp1_inverse_series") {};
 
-	virtual SeriesResult<T> generateSeries(
+	virtual SeriesResult<T> generate_series(
         const T& x , 
 		const K vecSize, 
 		const T& addTParameter = static_cast<T>(1),
 		const K addKParameter = static_cast<K>(1)
     ) override;
 
-	inline constexpr bool checkDomain(const T& x){
+	inline constexpr bool check_domainn(const T& x){
 
 		using std::isfinite;
 		
@@ -40,7 +40,7 @@ public:
 
 	}
 
-	inline constexpr T calculateSum(const T& x, const K m){
+	inline constexpr T calculate_summ(const T& x, const K m){
 
         using std::pow;
 
@@ -50,23 +50,23 @@ public:
 };
 
 template<AcceptedLike T, UnsignedIntLike K>
-SeriesResult<T> m_fact_1mx_mp1_inverse_series<T, K>::generateSeries(
+SeriesResult<T> m_fact_1mx_mp1_inverse_series<T, K>::generate_series(
     const T& x , 
 	const K vecSize, 
 	const T& addTParameter, //not needed
 	const K addKParameter //m 
 ) {
-	if(checkDomain(x)){
+	if(check_domainn(x)){
 		series_base<T, K>::throw_domain_error("x is not finite or |x|>=1");
 	}
 
     std::vector<T> vecAn;
 	std::vector<T> vecSn;
 
-	series_base<T,K>::initVecsWithPrec(vecSn,vecAn, vecSize, x);
+	series_base<T,K>::init_vecs_with_prec(vecSn,vecAn, vecSize, x);
 
 	series_base<T,K>::x_ = x;
-	series_base<T,K>::sum = calculateSum(x, addKParameter);
+	series_base<T,K>::sum = calculate_summ(x, addKParameter);
 	vecAn[0] = static_cast<T>(fact<K>(addKParameter));
 	vecSn[0] = static_cast<T>(fact<K>(addKParameter));
 
