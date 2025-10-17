@@ -1,6 +1,10 @@
 {
     "id": "ln_1plussqrt1plusxsquare_minus_ln_2_series",
-    "title": "",
-    "formula": "",
+    "num": 49,
+    "title": "ln(1+√(1+x²)) − ln(2)",
+    "formula": "\\sum_{n=0}^{\\infty} \\frac{(-1)^n (2n+1)!}{2^{2n+2} ((n+1)!)^2} x^{2n+2} = \\ln(1+\\sqrt{1+x^2}) - \\ln(2)",
+    "x_from": -1,
+    "x_to": 1,
+    "speed": "hyperlinear",
     "document": "Rows.docx"
 }

@@ -1,6 +1,10 @@
 {
-    "id": "pi_minus_x_2_series",
-    "title": "",
-    "formula": "",
-    "document": "Rows.docx"
+  "id": "pi_minus_x_2_series",
+  "num": 46,
+  "title": "\\tfrac{\\pi - x}{2}",
+  "formula": "\\sum_{n=0}^{\\infty}\\frac{\\sin\\big((n+1)x\\big)}{n+1} = \\tfrac{\\pi - x}{2}",
+  "x_from": "0",
+  "x_to": "\\pi",
+  "speed": "linear",
+  "document": "series.docx"
 }
