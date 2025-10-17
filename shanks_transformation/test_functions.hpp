@@ -9,6 +9,7 @@
 #include "methods.hpp"
 #include "methods/series_acceleration.hpp"
 #include "series/series_base.hpp"
+#include "noise/noise_generator.hpp"
 #include <chrono>
 #include <functional>
 #include <iostream>
@@ -133,6 +134,44 @@ void cmp_a_n_and_transform(const K n, const K order,
 			std::cout << e.what() << '\n';
 		}
 	}
+}
+
+/**
+ * @brief Applies noise to a given series
+ *
+ * @tparam T The type of the elements in the series
+ * @tparam ParamType The type of the noise parameters
+ *
+ * @param source The original series to which noise will be applied
+ * Valid values: any SeriesResult<T>.
+ * @param noise_type The type of noise to apply
+ * Valid values: NoiseType::uniform, NoiseType::normal, NoiseType::poisson.
+ * @param param1 The first parameter for the noise generation.\n
+ * Valid values: depends on noise type:
+ * -For uniform noise: Any real number representing the lower bound or complex number with real and imaginary parts as lower bounds.
+ * -For normal noise: Any real number representing the mean or complex number with real and imaginary parts as means.
+ * -For poisson noise: Any positive real number representing the lambda parameter.
+ * @param param2 The second parameter for the noise generation (optional, depending on noise type)\n
+ * Valid values: depends on noise type:
+ * -For uniform noise: Any real number greater than param1 representing the upper bound or complex number with real and imaginary parts greater than those of param1.
+ * -For normal noise: Any positive real number representing the standard deviation or complex number with positive real and imaginary parts.
+ * -For poisson noise: Not used, can be default constructed.
+ * @param seed The seed for the random number generator (default is based on current time and random value)\n
+ * Valid values: any positive integer.
+ *
+ * @return A new SeriesResult<T> with noise applied
+ */
+template<AcceptedLike T, AcceptedLike ParamType>
+inline static SeriesResult<T> jitter(
+	const SeriesResult<T>& source,
+	NoiseType noise_type,
+	ParamType param1,
+	ParamType param2 = ParamType{},
+	unsigned long long int seed = std::chrono::system_clock::now().time_since_epoch().count() + std::rand()
+	)
+{
+	noise_generator<T> gen = noise_generator<T>(noise_type,seed);
+	return gen.jitter(source, param1, param2);
 }
 
 /**

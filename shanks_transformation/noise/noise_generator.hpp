@@ -46,9 +46,9 @@ enum NoiseType {
 * @tparam FT Float-like type for range specification.
 
 * @param inf Lower bound of the uniform distribution.
-* @param sup Upper bound of the uniform distribution.
+* @param sup Upper bound of the uniform distribution.\n
 * Valid values: inf < sup.
-* @param rng Random number generator.
+* @param rng Random number generator.\n
 * Valid values: any initialized std::mt19937_64 instance.
 *
 * @return Generated noise of type CT.
@@ -75,9 +75,9 @@ CT generate_uniform_noise(const FT& inf, const FT& sup, std::mt19937_64& rng) {
 * @tparam T Complex-like type for noise generation.
 *
 * @param inf Complex lower bound of the uniform distribution.
-* @param sup Complex upper bound of the uniform distribution.
+* @param sup Complex upper bound of the uniform distribution.\n
 * Valid values: inf.real() < sup.real() and inf.imag() < sup.imag().
-* @param rng Random number generator.
+* @param rng Random number generator.\n
 * Valid values: any initialized std::mt19937_64 instance.
 *
 * @return Generated noise of type T.
@@ -105,9 +105,9 @@ T generate_uniform_noise(const T& inf, const T& sup, std::mt19937_64& rng) {
 * @tparam T Float-like type for noise generation.
 
 * @param inf Lower bound of the uniform distribution.
-* @param sup Upper bound of the uniform distribution.
+* @param sup Upper bound of the uniform distribution.\n
 * Valid values: inf < sup.
-* @param rng Random number generator.
+* @param rng Random number generator.\n
 * Valid values: any initialized std::mt19937_64 instance.
 *
 * @return Generated noise of type T.
@@ -134,13 +134,13 @@ T generate_uniform_noise(const T& inf, const T& sup, std::mt19937_64& rng) {
 * @tparam CT Complex-like type for noise generation.
 * @tparam FT Float-like type for distribution parameters.
 *
-* @param mean Mean of the normal (Gaussian) distribution.
-* Valid values: any real number.
+* @param mean Mean of the normal (Gaussian) distribution.\n
+* Valid values: any real number.\n
 * Defines the center of the normal distribution.
-* @param std Standard deviation of the normal (Gaussian) distribution.
-* Valid values: std > 0.
+* @param std Standard deviation of the normal (Gaussian) distribution.\n
+* Valid values: std > 0.\n
 * Defines the spread of the normal distribution.
-* @param rng Random number generator.
+* @param rng Random number generator.\n
 * Valid values: any initialized std::mt19937_64 instance.
 *
 * @return Generated noise of type CT.
@@ -165,13 +165,13 @@ CT generate_normal_noise(const FT& mean, const FT& std, std::mt19937_64& rng) {
 *
 * @tparam T Complex-like type for noise generation.
 *
-* @param mean Complex mean of the normal (Gaussian) distribution.
-* Valid values: mean.real() and mean.imag() can be any real numbers.
+* @param mean Complex mean of the normal (Gaussian) distribution.\n
+* Valid values: mean.real() and mean.imag() can be any real numbers.\n
 * Defines the center of the normal distributio for both real and imaginary parts.
-* @param std Complex standard deviation of the normal (Gaussian) distribution.
-* Valid values: std.real() > 0 and std.imag() > 0.
+* @param std Complex standard deviation of the normal (Gaussian) distribution.\n
+* Valid values: std.real() > 0 and std.imag() > 0.\n
 * Defines the spread of the normal distribution for both real and imaginary parts.
-* @param rng Random number generator.
+* @param rng Random number generator.\n
 * Valid values: any initialized std::mt19937_64 instance.
 *
 * @return Generated noise of type T.
@@ -196,13 +196,13 @@ T generate_normal_noise(const T& mean, const T& std, std::mt19937_64& rng) {
  *
  * @tparam T Float-like type for noise generation.
  *
- * @param mean Mean of the normal (Gaussian) distribution.
- * Valid values: any real number.
+ * @param mean Mean of the normal (Gaussian) distribution.\n
+ * Valid values: any real number.\n
  * Defines the center of the normal distribution.
- * @param std Standard deviation of the normal (Gaussian) distribution.
- * Valid values: std > 0.
+ * @param std Standard deviation of the normal (Gaussian) distribution.\n
+ * Valid values: std > 0.\n
  * Defines the spread of the normal distribution.
- * @param rng Random number generator.
+ * @param rng Random number generator.\n
  * Valid values: any initialized std::mt19937_64 instance.
  *
  * @return Generated noise of type T.
@@ -229,10 +229,10 @@ T generate_normal_noise(const T& mean, const T& std, std::mt19937_64& rng) {
 * @tparam CT Complex-like type for noise generation.
 * @tparam FT Float-like type for lambda parameter.
 *
-* @param lambda Lambda parameter of the Poisson distribution.
-* Valid values: lambda > 0.
+* @param lambda Lambda parameter of the Poisson distribution.\n
+* Valid values: lambda > 0.\n
 * Defines the average rate (mean) of occurrence for the Poisson distribution.
-* @param rng Random number generator.
+* @param rng Random number generator.\n
 * Valid values: any initialized std::mt19937_64 instance.
 *
 * @return Generated noise of type CT.
@@ -258,10 +258,10 @@ CT generate_poisson_noise(const FT& lambda, std::mt19937_64& rng) {
 *
 * @tparam T Complex-like type for noise generation.
 *
-* @param lambda Complex lambda parameter of the Poisson distribution.
-* Valid values: lambda.real() > 0 and lambda.imag() > 0.
+* @param lambda Complex lambda parameter of the Poisson distribution.\n
+* Valid values: lambda.real() > 0 and lambda.imag() > 0.\n
 * Defines the average rate (mean) of occurrence for the Poisson distribution for both real and imaginary parts.
-* @param rng Random number generator.
+* @param rng Random number generator.\n
 * Valid values: any initialized std::mt19937_64 instance.
 *
 * @return Generated noise of type T.
@@ -287,10 +287,10 @@ T generate_poisson_noise(const T& lambda, std::mt19937_64& rng) {
 *
 * @tparam T Complex-like type for noise generation.
 *
-* @param lambda Complex lambda parameter of the Poisson distribution.
-* Valid values: lambda.real() > 0 and lambda.imag() > 0.
+* @param lambda Complex lambda parameter of the Poisson distribution.\n
+* Valid values: lambda.real() > 0 and lambda.imag() > 0.\n
 * Defines the average rate (mean) of occurrence for the Poisson distribution for both real and imaginary parts.
-* @param rng Random number generator.
+* @param rng Random number generator.\n
 * Valid values: any initialized std::mt19937_64 instance.
 *
 * @return Generated noise of type T.
@@ -364,7 +364,7 @@ public:
      * and a user-defined seed for generating random numbers.
      *
      * @param type The type of noise to generate (uniform, normal, poisson).
-     * @param seed The seed for the random number generator.
+     * @param seed The seed for the random number generator.\n
      * Valid values: any positive integer.
      */
     noise_generator(const NoiseType type, const unsigned long long int seed) : seed(seed), type(type) {
