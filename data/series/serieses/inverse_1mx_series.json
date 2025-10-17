@@ -1,6 +1,10 @@
 {
-    "id": "inverse_1mx_series",
-    "title": "",
-    "formula": "",
-    "document": "Rows.docx"
+  "id": "inverse_1mx_series",
+  "num": 13,
+  "title": "\\frac{1}{1 - x}",
+  "formula": "\\sum_{n=0}^{\\infty} x^{n} = \\frac{1}{1 - x}",
+  "x_from": "-1",
+  "x_to": "1",
+  "speed": "linear",
+  "document": "series.docx"
 }

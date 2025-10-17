@@ -1,6 +1,10 @@
 {
-    "id": "erf_series",
-    "title": "",
-    "formula": "",
-    "document": "Rows.docx"
+  "id": "erf_series",
+  "num": 15,
+  "title": "\\tfrac{\\sqrt{\\pi}}{2}\\,\\mathrm{erf}(x)",
+  "formula": "\\sum_{n=0}^{\\infty}\\frac{(-1)^{n}x^{2n+1}}{n!(2n+1)} = \\tfrac{\\sqrt{\\pi}}{2}\\,\\mathrm{erf}(x)",
+  "x_from": "-\\infty",
+  "x_to": "+\\infty",
+  "speed": "hyperlinear",
+  "document": "series.docx"
 }

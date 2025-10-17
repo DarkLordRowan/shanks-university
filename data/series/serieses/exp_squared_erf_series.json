@@ -1,6 +1,10 @@
 {
-    "id": "exp_squared_erf_series",
-    "title": "",
-    "formula": "",
-    "document": "Rows.docx"
+  "id": "exp_squared_erf_series",
+  "num": 10,
+  "title": "e^{x^{2}}\\,\\mathrm{erf}(x)",
+  "formula": "\\frac{2}{\\sqrt{\\pi}}\\sum_{n=0}^{\\infty}\\frac{x^{2n+1}}{n!(2n+1)}",
+  "x_from": "-\\infty",
+  "x_to": "+\\infty",
+  "speed": "hyperlinear",
+  "document": "series.docx"
 }

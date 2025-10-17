@@ -1,6 +1,10 @@
 {
-    "id": "mean_sinh_sin_series",
-    "title": "",
-    "formula": "",
-    "document": "Rows.docx"
+  "id": "mean_sinh_sin_series",
+  "num": 9,
+  "title": "\\tfrac{\\sinh x + \\sin x}{2}",
+  "formula": "\\sum_{k=0}^{\\infty}\\frac{x^{4k+1}}{(4k+1)!}",
+  "x_from": "-\\infty",
+  "x_to": "+\\infty",
+  "speed": "hyperlinear",
+  "document": "series.docx"
 }
