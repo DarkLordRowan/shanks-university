@@ -7,16 +7,15 @@ from src.run.params import (
     AccelParamLoader,
     BaseAccelParam,
     BaseSeriesParam,
+    PrecisionType,
     SeriesParamLoader,
 )
 from src.run.trial import ComplexTrial, TrialResult
 
 
-def load_parameters(config: TrialConfig):
+def load_parameters(config: TrialConfig, precision: PrecisionType):
     series_params: list[BaseSeriesParam] = []
     accel_params: list[BaseAccelParam] = []
-
-    precision = config.precision
 
     if config.series_json.exists():
         logging.info("Loading series from JSON: %s", config.series_json)
@@ -51,12 +50,11 @@ def load_parameters(config: TrialConfig):
     return series_params, accel_params
 
 
-def execute_trial(config: TrialConfig):
-    logging.info("Starting trial execution...")
-    logging.info("Precision: %s", config.precision.name)
+def execute_trial(config: TrialConfig, precision: PrecisionType):
+    logging.info("Starting trial execution for precision: %s", precision.name)
     logging.info("Process count: %d", config.trial_process_count)
 
-    series_params, accel_params = load_parameters(config)
+    series_params, accel_params = load_parameters(config, precision)
 
     trial = ComplexTrial(
         series_params,
@@ -105,6 +103,10 @@ def lazy_load_events(
 
 
 def handle_run_command(config: TrialConfig, mongo_database: MongoDatabase | None):
-    results = execute_trial(config)
-    results = lazy_load_events(config, results)
-    export_results(results, config, mongo_database)
+    aggregated_results: list[TrialResult] = []
+    for precision in config.precisions:
+        results = execute_trial(config, precision)
+        results = lazy_load_events(config, results)
+        aggregated_results.extend(results)
+
+    export_results(aggregated_results, config, mongo_database)

@@ -2,7 +2,7 @@
 Parameter configuration module for series acceleration experiments.
 
 Provides helpers for loading/normalising series and acceleration parameters
-for every precision exported by ``py.cpp`` (F32, F64, FL, Arb, CF32, CF64, CFL, CArb).
+for every precision exported by ``py.cpp`` (F32, F64, FLong, Arb, CF32, CF64, CFLong, CArb).
 """
 
 from __future__ import annotations
@@ -54,49 +54,49 @@ class AccelProto(Protocol[TNum]):
 class PrecisionType(Enum):
     F32 = "F32"
     F64 = "F64"
-    FL = "FL"
+    FLONG = "FLong"
     ARB = "Arb"
     CF32 = "CF32"
     CF64 = "CF64"
-    CFL = "CFL"
+    CFLONG = "CFLong"
     CARB = "CArb"
 
 
 REAL_PRECISIONS = {
     PrecisionType.F32,
     PrecisionType.F64,
-    PrecisionType.FL,
+    PrecisionType.FLONG,
 }
 
 COMPLEX_PRECISIONS = {
     PrecisionType.CF32,
     PrecisionType.CF64,
-    PrecisionType.CFL,
+    PrecisionType.CFLONG,
     PrecisionType.CARB,
 }
 
 _COMPLEX_CLASS = {
     PrecisionType.CF32: ps.CF32,
     PrecisionType.CF64: ps.CF64,
-    PrecisionType.CFL: ps.CFLong,
+    PrecisionType.CFLONG: ps.CFLong,
     PrecisionType.CARB: ps.CArb,
 }
 
 _SERIES_RESULT_CLASS = {
     PrecisionType.F32: ps.SeriesResultF32,
     PrecisionType.F64: ps.SeriesResultF64,
-    PrecisionType.FL: ps.SeriesResultFL,
+    PrecisionType.FLONG: ps.SeriesResultFLong,
     PrecisionType.ARB: ps.SeriesResultArb,
     PrecisionType.CF32: ps.SeriesResultCF32,
     PrecisionType.CF64: ps.SeriesResultCF64,
-    PrecisionType.CFL: ps.SeriesResultCFL,
+    PrecisionType.CFLONG: ps.SeriesResultCFLong,
     PrecisionType.CARB: ps.SeriesResultCArb,
 }
 
 _REAL_SUBTYPE_FOR_PRECISION = {
     PrecisionType.CF32: PrecisionType.F32,
     PrecisionType.CF64: PrecisionType.F64,
-    PrecisionType.CFL: PrecisionType.FL,
+    PrecisionType.CFLONG: PrecisionType.FLONG,
     PrecisionType.CARB: PrecisionType.ARB,
 }
 
@@ -642,16 +642,16 @@ def _get_acceleration_base_class(precision: PrecisionType) -> type:
         return ps.SeriesAccelerationF32
     if precision == PrecisionType.F64:
         return ps.SeriesAccelerationF64
-    if precision == PrecisionType.FL:
-        return ps.SeriesAccelerationFL
+    if precision == PrecisionType.FLONG:
+        return ps.SeriesAccelerationFLong
     if precision == PrecisionType.ARB:
         return ps.SeriesAccelerationArb
     if precision == PrecisionType.CF32:
         return ps.SeriesAccelerationCF32
     if precision == PrecisionType.CF64:
         return ps.SeriesAccelerationCF64
-    if precision == PrecisionType.CFL:
-        return ps.SeriesAccelerationCFL
+    if precision == PrecisionType.CFLONG:
+        return ps.SeriesAccelerationCFLong
     if precision == PrecisionType.CARB:
         return ps.SeriesAccelerationCArb
     raise ValueError(f"Unsupported precision: {precision}")

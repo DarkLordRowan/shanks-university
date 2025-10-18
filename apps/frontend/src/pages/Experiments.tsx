@@ -6,6 +6,57 @@ const API_BASE = "https://shanks-worker.mirea-kmbo.ru/api";
 
 type ApiJsonResult = any;
 
+const COMPLEX_RE = /^C(?:Arb|F32|F64|FL)\(\s*([^,]+)\s*,\s*([^)]+)\)$/;
+const REAL_WRAPPER_RE = /^(?:Arb|F32|F64|FL)\(\s*([^)]+)\)$/;
+
+const formatCellValue = (value: unknown): string | number => {
+  if (value === null || value === undefined) return "";
+  if (typeof value === "number") return value;
+  if (typeof value === "boolean") return value ? "true" : "false";
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (trimmed.endsWith("* i")) {
+      const base = trimmed.slice(0, -3).trim();
+      let sign = "+";
+      let splitIdx = base.lastIndexOf(" + ");
+      if (splitIdx === -1) {
+        splitIdx = base.lastIndexOf(" - ");
+        sign = "-";
+      }
+      if (splitIdx !== -1) {
+        const realPart = base.slice(0, splitIdx).trim();
+        const imagRaw = base.slice(splitIdx + 3).trim();
+        const imagPart = sign === "-" ? `-${imagRaw}` : imagRaw;
+        return `Re: ${realPart}\nIm: ${imagPart}`;
+      }
+    }
+
+    const complexMatch = COMPLEX_RE.exec(trimmed);
+    if (complexMatch) {
+      const [, real, imag] = complexMatch;
+      return `Re: ${real.trim()}\nIm: ${imag.trim()}`;
+    }
+    const realMatch = REAL_WRAPPER_RE.exec(trimmed);
+    if (realMatch) {
+      return realMatch[1].trim();
+    }
+    return trimmed;
+  }
+
+  if (typeof value === "object") {
+    if (Array.isArray(value)) {
+      return value.map((item) => formatCellValue(item)).join(", ");
+    }
+    try {
+      return JSON.stringify(value);
+    } catch {
+      return String(value);
+    }
+  }
+
+  return String(value);
+};
+
 const Experiments: React.FC = () => {
   const [rawText, setRawText] = useState("");
   const [fileName, setFileName] = useState("");
@@ -99,14 +150,27 @@ const Experiments: React.FC = () => {
     for (const block of jsonResult) {
       const s = block?.series ?? {}; const a = block?.accel ?? {};
       const err = block?.error?.description ? String(block.error.description) : "";
-      const seriesName = s?.name ?? "";
-      const seriesX = s?.arguments && typeof s.arguments === "object" && "x" in s.arguments ? (s.arguments.x as any) : "";
-      const seriesLim = typeof s?.lim === "number" ? s.lim : "";
-      const accelName = a?.name ?? ""; const m = a?.m_value ?? a?.m ?? "";
+      const seriesName = formatCellValue(s?.name ?? "");
+      const seriesX = formatCellValue(s?.arguments && typeof s.arguments === "object" && "x" in s.arguments ? (s.arguments.x as any) : "");
+      const seriesLim = formatCellValue(s?.lim);
+      const accelName = formatCellValue(a?.name ?? "");
+      const m = formatCellValue(a?.m_value ?? a?.m ?? "");
       const items: any[] = Array.isArray(block?.computed) ? block.computed : [];
       for (const it of items) {
-        rows.push([seriesName, seriesX, seriesLim, accelName, m, it?.n ?? "", it?.series_value ?? "", it?.partial_sum ?? "",
-          it?.partial_sum_deviation ?? "", it?.accel_value ?? "", it?.accel_value_deviation ?? "", err]);
+        rows.push([
+          seriesName,
+          seriesX,
+          seriesLim,
+          accelName,
+          m,
+          formatCellValue(it?.n ?? ""),
+          formatCellValue(it?.series_value ?? ""),
+          formatCellValue(it?.partial_sum ?? ""),
+          formatCellValue(it?.partial_sum_deviation ?? ""),
+          formatCellValue(it?.accel_value ?? ""),
+          formatCellValue(it?.accel_value_deviation ?? ""),
+          formatCellValue(err),
+        ]);
       }
     }
     return { headers, rows };
