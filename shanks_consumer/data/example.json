@@ -21,12 +21,15 @@
   "methods": [
     {
       "name": "ShanksAlgorithm",
-      "n": [5, 6, 7, 8, 9, 10],
+
+      "n": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+
       "m": 4,
+
       "args": {}
     },
     {
-      "name": "ShanksTransformAlternating",
+      "name": "ShanksTransformAlternatingAlgorithm",
       "n": {
         "start": 1,
         "stop": 50,
@@ -48,9 +51,8 @@
       },
       "m": [8],
       "args": {
-        "remainder": ["v_variant", "u_variant", "t_wave_variant"],
+        "remainder": ["v_type", "u_type", "t_wave_type"],
         "useRecFormulas": true,
-
         "beta": {
           "start": 0,
           "stop": 1,

@@ -1,0 +1,16 @@
+{
+  "series_json": "data/big_boy.json",
+  "series_csv": "data/example_series.csv",
+  "accel_json": "data/big_boy.json",
+  "output_dir": "output",
+  "results_json": "output/output.json",
+  "results_csv": "output/output.csv",
+  "trial_process_count": 1,
+  "trial_task_timeout": 5,
+  "no_events": false,
+  "no_json_export": false,
+  "no_csv_export": true,
+  "precision": "F64",
+  "with_mongo": true,
+  "verbose": 3
+}

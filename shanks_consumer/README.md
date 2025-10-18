@@ -6,7 +6,8 @@
 
 ```bash
 git clone https://github.com/DarkLordRowan/shanks-university.git
-git checkout Fixes
+cd shanks-university
+git checkout concept-proved
 cd shanks_consumer
 
 bash install_pyshanks.sh
@@ -31,6 +32,14 @@ python main.py
 * Вывод: `output/output.json`, `output/output.csv`, `output/events.json`, `output/events.csv`
 
 * Графики: `plots/`
+
+### Файл конфигурации испытания
+
+```bash
+python main.py --options-json options.json
+```
+
+Запускает испытание с настройками в файле `options.json`. Подробнее о настройках ниже.
 
 ### Пользовательские входные файлы
 
@@ -78,9 +87,11 @@ python script.py -vv
 
 ### Опции ввода
 
+* `--options-json`: JSON файл для параметров испытания (вместо CLI флагов)
+
 * `--series-json`: JSON файл для параметров серий (по умолчанию: `data/example.json`)
 
-* `--series-csv`: CSV файл для параметров серий (по умолчанию: `data/example_series.csv`)
+* `--series-csv`: CSV файл для натуральных рядов (по умолчанию: `data/example_series.csv`)
 
 * `--accel-json`: JSON файл для параметров ускорения (по умолчанию: `data/example.json`)
 
@@ -104,7 +115,43 @@ python script.py -vv
 
 * `--no-plots`: Пропустить генерацию графиков
 
+* `--no-csv-export`: Пропустить экспорт в CSV
+
+* `--no-json-export`: Пропустить экспорт в JSON
+
+* `--with-arb`: Включить ARB режим (пока не поддерживается)
+
+* `--with-mongo`: Включить экспорт в MongoDB
+
 * `--verbose/-v`: Увеличить уровень детализации (используйте `-v` для базового, `-vv` для детального)
+
+### Флаги выполнения
+
+* `--trial-process-count`: количество создаваемых процессов для обработки испытания (по умолчанию `1`)
+
+* `--trial-task-timeout`: максимальное время для ожидания выполнения одной задачи в секундах (по умолчанию `10`)
+
+### Подробнее про экспорт в MongoDB
+
+Для экспорта в MongoDB нужно включить соответствующий флаг (`--with-mongo`) или в конфигурации `--options-json` и предоставить данные для подключения в `.env` файле.
+
+```sh
+# Скопируйте пример файла окружения
+cp .env.example .env
+# Отредактируйте файл .env правильными данными
+```
+
+### Ряды в формате CSV
+
+Утилита поддерживает заданные ряды вручную в формате `.csv`
+Укажите доступ к ним по флагу `--series-csv` или в конфигурации по пути `--options-json`. Внутри файла структура рядов следующая:
+
+```csv
+1,2,3,4,5,6,7,8,9
+9,8,7,6,5,4,3,2,1
+```
+
+В этом примере расположены два ряда, члены которых перечислены в строчке через запятую; заголовки и отступы не должны присутствовать.
 
 ## Выходные файлы
 
@@ -148,13 +195,13 @@ python script.py --no-events --no-plots --output-dir test_run
 ```json
 {
   // Список рядов
-  "series": [ 
+  "series": [
     {
       // Точное название ряда
       "name": "ExpSeries",
       // Словарь аргументов ряда
       "args": {
-        // Можно присвоить значение списка, тогда для каждого из параметров 
+        // Можно присвоить значение списка, тогда для каждого из параметров
         // будет создан соответствующий ряд
         "x": [1, 2, 3, 4]
       }
@@ -224,3 +271,54 @@ python script.py --no-events --no-plots --output-dir test_run
 }
 
 ```
+
+## Разработка
+
+### 0. Установите проект:
+
+```sh
+git clone https://github.com/DarkLordRowan/shanks-university.git
+cd shanks-university
+git checkout concept-proved
+cd shanks_consumer
+
+# Убедитесь, что у вас установлены зависимости:
+sudo apt update
+sudo apt install python3 python3-pip cmake build-essential
+```
+
+Для работы нужно собрать библиотеку **pyshanks*
+```
+bash install_pyshanks.sh
+```
+
+### 1. Установите [Poetry](https://python-poetry.org/docs/)
+
+```sh
+# Linux/macOS/WSL
+curl -sSL https://install.python-poetry.org | python3 -
+
+# Windows (PowerShell)
+(Invoke-WebRequest -Uri https://install.python-poetry.org -UseBasicParsing).Content | python -
+
+poetry --version
+```
+
+### 2. Загрузите зависимости:
+
+```sh
+poetry install
+```
+
+### 3. Установите pre-commit хуки (сделайте это ОДИН РАЗ после poetry install):
+
+```sh
+poetry run pre-commit install
+```
+
+### 4. Запуск скрипта без входа в окружение:
+
+```sh
+poetry run python main.py
+```
+...
