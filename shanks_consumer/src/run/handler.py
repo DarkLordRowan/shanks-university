@@ -3,8 +3,12 @@ import logging
 from src.config import TrialConfig
 from src.db import MongoDatabase
 from src.run.export import ExportTrialResults
-from src.run.loaders import AccelParamLoader, SeriesParamLoader
-from src.run.params import BaseAccelParam, BaseSeriesParam
+from src.run.params import (
+    AccelParamLoader,
+    BaseAccelParam,
+    BaseSeriesParam,
+    SeriesParamLoader,
+)
 from src.run.trial import ComplexTrial, TrialResult
 
 
@@ -12,10 +16,12 @@ def load_parameters(config: TrialConfig):
     series_params: list[BaseSeriesParam] = []
     accel_params: list[BaseAccelParam] = []
 
+    precision = config.precision
+
     if config.series_json.exists():
         logging.info("Loading series from JSON: %s", config.series_json)
         series_params.extend(
-            SeriesParamLoader.from_json(config.series_json, config.with_arb)
+            SeriesParamLoader.from_json(config.series_json, precision)
         )
     else:
         logging.warning("Series JSON file not found: %s", config.series_json)
@@ -23,7 +29,7 @@ def load_parameters(config: TrialConfig):
     if config.series_csv.exists():
         logging.info("Loading series from CSV: %s", config.series_csv)
         series_params.extend(
-            SeriesParamLoader.from_csv(config.series_csv, config.with_arb)
+            SeriesParamLoader.from_csv(config.series_csv, precision)
         )
     else:
         logging.warning("Series CSV file not found: %s", config.series_csv)
@@ -31,7 +37,7 @@ def load_parameters(config: TrialConfig):
     if config.accel_json.exists():
         logging.info("Loading acceleration methods from: %s", config.accel_json)
         accel_params.extend(
-            AccelParamLoader.from_json(config.accel_json, config.with_arb)
+            AccelParamLoader.from_json(config.accel_json, precision)
         )
     else:
         logging.warning("Acceleration JSON file not found: %s", config.accel_json)
@@ -47,7 +53,7 @@ def load_parameters(config: TrialConfig):
 
 def execute_trial(config: TrialConfig):
     logging.info("Starting trial execution...")
-    logging.info("Arb precision: %s", config.with_arb)
+    logging.info("Precision: %s", config.precision.name)
     logging.info("Process count: %d", config.trial_process_count)
 
     series_params, accel_params = load_parameters(config)

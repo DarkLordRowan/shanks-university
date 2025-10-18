@@ -4,6 +4,7 @@ import pathlib
 from abc import abstractmethod
 from dataclasses import dataclass, field
 
+from src.run.params import PrecisionType
 
 @dataclass
 class BaseConfig:
@@ -44,6 +45,7 @@ class TrialConfig(BaseConfig, MongoConfig):
     trial_process_count: int = 1
     trial_task_timeout: int = 10
 
+    precision: PrecisionType | str = PrecisionType.F64
     with_arb: bool = False
     no_events: bool = False
     no_csv_export: bool = False
@@ -52,6 +54,15 @@ class TrialConfig(BaseConfig, MongoConfig):
     with_mongo: bool = False
 
     def __post_init__(self):
+        if isinstance(self.precision, str):
+            try:
+                self.precision = PrecisionType[self.precision.upper()]
+            except KeyError as exc:
+                raise ValueError(f"Unsupported precision: {self.precision}") from exc
+        elif not isinstance(self.precision, PrecisionType):
+            raise TypeError(
+                f"precision must be a PrecisionType or string, got {type(self.precision)!r}"
+            )
         if self.results_json is None:
             self.results_json = self.output_dir / "output.json"
         if self.results_csv is None:
@@ -103,6 +114,13 @@ class BaseConfigLoader[T]:
 class TrialConfigLoader(BaseConfigLoader[TrialConfig]):
     @staticmethod
     def from_args(args) -> TrialConfig:
+        precision_arg = args.precision
+        precision = (
+            PrecisionType[precision_arg.upper()]
+            if precision_arg is not None
+            else (PrecisionType.ARB if args.with_arb else PrecisionType.F64)
+        )
+
         return TrialConfig(
             series_json=args.series_json,
             series_csv=args.series_csv,
@@ -112,6 +130,7 @@ class TrialConfigLoader(BaseConfigLoader[TrialConfig]):
             results_csv=args.results_csv,
             trial_process_count=args.trial_process_count,
             trial_task_timeout=args.trial_task_timeout,
+            precision=precision,
             with_arb=args.with_arb,
             no_events=args.no_events,
             no_json_export=args.no_json_export,

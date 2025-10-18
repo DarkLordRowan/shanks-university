@@ -6,7 +6,7 @@ from dataclasses import Field, asdict, fields, is_dataclass
 from typing import Any
 
 from pymongo.database import Database as MongoDatabase
-from src.run.loaders import ArbEncoder
+from src.run.params import XArbEncoder as ArbEncoder
 from src.run.trial import TrialResult
 
 

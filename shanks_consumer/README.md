@@ -232,7 +232,7 @@ python script.py --no-events --no-plots --output-dir test_run
       "args": {}
     },
     {
-      "name": "ShanksTransformAlternatingAlgorithm",
+      "name": "ShanksTransformAlternating",
       "n": {
         // Рендж можно применить и для этих аргументов
         "start": 1,
