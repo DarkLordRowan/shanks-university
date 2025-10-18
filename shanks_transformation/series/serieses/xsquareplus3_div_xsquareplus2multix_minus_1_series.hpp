@@ -31,11 +31,7 @@ public:
 		
 		using std::isfinite;
 
-		if constexpr (isComplexLike<T>::value){
-    		return !isfinite(x.real()) || !isfinite(x.imag()) || float_precision(abs(x - static_cast<T>(1))) >= float_precision(1);
-        } else {
-		    return !isfinite(x) || abs(x - static_cast<T>(1)) >= static_cast<T>(1);
-        }
+		return !isfinite(x) || abs(x - static_cast<T>(1)) >= static_cast<T>(1);
 	}
 
 	inline constexpr T calculate_sum(const T& x){
@@ -73,5 +69,77 @@ series_result<T> xsquareplus3_div_xsquareplus2multix_minus_1_series<T, K>::gener
 	}
 
 	return series_result<T>{.Sn = vecSn, .an = vecAn };
+
+}
+
+/**
+* @brief Maclaurin series of exp(x) function
+* @authors Bolshakov M.P.
+* @tparam T The type of the elements in the series, K The type of enumerating integer
+*/
+template <FloatLike T, UnsignedIntLike K>
+class xsquareplus3_div_xsquareplus2multix_minus_1_series<complex_precision<T>, K> final : public series_base<complex_precision<T>, K>
+{
+public:
+
+	/**
+	* @brief Parameterized constructor to initialize the series with function argument and sum
+	* @authors Bolshakov M.P.
+	* @tparam T The type of the elements in the series, K The type of enumerating integer
+	* @param x The argument for function series
+	*/
+	explicit xsquareplus3_div_xsquareplus2multix_minus_1_series() : series_base<complex_precision<T>, K>("xsquareplus3_div_xsquareplus2multix_minus_1_series") {};
+
+	virtual series_result<complex_precision<T>> generate_series(
+        const complex_precision<T>& x , 
+		const K vecSize, 
+		const complex_precision<T>& addTParameter = static_cast<complex_precision<T>>(1),
+		const K addKParameter = static_cast<K>(1)
+    ) override;
+
+	inline constexpr bool check_domain(const complex_precision<T>& x){
+		
+		using std::isfinite;
+
+    	return !isfinite(x.real()) || !isfinite(x.imag()) || abs(x - complex_precision<T>(1)) >= static_cast<T>(1);
+	}
+
+	inline constexpr complex_precision<T> calculate_sum(const complex_precision<T>& x){
+
+		return (x*x + complex_precision<T>(3)) / (x*x + complex_precision<T>(2) * x) - complex_precision<T>(1);
+	}
+
+};
+
+template<FloatLike T, UnsignedIntLike K>
+series_result<complex_precision<T>> xsquareplus3_div_xsquareplus2multix_minus_1_series<complex_precision<T>, K>::generate_series(
+    const complex_precision<T>& x , 
+	const K vecSize, 
+	const complex_precision<T>& addTParameter,
+	const K addKParameter
+) {
+
+	using Complex = complex_precision<T>;
+
+	if(check_domain(x)){
+		series_base<Complex, K>::throw_domain_error("x is not finite or x<=0 or x>=2");
+	}
+
+	series_base<Complex,K>::x_ = x;
+	series_base<Complex,K>::sum = calculate_sum(x);
+
+	std::vector<Complex> vecAn;
+	std::vector<Complex> vecSn;
+
+	series_base<Complex,K>::init_vecs_with_prec(vecSn,vecAn, vecSize, x);
+
+	using std::pow;
+
+	for(K j = static_cast<K>(0); j < vecSize; ++j){
+		vecAn[j] += Complex(0.5) * minus_one_raised_to_power_n<Complex, K>(j) * Complex(pow(3, j+2) - 7) * pow(x - Complex(1), Complex(j)) / Complex(pow(3, j+1));
+		vecSn[j] += vecSn[j == static_cast<K>(0) ? j : j-static_cast<K>(1)] + vecAn[j];
+	}
+
+	return series_result<complex_precision<T>>{.Sn = vecSn, .an = vecAn };
 
 }

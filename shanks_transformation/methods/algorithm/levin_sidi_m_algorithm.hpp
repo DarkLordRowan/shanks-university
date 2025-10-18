@@ -487,15 +487,15 @@ void levin_sidi_m_algorithm<complex_precision<T>, K>::update_type(const remainde
 
 	// Initialize the appropriate remainder transformation based on variant
 	switch(remainder_type_to_use){
-        case remainder_type::u_type 	: { remainder.reset(new u_transform<T, K>()); 	  break; }
-        case remainder_type::t_type 	: { remainder.reset(new t_transform<T, K>()); 	  break; }
-        case remainder_type::v_type 	: { remainder.reset(new v_transform<T, K>()); 	  break; }
-        case remainder_type::t_wave_type: { remainder.reset(new t_wave_transform<T, K>()); break; }
-        case remainder_type::v_wave_type: { remainder.reset(new v_wave_transform<T, K>()); break; }
+        case remainder_type::u_type 	: { remainder.reset(new u_transform<complex_precision<T>, K>()); 	  break; }
+        case remainder_type::t_type 	: { remainder.reset(new t_transform<complex_precision<T>, K>()); 	  break; }
+        case remainder_type::v_type 	: { remainder.reset(new v_transform<complex_precision<T>, K>()); 	  break; }
+        case remainder_type::t_wave_type: { remainder.reset(new t_wave_transform<complex_precision<T>, K>()); break; }
+        case remainder_type::v_wave_type: { remainder.reset(new v_wave_transform<complex_precision<T>, K>()); break; }
         default:
 		{
 			remainder_type_in_use = remainder_type::u_type;
-            remainder.reset(new u_transform<T, K>()); // Default to u-variant
+            remainder.reset(new u_transform<complex_precision<T>, K>()); // Default to u-variant
 		}
     }
 	

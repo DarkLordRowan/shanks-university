@@ -31,22 +31,15 @@ public:
 		
 		using std::isfinite;
 
-		if constexpr (isComplexLike<T>::value){
-    		return !isfinite(x.real()) || !isfinite(x.imag()) || float_precision(x.real()) < float_precision(2);
-        } else {
-            return !isfinite(x) || x < static_cast<T>(2);
-        }
+        return !isfinite(x) || x < static_cast<T>(2);
 	}
 
 	inline T calculate_sum(const T& x){
 
-		if constexpr (isComplexLike<T>::value){
-            return static_cast<T>(0);
-        } else if constexpr (std::is_same<T, float_precision>::value){
-            return abs(zeta(x - static_cast<T>(1)) / zeta(x));
-        } else {
-			return abs(static_cast<T>(zeta(float_precision(x - 1)))) / static_cast<T>(zeta(float_precision(x)));
-		}
+		using std::to_string;
+		float_precision adapterX = float_precision(to_string(x));
+
+		return static_cast<T>(static_cast<double>(zeta(adapterX - float_precision(1)) / zeta(adapterX)));
 	}
 
 };
@@ -79,5 +72,78 @@ series_result<T> riemann_zeta_func_xmin1_div_Riemann_zeta_func_x_series<T, K>::g
 	}
 
 	return series_result<T>{.Sn = vecSn, .an = vecAn };
+
+}
+
+/**
+* @brief Maclaurin series of exp(x) function
+* @authors Bolshakov M.P.
+* @tparam T The type of the elements in the series, K The type of enumerating integer
+*/
+template <FloatLike T, UnsignedIntLike K>
+class riemann_zeta_func_xmin1_div_Riemann_zeta_func_x_series<complex_precision<T>, K> final : public series_base<complex_precision<T>, K>
+{
+public:
+
+	/**
+	* @brief Parameterized constructor to initialize the series with function argument and sum
+	* @authors Bolshakov M.P.
+	* @tparam T The type of the elements in the series, K The type of enumerating integer
+	* @param x The argument for function series
+	*/
+	explicit riemann_zeta_func_xmin1_div_Riemann_zeta_func_x_series() : series_base<complex_precision<T>, K>("riemann_zeta_func_xmin1_div_Riemann_zeta_func_x_series") {};
+
+	virtual series_result<complex_precision<T>> generate_series(
+        const complex_precision<T>& x , 
+		const K vecSize, 
+		const complex_precision<T>& addTParameter = complex_precision<T>(1),
+		const K addKParameter = static_cast<K>(1)
+    ) override;
+
+	inline constexpr bool check_domain(const complex_precision<T>& x){
+		
+		using std::isfinite;
+
+    	return !isfinite(x.real()) || !isfinite(x.imag()) || x.real() < static_cast<T>(2);
+
+	}
+
+	inline complex_precision<T> calculate_sum(const complex_precision<T>& x){
+
+        return complex_precision<T>(0);
+	}
+
+};
+
+template<FloatLike T, UnsignedIntLike K>
+series_result<complex_precision<T>> riemann_zeta_func_xmin1_div_Riemann_zeta_func_x_series<complex_precision<T>, K>::generate_series(
+    const complex_precision<T>& x , 
+	const K vecSize, 
+	const complex_precision<T>& addTParameter,
+	const K addKParameter
+) {
+
+	using Complex = complex_precision<T>;
+
+	if(check_domain(x)){
+		series_base<Complex, K>::throw_domain_error("x is not finite or Re(x)<2");
+	}
+
+	series_base<Complex,K>::x_ = x;
+	series_base<Complex,K>::sum = calculate_sum(x);
+
+	std::vector<Complex> vecAn;
+	std::vector<Complex> vecSn;
+
+	series_base<Complex,K>::init_vecs_with_prec(vecSn,vecAn, vecSize, x);
+
+    using std::pow;
+
+	for(K j = static_cast<K>(0); j < vecSize; ++j){
+		vecAn[j] += phi<Complex,K>(j+1) / pow(Complex(j+1), x);
+		vecSn[j] += vecSn[j == static_cast<K>(0) ? j : j-static_cast<K>(1)] + vecAn[j];
+	}
+
+	return series_result<Complex>{.Sn = vecSn, .an = vecAn };
 
 }

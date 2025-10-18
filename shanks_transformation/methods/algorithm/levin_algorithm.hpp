@@ -52,9 +52,9 @@ class levin_algorithm final : public series_acceleration<T, K>
 protected:
 
 	T beta_in_use;													///< Parameter for u-variant transformation (β > 0). Default value is 1.0.
-    std::unique_ptr<const transform_base<T, K>> remainder;	///< Pointer to remainder transformation object
-    bool use_recurrent_formula = false;							///< Flag to use recurrence formulas (true) or direct formulas (false)
-    remainder_type remainder_type_in_use = remainder_type::u_type;		///< Type of Levin transformation variant (u, t, v, t~, v~)
+    std::unique_ptr<const transform_base<T, K>> remainder;			//< Pointer to remainder transformation object
+    bool use_recurrent_formula = false;								//< Flag to use recurrence formulas (true) or direct formulas (false)
+    remainder_type remainder_type_in_use = remainder_type::u_type;	//< Type of Levin transformation variant (u, t, v, t~, v~)
 
 	/**
 	 * @brief Computes the Levin transformation using direct summation formulas.

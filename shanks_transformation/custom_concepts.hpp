@@ -1,5 +1,6 @@
 #pragma once
 
+#include <type_traits>
 #ifndef INC_FPRECISION
     #include "libs/arbitrary_arithmetics/fprecision.h"
 #endif
@@ -42,6 +43,9 @@ template<typename T>
 concept AcceptedLike = requires{ 
     requires FloatLike<T> || ComplexLike<T>; 
 };
+
+template<typename T>
+struct isFloatLike : std::integral_constant<bool, std::is_floating_point<T>::value || std::is_same<T, float_precision>::value >{};
 
 template<typename K>
 concept UnsignedIntLike = requires {
