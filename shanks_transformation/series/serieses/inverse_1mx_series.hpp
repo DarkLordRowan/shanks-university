@@ -31,11 +31,7 @@ public:
 		
 		using std::isfinite;
 
-        if constexpr (isComplexLike<T>::value){
-    		return !isfinite(x.real()) || !isfinite(x.imag()) || float_precision(abs(x)) >= float_precision(1);
-        } else {
-		    return !isfinite(x) || abs(x) >= static_cast<T>(1);
-        }
+		return !isfinite(x) || abs(x) >= static_cast<T>(1);
 	}
 
 	inline constexpr T calculate_sum(const T& x){
@@ -74,5 +70,79 @@ series_result<T> inverse_1mx_series<T, K>::generate_series(
 	}
 
 	return series_result<T>{.Sn = vecSn, .an = vecAn };
+
+}
+
+/**
+* @brief Maclaurin series of exp(x) function
+* @authors Bolshakov M.P.
+* @tparam T The type of the elements in the series, K The type of enumerating integer
+*/
+template <FloatLike T, UnsignedIntLike K>
+class inverse_1mx_series<complex_precision<T>, K> final : public series_base<complex_precision<T>, K>
+{
+public:
+
+	/**
+	* @brief Parameterized constructor to initialize the series with function argument and sum
+	* @authors Bolshakov M.P.
+	* @tparam T The type of the elements in the series, K The type of enumerating integer
+	* @param x The argument for function series
+	*/
+	explicit inverse_1mx_series() : series_base<complex_precision<T>, K>("inverse_1mx_series") {};
+
+	virtual series_result<complex_precision<T>> generate_series(
+        const complex_precision<T>& x , 
+		const K vecSize, 
+		const complex_precision<T>& addTParameter = complex_precision<T>(1),
+		const K addKParameter = static_cast<K>(1)
+    ) override;
+
+	inline constexpr bool check_domainn(const complex_precision<T>& x){
+		
+		using std::isfinite;
+
+    	return !isfinite(x.real()) || !isfinite(x.imag()) || abs(x) >= static_cast<T>(1);
+
+	}
+
+	inline constexpr complex_precision<T> calculate_sum(const complex_precision<T>& x){
+
+		return complex_precision<T>(1) / (complex_precision<T>(1) - x);
+	}
+
+};
+
+template<FloatLike T, UnsignedIntLike K>
+series_result<complex_precision<T>> inverse_1mx_series<complex_precision<T>, K>::generate_series(
+    const complex_precision<T>& x , 
+	const K vecSize, 
+	const complex_precision<T>& addTParameter,
+	const K addKParameter
+) {
+
+	using Complex = complex_precision<T>;
+
+	if(check_domainn(x)){
+		series_base<Complex, K>::throw_domain_error("x is not finite or |x|>=1");
+	}
+
+	series_base<Complex,K>::x_ = x;
+	series_base<Complex,K>::sum = calculate_sum(x);
+
+	std::vector<Complex> vecAn;
+	std::vector<Complex> vecSn;
+
+	series_base<Complex,K>::init_vecs_with_prec(vecSn,vecAn, vecSize, x);
+
+	vecAn[0] = static_cast<Complex>(1);
+	vecSn[0] = static_cast<Complex>(1);
+
+	for(K j = static_cast<K>(1); j < vecSize; ++j){
+		vecAn[j] += x * vecAn[j-static_cast<K>(1)];
+		vecSn[j] += vecSn[j-static_cast<K>(1)] + vecAn[j];
+	}
+
+	return series_result<Complex>{.Sn = vecSn, .an = vecAn };
 
 }
