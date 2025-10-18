@@ -93,6 +93,13 @@ _SERIES_RESULT_CLASS = {
     PrecisionType.CARB: ps.SeriesResultCArb,
 }
 
+_REAL_SUBTYPE_FOR_PRECISION = {
+    PrecisionType.CF32: PrecisionType.F32,
+    PrecisionType.CF64: PrecisionType.F64,
+    PrecisionType.CFL: PrecisionType.FL,
+    PrecisionType.CARB: PrecisionType.ARB,
+}
+
 
 def is_complex_precision(precision: PrecisionType) -> bool:
     return precision in COMPLEX_PRECISIONS
@@ -102,7 +109,9 @@ def zero_for_precision(precision: PrecisionType):
     if precision == PrecisionType.ARB:
         return ps.Arb(0)
     if precision in COMPLEX_PRECISIONS:
-        return _COMPLEX_CLASS[precision](0)
+        real_zero = cast_real_subtype_value(precision, 0)
+        cls = _COMPLEX_CLASS[precision]
+        return cls(real_zero)
     return 0.0
 
 
@@ -110,7 +119,9 @@ def one_for_precision(precision: PrecisionType):
     if precision == PrecisionType.ARB:
         return ps.Arb(1)
     if precision in COMPLEX_PRECISIONS:
-        return _COMPLEX_CLASS[precision](1)
+        real_one = cast_real_subtype_value(precision, 1)
+        cls = _COMPLEX_CLASS[precision]
+        return cls(real_one)
     return 1.0
 
 
@@ -139,70 +150,65 @@ def cast_precision_value(precision: PrecisionType, value: Any):
             return cls(value.real, value.imag)
         if isinstance(value, (tuple, list)) and len(value) == 2:
             return cls(value[0], value[1])
+        if precision == PrecisionType.CARB and not isinstance(value, ps.Arb):
+            return cls(ps.Arb(str(value)))
         return cls(value)
 
     return value
+
+
+def cast_real_subtype_value(precision: PrecisionType, value: Any):
+    real_precision = _REAL_SUBTYPE_FOR_PRECISION.get(precision, precision)
+    return cast_precision_value(real_precision, value)
 
 
 def series_result_ctor_for_precision(precision: PrecisionType):
     return _SERIES_RESULT_CLASS[precision]
 
 
-def autowrap(x: Any, precision: PrecisionType | None = None) -> Iterable[Any]:
+def autowrap(x: Any) -> Iterable[Any]:
     if x is None:
         return []
 
     if isinstance(x, dict) and all(k in x for k in ("start", "stop", "step")):
-        start = x["start"]
-        stop = x["stop"]
-        step = x["step"]
-        if precision is not None:
-            start = cast_precision_value(precision, start)
-            stop = cast_precision_value(precision, stop)
-            step = cast_precision_value(precision, step)
-        return _generate_range_values(start, stop, step, precision)
+        start = _ensure_number(x["start"])
+        stop = _ensure_number(x["stop"])
+        step = _ensure_number(x["step"])
+        return _generate_range_values(start, stop, step)
 
     if isinstance(x, (str, bytes, bytearray)):
         return [x]
 
-    if isinstance(x, Iterable):
-        if precision is None:
-            return x
-        return [cast_precision_value(precision, value) for value in x]
+    if isinstance(x, Iterable) and not isinstance(x, (dict, str, bytes, bytearray)):
+        return [_ensure_number(value) for value in x]
 
-    return (
-        [cast_precision_value(precision, x)]
-        if precision is not None
-        else [x]
-    )
+    return [_ensure_number(x)]
 
 
-def _generate_range_values(start: Any, stop: Any, step: Any, precision: PrecisionType | None):
-    if precision in COMPLEX_PRECISIONS:
-        raise TypeError(
-            "Range expansion is not supported for complex precisions; "
-            "provide values explicitly."
-        )
-
+def _ensure_number(value: Any) -> Any:
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, (int, float)):
+        return value
+    if isinstance(value, str):
+        try:
+            if any(sep in value for sep in (".", "e", "E")):
+                return float(value)
+            return int(value)
+        except ValueError:
+            return value
     try:
-        start_f = float(start)
-        stop_f = float(stop)
-        step_f = float(step)
-    except (TypeError, ValueError) as exc:
-        raise TypeError("Unable to interpret range specification") from exc
+        return float(value)
+    except (TypeError, ValueError):
+        return value
 
-    if step_f == 0:
+
+def _generate_range_values(start: float, stop: float, step: float) -> list[float]:
+    if step == 0:
         raise ValueError("Range specification has zero step")
 
-    # Use integer count derived from floating representation to avoid implicit multiplication
-    count = int((stop_f - start_f) / step_f)
-
-    values = []
-    current = start
-    for _ in range(count):
-        values.append(current)
-        current = current + step
-    return values
+    steps = int((stop - start) / step)
+    return [start + i * step for i in range(steps)]
 
 
 class BaseSeriesParam(Generic[TNum], ABC):
@@ -227,6 +233,7 @@ class BaseSeriesParam(Generic[TNum], ABC):
 class SeriesParamJSON(BaseSeriesParam[TNum]):
     name: str
     args: Mapping[str, Iterable[TNum]]
+    precision: PrecisionType
 
     @property
     @override
@@ -438,15 +445,6 @@ def decoder_for_prec(precision: PrecisionType):
                 super().__init__(parse_float=ps.Arb, parse_int=ps.Arb, *args, **kwargs)
         return _Decoder
 
-    if precision == PrecisionType.CARB:
-        def _parse_complex(value: str):
-            return ps.CArb(value)
-
-        class _Decoder(json.JSONDecoder):
-            def __init__(self, *args, **kwargs):
-                super().__init__(parse_float=_parse_complex, parse_int=_parse_complex, *args, **kwargs)
-        return _Decoder
-
     return None
 
 
@@ -471,6 +469,7 @@ def load_series_params_from_data(
             SeriesParamJSON(
                 name=series_data.get("name") + precision.value,
                 args=processed_args,
+                precision=precision,
             )
         )
     return series_list
@@ -498,14 +497,20 @@ def load_accel_params_from_data(
         args = {}
         for key, value in method_data.get("args", {}).items():
             key_str = str(key)
-            values = autowrap(value, precision if key_str not in {"remainder", "numerator"} else None)
+            values = list(autowrap(value))
 
             if key_str == "remainder":
                 args[key_str] = [getattr(ps.RemainderType, str(v)) for v in values]
             elif key_str == "numerator":
                 args[key_str] = [getattr(ps.NumeratorType, str(v)) for v in values]
             else:
-                args[key_str] = [cast_precision_value(precision, v) for v in values]
+                converted: list[Any] = []
+                for item in values:
+                    if isinstance(item, bool):
+                        converted.append(item)
+                    else:
+                        converted.append(cast_real_subtype_value(precision, item))
+                args[key_str] = converted
 
         methods_list.append(
             AccelParamJSON(
@@ -547,7 +552,11 @@ def _cast_csv_value(value: str, precision: PrecisionType):
         return ps.Arb(value)
     if precision in COMPLEX_PRECISIONS:
         cls = _COMPLEX_CLASS[precision]
-        return cls(value)
+        real_value = cast_real_subtype_value(precision, value)
+        try:
+            return cls(real_value)
+        except TypeError:
+            return cls(value)
     return value
 
 
@@ -589,15 +598,17 @@ class SeriesParamLoader:
             return {}
 
         if not isinstance(args, dict):
-            args = {"x": autowrap(args, precision)}
+            args = {"x": autowrap(args)}
 
         processed: dict[str, Iterable[Any]] = {}
         for key, value in args.items():
             key_str = str(key)
-            if key_str in {"vecSize", "addKParameter"}:
-                processed[key_str] = list(autowrap(value))
+            if key_str in {"vecSize", "addKParameter", "m", "b"}:
+                processed[key_str] = [int(v) for v in autowrap(value)]
             else:
-                processed[key_str] = list(autowrap(value, precision))
+                processed[key_str] = [
+                    cast_precision_value(precision, v) for v in autowrap(value)
+                ]
         return processed
 
 

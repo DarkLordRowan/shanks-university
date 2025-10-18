@@ -29,7 +29,7 @@
       "args": {}
     },
     {
-      "name": "ShanksTransformAlternatingAlgorithm",
+      "name": "ShanksTransformAlternating",
       "n": {
         "start": 1,
         "stop": 50,

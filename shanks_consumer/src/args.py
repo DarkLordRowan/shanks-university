@@ -1,6 +1,8 @@
 import argparse
 import pathlib
 
+from src.run.params import PrecisionType
+
 
 def create_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="pyshanks_consumer CLI")
@@ -22,6 +24,13 @@ def _add_run_arguments(
         "--options-json",
         type=pathlib.Path,
         help="Load configuration from JSON file",
+    )
+    config_group.add_argument(
+        "--precision",
+        type=str,
+        choices=[precision.name for precision in PrecisionType],
+        default=None,
+        help="Select computation precision (overrides --with-arb when provided).",
     )
 
     input_group = parser.add_argument_group("Input Sources")
