@@ -285,7 +285,8 @@ class SeriesParamModule(BaseSeriesParam[TNum]):
 class SeriesParamCSV(BaseSeriesParam[TNum]):
     location: pathlib.Path
     row: int
-    data: SeriesResultProto[TNum]
+    precision: PrecisionType
+    raw_values: tuple[str, ...]
 
     @property
     @override
@@ -300,27 +301,33 @@ class SeriesParamCSV(BaseSeriesParam[TNum]):
     @property
     @override
     def executable(self):
-        class CSVSeriesWrapper:
-            def __init__(self, data: SeriesResultProto[TNum]):
-                self.data = data
-                self._sum = data.Sn[-1]
+        def factory():
+            return CSVSeriesWrapper(self.precision, self.raw_values)
 
-            def generateSeries(
-                self,
-                x: TNum,
-                vecSize: int,
-                addTParameter: TNum,
-                addKParameter: int,
-            ) -> SeriesResultProto[TNum]:
-                return self.data
+        return factory
 
-            def get_sum(self) -> TNum:
-                return self._sum
 
-            def get_name(self):
-                return f"CSVSeries_{self.data.__class__.__name__}"
+class CSVSeriesWrapper(Generic[TNum]):
+    def __init__(self, precision: PrecisionType, raw_values: Sequence[str]):
+        values = [_cast_csv_value(value, precision) for value in raw_values]
+        self.data = _create_series_result(values, precision)
+        self._sum = self.data.Sn[-1]
+        self._precision = precision
 
-        return lambda: CSVSeriesWrapper(self.data)
+    def generateSeries(
+        self,
+        x: TNum,
+        vecSize: int,
+        addTParameter: TNum,
+        addKParameter: int,
+    ) -> SeriesResultProto[TNum]:
+        return self.data
+
+    def get_sum(self) -> TNum:
+        return self._sum
+
+    def get_name(self) -> str:
+        return f"CSVSeries_{self._precision.value}"
 
 
 class BaseAccelParam(Generic[TNum], ABC):
@@ -533,13 +540,12 @@ def get_series_params_from_csv(
     with open(csv_location, encoding="utf-8") as f:
         reader = csv.reader(f)
         for i, row in enumerate(reader, 1):
-            an_vals = [_cast_csv_value(value, precision) for value in row]
-            series_result = _create_series_result(an_vals, precision)
             results.append(
                 SeriesParamCSV(
                     location=pathlib.Path(csv_location),
                     row=i,
-                    data=series_result,
+                    precision=precision,
+                    raw_values=tuple(row),
                 )
             )
     return results
