@@ -7,7 +7,7 @@ from dataclasses import Field, asdict, fields, is_dataclass
 from typing import Any
 
 from pymongo.database import Database as MongoDatabase
-from src.run.params import XArbEncoder as ArbEncoder
+from src.run.params import PrecisionType, XArbEncoder as ArbEncoder
 from src.run.trial import TrialResult
 import pyshanks as ps
 
@@ -186,7 +186,12 @@ def dataclasses_to_json(dataclasses, location):
     with open(location, mode="w", encoding="utf-8") as f:
         f.write(
             json.dumps(
-                [asdict(dataclass) for dataclass in dataclasses],
+                [
+                    BaseExport._sanitize_value(
+                        asdict(dataclass), convert_precision=True
+                    )
+                    for dataclass in dataclasses
+                ],
                 indent=4,
                 sort_keys=True,
                 cls=ArbEncoder,
@@ -204,7 +209,7 @@ class BaseExport:
         self.mongodb_collection: str = "base"
 
     @staticmethod
-    def _sanitize_value(value: Any) -> Any:
+    def _sanitize_value(value: Any, *, convert_precision: bool = False) -> Any:
         if isinstance(
             value,
             (
@@ -216,20 +221,43 @@ class BaseExport:
             ),
         ):
             return str(value)
+        if isinstance(
+            value,
+            (
+                ps.RemainderType,
+                ps.NumeratorType,
+            ),
+        ):
+            return value.name
+        if convert_precision and isinstance(value, PrecisionType):
+            return value.value
 
         if is_dataclass(value):
-            return BaseExport._sanitize_value(asdict(value))
+            return BaseExport._sanitize_value(
+                asdict(value), convert_precision=convert_precision
+            )
 
         if isinstance(value, Mapping):
-            return {key: BaseExport._sanitize_value(val) for key, val in value.items()}
+            return {
+                key: BaseExport._sanitize_value(
+                    val, convert_precision=convert_precision
+                )
+                for key, val in value.items()
+            }
 
         if isinstance(value, Sequence) and not isinstance(value, (str, bytes, bytearray)):
-            return [BaseExport._sanitize_value(item) for item in value]
+            return [
+                BaseExport._sanitize_value(item, convert_precision=convert_precision)
+                for item in value
+            ]
 
         return value
 
     def as_dict(self):
-        return [self._sanitize_value(asdict(data)) for data in self.data]
+        return [
+            self._sanitize_value(asdict(data), convert_precision=True)
+            for data in self.data
+        ]
 
     def to_mongodb(self, mongo_database: MongoDatabase):
         mongo_database.get_collection(self.mongodb_collection).insert_many(
