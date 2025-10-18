@@ -3,7 +3,7 @@ pybind11: polymorphic series (double + float_precision), helper-organized, no-ar
 """
 from __future__ import annotations
 import typing
-__all__: list[str] = ['AbsSinXMinus2DivPiSeriesArb', 'AbsSinXMinus2DivPiSeriesCArb', 'AbsSinXMinus2DivPiSeriesCF32', 'AbsSinXMinus2DivPiSeriesCF64', 'AbsSinXMinus2DivPiSeriesCFL', 'AbsSinXMinus2DivPiSeriesF32', 'AbsSinXMinus2DivPiSeriesF64', 'AbsSinXMinus2DivPiSeriesFL', 'Arb', 'ArcsinX2SeriesArb', 'ArcsinX2SeriesCArb', 'ArcsinX2SeriesCF32', 'ArcsinX2SeriesCF64', 'ArcsinX2SeriesCFL', 'ArcsinX2SeriesF32', 'ArcsinX2SeriesF64', 'ArcsinX2SeriesFL', 'ArcsinXMinusXSeriesArb', 'ArcsinXMinusXSeriesCArb', 'ArcsinXMinusXSeriesCF32', 'ArcsinXMinusXSeriesCF64', 'ArcsinXMinusXSeriesCFL', 'ArcsinXMinusXSeriesF32', 'ArcsinXMinusXSeriesF64', 'ArcsinXMinusXSeriesFL', 'ArcsinXSeriesArb', 'ArcsinXSeriesCArb', 'ArcsinXSeriesCF32', 'ArcsinXSeriesCF64', 'ArcsinXSeriesCFL', 'ArcsinXSeriesF32', 'ArcsinXSeriesF64', 'ArcsinXSeriesFL', 'ArcsinhXSeriesArb', 'ArcsinhXSeriesCArb', 'ArcsinhXSeriesCF32', 'ArcsinhXSeriesCF64', 'ArcsinhXSeriesCFL', 'ArcsinhXSeriesF32', 'ArcsinhXSeriesF64', 'ArcsinhXSeriesFL', 'ArctanhX2SeriesArb', 'ArctanhX2SeriesCArb', 'ArctanhX2SeriesCF32', 'ArctanhX2SeriesCF64', 'ArctanhX2SeriesCFL', 'ArctanhX2SeriesF32', 'ArctanhX2SeriesF64', 'ArctanhX2SeriesFL', 'ArctanhXSeriesArb', 'ArctanhXSeriesCArb', 'ArctanhXSeriesCF32', 'ArctanhXSeriesCF64', 'ArctanhXSeriesCFL', 'ArctanhXSeriesF32', 'ArctanhXSeriesF64', 'ArctanhXSeriesFL', 'ArctgX2SeriesArb', 'ArctgX2SeriesCArb', 'ArctgX2SeriesCF32', 'ArctgX2SeriesCF64', 'ArctgX2SeriesCFL', 'ArctgX2SeriesF32', 'ArctgX2SeriesF64', 'ArctgX2SeriesFL', 'ArctgX3SeriesArb', 'ArctgX3SeriesCArb', 'ArctgX3SeriesCF32', 'ArctgX3SeriesCF64', 'ArctgX3SeriesCFL', 'ArctgX3SeriesF32', 'ArctgX3SeriesF64', 'ArctgX3SeriesFL', 'ArctgXSeriesArb', 'ArctgXSeriesCArb', 'ArctgXSeriesCF32', 'ArctgXSeriesCF64', 'ArctgXSeriesCFL', 'ArctgXSeriesF32', 'ArctgXSeriesF64', 'ArctgXSeriesFL', 'BinSeriesArb', 'BinSeriesCArb', 'BinSeriesCF32', 'BinSeriesCF64', 'BinSeriesCFL', 'BinSeriesF32', 'BinSeriesF64', 'BinSeriesFL', 'BrezinskiThetaAlgorithmArb', 'BrezinskiThetaAlgorithmCArb', 'BrezinskiThetaAlgorithmCF32', 'BrezinskiThetaAlgorithmCF64', 'BrezinskiThetaAlgorithmCFL', 'BrezinskiThetaAlgorithmF32', 'BrezinskiThetaAlgorithmF64', 'BrezinskiThetaAlgorithmFL', 'CArb', 'CF32', 'CF64', 'CFLong', 'ChangWynnAlgorithmArb', 'ChangWynnAlgorithmCArb', 'ChangWynnAlgorithmCF32', 'ChangWynnAlgorithmCF64', 'ChangWynnAlgorithmCFL', 'ChangWynnAlgorithmF32', 'ChangWynnAlgorithmF64', 'ChangWynnAlgorithmFL', 'CiXSeriesArb', 'CiXSeriesCArb', 'CiXSeriesCF32', 'CiXSeriesCF64', 'CiXSeriesCFL', 'CiXSeriesF32', 'CiXSeriesF64', 'CiXSeriesFL', 'Cos3xMinus1DivXsquareSeriesArb', 'Cos3xMinus1DivXsquareSeriesCArb', 'Cos3xMinus1DivXsquareSeriesCF32', 'Cos3xMinus1DivXsquareSeriesCF64', 'Cos3xMinus1DivXsquareSeriesCFL', 'Cos3xMinus1DivXsquareSeriesF32', 'Cos3xMinus1DivXsquareSeriesF64', 'Cos3xMinus1DivXsquareSeriesFL', 'CosSeriesArb', 'CosSeriesCArb', 'CosSeriesCF32', 'CosSeriesCF64', 'CosSeriesCFL', 'CosSeriesF32', 'CosSeriesF64', 'CosSeriesFL', 'CosSqrtXSeriesArb', 'CosSqrtXSeriesCArb', 'CosSqrtXSeriesCF32', 'CosSqrtXSeriesCF64', 'CosSqrtXSeriesCFL', 'CosSqrtXSeriesF32', 'CosSqrtXSeriesF64', 'CosSqrtXSeriesFL', 'CosX2SeriesArb', 'CosX2SeriesCArb', 'CosX2SeriesCF32', 'CosX2SeriesCF64', 'CosX2SeriesCFL', 'CosX2SeriesF32', 'CosX2SeriesF64', 'CosX2SeriesFL', 'CoshSeriesArb', 'CoshSeriesCArb', 'CoshSeriesCF32', 'CoshSeriesCF64', 'CoshSeriesCFL', 'CoshSeriesF32', 'CoshSeriesF64', 'CoshSeriesFL', 'DrummondDAlgorithmArb', 'DrummondDAlgorithmCArb', 'DrummondDAlgorithmCF32', 'DrummondDAlgorithmCF64', 'DrummondDAlgorithmCFL', 'DrummondDAlgorithmF32', 'DrummondDAlgorithmF64', 'DrummondDAlgorithmFL', 'EXSeriesArb', 'EXSeriesCArb', 'EXSeriesCF32', 'EXSeriesCF64', 'EXSeriesCFL', 'EXSeriesF32', 'EXSeriesF64', 'EXSeriesFL', 'EighthPiMOneThirdSeriesArb', 'EighthPiMOneThirdSeriesCArb', 'EighthPiMOneThirdSeriesCF32', 'EighthPiMOneThirdSeriesCF64', 'EighthPiMOneThirdSeriesCFL', 'EighthPiMOneThirdSeriesF32', 'EighthPiMOneThirdSeriesF64', 'EighthPiMOneThirdSeriesFL', 'ErfSeriesArb', 'ErfSeriesCArb', 'ErfSeriesCF32', 'ErfSeriesCF64', 'ErfSeriesCFL', 'ErfSeriesF32', 'ErfSeriesF64', 'ErfSeriesFL', 'ExpMCosXSinsinXSeriesArb', 'ExpMCosXSinsinXSeriesCArb', 'ExpMCosXSinsinXSeriesCF32', 'ExpMCosXSinsinXSeriesCF64', 'ExpMCosXSinsinXSeriesCFL', 'ExpMCosXSinsinXSeriesF32', 'ExpMCosXSinsinXSeriesF64', 'ExpMCosXSinsinXSeriesFL', 'ExpSeriesArb', 'ExpSeriesCArb', 'ExpSeriesCF32', 'ExpSeriesCF64', 'ExpSeriesCFL', 'ExpSeriesF32', 'ExpSeriesF64', 'ExpSeriesFL', 'ExpSquaredErfSeriesArb', 'ExpSquaredErfSeriesCArb', 'ExpSquaredErfSeriesCF32', 'ExpSquaredErfSeriesCF64', 'ExpSquaredErfSeriesCFL', 'ExpSquaredErfSeriesF32', 'ExpSquaredErfSeriesF64', 'ExpSquaredErfSeriesFL', 'FivePiTwelveSeriesArb', 'FivePiTwelveSeriesCArb', 'FivePiTwelveSeriesCF32', 'FivePiTwelveSeriesCF64', 'FivePiTwelveSeriesCFL', 'FivePiTwelveSeriesF32', 'FivePiTwelveSeriesF64', 'FivePiTwelveSeriesFL', 'FordSidi2AlgorithmArb', 'FordSidi2AlgorithmCArb', 'FordSidi2AlgorithmCF32', 'FordSidi2AlgorithmCF64', 'FordSidi2AlgorithmCFL', 'FordSidi2AlgorithmF32', 'FordSidi2AlgorithmF64', 'FordSidi2AlgorithmFL', 'FordSidi3AlgorithmArb', 'FordSidi3AlgorithmCArb', 'FordSidi3AlgorithmCF32', 'FordSidi3AlgorithmCF64', 'FordSidi3AlgorithmCFL', 'FordSidi3AlgorithmF32', 'FordSidi3AlgorithmF64', 'FordSidi3AlgorithmFL', 'FourArctanSeriesArb', 'FourArctanSeriesCArb', 'FourArctanSeriesCF32', 'FourArctanSeriesCF64', 'FourArctanSeriesCFL', 'FourArctanSeriesF32', 'FourArctanSeriesF64', 'FourArctanSeriesFL', 'FourLn2M3SeriesArb', 'FourLn2M3SeriesCArb', 'FourLn2M3SeriesCF32', 'FourLn2M3SeriesCF64', 'FourLn2M3SeriesCFL', 'FourLn2M3SeriesF32', 'FourLn2M3SeriesF64', 'FourLn2M3SeriesFL', 'HalfAsinTwoXSeriesArb', 'HalfAsinTwoXSeriesCArb', 'HalfAsinTwoXSeriesCF32', 'HalfAsinTwoXSeriesCF64', 'HalfAsinTwoXSeriesCFL', 'HalfAsinTwoXSeriesF32', 'HalfAsinTwoXSeriesF64', 'HalfAsinTwoXSeriesFL', 'HalfMinusSinxMultiPi4SeriesArb', 'HalfMinusSinxMultiPi4SeriesCArb', 'HalfMinusSinxMultiPi4SeriesCF32', 'HalfMinusSinxMultiPi4SeriesCF64', 'HalfMinusSinxMultiPi4SeriesCFL', 'HalfMinusSinxMultiPi4SeriesF32', 'HalfMinusSinxMultiPi4SeriesF64', 'HalfMinusSinxMultiPi4SeriesFL', 'HalfMultiLn1Div2Multi1MinusCosxSeriesArb', 'HalfMultiLn1Div2Multi1MinusCosxSeriesCArb', 'HalfMultiLn1Div2Multi1MinusCosxSeriesCF32', 'HalfMultiLn1Div2Multi1MinusCosxSeriesCF64', 'HalfMultiLn1Div2Multi1MinusCosxSeriesCFL', 'HalfMultiLn1Div2Multi1MinusCosxSeriesF32', 'HalfMultiLn1Div2Multi1MinusCosxSeriesF64', 'HalfMultiLn1Div2Multi1MinusCosxSeriesFL', 'IncompleteGammaFuncSeriesArb', 'IncompleteGammaFuncSeriesCArb', 'IncompleteGammaFuncSeriesCF32', 'IncompleteGammaFuncSeriesCF64', 'IncompleteGammaFuncSeriesCFL', 'IncompleteGammaFuncSeriesF32', 'IncompleteGammaFuncSeriesF64', 'IncompleteGammaFuncSeriesFL', 'InvSqrt1m4xSeriesArb', 'InvSqrt1m4xSeriesCArb', 'InvSqrt1m4xSeriesCF32', 'InvSqrt1m4xSeriesCF64', 'InvSqrt1m4xSeriesCFL', 'InvSqrt1m4xSeriesF32', 'InvSqrt1m4xSeriesF64', 'InvSqrt1m4xSeriesFL', 'Inverse1mxSeriesArb', 'Inverse1mxSeriesCArb', 'Inverse1mxSeriesCF32', 'Inverse1mxSeriesCF64', 'Inverse1mxSeriesCFL', 'Inverse1mxSeriesF32', 'Inverse1mxSeriesF64', 'Inverse1mxSeriesFL', 'KXSeriesArb', 'KXSeriesCArb', 'KXSeriesCF32', 'KXSeriesCF64', 'KXSeriesCFL', 'KXSeriesF32', 'KXSeriesF64', 'KXSeriesFL', 'LambertWFuncSeriesArb', 'LambertWFuncSeriesCArb', 'LambertWFuncSeriesCF32', 'LambertWFuncSeriesCF64', 'LambertWFuncSeriesCFL', 'LambertWFuncSeriesF32', 'LambertWFuncSeriesF64', 'LambertWFuncSeriesFL', 'LevinAlgorithmArb', 'LevinAlgorithmCArb', 'LevinAlgorithmCF32', 'LevinAlgorithmCF64', 'LevinAlgorithmCFL', 'LevinAlgorithmF32', 'LevinAlgorithmF64', 'LevinAlgorithmFL', 'LevinSidiMAlgorithmArb', 'LevinSidiMAlgorithmCArb', 'LevinSidiMAlgorithmCF32', 'LevinSidiMAlgorithmCF64', 'LevinSidiMAlgorithmCFL', 'LevinSidiMAlgorithmF32', 'LevinSidiMAlgorithmF64', 'LevinSidiMAlgorithmFL', 'LevinSidiSAlgorithmArb', 'LevinSidiSAlgorithmCArb', 'LevinSidiSAlgorithmCF32', 'LevinSidiSAlgorithmCF64', 'LevinSidiSAlgorithmCFL', 'LevinSidiSAlgorithmF32', 'LevinSidiSAlgorithmF64', 'LevinSidiSAlgorithmFL', 'Ln13MinusLn7Div7SeriesArb', 'Ln13MinusLn7Div7SeriesCArb', 'Ln13MinusLn7Div7SeriesCF32', 'Ln13MinusLn7Div7SeriesCF64', 'Ln13MinusLn7Div7SeriesCFL', 'Ln13MinusLn7Div7SeriesF32', 'Ln13MinusLn7Div7SeriesF64', 'Ln13MinusLn7Div7SeriesFL', 'Ln1MinusX2SeriesArb', 'Ln1MinusX2SeriesCArb', 'Ln1MinusX2SeriesCF32', 'Ln1MinusX2SeriesCF64', 'Ln1MinusX2SeriesCFL', 'Ln1MinusX2SeriesF32', 'Ln1MinusX2SeriesF64', 'Ln1MinusX2SeriesFL', 'Ln1PlusSqrt1PlusXsquareMinusLn2SeriesArb', 'Ln1PlusSqrt1PlusXsquareMinusLn2SeriesCArb', 'Ln1PlusSqrt1PlusXsquareMinusLn2SeriesCF32', 'Ln1PlusSqrt1PlusXsquareMinusLn2SeriesCF64', 'Ln1PlusSqrt1PlusXsquareMinusLn2SeriesCFL', 'Ln1PlusSqrt1PlusXsquareMinusLn2SeriesF32', 'Ln1PlusSqrt1PlusXsquareMinusLn2SeriesF64', 'Ln1PlusSqrt1PlusXsquareMinusLn2SeriesFL', 'Ln1PlusX3SeriesArb', 'Ln1PlusX3SeriesCArb', 'Ln1PlusX3SeriesCF32', 'Ln1PlusX3SeriesCF64', 'Ln1PlusX3SeriesCFL', 'Ln1PlusX3SeriesF32', 'Ln1PlusX3SeriesF64', 'Ln1PlusX3SeriesFL', 'Ln1mxSeriesArb', 'Ln1mxSeriesCArb', 'Ln1mxSeriesCF32', 'Ln1mxSeriesCF64', 'Ln1mxSeriesCFL', 'Ln1mxSeriesF32', 'Ln1mxSeriesF64', 'Ln1mxSeriesFL', 'Ln1plusXDiv1plusX2SeriesArb', 'Ln1plusXDiv1plusX2SeriesCArb', 'Ln1plusXDiv1plusX2SeriesCF32', 'Ln1plusXDiv1plusX2SeriesCF64', 'Ln1plusXDiv1plusX2SeriesCFL', 'Ln1plusXDiv1plusX2SeriesF32', 'Ln1plusXDiv1plusX2SeriesF64', 'Ln1plusXDiv1plusX2SeriesFL', 'Ln1px4SeriesArb', 'Ln1px4SeriesCArb', 'Ln1px4SeriesCF32', 'Ln1px4SeriesCF64', 'Ln1px4SeriesCFL', 'Ln1px4SeriesF32', 'Ln1px4SeriesF64', 'Ln1px4SeriesFL', 'Ln2SeriesArb', 'Ln2SeriesCArb', 'Ln2SeriesCF32', 'Ln2SeriesCF64', 'Ln2SeriesCFL', 'Ln2SeriesF32', 'Ln2SeriesF64', 'Ln2SeriesFL', 'LnCosxSeriesArb', 'LnCosxSeriesCArb', 'LnCosxSeriesCF32', 'LnCosxSeriesCF64', 'LnCosxSeriesCFL', 'LnCosxSeriesF32', 'LnCosxSeriesF64', 'LnCosxSeriesFL', 'LnSinxMinusLnXSeriesArb', 'LnSinxMinusLnXSeriesCArb', 'LnSinxMinusLnXSeriesCF32', 'LnSinxMinusLnXSeriesCF64', 'LnSinxMinusLnXSeriesCFL', 'LnSinxMinusLnXSeriesF32', 'LnSinxMinusLnXSeriesF64', 'LnSinxMinusLnXSeriesFL', 'LnXPlusOneXMinusOneHalfedSeriesArb', 'LnXPlusOneXMinusOneHalfedSeriesCArb', 'LnXPlusOneXMinusOneHalfedSeriesCF32', 'LnXPlusOneXMinusOneHalfedSeriesCF64', 'LnXPlusOneXMinusOneHalfedSeriesCFL', 'LnXPlusOneXMinusOneHalfedSeriesF32', 'LnXPlusOneXMinusOneHalfedSeriesF64', 'LnXPlusOneXMinusOneHalfedSeriesFL', 'LubkinWAlgorithmArb', 'LubkinWAlgorithmCArb', 'LubkinWAlgorithmCF32', 'LubkinWAlgorithmCF64', 'LubkinWAlgorithmCFL', 'LubkinWAlgorithmF32', 'LubkinWAlgorithmF64', 'LubkinWAlgorithmFL', 'MFact1mxMp1InverseSeriesArb', 'MFact1mxMp1InverseSeriesCArb', 'MFact1mxMp1InverseSeriesCF32', 'MFact1mxMp1InverseSeriesCF64', 'MFact1mxMp1InverseSeriesCFL', 'MFact1mxMp1InverseSeriesF32', 'MFact1mxMp1InverseSeriesF64', 'MFact1mxMp1InverseSeriesFL', 'MeanSinhSinSeriesArb', 'MeanSinhSinSeriesCArb', 'MeanSinhSinSeriesCF32', 'MeanSinhSinSeriesCF64', 'MeanSinhSinSeriesCFL', 'MeanSinhSinSeriesF32', 'MeanSinhSinSeriesF64', 'MeanSinhSinSeriesFL', 'Minus3Div4OrXMinus3Div4SeriesArb', 'Minus3Div4OrXMinus3Div4SeriesCArb', 'Minus3Div4OrXMinus3Div4SeriesCF32', 'Minus3Div4OrXMinus3Div4SeriesCF64', 'Minus3Div4OrXMinus3Div4SeriesCFL', 'Minus3Div4OrXMinus3Div4SeriesF32', 'Minus3Div4OrXMinus3Div4SeriesF64', 'Minus3Div4OrXMinus3Div4SeriesFL', 'MinusOneNFactNInNSeriesArb', 'MinusOneNFactNInNSeriesCArb', 'MinusOneNFactNInNSeriesCF32', 'MinusOneNFactNInNSeriesCF64', 'MinusOneNFactNInNSeriesCFL', 'MinusOneNFactNInNSeriesF32', 'MinusOneNFactNInNSeriesF64', 'MinusOneNFactNInNSeriesFL', 'MinusOneNedInNSeriesArb', 'MinusOneNedInNSeriesCArb', 'MinusOneNedInNSeriesCF32', 'MinusOneNedInNSeriesCF64', 'MinusOneNedInNSeriesCFL', 'MinusOneNedInNSeriesF32', 'MinusOneNedInNSeriesF64', 'MinusOneNedInNSeriesFL', 'MinusOneQuarterSeriesArb', 'MinusOneQuarterSeriesCArb', 'MinusOneQuarterSeriesCF32', 'MinusOneQuarterSeriesCF64', 'MinusOneQuarterSeriesCFL', 'MinusOneQuarterSeriesF32', 'MinusOneQuarterSeriesF64', 'MinusOneQuarterSeriesFL', 'MinusThreePlusLn3ThreeDividedTwoPlusTwoLn2SeriesArb', 'MinusThreePlusLn3ThreeDividedTwoPlusTwoLn2SeriesCArb', 'MinusThreePlusLn3ThreeDividedTwoPlusTwoLn2SeriesCF32', 'MinusThreePlusLn3ThreeDividedTwoPlusTwoLn2SeriesCF64', 'MinusThreePlusLn3ThreeDividedTwoPlusTwoLn2SeriesCFL', 'MinusThreePlusLn3ThreeDividedTwoPlusTwoLn2SeriesF32', 'MinusThreePlusLn3ThreeDividedTwoPlusTwoLn2SeriesF64', 'MinusThreePlusLn3ThreeDividedTwoPlusTwoLn2SeriesFL', 'MinusXMinusPi4OrMinusPi4SeriesArb', 'MinusXMinusPi4OrMinusPi4SeriesCArb', 'MinusXMinusPi4OrMinusPi4SeriesCF32', 'MinusXMinusPi4OrMinusPi4SeriesCF64', 'MinusXMinusPi4OrMinusPi4SeriesCFL', 'MinusXMinusPi4OrMinusPi4SeriesF32', 'MinusXMinusPi4OrMinusPi4SeriesF64', 'MinusXMinusPi4OrMinusPi4SeriesFL', 'NumeratorType', 'OneDivSqrt2SinXDivSqrt2SeriesArb', 'OneDivSqrt2SinXDivSqrt2SeriesCArb', 'OneDivSqrt2SinXDivSqrt2SeriesCF32', 'OneDivSqrt2SinXDivSqrt2SeriesCF64', 'OneDivSqrt2SinXDivSqrt2SeriesCFL', 'OneDivSqrt2SinXDivSqrt2SeriesF32', 'OneDivSqrt2SinXDivSqrt2SeriesF64', 'OneDivSqrt2SinXDivSqrt2SeriesFL', 'OneDivTwoMinusXMultiThreePlusXSeriesArb', 'OneDivTwoMinusXMultiThreePlusXSeriesCArb', 'OneDivTwoMinusXMultiThreePlusXSeriesCF32', 'OneDivTwoMinusXMultiThreePlusXSeriesCF64', 'OneDivTwoMinusXMultiThreePlusXSeriesCFL', 'OneDivTwoMinusXMultiThreePlusXSeriesF32', 'OneDivTwoMinusXMultiThreePlusXSeriesF64', 'OneDivTwoMinusXMultiThreePlusXSeriesFL', 'OneMinusSqrt1minus4xDiv2xSeriesArb', 'OneMinusSqrt1minus4xDiv2xSeriesCArb', 'OneMinusSqrt1minus4xDiv2xSeriesCF32', 'OneMinusSqrt1minus4xDiv2xSeriesCF64', 'OneMinusSqrt1minus4xDiv2xSeriesCFL', 'OneMinusSqrt1minus4xDiv2xSeriesF32', 'OneMinusSqrt1minus4xDiv2xSeriesF64', 'OneMinusSqrt1minus4xDiv2xSeriesFL', 'OneSeriesArb', 'OneSeriesCArb', 'OneSeriesCF32', 'OneSeriesCF64', 'OneSeriesCFL', 'OneSeriesF32', 'OneSeriesF64', 'OneSeriesFL', 'OneThirdPiSquaredMNineSeriesArb', 'OneThirdPiSquaredMNineSeriesCArb', 'OneThirdPiSquaredMNineSeriesCF32', 'OneThirdPiSquaredMNineSeriesCF64', 'OneThirdPiSquaredMNineSeriesCFL', 'OneThirdPiSquaredMNineSeriesF32', 'OneThirdPiSquaredMNineSeriesF64', 'OneThirdPiSquaredMNineSeriesFL', 'OneTwelfth3x2Pi2SeriesArb', 'OneTwelfth3x2Pi2SeriesCArb', 'OneTwelfth3x2Pi2SeriesCF32', 'OneTwelfth3x2Pi2SeriesCF64', 'OneTwelfth3x2Pi2SeriesCFL', 'OneTwelfth3x2Pi2SeriesF32', 'OneTwelfth3x2Pi2SeriesF64', 'OneTwelfth3x2Pi2SeriesFL', 'OneTwelfthSeriesArb', 'OneTwelfthSeriesCArb', 'OneTwelfthSeriesCF32', 'OneTwelfthSeriesCF64', 'OneTwelfthSeriesCFL', 'OneTwelfthSeriesF32', 'OneTwelfthSeriesF64', 'OneTwelfthSeriesFL', 'OneTwelfthX2Pi2SeriesArb', 'OneTwelfthX2Pi2SeriesCArb', 'OneTwelfthX2Pi2SeriesCF32', 'OneTwelfthX2Pi2SeriesCF64', 'OneTwelfthX2Pi2SeriesCFL', 'OneTwelfthX2Pi2SeriesF32', 'OneTwelfthX2Pi2SeriesF64', 'OneTwelfthX2Pi2SeriesFL', 'Pi3SeriesArb', 'Pi3SeriesCArb', 'Pi3SeriesCF32', 'Pi3SeriesCF64', 'Pi3SeriesCFL', 'Pi3SeriesF32', 'Pi3SeriesF64', 'Pi3SeriesFL', 'Pi4SeriesArb', 'Pi4SeriesCArb', 'Pi4SeriesCF32', 'Pi4SeriesCF64', 'Pi4SeriesCFL', 'Pi4SeriesF32', 'Pi4SeriesF64', 'Pi4SeriesFL', 'Pi8CosxSquareMinus1Div3CosxSeriesArb', 'Pi8CosxSquareMinus1Div3CosxSeriesCArb', 'Pi8CosxSquareMinus1Div3CosxSeriesCF32', 'Pi8CosxSquareMinus1Div3CosxSeriesCF64', 'Pi8CosxSquareMinus1Div3CosxSeriesCFL', 'Pi8CosxSquareMinus1Div3CosxSeriesF32', 'Pi8CosxSquareMinus1Div3CosxSeriesF64', 'Pi8CosxSquareMinus1Div3CosxSeriesFL', 'PiCubed32SeriesArb', 'PiCubed32SeriesCArb', 'PiCubed32SeriesCF32', 'PiCubed32SeriesCF64', 'PiCubed32SeriesCFL', 'PiCubed32SeriesF32', 'PiCubed32SeriesF64', 'PiCubed32SeriesFL', 'PiFourMinusLn2HalfedSeriesArb', 'PiFourMinusLn2HalfedSeriesCArb', 'PiFourMinusLn2HalfedSeriesCF32', 'PiFourMinusLn2HalfedSeriesCF64', 'PiFourMinusLn2HalfedSeriesCFL', 'PiFourMinusLn2HalfedSeriesF32', 'PiFourMinusLn2HalfedSeriesF64', 'PiFourMinusLn2HalfedSeriesFL', 'PiMinus3pi4AndPiMinusXMinus3pi4SeriesArb', 'PiMinus3pi4AndPiMinusXMinus3pi4SeriesCArb', 'PiMinus3pi4AndPiMinusXMinus3pi4SeriesCF32', 'PiMinus3pi4AndPiMinusXMinus3pi4SeriesCF64', 'PiMinus3pi4AndPiMinusXMinus3pi4SeriesCFL', 'PiMinus3pi4AndPiMinusXMinus3pi4SeriesF32', 'PiMinus3pi4AndPiMinusXMinus3pi4SeriesF64', 'PiMinus3pi4AndPiMinusXMinus3pi4SeriesFL', 'PiMinusX2SeriesArb', 'PiMinusX2SeriesCArb', 'PiMinusX2SeriesCF32', 'PiMinusX2SeriesCF64', 'PiMinusX2SeriesCFL', 'PiMinusX2SeriesF32', 'PiMinusX2SeriesF64', 'PiMinusX2SeriesFL', 'PiSeriesArb', 'PiSeriesCArb', 'PiSeriesCF32', 'PiSeriesCF64', 'PiSeriesCFL', 'PiSeriesF32', 'PiSeriesF64', 'PiSeriesFL', 'PiSixMinHalfSeriesArb', 'PiSixMinHalfSeriesCArb', 'PiSixMinHalfSeriesCF32', 'PiSixMinHalfSeriesCF64', 'PiSixMinHalfSeriesCFL', 'PiSixMinHalfSeriesF32', 'PiSixMinHalfSeriesF64', 'PiSixMinHalfSeriesFL', 'PiSquared6MinusOneSeriesArb', 'PiSquared6MinusOneSeriesCArb', 'PiSquared6MinusOneSeriesCF32', 'PiSquared6MinusOneSeriesCF64', 'PiSquared6MinusOneSeriesCFL', 'PiSquared6MinusOneSeriesF32', 'PiSquared6MinusOneSeriesF64', 'PiSquared6MinusOneSeriesFL', 'PiSquaredTwelveSeriesArb', 'PiSquaredTwelveSeriesCArb', 'PiSquaredTwelveSeriesCF32', 'PiSquaredTwelveSeriesCF64', 'PiSquaredTwelveSeriesCFL', 'PiSquaredTwelveSeriesF32', 'PiSquaredTwelveSeriesF64', 'PiSquaredTwelveSeriesFL', 'PiXMinusXSquareSquareMinusThreePiXPlusTwoPiSquareSeriesArb', 'PiXMinusXSquareSquareMinusThreePiXPlusTwoPiSquareSeriesCArb', 'PiXMinusXSquareSquareMinusThreePiXPlusTwoPiSquareSeriesCF32', 'PiXMinusXSquareSquareMinusThreePiXPlusTwoPiSquareSeriesCF64', 'PiXMinusXSquareSquareMinusThreePiXPlusTwoPiSquareSeriesCFL', 'PiXMinusXSquareSquareMinusThreePiXPlusTwoPiSquareSeriesF32', 'PiXMinusXSquareSquareMinusThreePiXPlusTwoPiSquareSeriesF64', 'PiXMinusXSquareSquareMinusThreePiXPlusTwoPiSquareSeriesFL', 'PiXMultiEXpiPlusEMinusXpiDividedEXpiMinusEMinusXpiSeriesArb', 'PiXMultiEXpiPlusEMinusXpiDividedEXpiMinusEMinusXpiSeriesCArb', 'PiXMultiEXpiPlusEMinusXpiDividedEXpiMinusEMinusXpiSeriesCF32', 'PiXMultiEXpiPlusEMinusXpiDividedEXpiMinusEMinusXpiSeriesCF64', 'PiXMultiEXpiPlusEMinusXpiDividedEXpiMinusEMinusXpiSeriesCFL', 'PiXMultiEXpiPlusEMinusXpiDividedEXpiMinusEMinusXpiSeriesF32', 'PiXMultiEXpiPlusEMinusXpiDividedEXpiMinusEMinusXpiSeriesF64', 'PiXMultiEXpiPlusEMinusXpiDividedEXpiMinusEMinusXpiSeriesFL', 'RemainderType', 'RichardsonAlgorithmArb', 'RichardsonAlgorithmCArb', 'RichardsonAlgorithmCF32', 'RichardsonAlgorithmCF64', 'RichardsonAlgorithmCFL', 'RichardsonAlgorithmF32', 'RichardsonAlgorithmF64', 'RichardsonAlgorithmFL', 'RiemannZetaFuncSeriesArb', 'RiemannZetaFuncSeriesCArb', 'RiemannZetaFuncSeriesCF32', 'RiemannZetaFuncSeriesCF64', 'RiemannZetaFuncSeriesCFL', 'RiemannZetaFuncSeriesF32', 'RiemannZetaFuncSeriesF64', 'RiemannZetaFuncSeriesFL', 'RiemannZetaFuncXmin1DivRiemannZetaFuncXSeriesArb', 'RiemannZetaFuncXmin1DivRiemannZetaFuncXSeriesCArb', 'RiemannZetaFuncXmin1DivRiemannZetaFuncXSeriesCF32', 'RiemannZetaFuncXmin1DivRiemannZetaFuncXSeriesCF64', 'RiemannZetaFuncXmin1DivRiemannZetaFuncXSeriesCFL', 'RiemannZetaFuncXmin1DivRiemannZetaFuncXSeriesF32', 'RiemannZetaFuncXmin1DivRiemannZetaFuncXSeriesF64', 'RiemannZetaFuncXmin1DivRiemannZetaFuncXSeriesFL', 'SeriesAccelerationArb', 'SeriesAccelerationCArb', 'SeriesAccelerationCF32', 'SeriesAccelerationCF64', 'SeriesAccelerationCFL', 'SeriesAccelerationF32', 'SeriesAccelerationF64', 'SeriesAccelerationFL', 'SeriesBaseArb', 'SeriesBaseCArb', 'SeriesBaseCF32', 'SeriesBaseCF64', 'SeriesBaseCFL', 'SeriesBaseF32', 'SeriesBaseF64', 'SeriesBaseFL', 'SeriesResultArb', 'SeriesResultCArb', 'SeriesResultCF32', 'SeriesResultCF64', 'SeriesResultCFL', 'SeriesResultF32', 'SeriesResultF64', 'SeriesResultFL', 'SeriesWithLnNumber1Arb', 'SeriesWithLnNumber1CArb', 'SeriesWithLnNumber1CF32', 'SeriesWithLnNumber1CF64', 'SeriesWithLnNumber1CFL', 'SeriesWithLnNumber1F32', 'SeriesWithLnNumber1F64', 'SeriesWithLnNumber1FL', 'SeriesWithLnNumber2Arb', 'SeriesWithLnNumber2CArb', 'SeriesWithLnNumber2CF32', 'SeriesWithLnNumber2CF64', 'SeriesWithLnNumber2CFL', 'SeriesWithLnNumber2F32', 'SeriesWithLnNumber2F64', 'SeriesWithLnNumber2FL', 'ShanksAlgorithmArb', 'ShanksAlgorithmCArb', 'ShanksAlgorithmCF32', 'ShanksAlgorithmCF64', 'ShanksAlgorithmCFL', 'ShanksAlgorithmF32', 'ShanksAlgorithmF64', 'ShanksAlgorithmFL', 'ShanksTransformAlternatingArb', 'ShanksTransformAlternatingCArb', 'ShanksTransformAlternatingCF32', 'ShanksTransformAlternatingCF64', 'ShanksTransformAlternatingCFL', 'ShanksTransformAlternatingF32', 'ShanksTransformAlternatingF64', 'ShanksTransformAlternatingFL', 'SiXSeriesArb', 'SiXSeriesCArb', 'SiXSeriesCF32', 'SiXSeriesCF64', 'SiXSeriesCFL', 'SiXSeriesF32', 'SiXSeriesF64', 'SiXSeriesFL', 'SinSeriesArb', 'SinSeriesCArb', 'SinSeriesCF32', 'SinSeriesCF64', 'SinSeriesCFL', 'SinSeriesF32', 'SinSeriesF64', 'SinSeriesFL', 'SinX2SeriesArb', 'SinX2SeriesCArb', 'SinX2SeriesCF32', 'SinX2SeriesCF64', 'SinX2SeriesCFL', 'SinX2SeriesF32', 'SinX2SeriesF64', 'SinX2SeriesFL', 'SinhSeriesArb', 'SinhSeriesCArb', 'SinhSeriesCF32', 'SinhSeriesCF64', 'SinhSeriesCFL', 'SinhSeriesF32', 'SinhSeriesF64', 'SinhSeriesFL', 'SinhX2SeriesArb', 'SinhX2SeriesCArb', 'SinhX2SeriesCF32', 'SinhX2SeriesCF64', 'SinhX2SeriesCFL', 'SinhX2SeriesF32', 'SinhX2SeriesF64', 'SinhX2SeriesFL', 'Sqrt1plusXMinus1MinusXDiv2SeriesArb', 'Sqrt1plusXMinus1MinusXDiv2SeriesCArb', 'Sqrt1plusXMinus1MinusXDiv2SeriesCF32', 'Sqrt1plusXMinus1MinusXDiv2SeriesCF64', 'Sqrt1plusXMinus1MinusXDiv2SeriesCFL', 'Sqrt1plusXMinus1MinusXDiv2SeriesF32', 'Sqrt1plusXMinus1MinusXDiv2SeriesF64', 'Sqrt1plusXMinus1MinusXDiv2SeriesFL', 'Sqrt1plusXSeriesArb', 'Sqrt1plusXSeriesCArb', 'Sqrt1plusXSeriesCF32', 'Sqrt1plusXSeriesCF64', 'Sqrt1plusXSeriesCFL', 'Sqrt1plusXSeriesF32', 'Sqrt1plusXSeriesF64', 'Sqrt1plusXSeriesFL', 'SqrtOneminusSqrtoneminusxDivXSeriesArb', 'SqrtOneminusSqrtoneminusxDivXSeriesCArb', 'SqrtOneminusSqrtoneminusxDivXSeriesCF32', 'SqrtOneminusSqrtoneminusxDivXSeriesCF64', 'SqrtOneminusSqrtoneminusxDivXSeriesCFL', 'SqrtOneminusSqrtoneminusxDivXSeriesF32', 'SqrtOneminusSqrtoneminusxDivXSeriesF64', 'SqrtOneminusSqrtoneminusxDivXSeriesFL', 'TenMinusXSeriesArb', 'TenMinusXSeriesCArb', 'TenMinusXSeriesCF32', 'TenMinusXSeriesCF64', 'TenMinusXSeriesCFL', 'TenMinusXSeriesF32', 'TenMinusXSeriesF64', 'TenMinusXSeriesFL', 'ThreeMinusPiSeriesArb', 'ThreeMinusPiSeriesCArb', 'ThreeMinusPiSeriesCF32', 'ThreeMinusPiSeriesCF64', 'ThreeMinusPiSeriesCFL', 'ThreeMinusPiSeriesF32', 'ThreeMinusPiSeriesF64', 'ThreeMinusPiSeriesFL', 'TwoArcsinSquareXHalfedSeriesArb', 'TwoArcsinSquareXHalfedSeriesCArb', 'TwoArcsinSquareXHalfedSeriesCF32', 'TwoArcsinSquareXHalfedSeriesCF64', 'TwoArcsinSquareXHalfedSeriesCFL', 'TwoArcsinSquareXHalfedSeriesF32', 'TwoArcsinSquareXHalfedSeriesF64', 'TwoArcsinSquareXHalfedSeriesFL', 'TwoDegreeXSeriesArb', 'TwoDegreeXSeriesCArb', 'TwoDegreeXSeriesCF32', 'TwoDegreeXSeriesCF64', 'TwoDegreeXSeriesCFL', 'TwoDegreeXSeriesF32', 'TwoDegreeXSeriesF64', 'TwoDegreeXSeriesFL', 'TwoLn2SeriesArb', 'TwoLn2SeriesCArb', 'TwoLn2SeriesCF32', 'TwoLn2SeriesCF64', 'TwoLn2SeriesCFL', 'TwoLn2SeriesF32', 'TwoLn2SeriesF64', 'TwoLn2SeriesFL', 'WenigerAlgorithmArb', 'WenigerAlgorithmCArb', 'WenigerAlgorithmCF32', 'WenigerAlgorithmCF64', 'WenigerAlgorithmCFL', 'WenigerAlgorithmF32', 'WenigerAlgorithmF64', 'WenigerAlgorithmFL', 'WynnEpsilon1AlgorithmArb', 'WynnEpsilon1AlgorithmCArb', 'WynnEpsilon1AlgorithmCF32', 'WynnEpsilon1AlgorithmCF64', 'WynnEpsilon1AlgorithmCFL', 'WynnEpsilon1AlgorithmF32', 'WynnEpsilon1AlgorithmF64', 'WynnEpsilon1AlgorithmFL', 'WynnEpsilon2AlgorithmArb', 'WynnEpsilon2AlgorithmCArb', 'WynnEpsilon2AlgorithmCF32', 'WynnEpsilon2AlgorithmCF64', 'WynnEpsilon2AlgorithmCFL', 'WynnEpsilon2AlgorithmF32', 'WynnEpsilon2AlgorithmF64', 'WynnEpsilon2AlgorithmFL', 'WynnEpsilon3AlgorithmArb', 'WynnEpsilon3AlgorithmCArb', 'WynnEpsilon3AlgorithmCF32', 'WynnEpsilon3AlgorithmCF64', 'WynnEpsilon3AlgorithmCFL', 'WynnEpsilon3AlgorithmF32', 'WynnEpsilon3AlgorithmF64', 'WynnEpsilon3AlgorithmFL', 'WynnRhoAlgorithmArb', 'WynnRhoAlgorithmCArb', 'WynnRhoAlgorithmCF32', 'WynnRhoAlgorithmCF64', 'WynnRhoAlgorithmCFL', 'WynnRhoAlgorithmF32', 'WynnRhoAlgorithmF64', 'WynnRhoAlgorithmFL', 'X1mxSquaredSeriesArb', 'X1mxSquaredSeriesCArb', 'X1mxSquaredSeriesCF32', 'X1mxSquaredSeriesCF64', 'X1mxSquaredSeriesCFL', 'X1mxSquaredSeriesF32', 'X1mxSquaredSeriesF64', 'X1mxSquaredSeriesFL', 'XDiv1minX2SeriesArb', 'XDiv1minX2SeriesCArb', 'XDiv1minX2SeriesCF32', 'XDiv1minX2SeriesCF64', 'XDiv1minX2SeriesCFL', 'XDiv1minX2SeriesF32', 'XDiv1minX2SeriesF64', 'XDiv1minX2SeriesFL', 'XDiv1minXSeriesArb', 'XDiv1minXSeriesCArb', 'XDiv1minXSeriesCF32', 'XDiv1minXSeriesCF64', 'XDiv1minXSeriesCFL', 'XDiv1minXSeriesF32', 'XDiv1minXSeriesF64', 'XDiv1minXSeriesFL', 'XMinSqrtXSeriesArb', 'XMinSqrtXSeriesCArb', 'XMinSqrtXSeriesCF32', 'XMinSqrtXSeriesCF64', 'XMinSqrtXSeriesCFL', 'XMinSqrtXSeriesF32', 'XMinSqrtXSeriesF64', 'XMinSqrtXSeriesFL', 'XSeriesArb', 'XSeriesCArb', 'XSeriesCF32', 'XSeriesCF64', 'XSeriesCFL', 'XSeriesF32', 'XSeriesF64', 'XSeriesFL', 'XTwoSeriesArb', 'XTwoSeriesCArb', 'XTwoSeriesCF32', 'XTwoSeriesCF64', 'XTwoSeriesCFL', 'XTwoSeriesF32', 'XTwoSeriesF64', 'XTwoSeriesFL', 'XTwoThroughtSquaresSeriesArb', 'XTwoThroughtSquaresSeriesCArb', 'XTwoThroughtSquaresSeriesCF32', 'XTwoThroughtSquaresSeriesCF64', 'XTwoThroughtSquaresSeriesCFL', 'XTwoThroughtSquaresSeriesF32', 'XTwoThroughtSquaresSeriesF64', 'XTwoThroughtSquaresSeriesFL', 'Xsquareplus3DivXsquareplus2multixMinus1SeriesArb', 'Xsquareplus3DivXsquareplus2multixMinus1SeriesCArb', 'Xsquareplus3DivXsquareplus2multixMinus1SeriesCF32', 'Xsquareplus3DivXsquareplus2multixMinus1SeriesCF64', 'Xsquareplus3DivXsquareplus2multixMinus1SeriesCFL', 'Xsquareplus3DivXsquareplus2multixMinus1SeriesF32', 'Xsquareplus3DivXsquareplus2multixMinus1SeriesF64', 'Xsquareplus3DivXsquareplus2multixMinus1SeriesFL', 'gamma_rho_type', 'generalized_type', 'rho_type', 't_type', 't_wave_type', 'u_type', 'v_type', 'v_wave_type']
+__all__: list[str] = ['AbsSinXMinus2DivPiSeriesArb', 'AbsSinXMinus2DivPiSeriesCArb', 'AbsSinXMinus2DivPiSeriesCF32', 'AbsSinXMinus2DivPiSeriesCF64', 'AbsSinXMinus2DivPiSeriesCFLong', 'AbsSinXMinus2DivPiSeriesF32', 'AbsSinXMinus2DivPiSeriesF64', 'AbsSinXMinus2DivPiSeriesFLong', 'Arb', 'ArcsinX2SeriesArb', 'ArcsinX2SeriesCArb', 'ArcsinX2SeriesCF32', 'ArcsinX2SeriesCF64', 'ArcsinX2SeriesCFLong', 'ArcsinX2SeriesF32', 'ArcsinX2SeriesF64', 'ArcsinX2SeriesFLong', 'ArcsinXMinusXSeriesArb', 'ArcsinXMinusXSeriesCArb', 'ArcsinXMinusXSeriesCF32', 'ArcsinXMinusXSeriesCF64', 'ArcsinXMinusXSeriesCFLong', 'ArcsinXMinusXSeriesF32', 'ArcsinXMinusXSeriesF64', 'ArcsinXMinusXSeriesFLong', 'ArcsinXSeriesArb', 'ArcsinXSeriesCArb', 'ArcsinXSeriesCF32', 'ArcsinXSeriesCF64', 'ArcsinXSeriesCFLong', 'ArcsinXSeriesF32', 'ArcsinXSeriesF64', 'ArcsinXSeriesFLong', 'ArcsinhXSeriesArb', 'ArcsinhXSeriesCArb', 'ArcsinhXSeriesCF32', 'ArcsinhXSeriesCF64', 'ArcsinhXSeriesCFLong', 'ArcsinhXSeriesF32', 'ArcsinhXSeriesF64', 'ArcsinhXSeriesFLong', 'ArctanhX2SeriesArb', 'ArctanhX2SeriesCArb', 'ArctanhX2SeriesCF32', 'ArctanhX2SeriesCF64', 'ArctanhX2SeriesCFLong', 'ArctanhX2SeriesF32', 'ArctanhX2SeriesF64', 'ArctanhX2SeriesFLong', 'ArctanhXSeriesArb', 'ArctanhXSeriesCArb', 'ArctanhXSeriesCF32', 'ArctanhXSeriesCF64', 'ArctanhXSeriesCFLong', 'ArctanhXSeriesF32', 'ArctanhXSeriesF64', 'ArctanhXSeriesFLong', 'ArctgX2SeriesArb', 'ArctgX2SeriesCArb', 'ArctgX2SeriesCF32', 'ArctgX2SeriesCF64', 'ArctgX2SeriesCFLong', 'ArctgX2SeriesF32', 'ArctgX2SeriesF64', 'ArctgX2SeriesFLong', 'ArctgX3SeriesArb', 'ArctgX3SeriesCArb', 'ArctgX3SeriesCF32', 'ArctgX3SeriesCF64', 'ArctgX3SeriesCFLong', 'ArctgX3SeriesF32', 'ArctgX3SeriesF64', 'ArctgX3SeriesFLong', 'ArctgXSeriesArb', 'ArctgXSeriesCArb', 'ArctgXSeriesCF32', 'ArctgXSeriesCF64', 'ArctgXSeriesCFLong', 'ArctgXSeriesF32', 'ArctgXSeriesF64', 'ArctgXSeriesFLong', 'BinSeriesArb', 'BinSeriesCArb', 'BinSeriesCF32', 'BinSeriesCF64', 'BinSeriesCFLong', 'BinSeriesF32', 'BinSeriesF64', 'BinSeriesFLong', 'BrezinskiThetaAlgorithmArb', 'BrezinskiThetaAlgorithmCArb', 'BrezinskiThetaAlgorithmCF32', 'BrezinskiThetaAlgorithmCF64', 'BrezinskiThetaAlgorithmCFLong', 'BrezinskiThetaAlgorithmF32', 'BrezinskiThetaAlgorithmF64', 'BrezinskiThetaAlgorithmFLong', 'CArb', 'CF32', 'CF64', 'CFLong', 'ChangWynnAlgorithmArb', 'ChangWynnAlgorithmCArb', 'ChangWynnAlgorithmCF32', 'ChangWynnAlgorithmCF64', 'ChangWynnAlgorithmCFLong', 'ChangWynnAlgorithmF32', 'ChangWynnAlgorithmF64', 'ChangWynnAlgorithmFLong', 'CiXSeriesArb', 'CiXSeriesCArb', 'CiXSeriesCF32', 'CiXSeriesCF64', 'CiXSeriesCFLong', 'CiXSeriesF32', 'CiXSeriesF64', 'CiXSeriesFLong', 'Cos3xMinus1DivXsquareSeriesArb', 'Cos3xMinus1DivXsquareSeriesCArb', 'Cos3xMinus1DivXsquareSeriesCF32', 'Cos3xMinus1DivXsquareSeriesCF64', 'Cos3xMinus1DivXsquareSeriesCFLong', 'Cos3xMinus1DivXsquareSeriesF32', 'Cos3xMinus1DivXsquareSeriesF64', 'Cos3xMinus1DivXsquareSeriesFLong', 'CosSeriesArb', 'CosSeriesCArb', 'CosSeriesCF32', 'CosSeriesCF64', 'CosSeriesCFLong', 'CosSeriesF32', 'CosSeriesF64', 'CosSeriesFLong', 'CosSqrtXSeriesArb', 'CosSqrtXSeriesCArb', 'CosSqrtXSeriesCF32', 'CosSqrtXSeriesCF64', 'CosSqrtXSeriesCFLong', 'CosSqrtXSeriesF32', 'CosSqrtXSeriesF64', 'CosSqrtXSeriesFLong', 'CosX2SeriesArb', 'CosX2SeriesCArb', 'CosX2SeriesCF32', 'CosX2SeriesCF64', 'CosX2SeriesCFLong', 'CosX2SeriesF32', 'CosX2SeriesF64', 'CosX2SeriesFLong', 'CoshSeriesArb', 'CoshSeriesCArb', 'CoshSeriesCF32', 'CoshSeriesCF64', 'CoshSeriesCFLong', 'CoshSeriesF32', 'CoshSeriesF64', 'CoshSeriesFLong', 'DrummondDAlgorithmArb', 'DrummondDAlgorithmCArb', 'DrummondDAlgorithmCF32', 'DrummondDAlgorithmCF64', 'DrummondDAlgorithmCFLong', 'DrummondDAlgorithmF32', 'DrummondDAlgorithmF64', 'DrummondDAlgorithmFLong', 'EXSeriesArb', 'EXSeriesCArb', 'EXSeriesCF32', 'EXSeriesCF64', 'EXSeriesCFLong', 'EXSeriesF32', 'EXSeriesF64', 'EXSeriesFLong', 'EighthPiMOneThirdSeriesArb', 'EighthPiMOneThirdSeriesCArb', 'EighthPiMOneThirdSeriesCF32', 'EighthPiMOneThirdSeriesCF64', 'EighthPiMOneThirdSeriesCFLong', 'EighthPiMOneThirdSeriesF32', 'EighthPiMOneThirdSeriesF64', 'EighthPiMOneThirdSeriesFLong', 'ErfSeriesArb', 'ErfSeriesCArb', 'ErfSeriesCF32', 'ErfSeriesCF64', 'ErfSeriesCFLong', 'ErfSeriesF32', 'ErfSeriesF64', 'ErfSeriesFLong', 'ExpMCosXSinsinXSeriesArb', 'ExpMCosXSinsinXSeriesCArb', 'ExpMCosXSinsinXSeriesCF32', 'ExpMCosXSinsinXSeriesCF64', 'ExpMCosXSinsinXSeriesCFLong', 'ExpMCosXSinsinXSeriesF32', 'ExpMCosXSinsinXSeriesF64', 'ExpMCosXSinsinXSeriesFLong', 'ExpSeriesArb', 'ExpSeriesCArb', 'ExpSeriesCF32', 'ExpSeriesCF64', 'ExpSeriesCFLong', 'ExpSeriesF32', 'ExpSeriesF64', 'ExpSeriesFLong', 'ExpSquaredErfSeriesArb', 'ExpSquaredErfSeriesCArb', 'ExpSquaredErfSeriesCF32', 'ExpSquaredErfSeriesCF64', 'ExpSquaredErfSeriesCFLong', 'ExpSquaredErfSeriesF32', 'ExpSquaredErfSeriesF64', 'ExpSquaredErfSeriesFLong', 'FivePiTwelveSeriesArb', 'FivePiTwelveSeriesCArb', 'FivePiTwelveSeriesCF32', 'FivePiTwelveSeriesCF64', 'FivePiTwelveSeriesCFLong', 'FivePiTwelveSeriesF32', 'FivePiTwelveSeriesF64', 'FivePiTwelveSeriesFLong', 'FordSidi2AlgorithmArb', 'FordSidi2AlgorithmCArb', 'FordSidi2AlgorithmCF32', 'FordSidi2AlgorithmCF64', 'FordSidi2AlgorithmCFLong', 'FordSidi2AlgorithmF32', 'FordSidi2AlgorithmF64', 'FordSidi2AlgorithmFLong', 'FordSidi3AlgorithmArb', 'FordSidi3AlgorithmCArb', 'FordSidi3AlgorithmCF32', 'FordSidi3AlgorithmCF64', 'FordSidi3AlgorithmCFLong', 'FordSidi3AlgorithmF32', 'FordSidi3AlgorithmF64', 'FordSidi3AlgorithmFLong', 'FourArctanSeriesArb', 'FourArctanSeriesCArb', 'FourArctanSeriesCF32', 'FourArctanSeriesCF64', 'FourArctanSeriesCFLong', 'FourArctanSeriesF32', 'FourArctanSeriesF64', 'FourArctanSeriesFLong', 'FourLn2M3SeriesArb', 'FourLn2M3SeriesCArb', 'FourLn2M3SeriesCF32', 'FourLn2M3SeriesCF64', 'FourLn2M3SeriesCFLong', 'FourLn2M3SeriesF32', 'FourLn2M3SeriesF64', 'FourLn2M3SeriesFLong', 'HalfAsinTwoXSeriesArb', 'HalfAsinTwoXSeriesCArb', 'HalfAsinTwoXSeriesCF32', 'HalfAsinTwoXSeriesCF64', 'HalfAsinTwoXSeriesCFLong', 'HalfAsinTwoXSeriesF32', 'HalfAsinTwoXSeriesF64', 'HalfAsinTwoXSeriesFLong', 'HalfMinusSinxMultiPi4SeriesArb', 'HalfMinusSinxMultiPi4SeriesCArb', 'HalfMinusSinxMultiPi4SeriesCF32', 'HalfMinusSinxMultiPi4SeriesCF64', 'HalfMinusSinxMultiPi4SeriesCFLong', 'HalfMinusSinxMultiPi4SeriesF32', 'HalfMinusSinxMultiPi4SeriesF64', 'HalfMinusSinxMultiPi4SeriesFLong', 'HalfMultiLn1Div2Multi1MinusCosxSeriesArb', 'HalfMultiLn1Div2Multi1MinusCosxSeriesCArb', 'HalfMultiLn1Div2Multi1MinusCosxSeriesCF32', 'HalfMultiLn1Div2Multi1MinusCosxSeriesCF64', 'HalfMultiLn1Div2Multi1MinusCosxSeriesCFLong', 'HalfMultiLn1Div2Multi1MinusCosxSeriesF32', 'HalfMultiLn1Div2Multi1MinusCosxSeriesF64', 'HalfMultiLn1Div2Multi1MinusCosxSeriesFLong', 'IncompleteGammaFuncSeriesArb', 'IncompleteGammaFuncSeriesCArb', 'IncompleteGammaFuncSeriesCF32', 'IncompleteGammaFuncSeriesCF64', 'IncompleteGammaFuncSeriesCFLong', 'IncompleteGammaFuncSeriesF32', 'IncompleteGammaFuncSeriesF64', 'IncompleteGammaFuncSeriesFLong', 'InvSqrt1m4xSeriesArb', 'InvSqrt1m4xSeriesCArb', 'InvSqrt1m4xSeriesCF32', 'InvSqrt1m4xSeriesCF64', 'InvSqrt1m4xSeriesCFLong', 'InvSqrt1m4xSeriesF32', 'InvSqrt1m4xSeriesF64', 'InvSqrt1m4xSeriesFLong', 'Inverse1mxSeriesArb', 'Inverse1mxSeriesCArb', 'Inverse1mxSeriesCF32', 'Inverse1mxSeriesCF64', 'Inverse1mxSeriesCFLong', 'Inverse1mxSeriesF32', 'Inverse1mxSeriesF64', 'Inverse1mxSeriesFLong', 'KXSeriesArb', 'KXSeriesCArb', 'KXSeriesCF32', 'KXSeriesCF64', 'KXSeriesCFLong', 'KXSeriesF32', 'KXSeriesF64', 'KXSeriesFLong', 'LambertWFuncSeriesArb', 'LambertWFuncSeriesCArb', 'LambertWFuncSeriesCF32', 'LambertWFuncSeriesCF64', 'LambertWFuncSeriesCFLong', 'LambertWFuncSeriesF32', 'LambertWFuncSeriesF64', 'LambertWFuncSeriesFLong', 'LevinAlgorithmArb', 'LevinAlgorithmCArb', 'LevinAlgorithmCF32', 'LevinAlgorithmCF64', 'LevinAlgorithmCFLong', 'LevinAlgorithmF32', 'LevinAlgorithmF64', 'LevinAlgorithmFLong', 'LevinSidiMAlgorithmArb', 'LevinSidiMAlgorithmCArb', 'LevinSidiMAlgorithmCF32', 'LevinSidiMAlgorithmCF64', 'LevinSidiMAlgorithmCFLong', 'LevinSidiMAlgorithmF32', 'LevinSidiMAlgorithmF64', 'LevinSidiMAlgorithmFLong', 'LevinSidiSAlgorithmArb', 'LevinSidiSAlgorithmCArb', 'LevinSidiSAlgorithmCF32', 'LevinSidiSAlgorithmCF64', 'LevinSidiSAlgorithmCFLong', 'LevinSidiSAlgorithmF32', 'LevinSidiSAlgorithmF64', 'LevinSidiSAlgorithmFLong', 'Ln13MinusLn7Div7SeriesArb', 'Ln13MinusLn7Div7SeriesCArb', 'Ln13MinusLn7Div7SeriesCF32', 'Ln13MinusLn7Div7SeriesCF64', 'Ln13MinusLn7Div7SeriesCFLong', 'Ln13MinusLn7Div7SeriesF32', 'Ln13MinusLn7Div7SeriesF64', 'Ln13MinusLn7Div7SeriesFLong', 'Ln1MinusX2SeriesArb', 'Ln1MinusX2SeriesCArb', 'Ln1MinusX2SeriesCF32', 'Ln1MinusX2SeriesCF64', 'Ln1MinusX2SeriesCFLong', 'Ln1MinusX2SeriesF32', 'Ln1MinusX2SeriesF64', 'Ln1MinusX2SeriesFLong', 'Ln1PlusSqrt1PlusXsquareMinusLn2SeriesArb', 'Ln1PlusSqrt1PlusXsquareMinusLn2SeriesCArb', 'Ln1PlusSqrt1PlusXsquareMinusLn2SeriesCF32', 'Ln1PlusSqrt1PlusXsquareMinusLn2SeriesCF64', 'Ln1PlusSqrt1PlusXsquareMinusLn2SeriesCFLong', 'Ln1PlusSqrt1PlusXsquareMinusLn2SeriesF32', 'Ln1PlusSqrt1PlusXsquareMinusLn2SeriesF64', 'Ln1PlusSqrt1PlusXsquareMinusLn2SeriesFLong', 'Ln1PlusX3SeriesArb', 'Ln1PlusX3SeriesCArb', 'Ln1PlusX3SeriesCF32', 'Ln1PlusX3SeriesCF64', 'Ln1PlusX3SeriesCFLong', 'Ln1PlusX3SeriesF32', 'Ln1PlusX3SeriesF64', 'Ln1PlusX3SeriesFLong', 'Ln1mxSeriesArb', 'Ln1mxSeriesCArb', 'Ln1mxSeriesCF32', 'Ln1mxSeriesCF64', 'Ln1mxSeriesCFLong', 'Ln1mxSeriesF32', 'Ln1mxSeriesF64', 'Ln1mxSeriesFLong', 'Ln1plusXDiv1plusX2SeriesArb', 'Ln1plusXDiv1plusX2SeriesCArb', 'Ln1plusXDiv1plusX2SeriesCF32', 'Ln1plusXDiv1plusX2SeriesCF64', 'Ln1plusXDiv1plusX2SeriesCFLong', 'Ln1plusXDiv1plusX2SeriesF32', 'Ln1plusXDiv1plusX2SeriesF64', 'Ln1plusXDiv1plusX2SeriesFLong', 'Ln1px4SeriesArb', 'Ln1px4SeriesCArb', 'Ln1px4SeriesCF32', 'Ln1px4SeriesCF64', 'Ln1px4SeriesCFLong', 'Ln1px4SeriesF32', 'Ln1px4SeriesF64', 'Ln1px4SeriesFLong', 'Ln2SeriesArb', 'Ln2SeriesCArb', 'Ln2SeriesCF32', 'Ln2SeriesCF64', 'Ln2SeriesCFLong', 'Ln2SeriesF32', 'Ln2SeriesF64', 'Ln2SeriesFLong', 'LnCosxSeriesArb', 'LnCosxSeriesCArb', 'LnCosxSeriesCF32', 'LnCosxSeriesCF64', 'LnCosxSeriesCFLong', 'LnCosxSeriesF32', 'LnCosxSeriesF64', 'LnCosxSeriesFLong', 'LnSinxMinusLnXSeriesArb', 'LnSinxMinusLnXSeriesCArb', 'LnSinxMinusLnXSeriesCF32', 'LnSinxMinusLnXSeriesCF64', 'LnSinxMinusLnXSeriesCFLong', 'LnSinxMinusLnXSeriesF32', 'LnSinxMinusLnXSeriesF64', 'LnSinxMinusLnXSeriesFLong', 'LnXPlusOneXMinusOneHalfedSeriesArb', 'LnXPlusOneXMinusOneHalfedSeriesCArb', 'LnXPlusOneXMinusOneHalfedSeriesCF32', 'LnXPlusOneXMinusOneHalfedSeriesCF64', 'LnXPlusOneXMinusOneHalfedSeriesCFLong', 'LnXPlusOneXMinusOneHalfedSeriesF32', 'LnXPlusOneXMinusOneHalfedSeriesF64', 'LnXPlusOneXMinusOneHalfedSeriesFLong', 'LubkinWAlgorithmArb', 'LubkinWAlgorithmCArb', 'LubkinWAlgorithmCF32', 'LubkinWAlgorithmCF64', 'LubkinWAlgorithmCFLong', 'LubkinWAlgorithmF32', 'LubkinWAlgorithmF64', 'LubkinWAlgorithmFLong', 'MFact1mxMp1InverseSeriesArb', 'MFact1mxMp1InverseSeriesCArb', 'MFact1mxMp1InverseSeriesCF32', 'MFact1mxMp1InverseSeriesCF64', 'MFact1mxMp1InverseSeriesCFLong', 'MFact1mxMp1InverseSeriesF32', 'MFact1mxMp1InverseSeriesF64', 'MFact1mxMp1InverseSeriesFLong', 'MeanSinhSinSeriesArb', 'MeanSinhSinSeriesCArb', 'MeanSinhSinSeriesCF32', 'MeanSinhSinSeriesCF64', 'MeanSinhSinSeriesCFLong', 'MeanSinhSinSeriesF32', 'MeanSinhSinSeriesF64', 'MeanSinhSinSeriesFLong', 'Minus3Div4OrXMinus3Div4SeriesArb', 'Minus3Div4OrXMinus3Div4SeriesCArb', 'Minus3Div4OrXMinus3Div4SeriesCF32', 'Minus3Div4OrXMinus3Div4SeriesCF64', 'Minus3Div4OrXMinus3Div4SeriesCFLong', 'Minus3Div4OrXMinus3Div4SeriesF32', 'Minus3Div4OrXMinus3Div4SeriesF64', 'Minus3Div4OrXMinus3Div4SeriesFLong', 'MinusOneNFactNInNSeriesArb', 'MinusOneNFactNInNSeriesCArb', 'MinusOneNFactNInNSeriesCF32', 'MinusOneNFactNInNSeriesCF64', 'MinusOneNFactNInNSeriesCFLong', 'MinusOneNFactNInNSeriesF32', 'MinusOneNFactNInNSeriesF64', 'MinusOneNFactNInNSeriesFLong', 'MinusOneNedInNSeriesArb', 'MinusOneNedInNSeriesCArb', 'MinusOneNedInNSeriesCF32', 'MinusOneNedInNSeriesCF64', 'MinusOneNedInNSeriesCFLong', 'MinusOneNedInNSeriesF32', 'MinusOneNedInNSeriesF64', 'MinusOneNedInNSeriesFLong', 'MinusOneQuarterSeriesArb', 'MinusOneQuarterSeriesCArb', 'MinusOneQuarterSeriesCF32', 'MinusOneQuarterSeriesCF64', 'MinusOneQuarterSeriesCFLong', 'MinusOneQuarterSeriesF32', 'MinusOneQuarterSeriesF64', 'MinusOneQuarterSeriesFLong', 'MinusThreePlusLn3ThreeDividedTwoPlusTwoLn2SeriesArb', 'MinusThreePlusLn3ThreeDividedTwoPlusTwoLn2SeriesCArb', 'MinusThreePlusLn3ThreeDividedTwoPlusTwoLn2SeriesCF32', 'MinusThreePlusLn3ThreeDividedTwoPlusTwoLn2SeriesCF64', 'MinusThreePlusLn3ThreeDividedTwoPlusTwoLn2SeriesCFLong', 'MinusThreePlusLn3ThreeDividedTwoPlusTwoLn2SeriesF32', 'MinusThreePlusLn3ThreeDividedTwoPlusTwoLn2SeriesF64', 'MinusThreePlusLn3ThreeDividedTwoPlusTwoLn2SeriesFLong', 'MinusXMinusPi4OrMinusPi4SeriesArb', 'MinusXMinusPi4OrMinusPi4SeriesCArb', 'MinusXMinusPi4OrMinusPi4SeriesCF32', 'MinusXMinusPi4OrMinusPi4SeriesCF64', 'MinusXMinusPi4OrMinusPi4SeriesCFLong', 'MinusXMinusPi4OrMinusPi4SeriesF32', 'MinusXMinusPi4OrMinusPi4SeriesF64', 'MinusXMinusPi4OrMinusPi4SeriesFLong', 'NumeratorType', 'OneDivSqrt2SinXDivSqrt2SeriesArb', 'OneDivSqrt2SinXDivSqrt2SeriesCArb', 'OneDivSqrt2SinXDivSqrt2SeriesCF32', 'OneDivSqrt2SinXDivSqrt2SeriesCF64', 'OneDivSqrt2SinXDivSqrt2SeriesCFLong', 'OneDivSqrt2SinXDivSqrt2SeriesF32', 'OneDivSqrt2SinXDivSqrt2SeriesF64', 'OneDivSqrt2SinXDivSqrt2SeriesFLong', 'OneDivTwoMinusXMultiThreePlusXSeriesArb', 'OneDivTwoMinusXMultiThreePlusXSeriesCArb', 'OneDivTwoMinusXMultiThreePlusXSeriesCF32', 'OneDivTwoMinusXMultiThreePlusXSeriesCF64', 'OneDivTwoMinusXMultiThreePlusXSeriesCFLong', 'OneDivTwoMinusXMultiThreePlusXSeriesF32', 'OneDivTwoMinusXMultiThreePlusXSeriesF64', 'OneDivTwoMinusXMultiThreePlusXSeriesFLong', 'OneMinusSqrt1minus4xDiv2xSeriesArb', 'OneMinusSqrt1minus4xDiv2xSeriesCArb', 'OneMinusSqrt1minus4xDiv2xSeriesCF32', 'OneMinusSqrt1minus4xDiv2xSeriesCF64', 'OneMinusSqrt1minus4xDiv2xSeriesCFLong', 'OneMinusSqrt1minus4xDiv2xSeriesF32', 'OneMinusSqrt1minus4xDiv2xSeriesF64', 'OneMinusSqrt1minus4xDiv2xSeriesFLong', 'OneSeriesArb', 'OneSeriesCArb', 'OneSeriesCF32', 'OneSeriesCF64', 'OneSeriesCFLong', 'OneSeriesF32', 'OneSeriesF64', 'OneSeriesFLong', 'OneThirdPiSquaredMNineSeriesArb', 'OneThirdPiSquaredMNineSeriesCArb', 'OneThirdPiSquaredMNineSeriesCF32', 'OneThirdPiSquaredMNineSeriesCF64', 'OneThirdPiSquaredMNineSeriesCFLong', 'OneThirdPiSquaredMNineSeriesF32', 'OneThirdPiSquaredMNineSeriesF64', 'OneThirdPiSquaredMNineSeriesFLong', 'OneTwelfth3x2Pi2SeriesArb', 'OneTwelfth3x2Pi2SeriesCArb', 'OneTwelfth3x2Pi2SeriesCF32', 'OneTwelfth3x2Pi2SeriesCF64', 'OneTwelfth3x2Pi2SeriesCFLong', 'OneTwelfth3x2Pi2SeriesF32', 'OneTwelfth3x2Pi2SeriesF64', 'OneTwelfth3x2Pi2SeriesFLong', 'OneTwelfthSeriesArb', 'OneTwelfthSeriesCArb', 'OneTwelfthSeriesCF32', 'OneTwelfthSeriesCF64', 'OneTwelfthSeriesCFLong', 'OneTwelfthSeriesF32', 'OneTwelfthSeriesF64', 'OneTwelfthSeriesFLong', 'OneTwelfthX2Pi2SeriesArb', 'OneTwelfthX2Pi2SeriesCArb', 'OneTwelfthX2Pi2SeriesCF32', 'OneTwelfthX2Pi2SeriesCF64', 'OneTwelfthX2Pi2SeriesCFLong', 'OneTwelfthX2Pi2SeriesF32', 'OneTwelfthX2Pi2SeriesF64', 'OneTwelfthX2Pi2SeriesFLong', 'Pi3SeriesArb', 'Pi3SeriesCArb', 'Pi3SeriesCF32', 'Pi3SeriesCF64', 'Pi3SeriesCFLong', 'Pi3SeriesF32', 'Pi3SeriesF64', 'Pi3SeriesFLong', 'Pi4SeriesArb', 'Pi4SeriesCArb', 'Pi4SeriesCF32', 'Pi4SeriesCF64', 'Pi4SeriesCFLong', 'Pi4SeriesF32', 'Pi4SeriesF64', 'Pi4SeriesFLong', 'Pi8CosxSquareMinus1Div3CosxSeriesArb', 'Pi8CosxSquareMinus1Div3CosxSeriesCArb', 'Pi8CosxSquareMinus1Div3CosxSeriesCF32', 'Pi8CosxSquareMinus1Div3CosxSeriesCF64', 'Pi8CosxSquareMinus1Div3CosxSeriesCFLong', 'Pi8CosxSquareMinus1Div3CosxSeriesF32', 'Pi8CosxSquareMinus1Div3CosxSeriesF64', 'Pi8CosxSquareMinus1Div3CosxSeriesFLong', 'PiCubed32SeriesArb', 'PiCubed32SeriesCArb', 'PiCubed32SeriesCF32', 'PiCubed32SeriesCF64', 'PiCubed32SeriesCFLong', 'PiCubed32SeriesF32', 'PiCubed32SeriesF64', 'PiCubed32SeriesFLong', 'PiFourMinusLn2HalfedSeriesArb', 'PiFourMinusLn2HalfedSeriesCArb', 'PiFourMinusLn2HalfedSeriesCF32', 'PiFourMinusLn2HalfedSeriesCF64', 'PiFourMinusLn2HalfedSeriesCFLong', 'PiFourMinusLn2HalfedSeriesF32', 'PiFourMinusLn2HalfedSeriesF64', 'PiFourMinusLn2HalfedSeriesFLong', 'PiMinus3pi4AndPiMinusXMinus3pi4SeriesArb', 'PiMinus3pi4AndPiMinusXMinus3pi4SeriesCArb', 'PiMinus3pi4AndPiMinusXMinus3pi4SeriesCF32', 'PiMinus3pi4AndPiMinusXMinus3pi4SeriesCF64', 'PiMinus3pi4AndPiMinusXMinus3pi4SeriesCFLong', 'PiMinus3pi4AndPiMinusXMinus3pi4SeriesF32', 'PiMinus3pi4AndPiMinusXMinus3pi4SeriesF64', 'PiMinus3pi4AndPiMinusXMinus3pi4SeriesFLong', 'PiMinusX2SeriesArb', 'PiMinusX2SeriesCArb', 'PiMinusX2SeriesCF32', 'PiMinusX2SeriesCF64', 'PiMinusX2SeriesCFLong', 'PiMinusX2SeriesF32', 'PiMinusX2SeriesF64', 'PiMinusX2SeriesFLong', 'PiSeriesArb', 'PiSeriesCArb', 'PiSeriesCF32', 'PiSeriesCF64', 'PiSeriesCFLong', 'PiSeriesF32', 'PiSeriesF64', 'PiSeriesFLong', 'PiSixMinHalfSeriesArb', 'PiSixMinHalfSeriesCArb', 'PiSixMinHalfSeriesCF32', 'PiSixMinHalfSeriesCF64', 'PiSixMinHalfSeriesCFLong', 'PiSixMinHalfSeriesF32', 'PiSixMinHalfSeriesF64', 'PiSixMinHalfSeriesFLong', 'PiSquared6MinusOneSeriesArb', 'PiSquared6MinusOneSeriesCArb', 'PiSquared6MinusOneSeriesCF32', 'PiSquared6MinusOneSeriesCF64', 'PiSquared6MinusOneSeriesCFLong', 'PiSquared6MinusOneSeriesF32', 'PiSquared6MinusOneSeriesF64', 'PiSquared6MinusOneSeriesFLong', 'PiSquaredTwelveSeriesArb', 'PiSquaredTwelveSeriesCArb', 'PiSquaredTwelveSeriesCF32', 'PiSquaredTwelveSeriesCF64', 'PiSquaredTwelveSeriesCFLong', 'PiSquaredTwelveSeriesF32', 'PiSquaredTwelveSeriesF64', 'PiSquaredTwelveSeriesFLong', 'PiXMinusXSquareSquareMinusThreePiXPlusTwoPiSquareSeriesArb', 'PiXMinusXSquareSquareMinusThreePiXPlusTwoPiSquareSeriesCArb', 'PiXMinusXSquareSquareMinusThreePiXPlusTwoPiSquareSeriesCF32', 'PiXMinusXSquareSquareMinusThreePiXPlusTwoPiSquareSeriesCF64', 'PiXMinusXSquareSquareMinusThreePiXPlusTwoPiSquareSeriesCFLong', 'PiXMinusXSquareSquareMinusThreePiXPlusTwoPiSquareSeriesF32', 'PiXMinusXSquareSquareMinusThreePiXPlusTwoPiSquareSeriesF64', 'PiXMinusXSquareSquareMinusThreePiXPlusTwoPiSquareSeriesFLong', 'PiXMultiEXpiPlusEMinusXpiDividedEXpiMinusEMinusXpiSeriesArb', 'PiXMultiEXpiPlusEMinusXpiDividedEXpiMinusEMinusXpiSeriesCArb', 'PiXMultiEXpiPlusEMinusXpiDividedEXpiMinusEMinusXpiSeriesCF32', 'PiXMultiEXpiPlusEMinusXpiDividedEXpiMinusEMinusXpiSeriesCF64', 'PiXMultiEXpiPlusEMinusXpiDividedEXpiMinusEMinusXpiSeriesCFLong', 'PiXMultiEXpiPlusEMinusXpiDividedEXpiMinusEMinusXpiSeriesF32', 'PiXMultiEXpiPlusEMinusXpiDividedEXpiMinusEMinusXpiSeriesF64', 'PiXMultiEXpiPlusEMinusXpiDividedEXpiMinusEMinusXpiSeriesFLong', 'RemainderType', 'RichardsonAlgorithmArb', 'RichardsonAlgorithmCArb', 'RichardsonAlgorithmCF32', 'RichardsonAlgorithmCF64', 'RichardsonAlgorithmCFLong', 'RichardsonAlgorithmF32', 'RichardsonAlgorithmF64', 'RichardsonAlgorithmFLong', 'RiemannZetaFuncSeriesArb', 'RiemannZetaFuncSeriesCArb', 'RiemannZetaFuncSeriesCF32', 'RiemannZetaFuncSeriesCF64', 'RiemannZetaFuncSeriesCFLong', 'RiemannZetaFuncSeriesF32', 'RiemannZetaFuncSeriesF64', 'RiemannZetaFuncSeriesFLong', 'RiemannZetaFuncXmin1DivRiemannZetaFuncXSeriesArb', 'RiemannZetaFuncXmin1DivRiemannZetaFuncXSeriesCArb', 'RiemannZetaFuncXmin1DivRiemannZetaFuncXSeriesCF32', 'RiemannZetaFuncXmin1DivRiemannZetaFuncXSeriesCF64', 'RiemannZetaFuncXmin1DivRiemannZetaFuncXSeriesCFLong', 'RiemannZetaFuncXmin1DivRiemannZetaFuncXSeriesF32', 'RiemannZetaFuncXmin1DivRiemannZetaFuncXSeriesF64', 'RiemannZetaFuncXmin1DivRiemannZetaFuncXSeriesFLong', 'SeriesAccelerationArb', 'SeriesAccelerationCArb', 'SeriesAccelerationCF32', 'SeriesAccelerationCF64', 'SeriesAccelerationCFLong', 'SeriesAccelerationF32', 'SeriesAccelerationF64', 'SeriesAccelerationFLong', 'SeriesBaseArb', 'SeriesBaseCArb', 'SeriesBaseCF32', 'SeriesBaseCF64', 'SeriesBaseCFLong', 'SeriesBaseF32', 'SeriesBaseF64', 'SeriesBaseFLong', 'SeriesResultArb', 'SeriesResultCArb', 'SeriesResultCF32', 'SeriesResultCF64', 'SeriesResultCFLong', 'SeriesResultF32', 'SeriesResultF64', 'SeriesResultFLong', 'SeriesWithLnNumber1Arb', 'SeriesWithLnNumber1CArb', 'SeriesWithLnNumber1CF32', 'SeriesWithLnNumber1CF64', 'SeriesWithLnNumber1CFLong', 'SeriesWithLnNumber1F32', 'SeriesWithLnNumber1F64', 'SeriesWithLnNumber1FLong', 'SeriesWithLnNumber2Arb', 'SeriesWithLnNumber2CArb', 'SeriesWithLnNumber2CF32', 'SeriesWithLnNumber2CF64', 'SeriesWithLnNumber2CFLong', 'SeriesWithLnNumber2F32', 'SeriesWithLnNumber2F64', 'SeriesWithLnNumber2FLong', 'ShanksAlgorithmArb', 'ShanksAlgorithmCArb', 'ShanksAlgorithmCF32', 'ShanksAlgorithmCF64', 'ShanksAlgorithmCFLong', 'ShanksAlgorithmF32', 'ShanksAlgorithmF64', 'ShanksAlgorithmFLong', 'ShanksTransformAlternatingArb', 'ShanksTransformAlternatingCArb', 'ShanksTransformAlternatingCF32', 'ShanksTransformAlternatingCF64', 'ShanksTransformAlternatingCFLong', 'ShanksTransformAlternatingF32', 'ShanksTransformAlternatingF64', 'ShanksTransformAlternatingFLong', 'SiXSeriesArb', 'SiXSeriesCArb', 'SiXSeriesCF32', 'SiXSeriesCF64', 'SiXSeriesCFLong', 'SiXSeriesF32', 'SiXSeriesF64', 'SiXSeriesFLong', 'SinSeriesArb', 'SinSeriesCArb', 'SinSeriesCF32', 'SinSeriesCF64', 'SinSeriesCFLong', 'SinSeriesF32', 'SinSeriesF64', 'SinSeriesFLong', 'SinX2SeriesArb', 'SinX2SeriesCArb', 'SinX2SeriesCF32', 'SinX2SeriesCF64', 'SinX2SeriesCFLong', 'SinX2SeriesF32', 'SinX2SeriesF64', 'SinX2SeriesFLong', 'SinhSeriesArb', 'SinhSeriesCArb', 'SinhSeriesCF32', 'SinhSeriesCF64', 'SinhSeriesCFLong', 'SinhSeriesF32', 'SinhSeriesF64', 'SinhSeriesFLong', 'SinhX2SeriesArb', 'SinhX2SeriesCArb', 'SinhX2SeriesCF32', 'SinhX2SeriesCF64', 'SinhX2SeriesCFLong', 'SinhX2SeriesF32', 'SinhX2SeriesF64', 'SinhX2SeriesFLong', 'Sqrt1plusXMinus1MinusXDiv2SeriesArb', 'Sqrt1plusXMinus1MinusXDiv2SeriesCArb', 'Sqrt1plusXMinus1MinusXDiv2SeriesCF32', 'Sqrt1plusXMinus1MinusXDiv2SeriesCF64', 'Sqrt1plusXMinus1MinusXDiv2SeriesCFLong', 'Sqrt1plusXMinus1MinusXDiv2SeriesF32', 'Sqrt1plusXMinus1MinusXDiv2SeriesF64', 'Sqrt1plusXMinus1MinusXDiv2SeriesFLong', 'Sqrt1plusXSeriesArb', 'Sqrt1plusXSeriesCArb', 'Sqrt1plusXSeriesCF32', 'Sqrt1plusXSeriesCF64', 'Sqrt1plusXSeriesCFLong', 'Sqrt1plusXSeriesF32', 'Sqrt1plusXSeriesF64', 'Sqrt1plusXSeriesFLong', 'SqrtOneminusSqrtoneminusxDivXSeriesArb', 'SqrtOneminusSqrtoneminusxDivXSeriesCArb', 'SqrtOneminusSqrtoneminusxDivXSeriesCF32', 'SqrtOneminusSqrtoneminusxDivXSeriesCF64', 'SqrtOneminusSqrtoneminusxDivXSeriesCFLong', 'SqrtOneminusSqrtoneminusxDivXSeriesF32', 'SqrtOneminusSqrtoneminusxDivXSeriesF64', 'SqrtOneminusSqrtoneminusxDivXSeriesFLong', 'TenMinusXSeriesArb', 'TenMinusXSeriesCArb', 'TenMinusXSeriesCF32', 'TenMinusXSeriesCF64', 'TenMinusXSeriesCFLong', 'TenMinusXSeriesF32', 'TenMinusXSeriesF64', 'TenMinusXSeriesFLong', 'ThreeMinusPiSeriesArb', 'ThreeMinusPiSeriesCArb', 'ThreeMinusPiSeriesCF32', 'ThreeMinusPiSeriesCF64', 'ThreeMinusPiSeriesCFLong', 'ThreeMinusPiSeriesF32', 'ThreeMinusPiSeriesF64', 'ThreeMinusPiSeriesFLong', 'TwoArcsinSquareXHalfedSeriesArb', 'TwoArcsinSquareXHalfedSeriesCArb', 'TwoArcsinSquareXHalfedSeriesCF32', 'TwoArcsinSquareXHalfedSeriesCF64', 'TwoArcsinSquareXHalfedSeriesCFLong', 'TwoArcsinSquareXHalfedSeriesF32', 'TwoArcsinSquareXHalfedSeriesF64', 'TwoArcsinSquareXHalfedSeriesFLong', 'TwoDegreeXSeriesArb', 'TwoDegreeXSeriesCArb', 'TwoDegreeXSeriesCF32', 'TwoDegreeXSeriesCF64', 'TwoDegreeXSeriesCFLong', 'TwoDegreeXSeriesF32', 'TwoDegreeXSeriesF64', 'TwoDegreeXSeriesFLong', 'TwoLn2SeriesArb', 'TwoLn2SeriesCArb', 'TwoLn2SeriesCF32', 'TwoLn2SeriesCF64', 'TwoLn2SeriesCFLong', 'TwoLn2SeriesF32', 'TwoLn2SeriesF64', 'TwoLn2SeriesFLong', 'WenigerAlgorithmArb', 'WenigerAlgorithmCArb', 'WenigerAlgorithmCF32', 'WenigerAlgorithmCF64', 'WenigerAlgorithmCFLong', 'WenigerAlgorithmF32', 'WenigerAlgorithmF64', 'WenigerAlgorithmFLong', 'WynnEpsilon1AlgorithmArb', 'WynnEpsilon1AlgorithmCArb', 'WynnEpsilon1AlgorithmCF32', 'WynnEpsilon1AlgorithmCF64', 'WynnEpsilon1AlgorithmCFLong', 'WynnEpsilon1AlgorithmF32', 'WynnEpsilon1AlgorithmF64', 'WynnEpsilon1AlgorithmFLong', 'WynnEpsilon2AlgorithmArb', 'WynnEpsilon2AlgorithmCArb', 'WynnEpsilon2AlgorithmCF32', 'WynnEpsilon2AlgorithmCF64', 'WynnEpsilon2AlgorithmCFLong', 'WynnEpsilon2AlgorithmF32', 'WynnEpsilon2AlgorithmF64', 'WynnEpsilon2AlgorithmFLong', 'WynnEpsilon3AlgorithmArb', 'WynnEpsilon3AlgorithmCArb', 'WynnEpsilon3AlgorithmCF32', 'WynnEpsilon3AlgorithmCF64', 'WynnEpsilon3AlgorithmCFLong', 'WynnEpsilon3AlgorithmF32', 'WynnEpsilon3AlgorithmF64', 'WynnEpsilon3AlgorithmFLong', 'WynnRhoAlgorithmArb', 'WynnRhoAlgorithmCArb', 'WynnRhoAlgorithmCF32', 'WynnRhoAlgorithmCF64', 'WynnRhoAlgorithmCFLong', 'WynnRhoAlgorithmF32', 'WynnRhoAlgorithmF64', 'WynnRhoAlgorithmFLong', 'X1mxSquaredSeriesArb', 'X1mxSquaredSeriesCArb', 'X1mxSquaredSeriesCF32', 'X1mxSquaredSeriesCF64', 'X1mxSquaredSeriesCFLong', 'X1mxSquaredSeriesF32', 'X1mxSquaredSeriesF64', 'X1mxSquaredSeriesFLong', 'XDiv1minX2SeriesArb', 'XDiv1minX2SeriesCArb', 'XDiv1minX2SeriesCF32', 'XDiv1minX2SeriesCF64', 'XDiv1minX2SeriesCFLong', 'XDiv1minX2SeriesF32', 'XDiv1minX2SeriesF64', 'XDiv1minX2SeriesFLong', 'XDiv1minXSeriesArb', 'XDiv1minXSeriesCArb', 'XDiv1minXSeriesCF32', 'XDiv1minXSeriesCF64', 'XDiv1minXSeriesCFLong', 'XDiv1minXSeriesF32', 'XDiv1minXSeriesF64', 'XDiv1minXSeriesFLong', 'XMinSqrtXSeriesArb', 'XMinSqrtXSeriesCArb', 'XMinSqrtXSeriesCF32', 'XMinSqrtXSeriesCF64', 'XMinSqrtXSeriesCFLong', 'XMinSqrtXSeriesF32', 'XMinSqrtXSeriesF64', 'XMinSqrtXSeriesFLong', 'XSeriesArb', 'XSeriesCArb', 'XSeriesCF32', 'XSeriesCF64', 'XSeriesCFLong', 'XSeriesF32', 'XSeriesF64', 'XSeriesFLong', 'XTwoSeriesArb', 'XTwoSeriesCArb', 'XTwoSeriesCF32', 'XTwoSeriesCF64', 'XTwoSeriesCFLong', 'XTwoSeriesF32', 'XTwoSeriesF64', 'XTwoSeriesFLong', 'XTwoThroughtSquaresSeriesArb', 'XTwoThroughtSquaresSeriesCArb', 'XTwoThroughtSquaresSeriesCF32', 'XTwoThroughtSquaresSeriesCF64', 'XTwoThroughtSquaresSeriesCFLong', 'XTwoThroughtSquaresSeriesF32', 'XTwoThroughtSquaresSeriesF64', 'XTwoThroughtSquaresSeriesFLong', 'Xsquareplus3DivXsquareplus2multixMinus1SeriesArb', 'Xsquareplus3DivXsquareplus2multixMinus1SeriesCArb', 'Xsquareplus3DivXsquareplus2multixMinus1SeriesCF32', 'Xsquareplus3DivXsquareplus2multixMinus1SeriesCF64', 'Xsquareplus3DivXsquareplus2multixMinus1SeriesCFLong', 'Xsquareplus3DivXsquareplus2multixMinus1SeriesF32', 'Xsquareplus3DivXsquareplus2multixMinus1SeriesF64', 'Xsquareplus3DivXsquareplus2multixMinus1SeriesFLong', 'gamma_rho_type', 'generalized_type', 'rho_type', 't_type', 't_wave_type', 'u_type', 'v_type', 'v_wave_type']
 class AbsSinXMinus2DivPiSeriesArb(SeriesBaseArb):
     def __init__(self) -> None:
         ...
@@ -16,7 +16,7 @@ class AbsSinXMinus2DivPiSeriesCF32(SeriesBaseCF32):
 class AbsSinXMinus2DivPiSeriesCF64(SeriesBaseCF64):
     def __init__(self) -> None:
         ...
-class AbsSinXMinus2DivPiSeriesCFL(SeriesBaseCFL):
+class AbsSinXMinus2DivPiSeriesCFLong(SeriesBaseCFLong):
     def __init__(self) -> None:
         ...
 class AbsSinXMinus2DivPiSeriesF32(SeriesBaseF32):
@@ -25,7 +25,7 @@ class AbsSinXMinus2DivPiSeriesF32(SeriesBaseF32):
 class AbsSinXMinus2DivPiSeriesF64(SeriesBaseF64):
     def __init__(self) -> None:
         ...
-class AbsSinXMinus2DivPiSeriesFL(SeriesBaseFL):
+class AbsSinXMinus2DivPiSeriesFLong(SeriesBaseFLong):
     def __init__(self) -> None:
         ...
 class Arb:
@@ -93,7 +93,7 @@ class ArcsinX2SeriesCF32(SeriesBaseCF32):
 class ArcsinX2SeriesCF64(SeriesBaseCF64):
     def __init__(self) -> None:
         ...
-class ArcsinX2SeriesCFL(SeriesBaseCFL):
+class ArcsinX2SeriesCFLong(SeriesBaseCFLong):
     def __init__(self) -> None:
         ...
 class ArcsinX2SeriesF32(SeriesBaseF32):
@@ -102,7 +102,7 @@ class ArcsinX2SeriesF32(SeriesBaseF32):
 class ArcsinX2SeriesF64(SeriesBaseF64):
     def __init__(self) -> None:
         ...
-class ArcsinX2SeriesFL(SeriesBaseFL):
+class ArcsinX2SeriesFLong(SeriesBaseFLong):
     def __init__(self) -> None:
         ...
 class ArcsinXMinusXSeriesArb(SeriesBaseArb):
@@ -117,7 +117,7 @@ class ArcsinXMinusXSeriesCF32(SeriesBaseCF32):
 class ArcsinXMinusXSeriesCF64(SeriesBaseCF64):
     def __init__(self) -> None:
         ...
-class ArcsinXMinusXSeriesCFL(SeriesBaseCFL):
+class ArcsinXMinusXSeriesCFLong(SeriesBaseCFLong):
     def __init__(self) -> None:
         ...
 class ArcsinXMinusXSeriesF32(SeriesBaseF32):
@@ -126,7 +126,7 @@ class ArcsinXMinusXSeriesF32(SeriesBaseF32):
 class ArcsinXMinusXSeriesF64(SeriesBaseF64):
     def __init__(self) -> None:
         ...
-class ArcsinXMinusXSeriesFL(SeriesBaseFL):
+class ArcsinXMinusXSeriesFLong(SeriesBaseFLong):
     def __init__(self) -> None:
         ...
 class ArcsinXSeriesArb(SeriesBaseArb):
@@ -141,7 +141,7 @@ class ArcsinXSeriesCF32(SeriesBaseCF32):
 class ArcsinXSeriesCF64(SeriesBaseCF64):
     def __init__(self) -> None:
         ...
-class ArcsinXSeriesCFL(SeriesBaseCFL):
+class ArcsinXSeriesCFLong(SeriesBaseCFLong):
     def __init__(self) -> None:
         ...
 class ArcsinXSeriesF32(SeriesBaseF32):
@@ -150,7 +150,7 @@ class ArcsinXSeriesF32(SeriesBaseF32):
 class ArcsinXSeriesF64(SeriesBaseF64):
     def __init__(self) -> None:
         ...
-class ArcsinXSeriesFL(SeriesBaseFL):
+class ArcsinXSeriesFLong(SeriesBaseFLong):
     def __init__(self) -> None:
         ...
 class ArcsinhXSeriesArb(SeriesBaseArb):
@@ -165,7 +165,7 @@ class ArcsinhXSeriesCF32(SeriesBaseCF32):
 class ArcsinhXSeriesCF64(SeriesBaseCF64):
     def __init__(self) -> None:
         ...
-class ArcsinhXSeriesCFL(SeriesBaseCFL):
+class ArcsinhXSeriesCFLong(SeriesBaseCFLong):
     def __init__(self) -> None:
         ...
 class ArcsinhXSeriesF32(SeriesBaseF32):
@@ -174,7 +174,7 @@ class ArcsinhXSeriesF32(SeriesBaseF32):
 class ArcsinhXSeriesF64(SeriesBaseF64):
     def __init__(self) -> None:
         ...
-class ArcsinhXSeriesFL(SeriesBaseFL):
+class ArcsinhXSeriesFLong(SeriesBaseFLong):
     def __init__(self) -> None:
         ...
 class ArctanhX2SeriesArb(SeriesBaseArb):
@@ -189,7 +189,7 @@ class ArctanhX2SeriesCF32(SeriesBaseCF32):
 class ArctanhX2SeriesCF64(SeriesBaseCF64):
     def __init__(self) -> None:
         ...
-class ArctanhX2SeriesCFL(SeriesBaseCFL):
+class ArctanhX2SeriesCFLong(SeriesBaseCFLong):
     def __init__(self) -> None:
         ...
 class ArctanhX2SeriesF32(SeriesBaseF32):
@@ -198,7 +198,7 @@ class ArctanhX2SeriesF32(SeriesBaseF32):
 class ArctanhX2SeriesF64(SeriesBaseF64):
     def __init__(self) -> None:
         ...
-class ArctanhX2SeriesFL(SeriesBaseFL):
+class ArctanhX2SeriesFLong(SeriesBaseFLong):
     def __init__(self) -> None:
         ...
 class ArctanhXSeriesArb(SeriesBaseArb):
@@ -213,7 +213,7 @@ class ArctanhXSeriesCF32(SeriesBaseCF32):
 class ArctanhXSeriesCF64(SeriesBaseCF64):
     def __init__(self) -> None:
         ...
-class ArctanhXSeriesCFL(SeriesBaseCFL):
+class ArctanhXSeriesCFLong(SeriesBaseCFLong):
     def __init__(self) -> None:
         ...
 class ArctanhXSeriesF32(SeriesBaseF32):
@@ -222,7 +222,7 @@ class ArctanhXSeriesF32(SeriesBaseF32):
 class ArctanhXSeriesF64(SeriesBaseF64):
     def __init__(self) -> None:
         ...
-class ArctanhXSeriesFL(SeriesBaseFL):
+class ArctanhXSeriesFLong(SeriesBaseFLong):
     def __init__(self) -> None:
         ...
 class ArctgX2SeriesArb(SeriesBaseArb):
@@ -237,7 +237,7 @@ class ArctgX2SeriesCF32(SeriesBaseCF32):
 class ArctgX2SeriesCF64(SeriesBaseCF64):
     def __init__(self) -> None:
         ...
-class ArctgX2SeriesCFL(SeriesBaseCFL):
+class ArctgX2SeriesCFLong(SeriesBaseCFLong):
     def __init__(self) -> None:
         ...
 class ArctgX2SeriesF32(SeriesBaseF32):
@@ -246,7 +246,7 @@ class ArctgX2SeriesF32(SeriesBaseF32):
 class ArctgX2SeriesF64(SeriesBaseF64):
     def __init__(self) -> None:
         ...
-class ArctgX2SeriesFL(SeriesBaseFL):
+class ArctgX2SeriesFLong(SeriesBaseFLong):
     def __init__(self) -> None:
         ...
 class ArctgX3SeriesArb(SeriesBaseArb):
@@ -261,7 +261,7 @@ class ArctgX3SeriesCF32(SeriesBaseCF32):
 class ArctgX3SeriesCF64(SeriesBaseCF64):
     def __init__(self) -> None:
         ...
-class ArctgX3SeriesCFL(SeriesBaseCFL):
+class ArctgX3SeriesCFLong(SeriesBaseCFLong):
     def __init__(self) -> None:
         ...
 class ArctgX3SeriesF32(SeriesBaseF32):
@@ -270,7 +270,7 @@ class ArctgX3SeriesF32(SeriesBaseF32):
 class ArctgX3SeriesF64(SeriesBaseF64):
     def __init__(self) -> None:
         ...
-class ArctgX3SeriesFL(SeriesBaseFL):
+class ArctgX3SeriesFLong(SeriesBaseFLong):
     def __init__(self) -> None:
         ...
 class ArctgXSeriesArb(SeriesBaseArb):
@@ -285,7 +285,7 @@ class ArctgXSeriesCF32(SeriesBaseCF32):
 class ArctgXSeriesCF64(SeriesBaseCF64):
     def __init__(self) -> None:
         ...
-class ArctgXSeriesCFL(SeriesBaseCFL):
+class ArctgXSeriesCFLong(SeriesBaseCFLong):
     def __init__(self) -> None:
         ...
 class ArctgXSeriesF32(SeriesBaseF32):
@@ -294,7 +294,7 @@ class ArctgXSeriesF32(SeriesBaseF32):
 class ArctgXSeriesF64(SeriesBaseF64):
     def __init__(self) -> None:
         ...
-class ArctgXSeriesFL(SeriesBaseFL):
+class ArctgXSeriesFLong(SeriesBaseFLong):
     def __init__(self) -> None:
         ...
 class BinSeriesArb(SeriesBaseArb):
@@ -309,7 +309,7 @@ class BinSeriesCF32(SeriesBaseCF32):
 class BinSeriesCF64(SeriesBaseCF64):
     def __init__(self) -> None:
         ...
-class BinSeriesCFL(SeriesBaseCFL):
+class BinSeriesCFLong(SeriesBaseCFLong):
     def __init__(self) -> None:
         ...
 class BinSeriesF32(SeriesBaseF32):
@@ -318,7 +318,7 @@ class BinSeriesF32(SeriesBaseF32):
 class BinSeriesF64(SeriesBaseF64):
     def __init__(self) -> None:
         ...
-class BinSeriesFL(SeriesBaseFL):
+class BinSeriesFLong(SeriesBaseFLong):
     def __init__(self) -> None:
         ...
 class BrezinskiThetaAlgorithmArb(SeriesAccelerationArb):
@@ -333,7 +333,7 @@ class BrezinskiThetaAlgorithmCF32(SeriesAccelerationCF32):
 class BrezinskiThetaAlgorithmCF64(SeriesAccelerationCF64):
     def __init__(self) -> None:
         ...
-class BrezinskiThetaAlgorithmCFL(SeriesAccelerationCFL):
+class BrezinskiThetaAlgorithmCFLong(SeriesAccelerationCFLong):
     def __init__(self) -> None:
         ...
 class BrezinskiThetaAlgorithmF32(SeriesAccelerationF32):
@@ -342,7 +342,7 @@ class BrezinskiThetaAlgorithmF32(SeriesAccelerationF32):
 class BrezinskiThetaAlgorithmF64(SeriesAccelerationF64):
     def __init__(self) -> None:
         ...
-class BrezinskiThetaAlgorithmFL(SeriesAccelerationFL):
+class BrezinskiThetaAlgorithmFLong(SeriesAccelerationFLong):
     def __init__(self) -> None:
         ...
 class CArb:
@@ -541,7 +541,7 @@ class ChangWynnAlgorithmCF32(SeriesAccelerationCF32):
 class ChangWynnAlgorithmCF64(SeriesAccelerationCF64):
     def __init__(self) -> None:
         ...
-class ChangWynnAlgorithmCFL(SeriesAccelerationCFL):
+class ChangWynnAlgorithmCFLong(SeriesAccelerationCFLong):
     def __init__(self) -> None:
         ...
 class ChangWynnAlgorithmF32(SeriesAccelerationF32):
@@ -550,7 +550,7 @@ class ChangWynnAlgorithmF32(SeriesAccelerationF32):
 class ChangWynnAlgorithmF64(SeriesAccelerationF64):
     def __init__(self) -> None:
         ...
-class ChangWynnAlgorithmFL(SeriesAccelerationFL):
+class ChangWynnAlgorithmFLong(SeriesAccelerationFLong):
     def __init__(self) -> None:
         ...
 class CiXSeriesArb(SeriesBaseArb):
@@ -565,7 +565,7 @@ class CiXSeriesCF32(SeriesBaseCF32):
 class CiXSeriesCF64(SeriesBaseCF64):
     def __init__(self) -> None:
         ...
-class CiXSeriesCFL(SeriesBaseCFL):
+class CiXSeriesCFLong(SeriesBaseCFLong):
     def __init__(self) -> None:
         ...
 class CiXSeriesF32(SeriesBaseF32):
@@ -574,7 +574,7 @@ class CiXSeriesF32(SeriesBaseF32):
 class CiXSeriesF64(SeriesBaseF64):
     def __init__(self) -> None:
         ...
-class CiXSeriesFL(SeriesBaseFL):
+class CiXSeriesFLong(SeriesBaseFLong):
     def __init__(self) -> None:
         ...
 class Cos3xMinus1DivXsquareSeriesArb(SeriesBaseArb):
@@ -589,7 +589,7 @@ class Cos3xMinus1DivXsquareSeriesCF32(SeriesBaseCF32):
 class Cos3xMinus1DivXsquareSeriesCF64(SeriesBaseCF64):
     def __init__(self) -> None:
         ...
-class Cos3xMinus1DivXsquareSeriesCFL(SeriesBaseCFL):
+class Cos3xMinus1DivXsquareSeriesCFLong(SeriesBaseCFLong):
     def __init__(self) -> None:
         ...
 class Cos3xMinus1DivXsquareSeriesF32(SeriesBaseF32):
@@ -598,7 +598,7 @@ class Cos3xMinus1DivXsquareSeriesF32(SeriesBaseF32):
 class Cos3xMinus1DivXsquareSeriesF64(SeriesBaseF64):
     def __init__(self) -> None:
         ...
-class Cos3xMinus1DivXsquareSeriesFL(SeriesBaseFL):
+class Cos3xMinus1DivXsquareSeriesFLong(SeriesBaseFLong):
     def __init__(self) -> None:
         ...
 class CosSeriesArb(SeriesBaseArb):
@@ -613,7 +613,7 @@ class CosSeriesCF32(SeriesBaseCF32):
 class CosSeriesCF64(SeriesBaseCF64):
     def __init__(self) -> None:
         ...
-class CosSeriesCFL(SeriesBaseCFL):
+class CosSeriesCFLong(SeriesBaseCFLong):
     def __init__(self) -> None:
         ...
 class CosSeriesF32(SeriesBaseF32):
@@ -622,7 +622,7 @@ class CosSeriesF32(SeriesBaseF32):
 class CosSeriesF64(SeriesBaseF64):
     def __init__(self) -> None:
         ...
-class CosSeriesFL(SeriesBaseFL):
+class CosSeriesFLong(SeriesBaseFLong):
     def __init__(self) -> None:
         ...
 class CosSqrtXSeriesArb(SeriesBaseArb):
@@ -637,7 +637,7 @@ class CosSqrtXSeriesCF32(SeriesBaseCF32):
 class CosSqrtXSeriesCF64(SeriesBaseCF64):
     def __init__(self) -> None:
         ...
-class CosSqrtXSeriesCFL(SeriesBaseCFL):
+class CosSqrtXSeriesCFLong(SeriesBaseCFLong):
     def __init__(self) -> None:
         ...
 class CosSqrtXSeriesF32(SeriesBaseF32):
@@ -646,7 +646,7 @@ class CosSqrtXSeriesF32(SeriesBaseF32):
 class CosSqrtXSeriesF64(SeriesBaseF64):
     def __init__(self) -> None:
         ...
-class CosSqrtXSeriesFL(SeriesBaseFL):
+class CosSqrtXSeriesFLong(SeriesBaseFLong):
     def __init__(self) -> None:
         ...
 class CosX2SeriesArb(SeriesBaseArb):
@@ -661,7 +661,7 @@ class CosX2SeriesCF32(SeriesBaseCF32):
 class CosX2SeriesCF64(SeriesBaseCF64):
     def __init__(self) -> None:
         ...
-class CosX2SeriesCFL(SeriesBaseCFL):
+class CosX2SeriesCFLong(SeriesBaseCFLong):
     def __init__(self) -> None:
         ...
 class CosX2SeriesF32(SeriesBaseF32):
@@ -670,7 +670,7 @@ class CosX2SeriesF32(SeriesBaseF32):
 class CosX2SeriesF64(SeriesBaseF64):
     def __init__(self) -> None:
         ...
-class CosX2SeriesFL(SeriesBaseFL):
+class CosX2SeriesFLong(SeriesBaseFLong):
     def __init__(self) -> None:
         ...
 class CoshSeriesArb(SeriesBaseArb):
@@ -685,7 +685,7 @@ class CoshSeriesCF32(SeriesBaseCF32):
 class CoshSeriesCF64(SeriesBaseCF64):
     def __init__(self) -> None:
         ...
-class CoshSeriesCFL(SeriesBaseCFL):
+class CoshSeriesCFLong(SeriesBaseCFLong):
     def __init__(self) -> None:
         ...
 class CoshSeriesF32(SeriesBaseF32):
@@ -694,7 +694,7 @@ class CoshSeriesF32(SeriesBaseF32):
 class CoshSeriesF64(SeriesBaseF64):
     def __init__(self) -> None:
         ...
-class CoshSeriesFL(SeriesBaseFL):
+class CoshSeriesFLong(SeriesBaseFLong):
     def __init__(self) -> None:
         ...
 class DrummondDAlgorithmArb(SeriesAccelerationArb):
@@ -709,7 +709,7 @@ class DrummondDAlgorithmCF32(SeriesAccelerationCF32):
 class DrummondDAlgorithmCF64(SeriesAccelerationCF64):
     def __init__(self, remainder: RemainderType = ..., useRecurrentFormula: bool = False) -> None:
         ...
-class DrummondDAlgorithmCFL(SeriesAccelerationCFL):
+class DrummondDAlgorithmCFLong(SeriesAccelerationCFLong):
     def __init__(self, remainder: RemainderType = ..., useRecurrentFormula: bool = False) -> None:
         ...
 class DrummondDAlgorithmF32(SeriesAccelerationF32):
@@ -718,7 +718,7 @@ class DrummondDAlgorithmF32(SeriesAccelerationF32):
 class DrummondDAlgorithmF64(SeriesAccelerationF64):
     def __init__(self, remainder: RemainderType = ..., useRecurrentFormula: bool = False) -> None:
         ...
-class DrummondDAlgorithmFL(SeriesAccelerationFL):
+class DrummondDAlgorithmFLong(SeriesAccelerationFLong):
     def __init__(self, remainder: RemainderType = ..., useRecurrentFormula: bool = False) -> None:
         ...
 class EXSeriesArb(SeriesBaseArb):
@@ -733,7 +733,7 @@ class EXSeriesCF32(SeriesBaseCF32):
 class EXSeriesCF64(SeriesBaseCF64):
     def __init__(self) -> None:
         ...
-class EXSeriesCFL(SeriesBaseCFL):
+class EXSeriesCFLong(SeriesBaseCFLong):
     def __init__(self) -> None:
         ...
 class EXSeriesF32(SeriesBaseF32):
@@ -742,7 +742,7 @@ class EXSeriesF32(SeriesBaseF32):
 class EXSeriesF64(SeriesBaseF64):
     def __init__(self) -> None:
         ...
-class EXSeriesFL(SeriesBaseFL):
+class EXSeriesFLong(SeriesBaseFLong):
     def __init__(self) -> None:
         ...
 class EighthPiMOneThirdSeriesArb(SeriesBaseArb):
@@ -757,7 +757,7 @@ class EighthPiMOneThirdSeriesCF32(SeriesBaseCF32):
 class EighthPiMOneThirdSeriesCF64(SeriesBaseCF64):
     def __init__(self) -> None:
         ...
-class EighthPiMOneThirdSeriesCFL(SeriesBaseCFL):
+class EighthPiMOneThirdSeriesCFLong(SeriesBaseCFLong):
     def __init__(self) -> None:
         ...
 class EighthPiMOneThirdSeriesF32(SeriesBaseF32):
@@ -766,7 +766,7 @@ class EighthPiMOneThirdSeriesF32(SeriesBaseF32):
 class EighthPiMOneThirdSeriesF64(SeriesBaseF64):
     def __init__(self) -> None:
         ...
-class EighthPiMOneThirdSeriesFL(SeriesBaseFL):
+class EighthPiMOneThirdSeriesFLong(SeriesBaseFLong):
     def __init__(self) -> None:
         ...
 class ErfSeriesArb(SeriesBaseArb):
@@ -781,7 +781,7 @@ class ErfSeriesCF32(SeriesBaseCF32):
 class ErfSeriesCF64(SeriesBaseCF64):
     def __init__(self) -> None:
         ...
-class ErfSeriesCFL(SeriesBaseCFL):
+class ErfSeriesCFLong(SeriesBaseCFLong):
     def __init__(self) -> None:
         ...
 class ErfSeriesF32(SeriesBaseF32):
@@ -790,7 +790,7 @@ class ErfSeriesF32(SeriesBaseF32):
 class ErfSeriesF64(SeriesBaseF64):
     def __init__(self) -> None:
         ...
-class ErfSeriesFL(SeriesBaseFL):
+class ErfSeriesFLong(SeriesBaseFLong):
     def __init__(self) -> None:
         ...
 class ExpMCosXSinsinXSeriesArb(SeriesBaseArb):
@@ -805,7 +805,7 @@ class ExpMCosXSinsinXSeriesCF32(SeriesBaseCF32):
 class ExpMCosXSinsinXSeriesCF64(SeriesBaseCF64):
     def __init__(self) -> None:
         ...
-class ExpMCosXSinsinXSeriesCFL(SeriesBaseCFL):
+class ExpMCosXSinsinXSeriesCFLong(SeriesBaseCFLong):
     def __init__(self) -> None:
         ...
 class ExpMCosXSinsinXSeriesF32(SeriesBaseF32):
@@ -814,7 +814,7 @@ class ExpMCosXSinsinXSeriesF32(SeriesBaseF32):
 class ExpMCosXSinsinXSeriesF64(SeriesBaseF64):
     def __init__(self) -> None:
         ...
-class ExpMCosXSinsinXSeriesFL(SeriesBaseFL):
+class ExpMCosXSinsinXSeriesFLong(SeriesBaseFLong):
     def __init__(self) -> None:
         ...
 class ExpSeriesArb(SeriesBaseArb):
@@ -829,7 +829,7 @@ class ExpSeriesCF32(SeriesBaseCF32):
 class ExpSeriesCF64(SeriesBaseCF64):
     def __init__(self) -> None:
         ...
-class ExpSeriesCFL(SeriesBaseCFL):
+class ExpSeriesCFLong(SeriesBaseCFLong):
     def __init__(self) -> None:
         ...
 class ExpSeriesF32(SeriesBaseF32):
@@ -838,7 +838,7 @@ class ExpSeriesF32(SeriesBaseF32):
 class ExpSeriesF64(SeriesBaseF64):
     def __init__(self) -> None:
         ...
-class ExpSeriesFL(SeriesBaseFL):
+class ExpSeriesFLong(SeriesBaseFLong):
     def __init__(self) -> None:
         ...
 class ExpSquaredErfSeriesArb(SeriesBaseArb):
@@ -853,7 +853,7 @@ class ExpSquaredErfSeriesCF32(SeriesBaseCF32):
 class ExpSquaredErfSeriesCF64(SeriesBaseCF64):
     def __init__(self) -> None:
         ...
-class ExpSquaredErfSeriesCFL(SeriesBaseCFL):
+class ExpSquaredErfSeriesCFLong(SeriesBaseCFLong):
     def __init__(self) -> None:
         ...
 class ExpSquaredErfSeriesF32(SeriesBaseF32):
@@ -862,7 +862,7 @@ class ExpSquaredErfSeriesF32(SeriesBaseF32):
 class ExpSquaredErfSeriesF64(SeriesBaseF64):
     def __init__(self) -> None:
         ...
-class ExpSquaredErfSeriesFL(SeriesBaseFL):
+class ExpSquaredErfSeriesFLong(SeriesBaseFLong):
     def __init__(self) -> None:
         ...
 class FivePiTwelveSeriesArb(SeriesBaseArb):
@@ -877,7 +877,7 @@ class FivePiTwelveSeriesCF32(SeriesBaseCF32):
 class FivePiTwelveSeriesCF64(SeriesBaseCF64):
     def __init__(self) -> None:
         ...
-class FivePiTwelveSeriesCFL(SeriesBaseCFL):
+class FivePiTwelveSeriesCFLong(SeriesBaseCFLong):
     def __init__(self) -> None:
         ...
 class FivePiTwelveSeriesF32(SeriesBaseF32):
@@ -886,7 +886,7 @@ class FivePiTwelveSeriesF32(SeriesBaseF32):
 class FivePiTwelveSeriesF64(SeriesBaseF64):
     def __init__(self) -> None:
         ...
-class FivePiTwelveSeriesFL(SeriesBaseFL):
+class FivePiTwelveSeriesFLong(SeriesBaseFLong):
     def __init__(self) -> None:
         ...
 class FordSidi2AlgorithmArb(SeriesAccelerationArb):
@@ -901,7 +901,7 @@ class FordSidi2AlgorithmCF32(SeriesAccelerationCF32):
 class FordSidi2AlgorithmCF64(SeriesAccelerationCF64):
     def __init__(self) -> None:
         ...
-class FordSidi2AlgorithmCFL(SeriesAccelerationCFL):
+class FordSidi2AlgorithmCFLong(SeriesAccelerationCFLong):
     def __init__(self) -> None:
         ...
 class FordSidi2AlgorithmF32(SeriesAccelerationF32):
@@ -910,7 +910,7 @@ class FordSidi2AlgorithmF32(SeriesAccelerationF32):
 class FordSidi2AlgorithmF64(SeriesAccelerationF64):
     def __init__(self) -> None:
         ...
-class FordSidi2AlgorithmFL(SeriesAccelerationFL):
+class FordSidi2AlgorithmFLong(SeriesAccelerationFLong):
     def __init__(self) -> None:
         ...
 class FordSidi3AlgorithmArb(SeriesAccelerationArb):
@@ -925,7 +925,7 @@ class FordSidi3AlgorithmCF32(SeriesAccelerationCF32):
 class FordSidi3AlgorithmCF64(SeriesAccelerationCF64):
     def __init__(self) -> None:
         ...
-class FordSidi3AlgorithmCFL(SeriesAccelerationCFL):
+class FordSidi3AlgorithmCFLong(SeriesAccelerationCFLong):
     def __init__(self) -> None:
         ...
 class FordSidi3AlgorithmF32(SeriesAccelerationF32):
@@ -934,7 +934,7 @@ class FordSidi3AlgorithmF32(SeriesAccelerationF32):
 class FordSidi3AlgorithmF64(SeriesAccelerationF64):
     def __init__(self) -> None:
         ...
-class FordSidi3AlgorithmFL(SeriesAccelerationFL):
+class FordSidi3AlgorithmFLong(SeriesAccelerationFLong):
     def __init__(self) -> None:
         ...
 class FourArctanSeriesArb(SeriesBaseArb):
@@ -949,7 +949,7 @@ class FourArctanSeriesCF32(SeriesBaseCF32):
 class FourArctanSeriesCF64(SeriesBaseCF64):
     def __init__(self) -> None:
         ...
-class FourArctanSeriesCFL(SeriesBaseCFL):
+class FourArctanSeriesCFLong(SeriesBaseCFLong):
     def __init__(self) -> None:
         ...
 class FourArctanSeriesF32(SeriesBaseF32):
@@ -958,7 +958,7 @@ class FourArctanSeriesF32(SeriesBaseF32):
 class FourArctanSeriesF64(SeriesBaseF64):
     def __init__(self) -> None:
         ...
-class FourArctanSeriesFL(SeriesBaseFL):
+class FourArctanSeriesFLong(SeriesBaseFLong):
     def __init__(self) -> None:
         ...
 class FourLn2M3SeriesArb(SeriesBaseArb):
@@ -973,7 +973,7 @@ class FourLn2M3SeriesCF32(SeriesBaseCF32):
 class FourLn2M3SeriesCF64(SeriesBaseCF64):
     def __init__(self) -> None:
         ...
-class FourLn2M3SeriesCFL(SeriesBaseCFL):
+class FourLn2M3SeriesCFLong(SeriesBaseCFLong):
     def __init__(self) -> None:
         ...
 class FourLn2M3SeriesF32(SeriesBaseF32):
@@ -982,7 +982,7 @@ class FourLn2M3SeriesF32(SeriesBaseF32):
 class FourLn2M3SeriesF64(SeriesBaseF64):
     def __init__(self) -> None:
         ...
-class FourLn2M3SeriesFL(SeriesBaseFL):
+class FourLn2M3SeriesFLong(SeriesBaseFLong):
     def __init__(self) -> None:
         ...
 class HalfAsinTwoXSeriesArb(SeriesBaseArb):
@@ -997,7 +997,7 @@ class HalfAsinTwoXSeriesCF32(SeriesBaseCF32):
 class HalfAsinTwoXSeriesCF64(SeriesBaseCF64):
     def __init__(self) -> None:
         ...
-class HalfAsinTwoXSeriesCFL(SeriesBaseCFL):
+class HalfAsinTwoXSeriesCFLong(SeriesBaseCFLong):
     def __init__(self) -> None:
         ...
 class HalfAsinTwoXSeriesF32(SeriesBaseF32):
@@ -1006,7 +1006,7 @@ class HalfAsinTwoXSeriesF32(SeriesBaseF32):
 class HalfAsinTwoXSeriesF64(SeriesBaseF64):
     def __init__(self) -> None:
         ...
-class HalfAsinTwoXSeriesFL(SeriesBaseFL):
+class HalfAsinTwoXSeriesFLong(SeriesBaseFLong):
     def __init__(self) -> None:
         ...
 class HalfMinusSinxMultiPi4SeriesArb(SeriesBaseArb):
@@ -1021,7 +1021,7 @@ class HalfMinusSinxMultiPi4SeriesCF32(SeriesBaseCF32):
 class HalfMinusSinxMultiPi4SeriesCF64(SeriesBaseCF64):
     def __init__(self) -> None:
         ...
-class HalfMinusSinxMultiPi4SeriesCFL(SeriesBaseCFL):
+class HalfMinusSinxMultiPi4SeriesCFLong(SeriesBaseCFLong):
     def __init__(self) -> None:
         ...
 class HalfMinusSinxMultiPi4SeriesF32(SeriesBaseF32):
@@ -1030,7 +1030,7 @@ class HalfMinusSinxMultiPi4SeriesF32(SeriesBaseF32):
 class HalfMinusSinxMultiPi4SeriesF64(SeriesBaseF64):
     def __init__(self) -> None:
         ...
-class HalfMinusSinxMultiPi4SeriesFL(SeriesBaseFL):
+class HalfMinusSinxMultiPi4SeriesFLong(SeriesBaseFLong):
     def __init__(self) -> None:
         ...
 class HalfMultiLn1Div2Multi1MinusCosxSeriesArb(SeriesBaseArb):
@@ -1045,7 +1045,7 @@ class HalfMultiLn1Div2Multi1MinusCosxSeriesCF32(SeriesBaseCF32):
 class HalfMultiLn1Div2Multi1MinusCosxSeriesCF64(SeriesBaseCF64):
     def __init__(self) -> None:
         ...
-class HalfMultiLn1Div2Multi1MinusCosxSeriesCFL(SeriesBaseCFL):
+class HalfMultiLn1Div2Multi1MinusCosxSeriesCFLong(SeriesBaseCFLong):
     def __init__(self) -> None:
         ...
 class HalfMultiLn1Div2Multi1MinusCosxSeriesF32(SeriesBaseF32):
@@ -1054,7 +1054,7 @@ class HalfMultiLn1Div2Multi1MinusCosxSeriesF32(SeriesBaseF32):
 class HalfMultiLn1Div2Multi1MinusCosxSeriesF64(SeriesBaseF64):
     def __init__(self) -> None:
         ...
-class HalfMultiLn1Div2Multi1MinusCosxSeriesFL(SeriesBaseFL):
+class HalfMultiLn1Div2Multi1MinusCosxSeriesFLong(SeriesBaseFLong):
     def __init__(self) -> None:
         ...
 class IncompleteGammaFuncSeriesArb(SeriesBaseArb):
@@ -1069,7 +1069,7 @@ class IncompleteGammaFuncSeriesCF32(SeriesBaseCF32):
 class IncompleteGammaFuncSeriesCF64(SeriesBaseCF64):
     def __init__(self) -> None:
         ...
-class IncompleteGammaFuncSeriesCFL(SeriesBaseCFL):
+class IncompleteGammaFuncSeriesCFLong(SeriesBaseCFLong):
     def __init__(self) -> None:
         ...
 class IncompleteGammaFuncSeriesF32(SeriesBaseF32):
@@ -1078,7 +1078,7 @@ class IncompleteGammaFuncSeriesF32(SeriesBaseF32):
 class IncompleteGammaFuncSeriesF64(SeriesBaseF64):
     def __init__(self) -> None:
         ...
-class IncompleteGammaFuncSeriesFL(SeriesBaseFL):
+class IncompleteGammaFuncSeriesFLong(SeriesBaseFLong):
     def __init__(self) -> None:
         ...
 class InvSqrt1m4xSeriesArb(SeriesBaseArb):
@@ -1093,7 +1093,7 @@ class InvSqrt1m4xSeriesCF32(SeriesBaseCF32):
 class InvSqrt1m4xSeriesCF64(SeriesBaseCF64):
     def __init__(self) -> None:
         ...
-class InvSqrt1m4xSeriesCFL(SeriesBaseCFL):
+class InvSqrt1m4xSeriesCFLong(SeriesBaseCFLong):
     def __init__(self) -> None:
         ...
 class InvSqrt1m4xSeriesF32(SeriesBaseF32):
@@ -1102,7 +1102,7 @@ class InvSqrt1m4xSeriesF32(SeriesBaseF32):
 class InvSqrt1m4xSeriesF64(SeriesBaseF64):
     def __init__(self) -> None:
         ...
-class InvSqrt1m4xSeriesFL(SeriesBaseFL):
+class InvSqrt1m4xSeriesFLong(SeriesBaseFLong):
     def __init__(self) -> None:
         ...
 class Inverse1mxSeriesArb(SeriesBaseArb):
@@ -1117,7 +1117,7 @@ class Inverse1mxSeriesCF32(SeriesBaseCF32):
 class Inverse1mxSeriesCF64(SeriesBaseCF64):
     def __init__(self) -> None:
         ...
-class Inverse1mxSeriesCFL(SeriesBaseCFL):
+class Inverse1mxSeriesCFLong(SeriesBaseCFLong):
     def __init__(self) -> None:
         ...
 class Inverse1mxSeriesF32(SeriesBaseF32):
@@ -1126,7 +1126,7 @@ class Inverse1mxSeriesF32(SeriesBaseF32):
 class Inverse1mxSeriesF64(SeriesBaseF64):
     def __init__(self) -> None:
         ...
-class Inverse1mxSeriesFL(SeriesBaseFL):
+class Inverse1mxSeriesFLong(SeriesBaseFLong):
     def __init__(self) -> None:
         ...
 class KXSeriesArb(SeriesBaseArb):
@@ -1141,7 +1141,7 @@ class KXSeriesCF32(SeriesBaseCF32):
 class KXSeriesCF64(SeriesBaseCF64):
     def __init__(self) -> None:
         ...
-class KXSeriesCFL(SeriesBaseCFL):
+class KXSeriesCFLong(SeriesBaseCFLong):
     def __init__(self) -> None:
         ...
 class KXSeriesF32(SeriesBaseF32):
@@ -1150,7 +1150,7 @@ class KXSeriesF32(SeriesBaseF32):
 class KXSeriesF64(SeriesBaseF64):
     def __init__(self) -> None:
         ...
-class KXSeriesFL(SeriesBaseFL):
+class KXSeriesFLong(SeriesBaseFLong):
     def __init__(self) -> None:
         ...
 class LambertWFuncSeriesArb(SeriesBaseArb):
@@ -1165,7 +1165,7 @@ class LambertWFuncSeriesCF32(SeriesBaseCF32):
 class LambertWFuncSeriesCF64(SeriesBaseCF64):
     def __init__(self) -> None:
         ...
-class LambertWFuncSeriesCFL(SeriesBaseCFL):
+class LambertWFuncSeriesCFLong(SeriesBaseCFLong):
     def __init__(self) -> None:
         ...
 class LambertWFuncSeriesF32(SeriesBaseF32):
@@ -1174,7 +1174,7 @@ class LambertWFuncSeriesF32(SeriesBaseF32):
 class LambertWFuncSeriesF64(SeriesBaseF64):
     def __init__(self) -> None:
         ...
-class LambertWFuncSeriesFL(SeriesBaseFL):
+class LambertWFuncSeriesFLong(SeriesBaseFLong):
     def __init__(self) -> None:
         ...
 class LevinAlgorithmArb(SeriesAccelerationArb):
@@ -1189,7 +1189,7 @@ class LevinAlgorithmCF32(SeriesAccelerationCF32):
 class LevinAlgorithmCF64(SeriesAccelerationCF64):
     def __init__(self, remainder: RemainderType = ..., useRecurrentFormula: bool = False, beta: float = 1.0) -> None:
         ...
-class LevinAlgorithmCFL(SeriesAccelerationCFL):
+class LevinAlgorithmCFLong(SeriesAccelerationCFLong):
     def __init__(self, remainder: RemainderType = ..., useRecurrentFormula: bool = False, beta: float = 1.0) -> None:
         ...
 class LevinAlgorithmF32(SeriesAccelerationF32):
@@ -1198,7 +1198,7 @@ class LevinAlgorithmF32(SeriesAccelerationF32):
 class LevinAlgorithmF64(SeriesAccelerationF64):
     def __init__(self, remainder: RemainderType = ..., useRecurrentFormula: bool = False, beta: float = 1.0) -> None:
         ...
-class LevinAlgorithmFL(SeriesAccelerationFL):
+class LevinAlgorithmFLong(SeriesAccelerationFLong):
     def __init__(self, remainder: RemainderType = ..., useRecurrentFormula: bool = False, beta: float = 1.0) -> None:
         ...
 class LevinSidiMAlgorithmArb(SeriesAccelerationArb):
@@ -1213,7 +1213,7 @@ class LevinSidiMAlgorithmCF32(SeriesAccelerationCF32):
 class LevinSidiMAlgorithmCF64(SeriesAccelerationCF64):
     def __init__(self, remainder: RemainderType = ..., gamma: float = 10.0) -> None:
         ...
-class LevinSidiMAlgorithmCFL(SeriesAccelerationCFL):
+class LevinSidiMAlgorithmCFLong(SeriesAccelerationCFLong):
     def __init__(self, remainder: RemainderType = ..., gamma: float = 10.0) -> None:
         ...
 class LevinSidiMAlgorithmF32(SeriesAccelerationF32):
@@ -1222,7 +1222,7 @@ class LevinSidiMAlgorithmF32(SeriesAccelerationF32):
 class LevinSidiMAlgorithmF64(SeriesAccelerationF64):
     def __init__(self, remainder: RemainderType = ..., gamma: float = 10.0) -> None:
         ...
-class LevinSidiMAlgorithmFL(SeriesAccelerationFL):
+class LevinSidiMAlgorithmFLong(SeriesAccelerationFLong):
     def __init__(self, remainder: RemainderType = ..., gamma: float = 10.0) -> None:
         ...
 class LevinSidiSAlgorithmArb(SeriesAccelerationArb):
@@ -1237,7 +1237,7 @@ class LevinSidiSAlgorithmCF32(SeriesAccelerationCF32):
 class LevinSidiSAlgorithmCF64(SeriesAccelerationCF64):
     def __init__(self, remainder: RemainderType = ..., useRecurrentFormula: bool = False, beta: float = 1.0) -> None:
         ...
-class LevinSidiSAlgorithmCFL(SeriesAccelerationCFL):
+class LevinSidiSAlgorithmCFLong(SeriesAccelerationCFLong):
     def __init__(self, remainder: RemainderType = ..., useRecurrentFormula: bool = False, beta: float = 1.0) -> None:
         ...
 class LevinSidiSAlgorithmF32(SeriesAccelerationF32):
@@ -1246,7 +1246,7 @@ class LevinSidiSAlgorithmF32(SeriesAccelerationF32):
 class LevinSidiSAlgorithmF64(SeriesAccelerationF64):
     def __init__(self, remainder: RemainderType = ..., useRecurrentFormula: bool = False, beta: float = 1.0) -> None:
         ...
-class LevinSidiSAlgorithmFL(SeriesAccelerationFL):
+class LevinSidiSAlgorithmFLong(SeriesAccelerationFLong):
     def __init__(self, remainder: RemainderType = ..., useRecurrentFormula: bool = False, beta: float = 1.0) -> None:
         ...
 class Ln13MinusLn7Div7SeriesArb(SeriesBaseArb):
@@ -1261,7 +1261,7 @@ class Ln13MinusLn7Div7SeriesCF32(SeriesBaseCF32):
 class Ln13MinusLn7Div7SeriesCF64(SeriesBaseCF64):
     def __init__(self) -> None:
         ...
-class Ln13MinusLn7Div7SeriesCFL(SeriesBaseCFL):
+class Ln13MinusLn7Div7SeriesCFLong(SeriesBaseCFLong):
     def __init__(self) -> None:
         ...
 class Ln13MinusLn7Div7SeriesF32(SeriesBaseF32):
@@ -1270,7 +1270,7 @@ class Ln13MinusLn7Div7SeriesF32(SeriesBaseF32):
 class Ln13MinusLn7Div7SeriesF64(SeriesBaseF64):
     def __init__(self) -> None:
         ...
-class Ln13MinusLn7Div7SeriesFL(SeriesBaseFL):
+class Ln13MinusLn7Div7SeriesFLong(SeriesBaseFLong):
     def __init__(self) -> None:
         ...
 class Ln1MinusX2SeriesArb(SeriesBaseArb):
@@ -1285,7 +1285,7 @@ class Ln1MinusX2SeriesCF32(SeriesBaseCF32):
 class Ln1MinusX2SeriesCF64(SeriesBaseCF64):
     def __init__(self) -> None:
         ...
-class Ln1MinusX2SeriesCFL(SeriesBaseCFL):
+class Ln1MinusX2SeriesCFLong(SeriesBaseCFLong):
     def __init__(self) -> None:
         ...
 class Ln1MinusX2SeriesF32(SeriesBaseF32):
@@ -1294,7 +1294,7 @@ class Ln1MinusX2SeriesF32(SeriesBaseF32):
 class Ln1MinusX2SeriesF64(SeriesBaseF64):
     def __init__(self) -> None:
         ...
-class Ln1MinusX2SeriesFL(SeriesBaseFL):
+class Ln1MinusX2SeriesFLong(SeriesBaseFLong):
     def __init__(self) -> None:
         ...
 class Ln1PlusSqrt1PlusXsquareMinusLn2SeriesArb(SeriesBaseArb):
@@ -1309,7 +1309,7 @@ class Ln1PlusSqrt1PlusXsquareMinusLn2SeriesCF32(SeriesBaseCF32):
 class Ln1PlusSqrt1PlusXsquareMinusLn2SeriesCF64(SeriesBaseCF64):
     def __init__(self) -> None:
         ...
-class Ln1PlusSqrt1PlusXsquareMinusLn2SeriesCFL(SeriesBaseCFL):
+class Ln1PlusSqrt1PlusXsquareMinusLn2SeriesCFLong(SeriesBaseCFLong):
     def __init__(self) -> None:
         ...
 class Ln1PlusSqrt1PlusXsquareMinusLn2SeriesF32(SeriesBaseF32):
@@ -1318,7 +1318,7 @@ class Ln1PlusSqrt1PlusXsquareMinusLn2SeriesF32(SeriesBaseF32):
 class Ln1PlusSqrt1PlusXsquareMinusLn2SeriesF64(SeriesBaseF64):
     def __init__(self) -> None:
         ...
-class Ln1PlusSqrt1PlusXsquareMinusLn2SeriesFL(SeriesBaseFL):
+class Ln1PlusSqrt1PlusXsquareMinusLn2SeriesFLong(SeriesBaseFLong):
     def __init__(self) -> None:
         ...
 class Ln1PlusX3SeriesArb(SeriesBaseArb):
@@ -1333,7 +1333,7 @@ class Ln1PlusX3SeriesCF32(SeriesBaseCF32):
 class Ln1PlusX3SeriesCF64(SeriesBaseCF64):
     def __init__(self) -> None:
         ...
-class Ln1PlusX3SeriesCFL(SeriesBaseCFL):
+class Ln1PlusX3SeriesCFLong(SeriesBaseCFLong):
     def __init__(self) -> None:
         ...
 class Ln1PlusX3SeriesF32(SeriesBaseF32):
@@ -1342,7 +1342,7 @@ class Ln1PlusX3SeriesF32(SeriesBaseF32):
 class Ln1PlusX3SeriesF64(SeriesBaseF64):
     def __init__(self) -> None:
         ...
-class Ln1PlusX3SeriesFL(SeriesBaseFL):
+class Ln1PlusX3SeriesFLong(SeriesBaseFLong):
     def __init__(self) -> None:
         ...
 class Ln1mxSeriesArb(SeriesBaseArb):
@@ -1357,7 +1357,7 @@ class Ln1mxSeriesCF32(SeriesBaseCF32):
 class Ln1mxSeriesCF64(SeriesBaseCF64):
     def __init__(self) -> None:
         ...
-class Ln1mxSeriesCFL(SeriesBaseCFL):
+class Ln1mxSeriesCFLong(SeriesBaseCFLong):
     def __init__(self) -> None:
         ...
 class Ln1mxSeriesF32(SeriesBaseF32):
@@ -1366,7 +1366,7 @@ class Ln1mxSeriesF32(SeriesBaseF32):
 class Ln1mxSeriesF64(SeriesBaseF64):
     def __init__(self) -> None:
         ...
-class Ln1mxSeriesFL(SeriesBaseFL):
+class Ln1mxSeriesFLong(SeriesBaseFLong):
     def __init__(self) -> None:
         ...
 class Ln1plusXDiv1plusX2SeriesArb(SeriesBaseArb):
@@ -1381,7 +1381,7 @@ class Ln1plusXDiv1plusX2SeriesCF32(SeriesBaseCF32):
 class Ln1plusXDiv1plusX2SeriesCF64(SeriesBaseCF64):
     def __init__(self) -> None:
         ...
-class Ln1plusXDiv1plusX2SeriesCFL(SeriesBaseCFL):
+class Ln1plusXDiv1plusX2SeriesCFLong(SeriesBaseCFLong):
     def __init__(self) -> None:
         ...
 class Ln1plusXDiv1plusX2SeriesF32(SeriesBaseF32):
@@ -1390,7 +1390,7 @@ class Ln1plusXDiv1plusX2SeriesF32(SeriesBaseF32):
 class Ln1plusXDiv1plusX2SeriesF64(SeriesBaseF64):
     def __init__(self) -> None:
         ...
-class Ln1plusXDiv1plusX2SeriesFL(SeriesBaseFL):
+class Ln1plusXDiv1plusX2SeriesFLong(SeriesBaseFLong):
     def __init__(self) -> None:
         ...
 class Ln1px4SeriesArb(SeriesBaseArb):
@@ -1405,7 +1405,7 @@ class Ln1px4SeriesCF32(SeriesBaseCF32):
 class Ln1px4SeriesCF64(SeriesBaseCF64):
     def __init__(self) -> None:
         ...
-class Ln1px4SeriesCFL(SeriesBaseCFL):
+class Ln1px4SeriesCFLong(SeriesBaseCFLong):
     def __init__(self) -> None:
         ...
 class Ln1px4SeriesF32(SeriesBaseF32):
@@ -1414,7 +1414,7 @@ class Ln1px4SeriesF32(SeriesBaseF32):
 class Ln1px4SeriesF64(SeriesBaseF64):
     def __init__(self) -> None:
         ...
-class Ln1px4SeriesFL(SeriesBaseFL):
+class Ln1px4SeriesFLong(SeriesBaseFLong):
     def __init__(self) -> None:
         ...
 class Ln2SeriesArb(SeriesBaseArb):
@@ -1429,7 +1429,7 @@ class Ln2SeriesCF32(SeriesBaseCF32):
 class Ln2SeriesCF64(SeriesBaseCF64):
     def __init__(self) -> None:
         ...
-class Ln2SeriesCFL(SeriesBaseCFL):
+class Ln2SeriesCFLong(SeriesBaseCFLong):
     def __init__(self) -> None:
         ...
 class Ln2SeriesF32(SeriesBaseF32):
@@ -1438,7 +1438,7 @@ class Ln2SeriesF32(SeriesBaseF32):
 class Ln2SeriesF64(SeriesBaseF64):
     def __init__(self) -> None:
         ...
-class Ln2SeriesFL(SeriesBaseFL):
+class Ln2SeriesFLong(SeriesBaseFLong):
     def __init__(self) -> None:
         ...
 class LnCosxSeriesArb(SeriesBaseArb):
@@ -1453,7 +1453,7 @@ class LnCosxSeriesCF32(SeriesBaseCF32):
 class LnCosxSeriesCF64(SeriesBaseCF64):
     def __init__(self) -> None:
         ...
-class LnCosxSeriesCFL(SeriesBaseCFL):
+class LnCosxSeriesCFLong(SeriesBaseCFLong):
     def __init__(self) -> None:
         ...
 class LnCosxSeriesF32(SeriesBaseF32):
@@ -1462,7 +1462,7 @@ class LnCosxSeriesF32(SeriesBaseF32):
 class LnCosxSeriesF64(SeriesBaseF64):
     def __init__(self) -> None:
         ...
-class LnCosxSeriesFL(SeriesBaseFL):
+class LnCosxSeriesFLong(SeriesBaseFLong):
     def __init__(self) -> None:
         ...
 class LnSinxMinusLnXSeriesArb(SeriesBaseArb):
@@ -1477,7 +1477,7 @@ class LnSinxMinusLnXSeriesCF32(SeriesBaseCF32):
 class LnSinxMinusLnXSeriesCF64(SeriesBaseCF64):
     def __init__(self) -> None:
         ...
-class LnSinxMinusLnXSeriesCFL(SeriesBaseCFL):
+class LnSinxMinusLnXSeriesCFLong(SeriesBaseCFLong):
     def __init__(self) -> None:
         ...
 class LnSinxMinusLnXSeriesF32(SeriesBaseF32):
@@ -1486,7 +1486,7 @@ class LnSinxMinusLnXSeriesF32(SeriesBaseF32):
 class LnSinxMinusLnXSeriesF64(SeriesBaseF64):
     def __init__(self) -> None:
         ...
-class LnSinxMinusLnXSeriesFL(SeriesBaseFL):
+class LnSinxMinusLnXSeriesFLong(SeriesBaseFLong):
     def __init__(self) -> None:
         ...
 class LnXPlusOneXMinusOneHalfedSeriesArb(SeriesBaseArb):
@@ -1501,7 +1501,7 @@ class LnXPlusOneXMinusOneHalfedSeriesCF32(SeriesBaseCF32):
 class LnXPlusOneXMinusOneHalfedSeriesCF64(SeriesBaseCF64):
     def __init__(self) -> None:
         ...
-class LnXPlusOneXMinusOneHalfedSeriesCFL(SeriesBaseCFL):
+class LnXPlusOneXMinusOneHalfedSeriesCFLong(SeriesBaseCFLong):
     def __init__(self) -> None:
         ...
 class LnXPlusOneXMinusOneHalfedSeriesF32(SeriesBaseF32):
@@ -1510,7 +1510,7 @@ class LnXPlusOneXMinusOneHalfedSeriesF32(SeriesBaseF32):
 class LnXPlusOneXMinusOneHalfedSeriesF64(SeriesBaseF64):
     def __init__(self) -> None:
         ...
-class LnXPlusOneXMinusOneHalfedSeriesFL(SeriesBaseFL):
+class LnXPlusOneXMinusOneHalfedSeriesFLong(SeriesBaseFLong):
     def __init__(self) -> None:
         ...
 class LubkinWAlgorithmArb(SeriesAccelerationArb):
@@ -1525,7 +1525,7 @@ class LubkinWAlgorithmCF32(SeriesAccelerationCF32):
 class LubkinWAlgorithmCF64(SeriesAccelerationCF64):
     def __init__(self) -> None:
         ...
-class LubkinWAlgorithmCFL(SeriesAccelerationCFL):
+class LubkinWAlgorithmCFLong(SeriesAccelerationCFLong):
     def __init__(self) -> None:
         ...
 class LubkinWAlgorithmF32(SeriesAccelerationF32):
@@ -1534,7 +1534,7 @@ class LubkinWAlgorithmF32(SeriesAccelerationF32):
 class LubkinWAlgorithmF64(SeriesAccelerationF64):
     def __init__(self) -> None:
         ...
-class LubkinWAlgorithmFL(SeriesAccelerationFL):
+class LubkinWAlgorithmFLong(SeriesAccelerationFLong):
     def __init__(self) -> None:
         ...
 class MFact1mxMp1InverseSeriesArb(SeriesBaseArb):
@@ -1549,7 +1549,7 @@ class MFact1mxMp1InverseSeriesCF32(SeriesBaseCF32):
 class MFact1mxMp1InverseSeriesCF64(SeriesBaseCF64):
     def __init__(self) -> None:
         ...
-class MFact1mxMp1InverseSeriesCFL(SeriesBaseCFL):
+class MFact1mxMp1InverseSeriesCFLong(SeriesBaseCFLong):
     def __init__(self) -> None:
         ...
 class MFact1mxMp1InverseSeriesF32(SeriesBaseF32):
@@ -1558,7 +1558,7 @@ class MFact1mxMp1InverseSeriesF32(SeriesBaseF32):
 class MFact1mxMp1InverseSeriesF64(SeriesBaseF64):
     def __init__(self) -> None:
         ...
-class MFact1mxMp1InverseSeriesFL(SeriesBaseFL):
+class MFact1mxMp1InverseSeriesFLong(SeriesBaseFLong):
     def __init__(self) -> None:
         ...
 class MeanSinhSinSeriesArb(SeriesBaseArb):
@@ -1573,7 +1573,7 @@ class MeanSinhSinSeriesCF32(SeriesBaseCF32):
 class MeanSinhSinSeriesCF64(SeriesBaseCF64):
     def __init__(self) -> None:
         ...
-class MeanSinhSinSeriesCFL(SeriesBaseCFL):
+class MeanSinhSinSeriesCFLong(SeriesBaseCFLong):
     def __init__(self) -> None:
         ...
 class MeanSinhSinSeriesF32(SeriesBaseF32):
@@ -1582,7 +1582,7 @@ class MeanSinhSinSeriesF32(SeriesBaseF32):
 class MeanSinhSinSeriesF64(SeriesBaseF64):
     def __init__(self) -> None:
         ...
-class MeanSinhSinSeriesFL(SeriesBaseFL):
+class MeanSinhSinSeriesFLong(SeriesBaseFLong):
     def __init__(self) -> None:
         ...
 class Minus3Div4OrXMinus3Div4SeriesArb(SeriesBaseArb):
@@ -1597,7 +1597,7 @@ class Minus3Div4OrXMinus3Div4SeriesCF32(SeriesBaseCF32):
 class Minus3Div4OrXMinus3Div4SeriesCF64(SeriesBaseCF64):
     def __init__(self) -> None:
         ...
-class Minus3Div4OrXMinus3Div4SeriesCFL(SeriesBaseCFL):
+class Minus3Div4OrXMinus3Div4SeriesCFLong(SeriesBaseCFLong):
     def __init__(self) -> None:
         ...
 class Minus3Div4OrXMinus3Div4SeriesF32(SeriesBaseF32):
@@ -1606,7 +1606,7 @@ class Minus3Div4OrXMinus3Div4SeriesF32(SeriesBaseF32):
 class Minus3Div4OrXMinus3Div4SeriesF64(SeriesBaseF64):
     def __init__(self) -> None:
         ...
-class Minus3Div4OrXMinus3Div4SeriesFL(SeriesBaseFL):
+class Minus3Div4OrXMinus3Div4SeriesFLong(SeriesBaseFLong):
     def __init__(self) -> None:
         ...
 class MinusOneNFactNInNSeriesArb(SeriesBaseArb):
@@ -1621,7 +1621,7 @@ class MinusOneNFactNInNSeriesCF32(SeriesBaseCF32):
 class MinusOneNFactNInNSeriesCF64(SeriesBaseCF64):
     def __init__(self) -> None:
         ...
-class MinusOneNFactNInNSeriesCFL(SeriesBaseCFL):
+class MinusOneNFactNInNSeriesCFLong(SeriesBaseCFLong):
     def __init__(self) -> None:
         ...
 class MinusOneNFactNInNSeriesF32(SeriesBaseF32):
@@ -1630,7 +1630,7 @@ class MinusOneNFactNInNSeriesF32(SeriesBaseF32):
 class MinusOneNFactNInNSeriesF64(SeriesBaseF64):
     def __init__(self) -> None:
         ...
-class MinusOneNFactNInNSeriesFL(SeriesBaseFL):
+class MinusOneNFactNInNSeriesFLong(SeriesBaseFLong):
     def __init__(self) -> None:
         ...
 class MinusOneNedInNSeriesArb(SeriesBaseArb):
@@ -1645,7 +1645,7 @@ class MinusOneNedInNSeriesCF32(SeriesBaseCF32):
 class MinusOneNedInNSeriesCF64(SeriesBaseCF64):
     def __init__(self) -> None:
         ...
-class MinusOneNedInNSeriesCFL(SeriesBaseCFL):
+class MinusOneNedInNSeriesCFLong(SeriesBaseCFLong):
     def __init__(self) -> None:
         ...
 class MinusOneNedInNSeriesF32(SeriesBaseF32):
@@ -1654,7 +1654,7 @@ class MinusOneNedInNSeriesF32(SeriesBaseF32):
 class MinusOneNedInNSeriesF64(SeriesBaseF64):
     def __init__(self) -> None:
         ...
-class MinusOneNedInNSeriesFL(SeriesBaseFL):
+class MinusOneNedInNSeriesFLong(SeriesBaseFLong):
     def __init__(self) -> None:
         ...
 class MinusOneQuarterSeriesArb(SeriesBaseArb):
@@ -1669,7 +1669,7 @@ class MinusOneQuarterSeriesCF32(SeriesBaseCF32):
 class MinusOneQuarterSeriesCF64(SeriesBaseCF64):
     def __init__(self) -> None:
         ...
-class MinusOneQuarterSeriesCFL(SeriesBaseCFL):
+class MinusOneQuarterSeriesCFLong(SeriesBaseCFLong):
     def __init__(self) -> None:
         ...
 class MinusOneQuarterSeriesF32(SeriesBaseF32):
@@ -1678,7 +1678,7 @@ class MinusOneQuarterSeriesF32(SeriesBaseF32):
 class MinusOneQuarterSeriesF64(SeriesBaseF64):
     def __init__(self) -> None:
         ...
-class MinusOneQuarterSeriesFL(SeriesBaseFL):
+class MinusOneQuarterSeriesFLong(SeriesBaseFLong):
     def __init__(self) -> None:
         ...
 class MinusThreePlusLn3ThreeDividedTwoPlusTwoLn2SeriesArb(SeriesBaseArb):
@@ -1693,7 +1693,7 @@ class MinusThreePlusLn3ThreeDividedTwoPlusTwoLn2SeriesCF32(SeriesBaseCF32):
 class MinusThreePlusLn3ThreeDividedTwoPlusTwoLn2SeriesCF64(SeriesBaseCF64):
     def __init__(self) -> None:
         ...
-class MinusThreePlusLn3ThreeDividedTwoPlusTwoLn2SeriesCFL(SeriesBaseCFL):
+class MinusThreePlusLn3ThreeDividedTwoPlusTwoLn2SeriesCFLong(SeriesBaseCFLong):
     def __init__(self) -> None:
         ...
 class MinusThreePlusLn3ThreeDividedTwoPlusTwoLn2SeriesF32(SeriesBaseF32):
@@ -1702,7 +1702,7 @@ class MinusThreePlusLn3ThreeDividedTwoPlusTwoLn2SeriesF32(SeriesBaseF32):
 class MinusThreePlusLn3ThreeDividedTwoPlusTwoLn2SeriesF64(SeriesBaseF64):
     def __init__(self) -> None:
         ...
-class MinusThreePlusLn3ThreeDividedTwoPlusTwoLn2SeriesFL(SeriesBaseFL):
+class MinusThreePlusLn3ThreeDividedTwoPlusTwoLn2SeriesFLong(SeriesBaseFLong):
     def __init__(self) -> None:
         ...
 class MinusXMinusPi4OrMinusPi4SeriesArb(SeriesBaseArb):
@@ -1717,7 +1717,7 @@ class MinusXMinusPi4OrMinusPi4SeriesCF32(SeriesBaseCF32):
 class MinusXMinusPi4OrMinusPi4SeriesCF64(SeriesBaseCF64):
     def __init__(self) -> None:
         ...
-class MinusXMinusPi4OrMinusPi4SeriesCFL(SeriesBaseCFL):
+class MinusXMinusPi4OrMinusPi4SeriesCFLong(SeriesBaseCFLong):
     def __init__(self) -> None:
         ...
 class MinusXMinusPi4OrMinusPi4SeriesF32(SeriesBaseF32):
@@ -1726,7 +1726,7 @@ class MinusXMinusPi4OrMinusPi4SeriesF32(SeriesBaseF32):
 class MinusXMinusPi4OrMinusPi4SeriesF64(SeriesBaseF64):
     def __init__(self) -> None:
         ...
-class MinusXMinusPi4OrMinusPi4SeriesFL(SeriesBaseFL):
+class MinusXMinusPi4OrMinusPi4SeriesFLong(SeriesBaseFLong):
     def __init__(self) -> None:
         ...
 class NumeratorType:
@@ -1781,7 +1781,7 @@ class OneDivSqrt2SinXDivSqrt2SeriesCF32(SeriesBaseCF32):
 class OneDivSqrt2SinXDivSqrt2SeriesCF64(SeriesBaseCF64):
     def __init__(self) -> None:
         ...
-class OneDivSqrt2SinXDivSqrt2SeriesCFL(SeriesBaseCFL):
+class OneDivSqrt2SinXDivSqrt2SeriesCFLong(SeriesBaseCFLong):
     def __init__(self) -> None:
         ...
 class OneDivSqrt2SinXDivSqrt2SeriesF32(SeriesBaseF32):
@@ -1790,7 +1790,7 @@ class OneDivSqrt2SinXDivSqrt2SeriesF32(SeriesBaseF32):
 class OneDivSqrt2SinXDivSqrt2SeriesF64(SeriesBaseF64):
     def __init__(self) -> None:
         ...
-class OneDivSqrt2SinXDivSqrt2SeriesFL(SeriesBaseFL):
+class OneDivSqrt2SinXDivSqrt2SeriesFLong(SeriesBaseFLong):
     def __init__(self) -> None:
         ...
 class OneDivTwoMinusXMultiThreePlusXSeriesArb(SeriesBaseArb):
@@ -1805,7 +1805,7 @@ class OneDivTwoMinusXMultiThreePlusXSeriesCF32(SeriesBaseCF32):
 class OneDivTwoMinusXMultiThreePlusXSeriesCF64(SeriesBaseCF64):
     def __init__(self) -> None:
         ...
-class OneDivTwoMinusXMultiThreePlusXSeriesCFL(SeriesBaseCFL):
+class OneDivTwoMinusXMultiThreePlusXSeriesCFLong(SeriesBaseCFLong):
     def __init__(self) -> None:
         ...
 class OneDivTwoMinusXMultiThreePlusXSeriesF32(SeriesBaseF32):
@@ -1814,7 +1814,7 @@ class OneDivTwoMinusXMultiThreePlusXSeriesF32(SeriesBaseF32):
 class OneDivTwoMinusXMultiThreePlusXSeriesF64(SeriesBaseF64):
     def __init__(self) -> None:
         ...
-class OneDivTwoMinusXMultiThreePlusXSeriesFL(SeriesBaseFL):
+class OneDivTwoMinusXMultiThreePlusXSeriesFLong(SeriesBaseFLong):
     def __init__(self) -> None:
         ...
 class OneMinusSqrt1minus4xDiv2xSeriesArb(SeriesBaseArb):
@@ -1829,7 +1829,7 @@ class OneMinusSqrt1minus4xDiv2xSeriesCF32(SeriesBaseCF32):
 class OneMinusSqrt1minus4xDiv2xSeriesCF64(SeriesBaseCF64):
     def __init__(self) -> None:
         ...
-class OneMinusSqrt1minus4xDiv2xSeriesCFL(SeriesBaseCFL):
+class OneMinusSqrt1minus4xDiv2xSeriesCFLong(SeriesBaseCFLong):
     def __init__(self) -> None:
         ...
 class OneMinusSqrt1minus4xDiv2xSeriesF32(SeriesBaseF32):
@@ -1838,7 +1838,7 @@ class OneMinusSqrt1minus4xDiv2xSeriesF32(SeriesBaseF32):
 class OneMinusSqrt1minus4xDiv2xSeriesF64(SeriesBaseF64):
     def __init__(self) -> None:
         ...
-class OneMinusSqrt1minus4xDiv2xSeriesFL(SeriesBaseFL):
+class OneMinusSqrt1minus4xDiv2xSeriesFLong(SeriesBaseFLong):
     def __init__(self) -> None:
         ...
 class OneSeriesArb(SeriesBaseArb):
@@ -1853,7 +1853,7 @@ class OneSeriesCF32(SeriesBaseCF32):
 class OneSeriesCF64(SeriesBaseCF64):
     def __init__(self) -> None:
         ...
-class OneSeriesCFL(SeriesBaseCFL):
+class OneSeriesCFLong(SeriesBaseCFLong):
     def __init__(self) -> None:
         ...
 class OneSeriesF32(SeriesBaseF32):
@@ -1862,7 +1862,7 @@ class OneSeriesF32(SeriesBaseF32):
 class OneSeriesF64(SeriesBaseF64):
     def __init__(self) -> None:
         ...
-class OneSeriesFL(SeriesBaseFL):
+class OneSeriesFLong(SeriesBaseFLong):
     def __init__(self) -> None:
         ...
 class OneThirdPiSquaredMNineSeriesArb(SeriesBaseArb):
@@ -1877,7 +1877,7 @@ class OneThirdPiSquaredMNineSeriesCF32(SeriesBaseCF32):
 class OneThirdPiSquaredMNineSeriesCF64(SeriesBaseCF64):
     def __init__(self) -> None:
         ...
-class OneThirdPiSquaredMNineSeriesCFL(SeriesBaseCFL):
+class OneThirdPiSquaredMNineSeriesCFLong(SeriesBaseCFLong):
     def __init__(self) -> None:
         ...
 class OneThirdPiSquaredMNineSeriesF32(SeriesBaseF32):
@@ -1886,7 +1886,7 @@ class OneThirdPiSquaredMNineSeriesF32(SeriesBaseF32):
 class OneThirdPiSquaredMNineSeriesF64(SeriesBaseF64):
     def __init__(self) -> None:
         ...
-class OneThirdPiSquaredMNineSeriesFL(SeriesBaseFL):
+class OneThirdPiSquaredMNineSeriesFLong(SeriesBaseFLong):
     def __init__(self) -> None:
         ...
 class OneTwelfth3x2Pi2SeriesArb(SeriesBaseArb):
@@ -1901,7 +1901,7 @@ class OneTwelfth3x2Pi2SeriesCF32(SeriesBaseCF32):
 class OneTwelfth3x2Pi2SeriesCF64(SeriesBaseCF64):
     def __init__(self) -> None:
         ...
-class OneTwelfth3x2Pi2SeriesCFL(SeriesBaseCFL):
+class OneTwelfth3x2Pi2SeriesCFLong(SeriesBaseCFLong):
     def __init__(self) -> None:
         ...
 class OneTwelfth3x2Pi2SeriesF32(SeriesBaseF32):
@@ -1910,7 +1910,7 @@ class OneTwelfth3x2Pi2SeriesF32(SeriesBaseF32):
 class OneTwelfth3x2Pi2SeriesF64(SeriesBaseF64):
     def __init__(self) -> None:
         ...
-class OneTwelfth3x2Pi2SeriesFL(SeriesBaseFL):
+class OneTwelfth3x2Pi2SeriesFLong(SeriesBaseFLong):
     def __init__(self) -> None:
         ...
 class OneTwelfthSeriesArb(SeriesBaseArb):
@@ -1925,7 +1925,7 @@ class OneTwelfthSeriesCF32(SeriesBaseCF32):
 class OneTwelfthSeriesCF64(SeriesBaseCF64):
     def __init__(self) -> None:
         ...
-class OneTwelfthSeriesCFL(SeriesBaseCFL):
+class OneTwelfthSeriesCFLong(SeriesBaseCFLong):
     def __init__(self) -> None:
         ...
 class OneTwelfthSeriesF32(SeriesBaseF32):
@@ -1934,7 +1934,7 @@ class OneTwelfthSeriesF32(SeriesBaseF32):
 class OneTwelfthSeriesF64(SeriesBaseF64):
     def __init__(self) -> None:
         ...
-class OneTwelfthSeriesFL(SeriesBaseFL):
+class OneTwelfthSeriesFLong(SeriesBaseFLong):
     def __init__(self) -> None:
         ...
 class OneTwelfthX2Pi2SeriesArb(SeriesBaseArb):
@@ -1949,7 +1949,7 @@ class OneTwelfthX2Pi2SeriesCF32(SeriesBaseCF32):
 class OneTwelfthX2Pi2SeriesCF64(SeriesBaseCF64):
     def __init__(self) -> None:
         ...
-class OneTwelfthX2Pi2SeriesCFL(SeriesBaseCFL):
+class OneTwelfthX2Pi2SeriesCFLong(SeriesBaseCFLong):
     def __init__(self) -> None:
         ...
 class OneTwelfthX2Pi2SeriesF32(SeriesBaseF32):
@@ -1958,7 +1958,7 @@ class OneTwelfthX2Pi2SeriesF32(SeriesBaseF32):
 class OneTwelfthX2Pi2SeriesF64(SeriesBaseF64):
     def __init__(self) -> None:
         ...
-class OneTwelfthX2Pi2SeriesFL(SeriesBaseFL):
+class OneTwelfthX2Pi2SeriesFLong(SeriesBaseFLong):
     def __init__(self) -> None:
         ...
 class Pi3SeriesArb(SeriesBaseArb):
@@ -1973,7 +1973,7 @@ class Pi3SeriesCF32(SeriesBaseCF32):
 class Pi3SeriesCF64(SeriesBaseCF64):
     def __init__(self) -> None:
         ...
-class Pi3SeriesCFL(SeriesBaseCFL):
+class Pi3SeriesCFLong(SeriesBaseCFLong):
     def __init__(self) -> None:
         ...
 class Pi3SeriesF32(SeriesBaseF32):
@@ -1982,7 +1982,7 @@ class Pi3SeriesF32(SeriesBaseF32):
 class Pi3SeriesF64(SeriesBaseF64):
     def __init__(self) -> None:
         ...
-class Pi3SeriesFL(SeriesBaseFL):
+class Pi3SeriesFLong(SeriesBaseFLong):
     def __init__(self) -> None:
         ...
 class Pi4SeriesArb(SeriesBaseArb):
@@ -1997,7 +1997,7 @@ class Pi4SeriesCF32(SeriesBaseCF32):
 class Pi4SeriesCF64(SeriesBaseCF64):
     def __init__(self) -> None:
         ...
-class Pi4SeriesCFL(SeriesBaseCFL):
+class Pi4SeriesCFLong(SeriesBaseCFLong):
     def __init__(self) -> None:
         ...
 class Pi4SeriesF32(SeriesBaseF32):
@@ -2006,7 +2006,7 @@ class Pi4SeriesF32(SeriesBaseF32):
 class Pi4SeriesF64(SeriesBaseF64):
     def __init__(self) -> None:
         ...
-class Pi4SeriesFL(SeriesBaseFL):
+class Pi4SeriesFLong(SeriesBaseFLong):
     def __init__(self) -> None:
         ...
 class Pi8CosxSquareMinus1Div3CosxSeriesArb(SeriesBaseArb):
@@ -2021,7 +2021,7 @@ class Pi8CosxSquareMinus1Div3CosxSeriesCF32(SeriesBaseCF32):
 class Pi8CosxSquareMinus1Div3CosxSeriesCF64(SeriesBaseCF64):
     def __init__(self) -> None:
         ...
-class Pi8CosxSquareMinus1Div3CosxSeriesCFL(SeriesBaseCFL):
+class Pi8CosxSquareMinus1Div3CosxSeriesCFLong(SeriesBaseCFLong):
     def __init__(self) -> None:
         ...
 class Pi8CosxSquareMinus1Div3CosxSeriesF32(SeriesBaseF32):
@@ -2030,7 +2030,7 @@ class Pi8CosxSquareMinus1Div3CosxSeriesF32(SeriesBaseF32):
 class Pi8CosxSquareMinus1Div3CosxSeriesF64(SeriesBaseF64):
     def __init__(self) -> None:
         ...
-class Pi8CosxSquareMinus1Div3CosxSeriesFL(SeriesBaseFL):
+class Pi8CosxSquareMinus1Div3CosxSeriesFLong(SeriesBaseFLong):
     def __init__(self) -> None:
         ...
 class PiCubed32SeriesArb(SeriesBaseArb):
@@ -2045,7 +2045,7 @@ class PiCubed32SeriesCF32(SeriesBaseCF32):
 class PiCubed32SeriesCF64(SeriesBaseCF64):
     def __init__(self) -> None:
         ...
-class PiCubed32SeriesCFL(SeriesBaseCFL):
+class PiCubed32SeriesCFLong(SeriesBaseCFLong):
     def __init__(self) -> None:
         ...
 class PiCubed32SeriesF32(SeriesBaseF32):
@@ -2054,7 +2054,7 @@ class PiCubed32SeriesF32(SeriesBaseF32):
 class PiCubed32SeriesF64(SeriesBaseF64):
     def __init__(self) -> None:
         ...
-class PiCubed32SeriesFL(SeriesBaseFL):
+class PiCubed32SeriesFLong(SeriesBaseFLong):
     def __init__(self) -> None:
         ...
 class PiFourMinusLn2HalfedSeriesArb(SeriesBaseArb):
@@ -2069,7 +2069,7 @@ class PiFourMinusLn2HalfedSeriesCF32(SeriesBaseCF32):
 class PiFourMinusLn2HalfedSeriesCF64(SeriesBaseCF64):
     def __init__(self) -> None:
         ...
-class PiFourMinusLn2HalfedSeriesCFL(SeriesBaseCFL):
+class PiFourMinusLn2HalfedSeriesCFLong(SeriesBaseCFLong):
     def __init__(self) -> None:
         ...
 class PiFourMinusLn2HalfedSeriesF32(SeriesBaseF32):
@@ -2078,7 +2078,7 @@ class PiFourMinusLn2HalfedSeriesF32(SeriesBaseF32):
 class PiFourMinusLn2HalfedSeriesF64(SeriesBaseF64):
     def __init__(self) -> None:
         ...
-class PiFourMinusLn2HalfedSeriesFL(SeriesBaseFL):
+class PiFourMinusLn2HalfedSeriesFLong(SeriesBaseFLong):
     def __init__(self) -> None:
         ...
 class PiMinus3pi4AndPiMinusXMinus3pi4SeriesArb(SeriesBaseArb):
@@ -2093,7 +2093,7 @@ class PiMinus3pi4AndPiMinusXMinus3pi4SeriesCF32(SeriesBaseCF32):
 class PiMinus3pi4AndPiMinusXMinus3pi4SeriesCF64(SeriesBaseCF64):
     def __init__(self) -> None:
         ...
-class PiMinus3pi4AndPiMinusXMinus3pi4SeriesCFL(SeriesBaseCFL):
+class PiMinus3pi4AndPiMinusXMinus3pi4SeriesCFLong(SeriesBaseCFLong):
     def __init__(self) -> None:
         ...
 class PiMinus3pi4AndPiMinusXMinus3pi4SeriesF32(SeriesBaseF32):
@@ -2102,7 +2102,7 @@ class PiMinus3pi4AndPiMinusXMinus3pi4SeriesF32(SeriesBaseF32):
 class PiMinus3pi4AndPiMinusXMinus3pi4SeriesF64(SeriesBaseF64):
     def __init__(self) -> None:
         ...
-class PiMinus3pi4AndPiMinusXMinus3pi4SeriesFL(SeriesBaseFL):
+class PiMinus3pi4AndPiMinusXMinus3pi4SeriesFLong(SeriesBaseFLong):
     def __init__(self) -> None:
         ...
 class PiMinusX2SeriesArb(SeriesBaseArb):
@@ -2117,7 +2117,7 @@ class PiMinusX2SeriesCF32(SeriesBaseCF32):
 class PiMinusX2SeriesCF64(SeriesBaseCF64):
     def __init__(self) -> None:
         ...
-class PiMinusX2SeriesCFL(SeriesBaseCFL):
+class PiMinusX2SeriesCFLong(SeriesBaseCFLong):
     def __init__(self) -> None:
         ...
 class PiMinusX2SeriesF32(SeriesBaseF32):
@@ -2126,7 +2126,7 @@ class PiMinusX2SeriesF32(SeriesBaseF32):
 class PiMinusX2SeriesF64(SeriesBaseF64):
     def __init__(self) -> None:
         ...
-class PiMinusX2SeriesFL(SeriesBaseFL):
+class PiMinusX2SeriesFLong(SeriesBaseFLong):
     def __init__(self) -> None:
         ...
 class PiSeriesArb(SeriesBaseArb):
@@ -2141,7 +2141,7 @@ class PiSeriesCF32(SeriesBaseCF32):
 class PiSeriesCF64(SeriesBaseCF64):
     def __init__(self) -> None:
         ...
-class PiSeriesCFL(SeriesBaseCFL):
+class PiSeriesCFLong(SeriesBaseCFLong):
     def __init__(self) -> None:
         ...
 class PiSeriesF32(SeriesBaseF32):
@@ -2150,7 +2150,7 @@ class PiSeriesF32(SeriesBaseF32):
 class PiSeriesF64(SeriesBaseF64):
     def __init__(self) -> None:
         ...
-class PiSeriesFL(SeriesBaseFL):
+class PiSeriesFLong(SeriesBaseFLong):
     def __init__(self) -> None:
         ...
 class PiSixMinHalfSeriesArb(SeriesBaseArb):
@@ -2165,7 +2165,7 @@ class PiSixMinHalfSeriesCF32(SeriesBaseCF32):
 class PiSixMinHalfSeriesCF64(SeriesBaseCF64):
     def __init__(self) -> None:
         ...
-class PiSixMinHalfSeriesCFL(SeriesBaseCFL):
+class PiSixMinHalfSeriesCFLong(SeriesBaseCFLong):
     def __init__(self) -> None:
         ...
 class PiSixMinHalfSeriesF32(SeriesBaseF32):
@@ -2174,7 +2174,7 @@ class PiSixMinHalfSeriesF32(SeriesBaseF32):
 class PiSixMinHalfSeriesF64(SeriesBaseF64):
     def __init__(self) -> None:
         ...
-class PiSixMinHalfSeriesFL(SeriesBaseFL):
+class PiSixMinHalfSeriesFLong(SeriesBaseFLong):
     def __init__(self) -> None:
         ...
 class PiSquared6MinusOneSeriesArb(SeriesBaseArb):
@@ -2189,7 +2189,7 @@ class PiSquared6MinusOneSeriesCF32(SeriesBaseCF32):
 class PiSquared6MinusOneSeriesCF64(SeriesBaseCF64):
     def __init__(self) -> None:
         ...
-class PiSquared6MinusOneSeriesCFL(SeriesBaseCFL):
+class PiSquared6MinusOneSeriesCFLong(SeriesBaseCFLong):
     def __init__(self) -> None:
         ...
 class PiSquared6MinusOneSeriesF32(SeriesBaseF32):
@@ -2198,7 +2198,7 @@ class PiSquared6MinusOneSeriesF32(SeriesBaseF32):
 class PiSquared6MinusOneSeriesF64(SeriesBaseF64):
     def __init__(self) -> None:
         ...
-class PiSquared6MinusOneSeriesFL(SeriesBaseFL):
+class PiSquared6MinusOneSeriesFLong(SeriesBaseFLong):
     def __init__(self) -> None:
         ...
 class PiSquaredTwelveSeriesArb(SeriesBaseArb):
@@ -2213,7 +2213,7 @@ class PiSquaredTwelveSeriesCF32(SeriesBaseCF32):
 class PiSquaredTwelveSeriesCF64(SeriesBaseCF64):
     def __init__(self) -> None:
         ...
-class PiSquaredTwelveSeriesCFL(SeriesBaseCFL):
+class PiSquaredTwelveSeriesCFLong(SeriesBaseCFLong):
     def __init__(self) -> None:
         ...
 class PiSquaredTwelveSeriesF32(SeriesBaseF32):
@@ -2222,7 +2222,7 @@ class PiSquaredTwelveSeriesF32(SeriesBaseF32):
 class PiSquaredTwelveSeriesF64(SeriesBaseF64):
     def __init__(self) -> None:
         ...
-class PiSquaredTwelveSeriesFL(SeriesBaseFL):
+class PiSquaredTwelveSeriesFLong(SeriesBaseFLong):
     def __init__(self) -> None:
         ...
 class PiXMinusXSquareSquareMinusThreePiXPlusTwoPiSquareSeriesArb(SeriesBaseArb):
@@ -2237,7 +2237,7 @@ class PiXMinusXSquareSquareMinusThreePiXPlusTwoPiSquareSeriesCF32(SeriesBaseCF32
 class PiXMinusXSquareSquareMinusThreePiXPlusTwoPiSquareSeriesCF64(SeriesBaseCF64):
     def __init__(self) -> None:
         ...
-class PiXMinusXSquareSquareMinusThreePiXPlusTwoPiSquareSeriesCFL(SeriesBaseCFL):
+class PiXMinusXSquareSquareMinusThreePiXPlusTwoPiSquareSeriesCFLong(SeriesBaseCFLong):
     def __init__(self) -> None:
         ...
 class PiXMinusXSquareSquareMinusThreePiXPlusTwoPiSquareSeriesF32(SeriesBaseF32):
@@ -2246,7 +2246,7 @@ class PiXMinusXSquareSquareMinusThreePiXPlusTwoPiSquareSeriesF32(SeriesBaseF32):
 class PiXMinusXSquareSquareMinusThreePiXPlusTwoPiSquareSeriesF64(SeriesBaseF64):
     def __init__(self) -> None:
         ...
-class PiXMinusXSquareSquareMinusThreePiXPlusTwoPiSquareSeriesFL(SeriesBaseFL):
+class PiXMinusXSquareSquareMinusThreePiXPlusTwoPiSquareSeriesFLong(SeriesBaseFLong):
     def __init__(self) -> None:
         ...
 class PiXMultiEXpiPlusEMinusXpiDividedEXpiMinusEMinusXpiSeriesArb(SeriesBaseArb):
@@ -2261,7 +2261,7 @@ class PiXMultiEXpiPlusEMinusXpiDividedEXpiMinusEMinusXpiSeriesCF32(SeriesBaseCF3
 class PiXMultiEXpiPlusEMinusXpiDividedEXpiMinusEMinusXpiSeriesCF64(SeriesBaseCF64):
     def __init__(self) -> None:
         ...
-class PiXMultiEXpiPlusEMinusXpiDividedEXpiMinusEMinusXpiSeriesCFL(SeriesBaseCFL):
+class PiXMultiEXpiPlusEMinusXpiDividedEXpiMinusEMinusXpiSeriesCFLong(SeriesBaseCFLong):
     def __init__(self) -> None:
         ...
 class PiXMultiEXpiPlusEMinusXpiDividedEXpiMinusEMinusXpiSeriesF32(SeriesBaseF32):
@@ -2270,7 +2270,7 @@ class PiXMultiEXpiPlusEMinusXpiDividedEXpiMinusEMinusXpiSeriesF32(SeriesBaseF32)
 class PiXMultiEXpiPlusEMinusXpiDividedEXpiMinusEMinusXpiSeriesF64(SeriesBaseF64):
     def __init__(self) -> None:
         ...
-class PiXMultiEXpiPlusEMinusXpiDividedEXpiMinusEMinusXpiSeriesFL(SeriesBaseFL):
+class PiXMultiEXpiPlusEMinusXpiDividedEXpiMinusEMinusXpiSeriesFLong(SeriesBaseFLong):
     def __init__(self) -> None:
         ...
 class RemainderType:
@@ -2331,7 +2331,7 @@ class RichardsonAlgorithmCF32(SeriesAccelerationCF32):
 class RichardsonAlgorithmCF64(SeriesAccelerationCF64):
     def __init__(self) -> None:
         ...
-class RichardsonAlgorithmCFL(SeriesAccelerationCFL):
+class RichardsonAlgorithmCFLong(SeriesAccelerationCFLong):
     def __init__(self) -> None:
         ...
 class RichardsonAlgorithmF32(SeriesAccelerationF32):
@@ -2340,7 +2340,7 @@ class RichardsonAlgorithmF32(SeriesAccelerationF32):
 class RichardsonAlgorithmF64(SeriesAccelerationF64):
     def __init__(self) -> None:
         ...
-class RichardsonAlgorithmFL(SeriesAccelerationFL):
+class RichardsonAlgorithmFLong(SeriesAccelerationFLong):
     def __init__(self) -> None:
         ...
 class RiemannZetaFuncSeriesArb(SeriesBaseArb):
@@ -2355,7 +2355,7 @@ class RiemannZetaFuncSeriesCF32(SeriesBaseCF32):
 class RiemannZetaFuncSeriesCF64(SeriesBaseCF64):
     def __init__(self) -> None:
         ...
-class RiemannZetaFuncSeriesCFL(SeriesBaseCFL):
+class RiemannZetaFuncSeriesCFLong(SeriesBaseCFLong):
     def __init__(self) -> None:
         ...
 class RiemannZetaFuncSeriesF32(SeriesBaseF32):
@@ -2364,7 +2364,7 @@ class RiemannZetaFuncSeriesF32(SeriesBaseF32):
 class RiemannZetaFuncSeriesF64(SeriesBaseF64):
     def __init__(self) -> None:
         ...
-class RiemannZetaFuncSeriesFL(SeriesBaseFL):
+class RiemannZetaFuncSeriesFLong(SeriesBaseFLong):
     def __init__(self) -> None:
         ...
 class RiemannZetaFuncXmin1DivRiemannZetaFuncXSeriesArb(SeriesBaseArb):
@@ -2379,7 +2379,7 @@ class RiemannZetaFuncXmin1DivRiemannZetaFuncXSeriesCF32(SeriesBaseCF32):
 class RiemannZetaFuncXmin1DivRiemannZetaFuncXSeriesCF64(SeriesBaseCF64):
     def __init__(self) -> None:
         ...
-class RiemannZetaFuncXmin1DivRiemannZetaFuncXSeriesCFL(SeriesBaseCFL):
+class RiemannZetaFuncXmin1DivRiemannZetaFuncXSeriesCFLong(SeriesBaseCFLong):
     def __init__(self) -> None:
         ...
 class RiemannZetaFuncXmin1DivRiemannZetaFuncXSeriesF32(SeriesBaseF32):
@@ -2388,7 +2388,7 @@ class RiemannZetaFuncXmin1DivRiemannZetaFuncXSeriesF32(SeriesBaseF32):
 class RiemannZetaFuncXmin1DivRiemannZetaFuncXSeriesF64(SeriesBaseF64):
     def __init__(self) -> None:
         ...
-class RiemannZetaFuncXmin1DivRiemannZetaFuncXSeriesFL(SeriesBaseFL):
+class RiemannZetaFuncXmin1DivRiemannZetaFuncXSeriesFLong(SeriesBaseFLong):
     def __init__(self) -> None:
         ...
 class SeriesAccelerationArb:
@@ -2411,8 +2411,8 @@ class SeriesAccelerationCF64:
         ...
     def printInfo(self) -> str:
         ...
-class SeriesAccelerationCFL:
-    def __call__(self, n: int, order: int, data: SeriesResultCFL) -> CFLong:
+class SeriesAccelerationCFLong:
+    def __call__(self, n: int, order: int, data: SeriesResultCFLong) -> CFLong:
         ...
     def printInfo(self) -> str:
         ...
@@ -2426,8 +2426,8 @@ class SeriesAccelerationF64:
         ...
     def printInfo(self) -> str:
         ...
-class SeriesAccelerationFL:
-    def __call__(self, n: int, order: int, data: SeriesResultFL) -> float:
+class SeriesAccelerationFLong:
+    def __call__(self, n: int, order: int, data: SeriesResultFLong) -> float:
         ...
     def printInfo(self) -> str:
         ...
@@ -2467,8 +2467,8 @@ class SeriesBaseCF64:
         ...
     def get_x(self) -> CF64:
         ...
-class SeriesBaseCFL:
-    def generateSeries(self, x: CFLong, vecSize: int, addTParameter: CFLong = ..., addKParameter: int = 1) -> SeriesResultCFL:
+class SeriesBaseCFLong:
+    def generateSeries(self, x: CFLong, vecSize: int, addTParameter: CFLong = ..., addKParameter: int = 1) -> SeriesResultCFLong:
         ...
     def get_name(self) -> str:
         ...
@@ -2494,8 +2494,8 @@ class SeriesBaseF64:
         ...
     def get_x(self) -> float:
         ...
-class SeriesBaseFL:
-    def generateSeries(self, x: float, vecSize: int, addTParameter: float = 1.0, addKParameter: int = 1) -> SeriesResultFL:
+class SeriesBaseFLong:
+    def generateSeries(self, x: float, vecSize: int, addTParameter: float = 1.0, addKParameter: int = 1) -> SeriesResultFLong:
         ...
     def get_name(self) -> str:
         ...
@@ -2539,7 +2539,7 @@ class SeriesResultCF64:
     @typing.overload
     def __init__(self, arg0: list[CF64], arg1: list[CF64]) -> None:
         ...
-class SeriesResultCFL:
+class SeriesResultCFLong:
     Sn: list[CFLong]
     an: list[CFLong]
     @typing.overload
@@ -2566,7 +2566,7 @@ class SeriesResultF64:
     @typing.overload
     def __init__(self, arg0: list[float], arg1: list[float]) -> None:
         ...
-class SeriesResultFL:
+class SeriesResultFLong:
     Sn: list[float]
     an: list[float]
     @typing.overload
@@ -2587,7 +2587,7 @@ class SeriesWithLnNumber1CF32(SeriesBaseCF32):
 class SeriesWithLnNumber1CF64(SeriesBaseCF64):
     def __init__(self) -> None:
         ...
-class SeriesWithLnNumber1CFL(SeriesBaseCFL):
+class SeriesWithLnNumber1CFLong(SeriesBaseCFLong):
     def __init__(self) -> None:
         ...
 class SeriesWithLnNumber1F32(SeriesBaseF32):
@@ -2596,7 +2596,7 @@ class SeriesWithLnNumber1F32(SeriesBaseF32):
 class SeriesWithLnNumber1F64(SeriesBaseF64):
     def __init__(self) -> None:
         ...
-class SeriesWithLnNumber1FL(SeriesBaseFL):
+class SeriesWithLnNumber1FLong(SeriesBaseFLong):
     def __init__(self) -> None:
         ...
 class SeriesWithLnNumber2Arb(SeriesBaseArb):
@@ -2611,7 +2611,7 @@ class SeriesWithLnNumber2CF32(SeriesBaseCF32):
 class SeriesWithLnNumber2CF64(SeriesBaseCF64):
     def __init__(self) -> None:
         ...
-class SeriesWithLnNumber2CFL(SeriesBaseCFL):
+class SeriesWithLnNumber2CFLong(SeriesBaseCFLong):
     def __init__(self) -> None:
         ...
 class SeriesWithLnNumber2F32(SeriesBaseF32):
@@ -2620,7 +2620,7 @@ class SeriesWithLnNumber2F32(SeriesBaseF32):
 class SeriesWithLnNumber2F64(SeriesBaseF64):
     def __init__(self) -> None:
         ...
-class SeriesWithLnNumber2FL(SeriesBaseFL):
+class SeriesWithLnNumber2FLong(SeriesBaseFLong):
     def __init__(self) -> None:
         ...
 class ShanksAlgorithmArb(SeriesAccelerationArb):
@@ -2635,7 +2635,7 @@ class ShanksAlgorithmCF32(SeriesAccelerationCF32):
 class ShanksAlgorithmCF64(SeriesAccelerationCF64):
     def __init__(self) -> None:
         ...
-class ShanksAlgorithmCFL(SeriesAccelerationCFL):
+class ShanksAlgorithmCFLong(SeriesAccelerationCFLong):
     def __init__(self) -> None:
         ...
 class ShanksAlgorithmF32(SeriesAccelerationF32):
@@ -2644,7 +2644,7 @@ class ShanksAlgorithmF32(SeriesAccelerationF32):
 class ShanksAlgorithmF64(SeriesAccelerationF64):
     def __init__(self) -> None:
         ...
-class ShanksAlgorithmFL(SeriesAccelerationFL):
+class ShanksAlgorithmFLong(SeriesAccelerationFLong):
     def __init__(self) -> None:
         ...
 class ShanksTransformAlternatingArb(SeriesAccelerationArb):
@@ -2659,7 +2659,7 @@ class ShanksTransformAlternatingCF32(SeriesAccelerationCF32):
 class ShanksTransformAlternatingCF64(SeriesAccelerationCF64):
     def __init__(self) -> None:
         ...
-class ShanksTransformAlternatingCFL(SeriesAccelerationCFL):
+class ShanksTransformAlternatingCFLong(SeriesAccelerationCFLong):
     def __init__(self) -> None:
         ...
 class ShanksTransformAlternatingF32(SeriesAccelerationF32):
@@ -2668,7 +2668,7 @@ class ShanksTransformAlternatingF32(SeriesAccelerationF32):
 class ShanksTransformAlternatingF64(SeriesAccelerationF64):
     def __init__(self) -> None:
         ...
-class ShanksTransformAlternatingFL(SeriesAccelerationFL):
+class ShanksTransformAlternatingFLong(SeriesAccelerationFLong):
     def __init__(self) -> None:
         ...
 class SiXSeriesArb(SeriesBaseArb):
@@ -2683,7 +2683,7 @@ class SiXSeriesCF32(SeriesBaseCF32):
 class SiXSeriesCF64(SeriesBaseCF64):
     def __init__(self) -> None:
         ...
-class SiXSeriesCFL(SeriesBaseCFL):
+class SiXSeriesCFLong(SeriesBaseCFLong):
     def __init__(self) -> None:
         ...
 class SiXSeriesF32(SeriesBaseF32):
@@ -2692,7 +2692,7 @@ class SiXSeriesF32(SeriesBaseF32):
 class SiXSeriesF64(SeriesBaseF64):
     def __init__(self) -> None:
         ...
-class SiXSeriesFL(SeriesBaseFL):
+class SiXSeriesFLong(SeriesBaseFLong):
     def __init__(self) -> None:
         ...
 class SinSeriesArb(SeriesBaseArb):
@@ -2707,7 +2707,7 @@ class SinSeriesCF32(SeriesBaseCF32):
 class SinSeriesCF64(SeriesBaseCF64):
     def __init__(self) -> None:
         ...
-class SinSeriesCFL(SeriesBaseCFL):
+class SinSeriesCFLong(SeriesBaseCFLong):
     def __init__(self) -> None:
         ...
 class SinSeriesF32(SeriesBaseF32):
@@ -2716,7 +2716,7 @@ class SinSeriesF32(SeriesBaseF32):
 class SinSeriesF64(SeriesBaseF64):
     def __init__(self) -> None:
         ...
-class SinSeriesFL(SeriesBaseFL):
+class SinSeriesFLong(SeriesBaseFLong):
     def __init__(self) -> None:
         ...
 class SinX2SeriesArb(SeriesBaseArb):
@@ -2731,7 +2731,7 @@ class SinX2SeriesCF32(SeriesBaseCF32):
 class SinX2SeriesCF64(SeriesBaseCF64):
     def __init__(self) -> None:
         ...
-class SinX2SeriesCFL(SeriesBaseCFL):
+class SinX2SeriesCFLong(SeriesBaseCFLong):
     def __init__(self) -> None:
         ...
 class SinX2SeriesF32(SeriesBaseF32):
@@ -2740,7 +2740,7 @@ class SinX2SeriesF32(SeriesBaseF32):
 class SinX2SeriesF64(SeriesBaseF64):
     def __init__(self) -> None:
         ...
-class SinX2SeriesFL(SeriesBaseFL):
+class SinX2SeriesFLong(SeriesBaseFLong):
     def __init__(self) -> None:
         ...
 class SinhSeriesArb(SeriesBaseArb):
@@ -2755,7 +2755,7 @@ class SinhSeriesCF32(SeriesBaseCF32):
 class SinhSeriesCF64(SeriesBaseCF64):
     def __init__(self) -> None:
         ...
-class SinhSeriesCFL(SeriesBaseCFL):
+class SinhSeriesCFLong(SeriesBaseCFLong):
     def __init__(self) -> None:
         ...
 class SinhSeriesF32(SeriesBaseF32):
@@ -2764,7 +2764,7 @@ class SinhSeriesF32(SeriesBaseF32):
 class SinhSeriesF64(SeriesBaseF64):
     def __init__(self) -> None:
         ...
-class SinhSeriesFL(SeriesBaseFL):
+class SinhSeriesFLong(SeriesBaseFLong):
     def __init__(self) -> None:
         ...
 class SinhX2SeriesArb(SeriesBaseArb):
@@ -2779,7 +2779,7 @@ class SinhX2SeriesCF32(SeriesBaseCF32):
 class SinhX2SeriesCF64(SeriesBaseCF64):
     def __init__(self) -> None:
         ...
-class SinhX2SeriesCFL(SeriesBaseCFL):
+class SinhX2SeriesCFLong(SeriesBaseCFLong):
     def __init__(self) -> None:
         ...
 class SinhX2SeriesF32(SeriesBaseF32):
@@ -2788,7 +2788,7 @@ class SinhX2SeriesF32(SeriesBaseF32):
 class SinhX2SeriesF64(SeriesBaseF64):
     def __init__(self) -> None:
         ...
-class SinhX2SeriesFL(SeriesBaseFL):
+class SinhX2SeriesFLong(SeriesBaseFLong):
     def __init__(self) -> None:
         ...
 class Sqrt1plusXMinus1MinusXDiv2SeriesArb(SeriesBaseArb):
@@ -2803,7 +2803,7 @@ class Sqrt1plusXMinus1MinusXDiv2SeriesCF32(SeriesBaseCF32):
 class Sqrt1plusXMinus1MinusXDiv2SeriesCF64(SeriesBaseCF64):
     def __init__(self) -> None:
         ...
-class Sqrt1plusXMinus1MinusXDiv2SeriesCFL(SeriesBaseCFL):
+class Sqrt1plusXMinus1MinusXDiv2SeriesCFLong(SeriesBaseCFLong):
     def __init__(self) -> None:
         ...
 class Sqrt1plusXMinus1MinusXDiv2SeriesF32(SeriesBaseF32):
@@ -2812,7 +2812,7 @@ class Sqrt1plusXMinus1MinusXDiv2SeriesF32(SeriesBaseF32):
 class Sqrt1plusXMinus1MinusXDiv2SeriesF64(SeriesBaseF64):
     def __init__(self) -> None:
         ...
-class Sqrt1plusXMinus1MinusXDiv2SeriesFL(SeriesBaseFL):
+class Sqrt1plusXMinus1MinusXDiv2SeriesFLong(SeriesBaseFLong):
     def __init__(self) -> None:
         ...
 class Sqrt1plusXSeriesArb(SeriesBaseArb):
@@ -2827,7 +2827,7 @@ class Sqrt1plusXSeriesCF32(SeriesBaseCF32):
 class Sqrt1plusXSeriesCF64(SeriesBaseCF64):
     def __init__(self) -> None:
         ...
-class Sqrt1plusXSeriesCFL(SeriesBaseCFL):
+class Sqrt1plusXSeriesCFLong(SeriesBaseCFLong):
     def __init__(self) -> None:
         ...
 class Sqrt1plusXSeriesF32(SeriesBaseF32):
@@ -2836,7 +2836,7 @@ class Sqrt1plusXSeriesF32(SeriesBaseF32):
 class Sqrt1plusXSeriesF64(SeriesBaseF64):
     def __init__(self) -> None:
         ...
-class Sqrt1plusXSeriesFL(SeriesBaseFL):
+class Sqrt1plusXSeriesFLong(SeriesBaseFLong):
     def __init__(self) -> None:
         ...
 class SqrtOneminusSqrtoneminusxDivXSeriesArb(SeriesBaseArb):
@@ -2851,7 +2851,7 @@ class SqrtOneminusSqrtoneminusxDivXSeriesCF32(SeriesBaseCF32):
 class SqrtOneminusSqrtoneminusxDivXSeriesCF64(SeriesBaseCF64):
     def __init__(self) -> None:
         ...
-class SqrtOneminusSqrtoneminusxDivXSeriesCFL(SeriesBaseCFL):
+class SqrtOneminusSqrtoneminusxDivXSeriesCFLong(SeriesBaseCFLong):
     def __init__(self) -> None:
         ...
 class SqrtOneminusSqrtoneminusxDivXSeriesF32(SeriesBaseF32):
@@ -2860,7 +2860,7 @@ class SqrtOneminusSqrtoneminusxDivXSeriesF32(SeriesBaseF32):
 class SqrtOneminusSqrtoneminusxDivXSeriesF64(SeriesBaseF64):
     def __init__(self) -> None:
         ...
-class SqrtOneminusSqrtoneminusxDivXSeriesFL(SeriesBaseFL):
+class SqrtOneminusSqrtoneminusxDivXSeriesFLong(SeriesBaseFLong):
     def __init__(self) -> None:
         ...
 class TenMinusXSeriesArb(SeriesBaseArb):
@@ -2875,7 +2875,7 @@ class TenMinusXSeriesCF32(SeriesBaseCF32):
 class TenMinusXSeriesCF64(SeriesBaseCF64):
     def __init__(self) -> None:
         ...
-class TenMinusXSeriesCFL(SeriesBaseCFL):
+class TenMinusXSeriesCFLong(SeriesBaseCFLong):
     def __init__(self) -> None:
         ...
 class TenMinusXSeriesF32(SeriesBaseF32):
@@ -2884,7 +2884,7 @@ class TenMinusXSeriesF32(SeriesBaseF32):
 class TenMinusXSeriesF64(SeriesBaseF64):
     def __init__(self) -> None:
         ...
-class TenMinusXSeriesFL(SeriesBaseFL):
+class TenMinusXSeriesFLong(SeriesBaseFLong):
     def __init__(self) -> None:
         ...
 class ThreeMinusPiSeriesArb(SeriesBaseArb):
@@ -2899,7 +2899,7 @@ class ThreeMinusPiSeriesCF32(SeriesBaseCF32):
 class ThreeMinusPiSeriesCF64(SeriesBaseCF64):
     def __init__(self) -> None:
         ...
-class ThreeMinusPiSeriesCFL(SeriesBaseCFL):
+class ThreeMinusPiSeriesCFLong(SeriesBaseCFLong):
     def __init__(self) -> None:
         ...
 class ThreeMinusPiSeriesF32(SeriesBaseF32):
@@ -2908,7 +2908,7 @@ class ThreeMinusPiSeriesF32(SeriesBaseF32):
 class ThreeMinusPiSeriesF64(SeriesBaseF64):
     def __init__(self) -> None:
         ...
-class ThreeMinusPiSeriesFL(SeriesBaseFL):
+class ThreeMinusPiSeriesFLong(SeriesBaseFLong):
     def __init__(self) -> None:
         ...
 class TwoArcsinSquareXHalfedSeriesArb(SeriesBaseArb):
@@ -2923,7 +2923,7 @@ class TwoArcsinSquareXHalfedSeriesCF32(SeriesBaseCF32):
 class TwoArcsinSquareXHalfedSeriesCF64(SeriesBaseCF64):
     def __init__(self) -> None:
         ...
-class TwoArcsinSquareXHalfedSeriesCFL(SeriesBaseCFL):
+class TwoArcsinSquareXHalfedSeriesCFLong(SeriesBaseCFLong):
     def __init__(self) -> None:
         ...
 class TwoArcsinSquareXHalfedSeriesF32(SeriesBaseF32):
@@ -2932,7 +2932,7 @@ class TwoArcsinSquareXHalfedSeriesF32(SeriesBaseF32):
 class TwoArcsinSquareXHalfedSeriesF64(SeriesBaseF64):
     def __init__(self) -> None:
         ...
-class TwoArcsinSquareXHalfedSeriesFL(SeriesBaseFL):
+class TwoArcsinSquareXHalfedSeriesFLong(SeriesBaseFLong):
     def __init__(self) -> None:
         ...
 class TwoDegreeXSeriesArb(SeriesBaseArb):
@@ -2947,7 +2947,7 @@ class TwoDegreeXSeriesCF32(SeriesBaseCF32):
 class TwoDegreeXSeriesCF64(SeriesBaseCF64):
     def __init__(self) -> None:
         ...
-class TwoDegreeXSeriesCFL(SeriesBaseCFL):
+class TwoDegreeXSeriesCFLong(SeriesBaseCFLong):
     def __init__(self) -> None:
         ...
 class TwoDegreeXSeriesF32(SeriesBaseF32):
@@ -2956,7 +2956,7 @@ class TwoDegreeXSeriesF32(SeriesBaseF32):
 class TwoDegreeXSeriesF64(SeriesBaseF64):
     def __init__(self) -> None:
         ...
-class TwoDegreeXSeriesFL(SeriesBaseFL):
+class TwoDegreeXSeriesFLong(SeriesBaseFLong):
     def __init__(self) -> None:
         ...
 class TwoLn2SeriesArb(SeriesBaseArb):
@@ -2971,7 +2971,7 @@ class TwoLn2SeriesCF32(SeriesBaseCF32):
 class TwoLn2SeriesCF64(SeriesBaseCF64):
     def __init__(self) -> None:
         ...
-class TwoLn2SeriesCFL(SeriesBaseCFL):
+class TwoLn2SeriesCFLong(SeriesBaseCFLong):
     def __init__(self) -> None:
         ...
 class TwoLn2SeriesF32(SeriesBaseF32):
@@ -2980,7 +2980,7 @@ class TwoLn2SeriesF32(SeriesBaseF32):
 class TwoLn2SeriesF64(SeriesBaseF64):
     def __init__(self) -> None:
         ...
-class TwoLn2SeriesFL(SeriesBaseFL):
+class TwoLn2SeriesFLong(SeriesBaseFLong):
     def __init__(self) -> None:
         ...
 class WenigerAlgorithmArb(SeriesAccelerationArb):
@@ -2995,7 +2995,7 @@ class WenigerAlgorithmCF32(SeriesAccelerationCF32):
 class WenigerAlgorithmCF64(SeriesAccelerationCF64):
     def __init__(self) -> None:
         ...
-class WenigerAlgorithmCFL(SeriesAccelerationCFL):
+class WenigerAlgorithmCFLong(SeriesAccelerationCFLong):
     def __init__(self) -> None:
         ...
 class WenigerAlgorithmF32(SeriesAccelerationF32):
@@ -3004,7 +3004,7 @@ class WenigerAlgorithmF32(SeriesAccelerationF32):
 class WenigerAlgorithmF64(SeriesAccelerationF64):
     def __init__(self) -> None:
         ...
-class WenigerAlgorithmFL(SeriesAccelerationFL):
+class WenigerAlgorithmFLong(SeriesAccelerationFLong):
     def __init__(self) -> None:
         ...
 class WynnEpsilon1AlgorithmArb(SeriesAccelerationArb):
@@ -3019,7 +3019,7 @@ class WynnEpsilon1AlgorithmCF32(SeriesAccelerationCF32):
 class WynnEpsilon1AlgorithmCF64(SeriesAccelerationCF64):
     def __init__(self) -> None:
         ...
-class WynnEpsilon1AlgorithmCFL(SeriesAccelerationCFL):
+class WynnEpsilon1AlgorithmCFLong(SeriesAccelerationCFLong):
     def __init__(self) -> None:
         ...
 class WynnEpsilon1AlgorithmF32(SeriesAccelerationF32):
@@ -3028,7 +3028,7 @@ class WynnEpsilon1AlgorithmF32(SeriesAccelerationF32):
 class WynnEpsilon1AlgorithmF64(SeriesAccelerationF64):
     def __init__(self) -> None:
         ...
-class WynnEpsilon1AlgorithmFL(SeriesAccelerationFL):
+class WynnEpsilon1AlgorithmFLong(SeriesAccelerationFLong):
     def __init__(self) -> None:
         ...
 class WynnEpsilon2AlgorithmArb(SeriesAccelerationArb):
@@ -3043,7 +3043,7 @@ class WynnEpsilon2AlgorithmCF32(SeriesAccelerationCF32):
 class WynnEpsilon2AlgorithmCF64(SeriesAccelerationCF64):
     def __init__(self) -> None:
         ...
-class WynnEpsilon2AlgorithmCFL(SeriesAccelerationCFL):
+class WynnEpsilon2AlgorithmCFLong(SeriesAccelerationCFLong):
     def __init__(self) -> None:
         ...
 class WynnEpsilon2AlgorithmF32(SeriesAccelerationF32):
@@ -3052,7 +3052,7 @@ class WynnEpsilon2AlgorithmF32(SeriesAccelerationF32):
 class WynnEpsilon2AlgorithmF64(SeriesAccelerationF64):
     def __init__(self) -> None:
         ...
-class WynnEpsilon2AlgorithmFL(SeriesAccelerationFL):
+class WynnEpsilon2AlgorithmFLong(SeriesAccelerationFLong):
     def __init__(self) -> None:
         ...
 class WynnEpsilon3AlgorithmArb(SeriesAccelerationArb):
@@ -3067,7 +3067,7 @@ class WynnEpsilon3AlgorithmCF32(SeriesAccelerationCF32):
 class WynnEpsilon3AlgorithmCF64(SeriesAccelerationCF64):
     def __init__(self, epsilon_threshold: float = 0.001) -> None:
         ...
-class WynnEpsilon3AlgorithmCFL(SeriesAccelerationCFL):
+class WynnEpsilon3AlgorithmCFLong(SeriesAccelerationCFLong):
     def __init__(self, epsilon_threshold: float = 0.001) -> None:
         ...
 class WynnEpsilon3AlgorithmF32(SeriesAccelerationF32):
@@ -3076,7 +3076,7 @@ class WynnEpsilon3AlgorithmF32(SeriesAccelerationF32):
 class WynnEpsilon3AlgorithmF64(SeriesAccelerationF64):
     def __init__(self, epsilon_threshold: float = 0.001) -> None:
         ...
-class WynnEpsilon3AlgorithmFL(SeriesAccelerationFL):
+class WynnEpsilon3AlgorithmFLong(SeriesAccelerationFLong):
     def __init__(self, epsilon_threshold: float = 0.001) -> None:
         ...
 class WynnRhoAlgorithmArb(SeriesAccelerationArb):
@@ -3091,7 +3091,7 @@ class WynnRhoAlgorithmCF32(SeriesAccelerationCF32):
 class WynnRhoAlgorithmCF64(SeriesAccelerationCF64):
     def __init__(self, numerator: NumeratorType = ..., gamma: float = -1.0, rho: float = 1.0) -> None:
         ...
-class WynnRhoAlgorithmCFL(SeriesAccelerationCFL):
+class WynnRhoAlgorithmCFLong(SeriesAccelerationCFLong):
     def __init__(self, numerator: NumeratorType = ..., gamma: float = -1.0, rho: float = 1.0) -> None:
         ...
 class WynnRhoAlgorithmF32(SeriesAccelerationF32):
@@ -3100,7 +3100,7 @@ class WynnRhoAlgorithmF32(SeriesAccelerationF32):
 class WynnRhoAlgorithmF64(SeriesAccelerationF64):
     def __init__(self, numerator: NumeratorType = ..., gamma: float = -1.0, rho: float = 1.0) -> None:
         ...
-class WynnRhoAlgorithmFL(SeriesAccelerationFL):
+class WynnRhoAlgorithmFLong(SeriesAccelerationFLong):
     def __init__(self, numerator: NumeratorType = ..., gamma: float = -1.0, rho: float = 1.0) -> None:
         ...
 class X1mxSquaredSeriesArb(SeriesBaseArb):
@@ -3115,7 +3115,7 @@ class X1mxSquaredSeriesCF32(SeriesBaseCF32):
 class X1mxSquaredSeriesCF64(SeriesBaseCF64):
     def __init__(self) -> None:
         ...
-class X1mxSquaredSeriesCFL(SeriesBaseCFL):
+class X1mxSquaredSeriesCFLong(SeriesBaseCFLong):
     def __init__(self) -> None:
         ...
 class X1mxSquaredSeriesF32(SeriesBaseF32):
@@ -3124,7 +3124,7 @@ class X1mxSquaredSeriesF32(SeriesBaseF32):
 class X1mxSquaredSeriesF64(SeriesBaseF64):
     def __init__(self) -> None:
         ...
-class X1mxSquaredSeriesFL(SeriesBaseFL):
+class X1mxSquaredSeriesFLong(SeriesBaseFLong):
     def __init__(self) -> None:
         ...
 class XDiv1minX2SeriesArb(SeriesBaseArb):
@@ -3139,7 +3139,7 @@ class XDiv1minX2SeriesCF32(SeriesBaseCF32):
 class XDiv1minX2SeriesCF64(SeriesBaseCF64):
     def __init__(self) -> None:
         ...
-class XDiv1minX2SeriesCFL(SeriesBaseCFL):
+class XDiv1minX2SeriesCFLong(SeriesBaseCFLong):
     def __init__(self) -> None:
         ...
 class XDiv1minX2SeriesF32(SeriesBaseF32):
@@ -3148,7 +3148,7 @@ class XDiv1minX2SeriesF32(SeriesBaseF32):
 class XDiv1minX2SeriesF64(SeriesBaseF64):
     def __init__(self) -> None:
         ...
-class XDiv1minX2SeriesFL(SeriesBaseFL):
+class XDiv1minX2SeriesFLong(SeriesBaseFLong):
     def __init__(self) -> None:
         ...
 class XDiv1minXSeriesArb(SeriesBaseArb):
@@ -3163,7 +3163,7 @@ class XDiv1minXSeriesCF32(SeriesBaseCF32):
 class XDiv1minXSeriesCF64(SeriesBaseCF64):
     def __init__(self) -> None:
         ...
-class XDiv1minXSeriesCFL(SeriesBaseCFL):
+class XDiv1minXSeriesCFLong(SeriesBaseCFLong):
     def __init__(self) -> None:
         ...
 class XDiv1minXSeriesF32(SeriesBaseF32):
@@ -3172,7 +3172,7 @@ class XDiv1minXSeriesF32(SeriesBaseF32):
 class XDiv1minXSeriesF64(SeriesBaseF64):
     def __init__(self) -> None:
         ...
-class XDiv1minXSeriesFL(SeriesBaseFL):
+class XDiv1minXSeriesFLong(SeriesBaseFLong):
     def __init__(self) -> None:
         ...
 class XMinSqrtXSeriesArb(SeriesBaseArb):
@@ -3187,7 +3187,7 @@ class XMinSqrtXSeriesCF32(SeriesBaseCF32):
 class XMinSqrtXSeriesCF64(SeriesBaseCF64):
     def __init__(self) -> None:
         ...
-class XMinSqrtXSeriesCFL(SeriesBaseCFL):
+class XMinSqrtXSeriesCFLong(SeriesBaseCFLong):
     def __init__(self) -> None:
         ...
 class XMinSqrtXSeriesF32(SeriesBaseF32):
@@ -3196,7 +3196,7 @@ class XMinSqrtXSeriesF32(SeriesBaseF32):
 class XMinSqrtXSeriesF64(SeriesBaseF64):
     def __init__(self) -> None:
         ...
-class XMinSqrtXSeriesFL(SeriesBaseFL):
+class XMinSqrtXSeriesFLong(SeriesBaseFLong):
     def __init__(self) -> None:
         ...
 class XSeriesArb(SeriesBaseArb):
@@ -3211,7 +3211,7 @@ class XSeriesCF32(SeriesBaseCF32):
 class XSeriesCF64(SeriesBaseCF64):
     def __init__(self) -> None:
         ...
-class XSeriesCFL(SeriesBaseCFL):
+class XSeriesCFLong(SeriesBaseCFLong):
     def __init__(self) -> None:
         ...
 class XSeriesF32(SeriesBaseF32):
@@ -3220,7 +3220,7 @@ class XSeriesF32(SeriesBaseF32):
 class XSeriesF64(SeriesBaseF64):
     def __init__(self) -> None:
         ...
-class XSeriesFL(SeriesBaseFL):
+class XSeriesFLong(SeriesBaseFLong):
     def __init__(self) -> None:
         ...
 class XTwoSeriesArb(SeriesBaseArb):
@@ -3235,7 +3235,7 @@ class XTwoSeriesCF32(SeriesBaseCF32):
 class XTwoSeriesCF64(SeriesBaseCF64):
     def __init__(self) -> None:
         ...
-class XTwoSeriesCFL(SeriesBaseCFL):
+class XTwoSeriesCFLong(SeriesBaseCFLong):
     def __init__(self) -> None:
         ...
 class XTwoSeriesF32(SeriesBaseF32):
@@ -3244,7 +3244,7 @@ class XTwoSeriesF32(SeriesBaseF32):
 class XTwoSeriesF64(SeriesBaseF64):
     def __init__(self) -> None:
         ...
-class XTwoSeriesFL(SeriesBaseFL):
+class XTwoSeriesFLong(SeriesBaseFLong):
     def __init__(self) -> None:
         ...
 class XTwoThroughtSquaresSeriesArb(SeriesBaseArb):
@@ -3259,7 +3259,7 @@ class XTwoThroughtSquaresSeriesCF32(SeriesBaseCF32):
 class XTwoThroughtSquaresSeriesCF64(SeriesBaseCF64):
     def __init__(self) -> None:
         ...
-class XTwoThroughtSquaresSeriesCFL(SeriesBaseCFL):
+class XTwoThroughtSquaresSeriesCFLong(SeriesBaseCFLong):
     def __init__(self) -> None:
         ...
 class XTwoThroughtSquaresSeriesF32(SeriesBaseF32):
@@ -3268,7 +3268,7 @@ class XTwoThroughtSquaresSeriesF32(SeriesBaseF32):
 class XTwoThroughtSquaresSeriesF64(SeriesBaseF64):
     def __init__(self) -> None:
         ...
-class XTwoThroughtSquaresSeriesFL(SeriesBaseFL):
+class XTwoThroughtSquaresSeriesFLong(SeriesBaseFLong):
     def __init__(self) -> None:
         ...
 class Xsquareplus3DivXsquareplus2multixMinus1SeriesArb(SeriesBaseArb):
@@ -3283,7 +3283,7 @@ class Xsquareplus3DivXsquareplus2multixMinus1SeriesCF32(SeriesBaseCF32):
 class Xsquareplus3DivXsquareplus2multixMinus1SeriesCF64(SeriesBaseCF64):
     def __init__(self) -> None:
         ...
-class Xsquareplus3DivXsquareplus2multixMinus1SeriesCFL(SeriesBaseCFL):
+class Xsquareplus3DivXsquareplus2multixMinus1SeriesCFLong(SeriesBaseCFLong):
     def __init__(self) -> None:
         ...
 class Xsquareplus3DivXsquareplus2multixMinus1SeriesF32(SeriesBaseF32):
@@ -3292,7 +3292,7 @@ class Xsquareplus3DivXsquareplus2multixMinus1SeriesF32(SeriesBaseF32):
 class Xsquareplus3DivXsquareplus2multixMinus1SeriesF64(SeriesBaseF64):
     def __init__(self) -> None:
         ...
-class Xsquareplus3DivXsquareplus2multixMinus1SeriesFL(SeriesBaseFL):
+class Xsquareplus3DivXsquareplus2multixMinus1SeriesFLong(SeriesBaseFLong):
     def __init__(self) -> None:
         ...
 gamma_rho_type: NumeratorType  # value = <NumeratorType.gamma_rho_type: 2>

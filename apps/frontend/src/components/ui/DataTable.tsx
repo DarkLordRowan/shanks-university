@@ -5,9 +5,11 @@ function classNames(...s: (string | false | null | undefined)[]) {
     return s.filter(Boolean).join(" ");
 }
 
+type CellValue = string | number;
+
 export const DataTable: React.FC<{
     headers: string[];
-    rows: (string | number)[][];
+    rows: CellValue[][];
     searchable?: boolean;
     compact?: boolean;
 }> = ({ headers, rows, searchable = true, compact = false }) => {
@@ -58,7 +60,9 @@ export const DataTable: React.FC<{
                         <tr key={i} className="even:bg-panel/40">
                             {r.map((v, j) => (
                                 <td key={j} className="truncate border-t border-border/30 px-3 py-2 align-top">
-                                    <span title={String(v)}>{String(v)}</span>
+                                    <span className="block whitespace-pre-line break-words" title={String(v)}>
+                                        {String(v)}
+                                    </span>
                                 </td>
                             ))}
                         </tr>

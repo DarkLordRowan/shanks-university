@@ -355,11 +355,11 @@ PYBIND11_MODULE(pyshanks, m) {
 
     bind_all<float>(m, "F32");
     bind_all<double>(m, "F64");
-    bind_all<long double>(m, "FL");
+    bind_all<long double>(m, "FLong");
     bind_all<float_precision>(m, "Arb");
 
     bind_all<complex_precision<float>>(m, "CF32");
     bind_all<complex_precision<double>>(m, "CF64");
-    bind_all<complex_precision<long double>>(m, "CFL");
+    bind_all<complex_precision<long double>>(m, "CFLong");
     bind_all<complex_precision<float_precision>>(m, "CArb");
 }

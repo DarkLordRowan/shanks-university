@@ -2,12 +2,14 @@ import csv
 import io
 import json
 import pathlib
+from collections.abc import Mapping, Sequence
 from dataclasses import Field, asdict, fields, is_dataclass
 from typing import Any
 
 from pymongo.database import Database as MongoDatabase
 from src.run.params import XArbEncoder as ArbEncoder
 from src.run.trial import TrialResult
+import pyshanks as ps
 
 
 def auto_field_prefix(outer_field: Field, prefix: str = "", separator: str = "_"):
@@ -201,8 +203,33 @@ class BaseExport:
         self.separator: str = "_"
         self.mongodb_collection: str = "base"
 
+    @staticmethod
+    def _sanitize_value(value: Any) -> Any:
+        if isinstance(
+            value,
+            (
+                ps.Arb,
+                ps.CArb,
+                ps.CF32,
+                ps.CF64,
+                ps.CFLong,
+            ),
+        ):
+            return str(value)
+
+        if is_dataclass(value):
+            return BaseExport._sanitize_value(asdict(value))
+
+        if isinstance(value, Mapping):
+            return {key: BaseExport._sanitize_value(val) for key, val in value.items()}
+
+        if isinstance(value, Sequence) and not isinstance(value, (str, bytes, bytearray)):
+            return [BaseExport._sanitize_value(item) for item in value]
+
+        return value
+
     def as_dict(self):
-        return [asdict(data) for data in self.data]
+        return [self._sanitize_value(asdict(data)) for data in self.data]
 
     def to_mongodb(self, mongo_database: MongoDatabase):
         mongo_database.get_collection(self.mongodb_collection).insert_many(

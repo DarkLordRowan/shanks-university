@@ -28,33 +28,34 @@ def _add_run_arguments(
     config_group.add_argument(
         "--precision",
         type=str,
-        choices=[precision.name for precision in PrecisionType],
+        nargs="+",
         default=None,
-        help="Select computation precision (overrides --with-arb when provided).",
+        metavar="PRECISION",
+        help="Select one or more computation precisions",
     )
 
     input_group = parser.add_argument_group("Input Sources")
     input_group.add_argument(
         "--series-json",
         type=pathlib.Path,
-        default=pathlib.Path("data/example.json"),
+        default=None,
     )
     input_group.add_argument(
         "--series-csv",
         type=pathlib.Path,
-        default=pathlib.Path("data/example_series.csv"),
+        default=None,
     )
     input_group.add_argument(
         "--accel-json",
         type=pathlib.Path,
-        default=pathlib.Path("data/example.json"),
+        default=None,
     )
 
     output_group = parser.add_argument_group("Output Destinations")
     output_group.add_argument(
         "--output-dir",
         type=pathlib.Path,
-        default=pathlib.Path("output"),
+        default=None,
     )
     output_group.add_argument("--results-json", type=pathlib.Path, default=None)
     output_group.add_argument("--results-csv", type=pathlib.Path, default=None)
@@ -63,13 +64,13 @@ def _add_run_arguments(
     execution_group.add_argument(
         "--trial-process-count",
         type=int,
-        default=1,
+        default=None,
     )
 
     execution_group.add_argument(
         "--trial-task-timeout",
         type=int,
-        default=10,
+        default=None,
     )
 
     feature_group = parser.add_argument_group("Feature Toggles")
@@ -83,10 +84,6 @@ def _add_run_arguments(
     )
     feature_group.add_argument(
         "--no-events",
-        action="store_true",
-    )
-    feature_group.add_argument(
-        "--with-arb",
         action="store_true",
     )
     feature_group.add_argument(
