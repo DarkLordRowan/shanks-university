@@ -10,6 +10,7 @@ from src.run.params import PrecisionType
 PrecisionValue = PrecisionType | str
 PrecisionCollection = Sequence[PrecisionValue] | PrecisionValue | None
 
+
 @dataclass
 class BaseConfig:
     verbose: int = 0
@@ -81,7 +82,10 @@ class TrialConfig(BaseConfig, MongoConfig):
                 return PrecisionType[normalized]
             except KeyError:
                 for precision in PrecisionType:
-                    if value == precision.value or value.lower() == precision.value.lower():
+                    if (
+                        value == precision.value
+                        or value.lower() == precision.value.lower()
+                    ):
                         return precision
         raise ValueError(f"Unsupported precision: {value}")
 

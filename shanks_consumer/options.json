@@ -5,7 +5,7 @@
   "output_dir": "output",
   "results_json": "output/output.json",
   "results_csv": "output/output.csv",
-  "trial_process_count": 1,
+  "trial_process_count": 8,
   "trial_task_timeout": 5,
   "no_events": false,
   "no_json_export": false,

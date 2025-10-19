@@ -5,13 +5,10 @@ import uuid
 from dataclasses import asdict, dataclass, field
 from typing import Any, Callable, Mapping
 
-from src.run.params import (
-    BaseAccelParam,
-    BaseSeriesParam,
-    PrecisionType,
-    cast_precision_value,
-)
 from tqdm import tqdm
+
+from src.run.params import BaseAccelParam, BaseSeriesParam, PrecisionType
+from src.run.precision import cast_precision_value
 
 logger = logging.getLogger(__name__)
 
@@ -200,15 +197,15 @@ def execute_trial(
                                 additional_args=additional_args_display,
                             ),
                             computed=[],
-                                error=ErrorTrialResult(
-                                    str(exc),
-                                    {
-                                        "argument": dict(argument),
-                                        "additional_args": additional_args_display,
-                                        "m": m_value,
-                                    },
-                                ),
-                            )
+                            error=ErrorTrialResult(
+                                str(exc),
+                                {
+                                    "argument": dict(argument),
+                                    "additional_args": additional_args_display,
+                                    "m": m_value,
+                                },
+                            ),
+                        )
                     )
             continue
 
