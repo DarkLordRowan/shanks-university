@@ -3,13 +3,8 @@ import logging
 from src.config import TrialConfig
 from src.db import MongoDatabase
 from src.run.export import ExportTrialResults
-from src.run.params import (
-    AccelParamLoader,
-    BaseAccelParam,
-    BaseSeriesParam,
-    PrecisionType,
-    SeriesParamLoader,
-)
+from src.run.loaders import AccelParamLoader, SeriesParamLoader
+from src.run.params import BaseAccelParam, BaseSeriesParam, PrecisionType
 from src.run.trial import ComplexTrial, TrialResult
 
 
@@ -19,25 +14,19 @@ def load_parameters(config: TrialConfig, precision: PrecisionType):
 
     if config.series_json.exists():
         logging.info("Loading series from JSON: %s", config.series_json)
-        series_params.extend(
-            SeriesParamLoader.from_json(config.series_json, precision)
-        )
+        series_params.extend(SeriesParamLoader.from_json(config.series_json, precision))
     else:
         logging.warning("Series JSON file not found: %s", config.series_json)
 
     if config.series_csv.exists():
         logging.info("Loading series from CSV: %s", config.series_csv)
-        series_params.extend(
-            SeriesParamLoader.from_csv(config.series_csv, precision)
-        )
+        series_params.extend(SeriesParamLoader.from_csv(config.series_csv, precision))
     else:
         logging.warning("Series CSV file not found: %s", config.series_csv)
 
     if config.accel_json.exists():
         logging.info("Loading acceleration methods from: %s", config.accel_json)
-        accel_params.extend(
-            AccelParamLoader.from_json(config.accel_json, precision)
-        )
+        accel_params.extend(AccelParamLoader.from_json(config.accel_json, precision))
     else:
         logging.warning("Acceleration JSON file not found: %s", config.accel_json)
 
@@ -104,6 +93,9 @@ def lazy_load_events(
 
 def handle_run_command(config: TrialConfig, mongo_database: MongoDatabase | None):
     aggregated_results: list[TrialResult] = []
+    if config.precisions is None:
+        logging.error("Precision not specified")
+        return
     for precision in config.precisions:
         results = execute_trial(config, precision)
         results = lazy_load_events(config, results)

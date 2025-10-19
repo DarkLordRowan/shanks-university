@@ -6,9 +6,7 @@ def setup_logging(verbose: int):
     level = (
         logging.DEBUG
         if verbose >= 2
-        else logging.INFO
-        if verbose >= 1
-        else logging.WARNING
+        else logging.INFO if verbose >= 1 else logging.WARNING
     )
     logging.basicConfig(
         level=level,

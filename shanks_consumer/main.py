@@ -1,4 +1,5 @@
 from dotenv import load_dotenv
+
 from src.args import create_parser
 from src.commands import handle_run_command, handle_viz_command
 from src.config import load_trial_config, load_viz_config

@@ -7,9 +7,26 @@ from dataclasses import Field, asdict, fields, is_dataclass
 from typing import Any
 
 from pymongo.database import Database as MongoDatabase
-from src.run.params import PrecisionType, XArbEncoder as ArbEncoder
-from src.run.trial import TrialResult
+
 import pyshanks as ps
+from src.run.params import PrecisionType
+from src.run.trial import TrialResult
+
+
+class ArbEncoder(json.JSONEncoder):
+    def default(self, o):
+        if isinstance(
+            o,
+            (
+                ps.Arb,
+                ps.CArb,
+                ps.CF32,
+                ps.CF64,
+                ps.CFLong,
+            ),
+        ):
+            return str(o)
+        return super().default(o)
 
 
 def auto_field_prefix(outer_field: Field, prefix: str = "", separator: str = "_"):
@@ -182,23 +199,6 @@ def dataclasses_to_csv_text(dataclasses, expand_field=None, separator="_"):
     return buf.getvalue()
 
 
-def dataclasses_to_json(dataclasses, location):
-    with open(location, mode="w", encoding="utf-8") as f:
-        f.write(
-            json.dumps(
-                [
-                    BaseExport._sanitize_value(
-                        asdict(dataclass), convert_precision=True
-                    )
-                    for dataclass in dataclasses
-                ],
-                indent=4,
-                sort_keys=True,
-                cls=ArbEncoder,
-            )
-        )
-
-
 class BaseExport:
     def __init__(self, data: list, location: pathlib.Path | None = None):
         self.location = location
@@ -245,7 +245,9 @@ class BaseExport:
                 for key, val in value.items()
             }
 
-        if isinstance(value, Sequence) and not isinstance(value, (str, bytes, bytearray)):
+        if isinstance(value, Sequence) and not isinstance(
+            value, (str, bytes, bytearray)
+        ):
             return [
                 BaseExport._sanitize_value(item, convert_precision=convert_precision)
                 for item in value
@@ -271,7 +273,21 @@ class BaseExport:
         return location
 
     def to_json(self, override_location: pathlib.Path | None = None):
-        dataclasses_to_json(self.data, self._verify_location(override_location))
+        location = self._verify_location(override_location)
+        with open(location, mode="w", encoding="utf-8") as f:
+            f.write(
+                json.dumps(
+                    [
+                        BaseExport._sanitize_value(
+                            asdict(dataclass), convert_precision=True
+                        )
+                        for dataclass in self.data
+                    ],
+                    indent=4,
+                    sort_keys=True,
+                    cls=ArbEncoder,
+                )
+            )
 
     def to_csv(
         self,

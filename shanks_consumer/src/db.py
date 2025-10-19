@@ -3,6 +3,7 @@ import logging
 from pymongo import MongoClient
 from pymongo.database import Database as MongoDatabase
 from pymongo.errors import PyMongoError
+
 from src.config import MongoConfig
 
 
