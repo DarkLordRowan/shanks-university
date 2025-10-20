@@ -4,11 +4,29 @@ import pathlib
 from abc import abstractmethod
 from collections.abc import Sequence
 from dataclasses import dataclass, field, replace
+from typing import Any, TypedDict, cast
 
 from src.run.params import PrecisionType
 
 PrecisionValue = PrecisionType | str
 PrecisionCollection = Sequence[PrecisionValue] | PrecisionValue | None
+
+
+class TrialConfigOverrides(TypedDict, total=False):
+    series_json: pathlib.Path
+    series_csv: pathlib.Path
+    accel_json: pathlib.Path
+    output_dir: pathlib.Path
+    results_json: pathlib.Path | None
+    results_csv: pathlib.Path | None
+    trial_process_count: int
+    trial_task_timeout: int
+    precisions: tuple[PrecisionType, ...]
+    no_events: bool
+    no_csv_export: bool
+    no_json_export: bool
+    with_mongo: bool
+    verbose: int
 
 
 @dataclass
@@ -50,7 +68,7 @@ class TrialConfig(BaseConfig, MongoConfig):
     trial_process_count: int = 1
     trial_task_timeout: int = 10
 
-    precisions: PrecisionCollection = field(
+    precisions: tuple[PrecisionType, ...] = field(
         default_factory=lambda: (PrecisionType.F64,)
     )
     no_events: bool = False
@@ -125,14 +143,16 @@ class BaseConfigLoader[T]:
 
     @staticmethod
     @abstractmethod
-    def from_dict(data: dict) -> T:  # type: ignore
+    def from_dict(data: dict[str, object]) -> T:  # type: ignore[override]
         pass
 
     @staticmethod
-    def _process_path_fields(data: dict) -> dict:
-        config_dict = {}
+    def _process_path_fields(data: dict[str, object]) -> dict[str, object]:
+        config_dict: dict[str, object] = {}
         for key, value in data.items():
-            if key.endswith(("_json", "_csv", "_dir")):
+            if key.endswith(("_json", "_csv", "_dir")) and isinstance(
+                value, (str, os.PathLike)
+            ):
                 config_dict[key] = pathlib.Path(value)
             else:
                 config_dict[key] = value
@@ -142,8 +162,12 @@ class BaseConfigLoader[T]:
     def from_json(cls, json_location: pathlib.Path) -> T:  # type: ignore
         with open(json_location, encoding="utf-8") as f:
             data = json.load(f)
+        if not isinstance(data, dict):
+            raise ValueError("Configuration JSON must define an object at the root")
 
-        config_dict = cls._process_path_fields(data)
+        config_dict = cls._process_path_fields(
+            cast(dict[str, object], data)  # Safe after the isinstance check above.
+        )
         return cls.from_dict(config_dict)
 
     @staticmethod
@@ -162,8 +186,8 @@ class TrialConfigLoader(BaseConfigLoader[TrialConfig]):
         return base_config
 
     @staticmethod
-    def from_dict(data: dict) -> TrialConfig:
-        config_data = dict(data)
+    def from_dict(data: dict[str, object]) -> TrialConfig:
+        config_data: dict[str, Any] = dict(data)
         has_precision = "precision" in config_data
         has_precisions = "precisions" in config_data
         if has_precision and has_precisions:
@@ -171,7 +195,15 @@ class TrialConfigLoader(BaseConfigLoader[TrialConfig]):
                 "Configuration cannot define both 'precision' and 'precisions'"
             )
         if has_precision:
-            config_data["precisions"] = config_data.pop("precision")
+            raw_precision = cast(PrecisionCollection, config_data.pop("precision"))
+            config_data["precisions"] = TrialConfig._normalize_precisions(
+                raw_precision
+            )
+        elif has_precisions:
+            raw_precisions = cast(PrecisionCollection, config_data["precisions"])
+            config_data["precisions"] = TrialConfig._normalize_precisions(
+                raw_precisions
+            )
         return TrialConfig(**config_data)
 
     @staticmethod
@@ -179,8 +211,8 @@ class TrialConfigLoader(BaseConfigLoader[TrialConfig]):
         return TrialConfig()
 
     @staticmethod
-    def overrides_from_args(args) -> dict[str, object]:
-        overrides: dict[str, object] = {}
+    def overrides_from_args(args) -> TrialConfigOverrides:
+        overrides: TrialConfigOverrides = {}
 
         if getattr(args, "series_json", None) is not None:
             overrides["series_json"] = args.series_json
@@ -201,7 +233,9 @@ class TrialConfigLoader(BaseConfigLoader[TrialConfig]):
             overrides["trial_task_timeout"] = args.trial_task_timeout
 
         if getattr(args, "precision", None) is not None:
-            overrides["precisions"] = args.precision
+            overrides["precisions"] = TrialConfig._normalize_precisions(
+                cast(PrecisionCollection, args.precision)
+            )
 
         if getattr(args, "no_events", False):
             overrides["no_events"] = True
@@ -227,8 +261,11 @@ class VizConfigLoader(BaseConfigLoader[VizConfig]):
         )
 
     @staticmethod
-    def from_dict(data: dict) -> VizConfig:
-        return VizConfig(**data)
+    def from_dict(data: dict[str, object]) -> VizConfig:
+        stack_id = data.get("stack_id")
+        if stack_id is not None and not isinstance(stack_id, str):
+            raise ValueError("Viz configuration 'stack_id' must be a string if provided")
+        return VizConfig(stack_id=cast(str | None, stack_id))
 
     @staticmethod
     def default() -> VizConfig:

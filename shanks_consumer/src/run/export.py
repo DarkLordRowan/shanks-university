@@ -4,7 +4,7 @@ import json
 import pathlib
 from collections.abc import Mapping, Sequence
 from dataclasses import Field, asdict, fields, is_dataclass
-from typing import Any
+from typing import Any, cast
 
 from pymongo.database import Database as MongoDatabase
 
@@ -200,9 +200,11 @@ def dataclasses_to_csv_text(dataclasses, expand_field=None, separator="_"):
 
 
 class BaseExport:
-    def __init__(self, data: list, location: pathlib.Path | None = None):
+    def __init__(
+        self, data: Sequence[TrialResult], location: pathlib.Path | None = None
+    ):
         self.location = location
-        self.data = data
+        self.data: list[TrialResult] = list(data)
 
         self.expand_field: str | None = None
         self.separator: str = "_"
@@ -234,7 +236,7 @@ class BaseExport:
 
         if is_dataclass(value):
             return BaseExport._sanitize_value(
-                asdict(value), convert_precision=convert_precision
+                asdict(cast(Any, value)), convert_precision=convert_precision
             )
 
         if isinstance(value, Mapping):
@@ -255,11 +257,20 @@ class BaseExport:
 
         return value
 
-    def as_dict(self):
-        return [
-            self._sanitize_value(asdict(data), convert_precision=True)
-            for data in self.data
-        ]
+    def as_dict(self) -> list[dict[str, Any]]:
+        serialized: list[dict[str, Any]] = []
+        for dataclass_obj in self.data:
+            if not is_dataclass(dataclass_obj):
+                raise TypeError("BaseExport expects dataclass instances")
+            serialized.append(
+                cast(
+                    dict[str, Any],
+                    self._sanitize_value(
+                        asdict(cast(Any, dataclass_obj)), convert_precision=True
+                    ),
+                )
+            )
+        return serialized
 
     def to_mongodb(self, mongo_database: MongoDatabase):
         mongo_database.get_collection(self.mongodb_collection).insert_many(

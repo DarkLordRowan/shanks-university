@@ -3,14 +3,18 @@ import logging
 import multiprocessing as mp
 import uuid
 from dataclasses import asdict, dataclass, field
-from typing import Any, Callable, Mapping
+from typing import Any, Callable, Mapping, TypeGuard
 
-from tqdm import tqdm
+from tqdm import tqdm  # type: ignore[import]
 
 from src.run.params import BaseAccelParam, BaseSeriesParam, PrecisionType
-from src.run.precision import cast_precision_value
+from src.run.precision import SeriesBaseProto, cast_precision_value
 
 logger = logging.getLogger(__name__)
+
+
+def _is_series_generator(candidate: object) -> TypeGuard[SeriesBaseProto[Any]]:
+    return hasattr(candidate, "generateSeries") and hasattr(candidate, "get_sum")
 
 
 @dataclass
@@ -154,7 +158,11 @@ def execute_trial(
     for argument_combo in series_argument_combos:
         argument = dict(zip(series_arg_keys, argument_combo))
         try:
-            series_instance = series.executable()
+            series_candidate = series.executable()
+            if not _is_series_generator(series_candidate):
+                msg = f"Series executable '{series.series_name}' did not return a valid generator"
+                raise TypeError(msg)
+            series_instance = series_candidate
 
             vec_size = int(argument.get("vecSize", size_floor))
             vec_size = max(vec_size, size_floor)

@@ -93,9 +93,6 @@ def lazy_load_events(
 
 def handle_run_command(config: TrialConfig, mongo_database: MongoDatabase | None):
     aggregated_results: list[TrialResult] = []
-    if config.precisions is None:
-        logging.error("Precision not specified")
-        return
     for precision in config.precisions:
         results = execute_trial(config, precision)
         results = lazy_load_events(config, results)
