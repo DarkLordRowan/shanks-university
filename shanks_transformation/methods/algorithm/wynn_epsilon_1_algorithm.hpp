@@ -117,11 +117,14 @@ T wynn_epsilon_1_algorithm<T, K, series_templ>::operator()(const K n, const K or
 	// Apply epsilon algorithm recurrence
 	// For theory, see: Wynn (1956), Eq. (4) - Main recurrence relation
 	// εₖ₊₁⁽ⁿ⁾ = εₖ₋₁⁽ⁿ⁺¹⁾ + 1/(εₖ⁽ⁿ⁺¹⁾ - εₖ⁽ⁿ⁾)
+	T denom;
 	for (K i = static_cast<K>(0); i < m; ++i) {
-
 		for (K j = n1; j < max_ind; ++j) {
 			// Compute εₖ₊₁⁽ʲ⁾ using the recurrence relation
-			(*e1_add)[j] += static_cast<T>(1) / ((*e0_add)[j + static_cast<K>(1)] - (*e0_add)[j]);
+			denom = (*e0_add)[j + static_cast<K>(1)] - (*e0_add)[j];
+			if (!isfinite(denom))
+				break;
+			(*e1_add)[j] += static_cast<T>(1) / denom;
 		}
 
 		--max_ind;							// Reduce working range for next iteration

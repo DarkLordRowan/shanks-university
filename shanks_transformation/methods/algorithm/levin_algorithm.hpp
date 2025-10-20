@@ -171,7 +171,6 @@ levin_algorithm<T, K,series_templ>::levin_algorithm(
 
 template<std::floating_point T, std::unsigned_integral K, typename series_templ>
 inline T levin_algorithm<T, K,series_templ>::calc_result(K n, K order) const{
-
 	using std::pow;
 	using std::isfinite;
 
@@ -191,6 +190,9 @@ inline T levin_algorithm<T, K,series_templ>::calc_result(K n, K order) const{
 		C_njk  = static_cast<T>(pow(n + j     + static_cast<K>(1), order - static_cast<K>(1)));
 		C_njk /= static_cast<T>(pow(n + order + static_cast<K>(1), order - static_cast<K>(1)));
 
+		if (!isfinite(C_njk))
+			break;
+
 		// Get partial sum S_{n+j}
 		S_nj = this->series->S_n(n + j);
 
@@ -202,6 +204,9 @@ inline T levin_algorithm<T, K,series_templ>::calc_result(K n, K order) const{
             this->series,
             (variant == remainder_type::u_variant ? beta : static_cast<T>(1))
         );
+
+		if (!isfinite(g_n))
+			break;
 
 		// Combine all terms
 		rest *= C_njk;

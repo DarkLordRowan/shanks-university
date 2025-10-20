@@ -159,6 +159,11 @@ T ford_sidi_3_algorithm<T, K, series_templ>::operator()(const K n, const K order
         // For theory, see: Ford & Sidi (1987), Eq. (2.8) - Denominator computation
         // D = FSG[k2][MM1] - FSG[k2][MM] (difference for normalization)
         D = FSG[k2][MM1] - FSG[k2][MM];
+        if (D == 0) {
+            FSA[0] = FSA[MM];
+            FSI[0] = FSI[MM];
+            break;
+        }
 
         // For theory, see: Osada (2000), Section 4 - FSG sequence update
         // Update FSG values using difference operations: FSG[i][MM] = (FSG[i][MM1] - FSG[i][MM]) / D
@@ -175,7 +180,7 @@ T ford_sidi_3_algorithm<T, K, series_templ>::operator()(const K n, const K order
         // For theory, see: Osada (2000), Section 4 - FSI sequence update  
         // FSI[MM] = (FSI[MM1] - FSI[MM]) / D (normalization factor update)
         FSI[MM] = FSI[MM1] - FSI[MM];
-        FSI[MM]/= D;
+        FSI[MM]/= D; 
     }
 
     // For theory, see: Osada (2000), Eq. (11) - Final result computation
