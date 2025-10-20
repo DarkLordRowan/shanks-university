@@ -1474,8 +1474,10 @@ inline static void main_testing_function()
 
 	print_test_function_info();
 	K function_id = read_input<K>();
+
+	//if (function_id)
 	std::cout << "Enter n and order:" << '\n';
-	K n = read_input<K>();
+	K n		= read_input<K>();
 	K order = read_input<K>();
 
 	switch (function_id)

@@ -133,6 +133,9 @@ T weniger_algorithm<T, K, series_templ>::operator()(const K n, const K order) co
 		// Remainder estimate: ωₙ = Δsₙ = a_{n+1}, so 1/ωₙ = 1/a_{j+1}
 		a_n = static_cast<T>(1);
 		a_n/= this->series->operator()(j1);
+		
+		if (!isfinite(a_n))
+			break;
 
 		rest *= a_n;
 
@@ -155,7 +158,8 @@ T weniger_algorithm<T, K, series_templ>::operator()(const K n, const K order) co
 	numerator /= denominator;
 
 	if (!isfinite(numerator))
-		throw std::overflow_error("division by zero");
+		//throw std::overflow_error("division by zero");
+		return S_n;
 	
 	return numerator;
 }

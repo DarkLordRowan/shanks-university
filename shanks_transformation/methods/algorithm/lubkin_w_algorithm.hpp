@@ -122,10 +122,11 @@ T lubkin_w_algorithm<T, K, series_templ>::calculate(K n, const K order) const {
 		W[i] = this->series->S_n(n + i);
 	}
 
-	T Wo0, Wo1, Wo2;  // First differences: ΔS_n, ΔS_{n+1}, ΔS_{n+2}
+	T Wo0, Wo1, Wo2;  // First differences: ΔSᵢ, ΔSᵢ₊₁, ΔSᵢ₊₂
 	T Woo1, Woo2;     // Compound terms for denominator calculation
+	T denominator;
 
-	K j1, j2, j3;     // Index variables
+	K i1, i2, i3;     // Index variables
 
 	// For theory, see: 
 	// - Lubkin (1952), Eq. (5.2)
@@ -133,33 +134,36 @@ T lubkin_w_algorithm<T, K, series_templ>::calculate(K n, const K order) const {
 	// - Sidi (2003), Chapter 15.4, Eq. (15.4.1)
 	// Iterative application of the W-transformation
 	for(K level = static_cast<K>(1); level <= order; ++level){
+		for(K i = static_cast<K>(0); i < base_size - level * static_cast<K>(3); ++i){
 
-		for(K j = static_cast<K>(0); j < base_size - level * static_cast<K>(3); ++j){
-
-			j1 = j + static_cast<K>(1);
-			j2 = j + static_cast<K>(2);
-			j3 = j + static_cast<K>(3);
+			i1 = i + static_cast<K>(1);
+			i2 = i + static_cast<K>(2);
+			i3 = i + static_cast<K>(3);
 
 			// For theory, see: Lubkin (1952), Eq. (5.2)
-			// First differences: ΔS_j = S_{j+1} - S_j
-			Wo0 = W[j1] - W[j];    // ΔS_j
-			Wo1 = W[j2] - W[j1];   // ΔS_{j+1}
-			Wo2 = W[j3] - W[j2];   // ΔS_{j+2}
+			// First differences: ΔSᵢ = Sᵢ₊₁ - Sᵢ
+			Wo0 = W[i1] - W[i];    // ΔSᵢ
+			Wo1 = W[i2] - W[i1];   // ΔSᵢ₊₁
+			Wo2 = W[i3] - W[i2];   // ΔSᵢ₊₂
 
 			// For theory, see: Osada (1992), Eq. (5.2)
-			// Numerator: (ΔS_n·ΔS_{n-1}·Δ²S_{n-2}) = ΔS_{j+1}·(ΔS_{j+1} - ΔS_j)·ΔS_j
-			// Denominator: (ΔS_n·Δ²S_{n-2} - ΔS_{n-2}·Δ²S_{n-1}) = ΔS_{j+2}·(ΔS_{j+1} - ΔS_j) - ΔS_j·(ΔS_{j+2} - ΔS_{j+1})
-			Woo1 = Wo0 * (Wo2 - Wo1);  // ΔS_j·(ΔS_{j+2} - ΔS_{j+1})
-			Woo2 = Wo2 * (Wo1 - Wo0);  // ΔS_{j+2}·(ΔS_{j+1} - ΔS_j)
+			// Numerator: ΔSᵢ₊₁ × (ΔSᵢ₊₁ - ΔSᵢ) × ΔSᵢ
+			// Denominator: ΔSᵢ₊₂ × (ΔSᵢ₊₁ - ΔSᵢ) - ΔSᵢ × (ΔSᵢ₊₂ - ΔSᵢ₊₁)
+			Woo1 = Wo0 * (Wo2 - Wo1);  // ΔSᵢ × (ΔSᵢ₊₂ - ΔSᵢ₊₁)
+			Woo2 = Wo2 * (Wo1 - Wo0);  // ΔSᵢ₊₂ × (ΔSᵢ₊₁ - ΔSᵢ)
 
 			// For theory, see: Lubkin (1952), Main transformation formula
-			// W_n = S_{n+1} - [Numerator] / [Denominator]
+			// Wₙ = Sₙ₊₁ - [Numerator] / [Denominator]
 			// Optimized computation using fused multiply-add for better numerical stability
-			W[j] = fma(
-				-Wo1, 
-				Woo1 / (Woo2 - Woo1),
-				 W[j1]
-			);
+			
+			denominator = Woo2 - Woo1;
+
+			// Early exit
+			if (abs(denominator) < std::numeric_limits<T>::epsilon()) {
+				return W[i1];  // Sₙ₊₁ is the best approximation.
+			}
+
+			W[i] = fma(-Wo1, Woo1 / denominator, W[i1]);
 		}
 	}
 

@@ -127,6 +127,7 @@ T brezinski_theta_algorithm<T, K, series_templ>::calculate(K n, const K order) c
 
     K j1, j2;
     T delta; //temporary varaible
+    T last_correct = theta_even[0];
 
     for(K level = static_cast<K>(1); level <= order / static_cast<K>(2); ++level){
 
@@ -136,6 +137,8 @@ T brezinski_theta_algorithm<T, K, series_templ>::calculate(K n, const K order) c
             j1 = j + static_cast<K>(1);
 
             delta = theta_even[j1] - theta_even[j];
+            if (delta == 0)
+                break;
 
             theta_odd[j] = theta_odd[j1] + static_cast<T>(1) / delta;
         }
@@ -147,10 +150,17 @@ T brezinski_theta_algorithm<T, K, series_templ>::calculate(K n, const K order) c
             j2 = j + static_cast<K>(2);
 
             delta = theta_odd[j2] - theta_odd[j1];
+            if (delta == 0)
+                break;
             
             theta_even[j] = theta_even[j1];
             theta_even[j]-= (theta_even[j2]-theta_even[j1]) * delta / (theta_odd[j1] - theta_odd[j] - delta);
         }
+        if (!isfinite(theta_even[0])) {
+            //theta_even[0] = last_correct;
+            break;
+        }
+        last_correct = theta_even[0];
     }
 
     if(!isfinite(theta_even[0]))

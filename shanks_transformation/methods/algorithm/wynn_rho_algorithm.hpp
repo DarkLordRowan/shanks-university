@@ -90,15 +90,15 @@ public:
 	 *        Additional parameter for gamma-rho variant
 	 */
 
-	// // Был:
-	//explicit wynn_rho_algorithm(
-	//	const series_templ& series,
-	//	numerator_type variant = numerator_type::rho_variant,
-	//	T gamma_ = T(1), // Передача по значению
-	//	T RHO_ = T(0)    // Передача по значению
-	//);
+	 // // Был:
+	 //explicit wynn_rho_algorithm(
+	 //	const series_templ& series,
+	 //	numerator_type variant = numerator_type::rho_variant,
+	 //	T gamma_ = T(1), // Передача по значению
+	 //	T RHO_ = T(0)    // Передача по значению
+	 //);
 
-	// Стал:
+	 // Стал:
 	explicit wynn_rho_algorithm(
 		const series_templ& series,
 		numerator_type variant = numerator_type::rho_variant,
@@ -157,25 +157,25 @@ wynn_rho_algorithm<T, K, series_templ>::wynn_rho_algorithm(
 	const numerator_type variant,
 	const T& gamma_,
 	const T& RHO_
-	) :
+) :
 	series_acceleration<T, K, series_templ>(series),
 	gamma(gamma_),
 	RHO(RHO_)
 {
 
 	// Initialize the appropriate numerator computation strategy
-	switch(variant) {
-		case numerator_type::rho_variant :
-			numerator.reset(new rho_transform<T, K>());
-			break;
-		case numerator_type::generalized_variant :
-			numerator.reset(new generilized_transform<T, K>());
-			break;
-		case numerator_type::gamma_rho_variant :
-			numerator.reset(new gamma_rho_transform<T, K>());
-			break;
-		default:
-			numerator.reset(new rho_transform<T, K>());
+	switch (variant) {
+	case numerator_type::rho_variant:
+		numerator.reset(new rho_transform<T, K>());
+		break;
+	case numerator_type::generalized_variant:
+		numerator.reset(new generilized_transform<T, K>());
+		break;
+	case numerator_type::gamma_rho_variant:
+		numerator.reset(new gamma_rho_transform<T, K>());
+		break;
+	default:
+		numerator.reset(new rho_transform<T, K>());
 	}
 }
 
@@ -196,33 +196,23 @@ inline T wynn_rho_algorithm<T, K, series_templ>::calculate(const K n, K order) c
 
 	// For theory, see: Wynn (1966), Eq. (3.5) - Main recurrence relation
 	// ρₖ⁽ⁿ⁾ = ρₖ₋₂⁽ⁿ⁺¹⁾ + Nₖ⁽ⁿ⁾ / (ρₖ₋₁⁽ⁿ⁺¹⁾ - ρₖ₋₁⁽ⁿ⁾)
-	const T res = 
-		recursive_calculate_body(
-			n,
-			order1 - static_cast<K>(1),
-			 S_n,
-			 static_cast<K>(1)
-		) +
-		numerator->operator()(
-			n,
-			order,
-			this->series,
-			gamma,
-			RHO
-		) / (
-		recursive_calculate_body(
-			n,
-			order1,
-			S_n,
-			static_cast<K>(1)
-		) -
-		recursive_calculate_body(
-			n,
-			order1,
-			S_n,
-			static_cast<K>(0)
-		)
-	);
+
+	const T denom1	= recursive_calculate_body(n, order1, S_n, static_cast<K>(1));
+	if (!isfinite(denom1))
+		return S_n; // Early exit
+
+	const T denom2	= recursive_calculate_body(n, order1, S_n, static_cast<K>(0));
+	if (!isfinite(denom2))
+		return S_n; // Early exit
+
+	const T denom	= denom1 - denom2;
+	if (denom == 0)
+		return S_n; // Early exit
+
+	const T pk2n1 = recursive_calculate_body(n, order1 - static_cast<K>(1), S_n, static_cast<K>(1));
+	const T Nkn = numerator->operator()(n, order, this->series, gamma, RHO);
+
+	const T res = pk2n1 + Nkn / denom;
 
 	if (!isfinite(res))
 		throw std::overflow_error("division by zero");
@@ -255,34 +245,22 @@ T wynn_rho_algorithm<T, K, series_templ>::recursive_calculate_body(const K n, co
 
 	// For theory, see: Wynn (1966), Eq. (3.5) - Recursive computation
 	// ρₖ⁽ⁿ⁾ = ρₖ₋₂⁽ⁿ⁺¹⁾ + Nₖ⁽ⁿ⁾ / (ρₖ₋₁⁽ⁿ⁺¹⁾ - ρₖ₋₁⁽ⁿ⁾)
-	const T res = 
-		recursive_calculate_body(
-			nj,
-			order1 - static_cast<K>(1),
-			S_n,
-			static_cast<K>(1)
-		) +
-		numerator->operator()(
-			nj,
-			order,
-			this->series,
-			gamma,
-			RHO
-		) / (
-		recursive_calculate_body(
-			nj,
-			order1,
-			 S_n,
-			 static_cast<K>(1)
-		) -
-		recursive_calculate_body(
-			nj,
-			order1,
-			S_n,
-			static_cast<K>(0)
-		)
-	);
+	const T denom1	= recursive_calculate_body(nj, order1, S_n, static_cast<K>(1));
+	if (!isfinite(denom1))
+		return S_n; // Early exit
 
+	const T denom2	= recursive_calculate_body(nj, order1, S_n, static_cast<K>(0));
+	if (!isfinite(denom2))
+		return S_n; // Early exit
+
+	const T denom	= denom1 - denom2;
+	if (denom == 0)
+		return S_n; // Early exit
+
+	const T pk2n1 = recursive_calculate_body(nj, order1 - static_cast<K>(1), S_n, static_cast<K>(1));
+	const T Nkn = numerator->operator()(nj, order, this->series, gamma, RHO);
+
+	const T res = pk2n1 + Nkn / denom;
 	if (!isfinite(res))
 		throw std::overflow_error("division by zero");
 
