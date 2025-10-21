@@ -182,9 +182,8 @@ inline T levin_algorithm<T, K,series_templ>::calc_result(K n, K order) const{
 	//           [∑_{j=0}^k (-1)^j C(k,j) (n+j+1)^{k-1}/(n+k+1)^{k-1} 1/R_{n+j}]
 	for (K j = static_cast<K>(0); j <= order; ++j) {
 		//Compute (-1)^j * C(k,j)      p.s. since the Levin transformation already takes (-1)^j
-		//rest  = this->series->minus_one_raised_to_power_n(j);
-		//rest *= this->series->binomial_coefficient(static_cast<T>(order), j);
-		rest = this->series->binomial_coefficient(static_cast<T>(order), j);
+		rest  = this->series->minus_one_raised_to_power_n(j);
+		rest *= this->series->binomial_coefficient(static_cast<T>(order), j);
 
 		// Compute (n+j+1)^{k-1}/(n+k+1)^{k-1}
 		C_njk  = static_cast<T>(pow(n + j     + static_cast<K>(1), order - static_cast<K>(1)));
@@ -199,7 +198,7 @@ inline T levin_algorithm<T, K,series_templ>::calc_result(K n, K order) const{
 		// Compute 1/R_{n+j} where R_{n+j} is the remainder estimate
 		g_n = static_cast<T>(1);
 		g_n/= remainder->operator()(
-            n + j, 
+            n, 
             j, 
             this->series,
             (variant == remainder_type::u_variant ? beta : static_cast<T>(1))
@@ -212,8 +211,8 @@ inline T levin_algorithm<T, K,series_templ>::calc_result(K n, K order) const{
 		rest *= C_njk;
 		rest *= g_n;
 
+		numerator	+= rest * S_nj;
 		denominator += rest;
-		  numerator += rest * S_nj;
 	}
 
 	numerator /= denominator;
