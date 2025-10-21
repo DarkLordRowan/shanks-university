@@ -57,9 +57,15 @@ class MongoConfig:
 
 @dataclass
 class TrialConfig(BaseConfig, MongoConfig):
-    series_json: pathlib.Path = field(default=pathlib.Path("data/example.json"))
-    series_csv: pathlib.Path = field(default=pathlib.Path("data/example_series.csv"))
-    accel_json: pathlib.Path = field(default=pathlib.Path("data/example.json"))
+    series_json: pathlib.Path = field(
+        default=pathlib.Path("config/example.json")
+    )
+    series_csv: pathlib.Path = field(
+        default=pathlib.Path("config/example_series.csv")
+    )
+    accel_json: pathlib.Path = field(
+        default=pathlib.Path("config/example.json")
+    )
 
     output_dir: pathlib.Path = field(default=pathlib.Path("output"))
     results_json: pathlib.Path | None = None

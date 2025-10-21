@@ -1,7 +1,7 @@
 {
-  "series_json": "data/big_boy.json",
-  "series_csv": "data/example_series.csv",
-  "accel_json": "data/big_boy.json",
+  "series_json": "config/big_boy.json",
+  "series_csv": "config/example_series.csv",
+  "accel_json": "config/big_boy.json",
   "output_dir": "output",
   "results_json": "output/output.json",
   "results_csv": "output/output.csv",

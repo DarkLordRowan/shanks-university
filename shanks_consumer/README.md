@@ -17,15 +17,15 @@ pip install -r requirements.txt
 
 ## Использование
 
-### Базовое использование
+### Базовое использование 
 
 ```bash
-python main.py
+python main.py run
 ```
 
 Запускает со стандартными расположениями файлов:
 
-* Ряды: `data/example.json` и `data/example_series.csv`
+* Ряды: `config/example.json` и `data/example_series.csv`
 
 * Ускорение: `data/example.json`
 
@@ -36,7 +36,7 @@ python main.py
 ### Файл конфигурации испытания
 
 ```bash
-python main.py --options-json options.json
+python main.py run --options-json options.json
 ```
 
 Запускает испытание с настройками в файле `options.json`. Подробнее о настройках ниже.
@@ -44,43 +44,33 @@ python main.py --options-json options.json
 ### Пользовательские входные файлы
 
 ```bash
-python main.py \
+python main.py run \
     --series-json data/custom_series.json \
     --series-csv data/custom_data.csv \
     --accel-json data/accel_config.json
-```
-
-### Пользовательские выходные директории
-
-```bash
-python script.py \
-    --output-dir results/my_analysis \
-    --plots-dir figures/my_analysis \
-    --results-json results/my_analysis/final_results.json \
-    --events-csv results/my_analysis/detected_events.csv
 ```
 
 ### Выборочная обработка
 
 ```bash
 # Пропустить детектирование событий
-python script.py --no-events
+python main.py run --no-events
 
 # Пропустить генерацию графиков
-python script.py --no-plots
+python main.py run --no-plots
 
 # Пропустить и события и графики
-python script.py --no-events --no-plots
+python main.py run --no-events --no-plots
 ```
 
 ### Подробный вывод
 
 ```bash
 # Базовый подробный вывод
-python script.py -v
+python main.py run -v
 
 # Детальный вывод с трейсбэком при ошибках
-python script.py -vv
+python main.py run -vv
 ```
 
 ## Аргументы
@@ -166,13 +156,13 @@ cp .env.example .env
 ### Быстрый анализ с пользовательскими данными
 
 ```bash
-python script.py --series-json my_data.json --output-dir quick_results -v
+python main.py --series-json my_data.json --output-dir quick_results -v
 ```
 
 ### Продуктивный запуск со всеми выводами
 
 ```bash
-python script.py \
+python main.py run \
     --series-json production/series_config.json \
     --series-csv production/series_data.csv \
     --accel-json production/accel_config.json \
@@ -185,7 +175,7 @@ python script.py \
 ### Минимальный вывод для тестирования
 
 ```bash
-python script.py --no-events --no-plots --output-dir test_run
+python main.py --no-events --no-plots --output-dir test_run
 ```
 
 ## Конфигурация испытания
@@ -319,6 +309,54 @@ poetry run pre-commit install
 ### 4. Запуск скрипта без входа в окружение:
 
 ```sh
-poetry run python main.py
+poetry run python main.py run
 ```
 ...
+
+
+
+## Запуск в Docker Compose
+
+Сборка в изолированном окружении с автосборкой и локальной MongoDB
+
+### 0. Зависимости
+
+В отличии от остальных способов, из прямых зависимостей только [Docker](https://www.docker.com/get-started/) и [Docker Compose](https://docs.docker.com/compose/install/).
+
+### 1. Настройка
+
+```sh
+cp .env.example .env
+```
+
+Для локального размещения MongoDB изменять `.env` не требуется.
+
+### 2. Запуск
+
+```sh
+docker compose up -d --build
+# Отслеживайте статус запуска контейнеров
+docker compose ps 
+```
+
+### 3. Выполнение команд
+
+Для выполнения команд используйте шаблон:
+
+```sh
+docker compose exec -it shanks-consumer аналогичная_python_команда
+# Например:
+docker compose exec -it shanks-consumer python main.py run --options-json config/options.json
+```
+
+### 4. Ограничения
+
+Ожидается, что конфигурация будет в директории `config`, а вывод в `output`. Можно составлять поддиректории, но контейнер не имеет доступ к внешним директориям.
+
+WatchFiles *пока не поддерживается*, после изменений в исходном коде нужно пересобирать образы(не касается конфигураций!).
+
+Для скорости сборки образ опирается на `requirements.txt`, при добавлении/исключении Python зависимостей через Poetry обновляйте и `requirements.txt`:
+
+```sh
+poetry export --without-hashes --format=requirements.txt > requirements.txt
+```
