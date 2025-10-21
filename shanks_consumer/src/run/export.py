@@ -8,6 +8,8 @@ from typing import Any, cast
 
 from pymongo.database import Database as MongoDatabase
 
+from tqdm import tqdm
+
 import pyshanks as ps
 from src.run.params import PrecisionType
 from src.run.trial import TrialResult
@@ -114,7 +116,7 @@ def _write_dataclasses_to_csv_writer(dataclasses, writer, expand_field, separato
     if not dataclasses:
         return
 
-    for dataclass_obj in dataclasses:
+    for dataclass_obj in tqdm(dataclasses, desc="Exporting to CSV"):
         if expand_field:
             expand_data = getattr(dataclass_obj, expand_field)
             if not isinstance(expand_data, list):
@@ -209,6 +211,7 @@ class BaseExport:
         self.expand_field: str | None = None
         self.separator: str = "_"
         self.mongodb_collection: str = "base"
+        self.batch_size = 1000
 
     @staticmethod
     def _sanitize_value(value: Any, *, convert_precision: bool = False) -> Any:
@@ -272,28 +275,40 @@ class BaseExport:
             )
         return serialized
 
-    def to_mongodb(self, mongo_database: MongoDatabase):
-        mongo_database.get_collection(self.mongodb_collection).insert_many(
-            self.as_dict()
-        )
-
     def _verify_location(self, override_location):
         location = override_location or self.location
         if not location:
             raise ValueError("Provide location to export")
         return location
 
+    def to_mongodb(self, mongo_database: MongoDatabase):
+        data_dicts = self.as_dict()
+        collection = mongo_database.get_collection(self.mongodb_collection)
+
+        with tqdm(
+            total=len(data_dicts),
+            desc=f"Exporting to MongoDB collection '{self.mongodb_collection}'",
+        ) as pbar:
+            for i in range(0, len(data_dicts), self.batch_size):
+                batch = data_dicts[i : i + self.batch_size]
+                collection.insert_many(batch)
+                pbar.update(len(batch))
+
     def to_json(self, override_location: pathlib.Path | None = None):
         location = self._verify_location(override_location)
+
+        sanitized_data = []
+        for dataclass in tqdm(self.data, desc="Preparing JSON data"):
+            sanitized_data.append(
+                BaseExport._sanitize_value(
+                    asdict(dataclass), convert_precision=True
+                )
+            )
+
         with open(location, mode="w", encoding="utf-8") as f:
             f.write(
                 json.dumps(
-                    [
-                        BaseExport._sanitize_value(
-                            asdict(dataclass), convert_precision=True
-                        )
-                        for dataclass in self.data
-                    ],
+                    sanitized_data,
                     indent=4,
                     sort_keys=True,
                     cls=ArbEncoder,
