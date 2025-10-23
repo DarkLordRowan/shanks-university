@@ -1506,289 +1506,59 @@ inline static std::unique_ptr<series_acceleration<T, K>>
 create_transformation_by_id(transformation_id_t id) {
 
 	switch (id) {
-		case  		       brezinski_theta_transformation_id:
-		{
-			return std::make_unique<brezinski_theta_algorithm<T,K>>(brezinski_theta_algorithm<T,K>());
-		}
-		case                    chang_wynn_transformation_id:
-		{
-			return std::make_unique<chang_wynn_algorithm<T,K>>(chang_wynn_algorithm<T,K>());
-		}
-		case                  drummond_d_u_transformation_id:
-		{
-			return std::make_unique<drummond_d_algorithm<T,K>>(drummond_d_algorithm<T,K>(
-				remainder_type::u_type, false
-			));
-		}
-		case                  drummond_d_t_transformation_id:
-		{
-			return std::make_unique<drummond_d_algorithm<T,K>>(drummond_d_algorithm<T,K>(
-				remainder_type::t_type, false
-			));
-		}
-		case             drummond_d_t_wave_transformation_id:
-		{
-			return std::make_unique<drummond_d_algorithm<T,K>>(drummond_d_algorithm<T,K>(
-				remainder_type::t_wave_type, false
-			));
-		}
-		case                  drummond_d_v_transformation_id:
-		{
-			return std::make_unique<drummond_d_algorithm<T,K>>(drummond_d_algorithm<T,K>(
-				remainder_type::v_type, false
-			));
-		}
-		case             drummond_d_v_wave_transformation_id:
-		{
-			return std::make_unique<drummond_d_algorithm<T,K>>(drummond_d_algorithm<T,K>(
-				remainder_type::v_wave_type, false
-			));
-		}
-		case        recurrent_drummond_d_u_transformation_id:
-		{
-			return std::make_unique<drummond_d_algorithm<T,K>>(drummond_d_algorithm<T,K>(
-				remainder_type::u_type, true
-			));
-		}
-		case        recurrent_drummond_d_t_transformation_id:
-		{
-			return std::make_unique<drummond_d_algorithm<T,K>>(drummond_d_algorithm<T,K>(
-				remainder_type::t_type, true
-			));
-		}
-		case        recurrent_drummond_d_v_transformation_id:
-		{
-			return std::make_unique<drummond_d_algorithm<T,K>>(drummond_d_algorithm<T,K>(
-				remainder_type::v_type, true
-			));
-		}
-		case   recurrent_drummond_d_t_wave_transformation_id:
-		{
-			return std::make_unique<drummond_d_algorithm<T,K>>(drummond_d_algorithm<T,K>(
-				remainder_type::t_wave_type, true
-			));
-		}
-		case   recurrent_drummond_d_v_wave_transformation_id:
-		{
-			return std::make_unique<drummond_d_algorithm<T,K>>(drummond_d_algorithm<T,K>(
-				remainder_type::v_wave_type, true
-			));
-		}
-		case                   ford_sidi_2_transformation_id:
-		{
-			return std::make_unique<ford_sidi_2_algorithm<T,K>>(ford_sidi_2_algorithm<T,K>());
-		}
-		case                   ford_sidi_3_transformation_id:
-		{
-			return std::make_unique<ford_sidi_3_algorithm<T,K>>(ford_sidi_3_algorithm<T,K>());
-		}
-		case                levin_sidi_l_u_transformation_id:
-		{
-			return std::make_unique<levin_algorithm<T,K>>(levin_algorithm<T,K>(
-				remainder_type::u_type, false
-			));
-		}
-		case                levin_sidi_l_t_transformation_id:
-		{
-			return std::make_unique<levin_algorithm<T,K>>(levin_algorithm<T,K>(
-				remainder_type::t_type, false
-			));
-		}
-		case           levin_sidi_l_t_wave_transformation_id:
-		{
-			return std::make_unique<levin_algorithm<T,K>>(levin_algorithm<T,K>(
-				remainder_type::t_wave_type, false
-			));
-		}
-		case                levin_sidi_l_v_transformation_id:
-		{
-			return std::make_unique<levin_algorithm<T,K>>(levin_algorithm<T,K>(
-				remainder_type::v_type, false
-			));
-		}
-		case           levin_sidi_l_v_wave_transformation_id:
-		{
-			return std::make_unique<levin_algorithm<T,K>>(levin_algorithm<T,K>(
-				remainder_type::v_wave_type, false
-			));
-		}
-		case      recurrent_levin_sidi_l_u_transformation_id:
-		{
-			return std::make_unique<levin_algorithm<T,K>>(levin_algorithm<T,K>(
-				remainder_type::u_type, true
-			));
-		}
-		case      recurrent_levin_sidi_l_t_transformation_id:
-		{
-			return std::make_unique<levin_algorithm<T,K>>(levin_algorithm<T,K>(
-				remainder_type::t_type, true
-			));
-		}
-		case      recurrent_levin_sidi_l_v_transformation_id:
-		{
-			return std::make_unique<levin_algorithm<T,K>>(levin_algorithm<T,K>(
-				remainder_type::v_type, true
-			));
-		}
-		case recurrent_levin_sidi_l_t_wave_transformation_id:
-		{
-			return std::make_unique<levin_algorithm<T,K>>(levin_algorithm<T,K>(
-				remainder_type::t_wave_type, true
-			));
-		}
-		case recurrent_levin_sidi_l_v_wave_transformation_id:
-		{
-			return std::make_unique<levin_algorithm<T,K>>(levin_algorithm<T,K>(
-				remainder_type::v_wave_type, true
-			));
-		}
-		case                levin_sidi_m_u_transformation_id:
-		{
-			return std::make_unique<levin_sidi_m_algorithm<T,K>>(levin_sidi_m_algorithm<T,K>(
-				remainder_type::u_type, false
-			));
-		}
-		case                levin_sidi_m_t_transformation_id:
-		{
-			return std::make_unique<levin_sidi_m_algorithm<T,K>>(levin_sidi_m_algorithm<T,K>(
-				remainder_type::t_type, false
-			));
-		}
-		case           levin_sidi_m_t_wave_transformation_id:
-		{
-			return std::make_unique<levin_sidi_m_algorithm<T,K>>(levin_sidi_m_algorithm<T,K>(
-				remainder_type::t_wave_type, false
-			));
-		}
-		case                levin_sidi_m_v_transformation_id:
-		{
-			return std::make_unique<levin_sidi_m_algorithm<T,K>>(levin_sidi_m_algorithm<T,K>(
-				remainder_type::v_type, false
-			));
-		}
-		case           levin_sidi_m_v_wave_transformation_id:
-		{
-			return std::make_unique<levin_sidi_m_algorithm<T,K>>(levin_sidi_m_algorithm<T,K>(
-				remainder_type::v_wave_type, false
-			));
-		}
-		case                levin_sidi_s_u_transformation_id:
-		{
-			return std::make_unique<levin_sidi_s_algorithm<T,K>>(levin_sidi_s_algorithm<T,K>(
-				remainder_type::u_type, false
-			));
-		}
-		case                levin_sidi_s_t_transformation_id:
-		{
-			return std::make_unique<levin_sidi_s_algorithm<T,K>>(levin_sidi_s_algorithm<T,K>(
-				remainder_type::t_type, false
-			));
-		}
-		case           levin_sidi_s_t_wave_transformation_id:
-		{
-			return std::make_unique<levin_sidi_s_algorithm<T,K>>(levin_sidi_s_algorithm<T,K>(
-				remainder_type::t_wave_type, false
-			));
-		}
-		case                levin_sidi_s_v_transformation_id:
-		{
-			return std::make_unique<levin_sidi_s_algorithm<T,K>>(levin_sidi_s_algorithm<T,K>(
-				remainder_type::v_type, false
-			));
-		}
-		case           levin_sidi_s_v_wave_transformation_id:
-		{
-			return std::make_unique<levin_sidi_s_algorithm<T,K>>(levin_sidi_s_algorithm<T,K>(
-				remainder_type::v_wave_type, false
-			));
-		}
-		case      recurrent_levin_sidi_s_u_transformation_id:
-		{
-			return std::make_unique<levin_sidi_s_algorithm<T,K>>(levin_sidi_s_algorithm<T,K>(
-				remainder_type::u_type, true
-			));
-		}
-		case      recurrent_levin_sidi_s_t_transformation_id:
-		{
-			return std::make_unique<levin_sidi_s_algorithm<T,K>>(levin_sidi_s_algorithm<T,K>(
-				remainder_type::t_type, true
-			));
-		}
-		case      recurrent_levin_sidi_s_v_transformation_id:
-		{
-			return std::make_unique<levin_sidi_s_algorithm<T,K>>(levin_sidi_s_algorithm<T,K>(
-				remainder_type::v_type, true
-			));
-		}
-		case recurrent_levin_sidi_s_t_wave_transformation_id:
-		{
-			return std::make_unique<levin_sidi_s_algorithm<T,K>>(levin_sidi_s_algorithm<T,K>(
-				remainder_type::t_wave_type, true
-			));
-		}
-		case recurrent_levin_sidi_s_v_wave_transformation_id:
-		{
-			return std::make_unique<levin_sidi_s_algorithm<T,K>>(levin_sidi_s_algorithm<T,K>(
-				remainder_type::v_wave_type, true
-			));
-		}
-		case                      lubkin_w_transformation_id:
-		{
-			return std::make_unique<lubkin_w_algorithm<T,K>>(lubkin_w_algorithm<T,K>());
-		}
-		case                    richardson_transformation_id:
-		{
-			return std::make_unique<richardson_algorithm<T,K>>(richardson_algorithm<T,K>());
-		}
-		case                        shanks_transformation_id:
-		{
-			return std::make_unique<richardson_algorithm<T,K>>(richardson_algorithm<T,K>());
-		}
-		case            shanks_alternating_transformation_id:
-		{
-			return std::make_unique<richardson_algorithm<T,K>>(richardson_algorithm<T,K>());
-		}
-		case                       weniger_transformation_id:
-		{
-			return std::make_unique<weniger_algorithm<T,K>>(weniger_algorithm<T,K>());
-		}
-		case                wynn_epsilon_1_transforamtion_id:
-		{
-			return std::make_unique<wynn_epsilon_1_algorithm<T,K>>(wynn_epsilon_1_algorithm<T,K>());
-		}
-		case                wynn_epsilon_2_transforamtion_id:
-		{
-			return std::make_unique<wynn_epsilon_2_algorithm<T,K>>(wynn_epsilon_2_algorithm<T,K>());
-		}
-		case                wynn_epsilon_3_transforamtion_id:
-		{
-			return std::make_unique<wynn_epsilon_3_algorithm<T,K>>(wynn_epsilon_3_algorithm<T,K>());
-		}
-		case                  wynn_rho_rho_transformation_id:
-		{
-			return std::make_unique<wynn_rho_algorithm<T,K>>(wynn_rho_algorithm<T,K>(
-				numerator_type::rho_type
-			));
-		}
-		case          wynn_rho_generalized_transformation_id:
-		{
-			return std::make_unique<wynn_rho_algorithm<T,K>>(wynn_rho_algorithm<T,K>(
-				numerator_type::generalized_type
-			));
-		}
-		case            wynn_rho_gamma_rho_transformation_id:
-		{
-			return std::make_unique<wynn_rho_algorithm<T,K>>(wynn_rho_algorithm<T,K>(
-				numerator_type::gamma_rho_type
-			));
-		}
-		default:
-			throw std::domain_error("Invalid transformation ID");
+	case brezinski_theta_transformation_id		 	  	: { return std::make_unique<brezinski_theta_algorithm<T,K>>(brezinski_theta_algorithm<T,K>()); }
+	case chang_wynn_transformation_id			 	  	: { return std::make_unique<chang_wynn_algorithm<T,K>>(chang_wynn_algorithm<T,K>()); }
+	case drummond_d_u_transformation_id			 	  	: { return std::make_unique<drummond_d_algorithm<T,K>>(drummond_d_algorithm<T,K>( remainder_type::u_type, false )); }
+	case drummond_d_t_transformation_id			 	  	: { return std::make_unique<drummond_d_algorithm<T,K>>(drummond_d_algorithm<T,K>( remainder_type::t_type, false )); }
+	case drummond_d_t_wave_transformation_id	 	  	: { return std::make_unique<drummond_d_algorithm<T,K>>(drummond_d_algorithm<T,K>( remainder_type::t_wave_type, false )); }
+	case drummond_d_v_transformation_id			 	  	: { return std::make_unique<drummond_d_algorithm<T,K>>(drummond_d_algorithm<T,K>( remainder_type::v_type, false )); }
+	case drummond_d_v_wave_transformation_id	 	  	: { return std::make_unique<drummond_d_algorithm<T,K>>(drummond_d_algorithm<T,K>( remainder_type::v_wave_type, false )); }
+	case recurrent_drummond_d_u_transformation_id	  	: { return std::make_unique<drummond_d_algorithm<T,K>>(drummond_d_algorithm<T,K>( remainder_type::u_type, true )); }
+	case recurrent_drummond_d_t_transformation_id	  	: { return std::make_unique<drummond_d_algorithm<T,K>>(drummond_d_algorithm<T,K>( remainder_type::t_type, true )); }
+	case recurrent_drummond_d_v_transformation_id	  	: { return std::make_unique<drummond_d_algorithm<T,K>>(drummond_d_algorithm<T,K>( remainder_type::v_type, true )); }
+	case recurrent_drummond_d_t_wave_transformation_id	: { return std::make_unique<drummond_d_algorithm<T,K>>(drummond_d_algorithm<T,K>( remainder_type::t_wave_type, true )); }
+	case recurrent_drummond_d_v_wave_transformation_id	: { return std::make_unique<drummond_d_algorithm<T,K>>(drummond_d_algorithm<T,K>( remainder_type::v_wave_type, true )); }
+	case ford_sidi_2_transformation_id				  	: { return std::make_unique<ford_sidi_2_algorithm<T,K>>(ford_sidi_2_algorithm<T,K>()); }
+	case ford_sidi_3_transformation_id				  	: { return std::make_unique<ford_sidi_3_algorithm<T,K>>(ford_sidi_3_algorithm<T,K>()); }
+	case levin_sidi_l_u_transformation_id			  	: { return std::make_unique<levin_algorithm<T,K>>(levin_algorithm<T,K>( remainder_type::u_type, false )); }
+	case levin_sidi_l_t_transformation_id			  	: { return std::make_unique<levin_algorithm<T,K>>(levin_algorithm<T,K>( remainder_type::t_type, false )); }
+	case levin_sidi_l_t_wave_transformation_id		  	: { return std::make_unique<levin_algorithm<T,K>>(levin_algorithm<T,K>( remainder_type::t_wave_type, false )); }
+	case levin_sidi_l_v_transformation_id			  	: { return std::make_unique<levin_algorithm<T,K>>(levin_algorithm<T,K>( remainder_type::v_type, false )); }
+	case levin_sidi_l_v_wave_transformation_id		  	: { return std::make_unique<levin_algorithm<T,K>>(levin_algorithm<T,K>( remainder_type::v_wave_type, false )); }
+	case recurrent_levin_sidi_l_u_transformation_id	  	: { return std::make_unique<levin_algorithm<T,K>>(levin_algorithm<T,K>( remainder_type::u_type, true )); }
+	case recurrent_levin_sidi_l_t_transformation_id	  	: { return std::make_unique<levin_algorithm<T,K>>(levin_algorithm<T,K>( remainder_type::t_type, true )); }
+	case recurrent_levin_sidi_l_v_transformation_id	  	: { return std::make_unique<levin_algorithm<T,K>>(levin_algorithm<T,K>( remainder_type::v_type, true )); }
+	case recurrent_levin_sidi_l_t_wave_transformation_id: { return std::make_unique<levin_algorithm<T,K>>(levin_algorithm<T,K>( remainder_type::t_wave_type, true )); }
+	case recurrent_levin_sidi_l_v_wave_transformation_id: { return std::make_unique<levin_algorithm<T,K>>(levin_algorithm<T,K>( remainder_type::v_wave_type, true )); }
+	case levin_sidi_m_u_transformation_id				: { return std::make_unique<levin_sidi_m_algorithm<T,K>>(levin_sidi_m_algorithm<T,K>( remainder_type::u_type, false )); }
+	case levin_sidi_m_t_transformation_id				: { return std::make_unique<levin_sidi_m_algorithm<T,K>>(levin_sidi_m_algorithm<T,K>( remainder_type::t_type, false )); }
+	case levin_sidi_m_t_wave_transformation_id			: { return std::make_unique<levin_sidi_m_algorithm<T,K>>(levin_sidi_m_algorithm<T,K>( remainder_type::t_wave_type, false )); }
+	case levin_sidi_m_v_transformation_id				: { return std::make_unique<levin_sidi_m_algorithm<T,K>>(levin_sidi_m_algorithm<T,K>( remainder_type::v_type, false )); }
+	case levin_sidi_m_v_wave_transformation_id			: { return std::make_unique<levin_sidi_m_algorithm<T,K>>(levin_sidi_m_algorithm<T,K>( remainder_type::v_wave_type, false )); }
+	case levin_sidi_s_u_transformation_id				: { return std::make_unique<levin_sidi_s_algorithm<T,K>>(levin_sidi_s_algorithm<T,K>( remainder_type::u_type, false )); }
+	case levin_sidi_s_t_transformation_id				: { return std::make_unique<levin_sidi_s_algorithm<T,K>>(levin_sidi_s_algorithm<T,K>( remainder_type::t_type, false )); }
+	case levin_sidi_s_t_wave_transformation_id			: { return std::make_unique<levin_sidi_s_algorithm<T,K>>(levin_sidi_s_algorithm<T,K>( remainder_type::t_wave_type, false )); }
+	case levin_sidi_s_v_transformation_id				: { return std::make_unique<levin_sidi_s_algorithm<T,K>>(levin_sidi_s_algorithm<T,K>( remainder_type::v_type, false )); }
+	case levin_sidi_s_v_wave_transformation_id			: { return std::make_unique<levin_sidi_s_algorithm<T,K>>(levin_sidi_s_algorithm<T,K>( remainder_type::v_wave_type, false )); }
+	case recurrent_levin_sidi_s_u_transformation_id		: { return std::make_unique<levin_sidi_s_algorithm<T,K>>(levin_sidi_s_algorithm<T,K>( remainder_type::u_type, true )); }
+	case recurrent_levin_sidi_s_t_transformation_id		: { return std::make_unique<levin_sidi_s_algorithm<T,K>>(levin_sidi_s_algorithm<T,K>( remainder_type::t_type, true )); }
+	case recurrent_levin_sidi_s_v_transformation_id		: { return std::make_unique<levin_sidi_s_algorithm<T,K>>(levin_sidi_s_algorithm<T,K>( remainder_type::v_type, true )); }
+	case recurrent_levin_sidi_s_t_wave_transformation_id: { return std::make_unique<levin_sidi_s_algorithm<T,K>>(levin_sidi_s_algorithm<T,K>( remainder_type::t_wave_type, true )); }
+	case recurrent_levin_sidi_s_v_wave_transformation_id: { return std::make_unique<levin_sidi_s_algorithm<T,K>>(levin_sidi_s_algorithm<T,K>( remainder_type::v_wave_type, true )); }
+	case lubkin_w_transformation_id						: { return std::make_unique<lubkin_w_algorithm<T,K>>(lubkin_w_algorithm<T,K>()); }
+	case richardson_transformation_id					: { return std::make_unique<richardson_algorithm<T,K>>(richardson_algorithm<T,K>()); }
+	case shanks_transformation_id						: { return std::make_unique<richardson_algorithm<T,K>>(richardson_algorithm<T,K>()); }
+	case shanks_alternating_transformation_id			: { return std::make_unique<richardson_algorithm<T,K>>(richardson_algorithm<T,K>()); }
+	case weniger_transformation_id						: { return std::make_unique<weniger_algorithm<T,K>>(weniger_algorithm<T,K>()); }
+	case wynn_epsilon_1_transforamtion_id				: { return std::make_unique<wynn_epsilon_1_algorithm<T,K>>(wynn_epsilon_1_algorithm<T,K>()); }
+	case wynn_epsilon_2_transforamtion_id				: { return std::make_unique<wynn_epsilon_2_algorithm<T,K>>(wynn_epsilon_2_algorithm<T,K>()); }
+	case wynn_epsilon_3_transforamtion_id				: { return std::make_unique<wynn_epsilon_3_algorithm<T,K>>(wynn_epsilon_3_algorithm<T,K>()); }
+	case wynn_rho_rho_transformation_id					: { return std::make_unique<wynn_rho_algorithm<T,K>>(wynn_rho_algorithm<T,K>( numerator_type::rho_type )); }
+	case wynn_rho_generalized_transformation_id			: { return std::make_unique<wynn_rho_algorithm<T,K>>(wynn_rho_algorithm<T,K>( numerator_type::generalized_type )); }
+	case wynn_rho_gamma_rho_transformation_id			: { return std::make_unique<wynn_rho_algorithm<T,K>>(wynn_rho_algorithm<T,K>( numerator_type::gamma_rho_type )); }
+	default: throw std::domain_error("Invalid transformation ID");
 	}
 }
-
-
-
 
 
 /**
@@ -1796,233 +1566,135 @@ create_transformation_by_id(transformation_id_t id) {
  * This function provides a convenient and interactive way to test out the convergence acceleration of various series
  * @tparam T The type of the elements in the series, K The type of enumerating integer
  */
+
 template <AcceptedLike T, std::unsigned_integral K>
 inline static void main_testing_function()
 {
-	T x;
-	T tParam;
-	K kParam;
-	std::unique_ptr<series_base<T, K>> series;
-	std::unique_ptr<series_acceleration<T, K>> transform;
 
 	//choosing series
-	while (true) {
-		try {
-			print_series_info();
+	print_series_info();
+	std::unique_ptr<series_base<T, K>> series;
+	K series_id = read_input<K>();
 
-			K series_id = read_input<K>();
+	std::cout << "\nChosen series id " <<  series_id << "\n";
 
-			std::cout << "\nChosen series id " <<  series_id << "\n";
-
-			// Create series using helper function
-			series = create_series_by_id<T, K>(static_cast<series_id_t>(series_id));
-
-			clear_console();
-			std::cout << series->get_name() << "\n";
+	// Create series using helper function
+	series = create_series_by_id<T, K>(static_cast<series_id_t>(series_id));
 
 
-			//choosing x
-			std::cout << "Enter x - the argument for the functional series" << '\n';
-			x = inputCustomType<T>();
+	std::cout << series->get_name() << "\n";
+	//choosing x
+	std::cout << "Enter x - the argument for the functional series" << '\n';
+	T x = inputCustomType<T>();
 
-			tParam = static_cast<T>(1);
-			kParam = static_cast<K>(1);
+	T tParam = static_cast<T>(1);
+	K kParam = static_cast<K>(1);
 
-			switch(series_id){
-				case bin_series_id:{
-					std::cout << "for bin series must initialise variable alpha\n";
-					tParam = inputCustomType<T>("alpha");
-				}
-				case incomplete_Gamma_func_series_id:{
-					std::cout << "for incomplete Gamma function must initialise variable alpha\n";
-					tParam = inputCustomType<T>("alpha");
-				}
-				case m_fact_1mx_mp1_inverse_series_id:{
-					std::cout << "for m factorial 1mx mp1 ... series must initialise variable alpha\n";
-					kParam = inputCustomType<K>("m");
-				}
-				default:
-					break;
-			};
-			clear_console();
-			break;
-		} catch (std::domain_error &e ) {
-			std::cout << e.what() << "\nPlease, try again.\n";
-			stop_console();
-			clear_console();
-			continue;
-		} catch (std::invalid_argument &e ) {
-			std::cout << e.what() << "\nPlease, try again.\n";
-			stop_console();
-			clear_console();
-			continue;
-		} catch (std::exception &e) {
-			std::cout << "Unexpected error: " << e.what() << "\nExiting.\n";
-			return;
+	switch(series_id){
+		case bin_series_id:{
+			std::cout << "for bin series must initialise variable alpha\n";
+			tParam = inputCustomType<T>("alpha");
+		}
+		case incomplete_Gamma_func_series_id:{
+			std::cout << "for incomplete Gamma function must initialise variable alpha\n";
+			tParam = inputCustomType<T>("alpha");
+		}
+		case m_fact_1mx_mp1_inverse_series_id:{
+			std::cout << "for m factorial 1mx mp1 ... series must initialise variable alpha\n";
+			kParam = inputCustomType<K>("m");
 		}
 	}
 
-	std::string answer;
-	series_result<T> result;
-	K function_id;
-	K order;
-	K n;
+	//choosing transformation
+	print_transformation_info();
+	K transformation_id = read_input<K>();
 
-	while (true) {
-		try {
-			//choosing transformation
-			print_transformation_info();
-			K transformation_id = read_input<K>();
+	std::unique_ptr<series_acceleration<T, K>> transform;
 
+	// Create transformation using helper function
+	transform = create_transformation_by_id<T, K>(static_cast<transformation_id_t>(transformation_id));
 
-			clear_console();
+	std::cout << "transformation : " << transform->get_name() << "\n";
+	print_test_function_info();
+	K function_id = read_input<K>();
+	std::cout << "Enter n and order:" << '\n';
+	K n = read_input<K>();
+	K order = read_input<K>();
+	series_result<T> result = series->generate_series(x, n + 3 * order + 1, tParam, kParam);
 
-			// Create transformation using helper function
-			transform = create_transformation_by_id<T, K>(static_cast<transformation_id_t>(transformation_id));
-
-			std::cout << "transformation : " << transform->get_name() << "\n";
-			std::cout << "Enter n and order:" << '\n';
-			n = read_input<K>();
-			order = read_input<K>();
-
-
-			result = series->generate_series(x, n + 3 * order + 1, tParam, kParam);
-			answer = "ok";
-			clear_console();
-			break;
-		} catch (std::domain_error &e ) {
-			std::cout << e.what() << "\nPlease, try again.\n";
-			stop_console();
-			clear_console();
-			continue;
-		} catch (std::invalid_argument &e ) {
-			std::cout << e.what() << "\nPlease, try again.\n";
-			stop_console();
-			clear_console();
-			continue;
-		} catch (std::exception &e) {
-			std::cout << "Unexpected error: " << e.what() << "\nExiting.\n";
-			return;
-		}
+	std::string answer = "ok";
+	while(answer != "Y" && answer != "Yes" && answer != "N" && answer != "No"){
+		std::cout << "Appply noise [Y]es, [N]o: "; std::cin >> answer;
 	}
 
-	while (true) {
-		try {
-			while(answer != "Y" && answer != "Yes" && answer != "N" && answer != "No"){
-				std::cout << "Appply noise [Y]es, [N]o: "; std::cin >> answer;
-			};
-			clear_console();
+	if (answer == "Y" || answer == "Yes"){
+		size_t noise_type_to_use;
+		std::cout << "Noise type: uniform[0], normal[1], poisson[2]\n";
+		std::cin >> noise_type_to_use; std::cout << "\n";
 
-			if (answer == "Y" || answer == "Yes"){
-				size_t noise_type_to_use;
-				std::cout << "Noise type: uniform[0], normal[1], poisson[2]\n";
-				std::cin >> noise_type_to_use; std::cout << "\n";
+		result = jitter<T,T>(result, static_cast<NoiseType>(noise_type_to_use));
+	}
 
-				result = jitter<T,T>(result, static_cast<NoiseType>(noise_type_to_use));
-			}
-			clear_console();
-			break;
-		} catch (std::invalid_argument &e ) {
-			std::cout << e.what() << "\nPlease, try again.\n";
-			stop_console();
-			clear_console();
-			continue;
-		} catch (std::domain_error &e) {
-			std::cout << e.what() << "\nPlease, try again.\n";
-			stop_console();
-			clear_console();
-			continue;
-		} catch (std::exception &e) {
-			std:: cout << "Unexpected error: " << e.what() << "\nExiting.\n";
-			return;
-		}
+	switch (function_id)
+	{
+	case test_function_id_t::cmp_sum_and_transform_id:
+		cmp_sum_and_transform<T,K>(
+			n, order, 
+			series.get(),
+			result,
+			transform.get()
+		);
+		break;
+	case test_function_id_t::cmp_a_n_and_transform_id:
+		cmp_a_n_and_transform<T,K>(
+			n, order,
+			series.get(),
+			result,
+			transform.get()
+		);
+		break;
+	case test_function_id_t::transformation_remainder_id:
+		transformation_remainders<T,K>(
+			n, order, 
+			series.get(),
+			result,
+			transform.get()
+		);
+		break;
+	case test_function_id_t::cmp_transformations_id:
+	{
+		print_transformation_info();
+		K cmp_transformation_id = read_input<K>();
+		std::unique_ptr<series_acceleration<T, K>> transform2;
+		transform2 = create_transformation_by_id<T, K>( static_cast<transformation_id_t>(cmp_transformation_id));
+		cmp_transformations<T,K>(
+			n, order, 
+			series.get(),
+			result,
+			transform.get(),
+			transform2.get()
+		);
+		break;
 	}
-	while (true) {
-		try {
-			print_test_function_info();
-			function_id = read_input<K>();
-			switch (function_id)
-			{
-				case test_function_id_t::cmp_sum_and_transform_id:
-					cmp_sum_and_transform<T,K>(
-						n, order,
-						series.get(),
-						result,
-						transform.get()
-					);
-					break;
-				case test_function_id_t::cmp_a_n_and_transform_id:
-					cmp_a_n_and_transform<T,K>(
-						n, order,
-						series.get(),
-						result,
-						transform.get()
-					);
-					break;
-				case test_function_id_t::transformation_remainder_id:
-					transformation_remainders<T,K>(
-						n, order,
-						series.get(),
-						result,
-						transform.get()
-					);
-					break;
-				case test_function_id_t::cmp_transformations_id:
-				{
-					while (true) {
-						try{
-							print_transformation_info();
-							K cmp_transformation_id = read_input<K>();
-							std::unique_ptr<series_acceleration<T, K>> transform2;
-							transform2 = create_transformation_by_id<T, K>( static_cast<transformation_id_t>(cmp_transformation_id));
-							cmp_transformations<T,K>(
-								n, order,
-								series.get(),
-								result,
-								transform.get(),
-								transform2.get()
-							);
-							break;
-						} catch (std::domain_error &e ) {
-							throw;
-						}
-					}
-					break;
-				}
-				case test_function_id_t::eval_transform_time_id:
-					eval_transform_time<T,K>(
-						n, order,
-						series.get(),
-						result,
-						transform.get()
-					);
-					break;
-				case test_function_id_t::test_all_transforms_id:
-				{
-					test_all_transforms<T,K>(
-						n, order,
-						series.get(),
-						result
-					);
-					break;
-				}
-				default:
-					throw std::domain_error("wrong function_id");
-			}
-			stop_console();
-			clear_console();
-			break;
-		} catch (std::domain_error &e ) {
-			std::cout << e.what() << "\nPlease, try again.\n";
-			stop_console();
-			clear_console();
-			continue;
-		} catch (std::invalid_argument &e ) {
-			throw;
-		} catch (std::exception &e) {
-			std::cout << "Unexpected error: " << e.what() << "\nExiting.\n";
-			return;
-		}
+	case test_function_id_t::eval_transform_time_id:
+		eval_transform_time<T,K>(
+			n, order, 
+			series.get(),
+			result,
+			transform.get()
+		);
+		break;
+	case test_function_id_t::test_all_transforms_id:
+	{
+		test_all_transforms<T,K>(
+			n, order, 
+			series.get(),
+			result
+		);
+		break;
 	}
-	std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+	default:
+		throw std::domain_error("wrong function_id");
+	}
+
 }

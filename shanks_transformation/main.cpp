@@ -29,6 +29,8 @@ int main()
 		}
 		catch (float_precision::divide_by_zero& e){
 			std::cout << "float_precision::division by zero\n";
+		} catch (complex_precision<float_precision>::divide_by_zero& e){
+			std::cout << "float_precision::division by zero\n";
 		}
 		catch (float_precision::domain_error& e){
 			std::cout << "float_precision::domain error\n";
