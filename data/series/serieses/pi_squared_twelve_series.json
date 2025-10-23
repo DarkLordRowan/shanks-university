@@ -1,10 +1,12 @@
 {
-  "id": "pi_squared_twelve_series",
-  "num": 41,
-  "title": "\\tfrac{\\pi^{2}}{12}\\,x",
-  "formula": "\\sum_{n=0}^{\\infty}\\frac{(-1)^{n} x}{(n+1)^{2}} = \\tfrac{\\pi^{2}}{12}\\,x",
-  "x_from": "-\\infty",
-  "x_to": "+\\infty",
-  "speed": "quadratic",
-  "document": "series.docx"
+    "id": "pi_squared_twelve_series",
+    "num": 41,
+    "title": "\\tfrac{\\pi^{2}}{12}\\,x",
+    "formula": "\\sum_{n=0}^{\\infty}\\frac{(-1)^{n} x}{(n+1)^{2}} = \\tfrac{\\pi^{2}}{12}\\,x",
+    "x_from": "-\\infty",
+    "x_to": "+\\infty",
+    "left_closed": false,
+    "right_closed": false,
+    "speed": "quadratic",
+    "document": "series.docx"
 }

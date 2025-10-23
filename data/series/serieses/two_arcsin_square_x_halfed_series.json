@@ -1,10 +1,12 @@
 {
-  "id": "two_arcsin_square_x_halfed_series",
-  "num": 40,
-  "title": "2\\arcsin^2\\left(\\tfrac{x}{2}\\right)",
-  "formula": "\\sum_{n=0}^{\\infty}\\frac{(n!)^2}{(2n+2)!}x^{2n+2}=2\\arcsin^2\\left(\\tfrac{x}{2}\\right)",
-  "x_from": "-2",
-  "x_to": "2",
-  "speed": "hyperlinear",
-  "document": "series.docx"
+    "id": "two_arcsin_square_x_halfed_series",
+    "num": 40,
+    "title": "2\\arcsin^2\\left(\\tfrac{x}{2}\\right)",
+    "formula": "\\sum_{n=0}^{\\infty}\\frac{(n!)^2}{(2n+2)!}x^{2n+2}=2\\arcsin^2\\left(\\tfrac{x}{2}\\right)",
+    "x_from": "-2",
+    "x_to": "2",
+    "left_closed": false,
+    "right_closed": false,
+    "speed": "hyperlinear",
+    "document": "series.docx"
 }

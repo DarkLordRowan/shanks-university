@@ -1,10 +1,12 @@
 {
-  "id": "xmb_Jb_two_series",
-  "num": 11,
-  "title": "x^{-b}J_{b}(2x)",
-  "formula": "\\sum_{n=0}^{\\infty}(-1)^{n}\\frac{x^{2n}}{n!\\,\\Gamma(n+b+1)}",
-  "x_from": "-\\infty",
-  "x_to": "+\\infty",
-  "speed": "hyperlinear",
-  "document": "series.docx"
+    "id": "xmb_Jb_two_series",
+    "num": 11,
+    "title": "x^{-b}J_{b}(2x)",
+    "formula": "\\sum_{n=0}^{\\infty}(-1)^{n}\\frac{x^{2n}}{n!\\,\\Gamma(n+b+1)}",
+    "x_from": "-\\infty",
+    "x_to": "+\\infty",
+    "left_closed": false,
+    "right_closed": false,
+    "speed": "hyperlinear",
+    "document": "series.docx"
 }

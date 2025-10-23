@@ -1,10 +1,12 @@
 {
-  "id": "one_twelfth_series",
-  "num": 27,
-  "title": "\\tfrac{1}{12}\\,x",
-  "formula": "\\sum_{n=0}^{\\infty}\\frac{x}{(2n+1)(2n+3)(2n+5)} = \\tfrac{1}{12}\\,x",
-  "x_from": "-\\infty",
-  "x_to": "+\\infty",
-  "speed": "cubic",
-  "document": "series.docx"
+    "id": "one_twelfth_series",
+    "num": 27,
+    "title": "\\tfrac{1}{12}\\,x",
+    "formula": "\\sum_{n=0}^{\\infty}\\frac{x}{(2n+1)(2n+3)(2n+5)} = \\tfrac{1}{12}\\,x",
+    "x_from": "-\\infty",
+    "x_to": "+\\infty",
+    "left_closed": false,
+    "right_closed": false,
+    "speed": "cubic",
+    "document": "series.docx"
 }
