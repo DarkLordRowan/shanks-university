@@ -1,11 +1,34 @@
 export type SeriesNode = {
     id: string;
+    num: string;
     title: string;
-    subtitle?: string;
     formula?: string;
-    url?: string;
+    x_from?: string;
+    x_to?: string;
+    left_closed?: boolean;
+    right_closed?: boolean;
+    speed?:string;
     document?: string;
 };
+
+{
+    "id": "half_minus_sinx_multi_pi_4_series",
+    "num": 0,
+    "num": 0,
+    "title": "",
+    "formula": "",
+    "x_from": "",
+    "x_to": "",
+    "left_closed": false,
+    "right_closed": false,
+    "speed": "",
+    "x_from": "",
+    "x_to": "",
+    "left_closed": false,
+    "right_closed": false,
+    "speed": "",
+    "document": "series.docx"
+}
 
 const GH = {
     owner: "DarkLordRowan",
