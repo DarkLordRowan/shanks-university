@@ -1,10 +1,12 @@
 {
-  "id": "ln1mx_series",
-  "num": 8,
-  "title": "\\ln(1-x)",
-  "formula": "-\\sum_{n=1}^{\\infty}\\frac{x^{n}}{n}",
-  "x_from": "-1",
-  "x_to": "1",
-  "speed": "linear",
-  "document": "series.docx"
+    "id": "ln1mx_series",
+    "num": 8,
+    "title": "\\ln(1-x)",
+    "formula": "-\\sum_{n=1}^{\\infty}\\frac{x^{n}}{n}",
+    "x_from": "-1",
+    "x_to": "1",
+    "left_closed": false,
+    "right_closed": false,
+    "speed": "linear",
+    "document": "series.docx"
 }

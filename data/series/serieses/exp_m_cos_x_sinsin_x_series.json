@@ -1,10 +1,12 @@
 {
-  "id": "exp_m_cos_x_sinsin_x_series",
-  "num": 31,
-  "title": "e^{-\\cos(x)}\\,\\sin(\\sin x)",
-  "formula": "\\sum_{n=0}^{\\infty}\\frac{(-1)^{n}\\sin(nx)}{n!}=e^{-\\cos(x)}\\sin(\\sin(x))",
-  "x_from": "-\\infty",
-  "x_to": "+\\infty",
-  "speed": "hyperlinear",
-  "document": "series.docx"
+    "id": "exp_m_cos_x_sinsin_x_series",
+    "num": 31,
+    "title": "e^{-\\cos(x)}\\,\\sin(\\sin x)",
+    "formula": "\\sum_{n=0}^{\\infty}\\frac{(-1)^{n}\\sin(nx)}{n!}=e^{-\\cos(x)}\\sin(\\sin(x))",
+    "x_from": "-\\infty",
+    "x_to": "+\\infty",
+    "left_closed": false,
+    "right_closed": false,
+    "speed": "hyperlinear",
+    "document": "series.docx"
 }

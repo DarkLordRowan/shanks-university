@@ -1,10 +1,12 @@
 {
-  "id": "ln_x_plus_one_x_minus_one_halfed_series",
-  "num": 39,
-  "title": "\\tfrac{1}{2}\\ln\\left(\\tfrac{1+x}{1-x}\\right)",
-  "formula": "\\sum_{n=0}^{\\infty}\\frac{x^{2n+1}}{2n+1} = \\tfrac{1}{2}\\ln\\left(\\tfrac{1+x}{1-x}\\right)",
-  "x_from": "-1",
-  "x_to": "1",
-  "speed": "linear",
-  "document": "series.docx"
+    "id": "ln_x_plus_one_x_minus_one_halfed_series",
+    "num": 39,
+    "title": "\\tfrac{1}{2}\\ln\\left(\\tfrac{1+x}{1-x}\\right)",
+    "formula": "\\sum_{n=0}^{\\infty}\\frac{x^{2n+1}}{2n+1} = \\tfrac{1}{2}\\ln\\left(\\tfrac{1+x}{1-x}\\right)",
+    "x_from": "-1",
+    "x_to": "1",
+    "left_closed": false,
+    "right_closed": false,
+    "speed": "linear",
+    "document": "series.docx"
 }
