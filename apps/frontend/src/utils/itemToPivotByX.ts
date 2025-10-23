@@ -13,9 +13,9 @@ export function pivotByX(items: Item[]): PivotByX[] {
     const map = new Map<number, Item[]>();
 
     for (const it of items) {
-        const arr = map.get(it.x);
+        const arr = map.get(1);
         if (arr) arr.push(it);
-        else map.set(it.x, [it]);
+        else map.set(1, [it]);
     }
 
     const result: PivotByX[] = [];

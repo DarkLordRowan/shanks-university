@@ -32,7 +32,7 @@ function shortAlg(name: string): string {
     return name.endsWith("Algorithm") ? name.slice(0, -9) : name;
 }
 
-export const PivotMatrix: React.FC<Props> = ({ pivot, seriesTrim = 4 }) => {
+export const PivotMatrix: React.FC<Props> = ({ pivot, seriesTrim = 100 }) => {
     const algs = pivot.allAlgorithms;
     const rows = pivot.allSeries;
     const { ref, cw } = useAutoColWidth(algs.length, {
@@ -49,9 +49,7 @@ export const PivotMatrix: React.FC<Props> = ({ pivot, seriesTrim = 4 }) => {
             <table className="w-full border-collapse">
                 <thead className="bg-surface/60 backdrop-blur text-textDim">
                 <tr>
-                    <th className="sticky left-0 z-10 px-2 py-1 text-left bg-surface/60">
-                        x = {Number.isNaN(pivot.x) ? "NaN" : String(pivot.x)}
-                    </th>
+                    <th className="sticky left-0 z-10 px-2 py-1 text-left bg-surface/60"></th>
                     {algs.map((alg) => (
                         <th
                             key={alg}
@@ -60,16 +58,17 @@ export const PivotMatrix: React.FC<Props> = ({ pivot, seriesTrim = 4 }) => {
                             style={{ width: cw, minWidth: cw, maxWidth: cw }}
                         >
                             <div
-                                className="mx-auto h-14 flex items-end justify-center px-1 text-center text-textDim"
+                                className="mx-auto h-6 flex items-start justify-center px-1 text-center text-textDim"
                                 style={{
-                                    writingMode: "vertical-rl",
                                     textOrientation: "mixed",
+                                    transform: "rotate(0deg)",
                                 }}
                             >
                                 <span className="truncate">{shortAlg(alg)}</span>
                             </div>
                         </th>
                     ))}
+
                 </tr>
                 </thead>
 
