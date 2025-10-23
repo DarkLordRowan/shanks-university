@@ -17,7 +17,7 @@ export const PivotMatrixSwitcher: React.FC<Props> = ({ pivots, initialIndex = 0 
         <div className="space-y-3">
             <div className="flex items-center gap-3">
                 <label htmlFor="pivot-x" className="text-sm text-textDim">
-                    x:
+                    uuid:
                 </label>
                 <select
                     id="pivot-x"
@@ -27,7 +27,7 @@ export const PivotMatrixSwitcher: React.FC<Props> = ({ pivots, initialIndex = 0 
                 >
                     {pivots.map((p, i) => (
                         <option key={`${p.x}_${i}`} value={i}>
-                            {Number.isNaN(p.x) ? "NaN" : p.x}
+                            ...
                         </option>
                     ))}
                 </select>

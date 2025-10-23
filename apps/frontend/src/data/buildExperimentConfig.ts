@@ -67,27 +67,27 @@ export function buildExperimentConfig(
                 base.args = {
                     remainder: ["v_variant", "u_variant", "t_wave_variant"],
                     useRecFormulas: [true, false],
-                    beta: [0.5, 1, 1.5, 2],
+                    beta: [52],
                 };
                 break;
             case "LevinSidiMAlgorithm":
                 base.args = {
                     remainder: ["v_variant", "u_variant", "t_wave_variant"],
-                    gamma: [0.5, 1, 1.5, 2],
+                    gamma: [52],
                 };
                 break;
             case "LevinSidiSAlgorithm":
                 base.args = {
                     remainder: ["v_variant", "u_variant", "t_wave_variant"],
                     useRecFormulas: [true, false],
-                    parameter: [0.5, 1, 1.5, 2],
+                    parameter: [52],
                 };
                 break;
             case "WhynnRhoAlgorithm":
                 base.args = {
                     numerator: ["rho_variant", "generalized_variant", "gamma_rho_variant"],
-                    gamma: [0.5, 1, 1.5, 2],
-                    RHO: [0.5, 1, 1.5, 2],
+                    gamma: [52],
+                    RHO: [2],
                 };
                 break;
             case "WynnEpsilon3Algorithm":
