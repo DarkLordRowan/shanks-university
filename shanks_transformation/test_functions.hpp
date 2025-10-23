@@ -438,7 +438,5 @@ void test_all_transforms(
 				}
 			}
 			std::cout << "\n";
-		stop_console();
-		clear_console();
 	}
 }
