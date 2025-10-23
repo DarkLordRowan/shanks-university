@@ -1,13 +1,22 @@
+export type IntervalSpec = {
+    from: string;
+    to: string;
+    left_closed?: boolean;  // true → [a, ...
+    right_closed?: boolean; // true → ..., b]
+};
+
+export type DomainSpec = {
+    intervals: IntervalSpec[];
+    points?: string[];
+};
+
 export type SeriesNode = {
     id: string;
-    num: string;
+    num: number;
     title: string;
     formula?: string;
-    x_from?: string;
-    x_to?: string;
-    left_closed?: boolean;
-    right_closed?: boolean;
-    speed?:string;
+    domain: DomainSpec;
+    speed?: string;
     document?: string;
 };
 
@@ -27,8 +36,8 @@ export const getSeriesDataFromGitHub = async (): Promise<SeriesNode[]> => {
     const response = await fetch(rawUrl);
 
     if (!response.ok) {
-        console.error('Error fetching series data from GitHub', response.statusText);
-        throw new Error('Failed to fetch series data from GitHub');
+        console.error("Error fetching series data from GitHub", response.statusText);
+        throw new Error("Failed to fetch series data from GitHub");
     }
 
     const data: SeriesNode[] = await response.json();
@@ -38,10 +47,7 @@ export const getSeriesDataFromGitHub = async (): Promise<SeriesNode[]> => {
         num: jsonData.num,
         title: jsonData.title,
         formula: jsonData.formula,
-        x_from: jsonData.x_from,
-        x_to: jsonData.x_to,
-        left_closed: jsonData.left_closed,
-        right_closed: jsonData.right_closed,
+        domain: jsonData.domain,
         speed: jsonData.speed,
         document: jsonData.document,
     }));

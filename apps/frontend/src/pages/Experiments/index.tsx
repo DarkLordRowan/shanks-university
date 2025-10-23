@@ -8,13 +8,15 @@ import { PivotMatrixSwitcher } from "../../components/PivotMatrixSwitcher.tsx";
 import { pivotByX } from "../../utils/itemToPivotByX.ts";
 import { normalizeFromJson } from "../../utils/responseToItem.ts";
 
+import { buildExperimentConfig } from "../../data/buildExperimentConfig";
+
 const Experiments: React.FC = () => {
     // входные данные
     const [uuidInput, setUuidInput] = useState<string>("");
     const {
-        state: {rawText, fileName, jsonPayload, prettyPayload},
-        actions: {setRawText, onFileChange, onDrop, applyPasted, reset},
-        refs: {fileInputRef},
+        state: { rawText, fileName, jsonPayload, prettyPayload },
+        actions: { setRawText, onFileChange, onDrop, applyPasted, reset },
+        refs: { fileInputRef },
     } = useJsonInput();
 
     const {
@@ -45,16 +47,28 @@ const Experiments: React.FC = () => {
             return;
         }
         setGeneralError(null);
-        const {jsonOk} = await sendForJson(jsonPayload);
+        const { jsonOk } = await sendForJson(jsonPayload);
         if (jsonOk) setActiveTab("jsonTable");
+    };
+
+    const onGenerateFromData = () => {
+        try {
+            const config = buildExperimentConfig({ start: 1, stop: 51, step: 1 }, [10]);
+            const json = JSON.stringify(config, null, 2);
+            setRawText(json);
+            resetResults();
+            setGeneralError(null);
+        } catch (err) {
+            console.error(err);
+            setGeneralError("Ошибка при генерации JSON из данных проекта.");
+        }
     };
 
     return (
         <div className="mx-auto max-w-6xl px-4 py-6">
             <h1 className="mb-4 text-2xl font-bold">Эксперименты</h1>
             <p className="mb-6 text-textDim">
-                Загрузите JSON с параметрами рядов и алгоритмов. Мы отправим его во внешнее API и получим результаты в
-                форматах JSON и CSV.
+                Загрузите JSON с параметрами рядов и алгоритмов или сгенерируйте его автоматически.
             </p>
 
             {/* Входные данные */}
@@ -80,8 +94,13 @@ const Experiments: React.FC = () => {
                         </div>
                     )}
                 </div>
-                <input ref={fileInputRef} type="file" accept="application/json,.json" onChange={onFileChange}
-                       className="hidden"/>
+                <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="application/json,.json"
+                    onChange={onFileChange}
+                    className="hidden"
+                />
 
                 <label className="mb-1 block text-sm font-medium">Или вставьте JSON вручную</label>
                 <textarea
@@ -94,16 +113,28 @@ const Experiments: React.FC = () => {
                     onChange={(e) => setRawText(e.target.value)}
                 />
 
-                <div className="mt-3 flex gap-3">
+                <div className="mt-3 flex flex-wrap gap-3">
                     <button
                         className="rounded-xl bg-primary px-4 py-2 text-sm font-medium text-black hover:opacity-90"
                         onClick={onUsePasted}
                     >
                         Использовать вставленный JSON
                     </button>
-                    <button className="rounded-xl border border-border px-4 py-2 text-sm" onClick={onResetAll}>
+
+                    <button
+                        className="rounded-xl bg-primary/80 px-4 py-2 text-sm font-medium text-black hover:opacity-90"
+                        onClick={onGenerateFromData}
+                    >
+                        Сгенерировать из данных проекта
+                    </button>
+
+                    <button
+                        className="rounded-xl border border-border px-4 py-2 text-sm"
+                        onClick={onResetAll}
+                    >
                         Сбросить
                     </button>
+
                     <button
                         className="ml-auto rounded-xl bg-primary px-4 py-2 text-sm font-medium text-black hover:opacity-90 disabled:opacity-60"
                         onClick={onSend}
@@ -145,8 +176,7 @@ const Experiments: React.FC = () => {
                 {prettyPayload && (
                     <div className="mt-4">
                         <h3 className="mb-1 text-sm font-semibold text-secondary">Проверка распознанного JSON</h3>
-                        <pre
-                            className="max-h-64 whitespace-pre-wrap overflow-auto rounded-xl border border-border/60 bg-panel p-3 text-xs leading-relaxed text-white">
+                        <pre className="max-h-64 whitespace-pre-wrap overflow-auto rounded-xl border border-border/60 bg-panel p-3 text-xs leading-relaxed text-white">
                             {prettyPayload}
                         </pre>
                     </div>
@@ -158,20 +188,20 @@ const Experiments: React.FC = () => {
                 <h2 className="mb-3 text-lg font-semibold">Результаты</h2>
 
                 {generalError && (
-                    <div
-                        className="mb-3 rounded-xl border border-red-400/60 bg-red-500/10 p-3 text-sm text-red-300">{generalError}</div>
+                    <div className="mb-3 rounded-xl border border-red-400/60 bg-red-500/10 p-3 text-sm text-red-300">
+                        {generalError}
+                    </div>
                 )}
 
                 <div className="mb-3 flex flex-wrap gap-2">
-                    {[
-                        {id: "jsonTable", label: "Таблица JSON"},
-                        {id: "rawJson", label: "Raw JSON"},
-                    ].map((t) => (
+                    {[{ id: "jsonTable", label: "Таблица JSON" }, { id: "rawJson", label: "Raw JSON" }].map((t) => (
                         <button
                             key={t.id}
                             onClick={() => setActiveTab(t.id as any)}
                             className={`rounded-lg px-3 py-1 text-sm ${
-                                activeTab === (t.id as any) ? "bg-primary text-black" : "border border-border hover:bg-panel/60"
+                                activeTab === (t.id as any)
+                                    ? "bg-primary text-black"
+                                    : "border border-border hover:bg-panel/60"
                             }`}
                         >
                             {t.label}
@@ -182,7 +212,11 @@ const Experiments: React.FC = () => {
                         {jsonResult && (
                             <a
                                 className="rounded-lg border border-border px-3 py-1 text-sm hover:bg-panel/60"
-                                href={URL.createObjectURL(new Blob([JSON.stringify(jsonResult, null, 2)], {type: "application/json"}))}
+                                href={URL.createObjectURL(
+                                    new Blob([JSON.stringify(jsonResult, null, 2)], {
+                                        type: "application/json",
+                                    })
+                                )}
                                 download="results.json"
                             >
                                 Скачать JSON
@@ -194,8 +228,9 @@ const Experiments: React.FC = () => {
                 {activeTab === "jsonTable" && (
                     <>
                         {jsonError && (
-                            <div
-                                className="mb-3 rounded-xl border border-red-400/60 bg-red-500/10 p-3 text-sm text-red-300">{jsonError}</div>
+                            <div className="mb-3 rounded-xl border border-red-400/60 bg-red-500/10 p-3 text-sm text-red-300">
+                                {jsonError}
+                            </div>
                         )}
                         {jsonTable.headers.length ? (
                             <>
@@ -225,30 +260,31 @@ const Experiments: React.FC = () => {
                                     );
                                 })()}
 
-                                {/* Графики */}
-                                {(() => {
-                                    return <PivotMatrixSwitcher pivots={pivotByX(normalizeFromJson(jsonResult))}/>;
-                                })()}
+                                <PivotMatrixSwitcher pivots={pivotByX(normalizeFromJson(jsonResult))} />
                             </>
                         ) : (
-                            <div className="rounded-xl border border-border/60 p-4 text-sm text-textDim">Нет данных.
-                                Отправьте запрос.</div>
+                            <div className="rounded-xl border border-border/60 p-4 text-sm text-textDim">
+                                Нет данных. Отправьте запрос.
+                            </div>
                         )}
                     </>
                 )}
 
                 {activeTab === "rawJson" && (
                     <>
-                        {jsonError && <div
-                            className="mb-3 rounded-xl border border-red-400/60 bg-red-500/10 p-3 text-sm text-red-300">{jsonError}</div>}
+                        {jsonError && (
+                            <div className="mb-3 rounded-xl border border-red-400/60 bg-red-500/10 p-3 text-sm text-red-300">
+                                {jsonError}
+                            </div>
+                        )}
                         {jsonResult ? (
-                            <pre
-                                className="max-h-[28rem] overflow-auto rounded-xl border border-border/60 bg-surface p-3 text-xs leading-relaxed text-white whitespace-pre">
+                            <pre className="max-h-[28rem] overflow-auto rounded-xl border border-border/60 bg-surface p-3 text-xs leading-relaxed text-white whitespace-pre">
                                 {JSON.stringify(jsonResult, null, 2)}
                             </pre>
                         ) : (
-                            <div className="rounded-xl border border-border/60 p-4 text-sm text-textDim">Нет данных.
-                                Отправьте запрос.</div>
+                            <div className="rounded-xl border border-border/60 p-4 text-sm text-textDim">
+                                Нет данных. Отправьте запрос.
+                            </div>
                         )}
                     </>
                 )}
