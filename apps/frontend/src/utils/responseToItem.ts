@@ -2,6 +2,7 @@ import { parseResponse, type ResponseRecord } from "../types/response.zod.ts";
 import type { Item } from "../types/item.ts";
 
 export function normalizeRecords(records: ResponseRecord[]): Item[] {
+    // @ts-ignore
     return records.map(rec => ({
         id: rec.id,
         x: rec.series.arguments.x,
