@@ -1,12 +1,18 @@
 {
-    "id": "abs_sin_x_minus_2_div_pi_series",
-    "num": 0,
-    "title": "",
-    "formula": "",
-    "x_from": "",
-    "x_to": "",
-    "left_closed": false,
-    "right_closed": false,
-    "speed": "",
-    "document": "Rows.docx"
+  "id": "abs_sin_x_minus_2_div_pi_series",
+  "num": 0,
+  "title": "",
+  "formula": "",
+  "speed": "",
+  "document": "Rows.docx",
+  "domain": {
+    "intervals": [
+      {
+        "from": "",
+        "to": "",
+        "left_closed": false,
+        "right_closed": false
+      }
+    ]
+  }
 }

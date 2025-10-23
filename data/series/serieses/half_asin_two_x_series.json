@@ -1,12 +1,18 @@
 {
-    "id": "half_asin_two_x_series",
-    "num": 12,
-    "title": "\\tfrac{1}{2}\\arcsin(2x)",
-    "formula": "\\tfrac{1}{2}\\sum_{n=0}^{\\infty}\\frac{(2n)!}{(n!)^{2}(2n+1)}(2x)^{2n+1}",
-    "x_from": "-\\tfrac{1}{2}",
-    "x_to": "\\tfrac{1}{2}",
-    "left_closed": false,
-    "right_closed": false,
-    "speed": "hyperlinear",
-    "document": "series.docx"
+  "id": "half_asin_two_x_series",
+  "num": 12,
+  "title": "\\tfrac{1}{2}\\arcsin(2x)",
+  "formula": "\\tfrac{1}{2}\\sum_{n=0}^{\\infty}\\frac{(2n)!}{(n!)^{2}(2n+1)}(2x)^{2n+1}",
+  "speed": "hyperlinear",
+  "document": "series.docx",
+  "domain": {
+    "intervals": [
+      {
+        "from": "-\\tfrac{1}{2}",
+        "to": "\\tfrac{1}{2}",
+        "left_closed": false,
+        "right_closed": false
+      }
+    ]
+  }
 }

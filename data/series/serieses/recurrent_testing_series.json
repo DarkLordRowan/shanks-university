@@ -1,12 +1,18 @@
 {
-    "id": "recurrent_testing_series",
-    "num": 0,
-    "title": "",
-    "formula": "",
-    "x_from": "",
-    "x_to": "",
-    "left_closed": false,
-    "right_closed": false,
-    "speed": "",
-    "document": "Rows.docx"
+  "id": "recurrent_testing_series",
+  "num": 0,
+  "title": "",
+  "formula": "",
+  "speed": "",
+  "document": "Rows.docx",
+  "domain": {
+    "intervals": [
+      {
+        "from": "",
+        "to": "",
+        "left_closed": false,
+        "right_closed": false
+      }
+    ]
+  }
 }

@@ -1,12 +1,18 @@
 {
-    "id": "four_ln2_m_3_series",
-    "num": 30,
-    "title": "\\left(4\\ln(2)-3\\right)\\,x",
-    "formula": "\\sum_{n=0}^{\\infty}\\frac{(-1)^{n+1}x}{(n+1)^{2}(n+2)^{2}} = \\left(4\\ln(2)-3\\right)\\,x",
-    "x_from": "-\\infty",
-    "x_to": "+\\infty",
-    "left_closed": false,
-    "right_closed": false,
-    "speed": "cubic",
-    "document": "series.docx"
+  "id": "four_ln2_m_3_series",
+  "num": 30,
+  "title": "\\left(4\\ln(2)-3\\right)\\,x",
+  "formula": "\\sum_{n=0}^{\\infty}\\frac{(-1)^{n+1}x}{(n+1)^{2}(n+2)^{2}} = \\left(4\\ln(2)-3\\right)\\,x",
+  "speed": "cubic",
+  "document": "series.docx",
+  "domain": {
+    "intervals": [
+      {
+        "from": "-\\infty",
+        "to": "+\\infty",
+        "left_closed": false,
+        "right_closed": false
+      }
+    ]
+  }
 }

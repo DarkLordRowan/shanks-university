@@ -1,12 +1,18 @@
 {
-    "id": "sinh_series",
-    "num": 5,
-    "title": "\\sinh x",
-    "formula": "\\sum_{n=0}^{\\infty}\\frac{x^{2n+1}}{(2n+1)!}",
-    "x_from": "-\\infty",
-    "x_to": "+\\infty",
-    "left_closed": false,
-    "right_closed": false,
-    "speed": "hyperlinear",
-    "document": "series.docx"
+  "id": "sinh_series",
+  "num": 5,
+  "title": "\\sinh x",
+  "formula": "\\sum_{n=0}^{\\infty}\\frac{x^{2n+1}}{(2n+1)!}",
+  "speed": "hyperlinear",
+  "document": "series.docx",
+  "domain": {
+    "intervals": [
+      {
+        "from": "-\\infty",
+        "to": "+\\infty",
+        "left_closed": false,
+        "right_closed": false
+      }
+    ]
+  }
 }

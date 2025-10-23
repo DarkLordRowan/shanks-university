@@ -1,12 +1,18 @@
 {
-    "id": "half_minus_sinx_multi_pi_4_series",
-    "num": 48,
-    "title": "\\tfrac{1}{2}-\\tfrac{\\pi}{4}\\sin(x)",
-    "formula": "\\sum_{n=0}^{\\infty}\\frac{\\cos\\big(2(n+1)x\\big)}{(2n+1)(2n+3)}=\\tfrac{1}{2}-\\tfrac{\\pi}{4}\\sin(x)",
-    "x_from": "0",
-    "x_to": "\\tfrac{\\pi}{2}",
-    "left_closed": true,
-    "right_closed": true,
-    "speed": "quadratic",
-    "document": "series.docx"
+  "id": "half_minus_sinx_multi_pi_4_series",
+  "num": 48,
+  "title": "\\tfrac{1}{2}-\\tfrac{\\pi}{4}\\sin(x)",
+  "formula": "\\sum_{n=0}^{\\infty}\\frac{\\cos\\big(2(n+1)x\\big)}{(2n+1)(2n+3)}=\\tfrac{1}{2}-\\tfrac{\\pi}{4}\\sin(x)",
+  "speed": "quadratic",
+  "document": "series.docx",
+  "domain": {
+    "intervals": [
+      {
+        "from": "0",
+        "to": "\\tfrac{\\pi}{2}",
+        "left_closed": true,
+        "right_closed": true
+      }
+    ]
+  }
 }
