@@ -1,10 +1,12 @@
 {
-  "id": "sin_series",
-  "num": 3,
-  "title": "\\sin x",
-  "formula": "\\sum_{n=0}^{\\infty}(-1)^{n}\\frac{x^{2n+1}}{(2n+1)!}",
-  "x_from": "-\\infty",
-  "x_to": "+\\infty",
-  "speed": "hyperlinear",
-  "document": "series.docx"
+    "id": "sin_series",
+    "num": 3,
+    "title": "\\sin x",
+    "formula": "\\sum_{n=0}^{\\infty}(-1)^{n}\\frac{x^{2n+1}}{(2n+1)!}",
+    "x_from": "-\\infty",
+    "x_to": "+\\infty",
+    "left_closed": false,
+    "right_closed": false,
+    "speed": "hyperlinear",
+    "document": "series.docx"
 }

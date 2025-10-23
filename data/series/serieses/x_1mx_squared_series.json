@@ -1,10 +1,12 @@
 {
-  "id": "x_1mx_squared_series",
-  "num": 14,
-  "title": "\\frac{x}{(1 - x)^{2}}",
-  "formula": "\\sum_{n=0}^{\\infty} (n + 1)x^{n + 1} = \\frac{x}{(1 - x)^{2}}",
-  "x_from": "-1",
-  "x_to": "1",
-  "speed": "linear",
-  "document": "series.docx"
+    "id": "x_1mx_squared_series",
+    "num": 14,
+    "title": "\\frac{x}{(1 - x)^{2}}",
+    "formula": "\\sum_{n=0}^{\\infty} (n + 1)x^{n + 1} = \\frac{x}{(1 - x)^{2}}",
+    "x_from": "-1",
+    "x_to": "1",
+    "left_closed": false,
+    "right_closed": false,
+    "speed": "linear",
+    "document": "series.docx"
 }
