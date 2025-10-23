@@ -1,62 +1,122 @@
 [
     {
         "id": "abs_sin_x_minus_2_div_pi_series",
+        "num": 0,
         "title": "",
         "formula": "",
+        "x_from": "",
+        "x_to": "",
+        "left_closed": false,
+        "right_closed": false,
+        "speed": "",
         "document": "Rows.docx"
     },
     {
         "id": "arcsinh_x_series",
+        "num": 0,
         "title": "",
         "formula": "",
+        "x_from": "",
+        "x_to": "",
+        "left_closed": false,
+        "right_closed": false,
+        "speed": "",
         "document": "Rows.docx"
     },
     {
         "id": "arcsin_x2_series",
+        "num": 0,
         "title": "",
         "formula": "",
+        "x_from": "",
+        "x_to": "",
+        "left_closed": false,
+        "right_closed": false,
+        "speed": "",
         "document": "Rows.docx"
     },
     {
         "id": "arcsin_x_minus_x_series",
+        "num": 0,
         "title": "",
         "formula": "",
+        "x_from": "",
+        "x_to": "",
+        "left_closed": false,
+        "right_closed": false,
+        "speed": "",
         "document": "Rows.docx"
     },
     {
         "id": "arcsin_x_series",
+        "num": 0,
         "title": "",
         "formula": "",
+        "x_from": "",
+        "x_to": "",
+        "left_closed": false,
+        "right_closed": false,
+        "speed": "",
         "document": "Rows.docx"
     },
     {
         "id": "arctanh_x2_series",
+        "num": 0,
         "title": "",
         "formula": "",
+        "x_from": "",
+        "x_to": "",
+        "left_closed": false,
+        "right_closed": false,
+        "speed": "",
         "document": "Rows.docx"
     },
     {
         "id": "arctan_x2_series",
+        "num": 0,
         "title": "",
         "formula": "",
+        "x_from": "",
+        "x_to": "",
+        "left_closed": false,
+        "right_closed": false,
+        "speed": "",
         "document": "Rows.docx"
     },
     {
         "id": "arctan_x3_series",
+        "num": 0,
         "title": "",
         "formula": "",
+        "x_from": "",
+        "x_to": "",
+        "left_closed": false,
+        "right_closed": false,
+        "speed": "",
         "document": "Rows.docx"
     },
     {
         "id": "arctg_x_series",
+        "num": 0,
         "title": "",
         "formula": "",
+        "x_from": "",
+        "x_to": "",
+        "left_closed": false,
+        "right_closed": false,
+        "speed": "",
         "document": "Rows.docx"
     },
     {
         "id": "artanh_x_series",
+        "num": 0,
         "title": "",
         "formula": "",
+        "x_from": "",
+        "x_to": "",
+        "left_closed": false,
+        "right_closed": false,
+        "speed": "",
         "document": "Rows.docx"
     },
     {
@@ -67,18 +127,32 @@
         "x_from": "-1",
         "x_to": "1",
         "speed": "hyperlinear",
+        "left_closed": false,
+        "right_closed": false,
         "document": "series.docx"
     },
     {
         "id": "Ci_x_series",
+        "num": 0,
         "title": "",
         "formula": "",
+        "x_from": "",
+        "x_to": "",
+        "left_closed": false,
+        "right_closed": false,
+        "speed": "",
         "document": "Rows.docx"
     },
     {
         "id": "cos3xmin1_div_xsqare_series",
+        "num": 0,
         "title": "",
         "formula": "",
+        "x_from": "",
+        "x_to": "",
+        "left_closed": false,
+        "right_closed": false,
+        "speed": "",
         "document": "Rows.docx"
     },
     {
@@ -88,6 +162,8 @@
         "formula": "\\sum_{n=0}^{\\infty}\\frac{x^{2n}}{(2n)!}",
         "x_from": "-\\infty",
         "x_to": "+\\infty",
+        "left_closed": false,
+        "right_closed": false,
         "speed": "hyperlinear",
         "document": "series.docx"
     },
@@ -98,19 +174,33 @@
         "formula": "\\sum_{n=0}^{\\infty}(-1)^{n}\\frac{x^{2n}}{(2n)!}",
         "x_from": "-\\infty",
         "x_to": "+\\infty",
+        "left_closed": false,
+        "right_closed": false,
         "speed": "hyperlinear",
         "document": "series.docx"
     },
     {
         "id": "cos_sqrt_x_series",
+        "num": 0,
         "title": "",
         "formula": "",
+        "x_from": "",
+        "x_to": "",
+        "left_closed": false,
+        "right_closed": false,
+        "speed": "",
         "document": "Rows.docx"
     },
     {
         "id": "cos_x2_series",
+        "num": 0,
         "title": "",
         "formula": "",
+        "x_from": "",
+        "x_to": "",
+        "left_closed": false,
+        "right_closed": false,
+        "speed": "",
         "document": "Rows.docx"
     },
     {
@@ -120,6 +210,8 @@
         "formula": "\\sum_{n=0}^{\\infty}\\frac{(-1)^{n} x}{(2n+1)(2n+3)(2n+5)} = \\left(\\tfrac{\\pi}{8}-\\tfrac{1}{3}\\right)\\,x",
         "x_from": "-\\infty",
         "x_to": "+\\infty",
+        "left_closed": false,
+        "right_closed": false,
         "speed": "cubic",
         "document": "series.docx"
     },
@@ -130,6 +222,8 @@
         "formula": "\\sum_{n=0}^{\\infty}\\frac{(-1)^{n}x^{2n+1}}{n!(2n+1)} = \\tfrac{\\sqrt{\\pi}}{2}\\,\\mathrm{erf}(x)",
         "x_from": "-\\infty",
         "x_to": "+\\infty",
+        "left_closed": false,
+        "right_closed": false,
         "speed": "hyperlinear",
         "document": "series.docx"
     },
@@ -140,6 +234,8 @@
         "formula": "\\sum_{n=0}^{\\infty}\\frac{(-1)^{n}\\sin(nx)}{n!}=e^{-\\cos(x)}\\sin(\\sin(x))",
         "x_from": "-\\infty",
         "x_to": "+\\infty",
+        "left_closed": false,
+        "right_closed": false,
         "speed": "hyperlinear",
         "document": "series.docx"
     },
@@ -150,6 +246,8 @@
         "formula": "\\sum_{n=0}^{\\infty}\\frac{x^{n}}{n!}",
         "x_from": "-\\infty",
         "x_to": "+\\infty",
+        "left_closed": false,
+        "right_closed": false,
         "speed": "hyperlinear",
         "document": "series.docx"
     },
@@ -160,13 +258,21 @@
         "formula": "\\frac{2}{\\sqrt{\\pi}}\\sum_{n=0}^{\\infty}\\frac{x^{2n+1}}{n!(2n+1)}",
         "x_from": "-\\infty",
         "x_to": "+\\infty",
+        "left_closed": false,
+        "right_closed": false,
         "speed": "hyperlinear",
         "document": "series.docx"
     },
     {
         "id": "E_x_series",
+        "num": 0,
         "title": "",
         "formula": "",
+        "x_from": "",
+        "x_to": "",
+        "left_closed": false,
+        "right_closed": false,
+        "speed": "",
         "document": "Rows.docx"
     },
     {
@@ -176,6 +282,8 @@
         "formula": "\\sum_{n=0}^{\\infty}\\frac{(-1)^{\\frac{n-1}{3}}}{2n+1}\\,x = \\tfrac{5\\pi}{12}\\,x",
         "x_from": "-\\infty",
         "x_to": "+\\infty",
+        "left_closed": false,
+        "right_closed": false,
         "speed": "linear",
         "document": "series.docx"
     },
@@ -186,6 +294,8 @@
         "formula": "4\\sum_{n=0}^{\\infty}(-1)^{n}\\frac{x^{2n+1}}{2n+1}",
         "x_from": "-1",
         "x_to": "1",
+        "left_closed": false,
+        "right_closed": false,
         "speed": "hyperlinear",
         "document": "series.docx"
     },
@@ -196,13 +306,21 @@
         "formula": "\\sum_{n=0}^{\\infty}\\frac{(-1)^{n+1}x}{(n+1)^{2}(n+2)^{2}} = \\left(4\\ln(2)-3\\right)\\,x",
         "x_from": "-\\infty",
         "x_to": "+\\infty",
+        "left_closed": false,
+        "right_closed": false,
         "speed": "cubic",
         "document": "series.docx"
     },
     {
         "id": "gamma_series",
+        "num": 0,
         "title": "",
         "formula": "",
+        "x_from": "",
+        "x_to": "",
+        "left_closed": false,
+        "right_closed": false,
+        "speed": "",
         "document": "Rows.docx"
     },
     {
@@ -212,6 +330,8 @@
         "formula": "\\tfrac{1}{2}\\sum_{n=0}^{\\infty}\\frac{(2n)!}{(n!)^{2}(2n+1)}(2x)^{2n+1}",
         "x_from": "-\\tfrac{1}{2}",
         "x_to": "\\tfrac{1}{2}",
+        "left_closed": false,
+        "right_closed": false,
         "speed": "hyperlinear",
         "document": "series.docx"
     },
@@ -234,13 +354,21 @@
         "formula": "\\sum_{n=0}^{\\infty}\\frac{\\cos((n+1)x)}{n+1}=\\tfrac{1}{2}\\ln\\frac{1}{2(1-\\cos x)}",
         "x_from": "-\\pi",
         "x_to": "\\pi",
+        "left_closed": false,
+        "right_closed": false,
         "speed": "linear",
         "document": "series.docx"
     },
     {
         "id": "Incomplete_Gamma_func_series",
+        "num": 0,
         "title": "",
         "formula": "",
+        "x_from": "",
+        "x_to": "",
+        "left_closed": false,
+        "right_closed": false,
+        "speed": "",
         "document": "Rows.docx"
     },
     {
@@ -250,6 +378,8 @@
         "formula": "\\sum_{n=0}^{\\infty} x^{n} = \\frac{1}{1 - x}",
         "x_from": "-1",
         "x_to": "1",
+        "left_closed": false,
+        "right_closed": false,
         "speed": "linear",
         "document": "series.docx"
     },
@@ -260,31 +390,57 @@
         "formula": "\\sum_{n=0}^{\\infty}\\frac{(2n)!}{(n!)^{2}}x^{n} = \\frac{1}{\\sqrt{1 - 4x}}",
         "x_from": "-\\tfrac{1}{4}",
         "x_to": "\\tfrac{1}{4}",
+        "left_closed": false,
+        "right_closed": false,
         "speed": "hyperlinear",
         "document": "series.docx"
     },
     {
         "id": "Ja_x_series",
+        "num": 0,
         "title": "",
         "formula": "",
+        "x_from": "",
+        "x_to": "",
+        "left_closed": false,
+        "right_closed": false,
+        "speed": "",
         "document": "Rows.docx"
     },
     {
         "id": "K_x_series",
+        "num": 0,
         "title": "",
         "formula": "",
+        "x_from": "",
+        "x_to": "",
+        "left_closed": false,
+        "right_closed": false,
+        "speed": "",
         "document": "Rows.docx"
     },
     {
         "id": "Lambert_W_func_series",
+        "num": 0,
         "title": "",
         "formula": "",
+        "x_from": "",
+        "x_to": "",
+        "left_closed": false,
+        "right_closed": false,
+        "speed": "",
         "document": "Rows.docx"
     },
     {
         "id": "ln13_min_ln7_div_7_series",
+        "num": 0,
         "title": "",
         "formula": "",
+        "x_from": "",
+        "x_to": "",
+        "left_closed": false,
+        "right_closed": false,
+        "speed": "",
         "document": "Rows.docx"
     },
     {
@@ -294,19 +450,33 @@
         "formula": "-\\sum_{n=1}^{\\infty}\\frac{x^{n}}{n}",
         "x_from": "-1",
         "x_to": "1",
+        "left_closed": false,
+        "right_closed": false,
         "speed": "linear",
         "document": "series.docx"
     },
     {
         "id": "ln1px4_series",
+        "num": 0,
         "title": "",
         "formula": "",
+        "x_from": "",
+        "x_to": "",
+        "left_closed": false,
+        "right_closed": false,
+        "speed": "",
         "document": "Rows.docx"
     },
     {
         "id": "ln1_m_x2_series",
+        "num": 0,
         "title": "",
         "formula": "",
+        "x_from": "",
+        "x_to": "",
+        "left_closed": false,
+        "right_closed": false,
+        "speed": "",
         "document": "Rows.docx"
     },
     {
@@ -316,6 +486,8 @@
         "formula": "\\sum_{n=0}^{\\infty}\\frac{(-1)^{n}x}{n+1}=\\ln(2)\\,x",
         "x_from": "-\\infty",
         "x_to": "+\\infty",
+        "left_closed": false,
+        "right_closed": false,
         "speed": "linear",
         "document": "series.docx"
     },
@@ -326,19 +498,33 @@
         "formula": "\\sum_{n=0}^{\\infty} \\frac{(-1)^n (2n+1)!}{2^{2n+2} ((n+1)!)^2} x^{2n+2} = \\ln(1+\\sqrt{1+x^2}) - \\ln(2)",
         "x_from": -1,
         "x_to": 1,
+        "left_closed": false,
+        "right_closed": false,
         "speed": "hyperlinear",
         "document": "Rows.docx"
     },
     {
         "id": "ln_1plusx_div_1plusx2_series",
+        "num": 0,
         "title": "",
         "formula": "",
+        "x_from": "",
+        "x_to": "",
+        "left_closed": false,
+        "right_closed": false,
+        "speed": "",
         "document": "Rows.docx"
     },
     {
         "id": "ln_1_plus_x3_series",
+        "num": 0,
         "title": "",
         "formula": "",
+        "x_from": "",
+        "x_to": "",
+        "left_closed": false,
+        "right_closed": false,
+        "speed": "",
         "document": "Rows.docx"
     },
     {
@@ -348,13 +534,21 @@
         "formula": "\\sum_{n=0}^{\\infty}\\frac{-\\sin^{2n+2}(x)}{2n+2} = \\ln(\\cos x)",
         "x_from": "-\\frac{\\pi}{2}",
         "x_to": "\\frac{\\pi}{2}",
+        "left_closed": false,
+        "right_closed": false,
         "speed": "linear",
         "document": "Rows.docx"
     },
     {
         "id": "ln_sinx_minus_ln_x_series",
+        "num": 0,
         "title": "",
         "formula": "",
+        "x_from": "",
+        "x_to": "",
+        "left_closed": false,
+        "right_closed": false,
+        "speed": "",
         "document": "Rows.docx"
     },
     {
@@ -364,6 +558,8 @@
         "formula": "\\sum_{n=0}^{\\infty}\\frac{x^{2n+1}}{2n+1} = \\tfrac{1}{2}\\ln\\left(\\tfrac{1+x}{1-x}\\right)",
         "x_from": "-1",
         "x_to": "1",
+        "left_closed": false,
+        "right_closed": false,
         "speed": "linear",
         "document": "series.docx"
     },
@@ -374,13 +570,21 @@
         "formula": "\\sum_{k=0}^{\\infty}\\frac{x^{4k+1}}{(4k+1)!}",
         "x_from": "-\\infty",
         "x_to": "+\\infty",
+        "left_closed": false,
+        "right_closed": false,
         "speed": "hyperlinear",
         "document": "series.docx"
     },
     {
         "id": "minus_3_div_4_or_x_minus_3_div_4_series",
+        "num": 0,
         "title": "",
         "formula": "",
+        "x_from": "",
+        "x_to": "",
+        "left_closed": false,
+        "right_closed": false,
+        "speed": "",
         "document": "Rows.docx"
     },
     {
@@ -390,6 +594,8 @@
         "formula": "\\sum_{n=0}^{\\infty}\\frac{(-1)^{n+1}}{(n+1)^{n+1}}\\,x = -0.78343051\\,x",
         "x_from": "-\\infty",
         "x_to": "+\\infty",
+        "left_closed": false,
+        "right_closed": false,
         "speed": "logarithmic",
         "document": "series.docx"
     },
@@ -400,6 +606,8 @@
         "formula": "\\sum_{n=0}^{\\infty}\\frac{(-1)^{n+1}(n+1)!\\,x}{(n+1)^{(n+1)}}=-0.65583160\\,x",
         "x_from": "-\\infty",
         "x_to": "+\\infty",
+        "left_closed": false,
+        "right_closed": false,
         "speed": "superexponential",
         "document": "series.docx"
     },
@@ -410,6 +618,8 @@
         "formula": "\\sum_{n=0}^{\\infty}\\frac{(-1)^{n+1} x}{(n+1)(n+3)} = -\\tfrac{1}{4} \\cdot x",
         "x_from": "-\\infty",
         "x_to": "+\\infty",
+        "left_closed": false,
+        "right_closed": false,
         "speed": "linear",
         "document": "series.docx"
     },
@@ -420,13 +630,21 @@
         "formula": "\\sum_{n=0}^{\\infty}\\frac{x}{(n+1)\\bigl(36(n+1)^{2}-1\\bigr)}=\\left(-3+\\tfrac{3}{2}\\ln 3+2\\ln 2\\right)\\,x",
         "x_from": "-\\infty",
         "x_to": "+\\infty",
+        "left_closed": false,
+        "right_closed": false,
         "speed": "cubic",
         "document": "series.docx"
     },
     {
         "id": "minus_x_minus_pi_4_or_minus_pi_4_series",
+        "num": 0,
         "title": "",
         "formula": "",
+        "x_from": "",
+        "x_to": "",
+        "left_closed": false,
+        "right_closed": false,
+        "speed": "",
         "document": "Rows.docx"
     },
     {
@@ -436,25 +654,45 @@
         "formula": "\\sum_{n=0}^{\\infty}\\frac{(n + m)!}{n!\\,m!}\\,x^{n} = \\frac{m!}{(1 - x)^{m + 1}}",
         "x_from": "-1",
         "x_to": "1",
+        "left_closed": false,
+        "right_closed": false,
         "speed": "hyperlinear",
         "document": "series.docx"
     },
     {
         "id": "one_div_sqrt2_sin_xdivsqrt2_series",
+        "num": 0,
         "title": "",
         "formula": "",
+        "x_from": "",
+        "x_to": "",
+        "left_closed": false,
+        "right_closed": false,
+        "speed": "",
         "document": "Rows.docx"
     },
     {
         "id": "one_div_two_minus_x_multi_three_plus_x_series",
+        "num": 0,
         "title": "",
         "formula": "",
+        "x_from": "",
+        "x_to": "",
+        "left_closed": false,
+        "right_closed": false,
+        "speed": "",
         "document": "Rows.docx"
     },
     {
         "id": "one_minus_sqrt_1minus4x_div_2x_series",
+        "num": 0,
         "title": "",
         "formula": "",
+        "x_from": "",
+        "x_to": "",
+        "left_closed": false,
+        "right_closed": false,
+        "speed": "",
         "document": "Rows.docx"
     },
     {
@@ -464,6 +702,8 @@
         "formula": "\\sum_{n=0}^{\\infty}\\frac{x}{(n+1)(n+2)} = 1 \\cdot x",
         "x_from": "-\\infty",
         "x_to": "+\\infty",
+        "left_closed": false,
+        "right_closed": false,
         "speed": "linear",
         "document": "series.docx"
     },
@@ -474,6 +714,8 @@
         "formula": "\\sum_{n=0}^{\\infty}\\frac{x}{(n+1)^{2}(n+2)^{2}} = \\tfrac{\\pi^{2}-9}{3}\\,x",
         "x_from": "-\\infty",
         "x_to": "+\\infty",
+        "left_closed": false,
+        "right_closed": false,
         "speed": "cubic",
         "document": "series.docx"
     },
@@ -484,6 +726,8 @@
         "formula": "\\sum_{k=1}^{\\infty} \\frac{(-1)^{k}}{k^{2}}\\cos(kx) = \\tfrac{1}{12}\\bigl(3x^{2}-\\pi^{2}\\bigr)",
         "x_from": "-\\pi",
         "x_to": "\\pi",
+        "left_closed": false,
+        "right_closed": false,
         "speed": "quadratic",
         "document": "series.docx"
     },
@@ -494,6 +738,8 @@
         "formula": "\\sum_{n=0}^{\\infty}\\frac{x}{(2n+1)(2n+3)(2n+5)} = \\tfrac{1}{12}\\,x",
         "x_from": "-\\infty",
         "x_to": "+\\infty",
+        "left_closed": false,
+        "right_closed": false,
         "speed": "cubic",
         "document": "series.docx"
     },
@@ -504,6 +750,8 @@
         "formula": "\\sum_{k=1}^{\\infty}\\frac{(-1)^{k}}{k^{3}}\\sin(kx)=\\tfrac{x}{12}(x^{2}-\\pi^{2})",
         "x_from": "-\\pi",
         "x_to": "\\pi",
+        "left_closed": false,
+        "right_closed": false,
         "speed": "cubic",
         "document": "series.docx"
     },
@@ -514,6 +762,8 @@
         "formula": "\\sum_{n=0}^{\\infty}\\frac{x}{(n+2)(2n+3)(4n+5)} = \\tfrac{\\pi}{3}\\,x",
         "x_from": "-\\infty",
         "x_to": "+\\infty",
+        "left_closed": false,
+        "right_closed": false,
         "speed": "cubic",
         "document": "series.docx"
     },
@@ -524,13 +774,21 @@
         "formula": "\\sum_{n=0}^{\\infty}\\frac{(-1)^{n} x}{2n+1}=\\tfrac{\\pi}{4}\\,x",
         "x_from": "-\\infty",
         "x_to": "+\\infty",
+        "left_closed": false,
+        "right_closed": false,
         "speed": "linear",
         "document": "series.docx"
     },
     {
         "id": "pi_8_cosx_square_minus_1_div_3_cosx_series",
+        "num": 0,
         "title": "",
         "formula": "",
+        "x_from": "",
+        "x_to": "",
+        "left_closed": false,
+        "right_closed": false,
+        "speed": "",
         "document": "Rows.docx"
     },
     {
@@ -540,6 +798,8 @@
         "formula": "\\sum_{n=0}^{\\infty}\\frac{(-1)^{n} x}{(2n+1)^{3}} = \\tfrac{\\pi^{3}}{32}\\,x",
         "x_from": "-\\infty",
         "x_to": "+\\infty",
+        "left_closed": false,
+        "right_closed": false,
         "speed": "linear",
         "document": "series.docx"
     },
@@ -550,13 +810,21 @@
         "formula": "\\sum_{k=1}^{\\infty}\\frac{(-1)^{\\frac{k+1}{2}}}{k}\\,x=\\left(\\tfrac{\\pi}{4}-\\tfrac{\\ln(2)}{2}\\right)\\,x",
         "x_from": "-\\infty",
         "x_to": "+\\infty",
+        "left_closed": false,
+        "right_closed": false,
         "speed": "linear",
         "document": "series.docx"
     },
     {
         "id": "pi_minus_3pi_4_and_pi_minus_x_minus_3pi_4_series",
+        "num": 0,
         "title": "",
         "formula": "",
+        "x_from": "",
+        "x_to": "",
+        "left_closed": false,
+        "right_closed": false,
+        "speed": "",
         "document": "Rows.docx"
     },
     {
@@ -566,13 +834,21 @@
         "formula": "\\sum_{n=0}^{\\infty}\\frac{\\sin\\big((n+1)x\\big)}{n+1} = \\tfrac{\\pi - x}{2}",
         "x_from": "0",
         "x_to": "\\pi",
+        "left_closed": false,
+        "right_closed": false,
         "speed": "linear",
         "document": "series.docx"
     },
     {
         "id": "pi_series",
+        "num": 0,
         "title": "",
         "formula": "",
+        "x_from": "",
+        "x_to": "",
+        "left_closed": false,
+        "right_closed": false,
+        "speed": "",
         "document": "Rows.docx"
     },
     {
@@ -582,6 +858,8 @@
         "formula": "\\sum_{n=0}^{\\infty}\\frac{(-1)^{n}x}{(6n+5)(6n+7)} = \\left(\\tfrac{\\pi}{6}-\\tfrac{1}{2}\\right)\\,x",
         "x_from": "-\\infty",
         "x_to": "+\\infty",
+        "left_closed": false,
+        "right_closed": false,
         "speed": "quadratic",
         "document": "series.docx"
     },
@@ -592,6 +870,8 @@
         "formula": "\\sum_{n=0}^{\\infty}\\frac{x}{(n+1)^{2}(n+2)} = \\left(\\tfrac{\\pi^{2}}{6}-1\\right)\\,x",
         "x_from": "-\\infty",
         "x_to": "+\\infty",
+        "left_closed": false,
+        "right_closed": false,
         "speed": "cubic",
         "document": "series.docx"
     },
@@ -602,13 +882,21 @@
         "formula": "\\sum_{n=0}^{\\infty}\\frac{(-1)^{n} x}{(n+1)^{2}} = \\tfrac{\\pi^{2}}{12}\\,x",
         "x_from": "-\\infty",
         "x_to": "+\\infty",
+        "left_closed": false,
+        "right_closed": false,
         "speed": "quadratic",
         "document": "series.docx"
     },
     {
         "id": "pi_x_minus_x_square_and_x_square_minus_three_pi_x_plus_two_pi_square_series",
+        "num": 0,
         "title": "",
         "formula": "",
+        "x_from": "",
+        "x_to": "",
+        "left_closed": false,
+        "right_closed": false,
+        "speed": "",
         "document": "Rows.docx"
     },
     {
@@ -618,37 +906,69 @@
         "formula": "\\sum_{n=0}^{\\infty}\\frac{2x^{2}}{x^{2}+(n+1)^{2}}=\\pi x\\,\\frac{e^{\\pi x}+e^{-\\pi x}}{e^{\\pi x}-e^{-\\pi x}}-1",
         "x_from": "-\\infty",
         "x_to": "+\\infty",
+        "left_closed": false,
+        "right_closed": false,
         "speed": "quadratic",
         "document": "series.docx"
     },
     {
         "id": "recurrent_testing_series",
+        "num": 0,
         "title": "",
         "formula": "",
+        "x_from": "",
+        "x_to": "",
+        "left_closed": false,
+        "right_closed": false,
+        "speed": "",
         "document": "Rows.docx"
     },
     {
         "id": "Riemann_zeta_func_series",
+        "num": 0,
         "title": "",
         "formula": "",
+        "x_from": "",
+        "x_to": "",
+        "left_closed": false,
+        "right_closed": false,
+        "speed": "",
         "document": "Rows.docx"
     },
     {
         "id": "Riemann_zeta_func_xmin1_div_Riemann_zeta_func_x_series",
+        "num": 0,
         "title": "",
         "formula": "",
+        "x_from": "",
+        "x_to": "",
+        "left_closed": false,
+        "right_closed": false,
+        "speed": "",
         "document": "Rows.docx"
     },
     {
         "id": "Series_with_ln_number1_series",
+        "num": 0,
         "title": "",
         "formula": "",
+        "x_from": "",
+        "x_to": "",
+        "left_closed": false,
+        "right_closed": false,
+        "speed": "",
         "document": "Rows.docx"
     },
     {
         "id": "Series_with_ln_number2_series",
+        "num": 0,
         "title": "",
         "formula": "",
+        "x_from": "",
+        "x_to": "",
+        "left_closed": false,
+        "right_closed": false,
+        "speed": "",
         "document": "Rows.docx"
     },
     {
@@ -658,13 +978,21 @@
         "formula": "\\sum_{n=0}^{\\infty}\\frac{x^{2n+1}}{(2n+1)!}",
         "x_from": "-\\infty",
         "x_to": "+\\infty",
+        "left_closed": false,
+        "right_closed": false,
         "speed": "hyperlinear",
         "document": "series.docx"
     },
     {
         "id": "sinh_x2_series",
+        "num": 0,
         "title": "",
         "formula": "",
+        "x_from": "",
+        "x_to": "",
+        "left_closed": false,
+        "right_closed": false,
+        "speed": "",
         "document": "Rows.docx"
     },
     {
@@ -674,49 +1002,93 @@
         "formula": "\\sum_{n=0}^{\\infty}(-1)^{n}\\frac{x^{2n+1}}{(2n+1)!}",
         "x_from": "-\\infty",
         "x_to": "+\\infty",
+        "left_closed": false,
+        "right_closed": false,
         "speed": "hyperlinear",
         "document": "series.docx"
     },
     {
         "id": "sin_x2_series",
+        "num": 0,
         "title": "",
         "formula": "",
+        "x_from": "",
+        "x_to": "",
+        "left_closed": false,
+        "right_closed": false,
+        "speed": "",
         "document": "Rows.docx"
     },
     {
         "id": "Si_x_series",
+        "num": 0,
         "title": "",
         "formula": "",
+        "x_from": "",
+        "x_to": "",
+        "left_closed": false,
+        "right_closed": false,
+        "speed": "",
         "document": "Rows.docx"
     },
     {
         "id": "sqrt_1plusx_min_1_min_x_div_2_series",
+        "num": 0,
         "title": "",
         "formula": "",
+        "x_from": "",
+        "x_to": "",
+        "left_closed": false,
+        "right_closed": false,
+        "speed": "",
         "document": "Rows.docx"
     },
     {
         "id": "sqrt_1plusx_series",
+        "num": 0,
         "title": "",
         "formula": "",
+        "x_from": "",
+        "x_to": "",
+        "left_closed": false,
+        "right_closed": false,
+        "speed": "",
         "document": "Rows.docx"
     },
     {
         "id": "sqrt_oneminussqrtoneminusx_div_x_series",
+        "num": 0,
         "title": "",
         "formula": "",
+        "x_from": "",
+        "x_to": "",
+        "left_closed": false,
+        "right_closed": false,
+        "speed": "",
         "document": "Rows.docx"
     },
     {
         "id": "ten_minus_x_series",
+        "num": 0,
         "title": "",
         "formula": "",
+        "x_from": "",
+        "x_to": "",
+        "left_closed": false,
+        "right_closed": false,
+        "speed": "",
         "document": "Rows.docx"
     },
     {
         "id": "testing_series",
+        "num": 0,
         "title": "",
         "formula": "",
+        "x_from": "",
+        "x_to": "",
+        "left_closed": false,
+        "right_closed": false,
+        "speed": "",
         "document": "Rows.docx"
     },
     {
@@ -726,6 +1098,8 @@
         "formula": "\\sum_{n=0}^{\\infty}\\frac{(-1)^{n+1} x}{(n+1)(n+2)(2n+3)} = (3-\\pi)\\,x",
         "x_from": "-\\infty",
         "x_to": "+\\infty",
+        "left_closed": false,
+        "right_closed": false,
         "speed": "cubic",
         "document": "series.docx"
     },
@@ -736,13 +1110,21 @@
         "formula": "\\sum_{n=0}^{\\infty}\\frac{(n!)^2}{(2n+2)!}x^{2n+2}=2\\arcsin^2\\left(\\tfrac{x}{2}\\right)",
         "x_from": "-2",
         "x_to": "2",
+        "left_closed": false,
+        "right_closed": false,
         "speed": "hyperlinear",
         "document": "series.docx"
     },
     {
         "id": "two_degree_x_series",
+        "num": 0,
         "title": "",
         "formula": "",
+        "x_from": "",
+        "x_to": "",
+        "left_closed": false,
+        "right_closed": false,
+        "speed": "",
         "document": "Rows.docx"
     },
     {
@@ -752,6 +1134,8 @@
         "formula": "\\sum_{n=0}^{\\infty}\\frac{\\left(12(n+1)^{2}-1\\right)x}{(n+1)\\left(4(n+1)^{2}-1\\right)^{2}} = 2\\ln(2)\\,x",
         "x_from": "-\\infty",
         "x_to": "+\\infty",
+        "left_closed": false,
+        "right_closed": false,
         "speed": "cubic",
         "document": "series.docx"
     },
@@ -762,13 +1146,21 @@
         "formula": "\\sum_{n=0}^{\\infty}(-1)^{n}\\frac{x^{2n}}{n!\\,\\Gamma(n+b+1)}",
         "x_from": "-\\infty",
         "x_to": "+\\infty",
+        "left_closed": false,
+        "right_closed": false,
         "speed": "hyperlinear",
         "document": "series.docx"
     },
     {
         "id": "xsquareplus3_div_xsquareplus2multix_minus_1_series",
+        "num": 0,
         "title": "",
         "formula": "",
+        "x_from": "",
+        "x_to": "",
+        "left_closed": false,
+        "right_closed": false,
+        "speed": "",
         "document": "Rows.docx"
     },
     {
@@ -778,37 +1170,69 @@
         "formula": "\\sum_{n=0}^{\\infty} (n + 1)x^{n + 1} = \\frac{x}{(1 - x)^{2}}",
         "x_from": "-1",
         "x_to": "1",
+        "left_closed": false,
+        "right_closed": false,
         "speed": "linear",
         "document": "series.docx"
     },
     {
         "id": "x_div_1minx2_series",
+        "num": 0,
         "title": "",
         "formula": "",
+        "x_from": "",
+        "x_to": "",
+        "left_closed": false,
+        "right_closed": false,
+        "speed": "",
         "document": "Rows.docx"
     },
     {
         "id": "x_div_1minx_series",
+        "num": 0,
         "title": "",
         "formula": "",
+        "x_from": "",
+        "x_to": "",
+        "left_closed": false,
+        "right_closed": false,
+        "speed": "",
         "document": "Rows.docx"
     },
     {
         "id": "x_min_sqrt_x_series",
+        "num": 0,
         "title": "",
         "formula": "",
+        "x_from": "",
+        "x_to": "",
+        "left_closed": false,
+        "right_closed": false,
+        "speed": "",
         "document": "Rows.docx"
     },
     {
         "id": "x_series",
+        "num": 0,
         "title": "",
         "formula": "",
+        "x_from": "",
+        "x_to": "",
+        "left_closed": false,
+        "right_closed": false,
+        "speed": "",
         "document": "Rows.docx"
     },
     {
         "id": "x_twelfth_x2_pi2_series",
+        "num": 0,
         "title": "",
         "formula": "",
+        "x_from": "",
+        "x_to": "",
+        "left_closed": false,
+        "right_closed": false,
+        "speed": "",
         "document": "Rows.docx"
     },
     {
@@ -818,6 +1242,8 @@
         "formula": "\\sum_{n=0}^{\\infty}\\frac{x}{(2n+1)(2n+3)} = \\tfrac{x}{2}",
         "x_from": "-\\infty",
         "x_to": "+\\infty",
+        "left_closed": false,
+        "right_closed": false,
         "speed": "quadratic",
         "document": "series.docx"
     },
@@ -828,6 +1254,8 @@
         "formula": "\\sum_{n=0}^{\\infty}\\frac{(2(n+1)^{2}-1)x}{4(n+1)^{4}+1}=\\tfrac{x}{2}",
         "x_from": "-\\infty",
         "x_to": "+\\infty",
+        "left_closed": false,
+        "right_closed": false,
         "speed": "cubic",
         "document": "series.docx"
     }
