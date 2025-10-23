@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import { TREE } from "../../data/algorithms";
+import { ALGORITHMS  } from "../../data/algorithms";
 import type { AlgNode } from "../../types/algorithms";
 import { flattenIds } from "./utils/tree";
 import { TreeNode } from "./components/TreeNode";
@@ -8,7 +8,7 @@ const Algorithms: React.FC = () => {
     const [query, setQuery] = useState("");
     const [expanded, setExpanded] = useState<Set<string>>(new Set());
 
-    const allIds = useMemo(() => flattenIds(TREE as AlgNode[]), []);
+    const allIds = useMemo(() => flattenIds(ALGORITHMS as AlgNode[]), []);
 
     const expandAll = () => setExpanded(new Set(allIds));
     const collapseAll = () => setExpanded(new Set());
@@ -41,7 +41,7 @@ const Algorithms: React.FC = () => {
             </div>
 
             <div className="space-y-2 rounded-xl2 border border-border/60 bg-panel/50 p-2">
-                {TREE.map((root) => (
+                {ALGORITHMS.map((root) => (
                     <TreeNode
                         key={root.id}
                         node={root}

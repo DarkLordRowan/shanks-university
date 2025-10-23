@@ -1,10 +1,12 @@
 {
-  "id": "x_two_throught_squares_series",
-  "num": 36,
-  "title": "\\tfrac{x}{2}",
-  "formula": "\\sum_{n=0}^{\\infty}\\frac{(2(n+1)^{2}-1)x}{4(n+1)^{4}+1}=\\tfrac{x}{2}",
-  "x_from": "-\\infty",
-  "x_to": "+\\infty",
-  "speed": "cubic",
-  "document": "series.docx"
+    "id": "x_two_throught_squares_series",
+    "num": 36,
+    "title": "\\tfrac{x}{2}",
+    "formula": "\\sum_{n=0}^{\\infty}\\frac{(2(n+1)^{2}-1)x}{4(n+1)^{4}+1}=\\tfrac{x}{2}",
+    "x_from": "-\\infty",
+    "x_to": "+\\infty",
+    "left_closed": false,
+    "right_closed": false,
+    "speed": "cubic",
+    "document": "series.docx"
 }

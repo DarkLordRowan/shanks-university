@@ -1,10 +1,12 @@
 {
-  "id": "cosh_series",
-  "num": 4,
-  "title": "\\cosh x",
-  "formula": "\\sum_{n=0}^{\\infty}\\frac{x^{2n}}{(2n)!}",
-  "x_from": "-\\infty",
-  "x_to": "+\\infty",
-  "speed": "hyperlinear",
-  "document": "series.docx"
+    "id": "cosh_series",
+    "num": 4,
+    "title": "\\cosh x",
+    "formula": "\\sum_{n=0}^{\\infty}\\frac{x^{2n}}{(2n)!}",
+    "x_from": "-\\infty",
+    "x_to": "+\\infty",
+    "left_closed": false,
+    "right_closed": false,
+    "speed": "hyperlinear",
+    "document": "series.docx"
 }

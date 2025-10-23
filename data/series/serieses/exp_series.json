@@ -1,10 +1,12 @@
 {
-  "id": "exp_series",
-  "num": 1,
-  "title": "e^{x}",
-  "formula": "\\sum_{n=0}^{\\infty}\\frac{x^{n}}{n!}",
-  "x_from": "-\\infty",
-  "x_to": "+\\infty",
-  "speed": "hyperlinear",
-  "document": "series.docx"
+    "id": "exp_series",
+    "num": 1,
+    "title": "e^{x}",
+    "formula": "\\sum_{n=0}^{\\infty}\\frac{x^{n}}{n!}",
+    "x_from": "-\\infty",
+    "x_to": "+\\infty",
+    "left_closed": false,
+    "right_closed": false,
+    "speed": "hyperlinear",
+    "document": "series.docx"
 }

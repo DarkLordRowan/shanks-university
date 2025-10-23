@@ -1,10 +1,12 @@
 {
-  "id": "pi_four_minus_ln2_halfed_series",
-  "num": 32,
-  "title": "\\left(\\tfrac{\\pi}{4}-\\tfrac{\\ln(2)}{2}\\right)\\,x",
-  "formula": "\\sum_{k=1}^{\\infty}\\frac{(-1)^{\\frac{k+1}{2}}}{k}\\,x=\\left(\\tfrac{\\pi}{4}-\\tfrac{\\ln(2)}{2}\\right)\\,x",
-  "x_from": "-\\infty",
-  "x_to": "+\\infty",
-  "speed": "linear",
-  "document": "series.docx"
+    "id": "pi_four_minus_ln2_halfed_series",
+    "num": 32,
+    "title": "\\left(\\tfrac{\\pi}{4}-\\tfrac{\\ln(2)}{2}\\right)\\,x",
+    "formula": "\\sum_{k=1}^{\\infty}\\frac{(-1)^{\\frac{k+1}{2}}}{k}\\,x=\\left(\\tfrac{\\pi}{4}-\\tfrac{\\ln(2)}{2}\\right)\\,x",
+    "x_from": "-\\infty",
+    "x_to": "+\\infty",
+    "left_closed": false,
+    "right_closed": false,
+    "speed": "linear",
+    "document": "series.docx"
 }

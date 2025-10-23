@@ -5,6 +5,8 @@
     "formula": "\\sum_{n=0}^{\\infty}\\frac{-\\sin^{2n+2}(x)}{2n+2} = \\ln(\\cos x)",
     "x_from": "-\\frac{\\pi}{2}",
     "x_to": "\\frac{\\pi}{2}",
+    "left_closed": false,
+    "right_closed": false,
     "speed": "linear",
     "document": "Rows.docx"
 }

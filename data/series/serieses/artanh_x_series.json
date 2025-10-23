@@ -1,6 +1,12 @@
 {
     "id": "artanh_x_series",
+    "num": 0,
     "title": "",
     "formula": "",
+    "x_from": "",
+    "x_to": "",
+    "left_closed": false,
+    "right_closed": false,
+    "speed": "",
     "document": "Rows.docx"
 }
