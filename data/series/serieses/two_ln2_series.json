@@ -1,12 +1,18 @@
 {
-    "id": "two_ln2_series",
-    "num": 44,
-    "title": "2\\ln(2)\\,x",
-    "formula": "\\sum_{n=0}^{\\infty}\\frac{\\left(12(n+1)^{2}-1\\right)x}{(n+1)\\left(4(n+1)^{2}-1\\right)^{2}} = 2\\ln(2)\\,x",
-    "x_from": "-\\infty",
-    "x_to": "+\\infty",
-    "left_closed": false,
-    "right_closed": false,
-    "speed": "cubic",
-    "document": "series.docx"
+  "id": "two_ln2_series",
+  "num": 44,
+  "title": "2\\ln(2)\\,x",
+  "formula": "\\sum_{n=0}^{\\infty}\\frac{\\left(12(n+1)^{2}-1\\right)x}{(n+1)\\left(4(n+1)^{2}-1\\right)^{2}} = 2\\ln(2)\\,x",
+  "speed": "cubic",
+  "document": "series.docx",
+  "domain": {
+    "intervals": [
+      {
+        "from": "-\\infty",
+        "to": "+\\infty",
+        "left_closed": false,
+        "right_closed": false
+      }
+    ]
+  }
 }

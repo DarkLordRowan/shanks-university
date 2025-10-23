@@ -1,12 +1,18 @@
 {
-    "id": "pi_cubed_32_series",
-    "num": 42,
-    "title": "\\tfrac{\\pi^{3}}{32}\\,x",
-    "formula": "\\sum_{n=0}^{\\infty}\\frac{(-1)^{n} x}{(2n+1)^{3}} = \\tfrac{\\pi^{3}}{32}\\,x",
-    "x_from": "-\\infty",
-    "x_to": "+\\infty",
-    "left_closed": false,
-    "right_closed": false,
-    "speed": "linear",
-    "document": "series.docx"
+  "id": "pi_cubed_32_series",
+  "num": 42,
+  "title": "\\tfrac{\\pi^{3}}{32}\\,x",
+  "formula": "\\sum_{n=0}^{\\infty}\\frac{(-1)^{n} x}{(2n+1)^{3}} = \\tfrac{\\pi^{3}}{32}\\,x",
+  "speed": "linear",
+  "document": "series.docx",
+  "domain": {
+    "intervals": [
+      {
+        "from": "-\\infty",
+        "to": "+\\infty",
+        "left_closed": false,
+        "right_closed": false
+      }
+    ]
+  }
 }

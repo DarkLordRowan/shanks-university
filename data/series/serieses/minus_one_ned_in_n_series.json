@@ -1,12 +1,18 @@
 {
-    "id": "minus_one_ned_in_n_series",
-    "num": 37,
-    "title": "-0.78343051\\,x",
-    "formula": "\\sum_{n=0}^{\\infty}\\frac{(-1)^{n+1}}{(n+1)^{n+1}}\\,x = -0.78343051\\,x",
-    "x_from": "-\\infty",
-    "x_to": "+\\infty",
-    "left_closed": false,
-    "right_closed": false,
-    "speed": "logarithmic",
-    "document": "series.docx"
+  "id": "minus_one_ned_in_n_series",
+  "num": 37,
+  "title": "-0.78343051\\,x",
+  "formula": "\\sum_{n=0}^{\\infty}\\frac{(-1)^{n+1}}{(n+1)^{n+1}}\\,x = -0.78343051\\,x",
+  "speed": "logarithmic",
+  "document": "series.docx",
+  "domain": {
+    "intervals": [
+      {
+        "from": "-\\infty",
+        "to": "+\\infty",
+        "left_closed": false,
+        "right_closed": false
+      }
+    ]
+  }
 }

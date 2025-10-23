@@ -1,12 +1,18 @@
 {
-    "id": "half_multi_ln_1div2multi1minuscosx_series",
-    "num": 47,
-    "title": "\\tfrac{1}{2}\\ln\\frac{1}{2(1-\\cos x)}",
-    "formula": "\\sum_{n=0}^{\\infty}\\frac{\\cos((n+1)x)}{n+1}=\\tfrac{1}{2}\\ln\\frac{1}{2(1-\\cos x)}",
-    "x_from": "-\\pi",
-    "x_to": "\\pi",
-    "left_closed": false,
-    "right_closed": false,
-    "speed": "linear",
-    "document": "series.docx"
+  "id": "half_multi_ln_1div2multi1minuscosx_series",
+  "num": 47,
+  "title": "\\tfrac{1}{2}\\ln\\frac{1}{2(1-\\cos x)}",
+  "formula": "\\sum_{n=0}^{\\infty}\\frac{\\cos((n+1)x)}{n+1}=\\tfrac{1}{2}\\ln\\frac{1}{2(1-\\cos x)}",
+  "speed": "linear",
+  "document": "series.docx",
+  "domain": {
+    "intervals": [
+      {
+        "from": "-\\pi",
+        "to": "\\pi",
+        "left_closed": false,
+        "right_closed": false
+      }
+    ]
+  }
 }

@@ -1,12 +1,18 @@
 {
-    "id": "bin_series",
-    "num": 6,
-    "title": "(1+x)^{\\alpha}",
-    "formula": "\\sum_{n=0}^{\\infty}\\binom{\\alpha}{n}x^{n}",
-    "x_from": "-1",
-    "x_to": "1",
-    "speed": "hyperlinear",
-    "left_closed": false,
-    "right_closed": false,
-    "document": "series.docx"
+  "id": "bin_series",
+  "num": 6,
+  "title": "(1+x)^{\\alpha}",
+  "formula": "\\sum_{n=0}^{\\infty}\\binom{\\alpha}{n}x^{n}",
+  "speed": "hyperlinear",
+  "document": "series.docx",
+  "domain": {
+    "intervals": [
+      {
+        "from": "-1",
+        "to": "1",
+        "left_closed": false,
+        "right_closed": false
+      }
+    ]
+  }
 }

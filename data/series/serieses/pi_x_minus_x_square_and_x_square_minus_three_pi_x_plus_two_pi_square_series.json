@@ -1,12 +1,18 @@
 {
-    "id": "pi_x_minus_x_square_and_x_square_minus_three_pi_x_plus_two_pi_square_series",
-    "num": 0,
-    "title": "",
-    "formula": "",
-    "x_from": "",
-    "x_to": "",
-    "left_closed": false,
-    "right_closed": false,
-    "speed": "",
-    "document": "Rows.docx"
+  "id": "pi_x_minus_x_square_and_x_square_minus_three_pi_x_plus_two_pi_square_series",
+  "num": 0,
+  "title": "",
+  "formula": "",
+  "speed": "",
+  "document": "Rows.docx",
+  "domain": {
+    "intervals": [
+      {
+        "from": "",
+        "to": "",
+        "left_closed": false,
+        "right_closed": false
+      }
+    ]
+  }
 }
