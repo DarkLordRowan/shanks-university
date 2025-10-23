@@ -20,11 +20,11 @@ export const ResponseAccelSchema = z.object({
 
 export const ResponseComputedSchema = z.object({
     n: z.number(),
-    series_value: z.number(),
-    partial_sum: z.number(),
-    partial_sum_deviation: z.number(),
-    accel_value: z.number(),
-    accel_value_deviation: z.number(),
+    series_value: z.number().nullable(),
+    partial_sum: z.number().nullable(),
+    partial_sum_deviation: z.number().nullable(),
+    accel_value: z.number().nullable(),
+    accel_value_deviation: z.number().nullable(),
 });
 
 export const ResponseErrorSchema = z.object({

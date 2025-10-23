@@ -1,6 +1,6 @@
 import React from "react";
 import { useParams, Link } from "react-router-dom";
-import { TREE } from "../../data/algorithms";
+import { ALGORITHMS } from "../../data/algorithms";
 import { resolveAuthors } from "../../data/authors";
 import type { AlgNode } from "../../types/algorithms";
 
@@ -11,7 +11,7 @@ import { MarkdownDoc } from "./components/MarkdownDoc";
 
 const Algorithm: React.FC = () => {
     const { id } = useParams<{ id: string }>();
-    const node = id ? findNodeById(TREE as AlgNode[], id) : undefined;
+    const node = id ? findNodeById(ALGORITHMS as AlgNode[], id) : undefined;
 
     const [layout, setLayout] = React.useState<"stack" | "split">(
         (localStorage.getItem("alg-layout") as "stack" | "split") || "stack"

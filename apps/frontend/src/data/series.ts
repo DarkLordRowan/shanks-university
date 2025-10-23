@@ -11,25 +11,6 @@ export type SeriesNode = {
     document?: string;
 };
 
-{
-    "id": "half_minus_sinx_multi_pi_4_series",
-    "num": 0,
-    "num": 0,
-    "title": "",
-    "formula": "",
-    "x_from": "",
-    "x_to": "",
-    "left_closed": false,
-    "right_closed": false,
-    "speed": "",
-    "x_from": "",
-    "x_to": "",
-    "left_closed": false,
-    "right_closed": false,
-    "speed": "",
-    "document": "series.docx"
-}
-
 const GH = {
     owner: "DarkLordRowan",
     repo: "shanks-university",
@@ -54,11 +35,15 @@ export const getSeriesDataFromGitHub = async (): Promise<SeriesNode[]> => {
 
     return data.map((jsonData) => ({
         id: jsonData.id,
+        num: jsonData.num,
         title: jsonData.title,
-        subtitle: jsonData.subtitle,
         formula: jsonData.formula,
+        x_from: jsonData.x_from,
+        x_to: jsonData.x_to,
+        left_closed: jsonData.left_closed,
+        right_closed: jsonData.right_closed,
+        speed: jsonData.speed,
         document: jsonData.document,
-        url: jsonData.url,
     }));
 };
 

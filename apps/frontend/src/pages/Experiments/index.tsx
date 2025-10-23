@@ -3,8 +3,6 @@ import { useJsonInput } from "./hooks/useJsonInput";
 import { useApiProcessing } from "./hooks/useApiProcessing";
 import { type ErrorFilterMode } from "./types";
 import { buildJsonTable, filterByError } from "./utils/tables";
-import { buildChartGroups } from "./utils/chartUtils";
-import { parseCsv } from "../../utils/csv";
 import { DataTable } from "../../components/ui/DataTable";
 import { PivotMatrixSwitcher } from "../../components/PivotMatrixSwitcher.tsx";
 import { pivotByX } from "../../utils/itemToPivotByX.ts";
@@ -19,10 +17,9 @@ const Experiments: React.FC = () => {
         refs: {fileInputRef},
     } = useJsonInput();
 
-    // результаты API
     const {
-        state: {isSending, jsonResult, jsonError, csvBlobUrl, csvText, csvError},
-        actions: { sendForJsonAndCsv, loadByUuid, resetResults },
+        state: { isSending, jsonResult, jsonError },
+        actions: { sendForJson, loadByUuid, resetResults },
     } = useApiProcessing();
 
     const [generalError, setGeneralError] = useState<string | null>(null);
@@ -30,10 +27,6 @@ const Experiments: React.FC = () => {
     const [errorFilterMode, setErrorFilterMode] = useState<ErrorFilterMode>("all");
 
     const jsonTable = useMemo(() => buildJsonTable(jsonResult), [jsonResult]);
-    const csvTable = useMemo(() => (csvText ? parseCsv(csvText) : {
-        headers: [] as string[],
-        rows: [] as string[][]
-    }), [csvText]);
 
     const onUsePasted = () => {
         applyPasted((msg) => setGeneralError(msg || null));
@@ -52,7 +45,7 @@ const Experiments: React.FC = () => {
             return;
         }
         setGeneralError(null);
-        const {jsonOk} = await sendForJsonAndCsv(jsonPayload);
+        const {jsonOk} = await sendForJson(jsonPayload);
         if (jsonOk) setActiveTab("jsonTable");
     };
 
@@ -116,7 +109,7 @@ const Experiments: React.FC = () => {
                         onClick={onSend}
                         disabled={isSending || !jsonPayload}
                     >
-                        {isSending ? "Отправка… (JSON/CSV)" : "Отправить (JSON/CSV)"}
+                        {isSending ? "Отправка…" : "Отправить"}
                     </button>
                     {/* Загрузка по UUID */}
                     <div className="mt-3 flex gap-2 items-center">
@@ -172,9 +165,7 @@ const Experiments: React.FC = () => {
                 <div className="mb-3 flex flex-wrap gap-2">
                     {[
                         {id: "jsonTable", label: "Таблица JSON"},
-                        {id: "csvTable", label: "Таблица CSV"},
                         {id: "rawJson", label: "Raw JSON"},
-                        {id: "rawCsv", label: "Raw CSV"},
                     ].map((t) => (
                         <button
                             key={t.id}
@@ -195,12 +186,6 @@ const Experiments: React.FC = () => {
                                 download="results.json"
                             >
                                 Скачать JSON
-                            </a>
-                        )}
-                        {csvBlobUrl && (
-                            <a className="rounded-lg border border-border px-3 py-1 text-sm hover:bg-panel/60"
-                               href={csvBlobUrl} download="results.csv">
-                                Скачать CSV
                             </a>
                         )}
                     </div>
@@ -252,47 +237,6 @@ const Experiments: React.FC = () => {
                     </>
                 )}
 
-                {activeTab === "csvTable" && (
-                    <>
-                        {csvError && (
-                            <div
-                                className="mb-3 rounded-xl border border-red-400/60 bg-red-500/10 p-3 text-sm text-red-300">{csvError}</div>
-                        )}
-                        {csvTable.headers.length ? (
-                            <>
-                                <div className="mb-2 flex items-center gap-2 text-sm">
-                                    <span className="text-textDim">Ошибки:</span>
-                                    <select
-                                        className="rounded-md border border-border bg-background/60 px-2 py-1 text-sm"
-                                        value={errorFilterMode}
-                                        onChange={(e) => setErrorFilterMode(e.target.value as ErrorFilterMode)}
-                                    >
-                                        <option value="all">показывать все</option>
-                                        <option value="onlyGood">только без ошибок</option>
-                                        <option value="onlyBad">только с ошибками</option>
-                                    </select>
-                                </div>
-                                {(() => {
-                                    const t = filterByError(csvTable, errorFilterMode);
-                                    return (
-                                        <DataTable
-                                            headers={t.headers}
-                                            rows={t.rows}
-                                            compact
-                                            enableSorting
-                                            enableColumnFilters
-                                            storageKey="exp_csv_table"
-                                        />
-                                    );
-                                })()}
-                            </>
-                        ) : (
-                            <div className="rounded-xl border border-border/60 p-4 text-sm text-textDim">Нет данных.
-                                Отправьте запрос.</div>
-                        )}
-                    </>
-                )}
-
                 {activeTab === "rawJson" && (
                     <>
                         {jsonError && <div
@@ -301,22 +245,6 @@ const Experiments: React.FC = () => {
                             <pre
                                 className="max-h-[28rem] overflow-auto rounded-xl border border-border/60 bg-surface p-3 text-xs leading-relaxed text-white whitespace-pre">
                                 {JSON.stringify(jsonResult, null, 2)}
-                            </pre>
-                        ) : (
-                            <div className="rounded-xl border border-border/60 p-4 text-sm text-textDim">Нет данных.
-                                Отправьте запрос.</div>
-                        )}
-                    </>
-                )}
-
-                {activeTab === "rawCsv" && (
-                    <>
-                        {csvError && <div
-                            className="mb-3 rounded-xl border border-red-400/60 bg-red-500/10 p-3 text-sm text-red-300">{csvError}</div>}
-                        {csvText ? (
-                            <pre
-                                className="max-h-[28rem] overflow-auto rounded-xl border border-border/60 bg-surface p-3 text-xs leading-relaxed text-white whitespace-pre">
-                                {csvText}
                             </pre>
                         ) : (
                             <div className="rounded-xl border border-border/60 p-4 text-sm text-textDim">Нет данных.
