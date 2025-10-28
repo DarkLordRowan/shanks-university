@@ -33,7 +33,7 @@ class ErrorTrialResult:
     data: Mapping[str, Any]
 
 
-NoErrorTrialResult = ErrorTrialResult(None, {})
+NoErrorTrialResult = None
 
 
 @dataclass
@@ -67,7 +67,7 @@ class TrialResult:
     series: SeriesTrialResult
     accel: AccelTrialResult
     computed: list[ComputedTrialResult]
-    error: ErrorTrialResult
+    error: ErrorTrialResult | None = None
     stack_id: str | None = None
     events: list[EventTrialResult] | None = field(default=None, init=False, repr=False)
 
