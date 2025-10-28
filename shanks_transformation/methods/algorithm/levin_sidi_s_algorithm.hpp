@@ -457,7 +457,7 @@ public:
 		using std::to_string;
 
 		series_acceleration<float_precision, K>::acceleration_name = (use_recurrent_formula ? "recurrent " : "");
-		series_acceleration<float_precision, K>::acceleration_name += "levin l algorithm ";
+		series_acceleration<float_precision, K>::acceleration_name += "levin s algorithm ";
 		switch(remainder_type_in_use){
 			case remainder_type::u_type 	: { series_acceleration<float_precision, K>::acceleration_name += "with u-variant "; 		break; }
 			case remainder_type::t_type 	: { series_acceleration<float_precision, K>::acceleration_name += "with t-variant "; 		break; }
@@ -754,7 +754,7 @@ public:
 		using std::to_string;
 
 		series_acceleration<complex_precision<T>, K>::acceleration_name = (use_recurrent_formula ? "recurrent " : "");
-		series_acceleration<complex_precision<T>, K>::acceleration_name += "levin l algorithm ";
+		series_acceleration<complex_precision<T>, K>::acceleration_name += "levin sidi s algorithm ";
 		switch(remainder_type_in_use){
 			case remainder_type::u_type 	: { series_acceleration<complex_precision<T>, K>::acceleration_name += "with u-variant "; 		break; }
 			case remainder_type::t_type 	: { series_acceleration<complex_precision<T>, K>::acceleration_name += "with t-variant "; 		break; }
@@ -1059,7 +1059,7 @@ public:
         using ComplexFloatPrec = complex_precision<float_precision>;
 
 		series_acceleration<ComplexFloatPrec, K>::acceleration_name = (use_recurrent_formula ? "recurrent " : "");
-		series_acceleration<ComplexFloatPrec, K>::acceleration_name += "levin l algorithm ";
+		series_acceleration<ComplexFloatPrec, K>::acceleration_name += "levin sidi s algorithm ";
 		switch(remainder_type_in_use){
 			case remainder_type::u_type 	: { series_acceleration<ComplexFloatPrec, K>::acceleration_name += "with u-variant "; 		break; }
 			case remainder_type::t_type 	: { series_acceleration<ComplexFloatPrec, K>::acceleration_name += "with t-variant "; 		break; }

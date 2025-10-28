@@ -9,7 +9,7 @@
 
 #include "custom_concepts.hpp"
 #include <cstdio>
-#include <linux/limits.h>
+#include <limits.h>
 #include <memory>
 #include <set>
 #include <unordered_map>
@@ -675,101 +675,307 @@ public:
 /**
  * brief Implementations for all transformations
  */
+
+class BrezinskiThetaTransformationInfo : public ITransformationInfo {
+public:
+	transformation_id_t getId() const override { return brezinski_theta_transformation_id; }
+	std::string getName() const override { return "Brezinski Theta Transformation"; }
+};
+
+class ChangWynnTransformationInfo : public ITransformationInfo {
+public:
+	transformation_id_t getId() const override { return chang_wynn_transformation_id; }
+	std::string getName() const override { return "Chang-Wynn Transformation"; }
+};
+
+class DrummondDUTransformationInfo : public ITransformationInfo {
+public:
+	transformation_id_t getId() const override { return drummond_d_u_transformation_id; }
+	std::string getName() const override { return "Drummond D-U Transformation"; }
+};
+
+class DrummondDTTransformationInfo : public ITransformationInfo {
+public:
+	transformation_id_t getId() const override { return drummond_d_t_transformation_id; }
+	std::string getName() const override { return "Drummond D-T Transformation"; }
+};
+
+class DrummondDTWaveTransformationInfo : public ITransformationInfo {
+public:
+	transformation_id_t getId() const override { return drummond_d_t_wave_transformation_id; }
+	std::string getName() const override { return "Drummond D-T Wave Transformation"; }
+};
+
+class DrummondDVTransformationInfo : public ITransformationInfo {
+public:
+	transformation_id_t getId() const override { return drummond_d_v_transformation_id; }
+	std::string getName() const override { return "Drummond D-V Transformation"; }
+};
+
+class DrummondDVWaveTransformationInfo : public ITransformationInfo {
+public:
+	transformation_id_t getId() const override { return drummond_d_v_wave_transformation_id; }
+	std::string getName() const override { return "Drummond D-V Wave Transformation"; }
+};
+
+class RecurrentDrummondDUTransformationInfo : public ITransformationInfo {
+public:
+	transformation_id_t getId() const override { return recurrent_drummond_d_u_transformation_id; }
+	std::string getName() const override { return "Recurrent Drummond D-U Transformation"; }
+};
+
+class RecurrentDrummondDTTransformationInfo : public ITransformationInfo {
+public:
+	transformation_id_t getId() const override { return recurrent_drummond_d_t_transformation_id; }
+	std::string getName() const override { return "Recurrent Drummond D-T Transformation"; }
+};
+
+class RecurrentDrummondDVTransformationInfo : public ITransformationInfo {
+public:
+	transformation_id_t getId() const override { return recurrent_drummond_d_v_transformation_id; }
+	std::string getName() const override { return "Recurrent Drummond D-V Transformation"; }
+};
+
+class RecurrentDrummondDTWaveTransformationInfo : public ITransformationInfo {
+public:
+	transformation_id_t getId() const override { return recurrent_drummond_d_t_wave_transformation_id; }
+	std::string getName() const override { return "Recurrent Drummond D-T Wave Transformation"; }
+};
+
+class RecurrentDrummondDVWaveTransformationInfo : public ITransformationInfo {
+public:
+	transformation_id_t getId() const override { return recurrent_drummond_d_v_wave_transformation_id; }
+	std::string getName() const override { return "Recurrent Drummond D-V Wave Transformation"; }
+};
+
+class FordSidi2TransformationInfo : public ITransformationInfo {
+public:
+	transformation_id_t getId() const override { return ford_sidi_2_transformation_id; }
+	std::string getName() const override { return "Ford Sidi-2 Transformation"; }
+};
+
+class FordSidi3TransformationInfo : public ITransformationInfo {
+public:
+	transformation_id_t getId() const override { return ford_sidi_3_transformation_id; }
+	std::string getName() const override { return "Ford Sidi-3 Transformation"; }
+};
+
+class LevinSidiLUTransformationInfo : public ITransformationInfo {
+public:
+	transformation_id_t getId() const override { return levin_sidi_l_u_transformation_id; }
+	std::string getName() const override { return "Levin Sidi-L U Transformation"; }
+};
+
+class LevinSidiLTTransformationInfo : public ITransformationInfo {
+public:
+	transformation_id_t getId() const override { return levin_sidi_l_t_transformation_id; }
+	std::string getName() const override { return "Levin Sidi-L T Transformation"; }
+};
+
+class LevinSidiLTWaveTransformationInfo : public ITransformationInfo {
+public:
+	transformation_id_t getId() const override { return levin_sidi_l_t_wave_transformation_id; }
+	std::string getName() const override { return "Levin Sidi-L T Wave Transformation"; }
+};
+
+class LevinSidiLVTransformationInfo : public ITransformationInfo {
+public:
+	transformation_id_t getId() const override { return levin_sidi_l_v_transformation_id; }
+	std::string getName() const override { return "Levin Sidi-L V Transformation"; }
+};
+
+class LevinSidiLVWaveTransformationInfo : public ITransformationInfo {
+public:
+	transformation_id_t getId() const override { return levin_sidi_l_v_wave_transformation_id; }
+	std::string getName() const override { return "Levin Sidi-L V Wave Transformation"; }
+};
+
+class RecurrentLevinSidiLUTransformationInfo : public ITransformationInfo {
+public:
+	transformation_id_t getId() const override { return recurrent_levin_sidi_l_u_transformation_id; }
+	std::string getName() const override { return "Recurrent Levin Sidi-L U Transformation"; }
+};
+
+class RecurrentLevinSidiLTTransformationInfo : public ITransformationInfo {
+public:
+	transformation_id_t getId() const override { return recurrent_levin_sidi_l_t_transformation_id; }
+	std::string getName() const override { return "Recurrent Levin Sidi-L T Transformation"; }
+};
+
+class RecurrentLevinSidiLVTransformationInfo : public ITransformationInfo {
+public:
+	transformation_id_t getId() const override { return recurrent_levin_sidi_l_v_transformation_id; }
+	std::string getName() const override { return "Recurrent Levin Sidi-L V Transformation"; }
+};
+
+class RecurrentLevinSidiLTWaveTransformationInfo : public ITransformationInfo {
+public:
+	transformation_id_t getId() const override { return recurrent_levin_sidi_l_t_wave_transformation_id; }
+	std::string getName() const override { return "Recurrent Levin Sidi-L T Wave Transformation"; }
+};
+
+class RecurrentLevinSidiLVWaveTransformationInfo : public ITransformationInfo {
+public:
+	transformation_id_t getId() const override { return recurrent_levin_sidi_l_v_wave_transformation_id; }
+	std::string getName() const override { return "Recurrent Levin Sidi-L V Wave Transformation"; }
+};
+
+class LevinSidiMUTransformationInfo : public ITransformationInfo {
+public:
+	transformation_id_t getId() const override { return levin_sidi_m_u_transformation_id; }
+	std::string getName() const override { return "Levin Sidi-M U Transformation"; }
+};
+
+class LevinSidiMTTransformationInfo : public ITransformationInfo {
+public:
+	transformation_id_t getId() const override { return levin_sidi_m_t_transformation_id; }
+	std::string getName() const override { return "Levin Sidi-M T Transformation"; }
+};
+
+class LevinSidiMTWaveTransformationInfo : public ITransformationInfo {
+public:
+	transformation_id_t getId() const override { return levin_sidi_m_t_wave_transformation_id; }
+	std::string getName() const override { return "Levin Sidi-M T Wave Transformation"; }
+};
+
+class LevinSidiMVTransformationInfo : public ITransformationInfo {
+public:
+	transformation_id_t getId() const override { return levin_sidi_m_v_transformation_id; }
+	std::string getName() const override { return "Levin Sidi-M V Transformation"; }
+};
+
+class LevinSidiMVWaveTransformationInfo : public ITransformationInfo {
+public:
+	transformation_id_t getId() const override { return levin_sidi_m_v_wave_transformation_id; }
+	std::string getName() const override { return "Levin Sidi-M V Wave Transformation"; }
+};
+
+class LevinSidiSUTransformationInfo : public ITransformationInfo {
+public:
+	transformation_id_t getId() const override { return levin_sidi_s_u_transformation_id; }
+	std::string getName() const override { return "Levin Sidi-S U Transformation"; }
+};
+
+class LevinSidiSTTransformationInfo : public ITransformationInfo {
+public:
+	transformation_id_t getId() const override { return levin_sidi_s_t_transformation_id; }
+	std::string getName() const override { return "Levin Sidi-S T Transformation"; }
+};
+
+class LevinSidiSTWaveTransformationInfo : public ITransformationInfo {
+public:
+	transformation_id_t getId() const override { return levin_sidi_s_t_wave_transformation_id; }
+	std::string getName() const override { return "Levin Sidi-S T Wave Transformation"; }
+};
+
+class LevinSidiSVTransformationInfo : public ITransformationInfo {
+public:
+	transformation_id_t getId() const override { return levin_sidi_s_v_transformation_id; }
+	std::string getName() const override { return "Levin Sidi-S V Transformation"; }
+};
+
+class LevinSidiSVWaveTransformationInfo : public ITransformationInfo {
+public:
+	transformation_id_t getId() const override { return levin_sidi_s_v_wave_transformation_id; }
+	std::string getName() const override { return "Levin Sidi-S V Wave Transformation"; }
+};
+
+class RecurrentLevinSidiSUTransformationInfo : public ITransformationInfo {
+public:
+	transformation_id_t getId() const override { return recurrent_levin_sidi_s_u_transformation_id; }
+	std::string getName() const override { return "Recurrent Levin Sidi-S U Transformation"; }
+};
+
+class RecurrentLevinSidiSTTransformationInfo : public ITransformationInfo {
+public:
+	transformation_id_t getId() const override { return recurrent_levin_sidi_s_t_transformation_id; }
+	std::string getName() const override { return "Recurrent Levin Sidi-S T Transformation"; }
+};
+
+class RecurrentLevinSidiSVTransformationInfo : public ITransformationInfo {
+public:
+	transformation_id_t getId() const override { return recurrent_levin_sidi_s_v_transformation_id; }
+	std::string getName() const override { return "Recurrent Levin Sidi-S V Transformation"; }
+};
+
+class RecurrentLevinSidiSTWaveTransformationInfo : public ITransformationInfo {
+public:
+	transformation_id_t getId() const override { return recurrent_levin_sidi_s_t_wave_transformation_id; }
+	std::string getName() const override { return "Recurrent Levin Sidi-S T Wave Transformation"; }
+};
+
+class RecurrentLevinSidiSVWaveTransformationInfo : public ITransformationInfo {
+public:
+	transformation_id_t getId() const override { return recurrent_levin_sidi_s_v_wave_transformation_id; }
+	std::string getName() const override { return "Recurrent Levin Sidi-S V Wave Transformation"; }
+};
+
+class LubkinWTransformationInfo : public ITransformationInfo {
+public:
+	transformation_id_t getId() const override { return lubkin_w_transformation_id; }
+	std::string getName() const override { return "Lubkin W Transformation"; }
+};
+
+class RichardsonTransformationInfo : public ITransformationInfo {
+public:
+	transformation_id_t getId() const override { return richardson_transformation_id; }
+	std::string getName() const override { return "Richardson Transformation"; }
+};
+
 class ShanksTransformationInfo : public ITransformationInfo {
 public:
 	transformation_id_t getId() const override { return shanks_transformation_id; }
 	std::string getName() const override { return "Shanks Transformation"; }
 };
 
+class ShanksAlternatingTransformationInfo : public ITransformationInfo {
+public:
+	transformation_id_t getId() const override { return shanks_alternating_transformation_id; }
+	std::string getName() const override { return "Shanks Alternating Transformation"; }
+};
+
 class WenigerTransformationInfo : public ITransformationInfo {
 public:
 	transformation_id_t getId() const override { return weniger_transformation_id; }
-	std::string getName() const override { return "Weniger transformation"; }
+	std::string getName() const override { return "Weniger Transformation"; }
 };
 
-class RhoWynnTransformationInfo : public ITransformationInfo {
-public:
-	transformation_id_t getId() const override { return wynn_rho_rho_transformation_id; }
-	std::string getName() const override { return "Rho-Wynn transformation"; }
-};
-
-class BrezinskiThetaTransformationInfo : public ITransformationInfo {
-public:
-	transformation_id_t getId() const override { return brezinski_theta_transformation_id; }
-	std::string getName() const override { return "Brezinski Theta transformation"; }
-};
-
-class EpsilonAlgorithmInfo : public ITransformationInfo {
+class WynnEpsilon1TransformationInfo : public ITransformationInfo {
 public:
 	transformation_id_t getId() const override { return wynn_epsilon_1_transforamtion_id; }
-	std::string getName() const override { return "Epsilon algorithm"; }
+	std::string getName() const override { return "Wynn Epsilon-1 Transformation"; }
 };
 
-class EpsilonAlgorithm2Info : public ITransformationInfo {
+class WynnEpsilon2TransformationInfo : public ITransformationInfo {
 public:
 	transformation_id_t getId() const override { return wynn_epsilon_2_transforamtion_id; }
-	std::string getName() const override { return "Epsilon v2 algorithm"; }
+	std::string getName() const override { return "Wynn Epsilon-2 Transformation"; }
 };
 
-class EpsilonAlgorithm3Info : public ITransformationInfo {
+class WynnEpsilon3TransformationInfo : public ITransformationInfo {
 public:
 	transformation_id_t getId() const override { return wynn_epsilon_3_transforamtion_id; }
-	std::string getName() const override { return "Epsilon v3 algorithm"; }
+	std::string getName() const override { return "Wynn Epsilon-3 Transformation"; }
 };
 
-class ChangEpsilonAlgorithmInfo : public ITransformationInfo {
+class WynnRhoRhoTransformationInfo : public ITransformationInfo {
 public:
-	transformation_id_t getId() const override { return chang_wynn_transformation_id; }
-	std::string getName() const override { return "Chang epsilon algorithm"; }
+	transformation_id_t getId() const override { return wynn_rho_rho_transformation_id; }
+	std::string getName() const override { return "Wynn Rho-Rho Transformation"; }
 };
 
-class LAlgorithmInfo : public ITransformationInfo {
+class WynnRhoGeneralizedTransformationInfo : public ITransformationInfo {
 public:
-	transformation_id_t getId() const override { return levin_sidi_l_u_transformation_id; }
-	std::string getName() const override { return "L algorithm"; }
+	transformation_id_t getId() const override { return wynn_rho_generalized_transformation_id; }
+	std::string getName() const override { return "Wynn Rho Generalized Transformation"; }
 };
 
-class SAlgorithmInfo : public ITransformationInfo {
+class WynnRhoGammaRhoTransformationInfo : public ITransformationInfo {
 public:
-	transformation_id_t getId() const override { return levin_sidi_s_u_transformation_id; }
-	std::string getName() const override { return "S algorithm"; }
+	transformation_id_t getId() const override { return wynn_rho_gamma_rho_transformation_id; }
+	std::string getName() const override { return "Wynn Rho-Gamma-Rho Transformation"; }
 };
 
-class DAlgorithmInfo : public ITransformationInfo {
-public:
-	transformation_id_t getId() const override { return drummond_d_u_transformation_id; }
-	std::string getName() const override { return "D algorithm"; }
-};
-
-class MAlgorithmInfo : public ITransformationInfo {
-public:
-	transformation_id_t getId() const override { return levin_sidi_m_u_transformation_id; }
-	std::string getName() const override { return "M algorithm"; }
-};
-
-class WAlgorithmInfo : public ITransformationInfo {
-public:
-	transformation_id_t getId() const override { return lubkin_w_transformation_id; }
-	std::string getName() const override { return "W algorithm"; }
-};
-
-class RichardsonAlgorithmInfo : public ITransformationInfo {
-public:
-	transformation_id_t getId() const override { return richardson_transformation_id; }
-	std::string getName() const override { return "Richardson Algorithm"; }
-};
-
-class FordSidiAlgorithmTwoInfo : public ITransformationInfo {
-public:
-	transformation_id_t getId() const override { return ford_sidi_2_transformation_id; }
-	std::string getName() const override { return "Ford-Sidi Algorithm V-2"; }
-};
-
-class FordSidiAlgorithmThreeInfo : public ITransformationInfo {
-public:
-	transformation_id_t getId() const override { return ford_sidi_3_transformation_id; }
-	std::string getName() const override { return "Ford-Sidi Algorithm V-3"; }
-};
 
 
 /**
@@ -954,22 +1160,56 @@ inline static std::vector<std::unique_ptr<ISeriesInfo>> create_series_info() {
 
 inline static std::vector<std::unique_ptr<ITransformationInfo>> create_transformation_info() {
 	std::unique_ptr<ITransformationInfo> temp[] = {
-		std::make_unique<ShanksTransformationInfo>(),
-		std::make_unique<WenigerTransformationInfo>(),
-		std::make_unique<RhoWynnTransformationInfo>(),
 		std::make_unique<BrezinskiThetaTransformationInfo>(),
-		std::make_unique<EpsilonAlgorithmInfo>(),
-		std::make_unique<EpsilonAlgorithm2Info>(),
-		std::make_unique<EpsilonAlgorithm3Info>(),
-		std::make_unique<ChangEpsilonAlgorithmInfo>(),
-		std::make_unique<LAlgorithmInfo>(),
-		std::make_unique<SAlgorithmInfo>(),
-		std::make_unique<DAlgorithmInfo>(),
-		std::make_unique<MAlgorithmInfo>(),
-		std::make_unique<WAlgorithmInfo>(),
-		std::make_unique<RichardsonAlgorithmInfo>(),
-		std::make_unique<FordSidiAlgorithmTwoInfo>(),
-		std::make_unique<FordSidiAlgorithmThreeInfo>()
+		std::make_unique<ChangWynnTransformationInfo>(),
+		std::make_unique<DrummondDUTransformationInfo>(),
+		std::make_unique<DrummondDTTransformationInfo>(),
+		std::make_unique<DrummondDTWaveTransformationInfo>(),
+		std::make_unique<DrummondDVTransformationInfo>(),
+		std::make_unique<DrummondDVWaveTransformationInfo>(),
+		std::make_unique<RecurrentDrummondDUTransformationInfo>(),
+		std::make_unique<RecurrentDrummondDTTransformationInfo>(),
+		std::make_unique<RecurrentDrummondDVTransformationInfo>(),
+		std::make_unique<RecurrentDrummondDTWaveTransformationInfo>(),
+		std::make_unique<RecurrentDrummondDVWaveTransformationInfo>(),
+		std::make_unique<FordSidi2TransformationInfo>(),
+		std::make_unique<FordSidi3TransformationInfo>(),
+		std::make_unique<LevinSidiLUTransformationInfo>(),
+		std::make_unique<LevinSidiLTTransformationInfo>(),
+		std::make_unique<LevinSidiLTWaveTransformationInfo>(),
+		std::make_unique<LevinSidiLVTransformationInfo>(),
+		std::make_unique<LevinSidiLVWaveTransformationInfo>(),
+		std::make_unique<RecurrentLevinSidiLUTransformationInfo>(),
+		std::make_unique<RecurrentLevinSidiLTTransformationInfo>(),
+		std::make_unique<RecurrentLevinSidiLVTransformationInfo>(),
+		std::make_unique<RecurrentLevinSidiLTWaveTransformationInfo>(),
+		std::make_unique<RecurrentLevinSidiLVWaveTransformationInfo>(),
+		std::make_unique<LevinSidiMUTransformationInfo>(),
+		std::make_unique<LevinSidiMTTransformationInfo>(),
+		std::make_unique<LevinSidiMTWaveTransformationInfo>(),
+		std::make_unique<LevinSidiMVTransformationInfo>(),
+		std::make_unique<LevinSidiMVWaveTransformationInfo>(),
+		std::make_unique<LevinSidiSUTransformationInfo>(),
+		std::make_unique<LevinSidiSTTransformationInfo>(),
+		std::make_unique<LevinSidiSTWaveTransformationInfo>(),
+		std::make_unique<LevinSidiSVTransformationInfo>(),
+		std::make_unique<LevinSidiSVWaveTransformationInfo>(),
+		std::make_unique<RecurrentLevinSidiSUTransformationInfo>(),
+		std::make_unique<RecurrentLevinSidiSTTransformationInfo>(),
+		std::make_unique<RecurrentLevinSidiSVTransformationInfo>(),
+		std::make_unique<RecurrentLevinSidiSTWaveTransformationInfo>(),
+		std::make_unique<RecurrentLevinSidiSVWaveTransformationInfo>(),
+		std::make_unique<LubkinWTransformationInfo>(),
+		std::make_unique<RichardsonTransformationInfo>(),
+		std::make_unique<ShanksTransformationInfo>(),
+		std::make_unique<ShanksAlternatingTransformationInfo>(),
+		std::make_unique<WenigerTransformationInfo>(),
+		std::make_unique<WynnEpsilon1TransformationInfo>(),
+		std::make_unique<WynnEpsilon2TransformationInfo>(),
+		std::make_unique<WynnEpsilon3TransformationInfo>(),
+		std::make_unique<WynnRhoRhoTransformationInfo>(),
+		std::make_unique<WynnRhoGeneralizedTransformationInfo>(),
+		std::make_unique<WynnRhoGammaRhoTransformationInfo>(),
 	};
 
 	return std::vector<std::unique_ptr<ITransformationInfo>>(
@@ -1266,298 +1506,71 @@ inline static std::unique_ptr<series_acceleration<T, K>>
 create_transformation_by_id(transformation_id_t id) {
 
 	switch (id) {
-		case  		       brezinski_theta_transformation_id:
-		{
-			return std::make_unique<brezinski_theta_algorithm<T,K>>(brezinski_theta_algorithm<T,K>());
-		}
-		case                    chang_wynn_transformation_id:
-		{
-			return std::make_unique<chang_wynn_algorithm<T,K>>(chang_wynn_algorithm<T,K>());
-		}
-		case                  drummond_d_u_transformation_id:
-		{
-			return std::make_unique<drummond_d_algorithm<T,K>>(drummond_d_algorithm<T,K>(
-				remainder_type::u_type, false
-			));
-		}
-		case                  drummond_d_t_transformation_id:
-		{
-			return std::make_unique<drummond_d_algorithm<T,K>>(drummond_d_algorithm<T,K>(
-				remainder_type::t_type, false
-			));
-		}
-		case             drummond_d_t_wave_transformation_id:
-		{
-			return std::make_unique<drummond_d_algorithm<T,K>>(drummond_d_algorithm<T,K>(
-				remainder_type::t_wave_type, false
-			));
-		}
-		case                  drummond_d_v_transformation_id:
-		{
-			return std::make_unique<drummond_d_algorithm<T,K>>(drummond_d_algorithm<T,K>(
-				remainder_type::v_type, false
-			));
-		}
-		case             drummond_d_v_wave_transformation_id:
-		{
-			return std::make_unique<drummond_d_algorithm<T,K>>(drummond_d_algorithm<T,K>(
-				remainder_type::v_wave_type, false
-			));
-		}
-		case        recurrent_drummond_d_u_transformation_id:
-		{
-			return std::make_unique<drummond_d_algorithm<T,K>>(drummond_d_algorithm<T,K>(
-				remainder_type::u_type, true
-			));
-		}
-		case        recurrent_drummond_d_t_transformation_id:
-		{
-			return std::make_unique<drummond_d_algorithm<T,K>>(drummond_d_algorithm<T,K>(
-				remainder_type::t_type, true
-			));
-		}
-		case        recurrent_drummond_d_v_transformation_id:
-		{
-			return std::make_unique<drummond_d_algorithm<T,K>>(drummond_d_algorithm<T,K>(
-				remainder_type::v_type, true
-			));
-		}
-		case   recurrent_drummond_d_t_wave_transformation_id:
-		{
-			return std::make_unique<drummond_d_algorithm<T,K>>(drummond_d_algorithm<T,K>(
-				remainder_type::t_wave_type, true
-			));
-		}
-		case   recurrent_drummond_d_v_wave_transformation_id:
-		{
-			return std::make_unique<drummond_d_algorithm<T,K>>(drummond_d_algorithm<T,K>(
-				remainder_type::v_wave_type, true
-			));
-		}
-		case                   ford_sidi_2_transformation_id:
-		{
-			return std::make_unique<ford_sidi_2_algorithm<T,K>>(ford_sidi_2_algorithm<T,K>());
-		}
-		case                   ford_sidi_3_transformation_id:
-		{
-			return std::make_unique<ford_sidi_3_algorithm<T,K>>(ford_sidi_3_algorithm<T,K>());
-		}
-		case                levin_sidi_l_u_transformation_id:
-		{
-			return std::make_unique<levin_algorithm<T,K>>(levin_algorithm<T,K>(
-				remainder_type::u_type, false
-			));
-		}
-		case                levin_sidi_l_t_transformation_id:
-		{
-			return std::make_unique<levin_algorithm<T,K>>(levin_algorithm<T,K>(
-				remainder_type::t_type, false
-			));
-		}
-		case           levin_sidi_l_t_wave_transformation_id:
-		{
-			return std::make_unique<levin_algorithm<T,K>>(levin_algorithm<T,K>(
-				remainder_type::t_wave_type, false
-			));
-		}
-		case                levin_sidi_l_v_transformation_id:
-		{
-			return std::make_unique<levin_algorithm<T,K>>(levin_algorithm<T,K>(
-				remainder_type::v_type, false
-			));
-		}
-		case           levin_sidi_l_v_wave_transformation_id:
-		{
-			return std::make_unique<levin_algorithm<T,K>>(levin_algorithm<T,K>(
-				remainder_type::v_wave_type, false
-			));
-		}
-		case      recurrent_levin_sidi_l_u_transformation_id:
-		{
-			return std::make_unique<levin_algorithm<T,K>>(levin_algorithm<T,K>(
-				remainder_type::u_type, true
-			));
-		}
-		case      recurrent_levin_sidi_l_t_transformation_id:
-		{
-			return std::make_unique<levin_algorithm<T,K>>(levin_algorithm<T,K>(
-				remainder_type::t_type, true
-			));
-		}
-		case      recurrent_levin_sidi_l_v_transformation_id:
-		{
-			return std::make_unique<levin_algorithm<T,K>>(levin_algorithm<T,K>(
-				remainder_type::v_type, true
-			));
-		}
-		case recurrent_levin_sidi_l_t_wave_transformation_id:
-		{
-			return std::make_unique<levin_algorithm<T,K>>(levin_algorithm<T,K>(
-				remainder_type::t_wave_type, true
-			));
-		}
-		case recurrent_levin_sidi_l_v_wave_transformation_id:
-		{
-			return std::make_unique<levin_algorithm<T,K>>(levin_algorithm<T,K>(
-				remainder_type::v_wave_type, true
-			));
-		}
-		case                levin_sidi_m_u_transformation_id:
-		{
-			return std::make_unique<levin_sidi_m_algorithm<T,K>>(levin_sidi_m_algorithm<T,K>(
-				remainder_type::u_type, false
-			));
-		}
-		case                levin_sidi_m_t_transformation_id:
-		{
-			return std::make_unique<levin_sidi_m_algorithm<T,K>>(levin_sidi_m_algorithm<T,K>(
-				remainder_type::t_type, false
-			));
-		}
-		case           levin_sidi_m_t_wave_transformation_id:
-		{
-			return std::make_unique<levin_sidi_m_algorithm<T,K>>(levin_sidi_m_algorithm<T,K>(
-				remainder_type::t_wave_type, false
-			));
-		}
-		case                levin_sidi_m_v_transformation_id:
-		{
-			return std::make_unique<levin_sidi_m_algorithm<T,K>>(levin_sidi_m_algorithm<T,K>(
-				remainder_type::v_type, false
-			));
-		}
-		case           levin_sidi_m_v_wave_transformation_id:
-		{
-			return std::make_unique<levin_sidi_m_algorithm<T,K>>(levin_sidi_m_algorithm<T,K>(
-				remainder_type::v_wave_type, false
-			));
-		}
-		case                levin_sidi_s_u_transformation_id:
-		{
-			return std::make_unique<levin_sidi_s_algorithm<T,K>>(levin_sidi_s_algorithm<T,K>(
-				remainder_type::u_type, false
-			));
-		}
-		case                levin_sidi_s_t_transformation_id:
-		{
-			return std::make_unique<levin_sidi_s_algorithm<T,K>>(levin_sidi_s_algorithm<T,K>(
-				remainder_type::t_type, false
-			));
-		}
-		case           levin_sidi_s_t_wave_transformation_id:
-		{
-			return std::make_unique<levin_sidi_s_algorithm<T,K>>(levin_sidi_s_algorithm<T,K>(
-				remainder_type::t_wave_type, false
-			));
-		}
-		case                levin_sidi_s_v_transformation_id:
-		{
-			return std::make_unique<levin_sidi_s_algorithm<T,K>>(levin_sidi_s_algorithm<T,K>(
-				remainder_type::v_type, false
-			));
-		}
-		case           levin_sidi_s_v_wave_transformation_id:
-		{
-			return std::make_unique<levin_sidi_s_algorithm<T,K>>(levin_sidi_s_algorithm<T,K>(
-				remainder_type::v_wave_type, false
-			));
-		}
-		case      recurrent_levin_sidi_s_u_transformation_id:
-		{
-			return std::make_unique<levin_sidi_s_algorithm<T,K>>(levin_sidi_s_algorithm<T,K>(
-				remainder_type::u_type, true
-			));
-		}
-		case      recurrent_levin_sidi_s_t_transformation_id:
-		{
-			return std::make_unique<levin_sidi_s_algorithm<T,K>>(levin_sidi_s_algorithm<T,K>(
-				remainder_type::t_type, true
-			));
-		}
-		case      recurrent_levin_sidi_s_v_transformation_id:
-		{
-			return std::make_unique<levin_sidi_s_algorithm<T,K>>(levin_sidi_s_algorithm<T,K>(
-				remainder_type::v_type, true
-			));
-		}
-		case recurrent_levin_sidi_s_t_wave_transformation_id:
-		{
-			return std::make_unique<levin_sidi_s_algorithm<T,K>>(levin_sidi_s_algorithm<T,K>(
-				remainder_type::t_wave_type, true
-			));
-		}
-		case recurrent_levin_sidi_s_v_wave_transformation_id:
-		{
-			return std::make_unique<levin_sidi_s_algorithm<T,K>>(levin_sidi_s_algorithm<T,K>(
-				remainder_type::v_wave_type, true
-			));
-		}
-		case                      lubkin_w_transformation_id:
-		{
-			return std::make_unique<lubkin_w_algorithm<T,K>>(lubkin_w_algorithm<T,K>());
-		}
-		case                    richardson_transformation_id:
-		{
-			return std::make_unique<richardson_algorithm<T,K>>(richardson_algorithm<T,K>());
-		}
-		case                        shanks_transformation_id:
-		{
-			return std::make_unique<richardson_algorithm<T,K>>(richardson_algorithm<T,K>());
-		}
-		case            shanks_alternating_transformation_id:
-		{
-			return std::make_unique<richardson_algorithm<T,K>>(richardson_algorithm<T,K>());
-		}
-		case                       weniger_transformation_id:
-		{
-			return std::make_unique<weniger_algorithm<T,K>>(weniger_algorithm<T,K>());
-		}
-		case                wynn_epsilon_1_transforamtion_id:
-		{
-			return std::make_unique<wynn_epsilon_1_algorithm<T,K>>(wynn_epsilon_1_algorithm<T,K>());
-		}
-		case                wynn_epsilon_2_transforamtion_id:
-		{
-			return std::make_unique<wynn_epsilon_2_algorithm<T,K>>(wynn_epsilon_2_algorithm<T,K>());
-		}
-		case                wynn_epsilon_3_transforamtion_id:
-		{
-			return std::make_unique<wynn_epsilon_3_algorithm<T,K>>(wynn_epsilon_3_algorithm<T,K>());
-		}
-		case                  wynn_rho_rho_transformation_id:
-		{
-			return std::make_unique<wynn_rho_algorithm<T,K>>(wynn_rho_algorithm<T,K>(
-				numerator_type::rho_type
-			));
-		}
-		case          wynn_rho_generalized_transformation_id:
-		{
-			return std::make_unique<wynn_rho_algorithm<T,K>>(wynn_rho_algorithm<T,K>(
-				numerator_type::generalized_type
-			));
-		}
-		case            wynn_rho_gamma_rho_transformation_id:
-		{
-			return std::make_unique<wynn_rho_algorithm<T,K>>(wynn_rho_algorithm<T,K>(
-				numerator_type::gamma_rho_type
-			));
-		}
-		default:
-			throw std::domain_error("Invalid transformation ID");
+	case brezinski_theta_transformation_id		 	  	: { return std::make_unique<brezinski_theta_algorithm<T,K>>(brezinski_theta_algorithm<T,K>()); }
+	case chang_wynn_transformation_id			 	  	: { return std::make_unique<chang_wynn_algorithm<T,K>>(chang_wynn_algorithm<T,K>()); }
+	case drummond_d_u_transformation_id			 	  	: { return std::make_unique<drummond_d_algorithm<T,K>>(drummond_d_algorithm<T,K>( remainder_type::u_type, false )); }
+	case drummond_d_t_transformation_id			 	  	: { return std::make_unique<drummond_d_algorithm<T,K>>(drummond_d_algorithm<T,K>( remainder_type::t_type, false )); }
+	case drummond_d_t_wave_transformation_id	 	  	: { return std::make_unique<drummond_d_algorithm<T,K>>(drummond_d_algorithm<T,K>( remainder_type::t_wave_type, false )); }
+	case drummond_d_v_transformation_id			 	  	: { return std::make_unique<drummond_d_algorithm<T,K>>(drummond_d_algorithm<T,K>( remainder_type::v_type, false )); }
+	case drummond_d_v_wave_transformation_id	 	  	: { return std::make_unique<drummond_d_algorithm<T,K>>(drummond_d_algorithm<T,K>( remainder_type::v_wave_type, false )); }
+	case recurrent_drummond_d_u_transformation_id	  	: { return std::make_unique<drummond_d_algorithm<T,K>>(drummond_d_algorithm<T,K>( remainder_type::u_type, true )); }
+	case recurrent_drummond_d_t_transformation_id	  	: { return std::make_unique<drummond_d_algorithm<T,K>>(drummond_d_algorithm<T,K>( remainder_type::t_type, true )); }
+	case recurrent_drummond_d_v_transformation_id	  	: { return std::make_unique<drummond_d_algorithm<T,K>>(drummond_d_algorithm<T,K>( remainder_type::v_type, true )); }
+	case recurrent_drummond_d_t_wave_transformation_id	: { return std::make_unique<drummond_d_algorithm<T,K>>(drummond_d_algorithm<T,K>( remainder_type::t_wave_type, true )); }
+	case recurrent_drummond_d_v_wave_transformation_id	: { return std::make_unique<drummond_d_algorithm<T,K>>(drummond_d_algorithm<T,K>( remainder_type::v_wave_type, true )); }
+	case ford_sidi_2_transformation_id				  	: { return std::make_unique<ford_sidi_2_algorithm<T,K>>(ford_sidi_2_algorithm<T,K>()); }
+	case ford_sidi_3_transformation_id				  	: { return std::make_unique<ford_sidi_3_algorithm<T,K>>(ford_sidi_3_algorithm<T,K>()); }
+	case levin_sidi_l_u_transformation_id			  	: { return std::make_unique<levin_algorithm<T,K>>(levin_algorithm<T,K>( remainder_type::u_type, false )); }
+	case levin_sidi_l_t_transformation_id			  	: { return std::make_unique<levin_algorithm<T,K>>(levin_algorithm<T,K>( remainder_type::t_type, false )); }
+	case levin_sidi_l_t_wave_transformation_id		  	: { return std::make_unique<levin_algorithm<T,K>>(levin_algorithm<T,K>( remainder_type::t_wave_type, false )); }
+	case levin_sidi_l_v_transformation_id			  	: { return std::make_unique<levin_algorithm<T,K>>(levin_algorithm<T,K>( remainder_type::v_type, false )); }
+	case levin_sidi_l_v_wave_transformation_id		  	: { return std::make_unique<levin_algorithm<T,K>>(levin_algorithm<T,K>( remainder_type::v_wave_type, false )); }
+	case recurrent_levin_sidi_l_u_transformation_id	  	: { return std::make_unique<levin_algorithm<T,K>>(levin_algorithm<T,K>( remainder_type::u_type, true )); }
+	case recurrent_levin_sidi_l_t_transformation_id	  	: { return std::make_unique<levin_algorithm<T,K>>(levin_algorithm<T,K>( remainder_type::t_type, true )); }
+	case recurrent_levin_sidi_l_v_transformation_id	  	: { return std::make_unique<levin_algorithm<T,K>>(levin_algorithm<T,K>( remainder_type::v_type, true )); }
+	case recurrent_levin_sidi_l_t_wave_transformation_id: { return std::make_unique<levin_algorithm<T,K>>(levin_algorithm<T,K>( remainder_type::t_wave_type, true )); }
+	case recurrent_levin_sidi_l_v_wave_transformation_id: { return std::make_unique<levin_algorithm<T,K>>(levin_algorithm<T,K>( remainder_type::v_wave_type, true )); }
+	case levin_sidi_m_u_transformation_id				: { return std::make_unique<levin_sidi_m_algorithm<T,K>>(levin_sidi_m_algorithm<T,K>( remainder_type::u_type, false )); }
+	case levin_sidi_m_t_transformation_id				: { return std::make_unique<levin_sidi_m_algorithm<T,K>>(levin_sidi_m_algorithm<T,K>( remainder_type::t_type, false )); }
+	case levin_sidi_m_t_wave_transformation_id			: { return std::make_unique<levin_sidi_m_algorithm<T,K>>(levin_sidi_m_algorithm<T,K>( remainder_type::t_wave_type, false )); }
+	case levin_sidi_m_v_transformation_id				: { return std::make_unique<levin_sidi_m_algorithm<T,K>>(levin_sidi_m_algorithm<T,K>( remainder_type::v_type, false )); }
+	case levin_sidi_m_v_wave_transformation_id			: { return std::make_unique<levin_sidi_m_algorithm<T,K>>(levin_sidi_m_algorithm<T,K>( remainder_type::v_wave_type, false )); }
+	case levin_sidi_s_u_transformation_id				: { return std::make_unique<levin_sidi_s_algorithm<T,K>>(levin_sidi_s_algorithm<T,K>( remainder_type::u_type, false )); }
+	case levin_sidi_s_t_transformation_id				: { return std::make_unique<levin_sidi_s_algorithm<T,K>>(levin_sidi_s_algorithm<T,K>( remainder_type::t_type, false )); }
+	case levin_sidi_s_t_wave_transformation_id			: { return std::make_unique<levin_sidi_s_algorithm<T,K>>(levin_sidi_s_algorithm<T,K>( remainder_type::t_wave_type, false )); }
+	case levin_sidi_s_v_transformation_id				: { return std::make_unique<levin_sidi_s_algorithm<T,K>>(levin_sidi_s_algorithm<T,K>( remainder_type::v_type, false )); }
+	case levin_sidi_s_v_wave_transformation_id			: { return std::make_unique<levin_sidi_s_algorithm<T,K>>(levin_sidi_s_algorithm<T,K>( remainder_type::v_wave_type, false )); }
+	case recurrent_levin_sidi_s_u_transformation_id		: { return std::make_unique<levin_sidi_s_algorithm<T,K>>(levin_sidi_s_algorithm<T,K>( remainder_type::u_type, true )); }
+	case recurrent_levin_sidi_s_t_transformation_id		: { return std::make_unique<levin_sidi_s_algorithm<T,K>>(levin_sidi_s_algorithm<T,K>( remainder_type::t_type, true )); }
+	case recurrent_levin_sidi_s_v_transformation_id		: { return std::make_unique<levin_sidi_s_algorithm<T,K>>(levin_sidi_s_algorithm<T,K>( remainder_type::v_type, true )); }
+	case recurrent_levin_sidi_s_t_wave_transformation_id: { return std::make_unique<levin_sidi_s_algorithm<T,K>>(levin_sidi_s_algorithm<T,K>( remainder_type::t_wave_type, true )); }
+	case recurrent_levin_sidi_s_v_wave_transformation_id: { return std::make_unique<levin_sidi_s_algorithm<T,K>>(levin_sidi_s_algorithm<T,K>( remainder_type::v_wave_type, true )); }
+	case lubkin_w_transformation_id						: { return std::make_unique<lubkin_w_algorithm<T,K>>(lubkin_w_algorithm<T,K>()); }
+	case richardson_transformation_id					: { return std::make_unique<richardson_algorithm<T,K>>(richardson_algorithm<T,K>()); }
+	case shanks_transformation_id						: { return std::make_unique<richardson_algorithm<T,K>>(richardson_algorithm<T,K>()); }
+	case shanks_alternating_transformation_id			: { return std::make_unique<richardson_algorithm<T,K>>(richardson_algorithm<T,K>()); }
+	case weniger_transformation_id						: { return std::make_unique<weniger_algorithm<T,K>>(weniger_algorithm<T,K>()); }
+	case wynn_epsilon_1_transforamtion_id				: { return std::make_unique<wynn_epsilon_1_algorithm<T,K>>(wynn_epsilon_1_algorithm<T,K>()); }
+	case wynn_epsilon_2_transforamtion_id				: { return std::make_unique<wynn_epsilon_2_algorithm<T,K>>(wynn_epsilon_2_algorithm<T,K>()); }
+	case wynn_epsilon_3_transforamtion_id				: { return std::make_unique<wynn_epsilon_3_algorithm<T,K>>(wynn_epsilon_3_algorithm<T,K>()); }
+	case wynn_rho_rho_transformation_id					: { return std::make_unique<wynn_rho_algorithm<T,K>>(wynn_rho_algorithm<T,K>( numerator_type::rho_type )); }
+	case wynn_rho_generalized_transformation_id			: { return std::make_unique<wynn_rho_algorithm<T,K>>(wynn_rho_algorithm<T,K>( numerator_type::generalized_type )); }
+	case wynn_rho_gamma_rho_transformation_id			: { return std::make_unique<wynn_rho_algorithm<T,K>>(wynn_rho_algorithm<T,K>( numerator_type::gamma_rho_type )); }
+	default: throw std::domain_error("Invalid transformation ID");
 	}
 }
+
 
 /**
  * @brief The main testing function
  * This function provides a convenient and interactive way to test out the convergence acceleration of various series
  * @tparam T The type of the elements in the series, K The type of enumerating integer
  */
+
 template <AcceptedLike T, std::unsigned_integral K>
 inline static void main_testing_function()
 {
 
-
-	
 	//choosing series
 	print_series_info();
 	std::unique_ptr<series_base<T, K>> series;
@@ -1590,9 +1603,7 @@ inline static void main_testing_function()
 			std::cout << "for m factorial 1mx mp1 ... series must initialise variable alpha\n";
 			kParam = inputCustomType<K>("m");
 		}
-		default:
-		 break;
-	};
+	}
 
 	//choosing transformation
 	print_transformation_info();
@@ -1614,7 +1625,7 @@ inline static void main_testing_function()
 	std::string answer = "ok";
 	while(answer != "Y" && answer != "Yes" && answer != "N" && answer != "No"){
 		std::cout << "Appply noise [Y]es, [N]o: "; std::cin >> answer;
-	};
+	}
 
 	if (answer == "Y" || answer == "Yes"){
 		size_t noise_type_to_use;
@@ -1686,14 +1697,4 @@ inline static void main_testing_function()
 		throw std::domain_error("wrong function_id");
 	}
 
-	std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-	#ifdef __unix__
-		//it magically works
-		//system("read");
-		//system("clear");
-	#endif
-	#ifdef _WIN32
-		system("pause"); //pause console till input
-		system("cls"); //clear console
-	#endif
 }

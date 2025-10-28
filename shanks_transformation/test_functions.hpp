@@ -16,6 +16,29 @@
 #include <type_traits>
 #include <unordered_map>
 
+void static stop_console()
+{
+#ifdef __unix__
+	system("read -n 1 -s -p \"Press any key to continue...\"");
+	std::cout << std::endl;
+#endif
+#ifdef _WIN32
+	system("pause");
+#endif
+}
+
+void static clear_console()
+{
+#ifdef __unix__
+	// system("read");
+	system("clear");
+#endif
+#ifdef _WIN32
+	// system("pause");
+	system("cls");
+#endif
+}
+
 template <typename T>
 T inputCustomType(std::string varName = "x"){
 	if constexpr (std::is_same<T, float_precision>::value){
@@ -393,7 +416,7 @@ void test_all_transforms(
 		for (size_t j = 0; j < algos.size(); ++j) {
 				try{
 					std::cout << "transformation : " << algos[j]->get_name() << "\n";
-					std::cout << "n = " << i << " order = " << order << " : " << algos[j]->operator()(i,order,result) << "\n";
+					std::cout << "n = " << i << " order = " << order << " : " << algos[j]->operator()(i,order,result) << "\n\n";
 				} catch (std::overflow_error& e){
 					std::cout << e.what() << "\n";
 				} catch (std::domain_error& e){
