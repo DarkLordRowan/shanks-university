@@ -1,4 +1,5 @@
 import logging
+import uuid
 
 from src.config import TrialConfig
 from src.db import MongoDatabase
@@ -39,7 +40,9 @@ def load_parameters(config: TrialConfig, precision: PrecisionType):
     return series_params, accel_params
 
 
-def execute_trial(config: TrialConfig, precision: PrecisionType):
+def execute_trial(
+    config: TrialConfig, precision: PrecisionType, stack_id: str
+):
     logging.info("Starting trial execution for precision: %s", precision.name)
     logging.info("Process count: %d", config.trial_process_count)
 
@@ -50,6 +53,7 @@ def execute_trial(config: TrialConfig, precision: PrecisionType):
         accel_params,
         process_count=config.trial_process_count,
         task_timeout=config.trial_task_timeout,
+        stack_id=stack_id,
     )
     results = trial.execute()
 
@@ -79,6 +83,7 @@ def export_results(
         logging.info("Skipping export to CSV as requested")
 
     if mongo_database is not None:
+        logging.info("Collecting data for MongoDB collection...")
         results_exporter.to_mongodb(mongo_database)
         logging.info("Results exported to MongoDB")
 
@@ -93,9 +98,14 @@ def lazy_load_events(
 
 def handle_run_command(config: TrialConfig, mongo_database: MongoDatabase | None):
     aggregated_results: list[TrialResult] = []
+    stack_id = str(uuid.uuid4())
     for precision in config.precisions:
-        results = execute_trial(config, precision)
+        results = execute_trial(config, precision, stack_id)
         results = lazy_load_events(config, results)
         aggregated_results.extend(results)
 
     export_results(aggregated_results, config, mongo_database)
+    logging.info(
+        "Results are obtainable via stack_id: [%s]",
+        stack_id,
+    )

@@ -8,7 +8,7 @@
   "trial_process_count": 8,
   "trial_task_timeout": 5,
   "no_events": false,
-  "no_json_export": false,
+  "no_json_export": true,
   "no_csv_export": true,
   "precisions": ["F64"],
   "with_mongo": true,

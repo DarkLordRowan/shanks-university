@@ -139,6 +139,22 @@ class TrialConfig(BaseConfig, MongoConfig):
 @dataclass
 class VizConfig(BaseConfig, MongoConfig):
     stack_id: str | None = None
+    with_summary: bool = False
+    series_name: str | None = None
+    method_name: str | None = None
+
+    output_dir: pathlib.Path = field(default=pathlib.Path("output"))
+
+    @property
+    def summary_filename(self) -> pathlib.Path:
+        return self.output_dir / f"summary_{self.stack_id}.html"
+
+    @property
+    def computed_filename(self) -> pathlib.Path:
+        return (
+            self.output_dir
+            / f"plot_{self.stack_id}_{self.series_name}_{self.method_name}.html"
+        )
 
 
 class BaseConfigLoader[T]:
@@ -264,6 +280,10 @@ class VizConfigLoader(BaseConfigLoader[VizConfig]):
     def from_args(args) -> VizConfig:
         return VizConfig(
             stack_id=args.stack_id,
+            series_name=args.series_name,
+            method_name=args.method_name,
+            with_summary=args.with_summary,
+            verbose=args.verbose,
         )
 
     @staticmethod

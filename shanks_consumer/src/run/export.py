@@ -7,7 +7,6 @@ from dataclasses import Field, asdict, fields, is_dataclass
 from typing import Any, cast
 
 from pymongo.database import Database as MongoDatabase
-
 from tqdm import tqdm
 
 import pyshanks as ps
