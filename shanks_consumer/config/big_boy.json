@@ -616,13 +616,13 @@
   "methods": [
     {
       "name": "ShanksAlgorithm",
-      "n": { "start": 1, "stop": 51, "step": 1 },
+      "n": { "start": 10, "stop": 62, "step": 1 },
       "m": [2, 4, 10],
       "args": {}
     },
     {
       "name": "ShanksTransformAlternating",
-      "n": { "start": 1, "stop": 51, "step": 1 },
+      "n": { "start": 10, "stop": 62, "step": 1 },
       "m": [2, 4, 10],
       "args": {}
     },
@@ -695,7 +695,7 @@
       "args": {}
     },
     {
-      "name": "WhynnRhoAlgorithm",
+      "name": "WynnRhoAlgorithm",
       "n": { "start": 1, "stop": 51, "step": 1 },
       "m": [2, 4, 10],
       "args": {
@@ -717,7 +717,7 @@
       "args": {}
     },
     {
-      "name": "WynnEpsilonAlgorithm",
+      "name": "WynnEpsilon1Algorithm",
       "n": { "start": 1, "stop": 51, "step": 1 },
       "m": [2, 4, 10],
       "args": {}

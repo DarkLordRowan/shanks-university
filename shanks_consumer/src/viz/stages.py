@@ -197,7 +197,8 @@ class FlattenComputedDataStage(ProjectStage):
             "accel_value": "$computed.accel_value",
             "partial_sum_deviation": "$computed.partial_sum_deviation",
             "accel_value_deviation": "$computed.accel_value_deviation",
-            "additional_args": "$accel.additional_args",
+            "accel_additional_args": "$accel.additional_args",
+            "series_args": "$series.arguments",
         }
 
 

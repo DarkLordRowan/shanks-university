@@ -34,3 +34,7 @@ def handle_viz_command(
         )
         if not df.empty:
             logging.info("Written plot into %s", config.computed_filename)
+    else:
+        logging.warning("Provide a series and a method to plot it")
+        logging.warning(collector.get_method_names())
+        logging.warning(collector.get_series_names())

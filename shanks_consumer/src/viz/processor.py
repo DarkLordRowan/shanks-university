@@ -17,10 +17,10 @@ class DataProcessor:
         return df
 
     @staticmethod
-    def normalize_additional_args(
+    def normalize_field(
         df: pd.DataFrame,
-        target_field: str = "additional_args",
-        normalized_field: str = "additional_args_str",
+        target_field: str,
+        normalized_field: str,
     ) -> pd.DataFrame:
         df[normalized_field] = df[target_field].apply(
             lambda x: (
@@ -35,9 +35,7 @@ class DataProcessor:
     def provide_variation_field(df: pd.DataFrame):
         df["variation"] = df.apply(
             lambda row: (
-                f"{row['additional_args_str']} (m={row['m']})"
-                if pd.notna(row["m"])
-                else row["additional_args_str"]
+                f"(m={row['m']}) {row['accel_additional_args_str']} [{row['series_args_str']}]"
             ),
             axis=1,
         )
