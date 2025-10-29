@@ -38,7 +38,11 @@ class MongoDataCollector:
             return df
 
         df = self.data_processor.explode_events(df)
-        df = self.data_processor.normalize_additional_args(df)
+        df = self.data_processor.normalize_field(
+            df,
+            target_field="additional_args",
+            normalized_field="additional_args_str",
+        )
 
         pivot = self.data_processor.create_pivot_table(df)
         result_df = self.data_processor.merge_base_with_pivot(df, pivot)
@@ -76,7 +80,16 @@ class MongoDataCollector:
             logging.fatal("Please report this error")
             return df
 
-        df = self.data_processor.normalize_additional_args(df)
+        df = self.data_processor.normalize_field(
+            df,
+            target_field="accel_additional_args",
+            normalized_field="accel_additional_args_str",
+        )
+        df = self.data_processor.normalize_field(
+            df,
+            target_field="series_args",
+            normalized_field="series_args_str",
+        )
         df = self.data_processor.provide_variation_field(df)
 
         if draw_html:

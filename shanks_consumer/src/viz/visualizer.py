@@ -2,20 +2,15 @@ import pathlib
 
 import pandas as pd
 import plotly.express as px
+import plotly.io as pio
 
+pio.templates.default = "plotly_dark"
 
 class DataVisualizer:
     @staticmethod
     def create_scatter_plot(
         df: pd.DataFrame, output_file: pathlib.Path
     ) -> None:
-        if (
-            "slow_accel_method" not in df.columns
-            or "divergent_accel_method" not in df.columns
-        ):
-            raise ValueError(
-                "Отсутствуют необходимые колонки для визуализации"
-            )
 
         fig = px.scatter(
             df,
@@ -38,10 +33,6 @@ class DataVisualizer:
         method_name: str,
         output_file: pathlib.Path,
     ) -> None:
-
-        if df.empty:
-            raise ValueError("Нет данных для выбранного метода/ряда")
-
         fig = px.line(
             df,
             x="n",
@@ -73,24 +64,5 @@ class DataVisualizer:
                     "Частичная сумма: %{y:.10f}<br>"
                     "Вариация: " + variation + "<extra></extra>"
                 ),
-            )
-
-        series_limit = (
-            df["lim"].iloc[0]
-            if "lim" in df.columns and not df["lim"].isna().all()
-            else None
-        )
-
-        if series_limit is not None and pd.notna(series_limit):
-            fig.add_hline(
-                y=series_limit,
-                line_dash="dot",
-                line_color="red",
-                line_width=3,
-                annotation_text=f"Предел ряда: {series_limit:.10f}",
-                annotation_position="top right",
-                annotation_font_size=12,
-                annotation_font_color="red",
-                annotation_bgcolor="white",
             )
         fig.write_html(output_file, include_plotlyjs="cdn")

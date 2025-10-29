@@ -10,7 +10,7 @@
   "no_events": false,
   "no_json_export": true,
   "no_csv_export": true,
-  "precisions": ["F64"],
+  "precisions": ["FLong", "F64", "F32"],
   "with_mongo": true,
   "verbose": 1
 }
