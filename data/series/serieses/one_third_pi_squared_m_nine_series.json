@@ -1,5 +1,6 @@
 {
   "id": "one_third_pi_squared_m_nine_series",
+  "python_id": "",
   "num": 29,
   "title": "\\tfrac{\\pi^{2}-9}{3}\\,x",
   "formula": "\\sum_{n=0}^{\\infty}\\frac{x}{(n+1)^{2}(n+2)^{2}} = \\tfrac{\\pi^{2}-9}{3}\\,x",

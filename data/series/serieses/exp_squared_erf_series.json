@@ -1,5 +1,6 @@
 {
   "id": "exp_squared_erf_series",
+  "python_id": "",
   "num": 10,
   "title": "e^{x^{2}}\\,\\mathrm{erf}(x)",
   "formula": "\\frac{2}{\\sqrt{\\pi}}\\sum_{n=0}^{\\infty}\\frac{x^{2n+1}}{n!(2n+1)}",

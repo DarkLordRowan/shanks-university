@@ -1,5 +1,6 @@
 {
   "id": "pi_six_min_half_series",
+  "python_id": "",
   "num": 35,
   "title": "\\left(\\tfrac{\\pi}{6}-\\tfrac{1}{2}\\right)\\,x",
   "formula": "\\sum_{n=0}^{\\infty}\\frac{(-1)^{n}x}{(6n+5)(6n+7)} = \\left(\\tfrac{\\pi}{6}-\\tfrac{1}{2}\\right)\\,x",

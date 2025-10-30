@@ -1,6 +1,7 @@
 [
     {
         "id": "abs_sin_x_minus_2_div_pi_series",
+        "python_id": "",
         "num": 0,
         "title": "",
         "formula": "",
@@ -19,6 +20,7 @@
     },
     {
         "id": "arcsinh_x_series",
+        "python_id": "",
         "num": 0,
         "title": "",
         "formula": "",
@@ -37,6 +39,7 @@
     },
     {
         "id": "arcsin_x2_series",
+        "python_id": "",
         "num": 0,
         "title": "",
         "formula": "",
@@ -55,6 +58,7 @@
     },
     {
         "id": "arcsin_x_minus_x_series",
+        "python_id": "",
         "num": 0,
         "title": "",
         "formula": "",
@@ -73,6 +77,7 @@
     },
     {
         "id": "arcsin_x_series",
+        "python_id": "",
         "num": 0,
         "title": "",
         "formula": "",
@@ -91,6 +96,7 @@
     },
     {
         "id": "arctanh_x2_series",
+        "python_id": "",
         "num": 0,
         "title": "",
         "formula": "",
@@ -109,6 +115,7 @@
     },
     {
         "id": "arctan_x2_series",
+        "python_id": "",
         "num": 0,
         "title": "",
         "formula": "",
@@ -127,6 +134,7 @@
     },
     {
         "id": "arctan_x3_series",
+        "python_id": "",
         "num": 0,
         "title": "",
         "formula": "",
@@ -145,6 +153,7 @@
     },
     {
         "id": "arctg_x_series",
+        "python_id": "",
         "num": 0,
         "title": "",
         "formula": "",
@@ -163,6 +172,7 @@
     },
     {
         "id": "artanh_x_series",
+        "python_id": "",
         "num": 0,
         "title": "",
         "formula": "",
@@ -181,6 +191,7 @@
     },
     {
         "id": "bin_series",
+        "python_id": "",
         "num": 6,
         "title": "(1+x)^{\\alpha}",
         "formula": "\\sum_{n=0}^{\\infty}\\binom{\\alpha}{n}x^{n}",
@@ -199,6 +210,7 @@
     },
     {
         "id": "Ci_x_series",
+        "python_id": "",
         "num": 0,
         "title": "",
         "formula": "",
@@ -217,6 +229,7 @@
     },
     {
         "id": "cos3xmin1_div_xsqare_series",
+        "python_id": "",
         "num": 0,
         "title": "",
         "formula": "",
@@ -235,6 +248,7 @@
     },
     {
         "id": "cosh_series",
+        "python_id": "",
         "num": 4,
         "title": "\\cosh x",
         "formula": "\\sum_{n=0}^{\\infty}\\frac{x^{2n}}{(2n)!}",
@@ -253,6 +267,7 @@
     },
     {
         "id": "cos_series",
+        "python_id": "",
         "num": 2,
         "title": "\\cos x",
         "formula": "\\sum_{n=0}^{\\infty}(-1)^{n}\\frac{x^{2n}}{(2n)!}",
@@ -271,6 +286,7 @@
     },
     {
         "id": "cos_sqrt_x_series",
+        "python_id": "",
         "num": 0,
         "title": "",
         "formula": "",
@@ -289,6 +305,7 @@
     },
     {
         "id": "cos_x2_series",
+        "python_id": "",
         "num": 0,
         "title": "",
         "formula": "",
@@ -307,6 +324,7 @@
     },
     {
         "id": "eighth_pi_m_one_third_series",
+        "python_id": "",
         "num": 28,
         "title": "\\left(\\tfrac{\\pi}{8}-\\tfrac{1}{3}\\right)\\,x",
         "formula": "\\sum_{n=0}^{\\infty}\\frac{(-1)^{n} x}{(2n+1)(2n+3)(2n+5)} = \\left(\\tfrac{\\pi}{8}-\\tfrac{1}{3}\\right)\\,x",
@@ -325,6 +343,7 @@
     },
     {
         "id": "erf_series",
+        "python_id": "",
         "num": 15,
         "title": "\\tfrac{\\sqrt{\\pi}}{2}\\,\\mathrm{erf}(x)",
         "formula": "\\sum_{n=0}^{\\infty}\\frac{(-1)^{n}x^{2n+1}}{n!(2n+1)} = \\tfrac{\\sqrt{\\pi}}{2}\\,\\mathrm{erf}(x)",
@@ -343,6 +362,7 @@
     },
     {
         "id": "exp_m_cos_x_sinsin_x_series",
+        "python_id": "",
         "num": 31,
         "title": "e^{-\\cos(x)}\\,\\sin(\\sin x)",
         "formula": "\\sum_{n=0}^{\\infty}\\frac{(-1)^{n}\\sin(nx)}{n!}=e^{-\\cos(x)}\\sin(\\sin(x))",
@@ -361,6 +381,7 @@
     },
     {
         "id": "exp_series",
+        "python_id": "",
         "num": 1,
         "title": "e^{x}",
         "formula": "\\sum_{n=0}^{\\infty}\\frac{x^{n}}{n!}",
@@ -379,6 +400,7 @@
     },
     {
         "id": "exp_squared_erf_series",
+        "python_id": "",
         "num": 10,
         "title": "e^{x^{2}}\\,\\mathrm{erf}(x)",
         "formula": "\\frac{2}{\\sqrt{\\pi}}\\sum_{n=0}^{\\infty}\\frac{x^{2n+1}}{n!(2n+1)}",
@@ -397,6 +419,7 @@
     },
     {
         "id": "E_x_series",
+        "python_id": "",
         "num": 0,
         "title": "",
         "formula": "",
@@ -415,6 +438,7 @@
     },
     {
         "id": "five_pi_twelve_series",
+        "python_id": "",
         "num": 33,
         "title": "\\tfrac{5\\pi}{12}\\,x",
         "formula": "\\sum_{n=0}^{\\infty}\\frac{(-1)^{\\frac{n-1}{3}}}{2n+1}\\,x = \\tfrac{5\\pi}{12}\\,x",
@@ -433,6 +457,7 @@
     },
     {
         "id": "four_arctan_series",
+        "python_id": "",
         "num": 7,
         "title": "4\\arctan x",
         "formula": "4\\sum_{n=0}^{\\infty}(-1)^{n}\\frac{x^{2n+1}}{2n+1}",
@@ -451,6 +476,7 @@
     },
     {
         "id": "four_ln2_m_3_series",
+        "python_id": "",
         "num": 30,
         "title": "\\left(4\\ln(2)-3\\right)\\,x",
         "formula": "\\sum_{n=0}^{\\infty}\\frac{(-1)^{n+1}x}{(n+1)^{2}(n+2)^{2}} = \\left(4\\ln(2)-3\\right)\\,x",
@@ -469,6 +495,7 @@
     },
     {
         "id": "gamma_series",
+        "python_id": "",
         "num": 0,
         "title": "",
         "formula": "",
@@ -487,6 +514,7 @@
     },
     {
         "id": "half_asin_two_x_series",
+        "python_id": "",
         "num": 12,
         "title": "\\tfrac{1}{2}\\arcsin(2x)",
         "formula": "\\tfrac{1}{2}\\sum_{n=0}^{\\infty}\\frac{(2n)!}{(n!)^{2}(2n+1)}(2x)^{2n+1}",
@@ -505,6 +533,7 @@
     },
     {
         "id": "half_minus_sinx_multi_pi_4_series",
+        "python_id": "",
         "num": 48,
         "title": "\\tfrac{1}{2}-\\tfrac{\\pi}{4}\\sin(x)",
         "formula": "\\sum_{n=0}^{\\infty}\\frac{\\cos\\big(2(n+1)x\\big)}{(2n+1)(2n+3)}=\\tfrac{1}{2}-\\tfrac{\\pi}{4}\\sin(x)",
@@ -523,6 +552,7 @@
     },
     {
         "id": "half_multi_ln_1div2multi1minuscosx_series",
+        "python_id": "",
         "num": 47,
         "title": "\\tfrac{1}{2}\\ln\\frac{1}{2(1-\\cos x)}",
         "formula": "\\sum_{n=0}^{\\infty}\\frac{\\cos((n+1)x)}{n+1}=\\tfrac{1}{2}\\ln\\frac{1}{2(1-\\cos x)}",
@@ -541,6 +571,7 @@
     },
     {
         "id": "Incomplete_Gamma_func_series",
+        "python_id": "",
         "num": 0,
         "title": "",
         "formula": "",
@@ -559,6 +590,7 @@
     },
     {
         "id": "inverse_1mx_series",
+        "python_id": "",
         "num": 13,
         "title": "\\frac{1}{1 - x}",
         "formula": "\\sum_{n=0}^{\\infty} x^{n} = \\frac{1}{1 - x}",
@@ -577,6 +609,7 @@
     },
     {
         "id": "inverse_sqrt_1m4x_series",
+        "python_id": "",
         "num": 17,
         "title": "\\frac{1}{\\sqrt{1 - 4x}}",
         "formula": "\\sum_{n=0}^{\\infty}\\frac{(2n)!}{(n!)^{2}}x^{n} = \\frac{1}{\\sqrt{1 - 4x}}",
@@ -595,6 +628,7 @@
     },
     {
         "id": "Ja_x_series",
+        "python_id": "",
         "num": 0,
         "title": "",
         "formula": "",
@@ -613,6 +647,7 @@
     },
     {
         "id": "K_x_series",
+        "python_id": "",
         "num": 0,
         "title": "",
         "formula": "",
@@ -631,6 +666,7 @@
     },
     {
         "id": "Lambert_W_func_series",
+        "python_id": "",
         "num": 0,
         "title": "",
         "formula": "",
@@ -649,6 +685,7 @@
     },
     {
         "id": "ln13_min_ln7_div_7_series",
+        "python_id": "",
         "num": 0,
         "title": "",
         "formula": "",
@@ -667,6 +704,7 @@
     },
     {
         "id": "ln1mx_series",
+        "python_id": "",
         "num": 8,
         "title": "\\ln(1-x)",
         "formula": "-\\sum_{n=1}^{\\infty}\\frac{x^{n}}{n}",
@@ -685,6 +723,7 @@
     },
     {
         "id": "ln1px4_series",
+        "python_id": "",
         "num": 0,
         "title": "",
         "formula": "",
@@ -703,6 +742,7 @@
     },
     {
         "id": "ln1_m_x2_series",
+        "python_id": "",
         "num": 0,
         "title": "",
         "formula": "",
@@ -721,6 +761,7 @@
     },
     {
         "id": "ln2_series",
+        "python_id": "",
         "num": 20,
         "title": "\\ln(2)\\,x",
         "formula": "\\sum_{n=0}^{\\infty}\\frac{(-1)^{n}x}{n+1}=\\ln(2)\\,x",
@@ -739,6 +780,7 @@
     },
     {
         "id": "ln_1plussqrt1plusxsquare_minus_ln_2_series",
+        "python_id": "",
         "num": 49,
         "title": "ln(1+√(1+x²)) − ln(2)",
         "formula": "\\sum_{n=0}^{\\infty} \\frac{(-1)^n (2n+1)!}{2^{2n+2} ((n+1)!)^2} x^{2n+2} = \\ln(1+\\sqrt{1+x^2}) - \\ln(2)",
@@ -757,6 +799,7 @@
     },
     {
         "id": "ln_1plusx_div_1plusx2_series",
+        "python_id": "",
         "num": 0,
         "title": "",
         "formula": "",
@@ -775,6 +818,7 @@
     },
     {
         "id": "ln_1_plus_x3_series",
+        "python_id": "",
         "num": 0,
         "title": "",
         "formula": "",
@@ -793,6 +837,7 @@
     },
     {
         "id": "ln_cosx_series",
+        "python_id": "",
         "num": 50,
         "title": "\\ln(\\cos x)",
         "formula": "\\sum_{n=0}^{\\infty}\\frac{-\\sin^{2n+2}(x)}{2n+2} = \\ln(\\cos x)",
@@ -811,6 +856,7 @@
     },
     {
         "id": "ln_sinx_minus_ln_x_series",
+        "python_id": "",
         "num": 0,
         "title": "",
         "formula": "",
@@ -829,6 +875,7 @@
     },
     {
         "id": "ln_x_plus_one_x_minus_one_halfed_series",
+        "python_id": "",
         "num": 39,
         "title": "\\tfrac{1}{2}\\ln\\left(\\tfrac{1+x}{1-x}\\right)",
         "formula": "\\sum_{n=0}^{\\infty}\\frac{x^{2n+1}}{2n+1} = \\tfrac{1}{2}\\ln\\left(\\tfrac{1+x}{1-x}\\right)",
@@ -847,6 +894,7 @@
     },
     {
         "id": "mean_sinh_sin_series",
+        "python_id": "",
         "num": 9,
         "title": "\\tfrac{\\sinh x + \\sin x}{2}",
         "formula": "\\sum_{k=0}^{\\infty}\\frac{x^{4k+1}}{(4k+1)!}",
@@ -865,6 +913,7 @@
     },
     {
         "id": "minus_3_div_4_or_x_minus_3_div_4_series",
+        "python_id": "",
         "num": 0,
         "title": "",
         "formula": "",
@@ -883,6 +932,7 @@
     },
     {
         "id": "minus_one_ned_in_n_series",
+        "python_id": "",
         "num": 37,
         "title": "-0.78343051\\,x",
         "formula": "\\sum_{n=0}^{\\infty}\\frac{(-1)^{n+1}}{(n+1)^{n+1}}\\,x = -0.78343051\\,x",
@@ -901,6 +951,7 @@
     },
     {
         "id": "minus_one_n_fact_n_in_n_series",
+        "python_id": "",
         "num": 38,
         "title": "-0.65583160\\,x",
         "formula": "\\sum_{n=0}^{\\infty}\\frac{(-1)^{n+1}(n+1)!\\,x}{(n+1)^{(n+1)}}=-0.65583160\\,x",
@@ -919,6 +970,7 @@
     },
     {
         "id": "minus_one_quarter_series",
+        "python_id": "",
         "num": 22,
         "title": "-\\tfrac{1}{4} \\cdot x",
         "formula": "\\sum_{n=0}^{\\infty}\\frac{(-1)^{n+1} x}{(n+1)(n+3)} = -\\tfrac{1}{4} \\cdot x",
@@ -937,6 +989,7 @@
     },
     {
         "id": "minus_three_plus_ln3_three_devided_two_plus_two_ln2_series",
+        "python_id": "",
         "num": 43,
         "title": "\\left(-3+\\tfrac{3}{2}\\ln 3+2\\ln 2\\right)\\,x",
         "formula": "\\sum_{n=0}^{\\infty}\\frac{x}{(n+1)\\bigl(36(n+1)^{2}-1\\bigr)}=\\left(-3+\\tfrac{3}{2}\\ln 3+2\\ln 2\\right)\\,x",
@@ -955,6 +1008,7 @@
     },
     {
         "id": "minus_x_minus_pi_4_or_minus_pi_4_series",
+        "python_id": "",
         "num": 0,
         "title": "",
         "formula": "",
@@ -973,6 +1027,7 @@
     },
     {
         "id": "m_fact_1mx_mp1_inverse_series",
+        "python_id": "",
         "num": 16,
         "title": "\\frac{m!}{(1 - x)^{m + 1}}",
         "formula": "\\sum_{n=0}^{\\infty}\\frac{(n + m)!}{n!\\,m!}\\,x^{n} = \\frac{m!}{(1 - x)^{m + 1}}",
@@ -991,6 +1046,7 @@
     },
     {
         "id": "one_div_sqrt2_sin_xdivsqrt2_series",
+        "python_id": "",
         "num": 0,
         "title": "",
         "formula": "",
@@ -1009,6 +1065,7 @@
     },
     {
         "id": "one_div_two_minus_x_multi_three_plus_x_series",
+        "python_id": "",
         "num": 0,
         "title": "",
         "formula": "",
@@ -1027,6 +1084,7 @@
     },
     {
         "id": "one_minus_sqrt_1minus4x_div_2x_series",
+        "python_id": "",
         "num": 0,
         "title": "",
         "formula": "",
@@ -1045,6 +1103,7 @@
     },
     {
         "id": "one_series",
+        "python_id": "",
         "num": 21,
         "title": "1 \\cdot x",
         "formula": "\\sum_{n=0}^{\\infty}\\frac{x}{(n+1)(n+2)} = 1 \\cdot x",
@@ -1063,6 +1122,7 @@
     },
     {
         "id": "one_third_pi_squared_m_nine_series",
+        "python_id": "",
         "num": 29,
         "title": "\\tfrac{\\pi^{2}-9}{3}\\,x",
         "formula": "\\sum_{n=0}^{\\infty}\\frac{x}{(n+1)^{2}(n+2)^{2}} = \\tfrac{\\pi^{2}-9}{3}\\,x",
@@ -1081,6 +1141,7 @@
     },
     {
         "id": "one_twelfth_3x2_pi2_series",
+        "python_id": "",
         "num": 18,
         "title": "\\tfrac{1}{12}\\bigl(3x^{2}-\\pi^{2}\\bigr)",
         "formula": "\\sum_{k=1}^{\\infty} \\frac{(-1)^{k}}{k^{2}}\\cos(kx) = \\tfrac{1}{12}\\bigl(3x^{2}-\\pi^{2}\\bigr)",
@@ -1099,6 +1160,7 @@
     },
     {
         "id": "one_twelfth_series",
+        "python_id": "",
         "num": 27,
         "title": "\\tfrac{1}{12}\\,x",
         "formula": "\\sum_{n=0}^{\\infty}\\frac{x}{(2n+1)(2n+3)(2n+5)} = \\tfrac{1}{12}\\,x",
@@ -1117,6 +1179,7 @@
     },
     {
         "id": "one_twelfth_x2_pi2_series",
+        "python_id": "",
         "num": 19,
         "title": "\\tfrac{x}{12}(x^{2}-\\pi^{2})",
         "formula": "\\sum_{k=1}^{\\infty}\\frac{(-1)^{k}}{k^{3}}\\sin(kx)=\\tfrac{x}{12}(x^{2}-\\pi^{2})",
@@ -1154,6 +1217,7 @@
     },
     {
         "id": "pi_4_series",
+        "python_id": "",
         "num": 24,
         "title": "\\tfrac{\\pi}{4}\\,x",
         "formula": "\\sum_{n=0}^{\\infty}\\frac{(-1)^{n} x}{2n+1}=\\tfrac{\\pi}{4}\\,x",
@@ -1172,6 +1236,7 @@
     },
     {
         "id": "pi_8_cosx_square_minus_1_div_3_cosx_series",
+        "python_id": "",
         "num": 0,
         "title": "",
         "formula": "",
@@ -1190,6 +1255,7 @@
     },
     {
         "id": "pi_cubed_32_series",
+        "python_id": "",
         "num": 42,
         "title": "\\tfrac{\\pi^{3}}{32}\\,x",
         "formula": "\\sum_{n=0}^{\\infty}\\frac{(-1)^{n} x}{(2n+1)^{3}} = \\tfrac{\\pi^{3}}{32}\\,x",
@@ -1208,6 +1274,7 @@
     },
     {
         "id": "pi_four_minus_ln2_halfed_series",
+        "python_id": "",
         "num": 32,
         "title": "\\left(\\tfrac{\\pi}{4}-\\tfrac{\\ln(2)}{2}\\right)\\,x",
         "formula": "\\sum_{k=1}^{\\infty}\\frac{(-1)^{\\frac{k+1}{2}}}{k}\\,x=\\left(\\tfrac{\\pi}{4}-\\tfrac{\\ln(2)}{2}\\right)\\,x",
@@ -1226,6 +1293,7 @@
     },
     {
         "id": "pi_minus_3pi_4_and_pi_minus_x_minus_3pi_4_series",
+        "python_id": "",
         "num": 0,
         "title": "",
         "formula": "",
@@ -1244,6 +1312,7 @@
     },
     {
         "id": "pi_minus_x_2_series",
+        "python_id": "",
         "num": 46,
         "title": "\\tfrac{\\pi - x}{2}",
         "formula": "\\sum_{n=0}^{\\infty}\\frac{\\sin\\big((n+1)x\\big)}{n+1} = \\tfrac{\\pi - x}{2}",
@@ -1262,6 +1331,7 @@
     },
     {
         "id": "pi_series",
+        "python_id": "",
         "num": 0,
         "title": "",
         "formula": "",
@@ -1280,6 +1350,7 @@
     },
     {
         "id": "pi_six_min_half_series",
+        "python_id": "",
         "num": 35,
         "title": "\\left(\\tfrac{\\pi}{6}-\\tfrac{1}{2}\\right)\\,x",
         "formula": "\\sum_{n=0}^{\\infty}\\frac{(-1)^{n}x}{(6n+5)(6n+7)} = \\left(\\tfrac{\\pi}{6}-\\tfrac{1}{2}\\right)\\,x",
@@ -1298,6 +1369,7 @@
     },
     {
         "id": "pi_squared_6_minus_one_series",
+        "python_id": "",
         "num": 25,
         "title": "\\left(\\tfrac{\\pi^{2}}{6}-1\\right)\\,x",
         "formula": "\\sum_{n=0}^{\\infty}\\frac{x}{(n+1)^{2}(n+2)} = \\left(\\tfrac{\\pi^{2}}{6}-1\\right)\\,x",
@@ -1316,6 +1388,7 @@
     },
     {
         "id": "pi_squared_twelve_series",
+        "python_id": "",
         "num": 41,
         "title": "\\tfrac{\\pi^{2}}{12}\\,x",
         "formula": "\\sum_{n=0}^{\\infty}\\frac{(-1)^{n} x}{(n+1)^{2}} = \\tfrac{\\pi^{2}}{12}\\,x",
@@ -1334,6 +1407,7 @@
     },
     {
         "id": "pi_x_minus_x_square_and_x_square_minus_three_pi_x_plus_two_pi_square_series",
+        "python_id": "",
         "num": 0,
         "title": "",
         "formula": "",
@@ -1352,6 +1426,7 @@
     },
     {
         "id": "pi_x_multi_e_xpi_plus_e_minusxpi_divided_e_xpi_minus_e_minusxpi_minus_one_series",
+        "python_id": "",
         "num": 45,
         "title": "\\pi x\\,\\frac{e^{\\pi x}+e^{-\\pi x}}{e^{\\pi x}-e^{-\\pi x}}-1",
         "formula": "\\sum_{n=0}^{\\infty}\\frac{2x^{2}}{x^{2}+(n+1)^{2}}=\\pi x\\,\\frac{e^{\\pi x}+e^{-\\pi x}}{e^{\\pi x}-e^{-\\pi x}}-1",
@@ -1370,6 +1445,7 @@
     },
     {
         "id": "recurrent_testing_series",
+        "python_id": "",
         "num": 0,
         "title": "",
         "formula": "",
@@ -1388,6 +1464,7 @@
     },
     {
         "id": "Riemann_zeta_func_series",
+        "python_id": "",
         "num": 0,
         "title": "",
         "formula": "",
@@ -1406,6 +1483,7 @@
     },
     {
         "id": "Riemann_zeta_func_xmin1_div_Riemann_zeta_func_x_series",
+        "python_id": "",
         "num": 0,
         "title": "",
         "formula": "",
@@ -1424,6 +1502,7 @@
     },
     {
         "id": "Series_with_ln_number1_series",
+        "python_id": "",
         "num": 0,
         "title": "",
         "formula": "",
@@ -1442,6 +1521,7 @@
     },
     {
         "id": "Series_with_ln_number2_series",
+        "python_id": "",
         "num": 0,
         "title": "",
         "formula": "",
@@ -1460,6 +1540,7 @@
     },
     {
         "id": "sinh_series",
+        "python_id": "",
         "num": 5,
         "title": "\\sinh x",
         "formula": "\\sum_{n=0}^{\\infty}\\frac{x^{2n+1}}{(2n+1)!}",
@@ -1478,6 +1559,7 @@
     },
     {
         "id": "sinh_x2_series",
+        "python_id": "",
         "num": 0,
         "title": "",
         "formula": "",
@@ -1496,6 +1578,7 @@
     },
     {
         "id": "sin_series",
+        "python_id": "",
         "num": 3,
         "title": "\\sin x",
         "formula": "\\sum_{n=0}^{\\infty}(-1)^{n}\\frac{x^{2n+1}}{(2n+1)!}",
@@ -1514,6 +1597,7 @@
     },
     {
         "id": "sin_x2_series",
+        "python_id": "",
         "num": 0,
         "title": "",
         "formula": "",
@@ -1532,6 +1616,7 @@
     },
     {
         "id": "Si_x_series",
+        "python_id": "",
         "num": 0,
         "title": "",
         "formula": "",
@@ -1550,6 +1635,7 @@
     },
     {
         "id": "sqrt_1plusx_min_1_min_x_div_2_series",
+        "python_id": "",
         "num": 0,
         "title": "",
         "formula": "",
@@ -1568,6 +1654,7 @@
     },
     {
         "id": "sqrt_1plusx_series",
+        "python_id": "",
         "num": 0,
         "title": "",
         "formula": "",
@@ -1586,6 +1673,7 @@
     },
     {
         "id": "sqrt_oneminussqrtoneminusx_div_x_series",
+        "python_id": "",
         "num": 0,
         "title": "",
         "formula": "",
@@ -1604,6 +1692,7 @@
     },
     {
         "id": "ten_minus_x_series",
+        "python_id": "",
         "num": 0,
         "title": "",
         "formula": "",
@@ -1622,6 +1711,7 @@
     },
     {
         "id": "testing_series",
+        "python_id": "",
         "num": 0,
         "title": "",
         "formula": "",
@@ -1640,6 +1730,7 @@
     },
     {
         "id": "three_minus_pi_series",
+        "python_id": "",
         "num": 26,
         "title": "(3-\\pi)\\,x",
         "formula": "\\sum_{n=0}^{\\infty}\\frac{(-1)^{n+1} x}{(n+1)(n+2)(2n+3)} = (3-\\pi)\\,x",
@@ -1658,6 +1749,7 @@
     },
     {
         "id": "two_arcsin_square_x_halfed_series",
+        "python_id": "",
         "num": 40,
         "title": "2\\arcsin^2\\left(\\tfrac{x}{2}\\right)",
         "formula": "\\sum_{n=0}^{\\infty}\\frac{(n!)^2}{(2n+2)!}x^{2n+2}=2\\arcsin^2\\left(\\tfrac{x}{2}\\right)",
@@ -1676,6 +1768,7 @@
     },
     {
         "id": "two_degree_x_series",
+        "python_id": "",
         "num": 0,
         "title": "",
         "formula": "",
@@ -1694,6 +1787,7 @@
     },
     {
         "id": "two_ln2_series",
+        "python_id": "",
         "num": 44,
         "title": "2\\ln(2)\\,x",
         "formula": "\\sum_{n=0}^{\\infty}\\frac{\\left(12(n+1)^{2}-1\\right)x}{(n+1)\\left(4(n+1)^{2}-1\\right)^{2}} = 2\\ln(2)\\,x",
@@ -1712,6 +1806,7 @@
     },
     {
         "id": "xmb_Jb_two_series",
+        "python_id": "",
         "num": 11,
         "title": "x^{-b}J_{b}(2x)",
         "formula": "\\sum_{n=0}^{\\infty}(-1)^{n}\\frac{x^{2n}}{n!\\,\\Gamma(n+b+1)}",
@@ -1730,6 +1825,7 @@
     },
     {
         "id": "xsquareplus3_div_xsquareplus2multix_minus_1_series",
+        "python_id": "",
         "num": 0,
         "title": "",
         "formula": "",
@@ -1748,6 +1844,7 @@
     },
     {
         "id": "x_1mx_squared_series",
+        "python_id": "",
         "num": 14,
         "title": "\\frac{x}{(1 - x)^{2}}",
         "formula": "\\sum_{n=0}^{\\infty} (n + 1)x^{n + 1} = \\frac{x}{(1 - x)^{2}}",
@@ -1766,6 +1863,7 @@
     },
     {
         "id": "x_div_1minx2_series",
+        "python_id": "",
         "num": 0,
         "title": "",
         "formula": "",
@@ -1784,6 +1882,7 @@
     },
     {
         "id": "x_div_1minx_series",
+        "python_id": "",
         "num": 0,
         "title": "",
         "formula": "",
@@ -1802,6 +1901,7 @@
     },
     {
         "id": "x_min_sqrt_x_series",
+        "python_id": "",
         "num": 0,
         "title": "",
         "formula": "",
@@ -1820,6 +1920,7 @@
     },
     {
         "id": "x_series",
+        "python_id": "",
         "num": 0,
         "title": "",
         "formula": "",
@@ -1838,6 +1939,7 @@
     },
     {
         "id": "x_twelfth_x2_pi2_series",
+        "python_id": "",
         "num": 0,
         "title": "",
         "formula": "",
@@ -1856,6 +1958,7 @@
     },
     {
         "id": "x_two_series",
+        "python_id": "",
         "num": 34,
         "title": "\\tfrac{x}{2}",
         "formula": "\\sum_{n=0}^{\\infty}\\frac{x}{(2n+1)(2n+3)} = \\tfrac{x}{2}",
@@ -1874,6 +1977,7 @@
     },
     {
         "id": "x_two_throught_squares_series",
+        "python_id": "",
         "num": 36,
         "title": "\\tfrac{x}{2}",
         "formula": "\\sum_{n=0}^{\\infty}\\frac{(2(n+1)^{2}-1)x}{4(n+1)^{4}+1}=\\tfrac{x}{2}",

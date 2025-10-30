@@ -1,5 +1,6 @@
 {
   "id": "inverse_sqrt_1m4x_series",
+  "python_id": "",
   "num": 17,
   "title": "\\frac{1}{\\sqrt{1 - 4x}}",
   "formula": "\\sum_{n=0}^{\\infty}\\frac{(2n)!}{(n!)^{2}}x^{n} = \\frac{1}{\\sqrt{1 - 4x}}",

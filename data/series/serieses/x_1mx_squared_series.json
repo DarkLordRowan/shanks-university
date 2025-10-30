@@ -1,5 +1,6 @@
 {
   "id": "x_1mx_squared_series",
+  "python_id": "",
   "num": 14,
   "title": "\\frac{x}{(1 - x)^{2}}",
   "formula": "\\sum_{n=0}^{\\infty} (n + 1)x^{n + 1} = \\frac{x}{(1 - x)^{2}}",

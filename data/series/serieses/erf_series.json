@@ -1,5 +1,6 @@
 {
   "id": "erf_series",
+  "python_id": "",
   "num": 15,
   "title": "\\tfrac{\\sqrt{\\pi}}{2}\\,\\mathrm{erf}(x)",
   "formula": "\\sum_{n=0}^{\\infty}\\frac{(-1)^{n}x^{2n+1}}{n!(2n+1)} = \\tfrac{\\sqrt{\\pi}}{2}\\,\\mathrm{erf}(x)",
