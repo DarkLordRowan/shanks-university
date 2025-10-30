@@ -1,5 +1,6 @@
 {
   "id": "pi_four_minus_ln2_halfed_series",
+  "python_id": "",
   "num": 32,
   "title": "\\left(\\tfrac{\\pi}{4}-\\tfrac{\\ln(2)}{2}\\right)\\,x",
   "formula": "\\sum_{k=1}^{\\infty}\\frac{(-1)^{\\frac{k+1}{2}}}{k}\\,x=\\left(\\tfrac{\\pi}{4}-\\tfrac{\\ln(2)}{2}\\right)\\,x",

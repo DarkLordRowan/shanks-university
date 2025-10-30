@@ -1,5 +1,6 @@
 {
   "id": "ln1mx_series",
+  "python_id": "",
   "num": 8,
   "title": "\\ln(1-x)",
   "formula": "-\\sum_{n=1}^{\\infty}\\frac{x^{n}}{n}",
