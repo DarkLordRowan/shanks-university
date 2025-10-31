@@ -7,6 +7,10 @@ import { SubmitAndTrackJob } from "../../components/SubmitAndTrackJob.tsx";
 import type { ApiJsonResult } from "../Experiments/types.ts";
 import { CopyToClipboard } from "../../components/CopyToClipboard.tsx";
 import { Check } from "lucide-react";
+import { normalizeFromJson } from "../../utils/responseToItem.ts";
+import { AccelerationGainChartByN } from "../../charts/AccelerationGainChartByN.tsx";
+import { DeltaToLimitPartialSumChart } from "../../charts/DeltaToLimitPartialSumChart.tsx";
+import { LogPsDevChartByN } from "../../charts/LogPsDevChartByN.tsx";
 
 const Experiments_v3: React.FC = () => {
 
@@ -50,9 +54,22 @@ const Experiments_v3: React.FC = () => {
                 )}
             </div>
 
+            <br/>
+
             <div>
+                {responseJson && (
+                    <div className="mt-4 w-full">
+
+                        <AccelerationGainChartByN items={normalizeFromJson(responseJson)} />
+                        <br/>
+                        <DeltaToLimitPartialSumChart items={normalizeFromJson(responseJson)} />
+                        <br/>
+                        <LogPsDevChartByN items={normalizeFromJson(responseJson)} />
+                    </div>
+                )}
 
             </div>
+
         </div>
     );
 };
