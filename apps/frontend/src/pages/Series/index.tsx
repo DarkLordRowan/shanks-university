@@ -18,7 +18,6 @@ const SeriesList: React.FC = () => {
             const hay =
                 (row.id ?? "").toLowerCase() + " " +
                 (row.title ?? "").toLowerCase() + " " +
-                (row.subtitle ?? "").toLowerCase() + " " +
                 (row.formula ?? "").toLowerCase();
             return hay.includes(q);
         });

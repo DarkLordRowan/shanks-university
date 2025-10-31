@@ -1,9 +1,12 @@
 import { useMemo } from "react";
 import type { Item } from "../types/item";
 import { BaseChart } from "./BaseChart";
-import { uniqueAlgoKeys, groupByN, buildSeriesHeader } from "./common";
+import { buildSeriesHeader, groupByN, uniqueAlgoKeys } from "./common";
 
-export function AccelerationGainChartByN({ items, clamp = {min:-12,max:12} }: { items: Item[], clamp?: {min:number,max:number} }) {
+export function AccelerationGainChartByN({items, clamp = {min: -12, max: 12}}: {
+    items: Item[],
+    clamp?: { min: number, max: number }
+}) {
     const keys = useMemo(() => uniqueAlgoKeys(items), [items]);
     const data = useMemo(() => {
         const base = groupByN(items, c => {
@@ -21,7 +24,7 @@ export function AccelerationGainChartByN({ items, clamp = {min:-12,max:12} }: { 
             yAxisLabel="log10(|S_n-L|/|A_n-L|)"
             title={buildSeriesHeader(items)}
             formula={"G(n)=\\log_{10}\\left(\\dfrac{|S_n-L|}{|A_n-L|}\\right)"}
-            refLines={[{ y: 0, label: "G=0" }]}
+            refLines={[{y: 0, label: "G=0"}]}
             tooltipFormatter={(v, name) => [typeof v === "number" ? v.toFixed(3) : v, name]}
         />
     );

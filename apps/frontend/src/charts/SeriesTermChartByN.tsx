@@ -1,10 +1,9 @@
-// SeriesTermChartByN.tsx
-import React, { useMemo } from "react";
+import { useMemo } from "react";
 import type { Item } from "../types/item";
 import { BaseChart } from "./BaseChart";
-import { uniqueAlgoKeys, groupByN, buildSeriesHeader } from "./common";
+import { buildSeriesHeader, groupByN, uniqueAlgoKeys } from "./common";
 
-export function SeriesTermChartByN({ items }: { items: Item[] }) {
+export function SeriesTermChartByN({items}: { items: Item[] }) {
     const keys = useMemo(() => uniqueAlgoKeys(items), [items]);
     const data = useMemo(() => groupByN(items, c => c.series_value), [items]);
     return (
