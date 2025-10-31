@@ -11,6 +11,13 @@ import { normalizeFromJson } from "../../utils/responseToItem.ts";
 import { AccelerationGainChartByN } from "../../charts/AccelerationGainChartByN.tsx";
 import { DeltaToLimitPartialSumChart } from "../../charts/DeltaToLimitPartialSumChart.tsx";
 import { LogPsDevChartByN } from "../../charts/LogPsDevChartByN.tsx";
+import { PartialSumChartByN } from "../../charts/PartialSumChartByN.tsx";
+import { AccelValueChartByN } from "../../charts/AccelValueChartByN.tsx";
+import { LogAccelDevChartByN } from "../../charts/LogAccelDevChartByN.tsx";
+import { EOCPartialSumChartByN } from "../../charts/EOCPartialSumChartByN.tsx";
+import { SeriesTermChartByN } from "../../charts/SeriesTermChartByN.tsx";
+import { EOCAccelChartByN } from "../../charts/EOCAccelChartByN.tsx";
+import { StepsToToleranceBar } from "../../charts/StepsToToleranceBar.tsx";
 
 const Experiments_v3: React.FC = () => {
 
@@ -58,13 +65,38 @@ const Experiments_v3: React.FC = () => {
 
             <div>
                 {responseJson && (
-                    <div className="mt-4 w-full">
+                    <div className="mt-4 w-full space-y-10">
 
-                        <AccelerationGainChartByN items={normalizeFromJson(responseJson)} />
-                        <br/>
+                        {/* 1. Частичные суммы S_n */}
+                        <PartialSumChartByN items={normalizeFromJson(responseJson)} />
+
+                        {/* 2. Ошибка частичных сумм |S_n - L| */}
                         <DeltaToLimitPartialSumChart items={normalizeFromJson(responseJson)} />
-                        <br/>
+
+                        {/* 3. log10(|S_n - L|) */}
                         <LogPsDevChartByN items={normalizeFromJson(responseJson)} />
+
+                        {/* 4. Ускоренные значения A_n */}
+                        <AccelValueChartByN items={normalizeFromJson(responseJson)} />
+
+                        {/* 5. log10(|A_n - L|) */}
+                        <LogAccelDevChartByN items={normalizeFromJson(responseJson)} />
+
+                        {/* 6. Коэффициент усиления G(n) = log10(|S_n-L| / |A_n-L|) */}
+                        <AccelerationGainChartByN items={normalizeFromJson(responseJson)} />
+
+                        {/* 7. Порядок сходимости частичных сумм */}
+                        <EOCPartialSumChartByN items={normalizeFromJson(responseJson)} />
+
+                        {/* 8. Порядок сходимости ускоренных */}
+                        <EOCAccelChartByN items={normalizeFromJson(responseJson)} />
+
+                        {/* 9. Значения членов ряда a_n */}
+                        <SeriesTermChartByN items={normalizeFromJson(responseJson)} />
+
+                        {/* 10. Число шагов до точности ε */}
+                        <StepsToToleranceBar items={normalizeFromJson(responseJson)} eps={1e-8} />
+
                     </div>
                 )}
 
