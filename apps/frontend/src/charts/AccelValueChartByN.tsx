@@ -1,24 +1,21 @@
-// DeltaToLimitPartialSumChart.tsx
+// AccelValueChartByN.tsx
 import React, { useMemo } from "react";
 import type { Item } from "../types/item";
 import { BaseChart } from "./BaseChart";
 import { uniqueAlgoKeys, groupByN, seriesLimit, buildSeriesHeader } from "./common";
 
-export function DeltaToLimitPartialSumChart({ items }: { items: Item[] }) {
+export function AccelValueChartByN({ items }: { items: Item[] }) {
     const keys = useMemo(() => uniqueAlgoKeys(items), [items]);
     const lim = seriesLimit(items);
-    const data = useMemo(() => {
-        if (lim == null) return [];
-        return groupByN(items, c => Math.abs(c.partial_sum - lim));
-    }, [items, lim]);
+    const data = useMemo(() => groupByN(items, c => c.accel_value), [items]);
     return (
         <BaseChart
             data={data}
             seriesKeys={keys}
-            yAxisLabel="|S_n - L|"
+            yAxisLabel="accel_value"
             title={buildSeriesHeader(items)}
-            formula={"y(n)=|S_n-L|"}
-            refLines={[{ y: 0, label: "совпадение с L" }]}
+            formula={"y(n)=A_n"}
+            refLines={lim != null ? [{ y: lim, label: "lim", dash: "4 4" }] : undefined}
         />
     );
 }
