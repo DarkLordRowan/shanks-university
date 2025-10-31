@@ -18,10 +18,6 @@ export interface ExperimentConfig {
     }[];
 }
 
-/**
- * Преобразует snake_case идентификатор в PascalCase.
- * Например: "arcsin_x_minus_x_series" → "ArcsinXMinusXSeries"
- */
 function toPascalCase(id: string): string {
     return id
         .split("_")
@@ -32,23 +28,28 @@ function toPascalCase(id: string): string {
 
 /**
  * Формирует объект полной конфигурации эксперимента.
+ * @param nConfig диапозон n
+ * @param m массив m
+ * @param seriesList явный список рядов; если не задан, используется глобальный SERIES
  */
 export function buildExperimentConfig(
     nConfig: NConfig = { start: 1, stop: 51, step: 1 },
-    m: number[] = [10]
+    m: number[] = [10],
+    seriesList?: SeriesNode[]
 ): ExperimentConfig {
-    // Формируем раздел series
-    const seriesPart = SERIES
+    const source = seriesList ?? SERIES;
+
+    const seriesPart = source
+        .slice()
         .sort((a, b) => a.num - b.num)
         .filter((s) => s.num !== 0)
         .map((s: SeriesNode) => ({
-            name: toPascalCase(s.id), // уже включает "Series"
+            name: toPascalCase(s.id),
             args: { x: [randomFromDomain(s)] },
         }));
 
-    // Формируем раздел methods (алгоритмы)
     const methodsPart = ALGORITHMS.map((a: AlgorithmNode) => {
-        const name = toPascalCase(a.id); // уже включает "Algorithm"
+        const name = toPascalCase(a.id);
         const base = {
             name,
             n: nConfig,
