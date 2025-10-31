@@ -101,7 +101,11 @@ export function Combobox<T>({
         <div ref={rootRef} className={`relative w-full ${className ?? ""}`}>
             {showSearch ? (
                 <div
-                    className="group flex items-center gap-2 rounded-xl2 border border-border bg-panel px-3 py-2 shadow-panel focus-within:ring-2 focus-within:ring-primary">
+                    className="group flex items-center gap-2 rounded-xl2
+               bg-panel/80 backdrop-blur-sm px-3 py-2 shadow-panel
+               transition-[box-shadow,background-color]
+               hover:bg-panel/90
+               focus-within:shadow-[0_0_24px_rgba(59,130,246,0.18)]">
                     <button
                         type="button"
                         aria-haspopup="listbox"
@@ -111,11 +115,21 @@ export function Combobox<T>({
                             setOpen(v => !v);
                             requestAnimationFrame(() => inputRef.current?.focus());
                         }}
-                        className="shrink-0 rounded-md border border-transparent px-2 py-1 text-textDim hover:border-border hover:bg-surface"
+                        className="shrink-0 rounded-md p-1
+                 text-textDim/70 hover:text-primary
+                 bg-transparent border-0 shadow-none outline-none"
                         title="Открыть список"
                     >
-                        ▾
+                        <svg xmlns="http://www.w3.org/2000/svg"
+                             viewBox="0 0 20 20"
+                             fill="currentColor"
+                             className="h-4 w-4">
+                            <path fillRule="evenodd"
+                                  d="M5.23 7.21a.75.75 0 0 1 1.06.02L10 10.94l3.71-3.71a.75.75 0 1 1 1.06 1.06l-4.24 4.25a.75.75 0 0 1-1.06 0L5.25 8.27a.75.75 0 0 1-.02-1.06z"
+                                  clipRule="evenodd" />
+                        </svg>
                     </button>
+
                     <input
                         ref={inputRef}
                         value={query}
@@ -123,12 +137,19 @@ export function Combobox<T>({
                         onKeyDown={onKeyDown}
                         onFocus={() => setOpen(true)}
                         placeholder={placeholder}
-                        className="w-full bg-transparent text-sm text-textDim placeholder:text-textDim/60 focus:outline-none"
+                        className="w-full bg-transparent text-sm text-textDim
+                 placeholder:text-textDim/45 transition-colors
+                 border-0 focus:border-0
+                 ring-0 focus:ring-0
+                 outline-none focus:outline-none focus-visible:outline-none
+                 appearance-none shadow-none"
                         role="combobox"
                         aria-autocomplete="list"
                         aria-controls={listboxId}
                         aria-expanded={open}
-                        aria-activedescendant={open && activeIndex >= 0 ? `${listboxId}-opt-${activeIndex}` : undefined}
+                        aria-activedescendant={
+                            open && activeIndex >= 0 ? `${listboxId}-opt-${activeIndex}` : undefined
+                        }
                     />
                 </div>
             ) : (
@@ -141,10 +162,15 @@ export function Combobox<T>({
                     aria-haspopup="listbox"
                     aria-expanded={open}
                     aria-controls={listboxId}
-                    className="w-full rounded-xl2 border border-border bg-panel px-3 py-2 text-left shadow-panel hover:bg-panel/90 focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="w-full rounded-xl2 bg-panel/85 px-3 py-2 text-left
+               shadow-panel hover:bg-panel/90
+               focus:outline-none
+               focus:shadow-[0_0_24px_rgba(59,130,246,0.18)]"
                     title="Изменить выбор"
                 >
-                    {renderSelected ? renderSelected(value!) : renderOption(value!, {active: false, selected: true})}
+                    {renderSelected
+                        ? renderSelected(value!)
+                        : renderOption(value!, { active: false, selected: true })}
                 </button>
             )}
 
@@ -190,16 +216,16 @@ export function Combobox<T>({
 }
 
 export const ComboboxRow = memo(
-    function ComboboxRow
-    ({
-         left,
-         right,
-         sub,
-     }: {
-        left: React.ReactNode;
-        right?: React.ReactNode;
-        sub?: React.ReactNode
-    }) {
+    function ComboboxRow(
+        {
+            left,
+            right,
+            sub,
+        }: {
+            left: React.ReactNode;
+            right?: React.ReactNode;
+            sub?: React.ReactNode
+        }) {
         return (
             <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">

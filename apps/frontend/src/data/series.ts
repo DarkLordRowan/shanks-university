@@ -32,27 +32,35 @@ const buildSeriesFileLink = () => {
     return `https://raw.githubusercontent.com/${GH.owner}/${GH.repo}/${GH.branch}/${GH.dataFile}`;
 };
 
-export const getSeriesDataFromGitHub = async (): Promise<SeriesNode[]> => {
+let cachedSeriesPromise: Promise<SeriesNode[]> | null = null;
+
+export async function getSeriesDataFromGitHub(): Promise<SeriesNode[]> {
+    if (cachedSeriesPromise) return cachedSeriesPromise;
+
     const rawUrl = buildSeriesFileLink();
-    const response = await fetch(rawUrl);
 
-    if (!response.ok) {
-        console.error("Error fetching series data from GitHub", response.statusText);
-        throw new Error("Failed to fetch series data from GitHub");
-    }
+    cachedSeriesPromise = (async () => {
+        const response = await fetch(rawUrl);
+        if (!response.ok) {
+            console.error("Error fetching series data from GitHub", response.statusText);
+            throw new Error("Failed to fetch series data from GitHub");
+        }
 
-    const data: SeriesNode[] = await response.json();
+        const data: SeriesNode[] = await response.json();
 
-    return data.map((jsonData) => ({
-        id: jsonData.id,
-        python_id: jsonData.python_id,
-        num: jsonData.num,
-        title: jsonData.title,
-        formula: jsonData.formula,
-        domain: jsonData.domain,
-        speed: jsonData.speed,
-        document: jsonData.document,
-    }));
-};
+        return data.map((jsonData) => ({
+            id: jsonData.id,
+            python_id: jsonData.python_id,
+            num: jsonData.num,
+            title: jsonData.title,
+            formula: jsonData.formula,
+            domain: jsonData.domain,
+            speed: jsonData.speed,
+            document: jsonData.document,
+        }));
+    })();
+
+    return cachedSeriesPromise;
+}
 
 export const SERIES: SeriesNode[] = await getSeriesDataFromGitHub();
