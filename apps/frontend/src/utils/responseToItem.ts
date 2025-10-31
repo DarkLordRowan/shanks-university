@@ -5,13 +5,17 @@ export function normalizeRecords(records: ResponseRecord[]): Item[] {
     // @ts-ignore
     return records.map(rec => ({
         id: rec.id,
-        x: rec.series.arguments.x,
-        seriesName: rec.series.name,
-        seriesLim: rec.series.lim,
-        seriesArgs: rec.series.arguments,
-        algorithmName: rec.accel.name,
-        m: rec.accel.m_value ?? null,
-        algorithmArgs: rec.accel.additional_args,
+        series: {
+            x: rec.series.arguments.x,
+            seriesName: rec.series.name,
+            seriesLim: rec.series.lim,
+            seriesArgs: rec.series.arguments,
+        },
+        algorithm: {
+            algorithmName: rec.accel.name,
+            m: rec.accel.m_value ?? null,
+            algorithmArgs: rec.accel.additional_args,
+        },
         computed: rec.computed,
         error: rec.error,
     }));

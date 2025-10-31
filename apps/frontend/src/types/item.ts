@@ -14,17 +14,21 @@ export interface ResponseError {
 
 export interface Item {
     id: string;
-    x: number;
-    seriesName: string;
-    seriesLim: number | null;
-    algorithmName: string;
-    m: number | null;
-    seriesArgs: { x: number };
-    algorithmArgs: {
-        remainder: string;
-        useRecFormulas: string;
-        beta: string;
-    } | null;
+    series: {
+        x: number;
+        seriesName: string;
+        seriesLim: number | null;
+        seriesArgs: { x: number };
+    };
+    algorithm: {
+        algorithmName: string;
+        m: number | null;
+        algorithmArgs: {
+            remainder: string;
+            useRecFormulas: string;
+            beta: string;
+        } | null;
+    };
     computed: ResponseComputed[];
     error?: ResponseError | null;
 }
