@@ -48,7 +48,7 @@ export async function getSeriesDataFromGitHub(): Promise<SeriesNode[]> {
 
         const data: SeriesNode[] = await response.json();
 
-        return data.map((jsonData) => ({
+        const items = data.map((jsonData) => ({
             id: jsonData.id,
             python_id: jsonData.python_id,
             num: jsonData.num,
@@ -58,6 +58,11 @@ export async function getSeriesDataFromGitHub(): Promise<SeriesNode[]> {
             speed: jsonData.speed,
             document: jsonData.document,
         }));
+
+        items
+            .sort((a, b) => a.num - b.num || a.id.localeCompare(b.id));
+
+        return items;
     })();
 
     return cachedSeriesPromise;
