@@ -12,6 +12,7 @@ export type DomainSpec = {
 
 export type SeriesNode = {
     id: string;
+    python_id: string;
     num: number;
     title: string;
     formula?: string;
@@ -44,6 +45,7 @@ export const getSeriesDataFromGitHub = async (): Promise<SeriesNode[]> => {
 
     return data.map((jsonData) => ({
         id: jsonData.id,
+        python_id: jsonData.python_id,
         num: jsonData.num,
         title: jsonData.title,
         formula: jsonData.formula,
