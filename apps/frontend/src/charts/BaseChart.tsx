@@ -1,15 +1,14 @@
-// src/charts/BaseChart.tsx
 import React from "react";
 import {
-    ResponsiveContainer,
-    LineChart,
+    CartesianGrid,
+    Legend,
     Line,
+    LineChart,
+    ReferenceLine,
+    ResponsiveContainer,
+    Tooltip,
     XAxis,
     YAxis,
-    Tooltip,
-    Legend,
-    CartesianGrid,
-    ReferenceLine,
 } from "recharts";
 import { colorByKey } from "./common";
 import { Formula } from "../components/Formula.tsx";
@@ -52,18 +51,18 @@ export function BaseChart({
                     className="mb-3 rounded-xl px-3 py-2 text-sm  border border-gray-200"
                 >
                     {typeof formula === "string"
-                        ? <Formula latex={formula} />
+                        ? <Formula latex={formula}/>
                         : formula}
                 </div>
             )}
 
             <ResponsiveContainer width="100%" height={height}>
                 <LineChart data={data}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="n" />
-                    <YAxis label={yAxisLabel ? { value: yAxisLabel, angle: -90, position: "insideLeft" } : undefined} />
-                    <Tooltip formatter={tooltipFormatter} />
-                    <Legend />
+                    <CartesianGrid strokeDasharray="3 3"/>
+                    <XAxis dataKey="n"/>
+                    <YAxis label={yAxisLabel ? {value: yAxisLabel, angle: -90, position: "insideLeft"} : undefined}/>
+                    <Tooltip formatter={tooltipFormatter}/>
+                    <Legend/>
                     {refLines?.map((r, i) => (
                         <ReferenceLine
                             key={i}
@@ -71,7 +70,7 @@ export function BaseChart({
                             stroke={r.stroke ?? "#666"}
                             strokeDasharray={r.dash ?? "4 4"}
                             ifOverflow="extendDomain"
-                            label={r.label ? { value: r.label, position: "right", fill: r.stroke ?? "#666" } : undefined}
+                            label={r.label ? {value: r.label, position: "right", fill: r.stroke ?? "#666"} : undefined}
                         />
                     ))}
                     {seriesKeys.map(k => (
