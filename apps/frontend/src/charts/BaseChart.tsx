@@ -40,9 +40,15 @@ interface BaseChartProps {
     height?: number;
     title?: string;
     formula?: string | React.ReactNode;
+
+    /** Совместимость: если нужно стороннее форматирование значений. */
     tooltipFormatter?: (value: AnyNum, name: string) => [string | number, string];
+
+    /** Панель выбора серий. */
     controlsPlacement?: "side" | "top" | "none";
     controlsWidthPx?: number;
+    controlsCollapsible?: boolean;
+    controlsDefaultCollapsed?: boolean;
 }
 
 /* ======================= utils ======================= */
@@ -50,7 +56,7 @@ interface BaseChartProps {
 const isFiniteNumber = (v: unknown): v is number =>
     typeof v === "number" && Number.isFinite(v);
 
-const formatNumber = (value: AnyNum): string => {
+const defaultFormat = (value: AnyNum): string => {
     if (!isFiniteNumber(value)) return "—";
     const v = value as number;
     if (Math.abs(v) >= 1e5 || Math.abs(v) < 1e-4) return v.toExponential(6);
@@ -65,13 +71,7 @@ const lastDefined = (data: DataPoint[], key: string): number | null => {
     return null;
 };
 
-const buildVisibleKeys = (all: string[], hidden: Set<string>): Set<string> => {
-    const s = new Set<string>();
-    for (const k of all) if (!hidden.has(k)) s.add(k);
-    return s;
-};
-
-const sortKeysByLastValueDesc = (data: DataPoint[], keys: string[]): string[] =>
+const sortKeysByLastValueDesc = (data: DataPoint[], keys: string[]) =>
     [...keys].sort((a, b) => {
         const va = lastDefined(data, a);
         const vb = lastDefined(data, b);
@@ -81,19 +81,30 @@ const sortKeysByLastValueDesc = (data: DataPoint[], keys: string[]): string[] =>
         return vb - va;
     });
 
-/** Фиксированная оценка положения тултипа справа/слева. */
-const computeTooltipXY = (wrapW: number, mouseX: number) => {
-    const tooltipW = Math.min(520, Math.floor(wrapW * 0.48));
-    const gutter = 12;
-    const x =
-        mouseX < wrapW * 0.55
-            ? Math.max(gutter, wrapW - tooltipW - gutter)
-            : gutter;
-    const y = gutter;
-    return { x, y, tooltipW };
+const buildVisibleKeys = (all: string[], hidden: Set<string>): Set<string> => {
+    const s = new Set<string>();
+    for (const k of all) if (!hidden.has(k)) s.add(k);
+    return s;
 };
 
-/* ======================= Tooltip (sorted) ======================= */
+/** Позиционирование тултипа: не перекрывать вертикаль при текущем n. */
+const computeTooltipXY = (
+    wrapW: number,
+    mouseX: number,
+    measuredTipW?: number,
+    margin = 12
+) => {
+    const maxW = Math.floor(wrapW * 0.48);
+    const w = Math.min(measuredTipW ?? 520, maxW);
+    const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(v, hi));
+    const xLeft = clamp(mouseX - w - margin, margin, wrapW - w - margin);
+    const xRight = clamp(mouseX + margin, margin, wrapW - w - margin);
+    const x = mouseX < wrapW / 2 ? xRight : xLeft;
+    const y = margin;
+    return { x, y, tooltipW: w };
+};
+
+/* ======================= SortedTooltip ======================= */
 
 type SortedTooltipExtra = {
     format?: (value: AnyNum, name: string) => string;
@@ -126,7 +137,7 @@ const SortedTooltip = memo(function SortedTooltip(
     return (
         <div
             className="
-        z-[9999] max-h-[70vh] w-[min(520px,48vw)] overflow-auto
+        overflow-auto
         rounded-xl border border-gray-200 bg-white/95 p-3 shadow-lg backdrop-blur
         dark:border-neutral-700 dark:bg-neutral-900/95
       "
@@ -139,6 +150,7 @@ const SortedTooltip = memo(function SortedTooltip(
             <span
                 className="inline-block h-2.5 w-2.5 rounded-full"
                 style={{ background: it.color }}
+                aria-hidden
             />
                         <span className="whitespace-pre-wrap break-words">{it.name}</span>
                         <span className="ml-auto tabular-nums">
@@ -151,7 +163,7 @@ const SortedTooltip = memo(function SortedTooltip(
     );
 });
 
-/* ======================= Controls panel ======================= */
+/* ======================= ControlsPanel ======================= */
 
 interface ControlsProps {
     data: DataPoint[];
@@ -163,15 +175,15 @@ interface ControlsProps {
     maxHeight?: number | string;
 }
 
-const ControlsPanel = memo(function ControlsPanel({
-                                                      data,
-                                                      seriesKeys,
-                                                      hidden,
-                                                      onToggle,
-                                                      onShowAll,
-                                                      onHideAll,
-                                                      maxHeight,
-                                                  }: ControlsProps) {
+const ControlsPanel: React.FC<ControlsProps> = memo(function ControlsPanel({
+                                                                               data,
+                                                                               seriesKeys,
+                                                                               hidden,
+                                                                               onToggle,
+                                                                               onShowAll,
+                                                                               onHideAll,
+                                                                               maxHeight,
+                                                                           }) {
     const sortedKeys = useMemo(
         () => sortKeysByLastValueDesc(data, seriesKeys),
         [data, seriesKeys]
@@ -231,8 +243,8 @@ const ControlsPanel = memo(function ControlsPanel({
                                 {k}
                             </label>
                             <span className={`ml-2 tabular-nums ${isHidden ? "opacity-40" : ""}`}>
-                {v == null ? "—" : formatNumber(v)}
-              </span>
+                                {v == null ? "—" : defaultFormat(v)}
+                            </span>
                         </li>
                     );
                 })}
@@ -241,7 +253,7 @@ const ControlsPanel = memo(function ControlsPanel({
     );
 });
 
-/* ======================= component ======================= */
+/* ======================= BaseChart ======================= */
 
 export function BaseChart({
                               data,
@@ -254,8 +266,10 @@ export function BaseChart({
                               tooltipFormatter,
                               controlsPlacement = "side",
                               controlsWidthPx = 420,
+                              controlsCollapsible = true,
+                              controlsDefaultCollapsed = false,
                           }: BaseChartProps) {
-    /* скрытие серий */
+    /* видимость серий */
     const [hidden, setHidden] = useState<Set<string>>(() => new Set());
     const toggleKey = useCallback((k: string) => {
         setHidden((prev) => {
@@ -266,13 +280,21 @@ export function BaseChart({
     }, []);
     const showAll = useCallback(() => setHidden(new Set()), []);
     const hideAll = useCallback(() => setHidden(new Set(seriesKeys)), [seriesKeys]);
-
     const visibleKeys = useMemo(
         () => buildVisibleKeys(seriesKeys, hidden),
         [seriesKeys, hidden]
     );
 
-    /* измерение области для позиционирования тултипа */
+    /* панель выбора: сворачивание */
+    const [controlsCollapsed, setControlsCollapsed] = useState<boolean>(
+        Boolean(controlsDefaultCollapsed)
+    );
+    const toggleControls = useCallback(() => {
+        if (!controlsCollapsible) return;
+        setControlsCollapsed((v) => !v);
+    }, [controlsCollapsible]);
+
+    /* измерение области и координата курсора */
     const wrapRef = useRef<HTMLDivElement | null>(null);
     const [wrapW, setWrapW] = useState(0);
     const [mouseX, setMouseX] = useState(0);
@@ -293,9 +315,14 @@ export function BaseChart({
     }, []);
     const handleMouseLeave = useCallback(() => setMouseX(0), []);
 
-    const { x: tooltipX, y: tooltipY } = computeTooltipXY(wrapW, mouseX);
+    /* ширина тултипа и позиция */
+    const [measuredTipW, setMeasuredTipW] = useState<number | undefined>(undefined);
+    const { x: tooltipX, y: tooltipY } = computeTooltipXY(wrapW, mouseX, measuredTipW);
 
-    /* --------- разметка --------- */
+    /* ключи линий (без сортировки; сортировка только в тултипе/панели) */
+    const keys = useMemo(() => [...seriesKeys], [seriesKeys]);
+
+    /* части разметки */
     const ChartArea = (
         <div ref={wrapRef} className="relative w-full" style={{ height }}>
             <ResponsiveContainer width="100%" height="100%">
@@ -314,12 +341,13 @@ export function BaseChart({
                         }
                     />
 
+
+
                     <RechartsTooltip
-                        position={{ x: tooltipX, y: tooltipY }}
                         content={
                             <SortedTooltip
                                 format={(v, n) =>
-                                    tooltipFormatter ? String(tooltipFormatter(v, n)[0]) : formatNumber(v)
+                                    tooltipFormatter ? String(tooltipFormatter(v, n)[0]) : defaultFormat(v)
                                 }
                                 visibleKeys={visibleKeys}
                             />
@@ -342,7 +370,7 @@ export function BaseChart({
                         />
                     ))}
 
-                    {seriesKeys.map((k) => (
+                    {keys.map((k) => (
                         <Line
                             key={k}
                             type="monotone"
@@ -374,7 +402,26 @@ export function BaseChart({
 
     return (
         <div className="w-full">
-            {title && <div className="mb-1 text-sm font-medium">{title}</div>}
+            {/* Заголовок + кнопка сворачивания панели */}
+            <div className="mb-1 flex items-center gap-2">
+                {title ? <div className="text-sm font-medium">{title}</div> : null}
+                <div className="ml-auto">
+                    {controlsPlacement !== "none" && controlsCollapsible && (
+                        <button
+                            type="button"
+                            onClick={toggleControls}
+                            aria-pressed={controlsCollapsed ? "true" : "false"}
+                            aria-label={controlsCollapsed ? "Показать панель" : "Скрыть панель"}
+                            title={controlsCollapsed ? "Показать панель" : "Скрыть панель"}
+                            className="rounded-md border px-2 py-0.5 text-xs"
+                        >
+                            {controlsCollapsed
+                                ? "Панель выбора графиков: показать"
+                                : "Панель выбора графиков: скрыть"}
+                        </button>
+                    )}
+                </div>
+            </div>
 
             {formula && (
                 <div className="mb-3 rounded-xl px-3 py-2 text-sm border border-gray-200">
@@ -382,20 +429,28 @@ export function BaseChart({
                 </div>
             )}
 
-            {controlsPlacement === "top" && <div className="mb-3">{Controls}</div>}
+            {controlsPlacement === "top" && !controlsCollapsed && (
+                <div className="mb-3">{Controls}</div>
+            )}
 
             {controlsPlacement === "side" ? (
-                <div
-                    className="grid gap-3"
-                    style={{
-                        gridTemplateColumns: `1fr minmax(260px, ${controlsWidthPx}px)`,
-                    }}
-                >
-                    {ChartArea}
-                    <div>{Controls}</div>
-                </div>
+                controlsCollapsed ? (
+                    <div className="grid gap-3" style={{ gridTemplateColumns: `1fr` }}>
+                        {ChartArea}
+                    </div>
+                ) : (
+                    <div
+                        className="grid gap-3"
+                        style={{
+                            gridTemplateColumns: `1fr minmax(180px, ${controlsWidthPx ?? 420}px)`,
+                        }}
+                    >
+                        {ChartArea}
+                        <div>{Controls}</div>
+                    </div>
+                )
             ) : (
-                controlsPlacement === "none" ? ChartArea : ChartArea
+                ChartArea
             )}
         </div>
     );
