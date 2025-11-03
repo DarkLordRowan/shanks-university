@@ -57,6 +57,7 @@ recurrent_levin_sidi_s_v_wave_transformation_id,
                  wynn_rho_rho_transformation_id,
          wynn_rho_generalized_transformation_id,
            wynn_rho_gamma_rho_transformation_id,
+                      transformation_id_t_count
 };
 
 //INCLUDE TRANSFORMATIONS AND ALGORITHMS

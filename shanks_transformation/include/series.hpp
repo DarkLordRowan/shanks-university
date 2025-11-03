@@ -206,6 +206,7 @@ pi_x_multi_e_xpi_plus_e_minusxpi_divided_e_xpi_minus_e_minusxpi_series_id,
 				    xsquareplus3_div_xsquareplus2multix_minus_1_series_id,
 				    					 				  x_two_series_id,
 				    					 x_two_throught_squares_series_id,
+										 				series_id_t_count
 };
 
 

@@ -129,13 +129,18 @@ inline series_result<T> jitter(
 	ParamType param1;
 	ParamType param2;
 	unsigned long long seed;
-	std::cout << "Enter seed (0 for random, any other positive integer will be used as seed) : ";
-	std::cin >> seed;
+	std::cout << "Enter seed (0 for random, any other positive integer will be used as seed)\n";
+	seed = console_IO<unsigned long long int>::input("seed");
+
 	if (seed == 0){
 		seed = std::chrono::system_clock::now().time_since_epoch().count() + std::rand();
 	}
+
+	std::cout << "Seed : " << std::to_string(seed) << "\n";
+
 	switch (noise_type) {
 		case uniform:
+
 			param1 = console_IO<ParamType>::input("Lower bound");
 			param2 = console_IO<ParamType>::input("Upper bound");
 			break;
@@ -150,6 +155,7 @@ inline series_result<T> jitter(
 		default:
 			throw std::invalid_argument("Invalid noise type");
 	}
+
 	noise_generator<T> gen = noise_generator<T>(noise_type,seed);
 	return gen.jitter(source, param1, param2);
 }
@@ -347,8 +353,8 @@ void test_all_transforms(
 	std::vector<std::unique_ptr<series_acceleration<T,K>>> algos(algoInit.size());
 	for (size_t j = 1; j <= algoInit.size(); ++j){
 		algos[j-1] = algoInit[static_cast<transformation_id_t>(j)]();
-		std::cout << algos[j-1]->get_name() << "\n";
 	}
+	
 	for (size_t i = 0; i <= n; ++i){
 		for (size_t j = 0; j < algos.size(); ++j) {
 				try{
