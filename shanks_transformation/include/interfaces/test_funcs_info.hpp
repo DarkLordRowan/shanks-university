@@ -14,6 +14,7 @@ enum class test_function_id_t {
 	cmp_transformations_id,
 	eval_transform_time_id,
 	test_all_transforms_id,
+	test_function_id_t_count
 };
 
 /**

@@ -5,6 +5,12 @@
 #include <string>
 
 #include "../custom_concepts.hpp"
+
+#include "../series.hpp"
+#include "../methods.hpp"
+#include "../interfaces/test_funcs_info.hpp"
+#include "../noise/noise_generator.hpp"
+
 #include "console_effects.hpp"
 
 
@@ -82,6 +88,24 @@ InputType inline console_IO<InputType>::input(const std::string& var_name){
             } else if constexpr (std::is_enum<InputType>::value){
 
 				x = static_cast<InputType>(std::stoul(init_string));
+
+                if constexpr (std::is_same<InputType, series_id_t>::value){
+
+                    if(x >= series_id_t::series_id_t_count) throw std::out_of_range("Series with this id is not implemented");
+
+                } else if constexpr (std::is_same<InputType, transformation_id_t>::value){
+
+                    if(x >= transformation_id_t::transformation_id_t_count) throw std::out_of_range("Series with this id is not implemented");
+
+                } else if constexpr (std::is_same<InputType, test_function_id_t>::value){
+
+                    if(x >= test_function_id_t::test_function_id_t_count) throw std::out_of_range("Series with this id is not implemented");
+
+                } else if constexpr (std::is_same<InputType, NoiseType>::value){
+
+                    if(x >= NoiseType::noise_count) throw std::out_of_range("Series with this id is not implemented");
+
+                }
 				
 			}
 

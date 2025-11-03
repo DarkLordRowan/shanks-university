@@ -453,35 +453,9 @@ inline void main_testing_function()
 
 	//choosing series
 	print_series_info();
-	std::unique_ptr<series_base<T, K>> series;
-	series_id_t series_id;
+	series_id_t series_id = console_IO<series_id_t>::input("series_id");
+	std::unique_ptr<series_base<T, K>> series = create_series_by_id<T, K>(series_id);
 
-	//-------------------------------------------------------------------------------------//
-	bool valid = false;
-	bool error_triggered = false;
-
-	while (!valid){
-
-		series_id = console_IO<series_id_t>::input("series_id");
-
-		try {
-
-			series = create_series_by_id<T, K>(series_id);
-			valid = true;
-
-		} catch (std::domain_error& e){
-
-			console_effects::clear_lines_up(1 + static_cast<int>(error_triggered));
-			std::cout << e.what() << " : " << static_cast<int>(series_id) << "\n";
-			error_triggered = true;
-
-		}
-
-	}
-
-	console_effects::clear_lines_up(2 + static_cast<int>(error_triggered));
-	
-	//-------------------------------------------------------------------------------------//
 	std::cout << "\nChosen series id " <<  static_cast<unsigned long int>(series_id) << "\n";
 
 	std::cout << series->get_name() << "\n";
@@ -509,34 +483,8 @@ inline void main_testing_function()
 
 	//choosing transformation
 	print_transformation_info();
-	transformation_id_t transformation_id;
-	std::unique_ptr<series_acceleration<T, K>> transform;
-
-	//-------------------------------------------------------------------------------------//
-	valid = false;
-	error_triggered = false;
-	while (!valid){
-
-		transformation_id = console_IO<transformation_id_t>::input("transformation_id");
-
-		try {
-
-			transform = create_transformation_by_id<T, K>(transformation_id);
-			valid = true;
-
-		} catch (std::domain_error& e){
-
-			console_effects::clear_lines_up(1 + static_cast<int>(error_triggered));
-			std::cout << e.what() << " : " << static_cast<int>(series_id) << "\n";
-			error_triggered = true;
-
-		}
-
-	}
-
-	console_effects::clear_lines_up(2 + static_cast<int>(error_triggered));
-	
-	//-------------------------------------------------------------------------------------//
+	transformation_id_t transformation_id = console_IO<transformation_id_t>::input("transformation_id");
+	std::unique_ptr<series_acceleration<T, K>> transform = create_transformation_by_id<T, K>(transformation_id);
 
 	std::cout << "transformation : " << transform->get_name() << "\n";
 	print_test_function_info();
@@ -551,7 +499,7 @@ inline void main_testing_function()
 
 	std::string answer = "ok";
 	while(answer != "Y" && answer != "Yes" && answer != "N" && answer != "No"){
-		std::cout << "Appply noise [Y]es, [N]o: "; std::cin >> answer;
+		std::cout << "Appply noise [Y]es, [N]o: "; std::getline(std::cin, answer);
 	}
 
 	if (answer == "Y" || answer == "Yes"){

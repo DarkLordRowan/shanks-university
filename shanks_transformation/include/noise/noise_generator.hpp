@@ -32,6 +32,7 @@ enum NoiseType {
     uniform,
     normal,
     poisson,
+    noise_count
 };
 
 
