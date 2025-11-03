@@ -489,30 +489,4 @@ template<class _Ty> complex_precision<_Ty> atanh(const complex_precision<_Ty> x)
 	return complex_precision<_Ty>(( z2 - z1 ) * complex_precision<_Ty>(0.5, 0 ));
 	}
 
-//CUSTOM DEFINITIONS FOR ISFINITE, FMA, JUST FOR EVERYTHING TO WORK
-
-template<class _Ty> inline complex_precision<_Ty> hypot(const complex_precision<_Ty>& x, const complex_precision<_Ty>& y){ return sqrt(x * x + y *y ); }
-
-template<class _Ty> inline bool isfinite(const complex_precision<_Ty>& x){ 
-
-   using std::isfinite;
-   
-   return isfinite(x.real()) && isfinite(x.imag()); 
-}
-
-template<class _Ty> inline complex_precision<_Ty> fma(complex_precision<_Ty> x, complex_precision<_Ty> y, complex_precision<_Ty> z){
-
-   _Ty real_part = x.real() * y.real() - x.imag() * y.imag() + z.real();
-   _Ty imag_part = x.real() * y.imag() + y.real() * x.imag() + z.imag() ;
-
-   complex_precision<_Ty> res(real_part, imag_part);
-
-   return res;
-}
-
-template<class _Ty> inline std::string to_string(const complex_precision<_Ty>& x){ 
-   using std::to_string;
-   return to_string(x.real()) + " + " +to_string(x.imag()) + " * i";
- }
-
 #endif

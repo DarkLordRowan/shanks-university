@@ -11,8 +11,8 @@
 #include "libs/arbitrary_arithmetics/fprecision.h"
 #include "libs/arbitrary_arithmetics/precisioncore.cpp"
 
-#include "series.hpp"
-#include "methods.hpp"
+#include "include/series.hpp"
+#include "include/methods.hpp"
 
 namespace py = pybind11;
 
