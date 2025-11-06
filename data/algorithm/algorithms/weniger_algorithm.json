@@ -4,5 +4,7 @@
   "subtitle": "Алгоритм Венигера",
   "authorIds": [
     "weniger"
-  ]
+  ],
+  "python_id": "WenigerAlgorithm",
+  "args": []
 }
