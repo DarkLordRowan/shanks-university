@@ -4,5 +4,7 @@
   "subtitle": "Алгоритм Ричардсона",
   "authorIds": [
     "richardson"
-  ]
+  ],
+  "python_id": "RichardsonAlgorithm",
+  "args": []
 }

@@ -4,5 +4,7 @@
   "subtitle": "ета-алгоритм Брезински",
   "authorIds": [
     "brezinski"
-  ]
+  ],
+  "python_id": "BrezinskiThetaAlgorithm",
+  "args": []
 }

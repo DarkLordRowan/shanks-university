@@ -4,5 +4,7 @@
   "subtitle": "Эпсилон-алгоритм Винна (третья версия)",
   "authorIds": [
     "wynn"
-  ]
+  ],
+  "python_id": "WynnEpsilon3Algorithm",
+  "args": []
 }

@@ -4,5 +4,7 @@
   "subtitle": "Алгоритм Шенкса",
   "authorIds": [
     "shanks"
-  ]
+  ],
+  "python_id": "ShanksAlgorithm",
+  "args": []
 }

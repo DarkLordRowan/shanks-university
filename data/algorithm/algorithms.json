@@ -5,7 +5,9 @@
         "subtitle": "ета-алгоритм Брезински",
         "authorIds": [
             "brezinski"
-        ]
+        ],
+        "python_id": "BrezinskiThetaAlgorithm",
+        "args": []
     },
     {
         "id": "chang_wynn_algorithm",
@@ -14,7 +16,9 @@
         "authorIds": [
             "chang",
             "wynn"
-        ]
+        ],
+        "python_id": "ChangWynnAlgorithm",
+        "args": []
     },
     {
         "id": "drummond_d_algorithm",
@@ -22,7 +26,9 @@
         "subtitle": "Алгоритм Драммонда",
         "authorIds": [
             "drummond"
-        ]
+        ],
+        "python_id": "DrummondDAlgorithm",
+        "args": []
     },
     {
         "id": "ford_sidi_2_algorithm",
@@ -31,7 +37,9 @@
         "authorIds": [
             "ford",
             "sidi"
-        ]
+        ],
+        "python_id": "FordSidi2Algorithm",
+        "args": []
     },
     {
         "id": "ford_sidi_3_algorithm",
@@ -40,7 +48,9 @@
         "authorIds": [
             "ford",
             "sidi"
-        ]
+        ],
+        "python_id": "FordSidi3Algorithm",
+        "args": []
     },
     {
         "id": "levin_algorithm",
@@ -48,7 +58,9 @@
         "subtitle": "Алгоритм Левина",
         "authorIds": [
             "levin"
-        ]
+        ],
+        "python_id": "LevinAlgorithm",
+        "args": []
     },
     {
         "id": "levin_sidi_m_algorithm",
@@ -57,7 +69,9 @@
         "authorIds": [
             "levin",
             "sidi"
-        ]
+        ],
+        "python_id": "LevinSidiMAlgorithm",
+        "args": []
     },
     {
         "id": "levin_sidi_s_algorithm",
@@ -66,7 +80,9 @@
         "authorIds": [
             "levin",
             "sidi"
-        ]
+        ],
+        "python_id": "LevinSidiSAlgorithm",
+        "args": []
     },
     {
         "id": "lubkin_w_algorithm",
@@ -74,7 +90,9 @@
         "subtitle": "W-алгоритм Лубкина",
         "authorIds": [
             "lubkin"
-        ]
+        ],
+        "python_id": "LubkinWAlgorithm",
+        "args": []
     },
     {
         "id": "richardson_algorithm",
@@ -82,7 +100,9 @@
         "subtitle": "Алгоритм Ричардсона",
         "authorIds": [
             "richardson"
-        ]
+        ],
+        "python_id": "RichardsonAlgorithm",
+        "args": []
     },
     {
         "id": "shanks_algorithm",
@@ -90,7 +110,9 @@
         "subtitle": "Алгоритм Шенкса",
         "authorIds": [
             "shanks"
-        ]
+        ],
+        "python_id": "ShanksAlgorithm",
+        "args": []
     },
     {
         "id": "weniger_algorithm",
@@ -98,7 +120,9 @@
         "subtitle": "Алгоритм Венигера",
         "authorIds": [
             "weniger"
-        ]
+        ],
+        "python_id": "WenigerAlgorithm",
+        "args": []
     },
     {
         "id": "wynn_epsilon_1_algorithm",
@@ -106,7 +130,9 @@
         "subtitle": "Эпсилон-алгоритм Винна (первая версия)",
         "authorIds": [
             "wynn"
-        ]
+        ],
+        "python_id": "WynnEpsilonAlgorithm",
+        "args": []
     },
     {
         "id": "wynn_epsilon_2_algorithm",
@@ -114,7 +140,9 @@
         "subtitle": "Эпсилон-алгоритм Винна (вторая версия)",
         "authorIds": [
             "wynn"
-        ]
+        ],
+        "python_id": "WynnEpsilon2Algorithm",
+        "args": []
     },
     {
         "id": "wynn_epsilon_3_algorithm",
@@ -122,7 +150,9 @@
         "subtitle": "Эпсилон-алгоритм Винна (третья версия)",
         "authorIds": [
             "wynn"
-        ]
+        ],
+        "python_id": "WynnEpsilon3Algorithm",
+        "args": []
     },
     {
         "id": "wynn_rho_algorithm",
@@ -130,6 +160,8 @@
         "subtitle": "Ро-алгоритм Винна",
         "authorIds": [
             "wynn"
-        ]
+        ],
+        "python_id": "WhynnRhoAlgorithm",
+        "args": []
     }
 ]

@@ -4,5 +4,7 @@
   "subtitle": "Алгоритм Драммонда",
   "authorIds": [
     "drummond"
-  ]
+  ],
+  "python_id": "DrummondDAlgorithm",
+  "args": []
 }

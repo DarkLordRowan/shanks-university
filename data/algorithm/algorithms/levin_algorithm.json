@@ -4,5 +4,7 @@
   "subtitle": "Алгоритм Левина",
   "authorIds": [
     "levin"
-  ]
+  ],
+  "python_id": "LevinAlgorithm",
+  "args": []
 }
