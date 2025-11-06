@@ -12,6 +12,9 @@ export const PivotMatrixSwitcher: React.FC<Props> = ({ pivots, initialIndex = 0 
 
     return (
         <div className="space-y-3">
+            <div>
+                {pivots[0].allSeries.length}
+            </div>
             <PivotMatrix pivot={pivots[initialIndex]} />
         </div>
     );

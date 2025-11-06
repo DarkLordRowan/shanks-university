@@ -49,56 +49,13 @@ export function buildExperimentConfig(
         }));
 
     const methodsPart = ALGORITHMS.map((a: AlgorithmNode) => {
-        const name = toPascalCase(a.id);
+        const name = a.python_id;
         const base = {
             name,
             n: nConfig,
             m,
             args: {} as Record<string, unknown>,
         };
-
-        switch (name) {
-            case "DrummondDAlgorithm":
-                base.args = {
-                    remainder: ["v_variant", "u_variant", "t_wave_variant"],
-                    useRecFormulas: [true, false],
-                };
-                break;
-            case "LevinAlgorithm":
-                base.args = {
-                    remainder: ["v_variant", "u_variant", "t_wave_variant"],
-                    useRecFormulas: [true, false],
-                    beta: [52],
-                };
-                break;
-            case "LevinSidiMAlgorithm":
-                base.args = {
-                    remainder: ["v_variant", "u_variant", "t_wave_variant"],
-                    gamma: [52],
-                };
-                break;
-            case "LevinSidiSAlgorithm":
-                base.args = {
-                    remainder: ["v_variant", "u_variant", "t_wave_variant"],
-                    useRecFormulas: [true, false],
-                    parameter: [52],
-                };
-                break;
-            case "WhynnRhoAlgorithm":
-                base.args = {
-                    numerator: ["rho_variant", "generalized_variant", "gamma_rho_variant"],
-                    gamma: [52],
-                    RHO: [2],
-                };
-                break;
-            case "WynnEpsilon3Algorithm":
-                base.args = {
-                    epsilon_threshold: [1e-6, 1e-8, 1e-10],
-                };
-                break;
-            default:
-                base.args = {};
-        }
 
         return base;
     });

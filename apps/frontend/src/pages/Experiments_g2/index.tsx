@@ -19,11 +19,15 @@ import { EOCPartialSumChartByN } from "../../charts/EOCPartialSumChartByN.tsx";
 import { SeriesTermChartByN } from "../../charts/SeriesTermChartByN.tsx";
 import { EOCAccelChartByN } from "../../charts/EOCAccelChartByN.tsx";
 import { StepsToToleranceBar } from "../../charts/StepsToToleranceBar.tsx";
+import { GenerateExpFromDataButton } from "../../components/GenerateExpFromDataButton.tsx";
+import type { AlgorithmNode } from "../../data/algorithms.ts";
 
 const Experiments_v3: React.FC = () => {
 
     const [series, setSeries] = useState<SeriesNode | null>(null);
-    const [x, setX] = useState<number | null>(null);
+    const [xs, setXs] = useState<number[] | null>(null);
+    const [m, setM] = useState<number | null>(null);
+    const [algorithm, setAlgorithm] = useState<AlgorithmNode | null>(null);
 
     const [requestJson, setRequestJson] = useState<string | null>(null);
     const [responseJson, setResponseJson] = useState<ApiJsonResult | null>(null);
@@ -38,17 +42,15 @@ const Experiments_v3: React.FC = () => {
             </div>
             <br/>
 
-            <SelectSeries items={SERIES} value={series} onChange={setSeries}/>
-            <SelectX series={series} value={x} onChange={setX}/>
-
 
             <div className="mt-3 flex gap-3">
-                <GenerateFromDataButton
-                    series={series ? [series] : []}
-                    nConfig={{start: 1, stop: 51, step: 1}}
-                    m={[10]}
-                    disabled={!series}
-                    onSuccess={(json) => setRequestJson(json)}
+                <GenerateExpFromDataButton
+                    mode="vary-x"
+                    series={series}
+                    algorithm={algorithm}
+                    m={m}
+                    x={xs}
+                    onSuccess={setRequestJson}
                 />
 
                 <SubmitAndTrackJob

@@ -24,6 +24,11 @@ export function pivotByX(items: Item[]): PivotByX[] {
         const seriesNames = new Set<string>();
         const algorithmNames = new Set<string>();
 
+        group.forEach((item) => {
+            seriesNames.add(item.series.seriesName)
+            algorithmNames.add(item.algorithm.algorithmName)
+        })
+
         result.push({
             x,
             objects: group,

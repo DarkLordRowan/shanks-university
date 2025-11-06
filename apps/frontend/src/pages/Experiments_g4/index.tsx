@@ -19,11 +19,15 @@ import { EOCPartialSumChartByN } from "../../charts/EOCPartialSumChartByN.tsx";
 import { SeriesTermChartByN } from "../../charts/SeriesTermChartByN.tsx";
 import { EOCAccelChartByN } from "../../charts/EOCAccelChartByN.tsx";
 import { StepsToToleranceBar } from "../../charts/StepsToToleranceBar.tsx";
+import type { AlgorithmNode } from "../../data/algorithms.ts";
+import { GenerateExpFromDataButton } from "../../components/GenerateExpFromDataButton.tsx";
 
 const Experiments_v3: React.FC = () => {
 
     const [series, setSeries] = useState<SeriesNode | null>(null);
     const [x, setX] = useState<number | null>(null);
+    const [ms, setMs] = useState<number[] | null>([0, 2, 4, 6, 8, 10]);
+    const [algorithm, setAlgorithm] = useState<AlgorithmNode | null>(null);
 
     const [requestJson, setRequestJson] = useState<string | null>(null);
     const [responseJson, setResponseJson] = useState<ApiJsonResult | null>(null);
@@ -43,12 +47,13 @@ const Experiments_v3: React.FC = () => {
 
 
             <div className="mt-3 flex gap-3">
-                <GenerateFromDataButton
-                    series={series ? [series] : []}
-                    nConfig={{start: 1, stop: 51, step: 1}}
-                    m={[10]}
-                    disabled={!series}
-                    onSuccess={(json) => setRequestJson(json)}
+                <GenerateExpFromDataButton
+                    mode="vary-m"
+                    series={series}
+                    x={x}
+                    algorithm={algorithm}
+                    m={ms}
+                    onSuccess={setRequestJson}
                 />
 
                 <SubmitAndTrackJob
@@ -75,36 +80,6 @@ const Experiments_v3: React.FC = () => {
             <div>
                 {responseJson && (
                     <div className="mt-4 w-full space-y-10">
-
-                        {/* 10. Число шагов до точности ε */}
-                        <StepsToToleranceBar items={normalizeFromJson(responseJson)} eps={1e-8} />
-
-                        {/* 1. Частичные суммы S_n */}
-                        <PartialSumChartByN items={normalizeFromJson(responseJson)} />
-
-                        {/* 2. Ошибка частичных сумм |S_n - L| */}
-                        <DeltaToLimitPartialSumChart items={normalizeFromJson(responseJson)} />
-
-                        {/* 3. log10(|S_n - L|) */}
-                        <LogPsDevChartByN items={normalizeFromJson(responseJson)} />
-
-                        {/* 4. Ускоренные значения A_n */}
-                        <AccelValueChartByN items={normalizeFromJson(responseJson)} />
-
-                        {/* 5. log10(|A_n - L|) */}
-                        <LogAccelDevChartByN items={normalizeFromJson(responseJson)} />
-
-                        {/* 6. Коэффициент усиления G(n) = log10(|S_n-L| / |A_n-L|) */}
-                        <AccelerationGainChartByN items={normalizeFromJson(responseJson)} />
-
-                        {/* 7. Порядок сходимости частичных сумм */}
-                        <EOCPartialSumChartByN items={normalizeFromJson(responseJson)} />
-
-                        {/* 8. Порядок сходимости ускоренных */}
-                        <EOCAccelChartByN items={normalizeFromJson(responseJson)} />
-
-                        {/* 9. Значения членов ряда a_n */}
-                        <SeriesTermChartByN items={normalizeFromJson(responseJson)} />
 
                     </div>
                 )}
