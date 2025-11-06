@@ -11,6 +11,14 @@ import { type AlgorithmNode } from "../../data/algorithms.ts";
 import { GenerateExpFromDataButton } from "../../components/GenerateExpFromDataButton.tsx";
 import { SelectAlgorithm } from "../../components/SelectAlgorithm.tsx";
 import { SelectMs } from "../../components/SelectMs.tsx";
+import { PartialSumByN_VaryM } from "../../charts/vary_m/PartialSumByN_VaryM.tsx";
+import { DeltaToLimitPartialSumByN_VaryM } from "../../charts/vary_m/DeltaToLimitPartialSumByN_VaryM.tsx";
+import { normalizeFromJson } from "../../utils/responseToItem.ts";
+import { LogPsDevByN_VaryM } from "../../charts/vary_m/LogPsDevByN_VaryM.tsx";
+import { AccelValueByN_VaryM } from "../../charts/vary_m/AccelValueByN_VaryM.tsx";
+import { LogAccelDevByN_VaryM } from "../../charts/vary_m/LogAccelDevByN_VaryM.tsx";
+import { SeriesTermByN_VaryM } from "../../charts/vary_m/SeriesTermByN_VaryM.tsx";
+import { StepsToToleranceBar } from "../../charts/StepsToToleranceBar.tsx";
 
 const Experiments_v3: React.FC = () => {
 
@@ -71,7 +79,17 @@ const Experiments_v3: React.FC = () => {
             <div>
                 {responseJson && (
                     <div className="mt-4 w-full space-y-10">
+                        <StepsToToleranceBar
+                            items={normalizeFromJson(responseJson)}
+                            eps={1e-4}
+                        />
 
+                        <PartialSumByN_VaryM items={normalizeFromJson(responseJson)} />
+                        <DeltaToLimitPartialSumByN_VaryM items={normalizeFromJson(responseJson)} />
+                        <LogPsDevByN_VaryM items={normalizeFromJson(responseJson)} />
+                        <AccelValueByN_VaryM items={normalizeFromJson(responseJson)} />
+                        <LogAccelDevByN_VaryM items={normalizeFromJson(responseJson)} />
+                        <SeriesTermByN_VaryM items={normalizeFromJson(responseJson)} />
                     </div>
                 )}
 
