@@ -7,21 +7,19 @@ import type { ApiJsonResult } from "../Experiments/types.ts";
 import { CopyToClipboard } from "../../components/CopyToClipboard.tsx";
 import { Check } from "lucide-react";
 import { normalizeFromJson } from "../../utils/responseToItem.ts";
-import { AccelerationGainChartByN } from "../../charts/AccelerationGainChartByN.tsx";
-import { DeltaToLimitPartialSumChart } from "../../charts/DeltaToLimitPartialSumChart.tsx";
-import { LogPsDevChartByN } from "../../charts/LogPsDevChartByN.tsx";
-import { PartialSumChartByN } from "../../charts/PartialSumChartByN.tsx";
-import { AccelValueChartByN } from "../../charts/AccelValueChartByN.tsx";
-import { LogAccelDevChartByN } from "../../charts/LogAccelDevChartByN.tsx";
-import { EOCPartialSumChartByN } from "../../charts/EOCPartialSumChartByN.tsx";
-import { SeriesTermChartByN } from "../../charts/SeriesTermChartByN.tsx";
-import { EOCAccelChartByN } from "../../charts/EOCAccelChartByN.tsx";
+
 import { StepsToToleranceBar } from "../../charts/StepsToToleranceBar.tsx";
 import { GenerateExpFromDataButton } from "../../components/GenerateExpFromDataButton.tsx";
 import type { AlgorithmNode } from "../../data/algorithms.ts";
 import { SelectM } from "../../components/SelectM.tsx";
 import { SelectAlgorithm } from "../../components/SelectAlgorithm.tsx";
 import { SelectXs } from "../../components/SelectXs.tsx";
+import { PartialSumByN_VaryX } from "../../charts/vary_x/PartialSumByN_VaryX.tsx";
+import { DeltaToLimitPartialSumByN_VaryX } from "../../charts/vary_x/DeltaToLimitPartialSumByN_VaryX.tsx";
+import { AccelValueByN_VaryX } from "../../charts/vary_x/AccelValueByN_VaryX.tsx";
+import { LogPsDevByN_VaryX } from "../../charts/vary_x/LogPsDevByN_VaryX.tsx";
+import { LogAccelDevByN_VaryX } from "../../charts/vary_x/LogAccelDevByN_VaryX.tsx";
+import { SeriesTermByN_VaryX } from "../../charts/vary_x/SeriesTermByN_VaryX.tsx";
 
 const Experiments_v3: React.FC = () => {
 
@@ -82,6 +80,17 @@ const Experiments_v3: React.FC = () => {
             <div>
                 {responseJson && (
                     <div className="mt-4 w-full space-y-10">
+                        <StepsToToleranceBar
+                            items={normalizeFromJson(responseJson)}
+                            eps={1e-4}
+                        />
+
+                        <PartialSumByN_VaryX items={normalizeFromJson(responseJson)} />
+                        <DeltaToLimitPartialSumByN_VaryX items={normalizeFromJson(responseJson)} />
+                        <LogPsDevByN_VaryX items={normalizeFromJson(responseJson)} />
+                        <AccelValueByN_VaryX items={normalizeFromJson(responseJson)} />
+                        <LogAccelDevByN_VaryX items={normalizeFromJson(responseJson)} />
+                        <SeriesTermByN_VaryX items={normalizeFromJson(responseJson)} />
 
                     </div>
                 )}
