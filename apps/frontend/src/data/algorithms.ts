@@ -3,6 +3,8 @@ export type AlgorithmNode = {
     title: string;
     subtitle?: string;
     authorIds?: string[];
+    python_id: string;
+    args?: unknown[];
 };
 
 const GH = {
@@ -32,6 +34,8 @@ export const getAlgorithmsDataFromGitHub = async (): Promise<AlgorithmNode[]> =>
         title: jsonData.title,
         subtitle: jsonData.subtitle,
         authorIds: jsonData.authorIds,
+        python_id: jsonData.python_id,
+        args: jsonData.args,
     }));
 };
 

@@ -11,11 +11,11 @@ type Props = { pivot: PivotByX; seriesTrim?: number };
 function pickItem(p: PivotByX, s: string, a: string): Item | undefined {
     let best: Item | undefined;
     for (const it of p.objects) {
-        if (it.seriesName === s && it.algorithmName === a) {
+        if (it.series.seriesName === s && it.algorithm.algorithmName === a) {
             if (!best) best = it;
             else {
-                const am = it.m ?? Number.POSITIVE_INFINITY;
-                const bm = best.m ?? Number.POSITIVE_INFINITY;
+                const am = it.algorithm.m ?? Number.POSITIVE_INFINITY;
+                const bm = best.algorithm.m ?? Number.POSITIVE_INFINITY;
                 if (am < bm) best = it;
             }
         }
@@ -112,7 +112,7 @@ export const PivotMatrix: React.FC<Props> = ({ pivot, seriesTrim = 100 }) => {
                                         title={
                                             hasError
                                                 ? it.error!.description
-                                                : `lim=${fmtLim(it.seriesLim)}`
+                                                : `lim=${fmtLim(it.series.seriesLim)}`
                                         }
                                         className={[
                                             "px-1 py-1 text-center border-t border-l border-border font-semibold tabular-nums",
@@ -122,7 +122,7 @@ export const PivotMatrix: React.FC<Props> = ({ pivot, seriesTrim = 100 }) => {
                                         ].join(" ")}
                                         style={{ width: cw }}
                                     >
-                                        {hasError ? (nStep ?? "err") : fmtLim(it.seriesLim)}
+                                        {hasError ? (nStep ?? "err") : fmtLim(it.series.seriesLim)}
                                     </td>
                                 );
                             })}

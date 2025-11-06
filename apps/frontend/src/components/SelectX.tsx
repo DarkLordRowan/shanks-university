@@ -78,15 +78,19 @@ export function SelectX({ series, value, onChange, disabled }: Props) {
     }, [value]);
 
     if (!series || !domain) {
-        return <div className="text-xs text-textDim">Сначала выберите ряд.</div>;
+        return (
+            <div className="rounded-xl2 border border-border bg-panel p-3 text-sm text-white shadow-panel">
+                <div className="text-xs text-textDim">Выбор x. Сначала выберите ряд.</div>
+            </div>
+        );
     }
 
     if (collapsed) {
         return (
             <div className="flex items-center gap-2 rounded-xl2 border border-border bg-panel p-2 text-sm shadow-panel">
-        <span className="text-textDim">
-          <Formula inline latex={"x="} />
-        </span>
+                <span className="text-textDim">
+                    <Formula inline latex={"x="} />
+                </span>
                 <span className="font-mono">
           {value == null
               ? "—"
