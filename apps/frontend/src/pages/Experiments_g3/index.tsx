@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { SERIES, type SeriesNode } from "../../data/series";
 import { SelectSeries } from "../../components/SelectSeries.tsx";
-import { SelectX } from "../../components/SelectX.tsx";
 import { GenerateFromDataButton } from "../../components/GenerateFromDataButton.tsx";
 import { API_BASE } from "../Experiments/constants.ts";
 import { SubmitAndTrackJob } from "../../components/SubmitAndTrackJob.tsx";
@@ -23,7 +22,6 @@ import { StepsToToleranceBar } from "../../charts/StepsToToleranceBar.tsx";
 const Experiments_v3: React.FC = () => {
 
     const [series, setSeries] = useState<SeriesNode | null>(null);
-    const [x, setX] = useState<number | null>(null);
 
     const [requestJson, setRequestJson] = useState<string | null>(null);
     const [responseJson, setResponseJson] = useState<ApiJsonResult | null>(null);
@@ -34,12 +32,11 @@ const Experiments_v3: React.FC = () => {
         <div className="mx-auto max-w-6xl px-4 py-6">
 
             <div>
-                1 ряд, 1 алгоритм. Разные m
+                1 ряд, 1 x, 1 m. Разные алгоритмы
             </div>
             <br/>
 
             <SelectSeries items={SERIES} value={series} onChange={setSeries}/>
-            <SelectX series={series} value={x} onChange={setX}/>
 
 
             <div className="mt-3 flex gap-3">
@@ -76,9 +73,6 @@ const Experiments_v3: React.FC = () => {
                 {responseJson && (
                     <div className="mt-4 w-full space-y-10">
 
-                        {/* 10. Число шагов до точности ε */}
-                        <StepsToToleranceBar items={normalizeFromJson(responseJson)} eps={1e-8} />
-
                         {/* 1. Частичные суммы S_n */}
                         <PartialSumChartByN items={normalizeFromJson(responseJson)} />
 
@@ -105,6 +99,9 @@ const Experiments_v3: React.FC = () => {
 
                         {/* 9. Значения членов ряда a_n */}
                         <SeriesTermChartByN items={normalizeFromJson(responseJson)} />
+
+                        {/* 10. Число шагов до точности ε */}
+                        <StepsToToleranceBar items={normalizeFromJson(responseJson)} eps={1e-8} />
 
                     </div>
                 )}

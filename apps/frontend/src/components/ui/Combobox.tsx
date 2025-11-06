@@ -253,7 +253,7 @@ function OptionsList<T>({
             id={listboxId}
             role="listbox"
             className="absolute z-50 mt-2 max-h-72 w-full overflow-auto rounded-xl2
-                 border border-border bg-panel/95 backdrop-blur-sm shadow-panel"
+                 border border-border bg-panel/95 backdrop-blur-sm"
         >
             {items.length === 0 && (
                 <li className="px-3 py-2 text-sm text-textDim/70">Ничего не найдено</li>
