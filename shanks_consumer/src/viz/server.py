@@ -2,7 +2,7 @@ import json
 import urllib.parse
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 from pathlib import Path
-from typing import Dict, List, Set
+from typing import Dict, List, Set, Any
 import argparse
 
 
@@ -18,141 +18,102 @@ class DataAPIHandler(SimpleHTTPRequestHandler):
     def do_GET(self):
         if self.path.startswith('/api/data'):
             self.handle_api_request()
+        elif self.path.startswith('/api/metadata'):
+            self.handle_metadata_request()
+        elif self.path == '/':
+            self.serve_html_from_memory()
         else:
-            # Обслуживаем статические файлы
-            if self.path == '/':
-                self.path = '/index.html'
-            return super().do_GET()
+            self.send_error(404, "File not found")
     
-    def handle_api_request(self):
-        """Обрабатывает API запросы"""
-        try:
-            print(f"API request received: {self.path}")
-            # Парсим query параметры
-            parsed_url = urllib.parse.urlparse(self.path)
-            query_params = urllib.parse.parse_qs(parsed_url.query)
-            
-            # Извлекаем фильтры
-            series_filter = query_params.get('series', [])
-            stack_ids_filter = query_params.get('stack_id', [])
-            methods_filter = query_params.get('method', [])
-            m_values_filter = query_params.get('m_value', [])
-            
-            # Конвертируем строки в нужные типы
-            m_values_int = []
-            if m_values_filter:
-                m_values_int = [int(v) for v in m_values_filter]
-            
-            # Фильтруем данные
-            filtered_data = self.filter_data(
-                series_filter, stack_ids_filter, methods_filter, m_values_int
-            )
-            
-            # Отправляем ответ
-            self.send_json_response(filtered_data)
-            
-        except Exception as e:
-            self.send_error(500, f"Server error: {str(e)}")
-    
-    def filter_data(self, series_filter: List[str], stack_ids_filter: List[str], 
-                   methods_filter: List[str], m_values_filter: List[int]) -> List[Dict]:
-        """Фильтрует данные по заданным критериям"""
-        data = self.get_data()
-        filtered = []
+    def serve_html_from_memory(self):
+        """Обслуживает HTML контент из памяти"""
+        html_content = self.generate_dynamic_html()
         
-        for item in data:
-            # Пропускаем записи без вычисленных данных
-            if not item.get('computed') or len(item['computed']) == 0:
-                continue
-            
-            # Фильтр по рядам
-            if series_filter and item.get('series', {}).get('name') not in series_filter:
-                continue
-            
-            # Фильтр по stack_id
-            if stack_ids_filter and item.get('stack_id') not in stack_ids_filter:
-                continue
-            
-            # Фильтр по методам
-            if methods_filter and item.get('accel', {}).get('name') not in methods_filter:
-                continue
-            
-            # Фильтр по m_value
-            if m_values_filter and item.get('accel', {}).get('m_value') not in m_values_filter:
-                continue
-            
-            filtered.append(item)
-        
-        return filtered
-    
-    def send_json_response(self, data):
-        """Отправляет JSON ответ"""
-        response = json.dumps(data)
         self.send_response(200)
-        self.send_header('Content-type', 'application/json')
-        self.send_header('Content-length', str(len(response)))
-        self.send_header('Access-Control-Allow-Origin', '*')
+        self.send_header('Content-type', 'text/html; charset=utf-8')
         self.end_headers()
-        self.wfile.write(response.encode('utf-8'))
-
-
-def _create_series_buttons(series_names: List[str]) -> str:
-    """Создает кнопки для выбора рядов"""
-    buttons = []
-    for series_name in series_names:
-        buttons.append(f"""
-            <button class="series-btn" data-series="{series_name}">{series_name}</button>
-        """)
-    return ''.join(buttons)
-
-def _create_checkboxes(items: List, name_prefix: str) -> str:
-    """Создает HTML для чекбоксов"""
-    checkboxes = []
-    for item in items:
-        checkboxes.append(f"""
-            <div class="checkbox-item">
-                <input type="checkbox" id="{name_prefix}_{item}" name="{name_prefix}" value="{item}" checked>
-                <label for="{name_prefix}_{item}">{item}</label>
-            </div>
-        """)
-    return ''.join(checkboxes)
-
-def create_server_dashboard(data_file: Path, port: int = 8000):
-    """Создает HTML файл для дашборда с API"""
+        self.wfile.write(html_content.encode('utf-8'))
     
-    # Загружаем данные для получения метаданных
-    with open(data_file, 'r', encoding='utf-8') as f:
-        data = json.load(f)
-    
-    # Извлекаем уникальные значения
-    series_names = set()
-    stack_ids = set()
-    method_names = set()
-    m_values = set()
-    
-    for item in data:
-        if item.get('series', {}).get('name'):
-            series_names.add(item['series']['name'])
-        if item.get('stack_id'):
-            stack_ids.add(item['stack_id'])
-        if item.get('accel', {}).get('name'):
-            method_names.add(item['accel']['name'])
-        if item.get('accel', {}).get('m_value') is not None:
-            m_values.add(item['accel']['m_value'])
-    
-    series_names = sorted(list(series_names))
-    stack_ids = sorted(list(stack_ids))
-    method_names = sorted(list(method_names))
-    m_values = sorted(list(m_values))
-    
-    # Создаем HTML с API интеграцией
-    html_content = f"""
+    def generate_dynamic_html(self):
+        """Генерирует HTML динамически на основе метаданных"""
+        metadata = self.extract_metadata()
+        
+        # Создаем кнопки для рядов
+        series_buttons = []
+        for series_name in metadata['series_names']:
+            series_buttons.append(f'''
+                <button class="series-btn" data-series="{series_name}">{series_name}</button>
+            ''')
+        
+        # Создаем чекбоксы для методов ускорения
+        method_checkboxes = []
+        for method in metadata['accel_methods']:
+            method_checkboxes.append(f'''
+                <div class="checkbox-item">
+                    <input type="checkbox" id="method_{method['name']}" name="method" value="{method['name']}" checked>
+                    <label for="method_{method['name']}">{method['name']}</label>
+                </div>
+            ''')
+        
+        # Создаем чекбоксы для m_values
+        mvalue_checkboxes = []
+        for m_value in metadata['m_values']:
+            mvalue_checkboxes.append(f'''
+                <div class="checkbox-item">
+                    <input type="checkbox" id="mvalue_{m_value}" name="mvalue" value="{m_value}" checked>
+                    <label for="mvalue_{m_value}">{m_value}</label>
+                </div>
+            ''')
+        
+        # Создаем фильтры для дополнительных параметров
+        additional_filters = ""
+        for param_name, param_values in metadata['additional_params'].items():
+            param_checkboxes = []
+            for value in param_values:
+                param_checkboxes.append(f'''
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="param_{param_name}_{value}" name="param_{param_name}" value="{value}" checked>
+                        <label for="param_{param_name}_{value}">{param_name}: {value}</label>
+                    </div>
+                ''')
+            
+            additional_filters += f'''
+                <div class="filter-group">
+                    <label>{param_name}:</label>
+                    <div class="checkbox-group">
+                        {''.join(param_checkboxes)}
+                    </div>
+                </div>
+            '''
+        
+        # Создаем фильтры для параметров рядов
+        series_param_filters = ""
+        for param_name, param_values in metadata['series_params'].items():
+            param_checkboxes = []
+            for value in param_values:
+                param_checkboxes.append(f'''
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="series_param_{param_name}_{value}" name="series_param_{param_name}" value="{value}" checked>
+                        <label for="series_param_{param_name}_{value}">{param_name}: {value}</label>
+                    </div>
+                ''')
+            
+            series_param_filters += f'''
+                <div class="filter-group">
+                    <label>Series {param_name}:</label>
+                    <div class="checkbox-group">
+                        {''.join(param_checkboxes)}
+                    </div>
+                </div>
+            '''
+        
+        return f'''
 <!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Интерактивный дашборд (API режим)</title>
+    <title>Интерактивный дашборт (API режим)</title>
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <style>
         body {{
@@ -189,13 +150,9 @@ def create_server_dashboard(data_file: Path, port: int = 8000):
             padding: 8px;
             border-radius: 4px;
             border: 1px solid #555;
-            transition: opacity 0.3s ease, color 0.3s ease;
         }}
         .checkbox-item input {{
             margin-right: 8px;
-        }}
-        .checkbox-item input:disabled {{
-            cursor: not-allowed;
         }}
         .plot-container {{
             background-color: #2d2d2d;
@@ -214,20 +171,6 @@ def create_server_dashboard(data_file: Path, port: int = 8000):
         }}
         .update-btn:hover {{
             background-color: #005a9e;
-        }}
-        .update-btn:disabled {{
-            background-color: #666;
-            cursor: not-allowed;
-        }}
-        .stats {{
-            background-color: #2d2d2d;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-        }}
-        .loading {{
-            color: #007acc;
-            font-style: italic;
         }}
         .series-selector {{
             background-color: #2d2d2d;
@@ -252,16 +195,22 @@ def create_server_dashboard(data_file: Path, port: int = 8000):
         .series-btn.active {{
             background-color: #00a86b;
         }}
+        .stats {{
+            background-color: #2d2d2d;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }}
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Интерактивный дашборд (API режим)</h1>
+        <h1>Интерактивный дашборт</h1>
         
         <div class="series-selector">
             <h3>Выберите ряд(ы) для анализа:</h3>
             <div id="series-buttons">
-                {_create_series_buttons(series_names)}
+                {''.join(series_buttons)}
             </div>
         </div>
         
@@ -269,27 +218,24 @@ def create_server_dashboard(data_file: Path, port: int = 8000):
             <h2>Фильтры</h2>
             
             <div class="filter-group">
-                <label>Stack ID (выберите для отображения):</label>
-                <div class="checkbox-group" id="stack-filters">
-                    {_create_checkboxes(stack_ids, 'stack')}
-                </div>
-            </div>
-            
-            <div class="filter-group">
                 <label>Методы ускорения:</label>
-                <div class="checkbox-group" id="method-filters">
-                    {_create_checkboxes(method_names, 'method')}
+                <div class="checkbox-group">
+                    {''.join(method_checkboxes)}
                 </div>
             </div>
             
             <div class="filter-group">
                 <label>Значения m:</label>
-                <div class="checkbox-group" id="mvalue-filters">
-                    {_create_checkboxes(m_values, 'mvalue')}
+                <div class="checkbox-group">
+                    {''.join(mvalue_checkboxes)}
                 </div>
             </div>
             
-            <button class="update-btn" id="update-btn" onclick="updatePlots()">Обновить графики</button>
+            {additional_filters}
+            
+            {series_param_filters}
+            
+            <button class="update-btn" onclick="updatePlots()">Обновить графики</button>
         </div>
         
         <div class="stats" id="stats">
@@ -313,15 +259,10 @@ def create_server_dashboard(data_file: Path, port: int = 8000):
     <script>
         let currentData = [];
         let selectedSeries = new Set();
-        let isLoading = false;
+        let metadata = {json.dumps(metadata)};
         
-        // Инициализация
         document.addEventListener('DOMContentLoaded', function() {{
-            selectAllCheckboxes('stack');
-            selectAllCheckboxes('method');
-            selectAllCheckboxes('mvalue');
             setupSeriesButtons();
-            updateStackIdAvailability();
         }});
         
         function setupSeriesButtons() {{
@@ -336,47 +277,59 @@ def create_server_dashboard(data_file: Path, port: int = 8000):
                         selectedSeries.add(seriesName);
                         this.classList.add('active');
                     }}
-                    updateStackIdAvailability();
                 }});
             }});
         }}
         
-        function selectAllCheckboxes(type) {{
-            const checkboxes = document.querySelectorAll(`input[name="${{type}}"]`);
-            checkboxes.forEach(cb => cb.checked = true);
-        }}
-        
-        function getSelectedValues(type) {{
-            const checkboxes = document.querySelectorAll(`input[name="${{type}}"]:checked`);
+        function getSelectedValues(name) {{
+            const checkboxes = document.querySelectorAll(`input[name="${{name}}"]:checked`);
             return Array.from(checkboxes).map(cb => cb.value);
         }}
         
-        async function loadDataFromAPI() {{
-            if (isLoading) return;
+        function getAllSelectedParams() {{
+            const params = new URLSearchParams();
             
-            isLoading = true;
-            const updateBtn = document.getElementById('update-btn');
-            updateBtn.disabled = true;
-            updateBtn.textContent = 'Загрузка...';
+            // Добавляем выбранные ряды
+            selectedSeries.forEach(series => params.append('series', series));
+            
+            // Добавляем методы
+            getSelectedValues('method').forEach(method => params.append('method', method));
+            
+            // Добавляем m_values
+            getSelectedValues('mvalue').forEach(m => params.append('m_value', m));
+            
+            // Добавляем дополнительные параметры
+            Object.keys(metadata.additional_params).forEach(paramName => {{
+                getSelectedValues(`param_${{paramName}}`).forEach(value => {{
+                    params.append(`accel_param_${{paramName}}`, value);
+                }});
+            }});
+            
+            // Добавляем параметры рядов
+            Object.keys(metadata.series_params).forEach(paramName => {{
+                getSelectedValues(`series_param_${{paramName}}`).forEach(value => {{
+                    params.append(`series_param_${{paramName}}`, value);
+                }});
+            }});
+            
+            return params;
+        }}
+        
+        async function updatePlots() {{
+            if (selectedSeries.size === 0) {{
+                document.getElementById('stats').innerHTML = `
+                    <h3>Статистика</h3>
+                    <p>Выберите хотя бы один ряд для анализа</p>
+                `;
+                return;
+            }}
+            
+            const params = getAllSelectedParams();
             
             try {{
-                // Строим URL с параметрами
-                const params = new URLSearchParams();
-                
-                // Добавляем выбранные ряды
-                selectedSeries.forEach(series => params.append('series', series));
-                
-                // Добавляем выбранные фильтры
-                getSelectedValues('stack').forEach(stack => params.append('stack_id', stack));
-                getSelectedValues('method').forEach(method => params.append('method', method));
-                getSelectedValues('mvalue').forEach(m => params.append('m_value', m));
-                
                 const response = await fetch(`/api/data?${{params.toString()}}`);
-                if (!response.ok) {{
-                    throw new Error(`HTTP error! status: ${{response.status}}`);
-                }}
-                
                 currentData = await response.json();
+                
                 updateStats();
                 createPlots();
                 
@@ -384,33 +337,15 @@ def create_server_dashboard(data_file: Path, port: int = 8000):
                 console.error('Error loading data:', error);
                 document.getElementById('stats').innerHTML = `
                     <h3>Ошибка</h3>
-                    <p class="loading">Не удалось загрузить данные: ${{error.message}}</p>
+                    <p>Не удалось загрузить данные: ${{error.message}}</p>
                 `;
-            }} finally {{
-                isLoading = false;
-                updateBtn.disabled = false;
-                updateBtn.textContent = 'Обновить графики';
             }}
-        }}
-        
-        function updatePlots() {{
-            if (selectedSeries.size === 0) {{
-                document.getElementById('stats').innerHTML = `
-                    <h3>Статистика</h3>
-                    <p>Выберите хотя бы один ряд для анализа</p>
-                `;
-                clearPlots();
-                return;
-            }}
-            
-            loadDataFromAPI();
         }}
         
         function updateStats() {{
             const statsDiv = document.getElementById('stats');
             const totalItems = currentData.length;
             const uniqueSeries = [...new Set(currentData.map(item => item.series?.name))].length;
-            const uniqueStacks = [...new Set(currentData.map(item => item.stack_id))].length;
             const uniqueMethods = [...new Set(currentData.map(item => item.accel?.name))].length;
             
             statsDiv.innerHTML = `
@@ -418,26 +353,16 @@ def create_server_dashboard(data_file: Path, port: int = 8000):
                 <p>Выбранные ряды: ${{Array.from(selectedSeries).join(', ')}}</p>
                 <p>Всего записей: ${{totalItems}}</p>
                 <p>Уникальных рядов: ${{uniqueSeries}}</p>
-                <p>Уникальных stack_id: ${{uniqueStacks}}</p>
                 <p>Уникальных методов: ${{uniqueMethods}}</p>
             `;
         }}
         
         function createPlots() {{
-            if (currentData.length === 0) {{
-                clearPlots();
-                return;
-            }}
+            if (currentData.length === 0) return;
             
             createConvergencePlot();
             createErrorPlot();
             createPerformancePlot();
-        }}
-        
-        function clearPlots() {{
-            document.getElementById('convergence-plot').innerHTML = '<p>Нет данных для отображения</p>';
-            document.getElementById('error-plot').innerHTML = '<p>Нет данных для отображения</p>';
-            document.getElementById('performance-plot').innerHTML = '<p>Нет данных для отображения</p>';
         }}
         
         function createConvergencePlot() {{
@@ -449,30 +374,26 @@ def create_server_dashboard(data_file: Path, port: int = 8000):
                 const computed = item.computed;
                 const variation = `${{item.series.name}} (m=${{item.accel.m_value}}) ${{item.accel.name}}`;
                 
-                // Основная линия - ускоренные значения
                 traces.push({{
                     x: computed.map(c => c.n),
                     y: computed.map(c => c.accel_value),
                     mode: 'lines+markers',
                     name: variation,
-                    hovertemplate: '<b>%{{fullData.name}}</b><br>Ряд: ${{item.series.name}}<br>Итерация: %{{x}}<br>Ускоренное значение: %{{y}}:.10f<extra></extra>',
                     line: {{ width: 2 }}
                 }});
                 
-                // Пунктирная линия - частичные суммы
                 traces.push({{
                     x: computed.map(c => c.n),
                     y: computed.map(c => c.partial_sum),
                     mode: 'lines+markers',
                     name: variation + ' (частичные суммы)',
-                    hovertemplate: '<b>%{{fullData.name}}</b><br>Ряд: ${{item.series.name}}<br>Итерация: %{{x}}<br>Частичная сумма: %{{y}}:.10f<extra></extra>',
                     line: {{ dash: 'dash', width: 1 }},
                     marker: {{ size: 4, symbol: 'x' }}
                 }});
             }});
             
             const layout = {{
-                title: 'Сходимость методов (все ряды)',
+                title: 'Сходимость методов',
                 xaxis: {{ title: 'Итерация n' }},
                 yaxis: {{ title: 'Значение' }},
                 template: 'plotly_dark',
@@ -499,7 +420,6 @@ def create_server_dashboard(data_file: Path, port: int = 8000):
                     y: errors,
                     mode: 'lines+markers',
                     name: variation,
-                    hovertemplate: '<b>%{{fullData.name}}</b><br>Ряд: ${{item.series.name}}<br>Итерация: %{{x}}<br>Ошибка: %{{y}}:.2e<extra></extra>',
                     line: {{ width: 2 }}
                 }});
             }});
@@ -530,7 +450,6 @@ def create_server_dashboard(data_file: Path, port: int = 8000):
                     performanceData[key] = [];
                 }}
                 
-                // Находим минимальную ошибку для оценки производительности
                 const errors = item.computed.map(c => Math.abs(c.accel_value_deviation || 0));
                 const minError = Math.min(...errors);
                 const iterationAtMinError = item.computed.find(c => Math.abs(c.accel_value_deviation || 0) === minError)?.n || 0;
@@ -553,14 +472,12 @@ def create_server_dashboard(data_file: Path, port: int = 8000):
                     y: data.map(d => d.minError),
                     mode: 'markers',
                     name: key,
-                    text: data.map(d => `Stack: ${{d.stackId}}<br>Финальная ошибка: ${{d.finalError.toExponential(2)}}`),
-                    hovertemplate: '<b>%{{fullData.name}}</b><br>%{{text}}<br>Итерация мин. ошибки: %{{x}}<br>Мин. ошибка: %{{y}}:.2e<extra></extra>',
                     marker: {{ size: 10 }}
                 }});
             }});
             
             const layout = {{
-                title: 'Производительность методов (все ряды)',
+                title: 'Производительность методов',
                 xaxis: {{ title: 'Итерация достижения минимальной ошибки' }},
                 yaxis: {{ title: 'Минимальная ошибка', type: 'log' }},
                 template: 'plotly_dark',
@@ -569,121 +486,256 @@ def create_server_dashboard(data_file: Path, port: int = 8000):
             
             Plotly.newPlot('performance-plot', traces, layout);
         }}
-        
-        async function updateStackIdAvailability() {{
-            // Получаем все Stack ID checkboxes
-            const stackCheckboxes = document.querySelectorAll('input[name="stack"]');
-            
-            if (selectedSeries.size === 0) {{
-                // Если ряды не выбраны, все Stack ID доступны
-                stackCheckboxes.forEach(checkbox => {{
-                    checkbox.disabled = false;
-                    checkbox.parentElement.style.opacity = '1';
-                    checkbox.parentElement.style.color = '#ffffff';
-                }});
-                return;
-            }}
-            
-            try {{
-                // Запрашиваем данные для определения доступных Stack ID
-                const params = new URLSearchParams();
-                selectedSeries.forEach(series => params.append('series', series));
-                
-                const response = await fetch(`/api/data?${{params.toString()}}`);
-                const data = await response.json();
-                
-                // Получаем Stack ID, которые содержат выбранные ряды
-                const availableStackIds = new Set(data.map(item => item.stack_id));
-                
-                // Обновляем состояние каждого Stack ID checkbox
-                stackCheckboxes.forEach(checkbox => {{
-                    const stackId = checkbox.value;
-                    const isAvailable = availableStackIds.has(stackId);
-                    
-                    checkbox.disabled = !isAvailable;
-                    if (isAvailable) {{
-                        checkbox.parentElement.style.opacity = '1';
-                        checkbox.parentElement.style.color = '#ffffff';
-                    }} else {{
-                        checkbox.parentElement.style.opacity = '0.4';
-                        checkbox.parentElement.style.color = '#888888';
-                    }}
-                }});
-                
-            }} catch (error) {{
-                console.error('Error updating Stack ID availability:', error);
-            }}
-        }}
     </script>
 </body>
 </html>
-    """
+        '''
     
-    # Сохраняем HTML файл
-    output_dir = Path('output')
-    output_dir.mkdir(exist_ok=True)
+    def extract_metadata(self):
+        """Извлекает метаданные из данных для построения динамического интерфейса"""
+        data = self.get_data()
+        
+        series_names = set()
+        accel_methods = set()
+        m_values = set()
+        additional_params = {}
+        series_params = {}
+        
+        for item in data or []:
+            # Извлекаем имя ряда
+            if item.get('series', {}).get('name'):
+                series_names.add(item['series']['name'])
+                
+                # Извлекаем параметры ряда
+                if item.get('series', {}).get('arguments'):
+                    for param_name, param_value in item['series']['arguments'].items():
+                        if param_name not in series_params:
+                            series_params[param_name] = set()
+                        series_params[param_name].add(str(param_value))
+            
+            # Извлекаем методы ускорения и их параметры
+            if item.get('accel', {}).get('name'):
+                accel_methods.add(item['accel']['name'])
+            
+            if item.get('accel', {}).get('m_value') is not None:
+                m_values.add(item['accel']['m_value'])
+            
+            # Извлекаем дополнительные параметры ускорения
+            if item.get('accel', {}).get('additional_args'):
+                for param_name, param_value in item['accel']['additional_args'].items():
+                    if param_name not in additional_params:
+                        additional_params[param_name] = set()
+                    additional_params[param_name].add(str(param_value))
+        
+        # Конвертируем sets в sorted lists
+        accel_method_list = [{'name': name} for name in sorted(list(accel_methods))]
+        
+        return {
+            'series_names': sorted(list(series_names)),
+            'accel_methods': accel_method_list,
+            'm_values': sorted(list(m_values)),
+            'additional_params': {
+                k: sorted(list(v)) for k, v in additional_params.items()
+            },
+            'series_params': {
+                k: sorted(list(v)) for k, v in series_params.items()
+            }
+        }
     
-    with open(output_dir / 'index.html', 'w', encoding='utf-8') as f:
-        f.write(html_content)
+    def handle_metadata_request(self):
+        """Возвращает метаданные о доступных параметрах"""
+        metadata = self.extract_metadata()
+        self.send_json_response(metadata)
     
-    return output_dir / 'index.html'
-
-
-
-def create_handler_class(data_file: Path):
-    """Создает класс обработчика с привязанным файлом данных"""
+    def handle_api_request(self):
+        """Обрабатывает API запросы с улучшенной фильтрацией"""
+        parsed_path = urllib.parse.urlparse(self.path)
+        query_params = urllib.parse.parse_qs(parsed_path.query)
+        
+        # Извлекаем параметры фильтрации
+        series_filter = query_params.get('series', [])
+        methods_filter = query_params.get('method', [])
+        m_values_filter = query_params.get('m_value', [])
+        
+        # Извлекаем дополнительные параметры ускорения
+        accel_params = {}
+        for key, values in query_params.items():
+            if key.startswith('accel_param_'):
+                param_name = key[len('accel_param_'):]
+                # Handle multiple values for the same parameter
+                all_values = []
+                for value_list in values:
+                    if value_list:
+                        all_values.extend(value_list.split(','))
+                accel_params[param_name] = [v.strip() for v in all_values if v.strip()]
+        
+        # Извлекаем параметры рядов
+        series_params = {}
+        for key, values in query_params.items():
+            if key.startswith('series_param_'):
+                param_name = key[len('series_param_'):]
+                # Handle multiple values for the same parameter
+                all_values = []
+                for value_list in values:
+                    if value_list:
+                        all_values.extend(value_list.split(','))
+                series_params[param_name] = [v.strip() for v in all_values if v.strip()]
+        
+        # Преобразуем фильтры
+        if series_filter and len(series_filter) > 0:
+            all_series = []
+            for value_list in series_filter:
+                if value_list:
+                    all_series.extend(value_list.split(','))
+            series_filter = [s.strip() for s in all_series if s.strip()]
+        if methods_filter and len(methods_filter) > 0:
+            all_methods = []
+            for value_list in methods_filter:
+                if value_list:
+                    all_methods.extend(value_list.split(','))
+            methods_filter = [m.strip() for m in all_methods if m.strip()]
+        if m_values_filter and len(m_values_filter) > 0:
+            all_m_values = []
+            for value_list in m_values_filter:
+                if value_list:
+                    all_m_values.extend(value_list.split(','))
+            m_values_filter = [int(x.strip()) for x in all_m_values if x.strip()]
+        
+        data = self.get_data()
+        if data is None:
+            self.send_response(500)
+            self.send_header('Content-type', 'application/json')
+            self.end_headers()
+            response = json.dumps({"error": "Data not available"})
+            self.wfile.write(response.encode('utf-8'))
+            return
+        
+        # Debug logging
+        print(f"DEBUG: series_filter={series_filter}")
+        print(f"DEBUG: methods_filter={methods_filter}")
+        print(f"DEBUG: m_values_filter={m_values_filter}")
+        print(f"DEBUG: accel_params={accel_params}")
+        print(f"DEBUG: series_params={series_params}")
+        
+        # Группируем данные по (series, accel) для выбора лучшего stack_id
+        grouped_data = {}
+        
+        for item in data:
+            if not item.get('computed') or len(item['computed']) == 0:
+                continue
+            
+            # Создаем ключ группировки на основе параметров
+            series_key = item.get('series', {}).get('name', '')
+            accel_key = item.get('accel', {}).get('name', '')
+            m_value = item.get('accel', {}).get('m_value')
+            
+            # Проверяем фильтры
+            if series_filter and series_key not in series_filter:
+                continue
+            if methods_filter and accel_key not in methods_filter:
+                continue
+            if m_values_filter and m_value not in m_values_filter:
+                continue
+            
+            # Проверяем дополнительные параметры ускорения
+            accel_match = True
+            item_additional_args = item.get('accel', {}).get('additional_args', {})
+            for param_name, expected_values in accel_params.items():
+                if expected_values:  # Only check if user specified values for this parameter
+                    if param_name in item_additional_args:
+                        # Item has this parameter, check if value matches
+                        actual_value = str(item_additional_args[param_name])
+                        if actual_value not in expected_values:
+                            print(f"DEBUG: accel param mismatch - {param_name}: actual={actual_value}, expected one of={expected_values}")
+                            accel_match = False
+                            break
+                    # If item doesn't have this parameter, it passes the filter (user can filter by parameters they care about)
+            
+            if not accel_match:
+                continue
+            
+            # Проверяем параметры рядов
+            series_match = True
+            item_series_args = item.get('series', {}).get('arguments', {})
+            for param_name, expected_values in series_params.items():
+                if expected_values:  # Only check if user specified values for this parameter
+                    if param_name in item_series_args:
+                        # Item has this parameter, check if value matches
+                        actual_value = str(item_series_args[param_name])
+                        if actual_value not in expected_values:
+                            print(f"DEBUG: series param mismatch - {param_name}: actual={actual_value}, expected one of={expected_values}")
+                            series_match = False
+                            break
+                    # If item doesn't have this parameter, it passes the filter
+            
+            if not series_match:
+                continue
+            
+            # Создаем ключ группировки
+            group_key = (series_key, accel_key, m_value, 
+                        tuple(sorted(item.get('accel', {}).get('additional_args', {}).items())),
+                        tuple(sorted(item.get('series', {}).get('arguments', {}).items())))
+            
+            if group_key not in grouped_data:
+                grouped_data[group_key] = []
+            
+            grouped_data[group_key].append(item)
+        
+        # Выбираем по одному представителю из каждой группы (лучший по минимальной ошибке)
+        filtered = []
+        for group_items in grouped_data.values():
+            # Находим элемент с минимальной финальной ошибкой
+            best_item = min(group_items, key=lambda x: self.get_final_error(x))
+            filtered.append(best_item)
+        
+        self.send_json_response(filtered)
     
-    # Load data once at server startup
-    print(f"Loading data from {data_file}...")
-    with open(data_file, 'r', encoding='utf-8') as f:
-        data = json.load(f)
-    print(f"Loaded {len(data)} records")
+    def get_final_error(self, item):
+        """Получает финальную ошибку для элемента"""
+        if not item.get('computed') or len(item['computed']) == 0:
+            return float('inf')
+        
+        last_computed = item['computed'][-1]
+        return abs(last_computed.get('accel_value_deviation', float('inf')))
     
-    class Handler(DataAPIHandler):
-        def __init__(self, *args, **kwargs):
-            super().__init__(*args, data=data, **kwargs)
-    
-    return Handler
+    def send_json_response(self, data):
+        """Отправляет JSON ответ"""
+        response = json.dumps(data)
+        self.send_response(200)
+        self.send_header('Content-type', 'application/json')
+        self.send_header('Content-length', str(len(response)))
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.end_headers()
+        self.wfile.write(response.encode('utf-8'))
 
 
 def start_server(data_file: Path, port: int = 8000):
-    """Запускает HTTP сервер с дашбордом"""
+    """Запускает HTTP сервер с предзагруженными данными"""
     
-    # Создаем HTML дашборда
-    dashboard_file = create_server_dashboard(data_file, port)
-    print(f"Dashboard created: {dashboard_file}")
+    # Загружаем данные один раз при старте сервера
+    with open(data_file, 'r', encoding='utf-8') as f:
+        data = json.load(f)
     
-    # Создаем класс обработчика с предзагруженными данными
-    handler_class = create_handler_class(data_file)
+    print(f"Loaded {len(data)} records from {data_file}")
     
-    # Запускаем сервер из output директории
-    output_dir = Path('output')
-    if not output_dir.exists():
-        output_dir.mkdir(exist_ok=True)
+    # Создаем обработчик с предзагруженными данными
+    def handler(*args, **kwargs):
+        return DataAPIHandler(*args, data=data, **kwargs)
     
-    # Меняем рабочую директорию на output для обслуживания статических файлов
-    import os
-    original_cwd = os.getcwd()
+    # Запускаем сервер
+    server_address = ('', port)
+    httpd = HTTPServer(server_address, handler)
+    
+    print(f"\n🚀 Server started!")
+    print(f"📊 Dashboard: http://localhost:{port}")
+    print(f"📄 Data file: {data_file}")
+    print(f"\nPress Ctrl+C to stop the server\n")
+    
     try:
-        os.chdir(output_dir)
-        
-        # Запускаем сервер
-        server_address = ('', port)
-        httpd = HTTPServer(server_address, handler_class)
-        
-        print(f"\\n🚀 Server started!")
-        print(f"📊 Dashboard: http://localhost:{port}")
-        print(f"📁 Serving from: {Path.cwd()}")
-        print(f"📄 Data file: {data_file}")
-        print(f"\\nPress Ctrl+C to stop the server\\n")
-        
-        try:
-            httpd.serve_forever()
-        except KeyboardInterrupt:
-            print("\\n👋 Server stopped")
-            httpd.server_close()
-    finally:
-        os.chdir(original_cwd)
+        httpd.serve_forever()
+    except KeyboardInterrupt:
+        print("\n👋 Server stopped")
+        httpd.server_close()
 
 
 if __name__ == '__main__':
