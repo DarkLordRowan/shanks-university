@@ -2,24 +2,12 @@ import React, { useState } from "react";
 import { SERIES, type SeriesNode } from "../../data/series";
 import { SelectSeries } from "../../components/SelectSeries.tsx";
 import { SelectX } from "../../components/SelectX.tsx";
-import { GenerateFromDataButton } from "../../components/GenerateFromDataButton.tsx";
 import { API_BASE } from "../Experiments/constants.ts";
 import { SubmitAndTrackJob } from "../../components/SubmitAndTrackJob.tsx";
 import type { ApiJsonResult } from "../Experiments/types.ts";
 import { CopyToClipboard } from "../../components/CopyToClipboard.tsx";
 import { Check } from "lucide-react";
-import { normalizeFromJson } from "../../utils/responseToItem.ts";
-import { AccelerationGainChartByN } from "../../charts/AccelerationGainChartByN.tsx";
-import { DeltaToLimitPartialSumChart } from "../../charts/DeltaToLimitPartialSumChart.tsx";
-import { LogPsDevChartByN } from "../../charts/LogPsDevChartByN.tsx";
-import { PartialSumChartByN } from "../../charts/PartialSumChartByN.tsx";
-import { AccelValueChartByN } from "../../charts/AccelValueChartByN.tsx";
-import { LogAccelDevChartByN } from "../../charts/LogAccelDevChartByN.tsx";
-import { EOCPartialSumChartByN } from "../../charts/EOCPartialSumChartByN.tsx";
-import { SeriesTermChartByN } from "../../charts/SeriesTermChartByN.tsx";
-import { EOCAccelChartByN } from "../../charts/EOCAccelChartByN.tsx";
-import { StepsToToleranceBar } from "../../charts/StepsToToleranceBar.tsx";
-import type { AlgorithmNode } from "../../data/algorithms.ts";
+import { type AlgorithmNode, ALGORITHMS } from "../../data/algorithms.ts";
 import { GenerateExpFromDataButton } from "../../components/GenerateExpFromDataButton.tsx";
 
 const Experiments_v3: React.FC = () => {
@@ -27,7 +15,7 @@ const Experiments_v3: React.FC = () => {
     const [series, setSeries] = useState<SeriesNode | null>(null);
     const [x, setX] = useState<number | null>(null);
     const [ms, setMs] = useState<number[] | null>([0, 2, 4, 6, 8, 10]);
-    const [algorithm, setAlgorithm] = useState<AlgorithmNode | null>(null);
+    const [algorithm, setAlgorithm] = useState<AlgorithmNode | null>(ALGORITHMS);
 
     const [requestJson, setRequestJson] = useState<string | null>(null);
     const [responseJson, setResponseJson] = useState<ApiJsonResult | null>(null);

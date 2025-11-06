@@ -1,7 +1,5 @@
 import React, { useState } from "react";
 import { SERIES, type SeriesNode } from "../../data/series";
-import { SelectSeries } from "../../components/SelectSeries.tsx";
-import { SelectX } from "../../components/SelectX.tsx";
 import { API_BASE } from "../Experiments/constants.ts";
 import { SubmitAndTrackJob } from "../../components/SubmitAndTrackJob.tsx";
 import type { ApiJsonResult } from "../Experiments/types.ts";
@@ -9,6 +7,8 @@ import { CopyToClipboard } from "../../components/CopyToClipboard.tsx";
 import { Check } from "lucide-react";
 import type { AlgorithmNode } from "../../data/algorithms.ts";
 import { GenerateExpFromDataButton } from "../../components/GenerateExpFromDataButton.tsx";
+import { SelectM } from "../../components/SelectM.tsx";
+import { SelectAlgorithm } from "../../components/SelectAlgorithm.tsx";
 
 const Experiments_v3: React.FC = () => {
 
@@ -30,6 +30,8 @@ const Experiments_v3: React.FC = () => {
             </div>
             <br/>
 
+            <SelectM value={m} onChange={setM}/>
+            <SelectAlgorithm value={algorithm} onChange={setAlgorithm} />
 
             <div className="mt-3 flex gap-3">
                 <GenerateExpFromDataButton
@@ -57,6 +59,10 @@ const Experiments_v3: React.FC = () => {
                         {errorMsg}
                     </div>
                 )}
+            </div>
+
+            <div>
+                {requestJson}
             </div>
 
             <br/>

@@ -1,8 +1,6 @@
 import React, { useState } from "react";
 import { SERIES, type SeriesNode } from "../../data/series";
 import { SelectSeries } from "../../components/SelectSeries.tsx";
-import { SelectX } from "../../components/SelectX.tsx";
-import { GenerateFromDataButton } from "../../components/GenerateFromDataButton.tsx";
 import { API_BASE } from "../Experiments/constants.ts";
 import { SubmitAndTrackJob } from "../../components/SubmitAndTrackJob.tsx";
 import type { ApiJsonResult } from "../Experiments/types.ts";
@@ -21,6 +19,8 @@ import { EOCAccelChartByN } from "../../charts/EOCAccelChartByN.tsx";
 import { StepsToToleranceBar } from "../../charts/StepsToToleranceBar.tsx";
 import { GenerateExpFromDataButton } from "../../components/GenerateExpFromDataButton.tsx";
 import type { AlgorithmNode } from "../../data/algorithms.ts";
+import { SelectM } from "../../components/SelectM.tsx";
+import { SelectAlgorithm } from "../../components/SelectAlgorithm.tsx";
 
 const Experiments_v3: React.FC = () => {
 
@@ -42,6 +42,9 @@ const Experiments_v3: React.FC = () => {
             </div>
             <br/>
 
+            <SelectSeries items={SERIES} value={series} onChange={setSeries}/>
+            <SelectM value={m} onChange={setM}/>
+            <SelectAlgorithm value={algorithm} onChange={setAlgorithm} />
 
             <div className="mt-3 flex gap-3">
                 <GenerateExpFromDataButton
