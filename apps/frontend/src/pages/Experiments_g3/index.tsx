@@ -83,6 +83,10 @@ const Experiments_v3: React.FC = () => {
             <div>
                 {responseJson && (
                     <div className="mt-4 w-full space-y-10">
+                        <StepsToToleranceBar
+                            items={normalizeFromJson(responseJson)}
+                            eps={1e-4}
+                        />
 
                         {/* 1. Частичные суммы S_n */}
                         <PartialSumChartByN items={normalizeFromJson(responseJson)} />
@@ -112,8 +116,6 @@ const Experiments_v3: React.FC = () => {
                         <SeriesTermChartByN items={normalizeFromJson(responseJson)} />
 
                         {/* 10. Число шагов до точности ε */}
-                        <StepsToToleranceBar items={normalizeFromJson(responseJson)} eps={1e-8} />
-
                     </div>
                 )}
 

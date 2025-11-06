@@ -70,3 +70,56 @@ export function clamp(y: number | null, min: number, max: number): number | null
     if (y > max) return max;
     return y;
 }
+
+
+
+/** Текстовый ключ серии по m. */
+export function mKeyOf(item: Item): string {
+    const m = item.algorithm.m;
+    return m == null ? "m=∅" : `m=${m}`;
+}
+
+/** Уникальные ключи серий по m в порядке возрастания m, null в конце. */
+export function uniqueMKeys(items: Item[]): string[] {
+    const pairs: Array<{ k: string; m: number | null }> = [];
+    const seen = new Set<string>();
+    for (const it of items) {
+        const k = mKeyOf(it);
+        if (!seen.has(k)) {
+            seen.add(k);
+            pairs.push({ k, m: it.algorithm.m ?? null });
+        }
+    }
+    pairs.sort((a, b) => {
+        if (a.m == null && b.m == null) return 0;
+        if (a.m == null) return 1;
+        if (b.m == null) return -1;
+        return a.m - b.m;
+    });
+    return pairs.map(p => p.k);
+}
+
+/**
+ * Группировка по n с разложением по сериям m.
+ * pick получает блок computed, должен вернуть число или null.
+ */
+export function groupByNByM(
+    items: Item[],
+    pick: (c: Item["computed"]) => number | null
+): Array<Record<string, number | null>> {
+    // Считаем, что в выборке items фиксированы series.name, series.arguments.x и accel.name.
+    // Объединяем по n, серии отождествляем по mKeyOf(item).
+    type Row = Record<string, number | null> & { n: number };
+    const byN = new Map<number, Row>();
+
+    for (const it of items) {
+        const n = it.computed.n;
+        const key = mKeyOf(it);
+        const v = pick(it.computed);
+        const row = byN.get(n) ?? { n };
+        row[key] = v;
+        byN.set(n, row);
+    }
+
+    return Array.from(byN.values()).sort((a, b) => a.n - b.n);
+}
