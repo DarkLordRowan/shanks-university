@@ -1,0 +1,66 @@
+[
+    {
+        "series": {"name": "test_series"},
+        "accel": {"name": "shanks_algorithm", "m_value": 1},
+        "stack_id": "0",
+        "computed": [
+            {"n": 1, "partial_sum": 1.0, "accel_value": 1.0, "accel_value_deviation": 0.1},
+            {"n": 2, "partial_sum": 0.5, "accel_value": 0.5, "accel_value_deviation": 0.05}
+        ]
+    },
+    {
+        "series": {"name": "test_series"},
+        "accel": {"name": "levin_algorithm", "m_value": 2},
+        "stack_id": "1",
+        "computed": [
+            {"n": 1, "partial_sum": 1.0, "accel_value": 1.0, "accel_value_deviation": 0.2},
+            {"n": 2, "partial_sum": 0.5, "accel_value": 0.5, "accel_value_deviation": 0.1}
+        ]
+    },
+    {
+        "accel": {
+            "additional_args": {
+                "remainder": "RemainderType.u_type",
+                "useRecFormulas": "False"
+            },
+            "m_value": 4,
+            "name": "DrummondDAlgorithmF64"
+        },
+        "computed": [
+            {
+                "accel_value": 2.6888888888888878,
+                "accel_value_deviation": 0.029392939570157317,
+                "n": 1,
+                "partial_sum": 1.0,
+                "partial_sum_deviation": 1.718281828459045,
+                "series_value": 1.0
+            },
+            {
+                "accel_value": 2.717610062893082,
+                "accel_value_deviation": 0.0006717655659631561,
+                "n": 2,
+                "partial_sum": 2.0,
+                "partial_sum_deviation": 0.7182818284590451,
+                "series_value": 1.0
+            }
+        ],
+        "error": null,
+        "events": [
+            {
+                "data": {
+                    "computed_index": 0,
+                    "description": "accel_value_deviation0.029392939570157317\n is lesser than partial_sum_deviation1.718281828459045"
+                },
+                "event": "slow_accel_method"
+            }
+        ],
+        "series": {
+            "arguments": {
+                "x": 1.0
+            },
+            "lim": 2.718281828459045,
+            "name": "ExpSeriesF64"
+        },
+        "stack_id": "df657150-9dc7-4d8f-82cc-f70362a9fad6"
+    }
+]

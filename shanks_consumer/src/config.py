@@ -142,6 +142,10 @@ class VizConfigOverrides(TypedDict, total=False):
     series_name: str | None
     method_name: str | None
     from_file: pathlib.Path | None
+    interactive_dashboard: bool
+    all_series: bool
+    server: bool
+    port: int
     verbose: int
 
 
@@ -152,6 +156,10 @@ class VizConfig(BaseConfig, MongoConfig):
     series_name: str | None = None
     method_name: str | None = None
     from_file: pathlib.Path | None = None
+    interactive_dashboard: bool = False
+    all_series: bool = False
+    server: bool = False
+    port: int = 8000
 
     output_dir: pathlib.Path = field(default=pathlib.Path("output"))
 
@@ -165,6 +173,12 @@ class VizConfig(BaseConfig, MongoConfig):
             self.output_dir
             / f"plot_{self.stack_id}_{self.series_name}_{self.method_name}.html"
         )
+
+    @property
+    def dashboard_filename(self) -> pathlib.Path:
+        if self.all_series:
+            return self.output_dir / "dashboard_all_series.html"
+        return self.output_dir / f"dashboard_{self.series_name}.html"
 
 
 class BaseConfigLoader[T]:
@@ -294,6 +308,10 @@ class VizConfigLoader(BaseConfigLoader[VizConfig]):
             method_name=args.method_name,
             with_summary=args.with_summary,
             from_file=getattr(args, 'from_file', None),
+            interactive_dashboard=getattr(args, 'interactive_dashboard', False),
+            all_series=getattr(args, 'all_series', False),
+            server=getattr(args, 'server', False),
+            port=getattr(args, 'port', 8000),
             verbose=args.verbose,
         )
 

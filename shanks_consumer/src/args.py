@@ -129,6 +129,27 @@ def _add_viz_arguments(
         type=pathlib.Path,
         help="Load data from JSON file instead of MongoDB",
     )
+    viz_group.add_argument(
+        "--interactive-dashboard",
+        action="store_true",
+        help="Create interactive dashboard for series visualization",
+    )
+    viz_group.add_argument(
+        "--all-series",
+        action="store_true",
+        help="Create dashboard for all series at once (ignores --series-name)",
+    )
+    viz_group.add_argument(
+        "--server",
+        action="store_true",
+        help="Start HTTP server with API for dashboard",
+    )
+    viz_group.add_argument(
+        "--port",
+        type=int,
+        default=8000,
+        help="Server port (default: 8000)",
+    )
 
     verbosity_group = parser.add_argument_group("Verbosity")
     verbosity_group.add_argument(
