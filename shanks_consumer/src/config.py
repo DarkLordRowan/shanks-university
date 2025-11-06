@@ -136,12 +136,22 @@ class TrialConfig(BaseConfig, MongoConfig):
         return tuple(normalized)
 
 
+class VizConfigOverrides(TypedDict, total=False):
+    stack_id: str | None
+    with_summary: bool
+    series_name: str | None
+    method_name: str | None
+    from_file: pathlib.Path | None
+    verbose: int
+
+
 @dataclass
 class VizConfig(BaseConfig, MongoConfig):
     stack_id: str | None = None
     with_summary: bool = False
     series_name: str | None = None
     method_name: str | None = None
+    from_file: pathlib.Path | None = None
 
     output_dir: pathlib.Path = field(default=pathlib.Path("output"))
 
@@ -283,6 +293,7 @@ class VizConfigLoader(BaseConfigLoader[VizConfig]):
             series_name=args.series_name,
             method_name=args.method_name,
             with_summary=args.with_summary,
+            from_file=getattr(args, 'from_file', None),
             verbose=args.verbose,
         )
 

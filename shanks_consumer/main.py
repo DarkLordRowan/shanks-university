@@ -22,7 +22,15 @@ def main():
         case "viz":
             config = load_viz_config(args)
             setup_logging(config.verbose)
-            mongo_database = setup_mongo_db(config)
+            # Require MongoDB by default, only use file if --from-file is specified
+            mongo_database = None
+            if config.from_file is None:
+                try:
+                    mongo_database = setup_mongo_db(config)
+                except Exception as e:
+                    raise RuntimeError(
+                        f"MongoDB required but not available. Use --from-file to use file data source. Error: {e}"
+                    )
             handle_viz_command(config, mongo_database)
         case _:
             parser.print_help()

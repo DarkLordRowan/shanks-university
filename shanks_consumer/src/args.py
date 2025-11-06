@@ -124,6 +124,11 @@ def _add_viz_arguments(
         action="store_true",
         help="Shows error summary for given set of results",
     )
+    viz_group.add_argument(
+        "--from-file",
+        type=pathlib.Path,
+        help="Load data from JSON file instead of MongoDB",
+    )
 
     verbosity_group = parser.add_argument_group("Verbosity")
     verbosity_group.add_argument(

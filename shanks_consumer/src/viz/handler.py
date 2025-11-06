@@ -1,16 +1,24 @@
 import logging
+from typing import Optional
 
 from src.config import VizConfig
 from src.db import MongoDatabase
 from src.viz.collector import MongoDataCollector
+from src.viz.single_file_collector import SingleFileDataCollector
 
 
-def handle_viz_command(
-    config: VizConfig, mongo_database: MongoDatabase | None
-):
-    if mongo_database is None:
-        raise RuntimeError("MongoDB data source is only available")
-    collector = MongoDataCollector(mongo_database, config.mongo_collection)
+def handle_viz_command(config: VizConfig, mongo_database: MongoDatabase | None = None):
+    if config.from_file:
+        # Use file-based data source as specified by flag
+        logging.info("Using file-based data source: %s", config.from_file)
+        if not config.from_file.exists():
+            raise FileNotFoundError(f"Data file not found: {config.from_file}")
+        collector = SingleFileDataCollector(config.from_file)
+    else:
+        logging.info("Using MongoDB data source")
+        if mongo_database is None:
+            raise RuntimeError("MongoDB data source is required when --from-file is not specified")
+        collector = MongoDataCollector(mongo_database, config.mongo_collection)
 
     if config.with_summary:
         logging.info("Creating summary...")
