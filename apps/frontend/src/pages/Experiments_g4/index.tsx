@@ -7,15 +7,17 @@ import { SubmitAndTrackJob } from "../../components/SubmitAndTrackJob.tsx";
 import type { ApiJsonResult } from "../Experiments/types.ts";
 import { CopyToClipboard } from "../../components/CopyToClipboard.tsx";
 import { Check } from "lucide-react";
-import { type AlgorithmNode, ALGORITHMS } from "../../data/algorithms.ts";
+import { type AlgorithmNode } from "../../data/algorithms.ts";
 import { GenerateExpFromDataButton } from "../../components/GenerateExpFromDataButton.tsx";
+import { SelectAlgorithm } from "../../components/SelectAlgorithm.tsx";
+import { SelectMs } from "../../components/SelectMs.tsx";
 
 const Experiments_v3: React.FC = () => {
 
     const [series, setSeries] = useState<SeriesNode | null>(null);
     const [x, setX] = useState<number | null>(null);
-    const [ms, setMs] = useState<number[] | null>([0, 2, 4, 6, 8, 10]);
-    const [algorithm, setAlgorithm] = useState<AlgorithmNode | null>(ALGORITHMS);
+    const [ms, setMs] = useState<number[]>([0, 2, 4, 6, 8, 10]);
+    const [algorithm, setAlgorithm] = useState<AlgorithmNode | null>(null);
 
     const [requestJson, setRequestJson] = useState<string | null>(null);
     const [responseJson, setResponseJson] = useState<ApiJsonResult | null>(null);
@@ -32,7 +34,8 @@ const Experiments_v3: React.FC = () => {
 
             <SelectSeries items={SERIES} value={series} onChange={setSeries}/>
             <SelectX series={series} value={x} onChange={setX}/>
-
+            <SelectAlgorithm value={algorithm} onChange={setAlgorithm} />
+            <SelectMs value={ms} onChange={setMs}/>
 
             <div className="mt-3 flex gap-3">
                 <GenerateExpFromDataButton

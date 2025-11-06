@@ -21,13 +21,14 @@ import { SelectX } from "../../components/SelectX.tsx";
 import { SelectM } from "../../components/SelectM.tsx";
 import { type AlgorithmNode, ALGORITHMS } from "../../data/algorithms.ts";
 import { GenerateExpFromDataButton } from "../../components/GenerateExpFromDataButton.tsx";
+import { SelectAlgorithms } from "../../components/SelectAlgorithms.tsx";
 
 const Experiments_v3: React.FC = () => {
 
     const [series, setSeries] = useState<SeriesNode | null>(null);
     const [x, setX] = useState<number | null>(null);
     const [m, setM] = useState<number | null>(null);
-    const [algorithms, setAlgorithms] = useState<AlgorithmNode[] | null>(ALGORITHMS);
+    const [algorithms, setAlgorithms] = useState<AlgorithmNode[]>([]);
 
     const [requestJson, setRequestJson] = useState<string | null>(null);
     const [responseJson, setResponseJson] = useState<ApiJsonResult | null>(null);
@@ -44,6 +45,7 @@ const Experiments_v3: React.FC = () => {
 
             <SelectSeries items={SERIES} value={series} onChange={setSeries}/>
             <SelectX series={series} value={x} onChange={setX}/>
+            <SelectAlgorithms value={algorithms} onChange={setAlgorithms} options={ALGORITHMS}/>
             <SelectM value={m} onChange={setM}/>
 
 
