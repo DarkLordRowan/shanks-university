@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { SERIES, type SeriesNode } from "../../data/series";
 import { SelectSeries } from "../../components/SelectSeries.tsx";
-import { GenerateFromDataButton } from "../../components/GenerateFromDataButton.tsx";
 import { API_BASE } from "../Experiments/constants.ts";
 import { SubmitAndTrackJob } from "../../components/SubmitAndTrackJob.tsx";
 import type { ApiJsonResult } from "../Experiments/types.ts";
