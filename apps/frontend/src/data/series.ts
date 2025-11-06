@@ -48,7 +48,7 @@ export async function getSeriesDataFromGitHub(): Promise<SeriesNode[]> {
 
         const data: SeriesNode[] = await response.json();
 
-        const items = data.map((jsonData) => ({
+        let items = data.map((jsonData) => ({
             id: jsonData.id,
             python_id: jsonData.python_id,
             num: jsonData.num,
@@ -58,6 +58,8 @@ export async function getSeriesDataFromGitHub(): Promise<SeriesNode[]> {
             speed: jsonData.speed,
             document: jsonData.document,
         }));
+
+        items = items.filter((i) => Number.isFinite(i.num) && i.num > 0);
 
         items
             .sort((a, b) => a.num - b.num || a.id.localeCompare(b.id));

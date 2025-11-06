@@ -9,11 +9,11 @@ import type { AlgorithmNode } from "../../data/algorithms.ts";
 import { GenerateExpFromDataButton } from "../../components/GenerateExpFromDataButton.tsx";
 import { SelectM } from "../../components/SelectM.tsx";
 import { SelectAlgorithm } from "../../components/SelectAlgorithm.tsx";
+import { SelectSerieses } from "../../components/SelectSerieses.tsx";
 
 const Experiments_v3: React.FC = () => {
 
-    const [serieses, setSerieses] = useState<SeriesNode[] | null>(null);
-    const [x, setX] = useState<number | null>(null);
+    const [serieses, setSerieses] = useState<SeriesNode[]>([]);
     const [m, setM] = useState<number | null>(null);
     const [algorithm, setAlgorithm] = useState<AlgorithmNode | null>(null);
 
@@ -30,6 +30,7 @@ const Experiments_v3: React.FC = () => {
             </div>
             <br/>
 
+            <SelectSerieses value={serieses} onChange={setSerieses} items={SERIES} />
             <SelectM value={m} onChange={setM}/>
             <SelectAlgorithm value={algorithm} onChange={setAlgorithm} />
 
