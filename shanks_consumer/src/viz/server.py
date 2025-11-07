@@ -9,9 +9,9 @@ import argparse
 
 def parse_complex_number(value: Union[str, float, int]) -> float:
     """Parse complex numbers and scientific notation strings to float.
-    
+
     For visualization purposes, we extract the real part of complex numbers.
-    
+
     Examples:
     - "1.64872127070018063164E0 + 0E0 * i" -> 1.64872127070018063164
     - "5E-1 + 0E0 * i" -> 5E-1 -> 0.5
@@ -22,24 +22,24 @@ def parse_complex_number(value: Union[str, float, int]) -> float:
     """
     if isinstance(value, (int, float)):
         return float(value)
-    
+
     if not isinstance(value, str):
-        return float('inf')
-    
+        return float("inf")
+
     value = value.strip()
-    
+
     # Handle complex numbers in format "real + imag * i"
-    if ' + ' in value and ' * i' in value:
+    if " + " in value and " * i" in value:
         # Extract real part from complex number
-        real_part = value.split(' + ')[0].strip()
+        real_part = value.split(" + ")[0].strip()
         return parse_scientific_notation(real_part)
-    
+
     # Handle complex numbers in format "real - imag * i" (negative imaginary)
-    if ' - ' in value and ' * i' in value:
+    if " - " in value and " * i" in value:
         # Extract real part from complex number
-        real_part = value.split(' - ')[0].strip()
+        real_part = value.split(" - ")[0].strip()
         return parse_scientific_notation(real_part)
-    
+
     # Handle scientific notation like "5.248481770719903848E-14"
     return parse_scientific_notation(value)
 
@@ -50,74 +50,98 @@ def parse_scientific_notation(value: str) -> float:
         return float(value)
     except ValueError:
         # Handle cases like "1.64872127070018063164E0"
-        if 'E' in value:
+        if "E" in value:
             # Python can handle this format directly
             try:
-                return float(value.replace('E', 'e'))
+                return float(value.replace("E", "e"))
             except ValueError:
                 pass
-        
+
         # Try to extract number using regex
-        match = re.search(r'[-+]?\d*\.?\d+(?:[eE][-+]?\d+)?', value)
+        match = re.search(r"[-+]?\d*\.?\d+(?:[eE][-+]?\d+)?", value)
         if match:
             try:
                 return float(match.group())
             except ValueError:
                 pass
-        
-        return float('inf')
+
+        return float("inf")
 
 
 class DataAPIHandler(SimpleHTTPRequestHandler):
     def __init__(self, *args, data=None, **kwargs):
         self.data = data  # Pre-loaded data passed at server startup
         super().__init__(*args, **kwargs)
-    
+
     def get_data(self):
         """Возвращает предзагруженные данные"""
         return self.data
-    
+
     def do_GET(self):
-        if self.path.startswith('/api/data'):
+        if self.path.startswith("/api/data"):
             self.handle_api_request()
-        elif self.path.startswith('/api/metadata'):
+        elif self.path.startswith("/api/metadata"):
             self.handle_metadata_request()
-        elif self.path == '/':
+        elif self.path == "/":
             self.serve_html_from_memory()
         else:
             self.send_error(404, "File not found")
-    
+
     def serve_html_from_memory(self):
         """Обслуживает HTML контент из памяти"""
         html_content = self.generate_dynamic_html()
-        
+
         self.send_response(200)
-        self.send_header('Content-type', 'text/html; charset=utf-8')
+        self.send_header("Content-type", "text/html; charset=utf-8")
         self.end_headers()
-        self.wfile.write(html_content.encode('utf-8'))
-    
+        self.wfile.write(html_content.encode("utf-8"))
+
     def generate_dynamic_html(self):
         """Генерирует HTML динамически на основе метаданных"""
         metadata = self.extract_metadata()
-        
-        # Создаем кнопки для рядов
-        series_buttons = []
-        for series_name in metadata['series_names']:
-            series_buttons.append(f'''
-                <button class="series-btn" data-series="{series_name}">{series_name}</button>
+
+        # Создаем кнопки для precision (все включены по умолчанию)
+        precision_buttons = []
+        for precision in metadata['precisions']:
+            precision_buttons.append(f'''
+                <button class="filter-btn precision-btn active" data-type="precision" data-value="{precision}">{precision}</button>
             ''')
         
-        # Создаем чекбоксы для методов ускорения
-        method_checkboxes = []
-        for method in metadata['accel_methods']:
-            method_checkboxes.append(f'''
+        # Создаем кнопки для базовых имен рядов (все выключены по умолчанию)
+        base_series_buttons = []
+        for base_series in metadata['base_series_names']:
+            base_series_buttons.append(f'''
+                <button class="filter-btn base-series-btn" data-type="base_series" data-value="{base_series}">{base_series}</button>
+            ''')
+        
+        # Создаем кнопки для базовых имен методов ускорения (все выключены по умолчанию)
+        base_accel_buttons = []
+        for base_accel in metadata['base_accel_names']:
+            base_accel_buttons.append(f'''
+                <button class="filter-btn base-accel-btn" data-type="base_accel" data-value="{base_accel}">{base_accel}</button>
+            ''')
+
+        # Создаем чекбоксы для базовых имен рядов
+        base_series_checkboxes = []
+        for base_series in metadata["base_series_names"]:
+            base_series_checkboxes.append(f'''
                 <div class="checkbox-item">
-                    <input type="checkbox" id="method_{method['name']}" name="method" value="{method['name']}" checked>
-                    <label for="method_{method['name']}">{method['name']}</label>
+                    <input type="checkbox" id="base_series_{base_series}" name="base_series" value="{base_series}" checked>
+                    <label for="base_series_{base_series}">{base_series}</label>
                 </div>
             ''')
-        
-        # Создаем чекбоксы для m_values
+
+        # Создаем чекбоксы для базовых имен методов ускорения
+        base_accel_checkboxes = []
+        for base_accel in metadata["base_accel_names"]:
+            base_accel_checkboxes.append(f'''
+                <div class="checkbox-item">
+                    <input type="checkbox" id="base_accel_{base_accel}" name="base_accel" value="{base_accel}" checked>
+                    <label for="base_accel_{base_accel}">{base_accel}</label>
+                </div>
+            ''')
+
+        # Создаем чекбоксы для m_values (все включены по умолчанию)
         mvalue_checkboxes = []
         for m_value in metadata['m_values']:
             mvalue_checkboxes.append(f'''
@@ -126,10 +150,10 @@ class DataAPIHandler(SimpleHTTPRequestHandler):
                     <label for="mvalue_{m_value}">{m_value}</label>
                 </div>
             ''')
-        
+
         # Создаем фильтры для дополнительных параметров
         additional_filters = ""
-        for param_name, param_values in metadata['additional_params'].items():
+        for param_name, param_values in metadata["additional_params"].items():
             param_checkboxes = []
             for value in param_values:
                 param_checkboxes.append(f'''
@@ -138,19 +162,19 @@ class DataAPIHandler(SimpleHTTPRequestHandler):
                         <label for="param_{param_name}_{value}">{param_name}: {value}</label>
                     </div>
                 ''')
-            
-            additional_filters += f'''
+
+            additional_filters += f"""
                 <div class="filter-group">
                     <label>{param_name}:</label>
                     <div class="checkbox-group">
-                        {''.join(param_checkboxes)}
+                        {"".join(param_checkboxes)}
                     </div>
                 </div>
-            '''
-        
+            """
+
         # Создаем фильтры для параметров рядов
         series_param_filters = ""
-        for param_name, param_values in metadata['series_params'].items():
+        for param_name, param_values in metadata["series_params"].items():
             param_checkboxes = []
             for value in param_values:
                 param_checkboxes.append(f'''
@@ -159,17 +183,17 @@ class DataAPIHandler(SimpleHTTPRequestHandler):
                         <label for="series_param_{param_name}_{value}">{param_name}: {value}</label>
                     </div>
                 ''')
-            
-            series_param_filters += f'''
+
+            series_param_filters += f"""
                 <div class="filter-group">
                     <label>Series {param_name}:</label>
                     <div class="checkbox-group">
-                        {''.join(param_checkboxes)}
+                        {"".join(param_checkboxes)}
                     </div>
                 </div>
-            '''
-        
-        return f'''
+            """
+
+        return f"""
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -215,6 +239,33 @@ class DataAPIHandler(SimpleHTTPRequestHandler):
         }}
         .checkbox-item input {{
             margin-right: 8px;
+        }}
+        .button-group {{
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 8px;
+        }}
+        .filter-btn {{
+            background-color: #3d3d3d;
+            color: #ffffff;
+            padding: 10px 16px;
+            border: 1px solid #555;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }}
+        .filter-btn:hover {{
+            background-color: #4d4d4d;
+            border-color: #666;
+        }}
+        .filter-btn.active {{
+            background-color: #007acc;
+            border-color: #005a9e;
+            color: white;
+        }}
+        .filter-btn.active:hover {{
+            background-color: #005a9e;
         }}
         .plot-container {{
             background-color: #2d2d2d;
@@ -268,21 +319,28 @@ class DataAPIHandler(SimpleHTTPRequestHandler):
 <body>
     <div class="container">
         <h1>Интерактивный дашборт</h1>
-        
-        <div class="series-selector">
-            <h3>Выберите ряд(ы) для анализа:</h3>
-            <div id="series-buttons">
-                {''.join(series_buttons)}
-            </div>
-        </div>
-        
+
         <div class="filters">
             <h2>Фильтры</h2>
             
             <div class="filter-group">
-                <label>Методы ускорения:</label>
-                <div class="checkbox-group">
-                    {''.join(method_checkboxes)}
+                <label>Точность:</label>
+                <div class="button-group">
+                    {''.join(precision_buttons)}
+                </div>
+            </div>
+            
+            <div class="filter-group">
+                <label>Базовые ряды:</label>
+                <div class="button-group">
+                    {''.join(base_series_buttons)}
+                </div>
+            </div>
+            
+            <div class="filter-group">
+                <label>Базовые методы ускорения:</label>
+                <div class="button-group">
+                    {''.join(base_accel_buttons)}
                 </div>
             </div>
             
@@ -299,20 +357,20 @@ class DataAPIHandler(SimpleHTTPRequestHandler):
             
             <button class="update-btn" onclick="updatePlots()">Обновить графики</button>
         </div>
-        
+
         <div class="stats" id="stats">
             <h3>Статистика</h3>
             <p>Выберите ряды и нажмите "Обновить графики"</p>
         </div>
-        
+
         <div class="plot-container">
             <div id="convergence-plot"></div>
         </div>
-        
+
         <div class="plot-container">
             <div id="error-plot"></div>
         </div>
-        
+
         <div class="plot-container">
             <div id="performance-plot"></div>
         </div>
@@ -320,81 +378,76 @@ class DataAPIHandler(SimpleHTTPRequestHandler):
 
     <script>
         let currentData = [];
-        let selectedSeries = new Set();
         let metadata = {json.dumps(metadata)};
         
         document.addEventListener('DOMContentLoaded', function() {{
-            setupSeriesButtons();
+            setupFilterButtons();
         }});
         
-        function setupSeriesButtons() {{
-            const buttons = document.querySelectorAll('.series-btn');
-            buttons.forEach(btn => {{
+        function setupFilterButtons() {{
+            // Setup all filter buttons
+            const filterButtons = document.querySelectorAll('.filter-btn');
+            filterButtons.forEach(btn => {{
                 btn.addEventListener('click', function() {{
-                    const seriesName = this.getAttribute('data-series');
-                    if (selectedSeries.has(seriesName)) {{
-                        selectedSeries.delete(seriesName);
-                        this.classList.remove('active');
-                    }} else {{
-                        selectedSeries.add(seriesName);
-                        this.classList.add('active');
-                    }}
+                    this.classList.toggle('active');
                 }});
             }});
         }}
-        
+
         function getSelectedValues(name) {{
+            // For checkboxes (m_values and additional params)
             const checkboxes = document.querySelectorAll(`input[name="${{name}}"]:checked`);
-            return Array.from(checkboxes).map(cb => cb.value);
+            if (checkboxes.length > 0) {{
+                return Array.from(checkboxes).map(cb => cb.value);
+            }}
+            
+            // For filter buttons
+            const buttons = document.querySelectorAll(`.filter-btn[data-type="${{name}}"].active`);
+            return Array.from(buttons).map(btn => btn.getAttribute('data-value'));
         }}
-        
+
         function getAllSelectedParams() {{
             const params = new URLSearchParams();
-            
-            // Добавляем выбранные ряды
-            selectedSeries.forEach(series => params.append('series', series));
-            
-            // Добавляем методы
-            getSelectedValues('method').forEach(method => params.append('method', method));
-            
+
+            // Добавляем precision
+            getSelectedValues('precision').forEach(precision => params.append('precision', precision));
+
+            // Добавляем базовые ряды
+            getSelectedValues('base_series').forEach(baseSeries => params.append('base_series', baseSeries));
+
+            // Добавляем базовые методы ускорения
+            getSelectedValues('base_accel').forEach(baseAccel => params.append('base_accel', baseAccel));
+
             // Добавляем m_values
             getSelectedValues('mvalue').forEach(m => params.append('m_value', m));
-            
+
             // Добавляем дополнительные параметры
             Object.keys(metadata.additional_params).forEach(paramName => {{
                 getSelectedValues(`param_${{paramName}}`).forEach(value => {{
                     params.append(`accel_param_${{paramName}}`, value);
                 }});
             }});
-            
+
             // Добавляем параметры рядов
             Object.keys(metadata.series_params).forEach(paramName => {{
                 getSelectedValues(`series_param_${{paramName}}`).forEach(value => {{
                     params.append(`series_param_${{paramName}}`, value);
                 }});
             }});
-            
+
             return params;
         }}
-        
+
         async function updatePlots() {{
-            if (selectedSeries.size === 0) {{
-                document.getElementById('stats').innerHTML = `
-                    <h3>Статистика</h3>
-                    <p>Выберите хотя бы один ряд для анализа</p>
-                `;
-                return;
-            }}
-            
             const params = getAllSelectedParams();
-            
+
             try {{
                 const response = await fetch(`/api/data?${{params.toString()}}`);
                 currentData = await response.json();
-                
+
                 updateStats();
                 createPlots();
-                
+
             }} catch (error) {{
                 console.error('Error loading data:', error);
                 document.getElementById('stats').innerHTML = `
@@ -403,43 +456,53 @@ class DataAPIHandler(SimpleHTTPRequestHandler):
                 `;
             }}
         }}
-        
+
         function updateStats() {{
             const statsDiv = document.getElementById('stats');
             const totalItems = currentData.length;
             const uniqueSeries = [...new Set(currentData.map(item => item.series?.name))].length;
             const uniqueMethods = [...new Set(currentData.map(item => item.accel?.name))].length;
             
+            const selectedPrecisions = getSelectedValues('precision');
+            const selectedBaseSeries = getSelectedValues('base_series');
+            const selectedBaseAccel = getSelectedValues('base_accel');
+            
+            const precisionText = selectedPrecisions.length > 0 ? selectedPrecisions.join(', ') : 'не выбраны';
+            const baseSeriesText = selectedBaseSeries.length > 0 ? selectedBaseSeries.join(', ') : 'не выбраны';
+            const baseAccelText = selectedBaseAccel.length > 0 ? selectedBaseAccel.join(', ') : 'не выбраны';
+            
             statsDiv.innerHTML = `
                 <h3>Статистика</h3>
-                <p>Выбранные ряды: ${{Array.from(selectedSeries).join(', ')}}</p>
+                <p>Точности: ${{precisionText}}</p>
+                <p>Базовые ряды: ${{baseSeriesText}}</p>
+                <p>Базовые методы: ${{baseAccelText}}</p>
                 <p>Всего записей: ${{totalItems}}</p>
                 <p>Уникальных рядов: ${{uniqueSeries}}</p>
                 <p>Уникальных методов: ${{uniqueMethods}}</p>
             `;
         }}
-        
+
         function createPlots() {{
             if (currentData.length === 0) return;
-            
+
             createConvergencePlot();
             createErrorPlot();
             createPerformancePlot();
         }}
-        
+
         function createConvergencePlot() {{
             const traces = [];
-            
+
             currentData.forEach(item => {{
                 if (!item.computed || item.computed.length === 0) return;
-                
+
                 const computed = item.computed;
                 const variation = `${{item.series.name}} (m=${{item.accel.m_value}}) ${{item.accel.name}}`;
-                
+
                 // Handle complex numbers - check if values are objects with real/imag parts
-                const hasComplex = computed.some(c => 
+                const hasComplex = computed.some(c =>
                     typeof c.accel_value === 'object' && c.accel_value !== null);
-                
+
                 if (hasComplex) {{
                     // Complex number visualization - show real and imaginary parts
                     traces.push({{
@@ -449,11 +512,11 @@ class DataAPIHandler(SimpleHTTPRequestHandler):
                         name: variation + ' (действительная часть)',
                         line: {{ width: 2 }}
                     }});
-                    
+
                     // Check if there are non-zero imaginary parts
-                    const hasImaginary = computed.some(c => 
+                    const hasImaginary = computed.some(c =>
                         Math.abs(c.accel_value.imag || 0) > 1e-15);
-                    
+
                     if (hasImaginary) {{
                         traces.push({{
                             x: computed.map(c => c.n),
@@ -463,7 +526,7 @@ class DataAPIHandler(SimpleHTTPRequestHandler):
                             line: {{ width: 2, dash: 'dot' }}
                         }});
                     }}
-                    
+
                     // Partial sums for complex numbers
                     traces.push({{
                         x: computed.map(c => c.n),
@@ -473,7 +536,7 @@ class DataAPIHandler(SimpleHTTPRequestHandler):
                         line: {{ dash: 'dash', width: 1 }},
                         marker: {{ size: 4, symbol: 'x' }}
                     }});
-                    
+
                     if (hasImaginary) {{
                         traces.push({{
                             x: computed.map(c => c.n),
@@ -493,7 +556,7 @@ class DataAPIHandler(SimpleHTTPRequestHandler):
                         name: variation,
                         line: {{ width: 2 }}
                     }});
-                    
+
                     traces.push({{
                         x: computed.map(c => c.n),
                         y: computed.map(c => c.partial_sum),
@@ -504,7 +567,7 @@ class DataAPIHandler(SimpleHTTPRequestHandler):
                     }});
                 }}
             }});
-            
+
             const layout = {{
                 title: 'Сходимость методов',
                 xaxis: {{ title: 'Итерация n' }},
@@ -513,23 +576,23 @@ class DataAPIHandler(SimpleHTTPRequestHandler):
                 height: 700,
                 showlegend: true
             }};
-            
+
             Plotly.newPlot('convergence-plot', traces, layout);
         }}
-        
+
         function createErrorPlot() {{
             const traces = [];
-            
+
             currentData.forEach(item => {{
                 if (!item.computed || item.computed.length === 0) return;
-                
+
                 const computed = item.computed;
                 const variation = `${{item.series.name}} (m=${{item.accel.m_value}}) ${{item.accel.name}}`;
-                
+
                 // Handle complex numbers - check if deviation values are objects with real/imag parts
-                const hasComplex = computed.some(c => 
+                const hasComplex = computed.some(c =>
                     typeof c.accel_value_deviation === 'object' && c.accel_value_deviation !== null);
-                
+
                 if (hasComplex) {{
                     // Complex number error - use magnitude sqrt(real² + imag²)
                     const errors = computed.map(c => {{
@@ -541,7 +604,7 @@ class DataAPIHandler(SimpleHTTPRequestHandler):
                         }}
                         return Math.abs(dev || 0);
                     }});
-                    
+
                     traces.push({{
                         x: computed.map(c => c.n),
                         y: errors,
@@ -552,7 +615,7 @@ class DataAPIHandler(SimpleHTTPRequestHandler):
                 }} else {{
                     // Real number error (original logic)
                     const errors = computed.map(c => Math.abs(c.accel_value_deviation || 0));
-                    
+
                     traces.push({{
                         x: computed.map(c => c.n),
                         y: errors,
@@ -562,7 +625,7 @@ class DataAPIHandler(SimpleHTTPRequestHandler):
                     }});
                 }}
             }});
-            
+
             const layout = {{
                 title: 'Ошибка сходимости (логарифмическая шкала)',
                 xaxis: {{ title: 'Итерация n' }},
@@ -570,25 +633,25 @@ class DataAPIHandler(SimpleHTTPRequestHandler):
                 template: 'plotly_dark',
                 height: 700
             }};
-            
+
             Plotly.newPlot('error-plot', traces, layout);
         }}
-        
+
         function createPerformancePlot() {{
             const performanceData = {{}};
-            
+
             currentData.forEach(item => {{
                 if (!item.computed || item.computed.length === 0) return;
-                
+
                 const series = item.series.name;
                 const method = item.accel.name;
                 const mValue = item.accel.m_value;
                 const key = `${{series}} - ${{method}} (m=${{mValue}})`;
-                
+
                 if (!performanceData[key]) {{
                     performanceData[key] = [];
                 }}
-                
+
                 // Handle complex numbers in error calculation
                 const errors = item.computed.map(c => {{
                     const dev = c.accel_value_deviation;
@@ -599,10 +662,10 @@ class DataAPIHandler(SimpleHTTPRequestHandler):
                     }}
                     return Math.abs(dev || 0);
                 }});
-                
+
                 const minError = Math.min(...errors);
                 const iterationAtMinError = item.computed.find((c, index) => errors[index] === minError)?.n || 0;
-                
+
                 performanceData[key].push({{
                     stackId: item.stack_id,
                     minError: minError,
@@ -610,12 +673,12 @@ class DataAPIHandler(SimpleHTTPRequestHandler):
                     finalError: errors[errors.length - 1]
                 }});
             }});
-            
+
             const traces = [];
-            
+
             Object.keys(performanceData).forEach(key => {{
                 const data = performanceData[key];
-                
+
                 traces.push({{
                     x: data.map(d => d.iterationAtMinError),
                     y: data.map(d => d.minError),
@@ -624,7 +687,7 @@ class DataAPIHandler(SimpleHTTPRequestHandler):
                     marker: {{ size: 10 }}
                 }});
             }});
-            
+
             const layout = {{
                 title: 'Производительность методов',
                 xaxis: {{ title: 'Итерация достижения минимальной ошибки' }},
@@ -632,145 +695,209 @@ class DataAPIHandler(SimpleHTTPRequestHandler):
                 template: 'plotly_dark',
                 height: 700
             }};
-            
+
             Plotly.newPlot('performance-plot', traces, layout);
         }}
     </script>
 </body>
 </html>
-        '''
-    
+        """
+
+    def extract_precision(self, name: str) -> str:
+        """Extract precision suffix from name (e.g., 'ExpSeriesF64' -> 'F64')"""
+        # Known precision suffixes - sort by length (longer first) to avoid partial matches
+        precision_suffixes = ["CFLong", "CF64", "CF32", "CArb", "FLong", "F64", "F32", "Arb"]
+
+        for suffix in precision_suffixes:
+            if name.endswith(suffix):
+                return suffix
+        return ""  # No precision suffix found
+
+    def extract_base_name(self, name: str) -> str:
+        """Extract base name without precision suffix (e.g., 'ExpSeriesF64' -> 'ExpSeries')"""
+        precision = self.extract_precision(name)
+        if precision:
+            return name[: -len(precision)]
+        return name
+
     def extract_metadata(self):
         """Извлекает метаданные из данных для построения динамического интерфейса"""
         data = self.get_data()
-        
+
         series_names = set()
         accel_methods = set()
         m_values = set()
         additional_params = {}
         series_params = {}
-        
+        precisions = set()
+        base_series_names = set()
+        base_accel_names = set()
+
         for item in data or []:
             # Извлекаем имя ряда
-            if item.get('series', {}).get('name'):
-                series_names.add(item['series']['name'])
-                
+            if item.get("series", {}).get("name"):
+                series_name = item["series"]["name"]
+                series_names.add(series_name)
+
+                # Extract precision and base name
+                precision = self.extract_precision(series_name)
+                if precision:  # Only add if precision found
+                    precisions.add(precision)
+                base_series_name = self.extract_base_name(series_name)
+                base_series_names.add(base_series_name)
+
                 # Извлекаем параметры ряда
-                if item.get('series', {}).get('arguments'):
-                    for param_name, param_value in item['series']['arguments'].items():
+                if item.get("series", {}).get("arguments"):
+                    for param_name, param_value in item["series"]["arguments"].items():
                         if param_name not in series_params:
                             series_params[param_name] = set()
                         series_params[param_name].add(str(param_value))
-            
+
             # Извлекаем методы ускорения и их параметры
-            if item.get('accel', {}).get('name'):
-                accel_methods.add(item['accel']['name'])
-            
-            if item.get('accel', {}).get('m_value') is not None:
-                m_values.add(item['accel']['m_value'])
-            
+            if item.get("accel", {}).get("name"):
+                accel_name = item["accel"]["name"]
+                accel_methods.add(accel_name)
+
+                # Extract precision and base name for acceleration methods
+                precision = self.extract_precision(accel_name)
+                if precision:  # Only add if precision found
+                    precisions.add(precision)
+                base_accel_name = self.extract_base_name(accel_name)
+                base_accel_names.add(base_accel_name)
+
+            if item.get("accel", {}).get("m_value") is not None:
+                m_values.add(item["accel"]["m_value"])
+
             # Извлекаем дополнительные параметры ускорения
-            if item.get('accel', {}).get('additional_args'):
-                for param_name, param_value in item['accel']['additional_args'].items():
+            if item.get("accel", {}).get("additional_args"):
+                for param_name, param_value in item["accel"]["additional_args"].items():
                     if param_name not in additional_params:
                         additional_params[param_name] = set()
                     additional_params[param_name].add(str(param_value))
-        
+
         # Конвертируем sets в sorted lists
-        accel_method_list = [{'name': name} for name in sorted(list(accel_methods))]
-        
+        accel_method_list = [{"name": name} for name in sorted(list(accel_methods))]
+
         return {
-            'series_names': sorted(list(series_names)),
-            'accel_methods': accel_method_list,
-            'm_values': sorted(list(m_values)),
-            'additional_params': {
+            "series_names": sorted(list(series_names)),
+            "accel_methods": accel_method_list,
+            "m_values": sorted(list(m_values)),
+            "additional_params": {
                 k: sorted(list(v)) for k, v in additional_params.items()
             },
-            'series_params': {
-                k: sorted(list(v)) for k, v in series_params.items()
-            }
+            "series_params": {k: sorted(list(v)) for k, v in series_params.items()},
+            "precisions": sorted(list(precisions)),
+            "base_series_names": sorted(list(base_series_names)),
+            "base_accel_names": sorted(list(base_accel_names)),
         }
-    
+
     def handle_metadata_request(self):
         """Возвращает метаданные о доступных параметрах"""
         metadata = self.extract_metadata()
         self.send_json_response(metadata)
-    
+
     def handle_api_request(self):
         """Обрабатывает API запросы с улучшенной фильтрацией"""
         parsed_path = urllib.parse.urlparse(self.path)
         query_params = urllib.parse.parse_qs(parsed_path.query)
-        
+
         # Извлекаем параметры фильтрации
-        series_filter = query_params.get('series', [])
-        methods_filter = query_params.get('method', [])
-        m_values_filter = query_params.get('m_value', [])
-        
+        series_filter = query_params.get("series", [])
+        methods_filter = query_params.get("method", [])
+        m_values_filter = query_params.get("m_value", [])
+        precision_filter = query_params.get("precision", [])
+        base_series_filter = query_params.get("base_series", [])
+        base_accel_filter = query_params.get("base_accel", [])
+
         # Извлекаем дополнительные параметры ускорения
         accel_params = {}
         for key, values in query_params.items():
-            if key.startswith('accel_param_'):
-                param_name = key[len('accel_param_'):]
+            if key.startswith("accel_param_"):
+                param_name = key[len("accel_param_") :]
                 # Handle multiple values for the same parameter
                 all_values = []
                 for value_list in values:
                     if value_list:
-                        all_values.extend(value_list.split(','))
+                        all_values.extend(value_list.split(","))
                 accel_params[param_name] = [v.strip() for v in all_values if v.strip()]
-        
+
         # Извлекаем параметры рядов
         series_params = {}
         for key, values in query_params.items():
-            if key.startswith('series_param_'):
-                param_name = key[len('series_param_'):]
+            if key.startswith("series_param_"):
+                param_name = key[len("series_param_") :]
                 # Handle multiple values for the same parameter
                 all_values = []
                 for value_list in values:
                     if value_list:
-                        all_values.extend(value_list.split(','))
+                        all_values.extend(value_list.split(","))
                 series_params[param_name] = [v.strip() for v in all_values if v.strip()]
-        
+
         # Преобразуем фильтры
         if series_filter and len(series_filter) > 0:
             all_series = []
             for value_list in series_filter:
                 if value_list:
-                    all_series.extend(value_list.split(','))
+                    all_series.extend(value_list.split(","))
             series_filter = [s.strip() for s in all_series if s.strip()]
         if methods_filter and len(methods_filter) > 0:
             all_methods = []
             for value_list in methods_filter:
                 if value_list:
-                    all_methods.extend(value_list.split(','))
+                    all_methods.extend(value_list.split(","))
             methods_filter = [m.strip() for m in all_methods if m.strip()]
         if m_values_filter and len(m_values_filter) > 0:
             all_m_values = []
             for value_list in m_values_filter:
                 if value_list:
-                    all_m_values.extend(value_list.split(','))
+                    all_m_values.extend(value_list.split(","))
             m_values_filter = [int(x.strip()) for x in all_m_values if x.strip()]
-        
+        if precision_filter and len(precision_filter) > 0:
+            all_precisions = []
+            for value_list in precision_filter:
+                if value_list:
+                    all_precisions.extend(value_list.split(","))
+            precision_filter = [p.strip() for p in all_precisions if p.strip()]
+        if base_series_filter and len(base_series_filter) > 0:
+            all_base_series = []
+            for value_list in base_series_filter:
+                if value_list:
+                    all_base_series.extend(value_list.split(","))
+            base_series_filter = [s.strip() for s in all_base_series if s.strip()]
+        if base_accel_filter and len(base_accel_filter) > 0:
+            all_base_accel = []
+            for value_list in base_accel_filter:
+                if value_list:
+                    all_base_accel.extend(value_list.split(","))
+            base_accel_filter = [a.strip() for a in all_base_accel if a.strip()]
+
         data = self.get_data()
         if data is None:
             self.send_response(500)
-            self.send_header('Content-type', 'application/json')
+            self.send_header("Content-type", "application/json")
             self.end_headers()
             response = json.dumps({"error": "Data not available"})
-            self.wfile.write(response.encode('utf-8'))
+            self.wfile.write(response.encode("utf-8"))
             return
-        
+
         # Группируем данные по (series, accel) для выбора лучшего stack_id
         grouped_data = {}
-        
+
         for item in data:
-            if not item.get('computed') or len(item['computed']) == 0:
+            if not item.get("computed") or len(item["computed"]) == 0:
                 continue
-            
+
             # Создаем ключ группировки на основе параметров
-            series_key = item.get('series', {}).get('name', '')
-            accel_key = item.get('accel', {}).get('name', '')
-            m_value = item.get('accel', {}).get('m_value')
-            
+            series_key = item.get("series", {}).get("name", "")
+            accel_key = item.get("accel", {}).get("name", "")
+            m_value = item.get("accel", {}).get("m_value")
+
+            # Extract precision and base names for filtering
+            series_precision = self.extract_precision(series_key)
+            accel_precision = self.extract_precision(accel_key)
+            base_series_name = self.extract_base_name(series_key)
+            base_accel_name = self.extract_base_name(accel_key)
+
             # Проверяем фильтры
             if series_filter and series_key not in series_filter:
                 continue
@@ -778,12 +905,33 @@ class DataAPIHandler(SimpleHTTPRequestHandler):
                 continue
             if m_values_filter and m_value not in m_values_filter:
                 continue
-            
+
+            # Check precision filter - different logic for series and accel
+            if precision_filter:
+                # For acceleration methods: must have precision and match selected precisions
+                if not accel_precision or accel_precision not in precision_filter:
+                    continue
+                
+                # For series: if no precision, matches all selected precisions
+                # If has precision, must match selected precisions
+                if series_precision and series_precision not in precision_filter:
+                    continue
+
+            # Check base series filter
+            if base_series_filter and base_series_name not in base_series_filter:
+                continue
+
+            # Check base accel filter
+            if base_accel_filter and base_accel_name not in base_accel_filter:
+                continue
+
             # Проверяем дополнительные параметры ускорения
             accel_match = True
-            item_additional_args = item.get('accel', {}).get('additional_args', {})
+            item_additional_args = item.get("accel", {}).get("additional_args", {})
             for param_name, expected_values in accel_params.items():
-                if expected_values:  # Only check if user specified values for this parameter
+                if (
+                    expected_values
+                ):  # Only check if user specified values for this parameter
                     if param_name in item_additional_args:
                         # Item has this parameter, check if value matches
                         actual_value = str(item_additional_args[param_name])
@@ -791,15 +939,17 @@ class DataAPIHandler(SimpleHTTPRequestHandler):
                             accel_match = False
                             break
                     # If item doesn't have this parameter, it passes the filter (user can filter by parameters they care about)
-            
+
             if not accel_match:
                 continue
-            
+
             # Проверяем параметры рядов
             series_match = True
-            item_series_args = item.get('series', {}).get('arguments', {})
+            item_series_args = item.get("series", {}).get("arguments", {})
             for param_name, expected_values in series_params.items():
-                if expected_values:  # Only check if user specified values for this parameter
+                if (
+                    expected_values
+                ):  # Only check if user specified values for this parameter
                     if param_name in item_series_args:
                         # Item has this parameter, check if value matches
                         actual_value = str(item_series_args[param_name])
@@ -807,129 +957,146 @@ class DataAPIHandler(SimpleHTTPRequestHandler):
                             series_match = False
                             break
                     # If item doesn't have this parameter, it passes the filter
-            
+
             if not series_match:
                 continue
-            
+
             # Создаем ключ группировки (convert dicts to strings to make them hashable)
-            additional_args_str = json.dumps(item.get('accel', {}).get('additional_args', {}), sort_keys=True)
-            series_args_str = json.dumps(item.get('series', {}).get('arguments', {}), sort_keys=True)
-            group_key = (series_key, accel_key, m_value, additional_args_str, series_args_str)
-            
+            additional_args_str = json.dumps(
+                item.get("accel", {}).get("additional_args", {}), sort_keys=True
+            )
+            series_args_str = json.dumps(
+                item.get("series", {}).get("arguments", {}), sort_keys=True
+            )
+            group_key = (
+                series_key,
+                accel_key,
+                m_value,
+                additional_args_str,
+                series_args_str,
+            )
+
             if group_key not in grouped_data:
                 grouped_data[group_key] = []
-            
+
             grouped_data[group_key].append(item)
-        
+
         # Выбираем по одному представителю из каждой группы (лучший по минимальной ошибке)
         filtered = []
         for group_items in grouped_data.values():
             # Находим элемент с минимальной финальной ошибкой
             best_item = min(group_items, key=lambda x: self.get_final_error(x))
             filtered.append(best_item)
-        
+
         self.send_json_response(filtered)
-    
+
     def get_final_error(self, item):
         """Получает финальную ошибку для элемента"""
-        if not item.get('computed') or len(item['computed']) == 0:
-            return float('inf')
-        
-        last_computed = item['computed'][-1]
-        deviation_value = last_computed.get('accel_value_deviation', float('inf'))
+        if not item.get("computed") or len(item["computed"]) == 0:
+            return float("inf")
+
+        last_computed = item["computed"][-1]
+        deviation_value = last_computed.get("accel_value_deviation", float("inf"))
         return abs(parse_complex_number(deviation_value))
-    
+
     def send_json_response(self, data):
         """Отправляет JSON ответ"""
         response = json.dumps(data)
         self.send_response(200)
-        self.send_header('Content-type', 'application/json')
-        self.send_header('Content-length', str(len(response)))
-        self.send_header('Access-Control-Allow-Origin', '*')
+        self.send_header("Content-type", "application/json")
+        self.send_header("Content-length", str(len(response)))
+        self.send_header("Access-Control-Allow-Origin", "*")
         self.end_headers()
-        self.wfile.write(response.encode('utf-8'))
+        self.wfile.write(response.encode("utf-8"))
 
 
 def parse_complex_for_visualization(value: Union[str, float, int]) -> Dict[str, float]:
     """Parse complex numbers for visualization.
-    
+
     Returns:
     - For real numbers: {'real': value, 'imag': 0.0}
     - For complex numbers: {'real': real_part, 'imag': imag_part}
     """
     if isinstance(value, (int, float)):
-        return {'real': float(value), 'imag': 0.0}
-    
+        return {"real": float(value), "imag": 0.0}
+
     if not isinstance(value, str):
-        return {'real': float('inf'), 'imag': 0.0}
-    
+        return {"real": float("inf"), "imag": 0.0}
+
     value = value.strip()
-    
+
     # Handle complex numbers in format "real + imag * i" or "real - imag * i"
-    if (' + ' in value and ' * i' in value) or (' - ' in value and ' * i' in value):
+    if (" + " in value and " * i" in value) or (" - " in value and " * i" in value):
         # Extract real and imaginary parts
-        if ' + ' in value:
-            parts = value.split(' + ')
+        if " + " in value:
+            parts = value.split(" + ")
         else:
-            parts = value.split(' - ')
-        
+            parts = value.split(" - ")
+
         real_part = parse_scientific_notation(parts[0].strip())
-        imag_part_str = parts[1].replace(' * i', '').strip()
+        imag_part_str = parts[1].replace(" * i", "").strip()
         imag_part = parse_scientific_notation(imag_part_str)
-        
-        return {'real': real_part, 'imag': imag_part}
-    
+
+        return {"real": real_part, "imag": imag_part}
+
     # Handle real numbers (scientific notation or regular)
     real_val = parse_scientific_notation(value)
-    return {'real': real_val, 'imag': 0.0}
+    return {"real": real_val, "imag": 0.0}
 
 
 def preprocess_data(data: List[Dict]) -> List[Dict]:
     """Preprocess data to convert string numbers to proper numbers for visualization."""
     for item in data:
         # Process computed values
-        if 'computed' in item:
-            for computed in item['computed']:
+        if "computed" in item:
+            for computed in item["computed"]:
                 for key, value in computed.items():
-                    if key in ['accel_value', 'partial_sum', 'accel_value_deviation', 
-                               'partial_sum_deviation', 'series_value']:
+                    if key in [
+                        "accel_value",
+                        "partial_sum",
+                        "accel_value_deviation",
+                        "partial_sum_deviation",
+                        "series_value",
+                    ]:
                         computed[key] = parse_complex_for_visualization(value)
-        
+
         # Process series limit if it's a string
-        if 'series' in item and 'lim' in item['series']:
-            item['series']['lim'] = parse_complex_for_visualization(item['series']['lim'])
-        
+        if "series" in item and "lim" in item["series"]:
+            item["series"]["lim"] = parse_complex_for_visualization(
+                item["series"]["lim"]
+            )
+
         # NOTE: Don't process series arguments - keep original values for filtering
         # Series arguments are used for filtering and should remain in original format
-    
+
     return data
 
 
 def start_server(data_file: Path, port: int = 8000):
     """Запускает HTTP сервер с предзагруженными данными"""
-    
+
     # Загружаем данные один раз при старте сервера
-    with open(data_file, 'r', encoding='utf-8') as f:
+    with open(data_file, "r", encoding="utf-8") as f:
         data = json.load(f)
-    
+
     # Preprocess data to handle complex numbers and scientific notation
     data = preprocess_data(data)
-    
+
     print(f"Loaded {len(data)} records from {data_file}")
-    
+
     # Создаем обработчик с предзагруженными данными
     def handler(*args, **kwargs):
         return DataAPIHandler(*args, data=data, **kwargs)
-    
+
     # Запускаем сервер
-    server_address = ('', port)
+    server_address = ("", port)
     httpd = HTTPServer(server_address, handler)
-    
+
     print(f"\n🚀 Server started!")
     print(f"📊 Dashboard: http://localhost:{port}")
     print(f"📄 Data file: {data_file}")
     print(f"\nPress Ctrl+C to stop the server\n")
-    
+
     try:
         httpd.serve_forever()
     except KeyboardInterrupt:
@@ -937,15 +1104,17 @@ def start_server(data_file: Path, port: int = 8000):
         httpd.server_close()
 
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Start dashboard server')
-    parser.add_argument('--data-file', required=True, type=Path, help='JSON data file')
-    parser.add_argument('--port', type=int, default=8000, help='Server port (default: 8000)')
-    
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Start dashboard server")
+    parser.add_argument("--data-file", required=True, type=Path, help="JSON data file")
+    parser.add_argument(
+        "--port", type=int, default=8000, help="Server port (default: 8000)"
+    )
+
     args = parser.parse_args()
-    
+
     if not args.data_file.exists():
         print(f"Error: Data file {args.data_file} not found")
         exit(1)
-    
+
     start_server(args.data_file, args.port)
