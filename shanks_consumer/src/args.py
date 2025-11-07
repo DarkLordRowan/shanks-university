@@ -139,11 +139,7 @@ def _add_viz_arguments(
         action="store_true",
         help="Create dashboard for all series at once (ignores --series-name)",
     )
-    viz_group.add_argument(
-        "--server",
-        action="store_true",
-        help="Start HTTP server with API for dashboard",
-    )
+
     viz_group.add_argument(
         "--port",
         type=int,

@@ -610,13 +610,6 @@ class DataAPIHandler(SimpleHTTPRequestHandler):
             self.wfile.write(response.encode('utf-8'))
             return
         
-        # Debug logging
-        print(f"DEBUG: series_filter={series_filter}")
-        print(f"DEBUG: methods_filter={methods_filter}")
-        print(f"DEBUG: m_values_filter={m_values_filter}")
-        print(f"DEBUG: accel_params={accel_params}")
-        print(f"DEBUG: series_params={series_params}")
-        
         # Группируем данные по (series, accel) для выбора лучшего stack_id
         grouped_data = {}
         
@@ -646,7 +639,6 @@ class DataAPIHandler(SimpleHTTPRequestHandler):
                         # Item has this parameter, check if value matches
                         actual_value = str(item_additional_args[param_name])
                         if actual_value not in expected_values:
-                            print(f"DEBUG: accel param mismatch - {param_name}: actual={actual_value}, expected one of={expected_values}")
                             accel_match = False
                             break
                     # If item doesn't have this parameter, it passes the filter (user can filter by parameters they care about)
@@ -663,7 +655,6 @@ class DataAPIHandler(SimpleHTTPRequestHandler):
                         # Item has this parameter, check if value matches
                         actual_value = str(item_series_args[param_name])
                         if actual_value not in expected_values:
-                            print(f"DEBUG: series param mismatch - {param_name}: actual={actual_value}, expected one of={expected_values}")
                             series_match = False
                             break
                     # If item doesn't have this parameter, it passes the filter

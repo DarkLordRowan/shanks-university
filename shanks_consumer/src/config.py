@@ -144,7 +144,6 @@ class VizConfigOverrides(TypedDict, total=False):
     from_file: pathlib.Path | None
     interactive_dashboard: bool
     all_series: bool
-    server: bool
     port: int
     verbose: int
 
@@ -158,7 +157,6 @@ class VizConfig(BaseConfig, MongoConfig):
     from_file: pathlib.Path | None = None
     interactive_dashboard: bool = False
     all_series: bool = False
-    server: bool = False
     port: int = 8000
 
     output_dir: pathlib.Path = field(default=pathlib.Path("output"))
@@ -310,7 +308,6 @@ class VizConfigLoader(BaseConfigLoader[VizConfig]):
             from_file=getattr(args, 'from_file', None),
             interactive_dashboard=getattr(args, 'interactive_dashboard', False),
             all_series=getattr(args, 'all_series', False),
-            server=getattr(args, 'server', False),
             port=getattr(args, 'port', 8000),
             verbose=args.verbose,
         )
