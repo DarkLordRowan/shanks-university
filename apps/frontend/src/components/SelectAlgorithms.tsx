@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useId, useMemo, useState } from "react";
+import { useCallback, useId, useMemo, useState } from "react";
 import type { AlgorithmNode } from "../data/algorithms";
 
 type Props = {
@@ -14,7 +14,6 @@ export function SelectAlgorithms({ value, onChange, disabled, options }: Props) 
     const id = useId();
 
     const [collapsed, setCollapsed] = useState<boolean>(value.length > 0);
-    useEffect(() => { setCollapsed(value.length > 0); }, [value.length]);
 
     const [q, setQ] = useState("");
     const selectedIds = useMemo(() => new Set(value.map(v => v.id)), [value]);

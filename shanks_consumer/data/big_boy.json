@@ -623,30 +623,6 @@
 
   "methods": [
     {
-      "name": "ShanksAlgorithm",
-      "n": {"start": 1, "stop": 51, "step": 1},
-      "m": [2, 4, 10],
-      "args": {}
-    },
-    {
-      "name": "ShanksTransformAlternatingAlgorithm",
-      "n": {"start": 1, "stop": 51, "step": 1},
-      "m": [2, 4, 10],
-      "args": {}
-    },
-    {
-      "name": "BrezinskiThetaAlgorithm",
-      "n": {"start": 1, "stop": 51, "step": 1},
-      "m": [2, 4, 10],
-      "args": {}
-    },
-    {
-      "name": "ChangWynnAlgorithm",
-      "n": {"start": 1, "stop": 51, "step": 1},
-      "m": [2, 4, 10],
-      "args": {}
-    },
-    {
       "name": "DrummondDAlgorithm",
       "n": {"start": 1, "stop": 51, "step": 1},
       "m": [2, 4, 10],
@@ -654,18 +630,6 @@
         "remainder": ["v_variant", "u_variant", "t_wave_variant"],
         "useRecFormulas": [true, false]
       }
-    },
-    {
-      "name": "FordSidi2Algorithm",
-      "n": {"start": 1, "stop": 51, "step": 1},
-      "m": [2, 4, 10],
-      "args": {}
-    },
-    {
-      "name": "FordSidi3Algorithm",
-      "n": {"start": 1, "stop": 51, "step": 1},
-      "m": [2, 4, 10],
-      "args": {}
     },
     {
       "name": "LevinAlgorithm",
@@ -683,6 +647,7 @@
       "m": [2, 4, 10],
       "args": {
         "remainder": ["v_variant", "u_variant", "t_wave_variant"],
+        "useRecFormulas": [true, false],
         "gamma": [0.5, 1, 1.5, 2]
       }
     },
@@ -697,12 +662,6 @@
       }
     },
     {
-      "name": "LubkinWAlgorithm",
-      "n": {"start": 1, "stop": 51, "step": 1},
-      "m": [2, 4, 10],
-      "args": {}
-    },
-    {
       "name": "WhynnRhoAlgorithm",
       "n": {"start": 1, "stop": 51, "step": 1},
       "m": [2, 4, 10],
@@ -711,30 +670,6 @@
         "gamma": [0.5, 1, 1.5, 2],
         "RHO": [0.5, 1, 1.5, 2]
       }
-    },
-    {
-      "name": "RichardsonAlgorithm",
-      "n": {"start": 1, "stop": 51, "step": 1},
-      "m": [2, 4, 10],
-      "args": {}
-    },
-    {
-      "name": "WenigerAlgorithm",
-      "n": {"start": 1, "stop": 51, "step": 1},
-      "m": [2, 4, 10],
-      "args": {}
-    },
-    {
-      "name": "WynnEpsilonAlgorithm",
-      "n": {"start": 1, "stop": 51, "step": 1},
-      "m": [2, 4, 10],
-      "args": {}
-    },
-    {
-      "name": "WynnEpsilon2Algorithm",
-      "n": {"start": 1, "stop": 51, "step": 1},
-      "m": [2, 4, 10],
-      "args": {}
     },
     {
       "name": "WynnEpsilon3Algorithm",

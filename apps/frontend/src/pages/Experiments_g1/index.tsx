@@ -77,18 +77,30 @@ const Experiments_v3: React.FC = () => {
             <div>
                 {responseJson && (
                     <div className="mt-4 w-full space-y-10">
+                        {/* 0. Число шагов до точности ε */}
                         <StepsToToleranceBar
                             items={normalizeFromJson(responseJson)}
                             eps={1e-4}
                         />
 
+                        {/* 1. Частичные суммы Sₙ */}
+                        <PartialSumByN_VarySeries items={normalizeFromJson(responseJson)} />
 
-                        <PartialSumByN_VarySeries           items={normalizeFromJson(responseJson)} />
+                        {/* 2. Ошибка частичных сумм |Sₙ − L| */}
                         <DeltaToLimitPartialSumByN_VarySeries items={normalizeFromJson(responseJson)} />
-                        <LogPsDevByN_VarySeries             items={normalizeFromJson(responseJson)} />
-                        <AccelValueByN_VarySeries           items={normalizeFromJson(responseJson)} />
-                        <LogAccelDevByN_VarySeries          items={normalizeFromJson(responseJson)} />
-                        <SeriesTermByN_VarySeries           items={normalizeFromJson(responseJson)} />
+
+                        {/* 3. log10(|Sₙ − L|) */}
+                        <LogPsDevByN_VarySeries items={normalizeFromJson(responseJson)} />
+
+                        {/* 4. Ускоренные значения Aₙ */}
+                        <AccelValueByN_VarySeries items={normalizeFromJson(responseJson)} />
+
+                        {/* 5. log10(|Aₙ − L|) */}
+                        <LogAccelDevByN_VarySeries items={normalizeFromJson(responseJson)} />
+
+                        {/* 6. Значения членов ряда aₙ */}
+                        <SeriesTermByN_VarySeries items={normalizeFromJson(responseJson)} />
+
 
                     </div>
                 )}

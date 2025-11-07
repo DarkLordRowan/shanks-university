@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 
 type Props = {
     value: number[] ;                    // выбранные m
@@ -6,11 +6,10 @@ type Props = {
     disabled?: boolean;
 };
 
-function isValidM(n: number) { return Number.isInteger(n) && n >= 0 && n <= 100 && n % 2 === 0; }
+function isValidM(n: number) { return Number.isInteger(n) && n >= 2 && n <= 100 && n % 2 === 0; }
 
 export function SelectMs({ value, onChange, disabled }: Props) {
     const [collapsed, setCollapsed] = useState<boolean>(value.length > 0);
-    useEffect(() => { setCollapsed(value.length > 0); }, [value.length]);
 
     const all = useMemo(() => Array.from({length: 51}, (_, k) => 2*k), []);
     const set = useMemo(() => new Set(value), [value]);
