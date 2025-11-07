@@ -18,7 +18,7 @@ import { LogPsDevByN_VaryM } from "../../charts/vary_m/LogPsDevByN_VaryM.tsx";
 import { AccelValueByN_VaryM } from "../../charts/vary_m/AccelValueByN_VaryM.tsx";
 import { LogAccelDevByN_VaryM } from "../../charts/vary_m/LogAccelDevByN_VaryM.tsx";
 import { SeriesTermByN_VaryM } from "../../charts/vary_m/SeriesTermByN_VaryM.tsx";
-import { StepsToToleranceBar } from "../../charts/StepsToToleranceBar.tsx";
+import { StepsToToleranceExplorer } from "../../charts/StepsToToleranceExplorer.tsx";
 
 const Experiments_v3: React.FC = () => {
 
@@ -79,10 +79,8 @@ const Experiments_v3: React.FC = () => {
             <div>
                 {responseJson && (
                     <div className="mt-4 w-full space-y-10">
-                        <StepsToToleranceBar
-                            items={normalizeFromJson(responseJson)}
-                            eps={1e-4}
-                        />
+                        {/* 0. Число шагов до точности ε */}
+                        <StepsToToleranceExplorer items={normalizeFromJson(responseJson)} defaultEps={1e-4} />
 
                         <PartialSumByN_VaryM items={normalizeFromJson(responseJson)} />
                         <DeltaToLimitPartialSumByN_VaryM items={normalizeFromJson(responseJson)} />

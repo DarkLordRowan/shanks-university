@@ -3,7 +3,7 @@ import { SERIES, type SeriesNode } from "../../data/series";
 import { SelectSeries } from "../../components/SelectSeries.tsx";
 import { API_BASE } from "../Experiments/constants.ts";
 import { SubmitAndTrackJob } from "../../components/SubmitAndTrackJob.tsx";
-import type { ApiJsonResult } from "../Experiments/types.ts";
+import type { ApiJsonResult, ErrorFilterMode } from "../Experiments/types.ts";
 import { CopyToClipboard } from "../../components/CopyToClipboard.tsx";
 import { Check } from "lucide-react";
 import { normalizeFromJson } from "../../utils/responseToItem.ts";
@@ -16,7 +16,6 @@ import { LogAccelDevChartByN } from "../../charts/LogAccelDevChartByN.tsx";
 import { EOCPartialSumChartByN } from "../../charts/EOCPartialSumChartByN.tsx";
 import { SeriesTermChartByN } from "../../charts/SeriesTermChartByN.tsx";
 import { EOCAccelChartByN } from "../../charts/EOCAccelChartByN.tsx";
-import { StepsToToleranceBar } from "../../charts/StepsToToleranceBar.tsx";
 import { SelectX } from "../../components/SelectX.tsx";
 import { type AlgorithmNode, ALGORITHMS } from "../../data/algorithms.ts";
 import { GenerateExpFromDataButton } from "../../components/GenerateExpFromDataButton.tsx";
@@ -24,6 +23,9 @@ import { SelectAlgorithms } from "../../components/SelectAlgorithms.tsx";
 import { SelectMs } from "../../components/SelectMs.tsx";
 import { useItemsSelection } from "../../analysis/useItemsSelection.ts";
 import { ItemsSelectionMatrix } from "../../analysis/ItemsSelectionMatrix.tsx";
+import { StepsToToleranceExplorer } from "../../charts/StepsToToleranceExplorer.tsx";
+import { buildJsonTable, filterByError } from "../Experiments/utils/tables.ts";
+import { DataTable } from "../../components/ui/DataTable.tsx";
 
 const Experiments_v3: React.FC = () => {
 
@@ -44,6 +46,9 @@ const Experiments_v3: React.FC = () => {
 
     const sel = useItemsSelection(items);
     const filtered = sel.filteredItems;
+
+    const jsonTable = useMemo(() => buildJsonTable(responseJson), [responseJson]);
+    const [errorFilterMode, setErrorFilterMode] = useState<ErrorFilterMode>("onlyBad");
 
     return (
         <div className="mx-auto max-w-6xl px-4 py-6">
@@ -93,6 +98,37 @@ const Experiments_v3: React.FC = () => {
             <div>
                 {responseJson && (
                     <div className="mt-4 w-full space-y-6">
+
+                        {jsonTable.headers.length && (
+                            <>
+                                <div className="mb-2 flex items-center gap-2 text-sm">
+                                    <span className="text-textDim">Ошибки:</span>
+                                    <select
+                                        className="rounded-md border border-border bg-background/60 px-2 py-1 text-sm"
+                                        value={errorFilterMode}
+                                        onChange={(e) => setErrorFilterMode(e.target.value as ErrorFilterMode)}
+                                    >
+                                        <option value="all">показывать все</option>
+                                        <option value="onlyGood">только без ошибок</option>
+                                        <option value="onlyBad">только с ошибками</option>
+                                    </select>
+                                </div>
+
+                                {(() => {
+                                    const t = filterByError(jsonTable, errorFilterMode);
+                                    return (
+                                        <DataTable
+                                            headers={t.headers}
+                                            rows={t.rows}
+                                            enableSorting
+                                            enableColumnFilters
+                                            storageKey="exp_json_table"
+                                        />
+                                    );
+                                })()}
+                            </>
+                        )}
+
                         <ItemsSelectionMatrix
                             rows={sel.rows}
                             argCols={sel.argCols}
@@ -103,8 +139,7 @@ const Experiments_v3: React.FC = () => {
 
                         <div className="space-y-10">
                             {/* 0. Число шагов до точности ε */}
-                            <StepsToToleranceBar
-                                items={filtered} eps={1e-4}/>
+                            <StepsToToleranceExplorer items={filtered} defaultEps={1e-4} />
 
                             {/* 1. Частичные суммы S_n */}
                             <PartialSumChartByN items={filtered} />

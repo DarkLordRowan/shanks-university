@@ -18,7 +18,7 @@ type Props = {
 export const GenerateExpFromDataButton: React.FC<Props> = (
     {
         mode,
-        nConfig = { start: 1, stop: 51, step: 1 },
+        nConfig = { start: 1, stop: 101, step: 1 },
         series = null,
         x = null,
         m = [10],

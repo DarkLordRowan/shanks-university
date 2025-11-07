@@ -10,7 +10,6 @@ import { GenerateExpFromDataButton } from "../../components/GenerateExpFromDataB
 import { SelectM } from "../../components/SelectM.tsx";
 import { SelectAlgorithm } from "../../components/SelectAlgorithm.tsx";
 import { SelectSerieses } from "../../components/SelectSerieses.tsx";
-import { StepsToToleranceBar } from "../../charts/StepsToToleranceBar.tsx";
 import { normalizeFromJson } from "../../utils/responseToItem.ts";
 import { PartialSumByN_VarySeries } from "../../charts/vary_series/PartialSumByN_VarySeries.tsx";
 import { LogPsDevByN_VarySeries } from "../../charts/vary_series/LogPsDevByN_VarySeries.tsx";
@@ -20,6 +19,7 @@ import {
     DeltaToLimitPartialSumByN_VarySeries
 } from "../../charts/vary_series/DeltaToLimitPartialSumByN_VarySeries.tsx";
 import { AccelValueByN_VarySeries } from "../../charts/vary_series/AccelValueByN_VarySeries.tsx";
+import { StepsToToleranceExplorer } from "../../charts/StepsToToleranceExplorer.tsx";
 
 const Experiments_v3: React.FC = () => {
 
@@ -78,10 +78,7 @@ const Experiments_v3: React.FC = () => {
                 {responseJson && (
                     <div className="mt-4 w-full space-y-10">
                         {/* 0. Число шагов до точности ε */}
-                        <StepsToToleranceBar
-                            items={normalizeFromJson(responseJson)}
-                            eps={1e-4}
-                        />
+                        <StepsToToleranceExplorer items={normalizeFromJson(responseJson)} defaultEps={1e-4} />
 
                         {/* 1. Частичные суммы Sₙ */}
                         <PartialSumByN_VarySeries items={normalizeFromJson(responseJson)} />
