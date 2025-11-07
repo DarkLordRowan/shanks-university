@@ -1,9 +1,71 @@
 import json
 import urllib.parse
+import re
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 from pathlib import Path
-from typing import Dict, List, Set, Any
+from typing import Dict, List, Set, Any, Union
 import argparse
+
+
+def parse_complex_number(value: Union[str, float, int]) -> float:
+    """Parse complex numbers and scientific notation strings to float.
+    
+    For visualization purposes, we extract the real part of complex numbers.
+    
+    Examples:
+    - "1.64872127070018063164E0 + 0E0 * i" -> 1.64872127070018063164
+    - "5E-1 + 0E0 * i" -> 5E-1 -> 0.5
+    - "1.2351 + 1246234.65 * i" -> 1.2351
+    - "5.248481770719903848E-14" -> 5.248481770719903848e-14
+    - "1.5135321E5 + 236321E-4 * i" -> 1.5135321E5 -> 151353.21
+    - 1.5 -> 1.5
+    """
+    if isinstance(value, (int, float)):
+        return float(value)
+    
+    if not isinstance(value, str):
+        return float('inf')
+    
+    value = value.strip()
+    
+    # Handle complex numbers in format "real + imag * i"
+    if ' + ' in value and ' * i' in value:
+        # Extract real part from complex number
+        real_part = value.split(' + ')[0].strip()
+        return parse_scientific_notation(real_part)
+    
+    # Handle complex numbers in format "real - imag * i" (negative imaginary)
+    if ' - ' in value and ' * i' in value:
+        # Extract real part from complex number
+        real_part = value.split(' - ')[0].strip()
+        return parse_scientific_notation(real_part)
+    
+    # Handle scientific notation like "5.248481770719903848E-14"
+    return parse_scientific_notation(value)
+
+
+def parse_scientific_notation(value: str) -> float:
+    """Parse scientific notation strings to float."""
+    try:
+        return float(value)
+    except ValueError:
+        # Handle cases like "1.64872127070018063164E0"
+        if 'E' in value:
+            # Python can handle this format directly
+            try:
+                return float(value.replace('E', 'e'))
+            except ValueError:
+                pass
+        
+        # Try to extract number using regex
+        match = re.search(r'[-+]?\d*\.?\d+(?:[eE][-+]?\d+)?', value)
+        if match:
+            try:
+                return float(match.group())
+            except ValueError:
+                pass
+        
+        return float('inf')
 
 
 class DataAPIHandler(SimpleHTTPRequestHandler):
@@ -374,22 +436,73 @@ class DataAPIHandler(SimpleHTTPRequestHandler):
                 const computed = item.computed;
                 const variation = `${{item.series.name}} (m=${{item.accel.m_value}}) ${{item.accel.name}}`;
                 
-                traces.push({{
-                    x: computed.map(c => c.n),
-                    y: computed.map(c => c.accel_value),
-                    mode: 'lines+markers',
-                    name: variation,
-                    line: {{ width: 2 }}
-                }});
+                // Handle complex numbers - check if values are objects with real/imag parts
+                const hasComplex = computed.some(c => 
+                    typeof c.accel_value === 'object' && c.accel_value !== null);
                 
-                traces.push({{
-                    x: computed.map(c => c.n),
-                    y: computed.map(c => c.partial_sum),
-                    mode: 'lines+markers',
-                    name: variation + ' (частичные суммы)',
-                    line: {{ dash: 'dash', width: 1 }},
-                    marker: {{ size: 4, symbol: 'x' }}
-                }});
+                if (hasComplex) {{
+                    // Complex number visualization - show real and imaginary parts
+                    traces.push({{
+                        x: computed.map(c => c.n),
+                        y: computed.map(c => c.accel_value.real),
+                        mode: 'lines+markers',
+                        name: variation + ' (действительная часть)',
+                        line: {{ width: 2 }}
+                    }});
+                    
+                    // Check if there are non-zero imaginary parts
+                    const hasImaginary = computed.some(c => 
+                        Math.abs(c.accel_value.imag || 0) > 1e-15);
+                    
+                    if (hasImaginary) {{
+                        traces.push({{
+                            x: computed.map(c => c.n),
+                            y: computed.map(c => c.accel_value.imag || 0),
+                            mode: 'lines+markers',
+                            name: variation + ' (мнимая часть)',
+                            line: {{ width: 2, dash: 'dot' }}
+                        }});
+                    }}
+                    
+                    // Partial sums for complex numbers
+                    traces.push({{
+                        x: computed.map(c => c.n),
+                        y: computed.map(c => c.partial_sum.real),
+                        mode: 'lines+markers',
+                        name: variation + ' (частичные суммы, действительная часть)',
+                        line: {{ dash: 'dash', width: 1 }},
+                        marker: {{ size: 4, symbol: 'x' }}
+                    }});
+                    
+                    if (hasImaginary) {{
+                        traces.push({{
+                            x: computed.map(c => c.n),
+                            y: computed.map(c => (c.partial_sum.imag || 0)),
+                            mode: 'lines+markers',
+                            name: variation + ' (частичные суммы, мнимая часть)',
+                            line: {{ dash: 'dash', width: 1, dot: 'dot' }},
+                            marker: {{ size: 4, symbol: 'triangle-up' }}
+                        }});
+                    }}
+                }} else {{
+                    // Real number visualization (original logic)
+                    traces.push({{
+                        x: computed.map(c => c.n),
+                        y: computed.map(c => c.accel_value),
+                        mode: 'lines+markers',
+                        name: variation,
+                        line: {{ width: 2 }}
+                    }});
+                    
+                    traces.push({{
+                        x: computed.map(c => c.n),
+                        y: computed.map(c => c.partial_sum),
+                        mode: 'lines+markers',
+                        name: variation + ' (частичные суммы)',
+                        line: {{ dash: 'dash', width: 1 }},
+                        marker: {{ size: 4, symbol: 'x' }}
+                    }});
+                }}
             }});
             
             const layout = {{
@@ -413,15 +526,41 @@ class DataAPIHandler(SimpleHTTPRequestHandler):
                 const computed = item.computed;
                 const variation = `${{item.series.name}} (m=${{item.accel.m_value}}) ${{item.accel.name}}`;
                 
-                const errors = computed.map(c => Math.abs(c.accel_value_deviation || 0));
+                // Handle complex numbers - check if deviation values are objects with real/imag parts
+                const hasComplex = computed.some(c => 
+                    typeof c.accel_value_deviation === 'object' && c.accel_value_deviation !== null);
                 
-                traces.push({{
-                    x: computed.map(c => c.n),
-                    y: errors,
-                    mode: 'lines+markers',
-                    name: variation,
-                    line: {{ width: 2 }}
-                }});
+                if (hasComplex) {{
+                    // Complex number error - use magnitude sqrt(real² + imag²)
+                    const errors = computed.map(c => {{
+                        const dev = c.accel_value_deviation;
+                        if (typeof dev === 'object' && dev !== null) {{
+                            const real = dev.real || 0;
+                            const imag = dev.imag || 0;
+                            return Math.sqrt(real * real + imag * imag);
+                        }}
+                        return Math.abs(dev || 0);
+                    }});
+                    
+                    traces.push({{
+                        x: computed.map(c => c.n),
+                        y: errors,
+                        mode: 'lines+markers',
+                        name: variation + ' (модуль ошибки)',
+                        line: {{ width: 2 }}
+                    }});
+                }} else {{
+                    // Real number error (original logic)
+                    const errors = computed.map(c => Math.abs(c.accel_value_deviation || 0));
+                    
+                    traces.push({{
+                        x: computed.map(c => c.n),
+                        y: errors,
+                        mode: 'lines+markers',
+                        name: variation,
+                        line: {{ width: 2 }}
+                    }});
+                }}
             }});
             
             const layout = {{
@@ -450,9 +589,19 @@ class DataAPIHandler(SimpleHTTPRequestHandler):
                     performanceData[key] = [];
                 }}
                 
-                const errors = item.computed.map(c => Math.abs(c.accel_value_deviation || 0));
+                // Handle complex numbers in error calculation
+                const errors = item.computed.map(c => {{
+                    const dev = c.accel_value_deviation;
+                    if (typeof dev === 'object' && dev !== null) {{
+                        const real = dev.real || 0;
+                        const imag = dev.imag || 0;
+                        return Math.sqrt(real * real + imag * imag);
+                    }}
+                    return Math.abs(dev || 0);
+                }});
+                
                 const minError = Math.min(...errors);
-                const iterationAtMinError = item.computed.find(c => Math.abs(c.accel_value_deviation || 0) === minError)?.n || 0;
+                const iterationAtMinError = item.computed.find((c, index) => errors[index] === minError)?.n || 0;
                 
                 performanceData[key].push({{
                     stackId: item.stack_id,
@@ -662,10 +811,10 @@ class DataAPIHandler(SimpleHTTPRequestHandler):
             if not series_match:
                 continue
             
-            # Создаем ключ группировки
-            group_key = (series_key, accel_key, m_value, 
-                        tuple(sorted(item.get('accel', {}).get('additional_args', {}).items())),
-                        tuple(sorted(item.get('series', {}).get('arguments', {}).items())))
+            # Создаем ключ группировки (convert dicts to strings to make them hashable)
+            additional_args_str = json.dumps(item.get('accel', {}).get('additional_args', {}), sort_keys=True)
+            series_args_str = json.dumps(item.get('series', {}).get('arguments', {}), sort_keys=True)
+            group_key = (series_key, accel_key, m_value, additional_args_str, series_args_str)
             
             if group_key not in grouped_data:
                 grouped_data[group_key] = []
@@ -687,7 +836,8 @@ class DataAPIHandler(SimpleHTTPRequestHandler):
             return float('inf')
         
         last_computed = item['computed'][-1]
-        return abs(last_computed.get('accel_value_deviation', float('inf')))
+        deviation_value = last_computed.get('accel_value_deviation', float('inf'))
+        return abs(parse_complex_number(deviation_value))
     
     def send_json_response(self, data):
         """Отправляет JSON ответ"""
@@ -700,12 +850,70 @@ class DataAPIHandler(SimpleHTTPRequestHandler):
         self.wfile.write(response.encode('utf-8'))
 
 
+def parse_complex_for_visualization(value: Union[str, float, int]) -> Dict[str, float]:
+    """Parse complex numbers for visualization.
+    
+    Returns:
+    - For real numbers: {'real': value, 'imag': 0.0}
+    - For complex numbers: {'real': real_part, 'imag': imag_part}
+    """
+    if isinstance(value, (int, float)):
+        return {'real': float(value), 'imag': 0.0}
+    
+    if not isinstance(value, str):
+        return {'real': float('inf'), 'imag': 0.0}
+    
+    value = value.strip()
+    
+    # Handle complex numbers in format "real + imag * i" or "real - imag * i"
+    if (' + ' in value and ' * i' in value) or (' - ' in value and ' * i' in value):
+        # Extract real and imaginary parts
+        if ' + ' in value:
+            parts = value.split(' + ')
+        else:
+            parts = value.split(' - ')
+        
+        real_part = parse_scientific_notation(parts[0].strip())
+        imag_part_str = parts[1].replace(' * i', '').strip()
+        imag_part = parse_scientific_notation(imag_part_str)
+        
+        return {'real': real_part, 'imag': imag_part}
+    
+    # Handle real numbers (scientific notation or regular)
+    real_val = parse_scientific_notation(value)
+    return {'real': real_val, 'imag': 0.0}
+
+
+def preprocess_data(data: List[Dict]) -> List[Dict]:
+    """Preprocess data to convert string numbers to proper numbers for visualization."""
+    for item in data:
+        # Process computed values
+        if 'computed' in item:
+            for computed in item['computed']:
+                for key, value in computed.items():
+                    if key in ['accel_value', 'partial_sum', 'accel_value_deviation', 
+                               'partial_sum_deviation', 'series_value']:
+                        computed[key] = parse_complex_for_visualization(value)
+        
+        # Process series limit if it's a string
+        if 'series' in item and 'lim' in item['series']:
+            item['series']['lim'] = parse_complex_for_visualization(item['series']['lim'])
+        
+        # NOTE: Don't process series arguments - keep original values for filtering
+        # Series arguments are used for filtering and should remain in original format
+    
+    return data
+
+
 def start_server(data_file: Path, port: int = 8000):
     """Запускает HTTP сервер с предзагруженными данными"""
     
     # Загружаем данные один раз при старте сервера
     with open(data_file, 'r', encoding='utf-8') as f:
         data = json.load(f)
+    
+    # Preprocess data to handle complex numbers and scientific notation
+    data = preprocess_data(data)
     
     print(f"Loaded {len(data)} records from {data_file}")
     
