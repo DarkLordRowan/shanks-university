@@ -8,7 +8,6 @@ import { CopyToClipboard } from "../../components/CopyToClipboard.tsx";
 import { Check } from "lucide-react";
 import { normalizeFromJson } from "../../utils/responseToItem.ts";
 
-import { StepsToToleranceBar } from "../../charts/StepsToToleranceBar.tsx";
 import { GenerateExpFromDataButton } from "../../components/GenerateExpFromDataButton.tsx";
 import type { AlgorithmNode } from "../../data/algorithms.ts";
 import { SelectM } from "../../components/SelectM.tsx";
@@ -20,6 +19,7 @@ import { AccelValueByN_VaryX } from "../../charts/vary_x/AccelValueByN_VaryX.tsx
 import { LogPsDevByN_VaryX } from "../../charts/vary_x/LogPsDevByN_VaryX.tsx";
 import { LogAccelDevByN_VaryX } from "../../charts/vary_x/LogAccelDevByN_VaryX.tsx";
 import { SeriesTermByN_VaryX } from "../../charts/vary_x/SeriesTermByN_VaryX.tsx";
+import { StepsToToleranceExplorer } from "../../charts/StepsToToleranceExplorer.tsx";
 
 const Experiments_v3: React.FC = () => {
 
@@ -80,10 +80,8 @@ const Experiments_v3: React.FC = () => {
             <div>
                 {responseJson && (
                     <div className="mt-4 w-full space-y-10">
-                        <StepsToToleranceBar
-                            items={normalizeFromJson(responseJson)}
-                            eps={1e-4}
-                        />
+                        {/* 0. Число шагов до точности ε */}
+                        <StepsToToleranceExplorer items={normalizeFromJson(responseJson)} defaultEps={1e-4} />
 
                         <PartialSumByN_VaryX items={normalizeFromJson(responseJson)} />
                         <DeltaToLimitPartialSumByN_VaryX items={normalizeFromJson(responseJson)} />

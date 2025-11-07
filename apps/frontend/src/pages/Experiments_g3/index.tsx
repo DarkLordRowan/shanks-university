@@ -16,12 +16,12 @@ import { LogAccelDevChartByN } from "../../charts/LogAccelDevChartByN.tsx";
 import { EOCPartialSumChartByN } from "../../charts/EOCPartialSumChartByN.tsx";
 import { SeriesTermChartByN } from "../../charts/SeriesTermChartByN.tsx";
 import { EOCAccelChartByN } from "../../charts/EOCAccelChartByN.tsx";
-import { StepsToToleranceBar } from "../../charts/StepsToToleranceBar.tsx";
 import { SelectX } from "../../components/SelectX.tsx";
 import { SelectM } from "../../components/SelectM.tsx";
 import { type AlgorithmNode, ALGORITHMS } from "../../data/algorithms.ts";
 import { GenerateExpFromDataButton } from "../../components/GenerateExpFromDataButton.tsx";
 import { SelectAlgorithms } from "../../components/SelectAlgorithms.tsx";
+import { StepsToToleranceExplorer } from "../../charts/StepsToToleranceExplorer.tsx";
 
 const Experiments_v3: React.FC = () => {
 
@@ -84,10 +84,7 @@ const Experiments_v3: React.FC = () => {
                 {responseJson && (
                     <div className="mt-4 w-full space-y-10">
                         {/* 0. Число шагов до точности ε */}
-                        <StepsToToleranceBar
-                            items={normalizeFromJson(responseJson)}
-                            eps={1e-4}
-                        />
+                        <StepsToToleranceExplorer items={normalizeFromJson(responseJson)} defaultEps={1e-4} />
 
                         {/* 1. Частичные суммы S_n */}
                         <PartialSumChartByN items={normalizeFromJson(responseJson)} />
