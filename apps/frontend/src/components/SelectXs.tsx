@@ -24,7 +24,6 @@ export function SelectXs({ series, value, onChange, disabled }: Props) {
 
     const [collapsed, setCollapsed] = useState<boolean>(value.length > 0);
     useEffect(() => { setCollapsed(false); }, [series?.id]);
-    useEffect(() => { setCollapsed(value.length > 0); }, [value.length]);
 
     const [activeIntervalIdx, setActiveIntervalIdx] = useState<number | null>(0);
     const [draft, setDraft] = useState<string>("");

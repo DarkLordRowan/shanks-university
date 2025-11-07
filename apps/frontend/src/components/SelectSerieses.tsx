@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import type { SeriesNode } from "../data/series";
 import { Formula } from "./Formula";
 
@@ -25,7 +25,6 @@ export function SelectSerieses({
                                    searchField = "title",
                                }: Props) {
     const [collapsed, setCollapsed] = useState<boolean>(value.length > 0);
-    useEffect(() => { setCollapsed(value.length > 0); }, [value.length]);
 
     const [q, setQ] = useState("");
     const selected = useMemo(() => new Set(value.map(v => v.id)), [value]);

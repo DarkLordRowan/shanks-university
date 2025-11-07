@@ -1,57 +1,71 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { SERIES, type SeriesNode } from "../../data/series";
 import { SelectSeries } from "../../components/SelectSeries.tsx";
-import { SelectX } from "../../components/SelectX.tsx";
 import { API_BASE } from "../Experiments/constants.ts";
 import { SubmitAndTrackJob } from "../../components/SubmitAndTrackJob.tsx";
 import type { ApiJsonResult } from "../Experiments/types.ts";
 import { CopyToClipboard } from "../../components/CopyToClipboard.tsx";
 import { Check } from "lucide-react";
-import { type AlgorithmNode } from "../../data/algorithms.ts";
-import { GenerateExpFromDataButton } from "../../components/GenerateExpFromDataButton.tsx";
-import { SelectAlgorithm } from "../../components/SelectAlgorithm.tsx";
-import { SelectMs } from "../../components/SelectMs.tsx";
-import { PartialSumByN_VaryM } from "../../charts/vary_m/PartialSumByN_VaryM.tsx";
-import { DeltaToLimitPartialSumByN_VaryM } from "../../charts/vary_m/DeltaToLimitPartialSumByN_VaryM.tsx";
 import { normalizeFromJson } from "../../utils/responseToItem.ts";
-import { LogPsDevByN_VaryM } from "../../charts/vary_m/LogPsDevByN_VaryM.tsx";
-import { AccelValueByN_VaryM } from "../../charts/vary_m/AccelValueByN_VaryM.tsx";
-import { LogAccelDevByN_VaryM } from "../../charts/vary_m/LogAccelDevByN_VaryM.tsx";
-import { SeriesTermByN_VaryM } from "../../charts/vary_m/SeriesTermByN_VaryM.tsx";
+import { AccelerationGainChartByN } from "../../charts/AccelerationGainChartByN.tsx";
+import { DeltaToLimitPartialSumChart } from "../../charts/DeltaToLimitPartialSumChart.tsx";
+import { LogPsDevChartByN } from "../../charts/LogPsDevChartByN.tsx";
+import { PartialSumChartByN } from "../../charts/PartialSumChartByN.tsx";
+import { AccelValueChartByN } from "../../charts/AccelValueChartByN.tsx";
+import { LogAccelDevChartByN } from "../../charts/LogAccelDevChartByN.tsx";
+import { EOCPartialSumChartByN } from "../../charts/EOCPartialSumChartByN.tsx";
+import { SeriesTermChartByN } from "../../charts/SeriesTermChartByN.tsx";
+import { EOCAccelChartByN } from "../../charts/EOCAccelChartByN.tsx";
 import { StepsToToleranceBar } from "../../charts/StepsToToleranceBar.tsx";
+import { SelectX } from "../../components/SelectX.tsx";
+import { type AlgorithmNode, ALGORITHMS } from "../../data/algorithms.ts";
+import { GenerateExpFromDataButton } from "../../components/GenerateExpFromDataButton.tsx";
+import { SelectAlgorithms } from "../../components/SelectAlgorithms.tsx";
+import { SelectMs } from "../../components/SelectMs.tsx";
+import { useItemsSelection } from "../../analysis/useItemsSelection.ts";
+import { ItemsSelectionMatrix } from "../../analysis/ItemsSelectionMatrix.tsx";
 
 const Experiments_v3: React.FC = () => {
 
     const [series, setSeries] = useState<SeriesNode | null>(null);
     const [x, setX] = useState<number | null>(null);
     const [ms, setMs] = useState<number[]>([2, 4, 6, 8, 10]);
-    const [algorithm, setAlgorithm] = useState<AlgorithmNode | null>(null);
+    const [algorithms, setAlgorithms] = useState<AlgorithmNode[]>([]);
 
     const [requestJson, setRequestJson] = useState<string | null>(null);
     const [responseJson, setResponseJson] = useState<ApiJsonResult | null>(null);
     const [requestUUID, setRequestUUID] = useState<string | null>(null);
     const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
+    const items = useMemo(
+        () => (responseJson ? normalizeFromJson(responseJson) : []),
+        [responseJson]
+    );
+
+    const sel = useItemsSelection(items);
+    const filtered = sel.filteredItems;
+
     return (
         <div className="mx-auto max-w-6xl px-4 py-6">
 
             <div>
-                1 ряд, 1 x, 1 алгоритм. Разные m
+                1 ряд, 1 x, 1 m. Разные алгоритмы
             </div>
             <br/>
 
             <SelectSeries items={SERIES} value={series} onChange={setSeries}/>
             <SelectX series={series} value={x} onChange={setX}/>
-            <SelectAlgorithm value={algorithm} onChange={setAlgorithm} />
+            <SelectAlgorithms value={algorithms} onChange={setAlgorithms} options={ALGORITHMS}/>
             <SelectMs value={ms} onChange={setMs}/>
+
 
             <div className="mt-3 flex gap-3">
                 <GenerateExpFromDataButton
-                    mode="vary-m"
+                    mode="vary-algo"
                     series={series}
                     x={x}
-                    algorithm={algorithm}
                     m={ms}
+                    algorithm={algorithms}
                     onSuccess={setRequestJson}
                 />
 
@@ -78,18 +92,47 @@ const Experiments_v3: React.FC = () => {
 
             <div>
                 {responseJson && (
-                    <div className="mt-4 w-full space-y-10">
-                        <StepsToToleranceBar
-                            items={normalizeFromJson(responseJson)}
-                            eps={1e-4}
+                    <div className="mt-4 w-full space-y-6">
+                        <ItemsSelectionMatrix
+                            rows={sel.rows}
+                            argCols={sel.argCols}
+                            onToggle={sel.toggle}
+                            onSetAll={sel.setAll}
+                            onSort={sel.cycleSort}
                         />
 
-                        <PartialSumByN_VaryM items={normalizeFromJson(responseJson)} />
-                        <DeltaToLimitPartialSumByN_VaryM items={normalizeFromJson(responseJson)} />
-                        <LogPsDevByN_VaryM items={normalizeFromJson(responseJson)} />
-                        <AccelValueByN_VaryM items={normalizeFromJson(responseJson)} />
-                        <LogAccelDevByN_VaryM items={normalizeFromJson(responseJson)} />
-                        <SeriesTermByN_VaryM items={normalizeFromJson(responseJson)} />
+                        <div className="space-y-10">
+                            {/* 0. Число шагов до точности ε */}
+                            <StepsToToleranceBar
+                                items={filtered} eps={1e-4}/>
+
+                            {/* 1. Частичные суммы S_n */}
+                            <PartialSumChartByN items={filtered} />
+
+                            {/* 2. Ошибка частичных сумм |S_n - L| */}
+                            <DeltaToLimitPartialSumChart items={filtered} />
+
+                            {/* 3. log10(|S_n - L|) */}
+                            <LogPsDevChartByN items={filtered} />
+
+                            {/* 4. Ускоренные значения A_n */}
+                            <AccelValueChartByN items={filtered} />
+
+                            {/* 5. log10(|A_n - L|) */}
+                            <LogAccelDevChartByN items={filtered} />
+
+                            {/* 6. Коэффициент усиления G(n) = log10(|S_n-L| / |A_n-L|) */}
+                            <AccelerationGainChartByN items={filtered} />
+
+                            {/* 7. Порядок сходимости частичных сумм */}
+                            <EOCPartialSumChartByN items={filtered} />
+
+                            {/* 8. Порядок сходимости ускоренных */}
+                            <EOCAccelChartByN items={filtered} />
+
+                            {/* 9. Значения членов ряда a_n */}
+                            <SeriesTermChartByN items={filtered} />
+                        </div>
                     </div>
                 )}
 
