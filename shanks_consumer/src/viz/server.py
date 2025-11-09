@@ -102,72 +102,71 @@ class DataAPIHandler(SimpleHTTPRequestHandler):
 
         # Создаем кнопки для precision (все включены по умолчанию)
         precision_buttons = []
-        for precision in metadata['precisions']:
+        for precision in metadata["precisions"]:
             precision_buttons.append(f'''
                 <button class="filter-btn precision-btn active" data-type="precision" data-value="{precision}">{precision}</button>
             ''')
-        
+
         # Создаем кнопки для базовых имен рядов (все выключены по умолчанию)
         base_series_buttons = []
-        for base_series in metadata['base_series_names']:
+        for base_series in metadata["base_series_names"]:
             base_series_buttons.append(f'''
                 <button class="filter-btn base-series-btn" data-type="base_series" data-value="{base_series}">{base_series}</button>
             ''')
-        
+
         # Создаем кнопки для базовых имен методов ускорения (все выключены по умолчанию)
         base_accel_buttons = []
-        for base_accel in metadata['base_accel_names']:
+        for base_accel in metadata["base_accel_names"]:
             base_accel_buttons.append(f'''
                 <button class="filter-btn base-accel-btn" data-type="base_accel" data-value="{base_accel}">{base_accel}</button>
             ''')
 
-        # Создаем чекбоксы для базовых имен рядов
-        base_series_checkboxes = []
+        # Создаем кнопки для базовых имен рядов (все выключены по умолчанию)
+        base_series_buttons = []
         for base_series in metadata["base_series_names"]:
-            base_series_checkboxes.append(f'''
-                <div class="checkbox-item">
-                    <input type="checkbox" id="base_series_{base_series}" name="base_series" value="{base_series}" checked>
-                    <label for="base_series_{base_series}">{base_series}</label>
-                </div>
+            base_series_buttons.append(f'''
+                <button class="filter-btn base-series-btn" data-type="base_series" data-value="{base_series}">{base_series}</button>
             ''')
 
-        # Создаем чекбоксы для базовых имен методов ускорения
-        base_accel_checkboxes = []
+        # Создаем кнопки для базовых имен методов ускорения (все выключены по умолчанию)
+        base_accel_buttons = []
         for base_accel in metadata["base_accel_names"]:
-            base_accel_checkboxes.append(f'''
-                <div class="checkbox-item">
-                    <input type="checkbox" id="base_accel_{base_accel}" name="base_accel" value="{base_accel}" checked>
-                    <label for="base_accel_{base_accel}">{base_accel}</label>
-                </div>
+            base_accel_buttons.append(f'''
+                <button class="filter-btn base-accel-btn" data-type="base_accel" data-value="{base_accel}">{base_accel}</button>
             ''')
 
-        # Создаем чекбоксы для m_values (все включены по умолчанию)
-        mvalue_checkboxes = []
-        for m_value in metadata['m_values']:
-            mvalue_checkboxes.append(f'''
-                <div class="checkbox-item">
-                    <input type="checkbox" id="mvalue_{m_value}" name="mvalue" value="{m_value}" checked>
-                    <label for="mvalue_{m_value}">{m_value}</label>
-                </div>
+        # Создаем кнопки для m_values (все включены по умолчанию)
+        mvalue_buttons = []
+        for m_value in metadata["m_values"]:
+            mvalue_buttons.append(f'''
+                <button class="filter-btn mvalue-btn active" data-type="mvalue" data-value="{m_value}">{float(m_value):.6g}</button>
             ''')
 
         # Создаем фильтры для дополнительных параметров
         additional_filters = ""
         for param_name, param_values in metadata["additional_params"].items():
-            param_checkboxes = []
+            param_buttons = []
             for value in param_values:
-                param_checkboxes.append(f'''
-                    <div class="checkbox-item">
-                        <input type="checkbox" id="param_{param_name}_{value}" name="param_{param_name}" value="{value}" checked>
-                        <label for="param_{param_name}_{value}">{param_name}: {value}</label>
-                    </div>
+                # Try to format as number if possible
+                try:
+                    formatted_value = f"{float(value):.6g}"
+                except (ValueError, TypeError):
+                    formatted_value = str(value)
+                param_buttons.append(f'''
+                    <button class="filter-btn param-btn active" data-type="param_{param_name}" data-value="{value}">{param_name}: {formatted_value}</button>
                 ''')
 
             additional_filters += f"""
                 <div class="filter-group">
-                    <label>{param_name}:</label>
-                    <div class="checkbox-group">
-                        {"".join(param_checkboxes)}
+                    <div class="filter-header">
+                        <label>{param_name}:</label>
+                        <div class="toggle-buttons">
+                            <button class="toggle-btn" onclick="toggleAll('param_{param_name}', true)">Включить все</button>
+                            <button class="toggle-btn" onclick="toggleAll('param_{param_name}', false)">Выключить все</button>
+                        </div>
+                    </div>
+                    <div class="button-group">
+                        {"".join(param_buttons)}
                     </div>
                 </div>
             """
@@ -175,20 +174,28 @@ class DataAPIHandler(SimpleHTTPRequestHandler):
         # Создаем фильтры для параметров рядов
         series_param_filters = ""
         for param_name, param_values in metadata["series_params"].items():
-            param_checkboxes = []
+            param_buttons = []
             for value in param_values:
-                param_checkboxes.append(f'''
-                    <div class="checkbox-item">
-                        <input type="checkbox" id="series_param_{param_name}_{value}" name="series_param_{param_name}" value="{value}" checked>
-                        <label for="series_param_{param_name}_{value}">{param_name}: {value}</label>
-                    </div>
+                # Try to format as number if possible
+                try:
+                    formatted_value = f"{float(value):.6g}"
+                except (ValueError, TypeError):
+                    formatted_value = str(value)
+                param_buttons.append(f'''
+                    <button class="filter-btn series-param-btn active" data-type="series_param_{param_name}" data-value="{value}">{param_name}: {formatted_value}</button>
                 ''')
 
             series_param_filters += f"""
                 <div class="filter-group">
-                    <label>Series {param_name}:</label>
-                    <div class="checkbox-group">
-                        {"".join(param_checkboxes)}
+                    <div class="filter-header">
+                        <label>Series {param_name}:</label>
+                        <div class="toggle-buttons">
+                            <button class="toggle-btn" onclick="toggleAll('series_param_{param_name}', true)">Включить все</button>
+                            <button class="toggle-btn" onclick="toggleAll('series_param_{param_name}', false)">Выключить все</button>
+                        </div>
+                    </div>
+                    <div class="button-group">
+                        {"".join(param_buttons)}
                     </div>
                 </div>
             """
@@ -267,6 +274,30 @@ class DataAPIHandler(SimpleHTTPRequestHandler):
         .filter-btn.active:hover {{
             background-color: #005a9e;
         }}
+        .filter-header {{
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }}
+        .toggle-buttons {{
+            display: flex;
+            gap: 5px;
+        }}
+        .toggle-btn {{
+            background-color: #555;
+            color: #ffffff;
+            padding: 5px 10px;
+            border: 1px solid #666;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s ease;
+        }}
+        .toggle-btn:hover {{
+            background-color: #666;
+            border-color: #777;
+        }}
         .plot-container {{
             background-color: #2d2d2d;
             padding: 20px;
@@ -322,39 +353,63 @@ class DataAPIHandler(SimpleHTTPRequestHandler):
 
         <div class="filters">
             <h2>Фильтры</h2>
-            
+
             <div class="filter-group">
-                <label>Точность:</label>
+                <div class="filter-header">
+                    <label>Точность:</label>
+                    <div class="toggle-buttons">
+                        <button class="toggle-btn" onclick="toggleAll('precision', true)">Включить все</button>
+                        <button class="toggle-btn" onclick="toggleAll('precision', false)">Выключить все</button>
+                    </div>
+                </div>
                 <div class="button-group">
-                    {''.join(precision_buttons)}
+                    {"".join(precision_buttons)}
                 </div>
             </div>
-            
+
             <div class="filter-group">
-                <label>Базовые ряды:</label>
+                <div class="filter-header">
+                    <label>Базовые ряды:</label>
+                    <div class="toggle-buttons">
+                        <button class="toggle-btn" onclick="toggleAll('base_series', true)">Включить все</button>
+                        <button class="toggle-btn" onclick="toggleAll('base_series', false)">Выключить все</button>
+                    </div>
+                </div>
                 <div class="button-group">
-                    {''.join(base_series_buttons)}
+                    {"".join(base_series_buttons)}
                 </div>
             </div>
-            
+
             <div class="filter-group">
-                <label>Базовые методы ускорения:</label>
+                <div class="filter-header">
+                    <label>Базовые методы ускорения:</label>
+                    <div class="toggle-buttons">
+                        <button class="toggle-btn" onclick="toggleAll('base_accel', true)">Включить все</button>
+                        <button class="toggle-btn" onclick="toggleAll('base_accel', false)">Выключить все</button>
+                    </div>
+                </div>
                 <div class="button-group">
-                    {''.join(base_accel_buttons)}
+                    {"".join(base_accel_buttons)}
                 </div>
             </div>
-            
+
             <div class="filter-group">
-                <label>Значения m:</label>
-                <div class="checkbox-group">
-                    {''.join(mvalue_checkboxes)}
+                <div class="filter-header">
+                    <label>Значения m:</label>
+                    <div class="toggle-buttons">
+                        <button class="toggle-btn" onclick="toggleAll('mvalue', true)">Включить все</button>
+                        <button class="toggle-btn" onclick="toggleAll('mvalue', false)">Выключить все</button>
+                    </div>
+                </div>
+                <div class="button-group">
+                    {"".join(mvalue_buttons)}
                 </div>
             </div>
-            
+
             {additional_filters}
-            
+
             {series_param_filters}
-            
+
             <button class="update-btn" onclick="updatePlots()">Обновить графики</button>
         </div>
 
@@ -379,11 +434,11 @@ class DataAPIHandler(SimpleHTTPRequestHandler):
     <script>
         let currentData = [];
         let metadata = {json.dumps(metadata)};
-        
+
         document.addEventListener('DOMContentLoaded', function() {{
             setupFilterButtons();
         }});
-        
+
         function setupFilterButtons() {{
             // Setup all filter buttons
             const filterButtons = document.querySelectorAll('.filter-btn');
@@ -394,13 +449,24 @@ class DataAPIHandler(SimpleHTTPRequestHandler):
             }});
         }}
 
+        function toggleAll(type, activate) {{
+            const buttons = document.querySelectorAll(`.filter-btn[data-type="${{type}}"]`);
+            buttons.forEach(btn => {{
+                if (activate) {{
+                    btn.classList.add('active');
+                }} else {{
+                    btn.classList.remove('active');
+                }}
+            }});
+        }}
+
         function getSelectedValues(name) {{
             // For checkboxes (m_values and additional params)
             const checkboxes = document.querySelectorAll(`input[name="${{name}}"]:checked`);
             if (checkboxes.length > 0) {{
                 return Array.from(checkboxes).map(cb => cb.value);
             }}
-            
+
             // For filter buttons
             const buttons = document.querySelectorAll(`.filter-btn[data-type="${{name}}"].active`);
             return Array.from(buttons).map(btn => btn.getAttribute('data-value'));
@@ -462,15 +528,15 @@ class DataAPIHandler(SimpleHTTPRequestHandler):
             const totalItems = currentData.length;
             const uniqueSeries = [...new Set(currentData.map(item => item.series?.name))].length;
             const uniqueMethods = [...new Set(currentData.map(item => item.accel?.name))].length;
-            
+
             const selectedPrecisions = getSelectedValues('precision');
             const selectedBaseSeries = getSelectedValues('base_series');
             const selectedBaseAccel = getSelectedValues('base_accel');
-            
+
             const precisionText = selectedPrecisions.length > 0 ? selectedPrecisions.join(', ') : 'не выбраны';
             const baseSeriesText = selectedBaseSeries.length > 0 ? selectedBaseSeries.join(', ') : 'не выбраны';
             const baseAccelText = selectedBaseAccel.length > 0 ? selectedBaseAccel.join(', ') : 'не выбраны';
-            
+
             statsDiv.innerHTML = `
                 <h3>Статистика</h3>
                 <p>Точности: ${{precisionText}}</p>
@@ -480,6 +546,42 @@ class DataAPIHandler(SimpleHTTPRequestHandler):
                 <p>Уникальных рядов: ${{uniqueSeries}}</p>
                 <p>Уникальных методов: ${{uniqueMethods}}</p>
             `;
+        }}
+
+        function roundNumber(num, precision = 6) {{
+            if (typeof num === 'number') {{
+                return parseFloat(num.toFixed(precision));
+            }}
+            if (typeof num === 'string') {{
+                // Try to parse string as number
+                const parsed = parseFloat(num);
+                if (!isNaN(parsed)) {{
+                    return parseFloat(parsed.toFixed(precision));
+                }}
+            }}
+            return num; // Return as-is if not a number
+        }}
+
+        function formatItemName(item) {{
+            // Format series name with parameters
+            let seriesName = item.series.name;
+            if (item.series.arguments && Object.keys(item.series.arguments).length > 0) {{
+                const seriesParams = Object.entries(item.series.arguments)
+                    .map(([key, value]) => key + "=" + roundNumber(value))
+                    .join(', ');
+                seriesName += " (" + seriesParams + ")";
+            }}
+
+            // Format accel name with parameters
+            let accelName = item.accel.name;
+            if (item.accel.additional_args && Object.keys(item.accel.additional_args).length > 0) {{
+                const accelParams = Object.entries(item.accel.additional_args)
+                    .map(([key, value]) => key + "=" + roundNumber(value))
+                    .join(', ');
+                accelName += " (" + accelParams + ")";
+            }}
+
+            return seriesName + " (m=" + roundNumber(item.accel.m_value) + ") " + accelName;
         }}
 
         function createPlots() {{
@@ -498,7 +600,7 @@ class DataAPIHandler(SimpleHTTPRequestHandler):
                 if (!item.computed || item.computed.length === 0) return;
 
                 const computed = item.computed;
-                const variation = `${{item.series.name}} (m=${{item.accel.m_value}}) ${{item.accel.name}}`;
+                const variation = formatItemName(item);
 
                 // Handle complex numbers - check if values are objects with real/imag parts
                 const hasComplex = computed.some(c =>
@@ -584,8 +686,12 @@ class DataAPIHandler(SimpleHTTPRequestHandler):
                 xaxis: {{ title: 'Итерация n' }},
                 yaxis: {{ title: 'Значение' }},
                 template: 'plotly_dark',
-                height: 700,
-                showlegend: true
+                height: 900,
+                showlegend: true,
+                legend: {{
+                    orientation: 'h',
+                    y: -0.2
+                }}
             }};
 
             Plotly.newPlot('convergence-plot', traces, layout);
@@ -598,7 +704,7 @@ class DataAPIHandler(SimpleHTTPRequestHandler):
                 if (!item.computed || item.computed.length === 0) return;
 
                 const computed = item.computed;
-                const variation = `${{item.series.name}} (m=${{item.accel.m_value}}) ${{item.accel.name}}`;
+                const variation = formatItemName(item);
 
                 // Handle complex numbers - check if deviation values are objects with real/imag parts
                 const hasComplex = computed.some(c =>
@@ -642,7 +748,11 @@ class DataAPIHandler(SimpleHTTPRequestHandler):
                 xaxis: {{ title: 'Итерация n' }},
                 yaxis: {{ title: 'Абсолютная ошибка', type: 'log' }},
                 template: 'plotly_dark',
-                height: 700
+                height: 700,
+                legend: {{
+                    orientation: 'h',
+                    y: -0.2
+                }}
             }};
 
             Plotly.newPlot('error-plot', traces, layout);
@@ -654,10 +764,7 @@ class DataAPIHandler(SimpleHTTPRequestHandler):
             currentData.forEach(item => {{
                 if (!item.computed || item.computed.length === 0) return;
 
-                const series = item.series.name;
-                const method = item.accel.name;
-                const mValue = item.accel.m_value;
-                const key = `${{series}} - ${{method}} (m=${{mValue}})`;
+                const key = formatItemName(item);
 
                 if (!performanceData[key]) {{
                     performanceData[key] = [];
@@ -704,7 +811,11 @@ class DataAPIHandler(SimpleHTTPRequestHandler):
                 xaxis: {{ title: 'Итерация достижения минимальной ошибки' }},
                 yaxis: {{ title: 'Минимальная ошибка', type: 'log' }},
                 template: 'plotly_dark',
-                height: 700
+                height: 700,
+                legend: {{
+                    orientation: 'h',
+                    y: -0.2
+                }}
             }};
 
             Plotly.newPlot('performance-plot', traces, layout);
@@ -717,7 +828,16 @@ class DataAPIHandler(SimpleHTTPRequestHandler):
     def extract_precision(self, name: str) -> str:
         """Extract precision suffix from name (e.g., 'ExpSeriesF64' -> 'F64')"""
         # Known precision suffixes - sort by length (longer first) to avoid partial matches
-        precision_suffixes = ["CFLong", "CF64", "CF32", "CArb", "FLong", "F64", "F32", "Arb"]
+        precision_suffixes = [
+            "CFLong",
+            "CF64",
+            "CF32",
+            "CArb",
+            "FLong",
+            "F64",
+            "F32",
+            "Arb",
+        ]
 
         for suffix in precision_suffixes:
             if name.endswith(suffix):
@@ -922,7 +1042,7 @@ class DataAPIHandler(SimpleHTTPRequestHandler):
                 # For acceleration methods: must have precision and match selected precisions
                 if not accel_precision or accel_precision not in precision_filter:
                     continue
-                
+
                 # For series: if no precision, matches all selected precisions
                 # If has precision, must match selected precisions
                 if series_precision and series_precision not in precision_filter:
