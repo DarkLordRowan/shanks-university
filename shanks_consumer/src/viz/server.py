@@ -492,6 +492,7 @@ class DataAPIHandler(SimpleHTTPRequestHandler):
 
         function createConvergencePlot() {{
             const traces = [];
+            const partialSumTraces = new Map(); // Store one partial sum trace per series
 
             currentData.forEach(item => {{
                 if (!item.computed || item.computed.length === 0) return;
@@ -527,25 +528,25 @@ class DataAPIHandler(SimpleHTTPRequestHandler):
                         }});
                     }}
 
-                    // Partial sums for complex numbers
-                    traces.push({{
-                        x: computed.map(c => c.n),
-                        y: computed.map(c => c.partial_sum.real),
-                        mode: 'lines+markers',
-                        name: variation + ' (частичные суммы, действительная часть)',
-                        line: {{ dash: 'dash', width: 1 }},
-                        marker: {{ size: 4, symbol: 'x' }}
-                    }});
-
-                    if (hasImaginary) {{
-                        traces.push({{
+                    // Store partial sums for this series (only once per series)
+                    if (!partialSumTraces.has(item.series.name)) {{
+                        partialSumTraces.set(item.series.name, {{
                             x: computed.map(c => c.n),
-                            y: computed.map(c => (c.partial_sum.imag || 0)),
-                            mode: 'lines+markers',
-                            name: variation + ' (частичные суммы, мнимая часть)',
-                            line: {{ dash: 'dash', width: 1, dot: 'dot' }},
-                            marker: {{ size: 4, symbol: 'triangle-up' }}
+                            y: computed.map(c => c.partial_sum.real),
+                            name: item.series.name + ' (частичные суммы, действительная часть)',
+                            line: {{ dash: 'dash', width: 1 }},
+                            marker: {{ size: 4, symbol: 'x' }}
                         }});
+
+                        if (hasImaginary) {{
+                            partialSumTraces.get(item.series.name).imagTrace = {{
+                                x: computed.map(c => c.n),
+                                y: computed.map(c => (c.partial_sum.imag || 0)),
+                                name: item.series.name + ' (частичные суммы, мнимая часть)',
+                                line: {{ dash: 'dash', width: 1, dot: 'dot' }},
+                                marker: {{ size: 4, symbol: 'triangle-up' }}
+                            }};
+                        }}
                     }}
                 }} else {{
                     // Real number visualization (original logic)
@@ -557,14 +558,24 @@ class DataAPIHandler(SimpleHTTPRequestHandler):
                         line: {{ width: 2 }}
                     }});
 
-                    traces.push({{
-                        x: computed.map(c => c.n),
-                        y: computed.map(c => c.partial_sum),
-                        mode: 'lines+markers',
-                        name: variation + ' (частичные суммы)',
-                        line: {{ dash: 'dash', width: 1 }},
-                        marker: {{ size: 4, symbol: 'x' }}
-                    }});
+                    // Store partial sums for this series (only once per series)
+                    if (!partialSumTraces.has(item.series.name)) {{
+                        partialSumTraces.set(item.series.name, {{
+                            x: computed.map(c => c.n),
+                            y: computed.map(c => c.partial_sum),
+                            name: item.series.name + ' (частичные суммы)',
+                            line: {{ dash: 'dash', width: 1 }},
+                            marker: {{ size: 4, symbol: 'x' }}
+                        }});
+                    }}
+                }}
+            }});
+
+            // Add partial sum traces (one per series)
+            partialSumTraces.forEach(trace => {{
+                traces.push(trace);
+                if (trace.imagTrace) {{
+                    traces.push(trace.imagTrace);
                 }}
             }});
 
