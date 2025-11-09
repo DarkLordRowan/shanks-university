@@ -572,15 +572,6 @@ class DataAPIHandler(SimpleHTTPRequestHandler):
         }}
 
         function formatItemName(item) {{
-            // Format series name with parameters
-            let seriesName = item.series.name;
-            if (item.series.arguments && Object.keys(item.series.arguments).length > 0) {{
-                const seriesParams = Object.entries(item.series.arguments)
-                    .map(([key, value]) => key + "=" + roundNumber(value))
-                    .join(', ');
-                seriesName += " (" + seriesParams + ")";
-            }}
-
             // Format accel name with parameters
             let accelName = item.accel.name;
             if (item.accel.additional_args && Object.keys(item.accel.additional_args).length > 0) {{
@@ -590,7 +581,16 @@ class DataAPIHandler(SimpleHTTPRequestHandler):
                 accelName += " (" + accelParams + ")";
             }}
 
-            return seriesName + " (m=" + roundNumber(item.accel.m_value) + ") " + accelName;
+            // Format series name with parameters
+            let seriesName = item.series.name;
+            if (item.series.arguments && Object.keys(item.series.arguments).length > 0) {{
+                const seriesParams = Object.entries(item.series.arguments)
+                    .map(([key, value]) => key + "=" + roundNumber(value))
+                    .join(', ');
+                seriesName += " (" + seriesParams + ")";
+            }}
+
+            return accelName + " (m=" + roundNumber(item.accel.m_value) + ") " + seriesName;
         }}
 
         function createPlots() {{
@@ -604,6 +604,7 @@ class DataAPIHandler(SimpleHTTPRequestHandler):
         function createConvergencePlot() {{
             const traces = [];
             const partialSumTraces = new Map(); // Store one partial sum trace per series
+            const limitTraces = new Map(); // Store one limit trace per series
 
             currentData.forEach(item => {{
                 if (!item.computed || item.computed.length === 0) return;
@@ -621,7 +622,7 @@ class DataAPIHandler(SimpleHTTPRequestHandler):
                         x: computed.map(c => c.n),
                         y: computed.map(c => c.accel_value.real),
                         mode: 'lines+markers',
-                        name: variation + ' (действительная часть)',
+                        name: variation,
                         line: {{ width: 2 }}
                     }});
 
@@ -659,6 +660,22 @@ class DataAPIHandler(SimpleHTTPRequestHandler):
                             }};
                         }}
                     }}
+
+                    // Store limit line for this series (only once per series)
+                    if (!limitTraces.has(item.series.name) && item.series.lim !== undefined) {{
+                        const limitValue = typeof item.series.lim === 'object' ? item.series.lim.real : item.series.lim;
+                        const xRange = computed.map(c => c.n);
+                        const minX = Math.min(...xRange);
+                        const maxX = Math.max(...xRange);
+
+                        limitTraces.set(item.series.name, {{
+                            x: [minX, maxX],
+                            y: [limitValue, limitValue],
+                            name: item.series.name + ' (предел)',
+                            line: {{ color: '#ff6b6b', width: 3, dash: 'solid' }},
+                            mode: 'lines'
+                        }});
+                    }}
                 }} else {{
                     // Real number visualization (original logic)
                     traces.push({{
@@ -679,6 +696,22 @@ class DataAPIHandler(SimpleHTTPRequestHandler):
                             marker: {{ size: 4, symbol: 'x' }}
                         }});
                     }}
+
+                    // Store limit line for this series (only once per series)
+                    if (!limitTraces.has(item.series.name) && item.series.lim !== undefined) {{
+                        const limitValue = typeof item.series.lim === 'object' ? item.series.lim.real : item.series.lim;
+                        const xRange = computed.map(c => c.n);
+                        const minX = Math.min(...xRange);
+                        const maxX = Math.max(...xRange);
+
+                        limitTraces.set(item.series.name, {{
+                            x: [minX, maxX],
+                            y: [limitValue, limitValue],
+                            name: item.series.name + ' (предел)',
+                            line: {{ color: '#ff6b6b', width: 3, dash: 'solid' }},
+                            mode: 'lines'
+                        }});
+                    }}
                 }}
             }});
 
@@ -688,6 +721,11 @@ class DataAPIHandler(SimpleHTTPRequestHandler):
                 if (trace.imagTrace) {{
                     traces.push(trace.imagTrace);
                 }}
+            }});
+
+            // Add limit traces (one per series)
+            limitTraces.forEach(trace => {{
+                traces.push(trace);
             }});
 
             const layout = {{
@@ -753,9 +791,9 @@ class DataAPIHandler(SimpleHTTPRequestHandler):
             }});
 
             const layout = {{
-                title: 'Ошибка сходимости (логарифмическая шкала)',
+                title: 'Ошибка сходимости',
                 xaxis: {{ title: 'Итерация n' }},
-                yaxis: {{ title: 'Абсолютная ошибка', type: 'log' }},
+                yaxis: {{ title: 'Абсолютная ошибка' }},
                 template: 'plotly_dark',
                 height: 700,
                 legend: {{
