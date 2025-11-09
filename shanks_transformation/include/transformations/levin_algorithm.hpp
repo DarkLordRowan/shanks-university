@@ -138,7 +138,7 @@ public:
 	) const override;
 
 	void update_beta(const T& new_beta){
-		beta_in_use = (beta_in_use > static_cast<T>(0) ? beta_in_use : static_cast<T>(1));
+		beta_in_use = (new_beta > static_cast<T>(0) ? new_beta : static_cast<T>(1));
 	}
 
 	void update_type(const remainder_type remainder_type_to_use){
@@ -217,8 +217,8 @@ inline T levin_algorithm<T, K>::calc_result(
 		rest *= static_cast<T>(binomial_coefficient<K>(order, j));
 
 		// Compute (n+j+1)^{k-1}/(n+k+1)^{k-1}
-		C_njk  = static_cast<T>(pow(n + j     + static_cast<K>(1), order - static_cast<K>(1)));
-		C_njk /= static_cast<T>(pow(n + order + static_cast<K>(1), order - static_cast<K>(1)));
+		C_njk  = pow(beta_in_use + static_cast<T>(n + j     + static_cast<K>(1)), static_cast<T>(order - static_cast<K>(1)));
+		C_njk /= pow(beta_in_use + static_cast<T>(n + order + static_cast<K>(1)), static_cast<T>(order - static_cast<K>(1)));
 
 		// Compute 1/R_{n+j} where R_{n+j} is the remainder estimate
 		rest*= remainder->operator()(
@@ -336,7 +336,7 @@ class levin_algorithm<float_precision, K> final : public series_acceleration<flo
 {
 protected:
 
-	float_precision beta_in_use;													///< Parameter for u-variant transformation (β > 0). Default value is 1.0.
+	float_precision beta_in_use = float_precision(1);													///< Parameter for u-variant transformation (β > 0). Default value is 1.0.
     std::unique_ptr<const transform_base<float_precision, K>> remainder;	///< Pointer to remainder transformation object
     bool use_recurrent_formula = false;							///< Flag to use recurrence formulas (true) or direct formulas (false)
     remainder_type remainder_type_in_use = remainder_type::u_type;		///< Type of Levin transformation variant (u, t, v, t~, v~)
@@ -425,7 +425,7 @@ public:
 	) const override;
 
 	void update_beta(const float_precision& new_beta){
-		beta_in_use = (beta_in_use > static_cast<float_precision>(0) ? beta_in_use : static_cast<float_precision>(1));
+		beta_in_use = (new_beta > static_cast<float_precision>(0) ? new_beta : static_cast<float_precision>(1));
 	}
 
 	void update_type(const remainder_type remainder_type_to_use){
@@ -506,8 +506,8 @@ inline float_precision levin_algorithm<float_precision, K>::calc_result(
 		rest *= static_cast<float_precision>(binomial_coefficient<K>(order, j));
 
 		// Compute (n+j+1)^{k-1}/(n+k+1)^{k-1}
-		C_njk  = static_cast<float_precision>(pow(n + j     + static_cast<K>(1), order - static_cast<K>(1)));
-		C_njk /= static_cast<float_precision>(pow(n + order + static_cast<K>(1), order - static_cast<K>(1)));
+		C_njk  = pow(beta_in_use + static_cast<float_precision>(n + j     + static_cast<K>(1)), static_cast<float_precision>(order - static_cast<K>(1)));
+		C_njk /= pow(beta_in_use + static_cast<float_precision>(n + order + static_cast<K>(1)), static_cast<float_precision>(order - static_cast<K>(1)));
 
 		// Compute 1/R_{n+j} where R_{n+j} is the remainder estimate
 		rest*= remainder->operator()(
@@ -623,7 +623,7 @@ class levin_algorithm<complex_precision<T>, K> final : public series_acceleratio
 {
 protected:
 
-	T beta_in_use;													///< Parameter for u-variant transformation (β > 0). Default value is 1.0.
+	T beta_in_use = static_cast<T>(1);													///< Parameter for u-variant transformation (β > 0). Default value is 1.0.
     std::unique_ptr<const transform_base<complex_precision<T>, K>> remainder;	///< Pointer to remainder transformation object
     bool use_recurrent_formula = false;							///< Flag to use recurrence formulas (true) or direct formulas (false)
     remainder_type remainder_type_in_use = remainder_type::u_type;		///< Type of Levin transformation variant (u, t, v, t~, v~)
@@ -713,7 +713,7 @@ public:
 	) const override;
 
 	void update_beta(const T& new_beta){
-		beta_in_use = (beta_in_use > static_cast<T>(0) ? beta_in_use : static_cast<T>(1));
+		beta_in_use = (new_beta > static_cast<T>(0) ? new_beta : static_cast<T>(1));
 	}
 
 	void update_type(const remainder_type remainder_type_to_use){
@@ -791,8 +791,14 @@ inline complex_precision<T> levin_algorithm<complex_precision<T>, K>::calc_resul
 		rest *= static_cast<complex_precision<T>>(binomial_coefficient<K>(order, j));
 
 		// Compute (n+j+1)^{k-1}/(n+k+1)^{k-1}
-		C_njk  = static_cast<complex_precision<T>>(pow(n + j     + static_cast<K>(1), order - static_cast<K>(1)));
-		C_njk /= static_cast<complex_precision<T>>(pow(n + order + static_cast<K>(1), order - static_cast<K>(1)));
+		C_njk  = static_cast<complex_precision<T>>(
+			pow(beta_in_use + static_cast<T>(n + j     + static_cast<K>(1)), 
+			static_cast<T>(order - static_cast<K>(1)))
+		);
+		C_njk /= static_cast<complex_precision<T>>(
+			pow(beta_in_use + static_cast<T>(n + order + static_cast<K>(1)), 
+			static_cast<T>(order - static_cast<K>(1)))
+		);
 
 		// Compute 1/R_{n+j} where R_{n+j} is the remainder estimate
 		rest*= remainder->operator()(
@@ -904,7 +910,7 @@ class levin_algorithm<complex_precision<float_precision>, K> final : public seri
 {
 protected:
 
-	float_precision beta_in_use;													///< Parameter for u-variant transformation (β > 0). Default value is 1.0.
+	float_precision beta_in_use = float_precision(1);													///< Parameter for u-variant transformation (β > 0). Default value is 1.0.
     std::unique_ptr<const transform_base<complex_precision<float_precision>, K>> remainder;	///< Pointer to remainder transformation object
     bool use_recurrent_formula = false;							///< Flag to use recurrence formulas (true) or direct formulas (false)
     remainder_type remainder_type_in_use = remainder_type::u_type;		///< Type of Levin transformation variant (u, t, v, t~, v~)
@@ -993,7 +999,7 @@ public:
 	) const override;
 
 	void update_beta(const float_precision& new_beta){
-		beta_in_use = (beta_in_use > float_precision(0) ? beta_in_use : float_precision(1));
+		beta_in_use = (new_beta > float_precision(0) ? new_beta : float_precision(1));
 	}
 
 	void update_type(const remainder_type remainder_type_to_use){
@@ -1093,8 +1099,8 @@ inline complex_precision<float_precision> levin_algorithm<complex_precision<floa
 		rest *= static_cast<float_precision>(binomial_coefficient<K>(order, j));
 
 		// Compute (n+j+1)^{k-1}/(n+k+1)^{k-1}
-		C_njk  = static_cast<float_precision>(pow(n + j     + static_cast<K>(1), order - static_cast<K>(1)));
-		C_njk /= static_cast<float_precision>(pow(n + order + static_cast<K>(1), order - static_cast<K>(1)));
+		C_njk  = pow(beta_in_use + static_cast<float_precision>(n + j     + static_cast<K>(1)), static_cast<float_precision>(order - static_cast<K>(1)));
+		C_njk /= pow(beta_in_use + static_cast<float_precision>(n + order + static_cast<K>(1)), static_cast<float_precision>(order - static_cast<K>(1)));
 
 		// Compute 1/R_{n+j} where R_{n+j} is the remainder estimate
 		rest*= remainder->operator()(

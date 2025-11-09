@@ -497,3 +497,4 @@ rebuild.sh
 /shanks_transformation/tests/cmake-build-release-visual-studio/
 .dev
 shanks_consumer/output
+shanks_transformation/libs/cln-1.3.7
