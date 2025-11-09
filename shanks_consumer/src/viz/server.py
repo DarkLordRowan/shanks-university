@@ -110,29 +110,38 @@ class DataAPIHandler(SimpleHTTPRequestHandler):
         # Создаем кнопки для базовых имен рядов (все выключены по умолчанию)
         base_series_buttons = []
         for base_series in metadata["base_series_names"]:
+            # Ищем любой series с этим базовым именем, чтобы получить информацию о параметрах
+            # Идиотизм ли это? ДА. FIXME.
+            param_info = ""
+            for series_name in metadata["series_names"]:
+                if self.extract_base_name(
+                    series_name
+                ) == base_series and series_name in metadata.get(
+                    "series_param_info", {}
+                ):
+                    params = metadata["series_param_info"][series_name]
+                    if params:
+                        param_info = f" ({', '.join(params)})"
+                    break
             base_series_buttons.append(f'''
-                <button class="filter-btn base-series-btn" data-type="base_series" data-value="{base_series}">{base_series}</button>
+                <button class="filter-btn base-series-btn" data-type="base_series" data-value="{base_series}" title="Параметры: {param_info.strip(" ()")}">{base_series}{param_info}</button>
             ''')
 
         # Создаем кнопки для базовых имен методов ускорения (все выключены по умолчанию)
         base_accel_buttons = []
         for base_accel in metadata["base_accel_names"]:
+            # Ищем любой accel с этим базовым именем, чтобы получить информацию о параметрах
+            param_info = ""
+            for accel_name in [method["name"] for method in metadata["accel_methods"]]:
+                if self.extract_base_name(
+                    accel_name
+                ) == base_accel and accel_name in metadata.get("accel_param_info", {}):
+                    params = metadata["accel_param_info"][accel_name]
+                    if params:
+                        param_info = f" ({', '.join(params)})"
+                    break
             base_accel_buttons.append(f'''
-                <button class="filter-btn base-accel-btn" data-type="base_accel" data-value="{base_accel}">{base_accel}</button>
-            ''')
-
-        # Создаем кнопки для базовых имен рядов (все выключены по умолчанию)
-        base_series_buttons = []
-        for base_series in metadata["base_series_names"]:
-            base_series_buttons.append(f'''
-                <button class="filter-btn base-series-btn" data-type="base_series" data-value="{base_series}">{base_series}</button>
-            ''')
-
-        # Создаем кнопки для базовых имен методов ускорения (все выключены по умолчанию)
-        base_accel_buttons = []
-        for base_accel in metadata["base_accel_names"]:
-            base_accel_buttons.append(f'''
-                <button class="filter-btn base-accel-btn" data-type="base_accel" data-value="{base_accel}">{base_accel}</button>
+                <button class="filter-btn base-accel-btn" data-type="base_accel" data-value="{base_accel}" title="Параметры: {param_info.strip(" ()")}">{base_accel}{param_info}</button>
             ''')
 
         # Создаем кнопки для m_values (все включены по умолчанию)
@@ -864,6 +873,10 @@ class DataAPIHandler(SimpleHTTPRequestHandler):
         base_series_names = set()
         base_accel_names = set()
 
+        # Новые структуры для хранения информации о параметрах для каждой комбинации
+        series_param_info = {}  # series_name -> list of param names
+        accel_param_info = {}  # accel_name -> list of param names
+
         for item in data or []:
             # Извлекаем имя ряда
             if item.get("series", {}).get("name"):
@@ -877,12 +890,19 @@ class DataAPIHandler(SimpleHTTPRequestHandler):
                 base_series_name = self.extract_base_name(series_name)
                 base_series_names.add(base_series_name)
 
-                # Извлекаем параметры ряда
+                # Извлекаем параметры ряда и сохраняем информацию о них для данного series
                 if item.get("series", {}).get("arguments"):
-                    for param_name, param_value in item["series"]["arguments"].items():
+                    series_args = item["series"]["arguments"]
+                    if series_name not in series_param_info:
+                        series_param_info[series_name] = []
+
+                    for param_name in series_args.keys():
+                        if param_name not in series_param_info[series_name]:
+                            series_param_info[series_name].append(param_name)
+
                         if param_name not in series_params:
                             series_params[param_name] = set()
-                        series_params[param_name].add(str(param_value))
+                        series_params[param_name].add(str(series_args[param_name]))
 
             # Извлекаем методы ускорения и их параметры
             if item.get("accel", {}).get("name"):
@@ -896,15 +916,22 @@ class DataAPIHandler(SimpleHTTPRequestHandler):
                 base_accel_name = self.extract_base_name(accel_name)
                 base_accel_names.add(base_accel_name)
 
+                # Извлекаем дополнительные параметры ускорения и сохраняем информацию о них
+                if item.get("accel", {}).get("additional_args"):
+                    accel_args = item["accel"]["additional_args"]
+                    if accel_name not in accel_param_info:
+                        accel_param_info[accel_name] = []
+
+                    for param_name in accel_args.keys():
+                        if param_name not in accel_param_info[accel_name]:
+                            accel_param_info[accel_name].append(param_name)
+
+                        if param_name not in additional_params:
+                            additional_params[param_name] = set()
+                        additional_params[param_name].add(str(accel_args[param_name]))
+
             if item.get("accel", {}).get("m_value") is not None:
                 m_values.add(item["accel"]["m_value"])
-
-            # Извлекаем дополнительные параметры ускорения
-            if item.get("accel", {}).get("additional_args"):
-                for param_name, param_value in item["accel"]["additional_args"].items():
-                    if param_name not in additional_params:
-                        additional_params[param_name] = set()
-                    additional_params[param_name].add(str(param_value))
 
         # Конвертируем sets в sorted lists
         accel_method_list = [{"name": name} for name in sorted(list(accel_methods))]
@@ -920,6 +947,8 @@ class DataAPIHandler(SimpleHTTPRequestHandler):
             "precisions": sorted(list(precisions)),
             "base_series_names": sorted(list(base_series_names)),
             "base_accel_names": sorted(list(base_accel_names)),
+            "series_param_info": series_param_info,
+            "accel_param_info": accel_param_info,
         }
 
     def handle_metadata_request(self):
