@@ -6,7 +6,7 @@
  *
  *
  *                       Copyright (c) 2002-2024
- *                       Henrik Vestermark 
+ *                       Henrik Vestermark
  *                       Denmark, USA
  *
  *                       All Rights Reserved
@@ -24,14 +24,14 @@
  *
  *
  * Module name     : intervaldouble.h
- * Module ID Nbr   :   
+ * Module ID Nbr   :
  * Description     : Interval arithmetic template class
- *                   Works with both float and double and doesnt require any 
- *					 special floating point control as the previous version did. 
- *					 use software emulation of rounding control via the twosum and 
- *					 twoproduct 
+ *                   Works with both float and double and doesnt require any
+ *					 special floating point control as the previous version did.
+ *					 use software emulation of rounding control via the twosum and
+ *					 twoproduct
  * --------------------------------------------------------------------------
- * Change Record   :   
+ * Change Record   :
  *
  * Version	Author/Date		Description of changes
  * -------  --------------	----------------------
@@ -58,12 +58,12 @@
  * 01.18	HVE/24-Mar-2021 Updated license info
  * 01.19	HVE/4-Jul-2021	Added software interval runding via towsum and twoproduct functions and other functions
  * 01.20	HVE/5-Jul-2021	Replace deprecreated headers with current headers
- * 01.21	HVE/15-Jul-2021 Decpreated hardware support for interval arithmetic since this was not portable and didnt takes advantages of the latest 
+ * 01.21	HVE/15-Jul-2021 Decpreated hardware support for interval arithmetic since this was not portable and didnt takes advantages of the latest
  *							Intel instructions set. instead if used only software emaulation of intervals.
  * 01.22	HVE/29-Jul-2021 Corrected bugs in all the trigonometir functions and added interval version of hyperbolic functions
  *							sinh(), cosh(), tanh(), asinh(), acosh(), atanh().
  * 01.23	HVE/30-Jul-2021 Added intervalsection(), unionsection(), boolean precedes(), interior()
- * 02.01	HVE/19-FEB-2024	Rewritten and optimized 
+ * 02.01	HVE/19-FEB-2024	Rewritten and optimized
  * 02.02	HVE/28-Mar-2024	optimized for float_precision types
  * 02.03	HVE/17-Apr-2024	Method isEntire and function entire(), empty() are added,
  * 02.04	HVE/22-Apr-2024	Added the decoration attribute
@@ -88,7 +88,15 @@ static char _VinterP_[] = "@(#)intervalprecision.h 02.06 -- Copyright (C) Henrik
 #include <type_traits>
 #include <stdexcept>
 
-static_assert(__cplusplus >= 201703L, "The intervalprecision.h code requires c++17 or higher.");
+#if defined(_MSVC_LANG)
+	#if _MSVC_LANG < 201402L
+		#error The intervalprecision.h code requires c++14 or higher
+	#endif
+#else
+	#if __cplusplus < 201402L
+		#error The intervalprecision.h code requires c++14 or higher
+	#endif
+#endif
 
 #define PHASE4	// Add support for float_precision
 //#define PHASE5	// use simplify interval operations by always convert interval to its closed form and then perform the operation and leave the interval closed
@@ -117,7 +125,7 @@ enum int_class { NO_CLASS, ZERO, POSITIVE0, POSITIVE1, POSITIVE, NEGATIVE0, NEGA
 // # Left open a<x<=b	(a,b]	same as Right close
 // # Right open a<=x<b	[a,b)	same as Left close
 // # Open a<x<b			(a,b)
-// # EMPTY interval 
+// # EMPTY interval
 enum interval_type { EMPTY, CLOSE, LEFT_OPEN, RIGHT_OPEN, OPEN, RIGHT_CLOSE=LEFT_OPEN, LEFT_CLOSE=RIGHT_OPEN };
 
 // There are 5 decorations values in the IEEE1788 standard
@@ -129,7 +137,7 @@ enum interval_type { EMPTY, CLOSE, LEFT_OPEN, RIGHT_OPEN, OPEN, RIGHT_CLOSE=LEFT
 // Compute: COMPUTE is just a trigger for that the interval decoration has to be re-computed for the interval
 //
 enum interval_decoration {COMPUTE, ILL, TRV, DEF, DAC, COM};
-// 
+//
 // Interval class
 // Realistically the class Type can be float, double. Any other type is not supported
 
@@ -144,7 +152,7 @@ template<class IT> class interval {
 	enum interval_type type;  // Interval type CLOSE, OPEN, LEFT_OPEN, RIGHT_OPEN, (RIGHT_CLOSE is synonym for LEFT_OPEN and LEFT_CLOSE same as RIGHT_OPEN
 	enum interval_decoration decoration; // Decoration type COM,DAC,DEF,TRV, ILL
 
-	//	Implement the twosum algorithm. 
+	//	Implement the twosum algorithm.
 	//  Assuming round to nearest mode (default IEEE754)
 	//	sum=(a+b)
 	//	a1=sum-b
@@ -169,7 +177,7 @@ template<class IT> class interval {
 
 	// Split argument into a right and left. (Dekker's method)
 	// double has 53bits in mantissa and shifting is therefore (53+1)/2=27
-	// float has 24bits in mantissa and shifting is therefore (24+1)/2=12 
+	// float has 24bits in mantissa and shifting is therefore (24+1)/2=12
 	IT split(const IT& a)
 	{
 		const IT C(a * double((1 << 27) + 1));
@@ -208,7 +216,7 @@ template<class IT> class interval {
 		return std::make_pair(p, err);
 	}
 
-	//	Implement the fast twosum algorithm 
+	//	Implement the fast twosum algorithm
 	//  Assuming round to nearest mode (default IEEE754)
 	//	sum=(a+b)
 	//	a1=sum-a
@@ -288,18 +296,18 @@ template<class IT> class interval {
 		interval(const IT&);	// Singleton interval
 		// Regular interval with interval_type (default CLOSE)
 		interval(const IT&, const IT&, const enum interval_type t=CLOSE);
-	  
+
 		// Constructor for mixed type IT != _X (base types). Allows auto construction of e.g. interval<double> x(float)
-		// Notice that the phase one constructor above is still valid when both the interval type IT and the argument 
+		// Notice that the phase one constructor above is still valid when both the interval type IT and the argument
 		// is also of the same type
 		template<typename _X> interval(const _X&); // Singleton interval
 		// Regular interval with interval_type (default CLOSE)
 		template<typename _X, typename _Y> interval(const _X& , const _Y&, const enum interval_type t=CLOSE);
 		// constructor for any other type to IT. Both up and down conversions are possible
 		// constructor for an interval<_X> argument
-		template<typename _X> interval(const interval<_X>& a); 
-	 
-		// Coordinate functions. 
+		template<typename _X> interval(const interval<_X>& a);
+
+		// Coordinate functions.
 		IT rightinterval() const;			// Return rightinterval bound
 		IT leftinterval() const;			// Return leftinterval bound
 		IT rightinterval(const IT&);		// Set and return rightinterval bound
@@ -308,41 +316,41 @@ template<class IT> class interval {
 		enum interval_type intervaltype(const enum interval_type); // Set and return interval type
 		enum interval_decoration intervaldecoration() const; //Return the decoration information
 		enum interval_decoration intervaldecoration(const enum interval_decoration); // Set and return decoration information
-		
+
 
 		// IEEE1788 standard functions
-		IT inf(bool toclose=false) const;	// Return infimum of interval 
+		IT inf(bool toclose=false) const;	// Return infimum of interval
 		IT sup(bool toclose=false) const;	// Return supremum of interval
 		IT mid() const;	// Return midpoint of interval
-		IT rad() const;	// Return radius of interval	
+		IT rad() const;	// Return radius of interval
 		IT wid() const;	// Return width of interval
 		IT mig() const;	// Return Mignitude. inf(|x|)
 		IT mag() const;	// Return Magnitude. sup(|x|)
-		
+
 		// Is methods as required per IEEE 1788 standard
 		bool isEmpty() const;
 		bool isEntire() const;
 		bool isPoint() const;
 		bool isImproper() const;
 		bool isProper() const;
-	
+
 		bool in(const IT& i);	// Check if an pointis within the interval
 
 		// Miscellaneous but usefull coordinate functions
 		enum int_class isClass() const;
 		std::string toString() const;	// Convert interval to a string
-		
+
 		// Conversion Operators
-		operator short() const;				 
-		operator int() const;			
-		operator long() const;			 
-		operator long long() const;		 
-		operator unsigned short() const;	 
-		operator unsigned int() const;	
-		operator unsigned long() const;	
+		operator short() const;
+		operator int() const;
+		operator long() const;
+		operator long long() const;
+		operator unsigned short() const;
+		operator unsigned int() const;
+		operator unsigned long() const;
 		operator unsigned long long() const;
-		operator double() const;			 
-		operator float() const;	
+		operator double() const;
+		operator float() const;
 		operator float_precision() const;
 
 		// Essential operators
@@ -387,10 +395,10 @@ template<class IT> class interval {
 
 // Unary and Binary arithmetic
 // Arithmetic +,-,*,/ Binary and Unary
-template<class IT> interval<IT> operator+( const interval<IT>&, const interval<IT>& ); 
+template<class IT> interval<IT> operator+( const interval<IT>&, const interval<IT>& );
 template<class IT> interval<IT> operator+( const interval<IT>& );	// Unary
 template<class IT> interval<IT> operator-( const interval<IT>&, const interval<IT>& );
-template<class IT> interval<IT> operator-( const interval<IT>& );	// Unary 
+template<class IT> interval<IT> operator-( const interval<IT>& );	// Unary
 template<class IT> interval<IT> operator*(const interval<IT>&, const interval<IT>&);
 template<class IT> interval<IT> operator/( const interval<IT>&, const interval<IT>& );
 
@@ -420,7 +428,7 @@ template <class IT, class _X> interval<IT> operator*(const interval<IT>&, const 
 template <class IT, class _X> interval<IT> operator*(const _X&, const interval<IT>&);
 template <class IT, class _X> interval<IT> operator/(const interval<IT>&, const _X&);
 template <class IT, class _X> interval<IT> operator/(const _X&, const interval<IT>&);
- 
+
 // Boolean operators for mixed arithmetic
 template <class IT, class _X> bool operator==(const interval<IT>&, const _X&);
 template <class IT, class _X> bool operator==(const _X&, const interval<IT>&);
@@ -459,7 +467,7 @@ template<class IT> inline bool entire(const interval<IT>&);
 //	e=2.71828182845904523536
 //	ln2=0.69314718055994530942
 //	ln10=2.30258509299404568402
-// 
+//
 /////////////////////////////////////////////////////////////////////////////////////
 
 #ifdef PHASE4
@@ -487,9 +495,9 @@ template<typename IT> constexpr interval<IT> pi_interval(const size_t precision 
 		return interval<IT>(IT(3.141'592'653'589'793'1), IT(3.141'592'653'589'793'6));
 	else if  (std::is_same<IT, float_precision> ::value)
 	{
-		float_precision pi(0, precision, ROUND_DOWN); 
+		float_precision pi(0, precision, ROUND_DOWN);
 		// Get PI with one higher decimal accuracy to be able to get left side of interval correctly
-		pi=_float_table(_PI, precision+1); 
+		pi=_float_table(_PI, precision+1);
 		return interval<float_precision>(pi, nextafter(pi,FP_INFINITY));
 	}
 	else
@@ -571,7 +579,7 @@ template<typename IT> constexpr interval<IT> pi_interval()
 		return interval<IT>(IT(3.141'592'50), IT(3.141'592'74));
 	else if constexpr (std::is_same<IT, double>::value)
 		return interval<IT>(IT(3.141'592'653'589'793'1), IT(3.141'592'653'589'793'6));
-	else 
+	else
 		static_assert(std::is_floating_point<IT>::value || std::is_same<IT, float_precision>::value, "Unsupported type for pi_interval.Type must be float, double, or long double.");
 }
 
@@ -582,7 +590,7 @@ template<typename IT> constexpr interval<IT> e_interval()
 		return interval<IT>(IT(2.718'281'75), IT(2.718'281'98));
 	else if constexpr (std::is_same<IT, double>::value)
 		return interval<IT>(IT(2.718'281'828'459'045'1), IT(2.718'281'828'459'045'5));
-	else 
+	else
 		static_assert(std::is_floating_point<IT>::value || std::is_same<IT, float_precision>::value, "Unsupported type for pi_interval.Type must be float, double, or long double.");
 }
 
@@ -593,7 +601,7 @@ template<typename IT> constexpr interval<IT> ln2_interval()
 		return interval<IT>(IT(0.693'147'123), IT(0.693'147'182));
 	else if constexpr (std::is_same<IT, double>::value)
 		return interval<IT>(IT(0.693'147'180'559'945'29), IT(0.693'147'180'559'945'40));
-	else 
+	else
 		static_assert(std::is_floating_point<IT>::value || std::is_same<IT, float_precision>::value, "Unsupported type for pi_interval.Type must be float, double, or long double.");
 }
 
@@ -613,7 +621,7 @@ template<typename IT> constexpr interval<IT> ln10_interval()
 /////////////////////////////////////////////////////////////////////////////////////
 //
 // END of Interval constants
-// 
+//
 /////////////////////////////////////////////////////////////////////////////////////
 
 template<class IT> inline interval<IT> floor(const interval<IT>&);	// floor(x)
@@ -663,7 +671,7 @@ template<class _Ty> inline std::ostream& operator<<(std::ostream& strm, interval
 
 // Input operator >>
 //
-template<class _Ty> inline std::istream& operator>>( std::istream& strm, interval<_Ty>& c ) 
+template<class _Ty> inline std::istream& operator>>( std::istream& strm, interval<_Ty>& c )
    {
    _Ty l, u; char ch, lbrack='[', rbrack=']';
    if( strm >> ch && ch != '[' && ch != '(')
@@ -687,7 +695,7 @@ template<class _Ty> inline std::istream& operator>>( std::istream& strm, interva
 		   else
 			   rbrack = ch;
    }
-	
+
    if (!strm.fail())
    {
 	   enum interval_type t = CLOSE;
@@ -710,17 +718,17 @@ template<class _Ty> inline std::istream& operator>>( std::istream& strm, interva
 //////////////////////////////////////////////////////////////////////////////////////
 
 // Construct an empty interval
-template<class IT> inline  interval<IT>::interval() 
+template<class IT> inline  interval<IT>::interval()
 	:left(IT(0)), right(IT(0)), type(EMPTY), decoration(TRV) {}	// Set EMPTY interval type
 
 // Construct a singleton interval
-// Since IT is either float or double and the argument is of the same type 
+// Since IT is either float or double and the argument is of the same type
 // we can't catch any conversion error for up or down conversion of the argument
 template<class IT> inline  interval<IT>::interval(const IT& d)
 	: left(d), right(d), type(CLOSE), decoration(COM) {}	// Default is closed type
 
 // Construct a regular interval
-// Since IT is either float or double and the argument is of the same type 
+// Since IT is either float or double and the argument is of the same type
 // we can't catch any conversion error for up or down conversion of the argument
 template<class IT> inline  interval<IT>::interval(const IT& l, const IT& h, const enum interval_type t)
 	: left(l), right(h), type(t), decoration(COM) {}
@@ -732,7 +740,7 @@ template<class IT> inline  interval<IT>::interval(const IT& l, const IT& h, cons
 // If float or double limits are exceeded, sets the left interval to the correct lower bound,
 // while the right interval is adjusted accordingly.
 // Note: This template constructor is preferred over the simpler constructor
-template<class IT> template<typename _X> inline interval<IT>::interval(const _X& x)  
+template<class IT> template<typename _X> inline interval<IT>::interval(const _X& x)
 {
 	const bool isIntegral = std::is_integral<_X>::value;
 	const bool isTargetFloat = std::is_same<IT, float>::value;
@@ -743,9 +751,9 @@ template<class IT> template<typename _X> inline interval<IT>::interval(const _X&
 	left = IT(x);
 	right = IT(x);
 	if(isTargetFloat&& isSourceDoubleOrLongDouble)
-	{	// Downpromoting from double to float. 
+	{	// Downpromoting from double to float.
 		// Uppromotion from float to double is always accurate
-		auto adjustBoundaries = [&](const _X& val) 
+		auto adjustBoundaries = [&](const _X& val)
 		{
 			_X e = val - _X(left);
 			if (e < _X(0)) left = nextafter(left, -infi);
@@ -769,7 +777,7 @@ template<class IT> template<typename _X> inline interval<IT>::interval(const _X&
 			if (e < _X(0)) left = nextafter(left, -infi);
 		}
 	}
-	type = CLOSE; 
+	type = CLOSE;
 	decoration = this->intervaldecoration(COMPUTE);
 }
 
@@ -801,8 +809,8 @@ template<class IT> template<typename _X, typename _Y> inline interval<IT>::inter
 	return;
 }
 
-// constructor for any other interval<_X> to interval<IT>. 
-// e.g. interval<float> i1(2,3); 
+// constructor for any other interval<_X> to interval<IT>.
+// e.g. interval<float> i1(2,3);
 // interval<float> i2(i1);
 template<class IT> template<typename _X> inline interval<IT>::interval(const interval<_X>& a) //
 {
@@ -830,39 +838,39 @@ template<class IT> template<typename _X> inline interval<IT>::interval(const int
 
 // Conversion Operators
 template<class IT> inline interval<IT>::operator short() const
-{	// Conversion to short 	
+{	// Conversion to short
 	return static_cast<short>(mid());
 }
 template<class IT> inline interval<IT>::operator int() const
-{	// Conversion to int 	
+{	// Conversion to int
 	return static_cast<int>(mid());
 }
-	 
+
 template<class IT> inline interval<IT>::operator long() const
-{	// Conversion to long 	
+{	// Conversion to long
 	return static_cast<long>(mid());
 }
 template<class IT> inline interval<IT>::operator long long() const
-{	// Conversion to long long 	
+{	// Conversion to long long
 	return static_cast<long long>(mid());
 }
 
 template<class IT> inline interval<IT>::operator unsigned short() const
-{	// Conversion to unsigned short 	
+{	// Conversion to unsigned short
 	return static_cast<unsigned short>(mid());
 }
 template<class IT> inline interval<IT>::operator unsigned int() const
-{	// Conversion to unsgined int 	
+{	// Conversion to unsgined int
 	return static_cast<unsigned int>(mid());
 }
 
 template<class IT> inline interval<IT>::operator unsigned long() const
-{	// Conversion to unsigned long 	
+{	// Conversion to unsigned long
 	return static_cast<unsigned long>(mid());
 }
 
 template<class IT> inline interval<IT>::operator unsigned long long() const
-{	// Conversion to long long 	
+{	// Conversion to long long
 	return static_cast<unsigned long long>(mid());
 }
 
@@ -892,30 +900,30 @@ template<class IT> inline interval<IT>::operator float_precision() const
 ///
 //////////////////////////////////////////////////////////////////////////////////////
 
-// Coordinate functions. 
+// Coordinate functions.
 
 // Return the right interval "as is"
-template<class IT> inline IT interval<IT>::rightinterval() const 
+template<class IT> inline IT interval<IT>::rightinterval() const
 { return right; }
 
 // Return the left interval "as is"
-template<class IT> inline IT interval<IT>::leftinterval() const 
+template<class IT> inline IT interval<IT>::leftinterval() const
 { return left; }
 
-// Set the right interval "as is". 
+// Set the right interval "as is".
 // If interval is empty set the interval type to CLOSE
-template<class IT> inline IT interval<IT>::rightinterval(const IT& r) 
-{ 
+template<class IT> inline IT interval<IT>::rightinterval(const IT& r)
+{
 	if (type == EMPTY)
 		type = CLOSE;
 	right = r;
 	return right;
 }
 
-// Set the left interval "as is". 
+// Set the left interval "as is".
 // If interval is empty set the interval type to CLOSE
 template<class IT> inline IT interval<IT>::leftinterval(const IT& l)
-{ 	
+{
 	if (type == EMPTY)
 		type = CLOSE;
 	left = l;
@@ -923,7 +931,7 @@ template<class IT> inline IT interval<IT>::leftinterval(const IT& l)
 }
 
 // Return the current intervaltype
-template<class IT> inline enum interval_type interval<IT>::intervaltype() const 
+template<class IT> inline enum interval_type interval<IT>::intervaltype() const
 { return type; }
 
 // Set the interval type
@@ -955,28 +963,28 @@ template<class IT> inline enum interval_type interval<IT>::intervaltype(const en
 
 		switch (x.type)
 		{
-		case CLOSE: 
+		case CLOSE:
 			// if the interval is already CLOSE then do nothing
 			if (to == LEFT_OPEN || to == OPEN)
 				x.left = nextafter(x.left, -infi);
 			if (to == RIGHT_OPEN || to == OPEN)
 				x.right = nextafter(x.right, +infi);
 			break;
-		case OPEN: 
+		case OPEN:
 			// if the interval is already Open then do nothing
 			if (to == RIGHT_OPEN || to == CLOSE)
 				x.left = nextafter(x.left, +infi);
 			if (to == LEFT_OPEN || to == CLOSE)
 				x.right = nextafter(x.right, -infi);
 			break;
-		case LEFT_OPEN: 
+		case LEFT_OPEN:
 			// If the interval is already RIGHT_CLOSE same as LEFT_OPEN then do nothing
 			if (to == RIGHT_OPEN || to == CLOSE)
 				x.left = nextafter(x.left, +infi);
 			if (to == RIGHT_OPEN || to == OPEN)
 				x.right = nextafter(x.right, +infi);
 			break;
-		case RIGHT_OPEN:	
+		case RIGHT_OPEN:
 			// If the interval is already LEFT_CLOSE then do nothing
 			if (to == LEFT_OPEN || to == OPEN)
 				x.left = nextafter(x.left, -infi);
@@ -1002,7 +1010,7 @@ template<class IT> inline enum interval_decoration interval<IT>::intervaldecorat
 
 // Set and  Return the interval decoration
 template<class IT> inline enum interval_decoration interval<IT>::intervaldecoration(const enum interval_decoration to)
-{	
+{
 	decoration = to;
 	if(to==COMPUTE)
 	{ // Compute the decoration type
@@ -1018,7 +1026,7 @@ template<class IT> inline enum interval_decoration interval<IT>::intervaldecorat
 }
 
 // compute the infimum(greatest lower bound) of an interval, taking into account the type of interval
-// (closed, open, left-open, or right-open) and whether the interval is proper 
+// (closed, open, left-open, or right-open) and whether the interval is proper
 // (left endpoint is less than or equal to right endpoint) or improper(left endpoint is greater than the right endpoint).
 template<class IT> inline IT interval<IT>::inf(bool toclose) const
 {
@@ -1030,18 +1038,18 @@ template<class IT> inline IT interval<IT>::inf(bool toclose) const
 	if(!toclose)
 		return min(left, right);
 #endif
-	if (type == CLOSE) 
+	if (type == CLOSE)
 		return std::min(left, right);
 
 	IT adjustedLeft = left;
 	IT adjustedRight = right;
-	
+
 	// Adjust left boundary for open intervals
-	if (type == LEFT_OPEN || type == OPEN) 
+	if (type == LEFT_OPEN || type == OPEN)
 		adjustedLeft = nextafter(left, (left <= right) ? +infi : -infi);
 
 	// Adjust right boundary for open intervals, taking into account improper intervals
-	if (type == RIGHT_OPEN || type == OPEN) 
+	if (type == RIGHT_OPEN || type == OPEN)
 		adjustedRight = nextafter(right, (left <= right) ? -infi: +infi);
 
 	// Return the minimum of the adjusted boundaries
@@ -1050,7 +1058,7 @@ template<class IT> inline IT interval<IT>::inf(bool toclose) const
 
 // Optimizing the function for calculating the supremum(least upper bound) of an interval follows
 // a similar approach to optimizing the infimum calculation
-template<class IT> inline IT interval<IT>::sup(bool toclose) const 
+template<class IT> inline IT interval<IT>::sup(bool toclose) const
 {
 	const IT infi(infinity_interval<IT>());// infi(INFINITY);
 	if (isEmpty())	// If empty return -infinity
@@ -1081,27 +1089,27 @@ template<class IT> inline IT interval<IT>::sup(bool toclose) const
 
 // Return interval midpoint, computed as the interval is closed to ensure correct computation
 // if empty return no value
-template<class IT> inline IT interval<IT>::mid() const { 
+template<class IT> inline IT interval<IT>::mid() const {
 	if (isEmpty())
 		return FP_QUIET_NAN;
-	if (right == left) return left; else  return (right + left) / IT(2); 
+	if (right == left) return left; else  return (right + left) / IT(2);
 }
 
 // Return interval radius
 // Notice that radius is negative for improper intervals
-template<class IT> inline IT interval<IT>::rad() const { 
+template<class IT> inline IT interval<IT>::rad() const {
 	if (isEmpty())
-		return FP_QUIET_NAN; 
+		return FP_QUIET_NAN;
 	IT r((right - left) / IT(2));
 	return r;
 }
 
-// Return interval width 
+// Return interval width
 template<class IT> inline IT interval<IT>::wid() const {
 	if (isEmpty())
-		return FP_QUIET_NAN; 
+		return FP_QUIET_NAN;
 	IT r(right - left);
-	if (r < IT(0)) r = -r; 
+	if (r < IT(0)) r = -r;
 	return r;
 }
 
@@ -1124,13 +1132,13 @@ template<class IT> inline IT interval<IT>::mag() const {
 }
 
 // Required is... methods
-template<class IT> inline bool interval<IT>::isProper() const 
+template<class IT> inline bool interval<IT>::isProper() const
 { return left<=right; }
-template<class IT> inline bool interval<IT>::isImproper() const 
+template<class IT> inline bool interval<IT>::isImproper() const
 { return right<left; }
-template<class IT> inline bool interval<IT>::isPoint() const 
+template<class IT> inline bool interval<IT>::isPoint() const
 { return left==right; }
-template<class IT> inline bool interval<IT>::isEmpty() const 
+template<class IT> inline bool interval<IT>::isEmpty() const
 { return type==EMPTY; }
 template<class IT> inline bool interval<IT>::isEntire() const
 {
@@ -1139,7 +1147,7 @@ template<class IT> inline bool interval<IT>::isEntire() const
 }
 
 // Return interval classification
-template<class IT> inline enum int_class interval<IT>::isClass() const 
+template<class IT> inline enum int_class interval<IT>::isClass() const
 {
 	if (left == IT(0) && right == IT(0)) return ZERO;
 	if (left == IT(0) && right >  IT(0)) return POSITIVE0;
@@ -1181,7 +1189,7 @@ template<class IT> inline std::string interval<IT>::toString() const
 /// END Methods
 ///
 //////////////////////////////////////////////////////////////////////////////////////
-// 
+//
 //////////////////////////////////////////////////////////////////////////////////////
 //
 //
@@ -1294,9 +1302,9 @@ inline interval<float_precision>& interval<float_precision>::operator-=(const in
 }
 
 
-// specilization for the float_precision class. 
+// specilization for the float_precision class.
 // [EMPTY]:=a*[EMPTY] or [EMPTY]:=[EMPTY]*b or [EMPTY]:=[EMPTY]*[EMPTY]
-// Please note that this is for all integer classes. interval<int>, interval<long>, 
+// Please note that this is for all integer classes. interval<int>, interval<long>,
 // were there is no loss of precision
 // Instead of doing the mindless low = MIN(low*a.right, low*a.low,right*a.low,right*a.right) and
 // right = MAX(low*a.right, low*a.low,right*a.low,right*a.right) requiring a total of 8 multiplication
@@ -1304,8 +1312,8 @@ inline interval<float_precision>& interval<float_precision>::operator-=(const in
 //   low, right, a.low, a.right    result
 //    +     +     -     +        -  +  [ right*a.low, right*a.right ] 2205
 //    +     +     -     -        -  -  [ right*a.low, low*a.right ]
-//    +     +     +     +        +  +  [ low*a.low, right*a.right ] 
-//    -     +     +     +        -  +  [ low*a.right, right*a.right ]  
+//    +     +     +     +        +  +  [ low*a.low, right*a.right ]
+//    -     +     +     +        -  +  [ low*a.right, right*a.right ]
 //    -     +     -     +        -  +  [ MIN(low*a.right,right*a.low), MAX(low*a.low,right*a.right) ]
 //    -     +     -     -        -  -  [ right*a.low, low*a.low ]
 //    -     -     +     +        -  -  [ low*a.right, right,a.low ]
@@ -1371,7 +1379,7 @@ inline interval<float_precision>& interval<float_precision>::operator*=(const in
 		return *this;
 	}
 	if (ar < c0 && br < c0)
-	{// Both intervals negative 
+	{// Both intervals negative
 		itmp = multiply(al, bl);
 		right = itmp.right;
 		itmp = multiply(ar, br);
@@ -1379,7 +1387,7 @@ inline interval<float_precision>& interval<float_precision>::operator*=(const in
 		return *this;
 	}
 	if (al >= c0 && br < c0)
-	{// [A] interval positive, [B] interval negative 
+	{// [A] interval positive, [B] interval negative
 		itmp = multiply(ar, bl);
 		left = itmp.left;
 		itmp = multiply(al, br);
@@ -1407,7 +1415,7 @@ inline interval<float_precision>& interval<float_precision>::operator*=(const in
 	itmp = multiply(ar, br);
 	left = std::min(left, itmp.left);
 	right = std::max(right, itmp.right);
-	
+
 	// However if underflow or overflow then change it to DAC or TRV
 	if (abs(left) == infi || abs(right) == infi)
 		decoration = std::min(decoration, DAC);
@@ -1500,7 +1508,7 @@ inline interval<float_precision>& interval<float_precision>::operator/=(const in
 #endif
 
 
-// += operator. Works for nearly all classes. 
+// += operator. Works for nearly all classes.
 // Always return an "proper" and closed [] interval
 // a:=a+[EMPTY] or b:=[EMPTY]+b or [EMPTY]:=[EMPTY]+[EMPTY]
 template<class IT> inline interval<IT>& interval<IT>::operator+=( const interval<IT>& rhs )
@@ -1538,7 +1546,7 @@ template<class IT> inline interval<IT>& interval<IT>::operator+=( const interval
 	return *this;
 }
 
-// -= operator. Works all other classes. 
+// -= operator. Works all other classes.
 // Always return an "proper" and closed [] interval
 // a=a-[EMPTY] or -b=[EMPTY]-b or [EMPTY]=[EMPTY]-[EMPTY]
 //
@@ -1549,7 +1557,7 @@ template<class IT> inline interval<IT>& interval<IT>::operator-=( const interval
 		return *this;
 	if (type == EMPTY)
 		return (*this = -rhs);
-	
+
 	const IT infi(infinity_interval<IT>());// infi(INFINITY);
 	const IT unfl(underflow_interval<IT>());
 	// Neither a or b is [EMPTY]
@@ -1578,9 +1586,9 @@ template<class IT> inline interval<IT>& interval<IT>::operator-=( const interval
 
 
 
-// Works all other classes. 
+// Works all other classes.
 // [EMPTY]:=a*[EMPTY] or [EMPTY]:=[EMPTY]*b or [EMPTY]:=[EMPTY]*[EMPTY]
-// Please note that this is for all integer classes. interval<int>, interval<long>, 
+// Please note that this is for all integer classes. interval<int>, interval<long>,
 // were there is no loss of precision
 // Instead of doing the mindless low = MIN(low*a.right, low*a.low,right*a.low,right*a.right) and
 // right = MAX(low*a.right, low*a.low,right*a.low,right*a.right) requiring a total of 8 multiplication
@@ -1588,8 +1596,8 @@ template<class IT> inline interval<IT>& interval<IT>::operator-=( const interval
 //   low, right, a.low, a.right    result
 //    +     +     -     +        -  +  [ right*a.low, right*a.right ] 2205
 //    +     +     -     -        -  -  [ right*a.low, low*a.right ]
-//    +     +     +     +        +  +  [ low*a.low, right*a.right ] 
-//    -     +     +     +        -  +  [ low*a.right, right*a.right ]  
+//    +     +     +     +        +  +  [ low*a.low, right*a.right ]
+//    -     +     +     +        -  +  [ low*a.right, right*a.right ]
 //    -     +     -     +        -  +  [ MIN(low*a.right,right*a.low), MAX(low*a.low,right*a.right) ]
 //    -     +     -     -        -  -  [ right*a.low, low*a.low ]
 //    -     -     +     +        -  -  [ low*a.right, right,a.low ]
@@ -1614,9 +1622,9 @@ template<class IT> inline interval<IT>& interval<IT>::operator*=( const interval
 	IT bl(rhs.inf());
 	IT bh(rhs.sup());
 
-	auto multiply = [&](const IT& x, const IT& y) 
+	auto multiply = [&](const IT& x, const IT& y)
 	{
-		std::pair<IT, IT> tmp = interval<IT>::fasttwo_prod(x, y); 
+		std::pair<IT, IT> tmp = interval<IT>::fasttwo_prod(x, y);
 		interval<IT> res(tmp.first,tmp.first);
 		const IT infi(infinity_interval<IT>());// infi(INFINITY);
 		if (tmp.second < c0)
@@ -1627,7 +1635,7 @@ template<class IT> inline interval<IT>& interval<IT>::operator*=( const interval
 	};
 	// The initialization is done to preserve the precision when IT is a float_precision arbitrary type
 	// For_IT as float, double or long double it has no effect
-	interval<IT> itmp(al,ah);	
+	interval<IT> itmp(al,ah);
 #ifdef PHASE5
 	type = compute_interval_type(type, rhs.type);
 #else
@@ -1645,7 +1653,7 @@ template<class IT> inline interval<IT>& interval<IT>::operator*=( const interval
 		return *this;
 	}
 	if (ah < c0 && bh < c0)
-	{// Both intervals negative 
+	{// Both intervals negative
 		itmp = multiply(al, bl);
 		right = itmp.right;
 		itmp = multiply(ah, bh);
@@ -1653,7 +1661,7 @@ template<class IT> inline interval<IT>& interval<IT>::operator*=( const interval
 		return *this;
 	}
 	if (al >=c0 && bh < c0)
-	{// [A] interval positive, [B] interval negative 
+	{// [A] interval positive, [B] interval negative
 		itmp = multiply(ah, bl);
 		left = itmp.left;
 		itmp = multiply(al, bh);
@@ -1669,7 +1677,7 @@ template<class IT> inline interval<IT>& interval<IT>::operator*=( const interval
 		return *this;
 	}
 	// Otherwise, we have a mixed interval. Make all 4 combinations
-	itmp = multiply(al, bl); 
+	itmp = multiply(al, bl);
 	left = itmp.left;
 	right = itmp.right;
 	itmp = multiply(al, bh);
@@ -1783,7 +1791,7 @@ template<class IT> inline interval<IT>& interval<IT>::operator&=(const interval<
 }
 
 // Return the union.
-// However not the correct union as two intervals if not overlapping. 
+// However not the correct union as two intervals if not overlapping.
 // But just the entire union of the two interval
 // regardsless if the intervals is connected.
 // use join() for the correct handling of the union operator.
@@ -1904,8 +1912,8 @@ template<class IT> inline interval<IT> operator/(const interval<IT>& a, const in
 		//	return result;
 		}
 	}
-	result /= b; // Notice result/=b; return the maximum precision of the two operand And 
-				// since we change this precision in the division call result is the precision of 
+	result /= b; // Notice result/=b; return the maximum precision of the two operand And
+				// since we change this precision in the division call result is the precision of
 				// the maximum of the two operands
 	return result;
 }
@@ -1917,7 +1925,7 @@ template<class IT,class _X> inline interval<IT> operator+(const interval<IT>& a,
 	{
 	interval<IT> c(a);
 	c += interval<IT>(IT(b));
-	return c; 
+	return c;
 	}
 
 // Binary + operator
@@ -2081,7 +2089,7 @@ template<class IT> inline bool operator>(const interval<IT>& a, const interval<I
 		return true;
 
 	// Helper function to compare left boundaries
-	auto isLeftGreater=[](const interval<IT> & a, const interval<IT> & b) 
+	auto isLeftGreater=[](const interval<IT> & a, const interval<IT> & b)
 	{
 		if (a.inf() > b.inf()) return true;
 		if (a.inf() < b.inf()) return false;
@@ -2093,7 +2101,7 @@ template<class IT> inline bool operator>(const interval<IT>& a, const interval<I
 		return false;
 	};
 	// Helper function to compare right boundaries
-	auto isRightGreater=[](const interval<IT> & a, const interval<IT> & b) 
+	auto isRightGreater=[](const interval<IT> & a, const interval<IT> & b)
 	{
 		if (a.sup() > b.sup()) return true;
 		if (a.sup() < b.sup()) return false;
@@ -2236,9 +2244,9 @@ template<class IT, class _X> inline bool operator>=(const _X& a, const interval<
 // Works for all classes
 //
 template<class IT, class _X> inline bool operator>=(const interval<IT>& a, const interval<_X>& b)
-{  		
+{
 	interval<IT> c(b);
-	return a >= c; 
+	return a >= c;
 }
 
 // Binary >= operator
@@ -2414,9 +2422,9 @@ template<class IT> inline bool precedes(const interval<IT>& a, const interval<IT
 	return false;
 }
 
-// inclusion between two intervals. 
-// If a is a subset of b then return +1, 
-// if b is a subset of a then return +1 
+// inclusion between two intervals.
+// If a is a subset of b then return +1,
+// if b is a subset of a then return +1
 // otherwise return 0
 template<class IT> inline int inclusion(const interval<IT>& a, const interval<IT>& b)
 {
@@ -2466,7 +2474,7 @@ inline enum interval_type compute_interval_type(enum interval_type a, enum inter
 //
 // Interval functions:
 //		sgn(),
-//		sqr(),	
+//		sqr(),
 //		sqrt(),
 //		log10(),
 //		log(),
@@ -2475,12 +2483,12 @@ inline enum interval_type compute_interval_type(enum interval_type a, enum inter
 //		floor()
 //		ceil()
 //
-// By default IEE754 round to nearest 
+// By default IEE754 round to nearest
 /////////////////////////////////////////////////////////////////////////////////////
 
 // sqr(x)=x^2
 template<class IT> inline interval<IT> sqr(const interval<IT>& x)
-{	
+{
 	const IT infi(infinity_interval<IT>());// infi(INFINITY);
 	const IT unfl(underflow_interval<IT>());
 
@@ -2514,7 +2522,7 @@ template<class IT> inline interval<IT> sqr(const interval<IT>& x)
 // with the IT=float_precision
 //
 template<class IT> inline interval<IT> sqrt(const interval<IT>& x)
-{	
+{
 	const IT infi(infinity_interval<IT>());// infi(INFINITY);
 	// Initialized the local variable, to ensure right precision for float_precision types
 	// Notice IEEE1788 requires us to ignore outside of domain range. e.g. negative numbers
@@ -2527,7 +2535,7 @@ template<class IT> inline interval<IT> sqrt(const interval<IT>& x)
 	}
 	// Find leftinterval bound
 	const IT leftadjust(max(x.inf(), IT(0)));
-	IT left(sqrt(leftadjust)); 
+	IT left(sqrt(leftadjust));
 	IT r(-fma(left,left,-leftadjust));
 	if (isinf(left) && isinf(x.inf()))
 		r = 0;	// When both is infinity
@@ -2539,7 +2547,7 @@ template<class IT> inline interval<IT> sqrt(const interval<IT>& x)
 	IT right(sqrt(rightadjust));
 	if (isinf(right) && isinf(x.sup()))
 		r = 0;	// When both is infinity
-	else 
+	else
 		r = -fma(right, right, -rightadjust);
 	if (r > IT(0) )
 		right=nextafter(right, +infi);
@@ -2595,7 +2603,7 @@ template<class IT> inline interval<IT> sgn(const interval<IT>& x)
 	if (right > IT(0))
 		right_max = IT(1);
 
-	interval<IT> res(left_min, right_max ); 
+	interval<IT> res(left_min, right_max );
 	// set the proper interval decoration
 	res.intervaldecoration(COM);
 	return res;
@@ -2628,14 +2636,14 @@ static interval<double> interval_log(double x)
 	zn = interval<double>(x);
 	// Taylor series of log(x)
 	// log(x)=2( z + z^3/3 + z^5/5 ...)
-	// where z=(x-1)/(x+1) 
+	// where z=(x-1)/(x+1)
 	// In order to get a fast Taylor series result we need to get the fraction closer to 1
 	// The fraction part is [0.xxx,1] (base 2) after removing the exponent
 	// Initialize the iteration  (zn-1)/(zn+1)
 	zn = (zn - c1) / (zn + c1);
 	zsq = zn * zn;
 	sum = zn;
-	
+
 	interval<double> test;	// DEBUG
 	double diff;		// DEBUG
 	{// DEBUG
@@ -2646,7 +2654,7 @@ static interval<double> interval_log(double x)
 		// END DEBUG
 	}
 
-	// Iterate using taylor series log(x) == 2( z + z^3/3 + z^5/5 ... ) 
+	// Iterate using taylor series log(x) == 2( z + z^3/3 + z^5/5 ... )
 	for (i = 3;; i += 2)
 	{
 		zn *= zsq;
@@ -2680,7 +2688,7 @@ template<class IT> inline interval<IT> log(const interval<IT>& x)
 	const IT l(x.inf());
 	const IT r(x.sup());
 	const bool isIEEE754Float = std::is_floating_point<IT>::value;
-	
+
 	if (r < IT(0))
 	{	// entire interval < 0
 		interval<IT> res = interval<IT>();	// Return the EMPTY interval;
@@ -2704,13 +2712,13 @@ template<class IT> inline interval<IT> log(const interval<IT>& x)
 	else upper = nextafter(upper, +infi); // Adjust for precision if not a shortcut value
 
 	// Ensure lower is not mistakenly set to a non-NaN value when l <= 0
-	if (l <= IT(0) && r > IT(0)) 
+	if (l <= IT(0) && r > IT(0))
 		lower = -infi;
 
 	interval<IT> res(lower, upper);
 	// set the proper interval decoration
 	res.intervaldecoration(x.intervaldecoration());
-	if (x.inf() < IT(0)) // was x original < 0 
+	if (x.inf() < IT(0)) // was x original < 0
 		res.intervaldecoration(std::min(res.intervaldecoration(), TRV));
 	return res;
 }
@@ -2745,13 +2753,13 @@ template<class IT> inline interval<IT> log10(const interval<IT>& x)
 	else upper = nextafter(upper, +infi); // Adjust for precision if not a shortcut value
 
 	// Ensure lower is not mistakenly set to a non-NaN value when l <= 0
-	if (l <= IT(0) && r > IT(0)) 
+	if (l <= IT(0) && r > IT(0))
 		lower = -infi;
-	
+
 	interval<IT> res(lower, upper);
 	// set the proper interval decoration
 	res.intervaldecoration(x.intervaldecoration());
-	if (x.inf() < IT(0)) // was x original < 0 
+	if (x.inf() < IT(0)) // was x original < 0
 		res.intervaldecoration(std::min(res.intervaldecoration(), TRV));
 	return res;
 	}
@@ -2770,17 +2778,17 @@ template<class IT> inline interval<IT> exp(const interval<IT>& x)
 
 	// Directly handle the special cases with exact values
 	if (l == IT(0)) leftexp = IT(1); // e^0 = 1, exact
-	else 
+	else
 		if (isIEEE754Float && l == IT(1))
 			leftexp = e_interval<IT>().inf(); // e^1, use predefined constant
-		else 
+		else
 			leftexp = nextafter(leftexp, -infi); // Adjust unless it's a special case
 
 	if (r == IT(0)) rightexp = IT(1); // e^0 = 1, exact
-	else 
-		if (isIEEE754Float && r == IT(1)) 
+	else
+		if (isIEEE754Float && r == IT(1))
 			rightexp = e_interval<IT>().sup(); // e^1, use predefined constant
-		else 
+		else
 			rightexp = nextafter(rightexp, +infi); // Adjust unless it's a special case
 
 	// Create and return the interval from the calculated or adjusted values
@@ -2794,7 +2802,7 @@ template<class IT> inline interval<IT> exp(const interval<IT>& x)
 
 
 // pow(x,y) where x is an interval and y id a double
-// 
+//
 template<class IT> inline interval<IT> pow(const interval<IT>& x, const IT y)
 {
 	if (x.isEmpty())
@@ -2835,7 +2843,7 @@ template<class IT> inline interval<IT> pow(const interval<IT>& x, const IT y)
 		rp = nextafter(rp, (rp > IT(0)) ? +infi : -infi);
 	}
 	// else Both are integers => trust the result
-	
+
 	// Ensure correct interval ordering for the result
 	return interval<IT>(min(lp, rp), max(lp, rp));
 }
@@ -2843,9 +2851,9 @@ template<class IT> inline interval<IT> pow(const interval<IT>& x, const IT y)
 
 // pow(x) we have to do it manually
 // x^y == exp( y * ln( x ) ) );
-//			interval	singleton	
+//			interval	singleton
 // x
-// 
+//
 template<class IT> inline interval<IT> pow(const interval<IT>& x, const interval<IT>& y)
 {
 	if (x.isEmpty())
@@ -2895,37 +2903,37 @@ template<class IT> inline interval<IT> pow(const interval<IT>& x, const interval
 // to handle the periodic nature of the sine function and ensure it correctly covers the range of sine
 // values within the specified interval.
 // Here's an optimized approach that considers the sine function's properties :
-// The sine function is periodic with a period of 2π, and its range is between - 1 and 1. 
+// The sine function is periodic with a period of 2π, and its range is between - 1 and 1.
 // For any input interval, the sine function's output interval might wrap around this range.
 // If the interval's width is greater than or equal to 2π, the sine function covers its entire range of [−1,1].
 // For intervals smaller than 2π, calculate the exact sine values at the interval's endpoints
-// and check for any critical points (multiples of 2π / 2) within the interval to determine the maximum 
+// and check for any critical points (multiples of 2π / 2) within the interval to determine the maximum
 // and minimum sine values.
 // This function works for both the build in types: float, double or long double
 // but also for the float_precision class. (arbitrary precision). This is done by ensure that
 // local float_precision declaration is performed at the precision of x. Implemented via the use of constexpr (requires c++17)
 // lambda functions. the variable l and r inherits the precision fromthe call to fmod()
-template<class IT> inline interval<IT> sin(const interval<IT>& x) 
+template<class IT> inline interval<IT> sin(const interval<IT>& x)
 {
 	if (x.isEmpty())
 		return interval<IT>();	// Return the EMPTY interval;
 	const IT infi(infinity_interval<IT>());// infi(INFINITY);
 	const IT pi = [&]()->IT {
-		if constexpr (std::is_floating_point<IT>::value) 
+		if constexpr (std::is_floating_point<IT>::value)
 		{ // for floating point type
 			return acos(IT(-1));	// More precise pi value
 		}
-		else 
+		else
 		{ // For float_precision class. Use maximum precision of the left or right interval
 			return _float_table(_PI, max(x.leftinterval().precision(),x.rightinterval().precision()));
 		}
 	}(); // The Lambda is immediately invokeed
 	const IT twopi(IT(2) * pi);
-	IT l(x.inf()); 
-	IT r(x.sup()); 
+	IT l(x.inf());
+	IT r(x.sup());
 
 	// If the interval width is >= 2pi, the sine function covers the full range [-1, 1]
-	if (x.sup() - x.inf() >= twopi) 
+	if (x.sup() - x.inf() >= twopi)
 		return interval<IT>(IT(-1), IT(1));
 
 	// Calculate sine values at the interval's endpoints
@@ -2936,15 +2944,15 @@ template<class IT> inline interval<IT> sin(const interval<IT>& x)
 	IT sin_min(std::min(sin_l, sin_r));
 	IT sin_max(std::max(sin_l, sin_r));
 
-	// Check passing critical ponts by normalizing l and r 
+	// Check passing critical ponts by normalizing l and r
 	l=fmod(x.inf(), twopi); // Normalize l within a single period
 	r=l + fmod(x.sup() - x.inf(), twopi); // Calculate r based on l and the interval width
 	// Normalize angles to be within [0, 2*pi)
 	if (l < IT(0))	l += twopi;
 	if (r >= twopi)	r -= twopi;
-	if (l <= pi / IT(2) && pi / IT(2) <= r) 
+	if (l <= pi / IT(2) && pi / IT(2) <= r)
 		sin_max = IT(1); // pi/2 is within interval
-	if (l <= IT(1.5) * pi && IT(1.5) * pi <= r) 
+	if (l <= IT(1.5) * pi && IT(1.5) * pi <= r)
 		sin_min = IT(-1); // 3*pi/2 is within interval
 
 	// Established a safety interval around the result to ensure correct bound for the computation
@@ -2962,18 +2970,18 @@ template<class IT> inline interval<IT> sin(const interval<IT>& x)
 
 
 // Same layout as for the sin(x) with the needed change for cos(x)
-// The normalization of the input interval l and r remains the same as for the sin(x), 
+// The normalization of the input interval l and r remains the same as for the sin(x),
 // as it's based on the periodicity of the trigonometric functions.
-// The critical points for maximum and minimum values are adjusted for the cos(x) function.Specifically, 
+// The critical points for maximum and minimum values are adjusted for the cos(x) function.Specifically,
 // cos(x) reaches its maximum value of 1 at 0 and 2π, and its minimum value of - 1 at π.
 // The check for these critical points within the given interval is updated to reflect the cosine function's behavior.
-// The return statement creates and returns an interval of type IT based on the calculated minimum and maximum 
+// The return statement creates and returns an interval of type IT based on the calculated minimum and maximum
 // values of cos(x) within the specified interval.
 // This function works for both the build in types: float, double or long double
 // but also for the float_precision class. (arbitrary precision). This is done by ensure that
 // local float_precision declaration is performed at the precision of x. Implemented via the use of constexpr (requires c++17)
 // lambda functions. the variable l and r inherits the precision fromthe call to fmod()
-template<class IT> inline interval<IT> cos(const interval<IT>& x) 
+template<class IT> inline interval<IT> cos(const interval<IT>& x)
 {
 	if (x.isEmpty())
 		return interval<IT>();	// Return the EMPTY interval;
@@ -2989,9 +2997,9 @@ template<class IT> inline interval<IT> cos(const interval<IT>& x)
 		}
 	}(); // The Lambda is immediately invokeed
 	const IT twopi(IT(2) * pi);
-	IT l(x.inf()); 
-	IT r(x.sup()); 	
-	
+	IT l(x.inf());
+	IT r(x.sup());
+
 	// If the interval width is >= 2pi, the cos function covers the full range [-1, 1]
 	if (x.sup() - x.inf() >= twopi)
 		return interval<IT>(IT(-1), IT(1));
@@ -3003,16 +3011,16 @@ template<class IT> inline interval<IT> cos(const interval<IT>& x)
 	// Check for critical points within the interval
 	IT cos_min(std::min(cos_l, cos_r));
 	IT cos_max(std::max(cos_l, cos_r));
-	
-	// Check passing critical ponts by normalizing l and r 
+
+	// Check passing critical ponts by normalizing l and r
 	l = fmod(x.inf(), twopi); // Normalize l within a single period
 	r = l + fmod(x.sup() - x.inf(), twopi); // Calculate r based on l and the interval width
 	// Normalize angles to be within [0, 2*pi)
 	if (l < IT(0)) 	l += twopi;
 	if (r >= twopi)	r -= twopi;
-	if (r<l) 
+	if (r<l)
 		cos_max = IT(1.0); // 0 or 2*pi is within interval
-	//if (l <= pi && pi <= r) 
+	//if (l <= pi && pi <= r)
 	if(l<=pi && r >= pi)
 		cos_min = IT(-1.0); // pi is within interval
 
@@ -3028,18 +3036,18 @@ template<class IT> inline interval<IT> cos(const interval<IT>& x)
 	res.intervaldecoration(x.intervaldecoration());
 	return res;
 }
- 
+
 // This code makes several key assumptions and considerations:
 // It normalizes the input interval to a single period of 2π to manage the periodicity of tan(x).
-// It checks if the interval crosses a vertical asymptote by examining the range of the interval and the relative 
+// It checks if the interval crosses a vertical asymptote by examining the range of the interval and the relative
 // positions of l and r.If the interval crosses an asymptote, the function can potentially take on all real values,
 // so the interval is set to (−∞, ∞).
 // If the interval does not include an asymptote, the function calculates the tangent at the endpoints of the interval
 // and uses these to determine the minimum and maximum values of tan(x) within the interval.
 // It returns an interval representing the range of tan(x) over the specified interval, taking into account the
 // possibility of infinite values.
-// This approach captures the basic behavior of the tangent function over an interval, but it simplifies the handling 
-// of asymptotes and does not account for multiple discontinuities within a larger interval.For more complex cases, 
+// This approach captures the basic behavior of the tangent function over an interval, but it simplifies the handling
+// of asymptotes and does not account for multiple discontinuities within a larger interval.For more complex cases,
 // additional logic would be required to segment the interval and handle each segment individually.
 // This function works for both the build in types: float, double or long double
 // but also for the float_precision class. (arbitrary precision). This is done by ensure that
@@ -3063,7 +3071,7 @@ template<class IT> inline interval<IT> tan(const interval<IT>& x)
 	const IT twopi(IT(2) * pi);
 	IT l(fmod(x.inf(), twopi)); // Normalize l within a single period
 	IT r(l + fmod(x.sup() - x.inf(), twopi)); // Calculate r based on l and the interval width
-	
+
 	// Normalize angles to be within [0, 2*pi)
 	if (l < IT(0)) l += twopi;
 	if (r >= twopi) r -= twopi;
@@ -3101,7 +3109,7 @@ template<class IT> inline interval<IT> tan(const interval<IT>& x)
 // This function works for both the build in types: float, double or long double
 // but also for the float_precision class. (arbitrary precision). This is done by ensure that
 // local float_precision declaration is performed at the precision of x. Implemented via the use of constexpr (requires c++17)
-// lambda functions. 
+// lambda functions.
 //
 template<class IT> inline interval<IT> asin(const interval<IT>& x)
 {
@@ -3116,11 +3124,11 @@ template<class IT> inline interval<IT> asin(const interval<IT>& x)
 		res.intervaldecoration(TRV);
 		return res;
 	}
-	
+
 	const IT infi(infinity_interval<IT>());// infi(INFINITY);
 	// Calculate arcsin values at the interval's endpoints
 	const IT asin_l(asin(x.inf()));
-	const IT asin_r(asin(x.sup())); 
+	const IT asin_r(asin(x.sup()));
 
 	// Ensure the interval is correctly oriented
 	IT asin_min(std::min(asin_l, asin_r));
@@ -3133,7 +3141,7 @@ template<class IT> inline interval<IT> asin(const interval<IT>& x)
 	// Since arcsin is monotonically increasing in its domain, we directly return the interval
 	// Create and return the interval based on calculated min and max tangent values
 	interval<IT> res(asin_min, asin_max);
-	// set the proper interval decoration 
+	// set the proper interval decoration
 	res.intervaldecoration(x.intervaldecoration());
 	return res;
 }
@@ -3141,7 +3149,7 @@ template<class IT> inline interval<IT> asin(const interval<IT>& x)
 // acos(x)
 // This function works for both the build in types: float, double or long double
 // but also for the float_precision class. (arbitrary precision). This is done by ensure that
-// local float_precision declaration is performed at the precision of x. 
+// local float_precision declaration is performed at the precision of x.
 //
 template<class IT> inline interval<IT> acos(const interval<IT>& x)
 {
@@ -3156,7 +3164,7 @@ template<class IT> inline interval<IT> acos(const interval<IT>& x)
 		res.intervaldecoration(ILL);
 		return res;
 	}
-	
+
 	const IT infi(infinity_interval<IT>());// infi(INFINITY);
 	// Calculate acos values at the interval's endpoints
 	const IT acos_l(acos(x.sup())); // Note: we use sup here
@@ -3173,7 +3181,7 @@ template<class IT> inline interval<IT> acos(const interval<IT>& x)
 	// Since acos is monotonically decreasing in its domain
 	// Create and return the interval based on calculated min and max tangent values
 	interval<IT> res(acos_min, acos_max);
-	// set the proper interval decoration 
+	// set the proper interval decoration
 	res.intervaldecoration(x.intervaldecoration());
 	return res;
 }
@@ -3182,7 +3190,7 @@ template<class IT> inline interval<IT> acos(const interval<IT>& x)
 // atan(x)
 // This function works for both the build in types: float, double or long double
 // but also for the float_precision class. (arbitrary precision). This is done by ensure that
-// local float_precision declaration is performed at the precision of x. 
+// local float_precision declaration is performed at the precision of x.
 //
 template<class IT> inline interval<IT> atan(const interval<IT>& x)
 {
@@ -3204,9 +3212,9 @@ template<class IT> inline interval<IT> atan(const interval<IT>& x)
 	// Since atan is monotonically increasing in its domain, we directly return the interval
 	// Create and return the interval based on calculated min and max tangent values
 	interval<IT> res(atan_min, atan_max);
-	// set the proper interval decoration 
+	// set the proper interval decoration
 	res.intervaldecoration(x.intervaldecoration());
-	return res; 
+	return res;
 }
 
 
@@ -3232,7 +3240,7 @@ template<class IT> inline interval<IT> sinh(const interval<IT>& x)
 	const interval<IT> half(IT(0.5));	// Ensure correct precision for IT=float_precision
 	const interval<IT> e(exp(x));
 	interval<IT> res(half * (e - one / e));
-	// set the proper interval decoration 
+	// set the proper interval decoration
 	res.intervaldecoration(x.intervaldecoration());
 	return res;
 }
@@ -3248,7 +3256,7 @@ template<class IT> inline interval<IT> cosh(const interval<IT>& x)
 	one = IT(1);
 	half = IT(0.5);
 	interval<IT> res(half * (e + one / e));
-	// set the proper interval decoration 
+	// set the proper interval decoration
 	res.intervaldecoration(x.intervaldecoration());
 	return res;
 }
@@ -3262,14 +3270,14 @@ template<class IT> inline interval<IT> tanh(const interval<IT>& x)
 	interval<IT> e(exp(x));
 	e *= e;
 	interval<IT> res((e-one) /(e+one));
-	// set the proper interval decoration 
+	// set the proper interval decoration
 	res.intervaldecoration(x.intervaldecoration());
 	return res;
 }
 
 // Use the identity. asinh(x)=Ln(x+sqrt(x^2+1))
 // asinh(x) is defined for the entire real domain
-template<class IT> inline interval<IT> asinh(const interval<IT>& x) 
+template<class IT> inline interval<IT> asinh(const interval<IT>& x)
 {
 	if (x.isEmpty())
 		return interval<IT>();	// Return the EMPTY interval;
@@ -3277,7 +3285,7 @@ template<class IT> inline interval<IT> asinh(const interval<IT>& x)
 	interval<IT> xsq(x);
 	xsq *= xsq;
 	interval<IT> res(log(x + sqrt(xsq + one)));
-	// set the proper interval decoration 
+	// set the proper interval decoration
 	res.intervaldecoration(x.intervaldecoration());
 	return res;
 }
@@ -3292,7 +3300,7 @@ template<class IT> inline interval<IT> acosh(const interval<IT>& x)
 	interval<IT> xsq(x);
 	xsq *= xsq;
 	interval<IT> res(log(x + sqrt(xsq - one)));
-	// set the proper interval decoration 
+	// set the proper interval decoration
 	res.intervaldecoration(x.intervaldecoration());
 	return res;
 }
@@ -3321,7 +3329,7 @@ template<class IT> inline interval<IT> atanh(const interval<IT>&x)
 	const interval<IT> one(1);
 	const interval<IT> half(0.5);
 	interval<IT> res(log((xadjusted+one)/(-xadjusted+one))*half);
-	// set the proper interval decoration 
+	// set the proper interval decoration
 	res.intervaldecoration(x.intervaldecoration());
 	if (ainf == IT(-1) || asup == IT(1))
 		res.intervaldecoration(TRV);

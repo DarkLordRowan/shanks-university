@@ -4,13 +4,7 @@ import React from "react";
 const nav = [
     {to: "/", label: "Главная", end: true},
     {to: "/experiments", label: "Эксперименты"},
-    {to: "/experiments_g1", label: "Epx g1"},
-    {to: "/experiments_g2", label: "Exp g2"},
-    {to: "/experiments_g3", label: "Exp g3"},
-    {to: "/experiments_g4", label: "Exp g4"},
-    {to: "/experiments_g5", label: "Exp g5"},
     {to: "/algorithms", label: "Алгоритмы"},
-    {to: "/series", label: "Ряды"},
     {to: "/docs", label: "Документация"},
 ];
 

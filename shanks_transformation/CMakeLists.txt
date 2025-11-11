@@ -2,14 +2,20 @@ cmake_minimum_required(VERSION 3.11)
 project(shanks_transformation LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
+set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
 include(FetchContent)
 
 # -------------------------
 # Бинарник (основная программа)
 # -------------------------
-add_executable(shanks_transformation main.cpp)
-target_include_directories(shanks_transformation PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+
+include_directories(${CMAKE_SOURCE_DIR}/include)
+add_executable(shanks_transformation 
+    ${CMAKE_SOURCE_DIR}/src/main.cpp
+    ${CMAKE_SOURCE_DIR}/src/interfaces/series_info.cpp
+    ${CMAKE_SOURCE_DIR}/src/interfaces/test_funcs_info.cpp
+    ${CMAKE_SOURCE_DIR}/src/interfaces/transformations_info.cpp
+)
 
 # -------------------------
 # Pybind11 модуль
