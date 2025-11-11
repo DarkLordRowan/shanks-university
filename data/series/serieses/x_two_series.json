@@ -1,0 +1,19 @@
+{
+  "id": "x_two_series",
+  "python_id": "",
+  "num": 34,
+  "title": "\\tfrac{x}{2}",
+  "formula": "\\sum_{n=0}^{\\infty}\\frac{x}{(2n+1)(2n+3)} = \\tfrac{x}{2}",
+  "speed": "quadratic",
+  "document": "series.docx",
+  "domain": {
+    "intervals": [
+      {
+        "from": "-\\infty",
+        "to": "+\\infty",
+        "left_closed": false,
+        "right_closed": false
+      }
+    ]
+  }
+}

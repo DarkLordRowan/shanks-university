@@ -1,0 +1,19 @@
+{
+  "id": "ln2_series",
+  "python_id": "",
+  "num": 20,
+  "title": "\\ln(2)\\,x",
+  "formula": "\\sum_{n=0}^{\\infty}\\frac{(-1)^{n}x}{n+1}=\\ln(2)\\,x",
+  "speed": "linear",
+  "document": "series.docx",
+  "domain": {
+    "intervals": [
+      {
+        "from": "-\\infty",
+        "to": "+\\infty",
+        "left_closed": false,
+        "right_closed": false
+      }
+    ]
+  }
+}

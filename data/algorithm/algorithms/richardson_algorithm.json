@@ -1,0 +1,10 @@
+{
+  "id": "richardson_algorithm",
+  "title": "Richardson algorithm",
+  "subtitle": "Алгоритм Ричардсона",
+  "authorIds": [
+    "richardson"
+  ],
+  "python_id": "RichardsonAlgorithm",
+  "args": []
+}

@@ -1,0 +1,19 @@
+{
+  "id": "mean_sinh_sin_series",
+  "python_id": "",
+  "num": 9,
+  "title": "\\tfrac{\\sinh x + \\sin x}{2}",
+  "formula": "\\sum_{k=0}^{\\infty}\\frac{x^{4k+1}}{(4k+1)!}",
+  "speed": "hyperlinear",
+  "document": "series.docx",
+  "domain": {
+    "intervals": [
+      {
+        "from": "-\\infty",
+        "to": "+\\infty",
+        "left_closed": false,
+        "right_closed": false
+      }
+    ]
+  }
+}

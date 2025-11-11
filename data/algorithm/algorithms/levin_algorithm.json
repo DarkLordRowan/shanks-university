@@ -1,0 +1,10 @@
+{
+  "id": "levin_algorithm",
+  "title": "Levin’s algorithm",
+  "subtitle": "Алгоритм Левина",
+  "authorIds": [
+    "levin"
+  ],
+  "python_id": "LevinAlgorithm",
+  "args": []
+}

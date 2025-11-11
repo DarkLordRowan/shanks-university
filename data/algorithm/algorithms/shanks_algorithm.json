@@ -1,0 +1,10 @@
+{
+  "id": "shanks_algorithm",
+  "title": "Shanks’ algorithm",
+  "subtitle": "Алгоритм Шенкса",
+  "authorIds": [
+    "shanks"
+  ],
+  "python_id": "ShanksAlgorithm",
+  "args": []
+}

@@ -1,0 +1,19 @@
+{
+  "id": "gamma_series",
+  "python_id": "",
+  "num": 0,
+  "title": "",
+  "formula": "",
+  "speed": "",
+  "document": "Rows.docx",
+  "domain": {
+    "intervals": [
+      {
+        "from": "",
+        "to": "",
+        "left_closed": false,
+        "right_closed": false
+      }
+    ]
+  }
+}
