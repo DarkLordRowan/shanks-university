@@ -1,0 +1,10 @@
+{
+  "id": "brezinski_theta_algorithm",
+  "title": "Brezinski’s θ-algorithm",
+  "subtitle": "ета-алгоритм Брезински",
+  "authorIds": [
+    "brezinski"
+  ],
+  "python_id": "BrezinskiThetaAlgorithm",
+  "args": []
+}

@@ -1,0 +1,19 @@
+{
+  "id": "ln_cosx_series",
+  "python_id": "",
+  "num": 50,
+  "title": "\\ln(\\cos x)",
+  "formula": "\\sum_{n=0}^{\\infty}\\frac{-\\sin^{2n+2}(x)}{2n+2} = \\ln(\\cos x)",
+  "speed": "linear",
+  "document": "Rows.docx",
+  "domain": {
+    "intervals": [
+      {
+        "from": "-\\frac{\\pi}{2}",
+        "to": "\\frac{\\pi}{2}",
+        "left_closed": false,
+        "right_closed": false
+      }
+    ]
+  }
+}

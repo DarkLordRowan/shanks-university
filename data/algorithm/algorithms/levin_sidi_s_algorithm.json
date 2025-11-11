@@ -1,0 +1,11 @@
+{
+  "id": "levin_sidi_s_algorithm",
+  "title": "Levin–Sidi’s s-algorithm",
+  "subtitle": "S-алгоритм Левина–Сиди",
+  "authorIds": [
+    "levin",
+    "sidi"
+  ],
+  "python_id": "LevinSidiSAlgorithm",
+  "args": []
+}
