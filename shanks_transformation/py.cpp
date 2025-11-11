@@ -1,447 +1,365 @@
-﻿/**
+/**
  * @file py.cpp
- * @brief This file contains pybind11 bindings.
+ * @brief pybind11 bindings with support for double and arbitrary-precision float_precision
  */
+
+#include <pybind11/operators.h>
 #include <pybind11/pybind11.h>
-#include <pybind11/numpy.h>
+#include <pybind11/stl.h>
+#include <string>
+#include "libs/arbitrary_arithmetics/complexprecision.h"
+#include "libs/arbitrary_arithmetics/fprecision.h"
+#include "libs/arbitrary_arithmetics/precisioncore.cpp"
 
-#include "series.hpp"
-#include "series/series_base.hpp"
-#include "methods.hpp"
-
+#include "include/series.hpp"
+#include "include/methods.hpp"
 
 namespace py = pybind11;
 
-template <std::floating_point T, std::unsigned_integral K>
-class array_series : public series_base<T,K> {
-public:
-    array_series() = delete;
+using K = std::size_t;
 
-    explicit array_series(py::buffer buffer);
-    explicit array_series(py::object seq);
+template <template<class,class> class Impl>
+struct W { template<class X, class Y> using type = Impl<X,Y>; };
 
-    [[nodiscard]] virtual T operator()(K n) const override;
-    [[nodiscard]] std::size_t size() const noexcept { return size_; }
+template <AcceptedLike U> struct real_of { using type = U; };
+template <AcceptedLike R> struct real_of<complex_precision<R>> { using type = R; };
 
-private:
-    void build_from_buffer(py::buffer buffer);
-    void copy_from_buffer_info(const py::buffer_info& info);
-    void copy_from_object(py::object obj);
+template <AcceptedLike T>
+void bind_all(py::module_& m, const std::string& suffix){
+    using RealT = real_of<T>::type;
+    using MSeriesBase = series_base<T, K>;
+    using MSeriesAcceleration = series_acceleration<T, K>;
 
-    py::object owner_;       ///< keeps the Python object alive while this instance exists
-    T* data_ptr_ = nullptr;  ///< points into either owner_'s buffer or storage_.data()
-    std::vector<T> storage_; ///< owned storage when zero-copy impossible
-    std::size_t size_ = 0;
-};
+    auto name = [&](const char* base) { return std::string(base) + suffix; };
 
-template <std::floating_point T, std::unsigned_integral K>
-array_series<T,K>::array_series(py::buffer buffer)
-: owner_(buffer)
-{
-    build_from_buffer(buffer);
-}
+    py::class_<series_result<T>>(m, name("SeriesResult").c_str())
+        .def(py::init<>())
+        .def(py::init<std::vector<T>, std::vector<T>>())
+        .def_readwrite("Sn", &series_result<T>::Sn)
+        .def_readwrite("an", &series_result<T>::an);
 
-template <std::floating_point T, std::unsigned_integral K>
-array_series<T,K>::array_series(py::object seq)
-: owner_(seq)
-{
-    // Try to treat as array-like first (fast path, allows numpy, memoryview, etc.)
-    if (py::array arr = py::array::ensure(seq)) {
-        // ask pybind11 to produce a contiguous c-style array of T (forcecast: allow conversion)
-        using arr_t = py::array_t<T, py::array::c_style | py::array::forcecast>;
-        if (py::array conv = arr_t::ensure(arr)) {
-            if (conv.ndim() == 1) {
-                auto info = conv.request();
-                data_ptr_ = static_cast<T*>(info.ptr);
-                size_ = static_cast<std::size_t>(info.shape[0]);
-                owner_ = conv; // keep the possibly-new array alive
-                return;
-            }
-        }
-    }
-    // fallback: sequence-copy
-    copy_from_object(owner_);
-}
+    // SeriesBase
+    py::class_<MSeriesBase>(m, name("SeriesBase").c_str())
+        .def("get_x", &MSeriesBase::get_x)
+        .def("get_sum", &MSeriesBase::get_sum)
+        .def("get_name", &MSeriesBase::get_name)
+        .def("generateSeries",
+             &MSeriesBase::generate_series,
+             py::arg("x"),
+             py::arg("vecSize"),
+             py::arg("addTParameter") = static_cast<T>(1),
+             py::arg("addKParameter") = static_cast<K>(1));
 
-template <std::floating_point T, std::unsigned_integral K>
-void array_series<T,K>::build_from_buffer(py::buffer buffer)
-{
-    py::buffer_info info = buffer.request();
-    if (info.ndim != 1) {
-        // not 1-D buffer -> fall back to generic sequence copy
-        copy_from_object(owner_);
-        return;
-    }
-
-    // If format exactly matches T and contiguous in memory -> zero-copy
-    if (info.format == py::format_descriptor<T>::format()
-        && info.strides.size() <= 1
-        && static_cast<std::size_t>(info.itemsize) == sizeof(T)
-        && (info.strides.empty() || static_cast<std::size_t>(info.strides[0]) == sizeof(T)))
-    {
-        data_ptr_ = static_cast<T*>(info.ptr);
-        size_ = static_cast<std::size_t>(info.shape[0]);
-        // owner_ already holds the original buffer object (e.g., numpy array)
-        return;
-    }
-
-    // otherwise try letting pybind11 build a contiguous T array (handles cast & endianness)
-    try {
-        py::array arr(info); // wrap
-        using arr_t = py::array_t<T, py::array::c_style | py::array::forcecast>;
-        if (py::array conv = arr_t::ensure(arr)) {
-            if (conv.ndim() == 1) {
-                auto info2 = conv.request();
-                data_ptr_ = static_cast<T*>(info2.ptr);
-                size_ = static_cast<std::size_t>(info2.shape[0]);
-                owner_ = conv; // keep converted/copy array alive
-                return;
-            }
-        }
-    } catch (...) {
-        // fall through to manual conversion
-    }
-
-    // last resort: perform a reasonably fast manual conversion from some common native formats.
-    copy_from_buffer_info(info);
-}
-
-template <std::floating_point T, std::unsigned_integral K>
-void array_series<T,K>::copy_from_buffer_info(const py::buffer_info& info)
-{
-    // prepare storage
-    size_ = static_cast<std::size_t>(info.shape[0]);
-    storage_.resize(size_);
-
-    // Common fast typed-read cases: float32 -> T, float64 -> T, int32/int64 -> T, uint32/uint64 -> T
-    // Compare format codes via py::format_descriptor<Src>::format()
-    const char* fmt = info.format.c_str();
-    const std::size_t itemsize = static_cast<std::size_t>(info.itemsize);
-
-    auto try_cast_from = [&](auto* src_ptr) {
-        using Src = std::remove_pointer_t<decltype(src_ptr)>;
-        for (std::size_t i = 0; i < size_; ++i)
-            storage_[i] = static_cast<T>(src_ptr[i]);
-        data_ptr_ = storage_.data();
+    // Helper: bind a concrete no-arg series Impl<T,KIndex> derived from Base
+    // BS = Bind Series
+    auto bs = [&](int _i, auto tmpl, const char* basename) {
+        using ImplTK = typename decltype(tmpl)::template type<T, K>;
+        py::class_<ImplTK, MSeriesBase>(m, name(basename).c_str()).def(py::init<>());
     };
 
-    if (itemsize == sizeof(float) && info.format == py::format_descriptor<float>::format()) {
-        const float* ptr = static_cast<const float*>(info.ptr);
-        if (info.strides.empty() || static_cast<std::size_t>(info.strides[0]) == sizeof(float)) {
-            try_cast_from(const_cast<float*>(ptr));
-            return;
-        }
-    }
-    if (itemsize == sizeof(double) && info.format == py::format_descriptor<double>::format()) {
-        const double* ptr = static_cast<const double*>(info.ptr);
-        if (info.strides.empty() || static_cast<std::size_t>(info.strides[0]) == sizeof(double)) {
-            try_cast_from(const_cast<double*>(ptr));
-            return;
-        }
-    }
-    if (itemsize == sizeof(std::int32_t) && info.format == py::format_descriptor<std::int32_t>::format()) {
-        const std::int32_t* ptr = static_cast<const std::int32_t*>(info.ptr);
-        if (info.strides.empty() || static_cast<std::size_t>(info.strides[0]) == sizeof(std::int32_t)) {
-            try_cast_from(const_cast<std::int32_t*>(ptr));
-            return;
-        }
-    }
-    if (itemsize == sizeof(std::int64_t) && info.format == py::format_descriptor<std::int64_t>::format()) {
-        const std::int64_t* ptr = static_cast<const std::int64_t*>(info.ptr);
-        if (info.strides.empty() || static_cast<std::size_t>(info.strides[0]) == sizeof(std::int64_t)) {
-            try_cast_from(const_cast<std::int64_t*>(ptr));
-            return;
-        }
-    }
-    if (itemsize == sizeof(std::uint32_t) && info.format == py::format_descriptor<std::uint32_t>::format()) {
-        const std::uint32_t* ptr = static_cast<const std::uint32_t*>(info.ptr);
-        if (info.strides.empty() || static_cast<std::size_t>(info.strides[0]) == sizeof(std::uint32_t)) {
-            try_cast_from(const_cast<std::uint32_t*>(ptr));
-            return;
-        }
-    }
-    if (itemsize == sizeof(std::uint64_t) && info.format == py::format_descriptor<std::uint64_t>::format()) {
-        const std::uint64_t* ptr = static_cast<const std::uint64_t*>(info.ptr);
-        if (info.strides.empty() || static_cast<std::size_t>(info.strides[0]) == sizeof(std::uint64_t)) {
-            try_cast_from(const_cast<std::uint64_t*>(ptr));
-            return;
-        }
-    }
+    bs(1,  W<abs_sin_x_minus_2_div_pi_series>{}, "AbsSinXMinus2DivPiSeries");
+    bs(2,  W<arcsin_x2_series>{}, "ArcsinX2Series");
+    bs(3,  W<arcsin_x_minus_x_series>{}, "ArcsinXMinusXSeries");
+    bs(4,  W<arcsin_x_series>{}, "ArcsinXSeries");
+    bs(5,  W<arcsinh_x_series>{}, "ArcsinhXSeries");
+    bs(6,  W<arctanh_x2_series>{}, "ArctanhX2Series");
+    bs(7,  W<arctanh_x_series>{}, "ArctanhXSeries");
+    bs(8,  W<arctg_x2_series>{}, "ArctgX2Series");
+    bs(9,  W<arctg_x3_series>{}, "ArctgX3Series");
+    bs(10, W<arctg_x_series>{}, "ArctgXSeries");
+    bs(11, W<bin_series>{}, "BinSeries");
+    bs(12, W<ci_x_series>{}, "CiXSeries");
+    bs(13, W<cos3xmin1_div_xsquare_series>{}, "Cos3xMinus1DivXsquareSeries");
+    bs(14, W<cos_series>{}, "CosSeries");
+    bs(15, W<cos_sqrt_x_series>{}, "CosSqrtXSeries");
+    bs(16, W<cos_x2_series>{}, "CosX2Series");
+    bs(17, W<cosh_series>{}, "CoshSeries");
+    bs(18, W<e_x_series>{}, "EXSeries");
+    bs(19, W<eighth_pi_m_one_third_series>{}, "EighthPiMOneThirdSeries");
+    bs(20, W<erf_series>{}, "ErfSeries");
+    bs(21, W<exp_m_cos_x_sinsin_x_series>{}, "ExpMCosXSinsinXSeries");
+    bs(22, W<exp_series>{}, "ExpSeries");
+    bs(23, W<exp_squared_erf_series>{}, "ExpSquaredErfSeries");
+    bs(24, W<five_pi_twelve_series>{}, "FivePiTwelveSeries");
+    bs(25, W<four_arctan_series>{}, "FourArctanSeries");
+    bs(26, W<four_ln2_m_3_series>{}, "FourLn2M3Series");
+    bs(27, W<half_asin_two_x_series>{}, "HalfAsinTwoXSeries");
+    bs(28, W<half_minus_sinx_multi_pi_4_series>{}, "HalfMinusSinxMultiPi4Series");
+    bs(29, W<half_multi_ln_1div2multi1minuscosx_series>{}, "HalfMultiLn1Div2Multi1MinusCosxSeries");
+    bs(30, W<incomplete_Gamma_func_series>{}, "IncompleteGammaFuncSeries");
+    bs(31, W<inverse_1mx_series>{}, "Inverse1mxSeries");
+    bs(32, W<inverse_sqrt_1m4x_series>{}, "InvSqrt1m4xSeries");
+    // bs(33, W<Ja_x_series>{}, "JaXSeries");
+    bs(34, W<k_x_series>{}, "KXSeries");
+    bs(35, W<lambert_W_func_series>{}, "LambertWFuncSeries");
+    bs(36, W<ln1_m_x2_series>{}, "Ln1MinusX2Series");
+    bs(37, W<ln1mx_series>{}, "Ln1mxSeries");
+    bs(38, W<ln1px4_series>{}, "Ln1px4Series");
+    bs(39, W<ln2_series>{}, "Ln2Series");
+    bs(40, W<ln13_min_ln7_div_7_series>{}, "Ln13MinusLn7Div7Series");
+    bs(41, W<ln_1_plus_x3_series>{}, "Ln1PlusX3Series");
+    bs(42, W<ln_1plussqrt1plusxsquare_minus_ln_2_series>{}, "Ln1PlusSqrt1PlusXsquareMinusLn2Series");
+    bs(43, W<ln_1plusx_div_1plusx2_series>{}, "Ln1plusXDiv1plusX2Series");
+    bs(44, W<ln_cosx_series>{}, "LnCosxSeries");
+    bs(45, W<ln_sinx_minus_ln_x_series>{}, "LnSinxMinusLnXSeries");
+    bs(46, W<ln_x_plus_one_x_minus_one_halfed_series>{}, "LnXPlusOneXMinusOneHalfedSeries");
+    bs(47, W<m_fact_1mx_mp1_inverse_series>{}, "MFact1mxMp1InverseSeries");
+    bs(48, W<mean_sinh_sin_series>{}, "MeanSinhSinSeries");
+    bs(49, W<minus_3_div_4_or_x_minus_3_div_4_series>{}, "Minus3Div4OrXMinus3Div4Series");
+    bs(50, W<minus_one_n_fact_n_in_n_series>{}, "MinusOneNFactNInNSeries");
+    bs(51, W<minus_one_ned_in_n_series>{}, "MinusOneNedInNSeries");
+    bs(52, W<minus_one_quarter_series>{}, "MinusOneQuarterSeries");
+    bs(53, W<minus_three_plus_ln3_three_devided_two_plus_two_ln2_series>{}, "MinusThreePlusLn3ThreeDividedTwoPlusTwoLn2Series");
+    bs(54, W<minus_x_minus_pi_4_or_minus_pi_4_series>{}, "MinusXMinusPi4OrMinusPi4Series");
+    bs(55, W<one_div_sqrt2_sin_xdivsqrt2_series>{}, "OneDivSqrt2SinXDivSqrt2Series");
+    bs(56, W<one_div_two_minus_x_multi_three_plus_x_series>{}, "OneDivTwoMinusXMultiThreePlusXSeries");
+    bs(57, W<one_minus_sqrt_1minus4x_div_2x_series>{}, "OneMinusSqrt1minus4xDiv2xSeries");
+    bs(58, W<one_series>{}, "OneSeries");
+    bs(59, W<one_third_pi_squared_m_nine_series>{}, "OneThirdPiSquaredMNineSeries");
+    bs(60, W<one_twelfth_3x2_pi2_series>{}, "OneTwelfth3x2Pi2Series");
+    bs(61, W<one_twelfth_series>{}, "OneTwelfthSeries");
+    bs(62, W<one_twelfth_x2_pi2_series>{}, "OneTwelfthX2Pi2Series");
+    bs(63, W<pi_3_series>{}, "Pi3Series");
+    bs(64, W<pi_4_series>{}, "Pi4Series");
+    bs(65, W<pi_8_cosx_square_minus_1_div_3_cosx_series>{}, "Pi8CosxSquareMinus1Div3CosxSeries");
+    bs(66, W<pi_cubed_32_series>{}, "PiCubed32Series");
+    bs(67, W<pi_four_minus_ln2_halfed_series>{}, "PiFourMinusLn2HalfedSeries");
+    bs(68, W<pi_minus_3pi_4_and_pi_minus_x_minus_3pi_4_series>{}, "PiMinus3pi4AndPiMinusXMinus3pi4Series");
+    bs(69, W<pi_minus_x_2_series>{}, "PiMinusX2Series");
+    bs(70, W<pi_series>{}, "PiSeries");
+    bs(71, W<pi_six_min_half_series>{}, "PiSixMinHalfSeries");
+    bs(72, W<pi_squared_6_minus_one_series>{}, "PiSquared6MinusOneSeries");
+    bs(73, W<pi_squared_twelve_series>{}, "PiSquaredTwelveSeries");
+    bs(74, W<pi_x_minus_x_square_square_minus_three_pi_x_plus_two_pi_square_series>{}, "PiXMinusXSquareSquareMinusThreePiXPlusTwoPiSquareSeries");
+    bs(75, W<pi_x_multi_e_xpi_plus_e_minusxpi_divided_e_xpi_minus_e_minusxpi_series>{}, "PiXMultiEXpiPlusEMinusXpiDividedEXpiMinusEMinusXpiSeries");
+    bs(76, W<riemann_zeta_func_series>{}, "RiemannZetaFuncSeries");
+    bs(77, W<riemann_zeta_func_xmin1_div_Riemann_zeta_func_x_series>{}, "RiemannZetaFuncXmin1DivRiemannZetaFuncXSeries");
+    bs(78, W<series_with_ln_number1_series>{}, "SeriesWithLnNumber1");
+    bs(79, W<series_with_ln_number2_series>{}, "SeriesWithLnNumber2");
+    bs(80, W<si_x_series>{}, "SiXSeries");
+    bs(81, W<sin_series>{}, "SinSeries");
+    bs(82, W<sin_x2_series>{}, "SinX2Series");
+    bs(83, W<sinh_series>{}, "SinhSeries");
+    bs(84, W<sinh_x2_series>{}, "SinhX2Series");
+    bs(85, W<sqrt_1plusx_min_1_min_x_div_2_series>{}, "Sqrt1plusXMinus1MinusXDiv2Series");
+    bs(86, W<sqrt_1plusx_series>{}, "Sqrt1plusXSeries");
+    bs(87, W<sqrt_oneminussqrtoneminusx_div_x_series>{}, "SqrtOneminusSqrtoneminusxDivXSeries");
+    bs(88, W<ten_minus_x_series>{}, "TenMinusXSeries");
+    bs(89, W<three_minus_pi_series>{}, "ThreeMinusPiSeries");
+    bs(90, W<two_arcsin_square_x_halfed_series>{}, "TwoArcsinSquareXHalfedSeries");
+    bs(91, W<two_degree_x_series>{}, "TwoDegreeXSeries");
+    bs(92, W<two_ln2_series>{}, "TwoLn2Series");
+    bs(93, W<x_1mx_squared_series>{}, "X1mxSquaredSeries");
+    bs(94, W<x_div_1minx2_series>{}, "XDiv1minX2Series");
+    bs(95, W<x_div_1minx_series>{}, "XDiv1minXSeries");
+    bs(96, W<x_min_sqrt_x_series>{}, "XMinSqrtXSeries");
+    bs(97, W<x_series>{}, "XSeries");
+    bs(98, W<x_two_series>{}, "XTwoSeries");
+    bs(99, W<x_two_throught_squares_series>{}, "XTwoThroughtSquaresSeries");
+    // bs(100, W<xmb_Jb_two_series>{}, "XmbJbTwoSeries");
+    bs(101, W<xsquareplus3_div_xsquareplus2multix_minus_1_series>{}, "Xsquareplus3DivXsquareplus2multixMinus1Series");
 
-    // If we got here, we couldn't do a tight bulk read. Fall back to a safe element-wise conversion
-    // that avoids PyObject indexing: create a py::array wrapper and read elements via array indexing.
-    try {
-        py::array arr(info);
-        // read element-by-element via array indexing (still avoids Python-level sequence ops)
-        for (std::size_t i = 0; i < size_; ++i) {
-            py::object item = arr.attr("__getitem__")(py::int_(i));
-            storage_[i] = py::cast<T>(item);
-        }
-        data_ptr_ = storage_.data();
-        return;
-    } catch (...) {
-        // final fallback: treat owner_ as generic sequence (this will be slow)
-        copy_from_object(owner_);
-    }
+    // SeriesAcceleration
+    py::class_<MSeriesAcceleration>(m, name("SeriesAcceleration").c_str())
+        .def("printInfo", &MSeriesAcceleration::get_name)
+        .def("__call__", &MSeriesAcceleration::operator(),
+             py::arg("n"), py::arg("order"), py::arg("data"));
+
+    py::class_<brezinski_theta_algorithm<T,K>, MSeriesAcceleration>
+        (m, name("BrezinskiThetaAlgorithm").c_str())
+        .def(py::init<>());
+
+    py::class_<chang_wynn_algorithm<T,K>, MSeriesAcceleration>
+        (m, name("ChangWynnAlgorithm").c_str())
+        .def(py::init<>());
+
+    py::class_<drummond_d_algorithm<T,K>, MSeriesAcceleration>
+        (m, name("DrummondDAlgorithm").c_str())
+        .def(py::init<remainder_type, bool>(),
+             py::arg("remainder") = remainder_type::t_type,
+             py::arg("useRecurrentFormula") = false);
+
+    py::class_<ford_sidi_2_algorithm<T,K>, MSeriesAcceleration>
+        (m, name("FordSidi2Algorithm").c_str())
+        .def(py::init<>());
+
+    py::class_<ford_sidi_3_algorithm<T,K>, MSeriesAcceleration>
+        (m, name("FordSidi3Algorithm").c_str())
+        .def(py::init<>());
+
+    py::class_<levin_algorithm<T,K>, MSeriesAcceleration>
+        (m, name("LevinAlgorithm").c_str())
+        .def(py::init<remainder_type, bool, RealT>(),
+            py::arg("remainder") = remainder_type::t_type,
+            py::arg("useRecurrentFormula") = false,
+            py::arg("beta") = static_cast<RealT>(1));
+
+    py::class_<levin_sidi_m_algorithm<T,K>, MSeriesAcceleration>
+
+        (m, name("LevinSidiMAlgorithm").c_str())
+        .def(py::init<remainder_type, RealT>(),
+            py::arg("remainder") = remainder_type::t_type,
+            py::arg("gamma") = static_cast<RealT>(10));
+
+    py::class_<levin_sidi_s_algorithm<T,K>, MSeriesAcceleration>
+        (m, name("LevinSidiSAlgorithm").c_str())
+        .def(py::init<remainder_type, bool, RealT>(),
+            py::arg("remainder") = remainder_type::t_type,
+            py::arg("useRecurrentFormula") = false,
+            py::arg("beta") = static_cast<RealT>(1));
+
+    py::class_<lubkin_w_algorithm<T,K>, MSeriesAcceleration>
+        (m, name("LubkinWAlgorithm").c_str())
+        .def(py::init<>());
+
+    py::class_<richardson_algorithm<T,K>, MSeriesAcceleration>
+        (m, name("RichardsonAlgorithm").c_str())
+        .def(py::init<>());
+
+    py::class_<shanks_transform_alternating<T,K>, MSeriesAcceleration>
+        (m, name("ShanksTransformAlternating").c_str())
+        .def(py::init<>());
+
+    py::class_<shanks_algorithm<T,K>, MSeriesAcceleration>
+        (m, name("ShanksAlgorithm").c_str())
+        .def(py::init<>());
+
+    py::class_<weniger_algorithm<T,K>, MSeriesAcceleration>
+        (m, name("WenigerAlgorithm").c_str())
+        .def(py::init<>());
+
+    py::class_<wynn_epsilon_1_algorithm<T,K>, MSeriesAcceleration>
+        (m, name("WynnEpsilon1Algorithm").c_str())
+        .def(py::init<>());
+
+    py::class_<wynn_epsilon_2_algorithm<T,K>, MSeriesAcceleration>
+        (m, name("WynnEpsilon2Algorithm").c_str())
+        .def(py::init<>());
+
+    py::class_<wynn_epsilon_3_algorithm<T,K>, MSeriesAcceleration>
+        (m, name("WynnEpsilon3Algorithm").c_str())
+        .def(py::init<RealT>(), py::arg("epsilon_threshold") = static_cast<RealT>(1e-3));
+
+    py::class_<wynn_rho_algorithm<T,K>, MSeriesAcceleration>
+        (m, name("WynnRhoAlgorithm").c_str())
+        .def(py::init<numerator_type, RealT, RealT>(),
+            py::arg("numerator") = numerator_type::rho_type,
+            py::arg("gamma") = static_cast<RealT>(-1),
+            py::arg("rho") = static_cast<RealT>(1));
 }
 
-template <std::floating_point T, std::unsigned_integral K>
-void array_series<T,K>::copy_from_object(py::object obj)
-{
-    py::sequence seq = py::reinterpret_borrow<py::sequence>(obj);
-    size_ = static_cast<std::size_t>(seq.size());
-    storage_.resize(size_);
-    for (std::size_t i = 0; i < size_; ++i) {
-        storage_[i] = py::cast<T>(seq[py::int_(i)]);
-    }
-    data_ptr_ = storage_.data();
-}
+template <class R>
+void bind_complex_num(py::module_& m, const char* pyname) {
+    using C = complex_precision<R>;
 
-template <std::floating_point T, std::unsigned_integral K>
-T array_series<T,K>::operator()(K n) const
-{
-    std::size_t idx = static_cast<std::size_t>(n);
-    if (idx >= size_) throw std::out_of_range("array_series: index out of range");
-    return data_ptr_[idx];
-}
+    using State =
+        std::conditional_t<std::is_same_v<R, float_precision>,
+                           std::pair<std::string, std::string>,
+                           std::pair<R, R>>;
 
-using T = double;
-using K = size_t;
+    auto cls = py::class_<C>(m, pyname)
+        .def(py::init<>())
+        .def(py::init<R>(), py::arg("re"))
+        .def(py::init<R,R>(), py::arg("re"), py::arg("im"))
+        .def(py::init([](std::complex<double> z){
+            return C(R(z.real()), R(z.imag()));
+        }), py::arg("z"))
+        .def_property("real",
+            [](const C& z){ return z.real(); },
+            [](C& z, const R& r){ z.real(r); })
+        .def_property("imag",
+            [](const C& z){ return z.imag(); },
+            [](C& z, const R& i){ z.imag(i); })
+        .def("__str__", [](const C& z){ return to_string(z); })
+        .def("__format__", [](const C& z, const std::string&){ return to_string(z); })
+        .def("__repr__", [pyname](const C& z){
+            std::stringstream ss;
+            ss << pyname << "(" << to_string(z.real()) << ", " << to_string(z.imag()) << ")";
+            return ss.str();
+        })
+        .def("__complex__", [](const C& z){
+            return std::complex<double>(static_cast<double>(z.real()),
+                                        static_cast<double>(z.imag()));
+        })
+        .def(-py::self)
+        .def(+py::self)
+        .def("__abs__", [](const C& a){ return a.abs(); })
+        .def(py::self + py::self)
+        .def(py::self - py::self)
+        .def(py::self * py::self)
+        .def(py::self / py::self)
+        .def(py::self == py::self)
+        .def(py::self != py::self)
+        .def("__getstate__", [](const C& z)->State{
+            if constexpr (std::is_same_v<R, float_precision>) {
+                return { z.real().toString(), z.imag().toString() };
+            } else {
+                return { z.real(), z.imag() };
+            }
+        })
+        .def("__setstate__", [](C& z, const State& s){
+            if constexpr (std::is_same_v<R, float_precision>) {
+                new (&z) C(R(s.first), R(s.second));
+            } else {
+                new (&z) C(s.first, s.second);
+            }
+        });
+}
 
 PYBIND11_MODULE(pyshanks, m) {
-    m.doc() = "pybind11: polymorphic series + all Shanks‑type transformations";
-
-    // series
-    using SeriesBase = series_base<T, K>;
-    py::class_<SeriesBase>(m, "SeriesBase")
-        .def("S_n", &SeriesBase::S_n)
-        .def("__call__", &SeriesBase::operator())
-        .def("get_sum", &SeriesBase::get_sum)
-        .def("get_x", &SeriesBase::get_x);
-
-    #define BIND_SERIES(DERIVED, PYNAME, ...)       \
-        py::class_<DERIVED, SeriesBase>(m, PYNAME).def(py::init<__VA_ARGS__>())
-    #define UNPAREN(...) __VA_ARGS__
-    #define S(Alias, Impl, NameStr, BIND_ARGS) \
-        using Alias = Impl<T, K>; \
-        BIND_SERIES(Alias, NameStr, UNPAREN BIND_ARGS);
-    S(SER1, exp_series, "ExpSeries", (T))
-    S(SER2, cos_series, "CosSeries", (T))
-    S(SER3, sin_series, "SinSeries", (T))
-    S(SER4, cosh_series, "CoshSeries", (T))
-    S(SER5, sinh_series, "SinhSeries", (T))
-    S(SER6, bin_series, "BinSeries", (T,T))
-    S(SER7, four_arctan_series, "FourArctanSeries", (T))
-    S(SER8, ln1mx_series, "Ln1mxSeries", (T))
-    S(SER9, mean_sinh_sin_series, "MeanSinhSinSeries", (T))
-    S(SER10, exp_squared_erf_series, "ExpSquaredErfSeries", (T))
-    S(SER11, xmb_Jb_two_series, "XmbJbTwoSeries", (T,K))
-    S(SER12, half_asin_two_x_series, "HalfAsinTwoXSeries", (T))
-    S(SER13, inverse_1mx_series, "Inverse1mxSeries", (T))
-    S(SER14, x_1mx_squared_series, "X_1mx_SquaredSeries", (T))
-    S(SER15, erf_series, "ErfSeries", (T))
-    S(SER16, m_fact_1mx_mp1_inverse_series, "MFact1mxMp1InverseSeries", (T,K))
-    S(SER17, inverse_sqrt_1m4x_series, "InvSqrt1m4xSeries", (T))
-    S(SER18, one_twelfth_3x2_pi2_series, "OneTwelfth3x2Pi2Series", (T))
-    S(SER19, x_twelfth_x2_pi2_series, "XTwelfthX2Pi2Series", (T))
-    S(SER20, ln2_series, "Ln2Series", (T))
-    S(SER21, one_series, "OneSeries", (T))
-    S(SER22, minus_one_quarter_series, "MinusOneQuarterSeries", (T))
-    S(SER23, pi_3_series, "Pi3Series", (T))
-    S(SER24, pi_4_series, "Pi4Series", (T))
-    S(SER25, pi_squared_6_minus_one_series, "PiSquared6MinusOneSeries", (T))
-    S(SER26, three_minus_pi_series, "ThreeMinusPiSeries", (T))
-    S(SER27, one_twelfth_series, "OneTwelfthSeries", (T))
-    S(SER28, eighth_pi_m_one_third_series, "EighthPiMOneThirdSeries", (T))
-    S(SER29, one_third_pi_squared_m_nine_series, "OneThirdPiSquaredMNineSeries", (T))
-    S(SER30, four_ln2_m_3_series, "FourLn2M3Series", (T))
-    S(SER31, exp_m_cos_x_sinsin_x_series, "ExpMCosXSinsinXSeries", (T))
-    S(SER32, pi_four_minus_ln2_halfed_series, "PiFourMinusLn2HalfedSeries", (T))
-    S(SER33, five_pi_twelve_series, "FivePiTwelveSeries", (T))
-    S(SER34, x_two_series, "XTwoSeries", (T))
-    S(SER35, pi_six_min_half_series, "PiSixMinHalfSeries", (T))
-    S(SER36, x_two_throught_squares_series, "XTwoThroughtSquaresSeries", (T))
-    S(SER37, minus_one_ned_in_n_series, "MinusOneNedInNSeries", (T))
-    S(SER38, minus_one_n_fact_n_in_n_series, "MinusOneNFactNInNSeries", (T))
-    S(SER39, ln_x_plus_one_x_minus_one_halfed_series, "LnXPlusOneXMinusOneHalfedSeries", (T))
-    S(SER40, two_arcsin_square_x_halfed_series, "TwoArcsinSquareXHalfedSeries", (T))
-    S(SER41, pi_squared_twelve_series, "PiSquaredTwelveSeries", (T))
-    S(SER42, pi_cubed_32_series, "PiCubed32Series", (T))
-    S(SER43, minus_three_plus_ln3_three_devided_two_plus_two_ln2_series, "MinusThreePlusLn3ThreeDividedTwoPlusTwoLn2Series", (T))
-    S(SER44, two_ln2_series, "TwoLn2Series", (T))
-    S(SER45, pi_x_multi_e_xpi_plus_e_minusxpi_divided_e_xpi_minus_e_minusxpi_minus_one_series, "PiXMultiE_XpiPlusEMinusXpiDividedE_XpiMinusEMinusXpiMinusOneSeries", (T))
-    S(SER46, pi_minus_x_2_series, "PiMinusX2Series", (T))
-    S(SER47, half_multi_ln_1div2multi1minuscosx_series, "HalfMultiLn1Div2Multi1MinusCosxSeries", (T))
-    S(SER48, half_minus_sinx_multi_pi_4_series, "HalfMinusSinxMultiPi4Series", (T))
-    S(SER49, ln_1plussqrt1plusxsquare_minus_ln_2_series, "Ln1PlusSqrt1PlusXsquareMinusLn2Series", (T))
-    S(SER50, ln_cosx_series, "LnCosxSeries", (T))
-    S(SER51, ln_sinx_minus_ln_x_series, "LnSinxMinusLnXSeries", (T))
-    S(SER52, pi_8_cosx_square_minus_1_div_3_cosx_series, "Pi8CosxSquareMinus1Div3CosxSeries", (T))
-    S(SER53, sqrt_oneminussqrtoneminusx_div_x_series, "SqrtOneminusSqrtoneminusxDivXSeries", (T))
-    S(SER54, one_minus_sqrt_1minus4x_div_2x_series, "OneMinusSqrt1minus4xDiv2xSeries", (T))
-    S(SER55, arcsin_x_minus_x_series, "ArcsinXMinusXSeries", (T))
-    S(SER56, pi_x_minus_x_square_and_x_square_minus_three_pi_x_plus_two_pi_square_series, "PiXMinusXSquareAndXSquareMinusThreePiXPlusTwoPiSquareSeries", (T))
-    S(SER57, abs_sin_x_minus_2_div_pi_series, "AbsSinXMinus2DivPiSeries", (T))
-    S(SER58, pi_minus_3pi_4_and_pi_minus_x_minus_3pi_4_series, "PiMinus3pi4AndPiMinusXMinus3pi4Series", (T))
-    S(SER59, minus_3_div_4_or_x_minus_3_div_4_series, "Minus3Div4OrXMinus3Div4Series", (T))
-    S(SER60, ten_minus_x_series, "TenMinusXSeries", (T))
-    S(SER61, x_series, "XSeries", (T))
-    S(SER62, minus_x_minus_pi_4_or_minus_pi_4_series, "MinusXMinusPi4OrMinusPi4Series", (T))
-    S(SER63, one_div_two_minus_x_multi_three_plus_x_series, "OneDivTwoMinusXMultiThreePlusXSeries", (T))
-    S(SER64, Si_x_series, "SiXSeries", (T))
-    S(SER65, Ci_x_series, "CiXSeries", (T))
-    S(SER66, Riemann_zeta_func_series, "RiemannZetaFuncSeries", (T))
-    S(SER67, Riemann_zeta_func_xmin1_div_Riemann_zeta_func_x_series, "RiemannZetaFuncXmin1DivRiemannZetaFuncXSeries", (T))
-    S(SER68, xsquareplus3_div_xsquareplus2multix_minus_1_series, "Xsquareplus3DivXsquareplus2multixMinus1Series", (T))
-    S(SER69, arcsin_x_series, "ArcsinXSeries", (T))
-    S(SER70, arctg_x_series, "ArctgXSeries", (T))
-    S(SER71, K_x_series, "KXSeries", (T))
-    S(SER72, E_x_series, "EXSeries", (T))
-    S(SER73, sqrt_1plusx_series, "Sqrt1plusXSeries", (T))
-    S(SER74, Lambert_W_func_series, "LambertWFuncSeries", (T))
-    S(SER75, Incomplete_Gamma_func_series, "IncompleteGammaFuncSeries", (T,T))
-    S(SER76, Series_with_ln_number1_series, "SeriesWithLnNumber1", (T))
-    S(SER77, Series_with_ln_number2_series, "SeriesWithLnNumber2", (T))
-    S(SER78, pi_series, "PiSeries", (T))
-    S(SER79, x_min_sqrt_x_series, "XMinSqrtXSeries", (T))
-    S(SER80, arctan_x2_series, "ArctanX2Series", (T))
-    S(SER81, ln1px4_series, "Ln1px4Series", (T))
-    S(SER82, sin_x2_series, "SinX2Series", (T))
-    S(SER83, arctan_x3_series, "ArctanX3Series", (T))
-    S(SER84, arcsin_x2_series, "ArcsinX2Series", (T))
-    S(SER85, ln1_m_x2_series, "Ln1MinusX2Series", (T))
-    S(SER86, artanh_x_series, "ArtanhXSeries", (T))
-    S(SER87, arcsinh_x_series, "ArcsinhXSeries", (T))
-    S(SER88, cos_x2_series, "CosX2Series", (T))
-    S(SER89, sinh_x2_series, "SinhX2Series", (T))
-    S(SER90, arctanh_x2_series, "ArctanhX2Series", (T))
-    S(SER91, cos3xmin1_div_xsqare_series, "Cos3xMinus1DivXsquareSeries", (T))
-    S(SER92, two_degree_x_series, "TwoDegreeXSeries", (T))
-    S(SER93, sqrt_1plusx_min_1_min_x_div_2_series, "Sqrt1plusXMinus1MinusXDiv2Series", (T))
-    S(SER94, ln13_min_ln7_div_7_series, "Ln13MinusLn7Div7Series", (T))
-    S(SER95, Ja_x_series, "JaXSeries", (T,T))
-    S(SER96, one_div_sqrt2_sin_xdivsqrt2_series, "OneDivSqrt2SinXDivSqrt2Series", (T))
-    S(SER97, ln_1plusx_div_1plusx2_series, "Ln1plusXDiv1plusX2Series", (T))
-    S(SER98, cos_sqrt_x_series, "CosSqrtXSeries", (T))
-    S(SER99, ln_1_plus_x3_series, "Ln1PlusX3Series", (T))
-    S(SER100, x_div_1minx_series, "XDiv1minXSeries", (T))
-    S(SER101, x_div_1minx2_series, "XDiv1minX2Series", (T))
-    S(SER102, gamma_series, "GammaSeries", (T,T))
-    #undef BIND_SERIES
-    #undef UNPAREN
-    #undef S
-
-    // series_acceleration
-    using SeriesAcceleration = series_acceleration<T, K, SeriesBase*>;
-    py::class_<SeriesAcceleration>(m, "SeriesAcceleration")
-        .def("__call__", &SeriesAcceleration::operator());
+    m.doc() = "pybind11: polymorphic series (double + float_precision), helper-organized, no-arg constructors, backward-compatible";
 
     py::enum_<remainder_type>(m, "RemainderType")
-        .value("u_variant", remainder_type::u_variant)
-        .value("t_variant", remainder_type::t_variant)
-        .value("v_variant", remainder_type::v_variant)
-        .value("t_wave_variant", remainder_type::t_wave_variant)
-        .value("v_wave_variant", remainder_type::v_wave_variant)
+        .value("u_type", remainder_type::u_type)
+        .value("t_type", remainder_type::t_type)
+        .value("v_type", remainder_type::v_type)
+        .value("t_wave_type", remainder_type::t_wave_type)
+        .value("v_wave_type", remainder_type::v_wave_type)
         .export_values();
 
     py::enum_<numerator_type>(m, "NumeratorType")
-        .value("rho_variant", numerator_type::rho_variant)
-        .value("generalized_variant", numerator_type::generalized_variant)
-        .value("gamma_rho_variant", numerator_type::gamma_rho_variant)
+        .value("rho_type", numerator_type::rho_type)
+        .value("generalized_type", numerator_type::generalized_type)
+        .value("gamma_rho_type", numerator_type::gamma_rho_type)
         .export_values();
 
-    using Shanks = shanks_algorithm<T, K, SeriesBase*>;
-    py::class_<Shanks, SeriesAcceleration>(m, "ShanksAlgorithm")
-        .def(py::init<SeriesBase*>(), py::arg("series"), py::keep_alive<1, 2>());
+    // Arb
+    {
+        using R = float_precision;
 
-    using ShanksAlt = shanks_transform_alternating<T, K, SeriesBase*>;
-    py::class_<ShanksAlt, SeriesAcceleration>(m, "ShanksTransformAlternatingAlgorithm")
-        .def(py::init<SeriesBase*>(), py::arg("series"), py::keep_alive<1, 2>());
+        py::class_<R>(m, "Arb")
+            .def(py::init<>())
+            .def(py::init<double>(), py::arg("d"))
+            .def(py::init<const std::string&>(), py::arg("s"))
+            .def("__str__", [](const R &x){ return x.toString(); })
+            .def("__format__", [](const R &x, const std::string&){ return x.toString(); })
+            .def("__repr__", [](const R &x){ return std::string("<") + "Arb" + ": " + x.toString() + ">"; })
+            .def(py::self + py::self) .def(py::self - py::self)
+            .def(py::self * py::self) .def(py::self / py::self)
+            .def(-py::self) .def(+py::self)
+            .def("__abs__", [](const R& a){ return a < R(0.0) ? -a : a; })
+            .def(py::self == py::self) .def(py::self != py::self)
+            .def(py::self <  py::self) .def(py::self <= py::self)
+            .def(py::self >  py::self) .def(py::self >= py::self)
+            .def("__float__", [](const R &x){ return static_cast<double>(x); })
+            .def("__int__",   [](const R &x){ return static_cast<long>(static_cast<double>(x)); })
+            .def("__index__", [](const R &x){ return static_cast<long>(static_cast<double>(x)); })
+            .def("__getstate__", [](const R& x){ return x.toString(); })
+            .def("__setstate__", [](R& self, const std::string& s){ new (&self) R(s); });
+    }
 
+    bind_complex_num<float_precision>(m, "CArb");
+    bind_complex_num<float>(m, "CF32");
+    bind_complex_num<double>(m, "CF64");
+    bind_complex_num<long double>(m, "CFLong");
 
-    using BrezinskiTheta = brezinski_theta_algorithm<T, K, SeriesBase*>;
-    py::class_<BrezinskiTheta, SeriesAcceleration>(m, "BrezinskiThetaAlgorithm")
-        .def(py::init<SeriesBase*>(), py::arg("series"), py::keep_alive<1, 2>());
+    bind_all<float>(m, "F32");
+    bind_all<double>(m, "F64");
+    bind_all<long double>(m, "FLong");
+    bind_all<float_precision>(m, "Arb");
 
-    using ChangWynn = chang_wynn_algorithm<T, K, SeriesBase*>;
-    py::class_<ChangWynn, SeriesAcceleration>(m, "ChangWynnAlgorithm")
-        .def(py::init<SeriesBase*>(), py::arg("series"), py::keep_alive<1, 2>());
-
-    using DrummondD = drummond_d_algorithm<T, K, SeriesBase*>;
-    py::class_<DrummondD, SeriesAcceleration>(m, "DrummondDAlgorithm")
-        .def(py::init<SeriesBase*, remainder_type, bool>(),
-            py::arg("series"), py::keep_alive<1, 2>(),
-            py::arg("remainder") = remainder_type::u_variant,
-            py::arg("useRecFormulas") = false);
-
-    using FordSidi2 = ford_sidi_2_algorithm<T, K, SeriesBase*>;
-    py::class_<FordSidi2, SeriesAcceleration>(m, "FordSidi2Algorithm")
-        .def(py::init<SeriesBase*>(), py::arg("series"), py::keep_alive<1, 2>());
-
-    using FordSidiThree = ford_sidi_3_algorithm<T, K, SeriesBase*>;
-    py::class_<FordSidiThree, SeriesAcceleration>(m, "FordSidi3Algorithm")
-        .def(py::init<SeriesBase*>(), py::arg("series"), py::keep_alive<1, 2>());
-
-    using Levin = levin_algorithm<T, K, SeriesBase*>;
-    py::class_<Levin, SeriesAcceleration>(m, "LevinAlgorithm")
-        .def(py::init<SeriesBase*, remainder_type, bool, T>(),
-            py::arg("series"), py::keep_alive<1, 2>(),
-            py::arg("remainder") = remainder_type::u_variant,
-            py::arg("useRecFormulas") = false,
-            py::arg("beta") = static_cast<T>(1));
-
-    using LevinSidiM = levin_sidi_m_algorithm<T, K, SeriesBase*>;
-    py::class_<LevinSidiM, SeriesAcceleration>(m, "LevinSidiMAlgorithm")
-        .def(py::init<SeriesBase*, remainder_type, T>(),
-            py::arg("series"), py::keep_alive<1, 2>(),
-            py::arg("remainder") = remainder_type::u_variant,
-            py::arg("gamma") = static_cast<T>(10));
-
-    using LevinSidiS = levin_sidi_s_algorithm<T, K, SeriesBase*>;
-    py::class_<LevinSidiS, SeriesAcceleration>(m, "LevinSidiSAlgorithm")
-        .def(py::init<SeriesBase*, remainder_type, bool, T>(),
-            py::arg("series"), py::keep_alive<1, 2>(),
-            py::arg("remainder") = remainder_type::u_variant,
-            py::arg("useRecFormulas") = false,
-            py::arg("parameter") = static_cast<T>(1));
-
-    using LubkinW = lubkin_w_algorithm<T, K, SeriesBase*>;
-    py::class_<LubkinW, SeriesAcceleration>(m, "LubkinWAlgorithm")
-        .def(py::init<SeriesBase*>(), py::arg("series"), py::keep_alive<1, 2>());
-
-    using WhynnRho = wynn_rho_algorithm<T, K, SeriesBase*>;
-    py::class_<WhynnRho, SeriesAcceleration>(m, "WhynnRhoAlgorithm")
-        .def(py::init<SeriesBase*, numerator_type, T, T>(),
-            py::arg("series"), py::keep_alive<1, 2>(),
-            py::arg("numerator") = numerator_type::rho_variant,
-            py::arg("gamma") = static_cast<T>(1),
-            py::arg("RHO") = static_cast<T>(0));
-
-    using Richardson = richardson_algorithm<T, K, SeriesBase*>;
-    py::class_<Richardson, SeriesAcceleration>(m, "RichardsonAlgorithm")
-        .def(py::init<SeriesBase*>(), py::arg("series"), py::keep_alive<1, 2>());
-
-    using Weniger = weniger_algorithm<T, K, SeriesBase*>;
-    py::class_<Weniger, SeriesAcceleration>(m, "WenigerAlgorithm")
-        .def(py::init<SeriesBase*>(), py::arg("series"), py::keep_alive<1, 2>());
-
-    using WynnEpsilon = wynn_epsilon_1_algorithm<T, K, SeriesBase*>;
-    py::class_<WynnEpsilon, SeriesAcceleration>(m, "WynnEpsilonAlgorithm")
-        .def(py::init<SeriesBase*>(), py::arg("series"), py::keep_alive<1, 2>());
-
-    using WynnEpsilon2 = wynn_epsilon_2_algorithm<T, K, SeriesBase*>;
-    py::class_<WynnEpsilon2, SeriesAcceleration>(m, "WynnEpsilon2Algorithm")
-        .def(py::init<SeriesBase*>(), py::arg("series"), py::keep_alive<1, 2>());
-
-    using WynnEpsilon3 = wynn_epsilon_3_algorithm<T, K, SeriesBase*>;
-    py::class_<WynnEpsilon3, SeriesAcceleration>(m, "WynnEpsilon3Algorithm")
-        .def(py::init<SeriesBase*, T>(),
-            py::arg("series"), py::keep_alive<1, 2>(),
-            py::arg("epsilon_threshold") = static_cast<T>(1e-3));
-
-    using ArraySeries = array_series<T, K>;
-    py::class_<ArraySeries, SeriesBase>(m, "ArraySeries")
-        .def(py::init<py::buffer>(), py::arg("buffer"), "Construct from a Python buffer (numpy array/memoryview). Zero-copy when possible.")
-        .def(py::init<py::object>(), py::arg("sequence"), "Construct from a Python sequence (will copy).")
-        .def("size", &ArraySeries::size);
+    bind_all<complex_precision<float>>(m, "CF32");
+    bind_all<complex_precision<double>>(m, "CF64");
+    bind_all<complex_precision<long double>>(m, "CFLong");
+    bind_all<complex_precision<float_precision>>(m, "CArb");
 }

@@ -449,6 +449,7 @@ x64
 /x64/Debug
 html
 latex
+docs
 !docs/html/.nojekyll
 x64/Debug/shanks_transformation.exe
 shanks_transformation/x64/Debug/vc143.pdb
@@ -494,4 +495,6 @@ rebuild.sh
 */cmake-build-debug-event-trace/*
 */cmake-build-release-visual-studio/*
 /shanks_transformation/tests/cmake-build-release-visual-studio/
-/build-py313/
+.dev
+shanks_consumer/output
+shanks_transformation/libs/cln-1.3.7

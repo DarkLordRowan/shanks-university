@@ -6,11 +6,16 @@ authors = [
     {name = "abyssal",email = "abyssal@example.com"}
 ]
 readme = "README.md"
-requires-python = "^3.11"
+requires-python = ">=3.13"
 dependencies = [
-    "numpy (>=2.3.3,<3.0.0)",
     "matplotlib (>=3.10.6,<4.0.0)",
     "pyqt6 (>=6.9.1,<7.0.0)",
+    "mongo (>=0.2.0,<0.3.0)",
+    "dotenv (>=0.9.9,<0.10.0)",
+    "tqdm (>=4.67.1,<5.0.0)",
+    "seaborn (>=0.13.2,<0.14.0)",
+    "pandas (>=2.3.3,<3.0.0)",
+    "plotly (>=6.3.1,<7.0.0)",
 ]
 
 
@@ -22,6 +27,10 @@ build-backend = "poetry.core.masonry.api"
 packages = [
     { include = "src", from = "." }
 ]
+
+[tool.poetry.group.dev.dependencies]
+pre-commit = "^4.3.0"
+mypy = "^1.18.2"
 
 [tool.pylint.MASTER]
 extension-pkg-allow-list = ["pyshanks"]

@@ -26,30 +26,18 @@
 
 Теория: [ссылка на теорию](https://drive.google.com/drive/folders/19KFEQhl9ZR4EE2zDFvi610bNdNBWfGIb?usp=sharing)
 
-
 ## Установка
-
-Убедитесь что у вас установлен Python.
-
-### Unix
-```bash
-git clone https://github.com/DarkLordRowan/shanks-university.git
-git checkout Fixes
-cd shanks_consumer
-
-bash install_pyshanks.sh
-
-pip install -r requirements.txt
+##### Клонировать проект 
 ```
-
-### Windows
+git clone git@github.com:DarkLordRowan/shanks-university.git
 ```
-install_py_requirement.bat
-install_pyshanks_windows.bat
+##### Забилдить проект
 ```
-
-## Использование
-Файл MANUAL.md, в shanks_consumer.
+mkdir build
+cd build
+cmake ..
+make
+```
 
 ## Документация
 Doxygen документация доступна [по ссылке](https://bimbobam.github.io)
@@ -123,3 +111,11 @@ Doxygen документация доступна [по ссылке](https://bi
 
 - [Подробный анализ трансформации Шенкса и Эпсилон алгоритма](https://www.researchgate.net/publication/327178717_The_genesis_and_early_developments_of_Aitken's_process_Shanks'_transformation_the_e-algorithm_and_related_fixed_point_methods)
 
+
+
+# Запуск backend api:
+
+```
+docker build -t shanks-api:latest .
+docker run -d --name shanks-api -p 8000:8000 --restart unless-stopped shanks-api:latest
+```

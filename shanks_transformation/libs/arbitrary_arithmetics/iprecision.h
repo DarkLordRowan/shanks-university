@@ -55,9 +55,9 @@
  * 03.21	HVE/19-Jun-2023	Added the following PRNGs as classes: chacha20, xoshiro256pp, xoshiro256ss, xoshiro512pp, xoshiro512ss
  * 03.22	HVE/01-Aug-2023	Code change to make the source compiled under gcc
  * 03.23	HVE/04-Aug-2023	added the fibonacci function
- * 03.24	HVE/18-Aug-2024 Fixed an issue reported by C++17 standard, that bool operator==(const random_precision<PrngType, ReturnType>& rhs) in random_precision 
+ * 03.24	HVE/18-Aug-2024 Fixed an issue reported by C++17 standard, that bool operator==(const random_precision<PrngType, ReturnType>& rhs) in random_precision
  *							was missing the template argument. Same for bool operator!=(const random_precision<PrngType, ReturnType>& rhs)
- * 
+ *
  * End of Change Record
  * --------------------------------------------------------------------------
 */
@@ -69,7 +69,7 @@ static char _VI_[] = "@(#)iprecision.h 03.24 -- Copyright (C) Henrik Vestermark"
 // If _INT_PRECESION_FAST_DIV_REM is defined it will use a magnitude faster div and rem integer operation.
 // Set for using float_precision for int_precision division when appropriate
 // Speed up int_precision division with a factor of 50 (+-)
-#define _INT_PRECISION_FAST_DIV_REM		
+#define _INT_PRECISION_FAST_DIV_REM
 // END Configuration
 
 #include <climits>
@@ -81,7 +81,15 @@ static char _VI_[] = "@(#)iprecision.h 03.24 -- Copyright (C) Henrik Vestermark"
 #include <cstdlib>
 #include <random>	// Needed for random_precision class and PRNGs in general
 
-static_assert(__cplusplus >= 201402L, "The iprecision.h code requires c++14 or higher.");
+#if defined(_MSVC_LANG)
+	#if _MSVC_LANG < 201402L
+		#error The iprecision.h code requires c++14 or higher
+	#endif
+#else
+	#if __cplusplus < 201402L
+		#error The iprecision.h code requires c++14 or higher
+	#endif
+#endif
 
 // THIS is the only configuration parameter to set or change.
 typedef std::uintmax_t iptype;	// The default size of the internal binary vector type, an unsigned 64bit. It should ALWAYS be set to the 'biggest' integer type.
@@ -159,11 +167,11 @@ class int_precision
     // Coordinate memebr functions
 	std::vector<iptype> *pointer();							// Return a pointer to mNumber
 	std::vector<iptype> number() const;						// Return a copy of mNumber
-	std::vector<iptype> number(std::vector<iptype> &mb);	// Set mNumber and return a copy of mNumber 
+	std::vector<iptype> number(std::vector<iptype> &mb);	// Set mNumber and return a copy of mNumber
 	iptype index(const size_t inx)	const;
 	int sign() const;			// Return current sign
 	int sign(int s);			// Set and return sign
-	int change_sign();			// Toggle and return sign 
+	int change_sign();			// Toggle and return sign
 	size_t size() const;		// Return number of iptype digits. iptype is the allocation unit of typicall 64bit?
 	size_t precision() const;	// Return the maximum fixed integer precision the variable can hold in number of iptype units
 	size_t precision(const size_t p);	// Set a new fixed integer precision or arbitrary precision
@@ -181,14 +189,16 @@ class int_precision
 	// End of Bit Methods
 	// Conversion methods. Safer and less ambiguous than overloading implicit/explicit conversion operators
 	std::string toString(const int);	//  Convert number to Decimal String with an optional base parameter
-	
-	// Implicit/explicit conversion operators	
+
+	// Implicit/explicit conversion operators
 	operator float() const;
 	operator double() const;
+	operator long double() const; //CUSTOM
+
 #ifdef TEMPLIFY
 	template <typename T> operator T() const {	return static_cast<T>(mNumber[0] * mSign);
 #else
-	operator long() const; 
+	operator long() const;
     operator int() const;
     operator short() const;
     operator char() const;
@@ -217,7 +227,7 @@ class int_precision
 	friend std::ostream& operator<<( std::ostream& strm, const int_precision& d );
 	friend std::istream& operator>>( std::istream& strm, int_precision& d );
 
-	
+
     // Exception class
     class bad_int_syntax {};
     class out_of_range   {};
@@ -265,7 +275,7 @@ class int_precision
 	template <class _Ty> inline bool operator==(int_precision&, const _Ty&);
 	template <class _Ty> inline bool operator==(const _Ty&, const int_precision&);
 	template <class _Ty> inline bool operator!=(int_precision&, const _Ty&);
-	template <class _Ty> inline bool operator!=(const _Ty&, const int_precision&);
+	//template <class _Ty> inline bool operator!=(const _Ty&, const int_precision&); KOSTIL
 	template <class _Ty> inline bool operator>(int_precision&, const _Ty&);
 	template <class _Ty> inline bool operator>(const _Ty&, const int_precision&);
 	template <class _Ty> inline bool operator>=(int_precision&, const _Ty&);
@@ -300,7 +310,7 @@ class int_precision
 	template<class _Ty, class _type = uint64_t> class random_precision;			// random precision class
 	extern int_precision fibonacci(const int_precision&);						// Fibonacci sequence
 
-	// Core Support functions 
+	// Core Support functions
 	double _int_precision_iptod(const int_precision *);					// Explicit conversion to double
 	std::vector<iptype> _int_precision_atoip(const char *, int *);		// char * string to int_precision
 	std::vector<iptype> _int_precision_atoip(const std::string&, int *);// STL String to int_precision
@@ -437,9 +447,9 @@ inline int_precision::int_precision(const int_precision& s, const size_t limit)
 //
 // Description:
 //  Constructor
-//  Validate and initilize with a vector<iptype> 
+//  Validate and initilize with a vector<iptype>
 //
-inline int_precision::int_precision( const std::vector<iptype>& v, const size_t limit) 
+inline int_precision::int_precision( const std::vector<iptype>& v, const size_t limit)
 	{
 	mSign = 1;
 	mLimit = limit;
@@ -808,7 +818,7 @@ inline int_precision::operator long long() const
 //	@author Henrik Vestermark (hve@hvks.com)
 //	@date		8/Aug/20221
 //	@brief 		int_precision::operator long
-//	@return 	long 
+//	@return 	long
 //
 //	Description:
 //  This is the main operator from int_precision to regular long, int, short & char
@@ -864,7 +874,7 @@ inline int_precision::operator short() const
 //
 inline int_precision::operator char() const
 	{// Conversion to char
-	return static_cast<char>(mNumber[0] * mSign); 
+	return static_cast<char>(mNumber[0] * mSign);
 	}
 
 //	@author Henrik Vestermark (hve@hvks.com)
@@ -968,6 +978,12 @@ inline int_precision::operator float() const
 	{// Conversion to float
 	return static_cast<float>(static_cast<double>(*this));
 	}
+
+//CUSTOM
+inline int_precision::operator long double() const
+	{// Conversion to long double
+	return static_cast<float>(static_cast<double>(*this));
+	}
 #endif
 
 //////////////////////////////////////////////////////////////////////
@@ -1064,7 +1080,7 @@ inline int int_precision::sign(int s) { return (mSign = s); }
 // Description:
 //  Change sign and Return a copy of mSign
 //
-inline int int_precision::change_sign() { mSign *= -1;  return mSign; }		// Toggle and return sign 
+inline int int_precision::change_sign() { mSign *= -1;  return mSign; }		// Toggle and return sign
 
 //	@author Henrik Vestermark (hve@hvks.com)
 //	@date		21/Nov/2021
@@ -1095,13 +1111,13 @@ inline size_t int_precision::precision() const { return mLimit; }		// Return the
 // Description:
 // Set and Return the new maximum precision the mNumber vector<iptype> can hold
 //
-inline size_t int_precision::precision(const size_t p )  
-	{ 
+inline size_t int_precision::precision(const size_t p )
+	{
 	mLimit = p==0 ? 1 : p;  //  Can only be set to a size >= 1
 	if (mLimit < mNumber.size())
 		mNumber.resize(mLimit);
-	return mLimit; // Return the new number of maximum iptype digits mNumber can hold 
-	}		
+	return mLimit; // Return the new number of maximum iptype digits mNumber can hold
+	}
 
 //	@author Henrik Vestermark (hve@hvks.com)
 //	@date		21/Nov/2021
@@ -1182,7 +1198,7 @@ inline bool int_precision::testbit(size_t i) {
 //	@date		21/Nov/2021
 //	@brief 		int_precision::ctz
 //	@param		"i"	-	Bit position
-//	@return 	number of trailing zero bit in mNumber 
+//	@return 	number of trailing zero bit in mNumber
 //
 // Description:
 // Return the number of trailing zero bits in mNumber vector<iptype>
@@ -1193,7 +1209,7 @@ inline size_t int_precision::ctz() { return _int_precision_ctz(mNumber); }
 //	@date		21/Nov/2021
 //	@brief 		int_precision::ctz
 //	@param		"i"	-	Bit position
-//	@return 	number of leadingzero  bit in mNumber 
+//	@return 	number of leadingzero  bit in mNumber
 //
 // Description:
 // Return the number of leading zero bits in mNumber vector<iptype>
@@ -1205,7 +1221,7 @@ inline size_t int_precision::clz() { return _int_precision_clz(mNumber); }
 //	@author Henrik Vestermark (hve@hvks.com)
 //	@date		21/Nov/2021
 //	@brief 		int_precision::even
-//	@return 	return true or false if mNumber is even or odd 
+//	@return 	return true or false if mNumber is even or odd
 //
 // Description:
 // Return true if mNumber number is even otherwise false
@@ -1215,7 +1231,7 @@ inline bool int_precision::even() const { return (mNumber[0] & 0x1) ? false : tr
 //	@author Henrik Vestermark (hve@hvks.com)
 //	@date		21/Nov/2021
 //	@brief 		int_precision::odfd
-//	@return 	return true or false if mNumber is even or odd 
+//	@return 	return true or false if mNumber is even or odd
 //
 // Description:
 // Return true if mNumber number is odd otherwise false
@@ -1277,7 +1293,7 @@ inline int_precision& int_precision::operator=( const int_precision& rhs )
 //	@param		"rhs"	-	Adding operand. Right hand side of operator
 //
 // Description:
-//  += operator. 
+//  += operator.
 //
 inline int_precision& int_precision::operator+=( const int_precision& rhs )
 	{
@@ -1367,7 +1383,7 @@ inline int_precision& int_precision::operator/=( const int_precision& rhs )
 	// do faster floating point division if denominator is greater than 2^32 otherwise a udiv_short is 1'000 times faster
 	//  however this->size() need to be bigger than 70 digits which is size()>=4.
 	// and the conditions this->size()>=a->size()
-	if (mNumber.size()>=4 && mNumber.size()>=rhs.size() && rhs.mNumber.size() != 1 && (rhs.mNumber[0]>>32) != 0)  
+	if (mNumber.size()>=4 && mNumber.size()>=rhs.size() && rhs.mNumber.size() != 1 && (rhs.mNumber[0]>>32) != 0)
 		{
 		extern int_precision _int_precision_fastdiv( const int_precision&, const int_precision& );
 		int_precision b=*this;
@@ -1383,7 +1399,7 @@ inline int_precision& int_precision::operator/=( const int_precision& rhs )
 		{// Check for division of of number that can safely be done using 64bit binary division
 		mNumber = _int_precision_udiv(mNumber, const_cast<std::vector<iptype>&>(rhs.mNumber));
  		}
-	
+
 	if (mSign == -1 && mNumber.size() == 1 && mNumber[0] == (iptype)0)  // Avoid -0 as result +0 is right
 		mSign = +1;
 
@@ -1416,12 +1432,12 @@ inline int_precision& int_precision::operator%=( const int_precision& rhs )
 		}
 #endif
 
-	if (rhs.mNumber.size() == 1 && (rhs.mNumber.front() >> 32) == 0) // Make short rem 
+	if (rhs.mNumber.size() == 1 && (rhs.mNumber.front() >> 32) == 0) // Make short rem
 		mNumber = _int_precision_urem_short( mNumber, rhs.mNumber[0]);  // Short rem and sign stay the same
 	else
 		// Check for remainder of of number that can safely be done using 64bit binary remainder
 		mNumber = _int_precision_urem(mNumber, const_cast<std::vector<iptype>&>(rhs.mNumber));	// regular rem. sign stay the same
-   
+
 	if (mSign == -1 && mNumber.size() == 1 && mNumber[0] == (iptype)0)  // Avoid -0 as result +0 is right
 	   mSign = +1;
 
@@ -1937,7 +1953,7 @@ template <class _Ty> inline int_precision operator|(int_precision& lhs, const _T
 //  no const on the lhs parameter to prevent ambigous overload
 //
 template <class _Ty> inline int_precision operator^(int_precision& lhs, const _Ty& rhs)
-	{	
+	{
 	return int_precision(lhs) ^= int_precision(rhs);
 	}
 
@@ -1977,7 +1993,7 @@ inline int_precision operator~(const int_precision& a)
 		*d_pos = ~*d_pos;
 		}
 	lhs.number(des);
-	return lhs; 
+	return lhs;
 	}
 
 //////////////////////////////////////////////////////////////////////
@@ -2150,11 +2166,11 @@ template <class _Ty> inline bool operator!=( int_precision& a, const _Ty& b )
 //
 // Description:
 //  Boolean not equal of two precision numbers
-//
-template <class _Ty> inline bool operator!=( const _Ty& a, const int_precision& b )
-	{
-	return a == b ? false : true;
-	}
+// KOSTIL
+//template <class _Ty> inline bool operator!=( const _Ty& a, const int_precision& b )
+//	{
+//	return a == b ? false : true;
+//	}
 
 //	@author Henrik Vestermark (hve@hvks.com)
 //	@date		1/19/2005
@@ -2253,7 +2269,7 @@ template <class _Ty> inline bool operator>=( const _Ty& a, const int_precision& 
 //	@date		3/Feb/2017, revised 20/JUL/2019
 //	@brief 		gcd - Greatest Common Divisor
 //	@return 	The greates common divisor or a & b
-//	@param		"a"	-	First operand number 
+//	@param		"a"	-	First operand number
 //	@param		"b"	-	Second operand number
 //
 // Description:
@@ -2342,11 +2358,11 @@ inline bool operator||(const int_precision& a, const int_precision& b)
 //	@brief 		random_precision template class
 //	@param		"_TY"	-	The underlying random number generator class
 //  @param		"_type"	-	The return type of the operator() and min() and max()
-// 
+//
 // Description:
 //		Implement the arbitrary precision version from the underlying (32-64-bit random class)
-// 
-// 
+//
+//
 template<class PrngType, class ReturnType> class random_precision
 {
 	PrngType generator;
@@ -2457,10 +2473,10 @@ public:
 //	@author Henrik Vestermark (hve@hvks.com)
 //	@date		10/Jun/2023
 //	@brief 		chacha20 class for PRNG
-// 
+//
 // Description:
-//		Implement the 32-bit chacha20 random number generator 
-// 
+//		Implement the 32-bit chacha20 random number generator
+//
 // ChaCha20 PRNG class
 //
 class chacha20
@@ -2632,10 +2648,10 @@ public:
 //	@author Henrik Vestermark (hve@hvks.com)
 //	@date		19/Jun/2023
 //	@brief 		xoshiro256pp class for PRNG
-// 
+//
 // Description:
-//		Implement the 64-bit xoshiro256pp random number generator 
-// 
+//		Implement the 64-bit xoshiro256pp random number generator
+//
 // xoshiro256++ random number generator implementation
 // This is xoshiro256++ 1.0, one of our all-purpose, rock-solid generators.
 //   It has excellent (sub-ns) speed, a state (256 bits) that is large
@@ -2646,7 +2662,7 @@ public:
 //
 //   The state must be seeded so that it is not everywhere zero. If you have
 //   a 64-bit seed, we suggest to seed a splitmix64 generator and use its
-//   output to fill s. 
+//   output to fill s.
 class xoshiro256pp {
 	using result_type = uint64_t;
 	std::array<result_type, 4> s;   // Internal state 256 bits
@@ -2736,10 +2752,10 @@ public:
 //	@author Henrik Vestermark (hve@hvks.com)
 //	@date		19/Jun/2023
 //	@brief 		xoshiro256ss class for PRNG
-// 
+//
 // Description:
-//		Implement the 64-bit xoshiro256ss random number generator 
-// 
+//		Implement the 64-bit xoshiro256ss random number generator
+//
 // xoshiro256** random number generator implementation
 // This is xoshiro256** 1.0, one of our all-purpose, rock-solid
 //   generators. It has excellent (sub-ns) speed, a state (256 bits) that is
@@ -2780,7 +2796,7 @@ public:
 		seed(seeds);
 	}
 
-	inline void seed(const result_type seed_value)	
+	inline void seed(const result_type seed_value)
 	{
 		for (int i = 0; i < 4; ++i)
 			s[i] = splitmix64(seed_value + i);
@@ -2839,10 +2855,10 @@ public:
 //	@author Henrik Vestermark (hve@hvks.com)
 //	@date		19/Jun/2023
 //	@brief 		xoshiro512pp class for PRNG
-// 
+//
 // Description:
-//		Implement the 64-bit xoshiro512pp random number generator 
-// 
+//		Implement the 64-bit xoshiro512pp random number generator
+//
 // xoshiro512++ random number generator implementation
 // This is xoshiro512++ 1.0, one of our all-purpose, rock-solid
 //   generators. It has excellent (about 1ns) speed, a state (512 bits) that
@@ -2943,10 +2959,10 @@ public:
 //	@author Henrik Vestermark (hve@hvks.com)
 //	@date		19/Jun/2023
 //	@brief 		xoshiro512ss class for PRNG
-// 
+//
 // Description:
-//		Implement the 64-bit xoshiro512ss random number generator 
-// 
+//		Implement the 64-bit xoshiro512ss random number generator
+//
 // This is xoshiro512** 1.0, one of our all-purpose, rock-solid generators
 //   with increased state size. It has excellent (about 1ns) speed, a state
 //   (512 bits) that is large enough for any parallel application, and it
@@ -2978,7 +2994,7 @@ public:
 		seed(val);
 	}
 
-	inline xoshiro512ss(std::seed_seq& seeds) // No const qualifier for gcc compatability 
+	inline xoshiro512ss(std::seed_seq& seeds) // No const qualifier for gcc compatability
 	{   // Initialization through seed_seq seed
 		seed(seeds);
 	}

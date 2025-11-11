@@ -1,34 +1,62 @@
 import type { Author, AuthorId } from "../types/author.ts";
 
-const GH = {
-    owner: "DarkLordRowan",
-    repo: "shanks-university",
-    branch: "Fixes",
-    dataFile: "data/author/authors.json",
-};
-
-const buildAuthorsFileLink = () => {
-    return `https://raw.githubusercontent.com/${GH.owner}/${GH.repo}/${GH.branch}/${GH.dataFile}`;
-};
-
-export const getAuthorsDataFromGitHub = async (): Promise<Record<string, Author>> => {
-    const rawUrl = buildAuthorsFileLink();
-    const response = await fetch(rawUrl);
-
-    if (!response.ok) {
-        console.error('Error fetching authors data from GitHub', response.statusText);
-        throw new Error('Failed to fetch authors data from GitHub');
-    }
-
-    const data: Author[] = await response.json();
-
-    return data.reduce((acc, authorData) => {
-        acc[authorData.id] = authorData;
-        return acc;
-    }, {} as Record<string, Author>);
-};
-
-export const AUTHORS: Record<string, Author> = await getAuthorsDataFromGitHub();
+export const AUTHORS = {
+    wynn: {
+        id: "wynn",
+        name: "Peter Wynn",
+        url: "https://en.wikipedia.org/wiki/Peter_Wynn_(mathematician)",
+    },
+    brezinski: {
+        id: "brezinski",
+        name: "Claude Brezinski",
+        url: "https://en.wikipedia.org/wiki/Claude_Brezinski",
+    },
+    drummond: {
+        id: "drummond",
+        name: "Peter Drummond",
+        url: undefined,
+    },
+    levin: {
+        id: "levin",
+        name: "David Levin",
+        url: undefined,
+    },
+    sidi: {
+        id: "sidi",
+        name: "Avram Sidi",
+        url: undefined,
+    },
+    ford: {
+        id: "ford",
+        name: "William F. Ford",
+        url: undefined,
+    },
+    lubkin: {
+        id: "lubkin",
+        name: "Sidney Lubkin",
+        url: undefined,
+    },
+    richardson: {
+        id: "richardson",
+        name: "Lewis F. Richardson",
+        url: "https://en.wikipedia.org/wiki/Lewis_F._Richardson",
+    },
+    weniger: {
+        id: "weniger",
+        name: "Ernst Joachim Weniger",
+        url: undefined,
+    },
+    chang: {
+        id: "chang",
+        name: "Chang",
+        url: undefined,
+    },
+    shanks: {
+        id: "shanks",
+        name: "Daniel Shanks",
+        url: "https://en.wikipedia.org/wiki/Daniel_Shanks_(mathematician)",
+    },
+} satisfies Record<string, Author>;
 
 export function resolveAuthors(ids?: AuthorId[]): Author[] {
     if (!ids?.length) return [];

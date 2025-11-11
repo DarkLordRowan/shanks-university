@@ -1,16 +1,31 @@
 # Shanks consumer CLI
 
-## Использование
+## Установка
 
-### Базовое использование
+Убедитесь что у вас установлен Python.
 
 ```bash
-python main.py
+git clone https://github.com/DarkLordRowan/shanks-university.git
+cd shanks-university
+git checkout concept-proved
+cd shanks_consumer
+
+bash install_pyshanks.sh
+
+pip install -r requirements.txt
+```
+
+## Использование
+
+### Базовое использование 
+
+```bash
+python main.py run
 ```
 
 Запускает со стандартными расположениями файлов:
 
-* Ряды: `data/example.json` и `data/example_series.csv`
+* Ряды: `config/example.json` и `data/example_series.csv`
 
 * Ускорение: `data/example.json`
 
@@ -18,55 +33,55 @@ python main.py
 
 * Графики: `plots/`
 
+### Файл конфигурации испытания
+
+```bash
+python main.py run --options-json options.json
+```
+
+Запускает испытание с настройками в файле `options.json`. Подробнее о настройках ниже.
+
 ### Пользовательские входные файлы
 
 ```bash
-python main.py \
+python main.py run \
     --series-json data/custom_series.json \
     --series-csv data/custom_data.csv \
     --accel-json data/accel_config.json
-```
-
-### Пользовательские выходные директории
-
-```bash
-python script.py \
-    --output-dir results/my_analysis \
-    --plots-dir figures/my_analysis \
-    --results-json results/my_analysis/final_results.json \
-    --events-csv results/my_analysis/detected_events.csv
 ```
 
 ### Выборочная обработка
 
 ```bash
 # Пропустить детектирование событий
-python script.py --no-events
+python main.py run --no-events
 
 # Пропустить генерацию графиков
-python script.py --no-plots
+python main.py run --no-plots
 
 # Пропустить и события и графики
-python script.py --no-events --no-plots
+python main.py run --no-events --no-plots
 ```
 
 ### Подробный вывод
 
 ```bash
 # Базовый подробный вывод
-python script.py -v
+python main.py run -v
 
 # Детальный вывод с трейсбэком при ошибках
-python script.py -vv
+python main.py run -vv
 ```
 
 ## Аргументы
 
 ### Опции ввода
 
+* `--options-json`: JSON файл для параметров испытания (вместо CLI флагов)
+
 * `--series-json`: JSON файл для параметров серий (по умолчанию: `data/example.json`)
 
-* `--series-csv`: CSV файл для параметров серий (по умолчанию: `data/example_series.csv`)
+* `--series-csv`: CSV файл для натуральных рядов (по умолчанию: `data/example_series.csv`)
 
 * `--accel-json`: JSON файл для параметров ускорения (по умолчанию: `data/example.json`)
 
@@ -90,9 +105,43 @@ python script.py -vv
 
 * `--no-plots`: Пропустить генерацию графиков
 
-* `--plot-events-only`: Если графики рисуются, то они будут рисоваться только для результатов с зафикисированным ивентом
+* `--no-csv-export`: Пропустить экспорт в CSV
+
+* `--no-json-export`: Пропустить экспорт в JSON
+
+* `--with-arb`: Включить ARB режим (пока не поддерживается)
+
+* `--with-mongo`: Включить экспорт в MongoDB
 
 * `--verbose/-v`: Увеличить уровень детализации (используйте `-v` для базового, `-vv` для детального)
+
+### Флаги выполнения
+
+* `--trial-process-count`: количество создаваемых процессов для обработки испытания (по умолчанию `1`)
+
+* `--trial-task-timeout`: максимальное время для ожидания выполнения одной задачи в секундах (по умолчанию `10`)
+
+### Подробнее про экспорт в MongoDB
+
+Для экспорта в MongoDB нужно включить соответствующий флаг (`--with-mongo`) или в конфигурации `--options-json` и предоставить данные для подключения в `.env` файле.
+
+```sh
+# Скопируйте пример файла окружения
+cp .env.example .env
+# Отредактируйте файл .env правильными данными
+```
+
+### Ряды в формате CSV
+
+Утилита поддерживает заданные ряды вручную в формате `.csv`
+Укажите доступ к ним по флагу `--series-csv` или в конфигурации по пути `--options-json`. Внутри файла структура рядов следующая:
+
+```csv
+1,2,3,4,5,6,7,8,9
+9,8,7,6,5,4,3,2,1
+```
+
+В этом примере расположены два ряда, члены которых перечислены в строчке через запятую; заголовки и отступы не должны присутствовать.
 
 ## Выходные файлы
 
@@ -107,13 +156,13 @@ python script.py -vv
 ### Быстрый анализ с пользовательскими данными
 
 ```bash
-python script.py --series-json my_data.json --output-dir quick_results -v
+python main.py --series-json my_data.json --output-dir quick_results -v
 ```
 
 ### Продуктивный запуск со всеми выводами
 
 ```bash
-python script.py \
+python main.py run \
     --series-json production/series_config.json \
     --series-csv production/series_data.csv \
     --accel-json production/accel_config.json \
@@ -126,7 +175,7 @@ python script.py \
 ### Минимальный вывод для тестирования
 
 ```bash
-python script.py --no-events --no-plots --output-dir test_run
+python main.py --no-events --no-plots --output-dir test_run
 ```
 
 ## Конфигурация испытания
@@ -136,13 +185,13 @@ python script.py --no-events --no-plots --output-dir test_run
 ```json
 {
   // Список рядов
-  "series": [ 
+  "series": [
     {
       // Точное название ряда
       "name": "ExpSeries",
       // Словарь аргументов ряда
       "args": {
-        // Можно присвоить значение списка, тогда для каждого из параметров 
+        // Можно присвоить значение списка, тогда для каждого из параметров
         // будет создан соответствующий ряд
         "x": [1, 2, 3, 4]
       }
@@ -173,7 +222,7 @@ python script.py --no-events --no-plots --output-dir test_run
       "args": {}
     },
     {
-      "name": "ShanksTransformAlternatingAlgorithm",
+      "name": "ShanksTransformAlternating",
       "n": {
         // Рендж можно применить и для этих аргументов
         "start": 1,
@@ -211,4 +260,103 @@ python script.py --no-events --no-plots --output-dir test_run
   ]
 }
 
+```
+
+## Разработка
+
+### 0. Установите проект:
+
+```sh
+git clone https://github.com/DarkLordRowan/shanks-university.git
+cd shanks-university
+git checkout concept-proved
+cd shanks_consumer
+
+# Убедитесь, что у вас установлены зависимости:
+sudo apt update
+sudo apt install python3 python3-pip cmake build-essential
+```
+
+Для работы нужно собрать библиотеку **pyshanks*
+```
+bash install_pyshanks.sh
+```
+
+### 1. Установите [Poetry](https://python-poetry.org/docs/)
+
+```sh
+# Linux/macOS/WSL
+curl -sSL https://install.python-poetry.org | python3 -
+
+# Windows (PowerShell)
+(Invoke-WebRequest -Uri https://install.python-poetry.org -UseBasicParsing).Content | python -
+
+poetry --version
+```
+
+### 2. Загрузите зависимости:
+
+```sh
+poetry install
+```
+
+### 3. Установите pre-commit хуки (сделайте это ОДИН РАЗ после poetry install):
+
+```sh
+poetry run pre-commit install
+```
+
+### 4. Запуск скрипта без входа в окружение:
+
+```sh
+poetry run python main.py run
+```
+...
+
+
+
+## Запуск в Docker Compose
+
+Сборка в изолированном окружении с автосборкой и локальной MongoDB
+
+### 0. Зависимости
+
+В отличии от остальных способов, из прямых зависимостей только [Docker](https://www.docker.com/get-started/) и [Docker Compose](https://docs.docker.com/compose/install/).
+
+### 1. Настройка
+
+```sh
+cp .env.example .env
+```
+
+Для локального размещения MongoDB изменять `.env` не требуется.
+
+### 2. Запуск
+
+```sh
+docker compose up -d --build
+# Отслеживайте статус запуска контейнеров
+docker compose ps 
+```
+
+### 3. Выполнение команд
+
+Для выполнения команд используйте шаблон:
+
+```sh
+docker compose exec -it shanks-consumer аналогичная_python_команда
+# Например:
+docker compose exec -it shanks-consumer python main.py run --options-json config/options.json
+```
+
+### 4. Ограничения
+
+Ожидается, что конфигурация будет в директории `config`, а вывод в `output`. Можно составлять поддиректории, но контейнер не имеет доступ к внешним директориям.
+
+WatchFiles *пока не поддерживается*, после изменений в исходном коде нужно пересобирать образы(не касается конфигураций!).
+
+Для скорости сборки образ опирается на `requirements.txt`, при добавлении/исключении Python зависимостей через Poetry обновляйте и `requirements.txt`:
+
+```sh
+poetry export --without-hashes --format=requirements.txt > requirements.txt
 ```
