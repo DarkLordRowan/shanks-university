@@ -1,14 +1,16 @@
 import { z } from "zod";
 
+const NumOrStr = z.union([z.number(), z.string()]).nullable().optional();
+
 export const ResponseSeriesSchema = z
     .object({
         name: z.string(),
         arguments: z
             .object({
-                x: z.number(),
+                x: z.number().nullable().optional(),
             })
             .loose(),
-        lim: z.number().nullable().optional(),
+        lim: NumOrStr,
     })
     .loose();
 
@@ -29,11 +31,11 @@ export const ResponseAccelSchema = z
 export const ResponseComputedSchema = z
     .object({
         n: z.number(),
-        series_value: z.number().nullable().optional(),
-        partial_sum: z.number().nullable().optional(),
-        partial_sum_deviation: z.number().nullable().optional(),
-        accel_value: z.number().nullable().optional(),
-        accel_value_deviation: z.number().nullable().optional(),
+        series_value: NumOrStr,
+        partial_sum: NumOrStr,
+        partial_sum_deviation: NumOrStr,
+        accel_value: NumOrStr,
+        accel_value_deviation: NumOrStr,
     })
     .loose();
 
