@@ -55,14 +55,19 @@ export function ResponseRecordsFileInput({ onLoaded }: Props) {
                     <div className="font-semibold text-red-700">
                         Ошибки валидации:
                     </div>
-                    <ul className="max-h-40 overflow-auto rounded border p-2 text-xs">
+                    <ul className="max-h-60 overflow-auto rounded border p-2 text-xs font-mono">
                         {state.issues.map((issue, idx) => (
-                            <li key={idx} className="mb-1">
-                                <div className="font-mono">{issue.path}</div>
+                            <li key={idx} className="mb-2">
+                                <div>{issue.path}</div>
+                                {issue.objectIndex != null && (
+                                    <div>objectIndex: {issue.objectIndex}</div>
+                                )}
                                 <div>{issue.message}</div>
-                                <div className="text-[10px] text-gray-500">
-                                    code: {issue.code}
-                                </div>
+                                {issue.snippet && (
+                                    <pre className="mt-1 whitespace-pre-wrap rounded bg-black/30 p-1">
+                            {issue.snippet}
+                        </pre>
+                                )}
                             </li>
                         ))}
                     </ul>
