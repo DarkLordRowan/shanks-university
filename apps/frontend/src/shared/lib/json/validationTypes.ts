@@ -3,6 +3,8 @@ export type ValidationIssue = {
     code: string;
     message: string;
     rawPath: PropertyKey[];
+    objectIndex?: number;
+    snippet?: string;
 };
 
 export type ValidationResultOk<T> = {
