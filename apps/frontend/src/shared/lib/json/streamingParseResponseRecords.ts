@@ -62,7 +62,11 @@ export async function streamParseResponseRecords(
         indexInArray += 1;
         objectStart = -1;
 
-        const jsonText = buffer.slice(start, endPos);
+        let jsonText = buffer.slice(start, endPos);
+        jsonText = jsonText.replace(
+            /(:\s*)(-?(?:Infinity|NaN))(?=\s*[,}])/g,
+            '$1"$2"',
+        );
         flushedObjects += 1;
 
         if (flushedObjects <= 5 || flushedObjects % 1000 === 0) {
@@ -79,7 +83,7 @@ export async function streamParseResponseRecords(
         } catch (e) {
             const err = e as Error;
             const msg = err.message || "Unknown JSON parse error";
-            const snippet = jsonText.slice(0, 200);
+            const snippet = jsonText;
 
             fail([
                 {
