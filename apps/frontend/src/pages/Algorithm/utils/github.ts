@@ -1,7 +1,7 @@
 export const GH = {
     owner: "DarkLordRowan",
     repo: "shanks-university",
-    branch: "Fixes",
+    branch: "VecImpl",
     srcFolder: "shanks_transformation/methods/algorithm", // файлы .hpp
     docsFolder: "theory/algorithm", // файлы .tex
 };

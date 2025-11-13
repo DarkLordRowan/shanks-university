@@ -10,7 +10,7 @@ export type AlgorithmNode = {
 const GH = {
     owner: "DarkLordRowan",
     repo: "shanks-university",
-    branch: "Fixes",
+    branch: "VecImpl",
     dataFile: "data/algorithm/algorithms.json",
 };
 

@@ -3,7 +3,7 @@ import type { Author, AuthorId } from "../types/author.ts";
 const GH = {
     owner: "DarkLordRowan",
     repo: "shanks-university",
-    branch: "Fixes",
+    branch: "VecImpl",
     dataFile: "data/author/authors.json",
 };
 

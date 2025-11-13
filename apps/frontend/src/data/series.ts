@@ -24,7 +24,7 @@ export type SeriesNode = {
 const GH = {
     owner: "DarkLordRowan",
     repo: "shanks-university",
-    branch: "Fixes",
+    branch: "VecImpl",
     dataFile: "data/series/serieses.json",
 };
 

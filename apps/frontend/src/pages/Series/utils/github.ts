@@ -1,7 +1,7 @@
 export const GH_SERIES = {
     owner: "DarkLordRowan",
     repo: "shanks-university",
-    branch: "Fixes",
+    branch: "VecImpl",
     srcFolder: "shanks_transformation/series/serieses", // .hpp с кодом ряда
     docsFolder: "theory/series",               // .tex с теорией по ряду
 };

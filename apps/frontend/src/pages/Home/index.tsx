@@ -22,7 +22,7 @@ const Home: React.FC = () => {
                 <div className="space-y-1">
                     <p>Для тестирования можно использовать пример входных данных:</p>
                     <a
-                        href="https://github.com/DarkLordRowan/shanks-university/blob/Fixes/shanks_consumer/data/one_series_all_algo.json"
+                        href="https://github.com/DarkLordRowan/shanks-university/blob/VecImpl/shanks_consumer/data/one_series_all_algo.json"
                         target="_blank"
                         rel="noreferrer"
                         className="text-primary hover:underline underline-offset-4 break-all text-sm"
