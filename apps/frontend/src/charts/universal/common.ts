@@ -1,27 +1,19 @@
 // src/charts/universal/common.ts
-
-import type { Item, ResponseComputed } from "@/types/item.ts";
+import type { Item, ResponseComputed } from "@/types/item";
 
 export type UniversalChartRow = {
     n: number;
 } & Record<string, number | null>;
 
 /**
- * Человекочитаемый ключ для линии:
- * seriesName · x=... · algo · (m=...)
+ * Ключ для линии на графике.
+ * Теперь показываем только алгоритм и m, без seriesName и x,
+ * т.к. они уже выбраны фильтрами.
  */
 export function universalSeriesKey(item: Item): string {
-    const parts: string[] = [];
-
-    parts.push(item.series.seriesName);
-    parts.push(`x=${item.series.x}`);
-
     const algoBase = item.algorithm.algorithmName;
     const m = item.algorithm.m;
-    const algoFull = m != null ? `${algoBase} (m=${m})` : algoBase;
-    parts.push(algoFull);
-
-    return parts.join(" · ");
+    return m != null ? `${algoBase} (m=${m})` : algoBase;
 }
 
 /** Уникальные ключи линий для набора items. */
@@ -42,9 +34,6 @@ export function uniqueUniversalKeys(items: Item[]): string[] {
 /**
  * Группировка по n для произвольного набора items:
  * строки вида { n, [key1]: value1, [key2]: value2, ... }
- *
- * pick(c) вытаскивает нужное поле из ResponseComputed
- * (accel_value, partial_sum, deviation и т.д.).
  */
 export function groupByNUniversal(
     items: Item[],
@@ -72,8 +61,6 @@ export function groupByNUniversal(
 
 /**
  * Попытка найти единственный lim по ряду.
- * Если lim один и тот же везде (и не null), возвращаем его.
- * Иначе -> null (чтобы не рисовать одну "ложную" линию).
  */
 export function universalSeriesLimit(items: Item[]): number | null {
     let hasValue = false;
@@ -86,14 +73,16 @@ export function universalSeriesLimit(items: Item[]): number | null {
             hasValue = true;
             value = lim;
         } else if (value !== lim) {
-            return null; // разные lim -> не рисуем
+            return null;
         }
     }
 
     return hasValue ? value : null;
 }
 
-/** Логарифм по основанию 10, безопасный к 0/NaN/∞. */
+/**
+ * Логарифм по основанию 10, безопасный к 0/NaN/∞.
+ */
 export function log10Safe(v: number | null | undefined): number | null {
     if (typeof v !== "number" || !Number.isFinite(v) || v === 0) return null;
     const a = Math.abs(v);
@@ -102,19 +91,22 @@ export function log10Safe(v: number | null | undefined): number | null {
 }
 
 /**
- * Заголовок для универсальных графиков.
- * Короткая сводка: сколько разных рядов, x и алгоритмов.
+ * Заголовок для графиков.
+ * Здесь как раз показываем выбранный ряд и x (один),
+ * чтобы не повторять их в тултипе.
  */
 export function buildUniversalHeader(items: Item[]): string {
-    const seriesNames = new Set<string>();
-    const xs = new Set<number>();
-    const algos = new Set<string>();
+    if (!items.length) return "Нет данных";
 
-    for (const it of items) {
-        seriesNames.add(it.series.seriesName);
-        xs.add(it.series.x);
-        algos.add(it.algorithm.algorithmName);
+    const first = items[0];
+    const seriesName = first.series.seriesName;
+    const x = first.series.x;
+    const lim = universalSeriesLimit(items);
+
+    let suffix = "";
+    if (lim != null) {
+        suffix = `, lim = ${lim}`;
     }
 
-    return `Ряды: ${seriesNames.size}, x: ${xs.size}, алгоритмы: ${algos.size}`;
+    return `${seriesName}, x = ${x}${suffix}`;
 }
