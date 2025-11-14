@@ -608,7 +608,7 @@
       "name": "GammaSeries",
       "args": {
         "x": [0, 0.1, 0.5, 1, 2, 10],
-        "a": 2.0
+        "a": [0.1, 1, 10, 100]
       }
     }
   ],
@@ -616,13 +616,13 @@
   "methods": [
     {
       "name": "ShanksAlgorithm",
-      "n": { "start": 10, "stop": 62, "step": 1 },
+      "n": { "start": 1, "stop": 51, "step": 1 },
       "m": [2, 4, 10],
       "args": {}
     },
     {
       "name": "ShanksTransformAlternating",
-      "n": { "start": 10, "stop": 62, "step": 1 },
+      "n": { "start": 1, "stop": 51, "step": 1 },
       "m": [2, 4, 10],
       "args": {}
     },
@@ -666,7 +666,7 @@
       "args": {
         "remainder": ["v_type", "u_type", "t_wave_type"],
         "useRecFormulas": [true, false],
-        "beta": [0.5, 1, 1.5, 2]
+        "beta": [0.1, 1, 10]
       }
     },
     {
@@ -675,7 +675,7 @@
       "m": [2, 4, 10],
       "args": {
         "remainder": ["v_type", "u_type", "t_wave_type"],
-        "gamma": [0.5, 1, 1.5, 2]
+        "gamma": [10, 100, 1000]
       }
     },
     {
@@ -685,7 +685,7 @@
       "args": {
         "remainder": ["v_type", "u_type", "t_wave_type"],
         "useRecFormulas": [true, false],
-        "parameter": [0.5, 1, 1.5, 2]
+        "parameter": [0.1, 1, 10]
       }
     },
     {
@@ -700,8 +700,8 @@
       "m": [2, 4, 10],
       "args": {
         "numerator": ["rho_type", "generalized_type", "gamma_rho_type"],
-        "gamma": [0.5, 1, 1.5, 2],
-        "RHO": [0.5, 1, 1.5, 2]
+        "gamma": [0.1, 1, 10],
+        "RHO": [0.1, 1, 10]
       }
     },
     {
@@ -733,7 +733,7 @@
       "n": { "start": 1, "stop": 51, "step": 1 },
       "m": [2, 4, 10],
       "args": {
-        "epsilon_threshold": [1e-6, 1e-8, 1e-10]
+        "epsilon_threshold": [1e-10, 1e-30, 1e-50]
       }
     }
   ]

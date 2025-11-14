@@ -2,7 +2,7 @@ import logging
 import uuid
 
 from src.config import TrialConfig
-from src.db import MongoDatabase
+from src.db import setup_mongo_db
 from src.run.export import ExportTrialResults
 from src.run.loaders import AccelParamLoader, SeriesParamLoader
 from src.run.params import BaseAccelParam, BaseSeriesParam, PrecisionType
@@ -63,29 +63,36 @@ def execute_trial(
 def export_results(
     results: list,
     config: TrialConfig,
-    mongo_database: MongoDatabase | None = None,
 ):
     logging.info("Exporting results...")
 
     results_exporter = ExportTrialResults(
-        results, mongodb_collection=config.mongo_collection
+        results, collection_name=config.mongo_collection
     )
-    if not config.no_json_export:
-        results_exporter.to_json(config.results_json)
-        logging.info("Results exported to: %s", config.results_json)
-    else:
-        logging.info("Skipping export to JSON as requested")
-
-    if not config.no_csv_export:
-        results_exporter.to_csv(config.results_csv)
-        logging.info("Results exported to: %s", config.results_csv)
-    else:
-        logging.info("Skipping export to CSV as requested")
-
-    if mongo_database is not None:
-        logging.info("Collecting data for MongoDB collection...")
-        results_exporter.to_mongodb(mongo_database)
-        logging.info("Results exported to MongoDB")
+    
+    # Setup MongoDB if needed
+    mongo_database = None
+    if any(format_type.value == "mongodb" for format_type in config.output_formats):
+        mongo_database = setup_mongo_db(config)
+    
+    for format_type in config.output_formats:
+        if format_type.value == "json":
+            results_exporter.to_json(config.results_json)
+            logging.info("Results exported to: %s", config.results_json)
+        elif format_type.value == "csv":
+            results_exporter.to_csv(config.results_csv)
+            logging.info("Results exported to: %s", config.results_csv)
+        elif format_type.value == "parquet":
+            logging.info("Exporting to Parquet...")
+            results_exporter.to_parquet(config.output_dir, config.results_filename)
+            logging.info("Results exported to Parquet")
+        elif format_type.value == "mongodb":
+            if mongo_database is not None:
+                logging.info("Exporting to MongoDB...")
+                results_exporter.to_mongodb(mongo_database)
+                logging.info("Results exported to MongoDB")
+            else:
+                logging.warning("MongoDB export requested but connection failed")
 
 
 def lazy_load_events(
@@ -96,7 +103,7 @@ def lazy_load_events(
     return results
 
 
-def handle_run_command(config: TrialConfig, mongo_database: MongoDatabase | None):
+def handle_run_command(config: TrialConfig):
     aggregated_results: list[TrialResult] = []
     stack_id = str(uuid.uuid4())
     for precision in config.precisions:
@@ -104,7 +111,7 @@ def handle_run_command(config: TrialConfig, mongo_database: MongoDatabase | None
         results = lazy_load_events(config, results)
         aggregated_results.extend(results)
 
-    export_results(aggregated_results, config, mongo_database)
+    export_results(aggregated_results, config)
     logging.info(
         "Results are obtainable via stack_id: [%s]",
         stack_id,
