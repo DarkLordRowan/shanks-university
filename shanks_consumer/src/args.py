@@ -87,8 +87,8 @@ def _add_run_arguments(
         "--output-formats",
         nargs="+",
         choices=["json", "csv", "parquet", "mongodb"],
-        default=["json", "csv"],
-        help="Output formats to generate (default: json csv)",
+        default=["parquet"],
+        help="Output formats to generate (default: parquet)",
     )
 
     verbosity_group = parser.add_argument_group("Verbosity")

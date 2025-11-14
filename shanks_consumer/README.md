@@ -123,9 +123,10 @@ python main.py run -vv
 
 С помощью флага `--output-formats` можно выбрать один или несколько форматов вывода:
 
-* `json` - классический формат JSON (по умолчанию)
-* `csv` - табличный формат CSV (по умолчанию) 
-* `parquet` - высокоэффективный формат для больших данных
+* `parquet` - высокоэффективный формат для больших данных (по умолчанию)
+* `json` - классический формат JSON
+* `csv` - табличный формат CSV
+* `mongodb` - экспорт в MongoDB.
 
 Примеры использования:
 ```bash
@@ -135,8 +136,8 @@ python main.py run --output-formats json
 # CSV и Parquet с кастомным именем
 python main.py run --output-formats csv parquet --results-filename my_experiment
 
-# Все три формата с именем experiment_2024
-python main.py run --output-formats json csv parquet --results-filename experiment_2024
+# Все четыре формата с именем experiment_2025
+python main.py run --output-formats json csv parquet mongodb --results-filename experiment_2025
 ```
 
 Результат:
@@ -146,8 +147,6 @@ output/
 ├── results.csv
 └── results.parquet
 ```
-
-Parquet файлы сохраняются в той же директории `output/` с тем же именем, что и другие форматы, но с расширением `.parquet`. 
 
 ### Оптимизация Parquet:
 - **Сжатие ZSTD**: Максимальный уровень сжатия (уровень 9) для минимального размера файлов
