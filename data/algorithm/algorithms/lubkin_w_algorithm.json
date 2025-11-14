@@ -1,0 +1,10 @@
+{
+  "id": "lubkin_w_algorithm",
+  "title": "Lubkin’s W-algorithm",
+  "subtitle": "W-алгоритм Лубкина",
+  "authorIds": [
+    "lubkin"
+  ],
+  "python_id": "LubkinWAlgorithm",
+  "args": []
+}

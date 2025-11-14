@@ -90,9 +90,10 @@ typedef intmax_t eptype;	// The defalut size for the exponent. int (64bit) shoul
 
 const unsigned int Bitsfptype = sizeof(fptype) * 8; // Const use throughtout the source which is the number of bits the fptype can hold.
 
- // Default precision of 20 Decimal digits if not specified.
+// Default precision of 20 Decimal digits if not specified.
 // Note that PRECSION Needs to be larger than 64*ln(2)/ln(10)~64*0.3=19.2
-static const size_t PRECISION = 20;
+//
+static const size_t PRECISION = 50;
 
 // The four different rounding modes
 // # ROUND_NEAR  Rounded result is the closest to the infinitely precise result.

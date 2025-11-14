@@ -1,0 +1,19 @@
+{
+  "id": "pi_4_series",
+  "python_id": "",
+  "num": 24,
+  "title": "\\tfrac{\\pi}{4}\\,x",
+  "formula": "\\sum_{n=0}^{\\infty}\\frac{(-1)^{n} x}{2n+1}=\\tfrac{\\pi}{4}\\,x",
+  "speed": "linear",
+  "document": "series.docx",
+  "domain": {
+    "intervals": [
+      {
+        "from": "-\\infty",
+        "to": "+\\infty",
+        "left_closed": false,
+        "right_closed": false
+      }
+    ]
+  }
+}

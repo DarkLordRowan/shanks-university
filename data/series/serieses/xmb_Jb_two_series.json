@@ -1,0 +1,19 @@
+{
+  "id": "xmb_Jb_two_series",
+  "python_id": "",
+  "num": 11,
+  "title": "x^{-b}J_{b}(2x)",
+  "formula": "\\sum_{n=0}^{\\infty}(-1)^{n}\\frac{x^{2n}}{n!\\,\\Gamma(n+b+1)}",
+  "speed": "hyperlinear",
+  "document": "series.docx",
+  "domain": {
+    "intervals": [
+      {
+        "from": "-\\infty",
+        "to": "+\\infty",
+        "left_closed": false,
+        "right_closed": false
+      }
+    ]
+  }
+}

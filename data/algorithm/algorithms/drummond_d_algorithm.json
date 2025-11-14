@@ -1,0 +1,10 @@
+{
+  "id": "drummond_d_algorithm",
+  "title": "Drummond’s algorithm",
+  "subtitle": "Алгоритм Драммонда",
+  "authorIds": [
+    "drummond"
+  ],
+  "python_id": "DrummondDAlgorithm",
+  "args": []
+}

@@ -1,0 +1,19 @@
+{
+  "id": "sinh_series",
+  "python_id": "",
+  "num": 5,
+  "title": "\\sinh x",
+  "formula": "\\sum_{n=0}^{\\infty}\\frac{x^{2n+1}}{(2n+1)!}",
+  "speed": "hyperlinear",
+  "document": "series.docx",
+  "domain": {
+    "intervals": [
+      {
+        "from": "-\\infty",
+        "to": "+\\infty",
+        "left_closed": false,
+        "right_closed": false
+      }
+    ]
+  }
+}

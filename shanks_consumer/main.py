@@ -17,8 +17,7 @@ def main():
         case "run":
             config = load_trial_config(args)
             setup_logging(config.verbose)
-            mongo_database = setup_mongo_db(config) if config.with_mongo else None
-            handle_run_command(config, mongo_database)
+            handle_run_command(config)
         case "viz":
             config = load_viz_config(args)
             setup_logging(config.verbose)

@@ -55,6 +55,7 @@ def _add_run_arguments(
         type=pathlib.Path,
         default=None,
     )
+    output_group.add_argument("--results-filename", type=str, default="results", help="Base filename for output files (without extension)")
     output_group.add_argument("--results-json", type=pathlib.Path, default=None)
     output_group.add_argument("--results-csv", type=pathlib.Path, default=None)
 
@@ -73,20 +74,15 @@ def _add_run_arguments(
 
     feature_group = parser.add_argument_group("Feature Toggles")
     feature_group.add_argument(
-        "--no-json-export",
-        action="store_true",
-    )
-    feature_group.add_argument(
-        "--no-csv-export",
-        action="store_true",
-    )
-    feature_group.add_argument(
         "--no-events",
         action="store_true",
     )
     feature_group.add_argument(
-        "--with-mongo",
-        action="store_true",
+        "--output-formats",
+        nargs="+",
+        choices=["json", "csv", "parquet", "mongodb"],
+        default=["json", "csv"],
+        help="Output formats to generate (default: json csv)",
     )
 
     verbosity_group = parser.add_argument_group("Verbosity")

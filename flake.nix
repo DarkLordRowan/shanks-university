@@ -14,27 +14,31 @@
       {
 
         devShells.default = pkgs.mkShell {
-          packages = with pkgs; [
-            cmake
-            clang-tools
-            python3
-            poetry
-          ] ++ [
-            mongodb-ce
-            mongosh
-            mongodb-tools
-          ] ++ (with python3Packages; [
-            pybind11-stubgen
-            numpy
-            pandas
-            matplotlib
-            plotly
-            scipy
-            jupyter
-            pymongo
-            python-dotenv
-            tqdm
-          ]);
+          packages =
+            with pkgs;
+            [
+              cmake
+              clang-tools
+              python3
+              poetry
+            ]
+            ++ [
+              mongodb-ce
+              mongosh
+              mongodb-tools
+            ]
+            ++ (with python3Packages; [
+              pybind11-stubgen
+              numpy
+              pandas
+              matplotlib
+              plotly
+              scipy
+              jupyter
+              pymongo
+              python-dotenv
+              tqdm
+            ]);
 
           POETRY_VIRTUALENVS_IN_PROJECT = "true";
 
@@ -110,7 +114,7 @@
             echo
             echo "Mongo helpers ready:  mongo-up  |  mongo-down  |  mongo-wipe"
             echo "MONGODB_URI=$MONGODB_URI"
-            echo            
+            echo
           '';
         };
       }

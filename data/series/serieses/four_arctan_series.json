@@ -1,0 +1,19 @@
+{
+  "id": "four_arctan_series",
+  "python_id": "",
+  "num": 7,
+  "title": "4\\arctan x",
+  "formula": "4\\sum_{n=0}^{\\infty}(-1)^{n}\\frac{x^{2n+1}}{2n+1}",
+  "speed": "hyperlinear",
+  "document": "series.docx",
+  "domain": {
+    "intervals": [
+      {
+        "from": "-1",
+        "to": "1",
+        "left_closed": false,
+        "right_closed": false
+      }
+    ]
+  }
+}
