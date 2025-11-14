@@ -254,7 +254,7 @@ class BaseExport:
                 },
                 "accel": {
                     "name": result.accel.name,
-                    "m_value": str(result.accel.m_value),
+                    "m_value": result.accel.m_value,
                     "additional_args": {
                         k: str(v) for k, v in result.accel.additional_args.items()
                     },
