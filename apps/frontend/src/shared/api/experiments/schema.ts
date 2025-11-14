@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-const NumOrStr = z.union([z.number(), z.string()]).nullable().optional();
+export const NumOrStr = z.union([z.number(), z.string()]).nullable().optional();
 
 export const ResponseSeriesSchema = z
     .object({

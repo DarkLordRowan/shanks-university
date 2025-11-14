@@ -1,5 +1,6 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import type { ValidationIssue } from "@/shared/lib/json/validationTypes";
+import type { ResponseRecord } from "@/shared/api/experiments/dto";
 import { streamParseResponseRecords } from "@/shared/lib/json/streamingParseResponseRecords";
 
 type LoadState =
@@ -11,7 +12,10 @@ type LoadState =
 export function useStreamLoadRecords() {
     const [state, setState] = useState<LoadState>({ status: "idle" });
 
+    const recordsRef = useRef<ResponseRecord[]>([]);
+
     const load = useCallback(async (file: File) => {
+        recordsRef.current = [];
         setState({ status: "loading", count: 0 });
 
         let count = 0;
@@ -21,8 +25,13 @@ export function useStreamLoadRecords() {
             file,
             (record) => {
                 if (hadError) return;
+
+                recordsRef.current.push(record);
+
                 count += 1;
-                console.log("parsed record", count, record); // хотя бы первые 1–2 раза посмотреть
+                if (count <= 3) {
+                    console.log("parsed record", count, record);
+                }
                 setState({ status: "loading", count });
             },
             (issues) => {
@@ -37,5 +46,5 @@ export function useStreamLoadRecords() {
         }
     }, []);
 
-    return { state, load };
+    return { state, load, recordsRef };
 }
