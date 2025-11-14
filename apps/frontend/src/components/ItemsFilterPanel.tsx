@@ -1,7 +1,6 @@
 import { applyItemsFilter, buildFilterOptions, type ItemsFilterState } from "@/utils/filters";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import type { Item } from "@/types/item.ts";
-
 
 interface ItemsFilterPanelProps {
     items: Item[];
@@ -15,6 +14,15 @@ function toggleInArray<T>(arr: T[], value: T): T[] {
         : [...arr, value];
 }
 
+const EMPTY_FILTER: ItemsFilterState = {
+    seriesNames: [],
+    algorithmNames: [],
+    mValues: [],
+    xMin: undefined,
+    xMax: undefined,
+    hasError: null,
+};
+
 export const ItemsFilterPanel: React.FC<ItemsFilterPanelProps> = ({
                                                                       items,
                                                                       onChange,
@@ -22,92 +30,113 @@ export const ItemsFilterPanel: React.FC<ItemsFilterPanelProps> = ({
                                                                   }) => {
     const options = useMemo(() => buildFilterOptions(items), [items]);
 
-    const [filter, setFilter] = useState<ItemsFilterState>({
-        seriesNames: [],
-        algorithmNames: [],
-        mValues: [],
-        xMin: undefined,
-        xMax: undefined,
-        hasError: null,
-    });
+    // Черновой фильтр (UI)
+    const [draftFilter, setDraftFilter] = useState<ItemsFilterState>(EMPTY_FILTER);
 
-    useEffect(() => {
-        const filtered = applyItemsFilter(items, filter);
-        onChange(filtered);
-    }, [items, filter, onChange]);
+    // Применённый фильтр (для отображения статуса)
+    const [appliedFilter, setAppliedFilter] =
+        useState<ItemsFilterState>(EMPTY_FILTER);
 
     const handleSeriesNameToggle = (name: string) => {
-        setFilter((prev) => ({
+        setDraftFilter((prev) => ({
             ...prev,
             seriesNames: toggleInArray(prev.seriesNames, name),
         }));
     };
 
     const handleAlgorithmNameToggle = (name: string) => {
-        setFilter((prev) => ({
+        setDraftFilter((prev) => ({
             ...prev,
             algorithmNames: toggleInArray(prev.algorithmNames, name),
         }));
     };
 
     const handleMToggle = (m: number | null) => {
-        setFilter((prev) => ({
+        setDraftFilter((prev) => ({
             ...prev,
             mValues: toggleInArray(prev.mValues, m),
         }));
     };
 
-    const handleXMinChange: React.ChangeEventHandler<HTMLInputElement> = (
-        e,
-    ) => {
+    const handleXMinChange: React.ChangeEventHandler<HTMLInputElement> = (e) => {
         const v = e.target.value;
-        setFilter((prev) => ({
+        setDraftFilter((prev) => ({
             ...prev,
             xMin: v === "" ? undefined : Number(v),
         }));
     };
 
-    const handleXMaxChange: React.ChangeEventHandler<HTMLInputElement> = (
-        e,
-    ) => {
+    const handleXMaxChange: React.ChangeEventHandler<HTMLInputElement> = (e) => {
         const v = e.target.value;
-        setFilter((prev) => ({
+        setDraftFilter((prev) => ({
             ...prev,
             xMax: v === "" ? undefined : Number(v),
         }));
     };
 
-    const handleHasErrorChange: React.ChangeEventHandler<HTMLSelectElement> = (
-        e,
-    ) => {
+    const handleHasErrorChange: React.ChangeEventHandler<HTMLSelectElement> = (e) => {
         const v = e.target.value;
         let hasError: boolean | null;
         if (v === "with") hasError = true;
         else if (v === "without") hasError = false;
         else hasError = null;
 
-        setFilter((prev) => ({
+        setDraftFilter((prev) => ({
             ...prev,
             hasError,
         }));
     };
 
     const handleReset = () => {
-        setFilter({
-            seriesNames: [],
-            algorithmNames: [],
-            mValues: [],
-            xMin: undefined,
-            xMax: undefined,
-            hasError: null,
-        });
+        setDraftFilter(EMPTY_FILTER);
+        setAppliedFilter(EMPTY_FILTER);
+        // снаружи очищаем фильтрованное состояние (по желанию: [] или items)
+        onChange([]);
+        // onChange(items); // если хочешь показывать все данные после сброса
+    };
+
+    // превью результата чернового фильтра
+    const preview = useMemo(() => {
+        const filtered = applyItemsFilter(items, draftFilter);
+
+        const seriesSet = new Set<string>();
+        const xSet = new Set<number>();
+
+        for (const it of filtered) {
+            seriesSet.add(it.series.seriesName);
+            xSet.add(it.series.x);
+        }
+
+        return {
+            count: filtered.length,
+            seriesCount: seriesSet.size,
+            xCount: xSet.size,
+        };
+    }, [items, draftFilter]);
+
+    const previewCount = preview.count;
+
+    const appliedCount = useMemo(
+        () => applyItemsFilter(items, appliedFilter).length,
+        [items, appliedFilter],
+    );
+
+    const isDirty =
+        JSON.stringify(draftFilter) !== JSON.stringify(appliedFilter);
+
+    const canApplySingleSeriesX =
+        preview.seriesCount === 1 && preview.xCount === 1 && preview.count > 0;
+
+    const canApply = isDirty && canApplySingleSeriesX;
+
+    const handleApply = () => {
+        if (!canApply) return;
+        setAppliedFilter(draftFilter);
+        const filtered = applyItemsFilter(items, draftFilter);
+        onChange(filtered); // только здесь реально меняем filteredItems снаружи
     };
 
     const totalCount = items.length;
-    const filteredCount = useMemo(
-        () => applyItemsFilter(items, filter).length,
-        [items, filter],
-    );
 
     return (
         <div
@@ -120,13 +149,45 @@ export const ItemsFilterPanel: React.FC<ItemsFilterPanelProps> = ({
                 <div className="font-semibold text-sm text-white">
                     Фильтры
                 </div>
-                <div className="ml-auto text-[11px] text-textDim">
-                    Отфильтровано:{" "}
-                    <span className="text-primary">
-                        {filteredCount}
-                    </span>{" "}
-                    / {totalCount}
+
+                <div className="ml-auto text-[11px] text-textDim flex flex-col items-end">
+                    <div>
+                        Текущие:{" "}
+                        <span className="text-primary">
+                            {appliedCount}
+                        </span>{" "}
+                        / {totalCount}
+                    </div>
+                    <div className="text-[10px] text-textDim/70">
+                        После применения: {previewCount}
+                    </div>
+                    {!canApplySingleSeriesX && previewCount > 0 && (
+                        <div className="mt-0.5 text-[10px] text-secondary">
+                            Нужно 1 ряд и 1&nbsp;x. Сейчас: рядов {preview.seriesCount},
+                            x {preview.xCount}.
+                        </div>
+                    )}
+                    {previewCount === 0 && isDirty && (
+                        <div className="mt-0.5 text-[10px] text-secondary">
+                            Фильтр не возвращает ни одного элемента.
+                        </div>
+                    )}
                 </div>
+
+                <button
+                    type="button"
+                    onClick={handleApply}
+                    disabled={!canApply}
+                    className={[
+                        "ml-2 inline-flex items-center rounded-md px-2 py-1 text-[11px] transition-colors",
+                        canApply
+                            ? "bg-primary/80 text-white hover:bg-primary"
+                            : "bg-surface/60 text-textDim/60 cursor-default",
+                    ].join(" ")}
+                >
+                    Применить
+                </button>
+
                 <button
                     type="button"
                     onClick={handleReset}
@@ -143,7 +204,7 @@ export const ItemsFilterPanel: React.FC<ItemsFilterPanelProps> = ({
                 </div>
                 <div className="flex flex-wrap gap-2">
                     {options.seriesNames.map((name) => {
-                        const active = filter.seriesNames.includes(name);
+                        const active = draftFilter.seriesNames.includes(name);
                         return (
                             <button
                                 type="button"
@@ -176,7 +237,8 @@ export const ItemsFilterPanel: React.FC<ItemsFilterPanelProps> = ({
                 </div>
                 <div className="flex flex-wrap gap-2">
                     {options.algorithmNames.map((name) => {
-                        const active = filter.algorithmNames.includes(name);
+                        const active =
+                            draftFilter.algorithmNames.includes(name);
                         return (
                             <button
                                 type="button"
@@ -210,7 +272,7 @@ export const ItemsFilterPanel: React.FC<ItemsFilterPanelProps> = ({
                 <div className="flex flex-wrap gap-2">
                     {options.mValues.map((m) => {
                         const label = m === null ? "m = ∅" : `m = ${m}`;
-                        const active = filter.mValues.includes(m);
+                        const active = draftFilter.mValues.includes(m);
                         return (
                             <button
                                 type="button"
@@ -248,7 +310,7 @@ export const ItemsFilterPanel: React.FC<ItemsFilterPanelProps> = ({
                     <input
                         id="xMin"
                         type="number"
-                        value={filter.xMin ?? ""}
+                        value={draftFilter.xMin ?? ""}
                         onChange={handleXMinChange}
                         className="form-input mt-1 w-32 rounded-md border-border bg-surface/80 text-xs text-textDim placeholder:text-textDim/40 focus:border-primary focus:ring-primary"
                         placeholder={
@@ -266,7 +328,7 @@ export const ItemsFilterPanel: React.FC<ItemsFilterPanelProps> = ({
                     <input
                         id="xMax"
                         type="number"
-                        value={filter.xMax ?? ""}
+                        value={draftFilter.xMax ?? ""}
                         onChange={handleXMaxChange}
                         className="form-input mt-1 w-32 rounded-md border-border bg-surface/80 text-xs text-textDim placeholder:text-textDim/40 focus:border-primary focus:ring-primary"
                         placeholder={
@@ -287,9 +349,9 @@ export const ItemsFilterPanel: React.FC<ItemsFilterPanelProps> = ({
                 <select
                     id="hasError"
                     value={
-                        filter.hasError === true
+                        draftFilter.hasError === true
                             ? "with"
-                            : filter.hasError === false
+                            : draftFilter.hasError === false
                                 ? "without"
                                 : "any"
                     }
