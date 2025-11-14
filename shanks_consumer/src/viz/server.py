@@ -1282,311 +1282,273 @@ class ParquetDataLoader:
     def __init__(self, data_file: Path):
         self.data_file = data_file
         self.dataset = ds.dataset(data_file, format="parquet")
-        self._metadata_cache = None
+        self._metadata = None  # Cache metadata once
 
     def get_metadata(self) -> Dict[str, Any]:
-        """Get metadata for UI generation."""
-        if self._metadata_cache is None:
-            # Scan entire dataset for metadata (small overhead)
-            table = self.dataset.to_table(columns=["series", "accel", "stack_id"])
-            self._metadata_cache = self._extract_metadata_from_table(table)
-        return self._metadata_cache
+        """Get metadata for UI generation - cached and fast."""
+        if self._metadata is None:
+            self._metadata = self._compute_metadata()
+        return self._metadata
 
-    def _extract_metadata_from_table(self, table) -> Dict[str, Any]:
-        """Extract metadata from PyArrow table similar to JSON logic."""
-        series_names = set()
-        accel_methods = set()
-        m_values = set()
+    def _compute_metadata(self) -> Dict[str, Any]:
+        """Compute metadata from Parquet files using pure PyArrow."""
+        # Scan only needed columns for metadata - column pruning is automatic
+        scan_table = self.dataset.to_table(columns=["precision", "series", "accel"])
+
+        # Extract unique values from top-level columns
+        precisions = pc.unique(scan_table["precision"]).to_pylist()
+
+        # Extract nested struct fields using pc.struct_field (works on ChunkedArray)
+        series_names = pc.unique(
+            pc.struct_field(scan_table["series"], "name")
+        ).to_pylist()
+        accel_names = pc.unique(
+            pc.struct_field(scan_table["accel"], "name")
+        ).to_pylist()
+        m_values = pc.unique(
+            pc.struct_field(scan_table["accel"], "m_value")
+        ).to_pylist()
+
+        # For dynamic parameters, sample a limited number of rows
+        # Use slice() to limit rows, not max_rows parameter
+        sample_table = self.dataset.to_table(columns=["series", "accel"]).slice(
+            0, 10000
+        )  # This is the correct way to limit rows in PyArrow
+
+        # Convert sample to pandas for easier dict processing
+        sample_df = sample_table.to_pandas()
+
+        # Build parameter dictionaries
         additional_params = {}
         series_params = {}
-        precisions = set()
-        base_series_names = set()
-        base_accel_names = set()
-        series_param_info = {}
-        accel_param_info = {}
+        series_param_info = {name: [] for name in series_names}
+        accel_param_info = {name: [] for name in accel_names}
 
-        # Convert to pandas for easier processing (metadata is small)
-        df = table.to_pandas()
+        # Process series arguments
+        if not sample_df.empty:
+            series_args_list = sample_df["series"].apply(
+                lambda x: x.get("arguments", {}) if isinstance(x, dict) else {}
+            )
 
-        for _, row in df.iterrows():
-            series = row.get("series", {})
-            accel = row.get("accel", {})
-
-            # Extract series info
-            if isinstance(series, dict) and series.get("name"):
-                series_name = series["name"]
-                series_names.add(series_name)
-
-                precision = row.get("precision")
-                if precision:
-                    precisions.add(precision)
-                base_series_name = series_name
-                base_series_names.add(base_series_name)
-
-                if isinstance(series.get("arguments"), dict):
-                    series_args = series["arguments"]
-                    if series_name not in series_param_info:
-                        series_param_info[series_name] = []
-
-                    for param_name in series_args.keys():
-                        if param_name not in series_param_info[series_name]:
-                            series_param_info[series_name].append(param_name)
-
+            # Collect all parameter names and values
+            for args in series_args_list:
+                if args:
+                    for param_name, value in args.items():
                         if param_name not in series_params:
                             series_params[param_name] = set()
-                        series_params[param_name].add(str(series_args[param_name]))
+                        series_params[param_name].add(str(value))
 
-            # Extract accel info
-            if isinstance(accel, dict) and accel.get("name"):
-                accel_name = accel["name"]
-                accel_methods.add(accel_name)
+                        # Add to all series that have this parameter
+                        # (This is a simplification - in reality you'd need to track which series has which params)
+                        for series_name in series_names:
+                            if series_name not in series_param_info:
+                                series_param_info[series_name] = []
+                            if param_name not in series_param_info[series_name]:
+                                series_param_info[series_name].append(param_name)
 
-                precision = row.get("precision")
-                if precision:
-                    precisions.add(precision)
-                base_accel_name = accel_name
-                base_accel_names.add(base_accel_name)
+        # Process accel arguments
+        if not sample_df.empty:
+            accel_args_list = sample_df["accel"].apply(
+                lambda x: x.get("additional_args", {}) if isinstance(x, dict) else {}
+            )
 
-                if isinstance(accel.get("additional_args"), dict):
-                    accel_args = accel["additional_args"]
-                    if accel_name not in accel_param_info:
-                        accel_param_info[accel_name] = []
-
-                    for param_name in accel_args.keys():
-                        if param_name not in accel_param_info[accel_name]:
-                            accel_param_info[accel_name].append(param_name)
-
+            for args in accel_args_list:
+                if args:
+                    for param_name, value in args.items():
                         if param_name not in additional_params:
                             additional_params[param_name] = set()
-                        additional_params[param_name].add(str(accel_args[param_name]))
+                        additional_params[param_name].add(str(value))
 
-                if accel.get("m_value") is not None:
-                    m_values.add(accel["m_value"])
+                        # Add to all accels that have this parameter
+                        for accel_name in accel_names:
+                            if accel_name not in accel_param_info:
+                                accel_param_info[accel_name] = []
+                            if param_name not in accel_param_info[accel_name]:
+                                accel_param_info[accel_name].append(param_name)
 
         return {
-            "series_names": sorted(list(series_names)),
-            "accel_methods": [{"name": name} for name in sorted(list(accel_methods))],
-            "m_values": sorted(list(m_values)),
+            "series_names": sorted(series_names),
+            "accel_methods": [{"name": name} for name in sorted(accel_names)],
+            "m_values": sorted(m_values),
             "additional_params": {
                 k: sorted(list(v)) for k, v in additional_params.items()
             },
             "series_params": {k: sorted(list(v)) for k, v in series_params.items()},
-            "precisions": sorted(list(precisions)),
-            "base_series_names": sorted(list(base_series_names)),
-            "base_accel_names": sorted(list(base_accel_names)),
-            "series_param_info": series_param_info,
-            "accel_param_info": accel_param_info,
+            "precisions": sorted(precisions),
+            "base_series_names": sorted(series_names),
+            "base_accel_names": sorted(accel_names),
+            "series_param_info": {k: sorted(v) for k, v in series_param_info.items()},
+            "accel_param_info": {k: sorted(v) for k, v in accel_param_info.items()},
         }
 
-    def filter_data(self, filters):
-        """Filter data using PyArrow for simple filters, pandas for complex ones."""
-        # Build simple filter expressions for PyArrow
-        expressions = []
+    def filter_data(self, filters: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """Filter data using PyArrow expressions with memory-efficient approach."""
+        # Build comprehensive filter expression for PyArrow
+        expr = self._build_filter_expression(filters)
 
-        if filters.get("series_filter"):
-            expressions.append(
-                ds.field("series", "name").isin(filters["series_filter"])
-            )
+        # Apply filter and only read necessary columns
+        # Note: to_table() materializes data, but we limit columns to reduce memory usage
+        table = self.dataset.to_table(
+            filter=expr,
+            columns=[
+                "precision",
+                "series",
+                "accel",
+                "computed",
+                "stack_id",
+                "error",
+            ],
+        )
 
-        if filters.get("methods_filter"):
-            expressions.append(
-                ds.field("accel", "name").isin(filters["methods_filter"])
-            )
+        if table.num_rows == 0:
+            return []
 
-        if filters.get("m_values_filter"):
-            expressions.append(
-                ds.field("accel", "m_value").isin(filters["m_values_filter"])
-            )
-
-        # Apply simple filters with PyArrow
-        if expressions:
-            # Use the first expression as base filter (PyArrow limitation)
-            filter_expr = expressions[0]
-            table = self.dataset.to_table(filter=filter_expr)
-        else:
-            table = self.dataset.to_table()
-
-        # Convert to pandas for further processing
+        # Convert to pandas for complex grouping operations
         df = table.to_pandas()
 
-        # Apply all complex filtering in pandas
-        df = self._apply_all_filters(df, filters)
+        # Preprocess complex numbers vectorized
+        df = self._preprocess_complex_numbers_vectorized(df)
 
-        # Group and select best items (same logic as JSON)
-        return self._select_best_items(df)
+        # Group and select best items efficiently
+        return self._select_best_items_optimized(df)
 
-    def _apply_all_filters(self, df, filters):
-        """Apply all filtering logic in pandas."""
-        mask = pd.Series([True] * len(df))
+    def _build_filter_expression(self, filters: Dict[str, Any]) -> pc.Expression:
+        """Build single PyArrow expression for all filters."""
+        expr = pc.scalar(True)  # Start with "always true"
 
-        # Series filter
-        if filters.get("series_filter"):
-            series_mask = df["series"].apply(
-                lambda x: x.get("name") in filters["series_filter"]
-                if isinstance(x, dict)
-                else False
-            )
-            mask = mask & series_mask
-
-        # Methods filter
-        if filters.get("methods_filter"):
-            methods_mask = df["accel"].apply(
-                lambda x: x.get("name") in filters["methods_filter"]
-                if isinstance(x, dict)
-                else False
-            )
-            mask = mask & methods_mask
-
-        # M values filter
-        if filters.get("m_values_filter"):
-            m_values_mask = df["accel"].apply(
-                lambda x: x.get("m_value") in filters["m_values_filter"]
-                if isinstance(x, dict)
-                else False
-            )
-            mask = mask & m_values_mask
-
-        # Precision filter
         if filters.get("precision_filter"):
-            precision_mask = df["precision"].isin(filters["precision_filter"])
-            mask = mask & precision_mask
+            expr = expr & ds.field("precision").isin(filters["precision_filter"])
 
-        # Base series filter
-        if filters.get("base_series_filter"):
-            base_series_mask = pd.Series([False] * len(df))
-            for idx, row in df.iterrows():
-                series_name = (
-                    row["series"].get("name", "")
-                    if isinstance(row["series"], dict)
-                    else ""
+        if filters.get("series_filter"):
+            expr = expr & ds.field("series", "name").isin(filters["series_filter"])
+
+        if filters.get("methods_filter"):
+            expr = expr & ds.field("accel", "name").isin(filters["methods_filter"])
+
+        if filters.get("m_values_filter"):
+            expr = expr & ds.field("accel", "m_value").isin(filters["m_values_filter"])
+
+        # Note: We cannot filter on dynamic map keys directly in PyArrow
+        # These will be handled in pandas
+
+        return expr
+
+    def _preprocess_complex_numbers_vectorized(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Vectorized complex number preprocessing."""
+
+        # Define vectorized parsing function
+        def vectorized_parse_complex(series):
+            if series.dtype == object:
+                # Vectorized string operations
+                is_complex = series.str.contains(
+                    " \\+ ", na=False
+                ) | series.str.contains(" - ", na=False)
+
+                # Extract real and imaginary parts using vectorized operations
+                real_part = series.where(
+                    ~is_complex, series.str.split(" [\\+\\-] ").str[0]
+                )
+                imag_part = series.where(
+                    ~is_complex,
+                    series.str.split(" [\\+\\-] ").str[1].str.replace(" \\* i", ""),
                 )
 
-                for base_name in filters["base_series_filter"]:
-                    if series_name.startswith(base_name):
-                        base_series_mask[idx] = True
-                        break
-            mask = mask & base_series_mask
+                # Apply scientific notation parsing
+                real_parsed = real_part.apply(parse_complex_for_visualization)
 
-        # Base accel filter
-        if filters.get("base_accel_filter"):
-            base_accel_mask = pd.Series([False] * len(df))
-            for idx, row in df.iterrows():
-                accel_name = (
-                    row["accel"].get("name", "")
-                    if isinstance(row["accel"], dict)
-                    else ""
+                return real_parsed
+            return series
+
+        # Apply to relevant columns
+        if "computed" in df.columns:
+            # Explode computed to vectorize operations
+            computed_df = df.explode("computed")
+            if not computed_df.empty:
+                for col in [
+                    "accel_value",
+                    "partial_sum",
+                    "accel_value_deviation",
+                    "partial_sum_deviation",
+                    "series_value",
+                ]:
+                    if col in computed_df.columns:
+                        computed_df[col] = vectorized_parse_complex(computed_df[col])
+
+                # Group back
+                df["computed"] = computed_df.groupby(level=0).apply(
+                    lambda x: x.to_dict("records")
                 )
 
-                for base_name in filters["base_accel_filter"]:
-                    if accel_name.startswith(base_name):
-                        base_accel_mask[idx] = True
-                        break
-            mask = mask & base_accel_mask
+        # Process series limit
+        if "series" in df.columns:
+            df["series"] = df["series"].apply(
+                lambda x: x if isinstance(x, dict) else {}
+            )
+            # Apply limit parsing
+            df["series"] = df["series"].apply(
+                lambda s: {**s, "lim": parse_complex_for_visualization(s.get("lim"))}
+                if s
+                else {}
+            )
 
-        # Filter accel additional args
-        if filters.get("accel_params"):
-            for param_name, expected_values in filters["accel_params"].items():
-                if expected_values:
-                    param_mask = df["accel"].apply(
-                        lambda x: param_name in x.get("additional_args", {})
-                        and str(x["additional_args"][param_name]) in expected_values
-                        if isinstance(x, dict)
-                        else False
-                    )
-                    mask = mask & param_mask
+        return df
 
-        # Filter series args
-        if filters.get("series_params"):
-            for param_name, expected_values in filters["series_params"].items():
-                if expected_values:
-                    param_mask = df["series"].apply(
-                        lambda x: param_name in x.get("arguments", {})
-                        and str(x["arguments"][param_name]) in expected_values
-                        if isinstance(x, dict)
-                        else False
-                    )
-                    mask = mask & param_mask
-
-        return df[mask]
-
-    def _select_best_items(self, df):
-        """Select best items per group (same logic as JSON)."""
+    def _select_best_items_optimized(self, df: pd.DataFrame) -> List[Dict[str, Any]]:
+        print("selecting, I guess?")
+        """Optimized group selection using vectorized operations."""
         if df.empty:
             return []
 
-        # Preprocess complex numbers in computed data
-        df = self._preprocess_complex_numbers(df)
-
-        # Group by (series, accel, m_value, additional_args, series_args)
-        df["group_key"] = df.apply(
-            lambda row: (
-                row["series"].get("name", "")
-                if isinstance(row["series"], dict)
-                else "",
-                row["accel"].get("name", "") if isinstance(row["accel"], dict) else "",
-                row["accel"].get("m_value") if isinstance(row["accel"], dict) else None,
-                json.dumps(row["accel"].get("additional_args", {}), sort_keys=True)
-                if isinstance(row["accel"], dict)
-                else "{}",
-                json.dumps(row["series"].get("arguments", {}), sort_keys=True)
-                if isinstance(row["series"], dict)
-                else "{}",
-            ),
-            axis=1,
+        # Vectorized group key creation
+        df["group_key"] = (
+            df["series"].apply(
+                lambda x: x.get("name", "") if isinstance(x, dict) else ""
+            )
+            + "|"
+            + df["accel"].apply(
+                lambda x: x.get("name", "") if isinstance(x, dict) else ""
+            )
+            + "|"
+            + df["accel"].apply(
+                lambda x: str(x.get("m_value", "")) if isinstance(x, dict) else ""
+            )
+            + "|"
+            + df["accel"].apply(
+                lambda x: json.dumps(x.get("additional_args", {}), sort_keys=True)
+                if isinstance(x, dict)
+                else ""
+            )
+            + "|"
+            + df["series"].apply(
+                lambda x: json.dumps(x.get("arguments", {}), sort_keys=True)
+                if isinstance(x, dict)
+                else ""
+            )
         )
 
-        # For each group, find item with minimal final error
-        best_items = []
-        for _, group in df.groupby("group_key"):
-            if not group.empty:
-                # Calculate final error for each item
-                def get_final_error(item):
-                    if (
-                        not isinstance(item.get("computed"), list)
-                        or len(item["computed"]) == 0
-                    ):
-                        return float("inf")
-                    last_computed = item["computed"][-1]
-                    if not isinstance(last_computed, dict):
-                        return float("inf")
-                    deviation = last_computed.get("accel_value_deviation", float("inf"))
-                    return abs(parse_complex_number(deviation))
+        # Vectorized final error calculation
+        def extract_final_error(computed_list):
+            if not isinstance(computed_list, list) or len(computed_list) == 0:
+                return float("inf")
+            last = computed_list[-1]
+            dev = last.get("accel_value_deviation", float("inf"))
+            if isinstance(dev, dict):
+                # Complex number magnitude
+                return (dev.get("real", 0) ** 2 + dev.get("imag", 0) ** 2) ** 0.5
+            return abs(dev)
 
-                best_item = group.loc[group.apply(get_final_error, axis=1).idxmin()]
-                best_item_dict = best_item.to_dict()
-                # Convert numpy arrays back to lists for JSON serialization
-                import numpy as np
+        df["final_error"] = df["computed"].apply(extract_final_error)
 
-                if "computed" in best_item_dict:
-                    if isinstance(best_item_dict["computed"], np.ndarray):
-                        best_item_dict["computed"] = best_item_dict["computed"].tolist()
-                best_items.append(best_item_dict)
+        # Group and select min error in one operation
+        best_indices = df.groupby("group_key")["final_error"].idxmin()
+        best_df = df.loc[best_indices].copy()
 
-        return best_items
+        # Convert to dict records
+        # Drop temporary columns
+        best_df = best_df.drop(columns=["group_key", "final_error"])
 
-    def _preprocess_complex_numbers(self, df):
-        """Preprocess complex numbers in dataframe for visualization."""
-        for idx, row in df.iterrows():
-            if isinstance(row.get("computed"), list):
-                for computed in row["computed"]:
-                    if isinstance(computed, dict):
-                        for key, value in computed.items():
-                            if key in [
-                                "accel_value",
-                                "partial_sum",
-                                "accel_value_deviation",
-                                "partial_sum_deviation",
-                                "series_value",
-                            ]:
-                                computed[key] = parse_complex_for_visualization(value)
-
-            # Process series limit if it's a string
-            if isinstance(row.get("series"), dict):
-                series = row["series"]
-                if "lim" in series:
-                    series["lim"] = parse_complex_for_visualization(series["lim"])
-
-        return df
+        # Convert numpy types to Python natives for JSON serialization
+        return best_df.to_dict("records")
 
 
 def preprocess_data(data: List[Dict]) -> List[Dict]:

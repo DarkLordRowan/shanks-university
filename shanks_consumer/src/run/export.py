@@ -4,8 +4,11 @@ import json
 import pathlib
 from collections.abc import Mapping, Sequence
 from dataclasses import Field, asdict, fields, is_dataclass
-from typing import Any, cast
+from typing import Any, Generator, cast
 
+import pyarrow as pa
+import pyarrow.compute as pc
+import pyarrow.dataset as ds
 from pymongo.database import Database as MongoDatabase
 from tqdm import tqdm
 
@@ -184,12 +187,85 @@ def dataclasses_to_csv_text(dataclasses, expand_field=None, separator="_"):
     return buf.getvalue()
 
 
+def sanitize_value(value: Any) -> Any:
+    if isinstance(
+        value,
+        (ps.Arb, ps.CArb, ps.CF32, ps.CF64, ps.CFLong, float),
+    ):
+        return str(value)
+    if isinstance(
+        value,
+        (
+            ps.RemainderType,
+            ps.NumeratorType,
+        ),
+    ):
+        return value.name
+    if isinstance(value, PrecisionType):
+        return value.value
+
+    if is_dataclass(value):
+        return sanitize_value(asdict(cast(Any, value)))
+
+    if isinstance(value, Mapping):
+        return {key: sanitize_value(val) for key, val in value.items()}
+
+    if isinstance(value, Sequence) and not isinstance(value, (str, bytes, bytearray)):
+        return [sanitize_value(item) for item in value]
+
+    return value
+
+
+def to_sanitized(data: Sequence[TrialResult]) -> list[dict[str, Any]]:
+    """Fast conversion to dict format using direct field access for TrialResult."""
+    result_dicts = []
+
+    for result in tqdm(data, desc="Converting results"):
+        result_dict = {
+            "series_name": result.series.name,
+            "accel_name": result.accel.name,
+            "precision": result.precision.value,
+            "series": {
+                "arguments": {k: str(v) for k, v in result.series.arguments.items()},
+                "lim": str(result.series.lim),
+            },
+            "accel": {
+                "name": result.accel.name,
+                "m_value": result.accel.m_value,
+                "additional_args": {
+                    k: str(v) for k, v in result.accel.additional_args.items()
+                },
+            },
+            "computed": [
+                {
+                    "n": computed.n,
+                    "series_value": str(computed.series_value),
+                    "partial_sum": str(computed.partial_sum),
+                    "partial_sum_deviation": str(computed.partial_sum_deviation),
+                    "accel_value": str(computed.accel_value),
+                    "accel_value_deviation": str(computed.accel_value_deviation),
+                }
+                for computed in result.computed
+            ],
+            "error": {
+                "description": result.error.description,
+                "data": sanitize_value(result.error.data) if result.error else None,
+            }
+            if result.error
+            else None,
+            "stack_id": result.stack_id,
+        }
+
+        result_dicts.append(result_dict)
+
+    return result_dicts
+
+
 class BaseExport:
     def __init__(
         self, data: Sequence[TrialResult], location: pathlib.Path | None = None
     ):
         self.location = location
-        self.data: list[TrialResult] = list(data)
 
         self.expand_field: str | None = None
         self.separator: str = "_"
@@ -197,91 +273,7 @@ class BaseExport:
         self.batch_size = 1000
 
         # Sanitize data once during initialization
-        self._sanitized_data = self._to_dict_fast()
-
-    # TODO: Unfortunately, this is still used to sanitize `error`. Better clean this up.
-    @staticmethod
-    def _sanitize_value(value: Any) -> Any:
-        if isinstance(
-            value,
-            (ps.Arb, ps.CArb, ps.CF32, ps.CF64, ps.CFLong, float),
-        ):
-            return str(value)
-        if isinstance(
-            value,
-            (
-                ps.RemainderType,
-                ps.NumeratorType,
-            ),
-        ):
-            return value.name
-        if isinstance(value, PrecisionType):
-            return value.value
-
-        if is_dataclass(value):
-            return BaseExport._sanitize_value(asdict(cast(Any, value)))
-
-        if isinstance(value, Mapping):
-            return {key: BaseExport._sanitize_value(val) for key, val in value.items()}
-
-        if isinstance(value, Sequence) and not isinstance(
-            value, (str, bytes, bytearray)
-        ):
-            return [BaseExport._sanitize_value(item) for item in value]
-
-        return value
-
-    def _to_dict_fast(self) -> list[dict[str, Any]]:
-        """Fast conversion to dict format using direct field access for TrialResult."""
-        result_dicts = []
-
-        for result in tqdm(self.data, desc="Converting results"):
-            # Build nested structure like original but with direct field access
-            result_dict = {
-                "series": {
-                    "name": result.series.name,
-                    "arguments": {
-                        k: str(v) for k, v in result.series.arguments.items()
-                    },
-                    "lim": str(result.series.lim),
-                },
-                "accel": {
-                    "name": result.accel.name,
-                    "m_value": result.accel.m_value,
-                    "additional_args": {
-                        k: str(v) for k, v in result.accel.additional_args.items()
-                    },
-                },
-                "computed": [
-                    {
-                        "n": computed.n,
-                        "series_value": str(computed.series_value),
-                        "partial_sum": str(computed.partial_sum),
-                        "partial_sum_deviation": str(computed.partial_sum_deviation),
-                        "accel_value": str(computed.accel_value),
-                        "accel_value_deviation": str(computed.accel_value_deviation),
-                    }
-                    for computed in result.computed
-                ],
-                "error": {
-                    "description": result.error.description,
-                    "data": self._sanitize_value(result.error.data)
-                    if result.error
-                    else None,
-                }
-                if result.error
-                else None,
-                "stack_id": result.stack_id,
-                "precision": result.precision.value,
-            }
-
-            result_dicts.append(result_dict)
-
-        return result_dicts
-
-    def as_dict(self) -> list[dict[str, Any]]:
-        # Return pre-sanitized data to avoid duplicate sanitization
-        return self._sanitized_data
+        self.data = to_sanitized(data)
 
     def _verify_location(self, override_location):
         location = override_location or self.location
@@ -290,20 +282,23 @@ class BaseExport:
         return location
 
     def to_parquet(self, output_dir: pathlib.Path, filename: str):
-        import pandas as pd
-
-        parquet_file = output_dir / f"{filename}.parquet"
-        # Ensure directory exists
+        output_path = output_dir / f"{filename}.parquet"
         output_dir.mkdir(parents=True, exist_ok=True)
-
-        # Create DataFrame and save to parquet using pre-sanitized data
-        df = pd.DataFrame(self._sanitized_data)
-        df.to_parquet(
-            parquet_file,
-            engine="pyarrow",
-            compression="zstd",
-            index=False,
-            write_statistics=True,
+        ds.write_dataset(
+            pa.Table.from_pylist(self.data),
+            base_dir=output_path,
+            format="parquet",
+            partitioning=ds.partitioning(
+                pa.schema(
+                    [
+                        ("precision", pa.string()),
+                        ("series_name", pa.string()),
+                        ("accel_name", pa.string()),
+                    ]
+                ),
+                flavor="hive",
+            ),
+            existing_data_behavior="overwrite_or_ignore",
         )
 
     def to_mongodb(self, mongo_database: MongoDatabase):
