@@ -69,6 +69,7 @@ class TrialResult:
     computed: list[ComputedTrialResult]
     error: ErrorTrialResult | None = None
     stack_id: str | None = None
+    precision: PrecisionType = PrecisionType.F64
     events: list[EventTrialResult] | None = field(default=None, init=False, repr=False)
 
     def load_events(self) -> "TrialResult":
@@ -213,6 +214,7 @@ def execute_trial(
                                     "m": m_value,
                                 },
                             ),
+                            precision=series_precision,
                         )
                     )
             continue
@@ -247,6 +249,7 @@ def execute_trial(
                                     "m": m_value,
                                 },
                             ),
+                            precision=series_precision,
                         )
                     )
                 continue
@@ -302,6 +305,7 @@ def execute_trial(
                         ),
                         computed=computed,
                         error=error or NoErrorTrialResult,
+                        precision=series_precision,
                     )
                 )
 
@@ -391,6 +395,9 @@ class ComplexTrial:
                                             "series": series,
                                             "accel": accel,
                                         },
+                                    ),
+                                    precision=getattr(
+                                        series, "precision", PrecisionType.F64
                                     ),
                                 )
                             )

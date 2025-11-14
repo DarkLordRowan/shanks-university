@@ -12,9 +12,15 @@ from dataclasses import dataclass
 from typing import Any, Generic, Mapping, override
 
 import pyshanks as ps
-from src.run.precision import (AccelProto, PrecisionType, SeriesBaseProto,
-                               SeriesResultProto, TNum,
-                               cast_natural_series_value, create_series_result)
+from src.run.precision import (
+    AccelProto,
+    PrecisionType,
+    SeriesBaseProto,
+    SeriesResultProto,
+    TNum,
+    cast_natural_series_value,
+    create_series_result,
+)
 
 
 class BaseSeriesParam[T]:
@@ -51,7 +57,7 @@ class SeriesParamJSON(BaseSeriesParam[TNum]):
 
     @property
     def executable(self):
-        return getattr(ps, self.name)
+        return getattr(ps, self.name + self.precision.value)
 
 
 @dataclass
@@ -129,7 +135,6 @@ class CSVSeriesWrapper(Generic[TNum]):
 
 
 class BaseAccelParam(Generic[TNum], ABC):
-
     @property
     @abstractmethod
     def accel_name(self) -> str: ...
@@ -190,7 +195,7 @@ class AccelParamJSON(StandardAccelParam[TNum]):
     @property
     @override
     def executable(self):
-        return getattr(ps, self.name)
+        return getattr(ps, self.name + self.precision.value)
 
     @property
     @override

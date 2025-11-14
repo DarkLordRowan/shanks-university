@@ -5,8 +5,12 @@ from typing import Any, Iterable, Mapping
 
 import pyshanks as ps
 from src.run.params import AccelParamJSON, SeriesParamCSV, SeriesParamJSON
-from src.run.precision import (PrecisionType, cast_precision_value,
-                               cast_real_subtype_value, is_arb_precision)
+from src.run.precision import (
+    PrecisionType,
+    cast_precision_value,
+    cast_real_subtype_value,
+    is_arb_precision,
+)
 
 
 def decide_encoder(precision: PrecisionType):
@@ -78,7 +82,7 @@ class SeriesParamLoader:
             processed_args = SeriesParamLoader._process_series_args(args, precision)
             series_list.append(
                 SeriesParamJSON(
-                    name=series_data.get("name") + precision.value,
+                    name=series_data.get("name"),
                     args=processed_args,
                     precision=precision,
                 )
@@ -182,7 +186,7 @@ class AccelParamLoader:
 
             methods_list.append(
                 AccelParamJSON(
-                    name=method_data["name"] + precision.value,
+                    name=method_data["name"],
                     n=n_value,
                     m=m_value,
                     init_args=args,

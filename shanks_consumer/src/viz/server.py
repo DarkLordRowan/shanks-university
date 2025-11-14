@@ -1,16 +1,15 @@
 import argparse
 import json
-import urllib.parse
 import re
+import urllib.parse
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 from pathlib import Path
-from typing import Dict, List, Set, Any, Union, Protocol
-import argparse
+from typing import Any, Dict, List, Protocol, Set, Union
 
-import pyarrow as pa
-import pyarrow.dataset as ds
-import pyarrow.compute as pc
 import pandas as pd
+import pyarrow as pa
+import pyarrow.compute as pc
+import pyarrow.dataset as ds
 
 
 class DataLoader(Protocol):
@@ -57,10 +56,11 @@ class JsonDataLoader:
                 series_name = item["series"]["name"]
                 series_names.add(series_name)
 
-                precision = self._extract_precision(series_name)
+                precision = item.get("precision")
                 if precision:
                     precisions.add(precision)
-                base_series_name = self._extract_base_name(series_name)
+
+                base_series_name = series_name
                 base_series_names.add(base_series_name)
 
                 if item.get("series", {}).get("arguments"):
@@ -81,10 +81,10 @@ class JsonDataLoader:
                 accel_name = item["accel"]["name"]
                 accel_methods.add(accel_name)
 
-                precision = self._extract_precision(accel_name)
+                precision = item.get("precision")
                 if precision:
                     precisions.add(precision)
-                base_accel_name = self._extract_base_name(accel_name)
+                base_accel_name = accel_name
                 base_accel_names.add(base_accel_name)
 
                 if item.get("accel", {}).get("additional_args"):
@@ -107,7 +107,9 @@ class JsonDataLoader:
             "series_names": sorted(list(series_names)),
             "accel_methods": [{"name": name} for name in sorted(list(accel_methods))],
             "m_values": sorted(list(m_values)),
-            "additional_params": {k: sorted(list(v)) for k, v in additional_params.items()},
+            "additional_params": {
+                k: sorted(list(v)) for k, v in additional_params.items()
+            },
             "series_params": {k: sorted(list(v)) for k, v in series_params.items()},
             "precisions": sorted(list(precisions)),
             "base_series_names": sorted(list(base_series_names)),
@@ -115,23 +117,6 @@ class JsonDataLoader:
             "series_param_info": series_param_info,
             "accel_param_info": accel_param_info,
         }
-
-    def _extract_precision(self, name: str) -> str:
-        """Extract precision suffix from name."""
-        precision_suffixes = [
-            "CFLong", "CF64", "CF32", "CArb", "FLong", "F64", "F32", "Arb",
-        ]
-        for suffix in precision_suffixes:
-            if name.endswith(suffix):
-                return suffix
-        return ""
-
-    def _extract_base_name(self, name: str) -> str:
-        """Extract base name without precision suffix."""
-        precision = self._extract_precision(name)
-        if precision:
-            return name[:-len(precision)]
-        return name
 
     def filter_data(self, filters: Dict[str, Any]) -> List[Dict[str, Any]]:
         """Filter JSON data using original logic."""
@@ -158,10 +143,11 @@ class JsonDataLoader:
             m_value = item.get("accel", {}).get("m_value")
 
             # Extract precision and base names for filtering
-            series_precision = self._extract_precision(series_key)
-            accel_precision = self._extract_precision(accel_key)
-            base_series_name = self._extract_base_name(series_key)
-            base_accel_name = self._extract_base_name(accel_key)
+            precision = item.get("precision")
+            series_precision = precision
+            accel_precision = precision
+            base_series_name = series_key
+            base_accel_name = accel_key
 
             # Check filters
             if series_filter and series_key not in series_filter:
@@ -250,6 +236,8 @@ class JsonDataLoader:
         last_computed = item["computed"][-1]
         deviation_value = last_computed.get("accel_value_deviation", float("inf"))
         return abs(parse_complex_number(deviation_value))
+
+
 import pyarrow as pa
 import pyarrow.compute as pc
 import pyarrow.dataset as ds
@@ -362,9 +350,7 @@ class DataAPIHandler(SimpleHTTPRequestHandler):
             # Идиотизм ли это? ДА. FIXME.
             param_info = ""
             for series_name in metadata["series_names"]:
-                if self.extract_base_name(
-                    series_name
-                ) == base_series and series_name in metadata.get(
+                if series_name == base_series and series_name in metadata.get(
                     "series_param_info", {}
                 ):
                     params = metadata["series_param_info"][series_name]
@@ -381,9 +367,9 @@ class DataAPIHandler(SimpleHTTPRequestHandler):
             # Ищем любой accel с этим базовым именем, чтобы получить информацию о параметрах
             param_info = ""
             for accel_name in [method["name"] for method in metadata["accel_methods"]]:
-                if self.extract_base_name(
-                    accel_name
-                ) == base_accel and accel_name in metadata.get("accel_param_info", {}):
+                if accel_name == base_accel and accel_name in metadata.get(
+                    "accel_param_info", {}
+                ):
                     params = metadata["accel_param_info"][accel_name]
                     if params:
                         param_info = f" ({', '.join(params)})"
@@ -1120,124 +1106,11 @@ class DataAPIHandler(SimpleHTTPRequestHandler):
 </html>
         """
 
-    def extract_precision(self, name: str) -> str:
-        """Extract precision suffix from name (e.g., 'ExpSeriesF64' -> 'F64')"""
-        # Known precision suffixes - sort by length (longer first) to avoid partial matches
-        precision_suffixes = [
-            "CFLong",
-            "CF64",
-            "CF32",
-            "CArb",
-            "FLong",
-            "F64",
-            "F32",
-            "Arb",
-        ]
-
-        for suffix in precision_suffixes:
-            if name.endswith(suffix):
-                return suffix
-        return ""  # No precision suffix found
-
-    def extract_base_name(self, name: str) -> str:
-        """Extract base name without precision suffix (e.g., 'ExpSeriesF64' -> 'ExpSeries')"""
-        precision = self.extract_precision(name)
-        if precision:
-            return name[: -len(precision)]
-        return name
-
     def extract_metadata(self):
         """Извлекает метаданные из данных для построения динамического интерфейса"""
         if self.data_loader is None:
             return {}
         return self.data_loader.get_metadata()
-
-        series_names = set()
-        accel_methods = set()
-        m_values = set()
-        additional_params = {}
-        series_params = {}
-        precisions = set()
-        base_series_names = set()
-        base_accel_names = set()
-
-        # Новые структуры для хранения информации о параметрах для каждой комбинации
-        series_param_info = {}  # series_name -> list of param names
-        accel_param_info = {}  # accel_name -> list of param names
-
-        for item in data or []:
-            # Извлекаем имя ряда
-            if item.get("series", {}).get("name"):
-                series_name = item["series"]["name"]
-                series_names.add(series_name)
-
-                # Extract precision and base name
-                precision = self.extract_precision(series_name)
-                if precision:  # Only add if precision found
-                    precisions.add(precision)
-                base_series_name = self.extract_base_name(series_name)
-                base_series_names.add(base_series_name)
-
-                # Извлекаем параметры ряда и сохраняем информацию о них для данного series
-                if item.get("series", {}).get("arguments"):
-                    series_args = item["series"]["arguments"]
-                    if series_name not in series_param_info:
-                        series_param_info[series_name] = []
-
-                    for param_name in series_args.keys():
-                        if param_name not in series_param_info[series_name]:
-                            series_param_info[series_name].append(param_name)
-
-                        if param_name not in series_params:
-                            series_params[param_name] = set()
-                        series_params[param_name].add(str(series_args[param_name]))
-
-            # Извлекаем методы ускорения и их параметры
-            if item.get("accel", {}).get("name"):
-                accel_name = item["accel"]["name"]
-                accel_methods.add(accel_name)
-
-                # Extract precision and base name for acceleration methods
-                precision = self.extract_precision(accel_name)
-                if precision:  # Only add if precision found
-                    precisions.add(precision)
-                base_accel_name = self.extract_base_name(accel_name)
-                base_accel_names.add(base_accel_name)
-
-                # Извлекаем дополнительные параметры ускорения и сохраняем информацию о них
-                if item.get("accel", {}).get("additional_args"):
-                    accel_args = item["accel"]["additional_args"]
-                    if accel_name not in accel_param_info:
-                        accel_param_info[accel_name] = []
-
-                    for param_name in accel_args.keys():
-                        if param_name not in accel_param_info[accel_name]:
-                            accel_param_info[accel_name].append(param_name)
-
-                        if param_name not in additional_params:
-                            additional_params[param_name] = set()
-                        additional_params[param_name].add(str(accel_args[param_name]))
-
-            if item.get("accel", {}).get("m_value") is not None:
-                m_values.add(item["accel"]["m_value"])
-
-        # Конвертируем sets в sorted lists
-        accel_method_list = [{"name": name} for name in sorted(list(accel_methods))]
-
-        return {
-            "series_names": sorted(list(series_names)),
-            "accel_methods": accel_method_list,
-            "m_values": sorted(list(m_values)),
-            "additional_params": {
-                k: sorted(list(v)) for k, v in additional_params.items()
-            },
-            "series_params": {k: sorted(list(v)) for k, v in series_params.items()},
-            "precisions": sorted(list(precisions)),
-            "base_series_names": sorted(list(base_series_names)),
-            "base_accel_names": sorted(list(base_accel_names)),
-            "series_param_info": series_param_info,
-            "accel_param_info": accel_param_info,
-        }
 
     def handle_metadata_request(self):
         """Возвращает метаданные о доступных параметрах"""
@@ -1436,18 +1309,18 @@ class ParquetDataLoader:
         df = table.to_pandas()
 
         for _, row in df.iterrows():
-            series = row.get('series', {})
-            accel = row.get('accel', {})
+            series = row.get("series", {})
+            accel = row.get("accel", {})
 
             # Extract series info
             if isinstance(series, dict) and series.get("name"):
                 series_name = series["name"]
                 series_names.add(series_name)
 
-                precision = self._extract_precision(series_name)
+                precision = row.get("precision")
                 if precision:
                     precisions.add(precision)
-                base_series_name = self._extract_base_name(series_name)
+                base_series_name = series_name
                 base_series_names.add(base_series_name)
 
                 if isinstance(series.get("arguments"), dict):
@@ -1468,10 +1341,10 @@ class ParquetDataLoader:
                 accel_name = accel["name"]
                 accel_methods.add(accel_name)
 
-                precision = self._extract_precision(accel_name)
+                precision = row.get("precision")
                 if precision:
                     precisions.add(precision)
-                base_accel_name = self._extract_base_name(accel_name)
+                base_accel_name = accel_name
                 base_accel_names.add(base_accel_name)
 
                 if isinstance(accel.get("additional_args"), dict):
@@ -1494,7 +1367,9 @@ class ParquetDataLoader:
             "series_names": sorted(list(series_names)),
             "accel_methods": [{"name": name} for name in sorted(list(accel_methods))],
             "m_values": sorted(list(m_values)),
-            "additional_params": {k: sorted(list(v)) for k, v in additional_params.items()},
+            "additional_params": {
+                k: sorted(list(v)) for k, v in additional_params.items()
+            },
             "series_params": {k: sorted(list(v)) for k, v in series_params.items()},
             "precisions": sorted(list(precisions)),
             "base_series_names": sorted(list(base_series_names)),
@@ -1503,33 +1378,20 @@ class ParquetDataLoader:
             "accel_param_info": accel_param_info,
         }
 
-    def _extract_precision(self, name: str) -> str:
-        """Extract precision suffix from name."""
-        precision_suffixes = [
-            "CFLong", "CF64", "CF32", "CArb", "FLong", "F64", "F32", "Arb",
-        ]
-        for suffix in precision_suffixes:
-            if name.endswith(suffix):
-                return suffix
-        return ""
-
-    def _extract_base_name(self, name: str) -> str:
-        """Extract base name without precision suffix."""
-        precision = self._extract_precision(name)
-        if precision:
-            return name[:-len(precision)]
-        return name
-
     def filter_data(self, filters):
         """Filter data using PyArrow for simple filters, pandas for complex ones."""
         # Build simple filter expressions for PyArrow
         expressions = []
 
         if filters.get("series_filter"):
-            expressions.append(ds.field("series", "name").isin(filters["series_filter"]))
+            expressions.append(
+                ds.field("series", "name").isin(filters["series_filter"])
+            )
 
         if filters.get("methods_filter"):
-            expressions.append(ds.field("accel", "name").isin(filters["methods_filter"]))
+            expressions.append(
+                ds.field("accel", "name").isin(filters["methods_filter"])
+            )
 
         if filters.get("m_values_filter"):
             expressions.append(
@@ -1586,25 +1448,7 @@ class ParquetDataLoader:
 
         # Precision filter
         if filters.get("precision_filter"):
-            precision_mask = pd.Series([False] * len(df))
-            for idx, row in df.iterrows():
-                series_name = (
-                    row["series"].get("name", "")
-                    if isinstance(row["series"], dict)
-                    else ""
-                )
-                accel_name = (
-                    row["accel"].get("name", "")
-                    if isinstance(row["accel"], dict)
-                    else ""
-                )
-
-                for precision in filters["precision_filter"]:
-                    if series_name.endswith(precision) or accel_name.endswith(
-                        precision
-                    ):
-                        precision_mask[idx] = True
-                        break
+            precision_mask = df["precision"].isin(filters["precision_filter"])
             mask = mask & precision_mask
 
         # Base series filter
@@ -1666,55 +1510,65 @@ class ParquetDataLoader:
         return df[mask]
 
     def _select_best_items(self, df):
-            """Select best items per group (same logic as JSON)."""
-            if df.empty:
-                return []
+        """Select best items per group (same logic as JSON)."""
+        if df.empty:
+            return []
 
-            # Preprocess complex numbers in computed data
-            df = self._preprocess_complex_numbers(df)
+        # Preprocess complex numbers in computed data
+        df = self._preprocess_complex_numbers(df)
 
-            # Group by (series, accel, m_value, additional_args, series_args)
-            df['group_key'] = df.apply(
-                lambda row: (
-                    row['series'].get('name', '') if isinstance(row['series'], dict) else '',
-                    row['accel'].get('name', '') if isinstance(row['accel'], dict) else '',
-                    row['accel'].get('m_value') if isinstance(row['accel'], dict) else None,
-                    json.dumps(row['accel'].get('additional_args', {}), sort_keys=True) if isinstance(row['accel'], dict) else '{}',
-                    json.dumps(row['series'].get('arguments', {}), sort_keys=True) if isinstance(row['series'], dict) else '{}',
-                ),
-                axis=1
-            )
+        # Group by (series, accel, m_value, additional_args, series_args)
+        df["group_key"] = df.apply(
+            lambda row: (
+                row["series"].get("name", "")
+                if isinstance(row["series"], dict)
+                else "",
+                row["accel"].get("name", "") if isinstance(row["accel"], dict) else "",
+                row["accel"].get("m_value") if isinstance(row["accel"], dict) else None,
+                json.dumps(row["accel"].get("additional_args", {}), sort_keys=True)
+                if isinstance(row["accel"], dict)
+                else "{}",
+                json.dumps(row["series"].get("arguments", {}), sort_keys=True)
+                if isinstance(row["series"], dict)
+                else "{}",
+            ),
+            axis=1,
+        )
 
-            # For each group, find item with minimal final error
-            best_items = []
-            for _, group in df.groupby('group_key'):
-                if not group.empty:
-                    # Calculate final error for each item
-                    def get_final_error(item):
-                        if not isinstance(item.get('computed'), list) or len(item['computed']) == 0:
-                            return float('inf')
-                        last_computed = item['computed'][-1]
-                        if not isinstance(last_computed, dict):
-                            return float('inf')
-                        deviation = last_computed.get('accel_value_deviation', float('inf'))
-                        return abs(parse_complex_number(deviation))
+        # For each group, find item with minimal final error
+        best_items = []
+        for _, group in df.groupby("group_key"):
+            if not group.empty:
+                # Calculate final error for each item
+                def get_final_error(item):
+                    if (
+                        not isinstance(item.get("computed"), list)
+                        or len(item["computed"]) == 0
+                    ):
+                        return float("inf")
+                    last_computed = item["computed"][-1]
+                    if not isinstance(last_computed, dict):
+                        return float("inf")
+                    deviation = last_computed.get("accel_value_deviation", float("inf"))
+                    return abs(parse_complex_number(deviation))
 
-                    best_item = group.loc[group.apply(get_final_error, axis=1).idxmin()]
-                    best_item_dict = best_item.to_dict()
-                    # Convert numpy arrays back to lists for JSON serialization
-                    import numpy as np
-                    if 'computed' in best_item_dict:
-                        if isinstance(best_item_dict['computed'], np.ndarray):
-                            best_item_dict['computed'] = best_item_dict['computed'].tolist()
-                    best_items.append(best_item_dict)
+                best_item = group.loc[group.apply(get_final_error, axis=1).idxmin()]
+                best_item_dict = best_item.to_dict()
+                # Convert numpy arrays back to lists for JSON serialization
+                import numpy as np
 
-            return best_items
+                if "computed" in best_item_dict:
+                    if isinstance(best_item_dict["computed"], np.ndarray):
+                        best_item_dict["computed"] = best_item_dict["computed"].tolist()
+                best_items.append(best_item_dict)
+
+        return best_items
 
     def _preprocess_complex_numbers(self, df):
         """Preprocess complex numbers in dataframe for visualization."""
         for idx, row in df.iterrows():
-            if isinstance(row.get('computed'), list):
-                for computed in row['computed']:
+            if isinstance(row.get("computed"), list):
+                for computed in row["computed"]:
                     if isinstance(computed, dict):
                         for key, value in computed.items():
                             if key in [
@@ -1727,10 +1581,10 @@ class ParquetDataLoader:
                                 computed[key] = parse_complex_for_visualization(value)
 
             # Process series limit if it's a string
-            if isinstance(row.get('series'), dict):
-                series = row['series']
-                if 'lim' in series:
-                    series['lim'] = parse_complex_for_visualization(series['lim'])
+            if isinstance(row.get("series"), dict):
+                series = row["series"]
+                if "lim" in series:
+                    series["lim"] = parse_complex_for_visualization(series["lim"])
 
         return df
 
@@ -1767,7 +1621,7 @@ def start_server(data_file: Path, port: int = 8000):
     """Запускает HTTP сервер с предзагруженными данными"""
 
     # Detect file format and create appropriate data loader
-    if data_file.suffix.lower() == '.parquet':
+    if data_file.suffix.lower() == ".parquet":
         print(f"Loading Parquet data from {data_file}")
         data_loader = ParquetDataLoader(data_file)
         print(f"Parquet dataset loaded successfully")

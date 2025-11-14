@@ -195,13 +195,13 @@ class BaseExport:
         self.separator: str = "_"
         self.mongodb_collection: str = "base"
         self.batch_size = 1000
-        
+
         # Sanitize data once during initialization
         self._sanitized_data = self._to_dict_fast()
 
     # TODO: Unfortunately, this is still used to sanitize `error`. Better clean this up.
     @staticmethod
-    def _sanitize_value(value: Any, *, convert_precision: bool = False) -> Any:
+    def _sanitize_value(value: Any) -> Any:
         if isinstance(
             value,
             (ps.Arb, ps.CArb, ps.CF32, ps.CF64, ps.CFLong, float),
@@ -215,29 +215,19 @@ class BaseExport:
             ),
         ):
             return value.name
-        if convert_precision and isinstance(value, PrecisionType):
+        if isinstance(value, PrecisionType):
             return value.value
 
         if is_dataclass(value):
-            return BaseExport._sanitize_value(
-                asdict(cast(Any, value)), convert_precision=convert_precision
-            )
+            return BaseExport._sanitize_value(asdict(cast(Any, value)))
 
         if isinstance(value, Mapping):
-            return {
-                key: BaseExport._sanitize_value(
-                    val, convert_precision=convert_precision
-                )
-                for key, val in value.items()
-            }
+            return {key: BaseExport._sanitize_value(val) for key, val in value.items()}
 
         if isinstance(value, Sequence) and not isinstance(
             value, (str, bytes, bytearray)
         ):
-            return [
-                BaseExport._sanitize_value(item, convert_precision=convert_precision)
-                for item in value
-            ]
+            return [BaseExport._sanitize_value(item) for item in value]
 
         return value
 
@@ -282,6 +272,7 @@ class BaseExport:
                 if result.error
                 else None,
                 "stack_id": result.stack_id,
+                "precision": result.precision.value,
             }
 
             result_dicts.append(result_dict)
