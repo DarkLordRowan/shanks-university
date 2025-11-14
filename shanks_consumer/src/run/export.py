@@ -14,22 +14,6 @@ from src.run.params import PrecisionType
 from src.run.trial import TrialResult
 
 
-class ArbEncoder(json.JSONEncoder):
-    def default(self, o):
-        if isinstance(
-            o,
-            (
-                ps.Arb,
-                ps.CArb,
-                ps.CF32,
-                ps.CF64,
-                ps.CFLong,
-            ),
-        ):
-            return str(o)
-        return super().default(o)
-
-
 def auto_field_prefix(outer_field: Field, prefix: str = "", separator: str = "_"):
     return (
         f"{prefix}{outer_field.name}{separator}"
@@ -212,17 +196,12 @@ class BaseExport:
         self.mongodb_collection: str = "base"
         self.batch_size = 1000
 
+    # TODO: Unfortunately, this is still used to sanitize `error`. Better clean this up.
     @staticmethod
     def _sanitize_value(value: Any, *, convert_precision: bool = False) -> Any:
         if isinstance(
             value,
-            (
-                ps.Arb,
-                ps.CArb,
-                ps.CF32,
-                ps.CF64,
-                ps.CFLong,
-            ),
+            (ps.Arb, ps.CArb, ps.CF32, ps.CF64, ps.CFLong, float),
         ):
             return str(value)
         if isinstance(
@@ -259,6 +238,53 @@ class BaseExport:
 
         return value
 
+    def _to_dict_fast(self) -> list[dict[str, Any]]:
+        """Fast conversion to dict format using direct field access for TrialResult."""
+        result_dicts = []
+
+        for result in tqdm(self.data, desc="Converting results"):
+            # Build nested structure like original but with direct field access
+            result_dict = {
+                "series": {
+                    "name": result.series.name,
+                    "arguments": {
+                        k: str(v) for k, v in result.series.arguments.items()
+                    },
+                    "lim": str(result.series.lim),
+                },
+                "accel": {
+                    "name": result.accel.name,
+                    "m_value": str(result.accel.m_value),
+                    "additional_args": {
+                        k: str(v) for k, v in result.accel.additional_args.items()
+                    },
+                },
+                "computed": [
+                    {
+                        "n": computed.n,
+                        "series_value": str(computed.series_value),
+                        "partial_sum": str(computed.partial_sum),
+                        "partial_sum_deviation": str(computed.partial_sum_deviation),
+                        "accel_value": str(computed.accel_value),
+                        "accel_value_deviation": str(computed.accel_value_deviation),
+                    }
+                    for computed in result.computed
+                ],
+                "error": {
+                    "description": result.error.description,
+                    "data": self._sanitize_value(result.error.data)
+                    if result.error
+                    else None,
+                }
+                if result.error
+                else None,
+                "stack_id": result.stack_id,
+            }
+
+            result_dicts.append(result_dict)
+
+        return result_dicts
+
     def as_dict(self) -> list[dict[str, Any]]:
         serialized: list[dict[str, Any]] = []
         for dataclass_obj in self.data:
@@ -280,6 +306,23 @@ class BaseExport:
             raise ValueError("Provide location to export")
         return location
 
+    def to_parquet(self, output_dir: pathlib.Path, filename: str):
+        import pandas as pd
+
+        parquet_file = output_dir / f"{filename}.parquet"
+        # Ensure directory exists
+        output_dir.mkdir(parents=True, exist_ok=True)
+
+        # Create DataFrame and save to parquet
+        df = pd.DataFrame(self._to_dict_fast())
+        df.to_parquet(
+            parquet_file,
+            engine="pyarrow",
+            compression="zstd",
+            index=False,
+            write_statistics=True,
+        )
+
     def to_mongodb(self, mongo_database: MongoDatabase):
         data_dicts = self.as_dict()
         collection = mongo_database.get_collection(self.mongodb_collection)
@@ -296,23 +339,8 @@ class BaseExport:
     def to_json(self, override_location: pathlib.Path | None = None):
         location = self._verify_location(override_location)
 
-        sanitized_data = []
-        for dataclass in tqdm(self.data, desc="Preparing JSON data"):
-            sanitized_data.append(
-                BaseExport._sanitize_value(
-                    asdict(dataclass), convert_precision=True
-                )
-            )
-
         with open(location, mode="w", encoding="utf-8") as f:
-            f.write(
-                json.dumps(
-                    sanitized_data,
-                    indent=4,
-                    sort_keys=True,
-                    cls=ArbEncoder,
-                )
-            )
+            json.dump(self._to_dict_fast(), f, indent=4, sort_keys=True)
 
     def to_csv(
         self,
@@ -338,9 +366,9 @@ class ExportTrialResults(BaseExport):
     def __init__(
         self,
         results: list[TrialResult],
-        mongodb_collection: str = "trial_results",
+        collection_name: str = "trial_results",
         location: pathlib.Path | None = None,
     ):
         super().__init__(results, location)
         self.expand_field = "computed"
-        self.mongodb_collection = mongodb_collection
+        self.collection_name = collection_name
