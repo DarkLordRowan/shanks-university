@@ -6,9 +6,10 @@ import {
     ResponseEventSchema,
     ResponseErrorSchema,
     ResponseRecordSchema,
-    ResponseRecordsSchema,
+    ResponseRecordsSchema, NumOrStr,
 } from "./schema";
 
+export type NumOrStr = z.infer<typeof NumOrStr>;
 export type ResponseSeries = z.infer<typeof ResponseSeriesSchema>;
 export type ResponseAccel = z.infer<typeof ResponseAccelSchema>;
 export type ResponseComputed = z.infer<typeof ResponseComputedSchema>;
