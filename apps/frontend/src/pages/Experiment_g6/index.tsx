@@ -7,6 +7,7 @@ import { AccelValueByN_Universal } from "@/charts/universal/AccelValueByN_Univer
 import { PartialSumByN_Universal } from "@/charts/universal/PartialSumByN_Universal.tsx";
 import { LogAccelDevByN_Universal } from "@/charts/universal/LogAccelDevByN_Universal.tsx";
 import { LogPsDevByN_Universal } from "@/charts/universal/LogPsDevByN_Universal.tsx";
+import { ItemsTable } from "@/components/ItemsTable.tsx";
 
 export default function Experiment_g6() {
 
@@ -35,12 +36,16 @@ export default function Experiment_g6() {
                             {filteredItems.length > 0 && (
                                <div className="mt-4 w-full space-y-6">
                                    test
-                                   {/*<StepsToToleranceExplorer items={filteredItems}/>*/}
 
-                                   {/*<AccelValueByN_Universal items={filteredItems}/>*/}
-                                   {/*<PartialSumByN_Universal items={filteredItems}/>*/}
-                                   {/*<LogAccelDevByN_Universal items={filteredItems}/>*/}
-                                   {/*<LogPsDevByN_Universal items={filteredItems}/>*/}
+                                   <ItemsTable items={filteredItems} />
+
+
+                                   <StepsToToleranceExplorer items={filteredItems}/>
+
+                                   <AccelValueByN_Universal items={filteredItems}/>
+                                   <PartialSumByN_Universal items={filteredItems}/>
+                                   <LogAccelDevByN_Universal items={filteredItems}/>
+                                   <LogPsDevByN_Universal items={filteredItems}/>
                                </div>
                             )}
 

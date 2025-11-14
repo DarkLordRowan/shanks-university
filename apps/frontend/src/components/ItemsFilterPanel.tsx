@@ -1,4 +1,8 @@
-import { applyItemsFilter, buildFilterOptions, type ItemsFilterState } from "@/utils/filters";
+import {
+    applyItemsFilter,
+    buildFilterOptions,
+    type ItemsFilterState,
+} from "@/utils/filters";
 import React, { useMemo, useState } from "react";
 import type { Item } from "@/types/item.ts";
 
@@ -31,9 +35,10 @@ export const ItemsFilterPanel: React.FC<ItemsFilterPanelProps> = ({
     const options = useMemo(() => buildFilterOptions(items), [items]);
 
     // Черновой фильтр (UI)
-    const [draftFilter, setDraftFilter] = useState<ItemsFilterState>(EMPTY_FILTER);
+    const [draftFilter, setDraftFilter] =
+        useState<ItemsFilterState>(EMPTY_FILTER);
 
-    // Применённый фильтр (для отображения статуса)
+    // Применённый фильтр (для статуса)
     const [appliedFilter, setAppliedFilter] =
         useState<ItemsFilterState>(EMPTY_FILTER);
 
@@ -58,23 +63,9 @@ export const ItemsFilterPanel: React.FC<ItemsFilterPanelProps> = ({
         }));
     };
 
-    const handleXMinChange: React.ChangeEventHandler<HTMLInputElement> = (e) => {
-        const v = e.target.value;
-        setDraftFilter((prev) => ({
-            ...prev,
-            xMin: v === "" ? undefined : Number(v),
-        }));
-    };
-
-    const handleXMaxChange: React.ChangeEventHandler<HTMLInputElement> = (e) => {
-        const v = e.target.value;
-        setDraftFilter((prev) => ({
-            ...prev,
-            xMax: v === "" ? undefined : Number(v),
-        }));
-    };
-
-    const handleHasErrorChange: React.ChangeEventHandler<HTMLSelectElement> = (e) => {
+    const handleHasErrorChange: React.ChangeEventHandler<HTMLSelectElement> = (
+        e,
+    ) => {
         const v = e.target.value;
         let hasError: boolean | null;
         if (v === "with") hasError = true;
@@ -90,10 +81,63 @@ export const ItemsFilterPanel: React.FC<ItemsFilterPanelProps> = ({
     const handleReset = () => {
         setDraftFilter(EMPTY_FILTER);
         setAppliedFilter(EMPTY_FILTER);
-        // снаружи очищаем фильтрованное состояние (по желанию: [] или items)
         onChange([]);
-        // onChange(items); // если хочешь показывать все данные после сброса
+        // или onChange(items), если хочешь показывать все
     };
+
+    // ------------------------- выбор x из списка -------------------------
+
+    // текущий выбранный x в черновом фильтре
+    const selectedX: number | undefined =
+        draftFilter.xMin != null &&
+        draftFilter.xMax != null &&
+        draftFilter.xMin === draftFilter.xMax
+            ? draftFilter.xMin
+            : undefined;
+
+    // доступные x: по всем items, но можно ограничить выбранными рядами
+    const availableXs = useMemo(() => {
+        const sNames = draftFilter.seriesNames;
+        const set = new Set<number>();
+
+        for (const it of items) {
+            if (sNames.length > 0 && !sNames.includes(it.series.seriesName)) {
+                continue;
+            }
+            set.add(it.series.x);
+        }
+
+        return Array.from(set).sort((a, b) => a - b);
+    }, [items, draftFilter.seriesNames]);
+
+    const handleXSelect = (x: number) => {
+        setDraftFilter((prev) => {
+            const currentSelected =
+                prev.xMin != null &&
+                prev.xMax != null &&
+                prev.xMin === prev.xMax
+                    ? prev.xMin
+                    : undefined;
+
+            // повторный клик по тому же x снимает выбор
+            if (currentSelected === x) {
+                return {
+                    ...prev,
+                    xMin: undefined,
+                    xMax: undefined,
+                };
+            }
+
+            // выбор одного конкретного x: кодируем как [xMin = xMax = x]
+            return {
+                ...prev,
+                xMin: x,
+                xMax: x,
+            };
+        });
+    };
+
+    // ------------------------- превью и применение -------------------------
 
     // превью результата чернового фильтра
     const preview = useMemo(() => {
@@ -133,7 +177,7 @@ export const ItemsFilterPanel: React.FC<ItemsFilterPanelProps> = ({
         if (!canApply) return;
         setAppliedFilter(draftFilter);
         const filtered = applyItemsFilter(items, draftFilter);
-        onChange(filtered); // только здесь реально меняем filteredItems снаружи
+        onChange(filtered);
     };
 
     const totalCount = items.length;
@@ -163,8 +207,8 @@ export const ItemsFilterPanel: React.FC<ItemsFilterPanelProps> = ({
                     </div>
                     {!canApplySingleSeriesX && previewCount > 0 && (
                         <div className="mt-0.5 text-[10px] text-secondary">
-                            Нужно 1 ряд и 1&nbsp;x. Сейчас: рядов {preview.seriesCount},
-                            x {preview.xCount}.
+                            Нужно 1 ряд и 1&nbsp;x. Сейчас: рядов{" "}
+                            {preview.seriesCount}, x {preview.xCount}.
                         </div>
                     )}
                     {previewCount === 0 && isDirty && (
@@ -298,43 +342,36 @@ export const ItemsFilterPanel: React.FC<ItemsFilterPanelProps> = ({
                 </div>
             </div>
 
-            {/* x диапазон */}
-            <div className="flex flex-wrap items-end gap-4">
-                <div className="flex flex-col">
-                    <label
-                        className="text-[11px] font-semibold text-white/90"
-                        htmlFor="xMin"
-                    >
-                        x min
-                    </label>
-                    <input
-                        id="xMin"
-                        type="number"
-                        value={draftFilter.xMin ?? ""}
-                        onChange={handleXMinChange}
-                        className="form-input mt-1 w-32 rounded-md border-border bg-surface/80 text-xs text-textDim placeholder:text-textDim/40 focus:border-primary focus:ring-primary"
-                        placeholder={
-                            options.xMin !== null ? String(options.xMin) : ""
-                        }
-                    />
+            {/* выбор x как списка, а не диапазона */}
+            <div>
+                <div className="mb-1 text-[11px] font-semibold text-white/90">
+                    Значение x
                 </div>
-                <div className="flex flex-col">
-                    <label
-                        className="text-[11px] font-semibold text-white/90"
-                        htmlFor="xMax"
-                    >
-                        x max
-                    </label>
-                    <input
-                        id="xMax"
-                        type="number"
-                        value={draftFilter.xMax ?? ""}
-                        onChange={handleXMaxChange}
-                        className="form-input mt-1 w-32 rounded-md border-border bg-surface/80 text-xs text-textDim placeholder:text-textDim/40 focus:border-primary focus:ring-primary"
-                        placeholder={
-                            options.xMax !== null ? String(options.xMax) : ""
-                        }
-                    />
+                <div className="flex flex-wrap gap-2">
+                    {availableXs.map((x) => {
+                        const active = selectedX === x;
+                        return (
+                            <button
+                                type="button"
+                                key={x}
+                                onClick={() => handleXSelect(x)}
+                                className={[
+                                    "inline-flex items-center rounded-full border px-2 py-1 text-[11px]",
+                                    "transition-colors",
+                                    active
+                                        ? "border-primary bg-primary/25 text-primary"
+                                        : "border-border bg-surface/50 text-textDim hover:border-primary/60 hover:text-primary/80",
+                                ].join(" ")}
+                            >
+                                x = {x}
+                            </button>
+                        );
+                    })}
+                    {availableXs.length === 0 && (
+                        <div className="text-[11px] text-textDim/60">
+                            Нет доступных x для выбранных рядов
+                        </div>
+                    )}
                 </div>
             </div>
 

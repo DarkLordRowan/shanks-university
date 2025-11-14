@@ -229,7 +229,7 @@ export const DataTable: React.FC<{
                       {t === "number" ? (
                         <div className="flex items-center gap-2">
                           <input
-                            className="w-24 rounded-md border border-border bg-background/60 px-2 py-1 text-xs"
+                            className="w-24 rounded-md border border-border bg-surface/60 px-2 py-1 text-xs"
                             placeholder="мин"
                             value={(filters[i] as NumericFilter).min ?? ""}
                             onClick={(e) => e.stopPropagation()}
@@ -243,7 +243,7 @@ export const DataTable: React.FC<{
                             }}
                           />
                           <input
-                            className="w-24 rounded-md border border-border bg-background/60 px-2 py-1 text-xs"
+                            className="w-24 rounded-md border border-border bg-surface/60 px-2 py-1 text-xs"
                             placeholder="макс"
                             value={(filters[i] as NumericFilter).max ?? ""}
                             onClick={(e) => e.stopPropagation()}
@@ -259,7 +259,7 @@ export const DataTable: React.FC<{
                         </div>
                       ) : (
                         <input
-                          className="w-full rounded-md border border-border bg-background/60 px-2 py-1 text-xs"
+                          className="w-full rounded-md border border-border bg-surface/60 px-2 py-1 text-xs"
                           placeholder="фильтр…"
                           value={(filters[i] as TextFilter) as string}
                           onClick={(e) => e.stopPropagation()}
