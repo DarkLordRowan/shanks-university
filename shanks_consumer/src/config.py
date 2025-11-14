@@ -4,12 +4,20 @@ import pathlib
 from abc import abstractmethod
 from collections.abc import Sequence
 from dataclasses import dataclass, field, replace
+from enum import Enum
 from typing import Any, TypedDict, cast
 
 from src.run.params import PrecisionType
 
 PrecisionValue = PrecisionType | str
 PrecisionCollection = Sequence[PrecisionValue] | PrecisionValue | None
+
+
+class OutputFormat(Enum):
+    JSON = "json"
+    CSV = "csv"
+    PARQUET = "parquet"
+    MONGODB = "mongodb"
 
 
 class TrialConfigOverrides(TypedDict, total=False):
@@ -19,13 +27,12 @@ class TrialConfigOverrides(TypedDict, total=False):
     output_dir: pathlib.Path
     results_json: pathlib.Path | None
     results_csv: pathlib.Path | None
+    results_filename: str
     trial_process_count: int
     trial_task_timeout: int
     precisions: tuple[PrecisionType, ...]
     no_events: bool
-    no_csv_export: bool
-    no_json_export: bool
-    with_mongo: bool
+    output_formats: list[OutputFormat]
     verbose: int
 
 
@@ -56,7 +63,12 @@ class MongoConfig:
 
 
 @dataclass
-class TrialConfig(BaseConfig, MongoConfig):
+class OutputConfig:
+    parquet_collection: str = field(default="trial_results")
+
+
+@dataclass
+class TrialConfig(BaseConfig, MongoConfig, OutputConfig):
     series_json: pathlib.Path = field(
         default=pathlib.Path("config/example.json")
     )
@@ -68,6 +80,7 @@ class TrialConfig(BaseConfig, MongoConfig):
     )
 
     output_dir: pathlib.Path = field(default=pathlib.Path("output"))
+    results_filename: str = field(default="results")
     results_json: pathlib.Path | None = None
     results_csv: pathlib.Path | None = None
 
@@ -78,17 +91,14 @@ class TrialConfig(BaseConfig, MongoConfig):
         default_factory=lambda: (PrecisionType.F64,)
     )
     no_events: bool = False
-    no_csv_export: bool = False
-    no_json_export: bool = False
-
-    with_mongo: bool = False
+    output_formats: list[OutputFormat] = field(default_factory=lambda: [OutputFormat.JSON, OutputFormat.CSV])
 
     def __post_init__(self):
         self.precisions = self._normalize_precisions(self.precisions)
         if self.results_json is None:
-            self.results_json = self.output_dir / "output.json"
+            self.results_json = self.output_dir / f"{self.results_filename}.json"
         if self.results_csv is None:
-            self.results_csv = self.output_dir / "output.csv"
+            self.results_csv = self.output_dir / f"{self.results_filename}.csv"
 
         self.output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -137,7 +147,7 @@ class TrialConfig(BaseConfig, MongoConfig):
 
 
 @dataclass
-class VizConfig(BaseConfig, MongoConfig):
+class VizConfig(BaseConfig, MongoConfig, OutputConfig):
     stack_id: str | None = None
     with_summary: bool = False
     series_name: str | None = None
@@ -226,6 +236,15 @@ class TrialConfigLoader(BaseConfigLoader[TrialConfig]):
             config_data["precisions"] = TrialConfig._normalize_precisions(
                 raw_precisions
             )
+        
+        # Handle output_formats
+        if "output_formats" in config_data:
+            raw_formats = config_data["output_formats"]
+            if isinstance(raw_formats, str):
+                config_data["output_formats"] = [OutputFormat(f) for f in raw_formats.split(",")]
+            elif isinstance(raw_formats, list):
+                config_data["output_formats"] = [OutputFormat(f) for f in raw_formats]
+        
         return TrialConfig(**config_data)
 
     @staticmethod
@@ -248,6 +267,8 @@ class TrialConfigLoader(BaseConfigLoader[TrialConfig]):
             overrides["results_json"] = args.results_json
         if getattr(args, "results_csv", None) is not None:
             overrides["results_csv"] = args.results_csv
+        if getattr(args, "results_filename", None) is not None:
+            overrides["results_filename"] = args.results_filename
 
         if getattr(args, "trial_process_count", None) is not None:
             overrides["trial_process_count"] = args.trial_process_count
@@ -261,13 +282,9 @@ class TrialConfigLoader(BaseConfigLoader[TrialConfig]):
 
         if getattr(args, "no_events", False):
             overrides["no_events"] = True
-        if getattr(args, "no_json_export", False):
-            overrides["no_json_export"] = True
-        if getattr(args, "no_csv_export", False):
-            overrides["no_csv_export"] = True
-
-        if getattr(args, "with_mongo", False):
-            overrides["with_mongo"] = True
+        
+        if getattr(args, "output_formats", None):
+            overrides["output_formats"] = [OutputFormat(f) for f in args.output_formats]
 
         if getattr(args, "verbose", 0) > 0:
             overrides["verbose"] = args.verbose
