@@ -195,6 +195,9 @@ class BaseExport:
         self.separator: str = "_"
         self.mongodb_collection: str = "base"
         self.batch_size = 1000
+        
+        # Sanitize data once during initialization
+        self._sanitized_data = self._to_dict_fast()
 
     # TODO: Unfortunately, this is still used to sanitize `error`. Better clean this up.
     @staticmethod
@@ -286,19 +289,8 @@ class BaseExport:
         return result_dicts
 
     def as_dict(self) -> list[dict[str, Any]]:
-        serialized: list[dict[str, Any]] = []
-        for dataclass_obj in self.data:
-            if not is_dataclass(dataclass_obj):
-                raise TypeError("BaseExport expects dataclass instances")
-            serialized.append(
-                cast(
-                    dict[str, Any],
-                    self._sanitize_value(
-                        asdict(cast(Any, dataclass_obj)), convert_precision=True
-                    ),
-                )
-            )
-        return serialized
+        # Return pre-sanitized data to avoid duplicate sanitization
+        return self._sanitized_data
 
     def _verify_location(self, override_location):
         location = override_location or self.location
@@ -313,8 +305,8 @@ class BaseExport:
         # Ensure directory exists
         output_dir.mkdir(parents=True, exist_ok=True)
 
-        # Create DataFrame and save to parquet
-        df = pd.DataFrame(self._to_dict_fast())
+        # Create DataFrame and save to parquet using pre-sanitized data
+        df = pd.DataFrame(self._sanitized_data)
         df.to_parquet(
             parquet_file,
             engine="pyarrow",
@@ -324,7 +316,8 @@ class BaseExport:
         )
 
     def to_mongodb(self, mongo_database: MongoDatabase):
-        data_dicts = self.as_dict()
+        # Use pre-sanitized data instead of calling as_dict()
+        data_dicts = self._sanitized_data
         collection = mongo_database.get_collection(self.mongodb_collection)
 
         with tqdm(
@@ -340,7 +333,7 @@ class BaseExport:
         location = self._verify_location(override_location)
 
         with open(location, mode="w", encoding="utf-8") as f:
-            json.dump(self._to_dict_fast(), f, indent=4, sort_keys=True)
+            json.dump(self._sanitized_data, f, indent=4, sort_keys=True)
 
     def to_csv(
         self,

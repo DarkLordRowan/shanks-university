@@ -55,7 +55,13 @@ def _add_run_arguments(
         type=pathlib.Path,
         default=None,
     )
-    output_group.add_argument("--results-filename", type=str, default="results", help="Base filename for output files (without extension)")
+    # TODO: This is handled 100% wrong.
+    output_group.add_argument(
+        "--results-filename",
+        type=str,
+        default="results",
+        help="Base filename for output files (without extension)",
+    )
     output_group.add_argument("--results-json", type=pathlib.Path, default=None)
     output_group.add_argument("--results-csv", type=pathlib.Path, default=None)
 

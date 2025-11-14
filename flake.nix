@@ -1,3 +1,4 @@
+# very sorry
 {
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
@@ -21,11 +22,7 @@
               clang-tools
               python3
               poetry
-            ]
-            ++ [
               mongodb-ce
-              mongosh
-              mongodb-tools
             ]
             ++ (with python3Packages; [
               pybind11-stubgen
@@ -36,17 +33,17 @@
               scipy
               jupyter
               pymongo
+              parquet
+              pyarrow
               python-dotenv
               tqdm
             ]);
 
-          POETRY_VIRTUALENVS_IN_PROJECT = "true";
-
+          # veeeryyy sorryyy
           shellHook = ''
             echo "Python: $(python --version)"
             echo "Virtualenv: $VIRTUAL_ENV"
             echo "Tip: use 'poetry run ...' or 'python -m <module>'"
-            cd shanks-university
 
             set -eu
             set +u
