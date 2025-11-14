@@ -17,7 +17,7 @@ function clamp(n: number, lo: number, hi: number) {
 
 export function StepsToToleranceExplorer({
                                              items,
-                                             defaultEps = 1e-8,
+                                             defaultEps = 1e-4,
                                              pMin = -16,
                                              pMax = -1,
                                          }: Props) {
