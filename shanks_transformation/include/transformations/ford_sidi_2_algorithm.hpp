@@ -13,6 +13,7 @@
 
 #include "series_acceleration.hpp"
 #include <cmath> //Include for fma, isfinite
+#include <type_traits>
 
 /**
  * @brief Ford-Sidi algorithm class template implementing an efficient extrapolation method.
@@ -102,7 +103,16 @@ T ford_sidi_2_algorithm<T, K>::operator()(
 	using std::fma;
 	using std::isfinite;
 
-	T delta_squared_S_n = static_cast<T>(0);
+	T delta_squared_S_n, delta_S_n, T_n;
+	delta_squared_S_n = delta_S_n = T_n = static_cast<T>(0);
+
+	#ifdef INC_FPRECISION
+	if constexpr (std::is_same<T, float_precision>::value){
+		const size_t precision = data.Sn[0].precision();
+		delta_squared_S_n.precision(precision); delta_S_n.precision(precision); T_n.precision(precision);
+	}
+	#endif
+
 	K m = n;
 
 	// For theory, see: Osada (2000), Section 2.2 - Auxiliary sequence computation
@@ -123,12 +133,10 @@ T ford_sidi_2_algorithm<T, K>::operator()(
 
 	// For theory, see: Ford & Sidi (1987), Eq. (1.9) - First difference computation
 	// First difference formula: ΔS_m = S_{m+1} - S_m
-	T delta_S_n = static_cast<T>(0);
 	delta_S_n +=  data.Sn.at(m + static_cast<K>(1)) - data.Sn.at(m);
 
 	// For theory, see: Osada (2000), Eq. (20) - Main transformation formula
 	// Ford-Sidi acceleration: T_n = S_m - [(ΔS_m)² / Δ²S_m]
-	T T_n = static_cast<T>(0);
 	T_n += fma(-delta_S_n, delta_S_n / delta_squared_S_n, data.Sn.at(m));
 
 	// For theory, see: Ford & Sidi (1987), Section 3 - Numerical stability check
@@ -146,163 +154,76 @@ T ford_sidi_2_algorithm<T, K>::operator()(
 	return T_n;
 }
 
-#ifdef INC_FPRECISION
+#ifdef INC_COMPLEXPRECISION
 
-template <UnsignedIntLike K>
-class ford_sidi_2_algorithm<float_precision, K> final : public series_acceleration<float_precision, K>
+template <FloatLike T, UnsignedIntLike K>
+class ford_sidi_2_algorithm<complex_precision<T>, K> final : public series_acceleration<complex_precision<T>, K>
 {
 public:
-	explicit ford_sidi_2_algorithm() : series_acceleration<float_precision, K>("ford sidi 2") {}
-	float_precision operator()(
+	explicit ford_sidi_2_algorithm() : series_acceleration<complex_precision<T>, K>("ford sidi 2") {}
+	complex_precision<T> operator()(
 		const K n, 
         const K order, 
-        const series_result<float_precision>& data
+        const series_result<complex_precision<T>>& data
 	) const override;
 };
-
-template <UnsignedIntLike K>
-float_precision ford_sidi_2_algorithm<float_precision, K>::operator()(
+template <FloatLike T, UnsignedIntLike K>
+complex_precision<T> ford_sidi_2_algorithm<complex_precision<T>, K>::operator()(
 	const K n, 
     const K order, 
-    const series_result<float_precision>& data
+    const series_result<complex_precision<T>>& data
 ) const {
-
     const K required_size = n + static_cast<K>(2);
-
     if (data.Sn.size() < required_size ){
         throw std::out_of_range("The Sn smaller then required for ford_sidi_2_{" + to_string(order) + "}^{" + to_string(n) + "}\n" +
-        "the size of Sn must be at least " + to_string(required_size));
+    	"the size of Sn must be at least " + to_string(required_size));
 	}
-
 	// For theory, see: Ford & Sidi (1987), Section 1 - Input validation
 	// The algorithm requires at least one term for meaningful computation
 	if (n == static_cast<K>(0))
 		throw std::domain_error("n = 0 in the input");
+	using std::isfinite;
+	using std::fma;
 
-	const size_t precision = data.Sn[0].precision();
+	using Complex = complex_precision<T>;
 
-	float_precision delta_squared_S_n = float_precision(0, precision);
+	Complex delta_squared_S_n, delta_S_n, T_n;
+	delta_squared_S_n = delta_S_n = T_n = static_cast<Complex>(0);
+
+	#ifdef INC_FPRECISION
+	if constexpr (std::is_same<T, float_precision>::value){
+		const size_t precision = std::max(data.Sn[0].real().precision(), data.Sn[0].imag().precision());
+		delta_squared_S_n.ref_real()->precision(precision); delta_squared_S_n.ref_imag()->precision(precision);
+		delta_S_n.ref_real()->precision(precision); delta_S_n.ref_imag()->precision(precision);
+		T_n.ref_real()->precision(precision); T_n.ref_imag()->precision(precision);
+	}
+	#endif
+	
 	K m = n;
-
 	// For theory, see: Osada (2000), Section 2.2 - Auxiliary sequence computation
 	// The algorithm searches for a non-zero second difference to ensure numerical stability
 	do{
 		// For theory, see: Ford & Sidi (1987), Eq. (1.8) - Finite difference computation
 		// Second difference formula: Δ²S_m = S_{m+2} - 2S_{m+1} + S_m
 		delta_squared_S_n = data.Sn.at(m + static_cast<K>(2));
-		delta_squared_S_n-= float_precision(2) * data.Sn.at(m + static_cast<K>(1));
+		delta_squared_S_n-= Complex(2) * data.Sn.at(m + static_cast<K>(1));
 		delta_squared_S_n+= data.Sn.at(m);
-
-	} while (delta_squared_S_n == float_precision(0) && --m > static_cast<K>(0));
-
+	} while (delta_squared_S_n == Complex(0) && --m > static_cast<K>(0));
 	// For theory, see: Osada (2000), Section 4 - Stability condition
 	// Zero second difference indicates numerical instability or convergence issues
 	if (m == static_cast<K>(0))
 		throw std::overflow_error("division by zero");
-
 	// For theory, see: Ford & Sidi (1987), Eq. (1.9) - First difference computation
 	// First difference formula: ΔS_m = S_{m+1} - S_m
-	float_precision delta_S_n = float_precision(0, precision);
 	delta_S_n +=  data.Sn.at(m + static_cast<K>(1)) - data.Sn.at(m);
-
 	// For theory, see: Osada (2000), Eq. (20) - Main transformation formula
 	// Ford-Sidi acceleration: T_n = S_m - [(ΔS_m)² / Δ²S_m]
-	float_precision T_n = float_precision(0, precision);
 	T_n += fma(-delta_S_n, delta_S_n / delta_squared_S_n, data.Sn.at(m));
-
 	// For theory, see: Ford & Sidi (1987), Section 3 - Numerical stability check
 	// Ensures the result is a finite floating-point value
-    if(!isfinite(T_n)){
+    if (!isfinite(T_n.real()) || !isfinite(T_n.imag())){
         throw std::overflow_error("division by zero");
     }
-	
 	return T_n;
 }
-
-#ifdef INC_COMPLEXPRECISION
-
-	template <UnsignedIntLike K>
-	class ford_sidi_2_algorithm<complex_precision<float_precision>, K> final : public series_acceleration<complex_precision<float_precision>, K>
-	{
-	public:
-		explicit ford_sidi_2_algorithm() : series_acceleration<complex_precision<float_precision>, K>("ford sidi 2") {}
-		complex_precision<float_precision> operator()(
-			const K n, 
-	        const K order, 
-	        const series_result<complex_precision<float_precision>>& data
-		) const override;
-	};
-
-	template <UnsignedIntLike K>
-	complex_precision<float_precision> ford_sidi_2_algorithm<complex_precision<float_precision>, K>::operator()(
-		const K n, 
-	    const K order, 
-	    const series_result<complex_precision<float_precision>>& data
-	) const {
-
-	    const K required_size = n + static_cast<K>(2);
-
-	    if (data.Sn.size() < required_size ){
-	        throw std::out_of_range("The Sn smaller then required for ford_sidi_2_{" + to_string(order) + "}^{" + to_string(n) + "}\n" +
-        	"the size of Sn must be at least " + to_string(required_size));
-		}
-
-		// For theory, see: Ford & Sidi (1987), Section 1 - Input validation
-		// The algorithm requires at least one term for meaningful computation
-		if (n == static_cast<K>(0))
-			throw std::domain_error("n = 0 in the input");
-
-		using std::isfinite;
-		using std::fma;
-
-		const size_t precision = std::max(data.Sn[0].real().precision(), data.Sn[0].imag().precision());
-
-		complex_precision<float_precision> delta_squared_S_n = complex_precision<float_precision>(
-			float_precision(0, precision),
-			float_precision(0, precision)
-		);
-		K m = n;
-
-		// For theory, see: Osada (2000), Section 2.2 - Auxiliary sequence computation
-		// The algorithm searches for a non-zero second difference to ensure numerical stability
-		do{
-			// For theory, see: Ford & Sidi (1987), Eq. (1.8) - Finite difference computation
-			// Second difference formula: Δ²S_m = S_{m+2} - 2S_{m+1} + S_m
-			delta_squared_S_n = data.Sn.at(m + static_cast<K>(2));
-			delta_squared_S_n-= complex_precision<float_precision>(2) * data.Sn.at(m + static_cast<K>(1));
-			delta_squared_S_n+= data.Sn.at(m);
-
-		} while (delta_squared_S_n == complex_precision<float_precision>(0) && --m > static_cast<K>(0));
-
-		// For theory, see: Osada (2000), Section 4 - Stability condition
-		// Zero second difference indicates numerical instability or convergence issues
-		if (m == static_cast<K>(0))
-			throw std::overflow_error("division by zero");
-
-		// For theory, see: Ford & Sidi (1987), Eq. (1.9) - First difference computation
-		// First difference formula: ΔS_m = S_{m+1} - S_m
-		complex_precision<float_precision> delta_S_n = complex_precision<float_precision>(
-			float_precision(0, precision),
-			float_precision(0, precision)
-		);
-		delta_S_n +=  data.Sn.at(m + static_cast<K>(1)) - data.Sn.at(m);
-
-		// For theory, see: Osada (2000), Eq. (20) - Main transformation formula
-		// Ford-Sidi acceleration: T_n = S_m - [(ΔS_m)² / Δ²S_m]
-		complex_precision<float_precision> T_n = complex_precision<float_precision>(
-			float_precision(0, precision),
-			float_precision(0, precision)
-		);
-		T_n += fma(-delta_S_n, delta_S_n / delta_squared_S_n, data.Sn.at(m));
-
-		// For theory, see: Ford & Sidi (1987), Section 3 - Numerical stability check
-		// Ensures the result is a finite floating-point value
-	    if (!isfinite(T_n.real()) || !isfinite(T_n.imag())){
-	        throw std::overflow_error("division by zero");
-	    }
-
-		return T_n;
-	}
-
-	#endif
 #endif

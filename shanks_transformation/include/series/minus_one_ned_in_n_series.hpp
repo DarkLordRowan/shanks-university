@@ -68,7 +68,7 @@ series_result<T> minus_one_ned_in_n_series<T, K>::generate_series(
 	using std::pow;
 
 	for(K j = static_cast<K>(0); j < vecSize; ++j){
-		vecAn[j] += minus_one_raised_to_power_n<T, K>(j + 1) * x / static_cast<T>(pow(j+1, j+1));
+		vecAn[j] += utils::minus_one_raised_to_power_n<T, K>(j + 1) * x / static_cast<T>(pow(j+1, j+1));
 		vecSn[j] += vecSn[j == static_cast<K>(0) ? j : j-static_cast<K>(1)] + vecAn[j];
 	}
 

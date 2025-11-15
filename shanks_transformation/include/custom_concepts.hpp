@@ -1,6 +1,5 @@
 #pragma once
 
-#include <type_traits>
 #ifndef INC_FPRECISION
     #include "../libs/arbitrary_arithmetics/fprecision.h"
 #endif
@@ -9,6 +8,8 @@
     #include "../libs/arbitrary_arithmetics/complexprecision.h"
 #endif
 
+#include <type_traits>
+
 template<typename T>
 concept FloatLike =
     #ifdef INC_FPRECISION
@@ -16,6 +17,18 @@ concept FloatLike =
     #endif
     std::is_floating_point<T>::value 
     ;
+
+template<typename T>
+struct is_standart_types : std::integral_constant<bool,
+    std::is_floating_point<T>::value 
+    #ifdef INC_COMPLEXPRECISION
+    || 
+    std::is_same<T, complex_precision<float>>::value  ||
+    std::is_same<T, complex_precision<double>>::value ||
+    std::is_same<T, complex_precision<long double>>::value
+    #endif
+>{};
+
 
 #ifdef INC_COMPLEXPRECISION
 template<typename T>

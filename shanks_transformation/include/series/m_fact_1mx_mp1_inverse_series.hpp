@@ -44,7 +44,7 @@ public:
 
         using std::pow;
 
-        return static_cast<T>(fact<K>(m)) / pow(static_cast<T>(1) - x, static_cast<T>(m+1));
+        return static_cast<T>(utils::fact<K>(m)) / pow(static_cast<T>(1) - x, static_cast<T>(m+1));
 	}
 
 };
@@ -67,8 +67,8 @@ series_result<T> m_fact_1mx_mp1_inverse_series<T, K>::generate_series(
 
 	series_base<T,K>::x_ = x;
 	series_base<T,K>::sum = calculate_sum(x, addKParameter);
-	vecAn[0] = static_cast<T>(fact<K>(addKParameter));
-	vecSn[0] = static_cast<T>(fact<K>(addKParameter));
+	vecAn[0] = static_cast<T>(utils::fact<K>(addKParameter));
+	vecSn[0] = static_cast<T>(utils::fact<K>(addKParameter));
 
 	for(K j = static_cast<K>(1); j < vecSize; ++j){
 		vecAn[j] += vecAn[j-1] * x * static_cast<T>(addKParameter + j) / static_cast<T>(j);

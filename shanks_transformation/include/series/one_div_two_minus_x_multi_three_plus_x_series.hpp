@@ -70,7 +70,7 @@ series_result<T> one_div_two_minus_x_multi_three_plus_x_series<T, K>::generate_s
 
 	for(K j = static_cast<K>(0); j < vecSize; ++j){
 		vecAn[j] += pow(x, static_cast<T>(j)) * static_cast<T>(0.2) * 
-		(minus_one_raised_to_power_n<T, K>(j) * static_cast<T>(pow(2, j + 1)) + static_cast<T>(pow(3, j + 1))) / static_cast<T>(pow(6, j+1));
+		(utils::minus_one_raised_to_power_n<T, K>(j) * static_cast<T>(pow(2, j + 1)) + static_cast<T>(pow(3, j + 1))) / static_cast<T>(pow(6, j+1));
 		vecSn[j] += vecSn[j == static_cast<K>(0) ? j : j-static_cast<K>(1)] + vecAn[j];
 	}
 

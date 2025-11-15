@@ -69,7 +69,7 @@ series_result<T> pi_8_cosx_square_minus_1_div_3_cosx_series<T, K>::generate_seri
 
 
 	for(K j = static_cast<K>(0); j < vecSize; ++j){
-		vecAn[j] += minus_one_raised_to_power_n<T, K>(j) * cos(static_cast<T>(fma(2,j,3)) * x) / static_cast<T>(fma(2,j,1) * fma(2,j,3) * fma(2,j,5));
+		vecAn[j] += utils::minus_one_raised_to_power_n<T, K>(j) * cos(static_cast<T>(fma(2,j,3)) * x) / static_cast<T>(fma(2,j,1) * fma(2,j,3) * fma(2,j,5));
 		vecSn[j] += vecSn[j == static_cast<K>(0) ? j : j-static_cast<K>(1)] + vecAn[j];
 	}
 

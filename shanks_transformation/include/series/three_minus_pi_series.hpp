@@ -66,7 +66,7 @@ series_result<T> three_minus_pi_series<T, K>::generate_series(
 	series_base<T,K>::init_vecs_with_prec(vecSn,vecAn, vecSize, x);
 
 	for(K j = static_cast<K>(0); j < vecSize; ++j){
-		vecAn[j] += minus_one_raised_to_power_n<T, K>(j+1) * x / static_cast<T>((j+1)*(j+2)*fma(2,j,3));
+		vecAn[j] += utils::minus_one_raised_to_power_n<T, K>(j+1) * x / static_cast<T>((j+1)*(j+2)*fma(2,j,3));
 		vecSn[j] += vecSn[j == static_cast<K>(0) ? j : j-static_cast<K>(1)] + vecAn[j];
 	}
 

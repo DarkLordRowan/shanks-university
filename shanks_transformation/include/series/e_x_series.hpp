@@ -32,15 +32,23 @@ public:
 		using std::isfinite;
 		
         if constexpr (isComplexLike<T>::value){
-    		return !isfinite(x.real()) || !isfinite(x.imag()) && abs(x) >= abs(static_cast<T>(1));
+    		return !isfinite(x.real()) || !isfinite(x.imag()) || abs(x) >= abs(static_cast<T>(1));
         } else {
-            return !isfinite(x) && abs(x) >= static_cast<T>(1);
+            return !isfinite(x) || abs(x) >= static_cast<T>(1);
         }
 	}
 
 	inline constexpr T calculate_sum(const T& x){
 
-		return static_cast<T>(0);
+		if constexpr (std::is_floating_point<T>::value){
+			return std::comp_ellint_2(x);
+		}
+		#ifdef INC_FPRECISION
+		else if constexpr (std::is_floating_point<T>::value){
+			return float_precision(std::comp_ellint_2(static_cast<double>(x)), x.precision());
+		}
+		#endif
+		else return static_cast<T>(0);
 
 	}
 
@@ -66,11 +74,11 @@ series_result<T> e_x_series<T, K>::generate_series(
 
 	series_base<T,K>::init_vecs_with_prec(vecSn,vecAn, vecSize, x);
 
-	vecAn[0] = static_cast<T>(std::numbers::pi * 0,5);
-	vecSn[0] = static_cast<T>(std::numbers::pi * 0,5);
+	vecAn[0] = static_cast<T>(std::numbers::pi * 0.5);
+	vecSn[0] = static_cast<T>(std::numbers::pi * 0.5);
 
 	for(K j = static_cast<K>(1); j < vecSize; ++j){
-		vecAn[j] += static_cast<T>(-1) * vecAn[j-static_cast<K>(1)] * x * x * static_cast<T>(fma(2,j-1,1)*fma(2,j-1,1)*fma(2,j-1,1)) / static_cast<T>(4 * j * (2*j-1));
+		vecAn[j] += vecAn[j-static_cast<K>(1)] * x * x * (static_cast<T>((j-1)*(j-1))-static_cast<T>(0.25))/static_cast<T>(j*j);
 		vecSn[j] += vecSn[j-static_cast<K>(1)] + vecAn[j];
 	}
 

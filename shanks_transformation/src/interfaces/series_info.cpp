@@ -62,6 +62,7 @@ series_id_t                                                                     
 series_id_t                                               One_third_pi_squared_m_nineSeriesInfo::getId() const { return series_id_t::one_third_pi_squared_m_nine_series_id; }
 series_id_t                                                       One_twelfth_3x2_pi2SeriesInfo::getId() const { return series_id_t::one_twelfth_3x2_pi2_series_id; }
 series_id_t                                                               One_twelfthSeriesInfo::getId() const { return series_id_t::one_twelfth_series_id; }
+series_id_t                                                        One_twelfth_x2_pi2SeriesInfo::getId() const { return series_id_t::one_twelfth_x2_pi2_series_id; }
 series_id_t                                                                      Pi_3SeriesInfo::getId() const { return series_id_t::pi_3_series_id; }
 series_id_t                                                                      Pi_4SeriesInfo::getId() const { return series_id_t::pi_4_series_id; }
 series_id_t                                       Pi_8_cosx_square_minus_1_div_3_cosxSeriesInfo::getId() const { return series_id_t::pi_8_cosx_square_minus_1_div_3_cosx_series_id; }
@@ -163,6 +164,7 @@ std::string                                                                     
 std::string                                               One_third_pi_squared_m_nineSeriesInfo::getName() const { return "one_third_pi_squared_m_nine_series";}
 std::string                                                       One_twelfth_3x2_pi2SeriesInfo::getName() const { return "one_twelfth_3x2_pi2_series";}
 std::string                                                               One_twelfthSeriesInfo::getName() const { return "one_twelfth_series";}
+std::string                                                        One_twelfth_x2_pi2SeriesInfo::getName() const { return "one_twelfth_x2_pi2_series";}
 std::string                                                                      Pi_3SeriesInfo::getName() const { return "pi_3_series";}
 std::string                                                                      Pi_4SeriesInfo::getName() const { return "pi_4_series";}
 std::string                                       Pi_8_cosx_square_minus_1_div_3_cosxSeriesInfo::getName() const { return "pi_8_cosx_square_minus_1_div_3_cosx_series";}

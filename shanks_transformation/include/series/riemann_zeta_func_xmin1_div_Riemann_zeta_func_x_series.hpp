@@ -36,10 +36,14 @@ public:
 
 	inline T calculate_sum(const T& x){
 
-		using std::to_string;
-		float_precision adapterX = float_precision(to_string(x));
-
-		return static_cast<T>(static_cast<double>(zeta(adapterX - float_precision(1)) / zeta(adapterX)));
+		if constexpr (std::is_floating_point<T>::value){
+			return std::riemann_zeta(x - 1.0) / std::riemann_zeta(x) ;
+		}
+		#ifdef INC_FPRECISION
+		if constexpr (std::is_same<T,float_precision>::value){
+			return abs(zeta(x - float_precision(1)) / zeta(x));
+		}
+		#endif 
 	}
 
 };
@@ -67,7 +71,7 @@ series_result<T> riemann_zeta_func_xmin1_div_Riemann_zeta_func_x_series<T, K>::g
     using std::pow;
 
 	for(K j = static_cast<K>(0); j < vecSize; ++j){
-		vecAn[j] += phi<T,K>(j+1) / pow(static_cast<T>(j+1), x);
+		vecAn[j] += utils::phi<T, K>(j+1) / pow(static_cast<T>(j+1), x);
 		vecSn[j] += vecSn[j == static_cast<K>(0) ? j : j-static_cast<K>(1)] + vecAn[j];
 	}
 
@@ -140,7 +144,7 @@ series_result<complex_precision<T>> riemann_zeta_func_xmin1_div_Riemann_zeta_fun
     using std::pow;
 
 	for(K j = static_cast<K>(0); j < vecSize; ++j){
-		vecAn[j] += phi<Complex,K>(j+1) / pow(Complex(j+1), x);
+		vecAn[j] += utils::phi<Complex,K>(j+1) / pow(Complex(j+1), x);
 		vecSn[j] += vecSn[j == static_cast<K>(0) ? j : j-static_cast<K>(1)] + vecAn[j];
 	}
 
