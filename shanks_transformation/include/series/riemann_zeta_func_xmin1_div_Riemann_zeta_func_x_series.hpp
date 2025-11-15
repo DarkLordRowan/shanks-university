@@ -36,10 +36,14 @@ public:
 
 	inline T calculate_sum(const T& x){
 
-		using std::to_string;
-		float_precision adapterX = float_precision(to_string(x));
-
-		return abs(static_cast<T>(zeta(adapterX - float_precision(1)) / zeta(adapterX)));
+		if constexpr (std::is_floating_point<T>::value){
+			return std::riemann_zeta(x - 1.0) / std::riemann_zeta(x) ;
+		}
+		#ifdef INC_FPRECISION
+		if constexpr (std::is_same<T,float_precision>::value){
+			return abs(zeta(x - float_precision(1)) / zeta(x));
+		}
+		#endif 
 	}
 
 };

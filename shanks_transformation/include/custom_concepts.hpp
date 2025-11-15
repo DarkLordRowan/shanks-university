@@ -18,6 +18,18 @@ concept FloatLike =
     std::is_floating_point<T>::value 
     ;
 
+template<typename T>
+struct is_standart_types : std::integral_constant<bool,
+    std::is_floating_point<T>::value 
+    #ifdef INC_COMPLEXPRECISION
+    || 
+    std::is_same<T, complex_precision<float>>::value  ||
+    std::is_same<T, complex_precision<double>>::value ||
+    std::is_same<T, complex_precision<long double>>::value
+    #endif
+>{};
+
+
 #ifdef INC_COMPLEXPRECISION
 template<typename T>
 struct isComplexLike : std::integral_constant<bool,
