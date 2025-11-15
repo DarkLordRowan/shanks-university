@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
 import type { Item } from "../types/item";
 
 type SeriesKey = string;
@@ -40,7 +40,7 @@ function buildArgsSummary(args: Item["algorithm"]["algorithmArgs"]): string {
 
 export function AlgorithmSeriesErrorMatrix({
                                                items,
-                                               maxSeries,
+                                               maxSeries, // размер страницы по столбцам; если не задан, показываем все
                                            }: {
     items: Item[];
     maxSeries?: number;
@@ -92,19 +92,93 @@ export function AlgorithmSeriesErrorMatrix({
         };
     }, [items]);
 
-    const seriesListShown = maxSeries
-        ? seriesList.slice(0, maxSeries)
-        : seriesList;
+    // --- постраничный просмотр по столбцам (рядам) ---
+    const [page, setPage] = useState(0);
+
+    const pageSize =
+        maxSeries && maxSeries > 0 ? maxSeries : seriesList.length || 1;
+
+    const totalPages = Math.max(
+        1,
+        Math.ceil(seriesList.length / pageSize || 1),
+    );
+
+    // при изменении количества рядов/размера страницы сдвигаем текущую страницу, чтобы не вылезти за пределы
+    useEffect(() => {
+        if (page > totalPages - 1) {
+            setPage(totalPages - 1);
+        }
+    }, [page, totalPages]);
+
+    const startIndex = page * pageSize;
+    const endIndex = startIndex + pageSize;
+    const seriesListShown =
+        maxSeries && maxSeries > 0
+            ? seriesList.slice(startIndex, endIndex)
+            : seriesList;
 
     return (
-        <div className="space-y-3">
+        <div className="space-y-2">
             <div className="flex items-center justify-between text-xs text-textDim">
                 <h2 className="text-sm font-semibold text-textDim">
                     Матрица ошибок: алгоритмы × ряды
                 </h2>
-                <div>
-                    Алгоритмы: {algoList.length} · Ряды: {seriesListShown.length} из{" "}
-                    {seriesList.length} · Элементов: {items.length}
+                <div className="flex items-center gap-3">
+                    <div>
+                        Алгоритмы: {algoList.length} · Ряды:{" "}
+                        {seriesListShown.length} из {seriesList.length} ·
+                        Элементов: {items.length}
+                    </div>
+
+                    {maxSeries && maxSeries > 0 && seriesList.length > maxSeries && (
+                        <div className="flex items-center gap-1 text-[10px]">
+                            <button
+                                type="button"
+                                className="rounded border border-border bg-surface px-1 py-[1px] disabled:opacity-40 hover:bg-panel"
+                                onClick={() => setPage(0)}
+                                disabled={page === 0}
+                            >
+                                «
+                            </button>
+                            <button
+                                type="button"
+                                className="rounded border border-border bg-surface px-1 py-[1px] disabled:opacity-40 hover:bg-panel"
+                                onClick={() =>
+                                    setPage((p) => Math.max(0, p - 1))
+                                }
+                                disabled={page === 0}
+                            >
+                                ‹
+                            </button>
+                            <span className="px-1">
+                                стр. {page + 1} / {totalPages}
+                            </span>
+                            <span className="text-textDim/60">
+                                колонки {startIndex + 1}–
+                                {Math.min(endIndex, seriesList.length)}
+                            </span>
+                            <button
+                                type="button"
+                                className="rounded border border-border bg-surface px-1 py-[1px] disabled:opacity-40 hover:bg-panel"
+                                onClick={() =>
+                                    setPage((p) =>
+                                        Math.min(totalPages - 1, p + 1),
+                                    )
+                                }
+                                disabled={page >= totalPages - 1}
+                            >
+                                ›
+                            </button>
+                            <button
+                                type="button"
+                                className="rounded border border-border bg-surface px-1 py-[1px] disabled:opacity-40 hover:bg-panel"
+                                onClick={() => setPage(totalPages - 1)}
+                                disabled={page >= totalPages - 1}
+                            >
+                                »
+                            </button>
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -112,7 +186,6 @@ export function AlgorithmSeriesErrorMatrix({
                 <table className="border-collapse text-[10px] leading-tight text-textDim">
                     <thead className="bg-surface/80">
                     <tr>
-                        {/* левый столбец: алгоритм */}
                         <th className="sticky left-0 top-0 z-20 border border-border bg-surface/90 px-1 py-1 text-left align-bottom text-[10px]">
                             Алгоритм \ Ряд
                         </th>
@@ -137,7 +210,6 @@ export function AlgorithmSeriesErrorMatrix({
                     <tbody>
                     {algoList.map((algo) => (
                         <tr key={algo.key}>
-                            {/* первый столбец строки: описание алгоритма */}
                             <th
                                 className="sticky left-0 z-10 border border-border bg-panel px-1 py-[2px] text-left align-top"
                                 title={
@@ -190,7 +262,6 @@ export function AlgorithmSeriesErrorMatrix({
 
                                 const tooltipLines: string[] = [];
 
-                                // информация о ряде
                                 tooltipLines.push(
                                     `Ряд: ${item.series.seriesName}`,
                                 );
@@ -202,8 +273,6 @@ export function AlgorithmSeriesErrorMatrix({
                                 }
 
                                 tooltipLines.push("");
-
-                                // информация об алгоритме
                                 tooltipLines.push(
                                     `Алгоритм: ${item.algorithm.algorithmName}`,
                                 );
@@ -214,6 +283,7 @@ export function AlgorithmSeriesErrorMatrix({
                                             : "∅"
                                     }`,
                                 );
+
                                 if (
                                     item.algorithm.algorithmArgs &&
                                     Object.keys(
@@ -231,7 +301,6 @@ export function AlgorithmSeriesErrorMatrix({
                                     }
                                 }
 
-                                // информация об ошибке
                                 if (hasError && item.error) {
                                     tooltipLines.push("");
                                     tooltipLines.push(
