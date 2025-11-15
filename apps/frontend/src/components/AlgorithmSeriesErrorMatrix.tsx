@@ -15,6 +15,7 @@ interface AlgoInfo {
     algorithmName: string;
     m: number | null;
     argsSummary: string;
+    algorithmArgs: Item["algorithm"]["algorithmArgs"] | null;
 }
 
 function buildSeriesKey(seriesName: string, x: number): SeriesKey {
@@ -25,16 +26,9 @@ function buildSeriesLabel(info: SeriesInfo): string {
     return `${info.seriesName}\n x = ${info.x}`;
 }
 
-function buildAlgoLabel(info: AlgoInfo): string {
-    const mPart = info.m != null ? `m = ${info.m}` : "m = ∅";
-    return `${info.algorithmName}\n${mPart}`;
-}
-
 function buildArgsSummary(args: Item["algorithm"]["algorithmArgs"]): string {
     if (!args || Object.keys(args).length === 0) return "";
-    const entries = Object.entries(args).sort(([a], [b]) =>
-        a.localeCompare(b),
-    );
+    const entries = Object.entries(args).sort(([a, b]) => a.localeCompare(b));
     return entries.map(([k, v]) => `${k}=${v}`).join(", ");
 }
 
@@ -62,11 +56,13 @@ export function AlgorithmSeriesErrorMatrix({
 
             const algoKey: AlgoKey = it.algorithm.algorithmId;
             if (!algoMap.has(algoKey)) {
+                const args = it.algorithm.algorithmArgs ?? null;
                 algoMap.set(algoKey, {
                     key: algoKey,
                     algorithmName: it.algorithm.algorithmName,
                     m: it.algorithm.m,
-                    argsSummary: buildArgsSummary(it.algorithm.algorithmArgs),
+                    argsSummary: buildArgsSummary(args),
+                    algorithmArgs: args,
                 });
             }
 
@@ -76,13 +72,15 @@ export function AlgorithmSeriesErrorMatrix({
             }
         }
 
-        const seriesList = Array.from(seriesMap.values()).sort((a, b) =>
-            a.seriesName.localeCompare(b.seriesName) || a.x - b.x,
+        const seriesList = Array.from(seriesMap.values()).sort(
+            (a, b) =>
+                a.seriesName.localeCompare(b.seriesName) || a.x - b.x,
         );
 
-        const algoList = Array.from(algoMap.values()).sort((a, b) =>
-            a.algorithmName.localeCompare(b.algorithmName) ||
-            (a.m ?? 0) - (b.m ?? 0),
+        const algoList = Array.from(algoMap.values()).sort(
+            (a, b) =>
+                a.algorithmName.localeCompare(b.algorithmName) ||
+                (a.m ?? 0) - (b.m ?? 0),
         );
 
         return {
@@ -103,7 +101,6 @@ export function AlgorithmSeriesErrorMatrix({
         Math.ceil(seriesList.length / pageSize || 1),
     );
 
-    // при изменении количества рядов/размера страницы сдвигаем текущую страницу, чтобы не вылезти за пределы
     useEffect(() => {
         if (page > totalPages - 1) {
             setPage(totalPages - 1);
@@ -130,55 +127,57 @@ export function AlgorithmSeriesErrorMatrix({
                         Элементов: {items.length}
                     </div>
 
-                    {maxSeries && maxSeries > 0 && seriesList.length > maxSeries && (
-                        <div className="flex items-center gap-1 text-[10px]">
-                            <button
-                                type="button"
-                                className="rounded border border-border bg-surface px-1 py-[1px] disabled:opacity-40 hover:bg-panel"
-                                onClick={() => setPage(0)}
-                                disabled={page === 0}
-                            >
-                                «
-                            </button>
-                            <button
-                                type="button"
-                                className="rounded border border-border bg-surface px-1 py-[1px] disabled:opacity-40 hover:bg-panel"
-                                onClick={() =>
-                                    setPage((p) => Math.max(0, p - 1))
-                                }
-                                disabled={page === 0}
-                            >
-                                ‹
-                            </button>
-                            <span className="px-1">
-                                стр. {page + 1} / {totalPages}
-                            </span>
-                            <span className="text-textDim/60">
-                                колонки {startIndex + 1}–
-                                {Math.min(endIndex, seriesList.length)}
-                            </span>
-                            <button
-                                type="button"
-                                className="rounded border border-border bg-surface px-1 py-[1px] disabled:opacity-40 hover:bg-panel"
-                                onClick={() =>
-                                    setPage((p) =>
-                                        Math.min(totalPages - 1, p + 1),
-                                    )
-                                }
-                                disabled={page >= totalPages - 1}
-                            >
-                                ›
-                            </button>
-                            <button
-                                type="button"
-                                className="rounded border border-border bg-surface px-1 py-[1px] disabled:opacity-40 hover:bg-panel"
-                                onClick={() => setPage(totalPages - 1)}
-                                disabled={page >= totalPages - 1}
-                            >
-                                »
-                            </button>
-                        </div>
-                    )}
+                    {maxSeries &&
+                        maxSeries > 0 &&
+                        seriesList.length > maxSeries && (
+                            <div className="flex items-center gap-1 text-[10px]">
+                                <button
+                                    type="button"
+                                    className="rounded border border-border bg-surface px-1 py-[1px] disabled:opacity-40 hover:bg-panel"
+                                    onClick={() => setPage(0)}
+                                    disabled={page === 0}
+                                >
+                                    «
+                                </button>
+                                <button
+                                    type="button"
+                                    className="rounded border border-border bg-surface px-1 py-[1px] disabled:opacity-40 hover:bg-panel"
+                                    onClick={() =>
+                                        setPage((p) => Math.max(0, p - 1))
+                                    }
+                                    disabled={page === 0}
+                                >
+                                    ‹
+                                </button>
+                                <span className="px-1">
+                                    стр. {page + 1} / {totalPages}
+                                </span>
+                                <span className="text-textDim/60">
+                                    колонки {startIndex + 1}–
+                                    {Math.min(endIndex, seriesList.length)}
+                                </span>
+                                <button
+                                    type="button"
+                                    className="rounded border border-border bg-surface px-1 py-[1px] disabled:opacity-40 hover:bg-panel"
+                                    onClick={() =>
+                                        setPage((p) =>
+                                            Math.min(totalPages - 1, p + 1),
+                                        )
+                                    }
+                                    disabled={page >= totalPages - 1}
+                                >
+                                    ›
+                                </button>
+                                <button
+                                    type="button"
+                                    className="rounded border border-border bg-surface px-1 py-[1px] disabled:opacity-40 hover:bg-panel"
+                                    onClick={() => setPage(totalPages - 1)}
+                                    disabled={page >= totalPages - 1}
+                                >
+                                    »
+                                </button>
+                            </div>
+                        )}
                 </div>
             </div>
 
@@ -189,19 +188,21 @@ export function AlgorithmSeriesErrorMatrix({
                         <th className="sticky left-0 top-0 z-20 border border-border bg-surface/90 px-1 py-1 text-left align-bottom text-[10px]">
                             Алгоритм \ Ряд
                         </th>
+
                         {seriesListShown.map((s) => (
                             <th
                                 key={s.key}
-                                className="border border-border px-1 py-[2px] text-center align-bottom"
+                                className="border border-border px-0 py-0 text-center align-bottom"
                                 title={buildSeriesLabel(s)}
                             >
-                                <div className="whitespace-pre leading-tight">
-                                        <span className="block max-w-[110px] truncate">
-                                            {s.seriesName}
-                                        </span>
-                                    <span className="text-[9px] text-textDim/70">
-                                            x={s.x}
-                                        </span>
+                                {/* имя ряда повернуто, x — нормальный текст */}
+                                <div className="flex h-28 w-[32px] flex-col items-center justify-end gap-1">
+                                    <div className="origin-bottom-left -rotate-90 whitespace-nowrap text-[9px] leading-tight">
+                                        {s.seriesName}
+                                    </div>
+                                    <div className="text-[8px] text-textDim/70">
+                                        x={s.x}
+                                    </div>
                                 </div>
                             </th>
                         ))}
@@ -212,19 +213,42 @@ export function AlgorithmSeriesErrorMatrix({
                         <tr key={algo.key}>
                             <th
                                 className="sticky left-0 z-10 border border-border bg-panel px-1 py-[2px] text-left align-top"
-                                title={
-                                    buildAlgoLabel(algo) +
-                                    (algo.argsSummary
-                                        ? `\n${algo.argsSummary}`
-                                        : "")
-                                }
+                                title={(() => {
+                                    const lines: string[] = [];
+                                    lines.push(
+                                        `Алгоритм: ${algo.algorithmName}`,
+                                    );
+                                    lines.push(
+                                        `m = ${
+                                            algo.m != null ? algo.m : "∅"
+                                        }`,
+                                    );
+                                    if (
+                                        algo.algorithmArgs &&
+                                        Object.keys(
+                                            algo.algorithmArgs,
+                                        ).length > 0
+                                    ) {
+                                        lines.push("Аргументы:");
+                                        for (const [k, v] of Object.entries(
+                                            algo.algorithmArgs,
+                                        ).sort(([a, b]) =>
+                                            a.localeCompare(b),
+                                        )) {
+                                            lines.push(`  ${k}: ${v}`);
+                                        }
+                                    }
+                                    return lines.join("\n");
+                                })()}
                             >
                                 <div className="whitespace-pre leading-tight">
                                         <span className="block max-w-[150px] truncate">
                                             {algo.algorithmName}
                                         </span>
                                     <span className="text-[9px] text-textDim/70">
-                                            {algo.m != null ? `m=${algo.m}` : "m=∅"}
+                                            {algo.m != null
+                                                ? `m=${algo.m}`
+                                                : "m=∅"}
                                         </span>
                                     {algo.argsSummary && (
                                         <div className="mt-[1px] max-w-[150px] truncate text-[8px] text-textDim/60">
@@ -242,7 +266,7 @@ export function AlgorithmSeriesErrorMatrix({
                                     return (
                                         <td
                                             key={cellKey}
-                                            className="min-w-[28px] border border-border bg-surface/40 px-[2px] py-[2px] text-center text-[9px] text-textDim/40"
+                                            className="min-w-[26px] border border-border bg-surface/40 px-[2px] py-[2px] text-center text-[9px] text-textDim/40"
                                         >
                                             —
                                         </td>
@@ -262,6 +286,7 @@ export function AlgorithmSeriesErrorMatrix({
 
                                 const tooltipLines: string[] = [];
 
+                                // ряд
                                 tooltipLines.push(
                                     `Ряд: ${item.series.seriesName}`,
                                 );
@@ -273,6 +298,8 @@ export function AlgorithmSeriesErrorMatrix({
                                 }
 
                                 tooltipLines.push("");
+
+                                // алгоритм, со всеми аргументами
                                 tooltipLines.push(
                                     `Алгоритм: ${item.algorithm.algorithmName}`,
                                 );
@@ -283,7 +310,6 @@ export function AlgorithmSeriesErrorMatrix({
                                             : "∅"
                                     }`,
                                 );
-
                                 if (
                                     item.algorithm.algorithmArgs &&
                                     Object.keys(
@@ -293,7 +319,7 @@ export function AlgorithmSeriesErrorMatrix({
                                     tooltipLines.push("Аргументы:");
                                     const entries = Object.entries(
                                         item.algorithm.algorithmArgs,
-                                    ).sort(([a], [b]) =>
+                                    ).sort(([a, b]) =>
                                         a.localeCompare(b),
                                     );
                                     for (const [k, v] of entries) {
@@ -301,6 +327,7 @@ export function AlgorithmSeriesErrorMatrix({
                                     }
                                 }
 
+                                // ошибка
                                 if (hasError && item.error) {
                                     tooltipLines.push("");
                                     tooltipLines.push(
@@ -319,7 +346,7 @@ export function AlgorithmSeriesErrorMatrix({
                                     <td
                                         key={cellKey}
                                         title={title}
-                                        className={`min-w-[28px] border px-[2px] py-[2px] text-center text-[10px] cursor-default ${borderClass} ${bgClass}`}
+                                        className={`min-w-[26px] border px-[2px] py-[2px] text-center text-[10px] cursor-default ${borderClass} ${bgClass}`}
                                     >
                                         {hasError ? (
                                             <span className="font-semibold text-red-200">
