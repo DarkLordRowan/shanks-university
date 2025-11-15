@@ -6,11 +6,10 @@ import plotly.io as pio
 
 pio.templates.default = "plotly_dark"
 
+
 class DataVisualizer:
     @staticmethod
-    def create_scatter_plot(
-        df: pd.DataFrame, output_file: pathlib.Path
-    ) -> None:
+    def create_scatter_plot(df: pd.DataFrame, output_file: pathlib.Path) -> None:
 
         fig = px.scatter(
             df,

@@ -1,0 +1,26 @@
+import csv
+from pathlib import Path
+from typing import Iterable
+
+from src.domain.params import SeriesParamCSV
+from src.domain.precision import PrecisionType
+from src.domain.sources import SeriesParamSource
+
+
+class CSVSeriesParamSource(SeriesParamSource):
+    def __init__(self, path: Path):
+        self.path = path
+
+    def load(self, precision: PrecisionType) -> Iterable[SeriesParamCSV]:
+        results = []
+        with open(self.path, encoding="utf-8") as f:
+            for i, row in enumerate(csv.reader(f), start=1):
+                results.append(
+                    SeriesParamCSV(
+                        location=self.path,
+                        row=i,
+                        precision=precision,
+                        raw_values=tuple(row),
+                    )
+                )
+        return results

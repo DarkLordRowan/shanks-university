@@ -12,9 +12,16 @@ from dataclasses import dataclass
 from typing import Any, Generic, Mapping, override
 
 import pyshanks as ps
-from src.run.precision import (AccelProto, PrecisionType, SeriesBaseProto,
-                               SeriesResultProto, TNum,
-                               cast_natural_series_value, create_series_result)
+
+from src.domain.precision import (
+    AccelProto,
+    PrecisionType,
+    SeriesBaseProto,
+    SeriesResultProto,
+    TNum,
+    cast_natural_series_value,
+    create_series_result,
+)
 
 
 class BaseSeriesParam[T]:

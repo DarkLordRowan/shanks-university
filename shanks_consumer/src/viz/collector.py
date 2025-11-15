@@ -4,8 +4,12 @@ import pathlib
 import pandas as pd
 from pymongo.database import Database as MongoDatabase
 
-from src.viz.pipeline import (accel_error_events_pipeline, apply_pipeline,
-                              computed_values_pipeline, unqiue_fields_pipeline)
+from src.viz.pipeline import (
+    accel_error_events_pipeline,
+    apply_pipeline,
+    computed_values_pipeline,
+    unqiue_fields_pipeline,
+)
 from src.viz.processor import DataProcessor
 from src.viz.visualizer import DataVisualizer
 
@@ -28,9 +32,7 @@ class MongoDataCollector:
         except ValueError:
             return pd.DataFrame()
 
-        df = apply_pipeline(
-            self.collection, accel_error_events_pipeline(stack_id)
-        )
+        df = apply_pipeline(self.collection, accel_error_events_pipeline(stack_id))
 
         if df.empty:
             logging.fatal("!!! No data collected with the pipeline !!!")
@@ -143,6 +145,6 @@ class MongoDataCollector:
         )["name"].to_list()
 
     def get_stack_ids(self) -> list[str]:
-        return apply_pipeline(
-            self.collection, unqiue_fields_pipeline("stack_id")
-        )["stack_id"].to_list()
+        return apply_pipeline(self.collection, unqiue_fields_pipeline("stack_id"))[
+            "stack_id"
+        ].to_list()

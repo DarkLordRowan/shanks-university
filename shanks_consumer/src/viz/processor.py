@@ -53,12 +53,8 @@ class DataProcessor:
         return pivot
 
     @staticmethod
-    def merge_base_with_pivot(
-        df: pd.DataFrame, pivot: pd.DataFrame
-    ) -> pd.DataFrame:
-        base = df.drop(
-            columns=["events", "event_type", "event_count"]
-        ).drop_duplicates(
+    def merge_base_with_pivot(df: pd.DataFrame, pivot: pd.DataFrame) -> pd.DataFrame:
+        base = df.drop(columns=["events", "event_type", "event_count"]).drop_duplicates(
             subset=["method_name", "m_value", "additional_args_str"]
         )
 
@@ -69,8 +65,6 @@ class DataProcessor:
         )
 
         if "slow_accel_method" in result_df.columns:
-            result_df["slow_accel_method"] = result_df[
-                "slow_accel_method"
-            ].fillna(0)
+            result_df["slow_accel_method"] = result_df["slow_accel_method"].fillna(0)
 
         return result_df

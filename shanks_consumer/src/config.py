@@ -4,20 +4,13 @@ import pathlib
 from abc import abstractmethod
 from collections.abc import Sequence
 from dataclasses import dataclass, field, replace
-from enum import Enum
 from typing import Any, TypedDict, cast
 
-from src.run.params import PrecisionType
+from src.domain.output_format import OutputFormat
+from src.domain.precision import PrecisionType
 
 PrecisionValue = PrecisionType | str
 PrecisionCollection = Sequence[PrecisionValue] | PrecisionValue | None
-
-
-class OutputFormat(Enum):
-    JSON = "json"
-    CSV = "csv"
-    PARQUET = "parquet"
-    MONGODB = "mongodb"
 
 
 class TrialConfigOverrides(TypedDict, total=False):
@@ -69,29 +62,31 @@ class OutputConfig:
 
 @dataclass
 class TrialConfig(BaseConfig, MongoConfig, OutputConfig):
-    series_json: pathlib.Path = field(
-        default=pathlib.Path("config/example.json")
-    )
-    series_csv: pathlib.Path = field(
-        default=pathlib.Path("config/example_series.csv")
-    )
-    accel_json: pathlib.Path = field(
-        default=pathlib.Path("config/example.json")
-    )
+    series_json: pathlib.Path = field(default=pathlib.Path("config/example.json"))
+    series_csv: pathlib.Path = field(default=pathlib.Path("config/example_series.csv"))
+    accel_json: pathlib.Path = field(default=pathlib.Path("config/example.json"))
 
     output_dir: pathlib.Path = field(default=pathlib.Path("output"))
     results_filename: str = field(default="results")
     results_json: pathlib.Path | None = None
     results_csv: pathlib.Path | None = None
+    results_parquet: pathlib.Path | None = None
 
     trial_process_count: int = 1
+
+    @property
+    def is_parallel(self):
+        return self.trial_process_count > 1
+
     trial_task_timeout: int = 10
 
     precisions: tuple[PrecisionType, ...] = field(
         default_factory=lambda: (PrecisionType.F64,)
     )
     no_events: bool = False
-    output_formats: list[OutputFormat] = field(default_factory=lambda: [OutputFormat.JSON, OutputFormat.CSV])
+    output_formats: list[OutputFormat] = field(
+        default_factory=lambda: [OutputFormat.JSON, OutputFormat.CSV]
+    )
 
     def __post_init__(self):
         self.precisions = self._normalize_precisions(self.precisions)
@@ -228,23 +223,22 @@ class TrialConfigLoader(BaseConfigLoader[TrialConfig]):
             )
         if has_precision:
             raw_precision = cast(PrecisionCollection, config_data.pop("precision"))
-            config_data["precisions"] = TrialConfig._normalize_precisions(
-                raw_precision
-            )
+            config_data["precisions"] = TrialConfig._normalize_precisions(raw_precision)
         elif has_precisions:
             raw_precisions = cast(PrecisionCollection, config_data["precisions"])
             config_data["precisions"] = TrialConfig._normalize_precisions(
                 raw_precisions
             )
-        
-        # Handle output_formats
         if "output_formats" in config_data:
             raw_formats = config_data["output_formats"]
+
             if isinstance(raw_formats, str):
-                config_data["output_formats"] = [OutputFormat(f) for f in raw_formats.split(",")]
+                config_data["output_formats"] = [
+                    OutputFormat(f) for f in raw_formats.split(",")
+                ]
             elif isinstance(raw_formats, list):
                 config_data["output_formats"] = [OutputFormat(f) for f in raw_formats]
-        
+
         return TrialConfig(**config_data)
 
     @staticmethod
@@ -282,13 +276,12 @@ class TrialConfigLoader(BaseConfigLoader[TrialConfig]):
 
         if getattr(args, "no_events", False):
             overrides["no_events"] = True
-        
+
         if getattr(args, "output_formats", None):
             overrides["output_formats"] = [OutputFormat(f) for f in args.output_formats]
 
         if getattr(args, "verbose", 0) > 0:
             overrides["verbose"] = args.verbose
-
         return overrides
 
 
@@ -307,7 +300,9 @@ class VizConfigLoader(BaseConfigLoader[VizConfig]):
     def from_dict(data: dict[str, object]) -> VizConfig:
         stack_id = data.get("stack_id")
         if stack_id is not None and not isinstance(stack_id, str):
-            raise ValueError("Viz configuration 'stack_id' must be a string if provided")
+            raise ValueError(
+                "Viz configuration 'stack_id' must be a string if provided"
+            )
         return VizConfig(stack_id=cast(str | None, stack_id))
 
     @staticmethod
@@ -324,7 +319,7 @@ def load_trial_config(args) -> TrialConfig:
     overrides = TrialConfigLoader.overrides_from_args(args)
     if overrides:
         config = replace(config, **overrides)
-
+    print(config.output_formats)
     return config
 
 

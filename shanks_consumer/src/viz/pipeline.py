@@ -3,9 +3,7 @@ import pandas as pd
 import src.viz.stages as stages
 
 
-def apply_pipeline(
-    collection, pipeline: list[stages.PipelineStage]
-) -> pd.DataFrame:
+def apply_pipeline(collection, pipeline: list[stages.PipelineStage]) -> pd.DataFrame:
     data = list(collection.aggregate([stage.build() for stage in pipeline]))
 
     if data and "_id" in data[0].keys():

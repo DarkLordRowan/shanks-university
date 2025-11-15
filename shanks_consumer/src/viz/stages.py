@@ -9,9 +9,7 @@ class PipelineStage(ABC):
 
 class MatchStage(PipelineStage):
     def _build_match_expression(self) -> dict:
-        raise NotImplementedError(
-            "Subclasses must implement _build_match_expression"
-        )
+        raise NotImplementedError("Subclasses must implement _build_match_expression")
 
     def build(self) -> dict:
         return {"$match": self._build_match_expression()}
@@ -19,9 +17,7 @@ class MatchStage(PipelineStage):
 
 class GroupStage(PipelineStage):
     def _build_group_expression(self) -> dict:
-        raise NotImplementedError(
-            "Subclasses must implement _build_group_expression"
-        )
+        raise NotImplementedError("Subclasses must implement _build_group_expression")
 
     def build(self) -> dict:
         return {"$group": self._build_group_expression()}
@@ -39,9 +35,7 @@ class AddFieldsStage(PipelineStage):
 
 class ProjectStage(PipelineStage):
     def _build_project_expression(self) -> dict:
-        raise NotImplementedError(
-            "Subclasses must implement _build_project_expression"
-        )
+        raise NotImplementedError("Subclasses must implement _build_project_expression")
 
     def build(self) -> dict:
         return {"$project": self._build_project_expression()}
@@ -49,9 +43,7 @@ class ProjectStage(PipelineStage):
 
 class UnwindStage(PipelineStage):
     def _build_unwind_expression(self) -> dict | str:
-        raise NotImplementedError(
-            "Subclasses must implement _build_unwind_expression"
-        )
+        raise NotImplementedError("Subclasses must implement _build_unwind_expression")
 
     def build(self) -> dict:
         return {"$unwind": self._build_unwind_expression()}
@@ -59,9 +51,7 @@ class UnwindStage(PipelineStage):
 
 class SortStage(PipelineStage):
     def _build_sort_expression(self) -> dict:
-        raise NotImplementedError(
-            "Subclasses must implement _build_sort_expression"
-        )
+        raise NotImplementedError("Subclasses must implement _build_sort_expression")
 
     def build(self) -> dict:
         return {"$sort": self._build_sort_expression()}
@@ -95,9 +85,7 @@ class GroupByMethodStage(GroupStage):
                 "additional_args": "$accel.additional_args",
             },
             "total": {"$sum": 1},
-            "errors": {
-                "$sum": {"$cond": [{"$ifNull": ["$error", False]}, 1, 0]}
-            },
+            "errors": {"$sum": {"$cond": [{"$ifNull": ["$error", False]}, 1, 0]}},
             "events_list": {"$push": "$events"},
         }
 
@@ -213,9 +201,7 @@ class GroupByFieldStage(GroupStage):
 class ProjectFieldStage(ProjectStage):
     def __init__(self, field_path: str):
         self.field_path = field_path
-        self.field_name = (
-            field_path.split(".")[-1] if "." in field_path else field_path
-        )
+        self.field_name = field_path.split(".")[-1] if "." in field_path else field_path
 
     def _build_project_expression(self) -> dict:
         return {"_id": 0, self.field_name: "$_id"}
