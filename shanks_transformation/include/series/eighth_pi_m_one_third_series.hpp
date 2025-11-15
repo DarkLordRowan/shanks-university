@@ -69,7 +69,7 @@ series_result<T> eighth_pi_m_one_third_series<T, K>::generate_series(
 	vecSn[0] = x / static_cast<T>(15);
 
 	for(K j = static_cast<K>(1); j < vecSize; ++j){
-		vecAn[j] += minus_one_raised_to_power_n<T,K>(j) * x / static_cast<T>(fma(2,j,1) * fma(2,j,3) * fma(2,j,5));
+		vecAn[j] += utils::minus_one_raised_to_power_n<T,K>(j) * x / static_cast<T>(fma(2,j,1) * fma(2,j,3) * fma(2,j,5));
 		vecSn[j] += vecSn[j-static_cast<K>(1)] + vecAn[j];
 	}
 

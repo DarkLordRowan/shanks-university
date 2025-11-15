@@ -69,7 +69,7 @@ series_result<T> pi_cubed_32_series<T, K>::generate_series(
 
 
 	for(K j = static_cast<K>(0); j < vecSize; ++j){
-		vecAn[j] += minus_one_raised_to_power_n<T, K>(j) * x / static_cast<T>(fma(2,j,1) * fma(2,j,1) * fma(2,j,1));
+		vecAn[j] += utils::minus_one_raised_to_power_n<T, K>(j) * x / static_cast<T>(fma(2,j,1) * fma(2,j,1) * fma(2,j,1));
 		vecSn[j] += vecSn[j == static_cast<K>(0) ? j : j-static_cast<K>(1)] + vecAn[j];
 	}
 

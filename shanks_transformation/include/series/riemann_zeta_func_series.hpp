@@ -1,6 +1,7 @@
 #pragma once
 
 #include "series_base.hpp"
+#include <cmath>
 #include <type_traits>
 
 /**
@@ -38,11 +39,14 @@ public:
 
 	inline T calculate_sum(const T& x){
 
-		using std::to_string;
-
-		std::string adapterX = to_string(x);
-
-		return static_cast<T>(static_cast<double>(zeta(float_precision(adapterX))));
+		if constexpr (std::is_floating_point<T>::value){
+			return std::riemann_zeta(x);
+		}
+		#ifdef INC_FPRECISION
+		if constexpr (std::is_same<T, float_precision>::value){
+			return abs(zeta(x));
+		}
+		#endif 
 
 	}
 

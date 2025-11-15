@@ -11,10 +11,10 @@ include(FetchContent)
 
 include_directories(${CMAKE_SOURCE_DIR}/include)
 add_executable(shanks_transformation 
-    ${CMAKE_SOURCE_DIR}/src/main.cpp
     ${CMAKE_SOURCE_DIR}/src/interfaces/series_info.cpp
     ${CMAKE_SOURCE_DIR}/src/interfaces/test_funcs_info.cpp
     ${CMAKE_SOURCE_DIR}/src/interfaces/transformations_info.cpp
+    ${CMAKE_SOURCE_DIR}/src/main.cpp
 )
 
 # -------------------------

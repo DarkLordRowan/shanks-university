@@ -71,7 +71,7 @@ series_result<T> four_ln2_m_3_series<T, K>::generate_series(
 	vecSn[0] = static_cast<T>(-0.25)*x;
 
 	for(K j = static_cast<K>(1); j < vecSize; ++j){
-		vecAn[j] += minus_one_raised_to_power_n<T,K>(j+1) * x / static_cast<T>((j+1)*(j+1)*(j+2)*(j+2));
+		vecAn[j] += utils::minus_one_raised_to_power_n<T,K>(j+1) * x / static_cast<T>((j+1)*(j+1)*(j+2)*(j+2));
 		vecSn[j] += vecSn[j-static_cast<K>(1)] + vecAn[j];
 	}
 

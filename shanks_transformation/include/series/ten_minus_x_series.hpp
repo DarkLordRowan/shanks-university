@@ -68,7 +68,7 @@ series_result<T> ten_minus_x_series<T, K>::generate_series(
 	using std::sin;
 
 	for(K j = static_cast<K>(0); j < vecSize; ++j){
-		vecAn[j] += static_cast<T>(10) * minus_one_raised_to_power_n<T, K>(j+1) / (static_cast<T>(j+1) * static_cast<T>(std::numbers::pi)) * 
+		vecAn[j] += static_cast<T>(10) * utils::minus_one_raised_to_power_n<T, K>(j+1) / (static_cast<T>(j+1) * static_cast<T>(std::numbers::pi)) * 
 		sin(static_cast<T>(j+1) * static_cast<T>(std::numbers::pi * 0.2) * x);
 		vecSn[j] += vecSn[j == static_cast<K>(0) ? j : j-static_cast<K>(1)] + vecAn[j];
 	}

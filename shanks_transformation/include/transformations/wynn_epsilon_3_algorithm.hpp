@@ -123,19 +123,14 @@ T wynn_epsilon_3_algorithm<T, K>::operator()(
     T resla = static_cast<T>(0.0);        ///< Previous result for error comparison.
     K newelm, num, NUM, K1, ib, ie, in; // Loop indices and counters.
     T RES = static_cast<T>(0.0);
-    T E0 = static_cast<T>(0.0);
-    T E1 = static_cast<T>(0.0);
-    T E2 = static_cast<T>(0.0);
-    T E3 = static_cast<T>(0.0);
-    T DELTA1 = static_cast<T>(0.0);
-    T DELTA2 = static_cast<T>(0.0);
-    T DELTA3 = static_cast<T>(0.0);
-    T ERR1 = static_cast<T>(0.0);
-    T ERR2 = static_cast<T>(0.0);
-    T ERR3 = static_cast<T>(0.0); 
-    T TOL1 = static_cast<T>(0.0);
-    T TOL2 = static_cast<T>(0.0);
-    T TOL3 = static_cast<T>(0.0); 
+    T E0, E1, E2, E3;
+    E0 = E1 = E2 = E3 = static_cast<T>(0);
+    T DELTA1, DELTA2, DELTA3;
+    DELTA1 = DELTA2 = DELTA3 = static_cast<T>(0);
+    T ERROR, ERR1, ERR2, ERR3;
+    ERROR = ERR1 = ERR2 = ERR3 = static_cast<T>(0);
+    T TOL1, TOL2, TOL3;
+    TOL1 = TOL2 = TOL3 = static_cast<T>(0);
     T SS = static_cast<T>(0.0);
 
     // For theory, see: Wynn (1956), Section 3: Algorithm and lozenge diagram.
@@ -216,7 +211,7 @@ T wynn_epsilon_3_algorithm<T, K>::operator()(
                     RES = E1 + static_cast<T>(1) / SS;      // Apply epsilon correction
                     e[K1] = RES;                            // Store updated value
                     K1 -= static_cast<K>(2);                // Move to previous position in table
-                    T ERROR = ERR2 + abs(RES - E2) + ERR3;  // Total error estimat
+                    ERROR = ERR2 + abs(RES - E2) + ERR3;  // Total error estimat
                     if (ERROR <= abs_error) {
                         abs_error = ERROR;
                         result = RES;                       // Update best result
