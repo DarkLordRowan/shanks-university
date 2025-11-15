@@ -1,26 +1,36 @@
-from src.config import TrialConfig
+from src.config.model import TrialConfig
 from src.infra.export.registry import EXPORT_BUILDERS
+from src.infra.export.serializer import TrialResultSerializer
 from src.infra.param_sources.registry import (
     PARAM_ACCELS_SOURCE_BUILDERS,
     PARAM_SERIES_SOURCE_BUILDERS,
 )
 from src.infra.trials.parallel_runner import ParallelTrialRunner
 from src.infra.trials.sequential_runner import SequentialTrialRunner
+from src.logger import setup_logging
 from src.services.trial_executor import TrialExecutor
 
 
 def get_trial_executor_from_config(config: TrialConfig) -> TrialExecutor:
+    logger = setup_logging(config.verbose)
     runner = (
         ParallelTrialRunner(
             process_count=config.trial_process_count,
             timeout=config.trial_task_timeout,
         )
-        if config.is_parallel
+        if True
         else SequentialTrialRunner()
     )
 
     series_sources = [build(config) for build in PARAM_SERIES_SOURCE_BUILDERS]
+    if not all(series_sources):
+        raise ValueError(f"Failed collecting series: {series_sources}")
+
     accel_sources = [build(config) for build in PARAM_ACCELS_SOURCE_BUILDERS]
+    if not all(accel_sources):
+        raise ValueError(f"Failed collecting accels: {accel_sources}")
+
+    serializer = TrialResultSerializer(view=config.trial_result_view)
 
     exporters = [
         exporter
@@ -34,5 +44,7 @@ def get_trial_executor_from_config(config: TrialConfig) -> TrialExecutor:
         runner=runner,
         series_sources=series_sources,
         accel_sources=accel_sources,  # type: ignore
+        serializer=serializer,
         exporters=exporters,
+        logger=logger,
     )

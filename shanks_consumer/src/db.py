@@ -4,7 +4,7 @@ from pymongo import MongoClient
 from pymongo.database import Database as MongoDatabase
 from pymongo.errors import PyMongoError
 
-from src.config import MongoConfig
+from src.config.model import MongoConfig
 
 
 def setup_mongo_db(config: MongoConfig) -> MongoDatabase | None:
@@ -12,14 +12,14 @@ def setup_mongo_db(config: MongoConfig) -> MongoDatabase | None:
     logging.info("MongoDB export specified, attempting to connect...")
     try:
         mongo_database = MongoClient(
-            host=config.mongo_host,
-            port=config.mongo_port,
+            host=config.host,
+            port=config.port,
             serverSelectionTimeoutMS=5000,
             connectTimeoutMS=5000,
-            username=config.mongo_username,
-            password=config.mongo_password,
-            authSource=config.mongo_auth_source,
-        ).get_database(config.mongo_database)
+            username=config.username,
+            password=config.password,
+            authSource=config.auth_source,
+        ).get_database(config.database)
         if mongo_database is not None:
             mongo_database.client.admin.command("ping")
     except PyMongoError:

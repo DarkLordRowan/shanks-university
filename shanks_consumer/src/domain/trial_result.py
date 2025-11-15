@@ -107,3 +107,9 @@ class TrialResult:
             if event_data:
                 events.append(EventTrialResult(name, event_data))
         return events
+
+    @property
+    def failed_iteration(self) -> Any:
+        if not self.error:
+            return "ok"
+        return self.error.data.get("n", 0)

@@ -1,9 +1,10 @@
-import logging
 import uuid
+from logging import Logger
 from typing import Sequence
 
-from src.config import TrialConfig
+from src.config.model import TrialConfig
 from src.domain.complex_trial import ComplexTrial
+from src.domain.data_serializer import DataSerializer
 from src.domain.export_service import ExportService
 from src.domain.params import BaseAccelParam, BaseSeriesParam, PrecisionType
 from src.domain.sources import AccelParamSource, SeriesParamSource
@@ -12,13 +13,16 @@ from src.domain.trial_runner import TrialRunner
 
 
 class TrialExecutor:
+
     def __init__(
         self,
         config: TrialConfig,
         runner: TrialRunner,
         series_sources: Sequence[SeriesParamSource],
         accel_sources: Sequence[AccelParamSource],
+        serializer: DataSerializer,
         exporters: Sequence[ExportService],
+        logger: Logger,
     ):
         self.config = config
         self.runner = runner
@@ -26,7 +30,10 @@ class TrialExecutor:
 
         self.series_sources = series_sources
         self.accel_sources = accel_sources
+        self.serializer = serializer
         self.exporters = exporters
+
+        self.logger = logger
 
     def load_parameters(self, precision: PrecisionType):
         series_params: list[BaseSeriesParam] = []
@@ -41,12 +48,12 @@ class TrialExecutor:
         if not series_params:
             raise ValueError("No series parameters found!")
 
-        logging.info(
+        self.logger.info(
             "Loaded %d series params for precision %s",
             len(series_params),
             precision.name,
         )
-        logging.info(
+        self.logger.info(
             "Loaded %d accel params for precision %s",
             len(accel_params),
             precision.name,
@@ -55,7 +62,7 @@ class TrialExecutor:
         return series_params, accel_params
 
     def run_trials(self, precision: PrecisionType) -> list[TrialResult]:
-        logging.info("Running trials for precision: %s", precision.name)
+        self.logger.info("Running trials for precision: %s", precision.name)
         series_params, accel_params = self.load_parameters(precision)
 
         trial = ComplexTrial(
@@ -71,18 +78,15 @@ class TrialExecutor:
 
         return results
 
-    def export_results(self, results: list[TrialResult]):
-        logging.info("Exporting results...")
+    def export_results(self, dicts: Sequence[dict]):
+        self.logger.info("Exporting results...")
         for exporter in self.exporters:
-            exporter.export(results, config=self.config)
+            exporter.export(dicts, config=self.config)
 
     def run_all_precisions(self) -> str:
-        aggregated: list[TrialResult] = []
-
         for precision in self.config.precisions:
-            logging.info("Running precision: %s", precision.name)
+            self.logger.info("Running precision: %s", precision.name)
             res = self.run_trials(precision)
-            aggregated.extend(res)
+            self.export_results(self.serializer.to_dict(res))
 
-        self.export_results(aggregated)
         return self.stack_id
