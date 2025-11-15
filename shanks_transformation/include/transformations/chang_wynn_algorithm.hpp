@@ -117,7 +117,7 @@ T chang_wynn_algorithm<T, K>::operator()(const K n, const K order, const series_
     // Vector F stores intermediate factors F₁⁽ⁿ⁾ used in the recursion.
     std::vector<T> f; // Vector for containing F results from index 0 to n-1.
 
-    if constexpr (std::is_floating_point<T>::value){
+    if constexpr (is_standart_types<T>::value){
         e = std::vector<std::vector<T>>( 2, std::vector<T>( n, static_cast<T>(0) ));
         f = std::vector<T>(n, static_cast<T>(0));
     }
@@ -128,6 +128,21 @@ T chang_wynn_algorithm<T, K>::operator()(const K n, const K order, const series_
         e = std::vector<std::vector<T>>( 2, std::vector<T>( n, float_precision(0, precision) ) );
         f = std::vector<T>(n, float_precision(0, precision));                                     
     }
+    #ifdef INC_COMPLEXPRECISION
+    else if constexpr (std::is_same<T, complex_precision<float_precision>>::value){
+        const size_t precision = std::max(
+            std::max(data.Sn[0].real().precision(),data.Sn[0].imag().precision()), 
+            std::max(data.an[0].real().precision(),data.an[0].imag().precision())
+        );
+        up.ref_real()->precision(precision); up.ref_imag()->precision(precision);
+        down.ref_real()->precision(precision); down.ref_imag()->precision(precision);
+        coef.ref_real()->precision(precision); coef.ref_imag()->precision(precision);
+        coef2.ref_real()->precision(precision); coef2.ref_imag()->precision(precision);
+
+        e = std::vector<std::vector<T>>( 2, std::vector<T>( n, up )); // Two vectors of length n containing Epsilon table (current and previous rows).
+        f = std::vector<T>(n, up);                                     // Vector for containing F results from index 0 to n-1.                                   
+    }
+    #endif
     #endif
 
 
@@ -226,145 +241,3 @@ T chang_wynn_algorithm<T, K>::operator()(const K n, const K order, const series_
 
     return e[max & static_cast<K>(1)][0]; // Return the transformed value.
 }
-
-#ifdef INC_COMPLEXPRECISION
-
-    template <FloatLike T, UnsignedIntLike K>
-    class chang_wynn_algorithm<complex_precision<T>, K> final : public series_acceleration<complex_precision<T>, K>
-    {
-    public:
-        explicit chang_wynn_algorithm() : series_acceleration<complex_precision<T>, K>("chang wynn") {}
-    
-    	complex_precision<T> operator()(
-            const K n, 
-            const K order,
-    		const series_result<complex_precision<T>>& data
-        ) const override;
-    
-    };
-
-template <FloatLike T, UnsignedIntLike K>
-complex_precision<T> chang_wynn_algorithm<complex_precision<T>, K>::operator()(
-    const K n, 
-    const K order, 
-    const series_result<complex_precision<T>>& data
-) const {
-
-    using Complex = complex_precision<T>;
-    
-    K required_size = n + static_cast<K>(1);
-
-    if (data.Sn.size() < required_size || data.an.size() < required_size){
-        throw std::out_of_range("The Sn or an smaller then required for chang_wynn_{" + to_string(order) + "}^{" + to_string(n) + "}\n" +
-        "the size of Sn and an must be at least " + to_string(required_size));
-	}
-
-	// For theory, see: Ford & Sidi (1987), Section 1 - Input validation
-	// The algorithm requires at least one term for meaningful computation
-	if (n == static_cast<K>(0))
-		throw std::domain_error("n = 0 in the input");
-
-    Complex up, down, coef, coef2;
-    up = down = coef = coef2 = static_cast<Complex>(0);
-
-    // For theory, see: Wynn (1956), Section 3 (Algorithm)
-    // Epsilon table structure: two rows to store intermediate transformations.
-    std::vector<std::vector<Complex>> e;
-
-    // For theory, see: Chang et al. (2019), Eq. (3.20d)
-    // Vector F stores intermediate factors F₁⁽ⁿ⁾ used in the recursion.
-    std::vector<Complex> f;
-
-    if constexpr (std::is_floating_point<T>::value){
-        e = std::vector<std::vector<T>>( 2, std::vector<Complex>( n, static_cast<Complex>(0.0) ) ); // Two vectors of length n containing Epsilon table (current and previous rows).
-        f = std::vector<Complex>(n, static_cast<Complex>(0));                                       // Vector for containing F results from index 0 to n-1.
-    }
-    #ifdef INC_FPRECISION
-    else if constexpr (std::is_same<T, float_precision>::value){
-
-        const size_t precision = std::max(
-            std::max(data.Sn[0].real().precision(),data.Sn[0].imag().precision()), 
-            std::max(data.an[0].real().precision(),data.an[0].imag().precision())
-        );
-        up.ref_real()->precision(precision); up.ref_imag()->precision(precision);
-        down.ref_real()->precision(precision); down.ref_imag()->precision(precision);
-        coef.ref_real()->precision(precision); coef.ref_imag()->precision(precision);
-        coef2.ref_real()->precision(precision); coef2.ref_imag()->precision(precision);
-
-        e = std::vector<std::vector<Complex>>( 2, std::vector<Complex>( n, up )); // Two vectors of length n containing Epsilon table (current and previous rows).
-        f = std::vector<Complex>(n, up);                                     // Vector for containing F results from index 0 to n-1.
-    }
-    #endif
-    // For theory, see: Chang et al. (2019), Section 3.4, Eq. (3.20)
-    // Initialization of epsilon table with modified initial conditions.
-    K i1, i2, i3, k1;
-    K max = n - (n & static_cast<K>(1)); // Ensure max is even for algorithm stability.
-    
-    // For theory, see: Wynn (1956), Eq. (2.6b)
-    // Epsilon algorithm recursion: εₖ₊₁⁽ⁿ⁾ = εₖ₋₁⁽ⁿ⁺¹⁾ + 1/(εₖ⁽ⁿ⁺¹⁾ - εₖ⁽ⁿ⁾)
-    // Initialize the first row of the epsilon table.
-    for (K i = static_cast<K>(0); i < max; ++i) {
-        // For theory, see: Wynn (1956), Eq. (2.8)
-        // ε₁⁽ⁿ⁾ = 1 / ΔSₙ for n >= 0.
-        e[0][i] = Complex(1) / (data.an.at(i + static_cast<K>(1)));
-    }
-    // For theory, see: Chang et al. (2019), Eq. (3.20d)
-    // F₁⁽ⁿ⁾ = [Δ²T₀⁽ⁿ⁾ Δ²T₀⁽ⁿ⁺¹⁾] / [ΔT₀⁽ⁿ⁺²⁾ Δ²T₀⁽ⁿ⁾ - ΔT₀⁽ⁿ⁾ Δ²T₀⁽ⁿ⁺¹⁾]
-    for (K i = static_cast<K>(0); i < max; ++i) { //Counting F function
-        i1 = i + static_cast<K>(1);
-        i2 = i + static_cast<K>(2);
-        i3 = i + static_cast<K>(3);
-        // For theory, see: Chang et al. (2019), Eq. (3.20c)
-        // T₂⁽ⁿ⁾ = T₀⁽ⁿ⁺¹⁾ - [ΔT₀⁽ⁿ⁾ ΔT₀⁽ⁿ⁺¹⁾ Δ²T₀⁽ⁿ⁺¹⁾] / [ΔT₀⁽ⁿ⁺²⁾ Δ²T₀⁽ⁿ⁾ - ΔT₀⁽ⁿ⁾ Δ²T₀⁽ⁿ⁺¹⁾]
-        // Compute second differences: Δ²S_{n+1} = S_{n+3} - 2S_{n+2} + S_{n+1}
-        coef = fma(
-            Complex(-2),
-            data.Sn.at(i2),
-            data.Sn.at(i3) + data.Sn.at(i1)
-        );
-        // Compute Δ²S_n = S_{n+2} - 2S_{n+1} + S_n
-        coef2 = fma(
-            Complex(-2),
-            data.Sn.at(i1),
-            data.Sn.at(i2) + data.Sn.at(i)
-        );
-        // Numerator: ΔS_n * ΔS_{n+1} * Δ²S_{n+1}
-        up = data.an.at(i1);
-        up*= data.an.at(i2);
-        up*= coef;
-        // Denominator: ΔS_{n+2} * Δ²S_n - ΔS_n * Δ²S_{n+1}
-        down = data.an.at(i3) * coef2;
-        down -= data.an.at(i1) * coef;
-        down = Complex(1) / down; // Reciprocal for division.
-        // Compute T₂⁽ⁿ⁾ = S_{n+1} - (up * down)
-        e[1][i] = fma(-up, down, data.Sn.at(i1));
-        // Compute F₁⁽ⁿ⁾ = Δ²S_{n+1} * Δ²S_n * down
-        f[i] = coef * coef2 * down;
-    }
-    // For theory, see: Chang et al. (2019), Eq. (3.20e)
-    // Tₖ₊₁⁽ⁿ⁾ = Tₖ₋₁⁽ⁿ⁺¹⁾ + [1 - k + k F₁⁽ⁿ⁾] / [Tₖ⁽ⁿ⁺¹⁾ - Tₖ⁽ⁿ⁾]
-    for (K k = static_cast<K>(2); k <= max; ++k) {
-        k1 = static_cast<K>(1) - k; // Precompute (1 - k)
-        for (K i = static_cast<K>(0); i < max - k; ++i) {
-            i1 = i + static_cast<K>(1);
-            // Numerator: 1 - k + k * F₁⁽ⁿ⁾
-            up = fma(Complex(k), f[i], Complex(k1));
-            // Denominator: 1 / (Tₖ⁽ⁿ⁺¹⁾ - Tₖ⁽ⁿ⁾)
-            down = Complex(1) / (e[1][i1] - e[1][i]);
-            // Tₖ₊₁⁽ⁿ⁾ = Tₖ₋₁⁽ⁿ⁺¹⁾ + (up * down)
-            e[0][i] = fma(up, down, e[0][i1]);
-            if (!isfinite(e[0][i])) {
-                // Check for numerical instability (e.g., division by zero, overflow).
-                max = k + i1; // Adjust max to avoid further unstable steps.
-                break;
-            }
-        }
-        std::swap(e[0], e[1]); // Swap rows for the next iteration.
-    }
-    if (!isfinite(e[max & static_cast<K>(1)][0].real()) || !isfinite(e[max & static_cast<K>(1)][0].imag())){
-        throw std::overflow_error("division by zero");
-    }
-    return e[max & static_cast<K>(1)][0]; // Return the transformed value.
-}
-
-#endif

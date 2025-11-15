@@ -1,6 +1,7 @@
 #pragma once
 
 #include "series_base.hpp"
+#include <type_traits>
 
 /**
 * @brief Maclaurin series of exp(x) function
@@ -40,7 +41,15 @@ public:
 
 	inline constexpr T calculate_sum(const T& x){
 
-		return static_cast<T>(0);
+		if constexpr (std::is_floating_point<T>::value){
+			return std::comp_ellint_1(x);
+		}
+		#ifdef INC_FPRECISION
+		else if constexpr (std::is_floating_point<T>::value){
+			return float_precision(std::comp_ellint_1(static_cast<double>(x)), x.precision());
+		}
+		#endif
+		else return static_cast<T>(0);
 
 	}
 
@@ -70,7 +79,7 @@ series_result<T> k_x_series<T, K>::generate_series(
 	vecSn[0] = static_cast<T>(std::numbers::pi * 0.5);
 
 	for(K j = static_cast<K>(1); j < vecSize; ++j){
-		vecAn[j] += vecAn[j-static_cast<K>(1)] * x * x * static_cast<T>(fma(2,j-1,1)*fma(2,j-1,1)) / static_cast<T>(4 * j * j) ;
+		vecAn[j] += vecAn[j-static_cast<K>(1)] * x * x * static_cast<T>(fma(2,j-1,1)*fma(2,j-1,1))/static_cast<T>(4*j*j);
 		vecSn[j] += vecSn[j-static_cast<K>(1)] + vecAn[j];
 	}
 
