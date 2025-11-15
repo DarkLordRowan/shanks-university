@@ -74,8 +74,8 @@ series_result<T> minus_x_minus_pi_4_or_minus_pi_4_series<T, K>::generate_series(
 	using std::sin;
 
 	for(K j = static_cast<K>(1); j < vecSize; ++j){
-		vecAn[j] += (minus_one_raised_to_power_n<T, K>(j) - static_cast<T>(1)) / (static_cast<T>(std::numbers::pi)*static_cast<T>(j*j))*cos(static_cast<T>(j)*x) +
-		minus_one_raised_to_power_n<T, K>(j) / static_cast<T>(j) * sin(static_cast<T>(j) * x);
+		vecAn[j] += (utils::minus_one_raised_to_power_n<T, K>(j) - static_cast<T>(1)) / (static_cast<T>(std::numbers::pi)*static_cast<T>(j*j))*cos(static_cast<T>(j)*x) +
+		utils::minus_one_raised_to_power_n<T, K>(j) / static_cast<T>(j) * sin(static_cast<T>(j) * x);
 		vecSn[j] += vecSn[j-static_cast<K>(1)] + vecAn[j];
 	}
 
@@ -157,8 +157,8 @@ series_result<complex_precision<T>> minus_x_minus_pi_4_or_minus_pi_4_series<comp
 	using std::sin;
 
 	for(K j = static_cast<K>(1); j < vecSize; ++j){
-		vecAn[j] += (minus_one_raised_to_power_n<Complex, K>(j) - Complex(1)) / (Complex(std::numbers::pi)*Complex(j*j))*cos(Complex(j)*x) +
-		minus_one_raised_to_power_n<Complex, K>(j) / Complex(j) * sin(Complex(j) * x);
+		vecAn[j] += (utils::minus_one_raised_to_power_n<Complex, K>(j) - Complex(1)) / (Complex(std::numbers::pi)*Complex(j*j))*cos(Complex(j)*x) +
+		utils::minus_one_raised_to_power_n<Complex, K>(j) / Complex(j) * sin(Complex(j) * x);
 		vecSn[j] += vecSn[j-static_cast<K>(1)] + vecAn[j];
 	}
 

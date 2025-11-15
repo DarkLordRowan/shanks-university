@@ -1,6 +1,5 @@
 #pragma once
 
-#include <type_traits>
 #ifndef INC_FPRECISION
     #include "../libs/arbitrary_arithmetics/fprecision.h"
 #endif
@@ -8,6 +7,8 @@
 #ifndef INC_COMPLEXPRECISION
     #include "../libs/arbitrary_arithmetics/complexprecision.h"
 #endif
+
+#include <type_traits>
 
 template<typename T>
 concept FloatLike =

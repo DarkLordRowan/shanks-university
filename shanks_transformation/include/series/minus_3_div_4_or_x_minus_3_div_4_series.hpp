@@ -74,7 +74,7 @@ series_result<T> minus_3_div_4_or_x_minus_3_div_4_series<T, K>::generate_series(
 
 	for(K j = static_cast<K>(0); j < vecSize; ++j){
 		vecAn[j] += static_cast<T>(-2) / (piDiv3 * piDiv3 * static_cast<T>(3 * fma(2,j,1)*fma(2,j,1)))*cos(static_cast<T>(j+1)*piDiv3*x)+
-		minus_one_raised_to_power_n<T, K>(j) / (piDiv3 * static_cast<T>(j+1)) * sin(static_cast<T>(j+1) * piDiv3 * x);
+		utils::minus_one_raised_to_power_n<T, K>(j) / (piDiv3 * static_cast<T>(j+1)) * sin(static_cast<T>(j+1) * piDiv3 * x);
 		vecSn[j] += vecSn[j == static_cast<K>(0) ? j : j-static_cast<K>(1)] + vecAn[j];
 	}
 
@@ -156,7 +156,7 @@ series_result<complex_precision<T>> minus_3_div_4_or_x_minus_3_div_4_series<comp
 
 	for(K j = static_cast<K>(0); j < vecSize; ++j){
 		vecAn[j] += Complex(-2) / (piDiv3 * piDiv3 * Complex(3 * fma(2,j,1)*fma(2,j,1)))*cos(Complex(j+1)*piDiv3*x)+
-		minus_one_raised_to_power_n<Complex, K>(j) / (piDiv3 * Complex(j+1)) * sin(Complex(j+1) * piDiv3 * x);
+		utils::minus_one_raised_to_power_n<Complex, K>(j) / (piDiv3 * Complex(j+1)) * sin(Complex(j+1) * piDiv3 * x);
 		vecSn[j] += vecSn[j == static_cast<K>(0) ? j : j-static_cast<K>(1)] + vecAn[j];
 	}
 

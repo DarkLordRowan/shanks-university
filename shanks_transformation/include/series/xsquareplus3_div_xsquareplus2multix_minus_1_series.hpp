@@ -64,7 +64,7 @@ series_result<T> xsquareplus3_div_xsquareplus2multix_minus_1_series<T, K>::gener
 	using std::pow;
 
 	for(K j = static_cast<K>(0); j < vecSize; ++j){
-		vecAn[j] += static_cast<T>(0.5) * minus_one_raised_to_power_n<T, K>(j) * static_cast<T>(pow(3, j+2) - 7) * pow(x - static_cast<T>(1), static_cast<T>(j)) / static_cast<T>(pow(3, j+1));
+		vecAn[j] += static_cast<T>(0.5) * utils::minus_one_raised_to_power_n<T, K>(j) * static_cast<T>(pow(3, j+2) - 7) * pow(x - static_cast<T>(1), static_cast<T>(j)) / static_cast<T>(pow(3, j+1));
 		vecSn[j] += vecSn[j == static_cast<K>(0) ? j : j-static_cast<K>(1)] + vecAn[j];
 	}
 
@@ -136,7 +136,7 @@ series_result<complex_precision<T>> xsquareplus3_div_xsquareplus2multix_minus_1_
 	using std::pow;
 
 	for(K j = static_cast<K>(0); j < vecSize; ++j){
-		vecAn[j] += Complex(0.5) * minus_one_raised_to_power_n<Complex, K>(j) * Complex(pow(3, j+2) - 7) * pow(x - Complex(1), Complex(j)) / Complex(pow(3, j+1));
+		vecAn[j] += Complex(0.5) * utils::minus_one_raised_to_power_n<Complex, K>(j) * Complex(pow(3, j+2) - 7) * pow(x - Complex(1), Complex(j)) / Complex(pow(3, j+1));
 		vecSn[j] += vecSn[j == static_cast<K>(0) ? j : j-static_cast<K>(1)] + vecAn[j];
 	}
 

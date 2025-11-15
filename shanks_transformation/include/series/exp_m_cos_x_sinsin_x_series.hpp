@@ -78,7 +78,7 @@ series_result<T> exp_m_cos_x_sinsin_x_series<T, K>::generate_series(
 
 	for(K j = static_cast<K>(1); j < vecSize; ++j){
         fact *= j;
-		vecAn[j] += minus_one_raised_to_power_n<T, K>(j) * sin(static_cast<T>(j) * x) / static_cast<T>(fact);
+		vecAn[j] += utils::minus_one_raised_to_power_n<T, K>(j) * sin(static_cast<T>(j) * x) / static_cast<T>(fact);
 		vecSn[j] += vecSn[j-static_cast<K>(1)] + vecAn[j];
 	}
 
