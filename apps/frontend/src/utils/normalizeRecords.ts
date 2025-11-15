@@ -1,6 +1,5 @@
 import type { ResponseRecord } from "@/shared/api/experiments/dto";
-import type { Item, ResponseComputed, ResponseError } from "../types/item";
-
+import type { AlgorithmArgs, Item, ResponseComputed, ResponseError } from "../types/item";
 type NumLike = number | string | null | undefined;
 
 function toNumber(v: NumLike): number {
@@ -46,24 +45,64 @@ function toItemError(raw: ResponseRecord["error"]): ResponseError | null {
     };
 }
 
+/** Превращает additional_args в словарь string→string, отбрасывая null/undefined */
+function normalizeAlgorithmArgs(raw: unknown): AlgorithmArgs | null {
+    if (!raw || typeof raw !== "object") return null;
+
+    const result: Record<string, string> = {};
+    for (const [key, value] of Object.entries(raw as Record<string, unknown>)) {
+        if (value === null || value === undefined) continue;
+        // сохраним всё как строки
+        result[key] = typeof value === "string" ? value : String(value);
+    }
+
+    return Object.keys(result).length > 0 ? result : null;
+}
+
+/**
+ * Строит детерминированный идентификатор алгоритма из:
+ *  - имени
+ *  - m
+ *  - аргументов (по отсортированным ключам)
+ */
+function buildAlgorithmId(
+    name: string,
+    m: number | null,
+    args: AlgorithmArgs | null
+): string {
+    const mStr = m == null || Number.isNaN(m) ? "null" : String(m);
+
+    const entries = args
+        ? Object.entries(args).sort(([a], [b]) => a.localeCompare(b))
+        : [];
+
+    const argsStr = entries
+        .map(([k, v]) => `${k}=${v}`)
+        .join("&");
+
+    return `${name}|m=${mStr}|${argsStr}`;
+}
+
+
 export function normalizeRecords(records: ResponseRecord[]): Item[] {
     return records.map((rec, idx) => {
         const xRaw = rec.series.arguments?.x ?? null;
         const x = typeof xRaw === "number" ? xRaw : 0;
 
-        const algoArgsRaw = rec.accel.additional_args ?? null;
+        const algoArgs: AlgorithmArgs | null = normalizeAlgorithmArgs(
+            rec.accel.additional_args ?? null
+        );
 
-        const algorithmArgs =
-            algoArgsRaw == null
-                ? null
-                : {
-                    remainder: algoArgsRaw.remainder ?? "",
-                    useRecFormulas: algoArgsRaw.useRecFormulas ?? "",
-                    beta: algoArgsRaw.beta ?? "",
-                };
+        const m = rec.accel.m_value ?? null;
+
+        const algorithmId = buildAlgorithmId(
+            rec.accel.name,
+            m,
+            algoArgs
+        );
 
         return {
-            id: rec.stack_id ?? String(idx), // или crypto.randomUUID(), если хочется
+            id: rec.stack_id ?? String(idx), // при желании можно заменить на crypto.randomUUID()
             series: {
                 x,
                 seriesName: rec.series.name,
@@ -72,8 +111,9 @@ export function normalizeRecords(records: ResponseRecord[]): Item[] {
             },
             algorithm: {
                 algorithmName: rec.accel.name,
-                m: rec.accel.m_value ?? null,
-                algorithmArgs,
+                m,
+                algorithmArgs: algoArgs,
+                algorithmId,
             },
             computed: rec.computed.map(toItemComputed),
             error: toItemError(rec.error),

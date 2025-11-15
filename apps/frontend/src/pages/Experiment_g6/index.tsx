@@ -8,6 +8,7 @@ import { PartialSumByN_Universal } from "@/charts/universal/PartialSumByN_Univer
 import { LogAccelDevByN_Universal } from "@/charts/universal/LogAccelDevByN_Universal.tsx";
 import { LogPsDevByN_Universal } from "@/charts/universal/LogPsDevByN_Universal.tsx";
 import { ItemsTable } from "@/components/ItemsTable.tsx";
+import { AlgorithmSeriesErrorMatrix } from "@/components/AlgorithmSeriesErrorMatrix.tsx";
 
 export default function Experiment_g6() {
 
@@ -17,11 +18,15 @@ export default function Experiment_g6() {
 
 
     return (
-        <div className="mx-auto max-w-6xl px-4 py-6">
+        <div className="mx-auto">
 
             <StreamFileInput onItemsChange={setItems}/>
             <br/>
 
+            <AlgorithmSeriesErrorMatrix
+                items={items}
+                maxSeries={20}
+            />
             <div>
                 {items.length > 0 && (
                     <div className="mt-4 w-full space-y-6">
