@@ -12,6 +12,9 @@ export interface ResponseError {
     data: { n: number | null; }
 }
 
+export type AlgorithmArgs = Record<string, string>;
+
+
 export interface Item {
     id: string;
     series: {
@@ -23,11 +26,12 @@ export interface Item {
     algorithm: {
         algorithmName: string;
         m: number | null;
-        algorithmArgs: {
-            remainder: string;
-            useRecFormulas: string;
-            beta: string;
-        } | null;
+        algorithmArgs: AlgorithmArgs | null;
+        /**
+         * Детерминированный идентификатор алгоритма:
+         * функция от (algorithmName, m, algorithmArgs с отсортированными ключами)
+         */
+        algorithmId: string;
     };
     computed: ResponseComputed[];
     error?: ResponseError | null;
