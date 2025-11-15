@@ -1,5 +1,11 @@
 import type { ResponseRecord } from "@/shared/api/experiments/dto";
-import type { AlgorithmArgs, Item, ResponseComputed, ResponseError } from "../types/item";
+import type {
+    AlgorithmArgs,
+    Item,
+    ResponseComputed,
+    ResponseError,
+} from "../types/item";
+
 type NumLike = number | string | null | undefined;
 
 function toNumber(v: NumLike): number {
@@ -17,15 +23,17 @@ function toNumber(v: NumLike): number {
 }
 
 function toItemComputed(raw: {
-    n: number;
+    n: NumLike;
     series_value: NumLike;
     partial_sum: NumLike;
     partial_sum_deviation: NumLike;
     accel_value: NumLike;
     accel_value_deviation: NumLike;
 }): ResponseComputed {
+    const nVal = toNumber(raw.n);
+
     return {
-        n: raw.n,
+        n: Number.isNaN(nVal) ? NaN : nVal,
         series_value: toNumber(raw.series_value),
         partial_sum: toNumber(raw.partial_sum),
         partial_sum_deviation: toNumber(raw.partial_sum_deviation),
@@ -37,10 +45,18 @@ function toItemComputed(raw: {
 function toItemError(raw: ResponseRecord["error"]): ResponseError | null {
     if (!raw) return null;
 
+    // предполагаем, что в data.n лежит NumLike, но по схеме это просто record<string, unknown>
+    const nRaw = (raw.data as any)?.n as NumLike;
+    const nNum = toNumber(nRaw);
+    const n =
+        nRaw === null || nRaw === undefined || Number.isNaN(nNum)
+            ? null
+            : nNum;
+
     return {
         description: raw.description,
         data: {
-            n: raw.data?.n ?? null,
+            n,
         },
     };
 }
@@ -52,7 +68,6 @@ function normalizeAlgorithmArgs(raw: unknown): AlgorithmArgs | null {
     const result: Record<string, string> = {};
     for (const [key, value] of Object.entries(raw as Record<string, unknown>)) {
         if (value === null || value === undefined) continue;
-        // сохраним всё как строки
         result[key] = typeof value === "string" ? value : String(value);
     }
 
@@ -83,17 +98,30 @@ function buildAlgorithmId(
     return `${name}|m=${mStr}|${argsStr}`;
 }
 
-
 export function normalizeRecords(records: ResponseRecord[]): Item[] {
     return records.map((rec, idx) => {
-        const xRaw = rec.series.arguments?.x ?? null;
-        const x = typeof xRaw === "number" ? xRaw : 0;
+        // x может быть number|string|null
+        const xRaw = (rec.series.arguments as any)?.x as NumLike;
+        const xNum = toNumber(xRaw);
+        const x = Number.isNaN(xNum) ? 0 : xNum;
+
+        // lim тоже number|string|null
+        const limRaw = rec.series.lim as NumLike;
+        const limNum =
+            limRaw === null || limRaw === undefined
+                ? NaN
+                : toNumber(limRaw);
+        const seriesLim = Number.isNaN(limNum) ? null : limNum;
 
         const algoArgs: AlgorithmArgs | null = normalizeAlgorithmArgs(
             rec.accel.additional_args ?? null
         );
 
-        const m = rec.accel.m_value ?? null;
+        // m_value: number|string|null
+        const mRaw = rec.accel.m_value as NumLike;
+        const mNum =
+            mRaw === null || mRaw === undefined ? NaN : toNumber(mRaw);
+        const m = Number.isNaN(mNum) ? null : mNum;
 
         const algorithmId = buildAlgorithmId(
             rec.accel.name,
@@ -102,11 +130,11 @@ export function normalizeRecords(records: ResponseRecord[]): Item[] {
         );
 
         return {
-            id: rec.stack_id ?? String(idx), // при желании можно заменить на crypto.randomUUID()
+            id: rec.stack_id ?? String(idx), // можно заменить на crypto.randomUUID()
             series: {
                 x,
                 seriesName: rec.series.name,
-                seriesLim: rec.series.lim ?? null,
+                seriesLim,
                 seriesArgs: { x },
             },
             algorithm: {
