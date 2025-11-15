@@ -8,9 +8,7 @@
   "trial_process_count": 8,
   "trial_task_timeout": 5,
   "no_events": false,
-  "no_json_export": true,
-  "no_csv_export": true,
-  "precisions": ["FLong", "F64", "F32"],
-  "with_mongo": true,
+  "precisions": ["F32"],
+  "output_formats": ["mongodb"],
   "verbose": 1
 }

@@ -5,9 +5,7 @@ from src.db import MongoDatabase
 from src.viz.collector import MongoDataCollector
 
 
-def handle_viz_command(
-    config: VizConfig, mongo_database: MongoDatabase | None
-):
+def handle_viz_command(config: VizConfig, mongo_database: MongoDatabase | None):
     if mongo_database is None:
         raise RuntimeError("MongoDB data source is only available")
     collector = MongoDataCollector(mongo_database, config.mongo_collection)
