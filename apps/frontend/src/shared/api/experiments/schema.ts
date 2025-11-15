@@ -7,7 +7,7 @@ export const ResponseSeriesSchema = z
         name: z.string(),
         arguments: z
             .object({
-                x: z.number().nullable().optional(),
+                x: NumOrStr,
             })
             .loose(),
         lim: NumOrStr,
@@ -17,7 +17,7 @@ export const ResponseSeriesSchema = z
 export const ResponseAccelSchema = z
     .object({
         name: z.string(),
-        m_value: z.number().nullable().optional(),
+        m_value: NumOrStr,
         additional_args: z
             .object({
                 epsilon_threshold: z.string().optional(),
@@ -30,7 +30,7 @@ export const ResponseAccelSchema = z
 
 export const ResponseComputedSchema = z
     .object({
-        n: z.number(),
+        n: NumOrStr,
         series_value: NumOrStr,
         partial_sum: NumOrStr,
         partial_sum_deviation: NumOrStr,
@@ -41,8 +41,8 @@ export const ResponseComputedSchema = z
 
 export const ResponseEventDataSchema = z
     .object({
-        computed_index: z.number().optional(),
-        description: z.string().optional(),
+        computed_index: NumOrStr,
+        description: NumOrStr,
     })
     .loose();
 
