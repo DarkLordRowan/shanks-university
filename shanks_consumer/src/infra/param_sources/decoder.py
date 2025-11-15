@@ -1,7 +1,6 @@
 import json
 
 import pyshanks as ps
-
 from src.domain.precision import PrecisionType, is_arb_precision
 
 

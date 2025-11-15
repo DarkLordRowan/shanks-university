@@ -1,7 +1,6 @@
 from typing import Any, Iterable, Mapping
 
 import pyshanks as ps
-
 from src.domain.application.param_processing import autowrap
 from src.domain.params import AccelParamJSON
 from src.domain.precision import PrecisionType, cast_real_subtype_value

@@ -1,30 +1,18 @@
 from dotenv import load_dotenv
 
-from src.args import create_parser
-from src.cmd import handle_run_command
-from src.config import load_trial_config, load_viz_config
-
-from src.logger import setup_logging
+from src.cli import load_config_and_apply_argparse
+from src.cmd.run_cmd import handle_run_command
 
 
 def main():
-    parser = create_parser()
-    args = parser.parse_args()
-
     load_dotenv()
 
-    match args.command:
-        case "run":
-            config = load_trial_config(args)
-            setup_logging(config.verbose)
-            handle_run_command(config)
-        case "viz":
-            config = load_viz_config(args)
-            setup_logging(config.verbose)
-            # handle_viz_command(config)
-        case _:
-            parser.print_help()
-            exit(1)
+    config, args = load_config_and_apply_argparse()
+
+    if args.command == "run":
+        handle_run_command(config)
+    else:
+        raise RuntimeError(f"Unknown command: {args.command}")
 
 
 if __name__ == "__main__":

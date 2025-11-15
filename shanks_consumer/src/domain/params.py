@@ -12,7 +12,6 @@ from dataclasses import dataclass
 from typing import Any, Generic, Mapping, override
 
 import pyshanks as ps
-
 from src.domain.precision import (
     AccelProto,
     PrecisionType,

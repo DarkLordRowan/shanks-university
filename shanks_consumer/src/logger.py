@@ -49,3 +49,5 @@ def setup_logging(verbose: int, use_colors: bool = True):
         root_logger.removeHandler(existing_handler)
 
     root_logger.addHandler(handler)
+
+    return root_logger
