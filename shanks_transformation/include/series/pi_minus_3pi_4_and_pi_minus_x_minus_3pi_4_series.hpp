@@ -31,7 +31,7 @@ public:
 		
 		using std::isfinite;
 
-        return !isfinite(x) || abs(x) >= static_cast<T>(std::numbers::pi);;
+        return !isfinite(x) || abs(x) >= static_cast<T>(std::numbers::pi);
 
 
 	}
@@ -71,8 +71,8 @@ series_result<T> pi_minus_3pi_4_and_pi_minus_x_minus_3pi_4_series<T, K>::generat
 	using std::cos;
 
 	for(K j = static_cast<K>(0); j < vecSize; ++j){
-		vecAn[j] += (static_cast<T>(1) + minus_one_raised_to_power_n<T, K>(j)) / (static_cast<T>(std::numbers::pi) * static_cast<T>((j+1) * (j+1))) * cos(static_cast<T>(j+1) * x) +
-		minus_one_raised_to_power_n<T,K>(j+1) / static_cast<T>(j+1) * sin(static_cast<T>(j+1) * x);
+		vecAn[j] += (static_cast<T>(1) + utils::minus_one_raised_to_power_n<T, K>(j)) / (static_cast<T>(std::numbers::pi) * static_cast<T>((j+1) * (j+1))) * cos(static_cast<T>(j+1) * x) +
+		utils::minus_one_raised_to_power_n<T,K>(j+1) / static_cast<T>(j+1) * sin(static_cast<T>(j+1) * x);
 		vecSn[j] += vecSn[j == static_cast<K>(0) ? j : j-static_cast<K>(1)] + vecAn[j];
 	}
 
@@ -149,8 +149,8 @@ series_result<complex_precision<T>> pi_minus_3pi_4_and_pi_minus_x_minus_3pi_4_se
 	using std::cos;
 
 	for(K j = static_cast<K>(0); j < vecSize; ++j){
-		vecAn[j] += (Complex(1) + minus_one_raised_to_power_n<Complex, K>(j)) / (Complex(std::numbers::pi) * Complex((j+1) * (j+1))) * cos(Complex(j+1) * x) +
-		minus_one_raised_to_power_n<Complex,K>(j+1) / Complex(j+1) * sin(Complex(j+1) * x);
+		vecAn[j] += (Complex(1) + utils::minus_one_raised_to_power_n<Complex, K>(j)) / (Complex(std::numbers::pi) * Complex((j+1) * (j+1))) * cos(Complex(j+1) * x) +
+		utils::minus_one_raised_to_power_n<Complex,K>(j+1) / Complex(j+1) * sin(Complex(j+1) * x);
 		vecSn[j] += vecSn[j == static_cast<K>(0) ? j : j-static_cast<K>(1)] + vecAn[j];
 	}
 

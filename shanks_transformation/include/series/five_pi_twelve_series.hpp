@@ -70,7 +70,7 @@ series_result<T> five_pi_twelve_series<T, K>::generate_series(
 	vecSn[0] = static_cast<T>(-5) * x / static_cast<T>(3);
 
 	for(K j = static_cast<K>(1); j < vecSize; ++j){
-		vecAn[j] += minus_one_raised_to_power_n<T,K>(j % 3) * x / static_cast<T>(fma(2,j,1));
+		vecAn[j] += utils::minus_one_raised_to_power_n<T,K>(j % 3) * x / static_cast<T>(fma(2,j,1));
 		vecSn[j] += vecSn[j-static_cast<K>(1)] + vecAn[j];
 	}
 

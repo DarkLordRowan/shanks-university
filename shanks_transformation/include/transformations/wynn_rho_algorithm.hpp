@@ -43,10 +43,11 @@ class wynn_rho_algorithm final : public series_acceleration<T, K>
 {
 protected:
 
-	std::unique_ptr<const numerator_base<T, K>> numerator;				/**< Numerator computation strategy */
-	T gamma_in_use;															/**< Gamma parameter for generalized rho transformation */
-	T rho_in_use;																/**< Rho parameter for gamma-rho variant */
+	std::unique_ptr<const numerator_base<T, K>> numerator;			  /**< Numerator computation strategy */
+	T gamma_in_use;													  /**< Gamma parameter for generalized rho transformation */
+	T rho_in_use;													  /**< Rho parameter for gamma-rho variant */
 	numerator_type numerator_type_in_use = numerator_type::rho_type;  /**< numerator type in use needed for calculating required size */
+
 
 public:
 

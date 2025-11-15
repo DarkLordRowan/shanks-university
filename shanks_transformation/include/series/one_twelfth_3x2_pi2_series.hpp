@@ -71,7 +71,7 @@ series_result<T> one_twelfth_3x2_pi2_series<T, K>::generate_series(
     using std::cos;
 
 	for(K j = static_cast<K>(0); j < vecSize; ++j){
-		vecAn[j] += minus_one_raised_to_power_n<T, K>(j+1) * cos(static_cast<T>(j+1) * x) / static_cast<T>((j + 1) * (j + 1));
+		vecAn[j] += utils::minus_one_raised_to_power_n<T, K>(j+1) * cos(static_cast<T>(j+1) * x) / static_cast<T>((j + 1) * (j + 1));
 		vecSn[j] += vecSn[j == static_cast<K>(0) ? j : j-static_cast<K>(1)] + vecAn[j];
 	}
 

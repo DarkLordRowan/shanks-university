@@ -76,7 +76,7 @@ series_result<T> series_with_ln_number1_series<T, K>::generate_series(
 		j1 = static_cast<T>(j + 1);
 		j1_2 = j1 * j1;
 
-		vecAn[j] += log(static_cast<T>(1) + pow(j1, j1_2 + j1 * static_cast<T>(0.5)) / (pow(static_cast<T>(fact<K>(j+1)), j1) * exp(j1_2))) * x;
+		vecAn[j] += log(static_cast<T>(1) + pow(j1, j1_2 + j1 * static_cast<T>(0.5)) / (pow(static_cast<T>(utils::fact<K>(j+1)), j1) * exp(j1_2))) * x;
 		vecSn[j] += vecSn[j == static_cast<K>(0) ? j : j-static_cast<K>(1)] + vecAn[j];
 	}
 

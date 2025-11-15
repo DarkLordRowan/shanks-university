@@ -34,7 +34,7 @@
  * @tparam series_templ Type of series object to accelerate. Must provide:
  *           - T operator()(K n) const: returns the n-th series term aₙ
  *           - T S_n(K n) const: returns the n-th partial sum sₙ = a₀ + ... + aₙ
- *           - T minus_one_raised_to_power_n(K n) const: returns (-1)ⁿ
+ *           - T utils::minus_one_raised_to_power_n(K n) const: returns (-1)ⁿ
  *           - T binomial_coefficient(T n, K k) const: returns binomial coefficient C(n, k)
  */
 template<AcceptedLike T, UnsignedIntLike K>
@@ -108,7 +108,7 @@ T weniger_algorithm<T, K>::operator()(
 
 	// For theory, see: Weniger (1989), Eq. (8.2-7) recursive computation
 	// Initial binomial coefficient: C(order, 0) = 1
-	T binomial_coef = static_cast<T>(binomial_coefficient(n, static_cast<K>(0)));
+	T binomial_coef = static_cast<T>(utils::binomial_coefficient(n, static_cast<K>(0)));
 
 	// Precompute initial value: (1)ₖ₋₁ = (k-1)!
 	for (K m = static_cast<K>(0); m < order - static_cast<K>(1); ++m)
@@ -126,7 +126,7 @@ T weniger_algorithm<T, K>::operator()(
 		// Term sign: (-1)ʲ
 
 		rest = static_cast<T>(1.0); //need to set precision before doing anything
-		rest*= minus_one_raised_to_power_n<T,K>(j);
+		rest*= utils::minus_one_raised_to_power_n<T,K>(j);
 
 		// Binomial coefficient: C(order, j)
 		rest *= binomial_coef;
@@ -253,7 +253,7 @@ float_precision weniger_algorithm<float_precision, K>::operator()(
 
 	// For theory, see: Weniger (1989), Eq. (8.2-7) recursive computation
 	// Initial binomial coefficient: C(order, 0) = 1
-	float_precision binomial_coef = float_precision(binomial_coefficient(n, static_cast<K>(0)));
+	float_precision binomial_coef = float_precision(utils::binomial_coefficient<K>(n, static_cast<K>(0)));
 
 	// Precompute initial value: (1)ₖ₋₁ = (k-1)!
 	for (K m = static_cast<K>(0); m < order - static_cast<K>(1); ++m)
@@ -271,7 +271,7 @@ float_precision weniger_algorithm<float_precision, K>::operator()(
 		// Term sign: (-1)ʲ
 
 		rest = float_precision(1, precision); //need to set precision before doing anything
-		rest*= minus_one_raised_to_power_n<float_precision,K>(j);
+		rest*= utils::minus_one_raised_to_power_n<float_precision,K>(j);
 
 		// Binomial coefficient: C(order, j)
 		rest *= binomial_coef;
@@ -403,7 +403,7 @@ complex_precision<float_precision> weniger_algorithm<complex_precision<float_pre
 
 	// For theory, see: Weniger (1989), Eq. (8.2-7) recursive computation
 	// Initial binomial coefficient: C(order, 0) = 1
-	complex_precision<float_precision> binomial_coef = complex_precision<float_precision>(binomial_coefficient(n, static_cast<K>(0)));
+	complex_precision<float_precision> binomial_coef = complex_precision<float_precision>(utils::binomial_coefficient<K>(n, static_cast<K>(0)));
 
 	// Precompute initial value: (1)ₖ₋₁ = (k-1)!
 	for (K m = static_cast<K>(0); m < order - static_cast<K>(1); ++m)
@@ -424,7 +424,7 @@ complex_precision<float_precision> weniger_algorithm<complex_precision<float_pre
 			float_precision(1, precision),
 			float_precision(0, precision)
 		); //need to set precision before doing anything
-		rest*= minus_one_raised_to_power_n<complex_precision<float_precision>,K>(j);
+		rest*= utils::minus_one_raised_to_power_n<complex_precision<float_precision>,K>(j);
 
 		// Binomial coefficient: C(order, j)
 		rest *= binomial_coef;

@@ -66,7 +66,7 @@ series_result<T> x_series<T, K>::generate_series(
 	using std::sin;
 
 	for(K j = static_cast<K>(0); j < vecSize; ++j){
-		vecAn[j] += static_cast<T>(2) * minus_one_raised_to_power_n<T, K>(j) / static_cast<T>(j+1) * sin(static_cast<T>(j+1) * x);
+		vecAn[j] += static_cast<T>(2) * utils::minus_one_raised_to_power_n<T, K>(j) / static_cast<T>(j+1) * sin(static_cast<T>(j+1) * x);
 		vecSn[j] += vecSn[j == static_cast<K>(0) ? j : j-static_cast<K>(1)] + vecAn[j];
 	}
 
@@ -138,7 +138,7 @@ series_result<complex_precision<T>> x_series<complex_precision<T>, K>::generate_
 	using std::sin;
 
 	for(K j = static_cast<K>(0); j < vecSize; ++j){
-		vecAn[j] += Complex(2) * minus_one_raised_to_power_n<Complex, K>(j) / Complex(j+1) * sin(Complex(j+1) * x);
+		vecAn[j] += Complex(2) * utils::minus_one_raised_to_power_n<Complex, K>(j) / Complex(j+1) * sin(Complex(j+1) * x);
 		vecSn[j] += vecSn[j == static_cast<K>(0) ? j : j-static_cast<K>(1)] + vecAn[j];
 	}
 

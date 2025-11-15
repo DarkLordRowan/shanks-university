@@ -1,4 +1,5 @@
-#pragma once
+#ifndef UTILS_HPP
+#define UTILS_HPP
 
 #include "custom_concepts.hpp"
 #include <numbers>
@@ -9,8 +10,27 @@ struct series_result{
 	std::vector<T> an;
 };
 
+struct utils {
+
+	template<AcceptedLike T, UnsignedIntLike K>
+	constexpr static const T phi(K n);
+
+	template<UnsignedIntLike K>
+	constexpr static const K fact(const K n);
+
+	template<UnsignedIntLike K>
+	constexpr static const K double_fact(const K n);
+
+	template<UnsignedIntLike K>
+	constexpr static const K binomial_coefficient(const K n, const K k);
+
+	template<AcceptedLike T, UnsignedIntLike K>
+	constexpr static const T minus_one_raised_to_power_n(const K j);
+
+};
+
 template <AcceptedLike T, UnsignedIntLike K>
-constexpr const T phi(K n)
+constexpr const T utils::phi(K n)
 {
 	K result = n;
 	for (K i = 2; i * i <= n; ++i)
@@ -25,7 +45,7 @@ constexpr const T phi(K n)
 }
 
 template<UnsignedIntLike K>
-constexpr const K fact(const K n) {
+constexpr const K utils::fact(const K n) {
 	K fact = static_cast<K>(1);
 	for(K j = static_cast<K>(2); j <= n; ++j){
 		fact *= j;
@@ -34,7 +54,7 @@ constexpr const K fact(const K n) {
 }
 
 template<UnsignedIntLike K>
-constexpr const K double_fact(const K n) {
+constexpr const K utils::double_fact(const K n) {
 
 	K double_fact = static_cast<K>(1);
 
@@ -46,7 +66,7 @@ constexpr const K double_fact(const K n) {
 }
 
 template<UnsignedIntLike K>
-constexpr const K binomial_coefficient(const K n, const K k) {
+constexpr const K utils::binomial_coefficient(const K n, const K k) {
 
 	if(n<k)
 		throw std::invalid_argument("n>k");
@@ -67,36 +87,28 @@ constexpr const K binomial_coefficient(const K n, const K k) {
 }
 
 template<AcceptedLike T, UnsignedIntLike K>
-T minus_one_raised_to_power_n(K j){
+constexpr const T utils::minus_one_raised_to_power_n(const K j){
     return static_cast<T>(j & 1 ? -1 : 1);
 }
 
 #ifdef INC_COMPLEXPRECISION
-
 //CUSTOM DEFINITIONS FOR ISFINITE, FMA, JUST FOR EVERYTHING TO WORK
-
-template<class _Ty> inline complex_precision<_Ty> hypot(const complex_precision<_Ty>& x, const complex_precision<_Ty>& y){ return sqrt(x * x + y *y ); }
-
+template<class _Ty> inline complex_precision<_Ty> hypot(const complex_precision<_Ty>& x, const complex_precision<_Ty>& y){ return sqrt(x * x + y * y ); }
 template<class _Ty> inline bool isfinite(const complex_precision<_Ty>& x){ 
-
    using std::isfinite;
-   
+
    return isfinite(x.real()) && isfinite(x.imag()); 
 }
-
 template<class _Ty> inline complex_precision<_Ty> fma(complex_precision<_Ty> x, complex_precision<_Ty> y, complex_precision<_Ty> z){
-
    _Ty real_part = x.real() * y.real() - x.imag() * y.imag() + z.real();
    _Ty imag_part = x.real() * y.imag() + y.real() * x.imag() + z.imag() ;
-
    complex_precision<_Ty> res(real_part, imag_part);
-
    return res;
 }
-
 template<class _Ty> inline std::string to_string(const complex_precision<_Ty>& x){ 
    using std::to_string;
    return to_string(x.real()) + " + " +to_string(x.imag()) + " * i";
 }
+#endif
 
 #endif
