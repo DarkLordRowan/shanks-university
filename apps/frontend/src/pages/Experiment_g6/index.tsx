@@ -25,7 +25,7 @@ export default function Experiment_g6() {
 
             <AlgorithmSeriesErrorMatrix
                 items={items}
-                maxSeries={20}
+                maxSeries={40}
             />
             <div>
                 {items.length > 0 && (
