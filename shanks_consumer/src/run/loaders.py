@@ -8,7 +8,6 @@ from src.run.params import AccelParamJSON, SeriesParamCSV, SeriesParamJSON
 from src.run.precision import (
     PrecisionType,
     cast_precision_value,
-    cast_real_subtype_value,
     is_arb_precision,
 )
 
@@ -168,21 +167,7 @@ class AccelParamLoader:
 
             args = {}
             for key, value in method_data.get("args", {}).items():
-                key_str = str(key)
-                values = list(autowrap(value))
-
-                if key_str == "remainder":
-                    args[key_str] = [getattr(ps.RemainderType, str(v)) for v in values]
-                elif key_str == "numerator":
-                    args[key_str] = [getattr(ps.NumeratorType, str(v)) for v in values]
-                else:
-                    converted: list[Any] = []
-                    for item in values:
-                        if isinstance(item, bool):
-                            converted.append(item)
-                        else:
-                            converted.append(cast_real_subtype_value(precision, item))
-                    args[key_str] = converted
+                args[str(key)] = list(autowrap(value))
 
             methods_list.append(
                 AccelParamJSON(

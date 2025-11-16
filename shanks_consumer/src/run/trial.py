@@ -7,8 +7,9 @@ from typing import Any, Callable, Mapping, TypeGuard
 
 from tqdm import tqdm  # type: ignore[import]
 
+from pyshanks.pyshanks import NumeratorType, RemainderType
 from src.run.params import BaseAccelParam, BaseSeriesParam, PrecisionType
-from src.run.precision import SeriesBaseProto, cast_precision_value
+from src.run.precision import SeriesBaseProto, SeriesResultProto, cast_precision_value
 
 logger = logging.getLogger(__name__)
 
@@ -18,246 +19,67 @@ def _is_series_generator(candidate: object) -> TypeGuard[SeriesBaseProto[Any]]:
 
 
 @dataclass
-class ComputedTrialResult:
+class SeriesPoint:
     n: int
-    series_value: Any
-    partial_sum: Any
-    partial_sum_deviation: Any
-    accel_value: Any
-    accel_value_deviation: Any
+    value: Any
 
 
 @dataclass
-class ErrorTrialResult:
-    description: str | None
-    data: Mapping[str, Any]
-
-
-NoErrorTrialResult = None
+class SeriesRecord:  # stored in parquet/series
+    series_name: str  # partitioned by series name
+    series_id: int
+    precision: PrecisionType
+    source_arguments: dict[str, str]
+    series_limit: Any
+    computed: list[SeriesPoint]
 
 
 @dataclass
-class SeriesTrialResult:
+class ErrorRecord:
+    message: str
+    data: dict[str, Any]
+
+
+@dataclass
+class EventRecord:
     name: str
-    lim: Any
-    arguments: Mapping[str, Any]
+    data: dict[str, Any]
 
 
 @dataclass
-class AccelTrialResult:
-    name: str
+class AccelRecord:  # stored in parquet/accerations
+    series_id: int  # partitioned by series_id
+    accel_name: str
     m_value: int
-    additional_args: Mapping[str, str]
+    source_additional_args: dict
+    computed: list[Any]  # zipped with series.computed
+    errors: list[ErrorRecord] | None = None
+    events: list[EventRecord] | None = None
 
 
-@dataclass
-class EventTrialResult:
-    event: str
-    data: dict
+def execute_accels(
+    precision: PrecisionType,
+    series_id: int,
+    series_result: SeriesResultProto,
+    accels: BaseAccelParam,
+    series_limit: Any,
+) -> list[AccelRecord]:
+    accel_records = []
 
-
-@dataclass
-class EventDataTrialResult:
-    computed_index: int
-    description: str
-
-
-@dataclass
-class TrialResult:
-    series: SeriesTrialResult
-    accel: AccelTrialResult
-    computed: list[ComputedTrialResult]
-    error: ErrorTrialResult | None = None
-    stack_id: str | None = None
-    precision: PrecisionType = PrecisionType.F64
-    events: list[EventTrialResult] | None = field(default=None, init=False, repr=False)
-
-    def load_events(self) -> "TrialResult":
-        if self.events is None:
-            self.events = self._lazy_events()
-
-        return self
-
-    def _lazy_events(self) -> list[EventTrialResult]:
-        def _slow_accel_method(result: TrialResult) -> dict | None:
-            for i, compute in enumerate(result.computed):
-                if compute.accel_value_deviation < compute.partial_sum_deviation:
-                    return asdict(
-                        EventDataTrialResult(
-                            computed_index=i,
-                            description=f"accel_value_deviation"
-                            f"{compute.accel_value_deviation}\n"
-                            " is lesser than partial_sum_deviation"
-                            f"{compute.partial_sum_deviation}",
-                        )
-                    )
-            return None
-
-        def _divergent_accel_method(result: TrialResult) -> dict | None:
-            for i in range(1, len(result.computed)):
-                if (
-                    result.computed[i - 1].accel_value_deviation
-                    < result.computed[i].accel_value_deviation
-                ):
-                    return asdict(
-                        EventDataTrialResult(
-                            computed_index=i,
-                            description=f"accel_value_deviation"
-                            f"{result.computed[i - 1].accel_value_deviation}\n"
-                            f"from a previous iteration {i - 1}\n"
-                            f"is lesser than current accel_value_deviation"
-                            f"{result.computed[i].accel_value_deviation}",
-                        )
-                    )
-            return None
-
-        _scan_methods: dict[str, Callable] = {
-            "slow_accel_method": _slow_accel_method,
-            "divergent_accel_method": _divergent_accel_method,
+    for series_argument_list in itertools.product(*accels.additional_args.values()):
+        source_arguments = {
+            k: v for k, v in zip(accels.additional_args.keys(), series_argument_list)
         }
+        arguments = {k: convert_arg(k, v) for k, v in source_arguments.items()}
 
-        events = []
-
-        for name, method in _scan_methods.items():
-            event_data = method(self)
-            if event_data:
-                events.append(EventTrialResult(name, event_data))
-        return events
-
-
-def execute_trial(
-    series_accel: tuple[BaseSeriesParam, BaseAccelParam],
-) -> list[TrialResult]:
-    series, accel = series_accel
-
-    n_values = list(accel.n_values)
-    m_values = list(accel.m_values)
-    if not n_values or not m_values:
-        raise ValueError(
-            f"Acceleration '{accel.accel_name}' must provide both n and m values."
-        )
-
-    series_arg_items = list(series.arguments.items())
-    series_arg_keys = [name for name, _ in series_arg_items]
-    series_arg_values = [list(values) for _, values in series_arg_items]
-    series_argument_combos = (
-        list(itertools.product(*series_arg_values)) if series_arg_keys else [()]
-    )
-
-    accel_arg_items = list(accel.additional_args.items())
-    accel_arg_keys = [name for name, _ in accel_arg_items]
-    accel_arg_values = [list(values) for _, values in accel_arg_items]
-    accel_argument_combos = (
-        list(itertools.product(*accel_arg_values)) if accel_arg_keys else [()]
-    )
-
-    size_floor = max(10, max(n_values) + max(m_values) + 5)
-    series_precision = getattr(series, "precision", PrecisionType.F64)
-
-    results: list[TrialResult] = []
-
-    for argument_combo in series_argument_combos:
-        argument = dict(zip(series_arg_keys, argument_combo))
         try:
-            series_candidate = series.executable()
-            if not _is_series_generator(series_candidate):
-                msg = f"Series executable '{series.series_name}' did not return a valid generator"
-                raise TypeError(msg)
-            series_instance = series_candidate
+            accel_instance = accels.executable(**arguments)
+            for m_value in accels.m_values:
+                computed_values = [None] * max(accels.n_values, default=0)
+                errors = []
+                events = []
 
-            vec_size = int(argument.get("vecSize", size_floor))
-            vec_size = max(vec_size, size_floor)
-
-            default_t = cast_precision_value(series_precision, 1)
-            add_t_value = argument.get("addTParameter", argument.get("a", default_t))
-
-            add_k_source = argument.get(
-                "addKParameter", argument.get("m", argument.get("b", 1))
-            )
-            add_k_value = int(add_k_source) if add_k_source is not None else 1
-
-            default_x = cast_precision_value(series_precision, 0)
-            x_value = argument.get("x", default_x)
-
-            series_result = series_instance.generateSeries(
-                x_value,
-                vec_size,
-                add_t_value,
-                add_k_value,
-            )
-            series_lim = series_instance.get_sum()
-        except Exception as exc:
-            for accel_combo in accel_argument_combos:
-                additional_args = dict(zip(accel_arg_keys, accel_combo))
-                additional_args_display = {
-                    key: str(value) for key, value in additional_args.items()
-                }
-                for m_value in m_values:
-                    results.append(
-                        TrialResult(
-                            SeriesTrialResult(
-                                name=series.series_name,
-                                lim=None,
-                                arguments=dict(argument),
-                            ),
-                            AccelTrialResult(
-                                name=accel.accel_name,
-                                m_value=m_value,
-                                additional_args=additional_args_display,
-                            ),
-                            computed=[],
-                            error=ErrorTrialResult(
-                                str(exc),
-                                {
-                                    "argument": dict(argument),
-                                    "additional_args": additional_args_display,
-                                    "m": m_value,
-                                },
-                            ),
-                            precision=series_precision,
-                        )
-                    )
-            continue
-
-        for accel_combo in accel_argument_combos:
-            additional_args = dict(zip(accel_arg_keys, accel_combo))
-            additional_args_display = {
-                key: str(value) for key, value in additional_args.items()
-            }
-            try:
-                accel_instance = accel.executable(*accel_combo)
-            except Exception as exc:
-                for m_value in m_values:
-                    results.append(
-                        TrialResult(
-                            SeriesTrialResult(
-                                name=series.series_name,
-                                lim=series_lim,
-                                arguments=dict(argument),
-                            ),
-                            AccelTrialResult(
-                                name=accel.accel_name,
-                                m_value=m_value,
-                                additional_args=additional_args_display,
-                            ),
-                            computed=[],
-                            error=ErrorTrialResult(
-                                str(exc),
-                                {
-                                    "argument": dict(argument),
-                                    "additional_args": additional_args_display,
-                                    "m": m_value,
-                                },
-                            ),
-                            precision=series_precision,
-                        )
-                    )
-                continue
-
-            for m_value in m_values:
-                computed: list[ComputedTrialResult] = []
-                error: ErrorTrialResult | None = None
-                for n_value in n_values:
+                for n_value in accels.n_values:
                     try:
                         if n_value <= 0:
                             raise ValueError("n must be positive")
@@ -266,56 +88,206 @@ def execute_trial(
                             raise IndexError(
                                 f"Generated series size {len(series_result.Sn)} is insufficient for n={n_value}"
                             )
-                        partial_sum = series_result.Sn[index]
-                        series_term = series_result.an[index]
+
+                        # accel_instance returns a SINGLE computed point for this n
                         accel_value = accel_instance(n_value, m_value, series_result)
-                        computed.append(
-                            ComputedTrialResult(
-                                n=n_value,
-                                series_value=series_term,
-                                partial_sum=partial_sum,
-                                partial_sum_deviation=abs(partial_sum - series_lim),
-                                accel_value=accel_value,
-                                accel_value_deviation=abs(accel_value - series_lim),
+                        computed_values[n_value - 1] = accel_value
+
+                        # Check for events (e.g., acceleration is better than partial sum)
+                        if index < len(series_result.Sn):
+                            partial_sum = series_result.Sn[index]
+
+                            if series_limit is not None:
+                                accel_deviation = abs(accel_value - series_limit)
+                                partial_sum_deviation = abs(partial_sum - series_limit)
+
+                                # Event: acceleration deviation is less than partial sum deviation
+                                if accel_deviation < partial_sum_deviation:
+                                    events.append(
+                                        EventRecord(
+                                            name="accel_better_than_partial",
+                                            data={
+                                                "n": n_value,
+                                                "description": f"accel_value_deviation {accel_deviation} is lesser than partial_sum_deviation {partial_sum_deviation}",
+                                            },
+                                        )
+                                    )
+
+                                # Event: acceleration is diverging (deviation increases)
+                                if len(computed_values) > 1:
+                                    prev_accel_value = computed_values[-2]
+                                    prev_deviation = abs(
+                                        prev_accel_value - series_limit
+                                    )
+                                    if prev_deviation < accel_deviation:
+                                        events.append(
+                                            EventRecord(
+                                                name="divergent_accel_method",
+                                                data={
+                                                    "n": n_value,
+                                                    "description": f"accel_value_deviation from previous iteration {prev_deviation} is lesser than current accel_value_deviation {accel_deviation}",
+                                                },
+                                            )
+                                        )
+
+                    except Exception as exc:
+                        # Record error for this specific n_value
+                        errors.append(
+                            ErrorRecord(
+                                message=str(exc),
+                                data={
+                                    "n": n_value,
+                                    "m": m_value,
+                                    "arguments": source_arguments,
+                                },
                             )
                         )
-                    except Exception as exc:
-                        error = ErrorTrialResult(
-                            str(exc),
-                            {
-                                "n": n_value,
-                                "m": m_value,
-                                "argument": dict(argument),
-                                "additional_args": additional_args_display,
-                            },
-                        )
-                        break
+                        continue
 
-                results.append(
-                    TrialResult(
-                        SeriesTrialResult(
-                            name=series.series_name,
-                            lim=series_lim,
-                            arguments=dict(argument),
-                        ),
-                        AccelTrialResult(
-                            name=accel.accel_name,
-                            m_value=m_value,
-                            additional_args=additional_args_display,
-                        ),
-                        computed=computed,
-                        error=error or NoErrorTrialResult,
-                        precision=series_precision,
+                accel_records.append(
+                    AccelRecord(
+                        series_id=series_id,
+                        accel_name=accels.accel_name,
+                        m_value=m_value,
+                        source_additional_args=source_arguments,
+                        computed=computed_values,
+                        errors=errors if errors else None,
+                        events=events if events else None,
                     )
                 )
 
-    return results
+        except Exception as exc:
+            # Create error records for all m_values if accel instantiation fails
+            for m_value in accels.m_values:
+                accel_records.append(
+                    AccelRecord(
+                        series_id=series_id,
+                        accel_name=accels.accel_name,
+                        m_value=m_value,
+                        source_additional_args=source_arguments,
+                        computed=[],
+                        errors=[
+                            ErrorRecord(
+                                message=str(exc),
+                                data={
+                                    "m": m_value,
+                                    "arguments": source_arguments,
+                                },
+                            )
+                        ],
+                        events=None,
+                    )
+                )
+            continue
+
+    return accel_records
+
+
+def convert_arg(key, value):
+    if key == "remainder":
+        return getattr(RemainderType, str(value))
+    elif key == "numerator":
+        return getattr(NumeratorType, str(value))
+    else:
+        return value
+
+
+def _process_combination_worker(
+    args: tuple[PrecisionType, BaseSeriesParam, BaseAccelParam],
+) -> tuple[list[SeriesRecord], list[AccelRecord]]:
+    precision, series, accel = args
+    return execute_series_accels(precision, series, [accel])
+
+
+_fresh = 0
+
+
+def execute_series_accels(
+    precision: PrecisionType,
+    series: BaseSeriesParam,
+    related_accel: list[BaseAccelParam],
+) -> tuple[list[SeriesRecord], list[AccelRecord]]:
+    global _fresh
+    series_records, accel_records = [], []
+    for series_argument_list in itertools.product(*series.arguments.values()):
+        source_arguments = {
+            k: v for k, v in zip(series.arguments.keys(), series_argument_list)
+        }
+        arguments = {k: convert_arg(k, v) for k, v in source_arguments.items()}
+
+        max_n = max(
+            (max(accel.n_values, default=0) for accel in related_accel), default=0
+        )
+        max_m = max(
+            (max(accel.m_values, default=0) for accel in related_accel), default=0
+        )
+        size_floor = max(10, max_m + max_n + 5)
+
+        try:
+            series_candidate = series.executable()
+            if not _is_series_generator(series_candidate):
+                msg = f"Series executable '{series.series_name}' did not return a valid generator"
+                raise TypeError(msg)
+
+            vec_size = int(arguments.get("vecSize", size_floor))
+            vec_size = max(vec_size, size_floor)
+
+            default_t = cast_precision_value(precision, 1)
+            add_t_value = arguments.get("addTParameter", arguments.get("a", default_t))
+
+            add_k_source = arguments.get(
+                "addKParameter", arguments.get("m", arguments.get("b", 1))
+            )
+            add_k_value = int(add_k_source) if add_k_source is not None else 1
+
+            default_x = cast_precision_value(precision, 0)
+            x_value = arguments.get("x", default_x)
+
+            series_result = series_candidate.generateSeries(
+                x_value,
+                vec_size,
+                add_t_value,
+                add_k_value,
+            )
+            series_limit = series_candidate.get_sum()
+
+            series_id = _fresh
+            _fresh += 1
+
+            series_records.append(
+                SeriesRecord(
+                    series_name=series.series_name,
+                    series_id=series_id,
+                    precision=precision,
+                    source_arguments=source_arguments,
+                    series_limit=series_limit,
+                    computed=[
+                        SeriesPoint(n, value)
+                        for n, value in zip(
+                            range(1, len(series_result.an) + 1), series_result.an
+                        )  # TOO: an? sure?
+                    ],
+                )
+            )
+            for accel in related_accel:
+                accel_records += execute_accels(
+                    precision, series_id, series_result, accel, series_limit
+                )
+
+        except Exception as exc:
+            # TODO: NO NOTIFICATION OF ERRORS!
+            pass
+            # print("Couldn't run:" + str(series))
+            # print(exc)
+
+    return series_records, accel_records
 
 
 @dataclass
 class ComplexTrial:
     series_params: list[BaseSeriesParam]
     accel_params: list[BaseAccelParam]
+    precision: PrecisionType
 
     stack_id: str = field(default_factory=lambda: str(uuid.uuid4()))
     chunk_size: int = 1
@@ -331,87 +303,39 @@ class ComplexTrial:
             itertools.product(self.series_params, self.accel_params)
         )
 
-    def _execute_sequential(self) -> list[TrialResult]:
-        return list(
-            itertools.chain.from_iterable(
-                [
-                    execute_trial(series_accel)
-                    for series_accel in self._trial_combinations
-                ]
-            )
-        )
+    def execute(self) -> tuple[list[SeriesRecord], list[AccelRecord]]:
+        all_series_records = []
+        all_accel_records = []
 
-    def _execute_parallel(self) -> list[TrialResult]:
-        if not self._trial_combinations:
-            return []
-
-        num_processes = self.process_count or min(
-            mp.cpu_count(), len(self._trial_combinations)
-        )
-
-        try:
-            with mp.Pool(processes=num_processes) as pool:
-                results = []
-
-                pending_tasks = [
-                    (
-                        pool.apply_async(execute_trial, (combination,)),
-                        combination,
+        if self.process_count > 1:
+            # Use multiprocessing
+            with mp.Pool(self.process_count) as pool:
+                results = list(
+                    tqdm(
+                        pool.imap_unordered(
+                            _process_combination_worker,
+                            [
+                                (self.precision, series, accel)
+                                for series, accel in self._trial_combinations
+                            ],
+                        ),
+                        total=len(self._trial_combinations),
+                        desc="Processing combinations",
                     )
-                    for combination in self._trial_combinations
-                ]
+                )
 
-                with tqdm(
-                    total=len(self._trial_combinations),
-                    desc="Running trials",
-                    unit="trial",
-                    ncols=100,
-                ) as pbar:
-                    for async_result, combination in pending_tasks:
-                        try:
-                            trial_results = async_result.get(timeout=self.task_timeout)
-                            if trial_results:
-                                results.extend(trial_results)
-                        except mp.TimeoutError:
-                            series, accel = combination
-                            results.append(
-                                TrialResult(
-                                    SeriesTrialResult(
-                                        name=series.series_name,
-                                        lim=None,
-                                        arguments={},
-                                    ),
-                                    AccelTrialResult(
-                                        name=accel.accel_name,
-                                        m_value=-1,
-                                        additional_args={},
-                                    ),
-                                    computed=[],
-                                    error=ErrorTrialResult(
-                                        "Trial execution failed:"
-                                        " execution time exceeded "
-                                        f"{self.task_timeout} seconds",
-                                        data={
-                                            "series": series,
-                                            "accel": accel,
-                                        },
-                                    ),
-                                    precision=getattr(
-                                        series, "precision", PrecisionType.F64
-                                    ),
-                                )
-                            )
-                        finally:
-                            pbar.update(1)
-                return results
-        except Exception:
-            # ! emergency fallback
-            return self._execute_sequential()
+                for series_records, accel_records in results:
+                    all_series_records.extend(series_records)
+                    all_accel_records.extend(accel_records)
+        else:
+            # Single process with progress bar
+            for series, accel in tqdm(
+                self._trial_combinations, desc="Processing combinations"
+            ):
+                series_records, accel_records = execute_series_accels(
+                    self.precision, series, [accel]
+                )
+                all_series_records.extend(series_records)
+                all_accel_records.extend(accel_records)
 
-    def execute(self) -> list[TrialResult]:
-        results = self._execute_parallel()
-
-        for result in results:
-            result.stack_id = self.stack_id
-
-        return results
+        return all_series_records, all_accel_records

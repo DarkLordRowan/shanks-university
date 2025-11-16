@@ -1,353 +1,192 @@
-import csv
-import io
 import json
 import pathlib
-from collections.abc import Mapping, Sequence
-from dataclasses import Field, asdict, fields, is_dataclass
-from typing import Any, Generator, cast
+from dataclasses import asdict, fields, is_dataclass
+from typing import Any, Sequence
 
 import pyarrow as pa
-import pyarrow.compute as pc
 import pyarrow.dataset as ds
-from pymongo.database import Database as MongoDatabase
 from tqdm import tqdm
 
 import pyshanks as ps
 from src.run.params import PrecisionType
-from src.run.trial import TrialResult
+from src.run.trial import AccelRecord, ErrorRecord, EventRecord, SeriesRecord
 
 
-def auto_field_prefix(outer_field: Field, prefix: str = "", separator: str = "_"):
-    return (
-        f"{prefix}{outer_field.name}{separator}"
-        if prefix
-        else f"{outer_field.name}{separator}"
-    )
-
-
-def flatten_dataclass(
-    obj: Any, prefix: str = "", separator: str = "_"
-) -> dict[str, Any]:
-    if not is_dataclass(obj):
-        return {}
-
-    result = {}
-    for _field in fields(obj):
-        field_value = getattr(obj, _field.name)
-
-        if is_dataclass(field_value):
-            nested = flatten_dataclass(
-                field_value,
-                auto_field_prefix(_field, prefix, separator),
-                separator,
-            )
-            result.update(nested)
-        else:
-            key = prefix + _field.name if prefix else _field.name
-            result[key] = field_value
-
-    return result
-
-
-def get_flattened_headers(
-    dataclass_type: Any,
-    prefix: str = "",
-    separator: str = "_",
-    exclude_fields: list[str] | None = None,
-):
-    if not is_dataclass(dataclass_type):
-        return [prefix.rstrip(separator)] if prefix else []
-
-    exclude_fields = exclude_fields or []
-
-    headers = []
-    for _field in fields(dataclass_type):
-        if _field.name in exclude_fields:
-            continue
-
-        field_type = _field.type
-        field_prefix = auto_field_prefix(_field, prefix, separator)
-
-        if is_dataclass(field_type):
-            nested_headers = get_flattened_headers(field_type, field_prefix, separator)
-            headers.extend(nested_headers)
-        else:
-            headers.append(field_prefix.rstrip(separator))
-
-    return headers
-
-
-# pyright: reportAttributeAccessIssue=false
-def get_expanded_field_headers(dataclass_type, field_name, separator="_"):
-    if not is_dataclass(dataclass_type):
-        return []
-
-    for _field in fields(dataclass_type):
-        if _field.name == field_name:
-            field_type = _field.type
-            if (
-                hasattr(field_type, "__origin__")
-                and field_type.__origin__ is list
-                and getattr(field_type, "__args__", None)
-                and is_dataclass(field_type.__args__[0])
-            ):
-                nested_type = field_type.__args__[0]
-                return get_flattened_headers(
-                    nested_type, prefix=f"{field_name}_", separator=separator
-                )
-    return []
-
-
-def _write_dataclasses_to_csv_writer(dataclasses, writer, expand_field, separator):
-    if not dataclasses:
-        return
-
-    for dataclass_obj in tqdm(dataclasses, desc="Exporting to CSV"):
-        if expand_field:
-            expand_data = getattr(dataclass_obj, expand_field)
-            if not isinstance(expand_data, list):
-                raise ValueError(f"Field '{expand_field}' must be a list")
-
-            base_data = {}
-            for _field in fields(dataclass_obj):
-                if _field.name != expand_field:
-                    field_value = getattr(dataclass_obj, _field.name)
-                    if is_dataclass(field_value):
-                        flattened_field = flatten_dataclass(
-                            field_value,
-                            prefix=f"{_field.name}_",
-                            separator=separator,
-                        )
-                        base_data.update(flattened_field)
-                    else:
-                        base_data[_field.name] = field_value
-
-            for item in expand_data:
-                item_flattened = flatten_dataclass(
-                    item, prefix=f"{expand_field}_", separator=separator
-                )
-                row_data = {**base_data, **item_flattened}
-                final_row = {
-                    header: row_data.get(header, "") for header in writer.fieldnames
-                }
-                writer.writerow(final_row)
-        else:
-            flattened = flatten_dataclass(dataclass_obj, separator=separator)
-            final_row = {
-                header: flattened.get(header, "") for header in writer.fieldnames
-            }
-            writer.writerow(final_row)
-
-
-def dataclasses_to_csv(dataclasses, location, expand_field=None, separator="_"):
-    if not dataclasses:
-        return
-
-    first_obj = dataclasses[0]
-
-    if expand_field:
-        base_headers = get_flattened_headers(
-            type(first_obj), separator=separator, exclude_fields=expand_field
-        )
-        expanded_headers = get_expanded_field_headers(
-            type(first_obj), expand_field, separator=separator
-        )
-        headers = base_headers + expanded_headers
+def sanitize_complex_value(value: Any) -> dict[str, str | None] | None:
+    """Convert complex numbers to {real: str, imag: str} format."""
+    if value is None:
+        return None
+    elif isinstance(value, (ps.CF32, ps.CF64, ps.CFLong, ps.CArb)):
+        return {"real": str(value.real), "imag": str(value.imag)}
+    elif isinstance(value, complex):
+        return {"real": str(value.real), "imag": str(value.imag)}
+    elif isinstance(value, (ps.Arb, float, int)):
+        return {"real": str(value), "imag": None}
     else:
-        headers = get_flattened_headers(type(first_obj), separator=separator)
-
-    with open(location, mode="w", encoding="utf-8", newline="") as f:
-        writer = csv.DictWriter(f, fieldnames=headers)
-        writer.writeheader()
-        _write_dataclasses_to_csv_writer(dataclasses, writer, expand_field, separator)
-
-
-def dataclasses_to_csv_text(dataclasses, expand_field=None, separator="_"):
-    if not dataclasses:
-        return ""
-
-    first_obj = dataclasses[0]
-
-    if expand_field:
-        base_headers = get_flattened_headers(
-            type(first_obj), separator=separator, exclude_fields=expand_field
-        )
-        expanded_headers = get_expanded_field_headers(
-            type(first_obj), expand_field, separator=separator
-        )
-        headers = base_headers + expanded_headers
-    else:
-        headers = get_flattened_headers(type(first_obj), separator=separator)
-
-    buf = io.StringIO()
-    writer = csv.DictWriter(buf, fieldnames=headers)
-    writer.writeheader()
-    _write_dataclasses_to_csv_writer(dataclasses, writer, expand_field, separator)
-
-    return buf.getvalue()
+        raise ValueError(value)
 
 
 def sanitize_value(value: Any) -> Any:
+    """Sanitize values for Parquet export."""
     if isinstance(
-        value,
-        (ps.Arb, ps.CArb, ps.CF32, ps.CF64, ps.CFLong, float),
+        value, (ps.Arb, ps.CArb, ps.CF32, ps.CF64, ps.CFLong, float, int, complex)
     ):
-        return str(value)
-    if isinstance(
-        value,
-        (
-            ps.RemainderType,
-            ps.NumeratorType,
-        ),
-    ):
+        return sanitize_complex_value(value)
+    elif isinstance(value, (ps.RemainderType, ps.NumeratorType)):
         return value.name
-    if isinstance(value, PrecisionType):
+    elif isinstance(value, PrecisionType):
         return value.value
-
-    if is_dataclass(value):
-        return sanitize_value(asdict(cast(Any, value)))
-
-    if isinstance(value, Mapping):
-        return {key: sanitize_value(val) for key, val in value.items()}
-
-    if isinstance(value, Sequence) and not isinstance(value, (str, bytes, bytearray)):
+    elif isinstance(value, dict):
+        if value:
+            return {k: sanitize_value(v) for k, v in value.items()}
+        else:
+            return None
+    elif isinstance(value, (list, tuple)):
         return [sanitize_value(item) for item in value]
-
-    return value
-
-
-def to_sanitized(data: Sequence[TrialResult]) -> list[dict[str, Any]]:
-    """Fast conversion to dict format using direct field access for TrialResult."""
-    result_dicts = []
-
-    for result in tqdm(data, desc="Converting results"):
-        result_dict = {
-            "series_name": result.series.name,
-            "accel_name": result.accel.name,
-            "precision": result.precision.value,
-            "series": {
-                "arguments": {k: str(v) for k, v in result.series.arguments.items()},
-                "lim": str(result.series.lim),
-            },
-            "accel": {
-                "name": result.accel.name,
-                "m_value": result.accel.m_value,
-                "additional_args": {
-                    k: str(v) for k, v in result.accel.additional_args.items()
-                },
-            },
-            "computed": [
-                {
-                    "n": computed.n,
-                    "series_value": str(computed.series_value),
-                    "partial_sum": str(computed.partial_sum),
-                    "partial_sum_deviation": str(computed.partial_sum_deviation),
-                    "accel_value": str(computed.accel_value),
-                    "accel_value_deviation": str(computed.accel_value_deviation),
-                }
-                for computed in result.computed
-            ],
-            "error": {
-                "description": result.error.description,
-                "data": sanitize_value(result.error.data) if result.error else None,
-            }
-            if result.error
-            else None,
-            "stack_id": result.stack_id,
-        }
-
-        result_dicts.append(result_dict)
-
-    return result_dicts
+    elif isinstance(value, str):
+        return str(value)
+    else:
+        raise ValueError(value)
 
 
-class BaseExport:
+def sanitize_series_record(record: SeriesRecord) -> dict[str, Any]:
+    """Sanitize a SeriesRecord for Parquet export."""
+    sanitized = {
+        "series_name": record.series_name,
+        "series_id": record.series_id,
+        "precision": record.precision.value
+        if isinstance(record.precision, PrecisionType)
+        else str(record.precision),
+        "arguments": sanitize_value(record.source_arguments),
+        "series_limit": sanitize_complex_value(record.series_limit),
+        "computed": [],
+    }
+
+    # Sanitize computed points
+    for point in record.computed:
+        sanitized_point = {"n": point.n, "value": sanitize_complex_value(point.value)}
+        sanitized["computed"].append(sanitized_point)
+
+    return sanitized
+
+
+def sanitize_accel_record(record: AccelRecord) -> dict[str, Any]:
+    """Sanitize an AccelRecord for Parquet export."""
+    sanitized = {
+        "series_id": record.series_id,
+        "accel_name": record.accel_name,
+        "m_value": record.m_value,
+        "additional_args": sanitize_value(record.source_additional_args),
+        "computed": [],
+        "errors": None,
+        "events": None,
+    }
+
+    # Sanitize computed values
+    for value in record.computed:
+        sanitized["computed"].append(sanitize_complex_value(value))
+
+    # Sanitize errors if present
+    if record.errors:
+        sanitized["errors"] = [sanitize_value(asdict(error)) for error in record.errors]
+
+    # Sanitize events if present
+    if record.events:
+        sanitized["events"] = [sanitize_value(asdict(event)) for event in record.events]
+
+    return sanitized
+
+
+class ExportTrialResults:
     def __init__(
-        self, data: Sequence[TrialResult], location: pathlib.Path | None = None
+        self,
+        series_records: list[SeriesRecord],
+        accel_records: list[AccelRecord],
+        output_dir: pathlib.Path | None = None,
     ):
-        self.location = location
-
-        self.expand_field: str | None = None
-        self.separator: str = "_"
-        self.mongodb_collection: str = "base"
-        self.batch_size = 1000
-
-        # Sanitize data once during initialization
-        self.data = to_sanitized(data)
-
-    def _verify_location(self, override_location):
-        location = override_location or self.location
-        if not location:
-            raise ValueError("Provide location to export")
-        return location
+        self.series_records = series_records
+        self.accel_records = accel_records
+        self.output_dir = output_dir
 
     def to_parquet(self, output_dir: pathlib.Path, filename: str):
-        output_path = output_dir / f"{filename}.parquet"
+        """Export to separate Parquet files for series and accelerations."""
         output_dir.mkdir(parents=True, exist_ok=True)
-        ds.write_dataset(
-            pa.Table.from_pylist(self.data),
-            base_dir=output_path,
-            format="parquet",
-            partitioning=ds.partitioning(
-                pa.schema(
-                    [
-                        ("precision", pa.string()),
-                        ("series_name", pa.string()),
-                        ("accel_name", pa.string()),
-                    ]
+
+        # Export series records
+        if self.series_records:
+            series_data = []
+            for record in tqdm(self.series_records, desc="Sanitizing series records"):
+                series_data.append(sanitize_series_record(record))
+
+            series_table = pa.Table.from_pylist(series_data)
+            series_path = output_dir / "parquet" / "series"
+
+            ds.write_dataset(
+                series_table,
+                base_dir=series_path,
+                format="parquet",
+                partitioning=ds.partitioning(
+                    pa.schema(
+                        [
+                            ("series_name", pa.string()),
+                        ]
+                    ),
+                    flavor="hive",
                 ),
-                flavor="hive",
-            ),
-            existing_data_behavior="overwrite_or_ignore",
-        )
+                existing_data_behavior="overwrite_or_ignore",
+            )
+            print(f"Series data exported to: {series_path}")
 
-    def to_mongodb(self, mongo_database: MongoDatabase):
-        # Use pre-sanitized data instead of calling as_dict()
-        data_dicts = self._sanitized_data
-        collection = mongo_database.get_collection(self.mongodb_collection)
+        # Export acceleration records
+        if self.accel_records:
+            accel_data = []
+            for record in tqdm(
+                self.accel_records, desc="Sanitizing acceleration records"
+            ):
+                accel_data.append(sanitize_accel_record(record))
 
-        with tqdm(
-            total=len(data_dicts),
-            desc=f"Exporting to MongoDB collection '{self.mongodb_collection}'",
-        ) as pbar:
-            for i in range(0, len(data_dicts), self.batch_size):
-                batch = data_dicts[i : i + self.batch_size]
-                collection.insert_many(batch)
-                pbar.update(len(batch))
+            accel_table = pa.Table.from_pylist(accel_data)
+            accel_path = output_dir / "parquet" / "accelerations"
 
-    def to_json(self, override_location: pathlib.Path | None = None):
-        location = self._verify_location(override_location)
+            ds.write_dataset(
+                accel_table,
+                base_dir=accel_path,
+                format="parquet",
+                partitioning=ds.partitioning(
+                    pa.schema(
+                        [
+                            ("series_id", pa.int64()),
+                        ]
+                    ),
+                    flavor="hive",
+                ),
+                existing_data_behavior="overwrite_or_ignore",
+            )
+            print(f"Acceleration data exported to: {accel_path}")
 
-        with open(location, mode="w", encoding="utf-8") as f:
-            json.dump(self._sanitized_data, f, indent=4, sort_keys=True)
+    def to_json(self, output_path: pathlib.Path):
+        """Export to a single JSON file containing all data."""
+        output_path.parent.mkdir(parents=True, exist_ok=True)
 
-    def to_csv(
-        self,
-        override_location: pathlib.Path | None = None,
-    ):
-        dataclasses_to_csv(
-            self.data,
-            self._verify_location(override_location),
-            expand_field=self.expand_field,
-            separator=self.separator,
-        )
+        # Combine all data into a single structure
+        export_data = {"series": [], "accelerations": []}
 
-    def to_csv_text(self):
-        return dataclasses_to_csv_text(
-            self.data, expand_field=self.expand_field, separator=self.separator
-        )
+        # Export series records
+        if self.series_records:
+            for record in tqdm(
+                self.series_records, desc="Sanitizing series records for JSON"
+            ):
+                export_data["series"].append(sanitize_series_record(record))
 
-    def to_csv_bytes(self, encoding: str = "utf-8"):
-        return self.to_csv_text().encode(encoding)
+        # Export acceleration records
+        if self.accel_records:
+            for record in tqdm(
+                self.accel_records, desc="Sanitizing acceleration records for JSON"
+            ):
+                export_data["accelerations"].append(sanitize_accel_record(record))
 
+        # Write to JSON file
+        with open(output_path, "w", encoding="utf-8") as f:
+            json.dump(export_data, f, indent=2, ensure_ascii=False)
 
-class ExportTrialResults(BaseExport):
-    def __init__(
-        self,
-        results: list[TrialResult],
-        collection_name: str = "trial_results",
-        location: pathlib.Path | None = None,
-    ):
-        super().__init__(results, location)
-        self.expand_field = "computed"
-        self.collection_name = collection_name
+        print(f"Data exported to JSON: {output_path}")

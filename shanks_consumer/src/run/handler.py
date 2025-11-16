@@ -6,7 +6,7 @@ from src.db import setup_mongo_db
 from src.run.export import ExportTrialResults
 from src.run.loaders import AccelParamLoader, SeriesParamLoader
 from src.run.params import BaseAccelParam, BaseSeriesParam, PrecisionType
-from src.run.trial import ComplexTrial, TrialResult
+from src.run.trial import ComplexTrial, SeriesRecord, AccelRecord
 
 
 def load_parameters(config: TrialConfig, precision: PrecisionType):
@@ -42,7 +42,7 @@ def load_parameters(config: TrialConfig, precision: PrecisionType):
 
 def execute_trial(
     config: TrialConfig, precision: PrecisionType, stack_id: str
-):
+) -> tuple[list[SeriesRecord], list[AccelRecord]]:
     logging.info("Starting trial execution for precision: %s", precision.name)
     logging.info("Process count: %d", config.trial_process_count)
 
@@ -51,67 +51,57 @@ def execute_trial(
     trial = ComplexTrial(
         series_params,
         accel_params,
+        precision=precision,
         process_count=config.trial_process_count,
         task_timeout=config.trial_task_timeout,
         stack_id=stack_id,
     )
-    results = trial.execute()
+    series_records, accel_records = trial.execute()
 
-    return results
+    return series_records, accel_records
 
 
 def export_results(
-    results: list,
+    series_records: list[SeriesRecord],
+    accel_records: list[AccelRecord],
     config: TrialConfig,
 ):
     logging.info("Exporting results...")
 
     results_exporter = ExportTrialResults(
-        results, collection_name=config.mongo_collection
+        series_records, accel_records
     )
     
-    # Setup MongoDB if needed
-    mongo_database = None
-    if any(format_type.value == "mongodb" for format_type in config.output_formats):
-        mongo_database = setup_mongo_db(config)
-    
     for format_type in config.output_formats:
-        if format_type.value == "json":
-            results_exporter.to_json(config.results_json)
-            logging.info("Results exported to: %s", config.results_json)
-        elif format_type.value == "csv":
-            results_exporter.to_csv(config.results_csv)
-            logging.info("Results exported to: %s", config.results_csv)
-        elif format_type.value == "parquet":
+        if format_type.value == "parquet":
             logging.info("Exporting to Parquet...")
             results_exporter.to_parquet(config.output_dir, config.results_filename)
             logging.info("Results exported to Parquet")
-        elif format_type.value == "mongodb":
-            if mongo_database is not None:
-                logging.info("Exporting to MongoDB...")
-                results_exporter.to_mongodb(mongo_database)
-                logging.info("Results exported to MongoDB")
-            else:
-                logging.warning("MongoDB export requested but connection failed")
-
-
-def lazy_load_events(
-    config: TrialConfig, results: list[TrialResult]
-) -> list[TrialResult]:
-    if not config.no_events:
-        results = list(map(lambda r: r.load_events(), results))
-    return results
+        elif format_type.value == "json":
+            logging.info("Exporting to JSON...")
+            json_path = config.output_dir / f"{config.results_filename}.json"
+            results_exporter.to_json(json_path)
+            logging.info("Results exported to JSON")
+            
+            # Also export visualization-compatible JSON
+            viz_json_path = config.output_dir / f"{config.results_filename}_viz.json"
+            results_exporter.to_viz_json(viz_json_path)
+            logging.info("Results exported to visualization JSON")
+        else:
+            logging.warning(f"Export format {format_type.value} not supported in new schema")
 
 
 def handle_run_command(config: TrialConfig):
-    aggregated_results: list[TrialResult] = []
+    aggregated_series_records: list[SeriesRecord] = []
+    aggregated_accel_records: list[AccelRecord] = []
     stack_id = str(uuid.uuid4())
+    
     for precision in config.precisions:
-        results = execute_trial(config, precision, stack_id)
-        results = lazy_load_events(config, results)
-        aggregated_results.extend(results)
+        series_records, accel_records = execute_trial(config, precision, stack_id)
+        aggregated_series_records.extend(series_records)
+        aggregated_accel_records.extend(accel_records)
 
-    export_results(aggregated_results, config)
+    export_results(aggregated_series_records, aggregated_accel_records, config)
     logging.info(
         "Results are obtainable via stack_id: [%s]",
         stack_id,
