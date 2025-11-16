@@ -16,6 +16,7 @@ const Experiments_g3 = lazy(() => import("./pages/Experiments_g3"));
 const Experiments_g4 = lazy(() => import("./pages/Experiments_g4"));
 const Experiments_g5 = lazy(() => import("./pages/Experiments_g5"));
 const Experiment_g6 = lazy(() => import("./pages/Experiment_g6"));
+const Experiment_g7 = lazy(() => import("./pages/Experiment_g7"));
 
 
 
@@ -33,6 +34,7 @@ export const routes: RouteObject[] = [
             {path: "experiments_g4", element: <Experiments_g4/>},
             {path: "experiments_g5", element: <Experiments_g5/>},
             {path: "experiment_g6", element: <Experiment_g6/>},
+            {path: "experiment_g7", element: <Experiment_g7/>},
             {path: "algorithms", element: <Algorithms/>},
             {path: "algorithms/:id", element: <Algorithm/>},
             {path: "series", element: <SeriesList/>},

@@ -1,10 +1,5 @@
 import type { ResponseRecord } from "@/shared/api/experiments/dto";
-import type {
-    AlgorithmArgs,
-    Item,
-    ResponseComputed,
-    ResponseError,
-} from "../types/item";
+import type { AlgorithmArgs, Item, ResponseComputed, ResponseError, } from "../types/item";
 
 type NumLike = number | string | null | undefined;
 
@@ -45,7 +40,6 @@ function toItemComputed(raw: {
 function toItemError(raw: ResponseRecord["error"]): ResponseError | null {
     if (!raw) return null;
 
-    // предполагаем, что в data.n лежит NumLike, но по схеме это просто record<string, unknown>
     const nRaw = (raw.data as any)?.n as NumLike;
     const nNum = toNumber(nRaw);
     const n =
@@ -83,7 +77,7 @@ function normalizeAlgorithmArgs(raw: unknown): AlgorithmArgs | null {
 function buildAlgorithmId(
     name: string,
     m: number | null,
-    args: AlgorithmArgs | null
+    args: AlgorithmArgs | null,
 ): string {
     const mStr = m == null || Number.isNaN(m) ? "null" : String(m);
 
@@ -98,53 +92,63 @@ function buildAlgorithmId(
     return `${name}|m=${mStr}|${argsStr}`;
 }
 
-export function normalizeRecords(records: ResponseRecord[]): Item[] {
-    return records.map((rec, idx) => {
-        // x может быть number|string|null
-        const xRaw = (rec.series.arguments as any)?.x as NumLike;
-        const xNum = toNumber(xRaw);
-        const x = Number.isNaN(xNum) ? 0 : xNum;
+function normalizeName(raw: string): string {
+    // режем пробел + F32/F64/Flong/Arb в конце (без учёта регистра)
+    return raw.replace(/\s*(F32|F64|Flong|Arb)\s*$/i, "");
+}
 
-        // lim тоже number|string|null
-        const limRaw = rec.series.lim as NumLike;
-        const limNum =
-            limRaw === null || limRaw === undefined
-                ? NaN
-                : toNumber(limRaw);
-        const seriesLim = Number.isNaN(limNum) ? null : limNum;
+export function normalizeRecord(rec: ResponseRecord, idx: number): Item {
+    // x может быть number|string|null
+    const xRaw = (rec.series.arguments as any)?.x as NumLike;
+    const xNum = toNumber(xRaw);
+    const x = Number.isNaN(xNum) ? 0 : xNum;
 
-        const algoArgs: AlgorithmArgs | null = normalizeAlgorithmArgs(
-            rec.accel.additional_args ?? null
-        );
+    // lim тоже number|string|null
+    const limRaw = rec.series.lim as NumLike;
+    const limNum =
+        limRaw === null || limRaw === undefined
+            ? NaN
+            : toNumber(limRaw);
+    const seriesLim = Number.isNaN(limNum) ? null : limNum;
 
-        // m_value: number|string|null
-        const mRaw = rec.accel.m_value as NumLike;
-        const mNum =
-            mRaw === null || mRaw === undefined ? NaN : toNumber(mRaw);
-        const m = Number.isNaN(mNum) ? null : mNum;
+    const algoArgs: AlgorithmArgs | null = normalizeAlgorithmArgs(
+        rec.accel.additional_args ?? null,
+    );
 
-        const algorithmId = buildAlgorithmId(
-            rec.accel.name,
+    // m_value: number|string|null
+    const mRaw = rec.accel.m_value as NumLike;
+    const mNum =
+        mRaw === null || mRaw === undefined ? NaN : toNumber(mRaw);
+    const m = Number.isNaN(mNum) ? null : mNum;
+
+    const rawName = rec.accel.name;
+    const algorithmName = normalizeName(rawName);
+
+    const algorithmId = buildAlgorithmId(
+        algorithmName,
+        m,
+        algoArgs,
+    );
+
+    return {
+        id: rec.stack_id ?? String(idx),
+        series: {
+            x,
+            seriesName: normalizeName(rec.series.name),
+            seriesLim,
+            seriesArgs: {x},
+        },
+        algorithm: {
+            algorithmName: algorithmName,
             m,
-            algoArgs
-        );
+            algorithmArgs: algoArgs,
+            algorithmId,
+        },
+        computed: rec.computed.map(toItemComputed),
+        error: toItemError(rec.error),
+    };
+}
 
-        return {
-            id: rec.stack_id ?? String(idx), // можно заменить на crypto.randomUUID()
-            series: {
-                x,
-                seriesName: rec.series.name,
-                seriesLim,
-                seriesArgs: { x },
-            },
-            algorithm: {
-                algorithmName: rec.accel.name,
-                m,
-                algorithmArgs: algoArgs,
-                algorithmId,
-            },
-            computed: rec.computed.map(toItemComputed),
-            error: toItemError(rec.error),
-        };
-    });
+export function normalizeRecords(records: ResponseRecord[]): Item[] {
+    return records.map((rec, idx) => normalizeRecord(rec, idx));
 }
