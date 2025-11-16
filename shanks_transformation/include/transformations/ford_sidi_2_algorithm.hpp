@@ -109,7 +109,7 @@ T ford_sidi_2_algorithm<T, K>::operator()(
 	#ifdef INC_FPRECISION
 	if constexpr (std::is_same<T, float_precision>::value){
 		const size_t precision = data.Sn[0].precision();
-		delta_squared_S_n.precision(precision); delta_S_n.precision(precision); T_n.precision(precision);
+		utils::set_precision(precision, delta_squared_S_n, delta_S_n, T_n);
 	}
 	#endif
 
@@ -193,9 +193,7 @@ complex_precision<T> ford_sidi_2_algorithm<complex_precision<T>, K>::operator()(
 	#ifdef INC_FPRECISION
 	if constexpr (std::is_same<T, float_precision>::value){
 		const size_t precision = std::max(data.Sn[0].real().precision(), data.Sn[0].imag().precision());
-		delta_squared_S_n.ref_real()->precision(precision); delta_squared_S_n.ref_imag()->precision(precision);
-		delta_S_n.ref_real()->precision(precision); delta_S_n.ref_imag()->precision(precision);
-		T_n.ref_real()->precision(precision); T_n.ref_imag()->precision(precision);
+		utils::set_precision(precision, delta_squared_S_n, delta_S_n, T_n);
 	}
 	#endif
 	

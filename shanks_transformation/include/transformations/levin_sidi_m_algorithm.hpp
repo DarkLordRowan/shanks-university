@@ -179,9 +179,7 @@ T levin_sidi_m_algorithm<T, K>::operator()(
 	#ifdef INC_FPRECISION
 	if constexpr (std::is_same<T, float_precision>::value){
 		const size_t precision = std::max(data.Sn[0].precision(), data.an[0].precision());
-		numerator.precision(precision); denominator.precision(precision); rest.precision(precision);
-		down_coef.precision(precision); up_coef.precision(precision);
-		up.precision(precision); down.precision(precision);
+		utils::set_precision(precision, numerator, denominator, rest, up, down, down_coef, up_coef);
 	}
 	#endif
 
@@ -398,11 +396,7 @@ complex_precision<T> levin_sidi_m_algorithm<complex_precision<T>, K>::operator()
             std::max(data.Sn[0].real().precision(),data.Sn[0].imag().precision()),
             std::max(data.an[0].real().precision(),data.an[0].imag().precision())
         );
-		numerator.ref_real()->precision(precision); numerator.ref_imag()->precision(precision);
-		denominator.ref_real()->precision(precision); denominator.ref_imag()->precision(precision);
-		rest.ref_real()->precision(precision); rest.ref_imag()->precision(precision);
-		down_coef.precision(precision); up_coef.precision(precision);
-		up.precision(precision); down.precision(precision);
+		utils::set_precision(precision, numerator, denominator, rest, up, down, down_coef, up_coef);
 	}
 	#endif
 

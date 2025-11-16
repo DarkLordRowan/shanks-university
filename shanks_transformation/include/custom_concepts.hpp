@@ -29,6 +29,17 @@ struct is_standart_types : std::integral_constant<bool,
     #endif
 >{};
 
+template<typename T>
+struct is_precisable : std::integral_constant<bool,
+    false
+    #ifdef INC_FPRECISION
+    || std::is_same<T, float_precision>::value
+    #ifdef INC_COMPLEXPRECISION
+    || std::is_same<T, complex_precision<float_precision>>::value
+    #endif
+    #endif
+>{};
+
 
 #ifdef INC_COMPLEXPRECISION
 template<typename T>

@@ -127,7 +127,7 @@ T wynn_epsilon_2_algorithm<T, K>::operator()(
 	else if constexpr (std::is_same<T, float_precision>::value){
 		const size_t precision = data.Sn[0].precision();
 		eps = std::vector<std::vector<T>>(4, std::vector<T>(k + static_cast<K>(1), float_precision(0, precision)));
-		a.precision(precision); a1.precision(precision); a2.precision(precision);
+		utils::set_precision(precision, a, a1, a2);
 	}
 	#ifdef INC_COMPLEXPRECISION
 	else if constexpr (std::is_same<T, complex_precision<float_precision>>::value){
@@ -135,9 +135,7 @@ T wynn_epsilon_2_algorithm<T, K>::operator()(
 		eps = std::vector<std::vector<T>>(4, 
 			std::vector<T>(k + static_cast<K>(1), complex_precision<float_precision>(float_precision(0, precision), float_precision(0, precision)))
 		);
-		a.ref_real()->precision(precision); a.ref_imag()->precision(precision);
-		a1.ref_real()->precision(precision); a1.ref_imag()->precision(precision);
-		a2.ref_real()->precision(precision); a2.ref_imag()->precision(precision);
+		utils::set_precision(precision, a, a1, a2);
 	}
 	#endif
 	#endif

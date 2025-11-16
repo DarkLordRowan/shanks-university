@@ -196,7 +196,7 @@ inline T drummond_d_algorithm<T,K>::calc_result(
 	#ifdef INC_FPRECISION
 	if constexpr (std::is_same<T, float_precision>::value){
 		const size_t precision = std::max(data.Sn[0].precision(), data.an[0].precision());
-		numerator.precision(precision); denominator.precision(precision); rest.precision(precision);
+		utils::set_precision(precision, numerator, denominator, rest);
 	}
 	#endif
 
@@ -402,6 +402,7 @@ inline complex_precision<T> drummond_d_algorithm<complex_precision<T>,K>::calc_r
 			std::max(data.Sn[0].real().precision(), data.Sn[0].imag().precision()), 
 			std::max(data.an[0].real().precision(), data.an[0].imag().precision())
 		);
+		utils::set_precision(precision, numerator, denominator, rest);
 		numerator.ref_real()->precision(precision); numerator.ref_imag()->precision(precision);
 		denominator.ref_real()->precision(precision); denominator.ref_imag()->precision(precision);
 		rest.ref_real()->precision(precision); rest.ref_imag()->precision(precision);
