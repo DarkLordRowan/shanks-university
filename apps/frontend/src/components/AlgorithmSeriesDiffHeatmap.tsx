@@ -27,7 +27,6 @@ function buildArgsSummary(args: DiffCell["algorithmArgs"] | null): string {
     const entries = Object.entries(args).sort(([a, b]) => a.localeCompare(b));
     return entries.map(([k, v]) => `${k}=${v}`).join(", ");
 }
-
 interface ColorSpec {
     bgClass: string;
     borderClass: string;
@@ -36,29 +35,39 @@ interface ColorSpec {
 
 /**
  * Классификация по шагам ошибок:
- * - ok = !hasError
- * - err на шаге n = hasError && errorN != null
+ *
+ * Состояния:
+ *   ok          — !hasErr
+ *   error(n)    — hasErr && n != null (если n == null, считаем как n=0)
+ *
+ * Правила:
+ *   - было error 0 и осталось error 0       → белый
+ *   - было error 0 и стало error n≠0       → голубой
+ *   - error(n1) → error(n2), n1 != n2:
+ *        * n2 > n1  → зелёный (улучшилось, ошибка позже)
+ *        * n2 < n1  → красный (ухудшилось, ошибка раньше)
+ *   - error(n) → error(n), n1 == n2        → жёлтый
+ *   - ok → ok                               → золотой
+ *   - ok → error(n)                         → фиолетовый
+ *   - error(n) → ok                         → насыщенный зелёный (сильное улучшение)
+ *
+ * Пограничные случаи (нет n, но есть ошибка) трактуем как n=0.
  */
-function classifyErrorChange(
+export function classifyErrorChange(
     hasPrevErr: boolean,
     nPrev: number | null,
     hasNextErr: boolean,
     nNext: number | null,
 ): ColorSpec {
-    // нет данных вообще
-    if (!hasPrevErr && nPrev == null && !hasNextErr && nNext == null) {
-        return {
-            bgClass: "bg-surface/40",
-            borderClass: "border-border/50",
-            label: "нет данных",
-        };
-    }
+    // нормализуем n: ошибка без n → считаем как 0
+    const prevIsOk = !hasPrevErr;
+    const nextIsOk = !hasNextErr;
 
-    const prevOk = !hasPrevErr;
-    const nextOk = !hasNextErr;
+    const nPrevEff = hasPrevErr ? (nPrev ?? 0) : null;
+    const nNextEff = hasNextErr ? (nNext ?? 0) : null;
 
-    // ok → ok
-    if (prevOk && nextOk) {
+    // ok → ok — золотой
+    if (prevIsOk && nextIsOk) {
         return {
             bgClass: "bg-yellow-500/90 hover:bg-yellow-400/90",
             borderClass: "border-yellow-200",
@@ -66,43 +75,57 @@ function classifyErrorChange(
         };
     }
 
-    // err → ok (исчезла ошибка)
-    if (hasPrevErr && !prevOk && nextOk) {
-        return {
-            bgClass: "bg-green-700/80 hover:bg-green-600/80",
-            borderClass: "border-green-300/90",
-            label: "ошибка → ok (исчезла ошибка)",
-        };
-    }
-
-    // ok → err (появилась ошибка)
-    if (prevOk && hasNextErr && !nextOk) {
+    // ok → error(n) — фиолетовый
+    if (prevIsOk && hasNextErr) {
         return {
             bgClass: "bg-purple-800/80 hover:bg-purple-700/80",
             borderClass: "border-purple-400/80",
-            label: "ok → ошибка (появилась ошибка)",
+            label: `ok → error(n=${nNextEff ?? 0})`,
         };
     }
 
-    // обе с ошибкой, но шаги неизвестны
-    if (nPrev == null || nNext == null) {
+    // error(n) → ok — сильное улучшение, зелёный
+    if (hasPrevErr && nextIsOk) {
         return {
-            bgClass: "bg-slate-700/70 hover:bg-slate-600/70",
-            borderClass: "border-slate-400/80",
-            label: "ошибка без шага n",
+            bgClass: "bg-green-700/80 hover:bg-green-600/80",
+            borderClass: "border-green-300/90",
+            label: `error(n=${nPrevEff ?? 0}) → ok`,
         };
     }
 
-    // обе с ошибкой, шаги известны
-    if (nPrev === nNext) {
+    // дальше оба — error
+    const p = nPrevEff ?? 0;
+    const q = nNextEff ?? 0;
+
+    // было error 0 и осталось error 0 — белый
+    if (p === 0 && q === 0) {
+        return {
+            bgClass: "bg-white",
+            borderClass: "border-border/60",
+            label: "error(0) → error(0)",
+        };
+    }
+
+    // было error 0 и стало error n≠0 — голубой
+    if (p === 0 && q !== 0) {
+        return {
+            bgClass: "bg-sky-800/70 hover:bg-sky-700/80",
+            borderClass: "border-sky-400/80",
+            label: `error(0) → error(n=${q})`,
+        };
+    }
+
+    // error(n) → error(n), n не 0 — жёлтый (без изменений)
+    if (p === q) {
         return {
             bgClass: "bg-yellow-700/70 hover:bg-yellow-600/80",
             borderClass: "border-yellow-300/80",
-            label: "ошибка на том же шаге",
+            label: `error(n=${p}) без изменений`,
         };
     }
 
-    const delta = nNext - nPrev; // >0 — ошибка позже, <0 — раньше
+    // дальше: error(n1) → error(n2), n1 != n2
+    const delta = q - p;        // >0 — улучшилось, <0 — ухудшилось
     const absDelta = Math.abs(delta);
 
     const level =
@@ -112,18 +135,18 @@ function classifyErrorChange(
                     "600/50";
 
     if (delta > 0) {
-        // ошибка позже (улучшение)
+        // стало больше (ошибка позже) — зелёный
         return {
             bgClass: `bg-green-${level} hover:bg-green-500/60`,
             borderClass: "border-green-400/80",
-            label: `ошибка сдвинулась вперёд (Δn = +${delta})`,
+            label: `error(n=${p}) → error(n=${q}), ошибка позже (Δn=+${delta})`,
         };
     } else {
-        // ошибка раньше (ухудшение)
+        // стало меньше (ошибка раньше) — красный
         return {
             bgClass: `bg-red-${level} hover:bg-red-500/60`,
             borderClass: "border-red-400/80",
-            label: `ошибка произошла раньше (Δn = ${delta})`,
+            label: `error(n=${p}) → error(n=${q}), ошибка раньше (Δn=${delta})`,
         };
     }
 }
