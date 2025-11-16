@@ -119,18 +119,13 @@ T lubkin_w_algorithm<T, K>::operator()(
 	else if constexpr (std::is_same<T, float_precision>::value){
 		const size_t precision = data.Sn[0].precision();
 		W = std::vector<T>(base_size, float_precision(0, precision));
-		Wo0.precision(precision); Wo1.precision(precision); Wo2.precision(precision);
-		Woo1.precision(precision); Woo2.precision(precision);
+		utils::set_precision(precision, Wo0, Wo1, Wo2, Woo1, Woo2);
 	}
 	#ifdef INC_COMPLEXPRECISION
 	else if constexpr (std::is_same<T, complex_precision<float_precision>>::value){
 		const size_t precision = std::max(data.Sn[0].real().precision(), data.Sn[0].imag().precision());
 		W = std::vector<T>(base_size, complex_precision<float_precision>(float_precision(0, precision), float_precision(0, precision)));
-		Wo0.ref_real()->precision(precision); Wo0.ref_imag()->precision(precision);
-		Wo1.ref_real()->precision(precision); Wo1.ref_imag()->precision(precision); 
-		Wo2.ref_real()->precision(precision); Wo2.ref_imag()->precision(precision); 
-		Woo1.ref_real()->precision(precision); Woo1.ref_imag()->precision(precision); 
-		Woo2.ref_real()->precision(precision); Woo2.ref_imag()->precision(precision); 
+		utils::set_precision(precision, Wo0, Wo1, Wo2, Woo1, Woo2);
 	}
 	#endif
 	#endif

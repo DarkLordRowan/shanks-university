@@ -27,6 +27,11 @@ struct utils {
 	template<AcceptedLike T, UnsignedIntLike K>
 	constexpr static const T minus_one_raised_to_power_n(const K j);
 
+	template<typename Arg, typename... Args>
+	requires (is_precisable<Args>::value && ...)
+	static void set_precision(const size_t precision, Arg& precisable_arg, Args& ...precisable_args);
+	static void set_precision(const size_t precision) {}
+
 };
 
 template <AcceptedLike T, UnsignedIntLike K>
@@ -89,6 +94,19 @@ constexpr const K utils::binomial_coefficient(const K n, const K k) {
 template<AcceptedLike T, UnsignedIntLike K>
 constexpr const T utils::minus_one_raised_to_power_n(const K j){
     return static_cast<T>(j & 1 ? -1 : 1);
+}
+
+template<typename Arg, typename... Args>
+requires (is_precisable<Args>::value && ...)
+void utils::set_precision(const size_t precision, Arg& precisable_arg, Args& ...precisable_args){
+	if constexpr (std::is_same<Arg, float_precision>::value){
+		precisable_arg.precision(precision);
+	}
+	else if constexpr (std::is_same<Arg, complex_precision<float_precision>>::value){
+		precisable_arg.ref_real()->precision(precision); precisable_arg.ref_imag()->precision(precision);
+	}
+	utils::set_precision(precision, precisable_args...);
+
 }
 
 #ifdef INC_COMPLEXPRECISION

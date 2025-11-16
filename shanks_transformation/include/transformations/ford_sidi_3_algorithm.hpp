@@ -132,7 +132,7 @@ T ford_sidi_3_algorithm<T, K>::operator()(
             data.Sn[0].precision(),
             data.an[0].precision()
         );
-        D.precision(precision); Te.precision(precision);
+        utils::set_precision(precision, D, Te);
         G = std::vector<T>(m + static_cast<K>(1), float_precision(0, precision));
         FSA = std::vector<T>(m + static_cast<K>(1), float_precision(0, precision));
         FSI = std::vector<T>(m + static_cast<K>(1), float_precision(0, precision));
@@ -144,8 +144,7 @@ T ford_sidi_3_algorithm<T, K>::operator()(
             std::max(data.Sn[0].real().precision(),data.Sn[0].imag().precision()),
             std::max(data.an[0].real().precision(),data.an[0].imag().precision())
         );
-        D.ref_real()->precision(precision); D.ref_imag()->precision(precision);
-        Te.ref_real()->precision(precision); Te.ref_imag()->precision(precision);
+        utils::set_precision(precision, D, Te);
         G = std::vector<T>(m + static_cast<K>(1), D);
         FSA = std::vector<T>(m + static_cast<K>(1), D);
         FSI = std::vector<T>(m + static_cast<K>(1), D);

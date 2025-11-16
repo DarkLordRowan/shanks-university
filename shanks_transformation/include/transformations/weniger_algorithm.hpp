@@ -113,8 +113,7 @@ T weniger_algorithm<T, K>::operator()(
 	#ifdef INC_FPRECISION
 	if constexpr (std::is_same<T, float_precision>::value){
 		const size_t precision = std::max(data.Sn[0].precision(), data.an[0].precision());
-		numerator.precision(precision); denominator.precision(precision);  rest.precision(precision); 
-		coef.precision(precision); 
+		utils::set_precision(precision, numerator, denominator, rest, coef);
 	}
 	#ifdef INC_COMPLEXPRECISION
 	else if constexpr (std::is_same<T, complex_precision<float_precision>>::value){
@@ -122,10 +121,7 @@ T weniger_algorithm<T, K>::operator()(
 			std::max(data.Sn[0].real().precision(), data.Sn[0].imag().precision()), 
 			std::max(data.an[0].real().precision(), data.an[0].imag().precision())
 		);
-		numerator.ref_real()->precision(precision);numerator.ref_imag()->precision(precision);
-		denominator.ref_real()->precision(precision);denominator.ref_imag()->precision(precision);
-		rest.ref_real()->precision(precision);rest.ref_imag()->precision(precision);
-		coef.ref_real()->precision(precision);coef.ref_imag()->precision(precision);
+		utils::set_precision(precision, numerator, denominator, rest, coef);
 	}
 	#endif
 	#endif

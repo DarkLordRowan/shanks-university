@@ -135,7 +135,7 @@ T richardson_algorithm<T, K>::operator()(
     else if constexpr (std::is_same<T, float_precision>::value){
         const size_t precision = data.Sn[0].precision();
         e = std::vector<std::vector<T>>(2, std::vector<T>(n + static_cast<K>(1), float_precision(0, precision)));
-        a.precision(precision); b.precision(precision);
+        utils::set_precision(precision, a,b);
     }
     #ifdef INC_COMPLEXPRECISION
     else if constexpr (std::is_same<T, complex_precision<float_precision>>::value){
@@ -143,8 +143,7 @@ T richardson_algorithm<T, K>::operator()(
         e = std::vector<std::vector<T>>(2, 
             std::vector<T>(n + static_cast<K>(1), complex_precision<float_precision>(float_precision(0, precision), float_precision(0, precision)))
         );
-        a.ref_real()->precision(precision); a.ref_imag()->precision(precision);
-        b.ref_real()->precision(precision); b.ref_imag()->precision(precision);
+        utils::set_precision(precision, a,b);
     }
     #endif
     #endif

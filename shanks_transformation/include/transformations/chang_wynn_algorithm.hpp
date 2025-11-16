@@ -124,7 +124,7 @@ T chang_wynn_algorithm<T, K>::operator()(const K n, const K order, const series_
     #ifdef INC_FPRECISION
     else if constexpr (std::is_same<T, float_precision>::value){
         const size_t precision = std::max(data.Sn[0].precision(), data.an[0].precision());
-        up.precision(precision);  down.precision(precision); coef.precision(precision); coef2.precision(precision);
+        utils::set_precision(precision, up, down, coef, coef2);
         e = std::vector<std::vector<T>>( 2, std::vector<T>( n, float_precision(0, precision) ) );
         f = std::vector<T>(n, float_precision(0, precision));                                     
     }
@@ -134,10 +134,7 @@ T chang_wynn_algorithm<T, K>::operator()(const K n, const K order, const series_
             std::max(data.Sn[0].real().precision(),data.Sn[0].imag().precision()), 
             std::max(data.an[0].real().precision(),data.an[0].imag().precision())
         );
-        up.ref_real()->precision(precision); up.ref_imag()->precision(precision);
-        down.ref_real()->precision(precision); down.ref_imag()->precision(precision);
-        coef.ref_real()->precision(precision); coef.ref_imag()->precision(precision);
-        coef2.ref_real()->precision(precision); coef2.ref_imag()->precision(precision);
+        utils::set_precision(precision, up, down, coef, coef2);
 
         e = std::vector<std::vector<T>>( 2, std::vector<T>( n, up )); // Two vectors of length n containing Epsilon table (current and previous rows).
         f = std::vector<T>(n, up);                                     // Vector for containing F results from index 0 to n-1.                                   
