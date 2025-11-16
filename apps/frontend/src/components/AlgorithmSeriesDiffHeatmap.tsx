@@ -404,8 +404,16 @@ export function AlgorithmSeriesDiffHeatmap({
                                 className="border border-border px-0 py-0 text-center align-bottom"
                                 title={buildSeriesLabel(s)}
                             >
-                                <div className="flex h-28 w-[32px] flex-col items-center justify-end gap-1">
-                                    <div className="origin-bottom-left -rotate-90 whitespace-nowrap text-[9px] leading-tight">
+                                <div className="flex h-28 w-[40px] flex-col items-center justify-end gap-1">
+                                    <div
+                                        className="text-[9px] leading-tight"
+                                        style={{
+                                            writingMode: "vertical-rl",
+                                            textOrientation: "mixed",
+                                            // чтобы текст не лип к краю
+                                            paddingInline: "2px",
+                                        }}
+                                    >
                                         {s.seriesName}
                                     </div>
                                     <div className="text-[8px] text-textDim/70">
