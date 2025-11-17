@@ -40,12 +40,12 @@ def _is_series_generator(candidate: object) -> TypeGuard[SeriesBaseProto[Any]]:
 @dataclass
 class SeriesPoint:
     n: int
-    value: Any
+    value: Any  # partial sum
 
 
 @dataclass
 class AccelPoint:  # zipped with SeriesPoint
-    value: Any
+    value: Any  # partial sum
     deviation: Any  # unnecessary? Absolutely. But I don't want to get headbonked for losing precision
 
 
@@ -300,7 +300,7 @@ def execute_series_accels(
                     computed=[
                         SeriesPoint(n, value)
                         for n, value in zip(
-                            range(1, len(series_result.an) + 1), series_result.an
+                            range(1, len(series_result.Sn) + 1), series_result.Sn
                         )  # TOO: an? sure?
                     ],
                 )
