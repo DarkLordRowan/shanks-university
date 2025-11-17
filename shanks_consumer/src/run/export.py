@@ -9,7 +9,13 @@ from tqdm import tqdm
 
 import pyshanks as ps
 from src.run.params import PrecisionType
-from src.run.trial import AccelRecord, ErrorRecord, EventRecord, SeriesRecord
+from src.run.trial import (
+    AccelPoint,
+    AccelRecord,
+    ErrorRecord,
+    EventRecord,
+    SeriesRecord,
+)
 
 
 def sanitize_complex_value(value: Any) -> dict[str, str | None] | None:
@@ -85,8 +91,15 @@ def sanitize_accel_record(record: AccelRecord) -> dict[str, Any]:
     }
 
     # Sanitize computed values
-    for value in record.computed:
-        sanitized["computed"].append(sanitize_complex_value(value))
+    for point in record.computed:
+        if point is None:
+            sanitized["computed"].append(None)
+        else:
+            sanitized_point = {
+                "value": sanitize_complex_value(point.value),
+                "deviation": sanitize_complex_value(point.deviation),
+            }
+            sanitized["computed"].append(sanitized_point)
 
     # Sanitize errors if present
     if record.errors:
@@ -158,7 +171,7 @@ class ExportTrialResults:
             ):
                 accel_data.append(sanitize_accel_record(record))
 
-            # Explicit schema is a dealbreaker for performance
+            # TODO: Remove or make non-hardcoded
             accel_schema = pa.schema(
                 [
                     ("series_id", pa.int64()),
@@ -182,7 +195,28 @@ class ExportTrialResults:
                     (
                         "computed",
                         pa.list_(
-                            pa.struct([("real", pa.string()), ("imag", pa.string())])
+                            pa.struct(
+                                [
+                                    (
+                                        "value",
+                                        pa.struct(
+                                            [
+                                                ("real", pa.string()),
+                                                ("imag", pa.string()),
+                                            ]
+                                        ),
+                                    ),
+                                    (
+                                        "deviation",
+                                        pa.struct(
+                                            [
+                                                ("real", pa.string()),
+                                                ("imag", pa.string()),
+                                            ]
+                                        ),
+                                    ),
+                                ]
+                            )
                         ),
                     ),
                     (

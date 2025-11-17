@@ -44,6 +44,12 @@ class SeriesPoint:
 
 
 @dataclass
+class AccelPoint:  # zipped with SeriesPoint
+    value: Any
+    deviation: Any  # unnecessary? Absolutely. But I don't want to get headbonked for losing precision
+
+
+@dataclass
 class SeriesRecord:  # stored in parquet/series
     series_name: str  # partitioned by series name
     series_id: int
@@ -72,7 +78,7 @@ class AccelRecord:  # stored in parquet/accerations
     accel_name: str
     m_value: int
     source_additional_args: dict[str, str]
-    computed: list[Any]  # zipped with series.computed
+    computed: list[AccelPoint | None]  # zipped with series.computed
     errors: list[ErrorRecord] | None = None
     events: list[EventRecord] | None = None
 
@@ -106,7 +112,9 @@ def execute_accels(
         try:
             accel_instance = accels.executable(**arguments)
             for m_value in accels.m_values:
-                computed_values = [None] * max(accels.n_values, default=0)
+                computed_points: list[AccelPoint | None] = [None] * max(
+                    accels.n_values, default=0
+                )
                 errors = []
                 events = []
 
@@ -123,13 +131,18 @@ def execute_accels(
 
                         # accel_instance returns a SINGLE computed point for this n
                         accel_value = accel_instance(n_value, m_value, series_result)
-                        computed_values[n_value - 1] = accel_value
 
                         # Check for events (e.g., acceleration is better than partial sum)
                         partial_sum = series_result.Sn[index]
 
                         accel_deviation = abs(accel_value - series_limit)
                         partial_sum_deviation = abs(partial_sum - series_limit)
+
+                        # Store the computed point with deviation
+                        computed_points[n_value - 1] = AccelPoint(
+                            value=accel_value,
+                            deviation=accel_deviation,
+                        )
 
                         # Event: acceleration deviation is less than partial sum deviation
                         if accel_deviation < partial_sum_deviation:
@@ -171,7 +184,7 @@ def execute_accels(
                         source_additional_args={
                             k: str(v) for k, v in source_arguments.items()
                         },
-                        computed=computed_values,
+                        computed=computed_points,
                         errors=errors if errors else None,
                         events=events if events else None,
                     )
