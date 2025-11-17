@@ -158,6 +158,7 @@ class ExportTrialResults:
                     ),
                     flavor="hive",
                 ),
+                use_threads = False, # 20.0.0 deadlocks otherwise
                 existing_data_behavior="overwrite_or_ignore",
             )
             print(f"Series data exported to: {series_path}")
@@ -279,6 +280,15 @@ class ExportTrialResults:
                     flavor="hive",
                 ),
                 existing_data_behavior="overwrite_or_ignore",
+                # Disable parallel writing to avoid executor deadlock
+                use_threads=False,
+                # Conservative file handle limit
+                max_open_files=128,
+                # Prevent excessive partition fragmentation
+                max_partitions=2048,
+                # Ensure reasonable file sizes
+                max_rows_per_file=10_000_000,
+                min_rows_per_group=100_000,
             )
             print(f"Acceleration data exported to: {accel_path}")
         print("done")
