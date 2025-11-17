@@ -7,7 +7,6 @@ import pyshanks as ps
 from src.run.params import AccelParamJSON, SeriesParamCSV, SeriesParamJSON
 from src.run.precision import (
     PrecisionType,
-    cast_precision_value,
     is_arb_precision,
 )
 
@@ -100,13 +99,7 @@ class SeriesParamLoader:
 
         processed: dict[str, Iterable[Any]] = {}
         for key, value in args.items():
-            key_str = str(key)
-            if key_str in {"vecSize", "addKParameter", "m", "b"}:
-                processed[key_str] = [int(v) for v in autowrap(value)]
-            else:
-                processed[key_str] = [
-                    cast_precision_value(precision, v) for v in autowrap(value)
-                ]
+            processed[str(key)] = list(autowrap(value))
         return processed
 
     @staticmethod

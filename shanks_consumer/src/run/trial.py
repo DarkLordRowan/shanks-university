@@ -9,13 +9,32 @@ from tqdm import tqdm  # type: ignore[import]
 
 from pyshanks.pyshanks import NumeratorType, RemainderType
 from src.run.params import BaseAccelParam, BaseSeriesParam, PrecisionType
-from src.run.precision import SeriesBaseProto, SeriesResultProto, cast_precision_value
+from src.run.precision import (
+    SeriesBaseProto,
+    SeriesResultProto,
+    cast_precision_value,
+    cast_real_subtype_value,
+)
 
 logger = logging.getLogger(__name__)
+
+# Thread-safe counter for series IDs
+_fresh_counter = mp.Value("i", 0)
+
+
+def get_next_series_id() -> int:
+    """Get next series ID in a thread-safe manner."""
+    with _fresh_counter.get_lock():
+        current_id = _fresh_counter.value
+        _fresh_counter.value += 1
+        return current_id
 
 
 def _is_series_generator(candidate: object) -> TypeGuard[SeriesBaseProto[Any]]:
     return hasattr(candidate, "generateSeries") and hasattr(candidate, "get_sum")
+
+
+# TODO: replace dataclasses with functions that just constrct dicts. Yep, that stupid.
 
 
 @dataclass
@@ -37,13 +56,14 @@ class SeriesRecord:  # stored in parquet/series
 @dataclass
 class ErrorRecord:
     message: str
-    data: dict[str, Any]
+    n: int | None
 
 
 @dataclass
 class EventRecord:
     name: str
-    data: dict[str, Any]
+    n: int
+    description: str
 
 
 @dataclass
@@ -51,10 +71,19 @@ class AccelRecord:  # stored in parquet/accerations
     series_id: int  # partitioned by series_id
     accel_name: str
     m_value: int
-    source_additional_args: dict
+    source_additional_args: dict[str, str]
     computed: list[Any]  # zipped with series.computed
     errors: list[ErrorRecord] | None = None
     events: list[EventRecord] | None = None
+
+
+def convert_arg_accel(precision, key, value) -> Any:
+    if key == "remainder":
+        return getattr(RemainderType, str(value))
+    elif key == "numerator":
+        return getattr(NumeratorType, str(value))
+    else:
+        return cast_real_subtype_value(precision, value)
 
 
 def execute_accels(
@@ -70,7 +99,9 @@ def execute_accels(
         source_arguments = {
             k: v for k, v in zip(accels.additional_args.keys(), series_argument_list)
         }
-        arguments = {k: convert_arg(k, v) for k, v in source_arguments.items()}
+        arguments = {
+            k: convert_arg_accel(precision, k, v) for k, v in source_arguments.items()
+        }
 
         try:
             accel_instance = accels.executable(**arguments)
@@ -79,6 +110,7 @@ def execute_accels(
                 errors = []
                 events = []
 
+                prev_accel_deviation = None
                 for n_value in accels.n_values:
                     try:
                         if n_value <= 0:
@@ -94,52 +126,39 @@ def execute_accels(
                         computed_values[n_value - 1] = accel_value
 
                         # Check for events (e.g., acceleration is better than partial sum)
-                        if index < len(series_result.Sn):
-                            partial_sum = series_result.Sn[index]
+                        partial_sum = series_result.Sn[index]
 
-                            if series_limit is not None:
-                                accel_deviation = abs(accel_value - series_limit)
-                                partial_sum_deviation = abs(partial_sum - series_limit)
+                        accel_deviation = abs(accel_value - series_limit)
+                        partial_sum_deviation = abs(partial_sum - series_limit)
 
-                                # Event: acceleration deviation is less than partial sum deviation
-                                if accel_deviation < partial_sum_deviation:
-                                    events.append(
-                                        EventRecord(
-                                            name="accel_better_than_partial",
-                                            data={
-                                                "n": n_value,
-                                                "description": f"accel_value_deviation {accel_deviation} is lesser than partial_sum_deviation {partial_sum_deviation}",
-                                            },
-                                        )
+                        # Event: acceleration deviation is less than partial sum deviation
+                        if accel_deviation < partial_sum_deviation:
+                            events.append(
+                                EventRecord(
+                                    name="accel_better_than_partial",
+                                    n=n_value,
+                                    description=f"accel_value_deviation {accel_deviation} is lesser than partial_sum_deviation {partial_sum_deviation}",
+                                )
+                            )
+
+                        # Event: acceleration is diverging (deviation increases)
+                        if prev_accel_deviation is not None:
+                            if prev_accel_deviation < accel_deviation:
+                                events.append(
+                                    EventRecord(
+                                        name="divergent_accel_method",
+                                        n=n_value,
+                                        description=f"accel_value_deviation from previous iteration {prev_accel_deviation} is lesser than current accel_value_deviation {accel_deviation}",
                                     )
-
-                                # Event: acceleration is diverging (deviation increases)
-                                if len(computed_values) > 1:
-                                    prev_accel_value = computed_values[-2]
-                                    prev_deviation = abs(
-                                        prev_accel_value - series_limit
-                                    )
-                                    if prev_deviation < accel_deviation:
-                                        events.append(
-                                            EventRecord(
-                                                name="divergent_accel_method",
-                                                data={
-                                                    "n": n_value,
-                                                    "description": f"accel_value_deviation from previous iteration {prev_deviation} is lesser than current accel_value_deviation {accel_deviation}",
-                                                },
-                                            )
-                                        )
+                                )
+                        prev_accel_deviation = accel_deviation
 
                     except Exception as exc:
                         # Record error for this specific n_value
                         errors.append(
                             ErrorRecord(
                                 message=str(exc),
-                                data={
-                                    "n": n_value,
-                                    "m": m_value,
-                                    "arguments": source_arguments,
-                                },
+                                n=n_value,
                             )
                         )
                         continue
@@ -149,7 +168,9 @@ def execute_accels(
                         series_id=series_id,
                         accel_name=accels.accel_name,
                         m_value=m_value,
-                        source_additional_args=source_arguments,
+                        source_additional_args={
+                            k: str(v) for k, v in source_arguments.items()
+                        },
                         computed=computed_values,
                         errors=errors if errors else None,
                         events=events if events else None,
@@ -164,15 +185,14 @@ def execute_accels(
                         series_id=series_id,
                         accel_name=accels.accel_name,
                         m_value=m_value,
-                        source_additional_args=source_arguments,
+                        source_additional_args={
+                            k: str(v) for k, v in source_arguments.items()
+                        },
                         computed=[],
                         errors=[
                             ErrorRecord(
                                 message=str(exc),
-                                data={
-                                    "m": m_value,
-                                    "arguments": source_arguments,
-                                },
+                                n=None,
                             )
                         ],
                         events=None,
@@ -183,13 +203,11 @@ def execute_accels(
     return accel_records
 
 
-def convert_arg(key, value):
-    if key == "remainder":
-        return getattr(RemainderType, str(value))
-    elif key == "numerator":
-        return getattr(NumeratorType, str(value))
-    else:
+def convert_arg_series(precision, key, value) -> Any:
+    if key in ["vecSize", "addKParameter", "m", "b"]:
         return value
+    else:
+        return cast_precision_value(precision, value)
 
 
 def _process_combination_worker(
@@ -199,7 +217,11 @@ def _process_combination_worker(
     return execute_series_accels(precision, series, [accel])
 
 
-_fresh = 0
+def _process_series_worker(
+    args: tuple[PrecisionType, BaseSeriesParam, list[BaseAccelParam]],
+) -> tuple[list[SeriesRecord], list[AccelRecord]]:
+    precision, series, accel_params = args
+    return execute_series_accels(precision, series, accel_params)
 
 
 def execute_series_accels(
@@ -213,7 +235,9 @@ def execute_series_accels(
         source_arguments = {
             k: v for k, v in zip(series.arguments.keys(), series_argument_list)
         }
-        arguments = {k: convert_arg(k, v) for k, v in source_arguments.items()}
+        arguments = {
+            k: convert_arg_series(precision, k, v) for k, v in source_arguments.items()
+        }
 
         max_n = max(
             (max(accel.n_values, default=0) for accel in related_accel), default=0
@@ -251,15 +275,14 @@ def execute_series_accels(
             )
             series_limit = series_candidate.get_sum()
 
-            series_id = _fresh
-            _fresh += 1
+            series_id = get_next_series_id()
 
             series_records.append(
                 SeriesRecord(
                     series_name=series.series_name,
                     series_id=series_id,
                     precision=precision,
-                    source_arguments=source_arguments,
+                    source_arguments={k: str(v) for k, v in source_arguments.items()},
                     series_limit=series_limit,
                     computed=[
                         SeriesPoint(n, value)
@@ -294,15 +317,6 @@ class ComplexTrial:
     process_count: int = 1
     task_timeout: int = 10
 
-    _trial_combinations: list[tuple[BaseSeriesParam, BaseAccelParam]] = field(
-        init=False
-    )
-
-    def __post_init__(self):
-        self._trial_combinations = list(
-            itertools.product(self.series_params, self.accel_params)
-        )
-
     def execute(self) -> tuple[list[SeriesRecord], list[AccelRecord]]:
         all_series_records = []
         all_accel_records = []
@@ -313,14 +327,14 @@ class ComplexTrial:
                 results = list(
                     tqdm(
                         pool.imap_unordered(
-                            _process_combination_worker,
+                            _process_series_worker,
                             [
-                                (self.precision, series, accel)
-                                for series, accel in self._trial_combinations
+                                (self.precision, series, self.accel_params)
+                                for series in self.series_params
                             ],
                         ),
-                        total=len(self._trial_combinations),
-                        desc="Processing combinations",
+                        total=len(self.series_params),
+                        desc="Processing series",
                     )
                 )
 
@@ -329,11 +343,9 @@ class ComplexTrial:
                     all_accel_records.extend(accel_records)
         else:
             # Single process with progress bar
-            for series, accel in tqdm(
-                self._trial_combinations, desc="Processing combinations"
-            ):
+            for series in tqdm(self.series_params, desc="Processing series"):
                 series_records, accel_records = execute_series_accels(
-                    self.precision, series, [accel]
+                    self.precision, series, self.accel_params
                 )
                 all_series_records.extend(series_records)
                 all_accel_records.extend(accel_records)

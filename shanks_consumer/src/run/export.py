@@ -45,6 +45,8 @@ def sanitize_value(value: Any) -> Any:
         return [sanitize_value(item) for item in value]
     elif isinstance(value, str):
         return str(value)
+    elif value is None:
+        return None
     else:
         raise ValueError(value)
 
@@ -57,7 +59,7 @@ def sanitize_series_record(record: SeriesRecord) -> dict[str, Any]:
         "precision": record.precision.value
         if isinstance(record.precision, PrecisionType)
         else str(record.precision),
-        "arguments": sanitize_value(record.source_arguments),
+        "arguments": record.source_arguments,
         "series_limit": sanitize_complex_value(record.series_limit),
         "computed": [],
     }
@@ -76,7 +78,7 @@ def sanitize_accel_record(record: AccelRecord) -> dict[str, Any]:
         "series_id": record.series_id,
         "accel_name": record.accel_name,
         "m_value": record.m_value,
-        "additional_args": sanitize_value(record.source_additional_args),
+        "additional_args": record.source_additional_args,
         "computed": [],
         "errors": None,
         "events": None,
@@ -88,11 +90,20 @@ def sanitize_accel_record(record: AccelRecord) -> dict[str, Any]:
 
     # Sanitize errors if present
     if record.errors:
-        sanitized["errors"] = [sanitize_value(asdict(error)) for error in record.errors]
+        sanitized["errors"] = [
+            {"message": str(error.message), "n": error.n} for error in record.errors
+        ]
 
     # Sanitize events if present
     if record.events:
-        sanitized["events"] = [sanitize_value(asdict(event)) for event in record.events]
+        sanitized["events"] = [
+            {
+                "name": str(event.name),
+                "n": event.n,
+                "description": str(event.description),
+            }
+            for event in record.events
+        ]
 
     return sanitized
 
@@ -111,6 +122,7 @@ class ExportTrialResults:
     def to_parquet(self, output_dir: pathlib.Path, filename: str):
         """Export to separate Parquet files for series and accelerations."""
         output_dir.mkdir(parents=True, exist_ok=True)
+        print("exporting")
 
         # Export series records
         if self.series_records:
@@ -136,6 +148,7 @@ class ExportTrialResults:
                 existing_data_behavior="overwrite_or_ignore",
             )
             print(f"Series data exported to: {series_path}")
+        print("accels now")
 
         # Export acceleration records
         if self.accel_records:
@@ -145,7 +158,78 @@ class ExportTrialResults:
             ):
                 accel_data.append(sanitize_accel_record(record))
 
-            accel_table = pa.Table.from_pylist(accel_data)
+            # Explicit schema is a dealbreaker for performance
+            accel_schema = pa.schema(
+                [
+                    ("series_id", pa.int64()),
+                    ("accel_name", pa.string()),
+                    ("m_value", pa.int64()),
+                    (
+                        "additional_args",
+                        pa.struct(
+                            [
+                                ("remainder", pa.string()),
+                                ("useRecFormulas", pa.string()),
+                                ("beta", pa.string()),
+                                ("gamma", pa.string()),
+                                ("parameter", pa.string()),
+                                ("numerator", pa.string()),
+                                ("RHO", pa.string()),
+                                ("epsilon_threshold", pa.string()),
+                            ]
+                        ),
+                    ),
+                    (
+                        "computed",
+                        pa.list_(
+                            pa.struct([("real", pa.string()), ("imag", pa.string())])
+                        ),
+                    ),
+                    (
+                        "errors",
+                        pa.list_(
+                            pa.struct(
+                                [
+                                    ("n", pa.int64()),
+                                    (
+                                        "value",
+                                        pa.struct(
+                                            [
+                                                ("real", pa.string()),
+                                                ("imag", pa.string()),
+                                            ]
+                                        ),
+                                    ),
+                                    (
+                                        "error",
+                                        pa.struct(
+                                            [
+                                                ("real", pa.string()),
+                                                ("imag", pa.string()),
+                                            ]
+                                        ),
+                                    ),
+                                ]
+                            )
+                        ),
+                    ),
+                    (
+                        "events",
+                        pa.list_(
+                            pa.struct(
+                                [
+                                    ("n", pa.int64()),
+                                    ("event_type", pa.string()),
+                                    ("description", pa.string()),
+                                ]
+                            )
+                        ),
+                    ),
+                ]
+            )
+
+            print("Creating table with explicit schema...")
+            accel_table = pa.Table.from_pylist(accel_data, schema=accel_schema)
             accel_path = output_dir / "parquet" / "accelerations"
 
             ds.write_dataset(
@@ -163,6 +247,7 @@ class ExportTrialResults:
                 existing_data_behavior="overwrite_or_ignore",
             )
             print(f"Acceleration data exported to: {accel_path}")
+        print("done")
 
     def to_json(self, output_path: pathlib.Path):
         """Export to a single JSON file containing all data."""
