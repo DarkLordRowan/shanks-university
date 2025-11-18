@@ -62,7 +62,7 @@ protected:
 	 *        Valid values: order >= 0, higher orders use more terms but may provide better acceleration
 	 * @return The accelerated partial sum after D-transformation
 	 * @throws std::overflow_error if division by zero occurs
-	 */
+	*/
 	inline T calc_result(
         const K n, 
         const K order, 

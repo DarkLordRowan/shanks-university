@@ -196,7 +196,7 @@ levin_algorithm<T, K>::levin_algorithm(
 
 template<AcceptedLike T, UnsignedIntLike K>
 inline T levin_algorithm<T, K>::calc_result(
-	const K n, 
+	const K n,
     const K order, 
     const series_result<T>& data
 ) const {

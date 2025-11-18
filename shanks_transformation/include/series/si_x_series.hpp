@@ -1,6 +1,7 @@
 #pragma once
 
 #include "series_base.hpp"
+#include <gsl/gsl_sf.h>
 
 /**
 * @brief Maclaurin series of exp(x) function
@@ -40,7 +41,11 @@ public:
 
 	inline constexpr T calculate_sum(const T& x){
 
-		return static_cast<T>(0);
+		if constexpr (std::is_floating_point<T>::value){
+			return static_cast<T>(gsl_sf_Si(static_cast<double>(x)));
+		} else {
+			return static_cast<T>(0);
+		}
 
 	}
 
