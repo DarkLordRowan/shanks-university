@@ -40,7 +40,7 @@ export default function Experiment_g6() {
                 <div className="flex-1">
                     <input
                         type="range"
-                        min={-12}
+                        min={-100}
                         max={-1}
                         step={1}
                         value={epsilonExp}
@@ -50,8 +50,8 @@ export default function Experiment_g6() {
                         className="w-full"
                     />
                     <div className="flex justify-between text-[10px] mt-1">
-                        <span>10^-12</span>
-                        <span>10^-6</span>
+                        <span>10^-100</span>
+                        <span>10^-50</span>
                         <span>10^-1</span>
                     </div>
                 </div>

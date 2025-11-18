@@ -53,7 +53,7 @@ function makeAlgoKey(item: Item): AlgoKey {
     const base = `${algo.algorithmName}|m=${algo.m ?? "null"}`;
     const args = algo.algorithmArgs
         ? Object.entries(algo.algorithmArgs)
-            .sort(([a], [b]) => a.localeCompare(b))
+            .sort(([a, b]) => a.localeCompare(b))
             .map(([k, v]) => `${k}=${v}`)
             .join(";")
         : "";
@@ -65,7 +65,7 @@ function summarizeArgs(args: Item["algorithm"]["algorithmArgs"] | null): string 
     if (!args) return "";
     const entries = Object.entries(args)
         .filter(([, v]) => v !== undefined && v !== null && v !== "")
-        .sort(([a], [b]) => a.localeCompare(b));
+        .sort(([a, b]) => a.localeCompare(b));
     if (entries.length === 0) return "";
     return entries.map(([k, v]) => `${k}=${v}`).join(", ");
 }
@@ -348,7 +348,7 @@ export const AlgoRankingTable: React.FC<AlgoRankingTableProps> = ({
                                     handleSort("totalRankScore", "asc")
                                 }
                             >
-                                #
+                                Место
                                 {renderSortIcon(
                                     "totalRankScore",
                                     sortKey,
@@ -378,7 +378,7 @@ export const AlgoRankingTable: React.FC<AlgoRankingTableProps> = ({
                                 className="flex items-center gap-1 select-none"
                                 onClick={() => handleSort("m", "asc")}
                             >
-                                m
+                                m (порядок)
                                 {renderSortIcon("m", sortKey, sortDir)}
                             </button>
                         </th>
@@ -390,7 +390,7 @@ export const AlgoRankingTable: React.FC<AlgoRankingTableProps> = ({
                                     handleSort("argsSummary", "asc")
                                 }
                             >
-                                Аргументы
+                                Аргументы алгоритма
                                 {renderSortIcon(
                                     "argsSummary",
                                     sortKey,
@@ -406,7 +406,7 @@ export const AlgoRankingTable: React.FC<AlgoRankingTableProps> = ({
                                     handleSort("seriesCount", "desc")
                                 }
                             >
-                                Рядов
+                                Число рядов
                                 {renderSortIcon(
                                     "seriesCount",
                                     sortKey,
@@ -424,7 +424,7 @@ export const AlgoRankingTable: React.FC<AlgoRankingTableProps> = ({
                                     handleSort("rankPrecision", "asc")
                                 }
                             >
-                                Ранг точн.
+                                Ранг по точности
                                 {renderSortIcon(
                                     "rankPrecision",
                                     sortKey,
@@ -440,7 +440,7 @@ export const AlgoRankingTable: React.FC<AlgoRankingTableProps> = ({
                                     handleSort("avgBestDeviation", "asc")
                                 }
                             >
-                                ⟨лучш. ошибка⟩
+                                Средняя лучшая ошибка
                                 {renderSortIcon(
                                     "avgBestDeviation",
                                     sortKey,
@@ -458,7 +458,7 @@ export const AlgoRankingTable: React.FC<AlgoRankingTableProps> = ({
                                     handleSort("rankSpeed", "asc")
                                 }
                             >
-                                Ранг скор.
+                                Ранг по скорости
                                 {renderSortIcon(
                                     "rankSpeed",
                                     sortKey,
@@ -474,7 +474,7 @@ export const AlgoRankingTable: React.FC<AlgoRankingTableProps> = ({
                                     handleSort("avgStepsToTol", "asc")
                                 }
                             >
-                                ⟨шаг до ε⟩
+                                Средний шаг до ε
                                 {renderSortIcon(
                                     "avgStepsToTol",
                                     sortKey,
@@ -492,7 +492,7 @@ export const AlgoRankingTable: React.FC<AlgoRankingTableProps> = ({
                                     handleSort("rankStability", "asc")
                                 }
                             >
-                                Ранг стаб.
+                                Ранг по стабильности
                                 {renderSortIcon(
                                     "rankStability",
                                     sortKey,
@@ -508,7 +508,7 @@ export const AlgoRankingTable: React.FC<AlgoRankingTableProps> = ({
                                     handleSort("fracReachedTol", "desc")
                                 }
                             >
-                                P(|err| ≤ ε)
+                                Доля рядов с |avd|≤ε
                                 {renderSortIcon(
                                     "fracReachedTol",
                                     sortKey,
@@ -526,7 +526,7 @@ export const AlgoRankingTable: React.FC<AlgoRankingTableProps> = ({
                                     handleSort("totalRankScore", "asc")
                                 }
                             >
-                                Сумма рангов
+                                Итоговый ранг
                                 {renderSortIcon(
                                     "totalRankScore",
                                     sortKey,
@@ -619,9 +619,9 @@ export const AlgoRankingTable: React.FC<AlgoRankingTableProps> = ({
             </div>
 
             <div className="mt-1 text-[10px] text-textDim/70">
-                ⟨лучш. ошибка⟩ = среднее по рядам от{" "}
+                Средняя лучшая ошибка = среднее по рядам от{" "}
                 <span className="font-mono">min_n |accel_value_deviation|</span>
-                ; ⟨шаг до ε⟩ = среднее по тем рядам, где ошибка ≤ ε.
+                ; средний шаг до ε = среднее по тем рядам, где ошибка ≤ ε.
             </div>
         </div>
     );
