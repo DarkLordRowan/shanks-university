@@ -11,6 +11,7 @@ const nav = [
     {to: "/experiments_g5", label: "E g5"},
     {to: "/experiment_g6", label: "E g6"},
     {to: "/experiment_g7", label: "E g7"},
+    {to: "/experiment_g8", label: "E g8"},
     {to: "/algorithms", label: "Алгоритмы"},
     {to: "/series", label: "Ряды"},
     {to: "/docs", label: "Документация"},
