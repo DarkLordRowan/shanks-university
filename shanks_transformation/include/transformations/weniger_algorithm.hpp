@@ -45,7 +45,7 @@ public:
 	/**
 	 * @brief Parameterized constructor to initialize the weniger_algorithm
 	 * @param series The series class object to be accelerated
-	 *        Must be a valid object implementing the required series interface
+	 * Must be a valid object implementing the required series interface
 	 */
 	explicit weniger_algorithm() : series_acceleration<T, K>("weniger") {}
 
@@ -76,7 +76,7 @@ public:
 template<AcceptedLike T, UnsignedIntLike K>
 T weniger_algorithm<T, K>::operator()(
 	const K n, 
-    const K order, 
+    const K order,
     const series_result<T>& data
 ) const {
 
