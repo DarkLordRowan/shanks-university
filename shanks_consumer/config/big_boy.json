@@ -644,7 +644,7 @@
       "m": [2, 4, 10],
       "args": {
         "remainder": ["v_type", "u_type", "t_wave_type"],
-        "useRecFormulas": [true, false]
+        "useRecurrentFormula": [true, false]
       }
     },
     {
@@ -665,7 +665,7 @@
       "m": [2, 4, 10],
       "args": {
         "remainder": ["v_type", "u_type", "t_wave_type"],
-        "useRecFormulas": [true, false],
+        "useRecurrentFormula": [true, false],
         "beta": [0.1, 1, 10]
       }
     },
@@ -684,8 +684,8 @@
       "m": [2, 4, 10],
       "args": {
         "remainder": ["v_type", "u_type", "t_wave_type"],
-        "useRecFormulas": [true, false],
-        "parameter": [0.1, 1, 10]
+        "useRecurrentFormula": [true, false],
+        "beta": [0.1, 1, 10]
       }
     },
     {
@@ -701,7 +701,7 @@
       "args": {
         "numerator": ["rho_type", "generalized_type", "gamma_rho_type"],
         "gamma": [0.1, 1, 10],
-        "RHO": [0.1, 1, 10]
+        "rho": [0.1, 1, 10]
       }
     },
     {

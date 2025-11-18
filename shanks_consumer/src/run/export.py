@@ -97,7 +97,7 @@ def sanitize_accel_record(record: AccelRecord) -> dict[str, Any]:
         else:
             sanitized_point = {
                 "value": sanitize_complex_value(point.value),
-                "deviation": sanitize_complex_value(point.deviation),
+                "deviation": str(point.deviation),
             }
             sanitized["computed"].append(sanitized_point)
 
@@ -135,7 +135,6 @@ class ExportTrialResults:
     def to_parquet(self, output_dir: pathlib.Path, filename: str):
         """Export to separate Parquet files for series and accelerations."""
         output_dir.mkdir(parents=True, exist_ok=True)
-        print("exporting")
 
         # Export series records
         if self.series_records:
@@ -158,11 +157,10 @@ class ExportTrialResults:
                     ),
                     flavor="hive",
                 ),
-                use_threads = False, # 20.0.0 deadlocks otherwise
+                use_threads=False,  # 20.0.0 deadlocks otherwise
                 existing_data_behavior="overwrite_or_ignore",
             )
             print(f"Series data exported to: {series_path}")
-        print("accels now")
 
         # Export acceleration records
         if self.accel_records:
@@ -183,12 +181,12 @@ class ExportTrialResults:
                         pa.struct(
                             [
                                 ("remainder", pa.string()),
-                                ("useRecFormulas", pa.string()),
+                                ("useRecurrentFormula", pa.string()),
                                 ("beta", pa.string()),
                                 ("gamma", pa.string()),
                                 ("parameter", pa.string()),
                                 ("numerator", pa.string()),
-                                ("RHO", pa.string()),
+                                ("rho", pa.string()),
                                 ("epsilon_threshold", pa.string()),
                             ]
                         ),
@@ -207,15 +205,7 @@ class ExportTrialResults:
                                             ]
                                         ),
                                     ),
-                                    (
-                                        "deviation",
-                                        pa.struct(
-                                            [
-                                                ("real", pa.string()),
-                                                ("imag", pa.string()),
-                                            ]
-                                        ),
-                                    ),
+                                    ("deviation", pa.string()),
                                 ]
                             )
                         ),
@@ -291,7 +281,6 @@ class ExportTrialResults:
                 min_rows_per_group=100_000,
             )
             print(f"Acceleration data exported to: {accel_path}")
-        print("done")
 
     def to_json(self, output_path: pathlib.Path):
         """Export to a single JSON file containing all data."""
