@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { DiffCell } from "../types/diffCell";
+import html2canvas from "html2canvas";
 
 type SeriesKey = string;
 type AlgoKey = string;
@@ -27,6 +28,7 @@ function buildArgsSummary(args: DiffCell["algorithmArgs"] | null): string {
     const entries = Object.entries(args).sort(([a, b]) => a.localeCompare(b));
     return entries.map(([k, v]) => `${k}=${v}`).join(", ");
 }
+
 interface ColorSpec {
     bgClass: string;
     borderClass: string;
@@ -35,17 +37,17 @@ interface ColorSpec {
 
 // градация зелёного (улучшение)
 const GREEN_BY_LEVEL: Record<"huge" | "big" | "mid" | "small", string> = {
-    huge:  "bg-green-400/90",
-    big:   "bg-green-400/70",
-    mid:   "bg-green-500/60",
+    huge: "bg-green-400/90",
+    big: "bg-green-400/70",
+    mid: "bg-green-500/60",
     small: "bg-green-500/40",
 };
 
 // градация красного (ухудшение)
 const RED_BY_LEVEL: Record<"huge" | "big" | "mid" | "small", string> = {
-    huge:  "bg-red-400/90",
-    big:   "bg-red-400/70",
-    mid:   "bg-red-500/60",
+    huge: "bg-red-400/90",
+    big: "bg-red-400/70",
+    mid: "bg-red-500/60",
     small: "bg-red-500/40",
 };
 
@@ -212,8 +214,8 @@ export function classifyErrorChangeFull(
 
     const levelKey: "huge" | "big" | "mid" | "small" =
         absDelta >= 1000 ? "huge" :
-            absDelta >= 100  ? "big"  :
-                absDelta >= 10   ? "mid"  :
+            absDelta >= 100 ? "big" :
+                absDelta >= 10 ? "mid" :
                     "small";
 
     // 13) n2 > n1 — улучшение (зелёный градиент)
@@ -256,7 +258,9 @@ export function AlgorithmSeriesDiffHeatmap({
     cells: DiffCell[];
     maxSeries?: number;
 }) {
-    const { seriesList, algoList, cellMap } = useMemo(() => {
+    const containerRef = useRef<HTMLDivElement | null>(null);
+
+    const {seriesList, algoList, cellMap} = useMemo(() => {
         const seriesMap = new Map<SeriesKey, SeriesInfo>();
         const algoMap = new Map<AlgoKey, AlgoInfo>();
         const cellMap = new Map<string, DiffCell>();
@@ -298,7 +302,7 @@ export function AlgorithmSeriesDiffHeatmap({
                 (a.m ?? 0) - (b.m ?? 0),
         );
 
-        return { seriesList, algoList, cellMap };
+        return {seriesList, algoList, cellMap};
     }, [cells]);
 
     const [page, setPage] = useState(0);
@@ -310,6 +314,25 @@ export function AlgorithmSeriesDiffHeatmap({
         1,
         Math.ceil(seriesList.length / pageSize || 1),
     );
+
+    const handleExportPng = async () => {
+        const el = containerRef.current;
+        if (!el) return;
+
+        const canvas = await html2canvas(el, {
+            backgroundColor: "#020617", // твой общий фон (tailwind bg-slate-950 примерно)
+            scale: 2,                   // х2 для чёткости
+            scrollX: 0,
+            scrollY: -window.scrollY,   // чтобы не повлияло прокрученное окно
+        });
+
+        const dataUrl = canvas.toDataURL("image/png");
+        const link = document.createElement("a");
+        link.href = dataUrl;
+        link.download = `heatmap_page-${page + 1}-of-${totalPages}.png`;
+        link.click();
+    };
+
 
     useEffect(() => {
         if (page > totalPages - 1) {
@@ -336,6 +359,15 @@ export function AlgorithmSeriesDiffHeatmap({
                         {seriesListShown.length} из {seriesList.length}
                     </div>
 
+                    {/* кнопка экспортa */}
+                    <button
+                        type="button"
+                        onClick={handleExportPng}
+                        className="rounded border border-border bg-surface px-2 py-1 text-[10px] hover:bg-panel"
+                    >
+                        Скачать PNG (стр. {page + 1}/{totalPages})
+                    </button>
+
                     {maxSeries &&
                         maxSeries > 0 &&
                         seriesList.length > maxSeries && (
@@ -361,36 +393,40 @@ export function AlgorithmSeriesDiffHeatmap({
                                 <span className="px-1">
                                     стр. {page + 1} / {totalPages}
                                 </span>
-                                <span className="text-textDim/60">
+                            <span className="text-textDim/60">
                                     колонки {startIndex + 1}–
-                                    {Math.min(endIndex, seriesList.length)}
+                                {Math.min(endIndex, seriesList.length)}
                                 </span>
-                                <button
-                                    type="button"
-                                    className="rounded border border-border bg-surface px-1 py-[1px] disabled:opacity-40 hover:bg-panel"
-                                    onClick={() =>
-                                        setPage((p) =>
-                                            Math.min(totalPages - 1, p + 1),
-                                        )
-                                    }
-                                    disabled={page >= totalPages - 1}
-                                >
-                                    ›
-                                </button>
-                                <button
-                                    type="button"
-                                    className="rounded border border-border bg-surface px-1 py-[1px] disabled:opacity-40 hover:bg-panel"
-                                    onClick={() => setPage(totalPages - 1)}
-                                    disabled={page >= totalPages - 1}
-                                >
-                                    »
-                                </button>
-                            </div>
-                        )}
+                            <button
+                                type="button"
+                                className="rounded border border-border bg-surface px-1 py-[1px] disabled:opacity-40 hover:bg-panel"
+                                onClick={() =>
+                                    setPage((p) =>
+                                        Math.min(totalPages - 1, p + 1),
+                                    )
+                                }
+                                disabled={page >= totalPages - 1}
+                            >
+                                ›
+                            </button>
+                            <button
+                                type="button"
+                                className="rounded border border-border bg-surface px-1 py-[1px] disabled:opacity-40 hover:bg-panel"
+                                onClick={() => setPage(totalPages - 1)}
+                                disabled={page >= totalPages - 1}
+                            >
+                                »
+                            </button>
+                        </div>
+                    )}
                 </div>
             </div>
 
-            <div className="overflow-auto rounded-xl2 border border-border bg-panel shadow-panel">
+            {/* всё, что попадает в PNG */}
+            <div
+                ref={containerRef}
+                className="overflow-auto rounded-xl2 border border-border bg-panel shadow-panel"
+            >
                 <table className="border-collapse text-[10px] leading-tight text-textDim">
                     <thead className="bg-surface/80">
                     <tr>
@@ -483,7 +519,7 @@ export function AlgorithmSeriesDiffHeatmap({
                                 const nPrev = cell?.errorNPrev ?? null;
                                 const nNext = cell?.errorNNext ?? null;
 
-                                const { bgClass, borderClass, label } =
+                                const {bgClass, borderClass, label} =
                                     classifyErrorChange(
                                         hasPrevErr,
                                         nPrev,
