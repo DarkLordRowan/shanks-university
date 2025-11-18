@@ -260,29 +260,7 @@ class ExportTrialResults:
                     (
                         "errors",
                         pa.list_(
-                            pa.struct(
-                                [
-                                    ("n", pa.int64()),
-                                    (
-                                        "value",
-                                        pa.struct(
-                                            [
-                                                ("real", pa.string()),
-                                                ("imag", pa.string()),
-                                            ]
-                                        ),
-                                    ),
-                                    (
-                                        "error",
-                                        pa.struct(
-                                            [
-                                                ("real", pa.string()),
-                                                ("imag", pa.string()),
-                                            ]
-                                        ),
-                                    ),
-                                ]
-                            )
+                            pa.struct([("n", pa.int64()), ("message", pa.string())])
                         ),
                     ),
                     (
@@ -291,7 +269,7 @@ class ExportTrialResults:
                             pa.struct(
                                 [
                                     ("n", pa.int64()),
-                                    ("event_type", pa.string()),
+                                    ("name", pa.string()),
                                     ("description", pa.string()),
                                 ]
                             )
