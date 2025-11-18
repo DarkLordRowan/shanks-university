@@ -22,6 +22,14 @@ export interface ErrorMatrixTableProps {
     className?: string;
 }
 
+type SortKey = "total" | "ok" | "err" | "okPct" | "errPct";
+type SortDir = "asc" | "desc";
+
+interface SortState {
+    key: SortKey;
+    dir: SortDir;
+}
+
 export const ErrorMatrixTable: React.FC<ErrorMatrixTableProps> = ({
                                                                       items,
                                                                       maxSteps,
@@ -32,8 +40,13 @@ export const ErrorMatrixTable: React.FC<ErrorMatrixTableProps> = ({
         [items],
     );
 
-    // Хуки ВСЕГДА идут подряд и без условий
+    // хуки идут подряд и без условий
     const [page, setPage] = useState(0);
+
+    const [sort, setSort] = useState<SortState>({
+        key: "err",
+        dir: "desc",
+    });
 
     const pageSize =
         maxSteps && maxSteps > 0 ? maxSteps : nList.length || 1;
@@ -56,7 +69,51 @@ export const ErrorMatrixTable: React.FC<ErrorMatrixTableProps> = ({
             ? nList.slice(startIndex, endIndex)
             : nList;
 
-    // А уже после хуков можно условно рендерить "нет данных"
+    const sortedAlgoList = useMemo(() => {
+        return [...algoList].sort((a, b) => {
+            const sa = algoStats[a.key] ?? { total: 0, success: 0, error: 0 };
+            const sb = algoStats[b.key] ?? { total: 0, success: 0, error: 0 };
+
+            const totalA = sa.total;
+            const totalB = sb.total;
+
+            const okA = sa.success;
+            const okB = sb.success;
+
+            const errA = sa.error;
+            const errB = sb.error;
+
+            const okPctA = totalA > 0 ? okA / totalA : 0;
+            const okPctB = totalB > 0 ? okB / totalB : 0;
+
+            const errPctA = totalA > 0 ? errA / totalA : 0;
+            const errPctB = totalB > 0 ? errB / totalB : 0;
+
+            let diff = 0;
+
+            switch (sort.key) {
+                case "total":
+                    diff = totalA - totalB;
+                    break;
+                case "ok":
+                    diff = okA - okB;
+                    break;
+                case "err":
+                    diff = errA - errB;
+                    break;
+                case "okPct":
+                    diff = okPctA - okPctB;
+                    break;
+                case "errPct":
+                    diff = errPctA - errPctB;
+                    break;
+            }
+
+            return sort.dir === "asc" ? diff : -diff;
+        });
+    }, [algoList, algoStats, sort]);
+
+    // после хуков можно условно рендерить "нет данных"
     if (nList.length === 0 || algoList.length === 0) {
         return (
             <div className={className}>
@@ -75,7 +132,7 @@ export const ErrorMatrixTable: React.FC<ErrorMatrixTableProps> = ({
                 </h2>
                 <div className="flex items-center gap-3">
                     <div>
-                        Алгоритмы: {algoList.length} · Шаги n:{" "}
+                        Алгоритмы: {sortedAlgoList.length} · Шаги n:{" "}
                         {nListShown.length} из {nList.length} ·
                         Элементов с ошибкой (с n): {totalErrorItems} ·
                         Всего элементов: {items.length}
@@ -146,19 +203,94 @@ export const ErrorMatrixTable: React.FC<ErrorMatrixTableProps> = ({
                         </th>
 
                         {/* Агрегатные столбцы (отдельный блок слева от n) */}
-                        <th className="sticky left-[140px] top-0 z-20 border border-border bg-panel/95 px-1 py-1 text-center align-bottom text-[10px] min-w-[52px]">
+                        <th
+                            className="sticky left-[140px] top-0 z-20 border border-border bg-panel/95 px-1 py-1 text-center align-bottom text-[10px] min-w-[52px] cursor-pointer select-none"
+                            onClick={() =>
+                                setSort((s) =>
+                                    s.key === "total"
+                                        ? {
+                                            key: "total",
+                                            dir:
+                                                s.dir === "asc"
+                                                    ? "desc"
+                                                    : "asc",
+                                        }
+                                        : { key: "total", dir: "desc" },
+                                )
+                            }
+                        >
                             Всего
                         </th>
-                        <th className="sticky left-[192px] top-0 z-20 border border-border bg-panel/95 px-1 py-1 text-center align-bottom text-[10px] min-w-[52px]">
+                        <th
+                            className="sticky left-[192px] top-0 z-20 border border-border bg-panel/95 px-1 py-1 text-center align-bottom text-[10px] min-w-[52px] cursor-pointer select-none"
+                            onClick={() =>
+                                setSort((s) =>
+                                    s.key === "ok"
+                                        ? {
+                                            key: "ok",
+                                            dir:
+                                                s.dir === "asc"
+                                                    ? "desc"
+                                                    : "asc",
+                                        }
+                                        : { key: "ok", dir: "desc" },
+                                )
+                            }
+                        >
                             OK
                         </th>
-                        <th className="sticky left-[244px] top-0 z-20 border border-border bg-panel/95 px-1 py-1 text-center align-bottom text-[10px] min-w-[52px]">
+                        <th
+                            className="sticky left-[244px] top-0 z-20 border border-border bg-panel/95 px-1 py-1 text-center align-bottom text-[10px] min-w-[52px] cursor-pointer select-none"
+                            onClick={() =>
+                                setSort((s) =>
+                                    s.key === "err"
+                                        ? {
+                                            key: "err",
+                                            dir:
+                                                s.dir === "asc"
+                                                    ? "desc"
+                                                    : "asc",
+                                        }
+                                        : { key: "err", dir: "desc" },
+                                )
+                            }
+                        >
                             Err
                         </th>
-                        <th className="sticky left-[296px] top-0 z-20 border border-border bg-panel/95 px-1 py-1 text-center align-bottom text-[10px] min-w-[60px]">
+                        <th
+                            className="sticky left-[296px] top-0 z-20 border border-border bg-panel/95 px-1 py-1 text-center align-bottom text-[10px] min-w-[60px] cursor-pointer select-none"
+                            onClick={() =>
+                                setSort((s) =>
+                                    s.key === "okPct"
+                                        ? {
+                                            key: "okPct",
+                                            dir:
+                                                s.dir === "asc"
+                                                    ? "desc"
+                                                    : "asc",
+                                        }
+                                        : { key: "okPct", dir: "desc" },
+                                )
+                            }
+                        >
                             % OK
                         </th>
-                        <th className="sticky left-[356px] top-0 z-20 border border-border bg-panel/95 border-r-2 border-r-border px-1 py-1 text-center align-bottom text-[10px] min-w-[60px]">
+                        <th
+                            className="sticky left-[356px] top-0 z-20 border border-border bg-panel/95 border-r-2 border-r-border px-1 py-1 text-center align-bottom text-[10px] min-w-[60px] cursor-pointer select-none"
+                            onClick={() =>
+                                setSort((s) =>
+                                    s.key === "errPct"
+                                        ? {
+                                            key: "errPct",
+                                            dir:
+                                                s.dir === "asc"
+                                                    ? "desc"
+                                                    : "asc",
+                                        }
+                                        : { key: "errPct", dir: "desc" },
+                                )
+                            }
+                        >
                             % Err
                         </th>
 
@@ -177,7 +309,7 @@ export const ErrorMatrixTable: React.FC<ErrorMatrixTableProps> = ({
                     </tr>
                     </thead>
                     <tbody>
-                    {algoList.map((algo) => {
+                    {sortedAlgoList.map((algo) => {
                         const st = algoStats[algo.key] ?? {
                             total: 0,
                             success: 0,
