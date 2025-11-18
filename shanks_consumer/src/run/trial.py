@@ -3,7 +3,7 @@ import logging
 import multiprocessing as mp
 import uuid
 from dataclasses import asdict, dataclass, field
-from typing import Any, Callable, Mapping, TypeGuard
+from typing import Any, Callable, Iterable, Mapping, TypeGuard
 
 from tqdm import tqdm  # type: ignore[import]
 
@@ -330,37 +330,26 @@ class ComplexTrial:
     process_count: int = 1
     task_timeout: int = 10
 
-    def execute(self) -> tuple[list[SeriesRecord], list[AccelRecord]]:
-        all_series_records = []
-        all_accel_records = []
-
+    def execute(self) -> Iterable[tuple[list[SeriesRecord], list[AccelRecord]]]:
         if self.process_count > 1:
             # Use multiprocessing
             with mp.Pool(self.process_count) as pool:
-                results = list(
-                    tqdm(
-                        pool.imap_unordered(
-                            _process_series_worker,
-                            [
-                                (self.precision, series, self.accel_params)
-                                for series in self.series_params
-                            ],
-                        ),
-                        total=len(self.series_params),
-                        desc="Processing series",
-                    )
-                )
-
-                for series_records, accel_records in results:
-                    all_series_records.extend(series_records)
-                    all_accel_records.extend(accel_records)
+                for result in tqdm(
+                    pool.imap_unordered(
+                        _process_series_worker,
+                        [
+                            (self.precision, series, self.accel_params)
+                            for series in self.series_params
+                        ],
+                    ),
+                    total=len(self.series_params),
+                    desc="Processing series",
+                ):
+                    yield result
         else:
             # Single process with progress bar
             for series in tqdm(self.series_params, desc="Processing series"):
                 series_records, accel_records = execute_series_accels(
                     self.precision, series, self.accel_params
                 )
-                all_series_records.extend(series_records)
-                all_accel_records.extend(accel_records)
-
-        return all_series_records, all_accel_records
+                yield series_records, accel_records
