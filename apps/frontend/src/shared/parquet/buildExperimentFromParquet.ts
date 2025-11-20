@@ -182,16 +182,19 @@ function mapAccelComputed(raw: unknown): SeriesAccelComputedPoint[] {
     if (arr.length === 0) return [];
 
     return arr.map((c, idx) => {
+        const n = idx + 1;
+
         if (c == null) {
-            return { n: idx, value: null, deviation: null };
+            return { n, value: null, deviation: null };
         }
         return {
-            n: idx,
+            n,
             value: toComplex(c.value),
             deviation: toNumberOrNull(c.deviation),
         };
     });
 }
+
 
 /** errors */
 function mapErrors(raw: unknown): SeriesAccelError[] {
