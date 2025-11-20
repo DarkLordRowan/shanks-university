@@ -15,6 +15,7 @@ add_executable(shanks_transformation
     ${CMAKE_SOURCE_DIR}/src/interfaces/transformations_info.cpp
     ${CMAKE_SOURCE_DIR}/src/main.cpp
 )
+add_library(GSL SHARED IMPORTED)
 if (UNIX)
 target_link_libraries(shanks_transformation PRIVATE
     ${CMAKE_SOURCE_DIR}/libs/gsl-2.8/cblas/.libs/libgslcblas.so
