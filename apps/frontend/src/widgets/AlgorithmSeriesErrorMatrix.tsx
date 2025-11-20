@@ -104,11 +104,7 @@ interface CellSummary {
 }
 
 /**
- * Строим сводку по SeriesAccel:
- * - какие n имеют значение (value != null) без ошибок
- * - какие n содержат ошибки
- * - сколько событий дивергенции
- * - набор уникальных сообщений ошибок
+ * Строим сводку по SeriesAccel.
  */
 function summarizeSeriesAccel(sa: SeriesAccel): CellSummary {
     const computed = sa.computed ?? [];
@@ -193,9 +189,19 @@ export const AlgorithmSeriesErrorMatrix: React.FC<AlgorithmSeriesErrorMatrixProp
                                                                                           experiment,
                                                                                           maxSeries,
                                                                                       }) => {
-    const { seriesList, algoList, cellMap, totalCells } = useMemo(() => {
+    /** null = все precision, конкретная строка = фильтр по precision */
+    const [precisionFilter, setPrecisionFilter] = useState<string | null>(null);
+
+    const {
+        precisionsOrder,
+        seriesList,
+        algoList,
+        cellMap,
+        totalCells,
+    } = useMemo(() => {
         if (!experiment) {
             return {
+                precisionsOrder: [] as string[],
                 seriesList: [] as SeriesInfo[],
                 algoList: [] as AlgoInfo[],
                 cellMap: new Map<string, SeriesAccel>(),
@@ -207,12 +213,23 @@ export const AlgorithmSeriesErrorMatrix: React.FC<AlgorithmSeriesErrorMatrixProp
         const accelListRaw: Accel[] = experiment.accelList ?? [];
         const seriesAccelListRaw: SeriesAccel[] = experiment.seriesAccelList ?? [];
 
+        const precisionsOrder: string[] = [];
+        for (const s of seriesListRaw) {
+            if (!precisionsOrder.includes(s.precision)) {
+                precisionsOrder.push(s.precision);
+            }
+        }
+
         const seriesMap = new Map<SeriesKey, SeriesInfo>();
         const algoMap = new Map<AlgoKey, AlgoInfo>();
         const cells = new Map<string, SeriesAccel>();
 
-        // series
+        // series (с учётом фильтра по precision)
         for (const s of seriesListRaw) {
+            if (precisionFilter && s.precision !== precisionFilter) {
+                continue;
+            }
+
             const key: SeriesKey = s.id;
             if (!seriesMap.has(key)) {
                 const { xLabel, xSort } = parseX(s.args ?? null);
@@ -242,7 +259,7 @@ export const AlgorithmSeriesErrorMatrix: React.FC<AlgorithmSeriesErrorMatrixProp
             }
         }
 
-        // cells: SeriesAccel по (series, accel)
+        // cells: SeriesAccel по (series, accel), только для отфильтрованных series
         for (const sa of seriesAccelListRaw) {
             const sKey: SeriesKey = sa.series_id;
             const aKey: AlgoKey = sa.accel_id;
@@ -282,12 +299,23 @@ export const AlgorithmSeriesErrorMatrix: React.FC<AlgorithmSeriesErrorMatrixProp
         });
 
         return {
+            precisionsOrder,
             seriesList,
             algoList,
             cellMap: cells,
             totalCells: seriesAccelListRaw.length,
         };
-    }, [experiment]);
+    }, [experiment, precisionFilter]);
+
+    // если фильтр указывает на precision, которого больше нет, сбрасываем его
+    useEffect(() => {
+        if (
+            precisionFilter &&
+            !precisionsOrder.includes(precisionFilter)
+        ) {
+            setPrecisionFilter(null);
+        }
+    }, [precisionFilter, precisionsOrder]);
 
     const [page, setPage] = useState(0);
 
@@ -315,10 +343,39 @@ export const AlgorithmSeriesErrorMatrix: React.FC<AlgorithmSeriesErrorMatrixProp
     return (
         <div className="space-y-2">
             <div className="flex items-center justify-between text-xs text-textDim">
-                <h2 className="text-sm font-semibold text-textDim">
-                    Матрица ошибок: алгоритмы × ряды
-                </h2>
+                <div className="flex flex-col gap-1">
+                    <h2 className="text-sm font-semibold text-textDim">
+                        Матрица ошибок: алгоритмы × ряды
+                    </h2>
+                    {precisionFilter && (
+                        <div className="text-[10px] text-textDim/80">
+                            precision: {precisionFilter}
+                        </div>
+                    )}
+                </div>
+
                 <div className="flex items-center gap-3">
+                    {/* выбор precision */}
+                    <div className="flex items-center gap-2 text-[10px]">
+                        <span>precision:</span>
+                        <select
+                            className="rounded border border-border bg-surface px-1 py-[1px]"
+                            value={precisionFilter ?? ""}
+                            onChange={(e) =>
+                                setPrecisionFilter(
+                                    e.target.value === "" ? null : e.target.value,
+                                )
+                            }
+                        >
+                            <option value="">все</option>
+                            {precisionsOrder.map((p) => (
+                                <option key={p} value={p}>
+                                    {p}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+
                     <div>
                         Алгоритмы: {algoList.length} · Ряды:{" "}
                         {seriesListShown.length} из {seriesList.length} ·
@@ -396,8 +453,9 @@ export const AlgorithmSeriesErrorMatrix: React.FC<AlgorithmSeriesErrorMatrixProp
                                 )}`}
                             >
                                 <div className="relative h-28 w-[32px] flex items-center justify-center">
-                                    <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2
-                                    rotate-[-90deg] whitespace-nowrap text-[9px] leading-tight"
+                                    <span
+                                        className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2
+                                        rotate-[-90deg] whitespace-nowrap text-[9px] leading-tight"
                                     >
                                         {s.seriesName}
                                     </span>
@@ -443,14 +501,14 @@ export const AlgorithmSeriesErrorMatrix: React.FC<AlgorithmSeriesErrorMatrixProp
                                 })()}
                             >
                                 <div className="whitespace-pre leading-tight">
-                                        <span className="block max-w-[150px] truncate">
-                                            {algo.algorithmName}
-                                        </span>
+                                    <span className="block max-w-[150px] truncate">
+                                        {algo.algorithmName}
+                                    </span>
                                     <span className="text-[9px] text-textDim/70">
-                                            {algo.m != null
-                                                ? `m=${String(algo.m)}`
-                                                : "m=∅"}
-                                        </span>
+                                        {algo.m != null
+                                            ? `m=${String(algo.m)}`
+                                            : "m=∅"}
+                                    </span>
                                     {algo.argsSummary && (
                                         <div className="mt-[1px] max-w-[150px] truncate text-[8px] text-textDim/60">
                                             {algo.argsSummary}
@@ -495,8 +553,8 @@ export const AlgorithmSeriesErrorMatrix: React.FC<AlgorithmSeriesErrorMatrixProp
                                             "border-emerald-500/70";
                                         content = (
                                             <span className="font-semibold text-emerald-200">
-                                                    ✓
-                                                </span>
+                                                ✓
+                                            </span>
                                         );
                                         break;
                                     case "only-errors":
@@ -505,8 +563,8 @@ export const AlgorithmSeriesErrorMatrix: React.FC<AlgorithmSeriesErrorMatrixProp
                                         borderClass = "border-red-500/70";
                                         content = (
                                             <span className="font-semibold text-red-200">
-                                                    {"err"}
-                                                </span>
+                                                err
+                                            </span>
                                         );
                                         break;
                                     case "ok-with-errors":
@@ -520,17 +578,17 @@ export const AlgorithmSeriesErrorMatrix: React.FC<AlgorithmSeriesErrorMatrixProp
                                         ) {
                                             content = (
                                                 <span className="font-semibold text-amber-100">
-                                                        {summary.firstOkN ===
-                                                        summary.lastOkN
-                                                            ? `${summary.firstOkN}`
-                                                            : `${summary.firstOkN}–${summary.lastOkN}`}
-                                                    </span>
+                                                    {summary.firstOkN ===
+                                                    summary.lastOkN
+                                                        ? `${summary.firstOkN}`
+                                                        : `${summary.firstOkN}–${summary.lastOkN}`}
+                                                </span>
                                             );
                                         } else {
                                             content = (
                                                 <span className="font-semibold text-amber-100">
-                                                        mix
-                                                    </span>
+                                                    mix
+                                                </span>
                                             );
                                         }
                                         break;
@@ -595,9 +653,7 @@ export const AlgorithmSeriesErrorMatrix: React.FC<AlgorithmSeriesErrorMatrixProp
                                         `divergent_accel_method: ${summary.divergentCount}`,
                                     );
                                 }
-                                if (
-                                    summary.uniqueErrorMessages.length > 0
-                                ) {
+                                if (summary.uniqueErrorMessages.length > 0) {
                                     tooltipLines.push("");
                                     tooltipLines.push("Типы ошибок:");
                                     for (const msg of summary.uniqueErrorMessages) {
