@@ -255,7 +255,14 @@ export function buildExperimentFromParquet(
     const accelMap = new Map<string, Accel>();
     const seriesAccelList: SeriesAccel[] = [];
 
+    let count = 0;
+
     for (const row of accelRows) {
+        if (count % 1000 == 0) {
+            console.log("buildExperimentFromParquet", count)
+        }
+        count = count + 1;
+
         const sid = toNumberOrNull(row.series_id) ?? -1;
         const series = seriesMap.get(sid);
         if (!series) continue;

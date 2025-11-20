@@ -65,11 +65,15 @@ function parseX(args: SeriesArgs | null): { xLabel: string; xSort: number | null
     return { xLabel, xSort };
 }
 
-function buildArgsSummary(args: AccelArgs | null): string {
-    if (!args) return "";
-    const entries = Object.entries(args).filter(
-        ([, v]) => v !== undefined && v !== null,
+function nonNullEntries<T extends Record<string, unknown>>(obj: T | null | undefined) {
+    if (!obj) return [] as [string, unknown][];
+    return Object.entries(obj).filter(
+        ([, v]) => v !== null && v !== undefined,
     );
+}
+
+function buildArgsSummary(args: AccelArgs | null): string {
+    const entries = nonNullEntries(args);
     if (entries.length === 0) return "";
     entries.sort(([a], [b]) => a.localeCompare(b));
     return entries.map(([k, v]) => `${k}=${v}`).join(", ");
@@ -96,6 +100,7 @@ interface CellSummary {
     lastErrorN: number | null;
     errorCount: number;
     divergentCount: number;
+    uniqueErrorMessages: string[];
 }
 
 /**
@@ -103,6 +108,7 @@ interface CellSummary {
  * - какие n имеют значение (value != null) без ошибок
  * - какие n содержат ошибки
  * - сколько событий дивергенции
+ * - набор уникальных сообщений ошибок
  */
 function summarizeSeriesAccel(sa: SeriesAccel): CellSummary {
     const computed = sa.computed ?? [];
@@ -112,11 +118,22 @@ function summarizeSeriesAccel(sa: SeriesAccel): CellSummary {
     const totalN = computed.length;
 
     const errorNs = new Set<number>();
+    const errorMessages: string[] = [];
+
     for (const e of errors) {
         if (typeof e.n === "number") {
             errorNs.add(e.n);
         }
+        const msg =
+            typeof e.message === "string"
+                ? e.message.trim()
+                : String(e.message ?? "").trim();
+        if (msg.length > 0) {
+            errorMessages.push(msg);
+        }
     }
+
+    const uniqueErrorMessages = Array.from(new Set(errorMessages));
 
     const okNs: number[] = [];
     for (const cp of computed) {
@@ -168,6 +185,7 @@ function summarizeSeriesAccel(sa: SeriesAccel): CellSummary {
         lastErrorN,
         errorCount: errorList.length,
         divergentCount,
+        uniqueErrorMessages,
     };
 }
 
@@ -377,13 +395,15 @@ export const AlgorithmSeriesErrorMatrix: React.FC<AlgorithmSeriesErrorMatrixProp
                                     s.limit,
                                 )}`}
                             >
-                                <div className="flex h-28 w-[32px] flex-col items-center justify-end gap-1">
-                                    <div className="origin-bottom-left -rotate-90 whitespace-nowrap text-[9px] leading-tight">
+                                <div className="relative h-28 w-[32px] flex items-center justify-center">
+                                    <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2
+                                    rotate-[-90deg] whitespace-nowrap text-[9px] leading-tight"
+                                    >
                                         {s.seriesName}
-                                    </div>
-                                    <div className="text-[8px] text-textDim/70">
+                                    </span>
+                                    <span className="absolute bottom-1 text-[8px] text-textDim/70">
                                         x={s.xLabel}
-                                    </div>
+                                    </span>
                                 </div>
                             </th>
                         ))}
@@ -406,17 +426,15 @@ export const AlgorithmSeriesErrorMatrix: React.FC<AlgorithmSeriesErrorMatrixProp
                                                 : "∅"
                                         }`,
                                     );
-                                    if (
-                                        algo.algorithmArgs &&
-                                        Object.keys(
-                                            algo.algorithmArgs,
-                                        ).length > 0
-                                    ) {
+
+                                    const entries = nonNullEntries(
+                                        algo.algorithmArgs,
+                                    );
+                                    if (entries.length > 0) {
                                         lines.push("Аргументы:");
-                                        for (const [k, v] of Object.entries(
-                                            algo.algorithmArgs,
-                                        ).sort(([a, b]) =>
-                                            a.localeCompare(b),
+                                        for (const [k, v] of entries.sort(
+                                            ([a], [b]) =>
+                                                a.localeCompare(b),
                                         )) {
                                             lines.push(`  ${k}: ${v}`);
                                         }
@@ -487,9 +505,7 @@ export const AlgorithmSeriesErrorMatrix: React.FC<AlgorithmSeriesErrorMatrixProp
                                         borderClass = "border-red-500/70";
                                         content = (
                                             <span className="font-semibold text-red-200">
-                                                    {summary.firstErrorN != null
-                                                        ? `err@${summary.firstErrorN}`
-                                                        : "err"}
+                                                    {"err"}
                                                 </span>
                                         );
                                         break;
@@ -541,18 +557,15 @@ export const AlgorithmSeriesErrorMatrix: React.FC<AlgorithmSeriesErrorMatrixProp
                                             : "∅"
                                     }`,
                                 );
-                                if (
-                                    algo.algorithmArgs &&
-                                    Object.keys(algo.algorithmArgs).length >
-                                    0
-                                ) {
+                                const argEntries = nonNullEntries(
+                                    algo.algorithmArgs,
+                                );
+                                if (argEntries.length > 0) {
                                     tooltipLines.push("Аргументы:");
-                                    const entries = Object.entries(
-                                        algo.algorithmArgs,
-                                    ).sort(([a, b]) =>
-                                        a.localeCompare(b),
-                                    );
-                                    for (const [k, v] of entries) {
+                                    for (const [k, v] of argEntries.sort(
+                                        ([a], [b]) =>
+                                            a.localeCompare(b),
+                                    )) {
                                         tooltipLines.push(`  ${k}: ${v}`);
                                     }
                                 }
@@ -581,6 +594,15 @@ export const AlgorithmSeriesErrorMatrix: React.FC<AlgorithmSeriesErrorMatrixProp
                                     tooltipLines.push(
                                         `divergent_accel_method: ${summary.divergentCount}`,
                                     );
+                                }
+                                if (
+                                    summary.uniqueErrorMessages.length > 0
+                                ) {
+                                    tooltipLines.push("");
+                                    tooltipLines.push("Типы ошибок:");
+                                    for (const msg of summary.uniqueErrorMessages) {
+                                        tooltipLines.push(`  • ${msg}`);
+                                    }
                                 }
 
                                 const title = tooltipLines.join("\n");
