@@ -11,12 +11,12 @@
   "results_csv": "output/results.csv",
   "results_parquet": "output/results.parquet",
 
-  "trial_process_count": 8,
-  "trial_task_timeout": 20,
-  "trial_result_view": "completion",
+  "trial_process_count": 1,
+  "trial_task_timeout": 5,
+  "trial_result_view": "errors_only",
   "no_events": false,
 
-  "precisions": ["Arb"],
+  "precisions": ["F32"],
 
   "output_formats": ["csv"],
 
