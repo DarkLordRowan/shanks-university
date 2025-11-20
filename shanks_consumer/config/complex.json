@@ -1,0 +1,52 @@
+{
+  "series": [
+    {
+      "name": "ExpSeries",
+      "args": {
+        "x": [0, 1, "0 + 1i", "1 - 1i", "0.1 - 0.1i"]
+      }
+    },
+    {
+      "name": "OneSeries",
+      "args": {
+        "x": [0, 1, "0 + 1i", "1 - 1i", "0.1 - 0.1i"]
+      }
+    }
+  ],
+
+  "methods": [
+    {
+      "name": "ShanksAlgorithm",
+      "n": { "start": 1, "stop": 51, "step": 1 },
+      "m": [2, 4, 10],
+      "args": {}
+    },
+    {
+      "name": "ShanksTransformAlternating",
+      "n": { "start": 1, "stop": 51, "step": 1 },
+      "m": [2, 4, 10],
+      "args": {}
+    },
+    {
+      "name": "BrezinskiThetaAlgorithm",
+      "n": { "start": 1, "stop": 51, "step": 1 },
+      "m": [2, 4, 10],
+      "args": {}
+    },
+    {
+      "name": "ChangWynnAlgorithm",
+      "n": { "start": 1, "stop": 51, "step": 1 },
+      "m": [2, 4, 10],
+      "args": {}
+    },
+    {
+      "name": "DrummondDAlgorithm",
+      "n": { "start": 1, "stop": 51, "step": 1 },
+      "m": [2, 4, 10],
+      "args": {
+        "remainder": ["v_type", "u_type", "t_wave_type"],
+        "useRecurrentFormula": [true, false]
+      }
+    }
+  ]
+}

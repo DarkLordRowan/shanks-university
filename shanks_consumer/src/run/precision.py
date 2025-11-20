@@ -139,7 +139,15 @@ class Precision:
             constructor = cls._COMPLEX_CLASS[precision]
             if isinstance(value, cls):
                 return value
+            if isinstance(value, str):
+                sanitized_str = value.replace(" ", "").replace("i", "j")
+                try:
+                    value = complex(sanitized_str)
+                except ValueError:
+                    pass
             if isinstance(value, complex):
+                if precision == PrecisionType.CARB:
+                    return constructor(ps.Arb(value.real), ps.Arb(value.imag))
                 return constructor(value.real, value.imag)
             if isinstance(value, (tuple, list)) and len(value) == 2:
                 return constructor(value[0], value[1])
