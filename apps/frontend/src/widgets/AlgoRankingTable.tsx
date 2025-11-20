@@ -1,6 +1,6 @@
 // widgets/AlgoRankingTable.tsx
 
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import type { Experiment, AccelArgs } from "@/types/experiment";
 
 type AlgoKey = string;
@@ -10,6 +10,12 @@ interface AlgoStats {
     algorithmName: string;
     m: number | null;
     argsSummary: string;
+
+    /** precision по рядам этого алгоритма:
+     *  - если одинаковая у всех — её значение
+     *  - если разная — null (mixed / неизвестно)
+     */
+    precision: string | null;
 
     seriesCount: number;
     bestDeviations: number[];
@@ -31,8 +37,6 @@ export interface AlgoRankingTableProps {
     experiment: Experiment | null;
     /** Допустимая ошибка по |deviation|. По умолчанию 1e-6 */
     epsilon?: number;
-    /** Фильтр по series.precision; если null/undefined — берем все */
-    precision?: string | null;
     className?: string;
 }
 
@@ -40,6 +44,7 @@ type SortKey =
     | "algorithmName"
     | "m"
     | "argsSummary"
+    | "precision"
     | "seriesCount"
     | "avgBestDeviation"
     | "fracReachedTol"
@@ -125,7 +130,7 @@ function formatSteps(n: number): string {
 function buildAlgoStatsFromExperiment(
     experiment: Experiment | null,
     epsilon: number,
-    precisionFilter: string | null | undefined,
+    precisionFilter: string | null,
 ): AlgoStats[] {
     if (!experiment || !experiment.seriesAccelList || experiment.seriesAccelList.length === 0) {
         return [];
@@ -144,7 +149,9 @@ function buildAlgoStatsFromExperiment(
         const series = seriesById.get(sa.series_id);
         if (!series) continue;
 
-        if (precisionFilter && series.precision !== precisionFilter) {
+        const seriesPrecision = series.precision ?? null;
+
+        if (precisionFilter && seriesPrecision !== precisionFilter) {
             continue;
         }
 
@@ -163,6 +170,8 @@ function buildAlgoStatsFromExperiment(
                 m,
                 argsSummary: summarizeArgs(args),
 
+                precision: seriesPrecision,
+
                 seriesCount: 0,
                 bestDeviations: [],
                 stepsToTol: [],
@@ -179,11 +188,15 @@ function buildAlgoStatsFromExperiment(
                 totalRankScore: 0,
             };
             byAlgo.set(algoKey, stats);
+        } else {
+            // если в рамках одного алгоритма встретились разные precision — помечаем как mixed
+            if (stats.precision !== seriesPrecision) {
+                stats.precision = null;
+            }
         }
 
         const computed = sa.computed ?? [];
         if (computed.length === 0) {
-            // можно было бы учитывать чисто ошибки, но тогда нет deviation — пропускаем
             continue;
         }
 
@@ -325,12 +338,31 @@ function compareValues(aVal: unknown, bVal: unknown, dir: SortDir): number {
 export const AlgoRankingTable: React.FC<AlgoRankingTableProps> = ({
                                                                       experiment,
                                                                       epsilon = 1e-6,
-                                                                      precision,
                                                                       className,
                                                                   }) => {
+    /** null = все precision, строка = фильтр по series.precision */
+    const [precisionFilter, setPrecisionFilter] = useState<string | null>(null);
+
+    /** список доступных precision из Experiment */
+    const precisionsOrder = useMemo(() => {
+        if (!experiment || !experiment.seriesList) return [];
+        const set = new Set<string>();
+        for (const s of experiment.seriesList) {
+            if (s.precision) set.add(s.precision);
+        }
+        return Array.from(set).sort();
+    }, [experiment]);
+
+    // если выбранное precision больше не существует в данных — сбрасываем
+    useEffect(() => {
+        if (precisionFilter && !precisionsOrder.includes(precisionFilter)) {
+            setPrecisionFilter(null);
+        }
+    }, [precisionFilter, precisionsOrder]);
+
     const stats = useMemo(
-        () => buildAlgoStatsFromExperiment(experiment, epsilon, precision),
-        [experiment, epsilon, precision],
+        () => buildAlgoStatsFromExperiment(experiment, epsilon, precisionFilter),
+        [experiment, epsilon, precisionFilter],
     );
 
     const [sortKey, setSortKey] = useState<SortKey>("totalRankScore");
@@ -378,7 +410,7 @@ export const AlgoRankingTable: React.FC<AlgoRankingTableProps> = ({
             <div className={className}>
                 <div className="text-sm text-textDim/80">
                     Не удалось построить статистику по алгоритмам
-                    {precision ? ` (precision=${precision})` : ""}: нет валидных рядов с deviation.
+                    {precisionFilter ? ` (precision=${precisionFilter})` : ""}: нет валидных рядов с deviation.
                 </div>
             </div>
         );
@@ -390,15 +422,39 @@ export const AlgoRankingTable: React.FC<AlgoRankingTableProps> = ({
                 <h2 className="text-base font-semibold text-text">
                     Рейтинг алгоритмов
                 </h2>
-                <div className="text-xs text-textDim/80">
-                    ε = <span className="font-mono">{epsilon}</span>{" "}
-                    по |deviation|
-                    {precision ? (
-                        <span className="ml-2">
-                            · precision ={" "}
-                            <span className="font-mono">{precision}</span>
-                        </span>
-                    ) : null}
+                <div className="flex items-center gap-3 text-xs text-textDim/80">
+                    <div>
+                        ε = <span className="font-mono">{epsilon}</span>{" "}
+                        по |deviation|
+                        {precisionFilter && (
+                            <span className="ml-2">
+                                · precision ={" "}
+                                <span className="font-mono">
+                                    {precisionFilter}
+                                </span>
+                            </span>
+                        )}
+                    </div>
+
+                    <div className="flex items-center gap-2 text-[10px]">
+                        <span>precision:</span>
+                        <select
+                            className="rounded border border-border bg-surface px-1 py-[1px]"
+                            value={precisionFilter ?? ""}
+                            onChange={(e) =>
+                                setPrecisionFilter(
+                                    e.target.value === "" ? null : e.target.value,
+                                )
+                            }
+                        >
+                            <option value="">все</option>
+                            {precisionsOrder.map((p) => (
+                                <option key={p} value={p}>
+                                    {p}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
                 </div>
             </div>
 
@@ -442,6 +498,22 @@ export const AlgoRankingTable: React.FC<AlgoRankingTableProps> = ({
                             <button
                                 type="button"
                                 className="flex items-center gap-1 select-none"
+                                onClick={() =>
+                                    handleSort("precision", "asc")
+                                }
+                            >
+                                Точность (precision)
+                                {renderSortIcon(
+                                    "precision",
+                                    sortKey,
+                                    sortDir,
+                                )}
+                            </button>
+                        </th>
+                        <th className="px-2 py-1 text-left">
+                            <button
+                                type="button"
+                                className="flex items-center gap-1 select-none"
                                 onClick={() => handleSort("m", "asc")}
                             >
                                 m (порядок)
@@ -459,22 +531,6 @@ export const AlgoRankingTable: React.FC<AlgoRankingTableProps> = ({
                                 Аргументы алгоритма
                                 {renderSortIcon(
                                     "argsSummary",
-                                    sortKey,
-                                    sortDir,
-                                )}
-                            </button>
-                        </th>
-                        <th className="px-2 py-1 text-right">
-                            <button
-                                type="button"
-                                className="flex w-full justify-end items-center gap-1 select-none"
-                                onClick={() =>
-                                    handleSort("seriesCount", "desc")
-                                }
-                            >
-                                Число рядов
-                                {renderSortIcon(
-                                    "seriesCount",
                                     sortKey,
                                     sortDir,
                                 )}
@@ -625,6 +681,9 @@ export const AlgoRankingTable: React.FC<AlgoRankingTableProps> = ({
                             ? "bg-primary/5"
                             : "bg-surface/40";
 
+                        const precisionLabel =
+                            s.precision ?? (precisionFilter ? precisionFilter : "—");
+
                         return (
                             <tr key={s.algoKey} className={baseRowClass}>
                                 <td className="px-2 py-1 text-left font-mono text-textDim">
@@ -636,13 +695,13 @@ export const AlgoRankingTable: React.FC<AlgoRankingTableProps> = ({
                                     </div>
                                 </td>
                                 <td className="px-2 py-1 text-left font-mono text-textDim">
+                                    {precisionLabel}
+                                </td>
+                                <td className="px-2 py-1 text-left font-mono text-textDim">
                                     {s.m ?? "—"}
                                 </td>
                                 <td className="px-2 py-1 text-left text-textDim">
                                     {s.argsSummary || "—"}
-                                </td>
-                                <td className="px-2 py-1 text-right font-mono text-textDim">
-                                    {s.seriesCount}
                                 </td>
 
                                 {/* группа: точность */}
