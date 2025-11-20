@@ -21,6 +21,7 @@ interface SeriesInfo {
     xSort: number | null;
     limit: Complex | null;
     args: SeriesArgs | null;
+    precision: string;
 }
 
 interface AlgoInfo {
@@ -240,6 +241,7 @@ export const AlgorithmSeriesErrorMatrix: React.FC<AlgorithmSeriesErrorMatrixProp
                     xSort,
                     limit: s.limit,
                     args: s.args,
+                    precision: s.precision,
                 });
             }
         }
@@ -448,7 +450,7 @@ export const AlgorithmSeriesErrorMatrix: React.FC<AlgorithmSeriesErrorMatrixProp
                             <th
                                 key={s.key}
                                 className="border border-border px-0 py-0 text-center align-bottom"
-                                title={`${s.seriesName}\n x = ${s.xLabel}\n lim = ${formatComplex(
+                                title={`${s.seriesName}\n x = ${s.xLabel}\n precision = ${s.precision}\n lim = ${formatComplex(
                                     s.limit,
                                 )}`}
                             >
@@ -599,6 +601,7 @@ export const AlgorithmSeriesErrorMatrix: React.FC<AlgorithmSeriesErrorMatrixProp
                                 // ряд
                                 tooltipLines.push(`Ряд: ${s.seriesName}`);
                                 tooltipLines.push(`x = ${s.xLabel}`);
+                                tooltipLines.push(`precision = ${s.precision}`);
                                 tooltipLines.push(
                                     `lim = ${formatComplex(s.limit)}`,
                                 );
