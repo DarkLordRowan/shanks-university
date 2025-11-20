@@ -225,7 +225,7 @@ inline T levin_sidi_s_algorithm<T, K>::calc_result(
         );
 
         // Accumulate numerator and denominator
-        numerator   += rest * data.Sn.at( + j);
+        numerator   += rest * data.Sn.at(n + j);
         denominator += rest;
     }
 
@@ -486,8 +486,8 @@ inline float_precision levin_sidi_s_algorithm<float_precision, K>::calc_result(
 
     float_precision numerator   = float_precision(0.0, precision);
     float_precision denominator = float_precision(0.0, precision);
-    float_precision rest;
-    float_precision up_pochamer, down_pochamer;
+    float_precision rest = float_precision(1.0, precision);
+    float_precision up_pochamer = float_precision(1.0, precision), down_pochamer = float_precision(1.0, precision);
 
     // For theory, see: Sidi (2003, arXiv:math/0306302), Eq. (8.2)
     // S_{k,n} = [∑_{j=0}^k (-1)^j C(k,j) (β+n+j)_{k-1}/(β+n+k)_{k-1} S_{n+j}/R_{n+j}] /
