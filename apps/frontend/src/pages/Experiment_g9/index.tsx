@@ -1,11 +1,12 @@
 import { useMemo, useState } from "react";
-import type { Item } from "@/types/item.ts";
-import { StreamFileInput } from "@/features/import-experiment-from-file/ui/StreamFileInput.tsx";
-import { AlgoRankingTable } from "@/widgets/AlgoRankingTable/ui/AlgoRankingTable.tsx";
+import type { Experiment } from "@/types/experiment.ts";
+import { ParquetFolderInput } from "@/features/import-experiment-from-parquet/ui/ParquetFolderInput.tsx";
+import { AlgoRankingTable } from "@/widgets/AlgoRankingTable";
 
 export default function Experiment_g6() {
 
-    const [items, setItems] = useState<Item[]>([]);
+    const [experiment, setExperiment] = useState<Experiment | null>(null);
+
     const [epsilonExp, setEpsilonExp] = useState(-6);
 
 
@@ -18,7 +19,7 @@ export default function Experiment_g6() {
     return (
         <div className="mx-auto">
 
-            <StreamFileInput onItemsChange={setItems}/>
+            <ParquetFolderInput onExperimentChange={setExperiment}/>
             <br/>
 
             <div className="flex items-center gap-4 text-xs text-textDim">
@@ -57,7 +58,7 @@ export default function Experiment_g6() {
                 </div>
             </div>
 
-            <AlgoRankingTable items={items} epsilon={epsilon} />
+            <AlgoRankingTable experiment={experiment} epsilon={epsilon}/>
 
         </div>
     );
