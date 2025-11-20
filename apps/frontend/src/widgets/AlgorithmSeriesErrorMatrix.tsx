@@ -26,7 +26,7 @@ interface SeriesInfo {
 interface AlgoInfo {
     key: AlgoKey;
     algorithmName: string;
-    m: unknown; // по факту может быть number | bigint | string | null
+    m: unknown; // number | bigint | string | null
     argsSummary: string;
     algorithmArgs: AccelArgs | null;
 }
@@ -39,7 +39,6 @@ interface AlgorithmSeriesErrorMatrixProps {
 
 /**
  * Безопасное приведение к числу для сортировки.
- * Если привести нельзя, возвращаем null.
  */
 function toSortableNumber(v: unknown): number | null {
     if (typeof v === "number") {
@@ -69,7 +68,7 @@ function parseX(args: SeriesArgs | null): { xLabel: string; xSort: number | null
 function buildArgsSummary(args: AccelArgs | null): string {
     if (!args) return "";
     const entries = Object.entries(args).filter(
-        ([_, v]) => v !== undefined && v !== null,
+        ([, v]) => v !== undefined && v !== null,
     );
     if (entries.length === 0) return "";
     entries.sort(([a], [b]) => a.localeCompare(b));
@@ -84,6 +83,92 @@ function formatComplex(c: Complex | null): string {
     if (re == null || re === 0) return `${im}i`;
     const sign = im >= 0 ? "+" : "-";
     return `${re} ${sign} ${Math.abs(im)}i`;
+}
+
+/** Сводка по одной клетке (SeriesAccel) */
+interface CellSummary {
+    state: "no-data" | "all-ok" | "ok-with-errors" | "only-errors";
+    totalN: number;
+    okCount: number;
+    firstOkN: number | null;
+    lastOkN: number | null;
+    firstErrorN: number | null;
+    lastErrorN: number | null;
+    errorCount: number;
+    divergentCount: number;
+}
+
+/**
+ * Строим сводку по SeriesAccel:
+ * - какие n имеют значение (value != null) без ошибок
+ * - какие n содержат ошибки
+ * - сколько событий дивергенции
+ */
+function summarizeSeriesAccel(sa: SeriesAccel): CellSummary {
+    const computed = sa.computed ?? [];
+    const errors = sa.errors ?? [];
+    const events = sa.events ?? [];
+
+    const totalN = computed.length;
+
+    const errorNs = new Set<number>();
+    for (const e of errors) {
+        if (typeof e.n === "number") {
+            errorNs.add(e.n);
+        }
+    }
+
+    const okNs: number[] = [];
+    for (const cp of computed) {
+        if (!cp) continue;
+        const n = cp.n;
+        if (typeof n !== "number") continue;
+
+        const hasValue =
+            cp.value != null &&
+            (cp.value.re != null || cp.value.im != null);
+
+        if (hasValue && !errorNs.has(n)) {
+            okNs.push(n);
+        }
+    }
+
+    okNs.sort((a, b) => a - b);
+
+    const firstOkN = okNs.length > 0 ? okNs[0] : null;
+    const lastOkN = okNs.length > 0 ? okNs[okNs.length - 1] : null;
+
+    const errorList = [...errorNs].sort((a, b) => a - b);
+    const firstErrorN = errorList.length > 0 ? errorList[0] : null;
+    const lastErrorN = errorList.length > 0 ? errorList[errorList.length - 1] : null;
+
+    const divergentCount = events.filter(
+        (ev) => ev.name === "divergent_accel_method",
+    ).length;
+
+    let state: CellSummary["state"];
+
+    if (totalN === 0 && errorList.length === 0) {
+        state = "no-data";
+    } else if (okNs.length === 0 && errorList.length > 0) {
+        state = "only-errors";
+    } else if (okNs.length > 0 && errorList.length === 0) {
+        state = "all-ok";
+    } else {
+        state = "ok-with-errors";
+    }
+
+    return {
+        state,
+        totalN,
+        okCount: okNs.length,
+        firstOkN,
+        lastOkN,
+        firstErrorN,
+        lastErrorN,
+        errorCount: errorList.length,
+        divergentCount,
+    };
 }
 
 export const AlgorithmSeriesErrorMatrix: React.FC<AlgorithmSeriesErrorMatrixProps> = ({
@@ -132,7 +217,7 @@ export const AlgorithmSeriesErrorMatrix: React.FC<AlgorithmSeriesErrorMatrixProp
                 algoMap.set(key, {
                     key,
                     algorithmName: a.name,
-                    m: a.m, // может быть number | bigint | string | null
+                    m: a.m,
                     argsSummary: buildArgsSummary(args),
                     algorithmArgs: args,
                 });
@@ -371,20 +456,69 @@ export const AlgorithmSeriesErrorMatrix: React.FC<AlgorithmSeriesErrorMatrixProp
                                     );
                                 }
 
-                                const hasError =
-                                    sa.errors && sa.errors.length > 0;
-                                const errorN =
-                                    hasError && sa.errors[0]
-                                        ? sa.errors[0].n
-                                        : null;
+                                const summary = summarizeSeriesAccel(sa);
 
-                                const bgClass = hasError
-                                    ? "bg-red-900/40 hover:bg-red-800/60"
-                                    : "bg-emerald-900/40 hover:bg-emerald-800/60";
+                                let bgClass = "bg-surface/40 hover:bg-surface/60";
+                                let borderClass = "border-border/60";
+                                let content: React.ReactNode = "—";
 
-                                const borderClass = hasError
-                                    ? "border-red-500/70"
-                                    : "border-emerald-500/70";
+                                switch (summary.state) {
+                                    case "no-data":
+                                        bgClass =
+                                            "bg-surface/40 hover:bg-surface/60";
+                                        borderClass =
+                                            "border-border/60";
+                                        content = "—";
+                                        break;
+                                    case "all-ok":
+                                        bgClass =
+                                            "bg-emerald-900/40 hover:bg-emerald-800/60";
+                                        borderClass =
+                                            "border-emerald-500/70";
+                                        content = (
+                                            <span className="font-semibold text-emerald-200">
+                                                    ✓
+                                                </span>
+                                        );
+                                        break;
+                                    case "only-errors":
+                                        bgClass =
+                                            "bg-red-900/40 hover:bg-red-800/60";
+                                        borderClass = "border-red-500/70";
+                                        content = (
+                                            <span className="font-semibold text-red-200">
+                                                    {summary.firstErrorN != null
+                                                        ? `err@${summary.firstErrorN}`
+                                                        : "err"}
+                                                </span>
+                                        );
+                                        break;
+                                    case "ok-with-errors":
+                                        bgClass =
+                                            "bg-amber-900/40 hover:bg-amber-800/60";
+                                        borderClass =
+                                            "border-amber-500/70";
+                                        if (
+                                            summary.firstOkN != null &&
+                                            summary.lastOkN != null
+                                        ) {
+                                            content = (
+                                                <span className="font-semibold text-amber-100">
+                                                        {summary.firstOkN ===
+                                                        summary.lastOkN
+                                                            ? `${summary.firstOkN}`
+                                                            : `${summary.firstOkN}–${summary.lastOkN}`}
+                                                    </span>
+                                            );
+                                        } else {
+                                            content = (
+                                                <span className="font-semibold text-amber-100">
+                                                        mix
+                                                    </span>
+                                            );
+                                        }
+                                        break;
+                                }
 
                                 const tooltipLines: string[] = [];
 
@@ -423,15 +557,29 @@ export const AlgorithmSeriesErrorMatrix: React.FC<AlgorithmSeriesErrorMatrixProp
                                     }
                                 }
 
-                                // ошибки
-                                if (hasError) {
-                                    tooltipLines.push("");
+                                tooltipLines.push("");
+                                tooltipLines.push(
+                                    `Всего n: ${summary.totalN}`,
+                                );
+                                tooltipLines.push(
+                                    `OK-точек: ${summary.okCount}${
+                                        summary.firstOkN != null &&
+                                        summary.lastOkN != null
+                                            ? ` (n=${summary.firstOkN}…${summary.lastOkN})`
+                                            : ""
+                                    }`,
+                                );
+                                tooltipLines.push(
+                                    `Ошибок: ${summary.errorCount}${
+                                        summary.firstErrorN != null &&
+                                        summary.lastErrorN != null
+                                            ? ` (n=${summary.firstErrorN}…${summary.lastErrorN})`
+                                            : ""
+                                    }`,
+                                );
+                                if (summary.divergentCount > 0) {
                                     tooltipLines.push(
-                                        `Ошибок: ${sa.errors.length}`,
-                                    );
-                                    const first = sa.errors[0];
-                                    tooltipLines.push(
-                                        `Первая: n=${first.n}, ${first.message}`,
+                                        `divergent_accel_method: ${summary.divergentCount}`,
                                     );
                                 }
 
@@ -443,17 +591,7 @@ export const AlgorithmSeriesErrorMatrix: React.FC<AlgorithmSeriesErrorMatrixProp
                                         title={title}
                                         className={`min-w-[26px] border px-[2px] py-[2px] text-center text-[10px] cursor-default ${borderClass} ${bgClass}`}
                                     >
-                                        {hasError ? (
-                                            <span className="font-semibold text-red-200">
-                                                    {errorN != null
-                                                        ? `n=${errorN}`
-                                                        : "err"}
-                                                </span>
-                                        ) : (
-                                            <span className="font-semibold text-emerald-200">
-                                                    ✓
-                                                </span>
-                                        )}
+                                        {content}
                                     </td>
                                 );
                             })}
