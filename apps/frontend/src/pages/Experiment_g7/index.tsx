@@ -1,9 +1,10 @@
+import type { Experiment } from "@/types/experiment";
+import { useState } from "react";
 import { ParquetFolderInput } from "@/features/import-experiment-from-parquet/ui/ParquetFolderInput.tsx";
 import { AlgorithmSeriesDiffHeatmap } from "@/widgets/AlgorithmSeriesDiffHeatmap.tsx";
-import { usePersistedExperiment } from "@/shared/lib/hooks/usePersistedExperiment.ts";
 
 export default function Experiment_g7() {
-    const [experiment, setExperiment] = usePersistedExperiment();
+    const [experiment, setExperiment] = useState<Experiment | null>(null);
 
     return (
         <div className="mx-auto">
