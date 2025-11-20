@@ -1,4 +1,4 @@
-// buildExperimentFromParquet.ts
+// src/shared/parquet/buildExperimentFromParquet.ts
 
 import type {
     Experiment,
@@ -6,265 +6,288 @@ import type {
     Accel,
     SeriesAccel,
     Complex,
-    SeriesArgs,
-    AccelArgs,
+    ScalarArg,
     SeriesAccelComputedPoint,
     SeriesAccelError,
     SeriesAccelEvent,
-} from "./experiment";
+} from "@/types/experiment";
 
-export interface ParquetComplex {
-    real: string | null;
-    imag: string | null;
+import type {
+    ParquetSeriesRow,
+    ParquetAccelRow,
+    ParquetComplex,
+    ParquetAccelComputed,
+    ParquetErrorRow,
+    ParquetEventRow,
+} from "./types";
+
+/** Приведение строки/числа/bigint → number | null */
+function toNumberOrNull(v: unknown): number | null {
+    if (typeof v === "number") return Number.isNaN(v) ? null : v;
+    if (typeof v === "bigint") return Number(v);
+    if (typeof v === "string") {
+        const s = v.trim();
+        if (s === "") return null;
+        const low = s.toLowerCase();
+        if (low === "nan") return NaN;
+        if (low === "inf" || low === "+inf" || low === "infinity") return Infinity;
+        if (low === "-inf" || low === "-infinity") return -Infinity;
+        const n = Number(s);
+        return Number.isNaN(n) ? null : n;
+    }
+    return null;
 }
 
-export interface ParquetSeriesComputed {
-    n: number;
-    value: ParquetComplex | null;
+/**
+ * Приведение Arrow List / обычного массива / одиночного значения к массиву.
+ *
+ * Поддерживает:
+ *  - JS-массив: [ ... ]
+ *  - Arrow ListVector: { get(i), _offsets: [start, end], ... }
+ *  - одиночный объект: { ... } → [ {...} ]
+ *  - null/undefined → []
+ */
+function listLikeToArray<T = unknown>(v: unknown): T[] {
+    if (v == null) return [];
+
+    // 1) Обычный массив
+    if (Array.isArray(v)) return v as T[];
+
+    // 2) Arrow ListVector
+    if (
+        typeof v === "object" &&
+        v !== null &&
+        "get" in v &&
+        typeof (v as any).get === "function" &&
+        "_offsets" in v &&
+        Array.isArray((v as any)._offsets)
+    ) {
+        const list = v as any;
+        const offsets: number[] = list._offsets;
+        const start = offsets[0] ?? 0;
+        const end = offsets[1] ?? start;
+        const length = end - start;
+
+        const result: T[] = [];
+        for (let i = 0; i < length; i++) {
+            result.push(list.get(i) as T);
+        }
+        return result;
+    }
+
+    // 3) Структура / одиночный объект → массив из одного элемента
+    if (typeof v === "object") {
+        return [v as T];
+    }
+
+    // 4) Всё остальное — тоже одиночное значение → [value]
+    return [v as T];
 }
 
-export interface ParquetSeriesRow {
-    series_name: string;
-    series_id: number;
-    precision: string;
-
-    arguments: {
-        x?: string | null;
-        b?: string | null;
-        m?: string | null;
-        a?: string | null;
-        [key: string]: unknown;
-    } | null;
-
-    series_limit: ParquetComplex | null;
-
-    computed: ParquetSeriesComputed[]; // по факту может быть чем угодно
-}
-
-export interface ParquetAccelComputed {
-    value: ParquetComplex | null;
-    deviation: string | null;
-}
-
-export interface ParquetErrorRow {
-    n: number;
-    message: string;
-}
-
-export interface ParquetEventRow {
-    n: number;
-    name: string;
-    description: string;
-}
-
-export interface ParquetAccelRow {
-    series_id: number;
-    accel_name: string;
-    m_value: number | null;
-
-    additional_args: {
-        remainder?: string | null;
-        useRecurrentFormula?: string | null;
-        beta?: string | null;
-        gamma?: string | null;
-        parameter?: string | null;
-        numerator?: string | null;
-        rho?: string | null;
-        epsilon_threshold?: string | null;
-        [key: string]: unknown;
-    } | null;
-
-    computed: (ParquetAccelComputed | null)[]; // по факту тоже может быть чем угодно
-    errors: ParquetErrorRow[] | null;
-    events: ParquetEventRow[] | null;
-}
-
-/* helpers */
-
-function parseNumberOrNull(src: string | null | undefined): number | null {
-    if (src == null) return null;
-    const v = Number(src);
-    return Number.isFinite(v) ? v : null;
-}
-
-function fromParquetComplex(c: ParquetComplex | null): Complex | null {
+/** Преобразование комплекса */
+function toComplex(c: ParquetComplex | null): Complex | null {
     if (!c) return null;
-    return {
-        re: parseNumberOrNull(c.real),
-        im: parseNumberOrNull(c.imag),
-    };
+    const re = toNumberOrNull(c.real);
+    const im = toNumberOrNull(c.imag);
+    if (re === null && im === null) return null;
+    return { re, im };
 }
 
-function fromParquetSeriesArgs(src: ParquetSeriesRow["arguments"]): SeriesArgs | null {
+/** Скалярный аргумент */
+function toScalarArg(v: unknown): ScalarArg {
+    if (v === null || v === undefined) return null;
+
+    if (typeof v === "number") return Number.isNaN(v) ? null : v;
+    if (typeof v === "boolean") return v;
+    if (typeof v === "bigint") return Number(v);
+
+    if (typeof v === "string") {
+        const s = v.trim();
+        if (s === "") return null;
+        const low = s.toLowerCase();
+        if (low === "true") return true;
+        if (low === "false") return false;
+        const n = Number(s);
+        if (!Number.isNaN(n)) return n;
+        return s;
+    }
+
+    return null;
+}
+
+/** Series.args */
+function normalizeSeriesArgs(src: ParquetSeriesRow["arguments"]): Record<string, ScalarArg> | null {
     if (!src) return null;
-    const result: SeriesArgs = {};
+    const out: Record<string, ScalarArg> = {};
     for (const [k, v] of Object.entries(src)) {
-        if (v === undefined) continue;
-        result[k] = v as string | null;
+        out[k] = toScalarArg(v);
     }
-    return result;
+    return Object.keys(out).length === 0 ? null : out;
 }
 
-function fromParquetAccelArgs(src: ParquetAccelRow["additional_args"]): AccelArgs | null {
+/** Accel.args */
+function normalizeAccelArgs(src: ParquetAccelRow["additional_args"]): Record<string, ScalarArg> | null {
     if (!src) return null;
-    const result: AccelArgs = {};
+    const out: Record<string, ScalarArg> = {};
     for (const [k, v] of Object.entries(src)) {
-        if (v === undefined) continue;
-        result[k] = v as string | null;
+        out[k] = toScalarArg(v);
     }
-    return result;
+    return Object.keys(out).length === 0 ? null : out;
 }
 
-/**
- * Безопасное приведение "чего угодно" к массиву.
- * Поддерживаем:
- *   - уже массив
- *   - null/undefined → []
- *   - "объект с числовыми ключами" → Object.values(...)
- */
-function asArray<T = unknown>(value: unknown): T[] {
-    if (Array.isArray(value)) return value as T[];
-    if (value == null) return [];
-    if (typeof value === "object") {
-        return Object.values(value as Record<string, T>);
-    }
-    return [];
-}
-
-/**
- * accel_id определяется по имени и всем аргументам (включая m_value).
- */
-function buildAccelId(accel: ParquetAccelRow): string {
+/** Построение детерминированного accel_id */
+function buildAccelId(row: ParquetAccelRow): string {
     const parts: string[] = [];
 
-    parts.push(`name=${accel.accel_name}`);
+    parts.push(`name=${row.accel_name}`);
 
-    if (accel.m_value != null) {
-        parts.push(`m=${accel.m_value}`);
+    const m = toNumberOrNull((row as any).m_value ?? row.m_value);
+    if (m !== null) {
+        parts.push(`m=${m}`);
     }
 
-    if (accel.additional_args) {
-        const entries = Object.entries(accel.additional_args)
-            .filter(([_, v]) => v !== null && v !== undefined)
-            .sort(([k1], [k2]) => k1.localeCompare(k2));
+    const args = row.additional_args ?? {};
+    const orderedKeys = [
+        "beta",
+        "gamma",
+        "parameter",
+        "numerator",
+        "rho",
+        "epsilon_threshold",
+        "remainder",
+        "useRecurrentFormula",
+    ];
 
-        for (const [k, v] of entries) {
-            parts.push(`${k}=${String(v)}`);
+    const present = new Set(Object.keys(args));
+
+    for (const k of orderedKeys) {
+        if (present.has(k)) {
+            const v = (args as any)[k];
+            if (v != null) parts.push(`${k}=${String(v)}`);
         }
+    }
+
+    const other = [...present].filter((k) => !orderedKeys.includes(k)).sort();
+    for (const k of other) {
+        const v = (args as any)[k];
+        if (v != null) parts.push(`${k}=${String(v)}`);
     }
 
     return parts.join("|");
 }
 
-function mapSeriesComputedPoints(row: ParquetSeriesRow): SeriesAccelComputedPoint[] {
-    const raw = (row as any).computed;
-    const list = asArray<ParquetSeriesComputed>(raw);
+/** computed */
+function mapAccelComputed(raw: unknown): SeriesAccelComputedPoint[] {
+    const arr = listLikeToArray<ParquetAccelComputed | null>(raw);
+    if (arr.length === 0) return [];
 
-    return list.map<SeriesAccelComputedPoint>((p) => ({
-        n: p.n,
-        value: fromParquetComplex(p.value),
-        // deviation для исходного ряда не определена
+    return arr.map((c, idx) => {
+        if (c == null) {
+            return { n: idx, value: null, deviation: null };
+        }
+        return {
+            n: idx,
+            value: toComplex(c.value),
+            deviation: toNumberOrNull(c.deviation),
+        };
+    });
+}
+
+/** errors */
+function mapErrors(raw: unknown): SeriesAccelError[] {
+    const arr = listLikeToArray<ParquetErrorRow>(raw);
+    if (arr.length === 0) return [];
+    return arr.map((e) => ({
+        n: toNumberOrNull(e.n) ?? 0,
+        message: typeof e.message === "string" ? e.message : String(e.message),
     }));
 }
 
-function mapAccelComputedPoints(row: ParquetAccelRow): SeriesAccelComputedPoint[] {
-    const raw = (row as any).computed;
-    const list = asArray<ParquetAccelComputed | null>(raw);
-
-    return list.map<SeriesAccelComputedPoint>((p, idx) => ({
-        n: idx, // в ParquetAccelComputed нет n, используем индекс
-        value: p ? fromParquetComplex(p.value) : null,
-        deviation: p ? parseNumberOrNull(p.deviation) : null,
+/** events */
+function mapEvents(raw: unknown): SeriesAccelEvent[] {
+    const arr = listLikeToArray<ParquetEventRow>(raw);
+    if (arr.length === 0) return [];
+    return arr.map((ev, idx) => ({
+        n: toNumberOrNull(ev.n) ?? idx,
+        name: typeof ev.name === "string" ? ev.name : "",
+        description: typeof ev.description === "string" ? ev.description : "",
     }));
 }
 
-function mapErrors(errs: ParquetErrorRow[] | null): SeriesAccelError[] {
-    const list = asArray<ParquetErrorRow>(errs);
-    return list.map<SeriesAccelError>((e) => ({
-        n: e.n,
-        message: e.message,
-    }));
+/** Series list */
+function buildSeriesList(seriesRows: ParquetSeriesRow[]): Series[] {
+    const map = new Map<number, Series>();
+
+    for (const r of seriesRows) {
+        const sid = toNumberOrNull(r.series_id) ?? -1;
+        const id = String(sid);
+
+        const series: Series = {
+            id,
+            name: r.series_name,
+            precision: r.precision,
+            args: normalizeSeriesArgs(r.arguments),
+            limit: toComplex(r.series_limit),
+        };
+
+        map.set(sid, series);
+    }
+
+    return [...map.values()].sort((a, b) => Number(a.id) - Number(b.id));
 }
 
-function mapEvents(events: ParquetEventRow[] | null): SeriesAccelEvent[] {
-    const list = asArray<ParquetEventRow>(events);
-    return list.map<SeriesAccelEvent>((e) => ({
-        n: e.n,
-        name: e.name,
-        description: e.description,
-    }));
-}
-
-/* main */
-
+/** Основная сборка Experiment */
 export function buildExperimentFromParquet(
     seriesRows: ParquetSeriesRow[],
     accelRows: ParquetAccelRow[],
 ): Experiment {
-    const seriesList: Series[] = [];
-    const accelListMap = new Map<string, Accel>();
+    const seriesList = buildSeriesList(seriesRows);
+
+    const seriesMap = new Map<number, Series>();
+    for (const s of seriesList) {
+        const n = toNumberOrNull(s.id);
+        if (n != null) seriesMap.set(n, s);
+    }
+
+    const accelMap = new Map<string, Accel>();
     const seriesAccelList: SeriesAccel[] = [];
 
-    const seriesById = new Map<number, ParquetSeriesRow>();
+    for (const row of accelRows) {
+        const sid = toNumberOrNull(row.series_id) ?? -1;
+        const series = seriesMap.get(sid);
+        if (!series) continue;
 
-    // серии
-    for (const s of seriesRows) {
-        seriesById.set(s.series_id, s);
+        const accelId = buildAccelId(row);
 
-        const series: Series = {
-            id: String(s.series_id),
-            name: s.series_name,
-            precision: s.precision,
-            args: fromParquetSeriesArgs(s.arguments),
-            limit: fromParquetComplex(s.series_limit),
-        };
-
-        seriesList.push(series);
-    }
-
-    // алгоритмы + связки series-accel
-    for (const a of accelRows) {
-        const seriesRow = seriesById.get(a.series_id);
-        if (!seriesRow) {
-            // нет ряда для данного series_id — игнорируем эту строку
-            continue;
-        }
-
-        const accelId = buildAccelId(a);
-        const accelArgs = fromParquetAccelArgs(a.additional_args);
-
-        // регистрируем алгоритм, если ещё не был добавлен
-        if (!accelListMap.has(accelId)) {
-            const accel: Accel = {
+        let accel = accelMap.get(accelId);
+        if (!accel) {
+            accel = {
                 id: accelId,
-                name: a.accel_name,
-                m: a.m_value,
-                args: accelArgs,
+                name: row.accel_name,
+                m: toNumberOrNull((row as any).m_value ?? row.m_value),
+                args: normalizeAccelArgs(row.additional_args),
             };
-            accelListMap.set(accelId, accel);
+            accelMap.set(accelId, accel);
         }
 
-        const seriesPoints = mapSeriesComputedPoints(seriesRow);
-        const accelPoints = mapAccelComputedPoints(a);
+        const computed = mapAccelComputed((row as any).computed);
+        const errors = mapErrors((row as any).errors);
+        const events = mapEvents((row as any).events);
 
-        const seriesAccel: SeriesAccel = {
-            series_id: String(a.series_id),
-            accel_id: accelId,
-            computed: [...seriesPoints, ...accelPoints],
-            errors: mapErrors(a.errors),
-            events: mapEvents(a.events),
-        };
-
-        seriesAccelList.push(seriesAccel);
+        seriesAccelList.push({
+            series_id: series.id,
+            accel_id: accel.id,
+            computed,
+            errors,
+            events,
+        });
     }
 
-    const accelList: Accel[] = Array.from(accelListMap.values());
+    const accelList = [...accelMap.values()];
 
-    const experiment: Experiment = {
+    return {
         seriesList,
         accelList,
         seriesAccelList,
     };
-
-    return experiment;
 }

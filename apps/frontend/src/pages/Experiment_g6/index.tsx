@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { ParquetFolderInput } from "@/features/import-experiment-from-parquet/ui/ParquetFolderInput.tsx";
 import type { Experiment } from "@/types/experiment.ts";
+import { ExperimentViewer } from "@/widgets/ExperimentViewer/ExperimentViewer.tsx";
 
 export default function Experiment_g6() {
 
@@ -12,8 +13,12 @@ export default function Experiment_g6() {
             <ParquetFolderInput onExperimentChange={setExperiment}/>
             <br/>
 
+            <ExperimentViewer experiment={experiment} />
+
+
+
             {/*<AlgorithmSeriesErrorMatrix*/}
-            {/*    items={items}*/}
+            {/*    experiment={experiment}*/}
             {/*    maxSeries={40}*/}
             {/*/>*/}
 
