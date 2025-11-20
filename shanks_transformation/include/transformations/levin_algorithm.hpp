@@ -262,6 +262,7 @@ inline T levin_algorithm<T, K>::calc_result_rec(
 	// Initialize arrays for recursive computation
 	std::vector<T>   Num;
 	std::vector<T> Denom;
+	T scale = static_cast<T>(0);
 
 	if constexpr (std::is_floating_point<T>::value){
 		Num = std::vector<T>( order + static_cast<K>(1), static_cast<T>(0));
@@ -272,6 +273,7 @@ inline T levin_algorithm<T, K>::calc_result_rec(
 		const size_t precision = std::max(data.Sn[0].precision(), data.an[0].precision());
 		Num = std::vector<T>( order + static_cast<K>(1), float_precision(0, precision));
 		Denom = std::vector<T>( order + static_cast<K>(1), float_precision(0, precision));
+		utils::set_precision(precision, scale);
 	}
 	#endif
 
@@ -288,7 +290,6 @@ inline T levin_algorithm<T, K>::calc_result_rec(
 	}
 
 	// Recursive computation using the E-algorithm scheme
-	T scale = static_cast<T>(0);
 	for (K i = static_cast<K>(1); i <= order; ++i)
 		for (K j = static_cast<K>(0); j <= order - i; ++j) {
 
@@ -298,8 +299,8 @@ inline T levin_algorithm<T, K>::calc_result_rec(
 			scale*= pow(static_cast<T>(1) - static_cast<T>(1) / (beta_in_use + static_cast<T>(n + j + i + 1)), static_cast<T>(i));
 			scale/= (beta_in_use + static_cast<T>(n + j + i));
 
-			Denom[j] = fma(scale,Denom[j],Denom[j+static_cast<K>(1)]);
-              Num[j] = fma(scale,  Num[j],  Num[j+static_cast<K>(1)]);
+			Denom[j] = fma(-scale,Denom[j],Denom[j+static_cast<K>(1)]);
+              Num[j] = fma(-scale,  Num[j],  Num[j+static_cast<K>(1)]);
 		}
 
 	Num[0] /= Denom[0];
@@ -571,6 +572,7 @@ inline complex_precision<T> levin_algorithm<complex_precision<T>, K>::calc_resul
 	// Initialize arrays for recursive computation
 	std::vector<Complex>   Num;
 	std::vector<Complex> Denom;
+	T scale = static_cast<T>(0);
 
 	if constexpr (std::is_floating_point<T>::value){
 		Num = std::vector<Complex>( order + static_cast<K>(1), static_cast<Complex>(0));
@@ -584,6 +586,7 @@ inline complex_precision<T> levin_algorithm<complex_precision<T>, K>::calc_resul
         );
 		Num = std::vector<Complex>( order + static_cast<K>(1), Complex(float_precision(0, precision), float_precision(0, precision)));
 		Denom = std::vector<Complex>( order + static_cast<K>(1), Complex(float_precision(0, precision), float_precision(0, precision)));
+		utils::set_precision(precision, scale);
 	}
 	#endif
 
@@ -600,7 +603,6 @@ inline complex_precision<T> levin_algorithm<complex_precision<T>, K>::calc_resul
 	}
 
 	// Recursive computation using the E-algorithm scheme
-	T scale = static_cast<T>(0);
 	for (K i = static_cast<K>(1); i <= order; ++i)
 		for (K j = static_cast<K>(0); j <= order - i; ++j) {
 

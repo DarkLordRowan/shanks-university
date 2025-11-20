@@ -153,8 +153,7 @@ T brezinski_theta_algorithm<T, K>::operator()(
             base_size,
             float_precision(0, precision)
         ); //vector for theta_(2n), in the beginning it is theta_(-1) which is zero for all i
-
-        delta = float_precision(0, precision); //temporary varaible
+        delta.precision(precision); //temporary varaible
 
     }
     #ifdef INC_COMPLEXPRECISION
@@ -177,7 +176,6 @@ T brezinski_theta_algorithm<T, K>::operator()(
                 float_precision(0, precision)
             )
         ); //vector for theta_(2n), in the beginning it is theta_(-1) which is zero for all i
-
         delta.ref_real()->precision(precision); delta.ref_imag()->precision(precision); 
 
     }

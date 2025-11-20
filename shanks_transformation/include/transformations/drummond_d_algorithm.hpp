@@ -246,8 +246,8 @@ inline T drummond_d_algorithm<T,K>::calc_result_rec(
 
 	// Initialize base values: N_j^{(0)} = w_{n,j} S_{n+j}, D_j^{(0)} = w_{n,j}
 	for (K i = static_cast<K>(0); i < order+static_cast<K>(1); ++i) {
-		Denom[i] = remainder->operator()(n + i, n + i, data.an);
-		  Num[i] = data.Sn.at(i) * Denom[i];
+		Denom[i] += remainder->operator()(n + i, n + i, data.an);
+		  Num[i] += data.Sn.at(i) * Denom[i];
 	}
 
 	// Apply forward difference recurrence:
