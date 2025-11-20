@@ -1,11 +1,11 @@
 import { useMemo, useState } from "react";
+import type { Experiment } from "@/types/experiment.ts";
 import { ParquetFolderInput } from "@/features/import-experiment-from-parquet/ui/ParquetFolderInput.tsx";
 import { AlgoRankingTable } from "@/widgets/AlgoRankingTable";
-import { usePersistedExperiment } from "@/shared/lib/hooks/usePersistedExperiment.ts";
 
 export default function Experiment_g6() {
 
-    const [experiment, setExperiment] = usePersistedExperiment();
+    const [experiment, setExperiment] = useState<Experiment | null>(null);
 
     const [epsilonExp, setEpsilonExp] = useState(-6);
 
