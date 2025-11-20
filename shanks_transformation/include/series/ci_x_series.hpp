@@ -2,7 +2,6 @@
 
 #include "series_base.hpp"
 #include <gsl/gsl_sf.h>
-#include <gsl/gsl_sf_result.h>
 #include <type_traits>
 
 /**
@@ -44,6 +43,8 @@ public:
 
 		if constexpr (std::is_floating_point<T>::value){
 			return static_cast<T>(gsl_sf_Ci(static_cast<double>(x)));
+		} else if constexpr (std::is_same<T, float_precision>::value){
+			return float_precision(gsl_sf_Ci(static_cast<double>(x)), x.precision());
 		} else {
 			return static_cast<T>(0);
 		}
