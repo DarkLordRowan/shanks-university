@@ -40,6 +40,50 @@ function toNumberOrNull(v: unknown): number | null {
     return null;
 }
 
+
+function inspect(v: unknown, indent = 0): string {
+    const pad = " ".repeat(indent);
+
+    if (v === null) return pad + "null";
+    if (v === undefined) return pad + "undefined";
+
+    const t = typeof v;
+
+    if (t === "number" || t === "boolean" || t === "bigint") {
+        return pad + String(v);
+    }
+    if (t === "string") {
+        return pad + JSON.stringify(v); // нормальная строка в кавычках
+    }
+
+    if (Array.isArray(v)) {
+        if (v.length === 0) return pad + "[]";
+        let out = pad + "[\n";
+        for (const el of v) {
+            out += inspect(el, indent + 2) + ",\n";
+        }
+        out += pad + "]";
+        return out;
+    }
+
+    if (t === "object") {
+        const entries = Object.entries(v as any);
+        if (entries.length === 0) return pad + "{}";
+        let out = pad + "{\n";
+        for (const [k, val] of entries) {
+            out += pad + "  " + k + ": " + (typeof val === "object"
+                    ? "\n" + inspect(val, indent + 4)
+                    : inspect(val, 0)
+            ) + ",\n";
+        }
+        out += pad + "}";
+        return out;
+    }
+
+    return pad + String(v);
+}
+
+
 export type LoadParquetState =
     | { status: "idle" }
     | { status: "loading"; message: string; filesDone: number; filesTotal: number }
@@ -134,6 +178,7 @@ export function useLoadParquetExpirement() {
                         series_id: sid ?? -1, // чтобы не было undefined
                     };
 
+                    // console.log(inspect(row));
                     accelRows.push(row);
                 }
 
