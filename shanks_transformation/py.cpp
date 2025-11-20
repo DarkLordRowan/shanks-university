@@ -11,6 +11,8 @@
 #include "libs/arbitrary_arithmetics/fprecision.h"
 #include "libs/arbitrary_arithmetics/precisioncore.cpp"
 
+#include <gsl/gsl_sf_result.h>
+
 #include "include/series.hpp"
 #include "include/methods.hpp"
 

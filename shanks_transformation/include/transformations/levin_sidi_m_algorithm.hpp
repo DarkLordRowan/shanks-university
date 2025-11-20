@@ -174,19 +174,20 @@ T levin_sidi_m_algorithm<T, K>::operator()(
 	T up, down;
 	T down_coef, up_coef;
 	numerator = denominator = rest = down_coef = up_coef = static_cast<T>(0);
-	up = down = static_cast<T>(1);	
+	up = down = static_cast<T>(1);
+	T binomial_coef = static_cast<T>(utils::binomial_coefficient<K>(n, static_cast<K>(0)));
 
 	#ifdef INC_FPRECISION
 	if constexpr (std::is_same<T, float_precision>::value){
 		const size_t precision = std::max(data.Sn[0].precision(), data.an[0].precision());
-		utils::set_precision(precision, numerator, denominator, rest, up, down, down_coef, up_coef);
+		utils::set_precision(precision, numerator, denominator, rest, up, down, down_coef, up_coef, binomial_coef);
 	}
 	#endif
 
 	// Precompute initial Pochhammer symbol terms
 	// For theory, see: Sidi (2003, arXiv:math/0306302), Eq. (9.4)
 	// Compute: (γ+k+2)_{n-1}/(γ+k+1)_{n} = Γ(γ+k+n+1)/Γ(γ+k+2) × Γ(γ+k+1)/Γ(γ+k+n+1)
-	T binomial_coef = static_cast<T>(utils::binomial_coefficient<K>(n, static_cast<K>(0)));
+	
 
 	down_coef += gamma_in_use + static_cast<T>(order + static_cast<K>(2));
 	up_coef   += down_coef - static_cast<T>(n);
@@ -389,6 +390,7 @@ complex_precision<T> levin_sidi_m_algorithm<complex_precision<T>, K>::operator()
 
 	T down_coef, up_coef;
 	down_coef = up_coef = static_cast<T>(0);
+	T binomial_coef = static_cast<T>(utils::binomial_coefficient<K>(n, static_cast<K>(0)));
 
 	#ifdef INC_FPRECISION
 	if constexpr (std::is_same<T, float_precision>::value){
@@ -396,12 +398,10 @@ complex_precision<T> levin_sidi_m_algorithm<complex_precision<T>, K>::operator()
             std::max(data.Sn[0].real().precision(),data.Sn[0].imag().precision()),
             std::max(data.an[0].real().precision(),data.an[0].imag().precision())
         );
-		utils::set_precision(precision, numerator, denominator, rest, up, down, down_coef, up_coef);
+		utils::set_precision(precision, numerator, denominator, rest, up, down, down_coef, up_coef, binomial_coef);
 	}
 	#endif
 
-
-	T binomial_coef = static_cast<T>(utils::binomial_coefficient<K>(n, static_cast<K>(0)));
 
 
 	// Compute (γ+k+2)_{n-1} = ∏_{m=0}^{n-2} (γ+k+2+m)

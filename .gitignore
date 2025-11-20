@@ -498,3 +498,4 @@ rebuild.sh
 .dev
 shanks_consumer/output
 shanks_transformation/libs/cln-1.3.7
+shanks_transformation/libs/gsl-2.8

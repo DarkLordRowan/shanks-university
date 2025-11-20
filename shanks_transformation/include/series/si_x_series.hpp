@@ -40,9 +40,10 @@ public:
 	}
 
 	inline constexpr T calculate_sum(const T& x){
-
 		if constexpr (std::is_floating_point<T>::value){
 			return static_cast<T>(gsl_sf_Si(static_cast<double>(x)));
+		} else if constexpr (std::is_same<T, float_precision>::value){
+			return float_precision(gsl_sf_Si(static_cast<double>(x)), x.precision());
 		} else {
 			return static_cast<T>(0);
 		}
