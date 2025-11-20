@@ -8,17 +8,12 @@ authors = [
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
-    "matplotlib (>=3.10.6,<4.0.0)",
-    "pyqt6 (>=6.9.1,<7.0.0)",
-    "pyarrow (>=19.0.0,<20.0.0)",
     "pymongo (>=4.15.0,<5.0.0)",
     "dotenv (>=0.9.9,<0.10.0)",
     "tqdm (>=4.67.1,<5.0.0)",
-    "seaborn (>=0.13.2,<0.14.0)",
-    "pandas (>=2.3.3,<3.0.0)",
-    "plotly (>=6.3.1,<7.0.0)",
     "pydantic (>=2.12.4,<3.0.0)",
     "pyyaml (>=6.0.3,<7.0.0)",
+    "pyarrow (>=22.0.0,<23.0.0)",
 ]
 
 

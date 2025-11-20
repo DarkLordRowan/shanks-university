@@ -15,6 +15,7 @@ add_executable(shanks_transformation
     ${CMAKE_SOURCE_DIR}/src/interfaces/transformations_info.cpp
     ${CMAKE_SOURCE_DIR}/src/main.cpp
 )
+add_library(GSL SHARED IMPORTED)
 if (UNIX)
 target_link_libraries(shanks_transformation PRIVATE
     ${CMAKE_SOURCE_DIR}/libs/gsl-2.8/cblas/.libs/libgslcblas.so
@@ -33,7 +34,10 @@ endif()
 FetchContent_Declare(pybind11 GIT_REPOSITORY https://github.com/pybind/pybind11.git GIT_TAG v2.13.6)
 FetchContent_MakeAvailable(pybind11)
 pybind11_add_module(pyshanks py.cpp)
-target_include_directories(pyshanks PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(GSL REQUIRED gsl)
+target_link_libraries(pyshanks PRIVATE ${GSL_LIBRARIES})
+target_include_directories(pyshanks PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ${GSL_INCLUDE_DIRS})
 set_target_properties(pyshanks PROPERTIES PREFIX "")
 
 # -------------------------

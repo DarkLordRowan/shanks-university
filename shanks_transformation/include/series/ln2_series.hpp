@@ -32,9 +32,9 @@ public:
 		using std::isfinite;
 
         if constexpr (isComplexLike<T>::value){
-    		return !isfinite(x.real()) || !isfinite(x.imag()) || abs(x) >= abs(static_cast<T>(1));
+    		return !isfinite(x.real()) || !isfinite(x.imag());
         } else {
-		    return !isfinite(x) || abs(x) >= static_cast<T>(1);
+		    return !isfinite(x);
         }
 	}
 
