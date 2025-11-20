@@ -205,12 +205,13 @@ inline T levin_sidi_s_algorithm<T, K>::calc_result(
     for (K j = static_cast<K>(0); j <= order; ++j){
 
         // Compute (-1)^j * C(k,j)
-        rest  = static_cast<T>(1.0);
+        rest  = static_cast<T>(1);
         rest *= utils::minus_one_raised_to_power_n<T,K>(j);
         rest *= static_cast<T>(utils::binomial_coefficient<K>(order, j));
 
         // Compute Pochhammer symbols: (β+n+j)_{k-1} and (β+n+k)_{k-1}
-        up_pochamer = down_pochamer = static_cast<T>(1.0);
+        up_pochamer = down_pochamer = static_cast<T>(1);
+
         //up_pochamer   (beta + n + j)_(order - 1)     = (beta + n + j)(beta + n + j + 1)...(beta + n + j + order - 2)
         //down_pochamer (beta + n + order)_(order - 1) = (beta + n + order)(beta + n + order + 1)...(beta + n + order + oreder - 2)
 
@@ -231,7 +232,7 @@ inline T levin_sidi_s_algorithm<T, K>::calc_result(
         );
 
         // Accumulate numerator and denominator
-        numerator   += rest * data.Sn.at( + j);
+        numerator   += rest * data.Sn.at(n + j);
         denominator += rest;
     }
 
@@ -254,6 +255,9 @@ inline T levin_sidi_s_algorithm<T, K>::calc_result_rec(
     std::vector<T>   Num;
     std::vector<T> Denom;
 
+    T scale1, scale2;
+    scale1 = scale2 = static_cast<T>(0);
+
     if constexpr (std::is_floating_point<T>::value){
         Num = std::vector<T>(order + static_cast<K>(1),  static_cast<T>(0.0));
         Denom = std::vector<T>(order + static_cast<K>(1),  static_cast<T>(0.0));
@@ -263,8 +267,10 @@ inline T levin_sidi_s_algorithm<T, K>::calc_result_rec(
         const size_t precision = std::max(data.Sn[0].precision(), data.an[0].precision());
         Num = std::vector<T>(order + static_cast<K>(1),  float_precision(0, precision));
         Denom = std::vector<T>(order + static_cast<K>(1),  float_precision(0, precision));
+        utils::set_precision(precision, scale1, scale2);
     }
     #endif
+
     // Initialize base values: E_0^{(n)} = S_n, g_0^{(n)} = 1/R_n
     for (K i = static_cast<K>(0); i <= order; ++i){
 
@@ -275,11 +281,9 @@ inline T levin_sidi_s_algorithm<T, K>::calc_result_rec(
             (remainder_type_in_use == remainder_type::u_type ? beta_in_use : static_cast<T>(1))
         );
 
-        Num[i] = data.Sn.at( + i) * Denom[i];
+        Num[i] = data.Sn.at(n + i) * Denom[i];
 
     }
-
-    T scale1, scale2;
 
     // Recursive computation using the E-algorithm recurrence
     for (K i = static_cast<K>(1); i <= order; ++i)
@@ -564,6 +568,9 @@ inline complex_precision<T> levin_sidi_s_algorithm<complex_precision<T>, K>::cal
     std::vector<Complex>   Num;
     std::vector<Complex> Denom;
 
+    T scale1, scale2;
+    scale1 = scale2 = static_cast<T>(0);
+
     if constexpr (std::is_floating_point<T>::value){
         Num = std::vector<Complex>(order + static_cast<K>(1),  static_cast<T>(0.0));
         Denom = std::vector<Complex>(order + static_cast<K>(1),  static_cast<T>(0.0));
@@ -576,6 +583,7 @@ inline complex_precision<T> levin_sidi_s_algorithm<complex_precision<T>, K>::cal
         );
         Num = std::vector<Complex>(order + static_cast<K>(1),  Complex(float_precision(0, precision), float_precision(0, precision)));
         Denom = std::vector<Complex>(order + static_cast<K>(1),  Complex(float_precision(0, precision), float_precision(0, precision)));
+        utils::set_precision(precision, scale1, scale2);
     }
     #endif
 
@@ -592,8 +600,6 @@ inline complex_precision<T> levin_sidi_s_algorithm<complex_precision<T>, K>::cal
         Num[i] = data.Sn.at(n + i) * Denom[i];
 
     }
-
-    T scale1, scale2;
 
     // Recursive computation using the E-algorithm recurrence
     for (K i = static_cast<K>(1); i <= order; ++i)
