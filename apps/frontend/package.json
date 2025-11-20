@@ -10,11 +10,13 @@
     "preview": "vite preview --host 0.0.0.0 --port 80"
   },
   "dependencies": {
+    "apache-arrow": "^21.1.0",
     "highlight.js": "^11.11.1",
     "html2canvas": "^1.4.1",
     "katex": "*",
     "lucide-react": "*",
     "pako": "^2.1.0",
+    "parquet-wasm": "^0.7.1",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "react-markdown": "^10.1.0",
