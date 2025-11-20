@@ -7,6 +7,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     git \
     g++ \
+    libgsl-dev \
+    pkg-config \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /build
@@ -22,6 +24,7 @@ FROM python:3.13-slim-bookworm as prod
 RUN apt-get update && apt-get install -y --no-install-recommends \
     software-properties-common \
     libgl1 \
+    libgsl-dev \
     libglib2.0-0 \
     libxcb-* \
     libxkbcommon-x11-0 \

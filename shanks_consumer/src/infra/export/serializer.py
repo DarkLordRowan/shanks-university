@@ -52,14 +52,17 @@ class TrialResultSerializer(DataSerializer):
         return raw
 
     @staticmethod
-    def _view_errors_only(result: TrialResult) -> dict:
+    def _view_errors_only(result: TrialResult) -> dict | None:
         raw = asdict(result)
-        return {
-            "series": raw.get("series"),
-            "accel": raw.get("accel"),
-            "error": raw.get("error"),
-            "stack_id": raw.get("stack_id"),
-        }
+        return (
+            {
+                "series": result.series,
+                "accel": result.accel,
+                "error": raw.get("error"),
+            }
+            if raw.get("error")
+            else None
+        )
 
     @staticmethod
     def _view_completion_only(result: TrialResult) -> dict:
@@ -73,7 +76,12 @@ class TrialResultSerializer(DataSerializer):
         self,
         results: Sequence[TrialResult],
     ) -> Sequence[dict]:
-        return [
-            self._sanitize_value(self._apply_view(r))
-            for r in tqdm(results, "Serializing results...")
-        ]
+        return list(
+            filter(
+                lambda d: d is not None,
+                [
+                    self._sanitize_value(self._apply_view(r))
+                    for r in tqdm(results, "Serializing results...")
+                ],
+            )
+        )

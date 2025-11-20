@@ -10,6 +10,7 @@ class ResultView(Protocol):
 
 class ResultViewKind(Enum):
     FULL = "full"
+    DEBUG = "debug"
     SHORT = "short"
     COMPLETION = "completion"
     ERRORS_ONLY = "errors_only"

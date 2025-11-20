@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Sequence
-
-import pandas as pd
+import pyarrow as pa
+import pyarrow.parquet as pq
 
 from src.domain.export_service import ExportService
 
@@ -11,10 +11,14 @@ class ParquetExportService(ExportService):
         self.location = location
 
     def export(self, dicts: Sequence[dict], **kwargs):
-        pd.DataFrame(dicts).to_parquet(
+        if not dicts:
+            table = pa.table({})
+        else:
+            table = pa.Table.from_pylist(dicts)
+
+        pq.write_table(
+            table,
             self.location,
-            engine="pyarrow",
             compression="zstd",
-            index=False,
             write_statistics=True,
         )

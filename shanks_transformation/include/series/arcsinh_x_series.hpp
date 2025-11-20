@@ -72,7 +72,7 @@ series_result<T> arcsinh_x_series<T, K>::generate_series(
 
 
 	for(K j = static_cast<K>(1); j < vecSize; ++j){
-		vecAn[j] += vecAn[j-1] * x * x * static_cast<T>(fma(2,j,1)) / static_cast<T>(2*j);
+		vecAn[j] += static_cast<T>(-1)*vecAn[j-1] * x * x * static_cast<T>(fma(2,j-1,1)) / static_cast<T>(2*j);
 		vecSn[j] += vecSn[j-static_cast<K>(1)] + vecAn[j];
 	}
 
