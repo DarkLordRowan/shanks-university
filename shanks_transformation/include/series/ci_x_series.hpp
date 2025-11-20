@@ -1,6 +1,9 @@
 #pragma once
 
 #include "series_base.hpp"
+#include <gsl/gsl_sf.h>
+#include <gsl/gsl_sf_result.h>
+#include <type_traits>
 
 /**
 * @brief Maclaurin series of exp(x) function
@@ -39,7 +42,11 @@ public:
 
 	inline constexpr T calculate_sum(const T& x){
 
-		return static_cast<T>(0);
+		if constexpr (std::is_floating_point<T>::value){
+			return static_cast<T>(gsl_sf_Ci(static_cast<double>(x)));
+		} else {
+			return static_cast<T>(0);
+		}
 
 	}
 
@@ -73,8 +80,11 @@ series_result<T> ci_x_series<T, K>::generate_series(
     vecAn[1] = log(x);
     vecSn[1] += vecSn[0] + vecAn[1];
 
-	for(K j = static_cast<K>(2); j < vecSize; ++j){
-		vecAn[j] += vecAn[j-static_cast<K>(1)] * x * x * static_cast<T>(j-1) / static_cast<T>(2*j*j*fma(2,j-1,1));
+	vecAn[2] = x*x*static_cast<T>(-0.25);
+	vecSn[2] += vecSn[1] + vecAn[2];
+
+	for(K j = static_cast<K>(3); j < vecSize; ++j){
+		vecAn[j] += static_cast<T>(-1)*vecAn[j-static_cast<K>(1)] * x * x / static_cast<T>(2*(j-1)*(j-1)*fma(2,j-2,1));
 		vecSn[j] += vecSn[j-static_cast<K>(1)] + vecAn[j];
 	}
 

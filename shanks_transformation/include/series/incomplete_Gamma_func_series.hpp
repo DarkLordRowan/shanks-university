@@ -1,6 +1,8 @@
 #pragma once
 
 #include "series_base.hpp"
+#include <gsl/gsl_sf_gamma.h>
+#include <type_traits>
 
 /**
 * @brief Maclaurin series of exp(x) function
@@ -40,7 +42,11 @@ public:
 
 	inline constexpr T calculate_sum(const T& x, const T& alpha){
 
-		return static_cast<T>(0);
+		if constexpr (std::is_floating_point<T>::value){
+			return static_cast<T>(gsl_sf_gamma_inc(static_cast<double>(alpha), static_cast<double>(x)));
+		} else {
+			return static_cast<T>(0);
+		}
 	}
 
 };

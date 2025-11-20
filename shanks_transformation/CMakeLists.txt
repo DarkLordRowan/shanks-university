@@ -8,14 +8,24 @@ include(FetchContent)
 # -------------------------
 # Бинарник (основная программа)
 # -------------------------
-
 include_directories(${CMAKE_SOURCE_DIR}/include)
-add_executable(shanks_transformation 
+add_executable(shanks_transformation
     ${CMAKE_SOURCE_DIR}/src/interfaces/series_info.cpp
     ${CMAKE_SOURCE_DIR}/src/interfaces/test_funcs_info.cpp
     ${CMAKE_SOURCE_DIR}/src/interfaces/transformations_info.cpp
     ${CMAKE_SOURCE_DIR}/src/main.cpp
 )
+if (UNIX)
+target_link_libraries(shanks_transformation PRIVATE
+    ${CMAKE_SOURCE_DIR}/libs/gsl-2.8/cblas/.libs/libgslcblas.so
+    ${CMAKE_SOURCE_DIR}/libs/gsl-2.8/.libs/libgsl.so
+)
+elseif (WIN32)
+    find_package(GSL REQUIRED)
+    target_link_libraries(shanks_transformation GSL::gsl GSL::gslcblas)
+endif()
+
+
 
 # -------------------------
 # Pybind11 модуль
