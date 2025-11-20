@@ -1,19 +1,18 @@
 import { useState } from "react";
-import type { Item } from "@/types/item.ts";
-import { StreamFileInput } from "@/features/import-experiment-from-file/ui/StreamFileInput.tsx";
 import { ErrorMatrixTable } from "@/widgets/ErrorMatrixTable.tsx";
+import type { Experiment } from "@/types/experiment.ts";
+import { ParquetFolderInput } from "@/features/import-experiment-from-parquet/ui/ParquetFolderInput.tsx";
 
 export default function Experiment_g6() {
-
-    const [items, setItems] = useState<Item[]>([]);
+    const [experiment, setExperiment] = useState<Experiment | null>(null);
 
     return (
         <div className="mx-auto">
 
-            <StreamFileInput onItemsChange={setItems}/>
+            <ParquetFolderInput onExperimentChange={setExperiment}/>
             <br/>
 
-            <ErrorMatrixTable items={items}/>
+            <ErrorMatrixTable experiment={experiment}/>
         </div>
     );
 }

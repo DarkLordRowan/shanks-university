@@ -1,6 +1,8 @@
+// widgets/ErrorMatrixTable.tsx
+
 import React, { useMemo, useState, useEffect } from "react";
-import type { Item } from "../types/item";
-import { buildErrorMatrix } from "../analysis/buildErrorMatrix";
+import type { Experiment } from "@/types/experiment";
+import { buildErrorMatrixFromExperiment } from "../analysis/buildErrorMatrix";
 
 /** Оформление ячейки по количеству ошибок */
 function getCellClasses(count: number): string {
@@ -17,7 +19,7 @@ function getCellClasses(count: number): string {
 }
 
 export interface ErrorMatrixTableProps {
-    items: Item[];
+    experiment: Experiment | null;
     maxSteps?: number;
     className?: string;
 }
@@ -31,13 +33,50 @@ interface SortState {
 }
 
 export const ErrorMatrixTable: React.FC<ErrorMatrixTableProps> = ({
-                                                                      items,
+                                                                      experiment,
                                                                       maxSteps,
                                                                       className,
                                                                   }) => {
-    const { nList, algoList, cellMap, algoStats, totalErrorItems } = useMemo(
-        () => buildErrorMatrix(items),
-        [items],
+    // варианты точности из series.precision
+    const precisionOptions = useMemo(() => {
+        const set = new Set<string>();
+        for (const s of experiment?.seriesList ?? []) {
+            if (s.precision) {
+                set.add(s.precision);
+            }
+        }
+        return Array.from(set).sort((a, b) => a.localeCompare(b));
+    }, [experiment]);
+
+    const [precision, setPrecision] = useState<string | null>(null);
+
+    // сбрасываем precision, если такого значения больше нет
+    useEffect(() => {
+        if (!precision) return;
+        if (!precisionOptions.includes(precision)) {
+            setPrecision(null);
+        }
+    }, [precision, precisionOptions]);
+
+    const {
+        nList,
+        algoList,
+        cellMap,
+        algoStats,
+        totalErrorItems,
+    } = useMemo(
+        () => buildErrorMatrixFromExperiment(experiment, precision),
+        [experiment, precision],
+    );
+
+    // суммарное число элементов (по агрегатам)
+    const totalElements = useMemo(
+        () =>
+            Object.values(algoStats).reduce(
+                (sum, st) => sum + st.total,
+                0,
+            ),
+        [algoStats],
     );
 
     // хуки идут подряд и без условий
@@ -56,6 +95,11 @@ export const ErrorMatrixTable: React.FC<ErrorMatrixTableProps> = ({
         Math.ceil(nList.length / pageSize || 1),
     );
 
+    // сброс страницы при изменении precision
+    useEffect(() => {
+        setPage(0);
+    }, [precision]);
+
     useEffect(() => {
         if (page > totalPages - 1) {
             setPage(totalPages - 1);
@@ -71,8 +115,16 @@ export const ErrorMatrixTable: React.FC<ErrorMatrixTableProps> = ({
 
     const sortedAlgoList = useMemo(() => {
         return [...algoList].sort((a, b) => {
-            const sa = algoStats[a.key] ?? { total: 0, success: 0, error: 0 };
-            const sb = algoStats[b.key] ?? { total: 0, success: 0, error: 0 };
+            const sa = algoStats[a.key] ?? {
+                total: 0,
+                success: 0,
+                error: 0,
+            };
+            const sb = algoStats[b.key] ?? {
+                total: 0,
+                success: 0,
+                error: 0,
+            };
 
             const totalA = sa.total;
             const totalB = sb.total;
@@ -114,11 +166,12 @@ export const ErrorMatrixTable: React.FC<ErrorMatrixTableProps> = ({
     }, [algoList, algoStats, sort]);
 
     // после хуков можно условно рендерить "нет данных"
-    if (nList.length === 0 || algoList.length === 0) {
+    if (!experiment || nList.length === 0 || algoList.length === 0) {
         return (
             <div className={className}>
                 <p className="text-xs text-textDim/60">
-                    Ошибок с заданным шагом n не обнаружено.
+                    Ошибок с заданным шагом n не обнаружено
+                    {precision ? ` (precision=${precision})` : ""}.
                 </p>
             </div>
         );
@@ -135,8 +188,34 @@ export const ErrorMatrixTable: React.FC<ErrorMatrixTableProps> = ({
                         Алгоритмы: {sortedAlgoList.length} · Шаги n:{" "}
                         {nListShown.length} из {nList.length} ·
                         Элементов с ошибкой (с n): {totalErrorItems} ·
-                        Всего элементов: {items.length}
+                        Всего элементов: {totalElements}
                     </div>
+
+                    {/* выбор precision, если он вообще есть */}
+                    {precisionOptions.length > 0 && (
+                        <div className="flex items-center gap-1 text-[11px]">
+                            <span className="text-textDim/70">
+                                precision:
+                            </span>
+                            <select
+                                className="rounded border border-border bg-surface px-1 py-[1px] text-[11px]"
+                                value={precision ?? ""}
+                                onChange={(e) => {
+                                    const v = e.target.value || null;
+                                    setPrecision(v);
+                                }}
+                            >
+                                <option value="">
+                                    Все
+                                </option>
+                                {precisionOptions.map((p) => (
+                                    <option key={p} value={p}>
+                                        {p}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                    )}
 
                     {maxSteps &&
                         maxSteps > 0 &&
@@ -154,7 +233,9 @@ export const ErrorMatrixTable: React.FC<ErrorMatrixTableProps> = ({
                                     type="button"
                                     className="rounded border border-border bg-surface px-1 py-[1px] disabled:opacity-40 hover:bg-panel"
                                     onClick={() =>
-                                        setPage((p) => Math.max(0, p - 1))
+                                        setPage((p) =>
+                                            Math.max(0, p - 1),
+                                        )
                                     }
                                     disabled={page === 0}
                                 >
@@ -172,7 +253,10 @@ export const ErrorMatrixTable: React.FC<ErrorMatrixTableProps> = ({
                                     className="rounded border border-border bg-surface px-1 py-[1px] disabled:opacity-40 hover:bg-panel"
                                     onClick={() =>
                                         setPage((p) =>
-                                            Math.min(totalPages - 1, p + 1),
+                                            Math.min(
+                                                totalPages - 1,
+                                                p + 1,
+                                            ),
                                         )
                                     }
                                     disabled={page >= totalPages - 1}
@@ -182,7 +266,9 @@ export const ErrorMatrixTable: React.FC<ErrorMatrixTableProps> = ({
                                 <button
                                     type="button"
                                     className="rounded border border-border bg-surface px-1 py-[1px] disabled:opacity-40 hover:bg-panel"
-                                    onClick={() => setPage(totalPages - 1)}
+                                    onClick={() =>
+                                        setPage(totalPages - 1)
+                                    }
                                     disabled={page >= totalPages - 1}
                                 >
                                     »
@@ -215,7 +301,10 @@ export const ErrorMatrixTable: React.FC<ErrorMatrixTableProps> = ({
                                                     ? "desc"
                                                     : "asc",
                                         }
-                                        : { key: "total", dir: "desc" },
+                                        : {
+                                            key: "total",
+                                            dir: "desc",
+                                        },
                                 )
                             }
                         >
@@ -269,7 +358,10 @@ export const ErrorMatrixTable: React.FC<ErrorMatrixTableProps> = ({
                                                     ? "desc"
                                                     : "asc",
                                         }
-                                        : { key: "okPct", dir: "desc" },
+                                        : {
+                                            key: "okPct",
+                                            dir: "desc",
+                                        },
                                 )
                             }
                         >
@@ -287,7 +379,10 @@ export const ErrorMatrixTable: React.FC<ErrorMatrixTableProps> = ({
                                                     ? "desc"
                                                     : "asc",
                                         }
-                                        : { key: "errPct", dir: "desc" },
+                                        : {
+                                            key: "errPct",
+                                            dir: "desc",
+                                        },
                                 )
                             }
                         >
@@ -330,7 +425,8 @@ export const ErrorMatrixTable: React.FC<ErrorMatrixTableProps> = ({
                                 <th
                                     className="sticky left-0 z-30 border border-border bg-panel px-1 py-[2px] text-left align-top"
                                     title={(() => {
-                                        const lines: string[] = [];
+                                        const lines: string[] =
+                                            [];
                                         lines.push(
                                             `Алгоритм: ${algo.algorithmName}`,
                                         );
@@ -347,14 +443,25 @@ export const ErrorMatrixTable: React.FC<ErrorMatrixTableProps> = ({
                                                 algo.algorithmArgs,
                                             ).length > 0
                                         ) {
-                                            lines.push("Аргументы:");
-                                            const entries = Object.entries(
-                                                algo.algorithmArgs,
-                                            ).sort(([a, b]) =>
-                                                a.localeCompare(b),
+                                            lines.push(
+                                                "Аргументы:",
                                             );
-                                            for (const [k, v] of entries) {
-                                                lines.push(`  ${k}: ${v}`);
+                                            const entries =
+                                                Object.entries(
+                                                    algo.algorithmArgs,
+                                                ).sort(
+                                                    ([a, b]) =>
+                                                        a.localeCompare(
+                                                            b,
+                                                        ),
+                                                );
+                                            for (const [
+                                                k,
+                                                v,
+                                            ] of entries) {
+                                                lines.push(
+                                                    `  ${k}: ${v}`,
+                                                );
                                             }
                                         }
                                         lines.push("");
@@ -368,6 +475,11 @@ export const ErrorMatrixTable: React.FC<ErrorMatrixTableProps> = ({
                                                 )}%, % Err ≈ ${errPct!.toFixed(
                                                     1,
                                                 )}%`,
+                                            );
+                                        }
+                                        if (precision) {
+                                            lines.push(
+                                                `Фильтр precision = ${precision}`,
                                             );
                                         }
                                         return lines.join("\n");
@@ -430,7 +542,9 @@ export const ErrorMatrixTable: React.FC<ErrorMatrixTableProps> = ({
                                                 count,
                                             )}`}
                                         >
-                                            {count > 0 ? count : "—"}
+                                            {count > 0
+                                                ? count
+                                                : "—"}
                                         </td>
                                     );
                                 })}
