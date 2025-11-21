@@ -1,7 +1,6 @@
 // AlgorithmSeriesDiffHeatmap.tsx
 
-import { useEffect, useMemo, useRef, useState } from "react";
-import html2canvas from "html2canvas";
+import { useEffect, useMemo, useState } from "react";
 import type {
     Experiment,
     Series,
@@ -59,9 +58,7 @@ function parseX(args: SeriesArgs | null): { xLabel: string; xSort: number | null
 
 function nonNullEntries<T extends Record<string, unknown>>(obj: T | null | undefined) {
     if (!obj) return [] as [string, unknown][];
-    return Object.entries(obj).filter(
-        ([, v]) => v !== null && v !== undefined,
-    );
+    return Object.entries(obj).filter(([, v]) => v !== null && v !== undefined);
 }
 
 function buildArgsSummary(args: AccelArgs | null): string {
@@ -119,7 +116,7 @@ export function classifyErrorChangeFull(
     hasPrevErr: boolean,
     nPrev: number | null,
     hasNextErr: boolean,
-    nNext: number | null,
+    nNext: number | null
 ): ColorSpec {
     const statePrev = sideState(hasPrevCell, hasPrevErr, nPrev);
     const stateNext = sideState(hasNextCell, hasNextErr, nNext);
@@ -236,10 +233,7 @@ export function classifyErrorChangeFull(
     const absDelta = Math.abs(delta);
 
     const levelKey: "huge" | "big" | "mid" | "small" =
-        absDelta >= 1000 ? "huge" :
-            absDelta >= 100 ? "big" :
-                absDelta >= 10 ? "mid" :
-                    "small";
+        absDelta >= 1000 ? "huge" : absDelta >= 100 ? "big" : absDelta >= 10 ? "mid" : "small";
 
     if (delta > 0) {
         return {
@@ -274,9 +268,7 @@ function extractErrorInfo(sa: SeriesAccel | null | undefined): ErrorSideInfo {
         return { hasCell: true, hasErr: false, n: null };
     }
 
-    const ns = errors
-        .map((e) => e.n)
-        .filter((n) => typeof n === "number" && Number.isFinite(n));
+    const ns = errors.map((e) => e.n).filter((n) => typeof n === "number" && Number.isFinite(n));
 
     if (ns.length === 0) {
         return { hasCell: true, hasErr: true, n: null };
@@ -296,22 +288,13 @@ interface DiffRecord {
 type Side = "prev" | "next";
 
 export function AlgorithmSeriesDiffHeatmap({
-                                               experiment,
-                                               maxSeries,
-                                           }: {
+    experiment,
+    maxSeries,
+}: {
     experiment: Experiment | null;
     maxSeries?: number;
 }) {
-    const containerRef = useRef<HTMLDivElement | null>(null);
-
-    /* базовые данные + список precision в порядке появления */
-
-    const {
-        seriesRaw,
-        accelRaw,
-        seriesAccelRaw,
-        precisionsOrder,
-    } = useMemo(() => {
+    const { seriesRaw, accelRaw, seriesAccelRaw, precisionsOrder } = useMemo(() => {
         if (!experiment) {
             return {
                 seriesRaw: [] as Series[],
@@ -361,11 +344,7 @@ export function AlgorithmSeriesDiffHeatmap({
 
     /* вычисление матрицы диффа под выбранную пару precision */
 
-    const {
-        seriesList,
-        algoList,
-        diffMap,
-    } = useMemo(() => {
+    const { seriesList, algoList, diffMap } = useMemo(() => {
         const resultEmpty = {
             seriesList: [] as SeriesInfo[],
             algoList: [] as AlgoInfo[],
@@ -422,10 +401,7 @@ export function AlgorithmSeriesDiffHeatmap({
             return resultEmpty;
         }
 
-        const seriesIdMeta = new Map<
-            string,
-            { side: Side; baseKey: SeriesKey }
-        >();
+        const seriesIdMeta = new Map<string, { side: Side; baseKey: SeriesKey }>();
         for (const [baseKey, group] of seriesGroups.entries()) {
             for (const side of ["prev", "next"] as Side[]) {
                 const meta = group.bySide[side];
@@ -503,43 +479,13 @@ export function AlgorithmSeriesDiffHeatmap({
         });
 
         return { seriesList, algoList, diffMap };
-    }, [
-        seriesRaw,
-        accelRaw,
-        seriesAccelRaw,
-        prevPrecision,
-        nextPrecision,
-    ]);
-
-    /* ------------ пагинация и экспорт ------------ */
+    }, [seriesRaw, accelRaw, seriesAccelRaw, prevPrecision, nextPrecision]);
 
     const [page, setPage] = useState(0);
 
-    const pageSize =
-        maxSeries && maxSeries > 0 ? maxSeries : seriesList.length || 1;
+    const pageSize = maxSeries && maxSeries > 0 ? maxSeries : seriesList.length || 1;
 
-    const totalPages = Math.max(
-        1,
-        Math.ceil((seriesList.length || 1) / pageSize),
-    );
-
-    const handleExportPng = async () => {
-        const el = containerRef.current;
-        if (!el) return;
-
-        const canvas = await html2canvas(el, {
-            backgroundColor: "#020617",
-            scale: 2,
-            scrollX: 0,
-            scrollY: -window.scrollY,
-        });
-
-        const dataUrl = canvas.toDataURL("image/png");
-        const link = document.createElement("a");
-        link.href = dataUrl;
-        link.download = `heatmap_page-${page + 1}-of-${totalPages}.png`;
-        link.click();
-    };
+    const totalPages = Math.max(1, Math.ceil((seriesList.length || 1) / pageSize));
 
     useEffect(() => {
         if (page > totalPages - 1) {
@@ -550,9 +496,7 @@ export function AlgorithmSeriesDiffHeatmap({
     const startIndex = page * pageSize;
     const endIndex = startIndex + pageSize;
     const seriesListShown =
-        maxSeries && maxSeries > 0
-            ? seriesList.slice(startIndex, endIndex)
-            : seriesList;
+        maxSeries && maxSeries > 0 ? seriesList.slice(startIndex, endIndex) : seriesList;
 
     /* ------------ рендер ------------ */
 
@@ -578,15 +522,9 @@ export function AlgorithmSeriesDiffHeatmap({
                             <select
                                 className="rounded border border-border bg-surface px-1 py-[1px]"
                                 value={prevPrecision ?? ""}
-                                onChange={(e) =>
-                                    setPrevPrecision(
-                                        e.target.value || null,
-                                    )
-                                }
+                                onChange={(e) => setPrevPrecision(e.target.value || null)}
                             >
-                                {precisionsOrder.length === 0 && (
-                                    <option value="">—</option>
-                                )}
+                                {precisionsOrder.length === 0 && <option value="">—</option>}
                                 {precisionsOrder.map((p) => (
                                     <option key={p} value={p}>
                                         {p}
@@ -600,15 +538,9 @@ export function AlgorithmSeriesDiffHeatmap({
                             <select
                                 className="rounded border border-border bg-surface px-1 py-[1px]"
                                 value={nextPrecision ?? ""}
-                                onChange={(e) =>
-                                    setNextPrecision(
-                                        e.target.value || null,
-                                    )
-                                }
+                                onChange={(e) => setNextPrecision(e.target.value || null)}
                             >
-                                {precisionsOrder.length === 0 && (
-                                    <option value="">—</option>
-                                )}
+                                {precisionsOrder.length === 0 && <option value="">—</option>}
                                 {precisionsOrder.map((p) => (
                                     <option key={p} value={p}>
                                         {p}
@@ -619,248 +551,212 @@ export function AlgorithmSeriesDiffHeatmap({
                     </div>
 
                     <div>
-                        Алгоритмы: {algoList.length} · Ряды:{" "}
-                        {seriesListShown.length} из {seriesList.length}
+                        Алгоритмы: {algoList.length} · Ряды: {seriesListShown.length} из{" "}
+                        {seriesList.length}
                     </div>
 
-                    <button
-                        type="button"
-                        onClick={handleExportPng}
-                        className="rounded border border-border bg-surface px-2 py-1 text-[10px] hover:bg-panel"
-                    >
-                        Скачать PNG (стр. {page + 1}/{totalPages})
-                    </button>
-
-                    {maxSeries &&
-                        maxSeries > 0 &&
-                        seriesList.length > maxSeries && (
-                            <div className="flex items-center gap-1 text-[10px]">
-                                <button
-                                    type="button"
-                                    className="rounded border border-border bg-surface px-1 py-[1px] disabled:opacity-40 hover:bg-panel"
-                                    onClick={() => setPage(0)}
-                                    disabled={page === 0}
-                                >
-                                    «
-                                </button>
-                                <button
-                                    type="button"
-                                    className="rounded border border-border bg-surface px-1 py-[1px] disabled:opacity-40 hover:bg-panel"
-                                    onClick={() =>
-                                        setPage((p) => Math.max(0, p - 1))
-                                    }
-                                    disabled={page === 0}
-                                >
-                                    ‹
-                                </button>
-                                <span className="px-1">
-                                    стр. {page + 1} / {totalPages}
-                                </span>
-                                <span className="text-textDim/60">
-                                    колонки {startIndex + 1}–
-                                    {Math.min(endIndex, seriesList.length)}
-                                </span>
-                                <button
-                                    type="button"
-                                    className="rounded border border-border bg-surface px-1 py-[1px] disabled:opacity-40 hover:bg-panel"
-                                    onClick={() =>
-                                        setPage((p) =>
-                                            Math.min(totalPages - 1, p + 1),
-                                        )
-                                    }
-                                    disabled={page >= totalPages - 1}
-                                >
-                                    ›
-                                </button>
-                                <button
-                                    type="button"
-                                    className="rounded border border-border bg-surface px-1 py-[1px] disabled:opacity-40 hover:bg-panel"
-                                    onClick={() => setPage(totalPages - 1)}
-                                    disabled={page >= totalPages - 1}
-                                >
-                                    »
-                                </button>
-                            </div>
-                        )}
+                    {maxSeries && maxSeries > 0 && seriesList.length > maxSeries && (
+                        <div className="flex items-center gap-1 text-[10px]">
+                            <button
+                                type="button"
+                                className="rounded border border-border bg-surface px-1 py-[1px] disabled:opacity-40 hover:bg-panel"
+                                onClick={() => setPage(0)}
+                                disabled={page === 0}
+                            >
+                                «
+                            </button>
+                            <button
+                                type="button"
+                                className="rounded border border-border bg-surface px-1 py-[1px] disabled:opacity-40 hover:bg-panel"
+                                onClick={() => setPage((p) => Math.max(0, p - 1))}
+                                disabled={page === 0}
+                            >
+                                ‹
+                            </button>
+                            <span className="px-1">
+                                стр. {page + 1} / {totalPages}
+                            </span>
+                            <span className="text-textDim/60">
+                                колонки {startIndex + 1}–{Math.min(endIndex, seriesList.length)}
+                            </span>
+                            <button
+                                type="button"
+                                className="rounded border border-border bg-surface px-1 py-[1px] disabled:opacity-40 hover:bg-panel"
+                                onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+                                disabled={page >= totalPages - 1}
+                            >
+                                ›
+                            </button>
+                            <button
+                                type="button"
+                                className="rounded border border-border bg-surface px-1 py-[1px] disabled:opacity-40 hover:bg-panel"
+                                onClick={() => setPage(totalPages - 1)}
+                                disabled={page >= totalPages - 1}
+                            >
+                                »
+                            </button>
+                        </div>
+                    )}
                 </div>
             </div>
 
-            <div
-                ref={containerRef}
-                className="overflow-auto rounded-xl2 border border-border bg-panel shadow-panel"
-            >
+            <div className="overflow-auto rounded-xl2 border border-border bg-panel shadow-panel">
                 <table className="border-collapse text-[10px] leading-tight text-textDim">
                     <thead className="bg-surface/80">
-                    <tr>
-                        <th className="sticky left-0 top-0 z-20 border border-border bg-surface/90 px-1 py-1 text-left align-bottom text-[10px]">
-                            Алгоритм \ Ряд
-                        </th>
-
-                        {seriesListShown.map((s) => (
-                            <th
-                                key={s.key}
-                                className="border border-border px-0 py-0 text-center align-bottom"
-                                title={`${s.seriesName}\n x = ${s.xLabel}`}
-                            >
-                                <div className="relative h-28 w-[40px] flex items-center justify-center">
-                                    <span
-                                        className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rotate-[-90deg] whitespace-nowrap text-[9px] leading-tight"
-                                    >
-                                        {s.seriesName}
-                                    </span>
-                                    <span className="absolute bottom-1 text-[8px] text-textDim/70">
-                                        x={s.xLabel}
-                                    </span>
-                                </div>
+                        <tr>
+                            <th className="sticky left-0 top-0 z-20 border border-border bg-surface/90 px-1 py-1 text-left align-bottom text-[10px]">
+                                Алгоритм \ Ряд
                             </th>
-                        ))}
-                    </tr>
+
+                            {seriesListShown.map((s) => (
+                                <th
+                                    key={s.key}
+                                    className="border border-border px-0 py-0 text-center align-bottom"
+                                    title={`${s.seriesName}\n x = ${s.xLabel}`}
+                                >
+                                    <div className="relative h-28 w-[40px] flex items-center justify-center">
+                                        <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rotate-[-90deg] whitespace-nowrap text-[9px] leading-tight">
+                                            {s.seriesName}
+                                        </span>
+                                        <span className="absolute bottom-1 text-[8px] text-textDim/70">
+                                            x={s.xLabel}
+                                        </span>
+                                    </div>
+                                </th>
+                            ))}
+                        </tr>
                     </thead>
                     <tbody>
-                    {algoList.map((algo) => (
-                        <tr key={algo.key}>
-                            <th
-                                className="sticky left-0 z-10 border border-border bg-panel px-1 py-[2px] text-left align-top"
-                                title={(() => {
-                                    const lines: string[] = [];
-                                    lines.push(`Алгоритм: ${algo.algorithmName}`);
-                                    lines.push(
-                                        `m = ${
-                                            algo.m != null ? String(algo.m) : "∅"
-                                        }`,
-                                    );
-                                    const entries = nonNullEntries(
-                                        algo.algorithmArgs,
-                                    );
-                                    if (entries.length > 0) {
-                                        lines.push("Аргументы:");
-                                        for (const [k, v] of entries.sort(
-                                            ([a], [b]) =>
-                                                a.localeCompare(b),
-                                        )) {
-                                            lines.push(`  ${k}: ${v}`);
+                        {algoList.map((algo) => (
+                            <tr key={algo.key}>
+                                <th
+                                    className="sticky left-0 z-10 border border-border bg-panel px-1 py-[2px] text-left align-top"
+                                    title={(() => {
+                                        const lines: string[] = [];
+                                        lines.push(`Алгоритм: ${algo.algorithmName}`);
+                                        lines.push(`m = ${algo.m != null ? String(algo.m) : "∅"}`);
+                                        const entries = nonNullEntries(algo.algorithmArgs);
+                                        if (entries.length > 0) {
+                                            lines.push("Аргументы:");
+                                            for (const [k, v] of entries.sort(([a], [b]) =>
+                                                a.localeCompare(b)
+                                            )) {
+                                                lines.push(`  ${k}: ${v}`);
+                                            }
                                         }
-                                    }
-                                    return lines.join("\n");
-                                })()}
-                            >
-                                <div className="whitespace-pre leading-tight">
-                                    <span className="block max-w-[150px] truncate">
-                                        {algo.algorithmName}
-                                    </span>
-                                    <span className="text-[9px] text-textDim/70">
-                                        {algo.m != null
-                                            ? `m=${String(algo.m)}`
-                                            : "m=∅"}
-                                    </span>
-                                    {algo.argsSummary && (
-                                        <div className="mt-[1px] max-w-[150px] truncate text-[8px] text-textDim/60">
-                                            {algo.argsSummary}
-                                        </div>
-                                    )}
-                                </div>
-                            </th>
+                                        return lines.join("\n");
+                                    })()}
+                                >
+                                    <div className="whitespace-pre leading-tight">
+                                        <span className="block max-w-[150px] truncate">
+                                            {algo.algorithmName}
+                                        </span>
+                                        <span className="text-[9px] text-textDim/70">
+                                            {algo.m != null ? `m=${String(algo.m)}` : "m=∅"}
+                                        </span>
+                                        {algo.argsSummary && (
+                                            <div className="mt-[1px] max-w-[150px] truncate text-[8px] text-textDim/60">
+                                                {algo.argsSummary}
+                                            </div>
+                                        )}
+                                    </div>
+                                </th>
 
-                            {seriesListShown.map((s) => {
-                                const cellKey = `${algo.key}||${s.key}`;
-                                const rec = diffMap.get(cellKey);
+                                {seriesListShown.map((s) => {
+                                    const cellKey = `${algo.key}||${s.key}`;
+                                    const rec = diffMap.get(cellKey);
 
-                                const prevInfo = rec?.prev ?? {
-                                    hasCell: false,
-                                    hasErr: false,
-                                    n: null,
-                                };
-                                const nextInfo = rec?.next ?? {
-                                    hasCell: false,
-                                    hasErr: false,
-                                    n: null,
-                                };
+                                    const prevInfo = rec?.prev ?? {
+                                        hasCell: false,
+                                        hasErr: false,
+                                        n: null,
+                                    };
+                                    const nextInfo = rec?.next ?? {
+                                        hasCell: false,
+                                        hasErr: false,
+                                        n: null,
+                                    };
 
-                                const { bgClass, borderClass, label } =
-                                    classifyErrorChangeFull(
+                                    const { bgClass, borderClass, label } = classifyErrorChangeFull(
                                         prevInfo.hasCell,
                                         nextInfo.hasCell,
                                         prevInfo.hasErr,
                                         prevInfo.n,
                                         nextInfo.hasErr,
-                                        nextInfo.n,
+                                        nextInfo.n
                                     );
 
-                                let deltaText: string;
+                                    let deltaText: string;
 
-                                if (!prevInfo.hasCell && !nextInfo.hasCell) {
-                                    deltaText = "∅ / ∅";
-                                } else if (!prevInfo.hasCell && nextInfo.hasCell) {
-                                    deltaText = "∅ → …";
-                                } else if (prevInfo.hasCell && !nextInfo.hasCell) {
-                                    deltaText = "… → ∅";
-                                } else if (!prevInfo.hasErr && !nextInfo.hasErr) {
-                                    deltaText = "ok → ok";
-                                } else if (prevInfo.hasErr && !nextInfo.hasErr) {
-                                    deltaText = "err → ok";
-                                } else if (!prevInfo.hasErr && nextInfo.hasErr) {
-                                    deltaText = "ok → err";
-                                } else if (prevInfo.n != null && nextInfo.n != null) {
-                                    const delta = nextInfo.n - prevInfo.n;
-                                    deltaText = `n: ${prevInfo.n} → ${nextInfo.n} (Δ=${delta >= 0 ? "+" : ""}${delta})`;
-                                } else {
-                                    deltaText = `n: ${prevInfo.n ?? "∅"} → ${nextInfo.n ?? "∅"}`;
-                                }
+                                    if (!prevInfo.hasCell && !nextInfo.hasCell) {
+                                        deltaText = "∅ / ∅";
+                                    } else if (!prevInfo.hasCell && nextInfo.hasCell) {
+                                        deltaText = "∅ → …";
+                                    } else if (prevInfo.hasCell && !nextInfo.hasCell) {
+                                        deltaText = "… → ∅";
+                                    } else if (!prevInfo.hasErr && !nextInfo.hasErr) {
+                                        deltaText = "ok → ok";
+                                    } else if (prevInfo.hasErr && !nextInfo.hasErr) {
+                                        deltaText = "err → ok";
+                                    } else if (!prevInfo.hasErr && nextInfo.hasErr) {
+                                        deltaText = "ok → err";
+                                    } else if (prevInfo.n != null && nextInfo.n != null) {
+                                        const delta = nextInfo.n - prevInfo.n;
+                                        deltaText = `n: ${prevInfo.n} → ${nextInfo.n} (Δ=${delta >= 0 ? "+" : ""}${delta})`;
+                                    } else {
+                                        deltaText = `n: ${prevInfo.n ?? "∅"} → ${nextInfo.n ?? "∅"}`;
+                                    }
 
-                                const tooltipLines: string[] = [];
+                                    const tooltipLines: string[] = [];
 
-                                tooltipLines.push(
-                                    `Ряд: ${s.seriesName}, x=${s.xLabel}`,
-                                );
-                                tooltipLines.push(
-                                    `Алгоритм: ${algo.algorithmName}, m=${algo.m ?? "∅"}`,
-                                );
-                                tooltipLines.push("");
+                                    tooltipLines.push(`Ряд: ${s.seriesName}, x=${s.xLabel}`);
+                                    tooltipLines.push(
+                                        `Алгоритм: ${algo.algorithmName}, m=${algo.m ?? "∅"}`
+                                    );
+                                    tooltipLines.push("");
 
-                                tooltipLines.push(
-                                    `Старый precision (${prevPrecision ?? "?"}): ${
-                                        prevInfo.hasCell
-                                            ? prevInfo.hasErr
-                                                ? prevInfo.n != null
-                                                    ? `ошибка, n=${prevInfo.n}`
-                                                    : "ошибка, n неизвестно"
-                                                : "ошибки нет"
-                                            : "нет пары"
-                                    }`,
-                                );
-                                tooltipLines.push(
-                                    `Новый precision (${nextPrecision ?? "?"}): ${
-                                        nextInfo.hasCell
-                                            ? nextInfo.hasErr
-                                                ? nextInfo.n != null
-                                                    ? `ошибка, n=${nextInfo.n}`
-                                                    : "ошибка, n неизвестно"
-                                                : "ошибки нет"
-                                            : "нет пары"
-                                    }`,
-                                );
+                                    tooltipLines.push(
+                                        `Старый precision (${prevPrecision ?? "?"}): ${
+                                            prevInfo.hasCell
+                                                ? prevInfo.hasErr
+                                                    ? prevInfo.n != null
+                                                        ? `ошибка, n=${prevInfo.n}`
+                                                        : "ошибка, n неизвестно"
+                                                    : "ошибки нет"
+                                                : "нет пары"
+                                        }`
+                                    );
+                                    tooltipLines.push(
+                                        `Новый precision (${nextPrecision ?? "?"}): ${
+                                            nextInfo.hasCell
+                                                ? nextInfo.hasErr
+                                                    ? nextInfo.n != null
+                                                        ? `ошибка, n=${nextInfo.n}`
+                                                        : "ошибка, n неизвестно"
+                                                    : "ошибки нет"
+                                                : "нет пары"
+                                        }`
+                                    );
 
-                                tooltipLines.push("");
-                                tooltipLines.push(label);
+                                    tooltipLines.push("");
+                                    tooltipLines.push(label);
 
-                                const title = tooltipLines.join("\n");
+                                    const title = tooltipLines.join("\n");
 
-                                return (
-                                    <td
-                                        key={cellKey}
-                                        title={title}
-                                        className={`min-w-[30px] border px-[2px] py-[2px] text-center text-[10px] cursor-default ${borderClass} ${bgClass}`}
-                                    >
-                                        <div className="leading-tight">
-                                            <div className="text-[9px]">
-                                                {deltaText}
+                                    return (
+                                        <td
+                                            key={cellKey}
+                                            title={title}
+                                            className={`min-w-[30px] border px-[2px] py-[2px] text-center text-[10px] cursor-default ${borderClass} ${bgClass}`}
+                                        >
+                                            <div className="leading-tight">
+                                                <div className="text-[9px]">{deltaText}</div>
                                             </div>
-                                        </div>
-                                    </td>
-                                );
-                            })}
-                        </tr>
-                    ))}
+                                        </td>
+                                    );
+                                })}
+                            </tr>
+                        ))}
                     </tbody>
                 </table>
             </div>
