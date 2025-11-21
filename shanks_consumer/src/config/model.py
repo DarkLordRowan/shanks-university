@@ -40,6 +40,8 @@ class TrialConfig(BaseModel):
     trial_process_count: int = 1
     trial_task_timeout: int = 10
     trial_result_view: ResultViewKind = ResultViewKind.FULL
+    trial_memory_efficient: bool = True
+
     no_events: bool = False
 
     precisions: list[PrecisionType] = [PrecisionType.F64]
@@ -51,6 +53,10 @@ class TrialConfig(BaseModel):
 
     mongo: MongoConfig = MongoConfig()
     output: OutputConfig = OutputConfig()
+
+    @property
+    def is_parallel(self) -> int:
+        return self.trial_process_count > 1
 
     @property
     def precision(self) -> PrecisionType:
