@@ -62,6 +62,7 @@ export const ErrorMatrixTable: React.FC<ErrorMatrixTableProps> = ({
         nList,
         algoList,
         cellMap,
+        cellMessagesMap,
         algoStats,
         totalErrorItems,
     } = useMemo(
@@ -425,8 +426,7 @@ export const ErrorMatrixTable: React.FC<ErrorMatrixTableProps> = ({
                                 <th
                                     className="sticky left-0 z-30 border border-border bg-panel px-1 py-[2px] text-left align-top"
                                     title={(() => {
-                                        const lines: string[] =
-                                            [];
+                                        const lines: string[] = [];
                                         lines.push(
                                             `Алгоритм: ${algo.algorithmName}`,
                                         );
@@ -528,11 +528,37 @@ export const ErrorMatrixTable: React.FC<ErrorMatrixTableProps> = ({
                                     const cellKey = `${algo.key}||${n}`;
                                     const count =
                                         cellMap.get(cellKey) ?? 0;
+                                    const msgs =
+                                        cellMessagesMap.get(cellKey) ??
+                                        [];
+
+                                    const tooltipLines: string[] = [];
+                                    tooltipLines.push(
+                                        `Алгоритм: ${algo.algorithmName}`,
+                                    );
+                                    tooltipLines.push(
+                                        `шаг n = ${n}`,
+                                    );
+                                    tooltipLines.push(
+                                        count > 0
+                                            ? `количество ошибок: ${count}`
+                                            : "ошибок нет",
+                                    );
+
+                                    if (msgs.length > 0) {
+                                        tooltipLines.push("");
+                                        tooltipLines.push(
+                                            "Уникальные ошибки:",
+                                        );
+                                        for (const msg of msgs) {
+                                            tooltipLines.push(
+                                                `  • ${msg}`,
+                                            );
+                                        }
+                                    }
 
                                     const title =
-                                        count > 0
-                                            ? `Алгоритм: ${algo.algorithmName}\nшаг n = ${n}\nколичество ошибок: ${count}`
-                                            : `Алгоритм: ${algo.algorithmName}\nшаг n = ${n}\nошибок нет`;
+                                        tooltipLines.join("\n");
 
                                     return (
                                         <td

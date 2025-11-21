@@ -29,6 +29,12 @@ export interface ErrorMatrix {
      *   value = количество ошибок
      */
     cellMap: Map<string, number>;
+    /**
+     * Уникальные сообщения ошибок по ячейкам:
+     *   key = `${algoKey}||${n}`
+     *   value = массив уникальных текстов ошибок
+     */
+    cellMessagesMap: Map<string, string[]>;
     /** Агрегаты по алгоритмам */
     algoStats: Record<AlgoKey, AlgoStats>;
     /** Общее число элементов с ошибкой, участвующих в матрице */
@@ -53,6 +59,7 @@ export function buildErrorMatrix(items: Item[]): ErrorMatrix {
     const nSet = new Set<number>();
     const algoMap = new Map<AlgoKey, AlgoInfo>();
     const cellMap = new Map<string, number>();
+    const cellMessagesMap = new Map<string, string[]>();
     const statsMap = new Map<AlgoKey, AlgoStats>();
 
     let totalErrWithN = 0;
@@ -94,6 +101,20 @@ export function buildErrorMatrix(items: Item[]): ErrorMatrix {
             const prev = cellMap.get(cellKey) ?? 0;
             cellMap.set(cellKey, prev + 1);
             totalErrWithN += 1;
+
+            // собираем уникальные сообщения
+            const rawMsg = (err as any).message;
+            const msg =
+                typeof rawMsg === "string"
+                    ? rawMsg.trim()
+                    : String(rawMsg ?? "").trim();
+            if (msg) {
+                const existing = cellMessagesMap.get(cellKey) ?? [];
+                if (!existing.includes(msg)) {
+                    existing.push(msg);
+                    cellMessagesMap.set(cellKey, existing);
+                }
+            }
         }
     }
 
@@ -114,6 +135,7 @@ export function buildErrorMatrix(items: Item[]): ErrorMatrix {
         nList,
         algoList,
         cellMap,
+        cellMessagesMap,
         algoStats,
         totalErrorItems: totalErrWithN,
     };
@@ -140,6 +162,7 @@ export function buildErrorMatrixFromExperiment(
     const nSet = new Set<number>();
     const algoMap = new Map<AlgoKey, AlgoInfo>();
     const cellMap = new Map<string, number>();
+    const cellMessagesMap = new Map<string, string[]>();
     const statsMap = new Map<AlgoKey, AlgoStats>();
 
     let totalErrWithN = 0;
@@ -149,6 +172,7 @@ export function buildErrorMatrixFromExperiment(
             nList: [],
             algoList: [],
             cellMap,
+            cellMessagesMap,
             algoStats: {},
             totalErrorItems: 0,
         };
@@ -191,26 +215,43 @@ export function buildErrorMatrixFromExperiment(
             return init;
         };
 
-        // агрегируем ошибки по n
-        const errorCountByN = new Map<number, number>();
+        // агрегируем ошибки по n: считаем и тексты
+        const errorInfoByN = new Map<number, { count: number; messages: string[] }>();
         for (const e of sa.errors ?? []) {
-            const n = e.n;
+            const n = e?.n;
             if (!Number.isFinite(n)) continue;
-            errorCountByN.set(n, (errorCountByN.get(n) ?? 0) + 1);
+
+            const rawMsg = (e as any).message;
+            const msg =
+                typeof rawMsg === "string"
+                    ? rawMsg.trim()
+                    : String(rawMsg ?? "").trim();
+
+            let info = errorInfoByN.get(n);
+            if (!info) {
+                info = { count: 0, messages: [] };
+                errorInfoByN.set(n, info);
+            }
+            info.count += 1;
+            if (msg) {
+                info.messages.push(msg);
+            }
         }
 
         const seenNs = new Set<number>();
 
         // учитываем все computed[n] как элементы
         for (const cp of sa.computed ?? []) {
-            const n = cp.n;
+            const n = cp?.n;
             if (!Number.isFinite(n)) continue;
             seenNs.add(n);
 
             const st = ensureStats();
             st.total += 1;
 
-            const errCount = errorCountByN.get(n) ?? 0;
+            const info = errorInfoByN.get(n);
+            const errCount = info?.count ?? 0;
+
             if (errCount > 0) {
                 st.error += 1;
 
@@ -219,13 +260,21 @@ export function buildErrorMatrixFromExperiment(
                 const prev = cellMap.get(cellKey) ?? 0;
                 cellMap.set(cellKey, prev + errCount);
                 totalErrWithN += errCount;
+
+                if (info && info.messages.length > 0) {
+                    const existing = new Set(cellMessagesMap.get(cellKey) ?? []);
+                    for (const m of info.messages) {
+                        if (m) existing.add(m);
+                    }
+                    cellMessagesMap.set(cellKey, Array.from(existing));
+                }
             } else {
                 st.success += 1;
             }
         }
 
         // ошибки по n, для которых нет computed[n]
-        for (const [n, count] of errorCountByN.entries()) {
+        for (const [n, info] of errorInfoByN.entries()) {
             if (seenNs.has(n)) continue;
 
             const st = ensureStats();
@@ -235,8 +284,16 @@ export function buildErrorMatrixFromExperiment(
             nSet.add(n);
             const cellKey = `${algoKey}||${n}`;
             const prev = cellMap.get(cellKey) ?? 0;
-            cellMap.set(cellKey, prev + count);
-            totalErrWithN += count;
+            cellMap.set(cellKey, prev + info.count);
+            totalErrWithN += info.count;
+
+            if (info.messages.length > 0) {
+                const existing = new Set(cellMessagesMap.get(cellKey) ?? []);
+                for (const m of info.messages) {
+                    if (m) existing.add(m);
+                }
+                cellMessagesMap.set(cellKey, Array.from(existing));
+            }
         }
     }
 
@@ -257,6 +314,7 @@ export function buildErrorMatrixFromExperiment(
         nList,
         algoList,
         cellMap,
+        cellMessagesMap,
         algoStats,
         totalErrorItems: totalErrWithN,
     };
