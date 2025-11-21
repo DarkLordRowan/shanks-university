@@ -2,20 +2,13 @@
 
 import { useCallback, useRef, useState } from "react";
 import type { Experiment } from "@/types/experiment";
-import type { ParquetSeriesRow, ParquetAccelRow } from "@/shared/parquet/types";
+import type { ParquetAccelRow, ParquetSeriesRow } from "@/shared/parquet/types";
 import { readParquetFile } from "@/shared/parquet/readParquetFile";
 import { buildExperimentFromParquet } from "@/shared/parquet/buildExperimentFromParquet";
 
-/**
- * Разбор webkitRelativePath на HIVE-partition:
- *   parquet/accelerations/series_id=31/part-0.parquet
- * → { series_id: "31" }
- *   parquet/series/precision=F64/series_name=CosSeries/part-0.parquet
- * → { precision: "F64", series_name: "CosSeries" }
- */
 function parsePartitions(path: string): Record<string, string> {
     const res: Record<string, string> = {};
-    const parts = path.split(/[\\/]/); // и Windows, и UNIX
+    const parts = path.split(/[\\/]/);
 
     for (const seg of parts) {
         const idx = seg.indexOf("=");
@@ -27,9 +20,6 @@ function parsePartitions(path: string): Record<string, string> {
     return res;
 }
 
-/**
- * Приведение bigint | string | number → number | null
- */
 function toNumberOrNull(v: unknown): number | null {
     if (typeof v === "number") return Number.isNaN(v) ? null : v;
     if (typeof v === "bigint") return Number(v);
@@ -40,53 +30,15 @@ function toNumberOrNull(v: unknown): number | null {
     return null;
 }
 
-
-function inspect(v: unknown, indent = 0): string {
-    const pad = " ".repeat(indent);
-
-    if (v === null) return pad + "null";
-    if (v === undefined) return pad + "undefined";
-
-    const t = typeof v;
-
-    if (t === "number" || t === "boolean" || t === "bigint") {
-        return pad + String(v);
-    }
-    if (t === "string") {
-        return pad + JSON.stringify(v); // нормальная строка в кавычках
-    }
-
-    if (Array.isArray(v)) {
-        if (v.length === 0) return pad + "[]";
-        let out = pad + "[\n";
-        for (const el of v) {
-            out += inspect(el, indent + 2) + ",\n";
-        }
-        out += pad + "]";
-        return out;
-    }
-
-    if (t === "object") {
-        const entries = Object.entries(v as any);
-        if (entries.length === 0) return pad + "{}";
-        let out = pad + "{\n";
-        for (const [k, val] of entries) {
-            out += pad + "  " + k + ": " + (typeof val === "object"
-                    ? "\n" + inspect(val, indent + 4)
-                    : inspect(val, 0)
-            ) + ",\n";
-        }
-        out += pad + "}";
-        return out;
-    }
-
-    return pad + String(v);
-}
-
-
 export type LoadParquetState =
     | { status: "idle" }
-    | { status: "loading"; message: string; filesDone: number; filesTotal: number }
+    | {
+          status: "loading";
+          phase: "reading" | "building";
+          message: string;
+          done: number;
+          total: number;
+      }
     | { status: "error"; message: string }
     | { status: "success"; count: number };
 
@@ -102,12 +54,8 @@ export function useLoadParquetExpirement() {
 
         const allFiles = Array.from(files);
 
-        const seriesFiles = allFiles.filter((f) =>
-            f.webkitRelativePath.includes("/series/"),
-        );
-        const accelFiles = allFiles.filter((f) =>
-            f.webkitRelativePath.includes("/accelerations/"),
-        );
+        const seriesFiles = allFiles.filter((f) => f.webkitRelativePath.includes("/series/"));
+        const accelFiles = allFiles.filter((f) => f.webkitRelativePath.includes("/accelerations/"));
 
         if (seriesFiles.length === 0 || accelFiles.length === 0) {
             setState({
@@ -122,16 +70,16 @@ export function useLoadParquetExpirement() {
 
         setState({
             status: "loading",
+            phase: "reading",
             message: "Чтение Parquet",
-            filesDone,
-            filesTotal,
+            done: filesDone,
+            total: filesTotal,
         });
 
         const seriesRows: ParquetSeriesRow[] = [];
         const accelRows: ParquetAccelRow[] = [];
 
         try {
-            // series
             for (const f of seriesFiles) {
                 const parts = parsePartitions(f.webkitRelativePath);
                 const precisionFromPath = parts["precision"];
@@ -146,8 +94,7 @@ export function useLoadParquetExpirement() {
                         ...r,
                         series_id: sid ?? -1,
                         precision: (r as any).precision ?? precisionFromPath ?? "",
-                        series_name:
-                            (r as any).series_name ?? seriesNameFromPath ?? "",
+                        series_name: (r as any).series_name ?? seriesNameFromPath ?? "",
                     };
 
                     seriesRows.push(row);
@@ -156,13 +103,13 @@ export function useLoadParquetExpirement() {
                 filesDone += 1;
                 setState({
                     status: "loading",
+                    phase: "reading",
                     message: `Чтение series (${filesDone}/${filesTotal})`,
-                    filesDone,
-                    filesTotal,
+                    done: filesDone,
+                    total: filesTotal,
                 });
             }
 
-            // accelerations
             for (const f of accelFiles) {
                 const parts = parsePartitions(f.webkitRelativePath);
                 const seriesIdFromPath = toNumberOrNull(parts["series_id"]);
@@ -170,34 +117,51 @@ export function useLoadParquetExpirement() {
                 const rows = await readParquetFile<ParquetAccelRow>(f);
 
                 for (const r of rows) {
-                    const sid =
-                        toNumberOrNull((r as any).series_id) ?? seriesIdFromPath;
+                    const sid = toNumberOrNull((r as any).series_id) ?? seriesIdFromPath;
 
                     const row: ParquetAccelRow = {
                         ...r,
-                        series_id: sid ?? -1, // чтобы не было undefined
+                        series_id: sid ?? -1,
                     };
 
-                    // console.log(inspect(row));
                     accelRows.push(row);
                 }
 
                 filesDone += 1;
                 setState({
                     status: "loading",
+                    phase: "reading",
                     message: `Чтение accelerations (${filesDone}/${filesTotal})`,
-                    filesDone,
-                    filesTotal,
+                    done: filesDone,
+                    total: filesTotal,
                 });
             }
 
-            const experiment = buildExperimentFromParquet(seriesRows, accelRows);
+            setState({
+                status: "loading",
+                phase: "building",
+                message: "Построение эксперимента",
+                done: 0,
+                total: accelRows.length || 1,
+            });
+
+            const experiment = await buildExperimentFromParquet(
+                seriesRows,
+                accelRows,
+                (processed, total) => {
+                    setState({
+                        status: "loading",
+                        phase: "building",
+                        message: `Построение эксперимента (${processed}/${total})`,
+                        done: processed,
+                        total,
+                    });
+                }
+            );
+
             experimentRef.current = experiment;
 
-            const count =
-                experiment.seriesAccelList?.length ??
-                experiment.seriesList?.length ??
-                0;
+            const count = experiment.seriesAccelList?.length ?? experiment.seriesList?.length ?? 0;
 
             setState({
                 status: "success",
