@@ -10,16 +10,6 @@ const Docs = lazy(() => import("./pages/Docs"));
 const SeriesList = lazy(() => import("./pages/Series"));
 const SeriesPage = lazy(() => import("./pages/Series/[id]"));
 const NotFound = lazy(() => import("./pages/NotFound"));
-const Experiments_g1 = lazy(() => import("./pages/Experiments_g1"));
-const Experiments_g2 = lazy(() => import("./pages/Experiments_g2"));
-const Experiments_g3 = lazy(() => import("./pages/Experiments_g3"));
-const Experiments_g4 = lazy(() => import("./pages/Experiments_g4"));
-const Experiments_g5 = lazy(() => import("./pages/Experiments_g5"));
-const Experiment_g6 = lazy(() => import("./pages/Experiment_g6"));
-const Experiment_g7 = lazy(() => import("./pages/Experiment_g7"));
-const Experiment_g8 = lazy(() => import("./pages/Experiment_g8"));
-const Experiment_g9 = lazy(() => import("./pages/Experiment_g9"));
-const Experiment_g10 = lazy(() => import("./pages/Experiment_g10"));
 
 
 export const routes: RouteObject[] = [
@@ -29,16 +19,6 @@ export const routes: RouteObject[] = [
         children: [
             {index: true, element: <Home/>},
             {path: "experiments", element: <Experiments/>},
-            {path: "experiments_g1", element: <Experiments_g1/>},
-            {path: "experiments_g2", element: <Experiments_g2/>},
-            {path: "experiments_g3", element: <Experiments_g3/>},
-            {path: "experiments_g4", element: <Experiments_g4/>},
-            {path: "experiments_g5", element: <Experiments_g5/>},
-            {path: "experiment_g6", element: <Experiment_g6/>},
-            {path: "experiment_g7", element: <Experiment_g7/>},
-            {path: "experiment_g8", element: <Experiment_g8/>},
-            {path: "experiment_g9", element: <Experiment_g9/>},
-            {path: "experiment_g10", element: <Experiment_g10/>},
             {path: "algorithms", element: <Algorithms/>},
             {path: "algorithms/:id", element: <Algorithm/>},
             {path: "series", element: <SeriesList/>},
