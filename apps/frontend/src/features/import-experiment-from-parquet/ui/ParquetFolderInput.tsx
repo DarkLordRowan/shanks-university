@@ -2,9 +2,9 @@
 
 import { type RefObject, useEffect, useRef } from "react";
 import type { Experiment } from "@/types/experiment";
-import { useLoadParquetExpirement } from "../model/useLoadParquetExpirement";
+import { useLoadParquetExperiment } from "../model/useLoadParquetExperiment.ts";
 
-type LoadState = ReturnType<typeof useLoadParquetExpirement>["state"];
+type LoadState = ReturnType<typeof useLoadParquetExperiment>["state"];
 
 function getSummaryText(state: LoadState): string {
     switch (state.status) {
@@ -91,7 +91,7 @@ interface ParquetFolderInputProps {
 }
 
 export function ParquetFolderInput({ onExperimentChange }: ParquetFolderInputProps) {
-    const { state, load, experimentRef } = useLoadParquetExpirement();
+    const { state, load, experimentRef } = useLoadParquetExperiment();
     const inputRef = useRef<HTMLInputElement | null>(null);
 
     useEffect(() => {
