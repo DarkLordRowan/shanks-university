@@ -1,5 +1,3 @@
-// analysis/buildErrorMatrix.ts
-import type { Item } from "../types/item";
 import type { Experiment, AccelArgs } from "@/types/experiment";
 
 export type AlgoKey = string;
@@ -50,95 +48,6 @@ function buildArgsSummary(args: Record<string, unknown> | null | undefined): str
         .sort((a, b) => a.localeCompare(b))
         .map((k) => `${k}=${String((args as Record<string, unknown>)[k])}`);
     return entries.join(", ");
-}
-
-/**
- * Строит матрицу по массиву Item (старый вариант, как был).
- */
-export function buildErrorMatrix(items: Item[]): ErrorMatrix {
-    const nSet = new Set<number>();
-    const algoMap = new Map<AlgoKey, AlgoInfo>();
-    const cellMap = new Map<string, number>();
-    const cellMessagesMap = new Map<string, string[]>();
-    const statsMap = new Map<AlgoKey, AlgoStats>();
-
-    let totalErrWithN = 0;
-
-    for (const it of items) {
-        const algoKey: AlgoKey = it.algorithm.algorithmId;
-
-        // регистрация алгоритма
-        if (!algoMap.has(algoKey)) {
-            const args = (it.algorithm.algorithmArgs ?? null) as Record<string, unknown> | null;
-            algoMap.set(algoKey, {
-                key: algoKey,
-                algorithmName: it.algorithm.algorithmName,
-                m: it.algorithm.m,
-                argsSummary: buildArgsSummary(args),
-                algorithmArgs: args,
-            });
-        }
-
-        // агрегаты по алгоритму (total / success / error)
-        const currentStats =
-            statsMap.get(algoKey) ?? { total: 0, success: 0, error: 0 };
-
-        currentStats.total += 1;
-        if (it.error) {
-            currentStats.error += 1;
-        } else {
-            currentStats.success += 1;
-        }
-        statsMap.set(algoKey, currentStats);
-
-        // матрица по n: учитываем только ошибки с конкретным n
-        const err = it.error;
-        const n = err?.data?.n;
-
-        if (err && n != null) {
-            nSet.add(n);
-            const cellKey = `${algoKey}||${n}`;
-            const prev = cellMap.get(cellKey) ?? 0;
-            cellMap.set(cellKey, prev + 1);
-            totalErrWithN += 1;
-
-            // собираем уникальные сообщения
-            const rawMsg = (err as any).message;
-            const msg =
-                typeof rawMsg === "string"
-                    ? rawMsg.trim()
-                    : String(rawMsg ?? "").trim();
-            if (msg) {
-                const existing = cellMessagesMap.get(cellKey) ?? [];
-                if (!existing.includes(msg)) {
-                    existing.push(msg);
-                    cellMessagesMap.set(cellKey, existing);
-                }
-            }
-        }
-    }
-
-    const nList = Array.from(nSet).sort((a, b) => a - b);
-
-    const algoList = Array.from(algoMap.values()).sort(
-        (a, b) =>
-            a.algorithmName.localeCompare(b.algorithmName) ||
-            (a.m ?? 0) - (b.m ?? 0),
-    );
-
-    const algoStats: Record<AlgoKey, AlgoStats> = {};
-    for (const [key, st] of statsMap.entries()) {
-        algoStats[key] = st;
-    }
-
-    return {
-        nList,
-        algoList,
-        cellMap,
-        cellMessagesMap,
-        algoStats,
-        totalErrorItems: totalErrWithN,
-    };
 }
 
 /**
