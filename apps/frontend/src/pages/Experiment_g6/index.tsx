@@ -4,23 +4,14 @@ import type { Experiment } from "@/types/experiment.ts";
 import { AlgorithmSeriesErrorMatrix } from "@/widgets/AlgorithmSeriesErrorMatrix";
 
 export default function Experiment_g6() {
-
     const [experiment, setExperiment] = useState<Experiment | null>(null);
 
     return (
         <div className="mx-auto">
+            <ParquetFolderInput onExperimentChange={setExperiment} />
+            <br />
 
-            <ParquetFolderInput onExperimentChange={setExperiment}/>
-            <br/>
-
-            {/*<ExperimentViewer experiment={experiment} />*/}
-
-
-            <AlgorithmSeriesErrorMatrix
-                experiment={experiment}
-                maxSeries={40}
-            />
-
+            <AlgorithmSeriesErrorMatrix experiment={experiment} maxSeries={40} />
         </div>
     );
 }
