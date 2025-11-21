@@ -1,4 +1,4 @@
-// src/widgets/ExperimentExplorer.tsx
+// src/widgets/ExperimentSourceSelector.tsx
 
 import { type ReactNode, useState } from "react";
 import type { Experiment } from "@/types/experiment";
@@ -42,17 +42,11 @@ function SourceToggle(props: SourceToggleProps) {
 
     return (
         <div className="flex gap-2 mb-2">
-            <SourceButton
-                active={value === "parquet"}
-                onClick={() => onChange("parquet")}
-            >
+            <SourceButton active={value === "parquet"} onClick={() => onChange("parquet")}>
                 Из файлов parquet
             </SourceButton>
 
-            <SourceButton
-                active={value === "backend"}
-                onClick={() => onChange("backend")}
-            >
+            <SourceButton active={value === "backend"} onClick={() => onChange("backend")}>
                 Из backend по id
             </SourceButton>
         </div>
@@ -71,9 +65,7 @@ export function ExperimentSourceSelector(props: ExperimentSourceSelectorProps) {
         <div className="space-y-3">
             <SourceToggle value={source} onChange={setSource} />
 
-            {source === "parquet" && (
-                <ParquetFolderInput onExperimentChange={onExperimentChange} />
-            )}
+            {source === "parquet" && <ParquetFolderInput onExperimentChange={onExperimentChange} />}
 
             {source === "backend" && (
                 <BackendExperimentLoader onExperimentChange={onExperimentChange} />

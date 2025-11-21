@@ -2,19 +2,19 @@
 
 import { useState } from "react";
 import type { Experiment } from "@/types/experiment";
-import { ExperimentSourceSelector } from "@/widgets/ExperimentSourceSelector";
-import { AlgorithmSeriesErrorMatrix } from "@/widgets/AlgorithmSeriesErrorMatrix.tsx";
+import { ExperimentViewSwitcher } from "@/widgets/ExperimentViewSwitcher";
+import { ExperimentSourceWrapper } from "@/widgets/ExperimentSourceWrapper.tsx";
 
 export default function Experiments() {
     const [experiment, setExperiment] = useState<Experiment | null>(null);
 
     return (
-        <div className="mx-auto">
-            <ExperimentSourceSelector onExperimentChange={setExperiment} />
+        <div className="mx-auto mt-6 flex max-w-6xl flex-col gap-6 px-4">
+            <div className="flex justify-center">
+                <ExperimentSourceWrapper onExperimentChange={setExperiment} />
+            </div>
 
-            <br />
-
-            <AlgorithmSeriesErrorMatrix experiment={experiment} maxSeries={40} />
+            {experiment && <ExperimentViewSwitcher experiment={experiment} />}
         </div>
     );
 }
