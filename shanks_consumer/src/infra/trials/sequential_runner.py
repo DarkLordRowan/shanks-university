@@ -5,7 +5,4 @@ from src.domain.use_cases.run_trial import execute_trial
 class SequentialTrialRunner(TrialRunner):
 
     def run(self, combinations):
-        results = []
-        for combo in combinations:
-            results.extend(execute_trial(combo))
-        return results
+        return (execute_trial(combo) for combo in combinations)

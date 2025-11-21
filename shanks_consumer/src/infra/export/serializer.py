@@ -1,8 +1,6 @@
 from dataclasses import asdict, is_dataclass
 from typing import Any, Sequence
 
-from tqdm import tqdm
-
 import pyshanks as ps
 from src.domain.application.result_view import ResultViewKind
 from src.domain.data_serializer import DataSerializer
@@ -79,9 +77,6 @@ class TrialResultSerializer(DataSerializer):
         return list(
             filter(
                 lambda d: d is not None,
-                [
-                    self._sanitize_value(self._apply_view(r))
-                    for r in tqdm(results, "Serializing results...")
-                ],
+                [self._sanitize_value(self._apply_view(r)) for r in results],
             )
         )
