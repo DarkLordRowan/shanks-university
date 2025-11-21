@@ -1,4 +1,4 @@
-import type { Experiment, AccelArgs } from "@/types/experiment";
+import type { AccelArgs, Experiment } from "@/types/experiment";
 
 export type AlgoKey = string;
 
@@ -11,9 +11,9 @@ export interface AlgoInfo {
 }
 
 export interface AlgoStats {
-    total: number;   // всего элементов для алгоритма
+    total: number; // всего элементов для алгоритма
     success: number; // без error
-    error: number;   // с error (независимо от n)
+    error: number; // с error (независимо от n)
 }
 
 export interface ErrorMatrix {
@@ -66,7 +66,7 @@ function buildArgsSummary(args: Record<string, unknown> | null | undefined): str
  */
 export function buildErrorMatrixFromExperiment(
     experiment: Experiment | null,
-    precision: string | null,
+    precision: string | null
 ): ErrorMatrix {
     const nSet = new Set<number>();
     const algoMap = new Map<AlgoKey, AlgoInfo>();
@@ -87,12 +87,8 @@ export function buildErrorMatrixFromExperiment(
         };
     }
 
-    const seriesById = new Map(
-        (experiment.seriesList ?? []).map((s) => [s.id, s]),
-    );
-    const accelById = new Map(
-        (experiment.accelList ?? []).map((a) => [a.id, a]),
-    );
+    const seriesById = new Map((experiment.seriesList ?? []).map((s) => [s.id, s]));
+    const accelById = new Map((experiment.accelList ?? []).map((a) => [a.id, a]));
 
     for (const sa of experiment.seriesAccelList) {
         const series = seriesById.get(sa.series_id);
@@ -131,10 +127,7 @@ export function buildErrorMatrixFromExperiment(
             if (!Number.isFinite(n)) continue;
 
             const rawMsg = (e as any).message;
-            const msg =
-                typeof rawMsg === "string"
-                    ? rawMsg.trim()
-                    : String(rawMsg ?? "").trim();
+            const msg = typeof rawMsg === "string" ? rawMsg.trim() : String(rawMsg ?? "").trim();
 
             let info = errorInfoByN.get(n);
             if (!info) {
@@ -209,9 +202,7 @@ export function buildErrorMatrixFromExperiment(
     const nList = Array.from(nSet).sort((a, b) => a - b);
 
     const algoList = Array.from(algoMap.values()).sort(
-        (a, b) =>
-            a.algorithmName.localeCompare(b.algorithmName) ||
-            (a.m ?? 0) - (b.m ?? 0),
+        (a, b) => a.algorithmName.localeCompare(b.algorithmName) || (a.m ?? 0) - (b.m ?? 0)
     );
 
     const algoStats: Record<AlgoKey, AlgoStats> = {};
