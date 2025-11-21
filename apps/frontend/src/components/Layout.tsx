@@ -3,17 +3,7 @@ import React from "react";
 
 const nav = [
     {to: "/", label: "Главная", end: true},
-    // {to: "/experiments", label: "Эксперименты"},
-    // {to: "/experiments_g1", label: "E g1"},
-    // {to: "/experiments_g2", label: "E g2"},
-    // {to: "/experiments_g3", label: "E g3"},
-    // {to: "/experiments_g4", label: "E g4"},
-    // {to: "/experiments_g5", label: "E g5"},
-    {to: "/experiment_g6", label: "Exp: HeadMap"},
-    {to: "/experiment_g7", label: "Exp: HeadMap Double"},
-    {to: "/experiment_g8", label: "Exp: Error Count Matrix"},
-    {to: "/experiment_g9", label: "Exp: The best algorithms"},
-    // {to: "/experiment_g10", label: "g10"},
+    {to: "/experiments", label: "Эксперименты"},
     {to: "/algorithms", label: "Алгоритмы"},
     {to: "/series", label: "Ряды"},
     {to: "/docs", label: "Документация"},
