@@ -1,9 +1,9 @@
 {
   "verbose": 3,
 
-  "series_json": "config/big_boy.json",
+  "series_json": "config/example.json",
   "series_csv": "config/example_series.csv",
-  "accel_json": "config/big_boy.json",
+  "accel_json": "config/example.json",
 
   "output_dir": "output",
   "results_filename": "experiment_results",
@@ -11,9 +11,10 @@
   "results_csv": "output/results.csv",
   "results_parquet": "output/results.parquet",
 
-  "trial_process_count": 1,
+  "trial_process_count": 8,
   "trial_task_timeout": 5,
   "trial_result_view": "errors_only",
+  "trial_memory_efficient": true,
   "no_events": false,
 
   "precisions": ["F32"],

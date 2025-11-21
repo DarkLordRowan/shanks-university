@@ -1,4 +1,5 @@
 import itertools
+from functools import lru_cache
 from typing import Any, TypeGuard
 
 from src.domain.params import BaseAccelParam, BaseSeriesParam, PrecisionType
@@ -11,6 +12,17 @@ from src.domain.trial_result import (
     SeriesTrialResult,
     TrialResult,
 )
+
+
+@lru_cache(maxsize=1024)
+def cached_generate_series(
+    series_type: type, x: Any, vec_size: int, t: Any, k: int
+):
+    series = series_type()
+    return (
+        series.generateSeries(x, vec_size, t, k),
+        series.get_sum(),
+    )
 
 
 def _is_series_generator(candidate: object) -> TypeGuard[SeriesBaseProto[Any]]:
@@ -55,7 +67,6 @@ def execute_trial(
             if not _is_series_generator(series_candidate):
                 msg = f"Series executable '{series.series_name}' did not return a valid generator"
                 raise TypeError(msg)
-            series_instance = series_candidate
 
             vec_size = int(argument.get("vecSize", size_floor))
             vec_size = max(vec_size, size_floor)
@@ -71,13 +82,13 @@ def execute_trial(
             default_x = cast_precision_value(series_precision, 0)
             x_value = argument.get("x", default_x)
 
-            series_result = series_instance.generateSeries(  # type: ignore
-                x_value,
+            series_result, series_lim = cached_generate_series(
+                type(series_candidate),
+                x_value,  # type: ignore
                 vec_size,
-                add_t_value,
+                add_t_value,  # type: ignore
                 add_k_value,
             )
-            series_lim = series_instance.get_sum()  # type: ignore
         except Exception as exc:
             for accel_combo in accel_argument_combos:
                 additional_args = dict(zip(accel_arg_keys, accel_combo))

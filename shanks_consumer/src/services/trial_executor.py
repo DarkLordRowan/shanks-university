@@ -1,6 +1,9 @@
 import uuid
+from functools import reduce
 from logging import Logger
 from typing import Sequence
+
+from tqdm import tqdm
 
 from src.config.model import TrialConfig
 from src.domain.complex_trial import ComplexTrial
@@ -8,7 +11,6 @@ from src.domain.data_serializer import DataSerializer
 from src.domain.export_service import ExportService
 from src.domain.params import BaseAccelParam, BaseSeriesParam, PrecisionType
 from src.domain.sources import AccelParamSource, SeriesParamSource
-from src.domain.trial_result import TrialResult
 from src.domain.trial_runner import TrialRunner
 
 
@@ -61,8 +63,12 @@ class TrialExecutor:
 
         return series_params, accel_params
 
-    def run_trials(self, precision: PrecisionType) -> list[TrialResult]:
-        self.logger.info("Running trials for precision: %s", precision.name)
+    def export_results(self, dicts: Sequence[dict]):
+        for exporter in self.exporters:
+            exporter.export(dicts, config=self.config)
+
+    def __run_trials_full_load(self, precision: PrecisionType) -> None:
+        self.logger.info("Running standard trials")
         series_params, accel_params = self.load_parameters(precision)
 
         trial = ComplexTrial(
@@ -71,22 +77,40 @@ class TrialExecutor:
             stack_id=self.stack_id,
         )
 
-        results = self.runner.run(trial.combinations())
+        results = reduce(list.__add__, self.runner.run(trial.combinations()))
 
         if not self.config.no_events:
             results = [res.load_events() for res in results]
 
-        return results
+        self.export_results(self.serializer.to_dict(results))
 
-    def export_results(self, dicts: Sequence[dict]):
-        self.logger.info("Exporting results...")
-        for exporter in self.exporters:
-            exporter.export(dicts, config=self.config)
+    def __run_trials_dispose_at_completion(self, precision: PrecisionType) -> None:
+        self.logger.info("Running memory efficient trials")
+        series_params, accel_params = self.load_parameters(precision)
+
+        trial = ComplexTrial(
+            series_params,
+            accel_params,
+            stack_id=self.stack_id,
+        )
+
+        combinations = trial.combinations()
+
+        for result_chunk in tqdm(
+            self.runner.run(combinations), total=len(combinations)
+        ):
+            if not self.config.no_events:
+                result_chunk = [res.load_events() for res in result_chunk]
+            self.export_results(self.serializer.to_dict(result_chunk))
+
+    def run_trials(self, precision: PrecisionType):
+        self.logger.info("Running trials for precision: %s", precision.name)
+        if self.config.trial_memory_efficient:
+            return self.__run_trials_dispose_at_completion(precision)
+        return self.__run_trials_full_load(precision)
 
     def run_all_precisions(self) -> str:
         for precision in self.config.precisions:
-            self.logger.info("Running precision: %s", precision.name)
-            res = self.run_trials(precision)
-            self.export_results(self.serializer.to_dict(res))
+            self.run_trials(precision)
 
         return self.stack_id

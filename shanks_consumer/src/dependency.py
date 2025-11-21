@@ -13,12 +13,14 @@ from src.services.trial_executor import TrialExecutor
 
 def get_trial_executor_from_config(config: TrialConfig) -> TrialExecutor:
     logger = setup_logging(config.verbose)
+    logger.debug(config)
     runner = (
         ParallelTrialRunner(
             process_count=config.trial_process_count,
             timeout=config.trial_task_timeout,
+            memory_efficient=config.trial_memory_efficient,
         )
-        if True
+        if config.is_parallel
         else SequentialTrialRunner()
     )
 

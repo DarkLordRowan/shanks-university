@@ -14,11 +14,22 @@ from src.domain.use_cases.run_trial import execute_trial
 
 class ParallelTrialRunner(TrialRunner):
 
-    def __init__(self, process_count=1, timeout=10):
+    def __init__(
+        self,
+        process_count: int = 1,
+        timeout: float = 10,
+        memory_efficient: bool = False,
+    ):
         self.process_count = process_count
         self.timeout = timeout
+        self.memory_efficient = memory_efficient
 
     def run(self, combinations):
+        if self.memory_efficient:
+            return self.__run_dispose_at_completion(combinations)
+        yield self.__run_full_load(combinations)
+
+    def __run_full_load(self, combinations):
         if not combinations:
             return []
 
@@ -31,7 +42,7 @@ class ParallelTrialRunner(TrialRunner):
                 for comb in combinations
             ]
 
-            for async_result, comb in tqdm(async_tasks, desc="Trials", ncols=100):
+            for async_result, comb in tqdm(async_tasks, desc="Trials"):
                 try:
                     chunk = async_result.get(timeout=self.timeout)
                     if chunk:
@@ -54,3 +65,37 @@ class ParallelTrialRunner(TrialRunner):
                     )
 
         return results
+
+    def __run_dispose_at_completion(self, combinations):
+        if not combinations:
+            return []
+
+        process_count = self.process_count or mp.cpu_count()
+
+        with mp.Pool(processes=process_count) as pool:
+            async_tasks = [
+                (pool.apply_async(execute_trial, (comb,)), comb)
+                for comb in combinations
+            ]
+
+            for async_result, comb in async_tasks:
+                try:
+                    chunk = async_result.get(timeout=self.timeout)
+                    if chunk:
+                        yield chunk
+                except mp.TimeoutError:
+                    series, accel = comb
+                    yield [
+                        TrialResult(
+                            SeriesTrialResult(series.series_name, None, {}),
+                            AccelTrialResult(accel.accel_name, -1, {}),
+                            computed=[],
+                            error=ErrorTrialResult(
+                                f"Timeout after {self.timeout}s",
+                                {
+                                    "series": series.series_name,
+                                    "accel": accel.accel_name,
+                                },
+                            ),
+                        )
+                    ]
