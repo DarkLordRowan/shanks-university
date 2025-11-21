@@ -231,8 +231,8 @@ function mapErrors(raw: unknown): SeriesAccelError[] {
     if (arr.length === 0) return [];
 
     return arr.map<SeriesAccelError>((e) => ({
-        n: e.n ?? 0,
-        message: e.message,
+        n: toNumberOrNull(e.n) ?? 0,
+        message: typeof e.message === "string" ? e.message : String(e.message),
     }));
 }
 
@@ -241,9 +241,10 @@ function mapEvents(raw: unknown): SeriesAccelEvent[] {
     if (arr.length === 0) return [];
 
     return arr.map<SeriesAccelEvent>((ev, idx) => ({
-        n: ev.n ?? idx,
-        name: ev.name ?? "",
-        description: ev.description ?? "",
+        n: toNumberOrNull(ev.n) ?? idx,
+        name: typeof ev.name === "string" ? ev.name : "",
+        description:
+            typeof ev.description === "string" ? ev.description : String(ev.description ?? ""),
     }));
 }
 
@@ -251,7 +252,9 @@ function buildSeriesList(seriesRows: ParquetSeriesRow[]): Series[] {
     const map = new Map<number, Series>();
 
     for (const r of seriesRows) {
-        const sid = r.series_id;
+        const sid = toNumberOrNull(r.series_id);
+        if (sid == null) continue;
+
         const id = String(sid);
 
         const series: Series = {
@@ -281,8 +284,8 @@ export async function buildExperimentFromParquet(
 
     const seriesMap = new Map<number, Series>();
     for (const s of seriesList) {
-        const n = Number(s.id);
-        if (!Number.isNaN(n)) {
+        const n = toNumberOrNull(s.id);
+        if (n != null) {
             seriesMap.set(n, s);
         }
     }
@@ -296,7 +299,10 @@ export async function buildExperimentFromParquet(
     for (const row of accelRows) {
         processed += 1;
 
-        const sid = row.series_id;
+        const sid = toNumberOrNull(row.series_id);
+        if (sid == null) {
+            continue;
+        }
         const series = seriesMap.get(sid);
         if (!series) {
             continue;

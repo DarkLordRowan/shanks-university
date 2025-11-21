@@ -58,7 +58,7 @@ export const ErrorMatrixTable: React.FC<ErrorMatrixTableProps> = ({
         }
     }, [precision, precisionOptions]);
 
-    const { nList, algoList, cellMap, algoStats, totalErrorItems } = useMemo(
+    const { nList, algoList, cellMap, cellMessagesMap, algoStats, totalErrorItems } = useMemo(
         () => buildErrorMatrixFromExperiment(experiment, precision),
         [experiment, precision]
     );
@@ -434,11 +434,24 @@ export const ErrorMatrixTable: React.FC<ErrorMatrixTableProps> = ({
                                     {nListShown.map((n) => {
                                         const cellKey = `${algo.key}||${n}`;
                                         const count = cellMap.get(cellKey) ?? 0;
+                                        const msgs = cellMessagesMap.get(cellKey) ?? [];
 
-                                        const title =
-                                            count > 0
-                                                ? `Алгоритм: ${algo.algorithmName}\nшаг n = ${n}\nколичество ошибок: ${count}`
-                                                : `Алгоритм: ${algo.algorithmName}\nшаг n = ${n}\nошибок нет`;
+                                        const tooltipLines: string[] = [];
+                                        tooltipLines.push(`Алгоритм: ${algo.algorithmName}`);
+                                        tooltipLines.push(`шаг n = ${n}`);
+                                        tooltipLines.push(
+                                            count > 0 ? `количество ошибок: ${count}` : "ошибок нет"
+                                        );
+
+                                        if (msgs.length > 0) {
+                                            tooltipLines.push("");
+                                            tooltipLines.push("Уникальные ошибки:");
+                                            for (const msg of msgs) {
+                                                tooltipLines.push(`  • ${msg}`);
+                                            }
+                                        }
+
+                                        const title = tooltipLines.join("\n");
 
                                         return (
                                             <td
