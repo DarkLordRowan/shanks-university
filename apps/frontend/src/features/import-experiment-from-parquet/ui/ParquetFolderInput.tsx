@@ -1,12 +1,8 @@
 // src/features/import-experiment-from-parquet/ui/ParquetFolderInput.tsx
 
-import { useEffect, useRef } from "react";
+import { type RefObject, useEffect, useRef } from "react";
 import type { Experiment } from "@/types/experiment";
 import { useLoadParquetExpirement } from "../model/useLoadParquetExpirement";
-
-interface ParquetFolderInputProps {
-    onExperimentChange?: (experiment: Experiment | null) => void;
-}
 
 type LoadState = ReturnType<typeof useLoadParquetExpirement>["state"];
 
@@ -29,11 +25,7 @@ interface StatusDetailsProps {
 
 function StatusDetails({ state }: StatusDetailsProps) {
     if (state.status === "loading") {
-        return (
-            <div className="text-xs text-textDim">
-                {state.message} ({state.filesDone}/{state.filesTotal})
-            </div>
-        );
+        return <div className="text-xs text-textDim">{state.message}</div>;
     }
 
     if (state.status === "success") {
@@ -45,14 +37,57 @@ function StatusDetails({ state }: StatusDetailsProps) {
     }
 
     if (state.status === "error") {
-        return (
-            <div className="text-xs text-red-500">
-                Ошибка: {state.message}
-            </div>
-        );
+        return <div className="text-xs text-red-500">Ошибка: {state.message}</div>;
     }
 
     return null;
+}
+
+interface FolderSelectLabelProps {
+    state: LoadState;
+    isLoading: boolean;
+    inputRef: RefObject<HTMLInputElement | null>;
+    onFiles: (files: FileList) => void;
+}
+
+function FolderSelectLabel(props: FolderSelectLabelProps) {
+    const { state, isLoading, inputRef, onFiles } = props;
+
+    return (
+        <label className="inline-flex items-center gap-3 cursor-pointer">
+            <span
+                className={
+                    "inline-flex items-center rounded-md border px-3 py-1.5 " +
+                    "bg-panel border-border text-textDim shadow-sm " +
+                    (isLoading
+                        ? "opacity-60 cursor-not-allowed"
+                        : "hover:border-primary hover:text-primary")
+                }
+                aria-busy={isLoading}
+            >
+                Выбрать папку с parquet
+            </span>
+
+            <span className="text-xs text-textDim">{getSummaryText(state)}</span>
+
+            <input
+                ref={inputRef}
+                type="file"
+                className="hidden"
+                multiple
+                accept=".parquet"
+                disabled={isLoading}
+                onChange={(e) => {
+                    const files = e.target.files;
+                    if (files && files.length > 0) onFiles(files);
+                }}
+            />
+        </label>
+    );
+}
+
+interface ParquetFolderInputProps {
+    onExperimentChange?: (experiment: Experiment | null) => void;
 }
 
 export function ParquetFolderInput({ onExperimentChange }: ParquetFolderInputProps) {
@@ -65,9 +100,11 @@ export function ParquetFolderInput({ onExperimentChange }: ParquetFolderInputPro
         }
     }, [state.status, onExperimentChange, experimentRef]);
 
+    type DirInput = HTMLInputElement & { webkitdirectory?: boolean };
+
     useEffect(() => {
         if (inputRef.current) {
-            (inputRef.current as HTMLInputElement & { webkitdirectory?: boolean }).webkitdirectory = true;
+            (inputRef.current as DirInput).webkitdirectory = true;
         }
     }, []);
 
@@ -75,37 +112,12 @@ export function ParquetFolderInput({ onExperimentChange }: ParquetFolderInputPro
 
     return (
         <div className="space-y-2 text-sm">
-            <label className="inline-flex items-center gap-3 cursor-pointer">
-                <span
-                    className={
-                        "inline-flex items-center rounded-md border px-3 py-1.5 " +
-                        "bg-panel border-border text-textDim shadow-sm " +
-                        (isLoading
-                            ? "opacity-60 cursor-not-allowed"
-                            : "hover:border-primary hover:text-primary")
-                    }
-                >
-                    Выбрать папку с parquet
-                </span>
-
-                <span className="text-xs text-textDim">
-                    {getSummaryText(state)}
-                </span>
-
-                <input
-                    ref={inputRef}
-                    type="file"
-                    className="hidden"
-                    multiple
-                    accept=".parquet"
-                    disabled={isLoading}
-                    onChange={(e) => {
-                        const files = e.target.files;
-                        if (!files || files.length === 0) return;
-                        load(files);
-                    }}
-                />
-            </label>
+            <FolderSelectLabel
+                state={state}
+                isLoading={isLoading}
+                inputRef={inputRef}
+                onFiles={load}
+            />
 
             <StatusDetails state={state} />
         </div>

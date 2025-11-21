@@ -126,7 +126,9 @@ function normalizeSeriesArgs(src: ParquetSeriesRow["arguments"]): Record<string,
 }
 
 /** Accel.args */
-function normalizeAccelArgs(src: ParquetAccelRow["additional_args"]): Record<string, ScalarArg> | null {
+function normalizeAccelArgs(
+    src: ParquetAccelRow["additional_args"]
+): Record<string, ScalarArg> | null {
     if (!src) return null;
     const out: Record<string, ScalarArg> = {};
     for (const [k, v] of Object.entries(src)) {
@@ -195,7 +197,6 @@ function mapAccelComputed(raw: unknown): SeriesAccelComputedPoint[] {
     });
 }
 
-
 /** errors */
 function mapErrors(raw: unknown): SeriesAccelError[] {
     const arr = listLikeToArray<ParquetErrorRow>(raw);
@@ -239,11 +240,13 @@ function buildSeriesList(seriesRows: ParquetSeriesRow[]): Series[] {
     return [...map.values()].sort((a, b) => Number(a.id) - Number(b.id));
 }
 
-/** Основная сборка Experiment */
-export function buildExperimentFromParquet(
+export async function buildExperimentFromParquet(
     seriesRows: ParquetSeriesRow[],
     accelRows: ParquetAccelRow[],
-): Experiment {
+    onProgress?: (processed: number, total: number) => void
+): Promise<Experiment> {
+    const id: string = "0";
+
     const seriesList = buildSeriesList(seriesRows);
 
     const seriesMap = new Map<number, Series>();
@@ -255,13 +258,12 @@ export function buildExperimentFromParquet(
     const accelMap = new Map<string, Accel>();
     const seriesAccelList: SeriesAccel[] = [];
 
-    let count = 0;
+    const total = accelRows.length;
+    let processed = 0;
+    const CHUNK = 1000; // как часто отдаём управление
 
     for (const row of accelRows) {
-        if (count % 1000 == 0) {
-            console.log("buildExperimentFromParquet", count)
-        }
-        count = count + 1;
+        processed += 1;
 
         const sid = toNumberOrNull(row.series_id) ?? -1;
         const series = seriesMap.get(sid);
@@ -291,11 +293,21 @@ export function buildExperimentFromParquet(
             errors,
             events,
         });
+
+        if (onProgress && (processed % CHUNK === 0 || processed === total)) {
+            onProgress(processed, total);
+            // отдаём управление в event loop, чтобы UI обновился
+            await new Promise<void>((resolve) => {
+                // можно requestAnimationFrame, можно setTimeout(0)
+                requestAnimationFrame(() => resolve());
+            });
+        }
     }
 
     const accelList = [...accelMap.values()];
 
     return {
+        id,
         seriesList,
         accelList,
         seriesAccelList,
