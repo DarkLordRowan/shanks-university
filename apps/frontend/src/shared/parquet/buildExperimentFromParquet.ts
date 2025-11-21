@@ -21,6 +21,48 @@ import type {
     ParquetSeriesRow,
 } from "./types";
 
+interface ArrowListVectorLike<T> {
+    get(index: number): T;
+
+    _offsets: number[];
+}
+
+function isArrowListVectorLike<T = unknown>(v: unknown): v is ArrowListVectorLike<T> {
+    if (typeof v !== "object" || v === null) return false;
+
+    const obj = v as Record<string, unknown>;
+    const offsets = obj._offsets;
+
+    return typeof obj.get === "function" && Array.isArray(offsets);
+}
+
+function listLikeToArray<T = unknown>(v: unknown): T[] {
+    if (v == null) return [];
+
+    if (Array.isArray(v)) {
+        return v as T[];
+    }
+
+    if (isArrowListVectorLike<T>(v)) {
+        const offsets = v._offsets;
+        const start = offsets[0] ?? 0;
+        const end = offsets[1] ?? start;
+        const length = end - start;
+
+        const result: T[] = [];
+        for (let i = 0; i < length; i++) {
+            result.push(v.get(i));
+        }
+        return result;
+    }
+
+    if (typeof v === "object") {
+        return [v as T];
+    }
+
+    return [v as T];
+}
+
 function toNumberOrNull(v: unknown): number | null {
     if (typeof v === "number") {
         return Number.isNaN(v) ? null : v;
@@ -149,7 +191,12 @@ function buildAccelId(row: ParquetAccelRow): string {
         }
     }
 
-    const other = presentKeys.filter((k) => !ORDERED_ACCEL_ARG_KEYS.includes(k as any)).sort();
+    const other = presentKeys
+        .filter(
+            (k) => !ORDERED_ACCEL_ARG_KEYS.includes(k as (typeof ORDERED_ACCEL_ARG_KEYS)[number])
+        )
+        .sort();
+
     for (const k of other) {
         const v = (args as Record<string, unknown>)[k];
         if (v != null) {
@@ -160,12 +207,11 @@ function buildAccelId(row: ParquetAccelRow): string {
     return parts.join("|");
 }
 
-function mapAccelComputed(
-    raw: (ParquetAccelComputed | null)[] | null | undefined
-): SeriesAccelComputedPoint[] {
-    if (!raw || raw.length === 0) return [];
+function mapAccelComputed(raw: unknown): SeriesAccelComputedPoint[] {
+    const arr = listLikeToArray<ParquetAccelComputed | null>(raw);
+    if (arr.length === 0) return [];
 
-    return raw.map<SeriesAccelComputedPoint>((c, idx) => {
+    return arr.map<SeriesAccelComputedPoint>((c, idx) => {
         const n = idx + 1;
 
         if (c == null) {
@@ -180,19 +226,21 @@ function mapAccelComputed(
     });
 }
 
-function mapErrors(raw: ParquetErrorRow[] | null | undefined): SeriesAccelError[] {
-    if (!raw || raw.length === 0) return [];
+function mapErrors(raw: unknown): SeriesAccelError[] {
+    const arr = listLikeToArray<ParquetErrorRow>(raw);
+    if (arr.length === 0) return [];
 
-    return raw.map<SeriesAccelError>((e) => ({
+    return arr.map<SeriesAccelError>((e) => ({
         n: e.n ?? 0,
         message: e.message,
     }));
 }
 
-function mapEvents(raw: ParquetEventRow[] | null | undefined): SeriesAccelEvent[] {
-    if (!raw || raw.length === 0) return [];
+function mapEvents(raw: unknown): SeriesAccelEvent[] {
+    const arr = listLikeToArray<ParquetEventRow>(raw);
+    if (arr.length === 0) return [];
 
-    return raw.map<SeriesAccelEvent>((ev, idx) => ({
+    return arr.map<SeriesAccelEvent>((ev, idx) => ({
         n: ev.n ?? idx,
         name: ev.name ?? "",
         description: ev.description ?? "",
@@ -248,7 +296,7 @@ export async function buildExperimentFromParquet(
     for (const row of accelRows) {
         processed += 1;
 
-        const sid = row.series_id ?? -1;
+        const sid = row.series_id;
         const series = seriesMap.get(sid);
         if (!series) {
             continue;

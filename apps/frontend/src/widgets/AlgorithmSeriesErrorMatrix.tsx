@@ -1,14 +1,14 @@
 // src/widgets/AlgorithmSeriesErrorMatrix.tsx
 
-import React, { useMemo, useState, useEffect } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import type {
-    Experiment,
-    Series,
     Accel,
-    SeriesAccel,
-    SeriesArgs,
     AccelArgs,
     Complex,
+    Experiment,
+    Series,
+    SeriesAccel,
+    SeriesArgs,
 } from "@/types/experiment";
 
 type SeriesKey = string;
@@ -68,9 +68,7 @@ function parseX(args: SeriesArgs | null): { xLabel: string; xSort: number | null
 
 function nonNullEntries<T extends Record<string, unknown>>(obj: T | null | undefined) {
     if (!obj) return [] as [string, unknown][];
-    return Object.entries(obj).filter(
-        ([, v]) => v !== null && v !== undefined,
-    );
+    return Object.entries(obj).filter(([, v]) => v !== null && v !== undefined);
 }
 
 function buildArgsSummary(args: AccelArgs | null): string {
@@ -122,9 +120,7 @@ function summarizeSeriesAccel(sa: SeriesAccel): CellSummary {
             errorNs.add(e.n);
         }
         const msg =
-            typeof e.message === "string"
-                ? e.message.trim()
-                : String(e.message ?? "").trim();
+            typeof e.message === "string" ? e.message.trim() : String(e.message ?? "").trim();
         if (msg.length > 0) {
             errorMessages.push(msg);
         }
@@ -138,9 +134,7 @@ function summarizeSeriesAccel(sa: SeriesAccel): CellSummary {
         const n = cp.n;
         if (typeof n !== "number") continue;
 
-        const hasValue =
-            cp.value != null &&
-            (cp.value.re != null || cp.value.im != null);
+        const hasValue = cp.value != null && (cp.value.re != null || cp.value.im != null);
 
         if (hasValue && !errorNs.has(n)) {
             okNs.push(n);
@@ -156,9 +150,7 @@ function summarizeSeriesAccel(sa: SeriesAccel): CellSummary {
     const firstErrorN = errorList.length > 0 ? errorList[0] : null;
     const lastErrorN = errorList.length > 0 ? errorList[errorList.length - 1] : null;
 
-    const divergentCount = events.filter(
-        (ev) => ev.name === "divergent_accel_method",
-    ).length;
+    const divergentCount = events.filter((ev) => ev.name === "divergent_accel_method").length;
 
     let state: CellSummary["state"];
 
@@ -187,19 +179,13 @@ function summarizeSeriesAccel(sa: SeriesAccel): CellSummary {
 }
 
 export const AlgorithmSeriesErrorMatrix: React.FC<AlgorithmSeriesErrorMatrixProps> = ({
-                                                                                          experiment,
-                                                                                          maxSeries,
-                                                                                      }) => {
+    experiment,
+    maxSeries,
+}) => {
     /** null = все precision, конкретная строка = фильтр по precision */
     const [precisionFilter, setPrecisionFilter] = useState<string | null>(null);
 
-    const {
-        precisionsOrder,
-        seriesList,
-        algoList,
-        cellMap,
-        totalCells,
-    } = useMemo(() => {
+    const { precisionsOrder, seriesList, algoList, cellMap, totalCells } = useMemo(() => {
         if (!experiment) {
             return {
                 precisionsOrder: [] as string[],
@@ -311,23 +297,16 @@ export const AlgorithmSeriesErrorMatrix: React.FC<AlgorithmSeriesErrorMatrixProp
 
     // если фильтр указывает на precision, которого больше нет, сбрасываем его
     useEffect(() => {
-        if (
-            precisionFilter &&
-            !precisionsOrder.includes(precisionFilter)
-        ) {
+        if (precisionFilter && !precisionsOrder.includes(precisionFilter)) {
             setPrecisionFilter(null);
         }
     }, [precisionFilter, precisionsOrder]);
 
     const [page, setPage] = useState(0);
 
-    const pageSize =
-        maxSeries && maxSeries > 0 ? maxSeries : seriesList.length || 1;
+    const pageSize = maxSeries && maxSeries > 0 ? maxSeries : seriesList.length || 1;
 
-    const totalPages = Math.max(
-        1,
-        Math.ceil((seriesList.length || 1) / pageSize),
-    );
+    const totalPages = Math.max(1, Math.ceil((seriesList.length || 1) / pageSize));
 
     useEffect(() => {
         if (page > totalPages - 1) {
@@ -338,9 +317,7 @@ export const AlgorithmSeriesErrorMatrix: React.FC<AlgorithmSeriesErrorMatrixProp
     const startIndex = page * pageSize;
     const endIndex = startIndex + pageSize;
     const seriesListShown =
-        maxSeries && maxSeries > 0
-            ? seriesList.slice(startIndex, endIndex)
-            : seriesList;
+        maxSeries && maxSeries > 0 ? seriesList.slice(startIndex, endIndex) : seriesList;
 
     return (
         <div className="space-y-2">
@@ -364,9 +341,7 @@ export const AlgorithmSeriesErrorMatrix: React.FC<AlgorithmSeriesErrorMatrixProp
                             className="rounded border border-border bg-surface px-1 py-[1px]"
                             value={precisionFilter ?? ""}
                             onChange={(e) =>
-                                setPrecisionFilter(
-                                    e.target.value === "" ? null : e.target.value,
-                                )
+                                setPrecisionFilter(e.target.value === "" ? null : e.target.value)
                             }
                         >
                             <option value="">все</option>
@@ -379,305 +354,260 @@ export const AlgorithmSeriesErrorMatrix: React.FC<AlgorithmSeriesErrorMatrixProp
                     </div>
 
                     <div>
-                        Алгоритмы: {algoList.length} · Ряды:{" "}
-                        {seriesListShown.length} из {seriesList.length} ·
-                        Связок series-accel: {totalCells}
+                        Алгоритмы: {algoList.length} · Ряды: {seriesListShown.length} из{" "}
+                        {seriesList.length} · Связок series-accel: {totalCells}
                     </div>
 
-                    {maxSeries &&
-                        maxSeries > 0 &&
-                        seriesList.length > maxSeries && (
-                            <div className="flex items-center gap-1 text-[10px]">
-                                <button
-                                    type="button"
-                                    className="rounded border border-border bg-surface px-1 py-[1px] disabled:opacity-40 hover:bg-panel"
-                                    onClick={() => setPage(0)}
-                                    disabled={page === 0}
-                                >
-                                    «
-                                </button>
-                                <button
-                                    type="button"
-                                    className="rounded border border-border bg-surface px-1 py-[1px] disabled:opacity-40 hover:bg-panel"
-                                    onClick={() =>
-                                        setPage((p) => Math.max(0, p - 1))
-                                    }
-                                    disabled={page === 0}
-                                >
-                                    ‹
-                                </button>
-                                <span className="px-1">
-                                    стр. {page + 1} / {totalPages}
-                                </span>
-                                <span className="text-textDim/60">
-                                    колонки {startIndex + 1}–
-                                    {Math.min(endIndex, seriesList.length)}
-                                </span>
-                                <button
-                                    type="button"
-                                    className="rounded border border-border bg-surface px-1 py-[1px] disabled:opacity-40 hover:bg-panel"
-                                    onClick={() =>
-                                        setPage((p) =>
-                                            Math.min(totalPages - 1, p + 1),
-                                        )
-                                    }
-                                    disabled={page >= totalPages - 1}
-                                >
-                                    ›
-                                </button>
-                                <button
-                                    type="button"
-                                    className="rounded border border-border bg-surface px-1 py-[1px] disabled:opacity-40 hover:bg-panel"
-                                    onClick={() => setPage(totalPages - 1)}
-                                    disabled={page >= totalPages - 1}
-                                >
-                                    »
-                                </button>
-                            </div>
-                        )}
+                    {maxSeries && maxSeries > 0 && seriesList.length > maxSeries && (
+                        <div className="flex items-center gap-1 text-[10px]">
+                            <button
+                                type="button"
+                                className="rounded border border-border bg-surface px-1 py-[1px] disabled:opacity-40 hover:bg-panel"
+                                onClick={() => setPage(0)}
+                                disabled={page === 0}
+                            >
+                                «
+                            </button>
+                            <button
+                                type="button"
+                                className="rounded border border-border bg-surface px-1 py-[1px] disabled:opacity-40 hover:bg-panel"
+                                onClick={() => setPage((p) => Math.max(0, p - 1))}
+                                disabled={page === 0}
+                            >
+                                ‹
+                            </button>
+                            <span className="px-1">
+                                стр. {page + 1} / {totalPages}
+                            </span>
+                            <span className="text-textDim/60">
+                                колонки {startIndex + 1}–{Math.min(endIndex, seriesList.length)}
+                            </span>
+                            <button
+                                type="button"
+                                className="rounded border border-border bg-surface px-1 py-[1px] disabled:opacity-40 hover:bg-panel"
+                                onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+                                disabled={page >= totalPages - 1}
+                            >
+                                ›
+                            </button>
+                            <button
+                                type="button"
+                                className="rounded border border-border bg-surface px-1 py-[1px] disabled:opacity-40 hover:bg-panel"
+                                onClick={() => setPage(totalPages - 1)}
+                                disabled={page >= totalPages - 1}
+                            >
+                                »
+                            </button>
+                        </div>
+                    )}
                 </div>
             </div>
 
             <div className="overflow-auto rounded-xl2 border border-border bg-panel shadow-panel">
                 <table className="border-collapse text-[10px] leading-tight text-textDim">
                     <thead className="bg-surface/80">
-                    <tr>
-                        <th className="sticky left-0 top-0 z-20 border border-border bg-surface/90 px-1 py-1 text-left align-bottom text-[10px]">
-                            Алгоритм \ Ряд
-                        </th>
-
-                        {seriesListShown.map((s) => (
-                            <th
-                                key={s.key}
-                                className="border border-border px-0 py-0 text-center align-bottom"
-                                title={`${s.seriesName}\n x = ${s.xLabel}\n precision = ${s.precision}\n lim = ${formatComplex(
-                                    s.limit,
-                                )}`}
-                            >
-                                <div className="relative h-28 w-[32px] flex items-center justify-center">
-                                    <span
-                                        className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2
-                                        rotate-[-90deg] whitespace-nowrap text-[9px] leading-tight"
-                                    >
-                                        {s.seriesName}
-                                    </span>
-                                    <span className="absolute bottom-1 text-[8px] text-textDim/70">
-                                        x={s.xLabel}
-                                    </span>
-                                </div>
+                        <tr>
+                            <th className="sticky left-0 top-0 z-20 border border-border bg-surface/90 px-1 py-1 text-left align-bottom text-[10px]">
+                                Алгоритм \ Ряд
                             </th>
-                        ))}
-                    </tr>
+
+                            {seriesListShown.map((s) => (
+                                <th
+                                    key={s.key}
+                                    className="border border-border px-0 py-0 text-center align-bottom"
+                                    title={`${s.seriesName}\n x = ${s.xLabel}\n precision = ${s.precision}\n lim = ${formatComplex(
+                                        s.limit
+                                    )}`}
+                                >
+                                    <div className="relative h-28 w-[32px] flex items-center justify-center">
+                                        <span
+                                            className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2
+                                        rotate-[-90deg] whitespace-nowrap text-[9px] leading-tight"
+                                        >
+                                            {s.seriesName}
+                                        </span>
+                                        <span className="absolute bottom-1 text-[8px] text-textDim/70">
+                                            x={s.xLabel}
+                                        </span>
+                                    </div>
+                                </th>
+                            ))}
+                        </tr>
                     </thead>
                     <tbody>
-                    {algoList.map((algo) => (
-                        <tr key={algo.key}>
-                            <th
-                                className="sticky left-0 z-10 border border-border bg-panel px-1 py-[2px] text-left align-top"
-                                title={(() => {
-                                    const lines: string[] = [];
-                                    lines.push(
-                                        `Алгоритм: ${algo.algorithmName}`,
-                                    );
-                                    lines.push(
-                                        `m = ${
-                                            algo.m != null
-                                                ? String(algo.m)
-                                                : "∅"
-                                        }`,
-                                    );
+                        {algoList.map((algo) => (
+                            <tr key={algo.key}>
+                                <th
+                                    className="sticky left-0 z-10 border border-border bg-panel px-1 py-[2px] text-left align-top"
+                                    title={(() => {
+                                        const lines: string[] = [];
+                                        lines.push(`Алгоритм: ${algo.algorithmName}`);
+                                        lines.push(`m = ${algo.m != null ? String(algo.m) : "∅"}`);
 
-                                    const entries = nonNullEntries(
-                                        algo.algorithmArgs,
+                                        const entries = nonNullEntries(algo.algorithmArgs);
+                                        if (entries.length > 0) {
+                                            lines.push("Аргументы:");
+                                            for (const [k, v] of entries.sort(([a], [b]) =>
+                                                a.localeCompare(b)
+                                            )) {
+                                                lines.push(`  ${k}: ${v}`);
+                                            }
+                                        }
+                                        return lines.join("\n");
+                                    })()}
+                                >
+                                    <div className="whitespace-pre leading-tight">
+                                        <span className="block max-w-[150px] truncate">
+                                            {algo.algorithmName}
+                                        </span>
+                                        <span className="text-[9px] text-textDim/70">
+                                            {algo.m != null ? `m=${String(algo.m)}` : "m=∅"}
+                                        </span>
+                                        {algo.argsSummary && (
+                                            <div className="mt-[1px] max-w-[150px] truncate text-[8px] text-textDim/60">
+                                                {algo.argsSummary}
+                                            </div>
+                                        )}
+                                    </div>
+                                </th>
+
+                                {seriesListShown.map((s) => {
+                                    const cellKey = `${algo.key}||${s.key}`;
+                                    const sa = cellMap.get(cellKey);
+
+                                    if (!sa) {
+                                        return (
+                                            <td
+                                                key={cellKey}
+                                                className="min-w-[26px] border border-border bg-surface/40 px-[2px] py-[2px] text-center text-[9px] text-textDim/40"
+                                            >
+                                                —
+                                            </td>
+                                        );
+                                    }
+
+                                    const summary = summarizeSeriesAccel(sa);
+
+                                    let bgClass = "bg-surface/40 hover:bg-surface/60";
+                                    let borderClass = "border-border/60";
+                                    let content: React.ReactNode = "—";
+
+                                    switch (summary.state) {
+                                        case "no-data":
+                                            bgClass = "bg-surface/40 hover:bg-surface/60";
+                                            borderClass = "border-border/60";
+                                            content = "—";
+                                            break;
+                                        case "all-ok":
+                                            bgClass = "bg-emerald-900/40 hover:bg-emerald-800/60";
+                                            borderClass = "border-emerald-500/70";
+                                            content = (
+                                                <span className="font-semibold text-emerald-200">
+                                                    ✓
+                                                </span>
+                                            );
+                                            break;
+                                        case "only-errors":
+                                            bgClass = "bg-red-900/40 hover:bg-red-800/60";
+                                            borderClass = "border-red-500/70";
+                                            content = (
+                                                <span className="font-semibold text-red-200">
+                                                    err
+                                                </span>
+                                            );
+                                            break;
+                                        case "ok-with-errors":
+                                            bgClass = "bg-amber-900/40 hover:bg-amber-800/60";
+                                            borderClass = "border-amber-500/70";
+                                            if (
+                                                summary.firstOkN != null &&
+                                                summary.lastOkN != null
+                                            ) {
+                                                content = (
+                                                    <span className="font-semibold text-amber-100">
+                                                        {summary.firstOkN === summary.lastOkN
+                                                            ? `${summary.firstOkN}`
+                                                            : `${summary.firstOkN}–${summary.lastOkN}`}
+                                                    </span>
+                                                );
+                                            } else {
+                                                content = (
+                                                    <span className="font-semibold text-amber-100">
+                                                        err
+                                                    </span>
+                                                );
+                                            }
+                                            break;
+                                    }
+
+                                    const tooltipLines: string[] = [];
+
+                                    // ряд
+                                    tooltipLines.push(`Ряд: ${s.seriesName}`);
+                                    tooltipLines.push(`x = ${s.xLabel}`);
+                                    tooltipLines.push(`precision = ${s.precision}`);
+                                    tooltipLines.push(`lim = ${formatComplex(s.limit)}`);
+                                    tooltipLines.push("");
+
+                                    // алгоритм
+                                    tooltipLines.push(`Алгоритм: ${algo.algorithmName}`);
+                                    tooltipLines.push(
+                                        `m = ${algo.m != null ? String(algo.m) : "∅"}`
                                     );
-                                    if (entries.length > 0) {
-                                        lines.push("Аргументы:");
-                                        for (const [k, v] of entries.sort(
-                                            ([a], [b]) =>
-                                                a.localeCompare(b),
+                                    const argEntries = nonNullEntries(algo.algorithmArgs);
+                                    if (argEntries.length > 0) {
+                                        tooltipLines.push("Аргументы:");
+                                        for (const [k, v] of argEntries.sort(([a], [b]) =>
+                                            a.localeCompare(b)
                                         )) {
-                                            lines.push(`  ${k}: ${v}`);
+                                            tooltipLines.push(`  ${k}: ${v}`);
                                         }
                                     }
-                                    return lines.join("\n");
-                                })()}
-                            >
-                                <div className="whitespace-pre leading-tight">
-                                    <span className="block max-w-[150px] truncate">
-                                        {algo.algorithmName}
-                                    </span>
-                                    <span className="text-[9px] text-textDim/70">
-                                        {algo.m != null
-                                            ? `m=${String(algo.m)}`
-                                            : "m=∅"}
-                                    </span>
-                                    {algo.argsSummary && (
-                                        <div className="mt-[1px] max-w-[150px] truncate text-[8px] text-textDim/60">
-                                            {algo.argsSummary}
-                                        </div>
-                                    )}
-                                </div>
-                            </th>
 
-                            {seriesListShown.map((s) => {
-                                const cellKey = `${algo.key}||${s.key}`;
-                                const sa = cellMap.get(cellKey);
+                                    tooltipLines.push("");
+                                    tooltipLines.push(`Всего n: ${summary.totalN}`);
+                                    tooltipLines.push(
+                                        `OK-точек: ${summary.okCount}${
+                                            summary.firstOkN != null && summary.lastOkN != null
+                                                ? ` (n=${summary.firstOkN}…${summary.lastOkN})`
+                                                : ""
+                                        }`
+                                    );
+                                    tooltipLines.push(
+                                        `Ошибок: ${summary.errorCount}${
+                                            summary.firstErrorN != null &&
+                                            summary.lastErrorN != null
+                                                ? ` (n=${summary.firstErrorN}…${summary.lastErrorN})`
+                                                : ""
+                                        }`
+                                    );
+                                    if (summary.divergentCount > 0) {
+                                        tooltipLines.push(
+                                            `divergent_accel_method: ${summary.divergentCount}`
+                                        );
+                                    }
+                                    if (summary.uniqueErrorMessages.length > 0) {
+                                        tooltipLines.push("");
+                                        tooltipLines.push("Типы ошибок:");
+                                        for (const msg of summary.uniqueErrorMessages) {
+                                            tooltipLines.push(`  • ${msg}`);
+                                        }
+                                    }
 
-                                if (!sa) {
+                                    const title = tooltipLines.join("\n");
+
                                     return (
                                         <td
                                             key={cellKey}
-                                            className="min-w-[26px] border border-border bg-surface/40 px-[2px] py-[2px] text-center text-[9px] text-textDim/40"
+                                            title={title}
+                                            className={`min-w-[26px] border px-[2px] py-[2px] text-center text-[10px] cursor-default ${borderClass} ${bgClass}`}
                                         >
-                                            —
+                                            {content}
                                         </td>
                                     );
-                                }
-
-                                const summary = summarizeSeriesAccel(sa);
-
-                                let bgClass = "bg-surface/40 hover:bg-surface/60";
-                                let borderClass = "border-border/60";
-                                let content: React.ReactNode = "—";
-
-                                switch (summary.state) {
-                                    case "no-data":
-                                        bgClass =
-                                            "bg-surface/40 hover:bg-surface/60";
-                                        borderClass =
-                                            "border-border/60";
-                                        content = "—";
-                                        break;
-                                    case "all-ok":
-                                        bgClass =
-                                            "bg-emerald-900/40 hover:bg-emerald-800/60";
-                                        borderClass =
-                                            "border-emerald-500/70";
-                                        content = (
-                                            <span className="font-semibold text-emerald-200">
-                                                ✓
-                                            </span>
-                                        );
-                                        break;
-                                    case "only-errors":
-                                        bgClass =
-                                            "bg-red-900/40 hover:bg-red-800/60";
-                                        borderClass = "border-red-500/70";
-                                        content = (
-                                            <span className="font-semibold text-red-200">
-                                                err
-                                            </span>
-                                        );
-                                        break;
-                                    case "ok-with-errors":
-                                        bgClass =
-                                            "bg-amber-900/40 hover:bg-amber-800/60";
-                                        borderClass =
-                                            "border-amber-500/70";
-                                        if (
-                                            summary.firstOkN != null &&
-                                            summary.lastOkN != null
-                                        ) {
-                                            content = (
-                                                <span className="font-semibold text-amber-100">
-                                                    {summary.firstOkN ===
-                                                    summary.lastOkN
-                                                        ? `${summary.firstOkN}`
-                                                        : `${summary.firstOkN}–${summary.lastOkN}`}
-                                                </span>
-                                            );
-                                        } else {
-                                            content = (
-                                                <span className="font-semibold text-amber-100">
-                                                    mix
-                                                </span>
-                                            );
-                                        }
-                                        break;
-                                }
-
-                                const tooltipLines: string[] = [];
-
-                                // ряд
-                                tooltipLines.push(`Ряд: ${s.seriesName}`);
-                                tooltipLines.push(`x = ${s.xLabel}`);
-                                tooltipLines.push(`precision = ${s.precision}`);
-                                tooltipLines.push(
-                                    `lim = ${formatComplex(s.limit)}`,
-                                );
-                                tooltipLines.push("");
-
-                                // алгоритм
-                                tooltipLines.push(
-                                    `Алгоритм: ${algo.algorithmName}`,
-                                );
-                                tooltipLines.push(
-                                    `m = ${
-                                        algo.m != null
-                                            ? String(algo.m)
-                                            : "∅"
-                                    }`,
-                                );
-                                const argEntries = nonNullEntries(
-                                    algo.algorithmArgs,
-                                );
-                                if (argEntries.length > 0) {
-                                    tooltipLines.push("Аргументы:");
-                                    for (const [k, v] of argEntries.sort(
-                                        ([a], [b]) =>
-                                            a.localeCompare(b),
-                                    )) {
-                                        tooltipLines.push(`  ${k}: ${v}`);
-                                    }
-                                }
-
-                                tooltipLines.push("");
-                                tooltipLines.push(
-                                    `Всего n: ${summary.totalN}`,
-                                );
-                                tooltipLines.push(
-                                    `OK-точек: ${summary.okCount}${
-                                        summary.firstOkN != null &&
-                                        summary.lastOkN != null
-                                            ? ` (n=${summary.firstOkN}…${summary.lastOkN})`
-                                            : ""
-                                    }`,
-                                );
-                                tooltipLines.push(
-                                    `Ошибок: ${summary.errorCount}${
-                                        summary.firstErrorN != null &&
-                                        summary.lastErrorN != null
-                                            ? ` (n=${summary.firstErrorN}…${summary.lastErrorN})`
-                                            : ""
-                                    }`,
-                                );
-                                if (summary.divergentCount > 0) {
-                                    tooltipLines.push(
-                                        `divergent_accel_method: ${summary.divergentCount}`,
-                                    );
-                                }
-                                if (summary.uniqueErrorMessages.length > 0) {
-                                    tooltipLines.push("");
-                                    tooltipLines.push("Типы ошибок:");
-                                    for (const msg of summary.uniqueErrorMessages) {
-                                        tooltipLines.push(`  • ${msg}`);
-                                    }
-                                }
-
-                                const title = tooltipLines.join("\n");
-
-                                return (
-                                    <td
-                                        key={cellKey}
-                                        title={title}
-                                        className={`min-w-[26px] border px-[2px] py-[2px] text-center text-[10px] cursor-default ${borderClass} ${bgClass}`}
-                                    >
-                                        {content}
-                                    </td>
-                                );
-                            })}
-                        </tr>
-                    ))}
+                                })}
+                            </tr>
+                        ))}
                     </tbody>
                 </table>
             </div>
