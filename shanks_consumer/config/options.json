@@ -1,9 +1,9 @@
 {
   "verbose": 3,
 
-  "series_json": "config/big_boy.json",
+  "series_json": "config/example.json",
   "series_csv": "config/example_series.csv",
-  "accel_json": "config/big_boy.json",
+  "accel_json": "config/example.json",
 
   "output_dir": "output",
   "results_filename": "experiment_results",
