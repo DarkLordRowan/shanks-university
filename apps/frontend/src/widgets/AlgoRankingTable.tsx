@@ -1,7 +1,7 @@
 // widgets/AlgoRankingTable.tsx
 
 import React, { useEffect, useMemo, useState } from "react";
-import type { Experiment, AccelArgs } from "@/types/experiment";
+import type { Experiment, AccelArgs } from "@/entities/experiment/model/experiment";
 
 type AlgoKey = string;
 

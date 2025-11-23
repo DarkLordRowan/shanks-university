@@ -1,4 +1,4 @@
-import type { AlgNode } from "../../../types/algorithms";
+import type { AlgNode } from "@/entities/algorithm/model/algorithms.ts";
 
 export function findNodeById(nodes: AlgNode[], id: string): AlgNode | undefined {
     for (const n of nodes) {

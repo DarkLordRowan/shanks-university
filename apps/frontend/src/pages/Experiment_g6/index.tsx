@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { ParquetFolderInput } from "@/features/import-experiment-from-parquet/ui/ParquetFolderInput.tsx";
-import type { Experiment } from "@/types/experiment.ts";
+import type { Experiment } from "@/entities/experiment/model/experiment";
 import { AlgorithmSeriesErrorMatrix } from "@/widgets/AlgorithmSeriesErrorMatrix";
 
 export default function Experiment_g6() {

@@ -1,8 +1,8 @@
 import React from "react";
 import { useParams, Link } from "react-router-dom";
-import { ALGORITHMS } from "../../data/algorithms";
-import { resolveAuthors } from "../../data/authors";
-import type { AlgNode } from "../../types/algorithms";
+import { ALGORITHMS } from "@/entities/algorithm/model/algorithmsData";
+import { resolveAuthors } from "@/entities/author/model/authorsData";
+import type { AlgNode } from "@/entities/algorithm/model/algorithms";
 
 import { findNodeById } from "./utils/tree";
 import { buildSrcLinks } from "./utils/github";

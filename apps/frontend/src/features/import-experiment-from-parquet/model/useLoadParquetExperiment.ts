@@ -1,7 +1,7 @@
 // src/features/import-experiment-from-parquet/model/useLoadParquetExpirement.ts
 
 import { useCallback, useRef, useState } from "react";
-import type { Experiment } from "@/types/experiment";
+import type { Experiment } from "@/entities/experiment/model/experiment";
 import type { ParquetAccelRow, ParquetSeriesRow } from "@/shared/parquet/types";
 import { readParquetFile } from "@/shared/parquet/readParquetFile";
 import { buildExperimentFromParquet } from "@/shared/parquet/buildExperimentFromParquet";

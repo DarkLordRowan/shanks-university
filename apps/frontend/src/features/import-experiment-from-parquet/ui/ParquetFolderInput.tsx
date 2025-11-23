@@ -1,7 +1,7 @@
 // src/features/import-experiment-from-parquet/ui/ParquetFolderInput.tsx
 
 import { type RefObject, useEffect, useRef } from "react";
-import type { Experiment } from "@/types/experiment";
+import type { Experiment } from "@/entities/experiment/model/experiment";
 import { useLoadParquetExperiment } from "../model/useLoadParquetExperiment.ts";
 
 type LoadState = ReturnType<typeof useLoadParquetExperiment>["state"];

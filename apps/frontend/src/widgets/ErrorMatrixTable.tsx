@@ -1,8 +1,8 @@
 // widgets/ErrorMatrixTable.tsx
 
 import React, { useMemo, useState, useEffect } from "react";
-import type { Experiment } from "@/types/experiment";
-import { buildErrorMatrixFromExperiment } from "../analysis/buildErrorMatrix";
+import type { Experiment } from "@/entities/experiment/model/experiment";
+import { buildErrorMatrixFromExperiment } from "@/shared/lib/error-matrix/buildErrorMatrix";
 
 /** Оформление ячейки по количеству ошибок */
 function getCellClasses(count: number): string {

@@ -10,7 +10,7 @@ import type {
     SeriesAccelComputedPoint,
     SeriesAccelError,
     SeriesAccelEvent,
-} from "@/types/experiment";
+} from "@/entities/experiment/model/experiment";
 
 import type {
     ParquetAccelComputed,

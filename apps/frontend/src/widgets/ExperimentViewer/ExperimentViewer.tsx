@@ -1,6 +1,6 @@
 // src/widgets/ExperimentViewer/ExperimentViewer.tsx
 
-import type { Experiment, Series, Accel, SeriesAccel } from "@/types/experiment";
+import type { Experiment, Series, Accel, SeriesAccel } from "@/entities/experiment/model/experiment";
 
 interface ExperimentViewerProps {
     experiment: Experiment | null;

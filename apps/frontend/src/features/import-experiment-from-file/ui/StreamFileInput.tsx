@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useStreamLoadRecords } from "../model/useStreamLoadRecords";
-import type { Item } from "@/types/item.ts";
+import type { Item } from "@/entities/item/model/item";
 import { normalizeRecords } from "@/utils/normalizeRecords.ts";
 
 interface StreamFileInputProps {

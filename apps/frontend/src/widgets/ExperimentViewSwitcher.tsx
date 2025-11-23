@@ -1,7 +1,7 @@
 // src/widgets/ExperimentViewSwitcher.tsx
 
 import { type ReactNode, useState } from "react";
-import type { Experiment } from "@/types/experiment";
+import type { Experiment } from "@/entities/experiment/model/experiment";
 import { ErrorMatrixTable } from "@/widgets/ErrorMatrixTable";
 import { AlgorithmSeriesDiffHeatmap } from "@/widgets/AlgorithmSeriesDiffHeatmap";
 import { AlgorithmSeriesErrorMatrix } from "@/widgets/AlgorithmSeriesErrorMatrix";

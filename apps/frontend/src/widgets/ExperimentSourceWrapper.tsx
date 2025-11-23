@@ -1,7 +1,7 @@
 // src/widgets/ExperimentSourceWrapper.tsx
 
 import { type ReactNode, useState } from "react";
-import type { Experiment } from "@/types/experiment";
+import type { Experiment } from "@/entities/experiment/model/experiment";
 import { ExperimentSourceSelector } from "@/widgets/ExperimentSourceSelector";
 
 interface ExperimentSourceWrapperProps {
