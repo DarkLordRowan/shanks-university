@@ -1,6 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { SERIES } from "../../data/series";
+import { SERIES } from "@/entities/experiment/model/seriesData";
 import { FormulaBadge } from "./components/FormulaBadge";
 
 const SeriesList: React.FC = () => {

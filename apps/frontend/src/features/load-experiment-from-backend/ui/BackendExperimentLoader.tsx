@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import type { Experiment } from "@/types/experiment";
+import type { Experiment } from "@/entities/experiment/model/experiment";
 
 interface BackendExperimentLoaderProps {
     onExperimentChange: (experiment: Experiment | null) => void;

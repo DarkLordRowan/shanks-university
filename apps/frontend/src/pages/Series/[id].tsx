@@ -1,10 +1,10 @@
 import React from "react";
 import { useParams, Link } from "react-router-dom";
-import { SERIES } from "../../data/series";
+import { SERIES } from "@/entities/experiment/model/seriesData";
 import { findSeriesById } from "./utils/find";
 import { buildSeriesDocLinks, buildSeriesSrcLinks } from "./utils/github";
 import { FormulaPreview } from "./components/FormulaPreview";
-import { CodeViewer } from "../Algorithm/components/CodeViewer.tsx";
+import { CodeViewer } from "../Algorithm/components/CodeViewer";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";

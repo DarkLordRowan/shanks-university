@@ -1,7 +1,7 @@
 // src/widgets/ExperimentSourceSelector.tsx
 
 import { type ReactNode, useState } from "react";
-import type { Experiment } from "@/types/experiment";
+import type { Experiment } from "@/entities/experiment/model/experiment";
 import { ParquetFolderInput } from "@/features/import-experiment-from-parquet/ui/ParquetFolderInput";
 import { BackendExperimentLoader } from "@/features/load-experiment-from-backend/ui/BackendExperimentLoader";
 

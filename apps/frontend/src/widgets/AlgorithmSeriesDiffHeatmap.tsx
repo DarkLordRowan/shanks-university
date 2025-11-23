@@ -8,7 +8,7 @@ import type {
     SeriesArgs,
     AccelArgs,
     SeriesAccel,
-} from "@/types/experiment";
+} from "@/entities/experiment/model/experiment";
 
 type SeriesKey = string;
 type AlgoKey = string;

@@ -1,8 +1,8 @@
 import React, { useMemo } from "react";
-import type { AlgNode } from "../../../types/algorithms";
-import { resolveAuthors } from "../../../data/authors";
+import type { AlgNode } from "@/entities/algorithm/model/algorithms.ts";
 import { Link } from "react-router-dom";
 import { depthAccentClass } from "../utils/ui";
+import { resolveAuthors } from "@/entities/author/model/authorsData";
 
 export type NodeProps = {
     node: AlgNode;
@@ -12,14 +12,7 @@ export type NodeProps = {
     filter: string;
 };
 
-export const TreeNode: React.FC<NodeProps> = (
-    {
-        node,
-        level = 0,
-        expanded,
-        toggle,
-        filter,
-    }) => {
+export const TreeNode: React.FC<NodeProps> = ({ node, level = 0, expanded, toggle, filter }) => {
     const hasChildren = !!node.children?.length;
 
     const authorList = useMemo(() => resolveAuthors(node.authorIds), [node.authorIds]);
@@ -40,7 +33,9 @@ export const TreeNode: React.FC<NodeProps> = (
         if (!node.children?.length || !filter) return false;
         const q = filter.toLowerCase();
         const check = (n: AlgNode): boolean => {
-            const a = resolveAuthors(n.authorIds).map((x) => x.name.toLowerCase()).join(" ");
+            const a = resolveAuthors(n.authorIds)
+                .map((x) => x.name.toLowerCase())
+                .join(" ");
             const self =
                 n.id.toLowerCase().includes(q) ||
                 n.title.toLowerCase().includes(q) ||
@@ -60,7 +55,7 @@ export const TreeNode: React.FC<NodeProps> = (
             {/* строка узла */}
             <div
                 className={`group relative my-1 flex items-start gap-2 rounded-xl2 border border-border/60 bg-panel/70 px-3 py-2 shadow-panel hover:bg-panel/80`}
-                style={{marginLeft: `${level * 14}px`}}
+                style={{ marginLeft: `${level * 14}px` }}
             >
                 {/* левая цветная полоса по уровню */}
                 <div
@@ -78,7 +73,7 @@ export const TreeNode: React.FC<NodeProps> = (
                         {isOpen ? "−" : "+"}
                     </button>
                 ) : (
-                    <span className="mt-1 inline-block h-6 w-6 shrink-0"/>
+                    <span className="mt-1 inline-block h-6 w-6 shrink-0" />
                 )}
 
                 {/* контент узла */}
@@ -103,24 +98,24 @@ export const TreeNode: React.FC<NodeProps> = (
                         <div className="mt-2 flex flex-wrap items-center gap-2">
                             <span className="text-xs text-textDim">Авторы:</span>
                             {authorList.map((a) =>
-                                    a.url ? (
-                                        <a
-                                            key={a.id}
-                                            href={a.url}
-                                            target="_blank"
-                                            rel="noreferrer"
-                                            className="rounded-md border border-border/60 bg-surface/40 px-2 py-0.5 text-xs underline hover:text-white"
-                                        >
-                                            {a.name}
-                                        </a>
-                                    ) : (
-                                        <span
-                                            key={a.id}
-                                            className="rounded-md border border-border/60 bg-surface/40 px-2 py-0.5 text-xs text-textDim"
-                                        >
-                    {a.name}
-                  </span>
-                                    )
+                                a.url ? (
+                                    <a
+                                        key={a.id}
+                                        href={a.url}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="rounded-md border border-border/60 bg-surface/40 px-2 py-0.5 text-xs underline hover:text-white"
+                                    >
+                                        {a.name}
+                                    </a>
+                                ) : (
+                                    <span
+                                        key={a.id}
+                                        className="rounded-md border border-border/60 bg-surface/40 px-2 py-0.5 text-xs text-textDim"
+                                    >
+                                        {a.name}
+                                    </span>
+                                )
                             )}
                         </div>
                     )}

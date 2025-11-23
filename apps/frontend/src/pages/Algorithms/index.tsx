@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from "react";
-import { ALGORITHMS  } from "../../data/algorithms";
-import type { AlgNode } from "../../types/algorithms";
+import { ALGORITHMS  } from "@/entities/algorithm/model/algorithmsData";
+import type { AlgNode } from "@/entities/algorithm/model/algorithms";
 import { flattenIds } from "./utils/tree";
 import { TreeNode } from "./components/TreeNode";
 

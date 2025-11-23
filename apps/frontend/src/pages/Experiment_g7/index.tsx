@@ -1,4 +1,4 @@
-import type { Experiment } from "@/types/experiment";
+import type { Experiment } from "@/entities/experiment/model/experiment";
 import { useState } from "react";
 import { ParquetFolderInput } from "@/features/import-experiment-from-parquet/ui/ParquetFolderInput.tsx";
 import { AlgorithmSeriesDiffHeatmap } from "@/widgets/AlgorithmSeriesDiffHeatmap.tsx";
