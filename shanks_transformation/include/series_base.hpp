@@ -182,9 +182,19 @@ public:
 		const T& addTParameter = static_cast<T>(1),
 		const K addKParameter = static_cast<K>(1)
 	);
+	
+	void init_iterator(
+		const T& x, 
+		const T& addTParameter = static_cast<T>(1),
+		const K addKParameter = static_cast<K>(1)
+	);
 
-	T next(){
-		if (iterator_initialized) return series_iterator->next();
+	std::pair<T, T> next(){
+		if (iterator_initialized){
+			std::cout << "\n" << series_iterator->n << "\n";
+			const T an = series_iterator->next(); sum+=an;
+			return std::pair<T,T>(an, sum);
+		}
 		throw std::domain_error("iterator not initialized");
 	}
 
@@ -218,24 +228,26 @@ protected:
 	series_iterator_id_t iterator_id = series_iterator_id_t::null_iterator_id;
 
 	bool iterator_initialized = false;
+
+	T sum = static_cast<T>(0);
 };
 
 template <AcceptedLike T, UnsignedIntLike K>
-series_result<T> series_base<T, K>::generate_series(
+void series_base<T, K>::init_iterator(
 	const T& x, 
-	const K vecSize, 
 	const T& addTParameter,
 	const K addKParameter
 ){
-
 	series_iterator->reset();
+	sum = static_cast<T>(0);
 	if constexpr (!is_standart_types<T>::value){
             const size_t precision = utils::get_precision<T>(x);
-            utils::set_precision(precision, series_iterator->x);
+            utils::set_precision(precision, series_iterator->x, sum);
     }
 	series_iterator->x = x;
 	if(series_iterator->check_validity()) throw_domain_error();
 	iterator_initialized = true;
+	
 
 	switch(iterator_id){
 		case series_iterator_id_t::bin_iterator_id:{
@@ -259,6 +271,17 @@ series_result<T> series_base<T, K>::generate_series(
 			ptr->m = addKParameter;
 		}
 	}
+}
+
+template <AcceptedLike T, UnsignedIntLike K>
+series_result<T> series_base<T, K>::generate_series(
+	const T& x, 
+	const K vecSize, 
+	const T& addTParameter,
+	const K addKParameter
+){
+
+	init_iterator(x, addTParameter, addKParameter);
 	std::vector<T> vecAn(vecSize, static_cast<T>(0)); utils::set_vec_precision<T, K>(vecAn, utils::get_precision(series_iterator->x));
 	std::vector<T> vecSn(vecSize, static_cast<T>(0)); utils::set_vec_precision<T, K>(vecSn, utils::get_precision(series_iterator->x));
 
@@ -268,6 +291,7 @@ series_result<T> series_base<T, K>::generate_series(
 		} catch (...) {
 			vecAn[j] = (j == 0 ? static_cast<T>(0) : vecAn[j-1]);
 		}
+		sum += vecAn[j];
 		vecSn[j] = vecAn[j] + (j == 0 ? static_cast<T>(0) : vecSn[j-1]);
 	}
 
