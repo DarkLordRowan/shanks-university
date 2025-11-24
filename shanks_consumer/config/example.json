@@ -11,7 +11,7 @@
       "args": {
         "x": {
           "start": 1,
-          "stop": 11,
+          "stop": 2,
           "step": 1
         }
       }
@@ -26,8 +26,27 @@
 
       "m": 4,
 
-      "args": {}
-    },
+      "args": {},
+
+      "events": [
+        {
+          "type": "slow_accel",
+          "log_action_capacity": 10
+        },
+        {
+          "type": "sign_changed",
+          "log_action_capacity": -1
+        },
+        {
+          "type": "monotone",
+          "stop_action_limit": 3
+        },
+        {
+          "type": "divergent",
+          "stop_action_limit": 0
+        }
+      ]
+    },  
     {
       "name": "ShanksTransformAlternating",
       "n": {
@@ -40,7 +59,25 @@
         "stop": 10,
         "step": 3
       },
-      "args": {}
+      "args": {},
+      "events": [
+        {
+          "type": "slow_accel",
+          "log_action_capacity": 10
+        },
+        {
+          "type": "sign_changed",
+          "log_action_capacity": -1
+        },
+        {
+          "type": "monotone",
+          "stop_action_limit": 3
+        },
+        {
+          "type": "divergent",
+          "stop_action_limit": 0
+        }
+      ]
     },
     {
       "name": "LevinAlgorithm",
@@ -58,7 +95,25 @@
           "stop": 1,
           "step": 0.1
         }
-      }
+      },
+      "events": [
+        {
+          "type": "slow_accel",
+          "log_action_capacity": -1
+        },
+        {
+          "type": "sign_changed",
+          "log_action_capacity": -1
+        },
+        {
+          "type": "monotone",
+          "log_action_capacity": -1
+        },
+        {
+          "type": "divergent",
+          "stop_action_limit": 0
+        }
+      ]
     }
   ]
 }

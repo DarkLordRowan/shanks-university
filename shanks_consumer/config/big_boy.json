@@ -618,19 +618,74 @@
       "name": "ShanksAlgorithm",
       "n": { "start": 1, "stop": 51, "step": 1 },
       "m": [2, 4, 10],
-      "args": {}
+      "args": {},
+      "events": [
+        {
+          "type": "slow_accel",
+          "log_action_capacity": -1
+        },
+        {
+          "type": "sign_changed",
+          "log_action_capacity": -1
+        },
+        {
+          "type": "monotone",
+          "log_action_capacity": -1
+        },
+        {
+          "type": "divergent",
+          "stop_action_limit": 0
+        }
+      ]
+      
     },
     {
       "name": "ShanksTransformAlternating",
       "n": { "start": 1, "stop": 51, "step": 1 },
       "m": [2, 4, 10],
-      "args": {}
+      "args": {},
+      "events": [
+        {
+          "type": "slow_accel",
+          "log_action_capacity": -1
+        },
+        {
+          "type": "sign_changed",
+          "log_action_capacity": -1
+        },
+        {
+          "type": "monotone",
+          "log_action_capacity": -1
+        },
+        {
+          "type": "divergent",
+          "stop_action_limit": 0
+        }
+      ]
     },
     {
       "name": "BrezinskiThetaAlgorithm",
       "n": { "start": 1, "stop": 51, "step": 1 },
       "m": [2, 4, 10],
-      "args": {}
+      "args": {},
+      "events": [
+        {
+          "type": "slow_accel",
+          "log_action_capacity": -1
+        },
+        {
+          "type": "sign_changed",
+          "log_action_capacity": -1
+        },
+        {
+          "type": "monotone",
+          "log_action_capacity": -1
+        },
+        {
+          "type": "divergent",
+          "stop_action_limit": 0
+        }
+      ]
     },
     {
       "name": "ChangWynnAlgorithm",
