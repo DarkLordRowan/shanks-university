@@ -181,18 +181,6 @@ public:
 		const K vecSize, 
 		const T& addTParameter = static_cast<T>(1),
 		const K addKParameter = static_cast<K>(1)
-	) {
-		series_iterator->reset();
-		series_iterator->x = x;
-		if(series_iterator->check_validity()) throw_domain_error();
-		iterator_initialized = true;
-		return generate_series(vecSize, addTParameter, addKParameter);
-	}
-
-	series_result<T> generate_series(
-		const K vecSize, 
-		const T& addTParameter = static_cast<T>(1),
-		const K addKParameter = static_cast<K>(1)
 	);
 
 	T next(){
@@ -234,10 +222,16 @@ protected:
 
 template <AcceptedLike T, UnsignedIntLike K>
 series_result<T> series_base<T, K>::generate_series(
+	const T& x, 
 	const K vecSize, 
 	const T& addTParameter,
 	const K addKParameter
 ){
+
+	series_iterator->reset();
+	series_iterator->x = x;
+	if(series_iterator->check_validity()) throw_domain_error();
+	iterator_initialized = true;
 
 	switch(iterator_id){
 		case series_iterator_id_t::bin_iterator_id:{
