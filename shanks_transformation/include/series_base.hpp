@@ -229,6 +229,10 @@ series_result<T> series_base<T, K>::generate_series(
 ){
 
 	series_iterator->reset();
+	if constexpr (!is_standart_types<T>::value){
+            const size_t precision = utils::get_precision<T>(x);
+            utils::set_precision(precision, series_iterator->x);
+    }
 	series_iterator->x = x;
 	if(series_iterator->check_validity()) throw_domain_error();
 	iterator_initialized = true;
@@ -236,10 +240,18 @@ series_result<T> series_base<T, K>::generate_series(
 	switch(iterator_id){
 		case series_iterator_id_t::bin_iterator_id:{
 			bin_iterator<T,K>* ptr = static_cast<bin_iterator<T,K>*>(series_iterator.get());
+			if constexpr (!is_standart_types<T>::value){
+            	const size_t precision = utils::get_precision<T>(x);
+           		utils::set_precision(precision, series_iterator->x);
+    		}
 			ptr->alpha = addTParameter;
 		}
 		case series_iterator_id_t::incomplete_Gamma_func_iterator_id:{
 			incomplete_Gamma_func_iterator<T,K>* ptr = static_cast<incomplete_Gamma_func_iterator<T,K>*>(series_iterator.get());
+			if constexpr (!is_standart_types<T>::value){
+				const size_t precision = utils::get_precision<T>(x);
+				utils::set_precision(precision, series_iterator->x);			
+			}
 			ptr->alpha = addTParameter;
 		}
 		case series_iterator_id_t::m_fact_1mx_mp1_inverse_iterator_id:{
@@ -247,7 +259,6 @@ series_result<T> series_base<T, K>::generate_series(
 			ptr->m = addKParameter;
 		}
 	}
-
 	std::vector<T> vecAn(vecSize, static_cast<T>(0)); utils::set_vec_precision<T, K>(vecAn, utils::get_precision(series_iterator->x));
 	std::vector<T> vecSn(vecSize, static_cast<T>(0)); utils::set_vec_precision<T, K>(vecSn, utils::get_precision(series_iterator->x));
 

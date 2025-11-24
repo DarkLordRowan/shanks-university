@@ -44,8 +44,8 @@ struct utils {
 			return x.precision();
 		}
 		#ifdef INC_COMPLEXPRECISION
-		else if constexpr (std::is_same<T, float_precision>::value){
-			return std::max(x.ref_real()->precision(), x.ref_imag()->precision());
+		else if constexpr (std::is_same<T, complex_precision<float_precision>>::value){
+			return std::max(x.real().precision(), x.imag().precision());
 		}
 		#endif
 		#endif
