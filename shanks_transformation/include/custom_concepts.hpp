@@ -1,3 +1,5 @@
+#ifndef CUSTOM_CONCEPTS_HPP
+#define CUSTOM_CONCEPTS_HPP
 #pragma once
 
 #ifndef INC_FPRECISION
@@ -78,3 +80,5 @@ concept UnsignedIntLike = requires {
 
 template<typename K>
 struct isUnsignedIntLike : std::integral_constant<bool, std::is_integral<K>::value && !std::is_signed<K>::value>{};
+
+#endif
