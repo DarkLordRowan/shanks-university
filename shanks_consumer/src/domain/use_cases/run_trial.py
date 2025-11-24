@@ -13,8 +13,10 @@ from src.domain.trial_result import (
     TrialResult,
 )
 
+from src.domain.event import EVENT_METHODS
 
-@lru_cache(maxsize=1024)
+
+@lru_cache(maxsize=256)
 def cached_generate_series(
     series_type: type, x: Any, vec_size: int, t: Any, k: int
 ):
@@ -170,14 +172,31 @@ def execute_trial(
                         partial_sum = series_result.Sn[index]
                         series_term = series_result.an[index]
                         accel_value = accel_instance(n_value, m_value, series_result)
+
+                        events = list(
+                            filter(
+                                None,
+                                [
+                                    EVENT_METHODS.get(
+                                        event.type, lambda _: None
+                                    )(computed)
+                                    for event in accel.events
+                                ],
+                            )
+                        )
                         computed.append(
                             ComputedTrialResult(
                                 n=n_value,
                                 series_value=series_term,
                                 partial_sum=partial_sum,
-                                partial_sum_deviation=abs(partial_sum - series_lim),
+                                partial_sum_deviation=abs(
+                                    partial_sum - series_lim
+                                ),
                                 accel_value=accel_value,
-                                accel_value_deviation=abs(accel_value - series_lim),
+                                accel_value_deviation=abs(
+                                    accel_value - series_lim
+                                ),
+                                events=events,  # type: ignore
                             )
                         )
                     except Exception as exc:
