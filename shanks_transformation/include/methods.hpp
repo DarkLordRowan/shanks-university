@@ -1,3 +1,5 @@
+#ifndef METHODS_HPP
+#define METHODS_HPP
 #pragma once
 
  /**
@@ -79,5 +81,4 @@ recurrent_levin_sidi_s_v_wave_transformation_id,
 #include "transformations/wynn_epsilon_3_algorithm.hpp"
 #include "transformations/wynn_rho_algorithm.hpp"
 
-
-
+#endif
