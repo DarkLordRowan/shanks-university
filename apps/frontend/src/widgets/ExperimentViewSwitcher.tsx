@@ -5,8 +5,9 @@ import type { Experiment } from "@/entities/experiment/model/experiment";
 import { ErrorMatrixTable } from "@/widgets/ErrorMatrixTable";
 import { AlgorithmSeriesDiffHeatmap } from "@/widgets/AlgorithmSeriesDiffHeatmap";
 import { AlgorithmSeriesErrorMatrix } from "@/widgets/AlgorithmSeriesErrorMatrix";
+import { AlgorithmSeriesConvergenceTable } from "@/widgets/AlgorithmSeriesConvergenceTable";
 
-type ViewKey = "error-matrix" | "series-diff" | "series-error";
+type ViewKey = "error-matrix" | "series-diff" | "series-error" | "series-convergence";
 
 interface ViewButtonProps {
     active: boolean;
@@ -54,6 +55,13 @@ function ViewToggle(props: ViewToggleProps) {
             <ViewButton active={value === "series-error"} onClick={() => onChange("series-error")}>
                 Матрица ошибок по рядам
             </ViewButton>
+
+            <ViewButton
+                active={value === "series-convergence"}
+                onClick={() => onChange("series-convergence")}
+            >
+                Монотонность и направление
+            </ViewButton>
         </div>
     );
 }
@@ -66,7 +74,7 @@ interface ExperimentViewSwitcherProps {
 export function ExperimentViewSwitcher(props: ExperimentViewSwitcherProps) {
     const { experiment, className } = props;
 
-    const [view, setView] = useState<ViewKey>("error-matrix");
+    const [view, setView] = useState<ViewKey>("series-convergence");
 
     return (
         <div className={`w-full max-w-6xl ${className ?? ""}`}>
@@ -82,6 +90,10 @@ export function ExperimentViewSwitcher(props: ExperimentViewSwitcherProps) {
 
                     {view === "series-error" && (
                         <AlgorithmSeriesErrorMatrix experiment={experiment} maxSeries={40} />
+                    )}
+
+                    {view === "series-convergence" && (
+                        <AlgorithmSeriesConvergenceTable experiment={experiment} maxSeries={40} />
                     )}
                 </div>
             )}
