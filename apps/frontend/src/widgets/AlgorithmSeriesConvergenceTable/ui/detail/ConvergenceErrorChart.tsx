@@ -1,5 +1,5 @@
-import React, { useMemo } from "react";
-import { type DetailPoint, type Complex } from "../../model/types";
+import React, { useMemo, useState } from "react";
+import { type Complex, type DetailPoint } from "../../model/types";
 import {
     CartesianGrid,
     Line,
@@ -29,11 +29,6 @@ interface ConvergenceErrorChartProps {
 
 const isFiniteNumber = (v: unknown): v is number => typeof v === "number" && Number.isFinite(v);
 
-/**
- * Форматирование числа:
- * - экспоненциальный формат для очень больших/малых;
- * - фиксированный с обрезкой хвоста нулей для остальных.
- */
 const formatValue = (value: AnyNum): string => {
     if (!isFiniteNumber(value)) return "—";
     const v = value as number;
@@ -76,7 +71,6 @@ export const ConvergenceErrorChart: React.FC<ConvergenceErrorChartProps> = ({ po
         [points]
     );
 
-    // Диапазон по оси Y в пределах разброса ошибок + небольшой паддинг
     const { yMin, yMax } = useMemo(() => {
         if (data.length === 0) {
             return { yMin: 0, yMax: 0 };
@@ -91,7 +85,6 @@ export const ConvergenceErrorChart: React.FC<ConvergenceErrorChartProps> = ({ po
         }
 
         if (min === max) {
-            // все точки одинаковы: делаем маленький симметричный интервал вокруг значения
             const base = Math.abs(min) || 1;
             const pad = base * 0.1;
             return { yMin: min - pad, yMax: min + pad };
@@ -101,6 +94,8 @@ export const ConvergenceErrorChart: React.FC<ConvergenceErrorChartProps> = ({ po
         const pad = span * 0.1;
         return { yMin: min - pad, yMax: max + pad };
     }, [data]);
+
+    const [lineMode, setLineMode] = useState<"smooth" | "sharp">("smooth");
 
     if (!limit || data.length === 0) {
         return (
@@ -113,6 +108,34 @@ export const ConvergenceErrorChart: React.FC<ConvergenceErrorChartProps> = ({ po
 
     return (
         <div className="mb-3">
+            <div className="mb-1 flex justify-end gap-1 text-[10px] text-textDim/80">
+                <span className="mr-1">Соединение:</span>
+                <button
+                    type="button"
+                    className={
+                        "rounded border px-2 py-[1px]" +
+                        (lineMode === "smooth"
+                            ? " border-primary bg-primary/20"
+                            : " border-border bg-surface")
+                    }
+                    onClick={() => setLineMode("smooth")}
+                >
+                    плавное
+                </button>
+                <button
+                    type="button"
+                    className={
+                        "rounded border px-2 py-[1px]" +
+                        (lineMode === "sharp"
+                            ? " border-primary bg-primary/20"
+                            : " border-border bg-surface")
+                    }
+                    onClick={() => setLineMode("sharp")}
+                >
+                    резкое
+                </button>
+            </div>
+
             <div className="relative w-full" style={{ height: 220 }}>
                 <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={data}>
@@ -140,7 +163,7 @@ export const ConvergenceErrorChart: React.FC<ConvergenceErrorChartProps> = ({ po
                         />
                         <RechartsTooltip content={<ErrorTooltip />} wrapperStyle={{ zIndex: 50 }} />
                         <Line
-                            type="monotone"
+                            type={lineMode === "smooth" ? "monotone" : "linear"}
                             dataKey="err"
                             name="|Aₙ − lim|"
                             stroke="#22c55e"
