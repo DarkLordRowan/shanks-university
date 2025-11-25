@@ -1,14 +1,14 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
     type ConvergenceMatrix,
-    type MonotonicityType,
     type SelectedCell,
     type SideType,
+    type MonotonicityType,
 } from "../model/types";
 import {
-    formatMonotonicityShort,
-    formatSideShort,
     nonNullEntries,
+    formatSideShort,
+    formatMonotonicityShort,
 } from "../model/convergenceUtils";
 
 interface ConvergenceMatrixTableProps {
@@ -29,9 +29,26 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
     selectedCell,
     onCellSelect,
 }) => {
-    const seriesList = matrix.seriesList ?? [];
+    const rawSeriesList = matrix.seriesList ?? [];
     const algoList = matrix.algoList ?? [];
     const cells = matrix.cells ?? {};
+
+    /* ====== выбор precision ====== */
+
+    const allPrecisions = useMemo(() => {
+        const set = new Set<string>();
+        for (const s of rawSeriesList) {
+            if (s.precision != null) set.add(String(s.precision));
+        }
+        return Array.from(set).sort();
+    }, [rawSeriesList]);
+
+    const [precisionFilter, setPrecisionFilter] = useState<"ALL" | string>("ALL");
+
+    const seriesList = useMemo(() => {
+        if (precisionFilter === "ALL") return rawSeriesList;
+        return rawSeriesList.filter((s) => String(s.precision) === precisionFilter);
+    }, [rawSeriesList, precisionFilter]);
 
     const [page, setPage] = useState(0);
 
@@ -40,7 +57,7 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
 
     useEffect(() => {
         setPage(0);
-    }, [matrix, maxSeries]);
+    }, [matrix, maxSeries, precisionFilter]);
 
     useEffect(() => {
         setPage((prev) => {
@@ -50,7 +67,7 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
         });
     }, [totalPages]);
 
-    if (seriesList.length === 0 || algoList.length === 0) {
+    if (rawSeriesList.length === 0 || algoList.length === 0) {
         return (
             <div className="text-textDim text-sm">
                 Нет пар ряд × алгоритм для анализа (seriesList или accelList пусты).
@@ -71,51 +88,77 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
                     </span>
                     <span className="text-[11px] text-textDim/80">
                         Алгоритмы: {algoList.length} · Ряды: {seriesList.length}
+                        {precisionFilter !== "ALL"
+                            ? ` (из ${rawSeriesList.length}, precision=${precisionFilter})`
+                            : ""}
                     </span>
                 </div>
 
-                {seriesList.length > pageSize && (
+                <div className="flex items-center gap-3">
+                    {/* выбор precision как в примере heatmap */}
                     <div className="flex items-center gap-1 text-[10px]">
-                        <button
-                            type="button"
-                            className="rounded border border-border bg-surface px-1 py-[1px] hover:bg-panel disabled:opacity-40"
-                            onClick={() => setPage(0)}
-                            disabled={page === 0}
+                        <span>precision:</span>
+                        <select
+                            className="rounded border border-border bg-surface px-2 py-[2px]"
+                            value={precisionFilter}
+                            onChange={(e) =>
+                                setPrecisionFilter(
+                                    e.target.value === "ALL" ? "ALL" : e.target.value
+                                )
+                            }
                         >
-                            «
-                        </button>
-                        <button
-                            type="button"
-                            className="rounded border border-border bg-surface px-1 py-[1px] hover:bg-panel disabled:opacity-40"
-                            onClick={() => setPage((p) => Math.max(0, p - 1))}
-                            disabled={page === 0}
-                        >
-                            ‹
-                        </button>
-                        <span className="px-1">
-                            стр. {page + 1} / {totalPages}
-                        </span>
-                        <span className="text-textDim/60">
-                            колонки {startIndex + 1}–{endIndex}
-                        </span>
-                        <button
-                            type="button"
-                            className="rounded border border-border bg-surface px-1 py-[1px] hover:bg-panel disabled:opacity-40"
-                            onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
-                            disabled={page >= totalPages - 1}
-                        >
-                            ›
-                        </button>
-                        <button
-                            type="button"
-                            className="rounded border border-border bg-surface px-1 py-[1px] hover:bg-panel disabled:opacity-40"
-                            onClick={() => setPage(totalPages - 1)}
-                            disabled={page >= totalPages - 1}
-                        >
-                            »
-                        </button>
+                            <option value="ALL">Все</option>
+                            {allPrecisions.map((p) => (
+                                <option key={p} value={p}>
+                                    {p}
+                                </option>
+                            ))}
+                        </select>
                     </div>
-                )}
+
+                    {seriesList.length > pageSize && (
+                        <div className="flex items-center gap-1 text-[10px]">
+                            <button
+                                type="button"
+                                className="rounded border border-border bg-surface px-1 py-[1px] hover:bg-panel disabled:opacity-40"
+                                onClick={() => setPage(0)}
+                                disabled={page === 0}
+                            >
+                                «
+                            </button>
+                            <button
+                                type="button"
+                                className="rounded border border-border bg-surface px-1 py-[1px] hover:bg-panel disabled:opacity-40"
+                                onClick={() => setPage((p) => Math.max(0, p - 1))}
+                                disabled={page === 0}
+                            >
+                                ‹
+                            </button>
+                            <span className="px-1">
+                                стр. {page + 1} / {totalPages}
+                            </span>
+                            <span className="text-textDim/60">
+                                колонки {startIndex + 1}–{endIndex}
+                            </span>
+                            <button
+                                type="button"
+                                className="rounded border border-border bg-surface px-1 py-[1px] hover:bg-panel disabled:opacity-40"
+                                onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+                                disabled={page >= totalPages - 1}
+                            >
+                                ›
+                            </button>
+                            <button
+                                type="button"
+                                className="rounded border border-border bg-surface px-1 py-[1px] hover:bg-panel disabled:opacity-40"
+                                onClick={() => setPage(totalPages - 1)}
+                                disabled={page >= totalPages - 1}
+                            >
+                                »
+                            </button>
+                        </div>
+                    )}
+                </div>
             </div>
 
             <div className="overflow-auto rounded-xl2 border border-border bg-panel shadow-panel">
@@ -193,63 +236,27 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
                                                 key={key}
                                                 className="border border-border px-[2px] py-[2px] text-center text-[10px] text-textDim/50"
                                             >
-                                                —{" "}
+                                                —
                                             </td>
                                         );
                                     }
 
-                                    // Вверху файла уже есть импорты. Ничего не трогаем.
-
-                                    // Внутри .map по seriesSlice, в месте, где сейчас строится title:
-
                                     const sideShort = formatSideShort(analysis.side);
                                     const monShort = formatMonotonicityShort(analysis.monotonicity);
 
-                                    // дополнительные поля, если они есть в анализе
-                                    type Interval = { fromN: number; toN: number };
-                                    type ExtraAnalysis = {
-                                        signChangeNs?: number[];
-                                        growthIntervals?: Interval[];
-                                        flatIntervals?: Interval[];
-                                    };
-
-                                    const extra = analysis as unknown as ExtraAnalysis;
-                                    const signChangeNs = extra.signChangeNs ?? [];
-                                    const growthIntervals = extra.growthIntervals ?? [];
-                                    const flatIntervals = extra.flatIntervals ?? [];
-
                                     const titleLines: string[] = [];
 
-                                    // ====== Блок о ряде ======
                                     titleLines.push("Ряд:");
                                     titleLines.push(`  имя: ${s.seriesName}`);
                                     titleLines.push(`  x: ${s.xLabel}`);
                                     titleLines.push(`  точность: ${s.precision}`);
-
-                                    const sAny = s as any;
-                                    if (sAny.seriesArgs) {
-                                        const entries = nonNullEntries(
-                                            sAny.seriesArgs as Record<string, unknown>
-                                        );
-                                        if (entries.length > 0) {
-                                            titleLines.push("  параметры ряда:");
-                                            for (const [k, v] of entries.sort(([a], [b]) =>
-                                                a.localeCompare(b)
-                                            )) {
-                                                titleLines.push(`    ${k}: ${String(v)}`);
-                                            }
-                                        }
-                                    }
-
                                     titleLines.push("");
 
-                                    // ====== Блок об алгоритме ======
                                     titleLines.push("Алгоритм:");
                                     titleLines.push(`  имя: ${algo.algorithmName}`);
                                     titleLines.push(
                                         `  m: ${algo.m != null ? String(algo.m) : "∅"}`
                                     );
-
                                     const algoEntries = nonNullEntries(algo.algorithmArgs);
                                     if (algoEntries.length > 0) {
                                         titleLines.push("  параметры алгоритма:");
@@ -262,10 +269,8 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
                                     if (algo.argsSummary) {
                                         titleLines.push(`  кратко: ${algo.argsSummary}`);
                                     }
-
                                     titleLines.push("");
 
-                                    // ====== Направление + монотонность ======
                                     const isMono =
                                         analysis.monotonicity === "strict_decreasing_error" ||
                                         analysis.monotonicity === "non_increasing_error" ||
@@ -288,42 +293,36 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
                                         `Направление: ${sideDescr}; ${monoDescr} (обозначения в ячейке: ${sideShort} | ${monShort}).`
                                     );
 
-                                    // ====== Смена знака ошибки ======
                                     if (analysis.signChangesCount > 0) {
-                                        if (signChangeNs.length > 0) {
-                                            const intervalsStr =
-                                                formatIntervalsFromNs(signChangeNs);
-                                            titleLines.push(
-                                                `Смена знака ошибки: ${analysis.signChangesCount} раз; интервалы по n: ${intervalsStr}.`
-                                            );
-                                        } else {
-                                            titleLines.push(
-                                                `Смена знака ошибки: ${analysis.signChangesCount} раз.`
-                                            );
-                                        }
+                                        const first =
+                                            analysis.firstSignChangeN != null
+                                                ? `, первая при n = ${analysis.firstSignChangeN}`
+                                                : "";
+                                        titleLines.push(
+                                            `Смена знака ошибки: ${analysis.signChangesCount} раз${first}.`
+                                        );
                                     } else {
                                         titleLines.push("Смена знака ошибки не происходит.");
                                     }
 
-                                    // ====== Рост / неизменность ошибки по n ======
-                                    if (growthIntervals.length > 0) {
-                                        const giStr = formatIntervals(growthIntervals);
-                                        titleLines.push(`Интервалы роста ошибки по n: ${giStr}.`);
-                                    } else if (analysis.monotonicity === "has_growth") {
-                                        // рост есть, но интервалов не дали
-                                        titleLines.push(
-                                            "Ошибка местами растёт по n (интервалы не указаны)."
-                                        );
-                                    }
-
-                                    if (flatIntervals.length > 0) {
-                                        const fiStr = formatIntervals(flatIntervals);
-                                        titleLines.push(
-                                            `Интервалы, где ошибка не меняется: ${fiStr}.`
-                                        );
+                                    if (analysis.monotonicity === "has_growth") {
+                                        const first =
+                                            analysis.firstGrowthN != null
+                                                ? `, начиная с n = ${analysis.firstGrowthN}`
+                                                : "";
+                                        titleLines.push(`Рост ошибки по n: есть${first}.`);
                                     } else if (analysis.monotonicity === "constant_error") {
                                         titleLines.push(
-                                            "Ошибка не меняется на всем рассмотренном диапазоне n."
+                                            "Ошибка по n практически не меняется (постоянна)."
+                                        );
+                                    } else if (
+                                        analysis.monotonicity === "strict_decreasing_error" ||
+                                        analysis.monotonicity === "non_increasing_error"
+                                    ) {
+                                        titleLines.push("Ошибка по n не возрастает.");
+                                    } else {
+                                        titleLines.push(
+                                            "Поведение ошибки по n: данных недостаточно."
                                         );
                                     }
 
@@ -393,79 +392,35 @@ function isMonotone(mon: MonotonicityType): boolean {
     );
 }
 
-function hasUsableData(mon: MonotonicityType): boolean {
-    return mon !== "not_enough_data" && mon !== "no_limit";
-}
-
 /**
  * Цвета по правилам:
  *  - односторонний и монотонный  → зелёный
  *  - односторонний и немонотонный → синий
  *  - двусторонний и монотонный   → жёлтый
  *  - двусторонний и немонотонный → красный
- * Остальное (unknown/no_limit/нет данных) — серые.
  */
 function getCellColorClass(side: SideType, mon: MonotonicityType, selected: boolean): string {
     const sel = selected ? " ring-2 ring-accent ring-offset-1 ring-offset-surface" : "";
 
-    if (!hasUsableData(mon) || side === "no_limit") {
+    if (side === "no_limit" || mon === "not_enough_data" || mon === "no_limit") {
         return "border-border/60 text-textDim/70 bg-surface/30 hover:bg-surface/40" + sel;
     }
 
     const mono = isMonotone(mon);
 
-    // односторонний
     if (side === "one_sided" && mono) {
-        // зелёный
         return "border-border text-textDim bg-emerald-500/25 hover:bg-emerald-500/35" + sel;
     }
     if (side === "one_sided" && !mono) {
-        // синий
-        return "border-border text-textDim bg-blue-500/25 hover:bg-blue-500/35" + sel;
+        return "border-border text-textDim bg-sky-500/25 hover:bg-sky-500/35" + sel;
     }
 
-    // двусторонний
     if (side === "two_sided" && mono) {
-        // жёлтый
         return "border-border text-textDim bg-amber-300/35 hover:bg-amber-300/45" + sel;
     }
     if (side === "two_sided" && !mono) {
-        // красный
         return "border-border text-textDim bg-red-500/30 hover:bg-red-500/40" + sel;
     }
 
-    // unknown и прочий мусор — нейтральный
     return "border-border text-textDim bg-surface/40 hover:bg-surface/50" + sel;
-}
-
-type Interval = { fromN: number; toN: number };
-
-function formatIntervals(intervals: Interval[]): string {
-    if (!intervals.length) return "—";
-    return intervals
-        .map((iv) => (iv.fromN === iv.toN ? `n = ${iv.fromN}` : `n ∈ [${iv.fromN}; ${iv.toN}]`))
-        .join(", ");
-}
-
-function formatIntervalsFromNs(ns: number[]): string {
-    if (!ns.length) return "—";
-    const sorted = [...ns].sort((a, b) => a - b);
-    const intervals: Interval[] = [];
-
-    let start = sorted[0];
-    let prev = sorted[0];
-
-    for (let i = 1; i < sorted.length; i++) {
-        const cur = sorted[i];
-        if (cur === prev + 1) {
-            prev = cur;
-            continue;
-        }
-        intervals.push({ fromN: start, toN: prev });
-        start = cur;
-        prev = cur;
-    }
-    intervals.push({ fromN: start, toN: prev });
-
-    return formatIntervals(intervals);
 }
