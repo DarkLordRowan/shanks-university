@@ -1,6 +1,6 @@
 // src/widgets/AlgorithmSeriesConvergenceTable.tsx
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef, useMemo } from "react";
 import type {
     Experiment,
     Series,
@@ -477,60 +477,357 @@ function formatMonotonicityDescription(mon: MonotonicityType): string {
     }
 }
 
-/**
- * Цвет ячейки в зависимости от комбинации (side, monotonicity).
- */
-function getCellColorClass(side: SideType, mon: MonotonicityType): string {
-    let base = "border-border text-textDim";
+function getCellColorClass(side: SideType, mon: MonotonicityType, selected: boolean): string {
+    let base =
+        "border-border text-textDim transition-colors " +
+        (selected ? "ring-2 ring-accent ring-offset-1 ring-offset-surface" : "");
 
     if (mon === "strict_decreasing_error" || mon === "non_increasing_error") {
         if (side === "one_sided") {
-            return base + " bg-emerald-500/25";
+            return base + " bg-emerald-500/25 hover:bg-emerald-500/35";
         }
         if (side === "two_sided") {
-            return base + " bg-emerald-400/20";
+            return base + " bg-emerald-400/20 hover:bg-emerald-400/30";
         }
         if (side === "unknown") {
-            return base + " bg-emerald-400/10";
+            return base + " bg-emerald-400/10 hover:bg-emerald-400/20";
         }
         if (side === "no_limit") {
-            return "border-border/70 text-textDim/70 bg-surface/40";
+            return (
+                "border-border/70 text-textDim/70 bg-surface/40 hover:bg-surface/50 " +
+                (selected ? " ring-2 ring-accent ring-offset-1 ring-offset-surface" : "")
+            );
         }
     }
 
     if (mon === "constant_error") {
         if (side === "one_sided") {
-            return base + " bg-surface/70";
+            return base + " bg-surface/70 hover:bg-surface/60";
         }
         if (side === "two_sided") {
-            return base + " bg-surface/60";
+            return base + " bg-surface/60 hover:bg-surface/50";
         }
-        return "border-border/70 text-textDim/70 bg-surface/50";
+        return (
+            "border-border/70 text-textDim/70 bg-surface/50 hover:bg-surface/40 " +
+            (selected ? " ring-2 ring-accent ring-offset-1 ring-offset-surface" : "")
+        );
     }
 
     if (mon === "has_growth") {
         if (side === "one_sided") {
-            return "border-amber-500 text-textDim bg-amber-500/25";
+            return (
+                "border-amber-500 text-textDim bg-amber-500/25 hover:bg-amber-500/35 " +
+                (selected ? " ring-2 ring-accent ring-offset-1 ring-offset-surface" : "")
+            );
         }
         if (side === "two_sided") {
-            return "border-red-500 text-textDim bg-red-500/30";
+            return (
+                "border-red-500 text-textDim bg-red-500/30 hover:bg-red-500/40 " +
+                (selected ? " ring-2 ring-accent ring-offset-1 ring-offset-surface" : "")
+            );
         }
         if (side === "unknown") {
-            return "border-amber-500/80 text-textDim bg-amber-500/20";
+            return (
+                "border-amber-500/80 text-textDim bg-amber-500/20 hover:bg-amber-500/30 " +
+                (selected ? " ring-2 ring-accent ring-offset-1 ring-offset-surface" : "")
+            );
         }
         if (side === "no_limit") {
-            return "border-red-500/70 text-textDim/80 bg-red-500/20";
+            return (
+                "border-red-500/70 text-textDim/80 bg-red-500/20 hover:bg-red-500/30 " +
+                (selected ? " ring-2 ring-accent ring-offset-1 ring-offset-surface" : "")
+            );
         }
     }
 
     if (mon === "not_enough_data" || mon === "no_limit") {
         if (side === "no_limit") {
-            return "border-border/60 text-textDim/60 bg-surface/30";
+            return (
+                "border-border/60 text-textDim/60 bg-surface/30 hover:bg-surface/40 " +
+                (selected ? " ring-2 ring-accent ring-offset-1 ring-offset-surface" : "")
+            );
         }
-        return "border-border/50 text-textDim/60 bg-surface/40";
+        return (
+            "border-border/50 text-textDim/60 bg-surface/40 hover:bg-surface/50 " +
+            (selected ? " ring-2 ring-accent ring-offset-1 ring-offset-surface" : "")
+        );
     }
 
-    return "border-border text-textDim bg-surface/40";
+    return (
+        "border-border text-textDim bg-surface/40 hover:bg-surface/50 " +
+        (selected ? " ring-2 ring-accent ring-offset-1 ring-offset-surface" : "")
+    );
+}
+
+/* ================== Детальный график ================== */
+
+interface DetailPoint {
+    n: number;
+    valueRe: number | null;
+    valueIm: number | null;
+    err: number | null;
+    sign: -1 | 0 | 1 | null;
+}
+
+interface SelectedDetail {
+    seriesInfo: SeriesInfo | null;
+    algoInfo: AlgoInfo | null;
+    series: Series | null;
+    accel: Accel | null;
+    analysis: ConvergenceAnalysis | null;
+    limit: Complex | null;
+    points: DetailPoint[];
+}
+
+function ConvergenceDetailChart({ detail }: { detail: SelectedDetail }) {
+    const { seriesInfo, algoInfo, analysis, limit, points } = detail;
+
+    if (!seriesInfo || !algoInfo || !analysis) {
+        return null;
+    }
+
+    if (!points.length) {
+        return (
+            <div className="mt-4 rounded-xl border border-border bg-panel p-3 text-xs text-textDim">
+                Для выбранной пары нет вычисленных точек.
+            </div>
+        );
+    }
+
+    const errPoints = points.filter(
+        (p) => p.err != null && Number.isFinite(p.err) && (p.err as number) >= 0
+    );
+
+    const hasErrorCurve = limit != null && errPoints.length > 0;
+
+    let pathD = "";
+    let minN = 0;
+    let maxN = 0;
+    let minE = 0;
+    let maxE = 0;
+
+    if (hasErrorCurve) {
+        minN = errPoints[0].n;
+        maxN = errPoints[errPoints.length - 1].n;
+
+        minE = errPoints.reduce(
+            (acc, p) => Math.min(acc, p.err as number),
+            errPoints[0].err as number
+        );
+        maxE = errPoints.reduce(
+            (acc, p) => Math.max(acc, p.err as number),
+            errPoints[0].err as number
+        );
+
+        if (maxE === minE) {
+            maxE = minE + 1;
+        }
+
+        const width = 600;
+        const height = 220;
+        const marginLeft = 40;
+        const marginRight = 10;
+        const marginTop = 10;
+        const marginBottom = 25;
+
+        const innerW = width - marginLeft - marginRight;
+        const innerH = height - marginTop - marginBottom;
+
+        const xScale = (n: number) => marginLeft + (innerW * (n - minN)) / (maxN - minN || 1);
+        const yScale = (e: number) =>
+            marginTop + innerH - (innerH * (e - minE)) / (maxE - minE || 1);
+
+        const parts: string[] = [];
+        for (let i = 0; i < errPoints.length; i++) {
+            const p = errPoints[i];
+            const x = xScale(p.n);
+            const y = yScale(p.err as number);
+            parts.push(`${i === 0 ? "M" : "L"} ${x.toFixed(2)} ${y.toFixed(2)}`);
+        }
+        pathD = parts.join(" ");
+    }
+
+    const shortSide = formatSideShort(analysis.side);
+    const shortMon = formatMonotonicityShort(analysis.monotonicity);
+
+    return (
+        <div className="mt-4 rounded-xl border border-border bg-panel p-4 shadow-panel text-xs text-textDim">
+            <div className="mb-3 flex flex-wrap justify-between gap-3">
+                <div>
+                    <div className="text-sm font-semibold text-textDim">
+                        Детальный график сходимости
+                    </div>
+                    <div className="mt-1 space-y-0.5 text-[11px] text-textDim/80">
+                        <div>
+                            Ряд: {seriesInfo.seriesName}, x={seriesInfo.xLabel}, prec=
+                            {seriesInfo.precision}
+                        </div>
+                        <div>
+                            Алгоритм: {algoInfo.algorithmName}
+                            {algoInfo.m != null ? `, m=${algoInfo.m}` : ""}
+                        </div>
+                        {algoInfo.argsSummary && <div>Аргументы: {algoInfo.argsSummary}</div>}
+                    </div>
+                </div>
+                <div className="space-y-1 text-[11px] text-textDim/80">
+                    <div>
+                        Тип: {shortSide} | {shortMon}
+                    </div>
+                    <div>
+                        Смен знака: {analysis.signChangesCount}
+                        {analysis.firstSignChangeN != null
+                            ? `, первая при n=${analysis.firstSignChangeN}`
+                            : ""}
+                    </div>
+                    <div>
+                        Первый рост ошибки:{" "}
+                        {analysis.firstGrowthN != null ? `n=${analysis.firstGrowthN}` : "не был"}
+                    </div>
+                    <div>Сравнено шагов (пар): {analysis.stepsAnalyzed}</div>
+                </div>
+            </div>
+
+            {hasErrorCurve ? (
+                <div className="mb-3">
+                    <svg
+                        viewBox="0 0 600 220"
+                        className="w-full rounded bg-surface/80"
+                        preserveAspectRatio="none"
+                    >
+                        <rect x={0} y={0} width={600} height={220} className="fill-surface/80" />
+                        <line
+                            x1={40}
+                            y1={20}
+                            x2={40}
+                            y2={195}
+                            className="stroke-border"
+                            strokeWidth={0.5}
+                        />
+                        <line
+                            x1={40}
+                            y1={195}
+                            x2={590}
+                            y2={195}
+                            className="stroke-border"
+                            strokeWidth={0.5}
+                        />
+
+                        <path d={pathD} className="stroke-primary" strokeWidth={1.2} fill="none" />
+
+                        <text
+                            x={320}
+                            y={210}
+                            className="fill-textDim/70 text-[9px]"
+                            textAnchor="middle"
+                        >
+                            n (номер шага)
+                        </text>
+                        <text
+                            x={15}
+                            y={15}
+                            className="fill-textDim/70 text-[9px]"
+                            textAnchor="start"
+                        >
+                            |Aₙ − lim|
+                        </text>
+
+                        <text
+                            x={45}
+                            y={207}
+                            className="fill-textDim/60 text-[8px]"
+                            textAnchor="start"
+                        >
+                            n={minN}
+                        </text>
+                        <text
+                            x={585}
+                            y={207}
+                            className="fill-textDim/60 text-[8px]"
+                            textAnchor="end"
+                        >
+                            n={maxN}
+                        </text>
+
+                        <text
+                            x={45}
+                            y={32}
+                            className="fill-textDim/60 text-[8px]"
+                            textAnchor="start"
+                        >
+                            err≈{minE.toExponential(2)}
+                        </text>
+                        <text
+                            x={45}
+                            y={190}
+                            className="fill-textDim/60 text-[8px]"
+                            textAnchor="start"
+                        >
+                            err≈{maxE.toExponential(2)}
+                        </text>
+                    </svg>
+                    <div className="mt-1 text-[10px] text-textDim/70">
+                        График |Aₙ − lim| по n. Отображаются только точки, где ошибка корректно
+                        определена и конечна.
+                    </div>
+                </div>
+            ) : (
+                <div className="mb-3 text-[11px] text-amber-300/80">
+                    Невозможно построить график ошибки: нет предела или нет корректных значений |Aₙ
+                    − lim|. Ниже приведена таблица чисел.
+                </div>
+            )}
+
+            <div className="mt-2 max-h-64 overflow-auto rounded border border-border bg-surface/60">
+                <table className="min-w-full border-collapse text-[10px]">
+                    <thead className="bg-surface/80">
+                        <tr>
+                            <th className="border-b border-border px-2 py-1 text-left">n</th>
+                            <th className="border-b border-border px-2 py-1 text-left">Re(Aₙ)</th>
+                            <th className="border-b border-border px-2 py-1 text-left">Im(Aₙ)</th>
+                            <th className="border-b border-border px-2 py-1 text-left">
+                                |Aₙ − lim|
+                            </th>
+                            <th className="border-b border-border px-2 py-1 text-left">
+                                sgn(Re(Aₙ − lim))
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {points.slice(0, 200).map((p) => (
+                            <tr key={p.n} className="odd:bg-surface/40 even:bg-surface/20">
+                                <td className="border-t border-border px-2 py-1 font-mono">
+                                    {p.n}
+                                </td>
+                                <td className="border-t border-border px-2 py-1 font-mono">
+                                    {p.valueRe != null && Number.isFinite(p.valueRe)
+                                        ? p.valueRe.toExponential(4)
+                                        : "∅"}
+                                </td>
+                                <td className="border-t border-border px-2 py-1 font-mono">
+                                    {p.valueIm != null && Number.isFinite(p.valueIm)
+                                        ? p.valueIm.toExponential(4)
+                                        : "∅"}
+                                </td>
+                                <td className="border-t border-border px-2 py-1 font-mono">
+                                    {p.err != null && Number.isFinite(p.err)
+                                        ? p.err.toExponential(4)
+                                        : "∅"}
+                                </td>
+                                <td className="border-t border-border px-2 py-1 font-mono">
+                                    {p.sign === 1 ? "+" : p.sign === -1 ? "−" : "0 / ?"}
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+            {points.length > 200 && (
+                <div className="mt-1 text-[10px] text-textDim/60">
+                    Показаны первые 200 точек из {points.length}.
+                </div>
+            )}
+        </div>
+    );
 }
 
 /* ================== Компонент таблицы ================== */
@@ -542,6 +839,11 @@ export interface AlgorithmSeriesConvergenceTableProps {
     maxSeries?: number;
 }
 
+interface SelectedCell {
+    seriesId: string;
+    accelId: string;
+}
+
 export const AlgorithmSeriesConvergenceTable: React.FC<AlgorithmSeriesConvergenceTableProps> = ({
     experiment,
     className,
@@ -549,9 +851,12 @@ export const AlgorithmSeriesConvergenceTable: React.FC<AlgorithmSeriesConvergenc
 }) => {
     const { matrix, progress } = useConvergenceMatrix(experiment);
     const [page, setPage] = useState(0);
+    const [selectedCell, setSelectedCell] = useState<SelectedCell | null>(null);
+    const chartRef = useRef<HTMLDivElement | null>(null);
 
     useEffect(() => {
         setPage(0);
+        setSelectedCell(null);
     }, [experiment]);
 
     const seriesList = matrix?.seriesList ?? [];
@@ -568,6 +873,51 @@ export const AlgorithmSeriesConvergenceTable: React.FC<AlgorithmSeriesConvergenc
             return prev;
         });
     }, [totalPages]);
+
+    useEffect(() => {
+        if (selectedCell && chartRef.current) {
+            chartRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+    }, [selectedCell]);
+
+    const selectedDetail: SelectedDetail | null = useMemo(() => {
+        if (!selectedCell || !experiment || !matrix) return null;
+
+        const { seriesId, accelId } = selectedCell;
+
+        const series = (experiment.seriesList ?? []).find((s) => s.id === seriesId) ?? null;
+        const accel = (experiment.accelList ?? []).find((a) => a.id === accelId) ?? null;
+        const sa =
+            (experiment.seriesAccelList ?? []).find(
+                (x) => x.series_id === seriesId && x.accel_id === accelId
+            ) ?? null;
+
+        const seriesInfo = matrix.seriesList.find((s) => s.key === seriesId) ?? null;
+        const algoInfo = matrix.algoList.find((a) => a.key === accelId) ?? null;
+
+        const analysis = matrix.cells[`${accelId}::${seriesId}`] ?? null;
+        const limit = series?.limit ?? null;
+
+        const points: DetailPoint[] = sa
+            ? getPointsSortedByN(sa).map((p) => {
+                  const valueRe = p.value?.re ?? null;
+                  const valueIm = p.value?.im ?? null;
+                  const err = errorNorm(p.value, limit);
+                  const sign = realDiffSign(p.value, limit);
+                  return { n: p.n, valueRe, valueIm, err, sign };
+              })
+            : [];
+
+        return {
+            seriesInfo,
+            algoInfo,
+            series,
+            accel,
+            analysis,
+            limit,
+            points,
+        };
+    }, [selectedCell, experiment, matrix]);
 
     if (!experiment) {
         return (
@@ -764,18 +1114,25 @@ export const AlgorithmSeriesConvergenceTable: React.FC<AlgorithmSeriesConvergenc
                                         formatMonotonicityDescription(analysis.monotonicity),
                                         analysis.signChangesCount > 0
                                             ? `Число смен знака: ${analysis.signChangesCount}, первое при n = ${analysis.firstSignChangeN}.`
-                                            : "Смен знака A_k - lim не обнаружено.",
+                                            : "Число смен знака не обнаружено.",
                                         analysis.firstGrowthN != null
                                             ? `Первый рост ошибки при n = ${analysis.firstGrowthN}.`
-                                            : "Рост ошибки |A_k - lim| не обнаружен или данных недостаточно.",
+                                            : "Первый рост ошибки не обнаружен или данных недостаточно.",
                                         `Сравнено шагов (пар): ${analysis.stepsAnalyzed}.`,
+                                        "",
+                                        "Нажмите по ячейке, чтобы посмотреть детальный график.",
                                     ].join("\n");
 
+                                    const isSelected =
+                                        selectedCell?.seriesId === s.key &&
+                                        selectedCell?.accelId === algo.key;
+
                                     const baseCell =
-                                        "min-w-[30px] border px-[2px] py-[2px] text-center text-[10px] cursor-default";
+                                        "min-w-[30px] border px-[2px] py-[2px] text-center text-[10px] cursor-pointer";
                                     const colorClass = getCellColorClass(
                                         analysis.side,
-                                        analysis.monotonicity
+                                        analysis.monotonicity,
+                                        isSelected
                                     );
 
                                     return (
@@ -783,8 +1140,14 @@ export const AlgorithmSeriesConvergenceTable: React.FC<AlgorithmSeriesConvergenc
                                             key={key}
                                             className={baseCell + " " + colorClass}
                                             title={title}
+                                            onClick={() =>
+                                                setSelectedCell({
+                                                    seriesId: s.key,
+                                                    accelId: algo.key,
+                                                })
+                                            }
                                         >
-                                            <div className="flex flex-col items-center gap-[1px] leading-tight">
+                                            <div className="flex flex-col items-center gap-[1px] leading-tight select-none">
                                                 <span className="font-mono text-[10px]">
                                                     {sideShort} | {monShort}
                                                 </span>
@@ -799,6 +1162,12 @@ export const AlgorithmSeriesConvergenceTable: React.FC<AlgorithmSeriesConvergenc
                         ))}
                     </tbody>
                 </table>
+            </div>
+
+            <div ref={chartRef}>
+                {selectedDetail && selectedDetail.analysis && (
+                    <ConvergenceDetailChart detail={selectedDetail} />
+                )}
             </div>
         </div>
     );
