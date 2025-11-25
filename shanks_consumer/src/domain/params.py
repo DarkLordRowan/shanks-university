@@ -22,6 +22,8 @@ from src.domain.precision import (
     create_series_result,
 )
 
+from src.domain.event import EventType
+
 
 class BaseSeriesParam[T]:
     """Abstract base class for series parameter configurations."""
@@ -134,7 +136,15 @@ class CSVSeriesWrapper(Generic[TNum]):
         return f"CSVSeries_{self._precision.value}"
 
 
+@dataclass
+class EventSpecifierParam:
+    type: EventType
+    log_action_capacity: int | None = None
+    stop_action_limit: int | None = None
+
+
 class BaseAccelParam(Generic[TNum], ABC):
+    events: Iterable[EventSpecifierParam]
 
     @property
     @abstractmethod
@@ -163,6 +173,7 @@ class BaseAccelParam(Generic[TNum], ABC):
 class StandardAccelParam(BaseAccelParam[TNum], ABC):
     n: Iterable[int]
     m: Iterable[int]
+    events: Iterable[EventSpecifierParam]
 
     @property
     @override
@@ -178,8 +189,6 @@ class StandardAccelParam(BaseAccelParam[TNum], ABC):
 @dataclass
 class AccelParamJSON(StandardAccelParam[TNum]):
     name: str
-    n: Iterable[int]
-    m: Iterable[int]
     init_args: Mapping[str, Iterable[Any]]
     precision: PrecisionType
 
@@ -203,19 +212,19 @@ class AccelParamJSON(StandardAccelParam[TNum]):
     def additional_args(self):
         return self.expanded_init_args
 
-
-@dataclass
 class AccelParamModule(StandardAccelParam[TNum]):
+
     def __init__(
         self,
         caller: type[AccelProto[TNum]],
         n: Iterable[int],
         m: Iterable[int],
+        events: Iterable[EventSpecifierParam],
         **kwargs,
     ):
         self.caller = caller
         self.init_args = kwargs
-        super().__init__(n, m)
+        super().__init__(n, m, events)
 
     @property
     @override

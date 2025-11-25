@@ -2,7 +2,6 @@
 #define UTILS_HPP
 
 #include "custom_concepts.hpp"
-#include <numbers>
 
 template<AcceptedLike T>
 struct series_result{
@@ -31,6 +30,28 @@ struct utils {
 	requires (is_precisable<Args>::value && ...)
 	static void set_precision(const size_t precision, Arg& precisable_arg, Args& ...precisable_args);
 	static void set_precision(const size_t precision) {}
+
+	template<AcceptedLike T, UnsignedIntLike K>
+	static void set_vec_precision(std::vector<T>& vec, size_t precision);
+
+	template<AcceptedLike T>
+	static size_t get_precision(const T& x){
+		if constexpr (is_standart_types<T>::value){
+			return static_cast<size_t>(0);
+		}
+		#ifdef INC_FPRECISION
+		else if constexpr (std::is_same<T, float_precision>::value){
+			return x.precision();
+		}
+		#ifdef INC_COMPLEXPRECISION
+		else if constexpr (std::is_same<T, complex_precision<float_precision>>::value){
+			return std::max(x.real().precision(), x.imag().precision());
+		}
+		#endif
+		#endif
+		else return static_cast<size_t>(0);
+		
+	}
 
 };
 
@@ -107,6 +128,12 @@ void utils::set_precision(const size_t precision, Arg& precisable_arg, Args& ...
 	}
 	utils::set_precision(precision, precisable_args...);
 
+}
+
+template<AcceptedLike T, UnsignedIntLike K>
+void utils::set_vec_precision(std::vector<T>& vec, size_t precision){
+	for(size_t j = 0; j < vec.size(); ++j)
+		utils::set_precision(precision, vec[j]);
 }
 
 #ifdef INC_COMPLEXPRECISION

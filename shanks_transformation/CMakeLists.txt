@@ -16,15 +16,8 @@ add_executable(shanks_transformation
     ${CMAKE_SOURCE_DIR}/src/main.cpp
 )
 add_library(GSL SHARED IMPORTED)
-if (UNIX)
-target_link_libraries(shanks_transformation PRIVATE
-    ${CMAKE_SOURCE_DIR}/libs/gsl-2.8/cblas/.libs/libgslcblas.so
-    ${CMAKE_SOURCE_DIR}/libs/gsl-2.8/.libs/libgsl.so
-)
-elseif (WIN32)
-    find_package(GSL REQUIRED)
-    target_link_libraries(shanks_transformation GSL::gsl GSL::gslcblas)
-endif()
+find_package(GSL REQUIRED)
+target_link_libraries(shanks_transformation GSL::gsl GSL::gslcblas)
 
 
 
@@ -35,7 +28,7 @@ FetchContent_Declare(pybind11 GIT_REPOSITORY https://github.com/pybind/pybind11.
 FetchContent_MakeAvailable(pybind11)
 pybind11_add_module(pyshanks py.cpp)
 find_package(PkgConfig REQUIRED)
-pkg_check_modules(GSL REQUIRED gsl)
+#pkg_check_modules(GSL REQUIRED gsl)
 target_link_libraries(pyshanks PRIVATE ${GSL_LIBRARIES})
 target_include_directories(pyshanks PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ${GSL_INCLUDE_DIRS})
 set_target_properties(pyshanks PROPERTIES PREFIX "")
@@ -52,4 +45,5 @@ file(GLOB_RECURSE TEST_SOURCES CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/tes
 add_executable(all_tests ${TEST_SOURCES})
 target_include_directories(all_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/methods)
 target_link_libraries(all_tests PRIVATE GTest::gtest_main)
+target_link_libraries(all_tests PRIVATE GSL::gsl GSL::gslcblas)
 gtest_discover_tests(all_tests)

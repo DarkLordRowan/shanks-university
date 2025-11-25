@@ -99,7 +99,6 @@ series_id_t                                                               X_div_
 series_id_t                                                              X_min_sqrt_xSeriesInfo::getId() const { return series_id_t::x_min_sqrt_x_series_id; }
 series_id_t                                                                         XSeriesInfo::getId() const { return series_id_t::x_series_id; }
 series_id_t                               Xsquareplus3_div_xsquareplus2multix_minus_1SeriesInfo::getId() const { return series_id_t::xsquareplus3_div_xsquareplus2multix_minus_1_series_id; }
-series_id_t                                                          X_twelfth_x2_pi2SeriesInfo::getId() const { return series_id_t::one_twelfth_x2_pi2_series_id; }
 series_id_t                                                                     X_twoSeriesInfo::getId() const { return series_id_t::x_two_series_id; }
 series_id_t                                                    X_two_throught_squaresSeriesInfo::getId() const { return series_id_t::x_two_throught_squares_series_id; }
 
@@ -201,6 +200,5 @@ std::string                                                               X_div_
 std::string                                                              X_min_sqrt_xSeriesInfo::getName() const { return "x_min_sqrt_x_series";}
 std::string                                                                         XSeriesInfo::getName() const { return "x_series";}
 std::string                               Xsquareplus3_div_xsquareplus2multix_minus_1SeriesInfo::getName() const { return "xsquareplus3_div_xsquareplus2multix_minus_1_series";}
-std::string                                                          X_twelfth_x2_pi2SeriesInfo::getName() const { return "x_twelfth_x2_pi2_series";}
 std::string                                                                     X_twoSeriesInfo::getName() const { return "x_two_series";}
 std::string                                                    X_two_throught_squaresSeriesInfo::getName() const { return "x_two_throught_squares_series";}
