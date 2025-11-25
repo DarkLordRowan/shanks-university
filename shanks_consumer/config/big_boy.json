@@ -634,10 +634,14 @@
         },
         {
           "type": "divergent",
-          "stop_action_limit": 0
+          "log_action_capacity": -1,
+          "stop_action_limit": 2
+        },
+        {
+          "type": "second_diff",
+          "log_action_capacity": -1
         }
       ]
-      
     },
     {
       "name": "ShanksTransformAlternating",
@@ -659,7 +663,12 @@
         },
         {
           "type": "divergent",
-          "stop_action_limit": 0
+          "log_action_capacity": -1,
+          "stop_action_limit": 2
+        },
+        {
+          "type": "second_diff",
+          "log_action_capacity": -1
         }
       ]
     },
@@ -683,7 +692,12 @@
         },
         {
           "type": "divergent",
-          "stop_action_limit": 0
+          "log_action_capacity": -1,
+          "stop_action_limit": 2
+        },
+        {
+          "type": "second_diff",
+          "log_action_capacity": -1
         }
       ]
     },
@@ -691,7 +705,30 @@
       "name": "ChangWynnAlgorithm",
       "n": { "start": 1, "stop": 51, "step": 1 },
       "m": [2, 4, 10],
-      "args": {}
+      "args": {},
+      "events": [
+        {
+          "type": "slow_accel",
+          "log_action_capacity": -1
+        },
+        {
+          "type": "sign_changed",
+          "log_action_capacity": -1
+        },
+        {
+          "type": "monotone",
+          "log_action_capacity": -1
+        },
+        {
+          "type": "divergent",
+          "log_action_capacity": -1,
+          "stop_action_limit": 2
+        },
+        {
+          "type": "second_diff",
+          "log_action_capacity": -1
+        }
+      ]
     },
     {
       "name": "DrummondDAlgorithm",
@@ -700,19 +737,88 @@
       "args": {
         "remainder": ["v_type", "u_type", "t_wave_type"],
         "useRecFormulas": [true, false]
-      }
+      },
+      "events": [
+        {
+          "type": "slow_accel",
+          "log_action_capacity": -1
+        },
+        {
+          "type": "sign_changed",
+          "log_action_capacity": -1
+        },
+        {
+          "type": "monotone",
+          "log_action_capacity": -1
+        },
+        {
+          "type": "divergent",
+          "log_action_capacity": -1,
+          "stop_action_limit": 2
+        },
+        {
+          "type": "second_diff",
+          "log_action_capacity": -1
+        }
+      ]
     },
     {
       "name": "FordSidi2Algorithm",
       "n": { "start": 1, "stop": 51, "step": 1 },
       "m": [2, 4, 10],
-      "args": {}
+      "args": {},
+      "events": [
+        {
+          "type": "slow_accel",
+          "log_action_capacity": -1
+        },
+        {
+          "type": "sign_changed",
+          "log_action_capacity": -1
+        },
+        {
+          "type": "monotone",
+          "log_action_capacity": -1
+        },
+        {
+          "type": "divergent",
+          "log_action_capacity": -1,
+          "stop_action_limit": 2
+        },
+        {
+          "type": "second_diff",
+          "log_action_capacity": -1
+        }
+      ]
     },
     {
       "name": "FordSidi3Algorithm",
       "n": { "start": 1, "stop": 51, "step": 1 },
       "m": [2, 4, 10],
-      "args": {}
+      "args": {},
+      "events": [
+        {
+          "type": "slow_accel",
+          "log_action_capacity": -1
+        },
+        {
+          "type": "sign_changed",
+          "log_action_capacity": -1
+        },
+        {
+          "type": "monotone",
+          "log_action_capacity": -1
+        },
+        {
+          "type": "divergent",
+          "log_action_capacity": -1,
+          "stop_action_limit": 2
+        },
+        {
+          "type": "second_diff",
+          "log_action_capacity": -1
+        }
+      ]
     },
     {
       "name": "LevinAlgorithm",
@@ -722,7 +828,30 @@
         "remainder": ["v_type", "u_type", "t_wave_type"],
         "useRecFormulas": [true, false],
         "beta": [0.1, 1, 10]
-      }
+      },
+      "events": [
+        {
+          "type": "slow_accel",
+          "log_action_capacity": -1
+        },
+        {
+          "type": "sign_changed",
+          "log_action_capacity": -1
+        },
+        {
+          "type": "monotone",
+          "log_action_capacity": -1
+        },
+        {
+          "type": "divergent",
+          "log_action_capacity": -1,
+          "stop_action_limit": 2
+        },
+        {
+          "type": "second_diff",
+          "log_action_capacity": -1
+        }
+      ]
     },
     {
       "name": "LevinSidiMAlgorithm",
@@ -731,7 +860,30 @@
       "args": {
         "remainder": ["v_type", "u_type", "t_wave_type"],
         "gamma": [10, 100, 1000]
-      }
+      },
+      "events": [
+        {
+          "type": "slow_accel",
+          "log_action_capacity": -1
+        },
+        {
+          "type": "sign_changed",
+          "log_action_capacity": -1
+        },
+        {
+          "type": "monotone",
+          "log_action_capacity": -1
+        },
+        {
+          "type": "divergent",
+          "log_action_capacity": -1,
+          "stop_action_limit": 2
+        },
+        {
+          "type": "second_diff",
+          "log_action_capacity": -1
+        }
+      ]
     },
     {
       "name": "LevinSidiSAlgorithm",
@@ -741,13 +893,59 @@
         "remainder": ["v_type", "u_type", "t_wave_type"],
         "useRecFormulas": [true, false],
         "parameter": [0.1, 1, 10]
-      }
+      },
+      "events": [
+        {
+          "type": "slow_accel",
+          "log_action_capacity": -1
+        },
+        {
+          "type": "sign_changed",
+          "log_action_capacity": -1
+        },
+        {
+          "type": "monotone",
+          "log_action_capacity": -1
+        },
+        {
+          "type": "divergent",
+          "log_action_capacity": -1,
+          "stop_action_limit": 2
+        },
+        {
+          "type": "second_diff",
+          "log_action_capacity": -1
+        }
+      ]
     },
     {
       "name": "LubkinWAlgorithm",
       "n": { "start": 1, "stop": 51, "step": 1 },
       "m": [2, 4, 10],
-      "args": {}
+      "args": {},
+      "events": [
+        {
+          "type": "slow_accel",
+          "log_action_capacity": -1
+        },
+        {
+          "type": "sign_changed",
+          "log_action_capacity": -1
+        },
+        {
+          "type": "monotone",
+          "log_action_capacity": -1
+        },
+        {
+          "type": "divergent",
+          "log_action_capacity": -1,
+          "stop_action_limit": 2
+        },
+        {
+          "type": "second_diff",
+          "log_action_capacity": -1
+        }
+      ]
     },
     {
       "name": "WynnRhoAlgorithm",
@@ -757,31 +955,146 @@
         "numerator": ["rho_type", "generalized_type", "gamma_rho_type"],
         "gamma": [0.1, 1, 10],
         "RHO": [0.1, 1, 10]
-      }
+      },
+      "events": [
+        {
+          "type": "slow_accel",
+          "log_action_capacity": -1
+        },
+        {
+          "type": "sign_changed",
+          "log_action_capacity": -1
+        },
+        {
+          "type": "monotone",
+          "log_action_capacity": -1
+        },
+        {
+          "type": "divergent",
+          "log_action_capacity": -1,
+          "stop_action_limit": 2
+        },
+        {
+          "type": "second_diff",
+          "log_action_capacity": -1
+        }
+      ]
     },
     {
       "name": "RichardsonAlgorithm",
       "n": { "start": 1, "stop": 51, "step": 1 },
       "m": [2, 4, 10],
-      "args": {}
+      "args": {},
+      "events": [
+        {
+          "type": "slow_accel",
+          "log_action_capacity": -1
+        },
+        {
+          "type": "sign_changed",
+          "log_action_capacity": -1
+        },
+        {
+          "type": "monotone",
+          "log_action_capacity": -1
+        },
+        {
+          "type": "divergent",
+          "log_action_capacity": -1,
+          "stop_action_limit": 2
+        },
+        {
+          "type": "second_diff",
+          "log_action_capacity": -1
+        }
+      ]
     },
     {
       "name": "WenigerAlgorithm",
       "n": { "start": 1, "stop": 51, "step": 1 },
       "m": [2, 4, 10],
-      "args": {}
+      "args": {},
+      "events": [
+        {
+          "type": "slow_accel",
+          "log_action_capacity": -1
+        },
+        {
+          "type": "sign_changed",
+          "log_action_capacity": -1
+        },
+        {
+          "type": "monotone",
+          "log_action_capacity": -1
+        },
+        {
+          "type": "divergent",
+          "log_action_capacity": -1,
+          "stop_action_limit": 2
+        },
+        {
+          "type": "second_diff",
+          "log_action_capacity": -1
+        }
+      ]
     },
     {
       "name": "WynnEpsilon1Algorithm",
       "n": { "start": 1, "stop": 51, "step": 1 },
       "m": [2, 4, 10],
-      "args": {}
+      "args": {},
+      "events": [
+        {
+          "type": "slow_accel",
+          "log_action_capacity": -1
+        },
+        {
+          "type": "sign_changed",
+          "log_action_capacity": -1
+        },
+        {
+          "type": "monotone",
+          "log_action_capacity": -1
+        },
+        {
+          "type": "divergent",
+          "log_action_capacity": -1,
+          "stop_action_limit": 2
+        },
+        {
+          "type": "second_diff",
+          "log_action_capacity": -1
+        }
+      ]
     },
     {
       "name": "WynnEpsilon2Algorithm",
       "n": { "start": 1, "stop": 51, "step": 1 },
       "m": [2, 4, 10],
-      "args": {}
+      "args": {},
+      "events": [
+        {
+          "type": "slow_accel",
+          "log_action_capacity": -1
+        },
+        {
+          "type": "sign_changed",
+          "log_action_capacity": -1
+        },
+        {
+          "type": "monotone",
+          "log_action_capacity": -1
+        },
+        {
+          "type": "divergent",
+          "log_action_capacity": -1,
+          "stop_action_limit": 2
+        },
+        {
+          "type": "second_diff",
+          "log_action_capacity": -1
+        }
+      ]
     },
     {
       "name": "WynnEpsilon3Algorithm",
@@ -789,7 +1102,30 @@
       "m": [2, 4, 10],
       "args": {
         "epsilon_threshold": [1e-10, 1e-30, 1e-50]
-      }
+      },
+      "events": [
+        {
+          "type": "slow_accel",
+          "log_action_capacity": -1
+        },
+        {
+          "type": "sign_changed",
+          "log_action_capacity": -1
+        },
+        {
+          "type": "monotone",
+          "log_action_capacity": -1
+        },
+        {
+          "type": "divergent",
+          "log_action_capacity": -1,
+          "stop_action_limit": 2
+        },
+        {
+          "type": "second_diff",
+          "log_action_capacity": -1
+        }
+      ]
     }
   ]
 }

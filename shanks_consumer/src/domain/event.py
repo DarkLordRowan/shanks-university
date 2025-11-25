@@ -2,6 +2,8 @@ from enum import Enum
 from src.domain.trial_result import ComputedTrialResult
 from dataclasses import asdict, dataclass
 
+from src.logger import logged_debug
+
 
 class EventType(Enum):
     SLOW_ACCEL = "slow_accel"
@@ -28,6 +30,7 @@ class EventData:
     data: dict
 
 
+@logged_debug
 def slow_accel_method(computed: list[ComputedTrialResult]) -> dict | None:
     if len(computed) < 1:
         return
@@ -44,6 +47,7 @@ def slow_accel_method(computed: list[ComputedTrialResult]) -> dict | None:
         )
 
 
+@logged_debug
 def divergent_accel_method(computed: list[ComputedTrialResult]) -> dict | None:
     if len(computed) < 2:
         return
@@ -61,6 +65,7 @@ def divergent_accel_method(computed: list[ComputedTrialResult]) -> dict | None:
         )
 
 
+@logged_debug
 def monotone_accel_method(computed: list[ComputedTrialResult]) -> dict | None:
     if len(computed) < 2:
         return
@@ -78,6 +83,7 @@ def monotone_accel_method(computed: list[ComputedTrialResult]) -> dict | None:
         )
 
 
+@logged_debug
 def sign_changed_method(computed: list[ComputedTrialResult]) -> dict | None:
     if len(computed) < 2:
         return
@@ -95,6 +101,7 @@ def sign_changed_method(computed: list[ComputedTrialResult]) -> dict | None:
         )
 
 
+@logged_debug
 def second_diff_growth_method(
     computed: list[ComputedTrialResult],
 ) -> dict | None:
