@@ -17,12 +17,13 @@ type AnyNum = number | null | undefined;
 
 interface ErrorChartPoint {
     n: number;
-    err: number;
+    value: number;
 }
 
 interface ConvergenceErrorChartProps {
     points: DetailPoint[];
     limit: Complex | null;
+    useAbs: boolean;
 }
 
 /* ======================= utils ======================= */
@@ -38,8 +39,12 @@ const formatValue = (value: AnyNum): string => {
 
 /* ======================= Tooltip ======================= */
 
-const ErrorTooltip: React.FC<TooltipProps<number, string>> = (props) => {
-    const { active, label, payload } = props;
+interface ErrorTooltipProps extends TooltipProps<number, string> {
+    labelText: string;
+}
+
+const ErrorTooltip: React.FC<ErrorTooltipProps> = (props) => {
+    const { active, label, payload, labelText } = props;
     if (!active || !payload || payload.length === 0) return null;
 
     const first = payload[0];
@@ -50,7 +55,7 @@ const ErrorTooltip: React.FC<TooltipProps<number, string>> = (props) => {
         <div className="rounded-xl border border-border bg-panel/95 p-3 text-xs shadow-lg backdrop-blur">
             <div className="mb-2 font-semibold">n = {label}</div>
             <div className="flex items-center gap-2">
-                <span className="text-[11px] text-textDim/80">|Aₙ − lim| ≈</span>
+                <span className="text-[11px] text-textDim/80">{labelText} ≈</span>
                 <span className="font-mono text-[11px] tabular-nums">{formatValue(val)}</span>
             </div>
         </div>
@@ -59,29 +64,35 @@ const ErrorTooltip: React.FC<TooltipProps<number, string>> = (props) => {
 
 /* ======================= Chart ======================= */
 
-export const ConvergenceErrorChart: React.FC<ConvergenceErrorChartProps> = ({ points, limit }) => {
+export const ConvergenceErrorChart: React.FC<ConvergenceErrorChartProps> = ({
+    points,
+    limit,
+    useAbs,
+}) => {
     const data: ErrorChartPoint[] = useMemo(
         () =>
             points
                 .filter((p) => isFiniteNumber(p.err) && (p.err as number) >= 0)
-                .map((p) => ({
-                    n: p.n,
-                    err: p.err as number,
-                })),
-        [points]
+                .map((p) => {
+                    const base = p.err as number;
+                    const signed = !useAbs && p.sign != null && p.sign !== 0 ? base * p.sign : base;
+                    return {
+                        n: p.n,
+                        value: signed,
+                    };
+                }),
+        [points, useAbs]
     );
 
     const { yMin, yMax } = useMemo(() => {
-        if (data.length === 0) {
-            return { yMin: 0, yMax: 0 };
-        }
+        if (data.length === 0) return { yMin: 0, yMax: 0 };
 
-        let min = data[0].err;
-        let max = data[0].err;
+        let min = data[0].value;
+        let max = data[0].value;
 
         for (const d of data) {
-            if (d.err < min) min = d.err;
-            if (d.err > max) max = d.err;
+            if (d.value < min) min = d.value;
+            if (d.value > max) max = d.value;
         }
 
         if (min === max) {
@@ -100,11 +111,14 @@ export const ConvergenceErrorChart: React.FC<ConvergenceErrorChartProps> = ({ po
     if (!limit || data.length === 0) {
         return (
             <div className="mb-3 text-[11px] text-amber-300/80">
-                Невозможно построить график ошибки: нет предела или нет корректных значений |Aₙ −
-                lim|.
+                Невозможно построить график ошибки: нет предела или нет корректных значений Aₙ −
+                lim.
             </div>
         );
     }
+
+    const labelY = useAbs ? "|Aₙ − lim|" : "sgn·|Aₙ − lim|";
+    const tooltipLabel = labelY;
 
     return (
         <div className="mb-3">
@@ -155,17 +169,20 @@ export const ConvergenceErrorChart: React.FC<ConvergenceErrorChartProps> = ({ po
                             tick={{ fontSize: 10 }}
                             tickFormatter={(v: number) => formatValue(v)}
                             label={{
-                                value: "|Aₙ − lim|",
+                                value: labelY,
                                 angle: -90,
                                 position: "insideLeft",
                                 fontSize: 10,
                             }}
                         />
-                        <RechartsTooltip content={<ErrorTooltip />} wrapperStyle={{ zIndex: 50 }} />
+                        <RechartsTooltip
+                            content={<ErrorTooltip labelText={tooltipLabel} />}
+                            wrapperStyle={{ zIndex: 50 }}
+                        />
                         <Line
                             type={lineMode === "smooth" ? "monotone" : "linear"}
-                            dataKey="err"
-                            name="|Aₙ − lim|"
+                            dataKey="value"
+                            name={labelY}
                             stroke="#22c55e"
                             strokeWidth={2}
                             dot={{ r: 4 }}
@@ -175,7 +192,7 @@ export const ConvergenceErrorChart: React.FC<ConvergenceErrorChartProps> = ({ po
                 </ResponsiveContainer>
             </div>
             <div className="mt-1 text-[10px] text-textDim/70">
-                График |Aₙ − lim| по n. При наведении видно номер шага и значение ошибки.
+                График {labelY} по n. При наведении видно номер шага и значение ошибки.
             </div>
         </div>
     );

@@ -3,16 +3,24 @@ import { type DetailPoint } from "../../model/types";
 
 interface ConvergenceDiffTableProps {
     points: DetailPoint[];
+    useAbs: boolean;
 }
 
-export const ConvergenceDiffTable: React.FC<ConvergenceDiffTableProps> = ({ points }) => {
+const formatNumber = (v: number | null): string => {
+    if (v == null || !Number.isFinite(v)) return "∅";
+    const abs = Math.abs(v);
+    if (abs >= 1e5 || abs < 1e-4) return v.toExponential(4);
+    return v.toFixed(12).replace(/0+$/g, "").replace(/\.$/, "");
+};
+
+export const ConvergenceDiffTable: React.FC<ConvergenceDiffTableProps> = ({ points, useAbs }) => {
     const hasDiff = points.some((p) => p.diffNorm != null);
+
+    const headerNorm = useAbs ? "|Aₙ − Aₙ₋₁|" : "sgn·|Aₙ − Aₙ₋₁|";
 
     return (
         <div className="mt-4 border-t border-border/60 pt-3">
-            <div className="mb-2 text-[11px] font-semibold text-textDim">
-                Разности Aₙ − Aₙ₋₁
-            </div>
+            <div className="mb-2 text-[11px] font-semibold text-textDim">Разности Aₙ − Aₙ₋₁</div>
 
             {hasDiff ? (
                 <div className="max-h-64 overflow-auto rounded border border-border bg-surface/60">
@@ -27,7 +35,7 @@ export const ConvergenceDiffTable: React.FC<ConvergenceDiffTableProps> = ({ poin
                                     Im(Aₙ − Aₙ₋₁)
                                 </th>
                                 <th className="border-b border-border px-2 py-1 text-left">
-                                    |Aₙ − Aₙ₋₁|
+                                    {headerNorm}
                                 </th>
                             </tr>
                         </thead>
@@ -35,31 +43,46 @@ export const ConvergenceDiffTable: React.FC<ConvergenceDiffTableProps> = ({ poin
                             {points
                                 .filter((p) => p.diffNorm != null)
                                 .slice(0, 200)
-                                .map((p) => (
-                                    <tr
-                                        key={`diff-${p.n}`}
-                                        className="odd:bg-surface/40 even:bg-surface/20"
-                                    >
-                                        <td className="border-t border-border px-2 py-1 font-mono">
-                                            {p.n}
-                                        </td>
-                                        <td className="border-t border-border px-2 py-1 font-mono">
-                                            {p.diffRe != null && Number.isFinite(p.diffRe)
-                                                ? p.diffRe.toExponential(4)
-                                                : "∅"}
-                                        </td>
-                                        <td className="border-t border-border px-2 py-1 font-mono">
-                                            {p.diffIm != null && Number.isFinite(p.diffIm)
-                                                ? p.diffIm.toExponential(4)
-                                                : "∅"}
-                                        </td>
-                                        <td className="border-t border-border px-2 py-1 font-mono">
-                                            {p.diffNorm != null && Number.isFinite(p.diffNorm)
-                                                ? p.diffNorm.toExponential(4)
-                                                : "∅"}
-                                        </td>
-                                    </tr>
-                                ))}
+                                .map((p) => {
+                                    const { n, diffRe, diffIm, diffNorm } = p;
+
+                                    let normValue: number | null = null;
+                                    if (diffNorm != null && Number.isFinite(diffNorm)) {
+                                        if (!useAbs && diffRe != null && Number.isFinite(diffRe)) {
+                                            normValue = diffRe >= 0 ? diffNorm : -diffNorm;
+                                        } else {
+                                            normValue = diffNorm;
+                                        }
+                                    }
+
+                                    return (
+                                        <tr
+                                            key={`diff-${n}`}
+                                            className="odd:bg-surface/40 even:bg-surface/20"
+                                        >
+                                            <td className="border-t border-border px-2 py-1 font-mono">
+                                                {n}
+                                            </td>
+                                            <td className="border-t border-border px-2 py-1 font-mono">
+                                                {formatNumber(
+                                                    diffRe != null && Number.isFinite(diffRe)
+                                                        ? diffRe
+                                                        : null
+                                                )}
+                                            </td>
+                                            <td className="border-t border-border px-2 py-1 font-mono">
+                                                {formatNumber(
+                                                    diffIm != null && Number.isFinite(diffIm)
+                                                        ? diffIm
+                                                        : null
+                                                )}
+                                            </td>
+                                            <td className="border-t border-border px-2 py-1 font-mono">
+                                                {formatNumber(normValue)}
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
                         </tbody>
                     </table>
                 </div>
