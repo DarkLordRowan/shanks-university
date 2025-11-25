@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { type SelectedDetail } from "../model/types";
 import { formatMonotonicityShort, formatSideShort } from "../model/convergenceUtils";
 import { ConvergenceErrorChart } from "./detail/ConvergenceErrorChart";
@@ -12,16 +12,11 @@ interface ConvergenceDetailChartProps {
 export const ConvergenceDetailChart: React.FC<ConvergenceDetailChartProps> = ({ detail }) => {
     const { seriesInfo, algoInfo, analysis, limit, points } = detail;
 
+    // Глобальный переключатель: использовать модуль или знак
+    const [useAbs, setUseAbs] = useState<boolean>(true);
+
     if (!seriesInfo || !algoInfo || !analysis) {
         return null;
-    }
-
-    if (!points.length) {
-        return (
-            <div className="mt-4 rounded-xl border border-border bg-panel p-3 text-xs text-textDim">
-                Для выбранной пары нет вычисленных точек.
-            </div>
-        );
     }
 
     const shortSide = formatSideShort(analysis.side);
@@ -46,7 +41,7 @@ export const ConvergenceDetailChart: React.FC<ConvergenceDetailChartProps> = ({ 
                         {algoInfo.argsSummary && <div>Аргументы: {algoInfo.argsSummary}</div>}
                     </div>
                 </div>
-                <div className="space-y-1 text-[11px] text-textDim/80">
+                <div className="space-y-1 text-right text-[11px] text-textDim/80">
                     <div>
                         Тип: {shortSide} | {shortMon}
                     </div>
@@ -61,12 +56,42 @@ export const ConvergenceDetailChart: React.FC<ConvergenceDetailChartProps> = ({ 
                         {analysis.firstGrowthN != null ? `n=${analysis.firstGrowthN}` : "не был"}
                     </div>
                     <div>Сравнено шагов (пар): {analysis.stepsAnalyzed}</div>
+
+                    {/* Глобальный переключатель "модуль / со знаком" для всех трёх элементов */}
+                    <div className="pt-1">
+                        <span className="mr-1 text-[10px] text-textDim/70">Ошибка:</span>
+                        <button
+                            type="button"
+                            className={
+                                "mr-1 rounded border px-2 py-[1px] text-[10px]" +
+                                (useAbs
+                                    ? " border-primary bg-primary/20"
+                                    : " border-border bg-surface")
+                            }
+                            onClick={() => setUseAbs(true)}
+                        >
+                            модуль
+                        </button>
+                        <button
+                            type="button"
+                            className={
+                                "rounded border px-2 py-[1px] text-[10px]" +
+                                (!useAbs
+                                    ? " border-primary bg-primary/20"
+                                    : " border-border bg-surface")
+                            }
+                            onClick={() => setUseAbs(false)}
+                        >
+                            со знаком
+                        </button>
+                    </div>
                 </div>
             </div>
 
-            <ConvergenceErrorChart points={points} limit={limit} />
-            <ConvergenceAnTable points={points} />
-            <ConvergenceDiffTable points={points} />
+            {/* useAbs уходит во все три компонента */}
+            <ConvergenceErrorChart points={points} limit={limit} useAbs={useAbs} />
+            <ConvergenceAnTable points={points} useAbs={useAbs} />
+            <ConvergenceDiffTable points={points} useAbs={useAbs} />
         </div>
     );
 };

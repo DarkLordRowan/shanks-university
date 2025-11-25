@@ -3,12 +3,22 @@ import { type DetailPoint } from "../../model/types";
 
 interface ConvergenceAnTableProps {
     points: DetailPoint[];
+    useAbs: boolean;
 }
 
-export const ConvergenceAnTable: React.FC<ConvergenceAnTableProps> = ({ points }) => {
+const formatNumber = (v: number | null): string => {
+    if (v == null || !Number.isFinite(v)) return "∅";
+    const abs = Math.abs(v);
+    if (abs >= 1e5 || abs < 1e-4) return v.toExponential(4);
+    return v.toFixed(12).replace(/0+$/g, "").replace(/\.$/, "");
+};
+
+export const ConvergenceAnTable: React.FC<ConvergenceAnTableProps> = ({ points, useAbs }) => {
     if (!points.length) {
         return null;
     }
+
+    const headerErr = useAbs ? "|Aₙ − lim|" : "sgn·|Aₙ − lim|";
 
     return (
         <>
@@ -20,7 +30,7 @@ export const ConvergenceAnTable: React.FC<ConvergenceAnTableProps> = ({ points }
                             <th className="border-b border-border px-2 py-1 text-left">Re(Aₙ)</th>
                             <th className="border-b border-border px-2 py-1 text-left">Im(Aₙ)</th>
                             <th className="border-b border-border px-2 py-1 text-left">
-                                |Aₙ − lim|
+                                {headerErr}
                             </th>
                             <th className="border-b border-border px-2 py-1 text-left">
                                 sgn(Re(Aₙ − lim))
@@ -28,29 +38,46 @@ export const ConvergenceAnTable: React.FC<ConvergenceAnTableProps> = ({ points }
                         </tr>
                     </thead>
                     <tbody>
-                        {points.slice(0, 200).map((p) => (
-                            <tr key={p.n} className="odd:bg-surface/40 even:bg-surface/20">
-                                <td className="border-t border-border px-2 py-1 font-mono">{p.n}</td>
-                                <td className="border-t border-border px-2 py-1 font-mono">
-                                    {p.valueRe != null && Number.isFinite(p.valueRe)
-                                        ? p.valueRe.toExponential(4)
-                                        : "∅"}
-                                </td>
-                                <td className="border-t border-border px-2 py-1 font-mono">
-                                    {p.valueIm != null && Number.isFinite(p.valueIm)
-                                        ? p.valueIm.toExponential(4)
-                                        : "∅"}
-                                </td>
-                                <td className="border-t border-border px-2 py-1 font-mono">
-                                    {p.err != null && Number.isFinite(p.err)
-                                        ? p.err.toExponential(4)
-                                        : "∅"}
-                                </td>
-                                <td className="border-t border-border px-2 py-1 font-mono">
-                                    {p.sign === 1 ? "+" : p.sign === -1 ? "−" : "0 / ?"}
-                                </td>
-                            </tr>
-                        ))}
+                        {points.slice(0, 200).map((p) => {
+                            const { n, valueRe, valueIm, err, sign } = p;
+
+                            let errValue: number | null = null;
+                            if (err != null && Number.isFinite(err)) {
+                                if (useAbs || !sign || sign === 0) {
+                                    errValue = err;
+                                } else {
+                                    errValue = err * sign;
+                                }
+                            }
+
+                            return (
+                                <tr key={n} className="odd:bg-surface/40 even:bg-surface/20">
+                                    <td className="border-t border-border px-2 py-1 font-mono">
+                                        {n}
+                                    </td>
+                                    <td className="border-t border-border px-2 py-1 font-mono">
+                                        {formatNumber(
+                                            valueRe != null && Number.isFinite(valueRe)
+                                                ? valueRe
+                                                : null
+                                        )}
+                                    </td>
+                                    <td className="border-t border-border px-2 py-1 font-mono">
+                                        {formatNumber(
+                                            valueIm != null && Number.isFinite(valueIm)
+                                                ? valueIm
+                                                : null
+                                        )}
+                                    </td>
+                                    <td className="border-t border-border px-2 py-1 font-mono">
+                                        {formatNumber(errValue)}
+                                    </td>
+                                    <td className="border-t border-border px-2 py-1 font-mono">
+                                        {sign === 1 ? "+" : sign === -1 ? "−" : "0 / ?"}
+                                    </td>
+                                </tr>
+                            );
+                        })}
                     </tbody>
                 </table>
             </div>
