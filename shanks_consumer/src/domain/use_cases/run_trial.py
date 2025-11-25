@@ -15,7 +15,6 @@ from src.domain.trial_result import (
 
 from src.domain.event import EVENT_METHODS
 
-
 @lru_cache(maxsize=256)
 def cached_generate_series(
     series_type: type, x: Any, vec_size: int, t: Any, k: int
@@ -67,8 +66,9 @@ def execute_trial(
         try:
             series_candidate = series.executable()
             if not _is_series_generator(series_candidate):
-                msg = f"Series executable '{series.series_name}' did not return a valid generator"
-                raise TypeError(msg)
+                raise TypeError(
+                    f"Series executable '{series.series_name}' did not return a valid generator"
+                )
 
             vec_size = int(argument.get("vecSize", size_floor))
             vec_size = max(vec_size, size_floor)
@@ -160,7 +160,14 @@ def execute_trial(
             for m_value in m_values:
                 computed: list[ComputedTrialResult] = []
                 error: ErrorTrialResult | None = None
+
+                event_counters = {event.type: 0 for event in accel.events}
+                event_stopped = {event.type: False for event in accel.events}
+                event_blocked_completion = False
+
                 for n_value in n_values:
+                    if event_blocked_completion:
+                        break
                     try:
                         if n_value <= 0:
                             raise ValueError("n must be positive")
@@ -173,17 +180,36 @@ def execute_trial(
                         series_term = series_result.an[index]
                         accel_value = accel_instance(n_value, m_value, series_result)
 
-                        events = list(
-                            filter(
-                                None,
-                                [
-                                    EVENT_METHODS.get(
-                                        event.type, lambda _: None
-                                    )(computed)
-                                    for event in accel.events
-                                ],
-                            )
-                        )
+                        current_events = []
+                        for event in accel.events:
+                            event_type = event.type
+
+                            if event_stopped[event_type]:
+                                continue
+
+                            event_result = EVENT_METHODS.get(
+                                event_type, lambda _: None
+                            )(computed)
+                            if event_result is not None:
+                                current_events.append(event_result)
+                                event_counters[event_type] += 1
+
+                                if event.log_action_capacity and (
+                                    event_counters[event_type]
+                                    >= event.log_action_capacity
+                                    or event.log_action_capacity == -1
+                                ):
+                                    event_stopped[event_type] = True
+
+                                if (
+                                    event.stop_action_limit
+                                    and event_counters[event_type]
+                                    >= event.stop_action_limit
+                                    and event.stop_action_limit != -1
+                                ):
+                                    event_blocked_completion = True
+                                    break
+
                         computed.append(
                             ComputedTrialResult(
                                 n=n_value,
@@ -196,7 +222,7 @@ def execute_trial(
                                 accel_value_deviation=abs(
                                     accel_value - series_lim
                                 ),
-                                events=events,  # type: ignore
+                                events=current_events,
                             )
                         )
                     except Exception as exc:

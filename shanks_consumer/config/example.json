@@ -31,7 +31,7 @@
       "events": [
         {
           "type": "slow_accel",
-          "log_action_capacity": 10
+          "log_action_capacity": -1
         },
         {
           "type": "sign_changed",
@@ -39,11 +39,16 @@
         },
         {
           "type": "monotone",
-          "stop_action_limit": 3
+          "log_action_capacity": -1
         },
         {
           "type": "divergent",
-          "stop_action_limit": 0
+          "log_action_capacity": -1,
+          "stop_action_limit": 2
+        },
+        {
+          "type": "second_diff",
+          "log_action_capacity": -1
         }
       ]
     },  
