@@ -16,7 +16,6 @@
 #include "../custom_concepts.hpp"
 #include "../noise/noise_generator.hpp"
 #include "../console/console_IO.hpp"
-#include "../console/console_effects.hpp"
 #include "../interfaces/transformations_info.hpp"
 #include "../interfaces/series_info.hpp"
 #include "../interfaces/test_funcs_info.hpp"
@@ -126,7 +125,6 @@ inline std::vector<std::unique_ptr<ISeriesInfo>> create_series_info() {
 		std::make_unique<X_min_sqrt_xSeriesInfo>(),
 		std::make_unique<XSeriesInfo>(),
 		std::make_unique<Xsquareplus3_div_xsquareplus2multix_minus_1SeriesInfo>(),
-		std::make_unique<X_twelfth_x2_pi2SeriesInfo>(),
 		std::make_unique<X_twoSeriesInfo>(),
 		std::make_unique<X_two_throught_squaresSeriesInfo>(),
 	};
@@ -471,14 +469,17 @@ inline void main_testing_function()
 		case series_id_t::bin_series_id:{
 			std::cout << "for bin series must initialise variable alpha\n";
 			tParam = console_IO<T>::input("alpha");
+			break;
 		}
 		case series_id_t::incomplete_Gamma_func_series_id:{
 			std::cout << "for incomplete Gamma function must initialise variable alpha\n";
 			tParam = console_IO<T>::input("alpha");
+			break;
 		}
 		case series_id_t::m_fact_1mx_mp1_inverse_series_id:{
 			std::cout << "for m factorial 1mx mp1 ... series must initialise variable alpha\n";
 			kParam = console_IO<K>::input("m");
+			break;
 		}
 	}
 

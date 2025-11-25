@@ -125,12 +125,6 @@ public:
 	std::string getName() const override;
 };
 
-class X_twelfth_x2_pi2SeriesInfo : public ISeriesInfo {
-public:
-	series_id_t getId() const override;
-	std::string getName() const override;
-};
-
 class Ln2SeriesInfo : public ISeriesInfo {
 public:
 	series_id_t getId() const override;

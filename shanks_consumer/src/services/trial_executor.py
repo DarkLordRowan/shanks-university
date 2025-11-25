@@ -79,9 +79,6 @@ class TrialExecutor:
 
         results = reduce(list.__add__, self.runner.run(trial.combinations()))
 
-        if not self.config.no_events:
-            results = [res.load_events() for res in results]
-
         self.export_results(self.serializer.to_dict(results))
 
     def __run_trials_dispose_at_completion(self, precision: PrecisionType) -> None:
@@ -99,8 +96,6 @@ class TrialExecutor:
         for result_chunk in tqdm(
             self.runner.run(combinations), total=len(combinations)
         ):
-            if not self.config.no_events:
-                result_chunk = [res.load_events() for res in result_chunk]
             self.export_results(self.serializer.to_dict(result_chunk))
 
     def run_trials(self, precision: PrecisionType):

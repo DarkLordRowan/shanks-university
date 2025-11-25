@@ -6,7 +6,7 @@
 #pragma once
 
 #include "../methods.hpp"
-#include "../series/series_base.hpp"
+#include "../series_base.hpp"
 #include "../noise/noise_generator.hpp"
 #include "../console/console_IO.hpp"
 
@@ -140,7 +140,6 @@ inline series_result<T> jitter(
 
 	switch (noise_type) {
 		case uniform:
-
 			param1 = console_IO<ParamType>::input("Lower bound");
 			param2 = console_IO<ParamType>::input("Upper bound");
 			break;
