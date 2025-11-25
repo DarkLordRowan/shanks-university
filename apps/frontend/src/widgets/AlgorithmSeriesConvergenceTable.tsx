@@ -478,85 +478,56 @@ function formatMonotonicityDescription(mon: MonotonicityType): string {
 }
 
 function getCellColorClass(side: SideType, mon: MonotonicityType, selected: boolean): string {
-    let base =
-        "border-border text-textDim transition-colors " +
-        (selected ? "ring-2 ring-accent ring-offset-1 ring-offset-surface" : "");
+    const sel = selected ? " ring-2 ring-accent ring-offset-1 ring-offset-surface" : "";
 
     if (mon === "strict_decreasing_error" || mon === "non_increasing_error") {
         if (side === "one_sided") {
-            return base + " bg-emerald-500/25 hover:bg-emerald-500/35";
+            return "border-border text-textDim bg-emerald-500/25 hover:bg-emerald-500/35" + sel;
         }
         if (side === "two_sided") {
-            return base + " bg-emerald-400/20 hover:bg-emerald-400/30";
+            return "border-border text-textDim bg-emerald-400/20 hover:bg-emerald-400/30" + sel;
         }
         if (side === "unknown") {
-            return base + " bg-emerald-400/10 hover:bg-emerald-400/20";
+            return "border-border text-textDim bg-emerald-400/10 hover:bg-emerald-400/20" + sel;
         }
         if (side === "no_limit") {
-            return (
-                "border-border/70 text-textDim/70 bg-surface/40 hover:bg-surface/50 " +
-                (selected ? " ring-2 ring-accent ring-offset-1 ring-offset-surface" : "")
-            );
+            return "border-border/70 text-textDim/70 bg-surface/40 hover:bg-surface/50" + sel;
         }
     }
 
     if (mon === "constant_error") {
         if (side === "one_sided") {
-            return base + " bg-surface/70 hover:bg-surface/60";
+            return "border-border text-textDim bg-surface/70 hover:bg-surface/60" + sel;
         }
         if (side === "two_sided") {
-            return base + " bg-surface/60 hover:bg-surface/50";
+            return "border-border text-textDim bg-surface/60 hover:bg-surface/50" + sel;
         }
-        return (
-            "border-border/70 text-textDim/70 bg-surface/50 hover:bg-surface/40 " +
-            (selected ? " ring-2 ring-accent ring-offset-1 ring-offset-surface" : "")
-        );
+        return "border-border/70 text-textDim/70 bg-surface/50 hover:bg-surface/40" + sel;
     }
 
     if (mon === "has_growth") {
         if (side === "one_sided") {
-            return (
-                "border-amber-500 text-textDim bg-amber-500/25 hover:bg-amber-500/35 " +
-                (selected ? " ring-2 ring-accent ring-offset-1 ring-offset-surface" : "")
-            );
+            return "border-amber-500 text-textDim bg-amber-500/25 hover:bg-amber-500/35" + sel;
         }
         if (side === "two_sided") {
-            return (
-                "border-red-500 text-textDim bg-red-500/30 hover:bg-red-500/40 " +
-                (selected ? " ring-2 ring-accent ring-offset-1 ring-offset-surface" : "")
-            );
+            return "border-red-500 text-textDim bg-red-500/30 hover:bg-red-500/40" + sel;
         }
         if (side === "unknown") {
-            return (
-                "border-amber-500/80 text-textDim bg-amber-500/20 hover:bg-amber-500/30 " +
-                (selected ? " ring-2 ring-accent ring-offset-1 ring-offset-surface" : "")
-            );
+            return "border-amber-500/80 text-textDim bg-amber-500/20 hover:bg-amber-500/30" + sel;
         }
         if (side === "no_limit") {
-            return (
-                "border-red-500/70 text-textDim/80 bg-red-500/20 hover:bg-red-500/30 " +
-                (selected ? " ring-2 ring-accent ring-offset-1 ring-offset-surface" : "")
-            );
+            return "border-red-500/70 text-textDim/80 bg-red-500/20 hover:bg-red-500/30" + sel;
         }
     }
 
     if (mon === "not_enough_data" || mon === "no_limit") {
         if (side === "no_limit") {
-            return (
-                "border-border/60 text-textDim/60 bg-surface/30 hover:bg-surface/40 " +
-                (selected ? " ring-2 ring-accent ring-offset-1 ring-offset-surface" : "")
-            );
+            return "border-border/60 text-textDim/60 bg-surface/30 hover:bg-surface/40" + sel;
         }
-        return (
-            "border-border/50 text-textDim/60 bg-surface/40 hover:bg-surface/50 " +
-            (selected ? " ring-2 ring-accent ring-offset-1 ring-offset-surface" : "")
-        );
+        return "border-border/50 text-textDim/60 bg-surface/40 hover:bg-surface/50" + sel;
     }
 
-    return (
-        "border-border text-textDim bg-surface/40 hover:bg-surface/50 " +
-        (selected ? " ring-2 ring-accent ring-offset-1 ring-offset-surface" : "")
-    );
+    return "border-border text-textDim bg-surface/40 hover:bg-surface/50" + sel;
 }
 
 /* ================== Детальный график ================== */
@@ -567,6 +538,9 @@ interface DetailPoint {
     valueIm: number | null;
     err: number | null;
     sign: -1 | 0 | 1 | null;
+    diffRe: number | null;
+    diffIm: number | null;
+    diffNorm: number | null;
 }
 
 interface SelectedDetail {
@@ -597,30 +571,36 @@ function ConvergenceDetailChart({ detail }: { detail: SelectedDetail }) {
     const errPoints = points.filter(
         (p) => p.err != null && Number.isFinite(p.err) && (p.err as number) >= 0
     );
+    const diffPoints = points.filter(
+        (p) => p.diffNorm != null && Number.isFinite(p.diffNorm) && (p.diffNorm as number) >= 0
+    );
 
     const hasErrorCurve = limit != null && errPoints.length > 0;
+    const hasDiffCurve = diffPoints.length > 0;
 
-    let pathD = "";
-    let minN = 0;
-    let maxN = 0;
-    let minE = 0;
-    let maxE = 0;
+    /* --- график ошибки |A_n - lim| --- */
+
+    let errPathD = "";
+    let errMinN = 0;
+    let errMaxN = 0;
+    let errMinE = 0;
+    let errMaxE = 0;
 
     if (hasErrorCurve) {
-        minN = errPoints[0].n;
-        maxN = errPoints[errPoints.length - 1].n;
+        errMinN = errPoints[0].n;
+        errMaxN = errPoints[errPoints.length - 1].n;
 
-        minE = errPoints.reduce(
+        errMinE = errPoints.reduce(
             (acc, p) => Math.min(acc, p.err as number),
             errPoints[0].err as number
         );
-        maxE = errPoints.reduce(
+        errMaxE = errPoints.reduce(
             (acc, p) => Math.max(acc, p.err as number),
             errPoints[0].err as number
         );
 
-        if (maxE === minE) {
-            maxE = minE + 1;
+        if (errMaxE === errMinE) {
+            errMaxE = errMinE + 1;
         }
 
         const width = 600;
@@ -633,9 +613,10 @@ function ConvergenceDetailChart({ detail }: { detail: SelectedDetail }) {
         const innerW = width - marginLeft - marginRight;
         const innerH = height - marginTop - marginBottom;
 
-        const xScale = (n: number) => marginLeft + (innerW * (n - minN)) / (maxN - minN || 1);
+        const xScale = (n: number) =>
+            marginLeft + (innerW * (n - errMinN)) / (errMaxN - errMinN || 1);
         const yScale = (e: number) =>
-            marginTop + innerH - (innerH * (e - minE)) / (maxE - minE || 1);
+            marginTop + innerH - (innerH * (e - errMinE)) / (errMaxE - errMinE || 1);
 
         const parts: string[] = [];
         for (let i = 0; i < errPoints.length; i++) {
@@ -644,7 +625,185 @@ function ConvergenceDetailChart({ detail }: { detail: SelectedDetail }) {
             const y = yScale(p.err as number);
             parts.push(`${i === 0 ? "M" : "L"} ${x.toFixed(2)} ${y.toFixed(2)}`);
         }
-        pathD = parts.join(" ");
+        errPathD = parts.join(" ");
+
+        const errCircles = errPoints.map((p, idx) => {
+            const x = xScale(p.n);
+            const y = yScale(p.err as number);
+            return { x, y, p, key: idx };
+        });
+
+        /* отрисовка графика с точками и tooltip через <title> */
+        var errChart = (
+            <svg
+                viewBox="0 0 600 220"
+                className="w-full rounded bg-surface/80"
+                preserveAspectRatio="none"
+            >
+                <rect x={0} y={0} width={600} height={220} className="fill-surface/80" />
+                <line
+                    x1={40}
+                    y1={20}
+                    x2={40}
+                    y2={195}
+                    className="stroke-border"
+                    strokeWidth={0.5}
+                />
+                <line
+                    x1={40}
+                    y1={195}
+                    x2={590}
+                    y2={195}
+                    className="stroke-border"
+                    strokeWidth={0.5}
+                />
+
+                <path d={errPathD} className="stroke-primary" strokeWidth={1.2} fill="none" />
+
+                {errCircles.map((c) => (
+                    <circle key={c.key} cx={c.x} cy={c.y} r={2} className="fill-primary">
+                        <title>
+                            {`n=${c.p.n}, |Aₙ − lim|≈${(c.p.err as number).toExponential(4)}`}
+                        </title>
+                    </circle>
+                ))}
+
+                <text x={320} y={210} className="fill-textDim/70 text-[9px]" textAnchor="middle">
+                    n (номер шага)
+                </text>
+                <text x={15} y={15} className="fill-textDim/70 text-[9px]" textAnchor="start">
+                    |Aₙ − lim|
+                </text>
+
+                <text x={45} y={207} className="fill-textDim/60 text-[8px]" textAnchor="start">
+                    n={errMinN}
+                </text>
+                <text x={585} y={207} className="fill-textDim/60 text-[8px]" textAnchor="end">
+                    n={errMaxN}
+                </text>
+
+                <text x={45} y={32} className="fill-textDim/60 text-[8px]" textAnchor="start">
+                    err≈{errMinE.toExponential(2)}
+                </text>
+                <text x={45} y={190} className="fill-textDim/60 text-[8px]" textAnchor="start">
+                    err≈{errMaxE.toExponential(2)}
+                </text>
+            </svg>
+        );
+    }
+
+    /* --- график разностей |A_n - A_{n-1}| --- */
+
+    let diffPathD = "";
+    let diffMinN = 0;
+    let diffMaxN = 0;
+    let diffMinD = 0;
+    let diffMaxD = 0;
+    let diffChart: React.ReactNode = null;
+
+    if (hasDiffCurve) {
+        diffMinN = diffPoints[0].n;
+        diffMaxN = diffPoints[diffPoints.length - 1].n;
+
+        diffMinD = diffPoints.reduce(
+            (acc, p) => Math.min(acc, p.diffNorm as number),
+            diffPoints[0].diffNorm as number
+        );
+        diffMaxD = diffPoints.reduce(
+            (acc, p) => Math.max(acc, p.diffNorm as number),
+            diffPoints[0].diffNorm as number
+        );
+
+        if (diffMaxD === diffMinD) {
+            diffMaxD = diffMinD + 1;
+        }
+
+        const width = 600;
+        const height = 220;
+        const marginLeft = 40;
+        const marginRight = 10;
+        const marginTop = 10;
+        const marginBottom = 25;
+
+        const innerW = width - marginLeft - marginRight;
+        const innerH = height - marginTop - marginBottom;
+
+        const xScale = (n: number) =>
+            marginLeft + (innerW * (n - diffMinN)) / (diffMaxN - diffMinN || 1);
+        const yScale = (d: number) =>
+            marginTop + innerH - (innerH * (d - diffMinD)) / (diffMaxD - diffMinD || 1);
+
+        const parts: string[] = [];
+        for (let i = 0; i < diffPoints.length; i++) {
+            const p = diffPoints[i];
+            const x = xScale(p.n);
+            const y = yScale(p.diffNorm as number);
+            parts.push(`${i === 0 ? "M" : "L"} ${x.toFixed(2)} ${y.toFixed(2)}`);
+        }
+        diffPathD = parts.join(" ");
+
+        const diffCircles = diffPoints.map((p, idx) => {
+            const x = xScale(p.n);
+            const y = yScale(p.diffNorm as number);
+            return { x, y, p, key: idx };
+        });
+
+        diffChart = (
+            <svg
+                viewBox="0 0 600 220"
+                className="w-full rounded bg-surface/80"
+                preserveAspectRatio="none"
+            >
+                <rect x={0} y={0} width={600} height={220} className="fill-surface/80" />
+                <line
+                    x1={40}
+                    y1={20}
+                    x2={40}
+                    y2={195}
+                    className="stroke-border"
+                    strokeWidth={0.5}
+                />
+                <line
+                    x1={40}
+                    y1={195}
+                    x2={590}
+                    y2={195}
+                    className="stroke-border"
+                    strokeWidth={0.5}
+                />
+
+                <path d={diffPathD} className="stroke-secondary" strokeWidth={1.2} fill="none" />
+
+                {diffCircles.map((c) => (
+                    <circle key={c.key} cx={c.x} cy={c.y} r={2} className="fill-secondary">
+                        <title>
+                            {`n=${c.p.n}, |Aₙ − Aₙ₋₁|≈${(c.p.diffNorm as number).toExponential(4)}`}
+                        </title>
+                    </circle>
+                ))}
+
+                <text x={320} y={210} className="fill-textDim/70 text-[9px]" textAnchor="middle">
+                    n (номер шага)
+                </text>
+                <text x={15} y={15} className="fill-textDim/70 text-[9px]" textAnchor="start">
+                    |Aₙ − Aₙ₋₁|
+                </text>
+
+                <text x={45} y={207} className="fill-textDim/60 text-[8px]" textAnchor="start">
+                    n={diffMinN}
+                </text>
+                <text x={585} y={207} className="fill-textDim/60 text-[8px]" textAnchor="end">
+                    n={diffMaxN}
+                </text>
+
+                <text x={45} y={32} className="fill-textDim/60 text-[8px]" textAnchor="start">
+                    Δ≈{diffMinD.toExponential(2)}
+                </text>
+                <text x={45} y={190} className="fill-textDim/60 text-[8px]" textAnchor="start">
+                    Δ≈{diffMaxD.toExponential(2)}
+                </text>
+            </svg>
+        );
     }
 
     const shortSide = formatSideShort(analysis.side);
@@ -687,96 +846,23 @@ function ConvergenceDetailChart({ detail }: { detail: SelectedDetail }) {
                 </div>
             </div>
 
+            {/* График |A_n - lim| */}
             {hasErrorCurve ? (
                 <div className="mb-3">
-                    <svg
-                        viewBox="0 0 600 220"
-                        className="w-full rounded bg-surface/80"
-                        preserveAspectRatio="none"
-                    >
-                        <rect x={0} y={0} width={600} height={220} className="fill-surface/80" />
-                        <line
-                            x1={40}
-                            y1={20}
-                            x2={40}
-                            y2={195}
-                            className="stroke-border"
-                            strokeWidth={0.5}
-                        />
-                        <line
-                            x1={40}
-                            y1={195}
-                            x2={590}
-                            y2={195}
-                            className="stroke-border"
-                            strokeWidth={0.5}
-                        />
-
-                        <path d={pathD} className="stroke-primary" strokeWidth={1.2} fill="none" />
-
-                        <text
-                            x={320}
-                            y={210}
-                            className="fill-textDim/70 text-[9px]"
-                            textAnchor="middle"
-                        >
-                            n (номер шага)
-                        </text>
-                        <text
-                            x={15}
-                            y={15}
-                            className="fill-textDim/70 text-[9px]"
-                            textAnchor="start"
-                        >
-                            |Aₙ − lim|
-                        </text>
-
-                        <text
-                            x={45}
-                            y={207}
-                            className="fill-textDim/60 text-[8px]"
-                            textAnchor="start"
-                        >
-                            n={minN}
-                        </text>
-                        <text
-                            x={585}
-                            y={207}
-                            className="fill-textDim/60 text-[8px]"
-                            textAnchor="end"
-                        >
-                            n={maxN}
-                        </text>
-
-                        <text
-                            x={45}
-                            y={32}
-                            className="fill-textDim/60 text-[8px]"
-                            textAnchor="start"
-                        >
-                            err≈{minE.toExponential(2)}
-                        </text>
-                        <text
-                            x={45}
-                            y={190}
-                            className="fill-textDim/60 text-[8px]"
-                            textAnchor="start"
-                        >
-                            err≈{maxE.toExponential(2)}
-                        </text>
-                    </svg>
+                    {errChart}
                     <div className="mt-1 text-[10px] text-textDim/70">
-                        График |Aₙ − lim| по n. Отображаются только точки, где ошибка корректно
-                        определена и конечна.
+                        График |Aₙ − lim| по n. При наведении на точки видно номер шага и значение
+                        ошибки.
                     </div>
                 </div>
             ) : (
                 <div className="mb-3 text-[11px] text-amber-300/80">
                     Невозможно построить график ошибки: нет предела или нет корректных значений |Aₙ
-                    − lim|. Ниже приведена таблица чисел.
+                    − lim|.
                 </div>
             )}
 
+            {/* Таблица значений A_n и ошибки */}
             <div className="mt-2 max-h-64 overflow-auto rounded border border-border bg-surface/60">
                 <table className="min-w-full border-collapse text-[10px]">
                     <thead className="bg-surface/80">
@@ -826,6 +912,76 @@ function ConvergenceDetailChart({ detail }: { detail: SelectedDetail }) {
                     Показаны первые 200 точек из {points.length}.
                 </div>
             )}
+
+            {/* Блок разностей A_n - A_{n-1} */}
+            <div className="mt-4 border-t border-border/60 pt-3">
+                <div className="mb-2 text-[11px] font-semibold text-textDim">
+                    Разности Aₙ − Aₙ₋₁
+                </div>
+
+                {hasDiffCurve ? (
+                    <div className="mb-3">
+                        {diffChart}
+                        <div className="mt-1 text-[10px] text-textDim/70">
+                            График |Aₙ − Aₙ₋₁| по n. При наведении на точки видно номер шага и
+                            значение разности.
+                        </div>
+                    </div>
+                ) : (
+                    <div className="mb-3 text-[11px] text-textDim/70">
+                        Недостаточно данных для построения графика разностей Aₙ − Aₙ₋₁.
+                    </div>
+                )}
+
+                <div className="mt-2 max-h-64 overflow-auto rounded border border-border bg-surface/60">
+                    <table className="min-w-full border-collapse text-[10px]">
+                        <thead className="bg-surface/80">
+                            <tr>
+                                <th className="border-b border-border px-2 py-1 text-left">n</th>
+                                <th className="border-b border-border px-2 py-1 text-left">
+                                    Re(Aₙ − Aₙ₋₁)
+                                </th>
+                                <th className="border-b border-border px-2 py-1 text-left">
+                                    Im(Aₙ − Aₙ₋₁)
+                                </th>
+                                <th className="border-b border-border px-2 py-1 text-left">
+                                    |Aₙ − Aₙ₋₁|
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {points
+                                .filter((p) => p.diffNorm != null)
+                                .slice(0, 200)
+                                .map((p) => (
+                                    <tr
+                                        key={`diff-${p.n}`}
+                                        className="odd:bg-surface/40 even:bg-surface/20"
+                                    >
+                                        <td className="border-t border-border px-2 py-1 font-mono">
+                                            {p.n}
+                                        </td>
+                                        <td className="border-t border-border px-2 py-1 font-mono">
+                                            {p.diffRe != null && Number.isFinite(p.diffRe)
+                                                ? p.diffRe.toExponential(4)
+                                                : "∅"}
+                                        </td>
+                                        <td className="border-t border-border px-2 py-1 font-mono">
+                                            {p.diffIm != null && Number.isFinite(p.diffIm)
+                                                ? p.diffIm.toExponential(4)
+                                                : "∅"}
+                                        </td>
+                                        <td className="border-t border-border px-2 py-1 font-mono">
+                                            {p.diffNorm != null && Number.isFinite(p.diffNorm)
+                                                ? p.diffNorm.toExponential(4)
+                                                : "∅"}
+                                        </td>
+                                    </tr>
+                                ))}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     );
 }
@@ -835,7 +991,6 @@ function ConvergenceDetailChart({ detail }: { detail: SelectedDetail }) {
 export interface AlgorithmSeriesConvergenceTableProps {
     experiment: Experiment | null;
     className?: string;
-    /** максимальное число рядов (колонок) на страницу */
     maxSeries?: number;
 }
 
@@ -898,13 +1053,41 @@ export const AlgorithmSeriesConvergenceTable: React.FC<AlgorithmSeriesConvergenc
         const analysis = matrix.cells[`${accelId}::${seriesId}`] ?? null;
         const limit = series?.limit ?? null;
 
+        let prevVal: { re: number | null; im: number | null } | null = null;
+
         const points: DetailPoint[] = sa
             ? getPointsSortedByN(sa).map((p) => {
                   const valueRe = p.value?.re ?? null;
                   const valueIm = p.value?.im ?? null;
                   const err = errorNorm(p.value, limit);
                   const sign = realDiffSign(p.value, limit);
-                  return { n: p.n, valueRe, valueIm, err, sign };
+
+                  let diffRe: number | null = null;
+                  let diffIm: number | null = null;
+                  let diffNorm: number | null = null;
+
+                  if (
+                      prevVal &&
+                      valueRe != null &&
+                      Number.isFinite(valueRe) &&
+                      valueIm != null &&
+                      Number.isFinite(valueIm) &&
+                      prevVal.re != null &&
+                      Number.isFinite(prevVal.re) &&
+                      prevVal.im != null &&
+                      Number.isFinite(prevVal.im)
+                  ) {
+                      const dRe = valueRe - prevVal.re;
+                      const dIm = valueIm - prevVal.im;
+                      const dn = Math.hypot(dRe, dIm);
+                      diffRe = dRe;
+                      diffIm = dIm;
+                      diffNorm = Number.isFinite(dn) ? dn : null;
+                  }
+
+                  prevVal = { re: valueRe, im: valueIm };
+
+                  return { n: p.n, valueRe, valueIm, err, sign, diffRe, diffIm, diffNorm };
               })
             : [];
 
@@ -936,7 +1119,7 @@ export const AlgorithmSeriesConvergenceTable: React.FC<AlgorithmSeriesConvergenc
         return (
             <div className={className}>
                 <div className="rounded-xl border border-border bg-panel p-4 shadow-panel">
-                    <div className="mb-2 flex items-center justify-between text-sm text-textDim">
+                    <div className="mb-2 flex items-center justify_between text-sm text-textDim">
                         <span>Подсчёт монотонности и направления...</span>
                         <span>
                             {current} / {total} ({pct}%)
@@ -1114,10 +1297,10 @@ export const AlgorithmSeriesConvergenceTable: React.FC<AlgorithmSeriesConvergenc
                                         formatMonotonicityDescription(analysis.monotonicity),
                                         analysis.signChangesCount > 0
                                             ? `Число смен знака: ${analysis.signChangesCount}, первое при n = ${analysis.firstSignChangeN}.`
-                                            : "Число смен знака не обнаружено.",
+                                            : "Смен знака A_k - lim не обнаружено.",
                                         analysis.firstGrowthN != null
                                             ? `Первый рост ошибки при n = ${analysis.firstGrowthN}.`
-                                            : "Первый рост ошибки не обнаружен или данных недостаточно.",
+                                            : "Рост ошибки |A_k - lim| не обнаружен или данных недостаточно.",
                                         `Сравнено шагов (пар): ${analysis.stepsAnalyzed}.`,
                                         "",
                                         "Нажмите по ячейке, чтобы посмотреть детальный график.",
