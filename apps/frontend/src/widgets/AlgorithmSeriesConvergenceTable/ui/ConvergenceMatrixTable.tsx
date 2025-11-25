@@ -1,11 +1,14 @@
 import React, { useEffect, useState } from "react";
-import { type ConvergenceMatrix, type SelectedCell } from "../model/types";
 import {
-    nonNullEntries,
-    formatSideShort,
+    type ConvergenceMatrix,
+    type MonotonicityType,
+    type SelectedCell,
+    type SideType,
+} from "../model/types";
+import {
     formatMonotonicityShort,
-    formatSideDescription,
-    formatMonotonicityDescription,
+    formatSideShort,
+    nonNullEntries,
 } from "../model/convergenceUtils";
 
 interface ConvergenceMatrixTableProps {
@@ -13,6 +16,11 @@ interface ConvergenceMatrixTableProps {
     maxSeries?: number;
     selectedCell: SelectedCell | null;
     onCellSelect: (cell: SelectedCell) => void;
+}
+
+/** Единый способ построить id для DOM-элемента ячейки. */
+export function getConvergenceCellDomId(accelId: string, seriesId: string): string {
+    return `conv-cell-${accelId}::${seriesId}`;
 }
 
 export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
@@ -185,30 +193,149 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
                                                 key={key}
                                                 className="border border-border px-[2px] py-[2px] text-center text-[10px] text-textDim/50"
                                             >
-                                                —
+                                                —{" "}
                                             </td>
                                         );
                                     }
 
+                                    // Вверху файла уже есть импорты. Ничего не трогаем.
+
+                                    // Внутри .map по seriesSlice, в месте, где сейчас строится title:
+
                                     const sideShort = formatSideShort(analysis.side);
                                     const monShort = formatMonotonicityShort(analysis.monotonicity);
 
-                                    const title = [
-                                        `Ряд: ${s.seriesName}, x=${s.xLabel}, prec=${s.precision}`,
-                                        `Алгоритм: ${algo.algorithmName}, m=${algo.m ?? "∅"}`,
-                                        "",
-                                        formatSideDescription(analysis.side),
-                                        formatMonotonicityDescription(analysis.monotonicity),
-                                        analysis.signChangesCount > 0
-                                            ? `Число смен знака: ${analysis.signChangesCount}, первое при n = ${analysis.firstSignChangeN}.`
-                                            : "Смен знака A_k - lim не обнаружено.",
-                                        analysis.firstGrowthN != null
-                                            ? `Первый рост ошибки при n = ${analysis.firstGrowthN}.`
-                                            : "Рост ошибки |A_k - lim| не обнаружен или данных недостаточно.",
-                                        `Сравнено шагов (пар): ${analysis.stepsAnalyzed}.`,
-                                        "",
-                                        "Нажмите по ячейке, чтобы посмотреть детальный график.",
-                                    ].join("\n");
+                                    // дополнительные поля, если они есть в анализе
+                                    type Interval = { fromN: number; toN: number };
+                                    type ExtraAnalysis = {
+                                        signChangeNs?: number[];
+                                        growthIntervals?: Interval[];
+                                        flatIntervals?: Interval[];
+                                    };
+
+                                    const extra = analysis as unknown as ExtraAnalysis;
+                                    const signChangeNs = extra.signChangeNs ?? [];
+                                    const growthIntervals = extra.growthIntervals ?? [];
+                                    const flatIntervals = extra.flatIntervals ?? [];
+
+                                    const titleLines: string[] = [];
+
+                                    // ====== Блок о ряде ======
+                                    titleLines.push("Ряд:");
+                                    titleLines.push(`  имя: ${s.seriesName}`);
+                                    titleLines.push(`  x: ${s.xLabel}`);
+                                    titleLines.push(`  точность: ${s.precision}`);
+
+                                    const sAny = s as any;
+                                    if (sAny.seriesArgs) {
+                                        const entries = nonNullEntries(
+                                            sAny.seriesArgs as Record<string, unknown>
+                                        );
+                                        if (entries.length > 0) {
+                                            titleLines.push("  параметры ряда:");
+                                            for (const [k, v] of entries.sort(([a], [b]) =>
+                                                a.localeCompare(b)
+                                            )) {
+                                                titleLines.push(`    ${k}: ${String(v)}`);
+                                            }
+                                        }
+                                    }
+
+                                    titleLines.push("");
+
+                                    // ====== Блок об алгоритме ======
+                                    titleLines.push("Алгоритм:");
+                                    titleLines.push(`  имя: ${algo.algorithmName}`);
+                                    titleLines.push(
+                                        `  m: ${algo.m != null ? String(algo.m) : "∅"}`
+                                    );
+
+                                    const algoEntries = nonNullEntries(algo.algorithmArgs);
+                                    if (algoEntries.length > 0) {
+                                        titleLines.push("  параметры алгоритма:");
+                                        for (const [k, v] of algoEntries.sort(([a], [b]) =>
+                                            a.localeCompare(b)
+                                        )) {
+                                            titleLines.push(`    ${k}: ${String(v)}`);
+                                        }
+                                    }
+                                    if (algo.argsSummary) {
+                                        titleLines.push(`  кратко: ${algo.argsSummary}`);
+                                    }
+
+                                    titleLines.push("");
+
+                                    // ====== Направление + монотонность ======
+                                    const isMono =
+                                        analysis.monotonicity === "strict_decreasing_error" ||
+                                        analysis.monotonicity === "non_increasing_error" ||
+                                        analysis.monotonicity === "constant_error";
+
+                                    const sideDescr =
+                                        analysis.side === "one_sided"
+                                            ? "одностороннее приближение"
+                                            : analysis.side === "two_sided"
+                                              ? "двустороннее приближение"
+                                              : analysis.side === "no_limit"
+                                                ? "предел не просматривается"
+                                                : "тип направления не определён";
+
+                                    const monoDescr = isMono
+                                        ? "монотонная ошибка"
+                                        : "не монотонная ошибка";
+
+                                    titleLines.push(
+                                        `Направление: ${sideDescr}; ${monoDescr} (обозначения в ячейке: ${sideShort} | ${monShort}).`
+                                    );
+
+                                    // ====== Смена знака ошибки ======
+                                    if (analysis.signChangesCount > 0) {
+                                        if (signChangeNs.length > 0) {
+                                            const intervalsStr =
+                                                formatIntervalsFromNs(signChangeNs);
+                                            titleLines.push(
+                                                `Смена знака ошибки: ${analysis.signChangesCount} раз; интервалы по n: ${intervalsStr}.`
+                                            );
+                                        } else {
+                                            titleLines.push(
+                                                `Смена знака ошибки: ${analysis.signChangesCount} раз.`
+                                            );
+                                        }
+                                    } else {
+                                        titleLines.push("Смена знака ошибки не происходит.");
+                                    }
+
+                                    // ====== Рост / неизменность ошибки по n ======
+                                    if (growthIntervals.length > 0) {
+                                        const giStr = formatIntervals(growthIntervals);
+                                        titleLines.push(`Интервалы роста ошибки по n: ${giStr}.`);
+                                    } else if (analysis.monotonicity === "has_growth") {
+                                        // рост есть, но интервалов не дали
+                                        titleLines.push(
+                                            "Ошибка местами растёт по n (интервалы не указаны)."
+                                        );
+                                    }
+
+                                    if (flatIntervals.length > 0) {
+                                        const fiStr = formatIntervals(flatIntervals);
+                                        titleLines.push(
+                                            `Интервалы, где ошибка не меняется: ${fiStr}.`
+                                        );
+                                    } else if (analysis.monotonicity === "constant_error") {
+                                        titleLines.push(
+                                            "Ошибка не меняется на всем рассмотренном диапазоне n."
+                                        );
+                                    }
+
+                                    titleLines.push(
+                                        `Число проанализированных шагов: ${analysis.stepsAnalyzed}.`
+                                    );
+                                    titleLines.push("");
+                                    titleLines.push(
+                                        "Нажмите по ячейке, чтобы посмотреть детальный график."
+                                    );
+
+                                    const title = titleLines.join("\n");
 
                                     const isSelected =
                                         selectedCell?.seriesId === s.key &&
@@ -223,9 +350,12 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
                                         isSelected
                                     );
 
+                                    const domId = getConvergenceCellDomId(algo.key, s.key);
+
                                     return (
                                         <td
                                             key={key}
+                                            id={domId}
                                             className={baseCell + " " + colorClass}
                                             title={title}
                                             onClick={() =>
@@ -255,59 +385,87 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
     );
 };
 
-function getCellColorClass(
-    side: import("../model/types").SideType,
-    mon: import("../model/types").MonotonicityType,
-    selected: boolean
-): string {
+function isMonotone(mon: MonotonicityType): boolean {
+    return (
+        mon === "strict_decreasing_error" ||
+        mon === "non_increasing_error" ||
+        mon === "constant_error"
+    );
+}
+
+function hasUsableData(mon: MonotonicityType): boolean {
+    return mon !== "not_enough_data" && mon !== "no_limit";
+}
+
+/**
+ * Цвета по правилам:
+ *  - односторонний и монотонный  → зелёный
+ *  - односторонний и немонотонный → синий
+ *  - двусторонний и монотонный   → жёлтый
+ *  - двусторонний и немонотонный → красный
+ * Остальное (unknown/no_limit/нет данных) — серые.
+ */
+function getCellColorClass(side: SideType, mon: MonotonicityType, selected: boolean): string {
     const sel = selected ? " ring-2 ring-accent ring-offset-1 ring-offset-surface" : "";
 
-    if (mon === "strict_decreasing_error" || mon === "non_increasing_error") {
-        if (side === "one_sided") {
-            return "border-border text-textDim bg-emerald-500/25 hover:bg-emerald-500/35" + sel;
-        }
-        if (side === "two_sided") {
-            return "border-border text-textDim bg-emerald-400/20 hover:bg-emerald-400/30" + sel;
-        }
-        if (side === "unknown") {
-            return "border-border text-textDim bg-emerald-400/10 hover:bg-emerald-400/20" + sel;
-        }
-        if (side === "no_limit") {
-            return "border-border/70 text-textDim/70 bg-surface/40 hover:bg-surface/50" + sel;
-        }
+    if (!hasUsableData(mon) || side === "no_limit") {
+        return "border-border/60 text-textDim/70 bg-surface/30 hover:bg-surface/40" + sel;
     }
 
-    if (mon === "constant_error") {
-        if (side === "one_sided") {
-            return "border-border text-textDim bg-surface/70 hover:bg-surface/60" + sel;
-        }
-        if (side === "two_sided") {
-            return "border-border text-textDim bg-surface/60 hover:bg-surface/50" + sel;
-        }
-        return "border-border/70 text-textDim/70 bg-surface/50 hover:bg-surface/40" + sel;
+    const mono = isMonotone(mon);
+
+    // односторонний
+    if (side === "one_sided" && mono) {
+        // зелёный
+        return "border-border text-textDim bg-emerald-500/25 hover:bg-emerald-500/35" + sel;
+    }
+    if (side === "one_sided" && !mono) {
+        // синий
+        return "border-border text-textDim bg-blue-500/25 hover:bg-blue-500/35" + sel;
     }
 
-    if (mon === "has_growth") {
-        if (side === "one_sided") {
-            return "border-amber-500 text-textDim bg-amber-500/25 hover:bg-amber-500/35" + sel;
-        }
-        if (side === "two_sided") {
-            return "border-red-500 text-textDim bg-red-500/30 hover:bg-red-500/40" + sel;
-        }
-        if (side === "unknown") {
-            return "border-amber-500/80 text-textDim bg-amber-500/20 hover:bg-amber-500/30" + sel;
-        }
-        if (side === "no_limit") {
-            return "border-red-500/70 text-textDim/80 bg-red-500/20 hover:bg-red-500/30" + sel;
-        }
+    // двусторонний
+    if (side === "two_sided" && mono) {
+        // жёлтый
+        return "border-border text-textDim bg-amber-300/35 hover:bg-amber-300/45" + sel;
+    }
+    if (side === "two_sided" && !mono) {
+        // красный
+        return "border-border text-textDim bg-red-500/30 hover:bg-red-500/40" + sel;
     }
 
-    if (mon === "not_enough_data" || mon === "no_limit") {
-        if (side === "no_limit") {
-            return "border-border/60 text-textDim/60 bg-surface/30 hover:bg-surface/40" + sel;
-        }
-        return "border-border/50 text-textDim/60 bg-surface/40 hover:bg-surface/50" + sel;
-    }
-
+    // unknown и прочий мусор — нейтральный
     return "border-border text-textDim bg-surface/40 hover:bg-surface/50" + sel;
+}
+
+type Interval = { fromN: number; toN: number };
+
+function formatIntervals(intervals: Interval[]): string {
+    if (!intervals.length) return "—";
+    return intervals
+        .map((iv) => (iv.fromN === iv.toN ? `n = ${iv.fromN}` : `n ∈ [${iv.fromN}; ${iv.toN}]`))
+        .join(", ");
+}
+
+function formatIntervalsFromNs(ns: number[]): string {
+    if (!ns.length) return "—";
+    const sorted = [...ns].sort((a, b) => a - b);
+    const intervals: Interval[] = [];
+
+    let start = sorted[0];
+    let prev = sorted[0];
+
+    for (let i = 1; i < sorted.length; i++) {
+        const cur = sorted[i];
+        if (cur === prev + 1) {
+            prev = cur;
+            continue;
+        }
+        intervals.push({ fromN: start, toN: prev });
+        start = cur;
+        prev = cur;
+    }
+    intervals.push({ fromN: start, toN: prev });
+
+    return formatIntervals(intervals);
 }

@@ -1,9 +1,9 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { useConvergenceMatrix } from "../model/useConvergenceMatrix";
 import { type SelectedCell, type SelectedDetail, type DetailPoint } from "../model/types";
 import { errorNorm, realDiffSign, getPointsSortedByN } from "../model/convergenceUtils";
 import { ConvergenceDetailChart } from "./ConvergenceDetailChart";
-import { ConvergenceMatrixTable } from "./ConvergenceMatrixTable";
+import { ConvergenceMatrixTable, getConvergenceCellDomId } from "./ConvergenceMatrixTable";
 
 export interface AlgorithmSeriesConvergenceTableProps {
     experiment: import("../model/types").Experiment | null;
@@ -23,13 +23,25 @@ export const AlgorithmSeriesConvergenceTable: React.FC<AlgorithmSeriesConvergenc
     const [selectedCell, setSelectedCell] = useState<SelectedCell | null>(null);
     const chartRef = useRef<HTMLDivElement | null>(null);
 
+    // при смене эксперимента сбрасываем выбор
     useEffect(() => {
         setSelectedCell(null);
     }, [experiment]);
 
+    // при выборе ячейки скроллим к графикам
     useEffect(() => {
         if (selectedCell && chartRef.current) {
             chartRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+    }, [selectedCell]);
+
+    // кнопка "вернуться к выбранной ячейке"
+    const scrollBackToSelectedCell = useCallback(() => {
+        if (!selectedCell) return;
+        const domId = getConvergenceCellDomId(selectedCell.accelId, selectedCell.seriesId);
+        const el = document.getElementById(domId);
+        if (el) {
+            el.scrollIntoView({ behavior: "smooth", block: "center", inline: "center" });
         }
     }, [selectedCell]);
 
@@ -38,10 +50,8 @@ export const AlgorithmSeriesConvergenceTable: React.FC<AlgorithmSeriesConvergenc
 
         const { seriesId, accelId } = selectedCell;
 
-        const series =
-            (experiment.seriesList ?? []).find((s) => s.id === seriesId) ?? null;
-        const accel =
-            (experiment.accelList ?? []).find((a) => a.id === accelId) ?? null;
+        const series = (experiment.seriesList ?? []).find((s) => s.id === seriesId) ?? null;
+        const accel = (experiment.accelList ?? []).find((a) => a.id === accelId) ?? null;
         const sa =
             (experiment.seriesAccelList ?? []).find(
                 (x) => x.series_id === seriesId && x.accel_id === accelId
@@ -128,10 +138,7 @@ export const AlgorithmSeriesConvergenceTable: React.FC<AlgorithmSeriesConvergenc
 
     if (!matrix || progress.running) {
         const { current, total } = progress;
-        const pct =
-            total > 0
-                ? Math.max(0, Math.min(100, Math.round((current / total) * 100)))
-                : 0;
+        const pct = total > 0 ? Math.max(0, Math.min(100, Math.round((current / total) * 100))) : 0;
 
         return (
             <div className={className}>
@@ -177,7 +184,18 @@ export const AlgorithmSeriesConvergenceTable: React.FC<AlgorithmSeriesConvergenc
 
             <div ref={chartRef}>
                 {selectedDetail && selectedDetail.analysis && (
-                    <ConvergenceDetailChart detail={selectedDetail} />
+                    <div className="mt-4">
+                        <div className="mb-2 flex justify-end">
+                            <button
+                                type="button"
+                                className="rounded border border-border bg-surface px-2 py-[2px] text-[10px] text-textDim hover:bg-panel"
+                                onClick={scrollBackToSelectedCell}
+                            >
+                                Вернуться к выбранной ячейке
+                            </button>
+                        </div>
+                        <ConvergenceDetailChart detail={selectedDetail} />
+                    </div>
                 )}
             </div>
         </div>
