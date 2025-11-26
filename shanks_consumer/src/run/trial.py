@@ -3,6 +3,7 @@ import logging
 import multiprocessing as mp
 import uuid
 from dataclasses import asdict, dataclass, field
+from multiprocessing import Value
 from typing import Any, Callable, Iterable, Mapping, TypeGuard
 
 from tqdm import tqdm  # type: ignore[import]
@@ -18,15 +19,12 @@ from src.run.precision import (
 
 logger = logging.getLogger(__name__)
 
-# Thread-safe counter for series IDs
-_fresh_counter = mp.Value("i", 0)
 
-
-def get_next_series_id() -> int:
+def get_next_series_id(counter: Any) -> int:
     """Get next series ID in a thread-safe manner."""
-    with _fresh_counter.get_lock():
-        current_id = _fresh_counter.value
-        _fresh_counter.value += 1
+    with counter.get_lock():
+        current_id = counter.value
+        counter.value += 1
         return current_id
 
 
@@ -227,22 +225,31 @@ def _process_combination_worker(
     args: tuple[PrecisionType, BaseSeriesParam, BaseAccelParam],
 ) -> tuple[list[SeriesRecord], list[AccelRecord]]:
     precision, series, accel = args
-    return execute_series_accels(precision, series, [accel])
+    return execute_series_accels(precision, series, [accel], _global_counter)
+
+
+# Global variable for shared counter in multiprocessing
+_global_counter = None
+
+
+def _init_worker(counter: Any):
+    global _global_counter
+    _global_counter = counter
 
 
 def _process_series_worker(
     args: tuple[PrecisionType, BaseSeriesParam, list[BaseAccelParam]],
 ) -> tuple[list[SeriesRecord], list[AccelRecord]]:
     precision, series, accel_params = args
-    return execute_series_accels(precision, series, accel_params)
+    return execute_series_accels(precision, series, accel_params, _global_counter)
 
 
 def execute_series_accels(
     precision: PrecisionType,
     series: BaseSeriesParam,
     related_accel: list[BaseAccelParam],
+    counter: Any,
 ) -> tuple[list[SeriesRecord], list[AccelRecord]]:
-    global _fresh
     series_records, accel_records = [], []
     for series_argument_list in itertools.product(*series.arguments.values()):
         source_arguments = {
@@ -288,7 +295,7 @@ def execute_series_accels(
             )
             series_limit = series_candidate.get_sum()
 
-            series_id = get_next_series_id()
+            series_id = get_next_series_id(counter)
 
             series_records.append(
                 SeriesRecord(
@@ -312,7 +319,7 @@ def execute_series_accels(
 
         except Exception as exc:
             # TODO: NO NOTIFICATION OF ERRORS!
-            pass
+            logger.error(f"Couldn't run series {series.series_name}: {exc}")
             # print("Couldn't run:" + str(series))
             # print(exc)
 
@@ -332,24 +339,29 @@ class ComplexTrial:
 
     def execute(self) -> Iterable[tuple[list[SeriesRecord], list[AccelRecord]]]:
         if self.process_count > 1:
+            # Initialize shared counter for multiprocessing
+            counter = mp.Value("i", 0)
             # Use multiprocessing
-            with mp.Pool(self.process_count) as pool:
+            with mp.Pool(
+                self.process_count, initializer=_init_worker, initargs=(counter,)
+            ) as pool:
                 for result in tqdm(
                     pool.imap_unordered(
                         _process_series_worker,
-                        [
+                        (
                             (self.precision, series, self.accel_params)
                             for series in self.series_params
-                        ],
+                        ),
                     ),
                     total=len(self.series_params),
                     desc="Processing series",
                 ):
                     yield result
         else:
+            counter = mp.Value("i", 0)  # Local counter for single process
             # Single process with progress bar
             for series in tqdm(self.series_params, desc="Processing series"):
                 series_records, accel_records = execute_series_accels(
-                    self.precision, series, self.accel_params
+                    self.precision, series, self.accel_params, counter
                 )
                 yield series_records, accel_records
