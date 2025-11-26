@@ -15,9 +15,9 @@ add_executable(shanks_transformation
     ${CMAKE_SOURCE_DIR}/src/interfaces/transformations_info.cpp
     ${CMAKE_SOURCE_DIR}/src/main.cpp
 )
-add_library(GSL SHARED IMPORTED)
-find_package(GSL REQUIRED)
-target_link_libraries(shanks_transformation GSL::gsl GSL::gslcblas)
+#add_library(GSL SHARED IMPORTED)
+#find_package(GSL REQUIRED)
+#target_link_libraries(shanks_transformation GSL::gsl GSL::gslcblas)
 
 
 
@@ -45,5 +45,5 @@ file(GLOB_RECURSE TEST_SOURCES CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/tes
 add_executable(all_tests ${TEST_SOURCES})
 target_include_directories(all_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/methods)
 target_link_libraries(all_tests PRIVATE GTest::gtest_main)
-target_link_libraries(all_tests PRIVATE GSL::gsl GSL::gslcblas)
+#target_link_libraries(all_tests PRIVATE GSL::gsl GSL::gslcblas)
 gtest_discover_tests(all_tests)

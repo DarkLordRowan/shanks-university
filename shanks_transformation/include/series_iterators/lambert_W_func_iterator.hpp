@@ -3,7 +3,7 @@
 #pragma once
 
 #include "series_base_iterator.hpp"
-#include <gsl/gsl_sf_lambert.h>
+//#include <gsl/gsl_sf_lambert.h>
 #ifndef INC_FPRECISION
     #include "libs/arbitrary_arithmetics/fprecision.h"
 #endif
@@ -20,15 +20,16 @@ public:
 	lambert_W_func_iterator() : series_base_iterator<T, K>() {}
 
 	T sum() const override{
-		if constexpr (std::is_floating_point<T>::value){
-			return static_cast<T>(gsl_sf_lambert_W0(static_cast<double>(this->x)));
-		}
+		//if constexpr (std::is_floating_point<T>::value){
+		//	return static_cast<T>(gsl_sf_lambert_W0(static_cast<double>(this->x)));
+		//}
 		#ifdef INC_FPRECISION
-		else if constexpr (std::is_same<T, float_precision>::value){
+		//else 
+		if constexpr (std::is_same<T, float_precision>::value){
 			return lambertW0(this->x);
-		}
+		} else
 		#endif
-		else return static_cast<T>(0);
+		return static_cast<T>(0);
 
 	}
 	
