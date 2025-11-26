@@ -3,7 +3,7 @@
 #pragma once
 
 #include "series_base_iterator.hpp"
-#include <gsl/gsl_sf_gamma.h>
+//#include <gsl/gsl_sf_gamma.h>
 
 /**
 * @brief Maclaurin series of -0.5 log(2-2cos(x))function
@@ -20,14 +20,11 @@ public:
 
 	T sum() const override{
 
-		using std::log;
-		using std::cos;
-
-		if constexpr (std::is_floating_point<T>::value){
-			return std::tgamma(this->alpha) - static_cast<T>(gsl_sf_gamma_inc(static_cast<double>(alpha), static_cast<double>(this->x)));
-		} else {
+		//if constexpr (std::is_floating_point<T>::value){
+		//	return std::tgamma(this->alpha) - static_cast<T>(gsl_sf_gamma_inc(static_cast<double>(alpha), static_cast<double>(this->x)));
+		//} else {
 			return static_cast<T>(0);
-		}
+		//}
 
 	}
 	
