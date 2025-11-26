@@ -128,6 +128,7 @@ export function analyzeSeriesAccelConvergence(
             signChangesCount: 0,
             firstSignChangeN: null,
             firstGrowthN: null,
+            growthViolationsCount: 0,
             stepsAnalyzed: 0,
         };
     }
@@ -148,11 +149,15 @@ export function analyzeSeriesAccelConvergence(
 
     let stepsAnalyzed = 0;
 
+    // новое: число всех ростов ошибки
+    let growthViolationsCount = 0;
+
     for (const p of points) {
         const value = p.value;
         const err = errorNorm(value, limit);
         const sgn = realDiffSign(value, limit);
 
+        // анализ знака
         if (sgn !== null && sgn !== 0) {
             if (prevSign === null) {
                 prevSign = sgn;
@@ -165,10 +170,15 @@ export function analyzeSeriesAccelConvergence(
             }
         }
 
+        // анализ монотонности ошибки
         if (err !== null) {
             if (prevErr !== null) {
                 stepsAnalyzed += 1;
+
                 if (err > prevErr + EPS) {
+                    // рост ошибки
+                    growthViolationsCount += 1;
+
                     if (!hasGrowth) {
                         hasGrowth = true;
                         firstGrowthN = p.n;
@@ -216,6 +226,7 @@ export function analyzeSeriesAccelConvergence(
         signChangesCount,
         firstSignChangeN,
         firstGrowthN,
+        growthViolationsCount,
         stepsAnalyzed,
     };
 }
