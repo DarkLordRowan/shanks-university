@@ -1,6 +1,6 @@
 import logging
 import sys
-
+from functools import wraps
 
 class ColoredFormatter(logging.Formatter):
     COLORS = {
@@ -51,3 +51,40 @@ def setup_logging(verbose: int, use_colors: bool = True):
     root_logger.addHandler(handler)
 
     return root_logger
+
+
+def logged_debug(logger_name=None):
+
+    def decorator(func):
+        logger = logging.getLogger(logger_name or func.__module__)
+
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            logger.debug(
+                "Calling %s with args=%s, kwargs=%s",
+                func.__name__,
+                args,
+                kwargs,
+            )
+            try:
+                result = func(*args, **kwargs)
+
+                logger.debug(
+                    "Function %s{func.__name__} returned %s ",
+                    func.__name__,
+                    result,
+                )
+                return result
+
+            except Exception as e:
+                logger.debug(
+                    "Function %s raised %s: %s",
+                    func.__name__,
+                    type(e).__name__,
+                    e,
+                )
+                raise
+
+        return wrapper
+
+    return decorator

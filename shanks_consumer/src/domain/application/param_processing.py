@@ -19,18 +19,18 @@ def ensure_number(x: Any) -> Any:
         return x
 
 
-def generate_range(start: float, stop: float, step: float):
+def generate_range(start: float, stop: float, step: float) -> Iterable[float]:
     if step == 0:
         raise ValueError("step cannot be zero")
     count = int((stop - start) / step)
-    return [start + i * step for i in range(count)]
+    return (start + i * step for i in range(count))
 
 
 def autowrap(value: Any):
     if value is None:
         return []
     if isinstance(value, dict) and {"start", "stop", "step"} <= value.keys():
-        return generate_range(
+        return range(
             ensure_number(value["start"]),
             ensure_number(value["stop"]),
             ensure_number(value["step"]),
