@@ -130,6 +130,8 @@ export function analyzeSeriesAccelConvergence(
             firstGrowthN: null,
             growthViolationsCount: 0,
             stepsAnalyzed: 0,
+            signChangeNs: [],
+            growthNs: [],
         };
     }
 
@@ -148,8 +150,6 @@ export function analyzeSeriesAccelConvergence(
     let hasEqual = false;
 
     let stepsAnalyzed = 0;
-
-    // новое: число всех ростов ошибки
     let growthViolationsCount = 0;
 
     const signChangeNs: number[] = [];
@@ -207,7 +207,6 @@ export function analyzeSeriesAccelConvergence(
     }
 
     let monotonicity: MonotonicityType;
-
     if (stepsAnalyzed === 0) {
         monotonicity = "not_enough_data";
     } else if (hasGrowth) {
