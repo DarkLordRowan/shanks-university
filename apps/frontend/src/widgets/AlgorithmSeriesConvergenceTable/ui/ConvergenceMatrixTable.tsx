@@ -367,7 +367,7 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
                                         `Алгоритм: ${algo.algorithmName}` +
                                             (algo.m != null ? `, m=${algo.m}` : "")
                                     );
-                                    titleLines.push("");
+                                    titleLines.push("Аргументы алгоритма:");
 
                                     // Конфигурация алгоритма (кратко)
                                     const algoEntries = nonNullEntries(algo.algorithmArgs);
@@ -386,20 +386,29 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
                                     }
 
                                     // Итоговая классификация
-                                    titleLines.push(`Класс: side=${sideShort}, mono=${monShort}`);
+                                    const classDescr = describeClass(effectiveSide, effectiveMon);
+                                    titleLines.push(`Класс: ${classDescr}`);
 
-                                    // Знаковые эффекты
+                                    const signNsText =
+                                        analysis.signChangeNs && analysis.signChangeNs.length > 0
+                                            ? formatIntervals(analysis.signChangeNs)
+                                            : analysis.firstSignChangeN != null
+                                              ? String(analysis.firstSignChangeN)
+                                              : "—";
+
+                                    const growthNsText =
+                                        analysis.growthNs && analysis.growthNs.length > 0
+                                            ? formatIntervals(analysis.growthNs)
+                                            : analysis.firstGrowthN != null
+                                              ? String(analysis.firstGrowthN)
+                                              : "—";
+
                                     titleLines.push(
-                                        `Знак ошибки: смен ${analysis.signChangesCount}, n: ${formatIntervals(
-                                            analysis.signChangeNs ?? []
-                                        )}`
+                                        `Число смен знака: ${analysis.signChangesCount}, ns: ${signNsText}`
                                     );
 
-                                    // Рост ошибки
                                     titleLines.push(
-                                        `Рост |Aₙ−lim|: случаев ${analysis.growthViolationsCount}, n: ${formatIntervals(
-                                            analysis.growthNs ?? []
-                                        )}`
+                                        `Число роста |Aₙ−lim|: ${analysis.growthViolationsCount}, ns: ${growthNsText}`
                                     );
 
                                     // Объём данных
@@ -459,14 +468,6 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
         </>
     );
 };
-
-function isMonotone(mon: MonotonicityType): boolean {
-    return (
-        mon === "strict_decreasing_error" ||
-        mon === "non_increasing_error" ||
-        mon === "constant_error"
-    );
-}
 
 /**
  * Цвета по правилам:
@@ -531,4 +532,26 @@ function formatIntervals(ns: number[], maxRanges = 5): string {
     }
 
     return parts.join(", ");
+}
+
+function isMonotone(mon: MonotonicityType): boolean {
+    return (
+        mon === "strict_decreasing_error" ||
+        mon === "non_increasing_error" ||
+        mon === "constant_error"
+    );
+}
+
+function describeClass(side: SideType, mon: MonotonicityType): string {
+    const mono = isMonotone(mon);
+
+    if (side === "one_sided" && mono) return "односторонний и монотонный";
+    if (side === "one_sided" && !mono) return "односторонний и немонотонный";
+    if (side === "two_sided" && mono) return "двусторонний и монотонный";
+    if (side === "two_sided" && !mono) return "двусторонний и немонотонный";
+
+    if (side === "no_limit") return "предел не просматривается";
+    if (mon === "not_enough_data") return "недостаточно данных по ошибке";
+
+    return "тип не определён";
 }
