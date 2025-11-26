@@ -30,7 +30,7 @@ pybind11_add_module(pyshanks py.cpp)
 find_package(PkgConfig REQUIRED)
 #pkg_check_modules(GSL REQUIRED gsl)
 target_link_libraries(pyshanks PRIVATE ${GSL_LIBRARIES})
-target_include_directories(pyshanks PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ${GSL_INCLUDE_DIRS})
+#target_include_directories(pyshanks PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ${GSL_INCLUDE_DIRS})
 set_target_properties(pyshanks PROPERTIES PREFIX "")
 
 # -------------------------

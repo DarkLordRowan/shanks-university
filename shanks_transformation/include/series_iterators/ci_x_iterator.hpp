@@ -4,7 +4,9 @@
 #pragma once
 
 #include "series_base_iterator.hpp"
+#ifdef INCLUDE_GSL_LIB
 //#include <gsl/gsl_sf.h>
+#endif
 #include <numbers>
 
 /**
@@ -19,14 +21,17 @@ public:
 	ci_x_iterator() : series_base_iterator<T, K>() {}
 
 	T sum() const override{
-
-		//if constexpr (std::is_floating_point<T>::value){
-		//	return static_cast<T>(gsl_sf_Ci(static_cast<double>(this->x)));
-		//} else if constexpr (std::is_same<T, float_precision>::value){
-		//	return float_precision(gsl_sf_Ci(static_cast<double>(this->x)), this->x.precision());
-		//} else {
+		#ifdef INCLUDE_GSL_LIB
+		if constexpr (std::is_floating_point<T>::value){
+			return static_cast<T>(gsl_sf_Ci(static_cast<double>(this->x)));
+		} else if constexpr (std::is_same<T, float_precision>::value){
+			return float_precision(gsl_sf_Ci(static_cast<double>(this->x)), this->x.precision());
+		} else {
 			return static_cast<T>(0);
-		//}
+		}
+		#else
+		return static_cast<T>(0);
+		#endif
 	}
 	
 	bool check_validity() const override {

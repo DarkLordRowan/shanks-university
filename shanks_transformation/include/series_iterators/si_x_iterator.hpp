@@ -4,7 +4,9 @@
 #pragma once
 
 #include "series_base_iterator.hpp"
+#ifdef INCLUDE_GSL_LIB
 //#include <gsl/gsl_sf.h>
+#endif
 
 /**
 * @brief Maclaurin series of si_x(x) function
@@ -18,16 +20,16 @@ public:
 	si_x_iterator() : series_base_iterator<T, K>() {}
 
 	T sum() const override{
-
-		//if constexpr (std::is_floating_point<T>::value){
-		//	return static_cast<T>(gsl_sf_Si(static_cast<double>(this->x)));
-		//} 
-		//#ifdef INC_FPRECISION
-		//else if constexpr (std::is_same<T, float_precision>::value){
-		//	return float_precision(gsl_sf_Si(static_cast<double>(this->x)), this->x.precision());
-		//} 
-		//#endif
-		//else return static_cast<T>(0);
+		#ifdef INCLUDE_GSL_LIB
+		if constexpr (std::is_floating_point<T>::value){
+			return static_cast<T>(gsl_sf_Si(static_cast<double>(this->x)));
+		} 
+		#ifdef INC_FPRECISION
+		else if constexpr (std::is_same<T, float_precision>::value){
+			return float_precision(gsl_sf_Si(static_cast<double>(this->x)), this->x.precision());
+		} else
+		#endif
+		#endif
 		return static_cast<T>(0);
 	}
 	
