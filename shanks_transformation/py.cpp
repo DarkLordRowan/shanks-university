@@ -3,6 +3,7 @@
  * @brief pybind11 bindings with support for double and arbitrary-precision float_precision
  */
 
+#include <gsl/gsl_errno.h>
 #include <pybind11/operators.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
@@ -309,6 +310,9 @@ void bind_complex_num(py::module_& m, const char* pyname) {
 }
 
 PYBIND11_MODULE(pyshanks, m) {
+
+    gsl_set_error_handler_off();
+
     m.doc() = "pybind11: polymorphic series (double + float_precision), helper-organized, no-arg constructors, backward-compatible";
 
     py::enum_<remainder_type>(m, "RemainderType")

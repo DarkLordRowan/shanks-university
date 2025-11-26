@@ -1,7 +1,7 @@
 {
   "verbose": 3,
 
-  "series_json": "config/example.json",
+  "series_json": "config/big_boy.json",
   "series_csv": "config/example_series.csv",
   "accel_json": "config/big_boy.json",
 
@@ -11,14 +11,14 @@
   "results_csv": "output/results.csv",
   "results_parquet": "output/results.parquet",
 
-  "trial_process_count": 8,
+  "trial_process_count": 12,
   "trial_task_timeout": 5,
   "trial_result_view": "full",
-  "trial_memory_efficient": true,
+  "trial_memory_efficient": false,
 
   "precisions": ["F32"],
 
-  "output_formats": ["json"],
+  "output_formats": ["mongodb"],
 
   "output": {
     "parquet_collection": "trial_results"
