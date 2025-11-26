@@ -6,8 +6,14 @@ import { ErrorMatrixTable } from "@/widgets/ErrorMatrixTable";
 import { AlgorithmSeriesDiffHeatmap } from "@/widgets/AlgorithmSeriesDiffHeatmap";
 import { AlgorithmSeriesErrorMatrix } from "@/widgets/AlgorithmSeriesErrorMatrix";
 import { AlgorithmSeriesConvergenceTable } from "@/widgets/AlgorithmSeriesConvergenceTable";
+import { AlgoRankingTable } from "@/widgets/AlgoRankingTable.tsx";
 
-type ViewKey = "error-matrix" | "series-diff" | "series-error" | "series-convergence";
+type ViewKey =
+    | "error-matrix"
+    | "series-diff"
+    | "series-error"
+    | "series-convergence"
+    | "algo-ranking";
 
 interface ViewButtonProps {
     active: boolean;
@@ -62,6 +68,10 @@ function ViewToggle(props: ViewToggleProps) {
             >
                 Монотонность и направление
             </ViewButton>
+
+            <ViewButton active={value === "algo-ranking"} onClick={() => onChange("algo-ranking")}>
+                Ранги алгоритмов
+            </ViewButton>
         </div>
     );
 }
@@ -95,6 +105,8 @@ export function ExperimentViewSwitcher(props: ExperimentViewSwitcherProps) {
                     {view === "series-convergence" && (
                         <AlgorithmSeriesConvergenceTable experiment={experiment} maxSeries={40} />
                     )}
+
+                    {view === "algo-ranking" && <AlgoRankingTable experiment={experiment} />}
                 </div>
             )}
         </div>

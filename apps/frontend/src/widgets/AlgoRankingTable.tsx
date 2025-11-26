@@ -19,13 +19,13 @@ interface AlgoStats {
 
     seriesCount: number;
     bestDeviations: number[];
-    stepsToTol: number[];      // Infinity, если не достигли
+    stepsToTol: number[]; // Infinity, если не достигли
     reachedTolCount: number;
 
     avgBestDeviation: number;
     medianBestDeviation: number;
-    fracReachedTol: number;    // [0,1]
-    avgStepsToTol: number;     // только по тем, кто достиг; если никто — Infinity
+    fracReachedTol: number; // [0,1]
+    avgStepsToTol: number; // только по тем, кто достиг; если никто — Infinity
 
     rankPrecision: number;
     rankSpeed: number;
@@ -60,7 +60,7 @@ type SortDir = "asc" | "desc";
 function makeAlgoKey(
     algorithmName: string,
     m: number | null,
-    args: AccelArgs | null | undefined,
+    args: AccelArgs | null | undefined
 ): AlgoKey {
     const base = `${algorithmName}|m=${m ?? "null"}`;
     if (!args) return base;
@@ -71,9 +71,7 @@ function makeAlgoKey(
 
     if (argEntries.length === 0) return base;
 
-    const suffix = argEntries
-        .map(([k, v]) => `${k}=${v}`)
-        .join(";");
+    const suffix = argEntries.map(([k, v]) => `${k}=${v}`).join(";");
     return `${base}|${suffix}`;
 }
 
@@ -130,18 +128,14 @@ function formatSteps(n: number): string {
 function buildAlgoStatsFromExperiment(
     experiment: Experiment | null,
     epsilon: number,
-    precisionFilter: string | null,
+    precisionFilter: string | null
 ): AlgoStats[] {
     if (!experiment || !experiment.seriesAccelList || experiment.seriesAccelList.length === 0) {
         return [];
     }
 
-    const seriesById = new Map(
-        (experiment.seriesList ?? []).map((s) => [s.id, s]),
-    );
-    const accelById = new Map(
-        (experiment.accelList ?? []).map((a) => [a.id, a]),
-    );
+    const seriesById = new Map((experiment.seriesList ?? []).map((s) => [s.id, s]));
+    const accelById = new Map((experiment.accelList ?? []).map((a) => [a.id, a]));
 
     const byAlgo = new Map<AlgoKey, AlgoStats>();
 
@@ -255,25 +249,19 @@ function buildAlgoStatsFromExperiment(
     if (!list.length) return list;
 
     // ранги по точности (меньше средняя лучшая ошибка → лучше)
-    const byPrecision = [...list].sort(
-        (a, b) => a.avgBestDeviation - b.avgBestDeviation,
-    );
+    const byPrecision = [...list].sort((a, b) => a.avgBestDeviation - b.avgBestDeviation);
     byPrecision.forEach((s, idx) => {
         s.rankPrecision = idx + 1;
     });
 
     // ранги по скорости (меньше шаг до ε → лучше)
-    const bySpeed = [...list].sort(
-        (a, b) => a.avgStepsToTol - b.avgStepsToTol,
-    );
+    const bySpeed = [...list].sort((a, b) => a.avgStepsToTol - b.avgStepsToTol);
     bySpeed.forEach((s, idx) => {
         s.rankSpeed = idx + 1;
     });
 
     // ранги по стабильности (больше доля достигших ε → лучше)
-    const byStability = [...list].sort(
-        (a, b) => b.fracReachedTol - a.fracReachedTol,
-    );
+    const byStability = [...list].sort((a, b) => b.fracReachedTol - a.fracReachedTol);
     byStability.forEach((s, idx) => {
         s.rankStability = idx + 1;
     });
@@ -294,17 +282,9 @@ function buildAlgoStatsFromExperiment(
     return list;
 }
 
-function renderSortIcon(
-    columnKey: SortKey,
-    sortKey: SortKey,
-    sortDir: SortDir,
-): React.ReactNode {
+function renderSortIcon(columnKey: SortKey, sortKey: SortKey, sortDir: SortDir): React.ReactNode {
     if (columnKey !== sortKey) return null;
-    return (
-        <span className="ml-1 text-[9px]">
-            {sortDir === "asc" ? "▲" : "▼"}
-        </span>
-    );
+    return <span className="ml-1 text-[9px]">{sortDir === "asc" ? "▲" : "▼"}</span>;
 }
 
 function compareValues(aVal: unknown, bVal: unknown, dir: SortDir): number {
@@ -315,18 +295,8 @@ function compareValues(aVal: unknown, bVal: unknown, dir: SortDir): number {
     }
 
     // числа / null / undefined
-    const aNum =
-        typeof aVal === "number"
-            ? aVal
-            : aVal == null
-                ? Number.POSITIVE_INFINITY
-                : 0;
-    const bNum =
-        typeof bVal === "number"
-            ? bVal
-            : bVal == null
-                ? Number.POSITIVE_INFINITY
-                : 0;
+    const aNum = typeof aVal === "number" ? aVal : aVal == null ? Number.POSITIVE_INFINITY : 0;
+    const bNum = typeof bVal === "number" ? bVal : bVal == null ? Number.POSITIVE_INFINITY : 0;
 
     if (aNum === bNum) return 0;
     if (dir === "asc") {
@@ -335,11 +305,11 @@ function compareValues(aVal: unknown, bVal: unknown, dir: SortDir): number {
     return aNum > bNum ? -1 : 1;
 }
 
-export const AlgoRankingTable: React.FC<AlgoRankingTableProps> = ({
-                                                                      experiment,
-                                                                      epsilon = 1e-6,
-                                                                      className,
-                                                                  }) => {
+export const AlgoRankingTable: React.FC<AlgoRankingTableProps> = ({ experiment, className }) => {
+    const [epsilonExp, setEpsilonExp] = useState(-6);
+
+    const epsilon = useMemo(() => Math.pow(10, epsilonExp), [epsilonExp]);
+
     /** null = все precision, строка = фильтр по series.precision */
     const [precisionFilter, setPrecisionFilter] = useState<string | null>(null);
 
@@ -362,7 +332,7 @@ export const AlgoRankingTable: React.FC<AlgoRankingTableProps> = ({
 
     const stats = useMemo(
         () => buildAlgoStatsFromExperiment(experiment, epsilon, precisionFilter),
-        [experiment, epsilon, precisionFilter],
+        [experiment, epsilon, precisionFilter]
     );
 
     const [sortKey, setSortKey] = useState<SortKey>("totalRankScore");
@@ -373,7 +343,7 @@ export const AlgoRankingTable: React.FC<AlgoRankingTableProps> = ({
             stats.length
                 ? Math.min(...stats.map((s) => s.totalRankScore))
                 : Number.POSITIVE_INFINITY,
-        [stats],
+        [stats]
     );
 
     const sortedStats = useMemo(() => {
@@ -410,7 +380,8 @@ export const AlgoRankingTable: React.FC<AlgoRankingTableProps> = ({
             <div className={className}>
                 <div className="text-sm text-textDim/80">
                     Не удалось построить статистику по алгоритмам
-                    {precisionFilter ? ` (precision=${precisionFilter})` : ""}: нет валидных рядов с deviation.
+                    {precisionFilter ? ` (precision=${precisionFilter})` : ""}: нет валидных рядов с
+                    deviation.
                 </div>
             </div>
         );
@@ -418,20 +389,43 @@ export const AlgoRankingTable: React.FC<AlgoRankingTableProps> = ({
 
     return (
         <div className={className}>
+            <div className="flex items-center gap-4 text-xs text-textDim">
+                <div className="flex flex-col gap-1">
+                    <label className="font-medium text-text">Порог точности ε</label>
+                    <div className="flex items-baseline gap-2 font-mono">
+                        <span>
+                            ε = 10
+                            <sup>{epsilonExp}</sup>
+                        </span>
+                        <span className="text-textDim/80">≈ {epsilon.toExponential(2)}</span>
+                    </div>
+                </div>
+
+                <div className="flex-1">
+                    <input
+                        type="range"
+                        min={-100}
+                        max={-1}
+                        step={1}
+                        value={epsilonExp}
+                        onChange={(e) => setEpsilonExp(parseInt(e.target.value, 10))}
+                        className="w-full"
+                    />
+                    <div className="flex justify-between text-[10px] mt-1">
+                        <span>10^-100</span>
+                        <span>10^-50</span>
+                        <span>10^-1</span>
+                    </div>
+                </div>
+            </div>
             <div className="flex items-baseline justify-between mb-2">
-                <h2 className="text-base font-semibold text-text">
-                    Рейтинг алгоритмов
-                </h2>
+                <h2 className="text-base font-semibold text-text">Рейтинг алгоритмов</h2>
                 <div className="flex items-center gap-3 text-xs text-textDim/80">
                     <div>
-                        ε = <span className="font-mono">{epsilon}</span>{" "}
-                        по |deviation|
+                        ε = <span className="font-mono">{epsilon}</span> по |deviation|
                         {precisionFilter && (
                             <span className="ml-2">
-                                · precision ={" "}
-                                <span className="font-mono">
-                                    {precisionFilter}
-                                </span>
+                                · precision = <span className="font-mono">{precisionFilter}</span>
                             </span>
                         )}
                     </div>
@@ -442,9 +436,7 @@ export const AlgoRankingTable: React.FC<AlgoRankingTableProps> = ({
                             className="rounded border border-border bg-surface px-1 py-[1px]"
                             value={precisionFilter ?? ""}
                             onChange={(e) =>
-                                setPrecisionFilter(
-                                    e.target.value === "" ? null : e.target.value,
-                                )
+                                setPrecisionFilter(e.target.value === "" ? null : e.target.value)
                             }
                         >
                             <option value="">все</option>
@@ -461,292 +453,215 @@ export const AlgoRankingTable: React.FC<AlgoRankingTableProps> = ({
             <div className="overflow-x-auto rounded-xl border border-border/60 bg-surface/60">
                 <table className="min-w-full text-xs">
                     <thead className="bg-panel/80 text-textDim uppercase tracking-wide">
-                    <tr>
-                        <th className="px-2 py-1 text-left">
-                            <button
-                                type="button"
-                                className="flex items-center gap-1 select-none"
-                                onClick={() =>
-                                    handleSort("totalRankScore", "asc")
-                                }
-                            >
-                                Место
-                                {renderSortIcon(
-                                    "totalRankScore",
-                                    sortKey,
-                                    sortDir,
-                                )}
-                            </button>
-                        </th>
-                        <th className="px-2 py-1 text-left">
-                            <button
-                                type="button"
-                                className="flex items-center gap-1 select-none"
-                                onClick={() =>
-                                    handleSort("algorithmName", "asc")
-                                }
-                            >
-                                Алгоритм
-                                {renderSortIcon(
-                                    "algorithmName",
-                                    sortKey,
-                                    sortDir,
-                                )}
-                            </button>
-                        </th>
-                        <th className="px-2 py-1 text-left">
-                            <button
-                                type="button"
-                                className="flex items-center gap-1 select-none"
-                                onClick={() =>
-                                    handleSort("precision", "asc")
-                                }
-                            >
-                                Точность (precision)
-                                {renderSortIcon(
-                                    "precision",
-                                    sortKey,
-                                    sortDir,
-                                )}
-                            </button>
-                        </th>
-                        <th className="px-2 py-1 text-left">
-                            <button
-                                type="button"
-                                className="flex items-center gap-1 select-none"
-                                onClick={() => handleSort("m", "asc")}
-                            >
-                                m (порядок)
-                                {renderSortIcon("m", sortKey, sortDir)}
-                            </button>
-                        </th>
-                        <th className="px-2 py-1 text-left">
-                            <button
-                                type="button"
-                                className="flex items-center gap-1 select-none"
-                                onClick={() =>
-                                    handleSort("argsSummary", "asc")
-                                }
-                            >
-                                Аргументы алгоритма
-                                {renderSortIcon(
-                                    "argsSummary",
-                                    sortKey,
-                                    sortDir,
-                                )}
-                            </button>
-                        </th>
+                        <tr>
+                            <th className="px-2 py-1 text-left">
+                                <button
+                                    type="button"
+                                    className="flex items-center gap-1 select-none"
+                                    onClick={() => handleSort("totalRankScore", "asc")}
+                                >
+                                    Место
+                                    {renderSortIcon("totalRankScore", sortKey, sortDir)}
+                                </button>
+                            </th>
+                            <th className="px-2 py-1 text-left">
+                                <button
+                                    type="button"
+                                    className="flex items-center gap-1 select-none"
+                                    onClick={() => handleSort("algorithmName", "asc")}
+                                >
+                                    Алгоритм
+                                    {renderSortIcon("algorithmName", sortKey, sortDir)}
+                                </button>
+                            </th>
+                            <th className="px-2 py-1 text-left">
+                                <button
+                                    type="button"
+                                    className="flex items-center gap-1 select-none"
+                                    onClick={() => handleSort("precision", "asc")}
+                                >
+                                    Точность (precision)
+                                    {renderSortIcon("precision", sortKey, sortDir)}
+                                </button>
+                            </th>
+                            <th className="px-2 py-1 text-left">
+                                <button
+                                    type="button"
+                                    className="flex items-center gap-1 select-none"
+                                    onClick={() => handleSort("m", "asc")}
+                                >
+                                    m (порядок)
+                                    {renderSortIcon("m", sortKey, sortDir)}
+                                </button>
+                            </th>
+                            <th className="px-2 py-1 text-left">
+                                <button
+                                    type="button"
+                                    className="flex items-center gap-1 select-none"
+                                    onClick={() => handleSort("argsSummary", "asc")}
+                                >
+                                    Аргументы алгоритма
+                                    {renderSortIcon("argsSummary", sortKey, sortDir)}
+                                </button>
+                            </th>
 
-                        {/* Пара: ранг точности + значение точности */}
-                        <th className="px-2 py-1 text-right">
-                            <button
-                                type="button"
-                                className="flex w-full justify-end items-center gap-1 select-none"
-                                onClick={() =>
-                                    handleSort("rankPrecision", "asc")
-                                }
-                            >
-                                Ранг по точности
-                                {renderSortIcon(
-                                    "rankPrecision",
-                                    sortKey,
-                                    sortDir,
-                                )}
-                            </button>
-                        </th>
-                        <th className="px-2 py-1 text-right">
-                            <button
-                                type="button"
-                                className="flex w-full justify-end items-center gap-1 select-none"
-                                onClick={() =>
-                                    handleSort("avgBestDeviation", "asc")
-                                }
-                            >
-                                Средняя лучшая ошибка
-                                {renderSortIcon(
-                                    "avgBestDeviation",
-                                    sortKey,
-                                    sortDir,
-                                )}
-                            </button>
-                        </th>
+                            {/* Пара: ранг точности + значение точности */}
+                            <th className="px-2 py-1 text-right">
+                                <button
+                                    type="button"
+                                    className="flex w-full justify-end items-center gap-1 select-none"
+                                    onClick={() => handleSort("rankPrecision", "asc")}
+                                >
+                                    Ранг по точности
+                                    {renderSortIcon("rankPrecision", sortKey, sortDir)}
+                                </button>
+                            </th>
+                            <th className="px-2 py-1 text-right">
+                                <button
+                                    type="button"
+                                    className="flex w-full justify-end items-center gap-1 select-none"
+                                    onClick={() => handleSort("avgBestDeviation", "asc")}
+                                >
+                                    Средняя лучшая ошибка
+                                    {renderSortIcon("avgBestDeviation", sortKey, sortDir)}
+                                </button>
+                            </th>
 
-                        {/* Пара: ранг скорости + значение скорости */}
-                        <th className="px-2 py-1 text-right">
-                            <button
-                                type="button"
-                                className="flex w-full justify-end items-center gap-1 select-none"
-                                onClick={() =>
-                                    handleSort("rankSpeed", "asc")
-                                }
-                            >
-                                Ранг по скорости
-                                {renderSortIcon(
-                                    "rankSpeed",
-                                    sortKey,
-                                    sortDir,
-                                )}
-                            </button>
-                        </th>
-                        <th className="px-2 py-1 text-right">
-                            <button
-                                type="button"
-                                className="flex w-full justify-end items-center gap-1 select-none"
-                                onClick={() =>
-                                    handleSort("avgStepsToTol", "asc")
-                                }
-                            >
-                                Средний шаг до ε
-                                {renderSortIcon(
-                                    "avgStepsToTol",
-                                    sortKey,
-                                    sortDir,
-                                )}
-                            </button>
-                        </th>
+                            {/* Пара: ранг скорости + значение скорости */}
+                            <th className="px-2 py-1 text-right">
+                                <button
+                                    type="button"
+                                    className="flex w-full justify-end items-center gap-1 select-none"
+                                    onClick={() => handleSort("rankSpeed", "asc")}
+                                >
+                                    Ранг по скорости
+                                    {renderSortIcon("rankSpeed", sortKey, sortDir)}
+                                </button>
+                            </th>
+                            <th className="px-2 py-1 text-right">
+                                <button
+                                    type="button"
+                                    className="flex w-full justify-end items-center gap-1 select-none"
+                                    onClick={() => handleSort("avgStepsToTol", "asc")}
+                                >
+                                    Средний шаг до ε
+                                    {renderSortIcon("avgStepsToTol", sortKey, sortDir)}
+                                </button>
+                            </th>
 
-                        {/* Пара: ранг стабильности + значение стабильности */}
-                        <th className="px-2 py-1 text-right">
-                            <button
-                                type="button"
-                                className="flex w-full justify-end items-center gap-1 select-none"
-                                onClick={() =>
-                                    handleSort("rankStability", "asc")
-                                }
-                            >
-                                Ранг по стабильности
-                                {renderSortIcon(
-                                    "rankStability",
-                                    sortKey,
-                                    sortDir,
-                                )}
-                            </button>
-                        </th>
-                        <th className="px-2 py-1 text-right">
-                            <button
-                                type="button"
-                                className="flex w-full justify-end items-center gap-1 select-none"
-                                onClick={() =>
-                                    handleSort("fracReachedTol", "desc")
-                                }
-                            >
-                                Доля рядов с |deviation| ≤ ε
-                                {renderSortIcon(
-                                    "fracReachedTol",
-                                    sortKey,
-                                    sortDir,
-                                )}
-                            </button>
-                        </th>
+                            {/* Пара: ранг стабильности + значение стабильности */}
+                            <th className="px-2 py-1 text-right">
+                                <button
+                                    type="button"
+                                    className="flex w-full justify-end items-center gap-1 select-none"
+                                    onClick={() => handleSort("rankStability", "asc")}
+                                >
+                                    Ранг по стабильности
+                                    {renderSortIcon("rankStability", sortKey, sortDir)}
+                                </button>
+                            </th>
+                            <th className="px-2 py-1 text-right">
+                                <button
+                                    type="button"
+                                    className="flex w-full justify-end items-center gap-1 select-none"
+                                    onClick={() => handleSort("fracReachedTol", "desc")}
+                                >
+                                    Доля рядов с |deviation| ≤ ε
+                                    {renderSortIcon("fracReachedTol", sortKey, sortDir)}
+                                </button>
+                            </th>
 
-                        {/* Итоговая сумма рангов */}
-                        <th className="px-2 py-1 text-right">
-                            <button
-                                type="button"
-                                className="flex w-full justify-end items-center gap-1 select-none"
-                                onClick={() =>
-                                    handleSort("totalRankScore", "asc")
-                                }
-                            >
-                                Итоговый ранг
-                                {renderSortIcon(
-                                    "totalRankScore",
-                                    sortKey,
-                                    sortDir,
-                                )}
-                            </button>
-                        </th>
-                    </tr>
+                            {/* Итоговая сумма рангов */}
+                            <th className="px-2 py-1 text-right">
+                                <button
+                                    type="button"
+                                    className="flex w-full justify-end items-center gap-1 select-none"
+                                    onClick={() => handleSort("totalRankScore", "asc")}
+                                >
+                                    Итоговый ранг
+                                    {renderSortIcon("totalRankScore", sortKey, sortDir)}
+                                </button>
+                            </th>
+                        </tr>
                     </thead>
                     <tbody className="divide-y divide-border/40">
-                    {sortedStats.map((s, idx) => {
-                        const isBest = s.totalRankScore === minTotalRank;
+                        {sortedStats.map((s, idx) => {
+                            const isBest = s.totalRankScore === minTotalRank;
 
-                        const precisionGroupRankClass =
-                            "px-2 py-1 text-right font-mono text-textDim bg-primary/5";
-                        const precisionGroupValueClass =
-                            "px-2 py-1 text-right font-mono bg-primary/5";
+                            const precisionGroupRankClass =
+                                "px-2 py-1 text-right font-mono text-textDim bg-primary/5";
+                            const precisionGroupValueClass =
+                                "px-2 py-1 text-right font-mono bg-primary/5";
 
-                        const speedGroupRankClass =
-                            "px-2 py-1 text-right font-mono text-textDim bg-secondary/5";
-                        const speedGroupValueClass =
-                            "px-2 py-1 text-right font-mono bg-secondary/5";
+                            const speedGroupRankClass =
+                                "px-2 py-1 text-right font-mono text-textDim bg-secondary/5";
+                            const speedGroupValueClass =
+                                "px-2 py-1 text-right font-mono bg-secondary/5";
 
-                        const stabilityGroupRankClass =
-                            "px-2 py-1 text-right font-mono text-textDim bg-amber-900/10";
-                        const stabilityGroupValueClass =
-                            "px-2 py-1 text-right font-mono bg-amber-900/10";
+                            const stabilityGroupRankClass =
+                                "px-2 py-1 text-right font-mono text-textDim bg-amber-900/10";
+                            const stabilityGroupValueClass =
+                                "px-2 py-1 text-right font-mono bg-amber-900/10";
 
-                        const baseRowClass = isBest
-                            ? "bg-primary/5"
-                            : "bg-surface/40";
+                            const baseRowClass = isBest ? "bg-primary/5" : "bg-surface/40";
 
-                        const precisionLabel =
-                            s.precision ?? (precisionFilter ? precisionFilter : "—");
+                            const precisionLabel =
+                                s.precision ?? (precisionFilter ? precisionFilter : "—");
 
-                        return (
-                            <tr key={s.algoKey} className={baseRowClass}>
-                                <td className="px-2 py-1 text-left font-mono text-textDim">
-                                    {idx + 1}
-                                </td>
-                                <td className="px-2 py-1 text-left">
-                                    <div className="font-medium text-text">
-                                        {s.algorithmName}
-                                    </div>
-                                </td>
-                                <td className="px-2 py-1 text-left font-mono text-textDim">
-                                    {precisionLabel}
-                                </td>
-                                <td className="px-2 py-1 text-left font-mono text-textDim">
-                                    {s.m ?? "—"}
-                                </td>
-                                <td className="px-2 py-1 text-left text-textDim">
-                                    {s.argsSummary || "—"}
-                                </td>
+                            return (
+                                <tr key={s.algoKey} className={baseRowClass}>
+                                    <td className="px-2 py-1 text-left font-mono text-textDim">
+                                        {idx + 1}
+                                    </td>
+                                    <td className="px-2 py-1 text-left">
+                                        <div className="font-medium text-text">
+                                            {s.algorithmName}
+                                        </div>
+                                    </td>
+                                    <td className="px-2 py-1 text-left font-mono text-textDim">
+                                        {precisionLabel}
+                                    </td>
+                                    <td className="px-2 py-1 text-left font-mono text-textDim">
+                                        {s.m ?? "—"}
+                                    </td>
+                                    <td className="px-2 py-1 text-left text-textDim">
+                                        {s.argsSummary || "—"}
+                                    </td>
 
-                                {/* группа: точность */}
-                                <td className={precisionGroupRankClass}>
-                                    {s.rankPrecision}
-                                </td>
-                                <td className={precisionGroupValueClass}>
-                                    {formatNumber(s.avgBestDeviation)}
-                                </td>
+                                    {/* группа: точность */}
+                                    <td className={precisionGroupRankClass}>{s.rankPrecision}</td>
+                                    <td className={precisionGroupValueClass}>
+                                        {formatNumber(s.avgBestDeviation)}
+                                    </td>
 
-                                {/* группа: скорость */}
-                                <td className={speedGroupRankClass}>
-                                    {s.rankSpeed}
-                                </td>
-                                <td className={speedGroupValueClass}>
-                                    {formatSteps(s.avgStepsToTol)}
-                                </td>
+                                    {/* группа: скорость */}
+                                    <td className={speedGroupRankClass}>{s.rankSpeed}</td>
+                                    <td className={speedGroupValueClass}>
+                                        {formatSteps(s.avgStepsToTol)}
+                                    </td>
 
-                                {/* группа: стабильность */}
-                                <td className={stabilityGroupRankClass}>
-                                    {s.rankStability}
-                                </td>
-                                <td className={stabilityGroupValueClass}>
-                                    {s.seriesCount > 0
-                                        ? (s.fracReachedTol * 100).toFixed(
-                                        1,
-                                    ) + "%"
-                                        : "—"}
-                                </td>
+                                    {/* группа: стабильность */}
+                                    <td className={stabilityGroupRankClass}>{s.rankStability}</td>
+                                    <td className={stabilityGroupValueClass}>
+                                        {s.seriesCount > 0
+                                            ? (s.fracReachedTol * 100).toFixed(1) + "%"
+                                            : "—"}
+                                    </td>
 
-                                <td className="px-2 py-1 text-right font-mono font-semibold">
-                                    {s.totalRankScore}
-                                </td>
-                            </tr>
-                        );
-                    })}
+                                    <td className="px-2 py-1 text-right font-mono font-semibold">
+                                        {s.totalRankScore}
+                                    </td>
+                                </tr>
+                            );
+                        })}
                     </tbody>
                 </table>
             </div>
 
             <div className="mt-1 text-[10px] text-textDim/70">
                 Средняя лучшая ошибка = среднее по рядам от{" "}
-                <span className="font-mono">min_n |deviation_n|</span>;{" "}
-                средний шаг до ε = среднее по тем рядам, где нашёлся n с
-                |deviation_n| ≤ ε.
+                <span className="font-mono">min_n |deviation_n|</span>; средний шаг до ε = среднее
+                по тем рядам, где нашёлся n с |deviation_n| ≤ ε.
             </div>
         </div>
     );
