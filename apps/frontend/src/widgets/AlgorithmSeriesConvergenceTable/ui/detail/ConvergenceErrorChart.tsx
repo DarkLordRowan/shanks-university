@@ -4,6 +4,7 @@ import {
     CartesianGrid,
     Line,
     LineChart,
+    ReferenceLine,
     ResponsiveContainer,
     Tooltip as RechartsTooltip,
     XAxis,
@@ -179,6 +180,14 @@ export const ConvergenceErrorChart: React.FC<ConvergenceErrorChartProps> = ({
                             content={<ErrorTooltip labelText={tooltipLabel} />}
                             wrapperStyle={{ zIndex: 50 }}
                         />
+                        {!useAbs && (
+                            <ReferenceLine
+                                y={0}
+                                stroke="red"
+                                strokeWidth={1.5}
+                                strokeDasharray="8 8"
+                            />
+                        )}
                         <Line
                             type={lineMode === "smooth" ? "monotone" : "linear"}
                             dataKey="value"
