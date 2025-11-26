@@ -359,93 +359,56 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
 
                                     const titleLines: string[] = [];
 
-                                    titleLines.push("Ряд:");
-                                    titleLines.push(`  имя: ${s.seriesName}`);
-                                    titleLines.push(`  x: ${s.xLabel}`);
-                                    titleLines.push(`  точность: ${s.precision}`);
+                                    // Ряд / алгоритм
+                                    titleLines.push(
+                                        `Ряд: ${s.seriesName} (x=${s.xLabel}, prec=${s.precision})`
+                                    );
+                                    titleLines.push(
+                                        `Алгоритм: ${algo.algorithmName}` +
+                                            (algo.m != null ? `, m=${algo.m}` : "")
+                                    );
                                     titleLines.push("");
 
-                                    titleLines.push("Алгоритм:");
-                                    titleLines.push(`  имя: ${algo.algorithmName}`);
-                                    titleLines.push(
-                                        `  m: ${algo.m != null ? String(algo.m) : "∅"}`
-                                    );
+                                    // Конфигурация алгоритма (кратко)
                                     const algoEntries = nonNullEntries(algo.algorithmArgs);
                                     if (algoEntries.length > 0) {
-                                        titleLines.push("  параметры алгоритма:");
                                         for (const [k, v] of algoEntries.sort(([a], [b]) =>
                                             a.localeCompare(b)
                                         )) {
-                                            titleLines.push(`    ${k}: ${String(v)}`);
+                                            titleLines.push(`  ${k} = ${String(v)}`);
                                         }
                                     }
                                     if (algo.argsSummary) {
-                                        titleLines.push(`  кратко: ${algo.argsSummary}`);
+                                        titleLines.push(`  (${algo.argsSummary})`);
                                     }
+                                    if (algoEntries.length > 0 || algo.argsSummary) {
+                                        titleLines.push("");
+                                    }
+
+                                    // Итоговая классификация
+                                    titleLines.push(`Класс: side=${sideShort}, mono=${monShort}`);
+
+                                    // Знаковые эффекты
+                                    titleLines.push(
+                                        `Знак ошибки: смен ${analysis.signChangesCount}, n: ${formatIntervals(
+                                            analysis.signChangeNs ?? []
+                                        )}`
+                                    );
+
+                                    // Рост ошибки
+                                    titleLines.push(
+                                        `Рост |Aₙ−lim|: случаев ${analysis.growthViolationsCount}, n: ${formatIntervals(
+                                            analysis.growthNs ?? []
+                                        )}`
+                                    );
+
+                                    // Объём данных
+                                    titleLines.push(
+                                        `Пар (n−1,n) в анализе: ${analysis.stepsAnalyzed}`
+                                    );
+
                                     titleLines.push("");
-
-                                    const isMono =
-                                        effectiveMon === "strict_decreasing_error" ||
-                                        effectiveMon === "non_increasing_error" ||
-                                        effectiveMon === "constant_error";
-
-                                    const sideDescr =
-                                        effectiveSide === "one_sided"
-                                            ? "одностороннее приближение"
-                                            : effectiveSide === "two_sided"
-                                              ? "двустороннее приближение"
-                                              : effectiveSide === "no_limit"
-                                                ? "предел не просматривается"
-                                                : "тип направления не определён";
-
-                                    const monoDescr = isMono
-                                        ? "монотонная ошибка"
-                                        : "не монотонная ошибка";
-
-                                    titleLines.push(
-                                        `Направление: ${sideDescr}; ${monoDescr} (обозначения в ячейке: ${sideShort} | ${monShort}).`
-                                    );
-
-                                    if (analysis.signChangesCount > 0) {
-                                        const first =
-                                            analysis.firstSignChangeN != null
-                                                ? `, первая при n = ${analysis.firstSignChangeN}`
-                                                : "";
-                                        titleLines.push(
-                                            `Смена знака ошибки: ${analysis.signChangesCount} раз${first}.`
-                                        );
-                                    } else {
-                                        titleLines.push("Смена знака ошибки не происходит.");
-                                    }
-
-                                    if (analysis.monotonicity === "has_growth") {
-                                        const first =
-                                            analysis.firstGrowthN != null
-                                                ? `, начиная с n = ${analysis.firstGrowthN}`
-                                                : "";
-                                        titleLines.push(`Рост ошибки по n: есть${first}.`);
-                                    } else if (analysis.monotonicity === "constant_error") {
-                                        titleLines.push(
-                                            "Ошибка по n практически не меняется (постоянна)."
-                                        );
-                                    } else if (
-                                        analysis.monotonicity === "strict_decreasing_error" ||
-                                        analysis.monotonicity === "non_increasing_error"
-                                    ) {
-                                        titleLines.push("Ошибка по n не возрастает.");
-                                    } else {
-                                        titleLines.push(
-                                            "Поведение ошибки по n: данных недостаточно."
-                                        );
-                                    }
-
-                                    titleLines.push(
-                                        `Число проанализированных шагов: ${analysis.stepsAnalyzed}.`
-                                    );
-                                    titleLines.push("");
-                                    titleLines.push(
-                                        "Нажмите по ячейке, чтобы посмотреть детальный график."
-                                    );
+                                    titleLines.push("Клик — детальный график.");
 
                                     const title = titleLines.join("\n");
 
@@ -536,4 +499,36 @@ function getCellColorClass(side: SideType, mon: MonotonicityType, selected: bool
     }
 
     return "border-border text-textDim bg-surface/40 hover:bg-surface/50" + sel;
+}
+
+function formatIntervals(ns: number[], maxRanges = 5): string {
+    if (!ns.length) return "—";
+
+    const sorted = Array.from(new Set(ns)).sort((a, b) => a - b);
+
+    const ranges: Array<{ start: number; end: number }> = [];
+    let start = sorted[0];
+    let prev = sorted[0];
+
+    for (let i = 1; i < sorted.length; i++) {
+        const x = sorted[i];
+        if (x === prev + 1) {
+            prev = x;
+            continue;
+        }
+        ranges.push({ start, end: prev });
+        start = x;
+        prev = x;
+    }
+    ranges.push({ start, end: prev });
+
+    const parts = ranges
+        .slice(0, maxRanges)
+        .map((r) => (r.start === r.end ? `${r.start}` : `${r.start}–${r.end}`));
+
+    if (ranges.length > maxRanges) {
+        parts.push("…");
+    }
+
+    return parts.join(", ");
 }
