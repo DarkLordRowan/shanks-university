@@ -152,6 +152,9 @@ export function analyzeSeriesAccelConvergence(
     // новое: число всех ростов ошибки
     let growthViolationsCount = 0;
 
+    const signChangeNs: number[] = [];
+    const growthNs: number[] = [];
+
     for (const p of points) {
         const value = p.value;
         const err = errorNorm(value, limit);
@@ -163,6 +166,7 @@ export function analyzeSeriesAccelConvergence(
                 prevSign = sgn;
             } else if (prevSign !== 0 && prevSign !== sgn) {
                 signChangesCount += 1;
+                signChangeNs.push(p.n);
                 if (firstSignChangeN === null) {
                     firstSignChangeN = p.n;
                 }
@@ -176,8 +180,8 @@ export function analyzeSeriesAccelConvergence(
                 stepsAnalyzed += 1;
 
                 if (err > prevErr + EPS) {
-                    // рост ошибки
                     growthViolationsCount += 1;
+                    growthNs.push(p.n);
 
                     if (!hasGrowth) {
                         hasGrowth = true;
@@ -228,6 +232,8 @@ export function analyzeSeriesAccelConvergence(
         firstGrowthN,
         growthViolationsCount,
         stepsAnalyzed,
+        signChangeNs,
+        growthNs,
     };
 }
 

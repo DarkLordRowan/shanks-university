@@ -34,6 +34,12 @@ export interface ConvergenceAnalysis {
 
     /** Число проанализированных пар (n-1, n), где обе ошибки корректны */
     stepsAnalyzed: number;
+
+    /** Шаги, на которых изменился знак ошибки */
+    signChangeNs: number[];
+
+    /** Шаги, на которых ошибка по норме выросла */
+    growthNs: number[];
 }
 
 export type SeriesKey = string;
