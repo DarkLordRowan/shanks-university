@@ -29,6 +29,10 @@ export interface ConvergenceAnalysis {
     firstSignChangeN: number | null;
     firstGrowthN: number | null;
 
+    /** Число шагов, на которых |Aₙ − lim| выросло относительно предыдущего */
+    growthViolationsCount: number;
+
+    /** Число проанализированных пар (n-1, n), где обе ошибки корректны */
     stepsAnalyzed: number;
 }
 

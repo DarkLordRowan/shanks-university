@@ -1,14 +1,14 @@
 import React, { useEffect, useMemo, useState } from "react";
 import {
     type ConvergenceMatrix,
+    type MonotonicityType,
     type SelectedCell,
     type SideType,
-    type MonotonicityType,
 } from "../model/types";
 import {
-    nonNullEntries,
-    formatSideShort,
     formatMonotonicityShort,
+    formatSideShort,
+    nonNullEntries,
 } from "../model/convergenceUtils";
 
 interface ConvergenceMatrixTableProps {
@@ -33,7 +33,36 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
     const algoList = matrix.algoList ?? [];
     const cells = matrix.cells ?? {};
 
-    /* ====== выбор precision ====== */
+    const thresholds = useMemo(() => {
+        let maxSignChanges = 0;
+        let maxViolations = 0;
+
+        for (const key of Object.keys(cells)) {
+            const analysis = cells[key];
+            if (!analysis) continue;
+
+            const sc =
+                typeof analysis.signChangesCount === "number" ? analysis.signChangesCount : 0;
+            if (sc > maxSignChanges) maxSignChanges = sc;
+
+            const violationsRaw =
+                typeof analysis.growthViolationsCount === "number"
+                    ? analysis.growthViolationsCount
+                    : 0;
+
+            if (violationsRaw > maxViolations) maxViolations = violationsRaw;
+        }
+
+        return { maxSignChanges, maxViolations };
+    }, [cells]);
+
+    const [maxSignChangesForOneSided, setMaxSignChangesForOneSided] = useState<number>(0);
+    const [maxViolationsForMonotone, setMaxViolationsForMonotone] = useState<number>(0);
+
+    useEffect(() => {
+        setMaxSignChangesForOneSided(0);
+        setMaxViolationsForMonotone(0);
+    }, [matrix]);
 
     const allPrecisions = useMemo(() => {
         const set = new Set<string>();
@@ -66,6 +95,9 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
             return prev;
         });
     }, [totalPages]);
+
+    const signChangesSliderMax = thresholds.maxSignChanges > 0 ? thresholds.maxSignChanges : 5;
+    const violationsSliderMax = thresholds.maxViolations > 0 ? thresholds.maxViolations : 5;
 
     if (rawSeriesList.length === 0 || algoList.length === 0) {
         return (
@@ -114,6 +146,52 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
                                 </option>
                             ))}
                         </select>
+                    </div>
+
+                    {/* пороги пересчёта направления и монотонности */}
+                    <div className="flex flex-col gap-[2px] text-[10px]">
+                        <div className="flex items-center gap-1">
+                            <span
+                                className="whitespace-nowrap"
+                                title="Если число смен знака ≤ X, пара считается односторонней"
+                            >
+                                max sign changes:
+                            </span>
+                            <input
+                                type="range"
+                                min={0}
+                                max={signChangesSliderMax}
+                                value={maxSignChangesForOneSided}
+                                onChange={(e) =>
+                                    setMaxSignChangesForOneSided(Number(e.target.value))
+                                }
+                                className="h-[4px] w-28 cursor-pointer"
+                            />
+                            <span className="w-6 text-right tabular-nums">
+                                {maxSignChangesForOneSided}
+                            </span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                            <span
+                                className="whitespace-nowrap"
+                                title="Если число расхождений ≤ Y, ошибка считается монотонной"
+                            >
+                                max deviations:
+                            </span>
+                            <input
+                                type="range"
+                                min={0}
+                                max={violationsSliderMax}
+                                value={maxViolationsForMonotone}
+                                onChange={(e) =>
+                                    setMaxViolationsForMonotone(Number(e.target.value))
+                                }
+                                className="h-[4px] w-28 cursor-pointer"
+                            />
+                            <span className="w-6 text-right tabular-nums">
+                                {maxViolationsForMonotone}
+                            </span>
+                        </div>
                     </div>
 
                     {seriesList.length > pageSize && (
@@ -241,8 +319,43 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
                                         );
                                     }
 
-                                    const sideShort = formatSideShort(analysis.side);
-                                    const monShort = formatMonotonicityShort(analysis.monotonicity);
+                                    const rawSide = analysis.side;
+                                    const rawMon = analysis.monotonicity;
+
+                                    const signChanges =
+                                        typeof analysis.signChangesCount === "number"
+                                            ? analysis.signChangesCount
+                                            : 0;
+
+                                    const violationsCount =
+                                        typeof analysis.growthViolationsCount === "number"
+                                            ? analysis.growthViolationsCount
+                                            : 0;
+
+                                    // направление с учётом порога X
+                                    let effectiveSide: SideType = rawSide;
+                                    if (rawSide !== "no_limit") {
+                                        if (signChanges <= maxSignChangesForOneSided) {
+                                            effectiveSide = "one_sided";
+                                        } else {
+                                            effectiveSide = "two_sided";
+                                        }
+                                    }
+
+                                    // монотонность с учётом порога Y
+                                    let effectiveMon: MonotonicityType = rawMon;
+                                    if (rawMon !== "no_limit" && rawMon !== "not_enough_data") {
+                                        if (violationsCount <= maxViolationsForMonotone) {
+                                            // если формально "есть рост", но он в пределах допуска,
+                                            // считаем как не возрастающую ошибку
+                                            if (rawMon === "has_growth") {
+                                                effectiveMon = "non_increasing_error";
+                                            }
+                                        }
+                                    }
+
+                                    const sideShort = formatSideShort(effectiveSide);
+                                    const monShort = formatMonotonicityShort(effectiveMon);
 
                                     const titleLines: string[] = [];
 
@@ -272,16 +385,16 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
                                     titleLines.push("");
 
                                     const isMono =
-                                        analysis.monotonicity === "strict_decreasing_error" ||
-                                        analysis.monotonicity === "non_increasing_error" ||
-                                        analysis.monotonicity === "constant_error";
+                                        effectiveMon === "strict_decreasing_error" ||
+                                        effectiveMon === "non_increasing_error" ||
+                                        effectiveMon === "constant_error";
 
                                     const sideDescr =
-                                        analysis.side === "one_sided"
+                                        effectiveSide === "one_sided"
                                             ? "одностороннее приближение"
-                                            : analysis.side === "two_sided"
+                                            : effectiveSide === "two_sided"
                                               ? "двустороннее приближение"
-                                              : analysis.side === "no_limit"
+                                              : effectiveSide === "no_limit"
                                                 ? "предел не просматривается"
                                                 : "тип направления не определён";
 
@@ -344,8 +457,8 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
                                         "min-w-[30px] border px-[2px] py-[2px] text-center text-[10px] cursor-pointer";
 
                                     const colorClass = getCellColorClass(
-                                        analysis.side,
-                                        analysis.monotonicity,
+                                        effectiveSide,
+                                        effectiveMon,
                                         isSelected
                                     );
 
