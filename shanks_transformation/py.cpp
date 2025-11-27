@@ -3,7 +3,7 @@
  * @brief pybind11 bindings with support for double and arbitrary-precision float_precision
  */
 
-#include <gsl/gsl_errno.h>
+
 #include <pybind11/operators.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
@@ -12,7 +12,10 @@
 #include "libs/arbitrary_arithmetics/fprecision.h"
 #include "libs/arbitrary_arithmetics/precisioncore.cpp"
 
+#ifdef INCLUDE_GSL_LIB
+#include <gsl/gsl_errno.h>
 #include <gsl/gsl_sf_result.h>
+#endif
 
 #include "include/series.hpp"
 #include "include/methods.hpp"
