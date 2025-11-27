@@ -14,7 +14,7 @@ from typing import Any, Generic, Mapping, override
 import pyshanks as ps
 from src.run.precision import (
     AccelProto,
-    PrecisionType,
+    PrecisionConfig,
     SeriesBaseProto,
     SeriesResultProto,
     TNum,
@@ -38,14 +38,14 @@ class BaseSeriesParam[T]:
     @abstractmethod
     def executable(
         self,
-    ) -> type[SeriesBaseProto[TNum]] | Callable[..., SeriesResultProto[TNum]]: ...
+    ) -> type[SeriesBaseProto[TNum]] | Callable[[], Any]: ...
 
 
 @dataclass
 class SeriesParamJSON(BaseSeriesParam[TNum]):
     name: str
     args: Mapping[str, Iterable[TNum]]
-    precision: PrecisionType
+    precision: PrecisionConfig
 
     @property
     def arguments(self):
@@ -57,7 +57,7 @@ class SeriesParamJSON(BaseSeriesParam[TNum]):
 
     @property
     def executable(self):
-        return getattr(ps, self.name + self.precision.value)
+        return getattr(ps, self.name + self.precision.type.value)
 
 
 @dataclass
@@ -91,7 +91,7 @@ class SeriesParamModule(BaseSeriesParam[TNum]):
 class SeriesParamCSV(BaseSeriesParam[TNum]):
     location: pathlib.Path
     row: int
-    precision: PrecisionType
+    precision: PrecisionConfig
     raw_values: tuple[str, ...]
 
     @property
@@ -105,14 +105,14 @@ class SeriesParamCSV(BaseSeriesParam[TNum]):
     @property
     @override
     def executable(self):
-        def factory():
+        def factory() -> Any:
             return CSVSeriesWrapper(self.precision, self.raw_values)
 
         return factory
 
 
 class CSVSeriesWrapper(Generic[TNum]):
-    def __init__(self, precision: PrecisionType, raw_values: Sequence[str]):
+    def __init__(self, precision: PrecisionConfig, raw_values: Sequence[str]):
         values = [cast_natural_series_value(precision, value) for value in raw_values]
         self.data = create_series_result(values, precision)
         self._sum = self.data.Sn[-1]
@@ -131,7 +131,7 @@ class CSVSeriesWrapper(Generic[TNum]):
         return self._sum
 
     def get_name(self) -> str:
-        return f"CSVSeries_{self._precision.value}"
+        return f"CSVSeries_{self._precision}"
 
 
 class BaseAccelParam(Generic[TNum], ABC):
@@ -155,7 +155,7 @@ class BaseAccelParam(Generic[TNum], ABC):
 
     @property
     @abstractmethod
-    def additional_args(self) -> dict[str, Iterable[Any]]: ...
+    def additional_args(self) -> dict[str, Any]: ...
 
 
 @dataclass
@@ -175,12 +175,12 @@ class StandardAccelParam(BaseAccelParam[TNum], ABC):
 
 
 @dataclass
-class AccelParamJSON(StandardAccelParam[TNum]):
+class AccelParamJSON(StandardAccelParam[TNum], ABC):
     name: str
     n: Iterable[int]
     m: Iterable[int]
     init_args: Mapping[str, Iterable[Any]]
-    precision: PrecisionType
+    precision: PrecisionConfig
 
     def __post_init__(self):
         self.expanded_init_args = {
@@ -195,12 +195,12 @@ class AccelParamJSON(StandardAccelParam[TNum]):
     @property
     @override
     def executable(self):
-        return getattr(ps, self.name + self.precision.value)
+        return getattr(ps, self.name + self.precision.type.value)
 
     @property
     @override
     def additional_args(self):
-        return self.expanded_init_args
+        return dict(self.expanded_init_args)
 
 
 @dataclass
@@ -229,4 +229,4 @@ class AccelParamModule(StandardAccelParam[TNum]):
     @property
     @override
     def additional_args(self):
-        return self.init_args or {}
+        return dict(self.init_args or {})

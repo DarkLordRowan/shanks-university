@@ -7,7 +7,7 @@ import pyarrow as pa
 import pyarrow.dataset as ds
 
 import pyshanks as ps
-from src.run.params import PrecisionType
+from src.run.params import PrecisionType, PrecisionConfig
 from src.run.trial import (
     AccelPoint,
     AccelRecord,

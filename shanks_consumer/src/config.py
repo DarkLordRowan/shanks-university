@@ -7,9 +7,9 @@ from dataclasses import dataclass, field, replace
 from enum import Enum
 from typing import Any, TypedDict, cast
 
-from src.run.params import PrecisionType
+from src.run.params import PrecisionType, PrecisionConfig
 
-PrecisionValue = PrecisionType | str
+PrecisionValue = PrecisionType | str | PrecisionConfig
 PrecisionCollection = Sequence[PrecisionValue] | PrecisionValue | None
 
 
@@ -30,7 +30,7 @@ class TrialConfigOverrides(TypedDict, total=False):
     results_filename: str
     trial_process_count: int
     trial_task_timeout: int
-    precisions: tuple[PrecisionType, ...]
+    precisions: tuple[PrecisionConfig, ...]
     no_events: bool
     output_formats: list[OutputFormat]
     verbose: int
@@ -87,8 +87,8 @@ class TrialConfig(BaseConfig, MongoConfig, OutputConfig):
     trial_process_count: int = 1
     trial_task_timeout: int = 10
 
-    precisions: tuple[PrecisionType, ...] = field(
-        default_factory=lambda: (PrecisionType.F64,)
+    precisions: tuple[PrecisionConfig, ...] = field(
+        default_factory=lambda: (PrecisionConfig(PrecisionType.F64),)
     )
     no_events: bool = False
     output_formats: list[OutputFormat] = field(default_factory=lambda: [OutputFormat.JSON, OutputFormat.CSV])
@@ -103,41 +103,50 @@ class TrialConfig(BaseConfig, MongoConfig, OutputConfig):
         self.output_dir.mkdir(parents=True, exist_ok=True)
 
     @property
-    def precision(self) -> PrecisionType:
+    def precision(self) -> PrecisionConfig:
         return self.precisions[0]
 
     @staticmethod
-    def _coerce_precision(value: PrecisionValue) -> PrecisionType:
-        if isinstance(value, PrecisionType):
+    def _coerce_precision(value: PrecisionValue) -> PrecisionConfig:
+        if isinstance(value, PrecisionConfig):
             return value
+        if isinstance(value, PrecisionType):
+            return PrecisionConfig(value)
         if isinstance(value, str):
-            normalized = value.upper()
             try:
-                return PrecisionType[normalized]
-            except KeyError:
-                for precision in PrecisionType:
-                    if (
-                        value == precision.value
-                        or value.lower() == precision.value.lower()
-                    ):
-                        return precision
+                return PrecisionConfig.from_string(value)
+            except ValueError:
+                # Fallback to old behavior for backward compatibility
+                # Fallback to old behavior for backward compatibility
+                normalized = value.upper()
+                try:
+                    precision_type = PrecisionType[normalized]
+                    return PrecisionConfig(precision_type)
+                except KeyError:
+                    for precision in PrecisionType:
+                        if (
+                            value == precision.value
+                            or value.lower() == precision.value.lower()
+                        ):
+                            return PrecisionConfig(precision)
         raise ValueError(f"Unsupported precision: {value}")
 
     @classmethod
     def _normalize_precisions(
         cls, raw_precisions: PrecisionCollection
-    ) -> tuple[PrecisionType, ...]:
+    ) -> tuple[PrecisionConfig, ...]:
         if raw_precisions is None:
             candidates: Sequence[PrecisionValue] = (PrecisionType.F64,)
-        elif isinstance(raw_precisions, (PrecisionType, str)):
+        elif isinstance(raw_precisions, (PrecisionType, str, PrecisionConfig)):
             candidates = (raw_precisions,)
         else:
             candidates = raw_precisions
 
-        normalized: list[PrecisionType] = []
+        normalized: list[PrecisionConfig] = []
         for candidate in candidates:
             precision = cls._coerce_precision(candidate)
-            if precision not in normalized:
+            # Check for duplicates by comparing string representations
+            if not any(str(p) == str(precision) for p in normalized):
                 normalized.append(precision)
 
         if not normalized:

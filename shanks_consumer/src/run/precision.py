@@ -1,5 +1,7 @@
+import re
+from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Protocol, Sequence, TypeVar, runtime_checkable
+from typing import Any, Optional, Protocol, Sequence, TypeVar, runtime_checkable
 
 import pyshanks as ps
 
@@ -46,6 +48,56 @@ class PrecisionType(Enum):
     CARB = "CArb"
 
 
+@dataclass
+class PrecisionConfig:
+    """Configuration for precision types with optional precision value for ARB/CARB."""
+
+    type: PrecisionType
+    precision: Optional[int] = None  # Only used for ARB/CARB types
+
+    @classmethod
+    def from_string(cls, value: str) -> "PrecisionConfig":
+        """Parse precision string like 'CArb100', 'Arb50', 'F64' into PrecisionConfig."""
+        value = value.strip()
+
+        # Check for ARB/CARB with precision suffix (case-sensitive for actual enum values)
+        match = re.match(r"^(CArb|Arb)(\d+)$", value)
+        if match:
+            type_str, precision_str = match.groups()
+            if type_str == "CArb":
+                return cls(PrecisionType.CARB, int(precision_str))
+            elif type_str == "Arb":
+                return cls(PrecisionType.ARB, int(precision_str))
+
+        # Try uppercase version for backward compatibility
+        value_upper = value.upper()
+        match_upper = re.match(r"^(CA?RB)(\d+)$", value_upper)
+        if match_upper:
+            type_str, precision_str = match_upper.groups()
+            if type_str == "CARB":
+                return cls(PrecisionType.CARB, int(precision_str))
+            elif type_str == "ARB":
+                return cls(PrecisionType.ARB, int(precision_str))
+
+        # Handle standard precision types
+        try:
+            precision_type = PrecisionType[value]
+            return cls(precision_type)
+        except KeyError:
+            # Try to match by value
+            for precision in PrecisionType:
+                if value == precision.value or value.lower() == precision.value.lower():
+                    return cls(precision)
+
+        raise ValueError(f"Unsupported precision: {value}")
+
+    def __str__(self) -> str:
+        """String representation for logging and display."""
+        if self.precision is not None:
+            return f"{self.type.value}{self.precision}"
+        return self.type.value
+
+
 class Precision:
     _REAL_PRECISIONS = {
         PrecisionType.F32,
@@ -86,39 +138,53 @@ class Precision:
     }
 
     @classmethod
-    def is_real_precision(cls, precision: PrecisionType) -> bool:
-        return precision in cls._REAL_PRECISIONS
+    def is_real_precision(cls, precision: PrecisionConfig) -> bool:
+        return precision.type in cls._REAL_PRECISIONS
 
     @classmethod
-    def is_complex_precision(cls, precision: PrecisionType) -> bool:
-        return precision in cls._COMPLEX_PRECISIONS
+    def is_complex_precision(cls, precision: PrecisionConfig) -> bool:
+        return precision.type in cls._COMPLEX_PRECISIONS
 
     @classmethod
-    def is_arb_precision(cls, precision: PrecisionType) -> bool:
-        return precision == PrecisionType.ARB
+    def is_arb_precision(cls, precision: PrecisionConfig) -> bool:
+        return precision.type == PrecisionType.ARB
 
     @classmethod
-    def zero_for_precision(cls, precision: PrecisionType):
+    def zero_for_precision(cls, precision: PrecisionConfig):
         if cls.is_arb_precision(precision):
-            return ps.Arb(0)
+            arb_precision = precision.precision or 50
+            return ps.Arb(0.0, arb_precision)  # Default precision if not specified
         if cls.is_complex_precision(precision):
             real_zero = cast_real_subtype_value(precision, 0)
-            constructor = cls._COMPLEX_CLASS[precision]
+            constructor = cls._COMPLEX_CLASS[precision.type]
+            if precision.type == PrecisionType.CARB:
+                # For CArb, create with precision
+                arb_precision = precision.precision or 50
+                real_arb = ps.Arb(0.0, arb_precision)
+                imag_arb = ps.Arb(0.0, arb_precision)
+                return constructor(real_arb, imag_arb)
             return constructor(real_zero)
         return 0.0
 
     @classmethod
-    def one_for_precision(cls, precision: PrecisionType):
+    def one_for_precision(cls, precision: PrecisionConfig):
         if cls.is_arb_precision(precision):
-            return ps.Arb(1)
+            arb_precision = precision.precision or 50
+            return ps.Arb(1.0, arb_precision)  # Default precision if not specified
         if cls.is_complex_precision(precision):
             real_one = cast_real_subtype_value(precision, 1)
-            constructor = cls._COMPLEX_CLASS[precision]
+            constructor = cls._COMPLEX_CLASS[precision.type]
+            if precision.type == PrecisionType.CARB:
+                # For CArb, create with precision
+                arb_precision = precision.precision or 50
+                real_arb = ps.Arb(1.0, arb_precision)
+                imag_arb = ps.Arb(0.0, arb_precision)
+                return constructor(real_arb, imag_arb)
             return constructor(real_one)
         return 1.0
 
     @classmethod
-    def cast_precision_value(cls, precision: PrecisionType, value: Any):
+    def cast_precision_value(cls, precision: PrecisionConfig, value: Any):
         if value is None or isinstance(value, bool):
             return value
 
@@ -133,10 +199,10 @@ class Precision:
         if cls.is_arb_precision(precision):
             if isinstance(value, ps.Arb):
                 return value
-            return ps.Arb(str(value))
+            return ps.Arb(str(value), precision.precision or 50)
 
         if cls.is_complex_precision(precision):
-            constructor = cls._COMPLEX_CLASS[precision]
+            constructor = cls._COMPLEX_CLASS[precision.type]
             if isinstance(value, cls):
                 return value
             if isinstance(value, str):
@@ -146,43 +212,54 @@ class Precision:
                 except ValueError:
                     pass
             if isinstance(value, complex):
-                if precision == PrecisionType.CARB:
-                    return constructor(ps.Arb(value.real), ps.Arb(value.imag))
+                if precision.type == PrecisionType.CARB:
+                    real_arb = ps.Arb(str(value.real), precision.precision or 50)
+                    imag_arb = ps.Arb(str(value.imag), precision.precision or 50)
+                    return constructor(real_arb, imag_arb)
                 return constructor(value.real, value.imag)
             if isinstance(value, (tuple, list)) and len(value) == 2:
+                if precision.type == PrecisionType.CARB:
+                    real_arb = ps.Arb(str(value[0]), precision.precision or 50)
+                    imag_arb = ps.Arb(str(value[1]), precision.precision or 50)
+                    return constructor(real_arb, imag_arb)
                 return constructor(value[0], value[1])
-            if precision == PrecisionType.CARB and not isinstance(value, ps.Arb):
-                return constructor(ps.Arb(str(value)))
+            if precision.type == PrecisionType.CARB and not isinstance(value, ps.Arb):
+                return constructor(ps.Arb(str(value), precision.precision or 50))
             return constructor(value)
 
         return value
 
     @classmethod
-    def cast_real_subtype_value(cls, precision: PrecisionType, value: Any):
-        real_precision = cls._REAL_SUBTYPE_FOR_PRECISION.get(precision, precision)
+    def cast_real_subtype_value(cls, precision: PrecisionConfig, value: Any):
+        real_precision_type = cls._REAL_SUBTYPE_FOR_PRECISION.get(
+            precision.type, precision.type
+        )
+        real_precision = PrecisionConfig(real_precision_type, precision.precision)
         return cls.cast_precision_value(real_precision, value)
 
     @classmethod
-    def series_result_ctor_for_precision(cls, precision: PrecisionType):
-        return cls._SERIES_RESULT_CLASS[precision]
+    def series_result_ctor_for_precision(cls, precision: PrecisionConfig):
+        return cls._SERIES_RESULT_CLASS[precision.type]
 
     @classmethod
-    def cast_natural_series_value(cls, precision: PrecisionType, value: str):
+    def cast_natural_series_value(cls, precision: PrecisionConfig, value: str):
         if cls.is_real_precision(precision):
             return float(value)
         if cls.is_arb_precision(precision):
-            return ps.Arb(value)
+            return ps.Arb(value, precision.precision or 50)
         if cls.is_complex_precision(precision):
-            constructor = cls._COMPLEX_CLASS[precision]
+            constructor = cls._COMPLEX_CLASS[precision.type]
             real_value = cast_real_subtype_value(precision, value)
             try:
                 return constructor(real_value)
             except TypeError:
+                if precision.type == PrecisionType.CARB:
+                    return constructor(ps.Arb(value, precision.precision or 50))
                 return constructor(value)
         return value
 
     @classmethod
-    def create_series_result(cls, values: list[Any], precision: PrecisionType):
+    def create_series_result(cls, values: list[Any], precision: PrecisionConfig):
         cumulative = []
         total = cls.zero_for_precision(precision)
         for v in values:
