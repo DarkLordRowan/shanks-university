@@ -10,6 +10,7 @@ import {
     formatSideShort,
     nonNullEntries,
 } from "../model/convergenceUtils";
+import { StickyTable } from "@/shared/ui/StickyTable";
 
 interface ConvergenceMatrixTableProps {
     matrix: ConvergenceMatrix;
@@ -111,16 +112,231 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
     const endIndex = Math.min(startIndex + pageSize, seriesList.length);
     const seriesSlice = seriesList.slice(startIndex, endIndex);
 
+    const headerNode = (
+        <thead className="bg-surface/80">
+            <tr>
+                <th className="sticky left-0 z-20 border border-border bg-surface/90 px-1 py-1 text-left text-[10px] align-bottom">
+                    Алгоритм \ Ряд
+                </th>
+
+                {seriesSlice.map((s) => (
+                    <th
+                        key={s.key}
+                        className="border border-border px-0 py-0 text-center align-bottom"
+                        title={`${s.seriesName}\n x = ${s.xLabel}\n prec = ${s.precision}`}
+                    >
+                        <div className="relative flex h-28 w-[44px] items-center justify-center">
+                            <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rotate-[-90deg] whitespace-nowrap text-[9px] leading-tight">
+                                {s.seriesName}
+                            </span>
+                            <span className="absolute bottom-3 text-[8px] text-textDim/70">
+                                x={s.xLabel}
+                            </span>
+                            <span className="absolute bottom-0 text-[8px] text-textDim/60">
+                                prec={s.precision}
+                            </span>
+                        </div>
+                    </th>
+                ))}
+            </tr>
+        </thead>
+    );
+
+    const bodyNode = (
+        <tbody>
+            {algoList.map((algo) => (
+                <tr key={algo.key}>
+                    <th
+                        className="sticky left-0 z-10 border border-border bg-panel px-1 py-[2px] text-left align-top"
+                        title={(() => {
+                            const lines: string[] = [];
+                            lines.push(`Алгоритм: ${algo.algorithmName}`);
+                            lines.push(`m = ${algo.m != null ? String(algo.m) : "∅"}`);
+                            const entries = nonNullEntries(algo.algorithmArgs);
+                            if (entries.length > 0) {
+                                lines.push("Аргументы:");
+                                for (const [k, v] of entries.sort(([a, b]) => a.localeCompare(b))) {
+                                    lines.push(`  ${k}: ${v}`);
+                                }
+                            }
+                            return lines.join("\n");
+                        })()}
+                    >
+                        <div className="whitespace-pre leading-tight">
+                            <span className="block max-w-[150px] truncate">
+                                {algo.algorithmName}
+                            </span>
+                            <span className="text-[9px] text-textDim/70">
+                                {algo.m != null ? `m=${String(algo.m)}` : "m=∅"}
+                            </span>
+                            {algo.argsSummary && (
+                                <div className="mt-[1px] max-w-[150px] truncate text-[8px] text-textDim/60">
+                                    {algo.argsSummary}
+                                </div>
+                            )}
+                        </div>
+                    </th>
+
+                    {seriesSlice.map((s) => {
+                        const key = `${algo.key}::${s.key}`;
+                        const analysis = cells[key];
+
+                        if (!analysis) {
+                            return (
+                                <td
+                                    key={key}
+                                    className="border border-border px-[2px] py-[2px] text-center text-[10px] text-textDim/50"
+                                >
+                                    —
+                                </td>
+                            );
+                        }
+
+                        const rawSide = analysis.side;
+                        const rawMon = analysis.monotonicity;
+
+                        const signChanges =
+                            typeof analysis.signChangesCount === "number"
+                                ? analysis.signChangesCount
+                                : 0;
+
+                        const violationsCount =
+                            typeof analysis.growthViolationsCount === "number"
+                                ? analysis.growthViolationsCount
+                                : 0;
+
+                        // направление с учётом порога X
+                        let effectiveSide: SideType = rawSide;
+                        if (rawSide !== "no_limit") {
+                            if (signChanges <= maxSignChangesForOneSided) {
+                                effectiveSide = "one_sided";
+                            } else {
+                                effectiveSide = "two_sided";
+                            }
+                        }
+
+                        // монотонность с учётом порога Y
+                        let effectiveMon: MonotonicityType = rawMon;
+                        if (rawMon !== "no_limit" && rawMon !== "not_enough_data") {
+                            if (violationsCount <= maxViolationsForMonotone) {
+                                if (rawMon === "has_growth") {
+                                    effectiveMon = "non_increasing_error";
+                                }
+                            }
+                        }
+
+                        const sideShort = formatSideShort(effectiveSide);
+                        const monShort = formatMonotonicityShort(effectiveMon);
+
+                        const titleLines: string[] = [];
+
+                        // Ряд / алгоритм
+                        titleLines.push(
+                            `Ряд: ${s.seriesName} (x=${s.xLabel}, prec=${s.precision})`
+                        );
+                        titleLines.push(
+                            `Алгоритм: ${algo.algorithmName}` +
+                                (algo.m != null ? `, m=${algo.m}` : "")
+                        );
+                        titleLines.push("Аргументы алгоритма:");
+
+                        const algoEntries = nonNullEntries(algo.algorithmArgs);
+                        if (algoEntries.length > 0) {
+                            for (const [k, v] of algoEntries.sort(([a, b]) => a.localeCompare(b))) {
+                                titleLines.push(`  ${k} = ${String(v)}`);
+                            }
+                        }
+                        if (algo.argsSummary) {
+                            titleLines.push(`  (${algo.argsSummary})`);
+                        }
+                        if (algoEntries.length > 0 || algo.argsSummary) {
+                            titleLines.push("");
+                        }
+
+                        const classDescr = describeClass(effectiveSide, effectiveMon);
+                        titleLines.push(`Класс: ${classDescr}`);
+
+                        const signNsText =
+                            analysis.signChangeNs && analysis.signChangeNs.length > 0
+                                ? formatIntervals(analysis.signChangeNs)
+                                : analysis.firstSignChangeN != null
+                                  ? String(analysis.firstSignChangeN)
+                                  : "—";
+
+                        const growthNsText =
+                            analysis.growthNs && analysis.growthNs.length > 0
+                                ? formatIntervals(analysis.growthNs)
+                                : analysis.firstGrowthN != null
+                                  ? String(analysis.firstGrowthN)
+                                  : "—";
+
+                        titleLines.push(
+                            `Число смен знака: ${analysis.signChangesCount}, ns: ${signNsText}`
+                        );
+                        titleLines.push(
+                            `Число роста |Aₙ−lim|: ${analysis.growthViolationsCount}, ns: ${growthNsText}`
+                        );
+                        titleLines.push(`Пар (n−1,n) в анализе: ${analysis.stepsAnalyzed}`);
+
+                        titleLines.push("");
+                        titleLines.push("Клик — детальный график.");
+
+                        const title = titleLines.join("\n");
+
+                        const isSelected =
+                            selectedCell?.seriesId === s.key && selectedCell?.accelId === algo.key;
+
+                        const baseCell =
+                            "min-w-[30px] border px-[2px] py-[2px] text-center text-[10px] cursor-pointer";
+
+                        const colorClass = getCellColorClass(
+                            effectiveSide,
+                            effectiveMon,
+                            isSelected
+                        );
+
+                        const domId = getConvergenceCellDomId(algo.key, s.key);
+
+                        return (
+                            <td
+                                key={key}
+                                id={domId}
+                                className={baseCell + " " + colorClass}
+                                title={title}
+                                onClick={() =>
+                                    onCellSelect({
+                                        seriesId: s.key,
+                                        accelId: algo.key,
+                                    })
+                                }
+                            >
+                                <div className="flex select-none flex-col items-center gap-[1px] leading-tight">
+                                    <span className="font-mono text-[10px]">
+                                        {sideShort} | {monShort}
+                                    </span>
+                                    <span className="text-[9px] text-textDim/80">
+                                        k: {analysis.stepsAnalyzed}
+                                    </span>
+                                </div>
+                            </td>
+                        );
+                    })}
+                </tr>
+            ))}
+        </tbody>
+    );
+
     return (
         <div className="relative">
             <div
                 className="
-                    sticky top-0 z-20
+                    sticky top-0 z-40
                     mb-2 flex items-center justify-between text-xs text-textDim
                     bg-surface/95 backdrop-blur-sm
                     -mx-4 px-4 py-2
                 "
             >
+                {" "}
                 <div className="flex flex-col gap-1">
                     <span className="text-sm font-semibold text-textDim">
                         Монотонность и направление: алгоритмы × ряды
@@ -132,7 +348,6 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
                             : ""}
                     </span>
                 </div>
-
                 <div className="flex items-center gap-3">
                     <div className="flex items-center gap-1 text-[10px]">
                         <span>precision:</span>
@@ -244,227 +459,12 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
                 </div>
             </div>
 
-            <div className="overflow-x-auto rounded-xl2 border border-border bg-panel shadow-panel">
-                <table className="min-w-full border-collapse text-[10px] leading-tight text-textDim">
-                    <thead className="bg-surface/80">
-                        <tr>
-                            <th className="sticky left-0 z-20 border border-border bg-surface/90 px-1 py-1 text-left text-[10px] align-bottom">
-                                Алгоритм \ Ряд
-                            </th>
-
-                            {seriesSlice.map((s) => (
-                                <th
-                                    key={s.key}
-                                    className="border border-border px-0 py-0 text-center align-bottom"
-                                    title={`${s.seriesName}\n x = ${s.xLabel}\n prec = ${s.precision}`}
-                                >
-                                    <div className="relative flex h-28 w-[44px] items-center justify-center">
-                                        <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rotate-[-90deg] whitespace-nowrap text-[9px] leading-tight">
-                                            {s.seriesName}
-                                        </span>
-                                        <span className="absolute bottom-3 text-[8px] text-textDim/70">
-                                            x={s.xLabel}
-                                        </span>
-                                        <span className="absolute bottom-0 text-[8px] text-textDim/60">
-                                            prec={s.precision}
-                                        </span>
-                                    </div>
-                                </th>
-                            ))}
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {algoList.map((algo) => (
-                            <tr key={algo.key}>
-                                <th
-                                    className="sticky left-0 z-10 border border-border bg-panel px-1 py-[2px] text-left align-top"
-                                    title={(() => {
-                                        const lines: string[] = [];
-                                        lines.push(`Алгоритм: ${algo.algorithmName}`);
-                                        lines.push(`m = ${algo.m != null ? String(algo.m) : "∅"}`);
-                                        const entries = nonNullEntries(algo.algorithmArgs);
-                                        if (entries.length > 0) {
-                                            lines.push("Аргументы:");
-                                            for (const [k, v] of entries.sort(([a], [b]) =>
-                                                a.localeCompare(b)
-                                            )) {
-                                                lines.push(`  ${k}: ${v}`);
-                                            }
-                                        }
-                                        return lines.join("\n");
-                                    })()}
-                                >
-                                    <div className="whitespace-pre leading-tight">
-                                        <span className="block max-w-[150px] truncate">
-                                            {algo.algorithmName}
-                                        </span>
-                                        <span className="text-[9px] text-textDim/70">
-                                            {algo.m != null ? `m=${String(algo.m)}` : "m=∅"}
-                                        </span>
-                                        {algo.argsSummary && (
-                                            <div className="mt-[1px] max-w-[150px] truncate text-[8px] text-textDim/60">
-                                                {algo.argsSummary}
-                                            </div>
-                                        )}
-                                    </div>
-                                </th>
-
-                                {seriesSlice.map((s) => {
-                                    const key = `${algo.key}::${s.key}`;
-                                    const analysis = cells[key];
-
-                                    if (!analysis) {
-                                        return (
-                                            <td
-                                                key={key}
-                                                className="border border-border px-[2px] py-[2px] text-center text-[10px] text-textDim/50"
-                                            >
-                                                —
-                                            </td>
-                                        );
-                                    }
-
-                                    const rawSide = analysis.side;
-                                    const rawMon = analysis.monotonicity;
-
-                                    const signChanges =
-                                        typeof analysis.signChangesCount === "number"
-                                            ? analysis.signChangesCount
-                                            : 0;
-
-                                    const violationsCount =
-                                        typeof analysis.growthViolationsCount === "number"
-                                            ? analysis.growthViolationsCount
-                                            : 0;
-
-                                    // направление с учётом порога X
-                                    let effectiveSide: SideType = rawSide;
-                                    if (rawSide !== "no_limit") {
-                                        if (signChanges <= maxSignChangesForOneSided) {
-                                            effectiveSide = "one_sided";
-                                        } else {
-                                            effectiveSide = "two_sided";
-                                        }
-                                    }
-
-                                    // монотонность с учётом порога Y
-                                    let effectiveMon: MonotonicityType = rawMon;
-                                    if (rawMon !== "no_limit" && rawMon !== "not_enough_data") {
-                                        if (violationsCount <= maxViolationsForMonotone) {
-                                            if (rawMon === "has_growth") {
-                                                effectiveMon = "non_increasing_error";
-                                            }
-                                        }
-                                    }
-
-                                    const sideShort = formatSideShort(effectiveSide);
-                                    const monShort = formatMonotonicityShort(effectiveMon);
-
-                                    const titleLines: string[] = [];
-
-                                    // Ряд / алгоритм
-                                    titleLines.push(
-                                        `Ряд: ${s.seriesName} (x=${s.xLabel}, prec=${s.precision})`
-                                    );
-                                    titleLines.push(
-                                        `Алгоритм: ${algo.algorithmName}` +
-                                            (algo.m != null ? `, m=${algo.m}` : "")
-                                    );
-                                    titleLines.push("Аргументы алгоритма:");
-
-                                    const algoEntries = nonNullEntries(algo.algorithmArgs);
-                                    if (algoEntries.length > 0) {
-                                        for (const [k, v] of algoEntries.sort(([a], [b]) =>
-                                            a.localeCompare(b)
-                                        )) {
-                                            titleLines.push(`  ${k} = ${String(v)}`);
-                                        }
-                                    }
-                                    if (algo.argsSummary) {
-                                        titleLines.push(`  (${algo.argsSummary})`);
-                                    }
-                                    if (algoEntries.length > 0 || algo.argsSummary) {
-                                        titleLines.push("");
-                                    }
-
-                                    const classDescr = describeClass(effectiveSide, effectiveMon);
-                                    titleLines.push(`Класс: ${classDescr}`);
-
-                                    const signNsText =
-                                        analysis.signChangeNs && analysis.signChangeNs.length > 0
-                                            ? formatIntervals(analysis.signChangeNs)
-                                            : analysis.firstSignChangeN != null
-                                              ? String(analysis.firstSignChangeN)
-                                              : "—";
-
-                                    const growthNsText =
-                                        analysis.growthNs && analysis.growthNs.length > 0
-                                            ? formatIntervals(analysis.growthNs)
-                                            : analysis.firstGrowthN != null
-                                              ? String(analysis.firstGrowthN)
-                                              : "—";
-
-                                    titleLines.push(
-                                        `Число смен знака: ${analysis.signChangesCount}, ns: ${signNsText}`
-                                    );
-
-                                    titleLines.push(
-                                        `Число роста |Aₙ−lim|: ${analysis.growthViolationsCount}, ns: ${growthNsText}`
-                                    );
-
-                                    titleLines.push(
-                                        `Пар (n−1,n) в анализе: ${analysis.stepsAnalyzed}`
-                                    );
-
-                                    titleLines.push("");
-                                    titleLines.push("Клик — детальный график.");
-
-                                    const title = titleLines.join("\n");
-
-                                    const isSelected =
-                                        selectedCell?.seriesId === s.key &&
-                                        selectedCell?.accelId === algo.key;
-
-                                    const baseCell =
-                                        "min-w-[30px] border px-[2px] py-[2px] text-center text-[10px] cursor-pointer";
-
-                                    const colorClass = getCellColorClass(
-                                        effectiveSide,
-                                        effectiveMon,
-                                        isSelected
-                                    );
-
-                                    const domId = getConvergenceCellDomId(algo.key, s.key);
-
-                                    return (
-                                        <td
-                                            key={key}
-                                            id={domId}
-                                            className={baseCell + " " + colorClass}
-                                            title={title}
-                                            onClick={() =>
-                                                onCellSelect({
-                                                    seriesId: s.key,
-                                                    accelId: algo.key,
-                                                })
-                                            }
-                                        >
-                                            <div className="flex select-none flex-col items-center gap-[1px] leading-tight">
-                                                <span className="font-mono text-[10px]">
-                                                    {sideShort} | {monShort}
-                                                </span>
-                                                <span className="text-[9px] text-textDim/80">
-                                                    k: {analysis.stepsAnalyzed}
-                                                </span>
-                                            </div>
-                                        </td>
-                                    );
-                                })}
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
+            {/* базовая таблица с липкой шапкой, синхронизирующейся по горизонтали */}
+            <StickyTable
+                header={headerNode}
+                body={bodyNode}
+                stickyOffset={56} // подстрой по высоте верхнего навбара, если есть
+            />
         </div>
     );
 };
