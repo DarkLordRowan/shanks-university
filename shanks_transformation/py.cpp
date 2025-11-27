@@ -311,7 +311,10 @@ void bind_complex_num(py::module_& m, const char* pyname) {
 
 PYBIND11_MODULE(pyshanks, m) {
 
+    #ifdef INCLUDE_GSL_LIB
+    #pragma message("GSL LIB IS INCLUDED")
     gsl_set_error_handler_off();
+    #endif
 
     m.doc() = "pybind11: polymorphic series (double + float_precision), helper-organized, no-arg constructors, backward-compatible";
 
