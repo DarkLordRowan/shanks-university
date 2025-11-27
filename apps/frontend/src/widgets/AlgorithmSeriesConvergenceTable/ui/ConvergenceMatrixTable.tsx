@@ -112,8 +112,15 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
     const seriesSlice = seriesList.slice(startIndex, endIndex);
 
     return (
-        <>
-            <div className="mb-2 flex items-center justify-between text-xs text-textDim">
+        <div className="relative">
+            <div
+                className="
+                    sticky top-0 z-20
+                    mb-2 flex items-center justify-between text-xs text-textDim
+                    bg-surface/95 backdrop-blur-sm
+                    -mx-4 px-4 py-2
+                "
+            >
                 <div className="flex flex-col gap-1">
                     <span className="text-sm font-semibold text-textDim">
                         Монотонность и направление: алгоритмы × ряды
@@ -127,7 +134,6 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
                 </div>
 
                 <div className="flex items-center gap-3">
-                    {/* выбор precision как в примере heatmap */}
                     <div className="flex items-center gap-1 text-[10px]">
                         <span>precision:</span>
                         <select
@@ -148,7 +154,6 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
                         </select>
                     </div>
 
-                    {/* пороги пересчёта направления и монотонности */}
                     <div className="flex flex-col gap-[2px] text-[10px]">
                         <div className="flex items-center gap-1">
                             <span
@@ -239,11 +244,11 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
                 </div>
             </div>
 
-            <div className="overflow-auto rounded-xl2 border border-border bg-panel shadow-panel">
+            <div className="overflow-x-auto rounded-xl2 border border-border bg-panel shadow-panel">
                 <table className="min-w-full border-collapse text-[10px] leading-tight text-textDim">
                     <thead className="bg-surface/80">
                         <tr>
-                            <th className="sticky left-0 top-0 z-20 border border-border bg-surface/90 px-1 py-1 text-left text-[10px] align-bottom">
+                            <th className="sticky left-0 z-20 border border-border bg-surface/90 px-1 py-1 text-left text-[10px] align-bottom">
                                 Алгоритм \ Ряд
                             </th>
 
@@ -346,8 +351,6 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
                                     let effectiveMon: MonotonicityType = rawMon;
                                     if (rawMon !== "no_limit" && rawMon !== "not_enough_data") {
                                         if (violationsCount <= maxViolationsForMonotone) {
-                                            // если формально "есть рост", но он в пределах допуска,
-                                            // считаем как не возрастающую ошибку
                                             if (rawMon === "has_growth") {
                                                 effectiveMon = "non_increasing_error";
                                             }
@@ -369,7 +372,6 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
                                     );
                                     titleLines.push("Аргументы алгоритма:");
 
-                                    // Конфигурация алгоритма (кратко)
                                     const algoEntries = nonNullEntries(algo.algorithmArgs);
                                     if (algoEntries.length > 0) {
                                         for (const [k, v] of algoEntries.sort(([a], [b]) =>
@@ -385,7 +387,6 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
                                         titleLines.push("");
                                     }
 
-                                    // Итоговая классификация
                                     const classDescr = describeClass(effectiveSide, effectiveMon);
                                     titleLines.push(`Класс: ${classDescr}`);
 
@@ -411,7 +412,6 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
                                         `Число роста |Aₙ−lim|: ${analysis.growthViolationsCount}, ns: ${growthNsText}`
                                     );
 
-                                    // Объём данных
                                     titleLines.push(
                                         `Пар (n−1,n) в анализе: ${analysis.stepsAnalyzed}`
                                     );
@@ -465,7 +465,7 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
                     </tbody>
                 </table>
             </div>
-        </>
+        </div>
     );
 };
 
