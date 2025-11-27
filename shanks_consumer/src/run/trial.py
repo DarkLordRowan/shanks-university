@@ -220,13 +220,6 @@ def convert_arg_series(precision, key, value) -> Any:
         return cast_precision_value(precision, value)
 
 
-def _process_combination_worker(
-    args: tuple[PrecisionConfig, BaseSeriesParam, BaseAccelParam],
-) -> tuple[list[SeriesRecord], list[AccelRecord]]:
-    precision, series, accel = args
-    return execute_series_accels(precision, series, [accel], _global_counter)
-
-
 # Global variable for shared counter in multiprocessing
 _global_counter = None
 
@@ -330,6 +323,7 @@ class ComplexTrial:
     series_params: list[BaseSeriesParam]
     accel_params: list[BaseAccelParam]
     precision: PrecisionConfig
+    counter: Any  # App-level counter for unique series IDs
 
     stack_id: str = field(default_factory=lambda: str(uuid.uuid4()))
     chunk_size: int = 1
@@ -338,11 +332,9 @@ class ComplexTrial:
 
     def execute(self) -> Iterable[tuple[list[SeriesRecord], list[AccelRecord]]]:
         if self.process_count > 1:
-            # Initialize shared counter for multiprocessing
-            counter = mp.Value("i", 0)
-            # Use multiprocessing
+            # Use multiprocessing with shared counter
             with mp.Pool(
-                self.process_count, initializer=_init_worker, initargs=(counter,)
+                self.process_count, initializer=_init_worker, initargs=(self.counter,)
             ) as pool:
                 for result in tqdm(
                     pool.imap_unordered(
@@ -357,10 +349,9 @@ class ComplexTrial:
                 ):
                     yield result
         else:
-            counter = mp.Value("i", 0)  # Local counter for single process
             # Single process with progress bar
             for series in tqdm(self.series_params, desc="Processing series"):
                 series_records, accel_records = execute_series_accels(
-                    self.precision, series, self.accel_params, counter
+                    self.precision, series, self.accel_params, self.counter
                 )
                 yield series_records, accel_records
