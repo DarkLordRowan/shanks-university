@@ -1,23 +1,19 @@
 import json
 import pathlib
-from dataclasses import asdict, fields, is_dataclass
-from typing import Any, Sequence
+from typing import Any
 
 import pyarrow as pa
 import pyarrow.dataset as ds
 
 import pyshanks as ps
-from src.run.params import PrecisionType
+from src.run.precision import PrecisionType
 from src.run.trial import (
-    AccelPoint,
     AccelRecord,
-    ErrorRecord,
-    EventRecord,
     SeriesRecord,
 )
 
 
-def sanitize_complex_value(value: Any) -> dict[str, str | None] | None:
+def sanitize_complex_value(value: Any) -> dict[str, Any] | None:
     """Convert complex numbers to {real: str, imag: str} format."""
     if value is None:
         return None
@@ -58,7 +54,7 @@ def sanitize_value(value: Any) -> Any:
 
 def sanitize_series_record(record: SeriesRecord) -> dict[str, Any]:
     """Sanitize a SeriesRecord for Parquet export."""
-    sanitized = {
+    sanitized: dict[str, Any] = {
         "series_name": record.series_name,
         "series_id": record.series_id,
         "precision": record.precision.value
@@ -79,7 +75,7 @@ def sanitize_series_record(record: SeriesRecord) -> dict[str, Any]:
 
 def sanitize_accel_record(record: AccelRecord) -> dict[str, Any]:
     """Sanitize an AccelRecord for Parquet export."""
-    sanitized = {
+    sanitized: dict[str, Any] = {
         "series_id": record.series_id,
         "accel_name": record.accel_name,
         "m_value": record.m_value,
@@ -90,15 +86,17 @@ def sanitize_accel_record(record: AccelRecord) -> dict[str, Any]:
     }
 
     # Sanitize computed values
+    computed_list: list[dict[str, Any] | None] = []
     for point in record.computed:
         if point is None:
-            sanitized["computed"].append(None)
+            computed_list.append(None)
         else:
             sanitized_point = {
                 "value": sanitize_complex_value(point.value),
                 "deviation": str(point.deviation),
             }
-            sanitized["computed"].append(sanitized_point)
+            computed_list.append(sanitized_point)
+    sanitized["computed"] = computed_list
 
     # Sanitize errors if present
     if record.errors:
@@ -214,8 +212,8 @@ class ExportTrialResults:
         # Export acceleration records
         if self.accel_records:
             accel_data = []
-            for record in self.accel_records:
-                accel_data.append(sanitize_accel_record(record))
+            for accel_rec in self.accel_records:
+                accel_data.append(sanitize_accel_record(accel_rec))
 
             # TODO: Remove or make non-hardcoded
             accel_schema = pa.schema(
@@ -304,7 +302,10 @@ class ExportTrialResults:
         output_path.parent.mkdir(parents=True, exist_ok=True)
 
         # Combine all data into a single structure
-        export_data = {"series": [], "accelerations": []}
+        export_data: dict[str, list[dict[str, Any]]] = {
+            "series": [],
+            "accelerations": [],
+        }
 
         # Export series records
         if self.series_records:
@@ -313,8 +314,8 @@ class ExportTrialResults:
 
         # Export acceleration records
         if self.accel_records:
-            for record in self.accel_records:
-                export_data["accelerations"].append(sanitize_accel_record(record))
+            for accel_rec in self.accel_records:
+                export_data["accelerations"].append(sanitize_accel_record(accel_rec))
 
         # Write to JSON file
         with open(output_path, "w", encoding="utf-8") as f:

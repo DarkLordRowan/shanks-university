@@ -29,7 +29,7 @@ class JsonDataLoader:
 
     def __init__(self, data: List[Dict[str, Any]]):
         self.data = preprocess_data(data)
-        self._metadata_cache = None
+        self._metadata_cache: Dict[str, Any] | None = None
 
     def get_metadata(self) -> Dict[str, Any]:
         """Extract metadata from JSON data."""
@@ -42,13 +42,13 @@ class JsonDataLoader:
         series_names = set()
         accel_methods = set()
         m_values = set()
-        additional_params = {}
-        series_params = {}
+        additional_params: Dict[str, Any] = {}
+        series_params: Dict[str, Any] = {}
         precisions = set()
         base_series_names = set()
         base_accel_names = set()
-        series_param_info = {}
-        accel_param_info = {}
+        series_param_info: Dict[str, Any] = {}
+        accel_param_info: Dict[str, Any] = {}
 
         for item in data:
             # Extract series info
@@ -131,7 +131,7 @@ class JsonDataLoader:
         series_params = filters.get("series_params", {})
 
         # Group data by (series, accel) for selecting best stack_id
-        grouped_data = {}
+        grouped_data: Dict[tuple, Any] = {}
 
         for item in self.data:
             if not item.get("computed") or len(item["computed"]) == 0:
@@ -1282,7 +1282,7 @@ class ParquetDataLoader:
     def __init__(self, data_file: Path):
         self.data_file = data_file
         self.dataset = ds.dataset(data_file, format="parquet")
-        self._metadata = None  # Cache metadata once
+        self._metadata: Dict[str, Any] | None = None  # Cache metadata once
 
     def get_metadata(self) -> Dict[str, Any]:
         """Get metadata for UI generation - cached and fast."""
@@ -1296,18 +1296,15 @@ class ParquetDataLoader:
         scan_table = self.dataset.to_table(columns=["precision", "series", "accel"])
 
         # Extract unique values from top-level columns
-        precisions = pc.unique(scan_table["precision"]).to_pylist()
+        precisions = list(set(scan_table["precision"].to_pylist()))
 
-        # Extract nested struct fields using pc.struct_field (works on ChunkedArray)
-        series_names = pc.unique(
-            pc.struct_field(scan_table["series"], "name")
-        ).to_pylist()
-        accel_names = pc.unique(
-            pc.struct_field(scan_table["accel"], "name")
-        ).to_pylist()
-        m_values = pc.unique(
-            pc.struct_field(scan_table["accel"], "m_value")
-        ).to_pylist()
+        # Extract nested struct fields using pandas approach for compatibility
+        series_df = scan_table["series"].to_pandas()
+        accel_df = scan_table["accel"].to_pandas()
+        
+        series_names = list(set(series_df["name"].tolist()))
+        accel_names = list(set(accel_df["name"].tolist()))
+        m_values = list(set(accel_df["m_value"].tolist()))
 
         # For dynamic parameters, sample a limited number of rows
         # Use slice() to limit rows, not max_rows parameter
@@ -1319,10 +1316,10 @@ class ParquetDataLoader:
         sample_df = sample_table.to_pandas()
 
         # Build parameter dictionaries
-        additional_params = {}
-        series_params = {}
-        series_param_info = {name: [] for name in series_names}
-        accel_param_info = {name: [] for name in accel_names}
+        additional_params: Dict[str, Any] = {}
+        series_params: Dict[str, Any] = {}
+        series_param_info: Dict[str, Any] = {name: [] for name in series_names}
+        accel_param_info: Dict[str, Any] = {name: [] for name in accel_names}
 
         # Process series arguments
         if not sample_df.empty:
@@ -1583,15 +1580,16 @@ def start_server(data_file: Path, port: int = 8000):
     """Запускает HTTP сервер с предзагруженными данными"""
 
     # Detect file format and create appropriate data loader
+    data_loader: DataLoader
     if data_file.suffix.lower() == ".parquet":
         print(f"Loading Parquet data from {data_file}")
-        data_loader = ParquetDataLoader(data_file)
+        data_loader = ParquetDataLoader(data_file)  # type: ignore
         print(f"Parquet dataset loaded successfully")
     else:
         print(f"Loading JSON data from {data_file}")
         with open(data_file, "r", encoding="utf-8") as f:
             data = json.load(f)
-        data_loader = JsonDataLoader(data)
+        data_loader = JsonDataLoader(data)  # type: ignore
         print(f"Loaded {len(data)} records from {data_file}")
 
     # Создаем обработчик с data loader

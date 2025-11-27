@@ -2,14 +2,13 @@ import itertools
 import logging
 import multiprocessing as mp
 import uuid
-from dataclasses import asdict, dataclass, field
-from multiprocessing import Value
-from typing import Any, Callable, Iterable, Mapping, TypeGuard
+from dataclasses import dataclass, field
+from typing import Any, Iterable, TypeGuard
 
 from tqdm import tqdm  # type: ignore[import]
 
 from pyshanks.pyshanks import NumeratorType, RemainderType
-from src.run.params import BaseAccelParam, BaseSeriesParam, PrecisionType
+from src.run.params import BaseAccelParam, BaseSeriesParam, PrecisionConfig
 from src.run.precision import (
     SeriesBaseProto,
     SeriesResultProto,
@@ -51,7 +50,7 @@ class AccelPoint:  # zipped with SeriesPoint
 class SeriesRecord:  # stored in parquet/series
     series_name: str  # partitioned by series name
     series_id: int
-    precision: PrecisionType
+    precision: PrecisionConfig
     source_arguments: dict[str, str]
     series_limit: Any
     computed: list[SeriesPoint]
@@ -91,7 +90,7 @@ def convert_arg_accel(precision, key, value) -> Any:
 
 
 def execute_accels(
-    precision: PrecisionType,
+    precision: PrecisionConfig,
     series_id: int,
     series_result: SeriesResultProto,
     accels: BaseAccelParam,
@@ -222,7 +221,7 @@ def convert_arg_series(precision, key, value) -> Any:
 
 
 def _process_combination_worker(
-    args: tuple[PrecisionType, BaseSeriesParam, BaseAccelParam],
+    args: tuple[PrecisionConfig, BaseSeriesParam, BaseAccelParam],
 ) -> tuple[list[SeriesRecord], list[AccelRecord]]:
     precision, series, accel = args
     return execute_series_accels(precision, series, [accel], _global_counter)
@@ -238,14 +237,14 @@ def _init_worker(counter: Any):
 
 
 def _process_series_worker(
-    args: tuple[PrecisionType, BaseSeriesParam, list[BaseAccelParam]],
+    args: tuple[PrecisionConfig, BaseSeriesParam, list[BaseAccelParam]],
 ) -> tuple[list[SeriesRecord], list[AccelRecord]]:
     precision, series, accel_params = args
     return execute_series_accels(precision, series, accel_params, _global_counter)
 
 
 def execute_series_accels(
-    precision: PrecisionType,
+    precision: PrecisionConfig,
     series: BaseSeriesParam,
     related_accel: list[BaseAccelParam],
     counter: Any,
@@ -330,7 +329,7 @@ def execute_series_accels(
 class ComplexTrial:
     series_params: list[BaseSeriesParam]
     accel_params: list[BaseAccelParam]
-    precision: PrecisionType
+    precision: PrecisionConfig
 
     stack_id: str = field(default_factory=lambda: str(uuid.uuid4()))
     chunk_size: int = 1

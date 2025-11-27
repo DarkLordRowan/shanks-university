@@ -3,14 +3,13 @@ import uuid
 from typing import Iterable
 
 from src.config import TrialConfig
-from src.db import setup_mongo_db
 from src.run.export import ExportTrialResults
 from src.run.loaders import AccelParamLoader, SeriesParamLoader
-from src.run.params import BaseAccelParam, BaseSeriesParam, PrecisionType
+from src.run.params import BaseAccelParam, BaseSeriesParam, PrecisionConfig
 from src.run.trial import AccelRecord, ComplexTrial, SeriesRecord
 
 
-def load_parameters(config: TrialConfig, precision: PrecisionType):
+def load_parameters(config: TrialConfig, precision: PrecisionConfig):
     series_params: list[BaseSeriesParam] = []
     accel_params: list[BaseAccelParam] = []
 
@@ -28,7 +27,9 @@ def load_parameters(config: TrialConfig, precision: PrecisionType):
 
     if config.accel_json.exists():
         logging.info("Loading acceleration methods from: %s", config.accel_json)
-        accel_params.extend(AccelParamLoader.from_json(config.accel_json, precision))
+        accel_params.extend(
+            AccelParamLoader.from_json(config.accel_json, precision.type)
+        )
     else:
         logging.warning("Acceleration JSON file not found: %s", config.accel_json)
 
@@ -42,9 +43,9 @@ def load_parameters(config: TrialConfig, precision: PrecisionType):
 
 
 def execute_trial(
-    config: TrialConfig, precision: PrecisionType, stack_id: str
+    config: TrialConfig, precision: PrecisionConfig, stack_id: str
 ) -> Iterable[tuple[list[SeriesRecord], list[AccelRecord]]]:
-    logging.info("Starting trial execution for precision: %s", precision.name)
+    logging.info("Starting trial execution for precision: %s", str(precision))
     logging.info("Process count: %d", config.trial_process_count)
 
     series_params, accel_params = load_parameters(config, precision)

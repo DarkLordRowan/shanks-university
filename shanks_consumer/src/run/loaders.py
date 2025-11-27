@@ -4,22 +4,27 @@ import pathlib
 from typing import Any, Iterable, Mapping
 
 import pyshanks as ps
-from src.run.params import AccelParamJSON, SeriesParamCSV, SeriesParamJSON
+from src.run.params import AccelParamJSON, SeriesParamCSV, SeriesParamJSON, PrecisionConfig
 from src.run.precision import (
     PrecisionType,
     is_arb_precision,
 )
 
 
-def decide_encoder(precision: PrecisionType):
+def decide_encoder(precision: PrecisionConfig):
     if is_arb_precision(precision):
-
+        arb_precision = precision.precision or 50
+        
         class _Decoder(json.JSONDecoder):
             def __init__(self, *args, **kwargs):
-                super().__init__(parse_float=ps.Arb, parse_int=ps.Arb, *args, **kwargs)
-
+                super().__init__(
+                    parse_float=lambda x: ps.Arb(float(x), arb_precision), 
+                    parse_int=lambda x: ps.Arb(float(x), arb_precision), 
+                    *args, **kwargs
+                )
+ 
         return _Decoder
-
+ 
     return None
 
 
@@ -72,7 +77,7 @@ class SeriesParamLoader:
     @staticmethod
     def from_data(
         data: Mapping[str, Any],
-        precision: PrecisionType = PrecisionType.F64,
+        precision: PrecisionConfig = PrecisionConfig(PrecisionType.F64),
     ) -> list[SeriesParamJSON]:
         series_list: list[SeriesParamJSON[Any]] = []
         for series_data in data["series"]:
@@ -89,7 +94,7 @@ class SeriesParamLoader:
 
     @staticmethod
     def _process_series_args(
-        args: Any, precision: PrecisionType
+        args: Any, precision: PrecisionConfig
     ) -> dict[str, Iterable[Any]]:
         if not args:
             return {}
@@ -105,7 +110,7 @@ class SeriesParamLoader:
     @staticmethod
     def from_json(
         json_location: pathlib.Path,
-        precision: PrecisionType = PrecisionType.F64,
+        precision: PrecisionConfig = PrecisionConfig(PrecisionType.F64),
     ) -> list[SeriesParamJSON]:
         with open(json_location, encoding="utf-8") as f:
             data = json.load(f, cls=decide_encoder(precision))
@@ -114,7 +119,7 @@ class SeriesParamLoader:
     @staticmethod
     def from_csv(
         csv_location: pathlib.Path,
-        precision: PrecisionType = PrecisionType.F64,
+        precision: PrecisionConfig = PrecisionConfig(PrecisionType.F64),
     ) -> list[SeriesParamCSV]:
         results: list[SeriesParamCSV] = []
         with open(csv_location, encoding="utf-8") as f:
@@ -137,14 +142,15 @@ class AccelParamLoader:
         json_location: pathlib.Path,
         precision: PrecisionType = PrecisionType.F64,
     ) -> list[AccelParamJSON]:
+        precision_config = PrecisionConfig(type=precision)
         with open(json_location, encoding="utf-8") as f:
-            data = json.load(f, cls=decide_encoder(precision))
-        return AccelParamLoader.from_data(data, precision)
+            data = json.load(f, cls=decide_encoder(precision_config))
+        return AccelParamLoader.from_data(data, precision_config)
 
     @staticmethod
     def from_data(
         data: Mapping[str, Any],
-        precision: PrecisionType = PrecisionType.F64,
+        precision: PrecisionConfig = PrecisionConfig(type=PrecisionType.F64),
     ) -> list[AccelParamJSON]:
         methods_list: list[AccelParamJSON[Any]] = []
 

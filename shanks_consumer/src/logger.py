@@ -35,7 +35,7 @@ def setup_logging(verbose: int, use_colors: bool = True):
         use_colors = hasattr(sys.stdout, "isatty") and sys.stdout.isatty()
 
     if use_colors:
-        formatter = ColoredFormatter("%(levelname)s: %(message)s")
+        formatter: logging.Formatter = ColoredFormatter("%(levelname)s: %(message)s")
     else:
         formatter = logging.Formatter("%(levelname)s: %(message)s")
 

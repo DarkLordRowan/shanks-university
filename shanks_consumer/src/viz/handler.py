@@ -1,5 +1,5 @@
 import logging
-from typing import Optional
+from typing import Optional, Union
 
 from src.config import VizConfig
 from src.db import MongoDatabase
@@ -14,7 +14,7 @@ def handle_viz_command(config: VizConfig, mongo_database: MongoDatabase | None =
         logging.info("Using file-based data source: %s", config.from_file)
         if not config.from_file.exists():
             raise FileNotFoundError(f"Data file not found: {config.from_file}")
-        collector = SingleFileDataCollector(config.from_file)
+        collector: Union[SingleFileDataCollector, MongoDataCollector] = SingleFileDataCollector(config.from_file)
     else:
         logging.info("Using MongoDB data source")
         if mongo_database is None:

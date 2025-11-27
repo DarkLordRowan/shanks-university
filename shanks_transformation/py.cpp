@@ -260,7 +260,7 @@ void bind_complex_num(py::module_& m, const char* pyname) {
     auto cls = py::class_<C>(m, pyname)
         .def(py::init<>())
         .def(py::init<R>(), py::arg("re"))
-        .def(py::init<R,R>(), py::arg("re"), py::arg("im"))
+        .def(py::init<R, R>(), py::arg("re"), py::arg("im"))
         .def(py::init([](std::complex<double> z){
             return C(R(z.real()), R(z.imag()));
         }), py::arg("z"))
@@ -328,9 +328,8 @@ PYBIND11_MODULE(pyshanks, m) {
         using R = float_precision;
 
         py::class_<R>(m, "Arb")
-            .def(py::init<>())
-            .def(py::init<double>(), py::arg("d"))
-            .def(py::init<const std::string&>(), py::arg("s"))
+            .def(py::init<double, size_t>(), py::arg("d"), py::arg("precision"))
+            .def(py::init<const std::string&, size_t>(), py::arg("s"), py::arg("precision"))
             .def("__str__", [](const R &x){ return x.toString(); })
             .def("__format__", [](const R &x, const std::string&){ return x.toString(); })
             .def("__repr__", [](const R &x){ return std::string("<") + "Arb" + ": " + x.toString() + ">"; })

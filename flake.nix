@@ -22,10 +22,12 @@
               clang-tools
               python3
               poetry
-              mongodb-ce
+              # mongodb-ce
             ]
             ++ (with python3Packages; [
               pybind11-stubgen
+              mypy
+
               numpy
               pandas
               matplotlib
