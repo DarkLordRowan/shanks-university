@@ -30,6 +30,7 @@ packages = [
 pre-commit = "^4.3.0"
 mypy = "^1.18.2"
 isort = "^7.0.0"
+ruff = "^0.14.6"
 
 [tool.pylint.MASTER]
 extension-pkg-allow-list = ["pyshanks"]

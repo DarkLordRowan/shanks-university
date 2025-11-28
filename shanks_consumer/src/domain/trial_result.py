@@ -3,6 +3,12 @@ from typing import Any, Mapping
 
 
 @dataclass
+class EventData:
+    name: str
+    description: str
+
+
+@dataclass
 class ComputedTrialResult:
     n: int
     series_value: Any
@@ -10,7 +16,7 @@ class ComputedTrialResult:
     partial_sum_deviation: Any
     accel_value: Any
     accel_value_deviation: Any
-    events: list[dict[Any, Any]]
+    events: list[EventData]
 
 
 @dataclass
