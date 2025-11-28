@@ -15,7 +15,6 @@ class DataAccelParamSource(AccelParamSource):
         methods = []
 
         for m in self.data["methods"]:
-            print(m)
             n_list = [int(v) for v in autowrap(m["n"])]
             m_list = [int(v) for v in autowrap(m["m"])]
 
