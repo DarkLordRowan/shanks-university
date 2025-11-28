@@ -8,6 +8,7 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <string>
+#include <functional>
 #include "libs/arbitrary_arithmetics/complexprecision.h"
 #include "libs/arbitrary_arithmetics/fprecision.h"
 #include "libs/arbitrary_arithmetics/precisioncore.cpp"
@@ -19,10 +20,23 @@
 
 #include "include/series.hpp"
 #include "include/methods.hpp"
+#include "include/utils.hpp"
 
 namespace py = pybind11;
 
 using K = std::size_t;
+
+inline py::size_t hash_float_precision(const float_precision& x) {
+    py::size_t h = 0;
+    h ^= std::hash<size_t>{}(x.precision()) + 0x9e3779b9 + (h << 6) + (h >> 2);
+    h ^= std::hash<int>{}(x.sign()) + 0x9e3779b9 + (h << 6) + (h >> 2);
+    h ^= std::hash<eptype>{}(x.exponent()) + 0x9e3779b9 + (h << 6) + (h >> 2);
+    auto mantissa = x.number();
+    for (size_t i = 0; i < std::min(mantissa.size(), size_t(3)); ++i) {
+        h ^= std::hash<fptype>{}(mantissa[i]) + 0x9e3779b9 + (h << 6) + (h >> 2);
+    }
+    return h;
+}
 
 template <template<class,class> class Impl>
 struct W { template<class X, class Y> using type = Impl<X,Y>; };
@@ -296,6 +310,19 @@ void bind_complex_num(py::module_& m, const char* pyname) {
         .def(py::self / py::self)
         .def(py::self == py::self)
         .def(py::self != py::self)
+        .def("__hash__", [](const C& z) -> py::size_t {
+            py::size_t h_real;
+            py::size_t h_imag;
+            if constexpr (std::is_same_v<R, float_precision>) {
+                h_real = hash_float_precision(z.real());
+                h_imag = hash_float_precision(z.imag());
+            } else {
+                h_real = std::hash<R>{}(z.real());
+                h_imag = std::hash<R>{}(z.imag());
+            }
+            const py::size_t multiplier = 0x9e3779b97f4a7c15ULL;  // 2**61 - 1
+            return h_real + (h_imag * multiplier);
+        })
         .def("__getstate__", [](const C& z)->State{
             if constexpr (std::is_same_v<R, float_precision>) {
                 return { z.real().toString(), z.imag().toString() };
@@ -356,6 +383,7 @@ PYBIND11_MODULE(pyshanks, m) {
             .def("__float__", [](const R &x){ return static_cast<double>(x); })
             .def("__int__",   [](const R &x){ return static_cast<long>(static_cast<double>(x)); })
             .def("__index__", [](const R &x){ return static_cast<long>(static_cast<double>(x)); })
+            .def("__hash__", [](const R& x) -> py::size_t { return hash_float_precision(x); })
             .def("__getstate__", [](const R& x){ return x.toString(); })
             .def("__setstate__", [](R& self, const std::string& s){ new (&self) R(s); });
     }

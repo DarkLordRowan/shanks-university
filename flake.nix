@@ -23,6 +23,7 @@
               python3
               poetry
               mongodb-ce
+              pkg-config
             ]
             ++ (with python3Packages; [
               pybind11-stubgen
