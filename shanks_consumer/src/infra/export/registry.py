@@ -1,11 +1,10 @@
+from src.config.model import TrialConfig
 from src.db import setup_mongo_db
 from src.domain.output_format import OutputFormat
 from src.infra.export.to_csv import CSVExportService
 from src.infra.export.to_json import JSONExportService
 from src.infra.export.to_mongo import MongoExportService
 from src.infra.export.to_parquet import ParquetExportService
-
-from src.config.model import TrialConfig
 
 
 def build_json(cfg: TrialConfig) -> JSONExportService | None:

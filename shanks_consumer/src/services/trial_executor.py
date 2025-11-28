@@ -111,23 +111,15 @@ class TrialExecutor:
     ):
 
         if self.config.trial_memory_efficient:
-            return self.__run_trials_dispose_at_completion(
-                series_params, accel_params
-            )
+            return self.__run_trials_dispose_at_completion(series_params, accel_params)
         return self.__run_trials_full_load(series_params, accel_params)
 
     def run_all_precisions(self) -> str:
         for precision in self.config.precisions:
-            self.logger.info(
-                "Running trials for precision: %s", precision.name
-            )
+            self.logger.info("Running trials for precision: %s", precision.name)
             series_params, accel_params = self.load_parameters(precision)
-            self.logger.debug(
-                "Series params: \n%s", "\n".join(map(str, series_params))
-            )
-            self.logger.debug(
-                "Accel params: \n%s", "\n".join(map(str, accel_params))
-            )
+            self.logger.debug("Series params: \n%s", "\n".join(map(str, series_params)))
+            self.logger.debug("Accel params: \n%s", "\n".join(map(str, accel_params)))
             self.run_trials(series_params, accel_params)
 
         return self.stack_id

@@ -1,10 +1,12 @@
 from typing import Any, Iterable
 
+
 def generate_range(start: float, stop: float, step: float) -> Iterable[float]:
     if step == 0:
         raise ValueError("Step cannot be zero in a range construction")
     count = int((stop - start) / step)
     return (start + i * step for i in range(count))
+
 
 def autowrap(value: Any):
     if value is None:
