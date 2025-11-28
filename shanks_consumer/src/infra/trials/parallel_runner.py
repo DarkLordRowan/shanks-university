@@ -11,6 +11,7 @@ from src.domain.trial_result import (
 from src.domain.trial_runner import TrialRunner
 from src.domain.use_cases.run_trial import execute_trial
 
+
 class ParallelTrialRunner(TrialRunner):
 
     def __init__(

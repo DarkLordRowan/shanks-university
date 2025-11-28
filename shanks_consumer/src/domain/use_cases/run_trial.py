@@ -2,6 +2,7 @@ import itertools
 from functools import lru_cache
 from typing import Any, TypeGuard
 
+from src.domain.event import EVENT_METHODS
 from src.domain.params import BaseAccelParam, BaseSeriesParam, PrecisionType
 from src.domain.precision import SeriesBaseProto, cast_precision_value
 from src.domain.trial_result import (
@@ -13,12 +14,9 @@ from src.domain.trial_result import (
     TrialResult,
 )
 
-from src.domain.event import EVENT_METHODS
 
 @lru_cache(maxsize=256)
-def cached_generate_series(
-    series_type: type, x: Any, vec_size: int, t: Any, k: int
-):
+def cached_generate_series(series_type: type, x: Any, vec_size: int, t: Any, k: int):
     series = series_type()
     return (
         series.generateSeries(x, vec_size, t, k),
@@ -215,13 +213,9 @@ def execute_trial(
                                 n=n_value,
                                 series_value=series_term,
                                 partial_sum=partial_sum,
-                                partial_sum_deviation=abs(
-                                    partial_sum - series_lim
-                                ),
+                                partial_sum_deviation=abs(partial_sum - series_lim),
                                 accel_value=accel_value,
-                                accel_value_deviation=abs(
-                                    accel_value - series_lim
-                                ),
+                                accel_value_deviation=abs(accel_value - series_lim),
                                 events=current_events,
                             )
                         )

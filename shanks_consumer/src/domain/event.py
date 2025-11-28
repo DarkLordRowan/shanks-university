@@ -1,7 +1,7 @@
-from enum import Enum
-from src.domain.trial_result import ComputedTrialResult
 from dataclasses import asdict, dataclass
+from enum import Enum
 
+from src.domain.trial_result import ComputedTrialResult
 from src.logger import logged_debug
 
 

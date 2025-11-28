@@ -2,6 +2,7 @@ import logging
 import sys
 from functools import wraps
 
+
 class ColoredFormatter(logging.Formatter):
     COLORS = {
         "DEBUG": "\033[36m",  # Cyan

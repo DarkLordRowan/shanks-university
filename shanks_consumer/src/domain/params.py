@@ -12,6 +12,7 @@ from dataclasses import dataclass
 from typing import Any, Generic, Mapping, override
 
 import pyshanks as ps
+from src.domain.event import EventType
 from src.domain.precision import (
     AccelProto,
     PrecisionType,
@@ -21,8 +22,6 @@ from src.domain.precision import (
     cast_natural_series_value,
     create_series_result,
 )
-
-from src.domain.event import EventType
 
 
 class BaseSeriesParam[T]:
@@ -211,6 +210,7 @@ class AccelParamJSON(StandardAccelParam[TNum]):
     @override
     def additional_args(self):
         return self.expanded_init_args
+
 
 class AccelParamModule(StandardAccelParam[TNum]):
 
