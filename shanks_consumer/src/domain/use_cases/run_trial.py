@@ -2,7 +2,7 @@ import itertools
 from functools import lru_cache
 from typing import Any, TypeGuard
 
-from src.domain.event import EVENT_METHODS
+from src.domain.event import EVENT_METHODS, EventType
 from src.domain.params import BaseAccelParam, BaseSeriesParam, PrecisionType
 from src.domain.precision import SeriesBaseProto, cast_precision_value
 from src.domain.trial_result import (
@@ -13,6 +13,7 @@ from src.domain.trial_result import (
     SeriesTrialResult,
     TrialResult,
 )
+from src.logger import logged_debug
 
 
 @lru_cache(maxsize=256)
@@ -28,6 +29,7 @@ def _is_series_generator(candidate: object) -> TypeGuard[SeriesBaseProto[Any]]:
     return hasattr(candidate, "generateSeries") and hasattr(candidate, "get_sum")
 
 
+@logged_debug
 def execute_trial(
     series_accel: tuple[BaseSeriesParam, BaseAccelParam],
 ) -> list[TrialResult]:
@@ -178,7 +180,20 @@ def execute_trial(
                         series_term = series_result.an[index]
                         accel_value = accel_instance(n_value, m_value, series_result)
 
+                        computed.append(
+                            ComputedTrialResult(
+                                n=n_value,
+                                series_value=series_term,
+                                partial_sum=partial_sum,
+                                partial_sum_deviation=abs(partial_sum - series_lim),
+                                accel_value=accel_value,
+                                accel_value_deviation=abs(accel_value - series_lim),
+                                events=[],
+                            )
+                        )
+
                         current_events = []
+
                         for event in accel.events:
                             event_type = event.type
 
@@ -186,7 +201,7 @@ def execute_trial(
                                 continue
 
                             event_result = EVENT_METHODS.get(
-                                event_type, lambda _: None
+                                EventType(event_type), lambda _: None
                             )(computed)
                             if event_result is not None:
                                 current_events.append(event_result)
@@ -208,17 +223,7 @@ def execute_trial(
                                     event_blocked_completion = True
                                     break
 
-                        computed.append(
-                            ComputedTrialResult(
-                                n=n_value,
-                                series_value=series_term,
-                                partial_sum=partial_sum,
-                                partial_sum_deviation=abs(partial_sum - series_lim),
-                                accel_value=accel_value,
-                                accel_value_deviation=abs(accel_value - series_lim),
-                                events=current_events,
-                            )
-                        )
+                            computed[-1].events = current_events
                     except Exception as exc:
                         error = ErrorTrialResult(
                             str(exc),

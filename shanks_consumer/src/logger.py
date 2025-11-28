@@ -54,38 +54,34 @@ def setup_logging(verbose: int, use_colors: bool = True):
     return root_logger
 
 
-def logged_debug(logger_name=None):
+def logged_debug(func):
+    root_logger = logging.getLogger()
 
-    def decorator(func):
-        logger = logging.getLogger(logger_name or func.__module__)
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        root_logger.debug(
+            "Calling %s with args=%s, kwargs=%s",
+            func.__name__,
+            args,
+            kwargs,
+        )
+        try:
+            result = func(*args, **kwargs)
 
-        @wraps(func)
-        def wrapper(*args, **kwargs):
-            logger.debug(
-                "Calling %s with args=%s, kwargs=%s",
+            root_logger.debug(
+                "Function %s{func.__name__} returned %s ",
                 func.__name__,
-                args,
-                kwargs,
+                result,
             )
-            try:
-                result = func(*args, **kwargs)
+            return result
 
-                logger.debug(
-                    "Function %s{func.__name__} returned %s ",
-                    func.__name__,
-                    result,
-                )
-                return result
+        except Exception as e:
+            root_logger.debug(
+                "Function %s raised %s: %s",
+                func.__name__,
+                type(e).__name__,
+                e,
+            )
+            raise
 
-            except Exception as e:
-                logger.debug(
-                    "Function %s raised %s: %s",
-                    func.__name__,
-                    type(e).__name__,
-                    e,
-                )
-                raise
-
-        return wrapper
-
-    return decorator
+    return wrapper
