@@ -137,22 +137,13 @@ T wynn_epsilon_3_algorithm<T, K>::operator()(
     // The epsilon table e[0..N+2] stores intermediate values εₛ⁽ⁿ⁾.
     // For theory, see: Wynn (1956), Section 3: Algorithm and lozenge diagram.
     // The epsilon table e[0..N+2] stores intermediate values εₛ⁽ⁿ⁾.
-    std::vector<T> e; //First N eliments of epsilon table + 2 elements for math
+    std::vector<T> e(N + static_cast<K>(3), static_cast<T>(0.0)); //First N eliments of epsilon table + 2 elements for math
 
-    if constexpr (is_standart_types<T>::value){
-        e = std::vector<T>(
-            N + static_cast<K>(3),
-            static_cast<T>(0.0)  
-        );
-    }
     #ifdef INC_FPRECISION
-    else if constexpr (std::is_same<T, float_precision>::value){
-        const size_t precision = data.Sn[0].precision();
-        e = std::vector<T>(
-            N + static_cast<K>(3),
-            float_precision(0,precision)
-        );
-        utils::set_precision(precision,  result, abs_error, resla, RES, E0, E1, E2, E3, 
+    if constexpr (is_precisable<T>::value){
+        const size_t precision = utils::get_precision(data.Sn[0]);
+		utils::set_vec_precision(e, precision);
+		utils::set_precision(precision,  result, abs_error, resla, RES, E0, E1, E2, E3, 
                 DELTA1, DELTA2, DELTA3, ERROR, ERR1, ERR2, ERR3, TOL1, TOL2, TOL3, SS);
     }
     #endif

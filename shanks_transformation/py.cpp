@@ -11,6 +11,7 @@
 #include <functional>
 #include "libs/arbitrary_arithmetics/complexprecision.h"
 #include "libs/arbitrary_arithmetics/fprecision.h"
+#include "libs/arbitrary_arithmetics/intervalprecision.h"
 #include "libs/arbitrary_arithmetics/precisioncore.cpp"
 
 #ifdef INCLUDE_GSL_LIB

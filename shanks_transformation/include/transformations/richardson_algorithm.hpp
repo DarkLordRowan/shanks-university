@@ -124,28 +124,20 @@ T richardson_algorithm<T, K>::operator()(
 
     // For theory, see: Richardson (1911) - construction of extrapolation table
     // Storage for Richardson extrapolation table with two rows for efficient computation
-    std::vector<std::vector<T>> e; // Two vectors n + 1 length containing Richardson table next and previous
+    std::vector<std::vector<T>> e(
+        2, 
+        std::vector<T>(n + static_cast<K>(1), static_cast<T>(0))
+    ); // Two vectors n + 1 length containing Richardson table next and previous
     T a = static_cast<T>(1.0);
     T b = static_cast<T>(0.0);
 
-    if constexpr (is_standart_types<T>::value){
-        e = std::vector<std::vector<T>>(2, std::vector<T>(n + static_cast<K>(1), static_cast<T>(0)));
-    }
     #ifdef INC_FPRECISION
-    else if constexpr (std::is_same<T, float_precision>::value){
-        const size_t precision = data.Sn[0].precision();
-        e = std::vector<std::vector<T>>(2, std::vector<T>(n + static_cast<K>(1), float_precision(0, precision)));
+    if constexpr (is_precisable<T>::value){
+        const size_t precision = utils::get_precision(data.Sn[0]);
+        utils::set_vec_precision(e[0], precision);
+        utils::set_vec_precision(e[1], precision);
         utils::set_precision(precision, a,b);
     }
-    #ifdef INC_COMPLEXPRECISION
-    else if constexpr (std::is_same<T, complex_precision<float_precision>>::value){
-        const size_t precision = std::max(data.Sn[0].real().precision(), data.Sn[0].imag().precision());
-        e = std::vector<std::vector<T>>(2, 
-            std::vector<T>(n + static_cast<K>(1), complex_precision<float_precision>(float_precision(0, precision), float_precision(0, precision)))
-        );
-        utils::set_precision(precision, a,b);
-    }
-    #endif
     #endif
 
     // For theory, see: Richardson (1911), Eq. (2) - initialization with partial sums

@@ -44,9 +44,12 @@ class wynn_rho_algorithm final : public series_acceleration<T, K>
 {
 protected:
 
+	using Kostil = std::conditional_t<isFloatLike<T>::value, TypeWrapper<T>, T>;
+	using param_type = typename Kostil::value_type;
+
 	std::unique_ptr<const numerator_base<T, K>> numerator;			  /**< Numerator computation strategy */
-	T gamma_in_use;													  /**< Gamma parameter for generalized rho transformation */
-	T rho_in_use;													  /**< Rho parameter for gamma-rho variant */
+	param_type gamma_in_use;													  /**< Gamma parameter for generalized rho transformation */
+	param_type rho_in_use;													  /**< Rho parameter for gamma-rho variant */
 	numerator_type numerator_type_in_use = numerator_type::rho_type;  /**< numerator type in use needed for calculating required size */
 
 
@@ -74,8 +77,8 @@ public:
 	// Стал:
 	explicit wynn_rho_algorithm(
 		numerator_type numerator_type_to_use = numerator_type::rho_type,
-		const T& gamma_to_use = static_cast<T>(-1), // Передача по константной ссылке
-		const T& rho_to_use   = static_cast<T>(1)  // Передача по константной ссылке
+		const param_type& gamma_to_use = static_cast<param_type>(-1), // Передача по константной ссылке
+		const param_type& rho_to_use   = static_cast<param_type>(1)  // Передача по константной ссылке
 	) : series_acceleration<T, K>() {
 		update_gamma(gamma_to_use);
 		update_rho(rho_to_use);
@@ -111,8 +114,8 @@ public:
 	) const override;
 
 	
-	void update_gamma(const T& new_gamma) { gamma_in_use = new_gamma;}
-	void update_rho(const T& new_rho) {rho_in_use = new_rho; }
+	void update_gamma(const param_type& new_gamma) { gamma_in_use = new_gamma;}
+	void update_rho(const param_type& new_rho) {rho_in_use = new_rho; }
 
 	void update_numerator(const numerator_type numerator_type_to_use){
 
@@ -170,22 +173,17 @@ inline T wynn_rho_algorithm<T, K>::operator()(
 
 	const K base_size = order + static_cast<K>(1);
 
-    std::vector<T> rho_odd; // vector for theta_(2n + 1)
-    std::vector<T> rho_even; //vector for theta_(2n), in the beginning it is theta_(-1) which is zero for all i
+    std::vector<T> rho_odd(base_size, static_cast<T>(0)); // vector for theta_(2n + 1)
+    std::vector<T> rho_even(base_size, static_cast<T>(0)); //vector for theta_(2n), in the beginning it is theta_(-1) which is zero for all i
 	 
 	T delta; //temporary varaible
 	delta = static_cast<T>(0);
 
-	if constexpr(std::is_floating_point<T>::value){
-		rho_even = std::vector<T>(base_size, static_cast<T>(0));
-		rho_odd = std::vector<T>(base_size, static_cast<T>(0));
-	}
 	#ifdef INC_FPRECISION
-	else if constexpr(std::is_same<T, float_precision>::value){
-		const size_t precision = std::max(data.Sn[0].precision(), data.an[0].precision());
-		rho_even = std::vector<T>(base_size, float_precision(0, precision));
-		rho_odd  = std::vector<T>(base_size, float_precision(0, precision));
-		delta.precision(precision);
+	if constexpr (is_precisable<T>::value){
+		const size_t precision = std::max(utils::get_precision(data.Sn[0]), utils::get_precision(data.an[0]));
+		utils::set_vec_precision<T>(rho_odd, precision);
+		utils::set_vec_precision<T>(rho_even, precision);
 	}
 	#endif
 
