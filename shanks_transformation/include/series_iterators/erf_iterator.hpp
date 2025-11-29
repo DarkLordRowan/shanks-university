@@ -20,10 +20,10 @@ public:
 	T sum() const override{
 		using std::erf;
 
-		if constexpr(isComplexLike<T>::value){
-			return static_cast<T>(0);
-		} else {
+		if constexpr (isFloatLike<T>::value){
 			return sqrt(static_cast<T>(std::numbers::pi)) * erf(this->x) * static_cast<T>(0.5);
+		} else {
+			return static_cast<T>(0);
 		}
 	}
 	

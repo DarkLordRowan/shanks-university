@@ -116,29 +116,21 @@ T wynn_epsilon_2_algorithm<T, K>::operator()(
 
 	// For theory, see: Wynn (1956), Section 3 - Epsilon table structure
 	// The epsilon table is stored as a 4-row circular buffer to save memory
-	std::vector<std::vector<T>> eps;
+	std::vector<std::vector<T>> eps(
+		4, 
+		std::vector<T>(k + static_cast<K>(1), static_cast<T>(0))
+	);
 	T a, a1, a2;
 	a = a1 = a2 = static_cast<T>(0);
 
-	if constexpr (is_standart_types<T>::value){
-		eps = std::vector<std::vector<T>>(4, std::vector<T>(k + static_cast<K>(1), static_cast<T>(0)));
-	}
 	#ifdef INC_FPRECISION
-	else if constexpr (std::is_same<T, float_precision>::value){
-		const size_t precision = data.Sn[0].precision();
-		eps = std::vector<std::vector<T>>(4, std::vector<T>(k + static_cast<K>(1), float_precision(0, precision)));
+    if constexpr (is_precisable<T>::value){
+        const size_t precision = utils::get_precision(data.Sn[0]);
+		for (size_t j = 0; j < eps.size(); ++j)
+			utils::set_vec_precision(eps[j], precision);
 		utils::set_precision(precision, a, a1, a2);
-	}
-	#ifdef INC_COMPLEXPRECISION
-	else if constexpr (std::is_same<T, complex_precision<float_precision>>::value){
-		const size_t precision = std::max(data.Sn[0].real().precision(), data.Sn[0].imag().precision());
-		eps = std::vector<std::vector<T>>(4, 
-			std::vector<T>(k + static_cast<K>(1), complex_precision<float_precision>(float_precision(0, precision), float_precision(0, precision)))
-		);
-		utils::set_precision(precision, a, a1, a2);
-	}
-	#endif
-	#endif
+    }
+    #endif
 
 	// For theory, see: Wynn (1956), Eq. (2) - Initialization with partial sums
 	// Initialize the bottom row with partial sums: ε₀⁽ᵐ⁾ = Sₙ for m = 0,1,...,k

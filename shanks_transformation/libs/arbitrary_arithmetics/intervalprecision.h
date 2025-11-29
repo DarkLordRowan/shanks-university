@@ -74,6 +74,9 @@
  * --------------------------------------------------------------------------
 */
 
+#ifndef INC_FPRECISION
+#include "fprecision.h"
+#endif
 
 /* define version string */
 static char _VinterP_[] = "@(#)intervalprecision.h 02.06 -- Copyright (C) Henrik Vestermark";
@@ -87,6 +90,7 @@ static char _VinterP_[] = "@(#)intervalprecision.h 02.06 -- Copyright (C) Henrik
 #include <sstream>
 #include <type_traits>
 #include <stdexcept>
+#include <iostream>
 
 #if defined(_MSVC_LANG)
 	#if _MSVC_LANG < 201402L
@@ -228,6 +232,7 @@ template<class IT> class interval {
 	// Note if an overflow occurs the sum will be +infinity and the error is set to 0.
 	static std::pair<IT, IT> fasttwo_sum(const IT& a, const IT& b)
 	{
+		using std::abs;
 		const IT sum(a + b);
 		if (abs(a) > abs(b))
 		{
@@ -258,6 +263,7 @@ template<class IT> class interval {
 	// Note if an overflow occurs the product will be +infinity and the error is set to 0.
 	std::pair<IT, IT> fasttwo_prod(const IT& a, const IT& b)
 	{
+		using std::abs;
 		const IT p(a*b);
 		IT err(fma(a, b, -p));
 
@@ -312,6 +318,10 @@ template<class IT> class interval {
 		IT leftinterval() const;			// Return leftinterval bound
 		IT rightinterval(const IT&);		// Set and return rightinterval bound
 		IT leftinterval(const IT&);			// Set and return leftinterval bound
+
+		IT* ref_right(){return &right;}  //CUSTOM TO SET PRECISION FOR FLOAT_PRECISION
+		IT* ref_left(){return &left;}    //CUSTOM TO SET PRECISION FOR FLOAT_PRECISION
+
 		enum interval_type intervaltype() const;	// Return interval type
 		enum interval_type intervaltype(const enum interval_type); // Set and return interval type
 		enum interval_decoration intervaldecoration() const; //Return the decoration information
@@ -487,7 +497,7 @@ template<> inline double underflow_interval<double>() { return DBL_MIN; }
 template<> inline float_precision underflow_interval<float_precision>() { return float_precision(0); }
 
 // Get PI at the precision for IT (float_precision also based on the precision)
-template<typename IT> constexpr interval<IT> pi_interval(const size_t precision = float_precision_ctrl.precision())
+template<typename IT> interval<IT> pi_interval(const size_t precision = float_precision_ctrl.precision())
 {
 	if constexpr (std::is_same<IT, float>::value)
 		return interval<IT>(IT(3.141'592'50), IT(3.141'592'74));
@@ -505,7 +515,7 @@ template<typename IT> constexpr interval<IT> pi_interval(const size_t precision 
 }
 
 // Get e at the precision for IT.(float_precision also based on the precision)
-template<typename IT> constexpr interval<IT> e_interval(const size_t precision = float_precision_ctrl.precision())
+template<typename IT> interval<IT> e_interval(const size_t precision = float_precision_ctrl.precision())
 {
 	if constexpr (std::is_same<IT, float>::value)
 		return interval<IT>(IT(2.718'281'75), IT(2.718'281'98));
@@ -523,7 +533,7 @@ template<typename IT> constexpr interval<IT> e_interval(const size_t precision =
 }
 
 // Get e at the precision for IT.(float_precision also based on the precision)
-template<typename IT> constexpr interval<IT> ln2_interval(const size_t precision = float_precision_ctrl.precision())
+template<typename IT> interval<IT> ln2_interval(const size_t precision = float_precision_ctrl.precision())
 {
 	if constexpr (std::is_same<IT, float>::value)
 		return interval<IT>(IT(0.693'147'123), IT(0.693'147'182));
@@ -541,7 +551,7 @@ template<typename IT> constexpr interval<IT> ln2_interval(const size_t precision
 }
 
 // Get e at the precision for IT.(float_precision also based on the precision)
-template<typename IT> constexpr interval<IT> ln10_interval(const size_t precision = float_precision_ctrl.precision())
+template<typename IT> interval<IT> ln10_interval(const size_t precision = float_precision_ctrl.precision())
 {
 	if constexpr (std::is_same<IT, float>::value)
 		return interval<IT>(IT(2.302'584'89), IT(2.302'585'12));
@@ -663,7 +673,7 @@ template<class IT> inline interval<IT> atanh(const interval<IT>&);	// atan(x)
 
 // Output Operator <<
 //
-template<class _Ty> inline std::ostream& operator<<(std::ostream& strm, interval<_Ty>& a)
+template<class _Ty> inline std::ostream& operator<<(std::ostream& strm, const interval<_Ty>& a)
 {
 	if (a.intervaltype() == EMPTY)
 		return strm << "EMPTY";
@@ -764,7 +774,13 @@ template<class IT> template<typename _X> inline interval<IT>::interval(const _X&
 	}
 	if (isIntegral)
 	{	// Handle integer promotion to IT
-		const intmax_t absX = intmax_t(abs(x));
+		using std::abs;
+		intmax_t absX;
+		if constexpr (std::is_unsigned<_X>::value){
+			absX = x;
+		} else {
+			absX = intmax_t(abs(x));
+		}
 		auto maxFloat = 16'777'216; // 2^24
 		auto maxDouble = 9'007'199'254'740'992; // 2^53
 		bool exceedsFloat = isTargetFloat && absX > maxFloat;
@@ -1539,6 +1555,7 @@ template<class IT> inline interval<IT>& interval<IT>::operator+=( const interval
 	// Set decoration
 	decoration = std::min(decoration, rhs.decoration);
 	// However if underflow or overflow then change it to DAC or TRV
+	using std::abs;
 	if (abs(left) == infi || abs(right) == infi)
 		decoration = std::min(decoration, DAC);
 	if (left!=IT(0)&&abs(left) == unfl || right!=IT(0)&&abs(right) == unfl)
@@ -1577,6 +1594,7 @@ template<class IT> inline interval<IT>& interval<IT>::operator-=( const interval
 	// Set Decoration
 	decoration = std::min(decoration, rhs.decoration);
 	// However if underflow or overflow then change it to DAC or TRV
+	using std::abs;
 	if (abs(left) == infi || abs(right) == infi)
 		decoration = std::min(decoration, DAC);
 	if ((left != IT(0) && abs(left) == unfl) || (right != IT(0) && abs(right) == unfl))
@@ -1691,6 +1709,7 @@ template<class IT> inline interval<IT>& interval<IT>::operator*=( const interval
 	right = std::max(right, itmp.right);
 
 	// However if underflow or overflow then change it to DAC or TRV
+	using std::abs;
 	if (abs(left) == infi || abs(right) == infi)
 		decoration = std::min(decoration, DAC);
 	if ((left != c0 && abs(left) == unfl) || (right != c0 && abs(right) == unfl))
@@ -2349,7 +2368,8 @@ template<class IT, class _X> inline bool operator<(const interval<IT>& a, const 
 // if b<0 in [a,b] then |[a,b]|=[-b,-a]
 // if a<0 & b>0 in [a,b] then |[a,b]|=[0,max(-a,b)]
 template<class IT> inline interval<IT> abs( const interval<IT>& a )
-	{
+{
+	using std::max;
 	if (a.inf() >= IT(0) ) // Entirely positive
 		return a;
 	else
@@ -2357,7 +2377,7 @@ template<class IT> inline interval<IT> abs( const interval<IT>& a )
 			return -a;
 
 	return interval<IT>(IT(0), max(-a.inf(),a.sup()),a.intervaltype());
-	}
+}
 
 //////////////////////////////////////////////////////////////////////////////////////
 ///
@@ -2534,6 +2554,7 @@ template<class IT> inline interval<IT> sqrt(const interval<IT>& x)
 		return res;
 	}
 	// Find leftinterval bound
+	using std::max;
 	const IT leftadjust(max(x.inf(), IT(0)));
 	IT left(sqrt(leftadjust));
 	IT r(-fma(left,left,-leftadjust));
@@ -2845,6 +2866,8 @@ template<class IT> inline interval<IT> pow(const interval<IT>& x, const IT y)
 	// else Both are integers => trust the result
 
 	// Ensure correct interval ordering for the result
+	using std::min;
+	using std::max;
 	return interval<IT>(min(lp, rp), max(lp, rp));
 }
 
@@ -2874,6 +2897,8 @@ template<class IT> inline interval<IT> pow(const interval<IT>& x, const interval
 	{ // raise to the power of an integer interval
 		interval<IT> lhs(pow(x, yi));
 		interval<IT> rhs(pow(x, ys));
+		using std::min;
+		using std::max;
 		c = interval<IT>(min(lhs.inf(),rhs.inf()), max(lhs.sup(),rhs.sup()));
 		return c;
 	}
@@ -2925,6 +2950,7 @@ template<class IT> inline interval<IT> sin(const interval<IT>& x)
 		}
 		else
 		{ // For float_precision class. Use maximum precision of the left or right interval
+			using std::max;
 			return _float_table(_PI, max(x.leftinterval().precision(),x.rightinterval().precision()));
 		}
 	}(); // The Lambda is immediately invokeed
@@ -2993,6 +3019,7 @@ template<class IT> inline interval<IT> cos(const interval<IT>& x)
 		}
 		else
 		{ // For float_precision class. Use maximum precision of the left or right interval
+			using std::max;
 			return _float_table(_PI, max(x.leftinterval().precision(), x.rightinterval().precision()));
 		}
 	}(); // The Lambda is immediately invokeed

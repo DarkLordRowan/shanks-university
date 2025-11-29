@@ -37,11 +37,11 @@ void cmp_sum_and_transform(const K n, const K order,
 	for (K i = 1; i <= n; ++i) {
 		try
 		{
+			const T res = test->operator()(i, order, result);
 			std::cout << "Sum of algo : " << series->get_sum() << '\n';
-			std::cout << "S_" << i << " : " << result.Sn[i] << '\n';
-			std::cout << "T_" << i << " of order " << order << " : " << test->operator()(i, order, result) << '\n';
-			std::cout << "T_" << i << " of order " << order << " - S_" << i
-			<< " : " << test->operator()(i, order, result) - result.Sn[i] << '\n';
+			std::cout << "S_" << i << " : " << result.Sn[i] << "\n";
+			std::cout << "T_" << i << " of order " << order << " : " << res << std::endl;
+			std::cout << "T_" << i << " of order " << order << " - S_" << i << " : " << res - result.Sn[i] << '\n';
 
 		}
 		catch (std::domain_error& e)
