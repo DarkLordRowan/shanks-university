@@ -2,12 +2,8 @@ import multiprocessing as mp
 
 from tqdm import tqdm
 
-from src.domain.trial_result import (
-    AccelTrialResult,
-    ErrorTrialResult,
-    SeriesTrialResult,
-    TrialResult,
-)
+from src.domain.trial_result import (AccelTrialResult, ErrorTrialResult,
+                                     SeriesTrialResult, TrialResult)
 from src.domain.trial_runner import TrialRunner
 from src.domain.use_cases.run_trial import execute_trial
 
@@ -56,7 +52,7 @@ class ParallelTrialRunner(TrialRunner):
                             computed=[],
                             error=ErrorTrialResult(
                                 f"Timeout after {self.timeout}s",
-                                {
+                                data={
                                     "series": series.series_name,
                                     "accel": accel.accel_name,
                                 },

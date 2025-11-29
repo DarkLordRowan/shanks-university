@@ -20,6 +20,7 @@ class DataAccelParamSource(AccelParamSource):
 
             args = self._convert_args(m.get("args", {}), precision)
             events = [EventSpecifierParam(**event) for event in m.get("events", [])]
+
             methods.append(
                 AccelParamJSON(
                     name=m["name"] + precision.value,

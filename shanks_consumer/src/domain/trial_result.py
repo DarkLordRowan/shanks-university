@@ -22,7 +22,8 @@ class ComputedTrialResult:
 @dataclass
 class ErrorTrialResult:
     description: str | None
-    data: Mapping[str, Any]
+    debug: str | None = None
+    data: Mapping[str, Any] | None = None
 
 
 NoErrorTrialResult = None

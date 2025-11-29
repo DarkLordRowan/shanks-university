@@ -1,5 +1,7 @@
 from typing import Any, Iterable
 
+from src.logger import logged_debug
+
 
 def generate_range(start: float, stop: float, step: float) -> Iterable[float]:
     if step == 0:
@@ -8,9 +10,12 @@ def generate_range(start: float, stop: float, step: float) -> Iterable[float]:
     return (start + i * step for i in range(count))
 
 
+@logged_debug
 def autowrap(value: Any):
     if value is None:
         return []
+    if isinstance(value, bool):
+        return [value]
     if isinstance(value, dict) and {"start", "stop", "step"} <= value.keys():
         try:
             return generate_range(
@@ -30,6 +35,7 @@ def autowrap(value: Any):
         return [value]
     if isinstance(value, Iterable) and not isinstance(value, (str, bytes, dict)):
         return value
+
     try:
         return [float(value)]
     except ValueError as e:

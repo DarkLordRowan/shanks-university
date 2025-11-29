@@ -1,18 +1,14 @@
 import itertools
+import traceback
 from functools import lru_cache
 from typing import Any, TypeGuard
 
 from src.domain.event import EVENT_METHODS, EventType
 from src.domain.params import BaseAccelParam, BaseSeriesParam, PrecisionType
 from src.domain.precision import SeriesBaseProto, cast_precision_value
-from src.domain.trial_result import (
-    AccelTrialResult,
-    ComputedTrialResult,
-    ErrorTrialResult,
-    NoErrorTrialResult,
-    SeriesTrialResult,
-    TrialResult,
-)
+from src.domain.trial_result import (AccelTrialResult, ComputedTrialResult,
+                                     ErrorTrialResult, NoErrorTrialResult,
+                                     SeriesTrialResult, TrialResult)
 from src.logger import logged_debug
 
 
@@ -113,6 +109,7 @@ def execute_trial(
                             computed=[],
                             error=ErrorTrialResult(
                                 str(exc),
+                                traceback.format_exc(),
                                 {
                                     "argument": dict(argument),
                                     "additional_args": additional_args_display,
@@ -129,7 +126,9 @@ def execute_trial(
                 key: str(value) for key, value in additional_args.items()
             }
             try:
-                accel_instance = accel.executable(*accel_combo)
+                accel_instance = accel.executable(
+                    **{key: combo for key, combo in zip(accel_arg_keys, accel_combo)}
+                )
             except Exception as exc:
                 for m_value in m_values:
                     results.append(
@@ -147,6 +146,7 @@ def execute_trial(
                             computed=[],
                             error=ErrorTrialResult(
                                 str(exc),
+                                traceback.format_exc(),
                                 {
                                     "argument": dict(argument),
                                     "additional_args": additional_args_display,
@@ -227,6 +227,7 @@ def execute_trial(
                     except Exception as exc:
                         error = ErrorTrialResult(
                             str(exc),
+                            traceback.format_exc(),
                             {
                                 "n": n_value,
                                 "m": m_value,
