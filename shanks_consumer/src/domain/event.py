@@ -78,7 +78,10 @@ def sign_changed_method(
     if len(computed) < 2:
         return
     last, previous = computed[-1], computed[-2]
-    if previous.accel_value_deviation * last.accel_value_deviation < 0:
+
+    if previous.accel_value_deviation * last.accel_value_deviation < type(
+        last.accel_value_deviation
+    )(0):
         return EventData(
             name="sign_changed",
             description=(

@@ -1,9 +1,9 @@
 {
-  "verbose": 3,
+  "verbose": 1,
 
-  "series_json": "config/example.json",
+  "series_json": "config/big_boy.json",
   "series_csv": "config/example_series.csv",
-  "accel_json": "config/example.json",
+  "accel_json": "config/big_boy.json",
 
   "output_dir": "output",
   "results_filename": "experiment_results",
@@ -12,11 +12,11 @@
   "results_parquet": "output/results.parquet",
 
   "trial_process_count": 8,
-  "trial_task_timeout": 5,
+  "trial_task_timeout": 60,
   "trial_result_view": "full",
   "trial_memory_efficient": true,
 
-  "precisions": ["F32"],
+  "precisions": ["Arb"],
 
   "output_formats": ["mongodb"],
 

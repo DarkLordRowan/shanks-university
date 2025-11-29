@@ -19,7 +19,7 @@
       "m": [8],
       "args": {
         "remainder": ["v_type", "u_type", "t_wave_type"],
-        "useRecFormulas": true,
+        "useRecurrentFormula": true,
         "beta": {
           "start": 0.1,
           "stop": 1,

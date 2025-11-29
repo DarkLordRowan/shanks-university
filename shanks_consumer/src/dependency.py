@@ -1,10 +1,8 @@
 from src.config.model import TrialConfig
 from src.infra.export.registry import EXPORT_BUILDERS
 from src.infra.export.serializer import TrialResultSerializer
-from src.infra.param_sources.registry import (
-    PARAM_ACCELS_SOURCE_BUILDERS,
-    PARAM_SERIES_SOURCE_BUILDERS,
-)
+from src.infra.param_sources.registry import (PARAM_ACCELS_SOURCE_BUILDERS,
+                                              PARAM_SERIES_SOURCE_BUILDERS)
 from src.infra.trials.parallel_runner import ParallelTrialRunner
 from src.infra.trials.sequential_runner import SequentialTrialRunner
 from src.logger import setup_logging
