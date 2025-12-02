@@ -103,3 +103,5 @@ std::string             WynnEpsilon3TransformationInfo::getName() const {return 
 std::string               WynnRhoRhoTransformationInfo::getName() const {return "Wynn Rho-Rho Transformation";}
 std::string       WynnRhoGeneralizedTransformationInfo::getName() const {return "Wynn Rho Generalized Transformation";}
 std::string          WynnRhoGammaRhoTransformationInfo::getName() const {return "Wynn Rho-Gamma-Rho Transformation";}
+std::string          AndersonAccelerationAlgorithmInfo::getName() const { return "Anderson Acceleration Transformation"; }
+std::string               JTransformationAlgorithmInfo::getName() const { return "J Transformation"; }
