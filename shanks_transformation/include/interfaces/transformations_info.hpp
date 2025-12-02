@@ -322,4 +322,16 @@ public:
 	std::string getName() const override;
 };
 
+class AndersonAccelerationAlgorithmInfo : public ITransformationInfo {
+public:
+	transformation_id_t getId() const override;
+	std::string getName() const override;
+};
+
+class JTransformationAlgorithmInfo : public ITransformationInfo {
+public:
+	transformation_id_t getId() const override;
+	std::string getName() const override;
+};
+
 #endif

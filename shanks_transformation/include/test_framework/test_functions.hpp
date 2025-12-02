@@ -347,6 +347,8 @@ void test_all_transforms(
         {transformation_id_t::wynn_rho_rho_transformation_id				 , [](){ return std::make_unique<wynn_rho_algorithm<T, K>>(numerator_type::rho_type);              }},
   		{transformation_id_t::wynn_rho_generalized_transformation_id		 , [](){ return std::make_unique<wynn_rho_algorithm<T, K>>(numerator_type::generalized_type);      }},
     	{transformation_id_t::wynn_rho_gamma_rho_transformation_id			 , [](){ return std::make_unique<wynn_rho_algorithm<T, K>>(numerator_type::gamma_rho_type);        }},
+		{transformation_id_t::anderson_acceleration_algorithm_id             , [](){ return std::make_unique<anderson_acceleration_algorithm<T, K>>(); }},
+		{transformation_id_t::j_transformation_algorithm_id                  , [](){ return std::make_unique<j_transformation_algorithm<T, K>>(); }},
 	};
 
 	std::vector<std::unique_ptr<series_acceleration<T,K>>> algos(algoInit.size());

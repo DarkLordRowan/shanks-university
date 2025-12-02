@@ -59,7 +59,9 @@ recurrent_levin_sidi_s_v_wave_transformation_id,
                  wynn_rho_rho_transformation_id,
          wynn_rho_generalized_transformation_id,
            wynn_rho_gamma_rho_transformation_id,
-                      transformation_id_t_count
+                      transformation_id_t_count,
+             anderson_acceleration_algorithm_id,
+                  j_transformation_algorithm_id
 };
 
 //INCLUDE TRANSFORMATIONS AND ALGORITHMS
@@ -80,5 +82,7 @@ recurrent_levin_sidi_s_v_wave_transformation_id,
 #include "transformations/wynn_epsilon_2_algorithm.hpp"
 #include "transformations/wynn_epsilon_3_algorithm.hpp"
 #include "transformations/wynn_rho_algorithm.hpp"
+#include "transformations/anderson_acceleration_algorithm.hpp"
+#include "transformations/j_transformation_algorithm.hpp"
 
 #endif
