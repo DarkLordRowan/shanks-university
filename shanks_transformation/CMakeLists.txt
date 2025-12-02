@@ -42,12 +42,7 @@ FetchContent_MakeAvailable(googletest)
 enable_testing()
 include(GoogleTest)
 file(GLOB_RECURSE TEST_SOURCES CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/tests/*.cpp)
-add_executable(all_tests ${TEST_SOURCES}
-        include/transformations/anderson_acceleration_algorithm.hpp
-        include/transformations/j_transformation_algorithm.hpp
-        tests/anderson_acceleration_algorithm_test.cpp
-        tests/j_transformation_algorithm_test.cpp
-)
+add_executable(all_tests ${TEST_SOURCES})
 target_include_directories(all_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/methods)
 target_link_libraries(all_tests PRIVATE GTest::gtest_main)
 #target_link_libraries(all_tests PRIVATE GSL::gsl GSL::gslcblas)
