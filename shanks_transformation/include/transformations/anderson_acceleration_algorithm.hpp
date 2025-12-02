@@ -208,4 +208,3 @@ T anderson_acceleration_algorithm<T, K>::operator()(
 
     return beta_ * accelerated + (static_cast<T>(1) - beta_) * data.Sn[n];
 }
-
