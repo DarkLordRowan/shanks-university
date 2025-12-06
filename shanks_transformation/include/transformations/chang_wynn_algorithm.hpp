@@ -13,7 +13,6 @@
 #pragma once
 
 #include "series_acceleration.hpp"
-#include <type_traits>
 #include <vector>   // Include the vector library
 #include <cmath>    //Include for fma, isfinite
 
@@ -88,12 +87,12 @@ public:
 
 
 template <AcceptedLike T, UnsignedIntLike K>
-T chang_wynn_algorithm<T, K>::operator()(const K n, const K order, const series_result<T>& data) const {
+T chang_wynn_algorithm<T, K>::operator()(const K n, const K /*order*/, const series_result<T>& data) const {
 
     const K required_size = n + static_cast<K>(1);
 
     if (data.Sn.size() < required_size || data.an.size() < required_size){
-        throw std::out_of_range("The Sn or an smaller then required for chann_wynn_{" + to_string(order) + "}^{" + to_string(n) + "}\n" +
+        throw std::out_of_range("The Sn or an smaller then required for chann_wynn_{" + to_string(n) + "}\n" +
         "the size of Sn and an must be at least " + to_string(required_size));
 	}
 

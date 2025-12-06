@@ -14,7 +14,6 @@
 #include "series_acceleration.hpp"
 #include "remainders.hpp"
 #include <memory>					  // Include for unique ptr
-#include <type_traits>
 
  /**
   * @brief Drummond's D-transformation class template for accelerating slowly convergent series.

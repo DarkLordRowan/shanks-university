@@ -22,6 +22,12 @@ public:
  * brief Implementations for all transformations
  */
 
+class AndersonAccelerationAlgorithmInfo : public ITransformationInfo {
+public:
+	transformation_id_t getId() const override;
+	std::string getName() const override;
+};
+
 class BrezinskiThetaTransformationInfo : public ITransformationInfo {
 public:
 	transformation_id_t getId() const override;
@@ -53,6 +59,12 @@ public:
 };
 
 class DrummondDVTransformationInfo : public ITransformationInfo {
+public:
+	transformation_id_t getId() const override;
+	std::string getName() const override;
+};
+
+class JTransformationAlgorithmInfo : public ITransformationInfo {
 public:
 	transformation_id_t getId() const override;
 	std::string getName() const override;
@@ -317,18 +329,6 @@ public:
 };
 
 class WynnRhoGammaRhoTransformationInfo : public ITransformationInfo {
-public:
-	transformation_id_t getId() const override;
-	std::string getName() const override;
-};
-
-class AndersonAccelerationAlgorithmInfo : public ITransformationInfo {
-public:
-	transformation_id_t getId() const override;
-	std::string getName() const override;
-};
-
-class JTransformationAlgorithmInfo : public ITransformationInfo {
 public:
 	transformation_id_t getId() const override;
 	std::string getName() const override;

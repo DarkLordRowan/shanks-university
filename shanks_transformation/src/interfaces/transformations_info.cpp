@@ -2,6 +2,7 @@
 
 ITransformationInfo::~ITransformationInfo() {}
 
+transformation_id_t          AndersonAccelerationAlgorithmInfo::getId() const {return transformation_id_t::anderson_acceleration_algorithm_id;}
 transformation_id_t           BrezinskiThetaTransformationInfo::getId() const {return transformation_id_t::brezinski_theta_transformation_id;}
 transformation_id_t                ChangWynnTransformationInfo::getId() const {return transformation_id_t::chang_wynn_transformation_id;}
 transformation_id_t               DrummondDUTransformationInfo::getId() const {return transformation_id_t::drummond_d_u_transformation_id;}
@@ -9,6 +10,7 @@ transformation_id_t               DrummondDTTransformationInfo::getId() const {r
 transformation_id_t           DrummondDTWaveTransformationInfo::getId() const {return transformation_id_t::drummond_d_t_wave_transformation_id;}
 transformation_id_t               DrummondDVTransformationInfo::getId() const {return transformation_id_t::drummond_d_v_transformation_id;}
 transformation_id_t           DrummondDVWaveTransformationInfo::getId() const {return transformation_id_t::drummond_d_v_wave_transformation_id;}
+transformation_id_t               JTransformationAlgorithmInfo::getId() const {return transformation_id_t::j_transformation_id;}
 transformation_id_t      RecurrentDrummondDUTransformationInfo::getId() const {return transformation_id_t::recurrent_drummond_d_u_transformation_id;}
 transformation_id_t      RecurrentDrummondDTTransformationInfo::getId() const {return transformation_id_t::recurrent_drummond_d_t_transformation_id;}
 transformation_id_t      RecurrentDrummondDVTransformationInfo::getId() const {return transformation_id_t::recurrent_drummond_d_v_transformation_id;}
@@ -53,6 +55,7 @@ transformation_id_t               WynnRhoRhoTransformationInfo::getId() const {r
 transformation_id_t       WynnRhoGeneralizedTransformationInfo::getId() const {return transformation_id_t::wynn_rho_generalized_transformation_id;}
 transformation_id_t          WynnRhoGammaRhoTransformationInfo::getId() const {return transformation_id_t::wynn_rho_gamma_rho_transformation_id;}
 
+std::string          AndersonAccelerationAlgorithmInfo::getName() const {return "Anderson's acceleration algorithm";}
 std::string           BrezinskiThetaTransformationInfo::getName() const {return "Brezinski Theta Transformation";}
 std::string                ChangWynnTransformationInfo::getName() const {return "Chang-Wynn Transformation";}
 std::string               DrummondDUTransformationInfo::getName() const {return "Drummond D-U Transformation";}
@@ -60,6 +63,7 @@ std::string               DrummondDTTransformationInfo::getName() const {return 
 std::string           DrummondDTWaveTransformationInfo::getName() const {return "Drummond D-T Wave Transformation";}
 std::string               DrummondDVTransformationInfo::getName() const {return "Drummond D-V Transformation";}
 std::string           DrummondDVWaveTransformationInfo::getName() const {return "Drummond D-V Wave Transformation";}
+std::string               JTransformationAlgorithmInfo::getName() const {return "J transformation";}
 std::string      RecurrentDrummondDUTransformationInfo::getName() const {return "Recurrent Drummond D-U Transformation";}
 std::string      RecurrentDrummondDTTransformationInfo::getName() const {return "Recurrent Drummond D-T Transformation";}
 std::string      RecurrentDrummondDVTransformationInfo::getName() const {return "Recurrent Drummond D-V Transformation";}
@@ -103,5 +107,3 @@ std::string             WynnEpsilon3TransformationInfo::getName() const {return 
 std::string               WynnRhoRhoTransformationInfo::getName() const {return "Wynn Rho-Rho Transformation";}
 std::string       WynnRhoGeneralizedTransformationInfo::getName() const {return "Wynn Rho Generalized Transformation";}
 std::string          WynnRhoGammaRhoTransformationInfo::getName() const {return "Wynn Rho-Gamma-Rho Transformation";}
-std::string          AndersonAccelerationAlgorithmInfo::getName() const { return "Anderson Acceleration Transformation"; }
-std::string               JTransformationAlgorithmInfo::getName() const { return "J Transformation"; }

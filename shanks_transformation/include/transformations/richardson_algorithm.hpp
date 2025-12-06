@@ -14,7 +14,6 @@
 #pragma once
 
 #include "series_acceleration.hpp"
-#include <type_traits>
 #include <vector>   // Include the vector library
 #include <cmath>    //Include for fma, isfinite
 
