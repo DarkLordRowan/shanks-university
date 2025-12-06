@@ -267,18 +267,6 @@ void bind_all(py::module_& m, const std::string& suffix){
             py::arg("numerator") = numerator_type::rho_type,
             py::arg("gamma") = static_cast<RealT>(-1),
             py::arg("rho") = static_cast<RealT>(1));
-    py::class_<anderson_acceleration_algorithm<T,K>, MSeriesAcceleration>
-        (m, name("AndersonAccelerationAlgorithm").c_str())
-        .def(py::init<const series_base<T,K>&, K, RealT>(),
-            py::arg("series"),
-            py::arg("m") = static_cast<K>(5),
-            py::arg("beta") = static_cast<RealT>(1.0));
-
-    py::class_<j_transformation_algorithm<T,K>, MSeriesAcceleration>
-        (m, name("JTransformationAlgorithm").c_str())
-        .def(py::init<const series_base<T,K>&, K>(),
-            py::arg("series"),
-            py::arg("max_order") = static_cast<K>(5));
 }
 
 template <class R>
