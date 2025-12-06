@@ -13,7 +13,6 @@
 #pragma once
 
 #include "series_acceleration.hpp"
-#include <type_traits>
 
 /**
  * @brief Lubkin's W-transformation class template implementing a powerful sequence acceleration method.

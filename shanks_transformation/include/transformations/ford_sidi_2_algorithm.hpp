@@ -13,7 +13,6 @@
 
 #include "series_acceleration.hpp"
 #include <cmath> //Include for fma, isfinite
-#include <type_traits>
 
 /**
  * @brief Ford-Sidi algorithm class template implementing an efficient extrapolation method.
@@ -84,14 +83,14 @@ public:
 template <AcceptedLike T, UnsignedIntLike K>
 T ford_sidi_2_algorithm<T, K>::operator()(
 	const K n, 
-    const K order, 
+    const K /*order*/, 
     const series_result<T>& data
 ) const {
 
     const K required_size = n + static_cast<K>(2);
 
     if (data.Sn.size() < required_size ){
-        throw std::out_of_range("The Sn smaller then required for ford_sidi2_{" + to_string(order) + "}^{" + to_string(n) + "}\n" +
+        throw std::out_of_range("The Sn smaller then required for ford_sidi2_{" + to_string(n) + "}\n" +
         "the size of Sn must be at least " + to_string(required_size));
 	}
 

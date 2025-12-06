@@ -32,7 +32,7 @@ struct utils {
 	static void set_precision(const size_t precision) {}
 
 	template<AcceptedLike T>
-	static void set_vec_precision(std::vector<T>& vec, size_t precision);
+	static void set_vec_precision(std::vector<T>& vec, const size_t precision);
 
 	template<AcceptedLike T>
 	static size_t get_precision(const T& x){
@@ -139,7 +139,7 @@ void utils::set_precision(const size_t precision, Arg& precisable_arg, Args& ...
 }
 
 template<AcceptedLike T>
-void utils::set_vec_precision(std::vector<T>& vec, size_t precision){
+void utils::set_vec_precision(std::vector<T>& vec, const size_t precision){
 	for(size_t j = 0; j < vec.size(); ++j)
 		utils::set_precision(precision, vec[j]);
 }

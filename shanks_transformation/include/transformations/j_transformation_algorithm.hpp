@@ -15,7 +15,6 @@
 #include <vector>
 #include <stdexcept>
 #include <cmath>
-#include <limits>
 
 /**
  * @brief J-Transformation algorithm class template implementing nonlinear sequence transformation.
@@ -40,6 +39,10 @@ template <AcceptedLike T, UnsignedIntLike K>
 class j_transformation_algorithm final : public series_acceleration<T, K>
 {
 public:
+
+    using Kostil = std::conditional_t<isFloatLike<T>::value, TypeWrapper<T>, T>;
+    using param_type = typename Kostil::value_type; // TYPE FOR FLOATLIKE IN THE SITUATION OF COMPLEX OR INTERVAL
+
     /**
      * @brief Parameterized constructor to initialize the J-Transformation Algorithm.
      *
@@ -52,8 +55,8 @@ public:
      * @param safeguard Small value to prevent division by zero (default: 1e-12)
      */
     explicit j_transformation_algorithm(
-        K max_order = 5,
-        T safeguard = static_cast<T>(1e-12)
+        K max_order = 30,
+        param_type safeguard = static_cast<param_type>(1e-12)
     ) : series_acceleration<T, K>("j transformation algorithm"),
         max_order_(max_order > 0 ? max_order : 1),
         safeguard_(safeguard)
@@ -86,8 +89,81 @@ public:
 
 private:
     K max_order_;   ///< Maximum order of J-transformation
-    T safeguard_;   ///< Small value to prevent division by zero
+    param_type safeguard_;   ///< Small value to prevent division by zero
+
+    inline T simple_formula(const K n, const series_result<T>& data) const;
+    inline T recursive_formula(const K n, const K order, const series_result<T>& data) const;
 };
+
+template <AcceptedLike T, UnsignedIntLike K>
+T j_transformation_algorithm<T, K>::simple_formula(const K n, const series_result<T>& data) const {
+
+    using std::abs;
+
+    if (abs(data.an[n + 1] + static_cast<T>(safeguard_)) < safeguard_) return data.Sn[n];  // Fallback if denominator is too small
+
+    return data.Sn[n + 1] - (data.Sn[n + 1] - data.Sn[n]) * (data.Sn[n + 1] - data.Sn[n]) / (data.an[n + 1] + static_cast<T>(safeguard_));
+
+}
+
+template <AcceptedLike T, UnsignedIntLike K>
+T j_transformation_algorithm<T, K>::recursive_formula(const K n, const K order, const series_result<T>& data) const {
+    // For higher orders, use recursive implementation
+    // Initialize J0^{(k)} = S_{n+k}
+    std::vector<T> J_prev(order + 1, static_cast<T>(0));
+    std::vector<T> J_curr(order + 1, static_cast<T>(0));
+
+    T delta_S, delta_term, term1, term2;
+    delta_S = delta_term = term1 = term2 = static_cast<T>(0);
+
+    #ifdef INC_FPRECISION
+    if constexpr (is_precisable<T>::value){
+        const size_t precision = std::max(utils::get_precision(data.Sn[0]), utils::get_precision(data.an[0]));
+        utils::set_precision(precision, delta_S, delta_term, term1, term2);
+        utils::set_vec_precision(J_prev, precision);
+        utils::set_vec_precision(J_curr, precision);
+    }
+    #endif
+
+    //init J_prev
+    for (K i = 0; i <= order; ++i) J_prev[i] += data.Sn[n + i];
+
+    K curr_J_size = J_prev.size() - 1;
+    // Apply J-transformation recursively
+    for (K k = 1; k <= order; ++k, --curr_J_size) {
+        
+        for (K i = 0; i < curr_J_size; ++i) {
+        
+            //delta_S = J_prev[i + 1] - J_prev[i];
+            //Compute Δ_k^{(n)} term based on series terms
+            //For J-transformation, we use a combination of series terms
+            //First order uses next series term
+        
+            if (k == 1) delta_term = data.an[n + i + 1];
+            else {
+                // Higher orders use differences of previous J values
+                term1 = (i + k     < data.an.size()) ? data.an[n + i + k    ] : static_cast<T>(0);
+                term2 = (i + k - 1 < data.an.size()) ? data.an[n + i + k - 1] : static_cast<T>(0);
+                delta_term = term1 - term2;
+            }
+        
+            //delta_term += safeguard_ * ((delta_term >= 0) ? 1 : -1);
+            //If denominator is too small, use linear interpolation
+            
+            if (abs(delta_term) < safeguard_) J_curr[i] = J_prev[i + 1];
+            else J_curr[i] = J_prev[i + 1] + delta_S * delta_S / delta_term;
+        }
+
+        J_prev.swap(J_curr);
+
+        //If we've reduced to a single value, return it
+        if (curr_J_size == 1) break;
+    }
+
+    // The final accelerated value is J_order^{(0)}
+    return J_prev[0];
+}
+
 
 template <AcceptedLike T, UnsignedIntLike K>
 T j_transformation_algorithm<T, K>::operator()(
@@ -96,7 +172,8 @@ T j_transformation_algorithm<T, K>::operator()(
     const series_result<T>& data
 ) const {
     // Check if we have enough data
-    K required_size = n + order + 1;
+    const K required_size = n + order + 1;
+
     if (data.Sn.size() < required_size) {
         throw std::out_of_range(
             "Insufficient data in Sn vector: size=" +
@@ -115,70 +192,19 @@ T j_transformation_algorithm<T, K>::operator()(
     }
 
     // Base case: order 0 returns the partial sum directly
-    if (order == 0) {
-        return data.Sn[n];
-    }
+    if (order == 0) return data.Sn[n];
 
-    // For order 1, J-transformation reduces to a simple formula
-    if (order == 1) {
-        T S_n = data.Sn[n];
-        T S_n1 = data.Sn[n + 1];
-        T a_n1 = data.an[n + 1];  // Next term in series
+    const T result = (order == 1 ? simple_formula(n, data) : recursive_formula(n, order, data));
 
-        T denominator = a_n1 + safeguard_;
-
-        if (std::abs(denominator) < safeguard_) {
-            return data.Sn[n];  // Fallback if denominator is too small
+    if constexpr (isComplexLike<T>::value){
+        if (!isfinite(result.real()) || !isfinite(result.imag())){
+            throw std::overflow_error("division by zero");
         }
-
-        return S_n1 - (S_n1 - S_n) * (S_n1 - S_n) / denominator;
-    }
-
-    // For higher orders, use recursive implementation
-    // Initialize J0^{(k)} = S_{n+k}
-    std::vector<T> J_prev;
-    for (K i = 0; i <= order; ++i) {
-        J_prev.push_back(data.Sn[n + i]);
-    }
-
-    // Apply J-transformation recursively
-    for (K k = 1; k <= order; ++k) {
-        std::vector<T> J_curr(J_prev.size() - 1, static_cast<T>(0));
-
-        for (K i = 0; i < J_curr.size(); ++i) {
-            T delta_S = J_prev[i + 1] - J_prev[i];
-
-            // Compute Δ_k^{(n)} term based on series terms
-            // For J-transformation, we use a combination of series terms
-            T delta_term;
-            if (k == 1) {
-                // First order uses next series term
-                delta_term = data.an[n + i + 1];
-            } else {
-                // Higher orders use differences of previous J values
-                T term1 = (i + k < data.an.size()) ? data.an[n + i + k] : static_cast<T>(0);
-                T term2 = (i + k - 1 < data.an.size()) ? data.an[n + i + k - 1] : static_cast<T>(0);
-                delta_term = term1 - term2;
-            }
-
-            delta_term += safeguard_ * ((delta_term >= 0) ? 1 : -1);
-
-            if (std::abs(delta_term) < safeguard_) {
-                // If denominator is too small, use linear interpolation
-                J_curr[i] = J_prev[i + 1];
-            } else {
-                J_curr[i] = J_prev[i + 1] + delta_S * delta_S / delta_term;
-            }
-        }
-
-        J_prev = std::move(J_curr);
-
-        // If we've reduced to a single value, return it
-        if (J_prev.size() == 1) {
-            break;
+    } else {
+        if(!isfinite(result)){
+            throw std::overflow_error("division by zero");
         }
     }
-
-    // The final accelerated value is J_order^{(0)}
-    return J_prev[0];
+    
+    return result;
 }
