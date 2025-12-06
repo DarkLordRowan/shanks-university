@@ -9,6 +9,8 @@
 #include <pybind11/stl.h>
 #include <string>
 #include <functional>
+#include "include/transformations/anderson_acceleration_algorithm.hpp"
+#include "include/transformations/j_transformation_algorithm.hpp"
 #include "libs/arbitrary_arithmetics/complexprecision.h"
 #include "libs/arbitrary_arithmetics/fprecision.h"
 #include "libs/arbitrary_arithmetics/intervalprecision.h"
@@ -186,6 +188,13 @@ void bind_all(py::module_& m, const std::string& suffix){
         .def("__call__", &MSeriesAcceleration::operator(),
              py::arg("n"), py::arg("order"), py::arg("data"));
 
+    py::class_<anderson_acceleration_algorithm<T, K>, MSeriesAcceleration>
+        (m, name("AndersonAlgorithm").c_str())
+        .def(py::init<const K, RealT, RealT>(),
+             py::arg("m") = static_cast<K>(ANDERSON_DEFAULT_MAX_ORDER),
+             py::arg("beta") = static_cast<RealT>(ANDERSON_DEFAULT_BETA),
+             py::arg("safeguard") = static_cast<RealT>(ANDERSON_DEFAULT_SAFEGUARD));
+    
     py::class_<brezinski_theta_algorithm<T,K>, MSeriesAcceleration>
         (m, name("BrezinskiThetaAlgorithm").c_str())
         .def(py::init<>());
@@ -199,6 +208,12 @@ void bind_all(py::module_& m, const std::string& suffix){
         .def(py::init<remainder_type, bool>(),
              py::arg("remainder") = remainder_type::t_type,
              py::arg("useRecurrentFormula") = false);
+    
+    py::class_<j_transformation_algorithm<T, K>, MSeriesAcceleration>
+        (m, name("JAlgorithm").c_str())
+        .def(py::init<const K, RealT>(),
+             py::arg("max_order") = static_cast<K>(J_TRASFORMATION_DEFAULT_MAX_ORDER),
+             py::arg("safeguard") = static_cast<RealT>(J_TRASFORMATION_DEFAULT_MAX_ORDER));
 
     py::class_<ford_sidi_2_algorithm<T,K>, MSeriesAcceleration>
         (m, name("FordSidi2Algorithm").c_str())
@@ -216,7 +231,6 @@ void bind_all(py::module_& m, const std::string& suffix){
             py::arg("beta") = static_cast<RealT>(1));
 
     py::class_<levin_sidi_m_algorithm<T,K>, MSeriesAcceleration>
-
         (m, name("LevinSidiMAlgorithm").c_str())
         .def(py::init<remainder_type, RealT>(),
             py::arg("remainder") = remainder_type::t_type,

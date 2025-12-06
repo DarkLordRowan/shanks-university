@@ -16,6 +16,9 @@
 #include <stdexcept>
 #include <cmath>
 
+#define J_TRASFORMATION_DEFAULT_MAX_ORDER 30
+#define J_TRASFORMATION_DEFAULT_SAFEGUARD 1e-12
+
 /**
  * @brief J-Transformation algorithm class template implementing nonlinear sequence transformation.
  *
@@ -55,8 +58,8 @@ public:
      * @param safeguard Small value to prevent division by zero (default: 1e-12)
      */
     explicit j_transformation_algorithm(
-        K max_order = 30,
-        param_type safeguard = static_cast<param_type>(1e-12)
+        const K max_order = static_cast<K>(J_TRASFORMATION_DEFAULT_MAX_ORDER),
+        const param_type& safeguard = static_cast<param_type>(J_TRASFORMATION_DEFAULT_MAX_ORDER)
     ) : series_acceleration<T, K>("j transformation algorithm"),
         max_order_(max_order > 0 ? max_order : 1),
         safeguard_(safeguard)

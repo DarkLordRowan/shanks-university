@@ -1,14 +1,16 @@
 /**
  * @file anderson_acceleration_algorithm.hpp
  * @brief Anderson Acceleration algorithm implementation.
- */
+*/
 
 #pragma once
 
 #include "series_acceleration.hpp"
 #include <vector>
-#include <stdexcept>
-#include <cmath>
+
+#define ANDERSON_DEFAULT_MAX_ORDER 50
+#define ANDERSON_DEFAULT_BETA      1
+#define ANDERSON_DEFAULT_SAFEGUARD 1e-12
 
 /**
  * @brief Anderson acceleration algorithm class template implementing sequence transformation.
@@ -25,9 +27,9 @@ public:
     using param_type = typename Kostil::value_type; // TYPE FOR FLOATLIKE IN THE SITUATION OF COMPLEX OR INTERVAL
 
     explicit anderson_acceleration_algorithm(
-        K m = 5,
-        param_type beta = static_cast<param_type>(1.0),
-        param_type safeguard = static_cast<param_type>(1e-12)
+        const K m = ANDERSON_DEFAULT_MAX_ORDER,
+        const param_type& beta = static_cast<param_type>(ANDERSON_DEFAULT_BETA),
+        const param_type& safeguard = static_cast<param_type>(ANDERSON_DEFAULT_SAFEGUARD)
     ) : series_acceleration<T, K>("anderson acceleration algorithm"),
         m_(m > 0 ? m : 1),
         safeguard_(safeguard)

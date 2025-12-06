@@ -1,8 +1,5 @@
 #include <gtest/gtest.h>
 
-#include <math.h>
-#include "../libs/arbitrary_arithmetics/precisioncore.cpp"
-
 #include "../include/series.hpp"
 #include "../include/transformations/j_transformation_algorithm.hpp"
 
