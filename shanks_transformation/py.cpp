@@ -194,7 +194,7 @@ void bind_all(py::module_& m, const std::string& suffix){
              py::arg("m") = static_cast<K>(ANDERSON_DEFAULT_MAX_ORDER),
              py::arg("beta") = static_cast<RealT>(ANDERSON_DEFAULT_BETA),
              py::arg("safeguard") = static_cast<RealT>(ANDERSON_DEFAULT_SAFEGUARD));
-    
+
     py::class_<brezinski_theta_algorithm<T,K>, MSeriesAcceleration>
         (m, name("BrezinskiThetaAlgorithm").c_str())
         .def(py::init<>());
@@ -208,7 +208,7 @@ void bind_all(py::module_& m, const std::string& suffix){
         .def(py::init<remainder_type, bool>(),
              py::arg("remainder") = remainder_type::t_type,
              py::arg("useRecurrentFormula") = false);
-    
+
     py::class_<j_transformation_algorithm<T, K>, MSeriesAcceleration>
         (m, name("JAlgorithm").c_str())
         .def(py::init<const K, RealT>(),
@@ -295,7 +295,7 @@ void bind_complex_num(py::module_& m, const char* pyname) {
     auto cls = py::class_<C>(m, pyname)
         .def(py::init<>())
         .def(py::init<R>(), py::arg("re"))
-        .def(py::init<R,R>(), py::arg("re"), py::arg("im"))
+        .def(py::init<R, R>(), py::arg("re"), py::arg("im"))
         .def(py::init([](std::complex<double> z){
             return C(R(z.real()), R(z.imag()));
         }), py::arg("z"))
@@ -382,9 +382,8 @@ PYBIND11_MODULE(pyshanks, m) {
         using R = float_precision;
 
         py::class_<R>(m, "Arb")
-            .def(py::init<>())
-            .def(py::init<double>(), py::arg("d"))
-            .def(py::init<const std::string&>(), py::arg("s"))
+            .def(py::init<double, size_t>(), py::arg("d"), py::arg("precision"))
+            .def(py::init<const std::string&, size_t>(), py::arg("s"), py::arg("precision"))
             .def("__str__", [](const R &x){ return x.toString(); })
             .def("__format__", [](const R &x, const std::string&){ return x.toString(); })
             .def("__repr__", [](const R &x){ return std::string("<") + "Arb" + ": " + x.toString() + ">"; })
@@ -398,7 +397,6 @@ PYBIND11_MODULE(pyshanks, m) {
             .def("__float__", [](const R &x){ return static_cast<double>(x); })
             .def("__int__",   [](const R &x){ return static_cast<long>(static_cast<double>(x)); })
             .def("__index__", [](const R &x){ return static_cast<long>(static_cast<double>(x)); })
-            .def("__hash__", [](const R& x) -> py::size_t { return hash_float_precision(x); })
             .def("__getstate__", [](const R& x){ return x.toString(); })
             .def("__setstate__", [](R& self, const std::string& s){ new (&self) R(s); });
     }

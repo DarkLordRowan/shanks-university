@@ -1,0 +1,329 @@
+import json
+import pathlib
+from typing import Any
+
+import pyarrow as pa
+import pyarrow.dataset as ds
+
+import pyshanks as ps
+from src.run.precision import PrecisionType
+from src.run.trial import (
+    AccelRecord,
+    SeriesRecord,
+)
+
+
+def sanitize_complex_value(value: Any) -> dict[str, Any] | None:
+    """Convert complex numbers to {real: str, imag: str} format."""
+    if value is None:
+        return None
+    elif isinstance(value, (ps.CF32, ps.CF64, ps.CFLong, ps.CArb)):
+        return {"real": str(value.real), "imag": str(value.imag)}
+    elif isinstance(value, complex):
+        return {"real": str(value.real), "imag": str(value.imag)}
+    elif isinstance(value, (ps.Arb, float, int)):
+        return {"real": str(value), "imag": None}
+    else:
+        raise ValueError(value)
+
+
+def sanitize_value(value: Any) -> Any:
+    """Sanitize values for Parquet export."""
+    if isinstance(
+        value, (ps.Arb, ps.CArb, ps.CF32, ps.CF64, ps.CFLong, float, int, complex)
+    ):
+        return sanitize_complex_value(value)
+    elif isinstance(value, (ps.RemainderType, ps.NumeratorType)):
+        return value.name
+    elif isinstance(value, PrecisionType):
+        return value.value
+    elif isinstance(value, dict):
+        if value:
+            return {k: sanitize_value(v) for k, v in value.items()}
+        else:
+            return None
+    elif isinstance(value, (list, tuple)):
+        return [sanitize_value(item) for item in value]
+    elif isinstance(value, str):
+        return str(value)
+    elif value is None:
+        return None
+    else:
+        raise ValueError(value)
+
+
+def sanitize_series_record(record: SeriesRecord) -> dict[str, Any]:
+    """Sanitize a SeriesRecord for Parquet export."""
+    sanitized: dict[str, Any] = {
+        "series_name": record.series_name,
+        "series_id": record.series_id,
+        "precision": record.precision.value
+        if isinstance(record.precision, PrecisionType)
+        else str(record.precision),
+        "arguments": record.source_arguments,
+        "series_limit": sanitize_complex_value(record.series_limit),
+        "computed": [],
+    }
+
+    # Sanitize computed points
+    for point in record.computed:
+        sanitized_point = {
+            "n": point.n,
+            "value": sanitize_complex_value(point.value),
+            "deviation": str(point.deviation),
+        }
+        sanitized["computed"].append(sanitized_point)
+
+    return sanitized
+
+
+def sanitize_accel_record(record: AccelRecord) -> dict[str, Any]:
+    """Sanitize an AccelRecord for Parquet export."""
+    sanitized: dict[str, Any] = {
+        "series_id": record.series_id,
+        "accel_name": record.accel_name,
+        "m_value": record.m_value,
+        "additional_args": record.source_additional_args,
+        "computed": [],
+        "errors": None,
+        "events": None,
+    }
+
+    # Sanitize computed values
+    computed_list: list[dict[str, Any] | None] = []
+    for point in record.computed:
+        if point is None:
+            computed_list.append(None)
+        else:
+            sanitized_point = {
+                "value": sanitize_complex_value(point.value),
+                "deviation": str(point.deviation),
+            }
+            computed_list.append(sanitized_point)
+    sanitized["computed"] = computed_list
+
+    # Sanitize errors if present
+    if record.errors:
+        sanitized["errors"] = [
+            {"message": str(error.message), "n": error.n} for error in record.errors
+        ]
+
+    # Sanitize events if present
+    if record.events:
+        sanitized["events"] = [
+            {
+                "name": str(event.name),
+                "n": event.n,
+                "description": str(event.description),
+            }
+            for event in record.events
+        ]
+
+    return sanitized
+
+
+class ExportTrialResults:
+    def __init__(
+        self,
+        series_records: list[SeriesRecord],
+        accel_records: list[AccelRecord],
+        output_dir: pathlib.Path | None = None,
+    ):
+        self.series_records = series_records
+        self.accel_records = accel_records
+        self.output_dir = output_dir
+
+    def to_parquet(self, output_dir: pathlib.Path, filename: str):
+        file_options = ds.ParquetFileFormat().make_write_options(compression="zstd")
+        """Export to separate Parquet files for series and accelerations."""
+        output_dir.mkdir(parents=True, exist_ok=True)
+
+        # Export series records
+        if self.series_records:
+            series_data = []
+            for record in self.series_records:
+                series_data.append(sanitize_series_record(record))
+
+            # Define explicit schema for series
+            series_schema = pa.schema(
+                [
+                    ("series_name", pa.string()),
+                    ("series_id", pa.int64()),
+                    ("precision", pa.string()),
+                    (
+                        "arguments",
+                        pa.struct(
+                            [
+                                ("x", pa.string()),
+                                ("b", pa.string()),
+                                ("m", pa.string()),
+                                ("a", pa.string()),
+                            ]
+                        ),
+                    ),
+                    (
+                        "series_limit",
+                        pa.struct(
+                            [
+                                ("real", pa.string()),
+                                ("imag", pa.string()),
+                            ]
+                        ),
+                    ),
+                    (
+                        "computed",
+                        pa.list_(
+                            pa.struct(
+                                [
+                                    ("n", pa.int64()),
+                                    (
+                                        "value",
+                                        pa.struct(
+                                            [
+                                                ("real", pa.string()),
+                                                ("imag", pa.string()),
+                                            ]
+                                        ),
+                                    ),
+                                    ("deviation", pa.string()),
+                                ]
+                            )
+                        ),
+                    ),
+                ]
+            )
+
+            series_table = pa.Table.from_pylist(series_data, schema=series_schema)
+            series_path = output_dir / "parquet" / "series"
+
+            ds.write_dataset(
+                series_table,
+                base_dir=series_path,
+                format="parquet",
+                partitioning=ds.partitioning(
+                    pa.schema(
+                        [
+                            ("precision", pa.string()),
+                            ("series_name", pa.string()),
+                        ]
+                    ),
+                    flavor="hive",
+                ),
+                file_options=file_options,
+                existing_data_behavior="overwrite_or_ignore",
+            )
+            # print(f"Series data exported to: {series_path}")
+
+        # Export acceleration records
+        if self.accel_records:
+            accel_data = []
+            for accel_rec in self.accel_records:
+                accel_data.append(sanitize_accel_record(accel_rec))
+
+            # TODO: Remove or make non-hardcoded
+            accel_schema = pa.schema(
+                [
+                    ("series_id", pa.int64()),
+                    ("accel_name", pa.string()),
+                    ("m_value", pa.int64()),
+                    (
+                        "additional_args",
+                        pa.struct(
+                            [
+                                ("remainder", pa.string()),
+                                ("useRecurrentFormula", pa.string()),
+                                ("beta", pa.string()),
+                                ("gamma", pa.string()),
+                                ("parameter", pa.string()),
+                                ("numerator", pa.string()),
+                                ("rho", pa.string()),
+                                ("epsilon_threshold", pa.string()),
+                            ]
+                        ),
+                    ),
+                    (
+                        "computed",
+                        pa.list_(
+                            pa.struct(
+                                [
+                                    (
+                                        "value",
+                                        pa.struct(
+                                            [
+                                                ("real", pa.string()),
+                                                ("imag", pa.string()),
+                                            ]
+                                        ),
+                                    ),
+                                    ("deviation", pa.string()),
+                                ]
+                            )
+                        ),
+                    ),
+                    (
+                        "errors",
+                        pa.list_(
+                            pa.struct([("n", pa.int64()), ("message", pa.string())])
+                        ),
+                    ),
+                    (
+                        "events",
+                        pa.list_(
+                            pa.struct(
+                                [
+                                    ("n", pa.int64()),
+                                    ("name", pa.string()),
+                                    ("description", pa.string()),
+                                ]
+                            )
+                        ),
+                    ),
+                ]
+            )
+
+            # print("Creating table with explicit schema...")
+            accel_table = pa.Table.from_pylist(accel_data, schema=accel_schema)
+            accel_path = output_dir / "parquet" / "accelerations"
+
+            ds.write_dataset(
+                accel_table,
+                base_dir=accel_path,
+                format="parquet",
+                partitioning=ds.partitioning(
+                    pa.schema(
+                        [
+                            ("series_id", pa.int64()),
+                        ]
+                    ),
+                    flavor="hive",
+                ),
+                file_options=file_options,
+                existing_data_behavior="overwrite_or_ignore",
+            )
+            # print(f"Acceleration data exported to: {accel_path}")
+
+    def to_json(self, output_path: pathlib.Path):
+        """Export to a single JSON file containing all data."""
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+
+        # Combine all data into a single structure
+        export_data: dict[str, list[dict[str, Any]]] = {
+            "series": [],
+            "accelerations": [],
+        }
+
+        # Export series records
+        if self.series_records:
+            for record in self.series_records:
+                export_data["series"].append(sanitize_series_record(record))
+
+        # Export acceleration records
+        if self.accel_records:
+            for accel_rec in self.accel_records:
+                export_data["accelerations"].append(sanitize_accel_record(accel_rec))
+
+        # Write to JSON file
+        with open(output_path, "w", encoding="utf-8") as f:
+            json.dump(export_data, f, indent=2, ensure_ascii=False)
+
+        print(f"Data exported to JSON: {output_path}")
