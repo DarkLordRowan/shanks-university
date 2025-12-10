@@ -11,6 +11,7 @@ from src.domain.data_serializer import DataSerializer
 from src.domain.export_service import ExportService
 from src.domain.params import BaseAccelParam, BaseSeriesParam, PrecisionType
 from src.domain.sources import AccelParamSource, SeriesParamSource
+from src.domain.use_cases.run_trial import generate_all_series
 from src.domain.trial_runner import TrialRunner
 
 
@@ -63,6 +64,16 @@ class TrialExecutor:
 
         return series_params, accel_params
 
+    def pregen_series(
+        self,
+        series_params: list[BaseSeriesParam],
+        accel_params: list[BaseAccelParam],
+    ):
+        return generate_all_series(
+            series_params,
+            max(accel.size_floor for accel in accel_params),
+        )
+
     def export_results(self, dicts: Sequence[dict]):
         for exporter in self.exporters:
             exporter.export(dicts, config=self.config)
@@ -80,7 +91,15 @@ class TrialExecutor:
             stack_id=self.stack_id,
         )
 
-        results = reduce(list.__add__, self.runner.run(trial.combinations()))
+        pregen_series = self.pregen_series(series_params, accel_params)
+
+        results = reduce(
+            list.__add__,
+            self.runner.run(
+                trial.combinations(),
+                pregen_series,
+            ),
+        )
 
         self.export_results(self.serializer.to_dict(results))
 
@@ -98,9 +117,11 @@ class TrialExecutor:
         )
 
         combinations = trial.combinations()
+        pregen_series = self.pregen_series(series_params, accel_params)
 
         for result_chunk in tqdm(
-            self.runner.run(combinations), total=len(combinations)
+            self.runner.run(combinations, pregen_series),
+            total=len(combinations),
         ):
             self.export_results(self.serializer.to_dict(result_chunk))
 
@@ -109,9 +130,11 @@ class TrialExecutor:
         series_params: list[BaseSeriesParam],
         accel_params: list[BaseAccelParam],
     ):
-
         if self.config.trial_memory_efficient:
-            return self.__run_trials_dispose_at_completion(series_params, accel_params)
+            return self.__run_trials_dispose_at_completion(
+                series_params,
+                accel_params,
+            )
         return self.__run_trials_full_load(series_params, accel_params)
 
     def run_all_precisions(self) -> str:

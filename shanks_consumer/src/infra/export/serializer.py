@@ -28,55 +28,8 @@ class TrialResultSerializer(DataSerializer):
             return [self._sanitize_value(v) for v in value]
         return value
 
-    def _apply_view(self, result: TrialResult) -> dict:
-        view_map = {
-            ResultViewKind.FULL: self._view_full,
-            ResultViewKind.SHORT: self._view_short,
-            ResultViewKind.COMPLETION: self._view_completion_only,
-            ResultViewKind.ERRORS_ONLY: self._view_errors_only,
-        }
-
-        viewer = view_map.get(self.view, self._view_full)
-        return viewer(result)
-
-    @staticmethod
-    def _view_full(result: TrialResult) -> dict:
-        return asdict(result)
-
-    @staticmethod
-    def _view_short(result: TrialResult) -> dict:
-        raw = asdict(result)
-        raw.pop("computed", None)
-        return raw
-
-    @staticmethod
-    def _view_errors_only(result: TrialResult) -> dict | None:
-        raw = asdict(result)
-        return (
-            {
-                "series": result.series,
-                "accel": result.accel,
-                "error": raw.get("error"),
-            }
-            if raw.get("error")
-            else None
-        )
-
-    @staticmethod
-    def _view_completion_only(result: TrialResult) -> dict:
-        return {
-            "series": f"{result.series.name}_{list(result.series.arguments.items())}",
-            "accel": f"{result.accel.name}_{result.accel.m_value}_{list(result.accel.additional_args.items())}",
-            "failed": result.failed_iteration,
-        }
-
     def to_dict(
         self,
         results: Sequence[TrialResult],
     ) -> Sequence[dict]:
-        return list(
-            filter(
-                lambda d: d is not None,
-                [self._sanitize_value(self._apply_view(r)) for r in results],
-            )
-        )
+        return [self._sanitize_value(r) for r in results]
