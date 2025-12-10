@@ -1,7 +1,79 @@
 {
   "series": [
     {
-      "name": "ExpSeries",
+      "name": "AbsSinXMinus2DivPiSeries",
+      "args": {
+        "x": [0, 0.1, 0.5, 1, 2, 10]
+      }
+    },
+    {
+      "name": "ArcsinX2Series",
+      "args": {
+        "x": [0, 0.1, 0.5, 1, 2, 10]
+      }
+    },
+    {
+      "name": "ArcsinXMinusXSeries",
+      "args": {
+        "x": [0, 0.1, 0.5, 1, 2, 10]
+      }
+    },
+    {
+      "name": "ArcsinXSeries",
+      "args": {
+        "x": [0, 0.1, 0.5, 1, 2, 10]
+      }
+    },
+    {
+      "name": "ArcsinhXSeries",
+      "args": {
+        "x": [0, 0.1, 0.5, 1, 2, 10]
+      }
+    },
+    {
+      "name": "ArctanhX2Series",
+      "args": {
+        "x": [0, 0.1, 0.5, 1, 2, 10]
+      }
+    },
+    {
+      "name": "ArctanhXSeries",
+      "args": {
+        "x": [0, 0.1, 0.5, 1, 2, 10]
+      }
+    },
+    {
+      "name": "ArctgX2Series",
+      "args": {
+        "x": [0, 0.1, 0.5, 1, 2, 10]
+      }
+    },
+    {
+      "name": "ArctgX3Series",
+      "args": {
+        "x": [0, 0.1, 0.5, 1, 2, 10]
+      }
+    },
+    {
+      "name": "ArctgXSeries",
+      "args": {
+        "x": [0, 0.1, 0.5, 1, 2, 10]
+      }
+    },
+    {
+      "name": "BinSeries",
+      "args": {
+        "x": [0, 0.1, 0.5, 1, 2, 10]
+      }
+    },
+    {
+      "name": "CiXSeries",
+      "args": {
+        "x": [0, 0.1, 0.5, 1, 2, 10]
+      }
+    },
+    {
+      "name": "Cos3xMinus1DivXsquareSeries",
       "args": {
         "x": [0, 0.1, 0.5, 1, 2, 10]
       }
@@ -13,7 +85,13 @@
       }
     },
     {
-      "name": "SinSeries",
+      "name": "CosSqrtXSeries",
+      "args": {
+        "x": [0, 0.1, 0.5, 1, 2, 10]
+      }
+    },
+    {
+      "name": "CosX2Series",
       "args": {
         "x": [0, 0.1, 0.5, 1, 2, 10]
       }
@@ -25,135 +103,7 @@
       }
     },
     {
-      "name": "SinhSeries",
-      "args": {
-        "x": [0, 0.1, 0.5, 1, 2, 10]
-      }
-    },
-    {
-      "name": "FourArctanSeries",
-      "args": {
-        "x": [0, 0.1, 0.5, 1, 2, 10]
-      }
-    },
-    {
-      "name": "Ln1mxSeries",
-      "args": {
-        "x": [0, 0.1, 0.5, 1, 2, 10]
-      }
-    },
-    {
-      "name": "MeanSinhSinSeries",
-      "args": {
-        "x": [0, 0.1, 0.5, 1, 2, 10]
-      }
-    },
-    {
-      "name": "ExpSquaredErfSeries",
-      "args": {
-        "x": [0, 0.1, 0.5, 1, 2, 10]
-      }
-    },
-    {
-      "name": "XmbJbTwoSeries",
-      "args": {
-        "x": [0, 0.1, 0.5, 1, 2, 10],
-        "b": 2
-      }
-    },
-    {
-      "name": "HalfAsinTwoXSeries",
-      "args": {
-        "x": [0, 0.1, 0.5, 1, 2, 10]
-      }
-    },
-    {
-      "name": "Inverse1mxSeries",
-      "args": {
-        "x": [0, 0.1, 0.5, 1, 2, 10]
-      }
-    },
-    {
-      "name": "X_1mx_SquaredSeries",
-      "args": {
-        "x": [0, 0.1, 0.5, 1, 2, 10]
-      }
-    },
-    {
-      "name": "ErfSeries",
-      "args": {
-        "x": [0, 0.1, 0.5, 1, 2, 10]
-      }
-    },
-    {
-      "name": "MFact1mxMp1InverseSeries",
-      "args": {
-        "x": [0, 0.1, 0.5, 1, 2, 10],
-        "m": 3
-      }
-    },
-    {
-      "name": "InvSqrt1m4xSeries",
-      "args": {
-        "x": [0, 0.1, 0.5, 1, 2, 10]
-      }
-    },
-    {
-      "name": "OneTwelfth3x2Pi2Series",
-      "args": {
-        "x": [0, 0.1, 0.5, 1, 2, 10]
-      }
-    },
-    {
-      "name": "XTwelfthX2Pi2Series",
-      "args": {
-        "x": [0, 0.1, 0.5, 1, 2, 10]
-      }
-    },
-    {
-      "name": "Ln2Series",
-      "args": {
-        "x": [0, 0.1, 0.5, 1, 2, 10]
-      }
-    },
-    {
-      "name": "OneSeries",
-      "args": {
-        "x": [0, 0.1, 0.5, 1, 2, 10]
-      }
-    },
-    {
-      "name": "MinusOneQuarterSeries",
-      "args": {
-        "x": [0, 0.1, 0.5, 1, 2, 10]
-      }
-    },
-    {
-      "name": "Pi3Series",
-      "args": {
-        "x": [0, 0.1, 0.5, 1, 2, 10]
-      }
-    },
-    {
-      "name": "Pi4Series",
-      "args": {
-        "x": [0, 0.1, 0.5, 1, 2, 10]
-      }
-    },
-    {
-      "name": "PiSquared6MinusOneSeries",
-      "args": {
-        "x": [0, 0.1, 0.5, 1, 2, 10]
-      }
-    },
-    {
-      "name": "ThreeMinusPiSeries",
-      "args": {
-        "x": [0, 0.1, 0.5, 1, 2, 10]
-      }
-    },
-    {
-      "name": "OneTwelfthSeries",
+      "name": "EXSeries",
       "args": {
         "x": [0, 0.1, 0.5, 1, 2, 10]
       }
@@ -165,13 +115,7 @@
       }
     },
     {
-      "name": "OneThirdPiSquaredMNineSeries",
-      "args": {
-        "x": [0, 0.1, 0.5, 1, 2, 10]
-      }
-    },
-    {
-      "name": "FourLn2M3Series",
+      "name": "ErfSeries",
       "args": {
         "x": [0, 0.1, 0.5, 1, 2, 10]
       }
@@ -183,7 +127,13 @@
       }
     },
     {
-      "name": "PiFourMinusLn2HalfedSeries",
+      "name": "ExpSeries",
+      "args": {
+        "x": [0, 0.1, 0.5, 1, 2, 10]
+      }
+    },
+    {
+      "name": "ExpSquaredErfSeries",
       "args": {
         "x": [0, 0.1, 0.5, 1, 2, 10]
       }
@@ -195,85 +145,19 @@
       }
     },
     {
-      "name": "XTwoSeries",
+      "name": "FourArctanSeries",
       "args": {
         "x": [0, 0.1, 0.5, 1, 2, 10]
       }
     },
     {
-      "name": "PiSixMinHalfSeries",
+      "name": "FourLn2M3Series",
       "args": {
         "x": [0, 0.1, 0.5, 1, 2, 10]
       }
     },
     {
-      "name": "XTwoThroughtSquaresSeries",
-      "args": {
-        "x": [0, 0.1, 0.5, 1, 2, 10]
-      }
-    },
-    {
-      "name": "MinusOneNedInNSeries",
-      "args": {
-        "x": [0, 0.1, 0.5, 1, 2, 10]
-      }
-    },
-    {
-      "name": "MinusOneNFactNInNSeries",
-      "args": {
-        "x": [0, 0.1, 0.5, 1, 2, 10]
-      }
-    },
-    {
-      "name": "LnXPlusOneXMinusOneHalfedSeries",
-      "args": {
-        "x": [0, 0.1, 0.5, 1, 2, 10]
-      }
-    },
-    {
-      "name": "TwoArcsinSquareXHalfedSeries",
-      "args": {
-        "x": [0, 0.1, 0.5, 1, 2, 10]
-      }
-    },
-    {
-      "name": "PiSquaredTwelveSeries",
-      "args": {
-        "x": [0, 0.1, 0.5, 1, 2, 10]
-      }
-    },
-    {
-      "name": "PiCubed32Series",
-      "args": {
-        "x": [0, 0.1, 0.5, 1, 2, 10]
-      }
-    },
-    {
-      "name": "MinusThreePlusLn3ThreeDividedTwoPlusTwoLn2Series",
-      "args": {
-        "x": [0, 0.1, 0.5, 1, 2, 10]
-      }
-    },
-    {
-      "name": "TwoLn2Series",
-      "args": {
-        "x": [0, 0.1, 0.5, 1, 2, 10]
-      }
-    },
-    {
-      "name": "PiXMultiE_XpiPlusEMinusXpiDividedE_XpiMinusEMinusXpiMinusOneSeries",
-      "args": {
-        "x": [0, 0.1, 0.5, 1, 2, 10]
-      }
-    },
-    {
-      "name": "PiMinusX2Series",
-      "args": {
-        "x": [0, 0.1, 0.5, 1, 2, 10]
-      }
-    },
-    {
-      "name": "HalfMultiLn1Div2Multi1MinusCosxSeries",
+      "name": "HalfAsinTwoXSeries",
       "args": {
         "x": [0, 0.1, 0.5, 1, 2, 10]
       }
@@ -285,7 +169,85 @@
       }
     },
     {
+      "name": "HalfMultiLn1Div2Multi1MinusCosxSeries",
+      "args": {
+        "x": [0, 0.1, 0.5, 1, 2, 10]
+      }
+    },
+    {
+      "name": "IncompleteGammaFuncSeries",
+      "args": {
+        "x": [0, 0.1, 0.5, 1, 2, 10]
+      }
+    },
+    {
+      "name": "Inverse1mxSeries",
+      "args": {
+        "x": [0, 0.1, 0.5, 1, 2, 10]
+      }
+    },
+    {
+      "name": "InvSqrt1m4xSeries",
+      "args": {
+        "x": [0, 0.1, 0.5, 1, 2, 10]
+      }
+    },
+    {
+      "name": "KXSeries",
+      "args": {
+        "x": [0, 0.1, 0.5, 1, 2, 10]
+      }
+    },
+    {
+      "name": "LambertWFuncSeries",
+      "args": {
+        "x": [0, 0.1, 0.5, 1, 2, 10]
+      }
+    },
+    {
+      "name": "Ln1MinusX2Series",
+      "args": {
+        "x": [0, 0.1, 0.5, 1, 2, 10]
+      }
+    },
+    {
+      "name": "Ln1mxSeries",
+      "args": {
+        "x": [0, 0.1, 0.5, 1, 2, 10]
+      }
+    },
+    {
+      "name": "Ln1px4Series",
+      "args": {
+        "x": [0, 0.1, 0.5, 1, 2, 10]
+      }
+    },
+    {
+      "name": "Ln2Series",
+      "args": {
+        "x": [0, 0.1, 0.5, 1, 2, 10]
+      }
+    },
+    {
+      "name": "Ln13MinusLn7Div7Series",
+      "args": {
+        "x": [0, 0.1, 0.5, 1, 2, 10]
+      }
+    },
+    {
+      "name": "Ln1PlusX3Series",
+      "args": {
+        "x": [0, 0.1, 0.5, 1, 2, 10]
+      }
+    },
+    {
       "name": "Ln1PlusSqrt1PlusXsquareMinusLn2Series",
+      "args": {
+        "x": [0, 0.1, 0.5, 1, 2, 10]
+      }
+    },
+    {
+      "name": "Ln1plusXDiv1plusX2Series",
       "args": {
         "x": [0, 0.1, 0.5, 1, 2, 10]
       }
@@ -303,43 +265,19 @@
       }
     },
     {
-      "name": "Pi8CosxSquareMinus1Div3CosxSeries",
+      "name": "LnXPlusOneXMinusOneHalfedSeries",
       "args": {
         "x": [0, 0.1, 0.5, 1, 2, 10]
       }
     },
     {
-      "name": "SqrtOneminusSqrtoneminusxDivXSeries",
+      "name": "MFact1mxMp1InverseSeries",
       "args": {
         "x": [0, 0.1, 0.5, 1, 2, 10]
       }
     },
     {
-      "name": "OneMinusSqrt1minus4xDiv2xSeries",
-      "args": {
-        "x": [0, 0.1, 0.5, 1, 2, 10]
-      }
-    },
-    {
-      "name": "ArcsinXMinusXSeries",
-      "args": {
-        "x": [0, 0.1, 0.5, 1, 2, 10]
-      }
-    },
-    {
-      "name": "PiXMinusXSquareAndXSquareMinusThreePiXPlusTwoPiSquareSeries",
-      "args": {
-        "x": [0, 0.1, 0.5, 1, 2, 10]
-      }
-    },
-    {
-      "name": "AbsSinXMinus2DivPiSeries",
-      "args": {
-        "x": [0, 0.1, 0.5, 1, 2, 10]
-      }
-    },
-    {
-      "name": "PiMinus3pi4AndPiMinusXMinus3pi4Series",
+      "name": "MeanSinhSinSeries",
       "args": {
         "x": [0, 0.1, 0.5, 1, 2, 10]
       }
@@ -351,13 +289,25 @@
       }
     },
     {
-      "name": "TenMinusXSeries",
+      "name": "MinusOneNFactNInNSeries",
       "args": {
         "x": [0, 0.1, 0.5, 1, 2, 10]
       }
     },
     {
-      "name": "XSeries",
+      "name": "MinusOneNedInNSeries",
+      "args": {
+        "x": [0, 0.1, 0.5, 1, 2, 10]
+      }
+    },
+    {
+      "name": "MinusOneQuarterSeries",
+      "args": {
+        "x": [0, 0.1, 0.5, 1, 2, 10]
+      }
+    },
+    {
+      "name": "MinusThreePlusLn3ThreeDividedTwoPlusTwoLn2Series",
       "args": {
         "x": [0, 0.1, 0.5, 1, 2, 10]
       }
@@ -369,19 +319,127 @@
       }
     },
     {
+      "name": "OneDivSqrt2SinXDivSqrt2Series",
+      "args": {
+        "x": [0, 0.1, 0.5, 1, 2, 10]
+      }
+    },
+    {
       "name": "OneDivTwoMinusXMultiThreePlusXSeries",
       "args": {
         "x": [0, 0.1, 0.5, 1, 2, 10]
       }
     },
     {
-      "name": "SiXSeries",
+      "name": "OneMinusSqrt1minus4xDiv2xSeries",
       "args": {
         "x": [0, 0.1, 0.5, 1, 2, 10]
       }
     },
     {
-      "name": "CiXSeries",
+      "name": "OneSeries",
+      "args": {
+        "x": [0, 0.1, 0.5, 1, 2, 10]
+      }
+    },
+    {
+      "name": "OneThirdPiSquaredMNineSeries",
+      "args": {
+        "x": [0, 0.1, 0.5, 1, 2, 10]
+      }
+    },
+    {
+      "name": "OneTwelfth3x2Pi2Series",
+      "args": {
+        "x": [0, 0.1, 0.5, 1, 2, 10]
+      }
+    },
+    {
+      "name": "OneTwelfthSeries",
+      "args": {
+        "x": [0, 0.1, 0.5, 1, 2, 10]
+      }
+    },
+    {
+      "name": "OneTwelfthX2Pi2Series",
+      "args": {
+        "x": [0, 0.1, 0.5, 1, 2, 10]
+      }
+    },
+    {
+      "name": "Pi3Series",
+      "args": {
+        "x": [0, 0.1, 0.5, 1, 2, 10]
+      }
+    },
+    {
+      "name": "Pi4Series",
+      "args": {
+        "x": [0, 0.1, 0.5, 1, 2, 10]
+      }
+    },
+    {
+      "name": "Pi8CosxSquareMinus1Div3CosxSeries",
+      "args": {
+        "x": [0, 0.1, 0.5, 1, 2, 10]
+      }
+    },
+    {
+      "name": "PiCubed32Series",
+      "args": {
+        "x": [0, 0.1, 0.5, 1, 2, 10]
+      }
+    },
+    {
+      "name": "PiFourMinusLn2HalfedSeries",
+      "args": {
+        "x": [0, 0.1, 0.5, 1, 2, 10]
+      }
+    },
+    {
+      "name": "PiMinus3pi4AndPiMinusXMinus3pi4Series",
+      "args": {
+        "x": [0, 0.1, 0.5, 1, 2, 10]
+      }
+    },
+    {
+      "name": "PiMinusX2Series",
+      "args": {
+        "x": [0, 0.1, 0.5, 1, 2, 10]
+      }
+    },
+    {
+      "name": "PiSeries",
+      "args": {
+        "x": [0, 0.1, 0.5, 1, 2, 10]
+      }
+    },
+    {
+      "name": "PiSixMinHalfSeries",
+      "args": {
+        "x": [0, 0.1, 0.5, 1, 2, 10]
+      }
+    },
+    {
+      "name": "PiSquared6MinusOneSeries",
+      "args": {
+        "x": [0, 0.1, 0.5, 1, 2, 10]
+      }
+    },
+    {
+      "name": "PiSquaredTwelveSeries",
+      "args": {
+        "x": [0, 0.1, 0.5, 1, 2, 10]
+      }
+    },
+    {
+      "name": "PiXMinusXSquareSquareMinusThreePiXPlusTwoPiSquareSeries",
+      "args": {
+        "x": [0, 0.1, 0.5, 1, 2, 10]
+      }
+    },
+    {
+      "name": "PiXMultiEXpiPlusEMinusXpiDividedEXpiMinusEMinusXpiSeries",
       "args": {
         "x": [0, 0.1, 0.5, 1, 2, 10]
       }
@@ -399,55 +457,6 @@
       }
     },
     {
-      "name": "Xsquareplus3DivXsquareplus2multixMinus1Series",
-      "args": {
-        "x": [0, 0.1, 0.5, 1, 2, 10]
-      }
-    },
-    {
-      "name": "ArcsinXSeries",
-      "args": {
-        "x": [0, 0.1, 0.5, 1, 2, 10]
-      }
-    },
-    {
-      "name": "ArctgXSeries",
-      "args": {
-        "x": [0, 0.1, 0.5, 1, 2, 10]
-      }
-    },
-    {
-      "name": "KXSeries",
-      "args": {
-        "x": [0, 0.1, 0.5, 1, 2, 10]
-      }
-    },
-    {
-      "name": "EXSeries",
-      "args": {
-        "x": [0, 0.1, 0.5, 1, 2, 10]
-      }
-    },
-    {
-      "name": "Sqrt1plusXSeries",
-      "args": {
-        "x": [0, 0.1, 0.5, 1, 2, 10]
-      }
-    },
-    {
-      "name": "LambertWFuncSeries",
-      "args": {
-        "x": [0, 0.1, 0.5, 1, 2, 10]
-      }
-    },
-    {
-      "name": "IncompleteGammaFuncSeries",
-      "args": {
-        "x": [0, 0.1, 0.5, 1, 2, 10],
-        "a": 2.0
-      }
-    },
-    {
       "name": "SeriesWithLnNumber1",
       "args": {
         "x": [0, 0.1, 0.5, 1, 2, 10]
@@ -460,25 +469,13 @@
       }
     },
     {
-      "name": "PiSeries",
+      "name": "SiXSeries",
       "args": {
         "x": [0, 0.1, 0.5, 1, 2, 10]
       }
     },
     {
-      "name": "XMinSqrtXSeries",
-      "args": {
-        "x": [0, 0.1, 0.5, 1, 2, 10]
-      }
-    },
-    {
-      "name": "ArctanX2Series",
-      "args": {
-        "x": [0, 0.1, 0.5, 1, 2, 10]
-      }
-    },
-    {
-      "name": "Ln1px4Series",
+      "name": "SinSeries",
       "args": {
         "x": [0, 0.1, 0.5, 1, 2, 10]
       }
@@ -490,37 +487,7 @@
       }
     },
     {
-      "name": "ArctanX3Series",
-      "args": {
-        "x": [0, 0.1, 0.5, 1, 2, 10]
-      }
-    },
-    {
-      "name": "ArcsinX2Series",
-      "args": {
-        "x": [0, 0.1, 0.5, 1, 2, 10]
-      }
-    },
-    {
-      "name": "Ln1MinusX2Series",
-      "args": {
-        "x": [0, 0.1, 0.5, 1, 2, 10]
-      }
-    },
-    {
-      "name": "ArtanhXSeries",
-      "args": {
-        "x": [0, 0.1, 0.5, 1, 2, 10]
-      }
-    },
-    {
-      "name": "ArcsinhXSeries",
-      "args": {
-        "x": [0, 0.1, 0.5, 1, 2, 10]
-      }
-    },
-    {
-      "name": "CosX2Series",
+      "name": "SinhSeries",
       "args": {
         "x": [0, 0.1, 0.5, 1, 2, 10]
       }
@@ -532,13 +499,37 @@
       }
     },
     {
-      "name": "ArctanhX2Series",
+      "name": "Sqrt1plusXMinus1MinusXDiv2Series",
       "args": {
         "x": [0, 0.1, 0.5, 1, 2, 10]
       }
     },
     {
-      "name": "Cos3xMinus1DivXsquareSeries",
+      "name": "Sqrt1plusXSeries",
+      "args": {
+        "x": [0, 0.1, 0.5, 1, 2, 10]
+      }
+    },
+    {
+      "name": "SqrtOneminusSqrtoneminusxDivXSeries",
+      "args": {
+        "x": [0, 0.1, 0.5, 1, 2, 10]
+      }
+    },
+    {
+      "name": "TenMinusXSeries",
+      "args": {
+        "x": [0, 0.1, 0.5, 1, 2, 10]
+      }
+    },
+    {
+      "name": "ThreeMinusPiSeries",
+      "args": {
+        "x": [0, 0.1, 0.5, 1, 2, 10]
+      }
+    },
+    {
+      "name": "TwoArcsinSquareXHalfedSeries",
       "args": {
         "x": [0, 0.1, 0.5, 1, 2, 10]
       }
@@ -550,50 +541,13 @@
       }
     },
     {
-      "name": "Sqrt1plusXMinus1MinusXDiv2Series",
+      "name": "TwoLn2Series",
       "args": {
         "x": [0, 0.1, 0.5, 1, 2, 10]
       }
     },
     {
-      "name": "Ln13MinusLn7Div7Series",
-      "args": {
-        "x": [0, 0.1, 0.5, 1, 2, 10]
-      }
-    },
-    {
-      "name": "JaXSeries",
-      "args": {
-        "x": [0, 0.1, 0.5, 1, 2, 10],
-        "a": 2.0
-      }
-    },
-    {
-      "name": "OneDivSqrt2SinXDivSqrt2Series",
-      "args": {
-        "x": [0, 0.1, 0.5, 1, 2, 10]
-      }
-    },
-    {
-      "name": "Ln1plusXDiv1plusX2Series",
-      "args": {
-        "x": [0, 0.1, 0.5, 1, 2, 10]
-      }
-    },
-    {
-      "name": "CosSqrtXSeries",
-      "args": {
-        "x": [0, 0.1, 0.5, 1, 2, 10]
-      }
-    },
-    {
-      "name": "Ln1PlusX3Series",
-      "args": {
-        "x": [0, 0.1, 0.5, 1, 2, 10]
-      }
-    },
-    {
-      "name": "XDiv1minXSeries",
+      "name": "X1mxSquaredSeries",
       "args": {
         "x": [0, 0.1, 0.5, 1, 2, 10]
       }
@@ -605,26 +559,51 @@
       }
     },
     {
-      "name": "GammaSeries",
+      "name": "XDiv1minXSeries",
       "args": {
-        "x": [0, 0.1, 0.5, 1, 2, 10],
-        "a": [0.1, 1, 10, 100]
+        "x": [0, 0.1, 0.5, 1, 2, 10]
+      }
+    },
+    {
+      "name": "XMinSqrtXSeries",
+      "args": {
+        "x": [0, 0.1, 0.5, 1, 2, 10]
+      }
+    },
+    {
+      "name": "XSeries",
+      "args": {
+        "x": [0, 0.1, 0.5, 1, 2, 10]
+      }
+    },
+    {
+      "name": "XTwoSeries",
+      "args": {
+        "x": [0, 0.1, 0.5, 1, 2, 10]
+      }
+    },
+    {
+      "name": "XTwoThroughtSquaresSeries",
+      "args": {
+        "x": [0, 0.1, 0.5, 1, 2, 10]
+      }
+    },
+    {
+      "name": "Xsquareplus3DivXsquareplus2multixMinus1Series",
+      "args": {
+        "x": [0, 0.1, 0.5, 1, 2, 10]
       }
     }
   ],
-
   "methods": [
     {
-      "name": "ShanksAlgorithm",
+      "name": "AndersonAlgorithm",
       "n": { "start": 1, "stop": 51, "step": 1 },
       "m": [2, 4, 10],
-      "args": {}
-    },
-    {
-      "name": "ShanksTransformAlternating",
-      "n": { "start": 1, "stop": 51, "step": 1 },
-      "m": [2, 4, 10],
-      "args": {}
+      "args": {
+        "beta": [1.0],
+        "safeguard": [1.0]
+      }
     },
     {
       "name": "BrezinskiThetaAlgorithm",
@@ -645,6 +624,15 @@
       "args": {
         "remainder": ["v_type", "u_type", "t_wave_type"],
         "useRecurrentFormula": [true, false]
+      }
+    },
+    {
+      "name": "JAlgorithm",
+      "n": { "start": 1, "stop": 51, "step": 1 },
+      "m": [2, 4, 10],
+      "args": {
+        "max_order": [10],
+        "safeguard": [1.0]
       }
     },
     {
@@ -695,17 +683,19 @@
       "args": {}
     },
     {
-      "name": "WynnRhoAlgorithm",
+      "name": "RichardsonAlgorithm",
       "n": { "start": 1, "stop": 51, "step": 1 },
       "m": [2, 4, 10],
-      "args": {
-        "numerator": ["rho_type", "generalized_type", "gamma_rho_type"],
-        "gamma": [0.1, 1, 10],
-        "rho": [0.1, 1, 10]
-      }
+      "args": {}
     },
     {
-      "name": "RichardsonAlgorithm",
+      "name": "ShanksTransformAlternating",
+      "n": { "start": 1, "stop": 51, "step": 1 },
+      "m": [2, 4, 10],
+      "args": {}
+    },
+    {
+      "name": "ShanksAlgorithm",
       "n": { "start": 1, "stop": 51, "step": 1 },
       "m": [2, 4, 10],
       "args": {}
@@ -734,6 +724,16 @@
       "m": [2, 4, 10],
       "args": {
         "epsilon_threshold": [1e-10, 1e-30, 1e-50]
+      }
+    },
+    {
+      "name": "WynnRhoAlgorithm",
+      "n": { "start": 1, "stop": 51, "step": 1 },
+      "m": [2, 4, 10],
+      "args": {
+        "numerator": ["rho_type", "generalized_type", "gamma_rho_type"],
+        "gamma": [0.1, 1, 10],
+        "rho": [0.1, 1, 10]
       }
     }
   ]
