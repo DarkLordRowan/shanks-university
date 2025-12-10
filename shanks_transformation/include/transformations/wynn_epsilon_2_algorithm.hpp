@@ -14,7 +14,6 @@
 #pragma once
 
 #include "series_acceleration.hpp"
-#include <type_traits>
 
  /**
   * @brief Wynn's Epsilon Algorithm (Second Implementation) class template.
