@@ -12,7 +12,6 @@
 #pragma once
 
 #include "series_acceleration.hpp"
-#include <type_traits>
 #include <vector> // Include the vector library
 #include <cmath>  // Include for isfinite
 
@@ -84,14 +83,14 @@ public:
 template <AcceptedLike T, UnsignedIntLike K>
 T ford_sidi_3_algorithm<T, K>::operator()(
     const K n, 
-    const K order, 
+    const K /*order*/, 
     const series_result<T>& data
 ) const {
 
     const K required_size = n;
 
     if (data.Sn.size() < required_size || data.an.size() < required_size){
-        throw std::out_of_range("The Sn or an smaller then required for ford_sidi_3_{" + to_string(order) + "}^{" + to_string(n) + "}\n" +
+        throw std::out_of_range("The Sn or an smaller then required for ford_sidi_3_{" + to_string(n) + "}\n" +
         "the size of Sn and an must be at least " + to_string(required_size));
 	}
     
@@ -104,54 +103,35 @@ T ford_sidi_3_algorithm<T, K>::operator()(
     // For theory, see: Osada (2000), Section 4 - Efficient implementation
     // Algorithm uses auxiliary sequences for improved computational efficiency
     const K n1 = n - static_cast<K>(1);
+    
     const K m  = n + static_cast<K>(1);
 
     // For theory, see: Ford & Sidi (1987), Section 2 - Auxiliary sequence initialization
     // G sequence: Used for storing transformation coefficients
-    std::vector<T> G;
+    std::vector<T> G(m + static_cast<K>(1), static_cast<T>(0));
     // FSA sequence: Stores accelerated partial sums
-    std::vector<T> FSA;
+    std::vector<T> FSA(m + static_cast<K>(1), static_cast<T>(0));
     // FSI sequence: Stores normalization factors
-    std::vector<T> FSI;
+    std::vector<T> FSI(m + static_cast<K>(1), static_cast<T>(0));
     // FSG matrix: Stores intermediate transformation values
-    std::vector<std::vector<T>> FSG;
+    std::vector<std::vector<T>> FSG(m + static_cast<K>(2), std::vector<T>(m+static_cast<K>(1), static_cast<T>(0)));
     // For theory, see: Ford & Sidi (1987), Eq. (2.3) - Recursive coefficient scaling
     // Te = 1/n used for recursive computation of G sequence
     T D, Te;
     D = static_cast<T>(0); Te = static_cast<T>(1);
-
-    if constexpr (is_standart_types<T>::value){
-        G = std::vector<T>(m + static_cast<K>(1), static_cast<T>(0));
-        FSA = std::vector<T>(m + static_cast<K>(1), static_cast<T>(0));
-        FSI = std::vector<T>(m + static_cast<K>(1), static_cast<T>(0));
-        FSG = std::vector<std::vector<T>>(m + static_cast<K>(2), std::vector<T>(m+static_cast<K>(1), static_cast<T>(0)));
-    }
+    
     #ifdef INC_FPRECISION
-    else if constexpr (std::is_same<T, float_precision>::value){
-        const size_t precision = std::max(
-            data.Sn[0].precision(),
-            data.an[0].precision()
-        );
+    if constexpr (is_precisable<T>::value){
+        const size_t precision = std::max(utils::get_precision(data.Sn[0]), utils::get_precision(data.an[0]));
+        utils::set_vec_precision(G, precision);
+        utils::set_vec_precision(FSA, precision);
+        utils::set_vec_precision(FSI, precision);
+        for(size_t j = 0; j < FSG.size(); ++j)
+            utils::set_vec_precision(FSG[j], precision);
         utils::set_precision(precision, D, Te);
-        G = std::vector<T>(m + static_cast<K>(1), float_precision(0, precision));
-        FSA = std::vector<T>(m + static_cast<K>(1), float_precision(0, precision));
-        FSI = std::vector<T>(m + static_cast<K>(1), float_precision(0, precision));
-        FSG = std::vector<std::vector<T>>(m + static_cast<K>(2), std::vector<T>(m+static_cast<K>(1), float_precision(0, precision)));
-    }
-    #ifdef INC_COMPLEXPRECISION
-    else if constexpr (std::is_same<T, complex_precision<float_precision>>::value){
-        const size_t precision = std::max(
-            std::max(data.Sn[0].real().precision(),data.Sn[0].imag().precision()),
-            std::max(data.an[0].real().precision(),data.an[0].imag().precision())
-        );
-        utils::set_precision(precision, D, Te);
-        G = std::vector<T>(m + static_cast<K>(1), D);
-        FSA = std::vector<T>(m + static_cast<K>(1), D);
-        FSI = std::vector<T>(m + static_cast<K>(1), D);
-        FSG = std::vector<std::vector<T>>(m + static_cast<K>(2), std::vector<T>(m+static_cast<K>(1), D));
     }
     #endif
-    #endif
+    
     Te /= static_cast<T>(n);
 
     // For theory, see: Osada (2000), Eq. (9) - Initial coefficient computation
@@ -189,7 +169,7 @@ T ford_sidi_3_algorithm<T, K>::operator()(
     // For theory, see: Osada (2000), Section 4 - Main algorithm loop
     // Main Ford-Sidi transformation computation
     K MM, MM1, k2;
-
+    
     // Основной цикл алгоритма Ford-Sidi
     for (K k = static_cast<K>(0); k <= n1; ++k) {
         MM = n1 - k;
@@ -217,11 +197,11 @@ T ford_sidi_3_algorithm<T, K>::operator()(
         FSI[MM] = FSI[MM1] - FSI[MM];
         FSI[MM]/= D;
     }
-
+    
     // For theory, see: Osada (2000), Eq. (11) - Final result computation
     // T = FSA[0] / FSI[0] (final accelerated sum)
+    
     FSA[0] /= FSI[0];
-
     // For theory, see: Ford & Sidi (1987), Section 3 - Numerical stability check
     // Ensure the result is a finite floating-point value
     if constexpr (isComplexLike<T>::value){
@@ -233,7 +213,6 @@ T ford_sidi_3_algorithm<T, K>::operator()(
             throw std::overflow_error("division by zero");
         }
     }
-    
 
     return FSA[0];
 }

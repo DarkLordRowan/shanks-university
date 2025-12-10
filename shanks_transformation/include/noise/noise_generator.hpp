@@ -96,6 +96,18 @@ T generate_uniform_noise(const T& inf, const T& sup, std::mt19937_64& rng) {
     return T(static_cast<typename T::value_type>(distribution_real(rng)), static_cast<typename T::value_type>(distribution_imag(rng)));
 };
 
+template<IntervalLike T>
+T generate_uniform_noise(const T& inf, const T& sup, std::mt19937_64& rng) {
+
+    if (inf.leftinterval() >= sup.rightinterval()) {
+        throw std::invalid_argument("Invalid borders for uniform noise generation.");
+    }
+
+    std::uniform_real_distribution<float_t> distribution(static_cast<float_t>(inf.leftinterval()), static_cast<float_t>(sup.rightinterval()));
+
+    return T(static_cast<typename T::value_type>(distribution(rng)));
+};
+
 /**
 * @brief Generates uniform noise for given type and range.
 *
@@ -147,7 +159,7 @@ T generate_uniform_noise(const T& inf, const T& sup, std::mt19937_64& rng) {
 * @return Generated noise of type CT.
 */
 template<ComplexLike CT, FloatLike FT>
-requires (!ComplexLike<FT>)
+requires (!ComplexLike<FT> && !IntervalLike<FT>)
 CT generate_normal_noise(const FT& mean, const FT& std, std::mt19937_64& rng) {
     if (std <= 0) {
         throw std::invalid_argument("Standard deviation must be positive for normal distribution.");
@@ -190,6 +202,18 @@ T generate_normal_noise(const T& mean, const T& std, std::mt19937_64& rng) {
     return T(static_cast<typename T::value_type>(distribution_real(rng)), static_cast<typename T::value_type>(distribution_imag(rng)));
 }
 
+template<IntervalLike T>
+T generate_normal_noise(const T& mean, const T& std, std::mt19937_64& rng) {
+    if (std.leftinterval() <= static_cast<typename T::value_type>(0) || std.leftinterval() <= static_cast<typename T::value_type>(0)) {
+        throw std::invalid_argument("Standard deviation must be positive for normal distribution.");
+    }
+
+    // Generating real and imaginary parts independently
+    std::normal_distribution<float_t> distribution(mean.leftinterval(),std.leftinterval());
+
+    return T(static_cast<typename T::value_type>(distribution(rng)));
+}
+
 /** @brief Generates normal (Gaussian) noise for given type and range.
  * This function generates normal (Gaussian) noise of float-like type for the specified float-like type params.
  * Normal (Gaussian) noise is distributed according to a normal distribution.
@@ -209,7 +233,7 @@ T generate_normal_noise(const T& mean, const T& std, std::mt19937_64& rng) {
  * @return Generated noise of type T.
  */
 template<FloatLike T>
-requires (!ComplexLike<T>)
+requires (!ComplexLike<T> && !IntervalLike<T>)
 T generate_normal_noise(const T& mean, const T& std, std::mt19937_64& rng) {
     if (std <= static_cast<T>(0)) {
         throw std::invalid_argument("Standard deviation must be positive for normal distribution.");
@@ -308,6 +332,19 @@ T generate_poisson_noise(const T& lambda, std::mt19937_64& rng) {
 
     return T(static_cast<typename T::value_type>(distribution_real(rng)), static_cast<typename T::value_type>(distribution_imag(rng)));
 };
+
+template<IntervalLike T>
+T generate_poisson_noise(const T& lambda, std::mt19937_64& rng) {
+    if (lambda.leftinterval() <= static_cast<typename T::value_type>(0)) {
+        throw std::invalid_argument("Lambda must be positive for Poisson distribution.");
+    }
+
+    // Generating real and imaginary parts independently
+    std::poisson_distribution<uint64_t> distribution(static_cast<uint64_t>(lambda.leftinterval()));
+
+    return T(static_cast<typename T::value_type>(distribution(rng)));
+};
+
 
 
 /** @brief Class for generating noise and applying it to series results.

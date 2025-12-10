@@ -3,23 +3,43 @@
  * @brief pybind11 bindings with support for double and arbitrary-precision float_precision
  */
 
-#include <gsl/gsl_errno.h>
+
 #include <pybind11/operators.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <string>
+#include <functional>
+#include "include/transformations/anderson_acceleration_algorithm.hpp"
+#include "include/transformations/j_transformation_algorithm.hpp"
 #include "libs/arbitrary_arithmetics/complexprecision.h"
 #include "libs/arbitrary_arithmetics/fprecision.h"
+#include "libs/arbitrary_arithmetics/intervalprecision.h"
 #include "libs/arbitrary_arithmetics/precisioncore.cpp"
 
+#ifdef INCLUDE_GSL_LIB
+#include <gsl/gsl_errno.h>
 #include <gsl/gsl_sf_result.h>
+#endif
 
 #include "include/series.hpp"
 #include "include/methods.hpp"
+#include "include/utils.hpp"
 
 namespace py = pybind11;
 
 using K = std::size_t;
+
+inline py::size_t hash_float_precision(const float_precision& x) {
+    py::size_t h = 0;
+    h ^= std::hash<size_t>{}(x.precision()) + 0x9e3779b9 + (h << 6) + (h >> 2);
+    h ^= std::hash<int>{}(x.sign()) + 0x9e3779b9 + (h << 6) + (h >> 2);
+    h ^= std::hash<eptype>{}(x.exponent()) + 0x9e3779b9 + (h << 6) + (h >> 2);
+    auto mantissa = x.number();
+    for (size_t i = 0; i < std::min(mantissa.size(), size_t(3)); ++i) {
+        h ^= std::hash<fptype>{}(mantissa[i]) + 0x9e3779b9 + (h << 6) + (h >> 2);
+    }
+    return h;
+}
 
 template <template<class,class> class Impl>
 struct W { template<class X, class Y> using type = Impl<X,Y>; };
@@ -168,6 +188,13 @@ void bind_all(py::module_& m, const std::string& suffix){
         .def("__call__", &MSeriesAcceleration::operator(),
              py::arg("n"), py::arg("order"), py::arg("data"));
 
+    py::class_<anderson_acceleration_algorithm<T, K>, MSeriesAcceleration>
+        (m, name("AndersonAlgorithm").c_str())
+        .def(py::init<const K, RealT, RealT>(),
+             py::arg("m") = static_cast<K>(ANDERSON_DEFAULT_MAX_ORDER),
+             py::arg("beta") = static_cast<RealT>(ANDERSON_DEFAULT_BETA),
+             py::arg("safeguard") = static_cast<RealT>(ANDERSON_DEFAULT_SAFEGUARD));
+    
     py::class_<brezinski_theta_algorithm<T,K>, MSeriesAcceleration>
         (m, name("BrezinskiThetaAlgorithm").c_str())
         .def(py::init<>());
@@ -181,6 +208,12 @@ void bind_all(py::module_& m, const std::string& suffix){
         .def(py::init<remainder_type, bool>(),
              py::arg("remainder") = remainder_type::t_type,
              py::arg("useRecurrentFormula") = false);
+    
+    py::class_<j_transformation_algorithm<T, K>, MSeriesAcceleration>
+        (m, name("JAlgorithm").c_str())
+        .def(py::init<const K, RealT>(),
+             py::arg("max_order") = static_cast<K>(J_TRASFORMATION_DEFAULT_MAX_ORDER),
+             py::arg("safeguard") = static_cast<RealT>(J_TRASFORMATION_DEFAULT_MAX_ORDER));
 
     py::class_<ford_sidi_2_algorithm<T,K>, MSeriesAcceleration>
         (m, name("FordSidi2Algorithm").c_str())
@@ -198,7 +231,6 @@ void bind_all(py::module_& m, const std::string& suffix){
             py::arg("beta") = static_cast<RealT>(1));
 
     py::class_<levin_sidi_m_algorithm<T,K>, MSeriesAcceleration>
-
         (m, name("LevinSidiMAlgorithm").c_str())
         .def(py::init<remainder_type, RealT>(),
             py::arg("remainder") = remainder_type::t_type,
@@ -293,6 +325,19 @@ void bind_complex_num(py::module_& m, const char* pyname) {
         .def(py::self / py::self)
         .def(py::self == py::self)
         .def(py::self != py::self)
+        .def("__hash__", [](const C& z) -> py::size_t {
+            py::size_t h_real;
+            py::size_t h_imag;
+            if constexpr (std::is_same_v<R, float_precision>) {
+                h_real = hash_float_precision(z.real());
+                h_imag = hash_float_precision(z.imag());
+            } else {
+                h_real = std::hash<R>{}(z.real());
+                h_imag = std::hash<R>{}(z.imag());
+            }
+            const py::size_t multiplier = 0x9e3779b97f4a7c15ULL;  // 2**61 - 1
+            return h_real + (h_imag * multiplier);
+        })
         .def("__getstate__", [](const C& z)->State{
             if constexpr (std::is_same_v<R, float_precision>) {
                 return { z.real().toString(), z.imag().toString() };
@@ -353,6 +398,7 @@ PYBIND11_MODULE(pyshanks, m) {
             .def("__float__", [](const R &x){ return static_cast<double>(x); })
             .def("__int__",   [](const R &x){ return static_cast<long>(static_cast<double>(x)); })
             .def("__index__", [](const R &x){ return static_cast<long>(static_cast<double>(x)); })
+            .def("__hash__", [](const R& x) -> py::size_t { return hash_float_precision(x); })
             .def("__getstate__", [](const R& x){ return x.toString(); })
             .def("__setstate__", [](R& self, const std::string& s){ new (&self) R(s); });
     }

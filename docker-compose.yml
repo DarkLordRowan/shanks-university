@@ -18,7 +18,8 @@ services:
     volumes:
       - ./shanks_consumer/config:/app/config
       - ./shanks_consumer/output:/app/output
-    network_mode: service:shanks-consumer-mongodb
+    networks:
+      - shanks-network
 
   shanks-consumer-mongodb:
     image: mongo:latest
@@ -39,6 +40,28 @@ services:
       start_period: 30s
     networks:
       - shanks-network
+
+  shanks-client:
+    container_name: shanks-client
+    build:
+      context: .
+      dockerfile: shanks_client/Dockerfile
+    environment:
+      - MONGO_HOST=${MONGO_HOST}
+      - MONGO_PORT=${MONGO_PORT}
+      - MONGO_USERNAME=${MONGO_USERNAME}
+      - MONGO_PASSWORD=${MONGO_PASSWORD}
+    ports:
+      - 8080:8000
+    depends_on:
+      shanks-consumer-mongodb:
+        condition: service_healthy
+    volumes:
+      - ./shanks_client/:/app/
+    networks:
+      - shanks-network
+
+
 
 volumes:
   mongo_data:

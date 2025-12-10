@@ -282,8 +282,13 @@ series_result<T> series_base<T, K>::generate_series(
 ){
 
 	init_iterator(x, addTParameter, addKParameter);
-	std::vector<T> vecAn(vecSize, static_cast<T>(0)); utils::set_vec_precision<T, K>(vecAn, utils::get_precision(series_iterator->x));
-	std::vector<T> vecSn(vecSize, static_cast<T>(0)); utils::set_vec_precision<T, K>(vecSn, utils::get_precision(series_iterator->x));
+	std::vector<T> vecAn(vecSize, static_cast<T>(0));
+	std::vector<T> vecSn(vecSize, static_cast<T>(0));
+
+	if constexpr (is_precisable<T>::value){
+		utils::set_vec_precision<T>(vecAn, utils::get_precision(series_iterator->x));
+		utils::set_vec_precision<T>(vecSn, utils::get_precision(series_iterator->x));
+	}
 
 	for (K j = 0; j < vecSize; ++j){
 		try{

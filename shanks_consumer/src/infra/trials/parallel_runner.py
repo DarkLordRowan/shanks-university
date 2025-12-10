@@ -2,14 +2,11 @@ import multiprocessing as mp
 
 from tqdm import tqdm
 
-from src.domain.trial_result import (
-    AccelTrialResult,
-    ErrorTrialResult,
-    SeriesTrialResult,
-    TrialResult,
-)
+from src.domain.trial_result import (AccelTrialResult, ErrorTrialResult,
+                                     SeriesTrialResult, TrialResult)
 from src.domain.trial_runner import TrialRunner
 from src.domain.use_cases.run_trial import execute_trial
+
 
 class ParallelTrialRunner(TrialRunner):
 
@@ -23,12 +20,14 @@ class ParallelTrialRunner(TrialRunner):
         self.timeout = timeout
         self.memory_efficient = memory_efficient
 
-    def run(self, combinations):
+    def run(self, combinations, pregen_series=None):
         if self.memory_efficient:
-            return self.__run_dispose_at_completion(combinations)
-        yield self.__run_full_load(combinations)
+            return self.__run_dispose_at_completion(
+                combinations, pregen_series
+            )
+        yield self.__run_full_load(combinations, pregen_series)
 
-    def __run_full_load(self, combinations):
+    def __run_full_load(self, combinations, pregen_series):
         if not combinations:
             return []
 
@@ -37,7 +36,7 @@ class ParallelTrialRunner(TrialRunner):
 
         with mp.Pool(processes=process_count) as pool:
             async_tasks = [
-                (pool.apply_async(execute_trial, (comb,)), comb)
+                (pool.apply_async(execute_trial, (comb, pregen_series)), comb)
                 for comb in combinations
             ]
 
@@ -55,7 +54,7 @@ class ParallelTrialRunner(TrialRunner):
                             computed=[],
                             error=ErrorTrialResult(
                                 f"Timeout after {self.timeout}s",
-                                {
+                                data={
                                     "series": series.series_name,
                                     "accel": accel.accel_name,
                                 },
@@ -65,7 +64,7 @@ class ParallelTrialRunner(TrialRunner):
 
         return results
 
-    def __run_dispose_at_completion(self, combinations):
+    def __run_dispose_at_completion(self, combinations, pregen_series):
         if not combinations:
             return []
 
@@ -73,7 +72,7 @@ class ParallelTrialRunner(TrialRunner):
 
         with mp.Pool(processes=process_count) as pool:
             async_tasks = [
-                (pool.apply_async(execute_trial, (comb,)), comb)
+                (pool.apply_async(execute_trial, (comb, pregen_series)), comb)
                 for comb in combinations
             ]
 
@@ -91,7 +90,7 @@ class ParallelTrialRunner(TrialRunner):
                             computed=[],
                             error=ErrorTrialResult(
                                 f"Timeout after {self.timeout}s",
-                                {
+                                data={
                                     "series": series.series_name,
                                     "accel": accel.accel_name,
                                 },

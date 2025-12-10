@@ -4,7 +4,7 @@ from typing import Any, Union, get_args, get_origin
 
 from pydantic import BaseModel
 
-from src.config.model import TrialConfig, MongoConfig
+from src.config.model import TrialConfig
 
 
 def is_pydantic_model_type(t: Any) -> bool:

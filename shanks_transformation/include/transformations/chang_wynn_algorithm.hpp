@@ -13,7 +13,6 @@
 #pragma once
 
 #include "series_acceleration.hpp"
-#include <type_traits>
 #include <vector>   // Include the vector library
 #include <cmath>    //Include for fma, isfinite
 
@@ -88,12 +87,12 @@ public:
 
 
 template <AcceptedLike T, UnsignedIntLike K>
-T chang_wynn_algorithm<T, K>::operator()(const K n, const K order, const series_result<T>& data) const {
+T chang_wynn_algorithm<T, K>::operator()(const K n, const K /*order*/, const series_result<T>& data) const {
 
     const K required_size = n + static_cast<K>(1);
 
     if (data.Sn.size() < required_size || data.an.size() < required_size){
-        throw std::out_of_range("The Sn or an smaller then required for chann_wynn_{" + to_string(order) + "}^{" + to_string(n) + "}\n" +
+        throw std::out_of_range("The Sn or an smaller then required for chann_wynn_{" + to_string(n) + "}\n" +
         "the size of Sn and an must be at least " + to_string(required_size));
 	}
 
@@ -111,35 +110,21 @@ T chang_wynn_algorithm<T, K>::operator()(const K n, const K order, const series_
 
     // For theory, see: Wynn (1956), Section 3 (Algorithm)
     // Epsilon table structure: two rows to store intermediate transformations.
-    std::vector<std::vector<T>> e; // Two vectors of length n containing Epsilon table (current and previous rows).
+    std::vector<std::vector<T>> e( 2, std::vector<T>( n, static_cast<T>(0) )); // Two vectors of length n containing Epsilon table (current and previous rows).
 
     // For theory, see: Chang et al. (2019), Eq. (3.20d)
     // Vector F stores intermediate factors F₁⁽ⁿ⁾ used in the recursion.
-    std::vector<T> f; // Vector for containing F results from index 0 to n-1.
+    std::vector<T> f(n, static_cast<T>(0)); // Vector for containing F results from index 0 to n-1.
 
-    if constexpr (is_standart_types<T>::value){
-        e = std::vector<std::vector<T>>( 2, std::vector<T>( n, static_cast<T>(0) ));
-        f = std::vector<T>(n, static_cast<T>(0));
-    }
     #ifdef INC_FPRECISION
-    else if constexpr (std::is_same<T, float_precision>::value){
-        const size_t precision = std::max(data.Sn[0].precision(), data.an[0].precision());
-        utils::set_precision(precision, up, down, coef, coef2);
-        e = std::vector<std::vector<T>>( 2, std::vector<T>( n, float_precision(0, precision) ) );
-        f = std::vector<T>(n, float_precision(0, precision));                                     
-    }
-    #ifdef INC_COMPLEXPRECISION
-    else if constexpr (std::is_same<T, complex_precision<float_precision>>::value){
-        const size_t precision = std::max(
-            std::max(data.Sn[0].real().precision(),data.Sn[0].imag().precision()), 
-            std::max(data.an[0].real().precision(),data.an[0].imag().precision())
-        );
-        utils::set_precision(precision, up, down, coef, coef2);
+    if constexpr (is_precisable<T>::value){
+        const size_t precision = utils::get_precision(data.Sn[0]);
+        for(size_t j = 0; j < e.size(); ++j)
+            utils::set_vec_precision(e[j], precision);
 
-        e = std::vector<std::vector<T>>( 2, std::vector<T>( n, up )); // Two vectors of length n containing Epsilon table (current and previous rows).
-        f = std::vector<T>(n, up);                                     // Vector for containing F results from index 0 to n-1.                                   
+        utils::set_vec_precision(f, precision);
+        utils::set_precision(precision, up, down, coef, coef2);
     }
-    #endif
     #endif
 
 

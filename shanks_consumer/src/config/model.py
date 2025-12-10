@@ -36,6 +36,7 @@ class TrialConfig(BaseModel):
     results_json: Path | None = None
     results_csv: Path | None = None
     results_parquet: Path | None = None
+    results_parquet_split: Path | None = None
 
     trial_process_count: int = 1
     trial_task_timeout: int = 10

@@ -120,66 +120,17 @@ T brezinski_theta_algorithm<T, K>::operator()(
 
     const K base_size = static_cast<K>(3) * order / static_cast<K>(2) + static_cast<K>(1);
 
-    std::vector<T> theta_odd;
-    std::vector<T> theta_even;
-    T delta;
+    std::vector<T>  theta_odd(base_size, static_cast<T>(0));
+    std::vector<T> theta_even(base_size, static_cast<T>(0));
+    T delta = static_cast<T>(0);
 
-    if constexpr (is_standart_types<T>::value){
-
-        theta_odd = std::vector<T>(
-            base_size,
-            static_cast<T>(0)
-        ); // vector for theta_(2n + 1);
-
-        theta_even = std::vector<T>(
-            base_size,
-            static_cast<T>(0)
-        ); //vector for theta_(2n), in the beginning it is theta_(-1) which is zero for all i
-
-        delta = static_cast<T>(0); //temporary varaible
-
+    #ifdef INC_FPRECISION
+    if constexpr (is_precisable<T>::value){
+        const size_t precision = utils::get_precision(data.Sn[0]);
+        utils::set_vec_precision(theta_odd, precision);
+        utils::set_vec_precision(theta_even, precision);
+        utils::set_precision(precision, delta);
     }
-    #ifdef INC_FPRECISION 
-    else if constexpr (std::is_same<T, float_precision>::value){
-
-        const size_t precision = data.Sn[0].precision();
-
-        theta_odd = std::vector<T>(
-            base_size,
-            float_precision(0, precision)
-        ); // vector for theta_(2n + 1);
-
-        theta_even = std::vector<T>(
-            base_size,
-            float_precision(0, precision)
-        ); //vector for theta_(2n), in the beginning it is theta_(-1) which is zero for all i
-        delta.precision(precision); //temporary varaible
-
-    }
-    #ifdef INC_COMPLEXPRECISION
-    else if constexpr (std::is_same<T, complex_precision<float_precision>>::value){
-
-        const size_t precision = std::max(data.Sn[0].real().precision(), data.Sn[0].imag().precision());
-
-        theta_odd = std::vector<T>(
-            base_size,
-            complex_precision<float_precision>(
-                float_precision(0, precision),
-                float_precision(0, precision)
-            )
-        ); // vector for theta_(2n + 1);
-
-        theta_even = std::vector<T>(
-            base_size,
-            complex_precision<float_precision>(
-                float_precision(0, precision),
-                float_precision(0, precision)
-            )
-        ); //vector for theta_(2n), in the beginning it is theta_(-1) which is zero for all i
-        delta.ref_real()->precision(precision); delta.ref_imag()->precision(precision); 
-
-    }
-    #endif
     #endif
 
     // init theta_(0)

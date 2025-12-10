@@ -13,7 +13,6 @@
 #pragma once
 
 #include "series_acceleration.hpp"
-#include <type_traits>
 
 /**
  * @brief Lubkin's W-transformation class template implementing a powerful sequence acceleration method.
@@ -107,28 +106,18 @@ T lubkin_w_algorithm<T, K>::operator()(
 	// Storage scheme requires 3n+1 terms for order n transformation
 	const K base_size = static_cast<K>(3) * order + static_cast<K>(1);
 
-	std::vector<T> W;
+	std::vector<T> W(base_size, static_cast<T>(0));
 
 	T Wo0, Wo1, Wo2, Woo1, Woo2;
 	Wo0 = Wo1 = Wo2 = Woo1 = Woo2 = static_cast<T>(0);
 
-	if constexpr (is_standart_types<T>::value){
-		W = std::vector<T>(base_size, static_cast<T>(0));
-	}
 	#ifdef INC_FPRECISION
-	else if constexpr (std::is_same<T, float_precision>::value){
-		const size_t precision = data.Sn[0].precision();
-		W = std::vector<T>(base_size, float_precision(0, precision));
-		utils::set_precision(precision, Wo0, Wo1, Wo2, Woo1, Woo2);
-	}
-	#ifdef INC_COMPLEXPRECISION
-	else if constexpr (std::is_same<T, complex_precision<float_precision>>::value){
-		const size_t precision = std::max(data.Sn[0].real().precision(), data.Sn[0].imag().precision());
-		W = std::vector<T>(base_size, complex_precision<float_precision>(float_precision(0, precision), float_precision(0, precision)));
-		utils::set_precision(precision, Wo0, Wo1, Wo2, Woo1, Woo2);
-	}
-	#endif
-	#endif
+    if constexpr (is_precisable<T>::value){
+        const size_t precision = utils::get_precision(data.Sn[0]);
+        utils::set_vec_precision(W, precision);
+        utils::set_precision(precision, Wo0, Wo1, Wo2, Woo1, Woo2);
+    }
+    #endif
 
 	for(K i = static_cast<K>(0); i < base_size; ++i){
 		W[i] = data.Sn.at( + i);

@@ -111,27 +111,16 @@ T wynn_epsilon_1_algorithm<T, K>::operator()(
 
 	// Initialize epsilon tables: e0 for current column, e1 for next column
 	// For theory, see: Wynn (1956), Section 3 - Table construction
-	std::vector<T> e0;
-	std::vector<T> e1;
+	std::vector<T> e0(max_ind + static_cast<K>(1), static_cast<T>(0));
+	std::vector<T> e1(max_ind					   , static_cast<T>(0));
 
-	if constexpr (is_standart_types<T>::value){
-		e0 = std::vector<T>(max_ind + static_cast<K>(1), static_cast<T>(0));
-		e1 = std::vector<T>(max_ind					   , static_cast<T>(0));
-	}
 	#ifdef INC_FPRECISION
-	else if constexpr (std::is_same<T, float_precision>::value){
-		const size_t precision = data.Sn[0].precision();
-		e0 = std::vector<T>(max_ind + static_cast<K>(1), float_precision(0,precision));
-		e1 = std::vector<T>(max_ind					   , float_precision(0,precision));		
-	}
-	#ifdef INC_COMPLEXPRECISION
-	else if constexpr (std::is_same<T, complex_precision<float_precision>>::value){
-		const size_t precision = std::max(data.Sn[0].real().precision(), data.Sn[0].imag().precision());
-		e0 = std::vector<T>(max_ind + static_cast<K>(1), complex_precision<float_precision>(float_precision(0,precision), float_precision(0,precision)));
-		e1 = std::vector<T>(max_ind					   , complex_precision<float_precision>(float_precision(0,precision), float_precision(0,precision)));	
-	}
-	#endif
-	#endif
+    if constexpr (is_precisable<T>::value){
+        const size_t precision = utils::get_precision(data.Sn[0]);
+        utils::set_vec_precision(e0, precision);
+        utils::set_vec_precision(e1, precision);
+    }
+    #endif
 
 	auto e0_add = &e0; // Pointer to current epsilon column
 	auto e1_add = &e1; // Pointer to next epsilon column

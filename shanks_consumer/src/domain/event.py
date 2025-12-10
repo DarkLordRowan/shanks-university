@@ -1,8 +1,6 @@
 from enum import Enum
-from src.domain.trial_result import ComputedTrialResult
-from dataclasses import asdict, dataclass
 
-from src.logger import logged_debug
+from src.domain.trial_result import ComputedTrialResult, EventData
 
 
 class EventType(Enum):
@@ -23,88 +21,80 @@ class EventType(Enum):
     """
 
 
-@dataclass
-class EventData:
-    name: str
-    description: str
-    data: dict
-
-
-@logged_debug
-def slow_accel_method(computed: list[ComputedTrialResult]) -> dict | None:
+def slow_accel_method(computed: list[ComputedTrialResult]) -> EventData | None:
     if len(computed) < 1:
         return
     last = computed[-1]
     if last.accel_value_deviation < last.partial_sum_deviation:
-        return asdict(
-            EventData(
-                name="slow_accel",
-                description=f"{last.accel_value_deviation}\n"
-                " is lesser than partial_sum_deviation"
-                f"{last.partial_sum_deviation}",
-                data={"computed_index": len(computed) - 1},
-            )
+        return EventData(
+            name="slow_accel",
+            description=(
+                f"The acceleration deviation {last.accel_value_deviation} "
+                f"is smaller than the partial-sum deviation {last.partial_sum_deviation}, "
+                "indicating slower improvement than the baseline sequence."
+            ),
         )
 
 
-@logged_debug
-def divergent_accel_method(computed: list[ComputedTrialResult]) -> dict | None:
+def divergent_accel_method(
+    computed: list[ComputedTrialResult],
+) -> EventData | None:
     if len(computed) < 2:
         return
     last, previous = computed[-1], computed[-2]
     if previous.accel_value_deviation < last.accel_value_deviation:
-        return asdict(
-            EventData(
-                name="devirgent",
-                description=f"{previous.accel_value_deviation}\n"
-                f"from a previous iteration {len(computed) - 2}\n"
-                f"is lesser than current accel_value_deviation"
-                f"{last.accel_value_deviation}",
-                data={"computed_index": len(computed) - 1},
-            )
+        return EventData(
+            name="devirgent",
+            description=(
+                f"The previous deviation {previous.accel_value_deviation} "
+                f"(iteration {len(computed) - 2}) "
+                f"is smaller than the current deviation {last.accel_value_deviation}, "
+                "showing that the accelerated sequence is diverging."
+            ),
         )
 
 
-@logged_debug
-def monotone_accel_method(computed: list[ComputedTrialResult]) -> dict | None:
+def monotone_accel_method(
+    computed: list[ComputedTrialResult],
+) -> EventData | None:
     if len(computed) < 2:
         return
     last, previous = computed[-1], computed[-2]
     if previous.accel_value_deviation == last.accel_value_deviation:
-        return asdict(
-            EventData(
-                name="monotone_accel",
-                description=f"{previous.accel_value_deviation}\n"
-                f"from a previous iteration {len(computed) - 2}\n"
-                f"is lesser than current accel_value_deviation"
-                f"{last.accel_value_deviation}",
-                data={"computed_index": len(computed) - 1},
-            )
+        return EventData(
+            name="monotone_accel",
+            description=(
+                f"The deviation {previous.accel_value_deviation} "
+                f"from iteration {len(computed) - 2} "
+                f"matches the current deviation {last.accel_value_deviation}, "
+                "indicating a monotone progression without change in magnitude."
+            ),
         )
 
 
-@logged_debug
-def sign_changed_method(computed: list[ComputedTrialResult]) -> dict | None:
+def sign_changed_method(
+    computed: list[ComputedTrialResult],
+) -> EventData | None:
     if len(computed) < 2:
         return
     last, previous = computed[-1], computed[-2]
-    if previous.accel_value_deviation * last.accel_value_deviation < 0:
-        return asdict(
-            EventData(
-                name="sign_changed",
-                description=f"{previous.accel_value_deviation}\n"
-                f"from a previous iteration {len(computed) - 2}\n"
-                f"is lesser than current accel_value_deviation"
-                f"{last.accel_value_deviation}",
-                data={"computed_index": len(computed) - 1},
-            )
+
+    if previous.accel_value_deviation * last.accel_value_deviation < type(
+        last.accel_value_deviation
+    )(0):
+        return EventData(
+            name="sign_changed",
+            description=(
+                f"The deviation changed sign between iterations "
+                f"{len(computed) - 2} ({previous.accel_value_deviation}) "
+                f"and {len(computed) - 1} ({last.accel_value_deviation})"
+            ),
         )
 
 
-@logged_debug
 def second_diff_growth_method(
     computed: list[ComputedTrialResult],
-) -> dict | None:
+) -> EventData | None:
     if len(computed) < 3:
         return
 
@@ -116,16 +106,14 @@ def second_diff_growth_method(
     diff2 = abs(prev.accel_value - prev2.accel_value)
 
     if diff1 >= diff2:
-        return asdict(
-            EventData(
-                name="second_diff_growth",
-                description=(
-                    f"|A[{len(computed)-1}] - A[{len(computed)-2}]| = {diff1} "
-                    f"is greater or equal than "
-                    f"|A[{len(computed)-2}] - A[{len(computed)-3}]| = {diff2}"
-                ),
-                data={"computed_index": len(computed) - 1},
-            )
+        return EventData(
+            name="second_diff_growth",
+            description=(
+                f"The change |A[{len(computed)-1}] − A[{len(computed)-2}]| = {diff1} "
+                f"is greater than or equal to "
+                f"|A[{len(computed)-2}] − A[{len(computed)-3}]| = {diff2}, "
+                "showing that second-order differences are not decreasing."
+            ),
         )
 
 

@@ -14,7 +14,6 @@
 #include "series_acceleration.hpp"
 #include "remainders.hpp"
 #include <memory>					  // Include for unique ptr
-#include <type_traits>
 
  /**
   * @brief Drummond's D-transformation class template for accelerating slowly convergent series.
@@ -194,11 +193,11 @@ inline T drummond_d_algorithm<T,K>::calc_result(
 	numerator = denominator = rest = static_cast<T>(0);
 
 	#ifdef INC_FPRECISION
-	if constexpr (std::is_same<T, float_precision>::value){
-		const size_t precision = std::max(data.Sn[0].precision(), data.an[0].precision());
-		utils::set_precision(precision, numerator, denominator, rest);
-	}
-	#endif
+    if constexpr (is_precisable<T>::value){
+        const size_t precision = utils::get_precision(data.Sn[0]);
+        utils::set_precision(precision, numerator, denominator, rest);
+    }
+    #endif
 
 	// For theory, see: Drummond (1976), Eq. (2.1)
 	// D_n^{(k)} = [Σ_{j=0}^n (-1)^j C(n, j) w_{n,j} S_{n+j}] / [Σ_{j=0}^n (-1)^j C(n, j) w_{n,j}]
@@ -229,18 +228,14 @@ inline T drummond_d_algorithm<T,K>::calc_result_rec(
 
 	// For theory, see: Sidi (2003), Section 9.5-5
 	// Recursive computation using forward differences
-	std::vector<T>   Num;
-	std::vector<T> Denom;
+	std::vector<T>   Num = std::vector<T>( order + static_cast<K>(1),  static_cast<T>(0));
+	std::vector<T> Denom = std::vector<T>( order + static_cast<K>(1),  static_cast<T>(0));
 
-	if constexpr (std::is_floating_point<T>::value){
-		Denom = std::vector<T>( order + static_cast<K>(1),  static_cast<T>(0));
-		Num = std::vector<T>( order + static_cast<K>(1),  static_cast<T>(0));
-	}
 	#ifdef INC_FPRECISION
-	else if constexpr (std::is_same<T, float_precision>::value){
-		const size_t precision = std::max(data.Sn[0].precision(), data.an[0].precision());
-		Denom = std::vector<T>( order + static_cast<K>(1),  float_precision(0, precision));
-		Num   = std::vector<T>( order + static_cast<K>(1),  float_precision(0, precision));		
+	if constexpr (is_precisable<T>::value){
+		const size_t precision = std::max(utils::get_precision(data.Sn[0]), utils::get_precision(data.an[0]));
+		utils::set_vec_precision<T>(Num, precision);
+		utils::set_vec_precision<T>(Denom, precision);
 	}
 	#endif
 
@@ -249,7 +244,7 @@ inline T drummond_d_algorithm<T,K>::calc_result_rec(
 		Denom[i] += remainder->operator()(n + i, n + i, data.an);
 		  Num[i] += data.Sn.at(n + i) * Denom[i];
 	}
-
+	
 	// Apply forward difference recurrence:
 	// N_j^{(i)} = N_{j+1}^{(i-1)} - N_j^{(i-1)}
 	// D_j^{(i)} = D_{j+1}^{(i-1)} - D_j^{(i-1)}
@@ -303,213 +298,3 @@ T drummond_d_algorithm<T,K>::operator()(
 	
     return result;
 }
-
-#ifdef INC_COMPLEXPRECISION
-template<FloatLike T, UnsignedIntLike K>
-class drummond_d_algorithm<complex_precision<T>, K> final : public series_acceleration<complex_precision<T>, K>
-{
-protected:
-
-    std::unique_ptr<const transform_base<complex_precision<T>, K>> remainder;  /**< Remainder estimator object */
-    bool use_recurrent_formula = false;							/**< Flag indicating whether to use recurrence formulas */
-    remainder_type remainder_type_in_use = remainder_type::u_type;		/**< Type of remainder variant to use */
-
-	inline complex_precision<T> calc_result(
-        const K n, 
-        const K order, 
-        const series_result<complex_precision<T>>& data
-    ) const;
-
-	inline complex_precision<T> calc_result_rec(
-        const K n, 
-        const K order, 
-        const series_result<complex_precision<T>>& data
-    ) const;
-
-
-public:
-
-	explicit drummond_d_algorithm(
-		const remainder_type remainder_type_to_use = remainder_type::u_type,
-		const bool use_recurrent_formula = false
-	) : series_acceleration<complex_precision<T>, K>(), use_recurrent_formula(use_recurrent_formula) { updateType(remainder_type_to_use); };
-
-    complex_precision<T> operator()(
-		const K n, 
-        const K order, 
-        const series_result<complex_precision<T>>& data
-	) const override;
-
-	void updateType(const remainder_type remainder_type_to_use){
-
-		remainder_type_in_use = remainder_type_to_use;
-
-		using ComplexFloatPrec = complex_precision<T>;
-
-		// Initialize the appropriate remainder estimator based on variant
-    	switch(remainder_type_to_use){
-    	    case remainder_type::u_type 	: { remainder.reset(new u_transform<ComplexFloatPrec, K>()	    ); break; }
-    	    case remainder_type::t_type 	: { remainder.reset(new t_transform<ComplexFloatPrec, K>()	    ); break; }
-    	    case remainder_type::v_type 	: { remainder.reset(new v_transform<ComplexFloatPrec, K>()	    ); break; }
-    	    case remainder_type::t_wave_type: { remainder.reset(new t_wave_transform<ComplexFloatPrec, K>()); break; }
-    	    case remainder_type::v_wave_type: { remainder.reset(new v_wave_transform<ComplexFloatPrec, K>()); break; }
-    	    default:
-			{
-				remainder_type_in_use = remainder_type::u_type;
-    	        remainder.reset(new u_transform<ComplexFloatPrec, K>());
-			}
-    	}
-	}
-
-	std::string get_name() override{
-
-		using std::to_string;
-
-		using ComplexFloatPrec = complex_precision<T>;
-
-		series_acceleration<ComplexFloatPrec, K>::acceleration_name = (use_recurrent_formula ? "recurrent " : "");
-		series_acceleration<ComplexFloatPrec, K>::acceleration_name += "drummond d algorithm ";
-		switch(remainder_type_in_use){
-			case remainder_type::u_type 	: { series_acceleration<ComplexFloatPrec, K>::acceleration_name += "with u-variant "; 	  break; }
-			case remainder_type::t_type 	: { series_acceleration<ComplexFloatPrec, K>::acceleration_name += "with t-variant "; 	  break; }
-			case remainder_type::v_type 	: { series_acceleration<ComplexFloatPrec, K>::acceleration_name += "with v-variant "; 	  break; }
-			case remainder_type::t_wave_type: { series_acceleration<ComplexFloatPrec, K>::acceleration_name += "with t-wave-variant "; break; }
-			case remainder_type::v_wave_type: { series_acceleration<ComplexFloatPrec, K>::acceleration_name += "with v-wave-variant "; break; }
-		}
-
-		return series_acceleration<ComplexFloatPrec, K>::acceleration_name;
-	}
-
-};
-
-template<FloatLike T, UnsignedIntLike K>
-inline complex_precision<T> drummond_d_algorithm<complex_precision<T>,K>::calc_result(
-    const K n, 
-    const K order, 
-    const series_result<complex_precision<T>>& data
-) const {
-
-    using std::isfinite;
-
-	using Complex = complex_precision<T>;
-
-	Complex numerator, denominator, rest;
-	numerator = denominator = rest = Complex(0);
-
-	#ifdef INC_FPRECISION
-	if constexpr (std::is_same<T, float_precision>::value){
-		const size_t precision = std::max(
-			std::max(data.Sn[0].real().precision(), data.Sn[0].imag().precision()), 
-			std::max(data.an[0].real().precision(), data.an[0].imag().precision())
-		);
-		utils::set_precision(precision, numerator, denominator, rest);
-		numerator.ref_real()->precision(precision); numerator.ref_imag()->precision(precision);
-		denominator.ref_real()->precision(precision); denominator.ref_imag()->precision(precision);
-		rest.ref_real()->precision(precision); rest.ref_imag()->precision(precision);
-	}
-	#endif
-
-
-	// For theory, see: Drummond (1976), Eq. (2.1)
-	// D_n^{(k)} = [Σ_{j=0}^n (-1)^j C(n, j) w_{n,j} S_{n+j}] / [Σ_{j=0}^n (-1)^j C(n, j) w_{n,j}]
-	for (K j = static_cast<K>(0); j <= order; ++j) {
-
-		// Compute weight term: (-1)^j * C(n, j) * w_{n,j}
-		rest  = utils::minus_one_raised_to_power_n<Complex,K>(j);
-		rest *= static_cast<Complex>(utils::binomial_coefficient<K>(order, j));
-		rest *= remainder->operator()(n + j, n + j, data.an);
-
-		numerator   += rest * data.Sn.at(n+j);
-		denominator += rest;
-	}
-
-	numerator /= denominator;
-
-	return numerator;
-}
-
-template<FloatLike T, UnsignedIntLike K>
-inline complex_precision<T> drummond_d_algorithm<complex_precision<T>,K>::calc_result_rec(
-    const K n, 
-    const K order, 
-    const series_result<complex_precision<T>>& data
-) const {
-
-    using std::isfinite;
-
-	using Complex = complex_precision<T>;
-
-	// For theory, see: Sidi (2003), Section 9.5-5
-	// Recursive computation using forward differences
-	std::vector<Complex>   Num;
-	std::vector<Complex> Denom;
-
-	if constexpr (std::is_floating_point<T>::value){
-		Denom = std::vector<Complex>( order + static_cast<K>(1),  Complex(0));
-		Num   = std::vector<Complex>( order + static_cast<K>(1),  Complex(0));
-	}
-	#ifdef INC_FPRECISION
-	else if constexpr (std::is_same<T, float_precision>::value){
-		const size_t precision = std::max(
-			std::max(data.Sn[0].real().precision(), data.Sn[0].imag().precision()), 
-			std::max(data.an[0].real().precision(), data.an[0].imag().precision())
-		);
-		Denom = std::vector<Complex>( order + static_cast<K>(1),  complex_precision<float_precision>(float_precision(0, precision), float_precision(0, precision)));
-		Num   = std::vector<Complex>( order + static_cast<K>(1),  complex_precision<float_precision>(float_precision(0, precision), float_precision(0, precision)));		
-	}
-	#endif
-
-	// Initialize base values: N_j^{(0)} = w_{n,j} S_{n+j}, D_j^{(0)} = w_{n,j}
-	for (K i = static_cast<K>(0); i < order+static_cast<K>(1); ++i) {
-		Denom[i] = remainder->operator()(n + i, n + i, data.an);
-		  Num[i] = data.Sn.at(n + i) * Denom[i];
-	}
-
-	// Apply forward difference recurrence:
-	// N_j^{(i)} = N_{j+1}^{(i-1)} - N_j^{(i-1)}
-	// D_j^{(i)} = D_{j+1}^{(i-1)} - D_j^{(i-1)}
-	for (K i = static_cast<K>(1); i <= order; ++i)
-		for (K j = static_cast<K>(0); j <= order - i; ++j) {
-			Denom[j] = Denom[j+static_cast<K>(1)] - Denom[j];
-			  Num[j] =   Num[j+static_cast<K>(1)] -   Num[j];
-		}
-
-	// Final result: D_n^{(order)} = N_0^{(order)} / D_0^{(order)}
-	Num[0] /= Denom[0];
-
-	return Num[0];
-}
-
-template<FloatLike T, UnsignedIntLike K>
-complex_precision<T> drummond_d_algorithm<complex_precision<T>,K>::operator()(
-	const K n, 
-    const K order, 
-    const series_result<complex_precision<T>>& data
-) const {
-
-    K required_size = n + order + static_cast<K>(1) + static_cast<K>(
-		remainder_type_in_use == remainder_type::t_wave_type ||
-		remainder_type_in_use == remainder_type::v_type ||
-		remainder_type_in_use == remainder_type::v_wave_type
-	);
-
-    if (data.Sn.size() < required_size || data.an.size() < required_size){
-        throw std::out_of_range("The Sn or an smaller then required for D_{" + to_string(order) + "}^{" + to_string(n) + "}\n" +
-        "the size of Sn and an must be at least " + to_string(required_size));
-	}
-
-    if (order == static_cast<K>(0)) {
-        return data.Sn.at(n);
-    }
-
-    using std::isfinite;
-
-    const complex_precision<T> result = (use_recurrent_formula ? calc_result_rec(n,order, data) : calc_result(n,order, data));
-
-    if (!isfinite(result.real()) || !isfinite(result.imag())){
-       throw std::overflow_error("division by zero");
-    }
-	
-    return result;
-}
-#endif

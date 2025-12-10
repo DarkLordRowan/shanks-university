@@ -22,10 +22,10 @@ public:
         using std::erf;
 		using std::exp;
 
-		if constexpr(isComplexLike<T>::value){
-			return static_cast<T>(0);
-		} else {
+		if constexpr(isFloatLike<T>::value){
 			return erf(this->x) * exp(this->x * this->x);
+		} else {
+			return static_cast<T>(0);
 		}
 	}
 	

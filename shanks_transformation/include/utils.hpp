@@ -31,8 +31,8 @@ struct utils {
 	static void set_precision(const size_t precision, Arg& precisable_arg, Args& ...precisable_args);
 	static void set_precision(const size_t precision) {}
 
-	template<AcceptedLike T, UnsignedIntLike K>
-	static void set_vec_precision(std::vector<T>& vec, size_t precision);
+	template<AcceptedLike T>
+	static void set_vec_precision(std::vector<T>& vec, const size_t precision);
 
 	template<AcceptedLike T>
 	static size_t get_precision(const T& x){
@@ -46,6 +46,11 @@ struct utils {
 		#ifdef INC_COMPLEXPRECISION
 		else if constexpr (std::is_same<T, complex_precision<float_precision>>::value){
 			return std::max(x.real().precision(), x.imag().precision());
+		}
+		#endif
+		#ifdef INC_INTERVALPRECISION
+		else if constexpr (std::is_same<T, interval<float_precision>>::value){
+			return std::max(x.leftinterval().precision(), x.rightinterval().precision());
 		}
 		#endif
 		#endif
@@ -114,7 +119,7 @@ constexpr const K utils::binomial_coefficient(const K n, const K k) {
 
 template<AcceptedLike T, UnsignedIntLike K>
 constexpr const T utils::minus_one_raised_to_power_n(const K j){
-    return static_cast<T>(j & 1 ? -1 : 1);
+    return (j & 1 ? static_cast<T>(-1) : static_cast<T>(1));
 }
 
 template<typename Arg, typename... Args>
@@ -126,12 +131,15 @@ void utils::set_precision(const size_t precision, Arg& precisable_arg, Args& ...
 	else if constexpr (std::is_same<Arg, complex_precision<float_precision>>::value){
 		precisable_arg.ref_real()->precision(precision); precisable_arg.ref_imag()->precision(precision);
 	}
+	else if constexpr (std::is_same<Arg, interval<float_precision>>::value){
+		precisable_arg.ref_left()->precision(precision); precisable_arg.ref_right()->precision(precision);
+	}
 	utils::set_precision(precision, precisable_args...);
 
 }
 
-template<AcceptedLike T, UnsignedIntLike K>
-void utils::set_vec_precision(std::vector<T>& vec, size_t precision){
+template<AcceptedLike T>
+void utils::set_vec_precision(std::vector<T>& vec, const size_t precision){
 	for(size_t j = 0; j < vec.size(); ++j)
 		utils::set_precision(precision, vec[j]);
 }
@@ -150,10 +158,32 @@ template<class _Ty> inline complex_precision<_Ty> fma(complex_precision<_Ty> x, 
    complex_precision<_Ty> res(real_part, imag_part);
    return res;
 }
+
 template<class _Ty> inline std::string to_string(const complex_precision<_Ty>& x){ 
    using std::to_string;
    return to_string(x.real()) + " + " +to_string(x.imag()) + " * i";
 }
 #endif
+
+#ifdef INC_INTERVALPRECISION
+template<class IT> inline interval<IT> fma(interval<IT> x, interval<IT> y, interval<IT> z){
+	return x * y + z;
+}
+
+template<class IT> inline bool isfinite(const interval<IT>& x){
+	using std::isfinite;
+	return true;
+}
+
+template<class IT> inline interval<IT> hypot(const interval<IT>& x, const interval<IT>& y){ return sqrt(sqr(x) + sqr(y)); }
+
+template<class IT> inline std::string to_string(const interval<IT>& x){ return x.toString(); }
+
+#endif
+
+template <typename T>
+struct TypeWrapper {
+    using value_type = T;
+};
 
 #endif

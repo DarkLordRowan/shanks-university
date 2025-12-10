@@ -137,6 +137,7 @@ inline std::vector<std::unique_ptr<ISeriesInfo>> create_series_info() {
 
 inline std::vector<std::unique_ptr<ITransformationInfo>> create_transformation_info() {
 	std::unique_ptr<ITransformationInfo> temp[] = {
+		std::make_unique<AndersonAccelerationAlgorithmInfo>(),
 		std::make_unique<BrezinskiThetaTransformationInfo>(),
 		std::make_unique<ChangWynnTransformationInfo>(),
 		std::make_unique<DrummondDUTransformationInfo>(),
@@ -144,6 +145,7 @@ inline std::vector<std::unique_ptr<ITransformationInfo>> create_transformation_i
 		std::make_unique<DrummondDTWaveTransformationInfo>(),
 		std::make_unique<DrummondDVTransformationInfo>(),
 		std::make_unique<DrummondDVWaveTransformationInfo>(),
+		std::make_unique<JTransformationAlgorithmInfo>(),
 		std::make_unique<RecurrentDrummondDUTransformationInfo>(),
 		std::make_unique<RecurrentDrummondDTTransformationInfo>(),
 		std::make_unique<RecurrentDrummondDVTransformationInfo>(),
@@ -385,6 +387,7 @@ inline std::unique_ptr<series_acceleration<T, K>>
 create_transformation_by_id(transformation_id_t id) {
 
 	switch (id) {
+	case transformation_id_t::anderson_acceleration_algorithm_id                : {return std::make_unique<anderson_acceleration_algorithm<T, K>>();}
 	case transformation_id_t::brezinski_theta_transformation_id		 	  		: { return std::make_unique<brezinski_theta_algorithm<T,K>>(); }
 	case transformation_id_t::chang_wynn_transformation_id			 	  		: { return std::make_unique<chang_wynn_algorithm<T,K>>(); }
 	case transformation_id_t::drummond_d_u_transformation_id			 		: { return std::make_unique<drummond_d_algorithm<T,K>>(remainder_type::u_type, false ); }
@@ -392,6 +395,7 @@ create_transformation_by_id(transformation_id_t id) {
 	case transformation_id_t::drummond_d_t_wave_transformation_id	 	  		: { return std::make_unique<drummond_d_algorithm<T,K>>(remainder_type::t_wave_type, false ); }
 	case transformation_id_t::drummond_d_v_transformation_id			 		: { return std::make_unique<drummond_d_algorithm<T,K>>(remainder_type::v_type, false ); }
 	case transformation_id_t::drummond_d_v_wave_transformation_id	 	  		: { return std::make_unique<drummond_d_algorithm<T,K>>(remainder_type::v_wave_type, false ); }
+	case transformation_id_t::j_transformation_id                     			: {return std::make_unique<j_transformation_algorithm<T, K>>();}
 	case transformation_id_t::recurrent_drummond_d_u_transformation_id	  		: { return std::make_unique<drummond_d_algorithm<T,K>>(remainder_type::u_type, true ); }
 	case transformation_id_t::recurrent_drummond_d_t_transformation_id	  		: { return std::make_unique<drummond_d_algorithm<T,K>>(remainder_type::t_type, true ); }
 	case transformation_id_t::recurrent_drummond_d_v_transformation_id	  		: { return std::make_unique<drummond_d_algorithm<T,K>>(remainder_type::v_type, true ); }
@@ -495,6 +499,7 @@ inline void main_testing_function()
 	std::cout << "Enter n and order:" << '\n';
 	K n = console_IO<K>::input("n");
 	K order = console_IO<K>::input("order");
+	//series_result<T> result = series->generate_series(x, n + 3 * order + 1, tParam, kParam);
 	series_result<T> result = series->generate_series(x, n + 3 * order + 1, tParam, kParam);
 
 	std::string answer = "ok";
