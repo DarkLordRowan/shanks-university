@@ -115,12 +115,7 @@ T wynn_epsilon_3_algorithm<T, K>::operator()(
     using std::abs;
 
     K N = n; // Number of terms used in transformation
-
     // Machine constants for numerical stability
-    const param_type EMACH = std::numeric_limits<param_type>::epsilon();                                ///< Machine epsilon: smallest number such that 1.0 + ε ≠ 1.0.
-    const param_type EPRN = static_cast<param_type>(50) * EMACH;                                        ///< Relative error tolerance (50 * machine epsilon).
-    // THE 1'000'000'000 IS FOR ARB PRECISION, OTHERWISE NUMERIC LIMIT RETURNS 0
-    const param_type OFRN = max(std::numeric_limits<param_type>::max(), static_cast<param_type>(1'000'000'000)); ///< Overflow threshold (largest finite value).
 
     T result = static_cast<T>(0.0);       ///< Current best accelerated estimate.
     param_type abs_error = static_cast<param_type>(0.0);    ///< Absolute error estimate for current data.
@@ -141,14 +136,23 @@ T wynn_epsilon_3_algorithm<T, K>::operator()(
     // The epsilon table e[0..N+2] stores intermediate values εₛ⁽ⁿ⁾.
     std::vector<T> e(N + static_cast<K>(3), static_cast<T>(0.0)); //First N eliments of epsilon table + 2 elements for math
 
+
+    param_type EMACH = std::numeric_limits<param_type>::epsilon();                                ///< Machine epsilon: smallest number such that 1.0 + ε ≠ 1.0.
+    
+    
     #ifdef INC_FPRECISION
     if constexpr (is_precisable<T>::value){
         const size_t precision = utils::get_precision(data.Sn[0]);
 		utils::set_vec_precision(e, precision);
 		utils::set_precision(precision,  result, abs_error, resla, RES, E0, E1, E2, E3, 
                 DELTA1, DELTA2, DELTA3, ERROR, ERR1, ERR2, ERR3, TOL1, TOL2, TOL3, SS);
+        EMACH = abs_error.epsilon(); //get epsilon for float_precision with such precision
     }
     #endif
+    
+    const param_type EPRN = static_cast<param_type>(50) * EMACH;                                        ///< Relative error tolerance (50 * machine epsilon).
+    // THE 1'000'000'000 IS FOR ARB PRECISION, OTHERWISE NUMERIC LIMIT RETURNS 0
+    const param_type OFRN = max(std::numeric_limits<param_type>::max(), static_cast<param_type>(1'000'000'000)); ///< Overflow threshold (largest finite value).
 
     // Initialize epsilon table with partial sums: ε₀⁽ⁱ⁾ = S_i for i=0,...,N
     for (K i = static_cast<K>(0); i <= N; ++i) //Filling up Epsilon Table
