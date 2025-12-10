@@ -116,7 +116,16 @@ T wynn_epsilon_3_algorithm<T, K>::operator()(
     // Machine constants for numerical stability
     const T EMACH = std::numeric_limits<T>::epsilon(); ///< Machine epsilon: smallest number such that 1.0 + ε ≠ 1.0.
     const T EPRN = static_cast<T>(50) * EMACH;         ///< Relative error tolerance (50 * machine epsilon).
-    const T OFRN = std::numeric_limits<T>::max();      ///< Overflow threshold (largest finite value).
+    T OFRN = static_cast<T>(0); ///< Overflow threshold (largest finite value).
+    if constexpr (std::floating_point<T>){
+        OFRN = std::numeric_limits<T>::max();            
+    }
+    #ifdef INC_FPRECISION
+    else if constexpr (std::is_same<T, float_precision>::value){
+        OFRN = float_precision(1'000'000'000);
+    }
+    #endif
+    assert(OFRN > static_cast<T>(0));
 
     T result = static_cast<T>(0.0);       ///< Current best accelerated estimate.
     T abs_error = static_cast<T>(0.0);    ///< Absolute error estimate for current data.
@@ -135,8 +144,6 @@ T wynn_epsilon_3_algorithm<T, K>::operator()(
 
     // For theory, see: Wynn (1956), Section 3: Algorithm and lozenge diagram.
     // The epsilon table e[0..N+2] stores intermediate values εₛ⁽ⁿ⁾.
-    // For theory, see: Wynn (1956), Section 3: Algorithm and lozenge diagram.
-    // The epsilon table e[0..N+2] stores intermediate values εₛ⁽ⁿ⁾.
     std::vector<T> e(N + static_cast<K>(3), static_cast<T>(0.0)); //First N eliments of epsilon table + 2 elements for math
 
     #ifdef INC_FPRECISION
@@ -151,6 +158,7 @@ T wynn_epsilon_3_algorithm<T, K>::operator()(
     // Initialize epsilon table with partial sums: ε₀⁽ⁱ⁾ = S_i for i=0,...,N
     for (K i = static_cast<K>(0); i <= N; ++i) //Filling up Epsilon Table
         e[i] = data.Sn.at(i);
+    
 
     // Apply epsilon algorithm for 'order' iterations
     for (K i = static_cast<K>(0); i <= order; ++i) { //Working with Epsilon Table order times
@@ -159,32 +167,25 @@ T wynn_epsilon_3_algorithm<T, K>::operator()(
         K NEWELM = newelm = (N - static_cast<K>(1)) / static_cast<K>(2);    // Number of new elements to compute
         e[N + static_cast<K>(2)] = e[N];                                    // Guard element for boundary
         e[N] = abs_error = OFRN;                                            // Initialize error to large value
-
         // Process each new element in the current diagonal
         for (K I = static_cast<K>(1); I <= NEWELM; ++I) { //Counting all diagonal elements of epsilon table
 
             // For theory, see: Wynn (1956), Eq. (4): εₛ₊₁⁽ⁿ⁾ = εₛ₋₁⁽ⁿ⁺¹⁾ + 1/(εₛ⁽ⁿ⁺¹⁾ - εₛ⁽ⁿ⁾)
             RES = e[K1 + static_cast<K>(2)];    // εₛ⁽ⁿ⁺¹⁾
-            E0 = e[K1 - static_cast<K>(2)];     // εₛ₋₂⁽ⁿ⁾
-            E1 = e[K1 - static_cast<K>(1)];     // εₛ₋₁⁽ⁿ⁾
-            E2 = RES;                           // εₛ⁽ⁿ⁺¹⁾
+            E0  = e[K1 - static_cast<K>(2)];    // εₛ₋₂⁽ⁿ⁾
+            E1  = e[K1 - static_cast<K>(1)];    // εₛ₋₁⁽ⁿ⁾
+            E2  = RES;                          // εₛ⁽ⁿ⁺¹⁾
 
             DELTA2 = E2 - E1;                   // εₛ⁽ⁿ⁺¹⁾ - εₛ₋₁⁽ⁿ⁾
 
             ERR2 = abs(DELTA2);                 // Absolute difference
-
-            TOL2 = max(          // Tolerance based on machine precision
-                abs(E2), 
-                abs(E1)
-            );
+            
+            TOL2 = max(abs(E2), abs(E1)); // Tolerance based on machine precision
             TOL2*=EMACH;
 
             DELTA3 = E1 - E0;                   // εₛ₋₁⁽ⁿ⁾ - εₛ₋₂⁽ⁿ⁾
             ERR3 = abs(DELTA3);
-            TOL3 = max(
-                abs(E1), 
-                abs(E0)
-            );
+            TOL3 = max(abs(E1),abs(E0) );
             TOL3*= EMACH;
 
             // Check if differences are significant relative to tolerances
@@ -211,13 +212,13 @@ T wynn_epsilon_3_algorithm<T, K>::operator()(
 
                 // For theory, see: Wynn (1962), Eq. (13): Rational function extrapolation step.
                 SS = static_cast<T>(1) / DELTA1 + static_cast<T>(1) / DELTA2 - static_cast<T>(1) / DELTA3;
-
+                //std::cout << "\n" << RES << "\n";
                 // Check if correction term is within threshold
                 if (abs(SS * E1) > epsilon_threshold) {
                     RES = E1 + static_cast<T>(1) / SS;      // Apply epsilon correction
                     e[K1] = RES;                            // Store updated value
                     K1 -= static_cast<K>(2);                // Move to previous position in table
-                    ERROR = ERR2 + abs(RES - E2) + ERR3;  // Total error estimat
+                    ERROR = ERR2 + abs(RES - E2) + ERR3;    // Total error estimat
                     if (ERROR <= abs_error) {
                         abs_error = ERROR;
                         result = RES;                       // Update best result
@@ -360,7 +361,17 @@ complex_precision<T> wynn_epsilon_3_algorithm<complex_precision<T>, K>::operator
     // Machine constants for numerical stability
     const T EMACH = std::numeric_limits<T>::epsilon(); ///< Machine epsilon: smallest number such that 1.0 + ε ≠ 1.0.
     const T EPRN = static_cast<T>(50) * EMACH;         ///< Relative error tolerance (50 * machine epsilon).
-    const T OFRN = std::numeric_limits<T>::max();      ///< Overflow threshold (largest finite value).
+    T OFRN;
+    if constexpr (std::floating_point<T>){
+        OFRN = std::numeric_limits<T>::max();            ///< Overflow threshold (largest finite value).
+    }
+    #ifdef INC_FPRECISION
+    else if constexpr (std::is_same<T, float_precision>::value){
+        OFRN = float_precision(1'000'000'000);
+    }
+    #endif
+    assert(OFRN > static_cast<T>(0));
+
 
     Complex result = static_cast<Complex>(0.0);       ///< Current best accelerated estimate.
     T abs_error    = static_cast<T>(0.0);    ///< Absolute error estimate for current data.
