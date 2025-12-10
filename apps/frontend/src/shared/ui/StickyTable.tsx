@@ -1,11 +1,16 @@
 // src/shared/ui/StickyTable.tsx
-import React, { useRef, useLayoutEffect } from "react";
+import React, { useLayoutEffect, useRef } from "react";
 
 interface StickyTableProps {
     header: React.ReactNode;
     body: React.ReactNode;
     stickyOffset?: number;
     className?: string;
+
+    /** ref на внешний контейнер, чтобы родитель мог делать snapshot */
+    wrapperRef?: React.Ref<HTMLDivElement>;
+    /** если true, убираем overflow-x-auto, показываем всю таблицу целиком */
+    noScroll?: boolean;
 }
 
 export const StickyTable: React.FC<StickyTableProps> = ({
@@ -13,6 +18,8 @@ export const StickyTable: React.FC<StickyTableProps> = ({
     body,
     stickyOffset = 0,
     className = "",
+    wrapperRef,
+    noScroll = false,
 }) => {
     const headerScrollRef = useRef<HTMLDivElement | null>(null);
     const bodyScrollRef = useRef<HTMLDivElement | null>(null);
@@ -34,13 +41,15 @@ export const StickyTable: React.FC<StickyTableProps> = ({
             return;
         }
 
-        if (source === "header") {
-            if (bodyEl.scrollLeft !== headerEl.scrollLeft) {
-                bodyEl.scrollLeft = headerEl.scrollLeft;
-            }
-        } else {
-            if (headerEl.scrollLeft !== bodyEl.scrollLeft) {
-                headerEl.scrollLeft = bodyEl.scrollLeft;
+        if (!noScroll) {
+            if (source === "header") {
+                if (bodyEl.scrollLeft !== headerEl.scrollLeft) {
+                    bodyEl.scrollLeft = headerEl.scrollLeft;
+                }
+            } else {
+                if (headerEl.scrollLeft !== bodyEl.scrollLeft) {
+                    headerEl.scrollLeft = bodyEl.scrollLeft;
+                }
             }
         }
 
@@ -50,10 +59,12 @@ export const StickyTable: React.FC<StickyTableProps> = ({
     };
 
     const onHeaderScroll: React.UIEventHandler<HTMLDivElement> = () => {
+        if (noScroll) return;
         syncScroll("header");
     };
 
     const onBodyScroll: React.UIEventHandler<HTMLDivElement> = () => {
+        if (noScroll) return;
         syncScroll("body");
     };
 
@@ -64,7 +75,6 @@ export const StickyTable: React.FC<StickyTableProps> = ({
         const bodyTable = bodyTableRef.current;
         if (!headerTable || !bodyTable) return;
 
-        // если таблица скрыта (display: none), смысла мерить нет
         if (!bodyTable.offsetParent) return;
 
         const thead = headerTable.tHead;
@@ -81,7 +91,6 @@ export const StickyTable: React.FC<StickyTableProps> = ({
         const len = Math.min(headerCells.length, bodyCells.length);
         if (len === 0) return;
 
-        // 1) сбрасываем предыдущие размеры во всех ячейках
         for (const cell of headerCells) {
             cell.style.width = "";
             cell.style.minWidth = "";
@@ -93,14 +102,12 @@ export const StickyTable: React.FC<StickyTableProps> = ({
         headerTable.style.tableLayout = "auto";
         bodyTable.style.tableLayout = "auto";
 
-        // 2) пересчитываем ширины заново по первой строке тела
         const widths: number[] = [];
         for (let i = 0; i < len; i++) {
             const w = bodyCells[i].getBoundingClientRect().width;
             widths.push(w);
         }
 
-        // 3) фиксируем одинаковую ширину
         headerTable.style.tableLayout = "fixed";
         bodyTable.style.tableLayout = "fixed";
 
@@ -144,22 +151,24 @@ export const StickyTable: React.FC<StickyTableProps> = ({
                 cancelAnimationFrame(frameId);
             }
         };
-        // header/body как зависимости: при их изменении делаем новый sync
     }, [header, body]);
 
+    const headerWrapperClass = noScroll
+        ? "" // без sticky, без z-index, без подложки
+        : "sticky z-20 bg-surface/95 backdrop-blur-sm";
+
+    const headerWrapperStyle = noScroll ? undefined : { top: stickyOffset };
+
     return (
-        <div className={`relative ${className}`}>
-            {/* sticky-шапка секции */}
-            <div
-                className="
-                    sticky z-20
-                    bg-surface/95 backdrop-blur-sm
-                "
-                style={{ top: stickyOffset }}
-            >
+        <div ref={wrapperRef} className={`relative ${className}`}>
+            {/* шапка секции (липкая только когда noScroll = false) */}
+            <div className={headerWrapperClass} style={headerWrapperStyle}>
                 <div
                     ref={headerScrollRef}
-                    className="overflow-x-auto rounded-xl2 border border-border bg-panel"
+                    className={
+                        (noScroll ? "overflow-visible " : "overflow-x-auto ") +
+                        "rounded-xl2 border border-border bg-panel"
+                    }
                     onScroll={onHeaderScroll}
                 >
                     <table
@@ -173,7 +182,10 @@ export const StickyTable: React.FC<StickyTableProps> = ({
 
             <div
                 ref={bodyScrollRef}
-                className="overflow-x-auto rounded-xl2 border border-border bg-panel shadow-panel"
+                className={
+                    (noScroll ? "overflow-visible " : "overflow-x-auto ") +
+                    "rounded-xl2 border border-border bg-panel shadow-panel"
+                }
                 onScroll={onBodyScroll}
             >
                 <table

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useState, useRef, useCallback } from "react";
 import * as htmlToImage from "html-to-image";
 import {
     type ConvergenceMatrix,
@@ -34,6 +34,12 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
     const rawSeriesList = matrix.seriesList ?? [];
     const algoList = matrix.algoList ?? [];
     const cells = matrix.cells ?? {};
+
+    const stickyWrapperRef = useRef<HTMLDivElement | null>(null);
+
+    const [exportProgress, setExportProgress] = useState<number | null>(null);
+    const [isExporting, setIsExporting] = useState(false);
+    const [exportNoScroll, setExportNoScroll] = useState(false);
 
     const thresholds = useMemo(() => {
         let maxSignChanges = 0;
@@ -105,25 +111,31 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
     const endIndex = Math.min(startIndex + pageSize, seriesList.length);
     const seriesSlice = seriesList.slice(startIndex, endIndex);
 
-    const [exportProgress, setExportProgress] = useState<number | null>(null);
-    const [isExporting, setIsExporting] = useState(false);
-    const tableContainerRef = useRef<HTMLDivElement | null>(null);
-
     const handleExportPng = useCallback(async () => {
-        const node = tableContainerRef.current;
-        if (!node || isExporting) return;
+        if (isExporting) return;
+        const node = stickyWrapperRef.current;
+        if (!node) return;
 
         setIsExporting(true);
         setExportProgress(5);
 
-        const prevWidth = node.style.width;
-        const prevOverflow = node.style.overflow;
-
         try {
+            // включаем режим без внутренних скроллов, чтобы увидеть всю таблицу
+            setExportNoScroll(true);
+
+            // ждём, пока React применит классы и произойдёт layout
+            await new Promise<void>((resolve) => {
+                requestAnimationFrame(() => resolve());
+            });
+
+            const prevWidth = node.style.width;
+            const prevOverflow = node.style.overflow;
+
+            // раскрываем контейнер по полной ширине таблицы
             node.style.width = `${node.scrollWidth}px`;
             node.style.overflow = "visible";
 
-            setExportProgress(30);
+            setExportProgress(35);
 
             const dataUrl = await htmlToImage.toPng(node, {
                 pixelRatio: window.devicePixelRatio || 2,
@@ -141,17 +153,20 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
 
             setExportProgress(100);
         } catch (e) {
-            // eslint-disable-next-line no-console
             console.error("PNG export failed", e);
             setExportProgress(null);
         } finally {
-            node.style.width = prevWidth;
-            node.style.overflow = prevOverflow;
+            const nodeFinal = stickyWrapperRef.current;
+            if (nodeFinal) {
+                nodeFinal.style.width = "";
+                nodeFinal.style.overflow = "";
+            }
 
             setTimeout(() => {
                 setIsExporting(false);
                 setExportProgress(null);
-            }, 400);
+                setExportNoScroll(false);
+            }, 300);
         }
     }, [isExporting]);
 
@@ -396,6 +411,7 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
                     </span>
                 </div>
                 <div className="flex items-center gap-3">
+                    {/* блок precision */}
                     <div className="flex items-center gap-1 text-[10px]">
                         <span>precision:</span>
                         <select
@@ -517,7 +533,7 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
 
                         {exportProgress !== null && (
                             <div className="flex items-center gap-1 text-[9px] text-textDim/80 min-w-[80px]">
-                                <span>{exportProgress}%</span>
+                                <span className="tabular-nums">{exportProgress}%</span>
                                 <div className="h-[4px] flex-1 rounded bg-border/40 overflow-hidden">
                                     <div
                                         className="h-full rounded bg-accent/80 transition-all"
@@ -531,13 +547,13 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
             </div>
 
             {/* базовая таблица с липкой шапкой, синхронизирующейся по горизонтали */}
-            <div ref={tableContainerRef}>
-                <StickyTable
-                    header={headerNode}
-                    body={bodyNode}
-                    stickyOffset={56} // подстрой по высоте верхнего навбара, если есть
-                />
-            </div>
+            <StickyTable
+                header={headerNode}
+                body={bodyNode}
+                stickyOffset={56}
+                wrapperRef={stickyWrapperRef}
+                noScroll={exportNoScroll}
+            />
         </div>
     );
 };
