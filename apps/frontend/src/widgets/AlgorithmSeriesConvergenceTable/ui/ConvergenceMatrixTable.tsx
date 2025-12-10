@@ -1,6 +1,5 @@
-import React, { useEffect, useMemo, useState, useRef, useCallback } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import * as htmlToImage from "html-to-image";
-
 import {
     type ConvergenceMatrix,
     type MonotonicityType,
@@ -35,59 +34,6 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
     const rawSeriesList = matrix.seriesList ?? [];
     const algoList = matrix.algoList ?? [];
     const cells = matrix.cells ?? {};
-
-    const tableContainerRef = useRef<HTMLDivElement | null>(null);
-
-    const [exportProgress, setExportProgress] = useState<number | null>(null);
-    const [isExporting, setIsExporting] = useState(false);
-
-    const handleExportPng = useCallback(async () => {
-        const node = tableContainerRef.current;
-        if (!node || isExporting) return;
-
-        setIsExporting(true);
-        setExportProgress(5);
-
-        // сохраняем старые стили
-        const prevWidth = node.style.width;
-        const prevOverflow = node.style.overflow;
-
-        try {
-            // раскрываем контейнер по полной ширине таблицы, чтобы не было клиппинга
-            node.style.width = `${node.scrollWidth}px`;
-            node.style.overflow = "visible";
-
-            setExportProgress(30);
-
-            const dataUrl = await htmlToImage.toPng(node, {
-                pixelRatio: window.devicePixelRatio || 2,
-                cacheBust: true,
-            });
-
-            setExportProgress(90);
-
-            const link = document.createElement("a");
-            link.href = dataUrl;
-            link.download = "convergence-matrix.png";
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-
-            setExportProgress(100);
-        } catch (e) {
-            console.error("PNG export failed", e);
-            setExportProgress(null);
-        } finally {
-            // возвращаем стили
-            node.style.width = prevWidth;
-            node.style.overflow = prevOverflow;
-
-            setTimeout(() => {
-                setIsExporting(false);
-                setExportProgress(null);
-            }, 400);
-        }
-    }, [isExporting]);
 
     const thresholds = useMemo(() => {
         let maxSignChanges = 0;
@@ -155,6 +101,60 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
     const signChangesSliderMax = thresholds.maxSignChanges > 0 ? thresholds.maxSignChanges : 5;
     const violationsSliderMax = thresholds.maxViolations > 0 ? thresholds.maxViolations : 5;
 
+    const startIndex = page * pageSize;
+    const endIndex = Math.min(startIndex + pageSize, seriesList.length);
+    const seriesSlice = seriesList.slice(startIndex, endIndex);
+
+    const [exportProgress, setExportProgress] = useState<number | null>(null);
+    const [isExporting, setIsExporting] = useState(false);
+    const tableContainerRef = useRef<HTMLDivElement | null>(null);
+
+    const handleExportPng = useCallback(async () => {
+        const node = tableContainerRef.current;
+        if (!node || isExporting) return;
+
+        setIsExporting(true);
+        setExportProgress(5);
+
+        const prevWidth = node.style.width;
+        const prevOverflow = node.style.overflow;
+
+        try {
+            node.style.width = `${node.scrollWidth}px`;
+            node.style.overflow = "visible";
+
+            setExportProgress(30);
+
+            const dataUrl = await htmlToImage.toPng(node, {
+                pixelRatio: window.devicePixelRatio || 2,
+                cacheBust: true,
+            });
+
+            setExportProgress(90);
+
+            const link = document.createElement("a");
+            link.href = dataUrl;
+            link.download = "convergence-matrix.png";
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            setExportProgress(100);
+        } catch (e) {
+            // eslint-disable-next-line no-console
+            console.error("PNG export failed", e);
+            setExportProgress(null);
+        } finally {
+            node.style.width = prevWidth;
+            node.style.overflow = prevOverflow;
+
+            setTimeout(() => {
+                setIsExporting(false);
+                setExportProgress(null);
+            }, 400);
+        }
+    }, [isExporting]);
+
     if (rawSeriesList.length === 0 || algoList.length === 0) {
         return (
             <div className="text-textDim text-sm">
@@ -162,10 +162,6 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
             </div>
         );
     }
-
-    const startIndex = page * pageSize;
-    const endIndex = Math.min(startIndex + pageSize, seriesList.length);
-    const seriesSlice = seriesList.slice(startIndex, endIndex);
 
     const headerNode = (
         <thead className="bg-surface/80">
@@ -260,7 +256,6 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
                                 ? analysis.growthViolationsCount
                                 : 0;
 
-                        // направление с учётом порога X
                         let effectiveSide: SideType = rawSide;
                         if (rawSide !== "no_limit") {
                             if (signChanges <= maxSignChangesForOneSided) {
@@ -270,7 +265,6 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
                             }
                         }
 
-                        // монотонность с учётом порога Y
                         let effectiveMon: MonotonicityType = rawMon;
                         if (rawMon !== "no_limit" && rawMon !== "not_enough_data") {
                             if (violationsCount <= maxViolationsForMonotone) {
@@ -285,7 +279,6 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
 
                         const titleLines: string[] = [];
 
-                        // Ряд / алгоритм
                         titleLines.push(
                             `Ряд: ${s.seriesName} (x=${s.xLabel}, prec=${s.precision})`
                         );
@@ -391,7 +384,6 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
                     -mx-4 px-4 py-2
                 "
             >
-                {" "}
                 <div className="flex flex-col gap-1">
                     <span className="text-sm font-semibold text-textDim">
                         Монотонность и направление: алгоритмы × ряды
