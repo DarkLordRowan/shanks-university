@@ -12,6 +12,7 @@
   "dependencies": {
     "apache-arrow": "^21.1.0",
     "highlight.js": "^11.11.1",
+    "html-to-image": "^1.11.13",
     "html2canvas": "^1.4.1",
     "katex": "*",
     "lucide-react": "*",

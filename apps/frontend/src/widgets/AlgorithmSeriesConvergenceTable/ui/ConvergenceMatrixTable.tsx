@@ -1,4 +1,6 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, useRef, useCallback } from "react";
+import * as htmlToImage from "html-to-image";
+
 import {
     type ConvergenceMatrix,
     type MonotonicityType,
@@ -33,6 +35,59 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
     const rawSeriesList = matrix.seriesList ?? [];
     const algoList = matrix.algoList ?? [];
     const cells = matrix.cells ?? {};
+
+    const tableContainerRef = useRef<HTMLDivElement | null>(null);
+
+    const [exportProgress, setExportProgress] = useState<number | null>(null);
+    const [isExporting, setIsExporting] = useState(false);
+
+    const handleExportPng = useCallback(async () => {
+        const node = tableContainerRef.current;
+        if (!node || isExporting) return;
+
+        setIsExporting(true);
+        setExportProgress(5);
+
+        // сохраняем старые стили
+        const prevWidth = node.style.width;
+        const prevOverflow = node.style.overflow;
+
+        try {
+            // раскрываем контейнер по полной ширине таблицы, чтобы не было клиппинга
+            node.style.width = `${node.scrollWidth}px`;
+            node.style.overflow = "visible";
+
+            setExportProgress(30);
+
+            const dataUrl = await htmlToImage.toPng(node, {
+                pixelRatio: window.devicePixelRatio || 2,
+                cacheBust: true,
+            });
+
+            setExportProgress(90);
+
+            const link = document.createElement("a");
+            link.href = dataUrl;
+            link.download = "convergence-matrix.png";
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            setExportProgress(100);
+        } catch (e) {
+            console.error("PNG export failed", e);
+            setExportProgress(null);
+        } finally {
+            // возвращаем стили
+            node.style.width = prevWidth;
+            node.style.overflow = prevOverflow;
+
+            setTimeout(() => {
+                setIsExporting(false);
+                setExportProgress(null);
+            }, 400);
+        }
+    }, [isExporting]);
 
     const thresholds = useMemo(() => {
         let maxSignChanges = 0;
@@ -456,15 +511,41 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
                             </button>
                         </div>
                     )}
+
+                    <div className="flex items-center gap-2">
+                        <button
+                            type="button"
+                            className="rounded border border-border bg-surface px-2 py-[3px] text-[10px] hover:bg-panel disabled:opacity-50"
+                            onClick={() => void handleExportPng()}
+                            disabled={isExporting}
+                            title="Скачать PNG текущей таблицы"
+                        >
+                            {isExporting ? "Генерация…" : "PNG"}
+                        </button>
+
+                        {exportProgress !== null && (
+                            <div className="flex items-center gap-1 text-[9px] text-textDim/80 min-w-[80px]">
+                                <span>{exportProgress}%</span>
+                                <div className="h-[4px] flex-1 rounded bg-border/40 overflow-hidden">
+                                    <div
+                                        className="h-full rounded bg-accent/80 transition-all"
+                                        style={{ width: `${exportProgress}%` }}
+                                    />
+                                </div>
+                            </div>
+                        )}
+                    </div>
                 </div>
             </div>
 
             {/* базовая таблица с липкой шапкой, синхронизирующейся по горизонтали */}
-            <StickyTable
-                header={headerNode}
-                body={bodyNode}
-                stickyOffset={56} // подстрой по высоте верхнего навбара, если есть
-            />
+            <div ref={tableContainerRef}>
+                <StickyTable
+                    header={headerNode}
+                    body={bodyNode}
+                    stickyOffset={56} // подстрой по высоте верхнего навбара, если есть
+                />
+            </div>
         </div>
     );
 };
