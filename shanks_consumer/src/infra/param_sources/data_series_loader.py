@@ -19,9 +19,9 @@ class DataSeriesParamSource(SeriesParamSource):
 
             series_list.append(
                 SeriesParamJSON(
+                    precision=precision,
                     name=series_data["name"] + precision.value,
                     args=processed,
-                    precision=precision,
                 )
             )
 

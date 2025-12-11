@@ -11,7 +11,6 @@ from src.domain.data_serializer import DataSerializer
 from src.domain.export_service import ExportService
 from src.domain.params import BaseAccelParam, BaseSeriesParam, PrecisionType
 from src.domain.sources import AccelParamSource, SeriesParamSource
-from src.domain.use_cases.run_trial import generate_all_series
 from src.domain.trial_runner import TrialRunner
 
 
@@ -64,19 +63,11 @@ class TrialExecutor:
 
         return series_params, accel_params
 
-    def pregen_series(
-        self,
-        series_params: list[BaseSeriesParam],
-        accel_params: list[BaseAccelParam],
+    def export_results(
+        self, dicts: Sequence[dict], series: list[BaseSeriesParam]
     ):
-        return generate_all_series(
-            series_params,
-            max(accel.size_floor for accel in accel_params),
-        )
-
-    def export_results(self, dicts: Sequence[dict]):
         for exporter in self.exporters:
-            exporter.export(dicts, config=self.config)
+            exporter.export(dicts, config=self.config, series=series)
 
     def __run_trials_full_load(
         self,
@@ -91,17 +82,19 @@ class TrialExecutor:
             stack_id=self.stack_id,
         )
 
-        pregen_series = self.pregen_series(series_params, accel_params)
+        results, combinations = [], trial.combinations()
 
-        results = reduce(
-            list.__add__,
+        for result in tqdm(
             self.runner.run(
-                trial.combinations(),
-                pregen_series,
+                combinations,
             ),
-        )
+            total=len(combinations),
+        ):
+            results.extend(result)
 
-        self.export_results(self.serializer.to_dict(results))
+        dicts = self.serializer.to_dict(results)
+
+        self.export_results(dicts, series_params)
 
     def __run_trials_dispose_at_completion(
         self,
@@ -117,13 +110,14 @@ class TrialExecutor:
         )
 
         combinations = trial.combinations()
-        pregen_series = self.pregen_series(series_params, accel_params)
 
         for result_chunk in tqdm(
-            self.runner.run(combinations, pregen_series),
+            self.runner.run(combinations),
             total=len(combinations),
         ):
-            self.export_results(self.serializer.to_dict(result_chunk))
+            self.export_results(
+                self.serializer.to_dict(result_chunk), series_params
+            )
 
     def run_trials(
         self,

@@ -12,6 +12,8 @@ from collections.abc import Callable, Iterable, Sequence
 from dataclasses import dataclass, field
 from typing import Any, Generic, Generator, Mapping, override, TypeGuard
 
+from src.logger import logged_debug
+
 import pyshanks as ps
 from src.domain.event import EventType, EVENT_METHODS
 from src.domain.precision import (
@@ -25,6 +27,13 @@ from src.domain.precision import (
     create_series_result,
     cast_precision_value,
 )
+
+SeriesPregenLocalValue = tuple[SeriesResultProto[NumericLike], NumericLike]
+SeriesPregenLocalKey = tuple[tuple[str, Any], ...]
+SeriesPregenLocalMapping = dict[
+    SeriesPregenLocalKey,
+    SeriesPregenLocalValue | None,
+]
 
 
 def argument_combos[T](
@@ -44,6 +53,20 @@ class BaseSeriesParam[T]:
     """Abstract base class for series parameter configurations."""
 
     precision: PrecisionType
+    _next_id: int = field(
+        init=False,
+        repr=False,
+        default=1,
+        metadata={"skip_dataclass_field": True},
+    )
+    id: int = field(init=False)
+    __pregen: SeriesPregenLocalMapping = field(
+        init=False, default_factory=dict
+    )
+
+    def __post_init__(self):
+        self.id = BaseSeriesParam._next_id
+        BaseSeriesParam._next_id += 1
 
     @property
     @abstractmethod
@@ -84,7 +107,7 @@ class BaseSeriesParam[T]:
             )
         return instance
 
-    def resolve_series_arguments(
+    def __resolve_series_arguments(
         self,
         argument: Mapping[str, Any],
         size_floor: int,
@@ -107,21 +130,51 @@ class BaseSeriesParam[T]:
 
         return x_value, vec_size, add_t_value, add_k_value
 
-    def generate(
+    def __get_from_pregen(
+        self, argument: Mapping[str, Any]
+    ) -> SeriesPregenLocalValue | None:
+        if not self.__pregen:
+            return None
+        return self.__pregen.get(tuple(argument.items()), None)
+
+    def __generate(
         self, x: Any, vec_size: int, t: Any, k: int
-    ) -> tuple[SeriesResultProto[NumericLike], NumericLike]:
+    ) -> SeriesPregenLocalValue:
         instance = self.instance
         return (
             instance.generateSeries(x, vec_size, t, k),
             instance.get_sum(),
         )
 
-    def execute(
+    @logged_debug
+    def obtain_by_argument(
         self, argument: Mapping[str, Any], size_floor: int
-    ) -> tuple[SeriesResultProto[NumericLike], NumericLike]:
-        x, vec_size, t, k = self.resolve_series_arguments(argument, size_floor)
-        series_result, lim = self.generate(x, vec_size, t, k)
-        return series_result, lim
+    ) -> SeriesPregenLocalValue:
+        series_result_lim = self.__get_from_pregen(argument)
+
+        if series_result_lim:
+            return series_result_lim
+
+        x, vec_size, t, k = self.__resolve_series_arguments(
+            argument, size_floor
+        )
+
+        series_result_lim = self.__generate(x, vec_size, t, k)
+
+        self.__pregen[tuple(argument.items())] = series_result_lim
+        return series_result_lim
+
+    def obtain_all(self, size_floor: int) -> SeriesPregenLocalMapping:
+        return {
+            tuple(argument.items()): self.obtain_by_argument(
+                argument, size_floor
+            )
+            for argument in self.argument_combos
+        }
+
+    @property
+    def pregen(self):
+        return self.__pregen
 
 
 @dataclass

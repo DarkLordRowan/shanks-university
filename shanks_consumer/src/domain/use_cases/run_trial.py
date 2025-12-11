@@ -1,12 +1,10 @@
 import traceback
-from typing import Mapping, Any, Iterable
+from typing import Mapping, Any
 
 from src.domain.params import (
     BaseAccelParam,
     BaseSeriesParam,
     NumericLike,
-    PrecisionType,
-    SeriesResultProto,
 )
 from src.domain.trial_result import (
     AccelTrialResult,
@@ -29,6 +27,7 @@ def trial_results_from_series_error(
     return [
         TrialResult(
             SeriesTrialResult(
+                id=series.id,
                 name=series.series_name,
                 lim=None,
                 arguments=dict(series_argument),
@@ -63,6 +62,7 @@ def trial_results_from_accel_error(
     return [
         TrialResult(
             SeriesTrialResult(
+                id=series.id,
                 name=series.series_name,
                 lim=series_lim,
                 arguments=dict(series_argument),
@@ -84,13 +84,6 @@ def trial_results_from_accel_error(
 @logged_debug
 def execute_trial(
     series_accel: tuple[BaseSeriesParam, BaseAccelParam],
-    pregen_series: (
-        dict[
-            tuple[str, PrecisionType, tuple[tuple[str, Any], ...]],
-            tuple[SeriesResultProto[NumericLike], NumericLike],
-        ]
-        | None
-    ) = None,
 ) -> list[TrialResult]:
     series, accel = series_accel
 
@@ -101,18 +94,9 @@ def execute_trial(
 
     for series_argument in series.argument_combos:
         try:
-            if pregen_series:
-                series_result, series_lim = pregen_series[
-                    (
-                        series.series_name,
-                        series.precision,
-                        tuple(series_argument.items()),
-                    )
-                ]
-            else:
-                series_result, series_lim = series.execute(
-                    series_argument, accel.size_floor
-                )
+            series_result, series_lim = series.obtain_by_argument(
+                series_argument, accel.size_floor
+            )
         except Exception as exc:
             results.extend(
                 trial_results_from_series_error(
@@ -123,7 +107,7 @@ def execute_trial(
 
         for additional_args in accel.argument_combos:
             try:
-                accel_instance = accel.executable(**additional_args)
+                accel_instance = accel.create_instance(additional_args)
             except Exception as exc:
                 results.extend(
                     trial_results_from_accel_error(
@@ -192,6 +176,7 @@ def execute_trial(
                 results.append(
                     TrialResult(
                         SeriesTrialResult(
+                            id=series.id,
                             name=series.series_name,
                             lim=series_lim,
                             arguments=dict(series_argument),
@@ -210,18 +195,3 @@ def execute_trial(
                 )
 
     return results
-
-
-def generate_all_series(
-    series: Iterable[BaseSeriesParam], size_floor: int
-) -> dict[
-    tuple[str, PrecisionType, tuple[tuple[str, Any], ...]],
-    tuple[SeriesResultProto[NumericLike], NumericLike],
-]:
-    return {
-        (s.series_name, s.precision, tuple(combo.items())): s.execute(
-            combo, size_floor
-        )
-        for s in series
-        for combo in s.argument_combos
-    }
