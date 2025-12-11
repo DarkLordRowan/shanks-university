@@ -1,5 +1,6 @@
-import React, { useEffect, useMemo, useState, useRef, useCallback } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import * as htmlToImage from "html-to-image";
+import * as XLSX from "xlsx-js-style";
 import {
     type ConvergenceMatrix,
     type MonotonicityType,
@@ -169,6 +170,261 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
             }, 300);
         }
     }, [isExporting]);
+
+    type ColorClass = "green" | "blue" | "yellow" | "red" | "neutral";
+
+    function classifyColor(side: SideType, mon: MonotonicityType): ColorClass {
+        if (side === "no_limit" || mon === "not_enough_data" || mon === "no_limit") {
+            return "neutral";
+        }
+
+        const mono = isMonotone(mon);
+
+        if (side === "one_sided" && mono) return "green";
+        if (side === "one_sided" && !mono) return "blue";
+        if (side === "two_sided" && mono) return "yellow";
+        if (side === "two_sided" && !mono) return "red";
+
+        return "neutral";
+    }
+
+    const handleExportXlsx = useCallback(() => {
+        const allSeries = seriesList;
+        const allAlgos = algoList;
+
+        if (!allSeries.length || !allAlgos.length) {
+            return;
+        }
+
+        // ---------- заголовок основной матрицы ----------
+        const headerRow: (string | number)[] = ["Алгоритм \\ Ряд"];
+        for (const s of allSeries) {
+            headerRow.push(`${s.seriesName} (x=${s.xLabel}, prec=${s.precision ?? "∅"})`);
+        }
+
+        const wsData: (string | number | null)[][] = [];
+        wsData.push(headerRow);
+
+        // сетка цветов для последующего проставления стилей
+        const colorGrid: ColorClass[][] = [];
+        colorGrid.push(new Array(headerRow.length).fill("neutral"));
+
+        // статистика по строкам и столбцам
+        const rowStats: Array<{ green: number; blue: number; yellow: number; red: number }> =
+            allAlgos.map(() => ({ green: 0, blue: 0, yellow: 0, red: 0 }));
+
+        const colStats: Array<{ green: number; blue: number; yellow: number; red: number }> =
+            allSeries.map(() => ({ green: 0, blue: 0, yellow: 0, red: 0 }));
+
+        // ---------- строки по алгоритмам ----------
+        allAlgos.forEach((algo, algoIdx) => {
+            const row: (string | number | null)[] = [];
+
+            // описание алгоритма в первой колонке
+            const algoParts: string[] = [];
+            algoParts.push(algo.algorithmName);
+            if (algo.m != null) {
+                algoParts.push(`m=${algo.m}`);
+            }
+
+            const algoArgsEntries = nonNullEntries(algo.algorithmArgs);
+            if (algoArgsEntries.length > 0) {
+                const argsStr = algoArgsEntries
+                    .sort(([a], [b]) => a.localeCompare(b))
+                    .map(([k, v]) => `${k}=${v}`)
+                    .join(", ");
+                algoParts.push(`{${argsStr}}`);
+            }
+
+            row.push(algoParts.join(" "));
+
+            const colorRow: ColorClass[] = [];
+            colorRow.push("neutral"); // первая колонка
+
+            allSeries.forEach((s, seriesIdx) => {
+                const key = `${algo.key}::${s.key}`;
+                const analysis = cells[key];
+
+                if (!analysis) {
+                    row.push(null);
+                    colorRow.push("neutral");
+                    return;
+                }
+
+                const rawSide = analysis.side;
+                const rawMon = analysis.monotonicity;
+
+                const signChanges =
+                    typeof analysis.signChangesCount === "number" ? analysis.signChangesCount : 0;
+
+                const violationsCount =
+                    typeof analysis.growthViolationsCount === "number"
+                        ? analysis.growthViolationsCount
+                        : 0;
+
+                let effectiveSide: SideType = rawSide;
+                if (rawSide !== "no_limit") {
+                    if (signChanges <= maxSignChangesForOneSided) {
+                        effectiveSide = "one_sided";
+                    } else {
+                        effectiveSide = "two_sided";
+                    }
+                }
+
+                let effectiveMon: MonotonicityType = rawMon;
+                if (rawMon !== "no_limit" && rawMon !== "not_enough_data") {
+                    if (violationsCount <= maxViolationsForMonotone) {
+                        if (rawMon === "has_growth") {
+                            effectiveMon = "non_increasing_error";
+                        }
+                    }
+                }
+
+                const sideShort = formatSideShort(effectiveSide);
+                const monShort = formatMonotonicityShort(effectiveMon);
+
+                const cellText = [
+                    `${sideShort} | ${monShort}`,
+                    `k=${analysis.stepsAnalyzed}`,
+                    `sign_changes=${analysis.signChangesCount ?? "∅"}`,
+                    `growth_violations=${analysis.growthViolationsCount ?? "∅"}`,
+                ].join(" / ");
+
+                row.push(cellText);
+
+                const colorClass = classifyColor(effectiveSide, effectiveMon);
+                colorRow.push(colorClass);
+
+                // статистика
+                if (colorClass !== "neutral") {
+                    rowStats[algoIdx][colorClass]++;
+                    colStats[seriesIdx][colorClass]++;
+                }
+            });
+
+            wsData.push(row);
+            colorGrid.push(colorRow);
+        });
+
+        // ---------- основная таблица ----------
+        const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+        // стили для цветов
+        const colorStyles: Record<ColorClass, any> = {
+            neutral: {},
+            green: {
+                fill: {
+                    patternType: "solid",
+                    fgColor: { rgb: "C6EFCE" }, // светло-зелёный
+                },
+            },
+            blue: {
+                fill: {
+                    patternType: "solid",
+                    fgColor: { rgb: "C6D9F1" }, // светло-синий
+                },
+            },
+            yellow: {
+                fill: {
+                    patternType: "solid",
+                    fgColor: { rgb: "FFF2CC" }, // светло-жёлтый
+                },
+            },
+            red: {
+                fill: {
+                    patternType: "solid",
+                    fgColor: { rgb: "F8CBAD" }, // светло-красный
+                },
+            },
+        };
+
+        // проставляем стили по colorGrid
+        for (let r = 1; r < colorGrid.length; r++) {
+            const rowColors = colorGrid[r];
+            for (let c = 1; c < rowColors.length; c++) {
+                const colorClass = rowColors[c];
+                if (colorClass === "neutral") continue;
+
+                const cellAddress = XLSX.utils.encode_cell({ r, c });
+                const cell = ws[cellAddress];
+                if (!cell) continue;
+
+                cell.s = {
+                    ...(cell.s || {}),
+                    ...colorStyles[colorClass],
+                };
+            }
+        }
+
+        // ---------- лист статистики по строкам ----------
+        const rowStatsData: (string | number)[][] = [];
+        rowStatsData.push([
+            "Алгоритм",
+            "green (одностор.+монотонн.)",
+            "blue (одностор.+немонотонн.)",
+            "yellow (двустор.+монотонн.)",
+            "red (двустор.+немонотонн.)",
+            "total",
+        ]);
+
+        allAlgos.forEach((algo, i) => {
+            const s = rowStats[i];
+            const total = s.green + s.blue + s.yellow + s.red;
+
+            const algoParts: string[] = [];
+            algoParts.push(algo.algorithmName);
+            if (algo.m != null) {
+                algoParts.push(`m=${algo.m}`);
+            }
+
+            rowStatsData.push([algoParts.join(" "), s.green, s.blue, s.yellow, s.red, total]);
+        });
+
+        const wsRowStats = XLSX.utils.aoa_to_sheet(rowStatsData);
+
+        // ---------- лист статистики по столбцам ----------
+        const colStatsData: (string | number)[][] = [];
+        colStatsData.push([
+            "Ряд",
+            "green (одностор.+монотонн.)",
+            "blue (одностор.+немонотонн.)",
+            "yellow (двустор.+монотонн.)",
+            "red (двустор.+немонотонн.)",
+            "total",
+        ]);
+
+        allSeries.forEach((s, j) => {
+            const st = colStats[j];
+            const total = st.green + st.blue + st.yellow + st.red;
+
+            const seriesLabel = `${s.seriesName} (x=${s.xLabel}, prec=${s.precision ?? "∅"})`;
+
+            colStatsData.push([seriesLabel, st.green, st.blue, st.yellow, st.red, total]);
+        });
+
+        const wsColStats = XLSX.utils.aoa_to_sheet(colStatsData);
+
+        // ---------- книга и сохранение ----------
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "convergence");
+        XLSX.utils.book_append_sheet(wb, wsRowStats, "row_stats");
+        XLSX.utils.book_append_sheet(wb, wsColStats, "col_stats");
+
+        const wbout = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+
+        const blob = new Blob([wbout], {
+            type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        });
+        const url = URL.createObjectURL(blob);
+
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "convergence-matrix.xlsx";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }, [seriesList, algoList, cells, maxSignChangesForOneSided, maxViolationsForMonotone]);
 
     if (rawSeriesList.length === 0 || algoList.length === 0) {
         return (
@@ -529,6 +785,15 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
                             title="Скачать PNG текущей таблицы"
                         >
                             {isExporting ? "Генерация…" : "PNG"}
+                        </button>
+
+                        <button
+                            type="button"
+                            className="rounded border border-border bg-surface px-2 py-[3px] text-[10px] hover:bg-panel"
+                            onClick={handleExportXlsx}
+                            title="Скачать всю матрицу в XLSX (по текущему precision-фильтру)"
+                        >
+                            XLSX
                         </button>
 
                         {exportProgress !== null && (
