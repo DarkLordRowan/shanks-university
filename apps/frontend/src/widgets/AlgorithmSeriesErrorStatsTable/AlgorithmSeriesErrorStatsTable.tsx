@@ -68,7 +68,7 @@ export const AlgorithmSeriesErrorStatsTable: React.FC<AlgorithmSeriesErrorStatsT
             rows={rows}
             cols={cols}
             enableInnerScroll
-            maxBodyHeight="65vh"
+            maxBodyHeight="80vh"
             renderCorner={() => <div className="text-sm text-textDim">Ряд \ Алгоритм</div>}
             renderRowHeader={(row) => (
                 <div className="flex flex-col">

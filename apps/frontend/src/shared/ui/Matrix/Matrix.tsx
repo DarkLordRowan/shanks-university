@@ -1,4 +1,3 @@
-// src/shared/ui/Matrix/Matrix.tsx
 import React, { useRef } from "react";
 import { useWheelScrollCapture } from "@/shared/lib/dom/useWheelScrollCapture";
 
@@ -28,11 +27,14 @@ export interface MatrixProps<TRowMeta = unknown, TColMeta = unknown> {
 
     emptyFallback?: React.ReactNode;
 
-    /** Включить внутренний вертикальный скролл таблицы */
+    /** Включить внутренний скролл таблицы */
     enableInnerScroll?: boolean;
 
-    /** Максимальная высота области скролла (CSS-значение) */
-    maxBodyHeight?: string; // например "70vh" или "600px"
+    /** Максимальная высота области скролла */
+    maxBodyHeight?: string;
+
+    /** Закрепить верхнюю строку и левый столбец */
+    stickyHeaders?: boolean;
 }
 
 export function Matrix<TRowMeta = unknown, TColMeta = unknown>(
@@ -52,9 +54,12 @@ export function Matrix<TRowMeta = unknown, TColMeta = unknown>(
         emptyFallback = null,
         enableInnerScroll = true,
         maxBodyHeight = "70vh",
+        stickyHeaders = true,
     } = props;
 
     const scrollRef = useRef<HTMLDivElement | null>(null);
+
+    // Перехватываем wheel только для вертикали (deltaY) и только если контейнер может скроллиться.
     useWheelScrollCapture(scrollRef, enableInnerScroll);
 
     if (rows.length === 0 || cols.length === 0) {
@@ -64,56 +69,60 @@ export function Matrix<TRowMeta = unknown, TColMeta = unknown>(
     const thBase = "border border-border px-2 py-1 align-middle";
     const tdBase = "border border-border px-2 py-1 align-middle";
 
-    // Внешний контейнер: горизонтальный скролл
-    // Внутренний контейнер: вертикальный скролл + перехват wheel
+    const stickyTop = stickyHeaders ? "sticky top-0 z-20 bg-surface" : "";
+    const stickyLeft = stickyHeaders ? "sticky left-0 z-10 bg-surface" : "";
+    const stickyCorner = stickyHeaders ? "sticky top-0 left-0 z-30 bg-surface" : "";
+
     return (
         <div className={className ?? ""}>
-            <div className="overflow-x-auto">
-                <div
-                    ref={scrollRef}
-                    className={enableInnerScroll ? "overflow-y-auto" : undefined}
-                    style={enableInnerScroll ? { maxHeight: maxBodyHeight } : undefined}
+            <div
+                ref={scrollRef}
+                className={enableInnerScroll ? "overflow-auto" : undefined}
+                style={enableInnerScroll ? { maxHeight: maxBodyHeight } : undefined}
+            >
+                <table
+                    className={`border-collapse border border-border w-full ${tableClassName ?? ""}`}
                 >
-                    <table
-                        className={`border-collapse border border-border w-full ${tableClassName ?? ""}`}
-                    >
-                        <thead>
-                            <tr>
-                                <th className={`${thBase} text-left ${thClassName ?? ""}`}>
-                                    {renderCorner ? renderCorner() : null}
+                    <thead>
+                        <tr>
+                            <th
+                                className={`${thBase} text-left ${stickyCorner} ${thClassName ?? ""}`}
+                            >
+                                {renderCorner ? renderCorner() : null}
+                            </th>
+
+                            {cols.map((col, j) => (
+                                <th
+                                    key={col.id}
+                                    className={`${thBase} text-center ${stickyTop} ${thClassName ?? ""}`}
+                                >
+                                    {renderColHeader(col, j)}
+                                </th>
+                            ))}
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {rows.map((row, i) => (
+                            <tr key={row.id}>
+                                <th
+                                    className={`${thBase} text-left ${stickyLeft} ${thClassName ?? ""}`}
+                                >
+                                    {renderRowHeader(row, i)}
                                 </th>
 
                                 {cols.map((col, j) => (
-                                    <th
+                                    <td
                                         key={col.id}
-                                        className={`${thBase} text-center ${thClassName ?? ""}`}
+                                        className={`${tdBase} text-center ${tdClassName ?? ""}`}
                                     >
-                                        {renderColHeader(col, j)}
-                                    </th>
+                                        {renderCell(row, col, i, j)}
+                                    </td>
                                 ))}
                             </tr>
-                        </thead>
-
-                        <tbody>
-                            {rows.map((row, i) => (
-                                <tr key={row.id}>
-                                    <th className={`${thBase} text-left ${thClassName ?? ""}`}>
-                                        {renderRowHeader(row, i)}
-                                    </th>
-
-                                    {cols.map((col, j) => (
-                                        <td
-                                            key={col.id}
-                                            className={`${tdBase} text-center ${tdClassName ?? ""}`}
-                                        >
-                                            {renderCell(row, col, i, j)}
-                                        </td>
-                                    ))}
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
+                        ))}
+                    </tbody>
+                </table>
             </div>
         </div>
     );
