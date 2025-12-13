@@ -12,6 +12,7 @@ import type {
 } from "@/entities/experiment/model/experiment";
 import { MatrixPaged } from "@/shared/ui/Matrix/MatrixPaged";
 import type { MatrixAxisItem, MatrixProps } from "@/shared/ui/Matrix/Matrix";
+import * as XLSX from "xlsx-js-style";
 
 type SeriesKey = string;
 type AlgoKey = string;
@@ -157,6 +158,89 @@ function summarizeSeriesAccel(sa: SeriesAccel): CellSummary {
         errorCount: errorList.length,
         divergentCount,
         uniqueErrorMessages,
+    };
+}
+
+function cellStyleByState(state: CellSummary["state"]): XLSX.CellStyle {
+    // цвета близко к UI (можешь подогнать)
+    switch (state) {
+        case "all-ok":
+            return {
+                fill: { patternType: "solid", fgColor: { rgb: "1F4D3A" } }, // тёмно-зелёный
+                font: { color: { rgb: "D1FAE5" }, bold: true },
+                alignment: { horizontal: "center", vertical: "center", wrapText: true },
+                border: {
+                    top: { style: "thin", color: { rgb: "2DD4BF" } },
+                    bottom: { style: "thin", color: { rgb: "2DD4BF" } },
+                    left: { style: "thin", color: { rgb: "2DD4BF" } },
+                    right: { style: "thin", color: { rgb: "2DD4BF" } },
+                },
+            };
+        case "only-errors":
+            return {
+                fill: { patternType: "solid", fgColor: { rgb: "4B1D1D" } }, // тёмно-красный
+                font: { color: { rgb: "FEE2E2" }, bold: true },
+                alignment: { horizontal: "center", vertical: "center", wrapText: true },
+                border: {
+                    top: { style: "thin", color: { rgb: "F87171" } },
+                    bottom: { style: "thin", color: { rgb: "F87171" } },
+                    left: { style: "thin", color: { rgb: "F87171" } },
+                    right: { style: "thin", color: { rgb: "F87171" } },
+                },
+            };
+        case "ok-with-errors":
+            return {
+                fill: { patternType: "solid", fgColor: { rgb: "4A3414" } }, // тёмно-amber
+                font: { color: { rgb: "FEF3C7" }, bold: true },
+                alignment: { horizontal: "center", vertical: "center", wrapText: true },
+                border: {
+                    top: { style: "thin", color: { rgb: "FBBF24" } },
+                    bottom: { style: "thin", color: { rgb: "FBBF24" } },
+                    left: { style: "thin", color: { rgb: "FBBF24" } },
+                    right: { style: "thin", color: { rgb: "FBBF24" } },
+                },
+            };
+        case "no-data":
+        default:
+            return {
+                fill: { patternType: "solid", fgColor: { rgb: "111827" } }, // slate
+                font: { color: { rgb: "9CA3AF" } },
+                alignment: { horizontal: "center", vertical: "center" },
+                border: {
+                    top: { style: "thin", color: { rgb: "374151" } },
+                    bottom: { style: "thin", color: { rgb: "374151" } },
+                    left: { style: "thin", color: { rgb: "374151" } },
+                    right: { style: "thin", color: { rgb: "374151" } },
+                },
+            };
+    }
+}
+
+function headerStyle(): XLSX.CellStyle {
+    return {
+        fill: { patternType: "solid", fgColor: { rgb: "0B1220" } },
+        font: { color: { rgb: "E5E7EB" }, bold: true },
+        alignment: { horizontal: "center", vertical: "center", wrapText: true },
+        border: {
+            top: { style: "thin", color: { rgb: "374151" } },
+            bottom: { style: "thin", color: { rgb: "374151" } },
+            left: { style: "thin", color: { rgb: "374151" } },
+            right: { style: "thin", color: { rgb: "374151" } },
+        },
+    };
+}
+
+function rowHeaderStyle(): XLSX.CellStyle {
+    return {
+        fill: { patternType: "solid", fgColor: { rgb: "0F172A" } },
+        font: { color: { rgb: "E5E7EB" }, bold: true },
+        alignment: { horizontal: "left", vertical: "top", wrapText: true },
+        border: {
+            top: { style: "thin", color: { rgb: "374151" } },
+            bottom: { style: "thin", color: { rgb: "374151" } },
+            left: { style: "thin", color: { rgb: "374151" } },
+            right: { style: "thin", color: { rgb: "374151" } },
+        },
     };
 }
 
@@ -454,6 +538,110 @@ export const AlgorithmSeriesErrorMatrix: React.FC<AlgorithmSeriesErrorMatrixProp
             cols={colsAxis}
             maxColsPerPage={maxSeries && maxSeries > 0 ? maxSeries : 0}
             resetKey={`${(experiment as any)?.id ?? "no-exp"}::${precisionFilter ?? "all"}`}
+            export={{
+                fileBaseName: `AlgorithmSeriesErrorMatrix${precisionFilter ? `_${precisionFilter}` : ""}`,
+                enablePng: true,
+                enableXlsx: true,
+                buildWorkbook: ({ rows, cols }) => {
+                    const aoa: any[][] = [];
+
+                    // header row
+                    aoa.push([
+                        "Алгоритм \\ Ряд",
+                        ...cols.map((c) => {
+                            const s = c.meta!;
+                            return `${s.seriesName}\n x=${s.xLabel}\n precision=${s.precision}\n lim=${formatComplex(s.limit)}`;
+                        }),
+                    ]);
+
+                    // data rows
+                    for (const r of rows) {
+                        const algo = r.meta!;
+                        const rowArr: any[] = [];
+                        rowArr.push(
+                            `${algo.algorithmName}\n${algo.m != null ? `m=${String(algo.m)}` : "m=∅"}${
+                                algo.argsSummary ? `\n${algo.argsSummary}` : ""
+                            }`
+                        );
+
+                        for (const c of cols) {
+                            const s = c.meta!;
+                            const cellKey = `${algo.key}||${s.key}`;
+                            const sa = cellMap.get(cellKey);
+
+                            if (!sa) {
+                                rowArr.push("—");
+                                continue;
+                            }
+
+                            const summary = summarizeSeriesAccel(sa);
+                            if (summary.state === "all-ok") rowArr.push("✓");
+                            else if (summary.state === "only-errors") rowArr.push("err");
+                            else if (summary.state === "ok-with-errors") {
+                                rowArr.push(
+                                    summary.firstOkN != null && summary.lastOkN != null
+                                        ? summary.firstOkN === summary.lastOkN
+                                            ? `${summary.firstOkN}`
+                                            : `${summary.firstOkN}-${summary.lastOkN}`
+                                        : "err"
+                                );
+                            } else rowArr.push("—");
+                        }
+
+                        aoa.push(rowArr);
+                    }
+
+                    const ws = XLSX.utils.aoa_to_sheet(aoa);
+
+                    // column widths
+                    ws["!cols"] = [{ wch: 40 }, ...cols.map(() => ({ wch: 18 }))];
+
+                    // row heights (под повёрнутые заголовки в UI это не 1:1, но читаемо)
+                    ws["!rows"] = [{ hpt: 48 }, ...rows.map(() => ({ hpt: 36 }))];
+
+                    // styles
+                    const range = XLSX.utils.decode_range(ws["!ref"] || "A1:A1");
+
+                    // header row (row 0)
+                    for (let C = range.s.c; C <= range.e.c; C++) {
+                        const addr = XLSX.utils.encode_cell({ r: 0, c: C });
+                        if (!ws[addr]) continue;
+                        ws[addr].s = headerStyle();
+                    }
+
+                    // first column (row headers)
+                    for (let R = 1; R <= range.e.r; R++) {
+                        const addr = XLSX.utils.encode_cell({ r: R, c: 0 });
+                        if (!ws[addr]) continue;
+                        ws[addr].s = rowHeaderStyle();
+                    }
+
+                    // data cells
+                    for (let R = 1; R <= range.e.r; R++) {
+                        for (let C = 1; C <= range.e.c; C++) {
+                            const addr = XLSX.utils.encode_cell({ r: R, c: C });
+                            const cell = ws[addr];
+                            if (!cell) continue;
+
+                            const algo = rows[R - 1]?.meta!;
+                            const s = cols[C - 1]?.meta!;
+                            const cellKey = `${algo.key}||${s.key}`;
+                            const sa = cellMap.get(cellKey);
+
+                            if (!sa) {
+                                cell.s = cellStyleByState("no-data");
+                                continue;
+                            }
+                            const summary = summarizeSeriesAccel(sa);
+                            cell.s = cellStyleByState(summary.state);
+                        }
+                    }
+
+                    const wb = XLSX.utils.book_new();
+                    XLSX.utils.book_append_sheet(wb, ws, "Matrix");
+                    return wb;
+                },
+            }}
             className="space-y-2"
             renderTitle={() => "Матрица ошибок: алгоритмы × ряды"}
             renderSubtitle={() =>
@@ -492,7 +680,6 @@ export const AlgorithmSeriesErrorMatrix: React.FC<AlgorithmSeriesErrorMatrixProp
                     ) : null}
                 </div>
             )}
-            // Matrix props
             enableInnerScroll
             maxBodyHeight="70vh"
             stickyHeaders

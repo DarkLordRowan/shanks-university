@@ -1,14 +1,16 @@
-// AlgorithmSeriesDiffHeatmap.tsx
+// src/widgets/AlgorithmSeriesDiffHeatmap.tsx
 
 import { useEffect, useMemo, useState } from "react";
 import type {
+    Accel,
+    AccelArgs,
     Experiment,
     Series,
-    Accel,
-    SeriesArgs,
-    AccelArgs,
     SeriesAccel,
+    SeriesArgs,
 } from "@/entities/experiment/model/experiment";
+import { MatrixPaged } from "@/shared/ui/Matrix/MatrixPaged";
+import type { MatrixAxisItem, MatrixProps } from "@/shared/ui/Matrix/Matrix";
 
 type SeriesKey = string;
 type AlgoKey = string;
@@ -35,9 +37,7 @@ interface AlgoInfo {
 type Scalar = number | string | boolean | null;
 
 function toSortableNumber(v: Scalar): number | null {
-    if (typeof v === "number") {
-        return Number.isFinite(v) ? v : null;
-    }
+    if (typeof v === "number") return Number.isFinite(v) ? v : null;
     if (typeof v === "string") {
         const n = Number(v);
         return Number.isFinite(n) ? n : null;
@@ -47,13 +47,8 @@ function toSortableNumber(v: Scalar): number | null {
 
 function parseX(args: SeriesArgs | null): { xLabel: string; xSort: number | null } {
     const raw = args?.x as Scalar | undefined;
-    if (raw == null) {
-        return { xLabel: "∅", xSort: null };
-    }
-    return {
-        xLabel: String(raw),
-        xSort: toSortableNumber(raw),
-    };
+    if (raw == null) return { xLabel: "∅", xSort: null };
+    return { xLabel: String(raw), xSort: toSortableNumber(raw) };
 }
 
 function nonNullEntries<T extends Record<string, unknown>>(obj: T | null | undefined) {
@@ -94,22 +89,15 @@ const RED_BY_LEVEL: Record<"huge" | "big" | "mid" | "small", string> = {
 
 type SideState = "none" | "ok" | "err0" | "errN";
 
-/**
- * Нормализация состояния стороны.
- */
+/** Нормализация состояния стороны. */
 function sideState(hasCell: boolean, hasErr: boolean, n: number | null): SideState {
     if (!hasCell) return "none";
     if (!hasErr) return "ok";
-
-    if (n == null || !Number.isFinite(n) || n <= 0) {
-        return "err0";
-    }
+    if (n == null || !Number.isFinite(n) || n <= 0) return "err0";
     return "errN";
 }
 
-/**
- * Полная классификация по всем случаям.
- */
+/** Полная классификация по всем случаям. */
 export function classifyErrorChangeFull(
     hasPrevCell: boolean,
     hasNextCell: boolean,
@@ -123,8 +111,6 @@ export function classifyErrorChangeFull(
 
     const p = statePrev === "errN" || statePrev === "err0" ? (nPrev ?? 0) : null;
     const q = stateNext === "errN" || stateNext === "err0" ? (nNext ?? 0) : null;
-
-    // none / none / появления / исчезновения
 
     if (statePrev === "none" && stateNext === "none") {
         return {
@@ -165,8 +151,6 @@ export function classifyErrorChangeFull(
             label: "пара исчезла, раньше была с ошибкой",
         };
     }
-
-    // обе стороны существуют
 
     if (statePrev === "ok" && stateNext === "ok") {
         return {
@@ -216,8 +200,6 @@ export function classifyErrorChangeFull(
         };
     }
 
-    // errN → errN
-
     const n1 = p ?? 0;
     const n2 = q ?? 0;
 
@@ -259,23 +241,15 @@ interface ErrorSideInfo {
 }
 
 function extractErrorInfo(sa: SeriesAccel | null | undefined): ErrorSideInfo {
-    if (!sa) {
-        return { hasCell: false, hasErr: false, n: null };
-    }
+    if (!sa) return { hasCell: false, hasErr: false, n: null };
 
     const errors = sa.errors ?? [];
-    if (errors.length === 0) {
-        return { hasCell: true, hasErr: false, n: null };
-    }
+    if (errors.length === 0) return { hasCell: true, hasErr: false, n: null };
 
     const ns = errors.map((e) => e.n).filter((n) => typeof n === "number" && Number.isFinite(n));
+    if (ns.length === 0) return { hasCell: true, hasErr: true, n: null };
 
-    if (ns.length === 0) {
-        return { hasCell: true, hasErr: true, n: null };
-    }
-
-    const nMin = Math.min(...ns);
-    return { hasCell: true, hasErr: true, n: nMin };
+    return { hasCell: true, hasErr: true, n: Math.min(...ns) };
 }
 
 /* ------------ дифф по (prevPrecision, nextPrecision) ------------ */
@@ -286,6 +260,8 @@ interface DiffRecord {
 }
 
 type Side = "prev" | "next";
+
+/* ------------ component ------------ */
 
 export function AlgorithmSeriesDiffHeatmap({
     experiment,
@@ -310,20 +286,15 @@ export function AlgorithmSeriesDiffHeatmap({
 
         const precisionsOrder: string[] = [];
         for (const s of seriesRaw) {
-            if (!precisionsOrder.includes(s.precision)) {
-                precisionsOrder.push(s.precision);
-            }
+            if (!precisionsOrder.includes(s.precision)) precisionsOrder.push(s.precision);
         }
 
         return { seriesRaw, accelRaw, seriesAccelRaw, precisionsOrder };
     }, [experiment]);
 
-    /* выбранные precision */
-
     const [prevPrecision, setPrevPrecision] = useState<string | null>(null);
     const [nextPrecision, setNextPrecision] = useState<string | null>(null);
 
-    // при смене доступных precision — нормализуем выбор
     useEffect(() => {
         if (precisionsOrder.length === 0) {
             setPrevPrecision(null);
@@ -331,21 +302,18 @@ export function AlgorithmSeriesDiffHeatmap({
             return;
         }
 
-        setPrevPrecision((old) => {
-            if (old && precisionsOrder.includes(old)) return old;
-            return precisionsOrder[0] ?? null;
-        });
-
-        setNextPrecision((old) => {
-            if (old && precisionsOrder.includes(old)) return old;
-            return precisionsOrder[1] ?? precisionsOrder[0] ?? null;
-        });
+        setPrevPrecision((old) =>
+            old && precisionsOrder.includes(old) ? old : (precisionsOrder[0] ?? null)
+        );
+        setNextPrecision((old) =>
+            old && precisionsOrder.includes(old)
+                ? old
+                : (precisionsOrder[1] ?? precisionsOrder[0] ?? null)
+        );
     }, [precisionsOrder]);
 
-    /* вычисление матрицы диффа под выбранную пару precision */
-
     const { seriesList, algoList, diffMap } = useMemo(() => {
-        const resultEmpty = {
+        const empty = {
             seriesList: [] as SeriesInfo[],
             algoList: [] as AlgoInfo[],
             diffMap: new Map<string, DiffRecord>(),
@@ -359,7 +327,7 @@ export function AlgorithmSeriesDiffHeatmap({
             !nextPrecision ||
             prevPrecision === nextPrecision
         ) {
-            return resultEmpty;
+            return empty;
         }
 
         const seriesGroups = new Map<
@@ -370,11 +338,9 @@ export function AlgorithmSeriesDiffHeatmap({
             }
         >();
 
-        // группируем ряды по (name,x), но только с выбранными precision
+        // группируем ряды по (name,x), только выбранные precision
         for (const s of seriesRaw) {
-            if (s.precision !== prevPrecision && s.precision !== nextPrecision) {
-                continue;
-            }
+            if (s.precision !== prevPrecision && s.precision !== nextPrecision) continue;
 
             const { xLabel, xSort } = parseX(s.args ?? null);
             const baseKey: SeriesKey = `${s.name}||x=${xLabel}`;
@@ -383,38 +349,26 @@ export function AlgorithmSeriesDiffHeatmap({
             let group = seriesGroups.get(baseKey);
             if (!group) {
                 group = {
-                    info: {
-                        key: baseKey,
-                        seriesName: s.name,
-                        xLabel,
-                        xSort,
-                    },
+                    info: { key: baseKey, seriesName: s.name, xLabel, xSort },
                     bySide: {},
                 };
                 seriesGroups.set(baseKey, group);
             }
-
             group.bySide[side] = { seriesId: s.id };
         }
 
-        if (seriesGroups.size === 0) {
-            return resultEmpty;
-        }
+        if (seriesGroups.size === 0) return empty;
 
         const seriesIdMeta = new Map<string, { side: Side; baseKey: SeriesKey }>();
         for (const [baseKey, group] of seriesGroups.entries()) {
             for (const side of ["prev", "next"] as Side[]) {
                 const meta = group.bySide[side];
-                if (meta) {
-                    seriesIdMeta.set(meta.seriesId, { side, baseKey });
-                }
+                if (meta) seriesIdMeta.set(meta.seriesId, { side, baseKey });
             }
         }
 
         const accelById = new Map<string, Accel>();
-        for (const a of accelRaw) {
-            accelById.set(a.id, a);
-        }
+        for (const a of accelRaw) accelById.set(a.id, a);
 
         const algoMap = new Map<AlgoKey, AlgoInfo>();
         const diffMap = new Map<string, DiffRecord>();
@@ -451,11 +405,8 @@ export function AlgorithmSeriesDiffHeatmap({
             }
 
             const info = extractErrorInfo(sa);
-            if (side === "prev") {
-                rec.prev = info;
-            } else {
-                rec.next = info;
-            }
+            if (side === "prev") rec.prev = info;
+            else rec.next = info;
         }
 
         const seriesList = Array.from(seriesGroups.values())
@@ -481,42 +432,157 @@ export function AlgorithmSeriesDiffHeatmap({
         return { seriesList, algoList, diffMap };
     }, [seriesRaw, accelRaw, seriesAccelRaw, prevPrecision, nextPrecision]);
 
-    const [page, setPage] = useState(0);
+    const rowsAxis: MatrixAxisItem<AlgoInfo>[] = useMemo(
+        () => algoList.map((a) => ({ id: a.key, meta: a })),
+        [algoList]
+    );
 
-    const pageSize = maxSeries && maxSeries > 0 ? maxSeries : seriesList.length || 1;
+    const colsAxis: MatrixAxisItem<SeriesInfo>[] = useMemo(
+        () => seriesList.map((s) => ({ id: s.key, meta: s })),
+        [seriesList]
+    );
 
-    const totalPages = Math.max(1, Math.ceil((seriesList.length || 1) / pageSize));
+    const renderRowHeader: MatrixProps<AlgoInfo, SeriesInfo>["renderRowHeader"] = (row) => {
+        const algo = row.meta!;
+        return (
+            <div
+                className="whitespace-pre leading-tight"
+                title={(() => {
+                    const lines: string[] = [];
+                    lines.push(`Алгоритм: ${algo.algorithmName}`);
+                    lines.push(`m = ${algo.m != null ? String(algo.m) : "∅"}`);
+                    const entries = nonNullEntries(algo.algorithmArgs);
+                    if (entries.length > 0) {
+                        lines.push("Аргументы:");
+                        for (const [k, v] of entries.sort(([a], [b]) => a.localeCompare(b))) {
+                            lines.push(`  ${k}: ${v}`);
+                        }
+                    }
+                    return lines.join("\n");
+                })()}
+            >
+                <span className="block max-w-[160px] truncate">{algo.algorithmName}</span>
+                <span className="text-[9px] text-textDim/70">
+                    {algo.m != null ? `m=${String(algo.m)}` : "m=∅"}
+                </span>
+                {algo.argsSummary && (
+                    <div className="mt-[1px] max-w-[160px] truncate text-[8px] text-textDim/60">
+                        {algo.argsSummary}
+                    </div>
+                )}
+            </div>
+        );
+    };
 
-    useEffect(() => {
-        if (page > totalPages - 1) {
-            setPage(totalPages - 1);
+    const renderColHeader: MatrixProps<AlgoInfo, SeriesInfo>["renderColHeader"] = (col) => {
+        const s = col.meta!;
+        return (
+            <div
+                className="relative h-28 w-[40px] flex items-center justify-center"
+                title={`${s.seriesName}\n x = ${s.xLabel}`}
+            >
+                <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rotate-[-90deg] whitespace-nowrap text-[9px] leading-tight">
+                    {s.seriesName}
+                </span>
+                <span className="absolute bottom-1 text-[8px] text-textDim/70">x={s.xLabel}</span>
+            </div>
+        );
+    };
+
+    const renderCell: MatrixProps<AlgoInfo, SeriesInfo>["renderCell"] = (row, col) => {
+        const algo = row.meta!;
+        const s = col.meta!;
+        const cellKey = `${algo.key}||${s.key}`;
+        const rec = diffMap.get(cellKey);
+
+        const prevInfo = rec?.prev ?? { hasCell: false, hasErr: false, n: null };
+        const nextInfo = rec?.next ?? { hasCell: false, hasErr: false, n: null };
+
+        const { bgClass, borderClass, label } = classifyErrorChangeFull(
+            prevInfo.hasCell,
+            nextInfo.hasCell,
+            prevInfo.hasErr,
+            prevInfo.n,
+            nextInfo.hasErr,
+            nextInfo.n
+        );
+
+        let deltaText: string;
+
+        if (!prevInfo.hasCell && !nextInfo.hasCell) deltaText = "∅ / ∅";
+        else if (!prevInfo.hasCell && nextInfo.hasCell) deltaText = "∅ → …";
+        else if (prevInfo.hasCell && !nextInfo.hasCell) deltaText = "… → ∅";
+        else if (!prevInfo.hasErr && !nextInfo.hasErr) deltaText = "ok → ok";
+        else if (prevInfo.hasErr && !nextInfo.hasErr) deltaText = "err → ok";
+        else if (!prevInfo.hasErr && nextInfo.hasErr) deltaText = "ok → err";
+        else if (prevInfo.n != null && nextInfo.n != null) {
+            const delta = nextInfo.n - prevInfo.n;
+            deltaText = `n: ${prevInfo.n} → ${nextInfo.n} (Δ=${delta >= 0 ? "+" : ""}${delta})`;
+        } else {
+            deltaText = `n: ${prevInfo.n ?? "∅"} → ${nextInfo.n ?? "∅"}`;
         }
-    }, [page, totalPages]);
 
-    const startIndex = page * pageSize;
-    const endIndex = startIndex + pageSize;
-    const seriesListShown =
-        maxSeries && maxSeries > 0 ? seriesList.slice(startIndex, endIndex) : seriesList;
+        const tooltipLines: string[] = [];
+        tooltipLines.push(`Ряд: ${s.seriesName}, x=${s.xLabel}`);
+        tooltipLines.push(`Алгоритм: ${algo.algorithmName}, m=${algo.m ?? "∅"}`);
+        tooltipLines.push("");
 
-    /* ------------ рендер ------------ */
+        tooltipLines.push(
+            `Старый precision (${prevPrecision ?? "?"}): ${
+                prevInfo.hasCell
+                    ? prevInfo.hasErr
+                        ? prevInfo.n != null
+                            ? `ошибка, n=${prevInfo.n}`
+                            : "ошибка, n неизвестно"
+                        : "ошибки нет"
+                    : "нет пары"
+            }`
+        );
+        tooltipLines.push(
+            `Новый precision (${nextPrecision ?? "?"}): ${
+                nextInfo.hasCell
+                    ? nextInfo.hasErr
+                        ? nextInfo.n != null
+                            ? `ошибка, n=${nextInfo.n}`
+                            : "ошибка, n неизвестно"
+                        : "ошибки нет"
+                    : "нет пары"
+            }`
+        );
+
+        tooltipLines.push("");
+        tooltipLines.push(label);
+
+        return (
+            <div
+                title={tooltipLines.join("\n")}
+                className={`w-full h-full border px-[2px] py-[2px] text-center text-[10px] cursor-default ${borderClass} ${bgClass}`}
+            >
+                <div className="leading-tight">
+                    <div className="text-[9px]">{deltaText}</div>
+                </div>
+            </div>
+        );
+    };
+
+    const totalAlgos = algoList.length;
+    const totalSeries = seriesList.length;
 
     return (
-        <div className="space-y-2">
-            <div className="flex items-center justify-between text-xs text-textDim">
-                <div className="flex flex-col gap-1">
-                    <h2 className="text-sm font-semibold text-textDim">
-                        Хитмапа разницы по шагам ошибок: алгоритмы × ряды
-                    </h2>
-                    {prevPrecision && nextPrecision && prevPrecision !== nextPrecision && (
-                        <div className="text-[10px] text-textDim/80">
-                            precision: {prevPrecision} → {nextPrecision}
-                        </div>
-                    )}
-                </div>
-
-                <div className="flex items-center gap-3">
-                    {/* выбор precision */}
-                    <div className="flex items-center gap-2 text-[10px]">
+        <MatrixPaged<AlgoInfo, SeriesInfo>
+            rows={rowsAxis}
+            cols={colsAxis}
+            maxColsPerPage={maxSeries && maxSeries > 0 ? maxSeries : 0}
+            resetKey={`${(experiment as any)?.id ?? "no-exp"}::${prevPrecision ?? "∅"}->${nextPrecision ?? "∅"}`}
+            renderTitle={() => "Хитмапа разницы по шагам ошибок: алгоритмы × ряды"}
+            renderSubtitle={() =>
+                prevPrecision && nextPrecision && prevPrecision !== nextPrecision
+                    ? `precision: ${prevPrecision} → ${nextPrecision}`
+                    : "precision: —"
+            }
+            renderHeaderRight={({ page, totalPages, startIndex, endIndex }) => (
+                <div className="flex items-center gap-3 text-[10px] text-textDim">
+                    <div className="flex items-center gap-2">
                         <label className="flex items-center gap-1">
                             <span>precision₁:</span>
                             <select
@@ -550,216 +616,37 @@ export function AlgorithmSeriesDiffHeatmap({
                         </label>
                     </div>
 
-                    <div>
-                        Алгоритмы: {algoList.length} · Ряды: {seriesListShown.length} из{" "}
-                        {seriesList.length}
+                    <div className="whitespace-nowrap">
+                        Алгоритмы: {totalAlgos} · Ряды:{" "}
+                        {Math.min(endIndex, totalSeries) - startIndex} из {totalSeries}
                     </div>
 
-                    {maxSeries && maxSeries > 0 && seriesList.length > maxSeries && (
-                        <div className="flex items-center gap-1 text-[10px]">
-                            <button
-                                type="button"
-                                className="rounded border border-border bg-surface px-1 py-[1px] disabled:opacity-40 hover:bg-panel"
-                                onClick={() => setPage(0)}
-                                disabled={page === 0}
-                            >
-                                «
-                            </button>
-                            <button
-                                type="button"
-                                className="rounded border border-border bg-surface px-1 py-[1px] disabled:opacity-40 hover:bg-panel"
-                                onClick={() => setPage((p) => Math.max(0, p - 1))}
-                                disabled={page === 0}
-                            >
-                                ‹
-                            </button>
-                            <span className="px-1">
-                                стр. {page + 1} / {totalPages}
-                            </span>
-                            <span className="text-textDim/60">
-                                колонки {startIndex + 1}–{Math.min(endIndex, seriesList.length)}
-                            </span>
-                            <button
-                                type="button"
-                                className="rounded border border-border bg-surface px-1 py-[1px] disabled:opacity-40 hover:bg-panel"
-                                onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
-                                disabled={page >= totalPages - 1}
-                            >
-                                ›
-                            </button>
-                            <button
-                                type="button"
-                                className="rounded border border-border bg-surface px-1 py-[1px] disabled:opacity-40 hover:bg-panel"
-                                onClick={() => setPage(totalPages - 1)}
-                                disabled={page >= totalPages - 1}
-                            >
-                                »
-                            </button>
+                    {totalPages > 1 ? (
+                        <div className="text-textDim/60 whitespace-nowrap">
+                            стр. {page + 1}/{totalPages} · колонки {startIndex + 1}–{endIndex}
                         </div>
-                    )}
+                    ) : null}
                 </div>
-            </div>
-
-            <div className="overflow-auto rounded-xl2 border border-border bg-panel shadow-panel">
-                <table className="border-collapse text-[10px] leading-tight text-textDim">
-                    <thead className="bg-surface/80">
-                        <tr>
-                            <th className="sticky left-0 top-0 z-20 border border-border bg-surface/90 px-1 py-1 text-left align-bottom text-[10px]">
-                                Алгоритм \ Ряд
-                            </th>
-
-                            {seriesListShown.map((s) => (
-                                <th
-                                    key={s.key}
-                                    className="border border-border px-0 py-0 text-center align-bottom"
-                                    title={`${s.seriesName}\n x = ${s.xLabel}`}
-                                >
-                                    <div className="relative h-28 w-[40px] flex items-center justify-center">
-                                        <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rotate-[-90deg] whitespace-nowrap text-[9px] leading-tight">
-                                            {s.seriesName}
-                                        </span>
-                                        <span className="absolute bottom-1 text-[8px] text-textDim/70">
-                                            x={s.xLabel}
-                                        </span>
-                                    </div>
-                                </th>
-                            ))}
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {algoList.map((algo) => (
-                            <tr key={algo.key}>
-                                <th
-                                    className="sticky left-0 z-10 border border-border bg-panel px-1 py-[2px] text-left align-top"
-                                    title={(() => {
-                                        const lines: string[] = [];
-                                        lines.push(`Алгоритм: ${algo.algorithmName}`);
-                                        lines.push(`m = ${algo.m != null ? String(algo.m) : "∅"}`);
-                                        const entries = nonNullEntries(algo.algorithmArgs);
-                                        if (entries.length > 0) {
-                                            lines.push("Аргументы:");
-                                            for (const [k, v] of entries.sort(([a], [b]) =>
-                                                a.localeCompare(b)
-                                            )) {
-                                                lines.push(`  ${k}: ${v}`);
-                                            }
-                                        }
-                                        return lines.join("\n");
-                                    })()}
-                                >
-                                    <div className="whitespace-pre leading-tight">
-                                        <span className="block max-w-[150px] truncate">
-                                            {algo.algorithmName}
-                                        </span>
-                                        <span className="text-[9px] text-textDim/70">
-                                            {algo.m != null ? `m=${String(algo.m)}` : "m=∅"}
-                                        </span>
-                                        {algo.argsSummary && (
-                                            <div className="mt-[1px] max-w-[150px] truncate text-[8px] text-textDim/60">
-                                                {algo.argsSummary}
-                                            </div>
-                                        )}
-                                    </div>
-                                </th>
-
-                                {seriesListShown.map((s) => {
-                                    const cellKey = `${algo.key}||${s.key}`;
-                                    const rec = diffMap.get(cellKey);
-
-                                    const prevInfo = rec?.prev ?? {
-                                        hasCell: false,
-                                        hasErr: false,
-                                        n: null,
-                                    };
-                                    const nextInfo = rec?.next ?? {
-                                        hasCell: false,
-                                        hasErr: false,
-                                        n: null,
-                                    };
-
-                                    const { bgClass, borderClass, label } = classifyErrorChangeFull(
-                                        prevInfo.hasCell,
-                                        nextInfo.hasCell,
-                                        prevInfo.hasErr,
-                                        prevInfo.n,
-                                        nextInfo.hasErr,
-                                        nextInfo.n
-                                    );
-
-                                    let deltaText: string;
-
-                                    if (!prevInfo.hasCell && !nextInfo.hasCell) {
-                                        deltaText = "∅ / ∅";
-                                    } else if (!prevInfo.hasCell && nextInfo.hasCell) {
-                                        deltaText = "∅ → …";
-                                    } else if (prevInfo.hasCell && !nextInfo.hasCell) {
-                                        deltaText = "… → ∅";
-                                    } else if (!prevInfo.hasErr && !nextInfo.hasErr) {
-                                        deltaText = "ok → ok";
-                                    } else if (prevInfo.hasErr && !nextInfo.hasErr) {
-                                        deltaText = "err → ok";
-                                    } else if (!prevInfo.hasErr && nextInfo.hasErr) {
-                                        deltaText = "ok → err";
-                                    } else if (prevInfo.n != null && nextInfo.n != null) {
-                                        const delta = nextInfo.n - prevInfo.n;
-                                        deltaText = `n: ${prevInfo.n} → ${nextInfo.n} (Δ=${delta >= 0 ? "+" : ""}${delta})`;
-                                    } else {
-                                        deltaText = `n: ${prevInfo.n ?? "∅"} → ${nextInfo.n ?? "∅"}`;
-                                    }
-
-                                    const tooltipLines: string[] = [];
-
-                                    tooltipLines.push(`Ряд: ${s.seriesName}, x=${s.xLabel}`);
-                                    tooltipLines.push(
-                                        `Алгоритм: ${algo.algorithmName}, m=${algo.m ?? "∅"}`
-                                    );
-                                    tooltipLines.push("");
-
-                                    tooltipLines.push(
-                                        `Старый precision (${prevPrecision ?? "?"}): ${
-                                            prevInfo.hasCell
-                                                ? prevInfo.hasErr
-                                                    ? prevInfo.n != null
-                                                        ? `ошибка, n=${prevInfo.n}`
-                                                        : "ошибка, n неизвестно"
-                                                    : "ошибки нет"
-                                                : "нет пары"
-                                        }`
-                                    );
-                                    tooltipLines.push(
-                                        `Новый precision (${nextPrecision ?? "?"}): ${
-                                            nextInfo.hasCell
-                                                ? nextInfo.hasErr
-                                                    ? nextInfo.n != null
-                                                        ? `ошибка, n=${nextInfo.n}`
-                                                        : "ошибка, n неизвестно"
-                                                    : "ошибки нет"
-                                                : "нет пары"
-                                        }`
-                                    );
-
-                                    tooltipLines.push("");
-                                    tooltipLines.push(label);
-
-                                    const title = tooltipLines.join("\n");
-
-                                    return (
-                                        <td
-                                            key={cellKey}
-                                            title={title}
-                                            className={`min-w-[30px] border px-[2px] py-[2px] text-center text-[10px] cursor-default ${borderClass} ${bgClass}`}
-                                        >
-                                            <div className="leading-tight">
-                                                <div className="text-[9px]">{deltaText}</div>
-                                            </div>
-                                        </td>
-                                    );
-                                })}
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
-        </div>
+            )}
+            // Matrix props
+            enableInnerScroll
+            maxBodyHeight="70vh"
+            stickyHeaders
+            rowWidth={220}
+            colWidth={40}
+            className="rounded-xl2 border border-border bg-panel shadow-panel"
+            tableClassName="border-separate border-spacing-0"
+            thClassName="bg-surface/90"
+            tdClassName="p-0"
+            renderCorner={() => <span className="text-left">Алгоритм \ Ряд</span>}
+            renderRowHeader={renderRowHeader}
+            renderColHeader={renderColHeader}
+            renderCell={renderCell}
+            emptyFallback={
+                <div className="rounded-xl2 border border-border bg-panel p-3 text-[11px] text-textDim/70">
+                    Нет данных
+                </div>
+            }
+        />
     );
 }
