@@ -31,8 +31,6 @@ export const MatrixExportWrapper: React.FC<MatrixExportWrapperProps> = ({
     const [noInnerScroll, setNoInnerScroll] = useState(false);
     const [noSticky, setNoSticky] = useState(false);
 
-    /* ---------- PNG ---------- */
-
     const exportPng = useCallback(async () => {
         if (exporting) return;
         const node = captureRef.current;
@@ -46,26 +44,48 @@ export const MatrixExportWrapper: React.FC<MatrixExportWrapperProps> = ({
             setNoSticky(true);
 
             await new Promise<void>((r) => requestAnimationFrame(() => r()));
+            await new Promise<void>((r) => requestAnimationFrame(() => r()));
             setProgress(25);
 
             const table = node.querySelector("table") as HTMLTableElement | null;
 
-            const prevOverflow = node.style.overflow;
-            const prevWidth = node.style.width;
+            const prevNodeOverflow = node.style.overflow;
+            const prevNodeWidth = node.style.width;
+
             const prevTableWidth = table?.style.width ?? "";
+            const prevTableMinWidth = table?.style.minWidth ?? "";
 
             node.style.overflow = "visible";
+
             if (table) {
-                table.style.width = `${table.scrollWidth}px`;
+                const fullW = Math.ceil(table.scrollWidth) + 2;
+                table.style.width = `${fullW}px`;
+                table.style.minWidth = `${fullW}px`;
             } else {
-                node.style.width = `${node.scrollWidth}px`;
+                const fullW = Math.ceil(node.scrollWidth) + 2;
+                node.style.width = `${fullW}px`;
             }
 
+            await new Promise<void>((r) => requestAnimationFrame(() => r()));
             setProgress(50);
 
+            const targetEl: HTMLElement = (table ?? node) as HTMLElement;
+
+            const targetWidth = Math.ceil(targetEl.scrollWidth) + 2;
+            const targetHeight = Math.ceil(targetEl.scrollHeight) + 2;
+
             const dataUrl = await htmlToImage.toPng(node, {
-                pixelRatio: window.devicePixelRatio || 2,
                 cacheBust: true,
+                pixelRatio: window.devicePixelRatio || 2,
+
+                width: targetWidth,
+                height: targetHeight,
+
+                style: {
+                    overflow: "visible",
+                    width: `${targetWidth}px`,
+                    height: `${targetHeight}px`,
+                },
             });
 
             setProgress(90);
@@ -77,11 +97,17 @@ export const MatrixExportWrapper: React.FC<MatrixExportWrapperProps> = ({
             a.click();
             document.body.removeChild(a);
 
-            node.style.overflow = prevOverflow;
-            node.style.width = prevWidth;
-            if (table) table.style.width = prevTableWidth;
-
             setProgress(100);
+
+            node.style.overflow = prevNodeOverflow;
+            node.style.width = prevNodeWidth;
+            if (table) {
+                table.style.width = prevTableWidth;
+                table.style.minWidth = prevTableMinWidth;
+            }
+        } catch (e) {
+            console.error("PNG export failed", e);
+            setProgress(null);
         } finally {
             setTimeout(() => {
                 setExporting(false);
@@ -91,8 +117,6 @@ export const MatrixExportWrapper: React.FC<MatrixExportWrapperProps> = ({
             }, 250);
         }
     }, [exporting, fileBaseName]);
-
-    /* ---------- XLSX ---------- */
 
     const exportXlsx = useCallback(() => {
         const wb = buildWorkbook();
