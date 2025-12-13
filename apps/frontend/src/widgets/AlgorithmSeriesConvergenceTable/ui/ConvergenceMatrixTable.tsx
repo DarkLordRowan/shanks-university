@@ -1,5 +1,6 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import * as htmlToImage from "html-to-image";
+// ConvergenceMatrixTable.tsx
+
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import * as XLSX from "xlsx-js-style";
 import {
     type ConvergenceMatrix,
@@ -12,7 +13,8 @@ import {
     formatSideShort,
     nonNullEntries,
 } from "../model/convergenceUtils";
-import { StickyTable } from "@/shared/ui/StickyTable";
+import { Matrix, type MatrixAxisItem } from "@/shared/ui/Matrix/Matrix";
+import { MatrixExportWrapper } from "@/shared/ui/Matrix/MatrixExportWrapper";
 
 interface ConvergenceMatrixTableProps {
     matrix: ConvergenceMatrix;
@@ -26,6 +28,103 @@ export function getConvergenceCellDomId(accelId: string, seriesId: string): stri
     return `conv-cell-${accelId}::${seriesId}`;
 }
 
+type ColorClass = "green" | "blue" | "yellow" | "red" | "neutral";
+
+function isMonotone(mon: MonotonicityType): boolean {
+    return (
+        mon === "strict_decreasing_error" ||
+        mon === "non_increasing_error" ||
+        mon === "constant_error"
+    );
+}
+
+function describeClass(side: SideType, mon: MonotonicityType): string {
+    const mono = isMonotone(mon);
+
+    if (side === "one_sided" && mono) return "односторонний и монотонный";
+    if (side === "one_sided" && !mono) return "односторонний и немонотонный";
+    if (side === "two_sided" && mono) return "двусторонний и монотонный";
+    if (side === "two_sided" && !mono) return "двусторонний и немонотонный";
+
+    if (side === "no_limit") return "предел не просматривается";
+    if (mon === "not_enough_data") return "недостаточно данных по ошибке";
+
+    return "тип не определён";
+}
+
+function formatIntervals(ns: number[], maxRanges = 5): string {
+    if (!ns.length) return "—";
+
+    const sorted = Array.from(new Set(ns)).sort((a, b) => a - b);
+
+    const ranges: Array<{ start: number; end: number }> = [];
+    let start = sorted[0];
+    let prev = sorted[0];
+
+    for (let i = 1; i < sorted.length; i++) {
+        const x = sorted[i];
+        if (x === prev + 1) {
+            prev = x;
+            continue;
+        }
+        ranges.push({ start, end: prev });
+        start = x;
+        prev = x;
+    }
+    ranges.push({ start, end: prev });
+
+    const parts = ranges
+        .slice(0, maxRanges)
+        .map((r) => (r.start === r.end ? `${r.start}` : `${r.start}–${r.end}`));
+
+    if (ranges.length > maxRanges) {
+        parts.push("…");
+    }
+
+    return parts.join(", ");
+}
+
+function getCellColorClass(side: SideType, mon: MonotonicityType, selected: boolean): string {
+    const sel = selected ? " ring-2 ring-accent ring-offset-1 ring-offset-surface" : "";
+
+    if (side === "no_limit" || mon === "not_enough_data" || mon === "no_limit") {
+        return "border-border/60 text-textDim/70 bg-surface/30 hover:bg-surface/40" + sel;
+    }
+
+    const mono = isMonotone(mon);
+
+    if (side === "one_sided" && mono) {
+        return "border-border text-textDim bg-emerald-500/25 hover:bg-emerald-500/35" + sel;
+    }
+    if (side === "one_sided" && !mono) {
+        return "border-border text-textDim bg-sky-500/25 hover:bg-sky-500/35" + sel;
+    }
+
+    if (side === "two_sided" && mono) {
+        return "border-border text-textDim bg-amber-300/35 hover:bg-amber-300/45" + sel;
+    }
+    if (side === "two_sided" && !mono) {
+        return "border-border text-textDim bg-red-500/30 hover:bg-red-500/40" + sel;
+    }
+
+    return "border-border text-textDim bg-surface/40 hover:bg-surface/50" + sel;
+}
+
+function classifyColor(side: SideType, mon: MonotonicityType): ColorClass {
+    if (side === "no_limit" || mon === "not_enough_data" || mon === "no_limit") {
+        return "neutral";
+    }
+
+    const mono = isMonotone(mon);
+
+    if (side === "one_sided" && mono) return "green";
+    if (side === "one_sided" && !mono) return "blue";
+    if (side === "two_sided" && mono) return "yellow";
+    if (side === "two_sided" && !mono) return "red";
+
+    return "neutral";
+}
+
 export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
     matrix,
     maxSeries,
@@ -35,12 +134,6 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
     const rawSeriesList = matrix.seriesList ?? [];
     const algoList = matrix.algoList ?? [];
     const cells = matrix.cells ?? {};
-
-    const stickyWrapperRef = useRef<HTMLDivElement | null>(null);
-
-    const [exportProgress, setExportProgress] = useState<number | null>(null);
-    const [isExporting, setIsExporting] = useState(false);
-    const [exportNoScroll, setExportNoScroll] = useState(false);
 
     const thresholds = useMemo(() => {
         let maxSignChanges = 0;
@@ -58,7 +151,6 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
                 typeof analysis.growthViolationsCount === "number"
                     ? analysis.growthViolationsCount
                     : 0;
-
             if (violationsRaw > maxViolations) maxViolations = violationsRaw;
         }
 
@@ -112,88 +204,26 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
     const endIndex = Math.min(startIndex + pageSize, seriesList.length);
     const seriesSlice = seriesList.slice(startIndex, endIndex);
 
-    const handleExportPng = useCallback(async () => {
-        if (isExporting) return;
-        const node = stickyWrapperRef.current;
-        if (!node) return;
+    const rows: MatrixAxisItem<{ algoIndex: number }>[] = useMemo(
+        () => algoList.map((a, i) => ({ id: a.key, meta: { algoIndex: i } })),
+        [algoList]
+    );
 
-        setIsExporting(true);
-        setExportProgress(5);
+    const cols: MatrixAxisItem<{ seriesIndex: number }>[] = useMemo(
+        () => seriesSlice.map((s, j) => ({ id: s.key, meta: { seriesIndex: startIndex + j } })),
+        [seriesSlice, startIndex]
+    );
 
-        try {
-            // включаем режим без внутренних скроллов, чтобы увидеть всю таблицу
-            setExportNoScroll(true);
-
-            // ждём, пока React применит классы и произойдёт layout
-            await new Promise<void>((resolve) => {
-                requestAnimationFrame(() => resolve());
-            });
-
-            const prevWidth = node.style.width;
-            const prevOverflow = node.style.overflow;
-
-            // раскрываем контейнер по полной ширине таблицы
-            node.style.width = `${node.scrollWidth}px`;
-            node.style.overflow = "visible";
-
-            setExportProgress(35);
-
-            const dataUrl = await htmlToImage.toPng(node, {
-                pixelRatio: window.devicePixelRatio || 2,
-                cacheBust: true,
-            });
-
-            setExportProgress(90);
-
-            const link = document.createElement("a");
-            link.href = dataUrl;
-            link.download = "convergence-matrix.png";
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-
-            setExportProgress(100);
-        } catch (e) {
-            console.error("PNG export failed", e);
-            setExportProgress(null);
-        } finally {
-            const nodeFinal = stickyWrapperRef.current;
-            if (nodeFinal) {
-                nodeFinal.style.width = "";
-                nodeFinal.style.overflow = "";
-            }
-
-            setTimeout(() => {
-                setIsExporting(false);
-                setExportProgress(null);
-                setExportNoScroll(false);
-            }, 300);
-        }
-    }, [isExporting]);
-
-    type ColorClass = "green" | "blue" | "yellow" | "red" | "neutral";
-
-    function classifyColor(side: SideType, mon: MonotonicityType): ColorClass {
-        if (side === "no_limit" || mon === "not_enough_data" || mon === "no_limit") {
-            return "neutral";
-        }
-
-        const mono = isMonotone(mon);
-
-        if (side === "one_sided" && mono) return "green";
-        if (side === "one_sided" && !mono) return "blue";
-        if (side === "two_sided" && mono) return "yellow";
-        if (side === "two_sided" && !mono) return "red";
-
-        return "neutral";
-    }
-
-    const handleExportXlsx = useCallback(() => {
+    const buildWorkbook = useCallback((): XLSX.WorkBook => {
         const allSeries = seriesList;
         const allAlgos = algoList;
 
+        const wb = XLSX.utils.book_new();
+
         if (!allSeries.length || !allAlgos.length) {
-            return;
+            const wsEmpty = XLSX.utils.aoa_to_sheet([["Нет данных для экспорта"]]);
+            XLSX.utils.book_append_sheet(wb, wsEmpty, "convergence");
+            return wb;
         }
 
         // ---------- заголовок основной матрицы ----------
@@ -223,9 +253,7 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
             // описание алгоритма в первой колонке
             const algoParts: string[] = [];
             algoParts.push(algo.algorithmName);
-            if (algo.m != null) {
-                algoParts.push(`m=${algo.m}`);
-            }
+            if (algo.m != null) algoParts.push(`m=${algo.m}`);
 
             const algoArgsEntries = nonNullEntries(algo.algorithmArgs);
             if (algoArgsEntries.length > 0) {
@@ -264,19 +292,14 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
 
                 let effectiveSide: SideType = rawSide;
                 if (rawSide !== "no_limit") {
-                    if (signChanges <= maxSignChangesForOneSided) {
-                        effectiveSide = "one_sided";
-                    } else {
-                        effectiveSide = "two_sided";
-                    }
+                    effectiveSide =
+                        signChanges <= maxSignChangesForOneSided ? "one_sided" : "two_sided";
                 }
 
                 let effectiveMon: MonotonicityType = rawMon;
                 if (rawMon !== "no_limit" && rawMon !== "not_enough_data") {
                     if (violationsCount <= maxViolationsForMonotone) {
-                        if (rawMon === "has_growth") {
-                            effectiveMon = "non_increasing_error";
-                        }
+                        if (rawMon === "has_growth") effectiveMon = "non_increasing_error";
                     }
                 }
 
@@ -312,30 +335,10 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
         // стили для цветов
         const colorStyles: Record<ColorClass, any> = {
             neutral: {},
-            green: {
-                fill: {
-                    patternType: "solid",
-                    fgColor: { rgb: "C6EFCE" }, // светло-зелёный
-                },
-            },
-            blue: {
-                fill: {
-                    patternType: "solid",
-                    fgColor: { rgb: "C6D9F1" }, // светло-синий
-                },
-            },
-            yellow: {
-                fill: {
-                    patternType: "solid",
-                    fgColor: { rgb: "FFF2CC" }, // светло-жёлтый
-                },
-            },
-            red: {
-                fill: {
-                    patternType: "solid",
-                    fgColor: { rgb: "F8CBAD" }, // светло-красный
-                },
-            },
+            green: { fill: { patternType: "solid", fgColor: { rgb: "C6EFCE" } } },
+            blue: { fill: { patternType: "solid", fgColor: { rgb: "C6D9F1" } } },
+            yellow: { fill: { patternType: "solid", fgColor: { rgb: "FFF2CC" } } },
+            red: { fill: { patternType: "solid", fgColor: { rgb: "F8CBAD" } } },
         };
 
         // проставляем стили по colorGrid
@@ -368,16 +371,14 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
         ]);
 
         allAlgos.forEach((algo, i) => {
-            const s = rowStats[i];
-            const total = s.green + s.blue + s.yellow + s.red;
+            const st = rowStats[i];
+            const total = st.green + st.blue + st.yellow + st.red;
 
             const algoParts: string[] = [];
             algoParts.push(algo.algorithmName);
-            if (algo.m != null) {
-                algoParts.push(`m=${algo.m}`);
-            }
+            if (algo.m != null) algoParts.push(`m=${algo.m}`);
 
-            rowStatsData.push([algoParts.join(" "), s.green, s.blue, s.yellow, s.red, total]);
+            rowStatsData.push([algoParts.join(" "), st.green, st.blue, st.yellow, st.red, total]);
         });
 
         const wsRowStats = XLSX.utils.aoa_to_sheet(rowStatsData);
@@ -398,33 +399,17 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
             const total = st.green + st.blue + st.yellow + st.red;
 
             const seriesLabel = `${s.seriesName} (x=${s.xLabel}, prec=${s.precision ?? "∅"})`;
-
             colStatsData.push([seriesLabel, st.green, st.blue, st.yellow, st.red, total]);
         });
 
         const wsColStats = XLSX.utils.aoa_to_sheet(colStatsData);
 
-        // ---------- книга и сохранение ----------
-        const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, "convergence");
         XLSX.utils.book_append_sheet(wb, wsRowStats, "row_stats");
         XLSX.utils.book_append_sheet(wb, wsColStats, "col_stats");
 
-        const wbout = XLSX.write(wb, { bookType: "xlsx", type: "array" });
-
-        const blob = new Blob([wbout], {
-            type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        });
-        const url = URL.createObjectURL(blob);
-
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = "convergence-matrix.xlsx";
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-    }, [seriesList, algoList, cells, maxSignChangesForOneSided, maxViolationsForMonotone]);
+        return wb;
+    }, [algoList, cells, maxSignChangesForOneSided, maxViolationsForMonotone, seriesList]);
 
     if (rawSeriesList.length === 0 || algoList.length === 0) {
         return (
@@ -433,217 +418,6 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
             </div>
         );
     }
-
-    const headerNode = (
-        <thead className="bg-surface/80">
-            <tr>
-                <th className="sticky left-0 z-20 border border-border bg-surface/90 px-1 py-1 text-left text-[10px] align-bottom">
-                    Алгоритм \ Ряд
-                </th>
-
-                {seriesSlice.map((s) => (
-                    <th
-                        key={s.key}
-                        className="border border-border px-0 py-0 text-center align-bottom"
-                        title={`${s.seriesName}\n x = ${s.xLabel}\n prec = ${s.precision}`}
-                    >
-                        <div className="relative flex h-28 w-[44px] items-center justify-center">
-                            <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rotate-[-90deg] whitespace-nowrap text-[9px] leading-tight">
-                                {s.seriesName}
-                            </span>
-                            <span className="absolute bottom-3 text-[8px] text-textDim/70">
-                                x={s.xLabel}
-                            </span>
-                            <span className="absolute bottom-0 text-[8px] text-textDim/60">
-                                prec={s.precision}
-                            </span>
-                        </div>
-                    </th>
-                ))}
-            </tr>
-        </thead>
-    );
-
-    const bodyNode = (
-        <tbody>
-            {algoList.map((algo) => (
-                <tr key={algo.key}>
-                    <th
-                        className="sticky left-0 z-10 border border-border bg-panel px-1 py-[2px] text-left align-top"
-                        title={(() => {
-                            const lines: string[] = [];
-                            lines.push(`Алгоритм: ${algo.algorithmName}`);
-                            lines.push(`m = ${algo.m != null ? String(algo.m) : "∅"}`);
-                            const entries = nonNullEntries(algo.algorithmArgs);
-                            if (entries.length > 0) {
-                                lines.push("Аргументы:");
-                                for (const [k, v] of entries.sort(([a, b]) => a.localeCompare(b))) {
-                                    lines.push(`  ${k}: ${v}`);
-                                }
-                            }
-                            return lines.join("\n");
-                        })()}
-                    >
-                        <div className="whitespace-pre leading-tight">
-                            <span className="block max-w-[150px] truncate">
-                                {algo.algorithmName}
-                            </span>
-                            <span className="text-[9px] text-textDim/70">
-                                {algo.m != null ? `m=${String(algo.m)}` : "m=∅"}
-                            </span>
-                            {algo.argsSummary && (
-                                <div className="mt-[1px] max-w-[150px] truncate text-[8px] text-textDim/60">
-                                    {algo.argsSummary}
-                                </div>
-                            )}
-                        </div>
-                    </th>
-
-                    {seriesSlice.map((s) => {
-                        const key = `${algo.key}::${s.key}`;
-                        const analysis = cells[key];
-
-                        if (!analysis) {
-                            return (
-                                <td
-                                    key={key}
-                                    className="border border-border px-[2px] py-[2px] text-center text-[10px] text-textDim/50"
-                                >
-                                    —
-                                </td>
-                            );
-                        }
-
-                        const rawSide = analysis.side;
-                        const rawMon = analysis.monotonicity;
-
-                        const signChanges =
-                            typeof analysis.signChangesCount === "number"
-                                ? analysis.signChangesCount
-                                : 0;
-
-                        const violationsCount =
-                            typeof analysis.growthViolationsCount === "number"
-                                ? analysis.growthViolationsCount
-                                : 0;
-
-                        let effectiveSide: SideType = rawSide;
-                        if (rawSide !== "no_limit") {
-                            if (signChanges <= maxSignChangesForOneSided) {
-                                effectiveSide = "one_sided";
-                            } else {
-                                effectiveSide = "two_sided";
-                            }
-                        }
-
-                        let effectiveMon: MonotonicityType = rawMon;
-                        if (rawMon !== "no_limit" && rawMon !== "not_enough_data") {
-                            if (violationsCount <= maxViolationsForMonotone) {
-                                if (rawMon === "has_growth") {
-                                    effectiveMon = "non_increasing_error";
-                                }
-                            }
-                        }
-
-                        const sideShort = formatSideShort(effectiveSide);
-                        const monShort = formatMonotonicityShort(effectiveMon);
-
-                        const titleLines: string[] = [];
-
-                        titleLines.push(
-                            `Ряд: ${s.seriesName} (x=${s.xLabel}, prec=${s.precision})`
-                        );
-                        titleLines.push(
-                            `Алгоритм: ${algo.algorithmName}` +
-                                (algo.m != null ? `, m=${algo.m}` : "")
-                        );
-                        titleLines.push("Аргументы алгоритма:");
-
-                        const algoEntries = nonNullEntries(algo.algorithmArgs);
-                        if (algoEntries.length > 0) {
-                            for (const [k, v] of algoEntries.sort(([a, b]) => a.localeCompare(b))) {
-                                titleLines.push(`  ${k} = ${String(v)}`);
-                            }
-                        }
-                        if (algo.argsSummary) {
-                            titleLines.push(`  (${algo.argsSummary})`);
-                        }
-                        if (algoEntries.length > 0 || algo.argsSummary) {
-                            titleLines.push("");
-                        }
-
-                        const classDescr = describeClass(effectiveSide, effectiveMon);
-                        titleLines.push(`Класс: ${classDescr}`);
-
-                        const signNsText =
-                            analysis.signChangeNs && analysis.signChangeNs.length > 0
-                                ? formatIntervals(analysis.signChangeNs)
-                                : analysis.firstSignChangeN != null
-                                  ? String(analysis.firstSignChangeN)
-                                  : "—";
-
-                        const growthNsText =
-                            analysis.growthNs && analysis.growthNs.length > 0
-                                ? formatIntervals(analysis.growthNs)
-                                : analysis.firstGrowthN != null
-                                  ? String(analysis.firstGrowthN)
-                                  : "—";
-
-                        titleLines.push(
-                            `Число смен знака: ${analysis.signChangesCount}, ns: ${signNsText}`
-                        );
-                        titleLines.push(
-                            `Число роста |Aₙ−lim|: ${analysis.growthViolationsCount}, ns: ${growthNsText}`
-                        );
-                        titleLines.push(`Пар (n−1,n) в анализе: ${analysis.stepsAnalyzed}`);
-
-                        titleLines.push("");
-                        titleLines.push("Клик — детальный график.");
-
-                        const title = titleLines.join("\n");
-
-                        const isSelected =
-                            selectedCell?.seriesId === s.key && selectedCell?.accelId === algo.key;
-
-                        const baseCell =
-                            "min-w-[30px] border px-[2px] py-[2px] text-center text-[10px] cursor-pointer";
-
-                        const colorClass = getCellColorClass(
-                            effectiveSide,
-                            effectiveMon,
-                            isSelected
-                        );
-
-                        const domId = getConvergenceCellDomId(algo.key, s.key);
-
-                        return (
-                            <td
-                                key={key}
-                                id={domId}
-                                className={baseCell + " " + colorClass}
-                                title={title}
-                                onClick={() =>
-                                    onCellSelect({
-                                        seriesId: s.key,
-                                        accelId: algo.key,
-                                    })
-                                }
-                            >
-                                <div className="flex select-none flex-col items-center gap-[1px] leading-tight">
-                                    <span className="font-mono text-[10px]">
-                                        {sideShort} | {monShort}
-                                    </span>
-                                    <span className="text-[9px] text-textDim/80">
-                                        k: {analysis.stepsAnalyzed}
-                                    </span>
-                                </div>
-                            </td>
-                        );
-                    })}
-                </tr>
-            ))}
-        </tbody>
-    );
 
     return (
         <div className="relative">
@@ -666,8 +440,8 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
                             : ""}
                     </span>
                 </div>
+
                 <div className="flex items-center gap-3">
-                    {/* блок precision */}
                     <div className="flex items-center gap-1 text-[10px]">
                         <span>precision:</span>
                         <select
@@ -710,6 +484,7 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
                                 {maxSignChangesForOneSided}
                             </span>
                         </div>
+
                         <div className="flex items-center gap-1">
                             <span
                                 className="whitespace-nowrap"
@@ -775,137 +550,240 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
                             </button>
                         </div>
                     )}
-
-                    <div className="flex items-center gap-2">
-                        <button
-                            type="button"
-                            className="rounded border border-border bg-surface px-2 py-[3px] text-[10px] hover:bg-panel disabled:opacity-50"
-                            onClick={() => void handleExportPng()}
-                            disabled={isExporting}
-                            title="Скачать PNG текущей таблицы"
-                        >
-                            {isExporting ? "Генерация…" : "PNG"}
-                        </button>
-
-                        <button
-                            type="button"
-                            className="rounded border border-border bg-surface px-2 py-[3px] text-[10px] hover:bg-panel"
-                            onClick={handleExportXlsx}
-                            title="Скачать всю матрицу в XLSX (по текущему precision-фильтру)"
-                        >
-                            XLSX
-                        </button>
-
-                        {exportProgress !== null && (
-                            <div className="flex items-center gap-1 text-[9px] text-textDim/80 min-w-[80px]">
-                                <span className="tabular-nums">{exportProgress}%</span>
-                                <div className="h-[4px] flex-1 rounded bg-border/40 overflow-hidden">
-                                    <div
-                                        className="h-full rounded bg-accent/80 transition-all"
-                                        style={{ width: `${exportProgress}%` }}
-                                    />
-                                </div>
-                            </div>
-                        )}
-                    </div>
                 </div>
             </div>
 
-            {/* базовая таблица с липкой шапкой, синхронизирующейся по горизонтали */}
-            <StickyTable
-                header={headerNode}
-                body={bodyNode}
-                stickyOffset={56}
-                wrapperRef={stickyWrapperRef}
-                noScroll={exportNoScroll}
-            />
+            <MatrixExportWrapper fileBaseName="convergence-matrix" buildWorkbook={buildWorkbook}>
+                {({ noInnerScroll, noSticky, captureRef }) => (
+                    <div ref={captureRef}>
+                        <Matrix
+                            rows={rows}
+                            cols={cols}
+                            rowWidth={160}
+                            colWidth={44}
+                            className=""
+                            tableClassName=""
+                            thClassName="px-0 py-0"
+                            tdClassName="px-0 py-0"
+                            emptyFallback={
+                                <div className="text-textDim text-sm">
+                                    Нет данных для отображения.
+                                </div>
+                            }
+                            enableInnerScroll={!noInnerScroll}
+                            maxBodyHeight="70vh"
+                            stickyHeaders={!noSticky}
+                            renderCorner={() => (
+                                <div className="px-1 py-1 text-left text-[10px] text-textDim">
+                                    Алгоритм \ Ряд
+                                </div>
+                            )}
+                            renderColHeader={(col) => {
+                                const s = seriesSlice.find((x) => x.key === col.id);
+                                if (!s) return null;
+
+                                return (
+                                    <div
+                                        className="relative flex h-28 w-[44px] items-center justify-center"
+                                        title={`${s.seriesName}\n x = ${s.xLabel}\n prec = ${s.precision}`}
+                                    >
+                                        <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rotate-[-90deg] whitespace-nowrap text-[9px] leading-tight">
+                                            {s.seriesName}
+                                        </span>
+                                        <span className="absolute bottom-3 text-[8px] text-textDim/70">
+                                            x={s.xLabel}
+                                        </span>
+                                        <span className="absolute bottom-0 text-[8px] text-textDim/60">
+                                            prec={s.precision}
+                                        </span>
+                                    </div>
+                                );
+                            }}
+                            renderRowHeader={(row) => {
+                                const algo = algoList.find((a) => a.key === row.id);
+                                if (!algo) return null;
+
+                                return (
+                                    <div
+                                        className="px-1 py-[2px] text-left align-top"
+                                        title={(() => {
+                                            const lines: string[] = [];
+                                            lines.push(`Алгоритм: ${algo.algorithmName}`);
+                                            lines.push(
+                                                `m = ${algo.m != null ? String(algo.m) : "∅"}`
+                                            );
+                                            const entries = nonNullEntries(algo.algorithmArgs);
+                                            if (entries.length > 0) {
+                                                lines.push("Аргументы:");
+                                                for (const [k, v] of entries.sort(([a, b]) =>
+                                                    a.localeCompare(b)
+                                                )) {
+                                                    lines.push(`  ${k}: ${v}`);
+                                                }
+                                            }
+                                            return lines.join("\n");
+                                        })()}
+                                    >
+                                        <div className="whitespace-pre leading-tight">
+                                            <span className="block max-w-[150px] truncate text-[10px] text-textDim">
+                                                {algo.algorithmName}
+                                            </span>
+                                            <span className="text-[9px] text-textDim/70">
+                                                {algo.m != null ? `m=${String(algo.m)}` : "m=∅"}
+                                            </span>
+                                            {algo.argsSummary && (
+                                                <div className="mt-[1px] max-w-[150px] truncate text-[8px] text-textDim/60">
+                                                    {algo.argsSummary}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                );
+                            }}
+                            renderCell={(row, col) => {
+                                const algo = algoList.find((a) => a.key === row.id);
+                                const s = seriesSlice.find((x) => x.key === col.id);
+                                if (!algo || !s) return null;
+
+                                const key = `${algo.key}::${s.key}`;
+                                const analysis = cells[key];
+
+                                if (!analysis) {
+                                    return (
+                                        <div className="px-[2px] py-[2px] text-center text-[10px] text-textDim/50">
+                                            —
+                                        </div>
+                                    );
+                                }
+
+                                const rawSide = analysis.side;
+                                const rawMon = analysis.monotonicity;
+
+                                const signChanges =
+                                    typeof analysis.signChangesCount === "number"
+                                        ? analysis.signChangesCount
+                                        : 0;
+
+                                const violationsCount =
+                                    typeof analysis.growthViolationsCount === "number"
+                                        ? analysis.growthViolationsCount
+                                        : 0;
+
+                                let effectiveSide: SideType = rawSide;
+                                if (rawSide !== "no_limit") {
+                                    effectiveSide =
+                                        signChanges <= maxSignChangesForOneSided
+                                            ? "one_sided"
+                                            : "two_sided";
+                                }
+
+                                let effectiveMon: MonotonicityType = rawMon;
+                                if (rawMon !== "no_limit" && rawMon !== "not_enough_data") {
+                                    if (violationsCount <= maxViolationsForMonotone) {
+                                        if (rawMon === "has_growth") {
+                                            effectiveMon = "non_increasing_error";
+                                        }
+                                    }
+                                }
+
+                                const sideShort = formatSideShort(effectiveSide);
+                                const monShort = formatMonotonicityShort(effectiveMon);
+
+                                const titleLines: string[] = [];
+                                titleLines.push(
+                                    `Ряд: ${s.seriesName} (x=${s.xLabel}, prec=${s.precision})`
+                                );
+                                titleLines.push(
+                                    `Алгоритм: ${algo.algorithmName}` +
+                                        (algo.m != null ? `, m=${algo.m}` : "")
+                                );
+                                titleLines.push("Аргументы алгоритма:");
+
+                                const algoEntries = nonNullEntries(algo.algorithmArgs);
+                                if (algoEntries.length > 0) {
+                                    for (const [k, v] of algoEntries.sort(([a, b]) =>
+                                        a.localeCompare(b)
+                                    )) {
+                                        titleLines.push(`  ${k} = ${String(v)}`);
+                                    }
+                                }
+                                if (algo.argsSummary) {
+                                    titleLines.push(`  (${algo.argsSummary})`);
+                                }
+                                if (algoEntries.length > 0 || algo.argsSummary) {
+                                    titleLines.push("");
+                                }
+
+                                const classDescr = describeClass(effectiveSide, effectiveMon);
+                                titleLines.push(`Класс: ${classDescr}`);
+
+                                const signNsText =
+                                    analysis.signChangeNs && analysis.signChangeNs.length > 0
+                                        ? formatIntervals(analysis.signChangeNs)
+                                        : analysis.firstSignChangeN != null
+                                          ? String(analysis.firstSignChangeN)
+                                          : "—";
+
+                                const growthNsText =
+                                    analysis.growthNs && analysis.growthNs.length > 0
+                                        ? formatIntervals(analysis.growthNs)
+                                        : analysis.firstGrowthN != null
+                                          ? String(analysis.firstGrowthN)
+                                          : "—";
+
+                                titleLines.push(
+                                    `Число смен знака: ${analysis.signChangesCount}, ns: ${signNsText}`
+                                );
+                                titleLines.push(
+                                    `Число роста |Aₙ−lim|: ${analysis.growthViolationsCount}, ns: ${growthNsText}`
+                                );
+                                titleLines.push(`Пар (n−1,n) в анализе: ${analysis.stepsAnalyzed}`);
+                                titleLines.push("");
+                                titleLines.push("Клик — детальный график.");
+
+                                const title = titleLines.join("\n");
+
+                                const isSelected =
+                                    selectedCell?.seriesId === s.key &&
+                                    selectedCell?.accelId === algo.key;
+
+                                const colorClass = getCellColorClass(
+                                    effectiveSide,
+                                    effectiveMon,
+                                    isSelected
+                                );
+                                const domId = getConvergenceCellDomId(algo.key, s.key);
+
+                                return (
+                                    <div
+                                        id={domId}
+                                        title={title}
+                                        className={
+                                            "w-full h-full min-h-[32px] cursor-pointer border border-transparent " +
+                                            colorClass
+                                        }
+                                        onClick={() =>
+                                            onCellSelect({
+                                                seriesId: s.key,
+                                                accelId: algo.key,
+                                            })
+                                        }
+                                    >
+                                        <div className="flex select-none flex-col items-center justify-center gap-[1px] leading-tight py-[2px]">
+                                            <span className="font-mono text-[10px]">
+                                                {sideShort} | {monShort}
+                                            </span>
+                                            <span className="text-[9px] text-textDim/80">
+                                                k: {analysis.stepsAnalyzed}
+                                            </span>
+                                        </div>
+                                    </div>
+                                );
+                            }}
+                        />
+                    </div>
+                )}
+            </MatrixExportWrapper>
         </div>
     );
 };
-
-/**
- * Цвета по правилам:
- *  - односторонний и монотонный  → зелёный
- *  - односторонний и немонотонный → синий
- *  - двусторонний и монотонный   → жёлтый
- *  - двусторонний и немонотонный → красный
- */
-function getCellColorClass(side: SideType, mon: MonotonicityType, selected: boolean): string {
-    const sel = selected ? " ring-2 ring-accent ring-offset-1 ring-offset-surface" : "";
-
-    if (side === "no_limit" || mon === "not_enough_data" || mon === "no_limit") {
-        return "border-border/60 text-textDim/70 bg-surface/30 hover:bg-surface/40" + sel;
-    }
-
-    const mono = isMonotone(mon);
-
-    if (side === "one_sided" && mono) {
-        return "border-border text-textDim bg-emerald-500/25 hover:bg-emerald-500/35" + sel;
-    }
-    if (side === "one_sided" && !mono) {
-        return "border-border text-textDim bg-sky-500/25 hover:bg-sky-500/35" + sel;
-    }
-
-    if (side === "two_sided" && mono) {
-        return "border-border text-textDim bg-amber-300/35 hover:bg-amber-300/45" + sel;
-    }
-    if (side === "two_sided" && !mono) {
-        return "border-border text-textDim bg-red-500/30 hover:bg-red-500/40" + sel;
-    }
-
-    return "border-border text-textDim bg-surface/40 hover:bg-surface/50" + sel;
-}
-
-function formatIntervals(ns: number[], maxRanges = 5): string {
-    if (!ns.length) return "—";
-
-    const sorted = Array.from(new Set(ns)).sort((a, b) => a - b);
-
-    const ranges: Array<{ start: number; end: number }> = [];
-    let start = sorted[0];
-    let prev = sorted[0];
-
-    for (let i = 1; i < sorted.length; i++) {
-        const x = sorted[i];
-        if (x === prev + 1) {
-            prev = x;
-            continue;
-        }
-        ranges.push({ start, end: prev });
-        start = x;
-        prev = x;
-    }
-    ranges.push({ start, end: prev });
-
-    const parts = ranges
-        .slice(0, maxRanges)
-        .map((r) => (r.start === r.end ? `${r.start}` : `${r.start}–${r.end}`));
-
-    if (ranges.length > maxRanges) {
-        parts.push("…");
-    }
-
-    return parts.join(", ");
-}
-
-function isMonotone(mon: MonotonicityType): boolean {
-    return (
-        mon === "strict_decreasing_error" ||
-        mon === "non_increasing_error" ||
-        mon === "constant_error"
-    );
-}
-
-function describeClass(side: SideType, mon: MonotonicityType): string {
-    const mono = isMonotone(mon);
-
-    if (side === "one_sided" && mono) return "односторонний и монотонный";
-    if (side === "one_sided" && !mono) return "односторонний и немонотонный";
-    if (side === "two_sided" && mono) return "двусторонний и монотонный";
-    if (side === "two_sided" && !mono) return "двусторонний и немонотонный";
-
-    if (side === "no_limit") return "предел не просматривается";
-    if (mon === "not_enough_data") return "недостаточно данных по ошибке";
-
-    return "тип не определён";
-}
