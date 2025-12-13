@@ -31,6 +31,7 @@ NoErrorTrialResult = None
 
 @dataclass
 class SeriesTrialResult:
+    id: int
     name: str
     lim: Any
     arguments: Mapping[str, Any]

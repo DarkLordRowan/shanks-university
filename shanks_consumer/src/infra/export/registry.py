@@ -29,7 +29,7 @@ def build_parquet(cfg: TrialConfig) -> ParquetExportService | None:
 def build_parquet_split(cfg: TrialConfig) -> ParquetSplitExportService | None:
     if not cfg.results_parquet:
         return None
-    return ParquetSplitExportService(location=cfg.results_parquet)
+    return ParquetSplitExportService(location=cfg.output_dir)
 
 
 def build_mongodb(cfg: TrialConfig) -> MongoExportService | None:
@@ -46,5 +46,6 @@ EXPORT_BUILDERS = {
     OutputFormat.JSON: build_json,
     OutputFormat.CSV: build_csv,
     OutputFormat.PARQUET: build_parquet,
+    OutputFormat.PARQUET_SPLIT: build_parquet_split,
     OutputFormat.MONGODB: build_mongodb,
 }
