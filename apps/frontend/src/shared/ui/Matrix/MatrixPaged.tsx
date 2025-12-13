@@ -36,6 +36,9 @@ export interface MatrixPagedProps<TRowMeta = unknown, TColMeta = unknown>
     /** верхняя панель под заголовком */
     renderSubtitle?: () => React.ReactNode;
 
+    /** правая часть шапки (контролы, фильтры и т.п.) */
+    renderHeaderRight?: (pager: PagerInfo) => React.ReactNode;
+
     /** рендеры матрицы */
     renderRowHeader: MatrixProps<TRowMeta, TColMeta>["renderRowHeader"];
     renderColHeader: MatrixProps<TRowMeta, TColMeta>["renderColHeader"];
@@ -48,9 +51,9 @@ export interface MatrixPagedProps<TRowMeta = unknown, TColMeta = unknown>
         enableXlsx?: boolean;
 
         /**
-         * Важно: экспорт обычно ожидается "по видимым колонкам",
+         * Обычно экспорт ожидается "по видимым колонкам",
          * поэтому buildWorkbook получает текущий срез cols.
-         * Если нужен экспорт "всего", делайте buildWorkbookIgnoreSlice внутри.
+         * Если нужен экспорт "всего", игнорируйте colsSlice внутри buildWorkbook.
          */
         buildWorkbook: (args: {
             rows: MatrixAxisItem<TRowMeta>[];
@@ -58,8 +61,6 @@ export interface MatrixPagedProps<TRowMeta = unknown, TColMeta = unknown>
             pager: PagerInfo;
         }) => XLSX.WorkBook;
     };
-
-    renderHeaderRight?: (pager: PagerInfo) => React.ReactNode;
 }
 
 function Pager({ info, onSetPage }: { info: PagerInfo; onSetPage: (p: number) => void }) {
@@ -124,6 +125,7 @@ export function MatrixPaged<TRowMeta = unknown, TColMeta = unknown>(
 
         renderTitle,
         renderSubtitle,
+        renderHeaderRight,
 
         renderRowHeader,
         renderColHeader,
@@ -171,7 +173,7 @@ export function MatrixPaged<TRowMeta = unknown, TColMeta = unknown>(
     );
 
     const header =
-        renderTitle || renderSubtitle || totalPages > 1 ? (
+        renderTitle || renderSubtitle || renderHeaderRight || totalPages > 1 ? (
             <div
                 className="
                     sticky top-0 z-40 mb-2
@@ -189,11 +191,16 @@ export function MatrixPaged<TRowMeta = unknown, TColMeta = unknown>(
                     ) : null}
                 </div>
 
-                <Pager info={pagerInfo} onSetPage={(p) => setPage(clamp(p, 0, totalPages - 1))} />
+                <div className="flex items-center gap-3">
+                    {renderHeaderRight ? renderHeaderRight(pagerInfo) : null}
+                    <Pager
+                        info={pagerInfo}
+                        onSetPage={(p) => setPage(clamp(p, 0, totalPages - 1))}
+                    />
+                </div>
             </div>
         ) : null;
 
-    // если экспорт не нужен: просто header + Matrix
     if (!exportCfg) {
         return (
             <>
@@ -210,7 +217,6 @@ export function MatrixPaged<TRowMeta = unknown, TColMeta = unknown>(
         );
     }
 
-    // экспорт: wrap и прокидываем noInnerScroll/noSticky/captureRef
     return (
         <>
             {header}

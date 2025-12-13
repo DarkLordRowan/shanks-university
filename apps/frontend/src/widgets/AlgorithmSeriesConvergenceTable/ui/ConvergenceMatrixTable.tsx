@@ -394,7 +394,7 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
 
     return (
         <MatrixPaged<{ algoIndex: number }, { seriesIndex: number }>
-            resetKey={`${matrix.id ?? ""}::${precisionFilter}`}
+            resetKey={`""::${precisionFilter}`}
             rows={rows}
             cols={allCols}
             maxColsPerPage={maxSeries && maxSeries > 0 ? maxSeries : 0}
@@ -408,7 +408,6 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
                 fileBaseName: "convergence-matrix",
                 enablePng: true,
                 enableXlsx: true,
-                // экспорт остаётся "full", как и было
                 buildWorkbook: () => buildWorkbook(),
             }}
             renderTitle={() => "Монотонность и направление: алгоритмы × ряды"}
@@ -420,13 +419,75 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
                         : ""}
                 </>
             )}
-            // справа от pager-а тебе нужна панель контролов.
-            // В текущей версии MatrixPaged есть только title/subtitle + pager.
-            // Поэтому: встраиваем контролы внутрь title/subtitle через JSX-обёртку:
-            // проще: title/subtitle оставляем, а controls кладём в corner через renderCorner? нет.
-            // Реально правильно: расширить MatrixPaged, добавив renderHeaderRight.
-            // Пока делаем минимально: controls рендерим в renderTitle() блоком.
-            // (ниже даю корректный вариант через patch MatrixPaged)
+            renderHeaderRight={() => (
+                <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-1 text-[10px]">
+                        <span>precision:</span>
+                        <select
+                            className="rounded border border-border bg-surface px-2 py-[2px]"
+                            value={precisionFilter}
+                            onChange={(e) =>
+                                setPrecisionFilter(
+                                    e.target.value === "ALL" ? "ALL" : e.target.value
+                                )
+                            }
+                        >
+                            <option value="ALL">Все</option>
+                            {allPrecisions.map((p) => (
+                                <option key={p} value={p}>
+                                    {p}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+
+                    <div className="flex flex-col gap-[2px] text-[10px]">
+                        <div className="flex items-center gap-1">
+                            <span
+                                className="whitespace-nowrap"
+                                title="Если число смен знака ≤ X, пара считается односторонней"
+                            >
+                                max sign changes:
+                            </span>
+                            <input
+                                type="range"
+                                min={0}
+                                max={signChangesSliderMax}
+                                value={maxSignChangesForOneSided}
+                                onChange={(e) =>
+                                    setMaxSignChangesForOneSided(Number(e.target.value))
+                                }
+                                className="h-[4px] w-28 cursor-pointer"
+                            />
+                            <span className="w-6 text-right tabular-nums">
+                                {maxSignChangesForOneSided}
+                            </span>
+                        </div>
+
+                        <div className="flex items-center gap-1">
+                            <span
+                                className="whitespace-nowrap"
+                                title="Если число расхождений ≤ Y, ошибка считается монотонной"
+                            >
+                                max deviations:
+                            </span>
+                            <input
+                                type="range"
+                                min={0}
+                                max={violationsSliderMax}
+                                value={maxViolationsForMonotone}
+                                onChange={(e) =>
+                                    setMaxViolationsForMonotone(Number(e.target.value))
+                                }
+                                className="h-[4px] w-28 cursor-pointer"
+                            />
+                            <span className="w-6 text-right tabular-nums">
+                                {maxViolationsForMonotone}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            )}
             renderCorner={() => (
                 <div className="px-1 py-1 text-left text-[10px] text-textDim">Алгоритм \ Ряд</div>
             )}
