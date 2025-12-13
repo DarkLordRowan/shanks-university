@@ -12,16 +12,9 @@ export interface MatrixProps<TRowMeta = unknown, TColMeta = unknown> {
     rows: MatrixAxisItem<TRowMeta>[];
     cols: MatrixAxisItem<TColMeta>[];
 
-    /** Левый верхний угол */
     renderCorner?: () => React.ReactNode;
-
-    /** Заголовок строки (левый столбец) */
     renderRowHeader: (row: MatrixAxisItem<TRowMeta>, rowIndex: number) => React.ReactNode;
-
-    /** Заголовок колонки (верхняя строка) */
     renderColHeader: (col: MatrixAxisItem<TColMeta>, colIndex: number) => React.ReactNode;
-
-    /** Ячейка значения */
     renderCell: (
         row: MatrixAxisItem<TRowMeta>,
         col: MatrixAxisItem<TColMeta>,
@@ -29,10 +22,7 @@ export interface MatrixProps<TRowMeta = unknown, TColMeta = unknown> {
         colIndex: number
     ) => React.ReactNode;
 
-    /** Ширина левого столбца (ось rows) */
     rowWidth?: number | string;
-
-    /** Ширина каждой колонки (ось cols) */
     colWidth?: number | string;
 
     className?: string;
@@ -42,13 +32,8 @@ export interface MatrixProps<TRowMeta = unknown, TColMeta = unknown> {
 
     emptyFallback?: React.ReactNode;
 
-    /** Включить внутренний скролл таблицы */
     enableInnerScroll?: boolean;
-
-    /** Максимальная высота области скролла */
     maxBodyHeight?: string;
-
-    /** Закрепить верхнюю строку и левый столбец */
     stickyHeaders?: boolean;
 }
 
@@ -81,12 +66,13 @@ export function Matrix<TRowMeta = unknown, TColMeta = unknown>(
         return <>{emptyFallback}</>;
     }
 
-    const thBase = "px-2 py-1 align-middle";
-    const tdBase = "px-2 py-1 align-middle";
+    const thBase = "border border-border px-1 py-1 align-bottom text-[10px] text-textDim";
+    const tdBase = "border border-border px-[2px] py-[2px] align-middle text-[10px]";
 
-    const stickyTop = stickyHeaders ? "sticky top-0 z-20 bg-surface" : "";
-    const stickyLeft = stickyHeaders ? "sticky left-0 z-10 bg-surface" : "";
-    const stickyCorner = stickyHeaders ? "sticky top-0 left-0 z-30 bg-surface" : "";
+    const stickyBg = "bg-surface";
+    const stickyTop = stickyHeaders ? `sticky top-0 z-20  ${stickyBg}` : "";
+    const stickyLeft = stickyHeaders ? `sticky left-0 z-10 ${stickyBg}` : "";
+    const stickyCorner = stickyHeaders ? `sticky top-0 left-0 z-30 ${stickyBg}` : "";
 
     const rowStyle =
         rowWidth != null ? { width: rowWidth, minWidth: rowWidth, maxWidth: rowWidth } : undefined;
@@ -98,7 +84,9 @@ export function Matrix<TRowMeta = unknown, TColMeta = unknown>(
         <div className={className ?? ""}>
             <div
                 ref={scrollRef}
-                className={enableInnerScroll ? "overflow-auto" : undefined}
+                className={
+                    enableInnerScroll ? "overflow-auto rounded-xl2 border border-border" : undefined
+                }
                 style={enableInnerScroll ? { maxHeight: maxBodyHeight } : undefined}
             >
                 <table
