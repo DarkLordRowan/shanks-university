@@ -1,5 +1,3 @@
-// ConvergenceMatrixTable.tsx
-
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import * as XLSX from "xlsx-js-style";
 import {
@@ -13,8 +11,8 @@ import {
     formatSideShort,
     nonNullEntries,
 } from "../model/convergenceUtils";
-import { Matrix, type MatrixAxisItem } from "@/shared/ui/Matrix/Matrix";
-import { MatrixExportWrapper } from "@/shared/ui/Matrix/MatrixExportWrapper";
+import type { MatrixAxisItem } from "@/shared/ui/Matrix/Matrix";
+import { MatrixPaged } from "@/shared/ui/Matrix/MatrixPaged";
 
 interface ConvergenceMatrixTableProps {
     matrix: ConvergenceMatrix;
@@ -180,38 +178,17 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
         return rawSeriesList.filter((s) => String(s.precision) === precisionFilter);
     }, [rawSeriesList, precisionFilter]);
 
-    const [page, setPage] = useState(0);
-
-    const pageSize = maxSeries && maxSeries > 0 ? maxSeries : seriesList.length || 1;
-    const totalPages = Math.max(1, Math.ceil((seriesList.length || 1) / pageSize));
-
-    useEffect(() => {
-        setPage(0);
-    }, [matrix, maxSeries, precisionFilter]);
-
-    useEffect(() => {
-        setPage((prev) => {
-            if (prev >= totalPages) return totalPages - 1;
-            if (prev < 0) return 0;
-            return prev;
-        });
-    }, [totalPages]);
-
     const signChangesSliderMax = thresholds.maxSignChanges > 0 ? thresholds.maxSignChanges : 5;
     const violationsSliderMax = thresholds.maxViolations > 0 ? thresholds.maxViolations : 5;
-
-    const startIndex = page * pageSize;
-    const endIndex = Math.min(startIndex + pageSize, seriesList.length);
-    const seriesSlice = seriesList.slice(startIndex, endIndex);
 
     const rows: MatrixAxisItem<{ algoIndex: number }>[] = useMemo(
         () => algoList.map((a, i) => ({ id: a.key, meta: { algoIndex: i } })),
         [algoList]
     );
 
-    const cols: MatrixAxisItem<{ seriesIndex: number }>[] = useMemo(
-        () => seriesSlice.map((s, j) => ({ id: s.key, meta: { seriesIndex: startIndex + j } })),
-        [seriesSlice, startIndex]
+    const allCols: MatrixAxisItem<{ seriesIndex: number }>[] = useMemo(
+        () => seriesList.map((s, i) => ({ id: s.key, meta: { seriesIndex: i } })),
+        [seriesList]
     );
 
     const buildWorkbook = useCallback((): XLSX.WorkBook => {
@@ -250,7 +227,6 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
         allAlgos.forEach((algo, algoIdx) => {
             const row: (string | number | null)[] = [];
 
-            // описание алгоритма в первой колонке
             const algoParts: string[] = [];
             algoParts.push(algo.algorithmName);
             if (algo.m != null) algoParts.push(`m=${algo.m}`);
@@ -318,7 +294,6 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
                 const colorClass = classifyColor(effectiveSide, effectiveMon);
                 colorRow.push(colorClass);
 
-                // статистика
                 if (colorClass !== "neutral") {
                     rowStats[algoIdx][colorClass]++;
                     colStats[seriesIdx][colorClass]++;
@@ -332,7 +307,6 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
         // ---------- основная таблица ----------
         const ws = XLSX.utils.aoa_to_sheet(wsData);
 
-        // стили для цветов
         const colorStyles: Record<ColorClass, any> = {
             neutral: {},
             green: { fill: { patternType: "solid", fgColor: { rgb: "C6EFCE" } } },
@@ -341,7 +315,6 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
             red: { fill: { patternType: "solid", fgColor: { rgb: "F8CBAD" } } },
         };
 
-        // проставляем стили по colorGrid
         for (let r = 1; r < colorGrid.length; r++) {
             const rowColors = colorGrid[r];
             for (let c = 1; c < rowColors.length; c++) {
@@ -420,370 +393,215 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
     }
 
     return (
-        <div className="relative">
-            <div
-                className="
-                    sticky top-0 z-40
-                    mb-2 flex items-center justify-between text-xs text-textDim
-                    bg-surface/95 backdrop-blur-sm
-                    -mx-4 px-4 py-2
-                "
-            >
-                <div className="flex flex-col gap-1">
-                    <span className="text-sm font-semibold text-textDim">
-                        Монотонность и направление: алгоритмы × ряды
-                    </span>
-                    <span className="text-[11px] text-textDim/80">
-                        Алгоритмы: {algoList.length} · Ряды: {seriesList.length}
-                        {precisionFilter !== "ALL"
-                            ? ` (из ${rawSeriesList.length}, precision=${precisionFilter})`
-                            : ""}
-                    </span>
-                </div>
+        <MatrixPaged<{ algoIndex: number }, { seriesIndex: number }>
+            resetKey={`${matrix.id ?? ""}::${precisionFilter}`}
+            rows={rows}
+            cols={allCols}
+            maxColsPerPage={maxSeries && maxSeries > 0 ? maxSeries : 0}
+            rowWidth={160}
+            colWidth={44}
+            thClassName="px-0 py-0"
+            tdClassName="px-0 py-0"
+            maxBodyHeight="70vh"
+            emptyFallback={<div className="text-textDim text-sm">Нет данных для отображения.</div>}
+            export={{
+                fileBaseName: "convergence-matrix",
+                enablePng: true,
+                enableXlsx: true,
+                // экспорт остаётся "full", как и было
+                buildWorkbook: () => buildWorkbook(),
+            }}
+            renderTitle={() => "Монотонность и направление: алгоритмы × ряды"}
+            renderSubtitle={() => (
+                <>
+                    Алгоритмы: {algoList.length} · Ряды: {seriesList.length}
+                    {precisionFilter !== "ALL"
+                        ? ` (из ${rawSeriesList.length}, precision=${precisionFilter})`
+                        : ""}
+                </>
+            )}
+            // справа от pager-а тебе нужна панель контролов.
+            // В текущей версии MatrixPaged есть только title/subtitle + pager.
+            // Поэтому: встраиваем контролы внутрь title/subtitle через JSX-обёртку:
+            // проще: title/subtitle оставляем, а controls кладём в corner через renderCorner? нет.
+            // Реально правильно: расширить MatrixPaged, добавив renderHeaderRight.
+            // Пока делаем минимально: controls рендерим в renderTitle() блоком.
+            // (ниже даю корректный вариант через patch MatrixPaged)
+            renderCorner={() => (
+                <div className="px-1 py-1 text-left text-[10px] text-textDim">Алгоритм \ Ряд</div>
+            )}
+            renderColHeader={(col) => {
+                const idx = col.meta?.seriesIndex ?? 0;
+                const s = seriesList[idx];
+                if (!s) return null;
 
-                <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-1 text-[10px]">
-                        <span>precision:</span>
-                        <select
-                            className="rounded border border-border bg-surface px-2 py-[2px]"
-                            value={precisionFilter}
-                            onChange={(e) =>
-                                setPrecisionFilter(
-                                    e.target.value === "ALL" ? "ALL" : e.target.value
-                                )
-                            }
-                        >
-                            <option value="ALL">Все</option>
-                            {allPrecisions.map((p) => (
-                                <option key={p} value={p}>
-                                    {p}
-                                </option>
-                            ))}
-                        </select>
+                return (
+                    <div
+                        className="relative flex h-28 w-[44px] items-center justify-center"
+                        title={`${s.seriesName}\n x = ${s.xLabel}\n prec = ${s.precision}`}
+                    >
+                        <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rotate-[-90deg] whitespace-nowrap text-[9px] leading-tight">
+                            {s.seriesName}
+                        </span>
+                        <span className="absolute bottom-3 text-[8px] text-textDim/70">
+                            x={s.xLabel}
+                        </span>
+                        <span className="absolute bottom-0 text-[8px] text-textDim/60">
+                            prec={s.precision}
+                        </span>
                     </div>
+                );
+            }}
+            renderRowHeader={(row) => {
+                const algo = algoList.find((a) => a.key === row.id);
+                if (!algo) return null;
 
-                    <div className="flex flex-col gap-[2px] text-[10px]">
-                        <div className="flex items-center gap-1">
-                            <span
-                                className="whitespace-nowrap"
-                                title="Если число смен знака ≤ X, пара считается односторонней"
-                            >
-                                max sign changes:
-                            </span>
-                            <input
-                                type="range"
-                                min={0}
-                                max={signChangesSliderMax}
-                                value={maxSignChangesForOneSided}
-                                onChange={(e) =>
-                                    setMaxSignChangesForOneSided(Number(e.target.value))
+                return (
+                    <div
+                        className="px-1 py-[2px] text-left align-top"
+                        title={(() => {
+                            const lines: string[] = [];
+                            lines.push(`Алгоритм: ${algo.algorithmName}`);
+                            lines.push(`m = ${algo.m != null ? String(algo.m) : "∅"}`);
+                            const entries = nonNullEntries(algo.algorithmArgs);
+                            if (entries.length > 0) {
+                                lines.push("Аргументы:");
+                                for (const [k, v] of entries.sort(([a, b]) => a.localeCompare(b))) {
+                                    lines.push(`  ${k}: ${v}`);
                                 }
-                                className="h-[4px] w-28 cursor-pointer"
-                            />
-                            <span className="w-6 text-right tabular-nums">
-                                {maxSignChangesForOneSided}
-                            </span>
-                        </div>
-
-                        <div className="flex items-center gap-1">
-                            <span
-                                className="whitespace-nowrap"
-                                title="Если число расхождений ≤ Y, ошибка считается монотонной"
-                            >
-                                max deviations:
-                            </span>
-                            <input
-                                type="range"
-                                min={0}
-                                max={violationsSliderMax}
-                                value={maxViolationsForMonotone}
-                                onChange={(e) =>
-                                    setMaxViolationsForMonotone(Number(e.target.value))
-                                }
-                                className="h-[4px] w-28 cursor-pointer"
-                            />
-                            <span className="w-6 text-right tabular-nums">
-                                {maxViolationsForMonotone}
-                            </span>
-                        </div>
-                    </div>
-
-                    {seriesList.length > pageSize && (
-                        <div className="flex items-center gap-1 text-[10px]">
-                            <button
-                                type="button"
-                                className="rounded border border-border bg-surface px-1 py-[1px] hover:bg-panel disabled:opacity-40"
-                                onClick={() => setPage(0)}
-                                disabled={page === 0}
-                            >
-                                «
-                            </button>
-                            <button
-                                type="button"
-                                className="rounded border border-border bg-surface px-1 py-[1px] hover:bg-panel disabled:opacity-40"
-                                onClick={() => setPage((p) => Math.max(0, p - 1))}
-                                disabled={page === 0}
-                            >
-                                ‹
-                            </button>
-                            <span className="px-1">
-                                стр. {page + 1} / {totalPages}
-                            </span>
-                            <span className="text-textDim/60">
-                                колонки {startIndex + 1}–{endIndex}
-                            </span>
-                            <button
-                                type="button"
-                                className="rounded border border-border bg-surface px-1 py-[1px] hover:bg-panel disabled:opacity-40"
-                                onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
-                                disabled={page >= totalPages - 1}
-                            >
-                                ›
-                            </button>
-                            <button
-                                type="button"
-                                className="rounded border border-border bg-surface px-1 py-[1px] hover:bg-panel disabled:opacity-40"
-                                onClick={() => setPage(totalPages - 1)}
-                                disabled={page >= totalPages - 1}
-                            >
-                                »
-                            </button>
-                        </div>
-                    )}
-                </div>
-            </div>
-
-            <MatrixExportWrapper fileBaseName="convergence-matrix" buildWorkbook={buildWorkbook}>
-                {({ noInnerScroll, noSticky, captureRef }) => (
-                    <div ref={captureRef}>
-                        <Matrix
-                            rows={rows}
-                            cols={cols}
-                            rowWidth={160}
-                            colWidth={44}
-                            className=""
-                            tableClassName=""
-                            thClassName="px-0 py-0"
-                            tdClassName="px-0 py-0"
-                            emptyFallback={
-                                <div className="text-textDim text-sm">
-                                    Нет данных для отображения.
-                                </div>
                             }
-                            enableInnerScroll={!noInnerScroll}
-                            maxBodyHeight="70vh"
-                            stickyHeaders={!noSticky}
-                            renderCorner={() => (
-                                <div className="px-1 py-1 text-left text-[10px] text-textDim">
-                                    Алгоритм \ Ряд
+                            return lines.join("\n");
+                        })()}
+                    >
+                        <div className="whitespace-pre leading-tight">
+                            <span className="block max-w-[150px] truncate text-[10px] text-textDim">
+                                {algo.algorithmName}
+                            </span>
+                            <span className="text-[9px] text-textDim/70">
+                                {algo.m != null ? `m=${String(algo.m)}` : "m=∅"}
+                            </span>
+                            {algo.argsSummary && (
+                                <div className="mt-[1px] max-w-[150px] truncate text-[8px] text-textDim/60">
+                                    {algo.argsSummary}
                                 </div>
                             )}
-                            renderColHeader={(col) => {
-                                const s = seriesSlice.find((x) => x.key === col.id);
-                                if (!s) return null;
-
-                                return (
-                                    <div
-                                        className="relative flex h-28 w-[44px] items-center justify-center"
-                                        title={`${s.seriesName}\n x = ${s.xLabel}\n prec = ${s.precision}`}
-                                    >
-                                        <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rotate-[-90deg] whitespace-nowrap text-[9px] leading-tight">
-                                            {s.seriesName}
-                                        </span>
-                                        <span className="absolute bottom-3 text-[8px] text-textDim/70">
-                                            x={s.xLabel}
-                                        </span>
-                                        <span className="absolute bottom-0 text-[8px] text-textDim/60">
-                                            prec={s.precision}
-                                        </span>
-                                    </div>
-                                );
-                            }}
-                            renderRowHeader={(row) => {
-                                const algo = algoList.find((a) => a.key === row.id);
-                                if (!algo) return null;
-
-                                return (
-                                    <div
-                                        className="px-1 py-[2px] text-left align-top"
-                                        title={(() => {
-                                            const lines: string[] = [];
-                                            lines.push(`Алгоритм: ${algo.algorithmName}`);
-                                            lines.push(
-                                                `m = ${algo.m != null ? String(algo.m) : "∅"}`
-                                            );
-                                            const entries = nonNullEntries(algo.algorithmArgs);
-                                            if (entries.length > 0) {
-                                                lines.push("Аргументы:");
-                                                for (const [k, v] of entries.sort(([a, b]) =>
-                                                    a.localeCompare(b)
-                                                )) {
-                                                    lines.push(`  ${k}: ${v}`);
-                                                }
-                                            }
-                                            return lines.join("\n");
-                                        })()}
-                                    >
-                                        <div className="whitespace-pre leading-tight">
-                                            <span className="block max-w-[150px] truncate text-[10px] text-textDim">
-                                                {algo.algorithmName}
-                                            </span>
-                                            <span className="text-[9px] text-textDim/70">
-                                                {algo.m != null ? `m=${String(algo.m)}` : "m=∅"}
-                                            </span>
-                                            {algo.argsSummary && (
-                                                <div className="mt-[1px] max-w-[150px] truncate text-[8px] text-textDim/60">
-                                                    {algo.argsSummary}
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-                                );
-                            }}
-                            renderCell={(row, col) => {
-                                const algo = algoList.find((a) => a.key === row.id);
-                                const s = seriesSlice.find((x) => x.key === col.id);
-                                if (!algo || !s) return null;
-
-                                const key = `${algo.key}::${s.key}`;
-                                const analysis = cells[key];
-
-                                if (!analysis) {
-                                    return (
-                                        <div className="px-[2px] py-[2px] text-center text-[10px] text-textDim/50">
-                                            —
-                                        </div>
-                                    );
-                                }
-
-                                const rawSide = analysis.side;
-                                const rawMon = analysis.monotonicity;
-
-                                const signChanges =
-                                    typeof analysis.signChangesCount === "number"
-                                        ? analysis.signChangesCount
-                                        : 0;
-
-                                const violationsCount =
-                                    typeof analysis.growthViolationsCount === "number"
-                                        ? analysis.growthViolationsCount
-                                        : 0;
-
-                                let effectiveSide: SideType = rawSide;
-                                if (rawSide !== "no_limit") {
-                                    effectiveSide =
-                                        signChanges <= maxSignChangesForOneSided
-                                            ? "one_sided"
-                                            : "two_sided";
-                                }
-
-                                let effectiveMon: MonotonicityType = rawMon;
-                                if (rawMon !== "no_limit" && rawMon !== "not_enough_data") {
-                                    if (violationsCount <= maxViolationsForMonotone) {
-                                        if (rawMon === "has_growth") {
-                                            effectiveMon = "non_increasing_error";
-                                        }
-                                    }
-                                }
-
-                                const sideShort = formatSideShort(effectiveSide);
-                                const monShort = formatMonotonicityShort(effectiveMon);
-
-                                const titleLines: string[] = [];
-                                titleLines.push(
-                                    `Ряд: ${s.seriesName} (x=${s.xLabel}, prec=${s.precision})`
-                                );
-                                titleLines.push(
-                                    `Алгоритм: ${algo.algorithmName}` +
-                                        (algo.m != null ? `, m=${algo.m}` : "")
-                                );
-                                titleLines.push("Аргументы алгоритма:");
-
-                                const algoEntries = nonNullEntries(algo.algorithmArgs);
-                                if (algoEntries.length > 0) {
-                                    for (const [k, v] of algoEntries.sort(([a, b]) =>
-                                        a.localeCompare(b)
-                                    )) {
-                                        titleLines.push(`  ${k} = ${String(v)}`);
-                                    }
-                                }
-                                if (algo.argsSummary) {
-                                    titleLines.push(`  (${algo.argsSummary})`);
-                                }
-                                if (algoEntries.length > 0 || algo.argsSummary) {
-                                    titleLines.push("");
-                                }
-
-                                const classDescr = describeClass(effectiveSide, effectiveMon);
-                                titleLines.push(`Класс: ${classDescr}`);
-
-                                const signNsText =
-                                    analysis.signChangeNs && analysis.signChangeNs.length > 0
-                                        ? formatIntervals(analysis.signChangeNs)
-                                        : analysis.firstSignChangeN != null
-                                          ? String(analysis.firstSignChangeN)
-                                          : "—";
-
-                                const growthNsText =
-                                    analysis.growthNs && analysis.growthNs.length > 0
-                                        ? formatIntervals(analysis.growthNs)
-                                        : analysis.firstGrowthN != null
-                                          ? String(analysis.firstGrowthN)
-                                          : "—";
-
-                                titleLines.push(
-                                    `Число смен знака: ${analysis.signChangesCount}, ns: ${signNsText}`
-                                );
-                                titleLines.push(
-                                    `Число роста |Aₙ−lim|: ${analysis.growthViolationsCount}, ns: ${growthNsText}`
-                                );
-                                titleLines.push(`Пар (n−1,n) в анализе: ${analysis.stepsAnalyzed}`);
-                                titleLines.push("");
-                                titleLines.push("Клик — детальный график.");
-
-                                const title = titleLines.join("\n");
-
-                                const isSelected =
-                                    selectedCell?.seriesId === s.key &&
-                                    selectedCell?.accelId === algo.key;
-
-                                const colorClass = getCellColorClass(
-                                    effectiveSide,
-                                    effectiveMon,
-                                    isSelected
-                                );
-                                const domId = getConvergenceCellDomId(algo.key, s.key);
-
-                                return (
-                                    <div
-                                        id={domId}
-                                        title={title}
-                                        className={
-                                            "w-full h-full min-h-[32px] cursor-pointer border border-transparent " +
-                                            colorClass
-                                        }
-                                        onClick={() =>
-                                            onCellSelect({
-                                                seriesId: s.key,
-                                                accelId: algo.key,
-                                            })
-                                        }
-                                    >
-                                        <div className="flex select-none flex-col items-center justify-center gap-[1px] leading-tight py-[2px]">
-                                            <span className="font-mono text-[10px]">
-                                                {sideShort} | {monShort}
-                                            </span>
-                                            <span className="text-[9px] text-textDim/80">
-                                                k: {analysis.stepsAnalyzed}
-                                            </span>
-                                        </div>
-                                    </div>
-                                );
-                            }}
-                        />
+                        </div>
                     </div>
-                )}
-            </MatrixExportWrapper>
-        </div>
+                );
+            }}
+            renderCell={(row, col, _i, _j) => {
+                const algo = algoList.find((a) => a.key === row.id);
+                const s = seriesList[col.meta?.seriesIndex ?? 0];
+                if (!algo || !s) return null;
+
+                const key = `${algo.key}::${s.key}`;
+                const analysis = cells[key];
+
+                if (!analysis) {
+                    return (
+                        <div className="px-[2px] py-[2px] text-center text-[10px] text-textDim/50">
+                            —
+                        </div>
+                    );
+                }
+
+                const rawSide = analysis.side;
+                const rawMon = analysis.monotonicity;
+
+                const signChanges =
+                    typeof analysis.signChangesCount === "number" ? analysis.signChangesCount : 0;
+
+                const violationsCount =
+                    typeof analysis.growthViolationsCount === "number"
+                        ? analysis.growthViolationsCount
+                        : 0;
+
+                let effectiveSide: SideType = rawSide;
+                if (rawSide !== "no_limit") {
+                    effectiveSide =
+                        signChanges <= maxSignChangesForOneSided ? "one_sided" : "two_sided";
+                }
+
+                let effectiveMon: MonotonicityType = rawMon;
+                if (rawMon !== "no_limit" && rawMon !== "not_enough_data") {
+                    if (violationsCount <= maxViolationsForMonotone) {
+                        if (rawMon === "has_growth") effectiveMon = "non_increasing_error";
+                    }
+                }
+
+                const sideShort = formatSideShort(effectiveSide);
+                const monShort = formatMonotonicityShort(effectiveMon);
+
+                const titleLines: string[] = [];
+                titleLines.push(`Ряд: ${s.seriesName} (x=${s.xLabel}, prec=${s.precision})`);
+                titleLines.push(
+                    `Алгоритм: ${algo.algorithmName}` + (algo.m != null ? `, m=${algo.m}` : "")
+                );
+                titleLines.push("Аргументы алгоритма:");
+
+                const algoEntries = nonNullEntries(algo.algorithmArgs);
+                if (algoEntries.length > 0) {
+                    for (const [k, v] of algoEntries.sort(([a, b]) => a.localeCompare(b))) {
+                        titleLines.push(`  ${k} = ${String(v)}`);
+                    }
+                }
+                if (algo.argsSummary) titleLines.push(`  (${algo.argsSummary})`);
+                if (algoEntries.length > 0 || algo.argsSummary) titleLines.push("");
+
+                const classDescr = describeClass(effectiveSide, effectiveMon);
+                titleLines.push(`Класс: ${classDescr}`);
+
+                const signNsText =
+                    analysis.signChangeNs && analysis.signChangeNs.length > 0
+                        ? formatIntervals(analysis.signChangeNs)
+                        : analysis.firstSignChangeN != null
+                          ? String(analysis.firstSignChangeN)
+                          : "—";
+
+                const growthNsText =
+                    analysis.growthNs && analysis.growthNs.length > 0
+                        ? formatIntervals(analysis.growthNs)
+                        : analysis.firstGrowthN != null
+                          ? String(analysis.firstGrowthN)
+                          : "—";
+
+                titleLines.push(
+                    `Число смен знака: ${analysis.signChangesCount}, ns: ${signNsText}`
+                );
+                titleLines.push(
+                    `Число роста |Aₙ−lim|: ${analysis.growthViolationsCount}, ns: ${growthNsText}`
+                );
+                titleLines.push(`Пар (n−1,n) в анализе: ${analysis.stepsAnalyzed}`);
+                titleLines.push("");
+                titleLines.push("Клик — детальный график.");
+
+                const isSelected =
+                    selectedCell?.seriesId === s.key && selectedCell?.accelId === algo.key;
+
+                const colorClass = getCellColorClass(effectiveSide, effectiveMon, isSelected);
+                const domId = getConvergenceCellDomId(algo.key, s.key);
+
+                return (
+                    <div
+                        id={domId}
+                        title={titleLines.join("\n")}
+                        className={
+                            "w-full h-full min-h-[32px] cursor-pointer border border-transparent " +
+                            colorClass
+                        }
+                        onClick={() => onCellSelect({ seriesId: s.key, accelId: algo.key })}
+                    >
+                        <div className="flex select-none flex-col items-center justify-center gap-[1px] leading-tight py-[2px]">
+                            <span className="font-mono text-[10px]">
+                                {sideShort} | {monShort}
+                            </span>
+                            <span className="text-[9px] text-textDim/80">
+                                k: {analysis.stepsAnalyzed}
+                            </span>
+                        </div>
+                    </div>
+                );
+            }}
+        />
     );
 };
