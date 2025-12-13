@@ -11,6 +11,7 @@ import type {
 } from "@/entities/experiment/model/experiment";
 import { MatrixPaged } from "@/shared/ui/Matrix/MatrixPaged";
 import type { MatrixAxisItem, MatrixProps } from "@/shared/ui/Matrix/Matrix";
+import * as XLSX from "xlsx-js-style";
 
 type SeriesKey = string;
 type AlgoKey = string;
@@ -260,6 +261,62 @@ interface DiffRecord {
 }
 
 type Side = "prev" | "next";
+
+function headerStyle(): XLSX.CellStyle {
+    return {
+        fill: { patternType: "solid", fgColor: { rgb: "0B1220" } },
+        font: { color: { rgb: "E5E7EB" }, bold: true },
+        alignment: { horizontal: "center", vertical: "center", wrapText: true },
+        border: {
+            top: { style: "thin", color: { rgb: "374151" } },
+            bottom: { style: "thin", color: { rgb: "374151" } },
+            left: { style: "thin", color: { rgb: "374151" } },
+            right: { style: "thin", color: { rgb: "374151" } },
+        },
+    };
+}
+
+function rowHeaderStyle(): XLSX.CellStyle {
+    return {
+        fill: { patternType: "solid", fgColor: { rgb: "0F172A" } },
+        font: { color: { rgb: "E5E7EB" }, bold: true },
+        alignment: { horizontal: "left", vertical: "top", wrapText: true },
+        border: {
+            top: { style: "thin", color: { rgb: "374151" } },
+            bottom: { style: "thin", color: { rgb: "374151" } },
+            left: { style: "thin", color: { rgb: "374151" } },
+            right: { style: "thin", color: { rgb: "374151" } },
+        },
+    };
+}
+
+function styleFromColorSpec(spec: ColorSpec): XLSX.CellStyle {
+    // Маппинг "семантики" в Excel-цвета.
+    // Tailwind-классы тут бесполезны, Excel их не понимает.
+    const bg = (() => {
+        if (spec.bgClass.includes("bg-green")) return "14532D";
+        if (spec.bgClass.includes("bg-red")) return "7F1D1D";
+        if (spec.bgClass.includes("bg-purple")) return "4C1D95";
+        if (spec.bgClass.includes("bg-sky")) return "0C4A6E";
+        if (spec.bgClass.includes("bg-yellow")) return "713F12";
+        if (spec.bgClass.includes("bg-amber")) return "78350F";
+        if (spec.bgClass.includes("bg-white")) return "FFFFFF";
+        if (spec.bgClass.includes("bg-slate-900")) return "0F172A";
+        return "111827";
+    })();
+
+    return {
+        fill: { patternType: "solid", fgColor: { rgb: bg } },
+        font: { color: { rgb: bg === "FFFFFF" ? "111827" : "E5E7EB" } },
+        alignment: { horizontal: "center", vertical: "center", wrapText: true },
+        border: {
+            top: { style: "thin", color: { rgb: "374151" } },
+            bottom: { style: "thin", color: { rgb: "374151" } },
+            left: { style: "thin", color: { rgb: "374151" } },
+            right: { style: "thin", color: { rgb: "374151" } },
+        },
+    };
+}
 
 /* ------------ component ------------ */
 
@@ -574,6 +631,133 @@ export function AlgorithmSeriesDiffHeatmap({
             cols={colsAxis}
             maxColsPerPage={maxSeries && maxSeries > 0 ? maxSeries : 0}
             resetKey={`${(experiment as any)?.id ?? "no-exp"}::${prevPrecision ?? "∅"}->${nextPrecision ?? "∅"}`}
+            export={{
+                fileBaseName: `AlgorithmSeriesDiffHeatmap_${prevPrecision ?? "∅"}_to_${nextPrecision ?? "∅"}`,
+                enablePng: true,
+                enableXlsx: true,
+                buildWorkbook: ({ rows, cols }) => {
+                    const aoa: any[][] = [];
+
+                    // header
+                    aoa.push([
+                        "Алгоритм \\ Ряд",
+                        ...cols.map((c) => {
+                            const s = c.meta!;
+                            return `${s.seriesName}\n x=${s.xLabel}`;
+                        }),
+                    ]);
+
+                    // body
+                    for (const r of rows) {
+                        const algo = r.meta!;
+                        const rowArr: any[] = [];
+
+                        rowArr.push(
+                            `${algo.algorithmName}\n${algo.m != null ? `m=${algo.m}` : "m=∅"}${
+                                algo.argsSummary ? `\n${algo.argsSummary}` : ""
+                            }`
+                        );
+
+                        for (const c of cols) {
+                            const s = c.meta!;
+                            const key = `${algo.key}||${s.key}`;
+                            const rec = diffMap.get(key);
+
+                            const prevInfo = rec?.prev ?? {
+                                hasCell: false,
+                                hasErr: false,
+                                n: null,
+                            };
+                            const nextInfo = rec?.next ?? {
+                                hasCell: false,
+                                hasErr: false,
+                                n: null,
+                            };
+
+                            // текст в ячейке
+                            let text: string;
+                            if (!prevInfo.hasCell && !nextInfo.hasCell) text = "∅/∅";
+                            else if (!prevInfo.hasCell && nextInfo.hasCell) text = "∅→…";
+                            else if (prevInfo.hasCell && !nextInfo.hasCell) text = "…→∅";
+                            else if (!prevInfo.hasErr && !nextInfo.hasErr) text = "ok→ok";
+                            else if (prevInfo.hasErr && !nextInfo.hasErr) text = "err→ok";
+                            else if (!prevInfo.hasErr && nextInfo.hasErr) text = "ok→err";
+                            else if (prevInfo.n != null && nextInfo.n != null) {
+                                const d = nextInfo.n - prevInfo.n;
+                                text = `n ${prevInfo.n}→${nextInfo.n} (Δ${d >= 0 ? "+" : ""}${d})`;
+                            } else {
+                                text = `n ${prevInfo.n ?? "∅"}→${nextInfo.n ?? "∅"}`;
+                            }
+
+                            rowArr.push(text);
+                        }
+
+                        aoa.push(rowArr);
+                    }
+
+                    const ws = XLSX.utils.aoa_to_sheet(aoa);
+
+                    // размеры
+                    ws["!cols"] = [{ wch: 40 }, ...cols.map(() => ({ wch: 22 }))];
+                    ws["!rows"] = [{ hpt: 40 }, ...rows.map(() => ({ hpt: 36 }))];
+
+                    // стили
+                    const ref = ws["!ref"] || "A1:A1";
+                    const range = XLSX.utils.decode_range(ref);
+
+                    // header row
+                    for (let C = range.s.c; C <= range.e.c; C++) {
+                        const addr = XLSX.utils.encode_cell({ r: 0, c: C });
+                        if (ws[addr]) ws[addr].s = headerStyle();
+                    }
+
+                    // row headers
+                    for (let R = 1; R <= range.e.r; R++) {
+                        const addr = XLSX.utils.encode_cell({ r: R, c: 0 });
+                        if (ws[addr]) ws[addr].s = rowHeaderStyle();
+                    }
+
+                    // data cells with semantic coloring
+                    for (let R = 1; R <= range.e.r; R++) {
+                        for (let C = 1; C <= range.e.c; C++) {
+                            const addr = XLSX.utils.encode_cell({ r: R, c: C });
+                            const cell = ws[addr];
+                            if (!cell) continue;
+
+                            const algo = rows[R - 1]!.meta!;
+                            const s = cols[C - 1]!.meta!;
+                            const key = `${algo.key}||${s.key}`;
+                            const rec = diffMap.get(key);
+
+                            const prevInfo = rec?.prev ?? {
+                                hasCell: false,
+                                hasErr: false,
+                                n: null,
+                            };
+                            const nextInfo = rec?.next ?? {
+                                hasCell: false,
+                                hasErr: false,
+                                n: null,
+                            };
+
+                            const spec = classifyErrorChangeFull(
+                                prevInfo.hasCell,
+                                nextInfo.hasCell,
+                                prevInfo.hasErr,
+                                prevInfo.n,
+                                nextInfo.hasErr,
+                                nextInfo.n
+                            );
+
+                            cell.s = styleFromColorSpec(spec);
+                        }
+                    }
+
+                    const wb = XLSX.utils.book_new();
+                    XLSX.utils.book_append_sheet(wb, ws, "DiffHeatmap");
+                    return wb;
+                },
+            }}
             renderTitle={() => "Хитмапа разницы по шагам ошибок: алгоритмы × ряды"}
             renderSubtitle={() =>
                 prevPrecision && nextPrecision && prevPrecision !== nextPrecision
@@ -628,7 +812,6 @@ export function AlgorithmSeriesDiffHeatmap({
                     ) : null}
                 </div>
             )}
-            // Matrix props
             enableInnerScroll
             maxBodyHeight="70vh"
             stickyHeaders
@@ -636,7 +819,7 @@ export function AlgorithmSeriesDiffHeatmap({
             colWidth={40}
             className="rounded-xl2 border border-border bg-panel shadow-panel"
             tableClassName="border-separate border-spacing-0"
-            thClassName="bg-surface/90"
+            thClassName="bg-surface"
             tdClassName="p-0"
             renderCorner={() => <span className="text-left">Алгоритм \ Ряд</span>}
             renderRowHeader={renderRowHeader}
