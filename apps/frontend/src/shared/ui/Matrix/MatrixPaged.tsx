@@ -176,7 +176,7 @@ export function MatrixPaged<TRowMeta = unknown, TColMeta = unknown>(
         renderTitle || renderSubtitle || renderHeaderRight || totalPages > 1 ? (
             <div
                 className="
-                    sticky top-0 z-40 mb-2
+                    relative mb-2
                     -mx-4 px-4 py-2
                     bg-surface/95 backdrop-blur-sm
                     flex items-center justify-between

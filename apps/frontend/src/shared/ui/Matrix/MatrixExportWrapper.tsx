@@ -39,6 +39,8 @@ export const MatrixExportWrapper: React.FC<MatrixExportWrapperProps> = ({
         setExporting(true);
         setProgress(5);
 
+        const EXTRA_PX = 12;
+
         try {
             setNoInnerScroll(true);
             setNoSticky(true);
@@ -48,45 +50,62 @@ export const MatrixExportWrapper: React.FC<MatrixExportWrapperProps> = ({
             setProgress(25);
 
             const table = node.querySelector("table") as HTMLTableElement | null;
+            const targetEl = (table ?? node) as HTMLElement;
+            const rect = targetEl.getBoundingClientRect();
 
-            const prevNodeOverflow = node.style.overflow;
-            const prevNodeWidth = node.style.width;
+            const targetWidth = Math.ceil(rect.width) + EXTRA_PX;
+            const targetHeight = Math.ceil(rect.height) + EXTRA_PX;
 
-            const prevTableWidth = table?.style.width ?? "";
-            const prevTableMinWidth = table?.style.minWidth ?? "";
+            // 2) Клонируем и рендерим клон вне экрана
+            const clone = node.cloneNode(true) as HTMLDivElement;
 
-            node.style.overflow = "visible";
+            // контейнер-стейдж, чтобы клон не влиял на страницу
+            const stage = document.createElement("div");
+            stage.style.position = "fixed";
+            stage.style.left = "-100000px";
+            stage.style.top = "0";
+            stage.style.width = `${targetWidth}px`;
+            stage.style.height = `${targetHeight}px`;
+            stage.style.overflow = "visible";
+            stage.style.pointerEvents = "none";
+            stage.style.zIndex = "-1";
 
-            if (table) {
-                const fullW = Math.ceil(table.scrollWidth) + 2;
-                table.style.width = `${fullW}px`;
-                table.style.minWidth = `${fullW}px`;
-            } else {
-                const fullW = Math.ceil(node.scrollWidth) + 2;
-                node.style.width = `${fullW}px`;
+            // фиксируем размеры клона, но НЕ меняем display (никакого inline-block)
+            clone.style.overflow = "visible";
+            clone.style.width = `${targetWidth}px`;
+            clone.style.height = `${targetHeight}px`;
+            clone.style.boxSizing = "border-box";
+            clone.style.paddingBottom = `${EXTRA_PX}px`;
+
+            // если внутри есть table, лучше стабилизировать layout на клоне
+            const cloneTable = clone.querySelector("table") as HTMLTableElement | null;
+            if (cloneTable) {
+                // важно: фиксируем ширину, но только на клоне
+                cloneTable.style.width = `${targetWidth}px`;
+                cloneTable.style.minWidth = `${targetWidth}px`;
+                // чтобы не было переразметки колонок по содержимому
+                (cloneTable.style as any).tableLayout = "fixed";
             }
+
+            stage.appendChild(clone);
+            document.body.appendChild(stage);
 
             await new Promise<void>((r) => requestAnimationFrame(() => r()));
             setProgress(50);
 
-            const targetEl: HTMLElement = (table ?? node) as HTMLElement;
-
-            const targetWidth = Math.ceil(targetEl.scrollWidth) + 2;
-            const targetHeight = Math.ceil(targetEl.scrollHeight) + 2;
-
-            const dataUrl = await htmlToImage.toPng(node, {
+            const dataUrl = await htmlToImage.toPng(clone, {
                 cacheBust: true,
                 pixelRatio: window.devicePixelRatio || 2,
-
                 width: targetWidth,
                 height: targetHeight,
-
                 style: {
                     overflow: "visible",
                     width: `${targetWidth}px`,
                     height: `${targetHeight}px`,
                 },
             });
+
+            document.body.removeChild(stage);
 
             setProgress(90);
 
@@ -98,13 +117,6 @@ export const MatrixExportWrapper: React.FC<MatrixExportWrapperProps> = ({
             document.body.removeChild(a);
 
             setProgress(100);
-
-            node.style.overflow = prevNodeOverflow;
-            node.style.width = prevNodeWidth;
-            if (table) {
-                table.style.width = prevTableWidth;
-                table.style.minWidth = prevTableMinWidth;
-            }
         } catch (e) {
             console.error("PNG export failed", e);
             setProgress(null);

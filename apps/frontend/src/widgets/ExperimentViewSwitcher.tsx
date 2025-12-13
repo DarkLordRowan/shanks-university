@@ -104,19 +104,19 @@ export function ExperimentViewSwitcher(props: ExperimentViewSwitcherProps) {
                     {view === "error-matrix" && <ErrorMatrixTable experiment={experiment} />}
 
                     {view === "series-diff" && (
-                        <AlgorithmSeriesDiffHeatmap experiment={experiment} />
+                        <AlgorithmSeriesDiffHeatmap experiment={experiment} maxSeries={20} />
                     )}
 
                     {view === "series-error" && (
-                        <AlgorithmSeriesErrorMatrix experiment={experiment} />
+                        <AlgorithmSeriesErrorMatrix experiment={experiment} maxSeries={20} />
                     )}
 
                     {view === "series-convergence" && (
-                        <AlgorithmSeriesConvergenceTable experiment={experiment} maxSeries={15} />
+                        <AlgorithmSeriesConvergenceTable experiment={experiment} maxSeries={20} />
                     )}
 
                     {view === "series-error-stats" && (
-                        <AlgorithmSeriesErrorStatsTable experiment={experiment} maxSeries={15} />
+                        <AlgorithmSeriesErrorStatsTable experiment={experiment} maxSeries={20} />
                     )}
 
                     {view === "algo-ranking" && <AlgoRankingTable experiment={experiment} />}
