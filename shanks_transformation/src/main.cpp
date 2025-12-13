@@ -3,6 +3,7 @@
 
 #include "../libs/arbitrary_arithmetics/complexprecision.h"
 #include "../libs/arbitrary_arithmetics/fprecision.h"
+#include "../libs/arbitrary_arithmetics/intervalprecision.h"
 #include "../libs/arbitrary_arithmetics/precisioncore.cpp"
 
 #include "../include/test_framework/test_framework.hpp"
@@ -14,10 +15,12 @@ int main()
     while(true){
 		try
 		{
-			//main_testing_function<complex_precision<float_precision>, unsigned long long int>();
-			main_testing_function<float_precision, unsigned long long int >();
+			main_testing_function<complex_precision<float_precision>, unsigned long long int>();
+			//main_testing_function<complex_precision<double>, unsigned long long int>();
+			//main_testing_function<float_precision, unsigned long long int >();
 			//main_testing_function<long double, unsigned long long int>();
-			//main_testing_function<double, unsigned int>();
+			//main_testing_function<interval<double>, unsigned int>();
+			//main_testing_function<interval<float_precision>, unsigned int>();
 			//main_testing_function<float, unsigned short int>();
 		}
 		catch (std::domain_error& e)

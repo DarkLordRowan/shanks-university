@@ -47,6 +47,12 @@ struct console_IO<complex_precision<InputType>> {
 	complex_precision<InputType> inline static input(const std::string& var_name = "x");
 };
 
+//FOR INTERVAL PREC
+template<FloatLike InputType>
+struct console_IO<interval<InputType>> {
+	interval<InputType> inline static input(const std::string& var_name = "x");
+};
+
 template<typename InputType>
 requires std::floating_point<InputType> || std::unsigned_integral<InputType> || std::is_enum<InputType>::value
 InputType inline console_IO<InputType>::input(const std::string& var_name){
@@ -124,6 +130,7 @@ InputType inline console_IO<InputType>::input(const std::string& var_name){
 
 }
 
+#ifdef INC_FPRECISION
 float_precision inline console_IO<float_precision>::input(const std::string& var_name){
 
     std::string init_string = "";
@@ -151,7 +158,7 @@ float_precision inline console_IO<float_precision>::input(const std::string& var
             valid_input = true;
 
         } 
-		catch (int_precision::bad_int_syntax& e){ error_handler(error_mes_invalid_arg); } 
+        catch (float_precision::bad_int_syntax& e){ error_handler(error_mes_invalid_arg); } 
 		catch (float_precision::bad_float_syntax& e){ error_handler(error_mes_invalid_arg); }
         catch (float_precision::out_of_range& e) { error_handler(error_mes_out_of_range); }
     }
@@ -167,7 +174,9 @@ float_precision inline console_IO<float_precision>::input(const std::string& var
     return x;
 
 }
+#endif
 
+#ifdef INC_COMPLEXPRECISION
 template<FloatLike InputType>
 complex_precision<InputType> inline console_IO<complex_precision<InputType>>::input(const std::string& var_name){
 
@@ -177,3 +186,16 @@ complex_precision<InputType> inline console_IO<complex_precision<InputType>>::in
     return complex_precision<InputType>(real_x, imag_x);
 
 }
+#endif
+
+#ifdef INC_INTERVALPRECISION
+template<FloatLike InputType>
+interval<InputType> inline console_IO<interval<InputType>>::input(const std::string& var_name){
+
+    InputType left_x = console_IO<InputType>::input("left border");
+    InputType right_x = console_IO<InputType>::input("right border");
+
+    return interval<InputType>(left_x, right_x);
+
+}
+#endif 

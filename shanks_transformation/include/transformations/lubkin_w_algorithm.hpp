@@ -106,20 +106,22 @@ T lubkin_w_algorithm<T, K>::operator()(
 	// Storage scheme requires 3n+1 terms for order n transformation
 	const K base_size = static_cast<K>(3) * order + static_cast<K>(1);
 
-	std::vector<T> W(
-		base_size,
-		static_cast<T>(0.0)
-	);
+	std::vector<T> W(base_size, static_cast<T>(0));
+
+	T Wo0, Wo1, Wo2, Woo1, Woo2;
+	Wo0 = Wo1 = Wo2 = Woo1 = Woo2 = static_cast<T>(0);
+
+	#ifdef INC_FPRECISION
+    if constexpr (is_precisable<T>::value){
+        const size_t precision = utils::get_precision(data.Sn[0]);
+        utils::set_vec_precision(W, precision);
+        utils::set_precision(precision, Wo0, Wo1, Wo2, Woo1, Woo2);
+    }
+    #endif
 
 	for(K i = static_cast<K>(0); i < base_size; ++i){
 		W[i] = data.Sn.at( + i);
 	}
-
-	T Wo0 = static_cast<T>(0.0);
-	T Wo1 = static_cast<T>(0.0);
-	T Wo2 = static_cast<T>(0.0);  // First differences: ΔS_n, ΔS_{n+1}, ΔS_{n+2}
-	T Woo1 = static_cast<T>(0.0);
-	T Woo2 = static_cast<T>(0.0);     // Compound terms for denominator calculation
 
 	K j1, j2, j3;     // Index variables
 
@@ -154,7 +156,7 @@ T lubkin_w_algorithm<T, K>::operator()(
 			W[j] = fma(
 				-Wo1,
 				Woo1 / (Woo2 - Woo1),
-				 W[j1]
+				W[j1]
 			);
 		}
 	}
@@ -172,284 +174,3 @@ T lubkin_w_algorithm<T, K>::operator()(
 
 	return W[0];
 }
-
-#ifdef INC_FPRECISION
-
-template<UnsignedIntLike K>
-class lubkin_w_algorithm<float_precision, K> final : public series_acceleration<float_precision, K>
-{
-public:
-
-	/**
-	 * @brief Parameterized constructor to initialize the Lubkin W-transformation.
-	 * @param series The series class object to be accelerated
-	 *        Must be a valid object implementing the required series interface
-	 */
-	explicit lubkin_w_algorithm() : series_acceleration<float_precision, K>("lubkin W transformation") {}
-
-	/**
-	 * @brief Applies Lubkin's W-transformation to accelerate series convergence.
-	 *
-	 * Computes the accelerated sum using Lubkin's W-transformation, which is particularly
-	 * effective for sequences with both linear and logarithmic convergence patterns.
-	 *
-	 * For theory, see: Sidi (2003), Chapter 15.4, Theorem 15.4.1
-	 * The transformation accelerates convergence for:
-	 * - Logarithmic sequences: Am ∼ A + Σα_i m^{γ-i}
-	 * - Linear sequences: Am ∼ A + ζ^m Σα_i m^{γ-i}
-	 * - Factorial sequences: Am ∼ A + (ζ^m/(m!)^r) Σα_i m^{γ-i}
-	 *
-	 * @param n The number of terms to use in the transformation
-	 *        Valid values: n ≥ 0 (algorithm requires at least 1 term)
-	 *        Higher values use more terms but may provide better acceleration
-	 * @param order The order of transformation (number of iterations)
-	 *        Valid values: order ≥ 0
-	 *        Higher orders provide more acceleration but require more terms
-	 * @return The accelerated partial sum after Lubkin transformation
-	 * @throws std::domain_error if negative order is provided
-	 * @throws std::overflow_error if division by zero or numerical instability occurs
-	 */
-	float_precision operator()(
-		const K n, 
-        const K order, 
-        const series_result<float_precision>& data
-	) const override;
-};
-
-template<UnsignedIntLike K>
-float_precision lubkin_w_algorithm<float_precision, K>::operator()(
-	const K n, 
-    const K order, 
-    const series_result<float_precision>& data
-) const {
-
-    const K required_size = n + static_cast<K>(3) * order + static_cast<K>(1);
-
-    if (data.Sn.size() < required_size){
-        throw std::out_of_range("The Sn smaller then required for W_{" + to_string(order) + "}^{" + to_string(n) + "}\n" +
-        "the size of Sn must be at least " + to_string(required_size));
-	}
-
-    if (order == static_cast<K>(0)) {
-        return data.Sn.at(n);
-    }
-
-	using std::isfinite;
-	using std::fma;
-
-	// For theory, see: Wynn (1956), Section 3 - Table construction
-	// Storage scheme requires 3n+1 terms for order n transformation
-	const K base_size = static_cast<K>(3) * order + static_cast<K>(1);
-	const size_t precision = data.Sn[0].precision();
-
-	std::vector<float_precision> W(
-		base_size,
-		float_precision(0.0, precision)
-	);
-
-	for(K i = static_cast<K>(0); i < base_size; ++i){
-		W[i] = data.Sn.at( + i);
-	}
-
-	float_precision Wo0  = float_precision(0.0, precision);
-	float_precision Wo1  = float_precision(0.0, precision);
-	float_precision Wo2  = float_precision(0.0, precision);  // First differences: ΔS_n, ΔS_{n+1}, ΔS_{n+2}
-	float_precision Woo1 = float_precision(0.0, precision);
-	float_precision Woo2 = float_precision(0.0, precision);     // Compound terms for denominator calculation
-
-	K j1, j2, j3;     // Index variables
-
-	// For theory, see:
-	// - Lubkin (1952), Eq. (5.2)
-	// - Osada (1992), Theorem 2 and Eq. (5.2)
-	// - Sidi (2003), Chapter 15.4, Eq. (15.4.1)
-	// Iterative application of the W-transformation
-	for(K level = static_cast<K>(1); level <= order; ++level){
-
-		for(K j = static_cast<K>(0); j < base_size - level * static_cast<K>(3); ++j){
-
-			j1 = j + static_cast<K>(1);
-			j2 = j + static_cast<K>(2);
-			j3 = j + static_cast<K>(3);
-
-			// For theory, see: Lubkin (1952), Eq. (5.2)
-			// First differences: ΔS_j = S_{j+1} - S_j
-			Wo0 = W[j1] - W[j];    // ΔS_j
-			Wo1 = W[j2] - W[j1];   // ΔS_{j+1}
-			Wo2 = W[j3] - W[j2];   // ΔS_{j+2}
-
-			// For theory, see: Osada (1992), Eq. (5.2)
-			// Numerator: (ΔS_n·ΔS_{n-1}·Δ²S_{n-2}) = ΔS_{j+1}·(ΔS_{j+1} - ΔS_j)·ΔS_j
-			// Denominator: (ΔS_n·Δ²S_{n-2} - ΔS_{n-2}·Δ²S_{n-1}) = ΔS_{j+2}·(ΔS_{j+1} - ΔS_j) - ΔS_j·(ΔS_{j+2} - ΔS_{j+1})
-			Woo1 = Wo0 * (Wo2 - Wo1);  // ΔS_j·(ΔS_{j+2} - ΔS_{j+1})
-			Woo2 = Wo2 * (Wo1 - Wo0);  // ΔS_{j+2}·(ΔS_{j+1} - ΔS_j)
-
-			// For theory, see: Lubkin (1952), Main transformation formula
-			// W_n = S_{n+1} - [Numerator] / [Denominator]
-			// Optimized computation using fused multiply-add for better numerical stability
-			W[j] = fma(
-				-Wo1,
-				Woo1 / (Woo2 - Woo1),
-				 W[j1]
-			);
-		}
-	}
-
-	// Numerical stability check
-    if(!isfinite(W[0])){
-        throw std::overflow_error("division by zero");
-    }
-
-	return W[0];
-}
-
-#ifdef INC_COMPLEXPRECISION
-
-template<UnsignedIntLike K>
-class lubkin_w_algorithm<complex_precision<float_precision>, K> final : public series_acceleration<complex_precision<float_precision>, K>
-{
-public:
-
-	/**
-	 * @brief Parameterized constructor to initialize the Lubkin W-transformation.
-	 * @param series The series class object to be accelerated
-	 *        Must be a valid object implementing the required series interface
-	 */
-	explicit lubkin_w_algorithm() : series_acceleration<complex_precision<float_precision>, K>("lubkin W transformation") {}
-
-	/**
-	 * @brief Applies Lubkin's W-transformation to accelerate series convergence.
-	 *
-	 * Computes the accelerated sum using Lubkin's W-transformation, which is particularly
-	 * effective for sequences with both linear and logarithmic convergence patterns.
-	 *
-	 * For theory, see: Sidi (2003), Chapter 15.4, Theorem 15.4.1
-	 * The transformation accelerates convergence for:
-	 * - Logarithmic sequences: Am ∼ A + Σα_i m^{γ-i}
-	 * - Linear sequences: Am ∼ A + ζ^m Σα_i m^{γ-i}
-	 * - Factorial sequences: Am ∼ A + (ζ^m/(m!)^r) Σα_i m^{γ-i}
-	 *
-	 * @param n The number of terms to use in the transformation
-	 *        Valid values: n ≥ 0 (algorithm requires at least 1 term)
-	 *        Higher values use more terms but may provide better acceleration
-	 * @param order The order of transformation (number of iterations)
-	 *        Valid values: order ≥ 0
-	 *        Higher orders provide more acceleration but require more terms
-	 * @return The accelerated partial sum after Lubkin transformation
-	 * @throws std::domain_error if negative order is provided
-	 * @throws std::overflow_error if division by zero or numerical instability occurs
-	 */
-	complex_precision<float_precision> operator()(
-		const K n, 
-        const K order, 
-        const series_result<complex_precision<float_precision>>& data
-	) const override;
-};
-
-template<UnsignedIntLike K>
-complex_precision<float_precision> lubkin_w_algorithm<complex_precision<float_precision>, K>::operator()(
-	const K n, 
-    const K order, 
-    const series_result<complex_precision<float_precision>>& data
-) const {
-
-    const K required_size = n + static_cast<K>(3) * order + static_cast<K>(1);
-
-    if (data.Sn.size() < required_size){
-        throw std::out_of_range("The Sn smaller then required for W_{" + to_string(order) + "}^{" + to_string(n) + "}\n" +
-        "the size of Sn must be at least " + to_string(required_size));
-	}
-
-    if (order == static_cast<K>(0)) {
-        return data.Sn.at(n);
-    }
-
-	using std::isfinite;
-	using std::fma;
-
-	// For theory, see: Wynn (1956), Section 3 - Table construction
-	// Storage scheme requires 3n+1 terms for order n transformation
-	const K base_size = static_cast<K>(3) * order + static_cast<K>(1);
-	const size_t precision = std::max(data.Sn[0].real().precision(), data.Sn[0].imag().precision());
-
-	std::vector<complex_precision<float_precision>> W(
-		base_size,
-		complex_precision<float_precision>(
-		float_precision(0.0, precision),
-		float_precision(0.0, precision)
-		)
-	);
-
-	for(K i = static_cast<K>(0); i < base_size; ++i){
-		W[i] = data.Sn.at(n + i);
-	}
-
-	complex_precision<float_precision> Wo0  = complex_precision<float_precision>(
-		float_precision(0.0, precision),
-		float_precision(0.0, precision)
-	);
-	complex_precision<float_precision> Wo1  = complex_precision<float_precision>(
-		float_precision(0.0, precision),
-		float_precision(0.0, precision)
-	);
-	complex_precision<float_precision> Wo2  = complex_precision<float_precision>(
-		float_precision(0.0, precision),
-		float_precision(0.0, precision)
-	);  // First differences: ΔS_n, ΔS_{n+1}, ΔS_{n+2}
-	complex_precision<float_precision> Woo1 = complex_precision<float_precision>(
-		float_precision(0.0, precision),
-		float_precision(0.0, precision)
-	);
-	complex_precision<float_precision> Woo2 = complex_precision<float_precision>(
-		float_precision(0.0, precision),
-		float_precision(0.0, precision)
-	);     // Compound terms for denominator calculation
-
-	K j1, j2, j3;     // Index variables
-
-	// For theory, see:
-	// - Lubkin (1952), Eq. (5.2)
-	// - Osada (1992), Theorem 2 and Eq. (5.2)
-	// - Sidi (2003), Chapter 15.4, Eq. (15.4.1)
-	// Iterative application of the W-transformation
-	for(K level = static_cast<K>(1); level <= order; ++level){
-
-		for(K j = static_cast<K>(0); j < base_size - level * static_cast<K>(3); ++j){
-
-			j1 = j + static_cast<K>(1);
-			j2 = j + static_cast<K>(2);
-			j3 = j + static_cast<K>(3);
-
-			// For theory, see: Lubkin (1952), Eq. (5.2)
-			// First differences: ΔS_j = S_{j+1} - S_j
-			Wo0 = W[j1] - W[j];    // ΔS_j
-			Wo1 = W[j2] - W[j1];   // ΔS_{j+1}
-			Wo2 = W[j3] - W[j2];   // ΔS_{j+2}
-
-			// For theory, see: Osada (1992), Eq. (5.2)
-			// Numerator: (ΔS_n·ΔS_{n-1}·Δ²S_{n-2}) = ΔS_{j+1}·(ΔS_{j+1} - ΔS_j)·ΔS_j
-			// Denominator: (ΔS_n·Δ²S_{n-2} - ΔS_{n-2}·Δ²S_{n-1}) = ΔS_{j+2}·(ΔS_{j+1} - ΔS_j) - ΔS_j·(ΔS_{j+2} - ΔS_{j+1})
-			Woo1 = Wo0 * (Wo2 - Wo1);  // ΔS_j·(ΔS_{j+2} - ΔS_{j+1})
-			Woo2 = Wo2 * (Wo1 - Wo0);  // ΔS_{j+2}·(ΔS_{j+1} - ΔS_j)
-
-			// For theory, see: Lubkin (1952), Main transformation formula
-			// W_n = S_{n+1} - [Numerator] / [Denominator]
-			// Optimized computation using fused multiply-add for better numerical stability
-			W[j] = fma(
-				-Wo1,
-				Woo1 / (Woo2 - Woo1),
-				 W[j1]
-			);
-		}
-	}
-
-	// Numerical stability check
-    if (!isfinite(W[0].real()) || !isfinite(W[0].imag())){
-            throw std::overflow_error("division by zero");
-    }
-
-	return W[0];
-}
-
-#endif
-#endif

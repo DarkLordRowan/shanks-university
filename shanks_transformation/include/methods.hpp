@@ -1,3 +1,5 @@
+#ifndef METHODS_HPP
+#define METHODS_HPP
 #pragma once
 
  /**
@@ -7,6 +9,7 @@
 */
 enum class transformation_id_t {
 	        		     null_transformation_id,
+             anderson_acceleration_algorithm_id,
               brezinski_theta_transformation_id,
                    chang_wynn_transformation_id,
                  drummond_d_u_transformation_id,
@@ -14,6 +17,7 @@ enum class transformation_id_t {
             drummond_d_t_wave_transformation_id,
                  drummond_d_v_transformation_id,
             drummond_d_v_wave_transformation_id,
+                            j_transformation_id,
        recurrent_drummond_d_u_transformation_id,
        recurrent_drummond_d_t_transformation_id,
        recurrent_drummond_d_v_transformation_id,
@@ -57,7 +61,7 @@ recurrent_levin_sidi_s_v_wave_transformation_id,
                  wynn_rho_rho_transformation_id,
          wynn_rho_generalized_transformation_id,
            wynn_rho_gamma_rho_transformation_id,
-                      transformation_id_t_count
+                      transformation_id_t_count,
 };
 
 //INCLUDE TRANSFORMATIONS AND ALGORITHMS
@@ -78,6 +82,7 @@ recurrent_levin_sidi_s_v_wave_transformation_id,
 #include "transformations/wynn_epsilon_2_algorithm.hpp"
 #include "transformations/wynn_epsilon_3_algorithm.hpp"
 #include "transformations/wynn_rho_algorithm.hpp"
+#include "transformations/anderson_acceleration_algorithm.hpp"
+#include "transformations/j_transformation_algorithm.hpp"
 
-
-
+#endif
