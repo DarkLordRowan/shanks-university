@@ -10,6 +10,8 @@ import type {
     SeriesAccel,
     SeriesArgs,
 } from "@/entities/experiment/model/experiment";
+import { MatrixPaged } from "@/shared/ui/Matrix/MatrixPaged";
+import type { MatrixAxisItem, MatrixProps } from "@/shared/ui/Matrix/Matrix";
 
 type SeriesKey = string;
 type AlgoKey = string;
@@ -38,13 +40,11 @@ interface AlgorithmSeriesErrorMatrixProps {
     maxSeries?: number;
 }
 
-/**
- * Безопасное приведение к числу для сортировки.
- */
+/* ---------------- utils ---------------- */
+
+/** Безопасное приведение к числу для сортировки. */
 function toSortableNumber(v: unknown): number | null {
-    if (typeof v === "number") {
-        return Number.isFinite(v) ? v : null;
-    }
+    if (typeof v === "number") return Number.isFinite(v) ? v : null;
     if (typeof v === "bigint") {
         const n = Number(v);
         return Number.isFinite(n) ? n : null;
@@ -58,12 +58,8 @@ function toSortableNumber(v: unknown): number | null {
 
 function parseX(args: SeriesArgs | null): { xLabel: string; xSort: number | null } {
     const raw = args?.x;
-    if (raw == null) {
-        return { xLabel: "∅", xSort: null };
-    }
-    const xLabel = String(raw);
-    const xSort = toSortableNumber(raw);
-    return { xLabel, xSort };
+    if (raw == null) return { xLabel: "∅", xSort: null };
+    return { xLabel: String(raw), xSort: toSortableNumber(raw) };
 }
 
 function nonNullEntries<T extends Record<string, unknown>>(obj: T | null | undefined) {
@@ -88,7 +84,8 @@ function formatComplex(c: Complex | null): string {
     return `${re} ${sign} ${Math.abs(im)}i`;
 }
 
-/** Сводка по одной клетке (SeriesAccel) */
+/* ---------------- cell summary ---------------- */
+
 interface CellSummary {
     state: "no-data" | "all-ok" | "ok-with-errors" | "only-errors";
     totalN: number;
@@ -102,9 +99,7 @@ interface CellSummary {
     uniqueErrorMessages: string[];
 }
 
-/**
- * Строим сводку по SeriesAccel.
- */
+/** Строим сводку по SeriesAccel. */
 function summarizeSeriesAccel(sa: SeriesAccel): CellSummary {
     const computed = sa.computed ?? [];
     const errors = sa.errors ?? [];
@@ -116,14 +111,10 @@ function summarizeSeriesAccel(sa: SeriesAccel): CellSummary {
     const errorMessages: string[] = [];
 
     for (const e of errors) {
-        if (typeof e.n === "number") {
-            errorNs.add(e.n);
-        }
+        if (typeof e.n === "number") errorNs.add(e.n);
         const msg =
             typeof e.message === "string" ? e.message.trim() : String(e.message ?? "").trim();
-        if (msg.length > 0) {
-            errorMessages.push(msg);
-        }
+        if (msg.length > 0) errorMessages.push(msg);
     }
 
     const uniqueErrorMessages = Array.from(new Set(errorMessages));
@@ -135,10 +126,7 @@ function summarizeSeriesAccel(sa: SeriesAccel): CellSummary {
         if (typeof n !== "number") continue;
 
         const hasValue = cp.value != null && (cp.value.re != null || cp.value.im != null);
-
-        if (hasValue && !errorNs.has(n)) {
-            okNs.push(n);
-        }
+        if (hasValue && !errorNs.has(n)) okNs.push(n);
     }
 
     okNs.sort((a, b) => a - b);
@@ -153,16 +141,10 @@ function summarizeSeriesAccel(sa: SeriesAccel): CellSummary {
     const divergentCount = events.filter((ev) => ev.name === "divergent_accel_method").length;
 
     let state: CellSummary["state"];
-
-    if (totalN === 0 && errorList.length === 0) {
-        state = "no-data";
-    } else if (okNs.length === 0 && errorList.length > 0) {
-        state = "only-errors";
-    } else if (okNs.length > 0 && errorList.length === 0) {
-        state = "all-ok";
-    } else {
-        state = "ok-with-errors";
-    }
+    if (totalN === 0 && errorList.length === 0) state = "no-data";
+    else if (okNs.length === 0 && errorList.length > 0) state = "only-errors";
+    else if (okNs.length > 0 && errorList.length === 0) state = "all-ok";
+    else state = "ok-with-errors";
 
     return {
         state,
@@ -177,6 +159,8 @@ function summarizeSeriesAccel(sa: SeriesAccel): CellSummary {
         uniqueErrorMessages,
     };
 }
+
+/* ---------------- component ---------------- */
 
 export const AlgorithmSeriesErrorMatrix: React.FC<AlgorithmSeriesErrorMatrixProps> = ({
     experiment,
@@ -202,9 +186,7 @@ export const AlgorithmSeriesErrorMatrix: React.FC<AlgorithmSeriesErrorMatrixProp
 
         const precisionsOrder: string[] = [];
         for (const s of seriesListRaw) {
-            if (!precisionsOrder.includes(s.precision)) {
-                precisionsOrder.push(s.precision);
-            }
+            if (!precisionsOrder.includes(s.precision)) precisionsOrder.push(s.precision);
         }
 
         const seriesMap = new Map<SeriesKey, SeriesInfo>();
@@ -213,9 +195,7 @@ export const AlgorithmSeriesErrorMatrix: React.FC<AlgorithmSeriesErrorMatrixProp
 
         // series (с учётом фильтра по precision)
         for (const s of seriesListRaw) {
-            if (precisionFilter && s.precision !== precisionFilter) {
-                continue;
-            }
+            if (precisionFilter && s.precision !== precisionFilter) continue;
 
             const key: SeriesKey = s.id;
             if (!seriesMap.has(key)) {
@@ -256,9 +236,7 @@ export const AlgorithmSeriesErrorMatrix: React.FC<AlgorithmSeriesErrorMatrixProp
             if (!algoMap.has(aKey)) continue;
 
             const cellKey = `${aKey}||${sKey}`;
-            if (!cells.has(cellKey)) {
-                cells.set(cellKey, sa);
-            }
+            if (!cells.has(cellKey)) cells.set(cellKey, sa);
         }
 
         const seriesList = Array.from(seriesMap.values()).sort((a, b) => {
@@ -279,7 +257,6 @@ export const AlgorithmSeriesErrorMatrix: React.FC<AlgorithmSeriesErrorMatrixProp
 
             const am = toSortableNumber(a.m);
             const bm = toSortableNumber(b.m);
-
             if (am != null && bm != null) return am - bm;
             if (am != null) return -1;
             if (bm != null) return 1;
@@ -297,45 +274,194 @@ export const AlgorithmSeriesErrorMatrix: React.FC<AlgorithmSeriesErrorMatrixProp
 
     // если фильтр указывает на precision, которого больше нет, сбрасываем его
     useEffect(() => {
-        if (precisionFilter && !precisionsOrder.includes(precisionFilter)) {
-            setPrecisionFilter(null);
-        }
+        if (precisionFilter && !precisionsOrder.includes(precisionFilter)) setPrecisionFilter(null);
     }, [precisionFilter, precisionsOrder]);
 
-    const [page, setPage] = useState(0);
+    const rowsAxis: MatrixAxisItem<AlgoInfo>[] = useMemo(
+        () => algoList.map((a) => ({ id: a.key, meta: a })),
+        [algoList]
+    );
 
-    const pageSize = maxSeries && maxSeries > 0 ? maxSeries : seriesList.length || 1;
+    const colsAxis: MatrixAxisItem<SeriesInfo>[] = useMemo(
+        () => seriesList.map((s) => ({ id: s.key, meta: s })),
+        [seriesList]
+    );
 
-    const totalPages = Math.max(1, Math.ceil((seriesList.length || 1) / pageSize));
+    const renderRowHeader: MatrixProps<AlgoInfo, SeriesInfo>["renderRowHeader"] = (row) => {
+        const algo = row.meta!;
+        return (
+            <div
+                className="whitespace-pre leading-tight"
+                title={(() => {
+                    const lines: string[] = [];
+                    lines.push(`Алгоритм: ${algo.algorithmName}`);
+                    lines.push(`m = ${algo.m != null ? String(algo.m) : "∅"}`);
 
-    useEffect(() => {
-        if (page > totalPages - 1) {
-            setPage(totalPages - 1);
+                    const entries = nonNullEntries(algo.algorithmArgs);
+                    if (entries.length > 0) {
+                        lines.push("Аргументы:");
+                        for (const [k, v] of entries.sort(([a], [b]) => a.localeCompare(b))) {
+                            lines.push(`  ${k}: ${v}`);
+                        }
+                    }
+                    return lines.join("\n");
+                })()}
+            >
+                <span className="block max-w-[160px] truncate">{algo.algorithmName}</span>
+                <span className="text-[9px] text-textDim/70">
+                    {algo.m != null ? `m=${String(algo.m)}` : "m=∅"}
+                </span>
+                {algo.argsSummary && (
+                    <div className="mt-[1px] max-w-[160px] truncate text-[8px] text-textDim/60">
+                        {algo.argsSummary}
+                    </div>
+                )}
+            </div>
+        );
+    };
+
+    const renderColHeader: MatrixProps<AlgoInfo, SeriesInfo>["renderColHeader"] = (col) => {
+        const s = col.meta!;
+        return (
+            <div
+                className="relative h-28 w-[32px] flex items-center justify-center"
+                title={`${s.seriesName}\n x = ${s.xLabel}\n precision = ${s.precision}\n lim = ${formatComplex(
+                    s.limit
+                )}`}
+            >
+                <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rotate-[-90deg] whitespace-nowrap text-[9px] leading-tight">
+                    {s.seriesName}
+                </span>
+                <span className="absolute bottom-1 text-[8px] text-textDim">x={s.xLabel}</span>
+            </div>
+        );
+    };
+
+    const renderCell: MatrixProps<AlgoInfo, SeriesInfo>["renderCell"] = (row, col) => {
+        const algo = row.meta!;
+        const s = col.meta!;
+        const cellKey = `${algo.key}||${s.key}`;
+        const sa = cellMap.get(cellKey);
+
+        if (!sa) {
+            return (
+                <span className="text-[9px] text-textDim/40" title="Нет данных">
+                    —
+                </span>
+            );
         }
-    }, [page, totalPages]);
 
-    const startIndex = page * pageSize;
-    const endIndex = startIndex + pageSize;
-    const seriesListShown =
-        maxSeries && maxSeries > 0 ? seriesList.slice(startIndex, endIndex) : seriesList;
+        const summary = summarizeSeriesAccel(sa);
+
+        let bgClass = "bg-surface/40 hover:bg-surface/60";
+        let borderClass = "border-border/60";
+        let content: React.ReactNode = "—";
+
+        switch (summary.state) {
+            case "no-data":
+                bgClass = "bg-surface/40 hover:bg-surface/60";
+                borderClass = "border-border/60";
+                content = "—";
+                break;
+            case "all-ok":
+                bgClass = "bg-emerald-900/40 hover:bg-emerald-800/60";
+                borderClass = "border-emerald-500/70";
+                content = <span className="font-semibold text-emerald-200">✓</span>;
+                break;
+            case "only-errors":
+                bgClass = "bg-red-900/40 hover:bg-red-800/60";
+                borderClass = "border-red-500/70";
+                content = <span className="font-semibold text-red-200">err</span>;
+                break;
+            case "ok-with-errors":
+                bgClass = "bg-amber-900/40 hover:bg-amber-800/60";
+                borderClass = "border-amber-500/70";
+                if (summary.firstOkN != null && summary.lastOkN != null) {
+                    content = (
+                        <span className="font-semibold text-amber-100">
+                            {summary.firstOkN === summary.lastOkN
+                                ? `${summary.firstOkN}`
+                                : `${summary.firstOkN}–${summary.lastOkN}`}
+                        </span>
+                    );
+                } else {
+                    content = <span className="font-semibold text-amber-100">err</span>;
+                }
+                break;
+        }
+
+        const tooltipLines: string[] = [];
+
+        // ряд
+        tooltipLines.push(`Ряд: ${s.seriesName}`);
+        tooltipLines.push(`x = ${s.xLabel}`);
+        tooltipLines.push(`precision = ${s.precision}`);
+        tooltipLines.push(`lim = ${formatComplex(s.limit)}`);
+        tooltipLines.push("");
+
+        // алгоритм
+        tooltipLines.push(`Алгоритм: ${algo.algorithmName}`);
+        tooltipLines.push(`m = ${algo.m != null ? String(algo.m) : "∅"}`);
+        const argEntries = nonNullEntries(algo.algorithmArgs);
+        if (argEntries.length > 0) {
+            tooltipLines.push("Аргументы:");
+            for (const [k, v] of argEntries.sort(([a], [b]) => a.localeCompare(b))) {
+                tooltipLines.push(`  ${k}: ${v}`);
+            }
+        }
+
+        tooltipLines.push("");
+        tooltipLines.push(`Всего n: ${summary.totalN}`);
+        tooltipLines.push(
+            `OK-точек: ${summary.okCount}${
+                summary.firstOkN != null && summary.lastOkN != null
+                    ? ` (n=${summary.firstOkN}…${summary.lastOkN})`
+                    : ""
+            }`
+        );
+        tooltipLines.push(
+            `Ошибок: ${summary.errorCount}${
+                summary.firstErrorN != null && summary.lastErrorN != null
+                    ? ` (n=${summary.firstErrorN}…${summary.lastErrorN})`
+                    : ""
+            }`
+        );
+        if (summary.divergentCount > 0) {
+            tooltipLines.push(`divergent_accel_method: ${summary.divergentCount}`);
+        }
+        if (summary.uniqueErrorMessages.length > 0) {
+            tooltipLines.push("");
+            tooltipLines.push("Типы ошибок:");
+            for (const msg of summary.uniqueErrorMessages) tooltipLines.push(`  • ${msg}`);
+        }
+
+        return (
+            <div
+                title={tooltipLines.join("\n")}
+                className={`w-full h-full border px-[2px] py-[2px] text-center text-[10px] cursor-default ${borderClass} ${bgClass}`}
+            >
+                {content}
+            </div>
+        );
+    };
+
+    const totalAlgos = algoList.length;
+    const totalSeries = seriesList.length;
 
     return (
-        <div className="space-y-2">
-            <div className="flex items-center justify-between text-xs text-textDim">
-                <div className="flex flex-col gap-1">
-                    <h2 className="text-sm font-semibold text-textDim">
-                        Матрица ошибок: алгоритмы × ряды
-                    </h2>
-                    {precisionFilter && (
-                        <div className="text-[10px] text-textDim/80">
-                            precision: {precisionFilter}
-                        </div>
-                    )}
-                </div>
-
-                <div className="flex items-center gap-3">
-                    {/* выбор precision */}
-                    <div className="flex items-center gap-2 text-[10px]">
+        <MatrixPaged<AlgoInfo, SeriesInfo>
+            rows={rowsAxis}
+            cols={colsAxis}
+            maxColsPerPage={maxSeries && maxSeries > 0 ? maxSeries : 0}
+            resetKey={`${(experiment as any)?.id ?? "no-exp"}::${precisionFilter ?? "all"}`}
+            className="space-y-2"
+            renderTitle={() => "Матрица ошибок: алгоритмы × ряды"}
+            renderSubtitle={() =>
+                precisionFilter ? `precision: ${precisionFilter}` : "precision: все"
+            }
+            renderHeaderRight={({ page, totalPages, startIndex, endIndex }) => (
+                <div className="flex items-center gap-3 text-[10px] text-textDim">
+                    <div className="flex items-center gap-2">
                         <span>precision:</span>
                         <select
                             className="rounded border border-border bg-surface px-1 py-[1px]"
@@ -353,264 +479,37 @@ export const AlgorithmSeriesErrorMatrix: React.FC<AlgorithmSeriesErrorMatrixProp
                         </select>
                     </div>
 
-                    <div>
-                        Алгоритмы: {algoList.length} · Ряды: {seriesListShown.length} из{" "}
-                        {seriesList.length} · Связок series-accel: {totalCells}
+                    <div className="whitespace-nowrap">
+                        Алгоритмы: {totalAlgos} · Ряды:{" "}
+                        {Math.min(endIndex, totalSeries) - startIndex} из {totalSeries} · Связок
+                        series-accel: {totalCells}
                     </div>
 
-                    {maxSeries && maxSeries > 0 && seriesList.length > maxSeries && (
-                        <div className="flex items-center gap-1 text-[10px]">
-                            <button
-                                type="button"
-                                className="rounded border border-border bg-surface px-1 py-[1px] disabled:opacity-40 hover:bg-panel"
-                                onClick={() => setPage(0)}
-                                disabled={page === 0}
-                            >
-                                «
-                            </button>
-                            <button
-                                type="button"
-                                className="rounded border border-border bg-surface px-1 py-[1px] disabled:opacity-40 hover:bg-panel"
-                                onClick={() => setPage((p) => Math.max(0, p - 1))}
-                                disabled={page === 0}
-                            >
-                                ‹
-                            </button>
-                            <span className="px-1">
-                                стр. {page + 1} / {totalPages}
-                            </span>
-                            <span className="text-textDim/60">
-                                колонки {startIndex + 1}–{Math.min(endIndex, seriesList.length)}
-                            </span>
-                            <button
-                                type="button"
-                                className="rounded border border-border bg-surface px-1 py-[1px] disabled:opacity-40 hover:bg-panel"
-                                onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
-                                disabled={page >= totalPages - 1}
-                            >
-                                ›
-                            </button>
-                            <button
-                                type="button"
-                                className="rounded border border-border bg-surface px-1 py-[1px] disabled:opacity-40 hover:bg-panel"
-                                onClick={() => setPage(totalPages - 1)}
-                                disabled={page >= totalPages - 1}
-                            >
-                                »
-                            </button>
+                    {totalPages > 1 ? (
+                        <div className="text-textDim/60 whitespace-nowrap">
+                            стр. {page + 1}/{totalPages} · колонки {startIndex + 1}–{endIndex}
                         </div>
-                    )}
+                    ) : null}
                 </div>
-            </div>
-
-            <div className="overflow-auto rounded-xl2 border border-border bg-panel shadow-panel">
-                <table className="border-collapse text-[10px] leading-tight text-textDim">
-                    <thead className="bg-surface/80">
-                        <tr>
-                            <th className="sticky left-0 top-0 z-20 border border-border bg-surface/90 px-1 py-1 text-left align-bottom text-[10px]">
-                                Алгоритм \ Ряд
-                            </th>
-
-                            {seriesListShown.map((s) => (
-                                <th
-                                    key={s.key}
-                                    className="border border-border px-0 py-0 text-center align-bottom"
-                                    title={`${s.seriesName}\n x = ${s.xLabel}\n precision = ${s.precision}\n lim = ${formatComplex(
-                                        s.limit
-                                    )}`}
-                                >
-                                    <div className="relative h-28 w-[32px] flex items-center justify-center">
-                                        <span
-                                            className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2
-                                        rotate-[-90deg] whitespace-nowrap text-[9px] leading-tight"
-                                        >
-                                            {s.seriesName}
-                                        </span>
-                                        <span className="absolute bottom-1 text-[8px] text-textDim/70">
-                                            x={s.xLabel}
-                                        </span>
-                                    </div>
-                                </th>
-                            ))}
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {algoList.map((algo) => (
-                            <tr key={algo.key}>
-                                <th
-                                    className="sticky left-0 z-10 border border-border bg-panel px-1 py-[2px] text-left align-top"
-                                    title={(() => {
-                                        const lines: string[] = [];
-                                        lines.push(`Алгоритм: ${algo.algorithmName}`);
-                                        lines.push(`m = ${algo.m != null ? String(algo.m) : "∅"}`);
-
-                                        const entries = nonNullEntries(algo.algorithmArgs);
-                                        if (entries.length > 0) {
-                                            lines.push("Аргументы:");
-                                            for (const [k, v] of entries.sort(([a], [b]) =>
-                                                a.localeCompare(b)
-                                            )) {
-                                                lines.push(`  ${k}: ${v}`);
-                                            }
-                                        }
-                                        return lines.join("\n");
-                                    })()}
-                                >
-                                    <div className="whitespace-pre leading-tight">
-                                        <span className="block max-w-[150px] truncate">
-                                            {algo.algorithmName}
-                                        </span>
-                                        <span className="text-[9px] text-textDim/70">
-                                            {algo.m != null ? `m=${String(algo.m)}` : "m=∅"}
-                                        </span>
-                                        {algo.argsSummary && (
-                                            <div className="mt-[1px] max-w-[150px] truncate text-[8px] text-textDim/60">
-                                                {algo.argsSummary}
-                                            </div>
-                                        )}
-                                    </div>
-                                </th>
-
-                                {seriesListShown.map((s) => {
-                                    const cellKey = `${algo.key}||${s.key}`;
-                                    const sa = cellMap.get(cellKey);
-
-                                    if (!sa) {
-                                        return (
-                                            <td
-                                                key={cellKey}
-                                                className="min-w-[26px] border border-border bg-surface/40 px-[2px] py-[2px] text-center text-[9px] text-textDim/40"
-                                            >
-                                                —
-                                            </td>
-                                        );
-                                    }
-
-                                    const summary = summarizeSeriesAccel(sa);
-
-                                    let bgClass = "bg-surface/40 hover:bg-surface/60";
-                                    let borderClass = "border-border/60";
-                                    let content: React.ReactNode = "—";
-
-                                    switch (summary.state) {
-                                        case "no-data":
-                                            bgClass = "bg-surface/40 hover:bg-surface/60";
-                                            borderClass = "border-border/60";
-                                            content = "—";
-                                            break;
-                                        case "all-ok":
-                                            bgClass = "bg-emerald-900/40 hover:bg-emerald-800/60";
-                                            borderClass = "border-emerald-500/70";
-                                            content = (
-                                                <span className="font-semibold text-emerald-200">
-                                                    ✓
-                                                </span>
-                                            );
-                                            break;
-                                        case "only-errors":
-                                            bgClass = "bg-red-900/40 hover:bg-red-800/60";
-                                            borderClass = "border-red-500/70";
-                                            content = (
-                                                <span className="font-semibold text-red-200">
-                                                    err
-                                                </span>
-                                            );
-                                            break;
-                                        case "ok-with-errors":
-                                            bgClass = "bg-amber-900/40 hover:bg-amber-800/60";
-                                            borderClass = "border-amber-500/70";
-                                            if (
-                                                summary.firstOkN != null &&
-                                                summary.lastOkN != null
-                                            ) {
-                                                content = (
-                                                    <span className="font-semibold text-amber-100">
-                                                        {summary.firstOkN === summary.lastOkN
-                                                            ? `${summary.firstOkN}`
-                                                            : `${summary.firstOkN}–${summary.lastOkN}`}
-                                                    </span>
-                                                );
-                                            } else {
-                                                content = (
-                                                    <span className="font-semibold text-amber-100">
-                                                        err
-                                                    </span>
-                                                );
-                                            }
-                                            break;
-                                    }
-
-                                    const tooltipLines: string[] = [];
-
-                                    // ряд
-                                    tooltipLines.push(`Ряд: ${s.seriesName}`);
-                                    tooltipLines.push(`x = ${s.xLabel}`);
-                                    tooltipLines.push(`precision = ${s.precision}`);
-                                    tooltipLines.push(`lim = ${formatComplex(s.limit)}`);
-                                    tooltipLines.push("");
-
-                                    // алгоритм
-                                    tooltipLines.push(`Алгоритм: ${algo.algorithmName}`);
-                                    tooltipLines.push(
-                                        `m = ${algo.m != null ? String(algo.m) : "∅"}`
-                                    );
-                                    const argEntries = nonNullEntries(algo.algorithmArgs);
-                                    if (argEntries.length > 0) {
-                                        tooltipLines.push("Аргументы:");
-                                        for (const [k, v] of argEntries.sort(([a], [b]) =>
-                                            a.localeCompare(b)
-                                        )) {
-                                            tooltipLines.push(`  ${k}: ${v}`);
-                                        }
-                                    }
-
-                                    tooltipLines.push("");
-                                    tooltipLines.push(`Всего n: ${summary.totalN}`);
-                                    tooltipLines.push(
-                                        `OK-точек: ${summary.okCount}${
-                                            summary.firstOkN != null && summary.lastOkN != null
-                                                ? ` (n=${summary.firstOkN}…${summary.lastOkN})`
-                                                : ""
-                                        }`
-                                    );
-                                    tooltipLines.push(
-                                        `Ошибок: ${summary.errorCount}${
-                                            summary.firstErrorN != null &&
-                                            summary.lastErrorN != null
-                                                ? ` (n=${summary.firstErrorN}…${summary.lastErrorN})`
-                                                : ""
-                                        }`
-                                    );
-                                    if (summary.divergentCount > 0) {
-                                        tooltipLines.push(
-                                            `divergent_accel_method: ${summary.divergentCount}`
-                                        );
-                                    }
-                                    if (summary.uniqueErrorMessages.length > 0) {
-                                        tooltipLines.push("");
-                                        tooltipLines.push("Типы ошибок:");
-                                        for (const msg of summary.uniqueErrorMessages) {
-                                            tooltipLines.push(`  • ${msg}`);
-                                        }
-                                    }
-
-                                    const title = tooltipLines.join("\n");
-
-                                    return (
-                                        <td
-                                            key={cellKey}
-                                            title={title}
-                                            className={`min-w-[26px] border px-[2px] py-[2px] text-center text-[10px] cursor-default ${borderClass} ${bgClass}`}
-                                        >
-                                            {content}
-                                        </td>
-                                    );
-                                })}
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
-        </div>
+            )}
+            // Matrix props
+            enableInnerScroll
+            maxBodyHeight="70vh"
+            stickyHeaders
+            rowWidth={220}
+            colWidth={32}
+            tableClassName="border-separate border-spacing-0"
+            thClassName="bg-surface"
+            tdClassName="p-0"
+            renderCorner={() => <span className="text-left">Алгоритм \ Ряд</span>}
+            renderRowHeader={renderRowHeader}
+            renderColHeader={renderColHeader}
+            renderCell={renderCell}
+            emptyFallback={
+                <div className="rounded-xl2 border border-border bg-panel p-3 text-[11px] text-textDim/70">
+                    Нет данных
+                </div>
+            }
+        />
     );
 };
