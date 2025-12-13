@@ -1,7 +1,10 @@
 // widgets/AlgoRankingTable.tsx
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import * as XLSX from "xlsx-js-style";
 import type { Experiment, AccelArgs } from "@/entities/experiment/model/experiment";
+import { MatrixPaged } from "@/shared/ui/Matrix/MatrixPaged";
+import type { MatrixAxisItem, MatrixProps } from "@/shared/ui/Matrix/Matrix";
 
 type AlgoKey = string;
 
@@ -11,10 +14,6 @@ interface AlgoStats {
     m: number | null;
     argsSummary: string;
 
-    /** precision по рядам этого алгоритма:
-     *  - если одинаковая у всех — её значение
-     *  - если разная — null (mixed / неизвестно)
-     */
     precision: string | null;
 
     seriesCount: number;
@@ -85,7 +84,6 @@ function summarizeArgs(args: AccelArgs | null | undefined): string {
     return entries.map(([k, v]) => `${k}=${v}`).join(", ");
 }
 
-/** Среднее по массиву; если пустой, возвращает Infinity (чтобы в сортировке были хуже всех) */
 function meanOrInfinity(values: number[]): number {
     if (values.length === 0) return Number.POSITIVE_INFINITY;
     let sum = 0;
@@ -93,7 +91,6 @@ function meanOrInfinity(values: number[]): number {
     return sum / values.length;
 }
 
-/** Медиана по массиву; если пустой, Infinity */
 function medianOrInfinity(values: number[]): number {
     if (values.length === 0) return Number.POSITIVE_INFINITY;
     const sorted = [...values].sort((a, b) => a - b);
@@ -102,7 +99,6 @@ function medianOrInfinity(values: number[]): number {
     return (sorted[mid - 1] + sorted[mid]) / 2;
 }
 
-/** Форматирование чисел для таблицы */
 function formatNumber(x: number): string {
     if (!Number.isFinite(x)) return "—";
     const ax = Math.abs(x);
@@ -111,19 +107,27 @@ function formatNumber(x: number): string {
     return x.toFixed(4);
 }
 
-/** Форматирование шага n */
 function formatSteps(n: number): string {
     if (!Number.isFinite(n)) return "—";
     return String(Math.round(n));
 }
 
+function compareValues(aVal: unknown, bVal: unknown, dir: SortDir): number {
+    if (typeof aVal === "string" && typeof bVal === "string") {
+        const cmp = aVal.localeCompare(bVal);
+        return dir === "asc" ? cmp : -cmp;
+    }
+
+    const aNum = typeof aVal === "number" ? aVal : aVal == null ? Number.POSITIVE_INFINITY : 0;
+    const bNum = typeof bVal === "number" ? bVal : bVal == null ? Number.POSITIVE_INFINITY : 0;
+
+    if (aNum === bNum) return 0;
+    if (dir === "asc") return aNum < bNum ? -1 : 1;
+    return aNum > bNum ? -1 : 1;
+}
+
 /**
- * Построить агрегированную статистику по алгоритмам
- * из структуры Experiment.
- *
- * Для каждого (series_id, accel_id):
- *  - bestDev = min_n |deviation|
- *  - stepsToTol = min n: |deviation| <= epsilon (иначе Infinity)
+ * Построить агрегированную статистику по алгоритмам из Experiment.
  */
 function buildAlgoStatsFromExperiment(
     experiment: Experiment | null,
@@ -144,10 +148,7 @@ function buildAlgoStatsFromExperiment(
         if (!series) continue;
 
         const seriesPrecision = series.precision ?? null;
-
-        if (precisionFilter && seriesPrecision !== precisionFilter) {
-            continue;
-        }
+        if (precisionFilter && seriesPrecision !== precisionFilter) continue;
 
         const accel = accelById.get(sa.accel_id);
         const algorithmName = accel?.name ?? sa.accel_id;
@@ -183,16 +184,11 @@ function buildAlgoStatsFromExperiment(
             };
             byAlgo.set(algoKey, stats);
         } else {
-            // если в рамках одного алгоритма встретились разные precision — помечаем как mixed
-            if (stats.precision !== seriesPrecision) {
-                stats.precision = null;
-            }
+            if (stats.precision !== seriesPrecision) stats.precision = null;
         }
 
         const computed = sa.computed ?? [];
-        if (computed.length === 0) {
-            continue;
-        }
+        if (computed.length === 0) continue;
 
         let bestDev = Number.POSITIVE_INFINITY;
         let bestNForTol = Number.POSITIVE_INFINITY;
@@ -202,24 +198,14 @@ function buildAlgoStatsFromExperiment(
             if (dev == null || !Number.isFinite(dev)) continue;
 
             const absDev = Math.abs(dev);
-            if (absDev < bestDev) {
-                bestDev = absDev;
-            }
-            if (absDev <= epsilon && !Number.isFinite(bestNForTol)) {
-                bestNForTol = c.n;
-            }
+            if (absDev < bestDev) bestDev = absDev;
+            if (absDev <= epsilon && !Number.isFinite(bestNForTol)) bestNForTol = c.n;
         }
 
-        if (!Number.isFinite(bestDev) && !Number.isFinite(bestNForTol)) {
-            // полностью "мертвый" (нет нормальных deviation) — не засоряем статистику
-            continue;
-        }
+        if (!Number.isFinite(bestDev) && !Number.isFinite(bestNForTol)) continue;
 
         stats.seriesCount += 1;
-
-        if (Number.isFinite(bestDev)) {
-            stats.bestDeviations.push(bestDev);
-        }
+        if (Number.isFinite(bestDev)) stats.bestDeviations.push(bestDev);
 
         if (Number.isFinite(bestNForTol)) {
             stats.stepsToTol.push(bestNForTol);
@@ -230,7 +216,6 @@ function buildAlgoStatsFromExperiment(
     }
 
     const list: AlgoStats[] = [];
-
     for (const stats of byAlgo.values()) {
         if (stats.seriesCount === 0) continue;
 
@@ -248,89 +233,81 @@ function buildAlgoStatsFromExperiment(
 
     if (!list.length) return list;
 
-    // ранги по точности (меньше средняя лучшая ошибка → лучше)
     const byPrecision = [...list].sort((a, b) => a.avgBestDeviation - b.avgBestDeviation);
-    byPrecision.forEach((s, idx) => {
-        s.rankPrecision = idx + 1;
-    });
+    byPrecision.forEach((s, idx) => (s.rankPrecision = idx + 1));
 
-    // ранги по скорости (меньше шаг до ε → лучше)
     const bySpeed = [...list].sort((a, b) => a.avgStepsToTol - b.avgStepsToTol);
-    bySpeed.forEach((s, idx) => {
-        s.rankSpeed = idx + 1;
-    });
+    bySpeed.forEach((s, idx) => (s.rankSpeed = idx + 1));
 
-    // ранги по стабильности (больше доля достигших ε → лучше)
     const byStability = [...list].sort((a, b) => b.fracReachedTol - a.fracReachedTol);
-    byStability.forEach((s, idx) => {
-        s.rankStability = idx + 1;
-    });
+    byStability.forEach((s, idx) => (s.rankStability = idx + 1));
 
-    // итоговый ранг: сумма трёх рангов
-    for (const s of list) {
-        s.totalRankScore = s.rankPrecision + s.rankSpeed + s.rankStability;
-    }
+    for (const s of list) s.totalRankScore = s.rankPrecision + s.rankSpeed + s.rankStability;
 
-    // базовый порядок: по итоговому рангу, затем по точности
     list.sort((a, b) => {
-        if (a.totalRankScore !== b.totalRankScore) {
-            return a.totalRankScore - b.totalRankScore;
-        }
+        if (a.totalRankScore !== b.totalRankScore) return a.totalRankScore - b.totalRankScore;
         return a.avgBestDeviation - b.avgBestDeviation;
     });
 
     return list;
 }
 
-function renderSortIcon(columnKey: SortKey, sortKey: SortKey, sortDir: SortDir): React.ReactNode {
-    if (columnKey !== sortKey) return null;
-    return <span className="ml-1 text-[9px]">{sortDir === "asc" ? "▲" : "▼"}</span>;
-}
+/* ---------------- MatrixPaged wiring ---------------- */
 
-function compareValues(aVal: unknown, bVal: unknown, dir: SortDir): number {
-    // строки
-    if (typeof aVal === "string" && typeof bVal === "string") {
-        const cmp = aVal.localeCompare(bVal);
-        return dir === "asc" ? cmp : -cmp;
-    }
+type RowMeta = AlgoStats & { place: number; precisionLabel: string };
 
-    // числа / null / undefined
-    const aNum = typeof aVal === "number" ? aVal : aVal == null ? Number.POSITIVE_INFINITY : 0;
-    const bNum = typeof bVal === "number" ? bVal : bVal == null ? Number.POSITIVE_INFINITY : 0;
+type ColId =
+    | "precision"
+    | "m"
+    | "argsSummary"
+    | "seriesCount"
+    | "avgBestDeviation"
+    | "avgStepsToTol"
+    | "fracReachedTol"
+    | "rankPrecision"
+    | "rankSpeed"
+    | "rankStability"
+    | "totalRankScore";
 
-    if (aNum === bNum) return 0;
-    if (dir === "asc") {
-        return aNum < bNum ? -1 : 1;
-    }
-    return aNum > bNum ? -1 : 1;
-}
+type ColMeta = { id: ColId; title: string; sortKey: SortKey; defaultDir: SortDir };
+
+const COLUMNS: ColMeta[] = [
+    { id: "precision", title: "precision", sortKey: "precision", defaultDir: "asc" },
+    { id: "m", title: "m", sortKey: "m", defaultDir: "asc" },
+    { id: "argsSummary", title: "args", sortKey: "argsSummary", defaultDir: "asc" },
+    { id: "seriesCount", title: "series", sortKey: "seriesCount", defaultDir: "desc" },
+    {
+        id: "avgBestDeviation",
+        title: "avg best |dev|",
+        sortKey: "avgBestDeviation",
+        defaultDir: "asc",
+    },
+    { id: "avgStepsToTol", title: "avg steps to ε", sortKey: "avgStepsToTol", defaultDir: "asc" },
+    { id: "fracReachedTol", title: "reached ε, %", sortKey: "fracReachedTol", defaultDir: "desc" },
+    { id: "rankPrecision", title: "rank precision", sortKey: "rankPrecision", defaultDir: "asc" },
+    { id: "rankSpeed", title: "rank speed", sortKey: "rankSpeed", defaultDir: "asc" },
+    { id: "rankStability", title: "rank stability", sortKey: "rankStability", defaultDir: "asc" },
+    { id: "totalRankScore", title: "total rank", sortKey: "totalRankScore", defaultDir: "asc" },
+];
 
 export const AlgoRankingTable: React.FC<AlgoRankingTableProps> = ({ experiment, className }) => {
     const [epsilonExp, setEpsilonExp] = useState(-6);
-
     const epsilon = useMemo(() => Math.pow(10, epsilonExp), [epsilonExp]);
 
-    /** null = все precision, строка = фильтр по series.precision */
     const [precisionFilter, setPrecisionFilter] = useState<string | null>(null);
 
-    /** список доступных precision из Experiment */
     const precisionsOrder = useMemo(() => {
         if (!experiment || !experiment.seriesList) return [];
         const set = new Set<string>();
-        for (const s of experiment.seriesList) {
-            if (s.precision) set.add(s.precision);
-        }
+        for (const s of experiment.seriesList) if (s.precision) set.add(s.precision);
         return Array.from(set).sort();
     }, [experiment]);
 
-    // если выбранное precision больше не существует в данных — сбрасываем
     useEffect(() => {
-        if (precisionFilter && !precisionsOrder.includes(precisionFilter)) {
-            setPrecisionFilter(null);
-        }
+        if (precisionFilter && !precisionsOrder.includes(precisionFilter)) setPrecisionFilter(null);
     }, [precisionFilter, precisionsOrder]);
 
-    const stats = useMemo(
+    const baseStats = useMemo(
         () => buildAlgoStatsFromExperiment(experiment, epsilon, precisionFilter),
         [experiment, epsilon, precisionFilter]
     );
@@ -338,32 +315,203 @@ export const AlgoRankingTable: React.FC<AlgoRankingTableProps> = ({ experiment, 
     const [sortKey, setSortKey] = useState<SortKey>("totalRankScore");
     const [sortDir, setSortDir] = useState<SortDir>("asc");
 
-    const minTotalRank = useMemo(
-        () =>
-            stats.length
-                ? Math.min(...stats.map((s) => s.totalRankScore))
-                : Number.POSITIVE_INFINITY,
-        [stats]
+    const sortedStats = useMemo(() => {
+        const copy = [...baseStats];
+        copy.sort((a, b) => compareValues(a[sortKey], b[sortKey], sortDir));
+        return copy;
+    }, [baseStats, sortKey, sortDir]);
+
+    const rowsAxis: MatrixAxisItem<RowMeta>[] = useMemo(() => {
+        return sortedStats.map((s, idx) => ({
+            id: s.algoKey,
+            meta: {
+                ...s,
+                place: idx + 1,
+                precisionLabel: s.precision ?? (precisionFilter ? precisionFilter : "—"),
+            },
+        }));
+    }, [sortedStats, precisionFilter]);
+
+    const colsAxis: MatrixAxisItem<ColMeta>[] = useMemo(
+        () => COLUMNS.map((c) => ({ id: c.id, meta: c })),
+        []
     );
 
-    const sortedStats = useMemo(() => {
-        const copy = [...stats];
-        copy.sort((a, b) => {
-            const aVal = a[sortKey];
-            const bVal = b[sortKey];
-            return compareValues(aVal, bVal, sortDir);
-        });
-        return copy;
-    }, [stats, sortKey, sortDir]);
-
-    function handleSort(nextKey: SortKey, defaultDir: SortDir = "asc") {
-        if (nextKey === sortKey) {
-            setSortDir((prev) => (prev === "asc" ? "desc" : "asc"));
-        } else {
-            setSortKey(nextKey);
+    const handleSort = useCallback((nextKey: SortKey, defaultDir: SortDir) => {
+        setSortKey((cur) => {
+            if (cur === nextKey) {
+                setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+                return cur;
+            }
             setSortDir(defaultDir);
+            return nextKey;
+        });
+    }, []);
+
+    const renderColHeader: MatrixProps<RowMeta, ColMeta>["renderColHeader"] = (col) => {
+        const c = col.meta!;
+        const active = c.sortKey === sortKey;
+        const icon = active ? (sortDir === "asc" ? "▲" : "▼") : "";
+
+        return (
+            <button
+                type="button"
+                className="w-full px-1 py-1 text-[10px] text-left select-none"
+                onClick={() => handleSort(c.sortKey, c.defaultDir)}
+                title={`sort: ${c.sortKey}`}
+            >
+                <span className="truncate">{c.title}</span>
+                {icon ? <span className="ml-1 text-[9px] text-textDim/70">{icon}</span> : null}
+            </button>
+        );
+    };
+
+    const renderRowHeader: MatrixProps<RowMeta, ColMeta>["renderRowHeader"] = (row) => {
+        const s = row.meta!;
+        return (
+            <div className="leading-tight">
+                <div className="flex items-baseline justify-between gap-2">
+                    <div className="max-w-[170px] truncate text-textDim">{s.algorithmName}</div>
+                    <div className="font-mono text-[10px] text-textDim/70">#{s.place}</div>
+                </div>
+                <div className="text-[9px] text-textDim/60">
+                    {s.m != null ? `m=${String(s.m)}` : "m=∅"} · prec={s.precisionLabel}
+                </div>
+                {s.argsSummary ? (
+                    <div className="mt-[1px] max-w-[210px] truncate text-[8px] text-textDim/60">
+                        {s.argsSummary}
+                    </div>
+                ) : null}
+            </div>
+        );
+    };
+
+    const renderCell: MatrixProps<RowMeta, ColMeta>["renderCell"] = (row, col) => {
+        const s = row.meta!;
+        const c = col.meta!.id;
+
+        let text = "—";
+        let title = "";
+
+        switch (c) {
+            case "precision":
+                text = s.precisionLabel;
+                break;
+            case "m":
+                text = s.m != null ? String(s.m) : "—";
+                break;
+            case "argsSummary":
+                text = s.argsSummary || "—";
+                break;
+            case "seriesCount":
+                text = String(s.seriesCount);
+                break;
+            case "avgBestDeviation":
+                text = formatNumber(s.avgBestDeviation);
+                break;
+            case "avgStepsToTol":
+                text = formatSteps(s.avgStepsToTol);
+                break;
+            case "fracReachedTol":
+                text = s.seriesCount > 0 ? (s.fracReachedTol * 100).toFixed(1) + "%" : "—";
+                break;
+            case "rankPrecision":
+                text = String(s.rankPrecision);
+                break;
+            case "rankSpeed":
+                text = String(s.rankSpeed);
+                break;
+            case "rankStability":
+                text = String(s.rankStability);
+                break;
+            case "totalRankScore":
+                text = String(s.totalRankScore);
+                break;
         }
-    }
+
+        title = `${s.algorithmName}\n${c} = ${text}`;
+
+        return (
+            <div
+                title={title}
+                className="w-full h-full px-2 py-[2px] text-[10px] text-textDim font-mono tabular-nums"
+            >
+                <span className="block truncate">{text}</span>
+            </div>
+        );
+    };
+
+    const buildWorkbook = useCallback(
+        ({
+            rows,
+            cols,
+        }: {
+            rows: MatrixAxisItem<RowMeta>[];
+            cols: MatrixAxisItem<ColMeta>[];
+            pager: { startIndex: number; endIndex: number };
+        }): XLSX.WorkBook => {
+            const wb = XLSX.utils.book_new();
+
+            const header: (string | number)[] = ["place", "algorithm"];
+            for (const c of cols) header.push(c.meta?.id ?? c.id);
+
+            const data: (string | number | null)[][] = [header];
+
+            for (const r of rows) {
+                const s = r.meta!;
+                const line: (string | number | null)[] = [s.place, s.algorithmName];
+
+                for (const c of cols) {
+                    const id = c.meta!.id;
+
+                    switch (id) {
+                        case "precision":
+                            line.push(s.precisionLabel);
+                            break;
+                        case "m":
+                            line.push(s.m != null ? Number(s.m as any) || String(s.m) : null);
+                            break;
+                        case "argsSummary":
+                            line.push(s.argsSummary || null);
+                            break;
+                        case "seriesCount":
+                            line.push(s.seriesCount);
+                            break;
+                        case "avgBestDeviation":
+                            line.push(
+                                Number.isFinite(s.avgBestDeviation) ? s.avgBestDeviation : null
+                            );
+                            break;
+                        case "avgStepsToTol":
+                            line.push(Number.isFinite(s.avgStepsToTol) ? s.avgStepsToTol : null);
+                            break;
+                        case "fracReachedTol":
+                            line.push(Number.isFinite(s.fracReachedTol) ? s.fracReachedTol : null);
+                            break;
+                        case "rankPrecision":
+                            line.push(s.rankPrecision);
+                            break;
+                        case "rankSpeed":
+                            line.push(s.rankSpeed);
+                            break;
+                        case "rankStability":
+                            line.push(s.rankStability);
+                            break;
+                        case "totalRankScore":
+                            line.push(s.totalRankScore);
+                            break;
+                    }
+                }
+
+                data.push(line);
+            }
+
+            const ws = XLSX.utils.aoa_to_sheet(data);
+            XLSX.utils.book_append_sheet(wb, ws, "algo_ranking");
+            return wb;
+        },
+        []
+    );
 
     if (!experiment || !experiment.seriesAccelList || experiment.seriesAccelList.length === 0) {
         return (
@@ -375,7 +523,7 @@ export const AlgoRankingTable: React.FC<AlgoRankingTableProps> = ({ experiment, 
         );
     }
 
-    if (!stats.length) {
+    if (!baseStats.length) {
         return (
             <div className={className}>
                 <div className="text-sm text-textDim/80">
@@ -389,13 +537,13 @@ export const AlgoRankingTable: React.FC<AlgoRankingTableProps> = ({ experiment, 
 
     return (
         <div className={className}>
-            <div className="flex items-center gap-4 text-xs text-textDim">
+            {/* controls */}
+            <div className="flex items-center gap-4 text-xs text-textDim mb-2">
                 <div className="flex flex-col gap-1">
                     <label className="font-medium text-text">Порог точности ε</label>
                     <div className="flex items-baseline gap-2 font-mono">
                         <span>
-                            ε = 10
-                            <sup>{epsilonExp}</sup>
+                            ε = 10<sup>{epsilonExp}</sup>
                         </span>
                         <span className="text-textDim/80">≈ {epsilon.toExponential(2)}</span>
                     </div>
@@ -417,252 +565,71 @@ export const AlgoRankingTable: React.FC<AlgoRankingTableProps> = ({ experiment, 
                         <span>10^-1</span>
                     </div>
                 </div>
-            </div>
-            <div className="flex items-baseline justify-between mb-2">
-                <h2 className="text-base font-semibold text-text">Рейтинг алгоритмов</h2>
-                <div className="flex items-center gap-3 text-xs text-textDim/80">
-                    <div>
-                        ε = <span className="font-mono">{epsilon}</span> по |deviation|
-                        {precisionFilter && (
-                            <span className="ml-2">
-                                · precision = <span className="font-mono">{precisionFilter}</span>
-                            </span>
-                        )}
-                    </div>
 
-                    <div className="flex items-center gap-2 text-[10px]">
-                        <span>precision:</span>
-                        <select
-                            className="rounded border border-border bg-surface px-1 py-[1px]"
-                            value={precisionFilter ?? ""}
-                            onChange={(e) =>
-                                setPrecisionFilter(e.target.value === "" ? null : e.target.value)
-                            }
-                        >
-                            <option value="">все</option>
-                            {precisionsOrder.map((p) => (
-                                <option key={p} value={p}>
-                                    {p}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
+                <div className="flex items-center gap-2 text-[10px]">
+                    <span>precision:</span>
+                    <select
+                        className="rounded border border-border bg-surface px-1 py-[1px]"
+                        value={precisionFilter ?? ""}
+                        onChange={(e) =>
+                            setPrecisionFilter(e.target.value === "" ? null : e.target.value)
+                        }
+                    >
+                        <option value="">все</option>
+                        {precisionsOrder.map((p) => (
+                            <option key={p} value={p}>
+                                {p}
+                            </option>
+                        ))}
+                    </select>
                 </div>
             </div>
 
-            <div className="overflow-x-auto rounded-xl border border-border/60 bg-surface/60">
-                <table className="min-w-full text-xs">
-                    <thead className="bg-panel/80 text-textDim uppercase tracking-wide">
-                        <tr>
-                            <th className="px-2 py-1 text-left">
-                                <button
-                                    type="button"
-                                    className="flex items-center gap-1 select-none"
-                                    onClick={() => handleSort("totalRankScore", "asc")}
-                                >
-                                    Место
-                                    {renderSortIcon("totalRankScore", sortKey, sortDir)}
-                                </button>
-                            </th>
-                            <th className="px-2 py-1 text-left">
-                                <button
-                                    type="button"
-                                    className="flex items-center gap-1 select-none"
-                                    onClick={() => handleSort("algorithmName", "asc")}
-                                >
-                                    Алгоритм
-                                    {renderSortIcon("algorithmName", sortKey, sortDir)}
-                                </button>
-                            </th>
-                            <th className="px-2 py-1 text-left">
-                                <button
-                                    type="button"
-                                    className="flex items-center gap-1 select-none"
-                                    onClick={() => handleSort("precision", "asc")}
-                                >
-                                    Точность (precision)
-                                    {renderSortIcon("precision", sortKey, sortDir)}
-                                </button>
-                            </th>
-                            <th className="px-2 py-1 text-left">
-                                <button
-                                    type="button"
-                                    className="flex items-center gap-1 select-none"
-                                    onClick={() => handleSort("m", "asc")}
-                                >
-                                    m (порядок)
-                                    {renderSortIcon("m", sortKey, sortDir)}
-                                </button>
-                            </th>
-                            <th className="px-2 py-1 text-left">
-                                <button
-                                    type="button"
-                                    className="flex items-center gap-1 select-none"
-                                    onClick={() => handleSort("argsSummary", "asc")}
-                                >
-                                    Аргументы алгоритма
-                                    {renderSortIcon("argsSummary", sortKey, sortDir)}
-                                </button>
-                            </th>
-
-                            {/* Пара: ранг точности + значение точности */}
-                            <th className="px-2 py-1 text-right">
-                                <button
-                                    type="button"
-                                    className="flex w-full justify-end items-center gap-1 select-none"
-                                    onClick={() => handleSort("rankPrecision", "asc")}
-                                >
-                                    Ранг по точности
-                                    {renderSortIcon("rankPrecision", sortKey, sortDir)}
-                                </button>
-                            </th>
-                            <th className="px-2 py-1 text-right">
-                                <button
-                                    type="button"
-                                    className="flex w-full justify-end items-center gap-1 select-none"
-                                    onClick={() => handleSort("avgBestDeviation", "asc")}
-                                >
-                                    Средняя лучшая ошибка
-                                    {renderSortIcon("avgBestDeviation", sortKey, sortDir)}
-                                </button>
-                            </th>
-
-                            {/* Пара: ранг скорости + значение скорости */}
-                            <th className="px-2 py-1 text-right">
-                                <button
-                                    type="button"
-                                    className="flex w-full justify-end items-center gap-1 select-none"
-                                    onClick={() => handleSort("rankSpeed", "asc")}
-                                >
-                                    Ранг по скорости
-                                    {renderSortIcon("rankSpeed", sortKey, sortDir)}
-                                </button>
-                            </th>
-                            <th className="px-2 py-1 text-right">
-                                <button
-                                    type="button"
-                                    className="flex w-full justify-end items-center gap-1 select-none"
-                                    onClick={() => handleSort("avgStepsToTol", "asc")}
-                                >
-                                    Средний шаг до ε
-                                    {renderSortIcon("avgStepsToTol", sortKey, sortDir)}
-                                </button>
-                            </th>
-
-                            {/* Пара: ранг стабильности + значение стабильности */}
-                            <th className="px-2 py-1 text-right">
-                                <button
-                                    type="button"
-                                    className="flex w-full justify-end items-center gap-1 select-none"
-                                    onClick={() => handleSort("rankStability", "asc")}
-                                >
-                                    Ранг по стабильности
-                                    {renderSortIcon("rankStability", sortKey, sortDir)}
-                                </button>
-                            </th>
-                            <th className="px-2 py-1 text-right">
-                                <button
-                                    type="button"
-                                    className="flex w-full justify-end items-center gap-1 select-none"
-                                    onClick={() => handleSort("fracReachedTol", "desc")}
-                                >
-                                    Доля рядов с |deviation| ≤ ε
-                                    {renderSortIcon("fracReachedTol", sortKey, sortDir)}
-                                </button>
-                            </th>
-
-                            {/* Итоговая сумма рангов */}
-                            <th className="px-2 py-1 text-right">
-                                <button
-                                    type="button"
-                                    className="flex w-full justify-end items-center gap-1 select-none"
-                                    onClick={() => handleSort("totalRankScore", "asc")}
-                                >
-                                    Итоговый ранг
-                                    {renderSortIcon("totalRankScore", sortKey, sortDir)}
-                                </button>
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-border/40">
-                        {sortedStats.map((s, idx) => {
-                            const isBest = s.totalRankScore === minTotalRank;
-
-                            const precisionGroupRankClass =
-                                "px-2 py-1 text-right font-mono text-textDim bg-primary/5";
-                            const precisionGroupValueClass =
-                                "px-2 py-1 text-right font-mono bg-primary/5";
-
-                            const speedGroupRankClass =
-                                "px-2 py-1 text-right font-mono text-textDim bg-secondary/5";
-                            const speedGroupValueClass =
-                                "px-2 py-1 text-right font-mono bg-secondary/5";
-
-                            const stabilityGroupRankClass =
-                                "px-2 py-1 text-right font-mono text-textDim bg-amber-900/10";
-                            const stabilityGroupValueClass =
-                                "px-2 py-1 text-right font-mono bg-amber-900/10";
-
-                            const baseRowClass = isBest ? "bg-primary/5" : "bg-surface/40";
-
-                            const precisionLabel =
-                                s.precision ?? (precisionFilter ? precisionFilter : "—");
-
-                            return (
-                                <tr key={s.algoKey} className={baseRowClass}>
-                                    <td className="px-2 py-1 text-left font-mono text-textDim">
-                                        {idx + 1}
-                                    </td>
-                                    <td className="px-2 py-1 text-left">
-                                        <div className="font-medium text-text">
-                                            {s.algorithmName}
-                                        </div>
-                                    </td>
-                                    <td className="px-2 py-1 text-left font-mono text-textDim">
-                                        {precisionLabel}
-                                    </td>
-                                    <td className="px-2 py-1 text-left font-mono text-textDim">
-                                        {s.m ?? "—"}
-                                    </td>
-                                    <td className="px-2 py-1 text-left text-textDim">
-                                        {s.argsSummary || "—"}
-                                    </td>
-
-                                    {/* группа: точность */}
-                                    <td className={precisionGroupRankClass}>{s.rankPrecision}</td>
-                                    <td className={precisionGroupValueClass}>
-                                        {formatNumber(s.avgBestDeviation)}
-                                    </td>
-
-                                    {/* группа: скорость */}
-                                    <td className={speedGroupRankClass}>{s.rankSpeed}</td>
-                                    <td className={speedGroupValueClass}>
-                                        {formatSteps(s.avgStepsToTol)}
-                                    </td>
-
-                                    {/* группа: стабильность */}
-                                    <td className={stabilityGroupRankClass}>{s.rankStability}</td>
-                                    <td className={stabilityGroupValueClass}>
-                                        {s.seriesCount > 0
-                                            ? (s.fracReachedTol * 100).toFixed(1) + "%"
-                                            : "—"}
-                                    </td>
-
-                                    <td className="px-2 py-1 text-right font-mono font-semibold">
-                                        {s.totalRankScore}
-                                    </td>
-                                </tr>
-                            );
-                        })}
-                    </tbody>
-                </table>
-            </div>
-
-            <div className="mt-1 text-[10px] text-textDim/70">
-                Средняя лучшая ошибка = среднее по рядам от{" "}
-                <span className="font-mono">min_n |deviation_n|</span>; средний шаг до ε = среднее
-                по тем рядам, где нашёлся n с |deviation_n| ≤ ε.
-            </div>
+            <MatrixPaged<RowMeta, ColMeta>
+                resetKey={`${experiment.id}::${epsilonExp}::${precisionFilter ?? "ALL"}::${sortKey}:${sortDir}`}
+                rows={rowsAxis}
+                cols={colsAxis}
+                maxColsPerPage={0} // фиксированное число колонок, пагинация не нужна
+                // layout
+                enableInnerScroll
+                maxBodyHeight="70vh"
+                stickyHeaders
+                rowWidth={260}
+                colWidth={60}
+                className="rounded-xl2 border border-border bg-panel shadow-panel"
+                tableClassName="border-separate border-spacing-0"
+                thClassName="bg-surface"
+                tdClassName="p-0"
+                // header
+                renderTitle={() => "Рейтинг алгоритмов"}
+                renderSubtitle={() =>
+                    precisionFilter
+                        ? `ε=${epsilon.toExponential(2)} · precision=${precisionFilter} · N=${rowsAxis.length}`
+                        : `ε=${epsilon.toExponential(2)} · precision=all · N=${rowsAxis.length}`
+                }
+                renderHeaderRight={() => (
+                    <div className="text-[10px] text-textDim/70 whitespace-nowrap">
+                        sort: {sortKey} ({sortDir})
+                    </div>
+                )}
+                // export
+                export={{
+                    fileBaseName: "algo-ranking",
+                    enablePng: true,
+                    enableXlsx: true,
+                    buildWorkbook,
+                }}
+                // matrix
+                renderCorner={() => <span className="text-left">Алгоритм</span>}
+                renderRowHeader={renderRowHeader}
+                renderColHeader={renderColHeader}
+                renderCell={renderCell}
+                emptyFallback={
+                    <div className="rounded-xl2 border border-border bg-panel p-3 text-[11px] text-textDim/70">
+                        Нет данных
+                    </div>
+                }
+            />
         </div>
     );
 };

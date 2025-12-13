@@ -99,29 +99,129 @@ export const AlgorithmSeriesErrorStatsTable: React.FC<AlgorithmSeriesErrorStatsT
         }): XLSX.WorkBook => {
             const wb = XLSX.utils.book_new();
 
-            const header: (string | number)[] = ["Алгоритм \\ Ряд"];
-            for (const c of cols) header.push(c.meta?.name ?? c.id);
+            const headerStyle: XLSX.CellStyle = {
+                fill: { patternType: "solid", fgColor: { rgb: "0B1220" } },
+                font: { color: { rgb: "E5E7EB" }, bold: true },
+                alignment: { horizontal: "center", vertical: "center", wrapText: true },
+                border: {
+                    top: { style: "thin", color: { rgb: "374151" } },
+                    bottom: { style: "thin", color: { rgb: "374151" } },
+                    left: { style: "thin", color: { rgb: "374151" } },
+                    right: { style: "thin", color: { rgb: "374151" } },
+                },
+            };
 
-            const data: (string | number | null)[][] = [header];
+            const rowHeaderStyle: XLSX.CellStyle = {
+                fill: { patternType: "solid", fgColor: { rgb: "0F172A" } },
+                font: { color: { rgb: "E5E7EB" }, bold: true },
+                alignment: { horizontal: "left", vertical: "top", wrapText: true },
+                border: {
+                    top: { style: "thin", color: { rgb: "374151" } },
+                    bottom: { style: "thin", color: { rgb: "374151" } },
+                    left: { style: "thin", color: { rgb: "374151" } },
+                    right: { style: "thin", color: { rgb: "374151" } },
+                },
+            };
 
+            const baseCell: XLSX.CellStyle = {
+                alignment: { horizontal: "center", vertical: "center", wrapText: true },
+                border: {
+                    top: { style: "thin", color: { rgb: "374151" } },
+                    bottom: { style: "thin", color: { rgb: "374151" } },
+                    left: { style: "thin", color: { rgb: "374151" } },
+                    right: { style: "thin", color: { rgb: "374151" } },
+                },
+            };
+
+            const styleByHeat = (hc: HeatClass): XLSX.CellStyle => {
+                const fg = (() => {
+                    switch (hc) {
+                        case "ok":
+                            return "064E3B"; // зелёный тёмный
+                        case "warn":
+                            return "78350F"; // amber
+                        case "bad":
+                            return "7C2D12"; // оранж/красн
+                        case "fatal":
+                            return "7F1D1D"; // красный тёмный
+                        case "neutral":
+                        default:
+                            return "111827"; // slate
+                    }
+                })();
+
+                const fontColor = hc === "neutral" ? "9CA3AF" : "E5E7EB";
+
+                return {
+                    ...baseCell,
+                    fill: { patternType: "solid", fgColor: { rgb: fg } },
+                    font: { color: { rgb: fontColor }, bold: hc !== "neutral" },
+                };
+            };
+
+            const aoa: (string | number | null)[][] = [];
+
+            // header row
+            aoa.push(["Алгоритм \\ Ряд", ...cols.map((c) => c.meta?.name ?? c.id)]);
+
+            // data rows
             for (const r of rows) {
                 const line: (string | number | null)[] = [];
                 line.push(r.meta?.name ?? r.id);
 
                 for (const c of cols) {
-                    const st = statsIndex[c.id]?.[r.id];
+                    const st = statsIndex[c.id]?.[r.id] ?? null;
                     line.push(
-                        st ? `max=${st.max}; mean=${st.mean}; min=${st.min}; n=${st.count}` : null
+                        st ? `max=${st.max}; mean=${st.mean}; min=${st.min}; n=${st.count}` : "—"
                     );
                 }
-                data.push(line);
+                aoa.push(line);
             }
 
-            const ws = XLSX.utils.aoa_to_sheet(data);
+            const ws = XLSX.utils.aoa_to_sheet(aoa);
+
+            // widths / heights
+            ws["!cols"] = [{ wch: 32 }, ...cols.map(() => ({ wch: 26 }))];
+            ws["!rows"] = [{ hpt: 28 }, ...rows.map(() => ({ hpt: 36 }))];
+
+            // apply styles
+            const ref = ws["!ref"] || "A1:A1";
+            const range = XLSX.utils.decode_range(ref);
+
+            // header style
+            for (let C = range.s.c; C <= range.e.c; C++) {
+                const addr = XLSX.utils.encode_cell({ r: 0, c: C });
+                if (ws[addr]) ws[addr].s = headerStyle;
+            }
+
+            // first column style
+            for (let R = 1; R <= range.e.r; R++) {
+                const addr = XLSX.utils.encode_cell({ r: R, c: 0 });
+                if (ws[addr]) ws[addr].s = rowHeaderStyle;
+            }
+
+            // data cells style by HeatClass
+            for (let R = 1; R <= range.e.r; R++) {
+                for (let C = 1; C <= range.e.c; C++) {
+                    const addr = XLSX.utils.encode_cell({ r: R, c: C });
+                    const cell = ws[addr];
+                    if (!cell) continue;
+
+                    const rItem = rows[R - 1];
+                    const cItem = cols[C - 1];
+                    if (!rItem || !cItem) continue;
+
+                    const st = statsIndex[cItem.id]?.[rItem.id] ?? null;
+                    const hc = classifyByMax(st, globalMax);
+
+                    cell.s = styleByHeat(hc);
+                }
+            }
+
             XLSX.utils.book_append_sheet(wb, ws, "error_stats");
             return wb;
         },
-        [statsIndex]
+        [statsIndex, globalMax]
     );
 
     if (!experiment || rows.length === 0 || cols.length === 0) return null;
