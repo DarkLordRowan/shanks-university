@@ -7,12 +7,14 @@ import { AlgorithmSeriesDiffHeatmap } from "@/widgets/AlgorithmSeriesDiffHeatmap
 import { AlgorithmSeriesErrorMatrix } from "@/widgets/AlgorithmSeriesErrorMatrix";
 import { AlgorithmSeriesConvergenceTable } from "@/widgets/AlgorithmSeriesConvergenceTable";
 import { AlgoRankingTable } from "@/widgets/AlgoRankingTable.tsx";
+import { AlgorithmSeriesErrorStatsTable } from "@/widgets/AlgorithmSeriesErrorStatsTable";
 
 type ViewKey =
     | "error-matrix"
     | "series-diff"
     | "series-error"
     | "series-convergence"
+    | "series-error-stats"
     | "algo-ranking";
 
 interface ViewButtonProps {
@@ -69,6 +71,13 @@ function ViewToggle(props: ViewToggleProps) {
                 Монотонность и направление
             </ViewButton>
 
+            <ViewButton
+                active={value === "series-error-stats"}
+                onClick={() => onChange("series-error-stats")}
+            >
+                Ошибки
+            </ViewButton>
+
             <ViewButton active={value === "algo-ranking"} onClick={() => onChange("algo-ranking")}>
                 Ранги алгоритмов
             </ViewButton>
@@ -95,15 +104,19 @@ export function ExperimentViewSwitcher(props: ExperimentViewSwitcherProps) {
                     {view === "error-matrix" && <ErrorMatrixTable experiment={experiment} />}
 
                     {view === "series-diff" && (
-                        <AlgorithmSeriesDiffHeatmap experiment={experiment} maxSeries={40} />
+                        <AlgorithmSeriesDiffHeatmap experiment={experiment} />
                     )}
 
                     {view === "series-error" && (
-                        <AlgorithmSeriesErrorMatrix experiment={experiment} maxSeries={40} />
+                        <AlgorithmSeriesErrorMatrix experiment={experiment} />
                     )}
 
                     {view === "series-convergence" && (
-                        <AlgorithmSeriesConvergenceTable experiment={experiment} maxSeries={20} />
+                        <AlgorithmSeriesConvergenceTable experiment={experiment} />
+                    )}
+
+                    {view === "series-error-stats" && (
+                        <AlgorithmSeriesErrorStatsTable experiment={experiment} />
                     )}
 
                     {view === "algo-ranking" && <AlgoRankingTable experiment={experiment} />}
