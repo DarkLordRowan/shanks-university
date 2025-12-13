@@ -112,11 +112,11 @@ export function ExperimentViewSwitcher(props: ExperimentViewSwitcherProps) {
                     )}
 
                     {view === "series-convergence" && (
-                        <AlgorithmSeriesConvergenceTable experiment={experiment} maxSeries={25} />
+                        <AlgorithmSeriesConvergenceTable experiment={experiment} maxSeries={20} />
                     )}
 
                     {view === "series-error-stats" && (
-                        <AlgorithmSeriesErrorStatsTable experiment={experiment} />
+                        <AlgorithmSeriesErrorStatsTable experiment={experiment} maxSeries={20} />
                     )}
 
                     {view === "algo-ranking" && <AlgoRankingTable experiment={experiment} />}
