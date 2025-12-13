@@ -81,7 +81,7 @@ export function Matrix<TRowMeta = unknown, TColMeta = unknown>(
                 style={enableInnerScroll ? { maxHeight: maxBodyHeight } : undefined}
             >
                 <table
-                    className={`border-collapse border border-border w-full ${tableClassName ?? ""}`}
+                    className={`border-separate border-spacing-0 w-full ${tableClassName ?? ""}`}
                 >
                     <thead>
                         <tr>
