@@ -2,9 +2,9 @@
 
 import React, { useMemo, useState } from "react";
 import type {
+    Accel,
     Experiment,
     Series,
-    Accel,
     SeriesAccel,
 } from "@/entities/experiment/model/experiment";
 import { Matrix, type MatrixAxisItem } from "@/shared/ui/Matrix/Matrix";
@@ -15,10 +15,8 @@ interface AlgorithmSeriesErrorStatsTableProps {
     experiment: Experiment | null;
 }
 
-type Row = MatrixAxisItem<Series>;
-type Col = MatrixAxisItem<Accel>;
-
 type StatsIndex = Record<string, Record<string, ErrorStats | null>>;
+
 // stats[seriesId][accelId] -> stats|null
 
 function buildStatsIndex(seriesAccelList: SeriesAccel[] | undefined): StatsIndex {
@@ -30,7 +28,6 @@ function buildStatsIndex(seriesAccelList: SeriesAccel[] | undefined): StatsIndex
         const accelId = sa.accel_id;
 
         const deviations = (sa.computed ?? []).map((p) => p?.deviation);
-
         const stats = computeErrorStats(deviations);
 
         if (!index[seriesId]) index[seriesId] = {};
@@ -40,20 +37,23 @@ function buildStatsIndex(seriesAccelList: SeriesAccel[] | undefined): StatsIndex
     return index;
 }
 
+type Row = MatrixAxisItem<Accel>;
+type Col = MatrixAxisItem<Series>;
+
 export const AlgorithmSeriesErrorStatsTable: React.FC<AlgorithmSeriesErrorStatsTableProps> = ({
     experiment,
 }) => {
-    const [selected, setSelected] = useState<{ seriesId: string; accelId: string } | null>(null);
+    const [selected, setSelected] = useState<{ accelId: string; seriesId: string } | null>(null);
 
     const rows: Row[] = useMemo(() => {
-        const list = experiment?.seriesList ?? [];
-        return list.map((s) => ({ id: s.id, meta: s }));
-    }, [experiment?.seriesList]);
-
-    const cols: Col[] = useMemo(() => {
         const list = experiment?.accelList ?? [];
         return list.map((a) => ({ id: a.id, meta: a }));
     }, [experiment?.accelList]);
+
+    const cols: Col[] = useMemo(() => {
+        const list = experiment?.seriesList ?? [];
+        return list.map((s) => ({ id: s.id, meta: s }));
+    }, [experiment?.seriesList]);
 
     const statsIndex = useMemo(() => {
         return buildStatsIndex(experiment?.seriesAccelList);
@@ -64,12 +64,14 @@ export const AlgorithmSeriesErrorStatsTable: React.FC<AlgorithmSeriesErrorStatsT
     }
 
     return (
-        <Matrix<Series, Accel>
+        <Matrix<Accel, Series>
             rows={rows}
             cols={cols}
+            rowWidth={260}
+            colWidth={220}
             enableInnerScroll
             maxBodyHeight="80vh"
-            renderCorner={() => <div className="text-sm text-textDim">Ряд \ Алгоритм</div>}
+            renderCorner={() => <div>Алгоритм \ Ряд</div>}
             renderRowHeader={(row) => (
                 <div className="flex flex-col">
                     <div className="font-medium">{row.meta?.name ?? row.id}</div>
@@ -83,14 +85,15 @@ export const AlgorithmSeriesErrorStatsTable: React.FC<AlgorithmSeriesErrorStatsT
                 </div>
             )}
             renderCell={(row, col) => {
-                const stats = statsIndex[row.id]?.[col.id] ?? null;
-                const active = selected?.seriesId === row.id && selected?.accelId === col.id;
+                const stats = statsIndex[col.id]?.[row.id] ?? null;
+
+                const active = selected?.accelId === row.id && selected?.seriesId === col.id;
 
                 return (
                     <ErrorStatsCell
                         stats={stats}
                         active={active}
-                        onClick={() => setSelected({ seriesId: row.id, accelId: col.id })}
+                        onClick={() => setSelected({ accelId: row.id, seriesId: col.id })}
                     />
                 );
             }}

@@ -1,3 +1,5 @@
+// src/shared/ui/Matrix/Matrix.tsx
+
 import React, { useRef } from "react";
 import { useWheelScrollCapture } from "@/shared/lib/dom/useWheelScrollCapture";
 
@@ -10,15 +12,28 @@ export interface MatrixProps<TRowMeta = unknown, TColMeta = unknown> {
     rows: MatrixAxisItem<TRowMeta>[];
     cols: MatrixAxisItem<TColMeta>[];
 
+    /** Левый верхний угол */
     renderCorner?: () => React.ReactNode;
+
+    /** Заголовок строки (левый столбец) */
     renderRowHeader: (row: MatrixAxisItem<TRowMeta>, rowIndex: number) => React.ReactNode;
+
+    /** Заголовок колонки (верхняя строка) */
     renderColHeader: (col: MatrixAxisItem<TColMeta>, colIndex: number) => React.ReactNode;
+
+    /** Ячейка значения */
     renderCell: (
         row: MatrixAxisItem<TRowMeta>,
         col: MatrixAxisItem<TColMeta>,
         rowIndex: number,
         colIndex: number
     ) => React.ReactNode;
+
+    /** Ширина левого столбца (ось rows) */
+    rowWidth?: number | string;
+
+    /** Ширина каждой колонки (ось cols) */
+    colWidth?: number | string;
 
     className?: string;
     tableClassName?: string;
@@ -47,6 +62,8 @@ export function Matrix<TRowMeta = unknown, TColMeta = unknown>(
         renderRowHeader,
         renderColHeader,
         renderCell,
+        rowWidth,
+        colWidth,
         className,
         tableClassName,
         thClassName,
@@ -58,20 +75,24 @@ export function Matrix<TRowMeta = unknown, TColMeta = unknown>(
     } = props;
 
     const scrollRef = useRef<HTMLDivElement | null>(null);
-
-    // Перехватываем wheel только для вертикали (deltaY) и только если контейнер может скроллиться.
     useWheelScrollCapture(scrollRef, enableInnerScroll);
 
     if (rows.length === 0 || cols.length === 0) {
         return <>{emptyFallback}</>;
     }
 
-    const thBase = "border border-border px-2 py-1 align-middle";
-    const tdBase = "border border-border px-2 py-1 align-middle";
+    const thBase = "px-2 py-1 align-middle";
+    const tdBase = "px-2 py-1 align-middle";
 
     const stickyTop = stickyHeaders ? "sticky top-0 z-20 bg-surface" : "";
     const stickyLeft = stickyHeaders ? "sticky left-0 z-10 bg-surface" : "";
     const stickyCorner = stickyHeaders ? "sticky top-0 left-0 z-30 bg-surface" : "";
+
+    const rowStyle =
+        rowWidth != null ? { width: rowWidth, minWidth: rowWidth, maxWidth: rowWidth } : undefined;
+
+    const colStyle =
+        colWidth != null ? { width: colWidth, minWidth: colWidth, maxWidth: colWidth } : undefined;
 
     return (
         <div className={className ?? ""}>
@@ -87,6 +108,7 @@ export function Matrix<TRowMeta = unknown, TColMeta = unknown>(
                         <tr>
                             <th
                                 className={`${thBase} text-left ${stickyCorner} ${thClassName ?? ""}`}
+                                style={rowStyle}
                             >
                                 {renderCorner ? renderCorner() : null}
                             </th>
@@ -95,6 +117,7 @@ export function Matrix<TRowMeta = unknown, TColMeta = unknown>(
                                 <th
                                     key={col.id}
                                     className={`${thBase} text-center ${stickyTop} ${thClassName ?? ""}`}
+                                    style={colStyle}
                                 >
                                     {renderColHeader(col, j)}
                                 </th>
@@ -107,6 +130,7 @@ export function Matrix<TRowMeta = unknown, TColMeta = unknown>(
                             <tr key={row.id}>
                                 <th
                                     className={`${thBase} text-left ${stickyLeft} ${thClassName ?? ""}`}
+                                    style={rowStyle}
                                 >
                                     {renderRowHeader(row, i)}
                                 </th>
@@ -115,6 +139,7 @@ export function Matrix<TRowMeta = unknown, TColMeta = unknown>(
                                     <td
                                         key={col.id}
                                         className={`${tdBase} text-center ${tdClassName ?? ""}`}
+                                        style={colStyle}
                                     >
                                         {renderCell(row, col, i, j)}
                                     </td>
