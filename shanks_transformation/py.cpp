@@ -62,11 +62,11 @@ void bind_all(py::module_& m, const std::string& suffix){
     bs(3,  W<arcsin_x_minus_x_series>{}, "ArcsinXMinusXSeries");
     bs(4,  W<arcsin_x_series>{}, "ArcsinXSeries");
     bs(5,  W<arcsinh_x_series>{}, "ArcsinhXSeries");
-    bs(6,  W<arctanh_x2_series>{}, "ArctanhX2Series");
-    bs(7,  W<arctanh_x_series>{}, "ArctanhXSeries");
-    bs(8,  W<arctg_x2_series>{}, "ArctgX2Series");
-    bs(9,  W<arctg_x3_series>{}, "ArctgX3Series");
-    bs(10, W<arctg_x_series>{}, "ArctgXSeries");
+    bs(6,  W<arctanh_x2_series>{}, "ArtanhX2Series");
+    bs(7,  W<arctanh_x_series>{}, "ArtanhXSeries");
+    bs(8,  W<arctg_x2_series>{}, "ArctanX2Series");
+    bs(9,  W<arctg_x3_series>{}, "ArctanX3Series");
+    bs(10, W<arctg_x_series>{}, "ArctanXSeries");
     bs(11, W<bin_series>{}, "BinSeries");
     bs(12, W<ci_x_series>{}, "CiXSeries");
     bs(13, W<cos3xmin1_div_xsquare_series>{}, "Cos3xMinus1DivXsquareSeries");
@@ -118,7 +118,8 @@ void bind_all(py::module_& m, const std::string& suffix){
     bs(59, W<one_third_pi_squared_m_nine_series>{}, "OneThirdPiSquaredMNineSeries");
     bs(60, W<one_twelfth_3x2_pi2_series>{}, "OneTwelfth3x2Pi2Series");
     bs(61, W<one_twelfth_series>{}, "OneTwelfthSeries");
-    bs(62, W<one_twelfth_x2_pi2_series>{}, "OneTwelfthX2Pi2Series");
+    //bs(62, W<one_twelfth_x2_pi2_series>{}, "OneTwelfthX2Pi2Series");
+    bs(62, W<one_twelfth_x2_pi2_series>{}, "XTwelfthX2Pi2Series");
     bs(63, W<pi_3_series>{}, "Pi3Series");
     bs(64, W<pi_4_series>{}, "Pi4Series");
     bs(65, W<pi_8_cosx_square_minus_1_div_3_cosx_series>{}, "Pi8CosxSquareMinus1Div3CosxSeries");
@@ -130,8 +131,8 @@ void bind_all(py::module_& m, const std::string& suffix){
     bs(71, W<pi_six_min_half_series>{}, "PiSixMinHalfSeries");
     bs(72, W<pi_squared_6_minus_one_series>{}, "PiSquared6MinusOneSeries");
     bs(73, W<pi_squared_twelve_series>{}, "PiSquaredTwelveSeries");
-    bs(74, W<pi_x_minus_x_square_square_minus_three_pi_x_plus_two_pi_square_series>{}, "PiXMinusXSquareSquareMinusThreePiXPlusTwoPiSquareSeries");
-    bs(75, W<pi_x_multi_e_xpi_plus_e_minusxpi_divided_e_xpi_minus_e_minusxpi_series>{}, "PiXMultiEXpiPlusEMinusXpiDividedEXpiMinusEMinusXpiSeries");
+    bs(74, W<pi_x_minus_x_square_square_minus_three_pi_x_plus_two_pi_square_series>{}, "PiXMinusXSquareAndXSquareMinusThreePiXPlusTwoPiSquareSeries");
+    bs(75, W<pi_x_multi_e_xpi_plus_e_minusxpi_divided_e_xpi_minus_e_minusxpi_series>{}, "PiXMultiE_XpiPlusEMinusXpiDividedE_XpiMinusEMinusXpiMinusOneSeries");
     bs(76, W<riemann_zeta_func_series>{}, "RiemannZetaFuncSeries");
     bs(77, W<riemann_zeta_func_xmin1_div_Riemann_zeta_func_x_series>{}, "RiemannZetaFuncXmin1DivRiemannZetaFuncXSeries");
     bs(78, W<series_with_ln_number1_series>{}, "SeriesWithLnNumber1");
@@ -149,7 +150,7 @@ void bind_all(py::module_& m, const std::string& suffix){
     bs(90, W<two_arcsin_square_x_halfed_series>{}, "TwoArcsinSquareXHalfedSeries");
     bs(91, W<two_degree_x_series>{}, "TwoDegreeXSeries");
     bs(92, W<two_ln2_series>{}, "TwoLn2Series");
-    bs(93, W<x_1mx_squared_series>{}, "X1mxSquaredSeries");
+    bs(93, W<x_1mx_squared_series>{}, "X_1mx_SquaredSeries");
     bs(94, W<x_div_1minx2_series>{}, "XDiv1minX2Series");
     bs(95, W<x_div_1minx_series>{}, "XDiv1minXSeries");
     bs(96, W<x_min_sqrt_x_series>{}, "XMinSqrtXSeries");
