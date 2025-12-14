@@ -11,14 +11,14 @@
   "results_csv": "output/results.csv",
   "results_parquet": "output/results.parquet",
 
-  "trial_process_count": 8,
-  "trial_task_timeout": 60,
+  "trial_process_count": 1,
+  "trial_task_timeout": 5,
   "trial_result_view": "full",
   "trial_memory_efficient": true,
 
-  "precisions": ["Arb"],
+  "precisions": ["F64"],
 
-  "output_formats": ["mongodb"],
+  "output_formats": ["parquet_split"],
 
   "output": {
     "parquet_collection": "trial_results"

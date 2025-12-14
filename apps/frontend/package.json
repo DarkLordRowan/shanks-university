@@ -12,6 +12,7 @@
   "dependencies": {
     "apache-arrow": "^21.1.0",
     "highlight.js": "^11.11.1",
+    "html-to-image": "^1.11.13",
     "html2canvas": "^1.4.1",
     "katex": "*",
     "lucide-react": "*",
@@ -31,6 +32,8 @@
     "remark-math": "*",
     "remark-slug": "^8.0.0",
     "remark-toc": "^9.0.0",
+    "xlsx": "^0.18.5",
+    "xlsx-js-style": "^1.2.0",
     "zod": "^4.1.12"
   },
   "devDependencies": {

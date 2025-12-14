@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Any, Mapping
+from typing import Any, Mapping, Literal
 
 
 @dataclass
@@ -31,6 +31,7 @@ NoErrorTrialResult = None
 
 @dataclass
 class SeriesTrialResult:
+    id: int
     name: str
     lim: Any
     arguments: Mapping[str, Any]
@@ -48,7 +49,6 @@ class EventDataTrialResult:
     computed_index: int
     description: str
 
-
 @dataclass
 class TrialResult:
     series: SeriesTrialResult
@@ -56,9 +56,3 @@ class TrialResult:
     computed: list[ComputedTrialResult]
     error: ErrorTrialResult | None = None
     stack_id: str | None = None
-
-    @property
-    def failed_iteration(self) -> Any:
-        if not self.error:
-            return "ok"
-        return self.error.data.get("n", 0)

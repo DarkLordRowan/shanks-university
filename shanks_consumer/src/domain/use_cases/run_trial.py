@@ -1,28 +1,84 @@
-import itertools
 import traceback
-from functools import lru_cache
-from typing import Any, TypeGuard
+from typing import Mapping, Any
 
-from src.domain.event import EVENT_METHODS, EventType
-from src.domain.params import BaseAccelParam, BaseSeriesParam, PrecisionType
-from src.domain.precision import SeriesBaseProto, cast_precision_value
-from src.domain.trial_result import (AccelTrialResult, ComputedTrialResult,
-                                     ErrorTrialResult, NoErrorTrialResult,
-                                     SeriesTrialResult, TrialResult)
+from src.domain.params import (
+    BaseAccelParam,
+    BaseSeriesParam,
+    NumericLike,
+)
+from src.domain.trial_result import (
+    AccelTrialResult,
+    ComputedTrialResult,
+    ErrorTrialResult,
+    NoErrorTrialResult,
+    SeriesTrialResult,
+    TrialResult,
+)
 from src.logger import logged_debug
 
 
-@lru_cache(maxsize=256)
-def cached_generate_series(series_type: type, x: Any, vec_size: int, t: Any, k: int):
-    series = series_type()
-    return (
-        series.generateSeries(x, vec_size, t, k),
-        series.get_sum(),
-    )
+def trial_results_from_series_error(
+    series: BaseSeriesParam,
+    accel: BaseAccelParam,
+    series_argument: Mapping[str, Any],
+    exc: Exception,
+) -> list[TrialResult]:
+
+    return [
+        TrialResult(
+            SeriesTrialResult(
+                id=series.id,
+                name=series.series_name,
+                lim=None,
+                arguments=dict(series_argument),
+            ),
+            AccelTrialResult(
+                name=accel.accel_name,
+                m_value=m_value,
+                additional_args={
+                    key: str(value) for key, value in additional_args.items()
+                },
+            ),
+            computed=[],
+            error=ErrorTrialResult(
+                str(exc),
+                traceback.format_exc(),
+                {},
+            ),
+        )
+        for m_value in accel.m_values
+        for additional_args in accel.argument_combos
+    ]
 
 
-def _is_series_generator(candidate: object) -> TypeGuard[SeriesBaseProto[Any]]:
-    return hasattr(candidate, "generateSeries") and hasattr(candidate, "get_sum")
+def trial_results_from_accel_error(
+    series: BaseSeriesParam,
+    series_lim: NumericLike,
+    series_argument: Mapping[str, Any],
+    accel: BaseAccelParam,
+    additional_args: Mapping[str, Any],
+    exc: Exception,
+):
+    return [
+        TrialResult(
+            SeriesTrialResult(
+                id=series.id,
+                name=series.series_name,
+                lim=series_lim,
+                arguments=dict(series_argument),
+            ),
+            AccelTrialResult(
+                name=accel.accel_name,
+                m_value=m_value,
+                additional_args={
+                    key: str(value) for key, value in additional_args.items()
+                },
+            ),
+            computed=[],
+            error=ErrorTrialResult(str(exc), traceback.format_exc(), {}),
+        )
+        for m_value in accel.m_values
+    ]
 
 
 @logged_debug
@@ -33,140 +89,46 @@ def execute_trial(
 
     n_values = list(accel.n_values)
     m_values = list(accel.m_values)
-    if not n_values or not m_values:
-        raise ValueError(
-            f"Acceleration '{accel.accel_name}' must provide both n and m values."
-        )
-
-    series_arg_items = list(series.arguments.items())
-    series_arg_keys = [name for name, _ in series_arg_items]
-    series_arg_values = [list(values) for _, values in series_arg_items]
-    series_argument_combos = (
-        list(itertools.product(*series_arg_values)) if series_arg_keys else [()]
-    )
-
-    accel_arg_items = list(accel.additional_args.items())
-    accel_arg_keys = [name for name, _ in accel_arg_items]
-    accel_arg_values = [list(values) for _, values in accel_arg_items]
-    accel_argument_combos = (
-        list(itertools.product(*accel_arg_values)) if accel_arg_keys else [()]
-    )
-
-    size_floor = max(10, max(n_values) + max(m_values) + 5)
-    series_precision = getattr(series, "precision", PrecisionType.F64)
 
     results: list[TrialResult] = []
 
-    for argument_combo in series_argument_combos:
-        argument = dict(zip(series_arg_keys, argument_combo))
+    for series_argument in series.argument_combos:
         try:
-            series_candidate = series.executable()
-            if not _is_series_generator(series_candidate):
-                raise TypeError(
-                    f"Series executable '{series.series_name}' did not return a valid generator"
-                )
-
-            vec_size = int(argument.get("vecSize", size_floor))
-            vec_size = max(vec_size, size_floor)
-
-            default_t = cast_precision_value(series_precision, 1)
-            add_t_value = argument.get("addTParameter", argument.get("a", default_t))
-
-            add_k_source = argument.get(
-                "addKParameter", argument.get("m", argument.get("b", 1))
-            )
-            add_k_value = int(add_k_source) if add_k_source is not None else 1
-
-            default_x = cast_precision_value(series_precision, 0)
-            x_value = argument.get("x", default_x)
-
-            series_result, series_lim = cached_generate_series(
-                type(series_candidate),
-                x_value,  # type: ignore
-                vec_size,
-                add_t_value,  # type: ignore
-                add_k_value,
+            series_result, series_lim = series.obtain_by_argument(
+                series_argument, accel.size_floor
             )
         except Exception as exc:
-            for accel_combo in accel_argument_combos:
-                additional_args = dict(zip(accel_arg_keys, accel_combo))
-                additional_args_display = {
-                    key: str(value) for key, value in additional_args.items()
-                }
-                for m_value in m_values:
-                    results.append(
-                        TrialResult(
-                            SeriesTrialResult(
-                                name=series.series_name,
-                                lim=None,
-                                arguments=dict(argument),
-                            ),
-                            AccelTrialResult(
-                                name=accel.accel_name,
-                                m_value=m_value,
-                                additional_args=additional_args_display,
-                            ),
-                            computed=[],
-                            error=ErrorTrialResult(
-                                str(exc),
-                                traceback.format_exc(),
-                                {
-                                    "argument": dict(argument),
-                                    "additional_args": additional_args_display,
-                                    "m": m_value,
-                                },
-                            ),
-                        )
-                    )
+            results.extend(
+                trial_results_from_series_error(
+                    series, accel, series_argument, exc
+                )
+            )
             continue
 
-        for accel_combo in accel_argument_combos:
-            additional_args = dict(zip(accel_arg_keys, accel_combo))
-            additional_args_display = {
-                key: str(value) for key, value in additional_args.items()
-            }
+        for additional_args in accel.argument_combos:
             try:
-                accel_instance = accel.executable(
-                    **{key: combo for key, combo in zip(accel_arg_keys, accel_combo)}
-                )
+                accel_instance = accel.create_instance(additional_args)
             except Exception as exc:
-                for m_value in m_values:
-                    results.append(
-                        TrialResult(
-                            SeriesTrialResult(
-                                name=series.series_name,
-                                lim=series_lim,
-                                arguments=dict(argument),
-                            ),
-                            AccelTrialResult(
-                                name=accel.accel_name,
-                                m_value=m_value,
-                                additional_args=additional_args_display,
-                            ),
-                            computed=[],
-                            error=ErrorTrialResult(
-                                str(exc),
-                                traceback.format_exc(),
-                                {
-                                    "argument": dict(argument),
-                                    "additional_args": additional_args_display,
-                                    "m": m_value,
-                                },
-                            ),
-                        )
+                results.extend(
+                    trial_results_from_accel_error(
+                        series,
+                        series_lim,
+                        series_argument,
+                        accel,
+                        additional_args,
+                        exc,
                     )
+                )
                 continue
 
             for m_value in m_values:
                 computed: list[ComputedTrialResult] = []
                 error: ErrorTrialResult | None = None
 
-                event_counters = {event.type: 0 for event in accel.events}
-                event_stopped = {event.type: False for event in accel.events}
-                event_blocked_completion = False
+                ctx = accel.create_event_context()
 
                 for n_value in n_values:
-                    if event_blocked_completion:
+                    if ctx["blocked"]:
                         break
                     try:
                         if n_value <= 0:
@@ -192,38 +154,9 @@ def execute_trial(
                             )
                         )
 
-                        current_events = []
+                        current_events = accel.process_events(computed, ctx)
+                        computed[-1].events = current_events
 
-                        for event in accel.events:
-                            event_type = event.type
-
-                            if event_stopped[event_type]:
-                                continue
-
-                            event_result = EVENT_METHODS.get(
-                                EventType(event_type), lambda _: None
-                            )(computed)
-                            if event_result is not None:
-                                current_events.append(event_result)
-                                event_counters[event_type] += 1
-
-                                if event.log_action_capacity and (
-                                    event_counters[event_type]
-                                    >= event.log_action_capacity
-                                    or event.log_action_capacity == -1
-                                ):
-                                    event_stopped[event_type] = True
-
-                                if (
-                                    event.stop_action_limit
-                                    and event_counters[event_type]
-                                    >= event.stop_action_limit
-                                    and event.stop_action_limit != -1
-                                ):
-                                    event_blocked_completion = True
-                                    break
-
-                            computed[-1].events = current_events
                     except Exception as exc:
                         error = ErrorTrialResult(
                             str(exc),
@@ -231,8 +164,11 @@ def execute_trial(
                             {
                                 "n": n_value,
                                 "m": m_value,
-                                "argument": dict(argument),
-                                "additional_args": additional_args_display,
+                                "argument": dict(series_argument),
+                                "additional_args": {
+                                    key: str(value)
+                                    for key, value in additional_args.items()
+                                },
                             },
                         )
                         break
@@ -240,14 +176,18 @@ def execute_trial(
                 results.append(
                     TrialResult(
                         SeriesTrialResult(
+                            id=series.id,
                             name=series.series_name,
                             lim=series_lim,
-                            arguments=dict(argument),
+                            arguments=dict(series_argument),
                         ),
                         AccelTrialResult(
                             name=accel.accel_name,
                             m_value=m_value,
-                            additional_args=additional_args_display,
+                            additional_args={
+                                key: str(value)
+                                for key, value in additional_args.items()
+                            },
                         ),
                         computed=computed,
                         error=error or NoErrorTrialResult,

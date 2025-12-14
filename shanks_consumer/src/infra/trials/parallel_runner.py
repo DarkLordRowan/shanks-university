@@ -21,6 +21,7 @@ class ParallelTrialRunner(TrialRunner):
         self.memory_efficient = memory_efficient
 
     def run(self, combinations):
+        mp.set_start_method("fork", force=True)
         if self.memory_efficient:
             return self.__run_dispose_at_completion(combinations)
         yield self.__run_full_load(combinations)
@@ -68,7 +69,9 @@ class ParallelTrialRunner(TrialRunner):
 
         process_count = self.process_count or mp.cpu_count()
 
-        with mp.Pool(processes=process_count) as pool:
+        with mp.Pool(
+            processes=process_count,
+        ) as pool:
             async_tasks = [
                 (pool.apply_async(execute_trial, (comb,)), comb)
                 for comb in combinations
@@ -88,7 +91,7 @@ class ParallelTrialRunner(TrialRunner):
                             computed=[],
                             error=ErrorTrialResult(
                                 f"Timeout after {self.timeout}s",
-                                {
+                                data={
                                     "series": series.series_name,
                                     "accel": accel.accel_name,
                                 },
