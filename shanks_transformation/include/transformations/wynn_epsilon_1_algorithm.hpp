@@ -11,8 +11,9 @@
  // slowly convergent series based on the use of rational functions.
  // Numerische Mathematik, 4(1), 8-14.
 
+#pragma once
+
 #include "series_acceleration.hpp"
-#include <type_traits>
 
 /**
  * @brief Wynn Epsilon Algorithm class template implementing the epsilon algorithm for series acceleration.
