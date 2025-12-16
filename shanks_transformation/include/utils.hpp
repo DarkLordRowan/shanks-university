@@ -105,15 +105,13 @@ constexpr const K utils::binomial_coefficient(const K n, const K k) {
 	if (n==k || k==static_cast<K>(0))
 		return static_cast<K>(1);
 
-	K productNminusK = n; //n(n-1)(n-2)...(n-k)
-	K factK = k;
-
-	for(K j = static_cast<K>(1); j < k; j++){
-		factK*=j;
-		productNminusK*=(n-j);
-	}
-
-	return productNminusK/factK;
+	const K new_k = (k > (n + n % 2) / 2 ? n - k : k);
+	std::vector<K> dp(new_k + 1); dp[0] = 1;
+	for(K i = 1; i <= n; ++i)
+		for(K j = (i > new_k ? new_k : i); j > 0; --j)
+			dp[j] += dp[j-1];
+	
+	return dp[new_k];
 
 }
 
