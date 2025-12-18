@@ -35,6 +35,8 @@ export interface MatrixProps<TRowMeta = unknown, TColMeta = unknown> {
     enableInnerScroll?: boolean;
     maxBodyHeight?: string;
     stickyHeaders?: boolean;
+
+    minCellHeightPx?: number;
 }
 
 export function Matrix<TRowMeta = unknown, TColMeta = unknown>(
@@ -57,6 +59,7 @@ export function Matrix<TRowMeta = unknown, TColMeta = unknown>(
         enableInnerScroll = true,
         maxBodyHeight = "70vh",
         stickyHeaders = true,
+        minCellHeightPx = 32,
     } = props;
 
     const scrollRef = useRef<HTMLDivElement | null>(null);
@@ -132,7 +135,8 @@ export function Matrix<TRowMeta = unknown, TColMeta = unknown>(
                                         <div className="absolute inset-0">
                                             {renderCell(row, col, i, j)}
                                         </div>
-                                        <div className="h-[32px]" />
+
+                                        <div style={{ height: `${minCellHeightPx}px` }} />
                                     </td>
                                 ))}
                             </tr>

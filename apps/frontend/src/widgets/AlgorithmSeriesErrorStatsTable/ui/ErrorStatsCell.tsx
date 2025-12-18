@@ -3,24 +3,25 @@
 import React from "react";
 import type { ErrorStats } from "../model/errorStats";
 
-type HeatClass = "neutral" | "ok" | "warn" | "bad" | "fatal";
+export type HeatClass = "neutral" | "ok" | "warn" | "bad" | "fatal";
 
-function fmt(x: number) {
+function fmt(x: number | null | undefined): string {
+    if (x == null || !Number.isFinite(x)) return "∅";
     return x.toExponential(2);
 }
 
 function heatBg(h: HeatClass): string {
     switch (h) {
         case "ok":
-            return "bg-emerald-500/14 hover:bg-emerald-500/22";
+            return "bg-emerald-600/45 hover:bg-emerald-600/60";
         case "warn":
-            return "bg-amber-300/18 hover:bg-amber-300/26";
+            return "bg-lime-500/45 hover:bg-lime-500/60";
         case "bad":
-            return "bg-orange-500/18 hover:bg-orange-500/26";
+            return "bg-amber-500/50 hover:bg-amber-500/65";
         case "fatal":
-            return "bg-red-500/20 hover:bg-red-500/30";
+            return "bg-red-600/55 hover:bg-red-600/70";
         default:
-            return "bg-surface/20 hover:bg-surface/30";
+            return "bg-slate-800/45 hover:bg-slate-800/60";
     }
 }
 
@@ -29,6 +30,7 @@ interface ErrorStatsCellProps {
     active?: boolean;
     heatClass?: HeatClass;
     onClick?: () => void;
+    title?: string;
 }
 
 export const ErrorStatsCell: React.FC<ErrorStatsCellProps> = ({
@@ -36,33 +38,34 @@ export const ErrorStatsCell: React.FC<ErrorStatsCellProps> = ({
     active = false,
     heatClass = "neutral",
     onClick,
+    title,
 }) => {
     const sel = active ? " ring-2 ring-accent ring-offset-1 ring-offset-surface" : "";
 
-    // максимально “как в Convergence”: маленькая карточка внутри td
     const base =
-        "w-full min-w-[90px] rounded border border-border px-[6px] py-[4px] " +
+        "w-full h-full min-h-[32px] min-w-[90px] cursor-pointer select-none " +
+        "rounded border border-border px-[6px] py-[4px] " +
         "text-[10px] leading-tight text-textDim text-left transition-colors " +
         heatBg(heatClass) +
         sel;
 
     if (!stats) {
         return (
-            <button type="button" className={base} onClick={onClick} title="Нет данных">
+            <button type="button" className={base} onClick={onClick} title={title ?? "Нет данных"}>
                 <span className="text-textDim/50">—</span>
             </button>
         );
     }
 
-    const title = [
-        `max=${stats.max}`,
-        `min=${stats.min}`,
-        `mean=${stats.mean}`,
-        `n=${stats.count}`,
-    ].join("\n");
+    const autoTitle =
+        title ??
+        [`max=${stats.max}`, `mean=${stats.mean}`, `min=${stats.min}`, `n=${stats.count}`].join(
+            "\n"
+        );
 
     return (
-        <button type="button" className={base} onClick={onClick} title={title}>
+        <button type="button" className={base} onClick={onClick} title={autoTitle}>
+            {/* max на главном месте */}
             <div className="flex justify-between gap-2">
                 <span className="text-textDim/70">max</span>
                 <span className="font-mono tabular-nums text-[11px]">{fmt(stats.max)}</span>
@@ -71,6 +74,11 @@ export const ErrorStatsCell: React.FC<ErrorStatsCellProps> = ({
             <div className="mt-[2px] flex justify-between gap-2 text-[9px] text-textDim/80">
                 <span className="text-textDim/70">mean</span>
                 <span className="font-mono tabular-nums">{fmt(stats.mean)}</span>
+            </div>
+
+            <div className="mt-[2px] flex justify-between gap-2 text-[9px] text-textDim/70">
+                <span className="text-textDim/70">min</span>
+                <span className="font-mono tabular-nums">{fmt(stats.min)}</span>
             </div>
 
             <div className="mt-[2px] flex justify-between gap-2 text-[9px] text-textDim/70">

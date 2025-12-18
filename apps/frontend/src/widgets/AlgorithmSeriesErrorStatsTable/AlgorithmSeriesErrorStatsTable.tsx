@@ -1,3 +1,5 @@
+// src/widgets/AlgorithmSeriesErrorStatsTable/AlgorithmSeriesErrorStatsTable.tsx
+
 import React, { useCallback, useMemo, useState } from "react";
 import * as XLSX from "xlsx-js-style";
 import type {
@@ -9,7 +11,7 @@ import type {
 import type { MatrixAxisItem } from "@/shared/ui/Matrix/Matrix";
 import { MatrixPaged } from "@/shared/ui/Matrix/MatrixPaged";
 import { computeErrorStats, type ErrorStats } from "./model/errorStats";
-import { ErrorStatsCell } from "./ui/ErrorStatsCell";
+import { ErrorStatsCell, type HeatClass } from "./ui/ErrorStatsCell";
 
 interface AlgorithmSeriesErrorStatsTableProps {
     experiment: Experiment | null;
@@ -34,10 +36,9 @@ function buildStatsIndex(seriesAccelList: SeriesAccel[] | undefined): StatsIndex
         if (!index[seriesId]) index[seriesId] = {};
         index[seriesId][accelId] = stats;
     }
+
     return index;
 }
-
-type HeatClass = "neutral" | "ok" | "warn" | "bad" | "fatal";
 
 function getGlobalMax(statsIndex: StatsIndex): number {
     let g = 0;
@@ -59,10 +60,20 @@ function classifyByMax(st: ErrorStats | null, globalMax: number): HeatClass {
 
     const t = Math.min(1, Math.max(0, (x - (g - 6)) / 6));
 
-    if (t < 0.25) return "ok";
-    if (t < 0.5) return "warn";
-    if (t < 0.75) return "bad";
+    // чуть “шире” распределение по классам (больше различий)
+    if (t < 0.2) return "ok";
+    if (t < 0.45) return "warn";
+    if (t < 0.7) return "bad";
     return "fatal";
+}
+
+function fmtExp(x: number | null | undefined, digits = 2): string {
+    if (x == null || !Number.isFinite(x)) return "∅";
+    return x.toExponential(digits);
+}
+
+export function getErrorStatsCellDomId(accelId: string, seriesId: string): string {
+    return `errstats-cell-${accelId}::${seriesId}`;
 }
 
 export const AlgorithmSeriesErrorStatsTable: React.FC<AlgorithmSeriesErrorStatsTableProps> = ({
@@ -124,7 +135,7 @@ export const AlgorithmSeriesErrorStatsTable: React.FC<AlgorithmSeriesErrorStatsT
             };
 
             const baseCell: XLSX.CellStyle = {
-                alignment: { horizontal: "center", vertical: "center", wrapText: true },
+                alignment: { horizontal: "left", vertical: "top", wrapText: true },
                 border: {
                     top: { style: "thin", color: { rgb: "374151" } },
                     bottom: { style: "thin", color: { rgb: "374151" } },
@@ -134,23 +145,24 @@ export const AlgorithmSeriesErrorStatsTable: React.FC<AlgorithmSeriesErrorStatsT
             };
 
             const styleByHeat = (hc: HeatClass): XLSX.CellStyle => {
+                // “сильнее” цвета, чтобы в Excel было заметнее
                 const fg = (() => {
                     switch (hc) {
                         case "ok":
-                            return "064E3B"; // зелёный тёмный
+                            return "065F46"; // emerald-800-ish
                         case "warn":
-                            return "78350F"; // amber
+                            return "4D7C0F"; // lime-700-ish
                         case "bad":
-                            return "7C2D12"; // оранж/красн
+                            return "B45309"; // amber-700-ish
                         case "fatal":
-                            return "7F1D1D"; // красный тёмный
+                            return "991B1B"; // red-800-ish
                         case "neutral":
                         default:
                             return "111827"; // slate
                     }
                 })();
 
-                const fontColor = hc === "neutral" ? "9CA3AF" : "E5E7EB";
+                const fontColor = hc === "neutral" ? "9CA3AF" : "F9FAFB";
 
                 return {
                     ...baseCell,
@@ -161,46 +173,58 @@ export const AlgorithmSeriesErrorStatsTable: React.FC<AlgorithmSeriesErrorStatsT
 
             const aoa: (string | number | null)[][] = [];
 
-            // header row
-            aoa.push(["Алгоритм \\ Ряд", ...cols.map((c) => c.meta?.name ?? c.id)]);
+            aoa.push([
+                "Алгоритм \\ Ряд",
+                ...cols.map((c) => {
+                    const s = c.meta as any;
+                    const name = c.meta?.name ?? c.id;
+                    const x = s?.xLabel ?? s?.x ?? "∅";
+                    const prec = s?.precision ?? "∅";
+                    return `${name} (x=${String(x)}, prec=${String(prec)})`;
+                }),
+            ]);
 
-            // data rows
             for (const r of rows) {
+                const a = r.meta as any;
+                const algoName = r.meta?.name ?? r.id;
+                const m = a?.m != null ? `\nm=${String(a.m)}` : "";
+
                 const line: (string | number | null)[] = [];
-                line.push(r.meta?.name ?? r.id);
+                line.push(`${algoName}${m}`);
 
                 for (const c of cols) {
                     const st = statsIndex[c.id]?.[r.id] ?? null;
+                    if (!st) {
+                        line.push("—");
+                        continue;
+                    }
+                    // порядок: max, mean, min
                     line.push(
-                        st ? `max=${st.max}; mean=${st.mean}; min=${st.min}; n=${st.count}` : "—"
+                        `max=${fmtExp(st.max)}\nmean=${fmtExp(st.mean)}\nmin=${fmtExp(st.min)}\nn=${st.count}`
                     );
                 }
+
                 aoa.push(line);
             }
 
             const ws = XLSX.utils.aoa_to_sheet(aoa);
 
-            // widths / heights
-            ws["!cols"] = [{ wch: 32 }, ...cols.map(() => ({ wch: 26 }))];
-            ws["!rows"] = [{ hpt: 28 }, ...rows.map(() => ({ hpt: 36 }))];
+            ws["!cols"] = [{ wch: 34 }, ...cols.map(() => ({ wch: 30 }))];
+            ws["!rows"] = [{ hpt: 30 }, ...rows.map(() => ({ hpt: 52 }))];
 
-            // apply styles
             const ref = ws["!ref"] || "A1:A1";
             const range = XLSX.utils.decode_range(ref);
 
-            // header style
             for (let C = range.s.c; C <= range.e.c; C++) {
                 const addr = XLSX.utils.encode_cell({ r: 0, c: C });
                 if (ws[addr]) ws[addr].s = headerStyle;
             }
 
-            // first column style
             for (let R = 1; R <= range.e.r; R++) {
                 const addr = XLSX.utils.encode_cell({ r: R, c: 0 });
                 if (ws[addr]) ws[addr].s = rowHeaderStyle;
             }
 
-            // data cells style by HeatClass
             for (let R = 1; R <= range.e.r; R++) {
                 for (let C = 1; C <= range.e.c; C++) {
                     const addr = XLSX.utils.encode_cell({ r: R, c: C });
@@ -234,7 +258,10 @@ export const AlgorithmSeriesErrorStatsTable: React.FC<AlgorithmSeriesErrorStatsT
             maxColsPerPage={maxSeries}
             maxBodyHeight="80vh"
             rowWidth={220}
-            colWidth={100}
+            colWidth={90}
+            minCellHeightPx={64}
+            thClassName="px-0 py-0"
+            tdClassName="px-0 py-0"
             renderTitle={() => "Статистика ошибок: алгоритмы × ряды"}
             renderSubtitle={() => (
                 <>
@@ -250,37 +277,143 @@ export const AlgorithmSeriesErrorStatsTable: React.FC<AlgorithmSeriesErrorStatsT
                 enableXlsx: true,
                 buildWorkbook,
             }}
-            renderCorner={() => <div className="text-[10px] text-textDim/80">Алгоритм \ Ряд</div>}
-            renderRowHeader={(row) => (
-                <div className="leading-tight">
-                    <div className="max-w-[200px] truncate text-textDim">
-                        {row.meta?.name ?? row.id}
+            renderCorner={() => (
+                <div className="px-1 py-1 text-left text-[10px] text-textDim">Алгоритм \ Ряд</div>
+            )}
+            renderRowHeader={(row) => {
+                const a = row.meta as any;
+                if (!a) return null;
+
+                const titleLines: string[] = [];
+                titleLines.push(`Алгоритм: ${a.name ?? row.id}`);
+                titleLines.push(`id: ${row.id}`);
+                if (a?.m != null) titleLines.push(`m: ${String(a.m)}`);
+
+                const args = a?.algorithmArgs ?? a?.args;
+                if (args && typeof args === "object") {
+                    titleLines.push("args:");
+                    for (const k of Object.keys(args).sort()) {
+                        const v = args[k];
+                        if (v == null) continue;
+                        titleLines.push(`  ${k}: ${String(v)}`);
+                    }
+                }
+                if (a?.argsSummary) titleLines.push(`summary: ${String(a.argsSummary)}`);
+
+                return (
+                    <div
+                        className="px-1 py-[2px] text-left align-top"
+                        title={titleLines.join("\n")}
+                    >
+                        <div className="leading-tight">
+                            <div className="max-w-[200px] whitespace-normal break-words text-[10px] text-textDim">
+                                {a.name ?? row.id}
+                            </div>
+
+                            <div className="text-[9px] text-textDim/70 whitespace-nowrap">
+                                {a?.m != null ? `m=${String(a.m)}` : "m=∅"}
+                            </div>
+
+                            <div className="text-[9px] text-textDim/60 break-all">{row.id}</div>
+
+                            {a?.argsSummary && (
+                                <div className="mt-[1px] max-w-[200px] whitespace-normal break-words text-[8px] text-textDim/60">
+                                    {String(a.argsSummary)}
+                                </div>
+                            )}
+                        </div>
                     </div>
-                    <div className="text-[9px] text-textDim/60">{row.id}</div>
-                </div>
-            )}
-            renderColHeader={(col) => (
-                <div
-                    className="relative flex h-28 w-[64px] items-center justify-center"
-                    title={`${col.meta?.name ?? col.id}\n${col.id}`}
-                >
-                    <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rotate-[-90deg] whitespace-nowrap text-[9px] leading-tight text-textDim">
-                        {col.meta?.name ?? col.id}
-                    </span>
-                </div>
-            )}
+                );
+            }}
+            renderColHeader={(col) => {
+                const s = col.meta as any;
+                if (!s) return null;
+
+                const name = col.meta?.name ?? col.id;
+                const x = s?.xLabel ?? s?.x ?? "∅";
+                const prec = s?.precision ?? "∅";
+
+                return (
+                    <div
+                        className="flex flex-col items-center justify-end gap-1 px-1 py-1"
+                        title={`${name}\n x = ${String(x)}\n prec = ${String(prec)}\n id = ${col.id}`}
+                    >
+                        <span
+                            className="text-[9px] leading-tight text-center whitespace-nowrap"
+                            style={{
+                                writingMode: "vertical-rl",
+                                textOrientation: "mixed",
+                                transform: "rotate(180deg)",
+                            }}
+                        >
+                            {name}
+                        </span>
+
+                        <span className="text-[8px] leading-tight text-textDim/70 whitespace-nowrap">
+                            x={String(x)}
+                        </span>
+
+                        <span className="text-[8px] leading-tight text-textDim/60 whitespace-nowrap">
+                            {String(prec)}
+                        </span>
+                    </div>
+                );
+            }}
             renderCell={(row, col) => {
                 const stats = statsIndex[col.id]?.[row.id] ?? null;
                 const active = selected?.accelId === row.id && selected?.seriesId === col.id;
                 const heatClass = classifyByMax(stats, globalMax);
 
+                const a = row.meta as any;
+                const s = col.meta as any;
+
+                const algoName = a?.name ?? row.id;
+                const seriesName = s?.name ?? col.id;
+                const x = s?.xLabel ?? s?.x ?? "∅";
+                const prec = s?.precision ?? "∅";
+
+                const titleLines: string[] = [];
+                titleLines.push(`Ряд: ${seriesName} (x=${String(x)}, prec=${String(prec)})`);
+                titleLines.push(`Алгоритм: ${algoName}${a?.m != null ? `, m=${String(a.m)}` : ""}`);
+
+                const args = a?.algorithmArgs ?? a?.args;
+                if (args && typeof args === "object") {
+                    const keys = Object.keys(args)
+                        .filter((k) => args[k] != null)
+                        .sort();
+                    if (keys.length > 0) {
+                        titleLines.push("args:");
+                        for (const k of keys) titleLines.push(`  ${k}: ${String(args[k])}`);
+                    }
+                }
+                if (a?.argsSummary) titleLines.push(`summary: ${String(a.argsSummary)}`);
+
+                titleLines.push("");
+
+                if (!stats) {
+                    titleLines.push("Нет данных по ошибке.");
+                } else {
+                    titleLines.push(`max=${stats.max}`);
+                    titleLines.push(`mean=${stats.mean}`);
+                    titleLines.push(`min=${stats.min}`);
+                    titleLines.push(`n=${stats.count}`);
+                }
+
+                titleLines.push("");
+                titleLines.push("Клик — выбрать ячейку.");
+
+                const domId = getErrorStatsCellDomId(row.id, col.id);
+
                 return (
-                    <ErrorStatsCell
-                        stats={stats}
-                        active={active}
-                        heatClass={heatClass}
-                        onClick={() => setSelected({ accelId: row.id, seriesId: col.id })}
-                    />
+                    <div id={domId} className="w-full h-full">
+                        <ErrorStatsCell
+                            stats={stats}
+                            active={active}
+                            heatClass={heatClass}
+                            title={titleLines.join("\n")}
+                            onClick={() => setSelected({ accelId: row.id, seriesId: col.id })}
+                        />
+                    </div>
                 );
             }}
         />
