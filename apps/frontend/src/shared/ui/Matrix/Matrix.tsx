@@ -67,10 +67,10 @@ export function Matrix<TRowMeta = unknown, TColMeta = unknown>(
     }
 
     const thBase = "border border-border px-1 py-1 align-bottom text-[10px] text-textDim";
-    const tdBase = "border border-border px-[2px] py-[2px] align-middle text-[10px]";
+    const tdBase = "border border-border p-0 relative align-middle text-[10px]";
 
     const stickyBg = "bg-surface";
-    const stickyTop = stickyHeaders ? `sticky top-0 z-20  ${stickyBg}` : "";
+    const stickyTop = stickyHeaders ? `sticky top-0 z-20 ${stickyBg}` : "";
     const stickyLeft = stickyHeaders ? `sticky left-0 z-10 ${stickyBg}` : "";
     const stickyCorner = stickyHeaders ? `sticky top-0 left-0 z-30 ${stickyBg}` : "";
 
@@ -126,10 +126,13 @@ export function Matrix<TRowMeta = unknown, TColMeta = unknown>(
                                 {cols.map((col, j) => (
                                     <td
                                         key={col.id}
-                                        className={`${tdBase} text-center ${tdClassName ?? ""}`}
+                                        className={`${tdBase} ${tdClassName ?? ""}`}
                                         style={colStyle}
                                     >
-                                        {renderCell(row, col, i, j)}
+                                        <div className="absolute inset-0">
+                                            {renderCell(row, col, i, j)}
+                                        </div>
+                                        <div className="h-[32px]" />
                                     </td>
                                 ))}
                             </tr>

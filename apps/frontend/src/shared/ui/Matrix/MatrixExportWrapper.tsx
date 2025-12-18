@@ -31,7 +31,7 @@ export const MatrixExportWrapper: React.FC<MatrixExportWrapperProps> = ({
     const [noInnerScroll, setNoInnerScroll] = useState(false);
     const [noSticky, setNoSticky] = useState(false);
 
-    const exportPng = useCallback(async () => {
+    const exportJpeg = useCallback(async () => {
         if (exporting) return;
         const node = captureRef.current;
         if (!node) return;
@@ -40,10 +40,38 @@ export const MatrixExportWrapper: React.FC<MatrixExportWrapperProps> = ({
         setProgress(5);
 
         const EXTRA_PX = 12;
+        const EXPORT_BG = "#0b1220";
+        const JPEG_QUALITY = 0.95;
+
+        const EXPORT_CLASS = "matrix-exporting";
+        const ensureExportStyle = () => {
+            const id = "matrix-export-style";
+            if (document.getElementById(id)) return;
+            const style = document.createElement("style");
+            style.id = id;
+            style.textContent = `
+                body.${EXPORT_CLASS} * {
+                    transition: none !important;
+                    animation: none !important;
+                    caret-color: transparent !important;
+                }
+            `;
+            document.head.appendChild(style);
+        };
 
         try {
+            ensureExportStyle();
+
             setNoInnerScroll(true);
             setNoSticky(true);
+
+            await new Promise<void>((r) => requestAnimationFrame(() => r()));
+            await new Promise<void>((r) => requestAnimationFrame(() => r()));
+
+            const fontsAny = (document as any).fonts;
+            if (fontsAny?.ready) await fontsAny.ready;
+
+            document.body.classList.add(EXPORT_CLASS);
 
             await new Promise<void>((r) => requestAnimationFrame(() => r()));
             await new Promise<void>((r) => requestAnimationFrame(() => r()));
@@ -51,41 +79,38 @@ export const MatrixExportWrapper: React.FC<MatrixExportWrapperProps> = ({
 
             const table = node.querySelector("table") as HTMLTableElement | null;
             const targetEl = (table ?? node) as HTMLElement;
-            const rect = targetEl.getBoundingClientRect();
 
-            const targetWidth = Math.ceil(rect.width) + EXTRA_PX;
-            const targetHeight = Math.ceil(rect.height) + EXTRA_PX;
+            // размеры по контенту (не по viewport)
+            const targetWidth = Math.ceil(targetEl.scrollWidth) + EXTRA_PX;
+            const targetHeight = Math.ceil(targetEl.scrollHeight) + EXTRA_PX;
 
-            // 2) Клонируем и рендерим клон вне экрана
             const clone = node.cloneNode(true) as HTMLDivElement;
 
-            // контейнер-стейдж, чтобы клон не влиял на страницу
-            const stage = document.createElement("div");
-            stage.style.position = "fixed";
-            stage.style.left = "-100000px";
-            stage.style.top = "0";
-            stage.style.width = `${targetWidth}px`;
-            stage.style.height = `${targetHeight}px`;
-            stage.style.overflow = "visible";
-            stage.style.pointerEvents = "none";
-            stage.style.zIndex = "-1";
-
-            // фиксируем размеры клона, но НЕ меняем display (никакого inline-block)
             clone.style.overflow = "visible";
             clone.style.width = `${targetWidth}px`;
             clone.style.height = `${targetHeight}px`;
             clone.style.boxSizing = "border-box";
             clone.style.paddingBottom = `${EXTRA_PX}px`;
+            clone.style.transform = "none";
+            (clone.style as any).zoom = "1";
 
-            // если внутри есть table, лучше стабилизировать layout на клоне
             const cloneTable = clone.querySelector("table") as HTMLTableElement | null;
             if (cloneTable) {
-                // важно: фиксируем ширину, но только на клоне
                 cloneTable.style.width = `${targetWidth}px`;
                 cloneTable.style.minWidth = `${targetWidth}px`;
-                // чтобы не было переразметки колонок по содержимому
                 (cloneTable.style as any).tableLayout = "fixed";
             }
+
+            const stage = document.createElement("div");
+            stage.style.position = "fixed";
+            stage.style.left = "0";
+            stage.style.top = "0";
+            stage.style.width = `${targetWidth}px`;
+            stage.style.height = `${targetHeight}px`;
+            stage.style.opacity = "0";
+            stage.style.pointerEvents = "none";
+            stage.style.overflow = "visible";
+            stage.style.zIndex = "-1";
 
             stage.appendChild(clone);
             document.body.appendChild(stage);
@@ -93,34 +118,49 @@ export const MatrixExportWrapper: React.FC<MatrixExportWrapperProps> = ({
             await new Promise<void>((r) => requestAnimationFrame(() => r()));
             setProgress(50);
 
-            const dataUrl = await htmlToImage.toPng(clone, {
+            const canvas = await htmlToImage.toCanvas(clone, {
                 cacheBust: true,
-                pixelRatio: window.devicePixelRatio || 2,
+                pixelRatio: 2,
                 width: targetWidth,
                 height: targetHeight,
                 style: {
-                    overflow: "visible",
                     width: `${targetWidth}px`,
                     height: `${targetHeight}px`,
+                    overflow: "visible",
+                    backgroundColor: "transparent",
+                    transform: "none",
                 },
             });
 
+            const ctx = canvas.getContext("2d");
+            if (!ctx) throw new Error("Canvas 2D context not available");
+
+            ctx.globalCompositeOperation = "destination-over";
+            ctx.fillStyle = EXPORT_BG;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            setProgress(80);
+
+            const dataUrl = canvas.toDataURL("image/jpeg", JPEG_QUALITY);
+
             document.body.removeChild(stage);
+            document.body.classList.remove(EXPORT_CLASS);
 
             setProgress(90);
 
             const a = document.createElement("a");
             a.href = dataUrl;
-            a.download = `${fileBaseName}.png`;
+            a.download = `${fileBaseName}.jpg`;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
 
             setProgress(100);
         } catch (e) {
-            console.error("PNG export failed", e);
+            console.error("JPEG export failed", e);
             setProgress(null);
         } finally {
+            document.body.classList.remove("matrix-exporting");
             setTimeout(() => {
                 setExporting(false);
                 setProgress(null);
@@ -155,10 +195,11 @@ export const MatrixExportWrapper: React.FC<MatrixExportWrapperProps> = ({
                     <button
                         type="button"
                         className="rounded border border-border bg-surface px-2 py-[3px] hover:bg-panel disabled:opacity-50"
-                        onClick={exportPng}
+                        onClick={exportJpeg}
                         disabled={exporting}
+                        title="Экспорт без прозрачности (JPEG)"
                     >
-                        {exporting ? "PNG…" : "PNG"}
+                        {exporting ? "IMG…" : "IMG"}
                     </button>
                 )}
 

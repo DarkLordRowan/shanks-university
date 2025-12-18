@@ -399,7 +399,7 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
             cols={allCols}
             maxColsPerPage={maxSeries && maxSeries > 0 ? maxSeries : 0}
             rowWidth={160}
-            colWidth={44}
+            colWidth={50}
             thClassName="px-0 py-0"
             tdClassName="px-0 py-0"
             maxBodyHeight="70vh"
@@ -498,17 +498,26 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
 
                 return (
                     <div
-                        className="relative flex h-28 w-[44px] items-center justify-center"
+                        className="flex flex-col items-center justify-end gap-1 px-1 py-1"
                         title={`${s.seriesName}\n x = ${s.xLabel}\n prec = ${s.precision}`}
                     >
-                        <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rotate-[-90deg] whitespace-nowrap text-[9px] leading-tight">
+                        <span
+                            className="text-[9px] leading-tight text-center whitespace-nowrap"
+                            style={{
+                                writingMode: "vertical-rl",
+                                textOrientation: "mixed",
+                                transform: "rotate(180deg)",
+                            }}
+                        >
                             {s.seriesName}
                         </span>
-                        <span className="absolute bottom-3 text-[8px] text-textDim/70">
+
+                        <span className="text-[8px] leading-tight text-textDim/70 whitespace-nowrap">
                             x={s.xLabel}
                         </span>
-                        <span className="absolute bottom-0 text-[8px] text-textDim/60">
-                            prec={s.precision}
+
+                        <span className="text-[8px] leading-tight text-textDim/60 whitespace-nowrap">
+                            {s.precision}
                         </span>
                     </div>
                 );
@@ -534,15 +543,17 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
                             return lines.join("\n");
                         })()}
                     >
-                        <div className="whitespace-pre leading-tight">
-                            <span className="block max-w-[150px] truncate text-[10px] text-textDim">
+                        <div className="leading-tight">
+                            <span className="block max-w-[150px] whitespace-normal break-words text-[10px] text-textDim">
                                 {algo.algorithmName}
                             </span>
-                            <span className="text-[9px] text-textDim/70">
+
+                            <span className="block text-[9px] text-textDim/70 whitespace-nowrap">
                                 {algo.m != null ? `m=${String(algo.m)}` : "m=∅"}
                             </span>
+
                             {algo.argsSummary && (
-                                <div className="mt-[1px] max-w-[150px] truncate text-[8px] text-textDim/60">
+                                <div className="mt-[1px] max-w-[150px] whitespace-normal break-words text-[8px] text-textDim/60">
                                     {algo.argsSummary}
                                 </div>
                             )}
@@ -560,7 +571,7 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
 
                 if (!analysis) {
                     return (
-                        <div className="px-[2px] py-[2px] text-center text-[10px] text-textDim/50">
+                        <div className="w-full h-full min-h-[32px] flex items-center justify-center text-[10px] text-textDim/50">
                             —
                         </div>
                     );
@@ -609,8 +620,7 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
                 if (algo.argsSummary) titleLines.push(`  (${algo.argsSummary})`);
                 if (algoEntries.length > 0 || algo.argsSummary) titleLines.push("");
 
-                const classDescr = describeClass(effectiveSide, effectiveMon);
-                titleLines.push(`Класс: ${classDescr}`);
+                titleLines.push(`Класс: ${describeClass(effectiveSide, effectiveMon)}`);
 
                 const signNsText =
                     analysis.signChangeNs && analysis.signChangeNs.length > 0
