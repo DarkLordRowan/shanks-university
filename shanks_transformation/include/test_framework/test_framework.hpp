@@ -500,7 +500,7 @@ inline void main_testing_function()
 	K n = console_IO<K>::input("n");
 	K order = console_IO<K>::input("order");
 	//series_result<T> result = series->generate_series(x, n + 3 * order + 1, tParam, kParam);
-	series_result<T> result = series->generate_series(x, n + 3 * order + 1, tParam, kParam);
+	series_result<T> result = series->generate_series(x, n + 4 * order + 1, tParam, kParam);
 
 	std::string answer = "ok";
 	while(answer != "Y" && answer != "Yes" && answer != "N" && answer != "No"){
