@@ -176,6 +176,7 @@ export const AlgorithmSeriesConvergenceTable: React.FC<AlgorithmSeriesConvergenc
     return (
         <div className={className}>
             <ConvergenceMatrixTable
+                experiment={experiment}
                 matrix={matrix}
                 maxSeries={maxSeries}
                 selectedCell={selectedCell}

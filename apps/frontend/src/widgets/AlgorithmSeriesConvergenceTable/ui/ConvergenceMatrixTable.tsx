@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import * as XLSX from "xlsx-js-style";
 import {
     type ConvergenceMatrix,
+    type Experiment,
     type MonotonicityType,
     type SelectedCell,
     type SideType,
@@ -11,10 +12,10 @@ import {
     formatSideShort,
     nonNullEntries,
 } from "../model/convergenceUtils";
-import type { MatrixAxisItem } from "@/shared/ui/Matrix/Matrix";
-import { MatrixPaged } from "@/shared/ui/Matrix/MatrixPaged";
+import { MatrixAlgorithmSeries } from "@/shared/ui/Matrix/MatrixAlgorithmSeries.tsx";
 
 interface ConvergenceMatrixTableProps {
+    experiment: Experiment;
     matrix: ConvergenceMatrix;
     maxSeries?: number;
     selectedCell: SelectedCell | null;
@@ -124,6 +125,7 @@ function classifyColor(side: SideType, mon: MonotonicityType): ColorClass {
 }
 
 export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
+    experiment,
     matrix,
     maxSeries,
     selectedCell,
@@ -180,16 +182,6 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
 
     const signChangesSliderMax = thresholds.maxSignChanges > 0 ? thresholds.maxSignChanges : 5;
     const violationsSliderMax = thresholds.maxViolations > 0 ? thresholds.maxViolations : 5;
-
-    const rows: MatrixAxisItem<{ algoIndex: number }>[] = useMemo(
-        () => algoList.map((a, i) => ({ id: a.key, meta: { algoIndex: i } })),
-        [algoList]
-    );
-
-    const allCols: MatrixAxisItem<{ seriesIndex: number }>[] = useMemo(
-        () => seriesList.map((s, i) => ({ id: s.key, meta: { seriesIndex: i } })),
-        [seriesList]
-    );
 
     const buildWorkbook = useCallback((): XLSX.WorkBook => {
         const allSeries = seriesList;
@@ -384,19 +376,11 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
         return wb;
     }, [algoList, cells, maxSignChangesForOneSided, maxViolationsForMonotone, seriesList]);
 
-    if (rawSeriesList.length === 0 || algoList.length === 0) {
-        return (
-            <div className="text-textDim text-sm">
-                Нет пар ряд × алгоритм для анализа (seriesList или accelList пусты).
-            </div>
-        );
-    }
-
     return (
-        <MatrixPaged<{ algoIndex: number }, { seriesIndex: number }>
+        <MatrixAlgorithmSeries
+            accelList={experiment?.accelList ?? []}
+            seriesList={experiment?.seriesList ?? []}
             resetKey={`""::${precisionFilter}`}
-            rows={rows}
-            cols={allCols}
             maxColsPerPage={maxSeries && maxSeries > 0 ? maxSeries : 0}
             rowWidth={160}
             colWidth={50}
@@ -488,82 +472,9 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
                     </div>
                 </div>
             )}
-            renderCorner={() => (
-                <div className="px-1 py-1 text-left text-[10px] text-textDim">Алгоритм \ Ряд</div>
-            )}
-            renderColHeader={(col) => {
-                const idx = col.meta?.seriesIndex ?? 0;
-                const s = seriesList[idx];
-                if (!s) return null;
-
-                return (
-                    <div
-                        className="flex flex-col items-center justify-end gap-1 px-1 py-1"
-                        title={`${s.seriesName}\n x = ${s.xLabel}\n prec = ${s.precision}`}
-                    >
-                        <span
-                            className="text-[9px] leading-tight text-center whitespace-nowrap"
-                            style={{
-                                writingMode: "vertical-rl",
-                                textOrientation: "mixed",
-                                transform: "rotate(180deg)",
-                            }}
-                        >
-                            {s.seriesName}
-                        </span>
-
-                        <span className="text-[8px] leading-tight text-textDim/70 whitespace-nowrap">
-                            x={s.xLabel}
-                        </span>
-
-                        <span className="text-[8px] leading-tight text-textDim/60 whitespace-nowrap">
-                            {s.precision}
-                        </span>
-                    </div>
-                );
-            }}
-            renderRowHeader={(row) => {
+            renderCell={(row, col) => {
                 const algo = algoList.find((a) => a.key === row.id);
-                if (!algo) return null;
-
-                return (
-                    <div
-                        className="px-1 py-[2px] text-left align-top"
-                        title={(() => {
-                            const lines: string[] = [];
-                            lines.push(`Алгоритм: ${algo.algorithmName}`);
-                            lines.push(`m = ${algo.m != null ? String(algo.m) : "∅"}`);
-                            const entries = nonNullEntries(algo.algorithmArgs);
-                            if (entries.length > 0) {
-                                lines.push("Аргументы:");
-                                for (const [k, v] of entries.sort(([a, b]) => a.localeCompare(b))) {
-                                    lines.push(`  ${k}: ${v}`);
-                                }
-                            }
-                            return lines.join("\n");
-                        })()}
-                    >
-                        <div className="leading-tight">
-                            <span className="block max-w-[150px] whitespace-normal break-words text-[10px] text-textDim">
-                                {algo.algorithmName}
-                            </span>
-
-                            <span className="block text-[9px] text-textDim/70 whitespace-nowrap">
-                                {algo.m != null ? `m=${String(algo.m)}` : "m=∅"}
-                            </span>
-
-                            {algo.argsSummary && (
-                                <div className="mt-[1px] max-w-[150px] whitespace-normal break-words text-[8px] text-textDim/60">
-                                    {algo.argsSummary}
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                );
-            }}
-            renderCell={(row, col, _i, _j) => {
-                const algo = algoList.find((a) => a.key === row.id);
-                const s = seriesList[col.meta?.seriesIndex ?? 0];
+                const s = seriesList.find((s) => s.key === col.id);
                 if (!algo || !s) return null;
 
                 const key = `${algo.key}::${s.key}`;

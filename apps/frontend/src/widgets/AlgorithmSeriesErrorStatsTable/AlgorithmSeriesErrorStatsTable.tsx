@@ -278,7 +278,7 @@ export const AlgorithmSeriesErrorStatsTable: React.FC<AlgorithmSeriesErrorStatsT
                 fileBaseName: "algorithm-series-error-stats",
                 enablePng: true,
                 enableXlsx: true,
-                buildWorkbook,
+                buildWorkbook: () => buildWorkbook(),
             }}
             renderCell={(row, col) => {
                 const stats = statsIndex[col.id]?.[row.id] ?? null;
