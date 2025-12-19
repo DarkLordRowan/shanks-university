@@ -3,7 +3,7 @@ import * as XLSX from "xlsx-js-style";
 import { Matrix, type MatrixAxisItem, type MatrixProps } from "./Matrix";
 import { MatrixExportWrapper } from "./MatrixExportWrapper";
 
-type PagerInfo = {
+export type PagerInfo = {
     page: number;
     totalPages: number;
     pageSize: number;
