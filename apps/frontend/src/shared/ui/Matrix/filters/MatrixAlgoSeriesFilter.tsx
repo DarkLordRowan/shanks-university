@@ -1,3 +1,5 @@
+// src/shared/ui/Matrix/filters/MatrixAlgoSeriesFilter.tsx
+
 import React, { useEffect, useMemo, useState } from "react";
 import type { Accel, Series } from "@/entities/experiment/model/experiment.ts";
 import { MatrixAccelsFilter } from "@/shared/ui/Matrix/filters/MatrixAccelsFilter.tsx";
@@ -52,6 +54,62 @@ function applyIdFilter<T extends { id: string }>(
     if (mode === "whitelist") return items.filter((x) => selectedIds.has(x.id));
     return items.filter((x) => !selectedIds.has(x.id));
 }
+
+/* -------------------- sorting -------------------- */
+
+type SortKey = "name" | "name_args" | "id";
+
+function compareNullableNumber(a: number | null | undefined, b: number | null | undefined) {
+    const aa = a ?? Number.POSITIVE_INFINITY;
+    const bb = b ?? Number.POSITIVE_INFINITY;
+    return aa - bb;
+}
+
+function compareStrings(a: string, b: string) {
+    return a.localeCompare(b);
+}
+
+function accelSortKey(a: Accel, key: SortKey): string {
+    if (key === "id") return a.id;
+    if (key === "name_args") return `${a.name}::${formatArgs(a.args)}`;
+    return a.name;
+}
+
+function seriesSortKey(s: Series, key: SortKey): string {
+    if (key === "id") return s.id;
+    if (key === "name_args") return `${s.name}::${s.precision ?? ""}::${formatArgs(s.args as any)}`;
+    return s.name;
+}
+
+function sortAccels(list: Accel[], key: SortKey): Accel[] {
+    const out = [...list];
+    out.sort((a, b) => {
+        const c0 = compareStrings(accelSortKey(a, key), accelSortKey(b, key));
+        if (c0 !== 0) return c0;
+
+        const c1 = compareNullableNumber(a.m, b.m);
+        if (c1 !== 0) return c1;
+
+        return compareStrings(a.id, b.id);
+    });
+    return out;
+}
+
+function sortSeries(list: Series[], key: SortKey): Series[] {
+    const out = [...list];
+    out.sort((a, b) => {
+        const c0 = compareStrings(seriesSortKey(a, key), seriesSortKey(b, key));
+        if (c0 !== 0) return c0;
+
+        const c1 = compareStrings(a.precision ?? "", b.precision ?? "");
+        if (c1 !== 0) return c1;
+
+        return compareStrings(a.id, b.id);
+    });
+    return out;
+}
+
+/* -------------------- state -------------------- */
 
 type AxisState = {
     query: string;
@@ -134,20 +192,27 @@ export function MatrixAlgoSeriesFilter(props: MatrixAlgoSeriesFilterProps) {
 
     const accelGroups = useMemo(() => {
         const get = groupAccelsBy ?? ((a: Accel) => ({ key: normalize(a.name), title: a.name }));
-        return groupByKey(
+
+        const groups = groupByKey(
             accelList ?? [],
             (a) => get(a).key,
             (a) => get(a).title ?? a.name
         );
+
+        // сортировка внутри группы + детерминированность
+        return groups.map((g) => ({ ...g, items: sortAccels(g.items, "name_args") }));
     }, [accelList, groupAccelsBy]);
 
     const seriesGroups = useMemo(() => {
         const get = groupSeriesBy ?? ((s: Series) => ({ key: normalize(s.name), title: s.name }));
-        return groupByKey(
+
+        const groups = groupByKey(
             seriesList ?? [],
             (s) => get(s).key,
             (s) => get(s).title ?? s.name
         );
+
+        return groups.map((g) => ({ ...g, items: sortSeries(g.items, "name_args") }));
     }, [seriesList, groupSeriesBy]);
 
     // whitelist + пустой выбор => выбрать всё
@@ -191,7 +256,10 @@ export function MatrixAlgoSeriesFilter(props: MatrixAlgoSeriesFilterProps) {
         const byGroupIds = new Set(byGroup.map((a) => a.id));
         const afterGroup = base.filter((a) => byGroupIds.has(a.id));
 
-        return applyIdFilter(afterGroup, state.accel.selectedIds, state.accel.idMode);
+        const afterIds = applyIdFilter(afterGroup, state.accel.selectedIds, state.accel.idMode);
+
+        // итоговая сортировка
+        return sortAccels(afterIds, "name_args");
     }, [accelList, accelGroups, state.accel]);
 
     const filteredSeries = useMemo(() => {
@@ -212,7 +280,9 @@ export function MatrixAlgoSeriesFilter(props: MatrixAlgoSeriesFilterProps) {
         const byGroupIds = new Set(byGroup.map((s) => s.id));
         const afterGroup = base.filter((s) => byGroupIds.has(s.id));
 
-        return applyIdFilter(afterGroup, state.series.selectedIds, state.series.idMode);
+        const afterIds = applyIdFilter(afterGroup, state.series.selectedIds, state.series.idMode);
+
+        return sortSeries(afterIds, "name_args");
     }, [seriesList, seriesGroups, state.series]);
 
     return (
@@ -248,12 +318,6 @@ export function MatrixAlgoSeriesFilter(props: MatrixAlgoSeriesFilterProps) {
                             ...s,
                             accel: { ...s.accel, selectedGroupKeys: new Set() },
                         }))
-                    }
-                    idMode={state.accel.idMode}
-                    onIdMode={(m) => setState((s) => ({ ...s, accel: { ...s.accel, idMode: m } }))}
-                    selectedIds={state.accel.selectedIds}
-                    onClearIds={() =>
-                        setState((s) => ({ ...s, accel: { ...s.accel, selectedIds: new Set() } }))
                     }
                 />
 
