@@ -288,14 +288,6 @@ export function MatrixAlgoSeriesFilter(props: MatrixAlgoSeriesFilterProps) {
                             series: { ...s.series, selectedGroupKeys: new Set() },
                         }))
                     }
-                    idMode={state.series.idMode}
-                    onIdMode={(m) =>
-                        setState((s) => ({ ...s, series: { ...s.series, idMode: m } }))
-                    }
-                    selectedIds={state.series.selectedIds}
-                    onClearIds={() =>
-                        setState((s) => ({ ...s, series: { ...s.series, selectedIds: new Set() } }))
-                    }
                 />
             </div>
 

@@ -14,12 +14,6 @@ export interface MatrixAccelsFilterProps {
     onToggleGroup: (key: string) => void;
     onSelectAllGroups: () => void;
     onClearGroups: () => void;
-
-    idMode: FilterMode;
-    onIdMode: (m: FilterMode) => void;
-
-    selectedIds: Set<string>;
-    onClearIds: () => void;
 }
 
 export function MatrixAccelsFilter(props: MatrixAccelsFilterProps) {

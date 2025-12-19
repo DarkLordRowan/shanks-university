@@ -9,9 +9,9 @@ import type {
     SeriesAccel,
 } from "@/entities/experiment/model/experiment";
 import type { MatrixAxisItem } from "@/shared/ui/Matrix/Matrix";
-import { MatrixPaged } from "@/shared/ui/Matrix/MatrixPaged";
 import { computeErrorStats, type ErrorStats } from "./model/errorStats";
 import { ErrorStatsCell, type HeatClass } from "./ui/ErrorStatsCell";
+import { MatrixAlgorithmSeries } from "@/shared/ui/Matrix/MatrixAlgorithmSeries";
 
 interface AlgorithmSeriesErrorStatsTableProps {
     experiment: Experiment | null;
@@ -49,6 +49,13 @@ function getGlobalMax(statsIndex: StatsIndex): number {
         }
     }
     return g;
+}
+
+function formatArgs(args: Record<string, any> | null | undefined): string {
+    if (!args) return "";
+    const entries = Object.entries(args).filter(([, v]) => v !== null && v !== undefined);
+    if (entries.length === 0) return "";
+    return entries.map(([k, v]) => `${k}=${typeof v === "string" ? v : String(v)}`).join(", ");
 }
 
 function classifyByMax(st: ErrorStats | null, globalMax: number): HeatClass {
@@ -251,17 +258,13 @@ export const AlgorithmSeriesErrorStatsTable: React.FC<AlgorithmSeriesErrorStatsT
     if (!experiment || rows.length === 0 || cols.length === 0) return null;
 
     return (
-        <MatrixPaged<Accel, Series>
-            resetKey={experiment.id}
-            rows={rows}
-            cols={cols}
+        <MatrixAlgorithmSeries
+            accelList={experiment?.accelList ?? []}
+            seriesList={experiment?.seriesList ?? []}
             maxColsPerPage={maxSeries}
-            maxBodyHeight="80vh"
             rowWidth={220}
             colWidth={90}
             minCellHeightPx={64}
-            thClassName="px-0 py-0"
-            tdClassName="px-0 py-0"
             renderTitle={() => "Статистика ошибок: алгоритмы × ряды"}
             renderSubtitle={() => (
                 <>
@@ -277,116 +280,27 @@ export const AlgorithmSeriesErrorStatsTable: React.FC<AlgorithmSeriesErrorStatsT
                 enableXlsx: true,
                 buildWorkbook,
             }}
-            renderCorner={() => (
-                <div className="px-1 py-1 text-left text-[10px] text-textDim">Алгоритм \ Ряд</div>
-            )}
-            renderRowHeader={(row) => {
-                const a = row.meta as any;
-                if (!a) return null;
-
-                const titleLines: string[] = [];
-                titleLines.push(`Алгоритм: ${a.name ?? row.id}`);
-                titleLines.push(`id: ${row.id}`);
-                if (a?.m != null) titleLines.push(`m: ${String(a.m)}`);
-
-                const args = a?.algorithmArgs ?? a?.args;
-                if (args && typeof args === "object") {
-                    titleLines.push("args:");
-                    for (const k of Object.keys(args).sort()) {
-                        const v = args[k];
-                        if (v == null) continue;
-                        titleLines.push(`  ${k}: ${String(v)}`);
-                    }
-                }
-                if (a?.argsSummary) titleLines.push(`summary: ${String(a.argsSummary)}`);
-
-                return (
-                    <div
-                        className="px-1 py-[2px] text-left align-top"
-                        title={titleLines.join("\n")}
-                    >
-                        <div className="leading-tight">
-                            <div className="max-w-[200px] whitespace-normal break-words text-[10px] text-textDim">
-                                {a.name ?? row.id}
-                            </div>
-
-                            <div className="text-[9px] text-textDim/70 whitespace-nowrap">
-                                {a?.m != null ? `m=${String(a.m)}` : "m=∅"}
-                            </div>
-
-                            <div className="text-[9px] text-textDim/60 break-all">{row.id}</div>
-
-                            {a?.argsSummary && (
-                                <div className="mt-[1px] max-w-[200px] whitespace-normal break-words text-[8px] text-textDim/60">
-                                    {String(a.argsSummary)}
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                );
-            }}
-            renderColHeader={(col) => {
-                const s = col.meta as any;
-                if (!s) return null;
-
-                const name = col.meta?.name ?? col.id;
-                const x = s?.xLabel ?? s?.x ?? "∅";
-                const prec = s?.precision ?? "∅";
-
-                return (
-                    <div
-                        className="flex flex-col items-center justify-end gap-1 px-1 py-1"
-                        title={`${name}\n x = ${String(x)}\n prec = ${String(prec)}\n id = ${col.id}`}
-                    >
-                        <span
-                            className="text-[9px] leading-tight text-center whitespace-nowrap"
-                            style={{
-                                writingMode: "vertical-rl",
-                                textOrientation: "mixed",
-                                transform: "rotate(180deg)",
-                            }}
-                        >
-                            {name}
-                        </span>
-
-                        <span className="text-[8px] leading-tight text-textDim/70 whitespace-nowrap">
-                            x={String(x)}
-                        </span>
-
-                        <span className="text-[8px] leading-tight text-textDim/60 whitespace-nowrap">
-                            {String(prec)}
-                        </span>
-                    </div>
-                );
-            }}
             renderCell={(row, col) => {
                 const stats = statsIndex[col.id]?.[row.id] ?? null;
                 const active = selected?.accelId === row.id && selected?.seriesId === col.id;
                 const heatClass = classifyByMax(stats, globalMax);
 
-                const a = row.meta as any;
-                const s = col.meta as any;
+                const a = row;
+                const s = col;
 
                 const algoName = a?.name ?? row.id;
+                const argsA = formatArgs(a?.args) ?? [];
                 const seriesName = s?.name ?? col.id;
-                const x = s?.xLabel ?? s?.x ?? "∅";
+                const argsS = formatArgs(s?.args) ?? "∅";
                 const prec = s?.precision ?? "∅";
 
                 const titleLines: string[] = [];
-                titleLines.push(`Ряд: ${seriesName} (x=${String(x)}, prec=${String(prec)})`);
-                titleLines.push(`Алгоритм: ${algoName}${a?.m != null ? `, m=${String(a.m)}` : ""}`);
-
-                const args = a?.algorithmArgs ?? a?.args;
-                if (args && typeof args === "object") {
-                    const keys = Object.keys(args)
-                        .filter((k) => args[k] != null)
-                        .sort();
-                    if (keys.length > 0) {
-                        titleLines.push("args:");
-                        for (const k of keys) titleLines.push(`  ${k}: ${String(args[k])}`);
-                    }
-                }
-                if (a?.argsSummary) titleLines.push(`summary: ${String(a.argsSummary)}`);
+                titleLines.push(
+                    `Ряд: ${seriesName} prec=${String(prec)}, \n args: ${String(argsS)}`
+                );
+                titleLines.push(
+                    `Алгоритм: ${algoName}${a?.m != null ? `, m=${String(a.m)}` : ""} \n args: ${String(argsA)}`
+                );
 
                 titleLines.push("");
 

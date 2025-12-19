@@ -63,57 +63,6 @@ export interface MatrixPagedProps<TRowMeta = unknown, TColMeta = unknown>
     };
 }
 
-function Pager({ info, onSetPage }: { info: PagerInfo; onSetPage: (p: number) => void }) {
-    const { page, totalPages, startIndex, endIndex, totalCols } = info;
-    if (totalPages <= 1) return null;
-
-    return (
-        <div className="flex items-center gap-1 text-[10px] text-textDim">
-            <button
-                type="button"
-                className="rounded border border-border bg-surface px-1 py-[1px] hover:bg-panel disabled:opacity-40"
-                onClick={() => onSetPage(0)}
-                disabled={page === 0}
-            >
-                «
-            </button>
-            <button
-                type="button"
-                className="rounded border border-border bg-surface px-1 py-[1px] hover:bg-panel disabled:opacity-40"
-                onClick={() => onSetPage(page - 1)}
-                disabled={page === 0}
-            >
-                ‹
-            </button>
-
-            <span className="px-1">
-                стр. {page + 1} / {totalPages}
-            </span>
-
-            <span className="text-textDim/60">
-                колонки {startIndex + 1}–{endIndex} из {totalCols}
-            </span>
-
-            <button
-                type="button"
-                className="rounded border border-border bg-surface px-1 py-[1px] hover:bg-panel disabled:opacity-40"
-                onClick={() => onSetPage(page + 1)}
-                disabled={page >= totalPages - 1}
-            >
-                ›
-            </button>
-            <button
-                type="button"
-                className="rounded border border-border bg-surface px-1 py-[1px] hover:bg-panel disabled:opacity-40"
-                onClick={() => onSetPage(totalPages - 1)}
-                disabled={page >= totalPages - 1}
-            >
-                »
-            </button>
-        </div>
-    );
-}
-
 export function MatrixPaged<TRowMeta = unknown, TColMeta = unknown>(
     props: MatrixPagedProps<TRowMeta, TColMeta>
 ) {
@@ -171,35 +120,14 @@ export function MatrixPaged<TRowMeta = unknown, TColMeta = unknown>(
         }),
         [page, totalPages, pageSize, startIndex, endIndex, totalCols]
     );
-
-    const header =
-        renderTitle || renderSubtitle || renderHeaderRight || totalPages > 1 ? (
-            <div
-                className="
-                    relative mb-2
-                    -mx-4 px-4 py-2
-                    bg-surface/95 backdrop-blur-sm
-                    flex items-center justify-between
-                "
-            >
-                <div className="flex flex-col gap-1">
-                    {renderTitle ? (
-                        <span className="text-sm font-semibold text-textDim">{renderTitle()}</span>
-                    ) : null}
-                    {renderSubtitle ? (
-                        <span className="text-[11px] text-textDim/80">{renderSubtitle()}</span>
-                    ) : null}
-                </div>
-
-                <div className="flex items-center gap-3">
-                    {renderHeaderRight ? renderHeaderRight(pagerInfo) : null}
-                    <Pager
-                        info={pagerInfo}
-                        onSetPage={(p) => setPage(clamp(p, 0, totalPages - 1))}
-                    />
-                </div>
-            </div>
-        ) : null;
+    const header = getHeader(
+        renderTitle,
+        renderSubtitle,
+        renderHeaderRight,
+        pagerInfo,
+        setPage,
+        totalPages
+    );
 
     if (!exportCfg) {
         return (
@@ -249,5 +177,89 @@ export function MatrixPaged<TRowMeta = unknown, TColMeta = unknown>(
                 )}
             </MatrixExportWrapper>
         </>
+    );
+}
+
+function getHeader(
+    renderTitle: (() => React.ReactNode) | undefined,
+    renderSubtitle: (() => React.ReactNode) | undefined,
+    renderHeaderRight: ((pager: PagerInfo) => React.ReactNode) | undefined,
+    pagerInfo: PagerInfo,
+    setPage: (value: ((prevState: number) => number) | number) => void,
+    totalPages: number
+) {
+    return (
+        <div
+            className="
+                    relative mb-2
+                    -mx-4 px-4 py-2
+                    bg-surface/95 backdrop-blur-sm
+                    flex items-center justify-between
+                "
+        >
+            <div className="flex flex-col gap-1">
+                {renderTitle ? (
+                    <span className="text-sm font-semibold text-textDim">{renderTitle()}</span>
+                ) : null}
+                {renderSubtitle ? (
+                    <span className="text-[11px] text-textDim/80">{renderSubtitle()}</span>
+                ) : null}
+            </div>
+
+            <div className="flex items-center gap-3">
+                {renderHeaderRight ? renderHeaderRight(pagerInfo) : null}
+                <Pager info={pagerInfo} onSetPage={(p) => setPage(clamp(p, 0, totalPages - 1))} />
+            </div>
+        </div>
+    );
+}
+
+function Pager({ info, onSetPage }: { info: PagerInfo; onSetPage: (p: number) => void }) {
+    const { page, totalPages, startIndex, endIndex, totalCols } = info;
+
+    return (
+        <div className="flex items-center gap-1 text-[10px] text-textDim">
+            <button
+                type="button"
+                className="rounded border border-border bg-surface px-1 py-[1px] hover:bg-panel disabled:opacity-40"
+                onClick={() => onSetPage(0)}
+                disabled={page === 0}
+            >
+                «
+            </button>
+            <button
+                type="button"
+                className="rounded border border-border bg-surface px-1 py-[1px] hover:bg-panel disabled:opacity-40"
+                onClick={() => onSetPage(page - 1)}
+                disabled={page === 0}
+            >
+                ‹
+            </button>
+
+            <span className="px-1">
+                стр. {page + 1} / {totalPages}
+            </span>
+
+            <span className="text-textDim/60">
+                колонки {startIndex + 1}–{endIndex} из {totalCols}
+            </span>
+
+            <button
+                type="button"
+                className="rounded border border-border bg-surface px-1 py-[1px] hover:bg-panel disabled:opacity-40"
+                onClick={() => onSetPage(page + 1)}
+                disabled={page >= totalPages - 1}
+            >
+                ›
+            </button>
+            <button
+                type="button"
+                className="rounded border border-border bg-surface px-1 py-[1px] hover:bg-panel disabled:opacity-40"
+                onClick={() => onSetPage(totalPages - 1)}
+                disabled={page >= totalPages - 1}
+            >
+                »
+            </button>
+        </div>
     );
 }

@@ -31,6 +31,9 @@ export interface MatrixAlgorithmSeriesViewProps
     accelList: Accel[];
     seriesList: Series[];
 
+    rowWidth?: number | string;
+    colWidth?: number | string;
+
     renderCell: (
         accel: Accel,
         series: Series,
@@ -58,6 +61,8 @@ export function MatrixAlgorithmSeriesView(props: MatrixAlgorithmSeriesViewProps)
     const {
         accelList,
         seriesList,
+        rowWidth = 160,
+        colWidth = 50,
         renderCell,
         renderAlgoHeader,
         renderSeriesHeader,
@@ -84,6 +89,18 @@ export function MatrixAlgorithmSeriesView(props: MatrixAlgorithmSeriesViewProps)
         [seriesList]
     );
 
+    const corner: MatrixProps<AlgoRowMeta, SeriesColMeta>["renderCorner"] = () => {
+        if (renderCorner) return renderCorner();
+
+        return (
+            <div className="text-left text-[10px] text-textDim">
+                <span className="font-medium">Алгоритм</span>
+                <span className="text-textDim/60"> \ </span>
+                <span className="font-medium">Ряд</span>
+            </div>
+        );
+    };
+
     const rowHeader: MatrixProps<AlgoRowMeta, SeriesColMeta>["renderRowHeader"] = (row, i) => {
         const a = row.meta!.accel;
         if (renderAlgoHeader) return renderAlgoHeader(a, i);
@@ -107,11 +124,26 @@ export function MatrixAlgorithmSeriesView(props: MatrixAlgorithmSeriesViewProps)
 
         const args = formatArgs(s.args as any);
         return (
-            <div className="flex flex-col leading-tight">
-                <span className="font-medium text-textDim">{s.name}</span>
-                <span className="text-[10px] text-textDim/70">
-                    {s.precision ? `prec=${s.precision}` : ""}
-                    {s.precision && args ? " · " : ""}
+            <div
+                className="flex flex-col items-center justify-end gap-1 px-1 py-1"
+                title={`${s.name}\n prec = ${s.precision}\n args: ${args}`}
+            >
+                <span
+                    className="text-[9px] leading-tight text-center whitespace-nowrap"
+                    style={{
+                        writingMode: "vertical-rl",
+                        textOrientation: "mixed",
+                        transform: "rotate(180deg)",
+                    }}
+                >
+                    {s.name}
+                </span>
+
+                <span className="text-[8px] leading-tight text-textDim/60 whitespace-nowrap">
+                    {s.precision}
+                </span>
+
+                <span className="text-[8px] leading-tight text-textDim/70 whitespace-nowrap">
                     {args}
                 </span>
             </div>
@@ -123,7 +155,9 @@ export function MatrixAlgorithmSeriesView(props: MatrixAlgorithmSeriesViewProps)
             {...rest}
             rows={rows}
             cols={cols}
-            renderCorner={renderCorner}
+            rowWidth={rowWidth}
+            colWidth={colWidth}
+            renderCorner={corner}
             renderRowHeader={rowHeader}
             renderColHeader={colHeader}
             renderCell={(row, col, i, j) => renderCell(row.meta!.accel, col.meta!.series, i, j)}

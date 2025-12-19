@@ -22,12 +22,6 @@ export interface MatrixAxisFilterProps<T> {
     onToggleGroup: (key: string) => void;
     onSelectAllGroups: () => void;
     onClearGroups: () => void;
-
-    idMode: FilterMode;
-    onIdMode: (m: FilterMode) => void;
-
-    selectedIds: Set<string>;
-    onClearIds: () => void;
 }
 
 export function MatrixAxisFilter<T>(props: MatrixAxisFilterProps<T>) {
@@ -43,10 +37,6 @@ export function MatrixAxisFilter<T>(props: MatrixAxisFilterProps<T>) {
         onToggleGroup,
         onSelectAllGroups,
         onClearGroups,
-        idMode,
-        onIdMode,
-        selectedIds,
-        onClearIds,
     } = props;
 
     return (
@@ -127,46 +117,6 @@ export function MatrixAxisFilter<T>(props: MatrixAxisFilterProps<T>) {
                         </label>
                     );
                 })}
-            </div>
-
-            <div className="mt-2 flex items-center gap-2 text-[10px] text-textDim">
-                <span className="text-textDim/70">ids:</span>
-
-                <button
-                    type="button"
-                    className={`rounded border border-border px-2 py-[2px] ${
-                        idMode === "whitelist" ? "bg-panel" : "bg-surface hover:bg-panel"
-                    }`}
-                    onClick={() => onIdMode("whitelist")}
-                    title="Показывать только выбранные id"
-                >
-                    only
-                </button>
-
-                <button
-                    type="button"
-                    className={`rounded border border-border px-2 py-[2px] ${
-                        idMode === "blacklist" ? "bg-panel" : "bg-surface hover:bg-panel"
-                    }`}
-                    onClick={() => onIdMode("blacklist")}
-                    title="Скрывать выбранные id"
-                >
-                    hide
-                </button>
-
-                <button
-                    type="button"
-                    className="ml-auto rounded border border-border bg-surface px-2 py-[2px] hover:bg-panel disabled:opacity-50"
-                    onClick={onClearIds}
-                    disabled={selectedIds.size === 0}
-                    title="Очистить id-выбор"
-                >
-                    clear
-                </button>
-
-                {selectedIds.size > 0 ? (
-                    <span className="tabular-nums text-textDim/70">{selectedIds.size}</span>
-                ) : null}
             </div>
         </div>
     );

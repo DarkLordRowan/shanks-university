@@ -190,7 +190,14 @@ export const MatrixExportWrapper: React.FC<MatrixExportWrapperProps> = ({
 
     return (
         <div className="relative">
+            {children({
+                exporting,
+                noInnerScroll,
+                noSticky,
+                captureRef,
+            })}
             <div className="mb-2 flex items-center gap-2 text-[10px] text-textDim">
+                Export:
                 {enablePng && (
                     <button
                         type="button"
@@ -202,7 +209,6 @@ export const MatrixExportWrapper: React.FC<MatrixExportWrapperProps> = ({
                         {exporting ? "IMG…" : "IMG"}
                     </button>
                 )}
-
                 {enableXlsx && (
                     <button
                         type="button"
@@ -212,7 +218,6 @@ export const MatrixExportWrapper: React.FC<MatrixExportWrapperProps> = ({
                         XLSX
                     </button>
                 )}
-
                 {progress !== null && (
                     <div className="flex items-center gap-1 min-w-[80px]">
                         <span className="tabular-nums">{progress}%</span>
@@ -225,13 +230,6 @@ export const MatrixExportWrapper: React.FC<MatrixExportWrapperProps> = ({
                     </div>
                 )}
             </div>
-
-            {children({
-                exporting,
-                noInnerScroll,
-                noSticky,
-                captureRef,
-            })}
         </div>
     );
 };
