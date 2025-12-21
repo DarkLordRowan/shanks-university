@@ -8,8 +8,10 @@ import { AlgorithmSeriesErrorMatrix } from "@/widgets/AlgorithmSeriesErrorMatrix
 import { AlgorithmSeriesConvergenceTable } from "@/widgets/AlgorithmSeriesConvergenceTable";
 import { AlgoRankingTable } from "@/widgets/AlgoRankingTable.tsx";
 import { AlgorithmSeriesErrorStatsTable } from "@/widgets/AlgorithmSeriesErrorStatsTable";
+import { AlgorithmSeriesView } from "@/widgets/AlgorithmSeriesView";
 
 type ViewKey =
+    | "algorithm-series-view"
     | "error-matrix"
     | "series-diff"
     | "series-error"
@@ -52,6 +54,13 @@ function ViewToggle(props: ViewToggleProps) {
 
     return (
         <div className="flex flex-wrap gap-2 mb-3">
+            <ViewButton
+                active={value === "algorithm-series-view"}
+                onClick={() => onChange("algorithm-series-view")}
+            >
+                Результаты
+            </ViewButton>
+
             <ViewButton active={value === "error-matrix"} onClick={() => onChange("error-matrix")}>
                 Таблица ошибок по шагам
             </ViewButton>
@@ -101,6 +110,10 @@ export function ExperimentViewSwitcher(props: ExperimentViewSwitcherProps) {
 
             {experiment && (
                 <div className="mt-2">
+                    {view === "algorithm-series-view" && (
+                        <AlgorithmSeriesView experiment={experiment} />
+                    )}
+
                     {view === "error-matrix" && <ErrorMatrixTable experiment={experiment} />}
 
                     {view === "series-diff" && (

@@ -55,7 +55,7 @@ export interface MatrixPagedProps<TRowMeta = unknown, TColMeta = unknown>
          * поэтому buildWorkbook получает текущий срез cols.
          * Если нужен экспорт "всего", игнорируйте colsSlice внутри buildWorkbook.
          */
-        buildWorkbook: (args: {
+        buildWorkbook?: (args: {
             rows: MatrixAxisItem<TRowMeta>[];
             cols: MatrixAxisItem<TColMeta>[];
             pager: PagerInfo;

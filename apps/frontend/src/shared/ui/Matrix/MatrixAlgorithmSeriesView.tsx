@@ -49,7 +49,7 @@ export interface MatrixAlgorithmSeriesViewProps
         fileBaseName: string;
         enablePng?: boolean;
         enableXlsx?: boolean;
-        buildWorkbook: (args: {
+        buildWorkbook?: (args: {
             accelList: Accel[];
             seriesList: Series[];
             pager: PagerInfo;

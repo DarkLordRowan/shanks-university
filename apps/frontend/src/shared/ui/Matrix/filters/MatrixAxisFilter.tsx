@@ -1,3 +1,7 @@
+// src/shared/ui/Matrix/filters/MatrixAxisFilter.tsx
+
+import React from "react";
+
 export type FilterMode = "whitelist" | "blacklist";
 
 export type Group<T> = {
@@ -22,6 +26,9 @@ export interface MatrixAxisFilterProps<T> {
     onToggleGroup: (key: string) => void;
     onSelectAllGroups: () => void;
     onClearGroups: () => void;
+
+    /** дополнительная панель параметров (precision/m/args и т.п.) */
+    extra?: React.ReactNode;
 }
 
 export function MatrixAxisFilter<T>(props: MatrixAxisFilterProps<T>) {
@@ -37,6 +44,7 @@ export function MatrixAxisFilter<T>(props: MatrixAxisFilterProps<T>) {
         onToggleGroup,
         onSelectAllGroups,
         onClearGroups,
+        extra,
     } = props;
 
     return (
@@ -96,6 +104,8 @@ export function MatrixAxisFilter<T>(props: MatrixAxisFilterProps<T>) {
                     none
                 </button>
             </div>
+
+            {extra ? <div className="mt-2">{extra}</div> : null}
 
             <div className="mt-2 max-h-[160px] overflow-auto rounded border border-border bg-panel/40 p-1">
                 {groups.map((g) => {

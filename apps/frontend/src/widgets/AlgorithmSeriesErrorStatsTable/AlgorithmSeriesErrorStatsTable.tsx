@@ -262,7 +262,6 @@ export const AlgorithmSeriesErrorStatsTable: React.FC<AlgorithmSeriesErrorStatsT
             accelList={experiment?.accelList ?? []}
             seriesList={experiment?.seriesList ?? []}
             maxColsPerPage={maxSeries}
-            rowWidth={220}
             colWidth={90}
             minCellHeightPx={64}
             renderTitle={() => "Статистика ошибок: алгоритмы × ряды"}

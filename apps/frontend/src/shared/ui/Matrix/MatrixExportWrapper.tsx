@@ -6,7 +6,7 @@ import * as XLSX from "xlsx-js-style";
 
 export interface MatrixExportWrapperProps {
     fileBaseName: string;
-    buildWorkbook: () => XLSX.WorkBook;
+    buildWorkbook?: () => XLSX.WorkBook;
     enablePng?: boolean;
     enableXlsx?: boolean;
     children: (opts: {
@@ -20,8 +20,8 @@ export interface MatrixExportWrapperProps {
 export const MatrixExportWrapper: React.FC<MatrixExportWrapperProps> = ({
     fileBaseName,
     buildWorkbook,
-    enablePng = true,
-    enableXlsx = true,
+    enablePng = false,
+    enableXlsx = false,
     children,
 }) => {
     const captureRef = useRef<HTMLDivElement | null>(null);
@@ -171,6 +171,9 @@ export const MatrixExportWrapper: React.FC<MatrixExportWrapperProps> = ({
     }, [exporting, fileBaseName]);
 
     const exportXlsx = useCallback(() => {
+        if (!enableXlsx || buildWorkbook == undefined) {
+            return;
+        }
         const wb = buildWorkbook();
         const out = XLSX.write(wb, { bookType: "xlsx", type: "array" });
 
@@ -186,7 +189,7 @@ export const MatrixExportWrapper: React.FC<MatrixExportWrapperProps> = ({
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
-    }, [buildWorkbook, fileBaseName]);
+    }, [buildWorkbook, enableXlsx, fileBaseName]);
 
     return (
         <div className="relative">
