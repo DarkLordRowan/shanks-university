@@ -27,7 +27,6 @@ export interface MatrixAxisFilterProps<T> {
     onSelectAllGroups: () => void;
     onClearGroups: () => void;
 
-    /** дополнительная панель параметров (precision/m/args и т.п.) */
     extra?: React.ReactNode;
 }
 
@@ -63,6 +62,7 @@ export function MatrixAxisFilter<T>(props: MatrixAxisFilterProps<T>) {
                 />
             </div>
 
+            {/* GROUPS only: only/hide относятся ТОЛЬКО к группам */}
             <div className="mt-2 flex items-center gap-2 text-[10px] text-textDim">
                 <span className="text-textDim/70">группы:</span>
 

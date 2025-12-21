@@ -2,7 +2,11 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import type { Accel, Series } from "@/entities/experiment/model/experiment.ts";
-import { MatrixAccelsFilter } from "@/shared/ui/Matrix/filters/MatrixAccelsFilter.tsx";
+import {
+    MatrixAccelsFilter,
+    type ArgsOp,
+    type ArgClause,
+} from "@/shared/ui/Matrix/filters/MatrixAccelsFilter.tsx";
 import { MatrixSeriesFilter } from "@/shared/ui/Matrix/filters/MatrixSeriesFilter.tsx";
 import type { FilterMode, Group } from "@/shared/ui/Matrix/filters/MatrixAxisFilter.tsx";
 
@@ -123,46 +127,22 @@ function seriesSearchText(s: Series): string {
     );
 }
 
-/* -------------------- real filters helpers -------------------- */
+/* -------------------- real filters -------------------- */
 
-function applyArgsKVFilter<T extends { args: Record<string, any> | null }>(
-    list: T[],
-    argKey: string,
-    argValue: string
-): T[] {
-    const kq = normalize(argKey);
-    const vq = normalize(argValue);
-    if (!kq && !vq) return list;
+function parseNullableNumber(v: string): number | null {
+    const t = v.trim();
+    if (!t) return null;
+    const n = Number(t);
+    return Number.isFinite(n) ? n : null;
+}
 
-    return list.filter((x) => {
-        const args = x.args;
-        if (!args) return false;
-
-        // value-only: any value contains vq
-        if (!kq && vq) {
-            for (const [, v] of Object.entries(args)) {
-                if (v == null) continue;
-                if (normalize(String(v)).includes(vq)) return true;
-            }
-            return false;
-        }
-
-        // key specified (substring match)
-        if (kq) {
-            const keys = Object.keys(args);
-            const matchedKeys = keys.filter((kk) => normalize(kk).includes(kq));
-            if (matchedKeys.length === 0) return false;
-
-            if (!vq) return true;
-
-            for (const kk of matchedKeys) {
-                const v = (args as any)[kk];
-                if (v == null) continue;
-                if (normalize(String(v)).includes(vq)) return true;
-            }
-            return false;
-        }
-
+function applyAccelMFilter(list: Accel[], mMin: number | null, mMax: number | null): Accel[] {
+    if (mMin == null && mMax == null) return list;
+    return list.filter((a) => {
+        const m = a.m;
+        if (m == null) return false;
+        if (mMin != null && m < mMin) return false;
+        if (mMax != null && m > mMax) return false;
         return true;
     });
 }
@@ -177,47 +157,78 @@ function applySeriesPrecisionFilter(
     return list.filter((s) => !selectedPrecisions.has(s.precision ?? ""));
 }
 
-function applyAccelMFilter(list: Accel[], mMin: number | null, mMax: number | null): Accel[] {
-    if (mMin == null && mMax == null) return list;
-    return list.filter((a) => {
-        const m = a.m;
-        if (m == null) return false;
-        if (mMin != null && m < mMin) return false;
-        if (mMax != null && m > mMax) return false;
-        return true;
-    });
+function clauseMatchesArgs(args: Record<string, any> | null, clause: ArgClause): boolean {
+    const kq = normalize(clause.key);
+    const vq = normalize(clause.value);
+
+    if (!kq && !vq) return true; // пустое правило ничего не ограничивает
+
+    if (!args) return false;
+
+    // value-only: любое значение содержит vq
+    if (!kq && vq) {
+        for (const [, v] of Object.entries(args)) {
+            if (v == null) continue;
+            if (normalize(String(v)).includes(vq)) return true;
+        }
+        return false;
+    }
+
+    // key задан (substring match по ключу)
+    if (kq) {
+        const keys = Object.keys(args);
+        const matchedKeys = keys.filter((kk) => normalize(kk).includes(kq));
+        if (matchedKeys.length === 0) return false;
+
+        if (!vq) return true;
+
+        for (const kk of matchedKeys) {
+            const v = (args as any)[kk];
+            if (v == null) continue;
+            if (normalize(String(v)).includes(vq)) return true;
+        }
+        return false;
+    }
+
+    return true;
 }
 
-function parseNullableNumber(v: string): number | null {
-    const t = v.trim();
-    if (!t) return null;
-    const n = Number(t);
-    return Number.isFinite(n) ? n : null;
+function applyArgsClauses<T extends { args: Record<string, any> | null }>(
+    list: T[],
+    op: ArgsOp,
+    clauses: ArgClause[]
+): T[] {
+    const effective = clauses.filter((c) => normalize(c.key) !== "" || normalize(c.value) !== "");
+    if (effective.length === 0) return list;
+
+    return list.filter((x) => {
+        const matches = effective.map((c) => clauseMatchesArgs(x.args, c));
+        return op === "and" ? matches.every(Boolean) : matches.some(Boolean);
+    });
 }
 
 /* -------------------- state -------------------- */
 
 type AxisStateBase = {
     query: string;
-
     groupMode: FilterMode;
     selectedGroupKeys: Set<string>;
-
     idMode: FilterMode;
     selectedIds: Set<string>;
-
-    argKey: string;
-    argValue: string;
 };
 
 type AccelAxisState = AxisStateBase & {
     mMinText: string;
     mMaxText: string;
+    argsOp: ArgsOp;
+    argClauses: ArgClause[];
 };
 
 type SeriesAxisState = AxisStateBase & {
     precisionMode: FilterMode;
     selectedPrecisions: Set<string>;
+    argsOp: ArgsOp;
+    argClauses: ArgClause[];
 };
 
 export type MatrixAlgoSeriesFilterState = {
@@ -228,18 +239,13 @@ export type MatrixAlgoSeriesFilterState = {
 export interface MatrixAlgoSeriesFilterProps {
     accelList: Accel[];
     seriesList: Series[];
-
-    /** сброс фильтра при смене ключа (например experiment.id) */
     resetKey?: string | number;
 
-    /** кастомная группировка (по умолчанию normalize(name)) */
     groupAccelsBy?: (a: Accel) => { key: string; title?: string };
     groupSeriesBy?: (s: Series) => { key: string; title?: string };
 
-    /** начальное состояние */
     initialState?: Partial<MatrixAlgoSeriesFilterState>;
 
-    /** отрендерить матрицу/контент по отфильтрованным спискам */
     children: (args: {
         filteredAccels: Accel[];
         filteredSeries: Series[];
@@ -266,10 +272,10 @@ export function MatrixAlgoSeriesFilter(props: MatrixAlgoSeriesFilterProps) {
             selectedGroupKeys: new Set<string>(),
             idMode: "whitelist",
             selectedIds: new Set<string>(),
-            argKey: "",
-            argValue: "",
             mMinText: "",
             mMaxText: "",
+            argsOp: "and",
+            argClauses: [{ key: "", value: "" }],
             ...(initialState?.accel ?? null),
         } as AccelAxisState,
         series: {
@@ -278,10 +284,10 @@ export function MatrixAlgoSeriesFilter(props: MatrixAlgoSeriesFilterProps) {
             selectedGroupKeys: new Set<string>(),
             idMode: "whitelist",
             selectedIds: new Set<string>(),
-            argKey: "",
-            argValue: "",
             precisionMode: "whitelist",
             selectedPrecisions: new Set<string>(),
+            argsOp: "and",
+            argClauses: [{ key: "", value: "" }],
             ...(initialState?.series ?? null),
         } as SeriesAxisState,
     }));
@@ -294,19 +300,19 @@ export function MatrixAlgoSeriesFilter(props: MatrixAlgoSeriesFilterProps) {
                 query: "",
                 selectedGroupKeys: new Set(),
                 selectedIds: new Set(),
-                argKey: "",
-                argValue: "",
                 mMinText: "",
                 mMaxText: "",
+                argsOp: "and",
+                argClauses: [{ key: "", value: "" }],
             },
             series: {
                 ...s.series,
                 query: "",
                 selectedGroupKeys: new Set(),
                 selectedIds: new Set(),
-                argKey: "",
-                argValue: "",
                 selectedPrecisions: new Set(),
+                argsOp: "and",
+                argClauses: [{ key: "", value: "" }],
             },
         }));
     }, [resetKey]);
@@ -339,7 +345,7 @@ export function MatrixAlgoSeriesFilter(props: MatrixAlgoSeriesFilterProps) {
             .sort((a, b) => a.localeCompare(b));
     }, [seriesList]);
 
-    // whitelist + пустой выбор => выбрать всё (группы)
+    // groups default select-all
     useEffect(() => {
         setState((s) => {
             if (s.accel.groupMode !== "whitelist") return s;
@@ -364,16 +370,13 @@ export function MatrixAlgoSeriesFilter(props: MatrixAlgoSeriesFilterProps) {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [seriesGroups.length]);
 
-    // whitelist + пустой выбор => выбрать всё (precision)
+    // precision default select-all (в whitelist)
     useEffect(() => {
         setState((s) => {
             if (s.series.precisionMode !== "whitelist") return s;
             if (s.series.selectedPrecisions.size > 0) return s;
             if (precisionOptions.length === 0) return s;
-            return {
-                ...s,
-                series: { ...s.series, selectedPrecisions: new Set(precisionOptions) },
-            };
+            return { ...s, series: { ...s.series, selectedPrecisions: new Set(precisionOptions) } };
         });
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [precisionOptions.length]);
@@ -385,12 +388,15 @@ export function MatrixAlgoSeriesFilter(props: MatrixAlgoSeriesFilterProps) {
             ? (accelList ?? []).filter((a) => accelSearchText(a).includes(q))
             : (accelList ?? []);
 
-        out = applyArgsKVFilter(out as any, state.accel.argKey, state.accel.argValue);
+        // args clauses
+        out = applyArgsClauses(out as any, state.accel.argsOp, state.accel.argClauses);
 
+        // m
         const mMin = parseNullableNumber(state.accel.mMinText);
         const mMax = parseNullableNumber(state.accel.mMaxText);
         out = applyAccelMFilter(out, mMin, mMax);
 
+        // groups
         const byGroup = applyGroupFilter(
             accelGroups,
             state.accel.selectedGroupKeys,
@@ -399,6 +405,7 @@ export function MatrixAlgoSeriesFilter(props: MatrixAlgoSeriesFilterProps) {
         const byGroupIds = new Set(byGroup.map((a) => a.id));
         out = out.filter((a) => byGroupIds.has(a.id));
 
+        // ids (если где-то используется)
         out = applyIdFilter(out, state.accel.selectedIds, state.accel.idMode);
 
         return sortAccels(out, "name_args");
@@ -411,14 +418,17 @@ export function MatrixAlgoSeriesFilter(props: MatrixAlgoSeriesFilterProps) {
             ? (seriesList ?? []).filter((s) => seriesSearchText(s).includes(q))
             : (seriesList ?? []);
 
+        // precision
         out = applySeriesPrecisionFilter(
             out,
             state.series.selectedPrecisions,
             state.series.precisionMode
         );
 
-        out = applyArgsKVFilter(out as any, state.series.argKey, state.series.argValue);
+        // args clauses
+        out = applyArgsClauses(out as any, state.series.argsOp, state.series.argClauses);
 
+        // groups
         const byGroup = applyGroupFilter(
             seriesGroups,
             state.series.selectedGroupKeys,
@@ -427,6 +437,7 @@ export function MatrixAlgoSeriesFilter(props: MatrixAlgoSeriesFilterProps) {
         const byGroupIds = new Set(byGroup.map((s) => s.id));
         out = out.filter((s) => byGroupIds.has(s.id));
 
+        // ids
         out = applyIdFilter(out, state.series.selectedIds, state.series.idMode);
 
         return sortSeries(out, "name_args");
@@ -474,11 +485,39 @@ export function MatrixAlgoSeriesFilter(props: MatrixAlgoSeriesFilterProps) {
                     onMMaxText={(v) =>
                         setState((s) => ({ ...s, accel: { ...s.accel, mMaxText: v } }))
                     }
-                    argKey={state.accel.argKey}
-                    argValue={state.accel.argValue}
-                    onArgKey={(v) => setState((s) => ({ ...s, accel: { ...s.accel, argKey: v } }))}
-                    onArgValue={(v) =>
-                        setState((s) => ({ ...s, accel: { ...s.accel, argValue: v } }))
+                    argsOp={state.accel.argsOp}
+                    onArgsOp={(op) =>
+                        setState((s) => ({ ...s, accel: { ...s.accel, argsOp: op } }))
+                    }
+                    argClauses={state.accel.argClauses}
+                    onChangeClause={(i, patch) =>
+                        setState((s) => {
+                            const next = s.accel.argClauses.map((c, idx) =>
+                                idx === i ? { ...c, ...patch } : c
+                            );
+                            return { ...s, accel: { ...s.accel, argClauses: next } };
+                        })
+                    }
+                    onAddClause={() =>
+                        setState((s) => ({
+                            ...s,
+                            accel: {
+                                ...s.accel,
+                                argClauses: [...s.accel.argClauses, { key: "", value: "" }],
+                            },
+                        }))
+                    }
+                    onRemoveClause={(i) =>
+                        setState((s) => {
+                            const next = s.accel.argClauses.filter((_, idx) => idx !== i);
+                            return {
+                                ...s,
+                                accel: {
+                                    ...s.accel,
+                                    argClauses: next.length ? next : [{ key: "", value: "" }],
+                                },
+                            };
+                        })
                     }
                     onResetParams={() =>
                         setState((s) => ({
@@ -487,8 +526,8 @@ export function MatrixAlgoSeriesFilter(props: MatrixAlgoSeriesFilterProps) {
                                 ...s.accel,
                                 mMinText: "",
                                 mMaxText: "",
-                                argKey: "",
-                                argValue: "",
+                                argsOp: "and",
+                                argClauses: [{ key: "", value: "" }],
                             },
                         }))
                     }
@@ -550,13 +589,39 @@ export function MatrixAlgoSeriesFilter(props: MatrixAlgoSeriesFilterProps) {
                             series: { ...s.series, selectedPrecisions: new Set() },
                         }))
                     }
-                    argKey={state.series.argKey}
-                    argValue={state.series.argValue}
-                    onArgKey={(v) =>
-                        setState((s) => ({ ...s, series: { ...s.series, argKey: v } }))
+                    argsOp={state.series.argsOp}
+                    onArgsOp={(op) =>
+                        setState((s) => ({ ...s, series: { ...s.series, argsOp: op } }))
                     }
-                    onArgValue={(v) =>
-                        setState((s) => ({ ...s, series: { ...s.series, argValue: v } }))
+                    argClauses={state.series.argClauses}
+                    onChangeClause={(i, patch) =>
+                        setState((s) => {
+                            const next = s.series.argClauses.map((c, idx) =>
+                                idx === i ? { ...c, ...patch } : c
+                            );
+                            return { ...s, series: { ...s.series, argClauses: next } };
+                        })
+                    }
+                    onAddClause={() =>
+                        setState((s) => ({
+                            ...s,
+                            series: {
+                                ...s.series,
+                                argClauses: [...s.series.argClauses, { key: "", value: "" }],
+                            },
+                        }))
+                    }
+                    onRemoveClause={(i) =>
+                        setState((s) => {
+                            const next = s.series.argClauses.filter((_, idx) => idx !== i);
+                            return {
+                                ...s,
+                                series: {
+                                    ...s.series,
+                                    argClauses: next.length ? next : [{ key: "", value: "" }],
+                                },
+                            };
+                        })
                     }
                     onResetParams={() =>
                         setState((s) => ({
@@ -564,20 +629,15 @@ export function MatrixAlgoSeriesFilter(props: MatrixAlgoSeriesFilterProps) {
                             series: {
                                 ...s.series,
                                 selectedPrecisions: new Set(precisionOptions),
-                                argKey: "",
-                                argValue: "",
+                                argsOp: "and",
+                                argClauses: [{ key: "", value: "" }],
                             },
                         }))
                     }
                 />
             </div>
 
-            {children({
-                filteredAccels,
-                filteredSeries,
-                state,
-                setState,
-            })}
+            {children({ filteredAccels, filteredSeries, state, setState })}
         </div>
     );
 }
