@@ -61,7 +61,6 @@ export function MatrixSeriesFilter(props: MatrixSeriesFilterProps) {
     return (
         <MatrixAxisFilter<Series>
             title="Ряды"
-            hint="группировка по name"
             {...axisProps}
             extra={
                 <div className="rounded border border-border bg-panel/30 p-2">

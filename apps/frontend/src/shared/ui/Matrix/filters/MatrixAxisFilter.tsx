@@ -105,8 +105,6 @@ export function MatrixAxisFilter<T>(props: MatrixAxisFilterProps<T>) {
                 </button>
             </div>
 
-            {extra ? <div className="mt-2">{extra}</div> : null}
-
             <div className="mt-2 max-h-[160px] overflow-auto rounded border border-border bg-panel/40 p-1">
                 {groups.map((g) => {
                     const checked = selectedGroupKeys.has(g.key);
@@ -128,6 +126,8 @@ export function MatrixAxisFilter<T>(props: MatrixAxisFilterProps<T>) {
                     );
                 })}
             </div>
+
+            {extra ? <div className="mt-2">{extra}</div> : null}
         </div>
     );
 }

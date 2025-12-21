@@ -157,6 +157,51 @@ function applySeriesPrecisionFilter(
     return list.filter((s) => !selectedPrecisions.has(s.precision ?? ""));
 }
 
+function parseScalarQuery(
+    v: string
+):
+    | { kind: "num"; value: number }
+    | { kind: "bool"; value: boolean }
+    | { kind: "null" }
+    | { kind: "str" } {
+    const t = v.trim();
+    if (!t) return { kind: "str" };
+
+    const tl = t.toLowerCase();
+    if (tl === "true") return { kind: "bool", value: true };
+    if (tl === "false") return { kind: "bool", value: false };
+    if (tl === "null") return { kind: "null" };
+
+    const n = Number(t);
+    if (Number.isFinite(n) && /^[+-]?(\d+(\.\d*)?|\.\d+)([eE][+-]?\d+)?$/.test(t)) {
+        return { kind: "num", value: n };
+    }
+
+    return { kind: "str" };
+}
+
+function valueMatches(argVal: any, vqRaw: string): boolean {
+    const q = parseScalarQuery(vqRaw);
+
+    if (q.kind === "num") {
+        if (typeof argVal === "number") return argVal === q.value;
+        if (typeof argVal === "string") return normalize(argVal) === normalize(vqRaw);
+        return false;
+    }
+
+    if (q.kind === "bool") {
+        if (typeof argVal === "boolean") return argVal === q.value;
+        if (typeof argVal === "string") return normalize(argVal) === (q.value ? "true" : "false");
+        return false;
+    }
+
+    if (q.kind === "null") {
+        return argVal === null || normalize(String(argVal)) === "null";
+    }
+
+    return normalize(String(argVal)).includes(normalize(vqRaw));
+}
+
 function clauseMatchesArgs(args: Record<string, any> | null, clause: ArgClause): boolean {
     const kq = normalize(clause.key);
     const vq = normalize(clause.value);
@@ -169,7 +214,7 @@ function clauseMatchesArgs(args: Record<string, any> | null, clause: ArgClause):
     if (!kq && vq) {
         for (const [, v] of Object.entries(args)) {
             if (v == null) continue;
-            if (normalize(String(v)).includes(vq)) return true;
+            if (valueMatches(v, clause.value)) return true;
         }
         return false;
     }
@@ -185,7 +230,7 @@ function clauseMatchesArgs(args: Record<string, any> | null, clause: ArgClause):
         for (const kk of matchedKeys) {
             const v = (args as any)[kk];
             if (v == null) continue;
-            if (normalize(String(v)).includes(vq)) return true;
+            if (valueMatches(v, clause.value)) return true;
         }
         return false;
     }
