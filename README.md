@@ -111,3 +111,11 @@ Doxygen документация доступна [по ссылке](https://bi
 
 - [Подробный анализ трансформации Шенкса и Эпсилон алгоритма](https://www.researchgate.net/publication/327178717_The_genesis_and_early_developments_of_Aitken's_process_Shanks'_transformation_the_e-algorithm_and_related_fixed_point_methods)
 
+
+
+# Запуск backend api:
+
+```
+docker build -t shanks-api:latest .
+docker run -d --name shanks-api -p 8000:8000 --restart unless-stopped shanks-api:latest
+```

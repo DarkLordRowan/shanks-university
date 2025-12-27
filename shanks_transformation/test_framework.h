@@ -1,182 +1,36 @@
 /**
  * @file test_framework.h
  * @brief This file contains the function that provides the framework for testing
+ * @authors Bolshakov M.P.
+ * @edited by Kreynin R.G., Maximov A.K.
  */
 
 #pragma once
+
+#include "custom_concepts.hpp"
+#include "series/series.hpp"
+#include "series/term_calculator.hpp"
+#include <iterator>
 #include <memory>
-#include <string> 
 #include <set>
+#include <type_traits>
 
-#include "wynn_numerators.h"
-#include "./remainders/remainders.hpp"
-#include "shanks_transformation.h"
-#include "epsilon_algorithm.h"
-#include "levin_algorithm.h"
-#include "./levin_sidi_S/levin_sidi_S_algorithm.hpp"
-#include "./drummond_D/drummond_D_algorithm.hpp"
-#include "epsilon_algorithm_two.h"
-#include "chang_whynn_algorithm.h"
+#ifndef INC_FPRECISION
+	#include "libs/arbitrary_arithmetics/fprecision.h"
+#endif
+
+#ifndef INC_COMPLEXPRECISION
+	#include "libs/arbitrary_arithmetics/complexprecision.h"
+#endif
+
+#include "methods.hpp"
+#include "series/series.hpp"
+#include "series/series_base.hpp"
 #include "test_functions.h"
-#include "levin_sidi_M_algorithm.h"
-#include "weniger_algorithm.h"
-#include "rho_wynn_algorithm.h"
-#include "brezinski_theta_algorithm.h"
-#include "epsilon_algorithm_three.h"
-#include "levin_recursion_algorithm.h"
-#include "lubkin_W_algorithm.h"
-#include "richardson_algorithm.h"
-#include "FSA.h"
-#include "FSA_two.h"
-#include "FSA_3.h"
-#include "epsilon_modified_algorithm.h"
-#include "theta_modified_algorithm.h"
-#include "epsilon_aitken_theta_algorithm.h"
 
- /**
-  * @brief Enum of transformation IDs
-  * @authors Bolshakov M.P.
-  * @edited by Kreynin R.G.
-  */
-enum transformation_id_t {
-	null_transformation_id,
-	shanks_transformation_id,
-	epsilon_algorithm_id,
-	levin_algorithm_id,
-	epsilon_algorithm_2_id,
-	S_algorithm,
-	D_algorithm,
-	chang_epsilon_algorithm,
-	M_algorithm,
-	weniger_transformation,
-	rho_wynn_transformation_id,
-	brezinski_theta_transformation_id,
-	epsilon_algorithm_3_id,
-	levin_recursion_id,
-	W_algorithm_id,
-	richardson_algorithm_id,
-	Ford_Sidi_algorithm_id,
-	Ford_Sidi_algorithm_two_id,
-	Ford_Sidi_algorithm_three_id,
-	epsilon_modified_algorithm_id,
-	theta_modified_algorithm_id,
-	epsilon_aitken_theta_algorithm_id
-};
-/**
- * @brief Enum of series IDs
- * @authors Bolshakov M.P.
- * @edited by Kreynin R.G.
- */
-enum series_id_t {
-	null_series_id,
-	exp_series_id,
-	cos_series_id,
-	sin_series_id,
-	cosh_series_id,
-	sinh_series_id,
-	bin_series_id,
-	four_arctan_series_id,
-	ln1mx_series_id,
-	mean_sinh_sin_series_id,
-	exp_squared_erf_series_id,
-	xmb_Jb_two_series_id,
-	half_asin_two_x_series_id,
-	inverse_1mx_series_id,
-	x_1mx_squared_series_id,
-	erf_series_id,
-	m_fact_1mx_mp1_inverse_series_id,
-	inverse_sqrt_1m4x_series_id,
-	one_twelfth_3x2_pi2_series_id,
-	x_twelfth_x2_pi2_series_id,
-	ln2_series_id,
-	one_series_id,
-	minus_one_quarter_series_id,
-	pi_3_series_id,
-	pi_4_series_id,
-	pi_squared_6_minus_one_series_id,
-	three_minus_pi_series_id,
-	one_twelfth_series_id,
-	eighth_pi_m_one_third_series_id,
-	one_third_pi_squared_m_nine_series_id,
-	four_ln2_m_3_series_id,
-	exp_m_cos_x_sinsin_x_series_id,
-	pi_four_minus_ln2_halfed_series_id,
-	five_pi_twelve_series_id,
-	x_two_series_id,
-	pi_six_min_half_series_id,
-	x_two_throught_squares_id,
-	minus_one_ned_in_n_series_id,
-	minus_one_n_fact_n_in_n_series_id,
-	ln_x_plus_one_x_minus_one_halfed_series_id,
-	two_arcsin_square_x_halfed_series_id,
-	pi_squared_twelve_series_id,
-	pi_cubed_32_series_id,
-	minus_three_plus_ln3_three_devided_two_plus_two_ln2_series_id,
-	two_ln2_series_id,
-	pi_x_multi_e_xpi_plus_e_minusxpi_divided_e_xpi_minus_e_minusxpi_minus_one_series_id,
-	pi_minus_x_2_id,
-	half_multi_ln_1div2multi1minuscosx_id,
-	half_minus_sinx_multi_pi_4_id,
-	ln_1plussqrt1plusxsquare_minus_ln_2_id,
-	ln_cosx_id,
-	ln_sinx_minus_ln_x_id,
-	pi_8_cosx_square_minus_1_div_3_cosx_id,
-	sqrt_oneminussqrtoneminusx_div_x_id,
-	one_minus_sqrt_1minus4x_div_2x_id,
-	arcsin_x_minus_x_series_id,
-	pi_x_minus_x_square_and_x_square_minus_three_pi_x_plus_two_pi_square_series_id,
-	abs_sin_x_minus_2_div_pi_series_id,
-	pi_minus_3pi_4_and_pi_minus_x_minus_3pi_4_series_id,
-	minus_3_div_4_or_x_minus_3_div_4_series_id,
-	ten_minus_x_series_id,
-	x_series_id,
-	minus_x_minus_pi_4_or_minus_pi_4_series_id,
-	one_div_two_minus_x_multi_three_plus_x_series_id,
-	Si_x_series_id,
-	Ci_x_series_id,
-	Riemann_zeta_func_series_id,
-	Riemann_zeta_func_xmin1_div_Riemann_zeta_func_x_series_id,
-	xsquareplus3_div_xsquareplus2multix_minus_1_series_id,
-	arcsin_x_series_id,
-	arctg_x_series_id,
-	K_x_series_id,
-	E_x_series_id,
-	sqrt_1plusx_series_id,
-	Lambert_W_func_series_id,
-	Incomplete_Gamma_func_series_id,
-	Series_with_ln_number1_id,
-	Series_with_ln_number2_id,
-	pi_series_id,
-	x_min_sqrt_x_series_id,
-	arctan_x2_series_id,
-	ln1px4_series_id,
-	sin_x2_series_id,
-	arctan_x3_series_id,
-	arcsin_x2_series_id,
-	ln1_m_x2_series_id,
-	artanh_x_series_id,
-	arcsinh_x_series_id,
-	cos_x2_series_id,
-	sinh_x2_series_id,
-	arctanh_x2_series_id,
-	cos3xmin1_div_xsqare_series_id,
-	two_degree_x_series_id,
-	sqrt_1plusx_min_1_min_x_div_2_series_id,
-	ln13_min_ln7_div_7_series_id,
-	Ja_x_series_id,
-	one_div_sqrt2_sin_xdivsqrt2_series_id,
-	ln_1plusx_div_1plusx2_id,
-	cos_sqrt_x_id,
-	ln_1_plus_x3_id,
-	x_div_1minx_id,
-	x_div_1minx2_id,
-	gamma_series_id
-};
 
 /**
  * @brief Enum of testing functions IDs
- * @authors Bolshakov M.P.
- * @edited by Kreynin R.G.
  */
 enum test_function_id_t {
 	null_test_function_id,
@@ -185,836 +39,1401 @@ enum test_function_id_t {
 	transformation_remainder_id,
 	cmp_transformations_id,
 	eval_transform_time_id,
-	test_all_transforms_id
+	test_all_transforms_id,
 };
+
 
 /**
  * @brief safely reads and validates unsigned integral input
- * @authors Maximov A.K.
  */
-
 template <std::unsigned_integral K>
 K read_input() {
 	long long input;
 	std::cin >> input;
 
-	if (input < 0) 
+	if (input < 0)
 		throw std::domain_error("Negative value in the input!");
 
-	return static_cast<K>(input); // ���������� ��������������
+	return static_cast<K>(input);
 }
 
 /**
-* @brief prints out all available series for testing
-* @authors Bolshakov M.P.
-* @edited by Kreynin R.G.
-*/
-inline static void print_series_info()
-{
-	std::cout << "Which series' convergence would you like to accelerate?" << '\n' <<
-		"List of currently avaiable series:" << '\n' <<
-		"1 - exp_series" << '\n' <<
-		"2 - cos_series" << '\n' <<
-		"3 - sin_series" << '\n' <<
-		"4 - cosh_series" << '\n' <<
-		"5 - sinh_series" << '\n' <<
-		"6 - bin_series" << '\n' <<
-		"7 - four_arctan_series" << '\n' <<
-		"8 - ln1mx_series" << '\n' <<
-		"9 - mean_sinh_sin_series" << '\n' <<
-		"10 - exp_squared_erf_series" << '\n' <<
-		"11 - xmb_Jb_two_series" << '\n' <<
-		"12 - half_asin_two_x_series" << '\n' <<
-		"13 - inverse_1mx_series" << '\n' <<
-		"14 - x_1mx_squared_series" << '\n' <<
-		"15 - erf_series" << '\n' <<
-		"16 - m_fact_1mx_mp1_inverse_series" << '\n' <<
-		"17 - inverse_sqrt_1m4x_series" << '\n' <<
-		"18 - one_twelfth_3x2_pi2_series" << '\n' <<
-		"19 - x_twelfth_x2_pi2_series" << '\n' <<
-		"20 - ln2_series_id" << '\n' <<
-		"21 - one_series_id" << '\n' <<
-		"22 - minus_one_quarter_series_id" << '\n' <<
-		"23 - pi_3_series" << '\n' <<
-		"24 - pi_4_series" << '\n' <<
-		"25 - pi_squared_6_minus_one_series" << '\n' <<
-		"26 - three_minus_pi_series" << '\n' <<
-		"27 - one_twelfth_series" << '\n' <<
-		"28 - eighth_pi_m_one_third_series" << '\n' <<
-		"29 - one_third_pi_squared_m_nine_series" << '\n' <<
-		"30 - four_ln2_m_3_series" << '\n' <<
-		"31 - exp_m_cos_x_sinsin_x_series" << '\n' <<
-		"32 - pi_four_minus_ln2_halfed_series" << '\n' <<
-		"33 - five_pi_twelve_series" << '\n' <<
-		"34 - x_two_series" << '\n' <<
-		"35 - pi_six_min_half_series" << '\n' <<
-		"36 - x_two_throught_squares" << '\n' <<
-		"37 - minus_one_ned_in_n_series" << '\n' <<
-		"38 - minus_one_n_fact_n_in_n_series" << '\n' <<
-		"39 - ln_x_plus_one_x_minus_one_halfed_series" << '\n' <<
-		"40 - two_arcsin_square_x_halfed_series" << '\n' <<
-		"41 - pi_squared_twelve_series" << '\n' <<
-		"42 - pi_cubed_32_series" << '\n' <<
-		"43 - minus_three_plus_ln3_three_devided_two_plus_two_ln2_series" << '\n' <<
-		"44 - two_ln2_series" << '\n' <<
-		"45 - pi_x_multi_e_xpi_plus_e_minusxpi_divided_e_xpi_minus_e_minusxpi_minus_one_series" << '\n' <<
-		"46 - pi_minus_x_2" << '\n' <<
-		"47 - half_multi_ln_1div2multi1minuscosx" << '\n' <<
-		"48 - half_minus_sinx_multi_pi_4" << '\n' <<
-		"49 - ln_1plussqrt1plusxsquare_minus_ln_2" << '\n' <<
-		"50 - ln_cosx" << '\n' <<
-		"51 - ln_sinx_minus_ln_x" << '\n' <<
-		"52 - pi_8_cosx_square_minus_1_div_3_cosx" << '\n' <<
-		"53 - sqrt_oneminussqrtoneminusx_div_x" << '\n' <<
-		"54 - one_minus_sqrt_1minus4x_div_2x" << '\n' <<
-		"55 - arcsin_x_minus_x_series" << '\n' <<
-		"56 - pi_x_minus_x_square_and_x_square_minus_three_pi_x_plus_two_pi_square_series" << '\n' <<
-		"57 - abs_sin_x_minus_2_div_pi_series" << '\n' <<
-		"58 - pi_minus_3pi_4_and_pi_minus_x_minus_3pi_4_series" << '\n' <<
-		"59 - minus_3_div_4_or_x_minus_3_div_4_series" << '\n' <<
-		"60 - ten_minus_x_series" << '\n' <<
-		"61 - x_series" << '\n' <<
-		"62 - minus_x_minus_pi_4_or_minus_pi_4_series" << '\n' <<
-		"63 - one_div_two_minus_x_multi_three_plus_x_series" << '\n' <<
-		"64 - Si_x_series" << '\n' <<
-		"65 - Ci_x_series" << '\n' <<
-		"66 - Riemann_zeta_func_series" << '\n' <<
-		"67 - Riemann_zeta_func_xmin1_div_Riemann_zeta_func_x_series" << '\n' <<
-		"68 - xsquareplus3_div_xsquareplus2multix_minus_1_series" << '\n' <<
-		"69 - arcsin_x_series" << '\n' <<
-		"70 - arctg_x_series" << '\n' <<
-		"71 - K_x_series" << '\n' <<
-		"72 - E_x_series" << '\n' <<
-		"73 - sqrt_1plusx_series" << '\n' <<
-		"74 - Lambert_W_func_series" << '\n' <<
-		"75 - Incomplete_Gamma_func_series" << '\n' <<
-		"76 - Series_with_ln_number1" << '\n' <<
-		"77 - Series_with_ln_number2" << '\n' <<
-		"78 - pi_series" << '\n' <<
-		"79 - x_min_sqrt_x_series" << '\n' <<
-		"80 - arctan_x2_series" << '\n' <<
-		"81 - ln1px4_series" << '\n' <<
-		"82 - sin_x2_series" << '\n' <<
-		"83 - arctan_x3_series" << '\n' <<
-		"84 - arcsin_x2_series" << '\n' <<
-		"85 - ln1_m_x2_series" << '\n' <<
-		"86 - artanh_x_series" << '\n' <<
-		"87 - arcsinh_x_series" << '\n' <<
-		"88 - cos_x2_series" << '\n' <<
-		"89 - sinh_x2_series" << '\n' <<
-		"90 - arctanh_x2_series" << '\n' <<
-		"91 - cos3xmin1_div_xsqare_series" << '\n' <<
-		"92 - two_degree_x_series" << '\n' <<
-		"93 - sqrt_1plusx_min_1_min_x_div_2_series" << '\n' <<
-		"94 - ln13_min_ln7_div_7_series" << '\n' <<
-		"95 - Ja_x_series" << '\n' <<
-		"96 - one_div_sqrt2_sin_xdivsqrt2_series" << '\n' <<
-		"97 - ln_1plusx_div_1plusx2" << '\n' <<
-		"98 - cos_sqrt_x" << '\n' <<
-		"99 - ln_1_plus_x3" << '\n' <<
-		"100 - x_div_1minx" << '\n' <<
-		"101 - x_div_1minx2" << '\n' <<
-		"102 - gamma_series" << '\n' <<
-		'\n';
+ * @brief Interface for series information
+ */
+class ISeriesInfo {
+public:
+	virtual ~ISeriesInfo() = default;
+	virtual series_id_t getId() const = 0;
+	virtual std::string getName() const = 0;
+	virtual std::string getDescription() const { return ""; }
+};
+
+class ExpSeriesInfo : public ISeriesInfo {
+public:
+	series_id_t getId() const override { return exp_series_id; }
+	std::string getName() const override { return "exp_series"; }
+};
+
+class CosSeriesInfo : public ISeriesInfo {
+public:
+	series_id_t getId() const override { return cos_series_id; }
+	std::string getName() const override { return "cos_series"; }
+};
+
+class SinSeriesInfo : public ISeriesInfo {
+public:
+	series_id_t getId() const override { return sin_series_id; }
+	std::string getName() const override { return "sin_series"; }
+};
+
+class CoshSeriesInfo : public ISeriesInfo {
+public:
+	series_id_t getId() const override { return cosh_series_id; }
+	std::string getName() const override { return "cosh_series"; }
+};
+
+class SinhSeriesInfo : public ISeriesInfo {
+public:
+	series_id_t getId() const override { return sinh_series_id; }
+	std::string getName() const override { return "sinh_series"; }
+};
+
+class BinSeriesInfo : public ISeriesInfo {
+public:
+	series_id_t getId() const override { return bin_series_id; }
+	std::string getName() const override { return "bin_series"; }
+};
+
+class Four_arctanSeriesInfo : public ISeriesInfo {
+public:
+	series_id_t getId() const override { return four_arctan_series_id; }
+	std::string getName() const override { return "four_arctan_series"; }
+};
+
+class Ln1mxSeriesInfo : public ISeriesInfo {
+public:
+	series_id_t getId() const override { return ln1mx_series_id; }
+	std::string getName() const override { return "ln1mx_series"; }
+};
+
+class Mean_sinh_sinSeriesInfo : public ISeriesInfo {
+public:
+	series_id_t getId() const override { return mean_sinh_sin_series_id; }
+	std::string getName() const override { return "mean_sinh_sin_series"; }
+};
+
+class Exp_squared_erfSeriesInfo : public ISeriesInfo {
+public:
+	series_id_t getId() const override { return exp_squared_erf_series_id; }
+	std::string getName() const override { return "exp_squared_erf_series"; }
+};
+
+class Xmb_Jb_twoSeriesInfo : public ISeriesInfo {
+public:
+	series_id_t getId() const override { return xmb_Jb_two_series_id; }
+	std::string getName() const override { return "xmb_Jb_two_series"; }
+};
+
+class Half_asin_two_xSeriesInfo : public ISeriesInfo {
+public:
+	series_id_t getId() const override { return half_asin_two_x_series_id; }
+	std::string getName() const override { return "half_asin_two_x_series"; }
+};
+
+class Inverse_1mxSeriesInfo : public ISeriesInfo {
+public:
+	series_id_t getId() const override { return inverse_1mx_series_id; }
+	std::string getName() const override { return "inverse_1mx_series"; }
+};
+
+class X_1mx_squaredSeriesInfo : public ISeriesInfo {
+public:
+	series_id_t getId() const override { return x_1mx_squared_series_id; }
+	std::string getName() const override { return "x_1mx_squared_series"; }
+};
+
+class ErfSeriesInfo : public ISeriesInfo {
+public:
+	series_id_t getId() const override { return erf_series_id; }
+	std::string getName() const override { return "erf_series"; }
+};
+
+class M_fact_1mx_mp1_inverseSeriesInfo : public ISeriesInfo {
+public:
+	series_id_t getId() const override { return m_fact_1mx_mp1_inverse_series_id; }
+	std::string getName() const override { return "m_fact_1mx_mp1_inverse_series"; }
+};
+
+class Inverse_sqrt_1m4xSeriesInfo : public ISeriesInfo {
+public:
+	series_id_t getId() const override { return inverse_sqrt_1m4x_series_id; }
+	std::string getName() const override { return "inverse_sqrt_1m4x_series"; }
+};
+
+class One_twelfth_3x2_pi2SeriesInfo : public ISeriesInfo {
+public:
+	series_id_t getId() const override { return one_twelfth_3x2_pi2_series_id; }
+	std::string getName() const override { return "one_twelfth_3x2_pi2_series"; }
+};
+
+class X_twelfth_x2_pi2SeriesInfo : public ISeriesInfo {
+public:
+	series_id_t getId() const override { return x_twelfth_x2_pi2_series_id; }
+	std::string getName() const override { return "x_twelfth_x2_pi2_series"; }
+};
+
+class Ln2SeriesInfo : public ISeriesInfo {
+public:
+	series_id_t getId() const override { return ln2_series_id; }
+	std::string getName() const override { return "ln2_series"; }
+};
+
+class OneSeriesInfo : public ISeriesInfo {
+public:
+	series_id_t getId() const override { return one_series_id; }
+	std::string getName() const override { return "one_series"; }
+};
+
+class Minus_one_quarterSeriesInfo : public ISeriesInfo {
+public:
+	series_id_t getId() const override { return minus_one_quarter_series_id; }
+	std::string getName() const override { return "minus_one_quarter_series"; }
+};
+
+class Pi_3SeriesInfo : public ISeriesInfo {
+public:
+	series_id_t getId() const override { return pi_3_series_id; }
+	std::string getName() const override { return "pi_3_series"; }
+};
+
+class Pi_4SeriesInfo : public ISeriesInfo {
+public:
+	series_id_t getId() const override { return pi_4_series_id; }
+	std::string getName() const override { return "pi_4_series"; }
+};
+
+class Pi_squared_6_minus_oneSeriesInfo : public ISeriesInfo {
+public:
+	series_id_t getId() const override { return pi_squared_6_minus_one_series_id; }
+	std::string getName() const override { return "pi_squared_6_minus_one_series"; }
+};
+
+class Three_minus_piSeriesInfo : public ISeriesInfo {
+public:
+	series_id_t getId() const override { return three_minus_pi_series_id; }
+	std::string getName() const override { return "three_minus_pi_series"; }
+};
+
+class One_twelfthSeriesInfo : public ISeriesInfo {
+public:
+	series_id_t getId() const override { return one_twelfth_series_id; }
+	std::string getName() const override { return "one_twelfth_series"; }
+};
+
+class Eighth_pi_m_one_thirdSeriesInfo : public ISeriesInfo {
+public:
+	series_id_t getId() const override { return eighth_pi_m_one_third_series_id; }
+	std::string getName() const override { return "eighth_pi_m_one_third_series"; }
+};
+
+class One_third_pi_squared_m_nineSeriesInfo : public ISeriesInfo {
+public:
+	series_id_t getId() const override { return one_third_pi_squared_m_nine_series_id; }
+	std::string getName() const override { return "one_third_pi_squared_m_nine_series"; }
+};
+
+class Four_ln2_m_3SeriesInfo : public ISeriesInfo {
+public:
+	series_id_t getId() const override { return four_ln2_m_3_series_id; }
+	std::string getName() const override { return "four_ln2_m_3_series"; }
+};
+
+class Exp_m_cos_x_sinsin_xSeriesInfo : public ISeriesInfo {
+public:
+	series_id_t getId() const override { return exp_m_cos_x_sinsin_x_series_id; }
+	std::string getName() const override { return "exp_m_cos_x_sinsin_x_series"; }
+};
+
+class Pi_four_minus_ln2_halfedSeriesInfo : public ISeriesInfo {
+public:
+	series_id_t getId() const override { return pi_four_minus_ln2_halfed_series_id; }
+	std::string getName() const override { return "pi_four_minus_ln2_halfed_series"; }
+};
+
+class Five_pi_twelveSeriesInfo : public ISeriesInfo {
+public:
+	series_id_t getId() const override { return five_pi_twelve_series_id; }
+	std::string getName() const override { return "five_pi_twelve_series"; }
+};
+
+class X_twoSeriesInfo : public ISeriesInfo {
+public:
+	series_id_t getId() const override { return x_two_series_id; }
+	std::string getName() const override { return "x_two_series"; }
+};
+
+class Pi_six_min_halfSeriesInfo : public ISeriesInfo {
+public:
+	series_id_t getId() const override { return pi_six_min_half_series_id; }
+	std::string getName() const override { return "pi_six_min_half_series"; }
+};
+
+class X_two_throught_squaresSeriesInfo : public ISeriesInfo {
+public:
+	series_id_t getId() const override { return x_two_throught_squares_series_id; }
+	std::string getName() const override { return "x_two_throught_squares_series"; }
+};
+
+class Minus_one_ned_in_nSeriesInfo : public ISeriesInfo {
+public:
+	series_id_t getId() const override { return minus_one_ned_in_n_series_id; }
+	std::string getName() const override { return "minus_one_ned_in_n_series"; }
+};
+
+class Minus_one_n_fact_n_in_nSeriesInfo : public ISeriesInfo {
+public:
+	series_id_t getId() const override { return minus_one_n_fact_n_in_n_series_id; }
+	std::string getName() const override { return "minus_one_n_fact_n_in_n_series"; }
+};
+
+class Ln_x_plus_one_x_minus_one_halfedSeriesInfo : public ISeriesInfo {
+public:
+	series_id_t getId() const override { return ln_x_plus_one_x_minus_one_halfed_series_id; }
+	std::string getName() const override { return "ln_x_plus_one_x_minus_one_halfed_series"; }
+};
+
+class Two_arcsin_square_x_halfedSeriesInfo : public ISeriesInfo {
+public:
+	series_id_t getId() const override { return two_arcsin_square_x_halfed_series_id; }
+	std::string getName() const override { return "two_arcsin_square_x_halfed_series"; }
+};
+
+class Pi_squared_twelveSeriesInfo : public ISeriesInfo {
+public:
+	series_id_t getId() const override { return pi_squared_twelve_series_id; }
+	std::string getName() const override { return "pi_squared_twelve_series"; }
+};
+
+class Pi_cubed_32SeriesInfo : public ISeriesInfo {
+public:
+	series_id_t getId() const override { return pi_cubed_32_series_id; }
+	std::string getName() const override { return "pi_cubed_32_series"; }
+};
+
+class Minus_three_plus_ln3_three_devided_two_plus_two_ln2SeriesInfo : public ISeriesInfo {
+public:
+	series_id_t getId() const override { return minus_three_plus_ln3_three_devided_two_plus_two_ln2_series_id; }
+	std::string getName() const override { return "minus_three_plus_ln3_three_devided_two_plus_two_ln2_series"; }
+};
+
+class Two_ln2SeriesInfo : public ISeriesInfo {
+public:
+	series_id_t getId() const override { return two_ln2_series_id; }
+	std::string getName() const override { return "two_ln2_series"; }
+};
+
+class Pi_x_multi_e_xpi_plus_e_minusxpi_divided_e_xpi_minus_e_minusxpi_minus_oneSeriesInfo : public ISeriesInfo {
+public:
+	series_id_t getId() const override { return pi_x_multi_e_xpi_plus_e_minusxpi_divided_e_xpi_minus_e_minusxpi_minus_one_series_id; }
+	std::string getName() const override { return "pi_x_multi_e_xpi_plus_e_minusxpi_divided_e_xpi_minus_e_minusxpi_minus_one_series"; }
+};
+
+class Pi_minus_x_2SeriesInfo : public ISeriesInfo {
+public:
+	series_id_t getId() const override { return pi_minus_x_2_series_id; }
+	std::string getName() const override { return "pi_minus_x_2_series"; }
+};
+
+class Half_multi_ln_1div2multi1minuscosxSeriesInfo : public ISeriesInfo {
+public:
+	series_id_t getId() const override { return half_multi_ln_1div2multi1minuscosx_series_id; }
+	std::string getName() const override { return "half_multi_ln_1div2multi1minuscosx_series"; }
+};
+
+class Half_minus_sinx_multi_pi_4SeriesInfo : public ISeriesInfo {
+public:
+	series_id_t getId() const override { return half_minus_sinx_multi_pi_4_series_id; }
+	std::string getName() const override { return "half_minus_sinx_multi_pi_4_series"; }
+};
+
+class Ln_1plussqrt1plusxsquare_minus_ln_2SeriesInfo : public ISeriesInfo {
+public:
+	series_id_t getId() const override { return ln_1plussqrt1plusxsquare_minus_ln_2_series_id; }
+	std::string getName() const override { return "ln_1plussqrt1plusxsquare_minus_ln_2_series"; }
+};
+
+class Ln_cosxSeriesInfo : public ISeriesInfo {
+public:
+	series_id_t getId() const override { return ln_cosx_series_id; }
+	std::string getName() const override { return "ln_cosx_series"; }
+};
+
+class Ln_sinx_minus_ln_xSeriesInfo : public ISeriesInfo {
+public:
+	series_id_t getId() const override { return ln_sinx_minus_ln_x_series_id; }
+	std::string getName() const override { return "ln_sinx_minus_ln_x_series"; }
+};
+
+class Pi_8_cosx_square_minus_1_div_3_cosxSeriesInfo : public ISeriesInfo {
+public:
+	series_id_t getId() const override { return pi_8_cosx_square_minus_1_div_3_cosx_series_id; }
+	std::string getName() const override { return "pi_8_cosx_square_minus_1_div_3_cosx_series"; }
+};
+
+class Sqrt_oneminussqrtoneminusx_div_xSeriesInfo : public ISeriesInfo {
+public:
+	series_id_t getId() const override { return sqrt_oneminussqrtoneminusx_div_x_series_id; }
+	std::string getName() const override { return "sqrt_oneminussqrtoneminusx_div_x_series"; }
+};
+
+class One_minus_sqrt_1minus4x_div_2xSeriesInfo : public ISeriesInfo {
+public:
+	series_id_t getId() const override { return one_minus_sqrt_1minus4x_div_2x_series_id; }
+	std::string getName() const override { return "one_minus_sqrt_1minus4x_div_2x_series"; }
+};
+
+class Arcsin_x_minus_xSeriesInfo : public ISeriesInfo {
+public:
+	series_id_t getId() const override { return arcsin_x_minus_x_series_id; }
+	std::string getName() const override { return "arcsin_x_minus_x_series"; }
+};
+
+class Pi_x_minus_x_square_and_x_square_minus_three_pi_x_plus_two_pi_squareSeriesInfo : public ISeriesInfo {
+public:
+	series_id_t getId() const override { return pi_x_minus_x_square_and_x_square_minus_three_pi_x_plus_two_pi_square_series_id; }
+	std::string getName() const override { return "pi_x_minus_x_square_and_x_square_minus_three_pi_x_plus_two_pi_square_series"; }
+};
+
+class Abs_sin_x_minus_2_div_piSeriesInfo : public ISeriesInfo {
+public:
+	series_id_t getId() const override { return abs_sin_x_minus_2_div_pi_series_id; }
+	std::string getName() const override { return "abs_sin_x_minus_2_div_pi_series"; }
+};
+
+class Pi_minus_3pi_4_and_pi_minus_x_minus_3pi_4SeriesInfo : public ISeriesInfo {
+public:
+	series_id_t getId() const override { return pi_minus_3pi_4_and_pi_minus_x_minus_3pi_4_series_id; }
+	std::string getName() const override { return "pi_minus_3pi_4_and_pi_minus_x_minus_3pi_4_series"; }
+};
+
+class Minus_3_div_4_or_x_minus_3_div_4SeriesInfo : public ISeriesInfo {
+public:
+	series_id_t getId() const override { return minus_3_div_4_or_x_minus_3_div_4_series_id; }
+	std::string getName() const override { return "minus_3_div_4_or_x_minus_3_div_4_series"; }
+};
+
+class Ten_minus_xSeriesInfo : public ISeriesInfo {
+public:
+	series_id_t getId() const override { return ten_minus_x_series_id; }
+	std::string getName() const override { return "ten_minus_x_series"; }
+};
+
+class XSeriesInfo : public ISeriesInfo {
+public:
+	series_id_t getId() const override { return x_series_id; }
+	std::string getName() const override { return "x_series"; }
+};
+
+class Minus_x_minus_pi_4_or_minus_pi_4SeriesInfo : public ISeriesInfo {
+public:
+	series_id_t getId() const override { return minus_x_minus_pi_4_or_minus_pi_4_series_id; }
+	std::string getName() const override { return "minus_x_minus_pi_4_or_minus_pi_4_series"; }
+};
+
+class One_div_two_minus_x_multi_three_plus_xSeriesInfo : public ISeriesInfo {
+public:
+	series_id_t getId() const override { return one_div_two_minus_x_multi_three_plus_x_series_id; }
+	std::string getName() const override { return "one_div_two_minus_x_multi_three_plus_x_series"; }
+};
+
+class Si_xSeriesInfo : public ISeriesInfo {
+public:
+	series_id_t getId() const override { return Si_x_series_id; }
+	std::string getName() const override { return "Si_x_series"; }
+};
+
+class Ci_xSeriesInfo : public ISeriesInfo {
+public:
+	series_id_t getId() const override { return Ci_x_series_id; }
+	std::string getName() const override { return "Ci_x_series"; }
+};
+
+class Riemann_zeta_funcSeriesInfo : public ISeriesInfo {
+public:
+	series_id_t getId() const override { return Riemann_zeta_func_series_id; }
+	std::string getName() const override { return "Riemann_zeta_func_series"; }
+};
+
+class Riemann_zeta_func_xmin1_div_Riemann_zeta_func_xSeriesInfo : public ISeriesInfo {
+public:
+	series_id_t getId() const override { return Riemann_zeta_func_xmin1_div_Riemann_zeta_func_x_series_id; }
+	std::string getName() const override { return "Riemann_zeta_func_xmin1_div_Riemann_zeta_func_x_series"; }
+};
+
+class Xsquareplus3_div_xsquareplus2multix_minus_1SeriesInfo : public ISeriesInfo {
+public:
+	series_id_t getId() const override { return xsquareplus3_div_xsquareplus2multix_minus_1_series_id; }
+	std::string getName() const override { return "xsquareplus3_div_xsquareplus2multix_minus_1_series"; }
+};
+
+class Arcsin_xSeriesInfo : public ISeriesInfo {
+public:
+	series_id_t getId() const override { return arcsin_x_series_id; }
+	std::string getName() const override { return "arcsin_x_series"; }
+};
+
+class Arctg_xSeriesInfo : public ISeriesInfo {
+public:
+	series_id_t getId() const override { return arctg_x_series_id; }
+	std::string getName() const override { return "arctg_x_series"; }
+};
+
+class K_xSeriesInfo : public ISeriesInfo {
+public:
+	series_id_t getId() const override { return K_x_series_id; }
+	std::string getName() const override { return "K_x_series"; }
+};
+
+class E_xSeriesInfo : public ISeriesInfo {
+public:
+	series_id_t getId() const override { return E_x_series_id; }
+	std::string getName() const override { return "E_x_series"; }
+};
+
+class Sqrt_1plusxSeriesInfo : public ISeriesInfo {
+public:
+	series_id_t getId() const override { return sqrt_1plusx_series_id; }
+	std::string getName() const override { return "sqrt_1plusx_series"; }
+};
+
+class Lambert_W_funcSeriesInfo : public ISeriesInfo {
+public:
+	series_id_t getId() const override { return Lambert_W_func_series_id; }
+	std::string getName() const override { return "Lambert_W_func_series"; }
+};
+
+class Incomplete_Gamma_funcSeriesInfo : public ISeriesInfo {
+public:
+	series_id_t getId() const override { return Incomplete_Gamma_func_series_id; }
+	std::string getName() const override { return "Incomplete_Gamma_func_series"; }
+};
+
+class Series_with_ln_number1SeriesInfo : public ISeriesInfo {
+public:
+	series_id_t getId() const override { return Series_with_ln_number1_series_id; }
+	std::string getName() const override { return "Series_with_ln_number1_series"; }
+};
+
+class Series_with_ln_number2SeriesInfo : public ISeriesInfo {
+public:
+	series_id_t getId() const override { return Series_with_ln_number2_series_id; }
+	std::string getName() const override { return "Series_with_ln_number2_series"; }
+};
+
+class PiSeriesInfo : public ISeriesInfo {
+public:
+	series_id_t getId() const override { return pi_series_id; }
+	std::string getName() const override { return "pi_series"; }
+};
+
+class X_min_sqrt_xSeriesInfo : public ISeriesInfo {
+public:
+	series_id_t getId() const override { return x_min_sqrt_x_series_id; }
+	std::string getName() const override { return "x_min_sqrt_x_series"; }
+};
+
+class Arctan_x2SeriesInfo : public ISeriesInfo {
+public:
+	series_id_t getId() const override { return arctan_x2_series_id; }
+	std::string getName() const override { return "arctan_x2_series"; }
+};
+
+class Ln1px4SeriesInfo : public ISeriesInfo {
+public:
+	series_id_t getId() const override { return ln1px4_series_id; }
+	std::string getName() const override { return "ln1px4_series"; }
+};
+
+class Sin_x2SeriesInfo : public ISeriesInfo {
+public:
+	series_id_t getId() const override { return sin_x2_series_id; }
+	std::string getName() const override { return "sin_x2_series"; }
+};
+
+class Arctan_x3SeriesInfo : public ISeriesInfo {
+public:
+	series_id_t getId() const override { return arctan_x3_series_id; }
+	std::string getName() const override { return "arctan_x3_series"; }
+};
+
+class Arcsin_x2SeriesInfo : public ISeriesInfo {
+public:
+	series_id_t getId() const override { return arcsin_x2_series_id; }
+	std::string getName() const override { return "arcsin_x2_series"; }
+};
+
+class Ln1_m_x2SeriesInfo : public ISeriesInfo {
+public:
+	series_id_t getId() const override { return ln1_m_x2_series_id; }
+	std::string getName() const override { return "ln1_m_x2_series"; }
+};
+
+class Artanh_xSeriesInfo : public ISeriesInfo {
+public:
+	series_id_t getId() const override { return artanh_x_series_id; }
+	std::string getName() const override { return "artanh_x_series"; }
+};
+
+class Arcsinh_xSeriesInfo : public ISeriesInfo {
+public:
+	series_id_t getId() const override { return arcsinh_x_series_id; }
+	std::string getName() const override { return "arcsinh_x_series"; }
+};
+
+class Cos_x2SeriesInfo : public ISeriesInfo {
+public:
+	series_id_t getId() const override { return cos_x2_series_id; }
+	std::string getName() const override { return "cos_x2_series"; }
+};
+
+class Sinh_x2SeriesInfo : public ISeriesInfo {
+public:
+	series_id_t getId() const override { return sinh_x2_series_id; }
+	std::string getName() const override { return "sinh_x2_series"; }
+};
+
+class Arctanh_x2SeriesInfo : public ISeriesInfo {
+public:
+	series_id_t getId() const override { return arctanh_x2_series_id; }
+	std::string getName() const override { return "arctanh_x2_series"; }
+};
+
+class Cos3xmin1_div_xsqareSeriesInfo : public ISeriesInfo {
+public:
+	series_id_t getId() const override { return cos3xmin1_div_xsqare_series_id; }
+	std::string getName() const override { return "cos3xmin1_div_xsqare_series"; }
+};
+
+class Two_degree_xSeriesInfo : public ISeriesInfo {
+public:
+	series_id_t getId() const override { return two_degree_x_series_id; }
+	std::string getName() const override { return "two_degree_x_series"; }
+};
+
+class Sqrt_1plusx_min_1_min_x_div_2SeriesInfo : public ISeriesInfo {
+public:
+	series_id_t getId() const override { return sqrt_1plusx_min_1_min_x_div_2_series_id; }
+	std::string getName() const override { return "sqrt_1plusx_min_1_min_x_div_2_series"; }
+};
+
+class Ln13_min_ln7_div_7SeriesInfo : public ISeriesInfo {
+public:
+	series_id_t getId() const override { return ln13_min_ln7_div_7_series_id; }
+	std::string getName() const override { return "ln13_min_ln7_div_7_series"; }
+};
+
+class Ja_xSeriesInfo : public ISeriesInfo {
+public:
+	series_id_t getId() const override { return Ja_x_series_id; }
+	std::string getName() const override { return "Ja_x_series"; }
+};
+
+class One_div_sqrt2_sin_xdivsqrt2SeriesInfo : public ISeriesInfo {
+public:
+	series_id_t getId() const override { return one_div_sqrt2_sin_xdivsqrt2_series_id; }
+	std::string getName() const override { return "one_div_sqrt2_sin_xdivsqrt2_series"; }
+};
+
+class Ln_1plusx_div_1plusx2SeriesInfo : public ISeriesInfo {
+public:
+	series_id_t getId() const override { return ln_1plusx_div_1plusx2_series_id; }
+	std::string getName() const override { return "ln_1plusx_div_1plusx2_series"; }
+};
+
+class Cos_sqrt_xSeriesInfo : public ISeriesInfo {
+public:
+	series_id_t getId() const override { return cos_sqrt_x_series_id; }
+	std::string getName() const override { return "cos_sqrt_x_series"; }
+};
+
+class Ln_1_plus_x3SeriesInfo : public ISeriesInfo {
+public:
+	series_id_t getId() const override { return ln_1_plus_x3_series_id; }
+	std::string getName() const override { return "ln_1_plus_x3_series"; }
+};
+
+class X_div_1minxSeriesInfo : public ISeriesInfo {
+public:
+	series_id_t getId() const override { return x_div_1minx_series_id; }
+	std::string getName() const override { return "x_div_1minx_series"; }
+};
+
+class X_div_1minx2SeriesInfo : public ISeriesInfo {
+public:
+	series_id_t getId() const override { return x_div_1minx2_series_id; }
+	std::string getName() const override { return "x_div_1minx2_series"; }
+};
+
+class GammaSeriesInfo : public ISeriesInfo {
+public:
+	series_id_t getId() const override { return gamma_series_id; }
+	std::string getName() const override { return "gamma_series"; }
+};
+
+
+/**
+ * @brief Interface for transformation information
+ */
+class ITransformationInfo {
+public:
+	virtual ~ITransformationInfo() = default;
+	virtual transformation_id_t getId() const = 0;
+	virtual std::string getName() const = 0;
+};
+
+/**
+ * brief Implementations for all transformations
+ */
+class ShanksTransformationInfo : public ITransformationInfo {
+public:
+	transformation_id_t getId() const override { return shanks_transformation_id; }
+	std::string getName() const override { return "Shanks Transformation"; }
+};
+
+class WenigerTransformationInfo : public ITransformationInfo {
+public:
+	transformation_id_t getId() const override { return weniger_transformation_id; }
+	std::string getName() const override { return "Weniger transformation"; }
+};
+
+class RhoWynnTransformationInfo : public ITransformationInfo {
+public:
+	transformation_id_t getId() const override { return rho_wynn_transformation_id; }
+	std::string getName() const override { return "Rho-Wynn transformation"; }
+};
+
+class BrezinskiThetaTransformationInfo : public ITransformationInfo {
+public:
+	transformation_id_t getId() const override { return brezinski_theta_transformation_id; }
+	std::string getName() const override { return "Brezinski Theta transformation"; }
+};
+
+class EpsilonAlgorithmInfo : public ITransformationInfo {
+public:
+	transformation_id_t getId() const override { return epsilon_algorithm_id; }
+	std::string getName() const override { return "Epsilon algorithm"; }
+};
+
+class EpsilonAlgorithm2Info : public ITransformationInfo {
+public:
+	transformation_id_t getId() const override { return epsilon_algorithm_2_id; }
+	std::string getName() const override { return "Epsilon v2 algorithm"; }
+};
+
+class EpsilonAlgorithm3Info : public ITransformationInfo {
+public:
+	transformation_id_t getId() const override { return epsilon_algorithm_3_id; }
+	std::string getName() const override { return "Epsilon v3 algorithm"; }
+};
+
+class ChangEpsilonAlgorithmInfo : public ITransformationInfo {
+public:
+	transformation_id_t getId() const override { return chang_epsilon_algorithm_id; }
+	std::string getName() const override { return "Chang epsilon algorithm"; }
+};
+
+class LAlgorithmInfo : public ITransformationInfo {
+public:
+	transformation_id_t getId() const override { return L_algorithm_id; }
+	std::string getName() const override { return "L algorithm"; }
+};
+
+class SAlgorithmInfo : public ITransformationInfo {
+public:
+	transformation_id_t getId() const override { return S_algorithm_id; }
+	std::string getName() const override { return "S algorithm"; }
+};
+
+class DAlgorithmInfo : public ITransformationInfo {
+public:
+	transformation_id_t getId() const override { return D_algorithm_id; }
+	std::string getName() const override { return "D algorithm"; }
+};
+
+class MAlgorithmInfo : public ITransformationInfo {
+public:
+	transformation_id_t getId() const override { return M_algorithm_id; }
+	std::string getName() const override { return "M algorithm"; }
+};
+
+class WAlgorithmInfo : public ITransformationInfo {
+public:
+	transformation_id_t getId() const override { return W_algorithm_id; }
+	std::string getName() const override { return "W algorithm"; }
+};
+
+class RichardsonAlgorithmInfo : public ITransformationInfo {
+public:
+	transformation_id_t getId() const override { return richardson_algorithm_id; }
+	std::string getName() const override { return "Richardson Algorithm"; }
+};
+
+class FordSidiAlgorithmTwoInfo : public ITransformationInfo {
+public:
+	transformation_id_t getId() const override { return Ford_Sidi_algorithm_two_id; }
+	std::string getName() const override { return "Ford-Sidi Algorithm V-2"; }
+};
+
+class FordSidiAlgorithmThreeInfo : public ITransformationInfo {
+public:
+	transformation_id_t getId() const override { return Ford_Sidi_algorithm_three_id; }
+	std::string getName() const override { return "Ford-Sidi Algorithm V-3"; }
+};
+
+
+/**
+ * @brief Interface for test function information
+ */
+class ITestFunctionInfo {
+public:
+	virtual ~ITestFunctionInfo() = default;
+	virtual test_function_id_t getId() const = 0;
+	virtual std::string getName() const = 0;
+	virtual std::string getDescription() const = 0;
+};
+
+/**
+ * @brief Implementations for all test functions
+ */
+class CmpSumAndTransformInfo : public ITestFunctionInfo {
+public:
+	test_function_id_t getId() const override { return cmp_sum_and_transform_id; }
+	std::string getName() const override { return "cmp_sum_and_transform"; }
+	std::string getDescription() const override {
+		return "showcases the difference between the transformed partial sum and the nontransformed one";
+	}
+};
+
+class CmpANAndTransformInfo : public ITestFunctionInfo {
+public:
+	test_function_id_t getId() const override { return cmp_a_n_and_transform_id; }
+	std::string getName() const override { return "cmp_a_n_and_transform"; }
+	std::string getDescription() const override {
+		return "showcases the difference between series' terms and transformed ones";
+	}
+};
+
+class TransformationRemainderInfo : public ITestFunctionInfo {
+public:
+	test_function_id_t getId() const override { return transformation_remainder_id; }
+	std::string getName() const override { return "transformation_remainder"; }
+	std::string getDescription() const override {
+		return "showcases the difference between series' sum and transformed partial sum";
+	}
+};
+
+class CmpTransformationsInfo : public ITestFunctionInfo {
+public:
+	test_function_id_t getId() const override { return cmp_transformations_id; }
+	std::string getName() const override { return "cmp_transformations"; }
+	std::string getDescription() const override {
+		return "showcases the difference between convergence of sums accelerated by different transformations";
+	}
+};
+
+class EvalTransformTimeInfo : public ITestFunctionInfo {
+public:
+	test_function_id_t getId() const override { return eval_transform_time_id; }
+	std::string getName() const override { return "eval_transform_time"; }
+	std::string getDescription() const override {
+		return "evaluates the time it takes to transform series";
+	}
+};
+
+class TestAllTransformsInfo : public ITestFunctionInfo {
+public:
+	test_function_id_t getId() const override { return test_all_transforms_id; }
+	std::string getName() const override { return "test_all_transforms"; }
+	std::string getDescription() const override {
+		return "test all algorithms on sum";
+	}
+};
+
+/**
+ * @brief Factory functions to create all available items
+ */
+inline static std::vector<std::unique_ptr<ISeriesInfo>> create_series_info() {
+	std::unique_ptr<ISeriesInfo> temp[] = {
+		std::make_unique<ExpSeriesInfo>(),
+		std::make_unique<CosSeriesInfo>(),
+		std::make_unique<SinSeriesInfo>(),
+		std::make_unique<CoshSeriesInfo>(),
+		std::make_unique<SinhSeriesInfo>(),
+		std::make_unique<BinSeriesInfo>(),
+		std::make_unique<Four_arctanSeriesInfo>(),
+		std::make_unique<Ln1mxSeriesInfo>(),
+		std::make_unique<Mean_sinh_sinSeriesInfo>(),
+		std::make_unique<Exp_squared_erfSeriesInfo>(),
+		std::make_unique<Xmb_Jb_twoSeriesInfo>(),
+		std::make_unique<Half_asin_two_xSeriesInfo>(),
+		std::make_unique<Inverse_1mxSeriesInfo>(),
+		std::make_unique<X_1mx_squaredSeriesInfo>(),
+		std::make_unique<ErfSeriesInfo>(),
+		std::make_unique<M_fact_1mx_mp1_inverseSeriesInfo>(),
+		std::make_unique<Inverse_sqrt_1m4xSeriesInfo>(),
+		std::make_unique<One_twelfth_3x2_pi2SeriesInfo>(),
+		std::make_unique<X_twelfth_x2_pi2SeriesInfo>(),
+		std::make_unique<Ln2SeriesInfo>(),
+		std::make_unique<OneSeriesInfo>(),
+		std::make_unique<Minus_one_quarterSeriesInfo>(),
+		std::make_unique<Pi_3SeriesInfo>(),
+		std::make_unique<Pi_4SeriesInfo>(),
+		std::make_unique<Pi_squared_6_minus_oneSeriesInfo>(),
+		std::make_unique<Three_minus_piSeriesInfo>(),
+		std::make_unique<One_twelfthSeriesInfo>(),
+		std::make_unique<Eighth_pi_m_one_thirdSeriesInfo>(),
+		std::make_unique<One_third_pi_squared_m_nineSeriesInfo>(),
+		std::make_unique<Four_ln2_m_3SeriesInfo>(),
+		std::make_unique<Exp_m_cos_x_sinsin_xSeriesInfo>(),
+		std::make_unique<Pi_four_minus_ln2_halfedSeriesInfo>(),
+		std::make_unique<Five_pi_twelveSeriesInfo>(),
+		std::make_unique<X_twoSeriesInfo>(),
+		std::make_unique<Pi_six_min_halfSeriesInfo>(),
+		std::make_unique<X_two_throught_squaresSeriesInfo>(),
+		std::make_unique<Minus_one_ned_in_nSeriesInfo>(),
+		std::make_unique<Minus_one_n_fact_n_in_nSeriesInfo>(),
+		std::make_unique<Ln_x_plus_one_x_minus_one_halfedSeriesInfo>(),
+		std::make_unique<Two_arcsin_square_x_halfedSeriesInfo>(),
+		std::make_unique<Pi_squared_twelveSeriesInfo>(),
+		std::make_unique<Pi_cubed_32SeriesInfo>(),
+		std::make_unique<Minus_three_plus_ln3_three_devided_two_plus_two_ln2SeriesInfo>(),
+		std::make_unique<Two_ln2SeriesInfo>(),
+		std::make_unique<Pi_x_multi_e_xpi_plus_e_minusxpi_divided_e_xpi_minus_e_minusxpi_minus_oneSeriesInfo>(),
+		std::make_unique<Pi_minus_x_2SeriesInfo>(),
+		std::make_unique<Half_multi_ln_1div2multi1minuscosxSeriesInfo>(),
+		std::make_unique<Half_minus_sinx_multi_pi_4SeriesInfo>(),
+		std::make_unique<Ln_1plussqrt1plusxsquare_minus_ln_2SeriesInfo>(),
+		std::make_unique<Ln_cosxSeriesInfo>(),
+		std::make_unique<Ln_sinx_minus_ln_xSeriesInfo>(),
+		std::make_unique<Pi_8_cosx_square_minus_1_div_3_cosxSeriesInfo>(),
+		std::make_unique<Sqrt_oneminussqrtoneminusx_div_xSeriesInfo>(),
+		std::make_unique<One_minus_sqrt_1minus4x_div_2xSeriesInfo>(),
+		std::make_unique<Arcsin_x_minus_xSeriesInfo>(),
+		std::make_unique<Pi_x_minus_x_square_and_x_square_minus_three_pi_x_plus_two_pi_squareSeriesInfo>(),
+		std::make_unique<Abs_sin_x_minus_2_div_piSeriesInfo>(),
+		std::make_unique<Pi_minus_3pi_4_and_pi_minus_x_minus_3pi_4SeriesInfo>(),
+		std::make_unique<Minus_3_div_4_or_x_minus_3_div_4SeriesInfo>(),
+		std::make_unique<Ten_minus_xSeriesInfo>(),
+		std::make_unique<XSeriesInfo>(),
+		std::make_unique<Minus_x_minus_pi_4_or_minus_pi_4SeriesInfo>(),
+		std::make_unique<One_div_two_minus_x_multi_three_plus_xSeriesInfo>(),
+		std::make_unique<Si_xSeriesInfo>(),
+		std::make_unique<Ci_xSeriesInfo>(),
+		std::make_unique<Riemann_zeta_funcSeriesInfo>(),
+		std::make_unique<Riemann_zeta_func_xmin1_div_Riemann_zeta_func_xSeriesInfo>(),
+		std::make_unique<Xsquareplus3_div_xsquareplus2multix_minus_1SeriesInfo>(),
+		std::make_unique<Arcsin_xSeriesInfo>(),
+		std::make_unique<Arctg_xSeriesInfo>(),
+		std::make_unique<K_xSeriesInfo>(),
+		std::make_unique<E_xSeriesInfo>(),
+		std::make_unique<Sqrt_1plusxSeriesInfo>(),
+		std::make_unique<Lambert_W_funcSeriesInfo>(),
+		std::make_unique<Incomplete_Gamma_funcSeriesInfo>(),
+		std::make_unique<Series_with_ln_number1SeriesInfo>(),
+		std::make_unique<Series_with_ln_number2SeriesInfo>(),
+		std::make_unique<PiSeriesInfo>(),
+		std::make_unique<X_min_sqrt_xSeriesInfo>(),
+		std::make_unique<Arctan_x2SeriesInfo>(),
+		std::make_unique<Ln1px4SeriesInfo>(),
+		std::make_unique<Sin_x2SeriesInfo>(),
+		std::make_unique<Arctan_x3SeriesInfo>(),
+		std::make_unique<Arcsin_x2SeriesInfo>(),
+		std::make_unique<Ln1_m_x2SeriesInfo>(),
+		std::make_unique<Artanh_xSeriesInfo>(),
+		std::make_unique<Arcsinh_xSeriesInfo>(),
+		std::make_unique<Cos_x2SeriesInfo>(),
+		std::make_unique<Sinh_x2SeriesInfo>(),
+		std::make_unique<Arctanh_x2SeriesInfo>(),
+		std::make_unique<Cos3xmin1_div_xsqareSeriesInfo>(),
+		std::make_unique<Two_degree_xSeriesInfo>(),
+		std::make_unique<Sqrt_1plusx_min_1_min_x_div_2SeriesInfo>(),
+		std::make_unique<Ln13_min_ln7_div_7SeriesInfo>(),
+		std::make_unique<Ja_xSeriesInfo>(),
+		std::make_unique<One_div_sqrt2_sin_xdivsqrt2SeriesInfo>(),
+		std::make_unique<Ln_1plusx_div_1plusx2SeriesInfo>(),
+		std::make_unique<Cos_sqrt_xSeriesInfo>(),
+		std::make_unique<Ln_1_plus_x3SeriesInfo>(),
+		std::make_unique<X_div_1minxSeriesInfo>(),
+		std::make_unique<X_div_1minx2SeriesInfo>(),
+		std::make_unique<GammaSeriesInfo>()
+	};
+
+	return std::vector<std::unique_ptr<ISeriesInfo>>(
+		std::make_move_iterator(std::begin(temp)),
+		std::make_move_iterator(std::end(temp))
+	);
+}
+
+inline static std::vector<std::unique_ptr<ITransformationInfo>> create_transformation_info() {
+	std::unique_ptr<ITransformationInfo> temp[] = {
+		std::make_unique<ShanksTransformationInfo>(),
+		std::make_unique<WenigerTransformationInfo>(),
+		std::make_unique<RhoWynnTransformationInfo>(),
+		std::make_unique<BrezinskiThetaTransformationInfo>(),
+		std::make_unique<EpsilonAlgorithmInfo>(),
+		std::make_unique<EpsilonAlgorithm2Info>(),
+		std::make_unique<EpsilonAlgorithm3Info>(),
+		std::make_unique<ChangEpsilonAlgorithmInfo>(),
+		std::make_unique<LAlgorithmInfo>(),
+		std::make_unique<SAlgorithmInfo>(),
+		std::make_unique<DAlgorithmInfo>(),
+		std::make_unique<MAlgorithmInfo>(),
+		std::make_unique<WAlgorithmInfo>(),
+		std::make_unique<RichardsonAlgorithmInfo>(),
+		std::make_unique<FordSidiAlgorithmTwoInfo>(),
+		std::make_unique<FordSidiAlgorithmThreeInfo>()
+	};
+
+	return std::vector<std::unique_ptr<ITransformationInfo>>(
+		std::make_move_iterator(std::begin(temp)),
+		std::make_move_iterator(std::end(temp))
+	);
+}
+
+inline static std::vector<std::unique_ptr<ITestFunctionInfo>> create_test_function_info() {
+	std::unique_ptr<ITestFunctionInfo> temp[] = {
+		std::make_unique<CmpSumAndTransformInfo>(),
+		std::make_unique<CmpANAndTransformInfo>(),
+		std::make_unique<TransformationRemainderInfo>(),
+		std::make_unique<CmpTransformationsInfo>(),
+		std::make_unique<EvalTransformTimeInfo>(),
+		std::make_unique<TestAllTransformsInfo>()
+	};
+
+	return std::vector<std::unique_ptr<ITestFunctionInfo>>(
+		std::make_move_iterator(std::begin(temp)),
+		std::make_move_iterator(std::end(temp))
+	);
 }
 
 /**
-* @brief prints out all available transformations for testing
-* @authors Bolshakov M.P.
-* @edited by Kreynin R.G.
-*/
-inline static void print_transformation_info()
-{
-	std::cout << "Which transformation would you like to test?" << '\n' <<
-		"List of currently avaiable series:" << '\n' <<
-		"1 - Shanks Transformation" << '\n' <<
-		"2 - Epsilon Algorithm" << '\n' <<
-		"3 - Levin Algorithm" << '\n' <<
-		"4 - Epsilon Algorithm V-2" << '\n' <<
-		"5 - S-transformation" << '\n' <<
-		"6 - D-transformation" << '\n' <<
-		"7 - Chang - Wynn - Epsilon Algorithm" << '\n' <<
-		"8 - M-transformation" << '\n' <<
-		"9 - Weniger transformation" << '\n' <<
-		"10 - Rho - Wynn transformation" << '\n' <<
-		"11 - Theta Brezinski transformation" << '\n' <<
-		"12 - Epsilon Algorithm V-3" << '\n' <<
-		"13 - Levin - Recursion Algorithm" << '\n' <<
-		"14 - Lubkin W-transformation" << '\n' <<
-		"15 - Richardson Algorithm" << '\n' <<
-		"16 - Ford-Sidi Algorithm" << '\n' <<
-		"17 - Ford-Sidi Algorithm V-2" << '\n' <<
-		"18 - Ford-Sidi Algorithm V-3" << '\n' <<
-		"19 - Epsilon modified Algorithm" << '\n' <<
-		"20 - Theta modified Algorithm" << '\n' <<
-		"21 - Epsilon - Aitken - Theta Algorithm" << '\n' <<
-		'\n';
-}
+ * @brief prints out all available series for testing
+ */
+inline static void print_series_info() {
+	auto all_series = create_series_info();
 
-/**
-* @brief prints out all available fungus for testing
-* @authors Bolshakov M.P.
-* @edited by Kreynin R.G.
-*/
-inline static void print_test_function_info()
-{
-	std::cout << "Which function would you like to use for testing?" << '\n' <<
-		"List of currently avaiable functions:" << '\n' <<
-		"1 - cmp_sum_and_transform - showcases the difference between the transformed partial sum and the nontransformed one" << '\n' <<
-		"2 - cmp_a_n_and_transform - showcases the difference between series' terms and transformed ones" << '\n' <<
-		"3 - transformation_remainders - showcases the difference between series' sum and transformed partial sum" << '\n' <<
-		"4 - cmp_transformations - showcases the difference between convergence of sums accelerated by different transformations" << '\n' <<
-		"5 - eval_transform_time - evaluates the time it takes to transform series" << '\n' <<
-		"6 - test all algorithms on summ" << '\n'
-		<< '\n';
-}
+	std::cout <<
+		"Which series' convergence would you like to accelerate?" << '\n' <<
+		"List of currently available series:" << '\n';
 
-/**
-* @brief initialize LevinType transformations, usable for S,D,M
-* @authors Naumov A.
-* @edited by Yurov P.
-*/
-template<std::floating_point T, std::unsigned_integral K, typename series_templ>
-inline void init_levin(transformation_id_t id, std::unique_ptr<series_base<T, K>>& series, std::unique_ptr<series_acceleration<T, K, series_templ>>& transform)
-{
-	bool recursive = false;
-	bool standart = false;
-	char type;
-
+	for (size_t i = 0; i < all_series.size(); i++) {
+		std::cout << i + 1 << " - " << all_series[i]->getName() << '\n';
+	}
 	std::cout << '\n';
-	std::cout << "|--------------------------------------|" << '\n';
-	std::cout << "| choose what type of transformation u,t,d or v: "; std::cin >> type; std::cout << "|" << '\n';
-	if (id != transformation_id_t::M_algorithm)
-	{
-		std::cout << "| Use recurrence formula? 1<-true or 0<-false : "; std::cin >> recursive; std::cout << "|" << '\n';
+}
+
+/**
+ * @brief prints out all available transformations for testing
+ */
+inline static void print_transformation_info() {
+	auto all_transformations = create_transformation_info();
+
+	std::cout <<
+		"Which transformation would you like to test?" << '\n' <<
+		"List of currently available transformations:" << '\n';
+
+	for (size_t i = 0; i < all_transformations.size(); i++) {
+		std::cout << i + 1 << " - " << all_transformations[i]->getName() << '\n';
 	}
-	std::cout << "|--------------------------------------|" << '\n';
+	std::cout << '\n';
+}
 
-	T beta = T{};	//parameter for LevinType transformations algorithm
-	T gamma = T{};	//parameter for LevinType transformations algorithm
+/**
+ * @brief prints out all available functions for testing
+ */
+inline static void print_test_function_info() {
+	auto all_functions = create_test_function_info();
 
-	transform_base<T, K>* ptr = NULL;
+	std::cout <<
+		"Which function would you like to use for testing?" << '\n' <<
+		"List of currently available functions:" << '\n';
 
-	if (type == 'u') ptr = new u_transform<T, K>{};
-	if (type == 't') ptr = new t_transform<T, K>{};
-	if (type == 'v') {
-		if (id != transformation_id_t::M_algorithm)
-			ptr = new v_transform<T, K>{};
-		else
-			ptr = new v_transform_2<T, K>{};
+	for (size_t i = 0; i < all_functions.size(); i++) {
+		std::cout <<
+			i + 1 << " - " << all_functions[i]->getName() <<
+			" - " << all_functions[i]->getDescription() << '\n';
 	}
-	if (type == 'd') ptr = new d_transform<T, K>{};
+	std::cout << '\n';
+}
 
-	if (ptr == NULL) throw std::domain_error("chosen wrong type of transformation");
+template<typename T>
+static void input_value(T& value){
 
+	if constexpr (std::is_same<T, float_precision>::value){
+
+		//(real_part, imag_part)
+		std::string kostil;
+		std::cin >> kostil;
+
+		value = T(kostil);
+
+	} else if constexpr (std::is_same<T, complex_precision<float_precision>>::value) {
+
+		std::string real_p;
+		std::string imag_p;
+
+		std::cout << "Real part: "; std::cin>>real_p;
+		std::cout << "Imag part: "; std::cin>>imag_p;
+
+		value = complex_precision<float_precision>(real_p, imag_p);
+		
+	} else {
+		std::cin >> value;
+	}
+}
+
+/**
+ * @brief Helper function to get series by ID
+ */
+template <AcceptedLike T, std::unsigned_integral K>
+inline static std::unique_ptr<TermCalculatorBase<T, K>> create_series_by_id(series_id_t id) {
+
+	T x = static_cast<T>(0), s = static_cast<T>(0), a = static_cast<T>(0), t = static_cast<T>(0), alpha = static_cast<T>(0);
+	K b = 0, mu = 0 ;
+
+	SeriesConfig<T,K> config{};
+
+	input_value<T>(x);
+	config.x = x;
+
+
+	switch(id){
+		case bin_series_id:
+			input_value(alpha); config.addTParameter = alpha; break;
+		case xmb_Jb_two_series_id:
+			input_value(b); config.addKParameter = mu; break;
+		case m_fact_1mx_mp1_inverse_series_id:
+			input_value(mu); config.addKParameter = mu; break;
+		case Incomplete_Gamma_func_series_id:
+			input_value(s); config.addTParameter = s; break;
+		case Ja_x_series_id:
+			input_value(a); config.addTParameter = a; break;
+		case gamma_series_id:
+			input_value(t); config.addTParameter = t; break;
+		default:
+			break;
+	}
+
+	// This function replace huge switch-case
+	auto all_series = create_series_info();
+	if (static_cast<int>(id) < 1 || static_cast<int>(id) > all_series.size()) {
+		throw std::domain_error("Invalid series ID");
+	}
+
+	// Здесь нужно будет сделать mapping от ID к конструктору
+	// Пока оставляю старый switch, но можно оптимизировать дальше
 	switch (id) {
-	case transformation_id_t::S_algorithm:
+	case exp_series_id:
+		return std::make_unique<exp_series<T, K>>(config);
+	case cos_series_id:
+		return std::make_unique<cos_series<T, K>>(config);
+	case sin_series_id:
+		return std::make_unique<sin_series<T, K>>(config);
+	case cosh_series_id:
+		return std::make_unique<cosh_series<T, K>>(config);
+	case sinh_series_id:
+		return std::make_unique<sinh_series<T, K>>(config);
+	case bin_series_id: 
+		return std::make_unique<bin_series<T, K>>(config);
+	case four_arctan_series_id:
+		return std::make_unique<four_arctan_series<T, K>>(config);
+	case ln1mx_series_id:
+		return std::make_unique<ln1mx_series<T, K>>(config);
+	case mean_sinh_sin_series_id:
+		return std::make_unique<mean_sinh_sin_series<T, K>>(config);
+	case exp_squared_erf_series_id:
+		return std::make_unique<exp_squared_erf_series<T, K>>(config);
+	case xmb_Jb_two_series_id:
+		return std::make_unique<xmb_Jb_two_series<T, K>>(config);
+	case half_asin_two_x_series_id:
+		return std::make_unique<half_asin_two_x_series<T, K>>(config);
+	case inverse_1mx_series_id:
+		return std::make_unique<inverse_1mx_series<T, K>>(config);
+	case x_1mx_squared_series_id:
+		return std::make_unique<x_1mx_squared_series<T, K>>(config);
+	case erf_series_id:
+		return std::make_unique<erf_series<T, K>>(config);
+	case m_fact_1mx_mp1_inverse_series_id: 
+		return std::make_unique<m_fact_1mx_mp1_inverse_series<T, K>>(config);
+	case inverse_sqrt_1m4x_series_id:
+		return std::make_unique<inverse_sqrt_1m4x_series<T, K>>(config);
+	case one_twelfth_3x2_pi2_series_id:
+		return std::make_unique<one_twelfth_3x2_pi2_series<T, K>>(config);
+	case x_twelfth_x2_pi2_series_id:
+		return std::make_unique<x_twelfth_x2_pi2_series<T, K>>(config);
+	case ln2_series_id:
+		return std::make_unique<ln2_series<T, K>>(config);
+	case one_series_id:
+		return std::make_unique<one_series<T, K>>(config);
+	case minus_one_quarter_series_id:
+		return std::make_unique<minus_one_quarter_series<T, K>>(config);
+	case pi_3_series_id:
+		return std::make_unique<pi_3_series<T, K>>(config);
+	case pi_4_series_id:
+		return std::make_unique<pi_4_series<T, K>>(config);
+	case pi_squared_6_minus_one_series_id:
+		return std::make_unique<pi_squared_6_minus_one_series<T, K>>(config);
+	case three_minus_pi_series_id:
+		return std::make_unique<three_minus_pi_series<T, K>>(config);
+	case one_twelfth_series_id:
+		return std::make_unique<one_twelfth_series<T, K>>(config);
+	case eighth_pi_m_one_third_series_id:
+		return std::make_unique<eighth_pi_m_one_third_series<T, K>>(config);
+	case one_third_pi_squared_m_nine_series_id:
+		return std::make_unique<one_third_pi_squared_m_nine_series<T, K>>(config);
+	case four_ln2_m_3_series_id:
+		return std::make_unique<four_ln2_m_3_series<T, K>>(config);
+	case exp_m_cos_x_sinsin_x_series_id:
+		return std::make_unique<exp_m_cos_x_sinsin_x_series<T, K>>(config);
+	case pi_four_minus_ln2_halfed_series_id:
+		return std::make_unique<pi_four_minus_ln2_halfed_series<T, K>>(config);
+	case five_pi_twelve_series_id:
+		return std::make_unique<five_pi_twelve_series<T, K>>(config);
+	case x_two_series_id:
+		return std::make_unique<x_two_series<T, K>>(config);
+	case pi_six_min_half_series_id:
+		return std::make_unique<pi_six_min_half_series<T, K>>(config);
+	case x_two_throught_squares_series_id:
+		return std::make_unique<x_two_throught_squares_series<T, K>>(config);
+	case minus_one_ned_in_n_series_id:
+		return std::make_unique<minus_one_ned_in_n_series<T, K>>(config);
+	case minus_one_n_fact_n_in_n_series_id:
+		return std::make_unique<minus_one_n_fact_n_in_n_series<T, K>>(config);
+	case ln_x_plus_one_x_minus_one_halfed_series_id:
+		return std::make_unique<ln_x_plus_one_x_minus_one_halfed_series<T, K>>(config);
+	case two_arcsin_square_x_halfed_series_id:
+		return std::make_unique<two_arcsin_square_x_halfed_series<T, K>>(config);
+	case pi_squared_twelve_series_id:
+		return std::make_unique<pi_squared_twelve_series<T, K>>(config);
+	case pi_cubed_32_series_id:
+		return std::make_unique<pi_cubed_32_series<T, K>>(config);
+	case minus_three_plus_ln3_three_devided_two_plus_two_ln2_series_id:
+		return std::make_unique<minus_three_plus_ln3_three_devided_two_plus_two_ln2_series<T, K>>(config);
+	case two_ln2_series_id:
+		return std::make_unique<two_ln2_series<T, K>>(config);
+	case pi_x_multi_e_xpi_plus_e_minusxpi_divided_e_xpi_minus_e_minusxpi_minus_one_series_id:
+		return std::make_unique<pi_x_multi_e_xpi_plus_e_minusxpi_divided_e_xpi_minus_e_minusxpi_minus_one_series<T, K>>(config);
+	case pi_minus_x_2_series_id:
+		return std::make_unique<pi_minus_x_2_series<T, K>>(config);
+	case half_multi_ln_1div2multi1minuscosx_series_id:
+		return std::make_unique<half_multi_ln_1div2multi1minuscosx_series<T, K>>(config);
+	case half_minus_sinx_multi_pi_4_series_id:
+		return std::make_unique<half_minus_sinx_multi_pi_4_series<T, K>>(config);
+	case ln_1plussqrt1plusxsquare_minus_ln_2_series_id:
+		return std::make_unique<ln_1plussqrt1plusxsquare_minus_ln_2_series<T, K>>(config);
+	case ln_cosx_series_id:
+		return std::make_unique<ln_cosx_series<T, K>>(config);
+	case ln_sinx_minus_ln_x_series_id:
+		return std::make_unique<ln_sinx_minus_ln_x_series<T, K>>(config);
+	case pi_8_cosx_square_minus_1_div_3_cosx_series_id:
+		return std::make_unique<pi_8_cosx_square_minus_1_div_3_cosx_series<T, K>>(config);
+	case sqrt_oneminussqrtoneminusx_div_x_series_id:
+		return std::make_unique<sqrt_oneminussqrtoneminusx_div_x_series<T, K>>(config);
+	case one_minus_sqrt_1minus4x_div_2x_series_id:
+		return std::make_unique<one_minus_sqrt_1minus4x_div_2x_series<T, K>>(config);
+	case arcsin_x_minus_x_series_id:
+		return std::make_unique<arcsin_x_minus_x_series<T, K>>(config);
+	case pi_x_minus_x_square_and_x_square_minus_three_pi_x_plus_two_pi_square_series_id:
+		return std::make_unique<pi_x_minus_x_square_and_x_square_minus_three_pi_x_plus_two_pi_square_series<T, K>>(config);
+	case abs_sin_x_minus_2_div_pi_series_id:
+		return std::make_unique<abs_sin_x_minus_2_div_pi_series<T, K>>(config);
+	case pi_minus_3pi_4_and_pi_minus_x_minus_3pi_4_series_id:
+		return std::make_unique<pi_minus_3pi_4_and_pi_minus_x_minus_3pi_4_series<T, K>>(config);
+	case minus_3_div_4_or_x_minus_3_div_4_series_id:
+		return std::make_unique<minus_3_div_4_or_x_minus_3_div_4_series<T, K>>(config);
+	case ten_minus_x_series_id:
+		return std::make_unique<ten_minus_x_series<T, K>>(config);
+	case x_series_id:
+		return std::make_unique<x_series<T, K>>(config);
+	case minus_x_minus_pi_4_or_minus_pi_4_series_id:
+		return std::make_unique<minus_x_minus_pi_4_or_minus_pi_4_series<T, K>>(config);
+	case one_div_two_minus_x_multi_three_plus_x_series_id:
+		return std::make_unique<one_div_two_minus_x_multi_three_plus_x_series<T, K>>(config);
+	case Si_x_series_id:
+		return std::make_unique<Si_x_series<T, K>>(config);
+	case Ci_x_series_id:
+		return std::make_unique<Ci_x_series<T, K>>(config);
+	case Riemann_zeta_func_series_id:
+		return std::make_unique<Riemann_zeta_func_series<T, K>>(config);
+	case Riemann_zeta_func_xmin1_div_Riemann_zeta_func_x_series_id:
+		return std::make_unique<Riemann_zeta_func_xmin1_div_Riemann_zeta_func_x_series<T, K>>(config);
+	case xsquareplus3_div_xsquareplus2multix_minus_1_series_id:
+		return std::make_unique<xsquareplus3_div_xsquareplus2multix_minus_1_series<T, K>>(config);
+	case arcsin_x_series_id:
+		return std::make_unique<arcsin_x_series<T, K>>(config);
+	case arctg_x_series_id:
+		return std::make_unique<arctg_x_series<T, K>>(config);
+	case K_x_series_id:
+		return std::make_unique<K_x_series<T, K>>(config);
+	case E_x_series_id:
+		return std::make_unique<E_x_series<T, K>>(config);
+	case sqrt_1plusx_series_id:
+		return std::make_unique<sqrt_1plusx_series<T, K>>(config);
+	case Lambert_W_func_series_id:
+		return std::make_unique<Lambert_W_func_series<T, K>>(config);
+	case Incomplete_Gamma_func_series_id:
+		return std::make_unique<Incomplete_Gamma_func_series<T, K>>(config);
+	case Series_with_ln_number1_series_id:
+		return std::make_unique<Series_with_ln_number1_series<T, K>>(config);
+	case Series_with_ln_number2_series_id:
+		return std::make_unique<Series_with_ln_number2_series<T, K>>(config);
+	case pi_series_id:
+		return std::make_unique<pi_series<T, K>>(config);
+	case x_min_sqrt_x_series_id:
+		return std::make_unique<x_min_sqrt_x_series<T, K>>(config);
+	case arctan_x2_series_id:
+		return std::make_unique<arctan_x2_series<T, K>>(config);
+	case ln1px4_series_id:
+		return std::make_unique<ln1px4_series<T, K>>(config);
+	case sin_x2_series_id:
+		return std::make_unique<sin_x2_series<T, K>>(config);
+	case arctan_x3_series_id:
+		return std::make_unique<arctan_x3_series<T, K>>(config);
+	case arcsin_x2_series_id:
+		return std::make_unique<arcsin_x2_series<T, K>>(config);
+	case ln1_m_x2_series_id:
+		return std::make_unique<ln1_m_x2_series<T, K>>(config);
+	case artanh_x_series_id:
+		return std::make_unique<artanh_x_series<T, K>>(config);
+	case arcsinh_x_series_id:
+		return std::make_unique<arcsinh_x_series<T, K>>(config);
+	case cos_x2_series_id:
+		return std::make_unique<cos_x2_series<T, K>>(config);
+	case sinh_x2_series_id:
+		return std::make_unique<sinh_x2_series<T, K>>(config);
+	case arctanh_x2_series_id:
+		return std::make_unique<arctanh_x2_series<T, K>>(config);
+	case cos3xmin1_div_xsqare_series_id:
+		return std::make_unique<cos3xmin1_div_xsqare_series<T, K>>(config);
+	case two_degree_x_series_id:
+		return std::make_unique<two_degree_x_series<T, K>>(config);
+	case sqrt_1plusx_min_1_min_x_div_2_series_id:
+		return std::make_unique<sqrt_1plusx_min_1_min_x_div_2_series<T, K>>(config);
+	case ln13_min_ln7_div_7_series_id:
+		return std::make_unique<ln13_min_ln7_div_7_series<T, K>>(config);
+	case Ja_x_series_id:
+		return std::make_unique<Ja_x_series<T, K>>(config);
+	case one_div_sqrt2_sin_xdivsqrt2_series_id:
+		return std::make_unique<one_div_sqrt2_sin_xdivsqrt2_series<T, K>>(config);
+	case ln_1plusx_div_1plusx2_series_id:
+		return std::make_unique<ln_1plusx_div_1plusx2_series<T, K>>(config);
+	case cos_sqrt_x_series_id:
+		return std::make_unique<cos_sqrt_x_series<T, K>>(config);
+	case ln_1_plus_x3_series_id:
+		return std::make_unique<ln_1_plus_x3_series<T, K>>(config);
+	case x_div_1minx_series_id:
+		return std::make_unique<x_div_1minx_series<T, K>>(config);
+	case x_div_1minx2_series_id:
+		return std::make_unique<x_div_1minx2_series<T, K>>(config);
+	case gamma_series_id:
+		return std::make_unique<gamma_series<T, K>>(config);
 
-		std::cout << '\n';
-		std::cout << "|------------------------------------------|" << '\n';
-		std::cout << "| Use standart beta value? 1<-true or 0<-false : "; std::cin >> standart; std::cout << "|" << '\n';
-		std::cout << "|------------------------------------------|" << '\n';
+	default: throw std::domain_error("Series not implemented");
 
-		if (!standart) {
-			std::cout << '\n';
-			std::cout << "|------------------------------------------|" << '\n';
-			std::cout << "| Enter parameter beta: "; std::cin >> beta;
-			std::cout << "|------------------------------------------|" << '\n';
-		}
-		else beta = 1;
+	}
+}
 
-		transform.reset(new levin_sidi_S_algorithm<T, K, decltype(series.get())>(series.get(), type, recursive, beta));
-		return;
-	case transformation_id_t::D_algorithm:
-		transform.reset(new drummonds_D_algorithm<T, K, decltype(series.get())>(series.get(), type, recursive));
-		return;
-	case transformation_id_t::M_algorithm:
+/**
+ * @brief Helper function to get transformation by ID
+ */
+template <AcceptedLike T, std::unsigned_integral K>
+inline static std::unique_ptr<series_acceleration<T, K>>
+create_transformation_by_id(transformation_id_t id, std::shared_ptr<series_base<T,K>> series, bool is_alternating = false) {
 
-		std::cout << '\n';
-		std::cout << "|------------------------------------------|" << '\n';
-		std::cout << "| Use standart gamma value? 1<-true or 0<-false : "; std::cin >> standart; std::cout << "|" << '\n';
-		std::cout << "|------------------------------------------|" << '\n';
-
-		if (!standart) {
-			std::cout << '\n';
-			std::cout << "|------------------------------------------|" << '\n';
-			std::cout << "| Enter parameter gamma: "; std::cin >> gamma;
-			std::cout << "|------------------------------------------|" << '\n';
-		}
-		else gamma = 10;
-
-		transform.reset(new M_levin_sidi_algorithm<T, K, decltype(series.get())>(series.get(), ptr, gamma));
-		return;
+	if (id == shanks_transformation_id) {
+		if (is_alternating)
+			return std::make_unique<shanks_transform_alternating<T, K>>(series);
+		else
+			return std::make_unique<shanks_algorithm<T, K>>(series);
+	}
+	switch (id) {
+	case epsilon_algorithm_id:
+		return std::make_unique<wynn_epsilon_1_algorithm<T, K>>(series);
+	case epsilon_algorithm_2_id:
+		return std::make_unique<wynn_epsilon_2_algorithm<T, K>>(series);
+	case S_algorithm_id:
+		return std::make_unique<levin_sidi_s_algorithm<T, K>>(series);
+	case D_algorithm_id:
+		return std::make_unique<drummond_d_algorithm<T, K>>(series, remainder_type::t_variant);
+	case chang_epsilon_algorithm_id:
+		return std::make_unique<chang_wynn_algorithm<T, K>>(series);
+	case M_algorithm_id:
+		return std::make_unique<levin_sidi_m_algorithm<T, K>>(series);
+	case weniger_transformation_id:
+		return std::make_unique<weniger_algorithm<T, K>>(series);
+	case rho_wynn_transformation_id:
+		return std::make_unique<wynn_rho_algorithm<T, K>>(series);
+	case brezinski_theta_transformation_id:
+		return std::make_unique<brezinski_theta_algorithm<T, K>>(series);
+	case epsilon_algorithm_3_id:
+		return std::make_unique<wynn_epsilon_3_algorithm<T, K>>(series);
+	case W_algorithm_id:
+		return std::make_unique<lubkin_w_algorithm<T, K>>(series);
+	case richardson_algorithm_id:
+		return std::make_unique<richardson_algorithm<T, K>>(series);
+	case L_algorithm_id:
+		return std::make_unique<levin_algorithm<T, K>>(series, t_variant, true);
+	case Ford_Sidi_algorithm_two_id:
+		return std::make_unique<ford_sidi_2_algorithm<T, K>>(series);
+	case Ford_Sidi_algorithm_three_id:
+		return std::make_unique<ford_sidi_3_algorithm<T, K>>(series);
 	default:
-		throw std::domain_error("wrong id was given");
+		throw std::domain_error("Invalid transformation ID");
 	}
 }
 
 /**
-* @brief initialize rho-WynnType transformations, usable for basic, Gamma, Gamma-Rho
-* @authors Yurov P.
-*/
-template<std::floating_point T, std::unsigned_integral K, typename series_templ>
-inline void init_wynn(std::unique_ptr<series_base<T, K>>& series, std::unique_ptr<series_acceleration<T, K, series_templ>>& transform)
-{
-	K type;
-	bool standart = false;
-	T gamma = T{};	//parameter for gamma modification
-	T RHO = T{};	//parameter for gamma-rho modification
-
-	std::cout << '\n';
-	std::cout << "|------------------------------------------|" << '\n';
-	std::cout << "| choose transformation variant:           |" << '\n';
-	std::cout << "| classic (0), gamma (1), gamma-rho (2): "; type = read_input<K>();
-	std::cout << "|------------------------------------------|" << '\n';
-
-	switch (type) {
-	case 0:
-		transform.reset(new rho_Wynn_algorithm<T, K, decltype(series.get())>(series.get(), new rho_transform<T, K>{}));
-		break;
-	case 1:
-		std::cout << '\n';
-		std::cout << "|------------------------------------------|" << '\n';
-		std::cout << "| Use standart gamma value? 1<-true or 0<-false : "; std::cin >> standart; std::cout << "|" << '\n';
-		std::cout << "|------------------------------------------|" << '\n';
-
-		if (!standart) {
-			std::cout << '\n';
-			std::cout << "|------------------------------------------|" << '\n';
-			std::cout << "| Enter parameter gamma: "; std::cin >> gamma;
-			std::cout << "|------------------------------------------|" << '\n';
-		}
-		else gamma = 2;
-
-		transform.reset(new rho_Wynn_algorithm<T, K, decltype(series.get())>(series.get(), new generilized_transform<T, K>{}, gamma));
-		break;
-	case 2:
-		std::cout << '\n';
-		std::cout << "|------------------------------------------|" << '\n';
-		std::cout << "| Use standart gamma value? 1<-true or 0<-false : "; std::cin >> standart; std::cout << "|" << '\n';
-		std::cout << "|------------------------------------------|" << '\n';
-
-		if (!standart) {
-			std::cout << '\n';
-			std::cout << "|------------------------------------------|" << '\n';
-			std::cout << "| Enter parameter gamma: "; std::cin >> gamma;
-			std::cout << "|------------------------------------------|" << '\n';
-		}
-		else gamma = 2;
-
-		std::cout << '\n';
-		std::cout << "|------------------------------------------|" << '\n';
-		std::cout << "| Use standart RHO value? 1<-true or 0<-false : "; std::cin >> standart; std::cout << "|" << '\n';
-		std::cout << "|------------------------------------------|" << '\n';
-
-		if (!standart) {
-			std::cout << '\n';
-			std::cout << "|------------------------------------------|" << '\n';
-			std::cout << "| Enter parameter gamma: "; std::cin >> gamma;
-			std::cout << "|------------------------------------------|" << '\n';
-		}
-		else RHO = 1;
-
-		transform.reset(new rho_Wynn_algorithm<T, K, decltype(series.get())>(series.get(), new gamma_rho_transform<T, K>{}, gamma, RHO));
-		break;
-	default:
-		throw std::domain_error("wrong transform variant");
-		break;
-	}
-}
-
-/**
-* @brief initialize levin_recursion transformation
-* @authors Maximov A.K.
-*/
-template<std::floating_point T, std::unsigned_integral K, typename series_templ>
-inline void init_levin_recursion(std::unique_ptr<series_base<T, K>>& series, std::unique_ptr<series_acceleration<T, K, series_templ>>& transform)
-{
-	bool standart = false;
-	T beta = T{};	//parameter for levin_recursion algorithm
-
-	std::cout << '\n';
-	std::cout << "|------------------------------------------|" << '\n';
-	std::cout << "| Use standart beta value? 1<-true or 0<-false : "; std::cin >> standart; std::cout << "|" << '\n';
-	std::cout << "|------------------------------------------|" << '\n';
-
-	if (!standart) {
-		std::cout << '\n';
-		std::cout << "|------------------------------------------|" << '\n';
-		std::cout << "| Enter parameter beta: "; std::cin >> beta;
-		std::cout << "|------------------------------------------|" << '\n';
-	}
-	else beta = -1.5;
-
-	transform.reset(new levin_recursion_algorithm<T, K, decltype(series.get())>(series.get(), beta));
-}
-
-/**
-* @brief initialize epsilon_algorithm_3_id transformation
-* @authors Maximov A.K.
-*/
-template<std::floating_point T, std::unsigned_integral K, typename series_templ>
-inline void init_epsilon_3(std::unique_ptr<series_base<T, K>>& series, std::unique_ptr<series_acceleration<T, K, series_templ>>& transform)
-{
-
-	bool standart = false;
-	T epsilon = T{};	//parameter for epsilon 3 algorithm
-
-	std::cout << '\n';
-	std::cout << "|------------------------------------------|" << '\n';
-	std::cout << "| Use standart epsilon value? 1<-true or 0<-false : "; std::cin >> standart; std::cout << "|" << '\n';
-	std::cout << "|------------------------------------------|" << '\n';
-
-	if (!standart) {
-		std::cout << '\n';
-		std::cout << "|------------------------------------------|" << '\n';
-		std::cout << "| Enter parameter epsilon: "; std::cin >> epsilon;
-		std::cout << "|------------------------------------------|" << '\n';
-	}
-	else epsilon = T(1e-3);
-
-	transform.reset(new epsilon_algorithm_three<T, K, decltype(series.get())>(series.get(), epsilon));
-}
-
-/**
-* @brief The main testing function
-* This function provides a convenient and interactive way to test out the convergence acceleration of various series
-* @tparam T The type of the elements in the series, K The type of enumerating integer
-* @authors Bolshakov M.P
-* @edited by Kreynin R.G.
-*/
-template <std::floating_point T, std::unsigned_integral K>
+ * @brief The main testing function
+ * This function provides a convenient and interactive way to test out the convergence acceleration of various series
+ * @tparam T The type of the elements in the series, K The type of enumerating integer
+ */
+template <AcceptedLike T, std::unsigned_integral K>
 inline static void main_testing_function()
 {
 
 	//choosing series
 	print_series_info();
-	std::unique_ptr<series_base<T, K>> series;
 	K series_id = read_input<K>();
 
 	//choosing x
 	std::cout << "Enter x - the argument for the functional series" << '\n';
-	T x = 0;
-	std::cin >> x;
 
-	//choosing series (cont.)
-	std::set<K> alternating_series = { 2, 3, 7, 11, 15, 18, 19, 20, 21, 24, 26, 28, 30, 31 };
-	switch (series_id)
-	{
-	case series_id_t::exp_series_id:
-		series.reset(new exp_series<T, K>(x));
-		break;
-	case series_id_t::cos_series_id:
-		series.reset(new cos_series<T, K>(x));
-		break;
-	case series_id_t::sin_series_id:
-		series.reset(new sin_series<T, K>(x));
-		break;
-	case series_id_t::cosh_series_id:
-		series.reset(new cosh_series<T, K>(x));
-		break;
-	case series_id_t::sinh_series_id:
-		series.reset(new sinh_series<T, K>(x));
-		break;
-	case series_id_t::bin_series_id:
-		T alpha;
-		std::cout << "Enter the value for constant alpha for the series" << '\n';
-		std::cin >> alpha;
-		series.reset(new bin_series<T, K>(x, alpha));
-		break;
-	case series_id_t::four_arctan_series_id:
-		series.reset(new four_arctan_series<T, K>(x));
-		break;
-	case series_id_t::ln1mx_series_id:
-		series.reset(new ln1mx_series<T, K>(x));
-		break;
-	case series_id_t::mean_sinh_sin_series_id:
-		series.reset(new mean_sinh_sin_series<T, K>(x));
-		break;
-	case series_id_t::exp_squared_erf_series_id:
-		series.reset(new exp_squared_erf_series<T, K>(x));
-		break;
-	case series_id_t::xmb_Jb_two_series_id:
-		K b;
-		std::cout << "Enter the value for constant b for the series" << '\n';
-		b = read_input<K>();
-		series.reset(new xmb_Jb_two_series<T, K>(x, b));
-		break;
-	case series_id_t::half_asin_two_x_series_id:
-		series.reset(new half_asin_two_x_series<T, K>(x));
-		break;
-	case series_id_t::inverse_1mx_series_id:
-		series.reset(new inverse_1mx_series<T, K>(x));
-		break;
-	case series_id_t::x_1mx_squared_series_id:
-		series.reset(new x_1mx_squared_series<T, K>(x));
-		break;
-	case series_id_t::erf_series_id:
-		series.reset(new erf_series<T, K>(x));
-		break;
-	case series_id_t::m_fact_1mx_mp1_inverse_series_id:
-		K m;
-		std::cout << "Enter the value for constant m for the series" << '\n';
-		m = read_input<K>();
-		series.reset(new m_fact_1mx_mp1_inverse_series<T, K>(x, m));
-		break;
-	case series_id_t::inverse_sqrt_1m4x_series_id:
-		series.reset(new inverse_sqrt_1m4x_series<T, K>(x));
-		break;
-	case series_id_t::one_twelfth_3x2_pi2_series_id:
-		series.reset(new one_twelfth_3x2_pi2_series<T, K>(x));
-		break;
-	case series_id_t::x_twelfth_x2_pi2_series_id:
-		series.reset(new x_twelfth_x2_pi2_series<T, K>(x));
-		break;
-	case series_id_t::ln2_series_id:
-		series.reset(new ln2_series<T, K>(x));
-		break;
-	case series_id_t::one_series_id:
-		series.reset(new one_series<T, K>(x));
-		break;
-	case series_id_t::minus_one_quarter_series_id:
-		series.reset(new minus_one_quarter_series<T, K>(x));
-		break;
-	case series_id_t::pi_3_series_id:
-		series.reset(new pi_3_series<T, K>(x));
-		break;
-	case series_id_t::pi_4_series_id:
-		series.reset(new pi_4_series<T, K>(x));
-		break;
-	case series_id_t::pi_squared_6_minus_one_series_id:
-		series.reset(new pi_squared_6_minus_one_series<T, K>(x));
-		break;
-	case series_id_t::three_minus_pi_series_id:
-		series.reset(new three_minus_pi_series<T, K>(x));
-		break;
-	case series_id_t::one_twelfth_series_id:
-		series.reset(new one_twelfth_series<T, K>(x));
-		break;
-	case series_id_t::eighth_pi_m_one_third_series_id:
-		series.reset(new eighth_pi_m_one_third_series<T, K>(x));
-		break;
-	case series_id_t::one_third_pi_squared_m_nine_series_id:
-		series.reset(new one_third_pi_squared_m_nine_series<T, K>(x));
-		break;
-	case series_id_t::four_ln2_m_3_series_id:
-		series.reset(new four_ln2_m_3_series<T, K>(x));
-		break;
-	case series_id_t::exp_m_cos_x_sinsin_x_series_id:
-		series.reset(new exp_m_cos_x_sinsin_x_series<T, K>(x));
-		break;
-	case series_id_t::pi_four_minus_ln2_halfed_series_id:
-		series.reset(new pi_four_minus_ln2_halfed_series<T, K>(x));
-		break;
-	case series_id_t::five_pi_twelve_series_id:
-		series.reset(new five_pi_twelve_series<T, K>(x));
-		break;
-	case series_id_t::x_two_series_id:
-		series.reset(new x_two_series<T, K>(x));
-		break;
-	case series_id_t::pi_six_min_half_series_id:
-		series.reset(new pi_six_min_half_series<T, K>(x));
-		break;
-	case series_id_t::x_two_throught_squares_id:
-		series.reset(new x_two_throught_squares_series<T, K>(x));
-		break;
-	case series_id_t::minus_one_ned_in_n_series_id:
-		series.reset(new minus_one_ned_in_n_series<T, K>(x));
-		break;
-	case series_id_t::minus_one_n_fact_n_in_n_series_id:
-		series.reset(new minus_one_n_fact_n_in_n_series<T, K>(x));
-		break;
-	case series_id_t::ln_x_plus_one_x_minus_one_halfed_series_id:
-		series.reset(new ln_x_plus_one_x_minus_one_halfed_series<T, K>(x));
-		break;
-	case series_id_t::two_arcsin_square_x_halfed_series_id:
-		series.reset(new two_arcsin_square_x_halfed_series<T, K>(x));
-		break;
-	case series_id_t::pi_squared_twelve_series_id:
-		series.reset(new pi_squared_twelve_series<T, K>(x));
-		break;
-	case series_id_t::pi_cubed_32_series_id:
-		series.reset(new pi_cubed_32_series<T, K>(x));
-		break;
-	case series_id_t::minus_three_plus_ln3_three_devided_two_plus_two_ln2_series_id:
-		series.reset(new minus_three_plus_ln3_three_devided_two_plus_two_ln2_series<T, K>(x));
-		break;
-	case series_id_t::two_ln2_series_id:
-		series.reset(new two_ln2_series<T, K>(x));
-		break;
-	case series_id_t::pi_x_multi_e_xpi_plus_e_minusxpi_divided_e_xpi_minus_e_minusxpi_minus_one_series_id:
-		series.reset(new pi_x_multi_e_xpi_plus_e_minusxpi_divided_e_xpi_minus_e_minusxpi_minus_one_series<T, K>(x));
-		break;
-	case series_id_t::pi_minus_x_2_id:
-		series.reset(new pi_minus_x_2<T, K>(x));
-		break;
-	case series_id_t::half_multi_ln_1div2multi1minuscosx_id:
-		series.reset(new half_multi_ln_1div2multi1minuscosx<T, K>(x));
-		break;
-	case series_id_t::half_minus_sinx_multi_pi_4_id:
-		series.reset(new half_minus_sinx_multi_pi_4<T, K>(x));
-		break;
-	case series_id_t::ln_1plussqrt1plusxsquare_minus_ln_2_id:
-		series.reset(new ln_1plussqrt1plusxsquare_minus_ln_2<T, K>(x));
-		break;
-	case series_id_t::ln_cosx_id:
-		series.reset(new ln_cosx<T, K>(x));
-		break;
-	case series_id_t::ln_sinx_minus_ln_x_id:
-		series.reset(new ln_sinx_minus_ln_x<T, K>(x));
-		break;
-	case series_id_t::pi_8_cosx_square_minus_1_div_3_cosx_id:
-		series.reset(new pi_8_cosx_square_minus_1_div_3_cosx<T, K>(x));
-		break;
-	case series_id_t::sqrt_oneminussqrtoneminusx_div_x_id:
-		series.reset(new sqrt_oneminussqrtoneminusx_div_x<T, K>(x));
-		break;
-	case series_id_t::one_minus_sqrt_1minus4x_div_2x_id:
-		series.reset(new one_minus_sqrt_1minus4x_div_2x<T, K>(x));
-		break;
-	case series_id_t::arcsin_x_minus_x_series_id:
-		series.reset(new arcsin_x_minus_x_series<T, K>(x));
-		break;
-	case series_id_t::pi_x_minus_x_square_and_x_square_minus_three_pi_x_plus_two_pi_square_series_id:
-		series.reset(new pi_x_minus_x_square_and_x_square_minus_three_pi_x_plus_two_pi_square_series<T, K>(x));
-		break;
-	case series_id_t::abs_sin_x_minus_2_div_pi_series_id:
-		series.reset(new abs_sin_x_minus_2_div_pi_series<T, K>(x));
-		break;
-	case series_id_t::pi_minus_3pi_4_and_pi_minus_x_minus_3pi_4_series_id:
-		series.reset(new pi_minus_3pi_4_and_pi_minus_x_minus_3pi_4_series<T, K>(x));
-		break;
-	case series_id_t::minus_3_div_4_or_x_minus_3_div_4_series_id:
-		series.reset(new minus_3_div_4_or_x_minus_3_div_4_series<T, K>(x));
-		break;
-	case series_id_t::ten_minus_x_series_id:
-		series.reset(new ten_minus_x_series<T, K>(x));
-		break;
-	case series_id_t::x_series_id:
-		series.reset(new x_series<T, K>(x));
-		break;
-	case series_id_t::minus_x_minus_pi_4_or_minus_pi_4_series_id:
-		series.reset(new minus_x_minus_pi_4_or_minus_pi_4_series<T, K>(x));
-		break;
-	case series_id_t::one_div_two_minus_x_multi_three_plus_x_series_id:
-		series.reset(new one_div_two_minus_x_multi_three_plus_x_series<T, K>(x));
-		break;
-	case series_id_t::Si_x_series_id:
-		series.reset(new Si_x_series<T, K>(x));
-		break;
-	case series_id_t::Ci_x_series_id:
-		series.reset(new Ci_x_series<T, K>(x));
-		break;
-	case series_id_t::Riemann_zeta_func_series_id:
-		series.reset(new Riemann_zeta_func_series<T, K>(x));
-		break;
-	case series_id_t::Riemann_zeta_func_xmin1_div_Riemann_zeta_func_x_series_id:
-		series.reset(new Riemann_zeta_func_xmin1_div_Riemann_zeta_func_x_series<T, K>(x));
-		break;
-	case series_id_t::xsquareplus3_div_xsquareplus2multix_minus_1_series_id:
-		series.reset(new xsquareplus3_div_xsquareplus2multix_minus_1_series<T, K>(x));
-		break;
-	case series_id_t::arcsin_x_series_id:
-		series.reset(new arcsin_x_series<T, K>(x));
-		break;
-	case series_id_t::arctg_x_series_id:
-		series.reset(new arctg_x_series<T, K>(x));
-		break;
-	case series_id_t::K_x_series_id:
-		series.reset(new K_x_series<T, K>(x));
-		break;
-	case series_id_t::E_x_series_id:
-		series.reset(new E_x_series<T, K>(x));
-		break;
-	case series_id_t::sqrt_1plusx_series_id:
-		series.reset(new sqrt_1plusx_series<T, K>(x));
-		break;
-	case series_id_t::Lambert_W_func_series_id:
-		series.reset(new Lambert_W_func_series<T, K>(x));
-		break;
-	case series_id_t::Incomplete_Gamma_func_series_id:
-		T s;
-		std::cout << "Enter the value for constant s for the series" << '\n';
-		std::cin >> s;
-		series.reset(new Incomplete_Gamma_func_series<T, K>(x, s));
-		break;
-	case series_id_t::Series_with_ln_number1_id:
-		series.reset(new Series_with_ln_number1<T, K>(x));
-		break;
-	case series_id_t::Series_with_ln_number2_id:
-		series.reset(new Series_with_ln_number2<T, K>(x));
-		break;
-	case series_id_t::pi_series_id:
-		series.reset(new pi_series<T, K>(x));
-		break;
-	case series_id_t::x_min_sqrt_x_series_id:
-		series.reset(new x_min_sqrt_x_series<T, K>(x));
-		break;
-	case series_id_t::arctan_x2_series_id:
-		series.reset(new arctan_x2_series<T, K>(x));
-		break;
-	case series_id_t::ln1px4_series_id:
-		series.reset(new ln1px4_series<T, K>(x));
-		break;
-	case series_id_t::sin_x2_series_id:
-		series.reset(new sin_x2_series<T, K>(x));
-		break;
-	case series_id_t::arctan_x3_series_id:
-		series.reset(new arctan_x3_series<T, K>(x));
-		break;
-	case series_id_t::arcsin_x2_series_id:
-		series.reset(new arcsin_x2_series<T, K>(x));
-		break;
-	case series_id_t::ln1_m_x2_series_id:
-		series.reset(new ln1_m_x2_series<T, K>(x));
-		break;
-	case series_id_t::artanh_x_series_id:
-		series.reset(new artanh_x_series<T, K>(x));
-		break;
-	case series_id_t::arcsinh_x_series_id:
-		series.reset(new arcsinh_x_series<T, K>(x));
-		break;
-	case series_id_t::cos_x2_series_id:
-		series.reset(new cos_x2_series<T, K>(x));
-		break;
-	case series_id_t::sinh_x2_series_id:
-		series.reset(new sinh_x2_series<T, K>(x));
-		break;
-	case series_id_t::arctanh_x2_series_id:
-		series.reset(new arctanh_x2_series<T, K>(x));
-		break;
-	case series_id_t::cos3xmin1_div_xsqare_series_id:
-		series.reset(new cos3xmin1_div_xsqare_series<T, K>(x));
-		break;
-	case series_id_t::two_degree_x_series_id:
-		series.reset(new two_degree_x_series<T, K>(x));
-		break;
-	case series_id_t::sqrt_1plusx_min_1_min_x_div_2_series_id:
-		series.reset(new sqrt_1plusx_min_1_min_x_div_2_series<T, K>(x));
-		break;
-	case series_id_t::ln13_min_ln7_div_7_series_id:
-		series.reset(new ln13_min_ln7_div_7_series<T, K>(x));
-		break;
-	case series_id_t::Ja_x_series_id:
-		T a;
-		std::cout << "Enter the value for constant a for the series" << '\n';
-		std::cin >> a;
-		series.reset(new Ja_x_series<T, K>(x, a));
-		break;
-	case series_id_t::one_div_sqrt2_sin_xdivsqrt2_series_id:
-		series.reset(new one_div_sqrt2_sin_xdivsqrt2_series<T, K>(x));
-		break;
-	case series_id_t::ln_1plusx_div_1plusx2_id:
-		series.reset(new ln_1plusx_div_1plusx2<T, K>(x));
-		break;
-	case series_id_t::cos_sqrt_x_id:
-		series.reset(new cos_sqrt_x<T, K>(x));
-		break;
-	case series_id_t::ln_1_plus_x3_id:
-		series.reset(new ln_1_plus_x3<T, K>(x));
-		break;
-	case series_id_t::x_div_1minx_id:
-		series.reset(new x_div_1minx<T, K>(x));
-		break;
-	case series_id_t::x_div_1minx2_id:
-		series.reset(new x_div_1minx2<T, K>(x));
-		break;
-	case series_id_t::gamma_series_id:
-		T t;
-		std::cout << "Enter the parameter t in the gamma series" << '\n';
-		std::cin >> t;
-		series.reset(new gamma_series<T, K>(t, x));
-		break;
-	default:
-		throw std::domain_error("wrong series_id");
-	}
+	// Create series using helper function
+	std::unique_ptr<TermCalculatorBase<T, K>> termBase = create_series_by_id<T, K>(static_cast<series_id_t>(series_id));
+	std::shared_ptr<series_base<T, K>> series = std::make_shared<series_base<T,K>>(std::move(termBase));
 
 	//choosing transformation
 	print_transformation_info();
 	K transformation_id = read_input<K>();
-	std::unique_ptr<series_acceleration<T, K, decltype(series.get())>> transform;
-	switch (transformation_id)
-	{
-	case transformation_id_t::shanks_transformation_id:
-		if (alternating_series.contains(series_id))
-			transform.reset(new shanks_transform_alternating<T, K, decltype(series.get())>(series.get()));
-		else
-			transform.reset(new shanks_transform<T, K, decltype(series.get())>(series.get()));
-		break;
-	case transformation_id_t::epsilon_algorithm_id:
-		transform.reset(new epsilon_algorithm<T, K, decltype(series.get())>(series.get()));
-		break;
-	case transformation_id_t::levin_algorithm_id:
-		transform.reset(new levin_algorithm<T, K, decltype(series.get())>(series.get()));
-		break;
-	case transformation_id_t::epsilon_algorithm_2_id:
-		transform.reset(new epsilon_algorithm_two<T, K, decltype(series.get())>(series.get()));
-		break;
-	case transformation_id_t::S_algorithm:
-		init_levin(transformation_id_t::S_algorithm, series, transform);
-		break;
-	case transformation_id_t::D_algorithm:
-		init_levin(transformation_id_t::D_algorithm, series, transform);
-		break;
-	case transformation_id_t::chang_epsilon_algorithm:
-		transform.reset(new chang_whynn_algorithm<T, K, decltype(series.get())>(series.get()));
-		break;
-	case transformation_id_t::M_algorithm:
-		init_levin(transformation_id_t::M_algorithm, series, transform);
-		break;
-	case transformation_id_t::weniger_transformation:
-		transform.reset(new weniger_algorithm<T, K, decltype(series.get())>(series.get()));
-		break;
-	case transformation_id_t::rho_wynn_transformation_id:
-		init_wynn(series, transform);
-		break;
-	case transformation_id_t::brezinski_theta_transformation_id:
-		transform.reset(new theta_brezinski_algorithm<T, K, decltype(series.get())>(series.get()));
-		break;
-	case transformation_id_t::epsilon_algorithm_3_id:
-		init_epsilon_3(series, transform);
-		break;
-	case transformation_id_t::levin_recursion_id:
-		init_levin_recursion(series, transform);
-		break;
-	case transformation_id_t::W_algorithm_id:
-		transform.reset(new W_lubkin_algorithm<T, K, decltype(series.get())>(series.get()));
-		break;
-	case transformation_id_t::richardson_algorithm_id:
-		transform.reset(new richardson_algorithm<T, K, decltype(series.get())>(series.get()));
-		break;
-	case transformation_id_t::Ford_Sidi_algorithm_id:
-		transform.reset(new ford_sidi_algorithm<T, K, decltype(series.get())>(series.get()));
-		break;
-	case transformation_id_t::Ford_Sidi_algorithm_two_id:
-		transform.reset(new ford_sidi_algorithm_two<T, K, decltype(series.get())>(series.get()));
-		break;
-	case transformation_id_t::Ford_Sidi_algorithm_three_id:
-		transform.reset(new ford_sidi_algorithm_three<T, K, decltype(series.get())>(series.get()));
-		break;
-	case transformation_id_t::epsilon_modified_algorithm_id:
-		transform.reset(new epsilon_modified_algorithm<T, K, decltype(series.get())>(series.get()));
-		break;
-	case transformation_id_t::theta_modified_algorithm_id:
-		transform.reset(new theta_modified_algorithm<T, K, decltype(series.get())>(series.get()));
-		break;
-	case transformation_id_t::epsilon_aitken_theta_algorithm_id:
-		transform.reset(new epsilon_aitken_theta_algorithm<T, K, decltype(series.get())>(series.get()));
-		break;
-	default:
-		throw std::domain_error("wrong transformation_id");
-	}
+
+	std::unique_ptr<series_acceleration<T, K>> transform;
+	std::set<K> alternating_series = { 2, 3, 7, 11, 15, 18, 19, 20, 21, 24, 26, 28, 30, 31 };
+	bool is_alternating = alternating_series.contains(series_id);
+
+	// Create transformation using helper function
+	transform = create_transformation_by_id<T, K>(
+		static_cast<transformation_id_t>(transformation_id),
+		series,
+		is_alternating
+	);
 
 	//choosing testing function
-
-	bool standart = false;
-
-	T beta_Levin_S_algorithm = T{};			//parameter for LevinType transformations algorithm
-	T gamma_Levin_M_algorithm = T{};		//parameter for LevinType transformations algorithm
-	T gamma_rho_Wynn_algorithm = T{};		//parameter for gamma modification
-	T RHO_rho_Wynn_algorithm = T{};			//parameter for gamma-rho modification
-	T beta_levin_recursion_algorithm = T{};	//parameter for levin_recursion algorithm
-	T epsilon_algorithm_3 = T{};			//parameter for levin_recursion algorithm
+	T beta_Levin_S_algorithm = T{};
+	T gamma_Levin_M_algorithm = T{};
+	T gamma_rho_Wynn_algorithm = T{};
+	T RHO_rho_Wynn_algorithm = T{};
+	T beta_levin_recursion_algorithm = T{};
+	T epsilon_algorithm_3 = T{};
 
 	print_test_function_info();
 	K function_id = read_input<K>();
@@ -1025,326 +1444,149 @@ inline static void main_testing_function()
 	switch (function_id)
 	{
 	case test_function_id_t::cmp_sum_and_transform_id:
-		cmp_sum_and_transform(n, order, std::move(series.get()), std::move(transform.get()));
+		cmp_sum_and_transform(n, order, series, std::move(transform));
 		break;
 	case test_function_id_t::cmp_a_n_and_transform_id:
-		cmp_a_n_and_transform(n, order, std::move(series.get()), std::move(transform.get()));
+		cmp_a_n_and_transform(n, order, series, std::move(transform));
 		break;
 	case test_function_id_t::transformation_remainder_id:
-		transformation_remainders(n, order, std::move(series.get()), std::move(transform.get()));
+		transformation_remainders(n, order, series, std::move(transform));
 		break;
 	case test_function_id_t::cmp_transformations_id:
 	{
 		print_transformation_info();
-		K cmop_transformation_id = read_input<K>();;
+		K cmp_transformation_id = read_input<K>();
 
-		std::unique_ptr<series_acceleration<T, K, decltype(series.get())>> transform2;
+		std::unique_ptr<series_acceleration<T, K>> transform2;
+		transform2 = create_transformation_by_id<T, K>(
+			static_cast<transformation_id_t>(cmp_transformation_id),
+			series,
+			is_alternating
+		);
 
-		switch (cmop_transformation_id)
-		{
-		case transformation_id_t::shanks_transformation_id:
-			if (alternating_series.contains(series_id))
-				transform2.reset(new shanks_transform_alternating<T, K, decltype(series.get())>(series.get()));
-			else
-				transform2.reset(new shanks_transform<T, K, decltype(series.get())>(series.get()));
-			break;
-		case transformation_id_t::epsilon_algorithm_id:
-			transform2.reset(new epsilon_algorithm<T, K, decltype(series.get())>(series.get()));
-			break;
-		case transformation_id_t::levin_algorithm_id:
-			transform2.reset(new levin_algorithm<T, K, decltype(series.get())>(series.get()));
-			break;
-		case transformation_id_t::epsilon_algorithm_2_id:
-			transform2.reset(new epsilon_algorithm_two<T, K, decltype(series.get())>(series.get()));
-			break;
-		case transformation_id_t::S_algorithm:
-			init_levin(transformation_id_t::S_algorithm, series, transform2);
-			break;
-		case transformation_id_t::D_algorithm:
-			init_levin(transformation_id_t::D_algorithm, series, transform2);
-			break;
-		case transformation_id_t::chang_epsilon_algorithm:
-			transform2.reset(new chang_whynn_algorithm<T, K, decltype(series.get())>(series.get()));
-			break;
-		case transformation_id_t::M_algorithm:
-			init_levin(transformation_id_t::M_algorithm, series, transform2);
-			break;
-		case transformation_id_t::weniger_transformation:
-			transform2.reset(new weniger_algorithm<T, K, decltype(series.get())>(series.get()));
-			break;
-		case transformation_id_t::rho_wynn_transformation_id:
-			init_wynn(series, transform2);
-			break;
-		case transformation_id_t::brezinski_theta_transformation_id:
-			transform2.reset(new theta_brezinski_algorithm<T, K, decltype(series.get())>(series.get()));
-			break;
-		case transformation_id_t::epsilon_algorithm_3_id:
-			init_epsilon_3(series, transform);
-			break;
-		case transformation_id_t::levin_recursion_id:
-			init_levin_recursion(series, transform);
-			break;
-		case transformation_id_t::W_algorithm_id:
-			transform2.reset(new W_lubkin_algorithm<T, K, decltype(series.get())>(series.get()));
-			break;
-		case transformation_id_t::richardson_algorithm_id:
-			transform2.reset(new richardson_algorithm<T, K, decltype(series.get())>(series.get()));
-			break;
-		case transformation_id_t::Ford_Sidi_algorithm_id:
-			transform2.reset(new ford_sidi_algorithm<T, K, decltype(series.get())>(series.get()));
-			break;
-		case transformation_id_t::Ford_Sidi_algorithm_two_id:
-			transform2.reset(new ford_sidi_algorithm_two<T, K, decltype(series.get())>(series.get()));
-			break;
-		case transformation_id_t::Ford_Sidi_algorithm_three_id:
-			transform2.reset(new ford_sidi_algorithm_three<T, K, decltype(series.get())>(series.get()));
-			break;
-		case transformation_id_t::epsilon_modified_algorithm_id:
-			transform2.reset(new epsilon_modified_algorithm<T, K, decltype(series.get())>(series.get()));
-			break;
-		case transformation_id_t::theta_modified_algorithm_id:
-			transform2.reset(new theta_modified_algorithm<T, K, decltype(series.get())>(series.get()));
-			break;
-		case transformation_id_t::epsilon_aitken_theta_algorithm_id:
-			transform2.reset(new epsilon_aitken_theta_algorithm<T, K, decltype(series.get())>(series.get()));
-			break;
-
-		default:
-			throw std::domain_error("wrong algorithm id");
-		}
-
-		cmp_transformations(n, order, std::move(series.get()), std::move(transform.get()), std::move(transform2.get()));
+		cmp_transformations(n, order, series, std::move(transform), std::move(transform2));
 		break;
 	}
 	case test_function_id_t::eval_transform_time_id:
-		eval_transform_time(n, order, std::move(series.get()), std::move(transform.get()));
+		eval_transform_time(n, order, series, std::move(transform));
 		break;
-	case test_function_id_t::test_all_transforms_id: //Testing all functions for series
+	case test_function_id_t::test_all_transforms_id:
+	{
+		// Testing all functions for series
+		auto create_all_transformations = [&]() {
+			std::vector<std::unique_ptr<series_acceleration<T, K>>> transforms;
 
-		std::cout << '\n';
-		std::cout << "|------------------------------------------|" << '\n';
-		std::cout << "| Use standart beta_Levin_S_algorithm value? 1<-true or 0<-false : "; std::cin >> standart; std::cout << "|" << '\n';
-		std::cout << "|------------------------------------------|" << '\n';
-
-		if (!standart) {
-			std::cout << '\n';
-			std::cout << "|------------------------------------------|" << '\n';
-			std::cout << "| Enter parameter beta_Levin_S_algorithm: "; std::cin >> beta_Levin_S_algorithm;
-			std::cout << "|------------------------------------------|" << '\n';
-		}
-		else beta_Levin_S_algorithm = 1;
-
-		std::cout << '\n';
-		std::cout << "|------------------------------------------|" << '\n';
-		std::cout << "| Use standart gamma_Levin_M_algorithm value? 1<-true or 0<-false : "; std::cin >> standart; std::cout << "|" << '\n';
-		std::cout << "|------------------------------------------|" << '\n';
-
-		if (!standart) {
-			std::cout << '\n';
-			std::cout << "|------------------------------------------|" << '\n';
-			std::cout << "| Enter parameter gamma_Levin_M_algorithm: "; std::cin >> gamma_Levin_M_algorithm;
-			std::cout << "|------------------------------------------|" << '\n';
-		}
-		else gamma_Levin_M_algorithm = 10;
-
-		std::cout << '\n';
-		std::cout << "|------------------------------------------|" << '\n';
-		std::cout << "| Use standart gamma_rho_Wynn_algorithm value? 1<-true or 0<-false : "; std::cin >> standart; std::cout << "|" << '\n';
-		std::cout << "|------------------------------------------|" << '\n';
-
-		if (!standart) {
-			std::cout << '\n';
-			std::cout << "|------------------------------------------|" << '\n';
-			std::cout << "| Enter parameter gamma_rho_Wynn_algorithm: "; std::cin >> gamma_rho_Wynn_algorithm;
-			std::cout << "|------------------------------------------|" << '\n';
-		}
-		else gamma_rho_Wynn_algorithm = 2;
-
-		std::cout << '\n';
-		std::cout << "|------------------------------------------|" << '\n';
-		std::cout << "| Use standart RHO_rho_Wynn_algorithm value? 1<-true or 0<-false : "; std::cin >> standart; std::cout << "|" << '\n';
-		std::cout << "|------------------------------------------|" << '\n';
-
-		if (!standart) {
-			std::cout << '\n';
-			std::cout << "|------------------------------------------|" << '\n';
-			std::cout << "| Enter parameter RHO_rho_Wynn_algorithm: "; std::cin >> RHO_rho_Wynn_algorithm;
-			std::cout << "|------------------------------------------|" << '\n';
-		}
-		else RHO_rho_Wynn_algorithm = 1;
-
-		std::cout << '\n';
-		std::cout << "|------------------------------------------|" << '\n';
-		std::cout << "| Use standart beta_levin_recursion_algorithm value? 1<-true or 0<-false : "; std::cin >> standart; std::cout << "|" << '\n';
-		std::cout << "|------------------------------------------|" << '\n';
-
-		if (!standart) {
-			std::cout << '\n';
-			std::cout << "|------------------------------------------|" << '\n';
-			std::cout << "| Enter parameter beta_levin_recursion_algorithm: "; std::cin >> beta_levin_recursion_algorithm;
-			std::cout << "|------------------------------------------|" << '\n';
-		}
-		else beta_levin_recursion_algorithm = -1.5;
-
-		std::cout << '\n';
-		std::cout << "|------------------------------------------|" << '\n';
-		std::cout << "| Use standart epsilon_algorithm_3 value? 1<-true or 0<-false : "; std::cin >> standart; std::cout << "|" << '\n';
-		std::cout << "|------------------------------------------|" << '\n';
-
-		if (!standart) {
-			std::cout << '\n';
-			std::cout << "|------------------------------------------|" << '\n';
-			std::cout << "| Enter parameter epsilon_algorithm_3: "; std::cin >> epsilon_algorithm_3;
-			std::cout << "|------------------------------------------|" << '\n';
-		}
-		else epsilon_algorithm_3 = T(1e-3);
-
-		for (K i = 1; i <= n; i++)
-		{
-			print_sum(i, std::move(series.get()));
-
-			//shanks
+			// shanks
 			if (alternating_series.contains(series_id))
-				transform.reset(new shanks_transform_alternating<T, K, decltype(series.get())>(series.get()));
+				transforms.push_back(std::make_unique<shanks_transform_alternating<T, K>>(series));
 			else
-				transform.reset(new shanks_transform<T, K, decltype(series.get())>(series.get()));
-			
-			print_transform(i, order, std::move(transform.get()));
+				transforms.push_back(std::make_unique<shanks_algorithm<T, K>>(series));
 
-			//epsilon v-1
-			transform.reset(new epsilon_algorithm<T, K, decltype(series.get())>(series.get()));
-			print_transform(i, order, std::move(transform.get()));
+			// epsilon v-1
+			transforms.push_back(std::make_unique<wynn_epsilon_1_algorithm<T, K>>(series));
 
-			//epsilon v-2
-			transform.reset(new epsilon_algorithm_two<T, K, decltype(series.get())>(series.get()));
-			print_transform(i, order, std::move(transform.get()));
+			// epsilon v-2
+			transforms.push_back(std::make_unique<wynn_epsilon_2_algorithm<T, K>>(series));
 
-			//epsilon v-3
-			transform.reset(new epsilon_algorithm_three<T, K, decltype(series.get())>(series.get(), epsilon_algorithm_3));
-			print_transform(i, order, std::move(transform.get()));
+			// epsilon v-3
+			transforms.push_back(std::make_unique<wynn_epsilon_3_algorithm<T, K>>(series, epsilon_algorithm_3));
 
-			//rho-wynn
-			transform.reset(new rho_Wynn_algorithm<T, K, decltype(series.get())>(series.get(), new rho_transform<T, K>{}));
-			print_transform(i, order, std::move(transform.get()));
+			// rho-wynn classic
+			transforms.push_back(std::make_unique<wynn_rho_algorithm<T, K>>(series, numerator_type::rho_variant));
 
-			//rho-wynn
-			transform.reset(new rho_Wynn_algorithm<T, K, decltype(series.get())>(series.get(), new generilized_transform<T, K>{}, gamma_rho_Wynn_algorithm));
-			print_transform(i, order, std::move(transform.get()));
+			// rho-wynn generalized
+			transforms.push_back(std::make_unique<wynn_rho_algorithm<T, K>>(series, numerator_type::generalized_variant));
 
-			//rho-wynn
-			transform.reset(new rho_Wynn_algorithm<T, K, decltype(series.get())>(series.get(), new gamma_rho_transform<T, K>{}, gamma_rho_Wynn_algorithm, RHO_rho_Wynn_algorithm));
-			print_transform(i, order, std::move(transform.get()));
+			// rho-wynn gamma-rho
+			transforms.push_back(std::make_unique<wynn_rho_algorithm<T, K>>(series, numerator_type::gamma_rho_variant));
 
-			//theta-brezinski
-			transform.reset(new theta_brezinski_algorithm<T, K, decltype(series.get())>(series.get()));
+			// brezinski-theta
+			transforms.push_back(std::make_unique<brezinski_theta_algorithm<T, K>>(series));
 
-			//chang epsilon wynn
-			transform.reset(new chang_whynn_algorithm<T, K, decltype(series.get())>(series.get()));
-			print_transform(i, order, std::move(transform.get()));
+			// chang epsilon wynn
+			transforms.push_back(std::make_unique<chang_wynn_algorithm<T, K>>(series));
 
-			//levin standart
-			transform.reset(new levin_algorithm<T, K, decltype(series.get())>(series.get()));
-			print_transform(i, order, std::move(transform.get()));
+			// levin standart
+			transforms.push_back(std::make_unique<levin_algorithm<T, K>>(series));
 
-			//levin recurcive
-			transform.reset(new levin_recursion_algorithm<T, K, decltype(series.get())>(series.get(), beta_levin_recursion_algorithm));
-			print_transform(i, order, std::move(transform.get()));
+			// levin recurcive
+			transforms.push_back(std::make_unique<levin_algorithm<T, K>>(series, remainder_type::t_variant, true));
 
-			//levin-sidi S U
-			transform.reset(new levin_sidi_S_algorithm<T, K, decltype(series.get())>(series.get(), 'u', false, beta_Levin_S_algorithm));
-			print_transform(i, order, std::move(transform.get()));
-			//
+			// levin-sidi S U
+			transforms.push_back(std::make_unique<levin_sidi_s_algorithm<T, K>>(series, remainder_type::u_variant, false));
 
-			//levin-sidi S T
-			transform.reset(new levin_sidi_S_algorithm<T, K, decltype(series.get())>(series.get(), 't', false, beta_Levin_S_algorithm));
-			print_transform(i, order, std::move(transform.get()));
-			//
+			// levin-sidi S T
+			transforms.push_back(std::make_unique<levin_sidi_s_algorithm<T, K>>(series, remainder_type::t_variant, false));
 
-			//levin-sidi S D
-			transform.reset(new levin_sidi_S_algorithm<T, K, decltype(series.get())>(series.get(), 'd', false, beta_Levin_S_algorithm));
-			print_transform(i, order, std::move(transform.get()));
-			//
+			// levin-sidi S T-WAVE
+			transforms.push_back(std::make_unique<levin_sidi_s_algorithm<T, K>>(series, remainder_type::t_wave_variant, false));
 
-			//levin-sidi S V
-			transform.reset(new levin_sidi_S_algorithm<T, K, decltype(series.get())>(series.get(), 'v', false, beta_Levin_S_algorithm));
-			print_transform(i, order, std::move(transform.get()));
+			// levin-sidi S V
+			transforms.push_back(std::make_unique<levin_sidi_s_algorithm<T, K>>(series, remainder_type::v_variant, false));
 
-			//levin-sidi D U
-			transform.reset(new drummonds_D_algorithm<T, K, decltype(series.get())>(series.get(), 'u', false));
-			print_transform(i, order, std::move(transform.get()));
-			//
+			// levin-sidi D U
+			transforms.push_back(std::make_unique<drummond_d_algorithm<T, K>>(series, remainder_type::u_variant, false));
 
-			//levin-sidi D T
-			transform.reset(new drummonds_D_algorithm<T, K, decltype(series.get())>(series.get(), 't', false));
-			print_transform(i, order, std::move(transform.get()));
-			//
+			// levin-sidi D T
+			transforms.push_back(std::make_unique<drummond_d_algorithm<T, K>>(series, remainder_type::t_variant, false));
 
-			//levin-sidi D D
-			transform.reset(new drummonds_D_algorithm<T, K, decltype(series.get())>(series.get(), 'd', false));
-			print_transform(i, order, std::move(transform.get()));
-			//
+			// levin-sidi D T-WAVE
+			transforms.push_back(std::make_unique<drummond_d_algorithm<T, K>>(series, remainder_type::t_wave_variant, false));
 
-			//levin-sidi D V
-			transform.reset(new drummonds_D_algorithm<T, K, decltype(series.get())>(series.get(), 'v', false));
-			print_transform(i, order, std::move(transform.get()));
-			//
+			// levin-sidi D V
+			transforms.push_back(std::make_unique<drummond_d_algorithm<T, K>>(series, remainder_type::v_variant, false));
 
-			//levin-sidi M U
-			transform.reset(new M_levin_sidi_algorithm<T, K, decltype(series.get())>(series.get(), new u_transform<T, K>{}, gamma_Levin_M_algorithm));
-			print_transform(i, order, std::move(transform.get()));
-			//
+			// levin-sidi M U
+			transforms.push_back(std::make_unique<levin_sidi_m_algorithm<T, K>>(series, remainder_type::u_variant));
 
-			//levin-sidi M T
-			transform.reset(new M_levin_sidi_algorithm<T, K, decltype(series.get())>(series.get(), new t_transform<T, K>{}, gamma_Levin_M_algorithm));
-			print_transform(i, order, std::move(transform.get()));
-			//
+			// levin-sidi M T
+			transforms.push_back(std::make_unique<levin_sidi_m_algorithm<T, K>>(series, remainder_type::t_variant));
 
-			//levin-sidi M D
-			transform.reset(new M_levin_sidi_algorithm<T, K, decltype(series.get())>(series.get(), new d_transform<T, K>{}, gamma_Levin_M_algorithm));
-			print_transform(i, order, std::move(transform.get()));
-			//
+			// levin-sidi M T-WAVE
+			transforms.push_back(std::make_unique<levin_sidi_m_algorithm<T, K>>(series, remainder_type::t_wave_variant));
 
-			//levin-sidi M V
-			transform.reset(new M_levin_sidi_algorithm<T, K, decltype(series.get())>(series.get(), new v_transform_2<T, K>{}, gamma_Levin_M_algorithm));
-			print_transform(i, order, std::move(transform.get()));
-			//
+			// levin-sidi M V-WAVE
+			transforms.push_back(std::make_unique<levin_sidi_m_algorithm<T, K>>(series, remainder_type::v_wave_variant));
 
-			//weniger
-			transform.reset(new weniger_algorithm<T, K, decltype(series.get())>(series.get()));
-			print_transform(i, order, std::move(transform.get()));
+			// weniger
+			transforms.push_back(std::make_unique<weniger_algorithm<T, K>>(series));
 
-			//lubkin W
-			transform.reset(new W_lubkin_algorithm<T, K, decltype(series.get())>(series.get()));
-			print_transform(i, order, std::move(transform.get()));
+			// lubkin W
+			transforms.push_back(std::make_unique<lubkin_w_algorithm<T, K>>(series));
 
-			//Richardson
-			transform.reset(new richardson_algorithm<T, K, decltype(series.get())>(series.get()));
-			print_transform(i, order, std::move(transform.get()));
+			// Richardson
+			transforms.push_back(std::make_unique<richardson_algorithm<T, K>>(series));
 
-			//Ford-Sidi
-			transform.reset(new ford_sidi_algorithm<T, K, decltype(series.get())>(series.get()));
-			print_transform(i, order, std::move(transform.get()));
+			// Ford-Sidi v-2
+			transforms.push_back(std::make_unique<ford_sidi_2_algorithm<T, K>>(series));
 
-			//Ford-Sidi v-2
-			transform.reset(new ford_sidi_algorithm_two<T, K, decltype(series.get())>(series.get()));
-			print_transform(i, order, std::move(transform.get()));
+			// Ford-Sidi v-3
+			transforms.push_back(std::make_unique<ford_sidi_3_algorithm<T, K>>(series));
 
-			//epsilon modified algorithm
-			transform.reset(new epsilon_modified_algorithm<T, K, decltype(series.get())>(series.get()));
-			print_transform(i, order, std::move(transform.get()));
+			return transforms;
+			};
 
-			//theta modified algorithm
-			transform.reset(new theta_modified_algorithm<T, K, decltype(series.get())>(series.get()));
-			print_transform(i, order, std::move(transform.get()));
+		auto all_transforms = create_all_transformations();
 
-			//epsilon aitken theta algorithm algorithm
-			transform.reset(new epsilon_aitken_theta_algorithm<T, K, decltype(series.get())>(series.get()));
-			print_transform(i, order, std::move(transform.get()));
+		for (K i = 0; i <= n; i++)
+		{
+			print_sum(i, series);
+
+			for (auto& current_transform : all_transforms)
+			{
+				try{
+					print_transform(i, order, std::move(current_transform.get()));
+				} catch(float_precision::divide_by_zero){
+					std::cout << "divide_by_zero\n";
+				} catch(complex_precision<float_precision>::divide_by_zero){
+					std::cout << "divide_by_zero\n";
+				}
+			}
 
 			std::cout << '\n';
 		}
-
 		break;
+	}
 	default:
 		throw std::domain_error("wrong function_id");
 	}
