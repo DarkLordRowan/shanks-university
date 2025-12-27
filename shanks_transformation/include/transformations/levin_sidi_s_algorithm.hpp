@@ -35,11 +35,6 @@
   *           Represents numerical precision (float, double, long double)
   * @tparam K Unsigned integral type for indices and order (must satisfy std::unsigned_integral)
   *           Used for counting and indexing operations
-  * @tparam series_templ Type of series object to accelerate. Must provide:
-  *           - T operator()(K n) const: returns the n-th series term a_n
-  *           - T S_n(K n) const: returns the n-th partial sum s_n = a_0 + ... + a_n
-  *           - T utils::minus_one_raised_to_power_n(K j) const: returns (-1)^j
-  *           - T binomial_coefficient(T n, K k) const: returns binomial coefficient C(n, k)
   */
 template<AcceptedLike T, UnsignedIntLike K>
 class levin_sidi_s_algorithm final : public series_acceleration<T, K> {
@@ -47,10 +42,10 @@ protected:
 
     using float_type = GetUnderlyingType<T>::value; //type in case of complex or interval
 
-    float_type beta_in_use = utils::cast<float_type>(1.0);                    ///< Positive real parameter (β > 0). Default value is 1.0.
-    std::unique_ptr<const transform_base<T, K>> remainder;         ///< Pointer to remainder transformation object
-    bool use_recurrent_formula = false;                            ///< Flag to use recurrence formulas (true) or direct formulas (false)
-    remainder_type remainder_type_in_use = remainder_type::u_type; ///< Type of Levin transformation variant (u, t, v, t~, v~)
+    float_type beta_in_use = utils::cast<float_type>(1.0);       /**< Positive real parameter (β > 0). Default value is 1.0.            */
+    std::unique_ptr<const transform_base<T, K>> remainder;         /**< Pointer to remainder transformation object                        */
+    bool use_recurrent_formula = false;                            /**< Flag to use recurrence formulas (true) or direct formulas (false) */
+    remainder_type remainder_type_in_use = remainder_type::u_type; /**< Type of Levin transformation variant (u, t, v, t~, v~)            */
 
     /**
      * @brief Computes the S-transformation using direct summation formulas.
@@ -62,19 +57,12 @@ protected:
      * @param n Starting index for the transformation
      * @param order Order of transformation (k value)
      * @return Accelerated sum estimate S_{k,n}
-     */
+    */
     inline T calc_result(
         const K n, 
         const K order, 
         const series_result<T>& data
     ) const;
-
-    /**
-	* @brief Function to calculate S-tranformation using recurrence formula.
-	* @param n The partial sum number (S_n) from which the calculations will be done
-	* @param order the order of transformation
-	* @return The partial sum after the transformation.
-	*/
 
     /**
      * @brief Computes the S-transformation using recurrence formulas.
@@ -85,7 +73,7 @@ protected:
      * @param n Starting index for the transformation
      * @param order Order of transformation (k value)
      * @return Accelerated sum estimate S_{k,n}
-     */
+    */
     inline T calc_result_rec(
         const K n, 
         const K order, 
@@ -97,8 +85,6 @@ public:
     /**
      * @brief Parameterized constructor to initialize the Levin-Sidi S-transformation.
      *
-     * @param series The series class object to be accelerated
-     *        Must be a valid object implementing the required series interface
      * @param variant Type of remainder transformation to use
      *        Valid values: u_type, t_type, v_type, t_wave_type, v_wave_type
      *        Determines the remainder estimate R_n used in the transformation
@@ -107,7 +93,7 @@ public:
      * @param parameter Positive real parameter β (must be > 0)
      *        Default value: 1.0. Affects the Pochhammer symbol terms in the transformation.
      *        For theory, see: Sidi (2003, arXiv:math/0306302), p. 39
-     */
+    */
     explicit levin_sidi_s_algorithm(
         remainder_type remainder_type_in_use = remainder_type::u_type,
         bool use_recurrent_formula = false,
@@ -138,15 +124,23 @@ public:
      *        Valid values: order >= 0
      * @return The accelerated partial sum after S-transformation
      * @throws std::overflow_error if division by zero or numerical instability occurs
-     */
+    */
     T operator()(
         const K n, 
         const K order, 
         const series_result<T>& data
     ) const override;
 
+    /**
+     * @brief 
+     * @param new_beta 
+    */
     void update_beta(const float_type& new_beta){ beta_in_use = (new_beta > utils::cast<float_type>(0.0) ?  new_beta : utils::cast<float_type>(1.0)); }
 
+    /**
+     * @brief 
+     * @param remainder_type_to_use 
+    */
     void update_type(const remainder_type remainder_type_to_use){
 
 		remainder_type_in_use = remainder_type_to_use;
@@ -164,6 +158,11 @@ public:
 		}
 	}
 
+    /**
+     * @brief Get the name object
+     * 
+     * @return std::string 
+    */
 	std::string get_name() override {
 
 		series_acceleration<T, K>::acceleration_name = (use_recurrent_formula ? "recurrent " : "");
@@ -321,15 +320,11 @@ T levin_sidi_s_algorithm<T, K>::operator()(
         "the size of Sn and an must be at least " + utils::to_string(required_size));
 	}
 
-    if (order == static_cast<K>(0)) {
-        return data.Sn.at(n);
-    }
+    if (order == static_cast<K>(0)) return data.Sn.at(n);
 
     const T result = (use_recurrent_formula ? calc_result_rec(n,order, data) : calc_result(n, order, data));
 
-    if(!utils::isfinite(result)){
-        throw std::overflow_error("division by zero");
-    }
+    if(!utils::isfinite(result)) throw std::overflow_error("division by zero");
 
     return result;
 }

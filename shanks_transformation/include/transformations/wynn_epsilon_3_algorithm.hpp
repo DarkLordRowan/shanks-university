@@ -15,7 +15,6 @@
  */
 
 #include "series_acceleration.hpp"
-#include <cmath>
 
  /**
   * @brief Wynn's Epsilon Algorithm (Third Implementation) class template.
@@ -31,10 +30,6 @@
   * @tparam K Unsigned integral type for indices, counts, and sizes.
   *           Must satisfy std::unsigned_integral. Used for indexing terms, table sizes, and loop counters.
   *           Typical types: unsigned int, std::size_t.
-  * @tparam series_templ Type of the series object to accelerate. Must provide:
-  *           - T operator()(K n) const: returns the n-th series term aₙ
-  *           - T S_n(K n) const: returns the n-th partial sum sₙ = a₀ + ... + aₙ
-  *           The series object encapsulates the sequence whose convergence is to be accelerated.
   */
 template <AcceptedLike T, UnsignedIntLike K>
 class wynn_epsilon_3_algorithm final : public series_acceleration<T, K>
@@ -45,7 +40,6 @@ public:
 
     /**
      * @brief Parameterized constructor.
-     * @param series The series object to accelerate. Must be valid and provide term and partial sum access.
      * @param epsilon_threshold_ Threshold for epsilon corrections. Controls numerical stability.
      *        Valid values: positive T values. Too small may cause overflow, too large may reduce acceleration.
      */
@@ -112,10 +106,8 @@ T wynn_epsilon_3_algorithm<T, K>::operator()(
     }
 
     using std::max;
-    using std::abs;
 
     K N = n; // Number of terms used in transformation
-    // Machine constants for numerical stability
 
     T result = utils::cast<T>(0.0);       ///< Current best accelerated estimate.
     float_type abs_error = utils::cast<float_type>(0.0);    ///< Absolute error estimate for current data.
@@ -142,13 +134,14 @@ T wynn_epsilon_3_algorithm<T, K>::operator()(
                 DELTA1, DELTA2, DELTA3, ERROR, ERR1, ERR2, ERR3, TOL1, TOL2, TOL3, SS);
     }
 
-    const float_type EMACH = utils::epsilon(abs_error);  ///< Machine epsilon: smallest number such that 1.0 + ε ≠ 1.0.
-    const float_type EPRN = utils::cast<float_type>(50) * EMACH;                                        ///< Relative error tolerance (50 * machine epsilon).
+    // Machine constants for numerical stability
+    const float_type EMACH = utils::epsilon(abs_error);                         ///< Machine epsilon: smallest number such that 1.0 + ε ≠ 1.0.
+    const float_type EPRN = utils::cast<float_type>(50) * EMACH;                ///< Relative error tolerance (50 * machine epsilon).
     // THE 1'000'000'000 IS FOR ARB PRECISION, OTHERWISE NUMERIC LIMIT RETURNS 0
     const float_type OFRN = max(std::numeric_limits<float_type>::max(), utils::cast<float_type>(1'000'000'000)); ///< Overflow threshold (largest finite value).
+
     // Initialize epsilon table with partial sums: ε₀⁽ⁱ⁾ = S_i for i=0,...,N
-    for (K i = static_cast<K>(0); i <= N; ++i) //Filling up Epsilon Table
-        e[i] += data.Sn.at(i);
+    for (K i = static_cast<K>(0); i <= N; ++i)  e[i] += data.Sn.at(i); //Filling up Epsilon Table
     
 
     // Apply epsilon algorithm for 'order' iterations
@@ -169,31 +162,31 @@ T wynn_epsilon_3_algorithm<T, K>::operator()(
 
             DELTA2 = E2 - E1;                   // εₛ⁽ⁿ⁺¹⁾ - εₛ₋₁⁽ⁿ⁾
 
-            ERR2 = abs(DELTA2);                 // Absolute difference
+            ERR2 = utils::abs(DELTA2);                 // Absolute difference
             
-            TOL2 = max(abs(E2), abs(E1)); // Tolerance based on machine precision
+            TOL2 = max(utils::abs(E2), utils::abs(E1)); // Tolerance based on machine precision
             TOL2*=EMACH;
 
             DELTA3 = E1 - E0;                   // εₛ₋₁⁽ⁿ⁾ - εₛ₋₂⁽ⁿ⁾
-            ERR3 = abs(DELTA3);
-            TOL3 = max(abs(E1),abs(E0) );
+            ERR3 = utils::abs(DELTA3);
+            TOL3 = max(utils::abs(E1), utils::abs(E0) );
             TOL3*= EMACH;
 
             // Check if differences are significant relative to tolerances
-            if (abs(ERR2) > TOL2 || abs(ERR3) > TOL3) {
+            if (ERR2 > TOL2 || ERR3 > TOL3) {
 
                 E3 = e[K1];                     // εₛ⁽ⁿ⁾
                 e[K1] = E1;                     // Store εₛ₋₁⁽ⁿ⁾ temporarily
 
                 DELTA1 = E1 - E3;               // εₛ₋₁⁽ⁿ⁾ - εₛ⁽ⁿ⁾
 
-                ERR1 = abs(DELTA1);
+                ERR1 = utils::abs(DELTA1);
 
-                TOL1 = max(abs(E1),abs(E3));
+                TOL1 = max(utils::abs(E1), utils::abs(E3));
                 TOL1*= EMACH;
 
                 // If differences are insignificant, terminate early
-                if (abs(ERR1) <= TOL1 || abs(ERR2) <= TOL2 || abs(ERR3) <= TOL3) {
+                if (ERR1 <= TOL1 || ERR2 <= TOL2 || ERR3 <= TOL3) {
                     N = static_cast<K>(2) * I - static_cast<K>(1);
                     break;
                 }
@@ -202,11 +195,11 @@ T wynn_epsilon_3_algorithm<T, K>::operator()(
                 SS = utils::cast<T>(1) / DELTA1 + utils::cast<T>(1) / DELTA2 - utils::cast<T>(1) / DELTA3;
                 //std::cout << "\n" << RES << "\n";
                 // Check if correction term is within threshold
-                if (abs(SS * E1) > epsilon_threshold) {
+                if (utils::abs(SS * E1) > epsilon_threshold) {
                     RES = E1 + utils::cast<T>(1) / SS;      // Apply epsilon correction
                     e[K1] = RES;                            // Store updated value
                     K1 -= static_cast<K>(2);                // Move to previous position in table
-                    ERROR = ERR2 + abs(RES - E2) + ERR3;    // Total error estimat
+                    ERROR = ERR2 + utils::abs(RES - E2) + ERR3;    // Total error estimat
                     if (ERROR <= abs_error) {
                         abs_error = ERROR;
                         result = RES;                       // Update best result
@@ -238,8 +231,7 @@ T wynn_epsilon_3_algorithm<T, K>::operator()(
         ie = newelm + static_cast<K>(1);
 
         // Copy elements with stride 2 to compact the table
-        for (K pos = ib; pos < ib + static_cast<K>(2) * ie; pos += static_cast<K>(2))
-            e[pos] = e[pos + static_cast<K>(2)];
+        for (K pos = ib; pos < ib + static_cast<K>(2) * ie; pos += static_cast<K>(2)) e[pos] = e[pos + static_cast<K>(2)];
 
         // Shift elements if N changed
         if (num != N) {
@@ -250,17 +242,15 @@ T wynn_epsilon_3_algorithm<T, K>::operator()(
 
         // Update error estimate and previous result
         abs_error = max(
-            abs(result - resla), 
-            abs(EPRN) * abs(result)
+            utils::abs(result - resla), 
+            EPRN * utils::abs(result)
         );
 
         resla = result;
     }
 
     // Check for numerical instability
-    if(!utils::isfinite(result)){
-        throw std::overflow_error("division by zero");
-    }
+    if(!utils::isfinite(result)) throw std::overflow_error("division by zero");
 
     return result;
 

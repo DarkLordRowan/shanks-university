@@ -14,13 +14,17 @@
 #include "series_acceleration.hpp"
 
 #include <vector>
-#include <cmath>
 
 /**
  * @brief Anderson acceleration algorithm class template implementing sequence transformation.
  *
  * @authors
  *   Mkhitaryan A.A., Gerasimov A.I.
+ * @tparam T Floating-point type for series elements (must satisfy Accepted)
+ *           Represents numerical precision (float, double, long double)
+ *           Used for all mathematical computations and storage of series terms
+ * @tparam K Unsigned integral type for indices and order (must satisfy std::unsigned_integral)
+ *           Used for counting terms, indexing operations, and transformation order
  */
 template <AcceptedLike T, UnsignedIntLike K>
 class anderson_acceleration_algorithm final : public series_acceleration<T, K>
@@ -29,6 +33,9 @@ public:
 
     using float_type = GetUnderlyingType<T>::value; //type in case of complex or interval
 
+    /**
+     * @brief Parameterized constructor to initialize the Anderson Acceleration Algorithm.
+    */
     explicit anderson_acceleration_algorithm(
         const K m = ANDERSON_DEFAULT_MAX_ORDER,
         const float_type& beta = utils::cast<float_type>(ANDERSON_DEFAULT_BETA),
@@ -38,21 +45,28 @@ public:
         safeguard_(safeguard)
     { update_beta(beta); }
 
+    /**
+     * @brief Parameterized constructor to initialize the Theta Brezinski Algorithm.
+    */
     T operator() (
         const K n,
         const K order,
         const series_result<T>& data
     ) const override;
 
+    /**
+     * @brief Setter to update beta parameter
+     * @param new_beta new beta parameter, must be real number
+    */
     void update_beta(const float_type& new_beta) {
         beta_ = (new_beta <= utils::cast<float_type>(0.0) || new_beta > utils::cast<float_type>(1.0) ? utils::cast<float_type>(1.0) : new_beta);
     }
 
 private:
 
-    K m_;                    ///< Memory depth for Anderson acceleration
-    float_type beta_;        ///< Mixing parameter for damping
-    float_type safeguard_;   ///< Small value to prevent division by zero
+    K m_;                    /**< Memory depth for Anderson acceleration  */
+    float_type beta_;        /**< Mixing parameter for damping            */
+    float_type safeguard_;   /**< Small value to prevent division by zero */
 
     inline T aitken_case( const K n, const std::vector<T>& Sn ) const;
 
@@ -74,14 +88,13 @@ inline T anderson_acceleration_algorithm<T, K>::aitken_case(
 
     if constexpr (is_precisable<T>::value) utils::set_precision(utils::get_precision(Sn[0]), denominator, accelerated);
 
-    using std::abs;
     using std::max;
 
     denominator = Sn[n] - utils::cast<T>(2.0) * Sn[n - 1] + Sn[n - 2];
 
-    if (abs(denominator) < safeguard_ * max(abs(Sn[n]), max(abs(Sn[n - 1]), abs(Sn[n - 2])))) return Sn[n];  // fallback
+    if (utils::abs(denominator) < safeguard_ * max(utils::abs(Sn[n]), max(utils::abs(Sn[n - 1]), utils::abs(Sn[n - 2])))) return Sn[n];  // fallback
 
-    accelerated = Sn[n] - (Sn[n] - Sn[n - 1]) * (Sn[n] - Sn[n - 1]) / abs(denominator);
+    accelerated = Sn[n] - (Sn[n] - Sn[n - 1]) * (Sn[n] - Sn[n - 1]) / utils::cast<T>(utils::abs(denominator));
     return utils::cast<T>(beta_) * accelerated + utils::cast<T>(utils::cast<float_type>(1.0) - beta_) * Sn[n];
 }
 
@@ -91,7 +104,6 @@ inline T anderson_acceleration_algorithm<T, K>::main_case(
     const std::vector<T>& Sn
 ) const {
 
-    using std::abs;
     using std::max;
 
     const K actual_m = std::min(m_, static_cast<K>(n - 1));
@@ -125,16 +137,15 @@ inline T anderson_acceleration_algorithm<T, K>::main_case(
     
     K idx;
     for(K i = 0; i < actual_m; ++i){
-        f[i] += Sn.at(n - actual_m + 1) - Sn.at(n - actual_m);
+        f[i] += Sn.at(n - actual_m + i + 1) - Sn.at(n - actual_m + i);
         for(K j = 0; j < actual_m; ++j){
             idx = n - actual_m + j;
             delta_S[i][j] += (idx < n ? Sn.at(idx + 1) - Sn.at(idx) : utils::cast<T>(0.0));
         }
     }
     // Normal equations A = ΔSᵀ ΔS
-    
     for (K i = 0; i < actual_m; ++i) {
-        for (K j = 0; j < actual_m; ++j) 
+        for (K j = 0; j < actual_m; ++j)
             for (K k = 0; k < actual_m; ++k) A[i][j] += delta_S[k][i] * delta_S[k][j];
 
         for (K k = 0; k < actual_m; ++k) b[i] += delta_S[k][i] * f[k];
@@ -149,11 +160,11 @@ inline T anderson_acceleration_algorithm<T, K>::main_case(
     for (K i = 0; i < actual_m; ++i) {
 
         pivot = i;
-        max_val = abs(A[i][i]) ;
+        max_val = utils::abs(A[i][i]) ;
 
         for (K j = i + 1; j < actual_m; ++j) 
-            if (abs(A[j][i]) > max_val) {
-                max_val = abs(A[j][i]);
+            if (utils::abs(A[j][i]) > max_val) {
+                max_val = utils::abs(A[j][i]);
                 pivot = j;
             }
     
@@ -168,16 +179,16 @@ inline T anderson_acceleration_algorithm<T, K>::main_case(
         }
 
         for (K j = i + 1; j < actual_m; ++j) {
-            factor += A[j][i] / A[i][i] - factor;
+            factor = A[j][i] / A[i][i];
             for (K k = i; k < actual_m; ++k) A[j][k] -= factor * A[i][k];
             b[j] -= factor * b[i];
         }
     }
 
     for (int i = static_cast<int>(actual_m) - 1; i >= 0; --i) {
-        sum -= sum;
+        sum = utils::cast<T>(0);
         for (K j = static_cast<K>(i) + 1; j < actual_m; ++j) sum += A[i][j] * alpha[j];
-        alpha[i] += (b[i] - sum) / A[i][i] - alpha[i];
+        alpha[i] = (b[i] - sum) / A[i][i];
     }
 
     accelerated = Sn[n];
@@ -211,9 +222,7 @@ T anderson_acceleration_algorithm<T, K>::operator()(
 
     const T result = (actual_m == 1 ? aitken_case(n, data.Sn) : main_case(n, data.Sn));
 
-    if(!utils::isfinite(result)){
-        throw std::overflow_error("division by zero");
-    }
+    if(!utils::isfinite(result)) throw std::overflow_error("division by zero");
     
     return result;
 

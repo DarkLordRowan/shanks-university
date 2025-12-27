@@ -17,7 +17,6 @@
 
 #include "series_acceleration.hpp"
 #include <vector>
-#include <cmath>
 
 /**
  * @brief J-Transformation algorithm class template implementing nonlinear sequence transformation.
@@ -90,8 +89,9 @@ public:
     ) const override;
 
 private:
-    K max_order_;   ///< Maximum order of J-transformation
-    float_type safeguard_;   ///< Small value to prevent division by zero
+
+    K max_order_;            /**< Maximum order of J-transformation       */
+    float_type safeguard_;   /**< Small value to prevent division by zero */
 
     inline T simple_formula(const K n, const series_result<T>& data) const;
     inline T recursive_formula(const K n, const K order, const series_result<T>& data) const;
@@ -100,9 +100,7 @@ private:
 template <AcceptedLike T, UnsignedIntLike K>
 T j_transformation_algorithm<T, K>::simple_formula(const K n, const series_result<T>& data) const {
 
-    using std::abs;
-
-    if (abs(data.an[n + 1] + utils::cast<T>(safeguard_)) < safeguard_) return data.Sn[n];  // Fallback if denominator is too small
+    if (utils::abs(data.an[n + 1] + utils::cast<T>(safeguard_)) < safeguard_) return data.Sn[n];  // Fallback if denominator is too small
 
     return data.Sn[n + 1] - (data.Sn[n + 1] - data.Sn[n]) * (data.Sn[n + 1] - data.Sn[n]) / (data.an[n + 1] + utils::cast<T>(safeguard_));
 
@@ -150,7 +148,7 @@ T j_transformation_algorithm<T, K>::recursive_formula(const K n, const K order, 
             //delta_term += safeguard_ * ((delta_term >= 0) ? 1 : -1);
             //If denominator is too small, use linear interpolation
             
-            if (abs(delta_term) < safeguard_) J_curr[i] = J_prev[i + 1];
+            if (utils::abs(delta_term) < safeguard_) J_curr[i] = J_prev[i + 1];
             else J_curr[i] = J_prev[i + 1] + delta_S * delta_S / delta_term;
         }
 
@@ -196,9 +194,7 @@ T j_transformation_algorithm<T, K>::operator()(
 
     const T result = (order == 1 ? simple_formula(n, data) : recursive_formula(n, order, data));
 
-    if(!utils::isfinite(result)){
-        throw std::overflow_error("division by zero");
-    }
+    if(!utils::isfinite(result)) throw std::overflow_error("division by zero");
     
     return result;
 }

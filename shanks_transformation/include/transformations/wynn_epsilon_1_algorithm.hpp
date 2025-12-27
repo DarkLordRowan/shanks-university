@@ -36,9 +36,6 @@
  *           Represents numerical precision (float, double, long double)
  * @tparam K Unsigned integral type for indices and order (must satisfy std::unsigned_integral)
  *           Used for counting and indexing operations (e.g., size_t, unsigned int)
- * @tparam series_templ Type of series object to accelerate. Must provide:
- *           - T operator()(K n) const: returns the n-th series term a_n
- *           - T S_n(K n) const: returns the n-th partial sum s_n = a_0 + ... + a_n
  */
 template <AcceptedLike T, UnsignedIntLike K>
 class wynn_epsilon_1_algorithm final : public series_acceleration<T, K>
@@ -47,9 +44,6 @@ public:
 
 	/**
 	 * @brief Parameterized constructor to initialize the Wynn Epsilon Algorithm.
-	 * @param series The series class object to be accelerated.
-	 *        Must be a valid object implementing the required series interface.
-	 *        The series should represent a slowly convergent sequence for effective acceleration.
 	 */
 	explicit wynn_epsilon_1_algorithm() : series_acceleration<T, K>("wynn epsilon 1") {};
 
@@ -109,12 +103,10 @@ T wynn_epsilon_1_algorithm<T, K>::operator()(
 	std::vector<T> e0(max_ind + static_cast<K>(1), utils::cast<T>(0));
 	std::vector<T> e1(max_ind					 , utils::cast<T>(0));
 
-
     if constexpr (is_precisable<T>::value){
         utils::set_vec_precision(e0, utils::get_precision(data.Sn[0]));
         utils::set_vec_precision(e1, utils::get_precision(data.Sn[0]));
     }
-
 
 	auto e0_add = &e0; // Pointer to current epsilon column
 	auto e1_add = &e1; // Pointer to next epsilon column
@@ -122,9 +114,7 @@ T wynn_epsilon_1_algorithm<T, K>::operator()(
 	// Initialize first column with partial sums: ε₀⁽ʲ⁾ = S_j
 	// For theory, see: Wynn (1956), Eq. (2) - Initial conditions
 	K j = max_ind;
-	do {
-		e0[j] += data.Sn.at(j);
-	} while (--j > static_cast<K>(0));
+	do { e0[j] += data.Sn.at(j); } while (--j > static_cast<K>(0));
 
 	// Apply epsilon algorithm recurrence
 	// For theory, see: Wynn (1956), Eq. (4) - Main recurrence relation
@@ -143,9 +133,7 @@ T wynn_epsilon_1_algorithm<T, K>::operator()(
 
 	// Check for numerical stability
 	// For theory, see: Wynn (1956), Section 4 - Numerical considerations
-	if(!utils::isfinite((*e0_add)[n1])){
-        throw std::overflow_error("division by zero");
-    }
+	if(!utils::isfinite((*e0_add)[n1])) throw std::overflow_error("division by zero");
 
 	// Return the final transformed value (even-order epsilon transform)
 	// For theory, see: Wynn (1956), Section 2 - ε₂ₖ⁽ⁿ⁾ as accelerated approximations

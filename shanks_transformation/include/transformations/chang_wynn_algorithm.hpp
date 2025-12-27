@@ -31,19 +31,14 @@
  *   Construction of new generalizations of Wynn's epsilon and rho algorithm by solving
  *   finite difference equations in the transformation order. Numerical Algorithms.
  *
- * @tparam T Floating-point type for series elements (must satisfy Accepted)
- *           Represents numerical precision (float, double, long double)
+ * @tparam T AcceptedLike type for series elements (must satisfy Accepted)
+ *           Represents numerical precision (float, double, long double, std::complex<float>, std::complex<double>, ...)
  *           Purpose: To handle the numerical computations with desired precision.
- *           Valid values: Any standard floating-point type (float, double, long double).
+ *           Valid values: Any standard floating-point type (float, double, long double), any std::complex with floating-point type.
  * @tparam K Unsigned integral type for indices and order (must satisfy std::unsigned_integral)
  *           Used for counting and indexing operations.
  *           Purpose: To represent non-negative indices and transformation orders.
  *           Valid values: Any standard unsigned integral type (unsigned int, unsigned long, etc.).
- * @tparam series_templ Type of series object to accelerate. Must provide:
- *           - T operator()(K n) const: returns the n-th series term aₙ
- *           - T S_n(K n) const: returns the n-th partial sum sₙ = a₀ + ... + aₙ
- *           Purpose: To abstract the series representation, allowing flexibility (e.g., user-defined series).
- *           Valid values: Any type meeting the above requirements.
  */
 template <AcceptedLike T, UnsignedIntLike K>
 class chang_wynn_algorithm final : public series_acceleration<T, K>
@@ -51,11 +46,8 @@ class chang_wynn_algorithm final : public series_acceleration<T, K>
 public:
 
     /**
-     * @brief Parameterized constructor to initialize the chang_wynn_algorithm.
-     * @param series The series class object to be accelerated.
-     *        Must be a valid object implementing the required series interface.
-     *        Purpose: To provide the series data for acceleration.
-     */
+     * @brief Parameterized constructor to initialize the Chang-Wynn Algorithm.
+    */
     explicit chang_wynn_algorithm() : series_acceleration<T, K>("chang wynn") {}
 
     /**
@@ -205,9 +197,7 @@ T chang_wynn_algorithm<T, K>::operator()(const K n, const K /*order*/, const ser
         std::swap(e[0], e[1]); // Swap rows for the next iteration.
     }
 
-    if(!utils::isfinite(e[max & static_cast<K>(1)][0])){
-        throw std::overflow_error("division by zero");
-    }
+    if(!utils::isfinite(e[max & static_cast<K>(1)][0])) throw std::overflow_error("division by zero");
 
     return e[max & static_cast<K>(1)][0]; // Return the transformed value.
 }

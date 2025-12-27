@@ -37,9 +37,6 @@
  *           Used for all mathematical computations and storage of series terms
  * @tparam K Unsigned integral type for indices and order (must satisfy std::unsigned_integral)
  *           Used for counting terms, indexing operations, and transformation order
- * @tparam series_templ Type of series object to accelerate. Must provide:
- *           - T operator()(K n) const: returns the n-th series term a_n
- *           - T S_n(K n) const: returns the n-th partial sum s_n = a_0 + ... + a_n
  */
 template <AcceptedLike T, UnsignedIntLike K>
 class brezinski_theta_algorithm final : public series_acceleration<T, K>
@@ -48,14 +45,7 @@ public:
 
     /**
      * @brief Parameterized constructor to initialize the Theta Brezinski Algorithm.
-     *
-     * Initializes the algorithm with the provided series object. The series must
-     * implement the required interface for term access and partial sum computation.
-     *
-     * @param series The series class object to be accelerated
-     *        Must be a valid object implementing the required series interface
-     *        The series object is stored by reference for efficient access
-     */
+    */
     explicit brezinski_theta_algorithm() : series_acceleration<T, K>("brezinski theta algorithm") {}
 
     /**
@@ -164,9 +154,8 @@ T brezinski_theta_algorithm<T, K>::operator()(
         }
     }
     
-    if(!utils::isfinite(theta_even[0])){
-        throw std::overflow_error("division by zero");
-    }
+    if(!utils::isfinite(theta_even[0])) throw std::overflow_error("division by zero");
+    
 
     return theta_even[0];
 }

@@ -5,10 +5,14 @@
 #include <vector>
 #include <string>
 
+/**
+// * @brief Structure for more convenient passing and receiving data between algos and series
+// * @tparam T AcceptedLike Type
+*/
 template<AcceptedLike T>
 struct series_result{
-	std::vector<T> Sn;
-	std::vector<T> an;
+	std::vector<T> Sn; /**< vector of partial sums S_{n} of type T*/
+	std::vector<T> an; /**< vector of a_{n} = S_{n} - S_{n-1} */
 };
 
 template <typename T>

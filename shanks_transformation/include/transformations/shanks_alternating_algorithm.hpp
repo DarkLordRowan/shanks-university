@@ -12,10 +12,6 @@
  *           Used for all arithmetic operations and intermediate calculations
  * @tparam K Unsigned integral type for indices and order (must satisfy std::unsigned_integral)
  *           Used for counting terms, indexing operations, and transformation order
- * @tparam series_templ Type of series object to accelerate. Must provide:
- *           - T operator()(K n) const: returns the n-th series term a_n
- *           - T S_n(K n) const: returns the n-th partial sum s_n = a_0 + ... + a_n
- *           Series terms should alternate in sign for optimal performance
  */
 template <AcceptedLike T, UnsignedIntLike K>
 class shanks_transform_alternating : public series_acceleration<T, K>
@@ -25,10 +21,7 @@ public:
 	/**
 	 * @brief Parameterized constructor to initialize the Shanks transformation for alternating series.
 	 * @authors Bolshakov M.P.
-	 * @param series The series class object to be accelerated
-	 *        Must be a valid object implementing the required series interface
-	 *        Series terms should alternate in sign for optimal performance
-	 */
+	*/
 	explicit shanks_transform_alternating() : series_acceleration<T, K>("shanks alternating") {};
 
 	/**
@@ -64,9 +57,7 @@ T shanks_transform_alternating<T, K>::operator()(
         "the size of Sn and an must be at least " + utils::to_string(required_size));
 	}
 
-    if (order == static_cast<K>(0)) {
-        return data.Sn.at(n);
-    }
+    if (order == static_cast<K>(0)) return data.Sn.at(n);
 
 	if (order == static_cast<K>(1)) [[unlikely]]
 	{
@@ -81,10 +72,8 @@ T shanks_transform_alternating<T, K>::operator()(
 			data.Sn.at(n)
 		);
 
-		if(!utils::isfinite(result)){
-        	throw std::overflow_error("division by zero");
-    	}
-
+		if(!utils::isfinite(result)) throw std::overflow_error("division by zero");
+    	
 		return result;
 	}
 	//n > order >= 1
@@ -137,9 +126,7 @@ T shanks_transform_alternating<T, K>::operator()(
 		T_n = T_n_plus_1;
 	}
 
-	if(!utils::isfinite(T_n[n])){
-        throw std::overflow_error("division by zero");
-    }
+	if(!utils::isfinite(T_n[n])) throw std::overflow_error("division by zero");
 
 	return T_n[n];
 

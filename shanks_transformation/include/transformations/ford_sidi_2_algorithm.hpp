@@ -35,10 +35,6 @@
  * @tparam K Unsigned integral type for indices and order (must satisfy std::unsigned_integral)
  *           Used for counting terms, indexing operations, and loop control.
  *           Valid values: K >= 0, typically size_t or unsigned int.
- * @tparam series_templ Type of series object to accelerate. Must provide:
- *           - T operator()(K n) const: returns the n-th series term a_n
- *           - T S_n(K n) const: returns the n-th partial sum s_n = a_0 + ... + a_n
- *           The series object encapsulates the mathematical sequence to be accelerated.
  */
 template <AcceptedLike T, UnsignedIntLike K>
 class ford_sidi_2_algorithm final : public series_acceleration<T, K>
@@ -47,9 +43,6 @@ public:
 
 	/**
 	 * @brief Parameterized constructor to initialize the Ford-Sidi V-2 Algorithm.
-	 * @param series The series class object to be accelerated.
-	 *        Must be a valid object implementing the required series interface.
-	 *        The series object should provide access to terms and partial sums.
 	 */
 	explicit ford_sidi_2_algorithm() : series_acceleration<T, K>("ford sidi 2") {}
 
@@ -132,9 +125,8 @@ T ford_sidi_2_algorithm<T, K>::operator()(
 
 	// For theory, see: Ford & Sidi (1987), Section 3 - Numerical stability check
 	// Ensures the result is a finite floating-point value
-	if(!utils::isfinite(T_n)){
-        throw std::overflow_error("division by zero");
-    }
+	if(!utils::isfinite(T_n)) throw std::overflow_error("division by zero");
+    
 	
 	return T_n;
 }

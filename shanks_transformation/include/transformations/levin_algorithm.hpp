@@ -38,11 +38,6 @@
   *           Represents numerical precision (float, double, long double)
   * @tparam K Unsigned integral type for indices and order (must satisfy std::unsigned_integral)
   *           Used for counting and indexing operations
-  * @tparam series_templ Type of series object to accelerate. Must provide:
-  *           - T operator()(K n) const: returns the n-th series term a_n
-  *           - T S_n(K n) const: returns the n-th partial sum s_n = a_0 + ... + a_n
-  *           - T utils::minus_one_raised_to_power_n(K j) const: returns (-1)^j
-  *           - T binomial_coefficient(T n, K k) const: returns binomial coefficient C(n, k)
   */
 template <AcceptedLike T, UnsignedIntLike K>
 class levin_algorithm final : public series_acceleration<T, K>
@@ -51,10 +46,10 @@ protected:
 
 	using float_type = GetUnderlyingType<T>::value; //type in case of complex or interval
 
-	float_type beta_in_use = utils::cast<float_type>(1.0);			///< Parameter for u-variant transformation (β > 0). Default value is 1.0.
-    std::unique_ptr<const transform_base<T, K>> remainder;			//< Pointer to remainder transformation object
-    bool use_recurrent_formula = false;								//< Flag to use recurrence formulas (true) or direct formulas (false)
-    remainder_type remainder_type_in_use = remainder_type::u_type;	//< Type of Levin transformation variant (u, t, v, t~, v~)
+	float_type beta_in_use = utils::cast<float_type>(1.0);         /**< Parameter for u-variant transformation (β > 0). Default value is 1.0. */
+    std::unique_ptr<const transform_base<T, K>> remainder;			/**< Pointer to remainder transformation object 						   */
+    bool use_recurrent_formula = false;								/**< Flag to use recurrence formulas (true) or direct formulas (false) 	   */
+    remainder_type remainder_type_in_use = remainder_type::u_type;	/**< Type of Levin transformation variant (u, t, v, t~, v~) 			   */
 
 	/**
 	 * @brief Computes the Levin transformation using direct summation formulas.
@@ -139,10 +134,18 @@ public:
         const series_result<T>& data
 	) const override;
 
+	/**
+	 * @brief Setter to update beta parameter
+	 * @param new_beta new beta parameter, must be real number
+	 */
 	void update_beta(const float_type& new_beta){
 		beta_in_use = (new_beta > utils::cast<float_type>(0.0) ? new_beta : utils::cast<float_type>(1.0));
 	}
 
+	/**
+	 * @brief Setter to change numerator type
+	 * @param remainder_type_to_use enumerator of a new remainder to use
+	 */
 	void update_type(const remainder_type remainder_type_to_use){
 
 		remainder_type_in_use = remainder_type_to_use;
@@ -160,6 +163,10 @@ public:
 		}
 	}
 
+	/**
+	 * @brief Get the name of currently used variant of algorithm
+	 * @return std::string 
+	 */
 	std::string get_name() override {
 
 		series_acceleration<T, K>::acceleration_name = (use_recurrent_formula ? "recurrent " : "");
@@ -186,8 +193,7 @@ levin_algorithm<T, K>::levin_algorithm(
 ) :
 	series_acceleration<T, K>(),
 	use_recurrent_formula(use_recurrent_formula)
-{//TODO: нужно ли проверять бету на допустимость?
-
+{
 	update_beta(beta_to_use);
 	// Initialize the appropriate remainder transformation based on variant
     update_type(remainder_type_to_use);
@@ -313,15 +319,11 @@ T levin_algorithm<T, K>::operator()(
         "the size of Sn and an must be at least " + utils::to_string(required_size));
 	}
 
-    if (order == static_cast<K>(0)) {
-        return data.Sn.at(n);
-    }
+    if (order == static_cast<K>(0)) return data.Sn.at(n);
 
     const T result = (use_recurrent_formula ? calc_result_rec(n,order, data) : calc_result(n, order, data));
 
-	if(!utils::isfinite(result)){
-        throw std::overflow_error("division by zero");
-    }
+	if(!utils::isfinite(result)) throw std::overflow_error("division by zero");
 
     return result;
 }

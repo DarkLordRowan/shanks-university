@@ -37,20 +37,17 @@
   * @tparam K Unsigned integral type for indices and order (must satisfy std::unsigned_integral)
   *           Used for counting terms, indexing operations, and order specification
   *           Valid values: K >= 0, typically size_t or unsigned int
-  * @tparam series_templ Type of series object to accelerate. Must provide:
-  *           - T operator()(K n) const: returns the n-th series term a_n
-  *           - T S_n(K n) const: returns the n-th partial sum s_n = a_0 + ... + a_n
   */
 template <AcceptedLike T, UnsignedIntLike K>
 class wynn_rho_algorithm final : public series_acceleration<T, K>
 {
 protected:
 
-	using float_type = GetUnderlyingType<T>::value; //type in case of complex or interval
+	using float_type = GetUnderlyingType<T>::value; //type in case of complex or interval, represents type for real numbers
 
 	std::unique_ptr<const numerator_base<T, K>> numerator;			  /**< Numerator computation strategy */
-	float_type gamma_in_use;													  /**< Gamma parameter for generalized rho transformation */
-	float_type rho_in_use;													  /**< Rho parameter for gamma-rho variant */
+	float_type gamma_in_use;										  /**< Gamma parameter for generalized rho transformation */
+	float_type rho_in_use;											  /**< Rho parameter for gamma-rho variant */
 	numerator_type numerator_type_in_use = numerator_type::rho_type;  /**< numerator type in use needed for calculating required size */
 
 
@@ -86,7 +83,7 @@ public:
 		update_numerator(numerator_type_to_use);
 	};
 
-	//Default destructor is sufficient since unique_ptr handles deletion
+	~wynn_rho_algorithm() = default; //Default destructor is sufficient since unique_ptr handles deletion
 
 	/**
 	 * @brief Wynn's rho algorithm transformation.
@@ -114,18 +111,30 @@ public:
         const series_result<T>& data
 	) const override;
 
-	
+	/**
+	 * @brief Setter to update gamma parameter
+	 * @param new_gamma new gamma parameter, must be real number
+	*/
 	void update_gamma(const float_type& new_gamma) { gamma_in_use = new_gamma;}
+
+	/**
+	 * @brief Setter to update rho parameter
+	 * @param new_rho new rho parameter, must be real number
+	*/
 	void update_rho(const float_type& new_rho) {rho_in_use = new_rho; }
 
+	/**
+	 * @brief Setter to change numerator type
+	 * @param numerator_type_to_use enumerator of a new numerator to use
+	*/
 	void update_numerator(const numerator_type numerator_type_to_use){
 
 		numerator_type_in_use = numerator_type_to_use;
 
 		switch(numerator_type_to_use){
-        	case numerator_type::rho_type 			: { numerator.reset(new rho_transform<T, K>()	   ); break; }
-        	case numerator_type::generalized_type 	: { numerator.reset(new generilized_transform<T, K>()	   ); break; }
-        	case numerator_type::gamma_rho_type 	: { numerator.reset(new gamma_rho_transform<T, K>()	   ); break; }
+        	case numerator_type::rho_type 			: { numerator.reset(new rho_transform<T, K>()	    ); break; }
+        	case numerator_type::generalized_type 	: { numerator.reset(new generilized_transform<T, K>()); break; }
+        	case numerator_type::gamma_rho_type 	: { numerator.reset(new gamma_rho_transform<T, K>()	); break; }
         	default:{
 				numerator_type_in_use = numerator_type::rho_type;
         	    numerator.reset(new rho_transform<T, K>()); // Default to u-variant
@@ -133,9 +142,11 @@ public:
 		}
 	}
 
+	/**
+	 * @brief Get the name of currently used algorithm
+	 * @return std::string 
+	*/
 	std::string get_name() override {
-
-		
 
 		series_acceleration<T, K>::acceleration_name = "wynn rho algorithm ";
 		switch(numerator_type_in_use){
@@ -166,11 +177,7 @@ inline T wynn_rho_algorithm<T, K>::operator()(
 	}
     // For theory, see: Brezinski (1977), Chapter 4, Eq. (4.10)
     // Base cases: return partial sum for n=0 or order=0
-    if (order == static_cast<K>(0)){
-    	return data.Sn.at(n);
-	}
-
-	
+    if (order == static_cast<K>(0))return data.Sn.at(n);
 
 	const K base_size = order + static_cast<K>(1);
 
@@ -180,7 +187,7 @@ inline T wynn_rho_algorithm<T, K>::operator()(
 	T delta; //temporary varaible
 	delta = utils::cast<T>(0.0);
 
-
+	//setting precision in case the type is able to have one
 	if constexpr (is_precisable<T>::value){
 		const size_t precision = std::max(utils::get_precision(data.Sn[0]), utils::get_precision(data.an[0]));
 		utils::set_vec_precision<T>(rho_odd, precision);
@@ -194,7 +201,6 @@ inline T wynn_rho_algorithm<T, K>::operator()(
 
     K j1, j2;
    
-
     for(K level = static_cast<K>(1); level <= order / static_cast<K>(2); ++level){
 
 		// transform odd vector
@@ -234,9 +240,7 @@ inline T wynn_rho_algorithm<T, K>::operator()(
 
     }
 
-    if(!utils::isfinite(rho_even[0])){
-        throw std::overflow_error("division by zero");
-    }
+    if(!utils::isfinite(rho_even[0])) throw std::overflow_error("division by zero");
 
     return rho_even[0];
 }

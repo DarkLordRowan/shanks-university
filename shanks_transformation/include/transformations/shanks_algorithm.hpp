@@ -53,9 +53,6 @@ template<> struct NumTraits<mpfr::mpreal>
  *           Used for all arithmetic operations and intermediate calculations
  * @tparam K Unsigned integral type for indices and order (must satisfy std::unsigned_integral)
  *           Used for counting terms, indexing operations, and transformation order
- * @tparam series_templ Type of series object to accelerate. Must provide:
- *           - T operator()(K n) const: returns the n-th series term a_n
- *           - T S_n(K n) const: returns the n-th partial sum s_n = a_0 + ... + a_n
  */
 template <AcceptedLike T, UnsignedIntLike K>
 class shanks_algorithm final : public series_acceleration<T, K>
@@ -64,16 +61,11 @@ public:
 
 	/**
 	 * @brief Parameterized constructor to initialize the Shanks transformation for non-alternating series.
-	 * @authors Bolshakov M.P.
-	 * @param series The series class object to be accelerated
-	 *        Must be a valid object implementing the required series interface
-	 *        Series terms should be non-alternating for optimal performance
-	 */
+	*/
 	explicit shanks_algorithm() : series_acceleration<T, K>("shanks original") {};
 
 	/**
 	 * @brief Shanks transformation for non-alternating series function.
-	 * @authors Bolshakov M.P., Pashkov B.B.
 	 * @param n The number of terms in the partial sum to use for transformation
 	 *        Valid values: n >= order > 0, n > 0
 	 *        Higher values use more terms but may provide better acceleration
@@ -137,9 +129,7 @@ T shanks_algorithm<T, K>::operator()(
 
 	const T result = upper_determinant / lower_determinant;
 
-	if (!utils::isfinite(result)){
-		throw std::overflow_error("division by zero");
-	}
+	if (!utils::isfinite(result)) throw std::overflow_error("division by zero");
 
 	return result;
 	

@@ -37,11 +37,6 @@
   *           Represents numerical precision (float, double, long double)
   * @tparam K Unsigned integral type for indices and order (must satisfy std::unsigned_integral)
   *           Used for counting and indexing operations
-  * @tparam series_templ Type of series object to accelerate. Must provide:
-  *           - T operator()(K n) const: returns the n-th series term a_n
-  *           - T S_n(K n) const: returns the n-th partial sum s_n = a_0 + ... + a_n
-  *           - T utils::minus_one_raised_to_power_n(K j) const: returns (-1)^j
-  *           - T binomial_coefficient(T n, K k) const: returns binomial coefficient C(n, k)
   */
 template<AcceptedLike T, UnsignedIntLike K>
 class levin_sidi_m_algorithm final : public series_acceleration<T, K>
@@ -59,8 +54,6 @@ public:
 	/**
 	 * @brief Parameterized constructor to initialize the Levin-Sidi M-transformation.
 	 *
-	 * @param series The series class object to be accelerated
-	 *        Must be a valid object implementing the required series interface
 	 * @param variant Type of remainder transformation to use
 	 *        Valid values: u_type, t_type, v_type, t_wave_type, v_wave_type
 	 *        Determines the remainder estimate R_n used in the transformation
@@ -73,7 +66,7 @@ public:
 		const float_type& gamma_to_use = utils::cast<float_type>(DEFAULT_GAMMA)
 	) : series_acceleration<T, K>() { update_gamma(gamma_to_use); update_type(remainder_type_to_use); }
 
-	// Default destructor is sufficient since unique_ptr handles deletion
+	~levin_sidi_m_algorithm() = default; // Default destructor is sufficient since unique_ptr handles deletion
 
 	/**
 	 * @brief Implementation of Levin-Sidi M-transformation for series acceleration.
@@ -101,12 +94,23 @@ public:
         const series_result<T>& data
 	) const override;
 
+	/**
+	 * @brief Setter to change numerator type
+	 * @param remainder_type_to_use enumerator of a new remainder to use
+	 */
 	void update_type(const remainder_type remainder_type_to_use);
+
+	/**
+	 * @brief Setter to update beta parameter
+	 * @param new_gamma new gamma parameter, must be real number
+	 */
 	void update_gamma(const float_type& new_gamma) { gamma_in_use = new_gamma; }
 
+	/**
+	 * @brief Get the name of currently used variant of algorithm
+	 * @return std::string 
+	 */
 	std::string get_name() override {
-
-		
 
 		series_acceleration<T, K>::acceleration_name = "levin sidi m algorithm ";
 		switch(remainder_type_in_use){
@@ -161,9 +165,8 @@ T levin_sidi_m_algorithm<T, K>::operator()(
         "the size of Sn and an must be at least " + utils::to_string(required_size));
 	}
 
-    if (order == static_cast<K>(0)) {
-        return data.Sn.at(n);
-    }
+    if (order == static_cast<K>(0)) return data.Sn.at(n);
+    
 
 	//TODO разобраться с документом (pdf) n/order
     // Validate parameter constraint: gamma >= n - 1
@@ -185,8 +188,6 @@ T levin_sidi_m_algorithm<T, K>::operator()(
 	// Precompute initial Pochhammer symbol terms
 	// For theory, see: Sidi (2003, arXiv:math/0306302), Eq. (9.4)
 	// Compute: (γ+k+2)_{n-1}/(γ+k+1)_{n} = Γ(γ+k+n+1)/Γ(γ+k+2) × Γ(γ+k+1)/Γ(γ+k+n+1)
-	
-
 	down_coef += gamma_in_use + utils::cast<float_type>((order + static_cast<K>(2)));
 	up_coef   += down_coef - utils::cast<float_type>(n);
 
@@ -233,9 +234,7 @@ T levin_sidi_m_algorithm<T, K>::operator()(
 
 	numerator /= denominator;
 
-	if(!utils::isfinite(numerator)){
-        throw std::overflow_error("division by zero");
-    }
+	if(!utils::isfinite(numerator)) throw std::overflow_error("division by zero");
 
 	return numerator;
 }

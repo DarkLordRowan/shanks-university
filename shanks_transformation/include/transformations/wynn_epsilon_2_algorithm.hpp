@@ -31,9 +31,6 @@
   *           Represents numerical precision (float, double, long double)
   * @tparam K Unsigned integral type for indices and order (must satisfy std::unsigned_integral)
   *           Used for counting and indexing operations (typically std::size_t)
-  * @tparam series_templ Type of series object to accelerate. Must provide:
-  *           - T operator()(K n) const: returns the n-th series term aₙ
-  *           - T S_n(K n) const: returns the n-th partial sum sₙ = a₀ + ... + aₙ
   *
   * Mathematical Formulation:
   * Initial conditions: ε₋₁⁽ᵐ⁾ = 0, ε₀⁽ᵐ⁾ = Sₙ for m = 0,1,2,...
@@ -51,9 +48,6 @@ public:
 
 	/**
 	 * @brief Parameterized constructor to initialize the Epsilon Algorithm.
-	 * @param series The series class object to be accelerated.
-	 *        Must be a valid object implementing the required series interface.
-	 *        The series should provide term access and partial sum calculation.
 	 */
     explicit wynn_epsilon_2_algorithm() : series_acceleration<T, K>("wynn epsilon 2") {};
 
@@ -169,8 +163,7 @@ T wynn_epsilon_2_algorithm<T, K>::operator()(
 			stable = utils::isfinite(eps[0][i]);
 
 			// Fallback to previous value if correction fails
-			if (!stable)
-				eps[0][i] = eps[2][i];
+			if (!stable) eps[0][i] = eps[2][i];
 
 		}
 
@@ -190,10 +183,7 @@ T wynn_epsilon_2_algorithm<T, K>::operator()(
 
 	// For theory, see: Wynn (1956), Section 3 - Result extraction
 	// Even columns (ε₂ₖ⁽ᵐ⁾) contain the accelerated approximations
-	
-
-	if (n % static_cast<K>(2) != static_cast<K>(0))
-		return eps[3][0];
+	if (n % static_cast<K>(2) != static_cast<K>(0)) return eps[3][0];
 
 	return eps[0][0];
 }

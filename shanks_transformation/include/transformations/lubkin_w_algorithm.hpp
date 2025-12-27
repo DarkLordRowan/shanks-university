@@ -37,10 +37,6 @@
  * @tparam K Unsigned integral type for indices and order (must satisfy std::unsigned_integral)
  *           Used for counting and indexing operations
  *           Typically size_t or unsigned int, must be non-negative
- * @tparam series_templ Type of series object to accelerate. Must provide:
- *           - T operator()(K n) const: returns the n-th series term a_n
- *           - T S_n(K n) const: returns the n-th partial sum s_n = a_0 + ... + a_n
- *           Represents the mathematical series to be accelerated
  */
 template<AcceptedLike T, UnsignedIntLike K>
 class lubkin_w_algorithm final : public series_acceleration<T, K>
@@ -49,9 +45,7 @@ public:
 
 	/**
 	 * @brief Parameterized constructor to initialize the Lubkin W-transformation.
-	 * @param series The series class object to be accelerated
-	 *        Must be a valid object implementing the required series interface
-	 */
+	*/
 	explicit lubkin_w_algorithm() : series_acceleration<T, K>("lubkin W transformation") {}
 
 	/**
@@ -158,9 +152,7 @@ T lubkin_w_algorithm<T, K>::operator()(
 	}
 
 	// Numerical stability check
-	if(!utils::isfinite(W[0])){
-        throw std::overflow_error("division by zero");
-    }
+	if(!utils::isfinite(W[0])) throw std::overflow_error("division by zero");
 
 	return W[0];
 }

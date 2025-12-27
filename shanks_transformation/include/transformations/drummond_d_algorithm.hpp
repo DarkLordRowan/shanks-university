@@ -34,20 +34,15 @@
   * @tparam K Unsigned integral type for indices and order (must satisfy std::unsigned_integral)
   *           Used for counting terms, indexing operations, and order specification
   *           Valid values: K >= 0, typically size_t or unsigned int
-  * @tparam series_templ Type of series object to accelerate. Must provide:
-  *           - T operator()(K n) const: returns the n-th series term a_n
-  *           - T S_n(K n) const: returns the n-th partial sum s_n = a_0 + ... + a_n
-  *           - T utils::minus_one_raised_to_power_n(K n) const: returns (-1)^n
-  *           - T binomial_coefficient(T n, K k) const: returns binomial coefficient C(n, k)
   */
 template<AcceptedLike T, UnsignedIntLike K>
 class drummond_d_algorithm final : public series_acceleration<T, K>
 {
 protected:
 
-    std::unique_ptr<const transform_base<T, K>> remainder;  /**< Remainder estimator object */
-    bool use_recurrent_formula = false;							/**< Flag indicating whether to use recurrence formulas */
-    remainder_type remainder_type_in_use = remainder_type::u_type;		/**< Type of remainder variant to use */
+    std::unique_ptr<const transform_base<T, K>> remainder;  		/**< Unique pointer to remainder estimator */
+    bool use_recurrent_formula = false;								/**< Flag indicating whether to use recurrence formulas */
+    remainder_type remainder_type_in_use = remainder_type::u_type;	/**< Type of remainder variant to use */
 
 	/**
 	 * @brief Calculates D-transformation directly using the explicit formula.remainderType
@@ -94,9 +89,7 @@ public:
 
 	/**
 	 * @brief Parameterized constructor to initialize Drummond's D-algorithm.
-	 *
-	 * @param series The series object to be accelerated
-	 *        Must be a valid object implementing the required series interface
+	 
 	 * @param variant Type of remainder estimator to use
 	 *        Determines the specific variant of Drummond's transformation:
 	 *        - u_type: Standard remainder estimator
@@ -111,7 +104,7 @@ public:
 	explicit drummond_d_algorithm(
 		const remainder_type remainder_type_to_use = remainder_type::u_type,
 		const bool use_recurrent_formula = false
-	) : series_acceleration<T, K>(), use_recurrent_formula(use_recurrent_formula) { updateType(remainder_type_to_use); };
+	) : series_acceleration<T, K>(), use_recurrent_formula(use_recurrent_formula) { update_type(remainder_type_to_use); };
 
 	/**
 	 * @brief Applies Drummond's D-transformation to accelerate series convergence.
@@ -138,11 +131,10 @@ public:
 	) const override;
 
 	/**
-	 * @brief 
-	 * 
-	 * @param remainder_type_to_use 
+	 * @brief Setter to change numerator type
+	 * @param remainder_type_to_use enumerator of a new remainder type
 	 */
-	void updateType(const remainder_type remainder_type_to_use){
+	void update_type(const remainder_type remainder_type_to_use){
 
 		remainder_type_in_use = remainder_type_to_use;
 
@@ -161,6 +153,10 @@ public:
     	}
 	}
 
+	/**
+	 * @brief Get the name of currently used variant of algorithm
+	 * @return std::string 
+	 */
 	std::string get_name() override{
 
 		series_acceleration<T, K>::acceleration_name = (use_recurrent_formula ? "recurrent " : "");
@@ -272,9 +268,7 @@ T drummond_d_algorithm<T,K>::operator()(
 
     const T result = (use_recurrent_formula ? calc_result_rec(n,order, data) : calc_result(n,order, data));
 
-	if(!utils::isfinite(result)){
-        throw std::overflow_error("division by zero");
-    }
+	if(!utils::isfinite(result)) throw std::overflow_error("division by zero");
 	
     return result;
 }

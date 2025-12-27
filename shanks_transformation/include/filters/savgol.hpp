@@ -1,10 +1,24 @@
+#ifndef SAVGOL_HPP
+#define SAVGOL_HPP
+#pragma once
+
 #include <eigen3/Eigen/Core>
 #include <eigen3/Eigen/Dense>
 #include <stdexcept>
 #include "../custom_concepts.hpp"
 #include "../utils.hpp"
 
-//the code is taken from https://izadori.net/en/math-savitzky-golay-en/
+
+namespace shanks{
+namespace filters{
+
+/**
+// * @file savgol.hpp
+// * @brief Savitzky-Golay filter implementation.
+// * Code for calculating coefficients is taken from https://izadori.net/en/math-savitzky-golay-en/
+// * the code implementation gives similar values as scipy.savgol_filter with mode = constant and deriv = 0.
+// * main theory is given on wiki page https://en.wikipedia.org/wiki/Savitzky–Golay_filter
+*/
 template<AcceptedLike Scalar>
 std::vector<Scalar> savgol_filter(
     const std::vector<Scalar>& data, 
@@ -27,13 +41,12 @@ std::vector<Scalar> savgol_filter(
 
     Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic> coeff_mat = (x.transpose() * x).inverse() * x.transpose();
 
-    const Scalar derive_coeff = utils::cast<Scalar>(utils::fact(derive))*utils::pow(delta, utils::cast<Scalar>(derive));
+    Eigen::RowVector<Scalar, Eigen::Dynamic> coeffs = utils::cast<Scalar>(utils::fact(derive)) * coeff_mat.row(derive) / utils::pow(delta, utils::cast<Scalar>(derive));
 
-    Eigen::RowVector<Scalar, Eigen::Dynamic> coeffs = derive_coeff * coeff_mat.row(derive);
-
+    //convolution with padding: adding 0 at the start, rest 0 on the end
     std::vector<Scalar> padded_vector(data.size() + (window_length - 1) * 2, Scalar(0.0));
     std::vector<Scalar> result(data.size(), Scalar(0.0));
-    std::copy(data.begin(), data.end(), padded_vector.begin() + window_length);
+    std::copy(data.begin(), data.end(), padded_vector.begin()+1);
 
     for (size_t i{0}; i < result.size(); ++i)
         for(size_t j{0}; j < window_length; ++j)
@@ -41,3 +54,8 @@ std::vector<Scalar> savgol_filter(
 
     return result;
 }
+
+} //namespace shanks::filters
+} //namespace shanks
+
+#endif

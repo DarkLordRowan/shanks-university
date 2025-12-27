@@ -42,13 +42,6 @@
  *           - Valid values: Any std::unsigned_integral type (unsigned int, unsigned long, size_t)
  *           - Constraints: Must satisfy std::unsigned_integral concept
  *           - Example usage: Number of terms, transformation order, array indices
- *
- * @tparam series_templ Type of series object to accelerate
- *           - Purpose: Encapsulates the mathematical series to be transformed
- *           - Valid values: Any type providing the required interface
- *           - Required interface:
- *               - T S_n(K n) const: returns the n-th partial sum sₙ = a₀ + ... + aₙ
- *           - Example usage: Convergent series with known partial sums
  */
 template <AcceptedLike T, UnsignedIntLike K>
 class richardson_algorithm final : public series_acceleration<T, K>
@@ -57,12 +50,7 @@ public:
 
     /**
      * @brief Parameterized constructor to initialize the Richardson transformation for series.
-     * @param series The series class object to be accelerated
-     *        - Purpose: Provides access to series partial sums
-     *        - Valid values: Any object implementing the required series interface
-     *        - Constraints: Must be copy-constructible and provide S_n method
-     *        - Example: Mathematical series with known convergence properties
-     */
+    */
     explicit richardson_algorithm() : series_acceleration<T, K>("richardson") {}
 
     /**

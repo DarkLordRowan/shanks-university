@@ -62,7 +62,7 @@ public:
      * The specific formula depends on the concrete implementation.
      *
      * @param n order of the partial sum Sₙ from which calculation begins
-     * @param order order of the transformation (number of terms used)
+     * @param index index of the aₙ term (determine the start)
      * @param an Constant pointer to the an vector providing term access
      * @param scale Scaling factor (used primarily for u-variant with β parameter)
      * @return The computed remainder estimate ωₙ
@@ -90,7 +90,7 @@ class u_transform : public transform_base<T, K> {
      * Formula: ωₙ = (β + n) * aₙ, where aₙ = ΔSₙ₋₁ = Sₙ - Sₙ₋₁
      *
      * @param n order of the partial sum Sₙ
-     * @param order order of transformation (unused in this implementation)
+     * @param index index of the aₙ term (determine the start)
      * @param series Series object providing term access
      * @param scale Represents β parameter: ωₙ = (scale + n) * aₙ
      * @return u-variant remainder estimate ωₙ = 1/[(scale + n) * aₙ]
@@ -105,9 +105,7 @@ T u_transform<T, K>::operator()(const K n, const K index, const std::vector<T>& 
     // ωₙ = (β + n) * aₙ, where aₙ = ΔSₙ₋₁
     const T result = utils::cast<T>(1.0) / ((scale + utils::cast<T>(n)) * an.at(index));
 
-    if(!utils::isfinite(result)){
-        throw std::overflow_error("division by zero");
-    }
+    if(!utils::isfinite(result)) throw std::overflow_error("division by zero");
 
     return result;
  }
@@ -130,9 +128,9 @@ class t_transform : public transform_base<T, K> {
      * For theory, see: Levin (1973), Eq. (3.2)
      * Formula: ωₙ = aₙ, where aₙ = ΔSₙ₋₁ = Sₙ - Sₙ₋₁
      *
-     * @param n order of the partial sum Sₙ
-     * @param order order of transformation (determines which term aₙ₊ₖ is used)
-     * @param series Series object providing term access
+     * @param n order of the partial sum Sₙ (unused in this implementation)
+     * @param index index of the aₙ term (determine the start)
+     * @param an vector of aₙ
      * @param scale Unused parameter (maintained for interface consistency)
      * @return t-variant remainder estimate ωₙ = 1/aₙ₊ₖ
      * @throws std::overflow_error if aₙ₊ₖ = 0 causing division by zero
@@ -146,9 +144,7 @@ T t_transform<T, K>::operator()(const K n, const K index, const std::vector<T>& 
     // ωₙ = aₙ, where aₙ = ΔSₙ₋₁
     const T result = utils::cast<T>(1.0) / an.at(index);
 
-    if(!utils::isfinite(result)){
-        throw std::overflow_error("division by zero");
-    }
+    if(!utils::isfinite(result)) throw std::overflow_error("division by zero");
 
     return result;
 }
@@ -171,9 +167,9 @@ class t_wave_transform : public transform_base<T, K>  {
      * For theory, see: Smith & Ford (1979), Eq. (2.4) - d variant
      * Formula: ωₙ = aₙ₊₁, where aₙ = ΔSₙ₋₁
      *
-     * @param n order of the partial sum Sₙ
-     * @param order order of transformation (shifts the order further)
-     * @param series Series object providing term access
+     * @param n order of the partial sum Sₙ (unused in this implementation)
+     * @param index index of the aₙ term (determine the start)
+     * @param an vector of aₙ
      * @param scale Unused parameter (maintained for interface consistency)
      * @return t-wave variant remainder estimate ωₙ = 1/aₙ₊ₖ₊₁
      * @throws std::overflow_error if aₙ₊ₖ₊₁ = 0 causing division by zero
@@ -187,9 +183,7 @@ T t_wave_transform<T,K>::operator()(const K n, const K index, const std::vector<
     // ωₙ = aₙ₊₁ (shifted t-variant)
 	const T result = utils::cast<T>(1.0) / an.at(index + static_cast<K>(1));
 
-    if(!utils::isfinite(result)){
-        throw std::overflow_error("division by zero");
-    }
+    if(!utils::isfinite(result)) throw std::overflow_error("division by zero");
 
 	return result;
 }
@@ -212,9 +206,9 @@ class v_transform : public transform_base<T, K> {
      * For theory, see: Levin (1973), Eq. (3.4) - v transform
      * Formula: ωₙ = (aₙ * aₙ₊₁)/(aₙ₊₁ - aₙ), where aₙ = ΔSₙ₋₁
      *
-     * @param n order of the partial sum Sₙ
-     * @param order order of transformation (determines starting order)
-     * @param series Series object providing term access
+     * @param n order of the partial sum Sₙ (unused in this implementation)
+     * @param index index of the aₙ term (determine the start)
+     * @param an vector of aₙ
      * @param scale Unused parameter (maintained for interface consistency)
      * @return v-variant remainder estimate ωₙ = (aₙ₊ₖ₊₁ - aₙ₊ₖ)/(aₙ₊ₖ * aₙ₊ₖ₊₁)
      * @throws std::overflow_error if aₙ₊ₖ = 0 or aₙ₊ₖ₊₁ = 0 causing division by zero
@@ -229,11 +223,8 @@ T v_transform<T,K>::operator()(const K n, const K index, const std::vector<T>& a
     const T a1 = an.at(index), a2  = an.at(index + static_cast<K>(1));
     const T result = (a2-a1) / (a1 * a2);
 
-
-    if(!utils::isfinite(result)){
-        throw std::overflow_error("division by zero");
-    }
-
+    if(!utils::isfinite(result)) throw std::overflow_error("division by zero");
+    
 	return result;
 }
 
@@ -255,9 +246,9 @@ class v_wave_transform : public transform_base<T, K> {
      * Similar to v-variant but with shifted indices:
      * Formula: ωₙ = (aₙ₊₁ * aₙ₊₂)/(aₙ₊₁ - aₙ₊₂)
      *
-     * @param n order of the partial sum Sₙ
-     * @param order order of transformation (determines starting order)
-     * @param series Series object providing term access
+     * @param n order of the partial sum Sₙ (unused in this implementation)
+     * @param index index of the aₙ term (determine the start)
+     * @param an vector of aₙ
      * @param scale Unused parameter (maintained for interface consistency)
      * @return v-wave variant remainder estimate ωₙ = (aₙ₊ₖ - aₙ₊ₖ₊₁)/(aₙ₊ₖ * aₙ₊ₖ₊₁)
      * @throws std::overflow_error if aₙ₊ₖ = 0 or aₙ₊ₖ₊₁ = 0 causing division by zero
@@ -272,9 +263,7 @@ T v_wave_transform<T,K>::operator()(const K n, const K index, const std::vector<
     const T a1 = an.at(index), a2 = an.at(index + static_cast<K>(1));
     const T result = (a1 - a2) / (a1 * a2);
 
-    if(!utils::isfinite(result)){
-        throw std::overflow_error("division by zero");
-    }
+    if(!utils::isfinite(result)) throw std::overflow_error("division by zero");
     
 	return result;
 }

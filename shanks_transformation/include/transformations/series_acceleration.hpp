@@ -19,7 +19,6 @@
 
  /**
   * @brief Base class for series acceleration transformations
-  * @authors Bolshakov M.P.
   *
   * This class serves as a base for implementing various series acceleration methods
   * such as Shanks transformation and Wynn's epsilon algorithm. It provides the
@@ -33,7 +32,6 @@
   *           Represents numerical precision (float, double, long double)
   * @tparam K Unsigned integral type for indices and order (must satisfy std::unsigned_integral)
   *           Used for counting and indexing operations (typically size_t, unsigned int, etc.)
-  * @tparam series_templ Type of series object to accelerate. Must provide the required interface.
   */
 template<AcceptedLike T, UnsignedIntLike K>
 class series_acceleration
@@ -42,15 +40,11 @@ public:
 
     /**
      * @brief Parameterized constructor to initialize the series acceleration object
-     * @authors Bolshakov M.P.
-     * @param series The series class object to be accelerated
-     *        Must be a valid object implementing the required series interface
-     */
+    */
     explicit series_acceleration(std::string name  = "unknown") : acceleration_name(name) {};
 
     /**
      * @brief Virtual function operator for computing the accelerated partial sum
-     * @authors Bolshakov M.P., Pashkov B.B.
      *
      * This pure virtual function must be implemented by derived classes to provide
      * specific acceleration algorithms. It computes the transformed partial sum

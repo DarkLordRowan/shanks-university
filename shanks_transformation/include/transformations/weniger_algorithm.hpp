@@ -32,11 +32,6 @@
  *           Used for all floating-point calculations and storage.
  * @tparam K Unsigned integral type for indices and order (must satisfy std::unsigned_integral)
  *           Used for counting and indexing operations. Valid values: K >= 0.
- * @tparam series_templ Type of series object to accelerate. Must provide:
- *           - T operator()(K n) const: returns the n-th series term aₙ
- *           - T S_n(K n) const: returns the n-th partial sum sₙ = a₀ + ... + aₙ
- *           - T utils::minus_one_raised_to_power_n(K n) const: returns (-1)ⁿ
- *           - T binomial_coefficient(T n, K k) const: returns binomial coefficient C(n, k)
  */
 template<AcceptedLike T, UnsignedIntLike K>
 class weniger_algorithm final : public series_acceleration<T, K>
@@ -45,8 +40,6 @@ public:
 
 	/**
 	 * @brief Parameterized constructor to initialize the weniger_algorithm
-	 * @param series The series class object to be accelerated
-	 * Must be a valid object implementing the required series interface
 	 */
 	explicit weniger_algorithm() : series_acceleration<T, K>("weniger") {}
 
@@ -167,9 +160,7 @@ T weniger_algorithm<T, K>::operator()(
 	// Final transformed value: δₖ⁽ⁿ⁾ = numerator / denominator
 	numerator /= denominator;
 
-	if(!utils::isfinite(numerator)){
-        throw std::overflow_error("division by zero");
-    }
+	if(!utils::isfinite(numerator)) throw std::overflow_error("division by zero");
 
 	return numerator;
 }
