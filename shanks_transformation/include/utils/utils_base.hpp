@@ -87,7 +87,7 @@ struct utils {
 
 	#ifdef SET_PRECISION_SET
 	template<AcceptedLike T>
-	static void set_vec_precision(std::vector<T>& vec, const auto precision);
+	static void set_vec_precision(std::vector<T>& vec, const size_t precision);
 	#endif
 
 	//GETTING PRECISION

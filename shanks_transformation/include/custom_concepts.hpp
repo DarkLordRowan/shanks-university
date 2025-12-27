@@ -60,6 +60,12 @@ struct is_complex_t : public std::false_type {};
 template<std::floating_point U>
 struct is_complex_t<std::complex<U>> : public std::true_type {};
 
+template<typename T>
+struct is_complex_custom : public std::false_type {};
+
+template<FloatLike U>
+struct is_complex_custom<std::complex<U>> : public std::true_type {};
+
 
 template<typename T>
 struct is_standart_types : std::integral_constant<bool,

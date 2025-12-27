@@ -393,7 +393,7 @@ void test_all_transforms(
 				#endif
 				#endif
 			    catch (...){
-					std::cout <<"WTF ERROR\n";
+					std::cout <<"SOME ERROR\n";
 				}
 			}
 			std::cout << "\n";

@@ -161,7 +161,6 @@ T j_transformation_algorithm<T, K>::recursive_formula(const K n, const K order, 
     }
 
     // The final accelerated value is J_order^{(0)}
-    std::cout << "THE PREC IS " << utils::get_precision(J_prev[0]) << "\n";
     return J_prev[0];
 }
 

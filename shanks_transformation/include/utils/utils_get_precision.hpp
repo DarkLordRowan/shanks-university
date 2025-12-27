@@ -31,6 +31,7 @@ size_t utils::get_precision(const T& x){
 	}
 	#endif
 	#endif
+	if constexpr(is_complex_custom<T>::value) return std::max(utils::get_precision(x.real()), utils::get_precision(x.imag()));
 	else return static_cast<size_t>(0);
 }
 #endif

@@ -227,6 +227,20 @@ mpfr::mpreal inline console_IO<mpfr::mpreal>::input(const std::string& var_name)
     mpfr::mpreal res = mpfr::mpreal(float_value, mpfr::digits2bits(precision));
 
     return res;
+}
 
+template<>
+std::complex<mpfr::mpreal> inline console_IO<std::complex<mpfr::mpreal>>::input(const std::string& var_name){
+
+    std::string real_value; std::getline(std::cin, real_value);
+    size_t real_precision = console_IO<size_t>::input("precision");
+    std::string imag_value; std::getline(std::cin, imag_value);
+    size_t imag_precision = console_IO<size_t>::input("precision");
+    std::complex<mpfr::mpreal> res(
+        mpfr::mpreal(real_value, mpfr::digits2bits(real_precision)),
+        mpfr::mpreal(imag_value, mpfr::digits2bits(imag_precision))
+    );
+
+    return res;
 }
 #endif

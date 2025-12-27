@@ -92,7 +92,7 @@ T utils::pow(const T& x, const T& y){
 
 template<AcceptedLike T>
 T utils::sqrt(const T& x){
-	if (is_standart_types<T>::value) return std::sqrt(x);
+	if constexpr (is_standart_types<T>::value) return std::sqrt(x);
 	#ifdef __MPREAL_H__
 	else if constexpr (std::is_same<T, mpfr::mpreal>::value) return mpfr::sqrt(x);
 	#endif

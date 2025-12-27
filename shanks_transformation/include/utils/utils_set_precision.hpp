@@ -30,13 +30,17 @@ void utils::set_precision(const size_t precision, Arg& precisable_arg, Args& ...
 		precisable_arg.set_prec(mpfr::digits2bits(precision));
 	}
 	#endif
+	if constexpr (is_complex_custom<Arg>::value){
+		utils::set_precision(precision, reinterpret_cast<Arg::value_type(&)[2]>(precisable_arg)[0]);
+		utils::set_precision(precision, reinterpret_cast<Arg::value_type(&)[2]>(precisable_arg)[1]);
+	}
 	utils::set_precision(precision, precisable_args...);
 }
 #endif
 
 #ifdef SET_PRECISION_SET
 template<AcceptedLike T>
-void utils::set_vec_precision(std::vector<T>& vec, const auto precision){
+void utils::set_vec_precision(std::vector<T>& vec, const size_t precision){
 	for(size_t j = 0; j < vec.size(); ++j)
 		utils::set_precision(precision, vec[j]);
 }

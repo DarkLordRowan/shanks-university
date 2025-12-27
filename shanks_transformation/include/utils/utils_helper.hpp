@@ -10,7 +10,7 @@
 template<typename T>
 std::string utils::to_string(const T& x){ 
 
-    if constexpr (is_standart_types<T>::value) return std::to_string(x);
+    if constexpr (std::is_floating_point<T>::value || std::is_integral<T>::value) return std::to_string(x);
     #ifdef INC_FPRECISION
     else if constexpr (std::is_same<T, float_precision>::value) return x.toString();
     #endif
@@ -26,7 +26,7 @@ std::string utils::to_string(const T& x){
 		return x.toString(MAX_PRECISION_AVAILABLE, 10);
 	}
 	#endif
-
+    else if constexpr (is_complex_custom<T>::value) return "( " + utils::to_string(x.real()) + ", " + utils::to_string(x.imag()) + ")";
     return "something went wrong";
 }
 
@@ -44,6 +44,9 @@ bool utils::isfinite(const T& x){
 		return mpfr::isfinite(x) && !mpfr::isnan(x) && !mpfr::isinf(x);
 	}
 	#endif
+    else if constexpr (is_complex_custom<T>::value){
+		return utils::isfinite(x.real()) && utils::isfinite(x.imag());
+	}
     
     return true;
 }

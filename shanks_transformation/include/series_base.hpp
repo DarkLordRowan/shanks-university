@@ -299,8 +299,7 @@ series_result<T> series_base<T, K>::generate_series(
 		sum += vecAn[j];
 		vecSn[j] += vecAn[j] + (j == 0 ? utils::cast<T>(0.0) : vecSn[j-1]);
 	}
-	std::cout << "\n THE PREC " <<  utils::get_precision(vecAn[0]) << "\n";
-	return series_result<T>{.Sn = vecSn, .an = vecAn};
 
+	return series_result<T>{.Sn = vecSn, .an = vecAn};
 }
 #endif

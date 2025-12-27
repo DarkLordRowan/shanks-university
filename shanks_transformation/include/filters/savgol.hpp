@@ -36,9 +36,8 @@ std::vector<Scalar> savgol_filter(
     std::copy(data.begin(), data.end(), padded_vector.begin() + window_length);
 
     for (size_t i{0}; i < result.size(); ++i)
-        for(size_t j{0}; j < window_length; ++j){
+        for(size_t j{0}; j < window_length; ++j)
             result[i] += coeffs[j] * padded_vector[i + j];
-        }
 
     return result;
 }
