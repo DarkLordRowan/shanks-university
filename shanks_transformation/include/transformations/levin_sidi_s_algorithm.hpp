@@ -56,6 +56,7 @@ protected:
      *
      * @param n Starting index for the transformation
      * @param order Order of transformation (k value)
+     * @param data series_result<T> struct containing necessary information for algorithm
      * @return Accelerated sum estimate S_{k,n}
     */
     inline T calc_result(
@@ -72,6 +73,7 @@ protected:
      *
      * @param n Starting index for the transformation
      * @param order Order of transformation (k value)
+     * @param data series_result<T> struct containing necessary information for algorithm
      * @return Accelerated sum estimate S_{k,n}
     */
     inline T calc_result_rec(
@@ -122,6 +124,7 @@ public:
      *        Valid values: n >= 0
      * @param order The order of transformation (k value)
      *        Valid values: order >= 0
+     * @param data series_result<T> struct containing necessary information for algorithm
      * @return The accelerated partial sum after S-transformation
      * @throws std::overflow_error if division by zero or numerical instability occurs
     */
@@ -132,14 +135,14 @@ public:
     ) const override;
 
     /**
-     * @brief 
-     * @param new_beta 
+     * @brief Setter to update beta parameter
+     * @param new_beta new beta parameter, must be a real positive number
     */
     void update_beta(const float_type& new_beta){ beta_in_use = (new_beta > utils::cast<float_type>(0.0) ?  new_beta : utils::cast<float_type>(1.0)); }
 
     /**
-     * @brief 
-     * @param remainder_type_to_use 
+     * @brief Setter to change numerator type
+     * @param remainder_type_to_use enumerator of a new remainder to use
     */
     void update_type(const remainder_type remainder_type_to_use){
 
@@ -159,8 +162,7 @@ public:
 	}
 
     /**
-     * @brief Get the name object
-     * 
+     * @brief Get the name of currently used variant of algorithm
      * @return std::string 
     */
 	std::string get_name() override {

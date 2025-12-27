@@ -33,6 +33,7 @@ public:
 	 * @param order The order of transformation (number of recursive applications)
 	 *        Valid values: order >= 0 (order=0 returns untransformed partial sum)
 	 *        Higher orders provide more aggressive acceleration but may be less stable
+	 * @param data series_result<T> struct containing necessary information for algorithm
 	 * @return The accelerated partial sum after Shanks transformation
 	 * @throws std::overflow_error if division by zero or numerical instability occurs
 	 */

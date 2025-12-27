@@ -77,7 +77,7 @@ public:
      * @param order The order of J-transformation to apply
      *        Valid values: 0 <= order <= max_order_
      *        Higher orders provide more acceleration
-     * @param data Series result containing Sn and an vectors
+     * @param data series_result<T> struct containing necessary information for algorithm
      * @return The accelerated partial sum
      * @throws std::out_of_range if data size is insufficient
      * @throws std::domain_error if numerical issues occur

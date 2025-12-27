@@ -66,6 +66,7 @@ public:
 	 * @param order The order of transformation (number of iterations)
 	 *        Valid values: order ≥ 0
 	 *        Higher orders provide more acceleration but require more terms
+	 * @param data series_result<T> struct containing necessary information for algorithm
 	 * @return The accelerated partial sum after Lubkin transformation
 	 * @throws std::domain_error if negative order is provided
 	 * @throws std::overflow_error if division by zero or numerical instability occurs

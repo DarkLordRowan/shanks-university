@@ -70,6 +70,7 @@ public:
 	 * @param order The order of transformation (typically order ≤ n/2)
 	 *        Valid values: order >= 0
 	 *        Higher orders use more terms from the epsilon table
+	 * @param data series_result<T> struct containing necessary information for algorithm
 	 * @return The accelerated partial sum after Wynn's epsilon transformation
 	 * @throws std::domain_error if n=0 is provided as input
 	 * @throws std::overflow_error if numerical instability occurs

@@ -60,6 +60,7 @@ protected:
 	 *
 	 * @param n Number of terms used in the transformation (starting index)
 	 * @param order Order of transformation (k value)
+	 * @param data series_result<T> struct containing necessary information for algorithm
 	 * @return Accelerated sum estimate T_{k,n}
 	 */
 	inline T calc_result(
@@ -76,6 +77,7 @@ protected:
 	 *
 	 * @param n Number of terms used in the transformation (starting index)
 	 * @param order Order of transformation (k value)
+	 * @param data series_result<T> struct containing necessary information for algorithm
 	 * @return Accelerated sum estimate T_{k,n}
 	 */
 	inline T calc_result_rec(
@@ -96,7 +98,7 @@ public:
 	 *        Determines the remainder estimate R_n used in the transformation
 	 * @param use_recurrent_formula Flag to use recurrence formulas instead of direct summation
 	 *        true: use recursive implementation, false: use direct summation
-	 * @param beta_to_use Parameter for u-variant transformation (must be > 0)
+	 * @param beta_to_use Parameter for u-variant transformation (must be > 0), see p. 39 [https://arxiv.org/pdf/math/0306302.pdf]
 	 *        Default value: 1.0. Affects the remainder estimate in u-variant.
 	 *        For theory, see: Sidi & Levin (1981), Eq. (3.4) and surrounding discussion
 	 */
@@ -124,6 +126,7 @@ public:
 	 * @param order The order of transformation (k value)
 	 *        Valid values: order >= 0
 	 *        Higher orders eliminate more terms from the asymptotic expansion but may be less stable
+	 * @param data series_result<T> struct containing necessary information for algorithm
 	 * @return The accelerated partial sum after Levin transformation
 	 * @throws std::domain_error if n=0 is provided as input
 	 * @throws std::overflow_error if division by zero or numerical instability occurs
@@ -136,7 +139,7 @@ public:
 
 	/**
 	 * @brief Setter to update beta parameter
-	 * @param new_beta new beta parameter, must be real number
+	 * @param new_beta new beta parameter, must be real positive number, see p. 39 [https://arxiv.org/pdf/math/0306302.pdf]
 	 */
 	void update_beta(const float_type& new_beta){
 		beta_in_use = (new_beta > utils::cast<float_type>(0.0) ? new_beta : utils::cast<float_type>(1.0));

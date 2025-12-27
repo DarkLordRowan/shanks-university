@@ -57,7 +57,7 @@ public:
 	 * @param variant Type of remainder transformation to use
 	 *        Valid values: u_type, t_type, v_type, t_wave_type, v_wave_type
 	 *        Determines the remainder estimate R_n used in the transformation
-	 * @param gamma_ Positive real parameter such that gamma >= order - 1, see p. 64 [https://arxiv.org/pdf/math/0306302.pdf]
+	 * @param gamma_ Positive real positive parameter such that gamma >= order - 1, see p. 64 [https://arxiv.org/pdf/math/0306302.pdf]
 	 *        Default value: 10.0. Affects the factorial terms in the transformation.
 	 *        For theory, see: Sidi (2003, arXiv:math/0306302), p. 64
 	 */
@@ -84,6 +84,7 @@ public:
 	 * @param order The order of transformation (starting index k)
 	 *        Valid values: order >= 0
 	 *        The parameter gamma must satisfy gamma >= order - 1
+	 * @param data series_result<T> struct containing necessary information for algorithm
 	 * @return The accelerated partial sum after M-transformation
 	 * @throws std::domain_error if n=0 or gamma < n-1
 	 * @throws std::overflow_error if division by zero or numerical instability occurs
@@ -101,8 +102,10 @@ public:
 	void update_type(const remainder_type remainder_type_to_use);
 
 	/**
-	 * @brief Setter to update beta parameter
-	 * @param new_gamma new gamma parameter, must be real number
+	 * @brief Setter to update gamma parameter
+	 * @param new_gamma new gamma parameter, must be real number positive noninteger number and greater or equal than order - 1
+	 * see Nonlinear sequence transformations for the acceleration of convergence and the summation of divergent series by Ernst Joachim Weniger
+	 * page 64
 	 */
 	void update_gamma(const float_type& new_gamma) { gamma_in_use = new_gamma; }
 

@@ -121,6 +121,7 @@ public:
 	 * @param order The order of transformation
 	 *        Valid values: order >= 0, higher orders use more terms but may provide better acceleration
 	 *        Typically order <= 10 for numerical stability
+	 * @param data series_result<T> struct containing necessary information for algorithm
 	 * @return The accelerated partial sum after Drummond transformation
 	 * @throws std::overflow_error if division by zero or numerical instability occurs
 	 */

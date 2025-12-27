@@ -55,16 +55,21 @@ public:
      *        Higher values use more terms but may provide better acceleration
      * @param order The order of transformation (specific meaning depends on derived class)
      *        Valid values: order >= 0 (typically a non-negative integer)
+     * @param data series_result<T> struct containing necessary information for algorithm
      * @return The accelerated partial sum after applying the transformation
      * @throws May throw domain_error or overflow_error in derived implementations
      */
     virtual T operator()(const K n, const K order, const series_result<T>& data) const = 0;
 
+    /**
+     * @brief Get the name of transformation
+     * @return std::string 
+     */
     virtual std::string get_name() { return this->acceleration_name; }
 
 protected:
 
-    std::string acceleration_name = "series acceleration base class";
+    std::string acceleration_name = "series acceleration base class"; /**< Name of a transformation */
 
 };
 

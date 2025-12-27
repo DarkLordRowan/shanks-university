@@ -64,6 +64,7 @@ public:
      * @param order The order of transformation (unused in this implementation,
      *        maintained for interface consistency with base class).
      *        Valid values: order >= 0 (typically set to 0 or ignored).
+     * @param data series_result<T> struct containing necessary information for algorithm
      * @return The accelerated partial sum after Ford-Sidi transformation.
      * @throws std::domain_error if n=0 is provided as input.
      * @throws std::overflow_error if division by zero or numerical instability occurs.

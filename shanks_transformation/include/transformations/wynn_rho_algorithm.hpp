@@ -30,6 +30,7 @@
   * - Wynn, P. (1956). On a device for computing the eₙ(Sₙ) transformation.
   * - Wynn, P. (1966). Upon a second-order continued-fraction transformation for accelerating convergence.
   * - Osada, N. (1993). Acceleration Methods for Slowly Convergent Sequences and Their Applications.
+  * - Sidi, A. (2003). Practical Extrapolation Methods: Theory and Applications.
   *
   * @tparam T Floating-point type for series elements (must satisfy Accepted)
   *           Represents numerical precision (float, double, long double)
@@ -63,10 +64,11 @@ public:
 	 *        - rho_type: Standard Wynn rho algorithm
 	 *        - generalized_type: Generalized rho transformation
 	 *        - gamma_rho_type: Gamma-rho variant with additional parameters
-	 * @param gamma_ Gamma parameter value (default: 1)
+	 * @param gamma_ Gamma parameter value (default: -1)
+	 *		  must be noninteger(0, 1, 2, ....) real number for Osada Type, see p. 378 Sidi, A. (2003). Practical Extrapolation Methods: Theory and Applications.
 	 *        Valid values: T > 0, typically 1 or 2
 	 *        Controls the transformation behavior in generalized variants
-	 * @param RHO_ Rho parameter value (default: 0)
+	 * @param RHO_ Rho parameter value (default: 1.0)
 	 *        Valid values: T >= 0, typically 0 or 1
 	 *        Additional parameter for gamma-rho variant
 	 */
@@ -101,6 +103,7 @@ public:
 	 * @param order The order of transformation
 	 *        Valid values: order >= 0 and must be even (order % 2 == 0)
 	 *        Higher orders use more terms but may provide better acceleration
+	 * @param data series_result<T> struct containing necessary information for algorithm
 	 * @return The accelerated partial sum after rho transformation
 	 * @throws std::domain_error if order is odd
 	 * @throws std::overflow_error if division by zero occurs
@@ -113,7 +116,7 @@ public:
 
 	/**
 	 * @brief Setter to update gamma parameter
-	 * @param new_gamma new gamma parameter, must be real number
+	 * @param new_gamma new gamma parameter, must be noninteger(0, 1, 2, ....) real number
 	*/
 	void update_gamma(const float_type& new_gamma) { gamma_in_use = new_gamma;}
 

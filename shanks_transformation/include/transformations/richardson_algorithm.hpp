@@ -71,6 +71,8 @@ public:
      *        - Valid values: order >= 0 (maintained for interface consistency)
      *        - Note: This parameter is unused but required by the base class interface
      *
+     * @param data series_result<T> struct containing necessary information for algorithm
+     *
      * @return The accelerated partial sum after Richardson transformation
      *         - Type: Same as template parameter T
      *         - Meaning: Improved approximation of the series sum using n terms

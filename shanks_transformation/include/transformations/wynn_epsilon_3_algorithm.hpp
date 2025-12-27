@@ -66,6 +66,7 @@ public:
      *        Valid values: n > 0. Higher values use more terms but may provide better acceleration.
      * @param order The order of transformation (number of epsilon algorithm iterations).
      *        Valid values: order >= 0. Higher orders apply more transformations but may increase error.
+     * @param data series_result<T> struct containing necessary information for algorithm
      * @return The accelerated partial sum after applying the epsilon algorithm.
      * @throws std::domain_error if n=0.
      * @throws std::overflow_error if numerical instability (e.g., division by zero) occurs.
@@ -78,7 +79,7 @@ public:
 private:
 
     const float_type epsilon_threshold;  ///< Threshold for epsilon correction terms to prevent division by near-zero values.
-                                ///< Default: 1e-3. Smaller values may increase sensitivity but risk instability.
+                                         ///< Default: 1e-3. Smaller values may increase sensitivity but risk instability.
 };
 
 
@@ -97,13 +98,8 @@ T wynn_epsilon_3_algorithm<T, K>::operator()(
         "the size of Sn must be at least " + utils::to_string(required_size));
 	}
 
-    if (n == static_cast<K>(0)){
-        throw std::domain_error("n = 0 in the input");
-    }
-
-    if (order == static_cast<K>(0)) {
-        return data.Sn.at(n);
-    }
+    if (n == static_cast<K>(0)) throw std::domain_error("n = 0 in the input");
+    if (order == static_cast<K>(0)) return data.Sn.at(n);
 
     using std::max;
 

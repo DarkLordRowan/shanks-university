@@ -63,6 +63,7 @@ public:
      * @param order The order of transformation (must be even)
      *        Valid values: order >= 0 and even (order % 2 == 0)
      *        Higher orders provide more acceleration but require more computation
+     * @param data series_result<T> struct containing necessary information for algorithm
      * @return The accelerated partial sum after theta transformation
      * @throws std::domain_error if n=0 or order is odd
      * @throws std::overflow_error if division by zero occurs during computation
