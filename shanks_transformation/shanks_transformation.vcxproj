@@ -138,8 +138,7 @@
     <ClInclude Include="theta_modified_algorithm.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="main.cpp" />
-    <ClCompile Include="test_framework.h" />
+    <ClCompile Include="src/main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="CMakeLists.txt" />

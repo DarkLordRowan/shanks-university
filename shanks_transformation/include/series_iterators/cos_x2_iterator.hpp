@@ -1,0 +1,34 @@
+#ifndef COS_X2_ITERATOR_HPP
+#define COS_X2_ITERATOR_HPP
+#pragma once
+
+#include "series_base_iterator.hpp"
+
+/**
+* @brief Maclaurin series of cos(x^2) function
+* @authors Bolshakov M.P.
+* @tparam T The type of the elements in the series, K The type of enumerating integer
+*/
+template<AcceptedLike T, UnsignedIntLike K>
+class cos_x2_iterator final : public series_base_iterator<T, K>{
+public:
+
+	cos_x2_iterator() : series_base_iterator<T, K>() {}
+
+	T sum() const override{ return utils::cos(this->x * this->x); }
+	
+	bool check_validity() const override { return !utils::isfinite(this->x); }
+
+	T next() override {
+		
+		if (this->n == 0) this->current_state = utils::cast<T>(1);
+		else this->current_state *= utils::cast<T>(-1) * utils::pow(this->x, utils::cast<T>(4)) / 
+		utils::cast<T>(this->n * (size_t{4} * this->n - size_t{2}));
+		
+		this->n+=1;
+		return this->current_state;
+	}
+
+};
+
+#endif

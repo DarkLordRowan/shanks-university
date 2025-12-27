@@ -24,12 +24,12 @@
  *
  *
  * Module name     :   fractionprecision.h
- * Module ID Nbr   :   
+ * Module ID Nbr   :
  * Description     :   Arbitrary fraction precision class
  *                     Actually it a general fraction class that works with both
- *                     standard types like int, or int_precision 
+ *                     standard types like int, or int_precision
  * --------------------------------------------------------------------------
- * Change Record   :   
+ * Change Record   :
  *
  * Version	Author/Date		Description of changes
  * -------  -----------		----------------------
@@ -70,7 +70,7 @@ template<class _Ty> class fraction_precision {
 	  fraction_precision(const _Ty& whole, const _Ty& a, const _Ty& b) : n(a + whole*b), d(b) { normalize(); }  // mixed number constructions
       // constructor for any other type to _Ty
       template<class _X> fraction_precision( const fraction_precision<_X>& a ) : n((_Ty)a.numerator()), d((_Ty)a.denominator()) {}
-      
+
       // Coordinate functions
       _Ty numerator() const { return n; }						// return numerator
       _Ty denominator() const { return d; }						// return denominator
@@ -78,18 +78,18 @@ template<class _Ty> class fraction_precision {
 	  _Ty numerator( const fraction_precision<_Ty>& a )   { return ( n = a.numerator() ); }  // Set numerator from another fraction
       _Ty denominator( const _Ty& b )   { return ( d = b ); }	// Set denominator
 	  _Ty denominator( const fraction_precision<_Ty>& b )   { return ( d = b.denominator() ); } // Set denominator from another fraction
-	  
+
 	  // Methods
 	  fraction_precision<_Ty>& abs();
 	  fraction_precision<_Ty>& normalize();
 	  fraction_precision<_Ty>& inverse();
 	  bool iszero() const;	// Test for zero and return true or false
 	  bool isone() const;	// Test for one and return true or false
-	  _Ty whole() const;	// return the whole number 
+	  _Ty whole() const;	// return the whole number
 	  _Ty reduce() const;	// Reduce the fraction by removing and returning the whole number from the fraction
 	   // // Conversion methods. Safer and less ambiguous than overloading implicit/explicit conversion operators
 	 // std::string fraction_precision<int_precision>& toString() { return n.toString() + "/" + d.toString(); }
-																			
+
 
 	  // Implicit/explicit conversion operators
 	  operator long long() const		{ return (long long)(n) / (long long)(d); }
@@ -112,21 +112,21 @@ template<class _Ty> class fraction_precision {
 	  fraction_precision<_Ty>& operator-=(const fraction_precision<_Ty>&);
 	  fraction_precision<_Ty>& operator*=(const fraction_precision<_Ty>&);
 	  fraction_precision<_Ty>& operator/=(const fraction_precision<_Ty>&);
-		 
+
 	  class divide_by_zero {};
    };
 
 template<class _Ty> std::ostream& operator<<( std::ostream& strm, const fraction_precision<_Ty>& a )
 	{ return strm << a.numerator() << "/" << a.denominator(); }
 
-template<class _Ty> std::istream& operator>>( std::istream& strm, fraction_precision<_Ty>& f ) 
+template<class _Ty> std::istream& operator>>( std::istream& strm, fraction_precision<_Ty>& f )
    {
    _Ty n, d; char ch;
    strm >> n;
-   strm >> std::noskipws >> ch;  
-   if (ch == '/') 
+   strm >> std::noskipws >> ch;
+   if (ch == '/')
 	   strm >> d;
-   else 
+   else
 	   strm.putback(ch), d = (_Ty)0;
    if(!strm.fail())
 		f = fraction_precision<_Ty>( n, d );
@@ -145,7 +145,7 @@ template<class _Ty> fraction_precision<_Ty> operator++(fraction_precision<_Ty>&)
 template<class _Ty> fraction_precision<_Ty> operator++(fraction_precision<_Ty>&, int);	// Postfix
 template<class _Ty> fraction_precision<_Ty> operator--(fraction_precision<_Ty>&);		// Prefix
 template<class _Ty> fraction_precision<_Ty> operator--(fraction_precision<_Ty>&, int);	// Postfix
-                                                                                                                       
+
 // Boolean Comparision Operators
 template<class _Ty> inline bool operator==( const fraction_precision<_Ty>&, const fraction_precision<_Ty>& );
 template<class _Ty> inline bool operator!=( const fraction_precision<_Ty>&, const fraction_precision<_Ty>& );
@@ -201,26 +201,26 @@ template<class _Ty> fraction_precision<_Ty>& fraction_precision<_Ty>::abs()
 //
 // Description:
 //  Normalize the fraction (original 2015)
-// 
+//
 //  A normalize fraction has been reduced by gcd().
 //	if denominator is negative then the sign is moved up to the numerator
 //	if numerator == 0 then denominator is set to 1
 //	if denominator is zero a divide by zero exception is thrown
 //
-template<class _Ty> fraction_precision<_Ty>& fraction_precision<_Ty>::normalize() 
-{	
+template<class _Ty> fraction_precision<_Ty>& fraction_precision<_Ty>::normalize()
+{
 	_Ty z = gcd(n, d);
 	if (z == (_Ty)0)
 		throw divide_by_zero();
-	n /= z; 
-	d /= z; 
+	n /= z;
+	d /= z;
 	if (n == (_Ty)0)	// If numerator is zero then set denominator to 1.
 		d = (_Ty)1;
 	if (!(d >= (_Ty)0)) // Check for negative sign in the denominator
-	{ 
-		n *= (_Ty)-1; 
+	{
+		n *= (_Ty)-1;
 		d *= (_Ty)-1;
-	} 
+	}
 	return *this;
 }
 
@@ -235,12 +235,12 @@ template<class _Ty> fraction_precision<_Ty>& fraction_precision<_Ty>::normalize(
 //  Inverse the fraction (original 2015)
 //
 template<class _Ty> fraction_precision<_Ty>& fraction_precision<_Ty>::inverse()
-{	_Ty z; 
-	z = n; 
+{	_Ty z;
+	z = n;
 	n = d;
 	d = z;
 	if (!(d >= 0))
-	{ 
+	{
 		n *= (_Ty)-1;
 		d *= (_Ty)-1;
 	}
@@ -257,12 +257,12 @@ template<class _Ty> fraction_precision<_Ty>& fraction_precision<_Ty>::inverse()
 // Description:
 //  test for zero in the numerator (original 2015)
 //
-template<class _Ty> bool fraction_precision<_Ty>::iszero() const 
+template<class _Ty> bool fraction_precision<_Ty>::iszero() const
 { // Test for zero and return true or false
-	if (n == (_Ty)0) 
-		return true; 
-	return false; 
-}	
+	if (n == (_Ty)0)
+		return true;
+	return false;
+}
 
 //	@author Henrik Vestermark (hve@hvks.com)
 //	@date		20/Nov/2022
@@ -293,9 +293,9 @@ template<class _Ty> bool fraction_precision<_Ty>::isone() const
 //
 // Reduce the faction to a proper fraction and return the whole number of the original fraction
 //
-template<class _Ty> _Ty fraction_precision<_Ty>::reduce() const 
-{ 
-	_Ty w = n / d; 
+template<class _Ty> _Ty fraction_precision<_Ty>::reduce() const
+{
+	_Ty w = n / d;
 	n %= d;
 	return w;
 }
@@ -312,9 +312,9 @@ template<class _Ty> _Ty fraction_precision<_Ty>::reduce() const
 // Reduce the fraction by removing and returning the whole number from the fraction
 //
 template<class _Ty> _Ty fraction_precision<_Ty>::whole() const
-{ 
+{
 	return n / d;	// return the whole number
-}						 
+}
 
 //////////////////////////////////////////////////////////////////////
 //
@@ -345,9 +345,9 @@ template<class _Ty> _Ty fraction_precision<_Ty>::whole() const
 //
 template<class _Ty> fraction_precision<_Ty>& fraction_precision<_Ty>::operator=(const fraction_precision<_Ty>& a)
 {
-	n = a.numerator(); 
+	n = a.numerator();
 	d = a.denominator();
-	normalize(); 
+	normalize();
 	return *this;
 }
 
@@ -364,11 +364,11 @@ template<class _Ty> fraction_precision<_Ty>& fraction_precision<_Ty>::operator=(
 //
 template<class _Ty> fraction_precision<_Ty>& fraction_precision<_Ty>::operator+=(const fraction_precision<_Ty>& a)
 {
-	n *= a.denominator(); 
-	n += d * a.numerator(); 
+	n *= a.denominator();
+	n += d * a.numerator();
 	d *= a.denominator();
-	normalize(); 
-	return *this; 
+	normalize();
+	return *this;
 }
 
 //	@author Henrik Vestermark (hve@hvks.com)
@@ -385,10 +385,10 @@ template<class _Ty> fraction_precision<_Ty>& fraction_precision<_Ty>::operator+=
 template<class _Ty> fraction_precision<_Ty>& fraction_precision<_Ty>::operator-=(const fraction_precision<_Ty>& a)
 {
 	n *= a.denominator();
-	n -= d * a.numerator(); 
-	d *= a.denominator(); 
+	n -= d * a.numerator();
+	d *= a.denominator();
 	normalize();
-	return *this; 
+	return *this;
 }
 
 //	@author Henrik Vestermark (hve@hvks.com)
@@ -404,8 +404,8 @@ template<class _Ty> fraction_precision<_Ty>& fraction_precision<_Ty>::operator-=
 //
 template<class _Ty> fraction_precision<_Ty>& fraction_precision<_Ty>::operator*=(const fraction_precision<_Ty>& a)
 {
-	n *= a.numerator(); 
-	d *= a.denominator(); 
+	n *= a.numerator();
+	d *= a.denominator();
 	normalize();
 	return *this;
 }
@@ -424,8 +424,8 @@ template<class _Ty> fraction_precision<_Ty>& fraction_precision<_Ty>::operator*=
 //
 template<class _Ty> fraction_precision<_Ty>& fraction_precision<_Ty>::operator/=(const fraction_precision<_Ty>& a)
 {
-	n *= a.denominator(); 
-	d *= a.numerator(); 
+	n *= a.denominator();
+	d *= a.numerator();
 	normalize();
 	return *this;
 }
@@ -523,8 +523,8 @@ template<class _Ty> fraction_precision<_Ty> operator--(fraction_precision<_Ty>& 
 // lhs == rhs
 template<class _Ty> bool operator==( const fraction_precision<_Ty>& lhs, const fraction_precision<_Ty>& rhs )
 	{fraction_precision<_Ty> a, b;
-	a = lhs; 
-	b = rhs; 
+	a = lhs;
+	b = rhs;
 	return a.numerator() == b.numerator() && a.denominator() == b.denominator();
 	}
 
@@ -541,19 +541,19 @@ template<class _Ty> bool operator>=(const fraction_precision<_Ty>& lhs, const fr
 	bool bb;
 	fraction_precision<_Ty> a, b;
 	a = lhs;
-	b = rhs; 
+	b = rhs;
 	bb= a.numerator()*b.denominator()>=b.numerator()*a.denominator();
 	return bb;
 	}
 
-// lhs > rhs 
+// lhs > rhs
 // a/b>c/d => a*d>c*b
 template<class _Ty> bool operator>(const fraction_precision<_Ty>& lhs, const fraction_precision<_Ty>& rhs)
 {
 	bool bb;
 	fraction_precision<_Ty> a, b;
-	a = lhs;  
-	b = rhs;  
+	a = lhs;
+	b = rhs;
 	bb = a.numerator()*b.denominator() > b.numerator()*a.denominator();
 	return bb;
 }
@@ -591,12 +591,12 @@ template<class _Ty> inline fraction_precision<_Ty> abs(const fraction_precision<
 ///	@date  3/Feb/2017, revised 20/JUL/2019
 ///	@brief 			gcd - fraction_precision for Greatest Common Divisor
 ///	@return 		The greates common divisor of fraction precision a
-///	@param "a"	-	First operand number 
+///	@param "a"	-	First operand number
 ///
 ///	@todo
 ///
 /// Description:
-///   gcd of fraction_precision. 
+///   gcd of fraction_precision.
 ///   Call normalize that do a gcd()
 //
 template<class _TY> inline fraction_precision<_TY> gcd(const fraction_precision<_TY>& a )

@@ -32,7 +32,7 @@
  * Version	Author/Date		Description of changes
  * -------  -----------		----------------------
  * 03.01	HVE/3-Oct-2021	Switch to from Decimal String to Binary fptype float numbers. The previous chnage record has been removed to simplify
- * 03.02	HVE/19-Oct-2021	Passed all float testing 
+ * 03.02	HVE/19-Oct-2021	Passed all float testing
  * 03.03	HVE/19-Nov-2021 Fixed complier bugs reported n GNU version 14 running on a Mac
  * 03.04	HVE/20-Nov-2021 A few bugs fixed and change to avoid compiler warnings
  * 03.05	HVE/22-Nov-2021	Minor change and improvement
@@ -50,7 +50,7 @@
  * 03.16	HVE/7-Aug-2022	Handle a carry bug in the _int_precision_umul_add()
  * 03.17	HVE/20-Sep-2022	Added a extra default parameter to function _float_precision_clz()
  * 03.18	HVE/29-Oct-2022	Added the succ and pred method for finding next or previous representable number (usefull for interval arithmetic)
- * 03.19	HVE/15-Nov-2022	Fixed an issue with construction form a double. For constant 0, 1 or 2^x the mantissa could have one extra zero element 
+ * 03.19	HVE/15-Nov-2022	Fixed an issue with construction form a double. For constant 0, 1 or 2^x the mantissa could have one extra zero element
  * 03.20	HVE/20-Dec-2022	Added Bernoulli and Bernoulli Polynomials functions declarations
  * 03.21	HVE/1-Dec-2023	Added the _EULER (Euler-Mascheroni) constant as a parameter to the float_table() function
  * 03.22	HVE/10-Jan-2023	Added the _CATALAN (Catalan constant) as a paramter to the float_table() function
@@ -82,17 +82,18 @@ static char _VF_[] = "@(#)fprecision.h 03.29 -- Copyright (C) Henrik Vestermark"
 	#endif
 #endif
 
-// Configuration. Notice the code has only been tested as 64-bit entities. 
+// Configuration. Notice the code has only been tested as 64-bit entities.
 typedef uintmax_t fptype;	// The default size of the internal binary vector type unsigned 64bit
 							// option is unsigned int  32bit, unsigned short 16bi or unsigned char 8bit
-							// However performance will suffer if fptype < 64bit or the maximum natural integer size 
+							// However performance will suffer if fptype < 64bit or the maximum natural integer size
 typedef intmax_t eptype;	// The defalut size for the exponent. int (64bit) should give a range from -2^64+1 to 2^64-1
 
 const unsigned int Bitsfptype = sizeof(fptype) * 8; // Const use throughtout the source which is the number of bits the fptype can hold.
 
- // Default precision of 20 Decimal digits if not specified.
+// Default precision of 20 Decimal digits if not specified.
 // Note that PRECSION Needs to be larger than 64*ln(2)/ln(10)~64*0.3=19.2
-static const size_t PRECISION = 20;
+//
+static const size_t PRECISION = 50;
 
 // The four different rounding modes
 // # ROUND_NEAR  Rounded result is the closest to the infinitely precise result.
@@ -174,7 +175,7 @@ inline float_precision operator/(int_precision&, float_precision&);						// Over
 template <class _Ty> inline float_precision operator%(float_precision&, const _Ty&);
 template <class _Ty> inline float_precision operator%(const _Ty&, const float_precision&);
 inline float_precision operator%(int_precision&, float_precision&);						// Override int_precision % other type in iprecision.h
-																						
+
 // Precision Floating point functions equivalent with the std C functions
 extern float_precision modf( const float_precision&, float_precision * );
 extern float_precision fmod( const float_precision&, const float_precision& );
@@ -234,7 +235,7 @@ extern float_precision zeta(const float_precision&);
 // Support functions. Works on float_precision
 float_precision _float_precision_inverse( const float_precision& );
 float_precision _float_table( enum table_type, size_t, const enum round_mode = float_precision_ctrl.mode());
-// Binary version 
+// Binary version
 float_precision _float_precision_atofp(const char *, size_t, enum round_mode);
 float_precision _float_precision_atofp(const std::string&, size_t, enum round_mode);
 //float_precision _float_precision_atofp2(const char *, size_t, enum round_mode);  // DEBUG
@@ -297,20 +298,20 @@ int_precision _int_precision_fastrem(const int_precision &, const int_precision 
 //  And is always stored in normalized mode after an operation or conversion
 //  The length or the representation is always >= 2
 //  A null string is considered as an error and an exception is thrown
-//  Floating Point Numbers is stored in BASE 2^64 (Radix R=2^64). 
-//	
+//  Floating Point Numbers is stored in BASE 2^64 (Radix R=2^64).
+//
 //  Also number is always strip for leading nosignificant zeros
 //
 class float_precision {
    enum round_mode   mRmode;	// Rounding mode. Default Round Nearest
    size_t			 mPrec;		// Number of decimals in mantissa. Default 20, We make a shot cut by assuming the number of digits can't exceed 2^32-1 on 32bit or 2^64-1 on 64bit system
    eptype            mExpo;		// Exponent as a power of 2 as in IEEE 754. We make a short cut here and use the eptype to hold the exponent
-								// the exponent. 
+								// the exponent.
    int				 mSign;		// The sign +1 for "+"a and -1 for "-". Notice in version 2+ the sign has been separated frm the mNumber, same as for int_precision
    std::vector<fptype> mNumber; // The binary vector of fptype that holds the float number. Per definition the vector when the constructor is invoked will always be initialized to zero if no argument is provided.
 								// The fraction point is always after the first digit and is implied. mNumber[0] holds the most significant part of the number.
 								// e.g. R=2^64. Number=mNumber[0]*R^0+mNumber[1]*R^-1+mBInary[2]*R^-2,...mNumber[n-1]*R^-(n-1) etc.
-   
+
    public:
       // Constructors
 	  float_precision();											// When initialized with no parameters
@@ -339,7 +340,7 @@ class float_precision {
 	  eptype exponent() const;					// Return the exponent
 	  eptype exponent(const eptype e);			// Set and retun the new exponent
 	  eptype adjustExponent(const eptype adj);	// Adjust the exponent. Fast way to multiply or divide by a power of 2
-	  int sign() const;							// Return the sign 
+	  int sign() const;							// Return the sign
 	  int sign(const int s);					// Set and return the new sign
 	  int change_sign();						// Change sign
 	  size_t precision() const;					// Return the precision (number of decimal digits after the .)
@@ -358,9 +359,9 @@ class float_precision {
 	//  float_precision abs();					// Return the absolute value of the number
 
 	  float_precision assign(const float_precision& a);  // Assign the number a to the float_precision object
-	  	  
+
 	  // Conversion methods. Safer and less ambigiuos than overloading implicit/explivit conversion operators
-	  std::string toString() const; 
+	  std::string toString() const;
 	  std::string toFixed(int);
 	  std::string toPrecision(int);
 	  std::string toExponential(int);
@@ -436,7 +437,7 @@ extern const float_precision FP_QUIET_NAN;
 //  Constructor
 //  Validate and initilize with empty parameter
 //
-inline float_precision::float_precision() 
+inline float_precision::float_precision()
 	{
 	mRmode = float_precision_ctrl.mode();
 	mPrec = float_precision_ctrl.precision();
@@ -465,7 +466,7 @@ inline float_precision::float_precision( const char c, const size_t p = float_pr
 	mPrec = p;
 	mSign = +1;
 	if (c < 0) { mSign = -1; }
-	mNumber.assign( 1, abs(c) ); 
+	mNumber.assign( 1, abs(c) );
 	if (c != 0)
 		mExpo += _float_precision_normalize(mNumber);
 	}
@@ -503,7 +504,7 @@ inline float_precision::float_precision( const unsigned char c, const size_t p =
 // 	@param      "i"	-	Integer number
 // 	@param      "p"	-	Number of precision (default float_precision_ctrl.precision())
 // 	@param      "m"	-	rounding mode (default float_precision_ctrl.mode())
-// 
+//
 //  Description:
 //  Constructor
 //  Validate and initialize with integer
@@ -569,7 +570,7 @@ inline float_precision::float_precision( int i, const size_t p = float_precision
 	if (i < 0) mSign = -1;
 	mNumber.assign( 1, abs(i) );
 	if(i!=0)
-		mExpo+= _float_precision_normalize(mNumber);		
+		mExpo+= _float_precision_normalize(mNumber);
 	}
 
 
@@ -618,7 +619,7 @@ inline float_precision::float_precision( long i, const size_t p = float_precisio
 	mSign = +1;
 	//mNumber.resize(2, 0);
 	if (i < 0) mSign = -1;
-	mNumber.assign( 1, abs(i) );
+	mNumber.assign( 1, std::abs(i) );
 	if (i != 0)
 		mExpo += _float_precision_normalize(mNumber);
 	}
@@ -668,7 +669,7 @@ inline float_precision::float_precision( long long i, const size_t p = float_pre
 	mSign = +1;
 	//mNumber.resize(2, 0);
 	if (i < 0) mSign = -1;
-	mNumber.assign( 1, abs(i) );
+	mNumber.assign( 1, std::abs(i) );
 	if (i != 0)
 		mExpo += _float_precision_normalize(mNumber);
 	}
@@ -718,8 +719,8 @@ inline float_precision::float_precision( const char *str, const size_t p = float
    if( str == NULL || *str == '\0' )
       { throw bad_int_syntax(); return; }
 
-   mRmode = m;  
-   mPrec = p;   
+   mRmode = m;
+   mPrec = p;
    *this = _float_precision_atofp( str, p, m );
    }
 
@@ -787,7 +788,7 @@ inline float_precision::float_precision( double d, const size_t p = float_precis
 	{
 	uintmax_t fpb;
 
-	mPrec = p; 
+	mPrec = p;
 	mRmode = m;
 	mSign = +1;
 	mExpo = 0;
@@ -859,7 +860,7 @@ inline float_precision::float_precision(const std::vector<fptype>& v)
 //
 // Description:
 //  Constructor for vector<fptype>  to float_precision
-// When initialized through a float_precision. 
+// When initialized through a float_precision.
 inline float_precision::float_precision(const float_precision& s)
 	{
 	mRmode = s.mRmode;
@@ -908,8 +909,8 @@ inline float_precision::operator double() const
 
 	if (this->size() == 1 && this->index(0) == 0)
 		return 0.0;
-	expo = this->exponent();	// Get the exponent 
-	expo += 1023;			// Add Biased double exponent format 
+	expo = this->exponent();	// Get the exponent
+	expo += 1023;			// Add Biased double exponent format
 	if (this->size()>1)
 		t = static_cast<uintmax_t>(this->index(1));
 	t >>= 12;
@@ -1028,7 +1029,7 @@ inline float_precision::operator unsigned long long() const
 	if (mExpo > 0 && mNumber.size() == 1)  // true power of 2
 		{
 		ull = mNumber[0];
-		if (mExpo < 64) 
+		if (mExpo < 64)
 			ull <<= mExpo;
 		else
 			ull = 0;  // Overflow all lower 4bits is zero
@@ -1036,7 +1037,7 @@ inline float_precision::operator unsigned long long() const
 		}
 	//All other cases
 	size_t n = (mExpo - 1) / Bitsfptype + 1;
-	if(mNumber.size()<n-1) 
+	if(mNumber.size()<n-1)
 		{
 		return ull = 0;	// number exceed ull max number
 		}
@@ -1137,7 +1138,7 @@ inline float_precision::operator int_precision() const
 // Description:
 //  Return a copy of mRmode
 //
-inline enum round_mode float_precision::mode() const 
+inline enum round_mode float_precision::mode() const
 	{ return mRmode; }
 
 //	@author Henrik Vestermark (hve@hvks.com)
@@ -1173,7 +1174,7 @@ inline eptype float_precision::exponent() const
 //  Set and Return a copy of mExpo
 //	Notice that exponent is a power of base 2, 2^expo
 //
-inline eptype float_precision::exponent(const eptype e) 
+inline eptype float_precision::exponent(const eptype e)
 	{ return(mExpo = e); }
 
 //	@author Henrik Vestermark (hve@hvks.com)
@@ -1183,7 +1184,7 @@ inline eptype float_precision::exponent(const eptype e)
 //	@return 	Set and return a copy of the new exponent
 //
 // Description:
-//  Adjusting the exponent. This is the same as multiply with 2^adj; 
+//  Adjusting the exponent. This is the same as multiply with 2^adj;
 //	Much faster way to multiply with anu power of two. If mNumber[0] is 0 then dont do any adjustment since the result is still 0
 //
 inline eptype float_precision::adjustExponent(const eptype adj)
@@ -1201,7 +1202,7 @@ inline eptype float_precision::adjustExponent(const eptype adj)
 // Description:
 //  Return a copy of mSign
 //
-inline int float_precision::sign() const 
+inline int float_precision::sign() const
 	{ return mSign; }
 
 //	@author Henrik Vestermark (hve@hvks.com)
@@ -1213,7 +1214,7 @@ inline int float_precision::sign() const
 // Description:
 //  Set and Return a copy of mSign
 //
-inline int float_precision::sign(const int s) 
+inline int float_precision::sign(const int s)
 	{ return (mSign = s); }
 
 //	@author Henrik Vestermark (hve@hvks.com)
@@ -1245,10 +1246,10 @@ inline size_t float_precision::precision() const
 //
 // Description:
 //  Set and return a copy of the new decimal precision
-//	If new precision is less than previous precision number it is converted to new precision 
+//	If new precision is less than previous precision number it is converted to new precision
 //	using the current rounding mode for the float_precision object
 //
-inline size_t float_precision::precision(const size_t p) 
+inline size_t float_precision::precision(const size_t p)
 	{
 	size_t newPrec= p >= 0 ? p : float_precision_ctrl.precision();
 	if(newPrec < mPrec)
@@ -1278,7 +1279,7 @@ inline std::vector<fptype> float_precision::number() const
 // Description:
 //  Set and Return a copy of mNumber
 //
-inline std::vector<fptype> float_precision::number(const std::vector<fptype> &mb) 
+inline std::vector<fptype> float_precision::number(const std::vector<fptype> &mb)
 	{ return mNumber = mb; }
 
 //	@author Henrik Vestermark (hve@hvks.com)
@@ -1289,7 +1290,7 @@ inline std::vector<fptype> float_precision::number(const std::vector<fptype> &mb
 // Description:
 //  Return a pointer to mNumber
 //
-inline std::vector<fptype> *float_precision::pointer() 
+inline std::vector<fptype> *float_precision::pointer()
 	{ return &mNumber; }
 
 //	@author Henrik Vestermark (hve@hvks.com)
@@ -1312,7 +1313,7 @@ inline fptype float_precision::index(const size_t inx)	const
 // Description:
 //   Return the size of the mNumber vector<fptype>
 //
-inline size_t float_precision::size() const 
+inline size_t float_precision::size() const
 	{ return mNumber.size(); }
 
 //	@author Henrik Vestermark (hve@hvks.com)
@@ -1323,9 +1324,9 @@ inline size_t float_precision::size() const
 // Description:
 //   compare with 0 and return the boolean comparision value
 //
-inline bool float_precision::iszero() const 
+inline bool float_precision::iszero() const
 	{ return mNumber.size() == 1 && mNumber[0] == 0; }	// Notice both +0 and -0 is allowed and return true
-		
+
 //	@author Henrik Vestermark (hve@hvks.com)
 //	@date		6/Oct/2021
 //	@brief 		float_precision::epsilon  return the epsilon such that 1.0+epsilon!=1.0
@@ -1355,11 +1356,11 @@ inline float_precision float_precision::epsilon()
 //
 inline float_precision float_precision::succ()
 {
-	float_precision next(*this); // Copy the original number 
+	float_precision next(*this); // Copy the original number
 	const intmax_t pbits = static_cast<intmax_t>(ceil(mPrec * log2(BASE_10)));// +1;// -1; // Number of precision in bits
 	float_precision one(1);
 	eptype expo;
-	
+
 	one.exponent(-pbits-1);
 	if (next.iszero())
 	{
@@ -1383,11 +1384,11 @@ inline float_precision float_precision::succ()
 //
 inline float_precision float_precision::pred()
 {
-	float_precision next(*this); // Copy the original number 
+	float_precision next(*this); // Copy the original number
 	const intmax_t pbits = static_cast<intmax_t>(ceil(mPrec * log2(BASE_10)));// +1; // Number of precision in bits
 	float_precision one(1);
 	eptype expo;
-	
+
 	one.exponent(-pbits-1);
 	if (next.iszero())
 	{
@@ -1403,10 +1404,10 @@ inline float_precision float_precision::pred()
 //	@author Henrik Vestermark (hve@hvks.com)
 //	@date		7/Jun/2022
 //	@brief 		float_precision::abs
-//	@return		the absolute value of the float_precision object 
+//	@return		the absolute value of the float_precision object
 //
 // Description:
-//   Return the absolute value of the float_precision number 
+//   Return the absolute value of the float_precision number
 //	same as abs(float_precision number)
 //
 /*
@@ -1418,7 +1419,7 @@ inline float_precision float_precision::abs()
 //	@author Henrik Vestermark (hve@hvks.com)
 //	@date		23/Apr/2022
 //	@brief 		float_precision::inverse
-//	@return		the inverse of the float_precision object 
+//	@return		the inverse of the float_precision object
 //
 // Description:
 //   Return the inverse of the float_precision number doing 1/float_precision object
@@ -1431,9 +1432,9 @@ inline float_precision float_precision::inverse()
 //	@author Henrik Vestermark (hve@hvks.com)
 //	@date		23/Apr/2022
 //	@brief 		float_precision::square
-//	@return		the square of the float_precision object 
+//	@return		the square of the float_precision object
 //
-//	@todo  
+//	@todo
 //
 // Description:
 //   Return the square of the float_precision number by multiplying it with itself
@@ -1496,8 +1497,8 @@ inline float_precision float_precision::assign(const float_precision& a)
 	mPrec = a.mPrec;
 	mExpo = a.mExpo;
 	mNumber = a.mNumber;
-	mSign = a.mSign; 
-	return *this; 
+	mSign = a.mSign;
+	return *this;
 	}
 
 
@@ -1514,11 +1515,11 @@ inline float_precision float_precision::toInteger()
 	float_precision frac = *this;
 	if (mExpo < 0)
 		{ mNumber.assign(1, 0); mExpo = 0;  return frac; }
-	if (mExpo == 0) 
+	if (mExpo == 0)
 	{
 		//fptype tmp = mNumber[0];
 		mNumber.assign(1, frac.mNumber[0]);
-		frac.mNumber[0] = 0; 
+		frac.mNumber[0] = 0;
 		frac.mExpo += _float_precision_normalize(frac.mNumber); return frac; }
 	// fecth expo bits from the fp number after the '.'
 	const size_t n = mExpo / Bitsfptype + 1;
@@ -1547,18 +1548,18 @@ inline float_precision float_precision::toInteger()
 // Description:
 //  reduce float precision to a fraction and return the discared integer part
 //
-inline float_precision float_precision::toFraction() 
+inline float_precision float_precision::toFraction()
 	{// Return the integer as a float_precision and discard the inteer portion on this
 	const fptype mask = ~static_cast<fptype>(0);
 	float_precision integer = *this;
 
-	if (mExpo < 0) 
+	if (mExpo < 0)
 		{ integer.mNumber.assign(1, 0); integer.mExpo = 0; integer.mSign = 1;  return integer; }
-	if (mExpo == 0) 
+	if (mExpo == 0)
 		{ integer.mNumber.assign(1, mNumber[0]); mNumber[0] = 0; mExpo += _float_precision_normalize(mNumber); return integer; }
 	// Fecth expo bits from the fp number after the '.' to adjust the integer portion
 	const size_t n = integer.mExpo / Bitsfptype + 1;
-	const unsigned bn = integer.mExpo % Bitsfptype;  // mExpo always>0 
+	const unsigned bn = integer.mExpo % Bitsfptype;  // mExpo always>0
 	// Discard excessive fptype digits for the integer
 	const size_t extra = bn == 0 ? 0 : 1;
 	if (integer.mNumber.size()> n + extra)
@@ -1590,13 +1591,13 @@ inline float_precision float_precision::toFraction()
 //	@return 	the string representation of the float_precision object
 //
 //	@todo
-//		TBD 
+//		TBD
 //
 // Description:
 //  return the string value value of the float_precision object
 //
-inline std::string float_precision::toString() const 
-	{ 
+inline std::string float_precision::toString() const
+	{
 	if(isnan(*this))
 		return std::string("NaN");
 	if (isinf(*this))
@@ -1613,11 +1614,11 @@ inline std::string float_precision::toString() const
 //	@param		"fix"	-	Number of fixed decimal
 //
 //	@todo
-//		remove the need to do a string rounding and adding 
+//		remove the need to do a string rounding and adding
 //
 // Description:
 //  return the string value value of the fixed precision of the float_precision number
-//	  same functionality as the javascript .toFixed() method	
+//	  same functionality as the javascript .toFixed() method
 //
 inline std::string float_precision::toFixed(int fix = 0)
 	{
@@ -1626,7 +1627,7 @@ inline std::string float_precision::toFixed(int fix = 0)
 	size_t inx;
 
 	if (fix < 0) fix = 0;
-	ss = toString();						// Now we have it in exponetial form and in Base 10 
+	ss = toString();						// Now we have it in exponetial form and in Base 10
 	sign = mSign;							// get sign
 	if (sign<0)
 		ss.erase(0, 1);						// Erase sign
@@ -1634,14 +1635,14 @@ inline std::string float_precision::toFixed(int fix = 0)
 	expo = std::stoi(ss.substr(inx + 1));	// Get exponent value
 	ss.erase(inx, std::string::npos);		// Erase exponent value from string
 	ss.erase(1, 1);							// Erase '.'
-	inx = 1;								// Where dot should be inserted			
+	inx = 1;								// Where dot should be inserted
 	if (expo > 0)
 		{
-		ss.append(expo, '0'); //  append better than ss.insert(ss.length(), expo, '0'); 
+		ss.append(expo, '0'); //  append better than ss.insert(ss.length(), expo, '0');
 		inx += expo;
 		}		// Trailing with zeros
 	else if (expo < 0) ss.insert(0, -expo, '0');				// Padd with leading zeros
-	_float_precision_rounding(&ss, sign, inx + fix, this->mRmode);  // Round to fix. NOTICE string rounding 
+	_float_precision_rounding(&ss, sign, inx + fix, this->mRmode);  // Round to fix. NOTICE string rounding
 	if (ss.length()<(unsigned)(inx + fix))
 		ss.append(inx + fix - ss.length(), '0'); //ss.insert(ss.length(), inx + fix - ss.length(), '0');		// Add trailing zeros
 	if (ss.length()>inx) ss.insert(inx, 1, '.');			// Insert fraction unless it after the last digit
@@ -1658,11 +1659,11 @@ inline std::string float_precision::toFixed(int fix = 0)
 //	@param		"fix"	-	Number of fixed decimal
 //
 //	@todo
-//		remove the need to do a string rounding and adding 
+//		remove the need to do a string rounding and adding
 //
 // Description:
 //  return the string value value of the precision of the float_precision number
-//	  same functionality as the javascript .toPrecision() method	
+//	  same functionality as the javascript .toPrecision() method
 //
 inline std::string float_precision::toPrecision(int fix = 1)
 	{
@@ -1679,11 +1680,11 @@ inline std::string float_precision::toPrecision(int fix = 1)
 	expo = std::stoi(ss.substr(inx + 1));	// Get exponent value
 	ss.erase(inx, std::string::npos);		// Erase exponent value from string
 	ss.erase(1, 1);							// Erase .
-	inx = 1;								// Where dot should be inserted			
+	inx = 1;								// Where dot should be inserted
 	_float_precision_rounding(&ss, sign, fix, this->mRmode);  // Round to fix. old fashion string rounding
 	if (expo >= 0)
 		{
-		if ((unsigned)fix> ss.length()) 
+		if ((unsigned)fix> ss.length())
 			ss.append(fix - ss.length(), '0');  // Trailing with zeros, so we have fix decimals
 		if (expo > 0 && inx < ss.length())	 // Adjust the decimal sign as long as we can accomodate all digits
 			{
@@ -1693,22 +1694,22 @@ inline std::string float_precision::toPrecision(int fix = 1)
 			expo -= static_cast<int>(shf);
 			inx += shf;
 			}
-		}	
+		}
 	else
 		{  // Expo < 0
 		if (expo<0 && (unsigned)fix > ss.length())	// Room for adding leading zeros to accomodate the exponen which is negative
 			{
 			shf = (unsigned)fix - ss.length();
-			if (shf > (unsigned)-expo) 
+			if (shf > (unsigned)-expo)
 				shf = -expo;
 			expo += static_cast<int>(shf);
 			ss.insert(0, shf, '0');
 			}
 		}
 	ss = ss.substr(0, inx) + ((unsigned)fix > inx ? "." : "") + ss.substr(inx, fix);
-	if (sign < 0) 
+	if (sign < 0)
 		ss.insert(0, 1, '-');		// Add sign if negative
-	if (expo != 0) 
+	if (expo != 0)
 		{ ss += "E"; ss += (expo < 0 ? "-" : ""); ss += itostring(abs(expo), BASE_10); }
 	return ss;
 	}
@@ -1722,11 +1723,11 @@ inline std::string float_precision::toPrecision(int fix = 1)
 //	@param		"fix"	-	Number of fixed decimal
 //
 //	@todo
-//		remove the need to do a string rounding and adding 
+//		remove the need to do a string rounding and adding
 //
 // Description:
 //  return the string value value of the toExponential precision of the float_precision number
-//	  same functionality as the javascript .toExponential() method	
+//	  same functionality as the javascript .toExponential() method
 //
 inline std::string float_precision::toExponential(int fix = 0)
 	{
@@ -1743,14 +1744,14 @@ inline std::string float_precision::toExponential(int fix = 0)
 	expo = std::stoi(ss.substr(inx + 1));	// Get exponent value
 	ss.erase(inx, std::string::npos);		// Erase exponent value from string
 	ss.erase(1, 1);							// Erase .
-	inx = 1;								// Where dot should be inserted			
+	inx = 1;								// Where dot should be inserted
 	_float_precision_rounding(&ss, sign, fix, this->mRmode);  // Round to fix. Old fashion string rounding
-	if ((unsigned)fix > ss.length()) 
+	if ((unsigned)fix > ss.length())
 		ss.append(fix - ss.length(), '0');	// ss.insert(ss.length(), fix - ss.length(), '0');  // Trailing with zeros, so we have fix decimals
 	ss = ss.substr(0, inx) + ((unsigned)fix>inx ? "." : "") + ss.substr(inx, fix);
-	if (sign < 0) 
+	if (sign < 0)
 		ss.insert(0, 1, '-');		// Add sign if negative
-	if (expo != 0) 
+	if (expo != 0)
 		{ ss += "E"; ss += (expo < 0 ? "-" : ""); ss += itostring(abs(expo), BASE_10); }
 	return ss;
 	}
@@ -1782,7 +1783,7 @@ inline std::string float_precision::toExponential(int fix = 0)
 //  Mode and precision is not affected by the assignment.
 //
 inline float_precision& float_precision::operator=( const float_precision& rhs )
-	{	
+	{
 	// Notice mRmode and mPrec is not changed as a result of the assignment.
 	mExpo = rhs.mExpo;
 	mSign = rhs.mSign;
@@ -1802,7 +1803,7 @@ inline float_precision& float_precision::operator=( const float_precision& rhs )
 //
 //	@todo    Still missing code for x += a where add make sense. fx. if a is so small it does
 //           not affect the result within the given precision is should ignored. same is true
-//           if x is insignififcant comapre to a the just assign a to x. However for interval 
+//           if x is insignififcant comapre to a the just assign a to x. However for interval
 //			 arithmetic support this is not desirable
 //
 // Description:
@@ -1816,7 +1817,7 @@ inline float_precision& float_precision::operator=( const float_precision& rhs )
 //  Early out algorithm. i.e.
 //     - x+=0 return x
 //     - x+=a wher x is 0 return a
-// 
+//
 //
 inline float_precision& float_precision::operator+=( const float_precision& rhs )
 	{
@@ -1825,7 +1826,7 @@ inline float_precision& float_precision::operator+=( const float_precision& rhs 
 		return *this;
 	if (isnan(rhs))
 		return *this = rhs;
-	
+
 	// Check for shortcuts involving infinity operand
 	if (isinf(rhs) || isinf(*this))
 	{  // One or both the operand is infinity
@@ -1833,7 +1834,7 @@ inline float_precision& float_precision::operator+=( const float_precision& rhs 
 		{ // Both operand is of infinity value
 			if(mSign*rhs.mSign>0) // Both have the same sign
 				return *this;	// Both operand is infinity value. Return infinity
-			// Both infinity but different sign return NaN. 
+			// Both infinity but different sign return NaN.
 			// But maintain precision
 			//mSign = +1;
 			//mExpo = INTMAX_MAX;
@@ -1881,7 +1882,7 @@ inline float_precision& float_precision::operator+=( const float_precision& rhs 
 		_float_precision_right_shift( s1, 1 );
 	if( _float_precision_rounding( s2, sign2, precision_max, mRmode ) != 0 ) // If carry when rounding up then one right shift
 		_float_precision_right_shift( s2, 1 );
-	
+
 	digits_max = std::max(s1.size(), s2.size());
 
 	if( sign1 == sign2 )
@@ -2080,7 +2081,7 @@ inline float_precision& float_precision::operator/=( const float_precision& rhs 
 inline float_precision& float_precision::operator%=(const float_precision& rhs)
 	{
 	float_precision c;
-	
+
 	if (this->iszero()) // If divisor is zero the result is zero
 		return *this;
 
@@ -2140,7 +2141,7 @@ inline float_precision operator+( float_precision& lhs, float_precision& rhs)
 template <class _Ty> inline float_precision operator+( float_precision& lhs, const _Ty& rhs )
 	{
 	float_precision c(rhs);
-	
+
 	c.precision(std::max(lhs.precision(), c.precision()));
 	c += lhs;
 	return c;
@@ -2162,7 +2163,7 @@ template <class _Ty> inline float_precision operator+( const _Ty& lhs, const flo
 	{
 	float_precision c(lhs);
 
-	c.precision(std::max(rhs.precision(), c.precision())); 
+	c.precision(std::max(rhs.precision(), c.precision()));
 	return c += rhs;
 	}
 
@@ -2181,7 +2182,7 @@ inline float_precision operator+( int_precision& lhs, float_precision& rhs )
 	{
 	float_precision c(lhs);
 
-	c.precision(std::max(rhs.precision(), c.precision())); 
+	c.precision(std::max(rhs.precision(), c.precision()));
 	return c += rhs;
 	}
 
@@ -2201,7 +2202,7 @@ inline float_precision operator+( float_precision& lhs, int_precision& rhs )
 	{
 	float_precision c(rhs);
 
-	c.precision(std::max(lhs.precision(), c.precision())); 
+	c.precision(std::max(lhs.precision(), c.precision()));
 	return c += lhs;
 	}
 
@@ -2235,7 +2236,7 @@ template <class _Ty> inline float_precision operator-( float_precision& lhs, con
 	{
 	float_precision c(rhs), d(lhs);
 
-	d.precision(std::max(d.precision(), c.precision())); 
+	d.precision(std::max(d.precision(), c.precision()));
 	return d -= c;
 	}
 
@@ -2584,8 +2585,8 @@ inline bool operator==( const float_precision& a, const float_precision& b )
 		return false;
 	if (_float_precision_compare(a.mNumber, b.mNumber) != 0)
 		return false;
-	return true;	
-	} 
+	return true;
+	}
 
 
 //	@author Henrik Vestermark (hve@hvks.com)
@@ -2608,8 +2609,8 @@ inline bool operator<( const float_precision& a, const float_precision& b )
 	int sign1, sign2, cmp;
 	bool zero1, zero2;
 
-	zero1 = a.iszero(); 
-	zero2 = b.iszero(); 
+	zero1 = a.iszero();
+	zero2 = b.iszero();
 	if( zero1 && zero2 )  // Both zero
 		return false;
 
@@ -2619,7 +2620,7 @@ inline bool operator<( const float_precision& a, const float_precision& b )
 	if (sign1 != sign2)
 		return sign1 < sign2;
 
-	// Now a &  b has the same sign 
+	// Now a &  b has the same sign
 	if( zero1 )   // If a is zero and a & b has the same sign and b is not zero then a < b
 		return true;
 	if( zero2 )   // If b is zero and a & b has the same sign and a is not zero then a > b
@@ -2742,17 +2743,5 @@ inline float_precision fabs( const float_precision& a )
 // END FLOAT PRECISION FUNCTIONS
 //
 //////////////////////////////////////////////////////////
-
-//CUSTOM FOR COMPATABILITY
-
-inline std::string to_string(const float_precision& x) { return x.toString(); }
-
-inline float_precision hypot(const float_precision& x, const float_precision& y){ return sqrt(x * x + y * y ); }
-
-inline void set_global_precision(const size_t new_precision){ 
-	if(new_precision > 20){
-		float_precision_ctrl.precision(new_precision); 
-	}
-}
 
 #endif

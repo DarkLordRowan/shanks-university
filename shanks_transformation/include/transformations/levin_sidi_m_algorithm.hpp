@@ -1,0 +1,243 @@
+#ifndef LEVIN_SIDI_M_ALGORITHM_HPP
+#define LEVIN_SIDI_M_ALGORITHM_HPP
+#pragma once
+
+#define DEFAULT_GAMMA 100.5
+
+/**
+ * @file levin_sidi_m_algorithm.hpp
+ * @brief This file contains the definition of analogues of Levin-Sidi M-transformation
+ *
+ * For theory, see:
+ * Sidi, A. (2003). Practical Extrapolation Methods: Theory and Applications.
+ *   Cambridge University Press. (Chapter 9, pp. 285-369)
+ * Sidi, A. (2003). A new class of nonlinear transformations for accelerating the convergence
+ *   of infinite integrals and series. arXiv:math/0306302.
+ */
+
+#include "series_acceleration.hpp"
+#include "remainders.hpp"
+
+#include <memory> // For std::unique_ptr
+
+ /**
+  * @brief Levin-Sidi M-transformation class template.
+  *
+  * @authors Yurov P.I., Bezzaborov A.A.
+  *
+  * This class implements the Levin-Sidi M-transformation, which is particularly effective
+  * for series that belong to the b(1)/LIN/FAC classes (factorial and linear convergence).
+  * The transformation is based on factorial-like terms and Pochhammer symbols.
+  *
+  * References:
+  * - Sidi, A. (2003). Practical Extrapolation Methods: Theory and Applications.
+  * - Sidi, A. (2003). A new class of nonlinear transformations. arXiv:math/0306302.
+  *
+  * @tparam T Floating-point type for series elements (must satisfy Accepted)
+  *           Represents numerical precision (float, double, long double)
+  * @tparam K Unsigned integral type for indices and order (must satisfy std::unsigned_integral)
+  *           Used for counting and indexing operations
+  * @tparam series_templ Type of series object to accelerate. Must provide:
+  *           - T operator()(K n) const: returns the n-th series term a_n
+  *           - T S_n(K n) const: returns the n-th partial sum s_n = a_0 + ... + a_n
+  *           - T utils::minus_one_raised_to_power_n(K j) const: returns (-1)^j
+  *           - T binomial_coefficient(T n, K k) const: returns binomial coefficient C(n, k)
+  */
+template<AcceptedLike T, UnsignedIntLike K>
+class levin_sidi_m_algorithm final : public series_acceleration<T, K>
+{
+protected:
+
+	using float_type = GetUnderlyingType<T>::value; //type in case of complex or interval
+
+	float_type gamma_in_use = utils::cast<float_type>(DEFAULT_GAMMA);   ///< Positive real parameter such that gamma >= order - 1
+	std::unique_ptr<const transform_base<T, K>> remainder;				///< Pointer to remainder transformation object
+	remainder_type remainder_type_in_use;
+
+public:
+
+	/**
+	 * @brief Parameterized constructor to initialize the Levin-Sidi M-transformation.
+	 *
+	 * @param series The series class object to be accelerated
+	 *        Must be a valid object implementing the required series interface
+	 * @param variant Type of remainder transformation to use
+	 *        Valid values: u_type, t_type, v_type, t_wave_type, v_wave_type
+	 *        Determines the remainder estimate R_n used in the transformation
+	 * @param gamma_ Positive real parameter such that gamma >= order - 1, see p. 64 [https://arxiv.org/pdf/math/0306302.pdf]
+	 *        Default value: 10.0. Affects the factorial terms in the transformation.
+	 *        For theory, see: Sidi (2003, arXiv:math/0306302), p. 64
+	 */
+	explicit levin_sidi_m_algorithm(
+		remainder_type remainder_type_to_use = remainder_type::u_type,
+		const float_type& gamma_to_use = utils::cast<float_type>(DEFAULT_GAMMA)
+	) : series_acceleration<T, K>() { update_gamma(gamma_to_use); update_type(remainder_type_to_use); }
+
+	// Default destructor is sufficient since unique_ptr handles deletion
+
+	/**
+	 * @brief Implementation of Levin-Sidi M-transformation for series acceleration.
+	 *
+	 * Computes the accelerated sum using the M-transformation, which is particularly
+	 * effective for series with factorial or linear convergence patterns.
+	 *
+	 * For theory, see:
+	 * - General framework: Sidi (2003, arXiv:math/0306302), Eqs. (9.2)-(9.6)
+	 * - Convergence properties: Sidi (2003, Practical Extrapolation Methods), pp. 285, 369
+	 *
+	 * @param n The number of terms to use in the transformation
+	 *        Valid values: n > 0 (algorithm requires at least 1 term)
+	 *        Higher values use more terms but may provide better acceleration
+	 * @param order The order of transformation (starting index k)
+	 *        Valid values: order >= 0
+	 *        The parameter gamma must satisfy gamma >= order - 1
+	 * @return The accelerated partial sum after M-transformation
+	 * @throws std::domain_error if n=0 or gamma < n-1
+	 * @throws std::overflow_error if division by zero or numerical instability occurs
+	 */
+	T operator()(
+		const K n, 
+        const K order, 
+        const series_result<T>& data
+	) const override;
+
+	void update_type(const remainder_type remainder_type_to_use);
+	void update_gamma(const float_type& new_gamma) { gamma_in_use = new_gamma; }
+
+	std::string get_name() override {
+
+		
+
+		series_acceleration<T, K>::acceleration_name = "levin sidi m algorithm ";
+		switch(remainder_type_in_use){
+			case remainder_type::u_type 	: { series_acceleration<T, K>::acceleration_name += "with u-variant "; 		break; }
+			case remainder_type::t_type 	: { series_acceleration<T, K>::acceleration_name += "with t-variant "; 		break; }
+			case remainder_type::v_type 	: { series_acceleration<T, K>::acceleration_name += "with v-variant "; 		break; }
+			case remainder_type::t_wave_type: { series_acceleration<T, K>::acceleration_name += "with t-wave-variant "; break; }
+			case remainder_type::v_wave_type: { series_acceleration<T, K>::acceleration_name += "with v-wave-variant "; break; }
+		}
+		series_acceleration<T, K>::acceleration_name += "and gamma = " + utils::to_string(gamma_in_use);
+
+		return series_acceleration<T, K>::acceleration_name;
+	}
+};
+
+template<AcceptedLike T, UnsignedIntLike K>
+void levin_sidi_m_algorithm<T, K>::update_type(const remainder_type remainder_type_to_use){
+
+	remainder_type_in_use = remainder_type_to_use;
+
+	// Initialize the appropriate remainder transformation based on variant
+	switch(remainder_type_to_use){
+        case remainder_type::u_type 	: { remainder.reset(new u_transform<T, K>()); 	  break; }
+        case remainder_type::t_type 	: { remainder.reset(new t_transform<T, K>()); 	  break; }
+        case remainder_type::v_type 	: { remainder.reset(new v_transform<T, K>()); 	  break; }
+        case remainder_type::t_wave_type: { remainder.reset(new t_wave_transform<T, K>()); break; }
+        case remainder_type::v_wave_type: { remainder.reset(new v_wave_transform<T, K>()); break; }
+        default:
+		{
+			remainder_type_in_use = remainder_type::u_type;
+            remainder.reset(new u_transform<T, K>()); // Default to u-variant
+		}
+    }
+
+}
+
+template<AcceptedLike T, UnsignedIntLike K>
+T levin_sidi_m_algorithm<T, K>::operator()(
+	const K n, 
+    const K order, 
+    const series_result<T>& data
+) const {
+
+    const K required_size = n + order + static_cast<K>(1) + static_cast<K>(
+		remainder_type_in_use == remainder_type::t_wave_type ||
+		remainder_type_in_use == remainder_type::v_type ||
+		remainder_type_in_use == remainder_type::v_wave_type
+	);
+
+    if (data.Sn.size() < required_size || data.an.size() < required_size){
+        throw std::out_of_range("The Sn or an smaller then required for M_{" + utils::to_string(order) + "}^{" + utils::to_string(n) + "}\n" +
+        "the size of Sn and an must be at least " + utils::to_string(required_size));
+	}
+
+    if (order == static_cast<K>(0)) {
+        return data.Sn.at(n);
+    }
+
+	//TODO разобраться с документом (pdf) n/order
+    // Validate parameter constraint: gamma >= n - 1
+	if(gamma_in_use - utils::cast<float_type>(static_cast<double>(n)) - utils::cast<float_type>(1.0) < utils::cast<float_type>(0.0)){
+		throw std::domain_error("gamma cannot be lesser than n - 1");
+	}
+
+	T numerator, denominator, rest;
+	rest = numerator = denominator = utils::cast<T>(0.0);
+	float_type up, down, down_coef, up_coef;
+	up = down = utils::cast<float_type>(1.0);
+	down_coef = up_coef = utils::cast<float_type>(0.0);
+
+	if constexpr (is_precisable<T>::value){
+		const size_t precision = std::max(utils::get_precision(data.Sn[0]), utils::get_precision(data.an[0]));
+		utils::set_precision(precision, numerator, denominator, rest, up, down, down_coef, up_coef);
+	}
+
+	// Precompute initial Pochhammer symbol terms
+	// For theory, see: Sidi (2003, arXiv:math/0306302), Eq. (9.4)
+	// Compute: (γ+k+2)_{n-1}/(γ+k+1)_{n} = Γ(γ+k+n+1)/Γ(γ+k+2) × Γ(γ+k+1)/Γ(γ+k+n+1)
+	
+
+	down_coef += gamma_in_use + utils::cast<float_type>((order + static_cast<K>(2)));
+	up_coef   += down_coef - utils::cast<float_type>(n);
+
+	// Compute (γ+k+2)_{n-1} = ∏_{m=0}^{n-2} (γ+k+2+m)
+	// Compute (γ+k+1)_{n} = ∏_{m=0}^{n-1} (γ+k+1+m)
+	for (K m = static_cast<K>(0); m + static_cast<K>(1) < n; ++m) {
+		up   *= (up_coef   + utils::cast<float_type>(static_cast<double>(m)));
+		down *= (down_coef + utils::cast<float_type>(static_cast<double>(m)));
+	}
+	up /= down;
+
+	// Update coefficients for the inner product terms
+	down_coef = gamma_in_use + utils::cast<float_type>(static_cast<double>(order + static_cast<K>(1)));
+	up_coef   = down_coef - utils::cast<float_type>(static_cast<double>(n + static_cast<K>(1)));
+	// Main summation loop
+	// For theory, see: Sidi (2003, arXiv:math/0306302), Eq. (9.2)
+	for (K j = static_cast<K>(0); j <= n; ++j) {
+
+		// Compute (-1)^j * C(n,j) * (n-j)
+		rest += -rest + utils::minus_one_raised_to_power_n<T,K>(j);
+		rest *= utils::cast<T>(utils::binomial_coefficient<K>(n, j));
+		rest *= utils::cast<T>(up);										// Multiply by Pochhammer ratio term
+		rest /= utils::cast<T>(j + static_cast<K>(1));  // Multiply by 1/(j+1) factor
+		up /= (  up_coef + utils::cast<float_type>(j));			// Update Pochhammer ratio for next iteration
+		up *= (down_coef + utils::cast<float_type>(j));			// (γ+k+1-j)_{j}/(γ+k+2-n)_{j} → (γ+k+1-j)_{j+1}/(γ+k+2-n)_{j+1}
+		//Multiply by remainder term 1/R_{k+j}
+		rest *= remainder->operator()(
+			order + j,
+			order + j,
+			data.an,
+			utils::cast<T>(-gamma_in_use-utils::cast<float_type>(n))
+		);
+		
+		// Accumulate numerator and denominator
+		
+		numerator	+= rest * data.Sn.at(order + j);
+		denominator += rest;
+		
+		// TODO проверить корректность пересчета бин. коэф.
+		//// Update binomial coefficient for next iteration: C(n, j+1) = C(n, j) * (n-j)/(j+1)
+		//binomial_coef *= utils::cast<T>(n - j);
+		//binomial_coef /= utils::cast<T>(j + static_cast<K>(1));
+	}
+
+	numerator /= denominator;
+
+	if(!utils::isfinite(numerator)){
+        throw std::overflow_error("division by zero");
+    }
+
+	return numerator;
+}
+
+#endif

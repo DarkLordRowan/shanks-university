@@ -186,7 +186,7 @@ template<class _TY> polynomial<_TY>& polynomial<_TY>::operator/=( const polynomi
    for(size_t k=nq;k>=0;k--)
 		{
 		q[k]=r[nb+k]/rhs[nb];
-		for (size_t j = nb; j >= 0; j--) 
+		for (size_t j = nb; j >= 0; j--)
 			{
 			r[j + k] -= q[k] * rhs[j]; if (j == 0) break;
 			}
@@ -211,7 +211,7 @@ template<class _TY> polynomial<_TY>& polynomial<_TY>::operator%=( const polynomi
    for(size_t k=nq;k>=0;k--)
 		{
 		q[k]=r[nb+k]/rhs[nb];
-		for (size_t j = nb; j >= 0; j--) 
+		for (size_t j = nb; j >= 0; j--)
 			{
 			r[j + k] -= q[k] * rhs[j]; if (j == 0) break;
 			}
