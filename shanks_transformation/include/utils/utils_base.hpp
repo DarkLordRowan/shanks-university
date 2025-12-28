@@ -15,16 +15,30 @@ struct series_result{
 	std::vector<T> an; /**< vector of a_{n} = S_{n} - S_{n-1} */
 };
 
+/**
+ * @brief Wraps the type in the TypeWrapper struct
+ * @tparam T 
+ */
 template <typename T>
 struct TypeWrapper {
     using value_type = T;
 };
 
+/**
+ * @brief Get the value_type if the type has one, otherwise get the original type
+ * @tparam T 
+ */
 template<typename T>
 struct GetUnderlyingType {
 	using value = typename std::conditional_t<isFloatLike<T>::value, TypeWrapper<T>, T>::value_type;
 };
 
+/**
+ * @brief Adapter struct for more convenient integration of third party libraries with some custom integer like type
+ *
+ * consists of mathematical functions, helpers (isfinite, fma, to_string, ...), functions for acquiring precision if type is able to do it,
+ * and setting precision if type is able to do it. If such functionality isn't implemented for given type nothing is done or methods return zero (for now).
+*/
 struct utils {
 
 	//MATH FUNCTIONS

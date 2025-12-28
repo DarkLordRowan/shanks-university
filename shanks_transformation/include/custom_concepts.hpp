@@ -54,19 +54,30 @@ std::is_floating_point<T>::value
 #endif
 ;
 
+/**
+ * @brief Is complex with std::floating_point value_type
+ * @tparam T 
+ */
 template<typename T>
 struct is_complex_t : public std::false_type {};
 
 template<std::floating_point U>
 struct is_complex_t<std::complex<U>> : public std::true_type {};
 
+/**
+ * @brief Is complex with not only std::floating_point, but also for FloatLike types, such as mpfr::mpreal or similar ones
+ * @tparam T 
+ */
 template<typename T>
 struct is_complex_custom : public std::false_type {};
 
 template<FloatLike U>
 struct is_complex_custom<std::complex<U>> : public std::true_type {};
 
-
+/**
+ * @brief Does the type is from std:: or custom composite type has std:: value_type
+ * @tparam T 
+ */
 template<typename T>
 struct is_standard_types : std::integral_constant<bool,
     std::is_floating_point<T>::value || is_complex_t<T>::value || std::is_integral<T>::value
@@ -84,6 +95,10 @@ struct is_standard_types : std::integral_constant<bool,
     #endif
 >{};
 
+/**
+ * @brief Does the type has precision capabilities
+ * @tparam T 
+ */
 template<typename T>
 struct is_precisable : std::integral_constant<bool,
     false
@@ -168,6 +183,10 @@ concept IntervalLike = false
 #endif
 ;
 
+/**
+ * @brief Does the type is FloatLike, or ComplexLike, or IntervalLike
+ * @tparam T 
+ */
 template<typename T>
 concept AcceptedLike = requires{ 
     requires FloatLike<T> || ComplexLike<T> || IntervalLike<T>; 
