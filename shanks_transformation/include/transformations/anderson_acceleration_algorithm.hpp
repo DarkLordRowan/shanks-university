@@ -10,10 +10,10 @@
  * @file anderson_acceleration_algorithm.hpp
  * @brief Anderson Acceleration algorithm implementation.
 */
-
 #include "series_acceleration.hpp"
-
 #include <vector>
+
+namespace shanks{ namespace algos{
 
 /**
  * @brief Anderson acceleration algorithm class template implementing sequence transformation.
@@ -227,5 +227,8 @@ T anderson_acceleration_algorithm<T, K>::operator()(
     return result;
 
 }
+
+} //namespace shanks::algos
+} //namespace shanks
 
 #endif

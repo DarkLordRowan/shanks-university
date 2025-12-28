@@ -18,6 +18,8 @@
 #include "series_acceleration.hpp"
 #include <vector>
 
+namespace shanks{ namespace algos{
+
 /**
  * @brief J-Transformation algorithm class template implementing nonlinear sequence transformation.
  *
@@ -198,5 +200,8 @@ T j_transformation_algorithm<T, K>::operator()(
     
     return result;
 }
+
+} //namespace shanks::algos
+} //namespace shanksz
 
 #endif

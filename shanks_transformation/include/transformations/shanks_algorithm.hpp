@@ -23,7 +23,6 @@
 
 #ifdef EIGEN_CORE_MODULE_H
 namespace Eigen {
- 
 template<> struct NumTraits<mpfr::mpreal>
  : NumTraits<double> // permits to get the epsilon, dummy_precision, lowest, highest functions
 {
@@ -42,8 +41,9 @@ template<> struct NumTraits<mpfr::mpreal>
   };
 };
 }
-
 #endif
+
+namespace shanks{ namespace algos{
 
 /**
  * @brief Shanks transformation for series class template. Based upon determinant formula/
@@ -99,7 +99,7 @@ T shanks_algorithm<T, K>::operator()(
 
 	//create matrix for further determinant calculation
 	const size_t matrix_size = order + static_cast<K>(1);
-	Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> matrix_template; matrix_template.resize(matrix_size, matrix_size);
+	::Eigen::Matrix<T, ::Eigen::Dynamic, ::Eigen::Dynamic> matrix_template; matrix_template.resize(matrix_size, matrix_size);
 
 	T upper_determinant, lower_determinant;
 	upper_determinant = lower_determinant = utils::cast<T>(0);
@@ -135,5 +135,8 @@ T shanks_algorithm<T, K>::operator()(
 	return result;
 	
 }
+
+} //namespace shanks::algos
+} //namespace shanks
 
 #endif

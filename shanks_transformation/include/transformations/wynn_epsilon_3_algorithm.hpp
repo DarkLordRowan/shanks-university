@@ -16,6 +16,8 @@
 
 #include "series_acceleration.hpp"
 
+namespace shanks{ namespace algos{
+
  /**
   * @brief Wynn's Epsilon Algorithm (Third Implementation) class template.
   *
@@ -251,5 +253,8 @@ T wynn_epsilon_3_algorithm<T, K>::operator()(
     return result;
 
 }
+
+} //namespace shanks::algos
+} //namespace shanks
 
 #endif

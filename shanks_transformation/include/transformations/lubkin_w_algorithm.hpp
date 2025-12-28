@@ -16,6 +16,8 @@
 
 #include "series_acceleration.hpp"
 
+namespace shanks{ namespace algos{
+
 /**
  * @brief Lubkin's W-transformation class template implementing a powerful sequence acceleration method.
  *
@@ -157,5 +159,8 @@ T lubkin_w_algorithm<T, K>::operator()(
 
 	return W[0];
 }
+
+} //namespace shanks::algos
+} //namespace shanks
 
 #endif

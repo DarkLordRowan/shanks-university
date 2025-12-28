@@ -7,6 +7,7 @@
   * @authors Bolshakov M.P.
   * @edited by Kreynin R.G.
 */
+namespace shanks{ namespace algos{
 enum class transformation_id_t {
 	        		     null_transformation_id,
              anderson_acceleration_algorithm_id,
@@ -63,6 +64,9 @@ recurrent_levin_sidi_s_v_wave_transformation_id,
            wynn_rho_gamma_rho_transformation_id,
                       transformation_id_t_count,
 };
+
+} //namespace shanks::algos
+} //namespace shanks
 
 //INCLUDE TRANSFORMATIONS AND ALGORITHMS
 #include "transformations/brezinski_theta_algorithm.hpp"

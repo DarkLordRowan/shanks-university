@@ -18,6 +18,8 @@
 #include "series_acceleration.hpp"
 #include <vector>   // Include the vector library
 
+namespace shanks{ namespace algos{
+
 /**
  * @brief Richardson transformation class for series acceleration
  *
@@ -155,5 +157,7 @@ T richardson_algorithm<T, K>::operator()(
 
 }
 
+} //namespace shanks::algos
+} //namespace shanks
 
 #endif

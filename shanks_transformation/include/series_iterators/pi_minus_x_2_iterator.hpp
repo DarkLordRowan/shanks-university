@@ -5,6 +5,8 @@
 #include "series_base_iterator.hpp"
 #include <numbers>
 
+namespace shanks { namespace iters {
+
 /**
 * @brief Maclaurin series of (pi-2)/x function
 * @authors Bolshakov M.P.
@@ -37,5 +39,8 @@ public:
 	}
 
 };
+
+} //namespace shanks::iters
+} //namespace shanks
 
 #endif

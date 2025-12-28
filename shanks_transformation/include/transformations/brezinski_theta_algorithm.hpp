@@ -16,6 +16,8 @@
 #include "series_acceleration.hpp"
 #include <vector>
 
+namespace shanks{ namespace algos{
+
 /**
  * @brief Brezinski's theta algorithm class template implementing a nonlinear sequence transformation.
  *
@@ -160,5 +162,8 @@ T brezinski_theta_algorithm<T, K>::operator()(
 
     return theta_even[0];
 }
+
+} //namespace shanks::algos
+} //namespace shanks
 
 #endif

@@ -68,7 +68,7 @@ struct is_complex_custom<std::complex<U>> : public std::true_type {};
 
 
 template<typename T>
-struct is_standart_types : std::integral_constant<bool,
+struct is_standard_types : std::integral_constant<bool,
     std::is_floating_point<T>::value || is_complex_t<T>::value || std::is_integral<T>::value
     #ifdef INC_COMPLEXPRECISION
     || 

@@ -4,6 +4,8 @@
 
 #include "series_base_iterator.hpp"
 
+namespace shanks { namespace iters {
+
 /**
 * @brief Maclaurin series of -0.25 * x function
 * @authors Bolshakov M.P.
@@ -26,5 +28,8 @@ public:
 	}
 
 };
+
+} //namespace shanks::iters
+} //namespace shanks
 
 #endif

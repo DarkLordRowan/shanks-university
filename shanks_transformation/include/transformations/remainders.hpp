@@ -19,6 +19,8 @@
 #include <stdexcept>
 #include <vector>
 
+namespace shanks{ namespace remainders{
+
  /**
   * @brief Enum for remainder types to use in Levin-type transformations
   *
@@ -267,5 +269,8 @@ T v_wave_transform<T,K>::operator()(const K n, const K index, const std::vector<
     
 	return result;
 }
+
+} //namespace shanks::remainders
+} //namespace shanks
 
 #endif

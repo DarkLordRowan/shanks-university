@@ -18,6 +18,8 @@
 
 #include <memory>
 
+namespace shanks{ namespace algos{
+
  /**
   * @brief Wynn's Rho Algorithm class template for sequence acceleration.
   *
@@ -46,10 +48,17 @@ protected:
 
 	using float_type = GetUnderlyingType<T>::value; //type in case of complex or interval, represents type for real numbers
 
-	std::unique_ptr<const numerator_base<T, K>> numerator;			  /**< Numerator computation strategy */
-	float_type gamma_in_use;										  /**< Gamma parameter for generalized rho transformation */
-	float_type rho_in_use;											  /**< Rho parameter for gamma-rho variant */
-	numerator_type numerator_type_in_use = numerator_type::rho_type;  /**< numerator type in use needed for calculating required size */
+	/// Numerator computation strategy
+	std::unique_ptr<const shanks::numerators::numerator_base<T, K>> numerator;
+
+	/// Gamma parameter for generalized rho transformation
+	float_type gamma_in_use;
+
+	/// Rho parameter for gamma-rho variant
+	float_type rho_in_use;
+
+	/// numerator type in use needed for calculating required size 
+	shanks::numerators::numerator_type numerator_type_in_use{shanks::numerators::numerator_type::rho_type};
 
 
 public:
@@ -76,7 +85,7 @@ public:
 
 	// Стал:
 	explicit wynn_rho_algorithm(
-		numerator_type numerator_type_to_use = numerator_type::rho_type,
+		shanks::numerators::numerator_type numerator_type_to_use = shanks::numerators::numerator_type::rho_type,
 		const float_type& gamma_to_use = utils::cast<float_type>(-1.0), // Передача по константной ссылке
 		const float_type& rho_to_use   = utils::cast<float_type>(1.0)  // Передача по константной ссылке
 	) : series_acceleration<T, K>() {
@@ -130,17 +139,17 @@ public:
 	 * @brief Setter to change numerator type
 	 * @param numerator_type_to_use enumerator of a new numerator to use
 	*/
-	void update_numerator(const numerator_type numerator_type_to_use){
+	void update_numerator(const shanks::numerators::numerator_type numerator_type_to_use){
 
 		numerator_type_in_use = numerator_type_to_use;
 
 		switch(numerator_type_to_use){
-        	case numerator_type::rho_type 			: { numerator.reset(new rho_transform<T, K>()	    ); break; }
-        	case numerator_type::generalized_type 	: { numerator.reset(new generilized_transform<T, K>()); break; }
-        	case numerator_type::gamma_rho_type 	: { numerator.reset(new gamma_rho_transform<T, K>()	); break; }
+        	case shanks::numerators::numerator_type::rho_type 		  : { numerator.reset(new shanks::numerators::rho_transform<T, K>()	    ); break; }
+        	case shanks::numerators::numerator_type::generalized_type : { numerator.reset(new shanks::numerators::generilized_transform<T, K>()); break; }
+        	case shanks::numerators::numerator_type::gamma_rho_type   : { numerator.reset(new shanks::numerators::gamma_rho_transform<T, K>()	); break; }
         	default:{
-				numerator_type_in_use = numerator_type::rho_type;
-        	    numerator.reset(new rho_transform<T, K>()); // Default to u-variant
+				numerator_type_in_use = shanks::numerators::numerator_type::rho_type;
+        	    numerator.reset(new shanks::numerators::rho_transform<T, K>()); // Default to u-variant
 			}
 		}
 	}
@@ -153,9 +162,9 @@ public:
 
 		series_acceleration<T, K>::acceleration_name = "wynn rho algorithm ";
 		switch(numerator_type_in_use){
-			case numerator_type::rho_type 			: { series_acceleration<T, K>::acceleration_name += "with rho-numerator "; break; }
-			case numerator_type::generalized_type 	: { series_acceleration<T, K>::acceleration_name += "with generalized-numerator "; break; }
-			case numerator_type::gamma_rho_type 	: { series_acceleration<T, K>::acceleration_name += "with v-numerator "; break; }
+			case shanks::numerators::numerator_type::rho_type 			: { series_acceleration<T, K>::acceleration_name += "with rho-numerator "; break; }
+			case shanks::numerators::numerator_type::generalized_type 	: { series_acceleration<T, K>::acceleration_name += "with generalized-numerator "; break; }
+			case shanks::numerators::numerator_type::gamma_rho_type 	: { series_acceleration<T, K>::acceleration_name += "with v-numerator "; break; }
 		}
 		series_acceleration<T, K>::acceleration_name += ", gamma = " + utils::to_string(gamma_in_use);
 		series_acceleration<T, K>::acceleration_name += ", rho = " + utils::to_string(rho_in_use);
@@ -172,7 +181,7 @@ inline T wynn_rho_algorithm<T, K>::operator()(
     const series_result<T>& data
 ) const {
 
-	const K required_size = n + order + static_cast<K>(1) + order * static_cast<K>(numerator_type_in_use == numerator_type::rho_type);
+	const K required_size = n + order + static_cast<K>(1) + order * static_cast<K>(numerator_type_in_use == shanks::numerators::numerator_type::rho_type);
 
     if (data.Sn.size() < required_size || data.an.size() < required_size){
         throw std::out_of_range("The Sn or an smaller then required for wynn_rho_{" + utils::to_string(order) + "}^{" + utils::to_string(n) + "}\n" +
@@ -247,5 +256,8 @@ inline T wynn_rho_algorithm<T, K>::operator()(
 
     return rho_even[0];
 }
+
+} //namespace shanks::algos
+} //namespace shanks
 
 #endif

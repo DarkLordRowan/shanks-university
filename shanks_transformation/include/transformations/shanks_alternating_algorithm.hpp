@@ -4,6 +4,8 @@
 
 #include "series_acceleration.hpp"
 
+namespace shanks{ namespace algos{
+
 /**
  * @brief Shanks transformation for alternating series class template.
  *
@@ -132,5 +134,8 @@ T shanks_transform_alternating<T, K>::operator()(
 	return T_n[n];
 
 }
+
+} //namespace shanks::algos
+} //namespace shanks
 
 #endif

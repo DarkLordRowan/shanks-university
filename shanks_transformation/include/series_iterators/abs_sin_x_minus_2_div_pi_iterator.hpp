@@ -3,8 +3,9 @@
 #pragma once
 
 #include "series_base_iterator.hpp"
-#include <cmath>
 #include <numbers>
+
+namespace shanks { namespace iters {
 
 /**
 * @brief Maclaurin series of pi/4{x<0}, pi/4-x{x>=0} function
@@ -27,7 +28,7 @@ public:
            		return utils::sin(this->x) - utils::cast<T>(2) / utils::cast<T>(std::numbers::pi);
 		}
 
-		return utils::cast<T>(-1)*sin(this->x) - utils::cast<T>(2) / utils::cast<T>(std::numbers::pi);
+		return utils::cast<T>(-1) * utils::sin(this->x) - utils::cast<T>(2) / utils::cast<T>(std::numbers::pi);
 	}
 	
 	bool check_validity() const override {
@@ -41,10 +42,8 @@ public:
 	}
 
 	T next() override {
-		
-		using std::cos;
-
-		this->current_state = utils::cast<T>(-4) * cos(utils::cast<T>(utils::fma(size_t{2},this->n,size_t{2}))*this->x) / 
+	
+		this->current_state = utils::cast<T>(-4) * utils::cos(utils::cast<T>(utils::fma(size_t{2},this->n,size_t{2}))*this->x) / 
 		utils::cast<T>(utils::fma(size_t{2},this->n,size_t{1}) * utils::fma(size_t{2},this->n,size_t{3})) / utils::cast<T>(std::numbers::pi);
 	
 		this->n += 1;
@@ -52,5 +51,8 @@ public:
 	}
 
 };
+
+} //namespace shanks::iters
+} //namespace shanks
 
 #endif

@@ -19,6 +19,7 @@
 
 #include <memory>
 
+namespace shanks{ namespace algos{
 
  /**
   * @brief Levin Algorithm class template implementing various Levin transformations.
@@ -46,10 +47,17 @@ protected:
 
 	using float_type = GetUnderlyingType<T>::value; //type in case of complex or interval
 
-	float_type beta_in_use = utils::cast<float_type>(1.0);         /**< Parameter for u-variant transformation (β > 0). Default value is 1.0. */
-    std::unique_ptr<const transform_base<T, K>> remainder;			/**< Pointer to remainder transformation object 						   */
-    bool use_recurrent_formula = false;								/**< Flag to use recurrence formulas (true) or direct formulas (false) 	   */
-    remainder_type remainder_type_in_use = remainder_type::u_type;	/**< Type of Levin transformation variant (u, t, v, t~, v~) 			   */
+	/// Parameter for u-variant transformation (β > 0). Default value is 1.0.
+	float_type beta_in_use = utils::cast<float_type>(1.0);
+
+	/// Pointer to remainder transformation object
+    std::unique_ptr<const shanks::remainders::transform_base<T, K>> remainder;
+
+	/// Flag to use recurrence formulas (true) or direct formulas (false)
+    bool use_recurrent_formula{false};
+
+	///Type of Levin transformation variant (u, t, v, t~, v~)
+    shanks::remainders::remainder_type remainder_type_in_use{shanks::remainders::remainder_type::u_type};
 
 	/**
 	 * @brief Computes the Levin transformation using direct summation formulas.
@@ -103,7 +111,7 @@ public:
 	 *        For theory, see: Sidi & Levin (1981), Eq. (3.4) and surrounding discussion
 	 */
 	explicit levin_algorithm(
-        const remainder_type remainder_type_to_use = remainder_type::u_type,
+        const shanks::remainders::remainder_type remainder_type_to_use = shanks::remainders::remainder_type::u_type,
         const bool use_recurrent_formula = false,
         const float_type& beta_to_use = utils::cast<float_type>(1.0)
 	);
@@ -149,19 +157,19 @@ public:
 	 * @brief Setter to change numerator type
 	 * @param remainder_type_to_use enumerator of a new remainder to use
 	 */
-	void update_type(const remainder_type remainder_type_to_use){
+	void update_type(const shanks::remainders::remainder_type remainder_type_to_use){
 
 		remainder_type_in_use = remainder_type_to_use;
 
 		switch(remainder_type_to_use){
-        	case remainder_type::u_type 	: { remainder.reset(new u_transform<T, K>()	   ); break; }
-        	case remainder_type::t_type 	: { remainder.reset(new t_transform<T, K>()	   ); break; }
-        	case remainder_type::v_type 	: { remainder.reset(new v_transform<T, K>()	   ); break; }
-        	case remainder_type::t_wave_type: { remainder.reset(new t_wave_transform<T, K>()); break; }
-        	case remainder_type::v_wave_type: { remainder.reset(new v_wave_transform<T, K>()); break; }
+        	case shanks::remainders::remainder_type::u_type 	: { remainder.reset(new shanks::remainders::u_transform<T, K>()	   ); break; }
+        	case shanks::remainders::remainder_type::t_type 	: { remainder.reset(new shanks::remainders::t_transform<T, K>()	   ); break; }
+        	case shanks::remainders::remainder_type::v_type 	: { remainder.reset(new shanks::remainders::v_transform<T, K>()	   ); break; }
+        	case shanks::remainders::remainder_type::t_wave_type: { remainder.reset(new shanks::remainders::t_wave_transform<T, K>()); break; }
+        	case shanks::remainders::remainder_type::v_wave_type: { remainder.reset(new shanks::remainders::v_wave_transform<T, K>()); break; }
         	default:{
-				remainder_type_in_use = remainder_type::u_type;
-        	    remainder.reset(new u_transform<T, K>()); // Default to u-variant
+				remainder_type_in_use = shanks::remainders::remainder_type::u_type;
+        	    remainder.reset(new shanks::remainders::u_transform<T, K>()); // Default to u-variant
 			}
 		}
 	}
@@ -175,11 +183,11 @@ public:
 		series_acceleration<T, K>::acceleration_name = (use_recurrent_formula ? "recurrent " : "");
 		series_acceleration<T, K>::acceleration_name += "levin l algorithm ";
 		switch(remainder_type_in_use){
-			case remainder_type::u_type 	: { series_acceleration<T, K>::acceleration_name += "with u-variant "; 		break; }
-			case remainder_type::t_type 	: { series_acceleration<T, K>::acceleration_name += "with t-variant "; 		break; }
-			case remainder_type::v_type 	: { series_acceleration<T, K>::acceleration_name += "with v-variant "; 		break; }
-			case remainder_type::t_wave_type: { series_acceleration<T, K>::acceleration_name += "with t-wave-variant "; break; }
-			case remainder_type::v_wave_type: { series_acceleration<T, K>::acceleration_name += "with v-wave-variant "; break; }
+			case shanks::remainders::remainder_type::u_type 	: { series_acceleration<T, K>::acceleration_name += "with u-variant "; 		break; }
+			case shanks::remainders::remainder_type::t_type 	: { series_acceleration<T, K>::acceleration_name += "with t-variant "; 		break; }
+			case shanks::remainders::remainder_type::v_type 	: { series_acceleration<T, K>::acceleration_name += "with v-variant "; 		break; }
+			case shanks::remainders::remainder_type::t_wave_type: { series_acceleration<T, K>::acceleration_name += "with t-wave-variant "; break; }
+			case shanks::remainders::remainder_type::v_wave_type: { series_acceleration<T, K>::acceleration_name += "with v-wave-variant "; break; }
 		}
 		series_acceleration<T, K>::acceleration_name += "and beta = " + utils::to_string(beta_in_use);
 
@@ -190,7 +198,7 @@ public:
 
 template<AcceptedLike T, UnsignedIntLike K>
 levin_algorithm<T, K>::levin_algorithm(
-    const remainder_type remainder_type_to_use,
+    const shanks::remainders::remainder_type remainder_type_to_use,
     const bool use_recurrent_formula,
     const float_type& beta_to_use
 ) :
@@ -236,7 +244,7 @@ inline T levin_algorithm<T, K>::calc_result(
             n + j,
             n + j,
             data.an,
-            utils::cast<T>((remainder_type_in_use == remainder_type::u_type ? beta_in_use : utils::cast<float_type>(1.0)))
+            utils::cast<T>((remainder_type_in_use == shanks::remainders::remainder_type::u_type ? beta_in_use : utils::cast<float_type>(1.0)))
         );
 
 		rest *= C_njk;
@@ -276,7 +284,7 @@ inline T levin_algorithm<T, K>::calc_result_rec(
             n+i,
             n+i,
             data.an,
-            utils::cast<T>(remainder_type_in_use == remainder_type::u_type ? beta_in_use : utils::cast<float_type>(1.0))
+            utils::cast<T>(remainder_type_in_use == shanks::remainders::remainder_type::u_type ? beta_in_use : utils::cast<float_type>(1.0))
         );
 
 		Num[i] += data.Sn.at(n+i) * Denom[i];
@@ -312,9 +320,9 @@ T levin_algorithm<T, K>::operator()(
 ) const {
 
     const K required_size = n + order + static_cast<K>(1) + static_cast<K>(
-		remainder_type_in_use == remainder_type::t_wave_type ||
-		remainder_type_in_use == remainder_type::v_type ||
-		remainder_type_in_use == remainder_type::v_wave_type
+		remainder_type_in_use == shanks::remainders::remainder_type::t_wave_type ||
+		remainder_type_in_use == shanks::remainders::remainder_type::v_type ||
+		remainder_type_in_use == shanks::remainders::remainder_type::v_wave_type
 	);
 
     if (data.Sn.size() < required_size || data.an.size() < required_size){
@@ -330,5 +338,8 @@ T levin_algorithm<T, K>::operator()(
 
     return result;
 }
+
+} //namespace shanks::algos
+} //namespace shanks
 
 #endif

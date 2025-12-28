@@ -70,7 +70,7 @@ constexpr const K utils::binomial_coefficient(const K n, const K k) {
 template<typename T> 
 requires AcceptedLike<T> || std::is_integral<T>::value
 T utils::fma(const T& a, const T& b, const T& c){
-	if constexpr(is_standart_types<T>::value) return std::fma(a,b,c);
+	if constexpr(std::is_floating_point<T>::value) return std::fma(a,b,c);
 	#ifdef __MPREAL_H__
 	else if constexpr(std::is_same<T, mpfr::mpreal>::value) return mpfr::fma(a,b,c);
 	#endif
@@ -80,7 +80,7 @@ T utils::fma(const T& a, const T& b, const T& c){
 template<typename T> 
 requires AcceptedLike<T> || std::is_integral<T>::value
 T utils::pow(const T& x, const T& y){
-	if constexpr (is_standart_types<T>::value) return std::pow(x,y);
+	if constexpr (is_standard_types<T>::value) return std::pow(x,y);
 	#ifdef _CL_FLOAT_CLASS_H
 	else if constexpr (std::is_same<T, cln::cl_R>::value) return cln::exp(y * cln::ln(x));
 	#endif
@@ -92,7 +92,7 @@ T utils::pow(const T& x, const T& y){
 
 template<AcceptedLike T>
 T utils::sqrt(const T& x){
-	if constexpr (is_standart_types<T>::value) return std::sqrt(x);
+	if constexpr (is_standard_types<T>::value) return std::sqrt(x);
 	#ifdef __MPREAL_H__
 	else if constexpr (std::is_same<T, mpfr::mpreal>::value) return mpfr::sqrt(x);
 	#endif
@@ -116,7 +116,7 @@ T utils::exp(const T& x){
 
 template<AcceptedLike T>
 T utils::log(const T& x){
-	if constexpr (is_standart_types<T>::value) return std::log(x);
+	if constexpr (is_standard_types<T>::value) return std::log(x);
 	#ifdef __MPREAL_H__
 	else if constexpr (std::is_same<T, mpfr::mpreal>::value) return mpfr::log(x);
 	#endif
@@ -128,7 +128,7 @@ T utils::log(const T& x){
 
 template<AcceptedLike T> 
 T utils::hypot(const T& a, const T& b){
-	if constexpr(is_standart_types<T>::value) return std::hypot(a,b);
+	if constexpr(is_standard_types<T>::value) return std::hypot(a,b);
 	#ifdef INC_FPRECISION
 	if constexpr(std::is_same<T, float_precision>::value) return a.square() + b.square();
 	#endif
@@ -188,7 +188,7 @@ T utils::si_x(const T& x){
 
 template<AcceptedLike T>
 T utils::e_x(const T& x){
-	if constexpr (std::is_floating_point<T>::value) std::comp_ellint_2(x);
+	if constexpr (std::is_floating_point<T>::value) return std::comp_ellint_2(x);
 	else return utils::cast<T>(0.0);
 }
 
@@ -204,7 +204,7 @@ T utils::inc_gamma(const T& x, const T& alpha){
 	#ifdef __GSL_SF_EXPINT_H__
 	if constexpr (std::is_floating_point<T>::value) return std::tgamma(this->alpha) - utils::cast<T>(gsl_sf_gamma_inc(static_cast<double>(alpha), static_cast<double>(this->x)));
 	#else 
-	if constexpr (is_standart_types<T>::value) return utils::cast<T>(0.0);
+	if constexpr (is_standard_types<T>::value) return utils::cast<T>(0.0);
 	#endif
 	#ifdef __MPREAL_H__
 	else if constexpr (std::is_same<T, mpfr::mpreal>::value) return mpfr::tgamma(alpha) - mpfr::gammainc(alpha,x);
@@ -227,7 +227,7 @@ T utils::lambertW0(const T& x){
 
 template<AcceptedLike T>
 T utils::sin(const T& x){
-	if constexpr (is_standart_types<T>::value) return std::sin(x);
+	if constexpr (is_standard_types<T>::value) return std::sin(x);
 	#ifdef __MPREAL_H__
 	else if constexpr (std::is_same<T, mpfr::mpreal>::value) return mpfr::sin(x);
 	#endif
@@ -238,7 +238,7 @@ T utils::sin(const T& x){
 }
 template<AcceptedLike T> 
 T utils::asin(const T& x){
-	if constexpr (is_standart_types<T>::value) return std::asin(x);
+	if constexpr (is_standard_types<T>::value) return std::asin(x);
 	#ifdef __MPREAL_H__
 	else if constexpr (std::is_same<T, mpfr::mpreal>::value) return mpfr::asin(x);
 	#endif
@@ -249,7 +249,7 @@ T utils::asin(const T& x){
 }
 template<AcceptedLike T>
 T utils::cos(const T& x){
-	if constexpr (is_standart_types<T>::value) return std::cos(x);
+	if constexpr (is_standard_types<T>::value) return std::cos(x);
 	#ifdef __MPREAL_H__
 	else if constexpr (std::is_same<T, mpfr::mpreal>::value) return mpfr::cos(x);
 	#endif
@@ -260,7 +260,7 @@ T utils::cos(const T& x){
 }
 template<AcceptedLike T>
 T utils::acos(const T& x){
-	if constexpr (is_standart_types<T>::value) return std::acos(x);
+	if constexpr (is_standard_types<T>::value) return std::acos(x);
 	#ifdef __MPREAL_H__
 	else if constexpr (std::is_same<T, mpfr::mpreal>::value) return mpfr::acos(x);
 	#endif
@@ -271,7 +271,7 @@ T utils::acos(const T& x){
 }
 template<AcceptedLike T>
 T utils::tan(const T& x){
-	if constexpr (is_standart_types<T>::value) return std::tan(x);
+	if constexpr (is_standard_types<T>::value) return std::tan(x);
 	#ifdef __MPREAL_H__
 	else if constexpr (std::is_same<T, mpfr::mpreal>::value) return mpfr::tan(x);
 	#endif
@@ -282,7 +282,7 @@ T utils::tan(const T& x){
 }
 template<AcceptedLike T>
 T utils::atan(const T& x){
-	if constexpr (is_standart_types<T>::value) return std::atan(x);
+	if constexpr (is_standard_types<T>::value) return std::atan(x);
 	#ifdef __MPREAL_H__
 	else if constexpr (std::is_same<T, mpfr::mpreal>::value) return mpfr::atan(x);
 	#endif
@@ -294,7 +294,7 @@ T utils::atan(const T& x){
 
 template<AcceptedLike T>
 T utils::sinh(const T& x){
-	if constexpr (is_standart_types<T>::value) return std::sinh(x);
+	if constexpr (is_standard_types<T>::value) return std::sinh(x);
 	#ifdef __MPREAL_H__
 	else if constexpr (std::is_same<T, mpfr::mpreal>::value) return mpfr::sinh(x);
 	#endif
@@ -305,7 +305,7 @@ T utils::sinh(const T& x){
 }
 template<AcceptedLike T>
 T utils::asinh(const T& x){
-	if constexpr (is_standart_types<T>::value) return std::asinh(x);
+	if constexpr (is_standard_types<T>::value) return std::asinh(x);
 	#ifdef __MPREAL_H__
 	else if constexpr (std::is_same<T, mpfr::mpreal>::value) return mpfr::asinh(x);
 	#endif
@@ -316,7 +316,7 @@ T utils::asinh(const T& x){
 }
 template<AcceptedLike T>
 T utils::cosh(const T& x){
-	if constexpr (is_standart_types<T>::value) return std::cosh(x);
+	if constexpr (is_standard_types<T>::value) return std::cosh(x);
 	#ifdef __MPREAL_H__
 	else if constexpr (std::is_same<T, mpfr::mpreal>::value) return mpfr::cosh(x);
 	#endif
@@ -327,7 +327,7 @@ T utils::cosh(const T& x){
 }
 template<AcceptedLike T>
 T utils::acosh(const T& x){
-	if constexpr (is_standart_types<T>::value) return std::acosh(x);
+	if constexpr (is_standard_types<T>::value) return std::acosh(x);
 	#ifdef __MPREAL_H__
 	else if constexpr (std::is_same<T, mpfr::mpreal>::value) return mpfr::acosh(x);
 	#endif
@@ -338,7 +338,7 @@ T utils::acosh(const T& x){
 }
 template<AcceptedLike T>
 T utils::tanh(const T& x){
-	if constexpr (is_standart_types<T>::value) return std::tanh(x);
+	if constexpr (is_standard_types<T>::value) return std::tanh(x);
 	#ifdef __MPREAL_H__
 	else if constexpr (std::is_same<T, mpfr::mpreal>::value) return mpfr::tanh(x);
 	#endif
@@ -349,7 +349,7 @@ T utils::tanh(const T& x){
 }
 template<AcceptedLike T>
 T utils::atanh(const T& x){
-	if constexpr (is_standart_types<T>::value) return std::atanh(x);
+	if constexpr (is_standard_types<T>::value) return std::atanh(x);
 	#ifdef __MPREAL_H__
 	else if constexpr (std::is_same<T, mpfr::mpreal>::value) return mpfr::atanh(x);
 	#endif
@@ -361,7 +361,7 @@ T utils::atanh(const T& x){
 
 template<AcceptedLike T>
 typename GetUnderlyingType<T>::value utils::abs(const T& x){
-	if constexpr (is_standart_types<T>::value) return std::abs(x);
+	if constexpr (is_standard_types<T>::value) return std::abs(x);
 	#ifdef __MPREAL_H__
 	else if constexpr (std::is_same<T, mpfr::mpreal>::value) return mpfr::abs(x);
 	#endif

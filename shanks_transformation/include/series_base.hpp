@@ -14,112 +14,114 @@
 #include "series_iterators/series_iterators.hpp"
 #include "utils.hpp"
 
+namespace shanks { namespace series{
+
 /**
  * @brief Helper function to get series by ID
  */
 template <AcceptedLike T, std::unsigned_integral K>
-inline std::unique_ptr<series_base_iterator<T, K>> create_iterator_by_id(series_iterator_id_t id) {
+inline std::unique_ptr<shanks::iters::series_base_iterator<T, K>> create_iterator_by_id(shanks::iters::series_iterator_id_t id) {
 
 	switch (id) {
-	case series_iterator_id_t::exp_iterator_id: return std::make_unique<exp_iterator<T, K>>();
-	case series_iterator_id_t::cos_iterator_id: return std::make_unique<cos_iterator<T, K>>();
-	case series_iterator_id_t::sin_iterator_id: return std::make_unique<sin_iterator<T, K>>();
-	case series_iterator_id_t::cosh_iterator_id: return std::make_unique<cosh_iterator<T, K>>();
-	case series_iterator_id_t::sinh_iterator_id: return std::make_unique<sinh_iterator<T, K>>();
-	case series_iterator_id_t::bin_iterator_id: return std::make_unique<bin_iterator<T, K>>();
-	case series_iterator_id_t::four_arctan_iterator_id: return std::make_unique<four_arctan_iterator<T, K>>();
-	case series_iterator_id_t::ln1mx_iterator_id: return std::make_unique<ln1mx_iterator<T, K>>();
-	case series_iterator_id_t::mean_sinh_sin_iterator_id: return std::make_unique<mean_sinh_sin_iterator<T, K>>();
-	case series_iterator_id_t::exp_squared_erf_iterator_id: return std::make_unique<exp_squared_erf_iterator<T, K>>();
-	case series_iterator_id_t::half_asin_two_x_iterator_id: return std::make_unique<half_asin_two_x_iterator<T, K>>();
-	case series_iterator_id_t::inverse_1mx_iterator_id: return std::make_unique<inverse_1mx_iterator<T, K>>();
-	case series_iterator_id_t::x_1mx_squared_iterator_id: return std::make_unique<x_1mx_squared_iterator<T, K>>();
-	case series_iterator_id_t::erf_iterator_id: return std::make_unique<erf_iterator<T, K>>();
-	case series_iterator_id_t::m_fact_1mx_mp1_inverse_iterator_id: return std::make_unique<m_fact_1mx_mp1_inverse_iterator<T, K>>();
-	case series_iterator_id_t::inverse_sqrt_1m4x_iterator_id: return std::make_unique<inverse_sqrt_1m4x_iterator<T, K>>();
-	case series_iterator_id_t::one_twelfth_3x2_pi2_iterator_id: return std::make_unique<one_twelfth_3x2_pi2_iterator<T, K>>();
-	case series_iterator_id_t::one_twelfth_x2_pi2_iterator_id: return std::make_unique<one_twelfth_x2_pi2_iterator<T, K>>();
-	case series_iterator_id_t::ln2_iterator_id: return std::make_unique<ln2_iterator<T, K>>();
-	case series_iterator_id_t::one_iterator_id: return std::make_unique<one_iterator<T, K>>();
-	case series_iterator_id_t::minus_one_quarter_iterator_id: return std::make_unique<minus_one_quarter_iterator<T, K>>();
-	case series_iterator_id_t::pi_3_iterator_id: return std::make_unique<pi_3_iterator<T, K>>();
-	case series_iterator_id_t::pi_4_iterator_id: return std::make_unique<pi_4_iterator<T, K>>();
-	case series_iterator_id_t::pi_squared_6_minus_one_iterator_id: return std::make_unique<pi_squared_6_minus_one_iterator<T, K>>();
-	case series_iterator_id_t::three_minus_pi_iterator_id: return std::make_unique<three_minus_pi_iterator<T, K>>();
-	case series_iterator_id_t::one_twelfth_iterator_id: return std::make_unique<one_twelfth_iterator<T, K>>();
-	case series_iterator_id_t::eighth_pi_m_one_third_iterator_id: return std::make_unique<eighth_pi_m_one_third_iterator<T, K>>();
-	case series_iterator_id_t::one_third_pi_squared_m_nine_iterator_id: return std::make_unique<one_third_pi_squared_m_nine_iterator<T, K>>();
-	case series_iterator_id_t::four_ln2_m_3_iterator_id: return std::make_unique<four_ln2_m_3_iterator<T, K>>();
-	case series_iterator_id_t::exp_m_cos_x_sinsin_x_iterator_id: return std::make_unique<exp_m_cos_x_sinsin_x_iterator<T, K>>();
-	case series_iterator_id_t::pi_four_minus_ln2_halfed_iterator_id: return std::make_unique<pi_four_minus_ln2_halfed_iterator<T, K>>();
-	case series_iterator_id_t::five_pi_twelve_iterator_id: return std::make_unique<five_pi_twelve_iterator<T, K>>();
-	case series_iterator_id_t::x_two_iterator_id: return std::make_unique<x_two_iterator<T, K>>();
-	case series_iterator_id_t::pi_six_min_half_iterator_id: return std::make_unique<pi_six_min_half_iterator<T, K>>();
-	case series_iterator_id_t::x_two_throught_squares_iterator_id: return std::make_unique<x_two_throught_squares_iterator<T, K>>();
-	case series_iterator_id_t::minus_one_ned_in_n_iterator_id: return std::make_unique<minus_one_ned_in_n_iterator<T, K>>();
-	case series_iterator_id_t::minus_one_n_fact_n_in_n_iterator_id: return std::make_unique<minus_one_n_fact_n_in_n_iterator<T, K>>();
-	case series_iterator_id_t::ln_x_plus_one_x_minus_one_halfed_iterator_id: return std::make_unique<ln_x_plus_one_x_minus_one_halfed_iterator<T, K>>();
-	case series_iterator_id_t::two_arcsin_square_x_halfed_iterator_id: return std::make_unique<two_arcsin_square_x_halfed_iterator<T, K>>();
-	case series_iterator_id_t::pi_squared_twelve_iterator_id: return std::make_unique<pi_squared_twelve_iterator<T, K>>();
-	case series_iterator_id_t::pi_cubed_32_iterator_id: return std::make_unique<pi_cubed_32_iterator<T, K>>();
-	case series_iterator_id_t::minus_three_plus_ln3_three_devided_two_plus_two_ln2_iterator_id: return std::make_unique<minus_three_plus_ln3_three_devided_two_plus_two_ln2_iterator<T, K>>();
-	case series_iterator_id_t::two_ln2_iterator_id: return std::make_unique<two_ln2_iterator<T, K>>();
-	case series_iterator_id_t::pi_x_multi_e_xpi_plus_e_minusxpi_divided_e_xpi_minus_e_minusxpi_iterator_id: return std::make_unique<pi_x_multi_e_xpi_plus_e_minusxpi_divided_e_xpi_minus_e_minusxpi_iterator<T, K>>();
-	case series_iterator_id_t::pi_minus_x_2_iterator_id: return std::make_unique<pi_minus_x_2_iterator<T, K>>();
-	case series_iterator_id_t::half_multi_ln_1div2multi1minuscosx_iterator_id: return std::make_unique<half_multi_ln_1div2multi1minuscosx_iterator<T, K>>();
-	case series_iterator_id_t::half_minus_sinx_multi_pi_4_iterator_id: return std::make_unique<half_minus_sinx_multi_pi_4_iterator<T, K>>();
-	case series_iterator_id_t::ln_1plussqrt1plusxsquare_minus_ln_2_iterator_id: return std::make_unique<ln_1plussqrt1plusxsquare_minus_ln_2_iterator<T, K>>();
-	case series_iterator_id_t::ln_cosx_iterator_id: return std::make_unique<ln_cosx_iterator<T, K>>();
-	case series_iterator_id_t::ln_sinx_minus_ln_x_iterator_id: return std::make_unique<ln_sinx_minus_ln_x_iterator<T, K>>();
-	case series_iterator_id_t::pi_8_cosx_square_minus_1_div_3_cosx_iterator_id: return std::make_unique<pi_8_cosx_square_minus_1_div_3_cosx_iterator<T, K>>();
-	case series_iterator_id_t::sqrt_oneminussqrtoneminusx_div_x_iterator_id: return std::make_unique<sqrt_oneminussqrtoneminusx_div_x_iterator<T, K>>();
-	case series_iterator_id_t::one_minus_sqrt_1minus4x_div_2x_iterator_id: return std::make_unique<one_minus_sqrt_1minus4x_div_2x_iterator<T, K>>();
-	case series_iterator_id_t::arcsin_x_minus_x_iterator_id: return std::make_unique<arcsin_x_minus_x_iterator<T, K>>();
-	case series_iterator_id_t::pi_x_minus_x_square_square_minus_three_pi_x_plus_two_pi_square_iterator_id: return std::make_unique<pi_x_minus_x_square_square_minus_three_pi_x_plus_two_pi_square_iterator<T, K>>();
-	case series_iterator_id_t::abs_sin_x_minus_2_div_pi_iterator_id: return std::make_unique<abs_sin_x_minus_2_div_pi_iterator<T, K>>();
-	case series_iterator_id_t::pi_minus_3pi_4_and_pi_minus_x_minus_3pi_4_iterator_id: return std::make_unique<pi_minus_3pi_4_and_pi_minus_x_minus_3pi_4_iterator<T, K>>();
-	case series_iterator_id_t::minus_3_div_4_or_x_minus_3_div_4_iterator_id: return std::make_unique<minus_3_div_4_or_x_minus_3_div_4_iterator<T, K>>();
-	case series_iterator_id_t::ten_minus_x_iterator_id: return std::make_unique<ten_minus_x_iterator<T, K>>();
-	case series_iterator_id_t::x_iterator_id: return std::make_unique<x_iterator<T, K>>();
-	case series_iterator_id_t::minus_x_minus_pi_4_or_minus_pi_4_iterator_id: return std::make_unique<minus_x_minus_pi_4_or_minus_pi_4_iterator<T, K>>();
-	case series_iterator_id_t::one_div_two_minus_x_multi_three_plus_x_iterator_id: return std::make_unique<one_div_two_minus_x_multi_three_plus_x_iterator<T, K>>();
-	case series_iterator_id_t::si_x_iterator_id: return std::make_unique<si_x_iterator<T, K>>();
-	case series_iterator_id_t::ci_x_iterator_id: return std::make_unique<ci_x_iterator<T, K>>();
-	case series_iterator_id_t::riemann_zeta_func_iterator_id: return std::make_unique<riemann_zeta_func_iterator<T, K>>();
-	case series_iterator_id_t::riemann_zeta_func_xmin1_div_Riemann_zeta_func_x_iterator_id: return std::make_unique<riemann_zeta_func_xmin1_div_Riemann_zeta_func_x_iterator<T, K>>();
-	case series_iterator_id_t::xsquareplus3_div_xsquareplus2multix_minus_1_iterator_id: return std::make_unique<xsquareplus3_div_xsquareplus2multix_minus_1_iterator<T, K>>();
-	case series_iterator_id_t::arcsin_x_iterator_id: return std::make_unique<arcsin_x_iterator<T, K>>();
-	case series_iterator_id_t::arctg_x_iterator_id: return std::make_unique<arctan_x_iterator<T, K>>();
-	case series_iterator_id_t::k_x_iterator_id: return std::make_unique<k_x_iterator<T, K>>();
-	case series_iterator_id_t::e_x_iterator_id: return std::make_unique<e_x_iterator<T, K>>();
-	case series_iterator_id_t::sqrt_1plusx_iterator_id: return std::make_unique<sqrt_1plusx_iterator<T, K>>();
-	case series_iterator_id_t::lambert_W_func_iterator_id: return std::make_unique<lambert_W_func_iterator<T, K>>();
-	case series_iterator_id_t::incomplete_Gamma_func_iterator_id: return std::make_unique<incomplete_Gamma_func_iterator<T, K>>();
-	case series_iterator_id_t::series_with_ln_number1_iterator_id: return std::make_unique<series_with_ln_number1_iterator<T, K>>();
-	case series_iterator_id_t::series_with_ln_number2_iterator_id: return std::make_unique<series_with_ln_number2_iterator<T, K>>();
-	case series_iterator_id_t::pi_iterator_id: return std::make_unique<pi_iterator<T, K>>();
-	case series_iterator_id_t::x_min_sqrt_x_iterator_id: return std::make_unique<x_min_sqrt_x_iterator<T, K>>();
-	case series_iterator_id_t::arctg_x2_iterator_id: return std::make_unique<arctan_x2_iterator<T, K>>();
-	case series_iterator_id_t::ln1px4_iterator_id: return std::make_unique<ln1px4_iterator<T, K>>();
-	case series_iterator_id_t::sin_x2_iterator_id: return std::make_unique<sin_x2_iterator<T, K>>();
-	case series_iterator_id_t::arctg_x3_iterator_id: return std::make_unique<arctan_x3_iterator<T, K>>();
-	case series_iterator_id_t::arcsin_x2_iterator_id: return std::make_unique<arcsin_x2_iterator<T, K>>();
-	case series_iterator_id_t::ln1_m_x2_iterator_id: return std::make_unique<ln1_m_x2_iterator<T, K>>();
-	case series_iterator_id_t::arctanh_x_iterator_id: return std::make_unique<arctanh_x_iterator<T, K>>();
-	case series_iterator_id_t::arcsinh_x_iterator_id: return std::make_unique<arcsinh_x_iterator<T, K>>();
-	case series_iterator_id_t::cos_x2_iterator_id: return std::make_unique<cos_x2_iterator<T, K>>();
-	case series_iterator_id_t::sinh_x2_iterator_id: return std::make_unique<sinh_x2_iterator<T, K>>();
-	case series_iterator_id_t::arctanh_x2_iterator_id: return std::make_unique<arctanh_x2_iterator<T, K>>();
-	case series_iterator_id_t::cos3xmin1_div_xsquare_iterator_id: return std::make_unique<cos3xmin1_div_xsquare_iterator<T, K>>();
-	case series_iterator_id_t::two_degree_x_iterator_id: return std::make_unique<two_degree_x_iterator<T, K>>();
-	case series_iterator_id_t::sqrt_1plusx_min_1_min_x_div_2_iterator_id: return std::make_unique<sqrt_1plusx_min_1_min_x_div_2_iterator<T, K>>();
-	case series_iterator_id_t::ln13_min_ln7_div_7_iterator_id: return std::make_unique<ln13_min_ln7_div_7_iterator<T, K>>();
-	case series_iterator_id_t::one_div_sqrt2_sin_xdivsqrt2_iterator_id: return std::make_unique<one_div_sqrt2_sin_xdivsqrt2_iterator<T, K>>();
-	case series_iterator_id_t::ln_1plusx_div_1plusx2_iterator_id: return std::make_unique<ln_1plusx_div_1plusx2_iterator<T, K>>();
-	case series_iterator_id_t::cos_sqrt_x_iterator_id: return std::make_unique<cos_sqrt_x_iterator<T, K>>();
-	case series_iterator_id_t::ln_1_plus_x3_iterator_id: return std::make_unique<ln_1_plus_x3_iterator<T, K>>();
-	case series_iterator_id_t::x_div_1minx_iterator_id: return std::make_unique<x_div_1minx_iterator<T, K>>();
-	case series_iterator_id_t::x_div_1minx2_iterator_id: return std::make_unique<x_div_1minx2_iterator<T, K>>();
+	case shanks::iters::series_iterator_id_t::exp_iterator_id: return std::make_unique<shanks::iters::exp_iterator<T, K>>();
+	case shanks::iters::series_iterator_id_t::cos_iterator_id: return std::make_unique<shanks::iters::cos_iterator<T, K>>();
+	case shanks::iters::series_iterator_id_t::sin_iterator_id: return std::make_unique<shanks::iters::sin_iterator<T, K>>();
+	case shanks::iters::series_iterator_id_t::cosh_iterator_id: return std::make_unique<shanks::iters::cosh_iterator<T, K>>();
+	case shanks::iters::series_iterator_id_t::sinh_iterator_id: return std::make_unique<shanks::iters::sinh_iterator<T, K>>();
+	case shanks::iters::series_iterator_id_t::bin_iterator_id: return std::make_unique<shanks::iters::bin_iterator<T, K>>();
+	case shanks::iters::series_iterator_id_t::four_arctan_iterator_id: return std::make_unique<shanks::iters::four_arctan_iterator<T, K>>();
+	case shanks::iters::series_iterator_id_t::ln1mx_iterator_id: return std::make_unique<shanks::iters::ln1mx_iterator<T, K>>();
+	case shanks::iters::series_iterator_id_t::mean_sinh_sin_iterator_id: return std::make_unique<shanks::iters::mean_sinh_sin_iterator<T, K>>();
+	case shanks::iters::series_iterator_id_t::exp_squared_erf_iterator_id: return std::make_unique<shanks::iters::exp_squared_erf_iterator<T, K>>();
+	case shanks::iters::series_iterator_id_t::half_asin_two_x_iterator_id: return std::make_unique<shanks::iters::half_asin_two_x_iterator<T, K>>();
+	case shanks::iters::series_iterator_id_t::inverse_1mx_iterator_id: return std::make_unique<shanks::iters::inverse_1mx_iterator<T, K>>();
+	case shanks::iters::series_iterator_id_t::x_1mx_squared_iterator_id: return std::make_unique<shanks::iters::x_1mx_squared_iterator<T, K>>();
+	case shanks::iters::series_iterator_id_t::erf_iterator_id: return std::make_unique<shanks::iters::erf_iterator<T, K>>();
+	case shanks::iters::series_iterator_id_t::m_fact_1mx_mp1_inverse_iterator_id: return std::make_unique<shanks::iters::m_fact_1mx_mp1_inverse_iterator<T, K>>();
+	case shanks::iters::series_iterator_id_t::inverse_sqrt_1m4x_iterator_id: return std::make_unique<shanks::iters::inverse_sqrt_1m4x_iterator<T, K>>();
+	case shanks::iters::series_iterator_id_t::one_twelfth_3x2_pi2_iterator_id: return std::make_unique<shanks::iters::one_twelfth_3x2_pi2_iterator<T, K>>();
+	case shanks::iters::series_iterator_id_t::one_twelfth_x2_pi2_iterator_id: return std::make_unique<shanks::iters::one_twelfth_x2_pi2_iterator<T, K>>();
+	case shanks::iters::series_iterator_id_t::ln2_iterator_id: return std::make_unique<shanks::iters::ln2_iterator<T, K>>();
+	case shanks::iters::series_iterator_id_t::one_iterator_id: return std::make_unique<shanks::iters::one_iterator<T, K>>();
+	case shanks::iters::series_iterator_id_t::minus_one_quarter_iterator_id: return std::make_unique<shanks::iters::minus_one_quarter_iterator<T, K>>();
+	case shanks::iters::series_iterator_id_t::pi_3_iterator_id: return std::make_unique<shanks::iters::pi_3_iterator<T, K>>();
+	case shanks::iters::series_iterator_id_t::pi_4_iterator_id: return std::make_unique<shanks::iters::pi_4_iterator<T, K>>();
+	case shanks::iters::series_iterator_id_t::pi_squared_6_minus_one_iterator_id: return std::make_unique<shanks::iters::pi_squared_6_minus_one_iterator<T, K>>();
+	case shanks::iters::series_iterator_id_t::three_minus_pi_iterator_id: return std::make_unique<shanks::iters::three_minus_pi_iterator<T, K>>();
+	case shanks::iters::series_iterator_id_t::one_twelfth_iterator_id: return std::make_unique<shanks::iters::one_twelfth_iterator<T, K>>();
+	case shanks::iters::series_iterator_id_t::eighth_pi_m_one_third_iterator_id: return std::make_unique<shanks::iters::eighth_pi_m_one_third_iterator<T, K>>();
+	case shanks::iters::series_iterator_id_t::one_third_pi_squared_m_nine_iterator_id: return std::make_unique<shanks::iters::one_third_pi_squared_m_nine_iterator<T, K>>();
+	case shanks::iters::series_iterator_id_t::four_ln2_m_3_iterator_id: return std::make_unique<shanks::iters::four_ln2_m_3_iterator<T, K>>();
+	case shanks::iters::series_iterator_id_t::exp_m_cos_x_sinsin_x_iterator_id: return std::make_unique<shanks::iters::exp_m_cos_x_sinsin_x_iterator<T, K>>();
+	case shanks::iters::series_iterator_id_t::pi_four_minus_ln2_halfed_iterator_id: return std::make_unique<shanks::iters::pi_four_minus_ln2_halfed_iterator<T, K>>();
+	case shanks::iters::series_iterator_id_t::five_pi_twelve_iterator_id: return std::make_unique<shanks::iters::five_pi_twelve_iterator<T, K>>();
+	case shanks::iters::series_iterator_id_t::x_two_iterator_id: return std::make_unique<shanks::iters::x_two_iterator<T, K>>();
+	case shanks::iters::series_iterator_id_t::pi_six_min_half_iterator_id: return std::make_unique<shanks::iters::pi_six_min_half_iterator<T, K>>();
+	case shanks::iters::series_iterator_id_t::x_two_throught_squares_iterator_id: return std::make_unique<shanks::iters::x_two_throught_squares_iterator<T, K>>();
+	case shanks::iters::series_iterator_id_t::minus_one_ned_in_n_iterator_id: return std::make_unique<shanks::iters::minus_one_ned_in_n_iterator<T, K>>();
+	case shanks::iters::series_iterator_id_t::minus_one_n_fact_n_in_n_iterator_id: return std::make_unique<shanks::iters::minus_one_n_fact_n_in_n_iterator<T, K>>();
+	case shanks::iters::series_iterator_id_t::ln_x_plus_one_x_minus_one_halfed_iterator_id: return std::make_unique<shanks::iters::ln_x_plus_one_x_minus_one_halfed_iterator<T, K>>();
+	case shanks::iters::series_iterator_id_t::two_arcsin_square_x_halfed_iterator_id: return std::make_unique<shanks::iters::two_arcsin_square_x_halfed_iterator<T, K>>();
+	case shanks::iters::series_iterator_id_t::pi_squared_twelve_iterator_id: return std::make_unique<shanks::iters::pi_squared_twelve_iterator<T, K>>();
+	case shanks::iters::series_iterator_id_t::pi_cubed_32_iterator_id: return std::make_unique<shanks::iters::pi_cubed_32_iterator<T, K>>();
+	case shanks::iters::series_iterator_id_t::minus_three_plus_ln3_three_devided_two_plus_two_ln2_iterator_id: return std::make_unique<shanks::iters::minus_three_plus_ln3_three_devided_two_plus_two_ln2_iterator<T, K>>();
+	case shanks::iters::series_iterator_id_t::two_ln2_iterator_id: return std::make_unique<shanks::iters::two_ln2_iterator<T, K>>();
+	case shanks::iters::series_iterator_id_t::pi_x_multi_e_xpi_plus_e_minusxpi_divided_e_xpi_minus_e_minusxpi_iterator_id: return std::make_unique<shanks::iters::pi_x_multi_e_xpi_plus_e_minusxpi_divided_e_xpi_minus_e_minusxpi_iterator<T, K>>();
+	case shanks::iters::series_iterator_id_t::pi_minus_x_2_iterator_id: return std::make_unique<shanks::iters::pi_minus_x_2_iterator<T, K>>();
+	case shanks::iters::series_iterator_id_t::half_multi_ln_1div2multi1minuscosx_iterator_id: return std::make_unique<shanks::iters::half_multi_ln_1div2multi1minuscosx_iterator<T, K>>();
+	case shanks::iters::series_iterator_id_t::half_minus_sinx_multi_pi_4_iterator_id: return std::make_unique<shanks::iters::half_minus_sinx_multi_pi_4_iterator<T, K>>();
+	case shanks::iters::series_iterator_id_t::ln_1plussqrt1plusxsquare_minus_ln_2_iterator_id: return std::make_unique<shanks::iters::ln_1plussqrt1plusxsquare_minus_ln_2_iterator<T, K>>();
+	case shanks::iters::series_iterator_id_t::ln_cosx_iterator_id: return std::make_unique<shanks::iters::ln_cosx_iterator<T, K>>();
+	case shanks::iters::series_iterator_id_t::ln_sinx_minus_ln_x_iterator_id: return std::make_unique<shanks::iters::ln_sinx_minus_ln_x_iterator<T, K>>();
+	case shanks::iters::series_iterator_id_t::pi_8_cosx_square_minus_1_div_3_cosx_iterator_id: return std::make_unique<shanks::iters::pi_8_cosx_square_minus_1_div_3_cosx_iterator<T, K>>();
+	case shanks::iters::series_iterator_id_t::sqrt_oneminussqrtoneminusx_div_x_iterator_id: return std::make_unique<shanks::iters::sqrt_oneminussqrtoneminusx_div_x_iterator<T, K>>();
+	case shanks::iters::series_iterator_id_t::one_minus_sqrt_1minus4x_div_2x_iterator_id: return std::make_unique<shanks::iters::one_minus_sqrt_1minus4x_div_2x_iterator<T, K>>();
+	case shanks::iters::series_iterator_id_t::arcsin_x_minus_x_iterator_id: return std::make_unique<shanks::iters::arcsin_x_minus_x_iterator<T, K>>();
+	case shanks::iters::series_iterator_id_t::pi_x_minus_x_square_square_minus_three_pi_x_plus_two_pi_square_iterator_id: return std::make_unique<shanks::iters::pi_x_minus_x_square_square_minus_three_pi_x_plus_two_pi_square_iterator<T, K>>();
+	case shanks::iters::series_iterator_id_t::abs_sin_x_minus_2_div_pi_iterator_id: return std::make_unique<shanks::iters::abs_sin_x_minus_2_div_pi_iterator<T, K>>();
+	case shanks::iters::series_iterator_id_t::pi_minus_3pi_4_and_pi_minus_x_minus_3pi_4_iterator_id: return std::make_unique<shanks::iters::pi_minus_3pi_4_and_pi_minus_x_minus_3pi_4_iterator<T, K>>();
+	case shanks::iters::series_iterator_id_t::minus_3_div_4_or_x_minus_3_div_4_iterator_id: return std::make_unique<shanks::iters::minus_3_div_4_or_x_minus_3_div_4_iterator<T, K>>();
+	case shanks::iters::series_iterator_id_t::ten_minus_x_iterator_id: return std::make_unique<shanks::iters::ten_minus_x_iterator<T, K>>();
+	case shanks::iters::series_iterator_id_t::x_iterator_id: return std::make_unique<shanks::iters::x_iterator<T, K>>();
+	case shanks::iters::series_iterator_id_t::minus_x_minus_pi_4_or_minus_pi_4_iterator_id: return std::make_unique<shanks::iters::minus_x_minus_pi_4_or_minus_pi_4_iterator<T, K>>();
+	case shanks::iters::series_iterator_id_t::one_div_two_minus_x_multi_three_plus_x_iterator_id: return std::make_unique<shanks::iters::one_div_two_minus_x_multi_three_plus_x_iterator<T, K>>();
+	case shanks::iters::series_iterator_id_t::si_x_iterator_id: return std::make_unique<shanks::iters::si_x_iterator<T, K>>();
+	case shanks::iters::series_iterator_id_t::ci_x_iterator_id: return std::make_unique<shanks::iters::ci_x_iterator<T, K>>();
+	case shanks::iters::series_iterator_id_t::riemann_zeta_func_iterator_id: return std::make_unique<shanks::iters::riemann_zeta_func_iterator<T, K>>();
+	case shanks::iters::series_iterator_id_t::riemann_zeta_func_xmin1_div_Riemann_zeta_func_x_iterator_id: return std::make_unique<shanks::iters::riemann_zeta_func_xmin1_div_Riemann_zeta_func_x_iterator<T, K>>();
+	case shanks::iters::series_iterator_id_t::xsquareplus3_div_xsquareplus2multix_minus_1_iterator_id: return std::make_unique<shanks::iters::xsquareplus3_div_xsquareplus2multix_minus_1_iterator<T, K>>();
+	case shanks::iters::series_iterator_id_t::arcsin_x_iterator_id: return std::make_unique<shanks::iters::arcsin_x_iterator<T, K>>();
+	case shanks::iters::series_iterator_id_t::arctg_x_iterator_id: return std::make_unique<shanks::iters::arctan_x_iterator<T, K>>();
+	case shanks::iters::series_iterator_id_t::k_x_iterator_id: return std::make_unique<shanks::iters::k_x_iterator<T, K>>();
+	case shanks::iters::series_iterator_id_t::e_x_iterator_id: return std::make_unique<shanks::iters::e_x_iterator<T, K>>();
+	case shanks::iters::series_iterator_id_t::sqrt_1plusx_iterator_id: return std::make_unique<shanks::iters::sqrt_1plusx_iterator<T, K>>();
+	case shanks::iters::series_iterator_id_t::lambert_W_func_iterator_id: return std::make_unique<shanks::iters::lambert_W_func_iterator<T, K>>();
+	case shanks::iters::series_iterator_id_t::incomplete_Gamma_func_iterator_id: return std::make_unique<shanks::iters::incomplete_Gamma_func_iterator<T, K>>();
+	case shanks::iters::series_iterator_id_t::series_with_ln_number1_iterator_id: return std::make_unique<shanks::iters::series_with_ln_number1_iterator<T, K>>();
+	case shanks::iters::series_iterator_id_t::series_with_ln_number2_iterator_id: return std::make_unique<shanks::iters::series_with_ln_number2_iterator<T, K>>();
+	case shanks::iters::series_iterator_id_t::pi_iterator_id: return std::make_unique<shanks::iters::pi_iterator<T, K>>();
+	case shanks::iters::series_iterator_id_t::x_min_sqrt_x_iterator_id: return std::make_unique<shanks::iters::x_min_sqrt_x_iterator<T, K>>();
+	case shanks::iters::series_iterator_id_t::arctg_x2_iterator_id: return std::make_unique<shanks::iters::arctan_x2_iterator<T, K>>();
+	case shanks::iters::series_iterator_id_t::ln1px4_iterator_id: return std::make_unique<shanks::iters::ln1px4_iterator<T, K>>();
+	case shanks::iters::series_iterator_id_t::sin_x2_iterator_id: return std::make_unique<shanks::iters::sin_x2_iterator<T, K>>();
+	case shanks::iters::series_iterator_id_t::arctg_x3_iterator_id: return std::make_unique<shanks::iters::arctan_x3_iterator<T, K>>();
+	case shanks::iters::series_iterator_id_t::arcsin_x2_iterator_id: return std::make_unique<shanks::iters::arcsin_x2_iterator<T, K>>();
+	case shanks::iters::series_iterator_id_t::ln1_m_x2_iterator_id: return std::make_unique<shanks::iters::ln1_m_x2_iterator<T, K>>();
+	case shanks::iters::series_iterator_id_t::arctanh_x_iterator_id: return std::make_unique<shanks::iters::arctanh_x_iterator<T, K>>();
+	case shanks::iters::series_iterator_id_t::arcsinh_x_iterator_id: return std::make_unique<shanks::iters::arcsinh_x_iterator<T, K>>();
+	case shanks::iters::series_iterator_id_t::cos_x2_iterator_id: return std::make_unique<shanks::iters::cos_x2_iterator<T, K>>();
+	case shanks::iters::series_iterator_id_t::sinh_x2_iterator_id: return std::make_unique<shanks::iters::sinh_x2_iterator<T, K>>();
+	case shanks::iters::series_iterator_id_t::arctanh_x2_iterator_id: return std::make_unique<shanks::iters::arctanh_x2_iterator<T, K>>();
+	case shanks::iters::series_iterator_id_t::cos3xmin1_div_xsquare_iterator_id: return std::make_unique<shanks::iters::cos3xmin1_div_xsquare_iterator<T, K>>();
+	case shanks::iters::series_iterator_id_t::two_degree_x_iterator_id: return std::make_unique<shanks::iters::two_degree_x_iterator<T, K>>();
+	case shanks::iters::series_iterator_id_t::sqrt_1plusx_min_1_min_x_div_2_iterator_id: return std::make_unique<shanks::iters::sqrt_1plusx_min_1_min_x_div_2_iterator<T, K>>();
+	case shanks::iters::series_iterator_id_t::ln13_min_ln7_div_7_iterator_id: return std::make_unique<shanks::iters::ln13_min_ln7_div_7_iterator<T, K>>();
+	case shanks::iters::series_iterator_id_t::one_div_sqrt2_sin_xdivsqrt2_iterator_id: return std::make_unique<shanks::iters::one_div_sqrt2_sin_xdivsqrt2_iterator<T, K>>();
+	case shanks::iters::series_iterator_id_t::ln_1plusx_div_1plusx2_iterator_id: return std::make_unique<shanks::iters::ln_1plusx_div_1plusx2_iterator<T, K>>();
+	case shanks::iters::series_iterator_id_t::cos_sqrt_x_iterator_id: return std::make_unique<shanks::iters::cos_sqrt_x_iterator<T, K>>();
+	case shanks::iters::series_iterator_id_t::ln_1_plus_x3_iterator_id: return std::make_unique<shanks::iters::ln_1_plus_x3_iterator<T, K>>();
+	case shanks::iters::series_iterator_id_t::x_div_1minx_iterator_id: return std::make_unique<shanks::iters::x_div_1minx_iterator<T, K>>();
+	case shanks::iters::series_iterator_id_t::x_div_1minx2_iterator_id: return std::make_unique<shanks::iters::x_div_1minx2_iterator<T, K>>();
 
 	default:
 		throw std::domain_error("Series not implemented");
@@ -145,9 +147,9 @@ public:
 	series_base(
 		std::string name = "unknown", 
 		std::string condition = "unknown", 
-		series_iterator_id_t iterator_id = series_iterator_id_t::null_iterator_id
+		shanks::iters::series_iterator_id_t iterator_id = shanks::iters::series_iterator_id_t::null_iterator_id
 	) : series_name(name), condition(condition) {
-		assert((iterator_id != series_iterator_id_t::null_iterator_id));
+		assert((iterator_id != shanks::iters::series_iterator_id_t::null_iterator_id));
 		series_iterator = create_iterator_by_id<T,K>(iterator_id);
 		this->iterator_id = iterator_id;
 	}
@@ -213,7 +215,7 @@ protected:
 		throw std::domain_error(series_name + " series diverges at x = " + utils::to_string(series_iterator->x) + " (" + condition + ")");
 	}
 
-	std::unique_ptr<series_base_iterator<T,K>> series_iterator;
+	std::unique_ptr<shanks::iters::series_base_iterator<T,K>> series_iterator;
 
 	/**
     * @brief Name of the series for unified error messages
@@ -224,7 +226,7 @@ protected:
 
 	std::string condition = "no conditions";
 	
-	series_iterator_id_t iterator_id = series_iterator_id_t::null_iterator_id;
+	shanks::iters::series_iterator_id_t iterator_id = shanks::iters::series_iterator_id_t::null_iterator_id;
 
 	bool iterator_initialized = false;
 
@@ -241,7 +243,7 @@ void series_base<T, K>::init_iterator(
 	series_iterator->reset();
 	sum = utils::cast<T>(0.0);
 	#ifdef SET_PRECISION_SET
-	if constexpr (!is_standart_types<T>::value) utils::set_precision(utils::get_precision<T>(x), series_iterator->x, sum);
+	if constexpr (!is_standard_types<T>::value) utils::set_precision(utils::get_precision<T>(x), series_iterator->x, sum);
 	#endif
 
 	series_iterator->x = x;
@@ -250,22 +252,22 @@ void series_base<T, K>::init_iterator(
 	
 
 	switch(iterator_id){
-		case series_iterator_id_t::bin_iterator_id:{
-			bin_iterator<T,K>* ptr = static_cast<bin_iterator<T,K>*>(series_iterator.get());
+		case shanks::iters::series_iterator_id_t::bin_iterator_id:{
+			shanks::iters::bin_iterator<T,K>* ptr = static_cast<shanks::iters::bin_iterator<T,K>*>(series_iterator.get());
 			#ifdef SET_PRECISION_SET
-			if constexpr (!is_standart_types<T>::value) utils::set_precision(utils::get_precision<T>(x), series_iterator->x);
+			if constexpr (!is_standard_types<T>::value) utils::set_precision(utils::get_precision<T>(x), series_iterator->x);
 			#endif
 			ptr->alpha = addTParameter;
 		}
-		case series_iterator_id_t::incomplete_Gamma_func_iterator_id:{
-			incomplete_Gamma_func_iterator<T,K>* ptr = static_cast<incomplete_Gamma_func_iterator<T,K>*>(series_iterator.get());
+		case shanks::iters::series_iterator_id_t::incomplete_Gamma_func_iterator_id:{
+			shanks::iters::incomplete_Gamma_func_iterator<T,K>* ptr = static_cast<shanks::iters::incomplete_Gamma_func_iterator<T,K>*>(series_iterator.get());
 			#ifdef SET_PRECISION_SET
-			if constexpr (!is_standart_types<T>::value) utils::set_precision(utils::get_precision<T>(x), series_iterator->x);
+			if constexpr (!is_standard_types<T>::value) utils::set_precision(utils::get_precision<T>(x), series_iterator->x);
 			#endif 
 			ptr->alpha = addTParameter;
 		}
-		case series_iterator_id_t::m_fact_1mx_mp1_inverse_iterator_id:{
-			m_fact_1mx_mp1_inverse_iterator<T,K>* ptr = static_cast<m_fact_1mx_mp1_inverse_iterator<T,K>*>(series_iterator.get());
+		case shanks::iters::series_iterator_id_t::m_fact_1mx_mp1_inverse_iterator_id:{
+			shanks::iters::m_fact_1mx_mp1_inverse_iterator<T,K>* ptr = static_cast<shanks::iters::m_fact_1mx_mp1_inverse_iterator<T,K>*>(series_iterator.get());
 			ptr->m = addKParameter;
 		}
 	}
@@ -302,4 +304,8 @@ series_result<T> series_base<T, K>::generate_series(
 
 	return series_result<T>{.Sn = vecSn, .an = vecAn};
 }
+
+} //namespace shanks::series
+} //namespace shanks
+
 #endif

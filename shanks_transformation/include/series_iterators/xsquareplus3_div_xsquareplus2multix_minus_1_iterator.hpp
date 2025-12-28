@@ -4,6 +4,8 @@
 
 #include "series_base_iterator.hpp"
 
+namespace shanks { namespace iters {
+
 /**
 * @brief Another power series of (x^2+3)/(x^2+2x)-3 function
 * @authors Bolshakov M.P.
@@ -32,5 +34,8 @@ public:
 	}
 
 };
+
+} //namespace shanks::iters
+} //namespace shanks
 
 #endif

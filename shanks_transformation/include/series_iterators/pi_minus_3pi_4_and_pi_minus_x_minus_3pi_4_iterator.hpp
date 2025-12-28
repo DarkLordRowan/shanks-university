@@ -5,6 +5,8 @@
 #include <numbers>
 #include "series_base_iterator.hpp"
 
+namespace shanks { namespace iters {
+
 /**
 * @brief Maclaurin series of pi/4{x<0}, pi/4-x{x>=0} function
 * @authors Bolshakov M.P.
@@ -47,5 +49,8 @@ public:
 	}
 
 };
+
+} //namespace shanks::iters
+} //namespace shanks
 
 #endif

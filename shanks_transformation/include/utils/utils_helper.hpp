@@ -32,7 +32,8 @@ std::string utils::to_string(const T& x){
 
 template<typename T>
 bool utils::isfinite(const T& x){
-    if constexpr (is_standart_types<T>::value) return std::isfinite(x);
+    if constexpr (std::is_floating_point<T>::value) return std::isfinite(x);
+    else if constexpr (is_complex_t<T>::value) return std::isfinite(x.real()) && std::isfinite(x.imag());
     #ifdef INC_FPRECISION
     else if constexpr (std::is_same<T, float_precision>::value) return isfinite(x);
     #endif
@@ -53,7 +54,7 @@ bool utils::isfinite(const T& x){
 
 template<typename T>
 T utils::epsilon(const T& x){
-    if constexpr (is_standart_types<T>::value) return std::numeric_limits<T>::epsilon();
+    if constexpr (is_standard_types<T>::value) return std::numeric_limits<T>::epsilon();
     #ifdef INC_FPRECISION
     else if constexpr (std::is_same<T, float_precision>::value) return x.epsilon();
     #endif

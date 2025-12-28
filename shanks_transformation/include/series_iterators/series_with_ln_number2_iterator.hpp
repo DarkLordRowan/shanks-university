@@ -4,6 +4,8 @@
 
 #include "series_base_iterator.hpp"
 
+namespace shanks { namespace iters {
+
 /**
 * @brief Maclaurin series of ln_number_2(x * 5.71617784132) function
 * @authors Bolshakov M.P.
@@ -30,5 +32,8 @@ public:
 	}
 
 };
+
+} //namespace shanks::iters
+} //namespace shanks
 
 #endif

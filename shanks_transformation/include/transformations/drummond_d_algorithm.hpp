@@ -16,6 +16,8 @@
 #include "remainders.hpp"
 #include <memory>					  // Include for unique ptr
 
+namespace shanks{ namespace algos{
+
  /**
   * @brief Drummond's D-transformation class template for accelerating slowly convergent series.
   *
@@ -39,10 +41,12 @@ template<AcceptedLike T, UnsignedIntLike K>
 class drummond_d_algorithm final : public series_acceleration<T, K>
 {
 protected:
-
-    std::unique_ptr<const transform_base<T, K>> remainder;  		/**< Unique pointer to remainder estimator */
-    bool use_recurrent_formula = false;								/**< Flag indicating whether to use recurrence formulas */
-    remainder_type remainder_type_in_use = remainder_type::u_type;	/**< Type of remainder variant to use */
+	/// Unique pointer to remainder estimator
+    std::unique_ptr<const shanks::remainders::transform_base<T, K>> remainder;
+	/// Type of remainder variant to use
+    shanks::remainders::remainder_type remainder_type_in_use{shanks::remainders::remainder_type::u_type};
+	/// Flag indicating whether to use recurrence formulas
+	bool use_recurrent_formula{false};																		
 
 	/**
 	 * @brief Calculates D-transformation directly using the explicit formula.remainderType
@@ -102,7 +106,7 @@ public:
 	 *        false: Use direct computation (simpler but potentially slower)
 	 */
 	explicit drummond_d_algorithm(
-		const remainder_type remainder_type_to_use = remainder_type::u_type,
+		const shanks::remainders::remainder_type remainder_type_to_use = shanks::remainders::remainder_type::u_type,
 		const bool use_recurrent_formula = false
 	) : series_acceleration<T, K>(), use_recurrent_formula(use_recurrent_formula) { update_type(remainder_type_to_use); };
 
@@ -135,21 +139,21 @@ public:
 	 * @brief Setter to change numerator type
 	 * @param remainder_type_to_use enumerator of a new remainder type
 	 */
-	void update_type(const remainder_type remainder_type_to_use){
+	void update_type(const remainders::remainder_type remainder_type_to_use){
 
 		remainder_type_in_use = remainder_type_to_use;
 
 		// Initialize the appropriate remainder estimator based on variant
     	switch(remainder_type_to_use){
-    	    case remainder_type::u_type 	: { remainder.reset(new u_transform<T, K>()	   ); break; }
-    	    case remainder_type::t_type 	: { remainder.reset(new t_transform<T, K>()	   ); break; }
-    	    case remainder_type::v_type 	: { remainder.reset(new v_transform<T, K>()	   ); break; }
-    	    case remainder_type::t_wave_type: { remainder.reset(new t_wave_transform<T, K>()); break; }
-    	    case remainder_type::v_wave_type: { remainder.reset(new v_wave_transform<T, K>()); break; }
+    	    case shanks::remainders::remainder_type::u_type 	: { remainder.reset(new shanks::remainders::u_transform<T, K>()	   ); break; }
+    	    case shanks::remainders::remainder_type::t_type 	: { remainder.reset(new shanks::remainders::t_transform<T, K>()	   ); break; }
+    	    case shanks::remainders::remainder_type::v_type 	: { remainder.reset(new shanks::remainders::v_transform<T, K>()	   ); break; }
+    	    case shanks::remainders::remainder_type::t_wave_type: { remainder.reset(new shanks::remainders::t_wave_transform<T, K>()); break; }
+    	    case shanks::remainders::remainder_type::v_wave_type: { remainder.reset(new shanks::remainders::v_wave_transform<T, K>()); break; }
     	    default:
 			{
-				remainder_type_in_use = remainder_type::u_type;
-    	        remainder.reset(new u_transform<T, K>());
+				remainder_type_in_use = shanks::remainders::remainder_type::u_type;
+    	        remainder.reset(new shanks::remainders::u_transform<T, K>());
 			}
     	}
 	}
@@ -163,11 +167,11 @@ public:
 		series_acceleration<T, K>::acceleration_name = (use_recurrent_formula ? "recurrent " : "");
 		series_acceleration<T, K>::acceleration_name += "drummond d algorithm ";
 		switch(remainder_type_in_use){
-			case remainder_type::u_type 	: { series_acceleration<T, K>::acceleration_name += "with u-variant "; 		break; }
-			case remainder_type::t_type 	: { series_acceleration<T, K>::acceleration_name += "with t-variant "; 		break; }
-			case remainder_type::v_type 	: { series_acceleration<T, K>::acceleration_name += "with v-variant "; 		break; }
-			case remainder_type::t_wave_type: { series_acceleration<T, K>::acceleration_name += "with t-wave-variant "; break; }
-			case remainder_type::v_wave_type: { series_acceleration<T, K>::acceleration_name += "with v-wave-variant "; break; }
+			case shanks::remainders::remainder_type::u_type 	: { series_acceleration<T, K>::acceleration_name += "with u-variant "; 		break; }
+			case shanks::remainders::remainder_type::t_type 	: { series_acceleration<T, K>::acceleration_name += "with t-variant "; 		break; }
+			case shanks::remainders::remainder_type::v_type 	: { series_acceleration<T, K>::acceleration_name += "with v-variant "; 		break; }
+			case shanks::remainders::remainder_type::t_wave_type: { series_acceleration<T, K>::acceleration_name += "with t-wave-variant "; break; }
+			case shanks::remainders::remainder_type::v_wave_type: { series_acceleration<T, K>::acceleration_name += "with v-wave-variant "; break; }
 		}
 
 		return series_acceleration<T, K>::acceleration_name;
@@ -253,9 +257,9 @@ T drummond_d_algorithm<T,K>::operator()(
 ) const {
 
     const K required_size = n + order + static_cast<K>(1) + static_cast<K>(
-		remainder_type_in_use == remainder_type::t_wave_type ||
-		remainder_type_in_use == remainder_type::v_type ||
-		remainder_type_in_use == remainder_type::v_wave_type
+		remainder_type_in_use == shanks::remainders::remainder_type::t_wave_type ||
+		remainder_type_in_use == shanks::remainders::remainder_type::v_type ||
+		remainder_type_in_use == shanks::remainders::remainder_type::v_wave_type
 	);
 
     if (data.Sn.size() < required_size || data.an.size() < required_size){
@@ -273,5 +277,8 @@ T drummond_d_algorithm<T,K>::operator()(
 	
     return result;
 }
+
+} //namespace shanks::algos
+} //namespace shanks
 
 #endif

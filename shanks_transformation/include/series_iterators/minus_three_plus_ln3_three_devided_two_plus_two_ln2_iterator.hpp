@@ -4,6 +4,8 @@
 
 #include "series_base_iterator.hpp"
 
+namespace shanks { namespace iters {
+
 /**
 * @brief Maclaurin series of x*(-3+ln(3)/3+2ln(2)) function
 * @authors Bolshakov M.P.
@@ -29,5 +31,8 @@ public:
 	}
 
 };
+
+} //namespace shanks::iters
+} //namespace shanks
 
 #endif

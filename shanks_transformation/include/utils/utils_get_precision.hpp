@@ -8,7 +8,7 @@
 template<AcceptedLike T>
 size_t utils::get_precision(const T& x){
 
-	if constexpr (is_standart_types<T>::value){
+	if constexpr (is_standard_types<T>::value){
 		return static_cast<size_t>(0);
 	}
 	#ifdef __MPREAL_H__

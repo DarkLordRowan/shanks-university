@@ -4,6 +4,8 @@
 
 #include "series_base_iterator.hpp"
 
+namespace shanks { namespace iters {
+
 /**
 * @brief Maclaurin series of log(1+x^3) function
 * @authors Bolshakov M.P.
@@ -34,4 +36,8 @@ public:
 	}
 
 };
+
+} //namespace shanks::iters
+} //namespace shanks
+
 #endif

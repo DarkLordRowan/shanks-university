@@ -267,112 +267,112 @@ inline void print_test_function_info() {
  * @brief Helper function to get series by ID
  */
 template <AcceptedLike T, std::unsigned_integral K>
-inline std::unique_ptr<series_base<T, K>> create_series_by_id(series_id_t id) {
+inline std::unique_ptr<shanks::series::series_base<T, K>> create_series_by_id(shanks::series::series_id_t id) {
 	// This function replace huge switch-case
 	auto all_series = create_series_info();
 
 	// Здесь нужно будет сделать mapping от ID к конструктору
 	// Пока оставляю старый switch, но можно оптимизировать дальше
 	switch (id) {
-	case series_id_t::exp_series_id: return std::make_unique<exp_series<T, K>>();
-	case series_id_t::cos_series_id: return std::make_unique<cos_series<T, K>>();
-	case series_id_t::sin_series_id: return std::make_unique<sin_series<T, K>>();
-	case series_id_t::cosh_series_id: return std::make_unique<cosh_series<T, K>>();
-	case series_id_t::sinh_series_id: return std::make_unique<sinh_series<T, K>>();
-	case series_id_t::bin_series_id: return std::make_unique<bin_series<T, K>>();
-	case series_id_t::four_arctan_series_id: return std::make_unique<four_arctan_series<T, K>>();
-	case series_id_t::ln1mx_series_id: return std::make_unique<ln1mx_series<T, K>>();
-	case series_id_t::mean_sinh_sin_series_id: return std::make_unique<mean_sinh_sin_series<T, K>>();
-	case series_id_t::exp_squared_erf_series_id: return std::make_unique<exp_squared_erf_series<T, K>>();
-	case series_id_t::half_asin_two_x_series_id: return std::make_unique<half_asin_two_x_series<T, K>>();
-	case series_id_t::inverse_1mx_series_id: return std::make_unique<inverse_1mx_series<T, K>>();
-	case series_id_t::x_1mx_squared_series_id: return std::make_unique<x_1mx_squared_series<T, K>>();
-	case series_id_t::erf_series_id: return std::make_unique<erf_series<T, K>>();
-	case series_id_t::m_fact_1mx_mp1_inverse_series_id: return std::make_unique<m_fact_1mx_mp1_inverse_series<T, K>>();
-	case series_id_t::inverse_sqrt_1m4x_series_id: return std::make_unique<inverse_sqrt_1m4x_series<T, K>>();
-	case series_id_t::one_twelfth_3x2_pi2_series_id: return std::make_unique<one_twelfth_3x2_pi2_series<T, K>>();
-	case series_id_t::one_twelfth_x2_pi2_series_id: return std::make_unique<one_twelfth_x2_pi2_series<T, K>>();
-	case series_id_t::ln2_series_id: return std::make_unique<ln2_series<T, K>>();
-	case series_id_t::one_series_id: return std::make_unique<one_series<T, K>>();
-	case series_id_t::minus_one_quarter_series_id: return std::make_unique<minus_one_quarter_series<T, K>>();
-	case series_id_t::pi_3_series_id: return std::make_unique<pi_3_series<T, K>>();
-	case series_id_t::pi_4_series_id: return std::make_unique<pi_4_series<T, K>>();
-	case series_id_t::pi_squared_6_minus_one_series_id: return std::make_unique<pi_squared_6_minus_one_series<T, K>>();
-	case series_id_t::three_minus_pi_series_id: return std::make_unique<three_minus_pi_series<T, K>>();
-	case series_id_t::one_twelfth_series_id: return std::make_unique<one_twelfth_series<T, K>>();
-	case series_id_t::eighth_pi_m_one_third_series_id: return std::make_unique<eighth_pi_m_one_third_series<T, K>>();
-	case series_id_t::one_third_pi_squared_m_nine_series_id: return std::make_unique<one_third_pi_squared_m_nine_series<T, K>>();
-	case series_id_t::four_ln2_m_3_series_id: return std::make_unique<four_ln2_m_3_series<T, K>>();
-	case series_id_t::exp_m_cos_x_sinsin_x_series_id: return std::make_unique<exp_m_cos_x_sinsin_x_series<T, K>>();
-	case series_id_t::pi_four_minus_ln2_halfed_series_id: return std::make_unique<pi_four_minus_ln2_halfed_series<T, K>>();
-	case series_id_t::five_pi_twelve_series_id: return std::make_unique<five_pi_twelve_series<T, K>>();
-	case series_id_t::x_two_series_id: return std::make_unique<x_two_series<T, K>>();
-	case series_id_t::pi_six_min_half_series_id: return std::make_unique<pi_six_min_half_series<T, K>>();
-	case series_id_t::x_two_throught_squares_series_id: return std::make_unique<x_two_throught_squares_series<T, K>>();
-	case series_id_t::minus_one_ned_in_n_series_id: return std::make_unique<minus_one_ned_in_n_series<T, K>>();
-	case series_id_t::minus_one_n_fact_n_in_n_series_id: return std::make_unique<minus_one_n_fact_n_in_n_series<T, K>>();
-	case series_id_t::ln_x_plus_one_x_minus_one_halfed_series_id: return std::make_unique<ln_x_plus_one_x_minus_one_halfed_series<T, K>>();
-	case series_id_t::two_arcsin_square_x_halfed_series_id: return std::make_unique<two_arcsin_square_x_halfed_series<T, K>>();
-	case series_id_t::pi_squared_twelve_series_id: return std::make_unique<pi_squared_twelve_series<T, K>>();
-	case series_id_t::pi_cubed_32_series_id: return std::make_unique<pi_cubed_32_series<T, K>>();
-	case series_id_t::minus_three_plus_ln3_three_devided_two_plus_two_ln2_series_id: return std::make_unique<minus_three_plus_ln3_three_devided_two_plus_two_ln2_series<T, K>>();
-	case series_id_t::two_ln2_series_id: return std::make_unique<two_ln2_series<T, K>>();
-	case series_id_t::pi_x_multi_e_xpi_plus_e_minusxpi_divided_e_xpi_minus_e_minusxpi_series_id: return std::make_unique<pi_x_multi_e_xpi_plus_e_minusxpi_divided_e_xpi_minus_e_minusxpi_series<T, K>>();
-	case series_id_t::pi_minus_x_2_series_id: return std::make_unique<pi_minus_x_2_series<T, K>>();
-	case series_id_t::half_multi_ln_1div2multi1minuscosx_series_id: return std::make_unique<half_multi_ln_1div2multi1minuscosx_series<T, K>>();
-	case series_id_t::half_minus_sinx_multi_pi_4_series_id: return std::make_unique<half_minus_sinx_multi_pi_4_series<T, K>>();
-	case series_id_t::ln_1plussqrt1plusxsquare_minus_ln_2_series_id: return std::make_unique<ln_1plussqrt1plusxsquare_minus_ln_2_series<T, K>>();
-	case series_id_t::ln_cosx_series_id: return std::make_unique<ln_cosx_series<T, K>>();
-	case series_id_t::ln_sinx_minus_ln_x_series_id: return std::make_unique<ln_sinx_minus_ln_x_series<T, K>>();
-	case series_id_t::pi_8_cosx_square_minus_1_div_3_cosx_series_id: return std::make_unique<pi_8_cosx_square_minus_1_div_3_cosx_series<T, K>>();
-	case series_id_t::sqrt_oneminussqrtoneminusx_div_x_series_id: return std::make_unique<sqrt_oneminussqrtoneminusx_div_x_series<T, K>>();
-	case series_id_t::one_minus_sqrt_1minus4x_div_2x_series_id: return std::make_unique<one_minus_sqrt_1minus4x_div_2x_series<T, K>>();
-	case series_id_t::arcsin_x_minus_x_series_id: return std::make_unique<arcsin_x_minus_x_series<T, K>>();
-	case series_id_t::pi_x_minus_x_square_square_minus_three_pi_x_plus_two_pi_square_series_id: return std::make_unique<pi_x_minus_x_square_square_minus_three_pi_x_plus_two_pi_square_series<T, K>>();
-	case series_id_t::abs_sin_x_minus_2_div_pi_series_id: return std::make_unique<abs_sin_x_minus_2_div_pi_series<T, K>>();
-	case series_id_t::pi_minus_3pi_4_and_pi_minus_x_minus_3pi_4_series_id: return std::make_unique<pi_minus_3pi_4_and_pi_minus_x_minus_3pi_4_series<T, K>>();
-	case series_id_t::minus_3_div_4_or_x_minus_3_div_4_series_id: return std::make_unique<minus_3_div_4_or_x_minus_3_div_4_series<T, K>>();
-	case series_id_t::ten_minus_x_series_id: return std::make_unique<ten_minus_x_series<T, K>>();
-	case series_id_t::x_series_id: return std::make_unique<x_series<T, K>>();
-	case series_id_t::minus_x_minus_pi_4_or_minus_pi_4_series_id: return std::make_unique<minus_x_minus_pi_4_or_minus_pi_4_series<T, K>>();
-	case series_id_t::one_div_two_minus_x_multi_three_plus_x_series_id: return std::make_unique<one_div_two_minus_x_multi_three_plus_x_series<T, K>>();
-	case series_id_t::si_x_series_id: return std::make_unique<si_x_series<T, K>>();
-	case series_id_t::ci_x_series_id: return std::make_unique<ci_x_series<T, K>>();
-	case series_id_t::riemann_zeta_func_series_id: return std::make_unique<riemann_zeta_func_series<T, K>>();
-	case series_id_t::riemann_zeta_func_xmin1_div_Riemann_zeta_func_x_series_id: return std::make_unique<riemann_zeta_func_xmin1_div_Riemann_zeta_func_x_series<T, K>>();
-	case series_id_t::xsquareplus3_div_xsquareplus2multix_minus_1_series_id: return std::make_unique<xsquareplus3_div_xsquareplus2multix_minus_1_series<T, K>>();
-	case series_id_t::arcsin_x_series_id: return std::make_unique<arcsin_x_series<T, K>>();
-	case series_id_t::arctg_x_series_id: return std::make_unique<arctg_x_series<T, K>>();
-	case series_id_t::k_x_series_id: return std::make_unique<k_x_series<T, K>>();
-	case series_id_t::e_x_series_id: return std::make_unique<e_x_series<T, K>>();
-	case series_id_t::sqrt_1plusx_series_id: return std::make_unique<sqrt_1plusx_series<T, K>>();
-	case series_id_t::lambert_W_func_series_id: return std::make_unique<lambert_W_func_series<T, K>>();
-	case series_id_t::incomplete_Gamma_func_series_id: return std::make_unique<incomplete_Gamma_func_series<T, K>>();
-	case series_id_t::series_with_ln_number1_series_id: return std::make_unique<series_with_ln_number1_series<T, K>>();
-	case series_id_t::series_with_ln_number2_series_id: return std::make_unique<series_with_ln_number2_series<T, K>>();
-	case series_id_t::pi_series_id: return std::make_unique<pi_series<T, K>>();
-	case series_id_t::x_min_sqrt_x_series_id: return std::make_unique<x_min_sqrt_x_series<T, K>>();
-	case series_id_t::arctg_x2_series_id: return std::make_unique<arctg_x2_series<T, K>>();
-	case series_id_t::ln1px4_series_id: return std::make_unique<ln1px4_series<T, K>>();
-	case series_id_t::sin_x2_series_id: return std::make_unique<sin_x2_series<T, K>>();
-	case series_id_t::arctg_x3_series_id: return std::make_unique<arctg_x3_series<T, K>>();
-	case series_id_t::arcsin_x2_series_id: return std::make_unique<arcsin_x2_series<T, K>>();
-	case series_id_t::ln1_m_x2_series_id: return std::make_unique<ln1_m_x2_series<T, K>>();
-	case series_id_t::arctanh_x_series_id: return std::make_unique<arctanh_x_series<T, K>>();
-	case series_id_t::arcsinh_x_series_id: return std::make_unique<arcsinh_x_series<T, K>>();
-	case series_id_t::cos_x2_series_id: return std::make_unique<cos_x2_series<T, K>>();
-	case series_id_t::sinh_x2_series_id: return std::make_unique<sinh_x2_series<T, K>>();
-	case series_id_t::arctanh_x2_series_id: return std::make_unique<arctanh_x2_series<T, K>>();
-	case series_id_t::cos3xmin1_div_xsquare_series_id: return std::make_unique<cos3xmin1_div_xsquare_series<T, K>>();
-	case series_id_t::two_degree_x_series_id: return std::make_unique<two_degree_x_series<T, K>>();
-	case series_id_t::sqrt_1plusx_min_1_min_x_div_2_series_id: return std::make_unique<sqrt_1plusx_min_1_min_x_div_2_series<T, K>>();
-	case series_id_t::ln13_min_ln7_div_7_series_id: return std::make_unique<ln13_min_ln7_div_7_series<T, K>>();
-	case series_id_t::one_div_sqrt2_sin_xdivsqrt2_series_id: return std::make_unique<one_div_sqrt2_sin_xdivsqrt2_series<T, K>>();
-	case series_id_t::ln_1plusx_div_1plusx2_series_id: return std::make_unique<ln_1plusx_div_1plusx2_series<T, K>>();
-	case series_id_t::cos_sqrt_x_series_id: return std::make_unique<cos_sqrt_x_series<T, K>>();
-	case series_id_t::ln_1_plus_x3_series_id: return std::make_unique<ln_1_plus_x3_series<T, K>>();
-	case series_id_t::x_div_1minx_series_id: return std::make_unique<x_div_1minx_series<T, K>>();
-	case series_id_t::x_div_1minx2_series_id: return std::make_unique<x_div_1minx2_series<T, K>>();
+	case shanks::series::series_id_t::exp_series_id: return std::make_unique<shanks::series::exp_series<T, K>>();
+	case shanks::series::series_id_t::cos_series_id: return std::make_unique<shanks::series::cos_series<T, K>>();
+	case shanks::series::series_id_t::sin_series_id: return std::make_unique<shanks::series::sin_series<T, K>>();
+	case shanks::series::series_id_t::cosh_series_id: return std::make_unique<shanks::series::cosh_series<T, K>>();
+	case shanks::series::series_id_t::sinh_series_id: return std::make_unique<shanks::series::sinh_series<T, K>>();
+	case shanks::series::series_id_t::bin_series_id: return std::make_unique<shanks::series::bin_series<T, K>>();
+	case shanks::series::series_id_t::four_arctan_series_id: return std::make_unique<shanks::series::four_arctan_series<T, K>>();
+	case shanks::series::series_id_t::ln1mx_series_id: return std::make_unique<shanks::series::ln1mx_series<T, K>>();
+	case shanks::series::series_id_t::mean_sinh_sin_series_id: return std::make_unique<shanks::series::mean_sinh_sin_series<T, K>>();
+	case shanks::series::series_id_t::exp_squared_erf_series_id: return std::make_unique<shanks::series::exp_squared_erf_series<T, K>>();
+	case shanks::series::series_id_t::half_asin_two_x_series_id: return std::make_unique<shanks::series::half_asin_two_x_series<T, K>>();
+	case shanks::series::series_id_t::inverse_1mx_series_id: return std::make_unique<shanks::series::inverse_1mx_series<T, K>>();
+	case shanks::series::series_id_t::x_1mx_squared_series_id: return std::make_unique<shanks::series::x_1mx_squared_series<T, K>>();
+	case shanks::series::series_id_t::erf_series_id: return std::make_unique<shanks::series::erf_series<T, K>>();
+	case shanks::series::series_id_t::m_fact_1mx_mp1_inverse_series_id: return std::make_unique<shanks::series::m_fact_1mx_mp1_inverse_series<T, K>>();
+	case shanks::series::series_id_t::inverse_sqrt_1m4x_series_id: return std::make_unique<shanks::series::inverse_sqrt_1m4x_series<T, K>>();
+	case shanks::series::series_id_t::one_twelfth_3x2_pi2_series_id: return std::make_unique<shanks::series::one_twelfth_3x2_pi2_series<T, K>>();
+	case shanks::series::series_id_t::one_twelfth_x2_pi2_series_id: return std::make_unique<shanks::series::one_twelfth_x2_pi2_series<T, K>>();
+	case shanks::series::series_id_t::ln2_series_id: return std::make_unique<shanks::series::ln2_series<T, K>>();
+	case shanks::series::series_id_t::one_series_id: return std::make_unique<shanks::series::one_series<T, K>>();
+	case shanks::series::series_id_t::minus_one_quarter_series_id: return std::make_unique<shanks::series::minus_one_quarter_series<T, K>>();
+	case shanks::series::series_id_t::pi_3_series_id: return std::make_unique<shanks::series::pi_3_series<T, K>>();
+	case shanks::series::series_id_t::pi_4_series_id: return std::make_unique<shanks::series::pi_4_series<T, K>>();
+	case shanks::series::series_id_t::pi_squared_6_minus_one_series_id: return std::make_unique<shanks::series::pi_squared_6_minus_one_series<T, K>>();
+	case shanks::series::series_id_t::three_minus_pi_series_id: return std::make_unique<shanks::series::three_minus_pi_series<T, K>>();
+	case shanks::series::series_id_t::one_twelfth_series_id: return std::make_unique<shanks::series::one_twelfth_series<T, K>>();
+	case shanks::series::series_id_t::eighth_pi_m_one_third_series_id: return std::make_unique<shanks::series::eighth_pi_m_one_third_series<T, K>>();
+	case shanks::series::series_id_t::one_third_pi_squared_m_nine_series_id: return std::make_unique<shanks::series::one_third_pi_squared_m_nine_series<T, K>>();
+	case shanks::series::series_id_t::four_ln2_m_3_series_id: return std::make_unique<shanks::series::four_ln2_m_3_series<T, K>>();
+	case shanks::series::series_id_t::exp_m_cos_x_sinsin_x_series_id: return std::make_unique<shanks::series::exp_m_cos_x_sinsin_x_series<T, K>>();
+	case shanks::series::series_id_t::pi_four_minus_ln2_halfed_series_id: return std::make_unique<shanks::series::pi_four_minus_ln2_halfed_series<T, K>>();
+	case shanks::series::series_id_t::five_pi_twelve_series_id: return std::make_unique<shanks::series::five_pi_twelve_series<T, K>>();
+	case shanks::series::series_id_t::x_two_series_id: return std::make_unique<shanks::series::x_two_series<T, K>>();
+	case shanks::series::series_id_t::pi_six_min_half_series_id: return std::make_unique<shanks::series::pi_six_min_half_series<T, K>>();
+	case shanks::series::series_id_t::x_two_throught_squares_series_id: return std::make_unique<shanks::series::x_two_throught_squares_series<T, K>>();
+	case shanks::series::series_id_t::minus_one_ned_in_n_series_id: return std::make_unique<shanks::series::minus_one_ned_in_n_series<T, K>>();
+	case shanks::series::series_id_t::minus_one_n_fact_n_in_n_series_id: return std::make_unique<shanks::series::minus_one_n_fact_n_in_n_series<T, K>>();
+	case shanks::series::series_id_t::ln_x_plus_one_x_minus_one_halfed_series_id: return std::make_unique<shanks::series::ln_x_plus_one_x_minus_one_halfed_series<T, K>>();
+	case shanks::series::series_id_t::two_arcsin_square_x_halfed_series_id: return std::make_unique<shanks::series::two_arcsin_square_x_halfed_series<T, K>>();
+	case shanks::series::series_id_t::pi_squared_twelve_series_id: return std::make_unique<shanks::series::pi_squared_twelve_series<T, K>>();
+	case shanks::series::series_id_t::pi_cubed_32_series_id: return std::make_unique<shanks::series::pi_cubed_32_series<T, K>>();
+	case shanks::series::series_id_t::minus_three_plus_ln3_three_devided_two_plus_two_ln2_series_id: return std::make_unique<shanks::series::minus_three_plus_ln3_three_devided_two_plus_two_ln2_series<T, K>>();
+	case shanks::series::series_id_t::two_ln2_series_id: return std::make_unique<shanks::series::two_ln2_series<T, K>>();
+	case shanks::series::series_id_t::pi_x_multi_e_xpi_plus_e_minusxpi_divided_e_xpi_minus_e_minusxpi_series_id: return std::make_unique<shanks::series::pi_x_multi_e_xpi_plus_e_minusxpi_divided_e_xpi_minus_e_minusxpi_series<T, K>>();
+	case shanks::series::series_id_t::pi_minus_x_2_series_id: return std::make_unique<shanks::series::pi_minus_x_2_series<T, K>>();
+	case shanks::series::series_id_t::half_multi_ln_1div2multi1minuscosx_series_id: return std::make_unique<shanks::series::half_multi_ln_1div2multi1minuscosx_series<T, K>>();
+	case shanks::series::series_id_t::half_minus_sinx_multi_pi_4_series_id: return std::make_unique<shanks::series::half_minus_sinx_multi_pi_4_series<T, K>>();
+	case shanks::series::series_id_t::ln_1plussqrt1plusxsquare_minus_ln_2_series_id: return std::make_unique<shanks::series::ln_1plussqrt1plusxsquare_minus_ln_2_series<T, K>>();
+	case shanks::series::series_id_t::ln_cosx_series_id: return std::make_unique<shanks::series::ln_cosx_series<T, K>>();
+	case shanks::series::series_id_t::ln_sinx_minus_ln_x_series_id: return std::make_unique<shanks::series::ln_sinx_minus_ln_x_series<T, K>>();
+	case shanks::series::series_id_t::pi_8_cosx_square_minus_1_div_3_cosx_series_id: return std::make_unique<shanks::series::pi_8_cosx_square_minus_1_div_3_cosx_series<T, K>>();
+	case shanks::series::series_id_t::sqrt_oneminussqrtoneminusx_div_x_series_id: return std::make_unique<shanks::series::sqrt_oneminussqrtoneminusx_div_x_series<T, K>>();
+	case shanks::series::series_id_t::one_minus_sqrt_1minus4x_div_2x_series_id: return std::make_unique<shanks::series::one_minus_sqrt_1minus4x_div_2x_series<T, K>>();
+	case shanks::series::series_id_t::arcsin_x_minus_x_series_id: return std::make_unique<shanks::series::arcsin_x_minus_x_series<T, K>>();
+	case shanks::series::series_id_t::pi_x_minus_x_square_square_minus_three_pi_x_plus_two_pi_square_series_id: return std::make_unique<shanks::series::pi_x_minus_x_square_square_minus_three_pi_x_plus_two_pi_square_series<T, K>>();
+	case shanks::series::series_id_t::abs_sin_x_minus_2_div_pi_series_id: return std::make_unique<shanks::series::abs_sin_x_minus_2_div_pi_series<T, K>>();
+	case shanks::series::series_id_t::pi_minus_3pi_4_and_pi_minus_x_minus_3pi_4_series_id: return std::make_unique<shanks::series::pi_minus_3pi_4_and_pi_minus_x_minus_3pi_4_series<T, K>>();
+	case shanks::series::series_id_t::minus_3_div_4_or_x_minus_3_div_4_series_id: return std::make_unique<shanks::series::minus_3_div_4_or_x_minus_3_div_4_series<T, K>>();
+	case shanks::series::series_id_t::ten_minus_x_series_id: return std::make_unique<shanks::series::ten_minus_x_series<T, K>>();
+	case shanks::series::series_id_t::x_series_id: return std::make_unique<shanks::series::x_series<T, K>>();
+	case shanks::series::series_id_t::minus_x_minus_pi_4_or_minus_pi_4_series_id: return std::make_unique<shanks::series::minus_x_minus_pi_4_or_minus_pi_4_series<T, K>>();
+	case shanks::series::series_id_t::one_div_two_minus_x_multi_three_plus_x_series_id: return std::make_unique<shanks::series::one_div_two_minus_x_multi_three_plus_x_series<T, K>>();
+	case shanks::series::series_id_t::si_x_series_id: return std::make_unique<shanks::series::si_x_series<T, K>>();
+	case shanks::series::series_id_t::ci_x_series_id: return std::make_unique<shanks::series::ci_x_series<T, K>>();
+	case shanks::series::series_id_t::riemann_zeta_func_series_id: return std::make_unique<shanks::series::riemann_zeta_func_series<T, K>>();
+	case shanks::series::series_id_t::riemann_zeta_func_xmin1_div_Riemann_zeta_func_x_series_id: return std::make_unique<shanks::series::riemann_zeta_func_xmin1_div_Riemann_zeta_func_x_series<T, K>>();
+	case shanks::series::series_id_t::xsquareplus3_div_xsquareplus2multix_minus_1_series_id: return std::make_unique<shanks::series::xsquareplus3_div_xsquareplus2multix_minus_1_series<T, K>>();
+	case shanks::series::series_id_t::arcsin_x_series_id: return std::make_unique<shanks::series::arcsin_x_series<T, K>>();
+	case shanks::series::series_id_t::arctg_x_series_id: return std::make_unique<shanks::series::arctg_x_series<T, K>>();
+	case shanks::series::series_id_t::k_x_series_id: return std::make_unique<shanks::series::k_x_series<T, K>>();
+	case shanks::series::series_id_t::e_x_series_id: return std::make_unique<shanks::series::e_x_series<T, K>>();
+	case shanks::series::series_id_t::sqrt_1plusx_series_id: return std::make_unique<shanks::series::sqrt_1plusx_series<T, K>>();
+	case shanks::series::series_id_t::lambert_W_func_series_id: return std::make_unique<shanks::series::lambert_W_func_series<T, K>>();
+	case shanks::series::series_id_t::incomplete_Gamma_func_series_id: return std::make_unique<shanks::series::incomplete_Gamma_func_series<T, K>>();
+	case shanks::series::series_id_t::series_with_ln_number1_series_id: return std::make_unique<shanks::series::series_with_ln_number1_series<T, K>>();
+	case shanks::series::series_id_t::series_with_ln_number2_series_id: return std::make_unique<shanks::series::series_with_ln_number2_series<T, K>>();
+	case shanks::series::series_id_t::pi_series_id: return std::make_unique<shanks::series::pi_series<T, K>>();
+	case shanks::series::series_id_t::x_min_sqrt_x_series_id: return std::make_unique<shanks::series::x_min_sqrt_x_series<T, K>>();
+	case shanks::series::series_id_t::arctg_x2_series_id: return std::make_unique<shanks::series::arctg_x2_series<T, K>>();
+	case shanks::series::series_id_t::ln1px4_series_id: return std::make_unique<shanks::series::ln1px4_series<T, K>>();
+	case shanks::series::series_id_t::sin_x2_series_id: return std::make_unique<shanks::series::sin_x2_series<T, K>>();
+	case shanks::series::series_id_t::arctg_x3_series_id: return std::make_unique<shanks::series::arctg_x3_series<T, K>>();
+	case shanks::series::series_id_t::arcsin_x2_series_id: return std::make_unique<shanks::series::arcsin_x2_series<T, K>>();
+	case shanks::series::series_id_t::ln1_m_x2_series_id: return std::make_unique<shanks::series::ln1_m_x2_series<T, K>>();
+	case shanks::series::series_id_t::arctanh_x_series_id: return std::make_unique<shanks::series::arctanh_x_series<T, K>>();
+	case shanks::series::series_id_t::arcsinh_x_series_id: return std::make_unique<shanks::series::arcsinh_x_series<T, K>>();
+	case shanks::series::series_id_t::cos_x2_series_id: return std::make_unique<shanks::series::cos_x2_series<T, K>>();
+	case shanks::series::series_id_t::sinh_x2_series_id: return std::make_unique<shanks::series::sinh_x2_series<T, K>>();
+	case shanks::series::series_id_t::arctanh_x2_series_id: return std::make_unique<shanks::series::arctanh_x2_series<T, K>>();
+	case shanks::series::series_id_t::cos3xmin1_div_xsquare_series_id: return std::make_unique<shanks::series::cos3xmin1_div_xsquare_series<T, K>>();
+	case shanks::series::series_id_t::two_degree_x_series_id: return std::make_unique<shanks::series::two_degree_x_series<T, K>>();
+	case shanks::series::series_id_t::sqrt_1plusx_min_1_min_x_div_2_series_id: return std::make_unique<shanks::series::sqrt_1plusx_min_1_min_x_div_2_series<T, K>>();
+	case shanks::series::series_id_t::ln13_min_ln7_div_7_series_id: return std::make_unique<shanks::series::ln13_min_ln7_div_7_series<T, K>>();
+	case shanks::series::series_id_t::one_div_sqrt2_sin_xdivsqrt2_series_id: return std::make_unique<shanks::series::one_div_sqrt2_sin_xdivsqrt2_series<T, K>>();
+	case shanks::series::series_id_t::ln_1plusx_div_1plusx2_series_id: return std::make_unique<shanks::series::ln_1plusx_div_1plusx2_series<T, K>>();
+	case shanks::series::series_id_t::cos_sqrt_x_series_id: return std::make_unique<shanks::series::cos_sqrt_x_series<T, K>>();
+	case shanks::series::series_id_t::ln_1_plus_x3_series_id: return std::make_unique<shanks::series::ln_1_plus_x3_series<T, K>>();
+	case shanks::series::series_id_t::x_div_1minx_series_id: return std::make_unique<shanks::series::x_div_1minx_series<T, K>>();
+	case shanks::series::series_id_t::x_div_1minx2_series_id: return std::make_unique<shanks::series::x_div_1minx2_series<T, K>>();
 
 	default:
 		throw std::domain_error("Series not implemented");
@@ -383,62 +383,62 @@ inline std::unique_ptr<series_base<T, K>> create_series_by_id(series_id_t id) {
  * @brief Helper function to get transformation by ID
  */
 template <AcceptedLike T, std::unsigned_integral K>
-inline std::unique_ptr<series_acceleration<T, K>>
-create_transformation_by_id(transformation_id_t id) {
+inline std::unique_ptr<shanks::algos::series_acceleration<T, K>>
+create_transformation_by_id(shanks::algos::transformation_id_t id) {
 
 	switch (id) {
-	case transformation_id_t::anderson_acceleration_algorithm_id                : {return std::make_unique<anderson_acceleration_algorithm<T, K>>();}
-	case transformation_id_t::brezinski_theta_transformation_id		 	  		: { return std::make_unique<brezinski_theta_algorithm<T,K>>(); }
-	case transformation_id_t::chang_wynn_transformation_id			 	  		: { return std::make_unique<chang_wynn_algorithm<T,K>>(); }
-	case transformation_id_t::drummond_d_u_transformation_id			 		: { return std::make_unique<drummond_d_algorithm<T,K>>(remainder_type::u_type, false ); }
-	case transformation_id_t::drummond_d_t_transformation_id			 		: { return std::make_unique<drummond_d_algorithm<T,K>>(remainder_type::t_type, false ); }
-	case transformation_id_t::drummond_d_t_wave_transformation_id	 	  		: { return std::make_unique<drummond_d_algorithm<T,K>>(remainder_type::t_wave_type, false ); }
-	case transformation_id_t::drummond_d_v_transformation_id			 		: { return std::make_unique<drummond_d_algorithm<T,K>>(remainder_type::v_type, false ); }
-	case transformation_id_t::drummond_d_v_wave_transformation_id	 	  		: { return std::make_unique<drummond_d_algorithm<T,K>>(remainder_type::v_wave_type, false ); }
-	case transformation_id_t::j_transformation_id                     			: {return std::make_unique<j_transformation_algorithm<T, K>>();}
-	case transformation_id_t::recurrent_drummond_d_u_transformation_id	  		: { return std::make_unique<drummond_d_algorithm<T,K>>(remainder_type::u_type, true ); }
-	case transformation_id_t::recurrent_drummond_d_t_transformation_id	  		: { return std::make_unique<drummond_d_algorithm<T,K>>(remainder_type::t_type, true ); }
-	case transformation_id_t::recurrent_drummond_d_v_transformation_id	  		: { return std::make_unique<drummond_d_algorithm<T,K>>(remainder_type::v_type, true ); }
-	case transformation_id_t::recurrent_drummond_d_t_wave_transformation_id		: { return std::make_unique<drummond_d_algorithm<T,K>>(remainder_type::t_wave_type, true ); }
-	case transformation_id_t::recurrent_drummond_d_v_wave_transformation_id		: { return std::make_unique<drummond_d_algorithm<T,K>>(remainder_type::v_wave_type, true ); }
-	case transformation_id_t::ford_sidi_2_transformation_id				  		: { return std::make_unique<ford_sidi_2_algorithm<T,K>>(ford_sidi_2_algorithm<T,K>()); }
-	case transformation_id_t::ford_sidi_3_transformation_id				  		: { return std::make_unique<ford_sidi_3_algorithm<T,K>>(ford_sidi_3_algorithm<T,K>()); }
-	case transformation_id_t::levin_sidi_l_u_transformation_id			  		: { return std::make_unique<levin_algorithm<T,K>>(remainder_type::u_type, false ); }
-	case transformation_id_t::levin_sidi_l_t_transformation_id			  		: { return std::make_unique<levin_algorithm<T,K>>(remainder_type::t_type, false  ); }
-	case transformation_id_t::levin_sidi_l_t_wave_transformation_id		  		: { return std::make_unique<levin_algorithm<T,K>>(remainder_type::t_wave_type, false  ); }
-	case transformation_id_t::levin_sidi_l_v_transformation_id			  		: { return std::make_unique<levin_algorithm<T,K>>(remainder_type::v_type, false  ); }
-	case transformation_id_t::levin_sidi_l_v_wave_transformation_id		  		: { return std::make_unique<levin_algorithm<T,K>>(remainder_type::v_wave_type, false  ); }
-	case transformation_id_t::recurrent_levin_sidi_l_u_transformation_id	  	: { return std::make_unique<levin_algorithm<T,K>>(remainder_type::u_type, true  ); }
-	case transformation_id_t::recurrent_levin_sidi_l_t_transformation_id	  	: { return std::make_unique<levin_algorithm<T,K>>(remainder_type::t_type, true  ); }
-	case transformation_id_t::recurrent_levin_sidi_l_v_transformation_id	  	: { return std::make_unique<levin_algorithm<T,K>>(remainder_type::v_type, true  ); }
-	case transformation_id_t::recurrent_levin_sidi_l_t_wave_transformation_id	: { return std::make_unique<levin_algorithm<T,K>>(remainder_type::t_wave_type, true  ); }
-	case transformation_id_t::recurrent_levin_sidi_l_v_wave_transformation_id	: { return std::make_unique<levin_algorithm<T,K>>(remainder_type::v_wave_type, true  ); }
-	case transformation_id_t::levin_sidi_m_u_transformation_id					: { return std::make_unique<levin_sidi_m_algorithm<T,K>>(remainder_type::u_type  ); }
-	case transformation_id_t::levin_sidi_m_t_transformation_id					: { return std::make_unique<levin_sidi_m_algorithm<T,K>>(remainder_type::t_type ); }
-	case transformation_id_t::levin_sidi_m_t_wave_transformation_id				: { return std::make_unique<levin_sidi_m_algorithm<T,K>>(remainder_type::t_wave_type); }
-	case transformation_id_t::levin_sidi_m_v_transformation_id					: { return std::make_unique<levin_sidi_m_algorithm<T,K>>(remainder_type::v_type ); }
-	case transformation_id_t::levin_sidi_m_v_wave_transformation_id				: { return std::make_unique<levin_sidi_m_algorithm<T,K>>(remainder_type::v_wave_type ); }
-	case transformation_id_t::levin_sidi_s_u_transformation_id					: { return std::make_unique<levin_sidi_s_algorithm<T,K>>(remainder_type::u_type, false  ); }
-	case transformation_id_t::levin_sidi_s_t_transformation_id					: { return std::make_unique<levin_sidi_s_algorithm<T,K>>(remainder_type::t_type, false  ); }
-	case transformation_id_t::levin_sidi_s_t_wave_transformation_id				: { return std::make_unique<levin_sidi_s_algorithm<T,K>>(remainder_type::t_wave_type, false  ); }
-	case transformation_id_t::levin_sidi_s_v_transformation_id					: { return std::make_unique<levin_sidi_s_algorithm<T,K>>(remainder_type::v_type, false  ); }
-	case transformation_id_t::levin_sidi_s_v_wave_transformation_id				: { return std::make_unique<levin_sidi_s_algorithm<T,K>>(remainder_type::v_wave_type, false  ); }
-	case transformation_id_t::recurrent_levin_sidi_s_u_transformation_id		: { return std::make_unique<levin_sidi_s_algorithm<T,K>>(remainder_type::u_type, true  ); }
-	case transformation_id_t::recurrent_levin_sidi_s_t_transformation_id		: { return std::make_unique<levin_sidi_s_algorithm<T,K>>(remainder_type::t_type, true  ); }
-	case transformation_id_t::recurrent_levin_sidi_s_v_transformation_id		: { return std::make_unique<levin_sidi_s_algorithm<T,K>>(remainder_type::v_type, true ); }
-	case transformation_id_t::recurrent_levin_sidi_s_t_wave_transformation_id	: { return std::make_unique<levin_sidi_s_algorithm<T,K>>(remainder_type::t_wave_type, true  ); }
-	case transformation_id_t::recurrent_levin_sidi_s_v_wave_transformation_id	: { return std::make_unique<levin_sidi_s_algorithm<T,K>>(remainder_type::v_wave_type, true  ); }
-	case transformation_id_t::lubkin_w_transformation_id						: { return std::make_unique<lubkin_w_algorithm<T,K>>(); }
-	case transformation_id_t::richardson_transformation_id						: { return std::make_unique<richardson_algorithm<T,K>>(); }
-	case transformation_id_t::shanks_transformation_id							: { return std::make_unique<shanks_algorithm<T,K>>(); }
-	case transformation_id_t::shanks_alternating_transformation_id				: { return std::make_unique<shanks_transform_alternating<T,K>>(); }
-	case transformation_id_t::weniger_transformation_id							: { return std::make_unique<weniger_algorithm<T,K>>(); }
-	case transformation_id_t::wynn_epsilon_1_transformation_id					: { return std::make_unique<wynn_epsilon_1_algorithm<T,K>>(); }
-	case transformation_id_t::wynn_epsilon_2_transformation_id					: { return std::make_unique<wynn_epsilon_2_algorithm<T,K>>(); }
-	case transformation_id_t::wynn_epsilon_3_transformation_id					: { return std::make_unique<wynn_epsilon_3_algorithm<T,K>>(); }
-	case transformation_id_t::wynn_rho_rho_transformation_id					: { return std::make_unique<wynn_rho_algorithm<T,K>>(numerator_type::rho_type ); }
-	case transformation_id_t::wynn_rho_generalized_transformation_id			: { return std::make_unique<wynn_rho_algorithm<T,K>>(numerator_type::generalized_type ); }
-	case transformation_id_t::wynn_rho_gamma_rho_transformation_id				: { return std::make_unique<wynn_rho_algorithm<T,K>>(numerator_type::gamma_rho_type ); }
+	case shanks::algos::transformation_id_t::anderson_acceleration_algorithm_id              : { return std::make_unique<shanks::algos::anderson_acceleration_algorithm<T, K>>();}
+	case shanks::algos::transformation_id_t::brezinski_theta_transformation_id		 	  	 : { return std::make_unique<shanks::algos::brezinski_theta_algorithm<T,K>>(); }
+	case shanks::algos::transformation_id_t::chang_wynn_transformation_id			 	  	 : { return std::make_unique<shanks::algos::chang_wynn_algorithm<T,K>>(); }
+	case shanks::algos::transformation_id_t::drummond_d_u_transformation_id			 		 : { return std::make_unique<shanks::algos::drummond_d_algorithm<T,K>>(shanks::remainders::remainder_type::u_type, false ); }
+	case shanks::algos::transformation_id_t::drummond_d_t_transformation_id			 		 : { return std::make_unique<shanks::algos::drummond_d_algorithm<T,K>>(shanks::remainders::remainder_type::t_type, false ); }
+	case shanks::algos::transformation_id_t::drummond_d_t_wave_transformation_id	 	  	 : { return std::make_unique<shanks::algos::drummond_d_algorithm<T,K>>(shanks::remainders::remainder_type::t_wave_type, false ); }
+	case shanks::algos::transformation_id_t::drummond_d_v_transformation_id			 		 : { return std::make_unique<shanks::algos::drummond_d_algorithm<T,K>>(shanks::remainders::remainder_type::v_type, false ); }
+	case shanks::algos::transformation_id_t::drummond_d_v_wave_transformation_id	 	  	 : { return std::make_unique<shanks::algos::drummond_d_algorithm<T,K>>(shanks::remainders::remainder_type::v_wave_type, false ); }
+	case shanks::algos::transformation_id_t::j_transformation_id                     		 : {return std::make_unique<shanks::algos::j_transformation_algorithm<T, K>>();}
+	case shanks::algos::transformation_id_t::recurrent_drummond_d_u_transformation_id	  	 : { return std::make_unique<shanks::algos::drummond_d_algorithm<T,K>>(shanks::remainders::remainder_type::u_type, true ); }
+	case shanks::algos::transformation_id_t::recurrent_drummond_d_t_transformation_id	  	 : { return std::make_unique<shanks::algos::drummond_d_algorithm<T,K>>(shanks::remainders::remainder_type::t_type, true ); }
+	case shanks::algos::transformation_id_t::recurrent_drummond_d_v_transformation_id	  	 : { return std::make_unique<shanks::algos::drummond_d_algorithm<T,K>>(shanks::remainders::remainder_type::v_type, true ); }
+	case shanks::algos::transformation_id_t::recurrent_drummond_d_t_wave_transformation_id	 : { return std::make_unique<shanks::algos::drummond_d_algorithm<T,K>>(shanks::remainders::remainder_type::t_wave_type, true ); }
+	case shanks::algos::transformation_id_t::recurrent_drummond_d_v_wave_transformation_id	 : { return std::make_unique<shanks::algos::drummond_d_algorithm<T,K>>(shanks::remainders::remainder_type::v_wave_type, true ); }
+	case shanks::algos::transformation_id_t::ford_sidi_2_transformation_id				  	 : { return std::make_unique<shanks::algos::ford_sidi_2_algorithm<T,K>>(shanks::algos::ford_sidi_2_algorithm<T,K>()); }
+	case shanks::algos::transformation_id_t::ford_sidi_3_transformation_id				  	 : { return std::make_unique<shanks::algos::ford_sidi_3_algorithm<T,K>>(shanks::algos::ford_sidi_3_algorithm<T,K>()); }
+	case shanks::algos::transformation_id_t::levin_sidi_l_u_transformation_id			  	 : { return std::make_unique<shanks::algos::levin_algorithm<T,K>>(shanks::remainders::remainder_type::u_type, false ); }
+	case shanks::algos::transformation_id_t::levin_sidi_l_t_transformation_id			  	 : { return std::make_unique<shanks::algos::levin_algorithm<T,K>>(shanks::remainders::remainder_type::t_type, false  ); }
+	case shanks::algos::transformation_id_t::levin_sidi_l_t_wave_transformation_id		  	 : { return std::make_unique<shanks::algos::levin_algorithm<T,K>>(shanks::remainders::remainder_type::t_wave_type, false  ); }
+	case shanks::algos::transformation_id_t::levin_sidi_l_v_transformation_id			  	 : { return std::make_unique<shanks::algos::levin_algorithm<T,K>>(shanks::remainders::remainder_type::v_type, false  ); }
+	case shanks::algos::transformation_id_t::levin_sidi_l_v_wave_transformation_id		  	 : { return std::make_unique<shanks::algos::levin_algorithm<T,K>>(shanks::remainders::remainder_type::v_wave_type, false  ); }
+	case shanks::algos::transformation_id_t::recurrent_levin_sidi_l_u_transformation_id	  	 : { return std::make_unique<shanks::algos::levin_algorithm<T,K>>(shanks::remainders::remainder_type::u_type, true  ); }
+	case shanks::algos::transformation_id_t::recurrent_levin_sidi_l_t_transformation_id	  	 : { return std::make_unique<shanks::algos::levin_algorithm<T,K>>(shanks::remainders::remainder_type::t_type, true  ); }
+	case shanks::algos::transformation_id_t::recurrent_levin_sidi_l_v_transformation_id	  	 : { return std::make_unique<shanks::algos::levin_algorithm<T,K>>(shanks::remainders::remainder_type::v_type, true  ); }
+	case shanks::algos::transformation_id_t::recurrent_levin_sidi_l_t_wave_transformation_id : { return std::make_unique<shanks::algos::levin_algorithm<T,K>>(shanks::remainders::remainder_type::t_wave_type, true  ); }
+	case shanks::algos::transformation_id_t::recurrent_levin_sidi_l_v_wave_transformation_id : { return std::make_unique<shanks::algos::levin_algorithm<T,K>>(shanks::remainders::remainder_type::v_wave_type, true  ); }
+	case shanks::algos::transformation_id_t::levin_sidi_m_u_transformation_id				 : { return std::make_unique<shanks::algos::levin_sidi_m_algorithm<T,K>>(shanks::remainders::remainder_type::u_type  ); }
+	case shanks::algos::transformation_id_t::levin_sidi_m_t_transformation_id				 : { return std::make_unique<shanks::algos::levin_sidi_m_algorithm<T,K>>(shanks::remainders::remainder_type::t_type ); }
+	case shanks::algos::transformation_id_t::levin_sidi_m_t_wave_transformation_id			 : { return std::make_unique<shanks::algos::levin_sidi_m_algorithm<T,K>>(shanks::remainders::remainder_type::t_wave_type); }
+	case shanks::algos::transformation_id_t::levin_sidi_m_v_transformation_id				 : { return std::make_unique<shanks::algos::levin_sidi_m_algorithm<T,K>>(shanks::remainders::remainder_type::v_type ); }
+	case shanks::algos::transformation_id_t::levin_sidi_m_v_wave_transformation_id			 : { return std::make_unique<shanks::algos::levin_sidi_m_algorithm<T,K>>(shanks::remainders::remainder_type::v_wave_type ); }
+	case shanks::algos::transformation_id_t::levin_sidi_s_u_transformation_id				 : { return std::make_unique<shanks::algos::levin_sidi_s_algorithm<T,K>>(shanks::remainders::remainder_type::u_type, false  ); }
+	case shanks::algos::transformation_id_t::levin_sidi_s_t_transformation_id				 : { return std::make_unique<shanks::algos::levin_sidi_s_algorithm<T,K>>(shanks::remainders::remainder_type::t_type, false  ); }
+	case shanks::algos::transformation_id_t::levin_sidi_s_t_wave_transformation_id			 : { return std::make_unique<shanks::algos::levin_sidi_s_algorithm<T,K>>(shanks::remainders::remainder_type::t_wave_type, false  ); }
+	case shanks::algos::transformation_id_t::levin_sidi_s_v_transformation_id				 : { return std::make_unique<shanks::algos::levin_sidi_s_algorithm<T,K>>(shanks::remainders::remainder_type::v_type, false  ); }
+	case shanks::algos::transformation_id_t::levin_sidi_s_v_wave_transformation_id			 : { return std::make_unique<shanks::algos::levin_sidi_s_algorithm<T,K>>(shanks::remainders::remainder_type::v_wave_type, false  ); }
+	case shanks::algos::transformation_id_t::recurrent_levin_sidi_s_u_transformation_id		 : { return std::make_unique<shanks::algos::levin_sidi_s_algorithm<T,K>>(shanks::remainders::remainder_type::u_type, true  ); }
+	case shanks::algos::transformation_id_t::recurrent_levin_sidi_s_t_transformation_id		 : { return std::make_unique<shanks::algos::levin_sidi_s_algorithm<T,K>>(shanks::remainders::remainder_type::t_type, true  ); }
+	case shanks::algos::transformation_id_t::recurrent_levin_sidi_s_v_transformation_id		 : { return std::make_unique<shanks::algos::levin_sidi_s_algorithm<T,K>>(shanks::remainders::remainder_type::v_type, true ); }
+	case shanks::algos::transformation_id_t::recurrent_levin_sidi_s_t_wave_transformation_id : { return std::make_unique<shanks::algos::levin_sidi_s_algorithm<T,K>>(shanks::remainders::remainder_type::t_wave_type, true  ); }
+	case shanks::algos::transformation_id_t::recurrent_levin_sidi_s_v_wave_transformation_id : { return std::make_unique<shanks::algos::levin_sidi_s_algorithm<T,K>>(shanks::remainders::remainder_type::v_wave_type, true  ); }
+	case shanks::algos::transformation_id_t::lubkin_w_transformation_id						 : { return std::make_unique<shanks::algos::lubkin_w_algorithm<T,K>>(); }
+	case shanks::algos::transformation_id_t::richardson_transformation_id					 : { return std::make_unique<shanks::algos::richardson_algorithm<T,K>>(); }
+	case shanks::algos::transformation_id_t::shanks_transformation_id						 : { return std::make_unique<shanks::algos::shanks_algorithm<T,K>>(); }
+	case shanks::algos::transformation_id_t::shanks_alternating_transformation_id			 : { return std::make_unique<shanks::algos::shanks_transform_alternating<T,K>>(); }
+	case shanks::algos::transformation_id_t::weniger_transformation_id						 : { return std::make_unique<shanks::algos::weniger_algorithm<T,K>>(); }
+	case shanks::algos::transformation_id_t::wynn_epsilon_1_transformation_id				 : { return std::make_unique<shanks::algos::wynn_epsilon_1_algorithm<T,K>>(); }
+	case shanks::algos::transformation_id_t::wynn_epsilon_2_transformation_id				 : { return std::make_unique<shanks::algos::wynn_epsilon_2_algorithm<T,K>>(); }
+	case shanks::algos::transformation_id_t::wynn_epsilon_3_transformation_id				 : { return std::make_unique<shanks::algos::wynn_epsilon_3_algorithm<T,K>>(); }
+	case shanks::algos::transformation_id_t::wynn_rho_rho_transformation_id					 : { return std::make_unique<shanks::algos::wynn_rho_algorithm<T,K>>(shanks::numerators::numerator_type::rho_type ); }
+	case shanks::algos::transformation_id_t::wynn_rho_generalized_transformation_id			 : { return std::make_unique<shanks::algos::wynn_rho_algorithm<T,K>>(shanks::numerators::numerator_type::generalized_type ); }
+	case shanks::algos::transformation_id_t::wynn_rho_gamma_rho_transformation_id			 : { return std::make_unique<shanks::algos::wynn_rho_algorithm<T,K>>(shanks::numerators::numerator_type::gamma_rho_type ); }
 	default: throw std::domain_error("Invalid transformation ID");
 	}
 }
@@ -456,8 +456,8 @@ inline void main_testing_function()
 
 	//choosing series
 	print_series_info();
-	series_id_t series_id = console_IO<series_id_t>::input("series_id");
-	std::unique_ptr<series_base<T, K>> series = create_series_by_id<T, K>(series_id);
+	shanks::series::series_id_t series_id = console_IO<shanks::series::series_id_t>::input("series_id");
+	std::unique_ptr<shanks::series::series_base<T, K>> series = create_series_by_id<T, K>(series_id);
 
 	std::cout << "\nChosen series id " <<  static_cast<unsigned long int>(series_id) << "\n";
 
@@ -470,17 +470,17 @@ inline void main_testing_function()
 	K kParam = static_cast<K>(1);
 
 	switch(series_id){
-		case series_id_t::bin_series_id:{
+		case shanks::series::series_id_t::bin_series_id:{
 			std::cout << "for bin series must initialise variable alpha\n";
 			tParam = console_IO<T>::input("alpha");
 			break;
 		}
-		case series_id_t::incomplete_Gamma_func_series_id:{
+		case shanks::series::series_id_t::incomplete_Gamma_func_series_id:{
 			std::cout << "for incomplete Gamma function must initialise variable alpha\n";
 			tParam = console_IO<T>::input("alpha");
 			break;
 		}
-		case series_id_t::m_fact_1mx_mp1_inverse_series_id:{
+		case shanks::series::series_id_t::m_fact_1mx_mp1_inverse_series_id:{
 			std::cout << "for m factorial 1mx mp1 ... series must initialise variable alpha\n";
 			kParam = console_IO<K>::input("m");
 			break;
@@ -489,8 +489,8 @@ inline void main_testing_function()
 
 	//choosing transformation
 	print_transformation_info();
-	transformation_id_t transformation_id = console_IO<transformation_id_t>::input("transformation_id");
-	std::unique_ptr<series_acceleration<T, K>> transform = create_transformation_by_id<T, K>(transformation_id);
+	shanks::algos::transformation_id_t transformation_id = console_IO<shanks::algos::transformation_id_t>::input("transformation_id");
+	std::unique_ptr<shanks::algos::series_acceleration<T, K>> transform = create_transformation_by_id<T, K>(transformation_id);
 
 	std::cout << "transformation : " << transform->get_name() << "\n";
 	print_test_function_info();
@@ -544,8 +544,8 @@ inline void main_testing_function()
 	case test_function_id_t::cmp_transformations_id:
 	{
 		print_transformation_info();
-		transformation_id_t cmp_transformation_id = console_IO<transformation_id_t>::input("transformation id");
-		std::unique_ptr<series_acceleration<T, K>> transform2;
+		shanks::algos::transformation_id_t cmp_transformation_id = console_IO<shanks::algos::transformation_id_t>::input("transformation id");
+		std::unique_ptr<shanks::algos::series_acceleration<T, K>> transform2;
 
 		transform2 = create_transformation_by_id<T, K>( cmp_transformation_id);
 		cmp_transformations<T,K>(

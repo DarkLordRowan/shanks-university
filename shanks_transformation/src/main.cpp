@@ -24,14 +24,10 @@ int main()
     while(true){
 		try
 		{
-			//main_testing_function<complex_precision<float_precision>, unsigned long long int>();
-			//main_testing_function<complex_precision<double>, unsigned long long int>();
-			//main_testing_function<float_precision, unsigned long long int >();
 			//main_testing_function<long double, unsigned long long int>();
-			//main_testing_function<interval<double>, unsigned int>();
-			//main_testing_function<interval<float_precision>, unsigned int>();
+			main_testing_function<std::complex<long double>, unsigned long long int>();
 			//main_testing_function<std::complex<mpfr::mpreal>, unsigned short int>();
-			main_testing_function<mpfr::mpreal, unsigned short int>();
+			//main_testing_function<mpfr::mpreal, unsigned short int>();
 		}
 		catch (std::domain_error& e)
 		{

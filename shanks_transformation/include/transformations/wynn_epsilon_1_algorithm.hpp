@@ -16,6 +16,8 @@
 
 #include "series_acceleration.hpp"
 
+namespace shanks{ namespace algos{
+
 /**
  * @brief Wynn Epsilon Algorithm class template implementing the epsilon algorithm for series acceleration.
  *
@@ -140,5 +142,8 @@ T wynn_epsilon_1_algorithm<T, K>::operator()(
 	// For theory, see: Wynn (1956), Section 2 - ε₂ₖ⁽ⁿ⁾ as accelerated approximations
 	return (*e0_add)[n1];
 }
+
+} //namespace shanks::algos
+} //namespace shanks
 
 #endif

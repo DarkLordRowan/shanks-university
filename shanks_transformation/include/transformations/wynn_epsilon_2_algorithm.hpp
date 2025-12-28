@@ -15,9 +15,9 @@
  *   Computer Journal, 14(4), 437-441.
  */
 
-#pragma once
-
 #include "series_acceleration.hpp"
+
+namespace shanks{ namespace algos{
 
  /**
   * @brief Wynn's Epsilon Algorithm (Second Implementation) class template.
@@ -188,5 +188,8 @@ T wynn_epsilon_2_algorithm<T, K>::operator()(
 
 	return eps[0][0];
 }
+
+} //namespace shanks::algos
+} //namespace shanks
 
 #endif

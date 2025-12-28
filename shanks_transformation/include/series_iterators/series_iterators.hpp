@@ -2,6 +2,8 @@
 #define SERIES_ITERATORS_HPP
 #pragma once
 
+namespace shanks { namespace iters {
+
 enum class series_iterator_id_t {
 														   null_iterator_id,
 									   abs_sin_x_minus_2_div_pi_iterator_id,
@@ -105,6 +107,9 @@ pi_x_multi_e_xpi_plus_e_minusxpi_divided_e_xpi_minus_e_minusxpi_iterator_id,
 				    					 x_two_throught_squares_iterator_id,
 										 		  series_iterator_id_t_count
 };
+
+} //namespace shanks::iters
+} //namespace shanks
 
 #include "abs_sin_x_minus_2_div_pi_iterator.hpp"
 #include "arcsinh_x_iterator.hpp"

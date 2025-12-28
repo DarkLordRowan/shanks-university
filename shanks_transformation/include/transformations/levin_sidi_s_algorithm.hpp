@@ -17,35 +17,43 @@
 
 #include <memory>
 
+namespace shanks{ namespace algos{
 
- /**
-  * @brief Levin-Sidi S-transformation class template (Drummond's D-transformation).
-  *
-  * @authors Naumov A.
-  *
-  * This class implements the Levin-Sidi S-transformation,
-  * which is particularly effective for series with specific asymptotic behaviors. The transformation
-  * uses Pochhammer symbols and can be computed using either direct formulas or recurrence relations.
-  *
-  * References:
-  * - Sidi, A. (2003). Practical Extrapolation Methods: Theory and Applications.
-  * - Sidi, A. (2003). A new class of nonlinear transformations. arXiv:math/0306302.
-  *
-  * @tparam T Floating-point type for series elements (must satisfy Accepted)
-  *           Represents numerical precision (float, double, long double)
-  * @tparam K Unsigned integral type for indices and order (must satisfy std::unsigned_integral)
-  *           Used for counting and indexing operations
-  */
+/**
+* @brief Levin-Sidi S-transformation class template (Drummond's D-transformation).
+*
+* @authors Naumov A.
+*
+* This class implements the Levin-Sidi S-transformation,
+* which is particularly effective for series with specific asymptotic behaviors. The transformation
+* uses Pochhammer symbols and can be computed using either direct formulas or recurrence relations.
+*
+* References:
+* - Sidi, A. (2003). Practical Extrapolation Methods: Theory and Applications.
+* - Sidi, A. (2003). A new class of nonlinear transformations. arXiv:math/0306302.
+*
+* @tparam T Floating-point type for series elements (must satisfy Accepted)
+*           Represents numerical precision (float, double, long double)
+* @tparam K Unsigned integral type for indices and order (must satisfy std::unsigned_integral)
+*           Used for counting and indexing operations
+*/
 template<AcceptedLike T, UnsignedIntLike K>
 class levin_sidi_s_algorithm final : public series_acceleration<T, K> {
 protected:
 
     using float_type = GetUnderlyingType<T>::value; //type in case of complex or interval
 
-    float_type beta_in_use = utils::cast<float_type>(1.0);       /**< Positive real parameter (β > 0). Default value is 1.0.            */
-    std::unique_ptr<const transform_base<T, K>> remainder;         /**< Pointer to remainder transformation object                        */
-    bool use_recurrent_formula = false;                            /**< Flag to use recurrence formulas (true) or direct formulas (false) */
-    remainder_type remainder_type_in_use = remainder_type::u_type; /**< Type of Levin transformation variant (u, t, v, t~, v~)            */
+    ///Positive real parameter (β > 0). Default value is 1.0.
+    float_type beta_in_use = utils::cast<float_type>(1.0);
+
+    /// Pointer to remainder transformation object
+    std::unique_ptr<const shanks::remainders::transform_base<T, K>> remainder;
+
+    /// Flag to use recurrence formulas (true) or direct formulas (false)
+    bool use_recurrent_formula{false};
+
+    /// Type of Levin transformation variant (u, t, v, t~, v~)
+    shanks::remainders::remainder_type remainder_type_in_use{shanks::remainders::remainder_type::u_type};
 
     /**
      * @brief Computes the S-transformation using direct summation formulas.
@@ -97,7 +105,7 @@ public:
      *        For theory, see: Sidi (2003, arXiv:math/0306302), p. 39
     */
     explicit levin_sidi_s_algorithm(
-        remainder_type remainder_type_in_use = remainder_type::u_type,
+        shanks::remainders::remainder_type remainder_type_in_use = shanks::remainders::remainder_type::u_type,
         bool use_recurrent_formula = false,
         const float_type& beta_to_use = utils::cast<float_type>(1.0)
     ) : series_acceleration<T, K>(), use_recurrent_formula(use_recurrent_formula){
@@ -144,19 +152,19 @@ public:
      * @brief Setter to change numerator type
      * @param remainder_type_to_use enumerator of a new remainder to use
     */
-    void update_type(const remainder_type remainder_type_to_use){
+    void update_type(const shanks::remainders::remainder_type remainder_type_to_use){
 
 		remainder_type_in_use = remainder_type_to_use;
 
 		switch(remainder_type_to_use){
-        	case remainder_type::u_type 	: { remainder.reset(new u_transform<T, K>()	   ); break; }
-        	case remainder_type::t_type 	: { remainder.reset(new t_transform<T, K>()	   ); break; }
-        	case remainder_type::v_type 	: { remainder.reset(new v_transform<T, K>()	   ); break; }
-        	case remainder_type::t_wave_type: { remainder.reset(new t_wave_transform<T, K>()); break; }
-        	case remainder_type::v_wave_type: { remainder.reset(new v_wave_transform<T, K>()); break; }
+        	case shanks::remainders::remainder_type::u_type 	: { remainder.reset(new shanks::remainders::u_transform<T, K>()	   ); break; }
+        	case shanks::remainders::remainder_type::t_type 	: { remainder.reset(new shanks::remainders::t_transform<T, K>()	   ); break; }
+        	case shanks::remainders::remainder_type::v_type 	: { remainder.reset(new shanks::remainders::v_transform<T, K>()	   ); break; }
+        	case shanks::remainders::remainder_type::t_wave_type: { remainder.reset(new shanks::remainders::t_wave_transform<T, K>()); break; }
+        	case shanks::remainders::remainder_type::v_wave_type: { remainder.reset(new shanks::remainders::v_wave_transform<T, K>()); break; }
         	default:{
-				remainder_type_in_use = remainder_type::u_type;
-        	    remainder.reset(new u_transform<T, K>()); // Default to u-variant
+				remainder_type_in_use = shanks::remainders::remainder_type::u_type;
+        	    remainder.reset(new shanks::remainders::u_transform<T, K>()); // Default to u-variant
 			}
 		}
 	}
@@ -170,11 +178,11 @@ public:
 		series_acceleration<T, K>::acceleration_name = (use_recurrent_formula ? "recurrent " : "");
 		series_acceleration<T, K>::acceleration_name += "levin sidi s algorithm ";
 		switch(remainder_type_in_use){
-			case remainder_type::u_type 	: { series_acceleration<T, K>::acceleration_name += "with u-variant "; 		break; }
-			case remainder_type::t_type 	: { series_acceleration<T, K>::acceleration_name += "with t-variant "; 		break; }
-			case remainder_type::v_type 	: { series_acceleration<T, K>::acceleration_name += "with v-variant "; 		break; }
-			case remainder_type::t_wave_type: { series_acceleration<T, K>::acceleration_name += "with t-wave-variant "; break; }
-			case remainder_type::v_wave_type: { series_acceleration<T, K>::acceleration_name += "with v-wave-variant "; break; }
+			case shanks::remainders::remainder_type::u_type 	: { series_acceleration<T, K>::acceleration_name += "with u-variant "; 		break; }
+			case shanks::remainders::remainder_type::t_type 	: { series_acceleration<T, K>::acceleration_name += "with t-variant "; 		break; }
+			case shanks::remainders::remainder_type::v_type 	: { series_acceleration<T, K>::acceleration_name += "with v-variant "; 		break; }
+			case shanks::remainders::remainder_type::t_wave_type: { series_acceleration<T, K>::acceleration_name += "with t-wave-variant "; break; }
+			case shanks::remainders::remainder_type::v_wave_type: { series_acceleration<T, K>::acceleration_name += "with v-wave-variant "; break; }
 		}
 		series_acceleration<T, K>::acceleration_name += "and beta = " + utils::to_string(beta_in_use);
 
@@ -229,7 +237,7 @@ inline T levin_sidi_s_algorithm<T, K>::calc_result(
             n + j,        // Multiply by remainder term 1/R_{n+j}
             n + j,
             data.an,
-            (remainder_type_in_use == remainder_type::u_type ? utils::cast<T>(beta_in_use) : utils::cast<T>(1.0))
+            (remainder_type_in_use == shanks::remainders::remainder_type::u_type ? utils::cast<T>(beta_in_use) : utils::cast<T>(1.0))
         );
 
         // Accumulate numerator and denominator
@@ -271,7 +279,7 @@ inline T levin_sidi_s_algorithm<T, K>::calc_result_rec(
             n + i,
             n + i,
             data.an,
-            (remainder_type_in_use == remainder_type::u_type ? utils::cast<T>(beta_in_use) : utils::cast<T>(1.0))
+            (remainder_type_in_use == shanks::remainders::remainder_type::u_type ? utils::cast<T>(beta_in_use) : utils::cast<T>(1.0))
         );
 
         Num[i] += data.Sn.at(n + i) * Denom[i];
@@ -312,9 +320,9 @@ T levin_sidi_s_algorithm<T, K>::operator()(
 ) const{
 
     const K required_size = n + order +  static_cast<K>(1) + static_cast<K>(
-		remainder_type_in_use == remainder_type::t_wave_type ||
-		remainder_type_in_use == remainder_type::v_type ||
-		remainder_type_in_use == remainder_type::v_wave_type
+		remainder_type_in_use == shanks::remainders::remainder_type::t_wave_type ||
+		remainder_type_in_use == shanks::remainders::remainder_type::v_type ||
+		remainder_type_in_use == shanks::remainders::remainder_type::v_wave_type
 	);
 
     if (data.Sn.size() < required_size || data.an.size() < required_size){
@@ -330,5 +338,8 @@ T levin_sidi_s_algorithm<T, K>::operator()(
 
     return result;
 }
+
+} //namespace shanks::algos
+} //namespace shanks
 
 #endif

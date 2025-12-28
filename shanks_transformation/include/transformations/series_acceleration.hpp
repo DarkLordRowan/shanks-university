@@ -17,6 +17,8 @@
 
 #include <string>
 
+namespace shanks{ namespace algos{
+
  /**
   * @brief Base class for series acceleration transformations
   *
@@ -72,5 +74,8 @@ protected:
     std::string acceleration_name = "series acceleration base class"; /**< Name of a transformation */
 
 };
+
+} //namespace shanks::algos
+} //namespace shanks
 
 #endif

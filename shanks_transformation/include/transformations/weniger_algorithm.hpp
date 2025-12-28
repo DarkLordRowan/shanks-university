@@ -15,6 +15,8 @@
 
 #include "series_acceleration.hpp"
 
+namespace shanks{ namespace algos{
+
 /**
  * @brief Weniger transformation class template implementing a Levin-type acceleration method.
  *
@@ -108,8 +110,7 @@ T weniger_algorithm<T, K>::operator()(
 	}
 
 	// Precompute initial value: (1)ₖ₋₁ = (k-1)!
-	for (K m = static_cast<K>(0); m < order - static_cast<K>(1); ++m)
-		coef *= utils::cast<T>(static_cast<K>(1) + m);
+	for (K m = static_cast<K>(0); m < order - static_cast<K>(1); ++m) coef *= utils::cast<T>(static_cast<K>(1) + m);
 
 	K j1;
 
@@ -165,5 +166,8 @@ T weniger_algorithm<T, K>::operator()(
 
 	return numerator;
 }
+
+} //namespace shanks::algos
+} //namespace shanks
 
 #endif

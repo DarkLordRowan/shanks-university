@@ -28,9 +28,9 @@
  */
 template <AcceptedLike T, std::unsigned_integral K>
 void cmp_sum_and_transform(const K n, const K order, 
-	series_base<T,K>* series,
+	shanks::series::series_base<T,K>* series,
 	series_result<T>& result,
-	series_acceleration<T,K>* test)
+	shanks::algos::series_acceleration<T,K>* test)
 {
 
 	std::cout << "transformation : " << test->get_name() << "\n";
@@ -69,9 +69,9 @@ void cmp_sum_and_transform(const K n, const K order,
 */
 template <AcceptedLike T, std::unsigned_integral K>
 void cmp_a_n_and_transform(const K n, const K order,
-	series_base<T,K>* series, 
+	shanks::series::series_base<T,K>* series, 
 	series_result<T>& result,
-	series_acceleration<T,K>* test
+	shanks::algos::series_acceleration<T,K>* test
 )
 {
 
@@ -172,9 +172,9 @@ inline series_result<T> jitter(
 */
 template <AcceptedLike T, std::unsigned_integral K>
 void transformation_remainders(const K n, const K order, 
-	series_base<T,K>* series,
+	shanks::series::series_base<T,K>* series,
 	series_result<T>& result,
-	series_acceleration<T,K>* test
+	shanks::algos::series_acceleration<T,K>* test
 )
 {	
 
@@ -210,10 +210,10 @@ void transformation_remainders(const K n, const K order,
 */
 template <AcceptedLike T, std::unsigned_integral K>
 void cmp_transformations(const K n, const K order, 
-	series_base<T,K>* series,
+	shanks::series::series_base<T,K>* series,
 	series_result<T>& result,
-	series_acceleration<T,K>* test_1, 
-	series_acceleration<T,K>* test_2
+	shanks::algos::series_acceleration<T,K>* test_1, 
+	shanks::algos::series_acceleration<T,K>* test_2
 )
 {
 
@@ -261,9 +261,9 @@ void cmp_transformations(const K n, const K order,
 */
 template <AcceptedLike T, std::unsigned_integral K>
 void eval_transform_time(const K n, const K order, 
-	series_base<T,K>* series,
+	shanks::series::series_base<T,K>* series,
 	series_result<T>& result,
-	series_acceleration<T,K>* test
+	shanks::algos::series_acceleration<T,K>* test
 )
 {
 
@@ -292,68 +292,68 @@ template <AcceptedLike T, std::unsigned_integral K>
 void test_all_transforms(
 	const K n, 
 	const K order, 
-	series_base<T,K>* series,
+	shanks::series::series_base<T,K>* series,
 	series_result<T>& result
 ){
 
-	std::unordered_map<transformation_id_t, std::function<std::unique_ptr<series_acceleration<T,K>>(void)>> algoInit = {
-		{transformation_id_t::anderson_acceleration_algorithm_id             , [](){ return std::make_unique<anderson_acceleration_algorithm<T, K>>(); 						   }},
-	    {transformation_id_t::brezinski_theta_transformation_id				 , [](){ return std::make_unique<brezinski_theta_algorithm<T, K>>();                               }},
-		{transformation_id_t::chang_wynn_transformation_id					 , [](){ return std::make_unique<chang_wynn_algorithm<T, K>>();                                    }},
-		{transformation_id_t::drummond_d_u_transformation_id				 , [](){ return std::make_unique<drummond_d_algorithm<T, K>>(remainder_type::u_type       , false);}}, 
-        {transformation_id_t::drummond_d_t_transformation_id				 , [](){ return std::make_unique<drummond_d_algorithm<T, K>>(remainder_type::t_type       , false);}},
-        {transformation_id_t::drummond_d_t_wave_transformation_id			 , [](){ return std::make_unique<drummond_d_algorithm<T, K>>(remainder_type::t_wave_type  , false);}},
-        {transformation_id_t::drummond_d_v_transformation_id				 , [](){ return std::make_unique<drummond_d_algorithm<T, K>>(remainder_type::v_type       , false);}},
-        {transformation_id_t::drummond_d_v_wave_transformation_id			 , [](){ return std::make_unique<drummond_d_algorithm<T, K>>(remainder_type::v_wave_type  , false);}},
-		{transformation_id_t::j_transformation_id                  			 , [](){ return std::make_unique<j_transformation_algorithm<T, K>>(); 							   }}, 
-		{transformation_id_t::recurrent_drummond_d_u_transformation_id		 , [](){ return std::make_unique<drummond_d_algorithm<T, K>>(remainder_type::u_type       ,  true);}},
-    	{transformation_id_t::recurrent_drummond_d_t_transformation_id		 , [](){ return std::make_unique<drummond_d_algorithm<T, K>>(remainder_type::t_type       ,  true);}},
-     	{transformation_id_t::recurrent_drummond_d_v_transformation_id		 , [](){ return std::make_unique<drummond_d_algorithm<T, K>>(remainder_type::t_wave_type  ,  true);}},
-		{transformation_id_t::recurrent_drummond_d_t_wave_transformation_id  , [](){ return std::make_unique<drummond_d_algorithm<T, K>>(remainder_type::v_type       ,  true);}},
-		{transformation_id_t::recurrent_drummond_d_v_wave_transformation_id  , [](){ return std::make_unique<drummond_d_algorithm<T, K>>(remainder_type::v_wave_type  ,  true);}},
-		{transformation_id_t::ford_sidi_2_transformation_id					 , [](){ return std::make_unique<ford_sidi_2_algorithm<T, K>>();                                   }},
-		{transformation_id_t::ford_sidi_3_transformation_id					 , [](){ return std::make_unique<ford_sidi_3_algorithm<T, K>>();                                   }},
-		{transformation_id_t::levin_sidi_l_u_transformation_id				 , [](){ return std::make_unique<levin_algorithm<T, K>>(remainder_type::u_type            , false);}},
-		{transformation_id_t::levin_sidi_l_t_transformation_id				 , [](){ return std::make_unique<levin_algorithm<T, K>>(remainder_type::t_type            , false);}},
-		{transformation_id_t::levin_sidi_l_t_wave_transformation_id			 , [](){ return std::make_unique<levin_algorithm<T, K>>(remainder_type::t_wave_type       , false);}},
-		{transformation_id_t::levin_sidi_l_v_transformation_id				 , [](){ return std::make_unique<levin_algorithm<T, K>>(remainder_type::v_type            , false);}},
-		{transformation_id_t::levin_sidi_l_v_wave_transformation_id			 , [](){ return std::make_unique<levin_algorithm<T, K>>(remainder_type::v_wave_type       , false);}},
-		{transformation_id_t::recurrent_levin_sidi_l_u_transformation_id	 , [](){ return std::make_unique<levin_algorithm<T, K>>(remainder_type::u_type            , true); }},
-		{transformation_id_t::recurrent_levin_sidi_l_t_transformation_id	 , [](){ return std::make_unique<levin_algorithm<T, K>>(remainder_type::t_type            , true); }},
-		{transformation_id_t::recurrent_levin_sidi_l_t_wave_transformation_id, [](){ return std::make_unique<levin_algorithm<T, K>>(remainder_type::t_wave_type       , true); }},
-		{transformation_id_t::recurrent_levin_sidi_l_v_transformation_id	 , [](){ return std::make_unique<levin_algorithm<T, K>>(remainder_type::v_type            , true); }},
-		{transformation_id_t::recurrent_levin_sidi_l_v_wave_transformation_id, [](){ return std::make_unique<levin_algorithm<T, K>>(remainder_type::v_wave_type       , true); }},
-		{transformation_id_t::levin_sidi_m_u_transformation_id				 , [](){ return std::make_unique<levin_sidi_m_algorithm<T, K>>(remainder_type::u_type     );       }},
-		{transformation_id_t::levin_sidi_m_t_transformation_id				 , [](){ return std::make_unique<levin_sidi_m_algorithm<T, K>>(remainder_type::t_type     );       }},
-		{transformation_id_t::levin_sidi_m_t_wave_transformation_id			 , [](){ return std::make_unique<levin_sidi_m_algorithm<T, K>>(remainder_type::t_wave_type);       }},
-		{transformation_id_t::levin_sidi_m_v_transformation_id				 , [](){ return std::make_unique<levin_sidi_m_algorithm<T, K>>(remainder_type::v_type     );       }},
-		{transformation_id_t::levin_sidi_m_v_wave_transformation_id			 , [](){ return std::make_unique<levin_sidi_m_algorithm<T, K>>(remainder_type::v_wave_type);       }},
-		{transformation_id_t::levin_sidi_s_u_transformation_id				 , [](){ return std::make_unique<levin_sidi_s_algorithm<T, K>>(remainder_type::u_type     , false);}},
-		{transformation_id_t::levin_sidi_s_t_transformation_id				 , [](){ return std::make_unique<levin_sidi_s_algorithm<T, K>>(remainder_type::t_type     , false);}},
-		{transformation_id_t::levin_sidi_s_t_wave_transformation_id			 , [](){ return std::make_unique<levin_sidi_s_algorithm<T, K>>(remainder_type::t_wave_type, false);}},
-		{transformation_id_t::levin_sidi_s_v_transformation_id				 , [](){ return std::make_unique<levin_sidi_s_algorithm<T, K>>(remainder_type::v_type     , false);}},
-		{transformation_id_t::levin_sidi_s_v_wave_transformation_id			 , [](){ return std::make_unique<levin_sidi_s_algorithm<T, K>>(remainder_type::v_wave_type, false);}},
-		{transformation_id_t::recurrent_levin_sidi_s_u_transformation_id	 , [](){ return std::make_unique<levin_sidi_s_algorithm<T, K>>(remainder_type::u_type     , true); }},
-		{transformation_id_t::recurrent_levin_sidi_s_t_transformation_id	 , [](){ return std::make_unique<levin_sidi_s_algorithm<T, K>>(remainder_type::t_type     , true); }},
-		{transformation_id_t::recurrent_levin_sidi_s_t_wave_transformation_id, [](){ return std::make_unique<levin_sidi_s_algorithm<T, K>>(remainder_type::t_wave_type, true); }},
-		{transformation_id_t::recurrent_levin_sidi_s_v_transformation_id	 , [](){ return std::make_unique<levin_sidi_s_algorithm<T, K>>(remainder_type::v_type     , true); }},
-		{transformation_id_t::recurrent_levin_sidi_s_v_wave_transformation_id, [](){ return std::make_unique<levin_sidi_s_algorithm<T, K>>(remainder_type::v_wave_type, true); }},
-		{transformation_id_t::lubkin_w_transformation_id					 , [](){ return std::make_unique<lubkin_w_algorithm<T,K>>();                                       }},
-		{transformation_id_t::richardson_transformation_id					 , [](){ return std::make_unique<richardson_algorithm<T,K>>();                                     }},
-		{transformation_id_t::shanks_transformation_id						 , [](){ return std::make_unique<shanks_algorithm<T,K>>();                                         }},
-		{transformation_id_t::shanks_alternating_transformation_id			 , [](){ return std::make_unique<shanks_transform_alternating<T,K>>();                             }},
-		{transformation_id_t::weniger_transformation_id						 , [](){ return std::make_unique<weniger_algorithm<T,K>>();                                        }},
-		{transformation_id_t::wynn_epsilon_1_transformation_id				 , [](){ return std::make_unique<wynn_epsilon_1_algorithm<T,K>>();                                 }},
-		{transformation_id_t::wynn_epsilon_2_transformation_id				 , [](){ return std::make_unique<wynn_epsilon_2_algorithm<T,K>>();                                 }},
-		{transformation_id_t::wynn_epsilon_3_transformation_id				 , [](){ return std::make_unique<wynn_epsilon_3_algorithm<T,K>>();                                 }},
-        {transformation_id_t::wynn_rho_rho_transformation_id				 , [](){ return std::make_unique<wynn_rho_algorithm<T, K>>(numerator_type::rho_type);              }},
-  		{transformation_id_t::wynn_rho_generalized_transformation_id		 , [](){ return std::make_unique<wynn_rho_algorithm<T, K>>(numerator_type::generalized_type);      }},
-    	{transformation_id_t::wynn_rho_gamma_rho_transformation_id			 , [](){ return std::make_unique<wynn_rho_algorithm<T, K>>(numerator_type::gamma_rho_type);        }},
+	std::unordered_map<shanks::algos::transformation_id_t, std::function<std::unique_ptr<shanks::algos::series_acceleration<T,K>>(void)>> algoInit = {
+		{shanks::algos::transformation_id_t::anderson_acceleration_algorithm_id              , [](){ return std::make_unique<shanks::algos::anderson_acceleration_algorithm<T, K>>(); 						  					  }},
+	    {shanks::algos::transformation_id_t::brezinski_theta_transformation_id				 , [](){ return std::make_unique<shanks::algos::brezinski_theta_algorithm<T, K>>();                               					  }},
+		{shanks::algos::transformation_id_t::chang_wynn_transformation_id					 , [](){ return std::make_unique<shanks::algos::chang_wynn_algorithm<T, K>>();                                    					  }},
+		{shanks::algos::transformation_id_t::drummond_d_u_transformation_id				 	 , [](){ return std::make_unique<shanks::algos::drummond_d_algorithm<T, K>>(shanks::remainders::remainder_type::u_type       , false);}}, 
+        {shanks::algos::transformation_id_t::drummond_d_t_transformation_id				 	 , [](){ return std::make_unique<shanks::algos::drummond_d_algorithm<T, K>>(shanks::remainders::remainder_type::t_type       , false);}},
+        {shanks::algos::transformation_id_t::drummond_d_t_wave_transformation_id			 , [](){ return std::make_unique<shanks::algos::drummond_d_algorithm<T, K>>(shanks::remainders::remainder_type::t_wave_type  , false);}},
+        {shanks::algos::transformation_id_t::drummond_d_v_transformation_id				 	 , [](){ return std::make_unique<shanks::algos::drummond_d_algorithm<T, K>>(shanks::remainders::remainder_type::v_type       , false);}},
+        {shanks::algos::transformation_id_t::drummond_d_v_wave_transformation_id			 , [](){ return std::make_unique<shanks::algos::drummond_d_algorithm<T, K>>(shanks::remainders::remainder_type::v_wave_type  , false);}},
+		{shanks::algos::transformation_id_t::j_transformation_id                  			 , [](){ return std::make_unique<shanks::algos::j_transformation_algorithm<T, K>>(); 							   					   }}, 
+		{shanks::algos::transformation_id_t::recurrent_drummond_d_u_transformation_id		 , [](){ return std::make_unique<shanks::algos::drummond_d_algorithm<T, K>>(shanks::remainders::remainder_type::u_type       ,  true);}},
+    	{shanks::algos::transformation_id_t::recurrent_drummond_d_t_transformation_id		 , [](){ return std::make_unique<shanks::algos::drummond_d_algorithm<T, K>>(shanks::remainders::remainder_type::t_type       ,  true);}},
+     	{shanks::algos::transformation_id_t::recurrent_drummond_d_v_transformation_id		 , [](){ return std::make_unique<shanks::algos::drummond_d_algorithm<T, K>>(shanks::remainders::remainder_type::t_wave_type  ,  true);}},
+		{shanks::algos::transformation_id_t::recurrent_drummond_d_t_wave_transformation_id   , [](){ return std::make_unique<shanks::algos::drummond_d_algorithm<T, K>>(shanks::remainders::remainder_type::v_type       ,  true);}},
+		{shanks::algos::transformation_id_t::recurrent_drummond_d_v_wave_transformation_id   , [](){ return std::make_unique<shanks::algos::drummond_d_algorithm<T, K>>(shanks::remainders::remainder_type::v_wave_type  ,  true);}},
+		{shanks::algos::transformation_id_t::ford_sidi_2_transformation_id					 , [](){ return std::make_unique<shanks::algos::ford_sidi_2_algorithm<T, K>>();                                   					  }},
+		{shanks::algos::transformation_id_t::ford_sidi_3_transformation_id					 , [](){ return std::make_unique<shanks::algos::ford_sidi_3_algorithm<T, K>>();                                   					  }},
+		{shanks::algos::transformation_id_t::levin_sidi_l_u_transformation_id				 , [](){ return std::make_unique<shanks::algos::levin_algorithm<T, K>>(shanks::remainders::remainder_type::u_type            , false);}},
+		{shanks::algos::transformation_id_t::levin_sidi_l_t_transformation_id				 , [](){ return std::make_unique<shanks::algos::levin_algorithm<T, K>>(shanks::remainders::remainder_type::t_type            , false);}},
+		{shanks::algos::transformation_id_t::levin_sidi_l_t_wave_transformation_id			 , [](){ return std::make_unique<shanks::algos::levin_algorithm<T, K>>(shanks::remainders::remainder_type::t_wave_type       , false);}},
+		{shanks::algos::transformation_id_t::levin_sidi_l_v_transformation_id				 , [](){ return std::make_unique<shanks::algos::levin_algorithm<T, K>>(shanks::remainders::remainder_type::v_type            , false);}},
+		{shanks::algos::transformation_id_t::levin_sidi_l_v_wave_transformation_id			 , [](){ return std::make_unique<shanks::algos::levin_algorithm<T, K>>(shanks::remainders::remainder_type::v_wave_type       , false);}},
+		{shanks::algos::transformation_id_t::recurrent_levin_sidi_l_u_transformation_id	 	 , [](){ return std::make_unique<shanks::algos::levin_algorithm<T, K>>(shanks::remainders::remainder_type::u_type            , true); }},
+		{shanks::algos::transformation_id_t::recurrent_levin_sidi_l_t_transformation_id	 	 , [](){ return std::make_unique<shanks::algos::levin_algorithm<T, K>>(shanks::remainders::remainder_type::t_type            , true); }},
+		{shanks::algos::transformation_id_t::recurrent_levin_sidi_l_t_wave_transformation_id , [](){ return std::make_unique<shanks::algos::levin_algorithm<T, K>>(shanks::remainders::remainder_type::t_wave_type       , true); }},
+		{shanks::algos::transformation_id_t::recurrent_levin_sidi_l_v_transformation_id	 	 , [](){ return std::make_unique<shanks::algos::levin_algorithm<T, K>>(shanks::remainders::remainder_type::v_type            , true); }},
+		{shanks::algos::transformation_id_t::recurrent_levin_sidi_l_v_wave_transformation_id , [](){ return std::make_unique<shanks::algos::levin_algorithm<T, K>>(shanks::remainders::remainder_type::v_wave_type       , true); }},
+		{shanks::algos::transformation_id_t::levin_sidi_m_u_transformation_id				 , [](){ return std::make_unique<shanks::algos::levin_sidi_m_algorithm<T, K>>(shanks::remainders::remainder_type::u_type     );       }},
+		{shanks::algos::transformation_id_t::levin_sidi_m_t_transformation_id				 , [](){ return std::make_unique<shanks::algos::levin_sidi_m_algorithm<T, K>>(shanks::remainders::remainder_type::t_type     );       }},
+		{shanks::algos::transformation_id_t::levin_sidi_m_t_wave_transformation_id			 , [](){ return std::make_unique<shanks::algos::levin_sidi_m_algorithm<T, K>>(shanks::remainders::remainder_type::t_wave_type);       }},
+		{shanks::algos::transformation_id_t::levin_sidi_m_v_transformation_id				 , [](){ return std::make_unique<shanks::algos::levin_sidi_m_algorithm<T, K>>(shanks::remainders::remainder_type::v_type     );       }},
+		{shanks::algos::transformation_id_t::levin_sidi_m_v_wave_transformation_id			 , [](){ return std::make_unique<shanks::algos::levin_sidi_m_algorithm<T, K>>(shanks::remainders::remainder_type::v_wave_type);       }},
+		{shanks::algos::transformation_id_t::levin_sidi_s_u_transformation_id				 , [](){ return std::make_unique<shanks::algos::levin_sidi_s_algorithm<T, K>>(shanks::remainders::remainder_type::u_type     , false);}},
+		{shanks::algos::transformation_id_t::levin_sidi_s_t_transformation_id				 , [](){ return std::make_unique<shanks::algos::levin_sidi_s_algorithm<T, K>>(shanks::remainders::remainder_type::t_type     , false);}},
+		{shanks::algos::transformation_id_t::levin_sidi_s_t_wave_transformation_id			 , [](){ return std::make_unique<shanks::algos::levin_sidi_s_algorithm<T, K>>(shanks::remainders::remainder_type::t_wave_type, false);}},
+		{shanks::algos::transformation_id_t::levin_sidi_s_v_transformation_id				 , [](){ return std::make_unique<shanks::algos::levin_sidi_s_algorithm<T, K>>(shanks::remainders::remainder_type::v_type     , false);}},
+		{shanks::algos::transformation_id_t::levin_sidi_s_v_wave_transformation_id			 , [](){ return std::make_unique<shanks::algos::levin_sidi_s_algorithm<T, K>>(shanks::remainders::remainder_type::v_wave_type, false);}},
+		{shanks::algos::transformation_id_t::recurrent_levin_sidi_s_u_transformation_id	 	 , [](){ return std::make_unique<shanks::algos::levin_sidi_s_algorithm<T, K>>(shanks::remainders::remainder_type::u_type     , true); }},
+		{shanks::algos::transformation_id_t::recurrent_levin_sidi_s_t_transformation_id	 	 , [](){ return std::make_unique<shanks::algos::levin_sidi_s_algorithm<T, K>>(shanks::remainders::remainder_type::t_type     , true); }},
+		{shanks::algos::transformation_id_t::recurrent_levin_sidi_s_t_wave_transformation_id , [](){ return std::make_unique<shanks::algos::levin_sidi_s_algorithm<T, K>>(shanks::remainders::remainder_type::t_wave_type, true); }},
+		{shanks::algos::transformation_id_t::recurrent_levin_sidi_s_v_transformation_id	 	 , [](){ return std::make_unique<shanks::algos::levin_sidi_s_algorithm<T, K>>(shanks::remainders::remainder_type::v_type     , true); }},
+		{shanks::algos::transformation_id_t::recurrent_levin_sidi_s_v_wave_transformation_id , [](){ return std::make_unique<shanks::algos::levin_sidi_s_algorithm<T, K>>(shanks::remainders::remainder_type::v_wave_type, true); }},
+		{shanks::algos::transformation_id_t::lubkin_w_transformation_id					     , [](){ return std::make_unique<shanks::algos::lubkin_w_algorithm<T,K>>();                                       					  }},
+		{shanks::algos::transformation_id_t::richardson_transformation_id					 , [](){ return std::make_unique<shanks::algos::richardson_algorithm<T,K>>();                                     					  }},
+		{shanks::algos::transformation_id_t::shanks_transformation_id						 , [](){ return std::make_unique<shanks::algos::shanks_algorithm<T,K>>();                                         					  }},
+		{shanks::algos::transformation_id_t::shanks_alternating_transformation_id			 , [](){ return std::make_unique<shanks::algos::shanks_transform_alternating<T,K>>();                             					  }},
+		{shanks::algos::transformation_id_t::weniger_transformation_id						 , [](){ return std::make_unique<shanks::algos::weniger_algorithm<T,K>>();                                        					  }},
+		{shanks::algos::transformation_id_t::wynn_epsilon_1_transformation_id				 , [](){ return std::make_unique<shanks::algos::wynn_epsilon_1_algorithm<T,K>>();                                 					  }},
+		{shanks::algos::transformation_id_t::wynn_epsilon_2_transformation_id				 , [](){ return std::make_unique<shanks::algos::wynn_epsilon_2_algorithm<T,K>>();                                 					  }},
+		{shanks::algos::transformation_id_t::wynn_epsilon_3_transformation_id				 , [](){ return std::make_unique<shanks::algos::wynn_epsilon_3_algorithm<T,K>>();                                 					  }},
+        {shanks::algos::transformation_id_t::wynn_rho_rho_transformation_id				 	 , [](){ return std::make_unique<shanks::algos::wynn_rho_algorithm<T, K>>(shanks::numerators::numerator_type::rho_type);              }},
+  		{shanks::algos::transformation_id_t::wynn_rho_generalized_transformation_id		 	 , [](){ return std::make_unique<shanks::algos::wynn_rho_algorithm<T, K>>(shanks::numerators::numerator_type::generalized_type);      }},
+    	{shanks::algos::transformation_id_t::wynn_rho_gamma_rho_transformation_id			 , [](){ return std::make_unique<shanks::algos::wynn_rho_algorithm<T, K>>(shanks::numerators::numerator_type::gamma_rho_type);        }},
 	};
 
-	std::vector<std::unique_ptr<series_acceleration<T,K>>> algos(algoInit.size());
+	std::vector<std::unique_ptr<shanks::algos::series_acceleration<T,K>>> algos(algoInit.size());
 	for (size_t j = 1; j <= algoInit.size(); ++j){
-		algos[j-1] = algoInit[static_cast<transformation_id_t>(j)]();
+		algos[j-1] = algoInit[static_cast<shanks::algos::transformation_id_t>(j)]();
 	}
 	
 	for (size_t i = 0; i <= n; ++i){

@@ -5,6 +5,8 @@
 #include "series_base_iterator.hpp"
 #include <numbers>
 
+namespace shanks { namespace iters {
+
 /**
 * @brief Maclaurin series of ci_x(x) function
 * @authors Bolshakov M.P.
@@ -32,5 +34,8 @@ public:
 	}
 
 };
+
+} //namespace shanks::iters
+} //namespace shanks
 
 #endif

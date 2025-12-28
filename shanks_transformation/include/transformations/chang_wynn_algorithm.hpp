@@ -16,6 +16,8 @@
 #include "series_acceleration.hpp"
 #include <vector>   // Include the vector library
 
+namespace shanks{ namespace algos{
+
 /**
  * @brief Chang-Wynn algorithm class template implementing a hybrid acceleration method.
  *
@@ -202,5 +204,8 @@ T chang_wynn_algorithm<T, K>::operator()(const K n, const K /*order*/, const ser
 
     return e[max & static_cast<K>(1)][0]; // Return the transformed value.
 }
+
+} //namespace shanks::algos
+} //namespace shanks
 
 #endif

@@ -5,6 +5,8 @@
 #include "series_base_iterator.hpp"
 #include <numbers>
 
+namespace shanks { namespace iters {
+
 /**
 * @brief Fourier series of 10-x function
 * @authors Bolshakov M.P.
@@ -31,5 +33,8 @@ public:
 	}
 
 };
+
+} //namespace shanks::iters
+} //namespace shanks
 
 #endif

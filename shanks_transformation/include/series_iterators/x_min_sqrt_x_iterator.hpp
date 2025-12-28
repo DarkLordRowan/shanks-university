@@ -1,9 +1,10 @@
 #ifndef X_MIN_SQRT_X_ITERATOR_HPP
 #define X_MIN_SQRT_X_ITERATOR_HPP
-
 #pragma once
 
 #include "series_base_iterator.hpp"
+
+namespace shanks { namespace iters {
 
 /**
 * @brief Maclaurin series of x-sqrt(x) function
@@ -34,5 +35,8 @@ public:
 	}
 
 };
+
+} //namespace shanks::iters
+} //namespace shanks
 
 #endif

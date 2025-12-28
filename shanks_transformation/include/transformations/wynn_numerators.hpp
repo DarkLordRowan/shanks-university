@@ -21,6 +21,8 @@
 
 #include <vector>
 
+namespace shanks{ namespace numerators{
+
  /**
   * @brief Enum for remainder types to use in Levin-type transformations.
   *
@@ -195,5 +197,8 @@ public:
 		return -gamma + utils::cast<T>(order) / (utils::cast<T>(2) * rho) + utils::cast<T>(order & static_cast<K>(1));
 	}
 };
+
+} //namespace shanks::numerators
+} //namespace shanks
 
 #endif

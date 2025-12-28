@@ -5,6 +5,8 @@
 
 #include "series_base_iterator.hpp"
 
+namespace shanks { namespace iters {
+
 /**
 * @brief Maclaurin series of arcsin(x)-x function
 * @authors Bolshakov M.P.
@@ -23,7 +25,6 @@ public:
 	}
 
 	T next() override {
-		
 
 		if (this->n == 0) this->current_state = utils::pow(this->x,utils::cast<T>(3)) / utils::cast<T>(6);
 		else this->current_state *= this->x * this->x * 
@@ -35,5 +36,8 @@ public:
 	}
 
 };
+
+} //namespace shanks::iters
+} //namespace shanks
 
 #endif

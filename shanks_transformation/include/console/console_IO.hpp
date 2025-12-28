@@ -100,13 +100,13 @@ InputType inline console_IO<InputType>::input(const std::string& var_name){
 
 				x = static_cast<InputType>(std::stoul(init_string));
 
-                if constexpr (std::is_same<InputType, series_id_t>::value){
+                if constexpr (std::is_same<InputType, shanks::series::series_id_t>::value){
 
-                    if(x >= series_id_t::series_id_t_count) throw std::out_of_range("Series with this id is not implemented");
+                    if(x >= shanks::series::series_id_t::series_id_t_count) throw std::out_of_range("Series with this id is not implemented");
 
-                } else if constexpr (std::is_same<InputType, transformation_id_t>::value){
+                } else if constexpr (std::is_same<InputType, shanks::algos::transformation_id_t>::value){
 
-                    if(x >= transformation_id_t::transformation_id_t_count) throw std::out_of_range("Series with this id is not implemented");
+                    if(x >= shanks::algos::transformation_id_t::transformation_id_t_count) throw std::out_of_range("Series with this id is not implemented");
 
                 } else if constexpr (std::is_same<InputType, test_function_id_t>::value){
 
@@ -222,7 +222,7 @@ cln::cl_F inline console_IO<cln::cl_F>::input(const std::string& var_name){
 template<>
 mpfr::mpreal inline console_IO<mpfr::mpreal>::input(const std::string& var_name){
 
-    std::string float_value; std::getline(std::cin, float_value);
+    std::string float_value; std::cout << "Value of " << var_name <<" : "; std::getline(std::cin, float_value);
     size_t precision = console_IO<size_t>::input("precision");
     mpfr::mpreal res = mpfr::mpreal(float_value, mpfr::digits2bits(precision));
 
@@ -232,9 +232,9 @@ mpfr::mpreal inline console_IO<mpfr::mpreal>::input(const std::string& var_name)
 template<>
 std::complex<mpfr::mpreal> inline console_IO<std::complex<mpfr::mpreal>>::input(const std::string& var_name){
 
-    std::string real_value; std::getline(std::cin, real_value);
+    std::string real_value; std::cout << "Real of " << var_name <<" : ";std::getline(std::cin, real_value);
     size_t real_precision = console_IO<size_t>::input("precision");
-    std::string imag_value; std::getline(std::cin, imag_value);
+    std::string imag_value; std::cout << "Imag of " << var_name <<" : ";std::getline(std::cin, imag_value);
     size_t imag_precision = console_IO<size_t>::input("precision");
     std::complex<mpfr::mpreal> res(
         mpfr::mpreal(real_value, mpfr::digits2bits(real_precision)),
@@ -244,3 +244,17 @@ std::complex<mpfr::mpreal> inline console_IO<std::complex<mpfr::mpreal>>::input(
     return res;
 }
 #endif
+
+template<std::floating_point T>
+struct console_IO<std::complex<T>>{
+	std::complex<T> inline static input(const std::string& var_name  = "x");
+};
+
+template<std::floating_point T>
+std::complex<T> inline console_IO<std::complex<T>>::input(const std::string& var_name){
+
+    T real_value = console_IO<T>::input("Real of x");
+    T imag_value = console_IO<T>::input("Imag of x");
+
+    return std::complex<T>(real_value, imag_value);
+}

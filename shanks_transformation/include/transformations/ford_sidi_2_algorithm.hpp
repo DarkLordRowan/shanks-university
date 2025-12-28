@@ -14,6 +14,8 @@
 
 #include "series_acceleration.hpp"
 
+namespace shanks{ namespace algos{
+
 /**
  * @brief Ford-Sidi algorithm class template implementing an efficient extrapolation method.
  *
@@ -131,5 +133,8 @@ T ford_sidi_2_algorithm<T, K>::operator()(
 	
 	return T_n;
 }
+
+} //namespace shanks::algos
+} //namespace shanks
 
 #endif

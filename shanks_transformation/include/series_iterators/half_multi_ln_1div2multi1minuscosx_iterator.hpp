@@ -5,6 +5,8 @@
 #include "series_base_iterator.hpp"
 #include <numbers>
 
+namespace shanks { namespace iters {
+
 /**
 * @brief Maclaurin series of -0.5 log(2-2cos(x))function
 * @authors Bolshakov M.P.
@@ -32,4 +34,8 @@ public:
 	}
 
 };
+
+} //namespace shanks::iters
+} //namespace shanks
+
 #endif

@@ -1,10 +1,10 @@
 #ifndef SQRT_ONEMINUSSQRTONEMINUSX_DIV_X_ITERATOR_HPP
 #define SQRT_ONEMINUSSQRTONEMINUSX_DIV_X_ITERATOR_HPP
-
 #pragma once
 
 #include "series_base_iterator.hpp"
-#include <cmath>
+
+namespace shanks { namespace iters {
 
 /**
 * @brief Maclaurin series of sqrt((1-sqrt(1-x))/x) function
@@ -21,7 +21,7 @@ public:
 	
 	bool check_validity() const override {
 		using float_type = GetUnderlyingType<T>::value; //type in case of complex or interval
-		return !utils::isfinite(this->x) || this->x == utils::cast<T>(0) || abs(this->x) >= utils::cast<float_type>(1);
+		return !utils::isfinite(this->x) || this->x == utils::cast<T>(0) || utils::abs(this->x) >= utils::cast<float_type>(1);
 	}
 
 	T next() override {
@@ -36,5 +36,8 @@ public:
 	}
 
 };
+
+} //namespace shanks::iters
+} //namespace shanks
 
 #endif

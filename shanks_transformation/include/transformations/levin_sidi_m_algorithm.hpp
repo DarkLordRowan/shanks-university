@@ -20,6 +20,8 @@
 
 #include <memory> // For std::unique_ptr
 
+namespace shanks{ namespace algos{
+
  /**
   * @brief Levin-Sidi M-transformation class template.
   *
@@ -45,9 +47,11 @@ protected:
 
 	using float_type = GetUnderlyingType<T>::value; //type in case of complex or interval
 
-	float_type gamma_in_use = utils::cast<float_type>(DEFAULT_GAMMA);   ///< Positive real parameter such that gamma >= order - 1
-	std::unique_ptr<const transform_base<T, K>> remainder;				///< Pointer to remainder transformation object
-	remainder_type remainder_type_in_use;
+	/// Positive real parameter such that gamma >= order - 1
+	float_type gamma_in_use = utils::cast<float_type>(DEFAULT_GAMMA);
+	/// Pointer to remainder transformation object
+	std::unique_ptr<const shanks::remainders::transform_base<T, K>> remainder;
+	shanks::remainders::remainder_type remainder_type_in_use;
 
 public:
 
@@ -62,7 +66,7 @@ public:
 	 *        For theory, see: Sidi (2003, arXiv:math/0306302), p. 64
 	 */
 	explicit levin_sidi_m_algorithm(
-		remainder_type remainder_type_to_use = remainder_type::u_type,
+		shanks::remainders::remainder_type remainder_type_to_use = shanks::remainders::remainder_type::u_type,
 		const float_type& gamma_to_use = utils::cast<float_type>(DEFAULT_GAMMA)
 	) : series_acceleration<T, K>() { update_gamma(gamma_to_use); update_type(remainder_type_to_use); }
 
@@ -99,7 +103,7 @@ public:
 	 * @brief Setter to change numerator type
 	 * @param remainder_type_to_use enumerator of a new remainder to use
 	 */
-	void update_type(const remainder_type remainder_type_to_use);
+	void update_type(const shanks::remainders::remainder_type remainder_type_to_use);
 
 	/**
 	 * @brief Setter to update gamma parameter
@@ -117,11 +121,11 @@ public:
 
 		series_acceleration<T, K>::acceleration_name = "levin sidi m algorithm ";
 		switch(remainder_type_in_use){
-			case remainder_type::u_type 	: { series_acceleration<T, K>::acceleration_name += "with u-variant "; 		break; }
-			case remainder_type::t_type 	: { series_acceleration<T, K>::acceleration_name += "with t-variant "; 		break; }
-			case remainder_type::v_type 	: { series_acceleration<T, K>::acceleration_name += "with v-variant "; 		break; }
-			case remainder_type::t_wave_type: { series_acceleration<T, K>::acceleration_name += "with t-wave-variant "; break; }
-			case remainder_type::v_wave_type: { series_acceleration<T, K>::acceleration_name += "with v-wave-variant "; break; }
+			case shanks::remainders::remainder_type::u_type 	: { series_acceleration<T, K>::acceleration_name += "with u-variant "; 		break; }
+			case shanks::remainders::remainder_type::t_type 	: { series_acceleration<T, K>::acceleration_name += "with t-variant "; 		break; }
+			case shanks::remainders::remainder_type::v_type 	: { series_acceleration<T, K>::acceleration_name += "with v-variant "; 		break; }
+			case shanks::remainders::remainder_type::t_wave_type: { series_acceleration<T, K>::acceleration_name += "with t-wave-variant "; break; }
+			case shanks::remainders::remainder_type::v_wave_type: { series_acceleration<T, K>::acceleration_name += "with v-wave-variant "; break; }
 		}
 		series_acceleration<T, K>::acceleration_name += "and gamma = " + utils::to_string(gamma_in_use);
 
@@ -130,21 +134,21 @@ public:
 };
 
 template<AcceptedLike T, UnsignedIntLike K>
-void levin_sidi_m_algorithm<T, K>::update_type(const remainder_type remainder_type_to_use){
+void levin_sidi_m_algorithm<T, K>::update_type(const shanks::remainders::remainder_type remainder_type_to_use){
 
 	remainder_type_in_use = remainder_type_to_use;
 
 	// Initialize the appropriate remainder transformation based on variant
 	switch(remainder_type_to_use){
-        case remainder_type::u_type 	: { remainder.reset(new u_transform<T, K>()); 	  break; }
-        case remainder_type::t_type 	: { remainder.reset(new t_transform<T, K>()); 	  break; }
-        case remainder_type::v_type 	: { remainder.reset(new v_transform<T, K>()); 	  break; }
-        case remainder_type::t_wave_type: { remainder.reset(new t_wave_transform<T, K>()); break; }
-        case remainder_type::v_wave_type: { remainder.reset(new v_wave_transform<T, K>()); break; }
+        case shanks::remainders::remainder_type::u_type 	: { remainder.reset(new shanks::remainders::u_transform<T, K>()); 	  break; }
+        case shanks::remainders::remainder_type::t_type 	: { remainder.reset(new shanks::remainders::t_transform<T, K>()); 	  break; }
+        case shanks::remainders::remainder_type::v_type 	: { remainder.reset(new shanks::remainders::v_transform<T, K>()); 	  break; }
+        case shanks::remainders::remainder_type::t_wave_type: { remainder.reset(new shanks::remainders::t_wave_transform<T, K>()); break; }
+        case shanks::remainders::remainder_type::v_wave_type: { remainder.reset(new shanks::remainders::v_wave_transform<T, K>()); break; }
         default:
 		{
-			remainder_type_in_use = remainder_type::u_type;
-            remainder.reset(new u_transform<T, K>()); // Default to u-variant
+			remainder_type_in_use = shanks::remainders::remainder_type::u_type;
+            remainder.reset(new shanks::remainders::u_transform<T, K>()); // Default to u-variant
 		}
     }
 
@@ -158,9 +162,9 @@ T levin_sidi_m_algorithm<T, K>::operator()(
 ) const {
 
     const K required_size = n + order + static_cast<K>(1) + static_cast<K>(
-		remainder_type_in_use == remainder_type::t_wave_type ||
-		remainder_type_in_use == remainder_type::v_type ||
-		remainder_type_in_use == remainder_type::v_wave_type
+		remainder_type_in_use == shanks::remainders::remainder_type::t_wave_type ||
+		remainder_type_in_use == shanks::remainders::remainder_type::v_type      ||
+		remainder_type_in_use == shanks::remainders::remainder_type::v_wave_type
 	);
 
     if (data.Sn.size() < required_size || data.an.size() < required_size){
@@ -169,7 +173,6 @@ T levin_sidi_m_algorithm<T, K>::operator()(
 	}
 
     if (order == static_cast<K>(0)) return data.Sn.at(n);
-    
 
 	//TODO разобраться с документом (pdf) n/order
     // Validate parameter constraint: gamma >= n - 1
@@ -241,5 +244,8 @@ T levin_sidi_m_algorithm<T, K>::operator()(
 
 	return numerator;
 }
+
+} //namespace shanks::algos
+} //namespace shanks
 
 #endif

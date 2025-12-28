@@ -12,10 +12,10 @@
  // Ford, W.F., Sidi, A. (1987). An algorithm for a generalization of the Richardson extrapolation process.
  // Osada, N. (2000). The E-algorithm and the Ford-Sidi algorithm.
 
-#pragma once
-
 #include "series_acceleration.hpp"
 #include <vector> // Include the vector library
+
+namespace shanks{ namespace algos{
 
 /**
  * @brief Ford-Sidi algorithm class template implementing an efficient extrapolation method.
@@ -202,5 +202,8 @@ T ford_sidi_3_algorithm<T, K>::operator()(
 
     return FSA[0];
 }
+
+} //namespace shanks::algos
+} //namespace shanks
 
 #endif

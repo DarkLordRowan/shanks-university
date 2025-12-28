@@ -4,6 +4,8 @@
 
 #include "series_base_iterator.hpp"
 
+namespace shanks { namespace iters {
+
 /**
 * @brief Maclaurin series of dzeta(z-1)/dzeta(z) function
 * @authors Bolshakov M.P.
@@ -22,9 +24,9 @@ public:
 		using float_type = GetUnderlyingType<T>::value; //type in case of complex or interval
 
 		if constexpr (isComplexLike<T>::value){
-    		return !utils::isfinite(this->x) || this->x.real() < utils::cast<float_type>(2);
+    		return !utils::isfinite(this->x) || this->x.real() <= utils::cast<float_type>(2);
 		} else {
-			return !utils::isfinite(this->x) || this->x < utils::cast<T>(2);
+			return !utils::isfinite(this->x) || this->x <= utils::cast<T>(2);
 		}
 
 	}
@@ -37,5 +39,8 @@ public:
 	}
 
 };
+
+} //namespace shanks::iters
+} //namespace shanks
 
 #endif
