@@ -1,14 +1,23 @@
 // src/features/import-experiment-from-parquet/model/useLoadParquetExpirement.ts
 
 import { useCallback, useRef, useState } from "react";
+
 import type { Experiment } from "@/entities/experiment/model/experiment";
 import type { ParquetAccelRow, ParquetSeriesRow } from "@/shared/parquet/types";
+
 import { readParquetFile } from "@/shared/parquet/readParquetFile";
-import { buildExperimentFromParquet } from "@/shared/parquet/buildExperimentFromParquet";
+import {
+    buildSeriesEntityFromParquetRow,
+    buildAccelAndSeriesAccelEntitiesFromParquetRow,
+} from "@/shared/parquet/buildExperimentFromParquet";
+
+type Series = Experiment["seriesList"][number];
+type Accel = Experiment["accelList"][number];
+type SeriesAccel = Experiment["seriesAccelList"][number];
 
 function parsePartitions(path: string): Record<string, string> {
     const res: Record<string, string> = {};
-    const parts = path.split(/[\\/]/);
+    const parts = path.split(/[\\\/]/);
 
     for (const seg of parts) {
         const idx = seg.indexOf("=");
@@ -17,6 +26,7 @@ function parsePartitions(path: string): Record<string, string> {
         const val = decodeURIComponent(seg.slice(idx + 1));
         res[key] = val;
     }
+
     return res;
 }
 
@@ -28,6 +38,10 @@ function toNumberOrNull(v: unknown): number | null {
         return Number.isNaN(n) ? null : n;
     }
     return null;
+}
+
+function yieldToMainThread(): Promise<void> {
+    return new Promise((resolve) => requestAnimationFrame(() => resolve()));
 }
 
 type Phase = "reading" | "building";
@@ -52,86 +66,25 @@ function splitFilesByKind(allFiles: File[]) {
     return { seriesFiles, accelFiles };
 }
 
-async function readSeriesFiles(
-    files: File[],
-    totalFiles: number,
-    offset: number,
-    updateLoading: LoadingSetter
-): Promise<{ rows: ParquetSeriesRow[]; filesDone: number }> {
-    const seriesRows: ParquetSeriesRow[] = [];
-    let filesDone = offset;
+// Для series можно использовать проекцию (плоские колонки).
+const SERIES_COLUMNS = [
+    "series_id",
+    "series_name",
+    "precision",
+    "arguments",
+    "series_limit",
+] as const;
 
-    for (const f of files) {
-        const parts = parsePartitions(f.webkitRelativePath);
-        const precisionFromPath = parts["precision"];
-        const seriesNameFromPath = parts["series_name"];
-
-        const rows = await readParquetFile<ParquetSeriesRow>(f);
-
-        for (const r of rows) {
-            const sid = toNumberOrNull((r as unknown as { series_id?: unknown }).series_id);
-
-            const row: ParquetSeriesRow = {
-                ...r,
-                series_id: sid ?? -1,
-                precision: (r as any).precision ?? precisionFromPath ?? "",
-                series_name: (r as any).series_name ?? seriesNameFromPath ?? "",
-            };
-
-            seriesRows.push(row);
-        }
-
-        filesDone += 1;
-        updateLoading(
-            "reading",
-            `Чтение series (${filesDone}/${totalFiles})`,
-            filesDone,
-            totalFiles
-        );
-    }
-
-    return { rows: seriesRows, filesDone };
-}
-
-async function readAccelFiles(
-    files: File[],
-    totalFiles: number,
-    offset: number,
-    updateLoading: LoadingSetter
-): Promise<{ rows: ParquetAccelRow[]; filesDone: number }> {
-    const accelRows: ParquetAccelRow[] = [];
-    let filesDone = offset;
-
-    for (const f of files) {
-        const parts = parsePartitions(f.webkitRelativePath);
-        const seriesIdFromPath = toNumberOrNull(parts["series_id"]);
-
-        const rows = await readParquetFile<ParquetAccelRow>(f);
-
-        for (const r of rows) {
-            const sid =
-                toNumberOrNull((r as unknown as { series_id?: unknown }).series_id) ??
-                seriesIdFromPath;
-
-            const row: ParquetAccelRow = {
-                ...r,
-                series_id: sid ?? -1,
-            };
-
-            accelRows.push(row);
-        }
-
-        filesDone += 1;
-        updateLoading(
-            "reading",
-            `Чтение accelerations (${filesDone}/${totalFiles})`,
-            filesDone,
-            totalFiles
-        );
-    }
-
-    return { rows: accelRows, filesDone };
-}
+// Для accelerations НЕ используем проекцию по умолчанию: nested (computed/errors/events) может «обнуляться».
+const ACCEL_COLUMNS = [
+    "series_id",
+    "accel_name",
+    "m_value",
+    "additional_args",
+    "computed",
+    "errors",
+    "events",
+] as const;
 
 export function useLoadParquetExperiment() {
     const [state, setState] = useState<LoadParquetState>({ status: "idle" });
@@ -142,13 +95,7 @@ export function useLoadParquetExperiment() {
     const setLoadingWithRun = useCallback(
         (runId: number, phase: Phase, message: string, done: number, total: number) => {
             if (runIdRef.current !== runId) return;
-            setState({
-                status: "loading",
-                phase,
-                message,
-                done,
-                total,
-            });
+            setState({ status: "loading", phase, message, done, total });
         },
         []
     );
@@ -175,55 +122,152 @@ export function useLoadParquetExperiment() {
             const allFiles = Array.from(files);
             const { seriesFiles, accelFiles } = splitFilesByKind(allFiles);
 
-            if (seriesFiles.length === 0 || accelFiles.length === 0) {
-                setErrorWithRun(runId, "Не найдены каталоги 'series' или 'accelerations'");
+            const totalFiles = seriesFiles.length + accelFiles.length;
+            if (totalFiles === 0) {
+                setErrorWithRun(
+                    runId,
+                    "Не найдены файлы /series/ и /accelerations/ в webkitRelativePath"
+                );
                 return;
             }
 
-            const filesTotal = seriesFiles.length + accelFiles.length;
-
-            const updateLoading: LoadingSetter = (phase, message, done, total) =>
-                setLoadingWithRun(runId, phase, message, done, total);
-
-            updateLoading("reading", "Чтение Parquet", 0, filesTotal);
-
             try {
-                const { rows: seriesRows, filesDone: afterSeries } = await readSeriesFiles(
-                    seriesFiles,
-                    filesTotal,
+                setLoadingWithRun(
+                    runId,
+                    "reading",
+                    "Подготовка (0/" + totalFiles + ")",
                     0,
-                    updateLoading
+                    totalFiles
                 );
 
-                const { rows: accelRows } = await readAccelFiles(
-                    accelFiles,
-                    filesTotal,
-                    afterSeries,
-                    updateLoading
-                );
+                const seriesByNumericId = new Map<number, Series>();
+                const accelById = new Map<string, Accel>();
+                const seriesAccelList: SeriesAccel[] = [];
 
-                updateLoading("building", "Построение эксперимента", 0, accelRows.length || 1);
+                let filesDone = 0;
 
-                const experiment = await buildExperimentFromParquet(
-                    seriesRows,
-                    accelRows,
-                    (processed, total) => {
-                        updateLoading(
-                            "building",
-                            `Построение эксперимента (${processed}/${total})`,
-                            processed,
-                            total
+                // 1) series/*
+                for (const f of seriesFiles) {
+                    if (runIdRef.current !== runId) return;
+
+                    const parts = parsePartitions(f.webkitRelativePath);
+                    const precisionFromPath = parts["precision"];
+                    const seriesNameFromPath = parts["series_name"];
+
+                    const rows = await readParquetFile<ParquetSeriesRow>(f, {
+                        columns: [...SERIES_COLUMNS],
+                    });
+
+                    for (const r of rows) {
+                        const sid = toNumberOrNull(
+                            (r as unknown as { series_id?: unknown }).series_id
                         );
+
+                        const patched: ParquetSeriesRow = {
+                            ...r,
+                            series_id: (sid ?? -1) as any,
+                            precision: (r as any).precision ?? precisionFromPath ?? "",
+                            series_name: (r as any).series_name ?? seriesNameFromPath ?? "",
+                        };
+
+                        const series = buildSeriesEntityFromParquetRow(patched);
+                        if (!series) continue;
+
+                        const key = toNumberOrNull(series.id);
+                        if (key == null) continue;
+
+                        seriesByNumericId.set(key, series);
                     }
-                );
+
+                    filesDone += 1;
+                    setLoadingWithRun(
+                        runId,
+                        "reading",
+                        "Чтение series (" + filesDone + "/" + totalFiles + ")",
+                        filesDone,
+                        totalFiles
+                    );
+                    await yieldToMainThread();
+                }
+
+                // 2) accelerations/*
+                for (const f of accelFiles) {
+                    if (runIdRef.current !== runId) return;
+
+                    const parts = parsePartitions(f.webkitRelativePath);
+                    const seriesIdFromPath = toNumberOrNull(parts["series_id"]);
+
+                    // БАЗОВО: читаем без columns, чтобы не потерять nested.
+                    let rows = await readParquetFile<ParquetAccelRow>(f);
+
+                    // Опционально можно попытаться ускорить: сначала с columns, затем fallback.
+                    // Оставлено выключенным, чтобы не ловить «пропавшие computed».
+                    // let rows = await readParquetFile<ParquetAccelRow>(f, { columns: [...ACCEL_COLUMNS] });
+                    // const nestedLooksMissing =
+                    //     rows.length > 0 &&
+                    //     rows.every((r) => (r as any).computed == null && (r as any).errors == null && (r as any).events == null);
+                    // if (nestedLooksMissing) {
+                    //     rows = await readParquetFile<ParquetAccelRow>(f);
+                    // }
+
+                    for (const r of rows) {
+                        const sid =
+                            toNumberOrNull((r as unknown as { series_id?: unknown }).series_id) ??
+                            seriesIdFromPath;
+
+                        if (sid == null) continue;
+
+                        const series = seriesByNumericId.get(sid);
+                        if (!series) continue;
+
+                        const patched: ParquetAccelRow = {
+                            ...r,
+                            series_id: sid as any,
+                        };
+
+                        const { accelId, accel, seriesAccel } =
+                            buildAccelAndSeriesAccelEntitiesFromParquetRow({
+                                row: patched,
+                                series,
+                            });
+
+                        if (!accelById.has(accelId)) {
+                            accelById.set(accelId, accel);
+                        }
+                        seriesAccelList.push(seriesAccel);
+                    }
+
+                    filesDone += 1;
+                    setLoadingWithRun(
+                        runId,
+                        "reading",
+                        "Чтение accelerations (" + filesDone + "/" + totalFiles + ")",
+                        filesDone,
+                        totalFiles
+                    );
+                    await yieldToMainThread();
+                }
 
                 if (runIdRef.current !== runId) return;
+
+                setLoadingWithRun(runId, "building", "Финализация", totalFiles, totalFiles);
+
+                const seriesList = [...seriesByNumericId.values()].sort(
+                    (a, b) => Number(a.id) - Number(b.id)
+                );
+                const accelList = [...accelById.values()];
+
+                const experiment: Experiment = {
+                    id: "0",
+                    seriesList,
+                    accelList,
+                    seriesAccelList,
+                };
 
                 experimentRef.current = experiment;
 
                 const count =
                     experiment.seriesAccelList?.length ?? experiment.seriesList?.length ?? 0;
-
                 setSuccessWithRun(runId, count);
             } catch (e) {
                 console.error("[useLoadParquetExperiment] error", e);

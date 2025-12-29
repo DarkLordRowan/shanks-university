@@ -1,66 +1,50 @@
+// src/shared/parquet/types.ts
+//
+// Типы входных строк Parquet.
+// Arrow/wasm может возвращать сложные значения (ListVector/Struct и т.п.).
+// Здесь оставлены поля, которые реально используются в сборке Experiment.
+
+export type ParquetScalar = string | number | boolean | null;
+
 export interface ParquetComplex {
-    real: string | null;
-    imag: string | null;
-}
-
-export interface ParquetSeriesComputed {
-    n: number;
-    value: ParquetComplex | null;
-}
-
-export interface ParquetSeriesRow {
-    series_name: string;
-    series_id: number;
-    precision: string;
-
-    arguments: {
-        x?: string | null;
-        b?: string | null;
-        m?: string | null;
-        a?: string | null;
-        // возможны дополнительные поля
-        [key: string]: unknown;
-    } | null;
-
-    series_limit: ParquetComplex | null;
-
-    computed: ParquetSeriesComputed[];
+    real: ParquetScalar;
+    imag: ParquetScalar;
 }
 
 export interface ParquetAccelComputed {
     value: ParquetComplex | null;
-    deviation: string | null;
+    deviation: ParquetScalar;
 }
 
 export interface ParquetErrorRow {
-    n: number;
-    message: string;
+    n: ParquetScalar;
+    message: unknown;
 }
 
 export interface ParquetEventRow {
-    n: number;
-    name: string;
-    description: string;
+    n: ParquetScalar;
+    name: unknown;
+    description: unknown;
+}
+
+export interface ParquetSeriesRow {
+    series_name: string;
+    series_id: ParquetScalar;
+    precision: string;
+
+    arguments: Record<string, unknown> | null;
+    series_limit: ParquetComplex | null;
 }
 
 export interface ParquetAccelRow {
-    series_id: number;
+    series_id: ParquetScalar;
+
     accel_name: string;
-    m_value: number | null;
+    m_value: ParquetScalar;
 
-    additional_args: {
-        remainder?: string | null;
-        useRecurrentFormula?: string | null;
-        beta?: string | null;
-        gamma?: string | null;
-        parameter?: string | null;
-        numerator?: string | null;
-        rho?: string | null;
-        epsilon_threshold?: string | null;
-        [key: string]: unknown;
-    } | null;
+    additional_args: Record<string, unknown> | null;
 
-    computed: (ParquetAccelComputed | null)[];
-    errors: ParquetErrorRow[] | null;
-    events: ParquetEventRow[] | null;
+    computed: unknown;
+    errors: unknown;
+    events: unknown;
 }

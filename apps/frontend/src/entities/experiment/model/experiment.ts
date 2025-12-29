@@ -57,8 +57,8 @@ export interface SeriesAccel {
 }
 
 export interface Experiment {
-    id: string
-    seriesList?: Series[];
-    accelList?: Accel[];
-    seriesAccelList?: SeriesAccel[];
+    id: string;
+    seriesList: Series[];
+    accelList: Accel[];
+    seriesAccelList: SeriesAccel[];
 }
