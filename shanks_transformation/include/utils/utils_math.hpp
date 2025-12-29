@@ -9,18 +9,15 @@
 #include "utils_base.hpp"
 
 template<AcceptedLike T, UnsignedIntLike K>
-constexpr const T utils::minus_one_raised_to_power_n(const K j){
-    return (j & 1 ? utils::cast<T>(-1.0) : utils::cast<T>(1.0));
-}
+constexpr T utils::minus_one_raised_to_power_n(const K j){ return (j & 1 ? utils::cast<T>(-1.0) : utils::cast<T>(1.0));}
 
 template <AcceptedLike T, UnsignedIntLike K>
-constexpr const T utils::phi(K n)
+constexpr T utils::phi(K n)
 {
 	K result = n;
 	for (K i = 2; i * i <= n; ++i)
 		if (n % i == 0) {
-			while (n % i == 0)
-				n /= i;
+			while (n % i == 0) n /= i;
 			result -= result / i;
 		}
 
@@ -29,7 +26,7 @@ constexpr const T utils::phi(K n)
 }
 
 template<UnsignedIntLike K>
-constexpr const K utils::fact(const K n) {
+constexpr K utils::fact(const K n) {
 	K fact = static_cast<K>(1);
 	for(K j = static_cast<K>(2); j <= n; ++j){
 		fact *= j;
@@ -38,7 +35,7 @@ constexpr const K utils::fact(const K n) {
 }
 
 template<UnsignedIntLike K>
-constexpr const K utils::double_fact(const K n) {
+constexpr K utils::double_fact(const K n) {
 
 	K double_fact = static_cast<K>(1);
 
@@ -50,7 +47,7 @@ constexpr const K utils::double_fact(const K n) {
 }
 
 template<UnsignedIntLike K>
-constexpr const K utils::binomial_coefficient(const K n, const K k) {
+constexpr K utils::binomial_coefficient(const K n, const K k) {
 
 	if(n<k)
 		throw std::invalid_argument("n>k");
@@ -207,7 +204,7 @@ T utils::inc_gamma(const T& x, const T& alpha){
 	if constexpr (is_standard_types<T>::value) return utils::cast<T>(0.0);
 	#endif
 	#ifdef __MPREAL_H__
-	else if constexpr (std::is_same<T, mpfr::mpreal>::value) return mpfr::tgamma(alpha) - mpfr::gammainc(alpha,x);
+	else if constexpr (std::is_same<T, mpfr::mpreal>::value) return mpfr::gammainc(alpha,x);
 	#endif
 	else return utils::cast<T>(0.0);
 }
