@@ -1,4 +1,4 @@
-cd ../shanks_transformation
-cmake -B build
-cd build && make pyshanks
-cp pyshanks.cpython-313-x86_64-linux-gnu.so ../../shanks_consumer/pyshanks/
+cmake -S ../pyshanks -B build
+make -C build pyshanks
+cp build/*.so pyshanks/
+rm -rf build

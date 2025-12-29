@@ -13,14 +13,6 @@
 int main()
 {
 
-	std::vector<double> data = {2, 2, 5, 2, 1, 0, 1, 4, 9, 10, 12, 16, 20};
-	std::vector<double> res = shanks::filters::kolzur_filter(data, 5, 3);
-	for (const auto& x : res){
-		std::cout << x << " ";
-	}
-	series_result<float> a{};
-	std::cout << "\n";
-
     while(true){
 		try
 		{
