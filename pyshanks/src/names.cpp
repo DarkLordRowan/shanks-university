@@ -1,5 +1,6 @@
 #include "../include/bindings.hpp"
 
+///Series names
 constinit const char* series_names[OVERALL_SERIES_DEFINED] = {
 "AbsSinXMinus2DivPiSeries",
 "ArcsinX2Series",
@@ -101,4 +102,16 @@ constinit const char* series_names[OVERALL_SERIES_DEFINED] = {
 "XTwoSeries",
 "XTwoThroughtSquaresSeries",
 "Xsquareplus3DivXsquareplus2multixMinus1Series",
+};
+
+/// types to bind
+constinit const char* available_types[OVERALL_ARB_TYPES] = {
+    "F32",
+    "F64",
+    "FLong",
+    "Arb",
+    "CF32",
+    "CF64",
+    "CFLong",
+    "CArb"
 };
