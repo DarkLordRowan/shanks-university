@@ -1,9 +1,14 @@
 import React, { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { useConvergenceMatrix } from "../model/useConvergenceMatrix";
 import { type SelectedCell, type SelectedDetail, type DetailPoint } from "../model/types";
-import { errorNorm, realDiffSign, getPointsSortedByN } from "../model/convergenceUtils";
+import {
+    errorNorm,
+    realDiffSign,
+    getPointsSortedByN,
+    getConvergenceCellDomId,
+} from "../model/convergenceUtils";
 import { ConvergenceDetailChart } from "./ConvergenceDetailChart";
-import { ConvergenceMatrixTable, getConvergenceCellDomId } from "./ConvergenceMatrixTable";
+import { ConvergenceMatrixTable } from "./ConvergenceMatrixTable";
 
 export interface AlgorithmSeriesConvergenceTableProps {
     experiment: import("../model/types").Experiment | null;

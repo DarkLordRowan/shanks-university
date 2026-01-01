@@ -3,16 +3,12 @@ import {
     type Accel,
     type SeriesAccel,
     type Complex,
-    type SeriesArgs,
-    type AccelArgs,
     type ConvergenceAnalysis,
     type SideType,
     type MonotonicityType,
 } from "./types";
 
-const EPS = 1e-15;
-
-type Scalar = number | string | boolean | null;
+const EPS = 1e-10;
 
 export function hasFiniteNumber(v: number | null | undefined): v is number {
     return v != null && Number.isFinite(v);
@@ -78,44 +74,12 @@ export function getPointsSortedByN(
     return [...raw].sort((a, b) => a.n - b.n);
 }
 
-function toSortableNumber(v: Scalar): number | null {
-    if (typeof v === "number") {
-        return Number.isFinite(v) ? v : null;
-    }
-    if (typeof v === "string") {
-        const n = Number(v);
-        return Number.isFinite(n) ? n : null;
-    }
-    return null;
-}
-
-export function parseX(args: SeriesArgs | null): { xLabel: string; xSort: number | null } {
-    const raw = args?.x as Scalar | undefined;
-    if (raw == null) {
-        return { xLabel: "∅", xSort: null };
-    }
-    return {
-        xLabel: String(raw),
-        xSort: toSortableNumber(raw),
-    };
-}
-
-export function nonNullEntries<T extends Record<string, unknown>>(obj: T | null | undefined) {
-    if (!obj) return [] as [string, unknown][];
-    return Object.entries(obj).filter(([, v]) => v !== null && v !== undefined);
-}
-
-export function buildArgsSummary(args: AccelArgs | null): string {
-    const entries = nonNullEntries(args);
-    if (entries.length === 0) return "";
-    entries.sort(([a], [b]) => a.localeCompare(b));
-    return entries.map(([k, v]) => `${k}=${v}`).join(", ");
-}
-
 export function analyzeSeriesAccelConvergence(
     series: Series | undefined,
     _accel: Accel | undefined,
-    sa: SeriesAccel
+    sa: SeriesAccel,
+    maxSignChangesForOneSided: number = 0,
+    maxViolationsForMonotone: number = 0
 ): ConvergenceAnalysis {
     const limit = series?.limit ?? null;
 
@@ -123,15 +87,13 @@ export function analyzeSeriesAccelConvergence(
         return {
             seriesId: sa.series_id,
             accelId: sa.accel_id,
-            side: "no_limit",
-            monotonicity: "no_limit",
-            signChangesCount: 0,
-            firstSignChangeN: null,
-            firstGrowthN: null,
-            growthViolationsCount: 0,
+            side: "unknown",
+            monotonicity: "unknown",
             stepsAnalyzed: 0,
+            signChangesCount: 0,
+            violationsCount: 0,
             signChangeNs: [],
-            growthNs: [],
+            violationsNs: [],
         };
     }
 
@@ -143,17 +105,15 @@ export function analyzeSeriesAccelConvergence(
     let signChangesCount = 0;
     let firstSignChangeN: number | null = null;
 
-    let hasGrowth = false;
-    let firstGrowthN: number | null = null;
-
-    let hasStrictDecrease = false;
-    let hasEqual = false;
+    let strictDecreaseFound = false;
+    let equalityFound = false;
+    let strictIncreaseFound = false; // Добавлено
 
     let stepsAnalyzed = 0;
-    let growthViolationsCount = 0;
+    let violationsCount = 0; // Добавлено: счетчик нарушений монотонности
 
     const signChangeNs: number[] = [];
-    const growthNs: number[] = [];
+    const violationsNs: number[] = []; // Добавлено: номера шагов с нарушениями
 
     for (const p of points) {
         const value = p.value;
@@ -164,7 +124,7 @@ export function analyzeSeriesAccelConvergence(
         if (sgn !== null && sgn !== 0) {
             if (prevSign === null) {
                 prevSign = sgn;
-            } else if (prevSign !== 0 && prevSign !== sgn) {
+            } else if (prevSign !== sgn) {
                 signChangesCount += 1;
                 signChangeNs.push(p.n);
                 if (firstSignChangeN === null) {
@@ -180,17 +140,14 @@ export function analyzeSeriesAccelConvergence(
                 stepsAnalyzed += 1;
 
                 if (err > prevErr + EPS) {
-                    growthViolationsCount += 1;
-                    growthNs.push(p.n);
-
-                    if (!hasGrowth) {
-                        hasGrowth = true;
-                        firstGrowthN = p.n;
-                    }
+                    // Нарушение: ошибка увеличилась
+                    strictIncreaseFound = true;
+                    violationsCount += 1;
+                    violationsNs.push(p.n);
                 } else if (err < prevErr - EPS) {
-                    hasStrictDecrease = true;
+                    strictDecreaseFound = true;
                 } else {
-                    hasEqual = true;
+                    equalityFound = true;
                 }
             }
             prevErr = err;
@@ -199,40 +156,46 @@ export function analyzeSeriesAccelConvergence(
 
     let side: SideType;
     if (prevSign === null) {
-        side = "unknown";
-    } else if (signChangesCount === 0) {
-        side = "one_sided";
+        if (stepsAnalyzed === 0) {
+            side = "unknown";
+        } else {
+            side = "one_sided";
+        }
     } else {
-        side = "two_sided";
+        if (signChangesCount <= maxSignChangesForOneSided) {
+            side = "one_sided";
+        } else {
+            side = "two_sided";
+        }
     }
 
     let monotonicity: MonotonicityType;
     if (stepsAnalyzed === 0) {
-        monotonicity = "not_enough_data";
-    } else if (hasGrowth) {
-        monotonicity = "has_growth";
-    } else if (hasStrictDecrease && !hasEqual) {
+        monotonicity = "unknown";
+    } else if (strictDecreaseFound && !strictIncreaseFound && !equalityFound) {
         monotonicity = "strict_decreasing_error";
-    } else if (!hasStrictDecrease && hasEqual) {
+    } else if (!strictDecreaseFound && !strictIncreaseFound && equalityFound) {
         monotonicity = "constant_error";
-    } else if (hasStrictDecrease && hasEqual) {
+    } else if (strictDecreaseFound && !strictIncreaseFound && equalityFound) {
         monotonicity = "non_increasing_error";
+    } else if (!strictDecreaseFound && strictIncreaseFound && !equalityFound) {
+        monotonicity = "strict_increasing_error";
+    } else if (!strictDecreaseFound && strictIncreaseFound && equalityFound) {
+        monotonicity = "non_decreasing_error";
     } else {
-        monotonicity = "not_enough_data";
+        monotonicity = "random_error";
     }
 
     return {
         seriesId: sa.series_id,
         accelId: sa.accel_id,
-        side,
-        monotonicity,
-        signChangesCount,
-        firstSignChangeN,
-        firstGrowthN,
-        growthViolationsCount,
-        stepsAnalyzed,
-        signChangeNs,
-        growthNs,
+        side: side,
+        monotonicity: monotonicity,
+        stepsAnalyzed: stepsAnalyzed,
+        signChangesCount: signChangesCount,
+        violationsCount: violationsCount,
+        signChangeNs: signChangeNs,
+        violationsNs: violationsNs,
     };
 }
 
@@ -244,8 +207,6 @@ export function formatSideShort(side: SideType): string {
             return "2ст";
         case "unknown":
             return "?";
-        case "no_limit":
-            return "∅";
     }
 }
 
@@ -257,10 +218,13 @@ export function formatMonotonicityShort(mon: MonotonicityType): string {
             return "⇘";
         case "constant_error":
             return "=";
-        case "has_growth":
-            return "↗";
-        case "not_enough_data":
-        case "no_limit":
+        case "strict_increasing_error":
+            return "↑";
+        case "non_decreasing_error":
+            return "⇗";
+        case "random_error":
+            return "↕";
+        case "unknown":
             return "?";
     }
 }
@@ -273,8 +237,6 @@ export function formatSideDescription(side: SideType): string {
             return "Двустороннее приближение к пределу (знак A_k - lim меняется).";
         case "unknown":
             return "Недостаточно данных для определения односторонности.";
-        case "no_limit":
-            return "Нет значения предела для ряда (series.limit = null).";
     }
 }
 
@@ -286,11 +248,17 @@ export function formatMonotonicityDescription(mon: MonotonicityType): string {
             return "|A_k - lim| не возрастает (есть убывающие и равные шаги).";
         case "constant_error":
             return "|A_k - lim| одинаково на всех шагах.";
-        case "has_growth":
-            return "На некоторых шагах |A_k - lim| возрастает (есть рост ошибки).";
-        case "not_enough_data":
+        case "strict_increasing_error":
+            return "|A_k - lim| строго возрастает на всех шагах.";
+        case "non_decreasing_error":
+            return "|A_k - lim| не убывает (есть растущие и равные шаги).";
+        case "random_error":
+            return "|A_k - lim| меняется случайным образом (нет явной монотонности).";
+        case "unknown":
             return "Недостаточно точек для анализа монотонности.";
-        case "no_limit":
-            return "Нет значения предела, анализ монотонности не выполняется.";
     }
+}
+
+export function getConvergenceCellDomId(accelId: string, seriesId: string): string {
+    return `conv-cell-${accelId}::${seriesId}`;
 }
