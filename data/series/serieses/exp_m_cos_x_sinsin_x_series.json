@@ -1,0 +1,19 @@
+{
+  "id": "exp_m_cos_x_sinsin_x_series",
+  "python_id": "",
+  "num": 31,
+  "title": "e^{-\\cos(x)}\\,\\sin(\\sin x)",
+  "formula": "\\sum_{n=0}^{\\infty}\\frac{(-1)^{n}\\sin(nx)}{n!}=e^{-\\cos(x)}\\sin(\\sin(x))",
+  "speed": "hyperlinear",
+  "document": "series.docx",
+  "domain": {
+    "intervals": [
+      {
+        "from": "-\\infty",
+        "to": "+\\infty",
+        "left_closed": false,
+        "right_closed": false
+      }
+    ]
+  }
+}

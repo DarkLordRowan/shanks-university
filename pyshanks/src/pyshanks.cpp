@@ -11,8 +11,6 @@
 #include "../libs/mpfr/mpreal.h"
 #include "../include/bindings.hpp"
 
-namespace py = pybind11;
-
 PYBIND11_MODULE(pyshanks, m) {
     m.doc() = "pybind11: polymorphic series (double + float_precision), helper-organized, no-arg constructors, backward-compatible";
 
@@ -35,22 +33,25 @@ PYBIND11_MODULE(pyshanks, m) {
     using real_types = std::tuple<
         float,
         double,
-        long double,
-        mpfr::mpreal
+        long double
+        //mpfr::mpreal
     >;
 
-    bind_comlex_types<real_types, 0, 4>(m);
+    bind_comlex_types<real_types, 0, 3>(m);
+    bind_complex_num<mpfr::mpreal>(m, "CArb");
 
     using types_to_bind = std::tuple<
         std::tuple<       float, size_t>,
         std::tuple<      double, size_t>,
         std::tuple< long double, size_t>,
-        std::tuple<mpfr::mpreal, size_t>,
+        //std::tuple<mpfr::mpreal, size_t>,
         std::tuple<std::complex<float       >, size_t>,
         std::tuple<std::complex<double      >, size_t>,
-        std::tuple<std::complex<long double >, size_t>,
-        std::tuple<std::complex<mpfr::mpreal>, size_t>
+        std::tuple<std::complex<long double >, size_t>
+        //std::tuple<std::complex<mpfr::mpreal>, size_t>
     >;
 
     bind_all_types<types_to_bind>(m);
+    bind_all<mpfr::mpreal, size_t>(m, "Arb");
+    bind_all<std::complex<mpfr::mpreal>, size_t>(m, "CArb");
 }

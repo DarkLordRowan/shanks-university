@@ -1,0 +1,72 @@
+name: shanks-university
+services:
+  shanks-consumer:
+    stdin_open: true
+    tty: true
+    container_name: shanks-consumer
+    build:
+      context: .
+      dockerfile: shanks_consumer/Dockerfile
+    environment:
+      - MONGO_HOST=${MONGO_HOST}
+      - MONGO_PORT=${MONGO_PORT}
+      - MONGO_USERNAME=${MONGO_USERNAME}
+      - MONGO_PASSWORD=${MONGO_PASSWORD}
+    depends_on:
+      shanks-consumer-mongodb:
+        condition: service_healthy
+    volumes:
+      - ./shanks_consumer/config:/app/config
+      - ./shanks_consumer/output:/app/output
+    networks:
+      - shanks-network
+
+  shanks-consumer-mongodb:
+    image: mongo:latest
+    container_name: shanks-consumer-mongodb
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
+    volumes:
+      - mongo_data:/data/db
+    ports:
+      - "27017:27017"
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.runCommand('ping').ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - shanks-network
+
+  shanks-client:
+    container_name: shanks-client
+    build:
+      context: .
+      dockerfile: shanks_client/Dockerfile
+    environment:
+      - MONGO_HOST=${MONGO_HOST}
+      - MONGO_PORT=${MONGO_PORT}
+      - MONGO_USERNAME=${MONGO_USERNAME}
+      - MONGO_PASSWORD=${MONGO_PASSWORD}
+    ports:
+      - 8080:8000
+    depends_on:
+      shanks-consumer-mongodb:
+        condition: service_healthy
+    volumes:
+      - ./shanks_client/:/app/
+    networks:
+      - shanks-network
+
+
+
+volumes:
+  mongo_data:
+
+
+networks:
+  shanks-network:
+    driver: bridge

@@ -63,7 +63,6 @@ constinit const char* series_names[OVERALL_SERIES_DEFINED] = {
 "OneTwelfth3x2Pi2Series",
 "OneTwelfthSeries",
 "OneTwelfthX2Pi2Series",
-"XTwelfthX2Pi2Series",
 "Pi3Series",
 "Pi4Series",
 "Pi8CosxSquareMinus1Div3CosxSeries",
@@ -109,9 +108,9 @@ constinit const char* available_types[OVERALL_ARB_TYPES] = {
     "F32",
     "F64",
     "FLong",
-    "Arb",
+    //"Arb",
     "CF32",
     "CF64",
     "CFLong",
-    "CArb"
+    //"CArb"
 };

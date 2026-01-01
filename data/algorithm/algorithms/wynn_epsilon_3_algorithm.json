@@ -1,0 +1,10 @@
+{
+  "id": "wynn_epsilon_3_algorithm",
+  "title": "Wynn’s ε-algorithm (third version)",
+  "subtitle": "Эпсилон-алгоритм Винна (третья версия)",
+  "authorIds": [
+    "wynn"
+  ],
+  "python_id": "WynnEpsilon3Algorithm",
+  "args": []
+}

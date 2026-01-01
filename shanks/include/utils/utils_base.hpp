@@ -421,7 +421,7 @@ struct utils {
 	 * @return casted to type To value of x
 	 */
 	template<typename To, typename From >
-	static To cast(const From& x);
+	constexpr static To cast(const From& x);
 
 	//HELPER
 	/**
