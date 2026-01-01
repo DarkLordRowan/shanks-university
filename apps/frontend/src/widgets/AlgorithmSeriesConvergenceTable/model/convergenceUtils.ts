@@ -107,13 +107,13 @@ export function analyzeSeriesAccelConvergence(
 
     let strictDecreaseFound = false;
     let equalityFound = false;
-    let strictIncreaseFound = false; // Добавлено
+    let strictIncreaseFound = false;
 
     let stepsAnalyzed = 0;
-    let violationsCount = 0; // Добавлено: счетчик нарушений монотонности
+    let violationsCount = 0;
 
     const signChangeNs: number[] = [];
-    const violationsNs: number[] = []; // Добавлено: номера шагов с нарушениями
+    const violationsNs: number[] = [];
 
     for (const p of points) {
         const value = p.value;
@@ -182,6 +182,14 @@ export function analyzeSeriesAccelConvergence(
         monotonicity = "strict_increasing_error";
     } else if (!strictDecreaseFound && strictIncreaseFound && equalityFound) {
         monotonicity = "non_decreasing_error";
+    } else if (strictDecreaseFound && strictIncreaseFound) {
+        if (violationsCount <= maxViolationsForMonotone) {
+            monotonicity = "non_increasing_error";
+        } else if (stepsAnalyzed - violationsCount <= maxViolationsForMonotone) {
+            monotonicity = "non_decreasing_error";
+        } else {
+            monotonicity = "random_error";
+        }
     } else {
         monotonicity = "random_error";
     }

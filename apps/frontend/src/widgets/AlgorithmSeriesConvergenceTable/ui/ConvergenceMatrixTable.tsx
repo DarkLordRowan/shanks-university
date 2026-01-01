@@ -92,7 +92,7 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
                         <div className="flex items-center gap-1">
                             <span
                                 className="whitespace-nowrap"
-                                title="Если число смен знака ≤ X, пара считается односторонней"
+                                title="Максимальное количество смен знака разности Aₖ - lim, при котором приближение считается односторонним. Если смен знака больше этого значения, то считается двухсторонним."
                             >
                                 max sign changes:
                             </span>
@@ -114,9 +114,9 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
                         <div className="flex items-center gap-1">
                             <span
                                 className="whitespace-nowrap"
-                                title="Если число расхождений ≤ Y, ошибка считается монотонной"
+                                title="Максимальное количество увеличений ошибки |Aₖ - lim|, при котором приближение всё ещё считается монотонным (неубывающим или невозрастающим). Если увеличений больше, то ошибка считается случайной (random)."
                             >
-                                max deviations:
+                                max violations:
                             </span>
                             <input
                                 type="range"
