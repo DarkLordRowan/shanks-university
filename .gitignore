@@ -483,6 +483,7 @@ x64/Debug/shanks_transformation.exe
 *.exe
 *.tlog
 .clangd
+shanks/**/build*
 shanks_transformation/**/build*
 rebuild.sh
 .vscode
@@ -494,4 +495,8 @@ rebuild.sh
 */cmake-build-debug/*
 */cmake-build-debug-event-trace/*
 */cmake-build-release-visual-studio/*
-/shanks_transformation/tests/cmake-build-release-visual-studio/
+/shanks/tests/cmake-build-release-visual-studio/
+.dev
+shanks_consumer/output
+shanks/libs
+pyshanks/build
