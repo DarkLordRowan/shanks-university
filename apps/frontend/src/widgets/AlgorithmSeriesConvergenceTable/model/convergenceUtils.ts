@@ -75,8 +75,8 @@ export function getPointsSortedByN(
 }
 
 export function analyzeSeriesAccelConvergence(
-    series: Series | undefined,
-    _accel: Accel | undefined,
+    series: Series,
+    _accel: Accel,
     sa: SeriesAccel,
     maxSignChangesForOneSided: number = 0,
     maxViolationsForMonotone: number = 0

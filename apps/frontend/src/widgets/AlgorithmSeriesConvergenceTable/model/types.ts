@@ -80,8 +80,6 @@ export interface DetailPoint {
 }
 
 export interface SelectedDetail {
-    seriesInfo: SeriesInfo | null;
-    algoInfo: AlgoInfo | null;
     series: Series | null;
     accel: Accel | null;
     analysis: ConvergenceAnalysis | null;

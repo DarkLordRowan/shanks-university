@@ -10,17 +10,14 @@ interface ConvergenceDetailChartProps {
 }
 
 export const ConvergenceDetailChart: React.FC<ConvergenceDetailChartProps> = ({ detail }) => {
-    const { seriesInfo, algoInfo, analysis, limit, points } = detail;
-
-    // Глобальный переключатель: использовать модуль или знак
     const [useAbs, setUseAbs] = useState<boolean>(true);
 
-    if (!seriesInfo || !algoInfo || !analysis) {
+    if (!detail.series || !detail.analysis) {
         return null;
     }
 
-    const shortSide = formatSideShort(analysis.side);
-    const shortMon = formatMonotonicityShort(analysis.monotonicity);
+    const shortSide = formatSideShort(detail.analysis.side);
+    const shortMon = formatMonotonicityShort(detail.analysis.monotonicity);
 
     return (
         <div className="mt-4 rounded-xl border border-border bg-panel p-4 text-xs text-textDim shadow-panel">
@@ -29,33 +26,23 @@ export const ConvergenceDetailChart: React.FC<ConvergenceDetailChartProps> = ({ 
                     <div className="text-sm font-semibold text-textDim">
                         Детальный график сходимости
                     </div>
-                    <div className="mt-1 space-y-0.5 text-[11px] text-textDim/80">
-                        <div>
-                            Ряд: {seriesInfo.seriesName}, x={seriesInfo.xLabel}, prec=
-                            {seriesInfo.precision}
-                        </div>
-                        <div>
-                            Алгоритм: {algoInfo.algorithmName}
-                            {algoInfo.m != null ? `, m=${algoInfo.m}` : ""}
-                        </div>
-                        {algoInfo.argsSummary && <div>Аргументы: {algoInfo.argsSummary}</div>}
-                    </div>
+                    {/*<div className="mt-1 space-y-0.5 text-[11px] text-textDim/80">*/}
+                    {/*    <div>*/}
+                    {/*        Ряд: {series.seriesName}, x={series.xLabel}, prec=*/}
+                    {/*        {series.precision}*/}
+                    {/*    </div>*/}
+                    {/*    <div>*/}
+                    {/*        Алгоритм: {accel.algorithmName}*/}
+                    {/*        {accel.m != null ? `, m=${accel.m}` : ""}*/}
+                    {/*    </div>*/}
+                    {/*    {accel.argsSummary && <div>Аргументы: {accel.argsSummary}</div>}*/}
+                    {/*</div>*/}
                 </div>
                 <div className="space-y-1 text-right text-[11px] text-textDim/80">
                     <div>
                         Тип: {shortSide} | {shortMon}
                     </div>
-                    <div>
-                        Смен знака: {analysis.signChangesCount}
-                        {analysis.firstSignChangeN != null
-                            ? `, первая при n=${analysis.firstSignChangeN}`
-                            : ""}
-                    </div>
-                    <div>
-                        Первый рост ошибки:{" "}
-                        {analysis.firstGrowthN != null ? `n=${analysis.firstGrowthN}` : "не был"}
-                    </div>
-                    <div>Сравнено шагов (пар): {analysis.stepsAnalyzed}</div>
+                    <div>Сравнено шагов (пар): {detail.analysis.stepsAnalyzed}</div>
 
                     {/* Глобальный переключатель "модуль / со знаком" для всех трёх элементов */}
                     <div className="pt-1">
@@ -89,9 +76,9 @@ export const ConvergenceDetailChart: React.FC<ConvergenceDetailChartProps> = ({ 
             </div>
 
             {/* useAbs уходит во все три компонента */}
-            <ConvergenceErrorChart points={points} limit={limit} useAbs={useAbs} />
-            <ConvergenceAnTable points={points} useAbs={useAbs} />
-            <ConvergenceDiffTable points={points} useAbs={useAbs} />
+            <ConvergenceErrorChart points={detail.points} limit={detail.limit} useAbs={useAbs} />
+            <ConvergenceAnTable points={detail.points} useAbs={useAbs} />
+            <ConvergenceDiffTable points={detail.points} useAbs={useAbs} />
         </div>
     );
 };

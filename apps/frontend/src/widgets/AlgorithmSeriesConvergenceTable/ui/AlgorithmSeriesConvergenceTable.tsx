@@ -1,11 +1,16 @@
 import React, { useEffect, useMemo, useRef, useState, useCallback } from "react";
-import { useConvergenceMatrix } from "../model/useConvergenceMatrix";
-import { type SelectedCell, type SelectedDetail, type DetailPoint } from "../model/types";
+import {
+    type SelectedCell,
+    type SelectedDetail,
+    type DetailPoint,
+    type ConvergenceAnalysis,
+} from "../model/types";
 import {
     errorNorm,
     realDiffSign,
     getPointsSortedByN,
     getConvergenceCellDomId,
+    analyzeSeriesAccelConvergence,
 } from "../model/convergenceUtils";
 import { ConvergenceDetailChart } from "./ConvergenceDetailChart";
 import { ConvergenceMatrixTable } from "./ConvergenceMatrixTable";
@@ -16,31 +21,24 @@ export interface AlgorithmSeriesConvergenceTableProps {
     maxSeries?: number;
 }
 
-// убираем отдельный props-файл, чтобы не плодить мусор
-// (оставлено определение выше)
-
 export const AlgorithmSeriesConvergenceTable: React.FC<AlgorithmSeriesConvergenceTableProps> = ({
     experiment,
     className,
     maxSeries,
 }) => {
-    const { matrix, progress } = useConvergenceMatrix(experiment);
     const [selectedCell, setSelectedCell] = useState<SelectedCell | null>(null);
     const chartRef = useRef<HTMLDivElement | null>(null);
 
-    // при смене эксперимента сбрасываем выбор
     useEffect(() => {
         setSelectedCell(null);
     }, [experiment]);
 
-    // при выборе ячейки скроллим к графикам
     useEffect(() => {
         if (selectedCell && chartRef.current) {
             chartRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
         }
     }, [selectedCell]);
 
-    // кнопка "вернуться к выбранной ячейке"
     const scrollBackToSelectedCell = useCallback(() => {
         if (!selectedCell) return;
         const domId = getConvergenceCellDomId(selectedCell.accelId, selectedCell.seriesId);
@@ -51,28 +49,30 @@ export const AlgorithmSeriesConvergenceTable: React.FC<AlgorithmSeriesConvergenc
     }, [selectedCell]);
 
     const selectedDetail: SelectedDetail | null = useMemo(() => {
-        if (!selectedCell || !experiment || !matrix) return null;
+        if (!selectedCell || !experiment) return null;
 
         const { seriesId, accelId } = selectedCell;
 
-        const series = (experiment.seriesList ?? []).find((s) => s.id === seriesId) ?? null;
-        const accel = (experiment.accelList ?? []).find((a) => a.id === accelId) ?? null;
-        const sa =
-            (experiment.seriesAccelList ?? []).find(
-                (x) => x.series_id === seriesId && x.accel_id === accelId
-            ) ?? null;
+        const series = (experiment.seriesList ?? []).find((s) => s.id === seriesId);
+        const algo = (experiment.accelList ?? []).find((a) => a.id === accelId);
+        const seriesAccelData = (experiment.seriesAccelList ?? []).find(
+            (x) => x.series_id === seriesId && x.accel_id === accelId
+        );
 
-        const seriesInfo = matrix.seriesList.find((s) => s.key === seriesId) ?? null;
-        const algoInfo = matrix.algoList.find((a) => a.key === accelId) ?? null;
+        if (!series || !algo || !seriesAccelData) return null;
 
-        const analysis = matrix.cells[`${accelId}::${seriesId}`] ?? null;
+        const analysis: ConvergenceAnalysis = analyzeSeriesAccelConvergence(
+            series,
+            algo,
+            seriesAccelData
+        );
         const limit = series?.limit ?? null;
 
         let prevVal: { re: number | null; im: number | null } | null = null;
 
-        const points: DetailPoint[] = sa
+        const points: DetailPoint[] = seriesAccelData
             ? (() => {
-                  const sorted = getPointsSortedByN(sa);
+                  const sorted = getPointsSortedByN(seriesAccelData);
                   const pts: DetailPoint[] = [];
 
                   for (const p of sorted) {
@@ -121,15 +121,13 @@ export const AlgorithmSeriesConvergenceTable: React.FC<AlgorithmSeriesConvergenc
             : [];
 
         return {
-            seriesInfo,
-            algoInfo,
-            series,
-            accel,
-            analysis,
-            limit,
-            points,
+            series: series,
+            accel: algo,
+            analysis: analysis,
+            limit: limit,
+            points: points,
         };
-    }, [selectedCell, experiment, matrix]);
+    }, [selectedCell, experiment]);
 
     if (!experiment) {
         return (
@@ -141,34 +139,7 @@ export const AlgorithmSeriesConvergenceTable: React.FC<AlgorithmSeriesConvergenc
         );
     }
 
-    if (!matrix || progress.running) {
-        const { current, total } = progress;
-        const pct = total > 0 ? Math.max(0, Math.min(100, Math.round((current / total) * 100))) : 0;
-
-        return (
-            <div className={className}>
-                <div className="rounded-xl border border-border bg-panel p-4 shadow-panel">
-                    <div className="mb-2 flex items-center justify-between text-sm text-textDim">
-                        <span>Подсчёт монотонности и направления...</span>
-                        <span>
-                            {current} / {total} ({pct}%)
-                        </span>
-                    </div>
-                    <div className="h-2 w-full overflow-hidden rounded bg-surface/60">
-                        <div
-                            className="h-2 bg-primary transition-[width]"
-                            style={{ width: `${pct}%` }}
-                        />
-                    </div>
-                </div>
-            </div>
-        );
-    }
-
-    const seriesList = matrix.seriesList ?? [];
-    const algoList = matrix.algoList ?? [];
-
-    if (seriesList.length === 0 || algoList.length === 0) {
+    if (experiment.seriesList.length === 0 || experiment.accelList.length === 0) {
         return (
             <div className={className}>
                 <div className="text-textDim text-sm">
@@ -182,7 +153,6 @@ export const AlgorithmSeriesConvergenceTable: React.FC<AlgorithmSeriesConvergenc
         <div className={className}>
             <ConvergenceMatrixTable
                 experiment={experiment}
-                matrix={matrix}
                 maxSeries={maxSeries}
                 selectedCell={selectedCell}
                 onCellSelect={setSelectedCell}

@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import {
     type ConvergenceAnalysis,
-    type ConvergenceMatrix,
     type Experiment,
     type MonotonicityType,
     type SelectedCell,
@@ -17,7 +16,6 @@ import { MatrixAlgorithmSeries } from "@/shared/ui/Matrix/MatrixAlgorithmSeries.
 
 interface ConvergenceMatrixTableProps {
     experiment: Experiment;
-    matrix: ConvergenceMatrix;
     maxSeries?: number;
     selectedCell: SelectedCell | null;
     onCellSelect: (cell: SelectedCell) => void;
