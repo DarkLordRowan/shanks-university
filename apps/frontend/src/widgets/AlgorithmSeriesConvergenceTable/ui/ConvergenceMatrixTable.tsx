@@ -12,6 +12,7 @@ import {
     formatSideShort,
     formatSideWithMax,
     getConvergenceCellDomId,
+    nonNullEntries,
 } from "../model/convergenceUtils";
 import { MatrixAlgorithmSeries } from "@/shared/ui/Matrix/MatrixAlgorithmSeries.tsx";
 
@@ -29,6 +30,52 @@ function isMonotone(mon: MonotonicityType): boolean {
         mon === "non_increasing_error" ||
         mon === "constant_error"
     );
+}
+
+function describeClass(side: SideType, mon: MonotonicityType): string {
+    const mono = isMonotone(mon);
+
+    if (side === "one_sided" && mono) return "односторонний и монотонный";
+    if (side === "one_sided" && !mono) return "односторонний и немонотонный";
+    if (side === "two_sided" && mono) return "двусторонний и монотонный";
+    if (side === "two_sided" && !mono) return "двусторонний и немонотонный";
+
+    if (side === "unknown") return "недостаточно данных";
+    if (mon === "unknown") return "недостаточно данных";
+
+    return "недостаточно данных";
+}
+
+function formatIntervals(ns: number[], maxRanges = 5): string {
+    if (!ns.length) return "—";
+
+    const sorted = Array.from(new Set(ns)).sort((a, b) => a - b);
+
+    const ranges: Array<{ start: number; end: number }> = [];
+    let start = sorted[0];
+    let prev = sorted[0];
+
+    for (let i = 1; i < sorted.length; i++) {
+        const x = sorted[i];
+        if (x === prev + 1) {
+            prev = x;
+            continue;
+        }
+        ranges.push({ start, end: prev });
+        start = x;
+        prev = x;
+    }
+    ranges.push({ start, end: prev });
+
+    const parts = ranges
+        .slice(0, maxRanges)
+        .map((r) => (r.start === r.end ? `${r.start}` : `${r.start}–${r.end}`));
+
+    if (ranges.length > maxRanges) {
+        parts.push("…");
+    }
+
+    return parts.join(", ");
 }
 
 function getCellColorClass(side: SideType, mon: MonotonicityType, selected: boolean): string {
@@ -98,7 +145,7 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
                         <div className="flex items-center gap-1">
                             <span
                                 className="whitespace-nowrap"
-                                title="Если число смен знака ≤ X, пара считается односторонней"
+                                title="Максимальное количество смен знака разности Aₖ - lim, при котором приближение считается односторонним. Если смен знака больше этого значения, то считается двухсторонним."
                             >
                                 max sign changes:
                             </span>
@@ -120,7 +167,7 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
                         <div className="flex items-center gap-1">
                             <span
                                 className="whitespace-nowrap"
-                                title="Если число расхождений ≤ Y, ошибка считается монотонной"
+                                title="Максимальное количество увеличений ошибки |Aₖ - lim|, при котором приближение всё ещё считается монотонным (неубывающим или невозрастающим). Если увеличений больше, то ошибка считается случайной (random)."
                             >
                                 max violations:
                             </span>
@@ -170,9 +217,48 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
                 const colorClass = getCellColorClass(side, monotonicity, isSelected);
                 const domId = getConvergenceCellDomId(algo.key, s.key);
 
+                const titleLines: string[] = [];
+                titleLines.push(`Ряд: ${s.seriesName} (x=${s.xLabel}, prec=${s.precision})`);
+                titleLines.push(
+                    `Алгоритм: ${algo.algorithmName}` + (algo.m != null ? `, m=${algo.m}` : "")
+                );
+                titleLines.push("Аргументы алгоритма:");
+
+                const algoEntries = nonNullEntries(algo.algorithmArgs);
+                if (algoEntries.length > 0) {
+                    for (const [k, v] of algoEntries.sort(([a, b]) => a.localeCompare(b))) {
+                        titleLines.push(`  ${k} = ${String(v)}`);
+                    }
+                }
+                if (algo.argsSummary) titleLines.push(`  (${algo.argsSummary})`);
+                if (algoEntries.length > 0 || algo.argsSummary) titleLines.push("");
+
+                titleLines.push(`Класс: ${describeClass(side, monotonicity)}`);
+
+                const signNsText =
+                    analysis.signChangeNs && analysis.signChangeNs.length > 0
+                        ? formatIntervals(analysis.signChangeNs)
+                        : "—";
+
+                const growthNsText =
+                    analysis.violationsNs && analysis.violationsNs.length > 0
+                        ? formatIntervals(analysis.violationsNs)
+                        : "—";
+
+                titleLines.push(
+                    `Число смен знака: ${analysis.signChangesCount}, ns: ${signNsText}`
+                );
+                titleLines.push(
+                    `Число расхождений |Aₙ−lim|: ${analysis.violationsCount}, ns: ${growthNsText}`
+                );
+                titleLines.push(`Пар (n−1,n) в анализе: ${analysis.stepsAnalyzed}`);
+                titleLines.push("");
+                titleLines.push("Клик — детальный график.");
+
                 return (
                     <div
                         id={domId}
+                        title={titleLines.join("\n")}
                         className={
                             "w-full h-full min-h-[32px] cursor-pointer border border-transparent " +
                             colorClass

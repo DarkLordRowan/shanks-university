@@ -10,7 +10,7 @@ import {
     type SeriesArgs,
 } from "./types";
 
-const EPS = 1e-10;
+const EPS = 1e-15;
 
 export function hasFiniteNumber(v: number | null | undefined): v is number {
     return v != null && Number.isFinite(v);
