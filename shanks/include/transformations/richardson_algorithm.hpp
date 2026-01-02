@@ -23,7 +23,7 @@ namespace shanks{ namespace algos{
 /**
  * @brief Richardson transformation class for series acceleration
  *
- * @authors Trudolyubov N.A., Pavlova A.R.
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  *
  * This class implements the Richardson extrapolation method for accelerating
  * the convergence of series. The method uses polynomial extrapolation to

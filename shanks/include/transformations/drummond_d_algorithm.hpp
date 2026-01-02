@@ -4,7 +4,7 @@
 /**
  * @file drummond_d_algorithm.hpp
  * @brief Contains implementation of Drummond's D-transformation for sequence acceleration
- * @authors Naumov A.
+ * @authors Naumov A.U.
  *
  * For theory, see:
  * Drummond, J.E. (1976). A method for the summation of slowly convergent series.

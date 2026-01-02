@@ -21,7 +21,7 @@ namespace shanks{ namespace algos{
 /**
  * @brief Lubkin's W-transformation class template implementing a powerful sequence acceleration method.
  *
- * @authors Yurov P.I., Bezzaborov A.A.
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  *
  * This algorithm accelerates the convergence of sequences by applying Lubkin's W-transformation,
  * which is particularly effective for both linearly and logarithmically convergent sequences.

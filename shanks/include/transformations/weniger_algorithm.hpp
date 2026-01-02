@@ -5,7 +5,7 @@
  * @file weniger_algorithm.hpp
  * @brief This file contains the definition of the Weniger transformation,
  *        a powerful Levin-type nonlinear sequence transformation for series acceleration.
- * @authors Yurov P.I., Bezzaborov A.A.
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  */
 
  // For theory, see:

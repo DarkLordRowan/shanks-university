@@ -6,6 +6,8 @@
  * @file wynn_epsilon_2_algorithm.hpp
  * @brief This file contains the declaration of the second implementation of Wynn's Epsilon Algorithm.
  *
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G. 
+ * 
  * For theory, see:
  * Wynn, P. (1956). On a device for computing the eₙ(Sₙ) transformation.
  *   Mathematical Tables and Other Aids to Computation, 10(54), 91-96.

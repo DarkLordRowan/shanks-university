@@ -8,7 +8,7 @@ namespace shanks{ namespace algos{
 
 /**
  * @brief Shanks transformation for alternating series class template.
- *
+ * 
  * @tparam T Floating-point type for series elements (must satisfy Accepted)
  *           Represents numerical precision (float, double, long double)
  *           Used for all arithmetic operations and intermediate calculations
@@ -28,7 +28,7 @@ public:
 
 	/**
 	 * @brief Shanks transformation for alternating series function.
-	 * @authors Bolshakov M.P., Pashkov B.B.
+	 * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
 	 * @param n The number of terms in the partial sum to use for transformation
 	 *        Valid values: n >= order > 0, n > 0
 	 *        Higher values use more terms but may provide better acceleration

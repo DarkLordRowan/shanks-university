@@ -30,6 +30,8 @@ namespace shanks{ namespace algos{
   * - T operator()(K n) const: returns the n-th series term aₙ
   * - T S_n(K n) const: returns the n-th partial sum sₙ = a₀ + ... + aₙ
   *
+  * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+  * 
   * @tparam T Floating-point type for series elements (must satisfy std::floating_point)
   *           Represents numerical precision (float, double, long double)
   * @tparam K Unsigned integral type for indices and order (must satisfy std::unsigned_integral)

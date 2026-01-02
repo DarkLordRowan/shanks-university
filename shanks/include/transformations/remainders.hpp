@@ -31,8 +31,7 @@ namespace shanks{ namespace remainders{
   * - t_wave_type: ωₙ = ΔSₙ₊₁ (forward-shifted term difference)
   * - v_wave_type: ωₙ = (ΔSₙΔSₙ₊₁)/(ΔSₙ - ΔSₙ₊₁) (shifted v-variant)
   *
-  * @authors Bolshakov M.P.
-  * @edited by Kreynin R.G.
+  * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
   */
 enum remainder_type{
          u_type,

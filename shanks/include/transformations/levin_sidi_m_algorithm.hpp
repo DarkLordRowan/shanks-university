@@ -25,7 +25,7 @@ namespace shanks{ namespace algos{
  /**
   * @brief Levin-Sidi M-transformation class template.
   *
-  * @authors Yurov P.I., Bezzaborov A.A.
+  * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
   *
   * This class implements the Levin-Sidi M-transformation, which is particularly effective
   * for series that belong to the b(1)/LIN/FAC classes (factorial and linear convergence).

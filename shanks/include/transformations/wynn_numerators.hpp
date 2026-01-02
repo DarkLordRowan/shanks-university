@@ -13,7 +13,7 @@
  * Wynn, P. (1964). General Purpose Vector Epsilon Algorithm ALGOL Procedures.
  *   Numerische Mathematik, 6(1), 22-36.
  *
- * @authors Yurov P.I., Bezzaborov A.A.
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  */
 
 #include "../custom_concepts.hpp"

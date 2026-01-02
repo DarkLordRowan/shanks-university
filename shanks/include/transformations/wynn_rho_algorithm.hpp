@@ -4,7 +4,7 @@
 /**
  * @file wynn_rho_algorithm.hpp
  * @brief This file contains the declaration of the Wynn's Rho Algorithm class.
- * @authors Yurov P.I. Bezzaborov A.A.
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  *
  * For theory, see:
  * Wynn, P. (1956). On a device for computing the eₙ(Sₙ) transformation.

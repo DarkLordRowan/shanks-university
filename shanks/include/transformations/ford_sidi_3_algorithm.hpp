@@ -20,7 +20,7 @@ namespace shanks{ namespace algos{
 /**
  * @brief Ford-Sidi algorithm class template implementing an efficient extrapolation method.
  *
- * @authors Sharonov K.S.
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  *
  * This algorithm provides a more economical implementation compared to the standard E-algorithm
  * while maintaining mathematical equivalence. It is particularly effective for sequences

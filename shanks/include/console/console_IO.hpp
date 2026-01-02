@@ -13,7 +13,7 @@
 
 #include "console_effects.hpp"
 
-
+// Console input.
 template<typename InputType>
 struct console_IO{
 
@@ -24,8 +24,9 @@ struct console_IO{
 	}
 };
 
-//FOR STANDART
+// Values inputs for different precisions.
 
+// For standart cpp precisions.
 template<typename InputType>
 requires std::floating_point<InputType> || std::unsigned_integral<InputType> || std::is_enum<InputType>::value
 struct console_IO<InputType>{
@@ -33,15 +34,15 @@ struct console_IO<InputType>{
 	InputType inline static input(const std::string& var_name  = "x");
 };
 
-//FOR ARB PRECISION
+// For arb. precision.
 #ifdef INC_FPRECISION
 template<>
 struct console_IO<float_precision> {
 	float_precision inline static input(const std::string& var_name = "x");
 };
 
+// For complex precision.
 #ifdef INC_COMPLEXPRECISION
-//FOR COMPLEX PREC
 template<FloatLike InputType>
 struct console_IO<complex_precision<InputType>> {
 
@@ -49,8 +50,8 @@ struct console_IO<complex_precision<InputType>> {
 };
 #endif
 #endif
-//FOR INTERVAL PREC
 
+// For interval precision.
 #ifdef INC_INTERVALPRECISION
 template<FloatLike InputType>
 struct console_IO<interval<InputType>> {
@@ -58,6 +59,7 @@ struct console_IO<interval<InputType>> {
 };
 #endif
 
+// Processing console inputs for different cases.
 template<typename InputType>
 requires std::floating_point<InputType> || std::unsigned_integral<InputType> || std::is_enum<InputType>::value
 InputType inline console_IO<InputType>::input(const std::string& var_name){

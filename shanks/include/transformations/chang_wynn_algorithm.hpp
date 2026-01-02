@@ -21,7 +21,7 @@ namespace shanks{ namespace algos{
 /**
  * @brief Chang-Wynn algorithm class template implementing a hybrid acceleration method.
  *
- * @authors Kreinin R.G.
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  *
  * This algorithm combines Wynn's epsilon algorithm with modifications proposed by Chang
  * to improve numerical stability and convergence properties. It is particularly effective

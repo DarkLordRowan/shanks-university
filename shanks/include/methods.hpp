@@ -4,8 +4,7 @@
 
  /**
   * @brief Enum of transformation IDs
-  * @authors Bolshakov M.P.
-  * @edited by Kreynin R.G.
+  * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
 */
 namespace shanks{ namespace algos{
 enum class transformation_id_t {

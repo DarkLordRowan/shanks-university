@@ -22,7 +22,7 @@ namespace shanks{ namespace algos{
 /**
 * @brief Levin-Sidi S-transformation class template (Drummond's D-transformation).
 *
-* @authors Naumov A.
+* @authors Naumov A.U.
 *
 * This class implements the Levin-Sidi S-transformation,
 * which is particularly effective for series with specific asymptotic behaviors. The transformation

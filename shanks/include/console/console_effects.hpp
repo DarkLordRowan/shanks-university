@@ -5,7 +5,7 @@ enum class font_style{
 
 };
 
-// usefull constants
+// Usefull constants.
 #define BOLD            1m
 #define DIM             2m
 #define ITALIC          3m
@@ -18,6 +18,7 @@ enum class font_style{
 #include <cstdio>
 #include <iostream>
 
+// console_effects structure for a better output.
 struct console_effects{
 
 	unsigned short int foreground_color;

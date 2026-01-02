@@ -19,7 +19,7 @@
  * Then it prints out partial sums of first i terms of the series where i ranges from 1 to n (!)
  * After that it prints out transformed partial sum of first i terms of the series of order order
  * At last it prints out the difference between the two
- * @authors Bolshakov M.P.
+ * @authors Naumov A.U. , Lykov D.S., Kreynin R.G.
  * @tparam series_templ is the type of series whose convergence we accelerate, transform_type is the type of transformation we are using
  * @param n The number of terms
  * @param order The order of the transformation
@@ -60,7 +60,7 @@ void cmp_sum_and_transform(const K n, const K order,
 * At first it prints out the type of transformation, series that are being transformed, type of enumerating integer and type of series terms
 * Then it prints out terms from the first to nth of the series
 * At last it prints out terms from the first to nth of the transformed series
-* @authors Bolshakov M.P.
+* @authors Naumov A.U. , Lykov D.S.,  Kreynin R.G.
 * @tparam series_templ is the type of series whose convergence we accelerate, transform_type is the type of transformation we are using
 * @param n The number of terms
 * @param order The order of the transformation
@@ -163,7 +163,7 @@ inline series_result<T> jitter(
 * @brief Function that prints out the remainders
 * At first it prints out the type of transformation, series that are being transformed, type of enumerating integer and type of series terms
 * Then it prints out remainders of the series from 1 to n
-* @authors Bolshakov M.P.
+* @authors Naumov A.U. , Lykov D.S.,  Kreynin R.G.
 * @tparam series_templ is the type of series whose convergence we accelerate, transform_type is the type of transformation we are using
 * @param n The number of terms for the last remainder
 * @param order The order of the transformation
@@ -252,7 +252,7 @@ void cmp_transformations(const K n, const K order,
 
 /**
 * @brief Function that evaluates the time it takes to transform series
-* @authors Bolshakov M.P.
+* @authors Naumov A.U. , Lykov D.S.,  Kreynin R.G.
 * @tparam series_templ is the type of series whose convergence we accelerate, transform_type is the type of transformation we are using
 * @param n The number of terms for the last remainder
 * @param order The order of the transformation

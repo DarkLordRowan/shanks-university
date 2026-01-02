@@ -21,7 +21,7 @@ namespace shanks{ namespace algos{
 /**
  * @brief Wynn Epsilon Algorithm class template implementing the epsilon algorithm for series acceleration.
  *
- * @authors Pashkov B.B. (implementation), Wynn P. (algorithm)
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  *
  * This class implements the epsilon algorithm, a nonlinear transformation that accelerates
  * the convergence of slowly convergent series. The algorithm is particularly effective

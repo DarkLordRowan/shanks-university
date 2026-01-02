@@ -1,7 +1,3 @@
-// cpp
-//
-// Created by user on 03.10.2025.
-//
 #pragma once
 
 #include "../custom_concepts.hpp"
@@ -42,6 +38,8 @@ enum NoiseType {
 * This function generates uniform noise of complex-like type within the specified float-like range [inf, sup).
 * Uniform noise is evenly distributed across the specified range.
 * Real and imaginary parts are generated independently within the given range.
+*
+* @authors Naumov A.U., Lykov D.S., Kreynin R.G.
 *
 * @tparam CT Complex-like type for noise generation.
 * @tparam FT Float-like type for range specification.
@@ -144,6 +142,8 @@ T generate_uniform_noise(const T& inf, const T& sup, std::mt19937_64& rng) {
 * Normal (Gaussian) noise is distributed according to a normal distribution.
 * Noise is generated independently for real and imaginary parts using the specified mean and standard deviation.
 *
+* @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+*
 * @tparam CT Complex-like type for noise generation.
 * @tparam FT Float-like type for distribution parameters.
 *
@@ -175,6 +175,8 @@ CT generate_normal_noise(const FT& mean, const FT& std, std::mt19937_64& rng) {
 * This function generates normal (Gaussian) noise of complex-like type for the specified complex-like type params.
 * Normal (Gaussian) noise is distributed according to a normal distribution.
 * Noise is generated independently for real and imaginary parts using the specified real and imaginary parts of mean and standard deviation.
+*
+* @authors Naumov A.U., Lykov D.S., Kreynin R.G.
 *
 * @tparam T Complex-like type for noise generation.
 *
@@ -219,6 +221,8 @@ T generate_normal_noise(const T& mean, const T& std, std::mt19937_64& rng) {
  * Normal (Gaussian) noise is distributed according to a normal distribution.
  * Noise is generated using the specified mean and standard deviation.
  *
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+ * 
  * @tparam T Float-like type for noise generation.
  *
  * @param mean Mean of the normal (Gaussian) distribution.\n
@@ -250,6 +254,8 @@ T generate_normal_noise(const T& mean, const T& std, std::mt19937_64& rng) {
 * Noise is generated independently for real and imaginary parts using the specified lambda parameter.
 * Noise values are non-negative integers.
 *
+* @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+*
 * @tparam CT Complex-like type for noise generation.
 * @tparam FT Float-like type for lambda parameter.
 *
@@ -280,6 +286,8 @@ CT generate_poisson_noise(const FT& lambda, std::mt19937_64& rng) {
 * Noise is generated independently for real and imaginary parts using the specified real and imaginary parts of the lambda parameter.
 * Noise values are non-negative integers.
 *
+* @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+*
 * @tparam T Complex-like type for noise generation.
 *
 * @param lambda Complex lambda parameter of the Poisson distribution.\n
@@ -307,6 +315,8 @@ T generate_poisson_noise(const T& lambda, std::mt19937_64& rng) {
 * Poisson noise follows a Poisson distribution.
 * Noise is generated independently for real and imaginary parts using the specified real and imaginary parts of the lambda parameter.
 * Noise values are non-negative integers.
+*
+* @authors Naumov A.U., Lykov D.S., Kreynin R.G.
 *
 * @tparam T Complex-like type for noise generation.
 *
@@ -347,7 +357,6 @@ T generate_poisson_noise(const T& lambda, std::mt19937_64& rng) {
 
 /** @brief Class for generating noise and applying it to series results.
 * This class provides functionality to generate different types of noise
-* (uniform, normal, Poisson) and apply it to series results for jittering.
 * @tparam T Type of the series result elements.
 */
 template<AcceptedLike T>

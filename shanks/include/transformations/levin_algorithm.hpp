@@ -24,7 +24,7 @@ namespace shanks{ namespace algos{
  /**
   * @brief Levin Algorithm class template implementing various Levin transformations.
   *
-  * @authors Kreinin R.G., Trudolyubov N.A.
+  * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
   *
   * This class implements the Levin transformation for series acceleration, which is particularly
   * effective for sequences with specific asymptotic behaviors. The algorithm comes in several

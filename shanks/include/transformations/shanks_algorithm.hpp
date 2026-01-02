@@ -5,6 +5,7 @@
  * @file shanks_algorithm.hpp
  * @brief This file contains the definition of the Shanks transformation class
  *        and specialization of this transformation for alternating series.
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  */
 
  // For theory, see:
