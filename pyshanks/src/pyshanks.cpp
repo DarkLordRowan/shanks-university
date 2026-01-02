@@ -35,7 +35,6 @@ PYBIND11_MODULE(pyshanks, m) {
         float,
         double,
         long double
-        //mpfr::mpreal
     >;
 
     bind_comlex_types<real_types, 0, 3>(m);
@@ -45,11 +44,9 @@ PYBIND11_MODULE(pyshanks, m) {
         std::tuple<       float, size_t>,
         std::tuple<      double, size_t>,
         std::tuple< long double, size_t>,
-        //std::tuple<mpfr::mpreal, size_t>,
         std::tuple<std::complex<float       >, size_t>,
         std::tuple<std::complex<double      >, size_t>,
         std::tuple<std::complex<long double >, size_t>
-        //std::tuple<std::complex<mpfr::mpreal>, size_t>
     >;
 
     bind_all_types<types_to_bind>(m);

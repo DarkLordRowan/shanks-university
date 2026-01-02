@@ -118,9 +118,7 @@ constinit const char* available_types[OVERALL_ARB_TYPES] = {
     "F32",
     "F64",
     "FLong",
-    //"Arb",
     "CF32",
     "CF64",
     "CFLong",
-    //"CArb"
 };
