@@ -1,10 +1,6 @@
 #ifndef CONSOLE_EFFECTS_HPP
 #define CONSOLE_EFFECTS_HPP
 
-enum class font_style{
-
-};
-
 /**
  * @file console_effects.hpp
  * @brief This file contains utils for work with console.

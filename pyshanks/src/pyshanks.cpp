@@ -2,6 +2,7 @@
 /**
  * @file pyshanks.cpp
  * @brief pybind11 bindings with support for double and arbitrary-precision float_precision
+ * @authors Sobolev Y. ,Naumov A.U.
 */
 
 #include <pybind11/operators.h>
