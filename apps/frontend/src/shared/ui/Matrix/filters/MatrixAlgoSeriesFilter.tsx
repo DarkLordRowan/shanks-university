@@ -152,7 +152,7 @@ function applySeriesPrecisionFilter(
     selectedPrecisions: Set<string>,
     mode: FilterMode
 ): Series[] {
-    if (selectedPrecisions.size === 0) return list;
+    if (selectedPrecisions.size === 0) return [];
     if (mode === "whitelist") return list.filter((s) => selectedPrecisions.has(s.precision ?? ""));
     return list.filter((s) => !selectedPrecisions.has(s.precision ?? ""));
 }
@@ -397,7 +397,7 @@ export function MatrixAlgoSeriesFilter(props: MatrixAlgoSeriesFilterProps) {
             if (s.accel.selectedGroupKeys.size > 0) return s;
             return {
                 ...s,
-                accel: { ...s.accel, selectedGroupKeys: new Set(accelGroups.map((g) => g.key)) },
+                accel: { ...s.accel, selectedGroupKeys: new Set() },
             };
         });
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -409,7 +409,7 @@ export function MatrixAlgoSeriesFilter(props: MatrixAlgoSeriesFilterProps) {
             if (s.series.selectedGroupKeys.size > 0) return s;
             return {
                 ...s,
-                series: { ...s.series, selectedGroupKeys: new Set(seriesGroups.map((g) => g.key)) },
+                series: { ...s.series, selectedGroupKeys: new Set() },
             };
         });
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -421,7 +421,7 @@ export function MatrixAlgoSeriesFilter(props: MatrixAlgoSeriesFilterProps) {
             if (s.series.precisionMode !== "whitelist") return s;
             if (s.series.selectedPrecisions.size > 0) return s;
             if (precisionOptions.length === 0) return s;
-            return { ...s, series: { ...s.series, selectedPrecisions: new Set(precisionOptions) } };
+            return { ...s, series: { ...s.series, selectedPrecisions: new Set() } };
         });
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [precisionOptions.length]);

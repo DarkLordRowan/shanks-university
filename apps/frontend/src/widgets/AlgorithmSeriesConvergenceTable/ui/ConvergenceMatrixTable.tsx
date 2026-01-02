@@ -122,7 +122,7 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
                                 className="whitespace-nowrap"
                                 title="Если число расхождений ≤ Y, ошибка считается монотонной"
                             >
-                                max deviations:
+                                max violations:
                             </span>
                             <input
                                 type="range"
