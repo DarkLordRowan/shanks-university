@@ -1,5 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
-import * as XLSX from "xlsx-js-style";
+import React, { useEffect, useState } from "react";
 import {
     type ConvergenceMatrix,
     type Experiment,
@@ -9,7 +8,10 @@ import {
 } from "../model/types";
 import {
     formatMonotonicityShort,
+    formatMonotonicityWithMax,
     formatSideShort,
+    formatSideWithMax,
+    getConvergenceCellDomId,
     nonNullEntries,
 } from "../model/convergenceUtils";
 import { MatrixAlgorithmSeries } from "@/shared/ui/Matrix/MatrixAlgorithmSeries.tsx";
@@ -21,13 +23,6 @@ interface ConvergenceMatrixTableProps {
     selectedCell: SelectedCell | null;
     onCellSelect: (cell: SelectedCell) => void;
 }
-
-/** Единый способ построить id для DOM-элемента ячейки. */
-export function getConvergenceCellDomId(accelId: string, seriesId: string): string {
-    return `conv-cell-${accelId}::${seriesId}`;
-}
-
-type ColorClass = "green" | "blue" | "yellow" | "red" | "neutral";
 
 function isMonotone(mon: MonotonicityType): boolean {
     return (
@@ -45,10 +40,10 @@ function describeClass(side: SideType, mon: MonotonicityType): string {
     if (side === "two_sided" && mono) return "двусторонний и монотонный";
     if (side === "two_sided" && !mono) return "двусторонний и немонотонный";
 
-    if (side === "no_limit") return "предел не просматривается";
-    if (mon === "not_enough_data") return "недостаточно данных по ошибке";
+    if (side === "unknown") return "недостаточно данных";
+    if (mon === "unknown") return "недостаточно данных";
 
-    return "тип не определён";
+    return "недостаточно данных";
 }
 
 function formatIntervals(ns: number[], maxRanges = 5): string {
@@ -86,7 +81,7 @@ function formatIntervals(ns: number[], maxRanges = 5): string {
 function getCellColorClass(side: SideType, mon: MonotonicityType, selected: boolean): string {
     const sel = selected ? " ring-2 ring-accent ring-offset-1 ring-offset-surface" : "";
 
-    if (side === "no_limit" || mon === "not_enough_data" || mon === "no_limit") {
+    if (side === "unknown" || mon === "unknown") {
         return "border-border/60 text-textDim/70 bg-surface/30 hover:bg-surface/40" + sel;
     }
 
@@ -109,21 +104,6 @@ function getCellColorClass(side: SideType, mon: MonotonicityType, selected: bool
     return "border-border text-textDim bg-surface/40 hover:bg-surface/50" + sel;
 }
 
-function classifyColor(side: SideType, mon: MonotonicityType): ColorClass {
-    if (side === "no_limit" || mon === "not_enough_data" || mon === "no_limit") {
-        return "neutral";
-    }
-
-    const mono = isMonotone(mon);
-
-    if (side === "one_sided" && mono) return "green";
-    if (side === "one_sided" && !mono) return "blue";
-    if (side === "two_sided" && mono) return "yellow";
-    if (side === "two_sided" && !mono) return "red";
-
-    return "neutral";
-}
-
 export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
     experiment,
     matrix,
@@ -131,256 +111,18 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
     selectedCell,
     onCellSelect,
 }) => {
-    const rawSeriesList = matrix.seriesList ?? [];
-    const algoList = matrix.algoList ?? [];
-    const cells = matrix.cells ?? {};
-
-    const thresholds = useMemo(() => {
-        let maxSignChanges = 0;
-        let maxViolations = 0;
-
-        for (const key of Object.keys(cells)) {
-            const analysis = cells[key];
-            if (!analysis) continue;
-
-            const sc =
-                typeof analysis.signChangesCount === "number" ? analysis.signChangesCount : 0;
-            if (sc > maxSignChanges) maxSignChanges = sc;
-
-            const violationsRaw =
-                typeof analysis.growthViolationsCount === "number"
-                    ? analysis.growthViolationsCount
-                    : 0;
-            if (violationsRaw > maxViolations) maxViolations = violationsRaw;
-        }
-
-        return { maxSignChanges, maxViolations };
-    }, [cells]);
-
     const [maxSignChangesForOneSided, setMaxSignChangesForOneSided] = useState<number>(0);
     const [maxViolationsForMonotone, setMaxViolationsForMonotone] = useState<number>(0);
 
     useEffect(() => {
         setMaxSignChangesForOneSided(0);
         setMaxViolationsForMonotone(0);
-    }, [matrix]);
-
-    const allPrecisions = useMemo(() => {
-        const set = new Set<string>();
-        for (const s of rawSeriesList) {
-            if (s.precision != null) set.add(String(s.precision));
-        }
-        return Array.from(set).sort();
-    }, [rawSeriesList]);
-
-    const [precisionFilter, setPrecisionFilter] = useState<"ALL" | string>("ALL");
-
-    const seriesList = useMemo(() => {
-        if (precisionFilter === "ALL") return rawSeriesList;
-        return rawSeriesList.filter((s) => String(s.precision) === precisionFilter);
-    }, [rawSeriesList, precisionFilter]);
-
-    const signChangesSliderMax = thresholds.maxSignChanges > 0 ? thresholds.maxSignChanges : 5;
-    const violationsSliderMax = thresholds.maxViolations > 0 ? thresholds.maxViolations : 5;
-
-    const buildWorkbook = useCallback((): XLSX.WorkBook => {
-        const allSeries = seriesList;
-        const allAlgos = algoList;
-
-        const wb = XLSX.utils.book_new();
-
-        if (!allSeries.length || !allAlgos.length) {
-            const wsEmpty = XLSX.utils.aoa_to_sheet([["Нет данных для экспорта"]]);
-            XLSX.utils.book_append_sheet(wb, wsEmpty, "convergence");
-            return wb;
-        }
-
-        // ---------- заголовок основной матрицы ----------
-        const headerRow: (string | number)[] = ["Алгоритм \\ Ряд"];
-        for (const s of allSeries) {
-            headerRow.push(`${s.seriesName} (x=${s.xLabel}, prec=${s.precision ?? "∅"})`);
-        }
-
-        const wsData: (string | number | null)[][] = [];
-        wsData.push(headerRow);
-
-        // сетка цветов для последующего проставления стилей
-        const colorGrid: ColorClass[][] = [];
-        colorGrid.push(new Array(headerRow.length).fill("neutral"));
-
-        // статистика по строкам и столбцам
-        const rowStats: Array<{ green: number; blue: number; yellow: number; red: number }> =
-            allAlgos.map(() => ({ green: 0, blue: 0, yellow: 0, red: 0 }));
-
-        const colStats: Array<{ green: number; blue: number; yellow: number; red: number }> =
-            allSeries.map(() => ({ green: 0, blue: 0, yellow: 0, red: 0 }));
-
-        // ---------- строки по алгоритмам ----------
-        allAlgos.forEach((algo, algoIdx) => {
-            const row: (string | number | null)[] = [];
-
-            const algoParts: string[] = [];
-            algoParts.push(algo.algorithmName);
-            if (algo.m != null) algoParts.push(`m=${algo.m}`);
-
-            const algoArgsEntries = nonNullEntries(algo.algorithmArgs);
-            if (algoArgsEntries.length > 0) {
-                const argsStr = algoArgsEntries
-                    .sort(([a], [b]) => a.localeCompare(b))
-                    .map(([k, v]) => `${k}=${v}`)
-                    .join(", ");
-                algoParts.push(`{${argsStr}}`);
-            }
-
-            row.push(algoParts.join(" "));
-
-            const colorRow: ColorClass[] = [];
-            colorRow.push("neutral"); // первая колонка
-
-            allSeries.forEach((s, seriesIdx) => {
-                const key = `${algo.key}::${s.key}`;
-                const analysis = cells[key];
-
-                if (!analysis) {
-                    row.push(null);
-                    colorRow.push("neutral");
-                    return;
-                }
-
-                const rawSide = analysis.side;
-                const rawMon = analysis.monotonicity;
-
-                const signChanges =
-                    typeof analysis.signChangesCount === "number" ? analysis.signChangesCount : 0;
-
-                const violationsCount =
-                    typeof analysis.growthViolationsCount === "number"
-                        ? analysis.growthViolationsCount
-                        : 0;
-
-                let effectiveSide: SideType = rawSide;
-                if (rawSide !== "no_limit") {
-                    effectiveSide =
-                        signChanges <= maxSignChangesForOneSided ? "one_sided" : "two_sided";
-                }
-
-                let effectiveMon: MonotonicityType = rawMon;
-                if (rawMon !== "no_limit" && rawMon !== "not_enough_data") {
-                    if (violationsCount <= maxViolationsForMonotone) {
-                        if (rawMon === "has_growth") effectiveMon = "non_increasing_error";
-                    }
-                }
-
-                const sideShort = formatSideShort(effectiveSide);
-                const monShort = formatMonotonicityShort(effectiveMon);
-
-                const cellText = [
-                    `${sideShort} | ${monShort}`,
-                    `k=${analysis.stepsAnalyzed}`,
-                    `sign_changes=${analysis.signChangesCount ?? "∅"}`,
-                    `growth_violations=${analysis.growthViolationsCount ?? "∅"}`,
-                ].join(" / ");
-
-                row.push(cellText);
-
-                const colorClass = classifyColor(effectiveSide, effectiveMon);
-                colorRow.push(colorClass);
-
-                if (colorClass !== "neutral") {
-                    rowStats[algoIdx][colorClass]++;
-                    colStats[seriesIdx][colorClass]++;
-                }
-            });
-
-            wsData.push(row);
-            colorGrid.push(colorRow);
-        });
-
-        // ---------- основная таблица ----------
-        const ws = XLSX.utils.aoa_to_sheet(wsData);
-
-        const colorStyles: Record<ColorClass, any> = {
-            neutral: {},
-            green: { fill: { patternType: "solid", fgColor: { rgb: "C6EFCE" } } },
-            blue: { fill: { patternType: "solid", fgColor: { rgb: "C6D9F1" } } },
-            yellow: { fill: { patternType: "solid", fgColor: { rgb: "FFF2CC" } } },
-            red: { fill: { patternType: "solid", fgColor: { rgb: "F8CBAD" } } },
-        };
-
-        for (let r = 1; r < colorGrid.length; r++) {
-            const rowColors = colorGrid[r];
-            for (let c = 1; c < rowColors.length; c++) {
-                const colorClass = rowColors[c];
-                if (colorClass === "neutral") continue;
-
-                const cellAddress = XLSX.utils.encode_cell({ r, c });
-                const cell = ws[cellAddress];
-                if (!cell) continue;
-
-                cell.s = {
-                    ...(cell.s || {}),
-                    ...colorStyles[colorClass],
-                };
-            }
-        }
-
-        // ---------- лист статистики по строкам ----------
-        const rowStatsData: (string | number)[][] = [];
-        rowStatsData.push([
-            "Алгоритм",
-            "green (одностор.+монотонн.)",
-            "blue (одностор.+немонотонн.)",
-            "yellow (двустор.+монотонн.)",
-            "red (двустор.+немонотонн.)",
-            "total",
-        ]);
-
-        allAlgos.forEach((algo, i) => {
-            const st = rowStats[i];
-            const total = st.green + st.blue + st.yellow + st.red;
-
-            const algoParts: string[] = [];
-            algoParts.push(algo.algorithmName);
-            if (algo.m != null) algoParts.push(`m=${algo.m}`);
-
-            rowStatsData.push([algoParts.join(" "), st.green, st.blue, st.yellow, st.red, total]);
-        });
-
-        const wsRowStats = XLSX.utils.aoa_to_sheet(rowStatsData);
-
-        // ---------- лист статистики по столбцам ----------
-        const colStatsData: (string | number)[][] = [];
-        colStatsData.push([
-            "Ряд",
-            "green (одностор.+монотонн.)",
-            "blue (одностор.+немонотонн.)",
-            "yellow (двустор.+монотонн.)",
-            "red (двустор.+немонотонн.)",
-            "total",
-        ]);
-
-        allSeries.forEach((s, j) => {
-            const st = colStats[j];
-            const total = st.green + st.blue + st.yellow + st.red;
-
-            const seriesLabel = `${s.seriesName} (x=${s.xLabel}, prec=${s.precision ?? "∅"})`;
-            colStatsData.push([seriesLabel, st.green, st.blue, st.yellow, st.red, total]);
-        });
-
-        const wsColStats = XLSX.utils.aoa_to_sheet(colStatsData);
-
-        XLSX.utils.book_append_sheet(wb, ws, "convergence");
-        XLSX.utils.book_append_sheet(wb, wsRowStats, "row_stats");
-        XLSX.utils.book_append_sheet(wb, wsColStats, "col_stats");
-
-        return wb;
-    }, [algoList, cells, maxSignChangesForOneSided, maxViolationsForMonotone, seriesList]);
+    }, [experiment]);
 
     return (
         <MatrixAlgorithmSeries
             accelList={experiment?.accelList ?? []}
             seriesList={experiment?.seriesList ?? []}
-            resetKey={`""::${precisionFilter}`}
             maxColsPerPage={maxSeries && maxSeries > 0 ? maxSeries : 0}
             thClassName="px-0 py-0"
             tdClassName="px-0 py-0"
@@ -389,52 +131,28 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
             export={{
                 fileBaseName: "convergence-matrix",
                 enablePng: true,
-                enableXlsx: true,
-                buildWorkbook: () => buildWorkbook(),
+                enableXlsx: false,
             }}
             renderTitle={() => "Монотонность и направление: алгоритмы × ряды"}
             renderSubtitle={() => (
                 <>
-                    Алгоритмы: {algoList.length} · Ряды: {seriesList.length}
-                    {precisionFilter !== "ALL"
-                        ? ` (из ${rawSeriesList.length}, precision=${precisionFilter})`
-                        : ""}
+                    Алгоритмы: {matrix.algoList.length} · Ряды: {matrix.seriesList.length}
                 </>
             )}
             renderHeaderRight={() => (
                 <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-1 text-[10px]">
-                        <span>precision:</span>
-                        <select
-                            className="rounded border border-border bg-surface px-2 py-[2px]"
-                            value={precisionFilter}
-                            onChange={(e) =>
-                                setPrecisionFilter(
-                                    e.target.value === "ALL" ? "ALL" : e.target.value
-                                )
-                            }
-                        >
-                            <option value="ALL">Все</option>
-                            {allPrecisions.map((p) => (
-                                <option key={p} value={p}>
-                                    {p}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-
                     <div className="flex flex-col gap-[2px] text-[10px]">
                         <div className="flex items-center gap-1">
                             <span
                                 className="whitespace-nowrap"
-                                title="Если число смен знака ≤ X, пара считается односторонней"
+                                title="Максимальное количество смен знака разности Aₖ - lim, при котором приближение считается односторонним. Если смен знака больше этого значения, то считается двухсторонним."
                             >
                                 max sign changes:
                             </span>
                             <input
                                 type="range"
                                 min={0}
-                                max={signChangesSliderMax}
+                                max={50}
                                 value={maxSignChangesForOneSided}
                                 onChange={(e) =>
                                     setMaxSignChangesForOneSided(Number(e.target.value))
@@ -449,14 +167,14 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
                         <div className="flex items-center gap-1">
                             <span
                                 className="whitespace-nowrap"
-                                title="Если число расхождений ≤ Y, ошибка считается монотонной"
+                                title="Максимальное количество увеличений ошибки |Aₖ - lim|, при котором приближение всё ещё считается монотонным (неубывающим или невозрастающим). Если увеличений больше, то ошибка считается случайной (random)."
                             >
-                                max deviations:
+                                max violations:
                             </span>
                             <input
                                 type="range"
                                 min={0}
-                                max={violationsSliderMax}
+                                max={50}
                                 value={maxViolationsForMonotone}
                                 onChange={(e) =>
                                     setMaxViolationsForMonotone(Number(e.target.value))
@@ -471,12 +189,12 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
                 </div>
             )}
             renderCell={(row, col) => {
-                const algo = algoList.find((a) => a.key === row.id);
-                const s = seriesList.find((s) => s.key === col.id);
+                const algo = matrix.algoList.find((a) => a.key === row.id);
+                const s = matrix.seriesList.find((s) => s.key === col.id);
                 if (!algo || !s) return null;
 
                 const key = `${algo.key}::${s.key}`;
-                const analysis = cells[key];
+                const analysis = matrix.cells[key];
 
                 if (!analysis) {
                     return (
@@ -486,32 +204,18 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
                     );
                 }
 
-                const rawSide = analysis.side;
-                const rawMon = analysis.monotonicity;
+                const side = formatSideWithMax(analysis, maxSignChangesForOneSided);
+                const monotonicity = formatMonotonicityWithMax(analysis, maxViolationsForMonotone);
 
-                const signChanges =
-                    typeof analysis.signChangesCount === "number" ? analysis.signChangesCount : 0;
+                const sideShort = formatSideShort(side);
 
-                const violationsCount =
-                    typeof analysis.growthViolationsCount === "number"
-                        ? analysis.growthViolationsCount
-                        : 0;
+                const monShort = formatMonotonicityShort(monotonicity);
 
-                let effectiveSide: SideType = rawSide;
-                if (rawSide !== "no_limit") {
-                    effectiveSide =
-                        signChanges <= maxSignChangesForOneSided ? "one_sided" : "two_sided";
-                }
+                const isSelected =
+                    selectedCell?.seriesId === s.key && selectedCell?.accelId === algo.key;
 
-                let effectiveMon: MonotonicityType = rawMon;
-                if (rawMon !== "no_limit" && rawMon !== "not_enough_data") {
-                    if (violationsCount <= maxViolationsForMonotone) {
-                        if (rawMon === "has_growth") effectiveMon = "non_increasing_error";
-                    }
-                }
-
-                const sideShort = formatSideShort(effectiveSide);
-                const monShort = formatMonotonicityShort(effectiveMon);
+                const colorClass = getCellColorClass(side, monotonicity, isSelected);
+                const domId = getConvergenceCellDomId(algo.key, s.key);
 
                 const titleLines: string[] = [];
                 titleLines.push(`Ряд: ${s.seriesName} (x=${s.xLabel}, prec=${s.precision})`);
@@ -529,37 +233,27 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
                 if (algo.argsSummary) titleLines.push(`  (${algo.argsSummary})`);
                 if (algoEntries.length > 0 || algo.argsSummary) titleLines.push("");
 
-                titleLines.push(`Класс: ${describeClass(effectiveSide, effectiveMon)}`);
+                titleLines.push(`Класс: ${describeClass(side, monotonicity)}`);
 
                 const signNsText =
                     analysis.signChangeNs && analysis.signChangeNs.length > 0
                         ? formatIntervals(analysis.signChangeNs)
-                        : analysis.firstSignChangeN != null
-                          ? String(analysis.firstSignChangeN)
-                          : "—";
+                        : "—";
 
                 const growthNsText =
-                    analysis.growthNs && analysis.growthNs.length > 0
-                        ? formatIntervals(analysis.growthNs)
-                        : analysis.firstGrowthN != null
-                          ? String(analysis.firstGrowthN)
-                          : "—";
+                    analysis.violationsNs && analysis.violationsNs.length > 0
+                        ? formatIntervals(analysis.violationsNs)
+                        : "—";
 
                 titleLines.push(
                     `Число смен знака: ${analysis.signChangesCount}, ns: ${signNsText}`
                 );
                 titleLines.push(
-                    `Число роста |Aₙ−lim|: ${analysis.growthViolationsCount}, ns: ${growthNsText}`
+                    `Число расхождений |Aₙ−lim|: ${analysis.violationsCount}, ns: ${growthNsText}`
                 );
                 titleLines.push(`Пар (n−1,n) в анализе: ${analysis.stepsAnalyzed}`);
                 titleLines.push("");
                 titleLines.push("Клик — детальный график.");
-
-                const isSelected =
-                    selectedCell?.seriesId === s.key && selectedCell?.accelId === algo.key;
-
-                const colorClass = getCellColorClass(effectiveSide, effectiveMon, isSelected);
-                const domId = getConvergenceCellDomId(algo.key, s.key);
 
                 return (
                     <div

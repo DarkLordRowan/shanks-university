@@ -8,15 +8,16 @@ import type {
     AccelArgs,
 } from "@/entities/experiment/model/experiment";
 
-export type SideType = "one_sided" | "two_sided" | "unknown" | "no_limit";
+export type SideType = "one_sided" | "two_sided" | "unknown";
 
 export type MonotonicityType =
     | "strict_decreasing_error"
     | "non_increasing_error"
     | "constant_error"
-    | "has_growth"
-    | "not_enough_data"
-    | "no_limit";
+    | "unknown"
+    | "strict_increasing_error"
+    | "non_decreasing_error"
+    | "random_error";
 
 export interface ConvergenceAnalysis {
     seriesId: string;
@@ -25,21 +26,15 @@ export interface ConvergenceAnalysis {
     side: SideType;
     monotonicity: MonotonicityType;
 
-    signChangesCount: number;
-    firstSignChangeN: number | null;
-    firstGrowthN: number | null;
-
-    /** Число шагов, на которых |Aₙ − lim| выросло относительно предыдущего */
-    growthViolationsCount: number;
-
-    /** Число проанализированных пар (n-1, n), где обе ошибки корректны */
     stepsAnalyzed: number;
 
-    /** Шаги, на которых изменился знак ошибки */
+    signChangesCount: number;
+
+    violationsCount: number;
+
     signChangeNs: number[];
 
-    /** Шаги, на которых ошибка по норме выросла */
-    growthNs: number[];
+    violationsNs: number[];
 }
 
 export type SeriesKey = string;
@@ -85,8 +80,6 @@ export interface DetailPoint {
 }
 
 export interface SelectedDetail {
-    seriesInfo: SeriesInfo | null;
-    algoInfo: AlgoInfo | null;
     series: Series | null;
     accel: Accel | null;
     analysis: ConvergenceAnalysis | null;

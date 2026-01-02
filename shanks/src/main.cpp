@@ -21,6 +21,10 @@
 int main()
 {
 
+	for(const auto& x : shanks::series::erf_series<mpfr::mpreal, size_t>().generate_series(mpfr::mpreal(1, mpfr::digits2bits(1000)), 1000).Sn){
+		std::cout << utils::to_string(x) << "\n";
+	}
+
     while(true){
 		try
 		{

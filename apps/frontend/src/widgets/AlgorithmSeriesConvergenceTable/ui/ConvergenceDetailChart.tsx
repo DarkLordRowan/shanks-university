@@ -10,12 +10,12 @@ interface ConvergenceDetailChartProps {
 }
 
 export const ConvergenceDetailChart: React.FC<ConvergenceDetailChartProps> = ({ detail }) => {
-    const { seriesInfo, algoInfo, analysis, limit, points } = detail;
+    const { series, accel, analysis, limit, points } = detail;
 
     // Глобальный переключатель: использовать модуль или знак
     const [useAbs, setUseAbs] = useState<boolean>(true);
 
-    if (!seriesInfo || !algoInfo || !analysis) {
+    if (!series || !accel || !analysis) {
         return null;
     }
 
@@ -29,31 +29,21 @@ export const ConvergenceDetailChart: React.FC<ConvergenceDetailChartProps> = ({ 
                     <div className="text-sm font-semibold text-textDim">
                         Детальный график сходимости
                     </div>
-                    <div className="mt-1 space-y-0.5 text-[11px] text-textDim/80">
-                        <div>
-                            Ряд: {seriesInfo.seriesName}, x={seriesInfo.xLabel}, prec=
-                            {seriesInfo.precision}
-                        </div>
-                        <div>
-                            Алгоритм: {algoInfo.algorithmName}
-                            {algoInfo.m != null ? `, m=${algoInfo.m}` : ""}
-                        </div>
-                        {algoInfo.argsSummary && <div>Аргументы: {algoInfo.argsSummary}</div>}
-                    </div>
+                    {/*<div className="mt-1 space-y-0.5 text-[11px] text-textDim/80">*/}
+                    {/*    <div>*/}
+                    {/*        Ряд: {seriesInfo.seriesName}, x={seriesInfo.xLabel}, prec=*/}
+                    {/*        {seriesInfo.precision}*/}
+                    {/*    </div>*/}
+                    {/*    <div>*/}
+                    {/*        Алгоритм: {algoInfo.algorithmName}*/}
+                    {/*        {algoInfo.m != null ? `, m=${algoInfo.m}` : ""}*/}
+                    {/*    </div>*/}
+                    {/*    {algoInfo.argsSummary && <div>Аргументы: {algoInfo.argsSummary}</div>}*/}
+                    {/*</div>*/}
                 </div>
                 <div className="space-y-1 text-right text-[11px] text-textDim/80">
                     <div>
                         Тип: {shortSide} | {shortMon}
-                    </div>
-                    <div>
-                        Смен знака: {analysis.signChangesCount}
-                        {analysis.firstSignChangeN != null
-                            ? `, первая при n=${analysis.firstSignChangeN}`
-                            : ""}
-                    </div>
-                    <div>
-                        Первый рост ошибки:{" "}
-                        {analysis.firstGrowthN != null ? `n=${analysis.firstGrowthN}` : "не был"}
                     </div>
                     <div>Сравнено шагов (пар): {analysis.stepsAnalyzed}</div>
 

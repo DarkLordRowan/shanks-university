@@ -1,0 +1,24 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "vizr"
+version = "0.1.0"
+description = "A high-performance parquet data visualizer (Python version)"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "polars",
+    "pyarrow",
+    "pyqt6",
+    "pyqtgraph",
+    "numpy",
+    "pandas",
+]
+
+[project.scripts]
+vizr = "vizr.main:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["vizr"]
