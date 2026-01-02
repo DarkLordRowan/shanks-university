@@ -2,10 +2,12 @@
 #define METHODS_HPP
 #pragma once
 
- /**
-  * @brief Enum of transformation IDs
-  * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
-*/
+/**
+ * @file methods.hpp
+ * @brief This file contains the enum for transformations.
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+ */
+
 namespace shanks{ namespace algos{
 enum class transformation_id_t {
 	        		     null_transformation_id,

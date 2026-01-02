@@ -5,6 +5,12 @@ enum class font_style{
 
 };
 
+/**
+ * @file console_effects.hpp
+ * @brief This file contains utils for work with console.
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+ */
+
 // Usefull constants.
 #define BOLD            1m
 #define DIM             2m
@@ -18,7 +24,7 @@ enum class font_style{
 #include <cstdio>
 #include <iostream>
 
-// console_effects structure for a better output.
+// Console_effects structure for a better output.
 struct console_effects{
 
 	unsigned short int foreground_color;

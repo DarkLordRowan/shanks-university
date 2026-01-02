@@ -1,5 +1,11 @@
 #include "../../include/interfaces/series_info.hpp"
 
+/**
+ * @file series_info.cpp
+ * @brief This file contains the information about all series.
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+ */
+
 ISeriesInfo::~ISeriesInfo() {}
 
 shanks::series::series_id_t                                                  Abs_sin_x_minus_2_div_piSeriesInfo::getId() const { return shanks::series::series_id_t::abs_sin_x_minus_2_div_pi_series_id; }

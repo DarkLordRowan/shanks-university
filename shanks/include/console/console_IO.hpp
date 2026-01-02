@@ -13,6 +13,12 @@
 
 #include "console_effects.hpp"
 
+/**
+ * @file console_IO.hpp
+ * @brief This file contains console functions for different types of precisions.
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+ */
+
 // Console input.
 template<typename InputType>
 struct console_IO{
@@ -23,8 +29,6 @@ struct console_IO{
 		return x;
 	}
 };
-
-// Values inputs for different precisions.
 
 // For standart cpp precisions.
 template<typename InputType>

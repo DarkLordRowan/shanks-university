@@ -6,6 +6,12 @@
 
 
 /**
+ * @file series_base.hpp
+ * @brief This file contains the information about all tranfromations.
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+ */
+
+/**
  * @brief Interface for transformation information
  */
 class ITransformationInfo {

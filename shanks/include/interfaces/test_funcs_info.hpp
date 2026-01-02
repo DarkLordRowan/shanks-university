@@ -3,6 +3,13 @@
 
 #include <string>
 
+
+/**
+ * @file test_funcs_info.hpp
+ * @brief This file contains the information about all testing functions.
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+ */
+
 /**
  * @brief Enum of testing functions IDs
  */

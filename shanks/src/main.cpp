@@ -10,6 +10,14 @@
 #include "../include/filters/savgol.hpp"
 #include "../include/filters/kolzur.hpp"
 
+
+/**
+ * @file main.cpp
+ * @brief Main file for launching application.
+ * 
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+ */
+
 int main()
 {
 

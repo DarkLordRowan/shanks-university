@@ -1,5 +1,12 @@
 #include "../../include/interfaces/transformations_info.hpp"
 
+
+/**
+ * @file tranformations_info.cpp
+ * @brief This file contains the information about all tranfromations.
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+ */
+
 ITransformationInfo::~ITransformationInfo() {}
 
 shanks::algos::transformation_id_t          AndersonAccelerationAlgorithmInfo::getId() const {return shanks::algos::transformation_id_t::anderson_acceleration_algorithm_id;}

@@ -1,6 +1,7 @@
 /**
  * @file test_functions.h
  * @brief This file contains the testing functions
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  */
 
 #pragma once
@@ -19,7 +20,7 @@
  * Then it prints out partial sums of first i terms of the series where i ranges from 1 to n (!)
  * After that it prints out transformed partial sum of first i terms of the series of order order
  * At last it prints out the difference between the two
- * @authors Naumov A.U. , Lykov D.S., Kreynin R.G.
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  * @tparam series_templ is the type of series whose convergence we accelerate, transform_type is the type of transformation we are using
  * @param n The number of terms
  * @param order The order of the transformation

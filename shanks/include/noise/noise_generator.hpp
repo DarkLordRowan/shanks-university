@@ -14,6 +14,12 @@
 
 #define pseudo_random_seed (std::chrono::system_clock::now().time_since_epoch().count() + std::rand())
 
+/**
+ * @file noise_generator.hpp
+ * @brief This file contains the generator of noise.
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+ */
+
 
 /**
 * @brief Enum of noise types

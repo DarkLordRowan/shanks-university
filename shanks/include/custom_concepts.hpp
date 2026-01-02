@@ -2,6 +2,13 @@
 #define CUSTOM_CONCEPTS_HPP
 #pragma once
 
+/**
+ * @file custom_concepts.cpp
+ * @brief This file contains the information about custom concepts.
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+ */
+
+
 #ifndef __MPREAL_H__
     #include "../libs/mpfr/mpreal.h"
 #endif

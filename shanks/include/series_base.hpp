@@ -14,6 +14,13 @@
 #include "series_iterators/series_iterators.hpp"
 #include "utils.hpp"
 
+
+/**
+ * @file series_base.hpp
+ * @brief This file contains the base for all series.
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+ */
+
 namespace shanks { namespace series{
 
 /**
@@ -131,7 +138,7 @@ inline std::unique_ptr<shanks::iters::series_base_iterator<T, K>> create_iterato
 
  /**
  * @brief Abstract class for series
- * @authors Bolshakov M.P.
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  * @tparam T The type of the elements in the series, K The type of enumerating integer
  */
 template <AcceptedLike T, UnsignedIntLike K>
@@ -141,7 +148,7 @@ public:
 
 	/**
 	* @brief Parameterized constructor to initialize the series with function argument
-	* @authors Bolshakov M.P.
+	* @authors Naumov A.U., Lykov D.S., Kreynin R.G.
 	* @param x The argument for function series
 	*/
 	series_base(
@@ -156,19 +163,19 @@ public:
 
 	/**
 	* @brief x getter
-	* @authors Bolshakov M.P.
+	* @authors Naumov A.U., Lykov D.S., Kreynin R.G.
 	*/
 	[[nodiscard]] constexpr const T get_x() const { return series_iterator->x; }
 
 	/**
 	* @brief sum getter
-	* @authors Bolshakov M.P.
+	* @authors Naumov A.U., Lykov D.S., Kreynin R.G.
 	*/
 	[[nodiscard]] constexpr const T get_sum() const { return series_iterator->sum(); }
 
 	/**
 	* @brief sum getter
-	* @authors Bolshakov M.P.
+	* @authors Naumov A.U., Lykov D.S., Kreynin R.G.
 	*/
 	[[nodiscard]] constexpr const std::string get_name() const { return series_name; }
 
@@ -205,7 +212,7 @@ protected:
 
 	/**
     * @brief Throws domain error with unified message format
-    * @authors Maximov A.K.
+    * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
     * @param condition Description of the divergence condition
     * @throws std::domain_error with formatted message containing series name, x value and condition
     */
@@ -220,7 +227,7 @@ protected:
 	/**
     * @brief Name of the series for unified error messages
     * Used to generate consistent error output format
-    * @authors Maximov A.K.
+    * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
     */
 	std::string series_name = "series base";
 

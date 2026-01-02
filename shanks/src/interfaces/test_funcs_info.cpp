@@ -1,5 +1,12 @@
 #include "../../include/interfaces/test_funcs_info.hpp"
 
+/**
+ * @file test_funcs_info.cpp
+ * @brief This file contains the information about all testing functions of application.
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+ */
+
+
 ITestFunctionInfo::~ITestFunctionInfo() {}
 
 test_function_id_t      CmpSumAndTransformInfo::getId() const { return test_function_id_t::cmp_sum_and_transform_id ;}

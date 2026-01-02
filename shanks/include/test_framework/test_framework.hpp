@@ -1,8 +1,7 @@
 /**
  * @file test_framework.h
- * @brief This file contains the function that provides the framework for testing
- * @authors Bolshakov M.P.
- * @edited by Kreynin R.G., Maximov A.K.
+ * @brief This file contains the function that provides the framework for testing.
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  */
 
 #pragma once
@@ -271,8 +270,6 @@ inline std::unique_ptr<shanks::series::series_base<T, K>> create_series_by_id(sh
 	// This function replace huge switch-case
 	auto all_series = create_series_info();
 
-	// Здесь нужно будет сделать mapping от ID к конструктору
-	// Пока оставляю старый switch, но можно оптимизировать дальше
 	switch (id) {
 	case shanks::series::series_id_t::exp_series_id: return std::make_unique<shanks::series::exp_series<T, K>>();
 	case shanks::series::series_id_t::cos_series_id: return std::make_unique<shanks::series::cos_series<T, K>>();

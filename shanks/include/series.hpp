@@ -6,6 +6,12 @@
 #include "series_base.hpp"
 #include "series_iterators/series_iterators.hpp"
 
+/**
+ * @file series.hpp
+ * @brief This file contains enums for all series.
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+ */
+
 namespace shanks{ namespace series {
 
 enum class series_id_t {

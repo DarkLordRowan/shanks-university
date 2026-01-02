@@ -5,8 +5,10 @@
 #include "../series.hpp"
 
 /**
- * @brief Interface for series information
-*/
+ * @file series_info.hpp
+ * @brief This file contains the information for all series.
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+ */
 class ISeriesInfo {
 public:
 
