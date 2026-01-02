@@ -51,10 +51,8 @@ def _add_field_to_parser(parser: argparse.ArgumentParser, name: str, field: Any)
     if field_type is Path:
         parser.add_argument(arg_name, type=Path, help=help_text)
         return
-   
 
-    if hasattr(field_type, "__members__") and field_type != PrecisionType:
-        print(field_type)
+    if hasattr(field_type, "__members__"):
         parser.add_argument(
             arg_name,
             type=str,
@@ -114,15 +112,11 @@ def _build_nested_dict_from_args(args: dict[str, Any]) -> dict[str, Any]:
 def load_config_and_apply_argparse() -> tuple[TrialConfig, argparse.Namespace]:
     parser = build_cli_parser()
     args = parser.parse_args()
-    print("args", args)
 
     cfg = TrialConfig.load(args.config)
 
-    #overrides to str
     overrides = _build_nested_dict_from_args(vars(args))
 
-    #print("CFG", cfg)
     final_cfg = cfg.model_copy(update=overrides)
-    #print("FINAL CFG", final_cfg)
+
     return final_cfg, args
-    #return cfg, args

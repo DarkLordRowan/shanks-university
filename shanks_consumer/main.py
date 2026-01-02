@@ -8,7 +8,6 @@ def main():
     load_dotenv()
 
     config, args = load_config_and_apply_argparse()
-    #print(config)
 
     if args.command == "run":
         handle_run_command(config)
