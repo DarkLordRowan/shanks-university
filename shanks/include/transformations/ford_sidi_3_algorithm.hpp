@@ -6,6 +6,7 @@
  * @brief This file contains the declaration of the Ford-Sidi Algorithm class.
  *        This implementation is based on the efficient Ford-Sidi algorithm
  *        that requires fewer arithmetic operations than the E-algorithm.
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  */
 
  // For theory, see:
@@ -13,18 +14,17 @@
  // Osada, N. (2000). The E-algorithm and the Ford-Sidi algorithm.
 
 #include "series_acceleration.hpp"
-#include <vector> // Include the vector library
+#include <vector>
 
 namespace shanks{ namespace algos{
 
 /**
  * @brief Ford-Sidi algorithm class template implementing an efficient extrapolation method.
  *
- * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
- *
  * This algorithm provides a more economical implementation compared to the standard E-algorithm
- * while maintaining mathematical equivalence. It is particularly effective for sequences
- * with specific convergence patterns.
+ * while maintaining mathematical equivalence. It utilizes auxiliary sequences and finite
+ * difference operations to accelerate convergence. Variant 3 is characterized by its
+ * specific initialization and recursive update scheme for the transformation coefficients.
  *
  * References:
  * - Ford, W.F., Sidi, A. (1987). An algorithm for a generalization of the Richardson extrapolation process.
@@ -32,10 +32,12 @@ namespace shanks{ namespace algos{
  * - Osada, N. (2000). The E-algorithm and the Ford-Sidi algorithm.
  *   Journal of Computational and Applied Mathematics, 122(1), 223-230.
  *
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+ *
  * @tparam T Floating-point type for series elements (must satisfy Accepted)
  *           Represents numerical precision (float, double, long double).
  *           Used for all numerical computations and storage.
- * @tparam K Unsigned integral type for indices and order (must satisfy std::unsigned_integral)
+ * @tparam K Unsigned integral type for indices and order (must satisfy UnsignedIntLike)
  *           Used for counting terms, indexing operations, and loop control.
  *           Valid values: K >= 0, typically size_t or unsigned int.
  */
@@ -45,15 +47,16 @@ public:
 
     /**
     * @brief Parameterized constructor to initialize the Ford-Sidi V-3 Algorithm.
+    * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
     */
     explicit ford_sidi_3_algorithm() : series_acceleration<T, K>("ford sidi 3") {};
 
     /**
      * @brief Fast implementation of Ford-Sidi algorithm for series acceleration.
      *
-     * Computes the accelerated sum using the efficient Ford-Sidi implementation
-     * that requires fewer arithmetic operations than the standard E-algorithm.
-     * The algorithm uses auxiliary sequences and difference operations.
+     * Computes the accelerated sum using the efficient Ford-Sidi implementation.
+     * The algorithm builds several auxiliary sequences (G, FSA, FSI) and an
+     * intermediate matrix (FSG) to perform the extrapolation.
      *
      * For theory, see: Osada (2000), Section 4, Eq. (20)
      * T_k^{(n)} = [ψ_{k-1}^{(n+1)}(s) - ψ_{k-1}^{(n)}(s)] / [ψ_{k-1}^{(n+1)}(1) - ψ_{k-1}^{(n)}(1)]
@@ -66,30 +69,32 @@ public:
      *        Valid values: order >= 0 (typically set to 0 or ignored).
      * @param data series_result<T> struct containing necessary information for algorithm
      * @return The accelerated partial sum after Ford-Sidi transformation.
+     * @throws std::out_of_range if the Sn or an vectors are too small for index n.
      * @throws std::domain_error if n=0 is provided as input.
      * @throws std::overflow_error if division by zero or numerical instability occurs.
      */
     T operator()(
-        const K n, 
-        const K order, 
+        const K n,
+        const K order,
         const series_result<T>& data
     ) const override;
 };
 
 template <AcceptedLike T, UnsignedIntLike K>
 T ford_sidi_3_algorithm<T, K>::operator()(
-    const K n, 
-    const K /*order*/, 
+    const K n,
+    const K /*order*/,
     const series_result<T>& data
 ) const {
 
+    // Ensure we have enough data points to compute the transformation at index n
     const K required_size = n;
 
     if (data.Sn.size() < required_size || data.an.size() < required_size){
         throw std::out_of_range("The Sn or an smaller then required for ford_sidi_3_{" + utils::to_string(n) + "}\n" +
         "the size of Sn and an must be at least " + utils::to_string(required_size));
 	}
-    
+
     // For theory, see: Ford & Sidi (1987), Section 1 - Input validation
     // The algorithm requires at least one term for meaningful computation
     if (n == static_cast<K>(0)){
@@ -99,7 +104,6 @@ T ford_sidi_3_algorithm<T, K>::operator()(
     // For theory, see: Osada (2000), Section 4 - Efficient implementation
     // Algorithm uses auxiliary sequences for improved computational efficiency
     const K n1 = n - static_cast<K>(1);
-    
     const K m  = n + static_cast<K>(1);
 
     // For theory, see: Ford & Sidi (1987), Section 2 - Auxiliary sequence initialization
@@ -115,7 +119,7 @@ T ford_sidi_3_algorithm<T, K>::operator()(
     // Te = 1/n used for recursive computation of G sequence
     T D, Te;
     D = utils::cast<T>(0.0); Te = utils::cast<T>(1.0);
-    
+    // Set precision if the type T requires it
     if constexpr (is_precisable<T>::value){
         const size_t precision = std::max(utils::get_precision(data.Sn[0]), utils::get_precision(data.an[0]));
         utils::set_vec_precision(G, precision);
@@ -125,7 +129,7 @@ T ford_sidi_3_algorithm<T, K>::operator()(
             utils::set_vec_precision(FSG[j], precision);
         utils::set_precision(precision, D, Te);
     }
-    
+
     Te /= utils::cast<T>((n));
 
     // For theory, see: Osada (2000), Eq. (9) - Initial coefficient computation
@@ -163,7 +167,7 @@ T ford_sidi_3_algorithm<T, K>::operator()(
     // For theory, see: Osada (2000), Section 4 - Main algorithm loop
     // Main Ford-Sidi transformation computation
     K MM, MM1, k2;
-    
+
     // Основной цикл алгоритма Ford-Sidi
     for (K k = static_cast<K>(0); k <= n1; ++k) {
         MM = n1 - k;
@@ -191,10 +195,10 @@ T ford_sidi_3_algorithm<T, K>::operator()(
         FSI[MM] = FSI[MM1] - FSI[MM];
         FSI[MM]/= D;
     }
-    
+
     // For theory, see: Osada (2000), Eq. (11) - Final result computation
     // T = FSA[0] / FSI[0] (final accelerated sum)
-    
+
     FSA[0] /= FSI[0];
     // For theory, see: Ford & Sidi (1987), Section 3 - Numerical stability check
     // Ensure the result is a finite floating-point value

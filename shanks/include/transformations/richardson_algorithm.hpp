@@ -1,10 +1,11 @@
-﻿#ifndef RICHARDSON_ALGORITHM_HPP
+#ifndef RICHARDSON_ALGORITHM_HPP
 #define RICHARDSON_ALGORITHM_HPP
 #pragma once
 /**
  * @file richardson_algorithm.hpp
  * @brief This file contains the definition of the Richardson transformation class
  *        for series acceleration using Richardson extrapolation technique.
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  */
 
  // For theory, see:
@@ -16,7 +17,7 @@
 
 
 #include "series_acceleration.hpp"
-#include <vector>   // Include the vector library
+#include <vector>
 
 namespace shanks{ namespace algos{
 
@@ -32,12 +33,9 @@ namespace shanks{ namespace algos{
  * References:
  * - Richardson, L.F. (1911). The approximate arithmetical solution by finite differences
  * - Richardson, L.F., & Gaunt, J.A. (1927). The deferred approach to the limit
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  *
- * @tparam T Floating-point type for series elements and computations
- *           - Purpose: Represents numerical precision for all calculations
- *           - Valid values: Any Accepted type (float, double, long double)
- *           - Constraints: Must satisfy Accepted concept
- *           - Example usage: Stores partial sums, transformation results, and intermediate values
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  *
  * @tparam K Unsigned integral type for indices and counting operations
  *           - Purpose: Used for term counting, indexing, and loop control
@@ -52,16 +50,18 @@ public:
 
     /**
      * @brief Parameterized constructor to initialize the Richardson transformation for series.
+     * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
     */
     explicit richardson_algorithm() : series_acceleration<T, K>("richardson") {}
 
     /**
-     * @brief Richardson transformation for series acceleration
+     * @brief Richardson transformation for series acceleration.
      *
      * Computes the accelerated partial sum using Richardson extrapolation technique.
      * The method constructs an extrapolation table to eliminate lower-order error terms
      * and improve convergence rate.
      *
+     * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @param n The number of terms to use in the transformation
      *        - Purpose: Determines how many partial sums are considered for acceleration
      *        - Valid values: n > 0 (requires at least 1 term)
@@ -83,19 +83,20 @@ public:
      * @throws std::overflow_error if division by zero or numerical instability occurs
      */
     T operator()(
-        const K n, 
-        const K order, 
+        const K n,
+        const K order,
         const series_result<T>& data
     ) const override;
 };
 
 template <AcceptedLike T, UnsignedIntLike K>
 T richardson_algorithm<T, K>::operator()(
-    const K n, 
-    const K order, 
+    const K n,
+    const K order,
     const series_result<T>& data
 ) const {
 
+    // Ensure we have enough partial sums to perform the extrapolation
     const K required_size = n + static_cast<K>(1);
 
     if (data.Sn.size() < required_size){
@@ -110,31 +111,31 @@ T richardson_algorithm<T, K>::operator()(
     // in the method we don't use order, it's only a stub
     if (n == static_cast<K>(0))
         throw std::domain_error("n = 0 in the input");
-    
+
     // For theory, see: Richardson (1911) - construction of extrapolation table
     // Storage for Richardson extrapolation table with two rows for efficient computation
     std::vector<std::vector<T>> e(
-        2, 
+        2,
         std::vector<T>(n + static_cast<K>(1), utils::cast<T>(0))
     ); // Two vectors n + 1 length containing Richardson table next and previous
     T a = utils::cast<T>(1.0);
     T b = utils::cast<T>(0.0);
 
+    // Initialize precision if the type T supports it
     if constexpr (is_precisable<T>::value){
         utils::set_vec_precision(e[0], utils::get_precision(data.Sn[0]));
         utils::set_vec_precision(e[1], utils::get_precision(data.Sn[0]));
         utils::set_precision(utils::get_precision(data.Sn[0]), a,b);
     }
 
-    // For theory, see: Richardson (1911), Eq. (2) - initialization with partial sums
-    // Initialize the first row of the extrapolation table with partial sums
+    // Initialization: Load the first row with partial sums
+	// For theory, see: Richardson (1911), Eq. (2) - initialization with partial sums
     for (K i = static_cast<K>(0); i <= n; ++i)
         e[0][i] = data.Sn.at(i);
 
-    // The Richardson method main function
-
-    // For theory, see: Richardson & Gaunt (1927), Section 3 - recursive extrapolation
-    // Richardson extrapolation recursion: Tₖ⁽ⁿ⁾ = (4ᵏTₖ₋₁⁽ⁿ⁺¹⁾ - Tₖ₋₁⁽ⁿ⁾) / (4ᵏ - 1)
+    // Main recursion loop for the Richardson extrapolation scheme
+	// For theory, see: Richardson & Gaunt (1927), Section 3 - recursive extrapolation
+	// Richardson extrapolation recursion: Tₖ⁽ⁿ⁾ = (4ᵏTₖ₋₁⁽ⁿ⁺¹⁾ - Tₖ₋₁⁽ⁿ⁾) / (4ᵏ - 1)
     for (K l = static_cast<K>(1); l <= n; ++l) {
         a *= utils::cast<T>(4);     // 4ᵏ factor
         b = a - utils::cast<T>(1);  // (4ᵏ - 1) denominator
@@ -149,10 +150,11 @@ T richardson_algorithm<T, K>::operator()(
         std::swap(e[0], e[1]); // Swap rows for next iteration
     }
 
-    // get n & 1, cause if n is even, result is e[0][n], if n is odd, result is e[1][n]
+    // Final check for validity. The result selection logic depends on the number of swaps.
     if(!utils::isfinite(e[n & static_cast<K>(1)][n])){
         throw std::overflow_error("division by zero");
     }
+
     return e[n & static_cast<K>(1)][n];
 
 }

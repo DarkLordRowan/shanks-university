@@ -6,39 +6,40 @@
 
 /**
  * @file levin_sidi_m_algorithm.hpp
- * @brief This file contains the definition of analogues of Levin-Sidi M-transformation
+ * @brief This file contains the definition of analogues of Levin-Sidi M-transformation.
  *
  * For theory, see:
  * Sidi, A. (2003). Practical Extrapolation Methods: Theory and Applications.
  *   Cambridge University Press. (Chapter 9, pp. 285-369)
  * Sidi, A. (2003). A new class of nonlinear transformations for accelerating the convergence
  *   of infinite integrals and series. arXiv:math/0306302.
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  */
 
 #include "series_acceleration.hpp"
 #include "remainders.hpp"
 
-#include <memory> // For std::unique_ptr
+#include <memory>
 
 namespace shanks{ namespace algos{
 
  /**
   * @brief Levin-Sidi M-transformation class template.
   *
-  * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
-  *
   * This class implements the Levin-Sidi M-transformation, which is particularly effective
   * for series that belong to the b(1)/LIN/FAC classes (factorial and linear convergence).
-  * The transformation is based on factorial-like terms and Pochhammer symbols.
+  * The transformation leverages factorial-like terms and Pochhammer symbols to provide
+  * aggressive acceleration for specific sequence patterns.
   *
   * References:
   * - Sidi, A. (2003). Practical Extrapolation Methods: Theory and Applications.
   * - Sidi, A. (2003). A new class of nonlinear transformations. arXiv:math/0306302.
   *
-  * @tparam T Floating-point type for series elements (must satisfy Accepted)
-  *           Represents numerical precision (float, double, long double)
-  * @tparam K Unsigned integral type for indices and order (must satisfy std::unsigned_integral)
-  *           Used for counting and indexing operations
+  * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+  *
+  * @tparam T Floating-point type for series elements (must satisfy AcceptedLike).
+  *           Represents numerical precision (float, double, long double, or arbitrary precision).
+  * @tparam K Unsigned integral type for indices and order (must satisfy UnsignedIntLike).
   */
 template<AcceptedLike T, UnsignedIntLike K>
 class levin_sidi_m_algorithm final : public series_acceleration<T, K>
@@ -47,10 +48,12 @@ protected:
 
 	using float_type = GetUnderlyingType<T>::value; //type in case of complex or interval
 
-	/// Positive real parameter such that gamma >= order - 1
+	/// Positive real parameter gamma. For theoretical stability, it often satisfies gamma >= order - 1.
 	float_type gamma_in_use = utils::cast<float_type>(DEFAULT_GAMMA);
-	/// Pointer to remainder transformation object
+	/// Pointer to the remainder transformation strategy being used.
 	std::unique_ptr<const shanks::remainders::transform_base<T, K>> remainder;
+
+	/// The specific Levin variant variant (u, t, v, etc.) used for remainder estimation.
 	shanks::remainders::remainder_type remainder_type_in_use;
 
 public:
@@ -58,6 +61,7 @@ public:
 	/**
 	 * @brief Parameterized constructor to initialize the Levin-Sidi M-transformation.
 	 *
+	 * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
 	 * @param variant Type of remainder transformation to use
 	 *        Valid values: u_type, t_type, v_type, t_wave_type, v_wave_type
 	 *        Determines the remainder estimate R_n used in the transformation
@@ -70,7 +74,11 @@ public:
 		const float_type& gamma_to_use = utils::cast<float_type>(DEFAULT_GAMMA)
 	) : series_acceleration<T, K>() { update_gamma(gamma_to_use); update_type(remainder_type_to_use); }
 
-	~levin_sidi_m_algorithm() = default; // Default destructor is sufficient since unique_ptr handles deletion
+	/**
+	 * @brief Virtual destructor.
+	 * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+	 */
+	~levin_sidi_m_algorithm() = default;  // Default destructor is sufficient since unique_ptr handles deletion
 
 	/**
 	 * @brief Implementation of Levin-Sidi M-transformation for series acceleration.
@@ -82,6 +90,7 @@ public:
 	 * - General framework: Sidi (2003, arXiv:math/0306302), Eqs. (9.2)-(9.6)
 	 * - Convergence properties: Sidi (2003, Practical Extrapolation Methods), pp. 285, 369
 	 *
+	 * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
 	 * @param n The number of terms to use in the transformation
 	 *        Valid values: n > 0 (algorithm requires at least 1 term)
 	 *        Higher values use more terms but may provide better acceleration
@@ -90,32 +99,34 @@ public:
 	 *        The parameter gamma must satisfy gamma >= order - 1
 	 * @param data series_result<T> struct containing necessary information for algorithm
 	 * @return The accelerated partial sum after M-transformation
+	 * @throws std::out_of_range if the input vectors are too small for the requested calculation.
 	 * @throws std::domain_error if n=0 or gamma < n-1
 	 * @throws std::overflow_error if division by zero or numerical instability occurs
 	 */
 	T operator()(
-		const K n, 
-        const K order, 
+		const K n,
+        const K order,
         const series_result<T>& data
 	) const override;
 
 	/**
-	 * @brief Setter to change numerator type
-	 * @param remainder_type_to_use enumerator of a new remainder to use
+	 * @brief Updates the remainder estimator variant.
+	 * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+	 * @param remainder_type_to_use The new remainder variant to use.
 	 */
 	void update_type(const shanks::remainders::remainder_type remainder_type_to_use);
 
 	/**
-	 * @brief Setter to update gamma parameter
-	 * @param new_gamma new gamma parameter, must be real number positive noninteger number and greater or equal than order - 1
-	 * see Nonlinear sequence transformations for the acceleration of convergence and the summation of divergent series by Ernst Joachim Weniger
-	 * page 64
+	 * @brief Updates the gamma parameter.
+	 * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+	 * @param new_gamma The new gamma value.
 	 */
 	void update_gamma(const float_type& new_gamma) { gamma_in_use = new_gamma; }
 
 	/**
-	 * @brief Get the name of currently used variant of algorithm
-	 * @return std::string 
+	 * @brief Returns the descriptive name of the currently active Levin-Sidi M variant.
+	 * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+	 * @return std::string The name and current configuration of the algorithm.
 	 */
 	std::string get_name() override {
 
@@ -138,7 +149,7 @@ void levin_sidi_m_algorithm<T, K>::update_type(const shanks::remainders::remaind
 
 	remainder_type_in_use = remainder_type_to_use;
 
-	// Initialize the appropriate remainder transformation based on variant
+	// Re-instantiate the remainder strategy object based on the requested variant
 	switch(remainder_type_to_use){
         case shanks::remainders::remainder_type::u_type 	: { remainder.reset(new shanks::remainders::u_transform<T, K>()); 	  break; }
         case shanks::remainders::remainder_type::t_type 	: { remainder.reset(new shanks::remainders::t_transform<T, K>()); 	  break; }
@@ -148,7 +159,7 @@ void levin_sidi_m_algorithm<T, K>::update_type(const shanks::remainders::remaind
         default:
 		{
 			remainder_type_in_use = shanks::remainders::remainder_type::u_type;
-            remainder.reset(new shanks::remainders::u_transform<T, K>()); // Default to u-variant
+            remainder.reset(new shanks::remainders::u_transform<T, K>());
 		}
     }
 
@@ -156,11 +167,12 @@ void levin_sidi_m_algorithm<T, K>::update_type(const shanks::remainders::remaind
 
 template<AcceptedLike T, UnsignedIntLike K>
 T levin_sidi_m_algorithm<T, K>::operator()(
-	const K n, 
-    const K order, 
+	const K n,
+    const K order,
     const series_result<T>& data
 ) const {
 
+    // Determine the total number of terms required for both Sn and an vectors
     const K required_size = n + order + static_cast<K>(1) + static_cast<K>(
 		remainder_type_in_use == shanks::remainders::remainder_type::t_wave_type ||
 		remainder_type_in_use == shanks::remainders::remainder_type::v_type      ||
@@ -172,10 +184,11 @@ T levin_sidi_m_algorithm<T, K>::operator()(
         "the size of Sn and an must be at least " + utils::to_string(required_size));
 	}
 
+    // Trivial case: order 0 returns the current partial sum
     if (order == static_cast<K>(0)) return data.Sn.at(n);
 
 	//TODO разобраться с документом (pdf) n/order
-    // Validate parameter constraint: gamma >= n - 1
+    // Validate that gamma satisfies the theoretical constraint for stability: gamma >= n - 1
 	if(gamma_in_use - utils::cast<float_type>(static_cast<double>(n)) - utils::cast<float_type>(1.0) < utils::cast<float_type>(0.0)){
 		throw std::domain_error("gamma cannot be lesser than n - 1");
 	}
@@ -186,6 +199,7 @@ T levin_sidi_m_algorithm<T, K>::operator()(
 	up = down = utils::cast<float_type>(1.0);
 	down_coef = up_coef = utils::cast<float_type>(0.0);
 
+    // Initialize precision if supported by type T
 	if constexpr (is_precisable<T>::value){
 		const size_t precision = std::max(utils::get_precision(data.Sn[0]), utils::get_precision(data.an[0]));
 		utils::set_precision(precision, numerator, denominator, rest, up, down, down_coef, up_coef);
@@ -194,6 +208,7 @@ T levin_sidi_m_algorithm<T, K>::operator()(
 	// Precompute initial Pochhammer symbol terms
 	// For theory, see: Sidi (2003, arXiv:math/0306302), Eq. (9.4)
 	// Compute: (γ+k+2)_{n-1}/(γ+k+1)_{n} = Γ(γ+k+n+1)/Γ(γ+k+2) × Γ(γ+k+1)/Γ(γ+k+n+1)
+	// Precompute the initial ratio of Pochhammer symbols
 	down_coef += gamma_in_use + utils::cast<float_type>((order + static_cast<K>(2)));
 	up_coef   += down_coef - utils::cast<float_type>(n);
 
@@ -210,9 +225,10 @@ T levin_sidi_m_algorithm<T, K>::operator()(
 	up_coef   = down_coef - utils::cast<float_type>(static_cast<double>(n + static_cast<K>(1)));
 	// Main summation loop
 	// For theory, see: Sidi (2003, arXiv:math/0306302), Eq. (9.2)
+	// Main summation loop for the M-transformation formula
 	for (K j = static_cast<K>(0); j <= n; ++j) {
 
-		// Compute (-1)^j * C(n,j) * (n-j)
+		// Calculate the sign, binomial coefficient, and weight components
 		rest += -rest + utils::minus_one_raised_to_power_n<T,K>(j);
 		rest *= utils::cast<T>(utils::binomial_coefficient<K>(n, j));
 		rest *= utils::cast<T>(up);										// Multiply by Pochhammer ratio term
@@ -226,18 +242,18 @@ T levin_sidi_m_algorithm<T, K>::operator()(
 			data.an,
 			utils::cast<T>(-gamma_in_use-utils::cast<float_type>(n))
 		);
-		
+
 		// Accumulate numerator and denominator
-		
 		numerator	+= rest * data.Sn.at(order + j);
 		denominator += rest;
-		
+
 		// TODO проверить корректность пересчета бин. коэф.
 		//// Update binomial coefficient for next iteration: C(n, j+1) = C(n, j) * (n-j)/(j+1)
 		//binomial_coef *= utils::cast<T>(n - j);
 		//binomial_coef /= utils::cast<T>(j + static_cast<K>(1));
 	}
 
+	// Calculate the final result and check for validity
 	numerator /= denominator;
 
 	if(!utils::isfinite(numerator)) throw std::overflow_error("division by zero");

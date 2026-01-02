@@ -4,11 +4,18 @@
 
 /**
  * @file methods.hpp
- * @brief This file contains the enum for transformations.
+ * @brief This file aggregates all available transformation algorithms and defines their IDs.
  * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  */
 
 namespace shanks{ namespace algos{
+
+/**
+ * @brief Enumeration of all supported sequence transformation IDs.
+ * 
+ * Each ID corresponds to a specific implementation or variant of a sequence acceleration algorithm.
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+ */
 enum class transformation_id_t {
 	        		     null_transformation_id,
              anderson_acceleration_algorithm_id,
@@ -69,7 +76,7 @@ recurrent_levin_sidi_s_v_wave_transformation_id,
 } //namespace shanks::algos
 } //namespace shanks
 
-//INCLUDE TRANSFORMATIONS AND ALGORITHMS
+// Selection of transformation algorithms for inclusion
 #include "transformations/brezinski_theta_algorithm.hpp"
 #include "transformations/chang_wynn_algorithm.hpp"
 #include "transformations/drummond_d_algorithm.hpp"

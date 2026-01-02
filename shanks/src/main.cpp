@@ -1,4 +1,3 @@
-
 //#include "../libs/arbitrary_arithmetics/complexprecision.h"
 //#include "../libs/arbitrary_arithmetics/fprecision.h"
 //#include "../libs/arbitrary_arithmetics/intervalprecision.h"
@@ -13,11 +12,22 @@
 
 /**
  * @file main.cpp
- * @brief Main file for launching application.
- * 
+ * @brief Entry point for the shanks-university sequence transformation application.
  * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  */
 
+/**
+ * @brief Main entry point of the application.
+ *
+ * This function initiates the test framework, running a series of evaluations
+ * on different sequence acceleration algorithms using various mathematical series.
+ * It enters an infinite loop to allow continuous testing or monitoring.
+ *
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+ * @return int The exit status of the program.
+ * @throws std::domain_error if a mathematical domain violation occurs during series evaluation.
+ * @throws std::overflow_error if a numerical overflow or division by zero occurs.
+ */
 int main()
 {
 

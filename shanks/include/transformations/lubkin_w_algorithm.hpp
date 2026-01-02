@@ -1,10 +1,11 @@
-﻿#ifndef LUBKIN_W_ALGORITHM_HPP
+#ifndef LUBKIN_W_ALGORITHM_HPP
 #define LUBKIN_W_ALGORITHM_HPP
 #pragma once
 /**
  * @file lubkin_w_algorithm.hpp
  * @brief This file contains the definition of Lubkin's W-transformation,
  *        a sequence acceleration method effective for both linear and logarithmic convergence.
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  */
 
  // For theory, see:
@@ -21,11 +22,10 @@ namespace shanks{ namespace algos{
 /**
  * @brief Lubkin's W-transformation class template implementing a powerful sequence acceleration method.
  *
- * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
- *
  * This algorithm accelerates the convergence of sequences by applying Lubkin's W-transformation,
  * which is particularly effective for both linearly and logarithmically convergent sequences.
- * The transformation is based on a specific rational function representation of the sequence.
+ * It is based on a specific rational function representation of the sequence and can
+ * significantly improve the rate of convergence for many types of infinite series.
  *
  * References:
  * - Lubkin, S. (1952). A method of summing infinite series. J. Res. Nat. Bur. Standards.
@@ -33,12 +33,11 @@ namespace shanks{ namespace algos{
  * - Osada, N. (1992). A method for obtaining sequence transformations.
  * - Sidi, A. (2003). Practical Extrapolation Methods: Theory and Applications. (Chapter 15.4)
  *
- * @tparam T Floating-point type for series elements (must satisfy Accepted)
- *           Represents numerical precision (float, double, long double)
- *           Determines the arithmetic precision of all computations
- * @tparam K Unsigned integral type for indices and order (must satisfy std::unsigned_integral)
- *           Used for counting and indexing operations
- *           Typically size_t or unsigned int, must be non-negative
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+ *
+ * @tparam T Floating-point type for series elements (must satisfy AcceptedLike).
+ *           Represents numerical precision (float, double, long double, or arbitrary precision).
+ * @tparam K Unsigned integral type for indices and order (must satisfy UnsignedIntLike).
  */
 template<AcceptedLike T, UnsignedIntLike K>
 class lubkin_w_algorithm final : public series_acceleration<T, K>
@@ -47,6 +46,7 @@ public:
 
 	/**
 	 * @brief Parameterized constructor to initialize the Lubkin W-transformation.
+	 * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
 	*/
 	explicit lubkin_w_algorithm() : series_acceleration<T, K>("lubkin W transformation") {}
 
@@ -62,6 +62,7 @@ public:
 	 * - Linear sequences: Am ∼ A + ζ^m Σα_i m^{γ-i}
 	 * - Factorial sequences: Am ∼ A + (ζ^m/(m!)^r) Σα_i m^{γ-i}
 	 *
+	 * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
 	 * @param n The number of terms to use in the transformation
 	 *        Valid values: n ≥ 0 (algorithm requires at least 1 term)
 	 *        Higher values use more terms but may provide better acceleration
@@ -74,19 +75,20 @@ public:
 	 * @throws std::overflow_error if division by zero or numerical instability occurs
 	 */
 	T operator()(
-		const K n, 
-        const K order, 
+		const K n,
+        const K order,
         const series_result<T>& data
 	) const override;
 };
 
 template<AcceptedLike T, UnsignedIntLike K>
 T lubkin_w_algorithm<T, K>::operator()(
-	const K n, 
-    const K order, 
+	const K n,
+    const K order,
     const series_result<T>& data
 ) const {
 
+    // Ensure there is sufficient data in the Sn vector for the requested order and starting index
     const K required_size = n + static_cast<K>(3) * order + static_cast<K>(1);
 
     if (data.Sn.size() < required_size){
@@ -94,6 +96,7 @@ T lubkin_w_algorithm<T, K>::operator()(
         "the size of Sn must be at least " + utils::to_string(required_size));
 	}
 
+    // Trivial case: order 0 returns the original partial sum at index n
     if (order == static_cast<K>(0)) {
         return data.Sn.at(n);
     }
@@ -102,16 +105,19 @@ T lubkin_w_algorithm<T, K>::operator()(
 	// Storage scheme requires 3n+1 terms for order n transformation
 	const K base_size = static_cast<K>(3) * order + static_cast<K>(1);
 
+	// Working vector to store intermediate transformation values
 	std::vector<T> W(base_size, utils::cast<T>(0));
 
 	T Wo0, Wo1, Wo2, Woo1, Woo2;
 	Wo0 = Wo1 = Wo2 = Woo1 = Woo2 = utils::cast<T>(0);
 
+    // Initialize precision if supported by type T
     if constexpr (is_precisable<T>::value){
         utils::set_vec_precision(W, utils::get_precision(data.Sn[0]));
         utils::set_precision(utils::get_precision(data.Sn[0]), Wo0, Wo1, Wo2, Woo1, Woo2);
     }
 
+    // Load initial partial sums into the working vector starting from index n
 	for(K i = static_cast<K>(0); i < base_size; ++i){
 		W[i] += data.Sn.at( + i);
 	}

@@ -3,8 +3,8 @@
 #pragma once
 
 /**
- * @file custom_concepts.cpp
- * @brief This file contains the information about custom concepts.
+ * @file custom_concepts.hpp
+ * @brief This file contains the definitions of custom type traits and concepts used throughout the project.
  * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  */
 
@@ -31,6 +31,11 @@
 
 #include <type_traits>
 
+/**
+ * @brief Type trait to check if a type behaves like a floating-point number.
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+ * @tparam T The type to inspect.
+ */
 template<typename T>
 struct isFloatLike : std::integral_constant<bool,
 std::is_floating_point<T>::value 
@@ -46,6 +51,11 @@ std::is_floating_point<T>::value
 #endif
 >{};
 
+/**
+ * @brief Concept for types that behave like floating-point numbers.
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+ * @tparam T The type to check.
+ */
 template<typename T>
 concept FloatLike =
 std::is_floating_point<T>::value 
@@ -62,8 +72,9 @@ std::is_floating_point<T>::value
 ;
 
 /**
- * @brief Is complex with std::floating_point value_type
- * @tparam T 
+ * @brief Type trait to check if a type is a standard complex type with floating-point components.
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+ * @tparam T The type to check.
  */
 template<typename T>
 struct is_complex_t : public std::false_type {};
@@ -72,8 +83,9 @@ template<std::floating_point U>
 struct is_complex_t<std::complex<U>> : public std::true_type {};
 
 /**
- * @brief Is complex with not only std::floating_point, but also for FloatLike types, such as mpfr::mpreal or similar ones
- * @tparam T 
+ * @brief Type trait to check if a type is complex with components satisfying FloatLike.
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+ * @tparam T The type to check.
  */
 template<typename T>
 struct is_complex_custom : public std::false_type {};
@@ -82,8 +94,9 @@ template<FloatLike U>
 struct is_complex_custom<std::complex<U>> : public std::true_type {};
 
 /**
- * @brief Does the type is from std:: or custom composite type has std:: value_type
- * @tparam T 
+ * @brief Type trait to check if a type is considered a "standard" project type.
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+ * @tparam T The type to check.
  */
 template<typename T>
 struct is_standard_types : std::integral_constant<bool,
@@ -103,8 +116,9 @@ struct is_standard_types : std::integral_constant<bool,
 >{};
 
 /**
- * @brief Does the type has precision capabilities
- * @tparam T 
+ * @brief Type trait to check if a type supports explicit precision settings.
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+ * @tparam T The type to check.
  */
 template<typename T>
 struct is_precisable : std::integral_constant<bool,
@@ -128,6 +142,11 @@ struct is_precisable : std::integral_constant<bool,
     #endif
 >{};
 
+/**
+ * @brief Type trait to check if a type behaves like a complex number.
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+ * @tparam T The type to check.
+ */
 template<typename T>
 struct isComplexLike : std::integral_constant<bool,
     is_complex_t<T>::value
@@ -146,6 +165,11 @@ struct isComplexLike : std::integral_constant<bool,
 >{};
 
 
+/**
+ * @brief Concept for complex-like types.
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+ * @tparam T The type to check.
+ */
 template<typename T>
 concept ComplexLike = is_complex_t<T>::value
 #ifdef INC_COMPLEXPRECISION
@@ -162,6 +186,11 @@ concept ComplexLike = is_complex_t<T>::value
 #endif
 ;
 
+/**
+ * @brief Type trait to check if a type is an interval type.
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+ * @tparam T The type to check.
+ */
 template<typename T>
 struct is_interval : std::integral_constant<bool,
     false 
@@ -177,6 +206,11 @@ struct is_interval : std::integral_constant<bool,
 >{};
 
 
+/**
+ * @brief Concept for interval-like types.
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+ * @tparam T The type to check.
+ */
 template<typename T>
 concept IntervalLike = false
 #ifdef INC_INTERVALPRECISION
@@ -191,19 +225,30 @@ concept IntervalLike = false
 ;
 
 /**
- * @brief Does the type is FloatLike, or ComplexLike, or IntervalLike
- * @tparam T 
+ * @brief Concept for all types accepted as series elements (FloatLike, ComplexLike, or IntervalLike).
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+ * @tparam T The type to check.
  */
 template<typename T>
 concept AcceptedLike = requires{ 
     requires FloatLike<T> || ComplexLike<T> || IntervalLike<T>; 
 };
 
+/**
+ * @brief Concept for unsigned integral types.
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+ * @tparam K The type to check.
+ */
 template<typename K>
 concept UnsignedIntLike = requires {
     std::is_integral<K>::value && !std::is_signed<K>::value;
 };
 
+/**
+ * @brief Type trait to check if a type is an unsigned integral type.
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+ * @tparam K The type to check.
+ */
 template<typename K>
 struct isUnsignedIntLike : std::integral_constant<bool, std::is_integral<K>::value && !std::is_signed<K>::value>{};
 

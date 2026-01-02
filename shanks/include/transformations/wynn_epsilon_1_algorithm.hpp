@@ -1,10 +1,11 @@
-﻿#ifndef WYNN_EPSILON_1_ALGORITHM_HPP
+#ifndef WYNN_EPSILON_1_ALGORITHM_HPP
 #define WYNN_EPSILON_1_ALGORITHM_HPP
 #pragma once
 /**
  * @file wynn_epsilon_1_algorithm.hpp
  * @brief This file contains the declaration of the Wynn Epsilon Algorithm,
  *        a nonlinear sequence transformation for accelerating series convergence.
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  */
 
  // For theory, see:
@@ -21,12 +22,10 @@ namespace shanks{ namespace algos{
 /**
  * @brief Wynn Epsilon Algorithm class template implementing the epsilon algorithm for series acceleration.
  *
- * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
- *
  * This class implements the epsilon algorithm, a nonlinear transformation that accelerates
- * the convergence of slowly convergent series. The algorithm is particularly effective
- * for sequences that can be expressed as a linear combination of exponentials.
- *
+ * the convergence of slowly convergent series. It is particularly effective for sequences
+ * that can be expressed as a linear combination of exponentials. The algorithm builds a
+ * triangular table of estimates using a simple recursive rule.
  * References:
  * - Wynn, P. (1956). On a device for computing the eₙ(Sₙ) transformation.
  *   Mathematical Tables and Other Aids to Computation, 10(54), 91-96.
@@ -46,6 +45,7 @@ public:
 
 	/**
 	 * @brief Parameterized constructor to initialize the Wynn Epsilon Algorithm.
+	 * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
 	 */
 	explicit wynn_epsilon_1_algorithm() : series_acceleration<T, K>("wynn epsilon 1") {};
 
@@ -59,6 +59,8 @@ public:
 	 *
 	 * For theory, see: Wynn (1956), Eq. (4) - Main recurrence relation
 	 *
+	 * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+
 	 * @param n The starting index of the partial sum to transform (typically 0 or 1)
 	 *        Valid values: n >= 0
 	 *        Higher values use more terms but may provide better acceleration
@@ -66,24 +68,26 @@ public:
 	 *        Valid values: order >= 1
 	 *        Higher orders use more terms but may provide better acceleration
 	 * @param data series_result<T> struct containing necessary information for algorithm
-	 * @return The accelerated partial sum after epsilon transformation
-	 * @throws std::domain_error if order=0 is provided
-	 * @throws std::overflow_error if division by zero or numerical instability occurs
+	 * @return T The accelerated partial sum result.
+	 * @throws std::out_of_range if the Sn vector size is insufficient for index n and order.
+	 * @throws std::domain_error if n is 0.
+	 * @throws std::overflow_error if division by zero or numerical instability occurs.
 	 */
     T operator()(
-		const K n, 
-        const K order, 
+		const K n,
+        const K order,
         const series_result<T>& data
 	) const override;
 };
 
 template <AcceptedLike T, UnsignedIntLike K>
 T wynn_epsilon_1_algorithm<T, K>::operator()(
-	const K n, 
-    const K order, 
+	const K n,
+    const K order,
     const series_result<T>& data
 ) const {
 
+    // Ensure we have enough data points: 2*order + n + 1 terms are required
     const K required_size = n + static_cast<K>(2) * order + static_cast<K>(1);
 
     if (data.Sn.size() < required_size){

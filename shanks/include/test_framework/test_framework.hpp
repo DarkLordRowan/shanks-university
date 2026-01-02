@@ -1,6 +1,6 @@
 /**
- * @file test_framework.h
- * @brief This file contains the function that provides the framework for testing.
+ * @file test_framework.hpp
+ * @brief This file contains the framework for testing convergence acceleration of series.
  * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  */
 
@@ -23,7 +23,9 @@
 
 
 /**
- * @brief Factory functions to create all available items
+ * @brief Factory function to create information objects for all available series
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+ * @return std::vector<std::unique_ptr<ISeriesInfo>>
  */
 inline std::vector<std::unique_ptr<ISeriesInfo>> create_series_info() {
 	std::unique_ptr<ISeriesInfo> temp[] = {
@@ -134,6 +136,11 @@ inline std::vector<std::unique_ptr<ISeriesInfo>> create_series_info() {
 	);
 }
 
+/**
+ * @brief Factory function to create information objects for all available transformations
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+ * @return std::vector<std::unique_ptr<ITransformationInfo>>
+ */
 inline std::vector<std::unique_ptr<ITransformationInfo>> create_transformation_info() {
 	std::unique_ptr<ITransformationInfo> temp[] = {
 		std::make_unique<AndersonAccelerationAlgorithmInfo>(),
@@ -196,6 +203,11 @@ inline std::vector<std::unique_ptr<ITransformationInfo>> create_transformation_i
 	);
 }
 
+/**
+ * @brief Factory function to create information objects for all available test functions
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+ * @return std::vector<std::unique_ptr<ITestFunctionInfo>>
+ */
 inline std::vector<std::unique_ptr<ITestFunctionInfo>> create_test_function_info() {
 	std::unique_ptr<ITestFunctionInfo> temp[] = {
 		std::make_unique<CmpSumAndTransformInfo>(),
@@ -214,6 +226,7 @@ inline std::vector<std::unique_ptr<ITestFunctionInfo>> create_test_function_info
 
 /**
  * @brief prints out all available series for testing
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  */
 inline void print_series_info() {
 	auto all_series = create_series_info();
@@ -230,6 +243,7 @@ inline void print_series_info() {
 
 /**
  * @brief prints out all available transformations for testing
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  */
 inline void print_transformation_info() {
 	auto all_transformations = create_transformation_info();
@@ -246,6 +260,7 @@ inline void print_transformation_info() {
 
 /**
  * @brief prints out all available functions for testing
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  */
 inline void print_test_function_info() {
 	auto all_functions = create_test_function_info();
@@ -264,6 +279,10 @@ inline void print_test_function_info() {
 
 /**
  * @brief Helper function to get series by ID
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+ * @param id (shanks::series::series_id_t)
+ * @return std::unique_ptr<shanks::series::series_base<T, K>>
+ * @throws std::domain_error if series not implemented
  */
 template <AcceptedLike T, std::unsigned_integral K>
 inline std::unique_ptr<shanks::series::series_base<T, K>> create_series_by_id(shanks::series::series_id_t id) {
@@ -378,6 +397,10 @@ inline std::unique_ptr<shanks::series::series_base<T, K>> create_series_by_id(sh
 
 /**
  * @brief Helper function to get transformation by ID
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+ * @param id (shanks::algos::transformation_id_t)
+ * @return std::unique_ptr<shanks::algos::series_acceleration<T, K>>
+ * @throws std::domain_error if transformation ID is invalid
  */
 template <AcceptedLike T, std::unsigned_integral K>
 inline std::unique_ptr<shanks::algos::series_acceleration<T, K>>
@@ -444,6 +467,7 @@ create_transformation_by_id(shanks::algos::transformation_id_t id) {
 /**
  * @brief The main testing function
  * This function provides a convenient and interactive way to test out the convergence acceleration of various series
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  * @tparam T The type of the elements in the series, K The type of enumerating integer
  */
 
@@ -451,7 +475,7 @@ template <AcceptedLike T, std::unsigned_integral K>
 inline void main_testing_function()
 {
 
-	//choosing series
+	// User interaction to select series
 	print_series_info();
 	shanks::series::series_id_t series_id = console_IO<shanks::series::series_id_t>::input("series_id");
 	std::unique_ptr<shanks::series::series_base<T, K>> series = create_series_by_id<T, K>(series_id);
@@ -459,13 +483,15 @@ inline void main_testing_function()
 	std::cout << "\nChosen series id " <<  static_cast<unsigned long int>(series_id) << "\n";
 
 	std::cout << series->get_name() << "\n";
-	//choosing x
+	// User input for series argument x
 	std::cout << "Enter x - the argument for the functional series" << '\n';
 	T x = console_IO<T>::input();
 
+	// Default parameters for specialized series
 	T tParam = utils::cast<T>(1.0);
 	K kParam = static_cast<K>(1);
 
+	// Conditional input for additional series parameters
 	switch(series_id){
 		case shanks::series::series_id_t::bin_series_id:{
 			std::cout << "for bin series must initialise variable alpha\n";
@@ -484,21 +510,24 @@ inline void main_testing_function()
 		}
 	}
 
-	//choosing transformation
+	// User interaction to select transformation algorithm
 	print_transformation_info();
 	shanks::algos::transformation_id_t transformation_id = console_IO<shanks::algos::transformation_id_t>::input("transformation_id");
 	std::unique_ptr<shanks::algos::series_acceleration<T, K>> transform = create_transformation_by_id<T, K>(transformation_id);
 
 	std::cout << "transformation : " << transform->get_name() << "\n";
+	
+	// User interaction to select test function
 	print_test_function_info();
 	test_function_id_t function_id = console_IO<test_function_id_t>::input("function id");
 
 	std::cout << "Enter n and order:" << '\n';
 	K n = console_IO<K>::input("n");
 	K order = console_IO<K>::input("order");
-	//series_result<T> result = series->generate_series(x, n + 3 * order + 1, tParam, kParam);
+	// Generating the initial series terms
 	series_result<T> result = series->generate_series(x, n + 3 * order + 1, tParam, kParam);
 
+	// Optional noise application
 	std::string answer = "ok";
 	while(answer != "Y" && answer != "Yes" && answer != "N" && answer != "No"){
 		std::cout << "Appply noise [Y]es, [N]o: "; std::getline(std::cin, answer);
@@ -512,6 +541,7 @@ inline void main_testing_function()
 		result = jitter<T,T>(result, noise_type_to_use);
 	}
 
+	// Executing the selected test function
 	switch (function_id)
 	{
 	case test_function_id_t::cmp_sum_and_transform_id:

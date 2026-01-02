@@ -20,7 +20,6 @@
  * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  */
 
-
 /**
 * @brief Enum of noise types
 *
@@ -49,7 +48,7 @@ enum NoiseType {
 *
 * @tparam CT Complex-like type for noise generation.
 * @tparam FT Float-like type for range specification.
-
+*
 * @param inf Lower bound of the uniform distribution.
 * @param sup Upper bound of the uniform distribution.\n
 * Valid values: inf < sup.
@@ -57,6 +56,7 @@ enum NoiseType {
 * Valid values: any initialized std::mt19937_64 instance.
 *
 * @return Generated noise of type CT.
+* @throws std::invalid_argument if inf >= sup
 */
 template<ComplexLike CT, FloatLike FT>
 requires (!ComplexLike<FT>)
@@ -65,8 +65,10 @@ CT generate_uniform_noise(const FT& inf, const FT& sup, std::mt19937_64& rng) {
         throw std::invalid_argument("Invalid borders for uniform noise generation.");
     }
 
+    // Creating uniform distribution for floating point values
     std::uniform_real_distribution<float_t> distribution(inf, sup);
 
+    // Returning complex noise with independent parts
     return CT(distribution(rng), distribution(rng));
 };
 
@@ -77,6 +79,8 @@ CT generate_uniform_noise(const FT& inf, const FT& sup, std::mt19937_64& rng) {
 * Uniform noise is evenly distributed across the specified range.
 * Real and imaginary parts are generated independently within the real and imaginary parts of the given range.
 *
+* @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+*
 * @tparam T Complex-like type for noise generation.
 *
 * @param inf Complex lower bound of the uniform distribution.
@@ -86,6 +90,7 @@ CT generate_uniform_noise(const FT& inf, const FT& sup, std::mt19937_64& rng) {
 * Valid values: any initialized std::mt19937_64 instance.
 *
 * @return Generated noise of type T.
+* @throws std::invalid_argument if bounds are inconsistent
 */
 template<ComplexLike T>
 T generate_uniform_noise(const T& inf, const T& sup, std::mt19937_64& rng) {
@@ -93,13 +98,21 @@ T generate_uniform_noise(const T& inf, const T& sup, std::mt19937_64& rng) {
         throw std::invalid_argument("Invalid borders for uniform noise generation.");
     }
 
-    // Generating real and imaginary parts independently
+    // Generating real and imaginary parts independently using respective bounds
     std::uniform_real_distribution<float_t> distribution_real(utils::cast<float_t>(inf.real()), utils::cast<float_t>(sup.real()));
     std::uniform_real_distribution<float_t> distribution_imag(utils::cast<float_t>(inf.imag()), utils::cast<float_t>(sup.imag()));
 
     return T(static_cast<typename T::value_type>(distribution_real(rng)), static_cast<typename T::value_type>(distribution_imag(rng)));
 };
 
+/**
+* @brief Generates uniform noise for interval types
+* @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+* @tparam T Complex-like type for noise generation.
+* @param inf (T), sup (T), rng (std::mt19937_64)
+* @return T (Generated noise)
+* @throws std::invalid_argument if left border >= right border
+*/
 template<IntervalLike T>
 T generate_uniform_noise(const T& inf, const T& sup, std::mt19937_64& rng) {
 
@@ -107,6 +120,7 @@ T generate_uniform_noise(const T& inf, const T& sup, std::mt19937_64& rng) {
         throw std::invalid_argument("Invalid borders for uniform noise generation.");
     }
 
+    // Drawing a random value from within the specified interval range
     std::uniform_real_distribution<float_t> distribution(utils::cast<float_t>(inf.leftinterval()), utils::cast<float_t>(sup.rightinterval()));
 
     return T(static_cast<typename T::value_type>(distribution(rng)));
@@ -119,8 +133,10 @@ T generate_uniform_noise(const T& inf, const T& sup, std::mt19937_64& rng) {
 * Uniform noise is evenly distributed across the specified range.
 * Noise is generated within the given range.
 *
+* @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+*
 * @tparam T Float-like type for noise generation.
-
+*
 * @param inf Lower bound of the uniform distribution.
 * @param sup Upper bound of the uniform distribution.\n
 * Valid values: inf < sup.
@@ -128,6 +144,7 @@ T generate_uniform_noise(const T& inf, const T& sup, std::mt19937_64& rng) {
 * Valid values: any initialized std::mt19937_64 instance.
 *
 * @return Generated noise of type T.
+* @throws std::invalid_argument if inf >= sup
 */
 template<FloatLike T>
 requires (!ComplexLike<T>)
@@ -136,6 +153,7 @@ T generate_uniform_noise(const T& inf, const T& sup, std::mt19937_64& rng) {
         throw std::invalid_argument("Invalid borders for uniform noise generation.");
     }
 
+    // Simple uniform distribution generation for scalar types
     std::uniform_real_distribution<float_t> distribution(utils::cast<float_t>(inf), utils::cast<float_t>(sup));
 
     return utils::cast<T>(distribution(rng));
@@ -163,6 +181,7 @@ T generate_uniform_noise(const T& inf, const T& sup, std::mt19937_64& rng) {
 * Valid values: any initialized std::mt19937_64 instance.
 *
 * @return Generated noise of type CT.
+* @throws std::invalid_argument if std <= 0
 */
 template<ComplexLike CT, FloatLike FT>
 requires (!ComplexLike<FT> && !IntervalLike<FT>)
@@ -171,8 +190,10 @@ CT generate_normal_noise(const FT& mean, const FT& std, std::mt19937_64& rng) {
         throw std::invalid_argument("Standard deviation must be positive for normal distribution.");
     }
 
+    // Creating normal distribution with specified parameters
     std::normal_distribution<float_t> distribution(mean,std);
 
+    // Both parts share the same distribution parameters
     return CT(distribution(rng), distribution(rng));
 };
 
@@ -196,27 +217,35 @@ CT generate_normal_noise(const FT& mean, const FT& std, std::mt19937_64& rng) {
 * Valid values: any initialized std::mt19937_64 instance.
 *
 * @return Generated noise of type T.
- */
+* @throws std::invalid_argument if any standard deviation part is non-positive
+*/
 template<ComplexLike T>
 T generate_normal_noise(const T& mean, const T& std, std::mt19937_64& rng) {
     if (std.real() <= static_cast<typename T::value_type>(0) || std.imag() <= static_cast<typename T::value_type>(0)) {
         throw std::invalid_argument("Standard deviation must be positive for normal distribution.");
     }
 
-    // Generating real and imaginary parts independently
+    // Generating real and imaginary parts independently with their own mean/std
     std::normal_distribution<float_t> distribution_real(utils::cast<float_t>(mean.real()),utils::cast<float_t>(std.real()));
     std::normal_distribution<float_t> distribution_imag(utils::cast<float_t>(mean.imag()),utils::cast<float_t>(std.imag()));
 
     return T(static_cast<typename T::value_type>(distribution_real(rng)), static_cast<typename T::value_type>(distribution_imag(rng)));
 }
 
+/**
+* @brief Generates normal noise for interval types
+* @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+* @param mean (T), std (T), rng (std::mt19937_64)
+* @return T (Generated noise)
+* @throws std::invalid_argument if std dev is non-positive
+*/
 template<IntervalLike T>
 T generate_normal_noise(const T& mean, const T& std, std::mt19937_64& rng) {
     if (std.leftinterval() <= static_cast<typename T::value_type>(0) || std.leftinterval() <= static_cast<typename T::value_type>(0)) {
         throw std::invalid_argument("Standard deviation must be positive for normal distribution.");
     }
 
-    // Generating real and imaginary parts independently
+    // Using left interval boundary for distribution generation
     std::normal_distribution<float_t> distribution(mean.leftinterval(),std.leftinterval());
 
     return T(static_cast<typename T::value_type>(distribution(rng)));
@@ -241,6 +270,7 @@ T generate_normal_noise(const T& mean, const T& std, std::mt19937_64& rng) {
  * Valid values: any initialized std::mt19937_64 instance.
  *
  * @return Generated noise of type T.
+ * @throws std::invalid_argument if std <= 0
  */
 template<FloatLike T>
 requires (!ComplexLike<T> && !IntervalLike<T>)
@@ -248,6 +278,7 @@ T generate_normal_noise(const T& mean, const T& std, std::mt19937_64& rng) {
     if (std <= utils::cast<T>(0))
         throw std::invalid_argument("Standard deviation must be positive for normal distribution.");
 
+    // Simple Gaussian distribution for scalar types
     std::normal_distribution<float_t> distribution(utils::cast<float_t>(mean), utils::cast<float_t>(std));
 
     return utils::cast<T>(distribution(rng));
@@ -272,6 +303,7 @@ T generate_normal_noise(const T& mean, const T& std, std::mt19937_64& rng) {
 * Valid values: any initialized std::mt19937_64 instance.
 *
 * @return Generated noise of type CT.
+* @throws std::invalid_argument if lambda <= 0
 */
 template<ComplexLike CT, FloatLike FT>
 requires (!ComplexLike<FT>)
@@ -280,6 +312,7 @@ CT generate_poisson_noise(const FT& lambda, std::mt19937_64& rng) {
         throw std::invalid_argument("Lambda must be positive for Poisson distribution.");
     }
 
+    // Generating discrete Poisson distribution values
     std::poisson_distribution<uint64_t> distribution(utils::cast<uint64_t>(lambda));
 
     return CT(distribution(rng), distribution(rng));
@@ -287,22 +320,23 @@ CT generate_poisson_noise(const FT& lambda, std::mt19937_64& rng) {
 
 /**
 * @brief Generates Poisson noise for given type and lambda parameter.
-* This function generates Poisson noise of complex-like type for the specified complex-like lambda parameter which floors to integer.
+* This function generates Poisson noise of float-like type for the specified float-like lambda parameter which floors to integer.
 * Poisson noise follows a Poisson distribution.
-* Noise is generated independently for real and imaginary parts using the specified real and imaginary parts of the lambda parameter.
+* Noise is generated using the specified lambda parameter.
 * Noise values are non-negative integers.
 *
 * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
 *
-* @tparam T Complex-like type for noise generation.
+* @tparam T Float-like type for noise generation.
 *
-* @param lambda Complex lambda parameter of the Poisson distribution.\n
-* Valid values: lambda.real() > 0 and lambda.imag() > 0.\n
-* Defines the average rate (mean) of occurrence for the Poisson distribution for both real and imaginary parts.
+* @param lambda Lambda parameter of the Poisson distribution.\n
+* Valid values: lambda > 0.\n
+* Defines the average rate (mean) of occurrence for the Poisson distribution.
 * @param rng Random number generator.\n
 * Valid values: any initialized std::mt19937_64 instance.
 *
 * @return Generated noise of type T.
+* @throws std::invalid_argument if lambda <= 0
 */
 template<FloatLike T>
 requires (!ComplexLike<T>)
@@ -310,6 +344,7 @@ T generate_poisson_noise(const T& lambda, std::mt19937_64& rng) {
     if (lambda <= utils::cast<T>(0))
         throw std::invalid_argument("Lambda must be positive for Poisson distribution.");
 
+    // Simple Poisson distribution for scalar types
     std::poisson_distribution<uint64_t> distribution(utils::cast<uint64_t>(lambda));
 
     return utils::cast<T>(distribution(rng));
@@ -333,6 +368,7 @@ T generate_poisson_noise(const T& lambda, std::mt19937_64& rng) {
 * Valid values: any initialized std::mt19937_64 instance.
 *
 * @return Generated noise of type T.
+* @throws std::invalid_argument if lambda parts are non-positive
 */
 template<ComplexLike T>
 T generate_poisson_noise(const T& lambda, std::mt19937_64& rng) {
@@ -340,20 +376,27 @@ T generate_poisson_noise(const T& lambda, std::mt19937_64& rng) {
         throw std::invalid_argument("Lambda must be positive for Poisson distribution.");
     }
 
-    // Generating real and imaginary parts independently
+    // Generating real and imaginary parts independently with their own lambda rates
     std::poisson_distribution<uint64_t> distribution_real(utils::cast<uint64_t>(lambda.real()));
     std::poisson_distribution<uint64_t> distribution_imag(utils::cast<uint64_t>(lambda.imag()));
 
     return T(utils::cast<typename T::value_type>(distribution_real(rng)), utils::cast<typename T::value_type>(distribution_imag(rng)));
 };
 
+/**
+* @brief Generates Poisson noise for interval types
+* @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+* @param lambda (T), rng (std::mt19937_64)
+* @return T (Generated noise)
+* @throws std::invalid_argument if lambda border is non-positive
+*/
 template<IntervalLike T>
 T generate_poisson_noise(const T& lambda, std::mt19937_64& rng) {
     if (lambda.leftinterval() <= utils::cast<typename T::value_type>(0)) {
         throw std::invalid_argument("Lambda must be positive for Poisson distribution.");
     }
 
-    // Generating real and imaginary parts independently
+    // Using left boundary for Poisson rate calculation
     std::poisson_distribution<uint64_t> distribution(utils::cast<uint64_t>(lambda.leftinterval()));
 
     return T(utils::cast<typename T::value_type>(distribution(rng)));
@@ -363,6 +406,7 @@ T generate_poisson_noise(const T& lambda, std::mt19937_64& rng) {
 
 /** @brief Class for generating noise and applying it to series results.
 * This class provides functionality to generate different types of noise
+* @authors Naumov A.U., Lykov D.S., Kreynin R.G.
 * @tparam T Type of the series result elements.
 */
 template<AcceptedLike T>
@@ -376,16 +420,28 @@ protected:
     NoiseType type;
 
 
+    /**
+     * @brief Generates uniform noise
+     * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+     */
     template<AcceptedLike paramType>
     inline T uniform(const paramType& inf, const paramType& sup) const {
         return generate_uniform_noise<T>(inf, sup, *randomNumberGen);
     }
 
+    /**
+     * @brief Generates normal noise
+     * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+     */
     template<AcceptedLike paramType>
     inline T normal(const paramType& inf,const paramType& sup) const {
         return generate_normal_noise<T>(inf, sup, *randomNumberGen);
     };
 
+    /**
+     * @brief Generates poisson noise
+     * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+     */
     template<AcceptedLike paramType>
     inline T poisson(const paramType& lamda) const {
         return generate_poisson_noise<T>(lamda, *randomNumberGen);
@@ -398,6 +454,8 @@ public:
      *
      * This constructor initializes the NoiseGenerator with the specified noise type
      * and a random seed for generating random numbers.
+     *
+     * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      *
      * @param type The type of noise to generate (uniform, normal, poisson).
      */
@@ -414,6 +472,8 @@ public:
      * This constructor initializes the NoiseGenerator with the specified noise type
      * and a user-defined seed for generating random numbers.
      *
+     * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+     *
      * @param type The type of noise to generate (uniform, normal, poisson).
      * @param seed The seed for the random number generator.\n
      * Valid values: any positive integer.
@@ -428,6 +488,8 @@ public:
      *
      * This method applies jitter noise to the provided series result based on the specified noise type
      * and parameters. The noise is added to each term of the series result.
+     *
+     * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      *
      * @tparam paramType Type of the parameters for noise generation.
      *
@@ -445,6 +507,7 @@ public:
 
         std::function<T(const paramType&, const paramType&)> noiseFunc;
 
+        // Binding the appropriate noise generation function based on generator type
         switch (type) {
             case NoiseType::uniform:
                 noiseFunc = [this](const paramType& a, const paramType& b) { return this->uniform(a, b); };
@@ -457,6 +520,7 @@ public:
                 break;
         }
 
+        // Iteratively applying noise to partial sums and recalculating terms
         for (size_t i = 0; i < result.Sn.size(); ++i) {
             T noise = noiseFunc(tParam1, tParam2);
 
@@ -477,6 +541,8 @@ public:
      * This method applies scaling noise to the provided series result based on the specified noise type
      * and parameters. The terms of the series result are scaled by the generated noise.
      *
+     * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+     *
      * @tparam paramType Type of the parameters for noise generation.
      *
      * @param result The series result to which noise will be applied.
@@ -492,6 +558,7 @@ public:
 
         std::function<T(const paramType&, const paramType&)> noiseFunc;
 
+        // Binding the appropriate scaling noise function
         switch (type) {
             case NoiseType::uniform:
                 noiseFunc = [this](const paramType& a, const paramType& b) { return this->uniform(a, b); };
@@ -504,6 +571,7 @@ public:
                 break;
 
         }
+        // Applying noise factor to each term and accumulating partial sums
         for (size_t i = 0; i < result.Sn.size(); ++i) {
             T noise = noiseFunc(tParam1, tParam2);
 

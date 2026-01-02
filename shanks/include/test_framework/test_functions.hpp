@@ -1,6 +1,6 @@
 /**
- * @file test_functions.h
- * @brief This file contains the testing functions
+ * @file test_functions.hpp
+ * @brief This file contains the implementation of various testing functions.
  * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  */
 
@@ -15,7 +15,7 @@
 #include <iostream>
 
  /**
- * @brief Function that prints out comparesment between transformed and nontransformed partial sums
+ * @brief Function that prints out comparison between transformed and nontransformed partial sums
  * At first it prints out the type of transformation, series that are being transformed, type of enumerating integer and type of series terms
  * Then it prints out partial sums of first i terms of the series where i ranges from 1 to n (!)
  * After that it prints out transformed partial sum of first i terms of the series of order order
@@ -28,7 +28,7 @@
  * @param test The type of transformation that is being used
  */
 template <AcceptedLike T, std::unsigned_integral K>
-void cmp_sum_and_transform(const K n, const K order, 
+void cmp_sum_and_transform(const K n, const K order,
 	shanks::series::series_base<T,K>* series,
 	series_result<T>& result,
 	shanks::algos::series_acceleration<T,K>* test)
@@ -38,7 +38,9 @@ void cmp_sum_and_transform(const K n, const K order,
 	for (K i = 1; i <= n; ++i) {
 		try
 		{
+			// Calculating transformed value
 			const T res = test->operator()(i, order, result);
+			// Displaying comparison details
 			std::cout << "Sum of algo : " << utils::to_string(series->get_sum()) << '\n';
 			std::cout << "S_" << i << " : " << utils::to_string(result.Sn[i]) << "\n";
 			std::cout << "T_" << i << " of order " << order << " : " << utils::to_string(res) << std::endl;
@@ -57,7 +59,7 @@ void cmp_sum_and_transform(const K n, const K order,
 }
 
 /**
-* @brief Function that prints out comparesment between the terms of transformed and nontransformed series
+* @brief Function that prints out comparison between the terms of transformed and nontransformed series
 * At first it prints out the type of transformation, series that are being transformed, type of enumerating integer and type of series terms
 * Then it prints out terms from the first to nth of the series
 * At last it prints out terms from the first to nth of the transformed series
@@ -70,7 +72,7 @@ void cmp_sum_and_transform(const K n, const K order,
 */
 template <AcceptedLike T, std::unsigned_integral K>
 void cmp_a_n_and_transform(const K n, const K order,
-	shanks::series::series_base<T,K>* series, 
+	shanks::series::series_base<T,K>* series,
 	series_result<T>& result,
 	shanks::algos::series_acceleration<T,K>* test
 )
@@ -80,7 +82,9 @@ void cmp_a_n_and_transform(const K n, const K order,
 	for (K i = 1; i <= n; ++i) {
 		try
 		{
+			// Displaying original terms
 			std::cout << "a_" << i << " : " << utils::to_string(result.an[i]) << '\n';
+			// Calculating and displaying transformed terms
 			std::cout << "t_" << i << " : " << utils::to_string(test->operator()(i, order, result) - test->operator()(i - 1, order, result)) << '\n';
 			std::cout << "t_" << i << " of order " << order << " - a_" << i
 				<< " : " << utils::to_string((test->operator()(i, order, result) - test->operator()(i - 1, order, result)) - result.an[i]) << '\n';
@@ -98,7 +102,9 @@ void cmp_a_n_and_transform(const K n, const K order,
 
 /**
  * @brief Applies noise to a given series
- *
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+ * @param source (series_result<T>), noise_type (NoiseType)
+ * @return series_result<T> (noisy result)
  * @tparam T The type of the elements in the series
  * @tparam ParamType The type of the noise parameters
  *
@@ -125,11 +131,13 @@ template<AcceptedLike T, AcceptedLike ParamType>
 inline series_result<T> jitter(
 	series_result<T>& source,
 	const NoiseType noise_type
-	)
+)
 {
 	ParamType param1;
 	ParamType param2;
 	unsigned long long seed;
+
+	// Getting seed from user
 	std::cout << "Enter seed (0 for random, any other positive integer will be used as seed)\n";
 	seed = console_IO<unsigned long long int>::input("seed");
 
@@ -139,6 +147,7 @@ inline series_result<T> jitter(
 
 	std::cout << "Seed : " << utils::to_string(seed) << "\n";
 
+	// Getting noise parameters based on type
 	switch (noise_type) {
 		case uniform:
 			param1 = console_IO<ParamType>::input("Lower bound");
@@ -156,6 +165,7 @@ inline series_result<T> jitter(
 			throw std::invalid_argument("Invalid noise type");
 	}
 
+	// Applying noise
 	noise_generator<T> gen = noise_generator<T>(noise_type,seed);
 	return gen.jitter(source, param1, param2);
 }
@@ -172,18 +182,19 @@ inline series_result<T> jitter(
 * @param test The type of transformation that is being used
 */
 template <AcceptedLike T, std::unsigned_integral K>
-void transformation_remainders(const K n, const K order, 
+void transformation_remainders(const K n, const K order,
 	shanks::series::series_base<T,K>* series,
 	series_result<T>& result,
 	shanks::algos::series_acceleration<T,K>* test
 )
-{	
+{
 
 	std::cout << "Tranformation of order " << order << " remainders from i = 1 to " << n << '\n';
 	std::cout << "transformation : " << test->get_name() << "\n";
 	for (K i = 1; i <= n; ++i) {
 		try
 		{
+			// Calculating and displaying remainder: Sum - Transformed_Sum
 			std::cout << "S - T_" << i << " : " << utils::to_string(series->get_sum() - test->operator()(i, order, result)) << '\n';
 		}
 		catch (std::domain_error& e)
@@ -210,10 +221,10 @@ void transformation_remainders(const K n, const K order,
 * @param test_2 The type of the second transformation that is being used
 */
 template <AcceptedLike T, std::unsigned_integral K>
-void cmp_transformations(const K n, const K order, 
+void cmp_transformations(const K n, const K order,
 	shanks::series::series_base<T,K>* series,
 	series_result<T>& result,
-	shanks::algos::series_acceleration<T,K>* test_1, 
+	shanks::algos::series_acceleration<T,K>* test_1,
 	shanks::algos::series_acceleration<T,K>* test_2
 )
 {
@@ -231,10 +242,15 @@ void cmp_transformations(const K n, const K order,
 	for (K i = 1; i <= n; ++i) {
 		try
 		{
+			// Calculating remainders for both transformations
 			diff_1 = series->get_sum() - test_1->operator()(i, order, result);
 			diff_2 = series->get_sum() - test_2->operator()(i, order, result);
+
+			// Displaying remainders
 			std::cout << "The transformation #1: S - T_" << i << " : " << utils::to_string(diff_1) << '\n';
 			std::cout << "The transformation #2: S - T_" << i << " : " << utils::to_string(diff_2)<< '\n';
+
+			// Comparing absolute errors
 			if (abs(diff_1) < abs(diff_2))
 				std::cout << "The transformation #1 is faster" << '\n';
 			else
@@ -261,18 +277,20 @@ void cmp_transformations(const K n, const K order,
 * @param test The type of the first transformation that is being used
 */
 template <AcceptedLike T, std::unsigned_integral K>
-void eval_transform_time(const K n, const K order, 
+void eval_transform_time(const K n, const K order,
 	shanks::series::series_base<T,K>* series,
 	series_result<T>& result,
 	shanks::algos::series_acceleration<T,K>* test
 )
 {
 
+	// Starting timer
 	const auto start_time = std::chrono::system_clock::now();
 	std::cout << "transformation : " << test->get_name() << "\n";
 	for (K i = 1; i <= n; ++i) {
 		try
 		{
+			// Performing transformation
 			test->operator()(i, order, result);
 		}
 		catch (std::domain_error& e)
@@ -284,29 +302,38 @@ void eval_transform_time(const K n, const K order,
 			std::cout << e.what() << '\n';
 		}
 	}
+	// Ending timer
 	const auto end_time = std::chrono::system_clock::now();
 	const std::chrono::duration<double, std::milli> diff = end_time - start_time;
 	std::cout << "It took " << diff.count() << " to perform these transformations" << '\n';
 }
 
+/**
+ * @brief Function that tests all available transformations on a series
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+ * @param n (K), order (K), series (series_base*), result (series_result&)
+ * @tparam T The type of the elements in the series
+ * @tparam K The type of enumerating integer
+ */
 template <AcceptedLike T, std::unsigned_integral K>
 void test_all_transforms(
-	const K n, 
-	const K order, 
+	const K n,
+	const K order,
 	shanks::series::series_base<T,K>* series,
 	series_result<T>& result
 ){
 
+	// Map of all available algorithms
 	std::unordered_map<shanks::algos::transformation_id_t, std::function<std::unique_ptr<shanks::algos::series_acceleration<T,K>>(void)>> algoInit = {
 		{shanks::algos::transformation_id_t::anderson_acceleration_algorithm_id              , [](){ return std::make_unique<shanks::algos::anderson_acceleration_algorithm<T, K>>(); 						  					  }},
 	    {shanks::algos::transformation_id_t::brezinski_theta_transformation_id				 , [](){ return std::make_unique<shanks::algos::brezinski_theta_algorithm<T, K>>();                               					  }},
 		{shanks::algos::transformation_id_t::chang_wynn_transformation_id					 , [](){ return std::make_unique<shanks::algos::chang_wynn_algorithm<T, K>>();                                    					  }},
-		{shanks::algos::transformation_id_t::drummond_d_u_transformation_id				 	 , [](){ return std::make_unique<shanks::algos::drummond_d_algorithm<T, K>>(shanks::remainders::remainder_type::u_type       , false);}}, 
+		{shanks::algos::transformation_id_t::drummond_d_u_transformation_id				 	 , [](){ return std::make_unique<shanks::algos::drummond_d_algorithm<T, K>>(shanks::remainders::remainder_type::u_type       , false);}},
         {shanks::algos::transformation_id_t::drummond_d_t_transformation_id				 	 , [](){ return std::make_unique<shanks::algos::drummond_d_algorithm<T, K>>(shanks::remainders::remainder_type::t_type       , false);}},
         {shanks::algos::transformation_id_t::drummond_d_t_wave_transformation_id			 , [](){ return std::make_unique<shanks::algos::drummond_d_algorithm<T, K>>(shanks::remainders::remainder_type::t_wave_type  , false);}},
         {shanks::algos::transformation_id_t::drummond_d_v_transformation_id				 	 , [](){ return std::make_unique<shanks::algos::drummond_d_algorithm<T, K>>(shanks::remainders::remainder_type::v_type       , false);}},
         {shanks::algos::transformation_id_t::drummond_d_v_wave_transformation_id			 , [](){ return std::make_unique<shanks::algos::drummond_d_algorithm<T, K>>(shanks::remainders::remainder_type::v_wave_type  , false);}},
-		{shanks::algos::transformation_id_t::j_transformation_id                  			 , [](){ return std::make_unique<shanks::algos::j_transformation_algorithm<T, K>>(); 							   					   }}, 
+		{shanks::algos::transformation_id_t::j_transformation_id                  			 , [](){ return std::make_unique<shanks::algos::j_transformation_algorithm<T, K>>(); 							   					   }},
 		{shanks::algos::transformation_id_t::recurrent_drummond_d_u_transformation_id		 , [](){ return std::make_unique<shanks::algos::drummond_d_algorithm<T, K>>(shanks::remainders::remainder_type::u_type       ,  true);}},
     	{shanks::algos::transformation_id_t::recurrent_drummond_d_t_transformation_id		 , [](){ return std::make_unique<shanks::algos::drummond_d_algorithm<T, K>>(shanks::remainders::remainder_type::t_type       ,  true);}},
      	{shanks::algos::transformation_id_t::recurrent_drummond_d_v_transformation_id		 , [](){ return std::make_unique<shanks::algos::drummond_d_algorithm<T, K>>(shanks::remainders::remainder_type::t_wave_type  ,  true);}},
@@ -352,11 +379,13 @@ void test_all_transforms(
     	{shanks::algos::transformation_id_t::wynn_rho_gamma_rho_transformation_id			 , [](){ return std::make_unique<shanks::algos::wynn_rho_algorithm<T, K>>(shanks::numerators::numerator_type::gamma_rho_type);        }},
 	};
 
+	// Instantiating all algorithms
 	std::vector<std::unique_ptr<shanks::algos::series_acceleration<T,K>>> algos(algoInit.size());
 	for (size_t j = 1; j <= algoInit.size(); ++j){
 		algos[j-1] = algoInit[static_cast<shanks::algos::transformation_id_t>(j)]();
 	}
-	
+
+	// Running tests for each algorithm
 	for (size_t i = 0; i <= n; ++i){
 		for (size_t j = 0; j < algos.size(); ++j) {
 				try{

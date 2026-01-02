@@ -6,15 +6,35 @@
 
 /**
  * @file series_info.hpp
- * @brief This file contains the information for all series.
+ * @brief This file contains interface definitions for series metadata information.
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+ */
+
+/**
+ * @brief Interface for accessing series identification and naming metadata
  * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  */
 class ISeriesInfo {
 public:
 
+	/**
+	 * @brief Virtual destructor
+	 * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+	 */
 	virtual ~ISeriesInfo();
 
+	/**
+	 * @brief Returns the unique series ID
+	 * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+	 * @return shanks::series::series_id_t
+	 */
 	virtual shanks::series::series_id_t getId() const = 0;
+
+	/**
+	 * @brief Returns the human-readable name of the series
+	 * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+	 * @return std::string
+	 */
 	virtual std::string getName() const = 0;
 
 };

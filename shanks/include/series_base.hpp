@@ -17,14 +17,21 @@
 
 /**
  * @file series_base.hpp
- * @brief This file contains the base for all series.
+ * @brief This file contains the base class for all series and helper functions for iterator creation.
  * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  */
 
 namespace shanks { namespace series{
 
 /**
- * @brief Helper function to get series by ID
+ * @brief Factory function to create a series iterator based on its unique ID.
+ *
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+ * @tparam T Floating-point type for series elements (AcceptedLike).
+ * @tparam K Unsigned integral type for indexing (std::unsigned_integral).
+ * @param id The ID of the series iterator to instantiate.
+ * @return std::unique_ptr<shanks::iters::series_base_iterator<T, K>> A pointer to the newly created iterator.
+ * @throws std::domain_error if the requested series ID is not implemented.
  */
 template <AcceptedLike T, std::unsigned_integral K>
 inline std::unique_ptr<shanks::iters::series_base_iterator<T, K>> create_iterator_by_id(shanks::iters::series_iterator_id_t id) {
@@ -137,9 +144,14 @@ inline std::unique_ptr<shanks::iters::series_base_iterator<T, K>> create_iterato
 
 
  /**
- * @brief Abstract class for series
+ * @brief Abstract class for mathematical series.
+ *
+ * Defines the common structure and operations for all series in the library,
+ * managing their names, convergence conditions, and internal iterators.
+ *
  * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
- * @tparam T The type of the elements in the series, K The type of enumerating integer
+ * @tparam T Floating-point type for series elements (AcceptedLike).
+ * @tparam K Unsigned integral type for indexing (UnsignedIntLike).
  */
 template <AcceptedLike T, UnsignedIntLike K>
 class series_base
@@ -147,59 +159,86 @@ class series_base
 public:
 
 	/**
-	* @brief Parameterized constructor to initialize the series with function argument
+	* @brief Parameterized constructor to initialize the series object.
+	*
 	* @authors Naumov A.U., Lykov D.S., Kreynin R.G.
-	* @param x The argument for function series
+	* @param name Descriptive name of the series.
+	* @param condition Mathematical condition for series convergence.
+	* @param iterator_id ID of the iterator to be used for term generation.
 	*/
 	series_base(
-		std::string name = "unknown", 
-		std::string condition = "unknown", 
+		std::string name = "unknown",
+		std::string condition = "unknown",
 		shanks::iters::series_iterator_id_t iterator_id = shanks::iters::series_iterator_id_t::null_iterator_id
 	) : series_name(name), condition(condition) {
+		// Ensure that a valid iterator ID is provided
 		assert((iterator_id != shanks::iters::series_iterator_id_t::null_iterator_id));
 		series_iterator = create_iterator_by_id<T,K>(iterator_id);
 		this->iterator_id = iterator_id;
 	}
 
 	/**
-	* @brief x getter
+	* @brief Retrieves the current evaluation point x.
 	* @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+	* @return const T The value of x.
 	*/
 	[[nodiscard]] constexpr const T get_x() const { return series_iterator->x; }
 
 	/**
-	* @brief sum getter
+	* @brief Retrieves the current cumulative sum of the series.
 	* @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+	* @return const T The current sum.
 	*/
 	[[nodiscard]] constexpr const T get_sum() const { return series_iterator->sum(); }
 
 	/**
-	* @brief sum getter
+	* @brief Retrieves the name of the series.
 	* @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+	* @return const std::string The series name.
 	*/
 	[[nodiscard]] constexpr const std::string get_name() const { return series_name; }
 
 	/**
-	 * @brief 
-	 * 
-	 * @param vecSize 
-	 * @return std::vector<T> 
+	 * @brief Generates vectors of terms and partial sums for the series.
+	 *
+	 * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+	 * @param x Evaluation point.
+	 * @param vecSize Number of terms to generate.
+	 * @param addTParameter Additional floating-point parameter for specialized iterators.
+	 * @param addKParameter Additional integral parameter for specialized iterators.
+	 * @return series_result<T> Structure containing terms (an) and partial sums (Sn).
 	 */
 	series_result<T> generate_series(
-		const T& x , 
-		const K vecSize, 
-		const T& addTParameter = utils::cast<T>(1.0),
-		const K addKParameter = static_cast<K>(1)
-	);
-	
-	void init_iterator(
-		const T& x, 
+		const T& x ,
+		const K vecSize,
 		const T& addTParameter = utils::cast<T>(1.0),
 		const K addKParameter = static_cast<K>(1)
 	);
 
+	/**
+	 * @brief Initializes the internal iterator with specific evaluation parameters.
+	 *
+	 * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+	 * @param x Evaluation point.
+	 * @param addTParameter Additional floating-point parameter.
+	 * @param addKParameter Additional integral parameter.
+	 */
+	void init_iterator(
+		const T& x,
+		const T& addTParameter = utils::cast<T>(1.0),
+		const K addKParameter = static_cast<K>(1)
+	);
+
+	/**
+	 * @brief Computes the next term in the series and updates the sum.
+	 *
+	 * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+	 * @return std::pair<T, T> A pair containing the next term and the updated total sum.
+	 * @throws std::domain_error if the iterator has not been initialized.
+	 */
 	std::pair<T, T> next(){
 		if (iterator_initialized){
+			// Log current step for debugging purposes
 			std::cout << "\n" << series_iterator->n << "\n";
 			const T an = series_iterator->next(); sum+=an;
 			return std::pair<T,T>(an, sum);
@@ -211,39 +250,39 @@ public:
 protected:
 
 	/**
-    * @brief Throws domain error with unified message format
+    * @brief Helper to throw a formatted domain error for divergent series.
     * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
-    * @param condition Description of the divergence condition
-    * @throws std::domain_error with formatted message containing series name, x value and condition
+    * @throws std::domain_error with detailed context about the divergence point and conditions.
     */
 	void throw_domain_error() const {
-
-		
 		throw std::domain_error(series_name + " series diverges at x = " + utils::to_string(series_iterator->x) + " (" + condition + ")");
 	}
 
+	/// Unique pointer to the underlying iterator implementation.
 	std::unique_ptr<shanks::iters::series_base_iterator<T,K>> series_iterator;
 
-	/**
-    * @brief Name of the series for unified error messages
-    * Used to generate consistent error output format
-    * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
-    */
+	/// Internal storage for the series name.
 	std::string series_name = "series base";
 
+	/// Description of convergence conditions.
 	std::string condition = "no conditions";
-	
+
+	/// Identifier for the current iterator type.
 	shanks::iters::series_iterator_id_t iterator_id = shanks::iters::series_iterator_id_t::null_iterator_id;
 
+	/// State flag tracking iterator initialization.
 	bool iterator_initialized = false;
 
-	
+	/// The current total sum of the series.
 	T sum = utils::cast<T>(0.0);
 };
 
+/**
+ * @brief Initialization logic for the series iterator.
+ */
 template <AcceptedLike T, UnsignedIntLike K>
 void series_base<T, K>::init_iterator(
-	const T& x, 
+	const T& x,
 	const T& addTParameter,
 	const K addKParameter
 ){
@@ -254,10 +293,13 @@ void series_base<T, K>::init_iterator(
 	#endif
 
 	series_iterator->x = x;
+
+	// Validate point before starting calculation
 	if(series_iterator->check_validity()) throw_domain_error();
 	iterator_initialized = true;
-	
 
+
+	// Apply specialized parameters based on the iterator implementation
 	switch(iterator_id){
 		case shanks::iters::series_iterator_id_t::bin_iterator_id:{
 			shanks::iters::bin_iterator<T,K>* ptr = static_cast<shanks::iters::bin_iterator<T,K>*>(series_iterator.get());
@@ -270,7 +312,7 @@ void series_base<T, K>::init_iterator(
 			shanks::iters::incomplete_Gamma_func_iterator<T,K>* ptr = static_cast<shanks::iters::incomplete_Gamma_func_iterator<T,K>*>(series_iterator.get());
 			#ifdef SET_PRECISION_SET
 			if constexpr (!is_standard_types<T>::value) utils::set_precision(utils::get_precision<T>(x), series_iterator->x);
-			#endif 
+			#endif
 			ptr->alpha = addTParameter;
 		}
 		case shanks::iters::series_iterator_id_t::m_fact_1mx_mp1_inverse_iterator_id:{
@@ -280,10 +322,13 @@ void series_base<T, K>::init_iterator(
 	}
 }
 
+/**
+ * @brief Generation logic for series data vectors.
+ */
 template <AcceptedLike T, UnsignedIntLike K>
 series_result<T> series_base<T, K>::generate_series(
-	const T& x, 
-	const K vecSize, 
+	const T& x,
+	const K vecSize,
 	const T& addTParameter,
 	const K addKParameter
 ){
@@ -291,7 +336,7 @@ series_result<T> series_base<T, K>::generate_series(
 	init_iterator(x, addTParameter, addKParameter);
 	std::vector<T> vecAn(vecSize, utils::cast<T>(0.0));
 	std::vector<T> vecSn(vecSize, utils::cast<T>(0.0));
-	
+
 	#ifdef SET_PRECISION_SET
 	if constexpr (is_precisable<T>::value){
 		utils::set_vec_precision<T>(vecAn, utils::get_precision(x));
@@ -299,10 +344,12 @@ series_result<T> series_base<T, K>::generate_series(
 	}
 	#endif
 
+	// Populate the vectors term-by-term
 	for (K j = 0; j < vecSize; ++j){
 		try{
 			vecAn[j] += series_iterator->next();
 		} catch (...) {
+			// Fallback strategy: repeat last term if generation fails
 			vecAn[j] += (j == 0 ? utils::cast<T>(0.0) : vecAn[j-1]);
 		}
 		sum += vecAn[j];

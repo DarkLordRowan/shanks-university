@@ -1,10 +1,11 @@
-﻿#ifndef WYNN_EPSILON_3_ALGORITHM_HPP
+#ifndef WYNN_EPSILON_3_ALGORITHM_HPP
 #define WYNN_EPSILON_3_ALGORITHM_HPP
 #pragma once
 /**
  * @file wynn_epsilon_3_algorithm.hpp
  * @brief This file contains the declaration of the third implementation of Wynn's Epsilon Algorithm.
  * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+ *
  * For theory, see:
  * Wynn, P. (1956). On a device for computing the eₙ(Sₙ) transformation.
  *   Mathematical Tables and Other Aids to Computation, 10(54), 91-96.
@@ -25,13 +26,10 @@ namespace shanks{ namespace algos{
   * It computes accelerated partial sums using the epsilon algorithm with threshold-based
   * error control and adaptive table management.
   *
-  * Template Parameters:
-  * @tparam T Floating-point type for series elements and computations.
-  *           Must satisfy Accepted. Represents numerical precision (float, double, long double).
-  *           Determines the precision of all arithmetic operations and storage.
-  * @tparam K Unsigned integral type for indices, counts, and sizes.
-  *           Must satisfy std::unsigned_integral. Used for indexing terms, table sizes, and loop counters.
-  *           Typical types: unsigned int, std::size_t.
+  * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+  * @tparam T Floating-point type for series elements and computations (must satisfy AcceptedLike).
+  *           Represents numerical precision (float, double, long double, or arbitrary precision).
+  * @tparam K Unsigned integral type for indices, counts, and sizes (must satisfy UnsignedIntLike).
   */
 template <AcceptedLike T, UnsignedIntLike K>
 class wynn_epsilon_3_algorithm final : public series_acceleration<T, K>
@@ -41,41 +39,38 @@ public:
     using float_type = GetUnderlyingType<T>::value; //type in case of complex or interval
 
     /**
-     * @brief Parameterized constructor.
-     * @param epsilon_threshold_ Threshold for epsilon corrections. Controls numerical stability.
+     * @brief Parameterized constructor for Wynn's Epsilon Algorithm (variant 3).
+     * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+     * @param epsilon_threshold_ Threshold for epsilon corrections to maintain numerical stability.
      *        Valid values: positive T values. Too small may cause overflow, too large may reduce acceleration.
      */
-    explicit wynn_epsilon_3_algorithm(const float_type& epsilon_threshold_ = utils::cast<float_type>(1e-3)) : 
+    explicit wynn_epsilon_3_algorithm(const float_type& epsilon_threshold_ = utils::cast<float_type>(1e-3)) :
     series_acceleration<T, K>("wynn epsilon 3"), epsilon_threshold(epsilon_threshold_) {};
 
-	/**
-	* @brief Fast impimentation of Epsilon algorithm.
-	* Computes the partial sum after the transformation using the Epsilon Algorithm.
-	* For more information, see 612.zip
-	* @param n The number of terms in the partial sum.
-	* @param order The order of transformation.
-	* @return The partial sum after the transformation.
-	*/
-
     /**
-     * @brief Compute accelerated partial sum using Wynn's Epsilon Algorithm (Third Implementation).
+     * @brief Executes the third implementation of the Wynn Epsilon Algorithm.
+     *
+     * This method applies the recursive epsilon algorithm with additional error monitoring
+     * and a compacted table structure. It iteratively refines the estimate of the series limit.
      *
      * Implements the recursive epsilon algorithm with error control and adaptive table management.
      * The algorithm constructs a table of approximations and applies the recurrence:
      * For theory, see: Wynn (1956), Eq. (4): εₛ₊₁⁽ⁿ⁾ = εₛ₋₁⁽ⁿ⁺¹⁾ + 1/(εₛ⁽ⁿ⁺¹⁾ - εₛ⁽ⁿ⁾)
      * More information([https://calgo.acm.org/])
+     * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @param n The number of terms to use from the original series (partial sum index).
      *        Valid values: n > 0. Higher values use more terms but may provide better acceleration.
      * @param order The order of transformation (number of epsilon algorithm iterations).
      *        Valid values: order >= 0. Higher orders apply more transformations but may increase error.
      * @param data series_result<T> struct containing necessary information for algorithm
-     * @return The accelerated partial sum after applying the epsilon algorithm.
-     * @throws std::domain_error if n=0.
-     * @throws std::overflow_error if numerical instability (e.g., division by zero) occurs.
+     * @return T The accelerated partial sum result.
+     * @throws std::out_of_range if the Sn vector size is insufficient for the requested parameters.
+     * @throws std::domain_error if n is 0.
+     * @throws std::overflow_error if numerical instability or non-finite result occurs.
      */
 	T operator()(
-        const K n, 
-        const K order, 
+        const K n,
+        const K order,
         const series_result<T>& data
     ) const override;
 private:
@@ -88,11 +83,12 @@ private:
 // Algorithm implementation
 template <AcceptedLike T, UnsignedIntLike K>
 T wynn_epsilon_3_algorithm<T, K>::operator()(
-    const K n, 
-    const K order, 
+    const K n,
+    const K order,
     const series_result<T>& data
 ) const {
 
+    // Ensure Sn vector has enough terms: n + order + 1
     const K required_size = n + order + static_cast<K>(1);
 
     if (data.Sn.size() < required_size){
@@ -126,9 +122,10 @@ T wynn_epsilon_3_algorithm<T, K>::operator()(
     // The epsilon table e[0..N+2] stores intermediate values εₛ⁽ⁿ⁾.
     std::vector<T> e(N + static_cast<K>(3), utils::cast<T>(0.0)); //First N eliments of epsilon table + 2 elements for math
 
+    // Initialize precision for all variables if supported by type T
     if constexpr (is_precisable<T>::value){
 		utils::set_vec_precision(e, utils::get_precision(data.Sn[0]));
-		utils::set_precision(utils::get_precision(data.Sn[0]), result, abs_error, resla, RES, E0, E1, E2, E3, 
+		utils::set_precision(utils::get_precision(data.Sn[0]), result, abs_error, resla, RES, E0, E1, E2, E3,
                 DELTA1, DELTA2, DELTA3, ERROR, ERR1, ERR2, ERR3, TOL1, TOL2, TOL3, SS);
     }
 
@@ -140,9 +137,9 @@ T wynn_epsilon_3_algorithm<T, K>::operator()(
 
     // Initialize epsilon table with partial sums: ε₀⁽ⁱ⁾ = S_i for i=0,...,N
     for (K i = static_cast<K>(0); i <= N; ++i)  e[i] += data.Sn.at(i); //Filling up Epsilon Table
-    
 
-    // Apply epsilon algorithm for 'order' iterations
+
+    // Main transformation loop (iterations up to the specified order)
     for (K i = static_cast<K>(0); i <= order; ++i) { //Working with Epsilon Table order times
 
         num = NUM = K1 = N = n;
@@ -161,7 +158,7 @@ T wynn_epsilon_3_algorithm<T, K>::operator()(
             DELTA2 = E2 - E1;                   // εₛ⁽ⁿ⁺¹⁾ - εₛ₋₁⁽ⁿ⁾
 
             ERR2 = utils::abs(DELTA2);                 // Absolute difference
-            
+
             TOL2 = max(utils::abs(E2), utils::abs(E1)); // Tolerance based on machine precision
             TOL2*=EMACH;
 
@@ -183,7 +180,7 @@ T wynn_epsilon_3_algorithm<T, K>::operator()(
                 TOL1 = max(utils::abs(E1), utils::abs(E3));
                 TOL1*= EMACH;
 
-                // If differences are insignificant, terminate early
+                // Breakdown condition check
                 if (ERR1 <= TOL1 || ERR2 <= TOL2 || ERR3 <= TOL3) {
                     N = static_cast<K>(2) * I - static_cast<K>(1);
                     break;
@@ -191,7 +188,7 @@ T wynn_epsilon_3_algorithm<T, K>::operator()(
 
                 // For theory, see: Wynn (1962), Eq. (13): Rational function extrapolation step.
                 SS = utils::cast<T>(1) / DELTA1 + utils::cast<T>(1) / DELTA2 - utils::cast<T>(1) / DELTA3;
-                //std::cout << "\n" << RES << "\n";
+
                 // Check if correction term is within threshold
                 if (utils::abs(SS * E1) > epsilon_threshold) {
                     RES = E1 + utils::cast<T>(1) / SS;      // Apply epsilon correction
@@ -210,7 +207,7 @@ T wynn_epsilon_3_algorithm<T, K>::operator()(
             }
 
             else {
-                // Differences are insignificant; accept current value
+                // Insignificant differences; accept current value
                 result = RES;
                 abs_error = ERR2 + ERR3;
                 e[K1] = result;
@@ -218,13 +215,13 @@ T wynn_epsilon_3_algorithm<T, K>::operator()(
             }
         }
 
-        // Adjust N to be the greatest odd number <= n if no change
+        // Adjust working range for the next iteration level (N to be the greatest odd number <= n if no change)
         if (N == n) // making N the greatest odd number <= n
             N = (n % static_cast<K>(2) == static_cast<K>(1)) ? n : n - static_cast<K>(1);
 
         // Compact the epsilon table for next iteration
         ib = (num % static_cast<K>(2) == static_cast<K>(1) ) ? static_cast<K>(1) : static_cast<K>(2);  // Start index: 1 for odd, 2 for even
-        
+
         // Start index: 1 (odd) or 2 (even)
         ie = newelm + static_cast<K>(1);
 
@@ -240,14 +237,14 @@ T wynn_epsilon_3_algorithm<T, K>::operator()(
 
         // Update error estimate and previous result
         abs_error = max(
-            utils::abs(result - resla), 
+            utils::abs(result - resla),
             EPRN * utils::abs(result)
         );
 
         resla = result;
     }
 
-    // Check for numerical instability
+    // Final validity check for the accelerated estimate
     if(!utils::isfinite(result)) throw std::overflow_error("division by zero");
 
     return result;

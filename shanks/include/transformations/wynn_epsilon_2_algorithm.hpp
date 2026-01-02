@@ -1,13 +1,12 @@
-﻿#ifndef WYNN_EPSILON_2_ALGORITHM_HPP
+#ifndef WYNN_EPSILON_2_ALGORITHM_HPP
 #define WYNN_EPSILON_2_ALGORITHM_HPP
 #pragma once
 
 /**
  * @file wynn_epsilon_2_algorithm.hpp
  * @brief This file contains the declaration of the second implementation of Wynn's Epsilon Algorithm.
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  *
- * @authors Naumov A.U., Lykov D.S., Kreynin R.G. 
- * 
  * For theory, see:
  * Wynn, P. (1956). On a device for computing the eₙ(Sₙ) transformation.
  *   Mathematical Tables and Other Aids to Computation, 10(54), 91-96.
@@ -24,9 +23,11 @@ namespace shanks{ namespace algos{
  /**
   * @brief Wynn's Epsilon Algorithm (Second Implementation) class template.
   *
-  * This class implements Wynn's epsilon algorithm for series acceleration.
-  * The algorithm constructs a table of approximations using a recurrence relation
-  * and returns accelerated partial sums from the even columns of this table.
+  * This class implements Wynn's epsilon algorithm for series acceleration using a circular
+  * buffer of rows to minimize memory usage. It includes stability checks and correction
+  * logic to handle potential numerical singular points where the recurrence might fail.
+  *
+  * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
   *
   * Template Parameters:
   * @tparam T Floating-point type for series elements (must satisfy Accepted)
@@ -50,6 +51,7 @@ public:
 
 	/**
 	 * @brief Parameterized constructor to initialize the Epsilon Algorithm.
+	 * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
 	 */
     explicit wynn_epsilon_2_algorithm() : series_acceleration<T, K>("wynn epsilon 2") {};
 
@@ -66,6 +68,7 @@ public:
 	 *
 	 * εₖ₊₁⁽ᵐ⁾ = εₖ₋₁⁽ᵐ⁺¹⁾ + 1/(εₖ⁽ᵐ⁺¹⁾ - εₖ⁽ᵐ⁾)
 	 *
+	 * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
 	 * @param n The number of terms to use in the transformation (n ≥ 1)
 	 *        Valid values: n > 0 (algorithm requires at least 1 term)
 	 *        Higher values use more terms but may provide better acceleration
@@ -73,34 +76,37 @@ public:
 	 *        Valid values: order >= 0
 	 *        Higher orders use more terms from the epsilon table
 	 * @param data series_result<T> struct containing necessary information for algorithm
-	 * @return The accelerated partial sum after Wynn's epsilon transformation
-	 * @throws std::domain_error if n=0 is provided as input
-	 * @throws std::overflow_error if numerical instability occurs
+	 * @return T The accelerated partial sum result.
+	 * @throws std::out_of_range if the Sn vector is too small for the requested order.
+	 * @throws std::domain_error if n is 0.
+	 * @throws std::overflow_error if a non-finite result is encountered despite stability checks.
 	 */
     T operator()(
-		const K n, 
-        const K order, 
-         
+		const K n,
+        const K order,
+
         const series_result<T>& data
 	) const override;
 };
 
 template <AcceptedLike T, UnsignedIntLike K>
 T wynn_epsilon_2_algorithm<T, K>::operator()(
-	const K n, 
-    const K order, 
+	const K n,
+    const K order,
     const series_result<T>& data
 ) const {
 
+    // Ensure sufficient terms are available: 2*order + n + 1 terms are required
     const K required_size = static_cast<K>(2) * order + n + static_cast<K>(1);
 
     if (data.Sn.size() < required_size){
-        throw std::out_of_range("The Sn smaller then required for wynn_epsilon_2_{" + utils::to_string(order) + "}^{" + utils::to_string(n) + "}\n" +
-        "the size of Sn must be at least " + utils::to_string(required_size));
+        throw std::out_of_range("The Sn vector is smaller than required for Wynn epsilon 2 computation.");
 	}
 
-	// For theory, see: Wynn (1956), Section 2 - Initial conditions and algorithm setup
+    // For theory, see: Wynn (1956), Section 2 - Initial conditions and algorithm setup
     if (n == static_cast<K>(0)) throw std::domain_error("n = 0 in the input");
+
+    // Trivial case: order 0 returns the original partial sum
     if (order == static_cast<K>(0)) return data.Sn.at(n);
 
 	// For theory, see: Wynn (1956), Section 3 - Algorithm construction and table size
@@ -113,6 +119,7 @@ T wynn_epsilon_2_algorithm<T, K>::operator()(
 	T a, a1, a2;
 	a = a1 = a2 = utils::cast<T>(0);
 
+    // Initialize precision for types that require it
     if constexpr (is_precisable<T>::value){
 		for (size_t j = 0; j < eps.size(); ++j)
 			utils::set_vec_precision(eps[j], utils::get_precision(data.Sn[0]));
@@ -123,7 +130,7 @@ T wynn_epsilon_2_algorithm<T, K>::operator()(
 	// Initialize the bottom row with partial sums: ε₀⁽ᵐ⁾ = Sₙ for m = 0,1,...,k
 	for (K i = static_cast<K>(0); i <= k; ++i)
 		eps[3][i] = data.Sn.at( + i);
-	
+
 
 	K i1, i2;
 
@@ -163,6 +170,7 @@ T wynn_epsilon_2_algorithm<T, K>::operator()(
 				eps[0][i] = eps[0][i] * a;
 			}
 
+            // Final stability check after possible correction
 			stable = utils::isfinite(eps[0][i]);
 
 			// Fallback to previous value if correction fails
@@ -171,7 +179,7 @@ T wynn_epsilon_2_algorithm<T, K>::operator()(
 		}
 
 		// For theory, see: Wynn (1956), Section 3 - Table updating procedure
-		// Shift rows upward in the circular buffer for the next iteration
+		// Circular shift of the rows in the buffer
 		std::swap(eps[0], eps[1]);
 		std::swap(eps[1], eps[2]);
 		std::swap(eps[2], eps[3]);

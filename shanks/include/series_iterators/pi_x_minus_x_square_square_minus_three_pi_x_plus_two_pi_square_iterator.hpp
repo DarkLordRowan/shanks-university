@@ -4,21 +4,42 @@
 
 #include "series_base_iterator.hpp"
 
+/**
+ * @file pi_x_minus_x_square_square_minus_three_pi_x_plus_two_pi_square_iterator.hpp
+ * @brief Iterator for the Fourier series expansion of a periodic parabolic function.
+ * @authors Bolshakov M.P.
+ */
+
 namespace shanks { namespace iters {
 
 /**
-* @brief Maclaurin series of pi*x-x^2{x<=pi}, x^2-3pi*x+2pi^2 function
-* @authors Bolshakov M.P.
-* @tparam T The type of the elements in the series, K The type of enumerating integer
-*/
+ * @brief Fourier series iterator for the piecewise parabolic function:
+ * f(x) = pi*x - x^2 for x in [0, pi] and f(x) = x^2 - 3*pi*x + 2*pi^2 for x in [pi, 2*pi].
+ *
+ * This class implements the Fourier sine expansion for the given periodic
+ * parabolic segments, which converges for values of x such that 0 < x < 2*pi.
+ *
+ * @authors Bolshakov M.P.
+ * @tparam T Floating-point type for series elements (AcceptedLike).
+ * @tparam K Unsigned integral type for indexing (UnsignedIntLike).
+ */
 template<AcceptedLike T, UnsignedIntLike K>
 class pi_x_minus_x_square_square_minus_three_pi_x_plus_two_pi_square_iterator final : public series_base_iterator<T, K>{
 public:
 
+    /**
+     * @brief Default constructor for pi_x_minus_x_square_square_minus_three_pi_x_plus_two_pi_square_iterator.
+     * @authors Bolshakov M.P.
+     */
 	pi_x_minus_x_square_square_minus_three_pi_x_plus_two_pi_square_iterator() : series_base_iterator<T, K>() {}
-	
+
+    /**
+     * @brief Retrieves the analytic sum of the series (the piecewise parabolic value).
+     * @authors Bolshakov M.P.
+     * @return T The value of the piecewise function at current point x.
+     */
 	T sum() const override{
-		using float_type = GetUnderlyingType<T>::value; //type in case of complex or interval
+		using float_type = GetUnderlyingType<T>::value;
 
 		if constexpr (isComplexLike<T>::value){
 			if (this->x.real() <= utils::cast<float_type>(std::numbers::pi))
@@ -30,9 +51,14 @@ public:
 
 		return this->x * this->x - utils::cast<T>(3.0 * std::numbers::pi) * this->x + utils::cast<T>(2.0 * std::numbers::pi) * utils::cast<T>(std::numbers::pi);
 	}
-	
+
+    /**
+     * @brief Validates the current evaluation point x.
+     * @authors Bolshakov M.P.
+     * @return true if x is outside [0, 2pi] or non-finite, false otherwise.
+     */
 	bool check_validity() const override {
-		using float_type = GetUnderlyingType<T>::value; //type in case of complex or interval
+		using float_type = GetUnderlyingType<T>::value;
 
 		if constexpr (isComplexLike<T>::value){
     		return !utils::isfinite(this->x) || this->x.real() < utils::cast<float_type>(0) || this->x.real() > utils::cast<float_type>(2.0 * std::numbers::pi);
@@ -42,9 +68,15 @@ public:
 
 	}
 
+    /**
+     * @brief Computes the next term in the Fourier expansion of the parabolic function.
+     * @authors Bolshakov M.P.
+     * @return T The next term of the series (8 * sin((2n+1)x) / (pi * (2n+1)^3)).
+     */
 	T next() override {
 
-		this->current_state = utils::cast<T>(8) * utils::sin(utils::cast<T>(utils::fma(size_t{2},this->n,size_t{1})) * this->x) / 
+		// Formula for the odd harmonics of the Fourier sine series
+		this->current_state = utils::cast<T>(8) * utils::sin(utils::cast<T>(utils::fma(size_t{2},this->n,size_t{1})) * this->x) /
 		(utils::cast<T>(std::numbers::pi) * utils::cast<T>(utils::fma(size_t{2},this->n,size_t{1}) *
 		utils::fma(size_t{2},this->n,size_t{1})*utils::fma(size_t{2},this->n,size_t{1})));
 		this->n += 1;

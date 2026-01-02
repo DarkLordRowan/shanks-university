@@ -1,8 +1,8 @@
-﻿#ifndef WYNN_NUMERATORS_HPP
+#ifndef WYNN_NUMERATORS_HPP
 #define WYNN_NUMERATORS_HPP
 #pragma once
 /**
- * @file wynn_numerators.h
+ * @file wynn_numerators.hpp
  * @brief This file contains various variants of numerators for Wynn-type transformations.
  *
  * For theory, see:
@@ -24,7 +24,8 @@
 namespace shanks{ namespace numerators{
 
  /**
-  * @brief Enum for remainder types to use in Levin-type transformations.
+  * @brief Enum for numerator types to use in Wynn-type transformations.
+  * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
   *
   * Determines the type of numerator function used in the transformation:
   * - rho_type: Standard ρ-variant (difference-based)
@@ -40,24 +41,32 @@ enum numerator_type{
 /**
  * @brief Abstract base class for numerator functions in Wynn-type transformations.
  *
- * Defines the interface for numerator computation used in series acceleration methods.
+ * This class defines the interface for calculating numerator components used in
+ * various nonlinear sequence transformations, particularly those following
+ * the epsilon or rho algorithm frameworks.
  *
- * Template Parameters:
- * @tparam T Floating-point type for series elements and computations.
- *           Must satisfy Accepted. Represents numerical precision.
- * @tparam K Unsigned integral type for indices and counts.
- *           Must satisfy std::unsigned_integral. Used for indexing and order specification.
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+ *
+ * @tparam T Floating-point type for series elements (must satisfy AcceptedLike).
+ * @tparam K Unsigned integral type for indices and counts (must satisfy UnsignedIntLike).
  */
 
 template<AcceptedLike T, UnsignedIntLike K>
 class numerator_base {
 public:
 
+    /**
+     * @brief Destructor for the base class.
+     * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+     */
+    virtual ~numerator_base() = default;
+
 	/**
 	 * @brief Compute the numerator value for Wynn-type transformation.
 	 *
 	 * Pure virtual function to be implemented by specific numerator variants.
 	 *
+	 * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
 	 * @param n Index of the starting term in the series.
 	 *        Valid values: n >= 0. Determines the position in the series.
 	 * @param order Order of the transformation (number of terms used).
@@ -70,7 +79,6 @@ public:
 	 *        Meaning depends on the specific variant. Default: 0.0.
 	 * @return The computed numerator value for the transformation.
 	 */
-	
 	virtual T operator()(K n, K order, const std::vector<T>& an, T gamma = utils::cast<T>(-1), T rho = utils::cast<T>(1)) const = 0;
 
 };
@@ -83,7 +91,7 @@ public:
  *
  * For theory, see: Wynn (1956), Eq. (2.6b) and related difference formulations.
  *
- * Template Parameters:
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  * @tparam T Floating-point type for series elements.
  * @tparam K Unsigned integral type for indices.
  */
@@ -97,6 +105,7 @@ public:
 	 * Implements: numerator = term(n + order + 1) - term(n), see p. 34 6.2-2b [https://arxiv.org/pdf/math/0306302]
 	 * This represents the forward difference of order 'order' at index n.
 	 *
+	 * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
 	 * @param n Starting index in the series.
 	 *        Valid values: n >= 0, n + order within series bounds.
 	 * @param order Order of the difference.
@@ -122,9 +131,8 @@ public:
  * Implements a numerator that is a function of the transformation order:
  * Numerator = order - gamma - 1
  *
- * This variant provides a constant numerator based on the order and gamma parameter.
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  *
- * Template Parameters:
  * @tparam T Floating-point type for series elements.
  * @tparam K Unsigned integral type for indices.
  */
@@ -138,6 +146,7 @@ public:
 	 * Implements: numerator = order - gamma - 1
 	 * This provides a order-dependent constant numerator.
 	 *
+	 * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
 	 * @param n Unused parameter (maintained for interface consistency).
 	 * @param order Order of the transformation.
 	 *        Valid values: order >= 0.
@@ -165,6 +174,7 @@ public:
  * Template Parameters:
  * @tparam T Floating-point type for series elements.
  * @tparam K Unsigned integral type for indices.
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  */
 template<AcceptedLike T, UnsignedIntLike K>
 class gamma_rho_transform : public numerator_base<T, K> {
@@ -177,6 +187,7 @@ public:
 	 * If order is even: numerator = -gamma + (order/2)/rho
 	 * If order is odd:  numerator = -gamma + (order/2)/rho + 1
 	 *
+	 * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
 	 * @param n Unused parameter (maintained for interface consistency).
 	 * @param order Order of the transformation.
 	 *        Valid values: order >= 0.
@@ -188,7 +199,7 @@ public:
 	 * @return The computed parameter-dependent numerator.
 	 * @throws std::invalid_argument if rho = 0.0.
 	 */
-	
+
 	T operator()(const K n, const K order, const std::vector<T>& an, const T gamma = utils::cast<T>(-1), const T rho = utils::cast<T>(1)) const {
 		//p.377 Automatic rho(gamma)-algorithm [http://servidor.demec.ufpr.br/CFD/bibliografia/MER/Sidi_2003.pdf]
 

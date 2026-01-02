@@ -6,20 +6,36 @@
 
 
 /**
- * @file series_base.hpp
- * @brief This file contains the information about all tranfromations.
+ * @file transformations_info.hpp
+ * @brief This file contains metadata information for transformation algorithms.
  * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  */
 
 /**
- * @brief Interface for transformation information
+ * @brief Interface for accessing transformation identification and naming metadata
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  */
 class ITransformationInfo {
 public:
 
+	/**
+	 * @brief Virtual destructor
+	 * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+	 */
 	virtual ~ITransformationInfo();
 
+	/**
+	 * @brief Returns the unique transformation ID
+	 * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+	 * @return shanks::algos::transformation_id_t
+	 */
 	virtual shanks::algos::transformation_id_t getId() const = 0;
+
+	/**
+	 * @brief Returns the name of the transformation
+	 * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+	 * @return std::string
+	 */
 	virtual std::string getName() const = 0;
 
 };

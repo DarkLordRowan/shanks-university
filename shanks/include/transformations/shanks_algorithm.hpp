@@ -24,13 +24,17 @@
 
 #ifdef EIGEN_CORE_MODULE_H
 namespace Eigen {
+/**
+ * @brief Template specialization of NumTraits for mpfr::mpreal to support Eigen integration.
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+ */
 template<> struct NumTraits<mpfr::mpreal>
  : NumTraits<double> // permits to get the epsilon, dummy_precision, lowest, highest functions
 {
   typedef mpfr::mpreal Real;
   typedef mpfr::mpreal NonInteger;
   typedef mpfr::mpreal Nested;
- 
+
   enum {
     IsComplex = 0,
     IsInteger = 0,
@@ -47,13 +51,17 @@ template<> struct NumTraits<mpfr::mpreal>
 namespace shanks{ namespace algos{
 
 /**
- * @brief Shanks transformation for series class template. Based upon determinant formula/
+ * @brief Shanks transformation for series class template.
  *
- * @tparam T Floating-point type for series elements (must satisfy Accepted)
- *           Represents numerical precision (float, double, long double)
- *           Used for all arithmetic operations and intermediate calculations
- * @tparam K Unsigned integral type for indices and order (must satisfy std::unsigned_integral)
- *           Used for counting terms, indexing operations, and transformation order
+ * Implements the general Shanks transformation using its determinant representation.
+ * This nonlinear sequence transformation is highly effective for accelerating the
+ * convergence of sequences where terms behave like a sum of exponentials.
+ *
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+ *
+ * @tparam T Floating-point type for series elements (must satisfy AcceptedLike).
+ *           Represents numerical precision (float, double, long double, or arbitrary precision).
+ * @tparam K Unsigned integral type for indices and order (must satisfy UnsignedIntLike).
  */
 template <AcceptedLike T, UnsignedIntLike K>
 class shanks_algorithm final : public series_acceleration<T, K>
@@ -62,11 +70,17 @@ public:
 
 	/**
 	 * @brief Parameterized constructor to initialize the Shanks transformation for non-alternating series.
+	 * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
 	*/
 	explicit shanks_algorithm() : series_acceleration<T, K>("shanks original") {};
 
 	/**
-	 * @brief Shanks transformation for non-alternating series function.
+	 * @brief Executes the general determinant-based Shanks transformation.
+	 *
+	 * Computes the accelerated estimate using the ratio of two determinants.
+	 * The transformation order determines the size of the matrices used in the calculation.
+	 *
+	 * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
 	 * @param n The number of terms in the partial sum to use for transformation
 	 *        Valid values: n >= order > 0, n > 0
 	 *        Higher values use more terms but may provide better acceleration
@@ -74,23 +88,25 @@ public:
 	 *        Valid values: order >= 0 (order=0 returns untransformed partial sum)
 	 *        Higher orders provide more aggressive acceleration but may be less stable
 	 * @param data series_result<T> struct containing necessary information for algorithm
-	 * @return The accelerated partial sum after Shanks transformation
-	 * @throws std::overflow_error if division by zero or numerical instability occurs
+	 * @return T The accelerated partial sum result.
+	 * @throws std::out_of_range if the Sn vector size is insufficient for the requested order.
+	 * @throws std::overflow_error if division by zero or numerical instability occurs.
 	 */
 	T operator()(
-		const K n, 
-        const K order, 
+		const K n,
+        const K order,
         const series_result<T>& data
 	) const;
 };
 
 template <AcceptedLike T, UnsignedIntLike K>
 T shanks_algorithm<T, K>::operator()(
-	const K n, 
-    const K order, 
+	const K n,
+    const K order,
     const series_result<T>& data
 ) const{
 
+    // Validation: required size is 2*order + n + 1
     const K required_size = static_cast<K>(2) * order + n + static_cast<K>(1);
 
     if (data.Sn.size() < required_size){
@@ -104,37 +120,38 @@ T shanks_algorithm<T, K>::operator()(
 
 	T upper_determinant, lower_determinant;
 	upper_determinant = lower_determinant = utils::cast<T>(0);
+
+    // Adjust precision for results if supported by type T
 	if constexpr (is_precisable<T>::value){
 		utils::set_precision(utils::get_precision(data.Sn[0]), upper_determinant, lower_determinant);
 	}
 
-	//do similar parts
-
+	// Fill the common part of the matrices (rows 1 to order) with partial sum differences
 	for (size_t row = 1; row < matrix_size; ++row) for(size_t col = 0; col < matrix_size; ++col){
 		if constexpr (is_precisable<T>::value) utils::set_precision(utils::get_precision(data.Sn[0]), matrix_template(row,col));
 		matrix_template(row,col) = data.Sn[n + col + row] - data.Sn[n + col];
 	}
 
-	//do upper_determinant
+	// Compute the upper determinant by filling the first row with partial sums
 	for (size_t col = 0; col < matrix_size; ++col){
 		if constexpr (is_precisable<T>::value) utils::set_precision(utils::get_precision(data.Sn[0]), matrix_template(0,col));
 		matrix_template(0,col) = data.Sn[n + col];
 	}
 	upper_determinant += matrix_template.determinant();
 
-	//do lower_determinant
+	// Compute the lower determinant by filling the first row with ones
 	for (size_t col = 0; col < matrix_size; ++col){
 		matrix_template(0,col) = utils::cast<T>(1);
 		if constexpr (is_precisable<T>::value) utils::set_precision(utils::get_precision(data.Sn[0]), matrix_template(0,col));
 	}
 	lower_determinant += matrix_template.determinant();
 
+    // Final ratio yields the accelerated value
 	const T result = upper_determinant / lower_determinant;
 
 	if (!utils::isfinite(result)) throw std::overflow_error("division by zero");
 
 	return result;
-	
 }
 
 } //namespace shanks::algos

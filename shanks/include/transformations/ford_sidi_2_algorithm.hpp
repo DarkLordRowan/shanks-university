@@ -1,4 +1,4 @@
-﻿#ifndef FORD_SIDI_2_HPP
+#ifndef FORD_SIDI_2_HPP
 #define FORD_SIDI_2_HPP
 #pragma once
 /**
@@ -6,6 +6,7 @@
  * @brief This file contains the declaration of the Ford-Sidi Algorithm class.
  *        This implementation is based on the efficient Ford-Sidi algorithm
  *        that requires fewer arithmetic operations than the E-algorithm.
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  */
 
  // For theory, see:
@@ -19,22 +20,22 @@ namespace shanks{ namespace algos{
 /**
  * @brief Ford-Sidi algorithm class template implementing an efficient extrapolation method.
  *
- * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
- *
  * This algorithm provides a more economical implementation compared to the standard E-algorithm
  * while maintaining mathematical equivalence. It is particularly effective for sequences
- * with specific convergence patterns.
+ * with specific convergence patterns. The variant implemented here focuses on a simplified
+ * finite-difference approach for improved performance.
  *
  * References:
  * - Ford, W.F., Sidi, A. (1987). An algorithm for a generalization of the Richardson extrapolation process.
  *   SIAM Journal on Numerical Analysis, 24(5), 1212-1232.
  * - Osada, N. (2000). The E-algorithm and the Ford-Sidi algorithm.
  *   Journal of Computational and Applied Mathematics, 122(1), 223-230.
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  *
- * @tparam T Floating-point type for series elements (must satisfy Accepted)
- *           Represents numerical precision (float, double, long double).
+ * @tparam T Floating-point type for series elements (must satisfy AcceptedLike)
+ *           Represents numerical precision (float, double, long double, or arbitrary precision).
  *           Used for all numerical computations and storage.
- * @tparam K Unsigned integral type for indices and order (must satisfy std::unsigned_integral)
+ * @tparam K Unsigned integral type for indices and order (must satisfy UnsignedIntLike)
  *           Used for counting terms, indexing operations, and loop control.
  *           Valid values: K >= 0, typically size_t or unsigned int.
  */
@@ -45,6 +46,7 @@ public:
 
 	/**
 	 * @brief Parameterized constructor to initialize the Ford-Sidi V-2 Algorithm.
+	 * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
 	 */
 	explicit ford_sidi_2_algorithm() : series_acceleration<T, K>("ford sidi 2") {}
 
@@ -66,23 +68,25 @@ public:
 	 *        Valid values: order >= 0 (typically set to 0 or ignored).
 	 * @param data series_result<T> struct containing necessary information for algorithm
 	 * @return The accelerated partial sum after Ford-Sidi transformation.
-	 * @throws std::domain_error if n=0 is provided as input.
+	 * @throws std::out_of_range if the Sn vector size is insufficient.
+	 * @throws std::domain_error if n is 0.
 	 * @throws std::overflow_error if division by zero or numerical instability occurs.
 	 */
 	T operator()(
-		const K n, 
-        const K order, 
+		const K n,
+        const K order,
         const series_result<T>& data
 	) const override;
 };
 
 template <AcceptedLike T, UnsignedIntLike K>
 T ford_sidi_2_algorithm<T, K>::operator()(
-	const K n, 
-    const K /*order*/, 
+	const K n,
+    const K /*order*/,
     const series_result<T>& data
 ) const {
 
+    // Check if we have enough partial sums (at least n+2)
     const K required_size = n + static_cast<K>(2);
 
     if (data.Sn.size() < required_size ){
@@ -97,7 +101,7 @@ T ford_sidi_2_algorithm<T, K>::operator()(
 
 	T delta_squared_S_n, delta_S_n, T_n;
 	delta_squared_S_n = delta_S_n = T_n = utils::cast<T>(0.0);
-	
+
     if constexpr (is_precisable<T>::value) utils::set_precision(utils::get_precision(data.Sn[0]), delta_squared_S_n, delta_S_n, T_n);
 
 	K m = n;
@@ -129,8 +133,6 @@ T ford_sidi_2_algorithm<T, K>::operator()(
 	// For theory, see: Ford & Sidi (1987), Section 3 - Numerical stability check
 	// Ensures the result is a finite floating-point value
 	if(!utils::isfinite(T_n)) throw std::overflow_error("division by zero");
-    
-	
 	return T_n;
 }
 

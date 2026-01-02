@@ -2,13 +2,18 @@
 
 
 /**
- * @file tranformations_info.cpp
- * @brief This file contains the information about all tranfromations.
+ * @file transformations_info.cpp
+ * @brief This file contains the implementation of metadata retrieval for all sequence transformations.
  * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  */
 
+/**
+ * @brief Virtual destructor for the transformation information interface.
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+ */
 ITransformationInfo::~ITransformationInfo() {}
 
+// Retrieval of unique IDs for each transformation variant
 shanks::algos::transformation_id_t          AndersonAccelerationAlgorithmInfo::getId() const {return shanks::algos::transformation_id_t::anderson_acceleration_algorithm_id;}
 shanks::algos::transformation_id_t           BrezinskiThetaTransformationInfo::getId() const {return shanks::algos::transformation_id_t::brezinski_theta_transformation_id;}
 shanks::algos::transformation_id_t                ChangWynnTransformationInfo::getId() const {return shanks::algos::transformation_id_t::chang_wynn_transformation_id;}
@@ -62,6 +67,7 @@ shanks::algos::transformation_id_t               WynnRhoRhoTransformationInfo::g
 shanks::algos::transformation_id_t       WynnRhoGeneralizedTransformationInfo::getId() const {return shanks::algos::transformation_id_t::wynn_rho_generalized_transformation_id;}
 shanks::algos::transformation_id_t          WynnRhoGammaRhoTransformationInfo::getId() const {return shanks::algos::transformation_id_t::wynn_rho_gamma_rho_transformation_id;}
 
+// Retrieval of descriptive names for each transformation variant
 std::string          AndersonAccelerationAlgorithmInfo::getName() const {return "Anderson's acceleration algorithm";}
 std::string           BrezinskiThetaTransformationInfo::getName() const {return "Brezinski Theta Transformation";}
 std::string                ChangWynnTransformationInfo::getName() const {return "Chang-Wynn Transformation";}

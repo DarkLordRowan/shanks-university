@@ -2,8 +2,20 @@
 #define SERIES_ITERATORS_HPP
 #pragma once
 
+/**
+ * @file series_iterators.hpp
+ * @brief This file aggregates all available series iterators and defines an ID enumeration for them.
+ * @authors Bolshakov M.P.
+ */
+
 namespace shanks { namespace iters {
 
+/**
+ * @brief Enumeration of all supported series iterators.
+ * 
+ * Each ID corresponds to a specific mathematical series implementation.
+ * @authors Bolshakov M.P.
+ */
 enum class series_iterator_id_t {
 														   null_iterator_id,
 									   abs_sin_x_minus_2_div_pi_iterator_id,
@@ -111,6 +123,7 @@ pi_x_multi_e_xpi_plus_e_minusxpi_divided_e_xpi_minus_e_minusxpi_iterator_id,
 } //namespace shanks::iters
 } //namespace shanks
 
+// Include all specific iterator definitions
 #include "abs_sin_x_minus_2_div_pi_iterator.hpp"
 #include "arcsinh_x_iterator.hpp"
 #include "arcsin_x2_iterator.hpp"

@@ -4,6 +4,7 @@
 /**
  * @file levin_algorithm.hpp
  * @brief This file contains the declaration of the Levin algorithm class.
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  *
  * For theory, see:
  * Levin, D. (1973). Development of non-linear transformations for improving convergence of sequences.
@@ -24,21 +25,21 @@ namespace shanks{ namespace algos{
  /**
   * @brief Levin Algorithm class template implementing various Levin transformations.
   *
-  * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
-  *
   * This class implements the Levin transformation for series acceleration, which is particularly
   * effective for sequences with specific asymptotic behaviors. The algorithm comes in several
-  * variants (u, t, v, t~, v~) that use different remainder estimates.
+  * variants (u, t, v, t~, v~) that use different remainder estimates. It supports both
+  * direct summation and recursive computation schemes.
   *
   * References:
   * - Levin, D. (1973). Development of non-linear transformations for improving convergence of sequences.
   * - Sidi, A. (1979). Convergence properties of some nonlinear sequence transformations.
   * - Sidi, A., & Levin, D. (1981). Two new classes of nonlinear transformations.
   *
-  * @tparam T Floating-point type for series elements (must satisfy Accepted)
-  *           Represents numerical precision (float, double, long double)
-  * @tparam K Unsigned integral type for indices and order (must satisfy std::unsigned_integral)
-  *           Used for counting and indexing operations
+  * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+  *
+  * @tparam T Floating-point type for series elements (must satisfy AcceptedLike)
+  *           Represents numerical precision (float, double, long double, or arbitrary precision).
+  * @tparam K Unsigned integral type for indices and order (must satisfy UnsignedIntLike).
   */
 template <AcceptedLike T, UnsignedIntLike K>
 class levin_algorithm final : public series_acceleration<T, K>
@@ -50,13 +51,13 @@ protected:
 	/// Parameter for u-variant transformation (β > 0). Default value is 1.0.
 	float_type beta_in_use = utils::cast<float_type>(1.0);
 
-	/// Pointer to remainder transformation object
+	/// Pointer to the remainder transformation strategy being used.
     std::unique_ptr<const shanks::remainders::transform_base<T, K>> remainder;
 
 	/// Flag to use recurrence formulas (true) or direct formulas (false)
     bool use_recurrent_formula{false};
 
-	///Type of Levin transformation variant (u, t, v, t~, v~)
+	/// The specific Levin transformation variant (u, t, v, t~, v~) currently active.
     shanks::remainders::remainder_type remainder_type_in_use{shanks::remainders::remainder_type::u_type};
 
 	/**
@@ -66,31 +67,33 @@ protected:
 	 * General form: T_{k,n} = [∑_{j=0}^k (-1)^j C(k,j) (n+j+1)^{k-1}/(n+k+1)^{k-1} S_{n+j}/R_{n+j}] /
 	 *                      [∑_{j=0}^k (-1)^j C(k,j) (n+j+1)^{k-1}/(n+k+1)^{k-1} 1/R_{n+j}]
 	 *
-	 * @param n Number of terms used in the transformation (starting index)
-	 * @param order Order of transformation (k value)
-	 * @param data series_result<T> struct containing necessary information for algorithm
-	 * @return Accelerated sum estimate T_{k,n}
+	 * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+	 * @param n Base index for the transformation.
+	 * @param order Order of the transformation (k).
+	 * @param data Series data structure containing partial sums.
+	 * @return T Accelerated sum estimate.
 	 */
 	inline T calc_result(
-		const K n, 
-        const K order, 
+		const K n,
+        const K order,
         const series_result<T>& data
 	) const;
 
 	/**
-	 * @brief Computes the Levin transformation using recurrence formulas.
+	 * @brief Computes the Levin transformation using recursive formulas for improved stability.
 	 *
 	 * For theory, see: Sidi (1979), Section 3 and Brezinski's E-algorithm implementation
 	 * Recursive implementation for better numerical stability in some cases.
 	 *
-	 * @param n Number of terms used in the transformation (starting index)
-	 * @param order Order of transformation (k value)
-	 * @param data series_result<T> struct containing necessary information for algorithm
-	 * @return Accelerated sum estimate T_{k,n}
+	 * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+	 * @param n Base index for the transformation.
+	 * @param order Order of the transformation (k).
+	 * @param data Series data structure containing partial sums.
+	 * @return T Accelerated sum estimate.
 	 */
 	inline T calc_result_rec(
-		const K n, 
-        const K order, 
+		const K n,
+        const K order,
         const series_result<T>& data
 	) const;
 
@@ -99,6 +102,7 @@ public:
 	/**
 	 * @brief Parameterized constructor to initialize the Levin Algorithm.
 	 *
+	 * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
 	 * @param series The series class object to be accelerated
 	 *        Must be a valid object implementing the required series interface
 	 * @param remainder_type_to_use Type of Levin transformation variant to use
@@ -127,6 +131,7 @@ public:
 	 * - Convergence properties: Sidi (1979), Theorems 3.1, 4.2
 	 * - Variant-specific properties: Sidi & Levin (1981), Sections 3-4
 	 * - More information, see 3.9.13 in[https://dlmf.nist.gov/3.9]
+	 * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
 	 *
 	 * @param n The number of terms to use in the transformation
 	 *        Valid values: n > 0 (algorithm requires at least 1 term)
@@ -139,14 +144,15 @@ public:
 	 * @throws std::domain_error if n=0 is provided as input
 	 * @throws std::overflow_error if division by zero or numerical instability occurs
 	 */
-	T operator()( 
-        const K n, 
-        const K order, 
+	T operator()(
+        const K n,
+        const K order,
         const series_result<T>& data
 	) const override;
 
 	/**
 	 * @brief Setter to update beta parameter
+	 * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
 	 * @param new_beta new beta parameter, must be real positive number, see p. 39 [https://arxiv.org/pdf/math/0306302.pdf]
 	 */
 	void update_beta(const float_type& new_beta){
@@ -154,13 +160,15 @@ public:
 	}
 
 	/**
-	 * @brief Setter to change numerator type
-	 * @param remainder_type_to_use enumerator of a new remainder to use
+	 * @brief Changes the remainder estimator variant.
+	 * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+	 * @param remainder_type_to_use The new remainder variant (u, t, v, etc.).
 	 */
 	void update_type(const shanks::remainders::remainder_type remainder_type_to_use){
 
 		remainder_type_in_use = remainder_type_to_use;
 
+		// Re-initialize the remainder strategy based on the selection
 		switch(remainder_type_to_use){
         	case shanks::remainders::remainder_type::u_type 	: { remainder.reset(new shanks::remainders::u_transform<T, K>()	   ); break; }
         	case shanks::remainders::remainder_type::t_type 	: { remainder.reset(new shanks::remainders::t_transform<T, K>()	   ); break; }
@@ -169,14 +177,15 @@ public:
         	case shanks::remainders::remainder_type::v_wave_type: { remainder.reset(new shanks::remainders::v_wave_transform<T, K>()); break; }
         	default:{
 				remainder_type_in_use = shanks::remainders::remainder_type::u_type;
-        	    remainder.reset(new shanks::remainders::u_transform<T, K>()); // Default to u-variant
+        	    remainder.reset(new shanks::remainders::u_transform<T, K>());
 			}
 		}
 	}
 
 	/**
-	 * @brief Get the name of currently used variant of algorithm
-	 * @return std::string 
+	 * @brief Retrieves the descriptive name of the currently active Levin variant.
+	 * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+	 * @return std::string The name and current configuration of the algorithm.
 	 */
 	std::string get_name() override {
 
@@ -206,14 +215,13 @@ levin_algorithm<T, K>::levin_algorithm(
 	use_recurrent_formula(use_recurrent_formula)
 {
 	update_beta(beta_to_use);
-	// Initialize the appropriate remainder transformation based on variant
     update_type(remainder_type_to_use);
 }
 
 template<AcceptedLike T, UnsignedIntLike K>
 inline T levin_algorithm<T, K>::calc_result(
 	const K n,
-    const K order, 
+    const K order,
     const series_result<T>& data
 ) const {
 
@@ -222,20 +230,23 @@ inline T levin_algorithm<T, K>::calc_result(
 	numerator = denominator = rest = utils::cast<T>(0.0);
 	C_njk = utils::cast<float_type>(0.0);
 
+    // Initialize precision if the type T supports it
     if constexpr (is_precisable<T>::value){
         const size_t precision = std::max(utils::get_precision(data.Sn[0]), utils::get_precision(data.an[0]));
         utils::set_precision(precision, numerator, denominator, rest, C_njk);
     }
 
+	// Compute (-1)^j * C(k,j)
 	// For theory, see: Levin (1973), Eq. (2.3)
 	// T_{k,n} = [∑_{j=0}^k (-1)^j C(k,j) (n+j+1)^{k-1}/(n+k+1)^{k-1} S_{n+j}/R_{n+j}] /
 	//           [∑_{j=0}^k (-1)^j C(k,j) (n+j+1)^{k-1}/(n+k+1)^{k-1} 1/R_{n+j}]
+    // Main loop for the direct Levin transformation formula
 	for (K j = static_cast<K>(0); j <= order; ++j) {
-		// Compute (-1)^j * C(k,j)
+		// Compute (-1)^j * C(k,j) - the sign and binomial coefficient part
 		rest += -rest + utils::minus_one_raised_to_power_n<T,K>(j);
 		rest *= utils::cast<T>((utils::binomial_coefficient<K>(order, j)));
 
-		// Compute (n+j+1)^{k-1}/(n+k+1)^{k-1}
+		// Compute (n+j+1)^{k-1}/(n+k+1)^{k-1} - the weighting factors C_njk
 		C_njk  = utils::pow(beta_in_use + utils::cast<float_type>(n + j     + static_cast<K>(1)), utils::cast<float_type>(order - static_cast<K>(1)));
 		C_njk /= utils::pow(beta_in_use + utils::cast<float_type>(n + order + static_cast<K>(1)), utils::cast<float_type>(order - static_cast<K>(1)));
 
@@ -249,10 +260,12 @@ inline T levin_algorithm<T, K>::calc_result(
 
 		rest *= C_njk;
 
+		// Accumulate weighted partial sums and total weights
 		denominator += rest;
 		numerator += rest * data.Sn.at(n + j);
 	}
 
+	// Normalization yields the accelerated sum estimate
 	numerator /= denominator;
 
 	return numerator;
@@ -260,13 +273,12 @@ inline T levin_algorithm<T, K>::calc_result(
 
 template<AcceptedLike T, UnsignedIntLike K>
 inline T levin_algorithm<T, K>::calc_result_rec(
-	const K n, 
-    const K order, 
+	const K n,
+    const K order,
     const series_result<T>& data
 ) const{
-
 	// For theory, see: Sidi (1979), Section 3 - Recursive implementation using E-algorithm
-	// Initialize arrays for recursive computation
+	// Initialize auxiliary vectors for the recursive scheme
 	std::vector<T>   Num( order + static_cast<K>(1), utils::cast<T>(0.0));
 	std::vector<T> Denom( order + static_cast<K>(1), utils::cast<T>(0.0));
 	float_type scale = utils::cast<float_type>(0.0);
@@ -279,6 +291,7 @@ inline T levin_algorithm<T, K>::calc_result_rec(
 	}
 
 	// Initialize base values: E_0^{(n)} = S_n, g_0^{(n)} = 1/R_n
+	// Order 0 transformations correspond to weighted terms
 	for (K i = static_cast<K>(0); i < order+static_cast<K>(1); ++i) {
 		Denom[i] += remainder->operator()(
             n+i,
@@ -290,15 +303,16 @@ inline T levin_algorithm<T, K>::calc_result_rec(
 		Num[i] += data.Sn.at(n+i) * Denom[i];
 	}
 
-	// Recursive computation using the E-algorithm scheme
+	// Recursive refinement using a scheme similar to the E-algorithm
 	for (K i = static_cast<K>(1); i <= order; ++i)
 		for (K j = static_cast<K>(0); j <= order - i; ++j) {
 
 			// For theory, see: Brezinski's E-algorithm recurrence
 			// E_k^{(n)} = E_{k-1}^{(n)} - g_{k-1,k}^{(n)} * ΔE_{k-1}^{(n)} / Δg_{k-1,k}^{(n)}
+            // Scaling factor for the recursive update
 			scale = (beta_in_use + utils::cast<float_type>((n + j)));
 			scale*= utils::pow(
-				utils::cast<float_type>(1.0) - utils::cast<float_type>(1.0) / (beta_in_use + utils::cast<float_type>(n + j + i + 1)), 
+				utils::cast<float_type>(1.0) - utils::cast<float_type>(1.0) / (beta_in_use + utils::cast<float_type>(n + j + i + 1)),
 				utils::cast<float_type>((i))
 			);
 			scale/= (beta_in_use + utils::cast<float_type>((n + j + i)));
@@ -307,6 +321,7 @@ inline T levin_algorithm<T, K>::calc_result_rec(
               Num[j] = utils::fma(utils::cast<T>(-scale),  Num[j],  Num[j+static_cast<K>(1)]);
 		}
 
+	// Final normalization
 	Num[0] /= Denom[0];
 
 	return Num[0];
@@ -314,11 +329,12 @@ inline T levin_algorithm<T, K>::calc_result_rec(
 
 template <AcceptedLike T, UnsignedIntLike K>
 T levin_algorithm<T, K>::operator()(
-	const K n, 
-    const K order, 
+	const K n,
+    const K order,
     const series_result<T>& data
 ) const {
 
+    // Calculate required vector sizes based on the variant
     const K required_size = n + order + static_cast<K>(1) + static_cast<K>(
 		remainder_type_in_use == shanks::remainders::remainder_type::t_wave_type ||
 		remainder_type_in_use == shanks::remainders::remainder_type::v_type ||

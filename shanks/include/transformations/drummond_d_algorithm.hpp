@@ -1,20 +1,20 @@
-﻿#ifndef DRUMMOND_D_ALGORITHM_HPP
+#ifndef DRUMMOND_D_ALGORITHM_HPP
 #define DRUMMOND_D_ALGORITHM_HPP
 #pragma once
 /**
  * @file drummond_d_algorithm.hpp
- * @brief Contains implementation of Drummond's D-transformation for sequence acceleration
- * @authors Naumov A.U.
+ * @brief Contains implementation of Drummond's D-transformation for sequence acceleration.
  *
  * For theory, see:
  * Drummond, J.E. (1976). A method for the summation of slowly convergent series.
  * Osada, N. (1993). Acceleration Methods for Slowly Convergent Sequences and Their Applications.
  * Sidi, A. (2003). Practical Extrapolation Methods: Theory and Applications, Section 9.5.
+ * @authors Naumov A.U.
  */
 
 #include "series_acceleration.hpp"
 #include "remainders.hpp"
-#include <memory>					  // Include for unique ptr
+#include <memory>
 
 namespace shanks{ namespace algos{
 
@@ -23,12 +23,14 @@ namespace shanks{ namespace algos{
   *
   * This transformation is particularly effective for alternating series and sequences
   * with specific remainder behavior patterns. It uses different remainder variants
-  * to handle various types of slowly convergent sequences.
+  * to handle various types of slowly convergent sequences. The algorithm provides
+  * both direct and recursive implementations to balance between simplicity and efficiency.
   *
   * References:
   * - Drummond, J.E. (1976). A method for the summation of slowly convergent series.
   * - Osada, N. (1993). Acceleration Methods for Slowly Convergent Sequences and Their Applications.
   * - Sidi, A. (2003). Practical Extrapolation Methods: Theory and Applications.
+  * @authors Naumov A.U.
   *
   * @tparam T Floating-point type for series elements (must satisfy Accepted)
   *           Represents numerical precision (float, double, long double)
@@ -41,19 +43,20 @@ template<AcceptedLike T, UnsignedIntLike K>
 class drummond_d_algorithm final : public series_acceleration<T, K>
 {
 protected:
-	/// Unique pointer to remainder estimator
+	/// Unique pointer to the remainder estimator strategy being used.
     std::unique_ptr<const shanks::remainders::transform_base<T, K>> remainder;
-	/// Type of remainder variant to use
+	/// The specific type of remainder variant currently active.
     shanks::remainders::remainder_type remainder_type_in_use{shanks::remainders::remainder_type::u_type};
-	/// Flag indicating whether to use recurrence formulas
-	bool use_recurrent_formula{false};																		
+	/// Configuration flag: if true, uses recursive formulas for calculation; otherwise uses direct formula.
+	bool use_recurrent_formula{false};
 
 	/**
-	 * @brief Calculates D-transformation directly using the explicit formula.remainderType
+	 * @brief Calculates D-transformation directly using the explicit formula.
 	 *
 	 * For theory, see: Drummond (1976), Eq. (2.1) and Sidi (2003), Section 9.5-4
 	 * D_n^{(k)} = [Σ_{j=0}^n (-1)^j C(n, j) w_{n,j} S_{n+j}] / [Σ_{j=0}^n (-1)^j C(n, j) w_{n,j}]
 	 * where w_{n,j} is the remainder estimator function.
+	 * @authors Naumov A.U.
 	 *
 	 * @param n The starting index for partial sums (S_n)
 	 *        Valid values: n >= 0, determines the starting point of transformation
@@ -63,8 +66,8 @@ protected:
 	 * @throws std::overflow_error if division by zero occurs
 	*/
 	inline T calc_result(
-        const K n, 
-        const K order, 
+        const K n,
+        const K order,
         const series_result<T>& data
     ) const;
 
@@ -72,8 +75,10 @@ protected:
 	 * @brief Calculates D-transformation using recurrence relations for improved efficiency.
 	 *
 	 * For theory, see: Sidi (2003), Section 9.5-5
-	 * Implements the recursive computation scheme for Drummond's transformation
-	 * using forward difference operations on the remainder-weighted partial sums.
+	 * Implements a recursive scheme for Drummond's transformation, which is typically
+	 * more numerically stable and efficient for higher transformation orders.
+	 * It utilizes forward difference operations on remainder-weighted terms.
+	 * @authors Naumov A.U.
 	 *
 	 * @param n The starting index for partial sums (S_n)
 	 *        Valid values: n >= 0, determines the starting point of transformation
@@ -83,8 +88,8 @@ protected:
 	 * @throws std::overflow_error if division by zero occurs
 	 */
 	inline T calc_result_rec(
-        const K n, 
-        const K order, 
+        const K n,
+        const K order,
         const series_result<T>& data
     ) const;
 
@@ -93,7 +98,6 @@ public:
 
 	/**
 	 * @brief Parameterized constructor to initialize Drummond's D-algorithm.
-	 
 	 * @param variant Type of remainder estimator to use
 	 *        Determines the specific variant of Drummond's transformation:
 	 *        - u_type: Standard remainder estimator
@@ -104,6 +108,7 @@ public:
 	 * @param use_recurrent_formula Flag indicating whether to use recurrence formulas
 	 *        true: Use recursive computation (better for large orders)
 	 *        false: Use direct computation (simpler but potentially slower)
+	 * @authors Naumov A.U.
 	 */
 	explicit drummond_d_algorithm(
 		const shanks::remainders::remainder_type remainder_type_to_use = shanks::remainders::remainder_type::u_type,
@@ -111,11 +116,10 @@ public:
 	) : series_acceleration<T, K>(), use_recurrent_formula(use_recurrent_formula) { update_type(remainder_type_to_use); };
 
 	/**
-	 * @brief Applies Drummond's D-transformation to accelerate series convergence.
+	 * @brief Executes Drummond's D-transformation to accelerate series convergence.
 	 *
-	 * Computes the accelerated sum using Drummond's method with the specified
-	 * remainder variant. The transformation is particularly effective for
-	 * alternating series and sequences with specific convergence patterns.
+	 * This method acts as the entry point for the transformation, delegating the work
+	 * to either the direct or recursive implementation based on the configuration.
 	 *
 	 * For theory, see: Drummond (1976), Main Theorem and Sidi (2003), Theorem 9.5.1
 	 *
@@ -128,22 +132,28 @@ public:
 	 * @param data series_result<T> struct containing necessary information for algorithm
 	 * @return The accelerated partial sum after Drummond transformation
 	 * @throws std::overflow_error if division by zero or numerical instability occurs
+	 * @throws std::out_of_range if the input data vectors are too small.
+	 * @throws std::overflow_error if numerical instability or division by zero occurs.
 	 */
     T operator()(
-		const K n, 
-        const K order, 
+		const K n,
+        const K order,
         const series_result<T>& data
 	) const override;
 
 	/**
-	 * @brief Setter to change numerator type
-	 * @param remainder_type_to_use enumerator of a new remainder type
+	 * @brief Updates the remainder estimator type used by the algorithm.
+	 *
+	 * Re-initializes the internal remainder estimator pointer with the specified variant.
+	 *
+	 * @authors Naumov A.U.
+	 * @param remainder_type_to_use The new remainder variant to employ.
 	 */
 	void update_type(const remainders::remainder_type remainder_type_to_use){
 
 		remainder_type_in_use = remainder_type_to_use;
 
-		// Initialize the appropriate remainder estimator based on variant
+		// Re-instantiate the remainder strategy based on the requested type
     	switch(remainder_type_to_use){
     	    case shanks::remainders::remainder_type::u_type 	: { remainder.reset(new shanks::remainders::u_transform<T, K>()	   ); break; }
     	    case shanks::remainders::remainder_type::t_type 	: { remainder.reset(new shanks::remainders::t_transform<T, K>()	   ); break; }
@@ -159,8 +169,9 @@ public:
 	}
 
 	/**
-	 * @brief Get the name of currently used variant of algorithm
-	 * @return std::string 
+	 * @brief Returns the descriptive name of the specific Drummond variant currently in use.
+	 * @authors Naumov A.U.
+	 * @return std::string A string containing the variant name and configuration details.
 	 */
 	std::string get_name() override{
 
@@ -182,30 +193,33 @@ public:
 
 template<AcceptedLike T, UnsignedIntLike K>
 inline T drummond_d_algorithm<T,K>::calc_result(
-    const K n, 
-    const K order, 
+    const K n,
+    const K order,
     const series_result<T>& data
 ) const {
 
 	T numerator, denominator, rest;
 	numerator = denominator = rest = utils::cast<T>(0.0);
 
-
+    // Ensure precision is set for arbitrary precision types
     if constexpr (is_precisable<T>::value) utils::set_precision(utils::get_precision(data.Sn[0]), numerator, denominator, rest);
 
 	// For theory, see: Drummond (1976), Eq. (2.1)
 	// D_n^{(k)} = [Σ_{j=0}^n (-1)^j C(n, j) w_{n,j} S_{n+j}] / [Σ_{j=0}^n (-1)^j C(n, j) w_{n,j}]
+    // Core loop for the direct Drummond D-transformation formula
 	for (K j = static_cast<K>(0); j <= order; ++j) {
-
 		// Compute weight term: (-1)^j * C(n, j) * w_{n,j}
 		rest  = utils::minus_one_raised_to_power_n<T,K>(j);
 		rest *= utils::cast<T>((utils::binomial_coefficient<K>(order, j)));
+		// Call the remainder strategy object
 		rest *= remainder->operator()(n + j, n + j, data.an);
 
+		// Accumulate weighted partial sums and total weight
 		numerator   += rest * data.Sn.at(n + j);
 		denominator += rest;
 	}
 
+	// Final normalization step
 	numerator /= denominator;
 
 	return numerator;
@@ -213,13 +227,12 @@ inline T drummond_d_algorithm<T,K>::calc_result(
 
 template<AcceptedLike T, UnsignedIntLike K>
 inline T drummond_d_algorithm<T,K>::calc_result_rec(
-    const K n, 
-    const K order, 
+    const K n,
+    const K order,
     const series_result<T>& data
 ) const {
-
 	// For theory, see: Sidi (2003), Section 9.5-5
-	// Recursive computation using forward differences
+	// Temporary vectors to store numerator and denominator coefficients for the recursive scheme
 	std::vector<T>   Num = std::vector<T>( order + static_cast<K>(1),  utils::cast<T>(0.0));
 	std::vector<T> Denom = std::vector<T>( order + static_cast<K>(1),  utils::cast<T>(0.0));
 
@@ -251,11 +264,12 @@ inline T drummond_d_algorithm<T,K>::calc_result_rec(
 
 template<AcceptedLike T, UnsignedIntLike K>
 T drummond_d_algorithm<T,K>::operator()(
-	const K n, 
-    const K order, 
+	const K n,
+    const K order,
     const series_result<T>& data
 ) const {
 
+    // Calculate minimum required size based on the chosen remainder variant
     const K required_size = n + order + static_cast<K>(1) + static_cast<K>(
 		remainder_type_in_use == shanks::remainders::remainder_type::t_wave_type ||
 		remainder_type_in_use == shanks::remainders::remainder_type::v_type ||
@@ -267,14 +281,15 @@ T drummond_d_algorithm<T,K>::operator()(
         "the size of Sn and an must be at least " + utils::to_string(required_size));
 	}
 
+    // Trivial case: order 0 returns the original partial sum
     if (order == static_cast<K>(0)) {
         return data.Sn.at(n);
     }
 
+    // Branch to selected implementation strategy
     const T result = (use_recurrent_formula ? calc_result_rec(n,order, data) : calc_result(n,order, data));
 
 	if(!utils::isfinite(result)) throw std::overflow_error("division by zero");
-	
     return result;
 }
 

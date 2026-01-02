@@ -2,18 +2,28 @@
 #define SHANKS_ALGTERNATING_ALGORITHM_HPP
 #pragma once
 
+/**
+ * @file shanks_alternating_algorithm.hpp
+ * @brief This file contains the definition of the Shanks transformation specialized for alternating series.
+ * @authors Bolshakov M.P., Naumov A.U., Lykov D.S., Kreynin R.G.
+ */
+
 #include "series_acceleration.hpp"
 
 namespace shanks{ namespace algos{
 
 /**
  * @brief Shanks transformation for alternating series class template.
- * 
- * @tparam T Floating-point type for series elements (must satisfy Accepted)
- *           Represents numerical precision (float, double, long double)
- *           Used for all arithmetic operations and intermediate calculations
- * @tparam K Unsigned integral type for indices and order (must satisfy std::unsigned_integral)
- *           Used for counting terms, indexing operations, and transformation order
+ *
+ * This class provides an optimized implementation of the Shanks transformation specifically
+ * tailored for alternating series. It utilizes simplified formulas that are more numerically
+ * stable for such series compared to the general determinant-based approach.
+ *
+ * @authors Bolshakov M.P., Naumov A.U., Lykov D.S., Kreynin R.G.
+ *
+ * @tparam T Floating-point type for series elements (must satisfy AcceptedLike).
+ *           Represents numerical precision (float, double, long double, or arbitrary precision).
+ * @tparam K Unsigned integral type for indices and order (must satisfy UnsignedIntLike).
  */
 template <AcceptedLike T, UnsignedIntLike K>
 class shanks_transform_alternating : public series_acceleration<T, K>
@@ -27,7 +37,11 @@ public:
 	explicit shanks_transform_alternating() : series_acceleration<T, K>("shanks alternating") {};
 
 	/**
-	 * @brief Shanks transformation for alternating series function.
+	 * @brief Executes the Shanks transformation for alternating series.
+	 *
+	 * Computes the accelerated partial sum using a recursive or simplified formula
+	 * appropriate for alternating sequences.
+	 *
 	 * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
 	 * @param n The number of terms in the partial sum to use for transformation
 	 *        Valid values: n >= order > 0, n > 0
@@ -36,11 +50,13 @@ public:
 	 *        Valid values: order >= 0 (order=0 returns untransformed partial sum)
 	 *        Higher orders provide more aggressive acceleration but may be less stable
 	 * @param data series_result<T> struct containing necessary information for algorithm
-	 * @return The accelerated partial sum after Shanks transformation
-	 * @throws std::overflow_error if division by zero or numerical instability occurs
+	 * @return T The accelerated partial sum result.
+	 * @throws std::out_of_range if the input vectors Sn or an are smaller than required.
+	 * @throws std::invalid_argument if n is less than the requested order.
+	 * @throws std::overflow_error if division by zero or non-finite result occurs.
 	 */
 	T operator()(
-        const K n, 
+        const K n,
     	const K order,
 		const series_result<T>& data
 	) const override;
@@ -49,19 +65,22 @@ public:
 
 template <AcceptedLike T, UnsignedIntLike K>
 T shanks_transform_alternating<T, K>::operator()(
-	const K n, 
+	const K n,
     const K order,
 	const series_result<T>& data
 ) const {
 
+    // Ensure we have enough terms in both Sn and an vectors
     const K required_size = order + n + static_cast<K>(1);
     if (data.Sn.size() < required_size || data.an.size() < required_size){
         throw std::out_of_range("The Sn or an smaller then required for alt_shanks_{" + utils::to_string(order) + "}^{" + utils::to_string(n) + "}\n" +
         "the size of Sn and an must be at least " + utils::to_string(required_size));
 	}
 
+    // Trivial case: order 0 returns the current partial sum
     if (order == static_cast<K>(0)) return data.Sn.at(n);
 
+    // Special case: first-order Shanks transformation
 	if (order == static_cast<K>(1)) [[unlikely]]
 	{
 
@@ -76,7 +95,7 @@ T shanks_transform_alternating<T, K>::operator()(
 		);
 
 		if(!utils::isfinite(result)) throw std::overflow_error("division by zero");
-    	
+
 		return result;
 	}
 	//n > order >= 1
@@ -85,7 +104,7 @@ T shanks_transform_alternating<T, K>::operator()(
 	}
 
 	std::vector<T> T_n(
-		n + order, 
+		n + order,
 		utils::cast<T>(0.0)
 	);
 
@@ -102,7 +121,7 @@ T shanks_transform_alternating<T, K>::operator()(
 	}
 
 	std::vector<T> T_n_plus_1(
-		n + order, 
+		n + order,
 		utils::cast<T>(0.0)
 	);
 

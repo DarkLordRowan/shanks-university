@@ -4,28 +4,59 @@
 
 #include "series_base_iterator.hpp"
 
+/**
+ * @file cos_iterator.hpp
+ * @brief Iterator for the Taylor series expansion of the cosine function cos(x).
+ * @authors Bolshakov M.P.
+ */
+
 namespace shanks { namespace iters {
 
 /**
-* @brief Maclaurin series of exp(x) function
-* @authors Bolshakov M.P.
-* @tparam T The type of the elements in the series, K The type of enumerating integer
-*/
+ * @brief Taylor series iterator for the cosine function cos(x).
+ *
+ * This class implements the Maclaurin expansion of cos(x), which converges
+ * for all finite values of x.
+ *
+ * @authors Bolshakov M.P.
+ * @tparam T Floating-point type for series elements (AcceptedLike).
+ * @tparam K Unsigned integral type for indexing (UnsignedIntLike).
+ */
 template<AcceptedLike T, UnsignedIntLike K>
 class cos_iterator final : public series_base_iterator<T, K>{
 public:
 
+    /**
+     * @brief Default constructor for cos_iterator.
+     * @authors Bolshakov M.P.
+     */
 	cos_iterator() : series_base_iterator<T, K>() {}
 
+    /**
+     * @brief Retrieves the analytic sum of the series (cos(x)).
+     * @authors Bolshakov M.P.
+     * @return T The value of cos(x).
+     */
 	T sum() const override{ return utils::cos(this->x);}
-	
+
+    /**
+     * @brief Validates the current evaluation point x.
+     * @authors Bolshakov M.P.
+     * @return true if x is non-finite, false otherwise.
+     */
 	bool check_validity() const override {return !utils::isfinite(this->x);}
 
+    /**
+     * @brief Computes the next term in the cos(x) Taylor expansion.
+     * @authors Bolshakov M.P.
+     * @return T The next term of the series.
+     */
 	T next() override {
 
+		// Recurrence logic for the alternating even-power terms of the cosine expansion
 		if (this->n == 0) this->current_state = utils::cast<T>(1);
 		else this->current_state *= utils::cast<T>(-1) * this->x * this->x / utils::cast<T>(this->n * (static_cast<K>(4) * this->n - static_cast<K>(2)));
-		
+
 		this->n+=1;
 		return this->current_state;
 	}

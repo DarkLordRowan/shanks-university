@@ -25,8 +25,8 @@ namespace shanks{ namespace algos{
   *
   * This class implements Wynn's rho algorithm, which is particularly effective
   * for accelerating logarithmically convergent sequences. The algorithm uses
-  * continued fraction representations and reciprocal differences for convergence
-  * acceleration.
+  * continued fraction representations and reciprocal differences. Several variants
+  * are supported through different numerator computation strategies.
   *
   * References:
   * - Wynn, P. (1956). On a device for computing the eₙ(Sₙ) transformation.
@@ -34,6 +34,7 @@ namespace shanks{ namespace algos{
   * - Osada, N. (1993). Acceleration Methods for Slowly Convergent Sequences and Their Applications.
   * - Sidi, A. (2003). Practical Extrapolation Methods: Theory and Applications.
   *
+  * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
   * @tparam T Floating-point type for series elements (must satisfy Accepted)
   *           Represents numerical precision (float, double, long double)
   *           Used for all mathematical computations and storage
@@ -48,16 +49,16 @@ protected:
 
 	using float_type = GetUnderlyingType<T>::value; //type in case of complex or interval, represents type for real numbers
 
-	/// Numerator computation strategy
+	/// Strategy object for numerator computation.
 	std::unique_ptr<const shanks::numerators::numerator_base<T, K>> numerator;
 
-	/// Gamma parameter for generalized rho transformation
+	/// Gamma parameter, used in generalized and gamma-rho variants.
 	float_type gamma_in_use;
 
-	/// Rho parameter for gamma-rho variant
+	/// Rho parameter, used specifically in the gamma-rho variant.
 	float_type rho_in_use;
 
-	/// numerator type in use needed for calculating required size 
+	/// The current numerator type variant in use.
 	shanks::numerators::numerator_type numerator_type_in_use{shanks::numerators::numerator_type::rho_type};
 
 
@@ -66,35 +67,26 @@ public:
 	/**
 	 * @brief Parameterized constructor to initialize the Rho Wynn Algorithm.
 	 *
-	 * @param series The series class object to be accelerated
-	 *        Must be a valid object implementing the required series interface
-	 * @param variant Type of numerator computation strategy
-	 *        Determines the specific variant of Wynn's rho algorithm:
-	 *        - rho_type: Standard Wynn rho algorithm
-	 *        - generalized_type: Generalized rho transformation
-	 *        - gamma_rho_type: Gamma-rho variant with additional parameters
-	 * @param gamma_ Gamma parameter value (default: -1)
-	 *		  must be noninteger(0, 1, 2, ....) real number for Osada Type, see p. 378 Sidi, A. (2003). Practical Extrapolation Methods: Theory and Applications.
-	 *        Valid values: T > 0, typically 1 or 2
-	 *        Controls the transformation behavior in generalized variants
-	 * @param RHO_ Rho parameter value (default: 1.0)
-	 *        Valid values: T >= 0, typically 0 or 1
-	 *        Additional parameter for gamma-rho variant
+	 * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+	 * @param numerator_type_to_use The variant of numerator logic to apply (rho, generalized, or gamma-rho).
+	 * @param gamma_to_use Initial value for the gamma parameter.
+	 * @param rho_to_use Initial value for the rho parameter.
 	 */
-
-
-	// Стал:
 	explicit wynn_rho_algorithm(
 		shanks::numerators::numerator_type numerator_type_to_use = shanks::numerators::numerator_type::rho_type,
-		const float_type& gamma_to_use = utils::cast<float_type>(-1.0), // Передача по константной ссылке
-		const float_type& rho_to_use   = utils::cast<float_type>(1.0)  // Передача по константной ссылке
+		const float_type& gamma_to_use = utils::cast<float_type>(-1.0),
+		const float_type& rho_to_use   = utils::cast<float_type>(1.0)
 	) : series_acceleration<T, K>() {
 		update_gamma(gamma_to_use);
 		update_rho(rho_to_use);
 		update_numerator(numerator_type_to_use);
 	};
 
-	~wynn_rho_algorithm() = default; //Default destructor is sufficient since unique_ptr handles deletion
+	/**
+	 * @brief Virtual destructor.
+	 * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+	 */
+	~wynn_rho_algorithm() = default;
 
 	/**
 	 * @brief Wynn's rho algorithm transformation.
@@ -107,56 +99,62 @@ public:
 	 * ρ₂ₖ⁽ⁿ⁾ provides accelerated convergence for sequences satisfying
 	 * S_n ~ S + Σ c_k n^{-k} as n → ∞
 	 *
+	 * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
 	 * @param n The starting index for partial sums
 	 *        Valid values: n >= 0, determines the starting point of transformation
 	 * @param order The order of transformation
 	 *        Valid values: order >= 0 and must be even (order % 2 == 0)
 	 *        Higher orders use more terms but may provide better acceleration
 	 * @param data series_result<T> struct containing necessary information for algorithm
-	 * @return The accelerated partial sum after rho transformation
-	 * @throws std::domain_error if order is odd
-	 * @throws std::overflow_error if division by zero occurs
+	 * @return T The accelerated partial sum result.
+	 * @throws std::out_of_range if the input data vectors are too small for the requested order.
+	 * @throws std::overflow_error if division by zero or non-finite result occurs.
 	 */
 	T operator()(
-		const K n, 
-        const K order, 
+		const K n,
+        const K order,
         const series_result<T>& data
 	) const override;
 
 	/**
-	 * @brief Setter to update gamma parameter
-	 * @param new_gamma new gamma parameter, must be noninteger(0, 1, 2, ....) real number
+	 * @brief Updates the gamma parameter.
+	 * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+	 * @param new_gamma The new value for gamma.
 	*/
 	void update_gamma(const float_type& new_gamma) { gamma_in_use = new_gamma;}
 
 	/**
-	 * @brief Setter to update rho parameter
-	 * @param new_rho new rho parameter, must be real number
+	 * @brief Updates the rho parameter.
+	 * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+	 * @param new_rho The new value for rho.
 	*/
 	void update_rho(const float_type& new_rho) {rho_in_use = new_rho; }
 
 	/**
-	 * @brief Setter to change numerator type
-	 * @param numerator_type_to_use enumerator of a new numerator to use
+	 * @brief Changes the numerator computation variant.
+	 * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+	 * @param numerator_type_to_use The new numerator variant (rho, generalized, or gamma-rho).
 	*/
 	void update_numerator(const shanks::numerators::numerator_type numerator_type_to_use){
 
 		numerator_type_in_use = numerator_type_to_use;
 
+		// Re-instantiate the numerator logic based on the requested variant
 		switch(numerator_type_to_use){
         	case shanks::numerators::numerator_type::rho_type 		  : { numerator.reset(new shanks::numerators::rho_transform<T, K>()	    ); break; }
         	case shanks::numerators::numerator_type::generalized_type : { numerator.reset(new shanks::numerators::generilized_transform<T, K>()); break; }
         	case shanks::numerators::numerator_type::gamma_rho_type   : { numerator.reset(new shanks::numerators::gamma_rho_transform<T, K>()	); break; }
         	default:{
 				numerator_type_in_use = shanks::numerators::numerator_type::rho_type;
-        	    numerator.reset(new shanks::numerators::rho_transform<T, K>()); // Default to u-variant
+        	    numerator.reset(new shanks::numerators::rho_transform<T, K>());
 			}
 		}
 	}
 
 	/**
-	 * @brief Get the name of currently used algorithm
-	 * @return std::string 
+	 * @brief Returns the descriptive name of the currently active Rho variant.
+	 * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+	 * @return std::string The name and current parameter configuration of the algorithm.
 	*/
 	std::string get_name() override {
 
@@ -176,11 +174,12 @@ public:
 
 template <AcceptedLike T, UnsignedIntLike K>
 inline T wynn_rho_algorithm<T, K>::operator()(
-	const K n, 
-    const K order, 
+	const K n,
+    const K order,
     const series_result<T>& data
 ) const {
 
+    // Ensure we have enough data points to compute the transformation
 	const K required_size = n + order + static_cast<K>(1) + order * static_cast<K>(numerator_type_in_use == shanks::numerators::numerator_type::rho_type);
 
     if (data.Sn.size() < required_size || data.an.size() < required_size){
@@ -195,7 +194,7 @@ inline T wynn_rho_algorithm<T, K>::operator()(
 
     std::vector<T> rho_odd(base_size, utils::cast<T>(0.0)); // vector for theta_(2n + 1)
     std::vector<T> rho_even(base_size, utils::cast<T>(0.0)); //vector for theta_(2n), in the beginning it is theta_(-1) which is zero for all i
-	 
+
 	T delta; //temporary varaible
 	delta = utils::cast<T>(0.0);
 
@@ -212,7 +211,7 @@ inline T wynn_rho_algorithm<T, K>::operator()(
 	}
 
     K j1, j2;
-   
+
     for(K level = static_cast<K>(1); level <= order / static_cast<K>(2); ++level){
 
 		// transform odd vector
@@ -223,10 +222,10 @@ inline T wynn_rho_algorithm<T, K>::operator()(
             delta = rho_even[j1] - rho_even[j];
 
 			rho_odd[j] = rho_odd[j1] + numerator->operator()(
-				n + j, 
-				level * static_cast<K>(2) - static_cast<K>(1), 
-				data.an, 
-				gamma_in_use, 
+				n + j,
+				level * static_cast<K>(2) - static_cast<K>(1),
+				data.an,
+				gamma_in_use,
 				rho_in_use
 			) / delta;
 
@@ -239,12 +238,12 @@ inline T wynn_rho_algorithm<T, K>::operator()(
             j1 = j + static_cast<K>(1);
 
             delta = rho_odd[j1] - rho_odd[j];
-            
+
 			rho_even[j] = rho_even[j1] + numerator->operator()(
-				n + j, 
-				level * static_cast<K>(2), 
-				data.an, 
-				gamma_in_use, 
+				n + j,
+				level * static_cast<K>(2),
+				data.an,
+				gamma_in_use,
 				rho_in_use
 			) / delta;
 

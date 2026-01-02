@@ -8,12 +8,18 @@
 
 /**
  * @file series.hpp
- * @brief This file contains enums for all series.
+ * @brief This file aggregates all specific series implementations and defines their IDs.
  * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  */
 
 namespace shanks{ namespace series {
 
+/**
+ * @brief Enumeration of all supported series IDs.
+ *
+ * Each ID uniquely identifies a mathematical series implementation.
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+ */
 enum class series_id_t {
 														   null_series_id,
 									   abs_sin_x_minus_2_div_pi_series_id,
@@ -727,7 +733,7 @@ public:
 	) {};
 };
 
-template<AcceptedLike T, UnsignedIntLike K>	
+template<AcceptedLike T, UnsignedIntLike K>
 class pi_3_series final : public series_base<T,K>{
 public:
 	explicit pi_3_series() : series_base<T, K>(

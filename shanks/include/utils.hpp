@@ -4,10 +4,11 @@
 
 /**
  * @file utils.hpp
- * @brief This file contains the #include for all important util files.
+ * @brief This file contains the #include directives for all utility modules.
  * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  */
 
+// Core utility headers
 #include "utils/utils_base.hpp"
 #include "utils/utils_cast.hpp"
 #include "utils/utils_get_precision.hpp"

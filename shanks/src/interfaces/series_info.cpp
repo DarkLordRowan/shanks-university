@@ -2,12 +2,17 @@
 
 /**
  * @file series_info.cpp
- * @brief This file contains the information about all series.
+ * @brief This file contains the implementation of the metadata retrieval for all mathematical series.
  * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  */
 
+/**
+ * @brief Virtual destructor for the series information interface.
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+ */
 ISeriesInfo::~ISeriesInfo() {}
 
+// Retrieval of unique IDs for each supported series
 shanks::series::series_id_t                                                  Abs_sin_x_minus_2_div_piSeriesInfo::getId() const { return shanks::series::series_id_t::abs_sin_x_minus_2_div_pi_series_id; }
 shanks::series::series_id_t                                                                 Arcsinh_xSeriesInfo::getId() const { return shanks::series::series_id_t::arcsinh_x_series_id; }
 shanks::series::series_id_t                                                                 Arcsin_x2SeriesInfo::getId() const { return shanks::series::series_id_t::arcsin_x2_series_id; }
@@ -109,6 +114,7 @@ shanks::series::series_id_t                                                     
 shanks::series::series_id_t                                                    X_two_throught_squaresSeriesInfo::getId() const { return shanks::series::series_id_t::x_two_throught_squares_series_id; }
 
 
+// Retrieval of descriptive names for each supported series
 std::string                                                  Abs_sin_x_minus_2_div_piSeriesInfo::getName() const { return "abs_sin_x_minus_2_div_pi_series";}
 std::string                                                                 Arcsinh_xSeriesInfo::getName() const { return "arcsinh_x_series";}
 std::string                                                                 Arcsin_x2SeriesInfo::getName() const { return "arcsin_x2_series";}

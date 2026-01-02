@@ -6,10 +6,22 @@
 #include <type_traits>
 #include <cmath>
 
+/**
+ * @file utils_helper.hpp
+ * @brief This file contains various helper utilities like string conversion and finiteness checks.
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+ */
 
+/**
+ * @brief Converts variables of various types to std::string
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+ * @param x (T)
+ * @return std::string representation
+ */
 template<typename T>
 std::string utils::to_string(const T& x){ 
 
+    // Formatting based on type properties and library support
     if constexpr (std::is_floating_point<T>::value || std::is_integral<T>::value) return std::to_string(x);
     #ifdef INC_FPRECISION
     else if constexpr (std::is_same<T, float_precision>::value) return x.toString();
@@ -30,8 +42,15 @@ std::string utils::to_string(const T& x){
     return "something went wrong";
 }
 
+/**
+ * @brief Checks if a variable represents a finite value
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+ * @param x (T)
+ * @return bool (is finite)
+ */
 template<typename T>
 bool utils::isfinite(const T& x){
+    // Using standard or library-specific checks for finiteness
     if constexpr (std::is_floating_point<T>::value) return std::isfinite(x);
     else if constexpr (is_complex_t<T>::value) return std::isfinite(x.real()) && std::isfinite(x.imag());
     #ifdef INC_FPRECISION
@@ -52,8 +71,15 @@ bool utils::isfinite(const T& x){
     return true;
 }
 
+/**
+ * @brief Returns the machine epsilon for type T
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+ * @param x (T)
+ * @return T (epsilon value)
+ */
 template<typename T>
 T utils::epsilon(const T& x){
+    // Selecting the epsilon calculation method for the given type
     if constexpr (is_standard_types<T>::value) return std::numeric_limits<T>::epsilon();
     #ifdef INC_FPRECISION
     else if constexpr (std::is_same<T, float_precision>::value) return x.epsilon();

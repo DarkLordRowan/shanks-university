@@ -4,28 +4,59 @@
 
 #include "series_base_iterator.hpp"
 
+/**
+ * @file inverse_sqrt_1m4x_iterator.hpp
+ * @brief Iterator for the series expansion of 1/sqrt(1-4x).
+ * @authors Bolshakov M.P.
+ */
+
 namespace shanks { namespace iters {
 
 /**
-* @brief Maclaurin series of 1/sqrt(1-4x) function
-* @authors Bolshakov M.P.
-* @tparam T The type of the elements in the series, K The type of enumerating integer
-*/
+ * @brief Taylor series iterator for the function f(x) = 1 / sqrt(1 - 4x).
+ *
+ * This class implements the Maclaurin expansion of 1 / sqrt(1 - 4x), which
+ * is related to the central binomial coefficients and converges for |x| < 0.25.
+ *
+ * @authors Bolshakov M.P.
+ * @tparam T Floating-point type for series elements (AcceptedLike).
+ * @tparam K Unsigned integral type for indexing (UnsignedIntLike).
+ */
 template<AcceptedLike T, UnsignedIntLike K>
 class inverse_sqrt_1m4x_iterator final : public series_base_iterator<T, K>{
 public:
 
+    /**
+     * @brief Default constructor for inverse_sqrt_1m4x_iterator.
+     * @authors Bolshakov M.P.
+     */
 	inverse_sqrt_1m4x_iterator() : series_base_iterator<T, K>() {}
 
+    /**
+     * @brief Retrieves the analytic sum of the series (1 / sqrt(1 - 4x)).
+     * @authors Bolshakov M.P.
+     * @return T The value of 1 / sqrt(1 - 4x).
+     */
 	T sum() const override{ return utils::cast<T>(1) / utils::sqrt(utils::cast<T>(1) - utils::cast<T>(4) * this->x);}
-	
+
+    /**
+     * @brief Validates the current evaluation point x.
+     * @authors Bolshakov M.P.
+     * @return true if |x| >= 0.25 or non-finite, false otherwise.
+     */
 	bool check_validity() const override {
-		using float_type = GetUnderlyingType<T>::value; //type in case of complex or interval
+		using float_type = GetUnderlyingType<T>::value;
 		return !utils::isfinite(this->x) || utils::abs(this->x) > utils::cast<float_type>(0.25);
 	}
 
+    /**
+     * @brief Computes the next term in the 1/sqrt(1-4x) expansion.
+     * @authors Bolshakov M.P.
+     * @return T The next term of the series.
+     */
 	T next() override {
 
+		// Terms of this series are the central binomial coefficients C(2n, n) scaled by x^n
 		if (this->n == 0) this->current_state = utils::cast<T>(1);
 		else this->current_state *= this->x * utils::cast<T>(2 * utils::fma(size_t{2},this->n-1,size_t{1})) / utils::cast<T>(this->n);
 

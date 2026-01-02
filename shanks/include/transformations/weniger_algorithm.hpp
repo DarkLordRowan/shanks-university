@@ -22,18 +22,18 @@ namespace shanks{ namespace algos{
  *
  * This transformation uses factorial series approximations for remainder estimates and is
  * particularly effective for alternating and factorially divergent series. It generalizes
- * Levin's transformation by using Pochhammer symbols instead of powers.
+ * Levin's transformation by using Pochhammer symbols instead of standard powers, providing
+ * superior numerical stability and convergence properties in many cases.
  *
  * References:
  * - Weniger, E.J. (1989). Nonlinear sequence transformations for the acceleration of convergence
  *   and the summation of divergent series. Computer Physics Reports, 10(5-6), 189-371.
  * - Weniger, E.J. (1992). Interpolation between sequence transformations. Numerical Algorithms, 3(1-4), 477-486.
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  *
- * @tparam T Floating-point type for series elements (must satisfy Accepted)
- *           Represents numerical precision (float, double, long double).
- *           Used for all floating-point calculations and storage.
- * @tparam K Unsigned integral type for indices and order (must satisfy std::unsigned_integral)
- *           Used for counting and indexing operations. Valid values: K >= 0.
+ * @tparam T Floating-point type for series elements (must satisfy AcceptedLike).
+ *           Represents numerical precision (float, double, long double, or arbitrary precision).
+ * @tparam K Unsigned integral type for indices and order (must satisfy UnsignedIntLike).
  */
 template<AcceptedLike T, UnsignedIntLike K>
 class weniger_algorithm final : public series_acceleration<T, K>
@@ -41,42 +41,43 @@ class weniger_algorithm final : public series_acceleration<T, K>
 public:
 
 	/**
-	 * @brief Parameterized constructor to initialize the weniger_algorithm
+	 * @brief Parameterized constructor to initialize the Weniger Algorithm.
+	 * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
 	 */
 	explicit weniger_algorithm() : series_acceleration<T, K>("weniger") {}
 
 	/**
-	 * @brief Implementation of Weniger transformation for series acceleration.
+	 * @brief Executes the Weniger transformation to accelerate series convergence.
 	 *
 	 * Computes the accelerated sum using a Levin-type transformation with factorial series
-	 * weights. The algorithm uses binomial coefficients and Pochhammer-like terms for
-	 * optimal remainder estimation and convergence acceleration.
+	 * weights. The algorithm relies on binomial coefficients and Pochhammer-like terms
+	 * to estimate the remainder of the series and eliminate dominant error terms.
 	 *
-	 * For theory, see: Weniger (1989), Eq. (8.2-7)
-	 * Weniger transformation: δₖ⁽ⁿ⁾(β,sₙ) = [Δᵏ((β+n)ₖ₋₁sₙ/Δsₙ)] / [Δᵏ((β+n)ₖ₋₁/Δsₙ)]
-	 *
+	 * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
 	 * @param n The number of terms to use in the transformation (starting index)
 	 *        Valid values: n >= 0
 	 * @param order The order of transformation (number of terms in binomial sum)
 	 *        Valid values: order >= 1
 	 * @param data series_result<T> struct containing necessary information for algorithm
-	 * @return The accelerated partial sum after Weniger transformation
-	 * @throws std::overflow_error if division by zero or numerical instability occurs
+	 * @return T The accelerated partial sum result.
+	 * @throws std::out_of_range if the input vectors are smaller than required.
+	 * @throws std::overflow_error if division by zero or numerical instability occurs.
 	 */
 	T operator()(
-		const K n, 
-        const K order, 
+		const K n,
+        const K order,
         const series_result<T>& data
 	) const override;
 };
 
 template<AcceptedLike T, UnsignedIntLike K>
 T weniger_algorithm<T, K>::operator()(
-	const K n, 
+	const K n,
     const K order,
     const series_result<T>& data
 ) const {
 
+    // Validation: ensure input vectors contain enough data for the specified order and base index
     const K required_size = n + order + static_cast<K>(1);
 
     if (data.Sn.size() < required_size || data.an.size() < required_size) {
@@ -84,6 +85,7 @@ T weniger_algorithm<T, K>::operator()(
         "the size of Sn and an must be at least " + utils::to_string(required_size));
 	}
 
+    // Trivial case: order 0 returns the original partial sum
     if (order == static_cast<K>(0)) return data.Sn.at(n);
 
 	// For theory, see: Weniger (1989), Section 8.2, Eq. (8.2-7)
@@ -103,7 +105,7 @@ T weniger_algorithm<T, K>::operator()(
 	// Initial binomial coefficient: C(order, 0) = 1
 	T binomial_coef = utils::cast<T>(utils::binomial_coefficient(n, static_cast<K>(0)));
 
-
+    // Initialize precision for variable precision types
 	if constexpr (is_precisable<T>::value){
 		const size_t precision = std::max(utils::get_precision(data.Sn[0]), utils::get_precision(data.an[0]));
 		utils::set_precision(precision, numerator, denominator, rest, coef);
@@ -162,6 +164,7 @@ T weniger_algorithm<T, K>::operator()(
 	// Final transformed value: δₖ⁽ⁿ⁾ = numerator / denominator
 	numerator /= denominator;
 
+	// Check if the result is valid
 	if(!utils::isfinite(numerator)) throw std::overflow_error("division by zero");
 
 	return numerator;

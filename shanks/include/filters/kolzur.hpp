@@ -7,17 +7,21 @@
 #include "../custom_concepts.hpp"
 #include "../utils.hpp"
 
+/**
+ * @file kolzur.hpp
+ * @brief Kolmogorov-Zurbenko filter implementation.
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+ */
+
 namespace shanks{
 namespace filters{
 
 /**
-// * @file kolzur.hpp
-// * @brief Kolmogorov-Zurbenko filter implementation.
-// * Implementation for python is located at https://github.com/MathieuSchopfer/kolmogorov-zurbenko-filter/blob/master/kolzur_filter.py.
-// * Coefficients are calculated by formulas given at https://math.stackexchange.com/questions/1349135/kolmogorov-zurbenko-filter-calculation-of-coefficients.
-// * and https://math.stackexchange.com/questions/4535682/calculating-coefficients-of-an-n-degree-polynomial-raised-to-an-arbitrary-power.
-// * main theory is given on wiki page https://en.wikipedia.org/wiki/Kolmogorov–Zurbenko_filter
-*/
+ * @brief Calculates Kolmogorov-Zurbenko filter for given data
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+ * @param data (std::vector<Scalar>), window_length (size_t), degree (size_t)
+ * @return std::vector<Scalar> (filtered data)
+ */
 template<typename Scalar>
 requires AcceptedLike<Scalar> || std::is_integral<Scalar>::value
 std::vector<Scalar> kolzur_filter(
@@ -30,7 +34,7 @@ std::vector<Scalar> kolzur_filter(
     std::vector<int> coeffs = std::vector<int>(size, 0);
     coeffs[0] = coeffs[size - 1] = 1;
     
-    //calculating coefficients
+    // Iteratively calculating coefficients based on binomial formulas
     const size_t middle_coeff = (size + size % 2) / size_t{2};
     for(size_t l{1}; l < middle_coeff; ++l){
         for (size_t i{0}; m * i <= l; ++i){
@@ -40,6 +44,7 @@ std::vector<Scalar> kolzur_filter(
         }
     }
 
+    // Preparing vectors for convolution and handling arbitrary precision
     std::vector<Scalar> zur_coeffs(size + 1, utils::cast<Scalar>(0));
     std::vector<Scalar> padded_vector(data.size() + size * 2, Scalar(0.0));
     std::vector<Scalar> result(data.size(), Scalar(0.0));
@@ -49,16 +54,16 @@ std::vector<Scalar> kolzur_filter(
         utils::set_vec_precision(result, utils::get_precision(data.at(0)));
     }
 
-    //convolution with padding: adding 0 at the start, rest 0 on the end
+    // Convolution with padding: adding 0 at the start, rest 0 on the end
     std::copy(data.begin(), data.end(), padded_vector.begin()+1);
     
-    //calculating coefficients for filter
+    // Normalizing coefficients for the filter
     for (size_t i{0}; i < coeffs.size(); ++i) {
         zur_coeffs[i] += utils::cast<Scalar>(coeffs[i]);
         zur_coeffs[i] /= utils::cast<Scalar>(utils::pow(m,k));
     }
     
-    //convolution
+    // Applying the convolution to produce the filtered result
     for (size_t i{0}; i < result.size(); ++i)
         for(size_t j{0}; j < size; ++j)
             result[i] += zur_coeffs[j] * padded_vector[i + j];
