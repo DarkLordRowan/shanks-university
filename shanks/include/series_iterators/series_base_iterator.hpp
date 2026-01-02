@@ -28,7 +28,7 @@ public:
     virtual bool check_validity() const = 0;
 
     virtual T next() = 0;
-    T step(const size_t n_steps){ for(size_t j = 0; j <= n_steps; ++j) next(); }
+    T step(const size_t n_steps){ for(size_t j = 0; j < n_steps; ++j) next(); return next(); }
 
     void reset(){n = static_cast<size_t>(0);}
 

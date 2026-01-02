@@ -24,7 +24,7 @@ public:
 			if (this->x.real() <= utils::cast<float_type>(std::numbers::pi))
 				return utils::cast<T>(std::numbers::pi) * this->x - this->x * this->x;
 		} else {
-			if (this->x <= utils::cast<T>(0))
+			if (this->x <= utils::cast<T>(std::numbers::pi))
            		return utils::cast<T>(std::numbers::pi) * this->x - this->x * this->x;
 		}
 
