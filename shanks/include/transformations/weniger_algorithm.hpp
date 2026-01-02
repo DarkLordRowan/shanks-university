@@ -141,16 +141,16 @@ T weniger_algorithm<T, K>::operator()(
 		// For theory, see: Weniger (1989), Eq. (8.2-7) recursive Pochhammer update
 		// Update Pochhammer-like term: (β+n+j+1)ₖ₋₁ = (β+n+j)ₖ₋₁ × (β+n+j+order) / (β+n+j+1)
 		// With β=1: (n+j+1)ₖ₋₁ = (n+j)ₖ₋₁ × (n+j+order) / (n+j+1)
-		coef *= utils::cast<T>(j + order);
-		coef /= utils::cast<T>(j1);
+		coef *= utils::cast<T>(n + j + order);
+		coef /= utils::cast<T>(n + j1);
 
 		// For theory, see: Weniger (1989), Eq. (8.2-7) remainder estimate
 		// Remainder estimate: ωₙ = Δsₙ = a_{n+1}, so 1/ωₙ = 1/a_{j+1}
-		rest /= data.an.at(j1);
+		rest /= data.an.at(n + j1);
 
 		// For theory, see: Weniger (1989), Eq. (8.2-7) numerator term
 		// Numerator term: rest × s_{n+j}
-		numerator   += rest * data.Sn.at(j);
+		numerator   += rest * data.Sn.at(n + j);
 
 		// For theory, see: Weniger (1989), Eq. (8.2-7) denominator term
 		// Denominator term: rest
