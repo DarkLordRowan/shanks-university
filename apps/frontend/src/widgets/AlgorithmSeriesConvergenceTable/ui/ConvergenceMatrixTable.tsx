@@ -1,21 +1,23 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
-    type ConvergenceAnalysis,
+    type ConvergenceMatrix,
     type Experiment,
     type MonotonicityType,
     type SelectedCell,
     type SideType,
 } from "../model/types";
 import {
-    analyzeSeriesAccelConvergence,
     formatMonotonicityShort,
+    formatMonotonicityWithMax,
     formatSideShort,
+    formatSideWithMax,
     getConvergenceCellDomId,
 } from "../model/convergenceUtils";
 import { MatrixAlgorithmSeries } from "@/shared/ui/Matrix/MatrixAlgorithmSeries.tsx";
 
 interface ConvergenceMatrixTableProps {
     experiment: Experiment;
+    matrix: ConvergenceMatrix;
     maxSeries?: number;
     selectedCell: SelectedCell | null;
     onCellSelect: (cell: SelectedCell) => void;
@@ -57,12 +59,18 @@ function getCellColorClass(side: SideType, mon: MonotonicityType, selected: bool
 
 export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
     experiment,
+    matrix,
     maxSeries,
     selectedCell,
     onCellSelect,
 }) => {
     const [maxSignChangesForOneSided, setMaxSignChangesForOneSided] = useState<number>(0);
     const [maxViolationsForMonotone, setMaxViolationsForMonotone] = useState<number>(0);
+
+    useEffect(() => {
+        setMaxSignChangesForOneSided(0);
+        setMaxViolationsForMonotone(0);
+    }, [experiment]);
 
     return (
         <MatrixAlgorithmSeries
@@ -81,7 +89,7 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
             renderTitle={() => "Монотонность и направление: алгоритмы × ряды"}
             renderSubtitle={() => (
                 <>
-                    Алгоритмы: {experiment.accelList.length} · Ряды: {experiment.seriesList.length}
+                    Алгоритмы: {matrix.algoList.length} · Ряды: {matrix.seriesList.length}
                 </>
             )}
             renderHeaderRight={() => (
@@ -90,7 +98,7 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
                         <div className="flex items-center gap-1">
                             <span
                                 className="whitespace-nowrap"
-                                title="Максимальное количество смен знака разности Aₖ - lim, при котором приближение считается односторонним. Если смен знака больше этого значения, то считается двухсторонним."
+                                title="Если число смен знака ≤ X, пара считается односторонней"
                             >
                                 max sign changes:
                             </span>
@@ -112,9 +120,9 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
                         <div className="flex items-center gap-1">
                             <span
                                 className="whitespace-nowrap"
-                                title="Максимальное количество увеличений ошибки |Aₖ - lim|, при котором приближение всё ещё считается монотонным (неубывающим или невозрастающим). Если увеличений больше, то ошибка считается случайной (random)."
+                                title="Если число расхождений ≤ Y, ошибка считается монотонной"
                             >
-                                max violations:
+                                max deviations:
                             </span>
                             <input
                                 type="range"
@@ -133,12 +141,15 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
                     </div>
                 </div>
             )}
-            renderCell={(algo, series) => {
-                const seriesAccelData = experiment.seriesAccelList.find(
-                    (item) => item.series_id === series.id && item.accel_id === algo.id
-                );
+            renderCell={(row, col) => {
+                const algo = matrix.algoList.find((a) => a.key === row.id);
+                const s = matrix.seriesList.find((s) => s.key === col.id);
+                if (!algo || !s) return null;
 
-                if (!series || !algo || !seriesAccelData) {
+                const key = `${algo.key}::${s.key}`;
+                const analysis = matrix.cells[key];
+
+                if (!analysis) {
                     return (
                         <div className="w-full h-full min-h-[32px] flex items-center justify-center text-[10px] text-textDim/50">
                             —
@@ -146,26 +157,18 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
                     );
                 }
 
-                const analysis: ConvergenceAnalysis = analyzeSeriesAccelConvergence(
-                    series,
-                    algo,
-                    seriesAccelData,
-                    maxSignChangesForOneSided,
-                    maxViolationsForMonotone
-                );
+                const side = formatSideWithMax(analysis, maxSignChangesForOneSided);
+                const monotonicity = formatMonotonicityWithMax(analysis, maxViolationsForMonotone);
 
-                const sideShort = formatSideShort(analysis.side);
-                const monShort = formatMonotonicityShort(analysis.monotonicity);
+                const sideShort = formatSideShort(side);
+
+                const monShort = formatMonotonicityShort(monotonicity);
 
                 const isSelected =
-                    selectedCell?.seriesId === series.id && selectedCell?.accelId === algo.id;
+                    selectedCell?.seriesId === s.key && selectedCell?.accelId === algo.key;
 
-                const colorClass = getCellColorClass(
-                    analysis.side,
-                    analysis.monotonicity,
-                    isSelected
-                );
-                const domId = getConvergenceCellDomId(algo.id, series.id);
+                const colorClass = getCellColorClass(side, monotonicity, isSelected);
+                const domId = getConvergenceCellDomId(algo.key, s.key);
 
                 return (
                     <div
@@ -174,7 +177,7 @@ export const ConvergenceMatrixTable: React.FC<ConvergenceMatrixTableProps> = ({
                             "w-full h-full min-h-[32px] cursor-pointer border border-transparent " +
                             colorClass
                         }
-                        onClick={() => onCellSelect({ seriesId: series.id, accelId: algo.id })}
+                        onClick={() => onCellSelect({ seriesId: s.key, accelId: algo.key })}
                     >
                         <div className="flex select-none flex-col items-center justify-center gap-[1px] leading-tight py-[2px]">
                             <span className="font-mono text-[10px]">

@@ -10,14 +10,17 @@ interface ConvergenceDetailChartProps {
 }
 
 export const ConvergenceDetailChart: React.FC<ConvergenceDetailChartProps> = ({ detail }) => {
+    const { series, accel, analysis, limit, points } = detail;
+
+    // Глобальный переключатель: использовать модуль или знак
     const [useAbs, setUseAbs] = useState<boolean>(true);
 
-    if (!detail.series || !detail.analysis) {
+    if (!series || !accel || !analysis) {
         return null;
     }
 
-    const shortSide = formatSideShort(detail.analysis.side);
-    const shortMon = formatMonotonicityShort(detail.analysis.monotonicity);
+    const shortSide = formatSideShort(analysis.side);
+    const shortMon = formatMonotonicityShort(analysis.monotonicity);
 
     return (
         <div className="mt-4 rounded-xl border border-border bg-panel p-4 text-xs text-textDim shadow-panel">
@@ -28,21 +31,21 @@ export const ConvergenceDetailChart: React.FC<ConvergenceDetailChartProps> = ({ 
                     </div>
                     {/*<div className="mt-1 space-y-0.5 text-[11px] text-textDim/80">*/}
                     {/*    <div>*/}
-                    {/*        Ряд: {series.seriesName}, x={series.xLabel}, prec=*/}
-                    {/*        {series.precision}*/}
+                    {/*        Ряд: {seriesInfo.seriesName}, x={seriesInfo.xLabel}, prec=*/}
+                    {/*        {seriesInfo.precision}*/}
                     {/*    </div>*/}
                     {/*    <div>*/}
-                    {/*        Алгоритм: {accel.algorithmName}*/}
-                    {/*        {accel.m != null ? `, m=${accel.m}` : ""}*/}
+                    {/*        Алгоритм: {algoInfo.algorithmName}*/}
+                    {/*        {algoInfo.m != null ? `, m=${algoInfo.m}` : ""}*/}
                     {/*    </div>*/}
-                    {/*    {accel.argsSummary && <div>Аргументы: {accel.argsSummary}</div>}*/}
+                    {/*    {algoInfo.argsSummary && <div>Аргументы: {algoInfo.argsSummary}</div>}*/}
                     {/*</div>*/}
                 </div>
                 <div className="space-y-1 text-right text-[11px] text-textDim/80">
                     <div>
                         Тип: {shortSide} | {shortMon}
                     </div>
-                    <div>Сравнено шагов (пар): {detail.analysis.stepsAnalyzed}</div>
+                    <div>Сравнено шагов (пар): {analysis.stepsAnalyzed}</div>
 
                     {/* Глобальный переключатель "модуль / со знаком" для всех трёх элементов */}
                     <div className="pt-1">
@@ -76,9 +79,9 @@ export const ConvergenceDetailChart: React.FC<ConvergenceDetailChartProps> = ({ 
             </div>
 
             {/* useAbs уходит во все три компонента */}
-            <ConvergenceErrorChart points={detail.points} limit={detail.limit} useAbs={useAbs} />
-            <ConvergenceAnTable points={detail.points} useAbs={useAbs} />
-            <ConvergenceDiffTable points={detail.points} useAbs={useAbs} />
+            <ConvergenceErrorChart points={points} limit={limit} useAbs={useAbs} />
+            <ConvergenceAnTable points={points} useAbs={useAbs} />
+            <ConvergenceDiffTable points={points} useAbs={useAbs} />
         </div>
     );
 };

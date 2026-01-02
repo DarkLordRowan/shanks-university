@@ -6,6 +6,8 @@ import {
     type ConvergenceAnalysis,
     type SideType,
     type MonotonicityType,
+    type AccelArgs,
+    type SeriesArgs,
 } from "./types";
 
 const EPS = 1e-10;
@@ -207,6 +209,36 @@ export function analyzeSeriesAccelConvergence(
     };
 }
 
+export function formatSideWithMax(
+    analysis: ConvergenceAnalysis,
+    maxSignChangesForOneSided: number
+): SideType {
+    let side = analysis.side;
+    if (analysis.side === "two_sided") {
+        if (analysis.signChangesCount <= maxSignChangesForOneSided) {
+            side = "one_sided";
+        }
+    }
+    return side;
+}
+
+export function formatMonotonicityWithMax(
+    analysis: ConvergenceAnalysis,
+    maxViolationsForMonotone: number
+): MonotonicityType {
+    let monotonicity = analysis.monotonicity;
+    if (analysis.monotonicity === "random_error") {
+        if (analysis.violationsCount <= maxViolationsForMonotone) {
+            monotonicity = "non_increasing_error";
+        } else if (analysis.stepsAnalyzed - analysis.violationsCount <= maxViolationsForMonotone) {
+            monotonicity = "non_decreasing_error";
+        } else {
+            monotonicity = "random_error";
+        }
+    }
+    return monotonicity;
+}
+
 export function formatSideShort(side: SideType): string {
     switch (side) {
         case "one_sided":
@@ -231,7 +263,7 @@ export function formatMonotonicityShort(mon: MonotonicityType): string {
         case "non_decreasing_error":
             return "⇗";
         case "random_error":
-            return "↕";
+            return "↕️";
         case "unknown":
             return "?";
     }
@@ -269,4 +301,40 @@ export function formatMonotonicityDescription(mon: MonotonicityType): string {
 
 export function getConvergenceCellDomId(accelId: string, seriesId: string): string {
     return `conv-cell-${accelId}::${seriesId}`;
+}
+
+function toSortableNumber(v: Scalar): number | null {
+    if (typeof v === "number") {
+        return Number.isFinite(v) ? v : null;
+    }
+    if (typeof v === "string") {
+        const n = Number(v);
+        return Number.isFinite(n) ? n : null;
+    }
+    return null;
+}
+
+type Scalar = number | string | boolean | null;
+
+export function parseX(args: SeriesArgs | null): { xLabel: string; xSort: number | null } {
+    const raw = args?.x as Scalar | undefined;
+    if (raw == null) {
+        return { xLabel: "∅", xSort: null };
+    }
+    return {
+        xLabel: String(raw),
+        xSort: toSortableNumber(raw),
+    };
+}
+
+export function nonNullEntries<T extends Record<string, unknown>>(obj: T | null | undefined) {
+    if (!obj) return [] as [string, unknown][];
+    return Object.entries(obj).filter(([, v]) => v !== null && v !== undefined);
+}
+
+export function buildArgsSummary(args: AccelArgs | null): string {
+    const entries = nonNullEntries(args);
+    if (entries.length === 0) return "";
+    entries.sort(([a], [b]) => a.localeCompare(b));
+    return entries.map(([k, v]) => `${k}=${v}`).join(", ");
 }
