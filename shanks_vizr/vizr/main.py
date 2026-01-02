@@ -1,3 +1,8 @@
+"""
+Author: Sobolev Y. A.
+Description: Main application entry point and UI implementation using PyQt6."
+"""
+
 import argparse
 import sys
 import time
@@ -42,6 +47,9 @@ class CollapsibleCellWidget(QWidget):
     """
     A widget that can expand to show more content, used in the table for long lists.
     Keeps the table looking tidy until the user wants the details.
+
+    This is necessary because inserting thousands of lines of text into a single
+    table cell would make the UI sluggish or unusable.
     """
 
     def __init__(
@@ -51,6 +59,15 @@ class CollapsibleCellWidget(QWidget):
         parent_table: QTableWidget,
         row_idx: int,
     ):
+        """
+        Initializes the collapsible widget.
+
+        Inputs:
+            title (str): The text to display on the button.
+            content_lines (List[str]): The lines of text to show when expanded.
+            parent_table (QTableWidget): Reference to the parent table for resizing.
+            row_idx (int): The row index this widget belongs to.
+        """
         super().__init__()
         self.parent_table = parent_table
         self.row_idx = row_idx
@@ -60,6 +77,7 @@ class CollapsibleCellWidget(QWidget):
         self.layout.setSpacing(2)
 
         # Toggle Button
+        # We use a tool button because it can have an icon and text.
         self.toggle_btn = QToolButton()
         self.toggle_btn.setText(f"> {title}")
         self.toggle_btn.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
@@ -75,6 +93,7 @@ class CollapsibleCellWidget(QWidget):
         self.layout.addWidget(self.toggle_btn)
 
         # Content Area
+        # Hidden by default to save space.
         self.content_area = QTextEdit()
         self.content_area.setReadOnly(True)
         self.content_area.setText("\n".join(content_lines))
@@ -85,13 +104,16 @@ class CollapsibleCellWidget(QWidget):
     def on_toggle(self, checked: bool):
         """
         Handles the expansion/collapse logic.
+
+        Inputs:
+            checked (bool): The new state of the toggle button.
         """
         arrow = "v" if checked else ">"
         text = self.toggle_btn.text()[1:]  # Keep original title
         self.toggle_btn.setText(f"{arrow}{text}")
         self.content_area.setVisible(checked)
 
-        # Trigger resize of the row
+        # Trigger resize of the row so the content fits.
         self.parent_table.resizeRowToContents(self.row_idx)
 
 
@@ -101,6 +123,16 @@ def extract_filter_options(
     """
     Analyzes loaded data and returns available filter options.
     Only includes options with >1 unique values.
+
+    This is used for the "Quick Filters" which operate in-memory on the data
+    we have already downloaded/loaded, as opposed to the "Load Filters" which
+    query the disk.
+
+    Inputs:
+        data (List[Tuple[SeriesRecord, List[AccelRecord]]]): The loaded dataset.
+
+    Outputs:
+        Dict[str, Any]: A dictionary of filter options.
     """
     precisions: Set[str] = set()
     base_series: Set[str] = set()
@@ -113,6 +145,7 @@ def extract_filter_options(
         precisions.add(series.precision)
         base_series.add(series.name)
 
+        # Series Arguments
         for k, v in series.arguments.items():
             if k not in series_params:
                 series_params[k] = set()
@@ -122,11 +155,13 @@ def extract_filter_options(
             base_accel.add(accel.accel_info.name)
             m_values.add(accel.accel_info.m_value)
 
+            # Acceleration Arguments
             for k, v in accel.accel_info.additional_args.items():
                 if k not in accel_params:
                     accel_params[k] = set()
                 accel_params[k].add(v)
 
+    # Clean up params that only have 1 option (useless to filter on).
     def clean_params(params: Dict[str, Set[str]]) -> Dict[str, List[str]]:
         return {k: sorted(list(v)) for k, v in params.items() if len(v) > 1}
 
@@ -154,9 +189,16 @@ def filter_data_items(
         'series_params': {'param_name': set(), ...},
         'accel_params': {'param_name': set(), ...}
     }
-    Empty set ⇒ "All" (no filtering).
+    Empty set implies "All" (no filtering).
+
+    Inputs:
+        data (List[Tuple[SeriesRecord, List[AccelRecord]]]): The dataset to filter.
+        filters (Dict[str, Any]): Active filters.
+
+    Outputs:
+        List[Tuple[SeriesRecord, List[AccelRecord]]]: Filtered dataset.
     """
-    # Quick check if any filter is active
+    # Quick check if any filter is active to avoid iterating if not needed.
     has_filters = (
         bool(filters["precisions"])
         or bool(filters["base_series"])
@@ -173,6 +215,7 @@ def filter_data_items(
 
     for series, accels in data:
         # --- Series Filtering ---
+        # If the series itself doesn't match the criteria, we drop it entirely.
         if filters["precisions"] and series.precision not in filters["precisions"]:
             continue
         if filters["base_series"] and series.name not in filters["base_series"]:
@@ -229,6 +272,7 @@ def filter_data_items(
 
             valid_accels.append(accel)
 
+        # Only add the series if it has at least one matching acceleration
         if valid_accels:
             filtered_result.append((series, valid_accels))
 
@@ -239,6 +283,7 @@ class FlowLayout(QLayout):
     """
     A custom layout that wraps items like words in a paragraph.
     Great for lists of checkboxes that don't fit on one line.
+    Standard Qt layouts don't support this "flow" behavior natively.
     """
 
     def __init__(self, parent: Optional[QWidget] = None):
@@ -295,6 +340,8 @@ class FlowLayout(QLayout):
     def _do_layout(self, rect: QRect, test_only: bool) -> int:
         """
         Calculates the layout for the given rectangle.
+        Iterates through items, placing them next to each other until they hit the right edge,
+        then moves to the next line.
         """
         margins = self.contentsMargins()
         x = rect.x() + margins.left()
@@ -336,6 +383,7 @@ class FlowLayout(QLayout):
 class DataLoadThread(QThread):
     """
     Background thread for loading data without freezing the UI.
+    Polars operations can take seconds, which would make the window unresponsive.
     """
 
     finished = pyqtSignal(list)
@@ -347,6 +395,9 @@ class DataLoadThread(QThread):
         self.filters = filters
 
     def run(self):
+        """
+        Executes the data loading process.
+        """
         try:
             data = self.loader.filter_data(self.filters)
             self.finished.emit(data)
@@ -358,9 +409,21 @@ class SymLogAxisItem(pg.AxisItem):
     """
     Custom axis item for SymLog scale.
     Delegates tick formatting to our symlog_formatter.
+    Standard logarithmic axes crash or behave poorly with negative numbers.
     """
 
     def tickStrings(self, values, scale, spacing):
+        """
+        Generates string labels for ticks.
+
+        Inputs:
+            values (List[float]): Tick values.
+            scale (float): Scale factor.
+            spacing (float): Spacing.
+
+        Outputs:
+            List[str]: Formatted strings.
+        """
         return [symlog_formatter(v) for v in values]
 
 
@@ -370,7 +433,15 @@ class PlotWidget(pg.PlotWidget):
     """
 
     def __init__(self, title, symlog=False, **kwargs):
+        """
+        Initializes the plot widget.
+
+        Inputs:
+            title (str): Plot title.
+            symlog (bool): Whether to use symmetric log scale.
+        """
         if symlog:
+            # Swap the default axis item with our custom one BEFORE initialization
             kwargs["axisItems"] = {"left": SymLogAxisItem(orientation="left")}
         super().__init__(**kwargs)
         self.setTitle(title)
@@ -390,6 +461,12 @@ class DashboardApp(QMainWindow):
     """
 
     def __init__(self, data_dir: str):
+        """
+        Initializes the main window.
+
+        Inputs:
+            data_dir (str): Path to the data directory.
+        """
         super().__init__()
         self.setWindowTitle("vizr")
         self.resize(1400, 800)
@@ -437,7 +514,8 @@ class DashboardApp(QMainWindow):
         self.setCentralWidget(central_widget)
         main_layout = QHBoxLayout(central_widget)
 
-        # Scroll area for plots and filters
+        # Scroll area for plots and filters.
+        # This is important because on smaller screens the content might overflow.
         self.scroll_area = QScrollArea()
         self.scroll_area.setWidgetResizable(True)
         self.scroll_container = QWidget()
@@ -447,6 +525,7 @@ class DashboardApp(QMainWindow):
         self.setup_load_filters_ui(self.plots_layout)
 
         # Quick Filters Container (Dynamic)
+        # This group box is populated after data is loaded.
         self.quick_filters_group = QGroupBox("Quick Filters (In-Memory)")
         self.quick_filters_group.hide()  # Hidden until data is loaded
         self.quick_filters_layout = QVBoxLayout(self.quick_filters_group)
@@ -503,6 +582,9 @@ class DashboardApp(QMainWindow):
         """
         Creates the UI section for initial data loading filters.
         These filters determine what is fetched from Parquet in the first place.
+
+        Inputs:
+            layout (QLayout): The layout to add widgets to.
         """
         metadata = self.loader.metadata
 
@@ -586,10 +668,27 @@ class DashboardApp(QMainWindow):
         layout.addWidget(line)
 
     def create_filter_group(
-        self, title, items, filter_key, target_dict, is_int=False, on_change=None
+        self,
+        title,
+        items,
+        filter_key,
+        target_dict,
+        is_int=False,
+        on_change=None,
     ):
         """
         Creates a group box containing checkboxes for filtering options.
+
+        Inputs:
+            title (str): Group title.
+            items (List[str]): List of items to create checkboxes for.
+            filter_key (str/tuple): Key in target_dict to update.
+            target_dict (Dict): Dictionary storing filter state.
+            is_int (bool): Convert values to int before storing.
+            on_change (Callable): Callback when selection changes.
+
+        Outputs:
+            QGroupBox: The created widget group.
         """
         group = QGroupBox(title)
         layout = QVBoxLayout()
@@ -622,6 +721,7 @@ class DashboardApp(QMainWindow):
             val = int(item) if is_int else item
 
             is_checked = False
+            # Handle nested keys for params
             if isinstance(filter_key, tuple):
                 p_key, s_key = filter_key
                 if s_key in target_dict[p_key] and val in target_dict[p_key][s_key]:
@@ -677,7 +777,7 @@ class DashboardApp(QMainWindow):
         Creates the UI section for in-memory filtering (fast).
         Updates based on the currently loaded data.
         """
-        # Clear existing layout
+        # Clear existing layout because options change when new data is loaded.
         while self.quick_filters_layout.count():
             item = self.quick_filters_layout.takeAt(0)
             if item.widget():
@@ -687,7 +787,7 @@ class DashboardApp(QMainWindow):
                 # FlowLayout clean up handles its items
                 pass
 
-        # Calculate available options
+        # Calculate available options based on CURRENT data.
         options = extract_filter_options(self.data)
 
         if (
@@ -829,6 +929,11 @@ class DashboardApp(QMainWindow):
         """
         Sets up the mouse hover functionality for a plot widget.
         Displays tooltips when hovering over curves.
+
+        This is tricky because we often have many overlapping curves or points.
+
+        Inputs:
+            plot_widget (PlotWidget): The widget to attach hover logic to.
         """
         # Create a text item for the tooltip
         tooltip = pg.TextItem(
@@ -849,6 +954,7 @@ class DashboardApp(QMainWindow):
                 mouse_point = plot_widget.plotItem.vb.mapSceneToView(pos)
                 self.update_tooltip(plot_widget, mouse_point, pos)
 
+        # Rate limit is important to avoid lagging on mouse move.
         plot_widget.proxy = pg.SignalProxy(
             plot_widget.scene().sigMouseMoved, rateLimit=60, slot=mouse_moved
         )
@@ -857,6 +963,12 @@ class DashboardApp(QMainWindow):
         """
         Calculates the minimum distance from point p to the line segment vw.
         All inputs are QPointF-like objects (screen coordinates).
+
+        Inputs:
+            p, v, w (QPointF): Points.
+
+        Outputs:
+            float: Distance.
         """
         # p, v, w are QPointF (screen coords)
         # Return distance from p to segment vw
@@ -879,6 +991,11 @@ class DashboardApp(QMainWindow):
         """
         Updates the tooltip position and text based on mouse location.
         Finds the closest curve or point to the mouse cursor.
+
+        Inputs:
+            plot_widget (PlotWidget): The plot widget.
+            mouse_point (QPointF): Mouse position in plot coordinates.
+            scene_pos (QPointF): Mouse position in scene coordinates.
         """
         mouse_x = mouse_point.x()
 
@@ -969,7 +1086,9 @@ class DashboardApp(QMainWindow):
                             candidate_name = item.point_names[i]
 
             elif hasattr(item, "segments"):
-                # Batched segments
+                # Batched segments.
+                # This is an optimization where multiple curves are drawn as one continuous line with gaps (NaNs).
+                # We need to check which segment we are closest to.
                 for start, end, info_name in item.segments:
                     seg_x = x_data[start:end]
                     seg_y = y_data[start:end]
@@ -1002,6 +1121,9 @@ class DashboardApp(QMainWindow):
             tooltip.hide()
 
     def on_visual_option_changed(self, state):
+        """
+        Callback for visualization checkboxes.
+        """
         self.show_partial_sums = self.partial_sums_check.isChecked()
         self.show_limits = self.limits_check.isChecked()
         self.show_real = self.real_check.isChecked()
@@ -1010,6 +1132,9 @@ class DashboardApp(QMainWindow):
         self.update_plots()
 
     def on_symlog_changed(self, state):
+        """
+        Callback for symlog checkbox.
+        """
         self.symlog = state == Qt.CheckState.Checked.value
         # Update error_plot and performance_plot axis
         for plot in [self.error_plot, self.performance_plot]:
@@ -1028,6 +1153,11 @@ class DashboardApp(QMainWindow):
     def add_legend_item(self, text, color, is_dashed=False):
         """
         Adds an item to the custom legend widget.
+
+        Inputs:
+            text (str): Label text.
+            color (QColor): Icon color.
+            is_dashed (bool): Whether to draw dashed line icon.
         """
         pixmap = QPixmap(16, 16)
         pixmap.fill(color)
@@ -1059,6 +1189,9 @@ class DashboardApp(QMainWindow):
     def on_data_loaded(self, data):
         """
         Callback when data loading completes successfully.
+
+        Inputs:
+            data (List): Loaded data.
         """
         self.data = data
         self.refresh_btn.setEnabled(True)
@@ -1083,11 +1216,17 @@ class DashboardApp(QMainWindow):
         self.update_plots()
 
     def on_load_error(self, err_msg):
+        """
+        Callback for loading errors.
+        """
         print(f"Error loading data: {err_msg}")
         self.refresh_btn.setEnabled(True)
         self.progress_bar.hide()
 
     def format_args(self, args: Dict[str, str]) -> str:
+        """
+        Formats argument dictionary to string.
+        """
         if not args:
             return ""
         items = [f"{k}={v}" for k, v in args.items()]
@@ -1124,6 +1263,7 @@ class DashboardApp(QMainWindow):
 
         self.table.setRowCount(0)
 
+        # We limit the number of rows to avoid freezing the UI if the user selects "All".
         row_limit = 100
         rows_added = 0
 
@@ -1132,7 +1272,8 @@ class DashboardApp(QMainWindow):
         t_table = 0
         t_legend_add = 0
 
-        # Performance points collection
+        # Performance points collection.
+        # We collect all points first and then plot them in one go to be faster.
         perf_x = []
         perf_y = []
         perf_names = []
@@ -1149,7 +1290,8 @@ class DashboardApp(QMainWindow):
         n_series = len(self.filtered_data)
 
         for i, (series, accels) in enumerate(self.filtered_data):
-            # Generate color based on index for Accel Real lines
+            # Generate color based on index for Accel Real lines.
+            # This ensures distinct colors for different series.
             series_color = pg.intColor(i, n_series)
 
             if i % 5 == 0:
@@ -1205,8 +1347,7 @@ class DashboardApp(QMainWindow):
 
                 if self.show_real:
                     real_limit = limit.real.approx_f64()
-                    # Plot horizontal line
-                    # We need min_x and max_x.
+                    # Plot horizontal line representing the true limit.
                     if len(n_vals) > 0:
                         min_x, max_x = n_vals[0], n_vals[-1]
                         self.convergence_plot.plot(
@@ -1232,7 +1373,9 @@ class DashboardApp(QMainWindow):
             # 3. Accelerations
             t0 = time.time()
 
-            # Collect accel curves for batch plotting (Real Only)
+            # Collect accel curves for batch plotting (Real Only).
+            # Creating individual PlotCurveItems is expensive, so we combine data
+            # into one large array with NaN gaps to separate lines.
             series_accel_n = []
             series_accel_real = []
             series_accel_dev = []  # For Error Plot
@@ -1290,10 +1433,11 @@ class DashboardApp(QMainWindow):
                         accel_dev = accel_dev_real
 
                     seg_len = len(accel_n)
+                    # Track where this segment lives in the batched array for tooltip mapping.
                     accel_segments.append(
                         (current_offset, current_offset + seg_len, accel_legend_name)
                     )
-                    current_offset += seg_len + 1
+                    current_offset += seg_len + 1  # +1 for the NaN separator
 
                     series_accel_n.append(accel_n.astype(float))
                     series_accel_n.append(np.array([np.nan]))
@@ -1305,6 +1449,7 @@ class DashboardApp(QMainWindow):
                     series_accel_dev.append(np.array([np.nan]))
 
                     # Min error for performance plot
+                    # Find the best result this algorithm achieved.
                     valid_dev_indices = np.where(~np.isnan(accel_dev))[0]
                     if len(valid_dev_indices) > 0:
                         min_idx_local = np.argmin(accel_dev[valid_dev_indices])
