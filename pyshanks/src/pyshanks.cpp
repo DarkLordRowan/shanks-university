@@ -2,7 +2,7 @@
 /**
  * @file pyshanks.cpp
  * @brief pybind11 bindings with support for double and arbitrary-precision float_precision
- * @authors Sobolev Y. ,Naumov A.U.
+ * @authors Sobolev Y. A., Naumov A.U.
 */
 
 #include <pybind11/operators.h>
@@ -31,15 +31,21 @@ PYBIND11_MODULE(pyshanks, m) {
 
     bind_arb_real_num<mpfr::mpreal>(m, "Arb");
 
+    // Tuple of real types to bind complex equivalents for
     using real_types = std::tuple<
         float,
         double,
         long double
     >;
 
-    bind_comlex_types<real_types, 0, 3>(m);
+    // Bind complex types for float, double, and long double
+    // Suffixes start from index 3 (CF32, CF64, CFLong)
+    bind_complex_types<real_types, 0, 3>(m);
+
+    // Bind complex arbitrary precision type
     bind_complex_num<mpfr::mpreal>(m, "CArb");
 
+    // Tuple of <Type, IndexType> pairs to bind series and algorithms for
     using types_to_bind = std::tuple<
         std::tuple<       float, size_t>,
         std::tuple<      double, size_t>,
@@ -49,7 +55,10 @@ PYBIND11_MODULE(pyshanks, m) {
         std::tuple<std::complex<long double >, size_t>
     >;
 
+    // Bind series and algos for all standard types
     bind_all_types<types_to_bind>(m);
+
+    // Bind series and algos for arbitrary precision types
     bind_all<mpfr::mpreal, size_t>(m, "Arb");
     bind_all<std::complex<mpfr::mpreal>, size_t>(m, "CArb");
 }

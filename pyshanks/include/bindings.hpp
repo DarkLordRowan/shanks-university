@@ -5,8 +5,8 @@
 /**
  * @file bindings.hpp
  * @brief Contains function for binding c++ side to python
- * @authors Sobolev Y. ,Naumov A.U.
- * 
+ * @authors Sobolev Y. A, Naumov A.U.
+ *
  */
 
 #include <pybind11/operators.h>
@@ -28,66 +28,88 @@ extern constinit const char* series_names[OVERALL_SERIES_DEFINED];
 
 /**
  * @brief Bind complex type with given pyname to the module m
- * 
+ *
+ * This function defines a Python class for complex numbers based on the underlying
+ * floating-point type T. It exposes properties like real/imag parts and standard
+ * arithmetic operators.
+ *
  * @tparam T Floating-point type for type to base complex one (FloatLike).
  * @param m pybind module
- * @param pyname name of created type
+ * @param pyname name of created type in Python
  */
 template <FloatLike T>
 constexpr void bind_complex_num(py::module_& m, const char* pyname);
 
 /**
- * @brief Bind algos and series
- * 
+ * @brief Bind algorithms and series for a specific type configuration.
+ *
+ * Registers all defined series and sequence transformations (algorithms) for the
+ * specified numeric type T and integer type K. Appends a suffix to class names.
+ *
  * @tparam T AcceptedLike type to bind series and algos to.
- * @tparam K UnsignedIntLike type to bind series and algos to.
+ * @tparam K UnsignedIntLike type used for indexing/counts.
  * @param m pybind module
- * @param suffix suffix to append to the binded algos and series
+ * @param suffix suffix to append to the binded algos and series (e.g., "F64")
  */
 template <AcceptedLike T, UnsignedIntLike K>
 constexpr void bind_all(py::module_& m, const std::string& suffix);
 
 /**
- * @brief Bind complex types with tuple of FloatLike types
+ * @brief Recursively bind complex types from a tuple of FloatLike types.
+ *
+ * Iterates through a tuple of floating-point types and creates a corresponding
+ * complex number binding for each, mapping them to names in `available_types`.
+ *
  * @tparam TupleOfTypes tuple of FloatLike types
- * @tparam TypesIndex index for traversing TupleOfTypes
- * @tparam NameIndex index for type array (available_types)
+ * @tparam TypesIndex index for traversing TupleOfTypes (recursion state)
+ * @tparam NameIndex index for type array (available_types) (recursion state)
  * @param m pybind module
- * @return void
-*/
+ */
 template<typename TupleOfTypes, std::size_t TypesIndex = 0, std::size_t NameIndex = 0>
-constexpr void bind_comlex_types(py::module_& m){
+constexpr void bind_complex_types(py::module_& m){
     if constexpr (TypesIndex < std::tuple_size_v<TupleOfTypes> && NameIndex < OVERALL_ARB_TYPES){
         using type_from_tuple = std::tuple_element_t<TypesIndex, TupleOfTypes>;
         bind_complex_num<type_from_tuple>(m, available_types[NameIndex]);
-        bind_comlex_types<TupleOfTypes, TypesIndex + 1, NameIndex + 1>(m);
+        // Recursive call for the next type in the tuple
+        bind_complex_types<TupleOfTypes, TypesIndex + 1, NameIndex + 1>(m);
     } else return;
 }
 
 /**
- * @brief For all pair of types<T(AcceptedLike), K(UnsignedIntLike)> bind algos and series
- * @tparam TupleOfTypes tuple of pairs of types
- * @tparam TypesIndex index for traversing TupleOfTypes
- * @tparam NameIndex index for type array (available_types)
- * @param m 
+ * @brief Recursively bind algorithms and series for a tuple of type pairs.
+ *
+ * Iterates through a tuple of pairs <T, K> and invokes `bind_all` for each pair,
+ * associating them with names from `available_types`.
+ *
+ * @tparam TupleOfTypes tuple of pairs of types (T, K)
+ * @tparam TypesIndex index for traversing TupleOfTypes (recursion state)
+ * @tparam NameIndex index for type array (available_types) (recursion state)
+ * @param m pybind module
  */
 template<typename TupleOfTypes, std::size_t TypesIndex = 0, std::size_t NameIndex = 0>
 constexpr void bind_all_types(py::module_& m){
     if constexpr (TypesIndex < std::tuple_size_v<TupleOfTypes> && NameIndex < OVERALL_ARB_TYPES){
         using tuple_from_tuple = std::tuple_element_t<TypesIndex, TupleOfTypes>;
+        // Extract T (numeric type) and K (integer type) from the pair
         using TypeOfT = std::tuple_element_t<0, tuple_from_tuple>;
         using TypeOfK = std::tuple_element_t<1, tuple_from_tuple>;
+
         bind_all<TypeOfT, TypeOfK>(m, available_types[NameIndex]);
+
+        // Recursive call for the next pair
         bind_all_types<TupleOfTypes, TypesIndex + 1, NameIndex + 1>(m);
     } else return;
 }
 
 /**
- * @brief Bind arbitrary precision type
+ * @brief Bind arbitrary precision type (e.g., mpfr::mpreal) to Python.
+ *
+ * Exposes constructors (from double, string), arithmetic operators, comparisons,
+ * and string representations for high-precision types.
+ *
  * @tparam T type that satisfies is_precisable
  * @param m pybind module
  * @param name name for the bind class
- * @return void
  */
 template<typename T>
 requires is_precisable<T>::value
@@ -134,6 +156,7 @@ constexpr void bind_complex_num(py::module_& m, const char* pyname) {
 
     using C = std::complex<T>;
 
+    // Define state type for pickling support
     using State = std::conditional_t<std::is_same_v<T, mpfr::mpreal>, std::pair<std::string, std::string>, std::pair<T, T>>;
 
     auto cls = py::class_<C>(m, pyname)
@@ -173,12 +196,13 @@ constexpr void bind_complex_num(py::module_& m, const char* pyname) {
 }
 
 /**
- * @brief Bind series
+ * @brief Recursively bind a tuple of series classes.
+ *
  * @tparam TupleOfSeries tuple of series types to bind
- * @tparam BaseClass should be shanks::series::series_base<T, K>
- * @tparam I index for traversing TupleOfTypes
+ * @tparam BaseClass the base class type (shanks::series::series_base<T, K>)
+ * @tparam I index for traversing TupleOfSeries (recursion state)
  * @param m pybind module
- * @param suffix suffix to append when binding
+ * @param suffix suffix to append when binding (e.g., "F64")
  */
 template<typename TupleOfSeries, typename BaseClass, std::size_t I = 0>
 constexpr void bind_series_by_types(py::module_& m, const std::string& suffix){
@@ -190,14 +214,17 @@ constexpr void bind_series_by_types(py::module_& m, const std::string& suffix){
 }
 
 /**
- * @brief Bind series to the given module, appending their names with given suffix
- * 
- * @tparam T AcceptedLike type
- * @tparam K UnsignedIntLike type
+ * @brief Bind all defined series to the module with a specific suffix.
+ *
+ * Defines the `SeriesResult` and `SeriesBase` classes, and then binds
+ * a comprehensive list of specific series implementations.
+ *
+ * @tparam T AcceptedLike numeric type
+ * @tparam K UnsignedIntLike integer type
  * @param m pybind module
- * @param suffix suffix to append when binding
+ * @param suffix suffix to append to class names
  */
-template <AcceptedLike T, UnsignedIntLike K> 
+template <AcceptedLike T, UnsignedIntLike K>
 constexpr void bind_series(py::module_& m, const std::string& suffix){
 
     using MSeriesBase = shanks::series::series_base<T, K>;
@@ -303,7 +330,7 @@ constexpr void bind_series(py::module_& m, const std::string& suffix){
         shanks::series::x_two_throught_squares_series<T,K>,
         shanks::series::xsquareplus3_div_xsquareplus2multix_minus_1_series<T,K>
     >;
-    
+
     py::class_<series_result<T>>(m, (std::string("SeriesResult") + suffix).c_str())
         .def(py::init<>())
         .def(py::init<std::vector<T>, std::vector<T>>())
@@ -323,18 +350,18 @@ constexpr void bind_series(py::module_& m, const std::string& suffix){
              py::arg("addKParameter") = utils::cast<K>(1)
         );
     bind_series_by_types<SeriesTuple, MSeriesBase>(m, suffix);
-    
+
 };
 
 /**
  * @brief Bind transformations to the given module, appending their names with given suffix
- * 
+ *
  * @tparam T AcceptedLike type
  * @tparam K UnsignedIntLike type
  * @param m pybind module
  * @param suffix suffix to append when binding
  */
-template <AcceptedLike T, UnsignedIntLike K> 
+template <AcceptedLike T, UnsignedIntLike K>
 constexpr void bind_algos(py::module_& m, const std::string& suffix){
 
     using RealT = GetUnderlyingType<T>::value;

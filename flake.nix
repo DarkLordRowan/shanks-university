@@ -22,8 +22,10 @@
               clang-tools
               python3
               poetry
-              mongodb-ce
               pkg-config
+              mpfr
+              gmp
+              eigen
             ]
             ++ (with python3Packages; [
               pybind11-stubgen

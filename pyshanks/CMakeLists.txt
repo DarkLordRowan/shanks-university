@@ -15,5 +15,5 @@ pybind11_add_module(pyshanks
     ${CMAKE_SOURCE_DIR}/src/pyshanks.cpp
 )
 
-target_link_libraries(pyshanks PRIVATE /usr/local/lib/libmpfr.so /usr/local/lib/libgmp.so)
+target_link_libraries(pyshanks PRIVATE mpfr gmp)
 set_target_properties(pyshanks PROPERTIES PREFIX "")
