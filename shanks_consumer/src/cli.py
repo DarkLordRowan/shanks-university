@@ -118,5 +118,4 @@ def load_config_and_apply_argparse() -> tuple[TrialConfig, argparse.Namespace]:
     overrides = _build_nested_dict_from_args(vars(args))
 
     final_cfg = cfg.model_copy(update=overrides)
-
     return final_cfg, args
