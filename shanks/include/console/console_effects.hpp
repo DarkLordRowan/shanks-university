@@ -7,15 +7,6 @@
  * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  */
 
-/**
- * @brief Enumeration for different font styles
- * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
- */
-
-enum class font_style{
-
-};
-
 // Usefull constants for terminal text styling
 #define BOLD            1m
 #define DIM             2m

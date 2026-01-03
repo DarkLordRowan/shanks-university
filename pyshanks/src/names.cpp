@@ -1,5 +1,15 @@
 #include "../include/bindings.hpp"
 
+/**
+ * @file names.cpp
+ * @brief This file contains definitions for arrays with names
+ *
+ * series_names - names of series
+ *
+ * available_types - array of suffixes for standard types
+ * @authors Sobolev Y. ,Naumov A.U.
+ */
+
 ///Series names
 constinit const char* series_names[OVERALL_SERIES_DEFINED] = {
 "AbsSinXMinus2DivPiSeries",
@@ -103,14 +113,12 @@ constinit const char* series_names[OVERALL_SERIES_DEFINED] = {
 "Xsquareplus3DivXsquareplus2multixMinus1Series",
 };
 
-/// types to bind
+/// standard types to bind
 constinit const char* available_types[OVERALL_ARB_TYPES] = {
     "F32",
     "F64",
     "FLong",
-    //"Arb",
     "CF32",
     "CF64",
     "CFLong",
-    //"CArb"
 };
