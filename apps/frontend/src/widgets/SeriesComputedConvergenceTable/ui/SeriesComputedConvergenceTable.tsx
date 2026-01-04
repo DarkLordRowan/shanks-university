@@ -1,3 +1,5 @@
+// src/widgets/SeriesComputedConvergenceTable/ui/SeriesComputedConvergenceTable.tsx
+
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Experiment, Series } from "@/entities/experiment/model/experiment";
 import type { MonotonicityType, SideType } from "../model/types";
@@ -54,15 +56,114 @@ function getRowColorClass(side: SideType, mon: MonotonicityType, selected: boole
 function classScore(side: SideType, mon: MonotonicityType): number {
     if (side === "unknown" || mon === "unknown") return 4;
     const mono = isMonotone(mon);
-    if (side === "one_sided" && mono) return 0; // зелёный
-    if (side === "one_sided" && !mono) return 1; // синий
-    if (side === "two_sided" && mono) return 2; // жёлтый
-    if (side === "two_sided" && !mono) return 3; // красный
+    if (side === "one_sided" && mono) return 0;
+    if (side === "one_sided" && !mono) return 1;
+    if (side === "two_sided" && mono) return 2;
+    if (side === "two_sided" && !mono) return 3;
     return 4;
 }
 
-type SortKey = "name" | "precision" | "args" | "class" | "k" | "sign" | "viol";
+type SortKey =
+    | "name"
+    | "precision"
+    | "args"
+    | "class"
+    | "k"
+    | "sign"
+    | "viol"
+    | "devMin"
+    | "devMean"
+    | "devMedian"
+    | "devMax";
 type SortDir = "asc" | "desc";
+
+type ComplexAny = { re?: unknown; im?: unknown; real?: unknown; imag?: unknown };
+
+function toNum(v: unknown): number | null {
+    if (v == null) return null;
+    if (typeof v === "number") return Number.isFinite(v) ? v : null;
+    if (typeof v === "string") {
+        const n = Number(v);
+        return Number.isFinite(n) ? n : null;
+    }
+    return null;
+}
+
+function readComplex(z: unknown): { re: number | null; im: number | null } {
+    if (!z || typeof z !== "object") return { re: null, im: null };
+    const o = z as ComplexAny;
+    const re = toNum(o.re ?? o.real);
+    const im = toNum(o.im ?? o.imag);
+    return { re, im };
+}
+
+/** ||z - w||, im=null трактуем как 0; re обязателен */
+function absDiff(z: unknown, w: unknown): number | null {
+    const a = readComplex(z);
+    const b = readComplex(w);
+
+    if (a.re == null || b.re == null) return null;
+
+    const ai = a.im ?? 0;
+    const bi = b.im ?? 0;
+
+    return Math.hypot(a.re - b.re, ai - bi);
+}
+
+type DevStats = {
+    count: number;
+    min: number | null;
+    mean: number | null;
+    median: number | null;
+    max: number | null;
+};
+
+/**
+ * Статистика по d_n = ||S_n - S||, где S = series.limit, S_n = series.computed[n].value.
+ * Возвращает null-поля, если нет данных.
+ */
+function computeDevStats(series: Series): DevStats {
+    const limit = series.limit;
+    const computed = series.computed ?? [];
+    if (!limit || computed.length === 0) {
+        return { count: 0, min: null, mean: null, median: null, max: null };
+    }
+
+    const vals: number[] = [];
+    let sum = 0;
+
+    for (const p of computed as any[]) {
+        const d = absDiff(p?.value, limit);
+        if (d == null || !Number.isFinite(d)) continue;
+        vals.push(d);
+        sum += d;
+    }
+
+    const n = vals.length;
+    if (n === 0) return { count: 0, min: null, mean: null, median: null, max: null };
+
+    vals.sort((a, b) => a - b);
+
+    const min = vals[0];
+    const max = vals[n - 1];
+    const mean = sum / n;
+
+    const mid = Math.floor(n / 2);
+    const median = n % 2 === 1 ? vals[mid] : 0.5 * (vals[mid - 1] + vals[mid]);
+
+    return { count: n, min, mean, median, max };
+}
+
+function fmtDev(x: number | null): string {
+    return x == null ? "—" : x.toExponential(3);
+}
+
+function cmpNumNullable(a: number | null, b: number | null): number {
+    if (a == null && b == null) return 0;
+    if (a == null) return 1; // null вниз
+    if (b == null) return -1;
+    return a - b;
+}
 
 export const SeriesComputedConvergenceTable: React.FC<SeriesComputedConvergenceTableProps> = ({
     experiment,
@@ -75,8 +176,7 @@ export const SeriesComputedConvergenceTable: React.FC<SeriesComputedConvergenceT
     const [maxSignChangesForOneSided, setMaxSignChangesForOneSided] = useState<number>(0);
     const [maxViolationsForMonotone, setMaxViolationsForMonotone] = useState<number>(0);
 
-    const [sortKey, setSortKey] = useState<SortKey | null>(null);
-    const [sortDir, setSortDir] = useState<SortDir>("asc");
+    const [sort, setSort] = useState<{ key: SortKey; dir: SortDir } | null>(null);
 
     const detailRef = useRef<HTMLDivElement | null>(null);
 
@@ -84,8 +184,7 @@ export const SeriesComputedConvergenceTable: React.FC<SeriesComputedConvergenceT
         setSelectedSeriesId(null);
         setMaxSignChangesForOneSided(0);
         setMaxViolationsForMonotone(0);
-        setSortKey(null);
-        setSortDir("asc");
+        setSort(null);
     }, [experiment?.id]);
 
     useEffect(() => {
@@ -99,11 +198,6 @@ export const SeriesComputedConvergenceTable: React.FC<SeriesComputedConvergenceT
         const el = document.getElementById(getSeriesRowDomId(selectedSeriesId));
         if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
     }, [selectedSeriesId]);
-
-    type SortKey = "name" | "precision" | "args" | "class" | "k" | "sign" | "viol";
-    type SortDir = "asc" | "desc";
-
-    const [sort, setSort] = useState<{ key: SortKey; dir: SortDir } | null>(null);
 
     const toggleSort = useCallback((key: SortKey) => {
         setSort((prev) => {
@@ -122,8 +216,8 @@ export const SeriesComputedConvergenceTable: React.FC<SeriesComputedConvergenceT
 
     const rows = useMemo(() => {
         return seriesList
-            .map((s) => {
-                const a = analysisBySeriesId[s.id];
+            .map((s: Series) => {
+                const a: any = (analysisBySeriesId as any)[s.id];
                 if (!a) return null;
 
                 const side = applySideThreshold(
@@ -143,6 +237,8 @@ export const SeriesComputedConvergenceTable: React.FC<SeriesComputedConvergenceT
                 const monShort = formatMonotonicityShort(mon);
                 const argsSummary = buildArgsSummary((s.args ?? null) as any);
 
+                const dev = computeDevStats(s);
+
                 return {
                     series: s,
                     analysis: a,
@@ -152,6 +248,7 @@ export const SeriesComputedConvergenceTable: React.FC<SeriesComputedConvergenceT
                     monShort,
                     argsSummary,
                     clsScore: classScore(side, mon),
+                    dev,
                 };
             })
             .filter(Boolean) as Array<{
@@ -163,6 +260,7 @@ export const SeriesComputedConvergenceTable: React.FC<SeriesComputedConvergenceT
             monShort: string;
             argsSummary: string;
             clsScore: number;
+            dev: DevStats;
         }>;
     }, [seriesList, analysisBySeriesId, maxSignChangesForOneSided, maxViolationsForMonotone]);
 
@@ -170,12 +268,7 @@ export const SeriesComputedConvergenceTable: React.FC<SeriesComputedConvergenceT
         if (!sort) return rows;
 
         const mul = sort.dir === "asc" ? 1 : -1;
-
         const cmpStr = (a: string, b: string) => a.localeCompare(b, "ru");
-        const cmpNum = (a: number, b: number) => a - b;
-
-        const isNumKey =
-            sort.key === "class" || sort.key === "k" || sort.key === "sign" || sort.key === "viol";
 
         const get = (r: (typeof rows)[number]) => {
             switch (sort.key) {
@@ -193,19 +286,39 @@ export const SeriesComputedConvergenceTable: React.FC<SeriesComputedConvergenceT
                     return r.analysis.signChangesCount ?? 0;
                 case "viol":
                     return r.analysis.incCount ?? 0;
+                case "devMin":
+                    return r.dev.min;
+                case "devMean":
+                    return r.dev.mean;
+                case "devMedian":
+                    return r.dev.median;
+                case "devMax":
+                    return r.dev.max;
             }
         };
 
+        const isNumKey =
+            sort.key === "class" || sort.key === "k" || sort.key === "sign" || sort.key === "viol";
+
+        const isDevKey =
+            sort.key === "devMin" ||
+            sort.key === "devMean" ||
+            sort.key === "devMedian" ||
+            sort.key === "devMax";
+
         const arr = [...rows];
         arr.sort((ra, rb) => {
-            const va = get(ra) as any;
-            const vb = get(rb) as any;
+            if (isDevKey) {
+                const c0 = cmpNumNullable(get(ra) as number | null, get(rb) as number | null);
+                if (c0 !== 0) return mul * c0;
+            } else if (isNumKey) {
+                const c0 = Number(get(ra)) - Number(get(rb));
+                if (c0 !== 0) return mul * c0;
+            } else {
+                const c0 = cmpStr(String(get(ra)), String(get(rb)));
+                if (c0 !== 0) return mul * c0;
+            }
 
-            const c = isNumKey ? cmpNum(Number(va), Number(vb)) : cmpStr(String(va), String(vb));
-
-            if (c !== 0) return mul * c;
-
-            // tie-break
             return cmpStr(ra.series.name ?? "", rb.series.name ?? "");
         });
 
@@ -216,7 +329,7 @@ export const SeriesComputedConvergenceTable: React.FC<SeriesComputedConvergenceT
         if (!experiment || !selectedSeriesId) return null;
 
         const series = (experiment.seriesList ?? []).find((s) => s.id === selectedSeriesId) ?? null;
-        const analysis = analysisBySeriesId[selectedSeriesId] ?? null;
+        const analysis: any = (analysisBySeriesId as any)[selectedSeriesId] ?? null;
 
         if (!series || !analysis) return null;
 
@@ -240,6 +353,7 @@ export const SeriesComputedConvergenceTable: React.FC<SeriesComputedConvergenceT
             monotonicity,
             points: buildDetailPoints(series),
             argsSummary: buildArgsSummary((series.args ?? null) as any),
+            dev: computeDevStats(series),
         };
     }, [
         experiment,
@@ -341,8 +455,8 @@ export const SeriesComputedConvergenceTable: React.FC<SeriesComputedConvergenceT
                 </div>
 
                 <div className="mt-2 text-[10px] text-textDim/70">
-                    Клик по строке открывает детальный график и таблицы. Клик по заголовку включает
-                    сортировку.
+                    Клик по строке открывает детальный график и таблицы. Клик по заголовку
+                    сортирует.
                 </div>
             </div>
 
@@ -423,6 +537,47 @@ export const SeriesComputedConvergenceTable: React.FC<SeriesComputedConvergenceT
                                     {sortMark("viol")}
                                 </span>
                             </th>
+
+                            <th
+                                className="border-b border-border px-2 py-2 text-right cursor-pointer select-none"
+                                onClick={() => toggleSort("devMin")}
+                                title="min_n ||S_n - S||"
+                            >
+                                min |Sₙ−S|{" "}
+                                <span className="ml-1 text-[9px] text-textDim/70">
+                                    {sortMark("devMin")}
+                                </span>
+                            </th>
+                            <th
+                                className="border-b border-border px-2 py-2 text-right cursor-pointer select-none"
+                                onClick={() => toggleSort("devMean")}
+                                title="mean_n ||S_n - S||"
+                            >
+                                mean{" "}
+                                <span className="ml-1 text-[9px] text-textDim/70">
+                                    {sortMark("devMean")}
+                                </span>
+                            </th>
+                            <th
+                                className="border-b border-border px-2 py-2 text-right cursor-pointer select-none"
+                                onClick={() => toggleSort("devMedian")}
+                                title="median_n ||S_n - S||"
+                            >
+                                med{" "}
+                                <span className="ml-1 text-[9px] text-textDim/70">
+                                    {sortMark("devMedian")}
+                                </span>
+                            </th>
+                            <th
+                                className="border-b border-border px-2 py-2 text-right cursor-pointer select-none"
+                                onClick={() => toggleSort("devMax")}
+                                title="max_n ||S_n - S||"
+                            >
+                                max{" "}
+                                <span className="ml-1 text-[9px] text-textDim/70">
+                                    {sortMark("devMax")}
+                                </span>
+                            </th>
                         </tr>
                     </thead>
 
@@ -434,10 +589,10 @@ export const SeriesComputedConvergenceTable: React.FC<SeriesComputedConvergenceT
                             const isSelected = selectedSeriesId === s.id;
                             const rowCls = getRowColorClass(r.side, r.mon, isSelected);
 
-                            const signNsText = a.signChangeNs.length
+                            const signNsText = a.signChangeNs?.length
                                 ? formatIntervals(a.signChangeNs)
                                 : "—";
-                            const violNsText = a.violationsNs.length
+                            const violNsText = a.violationsNs?.length
                                 ? formatIntervals(a.violationsNs)
                                 : "—";
 
@@ -446,8 +601,13 @@ export const SeriesComputedConvergenceTable: React.FC<SeriesComputedConvergenceT
                             titleLines.push(`prec: ${s.precision}`);
                             titleLines.push(`args: ${r.argsSummary || "—"}`);
                             titleLines.push(
-                                `limit: ${s.limit ? `(${s.limit.re}, ${s.limit.im ?? 0})` : "∅"}`
+                                `limit: ${s.limit ? `(${(s as any).limit.re ?? (s as any).limit.real}, ${(s as any).limit.im ?? (s as any).limit.imag ?? 0})` : "∅"}`
                             );
+                            titleLines.push(`dev count: ${r.dev.count}`);
+                            titleLines.push(`min ||S_n−S||: ${fmtDev(r.dev.min)}`);
+                            titleLines.push(`mean ||S_n−S||: ${fmtDev(r.dev.mean)}`);
+                            titleLines.push(`med ||S_n−S||: ${fmtDev(r.dev.median)}`);
+                            titleLines.push(`max ||S_n−S||: ${fmtDev(r.dev.max)}`);
                             titleLines.push("");
                             titleLines.push(
                                 `Класс: ${describeClass(r.side, r.mon)} (${r.sideShort} | ${r.monShort})`
@@ -488,6 +648,19 @@ export const SeriesComputedConvergenceTable: React.FC<SeriesComputedConvergenceT
                                     <td className="border-t border-border px-2 py-2 text-right font-mono tabular-nums">
                                         {a.incCount}
                                     </td>
+
+                                    <td className="border-t border-border px-2 py-2 text-right font-mono tabular-nums">
+                                        {fmtDev(r.dev.min)}
+                                    </td>
+                                    <td className="border-t border-border px-2 py-2 text-right font-mono tabular-nums">
+                                        {fmtDev(r.dev.mean)}
+                                    </td>
+                                    <td className="border-t border-border px-2 py-2 text-right font-mono tabular-nums">
+                                        {fmtDev(r.dev.median)}
+                                    </td>
+                                    <td className="border-t border-border px-2 py-2 text-right font-mono tabular-nums">
+                                        {fmtDev(r.dev.max)}
+                                    </td>
                                 </tr>
                             );
                         })}
@@ -506,7 +679,15 @@ export const SeriesComputedConvergenceTable: React.FC<SeriesComputedConvergenceT
                                 <div className="font-mono">
                                     prec: {selected.series.precision}{" "}
                                     <span className="text-textDim/70">|</span> args:{" "}
-                                    {selected.argsSummary || "—"}
+                                    {selected.argsSummary || "—"}{" "}
+                                    <span className="text-textDim/70">|</span> min:{" "}
+                                    {fmtDev(selected.dev.min)}{" "}
+                                    <span className="text-textDim/70">|</span> mean:{" "}
+                                    {fmtDev(selected.dev.mean)}{" "}
+                                    <span className="text-textDim/70">|</span> med:{" "}
+                                    {fmtDev(selected.dev.median)}{" "}
+                                    <span className="text-textDim/70">|</span> max:{" "}
+                                    {fmtDev(selected.dev.max)}
                                 </div>
                             </div>
 
