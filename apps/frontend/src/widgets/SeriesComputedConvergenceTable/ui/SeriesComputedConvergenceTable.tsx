@@ -50,6 +50,20 @@ function getRowColorClass(side: SideType, mon: MonotonicityType, selected: boole
     return "border-border text-textDim bg-surface/40 hover:bg-surface/50" + sel;
 }
 
+/** 0 = лучше, больше = хуже/неопределённо */
+function classScore(side: SideType, mon: MonotonicityType): number {
+    if (side === "unknown" || mon === "unknown") return 4;
+    const mono = isMonotone(mon);
+    if (side === "one_sided" && mono) return 0; // зелёный
+    if (side === "one_sided" && !mono) return 1; // синий
+    if (side === "two_sided" && mono) return 2; // жёлтый
+    if (side === "two_sided" && !mono) return 3; // красный
+    return 4;
+}
+
+type SortKey = "name" | "precision" | "args" | "class" | "k" | "sign" | "viol";
+type SortDir = "asc" | "desc";
+
 export const SeriesComputedConvergenceTable: React.FC<SeriesComputedConvergenceTableProps> = ({
     experiment,
     className,
@@ -61,12 +75,17 @@ export const SeriesComputedConvergenceTable: React.FC<SeriesComputedConvergenceT
     const [maxSignChangesForOneSided, setMaxSignChangesForOneSided] = useState<number>(0);
     const [maxViolationsForMonotone, setMaxViolationsForMonotone] = useState<number>(0);
 
+    const [sortKey, setSortKey] = useState<SortKey | null>(null);
+    const [sortDir, setSortDir] = useState<SortDir>("asc");
+
     const detailRef = useRef<HTMLDivElement | null>(null);
 
     useEffect(() => {
         setSelectedSeriesId(null);
         setMaxSignChangesForOneSided(0);
         setMaxViolationsForMonotone(0);
+        setSortKey(null);
+        setSortDir("asc");
     }, [experiment?.id]);
 
     useEffect(() => {
@@ -80,6 +99,118 @@ export const SeriesComputedConvergenceTable: React.FC<SeriesComputedConvergenceT
         const el = document.getElementById(getSeriesRowDomId(selectedSeriesId));
         if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
     }, [selectedSeriesId]);
+
+    type SortKey = "name" | "precision" | "args" | "class" | "k" | "sign" | "viol";
+    type SortDir = "asc" | "desc";
+
+    const [sort, setSort] = useState<{ key: SortKey; dir: SortDir } | null>(null);
+
+    const toggleSort = useCallback((key: SortKey) => {
+        setSort((prev) => {
+            if (!prev || prev.key !== key) return { key, dir: "asc" };
+            return { key, dir: prev.dir === "asc" ? "desc" : "asc" };
+        });
+    }, []);
+
+    const sortMark = useCallback(
+        (key: SortKey) => {
+            if (!sort || sort.key !== key) return "";
+            return sort.dir === "asc" ? "▲" : "▼";
+        },
+        [sort]
+    );
+
+    const rows = useMemo(() => {
+        return seriesList
+            .map((s) => {
+                const a = analysisBySeriesId[s.id];
+                if (!a) return null;
+
+                const side = applySideThreshold(
+                    a.sideRaw,
+                    a.signChangesCount,
+                    maxSignChangesForOneSided
+                );
+                const mon = applyMonotonicityThreshold(
+                    a.monotonicityRaw,
+                    a.incCount,
+                    a.decCount,
+                    a.eqCount,
+                    maxViolationsForMonotone
+                );
+
+                const sideShort = formatSideShort(side);
+                const monShort = formatMonotonicityShort(mon);
+                const argsSummary = buildArgsSummary((s.args ?? null) as any);
+
+                return {
+                    series: s,
+                    analysis: a,
+                    side,
+                    mon,
+                    sideShort,
+                    monShort,
+                    argsSummary,
+                    clsScore: classScore(side, mon),
+                };
+            })
+            .filter(Boolean) as Array<{
+            series: Series;
+            analysis: any;
+            side: SideType;
+            mon: MonotonicityType;
+            sideShort: string;
+            monShort: string;
+            argsSummary: string;
+            clsScore: number;
+        }>;
+    }, [seriesList, analysisBySeriesId, maxSignChangesForOneSided, maxViolationsForMonotone]);
+
+    const sortedRows = useMemo(() => {
+        if (!sort) return rows;
+
+        const mul = sort.dir === "asc" ? 1 : -1;
+
+        const cmpStr = (a: string, b: string) => a.localeCompare(b, "ru");
+        const cmpNum = (a: number, b: number) => a - b;
+
+        const isNumKey =
+            sort.key === "class" || sort.key === "k" || sort.key === "sign" || sort.key === "viol";
+
+        const get = (r: (typeof rows)[number]) => {
+            switch (sort.key) {
+                case "name":
+                    return r.series.name ?? "";
+                case "precision":
+                    return r.series.precision ?? "";
+                case "args":
+                    return r.argsSummary ?? "";
+                case "class":
+                    return r.clsScore;
+                case "k":
+                    return r.analysis.stepsAnalyzed ?? 0;
+                case "sign":
+                    return r.analysis.signChangesCount ?? 0;
+                case "viol":
+                    return r.analysis.incCount ?? 0;
+            }
+        };
+
+        const arr = [...rows];
+        arr.sort((ra, rb) => {
+            const va = get(ra) as any;
+            const vb = get(rb) as any;
+
+            const c = isNumKey ? cmpNum(Number(va), Number(vb)) : cmpStr(String(va), String(vb));
+
+            if (c !== 0) return mul * c;
+
+            // tie-break
+            return cmpStr(ra.series.name ?? "", rb.series.name ?? "");
+        });
+
+        return arr;
+    }, [rows, sort]);
 
     const selected = useMemo(() => {
         if (!experiment || !selectedSeriesId) return null;
@@ -108,6 +239,7 @@ export const SeriesComputedConvergenceTable: React.FC<SeriesComputedConvergenceT
             side,
             monotonicity,
             points: buildDetailPoints(series),
+            argsSummary: buildArgsSummary((series.args ?? null) as any),
         };
     }, [
         experiment,
@@ -209,7 +341,8 @@ export const SeriesComputedConvergenceTable: React.FC<SeriesComputedConvergenceT
                 </div>
 
                 <div className="mt-2 text-[10px] text-textDim/70">
-                    Клик по строке открывает детальный график и таблицы.
+                    Клик по строке открывает детальный график и таблицы. Клик по заголовку включает
+                    сортировку.
                 </div>
             </div>
 
@@ -220,40 +353,86 @@ export const SeriesComputedConvergenceTable: React.FC<SeriesComputedConvergenceT
                 <table className="min-w-full border-collapse text-[10px]">
                     <thead className="bg-surface/80 sticky top-0 z-10">
                         <tr>
-                            <th className="border-b border-border px-2 py-2 text-left">Ряд</th>
-                            <th className="border-b border-border px-2 py-2 text-left">prec</th>
-                            <th className="border-b border-border px-2 py-2 text-left">класс</th>
-                            <th className="border-b border-border px-2 py-2 text-right">k</th>
-                            <th className="border-b border-border px-2 py-2 text-right">sign</th>
-                            <th className="border-b border-border px-2 py-2 text-right">viol</th>
+                            <th
+                                className="border-b border-border px-2 py-2 text-left cursor-pointer select-none"
+                                onClick={() => toggleSort("name")}
+                                title="Сортировать по имени ряда"
+                            >
+                                Ряд{" "}
+                                <span className="ml-1 text-[9px] text-textDim/70">
+                                    {sortMark("name")}
+                                </span>
+                            </th>
+                            <th
+                                className="border-b border-border px-2 py-2 text-left cursor-pointer select-none"
+                                onClick={() => toggleSort("precision")}
+                                title="Сортировать по precision"
+                            >
+                                prec{" "}
+                                <span className="ml-1 text-[9px] text-textDim/70">
+                                    {sortMark("precision")}
+                                </span>
+                            </th>
+                            <th
+                                className="border-b border-border px-2 py-2 text-left cursor-pointer select-none"
+                                onClick={() => toggleSort("args")}
+                                title="Сортировать по аргументам ряда (строка)"
+                            >
+                                args{" "}
+                                <span className="ml-1 text-[9px] text-textDim/70">
+                                    {sortMark("args")}
+                                </span>
+                            </th>
+                            <th
+                                className="border-b border-border px-2 py-2 text-left cursor-pointer select-none"
+                                onClick={() => toggleSort("class")}
+                                title="Сортировать по классу (лучше → хуже)"
+                            >
+                                класс{" "}
+                                <span className="ml-1 text-[9px] text-textDim/70">
+                                    {sortMark("class")}
+                                </span>
+                            </th>
+                            <th
+                                className="border-b border-border px-2 py-2 text-right cursor-pointer select-none"
+                                onClick={() => toggleSort("k")}
+                                title="Сортировать по числу пар (n−1,n) в анализе"
+                            >
+                                k{" "}
+                                <span className="ml-1 text-[9px] text-textDim/70">
+                                    {sortMark("k")}
+                                </span>
+                            </th>
+                            <th
+                                className="border-b border-border px-2 py-2 text-right cursor-pointer select-none"
+                                onClick={() => toggleSort("sign")}
+                                title="Сортировать по числу смен знака"
+                            >
+                                sign{" "}
+                                <span className="ml-1 text-[9px] text-textDim/70">
+                                    {sortMark("sign")}
+                                </span>
+                            </th>
+                            <th
+                                className="border-b border-border px-2 py-2 text-right cursor-pointer select-none"
+                                onClick={() => toggleSort("viol")}
+                                title="Сортировать по числу нарушений монотонности ||Sₙ−S||"
+                            >
+                                viol{" "}
+                                <span className="ml-1 text-[9px] text-textDim/70">
+                                    {sortMark("viol")}
+                                </span>
+                            </th>
                         </tr>
                     </thead>
 
                     <tbody>
-                        {seriesList.map((s: Series) => {
-                            const a = analysisBySeriesId[s.id];
-                            if (!a) return null;
-
-                            const side = applySideThreshold(
-                                a.sideRaw,
-                                a.signChangesCount,
-                                maxSignChangesForOneSided
-                            );
-                            const mon = applyMonotonicityThreshold(
-                                a.monotonicityRaw,
-                                a.incCount,
-                                a.decCount,
-                                a.eqCount,
-                                maxViolationsForMonotone
-                            );
+                        {sortedRows.map((r) => {
+                            const s = r.series;
+                            const a = r.analysis;
 
                             const isSelected = selectedSeriesId === s.id;
-                            const rowCls = getRowColorClass(side, mon, isSelected);
-
-                            const sideShort = formatSideShort(side);
-                            const monShort = formatMonotonicityShort(mon);
-
-                            const argsSummary = buildArgsSummary((s.args ?? null) as any);
+                            const rowCls = getRowColorClass(r.side, r.mon, isSelected);
 
                             const signNsText = a.signChangeNs.length
                                 ? formatIntervals(a.signChangeNs)
@@ -265,13 +444,13 @@ export const SeriesComputedConvergenceTable: React.FC<SeriesComputedConvergenceT
                             const titleLines: string[] = [];
                             titleLines.push(`Ряд: ${s.name}`);
                             titleLines.push(`prec: ${s.precision}`);
-                            titleLines.push(`args: ${argsSummary || "—"}`);
+                            titleLines.push(`args: ${r.argsSummary || "—"}`);
                             titleLines.push(
                                 `limit: ${s.limit ? `(${s.limit.re}, ${s.limit.im ?? 0})` : "∅"}`
                             );
                             titleLines.push("");
                             titleLines.push(
-                                `Класс: ${describeClass(side, mon)} (${sideShort} | ${monShort})`
+                                `Класс: ${describeClass(r.side, r.mon)} (${r.sideShort} | ${r.monShort})`
                             );
                             titleLines.push(`Пар (n−1,n) в анализе: ${a.stepsAnalyzed}`);
                             titleLines.push(`Смен знака: ${a.signChangesCount}, ns: ${signNsText}`);
@@ -291,8 +470,14 @@ export const SeriesComputedConvergenceTable: React.FC<SeriesComputedConvergenceT
                                     <td className="border-t border-border px-2 py-2 font-mono">
                                         {s.precision}
                                     </td>
+                                    <td
+                                        className="border-t border-border px-2 py-2 font-mono max-w-[240px] truncate"
+                                        title={r.argsSummary || "—"}
+                                    >
+                                        {r.argsSummary || "—"}
+                                    </td>
                                     <td className="border-t border-border px-2 py-2 font-mono">
-                                        {sideShort} | {monShort}
+                                        {r.sideShort} | {r.monShort}
                                     </td>
                                     <td className="border-t border-border px-2 py-2 text-right font-mono tabular-nums">
                                         {a.stepsAnalyzed}
@@ -313,7 +498,18 @@ export const SeriesComputedConvergenceTable: React.FC<SeriesComputedConvergenceT
             <div ref={detailRef}>
                 {selected && (
                     <div className="mt-4">
-                        <div className="mb-2 flex justify-end">
+                        <div className="mb-2 flex items-start justify-between gap-2">
+                            <div className="text-[10px] text-textDim">
+                                <div className="font-semibold text-textDim/90">
+                                    {selected.series.name}
+                                </div>
+                                <div className="font-mono">
+                                    prec: {selected.series.precision}{" "}
+                                    <span className="text-textDim/70">|</span> args:{" "}
+                                    {selected.argsSummary || "—"}
+                                </div>
+                            </div>
+
                             <button
                                 type="button"
                                 className="rounded border border-border bg-surface px-2 py-[2px] text-[10px] text-textDim hover:bg-panel"
