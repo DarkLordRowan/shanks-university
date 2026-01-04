@@ -34,6 +34,7 @@ export interface ParquetSeriesRow {
 
     arguments: Record<string, unknown> | null;
     series_limit: ParquetComplex | null;
+    computed?: unknown;
 }
 
 export interface ParquetAccelRow {

@@ -18,8 +18,11 @@ import type {
     ParquetComplex,
     ParquetErrorRow,
     ParquetEventRow,
+    ParquetScalar,
     ParquetSeriesRow,
 } from "./types";
+
+import type { SeriesComputedPoint } from "@/entities/experiment/model/experiment";
 
 interface ArrowListVectorLike<T> {
     get(index: number): T;
@@ -155,6 +158,29 @@ function mapAccelComputed(raw: unknown): SeriesAccelComputedPoint[] {
     });
 }
 
+type RawPoint = { n: number; value: ParquetComplex | null };
+
+function mapSeriesComputed(raw: unknown): SeriesComputedPoint[] {
+    const arr = listLikeToArray<RawPoint>(raw);
+    if (arr.length === 0) return [];
+
+    return arr.map((p, idx) => {
+        const n = typeof p?.n === "number" ? p.n : idx + 1;
+
+        if (!p || p.value == null) {
+            return { n, value: null };
+        }
+
+        return {
+            n,
+            value: {
+                re: toNumberOrNull(p.value.real),
+                im: toNumberOrNull(p.value.imag),
+            },
+        };
+    });
+}
+
 function mapErrors(raw: unknown): SeriesAccelError[] {
     const arr = listLikeToArray<ParquetErrorRow>(raw);
     if (arr.length === 0) return [];
@@ -234,6 +260,7 @@ function buildSeriesList(seriesRows: ParquetSeriesRow[]): Series[] {
             precision: r.precision,
             args: normalizeSeriesArgs(r.arguments),
             limit: toComplex((r as any).series_limit),
+            computed: (r as any).computed,
         };
 
         map.set(sid, series);
@@ -324,6 +351,7 @@ export function buildSeriesEntityFromParquetRow(row: ParquetSeriesRow): Series |
         precision: row.precision,
         args: normalizeSeriesArgs(row.arguments),
         limit: toComplex((row as any).series_limit),
+        computed: mapSeriesComputed((row as any).computed),
     };
 }
 

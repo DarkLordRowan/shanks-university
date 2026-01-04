@@ -15,12 +15,19 @@ export interface AccelArgs {
     [key: string]: ScalarArg;
 }
 
+export interface SeriesComputedPoint {
+    n: number;
+    value: Complex | null;
+}
+
 export interface Series {
     id: string;
     name: string;
     precision: string;
     args: SeriesArgs | null;
     limit: Complex | null;
+
+    computed?: SeriesComputedPoint[];
 }
 
 export interface Accel {
