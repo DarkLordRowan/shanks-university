@@ -9,6 +9,7 @@ import { AlgorithmSeriesConvergenceTable } from "@/widgets/AlgorithmSeriesConver
 import { AlgoRankingTable } from "@/widgets/AlgoRankingTable.tsx";
 import { AlgorithmSeriesErrorStatsTable } from "@/widgets/AlgorithmSeriesErrorStatsTable";
 import { AlgorithmSeriesView } from "@/widgets/AlgorithmSeriesView";
+import { SeriesComputedConvergenceTable } from "@/widgets/SeriesComputedConvergenceTable";
 
 type ViewKey =
     | "algorithm-series-view"
@@ -16,6 +17,7 @@ type ViewKey =
     | "series-diff"
     | "series-error"
     | "series-convergence"
+    | "series-computed-convergence"
     | "series-error-stats"
     | "algo-ranking";
 
@@ -81,6 +83,13 @@ function ViewToggle(props: ViewToggleProps) {
             </ViewButton>
 
             <ViewButton
+                active={value === "series-computed-convergence"}
+                onClick={() => onChange("series-computed-convergence")}
+            >
+                Частичные суммы
+            </ViewButton>
+
+            <ViewButton
                 active={value === "series-error-stats"}
                 onClick={() => onChange("series-error-stats")}
             >
@@ -126,6 +135,10 @@ export function ExperimentViewSwitcher(props: ExperimentViewSwitcherProps) {
 
                     {view === "series-convergence" && (
                         <AlgorithmSeriesConvergenceTable experiment={experiment} maxSeries={19} />
+                    )}
+
+                    {view === "series-computed-convergence" && (
+                        <SeriesComputedConvergenceTable experiment={experiment} />
                     )}
 
                     {view === "series-error-stats" && (
