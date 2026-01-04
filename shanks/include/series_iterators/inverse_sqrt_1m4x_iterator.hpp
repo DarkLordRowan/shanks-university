@@ -7,7 +7,7 @@
 /**
  * @file inverse_sqrt_1m4x_iterator.hpp
  * @brief Iterator for the series expansion of 1/sqrt(1-4x).
- * @authors Bolshakov M.P.
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  */
 
 namespace shanks { namespace iters {
@@ -18,7 +18,7 @@ namespace shanks { namespace iters {
  * This class implements the Maclaurin expansion of 1 / sqrt(1 - 4x), which
  * is related to the central binomial coefficients and converges for |x| < 0.25.
  *
- * @authors Bolshakov M.P.
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  * @tparam T Floating-point type for series elements (AcceptedLike).
  * @tparam K Unsigned integral type for indexing (UnsignedIntLike).
  */
@@ -28,20 +28,20 @@ public:
 
     /**
      * @brief Default constructor for inverse_sqrt_1m4x_iterator.
-     * @authors Bolshakov M.P.
+     * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      */
 	inverse_sqrt_1m4x_iterator() : series_base_iterator<T, K>() {}
 
     /**
      * @brief Retrieves the analytic sum of the series (1 / sqrt(1 - 4x)).
-     * @authors Bolshakov M.P.
+     * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The value of 1 / sqrt(1 - 4x).
      */
 	T sum() const override{ return utils::cast<T>(1) / utils::sqrt(utils::cast<T>(1) - utils::cast<T>(4) * this->x);}
 
     /**
      * @brief Validates the current evaluation point x.
-     * @authors Bolshakov M.P.
+     * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return true if |x| >= 0.25 or non-finite, false otherwise.
      */
 	bool check_validity() const override {
@@ -51,7 +51,7 @@ public:
 
     /**
      * @brief Computes the next term in the 1/sqrt(1-4x) expansion.
-     * @authors Bolshakov M.P.
+     * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The next term of the series.
      */
 	T next() override {

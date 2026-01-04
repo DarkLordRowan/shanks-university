@@ -212,7 +212,7 @@ void transformation_remainders(const K n, const K order,
 * @brief Function that showcases the difference between 2 transformations
 * At first it prints out the type of transformations, series that are being transformed, type of enumerating integer and type of series terms
 * Then it prints out remainders of the series sum from 1 to n transformed 2 different ways and also tells which one got closer to the sum of the series
-* @authors Bolshakov M.P.
+* @authors Naumov A.U., Lykov D.S., Kreynin R.G.
 * @tparam series_templ is the type of series whose convergence we accelerate, transform_type_1 is the first type of transformation we are using, transform_type_2 is the second type of transformation we are using
 * @param n The number of terms for the last remainder
 * @param order The order of the transformation

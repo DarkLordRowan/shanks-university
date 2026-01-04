@@ -8,7 +8,7 @@
 /**
  * @file exp_squared_erf_iterator.hpp
  * @brief Iterator for the Taylor series expansion of exp(x^2)*erf(x).
- * @authors Bolshakov M.P.
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  */
 
 namespace shanks { namespace iters {
@@ -19,7 +19,7 @@ namespace shanks { namespace iters {
  * This class implements the power series expansion of the product of the
  * Gaussian-like exponential and the error function.
  *
- * @authors Bolshakov M.P.
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  * @tparam T Floating-point type for series elements (AcceptedLike).
  * @tparam K Unsigned integral type for indexing (UnsignedIntLike).
  */
@@ -29,27 +29,27 @@ public:
 
     /**
      * @brief Default constructor for exp_squared_erf_iterator.
-     * @authors Bolshakov M.P.
+     * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      */
 	exp_squared_erf_iterator() : series_base_iterator<T, K>() {}
 
     /**
      * @brief Retrieves the analytic sum of the series (exp(x^2) * erf(x)).
-     * @authors Bolshakov M.P.
+     * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The value of the product exp(x^2) * erf(x).
      */
 	T sum() const override{ return utils::erf(this->x) * utils::exp(this->x * this->x);}
 
     /**
      * @brief Validates the current evaluation point x.
-     * @authors Bolshakov M.P.
+     * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return true if x is non-finite, false otherwise.
      */
 	bool check_validity() const override { return !utils::isfinite(this->x); }
 
     /**
      * @brief Computes the next term in the exp(x^2) * erf(x) expansion.
-     * @authors Bolshakov M.P.
+     * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The next term of the series.
      */
 	T next() override {

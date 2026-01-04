@@ -9,7 +9,7 @@
 /**
  * @file lambert_W_func_iterator.hpp
  * @brief Iterator for the series expansion of the principal branch of the Lambert W function W0(x).
- * @authors Bolshakov M.P.
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  */
 
 namespace shanks { namespace iters {
@@ -20,7 +20,7 @@ namespace shanks { namespace iters {
  * This class implements the Maclaurin expansion of W0(x), which converges for
  * values of x such that |x| < 1/e.
  *
- * @authors Bolshakov M.P.
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  * @tparam T Floating-point type for series elements (AcceptedLike).
  * @tparam K Unsigned integral type for indexing (UnsignedIntLike).
  */
@@ -30,20 +30,20 @@ public:
 
     /**
      * @brief Default constructor for lambert_W_func_iterator.
-     * @authors Bolshakov M.P.
+     * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      */
 	lambert_W_func_iterator() : series_base_iterator<T, K>() {}
 
     /**
      * @brief Retrieves the analytic sum of the series (W0(x)).
-     * @authors Bolshakov M.P.
+     * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The value of the principal branch of the Lambert W function.
      */
 	T sum() const override{ return utils::lambertW0(this->x); }
 
     /**
      * @brief Validates the current evaluation point x.
-     * @authors Bolshakov M.P.
+     * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return true if |x| > 1/e or non-finite, false otherwise.
      */
 	bool check_validity() const override {
@@ -53,7 +53,7 @@ public:
 
     /**
      * @brief Computes the next term in the Lambert W0(x) expansion.
-     * @authors Bolshakov M.P.
+     * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The next term of the series.
      */
 	T next() override {

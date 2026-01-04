@@ -5,7 +5,7 @@
 /**
  * @file series_base_iterator.hpp
  * @brief This file contains the base class for series iterators, defining the common interface.
- * @authors Bolshakov M.P.
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  */
 
 #include "../custom_concepts.hpp"
@@ -19,7 +19,7 @@ namespace shanks { namespace iters {
  * Provides a common foundation for iterating through terms of a mathematical series.
  * It manages the current state, the point of evaluation (x), and the number of steps taken.
  *
- * @authors Bolshakov M.P.
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  * @tparam T Floating-point type for series elements (must satisfy AcceptedLike).
  * @tparam K Unsigned integral type for indexing (must satisfy UnsignedIntLike).
  */
@@ -33,14 +33,14 @@ public:
 
     /**
      * @brief Default constructor for series_base_iterator.
-     * @authors Bolshakov M.P.
+     * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      */
     series_base_iterator() : x(0.0), current_state(0.0), n(0) {}
 
     /**
      * @brief Parameterized constructor to initialize evaluation point and starting step.
      *
-     * @authors Bolshakov M.P.
+     * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @param x The evaluation point.
      * @param step_forward The number of initial steps to advance the iterator.
      */
@@ -55,21 +55,21 @@ public:
 
     /**
      * @brief Retrieves the current cumulative sum of the series.
-     * @authors Bolshakov M.P.
+     * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The sum of terms computed so far.
      */
     virtual T sum() const = 0;
 
     /**
      * @brief Validates if the current evaluation point x is within the convergence radius.
-     * @authors Bolshakov M.P.
+     * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return true if valid, false otherwise.
      */
     virtual bool check_validity() const = 0;
 
     /**
      * @brief Advances to the next term in the series and updates current_state.
-     * @authors Bolshakov M.P.
+     * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The value of the next term.
      */
     virtual T next() = 0;
@@ -77,7 +77,7 @@ public:
     /**
      * @brief Advances the iterator by multiple steps.
      *
-     * @authors Bolshakov M.P.
+     * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @param n_steps Number of steps to advance.
      * @return T
      */
@@ -88,7 +88,7 @@ public:
 
     /**
      * @brief Resets the iteration counter to zero.
-     * @authors Bolshakov M.P.
+     * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      */
     void reset(){n = static_cast<size_t>(0);}
 

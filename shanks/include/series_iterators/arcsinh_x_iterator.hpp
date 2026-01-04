@@ -7,7 +7,7 @@
 /**
  * @file arcsinh_x_iterator.hpp
  * @brief Iterator for the arcsinh(x) Taylor series expansion.
- * @authors Bolshakov M.P.
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  */
 
 namespace shanks { namespace iters {
@@ -18,7 +18,7 @@ namespace shanks { namespace iters {
  * This class implements the Maclaurin expansion of arcsinh(x), which converges
  * for values of x within the range [-1, 1].
  *
- * @authors Bolshakov M.P.
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  * @tparam T Floating-point type for series elements (AcceptedLike).
  * @tparam K Unsigned integral type for indexing (UnsignedIntLike).
  */
@@ -28,20 +28,20 @@ public:
 
     /**
      * @brief Default constructor for arcsinh_x_iterator.
-     * @authors Bolshakov M.P.
+     * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      */
 	arcsinh_x_iterator() : series_base_iterator<T, K>() {}
 
     /**
      * @brief Retrieves the analytic sum of the series (arcsinh(x)).
-     * @authors Bolshakov M.P.
+     * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The value of arcsinh(x).
      */
 	T sum() const override{ return utils::asinh(this->x);}
 
     /**
      * @brief Validates the current evaluation point x.
-     * @authors Bolshakov M.P.
+     * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return true if |x| > 1 or non-finite, false otherwise.
      */
 	bool check_validity() const override {
@@ -51,7 +51,7 @@ public:
 
     /**
      * @brief Computes the next term in the arcsinh(x) Maclaurin expansion.
-     * @authors Bolshakov M.P.
+     * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The next term of the series.
      */
 	T next() override {

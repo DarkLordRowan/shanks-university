@@ -8,7 +8,7 @@
 /**
  * @file ten_minus_x_iterator.hpp
  * @brief Iterator for the Fourier series expansion of the linear function f(x) = 10 - x.
- * @authors Bolshakov M.P.
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  */
 
 namespace shanks { namespace iters {
@@ -19,7 +19,7 @@ namespace shanks { namespace iters {
  * This class implements a specific Fourier expansion for the function 10 - x,
  * which is valid for values of x such that |x - 10| <= 5.
  *
- * @authors Bolshakov M.P.
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  * @tparam T Floating-point type for series elements (AcceptedLike).
  * @tparam K Unsigned integral type for indexing (UnsignedIntLike).
  */
@@ -29,20 +29,20 @@ public:
 
     /**
      * @brief Default constructor for ten_minus_x_iterator.
-     * @authors Bolshakov M.P.
+     * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      */
 	ten_minus_x_iterator() : series_base_iterator<T, K>() {}
 
     /**
      * @brief Retrieves the analytic sum of the series (10 - x).
-     * @authors Bolshakov M.P.
+     * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The value of 10 - x.
      */
 	T sum() const override{ return utils::cast<T>(10) - this->x;}
 
     /**
      * @brief Validates the current evaluation point x.
-     * @authors Bolshakov M.P.
+     * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return true if |x - 10| > 5 or x is non-finite, false otherwise.
      */
 	bool check_validity() const override {
@@ -52,7 +52,7 @@ public:
 
     /**
      * @brief Computes the next term in the Fourier expansion of 10 - x.
-     * @authors Bolshakov M.P.
+     * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The next term of the series.
      */
 	T next() override {

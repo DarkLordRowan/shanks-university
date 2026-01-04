@@ -8,18 +8,18 @@
 /**
  * @file pi_minus_3pi_4_and_pi_minus_x_minus_3pi_4_iterator.hpp
  * @brief Iterator for the Fourier series expansion of a specific piecewise linear function.
- * @authors Bolshakov M.P.
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  */
 
 namespace shanks { namespace iters {
 
 /**
  * @brief Fourier series iterator for the piecewise function f(x) = pi/4 if x < 0, else pi/4 - x if x >= 0.
- * 
- * This class implements the Fourier expansion for a specific piecewise linear 
+ *
+ * This class implements the Fourier expansion for a specific piecewise linear
  * function, which converges for values of x such that |x| < pi.
- * 
- * @authors Bolshakov M.P.
+ *
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  * @tparam T Floating-point type for series elements (AcceptedLike).
  * @tparam K Unsigned integral type for indexing (UnsignedIntLike).
  */
@@ -29,13 +29,13 @@ public:
 
     /**
      * @brief Default constructor for pi_minus_3pi_4_and_pi_minus_x_minus_3pi_4_iterator.
-     * @authors Bolshakov M.P.
+     * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      */
 	pi_minus_3pi_4_and_pi_minus_x_minus_3pi_4_iterator() : series_base_iterator<T, K>() {}
-	
+
     /**
      * @brief Retrieves the analytic sum of the series (the piecewise function value).
-     * @authors Bolshakov M.P.
+     * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The value of the piecewise function at current point x.
      */
 	T sum() const override{
@@ -52,10 +52,10 @@ public:
 
 		return utils::cast<T>(0.25 * std::numbers::pi) - this->x;
 	}
-	
+
     /**
      * @brief Validates the current evaluation point x.
-     * @authors Bolshakov M.P.
+     * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return true if |x| >= pi or non-finite, false otherwise.
      */
 	bool check_validity() const override {
@@ -65,15 +65,15 @@ public:
 
     /**
      * @brief Computes the next term in the Fourier expansion of the piecewise function.
-     * @authors Bolshakov M.P.
+     * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The next term of the series.
      */
 	T next() override {
-	
+
 		// General Fourier term formula involving alternating cosine and sine components
 		const K n1 = this->n+1;
-		this->current_state = 
-		utils::cos(utils::cast<T>(n1) * this->x) * (utils::cast<T>(1) + utils::minus_one_raised_to_power_n<T, K>(this->n)) / (utils::cast<T>(std::numbers::pi) * utils::cast<T>(n1 * n1)) + 
+		this->current_state =
+		utils::cos(utils::cast<T>(n1) * this->x) * (utils::cast<T>(1) + utils::minus_one_raised_to_power_n<T, K>(this->n)) / (utils::cast<T>(std::numbers::pi) * utils::cast<T>(n1 * n1)) +
 		utils::sin(utils::cast<T>(n1) * this->x) * utils::minus_one_raised_to_power_n<T,K>(n1) / utils::cast<T>(n1);
 		this->n += 1;
 		return this->current_state;

@@ -7,7 +7,7 @@
 /**
  * @file x_two_throught_squares_iterator.hpp
  * @brief Iterator for a specific series expansion summing to x/2.
- * @authors Bolshakov M.P.
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  */
 
 namespace shanks { namespace iters {
@@ -18,7 +18,7 @@ namespace shanks { namespace iters {
  * This class implements a specific series expansion whose analytic sum equals
  * x / 2, with terms involving higher-order powers in the denominator.
  *
- * @authors Bolshakov M.P.
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  * @tparam T Floating-point type for series elements (AcceptedLike).
  * @tparam K Unsigned integral type for indexing (UnsignedIntLike).
  */
@@ -28,27 +28,27 @@ public:
 
     /**
      * @brief Default constructor for x_two_throught_squares_iterator.
-     * @authors Bolshakov M.P.
+     * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      */
 	x_two_throught_squares_iterator() : series_base_iterator<T, K>() {}
 
     /**
      * @brief Retrieves the analytic sum of the series (x / 2).
-     * @authors Bolshakov M.P.
+     * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The value of x / 2.
      */
 	T sum() const override{ return this->x * utils::cast<T>(0.5);}
 
     /**
      * @brief Validates the current evaluation point x.
-     * @authors Bolshakov M.P.
+     * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return true if x is non-finite, false otherwise.
      */
 	bool check_validity() const override { return !utils::isfinite(this->x); }
 
     /**
      * @brief Computes the next term in the series expansion.
-     * @authors Bolshakov M.P.
+     * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The next term of the series.
      */
 	T next() override {

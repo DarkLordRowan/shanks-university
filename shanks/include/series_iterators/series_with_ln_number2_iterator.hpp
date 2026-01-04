@@ -7,7 +7,7 @@
 /**
  * @file series_with_ln_number2_iterator.hpp
  * @brief Iterator for a specific series expansion summing to x * 5.71617784132.
- * @authors Bolshakov M.P.
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  */
 
 namespace shanks { namespace iters {
@@ -18,7 +18,7 @@ namespace shanks { namespace iters {
  * This class implements a specific series expansion whose analytic sum equals
  * approximately 5.71617784132 * x.
  *
- * @authors Bolshakov M.P.
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  * @tparam T Floating-point type for series elements (AcceptedLike).
  * @tparam K Unsigned integral type for indexing (UnsignedIntLike).
  */
@@ -28,27 +28,27 @@ public:
 
     /**
      * @brief Default constructor for series_with_ln_number2_iterator.
-     * @authors Bolshakov M.P.
+     * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      */
 	series_with_ln_number2_iterator() : series_base_iterator<T, K>() {}
 
     /**
      * @brief Retrieves the approximate analytic sum of the series.
-     * @authors Bolshakov M.P.
+     * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The value of 5.71617784132 * x.
      */
 	T sum() const override{ return utils::cast<T>(5.71617784132) * this->x;}
 
     /**
      * @brief Validates the current evaluation point x.
-     * @authors Bolshakov M.P.
+     * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return true if x is non-finite, false otherwise.
      */
 	bool check_validity() const override { return !utils::isfinite(this->x); }
 
     /**
      * @brief Computes the next term in the specific expansion.
-     * @authors Bolshakov M.P.
+     * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The next term of the series.
      */
 	T next() override {

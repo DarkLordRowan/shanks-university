@@ -7,7 +7,7 @@
 /**
  * @file x_div_1minx_iterator.hpp
  * @brief Iterator for the series expansion of x / sqrt(1 - x).
- * @authors Bolshakov M.P.
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  */
 
 namespace shanks { namespace iters {
@@ -18,7 +18,7 @@ namespace shanks { namespace iters {
  * This class implements the Maclaurin expansion of the given algebraic function,
  * which converges for values of x such that |x| < 1.
  *
- * @authors Bolshakov M.P.
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  * @tparam T Floating-point type for series elements (AcceptedLike).
  * @tparam K Unsigned integral type for indexing (UnsignedIntLike).
  */
@@ -28,20 +28,20 @@ public:
 
     /**
      * @brief Default constructor for x_div_1minx_iterator.
-     * @authors Bolshakov M.P.
+     * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      */
 	x_div_1minx_iterator() : series_base_iterator<T, K>() {}
 
     /**
      * @brief Retrieves the analytic sum of the series (x / sqrt(1 - x)).
-     * @authors Bolshakov M.P.
+     * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The value of x / sqrt(1 - x).
      */
 	T sum() const override{ return this->x / utils::sqrt(utils::cast<T>(1.0) - this->x); }
 
     /**
      * @brief Validates the current evaluation point x.
-     * @authors Bolshakov M.P.
+     * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return true if |x| >= 1 or non-finite, false otherwise.
      */
 	bool check_validity() const override {
@@ -51,7 +51,7 @@ public:
 
     /**
      * @brief Computes the next term in the power series expansion.
-     * @authors Bolshakov M.P.
+     * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The next term of the series.
      */
 	T next() override {

@@ -9,7 +9,7 @@
 /**
  * @file erf_iterator.hpp
  * @brief Iterator for the series expansion of the Error Function erf(x).
- * @authors Bolshakov M.P.
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  */
 
 namespace shanks { namespace iters {
@@ -20,7 +20,7 @@ namespace shanks { namespace iters {
  * This class implements the Maclaurin expansion of erf(x) (normalized by sqrt(pi)/2),
  * which converges for all finite values of x.
  *
- * @authors Bolshakov M.P.
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  * @tparam T Floating-point type for series elements (AcceptedLike).
  * @tparam K Unsigned integral type for indexing (UnsignedIntLike).
  */
@@ -30,27 +30,27 @@ public:
 
     /**
      * @brief Default constructor for erf_iterator.
-     * @authors Bolshakov M.P.
+     * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      */
 	erf_iterator() : series_base_iterator<T, K>() {}
 
     /**
      * @brief Retrieves the analytic sum of the series (normalized erf(x)).
-     * @authors Bolshakov M.P.
+     * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The value of (sqrt(pi)/2) * erf(x).
      */
 	T sum() const override{return utils::sqrt(utils::cast<T>(std::numbers::pi)) * utils::erf(this->x) * utils::cast<T>(0.5);}
 
     /**
      * @brief Validates the current evaluation point x.
-     * @authors Bolshakov M.P.
+     * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return true if x is non-finite, false otherwise.
      */
 	bool check_validity() const override { return !utils::isfinite(this->x);}
 
     /**
      * @brief Computes the next term in the erf(x) Taylor expansion.
-     * @authors Bolshakov M.P.
+     * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The next term of the series.
      */
 	T next() override {

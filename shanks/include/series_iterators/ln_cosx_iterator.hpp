@@ -8,7 +8,7 @@
 /**
  * @file ln_cosx_iterator.hpp
  * @brief Iterator for the series expansion of ln(cos(x)).
- * @authors Bolshakov M.P.
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  */
 
 namespace shanks { namespace iters {
@@ -19,7 +19,7 @@ namespace shanks { namespace iters {
  * This class implements a specific series expansion for ln(cos(x)), which converges
  * for values of x such that |x| < pi/2.
  *
- * @authors Bolshakov M.P.
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  * @tparam T Floating-point type for series elements (AcceptedLike).
  * @tparam K Unsigned integral type for indexing (UnsignedIntLike).
  */
@@ -29,20 +29,20 @@ public:
 
     /**
      * @brief Default constructor for ln_cosx_iterator.
-     * @authors Bolshakov M.P.
+     * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      */
 	ln_cosx_iterator() : series_base_iterator<T, K>() {}
 
     /**
      * @brief Retrieves the analytic sum of the series (ln(cos(x))).
-     * @authors Bolshakov M.P.
+     * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The value of ln(cos(x)).
      */
 	T sum() const override{ return utils::log(utils::cos(this->x));}
 
     /**
      * @brief Validates the current evaluation point x.
-     * @authors Bolshakov M.P.
+     * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return true if |x| >= pi/2 or non-finite, false otherwise.
      */
 	bool check_validity() const override {
@@ -52,7 +52,7 @@ public:
 
     /**
      * @brief Computes the next term in the series expansion.
-     * @authors Bolshakov M.P.
+     * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The next term of the series.
      */
 	T next() override {

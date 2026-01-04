@@ -7,7 +7,7 @@
 /**
  * @file xsquareplus3_div_xsquareplus2multix_minus_1_iterator.hpp
  * @brief Iterator for the series expansion of (x^2 + 3) / (x^2 + 2x) - 1.
- * @authors Bolshakov M.P.
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  */
 
 namespace shanks { namespace iters {
@@ -18,7 +18,7 @@ namespace shanks { namespace iters {
  * This class implements a specific series expansion for the given rational function,
  * typically expanded around x=1, which converges for values of x such that |x - 1| < 1.
  *
- * @authors Bolshakov M.P.
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  * @tparam T Floating-point type for series elements (AcceptedLike).
  * @tparam K Unsigned integral type for indexing (UnsignedIntLike).
  */
@@ -28,20 +28,20 @@ public:
 
     /**
      * @brief Default constructor for xsquareplus3_div_xsquareplus2multix_minus_1_iterator.
-     * @authors Bolshakov M.P.
+     * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      */
 	xsquareplus3_div_xsquareplus2multix_minus_1_iterator() : series_base_iterator<T, K>() {}
 
     /**
      * @brief Retrieves the analytic sum of the series.
-     * @authors Bolshakov M.P.
+     * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The value of the rational function at current point x.
      */
 	T sum() const override{ return (this->x * this->x + utils::cast<T>(3)) / (this->x * this->x + utils::cast<T>(2) * this->x) - utils::cast<T>(1);}
 
     /**
      * @brief Validates the current evaluation point x.
-     * @authors Bolshakov M.P.
+     * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return true if |x - 1| >= 1 or x is non-finite, false otherwise.
      */
 	bool check_validity() const override {
@@ -51,7 +51,7 @@ public:
 
     /**
      * @brief Computes the next term in the series expansion.
-     * @authors Bolshakov M.P.
+     * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The next term of the series.
      */
 	T next() override {

@@ -8,7 +8,7 @@
 /**
  * @file half_multi_ln_1div2multi1minuscosx_iterator.hpp
  * @brief Iterator for the series expansion of -0.5 * ln(2 - 2*cos(x)).
- * @authors Bolshakov M.P.
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  */
 
 namespace shanks { namespace iters {
@@ -19,7 +19,7 @@ namespace shanks { namespace iters {
  * This class implements the Fourier series for the logarithmic function, which
  * converges for all x except multiples of 2*pi.
  *
- * @authors Bolshakov M.P.
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  * @tparam T Floating-point type for series elements (AcceptedLike).
  * @tparam K Unsigned integral type for indexing (UnsignedIntLike).
  */
@@ -29,20 +29,20 @@ public:
 
     /**
      * @brief Default constructor for half_multi_ln_1div2multi1minuscosx_iterator.
-     * @authors Bolshakov M.P.
+     * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      */
 	half_multi_ln_1div2multi1minuscosx_iterator() : series_base_iterator<T, K>() {}
 
     /**
      * @brief Retrieves the analytic sum of the series (-0.5 * ln(2 - 2*cos(x))).
-     * @authors Bolshakov M.P.
+     * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The value of -0.5 * ln(2 - 2*cos(x)).
      */
 	T sum() const override{ return utils::cast<T>(-0.5) * utils::log(utils::cast<T>(2) - utils::cast<T>(2) * utils::cos(this->x)); }
 
     /**
      * @brief Validates the current evaluation point x.
-     * @authors Bolshakov M.P.
+     * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return true if |x| >= pi or non-finite, false otherwise.
      */
 	bool check_validity() const override {
@@ -52,7 +52,7 @@ public:
 
     /**
      * @brief Computes the next term in the Fourier expansion.
-     * @authors Bolshakov M.P.
+     * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The next term of the series.
      */
 	T next() override {

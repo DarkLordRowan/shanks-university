@@ -8,7 +8,7 @@
 /**
  * @file ci_x_iterator.hpp
  * @brief Iterator for the series expansion of the Cosine Integral Ci(x).
- * @authors Bolshakov M.P.
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  */
 
 namespace shanks { namespace iters {
@@ -20,7 +20,7 @@ namespace shanks { namespace iters {
  * logarithmic and constant terms (Euler-Mascheroni constant) followed by
  * an infinite power series.
  *
- * @authors Bolshakov M.P.
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  * @tparam T Floating-point type for series elements (AcceptedLike).
  * @tparam K Unsigned integral type for indexing (UnsignedIntLike).
  */
@@ -30,27 +30,27 @@ public:
 
     /**
      * @brief Default constructor for ci_x_iterator.
-     * @authors Bolshakov M.P.
+     * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      */
 	ci_x_iterator() : series_base_iterator<T, K>() {}
 
     /**
      * @brief Retrieves the analytic sum of the series (Ci(x)).
-     * @authors Bolshakov M.P.
+     * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The value of Ci(x).
      */
 	T sum() const override{ return utils::ci_x(this->x);}
 
     /**
      * @brief Validates the current evaluation point x.
-     * @authors Bolshakov M.P.
+     * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return true if x is non-finite, false otherwise.
      */
 	bool check_validity() const override { return !utils::isfinite(this->x); }
 
     /**
      * @brief Computes the next term in the Ci(x) expansion.
-     * @authors Bolshakov M.P.
+     * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The next term of the series.
      */
 	T next() override {

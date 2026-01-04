@@ -8,18 +8,18 @@
 /**
  * @file pi_minus_x_2_iterator.hpp
  * @brief Iterator for the Fourier series expansion of (pi - x) / 2.
- * @authors Bolshakov M.P.
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  */
 
 namespace shanks { namespace iters {
 
 /**
  * @brief Fourier series iterator for the linear function f(x) = (pi - x) / 2.
- * 
- * This class implements the Fourier expansion for the given linear function, 
+ *
+ * This class implements the Fourier expansion for the given linear function,
  * which converges for values of x such that 0 < x < pi.
- * 
- * @authors Bolshakov M.P.
+ *
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  * @tparam T Floating-point type for series elements (AcceptedLike).
  * @tparam K Unsigned integral type for indexing (UnsignedIntLike).
  */
@@ -29,20 +29,20 @@ public:
 
     /**
      * @brief Default constructor for pi_minus_x_2_iterator.
-     * @authors Bolshakov M.P.
+     * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      */
 	pi_minus_x_2_iterator() : series_base_iterator<T, K>() {}
-	
+
     /**
      * @brief Retrieves the analytic sum of the series ((pi - x) / 2).
-     * @authors Bolshakov M.P.
+     * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The value of (pi - x) / 2.
      */
 	T sum() const override{ return (utils::cast<T>(std::numbers::pi) - this->x) * utils::cast<T>(0.5);}
-	
+
     /**
      * @brief Validates the current evaluation point x.
-     * @authors Bolshakov M.P.
+     * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return true if x is outside (0, pi) or non-finite, false otherwise.
      */
 	bool check_validity() const override {
@@ -58,7 +58,7 @@ public:
 
     /**
      * @brief Computes the next term in the Fourier expansion of (pi - x) / 2.
-     * @authors Bolshakov M.P.
+     * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The next term of the series (sin((n+1)x) / (n+1)).
      */
 	T next() override {

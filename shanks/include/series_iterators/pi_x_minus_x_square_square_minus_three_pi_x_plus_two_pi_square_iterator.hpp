@@ -7,7 +7,7 @@
 /**
  * @file pi_x_minus_x_square_square_minus_three_pi_x_plus_two_pi_square_iterator.hpp
  * @brief Iterator for the Fourier series expansion of a periodic parabolic function.
- * @authors Bolshakov M.P.
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  */
 
 namespace shanks { namespace iters {
@@ -19,7 +19,7 @@ namespace shanks { namespace iters {
  * This class implements the Fourier sine expansion for the given periodic
  * parabolic segments, which converges for values of x such that 0 < x < 2*pi.
  *
- * @authors Bolshakov M.P.
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  * @tparam T Floating-point type for series elements (AcceptedLike).
  * @tparam K Unsigned integral type for indexing (UnsignedIntLike).
  */
@@ -29,13 +29,13 @@ public:
 
     /**
      * @brief Default constructor for pi_x_minus_x_square_square_minus_three_pi_x_plus_two_pi_square_iterator.
-     * @authors Bolshakov M.P.
+     * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      */
 	pi_x_minus_x_square_square_minus_three_pi_x_plus_two_pi_square_iterator() : series_base_iterator<T, K>() {}
 
     /**
      * @brief Retrieves the analytic sum of the series (the piecewise parabolic value).
-     * @authors Bolshakov M.P.
+     * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The value of the piecewise function at current point x.
      */
 	T sum() const override{
@@ -54,7 +54,7 @@ public:
 
     /**
      * @brief Validates the current evaluation point x.
-     * @authors Bolshakov M.P.
+     * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return true if x is outside [0, 2pi] or non-finite, false otherwise.
      */
 	bool check_validity() const override {
@@ -70,7 +70,7 @@ public:
 
     /**
      * @brief Computes the next term in the Fourier expansion of the parabolic function.
-     * @authors Bolshakov M.P.
+     * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The next term of the series (8 * sin((2n+1)x) / (pi * (2n+1)^3)).
      */
 	T next() override {

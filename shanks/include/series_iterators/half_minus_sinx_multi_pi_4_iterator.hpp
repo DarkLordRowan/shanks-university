@@ -8,7 +8,7 @@
 /**
  * @file half_minus_sinx_multi_pi_4_iterator.hpp
  * @brief Iterator for the series expansion of 0.5 - (pi/4)*sin(x).
- * @authors Bolshakov M.P.
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  */
 
 namespace shanks { namespace iters {
@@ -19,7 +19,7 @@ namespace shanks { namespace iters {
  * This class implements a specific series expansion for the given trigonometric function,
  * typically valid for x within the range [0, pi/2].
  *
- * @authors Bolshakov M.P.
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  * @tparam T Floating-point type for series elements (AcceptedLike).
  * @tparam K Unsigned integral type for indexing (UnsignedIntLike).
  */
@@ -29,20 +29,20 @@ public:
 
     /**
      * @brief Default constructor for half_minus_sinx_multi_pi_4_iterator.
-     * @authors Bolshakov M.P.
+     * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      */
 	half_minus_sinx_multi_pi_4_iterator() : series_base_iterator<T, K>() {}
 
     /**
      * @brief Retrieves the analytic sum of the series (0.5 - (pi/4)*sin(x)).
-     * @authors Bolshakov M.P.
+     * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The value of 0.5 - (pi/4)*sin(x).
      */
 	T sum() const override{ return utils::cast<T>(0.5) - utils::cast<T>(std::numbers::pi * 0.25) * utils::sin(this->x); }
 
     /**
      * @brief Validates the current evaluation point x.
-     * @authors Bolshakov M.P.
+     * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return true if x is outside [0, pi/2] or non-finite, false otherwise.
      */
 	bool check_validity() const override {
@@ -56,7 +56,7 @@ public:
 
     /**
      * @brief Computes the next term in the series expansion.
-     * @authors Bolshakov M.P.
+     * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The next term of the series.
      */
 	T next() override {

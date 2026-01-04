@@ -5,16 +5,16 @@
 /**
  * @file series_iterators.hpp
  * @brief This file aggregates all available series iterators and defines an ID enumeration for them.
- * @authors Bolshakov M.P.
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  */
 
 namespace shanks { namespace iters {
 
 /**
  * @brief Enumeration of all supported series iterators.
- * 
+ *
  * Each ID corresponds to a specific mathematical series implementation.
- * @authors Bolshakov M.P.
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  */
 enum class series_iterator_id_t {
 														   null_iterator_id,

@@ -8,18 +8,18 @@
 /**
  * @file abs_sin_x_minus_2_div_pi_iterator.hpp
  * @brief Iterator for the Fourier series expansion of |sin(x)| - 2/pi.
- * @authors Bolshakov M.P.
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  */
 
 namespace shanks { namespace iters {
 
 /**
  * @brief Fourier series iterator for the function f(x) = |sin(x)| - 2/pi.
- * 
- * This class computes terms of the Fourier series for the periodic absolute 
+ *
+ * This class computes terms of the Fourier series for the periodic absolute
  * sine function, shifted by its mean value (2/pi).
- * 
- * @authors Bolshakov M.P.
+ *
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  * @tparam T Floating-point type for series elements (AcceptedLike).
  * @tparam K Unsigned integral type for indexing (UnsignedIntLike).
  */
@@ -29,13 +29,13 @@ public:
 
     /**
      * @brief Default constructor for abs_sin_x_minus_2_div_pi_iterator.
-     * @authors Bolshakov M.P.
+     * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      */
 	abs_sin_x_minus_2_div_pi_iterator() : series_base_iterator<T, K>() {}
 
     /**
      * @brief Retrieves the analytic sum of the series at the current point x.
-     * @authors Bolshakov M.P.
+     * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The value of |sin(x)| - 2/pi.
      */
 	T sum() const override{
@@ -53,10 +53,10 @@ public:
 		// Negative branch for absolute value
 		return utils::cast<T>(-1) * utils::sin(this->x) - utils::cast<T>(2) / utils::cast<T>(std::numbers::pi);
 	}
-	
+
     /**
      * @brief Validates the current evaluation point x.
-     * @authors Bolshakov M.P.
+     * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return true if x is outside [0, 2pi] or non-finite, false otherwise.
      */
 	bool check_validity() const override {
@@ -71,15 +71,15 @@ public:
 
     /**
      * @brief Computes the next term in the Fourier expansion.
-     * @authors Bolshakov M.P.
+     * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The next term of the series.
      */
 	T next() override {
-	
+
 		// Formula for the n-th term of the |sin(x)| Fourier series
-		this->current_state = utils::cast<T>(-4) * utils::cos(utils::cast<T>(utils::fma(size_t{2},this->n,size_t{2}))*this->x) / 
+		this->current_state = utils::cast<T>(-4) * utils::cos(utils::cast<T>(utils::fma(size_t{2},this->n,size_t{2}))*this->x) /
 		utils::cast<T>(utils::fma(size_t{2},this->n,size_t{1}) * utils::fma(size_t{2},this->n,size_t{3})) / utils::cast<T>(std::numbers::pi);
-	
+
 		this->n += 1;
 		return this->current_state;
 	}
