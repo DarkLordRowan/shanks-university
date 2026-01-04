@@ -73,6 +73,7 @@ const SERIES_COLUMNS = [
     "precision",
     "arguments",
     "series_limit",
+    "computed",
 ] as const;
 
 // Для accelerations НЕ используем проекцию по умолчанию: nested (computed/errors/events) может «обнуляться».

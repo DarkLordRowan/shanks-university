@@ -100,10 +100,15 @@ export const AlgorithmSeriesView: React.FC<AlgorithmSeriesViewProps> = ({
             <div ref={detailRef}>
                 {selectedCell && (
                     <AlgorithmSeriesDetailChart
+                        experimentId={experiment.id}
                         selectedCell={selectedCell}
                         selectedDetail={
                             selectedDetail
-                                ? { accel: selectedDetail.accel, series: selectedDetail.series }
+                                ? {
+                                      accel: selectedDetail.accel,
+                                      series: selectedDetail.series,
+                                      seriesAccel: selectedDetail.seriesAccel,
+                                  }
                                 : null
                         }
                         onScrollBackToSelectedCell={scrollBackToSelectedCell}
