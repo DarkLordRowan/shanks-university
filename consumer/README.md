@@ -8,7 +8,7 @@
 git clone https://github.com/DarkLordRowan/shanks-university.git
 cd shanks-university
 git checkout concept-proved
-cd shanks_consumer
+cd consumer
 
 bash install_pyshanks.sh
 
@@ -296,7 +296,7 @@ python main.py --no-events --no-plots --output-dir test_run
 git clone https://github.com/DarkLordRowan/shanks-university.git
 cd shanks-university
 git checkout concept-proved
-cd shanks_consumer
+cd consumer
 
 # Убедитесь, что у вас установлены зависимости:
 sudo apt update

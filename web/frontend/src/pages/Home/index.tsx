@@ -6,23 +6,20 @@ const Home: React.FC = () => {
             <h1 className="text-3xl font-bold text-white">Ускорение сходимости рядов</h1>
 
             <p>
-                Данный интерфейс позволяет выполнять вычислительные эксперименты по
-                ускорению сходимости числовых рядов и визуализировать результаты.
+                Данный интерфейс позволяет выполнять вычислительные эксперименты по ускорению
+                сходимости числовых рядов и визуализировать результаты.
             </p>
 
             <div className="space-y-1">
                 <p className="font-semibold text-white">Глобальный эксперимент</p>
-                <Link
-                    to="/experiments"
-                    className="text-primary hover:underline underline-offset-4"
-                >
+                <Link to="/experiments" className="text-primary hover:underline underline-offset-4">
                     Перейти к глобальному эксперименту
                 </Link>
 
                 <div className="space-y-1">
                     <p>Для тестирования можно использовать пример входных данных:</p>
                     <a
-                        href="https://github.com/DarkLordRowan/shanks-university/blob/VecImpl/shanks_consumer/data/one_series_all_algo.json"
+                        href="https://github.com/DarkLordRowan/shanks-university/blob/VecImpl/consumer/data/one_series_all_algo.json"
                         target="_blank"
                         rel="noreferrer"
                         className="text-primary hover:underline underline-offset-4 break-all text-sm"

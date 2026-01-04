@@ -32,7 +32,7 @@ services:
   worker:
     build:
       context: ..
-      dockerfile: apps/worker/Dockerfile
+      dockerfile: web/worker/Dockerfile
     container_name: shanks-worker
     restart: unless-stopped
     environment:
@@ -48,7 +48,7 @@ services:
   gateway:
     build:
       context: ..
-      dockerfile: apps/gateway/Dockerfile
+      dockerfile: web/gateway/Dockerfile
     container_name: shanks-gateway
     restart: unless-stopped
     environment:

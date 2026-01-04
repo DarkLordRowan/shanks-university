@@ -3,7 +3,7 @@ ENV PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1
 
 WORKDIR /app
 
-COPY apps/gateway/ /app/gateway/
+COPY web/gateway/ /app/gateway/
 RUN if [ -f /app/gateway/requirements.txt ]; then \
       pip install --no-cache-dir -r /app/gateway/requirements.txt; \
     fi

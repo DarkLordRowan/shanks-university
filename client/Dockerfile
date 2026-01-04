@@ -27,11 +27,11 @@ ENV PYTHONUNBUFFERED=1
 
 WORKDIR /app
 
-COPY shanks_client/requirements.txt ./
+COPY client/requirements.txt ./
 
 RUN --mount=type=cache,target=/root/.cache/pip \
     pip install --no-cache-dir -r requirements.txt
 
-COPY shanks_client/ ./
+COPY client/ ./
 
 CMD ["python3", "main.py"]

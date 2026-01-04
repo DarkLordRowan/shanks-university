@@ -14,10 +14,10 @@ RUN mkdir -p /artifacts/pyshanks \
  && (find build -type f -name "pyshanks*.so"  -exec cp -v {} /artifacts/pyshanks/ \; || true) \
  && (find build -type f -name "pyshanks*.pyd" -exec cp -v {} /artifacts/pyshanks/ \; || true)
 
-COPY shanks_consumer/pyproject.toml shanks_consumer/README.md ./shanks_consumer/
-COPY shanks_consumer/src ./shanks_consumer/src
+COPY consumer/pyproject.toml consumer/README.md ./consumer/
+COPY consumer/src ./consumer/src
 RUN python -m pip install --upgrade pip build \
- && python -m build --wheel --outdir /artifacts/wheels ./shanks_consumer
+ && python -m build --wheel --outdir /artifacts/wheels ./consumer
 
 
 # --------------------
@@ -38,7 +38,7 @@ COPY --from=builder /artifacts/wheels/ /tmp/wheels/
 RUN pip install --no-cache-dir /tmp/wheels/*.whl \
  && rm -rf /tmp/*
 
-COPY apps/worker/ /app/worker/
+COPY web/worker/ /app/worker/
 RUN if [ -f /app/worker/requirements.txt ]; then \
       pip install --no-cache-dir -r /app/worker/requirements.txt; \
     fi

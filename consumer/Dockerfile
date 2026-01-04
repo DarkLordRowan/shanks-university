@@ -35,13 +35,13 @@ ENV PYTHONUNBUFFERED=1
 
 WORKDIR /app
 
-COPY shanks_consumer/requirements.txt ./
+COPY consumer/requirements.txt ./
 
 RUN --mount=type=cache,target=/root/.cache/pip \
     pip install --no-cache-dir -r requirements.txt
 
-COPY shanks_consumer/ ./
+COPY consumer/ ./
 
-COPY --from=shanks-builder /build/*.so ./pyshanks/
+COPY --from=shanks-builder /build/*.so ./src/
 
 CMD ["/bin/bash"]

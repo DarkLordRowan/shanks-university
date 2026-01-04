@@ -34,7 +34,7 @@ services:
   gateway:
     build:
       context: ..
-      dockerfile: apps/gateway/Dockerfile
+      dockerfile: web/gateway/Dockerfile
     container_name: shanks-gateway
     restart: unless-stopped
     environment:
