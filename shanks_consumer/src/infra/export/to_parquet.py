@@ -1,3 +1,8 @@
+"""
+Parquet export service implementation.
+Author: Sobolev Y. A.
+"""
+
 from pathlib import Path
 from typing import Sequence
 
@@ -12,6 +17,7 @@ class ParquetExportService(ExportService):
         self.location = location
 
     def export(self, dicts: Sequence[dict], **kwargs):
+        """Exports data to a Parquet file."""
         if not dicts:
             table = pa.table({})
         else:

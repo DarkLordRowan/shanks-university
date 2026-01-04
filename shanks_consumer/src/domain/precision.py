@@ -1,3 +1,8 @@
+"""
+Precision handling for numerical series and acceleration methods.
+Author: Shevyrov A.N., Yadrentsev I. M.
+"""
+
 from enum import Enum
 from typing import Any, Protocol, Sequence, TypeVar, runtime_checkable
 
@@ -6,6 +11,8 @@ import pyshanks as ps
 
 @runtime_checkable
 class NumericLike(Protocol):
+    """Protocol for numeric-like types supporting basic arithmetic operations."""
+
     def __add__(self, other: Any) -> Any: ...
     def __sub__(self, other: Any) -> Any: ...
     def __abs__(self) -> Any: ...
@@ -15,11 +22,15 @@ TNum = TypeVar("TNum", bound=NumericLike)
 
 
 class SeriesResultProto(Protocol[TNum]):
+    """Protocol for series result representation."""
+
     Sn: Sequence[TNum]
     an: Sequence[TNum]
 
 
 class SeriesBaseProto(Protocol[TNum]):
+    """Protocol for series generation and summation."""
+
     def generateSeries(
         self,
         x: TNum,
@@ -32,10 +43,14 @@ class SeriesBaseProto(Protocol[TNum]):
 
 
 class AccelProto(Protocol[TNum]):
+    """Protocol for acceleration methods."""
+
     def __call__(self, n: int, m: int, series: SeriesResultProto[TNum]) -> TNum: ...
 
 
 class PrecisionType(Enum):
+    """Supported precision types for numerical computations."""
+
     F32 = "F32"
     F64 = "F64"
     FLONG = "FLong"
@@ -47,6 +62,11 @@ class PrecisionType(Enum):
 
 
 class Precision:
+    """Precision specific utilities for numerical computations.
+
+    Provides methods for handling different numerical precisions, including real and complex types.
+    """
+
     _REAL_PRECISIONS = {
         PrecisionType.F32,
         PrecisionType.F64,
@@ -87,18 +107,22 @@ class Precision:
 
     @classmethod
     def is_real_precision(cls, precision: PrecisionType) -> bool:
+        """Check if the given precision is a real number precision."""
         return precision in cls._REAL_PRECISIONS
 
     @classmethod
     def is_complex_precision(cls, precision: PrecisionType) -> bool:
+        """Check if the given precision is a complex number precision."""
         return precision in cls._COMPLEX_PRECISIONS
 
     @classmethod
     def is_arb_precision(cls, precision: PrecisionType) -> bool:
+        """Check if the given precision is arbitrary precision."""
         return precision == PrecisionType.ARB
 
     @classmethod
     def zero_for_precision(cls, precision: PrecisionType):
+        """Get the zero value for the specified precision."""
         if cls.is_arb_precision(precision):
             return ps.Arb(0)
         if cls.is_complex_precision(precision):
@@ -109,6 +133,7 @@ class Precision:
 
     @classmethod
     def one_for_precision(cls, precision: PrecisionType):
+        """Get the one value for the specified precision."""
         if cls.is_arb_precision(precision):
             return ps.Arb(1)
         if cls.is_complex_precision(precision):
@@ -119,6 +144,7 @@ class Precision:
 
     @classmethod
     def cast_precision_value(cls, precision: PrecisionType, value: Any):
+        """Cast the given value to the specified precision type."""
         if value is None or isinstance(value, bool):
             return value
 
@@ -151,15 +177,18 @@ class Precision:
 
     @classmethod
     def cast_real_subtype_value(cls, precision: PrecisionType, value: Any):
+        """Cast the given value to the real subtype of the specified precision."""
         real_precision = cls._REAL_SUBTYPE_FOR_PRECISION.get(precision, precision)
         return cls.cast_precision_value(real_precision, value)
 
     @classmethod
     def series_result_ctor_for_precision(cls, precision: PrecisionType):
+        """Get the series result constructor for the specified precision."""
         return cls._SERIES_RESULT_CLASS[precision]
 
     @classmethod
     def cast_natural_series_value(cls, precision: PrecisionType, value: str):
+        """Cast a natural number string to the specified precision type."""
         if cls.is_real_precision(precision):
             return float(value)
         if cls.is_arb_precision(precision):
@@ -175,6 +204,7 @@ class Precision:
 
     @classmethod
     def create_series_result(cls, values: list[Any], precision: PrecisionType):
+        """Create a series result for the specified precision from a list of values."""
         cumulative = []
         total = cls.zero_for_precision(precision)
         for v in values:

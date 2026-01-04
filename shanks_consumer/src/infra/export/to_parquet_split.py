@@ -1,3 +1,8 @@
+"""
+Parquet export service with split tables for series and acceleration results.
+Author: Yadrentsev I. M.
+"""
+
 from pathlib import Path
 from typing import Sequence, Any
 
@@ -13,6 +18,17 @@ class ParquetSplitExportService(ExportService):
 
     @staticmethod
     def sanitize_complex_value(value: Any) -> dict[str, Any] | None:
+        """Sanitize complex-like value for Parquet export.
+
+        Sanitize complex-like value for Parquet export.
+        Adds 'real' and 'imag' keys for complex numbers, and handles other numeric types.
+
+        :param value: The value to sanitize.
+        :type value: Any
+        :raises ValueError: If the value is not a recognized type.
+        :return: The sanitized value.
+        :rtype: dict[str, Any] | None
+        """
         if value is None:
             return None
         elif isinstance(value, (ps.CF32, ps.CF64, ps.CFLong, ps.CArb)):
@@ -26,6 +42,25 @@ class ParquetSplitExportService(ExportService):
 
     @staticmethod
     def sanitize_value(value: Any) -> Any:
+        """Sanitize a value for Parquet export.
+
+        Sanitizes a value by converting complex types to structured representations
+        or recursively processing dictionaries and lists.
+
+        Sanitization rules:
+        - pyshanks numeric types (Arb, CArb, CF32, CF64, CFLong, float, int, complex) are converted to structured dicts.
+        - pyshanks RemainderType and NumeratorType are converted to their name strings.
+        - PrecisionType enum values are converted to their string values.
+        - dictionaries and lists are recursively sanitized.
+        - strings are returned as-is.
+        - None values are returned as None.
+
+        :param value: The value to sanitize.
+        :type value: Any
+        :raises ValueError: If the value is not a recognized type.
+        :return: The sanitized value.
+        :rtype: Any
+        """
         if isinstance(
             value,
             (
@@ -53,10 +88,7 @@ class ParquetSplitExportService(ExportService):
             else:
                 return None
         elif isinstance(value, (list, tuple)):
-            return [
-                ParquetSplitExportService.sanitize_value(item)
-                for item in value
-            ]
+            return [ParquetSplitExportService.sanitize_value(item) for item in value]
         elif isinstance(value, str):
             return str(value)
         elif value is None:
@@ -66,13 +98,13 @@ class ParquetSplitExportService(ExportService):
 
     @staticmethod
     def build_series_rows(series_params):
+        """Builds rows for series Parquet table."""
         rows = []
         for sp in series_params:
             for args, (
                 series_result,
                 lim,
             ) in sp.pregen.items():
-                # args = (('x', 1.0),)
                 arg_dict = {k: str(v) for k, v in args}
 
                 rows.append(
@@ -91,9 +123,7 @@ class ParquetSplitExportService(ExportService):
                             "imag": None,
                         },
                         "computed": [
-                            ParquetSplitExportService.sanitize_complex_value(
-                                sn
-                            )
+                            ParquetSplitExportService.sanitize_complex_value(sn)
                             for sn in series_result.Sn
                         ],
                     }
@@ -102,6 +132,7 @@ class ParquetSplitExportService(ExportService):
 
     @staticmethod
     def build_accel_rows(dicts):
+        """Builds rows for acceleration Parquet table."""
         rows = []
 
         for item in dicts:
@@ -238,11 +269,7 @@ class ParquetSplitExportService(ExportService):
                 ),
                 (
                     "errors",
-                    pa.list_(
-                        pa.struct(
-                            [("n", pa.int64()), ("message", pa.string())]
-                        )
-                    ),
+                    pa.list_(pa.struct([("n", pa.int64()), ("message", pa.string())])),
                 ),
                 (
                     "events",
@@ -260,20 +287,15 @@ class ParquetSplitExportService(ExportService):
         )
 
     def export(self, dicts: Sequence[dict], **kwargs):
+        """Export implementation for Parquet with split tables."""
         series = kwargs.get("series", [])
         series_rows = self.build_series_rows(series)
         accel_rows = self.build_accel_rows(dicts)
 
-        series_table = pa.Table.from_pylist(
-            series_rows, schema=self.series_schema
-        )
-        accel_table = pa.Table.from_pylist(
-            accel_rows, schema=self.accel_schema
-        )
+        series_table = pa.Table.from_pylist(series_rows, schema=self.series_schema)
+        accel_table = pa.Table.from_pylist(accel_rows, schema=self.accel_schema)
 
         pq.write_table(
             series_table, self.location / "series.parquet", compression="zstd"
         )
-        pq.write_table(
-            accel_table, self.location / "accel.parquet", compression="zstd"
-        )
+        pq.write_table(accel_table, self.location / "accel.parquet", compression="zstd")

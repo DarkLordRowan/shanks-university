@@ -1,3 +1,8 @@
+"""
+MongoDB export service implementation.
+Author: Yadrentsev I. M.
+"""
+
 from typing import Sequence
 
 from pymongo.database import Database as MongoDatabase
@@ -18,6 +23,7 @@ class MongoExportService(ExportService):
         self.collection_name = collection_name
 
     def export(self, dicts: Sequence[dict], **kwargs):
+        """MongoDB export implementation."""
         collection = self.mongo_database.get_collection(self.collection_name)
         with tqdm(
             total=len(dicts),

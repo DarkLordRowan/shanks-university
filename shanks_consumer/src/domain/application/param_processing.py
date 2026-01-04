@@ -1,17 +1,39 @@
-from typing import Any, Iterable
+"""
+Parameter processing utilities.
+Author: Shevyrov A.N., Yadrentsev I. M.
+"""
 
-from src.logger import logged_debug
+from typing import Any, Iterable
 
 
 def generate_range(start: float, stop: float, step: float) -> Iterable[float]:
+    """Generate a range of floats from start to stop with a given step."""
     if step == 0:
         raise ValueError("Step cannot be zero in a range construction")
     count = int((stop - start) / step)
     return (start + i * step for i in range(count))
 
 
-@logged_debug
-def autowrap(value: Any):
+def autowrap(value: Any) -> Iterable[Any]:
+    """Automatically wrap the input value into an appropriate iterable form.
+    This function handles various input types including None, booleans,
+    range specifications, strings, and numeric types.
+    Converts as follows:
+    - None -> []
+    - bool -> [bool]
+    - dict with 'start', 'stop', 'step' -> generates range of floats
+    - str/bytes -> [str/bytes]
+    - Iterable (excluding str, bytes, dict) -> returns as is
+    - other types -> attempts to convert to float and returns [float]
+
+    :param value: Input value to be wrapped.
+    :type value: Any
+    :raises KeyError: _start_, _stop_, or _step_ missing in range construction
+    :raises ValueError: invalid float conversion or zero step in range
+    :raises ValueError: invalid type for float conversion
+    :return: Wrapped iterable of appropriate type.
+    :rtype: Iterable[Any]
+    """
     if value is None:
         return []
     if isinstance(value, bool):
@@ -37,7 +59,7 @@ def autowrap(value: Any):
         return value
 
     try:
-        return [float(value)]
+        return [float(value)]  # pyright: ignore
     except ValueError as e:
         raise ValueError(
             f"Unknown value type failed to be converted to a float: {value}"

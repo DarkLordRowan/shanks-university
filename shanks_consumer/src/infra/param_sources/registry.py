@@ -1,3 +1,8 @@
+"""
+Parameter sources registry and builders.
+Author: Yadrentsev I. M.
+"""
+
 from src.infra.param_sources.csv_series_loader import CSVSeriesParamSource
 from src.infra.param_sources.json_accel_loader import JSONAccelParamSource
 from src.infra.param_sources.json_series_loader import JSONSeriesParamSource

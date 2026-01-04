@@ -1,14 +1,27 @@
+"""
+Parallel trial runner implementation.
+Author: Sobolev Y. A.
+"""
+
 import multiprocessing as mp
 
 from tqdm import tqdm
 
-from src.domain.trial_result import (AccelTrialResult, ErrorTrialResult,
-                                     SeriesTrialResult, TrialResult)
+from src.domain.trial_result import (
+    AccelTrialResult,
+    ErrorTrialResult,
+    SeriesTrialResult,
+    TrialResult,
+)
 from src.domain.trial_runner import TrialRunner
 from src.domain.use_cases.run_trial import execute_trial
 
 
 class ParallelTrialRunner(TrialRunner):
+    """Parallel trial runner using multiprocessing.
+
+    Implements the TrialRunner protocol to execute trials in parallel using multiple processes.
+    """
 
     def __init__(
         self,
@@ -27,6 +40,10 @@ class ParallelTrialRunner(TrialRunner):
         yield self.__run_full_load(combinations)
 
     def __run_full_load(self, combinations):
+        """Full load trial execution.
+
+        Executes all trials and collects results before returning.
+        """
         if not combinations:
             return []
 
@@ -64,6 +81,10 @@ class ParallelTrialRunner(TrialRunner):
         return results
 
     def __run_dispose_at_completion(self, combinations):
+        """Memory-efficient trial execution.
+
+        Executes trials and yields results as they complete to minimize memory usage.
+        """
         if not combinations:
             return []
 

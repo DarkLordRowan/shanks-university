@@ -1,3 +1,8 @@
+"""
+JSON export service implementation.
+Author: Yadrentsev I. M.
+"""
+
 import csv
 from pathlib import Path
 from typing import Sequence
@@ -10,6 +15,7 @@ class CSVExportService(ExportService):
         self.location = location
 
     def export(self, dicts: Sequence[dict], **kwargs):
+        """CSV export implementation."""
         if not dicts:
             return
 

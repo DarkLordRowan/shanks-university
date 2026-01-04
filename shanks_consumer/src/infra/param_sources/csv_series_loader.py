@@ -1,3 +1,8 @@
+"""
+CSV series parameter source implementation.
+Author: Yadrentsev I. M.
+"""
+
 import csv
 from pathlib import Path
 from typing import Iterable
@@ -12,14 +17,15 @@ class CSVSeriesParamSource(SeriesParamSource):
         self.path = path
 
     def load(self, precision: PrecisionType) -> Iterable[SeriesParamCSV]:
+        """Loads series parameters from a CSV file."""
         results = []
         with open(self.path, encoding="utf-8") as f:
             for i, row in enumerate(csv.reader(f), start=1):
                 results.append(
                     SeriesParamCSV(
+                        precision=precision,
                         location=self.path,
                         row=i,
-                        precision=precision,
                         raw_values=tuple(row),
                     )
                 )

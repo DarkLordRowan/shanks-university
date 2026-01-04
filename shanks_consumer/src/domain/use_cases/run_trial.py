@@ -1,3 +1,8 @@
+"""
+Trial execution logic.
+Authors: Shevyrov A.N., Yadrentsev I.M.
+"""
+
 import traceback
 from typing import Mapping, Any
 
@@ -23,6 +28,21 @@ def trial_results_from_series_error(
     series_argument: Mapping[str, Any],
     exc: Exception,
 ) -> list[TrialResult]:
+    """Generate trial results from a series error.
+
+    Taken when series parameter generation fails.
+
+    :param series: _series parameter
+    :type series: BaseSeriesParam
+    :param accel: _accel parameter
+    :type accel: BaseAccelParam
+    :param series_argument: _series argument mapping
+    :type series_argument: Mapping[str, Any]
+    :param exc: _exception instance
+    :type exc: Exception
+    :return: _list of trial results with errors
+    :rtype: list[TrialResult]
+    """
 
     return [
         TrialResult(
@@ -59,6 +79,25 @@ def trial_results_from_accel_error(
     additional_args: Mapping[str, Any],
     exc: Exception,
 ):
+    """Generate trial results from an acceleration error.
+
+    Taken when acceleration parameter generation fails.
+
+    :param series: _series parameter
+    :type series: BaseSeriesParam
+    :param series_lim: _series limit value
+    :type series_lim: NumericLike
+    :param series_argument: _series argument mapping
+    :type series_argument: Mapping[str, Any]
+    :param accel: _accel parameter
+    :type accel: BaseAccelParam
+    :param additional_args: _accel additional arguments
+    :type additional_args: Mapping[str, Any]
+    :param exc: _exception instance
+    :type exc: Exception
+    :return: _list of trial results with errors
+    :rtype: list[TrialResult]
+    """
     return [
         TrialResult(
             SeriesTrialResult(
@@ -85,6 +124,19 @@ def trial_results_from_accel_error(
 def execute_trial(
     series_accel: tuple[BaseSeriesParam, BaseAccelParam],
 ) -> list[TrialResult]:
+    """Execute a trial for given series and acceleration parameters.
+
+    The common trial execution logic that iterates over all combinations of
+    series arguments and acceleration additional arguments, computes the trial
+    results, and handles any errors that may occur during the process.
+
+    :param series_accel: _tuple of series and acceleration parameters
+    :type series_accel: tuple[BaseSeriesParam, BaseAccelParam]
+    :raises ValueError: _n must be positive
+    :raises IndexError: _generated series size is insufficient for n
+    :return: _list of trial results
+    :rtype: list[TrialResult]
+    """
     series, accel = series_accel
 
     n_values = list(accel.n_values)
@@ -99,9 +151,7 @@ def execute_trial(
             )
         except Exception as exc:
             results.extend(
-                trial_results_from_series_error(
-                    series, accel, series_argument, exc
-                )
+                trial_results_from_series_error(series, accel, series_argument, exc)
             )
             continue
 

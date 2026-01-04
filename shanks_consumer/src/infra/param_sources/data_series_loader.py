@@ -1,3 +1,8 @@
+"""
+Data series parameter source implementation.
+Author: Yadrentsev I. M.
+"""
+
 from typing import Any, Iterable, Mapping
 
 from src.domain.application.param_processing import autowrap
@@ -11,6 +16,13 @@ class DataSeriesParamSource(SeriesParamSource):
         self.data = data
 
     def load(self, precision: PrecisionType) -> Iterable[SeriesParamJSON]:
+        """Loads series parameters from provided data.
+
+        :param precision: The precision type for parameter conversion.
+        :type precision: PrecisionType
+        :return: An iterable of SeriesParamJSON instances.
+        :rtype: Iterable[SeriesParamJSON]
+        """
         series_list: list[SeriesParamJSON[Any]] = []
 
         for series_data in self.data["series"]:
@@ -28,6 +40,18 @@ class DataSeriesParamSource(SeriesParamSource):
         return series_list
 
     def _process_args(self, args: Any, precision: PrecisionType):
+        """
+        Processes argument values based on their keys and the specified precision.
+
+        THe following keys are specifically handled:
+        - "vecSize", "addKParameter", "m", "b": values are converted to integers.
+        - Other keys: values are converted to the appropriate real subtype based on the given precision.
+
+        :param args: The raw argument values.
+        :type args: Any
+        :param precision: The precision type for value conversion.
+        :type precision: PrecisionType
+        """
         if not args:
             return {}
 

@@ -1,3 +1,9 @@
+"""
+Configuration models for trial execution.
+
+Author: Yadrentsev I. M.
+"""
+
 import json
 import os
 from pathlib import Path
@@ -5,12 +11,13 @@ from pathlib import Path
 import yaml
 from pydantic import BaseModel, Field
 
-from src.domain.application.result_view import ResultViewKind
 from src.domain.output_format import OutputFormat
 from src.domain.precision import PrecisionType
 
 
 class MongoConfig(BaseModel):
+    """MongoDB connection configuration."""
+
     host: str = Field(default_factory=lambda: os.getenv("MONGO_HOST", "localhost"))
     port: int = Field(default_factory=lambda: int(os.getenv("MONGO_PORT", "27017")))
     username: str | None = Field(default_factory=lambda: os.getenv("MONGO_USERNAME"))
@@ -21,10 +28,14 @@ class MongoConfig(BaseModel):
 
 
 class OutputConfig(BaseModel):
+    """Output configuration for trial results."""
+
     parquet_collection: str = "trial_results"
 
 
 class TrialConfig(BaseModel):
+    """Trial execution configuration model."""
+
     verbose: int = 0
 
     series_json: Path = Path("config/example.json")
@@ -40,7 +51,6 @@ class TrialConfig(BaseModel):
 
     trial_process_count: int = 1
     trial_task_timeout: int = 10
-    trial_result_view: ResultViewKind = ResultViewKind.FULL
     trial_memory_efficient: bool = True
 
     no_events: bool = False
@@ -57,24 +67,29 @@ class TrialConfig(BaseModel):
 
     @property
     def is_parallel(self) -> int:
+        """Is the trial configured to run in parallel?"""
         return self.trial_process_count > 1
 
     @property
     def precision(self) -> PrecisionType:
+        """Get the primary precision for the trial."""
         return self.precisions[0]
 
     @staticmethod
     def load_json(path: Path) -> dict:
+        """Load configuration from a JSON file."""
         with open(path, "r", encoding="utf-8") as f:
             return json.load(f)
 
     @staticmethod
     def load_yaml(path: Path) -> dict:
+        """Load configuration from a YAML file."""
         with open(path, "r", encoding="utf-8") as f:
             return yaml.safe_load(f)
 
     @classmethod
     def load(cls, path: Path | None) -> "TrialConfig":
+        """Load trial configuration from a file."""
         if path is None:
             return cls()
 

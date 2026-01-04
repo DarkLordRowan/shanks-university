@@ -1,18 +1,38 @@
+"""
+TrialResult serializer implementation.
+Author: Yadrentsev I. M.
+"""
+
 from dataclasses import asdict, is_dataclass
 from typing import Any, Sequence
 
 import pyshanks as ps
-from src.domain.application.result_view import ResultViewKind
 from src.domain.data_serializer import DataSerializer
 from src.domain.trial_result import TrialResult
 
 
 class TrialResultSerializer(DataSerializer):
 
-    def __init__(self, view: ResultViewKind = ResultViewKind.FULL):
-        self.view = view
+    def __init__(self):
+        pass
 
     def _sanitize_value(self, value: Any) -> Any:
+        """Sanitizes a value for serialization.
+
+        Sanitizes a value by converting complex types to string representations
+        or recursively processing dataclasses, dictionaries, and lists.
+
+        THe following types are specifically handled:
+        - pyshanks numeric types (Arb, CArb, CF32, CF64, CFLong, float) are converted to strings.
+        - pyshanks RemainderType and NumeratorType are converted to their name strings.
+        - dataclasses are converted to dictionaries with sanitized values.
+        - dictionaries and lists are recursively sanitized.
+
+        :param value: The value to sanitize.
+        :type value: Any
+        :return: The sanitized value.
+        :rtype: Any
+        """
         if isinstance(value, (ps.Arb, ps.CArb, ps.CF32, ps.CF64, ps.CFLong, float)):
             return str(value)
         if isinstance(value, (ps.RemainderType, ps.NumeratorType)):

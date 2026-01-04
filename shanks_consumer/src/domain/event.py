@@ -1,9 +1,16 @@
+"""
+Event definitions and methods for detecting specific behaviors in trial results.
+Author: Shevyrov A.N., Yadrentsev I. M.
+"""
+
 from enum import Enum
 
 from src.domain.trial_result import ComputedTrialResult, EventData
 
 
 class EventType(Enum):
+    """Enumeration of event types detected in trial results."""
+
     SLOW_ACCEL = "slow_accel"
     """Method is slower than partial sums.
     """
@@ -22,6 +29,13 @@ class EventType(Enum):
 
 
 def slow_accel_method(computed: list[ComputedTrialResult]) -> EventData | None:
+    """Detects if the acceleration method is slower than the baseline partial sums.
+
+    :param computed: _computed trial results
+    :type computed: list[ComputedTrialResult]
+    :return: _detected event data or None
+    :rtype: EventData | None
+    """
     if len(computed) < 1:
         return
     last = computed[-1]
@@ -39,6 +53,13 @@ def slow_accel_method(computed: list[ComputedTrialResult]) -> EventData | None:
 def divergent_accel_method(
     computed: list[ComputedTrialResult],
 ) -> EventData | None:
+    """Detects if the acceleration method is diverging.
+
+    :param computed: _computed trial results
+    :type computed: list[ComputedTrialResult]
+    :return: _detected event data or None
+    :rtype: EventData | None
+    """
     if len(computed) < 2:
         return
     last, previous = computed[-1], computed[-2]
@@ -57,6 +78,13 @@ def divergent_accel_method(
 def monotone_accel_method(
     computed: list[ComputedTrialResult],
 ) -> EventData | None:
+    """Monotone acceleration detection.
+
+    :param computed: _computed trial results
+    :type computed: list[ComputedTrialResult]
+    :return: _detected event data or None
+    :rtype: EventData | None
+    """
     if len(computed) < 2:
         return
     last, previous = computed[-1], computed[-2]
@@ -75,6 +103,13 @@ def monotone_accel_method(
 def sign_changed_method(
     computed: list[ComputedTrialResult],
 ) -> EventData | None:
+    """Sign change detection in acceleration deviations.
+
+    :param computed: _computed trial results
+    :type computed: list[ComputedTrialResult]
+    :return: _detected event data or None
+    :rtype: EventData | None
+    """
     if len(computed) < 2:
         return
     last, previous = computed[-1], computed[-2]
@@ -95,6 +130,13 @@ def sign_changed_method(
 def second_diff_growth_method(
     computed: list[ComputedTrialResult],
 ) -> EventData | None:
+    """Second difference growth detection.
+
+    :param computed: _computed trial results
+    :type computed: list[ComputedTrialResult]
+    :return: _detected event data or None
+    :rtype: EventData | None
+    """
     if len(computed) < 3:
         return
 

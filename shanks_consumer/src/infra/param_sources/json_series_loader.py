@@ -1,3 +1,8 @@
+"""
+JSON series parameter source implementation.
+Author: Yadrentsev I. M.
+"""
+
 import json
 from pathlib import Path
 from typing import Iterable
@@ -13,5 +18,12 @@ class JSONSeriesParamSource(DataSeriesParamSource):
         super().__init__({})
 
     def load(self, precision: PrecisionType) -> Iterable[SeriesParamJSON]:
+        """Loads series parameters from a JSON file.
+
+        :param precision: The precision type for parameter conversion.
+        :type precision: PrecisionType
+        :return: An iterable of SeriesParamJSON instances.
+        :rtype: Iterable[SeriesParamJSON]
+        """
         self.data = json.loads(self.path.read_text())
         return super().load(precision=precision)

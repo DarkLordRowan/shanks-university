@@ -1,7 +1,11 @@
+"""
+CLI parser for trial executor.
+Author: Yadrentsev I. M.
+"""
+
 import argparse
 from pathlib import Path
 from typing import Any, Union, get_args, get_origin
-from src.domain.precision import PrecisionType
 
 from pydantic import BaseModel
 
@@ -9,6 +13,7 @@ from src.config.model import TrialConfig
 
 
 def is_pydantic_model_type(t: Any) -> bool:
+    """Check if a type is a Pydantic model or contains one."""
     if t is None:
         return False
 
@@ -28,6 +33,7 @@ def is_pydantic_model_type(t: Any) -> bool:
 
 
 def unwrap_type(t: Any) -> Any:
+    """Unwrap generic types to get the base type, handling Union and Optional."""
     origin = get_origin(t)
     if origin is Union:
         return next((a for a in get_args(t) if a is not type(None)), t)
@@ -37,9 +43,10 @@ def unwrap_type(t: Any) -> Any:
 
 
 def _add_field_to_parser(parser: argparse.ArgumentParser, name: str, field: Any):
+    """Add a single field to the argument parser."""
     raw_type = field.annotation
     field_type = unwrap_type(raw_type)
-    
+
     default = field.default
 
     arg_name = f"--{name.replace('_', '-')}"
@@ -71,6 +78,7 @@ def _add_field_to_parser(parser: argparse.ArgumentParser, name: str, field: Any)
 def _add_model_to_parser(
     parser: argparse.ArgumentParser, model: type[BaseModel], prefix: str = ""
 ):
+    """Recursively add Pydantic model fields to the argument parser."""
     for name, field in model.model_fields.items():
         full_name = f"{prefix}{name}"
 
@@ -83,6 +91,7 @@ def _add_model_to_parser(
 
 
 def build_cli_parser() -> argparse.ArgumentParser:
+    """Build and return the command-line argument parser."""
     parser = argparse.ArgumentParser(description="Trial executor")
 
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -97,6 +106,7 @@ def build_cli_parser() -> argparse.ArgumentParser:
 
 
 def _build_nested_dict_from_args(args: dict[str, Any]) -> dict[str, Any]:
+    """Convert flattened dotted argument names into nested dictionary structure."""
     result: dict[str, Any] = {}
     for k, v in args.items():
         if k == "config" or v is None:
@@ -110,6 +120,7 @@ def _build_nested_dict_from_args(args: dict[str, Any]) -> dict[str, Any]:
 
 
 def load_config_and_apply_argparse() -> tuple[TrialConfig, argparse.Namespace]:
+    """Load configuration from file and apply command-line argument overrides."""
     parser = build_cli_parser()
     args = parser.parse_args()
 

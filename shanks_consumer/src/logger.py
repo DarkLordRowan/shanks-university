@@ -1,17 +1,27 @@
+"""
+Logging utility with colored output and function call tracing.
+Author: Yadrentsev I. M.
+"""
+
 import logging
 import sys
 from functools import wraps
 
 
-class ColoredFormatter(logging.Formatter):
+class ColoredFormatter:
+    """Logging formatter that adds colors to log levels for terminal output."""
+
     COLORS = {
-        "DEBUG": "\033[36m",  # Cyan
-        "INFO": "\033[32m",  # Green
-        "WARNING": "\033[33m",  # Yellow
-        "ERROR": "\033[31m",  # Red
-        "CRITICAL": "\033[41m",  # Red background
-        "RESET": "\033[0m",  # Reset
+        "DEBUG": "\033[36m",
+        "INFO": "\033[32m",
+        "WARNING": "\033[33m",
+        "ERROR": "\033[31m",
+        "CRITICAL": "\033[41m",
+        "RESET": "\033[0m",
     }
+
+    def __init__(self, fmt=None, datefmt=None):
+        self._formatter = logging.Formatter(fmt, datefmt)
 
     def format(self, record):
         use_colors = hasattr(sys.stdout, "isatty") and sys.stdout.isatty()
@@ -22,10 +32,11 @@ class ColoredFormatter(logging.Formatter):
             record.levelname = f"{color}{record.levelname}{reset}"
             record.msg = f"{color}{record.msg}{reset}"
 
-        return super().format(record)
+        return self._formatter.format(record)
 
 
 def setup_logging(verbose: int, use_colors: bool = True):
+    """Sets up logging with specified verbosity and color options."""
     level = (
         logging.DEBUG
         if verbose >= 2
@@ -55,6 +66,7 @@ def setup_logging(verbose: int, use_colors: bool = True):
 
 
 def logged_debug(func):
+    """Log function calls and their results at DEBUG level."""
     root_logger = logging.getLogger()
 
     @wraps(func)

@@ -1,3 +1,8 @@
+"""
+MongoDB database setup utility.
+Author: Yadrentsev I. M.
+"""
+
 import logging
 
 from pymongo import MongoClient
@@ -8,6 +13,13 @@ from src.config.model import MongoConfig
 
 
 def setup_mongo_db(config: MongoConfig) -> MongoDatabase | None:
+    """Setups MongoDB connection.
+
+    :param config: MongoDB configuration
+    :type config: MongoConfig
+    :return: MongoDB database instance or None if connection failed
+    :rtype: MongoDatabase | None
+    """
     mongo_database = None
     logging.info("MongoDB export specified, attempting to connect...")
     try:

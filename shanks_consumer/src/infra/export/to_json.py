@@ -1,3 +1,8 @@
+"""
+JSON export service implementation.
+Author: Yadrentsev I. M.
+"""
+
 import json
 from pathlib import Path
 from typing import Sequence
@@ -10,5 +15,6 @@ class JSONExportService(ExportService):
         self.location = location
 
     def export(self, dicts: Sequence[dict], **kwargs):
+        """JSON export implementation."""
         with open(self.location, "a", encoding="utf-8") as f:
             json.dump(dicts, f, indent=4, sort_keys=True)
