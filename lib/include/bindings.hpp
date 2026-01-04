@@ -13,10 +13,10 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-#include "../../shanks/include/custom_concepts.hpp"
-#include "../../shanks/include/utils.hpp"
-#include "../../shanks/include/methods.hpp"
-#include "../../shanks/include/series.hpp"
+#include "../../src/include/custom_concepts.hpp"
+#include "../../src/include/utils.hpp"
+#include "../../src/include/methods.hpp"
+#include "../../src/include/series.hpp"
 
 namespace py = pybind11;
 
