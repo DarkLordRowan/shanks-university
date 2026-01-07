@@ -43,7 +43,7 @@ jobs:
         
       # Create documentation   
       - name: Create documentation     
-        run: cd backend && doxygen
+        run: mkdir -p backend/docs && cd backend && doxygen
         
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
