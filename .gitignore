@@ -500,3 +500,5 @@ rebuild.sh
 consumer/output
 src/libs
 lib/build
+*.sln
+*.vcxproj
