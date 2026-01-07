@@ -6,18 +6,20 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /build
 
-COPY shanks_transformation/ ./shanks_transformation/
-RUN cmake -S shanks_transformation -B build -DCMAKE_BUILD_TYPE=Release -DPython3_EXECUTABLE="$(which python)" \
+COPY backend/lib ./backend/lib
+COPY backend/src ./backend/src
+
+RUN cmake -S backend/lib -B build -DCMAKE_BUILD_TYPE=Release -DPython3_EXECUTABLE="$(which python)" \
  && cmake --build build --config Release --target pyshanks
 
 RUN mkdir -p /artifacts/pyshanks \
  && (find build -type f -name "pyshanks*.so"  -exec cp -v {} /artifacts/pyshanks/ \; || true) \
  && (find build -type f -name "pyshanks*.pyd" -exec cp -v {} /artifacts/pyshanks/ \; || true)
 
-COPY consumer/pyproject.toml consumer/README.md ./consumer/
-COPY consumer/src ./consumer/src
+COPY backend/consumer/pyproject.toml backend/consumer/README.md ./backend/consumer/
+COPY backend/consumer/src ./backend/consumer/src
 RUN python -m pip install --upgrade pip build \
- && python -m build --wheel --outdir /artifacts/wheels ./consumer
+ && python -m build --wheel --outdir /artifacts/wheels ./backend/consumer
 
 
 # --------------------
@@ -38,7 +40,7 @@ COPY --from=builder /artifacts/wheels/ /tmp/wheels/
 RUN pip install --no-cache-dir /tmp/wheels/*.whl \
  && rm -rf /tmp/*
 
-COPY web/worker/ /app/worker/
+COPY frontend/web/worker/ /app/worker/
 RUN if [ -f /app/worker/requirements.txt ]; then \
       pip install --no-cache-dir -r /app/worker/requirements.txt; \
     fi

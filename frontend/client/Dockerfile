@@ -27,11 +27,11 @@ ENV PYTHONUNBUFFERED=1
 
 WORKDIR /app
 
-COPY client/requirements.txt ./
+COPY frontend/client/requirements.txt ./
 
 RUN --mount=type=cache,target=/root/.cache/pip \
     pip install --no-cache-dir -r requirements.txt
 
-COPY client/ ./
+COPY frontend/client/ ./
 
 CMD ["python3", "main.py"]

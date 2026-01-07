@@ -1,7 +1,7 @@
 mkdir -p build/
 cd build/
-cmake ../lib
+cmake ../../lib
 cmake --build . --target pyshanks --config Release
-Copy-Item "Release/pyshanks.cp313-win_amd64.pyd" "../../consumer/pyshanks/" -Force
+Copy-Item "Release/pyshanks.cp313-win_amd64.pyd" "../pyshanks/" -Force
 cd ..
 rm build/ -r -fo

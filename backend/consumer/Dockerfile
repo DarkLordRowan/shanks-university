@@ -13,9 +13,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /build
 
-COPY shanks_transformation/ ./shanks_transformation
+COPY backend/lib ./backend/lib
+COPY backend/src ./backend/src
 
-RUN cmake -S shanks_transformation
+RUN cmake -S backend/lib
 
 RUN make pyshanks
 
@@ -35,13 +36,13 @@ ENV PYTHONUNBUFFERED=1
 
 WORKDIR /app
 
-COPY consumer/requirements.txt ./
+COPY backend/consumer/requirements.txt ./
 
 RUN --mount=type=cache,target=/root/.cache/pip \
     pip install --no-cache-dir -r requirements.txt
 
-COPY consumer/ ./
+COPY backend/consumer/ ./
 
-COPY --from=shanks-builder /build/*.so ./src/
+COPY --from=shanks-builder /build/*.so ./pyshanks/
 
 CMD ["/bin/bash"]

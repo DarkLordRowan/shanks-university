@@ -6,7 +6,7 @@ services:
     container_name: shanks-consumer
     build:
       context: .
-      dockerfile: consumer/Dockerfile
+      dockerfile: backend/consumer/Dockerfile
     environment:
       - MONGO_HOST=${MONGO_HOST}
       - MONGO_PORT=${MONGO_PORT}
@@ -16,8 +16,8 @@ services:
       shanks-consumer-mongodb:
         condition: service_healthy
     volumes:
-      - ./consumer/config:/app/config
-      - ./consumer/output:/app/output
+      - ./backend/consumer/config:/app/config
+      - ./backend/consumer/output:/app/output
     networks:
       - shanks-network
 
@@ -45,7 +45,7 @@ services:
     container_name: shanks-client
     build:
       context: .
-      dockerfile: client/Dockerfile
+      dockerfile: frontend/client/Dockerfile
     environment:
       - MONGO_HOST=${MONGO_HOST}
       - MONGO_PORT=${MONGO_PORT}
@@ -57,7 +57,7 @@ services:
       shanks-consumer-mongodb:
         condition: service_healthy
     volumes:
-      - ./client/:/app/
+      - ./frontend/client/:/app/
     networks:
       - shanks-network
 
