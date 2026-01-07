@@ -40,7 +40,7 @@ make
 ```
 
 ## Документация
-Doxygen документация доступна [по ссылке](https://bimbobam.github.io)
+Doxygen документация доступна [по ссылке](https://darklordrowan.github.io/shanks-university/)
 
 ## Руководитель проекта
 
