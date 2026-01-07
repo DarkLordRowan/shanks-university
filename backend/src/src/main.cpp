@@ -1,11 +1,10 @@
-//#include "../libs/arbitrary_arithmetics/complexprecision.h"
-//#include "../libs/arbitrary_arithmetics/fprecision.h"
-//#include "../libs/arbitrary_arithmetics/intervalprecision.h"
-//#include "../libs/arbitrary_arithmetics/precisioncore.cpp"
+//#include "arbitrary_arithmetics/complexprecision.h"
+//#include "arbitrary_arithmetics/fprecision.h"
+//#include "arbitrary_arithmetics/intervalprecision.h"
+//#include "arbitrary_arithmetics/precisioncore.cpp"
 
 #include "../include/test_framework/test_framework.hpp"
-
-#include "../libs/mpfr/mpreal.h"
+#include "mpreal.h"
 #include "../include/filters/savgol.hpp"
 #include "../include/filters/kolzur.hpp"
 

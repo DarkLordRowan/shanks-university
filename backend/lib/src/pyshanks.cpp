@@ -9,7 +9,7 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-#include "../libs/mpfr/mpreal.h"
+#include "mpreal.h"
 #include "../include/bindings.hpp"
 
 PYBIND11_MODULE(pyshanks, m) {

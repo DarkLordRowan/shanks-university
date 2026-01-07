@@ -5,12 +5,22 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
 include(FetchContent)
 
+# Add module path for custom Find modules
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../cmake/modules")
+
+# Find required packages
+find_package(GMP REQUIRED)
+find_package(MPFR REQUIRED)
+
+# Include directories
+include_directories(
+    ${CMAKE_SOURCE_DIR}/include
+)
+
 # -------------------------
 # Бинарник (основная программа)
 # -------------------------
 
-
-#include_directories(${CMAKE_SOURCE_DIR}/include)
 add_executable(shanks 
     ${CMAKE_SOURCE_DIR}/src/main.cpp
     ${CMAKE_SOURCE_DIR}/src/interfaces/series_info.cpp
@@ -18,4 +28,4 @@ add_executable(shanks
     ${CMAKE_SOURCE_DIR}/src/interfaces/transformations_info.cpp
 )
 
-target_link_libraries(shanks PRIVATE /usr/local/lib/libmpfr.so /usr/local/lib/libgmp.so)
+target_link_libraries(shanks PRIVATE MPFR::MPFR GMP::GMP)
