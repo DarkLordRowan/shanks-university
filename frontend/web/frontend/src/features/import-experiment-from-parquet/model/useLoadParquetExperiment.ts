@@ -112,15 +112,17 @@ export function useLoadParquetExperiment() {
     }, []);
 
     const load = useCallback(
-        async (files: FileList | null) => {
+        async (files: FileList | File[]) => {
+            const fileArr = Array.isArray(files) ? files : Array.from(files);
+
             const runId = ++runIdRef.current;
 
-            if (!files || files.length === 0) {
+            if (!fileArr || fileArr.length === 0) {
                 setErrorWithRun(runId, "Нет файлов");
                 return;
             }
 
-            const allFiles = Array.from(files);
+            const allFiles = Array.from(fileArr);
             const { seriesFiles, accelFiles } = splitFilesByKind(allFiles);
 
             const totalFiles = seriesFiles.length + accelFiles.length;

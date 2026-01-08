@@ -51,6 +51,7 @@
     "eslint-plugin-react-refresh": "^0.4.20",
     "globals": "^16.3.0",
     "init": "^0.1.2",
+    "jszip": "^3.10.1",
     "npx": "^10.2.2",
     "postcss": "^8.5.6",
     "prettier": "^3.6.2",

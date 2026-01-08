@@ -1,11 +1,10 @@
-// src/widgets/ExperimentSourceSelector.tsx
-
 import { type ReactNode, useState } from "react";
 import type { Experiment } from "@/entities/experiment/model/experiment";
 import { ParquetFolderInput } from "@/features/import-experiment-from-parquet/ui/ParquetFolderInput";
+import { ParquetZipUrlInput } from "@/features/import-experiment-from-parquet/ui/ParquetZipUrlInput";
 import { BackendExperimentLoader } from "@/features/load-experiment-from-backend/ui/BackendExperimentLoader";
 
-type Source = "parquet" | "backend";
+type Source = "parquet" | "parquet-url" | "backend";
 
 interface SourceButtonProps {
     active: boolean;
@@ -41,9 +40,13 @@ function SourceToggle(props: SourceToggleProps) {
     const { value, onChange } = props;
 
     return (
-        <div className="flex gap-2 mb-2">
+        <div className="flex gap-2 mb-2 flex-wrap">
             <SourceButton active={value === "parquet"} onClick={() => onChange("parquet")}>
                 Из файлов parquet
+            </SourceButton>
+
+            <SourceButton active={value === "parquet-url"} onClick={() => onChange("parquet-url")}>
+                По ссылке (zip)
             </SourceButton>
 
             <SourceButton active={value === "backend"} onClick={() => onChange("backend")}>
@@ -66,6 +69,10 @@ export function ExperimentSourceSelector(props: ExperimentSourceSelectorProps) {
             <SourceToggle value={source} onChange={setSource} />
 
             {source === "parquet" && <ParquetFolderInput onExperimentChange={onExperimentChange} />}
+
+            {source === "parquet-url" && (
+                <ParquetZipUrlInput onExperimentChange={onExperimentChange} />
+            )}
 
             {source === "backend" && (
                 <BackendExperimentLoader onExperimentChange={onExperimentChange} />
