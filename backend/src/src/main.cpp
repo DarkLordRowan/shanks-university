@@ -34,9 +34,9 @@ int main()
 		try
 		{
 			//main_testing_function<long double, unsigned long long int>();
-			main_testing_function<std::complex<long double>, unsigned long long int>();
+			//main_testing_function<std::complex<long double>, unsigned long long int>();
 			//main_testing_function<std::complex<mpfr::mpreal>, unsigned short int>();
-			//main_testing_function<mpfr::mpreal, unsigned short int>();
+			main_testing_function<mpfr::mpreal, unsigned short int>();
 		}
 		catch (std::domain_error& e)
 		{

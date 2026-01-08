@@ -173,11 +173,15 @@ T levin_sidi_m_algorithm<T, K>::operator()(
 ) const {
 
     // Determine the total number of terms required for both Sn and an vectors
-    const K required_size = n + order + static_cast<K>(1) + static_cast<K>(
+    const K required_size = n + order + static_cast<K>(1) + 
+	static_cast<K>(
 		remainder_type_in_use == shanks::remainders::remainder_type::t_wave_type ||
-		remainder_type_in_use == shanks::remainders::remainder_type::v_type      ||
+		remainder_type_in_use == shanks::remainders::remainder_type::v_type
+	) + 
+	static_cast<K>(2) * static_cast<K>(
 		remainder_type_in_use == shanks::remainders::remainder_type::v_wave_type
-	);
+	)
+	;
 
     if (data.Sn.size() < required_size || data.an.size() < required_size){
         throw std::out_of_range("The Sn or an smaller then required for M_{" + utils::to_string(order) + "}^{" + utils::to_string(n) + "}\n" +

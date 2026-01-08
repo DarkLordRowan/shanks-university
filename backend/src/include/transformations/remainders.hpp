@@ -290,7 +290,7 @@ template<AcceptedLike T, UnsignedIntLike K>
 T v_wave_transform<T,K>::operator()(const K n, const K index, const std::vector<T>& an, const T& scale) const  {
     // For theory, see: Modified v-transform with shifted indices
     // ωₙ = (aₙ₊₁ * aₙ₊₂)/(aₙ₊₁ - aₙ₊₂)
-    const T a1 = an.at(index), a2 = an.at(index + static_cast<K>(1));
+    const T a1 = an.at(index + static_cast<K>(1)), a2 = an.at(index + static_cast<K>(2));
     const T result = (a1 - a2) / (a1 * a2);
 
     if(!utils::isfinite(result)) throw std::overflow_error("division by zero");
