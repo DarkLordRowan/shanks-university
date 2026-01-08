@@ -1,78 +1,383 @@
+import React from "react";
 import { Link } from "react-router-dom";
+
+const GITHUB_REPO = "https://github.com/DarkLordRowan/shanks-university";
+const BRANCH = "main";
+
+type Feature = {
+    title: string;
+    description: string;
+    bullets: string[];
+    to: string;
+    toneClass: string;
+    icon: React.ReactNode;
+};
+
+type RepoItem = {
+    path: string;
+    kind: "dir" | "file";
+    href: string;
+    description: string;
+};
+
+function IconSliders(props: { className?: string }) {
+    return (
+        <svg
+            className={props.className}
+            viewBox="0 0 24 24"
+            fill="none"
+            aria-hidden="true"
+        >
+            <path
+                d="M4 21v-7m0-4V3m10 18v-9m0-4V3m6 18v-5m0-4V3"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+            />
+            <path
+                d="M2 14h4m6-6h4m6 8h4"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+            />
+        </svg>
+    );
+}
+
+function IconChart(props: { className?: string }) {
+    return (
+        <svg
+            className={props.className}
+            viewBox="0 0 24 24"
+            fill="none"
+            aria-hidden="true"
+        >
+            <path
+                d="M4 19V5"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+            />
+            <path
+                d="M4 19h16"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+            />
+            <path
+                d="M7 15l3-4 3 2 4-6"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+            />
+            <path
+                d="M18 7h2v2"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+            />
+        </svg>
+    );
+}
+
+function IconBook(props: { className?: string }) {
+    return (
+        <svg
+            className={props.className}
+            viewBox="0 0 24 24"
+            fill="none"
+            aria-hidden="true"
+        >
+            <path
+                d="M6 4h10a2 2 0 0 1 2 2v14a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2V6a2 2 0 0 1 2-2Z"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinejoin="round"
+            />
+            <path
+                d="M8 8h8"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+            />
+            <path
+                d="M8 12h6"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+            />
+        </svg>
+    );
+}
+
+function IconFolder(props: { className?: string }) {
+    return (
+        <svg
+            className={props.className}
+            viewBox="0 0 24 24"
+            fill="none"
+            aria-hidden="true"
+        >
+            <path
+                d="M3 7a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v8a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V7Z"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinejoin="round"
+            />
+        </svg>
+    );
+}
+
+function IconFile(props: { className?: string }) {
+    return (
+        <svg
+            className={props.className}
+            viewBox="0 0 24 24"
+            fill="none"
+            aria-hidden="true"
+        >
+            <path
+                d="M7 3h7l3 3v15a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinejoin="round"
+            />
+            <path
+                d="M14 3v4h4"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinejoin="round"
+            />
+        </svg>
+    );
+}
+
+const features: Feature[] = [
+    {
+        title: "Генератор конфигурации эксперимента",
+        description:
+            "Формирование постановки эксперимента (ряды, алгоритмы, параметры, точности).",
+        bullets: [
+            "выбор набора рядов и ускорителей (алгоритмов)",
+            "выбор точностей",
+            "TODO: сохранение/переиспользование конфигураций",
+        ],
+        to: "/configurations",
+        toneClass: "text-primary",
+        icon: <IconSliders className="h-6 w-6" />,
+    },
+    {
+        title: "Визуальный анализ эксперимента",
+        description:
+            "Анализ результатов вычислений с помощью таблиц и графиков с возможностью экспорта визуализаций в jpeg и xlsx.",
+        bullets: [
+            "таблицы ошибок",
+            "графики сходимости и отклонений",
+            "сравнение рядов и алгоритмов",
+        ],
+        to: "/experiments",
+        toneClass: "text-accent",
+        icon: <IconChart className="h-6 w-6" />,
+    },
+    {
+        title: "Документация",
+        description:
+            "TODO: придумать описание",
+        bullets: [
+            "TODO: придумать что тут должно быть",
+        ],
+        to: "/docs",
+        toneClass: "text-secondary",
+        icon: <IconBook className="h-6 w-6" />,
+    },
+];
+
+const repoItems: RepoItem[] = [
+    {
+        path: "backend/",
+        kind: "dir",
+        href: `${GITHUB_REPO}/tree/${BRANCH}/backend`,
+        description: "Core часть: c++ библиотека и python фреймворк",
+    },
+    {
+        path: "frontend/",
+        kind: "dir",
+        href: `${GITHUB_REPO}/tree/${BRANCH}/frontend`,
+        description: "Клиентская часть: вычислительный клиент, десктопный визуализатор, веб-интерфейс",
+    },
+    {
+        path: "theory/",
+        kind: "dir",
+        href: `${GITHUB_REPO}/tree/${BRANCH}/theory`,
+        description: "Теория: теоретическое обоснование корректности рядов и ускорителей (алгоритмов)",
+    },
+    {
+        path: "docker-compose.yml",
+        kind: "file",
+        href: `${GITHUB_REPO}/blob/${BRANCH}/docker-compose.yml`,
+        description: "Локальный запуск сервисов.",
+    },
+    {
+        path: "flake.nix",
+        kind: "file",
+        href: `${GITHUB_REPO}/blob/${BRANCH}/flake.nix`,
+        description: "Воспроизведение окружения для разработки.",
+    },
+    {
+        path: "README.md",
+        kind: "file",
+        href: `${GITHUB_REPO}/blob/${BRANCH}/README.md`,
+        description: "Вводное описание проекта и ссылки.",
+    },
+];
+
+function FeatureCard(p: Feature) {
+    return (
+        <div className="rounded-xl2 border border-border bg-panel p-4 shadow-panel">
+            <div className="flex items-start gap-3">
+                <div
+                    className={[
+                        "mt-0.5 inline-flex h-10 w-10 items-center justify-center rounded-xl2 border border-border bg-surface",
+                        p.toneClass,
+                    ].join(" ")}
+                >
+                    {p.icon}
+                </div>
+
+                <div className="min-w-0 flex-1">
+                    <div className="flex items-center justify-between gap-3">
+                        <h3 className="text-base font-semibold text-white">{p.title}</h3>
+                        <span className="shrink-0 rounded-full border border-border bg-surface px-2 py-0.5 text-xs text-textDim">
+                            UI
+                        </span>
+                    </div>
+
+                    <p className="mt-1 text-sm leading-relaxed text-textDim">{p.description}</p>
+
+                    <ul className="mt-3 space-y-1 text-sm text-textDim">
+                        {p.bullets.map((b) => (
+                            <li key={b} className="flex gap-2">
+                                <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-border" />
+                                <span className="min-w-0">{b}</span>
+                            </li>
+                        ))}
+                    </ul>
+
+                    <div className="mt-4">
+                        <Link
+                            to={p.to}
+                            className="inline-flex items-center gap-2 rounded-xl2 border border-border bg-surface px-3 py-2 text-sm font-medium text-white hover:border-primary/60"
+                        >
+                            Открыть
+                            <span className="text-textDim">→</span>
+                        </Link>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+function RepoRow(p: RepoItem) {
+    const Icon = p.kind === "dir" ? IconFolder : IconFile;
+
+    return (
+        <a
+            href={p.href}
+            target="_blank"
+            rel="noreferrer"
+            className="flex items-start gap-3 rounded-xl2 border border-border bg-panel p-3 shadow-panel hover:border-primary/60"
+        >
+            <span className="mt-0.5 text-textDim">
+                <Icon className="h-5 w-5" />
+            </span>
+
+            <span className="min-w-0 flex-1">
+                <span className="flex items-center gap-2">
+                    <span className="font-mono text-sm text-white">{p.path}</span>
+                    <span className="rounded-full border border-border bg-surface px-2 py-0.5 text-xs text-textDim">
+                        {p.kind === "dir" ? "dir" : "file"}
+                    </span>
+                </span>
+                <span className="mt-1 block text-sm text-textDim">{p.description}</span>
+            </span>
+
+            <span className="mt-1 shrink-0 text-textDim">↗</span>
+        </a>
+    );
+}
 
 const Home: React.FC = () => {
     return (
-        <div className="rounded-xl2 border border-border bg-panel p-6 shadow-panel space-y-5 text-textDim">
-            <h1 className="text-3xl font-bold text-white">Ускорение сходимости рядов</h1>
+        <div className="rounded-xl2 border border-border bg-panel p-6 shadow-panel text-textDim">
+            <div className="space-y-2">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                    <h1 className="text-3xl font-bold text-white">Ускорение сходимости рядов</h1>
 
-            <p>
-                Данный интерфейс позволяет выполнять вычислительные эксперименты по ускорению
-                сходимости числовых рядов и визуализировать результаты.
-            </p>
-
-            <div className="space-y-1">
-                <p className="font-semibold text-white">Глобальный эксперимент</p>
-                <Link to="/experiments" className="text-primary hover:underline underline-offset-4">
-                    Перейти к глобальному эксперименту
-                </Link>
-
-                <div className="space-y-1">
-                    <p>Для тестирования можно использовать пример входных данных:</p>
                     <a
-                        href="https://github.com/DarkLordRowan/shanks-university/blob/VecImpl/consumer/data/one_series_all_algo.json"
+                        href={`${GITHUB_REPO}/tree/${BRANCH}`}
                         target="_blank"
                         rel="noreferrer"
-                        className="text-primary hover:underline underline-offset-4 break-all text-sm"
+                        className="inline-flex items-center gap-2 rounded-xl2 border border-border bg-surface px-3 py-2 text-sm font-medium text-white hover:border-primary/60"
                     >
-                        one_series_all_algo.json
+                        GitHub
+                        <span className="rounded-full border border-border bg-panel px-2 py-0.5 text-xs text-textDim">
+                            ветка {BRANCH}
+                        </span>
                     </a>
                 </div>
+
+                <p className="max-w-4xl text-sm leading-relaxed text-textDim">
+                    Интерфейс для постановки вычислительных экспериментов по ускорению сходимости
+                    числовых рядов, анализа результатов и просмотра сопутствующей документации.
+                </p>
             </div>
 
-            <div className="space-y-2">
-                <p className="font-semibold text-white">Эксперименты с графиками</p>
+            <div className="mt-6 grid gap-6 lg:grid-cols-2">
+                <section className="space-y-4">
+                    <div className="rounded-xl2 border border-border bg-surface p-4">
+                        <h2 className="text-lg font-semibold text-white">Функции сайта</h2>
+                        <p className="mt-1 text-sm text-textDim">
+                            Три основных сценария работы: конфигурация, анализ, документация.
+                        </p>
+                    </div>
 
-                <ul className="space-y-1 text-sm">
-                    <li>
-                        1) Один алгоритм, фиксированное m. Разные ряды —{" "}
-                        <Link
-                            to="/experiments_1"
-                            className="text-primary hover:underline underline-offset-4"
-                        >
-                            открыть
-                        </Link>
-                    </li>
-                    <li>
-                        2) Один ряд, один алгоритм, одно m. Разные x —{" "}
-                        <Link
-                            to="/experiments_2"
-                            className="text-primary hover:underline underline-offset-4"
-                        >
-                            открыть
-                        </Link>
-                    </li>
-                    <li>
-                        3) Один ряд, фиксированные x и m. Разные алгоритмы —{" "}
-                        <Link
-                            to="/experiments_3"
-                            className="text-primary hover:underline underline-offset-4"
-                        >
-                            открыть
-                        </Link>
-                    </li>
-                    <li>
-                        4) Один ряд, один x, один алгоритм. Разные m —{" "}
-                        <Link
-                            to="/experiments_4"
-                            className="text-primary hover:underline underline-offset-4"
-                        >
-                            открыть
-                        </Link>
-                    </li>
-                </ul>
+                    <div className="space-y-4">
+                        {features.map((f) => (
+                            <FeatureCard key={f.title} {...f} />
+                        ))}
+                    </div>
+                </section>
+
+                <section className="space-y-4">
+                    <div className="rounded-xl2 border border-border bg-surface p-4">
+                        <h2 className="text-lg font-semibold text-white">Структура проекта (GitHub)</h2>
+                        <p className="mt-1 text-sm text-textDim">
+                            Репозиторий организован по модулям: backend/frontend/theory + инфраструктура.
+                        </p>
+                    </div>
+
+                    <div className="rounded-xl2 border border-border bg-panel p-4 shadow-panel">
+                        <div className="text-xs text-textDim">Дерево верхнего уровня</div>
+                        <pre className="mt-2 overflow-x-auto rounded-xl2 border border-border bg-surface p-3 font-mono text-xs text-textDim">
+{`shanks-university/
+├─ backend/
+├─ frontend/
+├─ theory/
+├─ docker-compose.yml
+├─ flake.nix
+└─ README.md`}
+                        </pre>
+                    </div>
+
+                    <div className="space-y-3">
+                        {repoItems.map((x) => (
+                            <RepoRow key={x.path} {...x} />
+                        ))}
+                    </div>
+                </section>
             </div>
-
-            <p>Загрузите файл и выполните эксперимент.</p>
         </div>
     );
 };
