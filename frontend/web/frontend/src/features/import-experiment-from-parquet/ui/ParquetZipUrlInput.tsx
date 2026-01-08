@@ -5,7 +5,7 @@ import JSZip from "jszip";
 import type { Experiment } from "@/entities/experiment/model/experiment";
 import { useLoadParquetExperiment } from "../model/useLoadParquetExperiment";
 
-const DEFAULT_ZIP_URL = "DEFAULT_ZIP_URL"; // заглушка, подставишь реальную
+const DEFAULT_ZIP_URL = "https://raw.githubusercontent.com/DarkLordRowan/shanks-university/main/frontend/web/frontend/parquet.zip";
 
 type LoadState = ReturnType<typeof useLoadParquetExperiment>["state"];
 type Phase = "idle" | "downloading" | "unzipping" | "error";
