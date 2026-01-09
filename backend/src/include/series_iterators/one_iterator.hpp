@@ -2,7 +2,7 @@
 #define ONE_ITERATOR_HPP
 #pragma once
 
-#include "series_base_iterator.hpp"
+#include "../series_base.hpp"
 
 /**
  * @file one_iterator.hpp
@@ -10,7 +10,7 @@
  * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  */
 
-namespace shanks { namespace iters {
+namespace shanks { namespace series {
 
 /**
  * @brief Series iterator for the identity function f(x) = x.
@@ -23,45 +23,45 @@ namespace shanks { namespace iters {
  * @tparam K Unsigned integral type for indexing (UnsignedIntLike).
  */
 template<AcceptedLike T, UnsignedIntLike K>
-class one_iterator final : public series_base_iterator<T, K>{
+class one_iterator final : public series_base_succ<T, K>{
 public:
 
     /**
      * @brief Default constructor for one_iterator.
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      */
-	one_iterator() : series_base_iterator<T, K>() {}
+	one_iterator(T x) : series_base_succ<T, K>(x) {
+	    if (this->is_invalid())
+			throw std::invalid_argument("Invalid series argument");
+	}
 
     /**
      * @brief Retrieves the analytic sum of the series (x).
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The value of x.
      */
-	T sum() const override{ return this->x;}
+	T get_sum() const override{ return this->x;}
 
     /**
      * @brief Validates the current evaluation point x.
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return true if x is non-finite, false otherwise.
      */
-	bool check_validity() const override { return !utils::isfinite(this->x); }
+	bool is_invalid() const override { return !utils::isfinite(this->x); }
 
     /**
      * @brief Computes the next term in the series expansion.
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The next term of the series.
      */
-	T next() override {
+	T next(K n, T& state) const override {
 
 		// Formula for the n-th term of the expansion: x / ((n+1) * (n+2))
-		this->current_state = this->x / utils::cast<T>((this->n+1)*(this->n+2));
-		this->n += 1;
-		return this->current_state;
+		state = this->x / utils::cast<T>((n+1)*(n+2));
+		return state;
 	}
 
 };
 
-} //namespace shanks::iters
-} //namespace shanks
-
+}} //namespace shanks
 #endif

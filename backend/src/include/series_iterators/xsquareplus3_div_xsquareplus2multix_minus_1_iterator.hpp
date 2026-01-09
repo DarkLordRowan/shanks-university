@@ -2,7 +2,7 @@
 #define XSQUAREPLUS3_DIV_XSQUAREPLUS2MULTIX_MINUS_1_ITERATOR_HPP
 #pragma once
 
-#include "series_base_iterator.hpp"
+#include "../series_base.hpp"
 
 /**
  * @file xsquareplus3_div_xsquareplus2multix_minus_1_iterator.hpp
@@ -10,7 +10,7 @@
  * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  */
 
-namespace shanks { namespace iters {
+namespace shanks { namespace series {
 
 /**
  * @brief Taylor series iterator for the rational function f(x) = (x^2 + 3) / (x^2 + 2x) - 1.
@@ -23,28 +23,31 @@ namespace shanks { namespace iters {
  * @tparam K Unsigned integral type for indexing (UnsignedIntLike).
  */
 template<AcceptedLike T, UnsignedIntLike K>
-class xsquareplus3_div_xsquareplus2multix_minus_1_iterator final : public series_base_iterator<T, K>{
+class xsquareplus3_div_xsquareplus2multix_minus_1_iterator final : public series_base_succ<T, K>{
 public:
 
     /**
      * @brief Default constructor for xsquareplus3_div_xsquareplus2multix_minus_1_iterator.
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      */
-	xsquareplus3_div_xsquareplus2multix_minus_1_iterator() : series_base_iterator<T, K>() {}
+	xsquareplus3_div_xsquareplus2multix_minus_1_iterator(T x) : series_base_succ<T, K>(x) {
+	    if (this->is_invalid())
+			throw std::invalid_argument("Invalid series argument");
+	}
 
     /**
      * @brief Retrieves the analytic sum of the series.
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The value of the rational function at current point x.
      */
-	T sum() const override{ return (this->x * this->x + utils::cast<T>(3)) / (this->x * this->x + utils::cast<T>(2) * this->x) - utils::cast<T>(1);}
+	T get_sum() const override{ return (this->x * this->x + utils::cast<T>(3)) / (this->x * this->x + utils::cast<T>(2) * this->x) - utils::cast<T>(1);}
 
     /**
      * @brief Validates the current evaluation point x.
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return true if |x - 1| >= 1 or x is non-finite, false otherwise.
      */
-	bool check_validity() const override {
+	bool is_invalid() const override {
 		using float_type = GetUnderlyingType<T>::value;
 		return !utils::isfinite(this->x) || utils::abs(this->x - utils::cast<T>(1)) >= utils::cast<float_type>(1.0);
 	}
@@ -54,19 +57,16 @@ public:
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The next term of the series.
      */
-	T next() override {
+	T next(K n, T& state) const override {
 
 		// Specific term formula for the expansion of the rational function around x=1
-		this->current_state = utils::cast<T>(0.5) * utils::minus_one_raised_to_power_n<T, K>(this->n) *
-		utils::cast<T>(utils::pow(size_t{3}, this->n+2) - 7) *
-		utils::pow(this->x - utils::cast<T>(1), utils::cast<T>(this->n)) / utils::cast<T>(utils::pow(size_t{3}, this->n+1));
-		this->n+=1;
-		return this->current_state;
+		state = utils::cast<T>(0.5) * utils::minus_one_raised_to_power_n<T, K>(n) *
+		utils::cast<T>(utils::pow(size_t{3}, static_cast<size_t>(n+2)) - 7) *
+		utils::pow(this->x - utils::cast<T>(1), utils::cast<T>(n)) / utils::cast<T>(utils::pow(size_t{3}, static_cast<size_t>(n+1)));
+		return state;
 	}
 
 };
 
-} //namespace shanks::iters
-} //namespace shanks
-
+}} //namespace shanks
 #endif

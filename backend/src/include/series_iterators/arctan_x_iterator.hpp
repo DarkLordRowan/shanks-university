@@ -2,15 +2,15 @@
 #define ARCTAN_X_ITERATOR_HPP
 #pragma once
 
-#include "series_base_iterator.hpp"
+#include "../series_base.hpp"
 
 /**
- * @file arctg_x_iterator.hpp
+ * @file arctan_x_iterator.hpp
  * @brief Iterator for the Taylor series expansion of arctan(x).
  * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  */
 
-namespace shanks { namespace iters {
+namespace shanks { namespace series {
 
 /**
  * @brief Taylor series iterator for the inverse tangent function arctan(x).
@@ -23,28 +23,31 @@ namespace shanks { namespace iters {
  * @tparam K Unsigned integral type for indexing (UnsignedIntLike).
  */
 template<AcceptedLike T, UnsignedIntLike K>
-class arctan_x_iterator final : public series_base_iterator<T, K>{
+class arctan_x_iterator final : public series_base_succ<T, K>{
 public:
 
     /**
      * @brief Default constructor for arctan_x_iterator.
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      */
-	arctan_x_iterator() : series_base_iterator<T, K>() {}
+	arctan_x_iterator(T x) : series_base_succ<T, K>(x) {
+	    if (this->is_invalid())
+			throw std::invalid_argument("Invalid series argument");
+	}
 
     /**
      * @brief Retrieves the analytic sum of the series (arctan(x)).
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The value of arctan(x).
      */
-	T sum() const override{ return utils::atan(this->x);}
+	T get_sum() const override{ return utils::atan(this->x);}
 
     /**
      * @brief Validates the current evaluation point x.
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return true if |x| > 1 or non-finite, false otherwise.
      */
-	bool check_validity() const override {
+	bool is_invalid() const override {
 		using float_type = GetUnderlyingType<T>::value;
 		return !utils::isfinite(this->x) || utils::abs(this->x) > utils::cast<float_type>(1.0);
 	}
@@ -54,20 +57,16 @@ public:
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The next term of the series.
      */
-	T next() override {
+	T next(K n, T& state) const override {
 
 		// Standard alternating Taylor series for arctan
-		if (this->n == 0) this->current_state = this->x;
-		else this->current_state *= utils::cast<T>(-1) * this->x * this->x *
-		utils::cast<T>(utils::fma(size_t{2},this->n-1,size_t{1})) / utils::cast<T>(utils::fma(size_t{2},this->n,size_t{1}));
-
-		this->n+=1;
-		return this->current_state;
+		if (n == 0) state = this->x;
+		else state *= utils::cast<T>(-1) * this->x * this->x *
+		utils::cast<T>(utils::fma(static_cast<size_t>(2),static_cast<size_t>(n-1),static_cast<size_t>(1))) / utils::cast<T>(utils::fma(static_cast<size_t>(2),static_cast<size_t>(n),static_cast<size_t>(1)));
+		return state;
 	}
 
 };
 
-} //namespace shanks::iters
-} //namespace shanks
-
+}} //namespace shanks
 #endif

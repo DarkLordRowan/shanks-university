@@ -2,7 +2,7 @@
 #define HALF_ASIN_TWO_X_ITERATOR_HPP
 #pragma once
 
-#include "series_base_iterator.hpp"
+#include "../series_base.hpp"
 
 /**
  * @file half_asin_two_x_iterator.hpp
@@ -10,7 +10,7 @@
  * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  */
 
-namespace shanks { namespace iters {
+namespace shanks { namespace series {
 
 /**
  * @brief Taylor series iterator for the function f(x) = 0.5 * asin(2x).
@@ -23,28 +23,31 @@ namespace shanks { namespace iters {
  * @tparam K Unsigned integral type for indexing (UnsignedIntLike).
  */
 template<AcceptedLike T, UnsignedIntLike K>
-class half_asin_two_x_iterator final : public series_base_iterator<T, K>{
+class half_asin_two_x_iterator final : public series_base_succ<T, K>{
 public:
 
     /**
      * @brief Default constructor for half_asin_two_x_iterator.
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      */
-	half_asin_two_x_iterator() : series_base_iterator<T, K>() {}
+	half_asin_two_x_iterator(T x) : series_base_succ<T, K>(x) {
+	    if (this->is_invalid())
+			throw std::invalid_argument("Invalid series argument");
+	}
 
     /**
      * @brief Retrieves the analytic sum of the series (0.5 * asin(2x)).
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The value of 0.5 * asin(2x).
      */
-	T sum() const override{ return utils::cast<T>(0.5) * utils::asin(utils::cast<T>(2) * this->x); }
+	T get_sum() const override{ return utils::cast<T>(0.5) * utils::asin(utils::cast<T>(2) * this->x); }
 
     /**
      * @brief Validates the current evaluation point x.
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return true if |x| > 0.5 or non-finite, false otherwise.
      */
-	bool check_validity() const override {
+	bool is_invalid() const override {
 		using float_type = GetUnderlyingType<T>::value;
 		return !utils::isfinite(this->x) || utils::abs(this->x) > utils::cast<float_type>(0.5);
 	}
@@ -54,20 +57,16 @@ public:
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The next term of the series.
      */
-	T next() override {
+	T next(K n, T& state) const override {
 
 		// Recurrence relation derived from the arcsin expansion with substitution x -> 2x and scaling factor 0.5
-		if (this->n == 0) this->current_state = this->x;
-		else this->current_state *= this->x * this->x * utils::cast<T>(2 * this->n * utils::fma(size_t{2},this->n-1,size_t{1}) *
-		utils::fma(size_t{2},this->n-1,size_t{1})) / utils::cast<T>(this->n * this->n * utils::fma(size_t{2},this->n,size_t{1}));
-
-		this->n+=1;
-		return this->current_state;
+		if (n == 0) state = this->x;
+		else state *= this->x * this->x * utils::cast<T>(2 * n * utils::fma(static_cast<size_t>(2),static_cast<size_t>(n-1),static_cast<size_t>(1)) *
+		utils::fma(static_cast<size_t>(2),static_cast<size_t>(n-1),static_cast<size_t>(1))) / utils::cast<T>(n * n * utils::fma(static_cast<size_t>(2),static_cast<size_t>(n),static_cast<size_t>(1)));
+		return state;
 	}
 
 };
 
-} //namespace shanks::iters
-} //namespace shanks
-
+}} //namespace shanks
 #endif

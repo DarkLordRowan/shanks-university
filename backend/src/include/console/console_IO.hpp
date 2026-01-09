@@ -135,11 +135,11 @@ InputType inline console_IO<InputType>::input(const std::string& var_name){
 				// Bound checks for enumerations
                 if constexpr (std::is_same<InputType, shanks::series::series_id_t>::value){
 
-                    if(x >= shanks::series::series_id_t::series_id_t_count) throw std::out_of_range("Series with this id is not implemented");
+                    if(static_cast<size_t>(x) >= static_cast<size_t>(shanks::series::series_id_t::series_id_t_count)) throw std::out_of_range("Series with this id is not implemented");
 
                 } else if constexpr (std::is_same<InputType, shanks::algos::transformation_id_t>::value){
 
-                    if(x >= shanks::algos::transformation_id_t::transformation_id_t_count) throw std::out_of_range("Series with this id is not implemented");
+                    if(x >= shanks::algos::transformation_id_t::transformation_id_t_count) throw std::out_of_range("Transformation with this id is not implemented");
 
                 } else if constexpr (std::is_same<InputType, test_function_id_t>::value){
 

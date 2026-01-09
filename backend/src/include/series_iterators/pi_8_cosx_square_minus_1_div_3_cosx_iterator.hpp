@@ -2,7 +2,7 @@
 #define PI_8_COSX_SQUARE_MINUS_1_DIV_3_COSX_ITERATOR_HPP
 #pragma once
 
-#include "series_base_iterator.hpp"
+#include "../series_base.hpp"
 #include <numbers>
 
 /**
@@ -11,7 +11,7 @@
  * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  */
 
-namespace shanks { namespace iters {
+namespace shanks { namespace series {
 
 /**
  * @brief Fourier-like series iterator for the trigonometric function f(x) = (pi/8)*cos^2(x) - cos(x)/3.
@@ -24,21 +24,24 @@ namespace shanks { namespace iters {
  * @tparam K Unsigned integral type for indexing (UnsignedIntLike).
  */
 template<AcceptedLike T, UnsignedIntLike K>
-class pi_8_cosx_square_minus_1_div_3_cosx_iterator final : public series_base_iterator<T, K>{
+class pi_8_cosx_square_minus_1_div_3_cosx_iterator final : public series_base_succ<T, K>{
 public:
 
     /**
      * @brief Default constructor for pi_8_cosx_square_minus_1_div_3_cosx_iterator.
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      */
-	pi_8_cosx_square_minus_1_div_3_cosx_iterator() : series_base_iterator<T, K>() {}
+	pi_8_cosx_square_minus_1_div_3_cosx_iterator(T x) : series_base_succ<T, K>(x) {
+	    if (this->is_invalid())
+			throw std::invalid_argument("Invalid series argument");
+	}
 
     /**
      * @brief Retrieves the analytic sum of the series.
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The value of (pi/8)*cos^2(x) - cos(x)/3.
      */
-	T sum() const override{
+	T get_sum() const override{
 		return utils::cast<T>(std::numbers::pi * 0.125) * utils::cos(this->x) * utils::cos(this->x) - utils::cos(this->x) / utils::cast<T>(3);
 	}
 
@@ -47,7 +50,7 @@ public:
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return true if |x| > pi/2 or non-finite, false otherwise.
      */
-	bool check_validity() const override {
+	bool is_invalid() const override {
 		using float_type = GetUnderlyingType<T>::value;
 		return !utils::isfinite(this->x) || utils::abs(this->x) > utils::cast<float_type>(std::numbers::pi * 0.5);
 	}
@@ -57,18 +60,15 @@ public:
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The next term of the series.
      */
-	T next() override {
+	T next(K n, T& state) const override {
 
 		// General term formula involving alternating higher-order cosine harmonics
-		this->current_state = utils::minus_one_raised_to_power_n<T, K>(this->n) * utils::cos(utils::cast<T>(utils::fma(size_t{2},this->n,size_t{3})) * this->x) /
-		utils::cast<T>(utils::fma(size_t{2},this->n,size_t{1}) * utils::fma(size_t{2},this->n,size_t{3}) * utils::fma(size_t{2},this->n,size_t{5}));
-		this->n += 1;
-		return this->current_state;
+		state = utils::minus_one_raised_to_power_n<T, K>(n) * utils::cos(utils::cast<T>(utils::fma(static_cast<size_t>(2),static_cast<size_t>(n),static_cast<size_t>(3))) * this->x) /
+		utils::cast<T>(utils::fma(static_cast<size_t>(2),static_cast<size_t>(n),static_cast<size_t>(1)) * utils::fma(static_cast<size_t>(2),static_cast<size_t>(n),static_cast<size_t>(3)) * utils::fma(static_cast<size_t>(2),static_cast<size_t>(n),static_cast<size_t>(5)));
+		return state;
 	}
 
 };
 
-} //namespace shanks::iters
-} //namespace shanks
-
+}} //namespace shanks
 #endif

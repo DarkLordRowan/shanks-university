@@ -8,7 +8,7 @@
  * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  */
 
-namespace shanks { namespace iters {
+namespace shanks { namespace series {
 
 /**
  * @brief Enumeration of all supported series iterators.
@@ -26,9 +26,7 @@ enum class series_iterator_id_t {
     series_iterator_id_t_count
 };
 
-} //namespace shanks::iters
-} //namespace shanks
-
+}} //namespace shanks
 // Include all specific iterator definitions
 #include "abs_sin_x_minus_2_div_pi_iterator.hpp"
 #include "arcsinh_x_iterator.hpp"
@@ -37,9 +35,9 @@ enum class series_iterator_id_t {
 #include "arcsin_x_iterator.hpp"
 #include "arctanh_x2_iterator.hpp"
 #include "arctanh_x_iterator.hpp"
-#include "arctg_x2_iterator.hpp"
-#include "arctg_x3_iterator.hpp"
-#include "arctg_x_iterator.hpp"
+#include "arctan_x2_iterator.hpp"
+#include "arctan_x3_iterator.hpp"
+#include "arctan_x_iterator.hpp"
 #include "bin_iterator.hpp"
 #include "ci_x_iterator.hpp"
 #include "cos3xmin1_div_xsquare_iterator.hpp"

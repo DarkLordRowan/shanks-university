@@ -2,7 +2,7 @@
 #define SIN_ITERATOR_HPP
 #pragma once
 
-#include "series_base_iterator.hpp"
+#include "../series_base.hpp"
 
 /**
  * @file sin_iterator.hpp
@@ -10,7 +10,7 @@
  * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  */
 
-namespace shanks { namespace iters {
+namespace shanks { namespace series {
 
 /**
  * @brief Taylor series iterator for the sine function sin(x).
@@ -23,48 +23,47 @@ namespace shanks { namespace iters {
  * @tparam K Unsigned integral type for indexing (UnsignedIntLike).
  */
 template<AcceptedLike T, UnsignedIntLike K>
-class sin_iterator final : public series_base_iterator<T, K>{
+class sin_iterator final : public series_base_succ<T, K>{
 public:
 
     /**
      * @brief Default constructor for sin_iterator.
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      */
-	sin_iterator() : series_base_iterator<T, K>() {}
+	sin_iterator(T x) : series_base_succ<T, K>(x) {
+	    if (this->is_invalid())
+			throw std::invalid_argument("Invalid series argument");
+	}
 
     /**
      * @brief Retrieves the analytic sum of the series (sin(x)).
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The value of sin(x).
      */
-	T sum() const override{ return utils::sin(this->x);}
+	T get_sum() const override{ return utils::sin(this->x);}
 
     /**
      * @brief Validates the current evaluation point x.
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return true if x is non-finite, false otherwise.
      */
-	bool check_validity() const override { return !utils::isfinite(this->x); }
+	bool is_invalid() const override { return !utils::isfinite(this->x); }
 
     /**
      * @brief Computes the next term in the sin(x) Taylor expansion.
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The next term of the series.
      */
-	T next() override {
+	T next(K n, T& state) const override {
 
 		// Recurrence logic for the alternating odd-power terms of the sine expansion
-		if (this->n == 0) this->current_state = this->x;
-		else this->current_state *= utils::cast<T>(-1.0) * this->x * this->x /
-		utils::cast<T>(utils::fma(size_t{2},this->n,size_t{1}) * 2 * this->n);
-
-		this->n+=1;
-		return this->current_state;
+		if (n == 0) state = this->x;
+		else state *= utils::cast<T>(-1.0) * this->x * this->x /
+		utils::cast<T>(utils::fma(static_cast<size_t>(2),static_cast<size_t>(n),static_cast<size_t>(1)) * 2 * n);
+		return state;
 	}
 
 };
 
-} //namespace shanks::iters
-} //namespace shanks
-
+}} //namespace shanks
 #endif

@@ -2,7 +2,7 @@
 #define COS_ITERATOR_HPP
 #pragma once
 
-#include "series_base_iterator.hpp"
+#include "../series_base.hpp"
 
 /**
  * @file cos_iterator.hpp
@@ -10,7 +10,7 @@
  * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  */
 
-namespace shanks { namespace iters {
+namespace shanks { namespace series {
 
 /**
  * @brief Taylor series iterator for the cosine function cos(x).
@@ -23,47 +23,46 @@ namespace shanks { namespace iters {
  * @tparam K Unsigned integral type for indexing (UnsignedIntLike).
  */
 template<AcceptedLike T, UnsignedIntLike K>
-class cos_iterator final : public series_base_iterator<T, K>{
+class cos_iterator final : public series_base_succ<T, K>{
 public:
 
     /**
      * @brief Default constructor for cos_iterator.
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      */
-	cos_iterator() : series_base_iterator<T, K>() {}
+	cos_iterator(T x) : series_base_succ<T, K>(x) {
+	    if (this->is_invalid())
+			throw std::invalid_argument("Invalid series argument");
+	}
 
     /**
      * @brief Retrieves the analytic sum of the series (cos(x)).
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The value of cos(x).
      */
-	T sum() const override{ return utils::cos(this->x);}
+	T get_sum() const override{ return utils::cos(this->x);}
 
     /**
      * @brief Validates the current evaluation point x.
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return true if x is non-finite, false otherwise.
      */
-	bool check_validity() const override {return !utils::isfinite(this->x);}
+	bool is_invalid() const override {return !utils::isfinite(this->x);}
 
     /**
      * @brief Computes the next term in the cos(x) Taylor expansion.
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The next term of the series.
      */
-	T next() override {
+	T next(K n, T& state) const override {
 
 		// Recurrence logic for the alternating even-power terms of the cosine expansion
-		if (this->n == 0) this->current_state = utils::cast<T>(1);
-		else this->current_state *= utils::cast<T>(-1) * this->x * this->x / utils::cast<T>(this->n * (static_cast<K>(4) * this->n - static_cast<K>(2)));
-
-		this->n+=1;
-		return this->current_state;
+		if (n == 0) state = utils::cast<T>(1);
+		else state *= utils::cast<T>(-1) * this->x * this->x / utils::cast<T>(n * (static_cast<K>(4) * n - static_cast<K>(2)));
+		return state;
 	}
 
 };
 
-} //namespace shanks::iters
-} //namespace shanks
-
+}} //namespace shanks
 #endif

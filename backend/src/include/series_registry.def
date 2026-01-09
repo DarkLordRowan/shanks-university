@@ -1,4 +1,3 @@
-// Auto-generated series registry
 // MACROS required:
 // SERIES_ENTRY(snake_name, "CamelName")
 // SERIES_LAST(snake_name, "CamelName")
@@ -10,9 +9,9 @@ SERIES_ENTRY(arcsin_x, "ArcsinXSeries")
 SERIES_ENTRY(arcsinh_x, "ArcsinhXSeries")
 SERIES_ENTRY(arctanh_x2, "ArtanhX2Series")
 SERIES_ENTRY(arctanh_x, "ArtanhXSeries")
-SERIES_ENTRY(arctg_x2, "ArctanX2Series")
-SERIES_ENTRY(arctg_x3, "ArctanX3Series")
-SERIES_ENTRY(arctg_x, "ArctanXSeries")
+SERIES_ENTRY(arctan_x2, "ArctanX2Series")
+SERIES_ENTRY(arctan_x3, "ArctanX3Series")
+SERIES_ENTRY(arctan_x, "ArctanXSeries")
 SERIES_ENTRY(bin, "BinSeries")
 SERIES_ENTRY(ci_x, "CiXSeries")
 SERIES_ENTRY(cos3xmin1_div_xsquare, "Cos3xMinus1DivXsquareSeries")

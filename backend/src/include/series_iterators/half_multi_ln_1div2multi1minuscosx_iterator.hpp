@@ -2,7 +2,7 @@
 #define HALF_MULTI_LN_1DIV2MULTI1MISUSCOSX_ITERATOR_HPP
 #pragma once
 
-#include "series_base_iterator.hpp"
+#include "../series_base.hpp"
 #include <numbers>
 
 /**
@@ -11,7 +11,7 @@
  * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  */
 
-namespace shanks { namespace iters {
+namespace shanks { namespace series {
 
 /**
  * @brief Fourier series iterator for the function f(x) = -0.5 * ln(2 - 2*cos(x)).
@@ -24,28 +24,31 @@ namespace shanks { namespace iters {
  * @tparam K Unsigned integral type for indexing (UnsignedIntLike).
  */
 template<AcceptedLike T, UnsignedIntLike K>
-class half_multi_ln_1div2multi1minuscosx_iterator final : public series_base_iterator<T, K>{
+class half_multi_ln_1div2multi1minuscosx_iterator final : public series_base_succ<T, K>{
 public:
 
     /**
      * @brief Default constructor for half_multi_ln_1div2multi1minuscosx_iterator.
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      */
-	half_multi_ln_1div2multi1minuscosx_iterator() : series_base_iterator<T, K>() {}
+	half_multi_ln_1div2multi1minuscosx_iterator(T x) : series_base_succ<T, K>(x) {
+	    if (this->is_invalid())
+			throw std::invalid_argument("Invalid series argument");
+	}
 
     /**
      * @brief Retrieves the analytic sum of the series (-0.5 * ln(2 - 2*cos(x))).
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The value of -0.5 * ln(2 - 2*cos(x)).
      */
-	T sum() const override{ return utils::cast<T>(-0.5) * utils::log(utils::cast<T>(2) - utils::cast<T>(2) * utils::cos(this->x)); }
+	T get_sum() const override{ return utils::cast<T>(-0.5) * utils::log(utils::cast<T>(2) - utils::cast<T>(2) * utils::cos(this->x)); }
 
     /**
      * @brief Validates the current evaluation point x.
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return true if |x| >= pi or non-finite, false otherwise.
      */
-	bool check_validity() const override {
+	bool is_invalid() const override {
 		using float_type = GetUnderlyingType<T>::value;
 		return !utils::isfinite(this->x) || utils::abs(this->x) >= utils::cast<float_type>(std::numbers::pi);
 	}
@@ -55,18 +58,15 @@ public:
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The next term of the series.
      */
-	T next() override {
+	T next(K n, T& state) const override {
 
 		// Fourier series term: cos((n+1)x) / (n+1)
-		this->current_state = utils::cos(utils::cast<T>(this->n+1) * this->x) / utils::cast<T>(this->n+1);
-		this->n+=1;
+		state = utils::cos(utils::cast<T>(n+1) * this->x) / utils::cast<T>(n+1);
 
-		return this->current_state;
+		return state;
 	}
 
 };
 
-} //namespace shanks::iters
-} //namespace shanks
-
+}} //namespace shanks
 #endif

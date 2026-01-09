@@ -12,65 +12,14 @@ namespace shanks{ namespace algos{
 
 /**
  * @brief Enumeration of all supported sequence transformation IDs.
- * 
- * Each ID corresponds to a specific implementation or variant of a sequence acceleration algorithm.
- * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+ * Generated automatically from transformation_registry.def.
  */
 enum class transformation_id_t {
-	        		     null_transformation_id,
-             anderson_acceleration_algorithm_id,
-              brezinski_theta_transformation_id,
-                   chang_wynn_transformation_id,
-                 drummond_d_u_transformation_id,
-                 drummond_d_t_transformation_id,
-            drummond_d_t_wave_transformation_id,
-                 drummond_d_v_transformation_id,
-            drummond_d_v_wave_transformation_id,
-                            j_transformation_id,
-       recurrent_drummond_d_u_transformation_id,
-       recurrent_drummond_d_t_transformation_id,
-       recurrent_drummond_d_v_transformation_id,
-  recurrent_drummond_d_t_wave_transformation_id,
-  recurrent_drummond_d_v_wave_transformation_id,
-                  ford_sidi_2_transformation_id,
-                  ford_sidi_3_transformation_id,
-               levin_sidi_l_u_transformation_id,
-               levin_sidi_l_t_transformation_id,
-          levin_sidi_l_t_wave_transformation_id,
-               levin_sidi_l_v_transformation_id,
-          levin_sidi_l_v_wave_transformation_id,
-     recurrent_levin_sidi_l_u_transformation_id,
-     recurrent_levin_sidi_l_t_transformation_id,
-     recurrent_levin_sidi_l_v_transformation_id,
-recurrent_levin_sidi_l_t_wave_transformation_id,
-recurrent_levin_sidi_l_v_wave_transformation_id,
-               levin_sidi_m_u_transformation_id,
-               levin_sidi_m_t_transformation_id,
-          levin_sidi_m_t_wave_transformation_id,
-               levin_sidi_m_v_transformation_id,
-          levin_sidi_m_v_wave_transformation_id,
-               levin_sidi_s_u_transformation_id,
-               levin_sidi_s_t_transformation_id,
-          levin_sidi_s_t_wave_transformation_id,
-               levin_sidi_s_v_transformation_id,
-          levin_sidi_s_v_wave_transformation_id,
-     recurrent_levin_sidi_s_u_transformation_id,
-     recurrent_levin_sidi_s_t_transformation_id,
-     recurrent_levin_sidi_s_v_transformation_id,
-recurrent_levin_sidi_s_t_wave_transformation_id,
-recurrent_levin_sidi_s_v_wave_transformation_id,
-                     lubkin_w_transformation_id,
-                   richardson_transformation_id,
-                       shanks_transformation_id,
-           shanks_alternating_transformation_id,
-                      weniger_transformation_id,
-               wynn_epsilon_1_transformation_id,
-               wynn_epsilon_2_transformation_id,
-               wynn_epsilon_3_transformation_id,
-                 wynn_rho_rho_transformation_id,
-         wynn_rho_generalized_transformation_id,
-           wynn_rho_gamma_rho_transformation_id,
-                      transformation_id_t_count,
+    null_transformation_id,
+#define TRANSFORMATION_ENTRY(id, name, ...) id,
+#include "transformation_registry.def"
+#undef TRANSFORMATION_ENTRY
+    transformation_id_t_count,
 };
 
 } //namespace shanks::algos
@@ -96,5 +45,69 @@ recurrent_levin_sidi_s_v_wave_transformation_id,
 #include "transformations/wynn_rho_algorithm.hpp"
 #include "transformations/anderson_acceleration_algorithm.hpp"
 #include "transformations/j_transformation_algorithm.hpp"
+
+#include <string>
+#include <vector>
+#include <memory>
+#include <functional>
+
+namespace shanks { namespace algos {
+
+/**
+ * @brief Metadata and factory logic for transformations.
+ */
+template<AcceptedLike T, UnsignedIntLike K>
+class transformation_registry {
+public:
+    using Factory = std::function<std::unique_ptr<series_acceleration<T, K>>()>;
+    
+    struct entry {
+        transformation_id_t id;
+        std::string name;
+        Factory factory;
+    };
+
+    static const std::vector<entry>& get_entries() {
+        static const std::vector<entry> entries = {
+#define TRANSFORMATION_ENTRY(id, name, ...) { transformation_id_t::id, name, []() -> std::unique_ptr<series_acceleration<T, K>> __VA_ARGS__ },
+#include "transformation_registry.def"
+#undef TRANSFORMATION_ENTRY
+        };
+        return entries;
+    }
+
+    static std::unique_ptr<series_acceleration<T, K>> create(transformation_id_t id) {
+        for (const auto& e : get_entries()) {
+            if (e.id == id) return e.factory();
+        }
+        throw std::domain_error("Invalid transformation ID");
+    }
+
+    static std::unique_ptr<series_acceleration<T, K>> create_by_index(size_t index) {
+        const auto& entries = get_entries();
+        if (index >= entries.size()) throw std::out_of_range("Transformation index out of range");
+        return entries[index].factory();
+    }
+};
+
+struct transformation_registry_metadata {
+    static std::vector<std::string> get_names() {
+        return {
+#define TRANSFORMATION_ENTRY(id, name, ...) name,
+#include "transformation_registry.def"
+#undef TRANSFORMATION_ENTRY
+        };
+    }
+
+    static std::vector<transformation_id_t> get_ids() {
+        return {
+#define TRANSFORMATION_ENTRY(id, name, ...) transformation_id_t::id,
+#include "transformation_registry.def"
+#undef TRANSFORMATION_ENTRY
+        };
+    }
+};
+
+}} // namespace shanks::algos
 
 #endif

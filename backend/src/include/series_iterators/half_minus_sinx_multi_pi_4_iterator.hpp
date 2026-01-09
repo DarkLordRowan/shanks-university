@@ -2,7 +2,7 @@
 #define HALF_MINUS_SINX_MULTI_PI_4_ITERATOR_HPP
 #pragma once
 
-#include "series_base_iterator.hpp"
+#include "../series_base.hpp"
 #include <numbers>
 
 /**
@@ -11,7 +11,7 @@
  * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  */
 
-namespace shanks { namespace iters {
+namespace shanks { namespace series {
 
 /**
  * @brief Series iterator for the function f(x) = 0.5 - (pi/4) * sin(x).
@@ -24,28 +24,31 @@ namespace shanks { namespace iters {
  * @tparam K Unsigned integral type for indexing (UnsignedIntLike).
  */
 template<AcceptedLike T, UnsignedIntLike K>
-class half_minus_sinx_multi_pi_4_iterator final : public series_base_iterator<T, K>{
+class half_minus_sinx_multi_pi_4_iterator final : public series_base_succ<T, K>{
 public:
 
     /**
      * @brief Default constructor for half_minus_sinx_multi_pi_4_iterator.
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      */
-	half_minus_sinx_multi_pi_4_iterator() : series_base_iterator<T, K>() {}
+	half_minus_sinx_multi_pi_4_iterator(T x) : series_base_succ<T, K>(x) {
+	    if (this->is_invalid())
+			throw std::invalid_argument("Invalid series argument");
+	}
 
     /**
      * @brief Retrieves the analytic sum of the series (0.5 - (pi/4)*sin(x)).
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The value of 0.5 - (pi/4)*sin(x).
      */
-	T sum() const override{ return utils::cast<T>(0.5) - utils::cast<T>(std::numbers::pi * 0.25) * utils::sin(this->x); }
+	T get_sum() const override{ return utils::cast<T>(0.5) - utils::cast<T>(std::numbers::pi * 0.25) * utils::sin(this->x); }
 
     /**
      * @brief Validates the current evaluation point x.
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return true if x is outside [0, pi/2] or non-finite, false otherwise.
      */
-	bool check_validity() const override {
+	bool is_invalid() const override {
 		using float_type = GetUnderlyingType<T>::value;
 		if constexpr (isComplexLike<T>::value){
     		return !utils::isfinite(this->x) || this->x.real() < utils::cast<float_type>(0) || this->x.real() > utils::cast<float_type>(0.5 * std::numbers::pi);
@@ -59,18 +62,14 @@ public:
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The next term of the series.
      */
-	T next() override {
+	T next(K n, T& state) const override {
 		// Specific term formula for the expansion of 0.5 - (pi/4)*sin(x)
-		this->current_state = utils::cos(utils::cast<T>(utils::fma(size_t{2},this->n,size_t{2})) * this->x) /
-		utils::cast<T>(utils::fma(size_t{2},this->n,size_t{1}) * utils::fma(size_t{2},this->n,size_t{3}));
-
-		this->n+=1;
-		return this->current_state;
+		state = utils::cos(utils::cast<T>(utils::fma(static_cast<size_t>(2),static_cast<size_t>(n),static_cast<size_t>(2))) * this->x) /
+		utils::cast<T>(utils::fma(static_cast<size_t>(2),static_cast<size_t>(n),static_cast<size_t>(1)) * utils::fma(static_cast<size_t>(2),static_cast<size_t>(n),static_cast<size_t>(3)));
+		return state;
 	}
 
 };
 
-} //namespace shanks::iters
-} //namespace shanks
-
+}} //namespace shanks
 #endif

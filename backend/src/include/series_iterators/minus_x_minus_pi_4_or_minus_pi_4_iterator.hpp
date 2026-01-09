@@ -2,7 +2,7 @@
 #define MINUS_X_MINUS_PI_4_OR_MINUS_PI_4_ITERATOR_HPP
 #pragma once
 
-#include "series_base_iterator.hpp"
+#include "../series_base.hpp"
 #include <numbers>
 
 /**
@@ -11,7 +11,7 @@
  * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  */
 
-namespace shanks { namespace iters {
+namespace shanks { namespace series {
 
 /**
  * @brief Fourier series iterator for the piecewise function f(x) = -x if -pi <= x < 0, else 0 if 0 <= x <= pi.
@@ -23,21 +23,24 @@ namespace shanks { namespace iters {
  * @tparam K Unsigned integral type for indexing (UnsignedIntLike).
  */
 template<AcceptedLike T, UnsignedIntLike K>
-class minus_x_minus_pi_4_or_minus_pi_4_iterator final : public series_base_iterator<T, K>{
+class minus_x_minus_pi_4_or_minus_pi_4_iterator final : public series_base_succ<T, K>{
 public:
 
     /**
      * @brief Default constructor for minus_x_minus_pi_4_or_minus_pi_4_iterator.
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      */
-	minus_x_minus_pi_4_or_minus_pi_4_iterator() : series_base_iterator<T, K>() {}
+	minus_x_minus_pi_4_or_minus_pi_4_iterator(T x) : series_base_succ<T, K>(x) {
+	    if (this->is_invalid())
+			throw std::invalid_argument("Invalid series argument");
+	}
 
     /**
      * @brief Retrieves the analytic sum of the series (the value of the piecewise function).
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The value of the piecewise function at x.
      */
-	T sum() const override{
+	T get_sum() const override{
 		using float_type = GetUnderlyingType<T>::value;
 
 		if constexpr (isComplexLike<T>::value){
@@ -56,7 +59,7 @@ public:
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return true if |x| >= pi or non-finite, false otherwise.
      */
-	bool check_validity() const override {
+	bool is_invalid() const override {
 		using float_type = GetUnderlyingType<T>::value;
 		return !utils::isfinite(this->x) || utils::abs(this->x) >= utils::cast<float_type>(std::numbers::pi);
 	}
@@ -66,24 +69,20 @@ public:
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The next term of the series.
      */
-	T next() override {
+	T next(K n, T& state) const override {
 
 		// First term is the DC component (constant term)
-		if (this->n == 0) this->current_state = utils::cast<T>(std::numbers::pi * 0.25);
+		if (n == 0) state = utils::cast<T>(std::numbers::pi * 0.25);
 		else {
 			const T piDiv3 = utils::cast<T>(std::numbers::pi) / utils::cast<T>(3);
-			const T cos_coef = (utils::minus_one_raised_to_power_n<T, K>(this->n) - utils::cast<T>(1)) / (utils::cast<T>(std::numbers::pi)*utils::cast<T>(this->n * this->n));
-			const T sin_coef = utils::minus_one_raised_to_power_n<T, K>(this->n) / utils::cast<T>(this->n);
-			this->current_state = cos_coef * utils::cos(utils::cast<T>(this->n) * this->x) + sin_coef * utils::sin(utils::cast<T>(this->n) * this->x);
+			const T cos_coef = (utils::minus_one_raised_to_power_n<T, K>(n) - utils::cast<T>(1)) / (utils::cast<T>(std::numbers::pi)*utils::cast<T>(n * n));
+			const T sin_coef = utils::minus_one_raised_to_power_n<T, K>(n) / utils::cast<T>(n);
+			state = cos_coef * utils::cos(utils::cast<T>(n) * this->x) + sin_coef * utils::sin(utils::cast<T>(n) * this->x);
 		}
-
-		this->n+=1;
-		return this->current_state;
+		return state;
 	}
 
 };
 
-} //namespace shanks::iters
-} //namespace shanks
-
+}} //namespace shanks
 #endif

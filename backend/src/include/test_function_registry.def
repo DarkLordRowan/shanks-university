@@ -1,0 +1,9 @@
+// MACROS required:
+// TEST_FUNCTION_ENTRY(id, name, description)
+
+TEST_FUNCTION_ENTRY(cmp_sum_and_transform_id, "cmp_sum_and_transform", "showcases the difference between the transformed partial sum and the nontransformed one")
+TEST_FUNCTION_ENTRY(cmp_a_n_and_transform_id, "cmp_a_n_and_transform", "showcases the difference between series' terms and transformed ones")
+TEST_FUNCTION_ENTRY(transformation_remainder_id, "transformation_remainder", "showcases the difference between series' sum and transformed partial sum")
+TEST_FUNCTION_ENTRY(cmp_transformations_id, "cmp_transformations", "showcases the difference between convergence of sums accelerated by different transformations")
+TEST_FUNCTION_ENTRY(eval_transform_time_id, "eval_transform_time", "evaluates the time it takes to transform series")
+TEST_FUNCTION_ENTRY(test_all_transforms_id, "test_all_transforms", "test all algorithms on sum")

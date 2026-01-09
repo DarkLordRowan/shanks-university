@@ -2,7 +2,7 @@
 #define TWO_DEGREE_X_ITERATOR_HPP
 #pragma once
 
-#include "series_base_iterator.hpp"
+#include "../series_base.hpp"
 
 /**
  * @file two_degree_x_iterator.hpp
@@ -10,7 +10,7 @@
  * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  */
 
-namespace shanks { namespace iters {
+namespace shanks { namespace series {
 
 /**
  * @brief Taylor series iterator for the exponential function f(x) = 2^x.
@@ -23,47 +23,46 @@ namespace shanks { namespace iters {
  * @tparam K Unsigned integral type for indexing (UnsignedIntLike).
  */
 template<AcceptedLike T, UnsignedIntLike K>
-class two_degree_x_iterator final : public series_base_iterator<T, K>{
+class two_degree_x_iterator final : public series_base_succ<T, K>{
 public:
 
     /**
      * @brief Default constructor for two_degree_x_iterator.
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      */
-	two_degree_x_iterator() : series_base_iterator<T, K>() {}
+	two_degree_x_iterator(T x) : series_base_succ<T, K>(x) {
+	    if (this->is_invalid())
+			throw std::invalid_argument("Invalid series argument");
+	}
 
     /**
      * @brief Retrieves the analytic sum of the series (2^x).
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The value of 2^x.
      */
-	T sum() const override{ return utils::pow(utils::cast<T>(2), this->x);}
+	T get_sum() const override{ return utils::pow(utils::cast<T>(2), this->x);}
 
     /**
      * @brief Validates the current evaluation point x.
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return true if x is non-finite, false otherwise.
      */
-	bool check_validity() const override { return !utils::isfinite(this->x); }
+	bool is_invalid() const override { return !utils::isfinite(this->x); }
 
     /**
      * @brief Computes the next term in the 2^x Taylor expansion.
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The next term of the series.
      */
-	T next() override {
+	T next(K n, T& state) const override {
 
 		// Each term is (x * ln(2))^n / n!, computed recursively
-		if (this->n == 0) this->current_state = utils::cast<T>(1);
-		else this->current_state *= this->x * utils::log(utils::cast<T>(2)) / utils::cast<T>(this->n);
-
-		this->n+=1;
-		return this->current_state;
+		if (n == 0) state = utils::cast<T>(1);
+		else state *= this->x * utils::log(utils::cast<T>(2)) / utils::cast<T>(n);
+		return state;
 	}
 
 };
 
-} //namespace shanks::iters
-} //namespace shanks
-
+}} //namespace shanks
 #endif

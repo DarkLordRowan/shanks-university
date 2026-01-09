@@ -2,7 +2,7 @@
 #define INVERSE_SQRT_1M4X_ITERATOR_HPP
 #pragma once
 
-#include "series_base_iterator.hpp"
+#include "../series_base.hpp"
 
 /**
  * @file inverse_sqrt_1m4x_iterator.hpp
@@ -10,7 +10,7 @@
  * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  */
 
-namespace shanks { namespace iters {
+namespace shanks { namespace series {
 
 /**
  * @brief Taylor series iterator for the function f(x) = 1 / sqrt(1 - 4x).
@@ -23,28 +23,31 @@ namespace shanks { namespace iters {
  * @tparam K Unsigned integral type for indexing (UnsignedIntLike).
  */
 template<AcceptedLike T, UnsignedIntLike K>
-class inverse_sqrt_1m4x_iterator final : public series_base_iterator<T, K>{
+class inverse_sqrt_1m4x_iterator final : public series_base_succ<T, K>{
 public:
 
     /**
      * @brief Default constructor for inverse_sqrt_1m4x_iterator.
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      */
-	inverse_sqrt_1m4x_iterator() : series_base_iterator<T, K>() {}
+	inverse_sqrt_1m4x_iterator(T x) : series_base_succ<T, K>(x) {
+	    if (this->is_invalid())
+			throw std::invalid_argument("Invalid series argument");
+	}
 
     /**
      * @brief Retrieves the analytic sum of the series (1 / sqrt(1 - 4x)).
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The value of 1 / sqrt(1 - 4x).
      */
-	T sum() const override{ return utils::cast<T>(1) / utils::sqrt(utils::cast<T>(1) - utils::cast<T>(4) * this->x);}
+	T get_sum() const override{ return utils::cast<T>(1) / utils::sqrt(utils::cast<T>(1) - utils::cast<T>(4) * this->x);}
 
     /**
      * @brief Validates the current evaluation point x.
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return true if |x| >= 0.25 or non-finite, false otherwise.
      */
-	bool check_validity() const override {
+	bool is_invalid() const override {
 		using float_type = GetUnderlyingType<T>::value;
 		return !utils::isfinite(this->x) || utils::abs(this->x) > utils::cast<float_type>(0.25);
 	}
@@ -54,19 +57,15 @@ public:
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The next term of the series.
      */
-	T next() override {
+	T next(K n, T& state) const override {
 
 		// Terms of this series are the central binomial coefficients C(2n, n) scaled by x^n
-		if (this->n == 0) this->current_state = utils::cast<T>(1);
-		else this->current_state *= this->x * utils::cast<T>(2 * utils::fma(size_t{2},this->n-1,size_t{1})) / utils::cast<T>(this->n);
-
-		this->n+=1;
-		return this->current_state;
+		if (n == 0) state = utils::cast<T>(1);
+		else state *= this->x * utils::cast<T>(2 * utils::fma(static_cast<size_t>(2),static_cast<size_t>(n-1),static_cast<size_t>(1))) / utils::cast<T>(n);
+		return state;
 	}
 
 };
 
-} //namespace shanks::iters
-} //namespace shanks
-
+}} //namespace shanks
 #endif

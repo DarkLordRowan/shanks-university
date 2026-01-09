@@ -2,7 +2,7 @@
 #define ONE_TWELFTH_3X2_PI2_ITERATOR_HPP
 #pragma once
 
-#include "series_base_iterator.hpp"
+#include "../series_base.hpp"
 #include <numbers>
 
 /**
@@ -11,7 +11,7 @@
  * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  */
 
-namespace shanks { namespace iters {
+namespace shanks { namespace series {
 
 /**
  * @brief Fourier series iterator for the quadratic function f(x) = (3x^2 - pi^2) / 12.
@@ -24,21 +24,24 @@ namespace shanks { namespace iters {
  * @tparam K Unsigned integral type for indexing (UnsignedIntLike).
  */
 template<AcceptedLike T, UnsignedIntLike K>
-class one_twelfth_3x2_pi2_iterator final : public series_base_iterator<T, K>{
+class one_twelfth_3x2_pi2_iterator final : public series_base_succ<T, K>{
 public:
 
     /**
      * @brief Default constructor for one_twelfth_3x2_pi2_iterator.
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      */
-	one_twelfth_3x2_pi2_iterator() : series_base_iterator<T, K>() {}
+	one_twelfth_3x2_pi2_iterator(T x) : series_base_succ<T, K>(x) {
+	    if (this->is_invalid())
+			throw std::invalid_argument("Invalid series argument");
+	}
 
     /**
      * @brief Retrieves the analytic sum of the series ((3x^2 - pi^2) / 12).
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The value of the quadratic function at x.
      */
-	T sum() const override{
+	T get_sum() const override{
 		return utils::cast<T>(1) / utils::cast<T>(12) * (utils::cast<T>(3) * this->x * this->x - utils::cast<T>(std::numbers::pi) * utils::cast<T>(std::numbers::pi));
 	}
 
@@ -47,7 +50,7 @@ public:
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return true if |x| > pi or non-finite, false otherwise.
      */
-	bool check_validity() const override {
+	bool is_invalid() const override {
 		using float_type = GetUnderlyingType<T>::value;
 		return !utils::isfinite(this->x) || utils::abs(this->x) > utils::cast<float_type>(std::numbers::pi);
 	}
@@ -57,17 +60,14 @@ public:
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The next term of the series.
      */
-	T next() override {
+	T next(K n, T& state) const override {
 		// General Fourier term: (-1)^n * cos(nx) / n^2
-		this->current_state = utils::minus_one_raised_to_power_n<T, K>(this->n+1) *
-		utils::cos(utils::cast<T>(this->n+1) * this->x) / utils::cast<T>((this->n + 1) * (this->n + 1));
-		this->n += 1;
-		return this->current_state;
+		state = utils::minus_one_raised_to_power_n<T, K>(n+1) *
+		utils::cos(utils::cast<T>(n+1) * this->x) / utils::cast<T>((n + 1) * (n + 1));
+		return state;
 	}
 
 };
 
-} //namespace shanks::iters
-} //namespace shanks
-
+}} //namespace shanks
 #endif

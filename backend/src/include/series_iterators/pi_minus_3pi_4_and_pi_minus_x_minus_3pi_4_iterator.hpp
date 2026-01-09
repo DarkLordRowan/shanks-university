@@ -2,8 +2,8 @@
 #define PI_MINUS_3PI_4_AND_PI_MINUS_X_MINUS_3PI_4_ITERATOR_HPP
 #pragma once
 
+#include "../series_base.hpp"
 #include <numbers>
-#include "series_base_iterator.hpp"
 
 /**
  * @file pi_minus_3pi_4_and_pi_minus_x_minus_3pi_4_iterator.hpp
@@ -11,7 +11,7 @@
  * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  */
 
-namespace shanks { namespace iters {
+namespace shanks { namespace series {
 
 /**
  * @brief Fourier series iterator for the piecewise function f(x) = pi/4 if x < 0, else pi/4 - x if x >= 0.
@@ -24,21 +24,24 @@ namespace shanks { namespace iters {
  * @tparam K Unsigned integral type for indexing (UnsignedIntLike).
  */
 template<AcceptedLike T, UnsignedIntLike K>
-class pi_minus_3pi_4_and_pi_minus_x_minus_3pi_4_iterator final : public series_base_iterator<T, K>{
+class pi_minus_3pi_4_and_pi_minus_x_minus_3pi_4_iterator final : public series_base_succ<T, K>{
 public:
 
     /**
      * @brief Default constructor for pi_minus_3pi_4_and_pi_minus_x_minus_3pi_4_iterator.
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      */
-	pi_minus_3pi_4_and_pi_minus_x_minus_3pi_4_iterator() : series_base_iterator<T, K>() {}
+	pi_minus_3pi_4_and_pi_minus_x_minus_3pi_4_iterator(T x) : series_base_succ<T, K>(x) {
+	    if (this->is_invalid())
+			throw std::invalid_argument("Invalid series argument");
+	}
 
     /**
      * @brief Retrieves the analytic sum of the series (the piecewise function value).
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The value of the piecewise function at current point x.
      */
-	T sum() const override{
+	T get_sum() const override{
 
 		using float_type = GetUnderlyingType<T>::value;
 
@@ -58,7 +61,7 @@ public:
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return true if |x| >= pi or non-finite, false otherwise.
      */
-	bool check_validity() const override {
+	bool is_invalid() const override {
 		using float_type = GetUnderlyingType<T>::value;
 		return !utils::isfinite(this->x) || utils::abs(this->x) >= utils::cast<float_type>(std::numbers::pi);
 	}
@@ -68,20 +71,17 @@ public:
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The next term of the series.
      */
-	T next() override {
+	T next(K n, T& state) const override {
 
 		// General Fourier term formula involving alternating cosine and sine components
-		const K n1 = this->n+1;
-		this->current_state =
-		utils::cos(utils::cast<T>(n1) * this->x) * (utils::cast<T>(1) + utils::minus_one_raised_to_power_n<T, K>(this->n)) / (utils::cast<T>(std::numbers::pi) * utils::cast<T>(n1 * n1)) +
+		const K n1 = n+1;
+		state =
+		utils::cos(utils::cast<T>(n1) * this->x) * (utils::cast<T>(1) + utils::minus_one_raised_to_power_n<T, K>(n)) / (utils::cast<T>(std::numbers::pi) * utils::cast<T>(n1 * n1)) +
 		utils::sin(utils::cast<T>(n1) * this->x) * utils::minus_one_raised_to_power_n<T,K>(n1) / utils::cast<T>(n1);
-		this->n += 1;
-		return this->current_state;
+		return state;
 	}
 
 };
 
-} //namespace shanks::iters
-} //namespace shanks
-
+}} //namespace shanks
 #endif

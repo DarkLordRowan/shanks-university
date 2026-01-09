@@ -2,7 +2,7 @@
 #define MINUS_ONE_NED_IN_N_ITERATOR_HPP
 #pragma once
 
-#include "series_base_iterator.hpp"
+#include "../series_base.hpp"
 
 /**
  * @file minus_one_ned_in_n_iterator.hpp
@@ -10,7 +10,7 @@
  * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  */
 
-namespace shanks { namespace iters {
+namespace shanks { namespace series {
 
 /**
  * @brief Series iterator for the function related to the Sophomore's dream integral.
@@ -23,45 +23,45 @@ namespace shanks { namespace iters {
  * @tparam K Unsigned integral type for indexing (UnsignedIntLike).
  */
 template<AcceptedLike T, UnsignedIntLike K>
-class minus_one_ned_in_n_iterator final : public series_base_iterator<T, K>{
+class minus_one_ned_in_n_iterator final : public series_base_succ<T, K>{
 public:
 
     /**
      * @brief Default constructor for minus_one_ned_in_n_iterator.
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      */
-	minus_one_ned_in_n_iterator() : series_base_iterator<T, K>() {}
+	minus_one_ned_in_n_iterator(T x) : series_base_succ<T, K>(x) {
+	    if (this->is_invalid())
+			throw std::invalid_argument("Invalid series argument");
+	}
 
     /**
      * @brief Retrieves the approximate sum of the series.
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The analytic sum.
      */
-	T sum() const override{ return this->x * utils::cast<T>(-0.78343051);}
+	T get_sum() const override{ return this->x * utils::cast<T>(-0.78343051);}
 
     /**
      * @brief Validates the current evaluation point x.
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return true if x is non-finite, false otherwise.
      */
-	bool check_validity() const override { return !utils::isfinite(this->x); }
+	bool is_invalid() const override { return !utils::isfinite(this->x); }
 
     /**
      * @brief Computes the next term in the series expansion.
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The next term of the series.
      */
-	T next() override {
+	T next(K n, T& state) const override {
 
 		// Formula for the n-th term: (-1)^(n+1) * x / (n+1)^(n+1)
-		this->current_state = utils::minus_one_raised_to_power_n<T, K>(this->n + 1) * this->x / utils::cast<T>(utils::pow(this->n+1, this->n+1));
-		this->n+=1;
-		return this->current_state;
+		state = utils::minus_one_raised_to_power_n<T, K>(n + 1) * this->x / utils::cast<T>(utils::pow(n+1, n+1));
+		return state;
 	}
 
 };
 
-} //namespace shanks::iters
-} //namespace shanks
-
+}} //namespace shanks
 #endif

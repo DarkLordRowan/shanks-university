@@ -2,6 +2,8 @@
 #define TRANSFORMATIONS_INFO_INTERFACES_HPP
 
 #include <string>
+#include <vector>
+#include <memory>
 #include "../methods.hpp"
 
 
@@ -22,7 +24,7 @@ public:
 	 * @brief Virtual destructor
 	 * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
 	 */
-	virtual ~ITransformationInfo();
+	virtual ~ITransformationInfo() = default;
 
 	/**
 	 * @brief Returns the unique transformation ID
@@ -41,319 +43,19 @@ public:
 };
 
 /**
- * brief Implementations for all transformations
+ * @brief Generic implementation of ITransformationInfo using metadata from registry
  */
-
-class AndersonAccelerationAlgorithmInfo : public ITransformationInfo {
+class DeclarativeTransformationInfo final : public ITransformationInfo {
 public:
-	shanks::algos::transformation_id_t getId() const override;
-	std::string getName() const override;
-};
+    DeclarativeTransformationInfo(shanks::algos::transformation_id_t id, std::string name)
+        : id_(id), name_(std::move(name)) {}
 
-class BrezinskiThetaTransformationInfo : public ITransformationInfo {
-public:
-	shanks::algos::transformation_id_t getId() const override;
-	std::string getName() const override;
-};
+    shanks::algos::transformation_id_t getId() const override { return id_; }
+    std::string getName() const override { return name_; }
 
-class ChangWynnTransformationInfo : public ITransformationInfo {
-public:
-	shanks::algos::transformation_id_t getId() const override;
-	std::string getName() const override;
-};
-
-class DrummondDUTransformationInfo : public ITransformationInfo {
-public:
-	shanks::algos::transformation_id_t getId() const override;
-	std::string getName() const override;
-};
-
-class DrummondDTTransformationInfo : public ITransformationInfo {
-public:
-	shanks::algos::transformation_id_t getId() const override;
-	std::string getName() const override;
-};
-
-class DrummondDTWaveTransformationInfo : public ITransformationInfo {
-public:
-	shanks::algos::transformation_id_t getId() const override;
-	std::string getName() const override;
-};
-
-class DrummondDVTransformationInfo : public ITransformationInfo {
-public:
-	shanks::algos::transformation_id_t getId() const override;
-	std::string getName() const override;
-};
-
-class JTransformationAlgorithmInfo : public ITransformationInfo {
-public:
-	shanks::algos::transformation_id_t getId() const override;
-	std::string getName() const override;
-};
-
-class DrummondDVWaveTransformationInfo : public ITransformationInfo {
-public:
-	shanks::algos::transformation_id_t getId() const override;
-	std::string getName() const override;
-};
-
-class RecurrentDrummondDUTransformationInfo : public ITransformationInfo {
-public:
-	shanks::algos::transformation_id_t getId() const override;
-	std::string getName() const override;
-};
-
-class RecurrentDrummondDTTransformationInfo : public ITransformationInfo {
-public:
-	shanks::algos::transformation_id_t getId() const override;
-	std::string getName() const override;
-};
-
-class RecurrentDrummondDVTransformationInfo : public ITransformationInfo {
-public:
-	shanks::algos::transformation_id_t getId() const override;
-	std::string getName() const override;
-};
-
-class RecurrentDrummondDTWaveTransformationInfo : public ITransformationInfo {
-public:
-	shanks::algos::transformation_id_t getId() const override;
-	std::string getName() const override;
-};
-
-class RecurrentDrummondDVWaveTransformationInfo : public ITransformationInfo {
-public:
-	shanks::algos::transformation_id_t getId() const override;
-	std::string getName() const override;
-};
-
-class FordSidi2TransformationInfo : public ITransformationInfo {
-public:
-	shanks::algos::transformation_id_t getId() const override;
-	std::string getName() const override;
-};
-
-class FordSidi3TransformationInfo : public ITransformationInfo {
-public:
-	shanks::algos::transformation_id_t getId() const override;
-	std::string getName() const override;
-};
-
-class LevinSidiLUTransformationInfo : public ITransformationInfo {
-public:
-	shanks::algos::transformation_id_t getId() const override;
-	std::string getName() const override;
-};
-
-class LevinSidiLTTransformationInfo : public ITransformationInfo {
-public:
-	shanks::algos::transformation_id_t getId() const override;
-	std::string getName() const override;
-};
-
-class LevinSidiLTWaveTransformationInfo : public ITransformationInfo {
-public:
-	shanks::algos::transformation_id_t getId() const override;
-	std::string getName() const override;
-};
-
-class LevinSidiLVTransformationInfo : public ITransformationInfo {
-public:
-	shanks::algos::transformation_id_t getId() const override;
-	std::string getName() const override;
-};
-
-class LevinSidiLVWaveTransformationInfo : public ITransformationInfo {
-public:
-	shanks::algos::transformation_id_t getId() const override;
-	std::string getName() const override;
-};
-
-class RecurrentLevinSidiLUTransformationInfo : public ITransformationInfo {
-public:
-	shanks::algos::transformation_id_t getId() const override;
-	std::string getName() const override;
-};
-
-class RecurrentLevinSidiLTTransformationInfo : public ITransformationInfo {
-public:
-	shanks::algos::transformation_id_t getId() const override;
-	std::string getName() const override;
-};
-
-class RecurrentLevinSidiLVTransformationInfo : public ITransformationInfo {
-public:
-	shanks::algos::transformation_id_t getId() const override;
-	std::string getName() const override;
-};
-
-class RecurrentLevinSidiLTWaveTransformationInfo : public ITransformationInfo {
-public:
-	shanks::algos::transformation_id_t getId() const override;
-	std::string getName() const override;
-};
-
-class RecurrentLevinSidiLVWaveTransformationInfo : public ITransformationInfo {
-public:
-	shanks::algos::transformation_id_t getId() const override;
-	std::string getName() const override;
-};
-
-class LevinSidiMUTransformationInfo : public ITransformationInfo {
-public:
-	shanks::algos::transformation_id_t getId() const override;
-	std::string getName() const override;
-};
-
-class LevinSidiMTTransformationInfo : public ITransformationInfo {
-public:
-	shanks::algos::transformation_id_t getId() const override;
-	std::string getName() const override;
-};
-
-class LevinSidiMTWaveTransformationInfo : public ITransformationInfo {
-public:
-	shanks::algos::transformation_id_t getId() const override;
-	std::string getName() const override;
-};
-
-class LevinSidiMVTransformationInfo : public ITransformationInfo {
-public:
-	shanks::algos::transformation_id_t getId() const override;
-	std::string getName() const override;
-};
-
-class LevinSidiMVWaveTransformationInfo : public ITransformationInfo {
-public:
-	shanks::algos::transformation_id_t getId() const override;
-	std::string getName() const override;
-};
-
-class LevinSidiSUTransformationInfo : public ITransformationInfo {
-public:
-	shanks::algos::transformation_id_t getId() const override;
-	std::string getName() const override;
-};
-
-class LevinSidiSTTransformationInfo : public ITransformationInfo {
-public:
-	shanks::algos::transformation_id_t getId() const override;
-	std::string getName() const override;
-};
-
-class LevinSidiSTWaveTransformationInfo : public ITransformationInfo {
-public:
-	shanks::algos::transformation_id_t getId() const override;
-	std::string getName() const override;
-};
-
-class LevinSidiSVTransformationInfo : public ITransformationInfo {
-public:
-	shanks::algos::transformation_id_t getId() const override;
-	std::string getName() const override;
-};
-
-class LevinSidiSVWaveTransformationInfo : public ITransformationInfo {
-public:
-	shanks::algos::transformation_id_t getId() const override;
-	std::string getName() const override;
-};
-
-class RecurrentLevinSidiSUTransformationInfo : public ITransformationInfo {
-public:
-	shanks::algos::transformation_id_t getId() const override;
-	std::string getName() const override;
-};
-
-class RecurrentLevinSidiSTTransformationInfo : public ITransformationInfo {
-public:
-	shanks::algos::transformation_id_t getId() const override;
-	std::string getName() const override;
-};
-
-class RecurrentLevinSidiSVTransformationInfo : public ITransformationInfo {
-public:
-	shanks::algos::transformation_id_t getId() const override;
-	std::string getName() const override;
-};
-
-class RecurrentLevinSidiSTWaveTransformationInfo : public ITransformationInfo {
-public:
-	shanks::algos::transformation_id_t getId() const override;
-	std::string getName() const override;
-};
-
-class RecurrentLevinSidiSVWaveTransformationInfo : public ITransformationInfo {
-public:
-	shanks::algos::transformation_id_t getId() const override;
-	std::string getName() const override;
-};
-
-class LubkinWTransformationInfo : public ITransformationInfo {
-public:
-	shanks::algos::transformation_id_t getId() const override;
-	std::string getName() const override;
-};
-
-class RichardsonTransformationInfo : public ITransformationInfo {
-public:
-	shanks::algos::transformation_id_t getId() const override;
-	std::string getName() const override;
-};
-
-class ShanksTransformationInfo : public ITransformationInfo {
-public:
-	shanks::algos::transformation_id_t getId() const override;
-	std::string getName() const override;
-};
-
-class ShanksAlternatingTransformationInfo : public ITransformationInfo {
-public:
-	shanks::algos::transformation_id_t getId() const override;
-	std::string getName() const override;
-};
-
-class WenigerTransformationInfo : public ITransformationInfo {
-public:
-	shanks::algos::transformation_id_t getId() const override;
-	std::string getName() const override;
-};
-
-class WynnEpsilon1TransformationInfo : public ITransformationInfo {
-public:
-	shanks::algos::transformation_id_t getId() const override;
-	std::string getName() const override;
-};
-
-class WynnEpsilon2TransformationInfo : public ITransformationInfo {
-public:
-	shanks::algos::transformation_id_t getId() const override;
-	std::string getName() const override;
-};
-
-class WynnEpsilon3TransformationInfo : public ITransformationInfo {
-public:
-	shanks::algos::transformation_id_t getId() const override;
-	std::string getName() const override;
-};
-
-class WynnRhoRhoTransformationInfo : public ITransformationInfo {
-public:
-	shanks::algos::transformation_id_t getId() const override;
-	std::string getName() const override;
-};
-
-class WynnRhoGeneralizedTransformationInfo : public ITransformationInfo {
-public:
-	shanks::algos::transformation_id_t getId() const override;
-	std::string getName() const override;
-};
-
-class WynnRhoGammaRhoTransformationInfo : public ITransformationInfo {
-public:
-	shanks::algos::transformation_id_t getId() const override;
-	std::string getName() const override;
+private:
+    shanks::algos::transformation_id_t id_;
+    std::string name_;
 };
 
 #endif

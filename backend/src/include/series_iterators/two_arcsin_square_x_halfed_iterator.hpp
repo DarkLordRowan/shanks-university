@@ -2,7 +2,7 @@
 #define TWO_ARCSIN_SQUARE_X_HALFED_ITERATOR_HPP
 #pragma once
 
-#include "series_base_iterator.hpp"
+#include "../series_base.hpp"
 
 /**
  * @file two_arcsin_square_x_halfed_iterator.hpp
@@ -10,7 +10,7 @@
  * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  */
 
-namespace shanks { namespace iters {
+namespace shanks { namespace series {
 
 /**
  * @brief Taylor series iterator for the function f(x) = 2 * asin(x/2)^2.
@@ -23,28 +23,31 @@ namespace shanks { namespace iters {
  * @tparam K Unsigned integral type for indexing (UnsignedIntLike).
  */
 template<AcceptedLike T, UnsignedIntLike K>
-class two_arcsin_square_x_halfed_iterator final : public series_base_iterator<T, K>{
+class two_arcsin_square_x_halfed_iterator final : public series_base_succ<T, K>{
 public:
 
     /**
      * @brief Default constructor for two_arcsin_square_x_halfed_iterator.
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      */
-	two_arcsin_square_x_halfed_iterator() : series_base_iterator<T, K>() {}
+	two_arcsin_square_x_halfed_iterator(T x) : series_base_succ<T, K>(x) {
+	    if (this->is_invalid())
+			throw std::invalid_argument("Invalid series argument");
+	}
 
     /**
      * @brief Retrieves the analytic sum of the series (2 * asin(x/2)^2).
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The value of the function at point x.
      */
-	T sum() const override{ return utils::cast<T>(2) * utils::asin(this->x * utils::cast<T>(0.5)) * utils::asin(this->x * utils::cast<T>(0.5));}
+	T get_sum() const override{ return utils::cast<T>(2) * utils::asin(this->x * utils::cast<T>(0.5)) * utils::asin(this->x * utils::cast<T>(0.5));}
 
     /**
      * @brief Validates the current evaluation point x.
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return true if |x| > 2 or non-finite, false otherwise.
      */
-	bool check_validity() const override {
+	bool is_invalid() const override {
 		using float_type = GetUnderlyingType<T>::value;
 		return !utils::isfinite(this->x) || utils::abs(this->x) > utils::cast<float_type>(2.0);
 	}
@@ -54,20 +57,16 @@ public:
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The next term of the series.
      */
-	T next() override {
+	T next(K n, T& state) const override {
 
 		// Recurrence relation for the squared arcsin expansion terms
-		if (this->n == 0) this->current_state = this->x * this->x * utils::cast<T>(0.5);
-		else this->current_state *= this->x * this->x * utils::cast<T>(this->n * this->n) /
-		utils::cast<T>(utils::fma(size_t{2},this->n,size_t{1}) * utils::fma(size_t{2},this->n,size_t{2}));
-
-		this->n+=1;
-		return this->current_state;
+		if (n == 0) state = this->x * this->x * utils::cast<T>(0.5);
+		else state *= this->x * this->x * utils::cast<T>(n * n) /
+		utils::cast<T>(utils::fma(static_cast<size_t>(2),static_cast<size_t>(n),static_cast<size_t>(1)) * utils::fma(static_cast<size_t>(2),static_cast<size_t>(n),static_cast<size_t>(2)));
+		return state;
 	}
 
 };
 
-} //namespace shanks::iters
-} //namespace shanks
-
+}} //namespace shanks
 #endif

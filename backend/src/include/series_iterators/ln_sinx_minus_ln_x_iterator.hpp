@@ -2,7 +2,7 @@
 #define LN_SINX_MINUS_LN_X_ITERATOR_HPP
 #pragma once
 
-#include "series_base_iterator.hpp"
+#include "../series_base.hpp"
 #include <numbers>
 
 /**
@@ -11,7 +11,7 @@
  * @authors Bolshakov M.P.
  */
 
-namespace shanks { namespace iters {
+namespace shanks { namespace series {
 
 /**
  * @brief Series iterator for the function f(x) = ln(sin(x)) - ln(x).
@@ -24,28 +24,31 @@ namespace shanks { namespace iters {
  * @tparam K Unsigned integral type for indexing (UnsignedIntLike).
  */
 template<AcceptedLike T, UnsignedIntLike K>
-class ln_sinx_minus_ln_x_iterator final : public series_base_iterator<T, K>{
+class ln_sinx_minus_ln_x_iterator final : public series_base_succ<T, K>{
 public:
 
     /**
      * @brief Default constructor for ln_sinx_minus_ln_x_iterator.
      * @authors Bolshakov M.P.
      */
-	ln_sinx_minus_ln_x_iterator() : series_base_iterator<T, K>() {}
+	ln_sinx_minus_ln_x_iterator(T x) : series_base_succ<T, K>(x) {
+	    if (this->is_invalid())
+			throw std::invalid_argument("Invalid series argument");
+	}
 
     /**
      * @brief Retrieves the analytic sum of the series (ln(sin(x)) - ln(x)).
      * @authors Bolshakov M.P.
      * @return T The value of ln(sin(x)/x).
      */
-	T sum() const override{ return utils::log(utils::sin(this->x)) - utils::log(this->x); }
+	T get_sum() const override{ return utils::log(utils::sin(this->x)) - utils::log(this->x); }
 
     /**
      * @brief Validates the current evaluation point x.
      * @authors Bolshakov M.P.
      * @return true if x is outside [0, pi) or non-finite, false otherwise.
      */
-	bool check_validity() const override {
+	bool is_invalid() const override {
 		if constexpr (isComplexLike<T>::value){
     		return !utils::isfinite(this->x) || this->x.real() > utils::cast<T>(std::numbers::pi).real() ||  this->x.real() < utils::cast<T>(0).real();
 		} else {
@@ -59,19 +62,15 @@ public:
      * @authors Bolshakov M.P.
      * @return T The next term of the series.
      */
-	T next() override {
+	T next(K n, T& state) const override {
 
 		// Infinite product based expansion term for ln(sin(x)/x)
-		this->current_state = utils::log(utils::cast<T>(1) - this->x * this->x  /
-		(utils::cast<T>((this->n+1)*(this->n+1)) * utils::cast<T>(std::numbers::pi) * utils::cast<T>(std::numbers::pi)));
-
-		this->n+=1;
-		return this->current_state;
+		state = utils::log(utils::cast<T>(1) - this->x * this->x  /
+		(utils::cast<T>((n+1)*(n+1)) * utils::cast<T>(std::numbers::pi) * utils::cast<T>(std::numbers::pi)));
+		return state;
 	}
 
 };
 
-} //namespace shanks::iters
-} //namespace shanks
-
+}} //namespace shanks
 #endif
