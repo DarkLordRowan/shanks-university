@@ -59,30 +59,45 @@ namespace shanks { namespace algos {
 template<AcceptedLike T, UnsignedIntLike K>
 class transformation_registry {
 public:
+
     using Factory = std::function<std::unique_ptr<series_acceleration<T, K>>()>;
-    
+
     struct entry {
         transformation_id_t id;
         std::string name;
         Factory factory;
     };
 
+    /**
+     * @brief Get the transformation/algorithms entries
+     * return a vector of entry structs containing transformation id, name, and a function to create one
+     * @return const std::vector<entry>& 
+    */
     static const std::vector<entry>& get_entries() {
         static const std::vector<entry> entries = {
-#define TRANSFORMATION_ENTRY(id, name, ...) { transformation_id_t::id, name, []() -> std::unique_ptr<series_acceleration<T, K>> __VA_ARGS__ },
-#include "transformation_registry.def"
-#undef TRANSFORMATION_ENTRY
+            #define TRANSFORMATION_ENTRY(id, name, ...) { transformation_id_t::id, name, []() -> std::unique_ptr<series_acceleration<T, K>> __VA_ARGS__ },
+            #include "transformation_registry.def"
+            #undef TRANSFORMATION_ENTRY
         };
         return entries;
     }
 
+    /**
+     * @brief Create unique_ptr of a transformation with given id
+     * @param id transformation_id_t
+     * @throws std::domain_error if an invalid transformation ID given 
+     * @return std::unique_ptr<series_acceleration<T, K>> 
+    */
     static std::unique_ptr<series_acceleration<T, K>> create(transformation_id_t id) {
-        for (const auto& e : get_entries()) {
-            if (e.id == id) return e.factory();
-        }
+        for (const auto& e : get_entries()) if (e.id == id) return e.factory();
         throw std::domain_error("Invalid transformation ID");
     }
 
+    /**
+     * @brief Returns unique_ptr of a transformation created by an index in transformation_registry.def
+     * @param index 
+     * @return std::unique_ptr<series_acceleration<T, K>> 
+     */
     static std::unique_ptr<series_acceleration<T, K>> create_by_index(size_t index) {
         const auto& entries = get_entries();
         if (index >= entries.size()) throw std::out_of_range("Transformation index out of range");
@@ -91,19 +106,28 @@ public:
 };
 
 struct transformation_registry_metadata {
+
+    /**
+     * @brief Get the vector of transformation names
+     * @return std::vector<std::string> 
+     */
     static std::vector<std::string> get_names() {
         return {
-#define TRANSFORMATION_ENTRY(id, name, ...) name,
-#include "transformation_registry.def"
-#undef TRANSFORMATION_ENTRY
+        #define TRANSFORMATION_ENTRY(id, name, ...) name,
+        #include "transformation_registry.def"
+        #undef TRANSFORMATION_ENTRY
         };
     }
 
+    /**
+     * @brief Get the vector of transformation ids
+     * @return std::vector<transformation_id_t> 
+    */
     static std::vector<transformation_id_t> get_ids() {
         return {
-#define TRANSFORMATION_ENTRY(id, name, ...) transformation_id_t::id,
-#include "transformation_registry.def"
-#undef TRANSFORMATION_ENTRY
+        #define TRANSFORMATION_ENTRY(id, name, ...) transformation_id_t::id,
+        #include "transformation_registry.def"
+        #undef TRANSFORMATION_ENTRY
         };
     }
 };

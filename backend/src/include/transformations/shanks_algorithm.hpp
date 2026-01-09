@@ -19,8 +19,8 @@
 
 #include "series_acceleration.hpp"
 
-#include <Eigen/Dense>
-#include <Eigen/Core>
+#include <eigen3/Eigen/Dense>
+#include <eigen3/Eigen/Core>
 
 #ifdef EIGEN_CORE_MODULE_H
 namespace Eigen {

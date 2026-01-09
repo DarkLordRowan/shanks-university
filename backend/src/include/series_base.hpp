@@ -19,6 +19,7 @@ namespace shanks { namespace series {
 template <AcceptedLike T, UnsignedIntLike K>
 class series_base {
 public:
+
     series_base() = delete;
     series_base(T x) : x(x) {}
     virtual ~series_base() = default;
@@ -31,6 +32,7 @@ public:
     virtual bool is_invalid() const = 0;
 
 protected:
+
     T x;
 
     template<typename IteratorFunc>
@@ -68,13 +70,12 @@ public:
     bool is_invalid() const override { return true; }
 
     series_result<T> generate(K n) override {
-        //for series iterators is crucial that it equals to zero
+
         State state = initial_state();
 
         //set state precision if possible
         if constexpr (is_precisable<State>::value) utils::set_precision(utils::get_precision(this->x), state);
 
-        std::cout << "State precision is " << utils::get_precision(state) << "\n";
         return series_base<T, K>::generate_from_iterator(n, [this, &state, i = K(0)]() mutable {
             return this->next(i++, state);
         });
