@@ -7,8 +7,6 @@ import uuid
 from logging import Logger
 from typing import Sequence
 
-from tqdm import tqdm
-
 from src.config.model import TrialConfig
 from src.domain.complex_trial import ComplexTrial
 from src.domain.data_serializer import DataSerializer
@@ -132,11 +130,10 @@ class TrialExecutor:
 
         results, combinations = [], trial.combinations()
 
-        for result in tqdm(
+        for result in (
             self.runner.run(
                 combinations,
             ),
-            total=len(combinations),
         ):
             results.extend(result)
 
@@ -170,9 +167,10 @@ class TrialExecutor:
 
         combinations = trial.combinations()
 
-        for result_chunk in tqdm(
-            self.runner.run(combinations),
-            total=len(combinations),
+        for result_chunk in (
+            self.runner.run(
+                combinations,
+            ),
         ):
             self.export_results(self.serializer.to_dict(result_chunk), series_params)
 

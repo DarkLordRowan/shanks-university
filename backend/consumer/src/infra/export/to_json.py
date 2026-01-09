@@ -16,5 +16,5 @@ class JSONExportService(ExportService):
 
     def export(self, dicts: Sequence[dict], **kwargs):
         """JSON export implementation."""
-        with open(self.location, "a", encoding="utf-8") as f:
+        with open(self.location, "w", encoding="utf-8") as f:
             json.dump(dicts, f, indent=4, sort_keys=True)

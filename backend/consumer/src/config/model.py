@@ -5,36 +5,40 @@ Author: Yadrentsev I. M.
 """
 
 import json
-import os
 from pathlib import Path
 
-import yaml
-from pydantic import BaseModel, Field
+from dataclasses import dataclass, field
 
 from src.domain.output_format import OutputFormat
 from src.domain.precision import PrecisionType
 
 
-class MongoConfig(BaseModel):
-    """MongoDB connection configuration."""
-
-    host: str = Field(default_factory=lambda: os.getenv("MONGO_HOST", "localhost"))
-    port: int = Field(default_factory=lambda: int(os.getenv("MONGO_PORT", "27017")))
-    username: str | None = Field(default_factory=lambda: os.getenv("MONGO_USERNAME"))
-    password: str | None = Field(default_factory=lambda: os.getenv("MONGO_PASSWORD"))
-    database: str = "trial_db"
-    collection: str = "trial_results"
-    auth_source: str = "admin"
-
-
-class OutputConfig(BaseModel):
-    """Output configuration for trial results."""
-
-    parquet_collection: str = "trial_results"
-
-
-class TrialConfig(BaseModel):
+@dataclass
+class TrialConfig:
     """Trial execution configuration model."""
+
+    def __post_init__(self):
+        self.series_json = Path(self.series_json)
+        self.series_csv = Path(self.series_csv)
+        self.accel_json = Path(self.accel_json)
+        self.output_dir = Path(self.output_dir)
+
+        self.results_json = (
+            Path(self.results_json) if self.results_json else None
+        )
+        self.results_csv = Path(self.results_csv) if self.results_csv else None
+
+        self.precisions = [
+            PrecisionType(precision) for precision in self.precisions
+        ]
+
+        self.output_formats = [
+            OutputFormat(fmt) for fmt in self.output_formats
+        ]
+
+        self.output_dir.mkdir(parents=True, exist_ok=True)
+
+        print(self)
 
     verbose: int = 0
 
@@ -44,10 +48,9 @@ class TrialConfig(BaseModel):
 
     output_dir: Path = Path("output")
     results_filename: str = "results"
+
     results_json: Path | None = None
     results_csv: Path | None = None
-    results_parquet: Path | None = None
-    results_parquet_split: Path | None = None
 
     trial_process_count: int = 1
     trial_task_timeout: int = 10
@@ -55,15 +58,13 @@ class TrialConfig(BaseModel):
 
     no_events: bool = False
 
-    precisions: list[PrecisionType] = [PrecisionType.F64]
+    precisions: list[PrecisionType] = field(
+        default_factory=lambda: [PrecisionType.F64]
+    )
 
-    output_formats: list[OutputFormat] = [
-        OutputFormat.JSON,
-        OutputFormat.CSV,
-    ]
-
-    mongo: MongoConfig = MongoConfig()
-    output: OutputConfig = OutputConfig()
+    output_formats: list[OutputFormat] = field(
+        default_factory=lambda: [OutputFormat.JSON, OutputFormat.CSV]
+    )
 
     @property
     def is_parallel(self) -> int:
@@ -81,12 +82,6 @@ class TrialConfig(BaseModel):
         with open(path, "r", encoding="utf-8") as f:
             return json.load(f)
 
-    @staticmethod
-    def load_yaml(path: Path) -> dict:
-        """Load configuration from a YAML file."""
-        with open(path, "r", encoding="utf-8") as f:
-            return yaml.safe_load(f)
-
     @classmethod
     def load(cls, path: Path | None) -> "TrialConfig":
         """Load trial configuration from a file."""
@@ -95,8 +90,6 @@ class TrialConfig(BaseModel):
 
         if not path.exists():
             raise FileNotFoundError(path)
-        if path.suffix.lower() in {".yml", ".yaml"}:
-            data = cls.load_yaml(path)
         elif path.suffix.lower() in {".json"}:
             data = cls.load_json(path)
         else:

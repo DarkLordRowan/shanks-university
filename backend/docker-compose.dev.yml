@@ -1,0 +1,16 @@
+services:
+  shanks-dev:
+    build: .
+    container_name: shanks-dev
+    volumes:
+      - .:/app
+      - pyshanks-artifacts:/app/consumer/pyshanks
+    working_dir: /app
+    command: /bin/bash
+    stdin_open: true
+    tty: true
+    environment:
+      - PYTHONUNBUFFERED=1
+
+volumes:
+  pyshanks-artifacts:

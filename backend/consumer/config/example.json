@@ -1,12 +1,6 @@
 {
   "series": [
     {
-      "name": "ExpSeries",
-      "args": {
-        "x": [1, 2]
-      }
-    },
-    {
       "name": "CosSeries",
       "args": {
         "x": [1, 2]

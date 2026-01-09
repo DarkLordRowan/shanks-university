@@ -1,0 +1,59 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Python
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv
+.pytest_cache
+.mypy_cache
+.coverage
+htmlcov/
+dist/
+build/
+*.egg-info/
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Documentation
+docs/
+Doxyfile
+
+# Build artifacts
+cmake_build/
+.cmake_build/
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+
+# Output
+output/
+results/
+*.log
+
+# Docker
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+
+# Consumer dev dependencies
+consumer/install_pyshanks.bat
+consumer/install_pyshanks.ps1
+consumer/config/

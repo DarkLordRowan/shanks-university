@@ -19,7 +19,7 @@ class CSVExportService(ExportService):
         if not dicts:
             return
 
-        with open(self.location, "a", newline="", encoding="utf-8") as f:
+        with open(self.location, "w", newline="", encoding="utf-8") as f:
             writer = csv.DictWriter(f, fieldnames=dicts[0].keys())
             writer.writeheader()
             writer.writerows(dicts)

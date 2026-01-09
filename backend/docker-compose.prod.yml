@@ -1,0 +1,11 @@
+services:
+  shanks:
+    build: .
+    container_name: shanks-prod
+    working_dir: /app
+    command: /bin/bash
+    stdin_open: true
+    tty: true
+    environment:
+      - PYTHONUNBUFFERED=1
+    restart: always

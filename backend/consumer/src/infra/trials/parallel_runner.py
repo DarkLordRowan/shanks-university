@@ -5,8 +5,6 @@ Author: Sobolev Y. A.
 
 import multiprocessing as mp
 
-from tqdm import tqdm
-
 from src.domain.trial_result import (
     AccelTrialResult,
     ErrorTrialResult,
@@ -56,7 +54,7 @@ class ParallelTrialRunner(TrialRunner):
                 for comb in combinations
             ]
 
-            for async_result, comb in tqdm(async_tasks, desc="Trials"):
+            for async_result, comb in async_tasks:
                 try:
                     chunk = async_result.get(timeout=self.timeout)
                     if chunk:
