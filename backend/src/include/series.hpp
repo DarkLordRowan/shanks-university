@@ -19,11 +19,11 @@ namespace shanks { namespace series {
  * Generated automatically from series_registry.def.
  */
 enum class series_id_t : size_t {
-#define SERIES_ENTRY(snake, camel) snake##_id,
-#define SERIES_LAST(snake, camel) snake##_id,
-#include "series_registry.def"
-#undef SERIES_ENTRY
-#undef SERIES_LAST
+    #define SERIES_ENTRY(snake, camel) snake##_id,
+    #define SERIES_LAST(snake, camel) snake##_id,
+    #include "series_registry.def"
+    #undef SERIES_ENTRY
+    #undef SERIES_LAST
     series_id_t_count
 };
 
@@ -44,6 +44,7 @@ public:
 
     static const std::vector<entry>& get_entries() {
         static const std::vector<entry> entries = {
+//DEFININTION OF SERIES_ENTRY MACRO
 #define SERIES_ENTRY(snake, camel) { camel, [](T x, T t, K k) -> std::unique_ptr<series_base<T, K>> { \
     if constexpr (std::is_constructible_v<shanks::series::snake##_iterator<T, K>, T, T, K>) \
         return std::make_unique<shanks::series::snake##_iterator<T, K>>(x, t, k); \
@@ -57,6 +58,7 @@ public:
     std::is_constructible_v<shanks::series::snake##_iterator<T, K>, T, T, K> || std::is_constructible_v<shanks::series::snake##_iterator<T, K>, T, T>, \
     std::is_constructible_v<shanks::series::snake##_iterator<T, K>, T, T, K> || std::is_constructible_v<shanks::series::snake##_iterator<T, K>, T, K> \
 },
+//DEFININTION OF SERIS_LAST MACRO
 #define SERIES_LAST(snake, camel) { camel, [](T x, T t, K k) -> std::unique_ptr<series_base<T, K>> { \
     if constexpr (std::is_constructible_v<shanks::series::snake##_iterator<T, K>, T, T, K>) \
         return std::make_unique<shanks::series::snake##_iterator<T, K>>(x, t, k); \
@@ -83,11 +85,11 @@ public:
 struct series_registry_metadata {
     static std::vector<std::string> get_names() {
         return {
-#define SERIES_ENTRY(snake, camel) camel,
-#define SERIES_LAST(snake, camel) camel
-#include "series_registry.def"
-#undef SERIES_ENTRY
-#undef SERIES_LAST
+            #define SERIES_ENTRY(snake, camel) camel,
+            #define SERIES_LAST(snake, camel) camel
+            #include "series_registry.def"
+            #undef SERIES_ENTRY
+            #undef SERIES_LAST
         };
     }
 };
