@@ -60,7 +60,7 @@ public:
 	T next(K n, T& state) const override {
 
 		// Catalan numbers generating function terms: C_n * x^n
-		if (n == 0) state = utils::cast<T>(1);
+		if (n == 0) state += utils::cast<T>(1);
 		else if (n == 1) state = this->x;
 		else state *= this->x * utils::cast<T>(2*utils::fma(static_cast<size_t>(2),static_cast<size_t>(n-1),static_cast<size_t>(1))) / utils::cast<T>(n+1);
 

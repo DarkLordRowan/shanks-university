@@ -347,25 +347,6 @@ void test_all_transforms(
 				}catch (std::runtime_error& e){
 					std::cout << e.what() << "\n";
 				}
-				#ifdef INC_FPRECISION
-				catch (float_precision::divide_by_zero& e){
-					std::cout << "Division by zero in float_precision" << "\n";
-				}
-				#endif
-				#ifdef INC_COMPLEXPRECISION
-				catch (complex_precision<float>::divide_by_zero& e){
-					std::cout << e.what() << "\n";
-				} catch (complex_precision<double>::divide_by_zero& e){
-					std::cout << e.what() << "\n";
-				} catch (complex_precision<long double>::divide_by_zero& e){
-					std::cout << e.what() << "\n";
-				}
-				#ifdef INC_FPRECISION
-				catch (complex_precision<float_precision>::divide_by_zero& e){
-					std::cout << e.what() << "\n";
-				}
-				#endif
-				#endif
 			    catch (...){
 					std::cout <<"SOME ERROR\n";
 				}

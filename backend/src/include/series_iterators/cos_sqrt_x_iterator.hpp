@@ -65,7 +65,7 @@ public:
      */
 	T next(K n, T& state) const override {
 		// First term is 1.0, subsequent terms derived from the cos Taylor expansion with u = sqrt(x)
-		if (n == 0) state = utils::cast<T>(1);
+		if (n == 0) state += utils::cast<T>(1);
 		else state *= utils::cast<T>(-1) * this->x  / utils::cast<T>(2*n*utils::fma(static_cast<size_t>(2),static_cast<size_t>(n-1),static_cast<size_t>(1)));
 		return state;
 	}

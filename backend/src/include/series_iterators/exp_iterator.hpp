@@ -55,9 +55,8 @@ public:
      * @return T The next term of the series.
      */
 	T next(K n, T& state) const override {
-
 		// Each term is x^n / n!, computed recursively from the previous term
-		if (n == 0) state = utils::cast<T>(1);
+		if (n == 0) state += utils::cast<T>(1);
 		else state *= this->x / utils::cast<T>(n);
 		return state;
 	}

@@ -61,7 +61,7 @@ public:
 	T next(K n, T& state) const override {
 
 		// First term is pi/2, subsequent terms use the squared ratio of odd factorials
-		if (n == 0) state = utils::cast<T>(std::numbers::pi * 0.5);
+		if (n == 0) state += utils::cast<T>(std::numbers::pi * 0.5);
 		else state *= this->x * this->x *
 		utils::cast<T>(utils::fma(static_cast<size_t>(2),static_cast<size_t>(n-1),static_cast<size_t>(1)) *
 		utils::fma(static_cast<size_t>(2),static_cast<size_t>(n-1),static_cast<size_t>(1))) / utils::cast<T>(4 * n * n);

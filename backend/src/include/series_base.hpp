@@ -35,18 +35,23 @@ protected:
 
     template<typename IteratorFunc>
     static series_result<T> generate_from_iterator(K n, IteratorFunc func) {
-        std::vector<T> an;
-        std::vector<T> Sn;
-        an.reserve(n);
-        Sn.reserve(n);
 
-        T current_sum = T(0);
-        for (K i = 0; i < n; ++i) {
-            T term = func();
-            an.push_back(term);
-            current_sum += term;
-            Sn.push_back(current_sum);
+        std::vector<T> an(n, utils::cast<T>(0.0));
+        std::vector<T> Sn(n, utils::cast<T>(0.0));
+
+        //sample for precision
+        const T sample = func();
+        if constexpr (is_precisable<T>::value){
+            utils::set_vec_precision(an, utils::get_precision(sample));
+            utils::set_vec_precision(Sn, utils::get_precision(sample));
         }
+
+        an[0] += sample; Sn[0] += sample;
+        for (K i = 1; i < n; ++i) {
+            an[i] += func();
+            Sn[i] += Sn[i - static_cast<K>(1)] + an[i];
+        }
+
         return {Sn, an};
     }
 };
@@ -63,7 +68,13 @@ public:
     bool is_invalid() const override { return true; }
 
     series_result<T> generate(K n) override {
+        //for series iterators is crucial that it equals to zero
         State state = initial_state();
+
+        //set state precision if possible
+        if constexpr (is_precisable<State>::value) utils::set_precision(utils::get_precision(this->x), state);
+
+        std::cout << "State precision is " << utils::get_precision(state) << "\n";
         return series_base<T, K>::generate_from_iterator(n, [this, &state, i = K(0)]() mutable {
             return this->next(i++, state);
         });

@@ -57,7 +57,7 @@ public:
 	T next(K n, T& state) const override {
 
 		// Recurrence logic for the alternating even-power terms of the cosine expansion
-		if (n == 0) state = utils::cast<T>(1);
+		if (n == 0) state += utils::cast<T>(1);
 		else state *= utils::cast<T>(-1) * this->x * this->x / utils::cast<T>(n * (static_cast<K>(4) * n - static_cast<K>(2)));
 		return state;
 	}

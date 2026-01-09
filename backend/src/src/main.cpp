@@ -1,19 +1,10 @@
-//#include "arbitrary_arithmetics/complexprecision.h"
-//#include "arbitrary_arithmetics/fprecision.h"
-//#include "arbitrary_arithmetics/intervalprecision.h"
-//#include "arbitrary_arithmetics/precisioncore.cpp"
-
-#include "../include/test_framework/test_framework.hpp"
-#include "mpreal.h"
-#include "../include/filters/savgol.hpp"
-#include "../include/filters/kolzur.hpp"
-
-
 /**
  * @file main.cpp
  * @brief Entry point for the shanks-university sequence transformation application.
  * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  */
+
+ #include "../include/test_framework/test_framework.hpp"
 
 /**
  * @brief Main entry point of the application.
@@ -29,6 +20,12 @@
  */
 int main()
 {
+
+	//auto test = shanks::series::abs_sin_x_minus_2_div_pi_iterator<mpfr::mpreal, size_t>(mpfr::mpreal(1, mpfr::digits2bits(100)));
+	//for(const auto& x : test.generate(10).Sn){
+	//	std::cout << utils::get_precision(x) << "\n";
+	//}
+
 
     while(true){
 		try

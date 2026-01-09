@@ -72,7 +72,7 @@ public:
 	T next(K n, T& state) const override {
 
 		// First term is the DC component (constant term)
-		if (n == 0) state = utils::cast<T>(std::numbers::pi * 0.25);
+		if (n == 0) state += utils::cast<T>(std::numbers::pi * 0.25);
 		else {
 			const T piDiv3 = utils::cast<T>(std::numbers::pi) / utils::cast<T>(3);
 			const T cos_coef = (utils::minus_one_raised_to_power_n<T, K>(n) - utils::cast<T>(1)) / (utils::cast<T>(std::numbers::pi)*utils::cast<T>(n * n));
