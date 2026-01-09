@@ -91,7 +91,7 @@ constexpr void bind_series(pybind11::module_& m, const std::string& suffix){
     // Automatic binding of all registered series
 #define SERIES_ENTRY(snake, camel) \
     { \
-        auto c = py::class_<shanks::series::snake##_iterator<T, K>, MSeriesBase>(m, (std::string(#camel) + suffix).c_str()); \
+        auto c = py::class_<shanks::series::snake##_iterator<T, K>, MSeriesBase>(m, (std::string(camel) + suffix).c_str()); \
         if constexpr (std::is_constructible_v<shanks::series::snake##_iterator<T, K>, T>) \
             c.def(py::init<T>(), py::arg("x")); \
         if constexpr (std::is_constructible_v<shanks::series::snake##_iterator<T, K>, T, T, K>) \

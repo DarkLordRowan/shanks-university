@@ -16,8 +16,8 @@
  * Automatically generated from series_registry.def.
  */
 constinit const char* series_names[OVERALL_SERIES_DEFINED] = {
-#define SERIES_ENTRY(snake, camel) #camel,
-#define SERIES_LAST(snake, camel) #camel
+#define SERIES_ENTRY(snake, camel) camel,
+#define SERIES_LAST(snake, camel) camel
 #include "../../src/include/series_registry.def"
 #undef SERIES_ENTRY
 #undef SERIES_LAST

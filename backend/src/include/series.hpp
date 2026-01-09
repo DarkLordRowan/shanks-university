@@ -44,7 +44,7 @@ public:
 
     static const std::vector<entry>& get_entries() {
         static const std::vector<entry> entries = {
-#define SERIES_ENTRY(snake, camel) { #camel, [](T x, T t, K k) -> std::unique_ptr<series_base<T, K>> { \
+#define SERIES_ENTRY(snake, camel) { camel, [](T x, T t, K k) -> std::unique_ptr<series_base<T, K>> { \
     if constexpr (std::is_constructible_v<shanks::series::snake##_iterator<T, K>, T, T, K>) \
         return std::make_unique<shanks::series::snake##_iterator<T, K>>(x, t, k); \
     else if constexpr (std::is_constructible_v<shanks::series::snake##_iterator<T, K>, T, K>) \
@@ -57,7 +57,7 @@ public:
     std::is_constructible_v<shanks::series::snake##_iterator<T, K>, T, T, K> || std::is_constructible_v<shanks::series::snake##_iterator<T, K>, T, T>, \
     std::is_constructible_v<shanks::series::snake##_iterator<T, K>, T, T, K> || std::is_constructible_v<shanks::series::snake##_iterator<T, K>, T, K> \
 },
-#define SERIES_LAST(snake, camel) { #camel, [](T x, T t, K k) -> std::unique_ptr<series_base<T, K>> { \
+#define SERIES_LAST(snake, camel) { camel, [](T x, T t, K k) -> std::unique_ptr<series_base<T, K>> { \
     if constexpr (std::is_constructible_v<shanks::series::snake##_iterator<T, K>, T, T, K>) \
         return std::make_unique<shanks::series::snake##_iterator<T, K>>(x, t, k); \
     else if constexpr (std::is_constructible_v<shanks::series::snake##_iterator<T, K>, T, K>) \
@@ -83,8 +83,8 @@ public:
 struct series_registry_metadata {
     static std::vector<std::string> get_names() {
         return {
-#define SERIES_ENTRY(snake, camel) #camel,
-#define SERIES_LAST(snake, camel) #camel
+#define SERIES_ENTRY(snake, camel) camel,
+#define SERIES_LAST(snake, camel) camel
 #include "series_registry.def"
 #undef SERIES_ENTRY
 #undef SERIES_LAST
