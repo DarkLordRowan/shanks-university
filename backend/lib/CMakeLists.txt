@@ -13,6 +13,7 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../cmake/modules")
 # Find required packages
 find_package(GMP REQUIRED)
 find_package(MPFR REQUIRED)
+find_package(Eigen3 REQUIRED)
 
 # Include directories
 include_directories(
@@ -29,5 +30,5 @@ pybind11_add_module(pyshanks
     ${CMAKE_CURRENT_SOURCE_DIR}/src/pyshanks.cpp
 )
 
-target_link_libraries(pyshanks PRIVATE MPFR::MPFR GMP::GMP)
+target_link_libraries(pyshanks PRIVATE MPFR::MPFR GMP::GMP Eigen3::Eigen)
 set_target_properties(pyshanks PROPERTIES PREFIX "")

@@ -103,17 +103,7 @@ class BaseSeriesParam[T]:
         candidate: object,
     ) -> TypeGuard[SeriesBaseProto[Any]]:
         """Inspect if the candidate is a valid series generator."""
-        return hasattr(candidate, "generateSeries") and hasattr(candidate, "get_sum")
-
-    @property
-    def instance(self) -> SeriesBaseProto[NumericLike]:
-        """Get an instance of the series generator."""
-        instance = self.executable()
-        if not self._is_series_generator(instance):
-            raise TypeError(
-                f"Series executable '{self.series_name}' did not return a valid generator"
-            )
-        return instance
+        return hasattr(candidate, "generate") and hasattr(candidate, "get_sum")
 
     def __resolve_series_arguments(
         self,
@@ -159,9 +149,17 @@ class BaseSeriesParam[T]:
         self, x: Any, vec_size: int, t: Any, k: int
     ) -> SeriesPregenLocalValue:
         """Generate a series result using the series instance."""
-        instance = self.instance
+        # For CSV series, we use the custom wrapper
+        if self.series_name.startswith("CSVSeries"):
+             instance = self.executable()
+             return (instance.generate(vec_size), instance.get_sum())
+
+        # For registry-based series, use create_series_by_name
+        factory = getattr(ps, f"create_series_by_name{self.precision.value}")
+        instance = factory(self.series_name, x, t, k)
+        
         return (
-            instance.generateSeries(x, vec_size, t, k),
+            instance.generate(vec_size),
             instance.get_sum(),
         )
 
@@ -234,7 +232,8 @@ class SeriesParamJSON(BaseSeriesParam[TNum]):
 
     @property
     def executable(self):
-        return getattr(ps, self.name)
+        # We use name strings for factory lookup now
+        return self.name
 
 
 @dataclass
@@ -292,7 +291,7 @@ class SeriesParamCSV(BaseSeriesParam[TNum]):
 
     @property
     def series_name(self):
-        return f"{self.location.name}#{self.row}"
+        return f"CSVSeries_{self.location.name}#{self.row}"
 
     @property
     @override
@@ -316,12 +315,9 @@ class CSVSeriesWrapper(Generic[TNum]):
         self._sum = self.data.Sn[-1]
         self._precision = precision
 
-    def generateSeries(
+    def generate(
         self,
-        x: TNum,
-        vecSize: int,
-        addTParameter: TNum,
-        addKParameter: int,
+        n: int,
     ) -> SeriesResultProto[TNum]:
         return self.data
 

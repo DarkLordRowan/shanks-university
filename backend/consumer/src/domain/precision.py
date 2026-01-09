@@ -31,13 +31,7 @@ class SeriesResultProto(Protocol[TNum]):
 class SeriesBaseProto(Protocol[TNum]):
     """Protocol for series generation and summation."""
 
-    def generateSeries(
-        self,
-        x: TNum,
-        vecSize: int,
-        addTParameter: TNum,
-        addKParameter: int,
-    ) -> SeriesResultProto[TNum]: ...
+    def generate(self, n: int) -> SeriesResultProto[TNum]: ...
 
     def get_sum(self) -> TNum: ...
 

@@ -11,6 +11,7 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../cmake/modules")
 # Find required packages
 find_package(GMP REQUIRED)
 find_package(MPFR REQUIRED)
+find_package(Eigen3 REQUIRED)
 
 # Include directories
 include_directories(
@@ -25,4 +26,4 @@ add_executable(shanks
     ${CMAKE_SOURCE_DIR}/src/main.cpp
 )
 
-target_link_libraries(shanks PRIVATE MPFR::MPFR GMP::GMP)
+target_link_libraries(shanks PRIVATE MPFR::MPFR GMP::GMP Eigen3::Eigen)
