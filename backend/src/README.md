@@ -13,6 +13,8 @@
     SERIES_ENTRY(exp, "ExpSeries")
 Для удобства новые вхождение лучше вставлять сохраняя алфавитный порядок.
 
+3. Добавить #include в /include/series_iterators/series_iterators.hpp
+
 # Добавление нового метода
 
 1. Реализация класса метода в include/transformations (класс должен наследоваться от series_acceleration)
@@ -37,3 +39,6 @@ L-трансформация может быть вычислено через �
 TRANSFORMATION_ENTRY(levin_sidi_l_transformation_id, "Levin Sidi-L Transformation", { return std::make_unique<shanks::algos::levin_algorithm<T, K>>(false); })
 Для реализации рекуррентной:
 TRANSFORMATION_ENTRY(recurrent_levin_sidi_l_transformation_id, "Levin Sidi-L Transformation", { return std::make_unique<shanks::algos::levin_algorithm<T, K>>(false); })
+
+
+3. Добавить #include в /include/methods.hpp
