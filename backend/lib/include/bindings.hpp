@@ -32,6 +32,12 @@ namespace py = pybind11;
 #define OVERALL_ARB_TYPES 6
 extern constinit const char* available_types[OVERALL_ARB_TYPES];
 
+template<typename T>
+struct RealTypeOf { using type = T; };
+
+template<typename U>
+struct RealTypeOf<std::complex<U>> { using type = U; };
+
 template <AcceptedLike T, UnsignedIntLike K>
 constexpr void bind_all(py::module_& m, const std::string& suffix);
 
@@ -89,37 +95,32 @@ constexpr void bind_series(pybind11::module_& m, const std::string& suffix){
         .def("generate", &MSeriesBase::generate, py::arg("n"));
 
     // Automatic binding of all registered series
-#define SERIES_ENTRY(snake, camel) \
+#define BIND_SERIES_IMPL(snake, camel, tName, kName) \
     { \
         auto c = py::class_<shanks::series::snake##_iterator<T, K>, MSeriesBase>(m, (std::string(camel) + suffix).c_str()); \
         if constexpr (std::is_constructible_v<shanks::series::snake##_iterator<T, K>, T>) \
             c.def(py::init<T>(), py::arg("x")); \
         if constexpr (std::is_constructible_v<shanks::series::snake##_iterator<T, K>, T, T, K>) \
-            c.def(py::init<T, T, K>(), py::arg("x"), py::arg("tParam"), py::arg("kParam")); \
+            c.def(py::init<T, T, K>(), py::arg("x"), py::arg(tName), py::arg(kName)); \
         if constexpr (std::is_constructible_v<shanks::series::snake##_iterator<T, K>, T, T>) \
-            c.def(py::init<T, T>(), py::arg("x"), py::arg("tParam")); \
+            c.def(py::init<T, T>(), py::arg("x"), py::arg(tName)); \
         if constexpr (std::is_constructible_v<shanks::series::snake##_iterator<T, K>, T, K>) \
-            c.def(py::init<T, K>(), py::arg("x"), py::arg("kParam")); \
+            c.def(py::init<T, K>(), py::arg("x"), py::arg(kName)); \
         c.def("generateSeries", &shanks::series::snake##_iterator<T, K>::generate, py::arg("n")); \
     }
+
+#define SERIES_ENTRY(snake, camel) BIND_SERIES_IMPL(snake, camel, "tParam", "kParam")
 #define SERIES_LAST(snake, camel) SERIES_ENTRY(snake, camel)
+#define SERIES_ENTRY_ARGS(snake, camel, tName, kName) BIND_SERIES_IMPL(snake, camel, tName, kName)
+#define SERIES_LAST_ARGS(snake, camel, tName, kName) SERIES_ENTRY_ARGS(snake, camel, tName, kName)
+
 #include "../../src/include/series_registry.def"
+
+#undef BIND_SERIES_IMPL
 #undef SERIES_ENTRY
 #undef SERIES_LAST
-
-    // Factory methods
-    m.def((std::string("create_series") + suffix).c_str(), 
-          &shanks::series::series_registry<T, K>::create,
-          py::arg("index"), py::arg("x"), py::arg("addTParameter") = T(1), py::arg("addKParameter") = K(1));
-
-    m.def((std::string("create_series_by_name") + suffix).c_str(),
-          [](const std::string& name, T x, T t, K k) {
-              auto names = shanks::series::series_registry_metadata::get_names();
-              for (size_t i = 0; i < (size_t)names.size(); ++i) {
-                  if (names[i] == name) return shanks::series::series_registry<T, K>::create(i, x, t, k);
-              }
-              throw std::runtime_error("Series not found: " + name);
-          }, py::arg("name"), py::arg("x"), py::arg("tParam") = T(1), py::arg("kParam") = K(1));
+#undef SERIES_ENTRY_ARGS
+#undef SERIES_LAST_ARGS
 };
 
 /**
@@ -128,32 +129,40 @@ constexpr void bind_series(pybind11::module_& m, const std::string& suffix){
 template <AcceptedLike T, UnsignedIntLike K>
 constexpr void bind_algos(pybind11::module_& m, const std::string& suffix){
     
+    using RealT = typename RealTypeOf<T>::type;
+
     // Shanks transformation
-    py::class_<shanks::algos::shanks_algorithm<T, K>>(m, (std::string("Shanks") + suffix).c_str())
+    py::class_<shanks::algos::shanks_algorithm<T, K>>(m, (std::string("ShanksAlgorithm") + suffix).c_str())
         .def(py::init<>()) 
         .def("__call__", &shanks::algos::shanks_algorithm<T, K>::operator());
 
     // Wynn Epsilon algorithms
-    py::class_<shanks::algos::wynn_epsilon_1_algorithm<T, K>>(m, (std::string("WynnEpsilon1") + suffix).c_str())
+    py::class_<shanks::algos::wynn_epsilon_1_algorithm<T, K>>(m, (std::string("WynnEpsilon1Algorithm") + suffix).c_str())
         .def(py::init<>()) 
         .def("__call__", &shanks::algos::wynn_epsilon_1_algorithm<T, K>::operator());
     
-    py::class_<shanks::algos::wynn_epsilon_2_algorithm<T, K>>(m, (std::string("WynnEpsilon2") + suffix).c_str())
+    py::class_<shanks::algos::wynn_epsilon_2_algorithm<T, K>>(m, (std::string("WynnEpsilon2Algorithm") + suffix).c_str())
         .def(py::init<>()) 
         .def("__call__", &shanks::algos::wynn_epsilon_2_algorithm<T, K>::operator());
 
     // Wynn Rho algorithm
-    py::class_<shanks::algos::wynn_rho_algorithm<T, K>>(m, (std::string("WynnRho") + suffix).c_str())
-        .def(py::init<shanks::numerators::numerator_type>(), py::arg("type") = shanks::numerators::numerator_type::rho_type)
+    py::class_<shanks::algos::wynn_rho_algorithm<T, K>>(m, (std::string("WynnRhoAlgorithm") + suffix).c_str())
+        .def(py::init<shanks::numerators::numerator_type, RealT, RealT>(), 
+             py::arg("numerator") = shanks::numerators::numerator_type::rho_type,
+             py::arg("gamma") = RealT(-1.0),
+             py::arg("RHO") = RealT(1.0))
         .def("__call__", &shanks::algos::wynn_rho_algorithm<T, K>::operator());
 
     // Levin transformation
-    py::class_<shanks::algos::levin_algorithm<T, K>>(m, (std::string("Levin") + suffix).c_str())
-        .def(py::init<shanks::remainders::remainder_type, bool>(), py::arg("type") = shanks::remainders::remainder_type::u_type, py::arg("is_recurrent") = false)
+    py::class_<shanks::algos::levin_algorithm<T, K>>(m, (std::string("LevinAlgorithm") + suffix).c_str())
+        .def(py::init<shanks::remainders::remainder_type, bool, RealT>(), 
+             py::arg("remainder") = shanks::remainders::remainder_type::u_type, 
+             py::arg("useRecurrentFormula") = false,
+             py::arg("beta") = RealT(1.0))
         .def("__call__", &shanks::algos::levin_algorithm<T, K>::operator());
 
     // Richardson extrapolation
-    py::class_<shanks::algos::richardson_algorithm<T, K>>(m, (std::string("Richardson") + suffix).c_str())
+    py::class_<shanks::algos::richardson_algorithm<T, K>>(m, (std::string("RichardsonAlgorithm") + suffix).c_str())
         .def(py::init<>()) 
         .def("__call__", &shanks::algos::richardson_algorithm<T, K>::operator());
 }

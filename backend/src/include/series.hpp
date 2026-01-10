@@ -21,9 +21,13 @@ namespace shanks { namespace series {
 enum class series_id_t : size_t {
     #define SERIES_ENTRY(snake, camel) snake##_id,
     #define SERIES_LAST(snake, camel) snake##_id,
+    #define SERIES_ENTRY_ARGS(snake, camel, a1, a2) snake##_id,
+    #define SERIES_LAST_ARGS(snake, camel, a1, a2) snake##_id,
     #include "series_registry.def"
     #undef SERIES_ENTRY
     #undef SERIES_LAST
+    #undef SERIES_ENTRY_ARGS
+    #undef SERIES_LAST_ARGS
     series_id_t_count
 };
 
@@ -59,22 +63,14 @@ public:
     std::is_constructible_v<shanks::series::snake##_iterator<T, K>, T, T, K> || std::is_constructible_v<shanks::series::snake##_iterator<T, K>, T, K> \
 },
 //DEFININTION OF SERIS_LAST MACRO
-#define SERIES_LAST(snake, camel) { camel, [](T x, T t, K k) -> std::unique_ptr<series_base<T, K>> { \
-    if constexpr (std::is_constructible_v<shanks::series::snake##_iterator<T, K>, T, T, K>) \
-        return std::make_unique<shanks::series::snake##_iterator<T, K>>(x, t, k); \
-    else if constexpr (std::is_constructible_v<shanks::series::snake##_iterator<T, K>, T, K>) \
-        return std::make_unique<shanks::series::snake##_iterator<T, K>>(x, k); \
-    else if constexpr (std::is_constructible_v<shanks::series::snake##_iterator<T, K>, T, T>) \
-        return std::make_unique<shanks::series::snake##_iterator<T, K>>(x, t); \
-    else \
-        return std::make_unique<shanks::series::snake##_iterator<T, K>>(x); \
-}, \
-    std::is_constructible_v<shanks::series::snake##_iterator<T, K>, T, T, K> || std::is_constructible_v<shanks::series::snake##_iterator<T, K>, T, T>, \
-    std::is_constructible_v<shanks::series::snake##_iterator<T, K>, T, T, K> || std::is_constructible_v<shanks::series::snake##_iterator<T, K>, T, K> \
-}
+#define SERIES_LAST(snake, camel) SERIES_ENTRY(snake, camel)
+#define SERIES_ENTRY_ARGS(snake, camel, a1, a2) SERIES_ENTRY(snake, camel)
+#define SERIES_LAST_ARGS(snake, camel, a1, a2) SERIES_LAST(snake, camel)
 #include "series_registry.def"
 #undef SERIES_ENTRY
 #undef SERIES_LAST
+#undef SERIES_ENTRY_ARGS
+#undef SERIES_LAST_ARGS
         };
         return entries;
     }
@@ -87,9 +83,13 @@ struct series_registry_metadata {
         return {
             #define SERIES_ENTRY(snake, camel) camel,
             #define SERIES_LAST(snake, camel) camel
+            #define SERIES_ENTRY_ARGS(snake, camel, a1, a2) camel,
+            #define SERIES_LAST_ARGS(snake, camel, a1, a2) camel
             #include "series_registry.def"
             #undef SERIES_ENTRY
             #undef SERIES_LAST
+            #undef SERIES_ENTRY_ARGS
+            #undef SERIES_LAST_ARGS
         };
     }
 };

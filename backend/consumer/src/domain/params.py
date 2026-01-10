@@ -9,6 +9,7 @@ Author: Yadrentsev I. M.
 
 import pathlib
 import itertools
+import re
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Iterable, Sequence
 from dataclasses import dataclass, field
@@ -109,33 +110,36 @@ class BaseSeriesParam[T]:
         self,
         argument: Mapping[str, Any],
         size_floor: int,
-    ) -> tuple[Any, int, Any, int]:
+    ) -> tuple[int, dict[str, Any]]:
         """Resolve series arguments from the provided mapping.
-
-        If certain arguments are missing, default values are used.
 
         :param argument: _series argument mapping
         :type argument: Mapping[str, Any]
         :param size_floor: _minimum size for the series
         :type size_floor: int
-        :return: _resolved arguments (x, vecSize, addTParameter, addKParameter)
-        :rtype: tuple[Any, int, Any, int]
+        :return: _resolved arguments (vecSize, kwargs)
+        :rtype: tuple[int, dict[str, Any]]
         """
         vec_size = int(argument.get("vecSize", size_floor))
         vec_size = max(vec_size, size_floor)
 
-        default_t = cast_precision_value(self.precision, 1)
-        add_t_value = argument.get("addTParameter", argument.get("a", default_t))
+        kwargs = {}
 
-        add_k_source = argument.get(
-            "addKParameter", argument.get("m", argument.get("b", 1))
-        )
-        add_k_value = int(add_k_source) if add_k_source is not None else 1
-
+        # Handle x (default to 0 if not present)
         default_x = cast_precision_value(self.precision, 0)
-        x_value = argument.get("x", default_x)
+        x_val = argument.get("x", default_x)
+        kwargs["x"] = x_val
+        
+        # Pass all other arguments through with casting, using their original names
+        ignored_keys = {"vecSize", "series_name", "x", "id"}
+        
+        for key, value in argument.items():
+            if key in ignored_keys or key.startswith("_"):
+                continue
+            
+            kwargs[key] = cast_precision_value(self.precision, value)
 
-        return x_value, vec_size, add_t_value, add_k_value
+        return vec_size, kwargs
 
     def __get_from_pregen(
         self, argument: Mapping[str, Any]
@@ -146,7 +150,7 @@ class BaseSeriesParam[T]:
         return self.__pregen.get(tuple(argument.items()), None)
 
     def __generate(
-        self, x: Any, vec_size: int, t: Any, k: int
+        self, vec_size: int, kwargs: dict[str, Any]
     ) -> SeriesPregenLocalValue:
         """Generate a series result using the series instance."""
         # For CSV series, we use the custom wrapper
@@ -154,9 +158,18 @@ class BaseSeriesParam[T]:
              instance = self.executable()
              return (instance.generate(vec_size), instance.get_sum())
 
-        # For registry-based series, use create_series_by_name
-        factory = getattr(ps, f"create_series_by_name{self.precision.value}")
-        instance = factory(self.series_name, x, t, k)
+        # For registry-based series, instantiate class directly
+        class_name = f"{self.series_name}{self.precision.value}"
+        
+        if not hasattr(ps, class_name):
+             raise RuntimeError(f"Series class not found: {class_name}")
+             
+        cls = getattr(ps, class_name)
+        
+        # Instantiate with exactly provided arguments.
+        # If the user config provides args that the class doesn't accept, this will raise TypeError.
+        # This is intended behavior.
+        instance = cls(**kwargs)
         
         return (
             instance.generate(vec_size),
@@ -183,9 +196,9 @@ class BaseSeriesParam[T]:
         if series_result_lim:
             return series_result_lim
 
-        x, vec_size, t, k = self.__resolve_series_arguments(argument, size_floor)
+        vec_size, kwargs = self.__resolve_series_arguments(argument, size_floor)
 
-        series_result_lim = self.__generate(x, vec_size, t, k)
+        series_result_lim = self.__generate(vec_size, kwargs)
 
         self.__pregen[tuple(argument.items())] = series_result_lim
         return series_result_lim
@@ -468,7 +481,10 @@ class AccelParamJSON(StandardAccelParam[TNum]):
     @property
     @override
     def executable(self):
-        return getattr(ps, self.accel_name)
+        accel_class_name = f"{self.accel_name}{self.precision.value}"
+        if not hasattr(ps, accel_class_name):
+            raise RuntimeError(f"Acceleration class not found: {accel_class_name}")
+        return getattr(ps, accel_class_name)
 
     @property
     @override

@@ -18,9 +18,13 @@
 constinit const char* series_names[OVERALL_SERIES_DEFINED] = {
 #define SERIES_ENTRY(snake, camel) camel,
 #define SERIES_LAST(snake, camel) camel
+#define SERIES_ENTRY_ARGS(snake, camel, arg1, arg2) SERIES_ENTRY(snake, camel)
+#define SERIES_LAST_ARGS(snake, camel, arg1, arg2) SERIES_LAST(snake, camel)
 #include "../../src/include/series_registry.def"
 #undef SERIES_ENTRY
 #undef SERIES_LAST
+#undef SERIES_ENTRY_ARGS
+#undef SERIES_LAST_ARGS
 };
 
 /**

@@ -20,9 +20,13 @@ enum class series_iterator_id_t {
     null_iterator_id,
 #define SERIES_ENTRY(snake, camel) snake##_iterator_id,
 #define SERIES_LAST(snake, camel) snake##_iterator_id,
+#define SERIES_ENTRY_ARGS(snake, camel, a1, a2) snake##_iterator_id,
+#define SERIES_LAST_ARGS(snake, camel, a1, a2) snake##_iterator_id,
 #include "../series_registry.def"
 #undef SERIES_ENTRY
 #undef SERIES_LAST
+#undef SERIES_ENTRY_ARGS
+#undef SERIES_LAST_ARGS
     series_iterator_id_t_count
 };
 

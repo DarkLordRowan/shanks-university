@@ -33,7 +33,7 @@ class DataAccelParamSource(AccelParamSource):
 
             methods.append(
                 AccelParamJSON(
-                    name=m["name"] + precision.value,
+                    name=m["name"],
                     n=n_list,
                     m=m_list,
                     init_args=args,

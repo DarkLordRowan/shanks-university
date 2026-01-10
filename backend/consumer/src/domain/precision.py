@@ -75,8 +75,8 @@ class Precision:
     }
 
     _COMPLEX_CLASS = {
-        PrecisionType.CF32: ps.CF32,
-        PrecisionType.CF64: ps.CF64,
+        PrecisionType.CF32: complex,
+        PrecisionType.CF64: complex,
         PrecisionType.CFLONG: ps.CFLong,
         PrecisionType.CARB: ps.CArb,
     }
