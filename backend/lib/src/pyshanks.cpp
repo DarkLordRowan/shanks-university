@@ -34,6 +34,17 @@ PYBIND11_MODULE(pyshanks, m) {
         .value("gamma_rho_type", shanks::numerators::numerator_type::gamma_rho_type)
         .export_values();
 
+    py::enum_<NoiseType>(m, "NoiseType")
+        .value("Uniform", NoiseType::uniform)
+        .value("Normal", NoiseType::normal)
+        .value("Poisson", NoiseType::poisson)
+        .export_values();
+
+    py::enum_<NoiseMethod>(m, "NoiseMethod")
+        .value("Jitter", NoiseMethod::jitter)
+        .value("Scaling", NoiseMethod::scaling)
+        .export_values();
+
     // 3. Bind all templated series and algos
     using types_to_bind = std::tuple<
         std::tuple<       float, size_t>,

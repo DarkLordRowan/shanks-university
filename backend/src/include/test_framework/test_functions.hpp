@@ -128,7 +128,7 @@ void cmp_a_n_and_transform(const K n, const K order,
  * @return A new series_result<T> with noise applied
  */
 template<AcceptedLike T, AcceptedLike ParamType>
-inline series_result<T> jitter(
+inline series_result<T> apply_noise_interactive(
 	series_result<T>& source,
 	const NoiseType noise_type
 )
@@ -166,8 +166,7 @@ inline series_result<T> jitter(
 	}
 
 	// Applying noise
-	noise_generator<T> gen = noise_generator<T>(noise_type,seed);
-	return gen.jitter(source, param1, param2);
+	return apply_noise(source, NoiseMethod::jitter, noise_type, seed, param1, param2);
 }
 
 /**

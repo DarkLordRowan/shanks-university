@@ -193,7 +193,7 @@ inline void main_testing_function()
 		std::cout << "Noise type: uniform[0], normal[1], poisson[2]\n";
 		NoiseType noise_type_to_use = console_IO<NoiseType>::input("noise_type");
 
-		result = jitter<T,T>(result, noise_type_to_use);
+		result = apply_noise_interactive<T,T>(result, noise_type_to_use);
 	}
 
 	// Executing the selected test function

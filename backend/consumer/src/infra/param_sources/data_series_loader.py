@@ -9,6 +9,7 @@ from src.domain.application.param_processing import autowrap
 from src.domain.params import SeriesParamJSON
 from src.domain.precision import PrecisionType, cast_precision_value
 from src.domain.sources import SeriesParamSource
+from src.config.model import NoiseConfig
 
 
 class DataSeriesParamSource(SeriesParamSource):
@@ -28,7 +29,7 @@ class DataSeriesParamSource(SeriesParamSource):
         for series_data in self.data["series"]:
             args = series_data.get("args", {})
             processed = self._process_args(args, precision)
-
+            
             series_list.append(
                 SeriesParamJSON(
                     precision=precision,
@@ -38,6 +39,16 @@ class DataSeriesParamSource(SeriesParamSource):
             )
 
         return series_list
+
+    def load_noises(self) -> list[NoiseConfig]:
+        """Loads noise configurations from provided data.
+
+        :return: A list of NoiseConfig instances.
+        :rtype: list[NoiseConfig]
+        """
+        return [
+            NoiseConfig.from_dict(n) for n in self.data.get("noises", [])
+        ]
 
     def _process_args(self, args: Any, precision: PrecisionType):
         """

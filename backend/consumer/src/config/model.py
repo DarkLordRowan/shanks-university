@@ -14,6 +14,19 @@ from src.domain.precision import PrecisionType
 
 
 @dataclass
+class NoiseConfig:
+    type: str = "Uniform"
+    method: str = "jitter"
+    param1: float | str = 0.0
+    param2: float | str = 0.0
+    seed: int = 0
+
+    @classmethod
+    def from_dict(cls, data: dict) -> "NoiseConfig":
+        return cls(**data)
+
+
+@dataclass
 class TrialConfig:
     """Trial execution configuration model."""
 
@@ -35,6 +48,8 @@ class TrialConfig:
         self.output_formats = [
             OutputFormat(fmt) for fmt in self.output_formats
         ]
+        
+        self.noise_configs = [NoiseConfig.from_dict(n) for n in self.noises]
 
         self.output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -65,6 +80,8 @@ class TrialConfig:
     output_formats: list[OutputFormat] = field(
         default_factory=lambda: [OutputFormat.JSON, OutputFormat.CSV]
     )
+    
+    noises: list[dict] = field(default_factory=list)
 
     @property
     def is_parallel(self) -> int:

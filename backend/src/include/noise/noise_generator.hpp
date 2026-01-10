@@ -30,10 +30,10 @@
 * - poisson: Represents Poisson distribution noise.
 */
 enum NoiseType {
-    uniform,
-    normal,
-    poisson,
-    noise_count
+    uniform = 0,
+    normal = 1,
+    poisson = 2,
+    noise_count = 3
 };
 
 
@@ -404,126 +404,40 @@ T generate_poisson_noise(const T& lambda, std::mt19937_64& rng) {
 
 
 
-/** @brief Class for generating noise and applying it to series results.
-* This class provides functionality to generate different types of noise
-* @authors Naumov A.U., Lykov D.S., Kreynin R.G.
-* @tparam T Type of the series result elements.
+/**
+* @brief Enum of noise application methods
+*
+* - jitter: Adds noise to partial sums.
+* - scaling: Multiplies terms by noise factor.
 */
-template<AcceptedLike T>
-class noise_generator {
-protected:
+enum NoiseMethod {
+    jitter,
+    scaling,
+    noise_method_count
+};
 
-    unsigned long long int seed;
+/**
+ * @brief Internal implementation specialized via template parameters for maximum performance.
+ */
+template<NoiseMethod Method, NoiseType Type, AcceptedLike T, AcceptedLike paramType>
+series_result<T> apply_noise_impl(const series_result<T>& result, std::mt19937_64& rng, const paramType& tParam1, const paramType& tParam2) {
+    const size_t size = result.Sn.size();
+    std::vector<T> newSn;
+    std::vector<T> newAn;
+    newSn.reserve(size);
+    newAn.reserve(size);
 
-    std::unique_ptr<std::mt19937_64> randomNumberGen;
-
-    NoiseType type;
-
-
-    /**
-     * @brief Generates uniform noise
-     * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
-     */
-    template<AcceptedLike paramType>
-    inline T uniform(const paramType& inf, const paramType& sup) const {
-        return generate_uniform_noise<T>(inf, sup, *randomNumberGen);
-    }
-
-    /**
-     * @brief Generates normal noise
-     * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
-     */
-    template<AcceptedLike paramType>
-    inline T normal(const paramType& inf,const paramType& sup) const {
-        return generate_normal_noise<T>(inf, sup, *randomNumberGen);
-    };
-
-    /**
-     * @brief Generates poisson noise
-     * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
-     */
-    template<AcceptedLike paramType>
-    inline T poisson(const paramType& lamda) const {
-        return generate_poisson_noise<T>(lamda, *randomNumberGen);
-    };
-
-
-public:
-
-    /** @brief Constructor for NoiseGenerator with specified noise type and random seed.
-     *
-     * This constructor initializes the NoiseGenerator with the specified noise type
-     * and a random seed for generating random numbers.
-     *
-     * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
-     *
-     * @param type The type of noise to generate (uniform, normal, poisson).
-     */
-    noise_generator(const NoiseType type) : type(type) {
-
-        seed = pseudo_random_seed;
-
-        randomNumberGen = std::make_unique<std::mt19937_64>(seed);
-
-    }
-
-    /** @brief Constructor for NoiseGenerator with specified noise type and defined seed.
-     *
-     * This constructor initializes the NoiseGenerator with the specified noise type
-     * and a user-defined seed for generating random numbers.
-     *
-     * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
-     *
-     * @param type The type of noise to generate (uniform, normal, poisson).
-     * @param seed The seed for the random number generator.\n
-     * Valid values: any positive integer.
-     */
-    noise_generator(const NoiseType type, const unsigned long long int seed) : seed(seed), type(type) {
-
-        randomNumberGen = std::make_unique<std::mt19937_64>(seed);
-
-    }
-
-    /** @brief Applies jitter noise to a series result.
-     *
-     * This method applies jitter noise to the provided series result based on the specified noise type
-     * and parameters. The noise is added to each term of the series result.
-     *
-     * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
-     *
-     * @tparam paramType Type of the parameters for noise generation.
-     *
-     * @param result The series result to which noise will be applied.
-     * @param tParam1 First parameter for noise generation (e.g., lower bound for uniform, mean for normal, lambda for poisson).
-     * @param tParam2 Second parameter for noise generation (e.g., upper bound for uniform, std deviation for normal). Not used for poisson.
-     *
-     * @return A new series_result with jitter noise applied.
-     */
-    template<AcceptedLike paramType>
-    series_result<T> jitter(const series_result<T>& result, const paramType& tParam1, const paramType& tParam2 = paramType{}) {
-
-        std::vector<T> newSn;
-        std::vector<T> newAn;
-
-        std::function<T(const paramType&, const paramType&)> noiseFunc;
-
-        // Binding the appropriate noise generation function based on generator type
-        switch (type) {
-            case NoiseType::uniform:
-                noiseFunc = [this](const paramType& a, const paramType& b) { return this->uniform(a, b); };
-                break;
-            case NoiseType::normal:
-                noiseFunc = [this](const paramType& a, const paramType& b) { return this->normal(a, b); };
-                break;
-            case NoiseType::poisson:
-                noiseFunc = [this](const paramType& a, const paramType&) { return this->poisson(a); };
-                break;
+    for (size_t i = 0; i < size; ++i) {
+        T noise;
+        if constexpr (Type == NoiseType::uniform) {
+            noise = generate_uniform_noise<T>(tParam1, tParam2, rng);
+        } else if constexpr (Type == NoiseType::normal) {
+            noise = generate_normal_noise<T>(tParam1, tParam2, rng);
+        } else if constexpr (Type == NoiseType::poisson) {
+            noise = generate_poisson_noise<T>(tParam1, rng);
         }
 
-        // Iteratively applying noise to partial sums and recalculating terms
-        for (size_t i = 0; i < result.Sn.size(); ++i) {
-            T noise = noiseFunc(tParam1, tParam2);
-
+        if constexpr (Method == NoiseMethod::jitter) {
             if (i == 0) {
                 newSn.push_back(result.Sn[0] + noise);
                 newAn.push_back(newSn[0]);
@@ -531,50 +445,7 @@ public:
                 newSn.push_back(result.Sn[i] + noise);
                 newAn.push_back(newSn[i] - newSn[i - 1]);
             }
-        }
-
-        return series_result<T>{.Sn = newSn, .an = newAn};
-    };
-
-    /** @brief Applies scaling noise to a series result.
-     *
-     * This method applies scaling noise to the provided series result based on the specified noise type
-     * and parameters. The terms of the series result are scaled by the generated noise.
-     *
-     * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
-     *
-     * @tparam paramType Type of the parameters for noise generation.
-     *
-     * @param result The series result to which noise will be applied.
-     * @param tParam1 First parameter for noise generation (e.g., lower bound for uniform, mean for normal, lambda for poisson).
-     * @param tParam2 Second parameter for noise generation (e.g., upper bound for uniform, std deviation for normal). Not used for poisson.
-     *
-     * @return A new series_result with scaling noise applied.
-     */
-    template<AcceptedLike paramType>
-    series_result<T> scaling(const series_result<T>& result, const paramType& tParam1, const paramType& tParam2 = paramType{}) {
-        std::vector<T> newSn;
-        std::vector<T> newAn;
-
-        std::function<T(const paramType&, const paramType&)> noiseFunc;
-
-        // Binding the appropriate scaling noise function
-        switch (type) {
-            case NoiseType::uniform:
-                noiseFunc = [this](const paramType& a, const paramType& b) { return this->uniform(a, b); };
-                break;
-            case NoiseType::normal:
-                noiseFunc = [this](const paramType& a, const paramType& b) { return this->normal(a, b); };
-                break;
-            case NoiseType::poisson:
-                noiseFunc = [this](const paramType& a, const paramType&) { return this->poisson(a); };
-                break;
-
-        }
-        // Applying noise factor to each term and accumulating partial sums
-        for (size_t i = 0; i < result.Sn.size(); ++i) {
-            T noise = noiseFunc(tParam1, tParam2);
-
+        } else if constexpr (Method == NoiseMethod::scaling) {
             if (i == 0) {
                 newSn.push_back(result.Sn[0] * noise);
                 newAn.push_back(newSn[0]);
@@ -583,7 +454,41 @@ public:
                 newSn.push_back(newSn[i - 1] + newAn[i]);
             }
         }
-        return series_result<T>{.Sn = newSn, .an = newAn};
+    }
+    return series_result<T>{.Sn = std::move(newSn), .an = std::move(newAn)};
+}
+
+/**
+ * @brief Applies noise to a series result using specified method and distribution.
+ *
+ * This function dispatches runtime enums to template-specialized implementations.
+ *
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+ */
+template<AcceptedLike T, AcceptedLike paramType>
+series_result<T> apply_noise(const series_result<T>& result, const NoiseMethod method, const NoiseType type, const unsigned long long int seed, const paramType& tParam1, const paramType& tParam2 = paramType{}) {
+    std::mt19937_64 rng(seed);
+
+    auto dispatch_type = [&](auto method_const) {
+        switch (type) {
+            case NoiseType::uniform:
+                return apply_noise_impl<decltype(method_const)::value, NoiseType::uniform, T, paramType>(result, rng, tParam1, tParam2);
+            case NoiseType::normal:
+                return apply_noise_impl<decltype(method_const)::value, NoiseType::normal, T, paramType>(result, rng, tParam1, tParam2);
+            case NoiseType::poisson:
+                return apply_noise_impl<decltype(method_const)::value, NoiseType::poisson, T, paramType>(result, rng, tParam1, tParam2);
+            default:
+                throw std::invalid_argument("Invalid noise type");
+        }
+    };
+
+    switch (method) {
+        case NoiseMethod::jitter:
+            return dispatch_type(std::integral_constant<NoiseMethod, NoiseMethod::jitter>{});
+        case NoiseMethod::scaling:
+            return dispatch_type(std::integral_constant<NoiseMethod, NoiseMethod::scaling>{});
+        default:
+            throw std::invalid_argument("Invalid noise method");
     }
 };
 

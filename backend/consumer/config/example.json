@@ -7,7 +7,22 @@
       }
     }
   ],
-
+  "noises": [
+    {
+      "type": "Normal",
+      "method": "jitter",
+      "param1": 0.0,
+      "param2": 1e-10,
+      "seed": 42
+    },
+    {
+      "type": "Uniform",
+      "method": "scaling",
+      "param1": 0.9999999999,
+      "param2": 1.0000000001,
+      "seed": 42
+    }
+  ],
   "methods": [
     {
       "name": "LevinAlgorithm",

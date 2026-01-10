@@ -10,6 +10,7 @@ from typing import Iterable
 from src.domain.params import SeriesParamCSV
 from src.domain.precision import PrecisionType
 from src.domain.sources import SeriesParamSource
+from src.config.model import NoiseConfig
 
 
 class CSVSeriesParamSource(SeriesParamSource):
@@ -30,3 +31,11 @@ class CSVSeriesParamSource(SeriesParamSource):
                     )
                 )
         return results
+
+    def load_noises(self) -> list[NoiseConfig]:
+        """Loads noise configurations from provided data.
+
+        :return: A list of NoiseConfig instances.
+        :rtype: list[NoiseConfig]
+        """
+        return []

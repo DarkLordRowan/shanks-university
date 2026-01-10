@@ -32,13 +32,9 @@ def get_trial_executor_from_config(config: TrialConfig) -> TrialExecutor:
     logger = setup_logging(config.verbose)
     logger.debug(config)
     runner = (
-        ParallelTrialRunner(
-            process_count=config.trial_process_count,
-            timeout=config.trial_task_timeout,
-            memory_efficient=config.trial_memory_efficient,
-        )
+        ParallelTrialRunner(config=config)
         if config.is_parallel
-        else SequentialTrialRunner()
+        else SequentialTrialRunner(config=config)
     )
 
     series_sources = [build(config) for build in PARAM_SERIES_SOURCE_BUILDERS]

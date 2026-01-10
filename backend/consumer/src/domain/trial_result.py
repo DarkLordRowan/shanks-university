@@ -5,6 +5,7 @@ Author: Yadrentsev I. M.
 
 from dataclasses import dataclass
 from typing import Any, Mapping
+from src.config.model import NoiseConfig
 
 
 @dataclass
@@ -74,5 +75,6 @@ class TrialResult:
     series: SeriesTrialResult
     accel: AccelTrialResult
     computed: list[ComputedTrialResult]
+    noise: NoiseConfig | None = None
     error: ErrorTrialResult | None = None
     stack_id: str | None = None

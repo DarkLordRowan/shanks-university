@@ -72,6 +72,7 @@ class TrialExecutor:
 
         for source in self.series_sources:
             series_params.extend(source.load(precision))
+            self.config.noise_configs.extend(source.load_noises())
 
         for source in self.accel_sources:
             accel_params.extend(source.load(precision))

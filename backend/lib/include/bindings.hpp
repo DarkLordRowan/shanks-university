@@ -22,6 +22,7 @@
 #include "../../src/include/utils.hpp"
 #include "../../src/include/methods.hpp"
 #include "../../src/include/series.hpp"
+#include "../../src/include/noise/noise_generator.hpp"
 
 namespace py = pybind11;
 
@@ -167,10 +168,26 @@ constexpr void bind_algos(pybind11::module_& m, const std::string& suffix){
         .def("__call__", &shanks::algos::richardson_algorithm<T, K>::operator());
 }
 
+/**
+ * @brief Binds noise generator.
+ */
+template <AcceptedLike T, UnsignedIntLike K>
+constexpr void bind_noise(pybind11::module_& m, const std::string& suffix){
+    
+    m.def((std::string("applyNoise") + suffix).c_str(), 
+        [](const series_result<T>& result, NoiseMethod method, NoiseType type, unsigned long long int seed, const T& p1, const T& p2) {
+             unsigned long long int actual_seed = (seed == 0) ? pseudo_random_seed : seed;
+             return apply_noise(result, method, type, actual_seed, p1, p2);
+        }, 
+        py::arg("result"), py::arg("method"), py::arg("type"), py::arg("seed") = 0, py::arg("param1"), py::arg("param2") = T()
+    );
+}
+
 template <AcceptedLike T, UnsignedIntLike K>
 constexpr void bind_all(pybind11::module_& m, const std::string& suffix){
     bind_series<T,K>(m, suffix);
     bind_algos<T,K>(m, suffix);
+    bind_noise<T,K>(m, suffix);
 }
 
 template<typename TupleOfTypes, std::size_t TypesIndex = 0, std::size_t NameIndex = 0>

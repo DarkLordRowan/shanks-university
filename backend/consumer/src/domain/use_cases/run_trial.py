@@ -6,6 +6,10 @@ Authors: Shevyrov A.N., Yadrentsev I.M.
 import traceback
 from typing import Mapping, Any
 
+import pyshanks as ps
+from src.config.model import NoiseConfig
+from src.domain.precision import cast_precision_value
+
 from src.domain.params import (
     BaseAccelParam,
     BaseSeriesParam,
@@ -27,6 +31,7 @@ def trial_results_from_series_error(
     accel: BaseAccelParam,
     series_argument: Mapping[str, Any],
     exc: Exception,
+    noise: NoiseConfig | None = None,
 ) -> list[TrialResult]:
     """Generate trial results from a series error.
 
@@ -40,6 +45,8 @@ def trial_results_from_series_error(
     :type series_argument: Mapping[str, Any]
     :param exc: _exception instance
     :type exc: Exception
+    :param noise: _noise configuration
+    :type noise: NoiseConfig | None
     :return: _list of trial results with errors
     :rtype: list[TrialResult]
     """
@@ -60,6 +67,7 @@ def trial_results_from_series_error(
                 },
             ),
             computed=[],
+            noise=noise,
             error=ErrorTrialResult(
                 str(exc),
                 traceback.format_exc(),
@@ -78,6 +86,7 @@ def trial_results_from_accel_error(
     accel: BaseAccelParam,
     additional_args: Mapping[str, Any],
     exc: Exception,
+    noise: NoiseConfig | None = None,
 ):
     """Generate trial results from an acceleration error.
 
@@ -95,6 +104,8 @@ def trial_results_from_accel_error(
     :type additional_args: Mapping[str, Any]
     :param exc: _exception instance
     :type exc: Exception
+    :param noise: _noise configuration
+    :type noise: NoiseConfig | None
     :return: _list of trial results with errors
     :rtype: list[TrialResult]
     """
@@ -114,6 +125,7 @@ def trial_results_from_accel_error(
                 },
             ),
             computed=[],
+            noise=noise,
             error=ErrorTrialResult(str(exc), traceback.format_exc(), {}),
         )
         for m_value in accel.m_values
@@ -123,6 +135,7 @@ def trial_results_from_accel_error(
 @logged_debug
 def execute_trial(
     series_accel: tuple[BaseSeriesParam, BaseAccelParam],
+    noise_config: NoiseConfig | None = None,
 ) -> list[TrialResult]:
     """Execute a trial for given series and acceleration parameters.
 
@@ -132,6 +145,8 @@ def execute_trial(
 
     :param series_accel: _tuple of series and acceleration parameters
     :type series_accel: tuple[BaseSeriesParam, BaseAccelParam]
+    :param noise_config: _noise configuration
+    :type noise_config: NoiseConfig | None
     :raises ValueError: _n must be positive
     :raises IndexError: _generated series size is insufficient for n
     :return: _list of trial results
@@ -149,9 +164,28 @@ def execute_trial(
             series_result, series_lim = series.obtain_by_argument(
                 series_argument, accel.size_floor
             )
+            
+            if noise_config:
+                 precision = series.precision
+                 noise_type_enum = getattr(ps.NoiseType, noise_config.type)
+                 noise_method_enum = getattr(ps.NoiseMethod, noise_config.method.capitalize())
+                 
+                 p1 = cast_precision_value(precision, noise_config.param1)
+                 p2 = cast_precision_value(precision, noise_config.param2)
+                 
+                 func_name = f"applyNoise{precision.value}"
+                 
+                 if not hasattr(ps, func_name):
+                     raise ValueError(f"Noise function {func_name} not found")
+                 
+                 func = getattr(ps, func_name)
+                 series_result = func(series_result, noise_method_enum, noise_type_enum, noise_config.seed, p1, p2)
+
         except Exception as exc:
             results.extend(
-                trial_results_from_series_error(series, accel, series_argument, exc)
+                trial_results_from_series_error(
+                    series, accel, series_argument, exc, noise=noise_config
+                )
             )
             continue
 
@@ -167,6 +201,7 @@ def execute_trial(
                         accel,
                         additional_args,
                         exc,
+                        noise=noise_config,
                     )
                 )
                 continue
@@ -240,6 +275,7 @@ def execute_trial(
                             },
                         ),
                         computed=computed,
+                        noise=noise_config,
                         error=error or NoErrorTrialResult,
                     )
                 )
