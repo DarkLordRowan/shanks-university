@@ -14,36 +14,40 @@
       in
       {
 
+        devShells.python = pkgs.mkShell {
+          packages = with pkgs; [
+            (python3.withPackages (ps: with ps; [
+              numpy
+              pandas
+              pyarrow
+              polars
+              pyqt6
+              pyqtgraph
+              mypy
+            ]))
+          ];
+        };
         devShells.default = pkgs.mkShell {
-          packages =
-            with pkgs;
-            [
-              cmake
-              clang-tools
-              poetry
-              pkg-config
-              mpfr
-              gmp
-              eigen
-              (python3.withPackages (ps: with ps; [
+          packages = with pkgs; [
+            cmake
+            clang-tools
+            poetry
+            pkg-config
+            mpfr
+            gmp
+            eigen
+            (python3.withPackages (
+              ps: with ps; [
                 pybind11-stubgen
+                polars
+                pyarrow
+                pyqt6
+                pyqtgraph
                 numpy
                 pandas
-                matplotlib
-                plotly
-                scipy
-                jupyter
-                pyarrow
-                python-dotenv
-                tqdm
-                pymongo
-                pydantic
-                pyyaml
-                dnspython
-                typing-extensions
-                typing-inspection
-              ]))
-            ];
+              ]
+            ))
+          ];
         };
       }
     );

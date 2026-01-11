@@ -87,6 +87,8 @@ class AccelInfo:
     name: str
     m_value: int
     additional_args: Dict[str, str]
+    noise_str: str = ""
+    noise_info: Optional[Dict[str, Any]] = None
 
 
 @dataclass
@@ -145,6 +147,7 @@ class Metadata:
     series_names: List[str]
     accel_names: List[str]
     m_values: List[int]
+    noise_options: List[str]
     accel_param_info: Dict[str, List[str]]
     series_param_info: Dict[str, List[str]]
 
@@ -161,18 +164,122 @@ class DataLoader:
         Initializes the DataLoader.
 
         Inputs:
-            data_dir (str): The directory containing 'series' and 'accelerations' subdirectories.
+            data_dir (str): The directory containing 'series' and 'accelerations' subdirectories,
+                           or a path to a JSON file.
         """
         self.data_dir = data_dir
-        # lazy scan allowing us to build a query plan before executing it.
-        # hive_partitioning=True allows us to leverage folder structures like /series_name=Harmonic/
-        self.series_df = pl.scan_parquet(
-            os.path.join(data_dir, "series"), hive_partitioning=True
-        )
-        self.accel_df = pl.scan_parquet(
-            os.path.join(data_dir, "accelerations"), hive_partitioning=True
-        )
+        if os.path.isfile(data_dir) and data_dir.endswith(".json"):
+            self._load_json(data_dir)
+        else:
+            # lazy scan allowing us to build a query plan before executing it.
+            # hive_partitioning=True allows us to leverage folder structures like /series_name=Harmonic/
+            self.series_df = pl.scan_parquet(
+                os.path.join(data_dir, "series"), hive_partitioning=True
+            )
+            self.accel_df = pl.scan_parquet(
+                os.path.join(data_dir, "accelerations"), hive_partitioning=True
+            )
         self.metadata = self._compute_metadata()
+
+    @staticmethod
+    def _format_noise_dict(ni: Dict[str, Any]) -> str:
+        """Compresses noise dictionary into a readable string."""
+        if not ni:
+            return "None"
+        method = ni.get("method", "Unknown")
+        params = []
+        # Sort keys to ensure consistent string representation
+        for k in sorted(ni.keys()):
+            v = ni[k]
+            if k == "method" or v is None:
+                continue
+            params.append(f"{k}={v}")
+        if not params:
+            return method
+        return f"{method}({', '.join(params)})"
+
+    def _load_json(self, json_path: str):
+        """
+        Loads data from a JSON file and transforms it to match the expected schema.
+        We attempt to make the JSON data look like the Parquet-based LazyFrames.
+        """
+        # We use pl.read_json which is eager, then convert to lazy.
+        df = pl.read_json(json_path)
+
+        # 1. Series DataFrame
+        # Each entry in JSON is (series + accel), so we group by series to get the unique base series.
+        series_df = df.select([
+            pl.lit("f64").alias("precision"),
+            pl.col("series").struct.field("id").alias("series_id"),
+            pl.col("series").struct.field("name").alias("series_name"),
+            pl.col("series").struct.field("arguments").alias("arguments"),
+            # series_limit as a struct of strings (real, imag)
+            pl.struct([
+                pl.col("series").struct.field("lim").alias("real"),
+                pl.lit("0.0").alias("imag"),
+            ]).alias("series_limit"),
+            # computed as list of struct {n, value: {real, imag}, deviation}
+            pl.col("computed").list.eval(
+                pl.struct([
+                    pl.element().struct.field("n"),
+                    pl.struct([
+                        pl.element().struct.field("partial_sum").alias("real"),
+                        pl.lit("0.0").alias("imag")
+                    ]).alias("value"),
+                    pl.element().struct.field("partial_sum_deviation").alias("deviation")
+                ])
+            ).alias("computed")
+        ]).unique(subset=["series_id"])
+        
+        self.series_df = series_df.lazy()
+
+        # 2. Accel DataFrame
+        def extract_events(computed_list):
+            evts = []
+            for step in computed_list:
+                n = step.get("n")
+                for e in step.get("events", []):
+                    evts.append({
+                        "n": n, 
+                        "name": e.get("name", ""), 
+                        "description": e.get("description", "")
+                    })
+            return evts
+
+        accel_df = df.select([
+            pl.col("series").struct.field("id").alias("series_id"),
+            pl.col("accel").struct.field("name").alias("accel_name"),
+            pl.col("accel").struct.field("m_value").alias("m_value"),
+            pl.col("accel").struct.field("additional_args").alias("additional_args"),
+            pl.col("noise").alias("noise"),
+            pl.col("noise").map_elements(self._format_noise_dict, return_dtype=pl.String).alias("noise_str"),
+            # computed for accel (aligned with series steps)
+            pl.col("computed").list.eval(
+                pl.struct([
+                    pl.struct([
+                        pl.element().struct.field("accel_value").alias("real"),
+                        pl.lit("0.0").alias("imag")
+                    ]).alias("value"),
+                    pl.element().struct.field("accel_value_deviation").alias("deviation")
+                ])
+            ).alias("computed"),
+            # Map events from steps
+            pl.col("computed").map_elements(extract_events, return_dtype=pl.List(pl.Struct([
+                pl.Field("n", pl.Int64),
+                pl.Field("name", pl.String),
+                pl.Field("description", pl.String)
+            ]))).alias("events"),
+            # Global error if any
+            pl.col("error").map_elements(
+                lambda x: [{"n": 0, "message": str(x)}] if x is not None else [],
+                return_dtype=pl.List(pl.Struct([
+                    pl.Field("n", pl.Int64),
+                    pl.Field("message", pl.String)
+                ]))
+            ).alias("errors")
+        ])
+        
+        self.accel_df = accel_df.lazy()
 
     def _compute_metadata(self) -> Metadata:
         """
@@ -221,6 +328,29 @@ class DataLoader:
             .to_list()
         )
 
+        noise_options = []
+        if "noise_str" in self.accel_df.collect_schema():
+            noise_options = (
+                self.accel_df.select("noise_str")
+                .unique()
+                .collect()
+                .get_column("noise_str")
+                .drop_nulls()
+                .sort()
+                .to_list()
+            )
+        elif "noise" in self.accel_df.collect_schema():
+            # If we have 'noise' struct but not 'noise_str' (e.g. from Parquet)
+            noise_options = (
+                self.accel_df.select(pl.col("noise").map_elements(self._format_noise_dict, return_dtype=pl.String).alias("noise_str"))
+                .unique()
+                .collect()
+                .get_column("noise_str")
+                .drop_nulls()
+                .sort()
+                .to_list()
+            )
+
         # For nested parameters (like arguments in a JSON struct), we need a helper.
         series_param_info = self._get_unique_param_info(self.series_df, "arguments")
         accel_param_info = self._get_unique_param_info(self.accel_df, "additional_args")
@@ -230,6 +360,7 @@ class DataLoader:
             series_names=series_names,
             accel_names=accel_names,
             m_values=m_values,
+            noise_options=noise_options,
             accel_param_info=accel_param_info,
             series_param_info=series_param_info,
         )
@@ -389,6 +520,13 @@ class DataLoader:
             a_df = a_df.filter(pl.col("accel_name").is_in(list(filters["base_accel"])))
         if filters.get("m_values"):
             a_df = a_df.filter(pl.col("m_value").is_in(list(filters["m_values"])))
+        if filters.get("noise_options"):
+            if "noise_str" in self.accel_df.collect_schema():
+                a_df = a_df.filter(pl.col("noise_str").is_in(list(filters["noise_options"])))
+            elif "noise" in self.accel_df.collect_schema():
+                a_df = a_df.filter(
+                    pl.col("noise").map_elements(self._format_noise_dict, return_dtype=pl.String).is_in(list(filters["noise_options"]))
+                )
 
         for param, values in filters.get("accel_params", {}).items():
             if values:
@@ -427,6 +565,12 @@ class DataLoader:
                 b_args = batch.column("additional_args")
                 b_err = batch.column("errors")
                 b_evt = batch.column("events")
+                
+                has_noise_str = "noise_str" in batch.schema.names
+                b_noise_str = batch.column("noise_str") if has_noise_str else None
+                
+                has_noise = "noise" in batch.schema.names
+                b_noise = batch.column("noise") if has_noise else None
 
                 b_comp = batch.column("computed_parsed")  # ListArray
 
@@ -458,6 +602,12 @@ class DataLoader:
                         for k, v in args_scalar.as_py().items()
                         if v is not None
                     }
+                    
+                    noise_info = b_noise[i].as_py() if b_noise is not None else None
+                    if b_noise_str is not None:
+                        noise_str = b_noise_str[i].as_py()
+                    else:
+                        noise_str = self._format_noise_dict(noise_info) if noise_info else "None"
 
                     # Computed slice
                     start = offsets[i]
@@ -486,7 +636,7 @@ class DataLoader:
                     ]
 
                     accel_rec = AccelRecord(
-                        accel_info=AccelInfo(name, m_val, args),
+                        accel_info=AccelInfo(name, m_val, args, noise_str=noise_str, noise_info=noise_info),
                         val_real_m=child_arrays["vr_m"][start:end],
                         val_real_e=child_arrays["vr_e"][start:end],
                         val_imag_m=child_arrays["vi_m"][start:end],
@@ -576,10 +726,10 @@ class DataLoader:
 
     def _parse_scientific(self, s: Any) -> Scientific:
         """
-        Parses a scientific notation value (string or existing Scientific) into a Scientific object.
+        Parses a scientific notation value (string, dict, or None) into a Scientific object.
 
         Inputs:
-            s (Any): Input value (string, Scientific, or None).
+            s (Any): Input value (string, dict with '0'/'1', or None).
 
         Outputs:
             Scientific: Parsed object.
@@ -588,6 +738,8 @@ class DataLoader:
             return Scientific(0.0, 0)
         if isinstance(s, str):
             return Scientific.from_str(s)
+        if isinstance(s, dict) and "0" in s and "1" in s:
+            return Scientific(float(s["0"]), int(s["1"]))
         # Fallback for unexpected formats
         return Scientific(0.0, 0)
 

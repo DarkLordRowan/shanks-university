@@ -138,6 +138,7 @@ def extract_filter_options(
     base_series: Set[str] = set()
     base_accel: Set[str] = set()
     m_values: Set[int] = set()
+    noise_options: Set[str] = set()
     series_params: Dict[str, Set[str]] = {}
     accel_params: Dict[str, Set[str]] = {}
 
@@ -154,6 +155,8 @@ def extract_filter_options(
         for accel in accels:
             base_accel.add(accel.accel_info.name)
             m_values.add(accel.accel_info.m_value)
+            if accel.accel_info.noise_str:
+                noise_options.add(accel.accel_info.noise_str)
 
             # Acceleration Arguments
             for k, v in accel.accel_info.additional_args.items():
@@ -170,6 +173,7 @@ def extract_filter_options(
         "base_series": sorted(list(base_series)) if len(base_series) > 1 else [],
         "base_accel": sorted(list(base_accel)) if len(base_accel) > 1 else [],
         "m_values": sorted(list(m_values)) if len(m_values) > 1 else [],
+        "noise_options": sorted(list(noise_options)) if len(noise_options) > 1 else [],
         "series_params": clean_params(series_params),
         "accel_params": clean_params(accel_params),
     }
@@ -179,31 +183,32 @@ def filter_data_items(
     data: List[Tuple[SeriesRecord, List[AccelRecord]]], filters: Dict[str, Any]
 ) -> List[Tuple[SeriesRecord, List[AccelRecord]]]:
     """
-    Filters the data based on quick filters.
-    Structure of filters:
-    {
-        'precisions': set(),
-        'base_series': set(),
-        'base_accel': set(),
-        'm_values': set(),
-        'series_params': {'param_name': set(), ...},
-        'accel_params': {'param_name': set(), ...}
-    }
-    Empty set implies "All" (no filtering).
+    # Structure of filters:
+    # {
+    #     'precisions': set(),
+    #     'base_series': set(),
+    #     'base_accel': set(),
+    #     'm_values': set(),
+    #     'noise_options': set(),
+    #     'series_params': {'param_name': set(), ...},
+    #     'accel_params': {'param_name': set(), ...}
+    # }
+    # Empty set implies "All" (no filtering).
 
-    Inputs:
-        data (List[Tuple[SeriesRecord, List[AccelRecord]]]): The dataset to filter.
-        filters (Dict[str, Any]): Active filters.
+    # Inputs:
+    #     data (List[Tuple[SeriesRecord, List[AccelRecord]]]): The dataset to filter.
+    #     filters (Dict[str, Any]): Active filters.
 
-    Outputs:
-        List[Tuple[SeriesRecord, List[AccelRecord]]]: Filtered dataset.
-    """
+    # Outputs:
+    #     List[Tuple[SeriesRecord, List[AccelRecord]]]: Filtered dataset.
+    # """
     # Quick check if any filter is active to avoid iterating if not needed.
     has_filters = (
         bool(filters["precisions"])
         or bool(filters["base_series"])
         or bool(filters["base_accel"])
         or bool(filters["m_values"])
+        or bool(filters.get("noise_options"))
         or any(filters["series_params"].values())
         or any(filters["accel_params"].values())
     )
@@ -239,6 +244,7 @@ def filter_data_items(
         has_accel_filters = (
             bool(filters["base_accel"])
             or bool(filters["m_values"])
+            or bool(filters.get("noise_options"))
             or any(filters["accel_params"].values())
         )
 
@@ -257,6 +263,11 @@ def filter_data_items(
             if (
                 filters["m_values"]
                 and accel.accel_info.m_value not in filters["m_values"]
+            ):
+                continue
+            if (
+                filters.get("noise_options")
+                and accel.accel_info.noise_str not in filters["noise_options"]
             ):
                 continue
 
@@ -479,6 +490,7 @@ class DashboardApp(QMainWindow):
             "base_series": set(),
             "base_accel": set(),
             "m_values": set(),
+            "noise_options": set(),
             "series_params": {},
             "accel_params": {},
         }
@@ -489,6 +501,7 @@ class DashboardApp(QMainWindow):
             "base_series": set(),
             "base_accel": set(),
             "m_values": set(),
+            "noise_options": set(),
             "series_params": {},
             "accel_params": {},
         }
@@ -626,6 +639,17 @@ class DashboardApp(QMainWindow):
                 is_int=True,
             )
         )
+
+        # Noise
+        if metadata.noise_options:
+            layout.addWidget(
+                self.create_filter_group(
+                    "Noise Options",
+                    metadata.noise_options,
+                    "noise_options",
+                    self.load_filters,
+                )
+            )
 
         # Series Params
         for param, values in metadata.series_param_info.items():
@@ -853,18 +877,19 @@ class DashboardApp(QMainWindow):
                 )
             )
 
-        # Series Params
-        if options["series_params"]:
-            for param, values in options["series_params"].items():
-                self.quick_filters_layout.addWidget(
-                    self.create_filter_group(
-                        f"Series: {param}",
-                        values,
-                        ("series_params", param),
-                        self.quick_filters,
-                        on_change=on_change,
-                    )
+        # Noise
+        if options["noise_options"]:
+            self.quick_filters_layout.addWidget(
+                self.create_filter_group(
+                    "Noise Options",
+                    options["noise_options"],
+                    "noise_options",
+                    self.quick_filters,
+                    on_change=on_change,
                 )
+            )
+
+        # Series Params
 
         # Accel Params
         if options["accel_params"]:
@@ -900,7 +925,7 @@ class DashboardApp(QMainWindow):
 
         # Table
         self.table = QTableWidget()
-        self.table.setColumnCount(13)
+        self.table.setColumnCount(14)
         self.table.setHorizontalHeaderLabels(
             [
                 "Series ID",
@@ -911,6 +936,7 @@ class DashboardApp(QMainWindow):
                 "Accel Name",
                 "M",
                 "Accel Params",
+                "Noise",
                 "Series Values",
                 "Accel Values",
                 "Deviations",
@@ -1393,7 +1419,9 @@ class DashboardApp(QMainWindow):
                 total_accels += 1
 
                 accel_params = self.format_args(accel.accel_info.additional_args)
-                accel_legend_name = f"{accel.accel_info.name} (m={accel.accel_info.m_value}) {accel_params}"
+                noise_str = f" [Noise: {accel.accel_info.noise_str}]" if accel.accel_info.noise_str != "None" else ""
+
+                accel_legend_name = f"{accel.accel_info.name} (m={accel.accel_info.m_value}){accel_params}{noise_str}"
 
                 if self.show_real:
                     self.add_legend_item(
@@ -1512,10 +1540,13 @@ class DashboardApp(QMainWindow):
                                     self.format_args(accel.accel_info.additional_args)
                                 ),
                             )
+                            
+                            # 8. Noise
+                            self.table.setItem(row_idx, 8, QTableWidgetItem(accel.accel_info.noise_str))
 
                             # Collapsible Widgets for Lists
 
-                            # 8. Series Values
+                            # 9. Series Values
 
                             def format_sci(m, e):
                                 return f"{m * (10.0**e):.6e}"
@@ -1532,7 +1563,7 @@ class DashboardApp(QMainWindow):
                             if s_lines:
                                 self.table.setCellWidget(
                                     row_idx,
-                                    8,
+                                    9,
                                     CollapsibleCellWidget(
                                         f"{len(s_lines)} values",
                                         s_lines,
@@ -1542,10 +1573,10 @@ class DashboardApp(QMainWindow):
                                 )
                             else:
                                 self.table.setItem(
-                                    row_idx, 8, QTableWidgetItem("(empty)")
+                                    row_idx, 9, QTableWidgetItem("(empty)")
                                 )
 
-                            # 9. Accel Values
+                            # 10. Accel Values
                             a_lines = []
                             for i in range(len(accel_n)):
                                 val_str = f"{accel_real[i]:.6e}"
@@ -1554,7 +1585,7 @@ class DashboardApp(QMainWindow):
                             if a_lines:
                                 self.table.setCellWidget(
                                     row_idx,
-                                    9,
+                                    10,
                                     CollapsibleCellWidget(
                                         f"{len(a_lines)} values",
                                         a_lines,
@@ -1564,10 +1595,10 @@ class DashboardApp(QMainWindow):
                                 )
                             else:
                                 self.table.setItem(
-                                    row_idx, 9, QTableWidgetItem("(empty)")
+                                    row_idx, 10, QTableWidgetItem("(empty)")
                                 )
 
-                            # 10. Deviations
+                            # 11. Deviations
                             d_lines = []
                             for i in range(len(accel_n)):
                                 # accel_dev_real is aligned with accel_n
@@ -1578,22 +1609,22 @@ class DashboardApp(QMainWindow):
                             if d_lines:
                                 self.table.setCellWidget(
                                     row_idx,
-                                    10,
+                                    11,
                                     CollapsibleCellWidget(
                                         dev_summary, d_lines, self.table, row_idx
                                     ),
                                 )
                             else:
                                 self.table.setItem(
-                                    row_idx, 10, QTableWidgetItem("No data")
+                                    row_idx, 11, QTableWidgetItem("No data")
                                 )
 
-                            # 11. Errors
+                            # 12. Errors
                             err_lines = [f"n={e.n}: {e.message}" for e in accel.errors]
                             if err_lines:
                                 self.table.setCellWidget(
                                     row_idx,
-                                    11,
+                                    12,
                                     CollapsibleCellWidget(
                                         f"{len(err_lines)} errors",
                                         err_lines,
@@ -1602,9 +1633,9 @@ class DashboardApp(QMainWindow):
                                     ),
                                 )
                             else:
-                                self.table.setItem(row_idx, 11, QTableWidgetItem(""))
+                                self.table.setItem(row_idx, 12, QTableWidgetItem(""))
 
-                            # 12. Events
+                            # 13. Events
                             evt_lines = [
                                 f"n={e.n}: {e.name} - {e.description}"
                                 for e in accel.events
@@ -1612,7 +1643,7 @@ class DashboardApp(QMainWindow):
                             if evt_lines:
                                 self.table.setCellWidget(
                                     row_idx,
-                                    12,
+                                    13,
                                     CollapsibleCellWidget(
                                         f"{len(evt_lines)} events",
                                         evt_lines,
@@ -1621,7 +1652,7 @@ class DashboardApp(QMainWindow):
                                     ),
                                 )
                             else:
-                                self.table.setItem(row_idx, 12, QTableWidgetItem(""))
+                                self.table.setItem(row_idx, 13, QTableWidgetItem(""))
 
                             rows_added += 1
 
