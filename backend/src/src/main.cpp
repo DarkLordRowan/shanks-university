@@ -19,12 +19,8 @@
  * @throws std::overflow_error if a numerical overflow or division by zero occurs.
  */
 int main()
-{
-
-	//auto test = shanks::series::abs_sin_x_minus_2_div_pi_iterator<mpfr::mpreal, size_t>(mpfr::mpreal(1, mpfr::digits2bits(100)));
-	//for(const auto& x : test.generate(10).Sn){
-	//	std::cout << utils::get_precision(x) << "\n";
-	//}
+{	
+	std::cout << mpfr::pow(mpfr::mpreal("1.5"), mpfr::mpreal("1.5")) << "\n";
 
 
     while(true){

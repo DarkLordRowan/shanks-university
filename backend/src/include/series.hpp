@@ -1,5 +1,6 @@
 #ifndef SERIES_HPP
 #define SERIES_HPP
+#include <type_traits>
 #pragma once
 
 #include <string>
@@ -52,10 +53,10 @@ public:
 #define SERIES_ENTRY(snake, camel) { camel, [](T x, T t, K k) -> std::unique_ptr<series_base<T, K>> { \
     if constexpr (std::is_constructible_v<shanks::series::snake##_iterator<T, K>, T, T, K>) \
         return std::make_unique<shanks::series::snake##_iterator<T, K>>(x, t, k); \
-    else if constexpr (std::is_constructible_v<shanks::series::snake##_iterator<T, K>, T, K>) \
-        return std::make_unique<shanks::series::snake##_iterator<T, K>>(x, k); \
-    else if constexpr (std::is_constructible_v<shanks::series::snake##_iterator<T, K>, T, T>) \
+    else if constexpr (std::is_constructible_v<shanks::series::snake##_iterator<T, K>, T, T>)\
         return std::make_unique<shanks::series::snake##_iterator<T, K>>(x, t); \
+    else if constexpr (std::is_constructible_v<shanks::series::snake##_iterator<T, K>, T, K>)\
+        return std::make_unique<shanks::series::snake##_iterator<T, K>>(x, k);\
     else \
         return std::make_unique<shanks::series::snake##_iterator<T, K>>(x); \
 }, \
