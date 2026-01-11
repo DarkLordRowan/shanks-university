@@ -14,7 +14,7 @@
   "trial_task_timeout": 5,
   "trial_memory_efficient": true,
 
-  "precisions": ["F64"],
+  "precisions": ["F32", "CFLong", "Arb", "CArb"],
 
   "output_formats": ["json"]
 }
