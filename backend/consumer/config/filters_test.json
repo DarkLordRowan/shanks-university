@@ -639,7 +639,7 @@
           "log_action_capacity": -1
         },
         {
-          "type": "divergent",
+          "type": "divergent_accel",
           "log_action_capacity": -1,
           "stop_action_limit": 2
         },

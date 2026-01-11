@@ -17,7 +17,7 @@ class EventType(Enum):
     MONOTONE_ACCEL = "monotone"
     """Method is monotone.
     """
-    DIVERGENT_ACCEL = "divergent"
+    DIVERGENT_ACCEL = "divergent_accel"
     """Method is divergent.
     """
     SIGN_CHANGED = "sign_changed"
@@ -65,7 +65,7 @@ def divergent_accel_method(
     last, previous = computed[-1], computed[-2]
     if previous.accel_value_deviation < last.accel_value_deviation:
         return EventData(
-            name="divergent",
+            name="divergent_accel",
             description=(
                 f"The previous deviation {previous.accel_value_deviation} "
                 f"(iteration {len(computed) - 2}) "
