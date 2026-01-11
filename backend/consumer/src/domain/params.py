@@ -7,26 +7,26 @@ for every precision exported by ``py.cpp`` (F32, F64, FLong, Arb, CF32, CF64, CF
 Author: Yadrentsev I. M.
 """
 
-import pathlib
 import itertools
+import pathlib
 import re
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Iterable, Sequence
 from dataclasses import dataclass, field
-from typing import Any, Generic, Generator, Mapping, override, TypeGuard
+from typing import Any, Generator, Generic, Mapping, TypeGuard, override
 
 import pyshanks as ps
-from src.domain.event import EventType, EVENT_METHODS
+from src.domain.event import EVENT_METHODS, EventType
 from src.domain.precision import (
     AccelProto,
+    NumericLike,
     PrecisionType,
     SeriesBaseProto,
     SeriesResultProto,
-    NumericLike,
     TNum,
     cast_natural_series_value,
-    create_series_result,
     cast_precision_value,
+    create_series_result,
 )
 
 SeriesPregenLocalValue = tuple[SeriesResultProto[NumericLike], NumericLike]
@@ -129,14 +129,14 @@ class BaseSeriesParam[T]:
         default_x = cast_precision_value(self.precision, 0)
         x_val = argument.get("x", default_x)
         kwargs["x"] = x_val
-        
+
         # Pass all other arguments through with casting, using their original names
         ignored_keys = {"vecSize", "series_name", "x", "id"}
-        
+
         for key, value in argument.items():
             if key in ignored_keys or key.startswith("_"):
                 continue
-            
+
             kwargs[key] = cast_precision_value(self.precision, value)
 
         return vec_size, kwargs
@@ -155,22 +155,22 @@ class BaseSeriesParam[T]:
         """Generate a series result using the series instance."""
         # For CSV series, we use the custom wrapper
         if self.series_name.startswith("CSVSeries"):
-             instance = self.executable()
-             return (instance.generate(vec_size), instance.get_sum())
+            instance = self.executable()
+            return (instance.generate(vec_size), instance.get_sum())
 
         # For registry-based series, instantiate class directly
         class_name = f"{self.series_name}{self.precision.value}"
-        
+
         if not hasattr(ps, class_name):
-             raise RuntimeError(f"Series class not found: {class_name}")
-             
+            raise RuntimeError(f"Series class not found: {class_name}")
+
         cls = getattr(ps, class_name)
-        
+
         # Instantiate with exactly provided arguments.
         # If the user config provides args that the class doesn't accept, this will raise TypeError.
         # This is intended behavior.
         instance = cls(**kwargs)
-        
+
         return (
             instance.generate(vec_size),
             instance.get_sum(),

@@ -1,11 +1,11 @@
 /**
  * @file bindings.hpp
- * @brief Template-based pybind11 bindings for the Shanks University library. 
- * 
+ * @brief Template-based pybind11 bindings for the Shanks University library.
+ *
  * This file provides a declarative way to export C++ series and acceleration
  * algorithms to Python. It uses C++20 concepts and template metaprogramming
- * to automatically generate bindings for multiple numerical precisions. 
- * 
+ * to automatically generate bindings for multiple numerical precisions.
+ *
  * @authors Sobolev Y. A., Naumov A.U.
  */
 
@@ -38,7 +38,7 @@ struct RealTypeOf<std::complex<U>> { using type = U; };
 
 /**
  * @brief Registers core numerical types (Arb, CArb, CF32, etc.) in the module.
- * 
+ *
  * These types must be registered BEFORE any functions that use them as
  * default arguments to avoid "type not registered" errors in pybind11.
  */
@@ -77,8 +77,8 @@ constexpr void bind_series(pybind11::module_& m, const char* suffix){
 
     // Result container
     py::class_<series_result<T>>(m, create_name("SeriesResult", suffix).c_str())
-        .def(py::init<>()) 
-        .def(py::init<std::vector<T>, std::vector<T>>()) 
+        .def(py::init<>())
+        .def(py::init<std::vector<T>, std::vector<T>>())
         .def_readwrite("Sn", &series_result<T>::Sn)
         .def_readwrite("an", &series_result<T>::an);
 
@@ -123,26 +123,26 @@ constexpr void bind_series(pybind11::module_& m, const char* suffix){
  */
 template <AcceptedLike T, UnsignedIntLike K>
 constexpr void bind_algos(pybind11::module_& m, const char* suffix){
-    
+
     using RealT = typename RealTypeOf<T>::type;
 
     // Shanks transformation
     py::class_<shanks::algos::shanks_algorithm<T, K>>(m, create_name("ShanksAlgorithm", suffix).c_str())
-        .def(py::init<>()) 
+        .def(py::init<>())
         .def("__call__", &shanks::algos::shanks_algorithm<T, K>::operator());
 
     // Wynn Epsilon algorithms
     py::class_<shanks::algos::wynn_epsilon_1_algorithm<T, K>>(m, create_name("WynnEpsilon1Algorithm", suffix).c_str())
-        .def(py::init<>()) 
+        .def(py::init<>())
         .def("__call__", &shanks::algos::wynn_epsilon_1_algorithm<T, K>::operator());
-    
+
     py::class_<shanks::algos::wynn_epsilon_2_algorithm<T, K>>(m, create_name("WynnEpsilon2Algorithm", suffix).c_str())
-        .def(py::init<>()) 
+        .def(py::init<>())
         .def("__call__", &shanks::algos::wynn_epsilon_2_algorithm<T, K>::operator());
 
     // Wynn Rho algorithm
     py::class_<shanks::algos::wynn_rho_algorithm<T, K>>(m, create_name("WynnRhoAlgorithm", suffix).c_str())
-        .def(py::init<shanks::numerators::numerator_type, RealT, RealT>(), 
+        .def(py::init<shanks::numerators::numerator_type, RealT, RealT>(),
              py::arg("numerator") = shanks::numerators::numerator_type::rho_type,
              py::arg("gamma") = RealT(-1.0),
              py::arg("RHO") = RealT(1.0))
@@ -150,15 +150,15 @@ constexpr void bind_algos(pybind11::module_& m, const char* suffix){
 
     // Levin transformation
     py::class_<shanks::algos::levin_algorithm<T, K>>(m, create_name("LevinAlgorithm", suffix).c_str())
-        .def(py::init<shanks::remainders::remainder_type, bool, RealT>(), 
-             py::arg("remainder") = shanks::remainders::remainder_type::u_type, 
+        .def(py::init<shanks::remainders::remainder_type, bool, RealT>(),
+             py::arg("remainder") = shanks::remainders::remainder_type::u_type,
              py::arg("useRecurrentFormula") = false,
              py::arg("beta") = RealT(1.0))
         .def("__call__", &shanks::algos::levin_algorithm<T, K>::operator());
 
     // Richardson extrapolation
     py::class_<shanks::algos::richardson_algorithm<T, K>>(m, create_name("RichardsonAlgorithm", suffix).c_str())
-        .def(py::init<>()) 
+        .def(py::init<>())
         .def("__call__", &shanks::algos::richardson_algorithm<T, K>::operator());
 }
 
@@ -167,12 +167,12 @@ constexpr void bind_algos(pybind11::module_& m, const char* suffix){
  */
 template <AcceptedLike T>
 constexpr void bind_noise(pybind11::module_& m, const char* suffix){
-    
-    m.def(create_name("applyNoise",suffix).c_str(), 
+
+    m.def(create_name("applyNoise",suffix).c_str(),
         [](const series_result<T>& result, NoiseMethod method, NoiseType type, unsigned long long int seed, const T& p1, const T& p2) {
              unsigned long long int actual_seed = (seed == 0) ? pseudo_random_seed : seed;
              return apply_noise(result, method, type, actual_seed, p1, p2);
-        }, 
+        },
         py::arg("result"), py::arg("method"), py::arg("type"), py::arg("seed") = 0, py::arg("param1"), py::arg("param2") = T()
     );
 }
@@ -185,13 +185,13 @@ constexpr void bind_filters(pybind11::module_& m, const char* suffix){
 
     m.def(create_name("kolzurFilter", suffix).c_str(),
         &shanks::filters::kolzur_filter<T>,
-        py::arg("result"), py::arg("windowLength"), py::arg("degree") 
+        py::arg("result"), py::arg("windowLength"), py::arg("degree")
     );
 
     m.def(create_name("savgolFilter", suffix).c_str(),
         &shanks::filters::savgol_filter<T>,
-        py::arg("result"), py::arg("windowLength"), 
-        py::arg("polyorder"), py::arg("derive") = size_t{0}, py::arg("delta") = utils::cast<T>(1.0)
+        py::arg("result"), py::arg("windowLength"),
+        py::arg("polyorder"), py::arg("derive"), py::arg("delta")
     );
 
 }

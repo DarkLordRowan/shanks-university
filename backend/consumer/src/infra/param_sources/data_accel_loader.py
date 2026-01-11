@@ -7,6 +7,7 @@ from typing import Any, Iterable, Mapping
 
 import pyshanks as ps
 from src.domain.application.param_processing import autowrap
+from src.domain.event import EventType
 from src.domain.params import AccelParamJSON, EventSpecifierParam
 from src.domain.precision import PrecisionType, cast_real_subtype_value
 from src.domain.sources import AccelParamSource
@@ -29,7 +30,13 @@ class DataAccelParamSource(AccelParamSource):
             m_list = [int(v) for v in autowrap(m["m"])]
 
             args = self._convert_args(m.get("args", {}), precision)
-            events = [EventSpecifierParam(**event) for event in m.get("events", [])]
+            
+            events = []
+            for event in m.get("events", []):
+                e_data = event.copy()
+                if "type" in e_data and isinstance(e_data["type"], str):
+                    e_data["type"] = EventType(e_data["type"])
+                events.append(EventSpecifierParam(**e_data))
 
             methods.append(
                 AccelParamJSON(

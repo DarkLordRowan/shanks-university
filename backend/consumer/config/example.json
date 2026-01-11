@@ -23,6 +23,22 @@
       "seed": 42
     }
   ],
+  "filters": [
+    {
+      "type": "savgol",
+      "params": {
+        "polyorder": 2,
+        "derive": 0,
+        "delta": 1.0
+      }
+    },
+    {
+      "type": "kolzur",
+      "params": {
+        "degree": 3
+      }
+    }
+  ],
   "methods": [
     {
       "name": "LevinAlgorithm",
@@ -52,7 +68,7 @@
         {
           "type": "divergent",
           "log_action_capacity": -1,
-          "stop_action_limit": 0
+          "stop_action_limit": 3
         }
       ]
     },
@@ -81,7 +97,7 @@
         {
           "type": "divergent",
           "log_action_capacity": -1,
-          "stop_action_limit": 0
+          "stop_action_limit": 3
         }
       ]
     }

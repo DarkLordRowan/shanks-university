@@ -69,6 +69,21 @@ class EventDataTrialResult:
 
 
 @dataclass
+class FilterMethodResult:
+    """Represents the result of a specific filter method."""
+    values: list[Any]
+    average: Any
+
+
+@dataclass
+class FilteredResults:
+    """Represents the collection of filtered results for a divergent segment."""
+    start_n: int
+    segment_length: int
+    methods: dict[str, FilterMethodResult]
+
+
+@dataclass
 class TrialResult:
     """Represents the complete result of a trial execution."""
 
@@ -78,3 +93,4 @@ class TrialResult:
     noise: NoiseConfig | None = None
     error: ErrorTrialResult | None = None
     stack_id: str | None = None
+    filtered: FilteredResults | None = None

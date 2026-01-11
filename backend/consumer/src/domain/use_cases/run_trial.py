@@ -4,17 +4,19 @@ Authors: Shevyrov A.N., Yadrentsev I.M.
 """
 
 import traceback
+import datetime
 from typing import Mapping, Any
 
 import pyshanks as ps
-from src.config.model import NoiseConfig
-from src.domain.precision import cast_precision_value
+from src.config.model import NoiseConfig, FilterConfig
+from src.domain.precision import cast_precision_value, cast_real_subtype_value
 
 from src.domain.params import (
     BaseAccelParam,
     BaseSeriesParam,
     NumericLike,
 )
+from src.domain.event import EventType
 from src.domain.trial_result import (
     AccelTrialResult,
     ComputedTrialResult,
@@ -22,8 +24,19 @@ from src.domain.trial_result import (
     NoErrorTrialResult,
     SeriesTrialResult,
     TrialResult,
+    FilteredResults,
+    FilterMethodResult,
 )
 from src.logger import logged_debug
+
+
+def append_to_event_log(msg: str):
+    try:
+        with open("events_log.txt", "a", encoding="utf-8") as f:
+            timestamp = datetime.datetime.now().isoformat()
+            f.write(f"[{timestamp}] {msg}\n")
+    except Exception:
+        pass  # Fail silently on logging errors
 
 
 def trial_results_from_series_error(
@@ -136,6 +149,7 @@ def trial_results_from_accel_error(
 def execute_trial(
     series_accel: tuple[BaseSeriesParam, BaseAccelParam],
     noise_config: NoiseConfig | None = None,
+    filter_configs: list[FilterConfig] | None = None,
 ) -> list[TrialResult]:
     """Execute a trial for given series and acceleration parameters.
 
@@ -147,12 +161,15 @@ def execute_trial(
     :type series_accel: tuple[BaseSeriesParam, BaseAccelParam]
     :param noise_config: _noise configuration
     :type noise_config: NoiseConfig | None
+    :param filter_configs: _filter configurations
+    :type filter_configs: list[FilterConfig] | None
     :raises ValueError: _n must be positive
     :raises IndexError: _generated series size is insufficient for n
     :return: _list of trial results
     :rtype: list[TrialResult]
     """
     series, accel = series_accel
+    filter_configs = filter_configs or []
 
     n_values = list(accel.n_values)
     m_values = list(accel.m_values)
@@ -257,6 +274,77 @@ def execute_trial(
                             },
                         )
                         break
+                
+                # Check for Stop-Filter-Average Logic
+                filtered_results_obj = None
+
+                if ctx["blocked"]:
+                    # Identify which event triggered the block
+                    triggering_event = None
+                    for e_spec in accel.events:
+                        if e_spec.stop_action_limit and ctx["counters"].get(e_spec.type, 0) >= e_spec.stop_action_limit:
+                            triggering_event = e_spec.type
+                            break
+
+                    if triggering_event:
+                        # 1. Identify start of divergence
+                        start_index = -1
+                        event_names = {triggering_event.value, "second_diff_growth", "divergent_accel", "slow_accel"}
+                        for i, res in enumerate(computed):
+                            if any(e.name in event_names for e in res.events):
+                                start_index = i
+                                break
+                        
+                        if start_index != -1 and len(computed) > start_index:
+                            divergent_segment = [c.accel_value for c in computed[start_index:]]
+                            methods_results = {}
+                            
+                            for f_conf in filter_configs:
+                                f_type = f_conf.type
+                                p = f_conf.params
+                                
+                                # Window length logic: default to segment length
+                                w_len = p.get("window_length", len(divergent_segment))
+                                if w_len == "segment":
+                                    w_len = len(divergent_segment)
+                                w_len = int(w_len)
+                                if w_len % 2 == 0:
+                                    w_len -= 1
+                                
+                                if w_len < 3:
+                                    continue
+                                
+                                func_name = f"{f_type}Filter{series.precision.value}"
+                                if hasattr(ps, func_name):
+                                    try:
+                                        func = getattr(ps, func_name)
+                                        
+                                        kwargs = {}
+                                        for k, v in p.items():
+                                            if k == "window_length":
+                                                continue # Handled explicitly
+                                            
+                                            # Heuristic for casting to Precision Type
+                                            if k in ["delta"]:
+                                                 kwargs[k] = cast_precision_value(series.precision, v)
+                                            else:
+                                                 kwargs[k] = v
+                                        
+                                        smoothed = func(divergent_segment, w_len, **kwargs)
+                                        
+                                        if smoothed:
+                                            avg = sum(smoothed) / len(smoothed)
+                                            methods_results[f_type] = FilterMethodResult(values=smoothed, average=avg)
+                                    except Exception as e:
+                                        append_to_event_log(f"{f_type.upper()} ERROR: {str(e)}")
+
+                            if methods_results:
+                                filtered_results_obj = FilteredResults(
+                                    start_n=computed[start_index].n,
+                                    segment_length=len(divergent_segment),
+                                    methods=methods_results
+                                )
+                                append_to_event_log(f"STOPPED BY {triggering_event.value}. FILTERS APPLIED: {list(methods_results.keys())}")
 
                 results.append(
                     TrialResult(
@@ -277,6 +365,7 @@ def execute_trial(
                         computed=computed,
                         noise=noise_config,
                         error=error or NoErrorTrialResult,
+                        filtered=filtered_results_obj,
                     )
                 )
 

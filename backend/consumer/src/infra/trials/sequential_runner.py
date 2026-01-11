@@ -26,12 +26,22 @@ class SequentialTrialRunner(TrialRunner):
 
         for series, accel in combinations:
             # Run as-is
-            results.extend(execute_trial((series, accel), noise_config=None))
+            results.extend(
+                execute_trial(
+                    (series, accel),
+                    noise_config=None,
+                    filter_configs=self.config.filter_configs,
+                )
+            )
 
             # Run with noise
             for noise_config in self.config.noise_configs:
                 results.extend(
-                    execute_trial((series, accel), noise_config=noise_config)
+                    execute_trial(
+                        (series, accel),
+                        noise_config=noise_config,
+                        filter_configs=self.config.filter_configs,
+                    )
                 )
 
         return results

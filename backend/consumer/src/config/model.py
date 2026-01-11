@@ -27,6 +27,19 @@ class NoiseConfig:
 
 
 @dataclass
+class FilterConfig:
+    type: str
+    params: dict = field(default_factory=dict)
+
+    @classmethod
+    def from_dict(cls, data: dict) -> "FilterConfig":
+        return cls(
+            type=data.get("type", "savgol"),
+            params=data.get("params", {})
+        )
+
+
+@dataclass
 class TrialConfig:
     """Trial execution configuration model."""
 
@@ -34,6 +47,8 @@ class TrialConfig:
         self.series_json = Path(self.series_json)
         self.series_csv = Path(self.series_csv)
         self.accel_json = Path(self.accel_json)
+        self.noise_json = Path(self.noise_json)
+        self.filters_json = Path(self.filters_json)
         self.output_dir = Path(self.output_dir)
 
         self.results_json = (
@@ -49,7 +64,26 @@ class TrialConfig:
             OutputFormat(fmt) for fmt in self.output_formats
         ]
         
+        # Load noises
+        if self.noise_json.exists():
+            try:
+                data = self.load_json(self.noise_json)
+                if "noises" in data:
+                    self.noises = data["noises"]
+            except Exception:
+                pass
+
+        # Load filters
+        if self.filters_json.exists():
+            try:
+                data = self.load_json(self.filters_json)
+                if "filters" in data:
+                    self.filters = data["filters"]
+            except Exception:
+                pass
+
         self.noise_configs = [NoiseConfig.from_dict(n) for n in self.noises]
+        self.filter_configs = [FilterConfig.from_dict(f) for f in self.filters]
 
         self.output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -60,6 +94,8 @@ class TrialConfig:
     series_json: Path = Path("config/example.json")
     series_csv: Path = Path("config/example_series.csv")
     accel_json: Path = Path("config/example.json")
+    noise_json: Path = Path("config/example.json")
+    filters_json: Path = Path("config/example.json")
 
     output_dir: Path = Path("output")
     results_filename: str = "results"
@@ -81,7 +117,8 @@ class TrialConfig:
         default_factory=lambda: [OutputFormat.JSON, OutputFormat.CSV]
     )
     
-    noises: list[dict] = field(default_factory=list)
+    noises: list[dict] = field(default_factory=list, init=False)
+    filters: list[dict] = field(default_factory=list, init=False)
 
     @property
     def is_parallel(self) -> int:

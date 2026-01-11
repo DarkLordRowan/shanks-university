@@ -34,11 +34,11 @@ class ParallelTrialRunner(TrialRunner):
         tasks = []
         for series, accel in combinations:
             # Run as-is
-            tasks.append((series, accel, None))
+            tasks.append((series, accel, None, self.config.filter_configs))
 
             # Run with noise
             for noise_config in self.config.noise_configs:
-                tasks.append((series, accel, noise_config))
+                tasks.append((series, accel, noise_config, self.config.filter_configs))
 
         if self.config.trial_memory_efficient:
             return self.__run_dispose_at_completion(tasks)
@@ -58,10 +58,10 @@ class ParallelTrialRunner(TrialRunner):
         with mp.Pool(processes=process_count) as pool:
             async_tasks = [
                 (
-                    pool.apply_async(execute_trial, ((series, accel), noise)),
+                    pool.apply_async(execute_trial, ((series, accel), noise, filters)),
                     (series, accel, noise),
                 )
-                for series, accel, noise in tasks
+                for series, accel, noise, filters in tasks
             ]
 
             for async_result, (series, accel, noise) in async_tasks:
@@ -105,10 +105,10 @@ class ParallelTrialRunner(TrialRunner):
         ) as pool:
             async_tasks = [
                 (
-                    pool.apply_async(execute_trial, ((series, accel), noise)),
+                    pool.apply_async(execute_trial, ((series, accel), noise, filters)),
                     (series, accel, noise),
                 )
-                for series, accel, noise in tasks
+                for series, accel, noise, filters in tasks
             ]
 
             for async_result, (series, accel, noise) in async_tasks:

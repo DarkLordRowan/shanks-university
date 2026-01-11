@@ -65,7 +65,7 @@ def divergent_accel_method(
     last, previous = computed[-1], computed[-2]
     if previous.accel_value_deviation < last.accel_value_deviation:
         return EventData(
-            name="devirgent",
+            name="divergent",
             description=(
                 f"The previous deviation {previous.accel_value_deviation} "
                 f"(iteration {len(computed) - 2}) "
@@ -151,9 +151,9 @@ def second_diff_growth_method(
         return EventData(
             name="second_diff_growth",
             description=(
-                f"The change |A[{len(computed)-1}] − A[{len(computed)-2}]| = {diff1} "
+                f"The change |A[{len(computed) - 1}] − A[{len(computed) - 2}]| = {diff1} "
                 f"is greater than or equal to "
-                f"|A[{len(computed)-2}] − A[{len(computed)-3}]| = {diff2}, "
+                f"|A[{len(computed) - 2}] − A[{len(computed) - 3}]| = {diff2}, "
                 "showing that second-order differences are not decreasing."
             ),
         )
