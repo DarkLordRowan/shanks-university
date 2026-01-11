@@ -2,8 +2,8 @@
 #define SAVGOL_HPP
 #pragma once
 
-#include <Eigen/Core>
-#include <Eigen/Dense>
+#include <eigen3/Eigen/Core>
+#include <eigen3/Eigen/Dense>
 #include <stdexcept>
 #include "../custom_concepts.hpp"
 #include "../utils.hpp"
@@ -39,7 +39,9 @@ std::vector<Scalar> savgol_filter(
     if (polyorder >= window_length) throw std::invalid_argument("polyorder is bigger or equal than window's length");
 
     // Setting up the least squares problem using Eigen
-    const int N = static_cast<int>(window_length) / 2;
+    Scalar N = utils::cast<Scalar>(static_cast<int>(window_length) / 2);
+    if constexpr (is_precisable<Scalar>::value) utils::set_precision(utils::get_precision(data.at(0)), N);
+
     Eigen::Vector<Scalar, Eigen::Dynamic> v = Eigen::Vector<Scalar, Eigen::Dynamic>::LinSpaced(window_length, -N, N);
     Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic> x = Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic>::Ones(window_length, polyorder + 1);
 

@@ -2,8 +2,6 @@
 #define KOLZUR_HPP
 #pragma once
 
-#include <Eigen/Core>
-#include <Eigen/Dense>
 #include "../custom_concepts.hpp"
 #include "../utils.hpp"
 

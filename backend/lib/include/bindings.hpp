@@ -23,11 +23,15 @@
 #include "../../src/include/methods.hpp"
 #include "../../src/include/series.hpp"
 #include "../../src/include/noise/noise_generator.hpp"
+#include "../../src/include/filters/kolzur.hpp"
+#include "../../src/include/filters/savgol.hpp"
 
 namespace py = pybind11;
 
 template<typename T>
 struct RealTypeOf { using type = T; };
+
+constexpr std::string create_name(const char* name, const char* suffix){ return std::string(name) + std::string(suffix);}
 
 template<typename U>
 struct RealTypeOf<std::complex<U>> { using type = U; };
@@ -70,8 +74,6 @@ template <AcceptedLike T, UnsignedIntLike K>
 constexpr void bind_series(pybind11::module_& m, const char* suffix){
 
     using MSeriesBase = shanks::series::series_base<T, K>;
-
-    constexpr auto create_name = [](const char* name, const char* suf) -> std::string {return std::string(name) + std::string(suf);};
 
     // Result container
     py::class_<series_result<T>>(m, create_name("SeriesResult", suffix).c_str())
@@ -124,8 +126,6 @@ constexpr void bind_algos(pybind11::module_& m, const char* suffix){
     
     using RealT = typename RealTypeOf<T>::type;
 
-    constexpr auto create_name = [](const char* name, const char* suf) -> std::string {return std::string(name) + std::string(suf);};
-
     // Shanks transformation
     py::class_<shanks::algos::shanks_algorithm<T, K>>(m, create_name("ShanksAlgorithm", suffix).c_str())
         .def(py::init<>()) 
@@ -165,10 +165,8 @@ constexpr void bind_algos(pybind11::module_& m, const char* suffix){
 /**
  * @brief Binds noise generator.
  */
-template <AcceptedLike T, UnsignedIntLike K>
+template <AcceptedLike T>
 constexpr void bind_noise(pybind11::module_& m, const char* suffix){
-
-    constexpr auto create_name = [](const char* name, const char* suf) -> std::string {return std::string(name) + std::string(suf);};
     
     m.def(create_name("applyNoise",suffix).c_str(), 
         [](const series_result<T>& result, NoiseMethod method, NoiseType type, unsigned long long int seed, const T& p1, const T& p2) {
@@ -179,11 +177,31 @@ constexpr void bind_noise(pybind11::module_& m, const char* suffix){
     );
 }
 
+/**
+ * @brief Binds filters
+ */
+template<AcceptedLike T>
+constexpr void bind_filters(pybind11::module_& m, const char* suffix){
+
+    m.def(create_name("kolzurFilter", suffix).c_str(),
+        &shanks::filters::kolzur_filter<T>,
+        py::arg("result"), py::arg("windowLength"), py::arg("degree") 
+    );
+
+    m.def(create_name("savgolFilter", suffix).c_str(),
+        &shanks::filters::savgol_filter<T>,
+        py::arg("result"), py::arg("windowLength"), 
+        py::arg("polyorder"), py::arg("derive") = size_t{0}, py::arg("delta") = utils::cast<T>(1.0)
+    );
+
+}
+
 template <AcceptedLike T, UnsignedIntLike K>
 constexpr void bind_all(pybind11::module_& m, const char* suffix){
     bind_series<T,K>(m, suffix);
     bind_algos<T,K>(m, suffix);
-    bind_noise<T,K>(m, suffix);
+    bind_noise<T>(m, suffix);
+    bind_filters<T>(m,suffix);
 }
 
 template<typename TupleOfTypes, size_t N, std::size_t TypesIndex = 0>
