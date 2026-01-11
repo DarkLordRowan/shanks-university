@@ -45,18 +45,41 @@ PYBIND11_MODULE(pyshanks, m) {
         .value("Scaling", NoiseMethod::scaling)
         .export_values();
 
-    // 3. Bind all templated series and algos
+    // 3. Bind all templated series and algos and noise
     using types_to_bind = std::tuple<
         std::tuple<       float, size_t>,
         std::tuple<      double, size_t>,
         std::tuple< long double, size_t>,
+        std::tuple<mpfr::mpreal, size_t>,
         std::tuple<std::complex<float       >, size_t>,
         std::tuple<std::complex<double      >, size_t>,
-        std::tuple<std::complex<long double >, size_t>
+        std::tuple<std::complex<long double >, size_t>,
+        std::tuple<std::complex<mpfr::mpreal>, size_t>
     >;
 
-    bind_all_types<types_to_bind>(m);
+    /**
+    * @brief Array of suffixes for standard numeric types.
+    *
+    * Used to distinguish bindings for different precisions and complex types.
+    * - F32: float
+    * - F64: double
+    * - FLong: long double
+    * - Arb: mpfr::mpreal
+    * - CF32: std::complex<float>
+    * - CF64: std::complex<double>
+    * - CFLong: std::complex<long double>
+    * - CArb: std::complex<mpfr::mpreal>
+    */
+    constexpr std::array<const char*, 8> suffixes{
+        "F32",
+        "F64",
+        "FLong",
+        "Arb",
+        "CF32",
+        "CF64",
+        "CFLong",
+        "CArb"
+    };
 
-    bind_all<mpfr::mpreal, size_t>(m, "Arb");
-    bind_all<std::complex<mpfr::mpreal>, size_t>(m, "CArb");
+    bind_all_types<types_to_bind, suffixes.size()>(m, suffixes);
 }
