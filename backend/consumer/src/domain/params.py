@@ -407,8 +407,8 @@ class BaseAccelParam[T]:
         """Event processing context initializer."""
         return {
             "counters": {e.type: 0 for e in self.events},
-            "stopped": {e.type: False for e in self.events},
-            "blocked": False,
+            "limit_reached": False,
+            "first_occurrence": {},
         }
 
     def process_events(self, computed: list, ctx: dict[str, Any]) -> list:
@@ -416,27 +416,37 @@ class BaseAccelParam[T]:
         events_here = []
 
         for e in self.events:
-            if ctx["stopped"][e.type]:
-                continue
+            count = ctx["counters"][e.type]
+
+            logging_finished = (
+                e.log_action_capacity is not None and count >= e.log_action_capacity
+            )
+            counting_finished = (
+                e.stop_action_limit is not None and count >= e.stop_action_limit
+            )
+
+            # Optimization: Skip if both logging and counting (if applicable) are done.
+            if logging_finished:
+                if e.stop_action_limit is None:
+                    continue
+                if counting_finished:
+                    continue
 
             handler = EVENT_METHODS[EventType(e.type)]
             result = handler(computed)
 
             if result is not None:
-                events_here.append(result)
+                if e.type not in ctx["first_occurrence"]:
+                    ctx["first_occurrence"][e.type] = len(computed) - 1
+
                 ctx["counters"][e.type] += 1
+                new_count = ctx["counters"][e.type]
 
-                if (
-                    e.log_action_capacity
-                    and ctx["counters"][e.type] >= e.log_action_capacity
-                ):
-                    ctx["stopped"][e.type] = True
+                if e.log_action_capacity is None or new_count <= e.log_action_capacity:
+                    events_here.append(result)
 
-                if (
-                    e.stop_action_limit
-                    and ctx["counters"][e.type] >= e.stop_action_limit
-                ):
-                    ctx["blocked"] = True
+                if e.stop_action_limit and new_count >= e.stop_action_limit:
+                    ctx["limit_reached"] = True
 
         return events_here
 

@@ -26,6 +26,7 @@ class ComputedTrialResult:
     partial_sum_deviation: Any
     accel_value: Any
     accel_value_deviation: Any
+    accel_error: Any
     events: list[EventData]
 
 

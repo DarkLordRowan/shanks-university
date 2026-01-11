@@ -12,16 +12,16 @@ class EventType(Enum):
     """Enumeration of event types detected in trial results."""
 
     SLOW_ACCEL = "slow_accel"
-    """Method is slower than partial sums.
+    """Method is slower/worse than partial sums.
     """
     MONOTONE_ACCEL = "monotone"
-    """Method is monotone.
+    """Method is monotone (error magnitude unchanged).
     """
     DIVERGENT_ACCEL = "divergent_accel"
-    """Method is divergent.
+    """Method is divergent (error magnitude growing).
     """
     SIGN_CHANGED = "sign_changed"
-    """Sign is changed.
+    """Error sign is changed (oscillation).
     """
     SECOND_DIFF = "second_diff"
     """|Aₖ − Aₖ₋₁| ≥ |Aₖ₋₁ − Aₖ₋₂|
@@ -29,7 +29,7 @@ class EventType(Enum):
 
 
 def slow_accel_method(computed: list[ComputedTrialResult]) -> EventData | None:
-    """Detects if the acceleration method is slower than the baseline partial sums.
+    """Detects if the acceleration method is performing worse than the baseline partial sums.
 
     :param computed: _computed trial results
     :type computed: list[ComputedTrialResult]
@@ -37,23 +37,26 @@ def slow_accel_method(computed: list[ComputedTrialResult]) -> EventData | None:
     :rtype: EventData | None
     """
     if len(computed) < 1:
-        return
+        return None
     last = computed[-1]
-    if last.accel_value_deviation < last.partial_sum_deviation:
+    
+    # If acceleration error is GREATER than partial sum error, it's performing poorly.
+    if last.accel_value_deviation > last.partial_sum_deviation:
         return EventData(
             name="slow_accel",
             description=(
                 f"The acceleration deviation {last.accel_value_deviation} "
-                f"is smaller than the partial-sum deviation {last.partial_sum_deviation}, "
-                "indicating slower improvement than the baseline sequence."
+                f"is greater than the partial-sum deviation {last.partial_sum_deviation}, "
+                "indicating worse accuracy than the baseline sequence."
             ),
         )
+    return None
 
 
 def divergent_accel_method(
     computed: list[ComputedTrialResult],
 ) -> EventData | None:
-    """Detects if the acceleration method is diverging.
+    """Detects if the acceleration method is diverging (error growing).
 
     :param computed: _computed trial results
     :type computed: list[ComputedTrialResult]
@@ -61,8 +64,10 @@ def divergent_accel_method(
     :rtype: EventData | None
     """
     if len(computed) < 2:
-        return
+        return None
     last, previous = computed[-1], computed[-2]
+    
+    # If error magnitude is increasing
     if previous.accel_value_deviation < last.accel_value_deviation:
         return EventData(
             name="divergent_accel",
@@ -73,12 +78,13 @@ def divergent_accel_method(
                 "showing that the accelerated sequence is diverging."
             ),
         )
+    return None
 
 
 def monotone_accel_method(
     computed: list[ComputedTrialResult],
 ) -> EventData | None:
-    """Monotone acceleration detection.
+    """Monotone acceleration detection (error magnitude unchanged).
 
     :param computed: _computed trial results
     :type computed: list[ComputedTrialResult]
@@ -86,8 +92,9 @@ def monotone_accel_method(
     :rtype: EventData | None
     """
     if len(computed) < 2:
-        return
+        return None
     last, previous = computed[-1], computed[-2]
+    
     if previous.accel_value_deviation == last.accel_value_deviation:
         return EventData(
             name="monotone_accel",
@@ -98,12 +105,13 @@ def monotone_accel_method(
                 "indicating a monotone progression without change in magnitude."
             ),
         )
+    return None
 
 
 def sign_changed_method(
     computed: list[ComputedTrialResult],
 ) -> EventData | None:
-    """Sign change detection in acceleration deviations.
+    """Sign change detection in acceleration errors (oscillation).
 
     :param computed: _computed trial results
     :type computed: list[ComputedTrialResult]
@@ -111,20 +119,27 @@ def sign_changed_method(
     :rtype: EventData | None
     """
     if len(computed) < 2:
-        return
+        return None
     last, previous = computed[-1], computed[-2]
 
-    if previous.accel_value_deviation * last.accel_value_deviation < type(
-        last.accel_value_deviation
-    )(0):
-        return EventData(
-            name="sign_changed",
-            description=(
-                f"The deviation changed sign between iterations "
-                f"{len(computed) - 2} ({previous.accel_value_deviation}) "
-                f"and {len(computed) - 1} ({last.accel_value_deviation})"
-            ),
-        )
+    try:
+        # Check if the error sign changed. 
+        # We use type(0) to get a zero of the appropriate type (e.g. Arb(0) or 0.0).
+        # Note: This may raise TypeError for complex numbers as < is not defined.
+        if previous.accel_error * last.accel_error < type(last.accel_error)(0):
+            return EventData(
+                name="sign_changed",
+                description=(
+                    f"The error sign changed between iterations "
+                    f"{len(computed) - 2} ({previous.accel_error}) "
+                    f"and {len(computed) - 1} ({last.accel_error})"
+                ),
+            )
+    except TypeError:
+        # Comparison not supported (e.g., complex numbers)
+        pass
+        
+    return None
 
 
 def second_diff_growth_method(
@@ -138,7 +153,7 @@ def second_diff_growth_method(
     :rtype: EventData | None
     """
     if len(computed) < 3:
-        return
+        return None
 
     last = computed[-1]
     prev = computed[-2]
@@ -157,6 +172,7 @@ def second_diff_growth_method(
                 "showing that second-order differences are not decreasing."
             ),
         )
+    return None
 
 
 EVENT_METHODS = {

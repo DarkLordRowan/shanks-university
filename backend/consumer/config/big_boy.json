@@ -624,24 +624,24 @@
       "events": [
         {
           "type": "slow_accel",
-          "log_action_capacity": -1
+          "log_action_capacity": 2
         },
         {
           "type": "sign_changed",
-          "log_action_capacity": -1
+          "log_action_capacity": 2
         },
         {
           "type": "monotone",
-          "log_action_capacity": -1
+          "log_action_capacity": 2
         },
         {
           "type": "divergent_accel",
-          "log_action_capacity": -1,
+          "log_action_capacity": 2,
           "stop_action_limit": 3
         },
         {
           "type": "second_diff",
-          "log_action_capacity": -1
+          "log_action_capacity": 2
         }
       ]
     },
@@ -653,24 +653,24 @@
       "events": [
         {
           "type": "slow_accel",
-          "log_action_capacity": -1
+          "log_action_capacity": 2
         },
         {
           "type": "sign_changed",
-          "log_action_capacity": -1
+          "log_action_capacity": 2
         },
         {
           "type": "monotone",
-          "log_action_capacity": -1
+          "log_action_capacity": 2
         },
         {
           "type": "divergent_accel",
-          "log_action_capacity": -1,
+          "log_action_capacity": 2,
           "stop_action_limit": 3
         },
         {
           "type": "second_diff",
-          "log_action_capacity": -1
+          "log_action_capacity": 2
         }
       ]
     },
@@ -682,24 +682,24 @@
       "events": [
         {
           "type": "slow_accel",
-          "log_action_capacity": -1
+          "log_action_capacity": 2
         },
         {
           "type": "sign_changed",
-          "log_action_capacity": -1
+          "log_action_capacity": 2
         },
         {
           "type": "monotone",
-          "log_action_capacity": -1
+          "log_action_capacity": 2
         },
         {
           "type": "divergent_accel",
-          "log_action_capacity": -1,
+          "log_action_capacity": 2,
           "stop_action_limit": 3
         },
         {
           "type": "second_diff",
-          "log_action_capacity": -1
+          "log_action_capacity": 2
         }
       ]
     },
@@ -711,24 +711,24 @@
       "events": [
         {
           "type": "slow_accel",
-          "log_action_capacity": -1
+          "log_action_capacity": 2
         },
         {
           "type": "sign_changed",
-          "log_action_capacity": -1
+          "log_action_capacity": 2
         },
         {
           "type": "monotone",
-          "log_action_capacity": -1
+          "log_action_capacity": 2
         },
         {
           "type": "divergent_accel",
-          "log_action_capacity": -1,
+          "log_action_capacity": 2,
           "stop_action_limit": 3
         },
         {
           "type": "second_diff",
-          "log_action_capacity": -1
+          "log_action_capacity": 2
         }
       ]
     },
@@ -743,24 +743,24 @@
       "events": [
         {
           "type": "slow_accel",
-          "log_action_capacity": -1
+          "log_action_capacity": 2
         },
         {
           "type": "sign_changed",
-          "log_action_capacity": -1
+          "log_action_capacity": 2
         },
         {
           "type": "monotone",
-          "log_action_capacity": -1
+          "log_action_capacity": 2
         },
         {
           "type": "divergent_accel",
-          "log_action_capacity": -1,
+          "log_action_capacity": 2,
           "stop_action_limit": 3
         },
         {
           "type": "second_diff",
-          "log_action_capacity": -1
+          "log_action_capacity": 2
         }
       ]
     },
@@ -772,24 +772,24 @@
       "events": [
         {
           "type": "slow_accel",
-          "log_action_capacity": -1
+          "log_action_capacity": 2
         },
         {
           "type": "sign_changed",
-          "log_action_capacity": -1
+          "log_action_capacity": 2
         },
         {
           "type": "monotone",
-          "log_action_capacity": -1
+          "log_action_capacity": 2
         },
         {
           "type": "divergent_accel",
-          "log_action_capacity": -1,
+          "log_action_capacity": 2,
           "stop_action_limit": 3
         },
         {
           "type": "second_diff",
-          "log_action_capacity": -1
+          "log_action_capacity": 2
         }
       ]
     },
@@ -801,24 +801,24 @@
       "events": [
         {
           "type": "slow_accel",
-          "log_action_capacity": -1
+          "log_action_capacity": 2
         },
         {
           "type": "sign_changed",
-          "log_action_capacity": -1
+          "log_action_capacity": 2
         },
         {
           "type": "monotone",
-          "log_action_capacity": -1
+          "log_action_capacity": 2
         },
         {
           "type": "divergent_accel",
-          "log_action_capacity": -1,
+          "log_action_capacity": 2,
           "stop_action_limit": 3
         },
         {
           "type": "second_diff",
-          "log_action_capacity": -1
+          "log_action_capacity": 2
         }
       ]
     },
@@ -834,24 +834,24 @@
       "events": [
         {
           "type": "slow_accel",
-          "log_action_capacity": -1
+          "log_action_capacity": 2
         },
         {
           "type": "sign_changed",
-          "log_action_capacity": -1
+          "log_action_capacity": 2
         },
         {
           "type": "monotone",
-          "log_action_capacity": -1
+          "log_action_capacity": 2
         },
         {
           "type": "divergent_accel",
-          "log_action_capacity": -1,
+          "log_action_capacity": 2,
           "stop_action_limit": 3
         },
         {
           "type": "second_diff",
-          "log_action_capacity": -1
+          "log_action_capacity": 2
         }
       ]
     },
@@ -866,24 +866,24 @@
       "events": [
         {
           "type": "slow_accel",
-          "log_action_capacity": -1
+          "log_action_capacity": 2
         },
         {
           "type": "sign_changed",
-          "log_action_capacity": -1
+          "log_action_capacity": 2
         },
         {
           "type": "monotone",
-          "log_action_capacity": -1
+          "log_action_capacity": 2
         },
         {
           "type": "divergent_accel",
-          "log_action_capacity": -1,
+          "log_action_capacity": 2,
           "stop_action_limit": 3
         },
         {
           "type": "second_diff",
-          "log_action_capacity": -1
+          "log_action_capacity": 2
         }
       ]
     },
@@ -899,24 +899,24 @@
       "events": [
         {
           "type": "slow_accel",
-          "log_action_capacity": -1
+          "log_action_capacity": 2
         },
         {
           "type": "sign_changed",
-          "log_action_capacity": -1
+          "log_action_capacity": 2
         },
         {
           "type": "monotone",
-          "log_action_capacity": -1
+          "log_action_capacity": 2
         },
         {
           "type": "divergent_accel",
-          "log_action_capacity": -1,
+          "log_action_capacity": 2,
           "stop_action_limit": 3
         },
         {
           "type": "second_diff",
-          "log_action_capacity": -1
+          "log_action_capacity": 2
         }
       ]
     },
@@ -928,24 +928,24 @@
       "events": [
         {
           "type": "slow_accel",
-          "log_action_capacity": -1
+          "log_action_capacity": 2
         },
         {
           "type": "sign_changed",
-          "log_action_capacity": -1
+          "log_action_capacity": 2
         },
         {
           "type": "monotone",
-          "log_action_capacity": -1
+          "log_action_capacity": 2
         },
         {
           "type": "divergent_accel",
-          "log_action_capacity": -1,
+          "log_action_capacity": 2,
           "stop_action_limit": 3
         },
         {
           "type": "second_diff",
-          "log_action_capacity": -1
+          "log_action_capacity": 2
         }
       ]
     },
@@ -961,24 +961,24 @@
       "events": [
         {
           "type": "slow_accel",
-          "log_action_capacity": -1
+          "log_action_capacity": 2
         },
         {
           "type": "sign_changed",
-          "log_action_capacity": -1
+          "log_action_capacity": 2
         },
         {
           "type": "monotone",
-          "log_action_capacity": -1
+          "log_action_capacity": 2
         },
         {
           "type": "divergent_accel",
-          "log_action_capacity": -1,
+          "log_action_capacity": 2,
           "stop_action_limit": 3
         },
         {
           "type": "second_diff",
-          "log_action_capacity": -1
+          "log_action_capacity": 2
         }
       ]
     },
@@ -990,24 +990,24 @@
       "events": [
         {
           "type": "slow_accel",
-          "log_action_capacity": -1
+          "log_action_capacity": 2
         },
         {
           "type": "sign_changed",
-          "log_action_capacity": -1
+          "log_action_capacity": 2
         },
         {
           "type": "monotone",
-          "log_action_capacity": -1
+          "log_action_capacity": 2
         },
         {
           "type": "divergent_accel",
-          "log_action_capacity": -1,
+          "log_action_capacity": 2,
           "stop_action_limit": 3
         },
         {
           "type": "second_diff",
-          "log_action_capacity": -1
+          "log_action_capacity": 2
         }
       ]
     },
@@ -1019,24 +1019,24 @@
       "events": [
         {
           "type": "slow_accel",
-          "log_action_capacity": -1
+          "log_action_capacity": 2
         },
         {
           "type": "sign_changed",
-          "log_action_capacity": -1
+          "log_action_capacity": 2
         },
         {
           "type": "monotone",
-          "log_action_capacity": -1
+          "log_action_capacity": 2
         },
         {
           "type": "divergent_accel",
-          "log_action_capacity": -1,
+          "log_action_capacity": 2,
           "stop_action_limit": 3
         },
         {
           "type": "second_diff",
-          "log_action_capacity": -1
+          "log_action_capacity": 2
         }
       ]
     },
@@ -1048,24 +1048,24 @@
       "events": [
         {
           "type": "slow_accel",
-          "log_action_capacity": -1
+          "log_action_capacity": 2
         },
         {
           "type": "sign_changed",
-          "log_action_capacity": -1
+          "log_action_capacity": 2
         },
         {
           "type": "monotone",
-          "log_action_capacity": -1
+          "log_action_capacity": 2
         },
         {
           "type": "divergent_accel",
-          "log_action_capacity": -1,
+          "log_action_capacity": 2,
           "stop_action_limit": 3
         },
         {
           "type": "second_diff",
-          "log_action_capacity": -1
+          "log_action_capacity": 2
         }
       ]
     },
@@ -1077,24 +1077,24 @@
       "events": [
         {
           "type": "slow_accel",
-          "log_action_capacity": -1
+          "log_action_capacity": 2
         },
         {
           "type": "sign_changed",
-          "log_action_capacity": -1
+          "log_action_capacity": 2
         },
         {
           "type": "monotone",
-          "log_action_capacity": -1
+          "log_action_capacity": 2
         },
         {
           "type": "divergent_accel",
-          "log_action_capacity": -1,
+          "log_action_capacity": 2,
           "stop_action_limit": 3
         },
         {
           "type": "second_diff",
-          "log_action_capacity": -1
+          "log_action_capacity": 2
         }
       ]
     },
@@ -1108,24 +1108,24 @@
       "events": [
         {
           "type": "slow_accel",
-          "log_action_capacity": -1
+          "log_action_capacity": 2
         },
         {
           "type": "sign_changed",
-          "log_action_capacity": -1
+          "log_action_capacity": 2
         },
         {
           "type": "monotone",
-          "log_action_capacity": -1
+          "log_action_capacity": 2
         },
         {
           "type": "divergent_accel",
-          "log_action_capacity": -1,
+          "log_action_capacity": 2,
           "stop_action_limit": 3
         },
         {
           "type": "second_diff",
-          "log_action_capacity": -1
+          "log_action_capacity": 2
         }
       ]
     }

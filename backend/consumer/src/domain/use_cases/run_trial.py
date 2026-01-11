@@ -3,29 +3,28 @@ Trial execution logic.
 Authors: Shevyrov A.N., Yadrentsev I.M.
 """
 
-import traceback
 import datetime
-from typing import Mapping, Any
+import traceback
+from typing import Any, Mapping
 
 import pyshanks as ps
-from src.config.model import NoiseConfig, FilterConfig
-from src.domain.precision import cast_precision_value, cast_real_subtype_value
-
+from src.config.model import FilterConfig, NoiseConfig
+from src.domain.event import EventType
 from src.domain.params import (
     BaseAccelParam,
     BaseSeriesParam,
     NumericLike,
 )
-from src.domain.event import EventType
+from src.domain.precision import cast_precision_value, cast_real_subtype_value
 from src.domain.trial_result import (
     AccelTrialResult,
     ComputedTrialResult,
     ErrorTrialResult,
+    FilteredResults,
+    FilterMethodResult,
     NoErrorTrialResult,
     SeriesTrialResult,
     TrialResult,
-    FilteredResults,
-    FilterMethodResult,
 )
 from src.logger import logged_debug
 
@@ -181,22 +180,31 @@ def execute_trial(
             series_result, series_lim = series.obtain_by_argument(
                 series_argument, accel.size_floor
             )
-            
+
             if noise_config:
-                 precision = series.precision
-                 noise_type_enum = getattr(ps.NoiseType, noise_config.type)
-                 noise_method_enum = getattr(ps.NoiseMethod, noise_config.method.capitalize())
-                 
-                 p1 = cast_precision_value(precision, noise_config.param1)
-                 p2 = cast_precision_value(precision, noise_config.param2)
-                 
-                 func_name = f"applyNoise{precision.value}"
-                 
-                 if not hasattr(ps, func_name):
-                     raise ValueError(f"Noise function {func_name} not found")
-                 
-                 func = getattr(ps, func_name)
-                 series_result = func(series_result, noise_method_enum, noise_type_enum, noise_config.seed, p1, p2)
+                precision = series.precision
+                noise_type_enum = getattr(ps.NoiseType, noise_config.type)
+                noise_method_enum = getattr(
+                    ps.NoiseMethod, noise_config.method.capitalize()
+                )
+
+                p1 = cast_precision_value(precision, noise_config.param1)
+                p2 = cast_precision_value(precision, noise_config.param2)
+
+                func_name = f"applyNoise{precision.value}"
+
+                if not hasattr(ps, func_name):
+                    raise ValueError(f"Noise function {func_name} not found")
+
+                func = getattr(ps, func_name)
+                series_result = func(
+                    series_result,
+                    noise_method_enum,
+                    noise_type_enum,
+                    noise_config.seed,
+                    p1,
+                    p2,
+                )
 
         except Exception as exc:
             results.extend(
@@ -230,8 +238,6 @@ def execute_trial(
                 ctx = accel.create_event_context()
 
                 for n_value in n_values:
-                    if ctx["blocked"]:
-                        break
                     try:
                         if n_value <= 0:
                             raise ValueError("n must be positive")
@@ -243,6 +249,7 @@ def execute_trial(
                         partial_sum = series_result.Sn[index]
                         series_term = series_result.an[index]
                         accel_value = accel_instance(n_value, m_value, series_result)
+                        accel_error = accel_value - series_lim
 
                         computed.append(
                             ComputedTrialResult(
@@ -251,7 +258,8 @@ def execute_trial(
                                 partial_sum=partial_sum,
                                 partial_sum_deviation=abs(partial_sum - series_lim),
                                 accel_value=accel_value,
-                                accel_value_deviation=abs(accel_value - series_lim),
+                                accel_value_deviation=abs(accel_error),
+                                accel_error=accel_error,
                                 events=[],
                             )
                         )
@@ -274,77 +282,84 @@ def execute_trial(
                             },
                         )
                         break
-                
+
                 # Check for Stop-Filter-Average Logic
                 filtered_results_obj = None
 
-                if ctx["blocked"]:
+                if ctx["limit_reached"]:
                     # Identify which event triggered the block
                     triggering_event = None
                     for e_spec in accel.events:
-                        if e_spec.stop_action_limit and ctx["counters"].get(e_spec.type, 0) >= e_spec.stop_action_limit:
+                        if (
+                            e_spec.stop_action_limit
+                            and ctx["counters"].get(e_spec.type, 0)
+                            >= e_spec.stop_action_limit
+                        ):
                             triggering_event = e_spec.type
                             break
 
                     if triggering_event:
                         # 1. Identify start of divergence
-                        start_index = -1
-                        event_names = {triggering_event.value, "second_diff_growth", "divergent_accel", "slow_accel"}
-                        for i, res in enumerate(computed):
-                            if any(e.name in event_names for e in res.events):
-                                start_index = i
-                                break
-                        
-                        if start_index != -1 and len(computed) > start_index:
-                            divergent_segment = [c.accel_value for c in computed[start_index:]]
-                            methods_results = {}
-                            
-                            for f_conf in filter_configs:
-                                f_type = f_conf.type
-                                p = f_conf.params
-                                
-                                # Window length logic: default to segment length
-                                w_len = p.get("window_length", len(divergent_segment))
-                                if w_len == "segment":
-                                    w_len = len(divergent_segment)
-                                w_len = int(w_len)
-                                if w_len % 2 == 0:
-                                    w_len -= 1
-                                
-                                if w_len < 3:
-                                    continue
-                                
-                                func_name = f"{f_type}Filter{series.precision.value}"
-                                if hasattr(ps, func_name):
-                                    try:
-                                        func = getattr(ps, func_name)
-                                        
-                                        kwargs = {}
-                                        for k, v in p.items():
-                                            if k == "window_length":
-                                                continue # Handled explicitly
-                                            
-                                            # Heuristic for casting to Precision Type
-                                            if k in ["delta"]:
-                                                 kwargs[k] = cast_precision_value(series.precision, v)
-                                            else:
-                                                 kwargs[k] = v
-                                        
-                                        smoothed = func(divergent_segment, w_len, **kwargs)
-                                        
-                                        if smoothed:
-                                            avg = sum(smoothed) / len(smoothed)
-                                            methods_results[f_type] = FilterMethodResult(values=smoothed, average=avg)
-                                    except Exception as e:
-                                        append_to_event_log(f"{f_type.upper()} ERROR: {str(e)}")
+                        start_index = ctx["first_occurrence"][triggering_event]
+                        divergent_segment = [
+                            c.accel_value for c in computed[start_index:]
+                        ]
+                        methods_results = {}
 
-                            if methods_results:
-                                filtered_results_obj = FilteredResults(
-                                    start_n=computed[start_index].n,
-                                    segment_length=len(divergent_segment),
-                                    methods=methods_results
-                                )
-                                append_to_event_log(f"STOPPED BY {triggering_event.value}. FILTERS APPLIED: {list(methods_results.keys())}")
+                        for f_conf in filter_configs:
+                            f_type = f_conf.type
+                            p = f_conf.params
+
+                            # Window length logic: default to segment length
+                            w_len = p.get("window_length", len(divergent_segment))
+                            if w_len == "segment":
+                                w_len = len(divergent_segment)
+                            w_len = int(w_len)
+                            if w_len % 2 == 0:
+                                w_len -= 1
+
+                            if w_len < 3:
+                                continue
+
+                            func_name = f"{f_type}Filter{series.precision.value}"
+                            if hasattr(ps, func_name):
+                                try:
+                                    func = getattr(ps, func_name)
+
+                                    kwargs = {}
+                                    for k, v in p.items():
+                                        if k == "window_length":
+                                            continue  # Handled explicitly
+
+                                        # Heuristic for casting to Precision Type
+                                        if k in ["delta"]:
+                                            kwargs[k] = cast_precision_value(
+                                                series.precision, v
+                                            )
+                                        else:
+                                            kwargs[k] = v
+
+                                    smoothed = func(divergent_segment, w_len, **kwargs)
+
+                                    if smoothed:
+                                        avg = sum(smoothed) / len(smoothed)
+                                        methods_results[f_type] = FilterMethodResult(
+                                            values=smoothed, average=avg
+                                        )
+                                except Exception as e:
+                                    append_to_event_log(
+                                        f"{f_type.upper()} ERROR: {str(e)}"
+                                    )
+
+                        if methods_results:
+                            filtered_results_obj = FilteredResults(
+                                start_n=computed[start_index].n,
+                                segment_length=len(divergent_segment),
+                                methods=methods_results,
+                            )
+                            append_to_event_log(
+                                f"STOPPED BY {triggering_event.value}. FILTERS APPLIED: {list(methods_results.keys())}"
+                            )
 
                 results.append(
                     TrialResult(
