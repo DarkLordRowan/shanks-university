@@ -4,49 +4,6 @@
 
 Документ описывает полный жизненный цикл данных в фреймворке - от загрузки конфигурации до экспорта результатов и визуализации.
 
-## Sequence Diagram
-
-```mermaid
-sequenceDiagram
-    participant User
-    participant CLI
-    participant DI
-    participant Config
-    participant TrialExecutor
-    participant Sources
-    participant TrialRunner
-    participant CppCore
-    participant Exporters
-    participant Mongo
-
-    User->>CLI: run --config config/options.json
-    CLI->>Config: TrialConfig.load(path)
-    Config-->>CLI: TrialConfig
-    CLI->>DI: get_trial_executor_from_config(cfg)
-    DI->>DI: create TrialRunner
-    DI->>DI: create ParamSources
-    DI->>DI: create Exporters
-    DI-->>CLI: TrialExecutor
-    CLI->>TrialExecutor: run_all_precisions()
-
-    loop Для каждой precision
-        TrialExecutor->>Sources: load(precision)
-        Sources-->>TrialExecutor: series_params, accel_params
-        TrialExecutor->>TrialRunner: run(combinations)
-        loop Для каждой комбинации
-            TrialRunner->>CppCore: execute_trial(series, accel)
-            CppCore-->>TrialRunner: TrialResult
-        end
-        TrialRunner-->>TrialExecutor: list[TrialResult]
-        TrialExecutor->>TrialExecutor: serializer.to_dict()
-    end
-
-    TrialExecutor->>Exporters: export(dicts)
-    loop Для каждого exporter
-        Exporters->>Файлы: write() (JSON/CSV/Parquet)
-    end
-```
-
 ## Пошаговый поток данных
 
 ### Шаг 1. Инициализация (CLI)
