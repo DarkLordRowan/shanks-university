@@ -133,7 +133,7 @@ TRANSFORMATION_ENTRY(my_algorithm_id, "MyAlgorithm", {
 
 Добавьте:
 
-```cpp
+```c++
 #include "transformations/my_algorithm.hpp"
 ```
 
@@ -142,8 +142,17 @@ TRANSFORMATION_ENTRY(my_algorithm_id, "MyAlgorithm", {
 ## Шаг 7. Пересоберите pyshanks
 
 ```bash
-cd backend/lib
+cd backend/consumer
 ./install_pyshanks.sh
+```
+
+Или вручную:
+
+```bash
+cd backend/lib
+mkdir -p build && cd build
+cmake ..
+make -j$(nproc)
 ```
 
 ---

@@ -123,7 +123,7 @@ SERIES_ENTRY(my_series_iterator, "MySeries")
 ## Шаг 5. Пересоберите pyshanks
 
 ```bash
-cd backend/lib
+cd backend/consumer
 ./install_pyshanks.sh
 ```
 
