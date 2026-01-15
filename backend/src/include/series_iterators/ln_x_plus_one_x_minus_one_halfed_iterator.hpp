@@ -31,7 +31,7 @@ public:
      * @brief Default constructor for ln_x_plus_one_x_minus_one_halfed_iterator.
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      */
-	ln_x_plus_one_x_minus_one_halfed_iterator(T x) : series_base_succ<T, K>(x) {
+	explicit ln_x_plus_one_x_minus_one_halfed_iterator(T x) : series_base_succ<T, K>(x) {
 	    if (this->is_invalid())
 			throw std::invalid_argument("Invalid series argument");
 	}

@@ -30,10 +30,12 @@ public:
      * @brief Default constructor for incomplete_Gamma_func_iterator.
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      */
-	incomplete_Gamma_func_iterator(T x, T alpha) : series_base_succ<T, K>(x), alpha(alpha) {
+	explicit incomplete_Gamma_func_iterator(T x, T alpha) : series_base_succ<T, K>(x), alpha(alpha) {
 	    if (this->is_invalid())
 			throw std::invalid_argument("Invalid series argument");
 	}
+
+    explicit incomplete_Gamma_func_iterator(T x, K alpha) = delete;
 
 	T alpha; /**< The shape parameter alpha of the incomplete Gamma function. */
 

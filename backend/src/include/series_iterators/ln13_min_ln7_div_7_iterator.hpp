@@ -30,7 +30,7 @@ public:
      * @brief Default constructor for ln13_min_ln7_div_7_iterator.
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      */
-	ln13_min_ln7_div_7_iterator(T x) : series_base_succ<T, K>(x) {
+	explicit ln13_min_ln7_div_7_iterator(T x) : series_base_succ<T, K>(x) {
 	    if (this->is_invalid())
 			throw std::invalid_argument("Invalid series argument");
 	}

@@ -32,10 +32,12 @@ public:
      * @brief Default constructor for m_fact_1mx_mp1_inverse_iterator.
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      */
-	m_fact_1mx_mp1_inverse_iterator(T x, K m) : series_base_succ<T, K>(x), m(m) {
+	explicit m_fact_1mx_mp1_inverse_iterator(T x, K m) : series_base_succ<T, K>(x), m(m) {
 	    if (this->is_invalid())
 			throw std::invalid_argument("Invalid series argument");
 	}
+
+    explicit m_fact_1mx_mp1_inverse_iterator(T x, T m) = delete;
 
     /**
      * @brief Retrieves the analytic sum of the series (m! / (1 - x)^(m + 1)).

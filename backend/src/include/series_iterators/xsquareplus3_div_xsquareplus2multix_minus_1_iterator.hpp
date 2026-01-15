@@ -30,7 +30,7 @@ public:
      * @brief Default constructor for xsquareplus3_div_xsquareplus2multix_minus_1_iterator.
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      */
-	xsquareplus3_div_xsquareplus2multix_minus_1_iterator(T x) : series_base_succ<T, K>(x) {
+	explicit xsquareplus3_div_xsquareplus2multix_minus_1_iterator(T x) : series_base_succ<T, K>(x) {
 	    if (this->is_invalid())
 			throw std::invalid_argument("Invalid series argument");
 	}

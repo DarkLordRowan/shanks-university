@@ -31,7 +31,7 @@ public:
      * @brief Default constructor for three_minus_pi_iterator.
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      */
-	three_minus_pi_iterator(T x) : series_base_succ<T, K>(x) {
+	explicit three_minus_pi_iterator(T x) : series_base_succ<T, K>(x) {
 	    if (this->is_invalid())
 			throw std::invalid_argument("Invalid series argument");
 	}

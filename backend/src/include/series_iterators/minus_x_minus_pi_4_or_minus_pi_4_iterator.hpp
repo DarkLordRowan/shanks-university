@@ -30,7 +30,7 @@ public:
      * @brief Default constructor for minus_x_minus_pi_4_or_minus_pi_4_iterator.
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      */
-	minus_x_minus_pi_4_or_minus_pi_4_iterator(T x) : series_base_succ<T, K>(x) {
+	explicit minus_x_minus_pi_4_or_minus_pi_4_iterator(T x) : series_base_succ<T, K>(x) {
 	    if (this->is_invalid())
 			throw std::invalid_argument("Invalid series argument");
 	}

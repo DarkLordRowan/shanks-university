@@ -31,7 +31,7 @@ public:
      * @brief Default constructor for half_multi_ln_1div2multi1minuscosx_iterator.
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      */
-	half_multi_ln_1div2multi1minuscosx_iterator(T x) : series_base_succ<T, K>(x) {
+	explicit half_multi_ln_1div2multi1minuscosx_iterator(T x) : series_base_succ<T, K>(x) {
 	    if (this->is_invalid())
 			throw std::invalid_argument("Invalid series argument");
 	}

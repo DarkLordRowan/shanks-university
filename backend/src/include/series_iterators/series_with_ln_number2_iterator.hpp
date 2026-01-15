@@ -30,7 +30,7 @@ public:
      * @brief Default constructor for series_with_ln_number2_iterator.
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      */
-	series_with_ln_number2_iterator(T x) : series_base_succ<T, K>(x) {
+	explicit series_with_ln_number2_iterator(T x) : series_base_succ<T, K>(x) {
 	    if (this->is_invalid())
 			throw std::invalid_argument("Invalid series argument");
 	}

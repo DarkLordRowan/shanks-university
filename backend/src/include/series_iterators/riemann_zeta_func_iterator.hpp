@@ -30,7 +30,7 @@ public:
      * @brief Default constructor for riemann_zeta_func_iterator.
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      */
-	riemann_zeta_func_iterator(T x) : series_base_succ<T, K>(x) {
+	explicit riemann_zeta_func_iterator(T x) : series_base_succ<T, K>(x) {
 	    if (this->is_invalid())
 			throw std::invalid_argument("Invalid series argument");
 	}

@@ -31,7 +31,7 @@ public:
      * @brief Default constructor for eighth_pi_m_one_third_iterator.
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      */
-	eighth_pi_m_one_third_iterator(T x) : series_base_succ<T, K>(x) {
+	explicit eighth_pi_m_one_third_iterator(T x) : series_base_succ<T, K>(x) {
 	    if (this->is_invalid())
 			throw std::invalid_argument("Invalid series argument");
 	}

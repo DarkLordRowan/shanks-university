@@ -30,7 +30,7 @@ public:
      * @brief Default constructor for sqrt_1plusx_min_1_min_x_div_2_iterator.
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      */
-	sqrt_1plusx_min_1_min_x_div_2_iterator(T x) : series_base_succ<T, K>(x) {
+	explicit sqrt_1plusx_min_1_min_x_div_2_iterator(T x) : series_base_succ<T, K>(x) {
 	    if (this->is_invalid())
 			throw std::invalid_argument("Invalid series argument");
 	}

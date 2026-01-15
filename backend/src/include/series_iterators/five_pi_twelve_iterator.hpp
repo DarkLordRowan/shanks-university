@@ -31,7 +31,7 @@ public:
      * @brief Default constructor for five_pi_twelve_iterator.
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      */
-	five_pi_twelve_iterator(T x) : series_base_succ<T, K>(x) {
+	explicit five_pi_twelve_iterator(T x) : series_base_succ<T, K>(x) {
 	    if (this->is_invalid())
 			throw std::invalid_argument("Invalid series argument");
 	}

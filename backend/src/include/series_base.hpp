@@ -21,7 +21,7 @@ class series_base {
 public:
 
     series_base() = delete;
-    series_base(T x) : x(x) {}
+    explicit series_base(T x) : x(x) {}
     virtual ~series_base() = default;
 
     T get_x() const { return x; }
@@ -61,7 +61,8 @@ protected:
 template <AcceptedLike T, UnsignedIntLike K, typename State>
 class series_base_iter : public series_base<T, K> {
 public:
-    series_base_iter(T x) : series_base<T, K>(x) {}
+
+    explicit series_base_iter(T x) : series_base<T, K>(x) {}
 
     virtual T get_sum() const override = 0;
     virtual State initial_state() const { return State(); };
@@ -85,7 +86,8 @@ public:
 template <AcceptedLike T, UnsignedIntLike K>
 class series_base_succ : public series_base_iter<T, K, T> {
 public:
-    series_base_succ(T x) : series_base_iter<T, K, T>(x) {}
+
+    explicit series_base_succ(T x) : series_base_iter<T, K, T>(x) {}
 
     virtual T get_sum() const override = 0;
     T initial_state() const { return utils::cast<T>(0); };

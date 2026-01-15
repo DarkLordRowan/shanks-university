@@ -30,7 +30,7 @@ public:
      * @brief Default constructor for inverse_sqrt_1m4x_iterator.
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      */
-	inverse_sqrt_1m4x_iterator(T x) : series_base_succ<T, K>(x) {
+	explicit inverse_sqrt_1m4x_iterator(T x) : series_base_succ<T, K>(x) {
 	    if (this->is_invalid())
 			throw std::invalid_argument("Invalid series argument");
 	}

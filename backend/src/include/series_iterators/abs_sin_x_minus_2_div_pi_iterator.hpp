@@ -32,7 +32,7 @@ public:
      * @brief Default constructor for abs_sin_x_minus_2_div_pi_iterator.
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      */
-	abs_sin_x_minus_2_div_pi_iterator(T x) : series_base_succ<T, K>(x) {
+	explicit abs_sin_x_minus_2_div_pi_iterator(T x) : series_base_succ<T, K>(x) {
 	    if (this->is_invalid())
 			throw std::invalid_argument("Invalid series argument");
 	}

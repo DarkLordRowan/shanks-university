@@ -31,7 +31,7 @@ public:
      * @brief Default constructor for ln_sinx_minus_ln_x_iterator.
      * @authors Bolshakov M.P.
      */
-	ln_sinx_minus_ln_x_iterator(T x) : series_base_succ<T, K>(x) {
+	explicit ln_sinx_minus_ln_x_iterator(T x) : series_base_succ<T, K>(x) {
 	    if (this->is_invalid())
 			throw std::invalid_argument("Invalid series argument");
 	}

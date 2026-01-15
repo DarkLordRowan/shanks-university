@@ -30,7 +30,7 @@ public:
      * @brief Default constructor for minus_three_plus_ln3_three_devided_two_plus_two_ln2_iterator.
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      */
-	minus_three_plus_ln3_three_devided_two_plus_two_ln2_iterator(T x) : series_base_succ<T, K>(x) {
+	explicit minus_three_plus_ln3_three_devided_two_plus_two_ln2_iterator(T x) : series_base_succ<T, K>(x) {
 	    if (this->is_invalid())
 			throw std::invalid_argument("Invalid series argument");
 	}

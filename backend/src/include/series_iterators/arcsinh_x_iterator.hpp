@@ -30,7 +30,7 @@ public:
      * @brief Default constructor for arcsinh_x_iterator.
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      */
-	arcsinh_x_iterator(T x) : series_base_succ<T, K>(x) {
+	explicit arcsinh_x_iterator(T x) : series_base_succ<T, K>(x) {
 	    if (this->is_invalid())
 			throw std::invalid_argument("Invalid series argument");
 	}

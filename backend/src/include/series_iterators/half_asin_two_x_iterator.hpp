@@ -30,7 +30,7 @@ public:
      * @brief Default constructor for half_asin_two_x_iterator.
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      */
-	half_asin_two_x_iterator(T x) : series_base_succ<T, K>(x) {
+	explicit half_asin_two_x_iterator(T x) : series_base_succ<T, K>(x) {
 	    if (this->is_invalid())
 			throw std::invalid_argument("Invalid series argument");
 	}

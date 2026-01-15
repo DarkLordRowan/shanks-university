@@ -60,8 +60,8 @@ public:
     else \
         return std::make_unique<shanks::series::snake##_iterator<T, K>>(x); \
 }, \
-    std::is_constructible_v<shanks::series::snake##_iterator<T, K>, T, T, K> || std::is_constructible_v<shanks::series::snake##_iterator<T, K>, T, T>, \
-    std::is_constructible_v<shanks::series::snake##_iterator<T, K>, T, T, K> || std::is_constructible_v<shanks::series::snake##_iterator<T, K>, T, K> \
+    std::is_constructible_v<shanks::series::snake##_iterator<T, K>, T, T>, \
+    std::is_constructible_v<shanks::series::snake##_iterator<T, K>, T, K> \
 },
 //DEFININTION OF SERIS_LAST MACRO
 #define SERIES_LAST(snake, camel) SERIES_ENTRY(snake, camel)

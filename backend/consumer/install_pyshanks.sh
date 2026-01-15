@@ -3,7 +3,7 @@ cmake -S ../lib -B build
 make -C build pyshanks
 
 echo "PREPARING FOLDER FOR PYTHON..."
-mkdir pyshanks
+mkdir -p pyshanks
 touch pyshanks/__init__.py && echo 'from .pyshanks import *' > pyshanks/__init__.py
 cp build/*.so pyshanks/
 

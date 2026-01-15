@@ -20,9 +20,7 @@
  */
 int main()
 {	
-	std::cout << mpfr::pow(mpfr::mpreal("1.5"), mpfr::mpreal("1.5")) << "\n";
-
-
+	
     while(true){
 		try
 		{

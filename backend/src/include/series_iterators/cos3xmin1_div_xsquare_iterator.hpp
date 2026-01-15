@@ -30,7 +30,7 @@ public:
      * @brief Default constructor for cos3xmin1_div_xsquare_iterator.
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      */
-	cos3xmin1_div_xsquare_iterator(T x) : series_base_succ<T, K>(x) {
+	explicit cos3xmin1_div_xsquare_iterator(T x) : series_base_succ<T, K>(x) {
 	    if (this->is_invalid())
 			throw std::invalid_argument("Invalid series argument");
 	}

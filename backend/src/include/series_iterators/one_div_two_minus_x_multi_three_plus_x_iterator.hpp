@@ -31,7 +31,7 @@ public:
      * @brief Default constructor for one_div_two_minus_x_multi_three_plus_x_iterator.
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      */
-	one_div_two_minus_x_multi_three_plus_x_iterator(T x) : series_base_succ<T, K>(x) {
+	explicit one_div_two_minus_x_multi_three_plus_x_iterator(T x) : series_base_succ<T, K>(x) {
 	    if (this->is_invalid())
 			throw std::invalid_argument("Invalid series argument");
 	}

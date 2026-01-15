@@ -31,7 +31,7 @@ public:
      * @brief Default constructor for half_minus_sinx_multi_pi_4_iterator.
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      */
-	half_minus_sinx_multi_pi_4_iterator(T x) : series_base_succ<T, K>(x) {
+	explicit half_minus_sinx_multi_pi_4_iterator(T x) : series_base_succ<T, K>(x) {
 	    if (this->is_invalid())
 			throw std::invalid_argument("Invalid series argument");
 	}

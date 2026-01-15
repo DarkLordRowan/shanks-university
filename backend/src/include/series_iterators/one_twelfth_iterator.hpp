@@ -29,7 +29,7 @@ public:
      * @brief Default constructor for one_twelfth_iterator.
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      */
-	one_twelfth_iterator(T x) : series_base_succ<T, K>(x) {
+	explicit one_twelfth_iterator(T x) : series_base_succ<T, K>(x) {
 	    if (this->is_invalid())
 			throw std::invalid_argument("Invalid series argument");
 	}

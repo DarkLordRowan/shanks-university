@@ -30,7 +30,7 @@ public:
      * @brief Default constructor for minus_one_n_fact_n_in_n_iterator.
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      */
-	minus_one_n_fact_n_in_n_iterator(T x) : series_base_succ<T, K>(x) {
+	explicit minus_one_n_fact_n_in_n_iterator(T x) : series_base_succ<T, K>(x) {
 	    if (this->is_invalid())
 			throw std::invalid_argument("Invalid series argument");
 	}

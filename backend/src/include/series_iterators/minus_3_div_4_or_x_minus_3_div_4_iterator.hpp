@@ -31,7 +31,7 @@ public:
      * @brief Default constructor for minus_3_div_4_or_x_minus_3_div_4_iterator.
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      */
-	minus_3_div_4_or_x_minus_3_div_4_iterator(T x) : series_base_succ<T, K>(x) {
+	explicit minus_3_div_4_or_x_minus_3_div_4_iterator(T x) : series_base_succ<T, K>(x) {
 	    if (this->is_invalid())
 			throw std::invalid_argument("Invalid series argument");
 	}

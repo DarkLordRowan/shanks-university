@@ -30,7 +30,7 @@ public:
      * @brief Default constructor for cosh_iterator.
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      */
-	cosh_iterator(T x) : series_base_succ<T, K>(x) {
+	explicit cosh_iterator(T x) : series_base_succ<T, K>(x) {
 	    if (this->is_invalid())
 			throw std::invalid_argument("Invalid series argument");
 	}

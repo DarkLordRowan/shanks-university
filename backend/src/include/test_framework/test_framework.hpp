@@ -11,6 +11,7 @@
 #include <memory>
 #include <stdexcept>
 #include <string>
+#include <type_traits>
 #include <vector>
 #include <unordered_map>
 #include <functional>
@@ -166,8 +167,6 @@ inline void main_testing_function()
 
     shanks::algos::transformation_id_t transformation_id = transform_ids[transform_idx];
 	std::unique_ptr<shanks::algos::series_acceleration<T, K>> transform = create_transformation_by_id<T, K>(transformation_id);
-
-	std::cout << "transformation : " << transform->get_name() << "\n";
 
 	// User interaction to select test function
 	print_test_function_info();

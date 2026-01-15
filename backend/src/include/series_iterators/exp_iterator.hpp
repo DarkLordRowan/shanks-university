@@ -30,7 +30,7 @@ public:
      * @brief Default constructor for exp_iterator.
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      */
-	exp_iterator(T x) : series_base_succ<T, K>(x) {
+	explicit exp_iterator(T x) : series_base_succ<T, K>(x) {
 	    if (this->is_invalid())
 			throw std::invalid_argument("Invalid series argument");
 	}
