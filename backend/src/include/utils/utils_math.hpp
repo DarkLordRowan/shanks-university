@@ -190,13 +190,7 @@ T utils::sqrt(const T& x){
 	#ifdef INC_FPRECISION
 	else if constexpr(std::is_same<T, float_precision>::value) return sqrt(x);
 	#endif
-    else if constexpr (is_complex_custom<T>::value) {
-        using ComponentT = typename T::value_type;
-        ComponentT r = utils::abs(x);
-        ComponentT phi = utils::atan2(x.imag(), x.real());
-        ComponentT sqrt_r = utils::sqrt(r);
-        return T(sqrt_r * utils::cos(phi / 2.0), sqrt_r * utils::sin(phi / 2.0));
-    }
+    else if constexpr (is_complex_custom<T>::value) return std::sqrt(x);
 	else {
         if constexpr (AcceptedLike<T>) {
             throw std::runtime_error("utils::sqrt not implemented for this type");
@@ -218,14 +212,7 @@ T utils::exp(const T& x){
 	#ifdef __MPREAL_H__
 	else if constexpr (std::is_same<T, mpfr::mpreal>::value) return mpfr::exp(x);
 	#endif
-	#ifdef INC_FPRECISION
-	else if constexpr(std::is_same<T, float_precision>::value) return exp(x);
-	#endif
-    else if constexpr (is_complex_custom<T>::value) {
-        using ComponentT = typename T::value_type;
-        ComponentT exp_r = utils::exp(x.real());
-        return T(exp_r * utils::cos(x.imag()), exp_r * utils::sin(x.imag()));
-    }
+    else if constexpr (is_complex_custom<T>::value) return std::exp(x);
 	else {
         static_assert(dependent_false<T>::value, "utils::exp not implemented for this type");
     }
@@ -243,13 +230,7 @@ T utils::log(const T& x){
 	#ifdef __MPREAL_H__
 	else if constexpr (std::is_same<T, mpfr::mpreal>::value) return mpfr::log(x);
 	#endif
-	#ifdef INC_FPRECISION
-	else if constexpr(std::is_same<T, float_precision>::value) return log(x);
-	#endif
-    else if constexpr (is_complex_custom<T>::value) {
-        using ComponentT = typename T::value_type;
-        return T(utils::log(utils::abs(x)), utils::atan2(x.imag(), x.real()));
-    }
+    else if constexpr (is_complex_custom<T>::value) return std::log(x);
 	else {
         static_assert(dependent_false<T>::value, "utils::log not implemented for this type");
     }
@@ -267,7 +248,7 @@ T utils::hypot(const T& a, const T& b){
 	#ifdef __MPREAL_H__
 	else if constexpr (std::is_same<T, mpfr::mpreal>::value) return mpfr::hypot(a, b);
 	#endif
-	else return sqrt(a*a + b*b);
+	else return utils::sqrt(a*a + b*b);
 }
 
 /**
@@ -282,9 +263,6 @@ T utils::erf(const T& x){
 	if constexpr (std::is_floating_point<T>::value) return std::erf(x);
 	#ifdef __MPREAL_H__
 	else if constexpr (std::is_same<T, mpfr::mpreal>::value) return mpfr::erf(x);
-	#endif
-	#ifdef INC_FPRECISION
-	else if constexpr(std::is_same<T, float_precision>::value) return erf(x);
 	#endif
 	else {
         // If we can't implement it, throw at runtime for AcceptedLike types to allow compilation
@@ -450,9 +428,6 @@ template<AcceptedLike T>
 T utils::lambertW0(const T& x){
 	#ifdef __GSL_SF_EXPINT_H__
 	if constexpr (std::is_floating_point<T>::value) return utils::cast<T>(gsl_sf_lambert_W0(static_cast<double>(this->x)));
-	#ifdef INC_FPRECISION
-	else if constexpr(std::is_same<T, float_precision>::value) return lambertW0(x);
-	#endif
 	else {
         if constexpr (AcceptedLike<T>) {
             throw std::runtime_error("utils::lambertW0 not implemented for this type");
@@ -483,13 +458,7 @@ T utils::sin(const T& x){
 	#ifdef __MPREAL_H__
 	else if constexpr (std::is_same<T, mpfr::mpreal>::value) return mpfr::sin(x);
 	#endif
-	#ifdef INC_FPRECISION
-	else if constexpr(std::is_same<T, float_precision>::value) return sin(x);
-	#endif
-    else if constexpr (is_complex_custom<T>::value) {
-        using ComponentT = typename T::value_type;
-        return T(utils::sin(x.real()) * utils::cosh(x.imag()), utils::cos(x.real()) * utils::sinh(x.imag()));
-    }
+    else if constexpr (is_complex_custom<T>::value) return std::sin(x);
 	else {
         if constexpr (AcceptedLike<T>) {
             throw std::runtime_error("utils::sin not implemented for this type");
@@ -511,14 +480,7 @@ T utils::asin(const T& x){
 	#ifdef __MPREAL_H__
 	else if constexpr (std::is_same<T, mpfr::mpreal>::value) return mpfr::asin(x);
 	#endif
-	#ifdef INC_FPRECISION
-	else if constexpr(std::is_same<T, float_precision>::value) return asin(x);
-	#endif
-    else if constexpr (is_complex_custom<T>::value) {
-        // asin(z) = -i * log(i*z + sqrt(1 - z^2))
-        T i(0, 1);
-        return -i * utils::log(i * x + utils::sqrt(utils::cast<T>(1.0) - x * x));
-    }
+    else if constexpr (is_complex_custom<T>::value)  return std::asin(x);
 	else {
         if constexpr (AcceptedLike<T>) {
             throw std::runtime_error("utils::asin not implemented for this type");
@@ -540,13 +502,7 @@ T utils::cos(const T& x){
 	#ifdef __MPREAL_H__
 	else if constexpr (std::is_same<T, mpfr::mpreal>::value) return mpfr::cos(x);
 	#endif
-	#ifdef INC_FPRECISION
-	else if constexpr(std::is_same<T, float_precision>::value) return cos(x);
-	#endif
-    else if constexpr (is_complex_custom<T>::value) {
-        using ComponentT = typename T::value_type;
-        return T(utils::cos(x.real()) * utils::cosh(x.imag()), -utils::sin(x.real()) * utils::sinh(x.imag()));
-    }
+    else if constexpr (is_complex_custom<T>::value) return std::cos(x);
 	else {
         if constexpr (AcceptedLike<T>) {
             throw std::runtime_error("utils::cos not implemented for this type");
@@ -568,14 +524,7 @@ T utils::acos(const T& x){
 	#ifdef __MPREAL_H__
 	else if constexpr (std::is_same<T, mpfr::mpreal>::value) return mpfr::acos(x);
 	#endif
-	#ifdef INC_FPRECISION
-	else if constexpr(std::is_same<T, float_precision>::value) return acos(x);
-	#endif
-    else if constexpr (is_complex_custom<T>::value) {
-        // acos(z) = pi/2 - asin(z)
-        T i(0, 1);
-        return -i * utils::log(x + i * utils::sqrt(utils::cast<T>(1.0) - x * x));
-    }
+    else if constexpr (is_complex_custom<T>::value) return std::acos(x);
 	else {
         if constexpr (AcceptedLike<T>) {
             throw std::runtime_error("utils::acos not implemented for this type");
@@ -597,12 +546,7 @@ T utils::tan(const T& x){
 	#ifdef __MPREAL_H__
 	else if constexpr (std::is_same<T, mpfr::mpreal>::value) return mpfr::tan(x);
 	#endif
-	#ifdef INC_FPRECISION
-	else if constexpr(std::is_same<T, float_precision>::value) return tan(x);
-	#endif
-    else if constexpr (is_complex_custom<T>::value) {
-        return utils::sin(x) / utils::cos(x);
-    }
+    else if constexpr (is_complex_custom<T>::value) return std::tan(x);
 	else {
         if constexpr (AcceptedLike<T>) {
             throw std::runtime_error("utils::tan not implemented for this type");
@@ -624,15 +568,7 @@ T utils::atan(const T& x){
 	#ifdef __MPREAL_H__
 	else if constexpr (std::is_same<T, mpfr::mpreal>::value) return mpfr::atan(x);
 	#endif
-	#ifdef INC_FPRECISION
-	else if constexpr(std::is_same<T, float_precision>::value) return atan(x);
-	#endif
-    else if constexpr (is_complex_custom<T>::value) {
-        // atan(z) = (i/2) * (log(1 - i*z) - log(1 + i*z))
-        T i(0, 1);
-        T i2(0, 0.5);
-        return i2 * (utils::log(utils::cast<T>(1.0) - i * x) - utils::log(utils::cast<T>(1.0) + i * x));
-    }
+    else if constexpr (is_complex_custom<T>::value) return std::atan(x);
 	else {
         if constexpr (AcceptedLike<T>) {
             throw std::runtime_error("utils::atan not implemented for this type");
@@ -654,13 +590,7 @@ T utils::sinh(const T& x){
 	#ifdef __MPREAL_H__
 	else if constexpr (std::is_same<T, mpfr::mpreal>::value) return mpfr::sinh(x);
 	#endif
-	#ifdef INC_FPRECISION
-	else if constexpr(std::is_same<T, float_precision>::value) return sinh(x);
-	#endif
-    else if constexpr (is_complex_custom<T>::value) {
-        // sinh(z) = (exp(z) - exp(-z)) / 2
-        return (utils::exp(x) - utils::exp(-x)) / utils::cast<T>(2.0);
-    }
+    else if constexpr (is_complex_custom<T>::value) return sinh(x);
 	else {
         if constexpr (AcceptedLike<T>) {
             throw std::runtime_error("utils::sinh not implemented for this type");
@@ -682,13 +612,7 @@ T utils::asinh(const T& x){
 	#ifdef __MPREAL_H__
 	else if constexpr (std::is_same<T, mpfr::mpreal>::value) return mpfr::asinh(x);
 	#endif
-	#ifdef INC_FPRECISION
-	else if constexpr(std::is_same<T, float_precision>::value) return asinh(x);
-	#endif
-    else if constexpr (is_complex_custom<T>::value) {
-        // asinh(z) = log(z + sqrt(z^2 + 1))
-        return utils::log(x + utils::sqrt(x * x + utils::cast<T>(1.0)));
-    }
+    else if constexpr (is_complex_custom<T>::value) return std::asinh(x);
 	else {
         if constexpr (AcceptedLike<T>) {
             throw std::runtime_error("utils::asinh not implemented for this type");
@@ -710,14 +634,7 @@ T utils::cosh(const T& x){
 	#ifdef __MPREAL_H__
 	else if constexpr (std::is_same<T, mpfr::mpreal>::value) return mpfr::cosh(x);
 	#endif
-<<<<<<< HEAD
-	#ifdef INC_FPRECISION
-	else if constexpr(std::is_same<T, float_precision>::value) return cosh(x);
-	#endif
-    else if constexpr (is_complex_custom<T>::value) {
-        // cosh(z) = (exp(z) + exp(-z)) / 2
-        return (utils::exp(x) + utils::exp(-x)) / utils::cast<T>(2.0);
-    }
+    else if constexpr (is_complex_custom<T>::value) return std::cosh(x);
 	else {
         if constexpr (AcceptedLike<T>) {
             throw std::runtime_error("utils::cosh not implemented for this type");
@@ -725,9 +642,6 @@ T utils::cosh(const T& x){
             static_assert(dependent_false<T>::value, "utils::cosh not implemented for this type");
         }
     }
-=======
-	else return utils::cast<T>(0.0);
->>>>>>> 5af1e009 (fixes)
 }
 
 /**
@@ -742,14 +656,7 @@ T utils::acosh(const T& x){
 	#ifdef __MPREAL_H__
 	else if constexpr (std::is_same<T, mpfr::mpreal>::value) return mpfr::acosh(x);
 	#endif
-<<<<<<< HEAD
-	#ifdef INC_FPRECISION
-	else if constexpr(std::is_same<T, float_precision>::value) return acosh(x);
-	#endif
-    else if constexpr (is_complex_custom<T>::value) {
-        // acosh(z) = log(z + sqrt(z + 1) * sqrt(z - 1))
-        return utils::log(x + utils::sqrt(x + utils::cast<T>(1.0)) * utils::sqrt(x - utils::cast<T>(1.0)));
-    }
+    else if constexpr (is_complex_custom<T>::value) return std::acosh(x);
 	else {
         if constexpr (AcceptedLike<T>) {
             throw std::runtime_error("utils::acosh not implemented for this type");
@@ -757,9 +664,6 @@ T utils::acosh(const T& x){
             static_assert(dependent_false<T>::value, "utils::acosh not implemented for this type");
         }
     }
-=======
-	else return utils::cast<T>(0.0);
->>>>>>> 5af1e009 (fixes)
 }
 
 /**
@@ -774,13 +678,7 @@ T utils::tanh(const T& x){
 	#ifdef __MPREAL_H__
 	else if constexpr (std::is_same<T, mpfr::mpreal>::value) return mpfr::tanh(x);
 	#endif
-<<<<<<< HEAD
-	#ifdef INC_FPRECISION
-	else if constexpr(std::is_same<T, float_precision>::value) return tanh(x);
-	#endif
-    else if constexpr (is_complex_custom<T>::value) {
-        return utils::sinh(x) / utils::cosh(x);
-    }
+    else if constexpr (is_complex_custom<T>::value) return std::atan(x);
 	else {
         if constexpr (AcceptedLike<T>) {
             throw std::runtime_error("utils::tanh not implemented for this type");
@@ -788,9 +686,6 @@ T utils::tanh(const T& x){
             static_assert(dependent_false<T>::value, "utils::tanh not implemented for this type");
         }
     }
-=======
-	else return utils::cast<T>(0.0);
->>>>>>> 5af1e009 (fixes)
 }
 
 /**
@@ -805,14 +700,7 @@ T utils::atanh(const T& x){
 	#ifdef __MPREAL_H__
 	else if constexpr (std::is_same<T, mpfr::mpreal>::value) return mpfr::atanh(x);
 	#endif
-<<<<<<< HEAD
-	#ifdef INC_FPRECISION
-	else if constexpr(std::is_same<T, float_precision>::value) return atanh(x);
-	#endif
-    else if constexpr (is_complex_custom<T>::value) {
-        // atanh(z) = 0.5 * (log(1 + z) - log(1 - z))
-        return utils::cast<T>(0.5) * (utils::log(utils::cast<T>(1.0) + x) - utils::log(utils::cast<T>(1.0) - x));
-    }
+    else if constexpr (is_complex_custom<T>::value) return std::atanh(x);
 	else {
         if constexpr (AcceptedLike<T>) {
             throw std::runtime_error("utils::atanh not implemented for this type");
@@ -820,9 +708,6 @@ T utils::atanh(const T& x){
             static_assert(dependent_false<T>::value, "utils::atanh not implemented for this type");
         }
     }
-=======
-	else return utils::cast<T>(0.0);
->>>>>>> 5af1e009 (fixes)
 }
 
 /**
@@ -837,12 +722,8 @@ typename GetUnderlyingType<T>::value utils::abs(const T& x){
 	#ifdef __MPREAL_H__
 	else if constexpr (std::is_same<T, mpfr::mpreal>::value) return mpfr::abs(x);
 	#endif
-<<<<<<< HEAD
-	#ifdef INC_FPRECISION
-	else if constexpr(std::is_same<T, float_precision>::value) return abs(x);
-	#endif
     else if constexpr (is_complex_custom<T>::value) {
-        return mpfr::hypot(x.real(), x.imag());
+        return utils::hypot(x.real(), x.imag());
     }
 	else {
         if constexpr (AcceptedLike<T>) {
@@ -851,9 +732,6 @@ typename GetUnderlyingType<T>::value utils::abs(const T& x){
             static_assert(dependent_false<T>::value, "utils::abs not implemented for this type");
         }
     }
-=======
-	else return utils::cast<typename GetUnderlyingType<T>::value>(0.0);
->>>>>>> 5af1e009 (fixes)
 }
 
 #endif
