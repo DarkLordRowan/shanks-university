@@ -40,15 +40,15 @@ from PyQt6.QtWidgets import (  # type: ignore
 )
 
 from .data_loader import AccelRecord, DataLoader, Metadata, SeriesRecord
-from .symlog import symlog_formatter, vectorized_approx_f64, vectorized_symlog
 from .logic import (
-    filter_dataset,
-    extract_filter_options,
-    prepare_viz_data,
+    TableRowData,
     ViewOptions,
     VisualizationData,
-    TableRowData
+    extract_filter_options,
+    filter_dataset,
+    prepare_viz_data,
 )
+from .symlog import symlog_formatter, vectorized_approx_f64, vectorized_symlog
 
 
 class CollapsibleCellWidget(QWidget):
@@ -648,8 +648,6 @@ class DashboardApp(QMainWindow):
             if item.widget():
                 item.widget().deleteLater()
             elif item.layout():
-                # recursively delete layout items?
-                # FlowLayout clean up handles its items
                 pass
 
         # calculate available options based on CURRENT data.
@@ -866,6 +864,7 @@ class DashboardApp(QMainWindow):
 
         closest_curve = None
         closest_name = None
+        closest_point = None
         min_dist = 20.0  # pixels
 
         vb = plot_widget.plotItem.vb
@@ -885,6 +884,7 @@ class DashboardApp(QMainWindow):
 
             candidate_dist = float("inf")
             candidate_name = item.opts.get("name", "Unknown")
+            candidate_point = None
 
             # helper to check a segment
             def check_segment(xs, ys, seg_name):
@@ -893,6 +893,7 @@ class DashboardApp(QMainWindow):
                 idx = np.searchsorted(xs, mouse_x)
 
                 local_min = float("inf")
+                local_pt = None
 
                 # we check the segment [idx-1, idx]
                 # ensure indices are valid within this slice
@@ -907,9 +908,14 @@ class DashboardApp(QMainWindow):
                         d = self.dist_to_segment(mouse_screen_pt, p1, p2)
                         if d < local_min:
                             local_min = d
+                            # find closest point on this segment
+                            local_pt = (
+                                (xs[i_left], ys[i_left])
+                                if np.abs(xs[i_left] - mouse_x)
+                                < np.abs(xs[i_right] - mouse_x)
+                                else (xs[i_right], ys[i_right])
+                            )
 
-                # also check point distance for idx (right side) if we are off the end?
-                # or just standard robustness if searchsorted puts us exactly on point
                 if i_right < len(xs):
                     p = vb.mapViewToDevice(pg.Point(xs[i_right], ys[i_right]))
                     if p:
@@ -918,6 +924,7 @@ class DashboardApp(QMainWindow):
                         )
                         if d < local_min:
                             local_min = d
+                            local_pt = (xs[i_right], ys[i_right])
 
                 if i_left >= 0:
                     p = vb.mapViewToDevice(pg.Point(xs[i_left], ys[i_left]))
@@ -927,8 +934,9 @@ class DashboardApp(QMainWindow):
                         )
                         if d < local_min:
                             local_min = d
+                            local_pt = (xs[i_left], ys[i_left])
 
-                return local_min
+                return local_min, local_pt
 
             if hasattr(item, "point_names"):
                 # scatter plot with named points (Performance Plot)
@@ -949,6 +957,7 @@ class DashboardApp(QMainWindow):
                         if d < candidate_dist:
                             candidate_dist = d
                             candidate_name = item.point_names[i]
+                            candidate_point = (x_data[i], y_data[i])
 
             elif hasattr(item, "segments"):
                 # batched segments.
@@ -963,24 +972,36 @@ class DashboardApp(QMainWindow):
                         if mouse_x < seg_x[0] - 1 or mouse_x > seg_x[-1] + 1:
                             continue
 
-                    d = check_segment(seg_x, seg_y, info_name)
+                    d, pt = check_segment(seg_x, seg_y, info_name)
                     if d < candidate_dist:
                         candidate_dist = d
                         candidate_name = info_name
+                        candidate_point = pt
             else:
                 # standard curve
-                d = check_segment(x_data, y_data, candidate_name)
+                d, pt = check_segment(x_data, y_data, candidate_name)
                 candidate_dist = d
+                candidate_point = pt
 
             if candidate_dist < min_dist:
                 min_dist = candidate_dist
                 closest_curve = item
                 closest_name = candidate_name
+                closest_point = candidate_point
 
         tooltip = plot_widget.custom_tooltip
-        if closest_curve:
-            tooltip.setText(closest_name)
-            tooltip.setPos(mouse_point.x(), mouse_point.y())
+        if closest_curve and closest_point:
+            x_val, y_val = closest_point
+
+            # format y-coord respecting symlog
+            if plot_widget.symlog:
+                y_str = symlog_formatter(y_val)
+            else:
+                y_str = f"{y_val:.6e}"
+
+            coord_str = f"n={int(x_val)}, y={y_str}"
+            tooltip.setText(f"{closest_name}\n{coord_str}")
+            tooltip.setPos(x_val, y_val)
             tooltip.show()
         else:
             tooltip.hide()
@@ -1094,7 +1115,7 @@ class DashboardApp(QMainWindow):
         Redraws all plots and populates the data table using pre-calculated visualization data.
         """
         t_start = time.time()
-        
+
         # 1. prepare data using pure logic
         options = ViewOptions(
             show_partial_sums=self.show_partial_sums,
@@ -1103,11 +1124,11 @@ class DashboardApp(QMainWindow):
             show_imaginary=self.show_imaginary,
             force_show_imaginary=self.force_show_imaginary,
             show_filters=self.show_filters,
-            symlog=self.symlog
+            symlog=self.symlog,
         )
-        
+
         viz_data = prepare_viz_data(self.filtered_data, options)
-        
+
         # 2. update UI
         self.convergence_plot.clear()
         self.error_plot.clear()
@@ -1124,7 +1145,9 @@ class DashboardApp(QMainWindow):
         # render curves
         def render_curves(plot, curves):
             for c in curves:
-                curve_item = plot.plot(c.x, c.y, pen=c.pen, name=c.name, connect="finite")
+                curve_item = plot.plot(
+                    c.x, c.y, pen=c.pen, name=c.name, connect="finite"
+                )
                 if c.segments:
                     curve_item.segments = c.segments
 
@@ -1143,7 +1166,7 @@ class DashboardApp(QMainWindow):
         for row in viz_data.table_rows:
             r_idx = self.table.rowCount()
             self.table.insertRow(r_idx)
-            
+
             self.table.setItem(r_idx, 0, QTableWidgetItem(row.series_id))
             self.table.setItem(r_idx, 1, QTableWidgetItem(row.name))
             self.table.setItem(r_idx, 2, QTableWidgetItem(row.precision))
@@ -1162,10 +1185,14 @@ class DashboardApp(QMainWindow):
                 (12, f"{len(row.errors)} errors", row.errors),
                 (13, f"{len(row.events)} events", row.events),
             ]
-            
+
             for col_idx, title, lines in col_configs:
                 if lines:
-                    self.table.setCellWidget(r_idx, col_idx, CollapsibleCellWidget(title, lines, self.table, r_idx))
+                    self.table.setCellWidget(
+                        r_idx,
+                        col_idx,
+                        CollapsibleCellWidget(title, lines, self.table, r_idx),
+                    )
                 else:
                     self.table.setItem(r_idx, col_idx, QTableWidgetItem(""))
 
