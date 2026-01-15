@@ -351,7 +351,7 @@ class DashboardApp(QMainWindow):
         self.show_real = True
         self.show_imaginary = True
         self.force_show_imaginary = False
-        self.show_filters = True
+        self.show_filters = False
 
         self.init_ui()
 
