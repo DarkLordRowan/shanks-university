@@ -272,7 +272,7 @@ class DataLoader:
                             pl.element().struct.field("partial_sum_deviation").alias("deviation")
                         ])
                     ).alias("computed")
-                ]).unique(subset=["series_id"])
+                ]).sort(pl.col("computed").list.len(), descending=True).unique(subset=["series_id"])
 
                 # 2. Accel DataFrame
                 def extract_events(computed_list):
@@ -336,7 +336,7 @@ class DataLoader:
         all_series = [d[0] for d in dfs]
         all_accels = [d[1] for d in dfs]
         
-        self.series_df = pl.concat(all_series).unique(subset=["series_id"]).lazy()
+        self.series_df = pl.concat(all_series).sort(pl.col("computed").list.len(), descending=True).unique(subset=["series_id"]).lazy()
         self.accel_df = pl.concat(all_accels).lazy()
 
     def _compute_metadata(self) -> Metadata:

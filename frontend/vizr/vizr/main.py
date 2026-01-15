@@ -1430,6 +1430,13 @@ class DashboardApp(QMainWindow):
             filter_segments = []
             current_offset_filter = 0
 
+            series_filter_n_imag = []
+            series_filter_imag = []
+            filter_segments_imag = []
+            current_offset_filter_imag = 0
+            
+            series_filter_dev = []
+
             for accel in accels:
                 total_accels += 1
 
@@ -1451,38 +1458,43 @@ class DashboardApp(QMainWindow):
 
                 current_n = n_vals[:min_len]
                 current_mask = mask[:min_len]
-                accel_n = current_n[current_mask]
+                
+                # We use the full range of n for this segment to keep it aligned,
+                # but we will insert NaNs where the mask is False.
+                accel_n_segment = current_n.astype(float)
 
                 # --- Real Accel ---
                 if self.show_real:
-                    accel_real = vectorized_approx_f64(
-                        accel.val_real_m[:min_len][current_mask],
-                        accel.val_real_e[:min_len][current_mask],
-                    )
+                    # vectorized_approx_f64 already returns an array of the same length as inputs
+                    # but we need to ensure invalid points are NaN.
+                    r_m = accel.val_real_m[:min_len]
+                    r_e = accel.val_real_e[:min_len]
+                    
+                    accel_real = vectorized_approx_f64(r_m, r_e)
+                    # Apply mask: set invalid points to NaN
+                    accel_real[~current_mask] = np.nan
 
                     # Error Plot Data (Deviation)
-                    # We always need real deviation values for statistics
-                    accel_dev_real = vectorized_approx_f64(
-                        accel.dev_m[:min_len][current_mask],
-                        accel.dev_e[:min_len][current_mask],
-                    )
+                    d_m = accel.dev_m[:min_len]
+                    d_e = accel.dev_e[:min_len]
+                    
+                    accel_dev_real = vectorized_approx_f64(d_m, d_e)
+                    accel_dev_real[~current_mask] = np.nan
 
                     if self.symlog:
-                        accel_dev = vectorized_symlog(
-                            accel.dev_m[:min_len][current_mask],
-                            accel.dev_e[:min_len][current_mask],
-                        )
+                        accel_dev = vectorized_symlog(d_m, d_e)
+                        accel_dev[~current_mask] = np.nan
                     else:
                         accel_dev = accel_dev_real
 
-                    seg_len = len(accel_n)
+                    seg_len = len(accel_n_segment)
                     # Track where this segment lives in the batched array for tooltip mapping.
                     accel_segments.append(
                         (current_offset, current_offset + seg_len, accel_legend_name)
                     )
                     current_offset += seg_len + 1  # +1 for the NaN separator
 
-                    series_accel_n.append(accel_n.astype(float))
+                    series_accel_n.append(accel_n_segment)
                     series_accel_n.append(np.array([np.nan]))
 
                     series_accel_real.append(accel_real)
@@ -1498,7 +1510,7 @@ class DashboardApp(QMainWindow):
                         min_idx_local = np.argmin(accel_dev[valid_dev_indices])
                         min_idx = valid_dev_indices[min_idx_local]
                         min_error = accel_dev[min_idx]
-                        min_error_n = accel_n[min_idx]
+                        min_error_n = accel_n_segment[min_idx]
 
                         perf_x.append(min_error_n)
                         perf_y.append(min_error)
@@ -1593,9 +1605,11 @@ class DashboardApp(QMainWindow):
 
                             # 10. Accel Values
                             a_lines = []
-                            for i in range(len(accel_n)):
+                            for i in range(len(accel_n_segment)):
+                                if np.isnan(accel_real[i]):
+                                    continue
                                 val_str = f"{accel_real[i]:.6e}"
-                                a_lines.append(f"n={int(accel_n[i])}: {val_str}")
+                                a_lines.append(f"n={int(accel_n_segment[i])}: {val_str}")
 
                             if a_lines:
                                 self.table.setCellWidget(
@@ -1615,10 +1629,12 @@ class DashboardApp(QMainWindow):
 
                             # 11. Deviations
                             d_lines = []
-                            for i in range(len(accel_n)):
-                                # accel_dev_real is aligned with accel_n
+                            for i in range(len(accel_n_segment)):
+                                if np.isnan(accel_dev_real[i]):
+                                    continue
+                                # accel_dev_real is aligned with accel_n_segment
                                 d_lines.append(
-                                    f"n={int(accel_n[i])}: {accel_dev_real[i]:.6e}"
+                                    f"n={int(accel_n_segment[i])}: {accel_dev_real[i]:.6e}"
                                 )
 
                             if d_lines:
@@ -1674,16 +1690,15 @@ class DashboardApp(QMainWindow):
                 # --- Imag Accel ---
                 if self.show_imaginary:
                     # Check zero
-                    # Accessing numpy arrays is cheap
-                    v_im_m = accel.val_imag_m[:min_len][current_mask]
+                    v_im_m = accel.val_imag_m[:min_len]
+                    v_im_e = accel.val_imag_e[:min_len]
                     is_zero_imag = np.all(v_im_m == 0.0)
 
                     if self.force_show_imaginary or not is_zero_imag:
-                        accel_imag = vectorized_approx_f64(
-                            v_im_m, accel.val_imag_e[:min_len][current_mask]
-                        )
+                        accel_imag = vectorized_approx_f64(v_im_m, v_im_e)
+                        accel_imag[~current_mask] = np.nan
 
-                        seg_len = len(accel_n)
+                        seg_len = len(accel_n_segment)
                         accel_segments_imag.append(
                             (
                                 current_offset_imag,
@@ -1693,7 +1708,7 @@ class DashboardApp(QMainWindow):
                         )
                         current_offset_imag += seg_len + 1
 
-                        series_accel_n_imag.append(accel_n.astype(float))
+                        series_accel_n_imag.append(accel_n_segment)
                         series_accel_n_imag.append(np.array([np.nan]))
 
                         series_accel_imag.append(accel_imag)
@@ -1705,20 +1720,55 @@ class DashboardApp(QMainWindow):
                         f_len = len(method.val_real_m)
                         f_n = np.arange(accel.filtered.start_n, accel.filtered.start_n + f_len, dtype=float)
                         
-                        f_real = vectorized_approx_f64(method.val_real_m, method.val_real_e)
-                        
                         filter_name = f"{accel_legend_name} [Filter: {method.name}]"
                         
-                        series_filter_n.append(f_n)
-                        series_filter_n.append(np.array([np.nan]))
+                        if self.show_real:
+                            f_real = vectorized_approx_f64(method.val_real_m, method.val_real_e)
+                            series_filter_n.append(f_n)
+                            series_filter_n.append(np.array([np.nan]))
+                            series_filter_real.append(f_real)
+                            series_filter_real.append(np.array([np.nan]))
+                            filter_segments.append(
+                                (current_offset_filter, current_offset_filter + f_len, filter_name)
+                            )
+                            current_offset_filter += f_len + 1
                         
-                        series_filter_real.append(f_real)
-                        series_filter_real.append(np.array([np.nan]))
+                        if self.show_imaginary:
+                            is_zero_imag = np.all(method.val_imag_m == 0.0)
+                            if self.force_show_imaginary or not is_zero_imag:
+                                f_imag = vectorized_approx_f64(method.val_imag_m, method.val_imag_e)
+                                series_filter_n_imag.append(f_n)
+                                series_filter_n_imag.append(np.array([np.nan]))
+                                series_filter_imag.append(f_imag)
+                                series_filter_imag.append(np.array([np.nan]))
+                                filter_segments_imag.append(
+                                    (current_offset_filter_imag, current_offset_filter_imag + f_len, f"{filter_name} (Imag)")
+                                )
+                                current_offset_filter_imag += f_len + 1
+
+                        # Error Plot Data for Filters
+                        # We calculate deviation from limit: sqrt((real-lim_r)^2 + (imag-lim_i)^2)
+                        lim_r = series.series_limit.real.approx_f64()
+                        lim_i = series.series_limit.imag.approx_f64()
                         
-                        filter_segments.append(
-                            (current_offset_filter, current_offset_filter + f_len, filter_name)
-                        )
-                        current_offset_filter += f_len + 1
+                        f_real_vals = vectorized_approx_f64(method.val_real_m, method.val_real_e)
+                        f_imag_vals = vectorized_approx_f64(method.val_imag_m, method.val_imag_e)
+                        
+                        f_diff_r = f_real_vals - lim_r
+                        f_diff_i = f_imag_vals - lim_i
+                        f_dev_linear = np.sqrt(f_diff_r**2 + f_diff_i**2)
+                        
+                        if self.symlog:
+                            # vectorized_symlog expects mantissa/exponent, but we have f64
+                            # We can just apply symlog logic directly or use a trick.
+                            # symlog(x) = sign(x) * log10(1 + |x|/10^C) ... actually symlog is in symlog.py
+                            # Let's use the one from symlog.py if possible or just log10.
+                            f_dev = vectorized_symlog(f_dev_linear, np.zeros_like(f_dev_linear, dtype=np.int32))
+                        else:
+                            f_dev = f_dev_linear
+                            
+                        series_filter_dev.append(f_dev)
+                        series_filter_dev.append(np.array([np.nan]))
 
             t_plotting += time.time() - t0
 
@@ -1788,6 +1838,45 @@ class DashboardApp(QMainWindow):
                     name=f"{series.name} (filters)"
                 )
                 curve_filter.segments = filter_segments
+
+            # Batch Plotting Filters Imag
+            if series_filter_n_imag:
+                all_n_filter_imag = np.concatenate(series_filter_n_imag)
+                all_imag_filter = np.concatenate(series_filter_imag)
+                
+                # Dark Green Dotted for Filters Imag
+                pen = pg.mkPen(
+                    COLOR_FILTER_IMAG, width=2, style=Qt.PenStyle.DotLine, cosmetic=True
+                )
+                
+                curve_filter_imag = self.convergence_plot.plot(
+                    all_n_filter_imag,
+                    all_imag_filter,
+                    connect="finite",
+                    pen=pen,
+                    name=f"{series.name} (filters imag)"
+                )
+                curve_filter_imag.segments = filter_segments_imag
+
+            # Batch Plotting Filters Error
+            if series_filter_dev:
+                all_n_filter = np.concatenate(series_filter_n) if series_filter_n else []
+                if len(all_n_filter) > 0:
+                    all_dev_filter = np.concatenate(series_filter_dev)
+                    
+                    pen = pg.mkPen(
+                        COLOR_FILTER_REAL, width=2, style=Qt.PenStyle.DotLine, cosmetic=True
+                    )
+                    
+                    curve_err_filter = self.error_plot.plot(
+                        all_n_filter,
+                        all_dev_filter,
+                        connect="finite",
+                        pen=pen,
+                        name=f"{series.name} (filters error)"
+                    )
+                    # We can reuse filter_segments for tooltips if they match
+                    curve_err_filter.segments = filter_segments
 
         # Batch plot performance scatter
         t0 = time.time()
