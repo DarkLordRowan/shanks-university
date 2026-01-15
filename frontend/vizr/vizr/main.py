@@ -1,6 +1,6 @@
 """
 Author: Sobolev Y. A.
-Description: Main application entry point and UI implementation using PyQt6."
+Description: Main application entry point and UI implementation using PyQt6.
 """
 
 import argparse
@@ -41,6 +41,14 @@ from PyQt6.QtWidgets import (  # type: ignore
 
 from .data_loader import AccelRecord, DataLoader, Metadata, SeriesRecord
 from .symlog import symlog_formatter, vectorized_approx_f64, vectorized_symlog
+from .logic import (
+    filter_dataset,
+    extract_filter_options,
+    prepare_viz_data,
+    ViewOptions,
+    VisualizationData,
+    TableRowData
+)
 
 
 class CollapsibleCellWidget(QWidget):
@@ -76,8 +84,8 @@ class CollapsibleCellWidget(QWidget):
         self.layout.setContentsMargins(2, 2, 2, 2)
         self.layout.setSpacing(2)
 
-        # Toggle Button
-        # We use a tool button because it can have an icon and text.
+        # toggle button
+        # we use a tool button because it can have an icon and text.
         self.toggle_btn = QToolButton()
         self.toggle_btn.setText(f"> {title}")
         self.toggle_btn.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
@@ -92,12 +100,12 @@ class CollapsibleCellWidget(QWidget):
         )
         self.layout.addWidget(self.toggle_btn)
 
-        # Content Area
-        # Hidden by default to save space.
+        # content area
+        # hidden by default to save space.
         self.content_area = QTextEdit()
         self.content_area.setReadOnly(True)
         self.content_area.setText("\n".join(content_lines))
-        self.content_area.setMaximumHeight(150)  # Cap height to avoid massive expansion
+        self.content_area.setMaximumHeight(150)  # cap height to avoid massive expansion
         self.content_area.setVisible(False)
         self.layout.addWidget(self.content_area)
 
@@ -109,185 +117,12 @@ class CollapsibleCellWidget(QWidget):
             checked (bool): The new state of the toggle button.
         """
         arrow = "v" if checked else ">"
-        text = self.toggle_btn.text()[1:]  # Keep original title
+        text = self.toggle_btn.text()[1:]  # keep original title
         self.toggle_btn.setText(f"{arrow}{text}")
         self.content_area.setVisible(checked)
 
-        # Trigger resize of the row so the content fits.
+        # trigger resize of the row so the content fits.
         self.parent_table.resizeRowToContents(self.row_idx)
-
-
-def extract_filter_options(
-    data: List[Tuple[SeriesRecord, List[AccelRecord]]],
-) -> Dict[str, Any]:
-    """
-    Analyzes loaded data and returns available filter options.
-    Only includes options with >1 unique values.
-
-    This is used for the "Quick Filters" which operate in-memory on the data
-    we have already downloaded/loaded, as opposed to the "Load Filters" which
-    query the disk.
-
-    Inputs:
-        data (List[Tuple[SeriesRecord, List[AccelRecord]]]): The loaded dataset.
-
-    Outputs:
-        Dict[str, Any]: A dictionary of filter options.
-    """
-    precisions: Set[str] = set()
-    base_series: Set[str] = set()
-    base_accel: Set[str] = set()
-    m_values: Set[int] = set()
-    noise_options: Set[str] = set()
-    series_params: Dict[str, Set[str]] = {}
-    accel_params: Dict[str, Set[str]] = {}
-
-    for series, accels in data:
-        precisions.add(series.precision)
-        base_series.add(series.name)
-
-        # Series Arguments
-        for k, v in series.arguments.items():
-            if k not in series_params:
-                series_params[k] = set()
-            series_params[k].add(v)
-
-        for accel in accels:
-            base_accel.add(accel.accel_info.name)
-            m_values.add(accel.accel_info.m_value)
-            if accel.accel_info.noise_str:
-                noise_options.add(accel.accel_info.noise_str)
-
-            # Acceleration Arguments
-            for k, v in accel.accel_info.additional_args.items():
-                if k not in accel_params:
-                    accel_params[k] = set()
-                accel_params[k].add(v)
-
-    # Clean up params that only have 1 option (useless to filter on).
-    def clean_params(params: Dict[str, Set[str]]) -> Dict[str, List[str]]:
-        return {k: sorted(list(v)) for k, v in params.items() if len(v) > 1}
-
-    return {
-        "precisions": sorted(list(precisions)) if len(precisions) > 1 else [],
-        "base_series": sorted(list(base_series)) if len(base_series) > 1 else [],
-        "base_accel": sorted(list(base_accel)) if len(base_accel) > 1 else [],
-        "m_values": sorted(list(m_values)) if len(m_values) > 1 else [],
-        "noise_options": sorted(list(noise_options)) if len(noise_options) > 1 else [],
-        "series_params": clean_params(series_params),
-        "accel_params": clean_params(accel_params),
-    }
-
-
-def filter_data_items(
-    data: List[Tuple[SeriesRecord, List[AccelRecord]]], filters: Dict[str, Any]
-) -> List[Tuple[SeriesRecord, List[AccelRecord]]]:
-    """
-    # Structure of filters:
-    # {
-    #     'precisions': set(),
-    #     'base_series': set(),
-    #     'base_accel': set(),
-    #     'm_values': set(),
-    #     'noise_options': set(),
-    #     'series_params': {'param_name': set(), ...},
-    #     'accel_params': {'param_name': set(), ...}
-    # }
-    # Empty set implies "All" (no filtering).
-
-    # Inputs:
-    #     data (List[Tuple[SeriesRecord, List[AccelRecord]]]): The dataset to filter.
-    #     filters (Dict[str, Any]): Active filters.
-
-    # Outputs:
-    #     List[Tuple[SeriesRecord, List[AccelRecord]]]: Filtered dataset.
-    # """
-    # Quick check if any filter is active to avoid iterating if not needed.
-    has_filters = (
-        bool(filters["precisions"])
-        or bool(filters["base_series"])
-        or bool(filters["base_accel"])
-        or bool(filters["m_values"])
-        or bool(filters.get("noise_options"))
-        or any(filters["series_params"].values())
-        or any(filters["accel_params"].values())
-    )
-
-    if not has_filters:
-        return data
-
-    filtered_result = []
-
-    for series, accels in data:
-        # --- Series Filtering ---
-        # If the series itself doesn't match the criteria, we drop it entirely.
-        if filters["precisions"] and series.precision not in filters["precisions"]:
-            continue
-        if filters["base_series"] and series.name not in filters["base_series"]:
-            continue
-
-        sp_fail = False
-        for param, allowed in filters["series_params"].items():
-            if allowed:
-                val = series.arguments.get(param)
-                if val is None or val not in allowed:
-                    sp_fail = True
-                    break
-        if sp_fail:
-            continue
-
-        # --- Accel Filtering ---
-        # We need to filter the accels list, but also decide if the series should be kept.
-        # If accel filters are present, the series is kept only if at least one accel matches.
-
-        # Check if we have any accel-related filters
-        has_accel_filters = (
-            bool(filters["base_accel"])
-            or bool(filters["m_values"])
-            or bool(filters.get("noise_options"))
-            or any(filters["accel_params"].values())
-        )
-
-        if not has_accel_filters:
-            # No accel filters, keep all accels
-            filtered_result.append((series, accels))
-            continue
-
-        valid_accels = []
-        for accel in accels:
-            if (
-                filters["base_accel"]
-                and accel.accel_info.name not in filters["base_accel"]
-            ):
-                continue
-            if (
-                filters["m_values"]
-                and accel.accel_info.m_value not in filters["m_values"]
-            ):
-                continue
-            if (
-                filters.get("noise_options")
-                and accel.accel_info.noise_str not in filters["noise_options"]
-            ):
-                continue
-
-            ap_fail = False
-            for param, allowed in filters["accel_params"].items():
-                if allowed:
-                    val = accel.accel_info.additional_args.get(param)
-                    if val is None or val not in allowed:
-                        ap_fail = True
-                        break
-            if ap_fail:
-                continue
-
-            valid_accels.append(accel)
-
-        # Only add the series if it has at least one matching acceleration
-        if valid_accels:
-            filtered_result.append((series, valid_accels))
-
-    return filtered_result
 
 
 class FlowLayout(QLayout):
@@ -452,7 +287,7 @@ class PlotWidget(pg.PlotWidget):
             symlog (bool): Whether to use symmetric log scale.
         """
         if symlog:
-            # Swap the default axis item with our custom one BEFORE initialization
+            # swap the default axis item with our custom one BEFORE initialization
             kwargs["axisItems"] = {"left": SymLogAxisItem(orientation="left")}
         super().__init__(**kwargs)
         self.setTitle(title)
@@ -484,7 +319,7 @@ class DashboardApp(QMainWindow):
 
         self.loader = DataLoader(data_dir)
 
-        # Load Filters (for fetching from disk)
+        # load filters (for fetching from disk)
         self.load_filters: Dict[str, Any] = {
             "precisions": set(),
             "base_series": set(),
@@ -495,7 +330,7 @@ class DashboardApp(QMainWindow):
             "accel_params": {},
         }
 
-        # Quick Filters (for filtering in-memory data)
+        # quick filters (for filtering in-memory data)
         self.quick_filters: Dict[str, Any] = {
             "precisions": set(),
             "base_series": set(),
@@ -510,7 +345,7 @@ class DashboardApp(QMainWindow):
         self.filtered_data: List[Tuple[SeriesRecord, List[AccelRecord]]] = []
         self.symlog = True
 
-        # Visualization Flags
+        # visualization flags
         self.show_partial_sums = True
         self.show_limits = True
         self.show_real = True
@@ -528,24 +363,24 @@ class DashboardApp(QMainWindow):
         self.setCentralWidget(central_widget)
         main_layout = QHBoxLayout(central_widget)
 
-        # Scroll area for plots and filters.
-        # This is important because on smaller screens the content might overflow.
+        # scroll area for plots and filters.
+        # this is important because on smaller screens the content might overflow.
         self.scroll_area = QScrollArea()
         self.scroll_area.setWidgetResizable(True)
         self.scroll_container = QWidget()
         self.plots_layout = QVBoxLayout(self.scroll_container)
 
-        # Load Filters
+        # load filters
         self.setup_load_filters_ui(self.plots_layout)
 
-        # Quick Filters Container (Dynamic)
-        # This group box is populated after data is loaded.
+        # quick filters container (dynamic)
+        # this group box is populated after data is loaded.
         self.quick_filters_group = QGroupBox("Quick Filters (In-Memory)")
-        self.quick_filters_group.hide()  # Hidden until data is loaded
+        self.quick_filters_group.hide()  # hidden until data is loaded
         self.quick_filters_layout = QVBoxLayout(self.quick_filters_group)
         self.plots_layout.addWidget(self.quick_filters_group)
 
-        # Visualization Options
+        # visualization options
         vis_options_group = QGroupBox("Visualization Options")
         vis_options_layout = QHBoxLayout(vis_options_group)
 
@@ -591,7 +426,7 @@ class DashboardApp(QMainWindow):
         self.scroll_area.setWidget(self.scroll_container)
         main_layout.addWidget(self.scroll_area, 1)
 
-        # Right sidebar for Legend
+        # right sidebar for legend
         self.legend_list = QListWidget()
         self.legend_list.setFixedWidth(300)
         self.legend_list.setWordWrap(True)
@@ -614,28 +449,28 @@ class DashboardApp(QMainWindow):
         filter_header.setFont(font)
         layout.addWidget(filter_header)
 
-        # Precisions
+        # precisions
         layout.addWidget(
             self.create_filter_group(
                 "Precisions", metadata.precisions, "precisions", self.load_filters
             )
         )
 
-        # Series
+        # series
         layout.addWidget(
             self.create_filter_group(
                 "Series Names", metadata.series_names, "base_series", self.load_filters
             )
         )
 
-        # Accel
+        # accel
         layout.addWidget(
             self.create_filter_group(
                 "Accel Names", metadata.accel_names, "base_accel", self.load_filters
             )
         )
 
-        # M Values
+        # m values
         layout.addWidget(
             self.create_filter_group(
                 "M Values",
@@ -646,7 +481,7 @@ class DashboardApp(QMainWindow):
             )
         )
 
-        # Noise
+        # noise
         if metadata.noise_options:
             layout.addWidget(
                 self.create_filter_group(
@@ -657,7 +492,7 @@ class DashboardApp(QMainWindow):
                 )
             )
 
-        # Series Params
+        # series params
         for param, values in metadata.series_param_info.items():
             layout.addWidget(
                 self.create_filter_group(
@@ -668,7 +503,7 @@ class DashboardApp(QMainWindow):
                 )
             )
 
-        # Accel Params
+        # accel params
         for param, values in metadata.accel_param_info.items():
             layout.addWidget(
                 self.create_filter_group(
@@ -679,7 +514,7 @@ class DashboardApp(QMainWindow):
                 )
             )
 
-        # Refresh row
+        # refresh row
         refresh_layout = QHBoxLayout()
         self.refresh_btn = QPushButton("Reload data")
         self.refresh_btn.clicked.connect(self.refresh_data)
@@ -691,7 +526,7 @@ class DashboardApp(QMainWindow):
         refresh_layout.addWidget(self.progress_bar)
         layout.addLayout(refresh_layout)
 
-        # Divider
+        # divider
         line = QFrame()
         line.setFrameShape(QFrame.Shape.HLine)
         line.setFrameShadow(QFrame.Shadow.Sunken)
@@ -730,7 +565,7 @@ class DashboardApp(QMainWindow):
         all_btn = QPushButton("All")
         none_btn = QPushButton("None")
 
-        # Make buttons compact
+        # make buttons compact
         all_btn.setFixedSize(40, 20)
         none_btn.setFixedSize(50, 20)
         font = all_btn.font()
@@ -747,11 +582,11 @@ class DashboardApp(QMainWindow):
             checkboxes.append(cb)
             flow.addWidget(cb)
 
-            # Determine if currently checked (state recovery)
+            # determine if currently checked (state recovery)
             val = int(item) if is_int else item
 
             is_checked = False
-            # Handle nested keys for params
+            # handle nested keys for params
             if isinstance(filter_key, tuple):
                 p_key, s_key = filter_key
                 if s_key in target_dict[p_key] and val in target_dict[p_key][s_key]:
@@ -807,17 +642,17 @@ class DashboardApp(QMainWindow):
         Creates the UI section for in-memory filtering (fast).
         Updates based on the currently loaded data.
         """
-        # Clear existing layout because options change when new data is loaded.
+        # clear existing layout because options change when new data is loaded.
         while self.quick_filters_layout.count():
             item = self.quick_filters_layout.takeAt(0)
             if item.widget():
                 item.widget().deleteLater()
             elif item.layout():
-                # Recursively delete layout items?
+                # recursively delete layout items?
                 # FlowLayout clean up handles its items
                 pass
 
-        # Calculate available options based on CURRENT data.
+        # calculate available options based on CURRENT data.
         options = extract_filter_options(self.data)
 
         if (
@@ -830,11 +665,11 @@ class DashboardApp(QMainWindow):
 
         self.quick_filters_group.show()
 
-        # Helper to trigger update
+        # helper to trigger update
         def on_change():
             self.apply_quick_filters_and_update()
 
-        # Precisions
+        # precisions
         if options["precisions"]:
             self.quick_filters_layout.addWidget(
                 self.create_filter_group(
@@ -846,7 +681,7 @@ class DashboardApp(QMainWindow):
                 )
             )
 
-        # Series
+        # series
         if options["base_series"]:
             self.quick_filters_layout.addWidget(
                 self.create_filter_group(
@@ -858,7 +693,7 @@ class DashboardApp(QMainWindow):
                 )
             )
 
-        # Accel
+        # accel
         if options["base_accel"]:
             self.quick_filters_layout.addWidget(
                 self.create_filter_group(
@@ -870,7 +705,7 @@ class DashboardApp(QMainWindow):
                 )
             )
 
-        # M Values
+        # m values
         if options["m_values"]:
             self.quick_filters_layout.addWidget(
                 self.create_filter_group(
@@ -883,7 +718,7 @@ class DashboardApp(QMainWindow):
                 )
             )
 
-        # Noise
+        # noise
         if options["noise_options"]:
             self.quick_filters_layout.addWidget(
                 self.create_filter_group(
@@ -895,9 +730,7 @@ class DashboardApp(QMainWindow):
                 )
             )
 
-        # Series Params
-
-        # Accel Params
+        # accel params
         if options["accel_params"]:
             for param, values in options["accel_params"].items():
                 self.quick_filters_layout.addWidget(
@@ -929,7 +762,7 @@ class DashboardApp(QMainWindow):
         self.setup_hover(self.performance_plot)
         self.plots_layout.addWidget(self.performance_plot)
 
-        # Table
+        # table
         self.table = QTableWidget()
         self.table.setColumnCount(14)
         self.table.setHorizontalHeaderLabels(
@@ -967,7 +800,7 @@ class DashboardApp(QMainWindow):
         Inputs:
             plot_widget (PlotWidget): The widget to attach hover logic to.
         """
-        # Create a text item for the tooltip
+        # create a text item for the tooltip
         tooltip = pg.TextItem(
             text="",
             color=(255, 255, 255),
@@ -977,7 +810,7 @@ class DashboardApp(QMainWindow):
         )
         tooltip.hide()
 
-        # Store reference in the widget for easy access
+        # store reference in the widget for easy access
         plot_widget.custom_tooltip = tooltip
 
         def mouse_moved(evt):
@@ -986,7 +819,7 @@ class DashboardApp(QMainWindow):
                 mouse_point = plot_widget.plotItem.vb.mapSceneToView(pos)
                 self.update_tooltip(plot_widget, mouse_point, pos)
 
-        # Rate limit is important to avoid lagging on mouse move.
+        # rate limit is important to avoid lagging on mouse move.
         plot_widget.proxy = pg.SignalProxy(
             plot_widget.scene().sigMouseMoved, rateLimit=60, slot=mouse_moved
         )
@@ -1003,7 +836,7 @@ class DashboardApp(QMainWindow):
             float: Distance.
         """
         # p, v, w are QPointF (screen coords)
-        # Return distance from p to segment vw
+        # return distance from p to segment vw
 
         l2 = (v.x() - w.x()) ** 2 + (v.y() - w.y()) ** 2
         if l2 == 0:
@@ -1013,7 +846,7 @@ class DashboardApp(QMainWindow):
         t = ((p.x() - v.x()) * (w.x() - v.x()) + (p.y() - v.y()) * (w.y() - v.y())) / l2
         t = max(0, min(1, t))
 
-        # Projection point
+        # projection point
         proj_x = v.x() + t * (w.x() - v.x())
         proj_y = v.y() + t * (w.y() - v.y())
 
@@ -1053,21 +886,21 @@ class DashboardApp(QMainWindow):
             candidate_dist = float("inf")
             candidate_name = item.opts.get("name", "Unknown")
 
-            # Helper to check a segment
+            # helper to check a segment
             def check_segment(xs, ys, seg_name):
-                # We need to find indices surrounding mouse_x
+                # we need to find indices surrounding mouse_x
                 # idx is where mouse_x should be inserted to maintain order
                 idx = np.searchsorted(xs, mouse_x)
 
                 local_min = float("inf")
 
-                # We check the segment [idx-1, idx]
-                # Ensure indices are valid within this slice
+                # we check the segment [idx-1, idx]
+                # ensure indices are valid within this slice
                 i_left = idx - 1
                 i_right = idx
 
                 if i_left >= 0 and i_right < len(xs):
-                    # Valid segment
+                    # valid segment
                     p1 = vb.mapViewToDevice(pg.Point(xs[i_left], ys[i_left]))
                     p2 = vb.mapViewToDevice(pg.Point(xs[i_right], ys[i_right]))
                     if p1 and p2:
@@ -1075,7 +908,7 @@ class DashboardApp(QMainWindow):
                         if d < local_min:
                             local_min = d
 
-                # Also check point distance for idx (right side) if we are off the end?
+                # also check point distance for idx (right side) if we are off the end?
                 # or just standard robustness if searchsorted puts us exactly on point
                 if i_right < len(xs):
                     p = vb.mapViewToDevice(pg.Point(xs[i_right], ys[i_right]))
@@ -1098,11 +931,11 @@ class DashboardApp(QMainWindow):
                 return local_min
 
             if hasattr(item, "point_names"):
-                # Scatter plot with named points (Performance Plot)
+                # scatter plot with named points (Performance Plot)
                 view_range_x = vb.viewRange()[0]
                 view_width = view_range_x[1] - view_range_x[0]
 
-                # Filter indices within reasonable X range (broad phase)
+                # filter indices within reasonable X range (broad phase)
                 x_margin = view_width * 0.1
                 mask = (x_data >= mouse_x - x_margin) & (x_data <= mouse_x + x_margin)
                 indices = np.where(mask)[0]
@@ -1118,14 +951,14 @@ class DashboardApp(QMainWindow):
                             candidate_name = item.point_names[i]
 
             elif hasattr(item, "segments"):
-                # Batched segments.
-                # This is an optimization where multiple curves are drawn as one continuous line with gaps (NaNs).
-                # We need to check which segment we are closest to.
+                # batched segments.
+                # this is an optimization where multiple curves are drawn as one continuous line with gaps (NaNs).
+                # we need to check which segment we are closest to.
                 for start, end, info_name in item.segments:
                     seg_x = x_data[start:end]
                     seg_y = y_data[start:end]
 
-                    # Optimization: Skip segments clearly out of X range
+                    # optimization: skip segments clearly out of X range
                     if len(seg_x) > 0:
                         if mouse_x < seg_x[0] - 1 or mouse_x > seg_x[-1] + 1:
                             continue
@@ -1135,7 +968,7 @@ class DashboardApp(QMainWindow):
                         candidate_dist = d
                         candidate_name = info_name
             else:
-                # Standard curve
+                # standard curve
                 d = check_segment(x_data, y_data, candidate_name)
                 candidate_dist = d
 
@@ -1169,7 +1002,7 @@ class DashboardApp(QMainWindow):
         Callback for symlog checkbox.
         """
         self.symlog = state == Qt.CheckState.Checked.value
-        # Update error_plot and performance_plot axis
+        # update error_plot and performance_plot axis
         for plot in [self.error_plot, self.performance_plot]:
             if self.symlog:
                 plot.getPlotItem().setAxisItems(
@@ -1230,10 +1063,10 @@ class DashboardApp(QMainWindow):
         self.refresh_btn.setEnabled(True)
         self.progress_bar.hide()
 
-        # Setup Quick Filters for new data
+        # setup quick filters for new data
         self.setup_quick_filters_ui()
 
-        # Apply initial filtering (using default empty filters = Show All)
+        # apply initial filtering (using default empty filters = Show All)
         self.apply_quick_filters_and_update()
 
     def apply_quick_filters_and_update(self):
@@ -1242,7 +1075,7 @@ class DashboardApp(QMainWindow):
         """
         print("Applying Quick Filters...")
         t0 = time.time()
-        self.filtered_data = filter_data_items(self.data, self.quick_filters)
+        self.filtered_data = filter_dataset(self.data, self.quick_filters)
         print(
             f"Quick Filters applied in {time.time() - t0:.3f}s. Items: {len(self.filtered_data)}/{len(self.data)}"
         )
@@ -1256,652 +1089,91 @@ class DashboardApp(QMainWindow):
         self.refresh_btn.setEnabled(True)
         self.progress_bar.hide()
 
-    def format_args(self, args: Dict[str, str]) -> str:
-        """
-        Formats argument dictionary to string.
-        """
-        if not args:
-            return ""
-        items = [f"{k}={v}" for k, v in args.items()]
-        return "{" + ", ".join(items) + "}"
-
     def update_plots(self):
         """
-        Redraws all plots and populates the data table.
+        Redraws all plots and populates the data table using pre-calculated visualization data.
         """
-        import time
-
         t_start = time.time()
-        print("Start updating plots...")
-
+        
+        # 1. prepare data using pure logic
+        options = ViewOptions(
+            show_partial_sums=self.show_partial_sums,
+            show_limits=self.show_limits,
+            show_real=self.show_real,
+            show_imaginary=self.show_imaginary,
+            force_show_imaginary=self.force_show_imaginary,
+            show_filters=self.show_filters,
+            symlog=self.symlog
+        )
+        
+        viz_data = prepare_viz_data(self.filtered_data, options)
+        
+        # 2. update UI
         self.convergence_plot.clear()
         self.error_plot.clear()
         self.performance_plot.clear()
-
-        # Re-add tooltips
-        if hasattr(self.convergence_plot, "custom_tooltip"):
-            self.convergence_plot.addItem(self.convergence_plot.custom_tooltip)
-            self.convergence_plot.custom_tooltip.hide()
-        if hasattr(self.error_plot, "custom_tooltip"):
-            self.error_plot.addItem(self.error_plot.custom_tooltip)
-            self.error_plot.custom_tooltip.hide()
-        if hasattr(self.performance_plot, "custom_tooltip"):
-            self.performance_plot.addItem(self.performance_plot.custom_tooltip)
-            self.performance_plot.custom_tooltip.hide()
-
-        # Clear Legend
-        t_legend_clear_start = time.time()
         self.legend_list.clear()
-        t_legend_clear = time.time() - t_legend_clear_start
-
         self.table.setRowCount(0)
 
-        # We limit the number of rows to avoid freezing the UI if the user selects "All".
-        row_limit = 100
-        rows_added = 0
-
-        total_accels = 0
-        t_plotting = 0
-        t_table = 0
-        t_legend_add = 0
-
-        # Performance points collection.
-        # We collect all points first and then plot them in one go to be faster.
-        perf_x = []
-        perf_y = []
-        perf_names = []
-        perf_brushes = []
-
-        # Colors matching Rust implementation
-        COLOR_PARTIAL_REAL = QColor(128, 128, 128)
-        COLOR_PARTIAL_IMAG = QColor(255, 192, 203)
-        COLOR_LIMIT_REAL = QColor(255, 0, 0)
-        COLOR_LIMIT_IMAG = QColor(255, 100, 100)
-        COLOR_ACCEL_IMAG = QColor(255, 165, 0)
-        COLOR_FILTER_REAL = QColor(0, 128, 0)
-        COLOR_FILTER_IMAG = QColor(0, 100, 0)
-
-        # Use filtered_data instead of data
-        n_series = len(self.filtered_data)
-
-        for i, (series, accels) in enumerate(self.filtered_data):
-            # Generate color based on index for Accel Real lines.
-            # This ensures distinct colors for different series.
-            series_color = pg.intColor(i, n_series)
-
-            if i % 5 == 0:
-                print(f"Processed {i} series...")
-
-            series_params = self.format_args(series.arguments)
-            series_legend_name = f"{series.name} {series_params}"
-
-            # --- Convergence Plotting ---
-            n_vals = series.n
-
-            # 1. Partial Sums
-            if self.show_partial_sums:
-                if self.show_real:
-                    real_vals = vectorized_approx_f64(
-                        series.val_real_m, series.val_real_e
-                    )
-                    self.convergence_plot.plot(
-                        n_vals,
-                        real_vals,
-                        pen=pg.mkPen(COLOR_PARTIAL_REAL, width=2),
-                        name=f"{series_legend_name} (Partial)",
-                    )
-
-                    if self.symlog:
-                        series_dev = vectorized_symlog(series.dev_m, series.dev_e)
-                    else:
-                        series_dev = vectorized_approx_f64(series.dev_m, series.dev_e)
-
-                    self.error_plot.plot(
-                        n_vals,
-                        series_dev,
-                        pen=pg.mkPen(QColor(255, 0, 0), width=3),
-                        name=f"{series_legend_name} (Partial Error)",
-                    )
-
-                if self.show_imaginary:
-                    is_zero_imag = np.all(series.val_imag_m == 0.0)  # Simplified check
-                    if self.force_show_imaginary or not is_zero_imag:
-                        imag_vals = vectorized_approx_f64(
-                            series.val_imag_m, series.val_imag_e
-                        )
-                        self.convergence_plot.plot(
-                            n_vals,
-                            imag_vals,
-                            pen=pg.mkPen(COLOR_PARTIAL_IMAG, width=2),
-                            name=f"{series_legend_name} (Partial Imag)",
-                        )
-
-            # 2. Limits
-            if self.show_limits:
-                limit = series.series_limit
-
-                if self.show_real:
-                    real_limit = limit.real.approx_f64()
-                    # Plot horizontal line representing the true limit.
-                    if len(n_vals) > 0:
-                        min_x, max_x = n_vals[0], n_vals[-1]
-                        self.convergence_plot.plot(
-                            [min_x, max_x],
-                            [real_limit, real_limit],
-                            pen=pg.mkPen(COLOR_LIMIT_REAL, width=3),
-                            name=f"{series_legend_name} (Limit)",
-                        )
-
-                if self.show_imaginary:
-                    imag_limit = limit.imag.approx_f64()
-                    is_zero_imag = imag_limit == 0.0
-                    if self.force_show_imaginary or not is_zero_imag:
-                        if len(n_vals) > 0:
-                            min_x, max_x = n_vals[0], n_vals[-1]
-                            self.convergence_plot.plot(
-                                [min_x, max_x],
-                                [imag_limit, imag_limit],
-                                pen=pg.mkPen(COLOR_LIMIT_IMAG, width=2),
-                                name=f"{series_legend_name} (Limit Imag)",
-                            )
-
-            # 3. Accelerations
-            t0 = time.time()
-
-            # Collect accel curves for batch plotting (Real Only).
-            # Creating individual PlotCurveItems is expensive, so we combine data
-            # into one large array with NaN gaps to separate lines.
-            series_accel_n = []
-            series_accel_real = []
-            series_accel_dev = []  # For Error Plot
-
-            accel_segments = []  # For Tooltips (Real)
-            current_offset = 0
-
-            # For Imaginary (batching separate due to different color)
-            series_accel_n_imag = []
-            series_accel_imag = []
-            accel_segments_imag = []
-            current_offset_imag = 0
-
-            # Filters
-            series_filter_n = []
-            series_filter_real = []
-            filter_segments = []
-            current_offset_filter = 0
-
-            series_filter_n_imag = []
-            series_filter_imag = []
-            filter_segments_imag = []
-            current_offset_filter_imag = 0
-            
-            series_filter_dev = []
-
-            for accel in accels:
-                total_accels += 1
-
-                accel_params = self.format_args(accel.accel_info.additional_args)
-                noise_str = f" [Noise: {accel.accel_info.noise_str}]" if accel.accel_info.noise_str != "None" else ""
-
-                accel_legend_name = f"{accel.accel_info.name} (m={accel.accel_info.m_value}){accel_params}{noise_str}"
-
-                if self.show_real:
-                    self.add_legend_item(
-                        f"  -> {accel_legend_name}", series_color, is_dashed=True
-                    )
-
-                mask = accel.valid_mask
-                if not np.any(mask):
-                    continue
-
-                min_len = min(len(n_vals), len(mask))
-
-                current_n = n_vals[:min_len]
-                current_mask = mask[:min_len]
-                
-                # We use the full range of n for this segment to keep it aligned,
-                # but we will insert NaNs where the mask is False.
-                accel_n_segment = current_n.astype(float)
-
-                # --- Real Accel ---
-                if self.show_real:
-                    # vectorized_approx_f64 already returns an array of the same length as inputs
-                    # but we need to ensure invalid points are NaN.
-                    r_m = accel.val_real_m[:min_len]
-                    r_e = accel.val_real_e[:min_len]
-                    
-                    accel_real = vectorized_approx_f64(r_m, r_e)
-                    # Apply mask: set invalid points to NaN
-                    accel_real[~current_mask] = np.nan
-
-                    # Error Plot Data (Deviation)
-                    d_m = accel.dev_m[:min_len]
-                    d_e = accel.dev_e[:min_len]
-                    
-                    accel_dev_real = vectorized_approx_f64(d_m, d_e)
-                    accel_dev_real[~current_mask] = np.nan
-
-                    if self.symlog:
-                        accel_dev = vectorized_symlog(d_m, d_e)
-                        accel_dev[~current_mask] = np.nan
-                    else:
-                        accel_dev = accel_dev_real
-
-                    seg_len = len(accel_n_segment)
-                    # Track where this segment lives in the batched array for tooltip mapping.
-                    accel_segments.append(
-                        (current_offset, current_offset + seg_len, accel_legend_name)
-                    )
-                    current_offset += seg_len + 1  # +1 for the NaN separator
-
-                    series_accel_n.append(accel_n_segment)
-                    series_accel_n.append(np.array([np.nan]))
-
-                    series_accel_real.append(accel_real)
-                    series_accel_real.append(np.array([np.nan]))
-
-                    series_accel_dev.append(accel_dev)
-                    series_accel_dev.append(np.array([np.nan]))
-
-                    # Min error for performance plot
-                    # Find the best result this algorithm achieved.
-                    valid_dev_indices = np.where(~np.isnan(accel_dev))[0]
-                    if len(valid_dev_indices) > 0:
-                        min_idx_local = np.argmin(accel_dev[valid_dev_indices])
-                        min_idx = valid_dev_indices[min_idx_local]
-                        min_error = accel_dev[min_idx]
-                        min_error_n = accel_n_segment[min_idx]
-
-                        perf_x.append(min_error_n)
-                        perf_y.append(min_error)
-                        perf_names.append(accel_legend_name)
-                        perf_brushes.append(pg.mkBrush(series_color))
-
-                        # Table Row
-                        if rows_added < row_limit:
-                            # Statistics on REAL deviations (not symlog)
-                            valid_real_indices = np.where(~np.isnan(accel_dev_real))[0]
-                            if len(valid_real_indices) > 0:
-                                valid_vals = accel_dev_real[valid_real_indices]
-                                mean_err = np.mean(valid_vals)
-                                min_err = np.min(valid_vals)
-                                dev_summary = (
-                                    f"Mean: {mean_err:.2e}, Min: {min_err:.2e}"
-                                )
-                            else:
-                                dev_summary = "No valid data"
-
-                            row_idx = self.table.rowCount()
-                            self.table.insertRow(row_idx)
-
-                            # Standard Text Items
-                            self.table.setItem(
-                                row_idx, 0, QTableWidgetItem(str(series.series_id))
-                            )
-                            self.table.setItem(
-                                row_idx, 1, QTableWidgetItem(series.name)
-                            )
-                            self.table.setItem(
-                                row_idx, 2, QTableWidgetItem(series.precision)
-                            )
-                            self.table.setItem(
-                                row_idx,
-                                3,
-                                QTableWidgetItem(series.series_limit.format()),
-                            )
-                            self.table.setItem(
-                                row_idx, 4, QTableWidgetItem(series_params)
-                            )
-                            self.table.setItem(
-                                row_idx, 5, QTableWidgetItem(accel.accel_info.name)
-                            )
-                            self.table.setItem(
-                                row_idx,
-                                6,
-                                QTableWidgetItem(str(accel.accel_info.m_value)),
-                            )
-                            self.table.setItem(
-                                row_idx,
-                                7,
-                                QTableWidgetItem(
-                                    self.format_args(accel.accel_info.additional_args)
-                                ),
-                            )
-                            
-                            # 8. Noise
-                            self.table.setItem(row_idx, 8, QTableWidgetItem(accel.accel_info.noise_str))
-
-                            # Collapsible Widgets for Lists
-
-                            # 9. Series Values
-
-                            def format_sci(m, e):
-                                return f"{m * (10.0**e):.6e}"
-
-                            s_lines = []
-                            for i in range(len(series.n)):
-                                val_str = format_sci(
-                                    series.val_real_m[i], series.val_real_e[i]
-                                )
-                                if series.val_imag_m[i] != 0:
-                                    val_str += f" + {format_sci(series.val_imag_m[i], series.val_imag_e[i])}j"
-                                s_lines.append(f"n={series.n[i]}: {val_str}")
-
-                            if s_lines:
-                                self.table.setCellWidget(
-                                    row_idx,
-                                    9,
-                                    CollapsibleCellWidget(
-                                        f"{len(s_lines)} values",
-                                        s_lines,
-                                        self.table,
-                                        row_idx,
-                                    ),
-                                )
-                            else:
-                                self.table.setItem(
-                                    row_idx, 9, QTableWidgetItem("(empty)")
-                                )
-
-                            # 10. Accel Values
-                            a_lines = []
-                            for i in range(len(accel_n_segment)):
-                                if np.isnan(accel_real[i]):
-                                    continue
-                                val_str = f"{accel_real[i]:.6e}"
-                                a_lines.append(f"n={int(accel_n_segment[i])}: {val_str}")
-
-                            if a_lines:
-                                self.table.setCellWidget(
-                                    row_idx,
-                                    10,
-                                    CollapsibleCellWidget(
-                                        f"{len(a_lines)} values",
-                                        a_lines,
-                                        self.table,
-                                        row_idx,
-                                    ),
-                                )
-                            else:
-                                self.table.setItem(
-                                    row_idx, 10, QTableWidgetItem("(empty)")
-                                )
-
-                            # 11. Deviations
-                            d_lines = []
-                            for i in range(len(accel_n_segment)):
-                                if np.isnan(accel_dev_real[i]):
-                                    continue
-                                # accel_dev_real is aligned with accel_n_segment
-                                d_lines.append(
-                                    f"n={int(accel_n_segment[i])}: {accel_dev_real[i]:.6e}"
-                                )
-
-                            if d_lines:
-                                self.table.setCellWidget(
-                                    row_idx,
-                                    11,
-                                    CollapsibleCellWidget(
-                                        dev_summary, d_lines, self.table, row_idx
-                                    ),
-                                )
-                            else:
-                                self.table.setItem(
-                                    row_idx, 11, QTableWidgetItem("No data")
-                                )
-
-                            # 12. Errors
-                            err_lines = [f"n={e.n}: {e.message}" for e in accel.errors]
-                            if err_lines:
-                                self.table.setCellWidget(
-                                    row_idx,
-                                    12,
-                                    CollapsibleCellWidget(
-                                        f"{len(err_lines)} errors",
-                                        err_lines,
-                                        self.table,
-                                        row_idx,
-                                    ),
-                                )
-                            else:
-                                self.table.setItem(row_idx, 12, QTableWidgetItem(""))
-
-                            # 13. Events
-                            evt_lines = [
-                                f"n={e.n}: {e.name} - {e.description}"
-                                for e in accel.events
-                            ]
-                            if evt_lines:
-                                self.table.setCellWidget(
-                                    row_idx,
-                                    13,
-                                    CollapsibleCellWidget(
-                                        f"{len(evt_lines)} events",
-                                        evt_lines,
-                                        self.table,
-                                        row_idx,
-                                    ),
-                                )
-                            else:
-                                self.table.setItem(row_idx, 13, QTableWidgetItem(""))
-
-                            rows_added += 1
-
-                # --- Imag Accel ---
-                if self.show_imaginary:
-                    # Check zero
-                    v_im_m = accel.val_imag_m[:min_len]
-                    v_im_e = accel.val_imag_e[:min_len]
-                    is_zero_imag = np.all(v_im_m == 0.0)
-
-                    if self.force_show_imaginary or not is_zero_imag:
-                        accel_imag = vectorized_approx_f64(v_im_m, v_im_e)
-                        accel_imag[~current_mask] = np.nan
-
-                        seg_len = len(accel_n_segment)
-                        accel_segments_imag.append(
-                            (
-                                current_offset_imag,
-                                current_offset_imag + seg_len,
-                                f"{accel_legend_name} (Imag)",
-                            )
-                        )
-                        current_offset_imag += seg_len + 1
-
-                        series_accel_n_imag.append(accel_n_segment)
-                        series_accel_n_imag.append(np.array([np.nan]))
-
-                        series_accel_imag.append(accel_imag)
-                        series_accel_imag.append(np.array([np.nan]))
-
-                # --- Filters ---
-                if self.show_filters and accel.filtered:
-                    for method in accel.filtered.methods:
-                        f_len = len(method.val_real_m)
-                        f_n = np.arange(accel.filtered.start_n, accel.filtered.start_n + f_len, dtype=float)
-                        
-                        filter_name = f"{accel_legend_name} [Filter: {method.name}]"
-                        
-                        if self.show_real:
-                            f_real = vectorized_approx_f64(method.val_real_m, method.val_real_e)
-                            series_filter_n.append(f_n)
-                            series_filter_n.append(np.array([np.nan]))
-                            series_filter_real.append(f_real)
-                            series_filter_real.append(np.array([np.nan]))
-                            filter_segments.append(
-                                (current_offset_filter, current_offset_filter + f_len, filter_name)
-                            )
-                            current_offset_filter += f_len + 1
-                        
-                        if self.show_imaginary:
-                            is_zero_imag = np.all(method.val_imag_m == 0.0)
-                            if self.force_show_imaginary or not is_zero_imag:
-                                f_imag = vectorized_approx_f64(method.val_imag_m, method.val_imag_e)
-                                series_filter_n_imag.append(f_n)
-                                series_filter_n_imag.append(np.array([np.nan]))
-                                series_filter_imag.append(f_imag)
-                                series_filter_imag.append(np.array([np.nan]))
-                                filter_segments_imag.append(
-                                    (current_offset_filter_imag, current_offset_filter_imag + f_len, f"{filter_name} (Imag)")
-                                )
-                                current_offset_filter_imag += f_len + 1
-
-                        # Error Plot Data for Filters
-                        # We calculate deviation from limit: sqrt((real-lim_r)^2 + (imag-lim_i)^2)
-                        lim_r = series.series_limit.real.approx_f64()
-                        lim_i = series.series_limit.imag.approx_f64()
-                        
-                        f_real_vals = vectorized_approx_f64(method.val_real_m, method.val_real_e)
-                        f_imag_vals = vectorized_approx_f64(method.val_imag_m, method.val_imag_e)
-                        
-                        f_diff_r = f_real_vals - lim_r
-                        f_diff_i = f_imag_vals - lim_i
-                        f_dev_linear = np.sqrt(f_diff_r**2 + f_diff_i**2)
-                        
-                        if self.symlog:
-                            # vectorized_symlog expects mantissa/exponent, but we have f64
-                            # We can just apply symlog logic directly or use a trick.
-                            # symlog(x) = sign(x) * log10(1 + |x|/10^C) ... actually symlog is in symlog.py
-                            # Let's use the one from symlog.py if possible or just log10.
-                            f_dev = vectorized_symlog(f_dev_linear, np.zeros_like(f_dev_linear, dtype=np.int32))
-                        else:
-                            f_dev = f_dev_linear
-                            
-                        series_filter_dev.append(f_dev)
-                        series_filter_dev.append(np.array([np.nan]))
-
-            t_plotting += time.time() - t0
-
-            # Batch Plotting Real
-            if series_accel_n:
-                all_n = np.concatenate(series_accel_n)
-                all_real = np.concatenate(series_accel_real)
-                all_dev = np.concatenate(series_accel_dev)
-
-                # Series Color for Accel Real
-                pen = pg.mkPen(
-                    series_color, width=1, style=Qt.PenStyle.DashLine, cosmetic=True
-                )
-
-                curve_conv = self.convergence_plot.plot(
-                    all_n,
-                    all_real,
-                    connect="finite",
-                    pen=pen,
-                    name=f"{series.name} (accels)",
-                )
-                curve_conv.segments = accel_segments
-
-                curve_err = self.error_plot.plot(
-                    all_n,
-                    all_dev,
-                    connect="finite",
-                    pen=pen,
-                    name=f"{series.name} (accels)",
-                )
-                curve_err.segments = accel_segments
-
-            # Batch Plotting Imag
-            if series_accel_n_imag:
-                all_n_imag = np.concatenate(series_accel_n_imag)
-                all_imag = np.concatenate(series_accel_imag)
-
-                # Orange for Accel Imag
-                pen = pg.mkPen(
-                    COLOR_ACCEL_IMAG, width=1, style=Qt.PenStyle.DashLine, cosmetic=True
-                )
-
-                curve_conv_imag = self.convergence_plot.plot(
-                    all_n_imag,
-                    all_imag,
-                    connect="finite",
-                    pen=pen,
-                    name=f"{series.name} (accels imag)",
-                )
-                curve_conv_imag.segments = accel_segments_imag
-
-            # Batch Plotting Filters
-            if series_filter_n:
-                all_n_filter = np.concatenate(series_filter_n)
-                all_real_filter = np.concatenate(series_filter_real)
-                
-                # Green Dotted for Filters
-                pen = pg.mkPen(
-                    COLOR_FILTER_REAL, width=2, style=Qt.PenStyle.DotLine, cosmetic=True
-                )
-                
-                curve_filter = self.convergence_plot.plot(
-                    all_n_filter,
-                    all_real_filter,
-                    connect="finite",
-                    pen=pen,
-                    name=f"{series.name} (filters)"
-                )
-                curve_filter.segments = filter_segments
-
-            # Batch Plotting Filters Imag
-            if series_filter_n_imag:
-                all_n_filter_imag = np.concatenate(series_filter_n_imag)
-                all_imag_filter = np.concatenate(series_filter_imag)
-                
-                # Dark Green Dotted for Filters Imag
-                pen = pg.mkPen(
-                    COLOR_FILTER_IMAG, width=2, style=Qt.PenStyle.DotLine, cosmetic=True
-                )
-                
-                curve_filter_imag = self.convergence_plot.plot(
-                    all_n_filter_imag,
-                    all_imag_filter,
-                    connect="finite",
-                    pen=pen,
-                    name=f"{series.name} (filters imag)"
-                )
-                curve_filter_imag.segments = filter_segments_imag
-
-            # Batch Plotting Filters Error
-            if series_filter_dev:
-                all_n_filter = np.concatenate(series_filter_n) if series_filter_n else []
-                if len(all_n_filter) > 0:
-                    all_dev_filter = np.concatenate(series_filter_dev)
-                    
-                    pen = pg.mkPen(
-                        COLOR_FILTER_REAL, width=2, style=Qt.PenStyle.DotLine, cosmetic=True
-                    )
-                    
-                    curve_err_filter = self.error_plot.plot(
-                        all_n_filter,
-                        all_dev_filter,
-                        connect="finite",
-                        pen=pen,
-                        name=f"{series.name} (filters error)"
-                    )
-                    # We can reuse filter_segments for tooltips if they match
-                    curve_err_filter.segments = filter_segments
-
-        # Batch plot performance scatter
-        t0 = time.time()
-        if perf_x:
+        # re-add tooltips
+        for plot in [self.convergence_plot, self.error_plot, self.performance_plot]:
+            if hasattr(plot, "custom_tooltip"):
+                plot.addItem(plot.custom_tooltip)
+                plot.custom_tooltip.hide()
+
+        # render curves
+        def render_curves(plot, curves):
+            for c in curves:
+                curve_item = plot.plot(c.x, c.y, pen=c.pen, name=c.name, connect="finite")
+                if c.segments:
+                    curve_item.segments = c.segments
+
+        render_curves(self.convergence_plot, viz_data.convergence_curves)
+        render_curves(self.error_plot, viz_data.error_curves)
+
+        # render performance
+        if viz_data.performance_data:
+            p = viz_data.performance_data
             perf_curve = self.performance_plot.plot(
-                perf_x,
-                perf_y,
-                pen=None,
-                symbol="o",
-                symbolBrush=perf_brushes,
-                symbolSize=5,
+                p.x, p.y, pen=None, symbol="o", symbolBrush=p.brushes, symbolSize=5
             )
-            perf_curve.point_names = perf_names
+            perf_curve.point_names = p.names
 
-        t_plotting += time.time() - t0
+        # render table
+        for row in viz_data.table_rows:
+            r_idx = self.table.rowCount()
+            self.table.insertRow(r_idx)
+            
+            self.table.setItem(r_idx, 0, QTableWidgetItem(row.series_id))
+            self.table.setItem(r_idx, 1, QTableWidgetItem(row.name))
+            self.table.setItem(r_idx, 2, QTableWidgetItem(row.precision))
+            self.table.setItem(r_idx, 3, QTableWidgetItem(row.limit_str))
+            self.table.setItem(r_idx, 4, QTableWidgetItem(row.series_params))
+            self.table.setItem(r_idx, 5, QTableWidgetItem(row.accel_name))
+            self.table.setItem(r_idx, 6, QTableWidgetItem(row.m_value))
+            self.table.setItem(r_idx, 7, QTableWidgetItem(row.accel_params))
+            self.table.setItem(r_idx, 8, QTableWidgetItem(row.noise_str))
 
-        # Probably need to remove some metrics?
-        print(
-            f"Finished updating plots structure in {time.time() - t_start:.3f}s. Rendering starting..."
-        )
-        print(f"  - Plotting setup time: {t_plotting:.3f}s")
-        print(f"  - Table setup time: {t_table:.3f}s")
-        print(f"  - Legend clear time: {t_legend_clear:.3f}s")
-        print(f"  - Legend add time: {t_legend_add:.3f}s")
-        print(f"  - Total accels processed: {total_accels}")
+            # collapsible
+            col_configs = [
+                (9, f"{len(row.series_values)} values", row.series_values),
+                (10, f"{len(row.accel_values)} values", row.accel_values),
+                (11, row.dev_summary, row.deviations),
+                (12, f"{len(row.errors)} errors", row.errors),
+                (13, f"{len(row.events)} events", row.events),
+            ]
+            
+            for col_idx, title, lines in col_configs:
+                if lines:
+                    self.table.setCellWidget(r_idx, col_idx, CollapsibleCellWidget(title, lines, self.table, r_idx))
+                else:
+                    self.table.setItem(r_idx, col_idx, QTableWidgetItem(""))
+
+        # render legend
+        for item in viz_data.legend_items:
+            self.add_legend_item(item.text, item.color, item.is_dashed)
+
+        print(f"UI update completed in {time.time() - t_start:.3f}s")
 
 
 def main():

@@ -33,14 +33,14 @@ class ComplexNumber:
             str: "real + imagj" or just "real" if imag is zero.
         """
         real_str = self.real.format()
-        # Only show the imaginary part if it's significant (non-zero mantissa).
+        # only show the imaginary part if it's significant (non-zero mantissa).
         if abs(self.imag.mantissa) > 0.0:
             imag_str = self.imag.format()
             return f"{real_str} + {imag_str}j"
         return real_str
 
     @classmethod
-    def from_polars_struct(cls, s: Dict[str, Any]) -> "ComplexNumber":
+    def from_polars_struct(cls, s: Optional[Dict[str, Any]]) -> "ComplexNumber":
         """
         Constructs a ComplexNumber from a dictionary struct, typically from Polars.
         The Parquet schema stores these as structs with fields '0' (mantissa) and '1' (exponent).
@@ -51,8 +51,21 @@ class ComplexNumber:
         Outputs:
             ComplexNumber: The constructed complex number.
         """
-        real = Scientific(float(s["real"]["0"]), int(s["real"]["1"]))
-        imag = Scientific(float(s["imag"]["0"]), int(s["imag"]["1"]))
+        if s is None:
+            return cls(Scientific(0.0, 0), Scientific(0.0, 0))
+        
+        r_data = s.get("real")
+        if r_data:
+            real = Scientific(float(r_data.get("0", 0.0)), int(r_data.get("1", 0)))
+        else:
+            real = Scientific(0.0, 0)
+            
+        i_data = s.get("imag")
+        if i_data:
+            imag = Scientific(float(i_data.get("0", 0.0)), int(i_data.get("1", 0)))
+        else:
+            imag = Scientific(0.0, 0)
+            
         return cls(real, imag)
 
 
@@ -121,15 +134,15 @@ class AccelRecord:
     """
 
     accel_info: AccelInfo
-    # Arrays for computed values (dense)
-    # Storing these as separate arrays is more efficient for plotting than a list of objects.
+    # arrays for computed values (dense)
+    # storing these as separate arrays is more efficient for plotting than a list of objects.
     val_real_m: np.ndarray
     val_real_e: np.ndarray
     val_imag_m: np.ndarray
     val_imag_e: np.ndarray
     dev_m: np.ndarray
     dev_e: np.ndarray
-    # Mask for valid entries (since some might be None/Null if the calc failed at step n)
+    # mask for valid entries (since some might be None/Null if the calc failed at step n)
     valid_mask: np.ndarray
 
     errors: List[ErrorInfo]
@@ -150,7 +163,7 @@ class SeriesRecord:
     name: str
     arguments: Dict[str, str]
     series_limit: ComplexNumber
-    # Arrays for computed values
+    # arrays for computed values
     n: np.ndarray
     val_real_m: np.ndarray
     val_real_e: np.ndarray
@@ -205,7 +218,7 @@ class DataLoader:
                     os.path.join(data_dir, "accelerations"), hive_partitioning=True
                 )
             else:
-                # Check for JSON files
+                # check for JSON files
                 json_files = glob.glob(os.path.join(data_dir, "results*.json"))
                 if json_files:
                     self._load_json(json_files)
@@ -222,9 +235,9 @@ class DataLoader:
         name_without_ext = os.path.splitext(filename)[0]
         parts = name_without_ext.split('_')
         if len(parts) > 1:
-            # Assumes format results_PRECISION
+            # assumes format results_PRECISION
             return parts[-1]
-        return "f64"  # Default
+        return "f64"  # default
 
     @staticmethod
     def _format_noise_dict(ni: Dict[str, Any]) -> str:
@@ -233,7 +246,7 @@ class DataLoader:
             return "None"
         method = ni.get("method", "Unknown")
         params = []
-        # Sort keys to ensure consistent string representation
+        # sort keys to ensure consistent string representation
         for k in sorted(ni.keys()):
             v = ni[k]
             if k == "method" or v is None:
@@ -251,12 +264,12 @@ class DataLoader:
         dfs = []
         for path in json_paths:
             try:
-                # We use pl.read_json which is eager, then convert to lazy.
+                # we use pl.read_json which is eager, then convert to lazy.
                 df = pl.read_json(path, infer_schema_length=None)
                 precision = self._infer_precision(path)
 
-                # 1. Series DataFrame
-                # Each entry in JSON is (series + accel), so we group by series to get the unique base series.
+                # 1. series dataframe
+                # each entry in JSON is (series + accel), so we group by series to get the unique base series.
                 series_df = df.select([
                     pl.lit(precision).alias("precision"),
                     pl.col("series").struct.field("id").alias("series_id"),
@@ -274,7 +287,7 @@ class DataLoader:
                     ).alias("computed")
                 ]).sort(pl.col("computed").list.len(), descending=True).unique(subset=["series_id"])
 
-                # 2. Accel DataFrame
+                # 2. accel dataframe
                 def extract_events(computed_list):
                     evts = []
                     for step in computed_list:
@@ -287,8 +300,8 @@ class DataLoader:
                             })
                     return evts
 
-                # Handle filtered if present
-                # It comes as a struct in JSON
+                # handle filtered if present
+                # it comes as a struct in JSON
                 
                 accel_df = df.select([
                     pl.col("series").struct.field("id").alias("series_id"),
@@ -296,7 +309,7 @@ class DataLoader:
                     pl.col("accel").struct.field("m_value").alias("m_value"),
                     pl.col("accel").struct.field("additional_args").alias("additional_args"),
                     pl.col("noise").alias("noise"),
-                    pl.col("noise").map_elements(self._format_noise_dict, return_dtype=pl.String).alias("noise_str"),
+                    pl.col("noise").map_elements(self._format_noise_dict, return_dtype=pl.String, skip_nulls=False).alias("noise_str"),
                     # computed for accel (aligned with series steps)
                     pl.col("computed").list.eval(
                         pl.struct([
@@ -304,13 +317,13 @@ class DataLoader:
                             pl.element().struct.field("accel_value_deviation").alias("deviation")
                         ])
                     ).alias("computed"),
-                    # Map events from steps
+                    # map events from steps
                     pl.col("computed").map_elements(extract_events, return_dtype=pl.List(pl.Struct([
                         pl.Field("n", pl.Int64),
                         pl.Field("name", pl.String),
                         pl.Field("description", pl.String)
                     ]))).alias("events"),
-                    # Global error if any
+                    # global error if any
                     pl.col("error").map_elements(
                         lambda x: [{"n": 0, "message": str(x)}] if x is not None else [],
                         return_dtype=pl.List(pl.Struct([
@@ -327,12 +340,12 @@ class DataLoader:
                 print(f"Error loading {path}: {e}")
 
         if not dfs:
-             # Initialize empty lazy frames if nothing loaded
+             # initialize empty lazy frames if nothing loaded
              self.series_df = pl.DataFrame().lazy()
              self.accel_df = pl.DataFrame().lazy()
              return
 
-        # Concat all series DFs and Accel DFs
+        # concat all series DFs and Accel DFs
         all_series = [d[0] for d in dfs]
         all_accels = [d[1] for d in dfs]
         
@@ -347,8 +360,8 @@ class DataLoader:
         Outputs:
             Metadata: Object containing lists of available series, accelerations, etc.
         """
-        # We need to collect some data to get unique values.
-        # The 'collect()' call triggers the actual file reading.
+        # we need to collect some data to get unique values.
+        # the 'collect()' call triggers the actual file reading.
         precisions = (
             self.series_df.select("precision")
             .unique()
@@ -398,9 +411,9 @@ class DataLoader:
                 .to_list()
             )
         elif "noise" in self.accel_df.collect_schema():
-            # If we have 'noise' struct but not 'noise_str' (e.g. from Parquet)
+            # if we have 'noise' struct but not 'noise_str' (e.g. from Parquet)
             noise_options = (
-                self.accel_df.select(pl.col("noise").map_elements(self._format_noise_dict, return_dtype=pl.String).alias("noise_str"))
+                self.accel_df.select(pl.col("noise").map_elements(self._format_noise_dict, return_dtype=pl.String, skip_nulls=False).alias("noise_str"))
                 .unique()
                 .collect()
                 .get_column("noise_str")
@@ -409,7 +422,7 @@ class DataLoader:
                 .to_list()
             )
 
-        # For nested parameters (like arguments in a JSON struct), we need a helper.
+        # for nested parameters (like arguments in a JSON struct), we need a helper.
         series_param_info = self._get_unique_param_info(self.series_df, "arguments")
         accel_param_info = self._get_unique_param_info(self.accel_df, "additional_args")
 
@@ -438,12 +451,12 @@ class DataLoader:
             Dict[str, List[str]]: A dictionary mapping field names to lists of unique values (as strings).
         """
         res = {}
-        # Get the schema of the struct column to know what fields exist inside it.
+        # get the schema of the struct column to know what fields exist inside it.
         schema = df.collect_schema()[column]
         if isinstance(schema, pl.Struct):
             for field in schema.fields:
                 field_name = field.name
-                # Query unique values for this specific field inside the struct.
+                # query unique values for this specific field inside the struct.
                 unique_vals = (
                     df.select(pl.col(column).struct.field(field_name))
                     .unique()
@@ -471,14 +484,13 @@ class DataLoader:
         Outputs:
             Tuple[pl.Expr, pl.Expr]: A tuple of (mantissa_expr, exponent_expr).
         """
-        # Returns (mantissa_expr, exponent_expr)
-        # Regex to split mantissa and exponent (if present)
-        # Matches: start, capture mantissa (no e/E), optional group (e/E, capture exponent), end
-        # We use extract with group index.
+        # regex to split mantissa and exponent (if present)
+        # matches: start, capture mantissa (no e/E), optional group (e/E, capture exponent), end
+        # we use extract with group index.
 
-        # Mantissa is everything up to 'e' or 'E' or end
+        # mantissa is everything up to 'e' or 'E' or end
         m_str = col_expr.str.extract(r"^([^eE]+)", 1)
-        # Exponent is everything after 'e' or 'E'
+        # exponent is everything after 'e' or 'E'
         e_str = col_expr.str.extract(r"[eE](.+)$", 1)
 
         m = m_str.cast(pl.Float64)
@@ -505,20 +517,28 @@ class DataLoader:
             
         parsed_methods = []
         
-        # Handle both list-of-kv-pairs (Map) and dict
+        # handle both list-of-kv-pairs (Map) and dict
         iterator = []
         if isinstance(methods_raw, dict):
             iterator = methods_raw.items()
         elif isinstance(methods_raw, list):
-            # Assumes list of {'key': ..., 'value': ...}
-            iterator = [(m['key'], m['value']) for m in methods_raw if m]
+            for m in methods_raw:
+                if isinstance(m, dict):
+                    k = m.get('key')
+                    v = m.get('value')
+                    if k is not None and v is not None:
+                        iterator.append((k, v))
+                elif isinstance(m, tuple) and len(m) == 2:
+                    iterator.append(m)
             
         for m_name, m_data in iterator:
+            if not isinstance(m_data, dict):
+                continue
             values = m_data.get("values", [])
             if not values:
                 continue
             
-            # Arrays to store components
+            # arrays to store components
             v_r_m = np.zeros(len(values), dtype=np.float64)
             v_r_e = np.zeros(len(values), dtype=np.int32)
             v_i_m = np.zeros(len(values), dtype=np.float64)
@@ -564,7 +584,7 @@ class DataLoader:
 
         t0 = time.time()
 
-        # Start building the query for the base series table.
+        # start building the query for the base series table.
         s_df = self.series_df
         if filters.get("precisions"):
             s_df = s_df.filter(pl.col("precision").is_in(list(filters["precisions"])))
@@ -579,9 +599,9 @@ class DataLoader:
                     pl.col("arguments").struct.field(param).is_in(list(values))
                 )
 
-        # Define expression to transform computed list.
-        # The data on disk stores 'computed' as a list of structs.
-        # We want to flatten these structs into parallel arrays (columns) for faster plotting logic later.
+        # define expression to transform computed list.
+        # the data on disk stores 'computed' as a list of structs.
+        # we want to flatten these structs into parallel arrays (columns) for faster plotting logic later.
 
         def transform_computed(col_name="computed", has_n=True):
             root = pl.element()
@@ -590,7 +610,7 @@ class DataLoader:
             real_str = val.struct.field("real")
             imag_str = val.struct.field("imag")
 
-            # Parse the string representations into numbers.
+            # parse the string representations into numbers.
             vr_m, vr_e = self._parse_sci_expr(real_str, default_val=0.0)
             vi_m, vi_e = self._parse_sci_expr(imag_str, default_val=0.0)
             d_m, d_e = self._parse_sci_expr(dev_str, default_val=None)
@@ -610,8 +630,8 @@ class DataLoader:
 
         t1 = time.time()
 
-        # Execute the query and bring data into memory.
-        # Use to_dicts() to avoid Arrow serialization issues with nested structs.
+        # execute the query and bring data into memory.
+        # use to_dicts() to avoid Arrow serialization issues with nested structs.
         series_collected = s_df.collect()
         series_rows = series_collected.with_columns(
             transform_computed("computed", has_n=True).alias("computed_parsed")
@@ -625,10 +645,10 @@ class DataLoader:
         if not series_rows:
             return []
 
-        # Get the Series IDs so we can fetch only the relevant accelerations.
+        # get the Series IDs so we can fetch only the relevant accelerations.
         series_ids = [row["series_id"] for row in series_rows]
 
-        # Start building the query for the accelerations table.
+        # start building the query for the accelerations table.
         a_df = self.accel_df.filter(pl.col("series_id").is_in(series_ids))
         if filters.get("base_accel"):
             a_df = a_df.filter(pl.col("accel_name").is_in(list(filters["base_accel"])))
@@ -639,7 +659,7 @@ class DataLoader:
                 a_df = a_df.filter(pl.col("noise_str").is_in(list(filters["noise_options"])))
             elif "noise" in self.accel_df.collect_schema():
                 a_df = a_df.filter(
-                    pl.col("noise").map_elements(self._format_noise_dict, return_dtype=pl.String).is_in(list(filters["noise_options"]))
+                    pl.col("noise").map_elements(self._format_noise_dict, return_dtype=pl.String, skip_nulls=False).is_in(list(filters["noise_options"]))
                 )
 
         for param, values in filters.get("accel_params", {}).items():
@@ -659,18 +679,18 @@ class DataLoader:
             f"[Timing] Accel collect: {t4 - t3:.3f}s (rows: {len(accel_rows)})"
         )
 
-        # Group accelerations by series_id locally.
-        # We need to associate each acceleration run with its parent series.
+        # group accelerations by series_id locally.
+        # we need to associate each acceleration run with its parent series.
         accels_by_series: Dict[int, List[AccelRecord]] = {}
 
-        # Process Accel Table.
+        # process accel table.
         t_start_proc_accel = time.time()
         for row in accel_rows:
             sid = row["series_id"]
             name = row["accel_name"]
             m_val = row["m_value"]
 
-            # Args (dict)
+            # args (dict)
             args = {
                 k: str(v)
                 for k, v in (row.get("additional_args") or {}).items()
@@ -682,7 +702,7 @@ class DataLoader:
             if noise_str is None:
                 noise_str = self._format_noise_dict(noise_info) if noise_info else "None"
 
-            # Computed
+            # computed
             computed_parsed = row.get("computed_parsed") or []
             n_points = len(computed_parsed)
             
@@ -705,14 +725,14 @@ class DataLoader:
                 
                 dm = p.get("d_m")
                 if dm is None:
-                    # Deviation might be null if no limit is available or error occurred
+                    # deviation might be null if no limit is available or error occurred
                     dev_m[i] = 0.0
                     dev_e[i] = 0
                 else:
                     dev_m[i] = dm
                     dev_e[i] = p.get("d_e", 0)
 
-            # Errors & Events
+            # errors & events
             err_list = row.get("errors") or []
             evt_list = row.get("events") or []
 
@@ -729,7 +749,7 @@ class DataLoader:
                 for e in evt_list if e
             ]
             
-            # Filtered
+            # filtered
             filtered_obj = self._parse_filtered(row.get("filtered"))
 
             accel_rec = AccelRecord(
@@ -753,14 +773,14 @@ class DataLoader:
             f"[Timing] Accel processing loop: {time.time() - t_start_proc_accel:.3f}s"
         )
 
-        # Process Series Table.
+        # process series table.
         t_start_proc_series = time.time()
         result: List[Tuple[SeriesRecord, List[AccelRecord]]] = []
         
         for row in series_rows:
             sid = row["series_id"]
             
-            # Computed
+            # computed
             computed_parsed = row.get("computed_parsed") or []
             n_points = len(computed_parsed)
             
@@ -782,7 +802,7 @@ class DataLoader:
                 dev_m[i] = p.get("d_m", 0.0)
                 dev_e[i] = p.get("d_e", 0)
 
-            # Limit
+            # limit
             series_limit = self._parse_complex(row.get("series_limit"))
 
             series_rec = SeriesRecord(
@@ -809,7 +829,6 @@ class DataLoader:
             f"[Timing] Series processing loop: {time.time() - t_start_proc_series:.3f}s"
         )
         return result
-        return result
 
     def _parse_scientific(self, s: Any) -> Scientific:
         """
@@ -827,10 +846,9 @@ class DataLoader:
             return Scientific.from_str(s)
         if isinstance(s, dict) and "0" in s and "1" in s:
             return Scientific(float(s["0"]), int(s["1"]))
-        # Fallback for unexpected formats
+        # fallback for unexpected formats
         return Scientific(0.0, 0)
-
-    def _parse_complex(self, s: Dict[str, Any]) -> ComplexNumber:
+    def _parse_complex(self, s: Optional[Dict[str, Any]]) -> ComplexNumber:
         """
         Parses a dictionary representing a complex number into a ComplexNumber object.
 
@@ -840,7 +858,9 @@ class DataLoader:
         Outputs:
             ComplexNumber: Parsed complex number.
         """
+        if s is None:
+            return ComplexNumber(Scientific(0.0, 0), Scientific(0.0, 0))
         return ComplexNumber(
-            real=self._parse_scientific(s["real"]),
-            imag=self._parse_scientific(s["imag"]),
+            real=self._parse_scientific(s.get("real")),
+            imag=self._parse_scientific(s.get("imag")),
         )

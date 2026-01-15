@@ -5,9 +5,9 @@ Description: Provides scientific number handling and symmetric logarithmic scali
 
 import numpy as np
 
-# We define a very small threshold for the linear region around zero.
-# In a standard logarithmic scale, log(0) is undefined and log(negative) is complex.
-# Symmetric log (symlog) solves this by being linear around zero and logarithmic elsewhere.
+# we define a very small threshold for the linear region around zero.
+# in a standard logarithmic scale, log(0) is undefined and log(negative) is complex.
+# symmetric log (symlog) solves this by being linear around zero and logarithmic elsewhere.
 # LINTHRESH is the range (-LINTHRESH, LINTHRESH) where the plot is linear.
 # LOG_LINTHRESH is simply log10(LINTHRESH) precomputed for speed.
 LINTHRESH = 1e-50
@@ -47,7 +47,7 @@ class Scientific:
         if not s:
             return cls(0.0, 0)
         
-        # Standardize the string to handle 'e' or 'E'.
+        # standardize the string to handle 'e' or 'E'.
         s = s.lower()
         if "e" in s:
             parts = s.split("e")
@@ -55,7 +55,7 @@ class Scientific:
             exponent = int(parts[1])
             return cls(mantissa, exponent)
         else:
-            # If there is no exponent part, it is just a regular number with exponent 0.
+            # if there is no exponent part, it is just a regular number with exponent 0.
             return cls(float(s), 0)
 
     def approx_f64(self) -> float:
@@ -88,20 +88,20 @@ class Scientific:
         sign = np.sign(self.mantissa)
         abs_mantissa = abs(self.mantissa)
 
-        # Calculate the log10 magnitude using the separate exponent to avoid underflow
+        # calculate the log10 magnitude using the separate exponent to avoid underflow
         # before taking the log.
         # log10(m * 10^e) = log10(m) + e
         val_log10 = np.log10(abs_mantissa) + self.exponent
 
-        # How far are we from the linear threshold?
+        # how far are we from the linear threshold?
         magnitude_diff = val_log10 - LOG_LINTHRESH
 
-        # If we are significantly larger than the threshold, we use the log behavior.
-        # We use 16.0 as a somewhat arbitrary cutoff where we switch to pure log behavior.
+        # if we are significantly larger than the threshold, we use the log behavior.
+        # we use 16.0 as a somewhat arbitrary cutoff where we switch to pure log behavior.
         if magnitude_diff > 16.0:
             return sign * magnitude_diff
         else:
-            # In the transition region or near zero, we use a function that behaves linearly
+            # in the transition region or near zero, we use a function that behaves linearly
             # to avoid the singularity at zero.
             return sign * np.log10(1.0 + abs(self.approx_f64()) / LINTHRESH)
 
@@ -119,13 +119,13 @@ class Scientific:
         sign_str = "-" if self.mantissa < 0.0 else ""
         abs_mantissa = abs(self.mantissa)
 
-        # If the number is very large or very small, force scientific notation.
+        # if the number is very large or very small, force scientific notation.
         if self.exponent < -2 or self.exponent > 3:
             return f"{sign_str}{abs_mantissa:.1f}e{self.exponent:.0f}"
         else:
-            # Otherwise, try to show it as a normal decimal number.
+            # otherwise, try to show it as a normal decimal number.
             real_val = abs_mantissa * (10.0**self.exponent)
-            # Remove trailing zeros and decimal point if not needed
+            # remove trailing zeros and decimal point if not needed
             return f"{sign_str}{real_val:.6f}".rstrip("0").rstrip(".")
 
 
@@ -159,14 +159,14 @@ def vectorized_symlog(mantissa: np.ndarray, exponent: np.ndarray) -> np.ndarray:
     Outputs:
         np.ndarray: Array of transformed values on the SymLog scale.
     """
-    # Handle zeros first. The result for 0 is 0.
+    # handle zeros first. The result for 0 is 0.
     result = np.zeros_like(mantissa)
     non_zero = mantissa != 0
 
     if not np.any(non_zero):
         return result
 
-    # We only process non-zero elements to avoid log(0) warnings.
+    # we only process non-zero elements to avoid log(0) warnings.
     m = mantissa[non_zero]
     e = exponent[non_zero]
 
@@ -178,25 +178,25 @@ def vectorized_symlog(mantissa: np.ndarray, exponent: np.ndarray) -> np.ndarray:
 
     magnitude_diff = val_log10 - LOG_LINTHRESH
 
-    # We treat numbers much larger than the threshold differently than those close to zero.
+    # we treat numbers much larger than the threshold differently than those close to zero.
     huge_mask = magnitude_diff > 16.0
     small_mask = ~huge_mask
 
-    # Prepare output container for the non-zero elements
+    # prepare output container for the non-zero elements
     out_vals = np.zeros_like(m)
 
-    # For huge numbers, the linear term 1.0 is negligible, so we just use the log difference.
+    # for huge numbers, the linear term 1.0 is negligible, so we just use the log difference.
     if np.any(huge_mask):
         out_vals[huge_mask] = sign[huge_mask] * magnitude_diff[huge_mask]
 
-    # For small numbers, we compute the full formula to ensure smooth transition through zero.
+    # for small numbers, we compute the full formula to ensure smooth transition through zero.
     if np.any(small_mask):
         approx_val = m[small_mask] * (10.0 ** e[small_mask])
         out_vals[small_mask] = sign[small_mask] * np.log10(
             1.0 + np.abs(approx_val) / LINTHRESH
         )
 
-    # Scatter the computed values back into the result array
+    # scatter the computed values back into the result array
     result[non_zero] = out_vals
 
     return result
@@ -218,14 +218,14 @@ def symlog_formatter(val: float) -> str:
     """
     if val == 0.0:
         return "0"
-    # If we are right on the threshold, we just show 1 (scaled) or similar basic value.
+    # if we are right on the threshold, we just show 1 (scaled) or similar basic value.
     elif abs(val + LOG_LINTHRESH) < 0.00001:
         return "1"
 
     sign_str = "-" if val < 0.0 else ""
     abs_plot_y = abs(val)
 
-    # Invert the log transformation:
+    # invert the log transformation:
     # plot_y = log10(x) - log10(threshold)
     # log10(x) = plot_y + log10(threshold)
     target_log10 = LOG_LINTHRESH + abs_plot_y
@@ -234,7 +234,7 @@ def symlog_formatter(val: float) -> str:
     fractional = target_log10 - exponent
     mantissa = 10.0**fractional
 
-    # Choose format based on magnitude
+    # choose format based on magnitude
     if exponent < -2.0 or exponent > 3.0:
         return f"{sign_str}{mantissa:.1f}e{exponent:.0f}"
     else:
