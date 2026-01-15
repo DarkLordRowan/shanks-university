@@ -49,7 +49,9 @@ public:
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return true if x is non-finite, false otherwise.
      */
-	bool is_invalid() const override { return !utils::isfinite(this->x); }
+	bool is_invalid() const override {
+        return !utils::isfinite(this->x) ; 
+    }
 
     /**
      * @brief Computes the next term in the Ci(x) expansion.
@@ -61,8 +63,8 @@ public:
 		// First few terms are special (constant and logarithmic), followed by the power series
 		if (n == 0) state += utils::cast<T>(std::numbers::egamma);
 		else if (n == 1) state = utils::log(this->x);
-		else if (n == 2) state = utils::cast<T>(-0.25) * this->x * this->x;
-		else state *= utils::cast<T>(-1) * this->x * this->x / utils::cast<T>(2*(n-1)*(n-1)*utils::fma(static_cast<size_t>(2),static_cast<size_t>(n-2),static_cast<size_t>(1)));
+		else if (n == 2) state = this->x * this->x * utils::cast<T>(-0.25);
+		else state *= utils::cast<T>(-1) * this->x * this->x * utils::cast<T>(n-2) / utils::cast<T>(2 * (n-1) * (n-1) * utils::fma(static_cast<size_t>(2),static_cast<size_t>(n-2),static_cast<size_t>(1)));
 		return state;
 	}
 

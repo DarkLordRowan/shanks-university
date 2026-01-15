@@ -23,15 +23,6 @@ std::string utils::to_string(const T& x){
 
     // Formatting based on type properties and library support
     if constexpr (std::is_floating_point<T>::value || std::is_integral<T>::value) return std::to_string(x);
-    #ifdef INC_FPRECISION
-    else if constexpr (std::is_same<T, float_precision>::value) return x.toString();
-    #endif
-    #ifdef INC_COMPLEXPRECISION
-    else if constexpr (isComplexLike<T>::value) return utils::to_string(x.real()) + "i * " + utils::to_string(x.imag());
-    #endif
-    #ifdef INC_INTERVALPRECISION
-    else if constexpr (is_interval<T>::value) return x.toString(); else
-    #endif
     #ifdef __MPREAL_H__
     else if constexpr (std::is_same<T, mpfr::mpreal>::value){
         #define MAX_PRECISION_AVAILABLE -1
@@ -55,12 +46,6 @@ bool utils::isfinite(const T& x){
     // Using standard or library-specific checks for finiteness
     if constexpr (std::is_floating_point<T>::value) return std::isfinite(x);
     else if constexpr (is_complex_t<T>::value) return std::isfinite(x.real()) && std::isfinite(x.imag());
-    #ifdef INC_FPRECISION
-    else if constexpr (std::is_same<T, float_precision>::value) return isfinite(x);
-    #endif
-    #ifdef INC_COMPLEXPRECISION
-    else if constexpr (isComplexLike<T>::value) return utils::isfinite(x.real()) && utils::isfinite(x.imag());;
-    #endif
     #ifdef __MPREAL_H__
     else if constexpr (std::is_same<T, mpfr::mpreal>::value){
 		return mpfr::isfinite(x) && !mpfr::isnan(x) && !mpfr::isinf(x);
@@ -84,9 +69,6 @@ template<typename T>
 T utils::epsilon(const T& x){
     // Selecting the epsilon calculation method for the given type
     if constexpr (is_standard_types<T>::value) return std::numeric_limits<T>::epsilon();
-    #ifdef INC_FPRECISION
-    else if constexpr (std::is_same<T, float_precision>::value) return x.epsilon();
-    #endif
     #ifdef __MPREAL_H__
     else if constexpr (std::is_same<T, mpfr::mpreal>::value){
 		return mpfr::machine_epsilon(x);

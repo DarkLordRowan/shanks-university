@@ -10,7 +10,7 @@
  * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  */
 
-#if defined(INC_FPRECISION) || defined(__MPREAL_H__)
+#if defined(__MPREAL_H__)
 /**
  * @brief Sets precision of given variables for MPFR and custom types
  * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
@@ -21,21 +21,6 @@ requires (is_precisable<Args>::value && ...)
 void utils::set_precision(const size_t precision, Arg& precisable_arg, Args& ...precisable_args){
 
 	// Handling precision for various library-specific types
-	#ifdef INC_FPRECISION
-	if constexpr (std::is_same<Arg, float_precision>::value){
-		precisable_arg.precision(precision);
-	}
-	#ifdef INC_COMPLEXPRECISION
-	if constexpr (std::is_same<Arg, complex_precision<float_precision>>::value){
-		precisable_arg.ref_real()->precision(precision); precisable_arg.ref_imag()->precision(precision);
-	}
-	#endif
-	#ifdef INC_INTERVALPRECISION
-	if constexpr (std::is_same<Arg, interval<float_precision>>::value){
-		precisable_arg.ref_left()->precision(precision); precisable_arg.ref_right()->precision(precision);
-	}
-	#endif
-	#endif
 	#ifdef __MPREAL_H__
 	if constexpr (std::is_same<Arg, mpfr::mpreal>::value){
 		precisable_arg.set_prec(mpfr::digits2bits(precision));

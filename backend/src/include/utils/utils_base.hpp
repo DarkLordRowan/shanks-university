@@ -22,15 +22,6 @@ struct series_result{
 	std::vector<T> an; /**< vector of a_{n} = S_{n} - S_{n-1} */
 };
 
-/**
- * @brief Wraps the type in the TypeWrapper struct
- * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
- * @tparam T Type to be wrapped
- */
-template <typename T>
-struct TypeWrapper {
-    using value_type = T;
-};
 
 /**
  * @brief Get the value_type if the type has one, otherwise get the original type
@@ -38,9 +29,10 @@ struct TypeWrapper {
  * @tparam T Input type
  */
 template<typename T>
-struct GetUnderlyingType {
-	using value = typename std::conditional_t<isFloatLike<T>::value, TypeWrapper<T>, T>::value_type;
-};
+struct GetUnderlyingType { using value = T;};
+
+template<typename T>
+struct GetUnderlyingType<std::complex<T>>{ using value = T; };
 
 /**
  * @brief Adapter struct for more convenient integration of third party libraries with some custom integer like type

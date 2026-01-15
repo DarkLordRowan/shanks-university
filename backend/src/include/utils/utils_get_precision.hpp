@@ -30,24 +30,6 @@ size_t utils::get_precision(const T& x){
 		return mpfr::bits2digits(x.get_prec());
 	}
 	#endif
-	#ifdef INC_FPRECISION
-	// Handling float_precision from custom libraries
-	else if constexpr (std::is_same<T, float_precision>::value){
-		return x.precision();
-	}
-	#ifdef INC_COMPLEXPRECISION
-	// Complex types precision is the maximum of real and imaginary parts
-	else if constexpr (std::is_same<T, complex_precision<float_precision>>::value){
-		return std::max(x.real().precision(), x.imag().precision());
-	}
-	#endif
-	#ifdef INC_INTERVALPRECISION
-	// Interval types precision is the maximum of left and right boundaries
-	else if constexpr (std::is_same<T, interval<float_precision>>::value){
-		return std::max(x.leftinterval().precision(), x.rightinterval().precision());
-	}
-	#endif
-	#endif
 	// Recursive handling for custom complex types
 	else if constexpr(is_complex_custom<T>::value) return std::max(utils::get_precision(x.real()), utils::get_precision(x.imag()));
 	else {

@@ -8,6 +8,10 @@
 
 #include "utils_base.hpp"
 
+//#include "gsl/gsl_sf_expint.h"
+//#include <gsl/gsl_sf_gamma.h>
+//#include <gsl/gsl_sf_lambert.h>
+
 /**
  * @file utils_math.hpp
  * @brief This file contains implementations of various mathematical functions.
@@ -137,9 +141,6 @@ template<typename T>
 requires AcceptedLike<T> || std::is_integral<T>::value
 T utils::pow(const T& x, const T& y){
 	if constexpr (is_standard_types<T>::value) return std::pow(x,y);
-	#ifdef _CL_FLOAT_CLASS_H
-	else if constexpr (std::is_same<T, cln::cl_R>::value) return cln::exp(y * cln::ln(x));
-	#endif
 	#ifdef __MPREAL_H__
 	else if constexpr (std::is_same<T, mpfr::mpreal>::value) return mpfr::pow(x,y);
 	#endif
@@ -263,9 +264,6 @@ T utils::log(const T& x){
 template<AcceptedLike T> 
 T utils::hypot(const T& a, const T& b){
 	if constexpr(is_standard_types<T>::value) return std::hypot(a,b);
-	#ifdef INC_FPRECISION
-	if constexpr(std::is_same<T, float_precision>::value) return a.square() + b.square();
-	#endif
 	#ifdef __MPREAL_H__
 	else if constexpr (std::is_same<T, mpfr::mpreal>::value) return mpfr::hypot(a, b);
 	#endif
@@ -308,9 +306,6 @@ T utils::erf(const T& x){
 template<AcceptedLike T>
 T utils::zeta(const T& x){
 	if constexpr (std::is_floating_point<T>::value) return std::riemann_zeta(x);
-	#ifdef INC_FPRECISION
-	else if constexpr (std::is_same<T, float_precision>::value) return abs(zeta(x));
-	#endif
 	#ifdef __MPREAL_H__
 	else if constexpr (std::is_same<T, mpfr::mpreal>::value) return mpfr::zeta(x);
 	#endif
@@ -332,9 +327,9 @@ T utils::zeta(const T& x){
 template<AcceptedLike T> 
 T utils::ci_x(const T& x){
 	#ifdef __GSL_SF_EXPINT_H__
-	if constexpr (std::is_floating_point<T>::value) utils::cast<T>(gsl_sf_Ci(static_cast<double>(this->x)));
+	if constexpr (std::is_floating_point<T>::value) return utils::cast<T>(gsl_sf_Ci(static_cast<double>(x)));
 	#ifdef __MPREAL_H__
-	else if constexpr (std::is_same<T, mpfr::mpreal>::value) return mpfr::erf(x);
+	else if constexpr (std::is_same<T, mpfr::mpreal>::value) return utils::cast<T>(gsl_sf_Ci(static_cast<double>(x)));
 	#endif
 	else {
         if constexpr (AcceptedLike<T>) {
@@ -427,14 +422,14 @@ T utils::k_x(const T& x){
 template<AcceptedLike T>
 T utils::inc_gamma(const T& x, const T& alpha){
 	#ifdef __GSL_SF_EXPINT_H__
-	if constexpr (std::is_floating_point<T>::value) return std::tgamma(this->alpha) - utils::cast<T>(gsl_sf_gamma_inc(static_cast<double>(alpha), static_cast<double>(this->x)));
+	if constexpr (std::is_floating_point<T>::value) return std::tgamma(alpha) - utils::cast<T>(gsl_sf_gamma_inc(static_cast<double>(alpha), static_cast<double>(x)));
 	#else 
 	if constexpr (is_standard_types<T>::value) {
         throw std::runtime_error("utils::inc_gamma not implemented (GSL missing)");
     }
 	#endif
 	#ifdef __MPREAL_H__
-	else if constexpr (std::is_same<T, mpfr::mpreal>::value) return mpfr::gammainc(alpha,x);
+	else if constexpr (std::is_same<T, mpfr::mpreal>::value) return mpfr::tgamma(alpha) - mpfr::gammainc(alpha,x);
 	#endif
 	else {
         if constexpr (AcceptedLike<T>) {
@@ -715,6 +710,7 @@ T utils::cosh(const T& x){
 	#ifdef __MPREAL_H__
 	else if constexpr (std::is_same<T, mpfr::mpreal>::value) return mpfr::cosh(x);
 	#endif
+<<<<<<< HEAD
 	#ifdef INC_FPRECISION
 	else if constexpr(std::is_same<T, float_precision>::value) return cosh(x);
 	#endif
@@ -729,6 +725,9 @@ T utils::cosh(const T& x){
             static_assert(dependent_false<T>::value, "utils::cosh not implemented for this type");
         }
     }
+=======
+	else return utils::cast<T>(0.0);
+>>>>>>> 5af1e009 (fixes)
 }
 
 /**
@@ -743,6 +742,7 @@ T utils::acosh(const T& x){
 	#ifdef __MPREAL_H__
 	else if constexpr (std::is_same<T, mpfr::mpreal>::value) return mpfr::acosh(x);
 	#endif
+<<<<<<< HEAD
 	#ifdef INC_FPRECISION
 	else if constexpr(std::is_same<T, float_precision>::value) return acosh(x);
 	#endif
@@ -757,6 +757,9 @@ T utils::acosh(const T& x){
             static_assert(dependent_false<T>::value, "utils::acosh not implemented for this type");
         }
     }
+=======
+	else return utils::cast<T>(0.0);
+>>>>>>> 5af1e009 (fixes)
 }
 
 /**
@@ -771,6 +774,7 @@ T utils::tanh(const T& x){
 	#ifdef __MPREAL_H__
 	else if constexpr (std::is_same<T, mpfr::mpreal>::value) return mpfr::tanh(x);
 	#endif
+<<<<<<< HEAD
 	#ifdef INC_FPRECISION
 	else if constexpr(std::is_same<T, float_precision>::value) return tanh(x);
 	#endif
@@ -784,6 +788,9 @@ T utils::tanh(const T& x){
             static_assert(dependent_false<T>::value, "utils::tanh not implemented for this type");
         }
     }
+=======
+	else return utils::cast<T>(0.0);
+>>>>>>> 5af1e009 (fixes)
 }
 
 /**
@@ -798,6 +805,7 @@ T utils::atanh(const T& x){
 	#ifdef __MPREAL_H__
 	else if constexpr (std::is_same<T, mpfr::mpreal>::value) return mpfr::atanh(x);
 	#endif
+<<<<<<< HEAD
 	#ifdef INC_FPRECISION
 	else if constexpr(std::is_same<T, float_precision>::value) return atanh(x);
 	#endif
@@ -812,6 +820,9 @@ T utils::atanh(const T& x){
             static_assert(dependent_false<T>::value, "utils::atanh not implemented for this type");
         }
     }
+=======
+	else return utils::cast<T>(0.0);
+>>>>>>> 5af1e009 (fixes)
 }
 
 /**
@@ -826,6 +837,7 @@ typename GetUnderlyingType<T>::value utils::abs(const T& x){
 	#ifdef __MPREAL_H__
 	else if constexpr (std::is_same<T, mpfr::mpreal>::value) return mpfr::abs(x);
 	#endif
+<<<<<<< HEAD
 	#ifdef INC_FPRECISION
 	else if constexpr(std::is_same<T, float_precision>::value) return abs(x);
 	#endif
@@ -839,6 +851,9 @@ typename GetUnderlyingType<T>::value utils::abs(const T& x){
             static_assert(dependent_false<T>::value, "utils::abs not implemented for this type");
         }
     }
+=======
+	else return utils::cast<typename GetUnderlyingType<T>::value>(0.0);
+>>>>>>> 5af1e009 (fixes)
 }
 
 #endif
