@@ -13,9 +13,9 @@
       }
     },
     {
-      "name": "RiemannZetaFuncSeries",
+      "name": "SinSeries",
       "args": {
-        "x": [2.0]
+        "x": [1.0]
       }
     }
   ],
@@ -46,22 +46,6 @@
     }
   ],
   "methods": [
-    {
-      "name": "AndersonAccelerationAlgorithm",
-      "n": { "start": 1, "step": 1, "stop": 33 },
-      "m": [4],
-      "args": {},
-      "events": [
-        { "type": "slow_accel", "log_action_capacity": 2 },
-        { "type": "sign_changed", "log_action_capacity": 2 },
-        { "type": "monotone", "log_action_capacity": 2 },
-        {
-          "type": "divergent_accel",
-          "log_action_capacity": 2,
-          "stop_action_limit": 3
-        }
-      ]
-    },
     {
       "name": "BrezinskiThetaAlgorithm",
       "n": { "start": 1, "step": 1, "stop": 33 },
