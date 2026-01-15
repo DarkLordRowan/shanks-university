@@ -16,7 +16,7 @@ namespace shanks{ namespace algos{
  */
 enum class transformation_id_t {
     null_transformation_id,
-#define TRANSFORMATION_ENTRY(id, name, ...) id,
+#define TRANSFORMATION_ENTRY(id, name, camel, cls, binding, ...) id,
 #include "transformation_registry.def"
 #undef TRANSFORMATION_ENTRY
     transformation_id_t_count,
@@ -75,7 +75,7 @@ public:
     */
     static const std::vector<entry>& get_entries() {
         static const std::vector<entry> entries = {
-            #define TRANSFORMATION_ENTRY(id, name, ...) { transformation_id_t::id, name, []() -> std::unique_ptr<series_acceleration<T, K>> __VA_ARGS__ },
+            #define TRANSFORMATION_ENTRY(id, name, camel, cls, binding, ...) { transformation_id_t::id, name, []() -> std::unique_ptr<series_acceleration<T, K>> __VA_ARGS__ },
             #include "transformation_registry.def"
             #undef TRANSFORMATION_ENTRY
         };
@@ -113,7 +113,7 @@ struct transformation_registry_metadata {
      */
     static std::vector<std::string> get_names() {
         return {
-        #define TRANSFORMATION_ENTRY(id, name, ...) name,
+        #define TRANSFORMATION_ENTRY(id, name, camel, cls, binding, ...) name,
         #include "transformation_registry.def"
         #undef TRANSFORMATION_ENTRY
         };
@@ -125,7 +125,7 @@ struct transformation_registry_metadata {
     */
     static std::vector<transformation_id_t> get_ids() {
         return {
-        #define TRANSFORMATION_ENTRY(id, name, ...) transformation_id_t::id,
+        #define TRANSFORMATION_ENTRY(id, name, camel, cls, binding, ...) transformation_id_t::id,
         #include "transformation_registry.def"
         #undef TRANSFORMATION_ENTRY
         };

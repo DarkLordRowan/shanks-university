@@ -225,40 +225,54 @@ constexpr void bind_algos(pybind11::module_& m, const char* suffix){
 
     using RealT = typename RealTypeOf<T>::type;
 
-    // Shanks transformation
-    py::class_<shanks::algos::shanks_algorithm<T, K>>(m, create_name("ShanksAlgorithm", suffix).c_str())
-        .def(py::init<>())
-        .def("__call__", &shanks::algos::shanks_algorithm<T, K>::operator());
+#define BIND_DEFAULT(cls, name) \
+    py::class_<shanks::algos::cls<T, K>>(m, create_name(name, suffix).c_str()) \
+        .def(py::init<>()) \
+        .def("__call__", &shanks::algos::cls<T, K>::operator())
 
-    // Wynn Epsilon algorithms
-    py::class_<shanks::algos::wynn_epsilon_1_algorithm<T, K>>(m, create_name("WynnEpsilon1Algorithm", suffix).c_str())
-        .def(py::init<>())
-        .def("__call__", &shanks::algos::wynn_epsilon_1_algorithm<T, K>::operator());
+#define BIND_REM(cls, name) \
+    py::class_<shanks::algos::cls<T, K>>(m, create_name(name, suffix).c_str()) \
+        .def(py::init<shanks::remainders::remainder_type>(), \
+             py::arg("remainder") = shanks::remainders::remainder_type::u_type) \
+        .def("__call__", &shanks::algos::cls<T, K>::operator())
 
-    py::class_<shanks::algos::wynn_epsilon_2_algorithm<T, K>>(m, create_name("WynnEpsilon2Algorithm", suffix).c_str())
-        .def(py::init<>())
-        .def("__call__", &shanks::algos::wynn_epsilon_2_algorithm<T, K>::operator());
+#define BIND_REM_BOOL(cls, name) \
+    py::class_<shanks::algos::cls<T, K>>(m, create_name(name, suffix).c_str()) \
+        .def(py::init<shanks::remainders::remainder_type, bool>(), \
+             py::arg("remainder") = shanks::remainders::remainder_type::u_type, \
+             py::arg("useRecurrentFormula") = false) \
+        .def("__call__", &shanks::algos::cls<T, K>::operator())
 
-    // Wynn Rho algorithm
-    py::class_<shanks::algos::wynn_rho_algorithm<T, K>>(m, create_name("WynnRhoAlgorithm", suffix).c_str())
-        .def(py::init<shanks::numerators::numerator_type, RealT, RealT>(),
-             py::arg("numerator") = shanks::numerators::numerator_type::rho_type,
-             py::arg("gamma") = RealT(-1.0),
-             py::arg("RHO") = RealT(1.0))
-        .def("__call__", &shanks::algos::wynn_rho_algorithm<T, K>::operator());
+#define BIND_LEVIN_BASE(cls, name) \
+    py::class_<shanks::algos::cls<T, K>>(m, create_name(name, suffix).c_str()) \
+        .def(py::init<shanks::remainders::remainder_type, bool, RealT>(), \
+             py::arg("remainder") = shanks::remainders::remainder_type::u_type, \
+             py::arg("useRecurrentFormula") = false, \
+             py::arg("beta") = RealT(1.0)) \
+        .def("__call__", &shanks::algos::cls<T, K>::operator())
 
-    // Levin transformation
-    py::class_<shanks::algos::levin_algorithm<T, K>>(m, create_name("LevinAlgorithm", suffix).c_str())
-        .def(py::init<shanks::remainders::remainder_type, bool, RealT>(),
-             py::arg("remainder") = shanks::remainders::remainder_type::u_type,
-             py::arg("useRecurrentFormula") = false,
-             py::arg("beta") = RealT(1.0))
-        .def("__call__", &shanks::algos::levin_algorithm<T, K>::operator());
+#define BIND_RHO(cls, name) \
+    py::class_<shanks::algos::cls<T, K>>(m, create_name(name, suffix).c_str()) \
+        .def(py::init<shanks::numerators::numerator_type, RealT, RealT>(), \
+             py::arg("numerator") = shanks::numerators::numerator_type::rho_type, \
+             py::arg("gamma") = RealT(-1.0), \
+             py::arg("RHO") = RealT(1.0)) \
+        .def("__call__", &shanks::algos::cls<T, K>::operator())
 
-    // Richardson extrapolation
-    py::class_<shanks::algos::richardson_algorithm<T, K>>(m, create_name("RichardsonAlgorithm", suffix).c_str())
-        .def(py::init<>())
-        .def("__call__", &shanks::algos::richardson_algorithm<T, K>::operator());
+#define BIND_NONE(cls, name)
+
+#define TRANSFORMATION_ENTRY(id, name, camel, cls, binding, ...) \
+    binding(cls, camel);
+
+#include "../../src/include/transformation_registry.def"
+
+#undef TRANSFORMATION_ENTRY
+#undef BIND_DEFAULT
+#undef BIND_REM
+#undef BIND_REM_BOOL
+#undef BIND_LEVIN_BASE
+#undef BIND_RHO
+#undef BIND_NONE
 }
 
 /**
