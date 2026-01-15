@@ -20,6 +20,5 @@
 - [Dataflow](pipeline.md)
 - [Установка Docker](installation/docker.md)
 - [Установка Linux](installation/linux.md)
-- [Установка Linux](installation/linux.md)
 - [Добавление методов/рядов](extending/overview.md)
 - [Конфигурация экспериментов](consumer-config/overview.md)
