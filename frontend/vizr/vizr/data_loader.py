@@ -92,6 +92,27 @@ class AccelInfo:
 
 
 @dataclass
+class FilteredMethod:
+    """
+    Data from a filter applied to a divergent segment.
+    """
+    name: str
+    val_real_m: np.ndarray
+    val_real_e: np.ndarray
+    val_imag_m: np.ndarray
+    val_imag_e: np.ndarray
+
+
+@dataclass
+class FilteredData:
+    """
+    Container for filtered segments.
+    """
+    start_n: int
+    methods: List[FilteredMethod]
+
+
+@dataclass
 class AccelRecord:
     """
     Record containing all the data for a specific acceleration run.
@@ -112,6 +133,8 @@ class AccelRecord:
 
     errors: List[ErrorInfo]
     events: List[EventInfo]
+    
+    filtered: Optional[FilteredData] = None
 
 
 @dataclass
@@ -204,7 +227,7 @@ class DataLoader:
         We attempt to make the JSON data look like the Parquet-based LazyFrames.
         """
         # We use pl.read_json which is eager, then convert to lazy.
-        df = pl.read_json(json_path)
+        df = pl.read_json(json_path, infer_schema_length=None)
 
         # 1. Series DataFrame
         # Each entry in JSON is (series + accel), so we group by series to get the unique base series.
@@ -214,18 +237,12 @@ class DataLoader:
             pl.col("series").struct.field("name").alias("series_name"),
             pl.col("series").struct.field("arguments").alias("arguments"),
             # series_limit as a struct of strings (real, imag)
-            pl.struct([
-                pl.col("series").struct.field("lim").alias("real"),
-                pl.lit("0.0").alias("imag"),
-            ]).alias("series_limit"),
+            pl.col("series").struct.field("lim").alias("series_limit"),
             # computed as list of struct {n, value: {real, imag}, deviation}
             pl.col("computed").list.eval(
                 pl.struct([
                     pl.element().struct.field("n"),
-                    pl.struct([
-                        pl.element().struct.field("partial_sum").alias("real"),
-                        pl.lit("0.0").alias("imag")
-                    ]).alias("value"),
+                    pl.element().struct.field("partial_sum").alias("value"),
                     pl.element().struct.field("partial_sum_deviation").alias("deviation")
                 ])
             ).alias("computed")
@@ -246,6 +263,9 @@ class DataLoader:
                     })
             return evts
 
+        # Handle filtered if present
+        # It comes as a struct in JSON
+        
         accel_df = df.select([
             pl.col("series").struct.field("id").alias("series_id"),
             pl.col("accel").struct.field("name").alias("accel_name"),
@@ -256,10 +276,7 @@ class DataLoader:
             # computed for accel (aligned with series steps)
             pl.col("computed").list.eval(
                 pl.struct([
-                    pl.struct([
-                        pl.element().struct.field("accel_value").alias("real"),
-                        pl.lit("0.0").alias("imag")
-                    ]).alias("value"),
+                    pl.element().struct.field("accel_value").alias("value"),
                     pl.element().struct.field("accel_value_deviation").alias("deviation")
                 ])
             ).alias("computed"),
@@ -276,7 +293,8 @@ class DataLoader:
                     pl.Field("n", pl.Int64),
                     pl.Field("message", pl.String)
                 ]))
-            ).alias("errors")
+            ).alias("errors"),
+            pl.col("filtered").alias("filtered")
         ])
         
         self.accel_df = accel_df.lazy()
@@ -430,6 +448,65 @@ class DataLoader:
         e = e_str.cast(pl.Int32).fill_null(0)
         return m, e
 
+    def _parse_filtered(self, raw_filtered: Any) -> Optional[FilteredData]:
+        """
+        Parses the filtered dictionary/struct from Arrow/Parquet/JSON.
+        """
+        if not raw_filtered:
+            return None
+        
+        start_n = raw_filtered.get("start_n")
+        if start_n is None:
+            return None
+            
+        methods_raw = raw_filtered.get("methods")
+        if not methods_raw:
+            return None
+            
+        parsed_methods = []
+        
+        # Handle both list-of-kv-pairs (Map) and dict
+        iterator = []
+        if isinstance(methods_raw, dict):
+            iterator = methods_raw.items()
+        elif isinstance(methods_raw, list):
+            # Assumes list of {'key': ..., 'value': ...}
+            iterator = [(m['key'], m['value']) for m in methods_raw if m]
+            
+        for m_name, m_data in iterator:
+            values = m_data.get("values", [])
+            if not values:
+                continue
+            
+            # Arrays to store components
+            v_r_m = np.zeros(len(values), dtype=np.float64)
+            v_r_e = np.zeros(len(values), dtype=np.int32)
+            v_i_m = np.zeros(len(values), dtype=np.float64)
+            v_i_e = np.zeros(len(values), dtype=np.int32)
+            
+            for i, val in enumerate(values):
+                # val is {real: ..., imag: ...}
+                r = self._parse_scientific(val.get("real"))
+                im = self._parse_scientific(val.get("imag"))
+                
+                v_r_m[i] = r.mantissa
+                v_r_e[i] = r.exponent
+                v_i_m[i] = im.mantissa
+                v_i_e[i] = im.exponent
+            
+            parsed_methods.append(FilteredMethod(
+                name=m_name,
+                val_real_m=v_r_m,
+                val_real_e=v_r_e,
+                val_imag_m=v_i_m,
+                val_imag_e=v_i_e
+            ))
+            
+        if not parsed_methods:
+            return None
+            
+        return FilteredData(start_n=start_n, methods=parsed_methods)
+
     def filter_data(
         self, filters: Dict[str, Any]
     ) -> List[Tuple[SeriesRecord, List[AccelRecord]]]:
@@ -491,28 +568,25 @@ class DataLoader:
 
             return pl.col(col_name).list.eval(pl.struct(**struct_fields))
 
-        # Apply the transformation query.
-        s_transformed = s_df.with_columns(
-            transform_computed("computed", has_n=True).alias("computed_parsed")
-        )
-
         t1 = time.time()
-        print(f"[Timing] Series query construction: {t1 - t0:.3f}s")
 
-        # Execute the query and bring data into memory as an Arrow table.
-        # Arrow is efficient for transfer to Numpy.
-        series_table = s_transformed.collect().to_arrow()
+        # Execute the query and bring data into memory.
+        # Use to_dicts() to avoid Arrow serialization issues with nested structs.
+        series_collected = s_df.collect()
+        series_rows = series_collected.with_columns(
+            transform_computed("computed", has_n=True).alias("computed_parsed")
+        ).to_dicts()
+        
         t2 = time.time()
         print(
-            f"[Timing] Series collect to arrow: {t2 - t1:.3f}s (rows: {series_table.num_rows})"
+            f"[Timing] Series collect: {t2 - t1:.3f}s (rows: {len(series_rows)})"
         )
 
-        if series_table.num_rows == 0:
+        if not series_rows:
             return []
 
         # Get the Series IDs so we can fetch only the relevant accelerations.
-        series_ids_col = series_table.column("series_id")
-        series_ids = series_ids_col.to_pylist()  # List[int]
+        series_ids = [row["series_id"] for row in series_rows]
 
         # Start building the query for the accelerations table.
         a_df = self.accel_df.filter(pl.col("series_id").is_in(series_ids))
@@ -534,19 +608,15 @@ class DataLoader:
                     pl.col("additional_args").struct.field(param).is_in(list(values))
                 )
 
-        # Same transformation for accel computed values (without 'n', as accels usually map to the series 'n' implied).
-        # Actually, accels do not always have 'n' explicitly in the same way, or it's implied by index.
-        # Correction: The rust code output 'n' for accels too if they are sparse, but here we assume dense or aligned?
-        # Re-checking the transform_computed: it uses has_n=False.
-        a_transformed = a_df.with_columns(
-            transform_computed("computed", has_n=False).alias("computed_parsed")
-        )
-
         t3 = time.time()
-        accel_table = a_transformed.collect().to_arrow()
+        accel_collected = a_df.collect()
+        accel_rows = accel_collected.with_columns(
+            transform_computed("computed", has_n=False).alias("computed_parsed")
+        ).to_dicts()
+        
         t4 = time.time()
         print(
-            f"[Timing] Accel collect to arrow: {t4 - t3:.3f}s (rows: {accel_table.num_rows})"
+            f"[Timing] Accel collect: {t4 - t3:.3f}s (rows: {len(accel_rows)})"
         )
 
         # Group accelerations by series_id locally.
@@ -554,174 +624,151 @@ class DataLoader:
         accels_by_series: Dict[int, List[AccelRecord]] = {}
 
         # Process Accel Table.
-        # We iterate through batches to utilize Arrow's speed and avoid heavy Python object creation overhead where possible.
         t_start_proc_accel = time.time()
-        if accel_table.num_rows > 0:
-            batches = accel_table.to_batches()
-            for batch in batches:
-                b_sid = batch.column("series_id")
-                b_name = batch.column("accel_name")
-                b_m = batch.column("m_value")
-                b_args = batch.column("additional_args")
-                b_err = batch.column("errors")
-                b_evt = batch.column("events")
+        for row in accel_rows:
+            sid = row["series_id"]
+            name = row["accel_name"]
+            m_val = row["m_value"]
+
+            # Args (dict)
+            args = {
+                k: str(v)
+                for k, v in (row.get("additional_args") or {}).items()
+                if v is not None
+            }
+            
+            noise_info = row.get("noise")
+            noise_str = row.get("noise_str")
+            if noise_str is None:
+                noise_str = self._format_noise_dict(noise_info) if noise_info else "None"
+
+            # Computed
+            computed_parsed = row.get("computed_parsed") or []
+            n_points = len(computed_parsed)
+            
+            val_real_m = np.zeros(n_points, dtype=np.float64)
+            val_real_e = np.zeros(n_points, dtype=np.int32)
+            val_imag_m = np.zeros(n_points, dtype=np.float64)
+            val_imag_e = np.zeros(n_points, dtype=np.int32)
+            dev_m = np.zeros(n_points, dtype=np.float64)
+            dev_e = np.zeros(n_points, dtype=np.int32)
+            valid_mask = np.ones(n_points, dtype=bool)
+
+            for i, p in enumerate(computed_parsed):
+                if p is None:
+                    valid_mask[i] = False
+                    continue
+                val_real_m[i] = p.get("vr_m", 0.0)
+                val_real_e[i] = p.get("vr_e", 0)
+                val_imag_m[i] = p.get("vi_m", 0.0)
+                val_imag_e[i] = p.get("vi_e", 0)
                 
-                has_noise_str = "noise_str" in batch.schema.names
-                b_noise_str = batch.column("noise_str") if has_noise_str else None
-                
-                has_noise = "noise" in batch.schema.names
-                b_noise = batch.column("noise") if has_noise else None
+                dm = p.get("d_m")
+                if dm is None:
+                    # Deviation might be null if no limit is available or error occurred
+                    dev_m[i] = 0.0
+                    dev_e[i] = 0
+                else:
+                    dev_m[i] = dm
+                    dev_e[i] = p.get("d_e", 0)
 
-                b_comp = batch.column("computed_parsed")  # ListArray
+            # Errors & Events
+            err_list = row.get("errors") or []
+            evt_list = row.get("events") or []
 
-                # OPTIMIZATION: Extract numpy arrays once per batch.
-                # The 'computed_parsed' column is a ListArray. We get its values (the flat array) and offsets.
-                # This allows us to slice it using numpy instead of iterating row-by-row in Python.
-                offsets = b_comp.offsets.to_numpy()  # int32 array of offsets
-                child_struct = b_comp.values  # StructArray
+            errors = [
+                ErrorInfo(n=int(e.get("n", 0)), message=e.get("message", ""))
+                for e in err_list if e
+            ]
+            events = [
+                EventInfo(
+                    n=int(e.get("n", 0)),
+                    name=e.get("name", ""),
+                    description=e.get("description", ""),
+                )
+                for e in evt_list if e
+            ]
+            
+            # Filtered
+            filtered_obj = self._parse_filtered(row.get("filtered"))
 
-                child_arrays = {}
-                for field_name in ["vr_m", "vr_e", "vi_m", "vi_e", "d_m", "d_e"]:
-                    child_arrays[field_name] = child_struct.field(field_name).to_numpy(
-                        zero_copy_only=False
-                    )
-
-                # Validity mask for the child structs (points).
-                # This tells us if a specific point is valid or null (e.g. calculation error).
-                child_validity = child_struct.is_valid().to_numpy(zero_copy_only=False)
-
-                for i in range(batch.num_rows):
-                    sid = b_sid[i].as_py()
-                    name = b_name[i].as_py()
-                    m_val = b_m[i].as_py()
-
-                    # Args (StructScalar to dict)
-                    args_scalar = b_args[i]
-                    args = {
-                        k: str(v)
-                        for k, v in args_scalar.as_py().items()
-                        if v is not None
-                    }
-                    
-                    noise_info = b_noise[i].as_py() if b_noise is not None else None
-                    if b_noise_str is not None:
-                        noise_str = b_noise_str[i].as_py()
-                    else:
-                        noise_str = self._format_noise_dict(noise_info) if noise_info else "None"
-
-                    # Computed slice
-                    start = offsets[i]
-                    end = offsets[i + 1]
-
-                    # valid_mask for this slice
-                    valid_mask = child_validity[start:end]
-
-                    # Errors & Events
-                    err_list = b_err[i].as_py()
-                    evt_list = b_evt[i].as_py()
-
-                    errors = [
-                        ErrorInfo(n=int(e.get("n", 0)), message=e.get("message", ""))
-                        for e in (err_list or [])
-                        if e
-                    ]
-                    events = [
-                        EventInfo(
-                            n=int(e.get("n", 0)),
-                            name=e.get("name", ""),
-                            description=e.get("description", ""),
-                        )
-                        for e in (evt_list or [])
-                        if e
-                    ]
-
-                    accel_rec = AccelRecord(
-                        accel_info=AccelInfo(name, m_val, args, noise_str=noise_str, noise_info=noise_info),
-                        val_real_m=child_arrays["vr_m"][start:end],
-                        val_real_e=child_arrays["vr_e"][start:end],
-                        val_imag_m=child_arrays["vi_m"][start:end],
-                        val_imag_e=child_arrays["vi_e"][start:end],
-                        dev_m=child_arrays["d_m"][start:end],
-                        dev_e=child_arrays["d_e"][start:end],
-                        valid_mask=valid_mask,
-                        errors=errors,
-                        events=events,
-                    )
-                    if sid not in accels_by_series:
-                        accels_by_series[sid] = []
-                    accels_by_series[sid].append(accel_rec)
+            accel_rec = AccelRecord(
+                accel_info=AccelInfo(name, m_val, args, noise_str=noise_str, noise_info=noise_info),
+                val_real_m=val_real_m,
+                val_real_e=val_real_e,
+                val_imag_m=val_imag_m,
+                val_imag_e=val_imag_e,
+                dev_m=dev_m,
+                dev_e=dev_e,
+                valid_mask=valid_mask,
+                errors=errors,
+                events=events,
+                filtered=filtered_obj
+            )
+            if sid not in accels_by_series:
+                accels_by_series[sid] = []
+            accels_by_series[sid].append(accel_rec)
 
         print(
             f"[Timing] Accel processing loop: {time.time() - t_start_proc_accel:.3f}s"
         )
 
         # Process Series Table.
-        # Similar logic to Accel table, but constructing SeriesRecords.
         t_start_proc_series = time.time()
         result: List[Tuple[SeriesRecord, List[AccelRecord]]] = []
-        batches = series_table.num_rows > 0 and series_table.to_batches() or []
-        for batch in batches:
-            b_prec = batch.column("precision")
-            b_sid = batch.column("series_id")
-            b_name = batch.column("series_name")
-            b_args = batch.column("arguments")
-            b_limit = batch.column("series_limit")
+        
+        for row in series_rows:
+            sid = row["series_id"]
+            
+            # Computed
+            computed_parsed = row.get("computed_parsed") or []
+            n_points = len(computed_parsed)
+            
+            n_vals = np.zeros(n_points, dtype=np.int64)
+            val_real_m = np.zeros(n_points, dtype=np.float64)
+            val_real_e = np.zeros(n_points, dtype=np.int32)
+            val_imag_m = np.zeros(n_points, dtype=np.float64)
+            val_imag_e = np.zeros(n_points, dtype=np.int32)
+            dev_m = np.zeros(n_points, dtype=np.float64)
+            dev_e = np.zeros(n_points, dtype=np.int32)
 
-            b_comp = batch.column("computed_parsed")
+            for i, p in enumerate(computed_parsed):
+                if p is None: continue
+                n_vals[i] = p.get("n", 0)
+                val_real_m[i] = p.get("vr_m", 0.0)
+                val_real_e[i] = p.get("vr_e", 0)
+                val_imag_m[i] = p.get("vi_m", 0.0)
+                val_imag_e[i] = p.get("vi_e", 0)
+                dev_m[i] = p.get("d_m", 0.0)
+                dev_e[i] = p.get("d_e", 0)
 
-            # OPTIMIZATION: Extract numpy arrays once per batch
-            offsets = b_comp.offsets.to_numpy()
-            child_struct = b_comp.values
+            # Limit
+            series_limit = self._parse_complex(row.get("series_limit"))
 
-            child_arrays = {}
-            for field_name in ["vr_m", "vr_e", "vi_m", "vi_e", "d_m", "d_e"]:
-                child_arrays[field_name] = child_struct.field(field_name).to_numpy(
-                    zero_copy_only=False
-                )
+            series_rec = SeriesRecord(
+                precision=row["precision"],
+                series_id=sid,
+                name=row["series_name"],
+                arguments={
+                    k: str(v) for k, v in (row.get("arguments") or {}).items() if v is not None
+                },
+                series_limit=series_limit,
+                n=n_vals,
+                val_real_m=val_real_m,
+                val_real_e=val_real_e,
+                val_imag_m=val_imag_m,
+                val_imag_e=val_imag_e,
+                dev_m=dev_m,
+                dev_e=dev_e,
+            )
 
-            # Series has 'n', unlike Accel which relies on alignment (in this schema version).
-            has_n = "n" in child_struct.type.names
-            if has_n:
-                child_arrays["n"] = child_struct.field("n").to_numpy(
-                    zero_copy_only=False
-                )
-            else:
-                child_arrays["n"] = np.array([], dtype=np.int64)
-
-            for i in range(batch.num_rows):
-                sid = b_sid[i].as_py()
-
-                # Computed slice
-                start = offsets[i]
-                end = offsets[i + 1]
-
-                # Limit
-                limit_dict = b_limit[i].as_py()
-                series_limit = self._parse_complex(limit_dict)
-
-                series_rec = SeriesRecord(
-                    precision=b_prec[i].as_py(),
-                    series_id=sid,
-                    name=b_name[i].as_py(),
-                    arguments={
-                        k: str(v) for k, v in b_args[i].as_py().items() if v is not None
-                    },
-                    series_limit=series_limit,
-                    n=child_arrays["n"][start:end],
-                    val_real_m=child_arrays["vr_m"][start:end],
-                    val_real_e=child_arrays["vr_e"][start:end],
-                    val_imag_m=child_arrays["vi_m"][start:end],
-                    val_imag_e=child_arrays["vi_e"][start:end],
-                    dev_m=child_arrays["d_m"][start:end],
-                    dev_e=child_arrays["d_e"][start:end],
-                )
-
-                accels = accels_by_series.get(sid, [])
-                result.append((series_rec, accels))
+            accels = accels_by_series.get(sid, [])
+            result.append((series_rec, accels))
 
         print(
             f"[Timing] Series processing loop: {time.time() - t_start_proc_series:.3f}s"
         )
+        return result
         return result
 
     def _parse_scientific(self, s: Any) -> Scientific:

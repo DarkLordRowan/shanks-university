@@ -55,6 +55,9 @@ class TrialConfig:
             Path(self.results_json) if self.results_json else None
         )
         self.results_csv = Path(self.results_csv) if self.results_csv else None
+        self.results_parquet = (
+            Path(self.results_parquet) if self.results_parquet else None
+        )
 
         self.precisions = [
             PrecisionType(precision) for precision in self.precisions
@@ -102,6 +105,7 @@ class TrialConfig:
 
     results_json: Path | None = None
     results_csv: Path | None = None
+    results_parquet: Path | None = None
 
     trial_process_count: int = 1
     trial_task_timeout: int = 10

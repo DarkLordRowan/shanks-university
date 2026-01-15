@@ -486,6 +486,7 @@ src/**/build*
 shanks_transformation/**/build*
 rebuild.sh
 .vscode
+events_log.txt
 
 
 # //TODO сократить  вчё то что сверху

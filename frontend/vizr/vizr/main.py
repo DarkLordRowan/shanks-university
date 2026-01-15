@@ -516,6 +516,7 @@ class DashboardApp(QMainWindow):
         self.show_real = True
         self.show_imaginary = True
         self.force_show_imaginary = False
+        self.show_filters = True
 
         self.init_ui()
 
@@ -577,6 +578,11 @@ class DashboardApp(QMainWindow):
         self.force_imaginary_check.setChecked(self.force_show_imaginary)
         self.force_imaginary_check.stateChanged.connect(self.on_visual_option_changed)
         vis_options_layout.addWidget(self.force_imaginary_check)
+
+        self.filters_check = QCheckBox("Filters")
+        self.filters_check.setChecked(self.show_filters)
+        self.filters_check.stateChanged.connect(self.on_visual_option_changed)
+        vis_options_layout.addWidget(self.filters_check)
 
         self.plots_layout.addWidget(vis_options_group)
 
@@ -1155,6 +1161,7 @@ class DashboardApp(QMainWindow):
         self.show_real = self.real_check.isChecked()
         self.show_imaginary = self.imaginary_check.isChecked()
         self.force_show_imaginary = self.force_imaginary_check.isChecked()
+        self.show_filters = self.filters_check.isChecked()
         self.update_plots()
 
     def on_symlog_changed(self, state):
@@ -1311,6 +1318,8 @@ class DashboardApp(QMainWindow):
         COLOR_LIMIT_REAL = QColor(255, 0, 0)
         COLOR_LIMIT_IMAG = QColor(255, 100, 100)
         COLOR_ACCEL_IMAG = QColor(255, 165, 0)
+        COLOR_FILTER_REAL = QColor(0, 128, 0)
+        COLOR_FILTER_IMAG = QColor(0, 100, 0)
 
         # Use filtered_data instead of data
         n_series = len(self.filtered_data)
@@ -1414,6 +1423,12 @@ class DashboardApp(QMainWindow):
             series_accel_imag = []
             accel_segments_imag = []
             current_offset_imag = 0
+
+            # Filters
+            series_filter_n = []
+            series_filter_real = []
+            filter_segments = []
+            current_offset_filter = 0
 
             for accel in accels:
                 total_accels += 1
@@ -1684,6 +1699,27 @@ class DashboardApp(QMainWindow):
                         series_accel_imag.append(accel_imag)
                         series_accel_imag.append(np.array([np.nan]))
 
+                # --- Filters ---
+                if self.show_filters and accel.filtered:
+                    for method in accel.filtered.methods:
+                        f_len = len(method.val_real_m)
+                        f_n = np.arange(accel.filtered.start_n, accel.filtered.start_n + f_len, dtype=float)
+                        
+                        f_real = vectorized_approx_f64(method.val_real_m, method.val_real_e)
+                        
+                        filter_name = f"{accel_legend_name} [Filter: {method.name}]"
+                        
+                        series_filter_n.append(f_n)
+                        series_filter_n.append(np.array([np.nan]))
+                        
+                        series_filter_real.append(f_real)
+                        series_filter_real.append(np.array([np.nan]))
+                        
+                        filter_segments.append(
+                            (current_offset_filter, current_offset_filter + f_len, filter_name)
+                        )
+                        current_offset_filter += f_len + 1
+
             t_plotting += time.time() - t0
 
             # Batch Plotting Real
@@ -1733,6 +1769,25 @@ class DashboardApp(QMainWindow):
                     name=f"{series.name} (accels imag)",
                 )
                 curve_conv_imag.segments = accel_segments_imag
+
+            # Batch Plotting Filters
+            if series_filter_n:
+                all_n_filter = np.concatenate(series_filter_n)
+                all_real_filter = np.concatenate(series_filter_real)
+                
+                # Green Dotted for Filters
+                pen = pg.mkPen(
+                    COLOR_FILTER_REAL, width=2, style=Qt.PenStyle.DotLine, cosmetic=True
+                )
+                
+                curve_filter = self.convergence_plot.plot(
+                    all_n_filter,
+                    all_real_filter,
+                    connect="finite",
+                    pen=pen,
+                    name=f"{series.name} (filters)"
+                )
+                curve_filter.segments = filter_segments
 
         # Batch plot performance scatter
         t0 = time.time()

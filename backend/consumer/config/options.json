@@ -9,6 +9,7 @@
   "results_filename": "experiment_results",
   "results_json": "output/results.json",
   "results_csv": "output/results.csv",
+  "results_parquet": "output/results_parquet",
 
   "trial_process_count": 1,
   "trial_task_timeout": 5,
@@ -16,5 +17,5 @@
 
   "precisions": ["F32", "CFLong", "Arb", "CArb"],
 
-  "output_formats": ["json"]
+  "output_formats": ["json", "parquet"]
 }
