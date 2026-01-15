@@ -39,7 +39,9 @@ std::string utils::to_string(const T& x){
 	}
 	#endif
     else if constexpr (is_complex_custom<T>::value) return "( " + utils::to_string(x.real()) + ", " + utils::to_string(x.imag()) + ")";
-    return "something went wrong";
+    else {
+        static_assert(dependent_false<T>::value, "utils::to_string not implemented for this type");
+    }
 }
 
 /**
@@ -67,8 +69,9 @@ bool utils::isfinite(const T& x){
     else if constexpr (is_complex_custom<T>::value){
 		return utils::isfinite(x.real()) && utils::isfinite(x.imag());
 	}
-    
-    return true;
+    else {
+        static_assert(dependent_false<T>::value, "utils::isfinite not implemented for this type");
+    }
 }
 
 /**
@@ -89,8 +92,9 @@ T utils::epsilon(const T& x){
 		return mpfr::machine_epsilon(x);
 	}
 	#endif
-    
-    return static_cast<T>(-1.0);
+    else {
+        static_assert(dependent_false<T>::value, "utils::epsilon not implemented for this type");
+    }
 }
 
 #endif

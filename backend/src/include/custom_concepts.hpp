@@ -174,4 +174,10 @@ concept UnsignedIntLike = requires {
 template<typename K>
 struct isUnsignedIntLike : std::integral_constant<bool, std::is_integral<K>::value && !std::is_signed<K>::value>{};
 
+/**
+ * @brief Utility for static_assert in if constexpr branches.
+ */
+template<typename...>
+struct dependent_false : std::false_type {};
+
 #endif

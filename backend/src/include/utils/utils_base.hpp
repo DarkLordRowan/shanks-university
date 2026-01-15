@@ -120,6 +120,14 @@ struct utils {
 	static T pow(const T& x, const T& y);
 
 	/**
+	 * @brief Calculates atan2(y, x)
+	 *
+	 * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+	 */
+	template<typename T>
+	static T atan2(const T& y, const T& x);
+
+	/**
 	 * @brief Calculates a * b + c
 	 *
 	 * Uses fma intructions for standard types, or if it is implemented for type T
