@@ -16,5 +16,15 @@ class JSONExportService(ExportService):
 
     def export(self, dicts: Sequence[dict], **kwargs):
         """JSON export implementation."""
-        with open(self.location, "w", encoding="utf-8") as f:
+        output_path = self.location
+        
+        series = kwargs.get("series")
+        if series and len(series) > 0:
+            precision = str(series[0].precision)
+            stem = output_path.stem
+            output_path = output_path.with_name(f"{stem}_{precision}{output_path.suffix}")
+
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+
+        with open(output_path, "w", encoding="utf-8") as f:
             json.dump(dicts, f, indent=4, sort_keys=True)

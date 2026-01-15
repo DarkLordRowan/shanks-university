@@ -17,6 +17,7 @@ def build_cli_parser() -> argparse.ArgumentParser:
     run_parser = subparsers.add_parser("run", help="Run trial executor")
 
     run_parser.add_argument("--config", type=Path, help="JSON config file")
+    run_parser.add_argument("-v", "--verbose", action="count", default=0, help="Increase verbosity level")
 
     return parser
 
@@ -26,4 +27,6 @@ def load_config_and_apply_argparse() -> tuple[TrialConfig, argparse.Namespace]:
     args = parser.parse_args()
 
     cfg = TrialConfig.load(args.config) if args.config else TrialConfig()
+    if args.verbose:
+        cfg.verbose = args.verbose
     return cfg, args

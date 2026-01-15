@@ -4,6 +4,7 @@ Description: Data loading and processing module for visualization, handling Parq
 """
 
 import os
+import glob
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Set, Tuple
 
@@ -192,17 +193,38 @@ class DataLoader:
         """
         self.data_dir = data_dir
         if os.path.isfile(data_dir) and data_dir.endswith(".json"):
-            self._load_json(data_dir)
+            self._load_json([data_dir])
+        elif os.path.isdir(data_dir):
+            if os.path.exists(os.path.join(data_dir, "series")):
+                # lazy scan allowing us to build a query plan before executing it.
+                # hive_partitioning=True allows us to leverage folder structures like /series_name=Harmonic/
+                self.series_df = pl.scan_parquet(
+                    os.path.join(data_dir, "series"), hive_partitioning=True
+                )
+                self.accel_df = pl.scan_parquet(
+                    os.path.join(data_dir, "accelerations"), hive_partitioning=True
+                )
+            else:
+                # Check for JSON files
+                json_files = glob.glob(os.path.join(data_dir, "results*.json"))
+                if json_files:
+                    self._load_json(json_files)
+                else:
+                     raise ValueError(f"No compatible data found in {data_dir}")
         else:
-            # lazy scan allowing us to build a query plan before executing it.
-            # hive_partitioning=True allows us to leverage folder structures like /series_name=Harmonic/
-            self.series_df = pl.scan_parquet(
-                os.path.join(data_dir, "series"), hive_partitioning=True
-            )
-            self.accel_df = pl.scan_parquet(
-                os.path.join(data_dir, "accelerations"), hive_partitioning=True
-            )
+             raise ValueError(f"Invalid data path: {data_dir}")
+
         self.metadata = self._compute_metadata()
+
+    def _infer_precision(self, path: str) -> str:
+        """Infers precision from filename (e.g., results_FLong.json -> FLong)."""
+        filename = os.path.basename(path)
+        name_without_ext = os.path.splitext(filename)[0]
+        parts = name_without_ext.split('_')
+        if len(parts) > 1:
+            # Assumes format results_PRECISION
+            return parts[-1]
+        return "f64"  # Default
 
     @staticmethod
     def _format_noise_dict(ni: Dict[str, Any]) -> str:
@@ -221,83 +243,101 @@ class DataLoader:
             return method
         return f"{method}({', '.join(params)})"
 
-    def _load_json(self, json_path: str):
+    def _load_json(self, json_paths: List[str]):
         """
-        Loads data from a JSON file and transforms it to match the expected schema.
+        Loads data from JSON files and transforms it to match the expected schema.
         We attempt to make the JSON data look like the Parquet-based LazyFrames.
         """
-        # We use pl.read_json which is eager, then convert to lazy.
-        df = pl.read_json(json_path, infer_schema_length=None)
+        dfs = []
+        for path in json_paths:
+            try:
+                # We use pl.read_json which is eager, then convert to lazy.
+                df = pl.read_json(path, infer_schema_length=None)
+                precision = self._infer_precision(path)
 
-        # 1. Series DataFrame
-        # Each entry in JSON is (series + accel), so we group by series to get the unique base series.
-        series_df = df.select([
-            pl.lit("f64").alias("precision"),
-            pl.col("series").struct.field("id").alias("series_id"),
-            pl.col("series").struct.field("name").alias("series_name"),
-            pl.col("series").struct.field("arguments").alias("arguments"),
-            # series_limit as a struct of strings (real, imag)
-            pl.col("series").struct.field("lim").alias("series_limit"),
-            # computed as list of struct {n, value: {real, imag}, deviation}
-            pl.col("computed").list.eval(
-                pl.struct([
-                    pl.element().struct.field("n"),
-                    pl.element().struct.field("partial_sum").alias("value"),
-                    pl.element().struct.field("partial_sum_deviation").alias("deviation")
+                # 1. Series DataFrame
+                # Each entry in JSON is (series + accel), so we group by series to get the unique base series.
+                series_df = df.select([
+                    pl.lit(precision).alias("precision"),
+                    pl.col("series").struct.field("id").alias("series_id"),
+                    pl.col("series").struct.field("name").alias("series_name"),
+                    pl.col("series").struct.field("arguments").alias("arguments"),
+                    # series_limit as a struct of strings (real, imag)
+                    pl.col("series").struct.field("lim").alias("series_limit"),
+                    # computed as list of struct {n, value: {real, imag}, deviation}
+                    pl.col("computed").list.eval(
+                        pl.struct([
+                            pl.element().struct.field("n"),
+                            pl.element().struct.field("partial_sum").alias("value"),
+                            pl.element().struct.field("partial_sum_deviation").alias("deviation")
+                        ])
+                    ).alias("computed")
+                ]).unique(subset=["series_id"])
+
+                # 2. Accel DataFrame
+                def extract_events(computed_list):
+                    evts = []
+                    for step in computed_list:
+                        n = step.get("n")
+                        for e in step.get("events", []):
+                            evts.append({
+                                "n": n, 
+                                "name": e.get("name", ""), 
+                                "description": e.get("description", "")
+                            })
+                    return evts
+
+                # Handle filtered if present
+                # It comes as a struct in JSON
+                
+                accel_df = df.select([
+                    pl.col("series").struct.field("id").alias("series_id"),
+                    pl.col("accel").struct.field("name").alias("accel_name"),
+                    pl.col("accel").struct.field("m_value").alias("m_value"),
+                    pl.col("accel").struct.field("additional_args").alias("additional_args"),
+                    pl.col("noise").alias("noise"),
+                    pl.col("noise").map_elements(self._format_noise_dict, return_dtype=pl.String).alias("noise_str"),
+                    # computed for accel (aligned with series steps)
+                    pl.col("computed").list.eval(
+                        pl.struct([
+                            pl.element().struct.field("accel_value").alias("value"),
+                            pl.element().struct.field("accel_value_deviation").alias("deviation")
+                        ])
+                    ).alias("computed"),
+                    # Map events from steps
+                    pl.col("computed").map_elements(extract_events, return_dtype=pl.List(pl.Struct([
+                        pl.Field("n", pl.Int64),
+                        pl.Field("name", pl.String),
+                        pl.Field("description", pl.String)
+                    ]))).alias("events"),
+                    # Global error if any
+                    pl.col("error").map_elements(
+                        lambda x: [{"n": 0, "message": str(x)}] if x is not None else [],
+                        return_dtype=pl.List(pl.Struct([
+                            pl.Field("n", pl.Int64),
+                            pl.Field("message", pl.String)
+                        ]))
+                    ).alias("errors"),
+                    pl.col("filtered").alias("filtered")
                 ])
-            ).alias("computed")
-        ]).unique(subset=["series_id"])
-        
-        self.series_df = series_df.lazy()
+                
+                dfs.append((series_df, accel_df))
+            
+            except Exception as e:
+                print(f"Error loading {path}: {e}")
 
-        # 2. Accel DataFrame
-        def extract_events(computed_list):
-            evts = []
-            for step in computed_list:
-                n = step.get("n")
-                for e in step.get("events", []):
-                    evts.append({
-                        "n": n, 
-                        "name": e.get("name", ""), 
-                        "description": e.get("description", "")
-                    })
-            return evts
+        if not dfs:
+             # Initialize empty lazy frames if nothing loaded
+             self.series_df = pl.DataFrame().lazy()
+             self.accel_df = pl.DataFrame().lazy()
+             return
 
-        # Handle filtered if present
-        # It comes as a struct in JSON
+        # Concat all series DFs and Accel DFs
+        all_series = [d[0] for d in dfs]
+        all_accels = [d[1] for d in dfs]
         
-        accel_df = df.select([
-            pl.col("series").struct.field("id").alias("series_id"),
-            pl.col("accel").struct.field("name").alias("accel_name"),
-            pl.col("accel").struct.field("m_value").alias("m_value"),
-            pl.col("accel").struct.field("additional_args").alias("additional_args"),
-            pl.col("noise").alias("noise"),
-            pl.col("noise").map_elements(self._format_noise_dict, return_dtype=pl.String).alias("noise_str"),
-            # computed for accel (aligned with series steps)
-            pl.col("computed").list.eval(
-                pl.struct([
-                    pl.element().struct.field("accel_value").alias("value"),
-                    pl.element().struct.field("accel_value_deviation").alias("deviation")
-                ])
-            ).alias("computed"),
-            # Map events from steps
-            pl.col("computed").map_elements(extract_events, return_dtype=pl.List(pl.Struct([
-                pl.Field("n", pl.Int64),
-                pl.Field("name", pl.String),
-                pl.Field("description", pl.String)
-            ]))).alias("events"),
-            # Global error if any
-            pl.col("error").map_elements(
-                lambda x: [{"n": 0, "message": str(x)}] if x is not None else [],
-                return_dtype=pl.List(pl.Struct([
-                    pl.Field("n", pl.Int64),
-                    pl.Field("message", pl.String)
-                ]))
-            ).alias("errors"),
-            pl.col("filtered").alias("filtered")
-        ])
-        
-        self.accel_df = accel_df.lazy()
+        self.series_df = pl.concat(all_series).unique(subset=["series_id"]).lazy()
+        self.accel_df = pl.concat(all_accels).lazy()
 
     def _compute_metadata(self) -> Metadata:
         """

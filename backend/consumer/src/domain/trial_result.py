@@ -58,7 +58,7 @@ class AccelTrialResult:
 
     name: str
     m_value: int
-    additional_args: Mapping[str, str]
+    additional_args: Mapping[str, Any]
 
 
 @dataclass

@@ -116,8 +116,8 @@ inline void bind_types(py::module_& m) {
 
     // Arbitrary precision real type (MPFR)
     py::class_<mpfr::mpreal>(m, "Arb")
-        .def(py::init<double>())
-        .def(py::init<std::string>())
+        .def(py::init<double, mp_prec_t>(), py::arg("d"), py::arg("prec"))
+        .def(py::init<std::string, mp_prec_t>(), py::arg("s"), py::arg("prec"))
         .def(py::self + py::self).def(py::self - py::self)
         .def(py::self * py::self).def(py::self / py::self)
         .def(-py::self)

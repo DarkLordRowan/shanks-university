@@ -74,9 +74,7 @@ def trial_results_from_series_error(
             AccelTrialResult(
                 name=accel.accel_name,
                 m_value=m_value,
-                additional_args={
-                    key: str(value) for key, value in additional_args.items()
-                },
+                additional_args=dict(additional_args),
             ),
             computed=[],
             noise=noise,
@@ -132,9 +130,7 @@ def trial_results_from_accel_error(
             AccelTrialResult(
                 name=accel.accel_name,
                 m_value=m_value,
-                additional_args={
-                    key: str(value) for key, value in additional_args.items()
-                },
+                additional_args=dict(additional_args),
             ),
             computed=[],
             noise=noise,
@@ -275,10 +271,7 @@ def execute_trial(
                                 "n": n_value,
                                 "m": m_value,
                                 "argument": dict(series_argument),
-                                "additional_args": {
-                                    key: str(value)
-                                    for key, value in additional_args.items()
-                                },
+                                "additional_args": dict(additional_args),
                             },
                         )
                         break
@@ -342,7 +335,9 @@ def execute_trial(
                                     smoothed = func(divergent_segment, w_len, **kwargs)
 
                                     if smoothed:
-                                        avg = sum(smoothed) / len(smoothed)
+                                        avg = sum(smoothed[1:], smoothed[0]) / cast_precision_value(
+                                            series.precision, len(smoothed)
+                                        )
                                         methods_results[f_type] = FilterMethodResult(
                                             values=smoothed, average=avg
                                         )
@@ -372,10 +367,7 @@ def execute_trial(
                         AccelTrialResult(
                             name=accel.accel_name,
                             m_value=m_value,
-                            additional_args={
-                                key: str(value)
-                                for key, value in additional_args.items()
-                            },
+                            additional_args=dict(additional_args),
                         ),
                         computed=computed,
                         noise=noise_config,
