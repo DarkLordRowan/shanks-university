@@ -81,7 +81,7 @@
 | **PiSquared6MinusOneSeries** | Разложение ряда, сходящегося к $x (\frac{\pi^2}{6} - 1)$ | Конечное | Нет |
 | **PiSquaredTwelveSeries** | Разложение ряда, сходящегося к $x \frac{\pi^2}{12}$ | Конечное | Нет |
 | **PiXMinusXSquareAndXSquareMinusThreePiXPlusTwoPiSquareSeries** | Ряд Фурье по синусам для периодических параболических сегментов | $x \in (0, 2\pi)$ (вещественное) | Нет |
-| **PiXMultiE_XpiPlusEMinusXpiDividedE_XpiMinusEMinusXpiMinusOneSeries** | Частичная дробь для $\pi x \coth(\pi x) - 1$ | Конечное | Нет |
+| **PiXMultiE_XpiPlusEMinusXpiDividedE**<br>**_XpiMinusEMinusXpiMinusOneSeries** | Частичная дробь для $\pi x \coth(\pi x) - 1$ | Конечное | Нет |
 | **RiemannZetaFuncSeries** | Ряд Дирихле для $\zeta(s)$ | $\text{Re}(x) > 1$ | Нет |
 | **RiemannZetaFuncXmin1DivRiemannZetaFuncXSeries** | Ряд Дирихле для $\zeta(s-1)/\zeta(s)$ | $\text{Re}(x) > 2$ | Нет |
 | **SeriesWithLnNumber1** | Комплексное разложение, сходящееся к $\approx 0.5992x$ | Конечное | Нет |
