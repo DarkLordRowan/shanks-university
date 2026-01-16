@@ -23,7 +23,7 @@ include_directories(
 # -------------------------
 
 add_executable(shanks 
-    ${CMAKE_SOURCE_DIR}/src/main.cpp
+    ${CMAKE_SOURCE_DIR}/main.cpp
 )
 
 target_link_libraries(shanks PRIVATE MPFR::MPFR GMP::GMP Eigen3::Eigen)
