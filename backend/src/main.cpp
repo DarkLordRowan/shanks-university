@@ -3,7 +3,7 @@
  * @brief Entry point for the shanks-university sequence transformation application.
  * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  */
-#include "../include/test_framework/test_framework.hpp"
+#include "include/test_framework/test_framework.hpp"
 
 
 /**
