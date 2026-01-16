@@ -43,8 +43,9 @@ public:
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @param epsilon_threshold_ Threshold for epsilon corrections to maintain numerical stability.
      *        Valid values: positive T values. Too small may cause overflow, too large may reduce acceleration.
+     *        Default is 1e-4 to match the original Fortran implementation (EPSALG).
      */
-    explicit wynn_epsilon_3_algorithm(const float_type& epsilon_threshold_ = utils::cast<float_type>(1e-3)) :
+    explicit wynn_epsilon_3_algorithm(const float_type& epsilon_threshold_ = utils::cast<float_type>(1e-4)) :
     series_acceleration<T, K>("wynn epsilon 3"), epsilon_threshold(epsilon_threshold_) {};
 
     /**
@@ -58,10 +59,10 @@ public:
      * For theory, see: Wynn (1956), Eq. (4): εₛ₊₁⁽ⁿ⁾ = εₛ₋₁⁽ⁿ⁺¹⁾ + 1/(εₛ⁽ⁿ⁺¹⁾ - εₛ⁽ⁿ⁾)
      * More information([https://calgo.acm.org/])
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
-     * @param n The number of terms to use from the original series (partial sum index).
-     *        Valid values: n > 0. Higher values use more terms but may provide better acceleration.
-     * @param order The order of transformation (number of epsilon algorithm iterations).
-     *        Valid values: order >= 0. Higher orders apply more transformations but may increase error.
+     * @param n The starting index of the partial sum window to use.
+     *        Valid values: n >= 0.
+     * @param order The order of transformation (related to the depth of the table).
+     *        Valid values: order >= 0.
      * @param data series_result<T> struct containing necessary information for algorithm
      * @return T The accelerated partial sum result.
      * @throws std::out_of_range if the Sn vector size is insufficient for the requested parameters.
@@ -76,7 +77,7 @@ public:
 private:
 
     const float_type epsilon_threshold;  ///< Threshold for epsilon correction terms to prevent division by near-zero values.
-                                         ///< Default: 1e-3. Smaller values may increase sensitivity but risk instability.
+                                         ///< Default: 1e-4. Smaller values may increase sensitivity but risk instability.
 };
 
 
@@ -88,8 +89,11 @@ T wynn_epsilon_3_algorithm<T, K>::operator()(
     const series_result<T>& data
 ) const {
 
-    // Ensure Sn vector has enough terms: n + order + 1
-    const K required_size = n + order + static_cast<K>(1);
+    // Ensure Sn vector has enough terms: n + 2*order + 1
+    // The epsilon algorithm typically requires 2*order additional terms beyond the starting point 'n'
+    // to compute the diagonal approximation of that order.
+    const K required_size = n + static_cast<K>(2) * order + static_cast<K>(1);
+    const size_t precision = utils::get_precision(data.Sn[0]);
 
     if (data.Sn.size() < required_size){
         throw std::out_of_range("The Sn smaller then required for wynn_epsilon_3_{" + utils::to_string(order) + "}^{" + utils::to_string(n) + "}\n" +
@@ -101,146 +105,205 @@ T wynn_epsilon_3_algorithm<T, K>::operator()(
 
     using std::max;
 
-    K N = n; // Number of terms used in transformation
-
-    T result = utils::cast<T>(0.0);       ///< Current best accelerated estimate.
-    float_type abs_error = utils::cast<float_type>(0.0);    ///< Absolute error estimate for current data.
-    T resla = utils::cast<T>(0.0);        ///< Previous result for error comparison.
-    K newelm, num, NUM, K1, ib, ie, in; // Loop indices and counters.
-    T RES = utils::cast<T>(0.0);
+    T result = utils::cast<T>(0.0, precision);       ///< Current best accelerated estimate.
+    float_type abs_error = utils::cast<float_type>(0.0, precision);    ///< Absolute error estimate for current data.
+    T resla = utils::cast<T>(0.0, precision);        ///< Previous result for error comparison.
+    K newelm, K1, ib, ie, in; // Loop indices and counters.
+    T RES = utils::cast<T>(0.0, precision);
     T E0, E1, E2, E3;
-    E0 = E1 = E2 = E3 = utils::cast<T>(0);
+    E0 = E1 = E2 = E3 = utils::cast<T>(0, precision);
     T DELTA1, DELTA2, DELTA3;
-    DELTA1 = DELTA2 = DELTA3 = utils::cast<T>(0);
+    DELTA1 = DELTA2 = DELTA3 = utils::cast<T>(0, precision);
     float_type ERROR, ERR1, ERR2, ERR3;
-    ERROR = ERR1 = ERR2 = ERR3 = utils::cast<float_type>(0);
+    ERROR = ERR1 = ERR2 = ERR3 = utils::cast<float_type>(0, precision);
     float_type TOL1, TOL2, TOL3;
-    TOL1 = TOL2 = TOL3 = utils::cast<float_type>(0);
-    T SS = utils::cast<T>(0.0);
+    TOL1 = TOL2 = TOL3 = utils::cast<float_type>(0, precision);
+    T SS = utils::cast<T>(0.0, precision);
 
-    // For theory, see: Wynn (1956), Section 3: Algorithm and lozenge diagram.
-    // The epsilon table e[0..N+2] stores intermediate values εₛ⁽ⁿ⁾.
-    std::vector<T> e(N + static_cast<K>(3), utils::cast<T>(0.0)); //First N eliments of epsilon table + 2 elements for math
-
-    // Initialize precision for all variables if supported by type T
-    if constexpr (is_precisable<T>::value){
-		utils::set_vec_precision(e, utils::get_precision(data.Sn[0]));
-		utils::set_precision(utils::get_precision(data.Sn[0]), result, abs_error, resla, RES, E0, E1, E2, E3,
-                DELTA1, DELTA2, DELTA3, ERROR, ERR1, ERR2, ERR3, TOL1, TOL2, TOL3, SS);
-    }
+    // Epsilon table. Size should be enough to hold the diagonal.
+    // Fortran used 52 for LIMEXP=50. We need approx 2*order + safety.
+    // The maximum index accessed is roughly 2*order + 2.
+    std::vector<T> epstab(static_cast<size_t>(2) * order + 5, utils::cast<T>(0.0, precision));
 
     // Machine constants for numerical stability
-    const float_type EMACH = utils::epsilon(abs_error);                         ///< Machine epsilon: smallest number such that 1.0 + ε ≠ 1.0.
-    const float_type EPRN = utils::cast<float_type>(50) * EMACH;                ///< Relative error tolerance (50 * machine epsilon).
-    // THE 1'000'000'000 IS FOR ARB PRECISION, OTHERWISE NUMERIC LIMIT RETURNS 0
-    const float_type OFRN = max(std::numeric_limits<float_type>::max(), utils::cast<float_type>(1'000'000'000)); ///< Overflow threshold (largest finite value).
+    const float_type EMACH = utils::epsilon(abs_error);                         ///< Machine epsilon
+    const float_type EPRN = utils::cast<float_type>(50) * EMACH;                ///< Relative error tolerance
+    const float_type OFRN = utils::numeric_max<float_type>(precision);            ///< Overflow threshold
 
-    // Initialize epsilon table with partial sums: ε₀⁽ⁱ⁾ = S_i for i=0,...,N
-    for (K i = static_cast<K>(0); i <= N; ++i)  e[i] += data.Sn.at(i); //Filling up Epsilon Table
+    // Iterate through the sequence of partial sums.
+    // Conceptually, we are feeding S_n, S_{n+1}, ..., S_{n + 2*order} into the algorithm.
+    // 'k' here acts as the 'N' parameter in the original Fortran subroutine (if N started at 0).
+    // We map 'k' to proper indices.
+    const K steps = static_cast<K>(2) * order;
 
+    // Initialize ABSERR to OFRN as in original (done implicitly via OFRN usage logic or explicit set)
+    abs_error = OFRN;
 
-    // Main transformation loop (iterations up to the specified order)
-    for (K i = static_cast<K>(0); i <= order; ++i) { //Working with Epsilon Table order times
+    for (K k = 0; k <= steps; ++k) {
 
-        num = NUM = K1 = N = n;
-        K NEWELM = newelm = (N - static_cast<K>(1)) / static_cast<K>(2);    // Number of new elements to compute
-        e[N + static_cast<K>(2)] = e[N];                                    // Guard element for boundary
-        e[N] = abs_error = OFRN;                                            // Initialize error to large value
-        // Process each new element in the current diagonal
-        for (K I = static_cast<K>(1); I <= NEWELM; ++I) { //Counting all diagonal elements of epsilon table
+        // Load new element into the table.
+        // In Fortran: EPSTAB(N) = NEW_ELEMENT (where N is 1-based index 1..steps)
+        // Here we use 0-based indexing for 'epstab'.
+        // Let's use 'k' as the index into 'epstab'.
+        epstab[k] = data.Sn[n + k];
 
-            // For theory, see: Wynn (1956), Eq. (4): εₛ₊₁⁽ⁿ⁾ = εₛ₋₁⁽ⁿ⁺¹⁾ + 1/(εₛ⁽ⁿ⁺¹⁾ - εₛ⁽ⁿ⁾)
-            RES = e[K1 + static_cast<K>(2)];    // εₛ⁽ⁿ⁺¹⁾
-            E0  = e[K1 - static_cast<K>(2)];    // εₛ₋₂⁽ⁿ⁾
-            E1  = e[K1 - static_cast<K>(1)];    // εₛ₋₁⁽ⁿ⁾
-            E2  = RES;                          // εₛ⁽ⁿ⁺¹⁾
+        // START OF EPSALG BODY Logic adaptation
+        // -------------------------------------
+        // EPSTAB(N+2) = EPSTAB(N) -> epstab[k+2] = epstab[k]
+        // Note: Check bounds. epstab size is > k+2 since loop goes to 2*order.
+        epstab[k + static_cast<K>(2)] = epstab[k];
 
-            DELTA2 = E2 - E1;                   // εₛ⁽ⁿ⁺¹⁾ - εₛ₋₁⁽ⁿ⁾
+        // NEWELM = (N-1)/2.
+        // Using our 0-based k (which corresponds to Fortran N-1 if we started at N=1),
+        // the formula simply becomes k/2.
+        // Example: k=0 (N=1) -> newelm=0. k=1 (N=2) -> newelm=0. k=2 (N=3) -> newelm=1.
+        newelm = k / static_cast<K>(2);
 
-            ERR2 = utils::abs(DELTA2);                 // Absolute difference
+        // EPSTAB(N) = OFRN
+        epstab[k] = OFRN;
 
-            TOL2 = max(utils::abs(E2), utils::abs(E1)); // Tolerance based on machine precision
-            TOL2*=EMACH;
+        // ABSERR = OFRN (Resetting abs_error at each step? The Fortran code does "ABSERR = OFRN" at start of subroutine)
+        // Since we are simulating sequential calls, we should likely NOT reset it if we want to track the *best* result found so far?
+        // However, the Fortran routine outputs RESULT and ABSERR.
+        // If we treat this loop as "finding the best result within the window", we should maintain 'result' and 'abs_error' across iterations.
+        // BUT, the Fortran code: "ABSERR = OFRN" is unconditional at the start.
+        // This suggests it computes the error estimate *fresh* for the current diagonal.
+        // Let's stick to the Fortran logic: reset it for the current diagonal calculation.
+        // We will store the *final* valid result found in this step into 'result'.
+        float_type current_step_error = OFRN;
+        T current_step_result = result; // Keep previous best if this step fails? Or reset?
+        // Actually, 'result' is updated only if error improves.
+        // Let's follow the code flow:
 
-            DELTA3 = E1 - E0;                   // εₛ₋₁⁽ⁿ⁾ - εₛ₋₂⁽ⁿ⁾
+        current_step_error = OFRN;
+
+        K1 = k;
+        K num_k = k; // Equivalent to NUM = N
+
+        // Loop I=1 to NEWELM
+        for (K I = 1; I <= newelm; ++I) {
+            K K2 = K1 - static_cast<K>(1);
+            K K3 = K1 - static_cast<K>(2);
+
+            RES = epstab[K1 + static_cast<K>(2)];
+            E0  = epstab[K3];
+            E1  = epstab[K2];
+            E2  = RES;
+
+            DELTA2 = E2 - E1;
+            ERR2 = utils::abs(DELTA2);
+            TOL2 = max(utils::abs(E2), utils::abs(E1)) * EMACH;
+
+            DELTA3 = E1 - E0;
             ERR3 = utils::abs(DELTA3);
-            TOL3 = max(utils::abs(E1), utils::abs(E0) );
-            TOL3*= EMACH;
+            TOL3 = max(utils::abs(E1), utils::abs(E0)) * EMACH;
 
-            // Check if differences are significant relative to tolerances
+            bool jump_to_10 = false;
             if (ERR2 > TOL2 || ERR3 > TOL3) {
-
-                E3 = e[K1];                     // εₛ⁽ⁿ⁾
-                e[K1] = E1;                     // Store εₛ₋₁⁽ⁿ⁾ temporarily
-
-                DELTA1 = E1 - E3;               // εₛ₋₁⁽ⁿ⁾ - εₛ⁽ⁿ⁾
-
-                ERR1 = utils::abs(DELTA1);
-
-                TOL1 = max(utils::abs(E1), utils::abs(E3));
-                TOL1*= EMACH;
-
-                // Breakdown condition check
-                if (ERR1 <= TOL1 || ERR2 <= TOL2 || ERR3 <= TOL3) {
-                    N = static_cast<K>(2) * I - static_cast<K>(1);
-                    break;
-                }
-
-                // For theory, see: Wynn (1962), Eq. (13): Rational function extrapolation step.
-                SS = utils::cast<T>(1) / DELTA1 + utils::cast<T>(1) / DELTA2 - utils::cast<T>(1) / DELTA3;
-
-                // Check if correction term is within threshold
-                if (utils::abs(SS * E1) > epsilon_threshold) {
-                    RES = E1 + utils::cast<T>(1) / SS;      // Apply epsilon correction
-                    e[K1] = RES;                            // Store updated value
-                    K1 -= static_cast<K>(2);                // Move to previous position in table
-                    ERROR = ERR2 + utils::abs(RES - E2) + ERR3;    // Total error estimat
-                    if (ERROR <= abs_error) {
-                        abs_error = ERROR;
-                        result = RES;                       // Update best result
-                    }
-                }
-                else {
-                    N = static_cast<K>(2) * I - static_cast<K>(1);
-                    break;
-                }
+                jump_to_10 = true;
+            } else {
+                // Convergence assumed
+                current_step_result = RES;
+                current_step_error = ERR2 + ERR3;
+                // GO TO 90 (End of this step)
+                goto label_90;
             }
 
-            else {
-                // Insignificant differences; accept current value
-                result = RES;
-                abs_error = ERR2 + ERR3;
-                e[K1] = result;
-                break;
+            if (jump_to_10) {
+                // Label 10
+                E3 = epstab[K1];
+                epstab[K1] = E1;
+
+                DELTA1 = E1 - E3;
+                ERR1 = utils::abs(DELTA1);
+                TOL1 = max(utils::abs(E1), utils::abs(E3)) * EMACH;
+
+                // IF (...) GO TO 20
+                if (ERR1 <= TOL1 || ERR2 <= TOL2 || ERR3 <= TOL3) {
+                    // Label 20 logic inline
+                    // N = I + I - 1; -> In our vars: update 'num_k' (NUM/N) to reduce table?
+                    // Fortran: N becomes 2*I - 1.
+                    // This affects the compaction logic later.
+                    num_k = static_cast<K>(2) * I - static_cast<K>(1);
+                    goto label_50;
+                }
+
+                SS = utils::cast<T>(1, precision) / DELTA1 + utils::cast<T>(1, precision) / DELTA2 - utils::cast<T>(1, precision) / DELTA3;
+
+                // Check for irregular behavior
+                if (utils::abs(SS * E1) <= epsilon_threshold) { // Logic inverted from GT check
+                     // Label 20 again
+                     num_k = static_cast<K>(2) * I - static_cast<K>(1);
+                     goto label_50;
+                }
+
+                // Label 30
+                RES = E1 + utils::cast<T>(1, precision) / SS;
+                epstab[K1] = RES;
+                K1 -= static_cast<K>(2);
+
+                ERROR = ERR2 + utils::abs(RES - E2) + ERR3;
+                if (ERROR <= current_step_error) {
+                    current_step_error = ERROR;
+                    current_step_result = RES;
+                }
+                // Label 40 CONTINUE
             }
         }
 
-        // Adjust working range for the next iteration level (N to be the greatest odd number <= n if no change)
-        if (N == n) // making N the greatest odd number <= n
-            N = (n % static_cast<K>(2) == static_cast<K>(1)) ? n : n - static_cast<K>(1);
+        label_50:
+        // Compaction / Table Shift Logic
+        // Fortran: IF (N.EQ.LIMEXP) N = 2*(LIMEXP/2) - 1 ...
+        // We don't have fixed LIMEXP, but we can perform the compaction to keep 'epstab' clean
+        // or just let it grow. The algorithm assumes compaction to remove old diagonals.
+        // Implementing compaction (Shift the table)
 
-        // Compact the epsilon table for next iteration
-        ib = (num % static_cast<K>(2) == static_cast<K>(1) ) ? static_cast<K>(1) : static_cast<K>(2);  // Start index: 1 for odd, 2 for even
+        // IB = 1. IF ((NUM/2)*2.EQ.NUM) IB = 2.
+        // In 0-based: if k (NUM) is odd -> IB=0?
+        // Fortran NUM=1 (Odd) -> IB=1. C++ k=0 (Even) -> ib=0.
+        // Fortran NUM=2 (Even) -> IB=2. C++ k=1 (Odd) -> ib=1.
+        ib = (k % static_cast<K>(2) == static_cast<K>(0)) ? static_cast<K>(0) : static_cast<K>(1);
 
-        // Start index: 1 (odd) or 2 (even)
         ie = newelm + static_cast<K>(1);
 
-        // Copy elements with stride 2 to compact the table
-        for (K pos = ib; pos < ib + static_cast<K>(2) * ie; pos += static_cast<K>(2)) e[pos] = e[pos + static_cast<K>(2)];
-
-        // Shift elements if N changed
-        if (num != N) {
-            in = num - N + static_cast<K>(1);
-            for (K j = static_cast<K>(1); j <= N; ++j, ++in)
-                e[j] = e[in];
+        for (K i_comp = 0; i_comp < ie; ++i_comp) {
+            K ib2 = ib + static_cast<K>(2);
+            // EPSTAB(IB) = EPSTAB(IB2)
+            epstab[ib] = epstab[ib2];
+            ib = ib2;
         }
 
-        // Update error estimate and previous result
+        if (k != num_k) { // IF (NUM.EQ.N) check (k is original N, num_k is potentially modified N)
+             // Fortran: IN = NUM - N + 1.
+             // 0-based: index 'in' = k - num_k.
+             in = k - num_k;
+             for (K j = 0; j <= num_k; ++j) { // <= num_k to cover 0..N?
+                 // Fortran loops 1 to N.
+                 // So we loop 0 to num_k? Wait, if N=num_k (0-based count?), loop 0 to num_k?
+                 // If num_k is index, loop j=0 to num_k?
+                 // Yes.
+                 // epstab[j] = epstab[in + j]
+                 if (in + j < epstab.size())
+                    epstab[j] = epstab[in + j];
+             }
+        }
+
+        // Label 80
+        // ABSERR = ABS(RESULT - RESLA)
+        // RESLA = RESULT
+
+        label_90:
+        // ABSERR = MAX(...)
+        // Store best result for this step.
+        // The algorithm returns the result of the *last* step (or the most converged one).
+        // We update the class 'result' variable.
+        result = current_step_result;
+
+        // Error update for next step comparison?
         abs_error = max(
             utils::abs(result - resla),
             EPRN * utils::abs(result)
         );
-
         resla = result;
     }
 

@@ -368,45 +368,6 @@ struct utils {
 	template<AcceptedLike T>
 	static typename GetUnderlyingType<T>::value abs(const T& x);
 
-	//SETTING PRECISION
-	#if defined(INC_FPRECISION) || defined(__MPREAL_H__)
-	#define SET_PRECISION_SET
-	/**
-	 * @brief Sets precision of given variables
-	 *
-	 * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
-	 * @param precision (size_t), precisable_arg (Arg), precisable_args (Args)
-	 */
-	template<typename Arg, typename... Args>
-	requires (is_precisable<Args>::value && ...)
-	static void set_precision(const size_t precision, Arg& precisable_arg, Args& ...precisable_args);
-	static void set_precision(const size_t precision) {}
-	#endif
-
-	#ifdef _CL_FLOAT_CLASS_H
-	#define SET_PRECISION_SET
-	/**
-	 * @brief Sets precision of given variables for CLN types
-	 * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
-	 * @param precision (cln::float_format_t), precisable_arg (Arg), precisable_args (Args)
-	 */
-	template<typename Arg, typename... Args>
-	requires (is_precisable<Args>::value && ...)
-	static void set_precision(const cln::float_format_t precision, Arg& precisable_arg, Args& ...precisable_args);
-	static void set_precision(const cln::float_format_t precision) {}
-	#endif
-
-	#ifdef SET_PRECISION_SET
-	/**
-	 * @brief Set the vector precision
-	 *
-	 * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
-	 * @param vec (std::vector<T>), precision (size_t)
-	 */
-	template<AcceptedLike T>
-	static void set_vec_precision(std::vector<T>& vec, const size_t precision);
-	#endif
-
 	//GETTING PRECISION
 	#if defined(INC_FPRECISION) || defined(__MPREAL_H__)
 	/**
@@ -418,17 +379,6 @@ struct utils {
 	 */
 	template<AcceptedLike T>
 	static size_t get_precision(const T& x);
-	#endif
-
-	#ifdef _CL_FLOAT_CLASS_H
-	/**
-	 * @brief Get the precision of a variable for CLN types
-	 * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
-	 * @param x (T)
-	 * @return cln::float_format_t precision
-	 */
-	template<AcceptedLike T>
-	static cln::float_format_t get_precision(const T& x);
 	#endif
 
 	//CASTING
