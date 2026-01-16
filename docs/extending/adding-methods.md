@@ -8,7 +8,7 @@
 
 ## Шаг 1. Создайте заголовочный файл
 
-**Расположение:** `backend/src/include/transformations/`
+**Расположение:** `backend/core/include/transformations/`
 
 **Имя файла:** `my_algorithm.hpp` (snake_case)
 
@@ -112,7 +112,7 @@ if (data.Sn.size() < required_size) {
 
 ## Шаг 5. Зарегистрируйте алгоритм
 
-**Файл:** `backend/src/include/transformation_registry.def`
+**Файл:** `backend/core/include/transformation_registry.def`
 
 ```cpp
 TRANSFORMATION_ENTRY(my_algorithm_id, "MyAlgorithm", {
@@ -129,7 +129,7 @@ TRANSFORMATION_ENTRY(my_algorithm_id, "MyAlgorithm", {
 
 ## Шаг 6. Включите заголовок
 
-**Файл:** `backend/src/include/methods.hpp`
+**Файл:** `backend/core/include/methods.hpp`
 
 Добавьте:
 
@@ -142,14 +142,14 @@ TRANSFORMATION_ENTRY(my_algorithm_id, "MyAlgorithm", {
 ## Шаг 7. Пересоберите pyshanks
 
 ```bash
-cd backend/consumer
+cd backend/runner
 ./install_pyshanks.sh
 ```
 
 Или вручную:
 
 ```bash
-cd backend/lib
+cd backend/bindings
 mkdir -p build && cd build
 cmake ..
 make -j$(nproc)

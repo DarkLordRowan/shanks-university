@@ -497,7 +497,7 @@ events_log.txt
 */cmake-build-release-visual-studio/*
 /src/tests/cmake-build-release-visual-studio/
 .dev
-consumer/output
+runner/output
 src/libs
 lib/build
 *.sln

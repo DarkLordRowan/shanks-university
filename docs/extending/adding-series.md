@@ -8,7 +8,7 @@
 
 ## Шаг 1. Создайте заголовочный файл
 
-**Расположение:** `backend/src/include/series_iterators/`
+**Расположение:** `backend/core/include/series_iterators/`
 
 **Имя файла:** `my_series_iterator.hpp` (snake_case)
 
@@ -94,7 +94,7 @@ T next(K n, T& state) const override {
 
 ## Шаг 3. Зарегистрируйте ряд
 
-**Файл:** `backend/src/include/series_registry.def`
+**Файл:** `backend/core/include/series_registry.def`
 
 Добавьте запись (до `SERIES_LAST`):
 
@@ -110,7 +110,7 @@ SERIES_ENTRY(my_series_iterator, "MySeries")
 
 ## Шаг 4. Включите заголовок
 
-**Файл:** `backend/src/include/series_iterators/series_iterators.hpp`
+**Файл:** `backend/core/include/series_iterators/series_iterators.hpp`
 
 Добавьте:
 
@@ -123,14 +123,14 @@ SERIES_ENTRY(my_series_iterator, "MySeries")
 ## Шаг 5. Пересоберите pyshanks
 
 ```bash
-cd backend/consumer
+cd backend/runner
 ./install_pyshanks.sh
 ```
 
 Или вручную:
 
 ```bash
-cd backend/lib
+cd backend/bindings
 mkdir -p build && cd build
 cmake ..
 make -j$(nproc)
@@ -157,7 +157,7 @@ print(instance.get_sum())  # теоретическое значение пре�
 
 ## Шаг 7. Используйте в JSON конфиге
 
-**Файл:** `backend/consumer/config/example.json`
+**Файл:** `backend/runner/config/example.json`
 
 ```json
 {

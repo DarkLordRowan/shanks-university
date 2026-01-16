@@ -6,7 +6,7 @@ set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
 include(FetchContent)
 
 # Add module path for custom Find modules
-# Assuming backend/lib/CMakeLists.txt is run, CMAKE_SOURCE_DIR is backend/lib
+# Assuming backend/bindings/CMakeLists.txt is run, CMAKE_SOURCE_DIR is backend/bindings
 # backend/cmake/modules is at ../cmake/modules
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../cmake/modules")
 
@@ -17,7 +17,7 @@ find_package(Eigen3 REQUIRED)
 
 # Include directories
 include_directories(
-    ${CMAKE_CURRENT_SOURCE_DIR}/../src/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/../core/include
 )
 
 # -------------------------

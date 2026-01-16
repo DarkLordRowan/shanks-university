@@ -107,8 +107,8 @@ docker compose exec shanks-consumer python -m src run \
 
 | Хост | Контейнер | Описание |
 |------|-----------|----------|
-| `./backend/consumer/config/` | `/app/config` | Конфигурации |
-| `./backend/consumer/output/` | `/app/output` | Результаты |
+| `./backend/runner/config/` | `/app/config` | Конфигурации |
+| `./backend/runner/output/` | `/app/output` | Результаты |
 
 ### Пример с выводом результатов
 
@@ -118,5 +118,5 @@ docker compose exec shanks-consumer python -m src run \
     --config /app/config/example.json
 
 # Просмотр результатов
-ls -la backend/consumer/output/
+ls -la backend/runner/output/
 ```

@@ -1,7 +1,7 @@
 @echo off
 mkdir build 2>nul
 cd build
-cmake ../../lib
+cmake ../../bindings
 cmake --build . --target pyshanks --config Release
 cd Release
 mkdir "../../../pyshanks/"

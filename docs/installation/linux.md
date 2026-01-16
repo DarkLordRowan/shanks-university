@@ -63,7 +63,7 @@ cd shanks-university
 ## Шаг 3. Сборка pyshanks (C++ extension)
 
 ```bash
-cd backend/consumer
+cd backend/runner
 ./install_pyshanks.sh
 ```
 
@@ -82,17 +82,17 @@ CLEANING...
 ### Ручная сборка (если скрипт не работает)
 
 ```bash
-cd backend/lib
+cd backend/bindings
 mkdir -p build && cd build
 cmake ..
 make -j$(nproc)
 ```
 
-Скопируйте `*.so` в `backend/consumer/pyshanks/`:
+Скопируйте `*.so` в `backend/runner/pyshanks/`:
 
 ```bash
-mkdir -p ../../consumer/pyshanks
-cp *.so ../../consumer/pyshanks/
+mkdir -p ../../runner/pyshanks
+cp *.so ../../runner/pyshanks/
 ```
 
 ---
@@ -100,7 +100,7 @@ cp *.so ../../consumer/pyshanks/
 ## Шаг 4. Проверка установки
 
 ```bash
-cd backend/consumer
+cd backend/runner
 python -c "import pyshanks as ps; print(ps.__version__)"
 ```
 

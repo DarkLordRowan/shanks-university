@@ -26,7 +26,7 @@
 
 ## Уровень 1: TrialConfig (options.json/yaml)
 
-**Расположение:** `backend/consumer/config/options.json` или `options.yaml`
+**Расположение:** `backend/runner/config/options.json` или `options.yaml`
 (Конкретный путь задаётся с помощью флага `--config`)
 
 **Назначение:** Конфигурация выполнения экспериментов (how to run).
@@ -85,7 +85,7 @@ precisions:
 
 ## Уровень 2: Конфигурация экспериментов
 
-**Расположение:** `backend/consumer/config/example.json`, `big_boy.json`
+**Расположение:** `backend/runner/config/example.json`, `big_boy.json`
 
 **Назначение:** Описание того, что запускать (what to run).
 

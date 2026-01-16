@@ -16,10 +16,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 WORKDIR /build
 
 COPY ./cmake ./cmake/
-COPY ./lib ./lib/
-COPY ./src ./src/
-COPY ./consumer ./consumer/
-WORKDIR /build/consumer
+COPY ./bindings ./bindings/
+COPY ./core ./core/
+COPY ./runner ./runner/
+WORKDIR /build/runner
 
 RUN chmod +x install_pyshanks.sh \
     && ./install_pyshanks.sh \
@@ -38,9 +38,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /app
 
-COPY consumer/ ./
+COPY runner/ ./
 
-COPY --from=shanks-builder /build/output/*.so ./consumer/pyshanks/pyshanks.so
-RUN mkdir -p /opt/consumer/pyshanks && cp ./consumer/pyshanks/pyshanks.so /opt/consumer/pyshanks/pyshanks.so
+COPY --from=shanks-builder /build/output/*.so ./pyshanks/pyshanks.so
+RUN mkdir -p /opt/runner/pyshanks && cp ./pyshanks/pyshanks.so /opt/runner/pyshanks/pyshanks.so
 
 CMD ["/bin/bash"]

@@ -54,6 +54,6 @@ docker-compose.yml
 .gitlab-ci.yml
 
 # Consumer dev dependencies
-consumer/install_pyshanks.bat
-consumer/install_pyshanks.ps1
-consumer/config/
+runner/install_pyshanks.bat
+runner/install_pyshanks.ps1
+runner/config/

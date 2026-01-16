@@ -19,13 +19,13 @@
 
 #include <sstream>
 
-#include "../../src/include/custom_concepts.hpp"
-#include "../../src/include/utils.hpp"
-#include "../../src/include/methods.hpp"
-#include "../../src/include/series.hpp"
-#include "../../src/include/noise/noise_generator.hpp"
-#include "../../src/include/filters/kolzur.hpp"
-#include "../../src/include/filters/savgol.hpp"
+#include "../../core/include/custom_concepts.hpp"
+#include "../../core/include/utils.hpp"
+#include "../../core/include/methods.hpp"
+#include "../../core/include/series.hpp"
+#include "../../core/include/noise/noise_generator.hpp"
+#include "../../core/include/filters/kolzur.hpp"
+#include "../../core/include/filters/savgol.hpp"
 
 namespace py = pybind11;
 
@@ -208,7 +208,7 @@ constexpr void bind_series(pybind11::module_& m, const char* suffix){
 #define SERIES_ENTRY_ARGS(snake, camel, tName, kName) BIND_SERIES_IMPL(snake, camel, tName, kName)
 #define SERIES_LAST_ARGS(snake, camel, tName, kName) SERIES_ENTRY_ARGS(snake, camel, tName, kName)
 
-#include "../../src/include/series_registry.def"
+#include "../../core/include/series_registry.def"
 
 #undef BIND_SERIES_IMPL
 #undef SERIES_ENTRY
@@ -264,7 +264,7 @@ constexpr void bind_algos(pybind11::module_& m, const char* suffix){
 #define TRANSFORMATION_ENTRY(id, name, camel, cls, binding, ...) \
     binding(cls, camel);
 
-#include "../../src/include/transformation_registry.def"
+#include "../../core/include/transformation_registry.def"
 
 #undef TRANSFORMATION_ENTRY
 #undef BIND_DEFAULT

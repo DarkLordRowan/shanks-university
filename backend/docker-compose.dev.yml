@@ -4,7 +4,7 @@ services:
     container_name: shanks-dev
     volumes:
       - .:/app
-      - pyshanks-artifacts:/app/consumer/pyshanks
+      - pyshanks-artifacts:/app/runner/pyshanks
     working_dir: /app
     command: /bin/bash
     stdin_open: true

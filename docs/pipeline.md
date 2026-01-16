@@ -11,7 +11,7 @@
 **Файл:** `cli.py`
 
 ```bash
-python3 run --config backend/consumer/config/options.json
+python3 run --config backend/runner/config/options.json
 ```
 
 ---
@@ -318,7 +318,7 @@ df.to_csv(path, index=False)
 #### Vizr
 
 ```bash
-PYTHONPATH="." python3 -m vizr.main ../consumer/output/results.json
+PYTHONPATH="." python3 -m vizr.main ../runner/output/results.json
 ```
 
 1. Загружает отфильтрованные JSON файл через Polars

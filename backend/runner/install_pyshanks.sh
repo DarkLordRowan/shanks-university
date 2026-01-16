@@ -1,5 +1,5 @@
 echo "BUILDING PYSHANKS..."
-cmake -S ../lib -B build
+cmake -S ../bindings -B build
 make -C build pyshanks
 
 echo "PREPARING FOLDER FOR PYTHON..."

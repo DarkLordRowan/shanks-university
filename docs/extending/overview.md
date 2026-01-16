@@ -36,7 +36,7 @@
 
 **Что:** Математические ряды для исследования.
 
-**Где:** `backend/src/include/series_iterators/`
+**Где:** `backend/core/include/series_iterators/`
 
 **Базовый класс:** `series_base_succ<T, K>` (альтернативно: `series_base_iter<T, K, T>` или базовый `series_base<T, K>`)
 
@@ -50,7 +50,7 @@
 
 **Что:** Алгоритмы ускорения сходимости рядов.
 
-**Где:** `backend/src/include/transformations/`
+**Где:** `backend/core/include/transformations/`
 
 **Базовый класс:** `series_acceleration<T, K>`
 
@@ -64,7 +64,7 @@
 
 **Что:** Критерии останова и детекции аномалий.
 
-**Где:** `backend/consumer/src/domain/event.py`
+**Где:** `backend/runner/src/domain/event.py`
 
 **Регистрация:** `EventType` enum
 
@@ -76,7 +76,7 @@
 
 ### Series Registry
 
-**Файл:** `backend/src/include/series_registry.def`
+**Файл:** `backend/core/include/series_registry.def`
 
 **Макросы:**
 ```cpp
@@ -100,7 +100,7 @@ SERIES_LAST(x, "XSeries")
 
 ### Transformation Registry
 
-**Файл:** `backend/src/include/transformation_registry.def`
+**Файл:** `backend/core/include/transformation_registry.def`
 
 **Макрос:**
 ```cpp
@@ -209,7 +209,7 @@ concept series_acceleration = requires(T t, series_iter<T, K> s, K n, K m) {
 ## Пересборка pyshanks
 
 ```bash
-cd backend/lib
+cd backend/bindings
 ./install_pyshanks.sh
 ```
 

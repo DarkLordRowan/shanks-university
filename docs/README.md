@@ -6,16 +6,16 @@
 
 Требуются установленные Python 3.13, компилятор GCC 11+ или CLang 13+, CMake 3.11+. Также требуются установленные библиотеки GMP, MPFR, Eigen3.
 
-1) Перейдите в директорию backend/consumer.
+1) Перейдите в директорию backend/runner.
 2) Запустите `install_pyshanks.sh` (или `install_pyshanks.bat`) для компиляции C++ составляющей проекта в Python-модуль.
 3) Запустите `python3 main run --config ./config/options.json` для запуска эксперимента.
-4) Результаты всех экспериментов будут записаны в `backend/consumer/output/results.json`
+4) Результаты всех экспериментов будут записаны в `backend/runner/output/results.json`
 
 Для визуализации полученных данных можно применить `frontend/vizr`:
 1) Создать виртуальную среду: `python -m venv .venv`
 2) Войти в виртуальную среду: `source .venv/bin/activate`
 3) Установить `vizr`: `pip install -e ./frontend/vizr`
-4) Визуализировать данные: `python3 -m vizr.main backend/consumer/output/results_json`
+4) Визуализировать данные: `python3 -m vizr.main backend/runner/output/results_json`
 
 # Подробнее
 
