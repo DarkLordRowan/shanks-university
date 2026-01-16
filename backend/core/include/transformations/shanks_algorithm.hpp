@@ -122,6 +122,12 @@ T shanks_algorithm<T, K>::operator()(
 	T upper_determinant, lower_determinant;
 	upper_determinant = lower_determinant = utils::cast<T>(0, precision);
 
+	// Fill the common part of the matrices (rows 1 to order) with partial sum differences
+	for (size_t row = 1; row < matrix_size; ++row) for(size_t col = 0; col < matrix_size; ++col){
+		if constexpr (is_precisable<T>::value) utils::set_precision(utils::get_precision(data.Sn[0]), matrix_template(row,col));
+		matrix_template(row,col) = data.Sn[n + col + row] - data.Sn[n + col];
+	}
+
 	// Compute the upper determinant by filling the first row with partial sums
 	for (size_t col = 0; col < matrix_size; ++col){
 		if constexpr (is_precisable<T>::value) utils::set_precision(utils::get_precision(data.Sn[0]), matrix_template(0,col));
@@ -132,6 +138,7 @@ T shanks_algorithm<T, K>::operator()(
 	// Compute the lower determinant by filling the first row with ones
 	for (size_t col = 0; col < matrix_size; ++col){
 		matrix_template(0,col) = utils::cast<T>(1, precision);
+
 	}
 	lower_determinant += matrix_template.determinant();
 

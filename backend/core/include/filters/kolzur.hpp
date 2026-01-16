@@ -3,7 +3,9 @@
 #pragma once
 
 #include "../custom_concepts.hpp"
-#include "../utils.hpp"
+#include <vector>
+#include "../utils/utils_get_precision.hpp"
+#include "../utils/utils_cast.hpp"
 
 /**
  * @file kolzur.hpp
@@ -29,6 +31,7 @@ std::vector<Scalar> kolzur_filter(
 ) {
     const size_t m = window_length, k = degree;
     const size_t size = (m-1)*k + 1;
+    const size_t precision = utils::get_precision(data.at(0));
     std::vector<int> coeffs = std::vector<int>(size, 0);
     coeffs[0] = coeffs[size - 1] = 1;
     
@@ -43,22 +46,17 @@ std::vector<Scalar> kolzur_filter(
     }
 
     // Preparing vectors for convolution and handling arbitrary precision
-    std::vector<Scalar> zur_coeffs(size + 1, utils::cast<Scalar>(0));
-    std::vector<Scalar> padded_vector(data.size() + size * 2, Scalar(0.0));
-    std::vector<Scalar> result(data.size(), Scalar(0.0));
-    if (is_precisable<Scalar>::value){
-        utils::set_vec_precision(zur_coeffs, utils::get_precision(data.at(0)));
-        utils::set_vec_precision(padded_vector, utils::get_precision(data.at(0)));
-        utils::set_vec_precision(result, utils::get_precision(data.at(0)));
-    }
+    std::vector<Scalar> zur_coeffs(size + 1, utils::cast<Scalar>(0, precision));
+    std::vector<Scalar> padded_vector(data.size() + size * 2, utils::cast<Scalar>(0.0, precision));
+    std::vector<Scalar> result(data.size(), utils::cast<Scalar>(0.0, precision));
 
     // Convolution with padding: adding 0 at the start, rest 0 on the end
     std::copy(data.begin(), data.end(), padded_vector.begin()+1);
     
     // Normalizing coefficients for the filter
     for (size_t i{0}; i < coeffs.size(); ++i) {
-        zur_coeffs[i] += utils::cast<Scalar>(coeffs[i]);
-        zur_coeffs[i] /= utils::cast<Scalar>(utils::pow(m,k));
+        zur_coeffs[i] += utils::cast<Scalar>(coeffs[i], precision);
+        zur_coeffs[i] /= utils::cast<Scalar>(utils::pow(m,k), precision);
     }
     
     // Applying the convolution to produce the filtered result
