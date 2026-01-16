@@ -11,9 +11,10 @@
  */
 
 /**
- * @brief Wrapper around std::static_cast and support for precisable types
+ * @brief Wrapper around std::static_cast (support for precisable types included by precision var)
  * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  * @param x (From)
+ * @param precision (size_t) desirable precision for precisable type(precision > 0), otherwise static_cast<To>(x) is called
  * @return To (casted value)
  */
 template<typename To, typename From >
