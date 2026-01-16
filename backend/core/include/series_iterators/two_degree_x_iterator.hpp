@@ -57,7 +57,7 @@ public:
 	T next(K n, T& state) const override {
 
 		// Each term is (x * ln(2))^n / n!, computed recursively
-		if (n == 0) state += utils::cast<T>(1);
+		if (n == 0) state = utils::cast<T>(1, utils::get_precision(state));
 		else state *= this->x * utils::log(utils::cast<T>(2)) / utils::cast<T>(n);
 		return state;
 	}

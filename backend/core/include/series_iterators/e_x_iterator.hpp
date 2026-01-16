@@ -62,7 +62,7 @@ public:
 	T next(K n, T& state) const override {
 
 		// First term is pi/2, subsequent terms use the specialized recurrence for E_x
-		if (n == 0) state += utils::cast<T>(std::numbers::pi * 0.5);
+		if (n == 0) state = utils::cast<T>(std::numbers::pi * 0.5, utils::get_precision(state));
 		else state *= this->x * this->x * (utils::cast<T>((n-1)*(n-1))-utils::cast<T>(0.25))/utils::cast<T>(n*n);
 		return state;
 	}

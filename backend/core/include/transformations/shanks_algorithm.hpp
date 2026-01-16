@@ -108,6 +108,7 @@ T shanks_algorithm<T, K>::operator()(
 
     // Validation: required size is 2*order + n + 1
     const K required_size = static_cast<K>(2) * order + n + static_cast<K>(1);
+	const size_t precision = utils::get_precision(data.Sn[0]);
 
     if (data.Sn.size() < required_size){
         throw std::out_of_range("The Sn or an smaller then required for shanks_{" + utils::to_string(order) + "}^{" + utils::to_string(n) + "}\n" +
@@ -119,18 +120,7 @@ T shanks_algorithm<T, K>::operator()(
 	::Eigen::Matrix<T, ::Eigen::Dynamic, ::Eigen::Dynamic> matrix_template; matrix_template.resize(matrix_size, matrix_size);
 
 	T upper_determinant, lower_determinant;
-	upper_determinant = lower_determinant = utils::cast<T>(0);
-
-    // Adjust precision for results if supported by type T
-	if constexpr (is_precisable<T>::value){
-		utils::set_precision(utils::get_precision(data.Sn[0]), upper_determinant, lower_determinant);
-	}
-
-	// Fill the common part of the matrices (rows 1 to order) with partial sum differences
-	for (size_t row = 1; row < matrix_size; ++row) for(size_t col = 0; col < matrix_size; ++col){
-		if constexpr (is_precisable<T>::value) utils::set_precision(utils::get_precision(data.Sn[0]), matrix_template(row,col));
-		matrix_template(row,col) = data.Sn[n + col + row] - data.Sn[n + col];
-	}
+	upper_determinant = lower_determinant = utils::cast<T>(0, precision);
 
 	// Compute the upper determinant by filling the first row with partial sums
 	for (size_t col = 0; col < matrix_size; ++col){
@@ -141,8 +131,7 @@ T shanks_algorithm<T, K>::operator()(
 
 	// Compute the lower determinant by filling the first row with ones
 	for (size_t col = 0; col < matrix_size; ++col){
-		matrix_template(0,col) = utils::cast<T>(1);
-		if constexpr (is_precisable<T>::value) utils::set_precision(utils::get_precision(data.Sn[0]), matrix_template(0,col));
+		matrix_template(0,col) = utils::cast<T>(1, precision);
 	}
 	lower_determinant += matrix_template.determinant();
 

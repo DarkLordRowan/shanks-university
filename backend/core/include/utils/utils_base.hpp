@@ -2,6 +2,7 @@
 #define UTILS_BASE_HPP
 
 #include "../custom_concepts.hpp"
+#include <limits>
 #include <vector>
 #include <string>
 
@@ -440,7 +441,7 @@ struct utils {
 	 * @return To (casted value)
 	 */
 	template<typename To, typename From >
-	constexpr static To cast(const From& x);
+	constexpr static To cast(const From& x, size_t precision = size_t{0});
 
 	//HELPER
 	/**
@@ -472,6 +473,13 @@ struct utils {
 	 */
 	template<typename T>
 	static T epsilon(const T& x);
+
+	/**
+	 * @brief Wrapper around std::numeric_limits<T>::max
+	 * 
+	 */
+	template<typename T>
+	static T numeric_max(size_t precision = size_t{0});
 
 };
 

@@ -88,6 +88,7 @@ T ford_sidi_2_algorithm<T, K>::operator()(
 
     // Check if we have enough partial sums (at least n+2)
     const K required_size = n + static_cast<K>(2);
+	const size_t precision = utils::get_precision(data.Sn[0]);
 
     if (data.Sn.size() < required_size ){
         throw std::out_of_range("The Sn smaller then required for ford_sidi2_{" + utils::to_string(n) + "}\n" +
@@ -100,9 +101,7 @@ T ford_sidi_2_algorithm<T, K>::operator()(
 		throw std::domain_error("n = 0 in the input");
 
 	T delta_squared_S_n, delta_S_n, T_n;
-	delta_squared_S_n = delta_S_n = T_n = utils::cast<T>(0.0);
-
-    if constexpr (is_precisable<T>::value) utils::set_precision(utils::get_precision(data.Sn[0]), delta_squared_S_n, delta_S_n, T_n);
+	delta_squared_S_n = delta_S_n = T_n = utils::cast<T>(0.0, precision);
 
 	K m = n;
 
@@ -112,10 +111,10 @@ T ford_sidi_2_algorithm<T, K>::operator()(
 		// For theory, see: Ford & Sidi (1987), Eq. (1.8) - Finite difference computation
 		// Second difference formula: Δ²S_m = S_{m+2} - 2S_{m+1} + S_m
 		delta_squared_S_n+= data.Sn.at(m + static_cast<K>(2));
-		delta_squared_S_n-= data.Sn.at(m + static_cast<K>(1)) * utils::cast<T>(2.0);
+		delta_squared_S_n-= data.Sn.at(m + static_cast<K>(1)) * utils::cast<T>(2.0, precision);
 		delta_squared_S_n+= data.Sn.at(m);
 
-	} while (delta_squared_S_n == utils::cast<T>(0.0) && --m > static_cast<K>(0));
+	} while (delta_squared_S_n == utils::cast<T>(0.0, precision) && --m > static_cast<K>(0));
 
 	// For theory, see: Osada (2000), Section 4 - Stability condition
 	// Zero second difference indicates numerical instability or convergence issues

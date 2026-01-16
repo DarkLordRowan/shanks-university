@@ -63,7 +63,7 @@ public:
      */
 	T next(K n, T& state) const override {
 		// First term is always 1.0, subsequent terms use the binomial recurrence
-		if (n == 0) state += utils::cast<T>(1.0);
+		if (n == 0) state = utils::cast<T>(1.0, utils::get_precision(state));
 		else state *= (this->alpha - utils::cast<T>(n - static_cast<K>(1))) * this->x / utils::cast<T>(n);
 		return state;
 	}

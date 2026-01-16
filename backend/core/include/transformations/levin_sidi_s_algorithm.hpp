@@ -208,16 +208,12 @@ inline T levin_sidi_s_algorithm<T, K>::calc_result(
     const series_result<T>& data
 ) const {
 
+    const size_t precision = std::max(utils::get_precision(data.Sn[0]), utils::get_precision(data.an[0]));
+
     T numerator, denominator, rest;
     float_type up_pochamer, down_pochamer;
-    numerator = denominator = rest = utils::cast<T>(0.0);
-    up_pochamer = down_pochamer = utils::cast<float_type>(0.0);
-
-    // Set precision if the type T supports it
-    if constexpr (is_precisable<T>::value){
-        const size_t precision = std::max(utils::get_precision(data.Sn[0]), utils::get_precision(data.an[0]));
-        utils::set_precision(precision, numerator, denominator, rest, up_pochamer, down_pochamer);
-    }
+    numerator = denominator = rest = utils::cast<T>(0.0, precision);
+    up_pochamer = down_pochamer = utils::cast<float_type>(0.0, precision);
 
     // For theory, see: Sidi (2003, arXiv:math/0306302), Eq. (8.2)
     // General form: S_{k,n} = [∑_{j=0}^k (-1)^j C(k,j) (β+n+j)_{k-1}/(β+n+k)_{k-1} S_{n+j}/R_{n+j}] /
@@ -226,9 +222,9 @@ inline T levin_sidi_s_algorithm<T, K>::calc_result(
     for (K j = static_cast<K>(0); j <= order; ++j){
 
         // Compute (-1)^j * C(k,j) - the sign and binomial coefficient part of the weight
-        rest += -rest + utils::cast<T>(1.0);
+        rest = utils::cast<T>(1.0, precision);
         rest *= utils::minus_one_raised_to_power_n<T,K>(j);
-        rest *= utils::cast<T>((utils::binomial_coefficient<K>(order, j)));
+        rest *= utils::cast<T>(utils::binomial_coefficient<K>(order, j), precision);
 
         // Compute Pochhammer symbols: (β+n+j)_{k-1} and (β+n+k)_{k-1}
         up_pochamer = down_pochamer = utils::cast<float_type>(1.0);
@@ -239,8 +235,8 @@ inline T levin_sidi_s_algorithm<T, K>::calc_result(
         // (β+n+j)_{k-1} = ∏_{i=0}^{k-2} (β+n+j+i)
         // (β+n+k)_{k-1} = ∏_{i=0}^{k-2} (β+n+k+i)
         for (K i = static_cast<K>(0); i < order - static_cast<K>(1); ++i){
-            up_pochamer   *= (beta_in_use + utils::cast<float_type>((n + j     + i)));
-            down_pochamer *= (beta_in_use + utils::cast<float_type>((n + order + i)));
+            up_pochamer   *= (beta_in_use + utils::cast<float_type>(n + j     + i, precision));
+            down_pochamer *= (beta_in_use + utils::cast<float_type>(n + order + i, precision));
         }
 
 
@@ -250,7 +246,7 @@ inline T levin_sidi_s_algorithm<T, K>::calc_result(
             n + j,        // Multiply by remainder term 1/R_{n+j}
             n + j,
             data.an,
-            (remainder_type_in_use == shanks::remainders::remainder_type::u_type ? utils::cast<T>(beta_in_use) : utils::cast<T>(1.0))
+            utils::cast<T>(remainder_type_in_use == shanks::remainders::remainder_type::u_type ? beta_in_use : 1.0, precision)
         );
 
         // Accumulate numerator and denominator
@@ -271,21 +267,16 @@ inline T levin_sidi_s_algorithm<T, K>::calc_result_rec(
     const series_result<T>& data
 ) const {
 
+    const size_t precision = std::max(utils::get_precision(data.Sn[0]), utils::get_precision(data.an[0]));
+
     // For theory, see: Sidi (2003, arXiv:math/0306302), Eqs. (8.3)-(8.5)
     // Recursive implementation using the E-algorithm scheme
     // Vectors for the recursive transformation scheme
-    std::vector<T>   Num(order + static_cast<K>(1),  utils::cast<T>(0.0));
-    std::vector<T> Denom(order + static_cast<K>(1),  utils::cast<T>(0.0));
+    std::vector<T>   Num(order + static_cast<K>(1),  utils::cast<T>(0.0, precision));
+    std::vector<T> Denom(order + static_cast<K>(1),  utils::cast<T>(0.0, precision));
 
     float_type scale1, scale2;
-    scale1 = scale2 = utils::cast<float_type>(0.0);
-
-    if constexpr (is_precisable<T>::value){
-        const size_t precision = std::max(utils::get_precision(data.Sn[0]), utils::get_precision(data.an[0]));
-        utils::set_vec_precision(Num, precision);
-        utils::set_vec_precision(Denom, precision);
-        utils::set_precision(precision, scale1, scale2);
-    }
+    scale1 = scale2 = utils::cast<float_type>(0.0, precision);
 
 	// For theory, see: Sidi (2003, arXiv:math/0306302), pp. 57-58, Eqs. (8.3)-(8.5) ([https://arxiv.org/pdf/math/0306302.pdf])
 	// Recursive implementation for better numerical stability in some cases.
@@ -297,7 +288,7 @@ inline T levin_sidi_s_algorithm<T, K>::calc_result_rec(
             n + i,
             n + i,
             data.an,
-            (remainder_type_in_use == shanks::remainders::remainder_type::u_type ? utils::cast<T>(beta_in_use) : utils::cast<T>(1.0))
+            utils::cast<T>(remainder_type_in_use == shanks::remainders::remainder_type::u_type ? beta_in_use : 1.0, precision)
         );
 
         Num[i] += data.Sn.at(n + i) * Denom[i];
@@ -315,15 +306,15 @@ inline T levin_sidi_s_algorithm<T, K>::calc_result_rec(
             // For theory, see: Sidi (2003), Eqs. (8.4)-(8.5)
             // Compute scaling factors based on Pochhammer symbol ratios
 
-            scale1 = beta_in_use + utils::cast<float_type>((n + i + j));
-            scale1*= (scale1 + utils::cast<float_type>(1.0));
+            scale1 = beta_in_use + utils::cast<float_type>(n + i + j, precision);
+            scale1*= (scale1 + utils::cast<float_type>(1.0, precision));
 
-            scale2 = scale1 + utils::cast<float_type>((n + i));
-            scale2*= (scale2 + utils::cast<float_type>(1.0));
+            scale2 = scale1 + utils::cast<float_type>(n + i, precision);
+            scale2*= (scale2 + utils::cast<float_type>(1.0, precision));
 
             // Apply recurrence: E_k^{(n)} = E_{k-1}^{(n)} - g_{k-1,k}^{(n)} * ΔE_{k-1}^{(n)} / Δg_{k-1,k}^{(n)}
-            Denom[j] = utils::fma(utils::cast<T>(-scale1),Denom[j]/utils::cast<T>(scale2),Denom[j+static_cast<K>(1)]);
-              Num[j] = utils::fma(utils::cast<T>(-scale1),  Num[j]/utils::cast<T>(scale2),  Num[j+static_cast<K>(1)]);
+            Denom[j] = utils::fma(utils::cast<T>(-scale1, precision),Denom[j]/utils::cast<T>(scale2, precision),Denom[j+static_cast<K>(1)]);
+              Num[j] = utils::fma(utils::cast<T>(-scale1, precision),  Num[j]/utils::cast<T>(scale2, precision),  Num[j+static_cast<K>(1)]);
         }
 
     // Final result ratio
@@ -347,8 +338,7 @@ T levin_sidi_s_algorithm<T, K>::operator()(
 	) + 
 	static_cast<K>(2) * static_cast<K>(
 		remainder_type_in_use == shanks::remainders::remainder_type::v_wave_type
-	)
-	;
+	);
 
     if (data.Sn.size() < required_size || data.an.size() < required_size){
         throw std::out_of_range("The Sn or an smaller then required for S_{" + utils::to_string(order) + "}^{" + utils::to_string(n) + "}\n" +

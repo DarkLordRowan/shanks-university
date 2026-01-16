@@ -89,6 +89,7 @@ T wynn_epsilon_1_algorithm<T, K>::operator()(
 
     // Ensure we have enough data points: 2*order + n + 1 terms are required
     const K required_size = n + static_cast<K>(2) * order + static_cast<K>(1);
+	const size_t precision = utils::get_precision(data.Sn[0]);
 
     if (data.Sn.size() < required_size){
         throw std::out_of_range("The Sn smaller then required for wynn_epsilon_1_{" + utils::to_string(order) + "}^{" + utils::to_string(n) + "}\n" +
@@ -107,13 +108,8 @@ T wynn_epsilon_1_algorithm<T, K>::operator()(
 
 	// Initialize epsilon tables: e0 for current column, e1 for next column
 	// For theory, see: Wynn (1956), Section 3 - Table construction
-	std::vector<T> e0(max_ind + static_cast<K>(1), utils::cast<T>(0));
-	std::vector<T> e1(max_ind					 , utils::cast<T>(0));
-
-    if constexpr (is_precisable<T>::value){
-        utils::set_vec_precision(e0, utils::get_precision(data.Sn[0]));
-        utils::set_vec_precision(e1, utils::get_precision(data.Sn[0]));
-    }
+	std::vector<T> e0(max_ind + static_cast<K>(1), utils::cast<T>(0.0, precision));
+	std::vector<T> e1(max_ind					 , utils::cast<T>(0.0, precision));
 
 	auto e0_add = &e0; // Pointer to current epsilon column
 	auto e1_add = &e1; // Pointer to next epsilon column
@@ -130,7 +126,7 @@ T wynn_epsilon_1_algorithm<T, K>::operator()(
 
 		for (K j = n1; j < max_ind; ++j) {
 			// Compute εₖ₊₁⁽ʲ⁾ using the recurrence relation
-			(*e1_add)[j] += utils::cast<T>(1) / ((*e0_add)[j + static_cast<K>(1)] - (*e0_add)[j]);
+			(*e1_add)[j] += utils::cast<T>(1.0, precision) / ((*e0_add)[j + static_cast<K>(1)] - (*e0_add)[j]);
 		}
 
 		--max_ind;							// Reduce working range for next iteration

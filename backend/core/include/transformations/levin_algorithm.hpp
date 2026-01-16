@@ -225,16 +225,12 @@ inline T levin_algorithm<T, K>::calc_result(
     const series_result<T>& data
 ) const {
 
+	const size_t precision = std::max(utils::get_precision(data.Sn[0]), utils::get_precision(data.an[0]));
+
 	T numerator, denominator, rest;
 	float_type C_njk;
-	numerator = denominator = rest = utils::cast<T>(0.0);
-	C_njk = utils::cast<float_type>(0.0);
-
-    // Initialize precision if the type T supports it
-    if constexpr (is_precisable<T>::value){
-        const size_t precision = std::max(utils::get_precision(data.Sn[0]), utils::get_precision(data.an[0]));
-        utils::set_precision(precision, numerator, denominator, rest, C_njk);
-    }
+	numerator = denominator = rest = utils::cast<T>(0.0, precision);
+	C_njk = utils::cast<float_type>(0.0, precision);
 
 	// Compute (-1)^j * C(k,j)
 	// For theory, see: Levin (1973), Eq. (2.3)
@@ -244,18 +240,18 @@ inline T levin_algorithm<T, K>::calc_result(
 	for (K j = static_cast<K>(0); j <= order; ++j) {
 		// Compute (-1)^j * C(k,j) - the sign and binomial coefficient part
 		rest += -rest + utils::minus_one_raised_to_power_n<T,K>(j);
-		rest *= utils::cast<T>((utils::binomial_coefficient<K>(order, j)));
+		rest *= utils::cast<T>((utils::binomial_coefficient<K>(order, j)), precision);
 
 		// Compute (n+j+1)^{k-1}/(n+k+1)^{k-1} - the weighting factors C_njk
-		C_njk  = utils::pow(beta_in_use + utils::cast<float_type>(n + j     + static_cast<K>(1)), utils::cast<float_type>(order - static_cast<K>(1)));
-		C_njk /= utils::pow(beta_in_use + utils::cast<float_type>(n + order + static_cast<K>(1)), utils::cast<float_type>(order - static_cast<K>(1)));
+		C_njk  = utils::pow(beta_in_use + utils::cast<float_type>(n + j     + static_cast<K>(1), precision), utils::cast<float_type>(order - static_cast<K>(1), precision));
+		C_njk /= utils::pow(beta_in_use + utils::cast<float_type>(n + order + static_cast<K>(1), precision), utils::cast<float_type>(order - static_cast<K>(1), precision));
 
 		// Compute 1/R_{n+j} where R_{n+j} is the remainder estimate
 		rest*= remainder->operator()(
             n + j,
             n + j,
             data.an,
-            utils::cast<T>((remainder_type_in_use == shanks::remainders::remainder_type::u_type ? beta_in_use : utils::cast<float_type>(1.0)))
+            utils::cast<T>((remainder_type_in_use == shanks::remainders::remainder_type::u_type ? beta_in_use : utils::cast<float_type>(1.0,precision)))
         );
 
 		rest *= C_njk;
@@ -277,18 +273,14 @@ inline T levin_algorithm<T, K>::calc_result_rec(
     const K order,
     const series_result<T>& data
 ) const{
+
+	const size_t precision = std::max(utils::get_precision(data.Sn[0]), utils::get_precision(data.an[0]));
+
 	// For theory, see: Sidi (1979), Section 3 - Recursive implementation using E-algorithm
 	// Initialize auxiliary vectors for the recursive scheme
-	std::vector<T>   Num( order + static_cast<K>(1), utils::cast<T>(0.0));
-	std::vector<T> Denom( order + static_cast<K>(1), utils::cast<T>(0.0));
-	float_type scale = utils::cast<float_type>(0.0);
-
-	if constexpr (is_precisable<T>::value){
-		const size_t precision = std::max(utils::get_precision(data.Sn[0]), utils::get_precision(data.an[0]));
-		utils::set_vec_precision<T>(Num, precision);
-		utils::set_vec_precision<T>(Denom, precision);
-		utils::set_precision(precision, scale);
-	}
+	std::vector<T>   Num( order + static_cast<K>(1), utils::cast<T>(0.0, precision));
+	std::vector<T> Denom( order + static_cast<K>(1), utils::cast<T>(0.0, precision));
+	float_type scale = utils::cast<float_type>(0.0, precision);
 
 	// Initialize base values: E_0^{(n)} = S_n, g_0^{(n)} = 1/R_n
 	// Order 0 transformations correspond to weighted terms
@@ -297,7 +289,7 @@ inline T levin_algorithm<T, K>::calc_result_rec(
             n+i,
             n+i,
             data.an,
-            utils::cast<T>(remainder_type_in_use == shanks::remainders::remainder_type::u_type ? beta_in_use : utils::cast<float_type>(1.0))
+            utils::cast<T>(remainder_type_in_use == shanks::remainders::remainder_type::u_type ? beta_in_use : utils::cast<float_type>(1.0, precision), precision)
         );
 
 		Num[i] += data.Sn.at(n+i) * Denom[i];
@@ -310,12 +302,12 @@ inline T levin_algorithm<T, K>::calc_result_rec(
 			// For theory, see: Brezinski's E-algorithm recurrence
 			// E_k^{(n)} = E_{k-1}^{(n)} - g_{k-1,k}^{(n)} * ΔE_{k-1}^{(n)} / Δg_{k-1,k}^{(n)}
             // Scaling factor for the recursive update
-			scale = (beta_in_use + utils::cast<float_type>((n + j)));
+			scale = (beta_in_use + utils::cast<float_type>(n + j, precision));
 			scale*= utils::pow(
-				utils::cast<float_type>(1.0) - utils::cast<float_type>(1.0) / (beta_in_use + utils::cast<float_type>(n + j + i + 1)),
+				utils::cast<float_type>(1.0, precision) - utils::cast<float_type>(1.0, precision) / (beta_in_use + utils::cast<float_type>(n + j + i + 1, precision)),
 				utils::cast<float_type>((i))
 			);
-			scale/= (beta_in_use + utils::cast<float_type>((n + j + i)));
+			scale/= (beta_in_use + utils::cast<float_type>(n + j + i, precision));
 
 			Denom[j] = utils::fma(utils::cast<T>(-scale),Denom[j],Denom[j+static_cast<K>(1)]);
               Num[j] = utils::fma(utils::cast<T>(-scale),  Num[j],  Num[j+static_cast<K>(1)]);
@@ -342,8 +334,7 @@ T levin_algorithm<T, K>::operator()(
 	) + 
 	static_cast<K>(2) * static_cast<K>(
 		remainder_type_in_use == shanks::remainders::remainder_type::v_wave_type
-	)
-	;
+	);
 
     if (data.Sn.size() < required_size || data.an.size() < required_size){
         throw std::out_of_range("The Sn or an smaller then required for L_{" + utils::to_string(order) + "}^{" + utils::to_string(n) + "}\n" +

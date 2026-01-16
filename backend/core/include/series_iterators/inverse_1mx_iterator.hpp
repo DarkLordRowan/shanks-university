@@ -60,7 +60,7 @@ public:
 	T next(K n, T& state) const override {
 
 		// Terms of the geometric series are powers of x
-		if (n == 0) state += utils::cast<T>(1);
+		if (n == 0) state = utils::cast<T>(1, utils::get_precision(state));
 		else state *= this->x;
 		return state;
 	}

@@ -6,7 +6,7 @@
 #include <eigen3/Eigen/Dense>
 #include <stdexcept>
 #include "../custom_concepts.hpp"
-#include "../utils.hpp"
+#include "../utils/utils_cast.hpp"
 
 /**
  * @file savgol.hpp
@@ -37,10 +37,10 @@ std::vector<Scalar> savgol_filter(
     // Validating filter parameters
     if (window_length > data.size()) throw std::invalid_argument("window's length is bigger than data's size");
     if (polyorder >= window_length) throw std::invalid_argument("polyorder is bigger or equal than window's length");
+    const size_t precision = utils::get_precision(data.at(0));
 
     // Setting up the least squares problem using Eigen
-    Scalar N = utils::cast<Scalar>(static_cast<int>(window_length) / 2);
-    if constexpr (is_precisable<Scalar>::value) utils::set_precision(utils::get_precision(data.at(0)), N);
+    Scalar N = utils::cast<Scalar>(static_cast<int>(window_length) / 2, precision);
 
     Eigen::Vector<Scalar, Eigen::Dynamic> v = Eigen::Vector<Scalar, Eigen::Dynamic>::LinSpaced(window_length, -N, N);
     Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic> x = Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic>::Ones(window_length, polyorder + 1);
@@ -53,11 +53,11 @@ std::vector<Scalar> savgol_filter(
     Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic> coeff_mat = (x.transpose() * x).inverse() * x.transpose();
 
     // Computing the final filter coefficients
-    Eigen::RowVector<Scalar, Eigen::Dynamic> coeffs = utils::cast<Scalar>(utils::fact(derive)) * coeff_mat.row(derive) / utils::pow(delta, utils::cast<Scalar>(derive));
+    Eigen::RowVector<Scalar, Eigen::Dynamic> coeffs = utils::cast<Scalar>(utils::fact(derive), precision) * coeff_mat.row(derive) / utils::pow(delta, utils::cast<Scalar>(derive, precision));
 
     // Convolution with padding: adding 0 at the start, rest 0 on the end
-    std::vector<Scalar> padded_vector(data.size() + (window_length - 1) * 2, Scalar(0.0));
-    std::vector<Scalar> result(data.size(), Scalar(0.0));
+    std::vector<Scalar> padded_vector(data.size() + (window_length - 1) * 2, utils::cast<Scalar>(0.0, precision));
+    std::vector<Scalar> result(data.size(), utils::cast<Scalar>(0.0, precision));
     std::copy(data.begin(), data.end(), padded_vector.begin()+1);
 
     // Applying the filter via convolution

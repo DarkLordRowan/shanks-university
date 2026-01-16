@@ -180,8 +180,8 @@ T levin_sidi_m_algorithm<T, K>::operator()(
 	) + 
 	static_cast<K>(2) * static_cast<K>(
 		remainder_type_in_use == shanks::remainders::remainder_type::v_wave_type
-	)
-	;
+	);
+	const size_t precision = std::max(utils::get_precision(data.Sn[0]), utils::get_precision(data.an[0]));
 
     if (data.Sn.size() < required_size || data.an.size() < required_size){
         throw std::out_of_range("The Sn or an smaller then required for M_{" + utils::to_string(order) + "}^{" + utils::to_string(n) + "}\n" +
@@ -198,53 +198,47 @@ T levin_sidi_m_algorithm<T, K>::operator()(
 	}
 
 	T numerator, denominator, rest;
-	rest = numerator = denominator = utils::cast<T>(0.0);
+	rest = numerator = denominator = utils::cast<T>(0.0, precision);
 	float_type up, down, down_coef, up_coef;
-	up = down = utils::cast<float_type>(1.0);
-	down_coef = up_coef = utils::cast<float_type>(0.0);
-
-    // Initialize precision if supported by type T
-	if constexpr (is_precisable<T>::value){
-		const size_t precision = std::max(utils::get_precision(data.Sn[0]), utils::get_precision(data.an[0]));
-		utils::set_precision(precision, numerator, denominator, rest, up, down, down_coef, up_coef);
-	}
+	up = down = utils::cast<float_type>(1.0, precision);
+	down_coef = up_coef = utils::cast<float_type>(0.0, precision);
 
 	// Precompute initial Pochhammer symbol terms
 	// For theory, see: Sidi (2003, arXiv:math/0306302), Eq. (9.4)
 	// Compute: (γ+k+2)_{n-1}/(γ+k+1)_{n} = Γ(γ+k+n+1)/Γ(γ+k+2) × Γ(γ+k+1)/Γ(γ+k+n+1)
 	// Precompute the initial ratio of Pochhammer symbols
-	down_coef += gamma_in_use + utils::cast<float_type>((order + static_cast<K>(2)));
-	up_coef   += down_coef - utils::cast<float_type>(n);
+	down_coef += gamma_in_use + utils::cast<float_type>(order + static_cast<K>(2), precision);
+	up_coef   += down_coef - utils::cast<float_type>(n, precision);
 
 	// Compute (γ+k+2)_{n-1} = ∏_{m=0}^{n-2} (γ+k+2+m)
 	// Compute (γ+k+1)_{n} = ∏_{m=0}^{n-1} (γ+k+1+m)
 	for (K m = static_cast<K>(0); m + static_cast<K>(1) < n; ++m) {
-		up   *= (up_coef   + utils::cast<float_type>(static_cast<double>(m)));
-		down *= (down_coef + utils::cast<float_type>(static_cast<double>(m)));
+		up   *= (up_coef   + utils::cast<float_type>(m, precision));
+		down *= (down_coef + utils::cast<float_type>(m, precision));
 	}
 	up /= down;
 
 	// Update coefficients for the inner product terms
-	down_coef = gamma_in_use + utils::cast<float_type>(static_cast<double>(order + static_cast<K>(1)));
-	up_coef   = down_coef - utils::cast<float_type>(static_cast<double>(n + static_cast<K>(1)));
+	down_coef = gamma_in_use + utils::cast<float_type>(order + static_cast<K>(1), precision);
+	up_coef   = down_coef - utils::cast<float_type>(n + static_cast<K>(1), precision);
 	// Main summation loop
 	// For theory, see: Sidi (2003, arXiv:math/0306302), Eq. (9.2)
 	// Main summation loop for the M-transformation formula
 	for (K j = static_cast<K>(0); j <= n; ++j) {
 
 		// Calculate the sign, binomial coefficient, and weight components
-		rest += -rest + utils::minus_one_raised_to_power_n<T,K>(j);
-		rest *= utils::cast<T>(utils::binomial_coefficient<K>(n, j));
-		rest *= utils::cast<T>(up);										// Multiply by Pochhammer ratio term
-		rest /= utils::cast<T>(j + static_cast<K>(1));  // Multiply by 1/(j+1) factor
-		up /= (  up_coef + utils::cast<float_type>(j));			// Update Pochhammer ratio for next iteration
-		up *= (down_coef + utils::cast<float_type>(j));			// (γ+k+1-j)_{j}/(γ+k+2-n)_{j} → (γ+k+1-j)_{j+1}/(γ+k+2-n)_{j+1}
+		rest = utils::minus_one_raised_to_power_n<T,K>(j);
+		rest *= utils::cast<T>(utils::binomial_coefficient<K>(n, j), precision);
+		rest *= utils::cast<T>(up, precision);										// Multiply by Pochhammer ratio term
+		rest /= utils::cast<T>(j + static_cast<K>(1), precision);  // Multiply by 1/(j+1) factor
+		up /= (  up_coef + utils::cast<float_type>(j, precision));			// Update Pochhammer ratio for next iteration
+		up *= (down_coef + utils::cast<float_type>(j, precision));			// (γ+k+1-j)_{j}/(γ+k+2-n)_{j} → (γ+k+1-j)_{j+1}/(γ+k+2-n)_{j+1}
 		//Multiply by remainder term 1/R_{k+j}
 		rest *= remainder->operator()(
 			order + j,
 			order + j,
 			data.an,
-			utils::cast<T>(-gamma_in_use-utils::cast<float_type>(n))
+			utils::cast<T>(-gamma_in_use-utils::cast<float_type>(n,precision), precision)
 		);
 
 		// Accumulate numerator and denominator

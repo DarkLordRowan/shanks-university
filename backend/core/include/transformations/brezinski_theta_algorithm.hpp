@@ -88,6 +88,7 @@ T brezinski_theta_algorithm<T, K>::operator()(
 
     // Calculate the number of terms required from the Sn vector
     const K required_size = static_cast<K>(3) * order / static_cast<K>(2) + static_cast<K>(1) + n;
+    const size_t precision = utils::get_precision(data.Sn[0]);
 
     // Check if enough data is available in the partial sums vector
     if (data.Sn.size() < required_size){
@@ -113,16 +114,9 @@ T brezinski_theta_algorithm<T, K>::operator()(
     const K base_size = static_cast<K>(3) * order / static_cast<K>(2) + static_cast<K>(1);
 
     // theta_odd and theta_even store intermediate results of the recursive transformation
-    std::vector<T>  theta_odd(base_size, utils::cast<T>(0.0));
-    std::vector<T> theta_even(base_size, utils::cast<T>(0.0));
-    T delta = utils::cast<T>(0.0);
-
-    // Initialize precision for types like mpreal
-    if constexpr (is_precisable<T>::value){
-        utils::set_vec_precision(theta_odd, utils::get_precision(data.Sn[0]));
-        utils::set_vec_precision(theta_even, utils::get_precision(data.Sn[0]));
-        utils::set_precision(utils::get_precision(data.Sn[0]), delta);
-    }
+    std::vector<T>  theta_odd(base_size, utils::cast<T>(0.0, precision));
+    std::vector<T> theta_even(base_size, utils::cast<T>(0.0, precision));
+    T delta = utils::cast<T>(0.0, precision);
 
     // Initialization: theta_0,j = S_j
     for(K j = static_cast<K>(0); j < base_size; ++j){
@@ -143,7 +137,7 @@ T brezinski_theta_algorithm<T, K>::operator()(
             delta = theta_even[j1] - theta_even[j];
 
             // theta_2k+1,j = theta_2k+1,j+1 + 1 / (theta_2k,j+1 - theta_2k,j)
-            theta_odd[j] = utils::fma(theta_odd[j1], delta, utils::cast<T>(1.0));
+            theta_odd[j] = utils::fma(theta_odd[j1], delta, utils::cast<T>(1.0, precision));
             theta_odd[j]/= delta;
         }
 

@@ -64,7 +64,7 @@ public:
 	T next(K n, T& state) const override {
 
 		// Recurrence relation based on the binomial coefficients for the m-th derivative of 1/(1-x)
-		if (n == 0) state += utils::cast<T>(utils::fact<K>(m));
+		if (n == 0) state = utils::cast<T>(utils::fact<K>(m), utils::get_precision(state));
 		else state *= this->x * utils::cast<T>(m + static_cast<K>(n)) / utils::cast<T>(n);
 		return state;
 	}

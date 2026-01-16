@@ -72,6 +72,7 @@ T shanks_transform_alternating<T, K>::operator()(
 
     // Ensure we have enough terms in both Sn and an vectors
     const K required_size = order + n + static_cast<K>(1);
+	const size_t precision = std::max(utils::get_precision(data.Sn[0]), utils::get_precision(data.an[0]));
     if (data.Sn.size() < required_size || data.an.size() < required_size){
         throw std::out_of_range("The Sn or an smaller then required for alt_shanks_{" + utils::to_string(order) + "}^{" + utils::to_string(n) + "}\n" +
         "the size of Sn and an must be at least " + utils::to_string(required_size));
@@ -84,13 +85,13 @@ T shanks_transform_alternating<T, K>::operator()(
 	if (order == static_cast<K>(1)) [[unlikely]]
 	{
 
-		T result = utils::cast<T>(0.0);
+		T result = utils::cast<T>(0.0, precision);
 
 		// For theory, see: Senhadji (2001), Section 3.2 - Alternating series case
 		// For alternating series: e₁(Sₙ) = Sₙ + (aₙaₙ₊₁)/(aₙ - aₙ₊₁)
 		result += utils::fma(
 			data.an.at(n) * data.an.at(n + static_cast<K>(1)),
-			utils::cast<T>(1) / (data.an.at(n) - data.an.at(n + static_cast<K>(1))),
+			utils::cast<T>(1.0, precision) / (data.an.at(n) - data.an.at(n + static_cast<K>(1))),
 			data.Sn.at(n)
 		);
 
@@ -105,7 +106,7 @@ T shanks_transform_alternating<T, K>::operator()(
 
 	std::vector<T> T_n(
 		n + order,
-		utils::cast<T>(0.0)
+		utils::cast<T>(0.0, precision)
 	);
 
 	for (K i = n - order + static_cast<K>(1); i <= n + order - static_cast<K>(1); ++i) // if we got to this branch then we know that n >= order - see previous branches int->K
@@ -115,19 +116,19 @@ T shanks_transform_alternating<T, K>::operator()(
 		// e₁(Sᵢ) = Sᵢ + (aᵢaᵢ₊₁)/(aᵢ - aᵢ₊₁)
 		T_n[i] = utils::fma(
 			data.an.at(i) * data.an.at(i + static_cast<K>(1)),
-			utils::cast<T>(1) / (data.an.at(i) - data.an.at(i + static_cast<K>(1))),
+			utils::cast<T>(1, precision) / (data.an.at(i) - data.an.at(i + static_cast<K>(1))),
 			data.Sn.at(n)
 		);
 	}
 
 	std::vector<T> T_n_plus_1(
 		n + order,
-		utils::cast<T>(0.0)
+		utils::cast<T>(0.0, precision)
 	);
 
-	T a = utils::cast<T>(0.0);
-	T b = utils::cast<T>(0.0);
-	T c = utils::cast<T>(0.0);
+	T a = utils::cast<T>(0.0, precision);
+	T b = utils::cast<T>(0.0, precision);
+	T c = utils::cast<T>(0.0, precision);
 
 	for (K j = static_cast<K>(2); j <= order; ++j) {
 		for (K i = n - order + j; i <= n + order - j; ++i) {
@@ -141,7 +142,7 @@ T shanks_transform_alternating<T, K>::operator()(
 			// eₖ(Sₙ) = eₖ₋₁(Sₙ) + [eₖ₋₁(Sₙ₊₁) - eₖ₋₁(Sₙ)] / [1 - (eₖ₋₁(Sₙ₊₁) - eₖ₋₁(Sₙ))/(eₖ₋₁(Sₙ₊₂) - eₖ₋₁(Sₙ₊₁))]
 			T_n_plus_1[i] = utils::fma(
 				utils::fma(a, c + b - a, -b * c),
-				utils::cast<T>(1) / (utils::cast<T>(2) * a - b - c),
+				utils::cast<T>(1.0, precision) / (utils::cast<T>(2) * a - b - c),
 				a
 			);
 		}

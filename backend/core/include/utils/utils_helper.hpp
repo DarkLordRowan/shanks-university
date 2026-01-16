@@ -79,4 +79,17 @@ T utils::epsilon(const T& x){
     }
 }
 
+template<typename T>
+T utils::numeric_max(size_t precision){
+	if constexpr(is_standard_types<T>::value) return std::numeric_limits<T>::max();
+	else if constexpr(std::is_same<T, mpfr::mpreal>::value) {
+        return std::numeric_limits<mpfr::mpreal>::max(mpfr::digits2bits(precision));
+    } else if constexpr(std::is_same<T, std::complex<mpfr::mpreal>>::value){
+        return utils::numeric_max<mpfr::mpreal>(mpfr::digits2bits(precision));
+    }
+	else {
+        static_assert(dependent_false<T>::value, "utils::numeric_max not implemented for this type");
+    }
+}
+
 #endif

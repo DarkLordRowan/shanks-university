@@ -90,6 +90,7 @@ T lubkin_w_algorithm<T, K>::operator()(
 
     // Ensure there is sufficient data in the Sn vector for the requested order and starting index
     const K required_size = n + static_cast<K>(3) * order + static_cast<K>(1);
+	const size_t precision = utils::get_precision(data.Sn[0]);
 
     if (data.Sn.size() < required_size){
         throw std::out_of_range("The Sn smaller then required for W_{" + utils::to_string(order) + "}^{" + utils::to_string(n) + "}\n" +
@@ -97,30 +98,20 @@ T lubkin_w_algorithm<T, K>::operator()(
 	}
 
     // Trivial case: order 0 returns the original partial sum at index n
-    if (order == static_cast<K>(0)) {
-        return data.Sn.at(n);
-    }
+    if (order == static_cast<K>(0)) return data.Sn.at(n);
 
 	// For theory, see: Wynn (1956), Section 3 - Table construction
 	// Storage scheme requires 3n+1 terms for order n transformation
 	const K base_size = static_cast<K>(3) * order + static_cast<K>(1);
 
 	// Working vector to store intermediate transformation values
-	std::vector<T> W(base_size, utils::cast<T>(0));
+	std::vector<T> W(base_size, utils::cast<T>(0, precision));
 
 	T Wo0, Wo1, Wo2, Woo1, Woo2;
-	Wo0 = Wo1 = Wo2 = Woo1 = Woo2 = utils::cast<T>(0);
-
-    // Initialize precision if supported by type T
-    if constexpr (is_precisable<T>::value){
-        utils::set_vec_precision(W, utils::get_precision(data.Sn[0]));
-        utils::set_precision(utils::get_precision(data.Sn[0]), Wo0, Wo1, Wo2, Woo1, Woo2);
-    }
+	Wo0 = Wo1 = Wo2 = Woo1 = Woo2 = utils::cast<T>(0, precision);
 
     // Load initial partial sums into the working vector starting from index n
-	for(K i = static_cast<K>(0); i < base_size; ++i){
-		W[i] += data.Sn.at( + i);
-	}
+	for(K i = static_cast<K>(0); i < base_size; ++i) W[i] += data.Sn.at( + i);
 
 	K j1, j2, j3;     // Index variables
 

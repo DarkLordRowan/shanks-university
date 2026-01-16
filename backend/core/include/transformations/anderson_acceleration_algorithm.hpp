@@ -119,23 +119,22 @@ inline T anderson_acceleration_algorithm<T, K>::aitken_case(
     const std::vector<T>& Sn
 ) const {
 
-    T denominator, accelerated;
-    denominator = accelerated = utils::cast<T>(0.0);
+    const size_t precision = utils::get_precision(Sn[0]);
 
-    // Initialize precision if the type supports it (e.g., mpreal)
-    if constexpr (is_precisable<T>::value) utils::set_precision(utils::get_precision(Sn[0]), denominator, accelerated);
+    T denominator, accelerated;
+    denominator = accelerated = utils::cast<T>(0.0, precision);
 
     using std::max;
 
     // Calculate the second-order difference for the denominator
-    denominator = Sn[n] - utils::cast<T>(2.0) * Sn[n - 1] + Sn[n - 2];
+    denominator = Sn[n] - utils::cast<T>(2.0, precision) * Sn[n - 1] + Sn[n - 2];
 
     // Check for numerical stability. If the denominator is too small, fallback to the current term.
     if (utils::abs(denominator) < safeguard_ * max(utils::abs(Sn[n]), max(utils::abs(Sn[n - 1]), utils::abs(Sn[n - 2])))) return Sn[n];  // fallback
 
     // Standard Aitken formula followed by mixing with the original term
     accelerated = Sn[n] - (Sn[n] - Sn[n - 1]) * (Sn[n] - Sn[n - 1]) / utils::cast<T>(utils::abs(denominator));
-    return utils::cast<T>(beta_) * accelerated + utils::cast<T>(utils::cast<float_type>(1.0) - beta_) * Sn[n];
+    return utils::cast<T>(beta_, precision) * accelerated + utils::cast<T>(utils::cast<float_type>(1.0, precision) - beta_, precision) * Sn[n];
 }
 
 template <AcceptedLike T, UnsignedIntLike K>
@@ -148,33 +147,20 @@ inline T anderson_acceleration_algorithm<T, K>::main_case(
 
     // Determine the actual history size to use, capped by m_ and current index n
     const K actual_m = std::min(m_, static_cast<K>(n - 1));
+    const size_t precision = utils::get_precision(Sn[0]);
 
-    std::vector<T> f(actual_m, utils::cast<T>(0.0));
-    std::vector<T> b(actual_m, utils::cast<T>(0.0));
-    std::vector<T> alpha(actual_m, utils::cast<T>(0.0));
+    std::vector<T> f(actual_m, utils::cast<T>(0.0, precision));
+    std::vector<T> b(actual_m, utils::cast<T>(0.0, precision));
+    std::vector<T> alpha(actual_m, utils::cast<T>(0.0, precision));
 
     // Matrices for the least squares problem (normal equations)
-    std::vector<std::vector<T>> A(actual_m, std::vector<T>(actual_m, utils::cast<T>(0.0)));
-    std::vector<std::vector<T>> delta_S(actual_m, std::vector(actual_m, utils::cast<T>(0.0)));
+    std::vector<std::vector<T>> A(actual_m, std::vector<T>(actual_m, utils::cast<T>(0.0, precision)));
+    std::vector<std::vector<T>> delta_S(actual_m, std::vector(actual_m, utils::cast<T>(0.0, precision)));
 
     T sum, sum_b, factor, accelerated;
-    sum = sum_b = factor = accelerated = utils::cast<T>(0.0);
+    sum = sum_b = factor = accelerated = utils::cast<T>(0.0, precision);
 
-    float_type max_val = utils::cast<float_type>(0.0);
-
-    // Setup precision for all temporary variables
-    if constexpr (is_precisable<T>::value){
-
-        utils::set_precision(utils::get_precision(Sn[0]), sum, sum_b, factor, accelerated, max_val);
-
-        utils::set_vec_precision(f, utils::get_precision(Sn[0]));
-        utils::set_vec_precision(b, utils::get_precision(Sn[0]));
-        utils::set_vec_precision(alpha, utils::get_precision(Sn[0]));
-
-        for(size_t j = 0; j < actual_m; ++j) utils::set_vec_precision(delta_S[j], utils::get_precision(Sn[0]));
-        for(size_t j = 0; j < actual_m; ++j) utils::set_vec_precision(A[j], utils::get_precision(Sn[0]));
-
-    }
+    float_type max_val = utils::cast<float_type>(0.0, precision);
 
     // --- Anderson m>1 logic ---
 
@@ -184,7 +170,7 @@ inline T anderson_acceleration_algorithm<T, K>::main_case(
         f[i] += Sn.at(n - actual_m + i + 1) - Sn.at(n - actual_m + i);
         for(K j = 0; j < actual_m; ++j){
             idx = n - actual_m + j;
-            delta_S[i][j] += (idx < n ? Sn.at(idx + 1) - Sn.at(idx) : utils::cast<T>(0.0));
+            delta_S[i][j] += (idx < n ? Sn.at(idx + 1) - Sn.at(idx) : utils::cast<T>(0.0, precision));
         }
     }
 
@@ -197,7 +183,7 @@ inline T anderson_acceleration_algorithm<T, K>::main_case(
     }
 
     // Numerical regularization: add safeguard to the diagonal to avoid singularity
-    for (K i = 0; i < actual_m; ++i) A[i][i] += utils::cast<T>(safeguard_);
+    for (K i = 0; i < actual_m; ++i) A[i][i] += utils::cast<T>(safeguard_, precision);
 
 
     K pivot;
@@ -215,7 +201,7 @@ inline T anderson_acceleration_algorithm<T, K>::main_case(
 
         // If the matrix is singular despite regularization, use a simple average fallback
         if (max_val < safeguard_) {
-            alpha.assign(actual_m, utils::cast<T>(1.0) / utils::cast<T>((actual_m)));
+            alpha.assign(actual_m, utils::cast<T>(1.0, precision) / utils::cast<T>(actual_m, precision));
             break;
         }
 
@@ -235,7 +221,7 @@ inline T anderson_acceleration_algorithm<T, K>::main_case(
 
     // Back substitution to find alpha coefficients
     for (int i = static_cast<int>(actual_m) - 1; i >= 0; --i) {
-        sum = utils::cast<T>(0);
+        sum = utils::cast<T>(0.0, precision);
         for (K j = static_cast<K>(i) + 1; j < actual_m; ++j) sum += A[i][j] * alpha[j];
         alpha[i] = (b[i] - sum) / A[i][i];
     }
@@ -248,7 +234,7 @@ inline T anderson_acceleration_algorithm<T, K>::main_case(
     }
 
     // Final damping step
-    return accelerated * utils::cast<T>(beta_) + Sn[n] * utils::cast<T>(utils::cast<float_type>(1.0) - beta_);
+    return accelerated * utils::cast<T>(beta_, precision) + Sn[n] * utils::cast<T>(utils::cast<float_type>(1.0, precision) - beta_, precision);
 }
 
 template <AcceptedLike T, UnsignedIntLike K>

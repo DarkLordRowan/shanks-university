@@ -60,7 +60,7 @@ public:
 	T next(K n, T& state) const override {
 
 		// Terms of this series are the central binomial coefficients C(2n, n) scaled by x^n
-		if (n == 0) state += utils::cast<T>(1);
+		if (n == 0) state = utils::cast<T>(1, utils::get_precision(state));
 		else state *= this->x * utils::cast<T>(2 * utils::fma(static_cast<size_t>(2),static_cast<size_t>(n-1),static_cast<size_t>(1))) / utils::cast<T>(n);
 		return state;
 	}

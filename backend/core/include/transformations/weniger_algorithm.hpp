@@ -79,6 +79,7 @@ T weniger_algorithm<T, K>::operator()(
 
     // Validation: ensure input vectors contain enough data for the specified order and base index
     const K required_size = n + order + static_cast<K>(1);
+	const size_t precision = std::max(utils::get_precision(data.Sn[0]), utils::get_precision(data.an[0]));
 
     if (data.Sn.size() < required_size || data.an.size() < required_size) {
         throw std::out_of_range("The Sn or an smaller then required for Weniger_{" + utils::to_string(order) + "}^{" + utils::to_string(n) + "}\n" +
@@ -90,8 +91,8 @@ T weniger_algorithm<T, K>::operator()(
 
 	// For theory, see: Weniger (1989), Section 8.2, Eq. (8.2-7)
 	// Weniger transformation as ratio of binomial sums with Pochhammer symbols
-	T numerator = utils::cast<T>(0.0);
-	T denominator = utils::cast<T>(0.0);
+	T numerator = utils::cast<T>(0.0, precision);
+	T denominator = utils::cast<T>(0.0, precision);
 
 	// For theory, see: Weniger (1989), Eq. (8.2-7) term components
 	T rest;	// Weight factor for current term: (-1)ʲ × C(order, j) × (β+n+j)ₖ₋₁
@@ -99,17 +100,11 @@ T weniger_algorithm<T, K>::operator()(
 
 	// For theory, see: Weniger (1989), Eq. (8.2-7) weight factor
 	// Initial Pochhammer-like term: (β+n)ₖ₋₁ with β=1, equivalent to (n+1)ₖ₋₁ = Γ(n+k)/Γ(n+1)
-	T coef = utils::cast<T>(1.0);
+	T coef = utils::cast<T>(1.0, precision);
 
 	// For theory, see: Weniger (1989), Eq. (8.2-7) recursive computation
 	// Initial binomial coefficient: C(order, 0) = 1
-	T binomial_coef = utils::cast<T>(utils::binomial_coefficient(n, static_cast<K>(0)));
-
-    // Initialize precision for variable precision types
-	if constexpr (is_precisable<T>::value){
-		const size_t precision = std::max(utils::get_precision(data.Sn[0]), utils::get_precision(data.an[0]));
-		utils::set_precision(precision, numerator, denominator, rest, coef);
-	}
+	T binomial_coef = utils::cast<T>(utils::binomial_coefficient(n, static_cast<K>(0)), precision);
 
 	// Precompute initial value: (1)ₖ₋₁ = (k-1)!
 	for (K m = static_cast<K>(0); m < order - static_cast<K>(1); ++m) coef *= utils::cast<T>(static_cast<K>(1) + m);
@@ -125,7 +120,7 @@ T weniger_algorithm<T, K>::operator()(
 		// For theory, see: Weniger (1989), Eq. (8.2-7) term structure
 		// Term sign: (-1)ʲ
 
-		rest = utils::cast<T>(1.0); //need to set precision before doing anything
+		rest = utils::cast<T>(1.0, precision); //need to set precision before doing anything
 		rest*= utils::minus_one_raised_to_power_n<T,K>(j);
 
 		// Binomial coefficient: C(order, j)
@@ -133,8 +128,8 @@ T weniger_algorithm<T, K>::operator()(
 
 		// For theory, see: Weniger (1989), Eq. (8.2-7) recursive binomial update
 		// Update binomial coefficient: C(order, j+1) = C(order, j) × (order - j) / (j + 1)
-		binomial_coef *= utils::cast<T>(order - j);
-		binomial_coef /= utils::cast<T>(j1);
+		binomial_coef *= utils::cast<T>(order - j, precision);
+		binomial_coef /= utils::cast<T>(j1, precision);
 
 		// For theory, see: Weniger (1989), Eq. (8.2-7) weight factor
 		// Pochhammer symbol factor: (β+n+j)ₖ₋₁ with β=1
@@ -143,8 +138,8 @@ T weniger_algorithm<T, K>::operator()(
 		// For theory, see: Weniger (1989), Eq. (8.2-7) recursive Pochhammer update
 		// Update Pochhammer-like term: (β+n+j+1)ₖ₋₁ = (β+n+j)ₖ₋₁ × (β+n+j+order) / (β+n+j+1)
 		// With β=1: (n+j+1)ₖ₋₁ = (n+j)ₖ₋₁ × (n+j+order) / (n+j+1)
-		coef *= utils::cast<T>(n + j + order);
-		coef /= utils::cast<T>(n + j1);
+		coef *= utils::cast<T>(n + j + order, precision);
+		coef /= utils::cast<T>(n + j1, precision);
 
 		// For theory, see: Weniger (1989), Eq. (8.2-7) remainder estimate
 		// Remainder estimate: ωₙ = Δsₙ = a_{n+1}, so 1/ωₙ = 1/a_{j+1}

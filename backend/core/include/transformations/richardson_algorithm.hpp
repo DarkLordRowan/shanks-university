@@ -98,35 +98,26 @@ T richardson_algorithm<T, K>::operator()(
 
     // Ensure we have enough partial sums to perform the extrapolation
     const K required_size = n + static_cast<K>(1);
+    const size_t precision = utils::get_precision(data.Sn[0]);
 
     if (data.Sn.size() < required_size){
         throw std::out_of_range("The Sn smaller then required for richardson_{" + utils::to_string(order) + "}^{" + utils::to_string(n) + "}\n" +
         "the size of Sn must be at least " + utils::to_string(required_size));
 	}
 
-    if (order == static_cast<K>(0)) {
-        return data.Sn.at(n);
-    }
+    if (order == static_cast<K>(0))  return data.Sn.at(n);
 
     // in the method we don't use order, it's only a stub
-    if (n == static_cast<K>(0))
-        throw std::domain_error("n = 0 in the input");
+    if (n == static_cast<K>(0)) throw std::domain_error("n = 0 in the input");
 
     // For theory, see: Richardson (1911) - construction of extrapolation table
     // Storage for Richardson extrapolation table with two rows for efficient computation
     std::vector<std::vector<T>> e(
         2,
-        std::vector<T>(n + static_cast<K>(1), utils::cast<T>(0))
+        std::vector<T>(n + static_cast<K>(1), utils::cast<T>(0.0, precision))
     ); // Two vectors n + 1 length containing Richardson table next and previous
-    T a = utils::cast<T>(1.0);
-    T b = utils::cast<T>(0.0);
-
-    // Initialize precision if the type T supports it
-    if constexpr (is_precisable<T>::value){
-        utils::set_vec_precision(e[0], utils::get_precision(data.Sn[0]));
-        utils::set_vec_precision(e[1], utils::get_precision(data.Sn[0]));
-        utils::set_precision(utils::get_precision(data.Sn[0]), a,b);
-    }
+    T a = utils::cast<T>(1.0, precision);
+    T b = utils::cast<T>(0.0, precision);
 
     // Initialization: Load the first row with partial sums
 	// For theory, see: Richardson (1911), Eq. (2) - initialization with partial sums
@@ -137,8 +128,8 @@ T richardson_algorithm<T, K>::operator()(
 	// For theory, see: Richardson & Gaunt (1927), Section 3 - recursive extrapolation
 	// Richardson extrapolation recursion: Tₖ⁽ⁿ⁾ = (4ᵏTₖ₋₁⁽ⁿ⁺¹⁾ - Tₖ₋₁⁽ⁿ⁾) / (4ᵏ - 1)
     for (K l = static_cast<K>(1); l <= n; ++l) {
-        a *= utils::cast<T>(4);     // 4ᵏ factor
-        b = a - utils::cast<T>(1);  // (4ᵏ - 1) denominator
+        a *= utils::cast<T>(4, precision);     // 4ᵏ factor
+        b = a - utils::cast<T>(1, precision);  // (4ᵏ - 1) denominator
 
         for (K m = l; m <= n; ++m){
             // For theory, see: Richardson & Gaunt (1927), Eq. (3.5)

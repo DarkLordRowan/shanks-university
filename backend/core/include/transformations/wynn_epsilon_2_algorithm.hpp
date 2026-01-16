@@ -98,6 +98,7 @@ T wynn_epsilon_2_algorithm<T, K>::operator()(
 
     // Ensure sufficient terms are available: 2*order + n + 1 terms are required
     const K required_size = static_cast<K>(2) * order + n + static_cast<K>(1);
+	const size_t precision = utils::get_precision(data.Sn[0]);
 
     if (data.Sn.size() < required_size){
         throw std::out_of_range("The Sn vector is smaller than required for Wynn epsilon 2 computation.");
@@ -115,16 +116,9 @@ T wynn_epsilon_2_algorithm<T, K>::operator()(
 
 	// For theory, see: Wynn (1956), Section 3 - Epsilon table structure
 	// The epsilon table is stored as a 4-row circular buffer to save memory
-	std::vector<std::vector<T>> eps(4, std::vector<T>(k + static_cast<K>(1), utils::cast<T>(0)));
+	std::vector<std::vector<T>> eps(4, std::vector<T>(k + static_cast<K>(1), utils::cast<T>(0.0, precision)));
 	T a, a1, a2;
-	a = a1 = a2 = utils::cast<T>(0);
-
-    // Initialize precision for types that require it
-    if constexpr (is_precisable<T>::value){
-		for (size_t j = 0; j < eps.size(); ++j)
-			utils::set_vec_precision(eps[j], utils::get_precision(data.Sn[0]));
-		utils::set_precision(utils::get_precision(data.Sn[0]), a, a1, a2);
-    }
+	a = a1 = a2 = utils::cast<T>(0.0, precision);
 
 	// For theory, see: Wynn (1956), Eq. (2) - Initialization with partial sums
 	// Initialize the bottom row with partial sums: ε₀⁽ᵐ⁾ = Sₙ for m = 0,1,...,k
@@ -146,7 +140,7 @@ T wynn_epsilon_2_algorithm<T, K>::operator()(
 
 			// For theory, see: Wynn (1956), Eq. (4) - Main recurrence relation
 			// εₖ₊₁⁽ᵐ⁾ = εₖ₋₁⁽ᵐ⁺¹⁾ + 1/(εₖ⁽ᵐ⁺¹⁾ - εₖ⁽ᵐ⁾)
-			eps[0][i] = eps[2][i1] + utils::cast<T>(1) / (eps[3][i1] - eps[3][i]);
+			eps[0][i] = eps[2][i1] + utils::cast<T>(1.0, precision) / (eps[3][i1] - eps[3][i]);
 
 			// For theory, see: Wynn (1964) - Numerical stability improvements
 		    // Additional checks and corrections for finite precision arithmetic
@@ -154,19 +148,19 @@ T wynn_epsilon_2_algorithm<T, K>::operator()(
 
 			if (!stable && i2 <= k) // Stability check and correction
 			{
-				a2 = utils::cast<T>(1) / eps[2][i1];
+				a2 = utils::cast<T>(1.0, precision) / eps[2][i1];
 
-				a1 = utils::cast<T>(1) / (utils::cast<T>(1) - (a2 * eps[2][i2]));
+				a1 = utils::cast<T>(1.0, precision) / (utils::cast<T>(1.0, precision) - (a2 * eps[2][i2]));
 				a = eps[2][i2] * a1;
 
-				a1 = utils::cast<T>(1) / (utils::cast<T>(1) - (a2 * eps[2][i]));
+				a1 = utils::cast<T>(1.0, precision) / (utils::cast<T>(1.0, precision) - (a2 * eps[2][i]));
 				a += eps[2][i] * a1;
 
-				a1 = utils::cast<T>(1) / (utils::cast<T>(1) - (a2 * eps[0][i2]));
+				a1 = utils::cast<T>(1.0, precision) / (utils::cast<T>(1.0, precision) - (a2 * eps[0][i2]));
 				a -= eps[0][i2] * a1;
 
-				eps[0][i] = utils::cast<T>(1) / eps[2][i1];
-				eps[0][i] = utils::cast<T>(1) / (utils::cast<T>(1) + a * eps[0][i]);
+				eps[0][i] = utils::cast<T>(1.0, precision) / eps[2][i1];
+				eps[0][i] = utils::cast<T>(1.0, precision) / (utils::cast<T>(1.0, precision) + a * eps[0][i]);
 				eps[0][i] = eps[0][i] * a;
 			}
 

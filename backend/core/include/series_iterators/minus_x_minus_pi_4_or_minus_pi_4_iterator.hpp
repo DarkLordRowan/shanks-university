@@ -72,11 +72,12 @@ public:
 	T next(K n, T& state) const override {
 
 		// First term is the DC component (constant term)
-		if (n == 0) state += utils::cast<T>(std::numbers::pi * 0.25);
+		if (n == 0) state = utils::cast<T>(std::numbers::pi * 0.25, utils::get_precision(state));
 		else {
-			const T piDiv3 = utils::cast<T>(std::numbers::pi) / utils::cast<T>(3);
-			const T cos_coef = (utils::minus_one_raised_to_power_n<T, K>(n) - utils::cast<T>(1)) / (utils::cast<T>(std::numbers::pi)*utils::cast<T>(n * n));
-			const T sin_coef = utils::minus_one_raised_to_power_n<T, K>(n) / utils::cast<T>(n);
+			const size_t precision = utils::get_precision(state);
+			const T piDiv3 = utils::cast<T>(std::numbers::pi, precision) / utils::cast<T>(3, precision);
+			const T cos_coef = (utils::minus_one_raised_to_power_n<T, K>(n) - utils::cast<T>(1, precision)) / (utils::cast<T>(std::numbers::pi, precision)*utils::cast<T>(n * n, precision));
+			const T sin_coef = utils::minus_one_raised_to_power_n<T, K>(n) / utils::cast<T>(n, precision);
 			state = cos_coef * utils::cos(utils::cast<T>(n) * this->x) + sin_coef * utils::sin(utils::cast<T>(n) * this->x);
 		}
 		return state;

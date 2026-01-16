@@ -57,7 +57,7 @@ public:
 	T next(K n, T& state) const override {
 
 		// Recurrence logic for the even-power terms of the cosh expansion
-		if (n == 0) state += utils::cast<T>(1);
+		if (n == 0) state = utils::cast<T>(1, utils::get_precision(state));
 		else state *= this->x * this->x / utils::cast<T>(n * (size_t{4} * n - size_t{2}));
 		return state;
 	}

@@ -181,6 +181,7 @@ inline T wynn_rho_algorithm<T, K>::operator()(
 
     // Ensure we have enough data points to compute the transformation
 	const K required_size = n + order + static_cast<K>(1) + order * static_cast<K>(numerator_type_in_use == shanks::numerators::numerator_type::rho_type);
+	const size_t precision = std::max(utils::get_precision(data.Sn[0]), utils::get_precision(data.an[0]));
 
     if (data.Sn.size() < required_size || data.an.size() < required_size){
         throw std::out_of_range("The Sn or an smaller then required for wynn_rho_{" + utils::to_string(order) + "}^{" + utils::to_string(n) + "}\n" +
@@ -192,23 +193,14 @@ inline T wynn_rho_algorithm<T, K>::operator()(
 
 	const K base_size = order + static_cast<K>(1);
 
-    std::vector<T> rho_odd(base_size, utils::cast<T>(0.0)); // vector for theta_(2n + 1)
-    std::vector<T> rho_even(base_size, utils::cast<T>(0.0)); //vector for theta_(2n), in the beginning it is theta_(-1) which is zero for all i
+    std::vector<T> rho_odd(base_size, utils::cast<T>(0.0, precision)); // vector for theta_(2n + 1)
+    std::vector<T> rho_even(base_size, utils::cast<T>(0.0, precision)); //vector for theta_(2n), in the beginning it is theta_(-1) which is zero for all i
 
 	T delta; //temporary varaible
-	delta = utils::cast<T>(0.0);
-
-	//setting precision in case the type is able to have one
-	if constexpr (is_precisable<T>::value){
-		const size_t precision = std::max(utils::get_precision(data.Sn[0]), utils::get_precision(data.an[0]));
-		utils::set_vec_precision<T>(rho_odd, precision);
-		utils::set_vec_precision<T>(rho_even, precision);
-	}
+	delta = utils::cast<T>(0.0, precision);
 
     // init theta_(0)
-    for(K j = static_cast<K>(0); j < base_size; ++j) {
-        rho_even[j] = data.Sn.at(n + j);
-	}
+    for(K j = static_cast<K>(0); j < base_size; ++j) rho_even[j] = data.Sn.at(n + j);
 
     K j1, j2;
 

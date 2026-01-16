@@ -60,7 +60,7 @@ public:
 	T next(K n, T& state) const override {
 
 		// First term corresponds to the limit at x -> 0, subsequent terms are calculated recursively
-		if (n == 0) state += utils::cast<T>(1) / utils::sqrt(utils::cast<T>(2));
+		if (n == 0) state = utils::cast<T>(1, utils::get_precision(state)) / utils::sqrt(utils::cast<T>(2, utils::get_precision(state)));
 		else state *= this->x *
 		utils::cast<T>(utils::fma(static_cast<size_t>(4),static_cast<size_t>(n-1),static_cast<size_t>(1)) * utils::fma(static_cast<size_t>(4),static_cast<size_t>(n-1),static_cast<size_t>(3))) /
 		utils::cast<T>(8 * n * utils::fma(static_cast<size_t>(2),static_cast<size_t>(n),static_cast<size_t>(1)));

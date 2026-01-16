@@ -7,7 +7,7 @@
 #include <string>
 
 #include "custom_concepts.hpp"
-#include "utils.hpp"
+#include "utils/utils_get_precision.hpp"
 
 namespace shanks { namespace series {
 
@@ -38,15 +38,11 @@ protected:
     template<typename IteratorFunc>
     static series_result<T> generate_from_iterator(K n, IteratorFunc func) {
 
-        std::vector<T> an(n, utils::cast<T>(0.0));
-        std::vector<T> Sn(n, utils::cast<T>(0.0));
-
         //sample for precision
         const T sample = func();
-        if constexpr (is_precisable<T>::value){
-            utils::set_vec_precision(an, utils::get_precision(sample));
-            utils::set_vec_precision(Sn, utils::get_precision(sample));
-        }
+
+        std::vector<T> an(n, utils::cast<T>(0.0, utils::get_precision(sample)));
+        std::vector<T> Sn(n, utils::cast<T>(0.0, utils::get_precision(sample)));
 
         an[0] += sample; Sn[0] += sample;
         for (K i = 1; i < n; ++i) {
@@ -74,9 +70,6 @@ public:
 
         State state = initial_state();
 
-        //set state precision if possible
-        if constexpr (is_precisable<State>::value) utils::set_precision(utils::get_precision(this->x), state);
-
         return series_base<T, K>::generate_from_iterator(n, [this, &state, i = K(0)]() mutable {
             return this->next(i++, state);
         });
@@ -90,7 +83,7 @@ public:
     explicit series_base_succ(T x) : series_base_iter<T, K, T>(x) {}
 
     virtual T get_sum() const override = 0;
-    T initial_state() const { return utils::cast<T>(0); };
+    T initial_state() const { return utils::cast<T>(0.0, utils::get_precision(this->x)); };
     virtual T next(K index, T& state) const = 0;
 
     bool is_invalid() const override { return true; }

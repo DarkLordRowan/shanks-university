@@ -24,7 +24,7 @@ int main()
     while(true){
 		try
 		{
-			//main_testing_function<double, unsigned long long int>();
+			//main_testing_function<std::complex<double>, unsigned long long int>();
 			//main_testing_function<std::complex<long double>, unsigned long long int>();
 			//main_testing_function<std::complex<mpfr::mpreal>, unsigned short int>();
 			main_testing_function<mpfr::mpreal, unsigned short int>();

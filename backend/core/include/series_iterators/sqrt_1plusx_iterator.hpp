@@ -60,7 +60,7 @@ public:
 	T next(K n, T& state) const override {
 
 		// Recurrence relation for binomial expansion with alpha = 0.5
-		if (n == 0) state += utils::cast<T>(1);
+		if (n == 0) state = utils::cast<T>(1, utils::get_precision(state));
 		else state *= utils::cast<T>(-1) * this->x * (utils::cast<T>(2*n)-utils::cast<T>(3)) / utils::cast<T>(2*n);
 		return state;
 	}
