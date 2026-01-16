@@ -38,8 +38,7 @@
 | Параметр | Описание | По умолчанию |
 |----------|----------|--------------|
 | `series_json` | Путь к JSON с рядами | `config/example.json` |
-| `series_csv` | Путь к CSV с рядами | `config/example_series.csv` |
-| `accel_json` | Путь к JSON с методами | `config/example.json` |
+| `accel_json` | Путь к JSON с методами ускорения | `config/example.json` |
 | `noise_json` | Путь к JSON с шумами | `config/example.json` |
 | `filters_json` | Путь к JSON с фильтрами | `config/example.json` |
 

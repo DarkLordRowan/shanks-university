@@ -1,59 +1,53 @@
 # ----------------------
 # Общие настройки
 # ----------------------
-verbose: 2               # CLI: --verbose
+verbose: 2 # CLI: --verbose
 # Уровень детализации логирования.
 # 0 – минимум сообщений, 1 – стандарт, 2 – подробный вывод.
 # Используется для отладки и контроля прогресса.
 
-series_json: config/series.json    # CLI: --series-json
-# Путь к JSON-файлу с определением рядов.
+series_json: config/example.json # CLI: --series-json
+accel_json: config/example.json # CLI: --accel-json
 
-series_csv: config/series.csv      # CLI: --series-csv
-# Путь к CSV-файлу с натуральными рядами.
-
-accel_json: config/accel.json      # CLI: --accel-json
-# JSON-файл с конфигураций методов ускорения сходимости.
-
-output_dir: output                  # CLI: --output-dir
+output_dir: output # CLI: --output-dir
 # Каталог для всех выходных данных эксперимента.
 # Все файлы (JSON, CSV, Parquet) будут сохраняться сюда.
 
-results_json: output/results.json      # CLI: --results-json
+results_json: output/results.json # CLI: --results-json
 # Полный путь к выходному файлу JSON с результатами.
 # JSON используется для последующего анализа и обмена данными.
 
-results_csv: output/results.csv        # CLI: --results-csv
+results_csv: output/results.csv # CLI: --results-csv
 # Полный путь к CSV-файлу с результатами экспериментов.
 # CSV удобен для загрузки в Excel или Pandas.
 
-results_parquet: output/results.parquet  # CLI: --results-parquet
+results_parquet: output/results.parquet # CLI: --results-parquet
 # Полный путь к Parquet-файлу с результатами.
 # Parquet оптимизирован для больших наборов данных и аналитики.
 
-trial_process_count: 8              # CLI: --trial-process-count
+trial_process_count: 8 # CLI: --trial-process-count
 # Количество параллельных процессов для выполнения экспериментов.
 # Влияет на скорость и нагрузку на CPU.
 
-trial_task_timeout: 15              # CLI: --trial-task-timeout
+trial_task_timeout: 15 # CLI: --trial-task-timeout
 # Таймаут выполнения одного испытания в секундах.
 # Если испытание не завершилось, она будет помечена как проваленное.
 
-trial_result_view: full             # CLI: --trial-result-view
+trial_result_view: full # CLI: --trial-result-view
 # Формат представления результатов.
 # Возможные значения: minimal / completion / full
 
-no_events: true                     # CLI: --no-events
+no_events: true # CLI: --no-events
 # Флаг отключения генерации событий эксперимента.
 
 precisions:
-  - F64                               # CLI: --precisions
+  - F64 # CLI: --precisions
 # Список используемых типов точности для вычислений.
 # Например: F64 (double), F32 (float), FLong (long), Arb
 # Можно указать несколько типов.
 
 output_formats:
-  - JSON                              # CLI: --output-formats
+  - JSON # CLI: --output-formats
   - CSV
 # Список форматов экспорта данных испытаний.
 # Можно указать несколько форматов.
@@ -88,5 +82,5 @@ output_formats:
 # Настройки формата вывода Parquet
 # ----------------------
 output:
-  parquet_collection: trial_results     # CLI: --output.parquet-collection
+  parquet_collection: trial_results # CLI: --output.parquet-collection
 # Название коллекции или таблицы внутри Parquet-файла.

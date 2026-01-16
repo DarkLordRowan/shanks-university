@@ -1,5 +1,6 @@
 {
   "series": [
+    "example_series.csv",
     {
       "name": "ExpSeries",
       "args": {

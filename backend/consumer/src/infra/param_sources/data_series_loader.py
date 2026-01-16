@@ -3,30 +3,43 @@ Data series parameter source implementation.
 Author: Yadrentsev I. M.
 """
 
+from pathlib import Path
 from typing import Any, Iterable, Mapping
 
 from src.domain.application.param_processing import autowrap
-from src.domain.params import SeriesParamJSON
+from src.domain.params import BaseSeriesParam, SeriesParamJSON
 from src.domain.precision import PrecisionType, cast_precision_value
 from src.domain.sources import SeriesParamSource
 from src.config.model import NoiseConfig
+from src.infra.param_sources.csv_series_loader import CSVSeriesParamSource
 
 
 class DataSeriesParamSource(SeriesParamSource):
-    def __init__(self, data: Mapping):
+    def __init__(self, data: Mapping, context_path: Path | None = None):
         self.data = data
+        self.context_path = context_path
 
-    def load(self, precision: PrecisionType) -> Iterable[SeriesParamJSON]:
+    def load(self, precision: PrecisionType) -> Iterable[BaseSeriesParam]:
         """Loads series parameters from provided data.
 
         :param precision: The precision type for parameter conversion.
         :type precision: PrecisionType
-        :return: An iterable of SeriesParamJSON instances.
-        :rtype: Iterable[SeriesParamJSON]
+        :return: An iterable of BaseSeriesParam instances.
+        :rtype: Iterable[BaseSeriesParam]
         """
-        series_list: list[SeriesParamJSON[Any]] = []
+        series_list: list[BaseSeriesParam] = []
 
         for series_data in self.data["series"]:
+            if isinstance(series_data, str):
+                csv_path = Path(series_data)
+                if not csv_path.is_absolute() and self.context_path:
+                    csv_path = self.context_path / csv_path
+                
+                if csv_path.exists():
+                    loader = CSVSeriesParamSource(csv_path)
+                    series_list.extend(loader.load(precision))
+                continue
+
             args = series_data.get("args", {})
             processed = self._process_args(args, precision)
             

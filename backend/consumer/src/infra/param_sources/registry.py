@@ -13,11 +13,6 @@ PARAM_SERIES_SOURCE_BUILDERS = [
         if cfg.series_json and cfg.series_json.exists()
         else None
     ),
-    lambda cfg: (
-        CSVSeriesParamSource(cfg.series_csv)
-        if cfg.series_csv and cfg.series_csv.exists()
-        else None
-    ),
 ]
 
 PARAM_ACCELS_SOURCE_BUILDERS = [

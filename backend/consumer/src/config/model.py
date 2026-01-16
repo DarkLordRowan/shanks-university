@@ -45,7 +45,6 @@ class TrialConfig:
 
     def __post_init__(self):
         self.series_json = Path(self.series_json)
-        self.series_csv = Path(self.series_csv)
         self.accel_json = Path(self.accel_json)
         self.noise_json = Path(self.noise_json)
         self.filters_json = Path(self.filters_json)
@@ -95,7 +94,6 @@ class TrialConfig:
     verbose: int = 0
 
     series_json: Path = Path("config/example.json")
-    series_csv: Path = Path("config/example_series.csv")
     accel_json: Path = Path("config/example.json")
     noise_json: Path = Path("config/example.json")
     filters_json: Path = Path("config/example.json")

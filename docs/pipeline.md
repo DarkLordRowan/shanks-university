@@ -30,8 +30,7 @@ cfg = TrialConfig.load(Path("config/options.json"))
 |------|----------|--------------|
 | `verbose` | Уровень логирования | 0 |
 | `series_json` | Путь к JSON с рядами | `config/example.json` |
-| `series_csv` | Путь к CSV с рядами | `config/example_series.csv` |
-| `accel_json` | Путь к JSON с методами | `config/example.json` |
+| `accel_json` | Путь к JSON с методами ускорения | `config/example.json` |
 | `noise_json` | Путь к JSON с шумами | `config/example.json` |
 | `filters_json` | Путь к JSON с фильтрами | `config/example.json` |
 | `output_dir` | Директория вывода | `output` |
@@ -60,8 +59,8 @@ executor = get_trial_executor_from_config(cfg)
 
 1. **TrialRunner** — `ParallelTrialRunner` или `SequentialTrialRunner` в зависимости от `trial_process_count`
 2. **SeriesParamSource'ы** — из `PARAM_SERIES_SOURCE_BUILDERS` registry:
-   - `JSONSeriesParamSource` — если `series_json` существует
-   - `CSVSeriesParamSource` — если `series_csv` существует
+   - `JSONSeriesParamSource`
+   - `CSVSeriesParamSource`
 3. **AccelParamSource'ы** — из `PARAM_ACCELS_SOURCE_BUILDERS` registry:
    - `JSONAccelParamSource` — если `accel_json` существует
 4. **Serializer** — `TrialResultSerializer`
