@@ -46,8 +46,7 @@ std::vector<Scalar> savgol_filter(
     Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic> x = Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic>::Ones(window_length, polyorder + 1);
 
     // Constructing the Vandermonde matrix
-    for (size_t i{1}; i <= polyorder; ++i)
-        x.col(i) = (x.col(i-1).array() * v.array()).matrix();
+    for (size_t i{1}; i <= polyorder; ++i) x.col(i) = (x.col(i-1).array() * v.array()).matrix();
 
     // Calculating the pseudo-inverse to find polynomial coefficients
     Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic> coeff_mat = (x.transpose() * x).inverse() * x.transpose();
