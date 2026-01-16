@@ -4,7 +4,7 @@
 /**
  * @file wynn_epsilon_3_algorithm.hpp
  * @brief This file contains the declaration of the third implementation of Wynn's Epsilon Algorithm.
- * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G., Sobolev Y. A.,
  *
  * For theory, see:
  * Wynn, P. (1956). On a device for computing the eₙ(Sₙ) transformation.
@@ -58,7 +58,7 @@ public:
      * The algorithm constructs a table of approximations and applies the recurrence:
      * For theory, see: Wynn (1956), Eq. (4): εₛ₊₁⁽ⁿ⁾ = εₛ₋₁⁽ⁿ⁺¹⁾ + 1/(εₛ⁽ⁿ⁺¹⁾ - εₛ⁽ⁿ⁾)
      * More information([https://calgo.acm.org/])
-     * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+     * @authors Sobolev Y. A., Lykov D.S., Kreynin R.G.
      * @param n The starting index of the partial sum window to use.
      *        Valid values: n >= 0.
      * @param order The order of transformation (related to the depth of the table).
