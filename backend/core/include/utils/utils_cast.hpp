@@ -11,7 +11,7 @@
  */
 
 /**
- * @brief Wrapper around std::static_cast with CLN specializations
+ * @brief Wrapper around std::static_cast and support for precisable types
  * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  * @param x (From)
  * @return To (casted value)
