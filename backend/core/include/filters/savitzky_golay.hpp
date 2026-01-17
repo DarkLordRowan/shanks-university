@@ -1,5 +1,5 @@
-#ifndef SAVGOL_HPP
-#define SAVGOL_HPP
+#ifndef SAVITZKY_GOLAY_HPP
+#define SAVITZKY_GOLAY_HPP
 #pragma once
 
 #include <eigen3/Eigen/Core>
@@ -9,7 +9,7 @@
 #include "../utils/utils_cast.hpp"
 
 /**
- * @file savgol.hpp
+ * @file savitzky_golay.hpp
  * @brief Savitzky-Golay filter implementation.
  * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  */
@@ -18,7 +18,7 @@ namespace shanks{
 namespace filters{
 
 /**
- * @file savgol.hpp
+ * @file savitzky_golay.hpp
  * @brief Calculates Savitzky-Golay filter for given data
  * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  * @param data (std::vector<Scalar>), window_length (size_t), polyorder (size_t), derive (size_t), delta (Scalar)
@@ -26,7 +26,7 @@ namespace filters{
  * @throws std::invalid_argument if window_length > data.size() or polyorder >= window_length
  */
 template<AcceptedLike Scalar>
-std::vector<Scalar> savgol_filter(
+std::vector<Scalar> savitzky_golay_filter(
     const std::vector<Scalar>& data,
     size_t window_length,
     size_t polyorder, //order of approximation polynomial

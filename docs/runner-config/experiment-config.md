@@ -178,7 +178,7 @@
 {
   "filters": [
     {
-      "type": "savgol|kolzur",
+      "type": "savitzky_golay|kolmogorov_zurbenko",
       "params": {...}
     }
   ]
@@ -194,11 +194,11 @@
 
 ### Типы фильтров
 
-#### Savitzky-Golay (`savgol`)
+#### Savitzky-Golay (`savitzky_golay`)
 
 ```json
 {
-  "type": "savgol",
+  "type": "savitzky_golay",
   "params": {
     "polyorder": 2,
     "derive": 0,
@@ -214,11 +214,11 @@
 - `delta` - шаг дискретизации (по умолчанию 1.0)
 - `window_length` - длина окна (`"segment"` для автоматической или число)
 
-#### Kolzur (`kolzur`)
+#### Kolmogorov-Zurbenko (`kolmogorov_zurbenko`)
 
 ```json
 {
-  "type": "kolzur",
+  "type": "kolmogorov_zurbenko",
   "params": {
     "degree": 3
   }
@@ -233,16 +233,16 @@
 ```json
 {
   "filters": [
-    {
-      "type": "savgol",
-      "params": {
+{
+  "type": "savitzky_golay",
+  "params": {
         "polyorder": 2,
         "derive": 0,
         "delta": 1.0
       }
     },
     {
-      "type": "kolzur",
+      "type": "kolmogorov_zurbenko",
       "params": {
         "degree": 3
       }
@@ -408,9 +408,9 @@
     }
   ],
   "filters": [
-    {
-      "type": "savgol",
-      "params": {
+{
+  "type": "savitzky_golay",
+  "params": {
         "polyorder": 2,
         "derive": 0,
         "delta": 1.0

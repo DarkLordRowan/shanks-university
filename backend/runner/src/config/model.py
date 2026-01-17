@@ -34,7 +34,7 @@ class FilterConfig:
     @classmethod
     def from_dict(cls, data: dict) -> "FilterConfig":
         return cls(
-            type=data.get("type", "savgol"),
+            type=data.get("type", "savitzky_golay"),
             params=data.get("params", {})
         )
 

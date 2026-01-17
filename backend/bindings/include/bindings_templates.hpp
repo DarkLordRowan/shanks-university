@@ -12,8 +12,8 @@
 #include "../../core/include/series.hpp"
 #include "../../core/include/methods.hpp"
 #include "../../core/include/noise/noise_generator.hpp"
-#include "../../core/include/filters/kolzur.hpp"
-#include "../../core/include/filters/savgol.hpp"
+#include "../../core/include/filters/kolmogorov_zurbenko.hpp"
+#include "../../core/include/filters/savitzky_golay.hpp"
 
 /**
  * @brief Template implementation for binding series.
@@ -133,13 +133,13 @@ void bind_noise(pybind11::module_& m, const char* suffix){
 
 template<AcceptedLike T>
 void bind_filters(pybind11::module_& m, const char* suffix){
-    m.def(create_name("kolzurFilter", suffix).c_str(),
-        &shanks::filters::kolzur_filter<T>,
+    m.def(create_name("kolmogorovZurbenkoFilter", suffix).c_str(),
+        &shanks::filters::kolmogorov_zurbenko_filter<T>,
         py::arg("result"), py::arg("windowLength"), py::arg("degree")
     );
 
-    m.def(create_name("savgolFilter", suffix).c_str(),
-        &shanks::filters::savgol_filter<T>,
+    m.def(create_name("savitzkyGolayFilter", suffix).c_str(),
+        &shanks::filters::savitzky_golay_filter<T>,
         py::arg("result"), py::arg("windowLength"),
         py::arg("polyorder"), py::arg("derive"), py::arg("delta")
     );

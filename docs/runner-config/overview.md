@@ -153,7 +153,7 @@ output_formats:
     {"type": "Normal", "method": "jitter", "param1": 0.0, "param2": 1e-10, "seed": 42}
   ],
   "filters": [
-    {"type": "savgol", "params": {"polyorder": 2}}
+    {"type": "savitzky_golay", "params": {"polyorder": 2}}
   ],
   "methods": [
     {

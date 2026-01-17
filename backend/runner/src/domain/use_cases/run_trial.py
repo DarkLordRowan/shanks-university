@@ -303,6 +303,10 @@ def execute_trial(
                             f_type = f_conf.type
                             p = f_conf.params
 
+                            # Convert snake_case to camelCase for the C++ binding name
+                            components = f_type.split('_')
+                            f_type_camel = components[0] + ''.join(x.title() for x in components[1:])
+
                             # Window length logic: default to segment length
                             w_len = p.get("window_length", len(divergent_segment))
                             if w_len == "segment":
@@ -314,7 +318,7 @@ def execute_trial(
                             if w_len < 3:
                                 continue
 
-                            func_name = f"{f_type}Filter{series.precision.value}"
+                            func_name = f"{f_type_camel}Filter{series.precision.value}"
                             if hasattr(ps, func_name):
                                 try:
                                     func = getattr(ps, func_name)

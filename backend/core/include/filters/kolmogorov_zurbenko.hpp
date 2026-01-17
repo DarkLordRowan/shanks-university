@@ -1,5 +1,5 @@
-#ifndef KOLZUR_HPP
-#define KOLZUR_HPP
+#ifndef KOLMOGOROV_ZURBENKO_HPP
+#define KOLMOGOROV_ZURBENKO_HPP
 #pragma once
 
 #include "../custom_concepts.hpp"
@@ -8,7 +8,7 @@
 #include "../utils/utils_cast.hpp"
 
 /**
- * @file kolzur.hpp
+ * @file kolmogorov_zurbenko.hpp
  * @brief Kolmogorov-Zurbenko filter implementation.
  * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  */
@@ -24,7 +24,7 @@ namespace filters{
  */
 template<typename Scalar>
 requires AcceptedLike<Scalar> || std::is_integral<Scalar>::value
-std::vector<Scalar> kolzur_filter(
+std::vector<Scalar> kolmogorov_zurbenko_filter(
     const std::vector<Scalar>& data,
     size_t window_length /*m*/,
     size_t degree /*k*/
