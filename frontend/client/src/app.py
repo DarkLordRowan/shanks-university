@@ -7,7 +7,7 @@ from src.views import api_router
 def get_app():
     app = FastAPI(
         title="MongoDB Results Viewer API",
-        description="Read-only MongoDB from consumer",
+        description="Read-only MongoDB from runner",
         version="1.0.0",
         lifespan=lifespan_setup,
         docs_url="/docs",

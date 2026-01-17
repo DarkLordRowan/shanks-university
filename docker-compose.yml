@@ -1,9 +1,9 @@
 name: shanks-university
 services:
-  shanks-consumer:
+  shanks-runner:
     stdin_open: true
     tty: true
-    container_name: shanks-consumer
+    container_name: shanks-runner
     build:
       context: .
       dockerfile: backend/Dockerfile
@@ -13,7 +13,7 @@ services:
       - MONGO_USERNAME=${MONGO_USERNAME}
       - MONGO_PASSWORD=${MONGO_PASSWORD}
     depends_on:
-      shanks-consumer-mongodb:
+      shanks-runner-mongodb:
         condition: service_healthy
     volumes:
       - ./backend/runner/config:/app/config
@@ -21,9 +21,9 @@ services:
     networks:
       - shanks-network
 
-  shanks-consumer-mongodb:
+  shanks-runner-mongodb:
     image: mongo:latest
-    container_name: shanks-consumer-mongodb
+    container_name: shanks-runner-mongodb
     restart: unless-stopped
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_USERNAME}
@@ -54,7 +54,7 @@ services:
     ports:
       - 8080:8000
     depends_on:
-      shanks-consumer-mongodb:
+      shanks-runner-mongodb:
         condition: service_healthy
     volumes:
       - ./frontend/client/:/app/

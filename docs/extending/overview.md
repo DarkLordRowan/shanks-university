@@ -64,7 +64,7 @@
 
 **Что:** Критерии останова и детекции аномалий.
 
-**Где:** `backend/runner/src/domain/event.py`
+**Где:** `backend/runner/` (модуль `domain/event.py`)
 
 **Регистрация:** `EventType` enum
 

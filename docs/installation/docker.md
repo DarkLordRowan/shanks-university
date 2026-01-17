@@ -25,8 +25,8 @@ docker compose version
 
 ```yaml
 services:
-  shanks-consumer:         # Backend consumer
-  shanks-consumer-mongodb: # MongoDB
+  shanks-runner:           # Backend runner
+  shanks-runner-mongodb:   # MongoDB
   shanks-client:           # FastAPI REST API
 ```
 
@@ -34,8 +34,8 @@ services:
 
 | Сервис | Образ | Порт | Описание |
 |--------|-------|------|----------|
-| `shanks-consumer` | shanks-consumer | - | Запуск экспериментов |
-| `shanks-consumer-mongodb` | mongo:latest | 27017 | Хранение результатов |
+| `shanks-runner` | shanks-runner | - | Запуск экспериментов |
+| `shanks-runner-mongodb` | mongo:latest | 27017 | Хранение результатов |
 | `shanks-client` | shanks-client | 8080 | REST API |
 
 ---
@@ -46,7 +46,7 @@ services:
 
 ```bash
 # MongoDB
-MONGO_HOST=shanks-consumer-mongodb
+MONGO_HOST=shanks-runner-mongodb
 MONGO_PORT=27017
 MONGO_USERNAME=admin
 MONGO_PASSWORD=secret_password
@@ -66,7 +66,7 @@ docker compose build
 ```
 
 **Собираемые образы:**
-1. `shanks-consumer` — из `backend/Dockerfile`
+1. `shanks-runner` — из `backend/Dockerfile`
 2. `shanks-client` — из `frontend/client/Dockerfile`
 
 ---
@@ -83,13 +83,13 @@ docker compose up -d
 
 ```bash
 # Только MongoDB
-docker compose up -d shanks-consumer-mongodb
+docker compose up -d shanks-runner-mongodb
 
-# MongoDB + Consumer
-docker compose up -d shanks-consumer-mongodb shanks-consumer
+# MongoDB + Runner
+docker compose up -d shanks-runner-mongodb shanks-runner
 
 # MongoDB + Client
-docker compose up -d shanks-consumer-mongodb shanks-client
+docker compose up -d shanks-runner-mongodb shanks-client
 ```
 
 ---
@@ -97,7 +97,7 @@ docker compose up -d shanks-consumer-mongodb shanks-client
 ## Шаг 4. Запуск эксперимента в контейнере
 
 ```bash
-docker compose exec shanks-consumer python -m src run \
+docker compose exec shanks-runner python main.py run \
     --config /app/config/options.json
 ```
 
@@ -114,7 +114,7 @@ docker compose exec shanks-consumer python -m src run \
 
 ```bash
 # Запуск
-docker compose exec shanks-consumer python -m src run \
+docker compose exec shanks-runner python main.py run \
     --config /app/config/example.json
 
 # Просмотр результатов

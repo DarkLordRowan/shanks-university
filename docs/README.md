@@ -24,4 +24,4 @@
 - [Установка Docker](installation/docker.md)
 - [Установка Linux](installation/linux.md)
 - [Добавление методов/рядов](extending/overview.md)
-- [Конфигурация экспериментов](consumer-config/overview.md)
+- [Конфигурация экспериментов](runner-config/overview.md)

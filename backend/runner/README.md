@@ -1,4 +1,4 @@
-# Shanks consumer CLI
+# Shanks runner CLI
 
 ## Установка
 
@@ -8,7 +8,7 @@
 git clone https://github.com/DarkLordRowan/shanks-university.git
 cd shanks-university
 git checkout concept-proved
-cd consumer
+cd runner
 
 bash install_pyshanks.sh
 
@@ -296,7 +296,7 @@ python main.py --no-events --no-plots --output-dir test_run
 git clone https://github.com/DarkLordRowan/shanks-university.git
 cd shanks-university
 git checkout concept-proved
-cd consumer
+cd runner
 
 # Убедитесь, что у вас установлены зависимости:
 sudo apt update
@@ -368,9 +368,9 @@ docker compose ps
 Для выполнения команд используйте шаблон:
 
 ```sh
-docker compose exec -it shanks-consumer аналогичная_python_команда
+docker compose exec -it shanks-runner аналогичная_python_команда
 # Например:
-docker compose exec -it shanks-consumer python main.py run --options-json config/options.json
+docker compose exec -it shanks-runner python main.py run --options-json config/options.json
 ```
 
 ### 4. Ограничения
