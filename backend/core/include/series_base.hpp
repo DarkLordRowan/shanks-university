@@ -7,7 +7,7 @@
 #include <string>
 
 #include "custom_concepts.hpp"
-#include "utils/utils_get_precision.hpp"
+#include "utils.hpp"
 
 namespace shanks { namespace series {
 
