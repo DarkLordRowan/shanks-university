@@ -4,6 +4,7 @@
 
 #include "../series_base.hpp"
 
+
 /**
  * @file arcsin_x_iterator.hpp
  * @brief Iterator for the Taylor series expansion of arcsin(x).

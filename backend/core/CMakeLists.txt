@@ -2,7 +2,14 @@ cmake_minimum_required(VERSION 3.11)
 project(shanks LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
+set(CMAKE_INTERPROCEDURAL_OPTIMIZATION FALSE)
+
+# Use mold linker if available
+find_program(MOLD_PATH mold)
+if(MOLD_PATH)
+    add_link_options("-fuse-ld=mold")
+endif()
+
 include(FetchContent)
 
 # Add module path for custom Find modules
@@ -22,7 +29,7 @@ include_directories(
 # Бинарник (основная программа)
 # -------------------------
 
-add_executable(shanks 
+add_executable(shanks
     ${CMAKE_SOURCE_DIR}/main.cpp
 )
 

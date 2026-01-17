@@ -1,21 +1,18 @@
 /**
  * @file pyshanks.cpp
- * @brief pybind11 bindings with support for double and arbitrary-precision float_precision
- * @authors Sobolev Y. A., Naumov A.U.
-*/
+ * @brief pybind11 bindings entry point
+ * @authors Naumov A.U., Sobolev Y. A.
+ */
 
-#include <pybind11/operators.h>
-#include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
-#include <complex>
-
-#include "mpreal.h"
 #include "../include/bindings.hpp"
+#include "../../core/include/transformations/remainders.hpp"
+#include "../../core/include/transformations/wynn_numerators.hpp"
+#include "../../core/include/noise/noise_generator.hpp"
 
 PYBIND11_MODULE(pyshanks, m) {
     m.doc() = "pybind11: polymorphic series (double + float_precision), registry-based";
 
-    // 1. Bind basic types first!
+    // 1. Bind basic types
     bind_types(m);
 
     // 2. Bind enums
@@ -44,41 +41,11 @@ PYBIND11_MODULE(pyshanks, m) {
         .value("Scaling", NoiseMethod::scaling)
         .export_values();
 
-    // 3. Bind all templated series and algos and noise
-    using types_to_bind = std::tuple<
-        std::tuple<       float, size_t>,
-        std::tuple<      double, size_t>,
-        std::tuple< long double, size_t>,
-        std::tuple<mpfr::mpreal, size_t>,
-        std::tuple<std::complex<float       >, size_t>,
-        std::tuple<std::complex<double      >, size_t>,
-        std::tuple<std::complex<long double >, size_t>,
-        std::tuple<std::complex<mpfr::mpreal>, size_t>
-    >;
-
-    /**
-    * @brief Array of suffixes for standard numeric types.
-    *
-    * Used to distinguish bindings for different precisions and complex types.
-    * - F32: float
-    * - F64: double
-    * - FLong: long double
-    * - Arb: mpfr::mpreal
-    * - CF32: std::complex<float>
-    * - CF64: std::complex<double>
-    * - CFLong: std::complex<long double>
-    * - CArb: std::complex<mpfr::mpreal>
-    */
-    constexpr std::array<const char*, 8> suffixes{
-        "F32",
-        "F64",
-        "FLong",
-        "Arb",
-        "CF32",
-        "CF64",
-        "CFLong",
-        "CArb"
-    };
-
-    bind_all_types<types_to_bind, suffixes.size()>(m, suffixes);
+    // 3. Bind all templated components from separate compilation units
+    bind_series_real(m);
+    bind_series_complex(m);
+    bind_algos_real(m);
+    bind_algos_complex(m);
+    bind_noise_all(m);
+    bind_filters_all(m);
 }

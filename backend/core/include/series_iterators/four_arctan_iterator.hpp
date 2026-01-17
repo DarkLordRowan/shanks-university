@@ -12,6 +12,7 @@
 
 namespace shanks { namespace series {
 
+
 /**
  * @brief Taylor series iterator for the function f(x) = 4 * arctan(x).
  *

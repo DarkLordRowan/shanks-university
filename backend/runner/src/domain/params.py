@@ -158,23 +158,23 @@ class BaseSeriesParam[T]:
             instance = self.executable()
             return (instance.generate(vec_size), instance.get_sum())
 
-        # For registry-based series, instantiate class directly
-        class_name = f"{self.series_name}{self.precision.value}"
+        # For registry-based series, call the bound function
+        function_name = f"{self.series_name}{self.precision.value}"
 
-        if not hasattr(ps, class_name):
-            raise RuntimeError(f"Series class not found: {class_name}")
+        if not hasattr(ps, function_name):
+            raise RuntimeError(f"Series function not found: {function_name}")
 
-        cls = getattr(ps, class_name)
+        func = getattr(ps, function_name)
 
-        # Instantiate with exactly provided arguments.
-        # If the user config provides args that the class doesn't accept, this will raise TypeError.
-        # This is intended behavior.
-        instance = cls(**kwargs)
+        # The function signature is (n, x, tParam, kParam)
+        # We need to extract 'n' from kwargs or use vec_size
+        n = kwargs.pop("vecSize", vec_size)
 
-        return (
-            instance.generate(vec_size),
-            instance.get_sum(),
-        )
+        # Call the function and get (SeriesResult, limit)
+        # Result is a tuple (ps.SeriesResultXXXX, NumericLike)
+        result_pair = func(n=n, **kwargs)
+
+        return result_pair
 
     def obtain_by_argument(
         self, argument: Mapping[str, Any], size_floor: int
@@ -491,10 +491,15 @@ class AccelParamJSON(StandardAccelParam[TNum]):
     @property
     @override
     def executable(self):
-        accel_class_name = f"{self.accel_name}{self.precision.value}"
-        if not hasattr(ps, accel_class_name):
-            raise RuntimeError(f"Acceleration class not found: {accel_class_name}")
-        return getattr(ps, accel_class_name)
+        accel_func_name = f"{self.accel_name}{self.precision.value}"
+        if not hasattr(ps, accel_func_name):
+            raise RuntimeError(f"Acceleration function not found: {accel_func_name}")
+        return getattr(ps, accel_func_name)
+
+    def create_instance(self, args: Mapping[str, Any]) -> AccelProto[NumericLike]:
+        """Create an instance of the acceleration method (a lambda calling the function with args)."""
+        func = self.executable
+        return lambda n, m, series: func(n, m, series, **args)
 
     @property
     @override

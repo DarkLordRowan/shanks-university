@@ -14,19 +14,6 @@
       in
       {
 
-        devShells.python = pkgs.mkShell {
-          packages = with pkgs; [
-            (python3.withPackages (ps: with ps; [
-              numpy
-              pandas
-              pyarrow
-              polars
-              pyqt6
-              pyqtgraph
-              mypy
-            ]))
-          ];
-        };
         devShells.default = pkgs.mkShell {
           packages = with pkgs; [
             cmake
@@ -36,6 +23,9 @@
             mpfr
             gmp
             eigen
+            mold
+            ccache
+            ninja
             (python3.withPackages (
               ps: with ps; [
                 pybind11-stubgen
@@ -45,6 +35,7 @@
                 pyqtgraph
                 numpy
                 pandas
+                mypy
               ]
             ))
           ];

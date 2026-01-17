@@ -7,6 +7,7 @@
 #include <functional>
 #include <random>
 #include <vector>
+#include <cstdlib>
 
 
 #ifndef SHANKS_TRANSFORMATION_NOISE_GENERATOR_HPP
