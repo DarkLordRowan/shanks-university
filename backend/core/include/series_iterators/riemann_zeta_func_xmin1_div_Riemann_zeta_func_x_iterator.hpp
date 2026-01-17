@@ -68,7 +68,7 @@ public:
 	T next(K n, T& state) const override {
 
 		// Dirichlet series term involving Euler's totient function
-		state = utils::phi<T, K>(n+1) / utils::pow(utils::cast<T>(n+1), this->x);
+		state = utils::phi<T, K>(n+1) / utils::pow(utils::cast<T>(n+1, utils::get_precision(state)), this->x);
 		return state;
 	}
 

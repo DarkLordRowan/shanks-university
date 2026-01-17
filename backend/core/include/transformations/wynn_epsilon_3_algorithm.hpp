@@ -180,6 +180,9 @@ T wynn_epsilon_3_algorithm<T, K>::operator()(
         K1 = k;
         K num_k = k; // Equivalent to NUM = N
 
+        bool shift_logic = true;
+        bool store_best  = true;
+
         // Loop I=1 to NEWELM
         for (K I = 1; I <= newelm; ++I) {
             K K2 = K1 - static_cast<K>(1);
@@ -206,7 +209,8 @@ T wynn_epsilon_3_algorithm<T, K>::operator()(
                 current_step_result = RES;
                 current_step_error = ERR2 + ERR3;
                 // GO TO 90 (End of this step)
-                goto label_90;
+                shift_logic = false;
+                break;
             }
 
             if (jump_to_10) {
@@ -225,7 +229,8 @@ T wynn_epsilon_3_algorithm<T, K>::operator()(
                     // Fortran: N becomes 2*I - 1.
                     // This affects the compaction logic later.
                     num_k = static_cast<K>(2) * I - static_cast<K>(1);
-                    goto label_50;
+                    store_best = false;
+                    break;
                 }
 
                 SS = utils::cast<T>(1, precision) / DELTA1 + utils::cast<T>(1, precision) / DELTA2 - utils::cast<T>(1, precision) / DELTA3;
@@ -234,7 +239,8 @@ T wynn_epsilon_3_algorithm<T, K>::operator()(
                 if (utils::abs(SS * E1) <= epsilon_threshold) { // Logic inverted from GT check
                      // Label 20 again
                      num_k = static_cast<K>(2) * I - static_cast<K>(1);
-                     goto label_50;
+                     store_best = false;
+                     break;
                 }
 
                 // Label 30
@@ -251,60 +257,63 @@ T wynn_epsilon_3_algorithm<T, K>::operator()(
             }
         }
 
-        label_50:
         // Compaction / Table Shift Logic
         // Fortran: IF (N.EQ.LIMEXP) N = 2*(LIMEXP/2) - 1 ...
         // We don't have fixed LIMEXP, but we can perform the compaction to keep 'epstab' clean
         // or just let it grow. The algorithm assumes compaction to remove old diagonals.
         // Implementing compaction (Shift the table)
-
         // IB = 1. IF ((NUM/2)*2.EQ.NUM) IB = 2.
         // In 0-based: if k (NUM) is odd -> IB=0?
         // Fortran NUM=1 (Odd) -> IB=1. C++ k=0 (Even) -> ib=0.
         // Fortran NUM=2 (Even) -> IB=2. C++ k=1 (Odd) -> ib=1.
-        ib = (k % static_cast<K>(2) == static_cast<K>(0)) ? static_cast<K>(0) : static_cast<K>(1);
+        if (shift_logic){
+            ib = (k % static_cast<K>(2) == static_cast<K>(0)) ? static_cast<K>(0) : static_cast<K>(1);
 
-        ie = newelm + static_cast<K>(1);
+            ie = newelm + static_cast<K>(1);
 
-        for (K i_comp = 0; i_comp < ie; ++i_comp) {
-            K ib2 = ib + static_cast<K>(2);
-            // EPSTAB(IB) = EPSTAB(IB2)
-            epstab[ib] = epstab[ib2];
-            ib = ib2;
-        }
+            for (K i_comp = 0; i_comp < ie; ++i_comp) {
+                K ib2 = ib + static_cast<K>(2);
+                // EPSTAB(IB) = EPSTAB(IB2)
+                epstab[ib] = epstab[ib2];
+                ib = ib2;
+            }
 
-        if (k != num_k) { // IF (NUM.EQ.N) check (k is original N, num_k is potentially modified N)
-             // Fortran: IN = NUM - N + 1.
-             // 0-based: index 'in' = k - num_k.
-             in = k - num_k;
-             for (K j = 0; j <= num_k; ++j) { // <= num_k to cover 0..N?
-                 // Fortran loops 1 to N.
-                 // So we loop 0 to num_k? Wait, if N=num_k (0-based count?), loop 0 to num_k?
-                 // If num_k is index, loop j=0 to num_k?
-                 // Yes.
-                 // epstab[j] = epstab[in + j]
-                 if (in + j < epstab.size())
-                    epstab[j] = epstab[in + j];
-             }
+            if (k != num_k) { // IF (NUM.EQ.N) check (k is original N, num_k is potentially modified N)
+                 // Fortran: IN = NUM - N + 1.
+                 // 0-based: index 'in' = k - num_k.
+                 in = k - num_k;
+                 for (K j = 0; j <= num_k; ++j) { // <= num_k to cover 0..N?
+                     // Fortran loops 1 to N.
+                     // So we loop 0 to num_k? Wait, if N=num_k (0-based count?), loop 0 to num_k?
+                     // If num_k is index, loop j=0 to num_k?
+                     // Yes.
+                     // epstab[j] = epstab[in + j]
+                     if (in + j < epstab.size())
+                        epstab[j] = epstab[in + j];
+                 }
+            }
         }
 
         // Label 80
         // ABSERR = ABS(RESULT - RESLA)
         // RESLA = RESULT
 
-        label_90:
+        // Label 90
         // ABSERR = MAX(...)
         // Store best result for this step.
         // The algorithm returns the result of the *last* step (or the most converged one).
         // We update the class 'result' variable.
-        result = current_step_result;
+        if (store_best){
+            result = current_step_result;
 
-        // Error update for next step comparison?
-        abs_error = max(
-            utils::abs(result - resla),
-            EPRN * utils::abs(result)
-        );
-        resla = result;
+            // Error update for next step comparison?
+            abs_error = max(
+                utils::abs(result - resla),
+                EPRN * utils::abs(result)
+            );
+            resla = result;
+        }
+        
     }
 
     // Final validity check for the accelerated estimate

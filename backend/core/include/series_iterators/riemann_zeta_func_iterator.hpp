@@ -66,7 +66,7 @@ public:
 	T next(K n, T& state) const override {
 
 		// Term formula: 1 / (n+1)^s
-		state = utils::pow(utils::cast<T>(n+1), utils::cast<T>(-1) * this->x);
+		state = utils::pow(utils::cast<T>(n+1, utils::get_precision(state)), utils::cast<T>(-1) * this->x);
 		return state;
 	}
 
