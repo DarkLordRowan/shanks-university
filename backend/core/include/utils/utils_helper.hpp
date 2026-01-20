@@ -1,5 +1,6 @@
 #ifndef UTILS_HELPER_H
 #define UTILS_HELPER_H
+#include <concepts>
 #pragma once
 
 #include "utils_base.hpp"
@@ -29,7 +30,7 @@ std::string utils::to_string(const T& x){
 		return x.toString(MAX_PRECISION_AVAILABLE, 10);
 	}
 	#endif
-    else if constexpr (is_complex_custom<T>::value) return "( " + utils::to_string(x.real()) + ", " + utils::to_string(x.imag()) + ")";
+    else if constexpr (is_complex_custom<T>::value || is_complex_t<T>::value) return "( " + utils::to_string(x.real()) + ", " + utils::to_string(x.imag()) + ")";
     else {
         static_assert(dependent_false<T>::value, "utils::to_string not implemented for this type");
     }

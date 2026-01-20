@@ -124,13 +124,11 @@ inline T anderson_acceleration_algorithm<T, K>::aitken_case(
     T denominator, accelerated;
     denominator = accelerated = utils::cast<T>(0.0, precision);
 
-    using std::max;
-
     // Calculate the second-order difference for the denominator
     denominator = Sn[n] - utils::cast<T>(2.0, precision) * Sn[n - 1] + Sn[n - 2];
 
     // Check for numerical stability. If the denominator is too small, fallback to the current term.
-    if (utils::abs(denominator) < safeguard_ * max(utils::abs(Sn[n]), max(utils::abs(Sn[n - 1]), utils::abs(Sn[n - 2])))) return Sn[n];  // fallback
+    if (utils::abs(denominator) < safeguard_ * std::max(utils::abs(Sn[n]), std::max(utils::abs(Sn[n - 1]), utils::abs(Sn[n - 2])))) return Sn[n];  // fallback
 
     // Standard Aitken formula followed by mixing with the original term
     accelerated = Sn[n] - (Sn[n] - Sn[n - 1]) * (Sn[n] - Sn[n - 1]) / utils::cast<T>(utils::abs(denominator));
@@ -142,8 +140,6 @@ inline T anderson_acceleration_algorithm<T, K>::main_case(
     const K n,
     const std::vector<T>& Sn
 ) const {
-
-    using std::max;
 
     // Determine the actual history size to use, capped by m_ and current index n
     const K actual_m = std::min(m_, static_cast<K>(n - 1));

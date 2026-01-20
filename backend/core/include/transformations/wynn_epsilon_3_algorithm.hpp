@@ -103,8 +103,6 @@ T wynn_epsilon_3_algorithm<T, K>::operator()(
     if (n == static_cast<K>(0)) throw std::domain_error("n = 0 in the input");
     if (order == static_cast<K>(0)) return data.Sn.at(n);
 
-    using std::max;
-
     T result = utils::cast<T>(0.0, precision);       ///< Current best accelerated estimate.
     float_type abs_error = utils::cast<float_type>(0.0, precision);    ///< Absolute error estimate for current data.
     T resla = utils::cast<T>(0.0, precision);        ///< Previous result for error comparison.
@@ -195,11 +193,11 @@ T wynn_epsilon_3_algorithm<T, K>::operator()(
 
             DELTA2 = E2 - E1;
             ERR2 = utils::abs(DELTA2);
-            TOL2 = max(utils::abs(E2), utils::abs(E1)) * EMACH;
+            TOL2 = std::max(utils::abs(E2), utils::abs(E1)) * EMACH;
 
             DELTA3 = E1 - E0;
             ERR3 = utils::abs(DELTA3);
-            TOL3 = max(utils::abs(E1), utils::abs(E0)) * EMACH;
+            TOL3 = std::max(utils::abs(E1), utils::abs(E0)) * EMACH;
 
             bool jump_to_10 = false;
             if (ERR2 > TOL2 || ERR3 > TOL3) {
@@ -220,7 +218,7 @@ T wynn_epsilon_3_algorithm<T, K>::operator()(
 
                 DELTA1 = E1 - E3;
                 ERR1 = utils::abs(DELTA1);
-                TOL1 = max(utils::abs(E1), utils::abs(E3)) * EMACH;
+                TOL1 = std::max(utils::abs(E1), utils::abs(E3)) * EMACH;
 
                 // IF (...) GO TO 20
                 if (ERR1 <= TOL1 || ERR2 <= TOL2 || ERR3 <= TOL3) {
@@ -307,7 +305,7 @@ T wynn_epsilon_3_algorithm<T, K>::operator()(
             result = current_step_result;
 
             // Error update for next step comparison?
-            abs_error = max(
+            abs_error = std::max(
                 utils::abs(result - resla),
                 EPRN * utils::abs(result)
             );
