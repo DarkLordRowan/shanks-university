@@ -5,7 +5,7 @@
 /**
  * @file shanks_alternating_algorithm.hpp
  * @brief This file contains the definition of the Shanks transformation specialized for alternating series.
- * @authors Naumov A.U., Lykov D.S., Kreynin R.G., Naumov A.U., Lykov D.S., Kreynin R.G.
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  */
 
 #include "series_acceleration.hpp"
@@ -19,7 +19,7 @@ namespace shanks{ namespace algos{
  * tailored for alternating series. It utilizes simplified formulas that are more numerically
  * stable for such series compared to the general determinant-based approach.
  *
- * @authors Naumov A.U., Lykov D.S., Kreynin R.G., Naumov A.U., Lykov D.S., Kreynin R.G.
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  *
  * @tparam T Floating-point type for series elements (must satisfy AcceptedLike).
  *           Represents numerical precision (float, double, long double, or arbitrary precision).
