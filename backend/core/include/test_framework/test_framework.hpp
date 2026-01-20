@@ -36,7 +36,7 @@ inline void print_series_info() {
 		"Which series' convergence would you like to accelerate?" << '\n' <<
 		"List of currently available series:" << '\n';
 
-	for (size_t i = 0; i < names.size(); i++) {
+	for (size_t i = 0; i < names.size(); ++i) {
 		std::cout << i + 1 << " - " << names[i] << '\n';
 	}
 	std::cout << std::endl;
@@ -86,7 +86,7 @@ inline void print_transformation_info() {
 		"Which transformation would you like to test?" << '\n' <<
 		"List of currently available transformations:" << '\n';
 
-	for (size_t i = 0; i < all_transformations.size(); i++) {
+	for (size_t i = 0; i < all_transformations.size(); ++i) {
 		std::cout << i + 1 << " - " << all_transformations[i]->getName() << '\n';
 	}
 	std::cout << '\n';
@@ -103,7 +103,7 @@ inline void print_test_function_info() {
 		"Which function would you like to use for testing?" << '\n' <<
 		"List of currently available functions:" << '\n';
 
-	for (size_t i = 0; i < all_functions.size(); i++) {
+	for (size_t i = 0; i < all_functions.size(); ++i) {
 		std::cout <<
 			i + 1 << " - " << all_functions[i]->getName() <<
 			" - " << all_functions[i]->getDescription() << '\n';

@@ -197,6 +197,11 @@ public:
 			case shanks::remainders::remainder_type::v_type 	: { series_acceleration<T, K>::acceleration_name += "with v-variant "; 		break; }
 			case shanks::remainders::remainder_type::t_wave_type: { series_acceleration<T, K>::acceleration_name += "with t-wave-variant "; break; }
 			case shanks::remainders::remainder_type::v_wave_type: { series_acceleration<T, K>::acceleration_name += "with v-wave-variant "; break; }
+			default:
+			{
+				remainder_type_in_use = shanks::remainders::remainder_type::u_type;
+        	    remainder.reset(new shanks::remainders::u_transform<T, K>());
+			}
 		}
 		series_acceleration<T, K>::acceleration_name += "and beta = " + utils::to_string(beta_in_use);
 

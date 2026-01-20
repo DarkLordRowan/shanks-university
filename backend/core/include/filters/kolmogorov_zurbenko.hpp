@@ -46,7 +46,7 @@ std::vector<Scalar> kolmogorov_zurbenko_filter(
     }
 
     // Preparing vectors for convolution and handling arbitrary precision
-    std::vector<Scalar> zur_coeffs(size + 1, utils::cast<Scalar>(0, precision));
+    std::vector<Scalar> zur_coeffs(size + 1, utils::cast<Scalar>(0.0, precision));
     std::vector<Scalar> padded_vector(data.size() + size * 2, utils::cast<Scalar>(0.0, precision));
     std::vector<Scalar> result(data.size(), utils::cast<Scalar>(0.0, precision));
 
