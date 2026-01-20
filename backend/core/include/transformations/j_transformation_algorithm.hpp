@@ -152,7 +152,7 @@ T j_transformation_algorithm<T, K>::recursive_formula(const K n, const K order, 
     K curr_J_size = J_prev.size() - 1;
 
     // Outer loop for the transformation order k
-    for (K k = 1; k <= order; ++k, --curr_J_size) {
+    for (K k = 1; k <= order && curr_J_size > 1; ++k, --curr_J_size) {
 
         // Inner loop over the sequence index i
         for (K i = 0; i < curr_J_size; ++i) {
@@ -182,8 +182,6 @@ T j_transformation_algorithm<T, K>::recursive_formula(const K n, const K order, 
         // Move to the next transformation level
         J_prev.swap(J_curr);
 
-        // Terminate if we've reached a single point estimate
-        if (curr_J_size == 1) break;
     }
 
     // The accelerated value is found at the first position of the highest level vector
