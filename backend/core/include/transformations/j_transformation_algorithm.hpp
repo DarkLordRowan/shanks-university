@@ -178,7 +178,7 @@ T j_transformation_algorithm<T, K>::recursive_formula(const K n, const K order, 
             if (utils::abs(delta_term) < safeguard_) J_curr[i] = J_prev[i + 1];
             else J_curr[i] = J_prev[i + 1] + delta_S * delta_S / delta_term;
         }
-
+        
         // Move to the next transformation level
         J_prev.swap(J_curr);
 

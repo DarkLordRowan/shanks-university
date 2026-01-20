@@ -191,7 +191,6 @@ T levin_sidi_m_algorithm<T, K>::operator()(
     // Trivial case: order 0 returns the current partial sum
     if (order == static_cast<K>(0)) return data.Sn.at(n);
 
-	//TODO разобраться с документом (pdf) n/order
     // Validate that gamma satisfies the theoretical constraint for stability: gamma >= n - 1
 	if(gamma_in_use - utils::cast<float_type>(static_cast<double>(n)) - utils::cast<float_type>(1.0) < utils::cast<float_type>(0.0)){
 		throw std::domain_error("gamma cannot be lesser than n - 1");

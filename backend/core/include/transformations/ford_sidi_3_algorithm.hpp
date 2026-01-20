@@ -154,7 +154,6 @@ T ford_sidi_3_algorithm<T, K>::operator()(
         for (K i = static_cast<K>(1); i <= m; ++i)
             FSG[i][n1] = G[i];
     }
-    //TODO спросить у Парфенова, ибо жертвуем читаемостью кода, ради его небольшого ускорения
 
     // For theory, see: Osada (2000), Section 4 - Main algorithm loop
     // Main Ford-Sidi transformation computation
