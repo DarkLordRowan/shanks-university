@@ -8,16 +8,16 @@
 #define BINDINGS_TEMPLATES_HPP
 #pragma once
 
-
+// clang-format off
+// Critical Section
 #include "bindings.hpp"
 
 #include "../../core/include/methods.hpp"
+#include "../../core/include/noise/noise_generator.hpp"
 #include "../../core/include/series.hpp"
-
 #include "../../core/include/filters/kolmogorov_zurbenko.hpp"
 #include "../../core/include/filters/savitzky_golay.hpp"
-#include "../../core/include/noise/noise_generator.hpp"
-
+// clang-format on
 
 /**
  * @brief Template implementation for binding series.
@@ -68,7 +68,7 @@ void bind_series(pybind11::module_& m, const char* suffix) {
  */
 template <AcceptedLike T, UnsignedIntLike K>
 void bind_algos(pybind11::module_& m, const char* suffix) {
-    using RealT = typename RealTypeOf<T>::type;
+    using RealT = typename real_of<T>::value;
 
 #define BIND_DEFAULT(cls, name)                                                                                \
     m.def(                                                                                                     \

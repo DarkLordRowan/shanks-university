@@ -14,7 +14,7 @@
  *
  * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  */
- 
+
 namespace shanks {
 namespace numerators {
 

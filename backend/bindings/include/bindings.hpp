@@ -24,16 +24,6 @@ namespace py = pybind11;
 
 // --- Shared Utilities ---
 
-template <typename T>
-struct RealTypeOf {
-    using type = T;
-};
-
-template <typename U>
-struct RealTypeOf<std::complex<U>> {
-    using type = U;
-};
-
 inline std::string create_name(const char* name, const char* suffix) { return std::string(name) + std::string(suffix); }
 
 // Common types tuples and suffixes for splitting compilation

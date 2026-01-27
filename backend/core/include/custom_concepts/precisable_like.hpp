@@ -7,11 +7,14 @@
  * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  * @tparam T The type to check.
  */
-template<typename T> struct is_precisable : public std::false_type {};
+template <typename T>
+struct is_precisable : public std::false_type {};
 
 #ifdef __MPREAL_H__
-template<> struct is_precisable<mpfr::mpreal> : public std::true_type {};
-template<> struct is_precisable<std::complex<mpfr::mpreal>> : public std::true_type {};
+template <>
+struct is_precisable<mpfr::mpreal> : public std::true_type {};
+template <>
+struct is_precisable<std::complex<mpfr::mpreal>> : public std::true_type {};
 #endif
 
 /**
@@ -19,11 +22,11 @@ template<> struct is_precisable<std::complex<mpfr::mpreal>> : public std::true_t
  * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  * @tparam T The type to check.
  */
-template<typename T>
+template <typename T>
 struct is_complex_custom : public std::false_type {};
 
-template<typename U>
-requires is_precisable<U>::value
+template <typename U>
+    requires is_precisable<U>::value
 struct is_complex_custom<std::complex<U>> : public std::true_type {};
 
 #endif

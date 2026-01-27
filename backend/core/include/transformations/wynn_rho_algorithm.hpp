@@ -40,8 +40,7 @@ namespace algos {
 template <AcceptedLike T, UnsignedIntLike K>
 class wynn_rho_algorithm final : public series_acceleration<T, K> {
 protected:
-    using float_type =
-        real_of<T>::value;  // type in case of complex or interval, represents type for real numbers
+    using float_type = real_of<T>::value;  // type in case of complex or interval, represents type for real numbers
 
     /// Strategy object for numerator computation.
     std::unique_ptr<const shanks::numerators::numerator_base<T, K>> numerator;

@@ -4,15 +4,15 @@
 
 #define pseudo_random_seed (std::chrono::system_clock::now().time_since_epoch().count() + std::rand())
 
+#include <cstdlib>
+#include <random>
+#include <vector>
+
 #include "../custom_concepts.hpp"
 #include "../utils.hpp"
 #include "normal_noise.hpp"
 #include "poisson_noise.hpp"
 #include "uniform_noise.hpp"
-
-#include <random>
-#include <vector>
-#include <cstdlib>
 
 /**
  * @brief Enum of noise types
@@ -115,4 +115,4 @@ series_result<T> apply_noise(const series_result<T>& result, const NoiseMethod m
     }
 };
 
-#endif //SHANKS_TRANSFORMATION_NOISE_GENERATOR_HPP
+#endif  // SHANKS_TRANSFORMATION_NOISE_GENERATOR_HPP
