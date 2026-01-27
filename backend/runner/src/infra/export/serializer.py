@@ -114,6 +114,7 @@ class TrialResultSerializer(DataSerializer):
                 "accel_error": self._sanitize_numeric(
                     value.accel_error, as_struct=True
                 ),
+                "profiling": self._sanitize_value(value.profiling),
                 "events": self._sanitize_value(value.events),
             }
 

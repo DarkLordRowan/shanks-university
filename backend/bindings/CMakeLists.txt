@@ -40,6 +40,12 @@ include_directories(
 # -------------------------
 FetchContent_Declare(pybind11 GIT_REPOSITORY https://github.com/pybind/pybind11.git GIT_TAG v2.13.6)
 FetchContent_MakeAvailable(pybind11)
+# Option for profiling
+option(SHANKS_ENABLE_PROFILING "Enable operation counting" OFF)
+if(SHANKS_ENABLE_PROFILING)
+    add_definitions(-DSHANKS_ENABLE_PROFILING)
+endif()
+
 pybind11_add_module(pyshanks 
     ${CMAKE_CURRENT_SOURCE_DIR}/src/pyshanks.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/bind_types.cpp

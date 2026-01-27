@@ -61,7 +61,8 @@ try:
                  
                  comp_list.append({
                      "value": val,
-                     "deviation": dev
+                     "deviation": dev,
+                     "profiling": step.get("profiling")
                  })
                  
                  if "events" in step and step["events"]:
@@ -206,6 +207,8 @@ try:
                 sorted_add_keys = sorted(list(all_add_keys))
                 
                 add_arg_fields = [(k, pa.string()) for k in sorted_add_keys]
+                if not add_arg_fields:
+                    add_arg_fields = [("__dummy__", pa.string())]
                 
                 accel_schema = pa.schema([
                     ("series_id", pa.int64()),
@@ -215,7 +218,13 @@ try:
                     ("computed", pa.list_(
                         pa.struct([
                             ("value", pa.struct([("real", pa.string()), ("imag", pa.string())])),
-                            ("deviation", pa.string())
+                            ("deviation", pa.string()),
+                            ("profiling", pa.struct([
+                                ("add", pa.int64()),
+                                ("mul", pa.int64()),
+                                ("div", pa.int64()),
+                                ("special", pa.int64())
+                            ]))
                         ])
                     )),
                     ("errors", pa.list_(pa.struct([("n", pa.int64()), ("message", pa.string())]))),

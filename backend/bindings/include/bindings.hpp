@@ -18,6 +18,7 @@
 #include <tuple>
 
 #include "../../core/include/custom_concepts.hpp"
+#include "../../core/include/operation_counter.hpp"
 #include "../../core/include/utils.hpp"
 
 namespace py = pybind11;
@@ -36,23 +37,32 @@ struct RealTypeOf<std::complex<U>> {
 
 inline std::string create_name(const char* name, const char* suffix) { return std::string(name) + std::string(suffix); }
 
+// Helper alias for conditional wrapper
+#ifdef SHANKS_ENABLE_PROFILING
+template <typename T>
+using OP = shanks::profiling::OperationCounting<T>;
+#else
+template <typename T>
+using OP = T;
+#endif
+
 // Common types tuples and suffixes for splitting compilation
-using types_real = std::tuple<std::tuple<float, size_t>, std::tuple<double, size_t>, std::tuple<long double, size_t>,
-                              std::tuple<mpfr::mpreal, size_t>>;
+using types_real = std::tuple<std::tuple<OP<float>, size_t>, std::tuple<OP<double>, size_t>,
+                              std::tuple<OP<long double>, size_t>, std::tuple<OP<mpfr::mpreal>, size_t>>;
 
 using types_complex =
-    std::tuple<std::tuple<std::complex<float>, size_t>, std::tuple<std::complex<double>, size_t>,
-               std::tuple<std::complex<long double>, size_t>, std::tuple<std::complex<mpfr::mpreal>, size_t>>;
+    std::tuple<std::tuple<std::complex<OP<float>>, size_t>, std::tuple<std::complex<OP<double>>, size_t>,
+               std::tuple<std::complex<OP<long double>>, size_t>, std::tuple<std::complex<OP<mpfr::mpreal>>, size_t>>;
 
 constexpr std::array<const char*, 4> suffixes_real{"F32", "F64", "FLong", "Arb"};
 constexpr std::array<const char*, 4> suffixes_complex{"CF32", "CF64", "CFLong", "CArb"};
 
 // Common types tuple and suffixes for all binding units (kept for simple cases)
 using types_to_bind =
-    std::tuple<std::tuple<float, size_t>, std::tuple<double, size_t>, std::tuple<long double, size_t>,
-               std::tuple<mpfr::mpreal, size_t>, std::tuple<std::complex<float>, size_t>,
-               std::tuple<std::complex<double>, size_t>, std::tuple<std::complex<long double>, size_t>,
-               std::tuple<std::complex<mpfr::mpreal>, size_t>>;
+    std::tuple<std::tuple<OP<float>, size_t>, std::tuple<OP<double>, size_t>, std::tuple<OP<long double>, size_t>,
+               std::tuple<OP<mpfr::mpreal>, size_t>, std::tuple<std::complex<OP<float>>, size_t>,
+               std::tuple<std::complex<OP<double>>, size_t>, std::tuple<std::complex<OP<long double>>, size_t>,
+               std::tuple<std::complex<OP<mpfr::mpreal>>, size_t>>;
 
 constexpr std::array<const char*, 8> suffixes{"F32", "F64", "FLong", "Arb", "CF32", "CF64", "CFLong", "CArb"};
 

@@ -20,8 +20,17 @@
  */
 template <typename To, typename From>
 constexpr To utils::cast(const From& x, const size_t precision) {
+    // Unwrap if needed (OperationCounting support via ADL_Unwrapper)
+    if constexpr (is_operation_counting<From>::value) {
+        return utils::cast<To>(ADL_Unwrapper<From>::unwrap(x), precision);
+    }
+    // Wrap if needed (OperationCounting support via ADL_Wrapper)
+    else if constexpr (is_operation_counting<To>::value) {
+        using UnderlyingTo = typename get_wrapped_type<To>::type;
+        return ADL_Wrapper<To>::wrap(utils::cast<UnderlyingTo>(x, precision));
+    }
     // Default static cast for standard types
-    if constexpr (is_standard_types<To>::value)
+    else if constexpr (is_standard_types<To>::value)
         return static_cast<To>(x);
     else if constexpr (is_precisable<To>::value)
         if (precision == size_t{0})

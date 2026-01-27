@@ -33,7 +33,14 @@ std::string utils::to_string(const T& x) {
     else if constexpr (is_complex_custom<T>::value || is_complex_t<T>::value)
         return "( " + utils::to_string(x.real()) + ", " + utils::to_string(x.imag()) + ")";
     else {
-        static_assert(dependent_false<T>::value, "utils::to_string not implemented for this type");
+        if constexpr (requires { x.value; }) {
+            return utils::to_string(x.value);
+        } else if constexpr (AcceptedLike<T>) {
+            using std::to_string;
+            return to_string(x);
+        } else {
+            static_assert(dependent_false<T>::value, "utils::to_string not implemented for this type");
+        }
     }
 }
 
@@ -45,11 +52,12 @@ std::string utils::to_string(const T& x) {
  */
 template <typename T>
 bool utils::isfinite(const T& x) {
+    using std::isfinite;
     // Using standard or library-specific checks for finiteness
     if constexpr (std::is_floating_point<T>::value)
         return std::isfinite(x);
     else if constexpr (is_complex_t<T>::value)
-        return std::isfinite(x.real()) && std::isfinite(x.imag());
+        return utils::isfinite(x.real()) && utils::isfinite(x.imag());
 #ifdef __MPREAL_H__
     else if constexpr (std::is_same<T, mpfr::mpreal>::value) {
         return mpfr::isfinite(x) && !mpfr::isnan(x) && !mpfr::isinf(x);
@@ -58,7 +66,11 @@ bool utils::isfinite(const T& x) {
     else if constexpr (is_complex_custom<T>::value) {
         return utils::isfinite(x.real()) && utils::isfinite(x.imag());
     } else {
-        static_assert(dependent_false<T>::value, "utils::isfinite not implemented for this type");
+        if constexpr (AcceptedLike<T>) {
+            return isfinite(x);
+        } else {
+            static_assert(dependent_false<T>::value, "utils::isfinite not implemented for this type");
+        }
     }
 }
 
@@ -78,7 +90,11 @@ T utils::epsilon(const T& x) {
     }
 #endif
     else {
-        static_assert(dependent_false<T>::value, "utils::epsilon not implemented for this type");
+        if constexpr (AcceptedLike<T>) {
+            return std::numeric_limits<T>::epsilon();
+        } else {
+            static_assert(dependent_false<T>::value, "utils::epsilon not implemented for this type");
+        }
     }
 }
 
@@ -91,7 +107,11 @@ T utils::numeric_max(size_t precision) {
     } else if constexpr (std::is_same<T, std::complex<mpfr::mpreal>>::value) {
         return utils::numeric_max<mpfr::mpreal>(mpfr::digits2bits(precision));
     } else {
-        static_assert(dependent_false<T>::value, "utils::numeric_max not implemented for this type");
+        if constexpr (AcceptedLike<T>) {
+            return std::numeric_limits<T>::max();
+        } else {
+            static_assert(dependent_false<T>::value, "utils::numeric_max not implemented for this type");
+        }
     }
 }
 

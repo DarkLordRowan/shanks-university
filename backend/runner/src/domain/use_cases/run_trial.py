@@ -244,7 +244,19 @@ def execute_trial(
                             )
                         partial_sum = series_result.Sn[index]
                         series_term = series_result.an[index]
+
+                        # Profiling
+                        ps.reset_operation_counts()
                         accel_value = accel_instance(n_value, m_value, series_result)
+                        counts = ps.get_operation_counts()
+                        # Convert counts to simple dict
+                        profiling_data = {
+                            "add": counts.add,
+                            "mul": counts.mul,
+                            "div": counts.div,
+                            "special": counts.special
+                        }
+
                         accel_error = accel_value - series_lim
 
                         computed.append(
@@ -256,6 +268,7 @@ def execute_trial(
                                 accel_value=accel_value,
                                 accel_value_deviation=abs(accel_error),
                                 accel_error=accel_error,
+                                profiling=profiling_data,
                                 events=[],
                             )
                         )
