@@ -55,7 +55,7 @@ struct utils {
 	 * @param n
 	 * @return return result of phi(n) of type T
 	 */
-	template<AcceptedLike T, UnsignedIntLike K> constexpr static T phi(K n);
+	// template<AcceptedLike T, UnsignedIntLike K> constexpr static T phi(K n);
 
 	/**
 	 * @brief Calculates factorial of a natural number n!

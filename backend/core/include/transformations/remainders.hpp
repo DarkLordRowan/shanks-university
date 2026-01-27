@@ -14,291 +14,305 @@
  * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  */
 
-#include "../custom_concepts.hpp"
-#include "../utils/utils_cast.hpp"
-
 #include <stdexcept>
 #include <vector>
 
-namespace shanks{ namespace remainders{
+#include "../custom_concepts.hpp"
+#include "../utils/utils_cast.hpp"
 
- /**
-  * @brief Enum for remainder types to use in Levin-type transformations
-  *
-  * Defines different variants of remainder estimates for Levin transformations:
-  * - u_type: ωₙ = (n+β)ΔSₙ₋₁ (for series acceleration)
-  * - t_type: ωₙ = ΔSₙ (term difference)
-  * - v_type: ωₙ = (ΔSₙ₋₁ΔSₙ)/(ΔSₙ - ΔSₙ₋₁) (modified Aitken δ²-process)
-  * - t_wave_type: ωₙ = ΔSₙ₊₁ (forward-shifted term difference)
-  * - v_wave_type: ωₙ = (ΔSₙΔSₙ₊₁)/(ΔSₙ - ΔSₙ₊₁) (shifted v-variant)
-  *
-  * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
-  */
-enum remainder_type{
-         u_type,
-         t_type,
-         v_type,
-    t_wave_type,
-    v_wave_type,
-};
+namespace shanks
+{
+    namespace remainders
+    {
 
-/**
- * @brief Abstract base class for remainder estimates in Levin-type transformations
- *
- * Provides the interface for different remainder estimate variants used in
- * Levin's sequence transformations for convergence acceleration.
- *
- * @tparam T Floating-point type for series elements (must satisfy Accepted)
- *           Represents numerical precision (float, double, long double)
- * @tparam K Unsigned integral type for indices (must satisfy std::unsigned_integral)
- *           Used for counting and ordering operations
- * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
- */
-template<AcceptedLike T, UnsignedIntLike K>
-class transform_base{
-public:
+        /**
+         * @brief Enum for remainder types to use in Levin-type transformations
+         *
+         * Defines different variants of remainder estimates for Levin transformations:
+         * - u_type: ωₙ = (n+β)ΔSₙ₋₁ (for series acceleration)
+         * - t_type: ωₙ = ΔSₙ (term difference)
+         * - v_type: ωₙ = (ΔSₙ₋₁ΔSₙ)/(ΔSₙ - ΔSₙ₋₁) (modified Aitken δ²-process)
+         * - t_wave_type: ωₙ = ΔSₙ₊₁ (forward-shifted term difference)
+         * - v_wave_type: ωₙ = (ΔSₙΔSₙ₊₁)/(ΔSₙ - ΔSₙ₊₁) (shifted v-variant)
+         *
+         * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+         */
+        enum remainder_type
+        {
+            u_type,
+            t_type,
+            v_type,
+            t_wave_type,
+            v_wave_type,
+        };
 
-    /**
-     * @brief Virtual operator() for computing remainder estimates
-     *
-     * Computes the remainder estimate ωₙ for Levin-type transformations.
-     * The specific formula depends on the concrete implementation.
-     *
-     * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
-     * @param n order of the partial sum Sₙ from which calculation begins
-     * @param index index of the aₙ term (determine the start)
-     * @param an Constant pointer to the an vector providing term access
-     * @param scale Scaling factor (used primarily for u-variant with β parameter)
-     * @return The computed remainder estimate ωₙ
-     * @throws std::overflow_error if division by zero or numerical instability occurs
-     */
-    virtual T operator() (K n, K index, const std::vector<T>&, const T& scale = utils::cast<T>(0.0)) const = 0;
-};
+        /**
+         * @brief Abstract base class for remainder estimates in Levin-type transformations
+         *
+         * Provides the interface for different remainder estimate variants used in
+         * Levin's sequence transformations for convergence acceleration.
+         *
+         * @tparam T Floating-point type for series elements (must satisfy Accepted)
+         *           Represents numerical precision (float, double, long double)
+         * @tparam K Unsigned integral type for indices (must satisfy std::unsigned_integral)
+         *           Used for counting and ordering operations
+         * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+         */
+        template <AcceptedLike T, UnsignedIntLike K>
+        class transform_base
+        {
+        public:
+            /**
+             * @brief Virtual operator() for computing remainder estimates
+             *
+             * Computes the remainder estimate ωₙ for Levin-type transformations.
+             * The specific formula depends on the concrete implementation.
+             *
+             * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+             * @param n order of the partial sum Sₙ from which calculation begins
+             * @param index index of the aₙ term (determine the start)
+             * @param an Constant pointer to the an vector providing term access
+             * @param scale Scaling factor (used primarily for u-variant with β parameter)
+             * @return The computed remainder estimate ωₙ
+             * @throws std::overflow_error if division by zero or numerical instability occurs
+             */
+            virtual T operator()(K n, K index, const std::vector<T>&, const T& scale = utils::cast<T>(0.0)) const = 0;
+        };
 
-/**
- * @brief Class for u-variant remainder estimate (ωₙ = (n+β)ΔSₙ₋₁)
- *
- * Implements the u-variant of Levin's transformation remainder estimate.
- * For theory, see: Levin (1973), Eq. (3.3) - u transform
- *
- * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
- * @tparam T Floating-point type for series elements
- * @tparam K Unsigned integral type for indices
- */
-template<AcceptedLike T, UnsignedIntLike K>
-class u_transform : public transform_base<T, K> {
+        /**
+         * @brief Class for u-variant remainder estimate (ωₙ = (n+β)ΔSₙ₋₁)
+         *
+         * Implements the u-variant of Levin's transformation remainder estimate.
+         * For theory, see: Levin (1973), Eq. (3.3) - u transform
+         *
+         * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+         * @tparam T Floating-point type for series elements
+         * @tparam K Unsigned integral type for indices
+         */
+        template <AcceptedLike T, UnsignedIntLike K>
+        class u_transform : public transform_base<T, K>
+        {
+            /**
+             * @brief Computes u-variant remainder estimate: ωₙ = (n+β)ΔSₙ₋₁
+             *
+             * For theory, see: Levin (1973), Eq. (3.3)
+             * Formula: ωₙ = (β + n) * aₙ, where aₙ = ΔSₙ₋₁ = Sₙ - Sₙ₋₁
+             *
+             * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+             * @param n order of the partial sum Sₙ
+             * @param index index of the aₙ term (determine the start)
+             * @param series Series object providing term access
+             * @param scale Represents β parameter: ωₙ = (scale + n) * aₙ
+             * @return u-variant remainder estimate ωₙ = 1/[(scale + n) * aₙ]
+             * @throws std::overflow_error if aₙ = 0 causing division by zero
+             */
+            T operator()(K n, K index, const std::vector<T>& an, const T& scale = utils::cast<T>(0.0)) const override;
+        };
 
-    /**
-     * @brief Computes u-variant remainder estimate: ωₙ = (n+β)ΔSₙ₋₁
-     *
-     * For theory, see: Levin (1973), Eq. (3.3)
-     * Formula: ωₙ = (β + n) * aₙ, where aₙ = ΔSₙ₋₁ = Sₙ - Sₙ₋₁
-     *
-     * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
-     * @param n order of the partial sum Sₙ
-     * @param index index of the aₙ term (determine the start)
-     * @param series Series object providing term access
-     * @param scale Represents β parameter: ωₙ = (scale + n) * aₙ
-     * @return u-variant remainder estimate ωₙ = 1/[(scale + n) * aₙ]
-     * @throws std::overflow_error if aₙ = 0 causing division by zero
-     */
-    T operator() (K n, K index, const std::vector<T>& an, const T& scale = utils::cast<T>(0.0)) const override;
-};
+        /**
+         * @brief Implementation of u-variant remainder estimate.
+         * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+         */
+        template <AcceptedLike T, UnsignedIntLike K>
+        T u_transform<T, K>::operator()(const K n, const K index, const std::vector<T>& an, const T& scale) const
+        {
+            // For theory, see: Levin (1973), Eq. (3.3) - u transform
+            // ωₙ = (β + n) * aₙ, where aₙ = ΔSₙ₋₁
+            const T result = utils::cast<T>(1.0) / ((scale + utils::cast<T>(n)) * an.at(index));
 
-/**
- * @brief Implementation of u-variant remainder estimate.
- * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
- */
-template<AcceptedLike T, UnsignedIntLike K>
-T u_transform<T, K>::operator()(const K n, const K index, const std::vector<T>& an, const T& scale) const {
-    // For theory, see: Levin (1973), Eq. (3.3) - u transform
-    // ωₙ = (β + n) * aₙ, where aₙ = ΔSₙ₋₁
-    const T result = utils::cast<T>(1.0) / ((scale + utils::cast<T>(n)) * an.at(index));
+            if (!utils::isfinite(result))
+                throw std::overflow_error("division by zero");
 
-    if(!utils::isfinite(result)) throw std::overflow_error("division by zero");
+            return result;
+        }
 
-    return result;
- }
+        /**
+         * @brief Class for t-variant remainder estimate (ωₙ = ΔSₙ)
+         *
+         * Implements the t-variant of Levin's transformation remainder estimate.
+         * For theory, see: Levin (1973), Eq. (3.2) - t transform
+         *
+         * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+         * @tparam T Floating-point type for series elements
+         * @tparam K Unsigned integral type for indices
+         */
+        template <AcceptedLike T, UnsignedIntLike K>
+        class t_transform : public transform_base<T, K>
+        {
+            /**
+             * @brief Computes t-variant remainder estimate: ωₙ = ΔSₙ
+             *
+             * For theory, see: Levin (1973), Eq. (3.2)
+             * Formula: ωₙ = aₙ, where aₙ = ΔSₙ₋₁ = Sₙ - Sₙ₋₁
+             *
+             * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+             * @param n order of the partial sum Sₙ (unused in this implementation)
+             * @param index index of the aₙ term (determine the start)
+             * @param an vector of aₙ
+             * @param scale Unused parameter (maintained for interface consistency)
+             * @return t-variant remainder estimate ωₙ = 1/aₙ₊ₖ
+             * @throws std::overflow_error if aₙ₊ₖ = 0 causing division by zero
+             */
+            T operator()(K n, K index, const std::vector<T>& an, const T& scale = utils::cast<T>(0.0)) const override;
+        };
 
-/**
- * @brief Class for t-variant remainder estimate (ωₙ = ΔSₙ)
- *
- * Implements the t-variant of Levin's transformation remainder estimate.
- * For theory, see: Levin (1973), Eq. (3.2) - t transform
- *
- * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
- * @tparam T Floating-point type for series elements
- * @tparam K Unsigned integral type for indices
- */
-template<AcceptedLike T, UnsignedIntLike K>
-class t_transform : public transform_base<T, K> {
+        /**
+         * @brief Implementation of t-variant remainder estimate.
+         * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+         */
+        template <AcceptedLike T, UnsignedIntLike K>
+        T t_transform<T, K>::operator()(const K n, const K index, const std::vector<T>& an, const T& scale) const
+        {
+            // For theory, see: Levin (1973), Eq. (3.2) - t transform
+            // ωₙ = aₙ, where aₙ = ΔSₙ₋₁
+            const T result = utils::cast<T>(1.0) / an.at(index);
 
-    /**
-     * @brief Computes t-variant remainder estimate: ωₙ = ΔSₙ
-     *
-     * For theory, see: Levin (1973), Eq. (3.2)
-     * Formula: ωₙ = aₙ, where aₙ = ΔSₙ₋₁ = Sₙ - Sₙ₋₁
-     *
-     * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
-     * @param n order of the partial sum Sₙ (unused in this implementation)
-     * @param index index of the aₙ term (determine the start)
-     * @param an vector of aₙ
-     * @param scale Unused parameter (maintained for interface consistency)
-     * @return t-variant remainder estimate ωₙ = 1/aₙ₊ₖ
-     * @throws std::overflow_error if aₙ₊ₖ = 0 causing division by zero
-     */
-    T operator() (K n, K index, const std::vector<T>& an, const T& scale = utils::cast<T>(0.0)) const override;
-};
+            if (!utils::isfinite(result))
+                throw std::overflow_error("division by zero");
 
-/**
- * @brief Implementation of t-variant remainder estimate.
- * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
- */
-template<AcceptedLike T, UnsignedIntLike K>
-T t_transform<T, K>::operator()(const K n, const K index, const std::vector<T>& an, const T& scale) const {
-    // For theory, see: Levin (1973), Eq. (3.2) - t transform
-    // ωₙ = aₙ, where aₙ = ΔSₙ₋₁
-    const T result = utils::cast<T>(1.0) / an.at(index);
+            return result;
+        }
 
-    if(!utils::isfinite(result)) throw std::overflow_error("division by zero");
+        /**
+         * @brief Class for t-wave variant remainder estimate (ωₙ = ΔSₙ₊₁)
+         *
+         * Implements a shifted t-variant remainder estimate (also known as d-variant).
+         * For theory, see: Smith & Ford (1979), Eq. (2.4) - d variant
+         *
+         * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+         * @tparam T Floating-point type for series elements
+         * @tparam K Unsigned integral type for indices
+         */
+        template <AcceptedLike T, UnsignedIntLike K>
+        class t_wave_transform : public transform_base<T, K>
+        {
+            /**
+             * @brief Computes t-wave variant remainder estimate: ωₙ = ΔSₙ₊₁
+             *
+             * For theory, see: Smith & Ford (1979), Eq. (2.4) - d variant
+             * Formula: ωₙ = aₙ₊₁, where aₙ = ΔSₙ₋₁
+             *
+             * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+             * @param n order of the partial sum Sₙ (unused in this implementation)
+             * @param index index of the aₙ term (determine the start)
+             * @param an vector of aₙ
+             * @param scale Unused parameter (maintained for interface consistency)
+             * @return t-wave variant remainder estimate ωₙ = 1/aₙ₊ₖ₊₁
+             * @throws std::overflow_error if aₙ₊ₖ₊₁ = 0 causing division by zero
+             */
+            T operator()(K n, K index, const std::vector<T>& an, const T& scale = utils::cast<T>(0.0)) const override;
+        };
 
-    return result;
-}
+        /**
+         * @brief Implementation of t-wave variant remainder estimate.
+         * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+         */
+        template <AcceptedLike T, UnsignedIntLike K>
+        T t_wave_transform<T, K>::operator()(const K n, const K index, const std::vector<T>& an, const T& scale) const
+        {
+            // For theory, see: Smith & Ford (1979), Eq. (2.4) - d variant
+            // ωₙ = aₙ₊₁ (shifted t-variant)
+            const T result = utils::cast<T>(1.0) / an.at(index + static_cast<K>(1));
 
-/**
- * @brief Class for t-wave variant remainder estimate (ωₙ = ΔSₙ₊₁)
- *
- * Implements a shifted t-variant remainder estimate (also known as d-variant).
- * For theory, see: Smith & Ford (1979), Eq. (2.4) - d variant
- *
- * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
- * @tparam T Floating-point type for series elements
- * @tparam K Unsigned integral type for indices
- */
-template<AcceptedLike T, UnsignedIntLike K>
-class t_wave_transform : public transform_base<T, K>  {
+            if (!utils::isfinite(result))
+                throw std::overflow_error("division by zero");
 
-    /**
-     * @brief Computes t-wave variant remainder estimate: ωₙ = ΔSₙ₊₁
-     *
-     * For theory, see: Smith & Ford (1979), Eq. (2.4) - d variant
-     * Formula: ωₙ = aₙ₊₁, where aₙ = ΔSₙ₋₁
-     *
-     * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
-     * @param n order of the partial sum Sₙ (unused in this implementation)
-     * @param index index of the aₙ term (determine the start)
-     * @param an vector of aₙ
-     * @param scale Unused parameter (maintained for interface consistency)
-     * @return t-wave variant remainder estimate ωₙ = 1/aₙ₊ₖ₊₁
-     * @throws std::overflow_error if aₙ₊ₖ₊₁ = 0 causing division by zero
-     */
-    T operator() (K n, K index, const std::vector<T>& an, const T& scale = utils::cast<T>(0.0)) const override;
-};
+            return result;
+        }
 
-/**
- * @brief Implementation of t-wave variant remainder estimate.
- * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
- */
-template<AcceptedLike T, UnsignedIntLike K>
-T t_wave_transform<T,K>::operator()(const K n, const K index, const std::vector<T>& an, const T& scale ) const {
-    // For theory, see: Smith & Ford (1979), Eq. (2.4) - d variant
-    // ωₙ = aₙ₊₁ (shifted t-variant)
-	const T result = utils::cast<T>(1.0) / an.at(index + static_cast<K>(1));
+        /**
+         * @brief Class for v-variant remainder estimate (ωₙ = (ΔSₙ₋₁ΔSₙ)/(ΔSₙ - ΔSₙ₋₁))
+         *
+         * Implements the v-variant of Levin's transformation remainder estimate.
+         * For theory, see: Levin (1973), Eq. (3.4) - v transform
+         *
+         * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+         * @tparam T Floating-point type for series elements
+         * @tparam K Unsigned integral type for indices
+         */
+        template <AcceptedLike T, UnsignedIntLike K>
+        class v_transform : public transform_base<T, K>
+        {
+            /**
+             * @brief Computes the v-variant remainder estimate.
+             * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+             * @param n Unused.
+             * @param index The index of the current term.
+             * @param an Vector of series terms.
+             * @param scale Unused.
+             * @return T The computed v-estimate.
+             * @throws std::overflow_error if division by zero occurs.
+             */
+            T operator()(K n, K index, const std::vector<T>& an, const T& scale = utils::cast<T>(0.0)) const override;
+        };
 
-    if(!utils::isfinite(result)) throw std::overflow_error("division by zero");
+        /**
+         * @brief Implementation of v-variant remainder estimate.
+         * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+         */
+        template <AcceptedLike T, UnsignedIntLike K>
+        T v_transform<T, K>::operator()(const K n, const K index, const std::vector<T>& an, const T& scale) const
+        {
+            // For theory, see: Levin (1973), Eq. (3.4) - v transform
+            // ωₙ = (aₙ * aₙ₊₁)/(aₙ₊₁ - aₙ)
+            const T a1 = an.at(index), a2 = an.at(index + static_cast<K>(1));
+            const T result = (a2 - a1) / (a1 * a2);
 
-	return result;
-}
+            if (!utils::isfinite(result))
+                throw std::overflow_error("division by zero");
 
-/**
- * @brief Class for v-variant remainder estimate (ωₙ = (ΔSₙ₋₁ΔSₙ)/(ΔSₙ - ΔSₙ₋₁))
- *
- * Implements the v-variant of Levin's transformation remainder estimate.
- * For theory, see: Levin (1973), Eq. (3.4) - v transform
- *
- * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
- * @tparam T Floating-point type for series elements
- * @tparam K Unsigned integral type for indices
- */
-template<AcceptedLike T, UnsignedIntLike K>
-class v_transform : public transform_base<T, K> {
+            return result;
+        }
 
-    /**
-     * @brief Computes the v-variant remainder estimate.
-     * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
-     * @param n Unused.
-     * @param index The index of the current term.
-     * @param an Vector of series terms.
-     * @param scale Unused.
-     * @return T The computed v-estimate.
-     * @throws std::overflow_error if division by zero occurs.
-     */
-    T operator() (K n, K index, const std::vector<T>& an, const T& scale = utils::cast<T>(0.0)) const override;
-};
+        /**
+         * @brief Class for v-wave variant remainder estimate (ωₙ = (ΔSₙΔSₙ₊₁)/(ΔSₙ - ΔSₙ₊₁))
+         *
+         * Implements a shifted v-variant remainder estimate.
+         * Similar to v-variant but with indices shifted by one position.
+         *
+         * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+         * @tparam T Floating-point type for series elements
+         * @tparam K Unsigned integral type for indices
+         */
+        template <AcceptedLike T, UnsignedIntLike K>
+        class v_wave_transform : public transform_base<T, K>
+        {
+            /**
+             * @brief Computes v-wave variant remainder estimate: ωₙ = (ΔSₙΔSₙ₊₁)/(ΔSₙ - ΔSₙ₊₁)
+             *
+             * Similar to v-variant but with shifted indices:
+             * Formula: ωₙ = (aₙ₊₁ * aₙ₊₂)/(aₙ₊₁ - aₙ₊₂)
+             *
+             * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+             * @param n order of the partial sum Sₙ (unused in this implementation)
+             * @param index index of the aₙ term (determine the start)
+             * @param an vector of aₙ
+             * @param scale Unused parameter (maintained for interface consistency)
+             * @return v-wave variant remainder estimate ωₙ = (aₙ₊ₖ - aₙ₊ₖ₊₁)/(aₙ₊ₖ * aₙ₊ₖ₊₁)
+             * @throws std::overflow_error if aₙ₊ₖ = 0 or aₙ₊ₖ₊₁ = 0 causing division by zero
+             */
+            T operator()(K n, K index, const std::vector<T>& an, const T& scale = utils::cast<T>(0.0)) const override;
+        };
 
-/**
- * @brief Implementation of v-variant remainder estimate.
- * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
- */
-template<AcceptedLike T, UnsignedIntLike K>
-T v_transform<T,K>::operator()(const K n, const K index, const std::vector<T>& an, const T& scale) const {
-    // For theory, see: Levin (1973), Eq. (3.4) - v transform
-    // ωₙ = (aₙ * aₙ₊₁)/(aₙ₊₁ - aₙ)
-    const T a1 = an.at(index), a2  = an.at(index + static_cast<K>(1));
-    const T result = (a2-a1) / (a1 * a2);
+        /**
+         * @brief Implementation of v-wave variant remainder estimate.
+         * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+         */
+        template <AcceptedLike T, UnsignedIntLike K>
+        T v_wave_transform<T, K>::operator()(const K n, const K index, const std::vector<T>& an, const T& scale) const
+        {
+            // For theory, see: Modified v-transform with shifted indices
+            // ωₙ = (aₙ₊₁ * aₙ₊₂)/(aₙ₊₁ - aₙ₊₂)
+            const T a1 = an.at(index + static_cast<K>(1)), a2 = an.at(index + static_cast<K>(2));
+            const T result = (a1 - a2) / (a1 * a2);
 
-    if(!utils::isfinite(result)) throw std::overflow_error("division by zero");
+            if (!utils::isfinite(result))
+                throw std::overflow_error("division by zero");
 
-	return result;
-}
+            return result;
+        }
 
-/**
- * @brief Class for v-wave variant remainder estimate (ωₙ = (ΔSₙΔSₙ₊₁)/(ΔSₙ - ΔSₙ₊₁))
- *
- * Implements a shifted v-variant remainder estimate.
- * Similar to v-variant but with indices shifted by one position.
- *
- * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
- * @tparam T Floating-point type for series elements
- * @tparam K Unsigned integral type for indices
- */
-template<AcceptedLike T, UnsignedIntLike K>
-class v_wave_transform : public transform_base<T, K> {
-
-    /**
-     * @brief Computes v-wave variant remainder estimate: ωₙ = (ΔSₙΔSₙ₊₁)/(ΔSₙ - ΔSₙ₊₁)
-     *
-     * Similar to v-variant but with shifted indices:
-     * Formula: ωₙ = (aₙ₊₁ * aₙ₊₂)/(aₙ₊₁ - aₙ₊₂)
-     *
-     * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
-     * @param n order of the partial sum Sₙ (unused in this implementation)
-     * @param index index of the aₙ term (determine the start)
-     * @param an vector of aₙ
-     * @param scale Unused parameter (maintained for interface consistency)
-     * @return v-wave variant remainder estimate ωₙ = (aₙ₊ₖ - aₙ₊ₖ₊₁)/(aₙ₊ₖ * aₙ₊ₖ₊₁)
-     * @throws std::overflow_error if aₙ₊ₖ = 0 or aₙ₊ₖ₊₁ = 0 causing division by zero
-     */
-    T operator() (K n, K index, const std::vector<T>& an, const T& scale = utils::cast<T>(0.0)) const override;
-};
-
-/**
- * @brief Implementation of v-wave variant remainder estimate.
- * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
- */
-template<AcceptedLike T, UnsignedIntLike K>
-T v_wave_transform<T,K>::operator()(const K n, const K index, const std::vector<T>& an, const T& scale) const  {
-    // For theory, see: Modified v-transform with shifted indices
-    // ωₙ = (aₙ₊₁ * aₙ₊₂)/(aₙ₊₁ - aₙ₊₂)
-    const T a1 = an.at(index + static_cast<K>(1)), a2 = an.at(index + static_cast<K>(2));
-    const T result = (a1 - a2) / (a1 * a2);
-
-    if(!utils::isfinite(result)) throw std::overflow_error("division by zero");
-
-	return result;
-}
-
-} //namespace shanks::remainders
-} //namespace shanks
+    } // namespace remainders
+} // namespace shanks
 
 #endif

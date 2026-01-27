@@ -4,12 +4,13 @@
  * @authors Naumov A.U., Sobolev Y. A.
  */
 
-#include "../include/bindings.hpp"
+#include "../../core/include/noise/noise_generator.hpp"
 #include "../../core/include/transformations/remainders.hpp"
 #include "../../core/include/transformations/wynn_numerators.hpp"
-#include "../../core/include/noise/noise_generator.hpp"
+#include "../include/bindings.hpp"
 
-PYBIND11_MODULE(pyshanks, m) {
+PYBIND11_MODULE(pyshanks, m)
+{
     m.doc() = "pybind11: polymorphic series (double + float_precision), registry-based";
 
     // 1. Bind basic types
