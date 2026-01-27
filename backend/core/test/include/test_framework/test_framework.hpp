@@ -18,10 +18,8 @@
 #include <vector>
 
 #include "../console/console_IO.hpp"
-#include "../custom_concepts.hpp"
 #include "../interfaces/test_funcs_info.hpp"
 #include "../interfaces/transformations_info.hpp"
-#include "../noise/noise_generator.hpp"
 #include "test_functions.hpp"
 
 /**

@@ -11,9 +11,6 @@
  * @brief Anderson Acceleration algorithm implementation.
  * @authors Mkhitaryan A.A., Gerasimov A.I.
  */
-#include <vector>
-
-#include "series_acceleration.hpp"
 
 namespace shanks {
 namespace algos {
@@ -36,7 +33,7 @@ namespace algos {
 template <AcceptedLike T, UnsignedIntLike K>
 class anderson_acceleration_algorithm final : public series_acceleration<T, K> {
 public:
-    using float_type = GetUnderlyingType<T>::value;  // type in case of complex or interval
+    using float_type = real_of<T>::value;  // type in case of complex or interval
 
     /**
      * @brief Parameterized constructor to initialize the Anderson Acceleration Algorithm.

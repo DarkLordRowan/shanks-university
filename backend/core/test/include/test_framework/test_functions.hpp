@@ -7,12 +7,6 @@
 #pragma once
 
 #include <chrono>
-#include <iostream>
-
-#include "../console/console_IO.hpp"
-#include "../methods.hpp"
-#include "../noise/noise_generator.hpp"
-#include "../series_base.hpp"
 
 /**
  * @brief Function that prints out comparison between transformed and nontransformed partial sums

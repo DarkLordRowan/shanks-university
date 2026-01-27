@@ -8,12 +8,16 @@
 #define BINDINGS_TEMPLATES_HPP
 #pragma once
 
+
+#include "bindings.hpp"
+
+#include "../../core/include/methods.hpp"
+#include "../../core/include/series.hpp"
+
 #include "../../core/include/filters/kolmogorov_zurbenko.hpp"
 #include "../../core/include/filters/savitzky_golay.hpp"
-#include "../../core/include/methods.hpp"
 #include "../../core/include/noise/noise_generator.hpp"
-#include "../../core/include/series.hpp"
-#include "bindings.hpp"
+
 
 /**
  * @brief Template implementation for binding series.

@@ -23,6 +23,7 @@ find_package(Eigen3 REQUIRED)
 # Include directories
 include_directories(
     ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/test/include
 )
 
 # -------------------------
@@ -30,7 +31,7 @@ include_directories(
 # -------------------------
 
 add_executable(shanks
-    ${CMAKE_SOURCE_DIR}/main.cpp
+    ${CMAKE_SOURCE_DIR}/test/src/main.cpp
 )
 
 target_link_libraries(shanks PRIVATE MPFR::MPFR GMP::GMP Eigen3::Eigen)

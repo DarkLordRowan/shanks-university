@@ -17,38 +17,6 @@
 // Multistep epsilon-algorithm, Shanks' transformation, and Lotka-Volterra system by Hirota's method.
 // Mathematics of Computation.
 
-#include <eigen3/Eigen/Core>
-#include <eigen3/Eigen/Dense>
-
-#include "series_acceleration.hpp"
-
-#ifdef EIGEN_CORE_MODULE_H
-namespace Eigen {
-/**
- * @brief Template specialization of NumTraits for mpfr::mpreal to support Eigen integration.
- * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
- */
-template <>
-struct NumTraits<mpfr::mpreal>
-    : NumTraits<double>  // permits to get the epsilon, dummy_precision, lowest, highest functions
-{
-    typedef mpfr::mpreal Real;
-    typedef mpfr::mpreal NonInteger;
-    typedef mpfr::mpreal Nested;
-
-    enum {
-        IsComplex = 0,
-        IsInteger = 0,
-        IsSigned = 1,
-        RequireInitialization = 1,
-        ReadCost = 1,
-        AddCost = 3,
-        MulCost = 3
-    };
-};
-}  // namespace Eigen
-#endif
-
 namespace shanks {
 namespace algos {
 

@@ -15,8 +15,6 @@
 // slowly convergent series based on the use of rational functions.
 // Numerische Mathematik, 4(1), 8-14.
 
-#include "series_acceleration.hpp"
-
 namespace shanks {
 namespace algos {
 

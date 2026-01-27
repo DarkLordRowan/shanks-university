@@ -48,7 +48,7 @@ public:
      * @return true if Re(x) <= 2 or x is non-finite, false otherwise.
      */
     bool is_invalid() const override {
-        using float_type = GetUnderlyingType<T>::value;
+        using float_type = real_of<T>::value;
 
         if constexpr (isComplexLike<T>::value) {
             return !utils::isfinite(this->x) || this->x.real() <= utils::cast<float_type>(2);

@@ -12,11 +12,6 @@
  * @authors Naumov A.U.
  */
 
-#include <memory>
-
-#include "remainders.hpp"
-#include "series_acceleration.hpp"
-
 namespace shanks {
 namespace algos {
 

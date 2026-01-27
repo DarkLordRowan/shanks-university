@@ -18,7 +18,7 @@
 enum class test_function_id_t {
     null_test_function_id,
 #define TEST_FUNCTION_ENTRY(id, name, desc) id,
-#include "../test_function_registry.def"
+#include "test_function_registry.def"
 #undef TEST_FUNCTION_ENTRY
     test_function_id_t_count
 };
@@ -80,7 +80,7 @@ struct test_function_registry_metadata {
     static std::vector<std::string> get_names() {
         return {
 #define TEST_FUNCTION_ENTRY(id, name, desc) name,
-#include "../test_function_registry.def"
+#include "test_function_registry.def"
 #undef TEST_FUNCTION_ENTRY
         };
     }
@@ -88,7 +88,7 @@ struct test_function_registry_metadata {
     static std::vector<std::string> get_descriptions() {
         return {
 #define TEST_FUNCTION_ENTRY(id, name, desc) desc,
-#include "../test_function_registry.def"
+#include "test_function_registry.def"
 #undef TEST_FUNCTION_ENTRY
         };
     }
@@ -96,7 +96,7 @@ struct test_function_registry_metadata {
     static std::vector<test_function_id_t> get_ids() {
         return {
 #define TEST_FUNCTION_ENTRY(id, name, desc) test_function_id_t::id,
-#include "../test_function_registry.def"
+#include "test_function_registry.def"
 #undef TEST_FUNCTION_ENTRY
         };
     }

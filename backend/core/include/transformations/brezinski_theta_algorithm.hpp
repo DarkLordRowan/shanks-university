@@ -14,10 +14,6 @@
 // Weniger, E. J. (2003). Nonlinear Sequence Transformations for the Acceleration of
 // Convergence and the Summation of Divergent Series. Computer Physics Reports, 1(1), 1-123.
 
-#include <vector>
-
-#include "series_acceleration.hpp"
-
 namespace shanks {
 namespace algos {
 

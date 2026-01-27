@@ -32,6 +32,11 @@ enum class transformation_id_t {
 #include <string>
 #include <vector>
 
+#include "series_acceleration.hpp"
+#include "utils.hpp"
+#include "remainders.hpp"
+#include "wynn_numerators.hpp"
+
 #include "transformations/anderson_acceleration_algorithm.hpp"
 #include "transformations/brezinski_theta_algorithm.hpp"
 #include "transformations/chang_wynn_algorithm.hpp"

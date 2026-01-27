@@ -13,11 +13,6 @@
  *   of infinite integrals and series. arXiv:math/0306302.
  */
 
-#include <memory>
-
-#include "remainders.hpp"
-#include "series_acceleration.hpp"
-
 namespace shanks {
 namespace algos {
 
@@ -42,7 +37,7 @@ namespace algos {
 template <AcceptedLike T, UnsignedIntLike K>
 class levin_sidi_s_algorithm final : public series_acceleration<T, K> {
 protected:
-    using float_type = GetUnderlyingType<T>::value;  // type in case of complex or interval
+    using float_type = real_of<T>::value;  // type in case of complex or interval
 
     /// Positive real parameter (β > 0). Default to 1.0.
     float_type beta_in_use = utils::cast<float_type>(1.0);

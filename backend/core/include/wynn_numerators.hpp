@@ -14,12 +14,7 @@
  *
  * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  */
-
-#include <vector>
-
-#include "../custom_concepts.hpp"
-#include "../utils/utils_base.hpp"
-
+ 
 namespace shanks {
 namespace numerators {
 

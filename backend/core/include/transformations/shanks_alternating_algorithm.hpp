@@ -8,8 +8,6 @@
  * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  */
 
-#include "series_acceleration.hpp"
-
 namespace shanks {
 namespace algos {
 

@@ -14,10 +14,6 @@
 // Construction of new generalizations of Wynn's epsilon and rho algorithm by solving
 // finite difference equations in the transformation order. Numerical Algorithms.
 
-#include <vector>
-
-#include "series_acceleration.hpp"
-
 namespace shanks {
 namespace algos {
 

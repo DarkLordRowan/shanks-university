@@ -16,8 +16,6 @@
  *   Computer Journal, 14(4), 437-441.
  */
 
-#include "series_acceleration.hpp"
-
 namespace shanks {
 namespace algos {
 

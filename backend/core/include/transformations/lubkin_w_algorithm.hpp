@@ -15,8 +15,6 @@
 // 12:85-94. Sidi, A. (2003). Practical Extrapolation Methods: Theory and Applications. Cambridge University Press.
 // (Chapter 15.4)
 
-#include "series_acceleration.hpp"
-
 namespace shanks {
 namespace algos {
 

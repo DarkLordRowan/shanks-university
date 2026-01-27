@@ -42,7 +42,7 @@ public:
      * @return T The value of the piecewise function at current point x.
      */
     T get_sum() const override {
-        using float_type = GetUnderlyingType<T>::value;
+        using float_type = real_of<T>::value;
 
         if constexpr (isComplexLike<T>::value) {
             if (this->x.real() <= utils::cast<float_type>(0)) return utils::cast<T>(0.25 * std::numbers::pi);
@@ -59,7 +59,7 @@ public:
      * @return true if |x| >= pi or non-finite, false otherwise.
      */
     bool is_invalid() const override {
-        using float_type = GetUnderlyingType<T>::value;
+        using float_type = real_of<T>::value;
         return !utils::isfinite(this->x) || utils::abs(this->x) >= utils::cast<float_type>(std::numbers::pi);
     }
 

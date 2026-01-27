@@ -15,11 +15,6 @@
  *   the convergence of infinite integrals and series. Appl. Math. Comp., 9, 175-215.
  */
 
-#include <memory>
-
-#include "remainders.hpp"
-#include "series_acceleration.hpp"
-
 namespace shanks {
 namespace algos {
 
@@ -45,7 +40,7 @@ namespace algos {
 template <AcceptedLike T, UnsignedIntLike K>
 class levin_algorithm final : public series_acceleration<T, K> {
 protected:
-    using float_type = GetUnderlyingType<T>::value;  // type in case of complex or interval
+    using float_type = real_of<T>::value;  // type in case of complex or interval
 
     /// Parameter for u-variant transformation (β > 0). Default value is 1.0.
     float_type beta_in_use = utils::cast<float_type>(1.0);

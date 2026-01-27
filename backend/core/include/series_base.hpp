@@ -1,13 +1,6 @@
 #ifndef SERIES_BASE_HPP
 #define SERIES_BASE_HPP
-
 #pragma once
-
-#include <string>
-#include <vector>
-
-#include "custom_concepts.hpp"
-#include "utils.hpp"
 
 namespace shanks {
 namespace series {

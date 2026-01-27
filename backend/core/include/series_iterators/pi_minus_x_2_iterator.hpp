@@ -49,7 +49,7 @@ public:
      * @return true if x is outside (0, pi) or non-finite, false otherwise.
      */
     bool is_invalid() const override {
-        using float_type = GetUnderlyingType<T>::value;
+        using float_type = real_of<T>::value;
 
         if constexpr (isComplexLike<T>::value) {
             return !utils::isfinite(this->x) || this->x.real() <= utils::cast<float_type>(0) ||

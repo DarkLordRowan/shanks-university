@@ -12,11 +12,6 @@
  * Osada, N. (1993). Acceleration Methods for Slowly Convergent Sequences and Their Applications.
  */
 
-#include <memory>
-
-#include "series_acceleration.hpp"
-#include "wynn_numerators.hpp"
-
 namespace shanks {
 namespace algos {
 
@@ -46,7 +41,7 @@ template <AcceptedLike T, UnsignedIntLike K>
 class wynn_rho_algorithm final : public series_acceleration<T, K> {
 protected:
     using float_type =
-        GetUnderlyingType<T>::value;  // type in case of complex or interval, represents type for real numbers
+        real_of<T>::value;  // type in case of complex or interval, represents type for real numbers
 
     /// Strategy object for numerator computation.
     std::unique_ptr<const shanks::numerators::numerator_base<T, K>> numerator;

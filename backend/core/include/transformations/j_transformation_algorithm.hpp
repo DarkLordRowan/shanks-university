@@ -16,10 +16,6 @@
  * Sidi, A. (2003). Practical Extrapolation Methods: Theory and Applications.
  */
 
-#include <vector>
-
-#include "series_acceleration.hpp"
-
 namespace shanks {
 namespace algos {
 
@@ -46,7 +42,7 @@ namespace algos {
 template <AcceptedLike T, UnsignedIntLike K>
 class j_transformation_algorithm final : public series_acceleration<T, K> {
 public:
-    using float_type = GetUnderlyingType<T>::value;  // type in case of complex or interval
+    using float_type = real_of<T>::value;  // type in case of complex or interval
 
     /**
      * @brief Parameterized constructor to initialize the J-Transformation Algorithm.

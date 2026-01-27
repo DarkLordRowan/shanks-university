@@ -16,11 +16,6 @@
  * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  */
 
-#include <memory>
-
-#include "remainders.hpp"
-#include "series_acceleration.hpp"
-
 namespace shanks {
 namespace algos {
 
@@ -45,7 +40,7 @@ namespace algos {
 template <AcceptedLike T, UnsignedIntLike K>
 class levin_sidi_m_algorithm final : public series_acceleration<T, K> {
 protected:
-    using float_type = GetUnderlyingType<T>::value;  // type in case of complex or interval
+    using float_type = real_of<T>::value;  // type in case of complex or interval
 
     /// Positive real parameter gamma. For theoretical stability, it often satisfies gamma >= order - 1.
     float_type gamma_in_use = utils::cast<float_type>(DEFAULT_GAMMA);

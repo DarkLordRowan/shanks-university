@@ -12,9 +12,6 @@
 // Weniger, E.J. (1989). Nonlinear sequence transformations for the acceleration of convergence
 // and the summation of divergent series. Computer Physics Reports, 10(5-6), 189-371.
 // Weniger, E.J. (1992). Interpolation between sequence transformations. Numerical Algorithms, 3(1-4), 477-486.
-//
-
-#include "series_acceleration.hpp"
 
 namespace shanks {
 namespace algos {

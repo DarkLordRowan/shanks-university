@@ -50,7 +50,7 @@ public:
      * @return true if |x| > 2 or non-finite, false otherwise.
      */
     bool is_invalid() const override {
-        using float_type = GetUnderlyingType<T>::value;
+        using float_type = real_of<T>::value;
         return !utils::isfinite(this->x) || utils::abs(this->x) > utils::cast<float_type>(2.0);
     }
 

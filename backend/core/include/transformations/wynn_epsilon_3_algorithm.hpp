@@ -14,8 +14,6 @@
  * ALGOL Procedures. Numerische Mathematik, 6(1), 22-36.
  */
 
-#include "series_acceleration.hpp"
-
 namespace shanks {
 namespace algos {
 
@@ -34,7 +32,7 @@ namespace algos {
 template <AcceptedLike T, UnsignedIntLike K>
 class wynn_epsilon_3_algorithm final : public series_acceleration<T, K> {
 public:
-    using float_type = GetUnderlyingType<T>::value;  // type in case of complex or interval
+    using float_type = real_of<T>::value;  // type in case of complex or interval
 
     /**
      * @brief Parameterized constructor for Wynn's Epsilon Algorithm (variant 3).

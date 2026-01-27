@@ -15,10 +15,6 @@
 // Richardson, L.F., & Gaunt, J.A. (1927). The deferred approach to the limit.
 // Philosophical Transactions of the Royal Society of London. Series A, 226, 299-361.
 
-#include <vector>
-
-#include "series_acceleration.hpp"
-
 namespace shanks {
 namespace algos {
 

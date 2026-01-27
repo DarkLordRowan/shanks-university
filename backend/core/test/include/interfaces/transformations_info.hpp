@@ -5,8 +5,6 @@
 #include <string>
 #include <vector>
 
-#include "../methods.hpp"
-
 /**
  * @file transformations_info.hpp
  * @brief This file contains metadata information for transformation algorithms.

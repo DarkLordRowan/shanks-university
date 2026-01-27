@@ -1,6 +1,5 @@
 #ifndef SERIES_HPP
 #define SERIES_HPP
-#include <type_traits>
 #pragma once
 
 #include <functional>
@@ -10,8 +9,10 @@
 #include <vector>
 
 #include "custom_concepts.hpp"
+#include "utils.hpp"
+
 #include "series_base.hpp"
-#include "series_iterators/series_iterators.hpp"
+#include "series_iterators.hpp"
 
 namespace shanks {
 namespace series {
