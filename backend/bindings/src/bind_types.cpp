@@ -2,9 +2,44 @@
 
 void bind_types(py::module_& m) {
 #ifdef SHANKS_ENABLE_PROFILING
-    py::class_<OP<float>>(m, "F32").def(py::init<float>());
-    py::class_<OP<double>>(m, "F64").def(py::init<double>());
-    py::class_<OP<long double>>(m, "FLong").def(py::init<long double>());
+    auto bind_real_props = []<typename T>(py::class_<OP<T>>& c) {
+        c.def(py::self + py::self)
+            .def(py::self - py::self)
+            .def(py::self * py::self)
+            .def(py::self / py::self)
+            .def(-py::self)
+            .def(py::self < py::self)
+            .def(py::self > py::self)
+            .def(py::self <= py::self)
+            .def(py::self >= py::self)
+            .def(py::self == py::self)
+            .def(py::self != py::self)
+            .def("__abs__",
+                 [](const OP<T>& self) {
+                     using shanks::profiling::abs;
+                     return abs(self);
+                 })
+            .def("__pow__",
+                 [](const OP<T>& self, const OP<T>& exp) {
+                     using shanks::profiling::pow;
+                     return pow(self, exp);
+                 })
+            .def("sqrt",
+                 [](const OP<T>& self) {
+                     using shanks::profiling::sqrt;
+                     return sqrt(self);
+                 })
+            .def("__hash__", [](const OP<T>& self) { return py::hash(py::str(shanks::profiling::to_string(self))); })
+            .def("__repr__", [](const OP<T>& self) { return shanks::profiling::to_string(self); })
+            .def(py::pickle([](const OP<T>& num) { return num.value; }, [](T val) { return OP<T>(val); }));
+    };
+
+    auto f32 = py::class_<OP<float>>(m, "F32").def(py::init<float>());
+    bind_real_props(f32);
+    auto f64 = py::class_<OP<double>>(m, "F64").def(py::init<double>());
+    bind_real_props(f64);
+    auto fLong = py::class_<OP<long double>>(m, "FLong").def(py::init<long double>());
+    bind_real_props(fLong);
 
     py::implicitly_convertible<float, OP<float>>();
     py::implicitly_convertible<double, OP<double>>();
