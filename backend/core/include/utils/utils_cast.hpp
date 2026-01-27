@@ -19,16 +19,14 @@
  * @return To (casted value)
  */
 template <typename To, typename From>
-constexpr To utils::cast(const From& x, const size_t precision)
-{
+constexpr To utils::cast(const From& x, const size_t precision) {
     // Default static cast for standard types
     if constexpr (is_standard_types<To>::value)
         return static_cast<To>(x);
     else if constexpr (is_precisable<To>::value)
         if (precision == size_t{0})
             return static_cast<To>(x);
-        else
-        {
+        else {
             if constexpr (std::is_same<To, mpfr::mpreal>::value)
                 if constexpr (std::is_same<From, mpfr::mpreal>::value)
                     return mpfr::mpreal(x);

@@ -23,16 +23,14 @@
  * @tparam InputType Type of input variable
  */
 template <typename InputType>
-struct console_IO
-{
+struct console_IO {
     /**
      * @brief Generic input function with prompt for generic types
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @param var_name (std::string)
      * @return InputType
      */
-    InputType inline static input(const std::string& var_name = "x")
-    {
+    InputType inline static input(const std::string& var_name = "x") {
         InputType x;
         // Reading from standard input
         std::cout << var_name << " : ";
@@ -47,8 +45,7 @@ struct console_IO
  */
 template <typename InputType>
     requires std::floating_point<InputType> || std::unsigned_integral<InputType> || std::is_enum<InputType>::value
-struct console_IO<InputType>
-{
+struct console_IO<InputType> {
     /**
      * @brief Input function with validation for standard types
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
@@ -61,26 +58,23 @@ struct console_IO<InputType>
 // For arbitrary precision types.
 #ifdef INC_FPRECISION
 template <>
-struct console_IO<float_precision>
-{
+struct console_IO<float_precision> {
     float_precision inline static input(const std::string& var_name = "x");
 };
 
 // For complex precision.
-#    ifdef INC_COMPLEXPRECISION
+#ifdef INC_COMPLEXPRECISION
 template <FloatLike InputType>
-struct console_IO<complex_precision<InputType>>
-{
+struct console_IO<complex_precision<InputType>> {
     complex_precision<InputType> inline static input(const std::string& var_name = "x");
 };
-#    endif
+#endif
 #endif
 
 // For interval precision types.
 #ifdef INC_INTERVALPRECISION
 template <FloatLike InputType>
-struct console_IO<interval<InputType>>
-{
+struct console_IO<interval<InputType>> {
     interval<InputType> inline static input(const std::string& var_name = "x");
 };
 #endif
@@ -90,8 +84,7 @@ struct console_IO<interval<InputType>>
  */
 template <typename InputType>
     requires std::floating_point<InputType> || std::unsigned_integral<InputType> || std::is_enum<InputType>::value
-InputType inline console_IO<InputType>::input(const std::string& var_name)
-{
+InputType inline console_IO<InputType>::input(const std::string& var_name) {
     std::string init_string = "";
     InputType x = static_cast<InputType>(0);
     bool valid_input = false;
@@ -101,8 +94,7 @@ InputType inline console_IO<InputType>::input(const std::string& var_name)
 
     // Error handling lambda for cleaner code
     auto error_handler = [&error_triggered, &init_string](const std::string& error_mes) {
-        if (error_triggered)
-        {
+        if (error_triggered) {
             console_effects::clear_lines_up(1);
         }
         console_effects::clear_lines_up(1);
@@ -111,78 +103,55 @@ InputType inline console_IO<InputType>::input(const std::string& var_name)
     };
 
     // Loop until valid input is received
-    while (!valid_input)
-    {
+    while (!valid_input) {
         std::cout << var_name << " : ";
         std::getline(std::cin, init_string);
 
-        try
-        {
+        try {
             // Converting string to appropriate numeric type
-            if constexpr (std::is_same<InputType, float>::value)
-            {
+            if constexpr (std::is_same<InputType, float>::value) {
                 x = std::stof(init_string);
-            }
-            else if constexpr (std::is_same<InputType, double>::value)
-            {
+            } else if constexpr (std::is_same<InputType, double>::value) {
                 x = std::stod(init_string);
-            }
-            else if constexpr (std::is_same<InputType, long double>::value)
-            {
+            } else if constexpr (std::is_same<InputType, long double>::value) {
                 x = std::stold(init_string);
-            }
-            else if constexpr (std::is_same<InputType, unsigned long int>::value ||
-                               std::is_same<InputType, unsigned int>::value ||
-                               std::is_same<InputType, unsigned short int>::value)
-            {
+            } else if constexpr (std::is_same<InputType, unsigned long int>::value ||
+                                 std::is_same<InputType, unsigned int>::value ||
+                                 std::is_same<InputType, unsigned short int>::value) {
                 x = static_cast<InputType>(std::stoul(init_string));
-            }
-            else if constexpr (std::is_same<InputType, unsigned long long int>::value)
-            {
+            } else if constexpr (std::is_same<InputType, unsigned long long int>::value) {
                 x = std::stoull(init_string);
-            }
-            else if constexpr (std::is_enum<InputType>::value)
-            {
+            } else if constexpr (std::is_enum<InputType>::value) {
                 x = static_cast<InputType>(std::stoul(init_string));
 
                 // Bound checks for enumerations
-                if constexpr (std::is_same<InputType, shanks::series::series_id_t>::value)
-                {
+                if constexpr (std::is_same<InputType, shanks::series::series_id_t>::value) {
                     if (static_cast<size_t>(x) >= static_cast<size_t>(shanks::series::series_id_t::series_id_t_count))
                         throw std::out_of_range("Series with this id is not implemented");
-                }
-                else if constexpr (std::is_same<InputType, shanks::algos::transformation_id_t>::value)
-                {
+
+                } else if constexpr (std::is_same<InputType, shanks::algos::transformation_id_t>::value) {
                     if (x >= shanks::algos::transformation_id_t::transformation_id_t_count)
                         throw std::out_of_range("Transformation with this id is not implemented");
-                }
-                else if constexpr (std::is_same<InputType, test_function_id_t>::value)
-                {
+
+                } else if constexpr (std::is_same<InputType, test_function_id_t>::value) {
                     if (x >= test_function_id_t::test_function_id_t_count)
                         throw std::out_of_range("Series with this id is not implemented");
-                }
-                else if constexpr (std::is_same<InputType, NoiseType>::value)
-                {
-                    if (x >= NoiseType::noise_count)
-                        throw std::out_of_range("Series with this id is not implemented");
+
+                } else if constexpr (std::is_same<InputType, NoiseType>::value) {
+                    if (x >= NoiseType::noise_count) throw std::out_of_range("Series with this id is not implemented");
                 }
             }
 
             valid_input = true;
-        }
-        catch (std::invalid_argument& e)
-        {
+        } catch (std::invalid_argument& e) {
             error_handler(error_mes_invalid_arg);
-        }
-        catch (std::out_of_range& e)
-        {
+        } catch (std::out_of_range& e) {
             error_handler(error_mes_out_of_range);
         }
     }
 
     // Visual cleanup after error
-    if (error_triggered)
-    {
+    if (error_triggered) {
         console_effects::clear_lines_up(2);
         std::cout << var_name << " : " << init_string << "\n";
     }
@@ -194,8 +163,7 @@ InputType inline console_IO<InputType>::input(const std::string& var_name)
 /**
  * @brief Input implementation for float_precision type
  */
-float_precision inline console_IO<float_precision>::input(const std::string& var_name)
-{
+float_precision inline console_IO<float_precision>::input(const std::string& var_name) {
     std::string init_string = "";
     float_precision x = 0;
     bool valid_input = false;
@@ -203,8 +171,7 @@ float_precision inline console_IO<float_precision>::input(const std::string& var
     const std::string error_mes_invalid_arg = "invalid input was given : ";
     const std::string error_mes_out_of_range = "given value is out of bounds for this type : ";
     auto error_handler = [&error_triggered, &init_string](const std::string& error_mes) {
-        if (error_triggered)
-        {
+        if (error_triggered) {
             console_effects::clear_lines_up(1);
         }
         console_effects::clear_lines_up(1);
@@ -212,32 +179,24 @@ float_precision inline console_IO<float_precision>::input(const std::string& var
         error_triggered = true;
     };
 
-    while (!valid_input)
-    {
+    while (!valid_input) {
         std::cout << var_name << " : ";
         std::getline(std::cin, init_string);
 
-        try
-        {
+        try {
             x = float_precision(init_string);
             valid_input = true;
-        }
-        catch (float_precision::bad_int_syntax& e)
-        {
+
+        } catch (float_precision::bad_int_syntax& e) {
             error_handler(error_mes_invalid_arg);
-        }
-        catch (float_precision::bad_float_syntax& e)
-        {
+        } catch (float_precision::bad_float_syntax& e) {
             error_handler(error_mes_invalid_arg);
-        }
-        catch (float_precision::out_of_range& e)
-        {
+        } catch (float_precision::out_of_range& e) {
             error_handler(error_mes_out_of_range);
         }
     }
 
-    if (error_triggered)
-    {
+    if (error_triggered) {
         console_effects::clear_lines_up(2);
         std::cout << var_name << " : " << init_string << "\n";
     }
@@ -255,8 +214,7 @@ float_precision inline console_IO<float_precision>::input(const std::string& var
  * @brief Input implementation for complex_precision types
  */
 template <FloatLike InputType>
-complex_precision<InputType> inline console_IO<complex_precision<InputType>>::input(const std::string& var_name)
-{
+complex_precision<InputType> inline console_IO<complex_precision<InputType>>::input(const std::string& var_name) {
     // Separately reading real and imaginary parts
     InputType real_x = console_IO<InputType>::input("Re(x)");
     InputType imag_x = console_IO<InputType>::input("Im(x)");
@@ -270,8 +228,7 @@ complex_precision<InputType> inline console_IO<complex_precision<InputType>>::in
  * @brief Input implementation for interval types
  */
 template <FloatLike InputType>
-interval<InputType> inline console_IO<interval<InputType>>::input(const std::string& var_name)
-{
+interval<InputType> inline console_IO<interval<InputType>>::input(const std::string& var_name) {
     // Reading left and right boundaries of the interval
     InputType left_x = console_IO<InputType>::input("left border");
     InputType right_x = console_IO<InputType>::input("right border");
@@ -285,8 +242,7 @@ interval<InputType> inline console_IO<interval<InputType>>::input(const std::str
  * @brief Input implementation for CLN cl_F type
  */
 template <>
-cln::cl_F inline console_IO<cln::cl_F>::input(const std::string& var_name)
-{
+cln::cl_F inline console_IO<cln::cl_F>::input(const std::string& var_name) {
     std::string float_value = console_IO<std::string>::input();
     size_t precision = console_IO<size_t>::input("precision");
     cln::cl_F res = (float_value + "_" + utils::to_string(precision)).c_str();
@@ -300,8 +256,7 @@ cln::cl_F inline console_IO<cln::cl_F>::input(const std::string& var_name)
  * @brief Input implementation for MPFR mpreal type
  */
 template <>
-mpfr::mpreal inline console_IO<mpfr::mpreal>::input(const std::string& var_name)
-{
+mpfr::mpreal inline console_IO<mpfr::mpreal>::input(const std::string& var_name) {
     std::string float_value;
     std::cout << "Value of " << var_name << " : ";
     std::getline(std::cin, float_value);
@@ -315,8 +270,7 @@ mpfr::mpreal inline console_IO<mpfr::mpreal>::input(const std::string& var_name)
  * @brief Input implementation for complex MPFR mpreal type
  */
 template <>
-std::complex<mpfr::mpreal> inline console_IO<std::complex<mpfr::mpreal>>::input(const std::string& var_name)
-{
+std::complex<mpfr::mpreal> inline console_IO<std::complex<mpfr::mpreal>>::input(const std::string& var_name) {
     std::string real_value;
     std::cout << "Real of " << var_name << " : ";
     std::getline(std::cin, real_value);
@@ -336,14 +290,12 @@ std::complex<mpfr::mpreal> inline console_IO<std::complex<mpfr::mpreal>>::input(
  * @brief Specialization for std::complex<T> inputs
  */
 template <std::floating_point T>
-struct console_IO<std::complex<T>>
-{
+struct console_IO<std::complex<T>> {
     std::complex<T> inline static input(const std::string& var_name = "x");
 };
 
 template <std::floating_point T>
-std::complex<T> inline console_IO<std::complex<T>>::input(const std::string& var_name)
-{
+std::complex<T> inline console_IO<std::complex<T>>::input(const std::string& var_name) {
     // Standard input for complex numbers via real and imaginary parts
     T real_value = console_IO<T>::input("Real of x");
     T imag_value = console_IO<T>::input("Imag of x");

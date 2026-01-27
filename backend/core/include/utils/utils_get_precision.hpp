@@ -18,25 +18,21 @@
  * @return size_t precision
  */
 template <AcceptedLike T>
-size_t utils::get_precision(const T& x)
-{
+size_t utils::get_precision(const T& x) {
     // Standard types have no arbitrary precision to report
-    if constexpr (is_standard_types<T>::value)
-    {
+    if constexpr (is_standard_types<T>::value) {
         return static_cast<size_t>(0);
     }
-#    ifdef __MPREAL_H__
+#ifdef __MPREAL_H__
     // Handling MPFR mpreal precision
-    else if constexpr (std::is_same<T, mpfr::mpreal>::value)
-    {
+    else if constexpr (std::is_same<T, mpfr::mpreal>::value) {
         return mpfr::bits2digits(x.get_prec());
     }
-#    endif
+#endif
     // Recursive handling for custom complex types
     else if constexpr (is_complex_custom<T>::value)
         return std::max(utils::get_precision(x.real()), utils::get_precision(x.imag()));
-    else
-    {
+    else {
         static_assert(dependent_false<T>::value, "utils::get_precision not implemented for this type");
     }
 }

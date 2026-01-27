@@ -24,8 +24,7 @@
  * @brief Console_effects structure for a better output.
  * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  */
-struct console_effects
-{
+struct console_effects {
     unsigned short int foreground_color;
     unsigned short int background_color;
 
@@ -33,8 +32,7 @@ struct console_effects
      * @brief Stops console and waits for user input
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      */
-    void inline static stop_console()
-    {
+    void inline static stop_console() {
 // Platform-specific pause command execution
 #ifdef __unix__
         system("read -n 1 -s -p \"Press any key to continue...\"");
@@ -50,8 +48,7 @@ struct console_effects
      * @brief Clears the console screen
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      */
-    void inline static clear_console()
-    {
+    void inline static clear_console() {
 // Platform-specific clear screen command execution
 #ifdef __unix__
         system("clear");
@@ -65,8 +62,7 @@ struct console_effects
      * @brief Clears current line in the console
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      */
-    void inline static clear_line()
-    {
+    void inline static clear_line() {
         // Using ANSI escape sequence to clear line
         std::cout << "\x1b[2K\r";
     }
@@ -75,8 +71,7 @@ struct console_effects
      * @brief Clears console from cursor to the end of screen
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      */
-    void inline static clear_to_end()
-    {
+    void inline static clear_to_end() {
         // Using ANSI escape sequence to clear to end
         std::cout << "\x1b[0J";
     }
@@ -86,8 +81,7 @@ struct console_effects
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @param count (size_t)
      */
-    void inline static move_up(size_t count = static_cast<size_t>(1))
-    {
+    void inline static move_up(size_t count = static_cast<size_t>(1)) {
         // Using ANSI escape sequence to move cursor up
         std::cout << "\x1b[" << count << "A";
     }
@@ -97,8 +91,7 @@ struct console_effects
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @param count (size_t)
      */
-    void inline static move_down(size_t count = static_cast<size_t>(1))
-    {
+    void inline static move_down(size_t count = static_cast<size_t>(1)) {
         // Using ANSI escape sequence to move cursor down
         std::cout << "\x1b[" << count << "B";
     }
@@ -108,12 +101,10 @@ struct console_effects
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @param count (size_t)
      */
-    void inline static clear_lines_up(size_t count)
-    {
+    void inline static clear_lines_up(size_t count) {
         // Iteratively moving up and clearing lines
         clear_line();
-        for (size_t j = 0; j < count; ++j)
-        {
+        for (size_t j = 0; j < count; ++j) {
             move_up();
             clear_line();
         }

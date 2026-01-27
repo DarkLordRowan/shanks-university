@@ -29,17 +29,11 @@
  * @param test The type of transformation that is being used
  */
 template <AcceptedLike T, std::unsigned_integral K>
-void cmp_sum_and_transform(const K n,
-                           const K order,
-                           shanks::series::series_base<T, K>* series,
-                           series_result<T>& result,
-                           shanks::algos::series_acceleration<T, K>* test)
-{
+void cmp_sum_and_transform(const K n, const K order, shanks::series::series_base<T, K>* series,
+                           series_result<T>& result, shanks::algos::series_acceleration<T, K>* test) {
     std::cout << "transformation : " << test->get_name() << "\n";
-    for (K i = 1; i <= n; ++i)
-    {
-        try
-        {
+    for (K i = 1; i <= n; ++i) {
+        try {
             // Calculating transformed value
             const T res = test->operator()(i, order, result);
             // Displaying comparison details
@@ -48,13 +42,10 @@ void cmp_sum_and_transform(const K n,
             std::cout << "T_" << i << " of order " << order << " : " << utils::to_string(res) << std::endl;
             std::cout << "T_" << i << " of order " << order << " - S_" << i << " : "
                       << utils::to_string(res - result.Sn[i]) << '\n';
-        }
-        catch (std::domain_error& e)
-        {
+
+        } catch (std::domain_error& e) {
             std::cout << e.what() << '\n';
-        }
-        catch (std::overflow_error& e)
-        {
+        } catch (std::overflow_error& e) {
             std::cout << e.what() << '\n';
         }
     }
@@ -74,17 +65,11 @@ void cmp_sum_and_transform(const K n,
  * @param test The type of transformation that is being used
  */
 template <AcceptedLike T, std::unsigned_integral K>
-void cmp_a_n_and_transform(const K n,
-                           const K order,
-                           shanks::series::series_base<T, K>* series,
-                           series_result<T>& result,
-                           shanks::algos::series_acceleration<T, K>* test)
-{
+void cmp_a_n_and_transform(const K n, const K order, shanks::series::series_base<T, K>* series,
+                           series_result<T>& result, shanks::algos::series_acceleration<T, K>* test) {
     std::cout << "transformation : " << test->get_name() << "\n";
-    for (K i = 1; i <= n; ++i)
-    {
-        try
-        {
+    for (K i = 1; i <= n; ++i) {
+        try {
             // Displaying original terms
             std::cout << "a_" << i << " : " << utils::to_string(result.an[i]) << '\n';
             // Calculating and displaying transformed terms
@@ -96,13 +81,9 @@ void cmp_a_n_and_transform(const K n,
                              (test->operator()(i, order, result) - test->operator()(i - 1, order, result)) -
                              result.an[i])
                       << '\n';
-        }
-        catch (std::domain_error& e)
-        {
+        } catch (std::domain_error& e) {
             std::cout << e.what() << '\n';
-        }
-        catch (std::overflow_error& e)
-        {
+        } catch (std::overflow_error& e) {
             std::cout << e.what() << '\n';
         }
     }
@@ -137,8 +118,7 @@ void cmp_a_n_and_transform(const K n,
  * @return A new series_result<T> with noise applied
  */
 template <AcceptedLike T, AcceptedLike ParamType>
-inline series_result<T> apply_noise_interactive(series_result<T>& source, const NoiseType noise_type)
-{
+inline series_result<T> apply_noise_interactive(series_result<T>& source, const NoiseType noise_type) {
     ParamType param1;
     ParamType param2;
     unsigned long long seed;
@@ -147,16 +127,14 @@ inline series_result<T> apply_noise_interactive(series_result<T>& source, const 
     std::cout << "Enter seed (0 for random, any other positive integer will be used as seed)\n";
     seed = console_IO<unsigned long long int>::input("seed");
 
-    if (seed == 0)
-    {
+    if (seed == 0) {
         seed = std::chrono::system_clock::now().time_since_epoch().count() + std::rand();
     }
 
     std::cout << "Seed : " << utils::to_string(seed) << "\n";
 
     // Getting noise parameters based on type
-    switch (noise_type)
-    {
+    switch (noise_type) {
         case uniform:
             param1 = console_IO<ParamType>::input("Lower bound");
             param2 = console_IO<ParamType>::input("Upper bound");
@@ -167,7 +145,7 @@ inline series_result<T> apply_noise_interactive(series_result<T>& source, const 
             break;
         case poisson:
             param1 = console_IO<ParamType>::input("Lambda");
-            param2 = ParamType(); // Not used for poisson
+            param2 = ParamType();  // Not used for poisson
             break;
         default:
             throw std::invalid_argument("Invalid noise type");
@@ -190,28 +168,18 @@ inline series_result<T> apply_noise_interactive(series_result<T>& source, const 
  * @param test The type of transformation that is being used
  */
 template <AcceptedLike T, std::unsigned_integral K>
-void transformation_remainders(const K n,
-                               const K order,
-                               shanks::series::series_base<T, K>* series,
-                               series_result<T>& result,
-                               shanks::algos::series_acceleration<T, K>* test)
-{
+void transformation_remainders(const K n, const K order, shanks::series::series_base<T, K>* series,
+                               series_result<T>& result, shanks::algos::series_acceleration<T, K>* test) {
     std::cout << "Tranformation of order " << order << " remainders from i = 1 to " << n << '\n';
     std::cout << "transformation : " << test->get_name() << "\n";
-    for (K i = 1; i <= n; ++i)
-    {
-        try
-        {
+    for (K i = 1; i <= n; ++i) {
+        try {
             // Calculating and displaying remainder: Sum - Transformed_Sum
             std::cout << "S - T_" << i << " : "
                       << utils::to_string(series->get_sum() - test->operator()(i, order, result)) << '\n';
-        }
-        catch (std::domain_error& e)
-        {
+        } catch (std::domain_error& e) {
             std::cout << e.what() << '\n';
-        }
-        catch (std::overflow_error& e)
-        {
+        } catch (std::overflow_error& e) {
             std::cout << e.what() << '\n';
         }
     }
@@ -232,13 +200,9 @@ void transformation_remainders(const K n,
  * @param test_2 The type of the second transformation that is being used
  */
 template <AcceptedLike T, std::unsigned_integral K>
-void cmp_transformations(const K n,
-                         const K order,
-                         shanks::series::series_base<T, K>* series,
-                         series_result<T>& result,
+void cmp_transformations(const K n, const K order, shanks::series::series_base<T, K>* series, series_result<T>& result,
                          shanks::algos::series_acceleration<T, K>* test_1,
-                         shanks::algos::series_acceleration<T, K>* test_2)
-{
+                         shanks::algos::series_acceleration<T, K>* test_2) {
     using std::abs;
 
     std::cout << "Tranformations of order " << order << " remainders from i = 1 to " << n << '\n';
@@ -249,10 +213,8 @@ void cmp_transformations(const K n,
 
     T diff_1;
     T diff_2;
-    for (K i = 1; i <= n; ++i)
-    {
-        try
-        {
+    for (K i = 1; i <= n; ++i) {
+        try {
             // Calculating remainders for both transformations
             diff_1 = series->get_sum() - test_1->operator()(i, order, result);
             diff_2 = series->get_sum() - test_2->operator()(i, order, result);
@@ -266,13 +228,9 @@ void cmp_transformations(const K n,
                 std::cout << "The transformation #1 is faster" << '\n';
             else
                 std::cout << "The transformation #2 is faster" << '\n';
-        }
-        catch (std::domain_error& e)
-        {
+        } catch (std::domain_error& e) {
             std::cout << e.what() << '\n';
-        }
-        catch (std::overflow_error& e)
-        {
+        } catch (std::overflow_error& e) {
             std::cout << e.what() << '\n';
         }
     }
@@ -289,28 +247,18 @@ void cmp_transformations(const K n,
  * @param test The type of the first transformation that is being used
  */
 template <AcceptedLike T, std::unsigned_integral K>
-void eval_transform_time(const K n,
-                         const K order,
-                         shanks::series::series_base<T, K>* series,
-                         series_result<T>& result,
-                         shanks::algos::series_acceleration<T, K>* test)
-{
+void eval_transform_time(const K n, const K order, shanks::series::series_base<T, K>* series, series_result<T>& result,
+                         shanks::algos::series_acceleration<T, K>* test) {
     // Starting timer
     const auto start_time = std::chrono::system_clock::now();
     std::cout << "transformation : " << test->get_name() << "\n";
-    for (K i = 1; i <= n; ++i)
-    {
-        try
-        {
+    for (K i = 1; i <= n; ++i) {
+        try {
             // Performing transformation
             test->operator()(i, order, result);
-        }
-        catch (std::domain_error& e)
-        {
+        } catch (std::domain_error& e) {
             std::cout << e.what() << '\n';
-        }
-        catch (std::overflow_error& e)
-        {
+        } catch (std::overflow_error& e) {
             std::cout << e.what() << '\n';
         }
     }
@@ -328,49 +276,33 @@ void eval_transform_time(const K n,
  * @tparam K The type of enumerating integer
  */
 template <AcceptedLike T, std::unsigned_integral K>
-void test_all_transforms(const K n, const K order, shanks::series::series_base<T, K>* series, series_result<T>& result)
-{
+void test_all_transforms(const K n, const K order, shanks::series::series_base<T, K>* series,
+                         series_result<T>& result) {
     // Get all registered transformations
     auto entries = shanks::algos::transformation_registry<T, K>::get_entries();
     std::vector<std::unique_ptr<shanks::algos::series_acceleration<T, K>>> algos;
-    for (const auto& entry : entries)
-    {
+    for (const auto& entry : entries) {
         algos.push_back(entry.factory());
     }
 
     // Running tests for each algorithm
-    for (size_t i = 0; i <= n; ++i)
-    {
-        for (size_t j = 0; j < algos.size(); ++j)
-        {
-            try
-            {
+    for (size_t i = 0; i <= n; ++i) {
+        for (size_t j = 0; j < algos.size(); ++j) {
+            try {
                 std::cout << "transformation : " << algos[j]->get_name() << "\n";
                 std::cout << "n = " << i << " order = " << order << " : "
                           << utils::to_string(algos[j]->operator()(i, order, result)) << "\n\n";
-            }
-            catch (std::overflow_error& e)
-            {
+            } catch (std::overflow_error& e) {
                 std::cout << e.what() << "\n";
-            }
-            catch (std::domain_error& e)
-            {
+            } catch (std::domain_error& e) {
                 std::cout << e.what() << "\n";
-            }
-            catch (std::out_of_range& e)
-            {
+            } catch (std::out_of_range& e) {
                 std::cout << e.what() << "\n";
-            }
-            catch (std::invalid_argument& e)
-            {
+            } catch (std::invalid_argument& e) {
                 std::cout << e.what() << "\n";
-            }
-            catch (std::runtime_error& e)
-            {
+            } catch (std::runtime_error& e) {
                 std::cout << e.what() << "\n";
-            }
-            catch (...)
-            {
+            } catch (...) {
                 std::cout << "SOME ERROR\n";
             }
         }

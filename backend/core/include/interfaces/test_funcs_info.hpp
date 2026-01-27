@@ -15,8 +15,7 @@
  * @brief Enumeration of testing functions IDs
  * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  */
-enum class test_function_id_t
-{
+enum class test_function_id_t {
     null_test_function_id,
 #define TEST_FUNCTION_ENTRY(id, name, desc) id,
 #include "../test_function_registry.def"
@@ -28,8 +27,7 @@ enum class test_function_id_t
  * @brief Interface for accessing test function identification and descriptive metadata
  * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  */
-class ITestFunctionInfo
-{
+class ITestFunctionInfo {
 public:
     /**
      * @brief Virtual destructor
@@ -63,26 +61,14 @@ public:
  * @brief Generic implementation of ITestFunctionInfo using metadata from registry
  * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  */
-class DeclarativeTestFunctionInfo final : public ITestFunctionInfo
-{
+class DeclarativeTestFunctionInfo final : public ITestFunctionInfo {
 public:
     DeclarativeTestFunctionInfo(test_function_id_t id, std::string name, std::string description)
-        : id_(id), name_(std::move(name)), description_(std::move(description))
-    {
-    }
+        : id_(id), name_(std::move(name)), description_(std::move(description)) {}
 
-    test_function_id_t getId() const override
-    {
-        return id_;
-    }
-    std::string getName() const override
-    {
-        return name_;
-    }
-    std::string getDescription() const override
-    {
-        return description_;
-    }
+    test_function_id_t getId() const override { return id_; }
+    std::string getName() const override { return name_; }
+    std::string getDescription() const override { return description_; }
 
 private:
     test_function_id_t id_;
@@ -90,10 +76,8 @@ private:
     std::string description_;
 };
 
-struct test_function_registry_metadata
-{
-    static std::vector<std::string> get_names()
-    {
+struct test_function_registry_metadata {
+    static std::vector<std::string> get_names() {
         return {
 #define TEST_FUNCTION_ENTRY(id, name, desc) name,
 #include "../test_function_registry.def"
@@ -101,8 +85,7 @@ struct test_function_registry_metadata
         };
     }
 
-    static std::vector<std::string> get_descriptions()
-    {
+    static std::vector<std::string> get_descriptions() {
         return {
 #define TEST_FUNCTION_ENTRY(id, name, desc) desc,
 #include "../test_function_registry.def"
@@ -110,8 +93,7 @@ struct test_function_registry_metadata
         };
     }
 
-    static std::vector<test_function_id_t> get_ids()
-    {
+    static std::vector<test_function_id_t> get_ids() {
         return {
 #define TEST_FUNCTION_ENTRY(id, name, desc) test_function_id_t::id,
 #include "../test_function_registry.def"

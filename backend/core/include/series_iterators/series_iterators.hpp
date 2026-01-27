@@ -8,20 +8,17 @@
  * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  */
 
-namespace shanks
-{
-    namespace series
-    {
+namespace shanks {
+namespace series {
 
-        /**
-         * @brief Enumeration of all supported series iterators.
-         *
-         * Each ID corresponds to a specific mathematical series implementation.
-         * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
-         */
-        enum class series_iterator_id_t
-        {
-            null_iterator_id,
+/**
+ * @brief Enumeration of all supported series iterators.
+ *
+ * Each ID corresponds to a specific mathematical series implementation.
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+ */
+enum class series_iterator_id_t {
+    null_iterator_id,
 #define SERIES_ENTRY(snake, camel) snake##_iterator_id,
 #define SERIES_LAST(snake, camel) snake##_iterator_id,
 #define SERIES_ENTRY_ARGS(snake, camel, a1, a2) snake##_iterator_id,
@@ -31,11 +28,11 @@ namespace shanks
 #undef SERIES_LAST
 #undef SERIES_ENTRY_ARGS
 #undef SERIES_LAST_ARGS
-            series_iterator_id_t_count
-        };
+    series_iterator_id_t_count
+};
 
-    } // namespace series
-} // namespace shanks
+}  // namespace series
+}  // namespace shanks
 // Include all specific iterator definitions
 #include "abs_sin_x_minus_2_div_pi_iterator.hpp"
 #include "arcsin_x2_iterator.hpp"

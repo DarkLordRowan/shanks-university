@@ -10,9 +10,9 @@
 #include "../utils.hpp"
 
 #ifndef SHANKS_TRANSFORMATION_NOISE_GENERATOR_HPP
-#    define SHANKS_TRANSFORMATION_NOISE_GENERATOR_HPP
+#define SHANKS_TRANSFORMATION_NOISE_GENERATOR_HPP
 
-#    define pseudo_random_seed (std::chrono::system_clock::now().time_since_epoch().count() + std::rand())
+#define pseudo_random_seed (std::chrono::system_clock::now().time_since_epoch().count() + std::rand())
 
 /**
  * @file noise_generator.hpp
@@ -29,13 +29,7 @@
  * - normal: Represents normal (Gaussian) distribution noise.
  * - poisson: Represents Poisson distribution noise.
  */
-enum NoiseType
-{
-    uniform = 0,
-    normal = 1,
-    poisson = 2,
-    noise_count = 3
-};
+enum NoiseType { uniform = 0, normal = 1, poisson = 2, noise_count = 3 };
 
 /**
  * @brief Generates uniform noise for given type and range.
@@ -60,10 +54,8 @@ enum NoiseType
  */
 template <ComplexLike CT, FloatLike FT>
     requires(!ComplexLike<FT>)
-CT generate_uniform_noise(const FT& inf, const FT& sup, std::mt19937_64& rng)
-{
-    if (inf >= sup)
-    {
+CT generate_uniform_noise(const FT& inf, const FT& sup, std::mt19937_64& rng) {
+    if (inf >= sup) {
         throw std::invalid_argument("Invalid borders for uniform noise generation.");
     }
 
@@ -95,10 +87,8 @@ CT generate_uniform_noise(const FT& inf, const FT& sup, std::mt19937_64& rng)
  * @throws std::invalid_argument if bounds are inconsistent
  */
 template <ComplexLike T>
-T generate_uniform_noise(const T& inf, const T& sup, std::mt19937_64& rng)
-{
-    if (inf.real() >= sup.real() || inf.imag() >= sup.imag())
-    {
+T generate_uniform_noise(const T& inf, const T& sup, std::mt19937_64& rng) {
+    if (inf.real() >= sup.real() || inf.imag() >= sup.imag()) {
         throw std::invalid_argument("Invalid borders for uniform noise generation.");
     }
 
@@ -121,10 +111,8 @@ T generate_uniform_noise(const T& inf, const T& sup, std::mt19937_64& rng)
  * @throws std::invalid_argument if left border >= right border
  */
 template <IntervalLike T>
-T generate_uniform_noise(const T& inf, const T& sup, std::mt19937_64& rng)
-{
-    if (inf.leftinterval() >= sup.rightinterval())
-    {
+T generate_uniform_noise(const T& inf, const T& sup, std::mt19937_64& rng) {
+    if (inf.leftinterval() >= sup.rightinterval()) {
         throw std::invalid_argument("Invalid borders for uniform noise generation.");
     }
 
@@ -157,10 +145,8 @@ T generate_uniform_noise(const T& inf, const T& sup, std::mt19937_64& rng)
  */
 template <FloatLike T>
     requires(!ComplexLike<T>)
-T generate_uniform_noise(const T& inf, const T& sup, std::mt19937_64& rng)
-{
-    if (inf >= sup)
-    {
+T generate_uniform_noise(const T& inf, const T& sup, std::mt19937_64& rng) {
+    if (inf >= sup) {
         throw std::invalid_argument("Invalid borders for uniform noise generation.");
     }
 
@@ -196,10 +182,8 @@ T generate_uniform_noise(const T& inf, const T& sup, std::mt19937_64& rng)
  */
 template <ComplexLike CT, FloatLike FT>
     requires(!ComplexLike<FT> && !IntervalLike<FT>)
-CT generate_normal_noise(const FT& mean, const FT& std, std::mt19937_64& rng)
-{
-    if (std <= 0)
-    {
+CT generate_normal_noise(const FT& mean, const FT& std, std::mt19937_64& rng) {
+    if (std <= 0) {
         throw std::invalid_argument("Standard deviation must be positive for normal distribution.");
     }
 
@@ -234,10 +218,8 @@ CT generate_normal_noise(const FT& mean, const FT& std, std::mt19937_64& rng)
  * @throws std::invalid_argument if any standard deviation part is non-positive
  */
 template <ComplexLike T>
-T generate_normal_noise(const T& mean, const T& std, std::mt19937_64& rng)
-{
-    if (std.real() <= static_cast<typename T::value_type>(0) || std.imag() <= static_cast<typename T::value_type>(0))
-    {
+T generate_normal_noise(const T& mean, const T& std, std::mt19937_64& rng) {
+    if (std.real() <= static_cast<typename T::value_type>(0) || std.imag() <= static_cast<typename T::value_type>(0)) {
         throw std::invalid_argument("Standard deviation must be positive for normal distribution.");
     }
 
@@ -259,11 +241,9 @@ T generate_normal_noise(const T& mean, const T& std, std::mt19937_64& rng)
  * @throws std::invalid_argument if std dev is non-positive
  */
 template <IntervalLike T>
-T generate_normal_noise(const T& mean, const T& std, std::mt19937_64& rng)
-{
+T generate_normal_noise(const T& mean, const T& std, std::mt19937_64& rng) {
     if (std.leftinterval() <= static_cast<typename T::value_type>(0) ||
-        std.leftinterval() <= static_cast<typename T::value_type>(0))
-    {
+        std.leftinterval() <= static_cast<typename T::value_type>(0)) {
         throw std::invalid_argument("Standard deviation must be positive for normal distribution.");
     }
 
@@ -296,8 +276,7 @@ T generate_normal_noise(const T& mean, const T& std, std::mt19937_64& rng)
  */
 template <FloatLike T>
     requires(!ComplexLike<T> && !IntervalLike<T>)
-T generate_normal_noise(const T& mean, const T& std, std::mt19937_64& rng)
-{
+T generate_normal_noise(const T& mean, const T& std, std::mt19937_64& rng) {
     if (std <= utils::cast<T>(0))
         throw std::invalid_argument("Standard deviation must be positive for normal distribution.");
 
@@ -329,10 +308,8 @@ T generate_normal_noise(const T& mean, const T& std, std::mt19937_64& rng)
  */
 template <ComplexLike CT, FloatLike FT>
     requires(!ComplexLike<FT>)
-CT generate_poisson_noise(const FT& lambda, std::mt19937_64& rng)
-{
-    if (lambda <= utils::cast<FT>(0))
-    {
+CT generate_poisson_noise(const FT& lambda, std::mt19937_64& rng) {
+    if (lambda <= utils::cast<FT>(0)) {
         throw std::invalid_argument("Lambda must be positive for Poisson distribution.");
     }
 
@@ -363,10 +340,8 @@ CT generate_poisson_noise(const FT& lambda, std::mt19937_64& rng)
  */
 template <FloatLike T>
     requires(!ComplexLike<T>)
-T generate_poisson_noise(const T& lambda, std::mt19937_64& rng)
-{
-    if (lambda <= utils::cast<T>(0))
-        throw std::invalid_argument("Lambda must be positive for Poisson distribution.");
+T generate_poisson_noise(const T& lambda, std::mt19937_64& rng) {
+    if (lambda <= utils::cast<T>(0)) throw std::invalid_argument("Lambda must be positive for Poisson distribution.");
 
     // Simple Poisson distribution for scalar types
     std::poisson_distribution<uint64_t> distribution(utils::cast<uint64_t>(lambda));
@@ -395,11 +370,9 @@ T generate_poisson_noise(const T& lambda, std::mt19937_64& rng)
  * @throws std::invalid_argument if lambda parts are non-positive
  */
 template <ComplexLike T>
-T generate_poisson_noise(const T& lambda, std::mt19937_64& rng)
-{
+T generate_poisson_noise(const T& lambda, std::mt19937_64& rng) {
     if (lambda.real() <= utils::cast<typename T::value_type>(0) ||
-        lambda.imag() <= utils::cast<typename T::value_type>(0))
-    {
+        lambda.imag() <= utils::cast<typename T::value_type>(0)) {
         throw std::invalid_argument("Lambda must be positive for Poisson distribution.");
     }
 
@@ -419,10 +392,8 @@ T generate_poisson_noise(const T& lambda, std::mt19937_64& rng)
  * @throws std::invalid_argument if lambda border is non-positive
  */
 template <IntervalLike T>
-T generate_poisson_noise(const T& lambda, std::mt19937_64& rng)
-{
-    if (lambda.leftinterval() <= utils::cast<typename T::value_type>(0))
-    {
+T generate_poisson_noise(const T& lambda, std::mt19937_64& rng) {
+    if (lambda.leftinterval() <= utils::cast<typename T::value_type>(0)) {
         throw std::invalid_argument("Lambda must be positive for Poisson distribution.");
     }
 
@@ -438,66 +409,43 @@ T generate_poisson_noise(const T& lambda, std::mt19937_64& rng)
  * - jitter: Adds noise to partial sums.
  * - scaling: Multiplies terms by noise factor.
  */
-enum NoiseMethod
-{
-    jitter,
-    scaling,
-    noise_method_count
-};
+enum NoiseMethod { jitter, scaling, noise_method_count };
 
 /**
  * @brief Internal implementation specialized via template parameters for maximum performance.
  */
 template <NoiseMethod Method, NoiseType Type, AcceptedLike T, AcceptedLike paramType>
-series_result<T> apply_noise_impl(const series_result<T>& result,
-                                  std::mt19937_64& rng,
-                                  const paramType& tParam1,
-                                  const paramType& tParam2)
-{
+series_result<T> apply_noise_impl(const series_result<T>& result, std::mt19937_64& rng, const paramType& tParam1,
+                                  const paramType& tParam2) {
     const size_t size = result.Sn.size();
     std::vector<T> newSn;
     std::vector<T> newAn;
     newSn.reserve(size);
     newAn.reserve(size);
 
-    for (size_t i = 0; i < size; ++i)
-    {
+    for (size_t i = 0; i < size; ++i) {
         T noise;
-        if constexpr (Type == NoiseType::uniform)
-        {
+        if constexpr (Type == NoiseType::uniform) {
             noise = generate_uniform_noise<T>(tParam1, tParam2, rng);
-        }
-        else if constexpr (Type == NoiseType::normal)
-        {
+        } else if constexpr (Type == NoiseType::normal) {
             noise = generate_normal_noise<T>(tParam1, tParam2, rng);
-        }
-        else if constexpr (Type == NoiseType::poisson)
-        {
+        } else if constexpr (Type == NoiseType::poisson) {
             noise = generate_poisson_noise<T>(tParam1, rng);
         }
 
-        if constexpr (Method == NoiseMethod::jitter)
-        {
-            if (i == 0)
-            {
+        if constexpr (Method == NoiseMethod::jitter) {
+            if (i == 0) {
                 newSn.push_back(result.Sn[0] + noise);
                 newAn.push_back(newSn[0]);
-            }
-            else
-            {
+            } else {
                 newSn.push_back(result.Sn[i] + noise);
                 newAn.push_back(newSn[i] - newSn[i - 1]);
             }
-        }
-        else if constexpr (Method == NoiseMethod::scaling)
-        {
-            if (i == 0)
-            {
+        } else if constexpr (Method == NoiseMethod::scaling) {
+            if (i == 0) {
                 newSn.push_back(result.Sn[0] * noise);
                 newAn.push_back(newSn[0]);
-            }
-            else
-            {
+            } else {
                 newAn.push_back(result.an[i] * noise);
                 newSn.push_back(newSn[i - 1] + newAn[i]);
             }
@@ -514,18 +462,13 @@ series_result<T> apply_noise_impl(const series_result<T>& result,
  * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  */
 template <AcceptedLike T, AcceptedLike paramType>
-series_result<T> apply_noise(const series_result<T>& result,
-                             const NoiseMethod method,
-                             const NoiseType type,
-                             const unsigned long long int seed,
-                             const paramType& tParam1,
-                             const paramType& tParam2 = paramType{})
-{
+series_result<T> apply_noise(const series_result<T>& result, const NoiseMethod method, const NoiseType type,
+                             const unsigned long long int seed, const paramType& tParam1,
+                             const paramType& tParam2 = paramType{}) {
     std::mt19937_64 rng(seed);
 
     auto dispatch_type = [&](auto method_const) {
-        switch (type)
-        {
+        switch (type) {
             case NoiseType::uniform:
                 return apply_noise_impl<decltype(method_const)::value, NoiseType::uniform, T, paramType>(
                     result, rng, tParam1, tParam2);
@@ -540,8 +483,7 @@ series_result<T> apply_noise(const series_result<T>& result,
         }
     };
 
-    switch (method)
-    {
+    switch (method) {
         case NoiseMethod::jitter:
             return dispatch_type(std::integral_constant<NoiseMethod, NoiseMethod::jitter>{});
         case NoiseMethod::scaling:
@@ -551,4 +493,4 @@ series_result<T> apply_noise(const series_result<T>& result,
     }
 };
 
-#endif // SHANKS_TRANSFORMATION_NOISE_GENERATOR_HPP
+#endif  // SHANKS_TRANSFORMATION_NOISE_GENERATOR_HPP

@@ -6,9 +6,10 @@
 
 #pragma once
 
+#include <limits.h>
+
 #include <cstdio>
 #include <functional>
-#include <limits.h>
 #include <memory>
 #include <stdexcept>
 #include <string>
@@ -27,15 +28,13 @@
  * @brief prints out all available series for testing
  * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  */
-inline void print_series_info()
-{
+inline void print_series_info() {
     auto names = shanks::series::series_registry_metadata::get_names();
 
     std::cout << "Which series' convergence would you like to accelerate?" << '\n'
               << "List of currently available series:" << '\n';
 
-    for (size_t i = 0; i < names.size(); ++i)
-    {
+    for (size_t i = 0; i < names.size(); ++i) {
         std::cout << i + 1 << " - " << names[i] << '\n';
     }
     std::cout << std::endl;
@@ -46,14 +45,12 @@ inline void print_series_info()
  * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  * @return std::vector<std::unique_ptr<ITransformationInfo>>
  */
-inline std::vector<std::unique_ptr<ITransformationInfo>> create_transformation_info()
-{
+inline std::vector<std::unique_ptr<ITransformationInfo>> create_transformation_info() {
     std::vector<std::unique_ptr<ITransformationInfo>> infos;
     auto names = shanks::algos::transformation_registry_metadata::get_names();
     auto ids = shanks::algos::transformation_registry_metadata::get_ids();
 
-    for (size_t i = 0; i < names.size(); ++i)
-    {
+    for (size_t i = 0; i < names.size(); ++i) {
         infos.push_back(std::make_unique<DeclarativeTransformationInfo>(ids[i], names[i]));
     }
     return infos;
@@ -64,15 +61,13 @@ inline std::vector<std::unique_ptr<ITransformationInfo>> create_transformation_i
  * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  * @return std::vector<std::unique_ptr<ITestFunctionInfo>>
  */
-inline std::vector<std::unique_ptr<ITestFunctionInfo>> create_test_function_info()
-{
+inline std::vector<std::unique_ptr<ITestFunctionInfo>> create_test_function_info() {
     std::vector<std::unique_ptr<ITestFunctionInfo>> infos;
     auto names = test_function_registry_metadata::get_names();
     auto descriptions = test_function_registry_metadata::get_descriptions();
     auto ids = test_function_registry_metadata::get_ids();
 
-    for (size_t i = 0; i < names.size(); ++i)
-    {
+    for (size_t i = 0; i < names.size(); ++i) {
         infos.push_back(std::make_unique<DeclarativeTestFunctionInfo>(ids[i], names[i], descriptions[i]));
     }
     return infos;
@@ -82,15 +77,13 @@ inline std::vector<std::unique_ptr<ITestFunctionInfo>> create_test_function_info
  * @brief prints out all available transformations for testing
  * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  */
-inline void print_transformation_info()
-{
+inline void print_transformation_info() {
     auto all_transformations = create_transformation_info();
 
     std::cout << "Which transformation would you like to test?" << '\n'
               << "List of currently available transformations:" << '\n';
 
-    for (size_t i = 0; i < all_transformations.size(); ++i)
-    {
+    for (size_t i = 0; i < all_transformations.size(); ++i) {
         std::cout << i + 1 << " - " << all_transformations[i]->getName() << '\n';
     }
     std::cout << '\n';
@@ -100,15 +93,13 @@ inline void print_transformation_info()
  * @brief prints out all available functions for testing
  * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  */
-inline void print_test_function_info()
-{
+inline void print_test_function_info() {
     auto all_functions = create_test_function_info();
 
     std::cout << "Which function would you like to use for testing?" << '\n'
               << "List of currently available functions:" << '\n';
 
-    for (size_t i = 0; i < all_functions.size(); ++i)
-    {
+    for (size_t i = 0; i < all_functions.size(); ++i) {
         std::cout << i + 1 << " - " << all_functions[i]->getName() << " - " << all_functions[i]->getDescription()
                   << '\n';
     }
@@ -123,9 +114,8 @@ inline void print_test_function_info()
  * @throws std::domain_error if transformation ID is invalid
  */
 template <AcceptedLike T, std::unsigned_integral K>
-inline std::unique_ptr<shanks::algos::series_acceleration<T, K>>
-create_transformation_by_id(shanks::algos::transformation_id_t id)
-{
+inline std::unique_ptr<shanks::algos::series_acceleration<T, K>> create_transformation_by_id(
+    shanks::algos::transformation_id_t id) {
     return shanks::algos::transformation_registry<T, K>::create(id);
 }
 
@@ -137,8 +127,7 @@ create_transformation_by_id(shanks::algos::transformation_id_t id)
  */
 
 template <AcceptedLike T, std::unsigned_integral K>
-inline void main_testing_function()
-{
+inline void main_testing_function() {
     // User interaction to select series
     print_series_info();
     size_t series_idx = console_IO<size_t>::input("series_index") - 1;
@@ -152,13 +141,10 @@ inline void main_testing_function()
     T tParam = utils::cast<T>(1.0);
     K kParam = static_cast<K>(1);
 
-    if (entry.needsT || entry.needsK)
-    {
+    if (entry.needsT || entry.needsK) {
         std::cout << "Enter additional parameters for " << entry.name << ":" << '\n';
-        if (entry.needsT)
-            tParam = console_IO<T>::input("tParam (parameter/alpha)");
-        if (entry.needsK)
-            kParam = console_IO<K>::input("kParam (order/m)");
+        if (entry.needsT) tParam = console_IO<T>::input("tParam (parameter/alpha)");
+        if (entry.needsK) kParam = console_IO<K>::input("kParam (order/m)");
     }
 
     std::unique_ptr<shanks::series::series_base<T, K>> series =
@@ -169,8 +155,7 @@ inline void main_testing_function()
     print_transformation_info();
     size_t transform_idx = console_IO<size_t>::input("transformation_idx") - 1;
     auto transform_ids = shanks::algos::transformation_registry_metadata::get_ids();
-    if (transform_idx >= transform_ids.size())
-        throw std::out_of_range("Invalid transformation index");
+    if (transform_idx >= transform_ids.size()) throw std::out_of_range("Invalid transformation index");
 
     shanks::algos::transformation_id_t transformation_id = transform_ids[transform_idx];
     std::unique_ptr<shanks::algos::series_acceleration<T, K>> transform =
@@ -180,8 +165,7 @@ inline void main_testing_function()
     print_test_function_info();
     size_t func_idx = console_IO<size_t>::input("function_idx") - 1;
     auto func_ids = test_function_registry_metadata::get_ids();
-    if (func_idx >= func_ids.size())
-        throw std::out_of_range("Invalid function index");
+    if (func_idx >= func_ids.size()) throw std::out_of_range("Invalid function index");
     test_function_id_t function_id = func_ids[func_idx];
 
     std::cout << "Enter n and order:" << '\n';
@@ -192,14 +176,12 @@ inline void main_testing_function()
 
     // Optional noise application
     std::string answer = "ok";
-    while (answer != "Y" && answer != "Yes" && answer != "N" && answer != "No")
-    {
+    while (answer != "Y" && answer != "Yes" && answer != "N" && answer != "No") {
         std::cout << "Appply noise [Y]es, [N]o: ";
         std::getline(std::cin, answer);
     }
 
-    if (answer == "Y" || answer == "Yes")
-    {
+    if (answer == "Y" || answer == "Yes") {
         std::cout << "Noise type: uniform[0], normal[1], poisson[2]\n";
         NoiseType noise_type_to_use = console_IO<NoiseType>::input("noise_type");
 
@@ -207,8 +189,7 @@ inline void main_testing_function()
     }
 
     // Executing the selected test function
-    switch (function_id)
-    {
+    switch (function_id) {
         case test_function_id_t::cmp_sum_and_transform_id:
             cmp_sum_and_transform<T, K>(n, order, series.get(), result, transform.get());
             break;
@@ -221,8 +202,7 @@ inline void main_testing_function()
         case test_function_id_t::cmp_transformations_id: {
             print_transformation_info();
             size_t cmp_transform_idx = console_IO<size_t>::input("transformation_idx") - 1;
-            if (cmp_transform_idx >= transform_ids.size())
-                throw std::out_of_range("Invalid transformation index");
+            if (cmp_transform_idx >= transform_ids.size()) throw std::out_of_range("Invalid transformation index");
             shanks::algos::transformation_id_t cmp_transformation_id = transform_ids[cmp_transform_idx];
             std::unique_ptr<shanks::algos::series_acceleration<T, K>> transform2;
 

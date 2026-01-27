@@ -9,8 +9,7 @@
 #include "../../core/include/transformations/wynn_numerators.hpp"
 #include "../include/bindings.hpp"
 
-PYBIND11_MODULE(pyshanks, m)
-{
+PYBIND11_MODULE(pyshanks, m) {
     m.doc() = "pybind11: polymorphic series (double + float_precision), registry-based";
 
     // 1. Bind basic types

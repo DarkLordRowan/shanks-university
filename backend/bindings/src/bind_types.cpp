@@ -1,7 +1,6 @@
 #include "../include/bindings.hpp"
 
-void bind_types(py::module_& m)
-{
+void bind_types(py::module_& m) {
     auto bind_complex_props = []<typename T>(py::class_<std::complex<T>>& c) {
         c.def(py::self + py::self)
             .def(py::self - py::self)
@@ -89,8 +88,7 @@ void bind_types(py::module_& m)
             .def("__repr__", [](const std::complex<mpfr::mpreal>& c) {
                 std::string r = c.real().toString();
                 std::string i = c.imag().toString();
-                if (i.empty() || i[0] != '-')
-                    return "(" + r + "+" + i + "j)";
+                if (i.empty() || i[0] != '-') return "(" + r + "+" + i + "j)";
                 return "(" + r + i + "j)";
             });
     bind_complex_props(cArb);
