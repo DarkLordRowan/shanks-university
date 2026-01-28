@@ -10,12 +10,15 @@
 struct utils{
 
     //utils for math functions
+    template<typename T>
     struct math;
 
     //utils for helpers such as isfinite, isnan, to_string etc.
+    template<typename T>
     struct helpers;
 
     //utils for casting
+    template<typename T>
     struct cast;
 
 }

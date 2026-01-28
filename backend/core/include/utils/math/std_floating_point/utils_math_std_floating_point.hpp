@@ -1,0 +1,7 @@
+#ifndef UTILS_MATH_STD_FLOATING_POINT_HPP
+#define UTILS_MATH_STD_FLOATING_POINT_HPP
+#pragma once
+
+
+
+#endif
