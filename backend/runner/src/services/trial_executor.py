@@ -114,19 +114,28 @@ class TrialExecutor:
         :param precision_name: The name of the precision being processed.
         :type precision_name: str
         """
+        import re
+        addr_pattern = re.compile(r"0x[0-9a-fA-F]+")
+
         log_file = self.config.output_dir / f"errors_{precision_name}.log"
         f = None
         try:
             for res in results:
                 # Check main error
-                if res.error and (msg := res.error.description) and msg not in self._seen_errors:
-                    self._seen_errors.add(msg)
-                    if f is None:
-                        f = open(log_file, "a", encoding="utf-8")
-                    f.write(f"{msg}\n")
-                
+                if (
+                    res.error
+                    and (msg := res.error.description)
+                ):
+                    msg = addr_pattern.sub("<addr>", msg)
+                    if msg not in self._seen_errors:
+                        self._seen_errors.add(msg)
+                        if f is None:
+                            f = open(log_file, "a", encoding="utf-8")
+                        f.write(f"{msg}\n")
+
                 # Check extra logs
                 for msg in res.extra_logs:
+                    msg = addr_pattern.sub("<addr>", msg)
                     if msg not in self._seen_errors:
                         self._seen_errors.add(msg)
                         if f is None:

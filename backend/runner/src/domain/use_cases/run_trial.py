@@ -270,7 +270,6 @@ def execute_trial(
 
                         current_events = accel.process_events(computed, ctx)
                         computed[-1].events = current_events
-
                     except Exception as exc:
                         error = ErrorTrialResult(
                             str(exc),
@@ -282,7 +281,7 @@ def execute_trial(
                                 "additional_args": dict(additional_args),
                             },
                         )
-                        break
+                        continue
 
                 # Check for Stop-Filter-Average Logic
                 filtered_results_obj = None
