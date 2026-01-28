@@ -11,7 +11,6 @@ from src.infra.param_sources.registry import (
     PARAM_SERIES_SOURCE_BUILDERS,
 )
 from src.infra.trials.parallel_runner import ParallelTrialRunner
-from src.infra.trials.sequential_runner import SequentialTrialRunner
 from src.logger import setup_logging
 from src.services.trial_executor import TrialExecutor
 
@@ -31,11 +30,7 @@ def get_trial_executor_from_config(config: TrialConfig) -> TrialExecutor:
     """
     logger = setup_logging(config.verbose)
     logger.debug(config)
-    runner = (
-        ParallelTrialRunner(config=config)
-        if config.is_parallel
-        else SequentialTrialRunner(config=config)
-    )
+    runner = ParallelTrialRunner(config=config)
 
     series_sources = [build(config) for build in PARAM_SERIES_SOURCE_BUILDERS]
     if not all(series_sources):

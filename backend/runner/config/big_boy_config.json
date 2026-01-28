@@ -8,7 +8,7 @@
   "results_filename": "experiment_results",
   "results_json": "output/results_bigboy_json/results.json",
   "results_csv": "output/results_bigboy_csv/results.csv",
-  "results_parquet": "output/results_parquet",
+  "results_parquet": "output/results_bigboy_parquet",
 
   "trial_process_count": 16,
   "trial_task_timeout": 30,
@@ -16,5 +16,5 @@
 
   "precisions": ["F32", "CFLong", "Arb256", "CArb256"],
 
-  "output_formats": ["json", "parquet"]
+  "output_formats": ["parquet"]
 }

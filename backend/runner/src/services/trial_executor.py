@@ -131,10 +131,8 @@ class TrialExecutor:
 
         results, combinations = [], trial.combinations()
 
-        for result in (
-            self.runner.run(
-                combinations,
-            ),
+        for result in self.runner.run(
+            combinations,
         ):
             results.extend(result)
 
@@ -168,10 +166,8 @@ class TrialExecutor:
 
         combinations = trial.combinations()
 
-        for result_chunk in (
-            self.runner.run(
-                combinations,
-            ),
+        for result_chunk in self.runner.run(
+            combinations,
         ):
             self.export_results(self.serializer.to_dict(result_chunk), series_params)
 

@@ -1,8 +1,8 @@
 {
   "verbose": 1,
 
-  "series_json": "config/example.json",
-  "accel_json": "config/example.json",
+  "series_json": "config/test.json",
+  "accel_json": "config/test.json",
 
   "output_dir": "output",
   "results_filename": "experiment_results",
@@ -10,7 +10,7 @@
   "results_csv": "output/results_csv/results.csv",
   "results_parquet": "output/results_parquet",
 
-  "trial_process_count": 1,
+  "trial_process_count": 16,
   "trial_task_timeout": 5,
   "trial_memory_efficient": true,
 
