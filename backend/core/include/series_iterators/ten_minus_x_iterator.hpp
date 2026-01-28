@@ -50,7 +50,7 @@ public:
      */
     bool is_invalid() const override {
         using float_type = GetUnderlyingType<T>::value;
-        return !utils::isfinite(this->x) || utils::abs(this->x - utils::cast<T>(10)) > utils::cast<float_type>(5);
+        return !utils::isfinite(this->x); //|| utils::abs(this->x - utils::cast<T>(10)) > utils::cast<float_type>(5);
     }
 
     /**

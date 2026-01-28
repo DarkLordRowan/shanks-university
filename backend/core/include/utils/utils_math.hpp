@@ -8,9 +8,9 @@
 
 #include "utils_base.hpp"
 
-// #include "gsl/gsl_sf_expint.h"
-// #include <gsl/gsl_sf_gamma.h>
-// #include <gsl/gsl_sf_lambert.h>
+#include "gsl/gsl_sf_expint.h"
+#include <gsl/gsl_sf_gamma.h>
+#include <gsl/gsl_sf_lambert.h>
 
 /**
  * @file utils_math.hpp
@@ -371,6 +371,10 @@ T utils::si_x(const T& x) {
 #ifdef __GSL_SF_EXPINT_H__
     if constexpr (std::is_floating_point<T>::value)
         return utils::cast<T>(gsl_sf_Si(static_cast<double>(x)));
+#ifdef __MPREAL_H__
+    else if constexpr (std::is_same<T, mpfr::mpreal>::value)
+        return utils::cast<T>(gsl_sf_Si(static_cast<double>(x)));
+#endif
     else if constexpr (is_operation_counting<T>::value) {
         return ADL_Wrapper<T>::wrap(utils::si_x(ADL_Unwrapper<T>::unwrap(x)));
     } else {
@@ -401,6 +405,8 @@ template <AcceptedLike T>
 T utils::e_x(const T& x) {
     if constexpr (std::is_floating_point<T>::value)
         return std::comp_ellint_2(x);
+    else if constexpr (std::is_same<T, mpfr::mpreal>::value)
+        return static_cast<mpfr::mpreal>(std::comp_ellint_2(static_cast<double>(x)));
     else if constexpr (is_operation_counting<T>::value) {
         return ADL_Wrapper<T>::wrap(utils::e_x(ADL_Unwrapper<T>::unwrap(x)));
     } else {
@@ -422,6 +428,8 @@ template <AcceptedLike T>
 T utils::k_x(const T& x) {
     if constexpr (std::is_floating_point<T>::value)
         return std::comp_ellint_1(x);
+    else if constexpr (std::is_same<T, mpfr::mpreal>::value)
+        return static_cast<mpfr::mpreal>(std::comp_ellint_1(static_cast<double>(x)));
     else if constexpr (is_operation_counting<T>::value) {
         return ADL_Wrapper<T>::wrap(utils::k_x(ADL_Unwrapper<T>::unwrap(x)));
     } else {
@@ -476,6 +484,8 @@ T utils::lambertW0(const T& x) {
 #ifdef __GSL_SF_EXPINT_H__
     if constexpr (std::is_floating_point<T>::value)
         return utils::cast<T>(gsl_sf_lambert_W0(static_cast<double>(x)));
+    else if constexpr (std::is_same<T, mpfr::mpreal>::value)
+        return static_cast<mpfr::mpreal>(gsl_sf_lambert_W0(static_cast<double>(x)));
     else if constexpr (is_operation_counting<T>::value) {
         return ADL_Wrapper<T>::wrap(utils::lambertW0(ADL_Unwrapper<T>::unwrap(x)));
     } else {
