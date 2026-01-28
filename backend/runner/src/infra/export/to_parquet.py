@@ -147,26 +147,6 @@ try:
                 s_id = s_res["id"]
                 
                 if s_id not in series_records:
-                     comp_list = []
-                     for step in result["computed"]:
-                         val = self._sanitize_complex_value(step.get("partial_sum"))
-                         dev = str(step.get("partial_sum_deviation", ""))
-                         prof = step.get("profiling")
-                         if prof:
-                             prof = {
-                                 "add": int(prof.get("add", 0)),
-                                 "mul": int(prof.get("mul", 0)),
-                                 "div": int(prof.get("div", 0)),
-                                 "special": int(prof.get("special", 0))
-                             }
-                         
-                         comp_list.append({
-                             "n": step["n"],
-                             "value": val,
-                             "deviation": dev,
-                             "profiling": prof
-                         })
-                     
                      prec_str = "f64"
                      found_param = next((p for p in series if getattr(p, "id", -1) == s_id), None)
                      if found_param:
@@ -178,14 +158,50 @@ try:
                          "precision": prec_str,
                          "arguments": {k: str(v) for k, v in s_res["arguments"].items()},
                          "series_limit": self._sanitize_complex_value(s_res["lim"]),
-                         "computed": comp_list
+                         "computed_map": {} # temp map for merging
                      }
+                
+                # Merge computed steps
+                record = series_records[s_id]
+                for step in result["computed"]:
+                    n = step["n"]
+                    if n not in record["computed_map"]:
+                        val = self._sanitize_complex_value(step.get("partial_sum"))
+                        dev = str(step.get("partial_sum_deviation", ""))
+                        prof = step.get("profiling")
+                        if prof:
+                            prof = {
+                                "add": int(prof.get("add", 0)),
+                                "mul": int(prof.get("mul", 0)),
+                                "div": int(prof.get("div", 0)),
+                                "special": int(prof.get("special", 0))
+                            }
+                        
+                        record["computed_map"][n] = {
+                            "n": n,
+                            "value": val,
+                            "deviation": dev,
+                            "profiling": prof
+                        }
                 
                 accel_records.append(self._get_accel_record(result, s_id))
 
             if series_records:
-                all_arg_keys = set()
+                # Convert maps to sorted lists
+                series_data = []
                 for r in series_records.values():
+                    sorted_computed = [r["computed_map"][n] for n in sorted(r["computed_map"].keys())]
+                    series_data.append({
+                        "series_name": r["series_name"],
+                        "series_id": r["series_id"],
+                        "precision": r["precision"],
+                        "arguments": r["arguments"],
+                        "series_limit": r["series_limit"],
+                        "computed": sorted_computed
+                    })
+
+                all_arg_keys = set()
+                for r in series_data:
                     all_arg_keys.update(r["arguments"].keys())
                 sorted_arg_keys = sorted(list(all_arg_keys))
                 
@@ -212,7 +228,6 @@ try:
                     ])))
                 ])
                 
-                series_data = list(series_records.values())
                 series_table = pa.Table.from_pylist(series_data, schema=series_schema)
                 
                 ds.write_dataset(
