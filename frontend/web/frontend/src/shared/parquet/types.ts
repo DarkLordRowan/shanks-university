@@ -11,9 +11,24 @@ export interface ParquetComplex {
     imag: ParquetScalar;
 }
 
+export interface ParquetProfiling {
+    add: ParquetScalar;
+    mul: ParquetScalar;
+    div: ParquetScalar;
+    special: ParquetScalar;
+}
+
+export interface ParquetSeriesComputedPoint {
+    n: ParquetScalar;
+    value: ParquetComplex | null;
+    deviation: ParquetScalar;
+    profiling?: ParquetProfiling | null;
+}
+
 export interface ParquetAccelComputed {
     value: ParquetComplex | null;
     deviation: ParquetScalar;
+    profiling?: ParquetProfiling | null;
 }
 
 export interface ParquetErrorRow {
@@ -27,6 +42,17 @@ export interface ParquetEventRow {
     description: unknown;
 }
 
+export interface ParquetFilteredMethod {
+    values: (ParquetComplex | null)[];
+    average: ParquetComplex | null;
+}
+
+export interface ParquetFiltered {
+    start_n: ParquetScalar;
+    segment_length: ParquetScalar;
+    methods: Record<string, ParquetFilteredMethod> | null;
+}
+
 export interface ParquetSeriesRow {
     series_name: string;
     series_id: ParquetScalar;
@@ -34,6 +60,7 @@ export interface ParquetSeriesRow {
 
     arguments: Record<string, unknown> | null;
     series_limit: ParquetComplex | null;
+
     computed?: unknown;
 }
 
@@ -48,4 +75,7 @@ export interface ParquetAccelRow {
     computed: unknown;
     errors: unknown;
     events: unknown;
+
+    noise_str?: string | null;
+    filtered?: unknown;
 }

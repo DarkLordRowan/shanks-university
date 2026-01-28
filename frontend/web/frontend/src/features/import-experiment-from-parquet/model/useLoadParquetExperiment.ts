@@ -49,16 +49,14 @@ type Phase = "reading" | "building";
 export type LoadParquetState =
     | { status: "idle" }
     | {
-          status: "loading";
-          phase: Phase;
-          message: string;
-          done: number;
-          total: number;
-      }
+    status: "loading";
+    phase: Phase;
+    message: string;
+    done: number;
+    total: number;
+}
     | { status: "error"; message: string }
     | { status: "success"; count: number };
-
-type LoadingSetter = (phase: Phase, message: string, done: number, total: number) => void;
 
 function splitFilesByKind(allFiles: File[]) {
     const seriesFiles = allFiles.filter((f) => f.webkitRelativePath.includes("/series/"));
@@ -76,7 +74,7 @@ const SERIES_COLUMNS = [
     "computed",
 ] as const;
 
-// Для accelerations НЕ используем проекцию по умолчанию: nested (computed/errors/events) может «обнуляться».
+// Для accelerations НЕ используем проекцию по умолчанию: nested (computed/errors/events/filtered) может «обнуляться».
 const ACCEL_COLUMNS = [
     "series_id",
     "accel_name",
@@ -85,6 +83,8 @@ const ACCEL_COLUMNS = [
     "computed",
     "errors",
     "events",
+    "noise_str",
+    "filtered",
 ] as const;
 
 export function useLoadParquetExperiment() {
@@ -204,7 +204,7 @@ export function useLoadParquetExperiment() {
                     let rows = await readParquetFile<ParquetAccelRow>(f);
 
                     // Опционально можно попытаться ускорить: сначала с columns, затем fallback.
-                    // Оставлено выключенным, чтобы не ловить «пропавшие computed».
+                    // Оставлено выключенным, чтобы не ловить «пропавшие computed/filtered».
                     // let rows = await readParquetFile<ParquetAccelRow>(f, { columns: [...ACCEL_COLUMNS] });
                     // const nestedLooksMissing =
                     //     rows.length > 0 &&

@@ -95,11 +95,20 @@ function seriesComputedStats(points: SeriesComputedPoint[] | undefined): Compute
     const ns: number[] = [];
     let last: { n: number; value: string } | null = null;
 
+    let devCount = 0;
+    let devMin: number | null = null;
+    let devMax: number | null = null;
+
     for (const p of pts) {
         ns.push(p.n);
         if (p.value !== null) {
             nonNull += 1;
             last = { n: p.n, value: formatComplex(p.value) };
+        }
+        if (p.deviation !== undefined && p.deviation !== null) {
+            devCount += 1;
+            if (devMin === null || p.deviation < devMin) devMin = p.deviation;
+            if (devMax === null || p.deviation > devMax) devMax = p.deviation;
         }
     }
 
@@ -108,7 +117,7 @@ function seriesComputedStats(points: SeriesComputedPoint[] | undefined): Compute
         nonNullValues: nonNull,
         n: nStatsFromNs(ns),
         lastNonNull: last,
-        deviation: null,
+        deviation: { count: devCount, min: devMin, max: devMax },
     };
 }
 

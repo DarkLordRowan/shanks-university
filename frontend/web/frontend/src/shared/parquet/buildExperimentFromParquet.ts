@@ -4,12 +4,15 @@ import type {
     Accel,
     Complex,
     Experiment,
+    Profiling,
     ScalarArg,
     Series,
     SeriesAccel,
     SeriesAccelComputedPoint,
     SeriesAccelError,
     SeriesAccelEvent,
+    SeriesAccelFiltered,
+    SeriesAccelFilteredMethod,
 } from "@/entities/experiment/model/experiment";
 
 import type {
@@ -100,12 +103,31 @@ function toComplex(src: ParquetComplex | null | undefined): Complex | null {
     return { re: re ?? 0, im: im ?? 0 };
 }
 
+function toProfiling(src: unknown): Profiling | null {
+    if (src == null || typeof src !== "object") return null;
+    const o = src as Record<string, unknown>;
+
+    const add = toNumberOrNull(o.add);
+    const mul = toNumberOrNull(o.mul);
+    const div = toNumberOrNull(o.div);
+    const special = toNumberOrNull(o.special);
+
+    if (add == null && mul == null && div == null && special == null) return null;
+
+    return {
+        add: add ?? 0,
+        mul: mul ?? 0,
+        div: div ?? 0,
+        special: special ?? 0,
+    };
+}
+
 function normalizeArgs(src: unknown): Record<string, ScalarArg> | null {
     if (src == null) return null;
     if (typeof src !== "object") return null;
 
     const obj = src as Record<string, unknown>;
-    const keys = Object.keys(obj);
+    const keys = Object.keys(obj).filter((k) => k !== "__dummy__");
     if (keys.length === 0) return null;
 
     const res: Record<string, ScalarArg> = {};
@@ -147,36 +169,41 @@ function mapAccelComputed(raw: unknown): SeriesAccelComputedPoint[] {
         const n = idx + 1;
 
         if (c == null) {
-            return { n, value: null, deviation: null };
+            return { n, value: null, deviation: null, profiling: null };
         }
 
         return {
             n,
             value: toComplex(c.value),
             deviation: toNumberOrNull(c.deviation),
+            profiling: toProfiling((c as any).profiling),
         };
     });
 }
 
-type RawPoint = { n: number; value: ParquetComplex | null };
+type RawSeriesPoint = {
+    n?: unknown;
+    value?: ParquetComplex | null;
+    deviation?: unknown;
+    profiling?: unknown;
+};
 
 function mapSeriesComputed(raw: unknown): SeriesComputedPoint[] {
-    const arr = listLikeToArray<RawPoint>(raw);
+    const arr = listLikeToArray<RawSeriesPoint>(raw);
     if (arr.length === 0) return [];
 
     return arr.map((p, idx) => {
-        const n = typeof p?.n === "number" ? p.n : idx + 1;
+        const n = toNumberOrNull(p?.n) ?? idx + 1;
 
-        if (!p || p.value == null) {
-            return { n, value: null };
-        }
+        const value = p?.value ? toComplex(p.value) : null;
+        const deviation = toNumberOrNull(p?.deviation);
+        const profiling = toProfiling(p?.profiling);
 
         return {
             n,
-            value: {
-                re: toNumberOrNull(p.value.real),
-                im: toNumberOrNull(p.value.imag),
-            },
+            value,
+            deviation: deviation ?? null,
+            profiling,
         };
     });
 }
@@ -197,10 +224,46 @@ function mapEvents(raw: unknown): SeriesAccelEvent[] {
 
     return arr.map<SeriesAccelEvent>((ev, idx) => ({
         n: toNumberOrNull(ev.n) ?? idx,
-        name: typeof ev.name === "string" ? ev.name : "",
+        name: typeof ev.name === "string" ? ev.name : String(ev.name ?? ""),
         description:
             typeof ev.description === "string" ? ev.description : String(ev.description ?? ""),
     }));
+}
+
+function mapFiltered(raw: unknown): SeriesAccelFiltered | null {
+    if (raw == null || typeof raw !== "object") return null;
+    const o = raw as Record<string, unknown>;
+
+    const startN = toNumberOrNull(o.start_n) ?? 0;
+    const segmentLength = toNumberOrNull(o.segment_length) ?? 0;
+
+    const methodsRaw = o.methods;
+    const methods: Record<string, SeriesAccelFilteredMethod> = {};
+
+    if (methodsRaw && typeof methodsRaw === "object") {
+        const mo = methodsRaw as Record<string, unknown>;
+        for (const key of Object.keys(mo)) {
+            if (key === "__dummy__") continue;
+
+            const v = mo[key];
+            if (v == null || typeof v !== "object") continue;
+
+            const m = v as Record<string, unknown>;
+            const valuesArr = listLikeToArray<ParquetComplex | null>(m.values);
+            const values = valuesArr.map((x) => (x ? toComplex(x) : null));
+
+            const avg = m.average as ParquetComplex | null | undefined;
+            const average = avg ? toComplex(avg) : null;
+
+            methods[key] = { values, average };
+        }
+    }
+
+    return {
+        startN,
+        segmentLength,
+        methods,
+    };
 }
 
 const ORDERED_ACCEL_ARG_KEYS = [
@@ -227,7 +290,7 @@ function buildAccelId(row: ParquetAccelRow): string {
     if (m !== null) parts.push(`m=${m}`);
 
     const args = row.additional_args ?? {};
-    const presentKeys = Object.keys(args);
+    const presentKeys = Object.keys(args).filter((k) => k !== "__dummy__");
     const present = new Set(presentKeys);
 
     for (const k of ORDERED_ACCEL_ARG_KEYS) {
@@ -260,7 +323,7 @@ function buildSeriesList(seriesRows: ParquetSeriesRow[]): Series[] {
             precision: r.precision,
             args: normalizeSeriesArgs(r.arguments),
             limit: toComplex((r as any).series_limit),
-            computed: (r as any).computed,
+            computed: mapSeriesComputed((r as any).computed),
         };
 
         map.set(sid, series);
@@ -318,12 +381,17 @@ export async function buildExperimentFromParquet(
         const errors = mapErrors(row.errors);
         const events = mapEvents(row.events);
 
+        const noise = typeof row.noise_str === "string" ? row.noise_str : null;
+        const filtered = mapFiltered((row as any).filtered);
+
         seriesAccelList.push({
             series_id: series.id,
             accel_id: accel.id,
             computed,
             errors,
             events,
+            noise,
+            filtered,
         });
 
         if (onProgress && (processed % PROGRESS_CHUNK === 0 || processed === total)) {
@@ -376,6 +444,8 @@ export function buildAccelAndSeriesAccelEntitiesFromParquetRow(params: {
         computed: mapAccelComputed(row.computed),
         errors: mapErrors(row.errors),
         events: mapEvents(row.events),
+        noise: typeof row.noise_str === "string" ? row.noise_str : null,
+        filtered: mapFiltered((row as any).filtered),
     };
 
     return { accelId, accel, seriesAccel };
