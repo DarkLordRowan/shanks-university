@@ -166,4 +166,8 @@ void bind_types(py::module_& m) {
     py::implicitly_convertible<double, std::complex<OP<double>>>();
     py::implicitly_convertible<long double, std::complex<OP<long double>>>();
     py::implicitly_convertible<mpfr::mpreal, std::complex<OP<mpfr::mpreal>>>();
+#ifdef __MPREAL_H__
+    m.def("set_default_precision", [](size_t bits) { mpfr::mpreal::set_default_prec(static_cast<mp_prec_t>(bits)); });
+    m.def("get_default_precision", []() { return static_cast<size_t>(mpfr::mpreal::get_default_prec()); });
+#endif
 }

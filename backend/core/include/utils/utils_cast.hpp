@@ -40,10 +40,10 @@ constexpr To utils::cast(const From& x, const size_t precision) {
                 if constexpr (std::is_same<From, mpfr::mpreal>::value)
                     return mpfr::mpreal(x);
                 else
-                    return mpfr::mpreal(x, mpfr::digits2bits(precision));
+                    return mpfr::mpreal(x, precision);  // precision is now bits
             else if constexpr (std::is_same<To, std::complex<mpfr::mpreal>>::value)
                 return std::complex<mpfr::mpreal>(utils::cast<mpfr::mpreal>(x, precision),
-                                                  mpfr::mpreal(0.0, mpfr::digits2bits(precision)));
+                                                  mpfr::mpreal(0.0, precision));
             else
                 static_assert(dependent_false<To>::value, "utils::cast with precision not implemented for this type");
         }

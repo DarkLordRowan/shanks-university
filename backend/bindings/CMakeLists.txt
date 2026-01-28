@@ -29,6 +29,7 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../cmake/modules")
 find_package(GMP REQUIRED)
 find_package(MPFR REQUIRED)
 find_package(Eigen3 REQUIRED)
+find_package(GSL REQUIRED)
 
 # Include directories
 include_directories(
@@ -56,5 +57,5 @@ pybind11_add_module(pyshanks
     ${CMAKE_CURRENT_SOURCE_DIR}/src/bind_noise.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/bind_filters.cpp
 )
-target_link_libraries(pyshanks PRIVATE MPFR::MPFR GMP::GMP Eigen3::Eigen)
+target_link_libraries(pyshanks PRIVATE MPFR::MPFR GMP::GMP Eigen3::Eigen GSL::gsl GSL::gslcblas)
 set_target_properties(pyshanks PROPERTIES PREFIX "")

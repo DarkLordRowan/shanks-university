@@ -163,6 +163,10 @@ def execute_trial(
     n_values = list(accel.n_values)
     m_values = list(accel.m_values)
 
+    # Set global precision for C++ backend (MPFR)
+    if series.precision.bits and hasattr(ps, "set_default_precision"):
+        ps.set_default_precision(series.precision.bits)
+
     results: list[TrialResult] = []
     extra_logs: list[str] = []
 

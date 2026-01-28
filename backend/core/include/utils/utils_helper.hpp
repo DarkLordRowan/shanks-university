@@ -1,9 +1,10 @@
 #ifndef UTILS_HELPER_H
 #define UTILS_HELPER_H
-#include <concepts>
 #pragma once
 
 #include <cmath>
+#include <iomanip>
+#include <sstream>
 #include <type_traits>
 
 #include "utils_base.hpp"
@@ -23,11 +24,25 @@
 template <typename T>
 std::string utils::to_string(const T& x) {
     // Formatting based on type properties and library support
-    if constexpr (std::is_floating_point<T>::value || std::is_integral<T>::value) return std::to_string(x);
+    if constexpr (std::is_floating_point<T>::value) {
+        std::ostringstream oss;
+        oss << std::scientific << std::setprecision(std::numeric_limits<T>::max_digits10) << x;
+        return oss.str();
+    } else if constexpr (std::is_integral<T>::value) {
+        return std::to_string(x);
+    }
 #ifdef __MPREAL_H__
     else if constexpr (std::is_same<T, mpfr::mpreal>::value) {
-#define MAX_PRECISION_AVAILABLE -1
-        return x.toString(MAX_PRECISION_AVAILABLE, 10);
+        char* s = nullptr;
+        // bits2digits(b) = floor(b * log10(2))
+        // We add small buffer to ensure all bits are uniquely represented
+        int digits = mpfr::bits2digits(x.getPrecision()) + 2;
+        if (mpfr_asprintf(&s, "%.*RNg", digits, x.mpfr_srcptr()) >= 0) {
+            std::string res(s);
+            mpfr_free_str(s);
+            return res;
+        }
+        return "conversion error";
     }
 #endif
     else if constexpr (is_complex_custom<T>::value || is_complex_t<T>::value)
@@ -103,9 +118,9 @@ T utils::numeric_max(size_t precision) {
     if constexpr (is_standard_types<T>::value)
         return std::numeric_limits<T>::max();
     else if constexpr (std::is_same<T, mpfr::mpreal>::value) {
-        return std::numeric_limits<mpfr::mpreal>::max(mpfr::digits2bits(precision));
+        return std::numeric_limits<mpfr::mpreal>::max(precision);
     } else if constexpr (std::is_same<T, std::complex<mpfr::mpreal>>::value) {
-        return utils::numeric_max<mpfr::mpreal>(mpfr::digits2bits(precision));
+        return utils::numeric_max<mpfr::mpreal>(precision);
     } else {
         if constexpr (AcceptedLike<T>) {
             return std::numeric_limits<T>::max();

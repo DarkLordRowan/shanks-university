@@ -12,7 +12,7 @@
 
   "trial_process_count": 16,
   "trial_task_timeout": 5,
-  "trial_memory_efficient": true,
+  "trial_memory_efficient": false,
 
   "precisions": ["F32", "CFLong", "Arb256", "CArb256"],
 
