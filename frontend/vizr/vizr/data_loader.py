@@ -234,26 +234,11 @@ class DataLoader:
         self.metadata = self._compute_metadata()
 
     def _parse_dynamic_dict(self, data: Any) -> Dict[str, str]:
-        """Parses dynamic arguments which can be a dict (JSON) or list of (key, value) tuples/dicts (Parquet Map)."""
+        """Parses dynamic arguments which are stored as Structs in Parquet/JSON."""
         if not data:
             return {}
         if isinstance(data, dict):
-            return {str(k): str(v) for k, v in data.items() if v is not None}
-        if isinstance(data, (list, tuple)):
-            res = {}
-            for item in data:
-                if isinstance(item, dict):
-                    k = item.get("key")
-                    if k is None: # some arrow versions use different labels
-                        k = item.get("0")
-                    v = item.get("value")
-                    if v is None:
-                        v = item.get("1")
-                    if k is not None:
-                        res[str(k)] = str(v) if v is not None else ""
-                elif isinstance(item, (tuple, list)) and len(item) == 2:
-                    res[str(item[0])] = str(item[1]) if item[1] is not None else ""
-            return res
+            return {str(k): str(v) for k, v in data.items() if v is not None and k != "__dummy__"}
         return {}
 
     def _infer_precision(self, path: str) -> str:
@@ -616,21 +601,12 @@ class DataLoader:
 
         parsed_methods = []
 
-        # handle both list-of-kv-pairs (Map) and dict
-        iterator = []
-        if isinstance(methods_raw, dict):
-            iterator = methods_raw.items()
-        elif isinstance(methods_raw, list):
-            for m in methods_raw:
-                if isinstance(m, dict):
-                    k = m.get("key")
-                    v = m.get("value")
-                    if k is not None and v is not None:
-                        iterator.append((k, v))
-                elif isinstance(m, tuple) and len(m) == 2:
-                    iterator.append(m)
+        if not isinstance(methods_raw, dict):
+            return None
 
-        for m_name, m_data in iterator:
+        for m_name, m_data in methods_raw.items():
+            if m_name == "__dummy__" or not isinstance(m_data, dict):
+                continue
             if not isinstance(m_data, dict):
                 continue
             values = m_data.get("values", [])
