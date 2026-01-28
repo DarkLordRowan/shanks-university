@@ -10,7 +10,7 @@
   "results_csv": "output/results_csv/results.csv",
   "results_parquet": "output/results_parquet",
 
-  "trial_process_count": 1,
+  "trial_process_count": 16,
   "trial_task_timeout": 5,
   "trial_memory_efficient": false,
 
