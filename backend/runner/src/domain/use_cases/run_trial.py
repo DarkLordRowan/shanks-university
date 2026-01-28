@@ -29,13 +29,7 @@ from src.domain.trial_result import (
 from src.logger import logged_debug
 
 
-def append_to_event_log(msg: str):
-    try:
-        with open("events_log.txt", "a", encoding="utf-8") as f:
-            timestamp = datetime.datetime.now().isoformat()
-            f.write(f"[{timestamp}] {msg}\n")
-    except Exception:
-        pass  # Fail silently on logging errors
+
 
 
 def trial_results_from_series_error(
@@ -170,6 +164,7 @@ def execute_trial(
     m_values = list(accel.m_values)
 
     results: list[TrialResult] = []
+    extra_logs: list[str] = []
 
     for series_argument in series.argument_combos:
         try:
@@ -275,7 +270,6 @@ def execute_trial(
 
                         current_events = accel.process_events(computed, ctx)
                         computed[-1].events = current_events
-
                     except Exception as exc:
                         error = ErrorTrialResult(
                             str(exc),
@@ -287,7 +281,7 @@ def execute_trial(
                                 "additional_args": dict(additional_args),
                             },
                         )
-                        break
+                        continue
 
                 # Check for Stop-Filter-Average Logic
                 filtered_results_obj = None
@@ -362,7 +356,7 @@ def execute_trial(
                                     logger.error(
                                         f"Filter {f_type} failed: {str(e)}\n{traceback.format_exc()}"
                                     )
-                                    append_to_event_log(
+                                    extra_logs.append(
                                         f"{f_type.upper()} ERROR: {str(e)}"
                                     )
 
@@ -371,9 +365,6 @@ def execute_trial(
                                 start_n=computed[start_index].n,
                                 segment_length=len(divergent_segment),
                                 methods=methods_results,
-                            )
-                            append_to_event_log(
-                                f"STOPPED BY {triggering_event.value}. FILTERS APPLIED: {list(methods_results.keys())}"
                             )
 
                 results.append(
@@ -393,7 +384,9 @@ def execute_trial(
                         noise=noise_config,
                         error=error or NoErrorTrialResult,
                         filtered=filtered_results_obj,
+                        extra_logs=list(extra_logs),
                     )
                 )
+                extra_logs.clear()
 
     return results

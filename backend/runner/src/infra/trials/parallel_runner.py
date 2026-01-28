@@ -88,7 +88,8 @@ class ParallelTrialRunner(TrialRunner):
                         )
                     )
 
-        return results
+        if results:
+            yield results
 
     def __run_dispose_at_completion(self, tasks):
         """Memory-efficient trial execution.

@@ -101,7 +101,7 @@ try:
             filtered_data = None
             if filtered:
                  # filtered is a dict: {start_n, segment_length, methods: {name: {values: [], average: ...}}}
-                 methods_data = []
+                 methods_data = {}
                  methods_dict = filtered.get("methods", {})
                  for m_name, m_res in methods_dict.items():
                      # Process values list
@@ -112,13 +112,10 @@ try:
                      raw_avg = m_res.get("average")
                      sanitized_avg = self._sanitize_complex_value(raw_avg)
                      
-                     methods_data.append((
-                         m_name,
-                         {
-                             "values": sanitized_vals,
-                             "average": sanitized_avg
-                         }
-                     ))
+                     methods_data[m_name] = {
+                         "values": sanitized_vals,
+                         "average": sanitized_avg
+                     }
                  
                  filtered_data = {
                      "start_n": filtered.get("start_n", 0),
@@ -187,11 +184,20 @@ try:
                 accel_records.append(self._get_accel_record(result, s_id))
 
             if series_records:
+                all_arg_keys = set()
+                for r in series_records.values():
+                    all_arg_keys.update(r["arguments"].keys())
+                sorted_arg_keys = sorted(list(all_arg_keys))
+                
+                arg_fields = [(k, pa.string()) for k in sorted_arg_keys]
+                if not arg_fields:
+                    arg_fields = [("__dummy__", pa.string())]
+
                 series_schema = pa.schema([
                     ("series_name", pa.string()),
                     ("series_id", pa.int64()),
                     ("precision", pa.string()),
-                    ("arguments", pa.map_(pa.string(), pa.string())),
+                    ("arguments", pa.struct(arg_fields)),
                     ("series_limit", pa.struct([("real", pa.string()), ("imag", pa.string())])),
                     ("computed", pa.list_(pa.struct([
                         ("n", pa.int64()),
@@ -219,11 +225,32 @@ try:
                 )
 
             if accel_records:
+                all_add_keys = set()
+                all_methods_keys = set()
+                for r in accel_records:
+                    all_add_keys.update(r["additional_args"].keys())
+                    if r["filtered"]:
+                        all_methods_keys.update(r["filtered"]["methods"].keys())
+                
+                sorted_add_keys = sorted(list(all_add_keys))
+                add_arg_fields = [(k, pa.string()) for k in sorted_add_keys]
+                if not add_arg_fields:
+                    add_arg_fields = [("__dummy__", pa.string())]
+                
+                sorted_methods_keys = sorted(list(all_methods_keys))
+                method_res_type = pa.struct([
+                    ("values", pa.list_(pa.struct([("real", pa.string()), ("imag", pa.string())]))),
+                    ("average", pa.struct([("real", pa.string()), ("imag", pa.string())]))
+                ])
+                methods_fields = [(k, method_res_type) for k in sorted_methods_keys]
+                if not methods_fields:
+                    methods_fields = [("__dummy__", method_res_type)]
+
                 accel_schema = pa.schema([
                     ("series_id", pa.int64()),
                     ("accel_name", pa.string()),
                     ("m_value", pa.int64()),
-                    ("additional_args", pa.map_(pa.string(), pa.string())),
+                    ("additional_args", pa.struct(add_arg_fields)),
                     ("computed", pa.list_(
                         pa.struct([
                             ("value", pa.struct([("real", pa.string()), ("imag", pa.string())])),
@@ -242,15 +269,7 @@ try:
                     ("filtered", pa.struct([
                         ("start_n", pa.int64()),
                         ("segment_length", pa.int64()),
-                        ("methods", pa.map_(
-                            pa.string(), # Key: Method Name
-                            pa.struct([  # Value: Method Result
-                                ("values", pa.list_(
-                                    pa.struct([("real", pa.string()), ("imag", pa.string())])
-                                )),
-                                ("average", pa.struct([("real", pa.string()), ("imag", pa.string())]))
-                            ])
-                        ))
+                        ("methods", pa.struct(methods_fields))
                     ]))
                 ])
 
