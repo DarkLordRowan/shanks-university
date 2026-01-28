@@ -42,8 +42,8 @@ public:
      * @return T The value of the cubic function at point x.
      */
     T get_sum() const override {
-        return this->x / utils::cast<T>(12) *
-               (this->x * this->x - utils::cast<T>(std::numbers::pi) * utils::cast<T>(std::numbers::pi));
+        return this->x / utils::cast<T>::meta(12) *
+               (this->x * this->x - utils::cast<T>::meta(std::numbers::pi) * utils::cast<T>::meta(std::numbers::pi));
     }
 
     /**
@@ -51,7 +51,7 @@ public:
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return true if x is non-finite, false otherwise.
      */
-    bool is_invalid() const override { return !utils::isfinite(this->x); }
+    bool is_invalid() const override { return !utils::helpers<T>::isfinite(this->x); }
 
     /**
      * @brief Computes the next term in the Fourier expansion of the cubic function.
@@ -60,8 +60,8 @@ public:
      */
     T next(K n, T& state) const override {
         // Formula for the n-th Fourier harmonic
-        state = utils::minus_one_raised_to_power_n<T, K>(n + 1) * utils::sin(utils::cast<T>(n + 1) * this->x) /
-                utils::cast<T>(utils::pow(static_cast<size_t>(n + 1), static_cast<size_t>(3)));
+        state = utils::minus_one_raised_to_power_n<T, K>(n + 1) * utils::math<T>::sin(utils::cast<T>::meta(n + 1) * this->x) /
+                utils::cast<T>::meta(utils::pow(static_cast<size_t>(n + 1), static_cast<size_t>(3)));
         return state;
     }
 };

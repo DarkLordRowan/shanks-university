@@ -49,29 +49,13 @@ struct GetUnderlyingType<intprec::interval<T>> {
     using value = T;
 };
 
-template <typename T>
-struct real_of {
-    using value = T;
-};
-
-template <FloatLike T>
-struct real_of<std::complex<T>> {
-    using value = T;
-};
-
+// clang-format off
+// Critical Section
 #include <type_traits>
-
-#include "custom_concepts.hpp"
+#include "custom_types/intervalprecision.fwd.hpp"
+#include "utils/utils.fwd.hpp"
 #include "custom_types/intervalprecision.hpp"
-
-// #include "gsl/gsl_sf_expint.h"
-// #include <gsl/gsl_sf_gamma.h>
-// #include <gsl/gsl_sf_lambert.h>
-
-#include "utils/utils_cast.hpp"
-#include "utils/utils_get_precision.hpp"
-#include "utils/utils_helper.hpp"
-#include "utils/utils_math.hpp"
+// clang-format on
 
 // Core utility headers
 

@@ -2,10 +2,6 @@
 #define UTILS_HELPER_STD_COMPLEX_HPP
 #pragma once
 
-#ifndef UTILS_HELPER_STD_FLOATING_POINT_HPP
-#define UTILS_HELPER_STD_FLOATING_POINT_HPP
-#pragma once
-
 template <typename T>
 struct utils::helpers<std::complex<T>> {
     static std::complex<T> nextafter(const std::complex<T>& x, const std::complex<T>& y);
@@ -76,7 +72,5 @@ template <typename T>
 T utils::helpers<std::complex<T>>::numeric_max(std::size_t precision) {
     return utils::helpers<T>::numeric_max(precision);
 }
-
-#endif
 
 #endif

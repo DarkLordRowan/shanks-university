@@ -50,9 +50,9 @@ public:
         using float_type = real_of<T>::value;
 
         if constexpr (isComplexLike<T>::value) {
-            return !utils::isfinite(this->x) || this->x.real() <= utils::cast<float_type>(1);
+            return !utils::helpers<T>::isfinite(this->x) || this->x.real() <= utils::cast<float_type>(1);
         } else {
-            return !utils::isfinite(this->x) || this->x <= utils::cast<T>(1);
+            return !utils::helpers<T>::isfinite(this->x) || this->x <= utils::cast<T>::meta(1);
         }
     }
 
@@ -63,7 +63,8 @@ public:
      */
     T next(K n, T& state) const override {
         // Term formula: 1 / (n+1)^s
-        state = utils::pow(utils::cast<T>(n + 1, utils::get_precision(state)), utils::cast<T>(-1) * this->x);
+        state =
+            utils::pow(utils::cast<T>::meta(n + 1, utils::helpers<T>::get_precision(state)), utils::cast<T>::meta(-1) * this->x);
         return state;
     }
 };

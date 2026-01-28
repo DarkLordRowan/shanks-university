@@ -8,7 +8,7 @@
 
 template <typename T>
 struct utils::math<intprec::interval<T>> {
-    static intprec::interval<T> phi(intprec::interval<T> n);
+    static intprec::interval<T> phi(const intprec::interval<T> n);
     static intprec::interval<T> fact(const intprec::interval<T> n);
     static intprec::interval<T> double_fact(const intprec::interval<T> n);
     static intprec::interval<T> binomial_coefficient(const intprec::interval<T> n, const intprec::interval<T> k);
@@ -16,7 +16,8 @@ struct utils::math<intprec::interval<T>> {
     static intprec::interval<T> minus_one_raised_to_power_n(const K j);
     static intprec::interval<T> pow(const intprec::interval<T>& x, const intprec::interval<T>& y);
     static intprec::interval<T> atan2(const intprec::interval<T>& x, const intprec::interval<T>& y);
-    static intprec::interval<T> fma(const intprec::interval<T>& a, const intprec::interval<T>& b, const intprec::interval<T>& c);
+    static intprec::interval<T> fma(const intprec::interval<T>& a, const intprec::interval<T>& b,
+                                    const intprec::interval<T>& c);
     static intprec::interval<T> sqrt(const intprec::interval<T>& x);
     static intprec::interval<T> exp(const intprec::interval<T>& x);
     static intprec::interval<T> log(const intprec::interval<T>& x);
@@ -43,25 +44,27 @@ struct utils::math<intprec::interval<T>> {
     static intprec::interval<T> tanh(const intprec::interval<T>& x);
     static intprec::interval<T> atanh(const intprec::interval<T>& x);
     static intprec::interval<T> abs(const intprec::interval<T>& x);
-}
+};
 
 template <typename T>
-intprec::interval<T> utils::math<intprec::interval<T>>::phi(T n) {
+intprec::interval<T> utils::math<intprec::interval<T>>::phi(const intprec::interval<T> n) {
     static_assert(std::false_type{}, "utils::math::phi not implemented for type");
 }
 template <typename T>
-intprec::interval<T> utils::math<intprec::interval<T>>::fact(const T n) {
+intprec::interval<T> utils::math<intprec::interval<T>>::fact(const intprec::interval<T> n) {
     static_assert(std::false_type{}, "utils::math::fact not implemented for type");
 }
 template <typename T>
-intprec::interval<T> utils::math<intprec::interval<T>>::double_fact(const T n) {
+intprec::interval<T> utils::math<intprec::interval<T>>::double_fact(const intprec::interval<T> n) {
     static_assert(std::false_type{}, "utils::math::double_fact not implemented for type");
 }
 template <typename T>
-intprec::interval<T> utils::math<intprec::interval<T>>::binomial_coefficient(const T n, const T k) {
+intprec::interval<T> utils::math<intprec::interval<T>>::binomial_coefficient(const intprec::interval<T> n,
+                                                                             const intprec::interval<T> k) {
     static_assert(std::false_type{}, "utils::math::binomial_coefficient not implemented for type");
 }
-template <typename T, std::integral K>
+template <typename T>
+template <std::integral K>
 intprec::interval<T> utils::math<intprec::interval<T>>::minus_one_raised_to_power_n(const K j) {
     if constexpr (std::is_signed<K>::value)
         return intprec::interval<T>(std::abs(j) & 1 ? -1 : 1);
@@ -69,15 +72,19 @@ intprec::interval<T> utils::math<intprec::interval<T>>::minus_one_raised_to_powe
         return intprec::interval<T>(j & 1 ? -1 : 1);
 }
 template <typename T>
-intprec::interval<T> utils::math<intprec::interval<T>>::pow(const intprec::interval<T>& x, const intprec::interval<T>& y) {
+intprec::interval<T> utils::math<intprec::interval<T>>::pow(const intprec::interval<T>& x,
+                                                            const intprec::interval<T>& y) {
     return intprec::pow(x, y);
 }
 template <typename T>
-intprec::interval<T> utils::math<intprec::interval<T>>::atan2(const intprec::interval<T>& x, const intprec::interval<T>& y) {
+intprec::interval<T> utils::math<intprec::interval<T>>::atan2(const intprec::interval<T>& x,
+                                                              const intprec::interval<T>& y) {
     static_assert(std::false_type{}, "utils::math::atan2 not implemented for type");
 }
 template <typename T>
-intprec::interval<T> utils::math<intprec::interval<T>>::fma(const intprec::interval<T>& a, const intprec::interval<T>& b, const intprec::interval<T>& c) {
+intprec::interval<T> utils::math<intprec::interval<T>>::fma(const intprec::interval<T>& a,
+                                                            const intprec::interval<T>& b,
+                                                            const intprec::interval<T>& c) {
     return a * b + c;
 }
 template <typename T>
@@ -97,8 +104,9 @@ intprec::interval<T> utils::math<intprec::interval<T>>::log10(const intprec::int
     return intprec::log10(x);
 }
 template <typename T>
-intprec::interval<T> utils::math<intprec::interval<T>>::hypot(const intprec::interval<T>& a, const intprec::interval<T>& b) {
-    return intprec::sqrt(a.sqr()+ b.sqr);
+intprec::interval<T> utils::math<intprec::interval<T>>::hypot(const intprec::interval<T>& a,
+                                                              const intprec::interval<T>& b) {
+    return intprec::sqrt(a.sqr() + b.sqr);
 }
 template <typename T>
 intprec::interval<T> utils::math<intprec::interval<T>>::erf(const intprec::interval<T>& x) {
@@ -125,7 +133,8 @@ intprec::interval<T> utils::math<intprec::interval<T>>::k_x(const intprec::inter
     static_assert(std::false_type{}, "utils::math::k_x not implemented for type");
 }
 template <typename T>
-intprec::interval<T> utils::math<intprec::interval<T>>::inc_gamma(const intprec::interval<T>& x, const intprec::interval<T>& alpha) {
+intprec::interval<T> utils::math<intprec::interval<T>>::inc_gamma(const intprec::interval<T>& x,
+                                                                  const intprec::interval<T>& alpha) {
     static_assert(std::false_type{}, "utils::math::inc_gamma not implemented for type");
 }
 template <typename T>
@@ -134,55 +143,55 @@ intprec::interval<T> utils::math<intprec::interval<T>>::lambertW0(const intprec:
 }
 template <typename T>
 intprec::interval<T> utils::math<intprec::interval<T>>::sin(const intprec::interval<T>& x) {
-    return std::sin(x);
+    return intprec::sin(x);
 }
 template <typename T>
 intprec::interval<T> utils::math<intprec::interval<T>>::asin(const intprec::interval<T>& x) {
-    return std::asin(x);
+    return intprec::asin(x);
 }
 template <typename T>
 intprec::interval<T> utils::math<intprec::interval<T>>::cos(const intprec::interval<T>& x) {
-    return std::cos(x);
+    return intprec::cos(x);
 }
 template <typename T>
 intprec::interval<T> utils::math<intprec::interval<T>>::acos(const intprec::interval<T>& x) {
-    return std::acos(x);
+    return intprec::acos(x);
 }
 template <typename T>
 intprec::interval<T> utils::math<intprec::interval<T>>::tan(const intprec::interval<T>& x) {
-    return std::tan(x);
+    return intprec::tan(x);
 }
 template <typename T>
 intprec::interval<T> utils::math<intprec::interval<T>>::atan(const intprec::interval<T>& x) {
-    return std::atan(x);
+    return intprec::atan(x);
 }
 template <typename T>
 intprec::interval<T> utils::math<intprec::interval<T>>::sinh(const intprec::interval<T>& x) {
-    return std::sinh(x);
+    return intprec::sinh(x);
 }
 template <typename T>
 intprec::interval<T> utils::math<intprec::interval<T>>::asinh(const intprec::interval<T>& x) {
-    return std::asinh(x);
+    return intprec::asinh(x);
 }
 template <typename T>
 intprec::interval<T> utils::math<intprec::interval<T>>::cosh(const intprec::interval<T>& x) {
-    return std::cosh(x);
+    return intprec::cosh(x);
 }
 template <typename T>
 intprec::interval<T> utils::math<intprec::interval<T>>::acosh(const intprec::interval<T>& x) {
-    return std::acosh(x);
+    return intprec::acosh(x);
 }
 template <typename T>
 intprec::interval<T> utils::math<intprec::interval<T>>::tanh(const intprec::interval<T>& x) {
-    return std::tanh(x);
+    return intprec::tanh(x);
 }
 template <typename T>
 intprec::interval<T> utils::math<intprec::interval<T>>::atanh(const intprec::interval<T>& x) {
-    return std::atanh(x);
+    return intprec::atanh(x);
 }
 template <typename T>
 intprec::interval<T> utils::math<intprec::interval<T>>::abs(const intprec::interval<T>& x) {
-    return std::abs(x)
+    return intprec::abs(x);
 }
 
 #endif

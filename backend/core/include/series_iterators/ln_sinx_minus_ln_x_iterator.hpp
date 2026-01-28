@@ -41,7 +41,7 @@ public:
      * @authors Bolshakov M.P.
      * @return T The value of ln(sin(x)/x).
      */
-    T get_sum() const override { return utils::log(utils::sin(this->x)) - utils::log(this->x); }
+    T get_sum() const override { return utils::log(utils::math<T>::sin(this->x)) - utils::log(this->x); }
 
     /**
      * @brief Validates the current evaluation point x.
@@ -50,11 +50,11 @@ public:
      */
     bool is_invalid() const override {
         if constexpr (isComplexLike<T>::value) {
-            return !utils::isfinite(this->x) || this->x.real() > utils::cast<T>(std::numbers::pi).real() ||
-                   this->x.real() < utils::cast<T>(0).real();
+            return !utils::helpers<T>::isfinite(this->x) || this->x.real() > utils::cast<T>::meta(std::numbers::pi).real() ||
+                   this->x.real() < utils::cast<T>::meta(0).real();
         } else {
-            return !utils::isfinite(this->x) || this->x > utils::cast<T>(std::numbers::pi) ||
-                   this->x < utils::cast<T>(0);
+            return !utils::helpers<T>::isfinite(this->x) || this->x > utils::cast<T>::meta(std::numbers::pi) ||
+                   this->x < utils::cast<T>::meta(0);
         }
     }
 
@@ -66,9 +66,9 @@ public:
     T next(K n, T& state) const override {
         // Infinite product based expansion term for ln(sin(x)/x)
         state =
-            utils::log(utils::cast<T>(1) - this->x * this->x /
-                                               (utils::cast<T>((n + 1) * (n + 1)) * utils::cast<T>(std::numbers::pi) *
-                                                utils::cast<T>(std::numbers::pi)));
+            utils::log(utils::cast<T>::meta(1) - this->x * this->x /
+                                               (utils::cast<T>::meta((n + 1) * (n + 1)) * utils::cast<T>::meta(std::numbers::pi) *
+                                                utils::cast<T>::meta(std::numbers::pi)));
         return state;
     }
 };

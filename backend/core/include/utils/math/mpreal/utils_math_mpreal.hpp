@@ -4,10 +4,6 @@
 
 template <>
 struct utils::math<mpfr::mpreal> {
-    static mpfr::mpreal phi(mpfr::mpreal n);
-    static mpfr::mpreal fact(const mpfr::mpreal n);
-    static mpfr::mpreal double_fact(const mpfr::mpreal n);
-    static mpfr::mpreal binomial_coefficient(const mpfr::mpreal n, const mpfr::mpreal k);
     template <std::integral K>
     static mpfr::mpreal minus_one_raised_to_power_n(const K j);
     static mpfr::mpreal pow(const mpfr::mpreal& x, const mpfr::mpreal& y);
@@ -20,12 +16,14 @@ struct utils::math<mpfr::mpreal> {
     static mpfr::mpreal hypot(const mpfr::mpreal& a, const mpfr::mpreal& b);
     static mpfr::mpreal erf(const mpfr::mpreal& x);
     static mpfr::mpreal zeta(const mpfr::mpreal& x);
+#ifdef __GSL_SF_EXPINT_H__
     static mpfr::mpreal ci_x(const mpfr::mpreal& x);
     static mpfr::mpreal si_x(const mpfr::mpreal& x);
+    static mpfr::mpreal lambertW0(const mpfr::mpreal& x);
+#endif
     static mpfr::mpreal e_x(const mpfr::mpreal& x);
     static mpfr::mpreal k_x(const mpfr::mpreal& x);
     static mpfr::mpreal inc_gamma(const mpfr::mpreal& x, const mpfr::mpreal& alpha);
-    static mpfr::mpreal lambertW0(const mpfr::mpreal& x);
     static mpfr::mpreal sin(const mpfr::mpreal& x);
     static mpfr::mpreal asin(const mpfr::mpreal& x);
     static mpfr::mpreal cos(const mpfr::mpreal& x);
@@ -39,24 +37,8 @@ struct utils::math<mpfr::mpreal> {
     static mpfr::mpreal tanh(const mpfr::mpreal& x);
     static mpfr::mpreal atanh(const mpfr::mpreal& x);
     static mpfr::mpreal abs(const mpfr::mpreal& x);
-}
+};
 
-mpfr::mpreal
-utils::math<mpfr::mpreal>::phi(mpfr::mpreal n) {
-    static_assert(std::false_type{}, "utils::math::phi not implemented for type");
-}
-
-mpfr::mpreal utils::math<mpfr::mpreal>::fact(const mpfr::mpreal n) {
-    static_assert(std::false_type{}, "utils::math::fact not implemented for type");
-}
-
-mpfr::mpreal utils::math<mpfr::mpreal>::double_fact(const mpfr::mpreal n) {
-    static_assert(std::false_type{}, "utils::math::double_fact not implemented for type");
-}
-
-mpfr::mpreal utils::math<mpfr::mpreal>::binomial_coefficient(const mpfr::mpreal n, const mpfr::mpreal k) {
-    static_assert(std::false_type{}, "utils::math::binomial_coefficient not implemented for type");
-}
 template <std::integral K>
 mpfr::mpreal utils::math<mpfr::mpreal>::minus_one_raised_to_power_n(const K j) {
     if constexpr (std::is_signed<K>::value)
@@ -90,47 +72,30 @@ mpfr::mpreal utils::math<mpfr::mpreal>::hypot(const mpfr::mpreal& a, const mpfr:
 mpfr::mpreal utils::math<mpfr::mpreal>::erf(const mpfr::mpreal& x) { return mpfr::erf(x); }
 
 mpfr::mpreal utils::math<mpfr::mpreal>::zeta(const mpfr::mpreal& x) { return mpfr::zeta(x); }
-
-mpfr::mpreal utils::math<mpfr::mpreal>::ci_x(const mpfr::mpreal& x) {
 #ifdef __GSL_SF_EXPINT_H__
-    return static_cast<mpfr::mpreal>(gsl_sf_Ci(static_cast<double>(x)), x.get_prec());
-#else
-    static_assert(std::false_type{}, "utils::math::ci_x not implemented for type");
-#endif
+mpfr::mpreal utils::math<mpfr::mpreal>::ci_x(const mpfr::mpreal& x) {
+    return mpfr::mpreal(gsl_sf_Ci(static_cast<double>(x)), x.get_prec());
 }
 
 mpfr::mpreal utils::math<mpfr::mpreal>::si_x(const mpfr::mpreal& x) {
-#ifdef __GSL_SF_EXPINT_H__
-    return static_cast<mpfr::mpreal>(gsl_sf_Si(static_cast<double>(x)), x.get_prec());
-#else
-    static_assert(std::false_type{}, "utils::math::si_x not implemented for type");
-#endif
-}
-
-mpfr::mpreal utils::math<mpfr::mpreal>::e_x(const mpfr::mpreal& x) {
-    return static_cast<mpfr::mpreal>(std::comp_ellint_2(static_cast<double>(x)), x.get_prec());
-}
-
-mpfr::mpreal utils::math<mpfr::mpreal>::k_x(const mpfr::mpreal& x) {
-    return static_cast<mpfr::mpreal>(std::comp_ellint_1(static_cast<double>(x)), x.get_prec());
-}
-
-mpfr::mpreal utils::math<mpfr::mpreal>::inc_gamma(const mpfr::mpreal& x, const mpfr::mpreal& alpha) {
-#ifdef __GSL_SF_EXPINT_H__
-    return mpfr::tgamma(alpha) -
-           static_cast<mpfr::mpreal>(gsl_sf_gamma_inc(static_cast<double>(alpha), static_cast<double>(x)),
-                                     x.get_prec());
-#else
-    static_assert(std::false_type{}, "utils::math::inc_gamma not implemented for type");
-#endif
+    return mpfr::mpreal(gsl_sf_Si(static_cast<double>(x)), x.get_prec());
 }
 
 mpfr::mpreal utils::math<mpfr::mpreal>::lambertW0(const mpfr::mpreal& x) {
-#ifdef __GSL_SF_EXPINT_H__
-    return static_cast<mpfr::mpreal>(gsl_sf_lambert_W0(static_cast<double>(x)), x.get_prec());
-#else
-    static_assert(std::false_type{}, "utils::math::lambertW0 not implemented for type");
+    return mpfr::mpreal(gsl_sf_lambert_W0(static_cast<double>(x)), x.get_prec());
+}
 #endif
+
+mpfr::mpreal utils::math<mpfr::mpreal>::e_x(const mpfr::mpreal& x) {
+    return mpfr::mpreal(std::comp_ellint_2(static_cast<double>(x)), x.get_prec());
+}
+
+mpfr::mpreal utils::math<mpfr::mpreal>::k_x(const mpfr::mpreal& x) {
+    return mpfr::mpreal(std::comp_ellint_1(static_cast<double>(x)), x.get_prec());
+}
+
+mpfr::mpreal utils::math<mpfr::mpreal>::inc_gamma(const mpfr::mpreal& x, const mpfr::mpreal& alpha) {
+    return mpfr::tgamma(alpha) - mpfr::gammainc(alpha, x);
 }
 
 mpfr::mpreal utils::math<mpfr::mpreal>::sin(const mpfr::mpreal& x) { return mpfr::sin(x); }
@@ -157,6 +122,6 @@ mpfr::mpreal utils::math<mpfr::mpreal>::tanh(const mpfr::mpreal& x) { return mpf
 
 mpfr::mpreal utils::math<mpfr::mpreal>::atanh(const mpfr::mpreal& x) { return mpfr::atanh(x); }
 
-mpfr::mpreal utils::math<mpfr::mpreal>::abs(const mpfr::mpreal& x) { return mpfr::abs(x) }
+mpfr::mpreal utils::math<mpfr::mpreal>::abs(const mpfr::mpreal& x) { return mpfr::abs(x); }
 
 #endif

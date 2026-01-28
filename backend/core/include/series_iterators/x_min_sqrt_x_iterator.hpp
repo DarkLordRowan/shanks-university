@@ -39,7 +39,7 @@ public:
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The value of x - sqrt(x).
      */
-    T get_sum() const override { return this->x - utils::sqrt(this->x); }
+    T get_sum() const override { return this->x - utils::math<T>::sqrt(this->x); }
 
     /**
      * @brief Validates the current evaluation point x.
@@ -48,7 +48,8 @@ public:
      */
     bool is_invalid() const override {
         using float_type = real_of<T>::value;
-        return !utils::isfinite(this->x) || utils::abs(this->x - utils::cast<T>(1)) >= utils::cast<float_type>(1.0);
+        return !utils::helpers<T>::isfinite(this->x) ||
+               utils::math<T>::abs(this->x - utils::cast<T>::meta(1)) >= utils::cast<float_type>(1.0);
     }
 
     /**
@@ -58,12 +59,12 @@ public:
      */
     T next(K n, T& state) const override {
         if (n == 0)
-            state = this->x - utils::cast<T>(1);
+            state = this->x - utils::cast<T>::meta(1);
         else if (n == 1)
-            state = (this->x - utils::cast<T>(1)) * utils::cast<T>(-0.5);
+            state = (this->x - utils::cast<T>::meta(1)) * utils::cast<T>::meta(-0.5);
         else
-            state *= utils::cast<T>(-1) * (this->x - utils::cast<T>(1)) * utils::cast<T>(0.5) *
-                     utils::cast<T>(2 * n - 3) / utils::cast<T>(n);
+            state *= utils::cast<T>::meta(-1) * (this->x - utils::cast<T>::meta(1)) * utils::cast<T>::meta(0.5) *
+                     utils::cast<T>::meta(2 * n - 3) / utils::cast<T>::meta(n);
         return state;
     }
 };

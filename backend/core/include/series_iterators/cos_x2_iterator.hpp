@@ -39,14 +39,14 @@ public:
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The value of cos(x^2).
      */
-    T get_sum() const override { return utils::cos(this->x * this->x); }
+    T get_sum() const override { return utils::math<T>::cos(this->x * this->x); }
 
     /**
      * @brief Validates the current evaluation point x.
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return true if x is non-finite, false otherwise.
      */
-    bool is_invalid() const override { return !utils::isfinite(this->x); }
+    bool is_invalid() const override { return !utils::helpers<T>::isfinite(this->x); }
 
     /**
      * @brief Computes the next term in the cos(x^2) Taylor expansion.
@@ -56,10 +56,10 @@ public:
     T next(K n, T& state) const override {
         // Recurrence relation for cos(x^2) terms derived from the cos Taylor series
         if (n == 0)
-            state = utils::cast<T>(1, utils::get_precision(state));
+            state = utils::cast<T>::meta(1, utils::helpers<T>::get_precision(state));
         else
-            state *= utils::cast<T>(-1) * utils::pow(this->x, utils::cast<T>(4)) /
-                     utils::cast<T>(n * (size_t{4} * n - size_t{2}));
+            state *= utils::cast<T>::meta(-1) * utils::pow(this->x, utils::cast<T>::meta(4)) /
+                     utils::cast<T>::meta(n * (size_t{4} * n - size_t{2}));
         return state;
     }
 };

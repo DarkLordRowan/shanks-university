@@ -42,8 +42,8 @@ public:
      * @return T The value of (pi/8)*cos^2(x) - cos(x)/3.
      */
     T get_sum() const override {
-        return utils::cast<T>(std::numbers::pi * 0.125) * utils::cos(this->x) * utils::cos(this->x) -
-               utils::cos(this->x) / utils::cast<T>(3);
+        return utils::cast<T>::meta(std::numbers::pi * 0.125) * utils::math<T>::cos(this->x) * utils::math<T>::cos(this->x) -
+               utils::math<T>::cos(this->x) / utils::cast<T>::meta(3);
     }
 
     /**
@@ -53,7 +53,8 @@ public:
      */
     bool is_invalid() const override {
         using float_type = real_of<T>::value;
-        return !utils::isfinite(this->x) || utils::abs(this->x) > utils::cast<float_type>(std::numbers::pi * 0.5);
+        return !utils::helpers<T>::isfinite(this->x) ||
+               utils::math<T>::abs(this->x) > utils::cast<float_type>(std::numbers::pi * 0.5);
     }
 
     /**
@@ -64,12 +65,13 @@ public:
     T next(K n, T& state) const override {
         // General term formula involving alternating higher-order cosine harmonics
         state = utils::minus_one_raised_to_power_n<T, K>(n) *
-                utils::cos(
-                    utils::cast<T>(utils::fma(static_cast<size_t>(2), static_cast<size_t>(n), static_cast<size_t>(3))) *
-                    this->x) /
-                utils::cast<T>(utils::fma(static_cast<size_t>(2), static_cast<size_t>(n), static_cast<size_t>(1)) *
-                               utils::fma(static_cast<size_t>(2), static_cast<size_t>(n), static_cast<size_t>(3)) *
-                               utils::fma(static_cast<size_t>(2), static_cast<size_t>(n), static_cast<size_t>(5)));
+                utils::math<T>::cos(utils::cast<T>::meta(utils::math<size_t>::fma(
+                                        static_cast<size_t>(2), static_cast<size_t>(n), static_cast<size_t>(3))) *
+                                    this->x) /
+                utils::cast<T>::meta(
+                    utils::math<size_t>::fma(static_cast<size_t>(2), static_cast<size_t>(n), static_cast<size_t>(1)) *
+                    utils::math<size_t>::fma(static_cast<size_t>(2), static_cast<size_t>(n), static_cast<size_t>(3)) *
+                    utils::math<size_t>::fma(static_cast<size_t>(2), static_cast<size_t>(n), static_cast<size_t>(5)));
         return state;
     }
 };

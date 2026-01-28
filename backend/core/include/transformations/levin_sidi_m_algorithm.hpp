@@ -144,7 +144,7 @@ public:
                 break;
             }
         }
-        series_acceleration<T, K>::acceleration_name += "and gamma = " + utils::to_string(gamma_in_use);
+        series_acceleration<T, K>::acceleration_name += "and gamma = " + utils::helpers<T>::to_string(gamma_in_use);
 
         return series_acceleration<T, K>::acceleration_name;
     }
@@ -191,12 +191,14 @@ T levin_sidi_m_algorithm<T, K>::operator()(const K n, const K order, const serie
         static_cast<K>(remainder_type_in_use == shanks::remainders::remainder_type::t_wave_type ||
                        remainder_type_in_use == shanks::remainders::remainder_type::v_type) +
         static_cast<K>(2) * static_cast<K>(remainder_type_in_use == shanks::remainders::remainder_type::v_wave_type);
-    const size_t precision = std::max(utils::get_precision(data.Sn[0]), utils::get_precision(data.an[0]));
+    const size_t precision =
+        std::max(utils::helpers<T>::get_precision(data.Sn[0]), utils::helpers<T>::get_precision(data.an[0]));
 
     if (data.Sn.size() < required_size || data.an.size() < required_size) {
-        throw std::out_of_range("The Sn or an smaller then required for M_{" + utils::to_string(order) + "}^{" +
-                                utils::to_string(n) + "}\n" + "the size of Sn and an must be at least " +
-                                utils::to_string(required_size));
+        throw std::out_of_range("The Sn or an smaller then required for M_{" + utils::helpers<T>::to_string(order) +
+                                "}^{" + utils::helpers<T>::to_string(n) + "}\n" +
+                                "the size of Sn and an must be at least " +
+                                utils::helpers<T>::to_string(required_size));
     }
 
     // Trivial case: order 0 returns the current partial sum
@@ -209,7 +211,7 @@ T levin_sidi_m_algorithm<T, K>::operator()(const K n, const K order, const serie
     }
 
     T numerator, denominator, rest;
-    rest = numerator = denominator = utils::cast<T>(0.0, precision);
+    rest = numerator = denominator = utils::cast<T>::meta(0.0, precision);
     float_type up, down, down_coef, up_coef;
     up = down = utils::cast<float_type>(1.0, precision);
     down_coef = up_coef = utils::cast<float_type>(0.0, precision);
@@ -237,16 +239,16 @@ T levin_sidi_m_algorithm<T, K>::operator()(const K n, const K order, const serie
     // Main summation loop for the M-transformation formula
     for (K j = static_cast<K>(0); j <= n; ++j) {
         // Calculate the sign, binomial coefficient, and weight components
-        rest = utils::minus_one_raised_to_power_n<T, K>(j);
-        rest *= utils::cast<T>(utils::binomial_coefficient<K>(n, j), precision);
-        rest *= utils::cast<T>(up, precision);                     // Multiply by Pochhammer ratio term
-        rest /= utils::cast<T>(j + static_cast<K>(1), precision);  // Multiply by 1/(j+1) factor
+        rest = utils::math<T>::template minus_one_raised_to_power_n<K>(j);
+        rest *= utils::cast<T>::meta(utils::math<K>::binomial_coefficient(n, j), precision);
+        rest *= utils::cast<T>::meta(up, precision);                     // Multiply by Pochhammer ratio term
+        rest /= utils::cast<T>::meta(j + static_cast<K>(1), precision);  // Multiply by 1/(j+1) factor
         up /= (up_coef + utils::cast<float_type>(j, precision));   // Update Pochhammer ratio for next iteration
         up *= (down_coef +
                utils::cast<float_type>(j, precision));  // (γ+k+1-j)_{j}/(γ+k+2-n)_{j} → (γ+k+1-j)_{j+1}/(γ+k+2-n)_{j+1}
         // Multiply by remainder term 1/R_{k+j}
         rest *= remainder->operator()(order + j, order + j, data.an,
-                                      utils::cast<T>(-gamma_in_use - utils::cast<float_type>(n, precision), precision));
+                                      utils::cast<T>::meta(-gamma_in_use - utils::cast<float_type>(n, precision), precision));
 
         // Accumulate numerator and denominator
         numerator += rest * data.Sn.at(order + j);
@@ -254,14 +256,14 @@ T levin_sidi_m_algorithm<T, K>::operator()(const K n, const K order, const serie
 
         // TODO проверить корректность пересчета бин. коэф.
         //// Update binomial coefficient for next iteration: C(n, j+1) = C(n, j) * (n-j)/(j+1)
-        // binomial_coef *= utils::cast<T>(n - j);
-        // binomial_coef /= utils::cast<T>(j + static_cast<K>(1));
+        // binomial_coef *= utils::cast<T>::meta(n - j);
+        // binomial_coef /= utils::cast<T>::meta(j + static_cast<K>(1));
     }
 
     // Calculate the final result and check for validity
     numerator /= denominator;
 
-    if (!utils::isfinite(numerator)) throw std::overflow_error("division by zero");
+    if (!utils::helpers<T>::isfinite(numerator)) throw std::overflow_error("division by zero");
 
     return numerator;
 }

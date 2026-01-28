@@ -51,8 +51,8 @@ public:
      */
     bool is_invalid() const override {
         using float_type = real_of<T>::value;
-        return !utils::isfinite(this->x) ||
-               utils::abs(this->x) > utils::cast<float_type>(1) / utils::cast<float_type>(std::numbers::e);
+        return !utils::helpers<T>::isfinite(this->x) ||
+               utils::math<T>::abs(this->x) > utils::cast<float_type>(1) / utils::cast<float_type>(std::numbers::e);
     }
 
     /**
@@ -65,7 +65,7 @@ public:
         if (n == 0)
             state = this->x;
         else
-            state *= utils::cast<T>(-1) * this->x / utils::cast<T>(n);
+            state *= utils::cast<T>::meta(-1) * this->x / utils::cast<T>::meta(n);
         return state;
     }
 };

@@ -39,7 +39,7 @@ struct utils::math<std::complex<T>> {
     static std::complex<T> tanh(const std::complex<T>& x);
     static std::complex<T> atanh(const std::complex<T>& x);
     static T abs(const std::complex<T>& x);
-}
+};
 
 template <typename T>
 std::complex<T> utils::math<std::complex<T>>::phi(T n) {
@@ -57,7 +57,8 @@ template <typename T>
 std::complex<T> utils::math<std::complex<T>>::binomial_coefficient(const T n, const T k) {
     static_assert(std::false_type{}, "utils::math::binomial_coefficient not implemented for type");
 }
-template <typename T, std::integral K>
+template <typename T>
+template <std::integral K>
 std::complex<T> utils::math<std::complex<T>>::minus_one_raised_to_power_n(const K j) {
     if constexpr (std::is_signed<K>::value)
         return std::complex<T>(std::abs(j) & 1 ? -1 : 1);
@@ -73,7 +74,8 @@ std::complex<T> utils::math<std::complex<T>>::atan2(const std::complex<T>& x, co
     return std::atan2(x, y);
 }
 template <typename T>
-std::complex<T> utils::math<std::complex<T>>::fma(const std::complex<T>& a, const std::complex<T>& b, const std::complex<T>& c) {
+std::complex<T> utils::math<std::complex<T>>::fma(const std::complex<T>& a, const std::complex<T>& b,
+                                                  const std::complex<T>& c) {
     return std::fma(a, b, c);
 }
 template <typename T>

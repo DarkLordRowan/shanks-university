@@ -39,14 +39,14 @@ public:
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The value of x * ln(2).
      */
-    T get_sum() const override { return this->x * utils::log(utils::cast<T>(2)); }
+    T get_sum() const override { return this->x * utils::log(utils::cast<T>::meta(2)); }
 
     /**
      * @brief Validates the current evaluation point x.
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return true if x is non-finite, false otherwise.
      */
-    bool is_invalid() const override { return !utils::isfinite(this->x); }
+    bool is_invalid() const override { return !utils::helpers<T>::isfinite(this->x); }
 
     /**
      * @brief Computes the next term in the series expansion.
@@ -58,7 +58,7 @@ public:
         if (n == 0)
             state = this->x;
         else
-            state *= utils::cast<T>(-1) * utils::cast<T>(n) / utils::cast<T>(n + 1);
+            state *= utils::cast<T>::meta(-1) * utils::cast<T>::meta(n) / utils::cast<T>::meta(n + 1);
         return state;
     }
 };

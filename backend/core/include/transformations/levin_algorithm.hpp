@@ -210,7 +210,7 @@ public:
                 remainder.reset(new shanks::remainders::u_transform<T, K>());
             }
         }
-        series_acceleration<T, K>::acceleration_name += "and beta = " + utils::to_string(beta_in_use);
+        series_acceleration<T, K>::acceleration_name += "and beta = " + utils::helpers<T>::to_string(beta_in_use);
 
         return series_acceleration<T, K>::acceleration_name;
     }
@@ -226,11 +226,12 @@ levin_algorithm<T, K>::levin_algorithm(const shanks::remainders::remainder_type 
 
 template <AcceptedLike T, UnsignedIntLike K>
 inline T levin_algorithm<T, K>::calc_result(const K n, const K order, const series_result<T>& data) const {
-    const size_t precision = std::max(utils::get_precision(data.Sn[0]), utils::get_precision(data.an[0]));
+    const size_t precision =
+        std::max(utils::helpers<T>::get_precision(data.Sn[0]), utils::helpers<T>::get_precision(data.an[0]));
 
     T numerator, denominator, rest;
     float_type C_njk;
-    numerator = denominator = rest = utils::cast<T>(0.0, precision);
+    numerator = denominator = rest = utils::cast<T>::meta(0.0, precision);
     C_njk = utils::cast<float_type>(0.0, precision);
 
     // Compute (-1)^j * C(k,j)
@@ -240,19 +241,21 @@ inline T levin_algorithm<T, K>::calc_result(const K n, const K order, const seri
     // Main loop for the direct Levin transformation formula
     for (K j = static_cast<K>(0); j <= order; ++j) {
         // Compute (-1)^j * C(k,j) - the sign and binomial coefficient part
-        rest += -rest + utils::minus_one_raised_to_power_n<T, K>(j);
-        rest *= utils::cast<T>((utils::binomial_coefficient<K>(order, j)), precision);
+        rest += -rest + utils::math<T>::template minus_one_raised_to_power_n<K>(j);
+        rest *= utils::cast<T>::meta((utils::math<K>::binomial_coefficient(order, j)), precision);
 
         // Compute (n+j+1)^{k-1}/(n+k+1)^{k-1} - the weighting factors C_njk
-        C_njk = utils::pow(beta_in_use + utils::cast<float_type>(n + j + static_cast<K>(1), precision),
-                           utils::cast<float_type>(order - static_cast<K>(1), precision));
-        C_njk /= utils::pow(beta_in_use + utils::cast<float_type>(n + order + static_cast<K>(1), precision),
-                            utils::cast<float_type>(order - static_cast<K>(1), precision));
+        C_njk =
+            utils::math<float_type>::pow(beta_in_use + utils::cast<float_type>(n + j + static_cast<K>(1), precision),
+                                         utils::cast<float_type>(order - static_cast<K>(1), precision));
+        C_njk /= utils::math<float_type>::pow(
+            beta_in_use + utils::cast<float_type>(n + order + static_cast<K>(1), precision),
+            utils::cast<float_type>(order - static_cast<K>(1), precision));
 
         // Compute 1/R_{n+j} where R_{n+j} is the remainder estimate
         rest *=
             remainder->operator()(n + j, n + j, data.an,
-                                  utils::cast<T>((remainder_type_in_use == shanks::remainders::remainder_type::u_type
+                                  utils::cast<T>::meta((remainder_type_in_use == shanks::remainders::remainder_type::u_type
                                                       ? beta_in_use
                                                       : utils::cast<float_type>(1.0, precision))));
 
@@ -271,12 +274,13 @@ inline T levin_algorithm<T, K>::calc_result(const K n, const K order, const seri
 
 template <AcceptedLike T, UnsignedIntLike K>
 inline T levin_algorithm<T, K>::calc_result_rec(const K n, const K order, const series_result<T>& data) const {
-    const size_t precision = std::max(utils::get_precision(data.Sn[0]), utils::get_precision(data.an[0]));
+    const size_t precision =
+        std::max(utils::helpers<T>::get_precision(data.Sn[0]), utils::helpers<T>::get_precision(data.an[0]));
 
     // For theory, see: Sidi (1979), Section 3 - Recursive implementation using E-algorithm
     // Initialize auxiliary vectors for the recursive scheme
-    std::vector<T> Num(order + static_cast<K>(1), utils::cast<T>(0.0, precision));
-    std::vector<T> Denom(order + static_cast<K>(1), utils::cast<T>(0.0, precision));
+    std::vector<T> Num(order + static_cast<K>(1), utils::cast<T>::meta(0.0, precision));
+    std::vector<T> Denom(order + static_cast<K>(1), utils::cast<T>::meta(0.0, precision));
     float_type scale = utils::cast<float_type>(0.0, precision);
 
     // Initialize base values: E_0^{(n)} = S_n, g_0^{(n)} = 1/R_n
@@ -284,7 +288,7 @@ inline T levin_algorithm<T, K>::calc_result_rec(const K n, const K order, const 
     for (K i = static_cast<K>(0); i < order + static_cast<K>(1); ++i) {
         Denom[i] +=
             remainder->operator()(n + i, n + i, data.an,
-                                  utils::cast<T>(remainder_type_in_use == shanks::remainders::remainder_type::u_type
+                                  utils::cast<T>::meta(remainder_type_in_use == shanks::remainders::remainder_type::u_type
                                                      ? beta_in_use
                                                      : utils::cast<float_type>(1.0, precision),
                                                  precision));
@@ -299,14 +303,15 @@ inline T levin_algorithm<T, K>::calc_result_rec(const K n, const K order, const 
             // E_k^{(n)} = E_{k-1}^{(n)} - g_{k-1,k}^{(n)} * ΔE_{k-1}^{(n)} / Δg_{k-1,k}^{(n)}
             // Scaling factor for the recursive update
             scale = (beta_in_use + utils::cast<float_type>(n + j, precision));
-            scale *= utils::pow(utils::cast<float_type>(1.0, precision) -
-                                    utils::cast<float_type>(1.0, precision) /
-                                        (beta_in_use + utils::cast<float_type>(n + j + i + 1, precision)),
-                                utils::cast<float_type>((i)));
+            scale *=
+                utils::math<float_type>::pow(utils::cast<float_type>(1.0, precision) -
+                                                 utils::cast<float_type>(1.0, precision) /
+                                                     (beta_in_use + utils::cast<float_type>(n + j + i + 1, precision)),
+                                             utils::cast<float_type>((i)));
             scale /= (beta_in_use + utils::cast<float_type>(n + j + i, precision));
 
-            Denom[j] = utils::fma(utils::cast<T>(-scale), Denom[j], Denom[j + static_cast<K>(1)]);
-            Num[j] = utils::fma(utils::cast<T>(-scale), Num[j], Num[j + static_cast<K>(1)]);
+            Denom[j] = utils::math<T>::fma(utils::cast<T>::meta(-scale), Denom[j], Denom[j + static_cast<K>(1)]);
+            Num[j] = utils::math<T>::fma(utils::cast<T>::meta(-scale), Num[j], Num[j + static_cast<K>(1)]);
         }
 
     // Final normalization
@@ -325,16 +330,17 @@ T levin_algorithm<T, K>::operator()(const K n, const K order, const series_resul
         static_cast<K>(2) * static_cast<K>(remainder_type_in_use == shanks::remainders::remainder_type::v_wave_type);
 
     if (data.Sn.size() < required_size || data.an.size() < required_size) {
-        throw std::out_of_range("The Sn or an smaller then required for L_{" + utils::to_string(order) + "}^{" +
-                                utils::to_string(n) + "}\n" + "the size of Sn and an must be at least " +
-                                utils::to_string(required_size));
+        throw std::out_of_range("The Sn or an smaller then required for L_{" + utils::helpers<T>::to_string(order) +
+                                "}^{" + utils::helpers<T>::to_string(n) + "}\n" +
+                                "the size of Sn and an must be at least " +
+                                utils::helpers<T>::to_string(required_size));
     }
 
     if (order == static_cast<K>(0)) return data.Sn.at(n);
 
     const T result = (use_recurrent_formula ? calc_result_rec(n, order, data) : calc_result(n, order, data));
 
-    if (!utils::isfinite(result)) throw std::overflow_error("division by zero");
+    if (!utils::helpers<T>::isfinite(result)) throw std::overflow_error("division by zero");
 
     return result;
 }

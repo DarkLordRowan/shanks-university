@@ -32,7 +32,7 @@ CT generate_poisson_noise(const FT& lambda, std::mt19937_64& rng) {
     if (lambda <= utils::cast<FT>(0)) throw std::invalid_argument("Lambda must be positive for Poisson distribution.");
 
     // Generating discrete Poisson distribution values
-    std::poisson_distribution<uint64_t> distribution(utils::cast<uint64_t>(lambda));
+    std::poisson_distribution<uint64_t> distribution{utils::cast<uint64_t>(lambda)};
 
     return CT(distribution(rng), distribution(rng));
 };
@@ -59,12 +59,12 @@ CT generate_poisson_noise(const FT& lambda, std::mt19937_64& rng) {
 template <FloatLike T>
     requires(!ComplexLike<T>)
 T generate_poisson_noise(const T& lambda, std::mt19937_64& rng) {
-    if (lambda <= utils::cast<T>(0)) throw std::invalid_argument("Lambda must be positive for Poisson distribution.");
+    if (lambda <= utils::cast<T>::meta(0)) throw std::invalid_argument("Lambda must be positive for Poisson distribution.");
 
     // Simple Poisson distribution for scalar types
-    std::poisson_distribution<uint64_t> distribution(utils::cast<uint64_t>(lambda));
+    std::poisson_distribution<uint64_t> distribution{utils::cast<uint64_t>(lambda)};
 
-    return utils::cast<T>(distribution(rng));
+    return utils::cast<T>::meta(distribution(rng));
 };
 
 /**
@@ -94,8 +94,8 @@ T generate_poisson_noise(const T& lambda, std::mt19937_64& rng) {
         throw std::invalid_argument("Lambda must be positive for Poisson distribution.");
 
     // Generating real and imaginary parts independently with their own lambda rates
-    std::poisson_distribution<uint64_t> distribution_real(utils::cast<uint64_t>(lambda.real()));
-    std::poisson_distribution<uint64_t> distribution_imag(utils::cast<uint64_t>(lambda.imag()));
+    std::poisson_distribution<uint64_t> distribution_real{utils::cast<uint64_t>(lambda.real())};
+    std::poisson_distribution<uint64_t> distribution_imag{utils::cast<uint64_t>(lambda.imag())};
 
     return T(utils::cast<typename T::value_type>(distribution_real(rng)),
              utils::cast<typename T::value_type>(distribution_imag(rng)));
@@ -114,7 +114,7 @@ T generate_poisson_noise(const T& lambda, std::mt19937_64& rng) {
         throw std::invalid_argument("Lambda must be positive for Poisson distribution.");
 
     // Using left boundary for Poisson rate calculation
-    std::poisson_distribution<uint64_t> distribution(utils::cast<uint64_t>(lambda.leftinterval()));
+    std::poisson_distribution<uint64_t> distribution{utils::cast<uint64_t>(lambda.leftinterval())};
 
     return T(utils::cast<typename T::value_type>(distribution(rng)));
 };

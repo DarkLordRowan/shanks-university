@@ -38,7 +38,7 @@ public:
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The limit of the sequence.
      */
-    T get_sum() const override { return utils::cast<T>(0.0); }
+    T get_sum() const override { return utils::cast<T>::meta(0.0); }
 
     /**
      * @brief Validates the current evaluation point x.
@@ -48,8 +48,9 @@ public:
     bool is_invalid() const override { return false; }
 
     std::pair<T, T> initial_state() const override {
-        return std::make_pair(utils::cast<T>(0.0, utils::get_precision(series_base_iter<T, K, std::pair<T, T>>::x)),
-                              utils::cast<T>(0.0, utils::get_precision(series_base_iter<T, K, std::pair<T, T>>::x)));
+        return std::make_pair(
+            utils::cast<T>::meta(0.0, utils::helpers<T>::get_precision(series_base_iter<T, K, std::pair<T, T>>::x)),
+            utils::cast<T>::meta(0.0, utils::helpers<T>::get_precision(series_base_iter<T, K, std::pair<T, T>>::x)));
     }
 
     /**
@@ -60,17 +61,16 @@ public:
     T next(K n, std::pair<T, T>& state) const override {
         if (n == 0)
             state = std::make_pair(
-            utils::cast<T>(0.0, utils::get_precision(series_base_iter<T, K, std::pair<T, T>>::x)), 
-            utils::cast<T>(3, utils::get_precision(series_base_iter<T, K, std::pair<T, T>>::x))
-            );
+                utils::cast<T>::meta(0.0, utils::helpers<T>::get_precision(series_base_iter<T, K, std::pair<T, T>>::x)),
+                utils::cast<T>::meta(3, utils::helpers<T>::get_precision(series_base_iter<T, K, std::pair<T, T>>::x)));
         else if (n == 1)
             state = std::make_pair(
-            utils::cast<T>(3, utils::get_precision(series_base_iter<T, K, std::pair<T, T>>::x)),
-            utils::cast<T>(170, utils::get_precision(series_base_iter<T, K, std::pair<T, T>>::x))
-            );
+                utils::cast<T>::meta(3, utils::helpers<T>::get_precision(series_base_iter<T, K, std::pair<T, T>>::x)),
+                utils::cast<T>::meta(170, utils::helpers<T>::get_precision(series_base_iter<T, K, std::pair<T, T>>::x)));
         else {
-            const size_t precision = utils::get_precision(state.first);
-            state.first = utils::cast<T>(-256, precision) + utils::cast<T>(131072, precision) / state.first / state.second;
+            const size_t precision = utils::helpers<T>::get_precision(state.first);
+            state.first =
+                utils::cast<T>::meta(-256, precision) + utils::cast<T>::meta(131072, precision) / state.first / state.second;
             std::swap(state.first, state.second);
         }
         return state.second;

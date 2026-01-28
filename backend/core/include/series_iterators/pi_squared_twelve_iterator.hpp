@@ -42,7 +42,7 @@ public:
      * @return T The value of x * pi^2 / 12.
      */
     T get_sum() const override {
-        return this->x * utils::cast<T>(std::numbers::pi) * utils::cast<T>(std::numbers::pi) / utils::cast<T>(12);
+        return this->x * utils::cast<T>::meta(std::numbers::pi) * utils::cast<T>::meta(std::numbers::pi) / utils::cast<T>::meta(12);
     }
 
     /**
@@ -50,7 +50,7 @@ public:
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return true if x is non-finite, false otherwise.
      */
-    bool is_invalid() const override { return !utils::isfinite(this->x) || this->x == utils::cast<T>(0); }
+    bool is_invalid() const override { return !utils::helpers<T>::isfinite(this->x) || this->x == utils::cast<T>::meta(0); }
 
     /**
      * @brief Computes the next term in the alternating series expansion.
@@ -59,7 +59,7 @@ public:
      */
     T next(K n, T& state) const override {
         // Alternating term with quadratic denominator
-        state = this->x * utils::minus_one_raised_to_power_n<T, K>(n) / utils::cast<T>((n + 1) * (n + 1));
+        state = this->x * utils::minus_one_raised_to_power_n<T, K>(n) / utils::cast<T>::meta((n + 1) * (n + 1));
         return state;
     }
 };

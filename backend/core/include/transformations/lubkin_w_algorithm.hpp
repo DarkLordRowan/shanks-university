@@ -78,12 +78,12 @@ template <AcceptedLike T, UnsignedIntLike K>
 T lubkin_w_algorithm<T, K>::operator()(const K n, const K order, const series_result<T>& data) const {
     // Ensure there is sufficient data in the Sn vector for the requested order and starting index
     const K required_size = n + static_cast<K>(3) * order + static_cast<K>(1);
-    const size_t precision = utils::get_precision(data.Sn[0]);
+    const size_t precision = utils::helpers<T>::get_precision(data.Sn[0]);
 
     if (data.Sn.size() < required_size) {
-        throw std::out_of_range("The Sn smaller then required for W_{" + utils::to_string(order) + "}^{" +
-                                utils::to_string(n) + "}\n" + "the size of Sn must be at least " +
-                                utils::to_string(required_size));
+        throw std::out_of_range("The Sn smaller then required for W_{" + utils::helpers<T>::to_string(order) + "}^{" +
+                                utils::helpers<T>::to_string(n) + "}\n" + "the size of Sn must be at least " +
+                                utils::helpers<T>::to_string(required_size));
     }
 
     // Trivial case: order 0 returns the original partial sum at index n
@@ -94,10 +94,10 @@ T lubkin_w_algorithm<T, K>::operator()(const K n, const K order, const series_re
     const K base_size = static_cast<K>(3) * order + static_cast<K>(1);
 
     // Working vector to store intermediate transformation values
-    std::vector<T> W(base_size, utils::cast<T>(0, precision));
+    std::vector<T> W(base_size, utils::cast<T>::meta(0, precision));
 
     T Wo0, Wo1, Wo2, Woo1, Woo2;
-    Wo0 = Wo1 = Wo2 = Woo1 = Woo2 = utils::cast<T>(0, precision);
+    Wo0 = Wo1 = Wo2 = Woo1 = Woo2 = utils::cast<T>::meta(0, precision);
 
     // Load initial partial sums into the working vector starting from index n
     for (K i = static_cast<K>(0); i < base_size; ++i) W[i] += data.Sn.at(+i);
@@ -131,12 +131,12 @@ T lubkin_w_algorithm<T, K>::operator()(const K n, const K order, const series_re
             // For theory, see: Lubkin (1952), Main transformation formula
             // W_n = S_{n+1} - [Numerator] / [Denominator]
             // Optimized computation using fused multiply-add for better numerical stability
-            W[j] = utils::fma(-Wo1, Woo1 / (Woo2 - Woo1), W[j1]);
+            W[j] = utils::math<T>::fma(-Wo1, Woo1 / (Woo2 - Woo1), W[j1]);
         }
     }
 
     // Numerical stability check
-    if (!utils::isfinite(W[0])) throw std::overflow_error("division by zero");
+    if (!utils::helpers<T>::isfinite(W[0])) throw std::overflow_error("division by zero");
 
     return W[0];
 }

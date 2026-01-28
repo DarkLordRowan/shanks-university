@@ -39,7 +39,7 @@ public:
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The value of ln(1 + x^4).
      */
-    T get_sum() const override { return utils::log(utils::cast<T>(1) + utils::pow(this->x, utils::cast<T>(4))); }
+    T get_sum() const override { return utils::log(utils::cast<T>::meta(1) + utils::pow(this->x, utils::cast<T>::meta(4))); }
 
     /**
      * @brief Validates the current evaluation point x.
@@ -48,7 +48,7 @@ public:
      */
     bool is_invalid() const override {
         using float_type = real_of<T>::value;
-        return !utils::isfinite(this->x) || utils::abs(this->x) >= utils::cast<float_type>(1.0);
+        return !utils::helpers<T>::isfinite(this->x) || utils::math<T>::abs(this->x) >= utils::cast<float_type>(1.0);
     }
 
     /**
@@ -59,10 +59,10 @@ public:
     T next(K n, T& state) const override {
         // Recurrence relation based on the ln(1+u) expansion with u = x^4
         if (n == 0)
-            state = utils::pow(this->x, utils::cast<T>(4));
+            state = utils::pow(this->x, utils::cast<T>::meta(4));
         else
             state *=
-                utils::cast<T>(-1) * utils::pow(this->x, utils::cast<T>(4)) * utils::cast<T>(n) / utils::cast<T>(n + 1);
+                utils::cast<T>::meta(-1) * utils::pow(this->x, utils::cast<T>::meta(4)) * utils::cast<T>::meta(n) / utils::cast<T>::meta(n + 1);
         return state;
     }
 };

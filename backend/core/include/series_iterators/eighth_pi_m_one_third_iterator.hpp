@@ -42,7 +42,7 @@ public:
      * @return T The value of x * (pi/8 - 1/3).
      */
     T get_sum() const override {
-        return this->x * (utils::cast<T>(std::numbers::pi * 0.125) - utils::cast<T>(1) / utils::cast<T>(3));
+        return this->x * (utils::cast<T>::meta(std::numbers::pi * 0.125) - utils::cast<T>::meta(1) / utils::cast<T>::meta(3));
     }
 
     /**
@@ -50,7 +50,7 @@ public:
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return true if x is non-finite, false otherwise.
      */
-    bool is_invalid() const override { return !utils::isfinite(this->x); }
+    bool is_invalid() const override { return !utils::helpers<T>::isfinite(this->x); }
 
     /**
      * @brief Computes the next term in the series expansion.
@@ -60,9 +60,10 @@ public:
     T next(K n, T& state) const override {
         // Formula for the n-th term of the specific series expansion
         state = utils::minus_one_raised_to_power_n<T, K>(n) * this->x /
-                utils::cast<T>(utils::fma(static_cast<size_t>(2), static_cast<size_t>(n), static_cast<size_t>(1)) *
-                               utils::fma(static_cast<size_t>(2), static_cast<size_t>(n), static_cast<size_t>(3)) *
-                               utils::fma(static_cast<size_t>(2), static_cast<size_t>(n), static_cast<size_t>(5)));
+                utils::cast<T>::meta(
+                    utils::math<size_t>::fma(static_cast<size_t>(2), static_cast<size_t>(n), static_cast<size_t>(1)) *
+                    utils::math<size_t>::fma(static_cast<size_t>(2), static_cast<size_t>(n), static_cast<size_t>(3)) *
+                    utils::math<size_t>::fma(static_cast<size_t>(2), static_cast<size_t>(n), static_cast<size_t>(5)));
         return state;
     }
 };

@@ -208,7 +208,7 @@ public:
                 remainder.reset(new shanks::remainders::u_transform<T, K>());
             }
         }
-        series_acceleration<T, K>::acceleration_name += "and beta = " + utils::to_string(beta_in_use);
+        series_acceleration<T, K>::acceleration_name += "and beta = " + utils::helpers<T>::to_string(beta_in_use);
 
         return series_acceleration<T, K>::acceleration_name;
     }
@@ -216,11 +216,12 @@ public:
 
 template <AcceptedLike T, UnsignedIntLike K>
 inline T levin_sidi_s_algorithm<T, K>::calc_result(const K n, const K order, const series_result<T>& data) const {
-    const size_t precision = std::max(utils::get_precision(data.Sn[0]), utils::get_precision(data.an[0]));
+    const size_t precision =
+        std::max(utils::helpers<T>::get_precision(data.Sn[0]), utils::helpers<T>::get_precision(data.an[0]));
 
     T numerator, denominator, rest;
     float_type up_pochamer, down_pochamer;
-    numerator = denominator = rest = utils::cast<T>(0.0, precision);
+    numerator = denominator = rest = utils::cast<T>::meta(0.0, precision);
     up_pochamer = down_pochamer = utils::cast<float_type>(0.0, precision);
 
     // For theory, see: Sidi (2003, arXiv:math/0306302), Eq. (8.2)
@@ -229,9 +230,9 @@ inline T levin_sidi_s_algorithm<T, K>::calc_result(const K n, const K order, con
     // Main loop for the direct S-transformation summation formula
     for (K j = static_cast<K>(0); j <= order; ++j) {
         // Compute (-1)^j * C(k,j) - the sign and binomial coefficient part of the weight
-        rest = utils::cast<T>(1.0, precision);
-        rest *= utils::minus_one_raised_to_power_n<T, K>(j);
-        rest *= utils::cast<T>(utils::binomial_coefficient<K>(order, j), precision);
+        rest = utils::cast<T>::meta(1.0, precision);
+        rest *= utils::math<T>::template minus_one_raised_to_power_n<K>(j);
+        rest *= utils::cast<T>::meta(utils::math<K>::binomial_coefficient(order, j), precision);
 
         // Compute Pochhammer symbols: (β+n+j)_{k-1} and (β+n+k)_{k-1}
         up_pochamer = down_pochamer = utils::cast<float_type>(1.0);
@@ -252,7 +253,7 @@ inline T levin_sidi_s_algorithm<T, K>::calc_result(const K n, const K order, con
         rest *= remainder->operator()(
             n + j,  // Multiply by remainder term 1/R_{n+j}
             n + j, data.an,
-            utils::cast<T>(remainder_type_in_use == shanks::remainders::remainder_type::u_type ? beta_in_use : 1.0,
+            utils::cast<T>::meta(remainder_type_in_use == shanks::remainders::remainder_type::u_type ? beta_in_use : 1.0,
                            precision));
 
         // Accumulate numerator and denominator
@@ -268,13 +269,14 @@ inline T levin_sidi_s_algorithm<T, K>::calc_result(const K n, const K order, con
 
 template <AcceptedLike T, UnsignedIntLike K>
 inline T levin_sidi_s_algorithm<T, K>::calc_result_rec(const K n, const K order, const series_result<T>& data) const {
-    const size_t precision = std::max(utils::get_precision(data.Sn[0]), utils::get_precision(data.an[0]));
+    const size_t precision =
+        std::max(utils::helpers<T>::get_precision(data.Sn[0]), utils::helpers<T>::get_precision(data.an[0]));
 
     // For theory, see: Sidi (2003, arXiv:math/0306302), Eqs. (8.3)-(8.5)
     // Recursive implementation using the E-algorithm scheme
     // Vectors for the recursive transformation scheme
-    std::vector<T> Num(order + static_cast<K>(1), utils::cast<T>(0.0, precision));
-    std::vector<T> Denom(order + static_cast<K>(1), utils::cast<T>(0.0, precision));
+    std::vector<T> Num(order + static_cast<K>(1), utils::cast<T>::meta(0.0, precision));
+    std::vector<T> Denom(order + static_cast<K>(1), utils::cast<T>::meta(0.0, precision));
 
     float_type scale1, scale2;
     scale1 = scale2 = utils::cast<float_type>(0.0, precision);
@@ -286,7 +288,7 @@ inline T levin_sidi_s_algorithm<T, K>::calc_result_rec(const K n, const K order,
     for (K i = static_cast<K>(0); i <= order; ++i) {
         Denom[i] += remainder->operator()(
             n + i, n + i, data.an,
-            utils::cast<T>(remainder_type_in_use == shanks::remainders::remainder_type::u_type ? beta_in_use : 1.0,
+            utils::cast<T>::meta(remainder_type_in_use == shanks::remainders::remainder_type::u_type ? beta_in_use : 1.0,
                            precision));
 
         Num[i] += data.Sn.at(n + i) * Denom[i];
@@ -309,10 +311,10 @@ inline T levin_sidi_s_algorithm<T, K>::calc_result_rec(const K n, const K order,
             scale2 *= (scale2 + utils::cast<float_type>(1.0, precision));
 
             // Apply recurrence: E_k^{(n)} = E_{k-1}^{(n)} - g_{k-1,k}^{(n)} * ΔE_{k-1}^{(n)} / Δg_{k-1,k}^{(n)}
-            Denom[j] = utils::fma(utils::cast<T>(-scale1, precision), Denom[j] / utils::cast<T>(scale2, precision),
-                                  Denom[j + static_cast<K>(1)]);
-            Num[j] = utils::fma(utils::cast<T>(-scale1, precision), Num[j] / utils::cast<T>(scale2, precision),
-                                Num[j + static_cast<K>(1)]);
+            Denom[j] = utils::math<T>::fma(utils::cast<T>::meta(-scale1, precision),
+                                           Denom[j] / utils::cast<T>::meta(scale2, precision), Denom[j + static_cast<K>(1)]);
+            Num[j] = utils::math<T>::fma(utils::cast<T>::meta(-scale1, precision), Num[j] / utils::cast<T>::meta(scale2, precision),
+                                         Num[j + static_cast<K>(1)]);
         }
 
     // Final result ratio
@@ -331,9 +333,10 @@ T levin_sidi_s_algorithm<T, K>::operator()(const K n, const K order, const serie
         static_cast<K>(2) * static_cast<K>(remainder_type_in_use == shanks::remainders::remainder_type::v_wave_type);
 
     if (data.Sn.size() < required_size || data.an.size() < required_size) {
-        throw std::out_of_range("The Sn or an smaller then required for S_{" + utils::to_string(order) + "}^{" +
-                                utils::to_string(n) + "}\n" + "the size of Sn and an must be at least " +
-                                utils::to_string(required_size));
+        throw std::out_of_range("The Sn or an smaller then required for S_{" + utils::helpers<T>::to_string(order) +
+                                "}^{" + utils::helpers<T>::to_string(n) + "}\n" +
+                                "the size of Sn and an must be at least " +
+                                utils::helpers<T>::to_string(required_size));
     }
 
     // Trivial case: order 0 returns the original partial sum
@@ -342,7 +345,7 @@ T levin_sidi_s_algorithm<T, K>::operator()(const K n, const K order, const serie
     // Delegate to either the direct summation or the recursive implementation
     const T result = (use_recurrent_formula ? calc_result_rec(n, order, data) : calc_result(n, order, data));
 
-    if (!utils::isfinite(result)) throw std::overflow_error("division by zero");
+    if (!utils::helpers<T>::isfinite(result)) throw std::overflow_error("division by zero");
 
     return result;
 }

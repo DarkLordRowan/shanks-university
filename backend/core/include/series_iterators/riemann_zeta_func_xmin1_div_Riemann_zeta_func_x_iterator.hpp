@@ -40,7 +40,7 @@ public:
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The value of the ratio zeta(s-1) / zeta(s).
      */
-    T get_sum() const override { return utils::zeta(this->x - utils::cast<T>(1.0)) / utils::zeta(this->x); }
+    T get_sum() const override { return utils::zeta(this->x - utils::cast<T>::meta(1.0)) / utils::zeta(this->x); }
 
     /**
      * @brief Validates the current evaluation point x (s).
@@ -51,9 +51,9 @@ public:
         using float_type = real_of<T>::value;
 
         if constexpr (isComplexLike<T>::value) {
-            return !utils::isfinite(this->x) || this->x.real() <= utils::cast<float_type>(2);
+            return !utils::helpers<T>::isfinite(this->x) || this->x.real() <= utils::cast<float_type>(2);
         } else {
-            return !utils::isfinite(this->x) || this->x <= utils::cast<T>(2);
+            return !utils::helpers<T>::isfinite(this->x) || this->x <= utils::cast<T>::meta(2);
         }
     }
 
@@ -64,7 +64,8 @@ public:
      */
     T next(K n, T& state) const override {
         // Dirichlet series term involving Euler's totient function
-        state = utils::phi<T, K>(n + 1) / utils::pow(utils::cast<T>(n + 1, utils::get_precision(state)), this->x);
+        state = utils::phi<T, K>(n + 1) /
+                utils::pow(utils::cast<T>::meta(n + 1, utils::helpers<T>::get_precision(state)), this->x);
         return state;
     }
 };

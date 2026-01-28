@@ -44,12 +44,12 @@ public:
         using float_type = real_of<T>::value;
 
         if constexpr (isComplexLike<T>::value) {
-            if (this->x.real() <= utils::cast<float_type>(0)) return utils::cast<T>(-1) * this->x;
+            if (this->x.real() <= utils::cast<float_type>(0)) return utils::cast<T>::meta(-1) * this->x;
         } else {
-            if (this->x <= utils::cast<T>(0)) return utils::cast<T>(-1) * this->x;
+            if (this->x <= utils::cast<T>::meta(0)) return utils::cast<T>::meta(-1) * this->x;
         }
 
-        return utils::cast<T>(0);
+        return utils::cast<T>::meta(0);
     }
 
     /**
@@ -59,7 +59,8 @@ public:
      */
     bool is_invalid() const override {
         using float_type = real_of<T>::value;
-        return !utils::isfinite(this->x) || utils::abs(this->x) >= utils::cast<float_type>(std::numbers::pi);
+        return !utils::helpers<T>::isfinite(this->x) ||
+               utils::math<T>::abs(this->x) >= utils::cast<float_type>(std::numbers::pi);
     }
 
     /**
@@ -70,15 +71,15 @@ public:
     T next(K n, T& state) const override {
         // First term is the DC component (constant term)
         if (n == 0)
-            state = utils::cast<T>(std::numbers::pi * 0.25, utils::get_precision(state));
+            state = utils::cast<T>::meta(std::numbers::pi * 0.25, utils::helpers<T>::get_precision(state));
         else {
-            const size_t precision = utils::get_precision(state);
-            const T piDiv3 = utils::cast<T>(std::numbers::pi, precision) / utils::cast<T>(3, precision);
-            const T cos_coef = (utils::minus_one_raised_to_power_n<T, K>(n) - utils::cast<T>(1, precision)) /
-                               (utils::cast<T>(std::numbers::pi, precision) * utils::cast<T>(n * n, precision));
-            const T sin_coef = utils::minus_one_raised_to_power_n<T, K>(n) / utils::cast<T>(n, precision);
-            state =
-                cos_coef * utils::cos(utils::cast<T>(n) * this->x) + sin_coef * utils::sin(utils::cast<T>(n) * this->x);
+            const size_t precision = utils::helpers<T>::get_precision(state);
+            const T piDiv3 = utils::cast<T>::meta(std::numbers::pi, precision) / utils::cast<T>::meta(3, precision);
+            const T cos_coef = (utils::minus_one_raised_to_power_n<T, K>(n) - utils::cast<T>::meta(1, precision)) /
+                               (utils::cast<T>::meta(std::numbers::pi, precision) * utils::cast<T>::meta(n * n, precision));
+            const T sin_coef = utils::minus_one_raised_to_power_n<T, K>(n) / utils::cast<T>::meta(n, precision);
+            state = cos_coef * utils::math<T>::cos(utils::cast<T>::meta(n) * this->x) +
+                    sin_coef * utils::math<T>::sin(utils::cast<T>::meta(n) * this->x);
         }
         return state;
     }

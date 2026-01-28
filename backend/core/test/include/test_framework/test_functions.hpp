@@ -31,11 +31,11 @@ void cmp_sum_and_transform(const K n, const K order, shanks::series::series_base
             // Calculating transformed value
             const T res = test->operator()(i, order, result);
             // Displaying comparison details
-            std::cout << "Sum of algo : " << utils::to_string(series->get_sum()) << '\n';
-            std::cout << "S_" << i << " : " << utils::to_string(result.Sn[i]) << "\n";
-            std::cout << "T_" << i << " of order " << order << " : " << utils::to_string(res) << std::endl;
+            std::cout << "Sum of algo : " << utils::helpers<T>::to_string(series->get_sum()) << '\n';
+            std::cout << "S_" << i << " : " << utils::helpers<T>::to_string(result.Sn[i]) << "\n";
+            std::cout << "T_" << i << " of order " << order << " : " << utils::helpers<T>::to_string(res) << std::endl;
             std::cout << "T_" << i << " of order " << order << " - S_" << i << " : "
-                      << utils::to_string(res - result.Sn[i]) << '\n';
+                      << utils::helpers<T>::to_string(res - result.Sn[i]) << '\n';
 
         } catch (std::domain_error& e) {
             std::cout << e.what() << '\n';
@@ -65,13 +65,14 @@ void cmp_a_n_and_transform(const K n, const K order, shanks::series::series_base
     for (K i = 1; i <= n; ++i) {
         try {
             // Displaying original terms
-            std::cout << "a_" << i << " : " << utils::to_string(result.an[i]) << '\n';
+            std::cout << "a_" << i << " : " << utils::helpers<T>::to_string(result.an[i]) << '\n';
             // Calculating and displaying transformed terms
             std::cout << "t_" << i << " : "
-                      << utils::to_string(test->operator()(i, order, result) - test->operator()(i - 1, order, result))
+                      << utils::helpers<T>::to_string(test->operator()(i, order, result) -
+                                                      test->operator()(i - 1, order, result))
                       << '\n';
             std::cout << "t_" << i << " of order " << order << " - a_" << i << " : "
-                      << utils::to_string(
+                      << utils::helpers<T>::to_string(
                              (test->operator()(i, order, result) - test->operator()(i - 1, order, result)) -
                              result.an[i])
                       << '\n';
@@ -125,7 +126,7 @@ inline series_result<T> apply_noise_interactive(series_result<T>& source, const 
         seed = std::chrono::system_clock::now().time_since_epoch().count() + std::rand();
     }
 
-    std::cout << "Seed : " << utils::to_string(seed) << "\n";
+    std::cout << "Seed : " << utils::helpers<T>::to_string(seed) << "\n";
 
     // Getting noise parameters based on type
     switch (noise_type) {
@@ -170,7 +171,7 @@ void transformation_remainders(const K n, const K order, shanks::series::series_
         try {
             // Calculating and displaying remainder: Sum - Transformed_Sum
             std::cout << "S - T_" << i << " : "
-                      << utils::to_string(series->get_sum() - test->operator()(i, order, result)) << '\n';
+                      << utils::helpers<T>::to_string(series->get_sum() - test->operator()(i, order, result)) << '\n';
         } catch (std::domain_error& e) {
             std::cout << e.what() << '\n';
         } catch (std::overflow_error& e) {
@@ -214,8 +215,8 @@ void cmp_transformations(const K n, const K order, shanks::series::series_base<T
             diff_2 = series->get_sum() - test_2->operator()(i, order, result);
 
             // Displaying remainders
-            std::cout << "The transformation #1: S - T_" << i << " : " << utils::to_string(diff_1) << '\n';
-            std::cout << "The transformation #2: S - T_" << i << " : " << utils::to_string(diff_2) << '\n';
+            std::cout << "The transformation #1: S - T_" << i << " : " << utils::helpers<T>::to_string(diff_1) << '\n';
+            std::cout << "The transformation #2: S - T_" << i << " : " << utils::helpers<T>::to_string(diff_2) << '\n';
 
             // Comparing absolute errors
             if (abs(diff_1) < abs(diff_2))
@@ -285,7 +286,7 @@ void test_all_transforms(const K n, const K order, shanks::series::series_base<T
             try {
                 std::cout << "transformation : " << algos[j]->get_name() << "\n";
                 std::cout << "n = " << i << " order = " << order << " : "
-                          << utils::to_string(algos[j]->operator()(i, order, result)) << "\n\n";
+                          << utils::helpers<T>::to_string(algos[j]->operator()(i, order, result)) << "\n\n";
             } catch (std::overflow_error& e) {
                 std::cout << e.what() << "\n";
             } catch (std::domain_error& e) {

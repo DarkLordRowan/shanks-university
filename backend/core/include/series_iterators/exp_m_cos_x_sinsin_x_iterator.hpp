@@ -40,7 +40,8 @@ public:
      * @return T The value of the function at the current point x.
      */
     T get_sum() const override {
-        return utils::exp(utils::cast<T>(-1) * utils::cos(this->x)) * utils::sin(utils::sin(this->x));
+        return utils::exp(utils::cast<T>::meta(-1) * utils::math<T>::cos(this->x)) *
+               utils::math<T>::sin(utils::math<T>::sin(this->x));
     }
 
     /**
@@ -48,7 +49,7 @@ public:
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return true if x is non-finite, false otherwise.
      */
-    bool is_invalid() const override { return !utils::isfinite(this->x); }
+    bool is_invalid() const override { return !utils::helpers<T>::isfinite(this->x); }
 
     /**
      * @brief Computes the next term in the series expansion.
@@ -57,8 +58,8 @@ public:
      */
     T next(K n, T& state) const override {
         // General formula for the n-th term of the specific expansion
-        state = utils::minus_one_raised_to_power_n<T, K>(n) * utils::sin(utils::cast<T>(n + 1) * this->x) /
-                utils::cast<T>(utils::fact<K>(n + 1));
+        state = utils::minus_one_raised_to_power_n<T, K>(n) * utils::math<T>::sin(utils::cast<T>::meta(n + 1) * this->x) /
+                utils::cast<T>::meta(utils::fact<K>(n + 1));
         return state;
     }
 };

@@ -41,10 +41,10 @@ public:
      * @return T The value of pi*x*coth(pi*x) - 1.
      */
     T get_sum() const override {
-        const T pi = utils::cast<T>(std::numbers::pi);
+        const T pi = utils::cast<T>::meta(std::numbers::pi);
         return pi * this->x * (utils::exp(pi * this->x) + utils::exp(-pi * this->x)) /
                    (utils::exp(pi * this->x) - utils::exp(-pi * this->x)) -
-               utils::cast<T>(1);
+               utils::cast<T>::meta(1);
     }
 
     /**
@@ -52,7 +52,7 @@ public:
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return true if x is non-finite, false otherwise.
      */
-    bool is_invalid() const override { return !utils::isfinite(this->x); }
+    bool is_invalid() const override { return !utils::helpers<T>::isfinite(this->x); }
 
     /**
      * @brief Computes the next term in the partial fraction expansion.
@@ -61,7 +61,7 @@ public:
      */
     T next(K n, T& state) const override {
         // Formula for the terms of the coth partial fraction expansion
-        state = utils::cast<T>(2) * this->x * this->x / (this->x * this->x + utils::cast<T>((n + 1) * (n + 1)));
+        state = utils::cast<T>::meta(2) * this->x * this->x / (this->x * this->x + utils::cast<T>::meta((n + 1) * (n + 1)));
         return state;
     }
 };

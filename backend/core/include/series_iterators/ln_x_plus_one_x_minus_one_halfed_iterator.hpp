@@ -40,7 +40,7 @@ public:
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The value of ln(cos(x)).
      */
-    T get_sum() const override { return utils::log(utils::cos(this->x)); }
+    T get_sum() const override { return utils::log(utils::math<T>::cos(this->x)); }
 
     /**
      * @brief Validates the current evaluation point x.
@@ -49,7 +49,8 @@ public:
      */
     bool is_invalid() const override {
         using float_type = real_of<T>::value;
-        return !utils::isfinite(this->x) || utils::abs(this->x) > utils::cast<float_type>(std::numbers::pi * 0.5);
+        return !utils::helpers<T>::isfinite(this->x) ||
+               utils::math<T>::abs(this->x) > utils::cast<float_type>(std::numbers::pi * 0.5);
     }
 
     /**
@@ -60,9 +61,10 @@ public:
     T next(K n, T& state) const override {
         // Expansion terms based on sin(x)^2 for ln(cos(x))
         if (n == 0)
-            state = utils::sin(this->x) * utils::sin(this->x) * utils::cast<T>(-0.5);
+            state = utils::math<T>::sin(this->x) * utils::math<T>::sin(this->x) * utils::cast<T>::meta(-0.5);
         else
-            state *= utils::sin(this->x) * utils::sin(this->x) * utils::cast<T>(n) / utils::cast<T>(n + 1);
+            state *=
+                utils::math<T>::sin(this->x) * utils::math<T>::sin(this->x) * utils::cast<T>::meta(n) / utils::cast<T>::meta(n + 1);
         return state;
     }
 };

@@ -80,41 +80,41 @@ T wynn_epsilon_3_algorithm<T, K>::operator()(const K n, const K order, const ser
     // The epsilon algorithm typically requires 2*order additional terms beyond the starting point 'n'
     // to compute the diagonal approximation of that order.
     const K required_size = n + static_cast<K>(2) * order + static_cast<K>(1);
-    const size_t precision = utils::get_precision(data.Sn[0]);
+    const size_t precision = utils::helpers<T>::get_precision(data.Sn[0]);
 
     if (data.Sn.size() < required_size) {
-        throw std::out_of_range("The Sn smaller then required for wynn_epsilon_3_{" + utils::to_string(order) + "}^{" +
-                                utils::to_string(n) + "}\n" + "the size of Sn must be at least " +
-                                utils::to_string(required_size));
+        throw std::out_of_range("The Sn smaller then required for wynn_epsilon_3_{" +
+                                utils::helpers<T>::to_string(order) + "}^{" + utils::helpers<T>::to_string(n) + "}\n" +
+                                "the size of Sn must be at least " + utils::helpers<T>::to_string(required_size));
     }
 
     if (n == static_cast<K>(0)) throw std::domain_error("n = 0 in the input");
     if (order == static_cast<K>(0)) return data.Sn.at(n);
 
-    T result = utils::cast<T>(0.0, precision);                       ///< Current best accelerated estimate.
+    T result = utils::cast<T>::meta(0.0, precision);                       ///< Current best accelerated estimate.
     float_type abs_error = utils::cast<float_type>(0.0, precision);  ///< Absolute error estimate for current data.
-    T resla = utils::cast<T>(0.0, precision);                        ///< Previous result for error comparison.
+    T resla = utils::cast<T>::meta(0.0, precision);                        ///< Previous result for error comparison.
     K newelm, K1, ib, ie, in;                                        // Loop indices and counters.
-    T RES = utils::cast<T>(0.0, precision);
+    T RES = utils::cast<T>::meta(0.0, precision);
     T E0, E1, E2, E3;
-    E0 = E1 = E2 = E3 = utils::cast<T>(0, precision);
+    E0 = E1 = E2 = E3 = utils::cast<T>::meta(0, precision);
     T DELTA1, DELTA2, DELTA3;
-    DELTA1 = DELTA2 = DELTA3 = utils::cast<T>(0, precision);
+    DELTA1 = DELTA2 = DELTA3 = utils::cast<T>::meta(0, precision);
     float_type ERROR, ERR1, ERR2, ERR3;
     ERROR = ERR1 = ERR2 = ERR3 = utils::cast<float_type>(0, precision);
     float_type TOL1, TOL2, TOL3;
     TOL1 = TOL2 = TOL3 = utils::cast<float_type>(0, precision);
-    T SS = utils::cast<T>(0.0, precision);
+    T SS = utils::cast<T>::meta(0.0, precision);
 
     // Epsilon table. Size should be enough to hold the diagonal.
     // Fortran used 52 for LIMEXP=50. We need approx 2*order + safety.
     // The maximum index accessed is roughly 2*order + 2.
-    std::vector<T> epstab(static_cast<size_t>(2) * order + 5, utils::cast<T>(0.0, precision));
+    std::vector<T> epstab(static_cast<size_t>(2) * order + 5, utils::cast<T>::meta(0.0, precision));
 
     // Machine constants for numerical stability
-    const float_type EMACH = utils::epsilon(abs_error);                 ///< Machine epsilon
-    const float_type EPRN = utils::cast<float_type>(50) * EMACH;        ///< Relative error tolerance
-    const float_type OFRN = utils::numeric_max<float_type>(precision);  ///< Overflow threshold
+    const float_type EMACH = utils::helpers<float_type>::epsilon(abs_error);     ///< Machine epsilon
+    const float_type EPRN = utils::cast<float_type>(50) * EMACH;                 ///< Relative error tolerance
+    const float_type OFRN = utils::helpers<float_type>::numeric_max(precision);  ///< Overflow threshold
 
     // Iterate through the sequence of partial sums.
     // Conceptually, we are feeding S_n, S_{n+1}, ..., S_{n + 2*order} into the algorithm.
@@ -179,12 +179,12 @@ T wynn_epsilon_3_algorithm<T, K>::operator()(const K n, const K order, const ser
             E2 = RES;
 
             DELTA2 = E2 - E1;
-            ERR2 = utils::abs(DELTA2);
-            TOL2 = std::max(utils::abs(E2), utils::abs(E1)) * EMACH;
+            ERR2 = utils::math<T>::abs(DELTA2);
+            TOL2 = std::max(utils::math<T>::abs(E2), utils::math<T>::abs(E1)) * EMACH;
 
             DELTA3 = E1 - E0;
-            ERR3 = utils::abs(DELTA3);
-            TOL3 = std::max(utils::abs(E1), utils::abs(E0)) * EMACH;
+            ERR3 = utils::math<T>::abs(DELTA3);
+            TOL3 = std::max(utils::math<T>::abs(E1), utils::math<T>::abs(E0)) * EMACH;
 
             bool jump_to_10 = false;
             if (ERR2 > TOL2 || ERR3 > TOL3) {
@@ -204,8 +204,8 @@ T wynn_epsilon_3_algorithm<T, K>::operator()(const K n, const K order, const ser
                 epstab[K1] = E1;
 
                 DELTA1 = E1 - E3;
-                ERR1 = utils::abs(DELTA1);
-                TOL1 = std::max(utils::abs(E1), utils::abs(E3)) * EMACH;
+                ERR1 = utils::math<T>::abs(DELTA1);
+                TOL1 = std::max(utils::math<T>::abs(E1), utils::math<T>::abs(E3)) * EMACH;
 
                 // IF (...) GO TO 20
                 if (ERR1 <= TOL1 || ERR2 <= TOL2 || ERR3 <= TOL3) {
@@ -218,11 +218,11 @@ T wynn_epsilon_3_algorithm<T, K>::operator()(const K n, const K order, const ser
                     break;
                 }
 
-                SS = utils::cast<T>(1, precision) / DELTA1 + utils::cast<T>(1, precision) / DELTA2 -
-                     utils::cast<T>(1, precision) / DELTA3;
+                SS = utils::cast<T>::meta(1, precision) / DELTA1 + utils::cast<T>::meta(1, precision) / DELTA2 -
+                     utils::cast<T>::meta(1, precision) / DELTA3;
 
                 // Check for irregular behavior
-                if (utils::abs(SS * E1) <= epsilon_threshold) {  // Logic inverted from GT check
+                if (utils::math<T>::abs(SS * E1) <= epsilon_threshold) {  // Logic inverted from GT check
                     // Label 20 again
                     num_k = static_cast<K>(2) * I - static_cast<K>(1);
                     store_best = false;
@@ -230,11 +230,11 @@ T wynn_epsilon_3_algorithm<T, K>::operator()(const K n, const K order, const ser
                 }
 
                 // Label 30
-                RES = E1 + utils::cast<T>(1, precision) / SS;
+                RES = E1 + utils::cast<T>::meta(1, precision) / SS;
                 epstab[K1] = RES;
                 K1 -= static_cast<K>(2);
 
-                ERROR = ERR2 + utils::abs(RES - E2) + ERR3;
+                ERROR = ERR2 + utils::math<T>::abs(RES - E2) + ERR3;
                 if (ERROR <= current_step_error) {
                     current_step_error = ERROR;
                     current_step_result = RES;
@@ -292,13 +292,13 @@ T wynn_epsilon_3_algorithm<T, K>::operator()(const K n, const K order, const ser
             result = current_step_result;
 
             // Error update for next step comparison?
-            abs_error = std::max(utils::abs(result - resla), EPRN * utils::abs(result));
+            abs_error = std::max(utils::math<T>::abs(result - resla), EPRN * utils::math<T>::abs(result));
             resla = result;
         }
     }
 
     // Final validity check for the accelerated estimate
-    if (!utils::isfinite(result)) throw std::overflow_error("division by zero");
+    if (!utils::helpers<T>::isfinite(result)) throw std::overflow_error("division by zero");
 
     return result;
 }

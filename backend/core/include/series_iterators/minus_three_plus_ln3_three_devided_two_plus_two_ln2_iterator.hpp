@@ -40,8 +40,8 @@ public:
      * @return T The analytic sum.
      */
     T get_sum() const override {
-        return this->x * (utils::log(utils::cast<T>(4)) + utils::cast<T>(1.5) * utils::log(utils::cast<T>(3)) -
-                          utils::cast<T>(3));
+        return this->x * (utils::log(utils::cast<T>::meta(4)) + utils::cast<T>::meta(1.5) * utils::log(utils::cast<T>::meta(3)) -
+                          utils::cast<T>::meta(3));
     }
 
     /**
@@ -49,7 +49,7 @@ public:
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return true if x is non-finite, false otherwise.
      */
-    bool is_invalid() const override { return !utils::isfinite(this->x); }
+    bool is_invalid() const override { return !utils::helpers<T>::isfinite(this->x); }
 
     /**
      * @brief Computes the next term in the series expansion.
@@ -58,7 +58,7 @@ public:
      */
     T next(K n, T& state) const override {
         // Specific term formula for the expansion: x / ((n+1) * (36*(n+1)^2 - 1))
-        state = this->x / utils::cast<T>((n + 1) * (36 * (n + 1) * (n + 1) - 1));
+        state = this->x / utils::cast<T>::meta((n + 1) * (36 * (n + 1) * (n + 1) - 1));
         return state;
     }
 };

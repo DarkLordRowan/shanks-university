@@ -39,14 +39,14 @@ public:
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The value of 5.71617784132 * x.
      */
-    T get_sum() const override { return utils::cast<T>(5.71617784132) * this->x; }
+    T get_sum() const override { return utils::cast<T>::meta(5.71617784132) * this->x; }
 
     /**
      * @brief Validates the current evaluation point x.
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return true if x is non-finite, false otherwise.
      */
-    bool is_invalid() const override { return !utils::isfinite(this->x); }
+    bool is_invalid() const override { return !utils::helpers<T>::isfinite(this->x); }
 
     /**
      * @brief Computes the next term in the specific expansion.
@@ -55,10 +55,10 @@ public:
      */
     T next(K n, T& state) const override {
         // Formula for the n-th term involving iterated logarithms and powers
-        const T n1 = utils::cast<T>(n + 1);
+        const T n1 = utils::cast<T>::meta(n + 1);
         const T n1_2 = n1 * n1;
 
-        state = this->x / utils::pow(utils::log(utils::cast<T>(n + 2)), utils::log(utils::cast<T>(n + 2)));
+        state = this->x / utils::pow(utils::log(utils::cast<T>::meta(n + 2)), utils::log(utils::cast<T>::meta(n + 2)));
         return state;
     }
 };

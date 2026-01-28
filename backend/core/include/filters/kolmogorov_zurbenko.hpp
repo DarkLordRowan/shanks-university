@@ -30,7 +30,7 @@ std::vector<Scalar> kolmogorov_zurbenko_filter(const std::vector<Scalar>& data, 
 ) {
     const size_t m = window_length, k = degree;
     const size_t size = (m - 1) * k + 1;
-    const size_t precision = utils::get_precision(data.at(0));
+    const size_t precision = utils::helpers<Scalar>::get_precision(data.at(0));
     std::vector<int> coeffs = std::vector<int>(size, 0);
     coeffs[0] = coeffs[size - 1] = 1;
 

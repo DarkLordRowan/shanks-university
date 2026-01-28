@@ -50,7 +50,8 @@ public:
      */
     bool is_invalid() const override {
         using float_type = real_of<T>::value;
-        return !utils::isfinite(this->x) || utils::abs(this->x) >= utils::cast<float_type>(std::numbers::pi);
+        return !utils::helpers<T>::isfinite(this->x) ||
+               utils::math<T>::abs(this->x) >= utils::cast<float_type>(std::numbers::pi);
     }
 
     /**
@@ -60,8 +61,8 @@ public:
      */
     T next(K n, T& state) const override {
         // Standard Fourier sine expansion for the sawtooth wave (identity on (-pi, pi))
-        state = utils::cast<T>(2) * utils::minus_one_raised_to_power_n<T, K>(n) / utils::cast<T>(n + 1) *
-                utils::sin(utils::cast<T>(n + 1) * this->x);
+        state = utils::cast<T>::meta(2) * utils::math<T>::template minus_one_raised_to_power_n<K>(n) / utils::cast<T>::meta(n + 1) *
+                utils::math<T>::sin(utils::cast<T>::meta(n + 1) * this->x);
         return state;
     }
 };

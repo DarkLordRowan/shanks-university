@@ -39,7 +39,7 @@ public:
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The value of x / sqrt(1 - x^2).
      */
-    T get_sum() const override { return this->x / utils::sqrt(utils::cast<T>(1.0) - this->x * this->x); }
+    T get_sum() const override { return this->x / utils::math<T>::sqrt(utils::cast<T>::meta(1.0) - this->x * this->x); }
 
     /**
      * @brief Validates the current evaluation point x.
@@ -48,7 +48,7 @@ public:
      */
     bool is_invalid() const override {
         using float_type = real_of<T>::value;
-        return !utils::isfinite(this->x) || utils::abs(this->x) >= utils::cast<float_type>(1.0);
+        return !utils::helpers<T>::isfinite(this->x) || utils::math<T>::abs(this->x) >= utils::cast<float_type>(1.0);
     }
 
     /**
@@ -60,10 +60,10 @@ public:
         if (n == 0)
             state = this->x;
         else
-            state *=
-                this->x * this->x *
-                utils::cast<T>(utils::fma(static_cast<size_t>(2), static_cast<size_t>(n - 1), static_cast<size_t>(1))) /
-                utils::cast<T>(2 * n);
+            state *= this->x * this->x *
+                     utils::cast<T>::meta(utils::math<size_t>::fma(static_cast<size_t>(2), static_cast<size_t>(n - 1),
+                                                             static_cast<size_t>(1))) /
+                     utils::cast<T>::meta(2 * n);
         return state;
     }
 };

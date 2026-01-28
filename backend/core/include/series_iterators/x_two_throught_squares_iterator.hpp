@@ -39,14 +39,14 @@ public:
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The value of x / 2.
      */
-    T get_sum() const override { return this->x * utils::cast<T>(0.5); }
+    T get_sum() const override { return this->x * utils::cast<T>::meta(0.5); }
 
     /**
      * @brief Validates the current evaluation point x.
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return true if x is non-finite, false otherwise.
      */
-    bool is_invalid() const override { return !utils::isfinite(this->x) || this->x == utils::cast<T>(0); }
+    bool is_invalid() const override { return !utils::helpers<T>::isfinite(this->x) || this->x == utils::cast<T>::meta(0); }
 
     /**
      * @brief Computes the next term in the series expansion.
@@ -55,8 +55,8 @@ public:
      */
     T next(K n, T& state) const override {
         // Specific term formula for this variant of the x/2 expansion
-        state = utils::cast<T>(2 * (n + 1) * (n + 1) - 1) * this->x /
-                utils::cast<T>(4 * utils::pow(static_cast<size_t>(n + 1), size_t{4}) + 1);
+        state = utils::cast<T>::meta(2 * (n + 1) * (n + 1) - 1) * this->x /
+                utils::cast<T>::meta(4 * utils::math<size_t>::pow(static_cast<size_t>(n + 1), size_t{4}) + 1);
         return state;
     }
 };

@@ -35,7 +35,7 @@ std::vector<Scalar> savitzky_golay_filter(const std::vector<Scalar>& data, size_
     // Validating filter parameters
     if (window_length > data.size()) throw std::invalid_argument("window's length is bigger than data's size");
     if (polyorder >= window_length) throw std::invalid_argument("polyorder is bigger or equal than window's length");
-    const size_t precision = utils::get_precision(data.at(0));
+    const size_t precision = utils::helpers<Scalar>::get_precision(data.at(0));
 
     // Setting up the least squares problem using Eigen
     Scalar N = utils::cast<Scalar>(static_cast<int>(window_length) / 2, precision);

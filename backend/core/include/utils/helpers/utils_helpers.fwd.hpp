@@ -1,5 +1,5 @@
-#ifndef UTILS_MATH_FWD_HPP
-#define UTILS_MATH_FWD_HPP
+#ifndef UTILS_HELPERS_FWD_HPP
+#define UTILS_HELPERS_FWD_HPP
 #pragma once
 
 template <typename T>
@@ -73,7 +73,7 @@ T utils::helpers<T>::numeric_max(std::size_t precision) {
     static_assert(std::false_type{}, "utils::helpers::numeric_max not implemented for type");
 }
 
-// #include "interval/utils_helpers_interval.hpp"
+#include "interval/utils_helpers_interval.hpp"
 #include "mpreal/utils_helpers_mpreal.hpp"
 #include "std_complex/utils_helpers_std_complex.hpp"
 #include "std_floating_point/utils_helpers_std_floating_point.hpp"

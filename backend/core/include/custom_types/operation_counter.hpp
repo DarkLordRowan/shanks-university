@@ -87,7 +87,7 @@ public:
     template <typename U>
         requires std::is_constructible_v<T, U> && (!std::is_same_v<std::remove_cvref_t<U>, OperationCounting>) &&
                  (!std::is_same_v<std::remove_cvref_t<U>, T>)
-    OperationCounting(const U& v) : value(static_cast<T>(v)) {}
+    OperationCounting(const U& v) : value(static_cast<T>::meta(v)) {}
 
     // Generic forwarding constructor for multi-argument initialization (e.g.
     // mpreal(d, prec)) Constrained to require multiple arguments to avoid
@@ -159,7 +159,7 @@ public:
 
     // Fused Multiply-Add support
     static OperationCounting fma(const OperationCounting& a, const OperationCounting& b, const OperationCounting& c) {
-        return OperationCounting(utils::fma(a.value, b.value, c.value));
+        return OperationCounting(utils::math<T>::fma(a.value, b.value, c.value));
     }
 
     // Comparison (No op count)
@@ -359,12 +359,12 @@ bool isfinite(const OperationCounting<T>& v) {
     if constexpr (std::is_floating_point<T>::value)
         return std::isfinite(v.value);
     else
-        return ::utils::isfinite(v.value);
+        return ::utils::helpers<T>::isfinite(v.value);
 }
 
 template <typename T>
 std::string to_string(const OperationCounting<T>& v) {
-    return ::utils::to_string(v.value);
+    return ::utils::helpers<T>::to_string(v.value);
 }
 
 }  // namespace profiling
@@ -429,23 +429,23 @@ bool isfinite(const T& v) {
     if constexpr (std::is_floating_point<T>::value)
         return std::isfinite(v);
     else
-        return ::utils::isfinite(v);
+        return ::utils::helpers<T>::isfinite(v);
 }
 
 template <typename T>
 std::string to_string(const T& v) {
-    return ::utils::to_string(v);
+    return ::utils::helpers<T>::to_string(v);
 }
 
 // Special functions proxies
 template <typename T>
 T abs(const T& v) {
-    return ::utils::abs(v);
+    return ::utils::math<T>::abs(v);
 }
 
 template <typename T>
 T sqrt(const T& v) {
-    return ::utils::sqrt(v);
+    return ::utils::math<T>::sqrt(v);
 }
 
 template <typename T>
@@ -455,7 +455,7 @@ T pow(const T& b, const T& e) {
 
 template <typename T>
 T atan2(const T& y, const T& x) {
-    return ::utils::atan2(y, x);
+    return ::utils::math<T>::atan2(y, x);
 }
 
 template <typename T>
@@ -470,12 +470,12 @@ T log(const T& v) {
 
 template <typename T>
 T sin(const T& v) {
-    return ::utils::sin(v);
+    return ::utils::math<T>::sin(v);
 }
 
 template <typename T>
 T cos(const T& v) {
-    return ::utils::cos(v);
+    return ::utils::math<T>::cos(v);
 }
 
 template <typename T>
@@ -485,27 +485,27 @@ T tan(const T& v) {
 
 template <typename T>
 T asin(const T& v) {
-    return ::utils::asin(v);
+    return ::utils::math<T>::asin(v);
 }
 
 template <typename T>
 T acos(const T& v) {
-    return ::utils::acos(v);
+    return ::utils::math<T>::acos(v);
 }
 
 template <typename T>
 T atan(const T& v) {
-    return ::utils::atan(v);
+    return ::utils::math<T>::atan(v);
 }
 
 template <typename T>
 T sinh(const T& v) {
-    return ::utils::sinh(v);
+    return ::utils::math<T>::sinh(v);
 }
 
 template <typename T>
 T cosh(const T& v) {
-    return ::utils::cosh(v);
+    return ::utils::math<T>::cosh(v);
 }
 
 template <typename T>
@@ -515,17 +515,17 @@ T tanh(const T& v) {
 
 template <typename T>
 T asinh(const T& v) {
-    return ::utils::asinh(v);
+    return ::utils::math<T>::asinh(v);
 }
 
 template <typename T>
 T acosh(const T& v) {
-    return ::utils::acosh(v);
+    return ::utils::math<T>::acosh(v);
 }
 
 template <typename T>
 T atanh(const T& v) {
-    return ::utils::atanh(v);
+    return ::utils::math<T>::atanh(v);
 }
 
 }  // namespace profiling

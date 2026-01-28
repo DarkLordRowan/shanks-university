@@ -39,14 +39,14 @@ public:
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The value of 0.599195688977 * x.
      */
-    T get_sum() const override { return utils::cast<T>(0.599195688977) * this->x; }
+    T get_sum() const override { return utils::cast<T>::meta(0.599195688977) * this->x; }
 
     /**
      * @brief Validates the current evaluation point x.
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return true if x is non-finite, false otherwise.
      */
-    bool is_invalid() const override { return !utils::isfinite(this->x); }
+    bool is_invalid() const override { return !utils::helpers<T>::isfinite(this->x); }
 
     /**
      * @brief Computes the next term in the specific expansion.
@@ -54,14 +54,14 @@ public:
      * @return T The next term of the series.
      */
     T next(K n, T& state) const override {
-        const T n1 = utils::cast<T>(n + 1);
+        const T n1 = utils::cast<T>::meta(n + 1);
         const T n1_2 = n1 * n1;
 
         // Specific term formula involving factorials, exponentials, and logarithms
-        state =
-            utils::log(utils::cast<T>(1) + utils::pow(n1 / utils::cast<T>(std::numbers::e), n1_2) *
-                                               utils::pow(utils::sqrt(n1) / utils::cast<T>(utils::fact(n + 1)), n1)) *
-            this->x;
+        state = utils::log(utils::cast<T>::meta(1) +
+                           utils::pow(n1 / utils::cast<T>::meta(std::numbers::e), n1_2) *
+                               utils::pow(utils::math<T>::sqrt(n1) / utils::cast<T>::meta(utils::fact(n + 1)), n1)) *
+                this->x;
         return state;
     }
 };

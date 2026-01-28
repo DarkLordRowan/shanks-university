@@ -39,7 +39,7 @@ public:
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The value of 0.5 * asin(2x).
      */
-    T get_sum() const override { return utils::cast<T>(0.5) * utils::asin(utils::cast<T>(2) * this->x); }
+    T get_sum() const override { return utils::cast<T>::meta(0.5) * utils::math<T>::asin(utils::cast<T>::meta(2) * this->x); }
 
     /**
      * @brief Validates the current evaluation point x.
@@ -48,7 +48,7 @@ public:
      */
     bool is_invalid() const override {
         using float_type = real_of<T>::value;
-        return !utils::isfinite(this->x) || utils::abs(this->x) > utils::cast<float_type>(0.5);
+        return !utils::helpers<T>::isfinite(this->x) || utils::math<T>::abs(this->x) > utils::cast<float_type>(0.5);
     }
 
     /**
@@ -61,13 +61,15 @@ public:
         if (n == 0)
             state = this->x;
         else
-            state *=
-                this->x * this->x *
-                utils::cast<T>(2 * n *
-                               utils::fma(static_cast<size_t>(2), static_cast<size_t>(n - 1), static_cast<size_t>(1)) *
-                               utils::fma(static_cast<size_t>(2), static_cast<size_t>(n - 1), static_cast<size_t>(1))) /
-                utils::cast<T>(n * n *
-                               utils::fma(static_cast<size_t>(2), static_cast<size_t>(n), static_cast<size_t>(1)));
+            state *= this->x * this->x *
+                     utils::cast<T>::meta(2 * n *
+                                    utils::math<size_t>::fma(static_cast<size_t>(2), static_cast<size_t>(n - 1),
+                                                             static_cast<size_t>(1)) *
+                                    utils::math<size_t>::fma(static_cast<size_t>(2), static_cast<size_t>(n - 1),
+                                                             static_cast<size_t>(1))) /
+                     utils::cast<T>::meta(n * n *
+                                    utils::math<size_t>::fma(static_cast<size_t>(2), static_cast<size_t>(n),
+                                                             static_cast<size_t>(1)));
         return state;
     }
 };

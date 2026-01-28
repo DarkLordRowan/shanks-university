@@ -50,7 +50,7 @@ public:
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return true if x is non-finite, false otherwise.
      */
-    bool is_invalid() const override { return !utils::isfinite(this->x); }
+    bool is_invalid() const override { return !utils::helpers<T>::isfinite(this->x); }
 
     /**
      * @brief Computes the next term in the incomplete Gamma function expansion.
@@ -62,8 +62,8 @@ public:
         if (n == 0)
             state = utils::pow(this->x, alpha) / alpha;
         else
-            state *= utils::cast<T>(-1) * this->x * (alpha + utils::cast<T>(n - 1)) /
-                     ((alpha + utils::cast<T>(n)) * utils::cast<T>(n));
+            state *= utils::cast<T>::meta(-1) * this->x * (alpha + utils::cast<T>::meta(n - 1)) /
+                     ((alpha + utils::cast<T>::meta(n)) * utils::cast<T>::meta(n));
 
         return state;
     }

@@ -40,7 +40,7 @@ public:
      * @return T The value of x * (4 * ln(2) - 3).
      */
     T get_sum() const override {
-        return this->x * (utils::cast<T>(4) * utils::log(utils::cast<T>(2)) - utils::cast<T>(3));
+        return this->x * (utils::cast<T>::meta(4) * utils::log(utils::cast<T>::meta(2)) - utils::cast<T>::meta(3));
     }
 
     /**
@@ -48,7 +48,7 @@ public:
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return true if x is non-finite, false otherwise.
      */
-    bool is_invalid() const override { return !utils::isfinite(this->x) || this->x == utils::cast<T>(0); }
+    bool is_invalid() const override { return !utils::helpers<T>::isfinite(this->x) || this->x == utils::cast<T>::meta(0); }
 
     /**
      * @brief Computes the next term in the series expansion.
@@ -58,7 +58,7 @@ public:
     T next(K n, T& state) const override {
         // Term formula based on the specific power series expansion for 4*ln(2)-3
         state = utils::minus_one_raised_to_power_n<T, K>(n + 1) * this->x /
-                utils::cast<T>((n + 1) * (n + 1) * (n + 2) * (n + 2));
+                utils::cast<T>::meta((n + 1) * (n + 1) * (n + 2) * (n + 2));
         return state;
     }
 };

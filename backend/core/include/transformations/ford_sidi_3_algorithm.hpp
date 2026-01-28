@@ -77,11 +77,13 @@ template <AcceptedLike T, UnsignedIntLike K>
 T ford_sidi_3_algorithm<T, K>::operator()(const K n, const K /*order*/, const series_result<T>& data) const {
     // Ensure we have enough data points to compute the transformation at index n
     const K required_size = n;
-    const size_t precision = std::max(utils::get_precision(data.Sn[0]), utils::get_precision(data.an[0]));
+    const size_t precision =
+        std::max(utils::helpers<T>::get_precision(data.Sn[0]), utils::helpers<T>::get_precision(data.an[0]));
 
     if (data.Sn.size() < required_size || data.an.size() < required_size) {
-        throw std::out_of_range("The Sn or an smaller then required for ford_sidi_3_{" + utils::to_string(n) + "}\n" +
-                                "the size of Sn and an must be at least " + utils::to_string(required_size));
+        throw std::out_of_range("The Sn or an smaller then required for ford_sidi_3_{" +
+                                utils::helpers<T>::to_string(n) + "}\n" + "the size of Sn and an must be at least " +
+                                utils::helpers<T>::to_string(required_size));
     }
 
     // For theory, see: Ford & Sidi (1987), Section 1 - Input validation
@@ -97,26 +99,26 @@ T ford_sidi_3_algorithm<T, K>::operator()(const K n, const K /*order*/, const se
 
     // For theory, see: Ford & Sidi (1987), Section 2 - Auxiliary sequence initialization
     // G sequence: Used for storing transformation coefficients
-    std::vector<T> G(m + static_cast<K>(1), utils::cast<T>(0.0, precision));
+    std::vector<T> G(m + static_cast<K>(1), utils::cast<T>::meta(0.0, precision));
     // FSA sequence: Stores accelerated partial sums
-    std::vector<T> FSA(m + static_cast<K>(1), utils::cast<T>(0.0, precision));
+    std::vector<T> FSA(m + static_cast<K>(1), utils::cast<T>::meta(0.0, precision));
     // FSI sequence: Stores normalization factors
-    std::vector<T> FSI(m + static_cast<K>(1), utils::cast<T>(0.0, precision));
+    std::vector<T> FSI(m + static_cast<K>(1), utils::cast<T>::meta(0.0, precision));
     // FSG matrix: Stores intermediate transformation values
     std::vector<std::vector<T>> FSG(m + static_cast<K>(2),
-                                    std::vector<T>(m + static_cast<K>(1), utils::cast<T>(0.0, precision)));
+                                    std::vector<T>(m + static_cast<K>(1), utils::cast<T>::meta(0.0, precision)));
     // For theory, see: Ford & Sidi (1987), Eq. (2.3) - Recursive coefficient scaling
     // Te = 1/n used for recursive computation of G sequence
     T D, Te;
-    D = utils::cast<T>(0.0, precision);
-    Te = utils::cast<T>(1.0, precision);
+    D = utils::cast<T>::meta(0.0, precision);
+    Te = utils::cast<T>::meta(1.0, precision);
     // Set precision if the type T requires it
 
-    Te /= utils::cast<T>(n, precision);
+    Te /= utils::cast<T>::meta(n, precision);
 
     // For theory, see: Osada (2000), Eq. (9) - Initial coefficient computation
     // G[0] = a_{n-1} * n, where a_{n-1} is the (n-1)-th series term
-    G[0] = data.an.at(n1) * utils::cast<T>(n, precision);
+    G[0] = data.an.at(n1) * utils::cast<T>::meta(n, precision);
 
     // For theory, see: Osada (2000), Section 2.2 - Recursive G sequence computation
     // G[k] = (1/n) * G[k-1] for k = 1, 2, ..., m
@@ -127,9 +129,9 @@ T ford_sidi_3_algorithm<T, K>::operator()(const K n, const K /*order*/, const se
     FSA[n1] = data.Sn.at(n1);
 
     // FSI[n1] = 1 (initial normalization factor)
-    FSI[n1] += utils::cast<T>(1.0, precision);
+    FSI[n1] += utils::cast<T>::meta(1.0, precision);
 
-    if (G[0] != utils::cast<T>(0.0)) {
+    if (G[0] != utils::cast<T>::meta(0.0)) {
         // For theory, see: Ford & Sidi (1987), Eq. (2.4) - Normalization when G[0] ≠ 0
         // Normalize sequences by dividing by G[0]
         FSA[n1] /= G[0];
@@ -179,7 +181,7 @@ T ford_sidi_3_algorithm<T, K>::operator()(const K n, const K /*order*/, const se
     FSA[0] /= FSI[0];
     // For theory, see: Ford & Sidi (1987), Section 3 - Numerical stability check
     // Ensure the result is a finite floating-point value
-    if (!utils::isfinite(FSA[0])) throw std::overflow_error("division by zero");
+    if (!utils::helpers<T>::isfinite(FSA[0])) throw std::overflow_error("division by zero");
 
     return FSA[0];
 }

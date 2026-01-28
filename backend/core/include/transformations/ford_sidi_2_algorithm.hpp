@@ -76,11 +76,12 @@ template <AcceptedLike T, UnsignedIntLike K>
 T ford_sidi_2_algorithm<T, K>::operator()(const K n, const K /*order*/, const series_result<T>& data) const {
     // Check if we have enough partial sums (at least n+2)
     const K required_size = n + static_cast<K>(2);
-    const size_t precision = utils::get_precision(data.Sn[0]);
+    const size_t precision = utils::helpers<T>::get_precision(data.Sn[0]);
 
     if (data.Sn.size() < required_size) {
-        throw std::out_of_range("The Sn smaller then required for ford_sidi2_{" + utils::to_string(n) + "}\n" +
-                                "the size of Sn must be at least " + utils::to_string(required_size));
+        throw std::out_of_range("The Sn smaller then required for ford_sidi2_{" + utils::helpers<T>::to_string(n) +
+                                "}\n" + "the size of Sn must be at least " +
+                                utils::helpers<T>::to_string(required_size));
     }
 
     // For theory, see: Ford & Sidi (1987), Section 1 - Input validation
@@ -88,7 +89,7 @@ T ford_sidi_2_algorithm<T, K>::operator()(const K n, const K /*order*/, const se
     if (n == static_cast<K>(0)) throw std::domain_error("n = 0 in the input");
 
     T delta_squared_S_n, delta_S_n, T_n;
-    delta_squared_S_n = delta_S_n = T_n = utils::cast<T>(0.0, precision);
+    delta_squared_S_n = delta_S_n = T_n = utils::cast<T>::meta(0.0, precision);
 
     K m = n;
 
@@ -98,10 +99,10 @@ T ford_sidi_2_algorithm<T, K>::operator()(const K n, const K /*order*/, const se
         // For theory, see: Ford & Sidi (1987), Eq. (1.8) - Finite difference computation
         // Second difference formula: Δ²S_m = S_{m+2} - 2S_{m+1} + S_m
         delta_squared_S_n += data.Sn.at(m + static_cast<K>(2));
-        delta_squared_S_n -= data.Sn.at(m + static_cast<K>(1)) * utils::cast<T>(2.0, precision);
+        delta_squared_S_n -= data.Sn.at(m + static_cast<K>(1)) * utils::cast<T>::meta(2.0, precision);
         delta_squared_S_n += data.Sn.at(m);
 
-    } while (delta_squared_S_n == utils::cast<T>(0.0, precision) && --m > static_cast<K>(0));
+    } while (delta_squared_S_n == utils::cast<T>::meta(0.0, precision) && --m > static_cast<K>(0));
 
     // For theory, see: Osada (2000), Section 4 - Stability condition
     // Zero second difference indicates numerical instability or convergence issues
@@ -113,11 +114,11 @@ T ford_sidi_2_algorithm<T, K>::operator()(const K n, const K /*order*/, const se
 
     // For theory, see: Osada (2000), Eq. (20) - Main transformation formula
     // Ford-Sidi acceleration: T_n = S_m - [(ΔS_m)² / Δ²S_m]
-    T_n += utils::fma(-delta_S_n, delta_S_n / delta_squared_S_n, data.Sn.at(m));
+    T_n += utils::math<T>::fma(-delta_S_n, delta_S_n / delta_squared_S_n, data.Sn.at(m));
 
     // For theory, see: Ford & Sidi (1987), Section 3 - Numerical stability check
     // Ensures the result is a finite floating-point value
-    if (!utils::isfinite(T_n)) throw std::overflow_error("division by zero");
+    if (!utils::helpers<T>::isfinite(T_n)) throw std::overflow_error("division by zero");
     return T_n;
 }
 

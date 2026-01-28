@@ -4,7 +4,7 @@
 
 template <std::floating_point T>
 struct utils::math<T> {
-    static T phi(T n);
+    static T phi(const T n);
     static T fact(const T n);
     static T double_fact(const T n);
     static T binomial_coefficient(const T n, const T k);
@@ -39,10 +39,10 @@ struct utils::math<T> {
     static T tanh(const T& x);
     static T atanh(const T& x);
     static T abs(const T& x);
-}
+};
 
 template <std::floating_point T>
-T utils::math<T>::phi(T n) {
+T utils::math<T>::phi(const T n) {
     static_assert(std::false_type{}, "utils::math::phi not implemented for type");
 }
 template <std::floating_point T>
@@ -57,12 +57,13 @@ template <std::floating_point T>
 T utils::math<T>::binomial_coefficient(const T n, const T k) {
     static_assert(std::false_type{}, "utils::math::binomial_coefficient not implemented for type");
 }
-template <std::floating_point T, std::integral K>
+template <std::floating_point T>
+template <std::integral K>
 T utils::math<T>::minus_one_raised_to_power_n(const K j) {
     if constexpr (std::is_signed<K>::value)
-        return static_cast<T>(std::abs(j) & 1 ? -1 : 1);
+        return static_cast<T>::meta(std::abs(j) & 1 ? -1 : 1);
     else
-        return static_cast<T>(j & 1 ? -1 : 1);
+        return static_cast<T>::meta(j & 1 ? -1 : 1);
 }
 template <std::floating_point T>
 T utils::math<T>::pow(const T& x, const T& y) {
@@ -107,7 +108,7 @@ T utils::math<T>::zeta(const T& x) {
 template <std::floating_point T>
 T utils::math<T>::ci_x(const T& x) {
 #ifdef __GSL_SF_EXPINT_H__
-    return static_cast<T>(gsl_sf_Ci(static_cast<double>(x)));
+    return static_cast<T>::meta(gsl_sf_Ci(static_cast<double>(x)));
 #else
     static_assert(std::false_type{}, "utils::math::ci_x not implemented for type");
 #endif
@@ -115,7 +116,7 @@ T utils::math<T>::ci_x(const T& x) {
 template <std::floating_point T>
 T utils::math<T>::si_x(const T& x) {
 #ifdef __GSL_SF_EXPINT_H__
-    return static_cast<T>(gsl_sf_Si(static_cast<double>(x)));
+    return static_cast<T>::meta(gsl_sf_Si(static_cast<double>(x)));
 #else
     static_assert(std::false_type{}, "utils::math::si_x not implemented for type");
 #endif
@@ -131,7 +132,7 @@ T utils::math<T>::k_x(const T& x) {
 template <std::floating_point T>
 T utils::math<T>::inc_gamma(const T& x, const T& alpha) {
 #ifdef __GSL_SF_EXPINT_H__
-    return std::tgamma(alpha) - static_cast<T>(gsl_sf_gamma_inc(static_cast<double>(alpha), static_cast<double>(x)));
+    return std::tgamma(alpha) - static_cast<T>::meta(gsl_sf_gamma_inc(static_cast<double>(alpha), static_cast<double>(x)));
 #else
     static_assert(std::false_type{}, "utils::math::inc_gamma not implemented for type");
 #endif
@@ -139,7 +140,7 @@ T utils::math<T>::inc_gamma(const T& x, const T& alpha) {
 template <std::floating_point T>
 T utils::math<T>::lambertW0(const T& x) {
 #ifdef __GSL_SF_EXPINT_H__
-    return static_cast<T>(gsl_sf_lambert_W0(static_cast<double>(x)));
+    return static_cast<T>::meta(gsl_sf_lambert_W0(static_cast<double>(x)));
 #else
     static_assert(std::false_type{}, "utils::math::lambertW0 not implemented for type");
 #endif
@@ -194,7 +195,7 @@ T utils::math<T>::atanh(const T& x) {
 }
 template <std::floating_point T>
 T utils::math<T>::abs(const T& x) {
-    return std::abs(x)
+    return std::abs(x);
 }
 
 #endif

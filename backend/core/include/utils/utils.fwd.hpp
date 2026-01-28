@@ -1,3 +1,6 @@
+#ifndef UTILS_FWD_HPP
+#define UTILS_FWD_HPP
+#pragma once
 /**
  * @brief Adapter struct for more convenient integration of third party libraries with some custom integer like type
  *
@@ -8,7 +11,7 @@
  */
 
 struct utils {
-    //utils for math functions
+    // utils for math functions
     template <typename T>
     struct math;
 
@@ -16,11 +19,13 @@ struct utils {
     template <typename T>
     struct helpers;
 
-    //utils for casting
-    template <typename T>
+    // utils for casting
+    template <typename To, typename From>
     struct cast;
 };
 
+#include "cast/utils_cast.fwd.hpp"
 #include "helpers/utils_helpers.fwd.hpp"
 #include "math/utils_math.fwd.hpp"
-#include "cast/utils_cast.fwd.hpp"
+
+#endif

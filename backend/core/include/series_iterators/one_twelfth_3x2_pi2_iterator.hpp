@@ -42,9 +42,9 @@ public:
      * @return T The value of the quadratic function at x.
      */
     T get_sum() const override {
-        return utils::cast<T>(1) / utils::cast<T>(12) *
-               (utils::cast<T>(3) * this->x * this->x -
-                utils::cast<T>(std::numbers::pi) * utils::cast<T>(std::numbers::pi));
+        return utils::cast<T>::meta(1) / utils::cast<T>::meta(12) *
+               (utils::cast<T>::meta(3) * this->x * this->x -
+                utils::cast<T>::meta(std::numbers::pi) * utils::cast<T>::meta(std::numbers::pi));
     }
 
     /**
@@ -54,7 +54,8 @@ public:
      */
     bool is_invalid() const override {
         using float_type = real_of<T>::value;
-        return !utils::isfinite(this->x) || utils::abs(this->x) > utils::cast<float_type>(std::numbers::pi);
+        return !utils::helpers<T>::isfinite(this->x) ||
+               utils::math<T>::abs(this->x) > utils::cast<float_type>(std::numbers::pi);
     }
 
     /**
@@ -64,8 +65,8 @@ public:
      */
     T next(K n, T& state) const override {
         // General Fourier term: (-1)^n * cos(nx) / n^2
-        state = utils::minus_one_raised_to_power_n<T, K>(n + 1) * utils::cos(utils::cast<T>(n + 1) * this->x) /
-                utils::cast<T>((n + 1) * (n + 1));
+        state = utils::minus_one_raised_to_power_n<T, K>(n + 1) * utils::math<T>::cos(utils::cast<T>::meta(n + 1) * this->x) /
+                utils::cast<T>::meta((n + 1) * (n + 1));
         return state;
     }
 };

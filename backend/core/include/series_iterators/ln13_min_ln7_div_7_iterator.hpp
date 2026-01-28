@@ -40,7 +40,7 @@ public:
      * @return T The value of x * ln(13/7) / 7.
      */
     T get_sum() const override {
-        return this->x * utils::log(utils::cast<T>(13) / utils::cast<T>(7)) / utils::cast<T>(7);
+        return this->x * utils::log(utils::cast<T>::meta(13) / utils::cast<T>::meta(7)) / utils::cast<T>::meta(7);
     }
 
     /**
@@ -48,7 +48,7 @@ public:
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return true if x is non-finite, false otherwise.
      */
-    bool is_invalid() const override { return !utils::isfinite(this->x); }
+    bool is_invalid() const override { return !utils::helpers<T>::isfinite(this->x); }
 
     /**
      * @brief Computes the next term in the series expansion.
@@ -58,10 +58,11 @@ public:
     T next(K n, T& state) const override {
         // Specific term recurrence for the ln(13/7) related series
         if (n == 0)
-            state = utils::cast<T>(6) * this->x / utils::cast<T>(49);
+            state = utils::cast<T>::meta(6) * this->x / utils::cast<T>::meta(49);
         else
-            state *= utils::cast<T>(-1) * utils::cast<T>(6 * n) /
-                     utils::cast<T>(utils::fma(static_cast<size_t>(7), static_cast<size_t>(n), static_cast<size_t>(7)));
+            state *= utils::cast<T>::meta(-1) * utils::cast<T>::meta(6 * n) /
+                     utils::cast<T>::meta(utils::math<size_t>::fma(static_cast<size_t>(7), static_cast<size_t>(n),
+                                                             static_cast<size_t>(7)));
         return state;
     }
 };

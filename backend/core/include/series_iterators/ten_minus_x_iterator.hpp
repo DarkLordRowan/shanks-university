@@ -41,7 +41,7 @@ public:
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The value of 10 - x.
      */
-    T get_sum() const override { return utils::cast<T>(10) - this->x; }
+    T get_sum() const override { return utils::cast<T>::meta(10) - this->x; }
 
     /**
      * @brief Validates the current evaluation point x.
@@ -50,7 +50,8 @@ public:
      */
     bool is_invalid() const override {
         using float_type = GetUnderlyingType<T>::value;
-        return !utils::isfinite(this->x); //|| utils::abs(this->x - utils::cast<T>(10)) > utils::cast<float_type>(5);
+        return !utils::helpers<T>::isfinite(
+            this->x);  //|| utils::math<T>::abs(this->x - utils::cast<T>::meta(10)) > utils::cast<float_type>(5);
     }
 
     /**
@@ -60,9 +61,9 @@ public:
      */
     T next(K n, T& state) const override {
         // Specific Fourier term formula for the linear segment expansion
-        state = utils::cast<T>(10) * utils::minus_one_raised_to_power_n<T, K>(n + 1) /
-                (utils::cast<T>(n + 1) * utils::cast<T>(std::numbers::pi)) *
-                utils::sin(utils::cast<T>(n + 1) * utils::cast<T>(std::numbers::pi * 0.2) * this->x);
+        state = utils::cast<T>::meta(10) * utils::minus_one_raised_to_power_n<T, K>(n + 1) /
+                (utils::cast<T>::meta(n + 1) * utils::cast<T>::meta(std::numbers::pi)) *
+                utils::math<T>::sin(utils::cast<T>::meta(n + 1) * utils::cast<T>::meta(std::numbers::pi * 0.2) * this->x);
         return state;
     }
 };

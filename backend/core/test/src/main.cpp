@@ -18,12 +18,24 @@
  * @throws std::overflow_error if a numerical overflow or division by zero occurs.
  */
 #include <complex>
+
+// clang-format off
+// Critical Section
 #include "../../include/custom_concepts.hpp"
-#include "../../include/custom_types/mpreal.h"
+#include "gsl/gsl_sf_expint.h"
+#include <gsl/gsl_sf_gamma.h>
+#include <gsl/gsl_sf_lambert.h>
 #include "../../include/custom_types/intervalprecision.fwd.hpp"
+#include "../../include/custom_types/mpreal.h"
 #include "../../include/utils/utils.fwd.hpp"
 #include "../../include/custom_types/intervalprecision.hpp"
+
+#include "../include/test_framework/test_framework.hpp"
+
+// clang-format on
+
 int main() {
+    std::cout << utils::math<mpfr::mpreal>::ci_x(mpfr::mpreal(3.0)) << "\n";
     // while (true) {
     //     try {
     //         main_testing_function<long double, unsigned short int>();
