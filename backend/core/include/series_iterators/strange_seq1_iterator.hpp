@@ -6,7 +6,7 @@
 
 /**
  * @file strange_seq1_iterator.hpp
- * @brief Iterator for the series x_{n+1} = 6496 - (4205*2^10+609725*2^15/x_{n-1})/x_n with initial values x_0 = -1305,
+ * @brief Iterator for the sequence x_{n+1} = 6496 - (4205*2^10+609725*2^15/x_{n-1})/x_n with initial values x_0 = -1305,
  * x_1 = -1440
  * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  */
@@ -15,7 +15,7 @@ namespace shanks {
 namespace series {
 
 /**
- * @brief Iterator for the series x_{n+1} = 6496 - (4205*2^10+609725*x^15/x_{n-1})/x_n with initial values x_0 = -1305,
+ * @brief Iterator for the sequence x_{n+1} = 6496 - (4205*2^10+609725*x^15/x_{n-1})/x_n with initial values x_0 = -1305,
  * x_1 = -1440
  * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  * @tparam T Floating-point type for series elements (AcceptedLike).
@@ -36,10 +36,15 @@ public:
      * @brief Retrieves limit for the series x_{n+1} = 6496 - (4205*2^10+609725*x^15/x_{n-1})/x_n with initial values
      * x_0 = -1305, x_1 = -1440
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
-     * @return T The value of sqrt((1 - sqrt(1 - x)) / x).
+     * @return T The limit of the sequence.
      */
     T get_sum() const override { return utils::cast<T>(0.0); }
 
+    /**
+     * @brief Validates the current evaluation point x.
+     * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+     * @return always valid
+     */
     bool is_invalid() const override { return false; }
 
     std::pair<T, T> initial_state() const override {
@@ -48,9 +53,9 @@ public:
     }
 
     /**
-     * @brief Computes the next term in the series expansion.
+     * @brief Computes the next term in the sequence.
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
-     * @return T The next term of the series.
+     * @return T The next term of the sequence.
      */
     T next(K n, std::pair<T, T>& state) const override {
         const size_t precision = utils::get_precision(state.first);

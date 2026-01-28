@@ -6,7 +6,7 @@
 
 /**
  * @file strange_seq2_iterator.hpp
- * @brief Iterator for the series x_{n+1} = -256 + 131072/x_{n-1}/x_n with initial values x_0 = 3, x_1 = 170
+ * @brief Iterator for the sequence x_{n+1} = -256 + 131072/x_{n-1}/x_n with initial values x_0 = 3, x_1 = 170
  * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  */
 
@@ -14,7 +14,7 @@ namespace shanks {
 namespace series {
 
 /**
- * @brief Iterator for the series x_{n+1} = -256 + 131072/x_{n-1}/x_n with initial values x_0 = 3, x_1 = 170
+ * @brief Iterator for the sequence x_{n+1} = -256 + 131072/x_{n-1}/x_n with initial values x_0 = 3, x_1 = 170
  * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  * @tparam T Floating-point type for series elements (AcceptedLike).
  * @tparam K Unsigned integral type for indexing (UnsignedIntLike).
@@ -34,16 +34,16 @@ public:
     }
 
     /**
-     * @brief Retrieves the analytic sum of the series.
+     * @brief Retrieves limit for the series x_{n+1} = -256 + 131072/x_{n-1}/x_n with initial values x_0 = 3, x_1 = 170
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
-     * @return T The value of sqrt((1 - sqrt(1 - x)) / x).
+     * @return T The limit of the sequence.
      */
     T get_sum() const override { return utils::cast<T>(0.0); }
 
     /**
      * @brief Validates the current evaluation point x.
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
-     * @return true if |x| >= 1, x is zero, or x is non-finite; false otherwise.
+     * @return always valid
      */
     bool is_invalid() const override { return false; }
 
