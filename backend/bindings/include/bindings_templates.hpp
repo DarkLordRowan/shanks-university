@@ -30,23 +30,28 @@ void bind_series(pybind11::module_& m, const char* suffix) {
         .def_readwrite("Sn", &series_result<T>::Sn)
         .def_readwrite("an", &series_result<T>::an);
 
-#define BIND_SERIES_IMPL(snake, camel, tName, kName)                                 \
-    m.def(                                                                           \
-        create_name(camel, suffix).c_str(),                                          \
-        [](K n, T x, T t, K k) {                                                     \
-            using S = shanks::series::snake##_iterator<T, K>;                        \
-            std::unique_ptr<S> it;                                                   \
-            if constexpr (std::is_constructible_v<S, T, T, K>)                       \
-                it = std::make_unique<S>(x, t, k);                                   \
-            else if constexpr (std::is_constructible_v<S, T, T>)                     \
-                it = std::make_unique<S>(x, t);                                      \
-            else if constexpr (std::is_constructible_v<S, T, K>)                     \
-                it = std::make_unique<S>(x, k);                                      \
-            else                                                                     \
-                it = std::make_unique<S>(x);                                         \
-            return std::make_pair(it->generate(n), it->get_sum());                   \
-        },                                                                           \
-        py::arg("n"), py::arg("x") = T(0), py::arg(tName ? tName : "tParam") = T(1), \
+#define BIND_SERIES_IMPL(snake, camel, tName, kName)                                                   \
+    m.def(                                                                                             \
+        create_name(camel, suffix).c_str(),                                                            \
+        [](K n, T x, T t, K k) {                                                                       \
+            using S = shanks::series::snake##_iterator<T, K>;                                          \
+            std::unique_ptr<S> it;                                                                     \
+            if constexpr (std::is_constructible_v<S, T, T, K>)                                         \
+                it = std::make_unique<S>(x, t, k);                                                     \
+            else if constexpr (std::is_constructible_v<S, T, T>)                                       \
+                it = std::make_unique<S>(x, t);                                                        \
+            else if constexpr (std::is_constructible_v<S, T, K>)                                       \
+                it = std::make_unique<S>(x, k);                                                        \
+            else                                                                                       \
+                it = std::make_unique<S>(x);                                                           \
+            return std::make_pair(                                                                     \
+                it->generate(n, std::is_same<shanks::series::snake##_iterator<T, K>,                   \
+                                             shanks::series::strange_seq1_iterator<T, K>>::value ||    \
+                                    std::is_same<shanks::series::snake##_iterator<T, K>,               \
+                                                 shanks::series::strange_seq2_iterator<T, K>>::value), \
+                it->get_sum());                                                                        \
+        },                                                                                             \
+        py::arg("n"), py::arg("x") = T(0), py::arg(tName ? tName : "tParam") = T(1),                   \
         py::arg(kName ? kName : "kParam") = K(1));
 
 #define SERIES_ENTRY(snake, camel) BIND_SERIES_IMPL(snake, camel, nullptr, nullptr)

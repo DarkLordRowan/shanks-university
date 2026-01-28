@@ -46,7 +46,7 @@ class Scientific:
         """
         if not s:
             return cls(0.0, 0)
-        
+
         # standardize the string to handle 'e' or 'E'.
         s = s.lower()
         if "e" in s:
@@ -74,7 +74,7 @@ class Scientific:
         """
         Computes the Symmetric Logarithmic value.
         Useful for plotting data that spans many orders of magnitude and includes zero/negative values.
-        
+
         The transformation function is roughly:
         y = sign(x) * (log10(|x|) - log10(threshold)) for |x| > threshold
         y = sign(x) * linear_interpolation(...) for |x| <= threshold
@@ -148,7 +148,7 @@ def vectorized_symlog(mantissa: np.ndarray, exponent: np.ndarray) -> np.ndarray:
     """
     Vectorized Symmetric Log transformation for arrays of mantissas/exponents.
     High performance version for plotting large datasets.
-    
+
     This function replicates the logic of Scientific.symlog but operates on entire
     numpy arrays at once using masks.
 
@@ -206,7 +206,7 @@ def symlog_formatter(val: float) -> str:
     """
     Formats a value on the SymLog axis for humans to read.
     Reverses the SymLog math to show actual values.
-    
+
     The axis ticks are in the transformed 'symlog' space, so we need to
     invert the transformation to show the user the real number (e.g., 1e-50).
 

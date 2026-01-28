@@ -8,7 +8,6 @@
  * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  */
 
-#if defined(INC_FPRECISION) || defined(__MPREAL_H__)
 /**
  * @brief Get the precision of a variable
  * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
@@ -34,9 +33,14 @@ size_t utils::get_precision(const T& x) {
         else
             return static_cast<size_t>(0);
     else {
-        static_assert(dependent_false<T>::value, "utils::get_precision not implemented for this type");
+        if constexpr (requires { x.value; }) {
+            return utils::get_precision(x.value);
+        } else if constexpr (AcceptedLike<T>) {
+            return size_t(0);
+        } else {
+            static_assert(dependent_false<T>::value, "utils::get_precision not implemented for this type");
+        }
     }
 }
-#endif
 
 #endif

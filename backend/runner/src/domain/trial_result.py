@@ -28,6 +28,7 @@ class ComputedTrialResult:
     accel_value_deviation: Any
     accel_error: Any
     events: list[EventData]
+    profiling: dict[str, int] | None = None
 
 
 @dataclass

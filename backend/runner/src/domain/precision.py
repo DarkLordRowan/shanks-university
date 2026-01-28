@@ -8,6 +8,8 @@ from typing import Any, Protocol, Sequence, TypeVar, runtime_checkable
 import pyshanks as ps
 
 
+# --- Protocols ---
+
 @runtime_checkable
 class NumericLike(Protocol):
     """Protocol for numeric-like types supporting basic arithmetic operations."""
@@ -40,6 +42,8 @@ class AccelProto(Protocol[TNum]):
 
     def __call__(self, n: int, m: int, series: SeriesResultProto[TNum]) -> TNum: ...
 
+
+# --- Precision Definition ---
 
 class PrecisionType:
     """Supported precision types for numerical computations.
@@ -88,197 +92,144 @@ class PrecisionType:
     def __hash__(self) -> int:
         return hash(self.name)
 
-# Define standard constants for backward compatibility and convenience
+# Define standard constants
 PrecisionType.F32 = PrecisionType("F32")
 PrecisionType.F64 = PrecisionType("F64")
 PrecisionType.FLONG = PrecisionType("FLong")
-PrecisionType.ARB = PrecisionType("Arb")  # Deprecated generic Arb
+PrecisionType.ARB = PrecisionType("Arb")
 PrecisionType.CF32 = PrecisionType("CF32")
 PrecisionType.CF64 = PrecisionType("CF64")
 PrecisionType.CFLONG = PrecisionType("CFLong")
-PrecisionType.CARB = PrecisionType("CArb") # Deprecated generic CArb
+PrecisionType.CARB = PrecisionType("CArb")
 
 
-class Precision:
-    """Precision specific utilities for numerical computations.
+# --- Helper Functions ---
 
-    Provides methods for handling different numerical precisions, including real and complex types.
+def _get_complex_components(value: Any) -> tuple[Any, Any]:
+    """Decompose a value into real and imaginary parts."""
+    if isinstance(value, complex):
+        return value.real, value.imag
+    if isinstance(value, (tuple, list)) and len(value) == 2:
+        return value[0], value[1]
+    if hasattr(value, "real") and hasattr(value, "imag"):
+        return value.real, value.imag
+    return value, 0.0
+
+
+def _get_arb_precision(precision: PrecisionType) -> int:
+    """Get the bit precision for Arb types, defaulting to 53."""
+    return precision.bits if precision.bits else 53
+
+
+# --- Core Conversion Logic ---
+
+def cast_precision_value(precision: PrecisionType, value: Any) -> Any:
+    """Convert a value to the target precision type suitable for computation.
+    
+    This function handles the crucial boundary between raw configuration values
+    and strict C++ bindings (pyshanks).
     """
+    if value is None or isinstance(value, bool):
+        return value
 
-    _REAL_SUFFIXES = {
-        "F32", "F64", "FLong", "Arb"
-    }
+    suffix = precision.suffix
 
-    _COMPLEX_SUFFIXES = {
-        "CF32", "CF64", "CFLong", "CArb"
-    }
+    # --- Arbitrary Precision ---
+    if suffix == "Arb":
+        bits = _get_arb_precision(precision)
+        if isinstance(value, ps.Arb):
+            return value # Assume bits are compatible
+        return ps.Arb(value, bits)
 
-    _COMPLEX_CLASS = {
-        "CF32": complex,
-        "CF64": complex,
-        "CFLong": ps.CFLong,
-        "CArb": ps.CArb,
-    }
-
-    _SERIES_RESULT_CLASS = {
-        "F32": ps.SeriesResultF32,
-        "F64": ps.SeriesResultF64,
-        "FLong": ps.SeriesResultFLong,
-        "Arb": ps.SeriesResultArb,
-        "CF32": ps.SeriesResultCF32,
-        "CF64": ps.SeriesResultCF64,
-        "CFLong": ps.SeriesResultCFLong,
-        "CArb": ps.SeriesResultCArb,
-    }
-
-    _REAL_SUBTYPE_SUFFIX = {
-        "CF32": "F32",
-        "CF64": "F64",
-        "CFLong": "FLong",
-        "CArb": "Arb",
-    }
-
-    @classmethod
-    def is_real_precision(cls, precision: PrecisionType) -> bool:
-        """Check if the given precision is a real number precision."""
-        return precision.suffix in cls._REAL_SUFFIXES
-
-    @classmethod
-    def is_complex_precision(cls, precision: PrecisionType) -> bool:
-        """Check if the given precision is a complex number precision."""
-        return precision.suffix in cls._COMPLEX_SUFFIXES
-
-    @classmethod
-    def is_arb_precision(cls, precision: PrecisionType) -> bool:
-        """Check if the given precision is arbitrary precision."""
-        return precision.suffix == "Arb"
-
-    @classmethod
-    def zero_for_precision(cls, precision: PrecisionType):
-        """Get the zero value for the specified precision."""
-        if cls.is_arb_precision(precision):
-            # Use explicit precision if available, otherwise default (53)
-            prec = precision.bits if precision.bits else 53
-            return ps.Arb(0.0, prec)
-            
-        if cls.is_complex_precision(precision):
-            real_zero = cast_real_subtype_value(precision, 0)
-            constructor = cls._COMPLEX_CLASS[precision.suffix]
-            return constructor(real_zero)
-        return 0.0
-
-    @classmethod
-    def cast_precision_value(cls, precision: PrecisionType, value: Any):
-        """Cast the given value to the specified precision type."""
-        if value is None or isinstance(value, bool):
+    if suffix == "CArb":
+        bits = _get_arb_precision(precision)
+        if isinstance(value, ps.CArb):
             return value
+        r, i = _get_complex_components(value)
+        # Must construct components as Arb first
+        return ps.CArb(ps.Arb(r, bits), ps.Arb(i, bits))
 
-        if cls.is_real_precision(precision):
-            if precision.suffix == "Arb":
-                # Handle Arbitrary Precision
-                if isinstance(value, ps.Arb):
-                    return value
-                
-                # Use explicit precision from config (e.g. 256 from Arb256)
-                # Fallback to 53 if not specified (legacy behavior)
-                prec = precision.bits if precision.bits else 53
-                
-                if isinstance(value, (int, float)):
-                    return ps.Arb(float(value), prec)
-                return ps.Arb(str(value), prec)
-            
-            # Handle Standard Real Types
-            if isinstance(value, (int, float)):
-                return float(value)
-            try:
-                return float(value)
-            except (TypeError, ValueError):
-                return value
+    # --- Extended Precision (Long Double) ---
+    if suffix == "FLong":
+        if isinstance(value, ps.FLong):
+            return value
+        return ps.FLong(float(value))
 
-        if cls.is_complex_precision(precision):
-            constructor = cls._COMPLEX_CLASS[precision.suffix]
-            
-            if isinstance(value, complex):
-                if precision.suffix == "CArb":
-                     # Decompose and reconstruct with high precision
-                     real_part = cls.cast_real_subtype_value(precision, value.real)
-                     imag_part = cls.cast_real_subtype_value(precision, value.imag)
-                     return constructor(real_part, imag_part)
-                return constructor(value.real, value.imag)
-                
-            if isinstance(value, (tuple, list)) and len(value) == 2:
-                # Recursively cast components (handles CArb logic via cast_real_subtype_value)
-                real_part = cls.cast_real_subtype_value(precision, value[0])
-                imag_part = cls.cast_real_subtype_value(precision, value[1])
-                return constructor(real_part, imag_part)
-                
-            if precision.suffix == "CArb" and not isinstance(value, ps.Arb):
-                # Construct from single value (real part)
-                real_part = cls.cast_real_subtype_value(precision, value)
-                return constructor(real_part)
-                
-            return constructor(value)
+    if suffix == "CFLong":
+        if isinstance(value, ps.CFLong):
+            return value
+        r, i = _get_complex_components(value)
+        # Must construct components as FLong first
+        return ps.CFLong(ps.FLong(float(r)), ps.FLong(float(i)))
 
-        return value
+    # --- Standard Precision ---
+    # F32/F64 are mapped to Python float for simplicity and JSON compatibility,
+    # relying on implicit conversion in bindings where necessary.
+    if suffix in ("F32", "F64"):
+        return float(value)
 
-    @classmethod
-    def cast_real_subtype_value(cls, precision: PrecisionType, value: Any):
-        """Cast the given value to the real subtype of the specified precision."""
-        # We need to construct a PrecisionType for the real subtype
-        # If we have CArb256, we want Arb256.
-        # If we have CF64, we want F64.
+    if suffix in ("CF32", "CF64"):
+        if isinstance(value, complex):
+            return value
+        r, i = _get_complex_components(value)
+        return complex(float(r), float(i))
+
+    return value
+
+
+def cast_natural_series_value(precision: PrecisionType, value: str) -> Any:
+    """Cast a string (typically from CSV) to the precision type."""
+    if precision.suffix == "Arb":
+        # Arb constructor handles strings directly to preserve precision
+        return cast_precision_value(precision, value)
+    
+    # For others, parse as float first
+    try:
+        float_val = float(value)
+    except ValueError:
+        float_val = 0.0
         
-        real_suffix = cls._REAL_SUBTYPE_SUFFIX.get(precision.suffix, precision.suffix)
+    return cast_precision_value(precision, float_val)
+
+
+def cast_real_subtype_value(precision: PrecisionType, value: Any) -> Any:
+    """Cast value to the real subtype of the given precision.
+    
+    E.g. if precision is CF32, cast to F32.
+    If precision is CArb256, cast to Arb256.
+    """
+    suffix = precision.suffix
+    
+    # Determine target real suffix
+    target_suffix = suffix
+    if suffix.startswith("C") and suffix not in ("CSVSeries",): # Basic check
+        target_suffix = suffix[1:]
         
-        # If it's dynamic (Arb/CArb), preserve bits
-        real_name = real_suffix
-        if precision.bits:
-             # Reconstruct name: Arb + 256
-             real_name = f"{real_suffix}{precision.bits}"
-             
-        real_precision = PrecisionType(real_name)
-        return cls.cast_precision_value(real_precision, value)
-
-    @classmethod
-    def series_result_ctor_for_precision(cls, precision: PrecisionType):
-        """Get the series result constructor for the specified precision."""
-        return cls._SERIES_RESULT_CLASS[precision.suffix]
-
-    @classmethod
-    def cast_natural_series_value(cls, precision: PrecisionType, value: str):
-        """Cast a natural number string to the specified precision type."""
-        if cls.is_real_precision(precision):
-            if precision.suffix == "Arb":
-                 prec = precision.bits if precision.bits else 53
-                 return ps.Arb(value, prec)
-            return float(value)
-            
-        if cls.is_complex_precision(precision):
-            constructor = cls._COMPLEX_CLASS[precision.suffix]
-            real_value = cast_real_subtype_value(precision, value)
-            try:
-                return constructor(real_value)
-            except TypeError:
-                # Fallback for complex types constructed from single argument
-                return constructor(value)
-        return value
-
-    @classmethod
-    def create_series_result(cls, values: list[Any], precision: PrecisionType):
-        """Create a series result for the specified precision from a list of values."""
-        cumulative = []
-        total = cls.zero_for_precision(precision)
-        for v in values:
-            total = total + v
-            cumulative.append(total)
-        ctor = cls.series_result_ctor_for_precision(precision)
-        return ctor(cumulative, values)
+    # Reconstruct name for PrecisionType
+    real_name = target_suffix
+    if precision.bits:
+        real_name = f"{target_suffix}{precision.bits}"
+        
+    real_prec = PrecisionType(real_name)
+    return cast_precision_value(real_prec, value)
 
 
-cast_real_subtype_value = Precision.cast_real_subtype_value
-zero_for_precision = Precision.zero_for_precision
-series_result_ctor_for_precision = Precision.series_result_ctor_for_precision
-cast_precision_value = Precision.cast_precision_value
-cast_natural_series_value = Precision.cast_natural_series_value
-is_arb_precision = Precision.is_arb_precision
-create_series_result = Precision.create_series_result
+def create_series_result(values: list[Any], precision: PrecisionType) -> Any:
+    """Create a SeriesResult object populated with values."""
+    suffix = precision.suffix
+    cls_name = f"SeriesResult{suffix}"
+    
+    if not hasattr(ps, cls_name):
+         raise ValueError(f"Unknown series result type: {cls_name}")
+    
+    ctor = getattr(ps, cls_name)
+    
+    # Calculate cumulative sum with correct zero type
+    cumulative = []
+    total = cast_precision_value(precision, 0)
+    
+    for v in values:
+        total = total + v
+        cumulative.append(total)
+        
+    return ctor(cumulative, values)

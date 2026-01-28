@@ -16,6 +16,134 @@
 #include "custom_concepts/precisable_like.hpp"
 #include "custom_concepts/complex_like.hpp"
 // clang-format on
+#include <concepts>
+#include <type_traits>
+
+// Forward declaration
+namespace shanks {
+namespace profiling {
+#ifdef SHANKS_ENABLE_PROFILING
+template <typename T>
+class OperationCounting;
+#endif
+}  // namespace profiling
+}  // namespace shanks
+
+/**
+ * @brief Type trait to check if a type is OperationCounting wrapper.
+ */
+template <typename T>
+struct is_operation_counting : public std::false_type {};
+#ifdef SHANKS_ENABLE_PROFILING
+template <typename T>
+struct is_operation_counting<shanks::profiling::OperationCounting<T>> : public std::true_type {};
+#endif
+
+/**
+ * @brief Type trait to get the underlying type of a wrapped type.
+ */
+template <typename T>
+struct get_wrapped_type {
+    using type = T;
+};
+#ifdef SHANKS_ENABLE_PROFILING
+template <typename T>
+struct get_wrapped_type<shanks::profiling::OperationCounting<T>> {
+    using type = T;
+};
+#endif
+
+/**
+ * @brief Utility to unwrap types (default: no-op).
+ */
+template <typename T>
+struct ADL_Unwrapper {
+    static const T& unwrap(const T& x) { return x; }
+};
+
+/**
+ * @brief Utility to wrap types (default: no-op).
+ */
+template <typename T>
+struct ADL_Wrapper {
+    template <typename U>
+    static T wrap(U&& x) {
+        return T(std::forward<U>(x));
+    }
+};
+
+/**
+ * @brief Type trait to check if a type behaves like a floating-point number.
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+ * @tparam T The type to inspect.
+ */
+
+template <typename T>
+struct isFloatLike : public std::false_type {};
+
+template <std::floating_point T>
+struct isFloatLike<T> : public std::true_type {};
+#ifdef SHANKS_ENABLE_PROFILING
+template <typename T>
+struct isFloatLike<shanks::profiling::OperationCounting<T>> : public std::true_type {};
+#endif
+#ifdef __MPREAL_H__
+template <>
+struct isFloatLike<mpfr::mpreal> : public std::true_type {};
+#endif
+
+/**
+ * @brief Concept for types that behave like floating-point numbers.
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+ * @tparam T The type to check.
+ */
+template <typename T>
+concept FloatLike = isFloatLike<T>::value;
+
+/**
+ * @brief Type trait to check if a type is a standard complex type with floating-point components.
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+ * @tparam T The type to check.
+ */
+template <typename T>
+struct is_complex_t : public std::false_type {};
+
+template <std::floating_point U>
+struct is_complex_t<std::complex<U>> : public std::true_type {};
+#ifdef SHANKS_ENABLE_PROFILING
+template <typename U>
+struct is_complex_t<std::complex<shanks::profiling::OperationCounting<U>>> : public std::true_type {};
+#endif
+
+/**
+ * @brief Type trait to check if a type supports explicit precision settings.
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+ * @tparam T The type to check.
+ */
+template <typename T>
+struct is_precisable : public std::false_type {};
+#ifdef __MPREAL_H__
+template <>
+struct is_precisable<mpfr::mpreal> : public std::true_type {};
+template <>
+struct is_precisable<std::complex<mpfr::mpreal>> : public std::true_type {};
+#ifdef SHANKS_ENABLE_PROFILING
+template <typename T>
+struct is_precisable<shanks::profiling::OperationCounting<T>> : public is_precisable<T> {};
+#endif
+#endif
+
+/**
+ * @brief Type trait to check if a type is complex with components satisfying is_precisable.
+ * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+ * @tparam T The type to check.
+ */
+template <typename T>
+struct is_complex_custom : public std::false_type {};
+
+template <typename U>
+    requires is_precisable<U>::value
+struct is_complex_custom<std::complex<U>> : public std::true_type {};
 
 /**
  * @brief Type trait to check if a type is considered a "standard" project type.

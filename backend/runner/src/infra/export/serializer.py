@@ -25,23 +25,39 @@ class TrialResultSerializer(DataSerializer):
     def _sanitize_numeric(self, value: Any, as_struct: bool = False) -> Any:
         if value is None:
             return None
+
+        # Standard pyshanks and python complex types
         if isinstance(value, (ps.CArb, ps.CF32, ps.CF64, ps.CFLong, complex)):
             if as_struct:
                 return {"real": str(value.real), "imag": str(value.imag)}
             else:
                 return str(value)
-        if isinstance(value, (ps.Arb, float, int)):
+
+        if hasattr(value, "__float__") and not isinstance(value, (float, int)):
             if as_struct:
                 return {"real": str(value), "imag": "0.0"}
             else:
                 return str(value)
+
+        if isinstance(value, (ps.Arb, ps.FLong, ps.F32, ps.F64, float, int)):
+            if as_struct:
+                return {"real": str(value), "imag": "0.0"}
+            else:
+                return str(value)
+
+        if as_struct:
+            return {"real": str(value), "imag": "0.0"}
         return str(value)
 
     def _normalize_arg(self, value: Any) -> str:
         # Unbox complex types if imaginary part is exactly zero
         if hasattr(value, "imag") and hasattr(value, "real"):
             try:
-                is_zero = str(value.imag) in ("0", "0.0", "-0.0")
+                imag_str = str(value.imag).strip()
+                # Check if it represents zero (0, 0.0, -0.0) without precision loss
+                is_zero = (
+                    imag_str.replace("0", "").replace(".", "").replace("-", "") == ""
+                )
                 if is_zero:
                     value = value.real
             except Exception:
@@ -50,8 +66,7 @@ class TrialResultSerializer(DataSerializer):
         s = str(value)
 
         # Normalize simple float strings: remove trailing zeros and dot
-        # e.g. "1.0" -> "1", "1.500" -> "1.5"
-        # Avoid messing with scientific notation for now to be safe
+        # e.g. "1.000000" -> "1"
         if "e" not in s and "E" not in s and "." in s:
             try:
                 # Check if it's actually a number before stripping
@@ -114,6 +129,7 @@ class TrialResultSerializer(DataSerializer):
                 "accel_error": self._sanitize_numeric(
                     value.accel_error, as_struct=True
                 ),
+                "profiling": self._sanitize_value(value.profiling),
                 "events": self._sanitize_value(value.events),
             }
 
@@ -151,7 +167,7 @@ class TrialResultSerializer(DataSerializer):
 
         if isinstance(value, (ps.CArb, ps.CF32, ps.CF64, ps.CFLong, complex)):
             return {"real": str(value.real), "imag": str(value.imag)}
-        if isinstance(value, (ps.Arb, float)):
+        if isinstance(value, (ps.Arb, ps.FLong, ps.F32, ps.F64, float, int)):
             return str(value)
         if isinstance(value, (ps.RemainderType, ps.NumeratorType)):
             return value.name

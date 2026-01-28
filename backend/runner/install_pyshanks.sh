@@ -1,9 +1,11 @@
 echo "BUILDING PYSHANKS..."
+CMAKE_ARGS="-S ../bindings -B build -DSHANKS_ENABLE_PROFILING=ON"
+
 # Use Ninja if available, fall back to standard generator otherwise
 if command -v ninja >/dev/null 2>&1; then
-    cmake -S ../bindings -B build -GNinja
+    cmake $CMAKE_ARGS -GNinja
 else
-    cmake -S ../bindings -B build
+    cmake $CMAKE_ARGS
 fi
 cmake --build build --target pyshanks -j$(nproc)
 

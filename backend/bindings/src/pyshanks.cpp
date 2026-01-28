@@ -12,6 +12,22 @@
 PYBIND11_MODULE(pyshanks, m) {
     m.doc() = "pybind11: polymorphic series (double + float_precision), registry-based";
 
+    // 0. Bind profiling utils if enabled
+    py::class_<shanks::profiling::OperationCounts>(m, "OperationCounts")
+        .def_readonly("add", &shanks::profiling::OperationCounts::add)
+        .def_readonly("mul", &shanks::profiling::OperationCounts::mul)
+        .def_readonly("div", &shanks::profiling::OperationCounts::div)
+        .def_readonly("special", &shanks::profiling::OperationCounts::special)
+        .def("__repr__", [](const shanks::profiling::OperationCounts& oc) {
+            std::ostringstream oss;
+            oss << "OperationCounts(add=" << oc.add << ", mul=" << oc.mul << ", div=" << oc.div
+                << ", special=" << oc.special << ")";
+            return oss.str();
+        });
+
+    m.def("reset_operation_counts", &shanks::profiling::reset_counts);
+    m.def("get_operation_counts", &shanks::profiling::get_counts);
+
     // 1. Bind basic types
     bind_types(m);
 

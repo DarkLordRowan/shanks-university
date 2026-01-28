@@ -177,7 +177,10 @@ inline void main_testing_function() {
     K n = console_IO<K>::input("n");
     K order = console_IO<K>::input("order");
     // Generating the initial series terms
-    series_result<T> result = series->generate(n + 3 * order + 1);
+    series_result<T> result = series->generate(
+        n + 3 * order + 1,
+        static_cast<shanks::series::series_id_t>(series_idx) == shanks::series::series_id_t::strange_seq1_id ||
+            static_cast<shanks::series::series_id_t>(series_idx) == shanks::series::series_id_t::strange_seq2_id);
 
     // Optional noise application
     std::string answer = "ok";

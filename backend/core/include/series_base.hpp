@@ -21,14 +21,14 @@ public:
     virtual std::string get_name() const { return "unknown_series"; }
 
     virtual T get_sum() const = 0;
-    virtual series_result<T> generate(K n) = 0;
+    virtual series_result<T> generate(K n, bool is_seq = false) = 0;
     virtual bool is_invalid() const = 0;
 
 protected:
     T x;
 
     template <typename IteratorFunc>
-    static series_result<T> generate_from_iterator(K n, IteratorFunc func) {
+    static series_result<T> generate_from_iterator(K n, IteratorFunc func, bool is_seq = false) {
         // sample for precision
         const T sample = func();
 
@@ -39,7 +39,7 @@ protected:
         Sn[0] += sample;
         for (K i = 1; i < n; ++i) {
             an[i] += func();
-            Sn[i] += Sn[i - static_cast<K>(1)] + an[i];
+            Sn[i] += an[i] + (is_seq ? utils::cast<T>(0.0) : Sn[i - static_cast<K>(1)]);
         }
 
         return {Sn, an};
@@ -57,11 +57,11 @@ public:
 
     bool is_invalid() const override { return true; }
 
-    series_result<T> generate(K n) override {
+    series_result<T> generate(K n, bool is_seq = false) override {
         State state = initial_state();
 
         return series_base<T, K>::generate_from_iterator(
-            n, [this, &state, i = K(0)]() mutable { return this->next(i++, state); });
+            n, [this, &state, i = K(0)]() mutable { return this->next(i++, state); }, is_seq);
     }
 };
 

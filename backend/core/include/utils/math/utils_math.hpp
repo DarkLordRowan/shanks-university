@@ -135,11 +135,18 @@ T utils::pow(const T& x, const T& y) {
 #endif
     else if constexpr (is_complex_custom<T>::value)
         return std::pow(x, y);
+<<<<<<< HEAD:backend/core/include/utils/math/utils_math.hpp
     else if constexpr (is_interval<T>::value)
         return intprec::pow(x, y);
     else {
+=======
+    else if constexpr (is_operation_counting<T>::value) {
+        return ADL_Wrapper<T>::wrap(utils::pow(ADL_Unwrapper<T>::unwrap(x), ADL_Unwrapper<T>::unwrap(y)));
+    } else {
+>>>>>>> main:backend/core/include/utils/utils_math.hpp
         if constexpr (AcceptedLike<T>) {
-            throw std::runtime_error("utils::pow not implemented for this type");
+            // Fallback for types that might support pow via ADL or std
+            return std::pow(x, y);
         } else {
             static_assert(dependent_false<T>::value, "utils::pow not implemented for this type");
         }
@@ -157,7 +164,9 @@ T utils::atan2(const T& y, const T& x) {
     else if constexpr (std::is_same<T, mpfr::mpreal>::value)
         return mpfr::atan2(y, x);
 #endif
-    else {
+    else if constexpr (is_operation_counting<T>::value) {
+        return ADL_Wrapper<T>::wrap(utils::atan2(ADL_Unwrapper<T>::unwrap(y), ADL_Unwrapper<T>::unwrap(x)));
+    } else {
         if constexpr (AcceptedLike<T>) {
             throw std::runtime_error("utils::atan2 not implemented for this type");
         } else {
@@ -181,9 +190,15 @@ T utils::sqrt(const T& x) {
 #endif
     else if constexpr (is_complex_custom<T>::value)
         return std::sqrt(x);
+<<<<<<< HEAD:backend/core/include/utils/math/utils_math.hpp
     else if constexpr (is_interval<T>::value)
         return intprec::sqrt(x);
     else {
+=======
+    else if constexpr (is_operation_counting<T>::value) {
+        return ADL_Wrapper<T>::wrap(utils::sqrt(ADL_Unwrapper<T>::unwrap(x)));
+    } else {
+>>>>>>> main:backend/core/include/utils/utils_math.hpp
         if constexpr (AcceptedLike<T>) {
             throw std::runtime_error("utils::sqrt not implemented for this type");
         } else {
@@ -207,9 +222,15 @@ T utils::exp(const T& x) {
 #endif
     else if constexpr (is_complex_custom<T>::value)
         return std::exp(x);
+<<<<<<< HEAD:backend/core/include/utils/math/utils_math.hpp
     else if constexpr (is_interval<T>::value)
         return intprec::exp(x);
     else {
+=======
+    else if constexpr (is_operation_counting<T>::value) {
+        return ADL_Wrapper<T>::wrap(utils::exp(ADL_Unwrapper<T>::unwrap(x)));
+    } else {
+>>>>>>> main:backend/core/include/utils/utils_math.hpp
         static_assert(dependent_false<T>::value, "utils::exp not implemented for this type");
     }
 }
@@ -229,6 +250,7 @@ T utils::log(const T& x) {
 #endif
     else if constexpr (is_complex_custom<T>::value)
         return std::log(x);
+<<<<<<< HEAD:backend/core/include/utils/math/utils_math.hpp
     else if constexpr (is_interval<T>::value)
         return intprec::log(x);
     else {
@@ -248,6 +270,11 @@ T utils::log10(const T& x) {
     else if constexpr (is_interval<T>::value)
         return intprec::log10(x);
     else {
+=======
+    else if constexpr (is_operation_counting<T>::value) {
+        return ADL_Wrapper<T>::wrap(utils::log(ADL_Unwrapper<T>::unwrap(x)));
+    } else {
+>>>>>>> main:backend/core/include/utils/utils_math.hpp
         static_assert(dependent_false<T>::value, "utils::log not implemented for this type");
     }
 }
@@ -265,9 +292,15 @@ T utils::hypot(const T& a, const T& b) {
     else if constexpr (std::is_same<T, mpfr::mpreal>::value)
         return mpfr::hypot(a, b);
 #endif
+<<<<<<< HEAD:backend/core/include/utils/math/utils_math.hpp
     else if constexpr (is_interval<T>::value)
         return intprec::sqrt(intprec::sqr(a) + intprec::sqr(b));
     else
+=======
+    else if constexpr (is_operation_counting<T>::value) {
+        return ADL_Wrapper<T>::wrap(utils::hypot(ADL_Unwrapper<T>::unwrap(a), ADL_Unwrapper<T>::unwrap(b)));
+    } else
+>>>>>>> main:backend/core/include/utils/utils_math.hpp
         return utils::sqrt(a * a + b * b);
 }
 
@@ -284,8 +317,11 @@ T utils::erf(const T& x) {
     else if constexpr (std::is_same<T, mpfr::mpreal>::value)
         return mpfr::erf(x);
 #endif
-    else {
-        // If we can't implement it, throw at runtime for AcceptedLike types to allow compilation
+    else if constexpr (is_operation_counting<T>::value) {
+        return ADL_Wrapper<T>::wrap(utils::erf(ADL_Unwrapper<T>::unwrap(x)));
+    } else {
+        // If we can't implement it, throw at runtime for AcceptedLike types to
+        // allow compilation
         if constexpr (AcceptedLike<T>) {
             throw std::runtime_error("utils::erf not implemented for this type");
         } else {
@@ -307,7 +343,9 @@ T utils::zeta(const T& x) {
     else if constexpr (std::is_same<T, mpfr::mpreal>::value)
         return mpfr::zeta(x);
 #endif
-    else {
+    else if constexpr (is_operation_counting<T>::value) {
+        return ADL_Wrapper<T>::wrap(utils::zeta(ADL_Unwrapper<T>::unwrap(x)));
+    } else {
         if constexpr (AcceptedLike<T>) {
             throw std::runtime_error("utils::zeta not implemented for this type");
         } else {
@@ -330,7 +368,9 @@ T utils::ci_x(const T& x) {
     else if constexpr (std::is_same<T, mpfr::mpreal>::value)
         return utils::cast<T>(gsl_sf_Ci(static_cast<double>(x)));
 #endif
-    else {
+    else if constexpr (is_operation_counting<T>::value) {
+        return ADL_Wrapper<T>::wrap(utils::ci_x(ADL_Unwrapper<T>::unwrap(x)));
+    } else {
         if constexpr (AcceptedLike<T>) {
             throw std::runtime_error("utils::ci_x not implemented for this type");
         } else {
@@ -359,7 +399,13 @@ T utils::si_x(const T& x) {
 #ifdef __GSL_SF_EXPINT_H__
     if constexpr (std::is_floating_point<T>::value)
         return utils::cast<T>(gsl_sf_Si(static_cast<double>(x)));
+<<<<<<< HEAD:backend/core/include/utils/math/utils_math.hpp
     else {
+=======
+    else if constexpr (is_operation_counting<T>::value) {
+        return ADL_Wrapper<T>::wrap(utils::si_x(ADL_Unwrapper<T>::unwrap(x)));
+    } else {
+>>>>>>> main:backend/core/include/utils/utils_math.hpp
         if constexpr (AcceptedLike<T>) {
             throw std::runtime_error("utils::si_x not implemented for this type");
         } else {
@@ -387,7 +433,9 @@ template <AcceptedLike T>
 T utils::e_x(const T& x) {
     if constexpr (std::is_floating_point<T>::value)
         return std::comp_ellint_2(x);
-    else {
+    else if constexpr (is_operation_counting<T>::value) {
+        return ADL_Wrapper<T>::wrap(utils::e_x(ADL_Unwrapper<T>::unwrap(x)));
+    } else {
         if constexpr (AcceptedLike<T>) {
             throw std::runtime_error("utils::e_x not implemented for this type");
         } else {
@@ -406,7 +454,9 @@ template <AcceptedLike T>
 T utils::k_x(const T& x) {
     if constexpr (std::is_floating_point<T>::value)
         return std::comp_ellint_1(x);
-    else {
+    else if constexpr (is_operation_counting<T>::value) {
+        return ADL_Wrapper<T>::wrap(utils::k_x(ADL_Unwrapper<T>::unwrap(x)));
+    } else {
         if constexpr (AcceptedLike<T>) {
             throw std::runtime_error("utils::k_x not implemented for this type");
         } else {
@@ -436,7 +486,9 @@ T utils::inc_gamma(const T& x, const T& alpha) {
     else if constexpr (std::is_same<T, mpfr::mpreal>::value)
         return mpfr::tgamma(alpha) - mpfr::gammainc(alpha, x);
 #endif
-    else {
+    else if constexpr (is_operation_counting<T>::value) {
+        return ADL_Wrapper<T>::wrap(utils::inc_gamma(ADL_Unwrapper<T>::unwrap(x), ADL_Unwrapper<T>::unwrap(alpha)));
+    } else {
         if constexpr (AcceptedLike<T>) {
             throw std::runtime_error("utils::inc_gamma not implemented for this type");
         } else {
@@ -456,7 +508,13 @@ T utils::lambertW0(const T& x) {
 #ifdef __GSL_SF_EXPINT_H__
     if constexpr (std::is_floating_point<T>::value)
         return utils::cast<T>(gsl_sf_lambert_W0(static_cast<double>(x)));
+<<<<<<< HEAD:backend/core/include/utils/math/utils_math.hpp
     else {
+=======
+    else if constexpr (is_operation_counting<T>::value) {
+        return ADL_Wrapper<T>::wrap(utils::lambertW0(ADL_Unwrapper<T>::unwrap(x)));
+    } else {
+>>>>>>> main:backend/core/include/utils/utils_math.hpp
         if constexpr (AcceptedLike<T>) {
             throw std::runtime_error("utils::lambertW0 not implemented for this type");
         } else {
@@ -489,9 +547,15 @@ T utils::sin(const T& x) {
 #endif
     else if constexpr (is_complex_custom<T>::value)
         return std::sin(x);
+<<<<<<< HEAD:backend/core/include/utils/math/utils_math.hpp
     else if constexpr (is_interval<T>::value)
         return intprec::sin(x);
     else {
+=======
+    else if constexpr (is_operation_counting<T>::value) {
+        return ADL_Wrapper<T>::wrap(utils::sin(ADL_Unwrapper<T>::unwrap(x)));
+    } else {
+>>>>>>> main:backend/core/include/utils/utils_math.hpp
         if constexpr (AcceptedLike<T>) {
             throw std::runtime_error("utils::sin not implemented for this type");
         } else {
@@ -515,9 +579,15 @@ T utils::asin(const T& x) {
 #endif
     else if constexpr (is_complex_custom<T>::value)
         return std::asin(x);
+<<<<<<< HEAD:backend/core/include/utils/math/utils_math.hpp
     else if constexpr (is_interval<T>::value)
         return intprec::asin(x);
     else {
+=======
+    else if constexpr (is_operation_counting<T>::value) {
+        return ADL_Wrapper<T>::wrap(utils::asin(ADL_Unwrapper<T>::unwrap(x)));
+    } else {
+>>>>>>> main:backend/core/include/utils/utils_math.hpp
         if constexpr (AcceptedLike<T>) {
             throw std::runtime_error("utils::asin not implemented for this type");
         } else {
@@ -541,9 +611,15 @@ T utils::cos(const T& x) {
 #endif
     else if constexpr (is_complex_custom<T>::value)
         return std::cos(x);
+<<<<<<< HEAD:backend/core/include/utils/math/utils_math.hpp
     else if constexpr (is_interval<T>::value)
         return intprec::cos(x);
     else {
+=======
+    else if constexpr (is_operation_counting<T>::value) {
+        return ADL_Wrapper<T>::wrap(utils::cos(ADL_Unwrapper<T>::unwrap(x)));
+    } else {
+>>>>>>> main:backend/core/include/utils/utils_math.hpp
         if constexpr (AcceptedLike<T>) {
             throw std::runtime_error("utils::cos not implemented for this type");
         } else {
@@ -567,9 +643,15 @@ T utils::acos(const T& x) {
 #endif
     else if constexpr (is_complex_custom<T>::value)
         return std::acos(x);
+<<<<<<< HEAD:backend/core/include/utils/math/utils_math.hpp
     else if constexpr (is_interval<T>::value)
         return intprec::acos(x);
     else {
+=======
+    else if constexpr (is_operation_counting<T>::value) {
+        return ADL_Wrapper<T>::wrap(utils::acos(ADL_Unwrapper<T>::unwrap(x)));
+    } else {
+>>>>>>> main:backend/core/include/utils/utils_math.hpp
         if constexpr (AcceptedLike<T>) {
             throw std::runtime_error("utils::acos not implemented for this type");
         } else {
@@ -593,9 +675,15 @@ T utils::tan(const T& x) {
 #endif
     else if constexpr (is_complex_custom<T>::value)
         return std::tan(x);
+<<<<<<< HEAD:backend/core/include/utils/math/utils_math.hpp
     else if constexpr (is_interval<T>::value)
         return intprec::tan(x);
     else {
+=======
+    else if constexpr (is_operation_counting<T>::value) {
+        return ADL_Wrapper<T>::wrap(utils::tan(ADL_Unwrapper<T>::unwrap(x)));
+    } else {
+>>>>>>> main:backend/core/include/utils/utils_math.hpp
         if constexpr (AcceptedLike<T>) {
             throw std::runtime_error("utils::tan not implemented for this type");
         } else {
@@ -619,9 +707,15 @@ T utils::atan(const T& x) {
 #endif
     else if constexpr (is_complex_custom<T>::value)
         return std::atan(x);
+<<<<<<< HEAD:backend/core/include/utils/math/utils_math.hpp
     else if constexpr (is_interval<T>::value)
         return intprec::atan(x);
     else {
+=======
+    else if constexpr (is_operation_counting<T>::value) {
+        return ADL_Wrapper<T>::wrap(utils::atan(ADL_Unwrapper<T>::unwrap(x)));
+    } else {
+>>>>>>> main:backend/core/include/utils/utils_math.hpp
         if constexpr (AcceptedLike<T>) {
             throw std::runtime_error("utils::atan not implemented for this type");
         } else {
@@ -644,10 +738,17 @@ T utils::sinh(const T& x) {
         return mpfr::sinh(x);
 #endif
     else if constexpr (is_complex_custom<T>::value)
+<<<<<<< HEAD:backend/core/include/utils/math/utils_math.hpp
         return std::sinh(x);
     else if constexpr (is_interval<T>::value)
         return intprec::sinh(x);
     else {
+=======
+        return sinh(x);
+    else if constexpr (is_operation_counting<T>::value) {
+        return ADL_Wrapper<T>::wrap(utils::sinh(ADL_Unwrapper<T>::unwrap(x)));
+    } else {
+>>>>>>> main:backend/core/include/utils/utils_math.hpp
         if constexpr (AcceptedLike<T>) {
             throw std::runtime_error("utils::sinh not implemented for this type");
         } else {
@@ -671,9 +772,15 @@ T utils::asinh(const T& x) {
 #endif
     else if constexpr (is_complex_custom<T>::value)
         return std::asinh(x);
+<<<<<<< HEAD:backend/core/include/utils/math/utils_math.hpp
     else if constexpr (is_interval<T>::value)
         return intprec::asinh(x);
     else {
+=======
+    else if constexpr (is_operation_counting<T>::value) {
+        return ADL_Wrapper<T>::wrap(utils::asinh(ADL_Unwrapper<T>::unwrap(x)));
+    } else {
+>>>>>>> main:backend/core/include/utils/utils_math.hpp
         if constexpr (AcceptedLike<T>) {
             throw std::runtime_error("utils::asinh not implemented for this type");
         } else {
@@ -697,9 +804,15 @@ T utils::cosh(const T& x) {
 #endif
     else if constexpr (is_complex_custom<T>::value)
         return std::cosh(x);
+<<<<<<< HEAD:backend/core/include/utils/math/utils_math.hpp
     else if constexpr (is_interval<T>::value)
         return intprec::cosh(x);
     else {
+=======
+    else if constexpr (is_operation_counting<T>::value) {
+        return ADL_Wrapper<T>::wrap(utils::cosh(ADL_Unwrapper<T>::unwrap(x)));
+    } else {
+>>>>>>> main:backend/core/include/utils/utils_math.hpp
         if constexpr (AcceptedLike<T>) {
             throw std::runtime_error("utils::cosh not implemented for this type");
         } else {
@@ -723,9 +836,15 @@ T utils::acosh(const T& x) {
 #endif
     else if constexpr (is_complex_custom<T>::value)
         return std::acosh(x);
+<<<<<<< HEAD:backend/core/include/utils/math/utils_math.hpp
     else if constexpr (is_interval<T>::value)
         return intprec::acosh(x);
     else {
+=======
+    else if constexpr (is_operation_counting<T>::value) {
+        return ADL_Wrapper<T>::wrap(utils::acosh(ADL_Unwrapper<T>::unwrap(x)));
+    } else {
+>>>>>>> main:backend/core/include/utils/utils_math.hpp
         if constexpr (AcceptedLike<T>) {
             throw std::runtime_error("utils::acosh not implemented for this type");
         } else {
@@ -748,10 +867,17 @@ T utils::tanh(const T& x) {
         return mpfr::tanh(x);
 #endif
     else if constexpr (is_complex_custom<T>::value)
+<<<<<<< HEAD:backend/core/include/utils/math/utils_math.hpp
         return std::atan(x);
     else if constexpr (is_interval<T>::value)
         return intprec::atan(x);
     else {
+=======
+        return std::tanh(x);
+    else if constexpr (is_operation_counting<T>::value) {
+        return ADL_Wrapper<T>::wrap(utils::tanh(ADL_Unwrapper<T>::unwrap(x)));
+    } else {
+>>>>>>> main:backend/core/include/utils/utils_math.hpp
         if constexpr (AcceptedLike<T>) {
             throw std::runtime_error("utils::tanh not implemented for this type");
         } else {
@@ -775,9 +901,15 @@ T utils::atanh(const T& x) {
 #endif
     else if constexpr (is_complex_custom<T>::value)
         return std::atanh(x);
+<<<<<<< HEAD:backend/core/include/utils/math/utils_math.hpp
     else if constexpr (is_interval<T>::value)
         return intprec::atanh(x);
     else {
+=======
+    else if constexpr (is_operation_counting<T>::value) {
+        return ADL_Wrapper<T>::wrap(utils::atanh(ADL_Unwrapper<T>::unwrap(x)));
+    } else {
+>>>>>>> main:backend/core/include/utils/utils_math.hpp
         if constexpr (AcceptedLike<T>) {
             throw std::runtime_error("utils::atanh not implemented for this type");
         } else {
@@ -805,9 +937,15 @@ typename real_of<T>::value utils::abs(const T& x) {
 #endif
     else if constexpr (is_complex_custom<T>::value)
         return utils::hypot(x.real(), x.imag());
+<<<<<<< HEAD:backend/core/include/utils/math/utils_math.hpp
     else if constexpr (is_interval<T>::value)
         return intprec::abs(x);
     else {
+=======
+    } else if constexpr (is_operation_counting<T>::value) {
+        return ADL_Wrapper<typename GetUnderlyingType<T>::value>::wrap(utils::abs(ADL_Unwrapper<T>::unwrap(x)));
+    } else {
+>>>>>>> main:backend/core/include/utils/utils_math.hpp
         if constexpr (AcceptedLike<T>) {
             throw std::runtime_error("utils::abs not implemented for this type");
         } else {
