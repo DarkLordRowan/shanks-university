@@ -25,8 +25,8 @@ inline T utils::minus_one_raised_to_power_n(const K j) {
  * @param n (K)
  * @return T (phi result)
  */
-template <AcceptedLike T, UnsignedIntLike K>
-inline T utils::phi(K n) {
+template <UnsignedIntLike K>
+inline K utils::phi(K n) {
     K result = n;
     // Iterating to find prime factors and applying the formula
     for (K i = 2; i * i <= n; ++i)
@@ -37,7 +37,7 @@ inline T utils::phi(K n) {
 
     // Final step for the remaining prime factor
     result -= n > 1 ? result / n : 0;
-    return utils::cast<T>((result));
+    return result;
 }
 
 /**
