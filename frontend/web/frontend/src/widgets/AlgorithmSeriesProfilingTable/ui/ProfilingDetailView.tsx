@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from "react";
 import type { SelectedDetail, ProfilingPoint } from "../model/types";
-import { formatOps, formatTrendShort } from "../model/profilingUtils";
+import { formatTrendShort } from "../model/profilingUtils";
 import {
     CartesianGrid,
     Line,
@@ -59,7 +59,7 @@ const TooltipBox: React.FC<{ label: string; items: Array<{ name: string; value: 
                 {items.map((it) => (
                     <div key={it.name} className="flex justify-between gap-3">
                         <span className="text-textDim/80">{it.name}</span>
-                        <span>{isNum(it.value) ? formatOps(it.value) : "∅"}</span>
+                        <span>{isNum(it.value) ? it.value : "∅"}</span>
                     </div>
                 ))}
             </div>
@@ -221,13 +221,13 @@ const OpsTable: React.FC<{ points: ProfilingPoint[]; kinds: string[] }> = ({ poi
                         <tr key={p.n} className="odd:bg-surface/40 even:bg-surface/20">
                             <td className="border-t border-border px-2 py-1 font-mono">{p.n}</td>
                             <td className="border-t border-border px-2 py-1 font-mono">
-                                {isNum(p.totalOps) ? formatOps(p.totalOps) : "∅"}
+                                {isNum(p.totalOps) ? p.totalOps : "∅"}
                             </td>
                             {kinds.map((k) => {
                                 const v = p.opsByKind?.[k];
                                 return (
                                     <td key={k} className="border-t border-border px-2 py-1 font-mono">
-                                        {isNum(v) ? formatOps(v) : "∅"}
+                                        {isNum(v) ? v : "∅"}
                                     </td>
                                 );
                             })}
@@ -272,7 +272,7 @@ const DiffTable: React.FC<{ points: ProfilingPoint[]; kinds: string[] }> = ({ po
                                         (dtNeg ? "text-red-300" : "")
                                     }
                                 >
-                                    {isNum(dt) ? formatOps(dt) : "∅"}
+                                    {isNum(dt) ? dt : "∅"}
                                 </td>
 
                                 {kinds.map((k) => {
@@ -286,7 +286,7 @@ const DiffTable: React.FC<{ points: ProfilingPoint[]; kinds: string[] }> = ({ po
                                                 (neg ? "text-red-300" : "")
                                             }
                                         >
-                                            {isNum(dv) ? formatOps(dv) : "∅"}
+                                            {isNum(dv) ? dv : "∅"}
                                         </td>
                                     );
                                 })}
@@ -336,7 +336,7 @@ export const ProfilingDetailView: React.FC<{ detail: SelectedDetail }> = ({ deta
 
     const maxText =
         analysis.maxTotalOps != null && analysis.maxTotalOpsN != null
-            ? `${formatOps(analysis.maxTotalOps)} @ n=${analysis.maxTotalOpsN}`
+            ? `${analysis.maxTotalOps}`
             : "∅";
 
     const trendShort = formatTrendShort(analysis.trendTotal);
