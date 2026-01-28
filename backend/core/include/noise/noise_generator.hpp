@@ -4,6 +4,8 @@
 #include <cstdlib>
 #include <functional>
 #include <random>
+#include <sstream>
+#include <string>
 #include <vector>
 
 #include "../custom_concepts.hpp"
@@ -56,7 +58,9 @@ template <ComplexLike CT, FloatLike FT>
     requires(!ComplexLike<FT>)
 CT generate_uniform_noise(const FT& inf, const FT& sup, std::mt19937_64& rng) {
     if (inf >= sup) {
-        throw std::invalid_argument("Invalid borders for uniform noise generation.");
+        std::ostringstream ss;
+        ss << "Invalid borders for uniform noise generation: inf (" << inf << ") >= sup (" << sup << ")";
+        throw std::invalid_argument(ss.str());
     }
 
     // Creating uniform distribution for floating point values
@@ -88,15 +92,26 @@ CT generate_uniform_noise(const FT& inf, const FT& sup, std::mt19937_64& rng) {
  */
 template <ComplexLike T>
 T generate_uniform_noise(const T& inf, const T& sup, std::mt19937_64& rng) {
-    if (inf.real() >= sup.real() || inf.imag() >= sup.imag()) {
-        throw std::invalid_argument("Invalid borders for uniform noise generation.");
+    if (inf.real() >= sup.real()) {
+        std::ostringstream ss;
+        ss << "Invalid borders for uniform noise generation: inf.real (" << inf.real() << ") >= sup.real ("
+           << sup.real() << ")";
+        throw std::invalid_argument(ss.str());
+    }
+
+    typename T::value_type i_inf = inf.imag();
+    typename T::value_type i_sup = sup.imag();
+
+    if (i_inf >= i_sup) {
+        i_inf = inf.real();
+        i_sup = sup.real();
     }
 
     // Generating real and imaginary parts independently using respective bounds
     std::uniform_real_distribution<float_t> distribution_real(utils::cast<float_t>(inf.real()),
                                                               utils::cast<float_t>(sup.real()));
-    std::uniform_real_distribution<float_t> distribution_imag(utils::cast<float_t>(inf.imag()),
-                                                              utils::cast<float_t>(sup.imag()));
+    std::uniform_real_distribution<float_t> distribution_imag(utils::cast<float_t>(i_inf),
+                                                              utils::cast<float_t>(i_sup));
 
     return T(static_cast<typename T::value_type>(distribution_real(rng)),
              static_cast<typename T::value_type>(distribution_imag(rng)));
@@ -113,7 +128,10 @@ T generate_uniform_noise(const T& inf, const T& sup, std::mt19937_64& rng) {
 template <IntervalLike T>
 T generate_uniform_noise(const T& inf, const T& sup, std::mt19937_64& rng) {
     if (inf.leftinterval() >= sup.rightinterval()) {
-        throw std::invalid_argument("Invalid borders for uniform noise generation.");
+        std::ostringstream ss;
+        ss << "Invalid borders for uniform noise generation: inf.left (" << inf.leftinterval() << ") >= sup.right ("
+           << sup.rightinterval() << ")";
+        throw std::invalid_argument(ss.str());
     }
 
     // Drawing a random value from within the specified interval range
@@ -147,7 +165,9 @@ template <FloatLike T>
     requires(!ComplexLike<T>)
 T generate_uniform_noise(const T& inf, const T& sup, std::mt19937_64& rng) {
     if (inf >= sup) {
-        throw std::invalid_argument("Invalid borders for uniform noise generation.");
+        std::ostringstream ss;
+        ss << "Invalid borders for uniform noise generation: inf (" << inf << ") >= sup (" << sup << ")";
+        throw std::invalid_argument(ss.str());
     }
 
     // Simple uniform distribution generation for scalar types
@@ -184,7 +204,9 @@ template <ComplexLike CT, FloatLike FT>
     requires(!ComplexLike<FT> && !IntervalLike<FT>)
 CT generate_normal_noise(const FT& mean, const FT& std, std::mt19937_64& rng) {
     if (std <= 0) {
-        throw std::invalid_argument("Standard deviation must be positive for normal distribution.");
+        std::ostringstream ss;
+        ss << "Standard deviation must be positive for normal distribution: std (" << std << ")";
+        throw std::invalid_argument(ss.str());
     }
 
     // Creating normal distribution with specified parameters
@@ -219,15 +241,24 @@ CT generate_normal_noise(const FT& mean, const FT& std, std::mt19937_64& rng) {
  */
 template <ComplexLike T>
 T generate_normal_noise(const T& mean, const T& std, std::mt19937_64& rng) {
-    if (std.real() <= static_cast<typename T::value_type>(0) || std.imag() <= static_cast<typename T::value_type>(0)) {
-        throw std::invalid_argument("Standard deviation must be positive for normal distribution.");
+    typename T::value_type s_real = std.real();
+    typename T::value_type s_imag = std.imag();
+
+    if (s_imag <= static_cast<typename T::value_type>(0)) {
+        s_imag = s_real;
+    }
+
+    if (s_real <= static_cast<typename T::value_type>(0)) {
+        std::ostringstream ss;
+        ss << "Standard deviation must be positive for normal distribution: std.real (" << s_real << ")";
+        throw std::invalid_argument(ss.str());
     }
 
     // Generating real and imaginary parts independently with their own mean/std
     std::normal_distribution<float_t> distribution_real(utils::cast<float_t>(mean.real()),
-                                                        utils::cast<float_t>(std.real()));
+                                                        utils::cast<float_t>(s_real));
     std::normal_distribution<float_t> distribution_imag(utils::cast<float_t>(mean.imag()),
-                                                        utils::cast<float_t>(std.imag()));
+                                                        utils::cast<float_t>(s_imag));
 
     return T(static_cast<typename T::value_type>(distribution_real(rng)),
              static_cast<typename T::value_type>(distribution_imag(rng)));
@@ -242,9 +273,10 @@ T generate_normal_noise(const T& mean, const T& std, std::mt19937_64& rng) {
  */
 template <IntervalLike T>
 T generate_normal_noise(const T& mean, const T& std, std::mt19937_64& rng) {
-    if (std.leftinterval() <= static_cast<typename T::value_type>(0) ||
-        std.leftinterval() <= static_cast<typename T::value_type>(0)) {
-        throw std::invalid_argument("Standard deviation must be positive for normal distribution.");
+    if (std.leftinterval() <= static_cast<typename T::value_type>(0)) {
+        std::ostringstream ss;
+        ss << "Standard deviation must be positive for normal distribution: std.left (" << std.leftinterval() << ")";
+        throw std::invalid_argument(ss.str());
     }
 
     // Using left interval boundary for distribution generation
@@ -277,8 +309,11 @@ T generate_normal_noise(const T& mean, const T& std, std::mt19937_64& rng) {
 template <FloatLike T>
     requires(!ComplexLike<T> && !IntervalLike<T>)
 T generate_normal_noise(const T& mean, const T& std, std::mt19937_64& rng) {
-    if (std <= utils::cast<T>(0))
-        throw std::invalid_argument("Standard deviation must be positive for normal distribution.");
+    if (std <= utils::cast<T>(0)) {
+        std::ostringstream ss;
+        ss << "Standard deviation must be positive for normal distribution: std (" << std << ")";
+        throw std::invalid_argument(ss.str());
+    }
 
     // Simple Gaussian distribution for scalar types
     std::normal_distribution<float_t> distribution(utils::cast<float_t>(mean), utils::cast<float_t>(std));
@@ -310,7 +345,9 @@ template <ComplexLike CT, FloatLike FT>
     requires(!ComplexLike<FT>)
 CT generate_poisson_noise(const FT& lambda, std::mt19937_64& rng) {
     if (lambda <= utils::cast<FT>(0)) {
-        throw std::invalid_argument("Lambda must be positive for Poisson distribution.");
+        std::ostringstream ss;
+        ss << "Lambda must be positive for Poisson distribution: lambda (" << lambda << ")";
+        throw std::invalid_argument(ss.str());
     }
 
     // Generating discrete Poisson distribution values
@@ -341,7 +378,11 @@ CT generate_poisson_noise(const FT& lambda, std::mt19937_64& rng) {
 template <FloatLike T>
     requires(!ComplexLike<T>)
 T generate_poisson_noise(const T& lambda, std::mt19937_64& rng) {
-    if (lambda <= utils::cast<T>(0)) throw std::invalid_argument("Lambda must be positive for Poisson distribution.");
+    if (lambda <= utils::cast<T>(0)) {
+        std::ostringstream ss;
+        ss << "Lambda must be positive for Poisson distribution: lambda (" << lambda << ")";
+        throw std::invalid_argument(ss.str());
+    }
 
     // Simple Poisson distribution for scalar types
     std::poisson_distribution<uint64_t> distribution(utils::cast<uint64_t>(lambda));
@@ -371,14 +412,22 @@ T generate_poisson_noise(const T& lambda, std::mt19937_64& rng) {
  */
 template <ComplexLike T>
 T generate_poisson_noise(const T& lambda, std::mt19937_64& rng) {
-    if (lambda.real() <= utils::cast<typename T::value_type>(0) ||
-        lambda.imag() <= utils::cast<typename T::value_type>(0)) {
-        throw std::invalid_argument("Lambda must be positive for Poisson distribution.");
+    typename T::value_type l_real = lambda.real();
+    typename T::value_type l_imag = lambda.imag();
+
+    if (l_imag <= utils::cast<typename T::value_type>(0)) {
+        l_imag = l_real;
+    }
+
+    if (l_real <= utils::cast<typename T::value_type>(0)) {
+        std::ostringstream ss;
+        ss << "Lambda must be positive for Poisson distribution: lambda.real (" << l_real << ")";
+        throw std::invalid_argument(ss.str());
     }
 
     // Generating real and imaginary parts independently with their own lambda rates
-    std::poisson_distribution<uint64_t> distribution_real(utils::cast<uint64_t>(lambda.real()));
-    std::poisson_distribution<uint64_t> distribution_imag(utils::cast<uint64_t>(lambda.imag()));
+    std::poisson_distribution<uint64_t> distribution_real(utils::cast<uint64_t>(l_real));
+    std::poisson_distribution<uint64_t> distribution_imag(utils::cast<uint64_t>(l_imag));
 
     return T(utils::cast<typename T::value_type>(distribution_real(rng)),
              utils::cast<typename T::value_type>(distribution_imag(rng)));
@@ -394,7 +443,9 @@ T generate_poisson_noise(const T& lambda, std::mt19937_64& rng) {
 template <IntervalLike T>
 T generate_poisson_noise(const T& lambda, std::mt19937_64& rng) {
     if (lambda.leftinterval() <= utils::cast<typename T::value_type>(0)) {
-        throw std::invalid_argument("Lambda must be positive for Poisson distribution.");
+        std::ostringstream ss;
+        ss << "Lambda must be positive for Poisson distribution: lambda.left (" << lambda.leftinterval() << ")";
+        throw std::invalid_argument(ss.str());
     }
 
     // Using left boundary for Poisson rate calculation

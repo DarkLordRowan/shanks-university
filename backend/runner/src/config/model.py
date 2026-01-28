@@ -7,6 +7,7 @@ Author: Yadrentsev I. M.
 import json
 from pathlib import Path
 
+import dataclasses
 from dataclasses import dataclass, field
 
 from src.domain.output_format import OutputFormat
@@ -50,13 +51,16 @@ class TrialConfig:
         self.filters_json = Path(self.filters_json)
         self.output_dir = Path(self.output_dir)
 
-        self.results_json = (
-            Path(self.results_json) if self.results_json else None
-        )
-        self.results_csv = Path(self.results_csv) if self.results_csv else None
-        self.results_parquet = (
-            Path(self.results_parquet) if self.results_parquet else None
-        )
+        if not self.results_json:
+            self.results_json = self.output_dir / "results_json" / f"{self.results_filename}.json"
+        if not self.results_csv:
+            self.results_csv = self.output_dir / "results_csv" / f"{self.results_filename}.csv"
+        if not self.results_parquet:
+            self.results_parquet = self.output_dir / "results_parquet" / f"{self.results_filename}.parquet"
+
+        self.results_json = Path(self.results_json)
+        self.results_csv = Path(self.results_csv)
+        self.results_parquet = Path(self.results_parquet)
 
         self.precisions = [
             precision if isinstance(precision, PrecisionType) else PrecisionType(precision)
@@ -89,8 +93,6 @@ class TrialConfig:
         self.filter_configs = [FilterConfig.from_dict(f) for f in self.filters]
 
         self.output_dir.mkdir(parents=True, exist_ok=True)
-
-        print(self)
 
     verbose: int = 0
 
@@ -151,4 +153,19 @@ class TrialConfig:
             data = cls.load_json(path)
         else:
             raise RuntimeError(f"Unknown config format: {path.suffix.lower()}")
-        return cls(**data)
+        
+        # Filter out keys not in dataclass fields to avoid TypeError
+        fields = {f.name for f in dataclasses.fields(cls) if f.init}
+        filtered_data = {k: v for k, v in data.items() if k in fields}
+        
+        # If it's a combined file, point parts to itself
+        if "series" in data and "series_json" not in data:
+            filtered_data["series_json"] = path
+        if "methods" in data and "accel_json" not in data:
+            filtered_data["accel_json"] = path
+        if "noises" in data and "noise_json" not in data:
+            filtered_data["noise_json"] = path
+        if "filters" in data and "filters_json" not in data:
+            filtered_data["filters_json"] = path
+            
+        return cls(**filtered_data)

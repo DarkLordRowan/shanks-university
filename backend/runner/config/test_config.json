@@ -3,6 +3,7 @@
 
   "series_json": "config/test.json",
   "accel_json": "config/test.json",
+  "filters_json": "config/test.json",
 
   "output_dir": "output",
   "results_filename": "experiment_results",

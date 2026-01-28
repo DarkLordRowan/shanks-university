@@ -171,6 +171,12 @@ public:
     bool operator>(const OperationCounting& other) const { return value > other.value; }
     bool operator<=(const OperationCounting& other) const { return value <= other.value; }
     bool operator>=(const OperationCounting& other) const { return value >= other.value; }
+
+    // Stream operator
+    friend std::ostream& operator<<(std::ostream& os, const OperationCounting& v) {
+        os << ::utils::to_string(v.value);
+        return os;
+    }
 };
 
 // Mixed mode arithmetic (Scalar op T)

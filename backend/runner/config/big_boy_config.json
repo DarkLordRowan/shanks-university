@@ -3,6 +3,7 @@
 
   "series_json": "config/big_boy_series.json",
   "accel_json": "config/big_boy_accel.json",
+  "filters_json": "config/big_boy_accel.json",
 
   "output_dir": "output",
   "results_filename": "experiment_results",

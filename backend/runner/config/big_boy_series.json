@@ -1,4 +1,13 @@
 {
+  "noises": [
+    {
+      "type": "Normal",
+      "method": "jitter",
+      "param1": 0.0,
+      "param2": 1e-10,
+      "seed": 42
+    }
+  ],
   "series": [
     {
       "name": "ExpSeries",
@@ -83,13 +92,6 @@
       "name": "ErfSeries",
       "args": {
         "x": [0.1, 0.5, 1, 2, 10]
-      }
-    },
-    {
-      "name": "MFact1mxMp1InverseSeries",
-      "args": {
-        "x": [0.1, 0.5, 1, 2, 10],
-        "m": 3
       }
     },
     {

@@ -4,6 +4,7 @@ Authors: Shevyrov A.N., Yadrentsev I.M.
 """
 
 import datetime
+import logging
 import traceback
 from typing import Any, Mapping
 
@@ -28,8 +29,7 @@ from src.domain.trial_result import (
 )
 from src.logger import logged_debug
 
-
-
+logger = logging.getLogger(__name__)
 
 
 def trial_results_from_series_error(
@@ -290,7 +290,7 @@ def execute_trial(
                 # Check for Stop-Filter-Average Logic
                 filtered_results_obj = None
 
-                if ctx["limit_reached"]:
+                if ctx.get("limit_reached"):
                     # Identify which event triggered the block
                     triggering_event = None
                     for e_spec in accel.events:
@@ -314,22 +314,23 @@ def execute_trial(
                             f_type = f_conf.type
                             p = f_conf.params
 
-                            # Convert snake_case to camelCase for the C++ binding name
-                            components = f_type.split('_')
-                            f_type_camel = components[0] + ''.join(x.title() for x in components[1:])
-
                             # Window length logic: default to segment length
-                            w_len = p.get("window_length", len(divergent_segment))
-                            if w_len == "segment":
+                            w_len_val = p.get("window_length", len(divergent_segment))
+                            if w_len_val == "segment":
                                 w_len = len(divergent_segment)
-                            w_len = int(w_len)
+                            else:
+                                w_len = int(w_len_val)
+
+                            if w_len > len(divergent_segment):
+                                w_len = len(divergent_segment)
+
                             if w_len % 2 == 0:
                                 w_len -= 1
 
                             if w_len < 3:
                                 continue
 
-                            func_name = f"{f_type_camel}Filter{series.precision.value}"
+                            func_name = f"{f_type}Filter{series.precision.value}"
                             if hasattr(ps, func_name):
                                 try:
                                     func = getattr(ps, func_name)
@@ -350,7 +351,9 @@ def execute_trial(
                                     smoothed = func(divergent_segment, w_len, **kwargs)
 
                                     if smoothed:
-                                        avg = sum(smoothed[1:], smoothed[0]) / cast_precision_value(
+                                        avg = sum(
+                                            smoothed[1:], smoothed[0]
+                                        ) / cast_precision_value(
                                             series.precision, len(smoothed)
                                         )
                                         methods_results[f_type] = FilterMethodResult(

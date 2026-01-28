@@ -56,9 +56,10 @@ std::vector<Scalar> savitzky_golay_filter(const std::vector<Scalar>& data, size_
                                                       utils::pow(delta, utils::cast<Scalar>(derive, precision));
 
     // Convolution with padding: adding 0 at the start, rest 0 on the end
-    std::vector<Scalar> padded_vector(data.size() + (window_length - 1) * 2, utils::cast<Scalar>(0.0, precision));
+    const size_t N_pad = window_length / 2;
+    std::vector<Scalar> padded_vector(data.size() + N_pad * 2, utils::cast<Scalar>(0.0, precision));
     std::vector<Scalar> result(data.size(), utils::cast<Scalar>(0.0, precision));
-    std::copy(data.begin(), data.end(), padded_vector.begin() + 1);
+    std::copy(data.begin(), data.end(), padded_vector.begin() + N_pad);
 
     // Applying the filter via convolution
     for (size_t i{0}; i < result.size(); ++i)
