@@ -120,7 +120,10 @@ T utils::fma(const T& a, const T& b, const T& c) {
     else if constexpr (std::is_same<T, mpfr::mpreal>::value)
         return mpfr::fma(a, b, c);
 #endif
-    else
+    else if constexpr (is_operation_counting<T>::value) {
+        return ADL_Wrapper<T>::wrap(
+            utils::fma(ADL_Unwrapper<T>::unwrap(a), ADL_Unwrapper<T>::unwrap(b), ADL_Unwrapper<T>::unwrap(c)));
+    } else
         return a * b + c;
 }
 
