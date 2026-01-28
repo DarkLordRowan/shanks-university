@@ -48,8 +48,8 @@ public:
     bool is_invalid() const override { return false; }
 
     std::pair<T, T> initial_state() const override {
-        return std::make_pair(utils::cast<T>(-1305, utils::get_precision(series_base_iter<T, K, std::pair<T, T>>::x)),
-                              utils::cast<T>(-1440, utils::get_precision(series_base_iter<T, K, std::pair<T, T>>::x)));
+        return std::make_pair(utils::cast<T>(0.0, utils::get_precision(series_base_iter<T, K, std::pair<T, T>>::x)),
+                              utils::cast<T>(0.0, utils::get_precision(series_base_iter<T, K, std::pair<T, T>>::x)));
     }
 
     /**
@@ -58,12 +58,25 @@ public:
      * @return T The next term of the sequence.
      */
     T next(K n, std::pair<T, T>& state) const override {
-        const size_t precision = utils::get_precision(state.first);
-        state.first =
-            utils::cast<T>(6496, precision) - (utils::cast<T>(4205ull * (2 << 9), precision) +
-                                               utils::cast<T>(609725ull * (2 << 14), precision) / state.first) /
-                                                  state.second;
-        std::swap(state.first, state.second);
+        if (n == 0)
+            state = std::make_pair(
+            utils::cast<T>(0.0, utils::get_precision(series_base_iter<T, K, std::pair<T, T>>::x)), 
+            utils::cast<T>(-1305, utils::get_precision(series_base_iter<T, K, std::pair<T, T>>::x))
+            );
+        else if (n == 1)
+            state = std::make_pair(
+            utils::cast<T>(-1305, utils::get_precision(series_base_iter<T, K, std::pair<T, T>>::x)),
+            utils::cast<T>(-1440, utils::get_precision(series_base_iter<T, K, std::pair<T, T>>::x))
+            );
+        else {
+            
+            const size_t precision = utils::get_precision(state.first);
+            state.first =
+                utils::cast<T>(6496, precision) - (utils::cast<T>(4205ull * (2 << 9), precision) +
+                                                   utils::cast<T>(609725ull * (2 << 14), precision) / state.first) /
+                                                      state.second;
+            std::swap(state.first, state.second);
+        }
         return state.second;
     }
 };
