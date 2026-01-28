@@ -213,13 +213,30 @@ class DataLoader:
             self._load_json([data_dir])
         elif os.path.isdir(data_dir):
             if os.path.exists(os.path.join(data_dir, "series")):
+                # Discover unified schemas for both directories to handle varying struct fields
+                series_path = os.path.join(data_dir, "series")
+                accel_path = os.path.join(data_dir, "accelerations")
+
+                series_schema = self._discover_unified_schema(series_path)
+                accel_schema = self._discover_unified_schema(accel_path)
+
                 # lazy scan allowing us to build a query plan before executing it.
                 # hive_partitioning=True allows us to leverage folder structures like /series_name=Harmonic/
                 self.series_df = pl.scan_parquet(
-                    os.path.join(data_dir, "series"), hive_partitioning=True
+                    series_path,
+                    hive_partitioning=True,
+                    schema=series_schema,
+                    cast_options=pl.ScanCastOptions(
+                        extra_struct_fields="ignore", missing_struct_fields="insert"
+                    ),
                 )
                 self.accel_df = pl.scan_parquet(
-                    os.path.join(data_dir, "accelerations"), hive_partitioning=True
+                    accel_path,
+                    hive_partitioning=True,
+                    schema=accel_schema,
+                    cast_options=pl.ScanCastOptions(
+                        extra_struct_fields="ignore", missing_struct_fields="insert"
+                    ),
                 )
             else:
                 # check for JSON files
@@ -232,6 +249,47 @@ class DataLoader:
             raise ValueError(f"Invalid data path: {data_dir}")
 
         self.metadata = self._compute_metadata()
+
+    def _discover_unified_schema(self, base_dir: str) -> Dict[str, pl.DataType]:
+        """
+        Recursively finds all Parquet files and unifies their schemas,
+        merging struct fields from 'arguments' and 'additional_args'.
+        """
+        import glob
+
+        files = glob.glob(os.path.join(base_dir, "**/*.parquet"), recursive=True)
+        if not files:
+            return None
+
+        full_schema = {}
+        for f in files:
+            try:
+                schema = pl.read_parquet_schema(f)
+                for col, dtype in schema.items():
+                    if col not in full_schema:
+                        full_schema[col] = dtype
+                    elif isinstance(dtype, pl.Struct):
+                        # Merge struct fields if they already exist
+                        existing_dtype = full_schema[col]
+                        if isinstance(existing_dtype, pl.Struct):
+                            fields_map = {
+                                field.name: field.dtype for field in existing_dtype.fields
+                            }
+                            new_fields = False
+                            for field in dtype.fields:
+                                if field.name not in fields_map:
+                                    fields_map[field.name] = field.dtype
+                                    new_fields = True
+
+                            if new_fields:
+                                # Reconstruct struct with combined fields
+                                full_schema[col] = pl.Struct(
+                                    [pl.Field(name, dt) for name, dt in fields_map.items()]
+                                )
+            except Exception as e:
+                print(f"Warning: could not read schema for {f}: {e}")
+
+        return full_schema
 
     def _parse_dynamic_dict(self, data: Any) -> Dict[str, str]:
         """Parses dynamic arguments which are stored as Structs in Parquet/JSON."""
