@@ -2,6 +2,4 @@
 #define UTILS_CAST_INTERVAL_HPP
 #pragma once
 
-
-
 #endif

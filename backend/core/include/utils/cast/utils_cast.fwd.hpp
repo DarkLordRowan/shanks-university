@@ -3,7 +3,7 @@
 #pragma once
 
 template <typename To, typename From>
-struct utils::cast{
+struct utils::cast {
     /**
      * @brief Wrapper around std::static_cast, has similar functionality
      *
@@ -11,7 +11,7 @@ struct utils::cast{
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @param x (From)
      * @return To (casted value)
-    */
+     */
     static To cast(const From& x, size_t precision = size_t{0});
 }
 

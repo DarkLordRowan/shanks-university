@@ -2,9 +2,8 @@
 #define UTILS_MATH_FWD_HPP
 #pragma once
 
-template<typename T>
-struct utils::math{
-
+template <typename T>
+struct utils::math {
     // MATH FUNCTIONS
     /**
      * @brief Calculates Euler's totient function
@@ -331,7 +330,6 @@ struct utils::math{
      * @return Underlying type value (absolute value)
      */
     static typename real_of<T>::value abs(const T& x);
-
 }
 
 #endif

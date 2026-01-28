@@ -3,7 +3,7 @@
  * @brief Entry point for the shanks-university sequence transformation application.
  * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  */
-#include "../include/test_framework/test_framework.hpp"
+//#include "../include/test_framework/test_framework.hpp"
 
 /**
  * @brief Main entry point of the application.
@@ -17,19 +17,24 @@
  * @throws std::domain_error if a mathematical domain violation occurs during series evaluation.
  * @throws std::overflow_error if a numerical overflow or division by zero occurs.
  */
+#include <complex>
+//#include "../../include/custom_concepts.hpp"
+//#include "../../include/custom_types/mpreal.h"
+//#include "../../include/custom_types/intervalprecision.hpp"
+#include "../../include/utils/utils.fwd.hpp"
 int main() {
-    while (true) {
-        try {
-            main_testing_function<long double, unsigned short int>();
-            main_testing_function<std::complex<long double>, unsigned long long int>();
-            main_testing_function<intprec::interval<mpfr::mpreal>, unsigned short int>();
-            main_testing_function<mpfr::mpreal, unsigned short int>();
-        } catch (std::domain_error& e) {
-            std::cout << e.what() << "\n";
-        } catch (std::overflow_error& e) {
-            std::cout << e.what() << "\n";
-        }
-    }
+    //while (true) {
+    //    try {
+    //        main_testing_function<long double, unsigned short int>();
+    //        main_testing_function<std::complex<long double>, unsigned long long int>();
+    //        main_testing_function<intprec::interval<mpfr::mpreal>, unsigned short int>();
+    //        main_testing_function<mpfr::mpreal, unsigned short int>();
+    //    } catch (std::domain_error& e) {
+    //        std::cout << e.what() << "\n";
+    //    } catch (std::overflow_error& e) {
+    //        std::cout << e.what() << "\n";
+    //    }
+    //}
 
     return 0;
 }

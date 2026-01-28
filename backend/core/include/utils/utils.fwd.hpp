@@ -7,18 +7,18 @@
  * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  */
 
-struct utils{
+struct utils {
+    // utils for math functions
+    //template <typename T>
+    //struct math;
 
-    //utils for math functions
-    template<typename T>
-    struct math;
-
-    //utils for helpers such as isfinite, isnan, to_string etc.
-    template<typename T>
+    // utils for helpers such as isfinite, isnan, to_string etc.
+    template <typename T>
     struct helpers;
 
-    //utils for casting
-    template<typename T>
-    struct cast;
+    // utils for casting
+    //template <typename T>
+    //struct cast;
+};
 
-}
+#include "helpers/utils_helpers.fwd.hpp"

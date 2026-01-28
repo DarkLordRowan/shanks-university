@@ -292,14 +292,15 @@ T utils::hypot(const T& a, const T& b) {
     else if constexpr (std::is_same<T, mpfr::mpreal>::value)
         return mpfr::hypot(a, b);
 #endif
-<<<<<<< HEAD:backend/core/include/utils/math/utils_math.hpp
-    else if constexpr (is_interval<T>::value)
-        return intprec::sqrt(intprec::sqr(a) + intprec::sqr(b));
+    < < < < < < < HEAD : backend / core / include / utils / math /
+                         utils_math.hpp else if constexpr (is_interval<T>::value) return intprec::sqrt(intprec::sqr(a) +
+                                                                                                       intprec::sqr(b));
     else
 =======
-    else if constexpr (is_operation_counting<T>::value) {
-        return ADL_Wrapper<T>::wrap(utils::hypot(ADL_Unwrapper<T>::unwrap(a), ADL_Unwrapper<T>::unwrap(b)));
-    } else
+else if constexpr (is_operation_counting<T>::value) {
+    return ADL_Wrapper<T>::wrap(utils::hypot(ADL_Unwrapper<T>::unwrap(a), ADL_Unwrapper<T>::unwrap(b)));
+}
+else
 >>>>>>> main:backend/core/include/utils/utils_math.hpp
         return utils::sqrt(a * a + b * b);
 }
@@ -942,9 +943,11 @@ typename real_of<T>::value utils::abs(const T& x) {
         return intprec::abs(x);
     else {
 =======
-    } else if constexpr (is_operation_counting<T>::value) {
-        return ADL_Wrapper<typename GetUnderlyingType<T>::value>::wrap(utils::abs(ADL_Unwrapper<T>::unwrap(x)));
-    } else {
+}
+else if constexpr (is_operation_counting<T>::value) {
+    return ADL_Wrapper<typename GetUnderlyingType<T>::value>::wrap(utils::abs(ADL_Unwrapper<T>::unwrap(x)));
+}
+else {
 >>>>>>> main:backend/core/include/utils/utils_math.hpp
         if constexpr (AcceptedLike<T>) {
             throw std::runtime_error("utils::abs not implemented for this type");

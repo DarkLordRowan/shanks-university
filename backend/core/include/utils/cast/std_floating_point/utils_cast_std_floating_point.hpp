@@ -2,6 +2,4 @@
 #define UTILS_CAST_STD_FLOATING_POINT_HPP
 #pragma once
 
-
-
 #endif
