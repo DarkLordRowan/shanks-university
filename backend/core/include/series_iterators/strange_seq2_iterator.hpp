@@ -23,6 +23,7 @@ template <AcceptedLike T, UnsignedIntLike K>
 class strange_seq2_iterator final : public series_base_iter<T, K, std::pair<T, T>> {
 private:
     T prev_state;
+
 public:
     /**
      * @brief Default constructor for strange_seq2_iterator.
@@ -37,24 +38,18 @@ public:
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The value of sqrt((1 - sqrt(1 - x)) / x).
      */
-    T get_sum() const override {
-        return utils::cast<T>(0.0);
-    }
+    T get_sum() const override { return utils::cast<T>(0.0); }
 
     /**
      * @brief Validates the current evaluation point x.
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return true if |x| >= 1, x is zero, or x is non-finite; false otherwise.
      */
-    bool is_invalid() const override {
-        return false;
-    }
+    bool is_invalid() const override { return false; }
 
-    std::pair<T, T> initial_state() const override { 
-        return std::make_pair(
-            utils::cast<T>(3, utils::get_precision(series_base_iter<T, K, std::pair<T,T>>::x)),
-            utils::cast<T>(170, utils::get_precision(series_base_iter<T, K, std::pair<T,T>>::x))
-        ); 
+    std::pair<T, T> initial_state() const override {
+        return std::make_pair(utils::cast<T>(3, utils::get_precision(series_base_iter<T, K, std::pair<T, T>>::x)),
+                              utils::cast<T>(170, utils::get_precision(series_base_iter<T, K, std::pair<T, T>>::x)));
     }
 
     /**
