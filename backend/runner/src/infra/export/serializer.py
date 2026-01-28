@@ -3,6 +3,7 @@ TrialResult serializer implementation.
 Author: Yadrentsev I. M.
 """
 
+import re
 from dataclasses import asdict, is_dataclass
 from typing import Any, Sequence
 
@@ -22,6 +23,43 @@ class TrialResultSerializer(DataSerializer):
     def __init__(self):
         pass
 
+    def _beautify_numeric(self, value: Any) -> str:
+        """Provides a clean string representation for numeric values."""
+        if value is None:
+            return "None"
+
+        s = str(value)
+
+        # Heuristic to detect floating point noise (e.g., ...000000000001 or ...999999999998)
+        # We look for at least 10 identical digits followed by any digits at the end.
+        # This typically happens when a decimal like 0.1 is represented in binary.
+        match_s = s
+        if "e" in s.lower():
+            parts = re.split(pattern="[eE]", string=s, maxsplit=1)
+            match_s = parts[0]
+
+        if re.search(r"([0-9])\1{10,}\d*$", match_s):
+            try:
+                # If we detect noise, Python's str(float(...)) is excellent at finding
+                # the shortest equivalent decimal representation for 64-bit floats.
+                f = float(s)
+                s_f = str(f)
+
+                # Only use it if it's actually shorter (don't mess with already short strings)
+                if len(s_f) < len(s):
+                    return s_f
+            except (ValueError, TypeError, OverflowError):
+                pass
+
+        # Normalize simple float strings: remove trailing zeros and dot
+        if "e" not in s.lower() and "." in s:
+            try:
+                s = s.rstrip("0").rstrip(".")
+            except Exception:
+                pass
+
+        return s
+
     def _sanitize_numeric(self, value: Any, as_struct: bool = False) -> Any:
         if value is None:
             return None
@@ -29,25 +67,17 @@ class TrialResultSerializer(DataSerializer):
         # Standard pyshanks and python complex types
         if isinstance(value, (ps.CArb, ps.CF32, ps.CF64, ps.CFLong, complex)):
             if as_struct:
-                return {"real": str(value.real), "imag": str(value.imag)}
-            else:
-                return str(value)
-
-        if hasattr(value, "__float__") and not isinstance(value, (float, int)):
-            if as_struct:
-                return {"real": str(value), "imag": "0.0"}
-            else:
-                return str(value)
-
-        if isinstance(value, (ps.Arb, ps.FLong, ps.F32, ps.F64, float, int)):
-            if as_struct:
-                return {"real": str(value), "imag": "0.0"}
+                return {
+                    "real": self._beautify_numeric(value.real),
+                    "imag": self._beautify_numeric(value.imag),
+                }
             else:
                 return str(value)
 
         if as_struct:
-            return {"real": str(value), "imag": "0.0"}
-        return str(value)
+            return {"real": self._beautify_numeric(value), "imag": "0.0"}
+
+        return self._beautify_numeric(value)
 
     def _normalize_arg(self, value: Any) -> str:
         # Unbox complex types if imaginary part is exactly zero
@@ -56,7 +86,7 @@ class TrialResultSerializer(DataSerializer):
                 imag_str = str(value.imag).strip().lower()
                 # Check if it represents zero (0, 0.0, -0.0) without precision loss
                 # Handle scientific notation like 0.000e+00
-                base_part = imag_str.split('e')[0]
+                base_part = imag_str.split("e")[0]
                 is_zero = (
                     base_part.replace("0", "").replace(".", "").replace("-", "") == ""
                 )
@@ -65,19 +95,18 @@ class TrialResultSerializer(DataSerializer):
             except Exception:
                 pass
 
+        # For "mere args", we are much more aggressive with truncation.
+        # We prefer a clean float representation if it's shorter than the high-precision one.
         s = str(value)
+        try:
+            f = float(s)
+            s_f = str(f)
+            if len(s_f) < len(s):
+                return s_f
+        except (ValueError, TypeError, OverflowError):
+            pass
 
-        # Normalize simple float strings: remove trailing zeros and dot
-        # e.g. "1.000000" -> "1"
-        if "e" not in s and "E" not in s and "." in s:
-            try:
-                # Check if it's actually a number before stripping
-                # (Simple heuristic: look for digits)
-                s = s.rstrip("0").rstrip(".")
-            except Exception:
-                pass
-
-        return s
+        return self._beautify_numeric(value)
 
     def _sanitize_arguments(self, args: dict[str, Any]) -> dict[str, str]:
         return {k: self._normalize_arg(v) for k, v in args.items()}

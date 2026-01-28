@@ -4,19 +4,19 @@
     {
       "name": "ExpSeries",
       "args": {
-        "x": [1.0]
+        "x": [0.1]
       }
     },
     {
       "name": "CosSeries",
       "args": {
-        "x": [1.0]
+        "x": [0.1]
       }
     },
     {
       "name": "SinSeries",
       "args": {
-        "x": [1.0]
+        "x": [0.1]
       }
     }
   ],
