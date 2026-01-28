@@ -6,8 +6,8 @@
 
 /**
  * @file strange_seq1_iterator.hpp
- * @brief Iterator for the sequence x_{n+1} = 6496 - (4205*2^10+609725*2^15/x_{n-1})/x_n with initial values x_0 = -1305,
- * x_1 = -1440
+ * @brief Iterator for the sequence x_{n+1} = 6496 - (4205*2^10+609725*2^15/x_{n-1})/x_n with initial values x_0 =
+ * -1305, x_1 = -1440
  * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  */
 
@@ -15,8 +15,8 @@ namespace shanks {
 namespace series {
 
 /**
- * @brief Iterator for the sequence x_{n+1} = 6496 - (4205*2^10+609725*x^15/x_{n-1})/x_n with initial values x_0 = -1305,
- * x_1 = -1440
+ * @brief Iterator for the sequence x_{n+1} = 6496 - (4205*2^10+609725*x^15/x_{n-1})/x_n with initial values x_0 =
+ * -1305, x_1 = -1440
  * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  * @tparam T Floating-point type for series elements (AcceptedLike).
  * @tparam K Unsigned integral type for indexing (UnsignedIntLike).

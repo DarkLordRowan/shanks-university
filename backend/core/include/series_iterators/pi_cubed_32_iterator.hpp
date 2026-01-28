@@ -50,7 +50,7 @@ public:
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return true if x is non-finite, false otherwise.
      */
-    bool is_invalid() const override { return !utils::isfinite(this->x); }
+    bool is_invalid() const override { return !utils::isfinite(this->x) || this->x == utils::cast<T>(0); }
 
     /**
      * @brief Computes the next term in the alternating series expansion.
