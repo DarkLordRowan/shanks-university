@@ -353,6 +353,12 @@ class DashboardApp(QMainWindow):
         self.force_show_imaginary = False
         self.show_filters = False
 
+        # profiling flags
+        self.show_prof_add = False
+        self.show_prof_mul = False
+        self.show_prof_div = False
+        self.show_prof_special = False
+
         self.init_ui()
 
     def init_ui(self):
@@ -416,6 +422,9 @@ class DashboardApp(QMainWindow):
 
         self.filters_check = QCheckBox("Filters")
         self.filters_check.setChecked(self.show_filters)
+        self.filters_check.stateChanged.connect(self.on_visual_option_changed)
+        vis_options_layout.addWidget(self.filters_check)
+
         self.filters_check.stateChanged.connect(self.on_visual_option_changed)
         vis_options_layout.addWidget(self.filters_check)
 
@@ -760,6 +769,38 @@ class DashboardApp(QMainWindow):
         self.setup_hover(self.performance_plot)
         self.plots_layout.addWidget(self.performance_plot)
 
+        # profiling toggles right before the plot
+        prof_group = QGroupBox("Profiling Options")
+        prof_layout = QHBoxLayout(prof_group)
+        
+        self.prof_add_check = QCheckBox("Add")
+        self.prof_add_check.setChecked(self.show_prof_add)
+        self.prof_add_check.stateChanged.connect(self.on_visual_option_changed)
+        prof_layout.addWidget(self.prof_add_check)
+
+        self.prof_mul_check = QCheckBox("Mul")
+        self.prof_mul_check.setChecked(self.show_prof_mul)
+        self.prof_mul_check.stateChanged.connect(self.on_visual_option_changed)
+        prof_layout.addWidget(self.prof_mul_check)
+
+        self.prof_div_check = QCheckBox("Div")
+        self.prof_div_check.setChecked(self.show_prof_div)
+        self.prof_div_check.stateChanged.connect(self.on_visual_option_changed)
+        prof_layout.addWidget(self.prof_div_check)
+
+        self.prof_special_check = QCheckBox("Special")
+        self.prof_special_check.setChecked(self.show_prof_special)
+        self.prof_special_check.stateChanged.connect(self.on_visual_option_changed)
+        prof_layout.addWidget(self.prof_special_check)
+
+        self.plots_layout.addWidget(prof_group)
+
+        self.profiling_plot = PlotWidget("Profiling (Op Counts)")
+        self.profiling_plot.setMinimumHeight(400)
+        self.profiling_plot.getAxis("left").setLabel("Count")
+        self.setup_hover(self.profiling_plot)
+        self.plots_layout.addWidget(self.profiling_plot)
+
         # table
         self.table = QTableWidget()
         self.table.setColumnCount(14)
@@ -994,7 +1035,9 @@ class DashboardApp(QMainWindow):
             x_val, y_val = closest_point
 
             # format y-coord respecting symlog
-            if plot_widget.symlog:
+            if plot_widget == self.profiling_plot:
+                y_str = f"{int(y_val)}"
+            elif plot_widget.symlog:
                 y_str = symlog_formatter(y_val)
             else:
                 y_str = f"{y_val:.6e}"
@@ -1016,6 +1059,10 @@ class DashboardApp(QMainWindow):
         self.show_imaginary = self.imaginary_check.isChecked()
         self.force_show_imaginary = self.force_imaginary_check.isChecked()
         self.show_filters = self.filters_check.isChecked()
+        self.show_prof_add = self.prof_add_check.isChecked()
+        self.show_prof_mul = self.prof_mul_check.isChecked()
+        self.show_prof_div = self.prof_div_check.isChecked()
+        self.show_prof_special = self.prof_special_check.isChecked()
         self.update_plots()
 
     def on_symlog_changed(self, state):
@@ -1125,6 +1172,10 @@ class DashboardApp(QMainWindow):
             force_show_imaginary=self.force_show_imaginary,
             show_filters=self.show_filters,
             symlog=self.symlog,
+            show_prof_add=self.show_prof_add,
+            show_prof_mul=self.show_prof_mul,
+            show_prof_div=self.show_prof_div,
+            show_prof_special=self.show_prof_special,
         )
 
         viz_data = prepare_viz_data(self.filtered_data, options)
@@ -1133,11 +1184,12 @@ class DashboardApp(QMainWindow):
         self.convergence_plot.clear()
         self.error_plot.clear()
         self.performance_plot.clear()
+        self.profiling_plot.clear()
         self.legend_list.clear()
         self.table.setRowCount(0)
 
         # re-add tooltips
-        for plot in [self.convergence_plot, self.error_plot, self.performance_plot]:
+        for plot in [self.convergence_plot, self.error_plot, self.performance_plot, self.profiling_plot]:
             if hasattr(plot, "custom_tooltip"):
                 plot.addItem(plot.custom_tooltip)
                 plot.custom_tooltip.hide()
@@ -1153,6 +1205,7 @@ class DashboardApp(QMainWindow):
 
         render_curves(self.convergence_plot, viz_data.convergence_curves)
         render_curves(self.error_plot, viz_data.error_curves)
+        render_curves(self.profiling_plot, viz_data.profiling_curves)
 
         # render performance
         if viz_data.performance_data:

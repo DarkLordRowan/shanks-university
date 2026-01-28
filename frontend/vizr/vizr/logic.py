@@ -84,6 +84,7 @@ class VisualizationData:
 
     convergence_curves: List[CurveData] = field(default_factory=list)
     error_curves: List[CurveData] = field(default_factory=list)
+    profiling_curves: List[CurveData] = field(default_factory=list)
     performance_data: Optional[ScatterData] = None
     table_rows: List[TableRowData] = field(default_factory=list)
     legend_items: List[LegendItemData] = field(default_factory=list)
@@ -193,6 +194,10 @@ class ViewOptions:
     force_show_imaginary: bool = False
     show_filters: bool = True
     symlog: bool = False
+    show_prof_add: bool = False
+    show_prof_mul: bool = False
+    show_prof_div: bool = False
+    show_prof_special: bool = False
 
 
 def format_args(args: Dict[str, str]) -> str:
@@ -297,6 +302,14 @@ def prepare_viz_data(
     COLOR_ACCEL_IMAG = QColor(255, 165, 0)
     COLOR_FILTER_REAL = QColor(0, 128, 0)
     COLOR_FILTER_IMAG = QColor(0, 100, 0)
+
+    # Profiling colors
+    COLOR_PROF = {
+        "add": QColor(0, 255, 0),       # Green
+        "mul": QColor(0, 0, 255),       # Blue
+        "div": QColor(255, 0, 0),       # Red
+        "special": QColor(255, 165, 0), # Orange
+    }
 
     n_series = len(data)
 
@@ -421,6 +434,12 @@ def prepare_viz_data(
         batch_filt_err_n = []
         batch_filt_err_y = []
 
+        # profiling batches
+        batch_prof_n = {cat: [] for cat in COLOR_PROF}
+        batch_prof_y = {cat: [] for cat in COLOR_PROF}
+        batch_prof_segs = {cat: [] for cat in COLOR_PROF}
+        curr_off_prof = {cat: 0 for cat in COLOR_PROF}
+
         for accel in accels:
             accel_params_str = format_args(accel.accel_info.additional_args)
 
@@ -428,6 +447,7 @@ def prepare_viz_data(
             accel_label_diff = optimizer.get_accel_label(accel)
             # full tooltip label
             accel_tooltip = f"{series_label} -> {accel_label_diff}"
+
 
             if options.show_real:
                 viz_data.legend_items.append(
@@ -445,6 +465,30 @@ def prepare_viz_data(
             min_len = min(len(n_vals), len(mask))
             current_n = n_vals[:min_len].astype(float)
             current_mask = mask[:min_len]
+
+            # Profiling curves (accumulate batches)
+            for cat, color in COLOR_PROF.items():
+                if cat in accel.profiling:
+                    # Check if this category should be shown
+                    if cat == "add" and not options.show_prof_add: continue
+                    if cat == "mul" and not options.show_prof_mul: continue
+                    if cat == "div" and not options.show_prof_div: continue
+                    if cat == "special" and not options.show_prof_special: continue
+
+                    prof_vals = accel.profiling[cat][:min_len].astype(float)
+                    # Use the same mask logic as real/imag
+                    prof_vals[~current_mask] = np.nan
+
+                    seg_len = len(current_n)
+                    batch_prof_segs[cat].append(
+                        (curr_off_prof[cat], curr_off_prof[cat] + seg_len, f"{accel_tooltip} ({cat})")
+                    )
+                    curr_off_prof[cat] += seg_len + 1
+
+                    batch_prof_n[cat].append(current_n)
+                    batch_prof_n[cat].append(np.array([np.nan]))
+                    batch_prof_y[cat].append(prof_vals)
+                    batch_prof_y[cat].append(np.array([np.nan]))
 
             # --- real accel ---
             if options.show_real:
@@ -745,6 +789,19 @@ def prepare_viz_data(
                     segments=batch_filt_imag_segs,
                 )
             )
+
+        # finalize profiling batches for this series
+        for cat, color in COLOR_PROF.items():
+            if batch_prof_n[cat]:
+                viz_data.profiling_curves.append(
+                    CurveData(
+                        x=np.concatenate(batch_prof_n[cat]),
+                        y=np.concatenate(batch_prof_y[cat]),
+                        pen=pg.mkPen(color, width=1, style=Qt.PenStyle.SolidLine),
+                        name=f"{series_label} ({cat})",
+                        segments=batch_prof_segs[cat],
+                    )
+                )
 
     # wrap up performance data
     if perf_x:

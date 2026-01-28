@@ -147,6 +147,8 @@ class AccelRecord:
     # mask for valid entries (since some might be None/Null if the calc failed at step n)
     valid_mask: np.ndarray
 
+    profiling: Dict[str, np.ndarray]
+
     errors: List[ErrorInfo]
     events: List[EventInfo]
 
@@ -318,6 +320,9 @@ class DataLoader:
                                         pl.element()
                                         .struct.field("partial_sum_deviation")
                                         .alias("deviation"),
+                                        pl.element()
+                                        .struct.field("profiling")
+                                        .alias("profiling"),
                                     ]
                                 )
                             )
@@ -373,6 +378,9 @@ class DataLoader:
                                     pl.element()
                                     .struct.field("accel_value_deviation")
                                     .alias("deviation"),
+                                    pl.element()
+                                    .struct.field("profiling")
+                                    .alias("profiling"),
                                 ]
                             )
                         )
@@ -715,6 +723,7 @@ class DataLoader:
                 "vi_e": vi_e,
                 "d_m": d_m,
                 "d_e": d_e,
+                "prof": root.struct.field("profiling"),
             }
             if has_n:
                 struct_fields["n"] = root.struct.field("n")
@@ -809,6 +818,11 @@ class DataLoader:
             dev_e = np.zeros(n_points, dtype=np.int32)
             valid_mask = np.ones(n_points, dtype=bool)
 
+            prof_add = np.zeros(n_points, dtype=np.int64)
+            prof_mul = np.zeros(n_points, dtype=np.int64)
+            prof_div = np.zeros(n_points, dtype=np.int64)
+            prof_special = np.zeros(n_points, dtype=np.int64)
+
             for i, p in enumerate(computed_parsed):
                 if p is None:
                     valid_mask[i] = False
@@ -820,12 +834,18 @@ class DataLoader:
 
                 dm = p.get("d_m")
                 if dm is None:
-                    # deviation might be null if no limit is available or error occurred
                     dev_m[i] = 0.0
                     dev_e[i] = 0
                 else:
                     dev_m[i] = dm
                     dev_e[i] = p.get("d_e", 0)
+
+                prof = p.get("prof")
+                if prof:
+                    prof_add[i] = prof.get("add", 0)
+                    prof_mul[i] = prof.get("mul", 0)
+                    prof_div[i] = prof.get("div", 0)
+                    prof_special[i] = prof.get("special", 0)
 
             # errors & events
             err_list = row.get("errors") or []
@@ -860,6 +880,12 @@ class DataLoader:
                 dev_m=dev_m,
                 dev_e=dev_e,
                 valid_mask=valid_mask,
+                profiling={
+                    "add": prof_add,
+                    "mul": prof_mul,
+                    "div": prof_div,
+                    "special": prof_special,
+                },
                 errors=errors,
                 events=events,
                 filtered=filtered_obj,
