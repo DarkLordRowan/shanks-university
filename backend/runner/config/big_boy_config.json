@@ -1,0 +1,20 @@
+{
+  "verbose": 1,
+
+  "series_json": "config/big_boy_series.json",
+  "accel_json": "config/big_boy_accel.json",
+
+  "output_dir": "output",
+  "results_filename": "experiment_results",
+  "results_json": "output/results_bigboy_json/results.json",
+  "results_csv": "output/results_bigboy_csv/results.csv",
+  "results_parquet": "output/results_parquet",
+
+  "trial_process_count": 16,
+  "trial_task_timeout": 30,
+  "trial_memory_efficient": true,
+
+  "precisions": ["F32", "CFLong", "Arb256", "CArb256"],
+
+  "output_formats": ["json", "parquet"]
+}
