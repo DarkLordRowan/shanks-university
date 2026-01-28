@@ -157,6 +157,11 @@ public:
         return *this;
     }
 
+    // Fused Multiply-Add support
+    static OperationCounting fma(const OperationCounting& a, const OperationCounting& b, const OperationCounting& c) {
+        return OperationCounting(utils::fma(a.value, b.value, c.value));
+    }
+
     // Comparison (No op count)
     auto operator<=>(const OperationCounting& other) const = default;  // C++20
 
@@ -174,55 +179,54 @@ template <typename T, typename U>
     requires std::is_convertible_v<U, T>
 OperationCounting<T> operator+(const OperationCounting<T>& lhs, const U& rhs) {
     global_operation_counts.add++;
-    return OperationCounting<T>(lhs.value + static_cast<T>(rhs));
+    return OperationCounting<T>(lhs.value + rhs);
 }
 // Right operand is OperationCounting
 template <typename T, typename U>
     requires std::is_convertible_v<U, T>
 OperationCounting<T> operator+(const U& lhs, const OperationCounting<T>& rhs) {
     global_operation_counts.add++;
-    return OperationCounting<T>(static_cast<T>(lhs) + rhs.value);
+    return OperationCounting<T>(lhs + rhs.value);
 }
 
 template <typename T, typename U>
     requires std::is_convertible_v<U, T>
 OperationCounting<T> operator-(const OperationCounting<T>& lhs, const U& rhs) {
     global_operation_counts.add++;
-    return OperationCounting<T>(lhs.value - static_cast<T>(rhs));
+    return OperationCounting<T>(lhs.value - rhs);
 }
 template <typename T, typename U>
     requires std::is_convertible_v<U, T>
 OperationCounting<T> operator-(const U& lhs, const OperationCounting<T>& rhs) {
     global_operation_counts.add++;
-    return OperationCounting<T>(static_cast<T>(lhs) - rhs.value);
+    return OperationCounting<T>(lhs - rhs.value);
 }
 
 template <typename T, typename U>
     requires std::is_convertible_v<U, T>
 OperationCounting<T> operator*(const OperationCounting<T>& lhs, const U& rhs) {
     global_operation_counts.mul++;
-    return OperationCounting<T>(lhs.value * static_cast<T>(rhs));
+    return OperationCounting<T>(lhs.value * rhs);
 }
 template <typename T, typename U>
     requires std::is_convertible_v<U, T>
 OperationCounting<T> operator*(const U& lhs, const OperationCounting<T>& rhs) {
     global_operation_counts.mul++;
-    return OperationCounting<T>(static_cast<T>(lhs) * rhs.value);
+    return OperationCounting<T>(lhs * rhs.value);
 }
 
 template <typename T, typename U>
     requires std::is_convertible_v<U, T>
 OperationCounting<T> operator/(const OperationCounting<T>& lhs, const U& rhs) {
     global_operation_counts.div++;
-    return OperationCounting<T>(lhs.value / static_cast<T>(rhs));
+    return OperationCounting<T>(lhs.value / rhs);
 }
 template <typename T, typename U>
     requires std::is_convertible_v<U, T>
 OperationCounting<T> operator/(const U& lhs, const OperationCounting<T>& rhs) {
     global_operation_counts.div++;
-    return OperationCounting<T>(static_cast<T>(lhs) / rhs.value);
+    return OperationCounting<T>(lhs / rhs.value);
 }
-
 // Special functions
 template <typename T>
 OperationCounting<T> abs(const OperationCounting<T>& v) {

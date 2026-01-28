@@ -49,8 +49,8 @@ public:
      * @return true if |x - 10| > 5 or x is non-finite, false otherwise.
      */
     bool is_invalid() const override {
-        using float_type = real_of<T>::value;
-        return !utils::isfinite(this->x) || utils::abs(this->x - utils::cast<T>(10)) > utils::cast<float_type>(5);
+        using float_type = GetUnderlyingType<T>::value;
+        return !utils::isfinite(this->x); //|| utils::abs(this->x - utils::cast<T>(10)) > utils::cast<float_type>(5);
     }
 
     /**

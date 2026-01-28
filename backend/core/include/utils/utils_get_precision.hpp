@@ -21,7 +21,7 @@ size_t utils::get_precision(const T& x) {
 #ifdef __MPREAL_H__
     // Handling MPFR mpreal precision
     else if constexpr (std::is_same<T, mpfr::mpreal>::value) {
-        return mpfr::bits2digits(x.get_prec());
+        return static_cast<size_t>(x.get_prec());
     }
 #endif
     // Recursive handling for custom complex types

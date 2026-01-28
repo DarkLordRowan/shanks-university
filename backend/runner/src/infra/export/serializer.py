@@ -53,10 +53,12 @@ class TrialResultSerializer(DataSerializer):
         # Unbox complex types if imaginary part is exactly zero
         if hasattr(value, "imag") and hasattr(value, "real"):
             try:
-                imag_str = str(value.imag).strip()
+                imag_str = str(value.imag).strip().lower()
                 # Check if it represents zero (0, 0.0, -0.0) without precision loss
+                # Handle scientific notation like 0.000e+00
+                base_part = imag_str.split('e')[0]
                 is_zero = (
-                    imag_str.replace("0", "").replace(".", "").replace("-", "") == ""
+                    base_part.replace("0", "").replace(".", "").replace("-", "") == ""
                 )
                 if is_zero:
                     value = value.real
