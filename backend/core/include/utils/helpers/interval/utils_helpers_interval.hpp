@@ -8,13 +8,13 @@ struct utils::helpers<intprec::interval<T>> {};
 template <typename T>
 static intprec::interval<T> utils::helpers<intprec::interval<T>>::nextafter(const intprec::interval<T>& x,
                                                                             const intprec::interval<T>& y) {
-    static_assert(std::false_type{}, "utils::nextafter not implemented for type");
+    static_assert(std::false_type{}, "utils::helpers::nextafter not implemented for type");
 }
 
 template <typename T>
 static intprec::interval<T> utils::helpers<intprec::interval<T>>::fmod(const intprec::interval<T>& x,
                                                                        const intprec::interval<T>& y) {
-    static_assert(std::false_type{}, "utils::fmod not implemented for type");
+    static_assert(std::false_type{}, "utils::helpers::fmod not implemented for type");
 }
 template <typename T>
 static intprec::interval<T> utils::helpers<intprec::interval<T>>::floor(const intprec::interval<T>& x) {

@@ -1,15 +1,14 @@
-#ifndef UTILS_MATH_STD_FLOATING_POINT_HPP
-#define UTILS_MATH_STD_FLOATING_POINT_HPP
+#ifndef UTILS_MATH_STD_INTEGRAL_HPP
+#define UTILS_MATH_STD_INTEGRAL_HPP
 #pragma once
 
-template <std::floating_point T>
+template <std::integral T>
 struct utils::math<T> {
     static T phi(T n);
     static T fact(const T n);
     static T double_fact(const T n);
     static T binomial_coefficient(const T n, const T k);
-    template <std::integral K>
-    static T minus_one_raised_to_power_n(const K j);
+    static T minus_one_raised_to_power_n(const T j);
     static T pow(const T& x, const T& y);
     static T atan2(const T& x, const T& y);
     static T fma(const T& a, const T& b, const T& c);
@@ -41,160 +40,145 @@ struct utils::math<T> {
     static T abs(const T& x);
 }
 
-template <std::floating_point T>
+template <std::integral T>
 T utils::math<T>::phi(T n) {
     static_assert(std::false_type{}, "utils::math::phi not implemented for type");
 }
-template <std::floating_point T>
+template <std::integral T>
 T utils::math<T>::fact(const T n) {
     static_assert(std::false_type{}, "utils::math::fact not implemented for type");
 }
-template <std::floating_point T>
+template <std::integral T>
 T utils::math<T>::double_fact(const T n) {
     static_assert(std::false_type{}, "utils::math::double_fact not implemented for type");
 }
-template <std::floating_point T>
+template <std::integral T>
 T utils::math<T>::binomial_coefficient(const T n, const T k) {
     static_assert(std::false_type{}, "utils::math::binomial_coefficient not implemented for type");
 }
-template <std::floating_point T, std::integral K>
-T utils::math<T>::minus_one_raised_to_power_n(const K j) {
-    if constexpr (std::is_signed<K>::value)
+template <std::integral T>
+T utils::math<T>::minus_one_raised_to_power_n(const T j) {
+    if constexpr (std::is_signed<T>::value)
         return static_cast<T>(std::abs(j) & 1 ? -1 : 1);
     else
-        return static_cast<T>(j & 1 ? -1 : 1);
+        static_assert(std::false_type{},
+                      "utils::math::minus_one_raised_to_power_n can't be implemented for usigned integral type");
 }
-template <std::floating_point T>
+template <std::integral T>
 T utils::math<T>::pow(const T& x, const T& y) {
     return std::pow(x, y);
 }
-template <std::floating_point T>
+template <std::integral T>
 T utils::math<T>::atan2(const T& x, const T& y) {
-    return std::atan2(x, y);
+    static_assert(std::false_type{}, "utils::math::atan2 not implemented for type");
 }
-template <std::floating_point T>
+template <std::integral T>
 T utils::math<T>::fma(const T& a, const T& b, const T& c) {
-    return std::fma(a, b, c);
+    static_assert(std::false_type{}, "utils::math::fma not implemented for type");
 }
-template <std::floating_point T>
+template <std::integral T>
 T utils::math<T>::sqrt(const T& x) {
-    return std::sqrt(x);
+    static_assert(std::false_type{}, "utils::math::sqrt not implemented for type");
 }
-template <std::floating_point T>
+template <std::integral T>
 T utils::math<T>::exp(const T& x) {
-    return std::exp(x);
+    static_assert(std::false_type{}, "utils::math::exp not implemented for type");
 }
-template <std::floating_point T>
+template <std::integral T>
 T utils::math<T>::log(const T& x) {
-    return std::log(x);
+    static_assert(std::false_type{}, "utils::math::log not implemented for type");
 }
-template <std::floating_point T>
+template <std::integral T>
 T utils::math<T>::log10(const T& x) {
-    return std::log10(x);
+    static_assert(std::false_type{}, "utils::math::log10 not implemented for type");
 }
-template <std::floating_point T>
+template <std::integral T>
 T utils::math<T>::hypot(const T& a, const T& b) {
-    return std::hypot(a, b);
+    static_assert(std::false_type{}, "utils::math::hypot not implemented for type");
 }
-template <std::floating_point T>
+template <std::integral T>
 T utils::math<T>::erf(const T& x) {
-    return std::erf(x);
+    static_assert(std::false_type{}, "utils::math::erf not implemented for type");
 }
-template <std::floating_point T>
+template <std::integral T>
 T utils::math<T>::zeta(const T& x) {
-    return std::riemann_zeta(x);
+    static_assert(std::false_type{}, "utils::math::zeta not implemented for type");
 }
-template <std::floating_point T>
+template <std::integral T>
 T utils::math<T>::ci_x(const T& x) {
-#ifdef __GSL_SF_EXPINT_H__
-    return static_cast<T>(gsl_sf_Ci(static_cast<double>(x)));
-#else
     static_assert(std::false_type{}, "utils::math::ci_x not implemented for type");
-#endif
 }
-template <std::floating_point T>
+template <std::integral T>
 T utils::math<T>::si_x(const T& x) {
-#ifdef __GSL_SF_EXPINT_H__
-    return static_cast<T>(gsl_sf_Si(static_cast<double>(x)));
-#else
     static_assert(std::false_type{}, "utils::math::si_x not implemented for type");
-#endif
 }
-template <std::floating_point T>
+template <std::integral T>
 T utils::math<T>::e_x(const T& x) {
-    return std::comp_ellint_2(x);
+    static_assert(std::false_type{}, "utils::math::e_x not implemented for type");
 }
-template <std::floating_point T>
+template <std::integral T>
 T utils::math<T>::k_x(const T& x) {
-    return std::comp_ellint_1(x);
+    static_assert(std::false_type{}, "utils::math::k_x not implemented for type");
 }
-template <std::floating_point T>
+template <std::integral T>
 T utils::math<T>::inc_gamma(const T& x, const T& alpha) {
-#ifdef __GSL_SF_EXPINT_H__
-    return std::tgamma(alpha) - static_cast<T>(gsl_sf_gamma_inc(static_cast<double>(alpha), static_cast<double>(x)));
-#else
     static_assert(std::false_type{}, "utils::math::inc_gamma not implemented for type");
-#endif
 }
-template <std::floating_point T>
+template <std::integral T>
 T utils::math<T>::lambertW0(const T& x) {
-#ifdef __GSL_SF_EXPINT_H__
-    return static_cast<T>(gsl_sf_lambert_W0(static_cast<double>(x)));
-#else
     static_assert(std::false_type{}, "utils::math::lambertW0 not implemented for type");
-#endif
 }
-template <std::floating_point T>
+template <std::integral T>
 T utils::math<T>::sin(const T& x) {
-    return std::sin(x);
+    static_assert(std::false_type{}, "utils::math::sin not implemented for type");
 }
-template <std::floating_point T>
+template <std::integral T>
 T utils::math<T>::asin(const T& x) {
-    return std::asin(x);
+    static_assert(std::false_type{}, "utils::math::asin not implemented for type");
 }
-template <std::floating_point T>
+template <std::integral T>
 T utils::math<T>::cos(const T& x) {
-    return std::cos(x);
+    static_assert(std::false_type{}, "utils::math::cos not implemented for type");
 }
-template <std::floating_point T>
+template <std::integral T>
 T utils::math<T>::acos(const T& x) {
-    return std::acos(x);
+    static_assert(std::false_type{}, "utils::math::acos not implemented for type");
 }
-template <std::floating_point T>
+template <std::integral T>
 T utils::math<T>::tan(const T& x) {
-    return std::tan(x);
+    static_assert(std::false_type{}, "utils::math::tan not implemented for type");
 }
-template <std::floating_point T>
+template <std::integral T>
 T utils::math<T>::atan(const T& x) {
-    return std::atan(x);
+    static_assert(std::false_type{}, "utils::math::atan not implemented for type");
 }
-template <std::floating_point T>
+template <std::integral T>
 T utils::math<T>::sinh(const T& x) {
-    return std::sinh(x);
+    static_assert(std::false_type{}, "utils::math::sinh not implemented for type");
 }
-template <std::floating_point T>
+template <std::integral T>
 T utils::math<T>::asinh(const T& x) {
-    return std::asinh(x);
+    static_assert(std::false_type{}, "utils::math::asinh not implemented for type");
 }
-template <std::floating_point T>
+template <std::integral T>
 T utils::math<T>::cosh(const T& x) {
-    return std::cosh(x);
+    static_assert(std::false_type{}, "utils::math::cosh not implemented for type");
 }
-template <std::floating_point T>
+template <std::integral T>
 T utils::math<T>::acosh(const T& x) {
-    return std::acosh(x);
+    static_assert(std::false_type{}, "utils::math::acosh not implemented for type");
 }
-template <std::floating_point T>
+template <std::integral T>
 T utils::math<T>::tanh(const T& x) {
-    return std::tanh(x);
+    static_assert(std::false_type{}, "utils::math::tanh not implemented for type");
 }
-template <std::floating_point T>
+template <std::integral T>
 T utils::math<T>::atanh(const T& x) {
-    return std::atanh(x);
+    static_assert(std::false_type{}, "utils::math::atanh not implemented for type");
 }
-template <std::floating_point T>
+template <std::integral T>
 T utils::math<T>::abs(const T& x) {
-    return std::abs(x)
+    if constexpr (std::is_signed<T>::value) return std::abs(x) else return x;
 }
 
 #endif

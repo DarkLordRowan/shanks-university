@@ -3,61 +3,58 @@
 #pragma once
 
 template <>
-struct utils::helpers<mpfr::mpreal> {};
+struct utils::helpers<mpfr::mpreal> {
+    static mpfr::mpreal nextafter(const mpfr::mpreal& x, const mpfr::mpreal& y);
+    static mpfr::mpreal fmod(const mpfr::mpreal& x, const mpfr::mpreal& y);
+    static mpfr::mpreal floor(const mpfr::mpreal& x);
+    static mpfr::mpreal ceil(const mpfr::mpreal& x);
+    static mpfr::mpreal get_nan();
+    static std::size_t get_precision(const mpfr::mpreal& x);
+    static std::string to_string(const mpfr::mpreal& x);
+    static bool isfinite(const mpfr::mpreal& x);
+    static bool isnan(const mpfr::mpreal& x);
+    static bool isinf(const mpfr::mpreal& x);
+    static mpfr::mpreal epsilon(std::size_t precision = std::size_t{0});
+    static mpfr::mpreal numeric_max(std::size_t precision = std::size_t{0});
+};
 
-template <>
-static T utils::helpers<T>::nextafter(const T& x, const T& y) {
+mpfr::mpreal utils::helpers<mpfr::mpreal>::nextafter(const mpfr::mpreal& x, const mpfr::mpreal& y) {
     return mpfr::nextafter(x, y);
 }
 
-template <>
-static T utils::helpers<T>::fmod(const T& x, const T& y) {
+mpfr::mpreal utils::helpers<mpfr::mpreal>::fmod(const mpfr::mpreal& x, const mpfr::mpreal& y) {
     return mpfr::fmod(x, y);
 }
-template <>
-static T utils::helpers<T>::floor(const T& x) {
-    return mpfr::floor(x);
-}
-template <>
-static T utils::helpers<T>::ceil(const T& x) {
-    return mpfr::ceil(x);
+mpfr::mpreal utils::helpers<mpfr::mpreal>::floor(const mpfr::mpreal& x) { return mpfr::floor(x); }
+mpfr::mpreal utils::helpers<mpfr::mpreal>::ceil(const mpfr::mpreal& x) { return mpfr::ceil(x); }
+
+mpfr::mpreal utils::helpers<mpfr::mpreal>::get_nan() {
+    return mpfr::mpreal().setNan();
+    ;
 }
 
-template <>
-static T utils::helpers<T>::get_nan() {
-    return mpfr::quiet_NaN();
-}
-
-template <>
-static std::size_t utils::helpers<T>::get_precision(const T& x) {
+std::size_t utils::helpers<mpfr::mpreal>::get_precision(const mpfr::mpreal& x) {
     return mpfr::bits2digits(x.get_prec());
 }
 
-template <>
-static std::string utils::helpers<T>::to_string(const T& x) {
-    return x.toString(-1, 10);
+std::string utils::helpers<mpfr::mpreal>::to_string(const mpfr::mpreal& x) { return x.toString(-1, 10); }
+
+bool utils::helpers<mpfr::mpreal>::isfinite(const mpfr::mpreal& x) { return mpfr::isfinite(x); }
+bool utils::helpers<mpfr::mpreal>::isnan(const mpfr::mpreal& x) { return mpfr::isnan(x); }
+bool utils::helpers<mpfr::mpreal>::isinf(const mpfr::mpreal& x) { return mpfr::isinf(x); }
+
+mpfr::mpreal utils::helpers<mpfr::mpreal>::epsilon(std::size_t precision) {
+    if (precision > 0)
+        return mpfr::machine_epsilon(precision);
+    else
+        return mpfr::machine_epsilon();
 }
 
-template <>
-static bool utils::helpers<T>::isfinite(const T& x) {
-    return mpfr::isfinite(x);
-}
-template <>
-static bool utils::helpers<T>::isnan(const T& x) {
-    return mpfr::isnan(x);
-}
-template <>
-static bool utils::helpers<T>::isinf(const T& x) {
-    return mpfr::isinf(x);
-}
-
-template <>
-static T utils::helpers<T>::epsilon(std::size_t precision = std::size_t{0}) {
-    return mpfr::machine_epsilon(precision);
-}
-template <>
-static T utils::helpers<T>::numeric_max(std::size_t precision = std::size_t{0}) {
-    return std::numeric_limits<mpfr::mpreal>::max(mpfr::digits2bits(precision));
+mpfr::mpreal utils::helpers<mpfr::mpreal>::numeric_max(std::size_t precision) {
+    if (precision > 0)
+        return std::numeric_limits<mpfr::mpreal>::max(mpfr::digits2bits(precision));
+    else
+        return std::numeric_limits<mpfr::mpreal>::max();
 }
 
 #endif

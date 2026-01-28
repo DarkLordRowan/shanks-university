@@ -190,7 +190,7 @@ std::pair<IT, IT> interval<IT>::two_prod(const IT& a, const IT& b) {
     const std::pair<IT, IT> y(split(b));
     const IT p(a * b);
     // check for an overflow condition
-    const IT t1(utils::abs(p) > ldexp(1, -1021) ? (-p * 0.5 + (x.first * 0.5) * y.first) * 2.0
+    const IT t1(utils::math<IT>::abs(p) > ldexp(1, -1021) ? (-p * 0.5 + (x.first * 0.5) * y.first) * 2.0
                                                 : -p + x.first * y.first);
     const IT t2(t1 + x.first * y.second);
     const IT t3(t2 + x.second * y.first);
@@ -215,7 +215,7 @@ std::pair<IT, IT> interval<IT>::two_prod(const IT& a, const IT& b) {
 template <FloatLike IT>
 std::pair<IT, IT> interval<IT>::fasttwo_sum(const IT& a, const IT& b) {
     const IT sum(a + b);
-    if (utils::abs(a) > utils::abs(b)) {
+    if (utils::math<IT>::abs(a) > utils::math<IT>::abs(b)) {
         IT tmp(sum - a);
         IT err(b - tmp);
         if (sum == infinity_interval<IT>())  // If overflow occurs then set err=0
@@ -240,16 +240,16 @@ std::pair<IT, IT> interval<IT>::fasttwo_sum(const IT& a, const IT& b) {
 template <FloatLike IT>
 std::pair<IT, IT> interval<IT>::fasttwo_prod(const IT& a, const IT& b) {
     const IT p(a * b);
-    IT err(utils::fma(a, b, -p));
+    IT err(utils::math<IT>::fma(a, b, -p));
     if (p == infinity_interval<IT>())  // If overflow occurs then set err=0
         err = IT(0);
-    if (p != IT(0) && utils::abs(p) < underflow_interval<IT>())  // Test for underflow conditions
+    if (p != IT(0) && utils::math<IT>::abs(p) < underflow_interval<IT>())  // Test for underflow conditions
     {                                                            // Recalculate the err using the scale products
         int aexp, bexp;
         IT ascale(frexp(a, &aexp));  // ascale [1.0,2.0)
         IT bscale(frexp(b, &bexp));  // bscale [1.0,2.0)
         IT p2(ascale * bscale);
-        err = utils::fma(ascale, bscale, -p2);
+        err = utils::math<IT>::fma(ascale, bscale, -p2);
     }
     return std::make_pair(p, err);
 }
@@ -300,14 +300,14 @@ inline interval<IT>::interval(const _X& x) {
         // Uppromotion from float to double is always accurate
         auto adjustBoundaries = [&](const _X& val) {
             _X e = val - _X(left);
-            if (e < _X(0)) left = utils::nextafter(left, -infi);
+            if (e < _X(0)) left = utils::helpers<IT>::nextafter(left, -infi);
             e = val - _X(right);
-            if (e > _X(0)) right = utils::nextafter(right, +infi);
+            if (e > _X(0)) right = utils::helpers<IT>::nextafter(right, +infi);
         };
         adjustBoundaries(x);
     }
     if (isIntegral) {  // Handle integer promotion to IT
-        const intmax_t absX = intmax_t(utils::abs(x));
+        const intmax_t absX = intmax_t(utils::math<IT>::abs(x));
         auto maxFloat = 16'777'216;              // 2^24
         auto maxDouble = 9'007'199'254'740'992;  // 2^53
         bool exceedsFloat = isTargetFloat && absX > maxFloat;
@@ -315,8 +315,8 @@ inline interval<IT>::interval(const _X& x) {
 
         if (exceedsFloat || exceedsDouble) {
             _X e = x - _X(left);
-            if (e > _X(0)) right = utils::nextafter(right, +infi);
-            if (e < _X(0)) left = utils::nextafter(left, -infi);
+            if (e > _X(0)) right = utils::helpers<IT>::nextafter(right, +infi);
+            if (e < _X(0)) left = utils::helpers<IT>::nextafter(left, -infi);
         }
     }
     type = CLOSE;
@@ -506,23 +506,23 @@ inline enum interval_type interval<IT>::intervaltype(const enum interval_type to
         switch (x.type) {
             case CLOSE:
                 // if the interval is already CLOSE then do nothing
-                if (to == LEFT_OPEN || to == OPEN) x.left = utils::nextafter(x.left, -infi);
-                if (to == RIGHT_OPEN || to == OPEN) x.right = utils::nextafter(x.right, +infi);
+                if (to == LEFT_OPEN || to == OPEN) x.left = utils::helpers<IT>::nextafter(x.left, -infi);
+                if (to == RIGHT_OPEN || to == OPEN) x.right = utils::helpers<IT>::nextafter(x.right, +infi);
                 break;
             case OPEN:
                 // if the interval is already Open then do nothing
-                if (to == RIGHT_OPEN || to == CLOSE) x.left = utils::nextafter(x.left, +infi);
-                if (to == LEFT_OPEN || to == CLOSE) x.right = utils::nextafter(x.right, -infi);
+                if (to == RIGHT_OPEN || to == CLOSE) x.left = utils::helpers<IT>::nextafter(x.left, +infi);
+                if (to == LEFT_OPEN || to == CLOSE) x.right = utils::helpers<IT>::nextafter(x.right, -infi);
                 break;
             case LEFT_OPEN:
                 // If the interval is already RIGHT_CLOSE same as LEFT_OPEN then do nothing
-                if (to == RIGHT_OPEN || to == CLOSE) x.left = utils::nextafter(x.left, +infi);
-                if (to == RIGHT_OPEN || to == OPEN) x.right = utils::nextafter(x.right, +infi);
+                if (to == RIGHT_OPEN || to == CLOSE) x.left = utils::helpers<IT>::nextafter(x.left, +infi);
+                if (to == RIGHT_OPEN || to == OPEN) x.right = utils::helpers<IT>::nextafter(x.right, +infi);
                 break;
             case RIGHT_OPEN:
                 // If the interval is already LEFT_CLOSE then do nothing
-                if (to == LEFT_OPEN || to == OPEN) x.left = utils::nextafter(x.left, -infi);
-                if (to == LEFT_OPEN || to == CLOSE) x.right = utils::nextafter(x.right, -infi);
+                if (to == LEFT_OPEN || to == OPEN) x.left = utils::helpers<IT>::nextafter(x.left, -infi);
+                if (to == LEFT_OPEN || to == CLOSE) x.right = utils::helpers<IT>::nextafter(x.right, -infi);
                 break;
         }
         x.type = to;
@@ -547,9 +547,9 @@ inline enum interval_decoration interval<IT>::intervaldecoration(const enum inte
     if (to == COMPUTE) {  // Compute the decoration type
         if (type == EMPTY)
             decoration = TRV;
-        else if (utils::isfinite(left) && utils::isfinite(right))
+        else if (utils::helpers<IT>::isfinite(left) && utils::helpers<IT>::isfinite(right))
             decoration = COM;  // is bounded
-        else if (utils::isnan(left) || utils::isnan(right))
+        else if (utils::helpers<IT>::isnan(left) || utils::helpers<IT>::isnan(right))
             decoration = ILL;  // ill formed e.g. one or both intervals is NAN
         else
             decoration = DAC;  // Must be unbounded, but otherwise good
@@ -576,10 +576,10 @@ inline IT interval<IT>::inf(bool toclose) const {
     IT adjustedRight = right;
 
     // Adjust left boundary for open intervals
-    if (type == LEFT_OPEN || type == OPEN) adjustedLeft = utils::nextafter(left, (left <= right) ? +infi : -infi);
+    if (type == LEFT_OPEN || type == OPEN) adjustedLeft = utils::helpers<IT>::nextafter(left, (left <= right) ? +infi : -infi);
 
     // Adjust right boundary for open intervals, taking into account improper intervals
-    if (type == RIGHT_OPEN || type == OPEN) adjustedRight = utils::nextafter(right, (left <= right) ? -infi : +infi);
+    if (type == RIGHT_OPEN || type == OPEN) adjustedRight = utils::helpers<IT>::nextafter(right, (left <= right) ? -infi : +infi);
 
     // Return the minimum of the adjusted boundaries
     return std::min(adjustedLeft, adjustedRight);
@@ -602,10 +602,10 @@ inline IT interval<IT>::sup(bool toclose) const {
     IT adjustedRight = right;
 
     // Adjust left boundary for open intervals
-    if (type == LEFT_OPEN || type == OPEN) adjustedLeft = utils::nextafter(left, (left <= right) ? +infi : -infi);
+    if (type == LEFT_OPEN || type == OPEN) adjustedLeft = utils::helpers<IT>::nextafter(left, (left <= right) ? +infi : -infi);
 
     // Adjust right boundary for open intervals, considering proper and improper intervals
-    if (type == RIGHT_OPEN || type == OPEN) adjustedRight = utils::nextafter(right, (left <= right) ? -infi : +infi);
+    if (type == RIGHT_OPEN || type == OPEN) adjustedRight = utils::helpers<IT>::nextafter(right, (left <= right) ? -infi : +infi);
 
     // Return the maximum of the adjusted boundaries
     return std::max(adjustedLeft, adjustedRight);
@@ -615,7 +615,7 @@ inline IT interval<IT>::sup(bool toclose) const {
 // if empty return no value
 template <FloatLike IT>
 inline IT interval<IT>::mid() const {
-    if (isEmpty()) return utils::get_nan(left);
+    if (isEmpty()) return utils::helpers<IT>::get_nan(left);
     if (right == left)
         return left;
     else
@@ -626,7 +626,7 @@ inline IT interval<IT>::mid() const {
 // Notice that radius is negative for improper intervals
 template <FloatLike IT>
 inline IT interval<IT>::rad() const {
-    if (isEmpty()) return utils::get_nan(left);
+    if (isEmpty()) return utils::helpers<IT>::get_nan(left);
     IT r((right - left) / IT(2));
     return r;
 }
@@ -634,7 +634,7 @@ inline IT interval<IT>::rad() const {
 // Return interval width
 template <FloatLike IT>
 inline IT interval<IT>::wid() const {
-    if (isEmpty()) return utils::get_nan(left);
+    if (isEmpty()) return utils::helpers<IT>::get_nan(left);
     IT r(right - left);
     if (r < IT(0)) r = -r;
     return r;
@@ -643,18 +643,18 @@ inline IT interval<IT>::wid() const {
 // Return mignitude of class
 template <FloatLike IT>
 inline IT interval<IT>::mig() const {
-    if (isEmpty()) return utils::get_nan(left);
-    const IT l(utils::abs(inf()));
-    const IT r(utils::abs(sup()));
+    if (isEmpty()) return utils::helpers<IT>::get_nan(left);
+    const IT l(utils::math<IT>::abs(inf()));
+    const IT r(utils::math<IT>::abs(sup()));
     return std::min(l, r);
 }
 
 // Return magnitude of interval
 template <FloatLike IT>
 inline IT interval<IT>::mag() const {
-    if (isEmpty()) return utils::get_nan(left);
-    const IT l(utils::abs(inf()));
-    const IT r(utils::abs(sup()));
+    if (isEmpty()) return utils::helpers<IT>::get_nan(left);
+    const IT l(utils::math<IT>::abs(inf()));
+    const IT r(utils::math<IT>::abs(sup()));
     return std::max(l, r);
 }
 
@@ -758,8 +758,8 @@ inline interval<IT>& interval<IT>::operator+=(const interval<IT>& rhs) {
     std::pair<IT, IT> xleft = fasttwo_sum(inf(), rhs.inf());
     std::pair<IT, IT> xright = fasttwo_sum(sup(), rhs.sup());
     // Any adjustment?
-    if (xleft.second < IT(0)) xleft.first = utils::nextafter(xleft.first, -infi);
-    if (xright.second > IT(0)) xright.first = utils::nextafter(xright.first, +infi);
+    if (xleft.second < IT(0)) xleft.first = utils::helpers<IT>::nextafter(xleft.first, -infi);
+    if (xright.second > IT(0)) xright.first = utils::helpers<IT>::nextafter(xright.first, +infi);
     left = xleft.first;
     right = xright.first;
 #ifdef PHASE5
@@ -770,8 +770,8 @@ inline interval<IT>& interval<IT>::operator+=(const interval<IT>& rhs) {
     // Set decoration
     decoration = std::min(decoration, rhs.decoration);
     // However if underflow or overflow then change it to DAC or TRV
-    if (utils::abs(left) == infi || utils::abs(right) == infi) decoration = std::min(decoration, DAC);
-    if ((left != IT(0) && utils::abs(left) == unfl) || (right != IT(0) && utils::abs(right) == unfl))
+    if (utils::math<IT>::abs(left) == infi || utils::math<IT>::abs(right) == infi) decoration = std::min(decoration, DAC);
+    if ((left != IT(0) && utils::math<IT>::abs(left) == unfl) || (right != IT(0) && utils::math<IT>::abs(right) == unfl))
         decoration = std::min(decoration, TRV);
     return *this;
 }
@@ -791,8 +791,8 @@ inline interval<IT>& interval<IT>::operator-=(const interval<IT>& rhs) {
     // Neither a or b is [EMPTY]
     std::pair<IT, IT> xleft = fasttwo_sum(inf(), -rhs.sup());
     std::pair<IT, IT> xright = fasttwo_sum(sup(), -rhs.inf());
-    if (xleft.second < IT(0)) xleft.first = utils::nextafter(xleft.first, -infi);
-    if (xright.second > IT(0)) xright.first = utils::nextafter(xright.first, +infi);
+    if (xleft.second < IT(0)) xleft.first = utils::helpers<IT>::nextafter(xleft.first, -infi);
+    if (xright.second > IT(0)) xright.first = utils::helpers<IT>::nextafter(xright.first, +infi);
     left = xleft.first;
     right = xright.first;
 #ifdef PHASE5
@@ -803,8 +803,8 @@ inline interval<IT>& interval<IT>::operator-=(const interval<IT>& rhs) {
     // Set Decoration
     decoration = std::min(decoration, rhs.decoration);
     // However if underflow or overflow then change it to DAC or TRV
-    if (utils::abs(left) == infi || utils::abs(right) == infi) decoration = std::min(decoration, DAC);
-    if ((left != IT(0) && utils::abs(left) == unfl) || (right != IT(0) && utils::abs(right) == unfl))
+    if (utils::math<IT>::abs(left) == infi || utils::math<IT>::abs(right) == infi) decoration = std::min(decoration, DAC);
+    if ((left != IT(0) && utils::math<IT>::abs(left) == unfl) || (right != IT(0) && utils::math<IT>::abs(right) == unfl))
         decoration = std::min(decoration, TRV);
     return *this;
 }
@@ -847,8 +847,8 @@ inline interval<IT>& interval<IT>::operator*=(const interval<IT>& rhs) {
         std::pair<IT, IT> tmp = interval<IT>::fasttwo_prod(x, y);
         interval<IT> res(tmp.first, tmp.first);
         const IT infi(infinity_interval<IT>());  // infi(INFINITY);
-        if (tmp.second < c0) res.left = utils::nextafter(tmp.first, -infi);
-        if (tmp.second > c0) res.right = utils::nextafter(tmp.first, +infi);
+        if (tmp.second < c0) res.left = utils::helpers<IT>::nextafter(tmp.first, -infi);
+        if (tmp.second > c0) res.right = utils::helpers<IT>::nextafter(tmp.first, +infi);
         return res;
     };
     // The initialization is done to preserve the precision when IT is a float_precision arbitrary type
@@ -905,8 +905,8 @@ inline interval<IT>& interval<IT>::operator*=(const interval<IT>& rhs) {
     right = std::max(right, itmp.right);
 
     // However if underflow or overflow then change it to DAC or TRV
-    if (utils::abs(left) == infi || utils::abs(right) == infi) decoration = std::min(decoration, DAC);
-    if ((left != c0 && utils::abs(left) == unfl) || (right != c0 && utils::abs(right) == unfl))
+    if (utils::math<IT>::abs(left) == infi || utils::math<IT>::abs(right) == infi) decoration = std::min(decoration, DAC);
+    if ((left != c0 && utils::math<IT>::abs(left) == unfl) || (right != c0 && utils::math<IT>::abs(right) == unfl))
         decoration = std::min(decoration, TRV);
     return *this;
 }
@@ -927,12 +927,12 @@ inline interval<IT>& interval<IT>::operator/=(const interval<IT>& rhs) {
     // Compute the reverse of y e.g. 1/y
     auto inverse = [&](const IT& y, const bool up) {
         IT res(IT(1) / y);
-        const IT r(-utils::fma(res, y, utils::cast<IT>(-1.0)));
+        const IT r(-utils::math<IT>::fma(res, y, utils::cast<IT>(-1.0)));
 
         if (up == false) {
-            if (r < IT(0)) res = utils::nextafter(res, -infi);
+            if (r < IT(0)) res = utils::helpers<IT>::nextafter(res, -infi);
         } else {
-            if (r > IT(0)) res = utils::nextafter(res, +infi);
+            if (r > IT(0)) res = utils::helpers<IT>::nextafter(res, +infi);
         };
 
         return res;
@@ -1549,7 +1549,7 @@ inline interval<IT> abs(const interval<IT>& a) {
 
 template <FloatLike IT>
 inline IT intervaldistance(const interval<IT>& a, const interval<IT>& b) {
-    return std::max(utils::abs(a.leftinterval() - b.leftinterval()), utils::abs(a.rightinterval() - b.rightinterval()));
+    return std::max(utils::math<IT>::abs(a.leftinterval() - b.leftinterval()), utils::math<IT>::abs(a.rightinterval() - b.rightinterval()));
 }
 
 // Return union
@@ -1683,9 +1683,9 @@ inline interval<IT> sqr(const interval<IT>& x) {
     // Set decoration
     r.intervaldecoration(std::min(r.intervaldecoration(), x.intervaldecoration()));
     // However if underflow or overflow then change it to DAC or TRV
-    if (utils::abs(left) == infi || utils::abs(right) == infi)
+    if (utils::math<IT>::abs(left) == infi || utils::math<IT>::abs(right) == infi)
         r.intervaldecoration(std::min(r.intervaldecoration(), DAC));
-    if ((left != IT(0) && utils::abs(left) == unfl) || (right != IT(0) && utils::abs(right) == unfl))
+    if ((left != IT(0) && utils::math<IT>::abs(left) == unfl) || (right != IT(0) && utils::math<IT>::abs(right) == unfl))
         r.intervaldecoration(std::min(r.intervaldecoration(), TRV));
     return r;
 }
@@ -1707,19 +1707,19 @@ inline interval<IT> sqrt(const interval<IT>& x) {
     }
     // Find leftinterval bound
     const IT leftadjust(std::max(x.inf(), IT(0)));
-    IT left(utils::sqrt(leftadjust));
-    IT r(-utils::fma(left, left, -leftadjust));
-    if (utils::isinf(left) && utils::isinf(x.inf())) r = 0;  // When both is infinity
-    if (r < IT(0)) left = utils::nextafter(left, -infi);
+    IT left(utils::math<IT>::sqrt(leftadjust));
+    IT r(-utils::math<IT>::fma(left, left, -leftadjust));
+    if (utils::helpers<IT>::isinf(left) && utils::helpers<IT>::isinf(x.inf())) r = 0;  // When both is infinity
+    if (r < IT(0)) left = utils::helpers<IT>::nextafter(left, -infi);
 
     // Find rightinterval bound
     const IT rightadjust(std::max(x.sup(), IT(0)));
-    IT right(utils::sqrt(rightadjust));
-    if (utils::isinf(right) && utils::isinf(x.sup()))
+    IT right(utils::math<IT>::sqrt(rightadjust));
+    if (utils::helpers<IT>::isinf(right) && utils::helpers<IT>::isinf(x.sup()))
         r = 0;  // When both is infinity
     else
-        r = -utils::fma(right, right, -rightadjust);
-    if (r > IT(0)) right = utils::nextafter(right, +infi);
+        r = -utils::math<IT>::fma(right, right, -rightadjust);
+    if (r > IT(0)) right = utils::helpers<IT>::nextafter(right, +infi);
 
     interval<IT> res(left, right);
     // set the proper interval decoration
@@ -1734,7 +1734,7 @@ template <FloatLike IT>
 inline interval<IT> floor(const interval<IT>& x) {
     const IT left(x.inf(true));
     const IT right(x.sup(true));
-    interval<IT> res(utils::floor(left), utils::floor(right));
+    interval<IT> res(utils::helpers<IT>::floor(left), utils::helpers<IT>::floor(right));
     // set the proper interval decoration
     res.intervaldecoration(x.intervaldecoration());
     return res;
@@ -1745,7 +1745,7 @@ template <FloatLike IT>
 inline interval<IT> ceil(const interval<IT>& x) {
     const IT left(x.inf(true));
     const IT right(x.sup(true));
-    interval<IT> res(utils::ceil(left), utils::ceil(right));
+    interval<IT> res(utils::helpers<IT>::ceil(left), utils::helpers<IT>::ceil(right));
     // set the proper interval decoration
     res.intervaldecoration(x.intervaldecoration());
     return res;
@@ -1789,8 +1789,8 @@ inline interval<IT> log(const interval<IT>& x) {
     }
 
     // Initialize lower and upper with direct log calculations or -INFINITY for l <= 0
-    IT lower((l <= IT(0)) ? -infi : utils::log(l));
-    IT upper((r <= IT(0)) ? -infi : utils::log(r));
+    IT lower((l <= IT(0)) ? -infi : utils::math<IT>::log(l));
+    IT upper((r <= IT(0)) ? -infi : utils::math<IT>::log(r));
 
     // Apply shortcuts for well-known constants, adjusting for precision
     if (l == IT(1))
@@ -1800,7 +1800,7 @@ inline interval<IT> log(const interval<IT>& x) {
     else if (isIEEE754Float && l == IT(10))
         lower = ln10_interval<IT>().inf();
     else
-        lower = utils::nextafter(lower, -infi);  // Adjust for precision if not a shortcut value
+        lower = utils::helpers<IT>::nextafter(lower, -infi);  // Adjust for precision if not a shortcut value
 
     if (r == IT(1))
         upper = IT(0);
@@ -1809,7 +1809,7 @@ inline interval<IT> log(const interval<IT>& x) {
     else if (isIEEE754Float && r == IT(10))
         upper = ln10_interval<IT>().sup();
     else
-        upper = utils::nextafter(upper, +infi);  // Adjust for precision if not a shortcut value
+        upper = utils::helpers<IT>::nextafter(upper, +infi);  // Adjust for precision if not a shortcut value
 
     // Ensure lower is not mistakenly set to a non-NaN value when l <= 0
     if (l <= IT(0) && r > IT(0)) lower = -infi;
@@ -1837,8 +1837,8 @@ inline interval<IT> log10(const interval<IT>& x) {
     }
 
     // Initialize lower and upper bounds with direct log10 calculations or -INFINITY for l <= 0
-    IT lower(l <= IT(0) ? -infi : utils::log10(l));
-    IT upper(r <= IT(0) ? -infi : utils::log10(r));
+    IT lower(l <= IT(0) ? -infi : utils::math<IT>::log10(l));
+    IT upper(r <= IT(0) ? -infi : utils::math<IT>::log10(r));
 
     // Apply shortcuts for well-known constants, adjusting for precision
     if (l == IT(1))
@@ -1846,14 +1846,14 @@ inline interval<IT> log10(const interval<IT>& x) {
     else if (l == IT(10))
         lower = IT(1);
     else
-        lower = utils::nextafter(lower, -infi);  // Adjust for precision if not a shortcut value
+        lower = utils::helpers<IT>::nextafter(lower, -infi);  // Adjust for precision if not a shortcut value
 
     if (r == IT(1))
         upper = IT(0);
     else if (r == IT(10))
         upper = IT(1);
     else
-        upper = utils::nextafter(upper, +infi);  // Adjust for precision if not a shortcut value
+        upper = utils::helpers<IT>::nextafter(upper, +infi);  // Adjust for precision if not a shortcut value
 
     // Ensure lower is not mistakenly set to a non-NaN value when l <= 0
     if (l <= IT(0) && r > IT(0)) lower = -infi;
@@ -1874,8 +1874,8 @@ inline interval<IT> exp(const interval<IT>& x) {
     const bool isIEEE754Float = std::is_floating_point<IT>::value;
     const IT l(x.inf());
     const IT r(x.sup());
-    IT leftexp(utils::exp(l));
-    IT rightexp(utils::exp(r));
+    IT leftexp(utils::math<IT>::exp(l));
+    IT rightexp(utils::math<IT>::exp(r));
 
     // Directly handle the special cases with exact values
     if (l == IT(0))
@@ -1883,20 +1883,20 @@ inline interval<IT> exp(const interval<IT>& x) {
     else if (isIEEE754Float && l == IT(1))
         leftexp = e_interval<IT>().inf();  // e^1, use predefined constant
     else
-        leftexp = utils::nextafter(leftexp, -infi);  // Adjust unless it's a special case
+        leftexp = utils::helpers<IT>::nextafter(leftexp, -infi);  // Adjust unless it's a special case
 
     if (r == IT(0))
         rightexp = IT(1);  // e^0 = 1, exact
     else if (isIEEE754Float && r == IT(1))
         rightexp = e_interval<IT>().sup();  // e^1, use predefined constant
     else
-        rightexp = utils::nextafter(rightexp, +infi);  // Adjust unless it's a special case
+        rightexp = utils::helpers<IT>::nextafter(rightexp, +infi);  // Adjust unless it's a special case
 
     // Create and return the interval from the calculated or adjusted values
     interval<IT> res(leftexp, rightexp);
     // set the proper interval decoration
     res.intervaldecoration(x.intervaldecoration());
-    if (utils::abs(rightexp) == infi || utils::abs(leftexp) == infi)
+    if (utils::math<IT>::abs(rightexp) == infi || utils::math<IT>::abs(leftexp) == infi)
         res.intervaldecoration(std::min(res.intervaldecoration(), DAC));
     return res;
 }
@@ -1933,13 +1933,13 @@ inline interval<IT> pow(const interval<IT>& x, const IT y) {
     }
     */
 
-    IT lp(utils::pow(l, y));
-    IT rp(utils::pow(r, y));
+    IT lp(utils::math<IT>::pow(l, y));
+    IT rp(utils::math<IT>::pow(r, y));
 
-    if (utils::floor(l) != l ||
-        utils::floor(r) != r) {  // if either is not an integer then we do not have an exact power
-        lp = utils::nextafter(lp, (lp > IT(0)) ? -infi : +infi);
-        rp = utils::nextafter(rp, (rp > IT(0)) ? +infi : -infi);
+    if (utils::helpers<IT>::floor(l) != l ||
+        utils::helpers<IT>::floor(r) != r) {  // if either is not an integer then we do not have an exact power
+        lp = utils::helpers<IT>::nextafter(lp, (lp > IT(0)) ? -infi : +infi);
+        rp = utils::helpers<IT>::nextafter(rp, (rp > IT(0)) ? +infi : -infi);
     }
     // else Both are integers => trust the result
 
@@ -1965,18 +1965,18 @@ inline interval<IT> pow(const interval<IT>& x, const interval<IT>& y) {
     }
     // Both x and y are intervals
     // if y is an integer?
-    if (utils::floor(y.inf()) == y.inf() &&
-        utils::floor(y.sup()) == y.sup()) {  // raise to the power of an integer interval
-        interval<IT> lhs(utils::pow(x, utils::cast<interval<IT>>(y.inf())));
-        interval<IT> rhs(utils::pow(x, utils::cast<interval<IT>>(y.sup())));
+    if (utils::helpers<IT>::floor(y.inf()) == y.inf() &&
+        utils::helpers<IT>::floor(y.sup()) == y.sup()) {  // raise to the power of an integer interval
+        interval<IT> lhs(utils::math<IT>::pow(x, utils::cast<interval<IT>>(y.inf())));
+        interval<IT> rhs(utils::math<IT>::pow(x, utils::cast<interval<IT>>(y.sup())));
         c = interval<IT>(std::min(lhs.inf(), rhs.inf()), std::max(lhs.sup(), rhs.sup()));
         return c;
     }
 
     // Otherwise do it the hard way
-    c = utils::log(x);
+    c = utils::math<IT>::log(x);
     c *= y;
-    c = utils::exp(c);
+    c = utils::math<IT>::exp(c);
     return c;
 }
 
@@ -2012,7 +2012,7 @@ inline interval<IT> sin(const interval<IT>& x) {
     if (x.isEmpty()) return interval<IT>();  // Return the EMPTY interval;
     const IT infi(infinity_interval<IT>());  // infi(INFINITY);
     const IT pi = [&]() -> IT {
-        return utils::acos(IT(-1));  // More precise pi value
+        return utils::math<IT>::acos(IT(-1));  // More precise pi value
     }();  // The Lambda is immediately invokeed
     const IT twopi(IT(2) * pi);
     IT l(x.inf());
@@ -2022,16 +2022,16 @@ inline interval<IT> sin(const interval<IT>& x) {
     if (x.sup() - x.inf() >= twopi) return interval<IT>(IT(-1), IT(1));
 
     // Calculate sine values at the interval's endpoints
-    IT sin_l(utils::sin(l));
-    IT sin_r(utils::sin(r));
+    IT sin_l(utils::math<IT>::sin(l));
+    IT sin_r(utils::math<IT>::sin(r));
 
     // Check for critical points within the interval
     IT sin_min(std::min(sin_l, sin_r));
     IT sin_max(std::max(sin_l, sin_r));
 
     // Check passing critical ponts by normalizing l and r
-    l = utils::fmod(x.inf(), twopi);                // Normalize l within a single period
-    r = l + utils::fmod(x.sup() - x.inf(), twopi);  // Calculate r based on l and the interval width
+    l = utils::helpers<IT>::fmod(x.inf(), twopi);                // Normalize l within a single period
+    r = l + utils::helpers<IT>::fmod(x.sup() - x.inf(), twopi);  // Calculate r based on l and the interval width
     // Normalize angles to be within [0, 2*pi)
     if (l < IT(0)) l += twopi;
     if (r >= twopi) r -= twopi;
@@ -2039,8 +2039,8 @@ inline interval<IT> sin(const interval<IT>& x) {
     if (l <= IT(1.5) * pi && IT(1.5) * pi <= r) sin_min = IT(-1);  // 3*pi/2 is within interval
 
     // Established a safety interval around the result to ensure correct bound for the computation
-    if (sin_min != IT(-1) && sin_min != IT(0)) sin_min = utils::nextafter(sin_min, -infi);
-    if (sin_max != IT(1) && sin_max != IT(0)) sin_max = utils::nextafter(sin_max, +infi);
+    if (sin_min != IT(-1) && sin_min != IT(0)) sin_min = utils::helpers<IT>::nextafter(sin_min, -infi);
+    if (sin_max != IT(1) && sin_max != IT(0)) sin_max = utils::helpers<IT>::nextafter(sin_max, +infi);
 
     // Create and return the interval based on calculated min and max sine values
     interval<IT> res(sin_min, sin_max);
@@ -2066,7 +2066,7 @@ inline interval<IT> cos(const interval<IT>& x) {
     if (x.isEmpty()) return interval<IT>();  // Return the EMPTY interval;
     const IT infi(infinity_interval<IT>());  // infi(INFINITY);
     const IT pi = [&]() -> IT {
-        return utils::acos(IT(-1));  // More precise pi value
+        return utils::math<IT>::acos(IT(-1));  // More precise pi value
     }();  // The Lambda is immediately invokeed
     const IT twopi(IT(2) * pi);
     IT l(x.inf());
@@ -2076,16 +2076,16 @@ inline interval<IT> cos(const interval<IT>& x) {
     if (x.sup() - x.inf() >= twopi) return interval<IT>(IT(-1), IT(1));
 
     // Calculate cosine values at the interval's endpoints
-    IT cos_l(utils::cos(l));
-    IT cos_r(utils::cos(r));
+    IT cos_l(utils::math<IT>::cos(l));
+    IT cos_r(utils::math<IT>::cos(r));
 
     // Check for critical points within the interval
     IT cos_min(std::min(cos_l, cos_r));
     IT cos_max(std::max(cos_l, cos_r));
 
     // Check passing critical ponts by normalizing l and r
-    l = utils::fmod(x.inf(), twopi);                // Normalize l within a single period
-    r = l + utils::fmod(x.sup() - x.inf(), twopi);  // Calculate r based on l and the interval width
+    l = utils::helpers<IT>::fmod(x.inf(), twopi);                // Normalize l within a single period
+    r = l + utils::helpers<IT>::fmod(x.sup() - x.inf(), twopi);  // Calculate r based on l and the interval width
     // Normalize angles to be within [0, 2*pi)
     if (l < IT(0)) l += twopi;
     if (r >= twopi) r -= twopi;
@@ -2094,8 +2094,8 @@ inline interval<IT> cos(const interval<IT>& x) {
     if (l <= pi && r >= pi) cos_min = IT(-1.0);  // pi is within interval
 
     // Established a safety interval around the result to ensure correct bound for the computation
-    if (cos_min != IT(-1) && cos_min != IT(0)) cos_min = utils::utils::nextafter(cos_min, -infi);
-    if (cos_max != IT(1) && cos_max != IT(0)) cos_max = utils::utils::nextafter(cos_max, +infi);
+    if (cos_min != IT(-1) && cos_min != IT(0)) cos_min = utils::utils::helpers<IT>::nextafter(cos_min, -infi);
+    if (cos_max != IT(1) && cos_max != IT(0)) cos_max = utils::utils::helpers<IT>::nextafter(cos_max, +infi);
 
     // Create and return the interval based on calculated min and max cosine values
     interval<IT> res(cos_min, cos_max);
@@ -2125,26 +2125,26 @@ inline interval<IT> tan(const interval<IT>& x) {
     if (x.isEmpty()) return interval<IT>();  // Return the EMPTY interval;
     const IT infi(infinity_interval<IT>());  // infi(INFINITY);
     const IT pi = [&]() -> IT {
-        return utils::acos(IT(-1));  // More precise pi value
+        return utils::math<IT>::acos(IT(-1));  // More precise pi value
     }();  // The Lambda is immediately invokeed
     const IT twopi(IT(2) * pi);
-    IT l(utils::fmod(x.inf(), twopi));                // Normalize l within a single period
-    IT r(l + utils::fmod(x.sup() - x.inf(), twopi));  // Calculate r based on l and the interval width
+    IT l(utils::helpers<IT>::fmod(x.inf(), twopi));                // Normalize l within a single period
+    IT r(l + utils::helpers<IT>::fmod(x.sup() - x.inf(), twopi));  // Calculate r based on l and the interval width
 
     // Normalize angles to be within [0, 2*pi)
     if (l < IT(0)) l += twopi;
     if (r >= twopi) r -= twopi;
 
     // Check if the interval includes a vertical asymptote
-    if (x.sup() - x.inf() >= pi || (utils::floor((l + pi / IT(2)) / pi) != utils::floor((r + pi / IT(2)) / pi))) {
+    if (x.sup() - x.inf() >= pi || (utils::helpers<IT>::floor((l + pi / IT(2)) / pi) != utils::helpers<IT>::floor((r + pi / IT(2)) / pi))) {
         // The function covers an entire period or crosses an asymptote, range is all real numbers
         interval<IT> res(-infi, +infi);
         return res;
     }
 
     // Calculate tangent values at the interval's endpoints
-    IT tan_l(utils::tan(x.inf()));
-    IT tan_r(utils::tan(x.sup()));
+    IT tan_l(utils::math<IT>::tan(x.inf()));
+    IT tan_r(utils::math<IT>::tan(x.sup()));
 
     // Given the properties of tan(x), if the interval does not include an asymptote,
     // the minimum and maximum can be directly computed from the interval's endpoints.
@@ -2152,8 +2152,8 @@ inline interval<IT> tan(const interval<IT>& x) {
     IT tan_max(std::max(tan_l, tan_r));
 
     // Established a safety interval around the result to ensure correct bound for the computation
-    if (tan_min != pi) tan_min = utils::utils::nextafter(tan_min, -infi);
-    if (tan_max != pi) tan_max = utils::utils::nextafter(tan_max, +infi);
+    if (tan_min != pi) tan_min = utils::helpers<IT>::nextafter(tan_min, -infi);
+    if (tan_max != pi) tan_max = utils::helpers<IT>::nextafter(tan_max, +infi);
 
     // Create and return the interval based on calculated min and max tangent values
     interval<IT> res(tan_min, tan_max);
@@ -2182,16 +2182,16 @@ inline interval<IT> asin(const interval<IT>& x) {
 
     const IT infi(infinity_interval<IT>());  // infi(INFINITY);
     // Calculate arcsin values at the interval's endpoints
-    const IT asin_l(utils::asin(x.inf()));
-    const IT asin_r(utils::asin(x.sup()));
+    const IT asin_l(utils::math<IT>::asin(x.inf()));
+    const IT asin_r(utils::math<IT>::asin(x.sup()));
 
     // Ensure the interval is correctly oriented
     IT asin_min(std::min(asin_l, asin_r));
     IT asin_max(std::max(asin_l, asin_r));
 
     // Established a safety interval around the result to ensure correct bound for the computation
-    asin_min = utils::utils::nextafter(asin_min, -infi);
-    asin_max = utils::utils::nextafter(asin_max, +infi);
+    asin_min = utils::helpers<IT>::nextafter(asin_min, -infi);
+    asin_max = utils::helpers<IT>::nextafter(asin_max, +infi);
 
     // Since arcsin is monotonically increasing in its domain, we directly return the interval
     // Create and return the interval based on calculated min and max tangent values
@@ -2220,16 +2220,16 @@ inline interval<IT> acos(const interval<IT>& x) {
 
     const IT infi(infinity_interval<IT>());  // infi(INFINITY);
     // Calculate acos values at the interval's endpoints
-    const IT acos_l(utils::acos(x.sup()));  // Note: we use sup here
-    const IT acos_r(utils::acos(x.inf()));  // Note: we use inf here
+    const IT acos_l(utils::math<IT>::acos(x.sup()));  // Note: we use sup here
+    const IT acos_r(utils::math<IT>::acos(x.inf()));  // Note: we use inf here
 
     // Ensure the interval is correctly oriented
     IT acos_min(std::min(acos_l, acos_r));
     IT acos_max(std::max(acos_l, acos_r));
 
     // Established a safety interval around the result to ensure correct bound for the computation
-    acos_min = utils::nextafter(acos_min, -infi);
-    acos_max = utils::nextafter(acos_max, +infi);
+    acos_min = utils::helpers<IT>::nextafter(acos_min, -infi);
+    acos_max = utils::helpers<IT>::nextafter(acos_max, +infi);
 
     // Since acos is monotonically decreasing in its domain
     // Create and return the interval based on calculated min and max tangent values
@@ -2249,16 +2249,16 @@ inline interval<IT> atan(const interval<IT>& x) {
     if (x.isEmpty()) return interval<IT>();  // Return the EMPTY interval;
     const IT infi(infinity_interval<IT>());  // infi(INFINITY);
     // Calculate atan values at the interval's endpoints
-    const IT atan_l(utils::atan(x.inf()));
-    const IT atan_r(utils::atan(x.sup()));
+    const IT atan_l(utils::math<IT>::atan(x.inf()));
+    const IT atan_r(utils::math<IT>::atan(x.sup()));
 
     // Ensure the interval is correctly oriented
     IT atan_min(std::min(atan_l, atan_r));
     IT atan_max(std::max(atan_l, atan_r));
 
     // Established a safety interval around the result to ensure correct bound for the computation
-    atan_min = utils::nextafter(atan_min, -infi);
-    atan_max = utils::nextafter(atan_max, +infi);
+    atan_min = utils::helpers<IT>::nextafter(atan_min, -infi);
+    atan_max = utils::helpers<IT>::nextafter(atan_max, +infi);
 
     // Since atan is monotonically increasing in its domain, we directly return the interval
     // Create and return the interval based on calculated min and max tangent values
@@ -2286,7 +2286,7 @@ inline interval<IT> sinh(const interval<IT>& x) {
     if (x.isEmpty()) return interval<IT>();  // Return the EMPTY interval;
     const interval<IT> one(IT(1));           // Ensure correct precision for IT=float_precision
     const interval<IT> half(IT(0.5));        // Ensure correct precision for IT=float_precision
-    const interval<IT> e(utils::exp(x));
+    const interval<IT> e(utils::math<IT>::exp(x));
     interval<IT> res(half * (e - one / e));
     // set the proper interval decoration
     res.intervaldecoration(x.intervaldecoration());
@@ -2299,7 +2299,7 @@ inline interval<IT> cosh(const interval<IT>& x) {
     if (x.isEmpty()) return interval<IT>();  // Return the EMPTY interval;
     interval<IT> one(x);                     // Ensure correct precision for IT=float_precision
     interval<IT> half(x);                    // Ensure correct precision for IT=float_precision
-    const interval<IT> e(utils::exp(x));
+    const interval<IT> e(utils::math<IT>::exp(x));
     one = interval<IT>(1);
     half = interval<IT>(0.5);
     interval<IT> res(half * (e + one / e));
@@ -2313,7 +2313,7 @@ template <FloatLike IT>
 inline interval<IT> tanh(const interval<IT>& x) {
     if (x.isEmpty()) return interval<IT>();  // Return the EMPTY interval;
     const interval<IT> one(1);
-    interval<IT> e(utils::exp(x));
+    interval<IT> e(utils::math<IT>::exp(x));
     e *= e;
     interval<IT> res((e - one) / (e + one));
     // set the proper interval decoration
@@ -2329,7 +2329,7 @@ inline interval<IT> asinh(const interval<IT>& x) {
     const interval<IT> one(1);
     interval<IT> xsq(x);
     xsq *= xsq;
-    interval<IT> res(utils::log(x + utils::sqrt(xsq + one)));
+    interval<IT> res(utils::math<IT>::log(x + utils::math<IT>::sqrt(xsq + one)));
     // set the proper interval decoration
     res.intervaldecoration(x.intervaldecoration());
     return res;
@@ -2343,7 +2343,7 @@ inline interval<IT> acosh(const interval<IT>& x) {
     const interval<IT> one(1);
     interval<IT> xsq(x);
     xsq *= xsq;
-    interval<IT> res(utils::log(x + utils::sqrt(xsq - one)));
+    interval<IT> res(utils::math<IT>::log(x + utils::math<IT>::sqrt(xsq - one)));
     // set the proper interval decoration
     res.intervaldecoration(x.intervaldecoration());
     return res;
@@ -2370,7 +2370,7 @@ inline interval<IT> atanh(const interval<IT>& x) {
     interval<IT> xadjusted(ainf, asup);
     const interval<IT> one(1);
     const interval<IT> half(0.5);
-    interval<IT> res(utils::log((xadjusted + one) / (-xadjusted + one)) * half);
+    interval<IT> res(utils::math<IT>::log((xadjusted + one) / (-xadjusted + one)) * half);
     // set the proper interval decoration
     res.intervaldecoration(x.intervaldecoration());
     if (ainf == IT(-1) || asup == IT(1)) res.intervaldecoration(TRV);
@@ -2387,10 +2387,10 @@ inline interval<IT> atanh(const interval<IT>& x) {
 template <FloatLike IT>
 inline interval<IT> sinsimpel(const interval<IT>& x) {
     const IT infi(infinity_interval<IT>());  // infi(INFINITY);
-    const IT pi = utils::acos(IT(-1));       // More precise pi value
+    const IT pi = utils::math<IT>::acos(IT(-1));       // More precise pi value
     const IT twopi(IT(2) * pi);
-    IT l(utils::fmod(x.inf(), twopi));                // Normalize l within a single period
-    IT r(l + utils::fmod(x.sup() - x.inf(), twopi));  // Calculate r based on l and the interval width
+    IT l(utils::helpers<IT>::fmod(x.inf(), twopi));                // Normalize l within a single period
+    IT r(l + utils::helpers<IT>::fmod(x.sup() - x.inf(), twopi));  // Calculate r based on l and the interval width
 
     // Normalize angles to be within [0, 2*pi)
     if (l < IT(0)) l += twopi;
@@ -2400,8 +2400,8 @@ inline interval<IT> sinsimpel(const interval<IT>& x) {
     if (x.sup() - x.inf() >= twopi) return interval<IT>(IT(-1), IT(1));
 
     // Calculate sine values at the interval's endpoints
-    IT sin_l(utils::sin(l));
-    IT sin_r(utils::sin(r));
+    IT sin_l(utils::math<IT>::sin(l));
+    IT sin_r(utils::math<IT>::sin(r));
 
     // Check for critical points within the interval
     IT sin_min(std::min(sin_l, sin_r));
@@ -2410,8 +2410,8 @@ inline interval<IT> sinsimpel(const interval<IT>& x) {
     if (l <= IT(1.5) * pi && IT(1.5) * pi <= r) sin_min = IT(-1);  // 3*pi/2 is within interval
 
     // Established a safety interval around the result to ensure correct bound for the computation
-    if (sin_min != IT(-1) && sin_min != IT(0)) sin_min = utils::nextafter(sin_min, -infi);
-    if (sin_max != IT(1) && sin_max != IT(0)) sin_max = utils::nextafter(sin_max, +infi);
+    if (sin_min != IT(-1) && sin_min != IT(0)) sin_min = utils::helpers<IT>::nextafter(sin_min, -infi);
+    if (sin_max != IT(1) && sin_max != IT(0)) sin_max = utils::helpers<IT>::nextafter(sin_max, +infi);
 
     // Create and return the interval based on calculated min and max sine values
     return interval<IT>(IT(sin_min), IT(sin_max));
@@ -2428,7 +2428,7 @@ constexpr interval<IT> pi_interval(const size_t precision) {
         return interval<IT>(IT(3.141'592'653'589'793'1), IT(3.141'592'653'589'793'6));
     else if constexpr (std::is_same<IT, mpfr::mpreal>::value)
         return interval<IT>(mpfr::const_pi(),
-                            utils::nextafter(mpfr::const_pi(), mpfr::const_pi() + mpfr::mpreal(1.0f)));
+                            utils::helpers<IT>::nextafter(mpfr::const_pi(), mpfr::const_pi() + mpfr::mpreal(1.0f)));
     else
         static_assert(isFloatLike<IT>::value,
                       "Unsupported type for pi_interval.Type must be float, double, long double or float_precision.");
@@ -2445,7 +2445,7 @@ constexpr interval<IT> e_interval(const size_t precision) {
         return interval<IT>(IT(2.718'281'828'459'045'1), IT(2.718'281'828'459'045'5));
     else if constexpr (std::is_same<IT, mpfr::mpreal>::value)
         return interval<IT>(mpfr::const_euler(),
-                            utils::nextafter(mpfr::const_euler(), mpfr::const_euler() + mpfr::mpreal(1.0f)));
+                            utils::helpers<IT>::nextafter(mpfr::const_euler(), mpfr::const_euler() + mpfr::mpreal(1.0f)));
     else
         static_assert(std::is_floating_point<IT>::value,
                       "Unsupported type for pi_interval.Type must be float, double, long double or float_precision.");
@@ -2462,7 +2462,7 @@ constexpr interval<IT> ln2_interval(const size_t precision) {
         return interval<IT>(IT(0.693'147'180'559'945'29), IT(0.693'147'180'559'945'40));
     else if constexpr (std::is_same<IT, mpfr::mpreal>::value)
         return interval<IT>(mpfr::const_log2(),
-                            utils::nextafter(mpfr::const_log2(), mpfr::const_log2() + mpfr::mpreal(1.0f)));
+                            utils::helpers<IT>::nextafter(mpfr::const_log2(), mpfr::const_log2() + mpfr::mpreal(1.0f)));
     else
         static_assert(isFloatLike<IT>::value,
                       "Unsupported type for pi_interval.Type must be float, double, long double or float_precision.");
@@ -2480,7 +2480,7 @@ constexpr interval<IT> ln10_interval(const size_t precision) {
     else if constexpr (std::is_same<IT, mpfr::mpreal>::value)
         return interval<IT>(
             mpfr::log(mpfr::mpreal("10")),
-            utils::nextafter(mpfr::log(mpfr::mpreal("10")), mpfr::log(mpfr::mpreal("10")) + mpfr::mpreal(1.0f)));
+            utils::helpers<IT>::nextafter(mpfr::log(mpfr::mpreal("10")), mpfr::log(mpfr::mpreal("10")) + mpfr::mpreal(1.0f)));
     else
         static_assert(isFloatLike<IT>::valu,
                       "Unsupported type for pi_interval.Type must be float, double, long double or float_precision.");

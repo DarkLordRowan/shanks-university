@@ -83,7 +83,7 @@ struct utils::math {
      *
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      */
-    static T atan2(const T& y, const T& x);
+    static T atan2(const T& x, const T& y);
 
     /**
      * @brief Calculates a * b + c
@@ -331,5 +331,146 @@ struct utils::math {
      */
     static typename real_of<T>::value abs(const T& x);
 }
+
+template <typename T, UnsignedIntLike K>
+K utils::math::phi(K n) {
+    static_assert(std::false_type{}, "utils::math::phi not implemented for type");
+}
+template <typename T, UnsignedIntLike K>
+K utils::math::fact(const K n) {
+    static_assert(std::false_type{}, "utils::math::fact not implemented for type");
+}
+template <typename T, UnsignedIntLike K>
+K utils::math::double_fact(const K n) {
+    static_assert(std::false_type{}, "utils::math::double_fact not implemented for type");
+}
+template <typename T, UnsignedIntLike K>
+K utils::math::binomial_coefficient(const K n, const K k) {
+    static_assert(std::false_type{}, "utils::math::binomial_coefficient not implemented for type");
+}
+template <typename T, UnsignedIntLike K>
+T utils::math::minus_one_raised_to_power_n(const K j) {
+    static_assert(std::false_type{}, "utils::math::minus_one_raised_to_power_n not implemented for type");
+}
+template <typename T>
+T utils::math::pow(const T& x, const T& y) {
+    static_assert(std::false_type{}, "utils::math::pow not implemented for type");
+}
+template <typename T>
+T utils::math::atan2(const T& x, const T& y) {
+    static_assert(std::false_type{}, "utils::math::atan2 not implemented for type");
+}
+template <typename T>
+T utils::math::fma(const T& a, const T& b, const T& c) {
+    static_assert(std::false_type{}, "utils::math::fma not implemented for type");
+}
+template <typename T>
+T utils::math::sqrt(const T& x) {
+    static_assert(std::false_type{}, "utils::math::sqrt not implemented for type");
+}
+template <typename T>
+T utils::math::exp(const T& x) {
+    static_assert(std::false_type{}, "utils::math::exp not implemented for type");
+}
+template <typename T>
+T utils::math::log(const T& x) {
+    static_assert(std::false_type{}, "utils::math::log not implemented for type");
+}
+template <typename T>
+T utils::math::log10(const T& x) {
+    static_assert(std::false_type{}, "utils::math::log10 not implemented for type");
+}
+template <typename T>
+T utils::math::hypot(const T& a, const T& b) {
+    static_assert(std::false_type{}, "utils::math::hypot not implemented for type");
+}
+template <typename T>
+T utils::math::erf(const T& x) {
+    static_assert(std::false_type{}, "utils::math::erf not implemented for type");
+}
+template <typename T>
+T utils::math::zeta(const T& x) {
+    static_assert(std::false_type{}, "utils::math::zeta not implemented for type");
+}
+template <typename T>
+T utils::math::ci_x(const T& x) {
+    static_assert(std::false_type{}, "utils::math::ci_x not implemented for type");
+}
+template <typename T>
+T utils::math::si_x(const T& x) {
+    static_assert(std::false_type{}, "utils::math::si_x not implemented for type");
+}
+template <typename T>
+T utils::math::e_x(const T& x) {
+    static_assert(std::false_type{}, "utils::math::e_x not implemented for type");
+}
+template <typename T>
+T utils::math::k_x(const T& x) {
+    static_assert(std::false_type{}, "utils::math::k_x not implemented for type");
+}
+template <typename T>
+T utils::math::inc_gamma(const T& x, const T& alpha) {
+    static_assert(std::false_type{}, "utils::math::inc_gamma not implemented for type");
+}
+template <typename T>
+T utils::math::lambertW0(const T& x) {
+    static_assert(std::false_type{}, "utils::math::lambertW0 not implemented for type");
+}
+template <typename T>
+T utils::math::sin(const T& x) {
+    static_assert(std::false_type{}, "utils::math::sin not implemented for type");
+}
+template <typename T>
+T utils::math::asin(const T& x) {
+    static_assert(std::false_type{}, "utils::math::asin not implemented for type");
+}
+template <typename T>
+T utils::math::cos(const T& x) {
+    static_assert(std::false_type{}, "utils::math::cos not implemented for type");
+}
+template <typename T>
+T utils::math::acos(const T& x) {
+    static_assert(std::false_type{}, "utils::math::acos not implemented for type");
+}
+template <typename T>
+T utils::math::tan(const T& x) {
+    static_assert(std::false_type{}, "utils::math::tan not implemented for type");
+}
+template <typename T>
+T utils::math::atan(const T& x) {
+    static_assert(std::false_type{}, "utils::math::atan not implemented for type");
+}
+template <typename T>
+T utils::math::sinh(const T& x) {
+    static_assert(std::false_type{}, "utils::math::sinh not implemented for type");
+}
+template <typename T>
+T utils::math::asinh(const T& x) {
+    static_assert(std::false_type{}, "utils::math::asinh not implemented for type");
+}
+template <typename T>
+T utils::math::cosh(const T& x) {
+    static_assert(std::false_type{}, "utils::math::cosh not implemented for type");
+}
+template <typename T>
+T utils::math::acosh(const T& x) {
+    static_assert(std::false_type{}, "utils::math::acosh not implemented for type");
+}
+template <typename T>
+T utils::math::tanh(const T& x) {
+    static_assert(std::false_type{}, "utils::math::tanh not implemented for type");
+}
+template <typename T>
+T utils::math::atanh(const T& x) {
+    static_assert(std::false_type{}, "utils::math::atanh not implemented for type");
+}
+template <typename T>
+typename real_of<T>::value utils::math::abs(const T& x) {
+    static_assert(std::false_type{}, "utils::math::abs not implemented for type");
+}
+
+#include "mpreal/utils_math_mpreal.hpp"
+#include "std_floating_point/utils_math_std_floating_point.hpp"
+#include "std_integral/utils_math_std_integral.hpp"
 
 #endif

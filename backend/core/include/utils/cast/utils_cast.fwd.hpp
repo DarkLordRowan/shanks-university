@@ -12,7 +12,15 @@ struct utils::cast {
      * @param x (From)
      * @return To (casted value)
      */
-    static To cast(const From& x, size_t precision = size_t{0});
+    static To operator()(const From& x, size_t precision = size_t{0});
 }
+
+template <typename To, typename From>
+TO utils::cast::operator()(const From& x, size_t precision){
+    return static_cast<To>(x);
+}
+
+#include "std_complex/utils_cast_std_complex.hpp"
+#include "mpreal/utils_cast_mpreal.hpp"
 
 #endif
