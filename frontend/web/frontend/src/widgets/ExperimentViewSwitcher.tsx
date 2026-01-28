@@ -10,6 +10,7 @@ import { AlgoRankingTable } from "@/widgets/AlgoRankingTable.tsx";
 import { AlgorithmSeriesErrorStatsTable } from "@/widgets/AlgorithmSeriesErrorStatsTable";
 import { AlgorithmSeriesView } from "@/widgets/AlgorithmSeriesView";
 import { SeriesComputedConvergenceTable } from "@/widgets/SeriesComputedConvergenceTable";
+import { AlgorithmSeriesProfilingTable } from "@/widgets/AlgorithmSeriesProfilingTable";
 
 type ViewKey =
     | "algorithm-series-view"
@@ -17,6 +18,7 @@ type ViewKey =
     | "series-diff"
     | "series-error"
     | "series-convergence"
+    | "series-profiling"
     | "series-computed-convergence"
     | "series-error-stats"
     | "algo-ranking";
@@ -83,6 +85,13 @@ function ViewToggle(props: ViewToggleProps) {
             </ViewButton>
 
             <ViewButton
+                active={value === "series-profiling"}
+                onClick={() => onChange("series-profiling")}
+            >
+                Профилинг
+            </ViewButton>
+
+            <ViewButton
                 active={value === "series-computed-convergence"}
                 onClick={() => onChange("series-computed-convergence")}
             >
@@ -135,6 +144,10 @@ export function ExperimentViewSwitcher(props: ExperimentViewSwitcherProps) {
 
                     {view === "series-convergence" && (
                         <AlgorithmSeriesConvergenceTable experiment={experiment} maxSeries={19} />
+                    )}
+
+                    {view === "series-profiling" && (
+                        <AlgorithmSeriesProfilingTable experiment={experiment} maxSeries={19} />
                     )}
 
                     {view === "series-computed-convergence" && (

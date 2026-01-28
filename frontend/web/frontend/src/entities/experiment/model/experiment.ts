@@ -1,8 +1,15 @@
-// experiment.ts
+// src/entities/experiment/model/experiment.ts
 
 export interface Complex {
     re: number | null;
     im: number | null;
+}
+
+export interface Profiling {
+    add: number;
+    mul: number;
+    div: number;
+    special: number;
 }
 
 export type ScalarArg = number | string | boolean | null;
@@ -18,6 +25,8 @@ export interface AccelArgs {
 export interface SeriesComputedPoint {
     n: number;
     value: Complex | null;
+    deviation?: number | null;
+    profiling?: Profiling | null;
 }
 
 export interface Series {
@@ -41,6 +50,7 @@ export interface SeriesAccelComputedPoint {
     n: number;
     value: { re: number | null; im: number | null } | null;
     deviation?: number | null;
+    profiling?: Profiling | null;
 }
 
 export interface SeriesAccelError {
@@ -54,6 +64,17 @@ export interface SeriesAccelEvent {
     description: string;
 }
 
+export interface SeriesAccelFilteredMethod {
+    values: ({ re: number | null; im: number | null } | null)[];
+    average: { re: number | null; im: number | null } | null;
+}
+
+export interface SeriesAccelFiltered {
+    startN: number;
+    segmentLength: number;
+    methods: Record<string, SeriesAccelFilteredMethod>;
+}
+
 export interface SeriesAccel {
     series_id: string;
     accel_id: string;
@@ -61,6 +82,9 @@ export interface SeriesAccel {
     computed: SeriesAccelComputedPoint[];
     errors: SeriesAccelError[];
     events: SeriesAccelEvent[];
+
+    noise?: string | null;
+    filtered?: SeriesAccelFiltered | null;
 }
 
 export interface Experiment {
