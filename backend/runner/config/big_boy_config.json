@@ -14,7 +14,7 @@
   "trial_task_timeout": 30,
   "trial_memory_efficient": false,
 
-  "precisions": ["F32", "CFLong", "Arb256", "CArb256"],
+  "precisions": ["F32", "FLong", "Arb256"],
 
   "output_formats": ["parquet"]
 }

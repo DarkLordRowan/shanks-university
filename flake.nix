@@ -16,16 +16,17 @@
 
         devShells.default = pkgs.mkShell {
           packages = with pkgs; [
-            cmake
-            clang-tools
-            poetry
-            pkg-config
-            mpfr
-            gmp
-            eigen
-            mold
             ccache
+            clang-tools
+            cmake
+            eigen
+            gmp
+            gsl
+            mold
+            mpfr
             ninja
+            pkg-config
+            poetry
             (python3.withPackages (
               ps: with ps; [
                 pybind11-stubgen
