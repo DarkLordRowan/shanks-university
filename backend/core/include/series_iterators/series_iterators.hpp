@@ -117,6 +117,8 @@ enum class series_iterator_id_t {
 #include "sin_x2_iterator.hpp"
 #include "sinh_iterator.hpp"
 #include "sinh_x2_iterator.hpp"
+#include "strange_seq1_iterator.hpp"
+#include "strange_seq2_iterator.hpp"
 #include "sqrt_1plusx_iterator.hpp"
 #include "sqrt_1plusx_min_1_min_x_div_2_iterator.hpp"
 #include "sqrt_oneminussqrtoneminusx_div_x_iterator.hpp"

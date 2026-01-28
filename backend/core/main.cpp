@@ -18,12 +18,13 @@
  * @throws std::overflow_error if a numerical overflow or division by zero occurs.
  */
 int main() {
+    std::cout << (-256.0 + 131072.0 / 3.0) / 170.0 << "\n";
     while (true) {
         try {
-            // main_testing_function<long double, unsigned short int>();
+            main_testing_function<double, unsigned short int>();
             // main_testing_function<std::complex<long double>, unsigned long long int>();
             // main_testing_function<std::complex<mpfr::mpreal>, unsigned short int>();
-            main_testing_function<mpfr::mpreal, unsigned short int>();
+            //main_testing_function<mpfr::mpreal, unsigned short int>();
         } catch (std::domain_error& e) {
             std::cout << e.what() << "\n";
         } catch (std::overflow_error& e) {
