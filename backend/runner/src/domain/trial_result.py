@@ -3,7 +3,7 @@ Trial result data models.
 Author: Yadrentsev I. M.
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, Mapping
 from src.config.model import NoiseConfig
 
@@ -96,3 +96,4 @@ class TrialResult:
     error: ErrorTrialResult | None = None
     stack_id: str | None = None
     filtered: FilteredResults | None = None
+    extra_logs: list[str] = field(default_factory=list)

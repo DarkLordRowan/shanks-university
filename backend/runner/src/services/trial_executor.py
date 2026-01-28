@@ -13,6 +13,7 @@ from src.domain.data_serializer import DataSerializer
 from src.domain.export_service import ExportService
 from src.domain.params import BaseAccelParam, BaseSeriesParam, PrecisionType
 from src.domain.sources import AccelParamSource, SeriesParamSource
+from src.domain.trial_result import TrialResult
 from src.domain.trial_runner import TrialRunner
 
 
@@ -57,6 +58,7 @@ class TrialExecutor:
         self.exporters = exporters
 
         self.logger = logger
+        self._seen_errors: set[str] = set()
 
     def load_parameters(self, precision: PrecisionType):
         """Load parameters for the trial.
@@ -104,6 +106,36 @@ class TrialExecutor:
         for exporter in self.exporters:
             exporter.export(dicts, config=self.config, series=series)
 
+    def _log_unique_errors(self, results: Sequence[TrialResult], precision_name: str):
+        """Logs unique errors to a file per precision.
+
+        :param results: The list of trial results to process.
+        :type results: Sequence[TrialResult]
+        :param precision_name: The name of the precision being processed.
+        :type precision_name: str
+        """
+        log_file = self.config.output_dir / f"errors_{precision_name}.log"
+        f = None
+        try:
+            for res in results:
+                # Check main error
+                if res.error and (msg := res.error.description) and msg not in self._seen_errors:
+                    self._seen_errors.add(msg)
+                    if f is None:
+                        f = open(log_file, "a", encoding="utf-8")
+                    f.write(f"{msg}\n")
+                
+                # Check extra logs
+                for msg in res.extra_logs:
+                    if msg not in self._seen_errors:
+                        self._seen_errors.add(msg)
+                        if f is None:
+                            f = open(log_file, "a", encoding="utf-8")
+                        f.write(f"{msg}\n")
+        finally:
+            if f:
+                f.close()
+
     def __run_trials_full_load(
         self,
         series_params: list[BaseSeriesParam],
@@ -138,6 +170,7 @@ class TrialExecutor:
 
         dicts = self.serializer.to_dict(results)
 
+        self._log_unique_errors(results, series_params[0].precision.name)
         self.export_results(dicts, series_params)
 
     def __run_trials_dispose_at_completion(
@@ -169,6 +202,7 @@ class TrialExecutor:
         for result_chunk in self.runner.run(
             combinations,
         ):
+            self._log_unique_errors(result_chunk, series_params[0].precision.name)
             self.export_results(self.serializer.to_dict(result_chunk), series_params)
 
     def run_trials(
@@ -195,6 +229,13 @@ class TrialExecutor:
     def run_all_precisions(self) -> str:
         """Run trials for all configured precisions."""
         for precision in self.config.precisions:
+            self._seen_errors.clear()
+            
+            # Ensure fresh error log per precision
+            log_file = self.config.output_dir / f"errors_{precision.name}.log"
+            if log_file.exists():
+                log_file.unlink()
+
             self.logger.info("Running trials for precision: %s", precision.name)
             series_params, accel_params = self.load_parameters(precision)
             self.logger.debug("Series params: \n%s", "\n".join(map(str, series_params)))
