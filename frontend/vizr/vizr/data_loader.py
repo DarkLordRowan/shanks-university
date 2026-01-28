@@ -704,7 +704,15 @@ class DataLoader:
         # the data on disk stores 'computed' as a list of structs.
         # we want to flatten these structs into parallel arrays (columns) for faster plotting logic later.
 
-        def transform_computed(col_name="computed", has_n=True):
+        def transform_computed(df_to_check: pl.LazyFrame, col_name="computed", has_n=True):
+            # get the schema of the list element to see if profiling exists
+            list_dtype = df_to_check.collect_schema()[col_name]
+            inner_fields = []
+            if isinstance(list_dtype, pl.List):
+                inner_dtype = list_dtype.inner
+                if isinstance(inner_dtype, pl.Struct):
+                    inner_fields = [f.name for f in inner_dtype.fields]
+
             root = pl.element()
             val = root.struct.field("value")
             dev_str = root.struct.field("deviation")
@@ -723,8 +731,12 @@ class DataLoader:
                 "vi_e": vi_e,
                 "d_m": d_m,
                 "d_e": d_e,
-                "prof": root.struct.field("profiling"),
             }
+            if "profiling" in inner_fields:
+                struct_fields["prof"] = root.struct.field("profiling")
+            else:
+                struct_fields["prof"] = pl.lit(None)
+
             if has_n:
                 struct_fields["n"] = root.struct.field("n")
 
@@ -736,7 +748,7 @@ class DataLoader:
         # use to_dicts() to avoid Arrow serialization issues with nested structs.
         series_collected = s_df.collect()
         series_rows = series_collected.with_columns(
-            transform_computed("computed", has_n=True).alias("computed_parsed")
+            transform_computed(s_df, "computed", has_n=True).alias("computed_parsed")
         ).to_dicts()
 
         t2 = time.time()
@@ -779,7 +791,7 @@ class DataLoader:
         t3 = time.time()
         accel_collected = a_df.collect()
         accel_rows = accel_collected.with_columns(
-            transform_computed("computed", has_n=False).alias("computed_parsed")
+            transform_computed(a_df, "computed", has_n=False).alias("computed_parsed")
         ).to_dicts()
 
         t4 = time.time()

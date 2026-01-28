@@ -154,10 +154,20 @@ try:
                      for step in result["computed"]:
                          val = self._sanitize_complex_value(step.get("partial_sum"))
                          dev = str(step.get("partial_sum_deviation", ""))
+                         prof = step.get("profiling")
+                         if prof:
+                             prof = {
+                                 "add": int(prof.get("add", 0)),
+                                 "mul": int(prof.get("mul", 0)),
+                                 "div": int(prof.get("div", 0)),
+                                 "special": int(prof.get("special", 0))
+                             }
+                         
                          comp_list.append({
                              "n": step["n"],
                              "value": val,
-                             "deviation": dev
+                             "deviation": dev,
+                             "profiling": prof
                          })
                      
                      prec_str = "f64"
@@ -186,7 +196,13 @@ try:
                     ("computed", pa.list_(pa.struct([
                         ("n", pa.int64()),
                         ("value", pa.struct([("real", pa.string()), ("imag", pa.string())])),
-                        ("deviation", pa.string())
+                        ("deviation", pa.string()),
+                        ("profiling", pa.struct([
+                            ("add", pa.int64()),
+                            ("mul", pa.int64()),
+                            ("div", pa.int64()),
+                            ("special", pa.int64())
+                        ]))
                     ])))
                 ])
                 
