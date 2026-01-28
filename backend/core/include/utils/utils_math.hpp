@@ -144,11 +144,14 @@ T utils::pow(const T& x, const T& y) {
     else if constexpr (std::is_same<T, mpfr::mpreal>::value)
         return mpfr::pow(x, y);
 #endif
+    else if constexpr (is_complex_custom<T>::value)
+        return std::pow(x, y);
     else if constexpr (is_operation_counting<T>::value) {
         return ADL_Wrapper<T>::wrap(utils::pow(ADL_Unwrapper<T>::unwrap(x), ADL_Unwrapper<T>::unwrap(y)));
     } else {
         if constexpr (AcceptedLike<T>) {
-            throw std::runtime_error("utils::pow not implemented for this type");
+            // Fallback for types that might support pow via ADL or std
+            return std::pow(x, y);
         } else {
             static_assert(dependent_false<T>::value, "utils::pow not implemented for this type");
         }

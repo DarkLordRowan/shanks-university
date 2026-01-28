@@ -59,10 +59,19 @@ try:
                  val = self._sanitize_complex_value(step.get("accel_value"))
                  dev = str(step.get("accel_value_deviation", ""))
                  
+                 prof = step.get("profiling")
+                 if prof:
+                     prof = {
+                         "add": int(prof.get("add", 0)),
+                         "mul": int(prof.get("mul", 0)),
+                         "div": int(prof.get("div", 0)),
+                         "special": int(prof.get("special", 0))
+                     }
+
                  comp_list.append({
                      "value": val,
                      "deviation": dev,
-                     "profiling": step.get("profiling")
+                     "profiling": prof
                  })
                  
                  if "events" in step and step["events"]:
@@ -121,7 +130,7 @@ try:
                 "series_id": series_id,
                 "accel_name": str(accel.get("name")),
                 "m_value": int(accel.get("m_value")),
-                "additional_args": {k: str(v) for k, v in accel.get("additional_args", {}).items()},
+                "additional_args": accel.get("additional_args", {}),
                 "computed": comp_list,
                 "errors": errors_list,
                 "events": events_list,
@@ -168,18 +177,11 @@ try:
                 accel_records.append(self._get_accel_record(result, s_id))
 
             if series_records:
-                all_arg_keys = set()
-                for r in series_records.values():
-                    all_arg_keys.update(r["arguments"].keys())
-                sorted_arg_keys = sorted(list(all_arg_keys))
-                
-                arg_fields = [(k, pa.string()) for k in sorted_arg_keys]
-                
                 series_schema = pa.schema([
                     ("series_name", pa.string()),
                     ("series_id", pa.int64()),
                     ("precision", pa.string()),
-                    ("arguments", pa.struct(arg_fields)),
+                    ("arguments", pa.map_(pa.string(), pa.string())),
                     ("series_limit", pa.struct([("real", pa.string()), ("imag", pa.string())])),
                     ("computed", pa.list_(pa.struct([
                         ("n", pa.int64()),
@@ -201,20 +203,11 @@ try:
                 )
 
             if accel_records:
-                all_add_keys = set()
-                for r in accel_records:
-                    all_add_keys.update(r["additional_args"].keys())
-                sorted_add_keys = sorted(list(all_add_keys))
-                
-                add_arg_fields = [(k, pa.string()) for k in sorted_add_keys]
-                if not add_arg_fields:
-                    add_arg_fields = [("__dummy__", pa.string())]
-                
                 accel_schema = pa.schema([
                     ("series_id", pa.int64()),
                     ("accel_name", pa.string()),
                     ("m_value", pa.int64()),
-                    ("additional_args", pa.struct(add_arg_fields)),
+                    ("additional_args", pa.map_(pa.string(), pa.string())),
                     ("computed", pa.list_(
                         pa.struct([
                             ("value", pa.struct([("real", pa.string()), ("imag", pa.string())])),

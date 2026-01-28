@@ -231,6 +231,29 @@ class DataLoader:
 
         self.metadata = self._compute_metadata()
 
+    def _parse_dynamic_dict(self, data: Any) -> Dict[str, str]:
+        """Parses dynamic arguments which can be a dict (JSON) or list of (key, value) tuples/dicts (Parquet Map)."""
+        if not data:
+            return {}
+        if isinstance(data, dict):
+            return {str(k): str(v) for k, v in data.items() if v is not None}
+        if isinstance(data, (list, tuple)):
+            res = {}
+            for item in data:
+                if isinstance(item, dict):
+                    k = item.get("key")
+                    if k is None: # some arrow versions use different labels
+                        k = item.get("0")
+                    v = item.get("value")
+                    if v is None:
+                        v = item.get("1")
+                    if k is not None:
+                        res[str(k)] = str(v) if v is not None else ""
+                elif isinstance(item, (tuple, list)) and len(item) == 2:
+                    res[str(item[0])] = str(item[1]) if item[1] is not None else ""
+            return res
+        return {}
+
     def _infer_precision(self, path: str) -> str:
         """Infers precision from filename (e.g., results_FLong.json -> FLong)."""
         filename = os.path.basename(path)
@@ -405,12 +428,12 @@ class DataLoader:
         all_accels = [d[1] for d in dfs]
 
         self.series_df = (
-            pl.concat(all_series)
+            pl.concat(all_series, how="diagonal")
             .sort(pl.col("computed").list.len(), descending=True)
             .unique(subset=["series_id"])
             .lazy()
         )
-        self.accel_df = pl.concat(all_accels).lazy()
+        self.accel_df = pl.concat(all_accels, how="diagonal").lazy()
 
     def _compute_metadata(self) -> Metadata:
         """
@@ -765,11 +788,7 @@ class DataLoader:
             m_val = row["m_value"]
 
             # args (dict)
-            args = {
-                k: str(v)
-                for k, v in (row.get("additional_args") or {}).items()
-                if v is not None
-            }
+            args = self._parse_dynamic_dict(row.get("additional_args"))
 
             noise_info = row.get("noise")
             noise_str = row.get("noise_str")
@@ -890,11 +909,7 @@ class DataLoader:
                 precision=row["precision"],
                 series_id=sid,
                 name=row["series_name"],
-                arguments={
-                    k: str(v)
-                    for k, v in (row.get("arguments") or {}).items()
-                    if v is not None
-                },
+                arguments=self._parse_dynamic_dict(row.get("arguments")),
                 series_limit=series_limit,
                 n=n_vals,
                 val_real_m=val_real_m,

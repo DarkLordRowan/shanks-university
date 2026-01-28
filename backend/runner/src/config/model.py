@@ -59,7 +59,8 @@ class TrialConfig:
         )
 
         self.precisions = [
-            PrecisionType(precision) for precision in self.precisions
+            precision if isinstance(precision, PrecisionType) else PrecisionType(precision)
+            for precision in self.precisions
         ]
 
         self.output_formats = [

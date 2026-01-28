@@ -359,6 +359,9 @@ def execute_trial(
                                             values=smoothed, average=avg
                                         )
                                 except Exception as e:
+                                    logger.error(
+                                        f"Filter {f_type} failed: {str(e)}\n{traceback.format_exc()}"
+                                    )
                                     append_to_event_log(
                                         f"{f_type.upper()} ERROR: {str(e)}"
                                     )
