@@ -42,7 +42,7 @@ public:
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The value of Ci(x).
      */
-    T get_sum() const override { return utils::ci_x(this->x); }
+    T get_sum() const override { return utils::math<T>::ci_x(this->x); }
 
     /**
      * @brief Validates the current evaluation point x.
@@ -59,16 +59,16 @@ public:
     T next(K n, T& state) const override {
         // First few terms are special (constant and logarithmic), followed by the power series
         if (n == 0)
-            state = utils::cast<T>::meta(std::numbers::egamma, utils::helpers<T>::get_precision(state));
+            state = utils::cast<T, double>()(std::numbers::egamma, utils::helpers<T>::get_precision(state));
         else if (n == 1)
-            state = utils::log(this->x);
+            state = utils::math<T>::log(this->x);
         else if (n == 2)
-            state = this->x * this->x * utils::cast<T>::meta(-0.25);
+            state = this->x * this->x * utils::cast<T, double>()(-0.25);
         else
-            state *= utils::cast<T>::meta(-1.0) * this->x * this->x * utils::cast<T>::meta(n - 2) /
-                     utils::cast<T>::meta(2 * (n - 1) * (n - 1) *
-                                    utils::math<size_t>::fma(static_cast<size_t>(2), static_cast<size_t>(n - 2),
-                                                             static_cast<size_t>(1)));
+            state *= utils::cast<T, int>()(-1) * this->x * this->x * utils::cast<T, K>()(n - 2) /
+                     utils::cast<T, size_t>()(2 * (n - 1) * (n - 1) *
+                                          utils::math<size_t>::fma(static_cast<size_t>(2), static_cast<size_t>(n - 2),
+                                                                   static_cast<size_t>(1)));
         return state;
     }
 };

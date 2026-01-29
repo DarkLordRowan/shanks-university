@@ -73,13 +73,13 @@ T shanks_transform_alternating<T, K>::operator()(const K n, const K order, const
 
     // Special case: first-order Shanks transformation
     if (order == static_cast<K>(1)) [[unlikely]] {
-        T result = utils::cast<T>::meta(0.0, precision);
+        T result = utils::cast<T, int>()(0, precision);
 
         // For theory, see: Senhadji (2001), Section 3.2 - Alternating series case
         // For alternating series: e₁(Sₙ) = Sₙ + (aₙaₙ₊₁)/(aₙ - aₙ₊₁)
         result += utils::math<T>::fma(
             data.an.at(n) * data.an.at(n + static_cast<K>(1)),
-            utils::cast<T>::meta(1.0, precision) / (data.an.at(n) - data.an.at(n + static_cast<K>(1))), data.Sn.at(n));
+            utils::cast<T, int>()(1, precision) / (data.an.at(n) - data.an.at(n + static_cast<K>(1))), data.Sn.at(n));
 
         if (!utils::helpers<T>::isfinite(result)) throw std::overflow_error("division by zero");
 
@@ -90,23 +90,23 @@ T shanks_transform_alternating<T, K>::operator()(const K n, const K order, const
         throw std::invalid_argument("n is less than order");
     }
 
-    std::vector<T> T_n(n + order, utils::cast<T>::meta(0.0, precision));
+    std::vector<T> T_n(n + order, utils::cast<T, int>()(0, precision));
 
     for (K i = n - order + static_cast<K>(1); i <= n + order - static_cast<K>(1);
          ++i)  // if we got to this branch then we know that n >= order - see previous branches int->K
     {
         // For theory, see: Senhadji (2001), Section 3.2 - Alternating series case
         // e₁(Sᵢ) = Sᵢ + (aᵢaᵢ₊₁)/(aᵢ - aᵢ₊₁)
-        T_n[i] = utils::math<T>::fma(data.an.at(i) * data.an.at(i + static_cast<K>(1)),
-                                     utils::cast<T>::meta(1, precision) / (data.an.at(i) - data.an.at(i + static_cast<K>(1))),
-                                     data.Sn.at(n));
+        T_n[i] = utils::math<T>::fma(
+            data.an.at(i) * data.an.at(i + static_cast<K>(1)),
+            utils::cast<T, int>()(1, precision) / (data.an.at(i) - data.an.at(i + static_cast<K>(1))), data.Sn.at(n));
     }
 
-    std::vector<T> T_n_plus_1(n + order, utils::cast<T>::meta(0.0, precision));
+    std::vector<T> T_n_plus_1(n + order, utils::cast<T, int>()(0, precision));
 
-    T a = utils::cast<T>::meta(0.0, precision);
-    T b = utils::cast<T>::meta(0.0, precision);
-    T c = utils::cast<T>::meta(0.0, precision);
+    T a = utils::cast<T, int>()(0, precision);
+    T b = utils::cast<T, int>()(0, precision);
+    T c = utils::cast<T, int>()(0, precision);
 
     for (K j = static_cast<K>(2); j <= order; ++j) {
         for (K i = n - order + j; i <= n + order - j; ++i) {
@@ -117,8 +117,9 @@ T shanks_transform_alternating<T, K>::operator()(const K n, const K order, const
             // For theory, see: Brezinski et al. (2010), Section 3 - Multistep transformation
             // Higher order transformation for alternating series
             // eₖ(Sₙ) = eₖ₋₁(Sₙ) + [eₖ₋₁(Sₙ₊₁) - eₖ₋₁(Sₙ)] / [1 - (eₖ₋₁(Sₙ₊₁) - eₖ₋₁(Sₙ))/(eₖ₋₁(Sₙ₊₂) - eₖ₋₁(Sₙ₊₁))]
-            T_n_plus_1[i] = utils::math<T>::fma(utils::math<T>::fma(a, c + b - a, -b * c),
-                                                utils::cast<T>::meta(1.0, precision) / (utils::cast<T>::meta(2) * a - b - c), a);
+            T_n_plus_1[i] =
+                utils::math<T>::fma(utils::math<T>::fma(a, c + b - a, -b * c),
+                                    utils::cast<T, int>()(1, precision) / (utils::cast<T, int>()(2) * a - b - c), a);
         }
         T_n = T_n_plus_1;
     }

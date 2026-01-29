@@ -65,8 +65,8 @@ public:
      */
     explicit wynn_rho_algorithm(
         shanks::numerators::numerator_type numerator_type_to_use = shanks::numerators::numerator_type::rho_type,
-        const float_type& gamma_to_use = utils::cast<float_type>(-1.0),
-        const float_type& rho_to_use = utils::cast<float_type>(1.0))
+        const float_type& gamma_to_use = utils::cast<float_type, int>()(-1),
+        const float_type& rho_to_use = utils::cast<float_type, int>()(1))
         : series_acceleration<T, K>() {
         update_gamma(gamma_to_use);
         update_rho(rho_to_use);
@@ -195,14 +195,14 @@ inline T wynn_rho_algorithm<T, K>::operator()(const K n, const K order, const se
 
     const K base_size = order + static_cast<K>(1);
 
-    std::vector<T> rho_odd(base_size, utils::cast<T>::meta(0.0, precision));  // vector for theta_(2n + 1)
+    std::vector<T> rho_odd(base_size, utils::cast<T, int>()(0, precision));  // vector for theta_(2n + 1)
     std::vector<T> rho_even(
-        base_size,
-        utils::cast<T>::meta(0.0,
+        base_size, utils::cast<T, int>()(
+                       0,
                        precision));  // vector for theta_(2n), in the beginning it is theta_(-1) which is zero for all i
 
     T delta;  // temporary varaible
-    delta = utils::cast<T>::meta(0.0, precision);
+    delta = utils::cast<T, int>()(0, precision);
 
     // init theta_(0)
     for (K j = static_cast<K>(0); j < base_size; ++j) rho_even[j] = data.Sn.at(n + j);

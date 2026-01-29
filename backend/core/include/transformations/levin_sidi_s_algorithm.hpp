@@ -40,7 +40,7 @@ protected:
     using float_type = real_of<T>::value;  // type in case of complex or interval
 
     /// Positive real parameter (β > 0). Default to 1.0.
-    float_type beta_in_use = utils::cast<float_type>(1.0);
+    float_type beta_in_use = utils::cast<float_type, int>()(1);
 
     /// Pointer to the remainder transformation strategy being used.
     std::unique_ptr<const shanks::remainders::transform_base<T, K>> remainder;
@@ -96,7 +96,7 @@ public:
      */
     explicit levin_sidi_s_algorithm(
         shanks::remainders::remainder_type remainder_type_in_use = shanks::remainders::remainder_type::u_type,
-        bool use_recurrent_formula = false, const float_type& beta_to_use = utils::cast<float_type>(1.0))
+        bool use_recurrent_formula = false, const float_type& beta_to_use = utils::cast<float_type, int>()(1))
         : series_acceleration<T, K>(), use_recurrent_formula(use_recurrent_formula) {
         // parameter is "beta" parameter
         // beta must be nonzero positive real number
@@ -134,7 +134,7 @@ public:
      * @param new_beta The new beta value. Must be greater than zero, otherwise defaults to 1.0.
      */
     void update_beta(const float_type& new_beta) {
-        beta_in_use = (new_beta > utils::cast<float_type>(0.0) ? new_beta : utils::cast<float_type>(1.0));
+        beta_in_use = (new_beta > utils::cast<float_type, int>()(0) ? new_beta : utils::cast<float_type, int>()(1));
     }
 
     /**
@@ -221,8 +221,8 @@ inline T levin_sidi_s_algorithm<T, K>::calc_result(const K n, const K order, con
 
     T numerator, denominator, rest;
     float_type up_pochamer, down_pochamer;
-    numerator = denominator = rest = utils::cast<T>::meta(0.0, precision);
-    up_pochamer = down_pochamer = utils::cast<float_type>(0.0, precision);
+    numerator = denominator = rest = utils::cast<T, int>()(0, precision);
+    up_pochamer = down_pochamer = utils::cast<float_type, int>()(0, precision);
 
     // For theory, see: Sidi (2003, arXiv:math/0306302), Eq. (8.2)
     // General form: S_{k,n} = [∑_{j=0}^k (-1)^j C(k,j) (β+n+j)_{k-1}/(β+n+k)_{k-1} S_{n+j}/R_{n+j}] /
@@ -230,12 +230,12 @@ inline T levin_sidi_s_algorithm<T, K>::calc_result(const K n, const K order, con
     // Main loop for the direct S-transformation summation formula
     for (K j = static_cast<K>(0); j <= order; ++j) {
         // Compute (-1)^j * C(k,j) - the sign and binomial coefficient part of the weight
-        rest = utils::cast<T>::meta(1.0, precision);
+        rest = utils::cast<T, int>()(1, precision);
         rest *= utils::math<T>::template minus_one_raised_to_power_n<K>(j);
-        rest *= utils::cast<T>::meta(utils::math<K>::binomial_coefficient(order, j), precision);
+        rest *= utils::cast<T, K>()(utils::math<K>::binomial_coefficient(order, j), precision);
 
         // Compute Pochhammer symbols: (β+n+j)_{k-1} and (β+n+k)_{k-1}
-        up_pochamer = down_pochamer = utils::cast<float_type>(1.0);
+        up_pochamer = down_pochamer = utils::cast<float_type, int>()(1);
 
         // up_pochamer   (beta + n + j)_(order - 1)     = (beta + n + j)(beta + n + j + 1)...(beta + n + j + order - 2)
         // down_pochamer (beta + n + order)_(order - 1) = (beta + n + order)(beta + n + order + 1)...(beta + n + order +
@@ -244,8 +244,8 @@ inline T levin_sidi_s_algorithm<T, K>::calc_result(const K n, const K order, con
         // (β+n+j)_{k-1} = ∏_{i=0}^{k-2} (β+n+j+i)
         // (β+n+k)_{k-1} = ∏_{i=0}^{k-2} (β+n+k+i)
         for (K i = static_cast<K>(0); i < order - static_cast<K>(1); ++i) {
-            up_pochamer *= (beta_in_use + utils::cast<float_type>(n + j + i, precision));
-            down_pochamer *= (beta_in_use + utils::cast<float_type>(n + order + i, precision));
+            up_pochamer *= (beta_in_use + utils::cast<float_type, K>()(n + j + i, precision));
+            down_pochamer *= (beta_in_use + utils::cast<float_type, K>()(n + order + i, precision));
         }
 
         rest *= (up_pochamer / down_pochamer);  // Multiply by Pochhammer ratio
@@ -253,8 +253,10 @@ inline T levin_sidi_s_algorithm<T, K>::calc_result(const K n, const K order, con
         rest *= remainder->operator()(
             n + j,  // Multiply by remainder term 1/R_{n+j}
             n + j, data.an,
-            utils::cast<T>::meta(remainder_type_in_use == shanks::remainders::remainder_type::u_type ? beta_in_use : 1.0,
-                           precision));
+            utils::cast<T, float_type>()(remainder_type_in_use == shanks::remainders::remainder_type::u_type
+                                           ? beta_in_use
+                                           : utils::cast<T, int>()(1, precision),
+                                       precision));
 
         // Accumulate numerator and denominator
         numerator += rest * data.Sn.at(n + j);
@@ -275,11 +277,11 @@ inline T levin_sidi_s_algorithm<T, K>::calc_result_rec(const K n, const K order,
     // For theory, see: Sidi (2003, arXiv:math/0306302), Eqs. (8.3)-(8.5)
     // Recursive implementation using the E-algorithm scheme
     // Vectors for the recursive transformation scheme
-    std::vector<T> Num(order + static_cast<K>(1), utils::cast<T>::meta(0.0, precision));
-    std::vector<T> Denom(order + static_cast<K>(1), utils::cast<T>::meta(0.0, precision));
+    std::vector<T> Num(order + static_cast<K>(1), utils::cast<T, int>()(0, precision));
+    std::vector<T> Denom(order + static_cast<K>(1), utils::cast<T, int>()(0, precision));
 
     float_type scale1, scale2;
-    scale1 = scale2 = utils::cast<float_type>(0.0, precision);
+    scale1 = scale2 = utils::cast<float_type, int>()(0, precision);
 
     // For theory, see: Sidi (2003, arXiv:math/0306302), pp. 57-58, Eqs. (8.3)-(8.5)
     // ([https://arxiv.org/pdf/math/0306302.pdf]) Recursive implementation for better numerical stability in some cases.
@@ -288,8 +290,10 @@ inline T levin_sidi_s_algorithm<T, K>::calc_result_rec(const K n, const K order,
     for (K i = static_cast<K>(0); i <= order; ++i) {
         Denom[i] += remainder->operator()(
             n + i, n + i, data.an,
-            utils::cast<T>::meta(remainder_type_in_use == shanks::remainders::remainder_type::u_type ? beta_in_use : 1.0,
-                           precision));
+            utils::cast<T, float_type>()(remainder_type_in_use == shanks::remainders::remainder_type::u_type
+                                           ? beta_in_use
+                                           : utils::cast<float_type, int>()(1),
+                                       precision));
 
         Num[i] += data.Sn.at(n + i) * Denom[i];
     }
@@ -304,17 +308,19 @@ inline T levin_sidi_s_algorithm<T, K>::calc_result_rec(const K n, const K order,
             // For theory, see: Sidi (2003), Eqs. (8.4)-(8.5)
             // Compute scaling factors based on Pochhammer symbol ratios
 
-            scale1 = beta_in_use + utils::cast<float_type>(n + i + j, precision);
-            scale1 *= (scale1 + utils::cast<float_type>(1.0, precision));
+            scale1 = beta_in_use + utils::cast<float_type, K>()(n + i + j, precision);
+            scale1 *= (scale1 + utils::cast<float_type, int>()(1, precision));
 
-            scale2 = scale1 + utils::cast<float_type>(n + i, precision);
-            scale2 *= (scale2 + utils::cast<float_type>(1.0, precision));
+            scale2 = scale1 + utils::cast<float_type, K>()(n + i, precision);
+            scale2 *= (scale2 + utils::cast<float_type, int>()(1, precision));
 
             // Apply recurrence: E_k^{(n)} = E_{k-1}^{(n)} - g_{k-1,k}^{(n)} * ΔE_{k-1}^{(n)} / Δg_{k-1,k}^{(n)}
-            Denom[j] = utils::math<T>::fma(utils::cast<T>::meta(-scale1, precision),
-                                           Denom[j] / utils::cast<T>::meta(scale2, precision), Denom[j + static_cast<K>(1)]);
-            Num[j] = utils::math<T>::fma(utils::cast<T>::meta(-scale1, precision), Num[j] / utils::cast<T>::meta(scale2, precision),
-                                         Num[j + static_cast<K>(1)]);
+            Denom[j] = utils::math<T>::fma(utils::cast<T, float_type>()(-scale1, precision),
+                                           Denom[j] / utils::cast<T, float_type>()(scale2, precision),
+                                           Denom[j + static_cast<K>(1)]);
+            Num[j] =
+                utils::math<T>::fma(utils::cast<T, float_type>()(-scale1, precision),
+                                    Num[j] / utils::cast<T, float_type>()(scale2, precision), Num[j + static_cast<K>(1)]);
         }
 
     // Final result ratio

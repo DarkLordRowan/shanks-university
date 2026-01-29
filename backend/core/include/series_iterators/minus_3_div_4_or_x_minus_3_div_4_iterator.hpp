@@ -44,12 +44,12 @@ public:
     T get_sum() const override {
         using float_type = real_of<T>::value;
         if constexpr (isComplexLike<T>::value) {
-            if (this->x.real() <= utils::cast<float_type>(0)) return utils::cast<T>::meta(-0.75);
+            if (this->x.real() <= utils::cast<float_type, int>()(0)) return utils::cast<T, double>()(-0.75);
         } else {
-            if (this->x <= utils::cast<T>::meta(0)) return utils::cast<T>::meta(-0.75);
+            if (this->x <= utils::cast<T, int>()(0)) return utils::cast<T, double>()(-0.75);
         }
 
-        return this->x - utils::cast<T>::meta(0.75);
+        return this->x - utils::cast<T, double>()(0.75);
     }
 
     /**
@@ -59,7 +59,7 @@ public:
      */
     bool is_invalid() const override {
         using float_type = real_of<T>::value;
-        return !utils::helpers<T>::isfinite(this->x) || utils::math<T>::abs(this->x) >= utils::cast<float_type>(3.0);
+        return !utils::helpers<T>::isfinite(this->x) || utils::math<T>::abs(this->x) >= utils::cast<float_type, int>()(3);
     }
 
     /**
@@ -68,19 +68,19 @@ public:
      * @return T The next term of the series.
      */
     T next(K n, T& state) const override {
-        const T piDiv3 = utils::cast<T>::meta(std::numbers::pi) / utils::cast<T>::meta(3);
-        const T shifted_x = utils::cast<T>::meta(n + 1) * piDiv3 * this->x;
+        const T piDiv3 = utils::cast<T, double>()(std::numbers::pi, utils::helpers<T>::get_precision(this->x)) / utils::cast<T, int>()(3);
+        const T shifted_x = utils::cast<T, K>()(n + 1) * piDiv3 * this->x;
 
         // Fourier series term formula involving both sine and cosine components
-        state = utils::cast<T>::meta(-2) /
+        state = utils::cast<T, int>()(-2) /
                     (piDiv3 * piDiv3 *
-                     utils::cast<T>::meta(3 *
-                                    utils::math<size_t>::fma(static_cast<size_t>(2), static_cast<size_t>(n),
-                                                             static_cast<size_t>(1)) *
-                                    utils::math<size_t>::fma(static_cast<size_t>(2), static_cast<size_t>(n),
-                                                             static_cast<size_t>(1)))) *
+                     utils::cast<T, size_t>()(3 *
+                                          utils::math<size_t>::fma(static_cast<size_t>(2), static_cast<size_t>(n),
+                                                                   static_cast<size_t>(1)) *
+                                          utils::math<size_t>::fma(static_cast<size_t>(2), static_cast<size_t>(n),
+                                                                   static_cast<size_t>(1)))) *
                     utils::math<T>::cos(shifted_x) +
-                utils::minus_one_raised_to_power_n<T, K>(n) / (piDiv3 * utils::cast<T>::meta(n + 1)) *
+                utils::math<T>::template minus_one_raised_to_power_n<K>(n) / (piDiv3 * utils::cast<T, K>()(n + 1)) *
                     utils::math<T>::sin(shifted_x);
         return state;
     }

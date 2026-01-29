@@ -12,11 +12,11 @@ struct utils::cast {
      * @param x (From)
      * @return To (casted value)
      */
-    static To meta(const From& x, std::size_t precision = std::size_t{0});
+    To operator()(const From& x, std::size_t precision = std::size_t{0});
 };
 
 template <typename To, typename From>
-To utils::cast<To, From>::meta(const From& x, std::size_t precision) {
+To utils::cast<To, From>::operator()(const From& x, std::size_t precision) {
     return static_cast<To>(x);
 }
 

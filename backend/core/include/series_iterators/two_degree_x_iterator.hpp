@@ -39,7 +39,7 @@ public:
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The value of 2^x.
      */
-    T get_sum() const override { return utils::pow(utils::cast<T>::meta(2), this->x); }
+    T get_sum() const override { return utils::math<T>::pow(utils::cast<T, int>()(2, utils::helpers<T>::get_precision(this->x)), this->x); }
 
     /**
      * @brief Validates the current evaluation point x.
@@ -55,10 +55,11 @@ public:
      */
     T next(K n, T& state) const override {
         // Each term is (x * ln(2))^n / n!, computed recursively
+        const size_t precision = utils::helpers<T>::get_precision(this->x);
         if (n == 0)
-            state = utils::cast<T>::meta(1, utils::helpers<T>::get_precision(state));
+            state = utils::cast<T, int>()(1, precision);
         else
-            state *= this->x * utils::math<T>::log(utils::cast<T>::meta(2)) / utils::cast<T>::meta(n);
+            state *= this->x * utils::math<T>::log(utils::cast<T, int>()(2, precision)) / utils::cast<T, K>()(n);
         return state;
     }
 };

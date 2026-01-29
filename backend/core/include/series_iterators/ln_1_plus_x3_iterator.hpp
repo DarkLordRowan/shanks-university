@@ -39,7 +39,9 @@ public:
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The value of ln(1 + x^3).
      */
-    T get_sum() const override { return utils::log(utils::cast<T>::meta(1) + utils::pow(this->x, utils::cast<T>::meta(3))); }
+    T get_sum() const override {
+        return utils::math<T>::log(utils::cast<T, int>()(1) + utils::math<T>::pow(this->x, utils::cast<T, int>()(3)));
+    }
 
     /**
      * @brief Validates the current evaluation point x.
@@ -48,7 +50,7 @@ public:
      */
     bool is_invalid() const override {
         using float_type = real_of<T>::value;
-        return !utils::helpers<T>::isfinite(this->x) || utils::math<T>::abs(this->x) >= utils::cast<float_type>(1.0);
+        return !utils::helpers<T>::isfinite(this->x) || utils::math<T>::abs(this->x) >= utils::cast<float_type, int>()(1);
     }
 
     /**
@@ -59,10 +61,10 @@ public:
     T next(K n, T& state) const override {
         // Recurrence relation based on the ln(1+u) expansion where u = x^3
         if (n == 0)
-            state = utils::pow(this->x, utils::cast<T>::meta(3.0));
+            state = utils::math<T>::pow(this->x, utils::cast<T, int>()(3));
         else
-            state *= utils::cast<T>::meta(-1.0) * utils::pow(this->x, utils::cast<T>::meta(3.0)) *
-                     utils::cast<T>::meta(static_cast<double>(n)) / utils::cast<T>::meta(static_cast<double>(n + 1));
+            state *= utils::cast<T, int>()(-1) * utils::math<T>::pow(this->x, utils::cast<T, int>()(3.0)) *
+                     utils::cast<T, K>()(n) / utils::cast<T, K>()(n + 1);
         return state;
     }
 };

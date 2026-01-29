@@ -42,8 +42,8 @@ public:
      * @return T The value of the cubic function at point x.
      */
     T get_sum() const override {
-        return this->x / utils::cast<T>::meta(12) *
-               (this->x * this->x - utils::cast<T>::meta(std::numbers::pi) * utils::cast<T>::meta(std::numbers::pi));
+        return this->x / utils::cast<T, int>()(12) *
+               (this->x * this->x - utils::cast<T, double>()(std::numbers::pi) * utils::cast<T, double>()(std::numbers::pi));
     }
 
     /**
@@ -60,8 +60,9 @@ public:
      */
     T next(K n, T& state) const override {
         // Formula for the n-th Fourier harmonic
-        state = utils::minus_one_raised_to_power_n<T, K>(n + 1) * utils::math<T>::sin(utils::cast<T>::meta(n + 1) * this->x) /
-                utils::cast<T>::meta(utils::pow(static_cast<size_t>(n + 1), static_cast<size_t>(3)));
+        state = utils::math<T>::template minus_one_raised_to_power_n<K>(n + 1) *
+                utils::math<T>::sin(utils::cast<T, K>()(n + 1) * this->x) /
+                utils::cast<T, size_t>()(utils::math<size_t>::pow(static_cast<size_t>(n + 1), static_cast<size_t>(3)));
         return state;
     }
 };

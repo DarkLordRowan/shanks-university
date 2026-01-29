@@ -39,7 +39,7 @@ public:
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The value of the Riemann zeta function at point x (s).
      */
-    T get_sum() const override { return utils::zeta(this->x); }
+    T get_sum() const override { return utils::math<T>::zeta(this->x); }
 
     /**
      * @brief Validates the current evaluation point x (s).
@@ -50,9 +50,9 @@ public:
         using float_type = real_of<T>::value;
 
         if constexpr (isComplexLike<T>::value) {
-            return !utils::helpers<T>::isfinite(this->x) || this->x.real() <= utils::cast<float_type>(1);
+            return !utils::helpers<T>::isfinite(this->x) || this->x.real() <= utils::cast<float_type, int>()(1);
         } else {
-            return !utils::helpers<T>::isfinite(this->x) || this->x <= utils::cast<T>::meta(1);
+            return !utils::helpers<T>::isfinite(this->x) || this->x <= utils::cast<T, int>()(1);
         }
     }
 
@@ -63,8 +63,8 @@ public:
      */
     T next(K n, T& state) const override {
         // Term formula: 1 / (n+1)^s
-        state =
-            utils::pow(utils::cast<T>::meta(n + 1, utils::helpers<T>::get_precision(state)), utils::cast<T>::meta(-1) * this->x);
+        state = utils::math<T>::pow(utils::cast<T, K>()(n + 1, utils::helpers<T>::get_precision(state)),
+                           utils::cast<T, int>()(-1) * this->x);
         return state;
     }
 };

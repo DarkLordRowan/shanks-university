@@ -4,10 +4,6 @@
 
 template <typename T>
 struct utils::math<std::complex<T>> {
-    static std::complex<T> phi(std::complex<T> n);
-    static std::complex<T> fact(const std::complex<T> n);
-    static std::complex<T> double_fact(const std::complex<T> n);
-    static std::complex<T> binomial_coefficient(const std::complex<T> n, const std::complex<T> k);
     template <std::integral K>
     static std::complex<T> minus_one_raised_to_power_n(const K j);
     static std::complex<T> pow(const std::complex<T>& x, const std::complex<T>& y);
@@ -18,14 +14,6 @@ struct utils::math<std::complex<T>> {
     static std::complex<T> log(const std::complex<T>& x);
     static std::complex<T> log10(const std::complex<T>& x);
     static std::complex<T> hypot(const std::complex<T>& a, const std::complex<T>& b);
-    static std::complex<T> erf(const std::complex<T>& x);
-    static std::complex<T> zeta(const std::complex<T>& x);
-    static std::complex<T> ci_x(const std::complex<T>& x);
-    static std::complex<T> si_x(const std::complex<T>& x);
-    static std::complex<T> e_x(const std::complex<T>& x);
-    static std::complex<T> k_x(const std::complex<T>& x);
-    static std::complex<T> inc_gamma(const std::complex<T>& x, const std::complex<T>& alpha);
-    static std::complex<T> lambertW0(const std::complex<T>& x);
     static std::complex<T> sin(const std::complex<T>& x);
     static std::complex<T> asin(const std::complex<T>& x);
     static std::complex<T> cos(const std::complex<T>& x);
@@ -41,22 +29,6 @@ struct utils::math<std::complex<T>> {
     static T abs(const std::complex<T>& x);
 };
 
-template <typename T>
-std::complex<T> utils::math<std::complex<T>>::phi(T n) {
-    static_assert(std::false_type{}, "utils::math::phi not implemented for type");
-}
-template <typename T>
-std::complex<T> utils::math<std::complex<T>>::fact(const T n) {
-    static_assert(std::false_type{}, "utils::math::fact not implemented for type");
-}
-template <typename T>
-std::complex<T> utils::math<std::complex<T>>::double_fact(const T n) {
-    static_assert(std::false_type{}, "utils::math::double_fact not implemented for type");
-}
-template <typename T>
-std::complex<T> utils::math<std::complex<T>>::binomial_coefficient(const T n, const T k) {
-    static_assert(std::false_type{}, "utils::math::binomial_coefficient not implemented for type");
-}
 template <typename T>
 template <std::integral K>
 std::complex<T> utils::math<std::complex<T>>::minus_one_raised_to_power_n(const K j) {
@@ -97,38 +69,6 @@ std::complex<T> utils::math<std::complex<T>>::log10(const std::complex<T>& x) {
 template <typename T>
 std::complex<T> utils::math<std::complex<T>>::hypot(const std::complex<T>& a, const std::complex<T>& b) {
     return std::hypot(a, b);
-}
-template <typename T>
-std::complex<T> utils::math<std::complex<T>>::erf(const std::complex<T>& x) {
-    static_assert(std::false_type{}, "utils::math::erf not implemented for type");
-}
-template <typename T>
-std::complex<T> utils::math<std::complex<T>>::zeta(const std::complex<T>& x) {
-    static_assert(std::false_type{}, "utils::math::zeta not implemented for type");
-}
-template <typename T>
-std::complex<T> utils::math<std::complex<T>>::ci_x(const std::complex<T>& x) {
-    static_assert(std::false_type{}, "utils::math::ci_x not implemented for type");
-}
-template <typename T>
-std::complex<T> utils::math<std::complex<T>>::si_x(const std::complex<T>& x) {
-    static_assert(std::false_type{}, "utils::math::si_x not implemented for type");
-}
-template <typename T>
-std::complex<T> utils::math<std::complex<T>>::e_x(const std::complex<T>& x) {
-    static_assert(std::false_type{}, "utils::math::e_x not implemented for type");
-}
-template <typename T>
-std::complex<T> utils::math<std::complex<T>>::k_x(const std::complex<T>& x) {
-    static_assert(std::false_type{}, "utils::math::k_x not implemented for type");
-}
-template <typename T>
-std::complex<T> utils::math<std::complex<T>>::inc_gamma(const std::complex<T>& x, const std::complex<T>& alpha) {
-    static_assert(std::false_type{}, "utils::math::inc_gamma not implemented for type");
-}
-template <typename T>
-std::complex<T> utils::math<std::complex<T>>::lambertW0(const std::complex<T>& x) {
-    static_assert(std::false_type{}, "utils::math::lambertW0 not implemented for type");
 }
 template <typename T>
 std::complex<T> utils::math<std::complex<T>>::sin(const std::complex<T>& x) {

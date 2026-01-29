@@ -210,7 +210,7 @@ inline T drummond_d_algorithm<T, K>::calc_result(const K n, const K order, const
         std::max(utils::helpers<T>::get_precision(data.Sn[0]), utils::helpers<T>::get_precision(data.an[0]));
 
     T numerator, denominator, rest;
-    numerator = denominator = rest = utils::cast<T>::meta(0.0, precision);
+    numerator = denominator = rest = utils::cast<T, int>()(0, precision);
 
     // For theory, see: Drummond (1976), Eq. (2.1)
     // D_n^{(k)} = [Σ_{j=0}^n (-1)^j C(n, j) w_{n,j} S_{n+j}] / [Σ_{j=0}^n (-1)^j C(n, j) w_{n,j}]
@@ -218,7 +218,7 @@ inline T drummond_d_algorithm<T, K>::calc_result(const K n, const K order, const
     for (K j = static_cast<K>(0); j <= order; ++j) {
         // Compute weight term: (-1)^j * C(n, j) * w_{n,j}
         rest = utils::math<T>::template minus_one_raised_to_power_n<K>(j);
-        rest *= utils::cast<T>::meta(utils::math<K>::binomial_coefficient(order, j), precision);
+        rest *= utils::cast<T, K>()(utils::math<K>::binomial_coefficient(order, j), precision);
         // Call the remainder strategy object
         rest *= remainder->operator()(n + j, n + j, data.an);
 
@@ -240,8 +240,8 @@ inline T drummond_d_algorithm<T, K>::calc_result_rec(const K n, const K order, c
 
     // For theory, see: Sidi (2003), Section 9.5-5
     // Temporary vectors to store numerator and denominator coefficients for the recursive scheme
-    std::vector<T> Num = std::vector<T>(order + static_cast<K>(1), utils::cast<T>::meta(0.0, precision));
-    std::vector<T> Denom = std::vector<T>(order + static_cast<K>(1), utils::cast<T>::meta(0.0, precision));
+    std::vector<T> Num = std::vector<T>(order + static_cast<K>(1), utils::cast<T, int>()(0, precision));
+    std::vector<T> Denom = std::vector<T>(order + static_cast<K>(1), utils::cast<T, int>()(0, precision));
 
     // Initialize base values: N_j^{(0)} = w_{n,j} S_{n+j}, D_j^{(0)} = w_{n,j}
     for (K i = static_cast<K>(0); i < order + static_cast<K>(1); ++i) {

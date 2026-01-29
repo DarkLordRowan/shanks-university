@@ -99,26 +99,26 @@ T ford_sidi_3_algorithm<T, K>::operator()(const K n, const K /*order*/, const se
 
     // For theory, see: Ford & Sidi (1987), Section 2 - Auxiliary sequence initialization
     // G sequence: Used for storing transformation coefficients
-    std::vector<T> G(m + static_cast<K>(1), utils::cast<T>::meta(0.0, precision));
+    std::vector<T> G(m + static_cast<K>(1), utils::cast<T, int>()(0, precision));
     // FSA sequence: Stores accelerated partial sums
-    std::vector<T> FSA(m + static_cast<K>(1), utils::cast<T>::meta(0.0, precision));
+    std::vector<T> FSA(m + static_cast<K>(1), utils::cast<T, int>()(0, precision));
     // FSI sequence: Stores normalization factors
-    std::vector<T> FSI(m + static_cast<K>(1), utils::cast<T>::meta(0.0, precision));
+    std::vector<T> FSI(m + static_cast<K>(1), utils::cast<T, int>()(0, precision));
     // FSG matrix: Stores intermediate transformation values
     std::vector<std::vector<T>> FSG(m + static_cast<K>(2),
-                                    std::vector<T>(m + static_cast<K>(1), utils::cast<T>::meta(0.0, precision)));
+                                    std::vector<T>(m + static_cast<K>(1), utils::cast<T, int>()(0, precision)));
     // For theory, see: Ford & Sidi (1987), Eq. (2.3) - Recursive coefficient scaling
     // Te = 1/n used for recursive computation of G sequence
     T D, Te;
-    D = utils::cast<T>::meta(0.0, precision);
-    Te = utils::cast<T>::meta(1.0, precision);
+    D = utils::cast<T, int>()(0, precision);
+    Te = utils::cast<T, int>()(1, precision);
     // Set precision if the type T requires it
 
-    Te /= utils::cast<T>::meta(n, precision);
+    Te /= utils::cast<T, K>()(n, precision);
 
     // For theory, see: Osada (2000), Eq. (9) - Initial coefficient computation
     // G[0] = a_{n-1} * n, where a_{n-1} is the (n-1)-th series term
-    G[0] = data.an.at(n1) * utils::cast<T>::meta(n, precision);
+    G[0] = data.an.at(n1) * utils::cast<T, K>()(n, precision);
 
     // For theory, see: Osada (2000), Section 2.2 - Recursive G sequence computation
     // G[k] = (1/n) * G[k-1] for k = 1, 2, ..., m
@@ -129,9 +129,9 @@ T ford_sidi_3_algorithm<T, K>::operator()(const K n, const K /*order*/, const se
     FSA[n1] = data.Sn.at(n1);
 
     // FSI[n1] = 1 (initial normalization factor)
-    FSI[n1] += utils::cast<T>::meta(1.0, precision);
+    FSI[n1] += utils::cast<T, int>()(1, precision);
 
-    if (G[0] != utils::cast<T>::meta(0.0)) {
+    if (G[0] != utils::cast<T, int>()(0)) {
         // For theory, see: Ford & Sidi (1987), Eq. (2.4) - Normalization when G[0] ≠ 0
         // Normalize sequences by dividing by G[0]
         FSA[n1] /= G[0];

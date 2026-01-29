@@ -89,7 +89,7 @@ T ford_sidi_2_algorithm<T, K>::operator()(const K n, const K /*order*/, const se
     if (n == static_cast<K>(0)) throw std::domain_error("n = 0 in the input");
 
     T delta_squared_S_n, delta_S_n, T_n;
-    delta_squared_S_n = delta_S_n = T_n = utils::cast<T>::meta(0.0, precision);
+    delta_squared_S_n = delta_S_n = T_n = utils::cast<T, int>()(0, precision);
 
     K m = n;
 
@@ -99,10 +99,10 @@ T ford_sidi_2_algorithm<T, K>::operator()(const K n, const K /*order*/, const se
         // For theory, see: Ford & Sidi (1987), Eq. (1.8) - Finite difference computation
         // Second difference formula: Δ²S_m = S_{m+2} - 2S_{m+1} + S_m
         delta_squared_S_n += data.Sn.at(m + static_cast<K>(2));
-        delta_squared_S_n -= data.Sn.at(m + static_cast<K>(1)) * utils::cast<T>::meta(2.0, precision);
+        delta_squared_S_n -= data.Sn.at(m + static_cast<K>(1)) * utils::cast<T, int>()(2, precision);
         delta_squared_S_n += data.Sn.at(m);
 
-    } while (delta_squared_S_n == utils::cast<T>::meta(0.0, precision) && --m > static_cast<K>(0));
+    } while (delta_squared_S_n == utils::cast<T, int>()(0, precision) && --m > static_cast<K>(0));
 
     // For theory, see: Osada (2000), Section 4 - Stability condition
     // Zero second difference indicates numerical instability or convergence issues

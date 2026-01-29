@@ -73,8 +73,8 @@ public:
      *        Meaning depends on the specific variant. Default: 0.0.
      * @return The computed numerator value for the transformation.
      */
-    virtual T operator()(K n, K order, const std::vector<T>& an, T gamma = utils::cast<T>::meta(-1),
-                         T rho = utils::cast<T>::meta(1)) const = 0;
+    virtual T operator()(K n, K order, const std::vector<T>& an, T gamma = utils::cast<T, int>()(-1),
+                         T rho = utils::cast<T, int>()(1)) const = 0;
 };
 
 /**
@@ -110,8 +110,8 @@ public:
      * @return The computed difference: series(n+order) - series(n).
      */
 
-    T operator()(const K n, const K order, const std::vector<T>& an, const T gamma = utils::cast<T>::meta(-1),
-                 const T rho = utils::cast<T>::meta(1)) const {
+    T operator()(const K n, const K order, const std::vector<T>& an, const T gamma = utils::cast<T, int>()(-1),
+                 const T rho = utils::cast<T, int>()(1)) const {
         // For theory, see: Wynn (1956), Eq. (2.6b): ΔS_n = S_{n+1} - S_n
         return an.at(n + order) - an.at(n);  // p.34 6.2-2b [https://arxiv.org/pdf/math/0306302]
     }
@@ -147,10 +147,9 @@ public:
      * @param rho Unused parameter (maintained for interface consistency).
      * @return The computed constant: order - gamma - 1.
      */
-    T operator()(const K n, const K order, const std::vector<T>& an, const T gamma = utils::cast<T>::meta(-1),
-                 const T rho = utils::cast<T>::meta(1)) const {
-        return utils::cast<T>::meta(order - static_cast<K>(1)) -
-               gamma;  // p.377 rhi(gamma)-algorithm [http://servidor.demec.ufpr.br/CFD/bibliografia/MER/Sidi_2003.pdf]
+    T operator()(const K n, const K order, const std::vector<T>& an, const T gamma = utils::cast<T, int>()(-1),
+                 const T rho = utils::cast<T, int>()(1)) const {
+        return utils::cast<T, K>()(order - static_cast<K>(1)) - gamma;  // p.377 rhi(gamma)-algorithm [http://servidor.demec.ufpr.br/CFD/bibliografia/MER/Sidi_2003.pdf]
     }
 };
 
@@ -191,13 +190,14 @@ public:
      * @throws std::invalid_argument if rho = 0.0.
      */
 
-    T operator()(const K n, const K order, const std::vector<T>& an, const T gamma = utils::cast<T>::meta(-1),
-                 const T rho = utils::cast<T>::meta(1)) const {
+    T operator()(const K n, const K order, const std::vector<T>& an, const T gamma = utils::cast<T, int>()(-1),
+                 const T rho = utils::cast<T, int>()(1)) const {
         // p.377 Automatic rho(gamma)-algorithm [http://servidor.demec.ufpr.br/CFD/bibliografia/MER/Sidi_2003.pdf]
 
         // For theory, see: Wynn (1962), Section 2: Parameterized transformations
         // Add 1 for odd orders (order & 1 checks parity)
-        return -gamma + utils::cast<T>::meta(order) / (utils::cast<T>::meta(2) * rho) + utils::cast<T>::meta(order & static_cast<K>(1));
+        return -gamma + utils::cast<T, K>()(order) / (utils::cast<T, int>()(2) * rho) +
+               utils::cast<T, K>()(order & static_cast<K>(1));
     }
 };
 

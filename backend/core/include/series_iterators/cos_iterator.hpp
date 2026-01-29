@@ -56,10 +56,10 @@ public:
     T next(K n, T& state) const override {
         // Recurrence logic for the alternating even-power terms of the cosine expansion
         if (n == 0)
-            state = utils::cast<T>::meta(1, utils::helpers<T>::get_precision(state));
+            state = utils::cast<T, int>()(1, utils::helpers<T>::get_precision(state));
         else
-            state *= utils::cast<T>::meta(-1) * this->x * this->x /
-                     utils::cast<T>::meta(n * (static_cast<K>(4) * n - static_cast<K>(2)));
+            state *= utils::cast<T, int>()(-1) * this->x * this->x /
+                     utils::cast<T, K>()(n * (static_cast<K>(4) * n - static_cast<K>(2)));
         return state;
     }
 };

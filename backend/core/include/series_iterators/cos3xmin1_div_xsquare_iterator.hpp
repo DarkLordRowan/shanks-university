@@ -40,7 +40,7 @@ public:
      * @return T The value of (cos(3x-1))/x^2.
      */
     T get_sum() const override {
-        return utils::math<T>::cos(utils::cast<T>::meta(3) * this->x - utils::cast<T>::meta(1)) / (this->x * this->x);
+        return utils::math<T>::cos(utils::cast<T, int>()(3) * this->x - utils::cast<T, int>()(1)) / (this->x * this->x);
     }
 
     /**
@@ -48,7 +48,9 @@ public:
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return true if x is zero or non-finite, false otherwise.
      */
-    bool is_invalid() const override { return !utils::helpers<T>::isfinite(this->x) || this->x == utils::cast<T>::meta(0); }
+    bool is_invalid() const override {
+        return !utils::helpers<T>::isfinite(this->x) || this->x == utils::cast<T, int>()(0);
+    }
 
     /**
      * @brief Computes the next term in the series expansion.
@@ -58,15 +60,15 @@ public:
     T next(K n, T& state) const override {
         // First term corresponds to the leading term of the expansion at n=0
         if (n == 0)
-            state = utils::cast<T>::meta(1) / (this->x * this->x);
+            state = utils::cast<T, int>()(1, utils::helpers<T>::get_precision(this->x)) / (this->x * this->x);
         else {
-            const T var_3x_1squared = utils::math<T>::fma(utils::cast<T>::meta(3), this->x, utils::cast<T>::meta(-1)) *
-                                      utils::math<T>::fma(utils::cast<T>::meta(3), this->x, utils::cast<T>::meta(-1));
+            const T var_3x_1squared = utils::math<T>::fma(utils::cast<T, int>()(3), this->x, utils::cast<T, int>()(-1)) *
+                                      utils::math<T>::fma(utils::cast<T, int>()(3), this->x, utils::cast<T, int>()(-1));
             // Recursive update based on the Taylor series for cos(u) where u = 3x-1
-            state *= utils::cast<T>::meta(-1) * var_3x_1squared /
-                     utils::cast<T>::meta(2 * n *
-                                    utils::math<size_t>::fma(static_cast<size_t>(2), static_cast<size_t>(n - 1),
-                                                             static_cast<size_t>(1)));
+            state *= utils::cast<T, int>()(-1) * var_3x_1squared /
+                     utils::cast<T,size_t>()(2 * n *
+                                          utils::math<size_t>::fma(static_cast<size_t>(2), static_cast<size_t>(n - 1),
+                                                                   static_cast<size_t>(1)));
         }
         return state;
     }

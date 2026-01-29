@@ -42,7 +42,7 @@ public:
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The value of E_x(x).
      */
-    T get_sum() const override { return utils::e_x(this->x); }
+    T get_sum() const override { return utils::math<T>::e_x(this->x); }
 
     /**
      * @brief Validates the current evaluation point x.
@@ -51,7 +51,7 @@ public:
      */
     bool is_invalid() const override {
         using float_type = real_of<T>::value;
-        return !utils::helpers<T>::isfinite(this->x) || utils::math<T>::abs(this->x) >= utils::cast<float_type>(1.0);
+        return !utils::helpers<T>::isfinite(this->x) || utils::math<T>::abs(this->x) >= utils::cast<float_type, int>()(1);
     }
 
     /**
@@ -62,10 +62,10 @@ public:
     T next(K n, T& state) const override {
         // First term is pi/2, subsequent terms use the specialized recurrence for E_x
         if (n == 0)
-            state = utils::cast<T>::meta(std::numbers::pi * 0.5, utils::helpers<T>::get_precision(state));
+            state = utils::cast<T, double>()(std::numbers::pi * 0.5, utils::helpers<T>::get_precision(state));
         else
-            state *=
-                this->x * this->x * (utils::cast<T>::meta((n - 1) * (n - 1)) - utils::cast<T>::meta(0.25)) / utils::cast<T>::meta(n * n);
+            state *= this->x * this->x * (utils::cast<T, K>()((n - 1) * (n - 1)) - utils::cast<T, double>()(0.25)) /
+                     utils::cast<T, K>()(n * n);
         return state;
     }
 };

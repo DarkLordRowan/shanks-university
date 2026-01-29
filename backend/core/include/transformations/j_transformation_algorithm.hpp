@@ -57,7 +57,7 @@ public:
      */
     explicit j_transformation_algorithm(
         const K max_order = static_cast<K>(J_TRASFORMATION_DEFAULT_MAX_ORDER),
-        const float_type& safeguard = utils::cast<float_type>(J_TRASFORMATION_DEFAULT_SAFEGUARD))
+        const float_type& safeguard = utils::cast<float_type, double>()(J_TRASFORMATION_DEFAULT_SAFEGUARD))
         : series_acceleration<T, K>("j transformation algorithm"),
           max_order_(max_order > 0 ? max_order : 1),
           safeguard_(safeguard) {}
@@ -115,11 +115,12 @@ T j_transformation_algorithm<T, K>::simple_formula(const K n, const series_resul
         std::max(utils::helpers<T>::get_precision(data.Sn[0]), utils::helpers<T>::get_precision(data.an[0]));
 
     // Numerical stability check for the denominator
-    if (utils::math<T>::abs(data.an[n + 1] + utils::cast<T>::meta(safeguard_, precision)) < safeguard_) return data.Sn[n];
+    if (utils::math<T>::abs(data.an[n + 1] + utils::cast<T, float_type>()(safeguard_, precision)) < safeguard_)
+        return data.Sn[n];
 
     // Standard first-order J-transformation formula
     return data.Sn[n + 1] - (data.Sn[n + 1] - data.Sn[n]) * (data.Sn[n + 1] - data.Sn[n]) /
-                                (data.an[n + 1] + utils::cast<T>::meta(safeguard_, precision));
+                                (data.an[n + 1] + utils::cast<T, float_type>()(safeguard_, precision));
 }
 
 template <AcceptedLike T, UnsignedIntLike K>
@@ -130,11 +131,11 @@ T j_transformation_algorithm<T, K>::recursive_formula(const K n, const K order, 
     // For higher orders, use recursive implementation
     // Initialize J0^{(k)} = S_{n+k}
     // Auxiliary vectors for storing transformation results at consecutive levels
-    std::vector<T> J_prev(order + 1, utils::cast<T>::meta(0.0, precision));
-    std::vector<T> J_curr(order + 1, utils::cast<T>::meta(0.0, precision));
+    std::vector<T> J_prev(order + 1, utils::cast<T, int>()(0, precision));
+    std::vector<T> J_curr(order + 1, utils::cast<T, int>()(0, precision));
 
     T delta_S, delta_term, term1, term2;
-    delta_S = delta_term = term1 = term2 = utils::cast<T>::meta(0.0, precision);
+    delta_S = delta_term = term1 = term2 = utils::cast<T, int>()(0, precision);
 
     // Base initialization: J_0,i = S_n+i
     for (K i = 0; i <= order; ++i) J_prev[i] += data.Sn[n + i];
@@ -155,8 +156,8 @@ T j_transformation_algorithm<T, K>::recursive_formula(const K n, const K order, 
                 delta_term = data.an[n + i + 1];
             else {
                 // For higher orders, use differences of the series terms
-                term1 = (i + k < data.an.size()) ? data.an[n + i + k] : utils::cast<T>::meta(0.0, precision);
-                term2 = (i + k - 1 < data.an.size()) ? data.an[n + i + k - 1] : utils::cast<T>::meta(0.0, precision);
+                term1 = (i + k < data.an.size()) ? data.an[n + i + k] : utils::cast<T, int>()(0, precision);
+                term2 = (i + k - 1 < data.an.size()) ? data.an[n + i + k - 1] : utils::cast<T, int>()(0, precision);
                 delta_term = term1 - term2;
             }
 

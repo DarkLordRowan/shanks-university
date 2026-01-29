@@ -40,8 +40,8 @@ public:
      * @return T The value of the rational function at current point x.
      */
     T get_sum() const override {
-        return (this->x * this->x + utils::cast<T>::meta(3)) / (this->x * this->x + utils::cast<T>::meta(2) * this->x) -
-               utils::cast<T>::meta(1);
+        return (this->x * this->x + utils::cast<T, int>()(3)) / (this->x * this->x + utils::cast<T, int>()(2) * this->x) -
+               utils::cast<T, int>()(1);
     }
 
     /**
@@ -52,7 +52,7 @@ public:
     bool is_invalid() const override {
         using float_type = real_of<T>::value;
         return !utils::helpers<T>::isfinite(this->x) ||
-               utils::math<T>::abs(this->x - utils::cast<T>::meta(1)) >= utils::cast<float_type>(1.0);
+               utils::math<T>::abs(this->x - utils::cast<T, int>()(1)) >= utils::cast<float_type, int>()(1);
     }
 
     /**
@@ -62,10 +62,10 @@ public:
      */
     T next(K n, T& state) const override {
         // Specific term formula for the expansion of the rational function around x=1
-        state = utils::cast<T>::meta(0.5) * utils::math<T>::template minus_one_raised_to_power_n<K>(n) *
-                utils::cast<T>::meta(utils::math<size_t>::pow(size_t{3}, static_cast<size_t>(n + 2)) - 7) *
-                utils::math<T>::pow(this->x - utils::cast<T>::meta(1), utils::cast<T>::meta(n)) /
-                utils::cast<T>::meta(utils::math<size_t>::pow(size_t{3}, static_cast<size_t>(n + 1)));
+        state = utils::cast<T, double>()(0.5) * utils::math<T>::template minus_one_raised_to_power_n<K>(n) *
+                utils::cast<T, size_t>()(utils::math<size_t>::pow(size_t{3}, static_cast<size_t>(n + 2)) - 7) *
+                utils::math<T>::pow(this->x - utils::cast<T, int>()(1), utils::cast<T, K>()(n)) /
+                utils::cast<T, size_t>()(utils::math<size_t>::pow(size_t{3}, static_cast<size_t>(n + 1)));
         return state;
     }
 };

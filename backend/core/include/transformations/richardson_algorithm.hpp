@@ -101,11 +101,11 @@ T richardson_algorithm<T, K>::operator()(const K n, const K order, const series_
     // Storage for Richardson extrapolation table with two rows for efficient computation
     std::vector<std::vector<T>> e(
         2,
-        std::vector<T>(
-            n + static_cast<K>(1),
-            utils::cast<T>::meta(0.0, precision)));  // Two vectors n + 1 length containing Richardson table next and previous
-    T a = utils::cast<T>::meta(1.0, precision);
-    T b = utils::cast<T>::meta(0.0, precision);
+        std::vector<T>(n + static_cast<K>(1),
+                       utils::cast<T, int>()(
+                           0, precision)));  // Two vectors n + 1 length containing Richardson table next and previous
+    T a = utils::cast<T, int>()(1, precision);
+    T b = utils::cast<T, int>()(0, precision);
 
     // Initialization: Load the first row with partial sums
     // For theory, see: Richardson (1911), Eq. (2) - initialization with partial sums
@@ -115,8 +115,8 @@ T richardson_algorithm<T, K>::operator()(const K n, const K order, const series_
     // For theory, see: Richardson & Gaunt (1927), Section 3 - recursive extrapolation
     // Richardson extrapolation recursion: Tₖ⁽ⁿ⁾ = (4ᵏTₖ₋₁⁽ⁿ⁺¹⁾ - Tₖ₋₁⁽ⁿ⁾) / (4ᵏ - 1)
     for (K l = static_cast<K>(1); l <= n; ++l) {
-        a *= utils::cast<T>::meta(4, precision);     // 4ᵏ factor
-        b = a - utils::cast<T>::meta(1, precision);  // (4ᵏ - 1) denominator
+        a *= utils::cast<T, int>()(4, precision);     // 4ᵏ factor
+        b = a - utils::cast<T, int>()(1, precision);  // (4ᵏ - 1) denominator
 
         for (K m = l; m <= n; ++m) {
             // For theory, see: Richardson & Gaunt (1927), Eq. (3.5)

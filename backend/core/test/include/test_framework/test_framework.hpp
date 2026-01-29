@@ -143,7 +143,7 @@ inline void main_testing_function() {
 
     // Optional parameters for specialized series (e.g., alpha for IncompleteGamma)
     const auto& entry = shanks::series::series_registry<T, K>::get_entries()[series_idx];
-    T tParam = utils::cast<T>(1.0);
+    T tParam = utils::cast<T, int>()(1);
     K kParam = static_cast<K>(1);
 
     if (entry.needsT || entry.needsK) {

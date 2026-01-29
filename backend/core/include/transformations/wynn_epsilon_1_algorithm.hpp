@@ -97,8 +97,8 @@ T wynn_epsilon_1_algorithm<T, K>::operator()(const K n, const K order, const ser
 
     // Initialize epsilon tables: e0 for current column, e1 for next column
     // For theory, see: Wynn (1956), Section 3 - Table construction
-    std::vector<T> e0(max_ind + static_cast<K>(1), utils::cast<T>::meta(0.0, precision));
-    std::vector<T> e1(max_ind, utils::cast<T>::meta(0.0, precision));
+    std::vector<T> e0(max_ind + static_cast<K>(1), utils::cast<T, int>()(0, precision));
+    std::vector<T> e1(max_ind, utils::cast<T, int>()(0, precision));
 
     auto e0_add = &e0;  // Pointer to current epsilon column
     auto e1_add = &e1;  // Pointer to next epsilon column
@@ -116,7 +116,7 @@ T wynn_epsilon_1_algorithm<T, K>::operator()(const K n, const K order, const ser
     for (K i = static_cast<K>(0); i < m; ++i) {
         for (K j = n1; j < max_ind; ++j) {
             // Compute εₖ₊₁⁽ʲ⁾ using the recurrence relation
-            (*e1_add)[j] += utils::cast<T>::meta(1.0, precision) / ((*e0_add)[j + static_cast<K>(1)] - (*e0_add)[j]);
+            (*e1_add)[j] += utils::cast<T, int>()(1, precision) / ((*e0_add)[j + static_cast<K>(1)] - (*e0_add)[j]);
         }
 
         --max_ind;                           // Reduce working range for next iteration

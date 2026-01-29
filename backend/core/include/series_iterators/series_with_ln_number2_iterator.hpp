@@ -39,7 +39,7 @@ public:
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The value of 5.71617784132 * x.
      */
-    T get_sum() const override { return utils::cast<T>::meta(5.71617784132) * this->x; }
+    T get_sum() const override { return utils::cast<T, double>()(5.71617784132) * this->x; }
 
     /**
      * @brief Validates the current evaluation point x.
@@ -55,10 +55,9 @@ public:
      */
     T next(K n, T& state) const override {
         // Formula for the n-th term involving iterated logarithms and powers
-        const T n1 = utils::cast<T>::meta(n + 1);
-        const T n1_2 = n1 * n1;
-
-        state = this->x / utils::pow(utils::log(utils::cast<T>::meta(n + 2)), utils::log(utils::cast<T>::meta(n + 2)));
+        const size_t precision = utils::helpers<T>::get_precision(this->x);
+        const T ln_n2 = utils::math<T>::log(utils::cast<T, K>()(n + 2, precision));
+        state = this->x / utils::math<T>::pow(ln_n2, ln_n2);
         return state;
     }
 };

@@ -40,7 +40,8 @@ public:
      * @return T The value of the truncated square root expansion at x.
      */
     T get_sum() const override {
-        return utils::math<T>::sqrt(utils::cast<T>::meta(1) + this->x) - utils::cast<T>::meta(1) - this->x * utils::cast<T>::meta(0.5);
+        return utils::math<T>::sqrt(utils::cast<T, int>()(1) + this->x) - utils::cast<T, int>()(1) -
+               this->x * utils::cast<T, double>()(0.5);
     }
 
     /**
@@ -50,7 +51,7 @@ public:
      */
     bool is_invalid() const override {
         using float_type = real_of<T>::value;
-        return !utils::helpers<T>::isfinite(this->x) || utils::math<T>::abs(this->x) > utils::cast<float_type>(1.0);
+        return !utils::helpers<T>::isfinite(this->x) || utils::math<T>::abs(this->x) > utils::cast<float_type, int>()(1);
     }
 
     /**
@@ -60,13 +61,13 @@ public:
      */
     T next(K n, T& state) const override {
         if (n == 0)
-            state = this->x * this->x * utils::cast<T>::meta(-0.125);
+            state = this->x * this->x * utils::cast<T, double>()(-0.125);
         else
-            state *= utils::cast<T>::meta(-1) * this->x *
-                     utils::cast<T>::meta(utils::math<size_t>::fma(static_cast<size_t>(2), static_cast<size_t>(n),
-                                                             static_cast<size_t>(1))) /
-                     utils::cast<T>::meta(utils::math<size_t>::fma(static_cast<size_t>(2), static_cast<size_t>(n),
-                                                             static_cast<size_t>(2)));
+            state *= utils::cast<T, int>()(-1) * this->x *
+                     utils::cast<T, size_t>()(utils::math<size_t>::fma(static_cast<size_t>(2), static_cast<size_t>(n),
+                                                                   static_cast<size_t>(1))) /
+                     utils::cast<T, size_t>()(utils::math<size_t>::fma(static_cast<size_t>(2), static_cast<size_t>(n),
+                                                                   static_cast<size_t>(2)));
         return state;
     }
 };

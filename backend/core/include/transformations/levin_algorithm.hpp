@@ -43,7 +43,7 @@ protected:
     using float_type = real_of<T>::value;  // type in case of complex or interval
 
     /// Parameter for u-variant transformation (β > 0). Default value is 1.0.
-    float_type beta_in_use = utils::cast<float_type>(1.0);
+    float_type beta_in_use = utils::cast<float_type, int>()(1);
 
     /// Pointer to the remainder transformation strategy being used.
     std::unique_ptr<const shanks::remainders::transform_base<T, K>> remainder;
@@ -101,7 +101,7 @@ public:
      */
     explicit levin_algorithm(
         const shanks::remainders::remainder_type remainder_type_to_use = shanks::remainders::remainder_type::u_type,
-        const bool use_recurrent_formula = false, const float_type& beta_to_use = utils::cast<float_type>(1.0));
+        const bool use_recurrent_formula = false, const float_type& beta_to_use = utils::cast<float_type, int>()(1));
 
     /**
      * @brief Implementation of Levin transformation for series acceleration.
@@ -136,7 +136,7 @@ public:
      * [https://arxiv.org/pdf/math/0306302.pdf]
      */
     void update_beta(const float_type& new_beta) {
-        beta_in_use = (new_beta > utils::cast<float_type>(0.0) ? new_beta : utils::cast<float_type>(1.0));
+        beta_in_use = (new_beta > utils::cast<float_type, int>()(0) ? new_beta : utils::cast<float_type, int>()(1));
     }
 
     /**
@@ -231,8 +231,8 @@ inline T levin_algorithm<T, K>::calc_result(const K n, const K order, const seri
 
     T numerator, denominator, rest;
     float_type C_njk;
-    numerator = denominator = rest = utils::cast<T>::meta(0.0, precision);
-    C_njk = utils::cast<float_type>(0.0, precision);
+    numerator = denominator = rest = utils::cast<T, int>()(0, precision);
+    C_njk = utils::cast<float_type, int>()(0, precision);
 
     // Compute (-1)^j * C(k,j)
     // For theory, see: Levin (1973), Eq. (2.3)
@@ -242,22 +242,22 @@ inline T levin_algorithm<T, K>::calc_result(const K n, const K order, const seri
     for (K j = static_cast<K>(0); j <= order; ++j) {
         // Compute (-1)^j * C(k,j) - the sign and binomial coefficient part
         rest += -rest + utils::math<T>::template minus_one_raised_to_power_n<K>(j);
-        rest *= utils::cast<T>::meta((utils::math<K>::binomial_coefficient(order, j)), precision);
+        rest *= utils::cast<T, K>()(utils::math<K>::binomial_coefficient(order, j), precision);
 
         // Compute (n+j+1)^{k-1}/(n+k+1)^{k-1} - the weighting factors C_njk
         C_njk =
-            utils::math<float_type>::pow(beta_in_use + utils::cast<float_type>(n + j + static_cast<K>(1), precision),
-                                         utils::cast<float_type>(order - static_cast<K>(1), precision));
+            utils::math<float_type>::pow(beta_in_use + utils::cast<float_type, K>()(n + j + static_cast<K>(1), precision),
+                                         utils::cast<float_type, K>()(order - static_cast<K>(1), precision));
         C_njk /= utils::math<float_type>::pow(
-            beta_in_use + utils::cast<float_type>(n + order + static_cast<K>(1), precision),
-            utils::cast<float_type>(order - static_cast<K>(1), precision));
+            beta_in_use + utils::cast<float_type, K>()(n + order + static_cast<K>(1), precision),
+            utils::cast<float_type, K>()(order - static_cast<K>(1), precision));
 
         // Compute 1/R_{n+j} where R_{n+j} is the remainder estimate
-        rest *=
-            remainder->operator()(n + j, n + j, data.an,
-                                  utils::cast<T>::meta((remainder_type_in_use == shanks::remainders::remainder_type::u_type
-                                                      ? beta_in_use
-                                                      : utils::cast<float_type>(1.0, precision))));
+        rest *= remainder->operator()(
+            n + j, n + j, data.an,
+            utils::cast<T, float_type>()((remainder_type_in_use == shanks::remainders::remainder_type::u_type
+                                            ? beta_in_use
+                                            : utils::cast<T, int>()(1, precision))));
 
         rest *= C_njk;
 
@@ -279,19 +279,19 @@ inline T levin_algorithm<T, K>::calc_result_rec(const K n, const K order, const 
 
     // For theory, see: Sidi (1979), Section 3 - Recursive implementation using E-algorithm
     // Initialize auxiliary vectors for the recursive scheme
-    std::vector<T> Num(order + static_cast<K>(1), utils::cast<T>::meta(0.0, precision));
-    std::vector<T> Denom(order + static_cast<K>(1), utils::cast<T>::meta(0.0, precision));
-    float_type scale = utils::cast<float_type>(0.0, precision);
+    std::vector<T> Num(order + static_cast<K>(1), utils::cast<T, int>()(0, precision));
+    std::vector<T> Denom(order + static_cast<K>(1), utils::cast<T, int>()(0, precision));
+    float_type scale = utils::cast<float_type, int>()(0, precision);
 
     // Initialize base values: E_0^{(n)} = S_n, g_0^{(n)} = 1/R_n
     // Order 0 transformations correspond to weighted terms
     for (K i = static_cast<K>(0); i < order + static_cast<K>(1); ++i) {
-        Denom[i] +=
-            remainder->operator()(n + i, n + i, data.an,
-                                  utils::cast<T>::meta(remainder_type_in_use == shanks::remainders::remainder_type::u_type
-                                                     ? beta_in_use
-                                                     : utils::cast<float_type>(1.0, precision),
-                                                 precision));
+        Denom[i] += remainder->operator()(
+            n + i, n + i, data.an,
+            utils::cast<T, float_type>()(remainder_type_in_use == shanks::remainders::remainder_type::u_type
+                                                 ? beta_in_use
+                                                 : utils::cast<float_type, int>()(1, precision),
+                                             precision));
 
         Num[i] += data.Sn.at(n + i) * Denom[i];
     }
@@ -302,16 +302,16 @@ inline T levin_algorithm<T, K>::calc_result_rec(const K n, const K order, const 
             // For theory, see: Brezinski's E-algorithm recurrence
             // E_k^{(n)} = E_{k-1}^{(n)} - g_{k-1,k}^{(n)} * ΔE_{k-1}^{(n)} / Δg_{k-1,k}^{(n)}
             // Scaling factor for the recursive update
-            scale = (beta_in_use + utils::cast<float_type>(n + j, precision));
-            scale *=
-                utils::math<float_type>::pow(utils::cast<float_type>(1.0, precision) -
-                                                 utils::cast<float_type>(1.0, precision) /
-                                                     (beta_in_use + utils::cast<float_type>(n + j + i + 1, precision)),
-                                             utils::cast<float_type>((i)));
-            scale /= (beta_in_use + utils::cast<float_type>(n + j + i, precision));
+            scale = (beta_in_use + utils::cast<float_type, K>()(n + j, precision));
+            scale *= utils::math<float_type>::pow(
+                utils::cast<float_type, int>()(1, precision) -
+                    utils::cast<float_type, int>()(1, precision) /
+                        (beta_in_use + utils::cast<float_type, K>()(n + j + i + 1, precision)),
+                utils::cast<float_type, K>()(i));
+            scale /= (beta_in_use + utils::cast<float_type, K>()(n + j + i, precision));
 
-            Denom[j] = utils::math<T>::fma(utils::cast<T>::meta(-scale), Denom[j], Denom[j + static_cast<K>(1)]);
-            Num[j] = utils::math<T>::fma(utils::cast<T>::meta(-scale), Num[j], Num[j + static_cast<K>(1)]);
+            Denom[j] = utils::math<T>::fma(utils::cast<T, float_type>()(-scale), Denom[j], Denom[j + static_cast<K>(1)]);
+            Num[j] = utils::math<T>::fma(utils::cast<T, float_type>()(-scale), Num[j], Num[j + static_cast<K>(1)]);
         }
 
     // Final normalization

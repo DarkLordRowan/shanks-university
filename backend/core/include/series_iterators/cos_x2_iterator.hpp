@@ -56,10 +56,10 @@ public:
     T next(K n, T& state) const override {
         // Recurrence relation for cos(x^2) terms derived from the cos Taylor series
         if (n == 0)
-            state = utils::cast<T>::meta(1, utils::helpers<T>::get_precision(state));
+            state = utils::cast<T, int>()(1, utils::helpers<T>::get_precision(state));
         else
-            state *= utils::cast<T>::meta(-1) * utils::pow(this->x, utils::cast<T>::meta(4)) /
-                     utils::cast<T>::meta(n * (size_t{4} * n - size_t{2}));
+            state *= utils::cast<T, int>()(-1) * utils::math<T>::pow(this->x, utils::cast<T, int>()(4)) /
+                     utils::cast<T,size_t>()(n * (size_t{4} * n - size_t{2}));
         return state;
     }
 };

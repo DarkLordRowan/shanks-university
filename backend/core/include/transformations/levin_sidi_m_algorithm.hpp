@@ -43,7 +43,7 @@ protected:
     using float_type = real_of<T>::value;  // type in case of complex or interval
 
     /// Positive real parameter gamma. For theoretical stability, it often satisfies gamma >= order - 1.
-    float_type gamma_in_use = utils::cast<float_type>(DEFAULT_GAMMA);
+    float_type gamma_in_use = utils::cast<float_type, double>()(DEFAULT_GAMMA);
     /// Pointer to the remainder transformation strategy being used.
     std::unique_ptr<const shanks::remainders::transform_base<T, K>> remainder;
 
@@ -64,7 +64,7 @@ public:
      */
     explicit levin_sidi_m_algorithm(
         shanks::remainders::remainder_type remainder_type_to_use = shanks::remainders::remainder_type::u_type,
-        const float_type& gamma_to_use = utils::cast<float_type>(DEFAULT_GAMMA))
+        const float_type& gamma_to_use = utils::cast<float_type, double>()(DEFAULT_GAMMA))
         : series_acceleration<T, K>() {
         update_gamma(gamma_to_use);
         update_type(remainder_type_to_use);
@@ -205,50 +205,51 @@ T levin_sidi_m_algorithm<T, K>::operator()(const K n, const K order, const serie
     if (order == static_cast<K>(0)) return data.Sn.at(n);
 
     // Validate that gamma satisfies the theoretical constraint for stability: gamma >= n - 1
-    if (gamma_in_use - utils::cast<float_type>(static_cast<double>(n)) - utils::cast<float_type>(1.0) <
-        utils::cast<float_type>(0.0)) {
+    if (gamma_in_use - utils::cast<float_type, K>()(n) - utils::cast<float_type, int>()(1) <
+        utils::cast<float_type, int>()(0)) {
         throw std::domain_error("gamma cannot be lesser than n - 1");
     }
 
     T numerator, denominator, rest;
-    rest = numerator = denominator = utils::cast<T>::meta(0.0, precision);
+    rest = numerator = denominator = utils::cast<T, int>()(0, precision);
     float_type up, down, down_coef, up_coef;
-    up = down = utils::cast<float_type>(1.0, precision);
-    down_coef = up_coef = utils::cast<float_type>(0.0, precision);
+    up = down = utils::cast<float_type, int>()(1, precision);
+    down_coef = up_coef = utils::cast<float_type, int>()(0, precision);
 
     // Precompute initial Pochhammer symbol terms
     // For theory, see: Sidi (2003, arXiv:math/0306302), Eq. (9.4)
     // Compute: (γ+k+2)_{n-1}/(γ+k+1)_{n} = Γ(γ+k+n+1)/Γ(γ+k+2) × Γ(γ+k+1)/Γ(γ+k+n+1)
     // Precompute the initial ratio of Pochhammer symbols
-    down_coef += gamma_in_use + utils::cast<float_type>(order + static_cast<K>(2), precision);
-    up_coef += down_coef - utils::cast<float_type>(n, precision);
+    down_coef += gamma_in_use + utils::cast<float_type, K>()(order + static_cast<K>(2), precision);
+    up_coef += down_coef - utils::cast<float_type, K>()(n, precision);
 
     // Compute (γ+k+2)_{n-1} = ∏_{m=0}^{n-2} (γ+k+2+m)
     // Compute (γ+k+1)_{n} = ∏_{m=0}^{n-1} (γ+k+1+m)
     for (K m = static_cast<K>(0); m + static_cast<K>(1) < n; ++m) {
-        up *= (up_coef + utils::cast<float_type>(m, precision));
-        down *= (down_coef + utils::cast<float_type>(m, precision));
+        up *= (up_coef + utils::cast<float_type, K>()(m, precision));
+        down *= (down_coef + utils::cast<float_type, K>()(m, precision));
     }
     up /= down;
 
     // Update coefficients for the inner product terms
-    down_coef = gamma_in_use + utils::cast<float_type>(order + static_cast<K>(1), precision);
-    up_coef = down_coef - utils::cast<float_type>(n + static_cast<K>(1), precision);
+    down_coef = gamma_in_use + utils::cast<float_type, K>()(order + static_cast<K>(1), precision);
+    up_coef = down_coef - utils::cast<float_type, K>()(n + static_cast<K>(1), precision);
     // Main summation loop
     // For theory, see: Sidi (2003, arXiv:math/0306302), Eq. (9.2)
     // Main summation loop for the M-transformation formula
     for (K j = static_cast<K>(0); j <= n; ++j) {
         // Calculate the sign, binomial coefficient, and weight components
         rest = utils::math<T>::template minus_one_raised_to_power_n<K>(j);
-        rest *= utils::cast<T>::meta(utils::math<K>::binomial_coefficient(n, j), precision);
-        rest *= utils::cast<T>::meta(up, precision);                     // Multiply by Pochhammer ratio term
-        rest /= utils::cast<T>::meta(j + static_cast<K>(1), precision);  // Multiply by 1/(j+1) factor
-        up /= (up_coef + utils::cast<float_type>(j, precision));   // Update Pochhammer ratio for next iteration
-        up *= (down_coef +
-               utils::cast<float_type>(j, precision));  // (γ+k+1-j)_{j}/(γ+k+2-n)_{j} → (γ+k+1-j)_{j+1}/(γ+k+2-n)_{j+1}
+        rest *= utils::cast<T, K>()(utils::math<K>::binomial_coefficient(n, j), precision);
+        rest *= utils::cast<T, K>()(up, precision);                     // Multiply by Pochhammer ratio term
+        rest /= utils::cast<T, K>()(j + static_cast<K>(1), precision);  // Multiply by 1/(j+1) factor
+        up /= (up_coef + utils::cast<float_type, K>()(j, precision));   // Update Pochhammer ratio for next iteration
+        up *= (down_coef + utils::cast<float_type, K>()(
+                               j, precision));  // (γ+k+1-j)_{j}/(γ+k+2-n)_{j} → (γ+k+1-j)_{j+1}/(γ+k+2-n)_{j+1}
         // Multiply by remainder term 1/R_{k+j}
-        rest *= remainder->operator()(order + j, order + j, data.an,
-                                      utils::cast<T>::meta(-gamma_in_use - utils::cast<float_type>(n, precision), precision));
+        rest *= remainder->operator()(
+            order + j, order + j, data.an,
+            utils::cast<T, float_type>()(-gamma_in_use - utils::cast<float_type, K>()(n, precision), precision));
 
         // Accumulate numerator and denominator
         numerator += rest * data.Sn.at(order + j);
@@ -256,8 +257,8 @@ T levin_sidi_m_algorithm<T, K>::operator()(const K n, const K order, const serie
 
         // TODO проверить корректность пересчета бин. коэф.
         //// Update binomial coefficient for next iteration: C(n, j+1) = C(n, j) * (n-j)/(j+1)
-        // binomial_coef *= utils::cast<T>::meta(n - j);
-        // binomial_coef /= utils::cast<T>::meta(j + static_cast<K>(1));
+        // binomial_coef *= utils::cast<T>()(n - j);
+        // binomial_coef /= utils::cast<T>()(j + static_cast<K>(1));
     }
 
     // Calculate the final result and check for validity

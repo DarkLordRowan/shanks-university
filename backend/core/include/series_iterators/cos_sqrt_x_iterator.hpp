@@ -49,9 +49,9 @@ public:
      */
     bool is_invalid() const override {
         if constexpr (isComplexLike<T>::value) {
-            return !utils::helpers<T>::isfinite(this->x) || this->x.real() <= utils::cast<T>::meta(0).real();
+            return !utils::helpers<T>::isfinite(this->x) || this->x.real() <= utils::cast<typename real_of<T>::value, int>()(0);
         } else {
-            return !utils::helpers<T>::isfinite(this->x) || this->x < utils::cast<T>::meta(0);
+            return !utils::helpers<T>::isfinite(this->x) || this->x < utils::cast<T, int>()(0);
         }
     }
 
@@ -63,12 +63,12 @@ public:
     T next(K n, T& state) const override {
         // First term is 1.0, subsequent terms derived from the cos Taylor expansion with u = sqrt(x)
         if (n == 0)
-            state = utils::cast<T>::meta(1, utils::helpers<T>::get_precision(state));
+            state = utils::cast<T, int>()(1, utils::helpers<T>::get_precision(state));
         else
-            state *= utils::cast<T>::meta(-1) * this->x /
-                     utils::cast<T>::meta(2 * n *
-                                    utils::math<size_t>::fma(static_cast<size_t>(2), static_cast<size_t>(n - 1),
-                                                             static_cast<size_t>(1)));
+            state *= utils::cast<T, int>()(-1) * this->x /
+                     utils::cast<T, size_t>()(2 * n *
+                                          utils::math<size_t>::fma(static_cast<size_t>(2), static_cast<size_t>(n - 1),
+                                                                   static_cast<size_t>(1)));
         return state;
     }
 };

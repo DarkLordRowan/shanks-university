@@ -58,10 +58,10 @@ public:
         if (n == 0)
             state = this->x * this->x;
         else
-            state *= utils::pow(this->x, utils::cast<T>::meta(4)) /
-                     utils::cast<T>::meta(utils::math<size_t>::fma(static_cast<size_t>(2), static_cast<size_t>(n),
-                                                             static_cast<size_t>(1)) *
-                                    2 * n);
+            state *= utils::math<T>::pow(this->x, utils::cast<T, int>()(4)) /
+                     utils::cast<T, size_t>()(utils::math<size_t>::fma(static_cast<size_t>(2), static_cast<size_t>(n),
+                                                                   static_cast<size_t>(1)) *
+                                          2 * n);
         return state;
     }
 };

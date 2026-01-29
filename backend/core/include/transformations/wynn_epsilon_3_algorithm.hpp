@@ -41,7 +41,7 @@ public:
      *        Valid values: positive T values. Too small may cause overflow, too large may reduce acceleration.
      *        Default is 1e-4 to match the original Fortran implementation (EPSALG).
      */
-    explicit wynn_epsilon_3_algorithm(const float_type& epsilon_threshold_ = utils::cast<float_type>(1e-4))
+    explicit wynn_epsilon_3_algorithm(const float_type& epsilon_threshold_ = utils::cast<float_type, double>()(1e-4))
         : series_acceleration<T, K>("wynn epsilon 3"), epsilon_threshold(epsilon_threshold_) {};
 
     /**
@@ -91,29 +91,27 @@ T wynn_epsilon_3_algorithm<T, K>::operator()(const K n, const K order, const ser
     if (n == static_cast<K>(0)) throw std::domain_error("n = 0 in the input");
     if (order == static_cast<K>(0)) return data.Sn.at(n);
 
-    T result = utils::cast<T>::meta(0.0, precision);                       ///< Current best accelerated estimate.
-    float_type abs_error = utils::cast<float_type>(0.0, precision);  ///< Absolute error estimate for current data.
-    T resla = utils::cast<T>::meta(0.0, precision);                        ///< Previous result for error comparison.
-    K newelm, K1, ib, ie, in;                                        // Loop indices and counters.
-    T RES = utils::cast<T>::meta(0.0, precision);
+    T result;                  ///< Current best accelerated estimate.
+    float_type abs_error;      ///< Absolute error estimate for current data.
+    T resla;                   ///< Previous result for error comparison.
+    K newelm, K1, ib, ie, in;  ///< Loop indices and counters.
+    T RES;
     T E0, E1, E2, E3;
-    E0 = E1 = E2 = E3 = utils::cast<T>::meta(0, precision);
     T DELTA1, DELTA2, DELTA3;
-    DELTA1 = DELTA2 = DELTA3 = utils::cast<T>::meta(0, precision);
     float_type ERROR, ERR1, ERR2, ERR3;
-    ERROR = ERR1 = ERR2 = ERR3 = utils::cast<float_type>(0, precision);
     float_type TOL1, TOL2, TOL3;
-    TOL1 = TOL2 = TOL3 = utils::cast<float_type>(0, precision);
-    T SS = utils::cast<T>::meta(0.0, precision);
+    T SS;
+    result = resla = RES = E0 = E1 = E2 = E3 = DELTA1 = DELTA2 = DELTA3 = SS = utils::cast<T, int>()(0, precision);
+    abs_error = ERROR = ERR1 = ERR2 = ERR3 = TOL1 = TOL2 = TOL3 = utils::cast<float_type, int>()(0, precision);
 
     // Epsilon table. Size should be enough to hold the diagonal.
     // Fortran used 52 for LIMEXP=50. We need approx 2*order + safety.
     // The maximum index accessed is roughly 2*order + 2.
-    std::vector<T> epstab(static_cast<size_t>(2) * order + 5, utils::cast<T>::meta(0.0, precision));
+    std::vector<T> epstab(static_cast<size_t>(2) * order + 5, utils::cast<T, int>()(0, precision));
 
     // Machine constants for numerical stability
     const float_type EMACH = utils::helpers<float_type>::epsilon(abs_error);     ///< Machine epsilon
-    const float_type EPRN = utils::cast<float_type>(50) * EMACH;                 ///< Relative error tolerance
+    const float_type EPRN = utils::cast<float_type, int>()(50) * EMACH;            ///< Relative error tolerance
     const float_type OFRN = utils::helpers<float_type>::numeric_max(precision);  ///< Overflow threshold
 
     // Iterate through the sequence of partial sums.
@@ -218,8 +216,8 @@ T wynn_epsilon_3_algorithm<T, K>::operator()(const K n, const K order, const ser
                     break;
                 }
 
-                SS = utils::cast<T>::meta(1, precision) / DELTA1 + utils::cast<T>::meta(1, precision) / DELTA2 -
-                     utils::cast<T>::meta(1, precision) / DELTA3;
+                SS = utils::cast<T, int>()(1, precision) / DELTA1 + utils::cast<T, int>()(1, precision) / DELTA2 -
+                     utils::cast<T, int>()(1, precision) / DELTA3;
 
                 // Check for irregular behavior
                 if (utils::math<T>::abs(SS * E1) <= epsilon_threshold) {  // Logic inverted from GT check
@@ -230,7 +228,7 @@ T wynn_epsilon_3_algorithm<T, K>::operator()(const K n, const K order, const ser
                 }
 
                 // Label 30
-                RES = E1 + utils::cast<T>::meta(1, precision) / SS;
+                RES = E1 + utils::cast<T, int>()(1, precision) / SS;
                 epstab[K1] = RES;
                 K1 -= static_cast<K>(2);
 

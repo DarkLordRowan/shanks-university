@@ -39,7 +39,7 @@ public:
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The value of the Sine Integral function at point x.
      */
-    T get_sum() const override { return utils::si_x(this->x); }
+    T get_sum() const override { return utils::math<T>::si_x(this->x); }
 
     /**
      * @brief Validates the current evaluation point x.
@@ -59,10 +59,10 @@ public:
             state = this->x;
         else
             state *=
-                utils::cast<T>::meta(-1) * this->x * this->x *
-                utils::cast<T>::meta(utils::math<size_t>::fma(static_cast<size_t>(2), static_cast<size_t>(n - 1),
-                                                        static_cast<size_t>(1))) /
-                utils::cast<T>::meta(
+                utils::cast<T, int>()(-1) * this->x * this->x *
+                utils::cast<T, size_t>()(utils::math<size_t>::fma(static_cast<size_t>(2), static_cast<size_t>(n - 1),
+                                                              static_cast<size_t>(1))) /
+                utils::cast<T, size_t>()(
                     utils::math<size_t>::fma(static_cast<size_t>(2), static_cast<size_t>(n), static_cast<size_t>(1)) *
                     2 *
                     utils::math<size_t>::fma(static_cast<size_t>(2), static_cast<size_t>(n), static_cast<size_t>(1)) *

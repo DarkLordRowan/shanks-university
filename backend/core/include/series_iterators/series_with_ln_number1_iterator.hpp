@@ -39,7 +39,7 @@ public:
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The value of 0.599195688977 * x.
      */
-    T get_sum() const override { return utils::cast<T>::meta(0.599195688977) * this->x; }
+    T get_sum() const override { return utils::cast<T, double>()(0.599195688977) * this->x; }
 
     /**
      * @brief Validates the current evaluation point x.
@@ -54,13 +54,13 @@ public:
      * @return T The next term of the series.
      */
     T next(K n, T& state) const override {
-        const T n1 = utils::cast<T>::meta(n + 1);
+        const T n1 = utils::cast<T, K>()(n + 1, utils::helpers<T>::get_precision(this->x));
         const T n1_2 = n1 * n1;
 
         // Specific term formula involving factorials, exponentials, and logarithms
-        state = utils::log(utils::cast<T>::meta(1) +
-                           utils::pow(n1 / utils::cast<T>::meta(std::numbers::e), n1_2) *
-                               utils::pow(utils::math<T>::sqrt(n1) / utils::cast<T>::meta(utils::fact(n + 1)), n1)) *
+        state = utils::math<T>::log(utils::cast<T, int>()(1) +
+                           utils::math<T>::pow(n1 / utils::cast<T, double>()(std::numbers::e), n1_2) *
+                               utils::math<T>::pow(utils::math<T>::sqrt(n1) / utils::cast<T, K>()(utils::math<K>::fact(n + 1)), n1)) *
                 this->x;
         return state;
     }

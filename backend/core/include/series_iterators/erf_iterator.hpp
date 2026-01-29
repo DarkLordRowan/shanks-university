@@ -43,7 +43,8 @@ public:
      * @return T The value of (sqrt(pi)/2) * erf(x).
      */
     T get_sum() const override {
-        return utils::math<T>::sqrt(utils::cast<T>::meta(std::numbers::pi)) * utils::erf(this->x) * utils::cast<T>::meta(0.5);
+        return utils::math<T>::sqrt(utils::cast<T, double>()(std::numbers::pi)) * utils::math<T>::erf(this->x) *
+               utils::cast<T, double>()(0.5);
     }
 
     /**
@@ -63,11 +64,11 @@ public:
         if (n == 0)
             state = this->x;
         else
-            state *= utils::cast<T>::meta(-1) * this->x * this->x *
-                     utils::cast<T>::meta(utils::math<size_t>::fma(static_cast<size_t>(2), static_cast<size_t>(n - 1),
-                                                             static_cast<size_t>(1))) /
-                     utils::cast<T>::meta(n * utils::math<size_t>::fma(static_cast<size_t>(2), static_cast<size_t>(n),
-                                                                 static_cast<size_t>(1)));
+            state *= utils::cast<T, int>()(-1) * this->x * this->x *
+                     utils::cast<T, size_t>()(utils::math<size_t>::fma(static_cast<size_t>(2), static_cast<size_t>(n - 1),
+                                                                   static_cast<size_t>(1))) /
+                     utils::cast<T, size_t>()(n * utils::math<size_t>::fma(static_cast<size_t>(2), static_cast<size_t>(n),
+                                                                       static_cast<size_t>(1)));
         return state;
     }
 };

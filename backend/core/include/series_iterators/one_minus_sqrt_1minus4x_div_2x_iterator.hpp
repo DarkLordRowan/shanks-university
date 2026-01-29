@@ -40,8 +40,9 @@ public:
      * @return T The value of the generating function at x.
      */
     T get_sum() const override {
-        return (utils::cast<T>::meta(1) - utils::math<T>::sqrt(utils::cast<T>::meta(1) - utils::cast<T>::meta(4) * this->x)) /
-               (utils::cast<T>::meta(2) * this->x);
+        return (utils::cast<T, int>()(1) -
+                utils::math<T>::sqrt(utils::cast<T, int>()(1) - utils::cast<T, int>()(4) * this->x)) /
+               (utils::cast<T, int>()(2) * this->x);
     }
 
     /**
@@ -51,8 +52,8 @@ public:
      */
     bool is_invalid() const override {
         using float_type = real_of<T>::value;
-        return !utils::helpers<T>::isfinite(this->x) || utils::math<T>::abs(this->x) > utils::cast<float_type>(0.25) ||
-               this->x == utils::cast<T>::meta(0);
+        return !utils::helpers<T>::isfinite(this->x) || utils::math<T>::abs(this->x) > utils::cast<float_type, double>()(0.25) ||
+               this->x == utils::cast<T, int>()(0);
     }
 
     /**
@@ -63,14 +64,15 @@ public:
     T next(K n, T& state) const override {
         // Catalan numbers generating function terms: C_n * x^n
         if (n == 0)
-            state = utils::cast<T>::meta(1, utils::helpers<T>::get_precision(state));
+            state = utils::cast<T, int>()(1, utils::helpers<T>::get_precision(state));
         else if (n == 1)
             state = this->x;
         else
-            state *= this->x *
-                     utils::cast<T>::meta(2 * utils::math<size_t>::fma(static_cast<size_t>(2), static_cast<size_t>(n - 1),
-                                                                 static_cast<size_t>(1))) /
-                     utils::cast<T>::meta(n + 1);
+            state *=
+                this->x *
+                utils::cast<T, size_t>()(2 * utils::math<size_t>::fma(static_cast<size_t>(2), static_cast<size_t>(n - 1),
+                                                                  static_cast<size_t>(1))) /
+                utils::cast<T, K>()(n + 1);
 
         return state;
     }

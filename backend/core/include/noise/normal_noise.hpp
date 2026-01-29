@@ -71,10 +71,10 @@ T generate_normal_noise(const T& mean, const T& std, std::mt19937_64& rng) {
         throw std::invalid_argument("Standard deviation must be positive for normal distribution.");
 
     // Generating real and imaginary parts independently with their own mean/std
-    std::normal_distribution<float_t> distribution_real{utils::cast<float_t>(mean.real()),
-                                                        utils::cast<float_t>(std.real())};
-    std::normal_distribution<float_t> distribution_imag{utils::cast<float_t>(mean.imag()),
-                                                        utils::cast<float_t>(std.imag())};
+    std::normal_distribution<float_t> distribution_real{utils::cast<float_t, typename real_of<T>::value>()(mean.real()),
+                                                        utils::cast<float_t, typename real_of<T>::value>()(std.real())};
+    std::normal_distribution<float_t> distribution_imag{utils::cast<float_t, typename real_of<T>::value>()(mean.imag()),
+                                                        utils::cast<float_t, typename real_of<T>::value>()(std.imag())};
 
     return T(static_cast<typename T::value_type>(distribution_real(rng)),
              static_cast<typename T::value_type>(distribution_imag(rng)));
@@ -94,8 +94,8 @@ T generate_normal_noise(const T& mean, const T& std, std::mt19937_64& rng) {
         throw std::invalid_argument("Standard deviation must be positive for normal distribution.");
 
     // Using left interval boundary for distribution generation
-    std::normal_distribution<float_t> distribution{utils::cast<float_t>(mean.leftinterval()),
-                                                   utils::cast<float_t>(std.leftinterval())};
+    std::normal_distribution<float_t> distribution{utils::cast<float_t, typename T::value_type>()(mean.leftinterval()),
+                                                   utils::cast<float_t, typename T::value_type>()(std.leftinterval())};
 
     return T(static_cast<typename T::value_type>(distribution(rng)));
 }
@@ -124,13 +124,13 @@ T generate_normal_noise(const T& mean, const T& std, std::mt19937_64& rng) {
 template <FloatLike T>
     requires(!ComplexLike<T> && !IntervalLike<T>)
 T generate_normal_noise(const T& mean, const T& std, std::mt19937_64& rng) {
-    if (std <= utils::cast<T>::meta(0))
+    if (std <= utils::cast<T, int>()(0))
         throw std::invalid_argument("Standard deviation must be positive for normal distribution.");
 
     // Simple Gaussian distribution for scalar types
-    std::normal_distribution<float_t> distribution{utils::cast<float_t>(mean), utils::cast<float_t>(std)};
+    std::normal_distribution<float_t> distribution{utils::cast<float_t, T>()(mean), utils::cast<float_t, T>()(std)};
 
-    return utils::cast<T>::meta(distribution(rng));
+    return utils::cast<T, float_t>()(distribution(rng));
 }
 
 #endif

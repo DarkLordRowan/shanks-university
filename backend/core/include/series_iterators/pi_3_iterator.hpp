@@ -41,14 +41,16 @@ public:
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The value of x * pi / 3.
      */
-    T get_sum() const override { return this->x * utils::cast<T>::meta(std::numbers::pi) / utils::cast<T>::meta(3); }
+    T get_sum() const override { return this->x * utils::cast<T, double>()(std::numbers::pi) / utils::cast<T, int>()(3); }
 
     /**
      * @brief Validates the current evaluation point x.
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return true if x is non-finite, false otherwise.
      */
-    bool is_invalid() const override { return !utils::helpers<T>::isfinite(this->x) || this->x == utils::cast<T>::meta(0); }
+    bool is_invalid() const override {
+        return !utils::helpers<T>::isfinite(this->x) || this->x == utils::cast<T, int>()(0);
+    }
 
     /**
      * @brief Computes the next term in the series expansion.
@@ -58,7 +60,7 @@ public:
     T next(K n, T& state) const override {
         // Formula for the n-th term of the specific series expansion
         state = this->x /
-                utils::cast<T>::meta(
+                utils::cast<T, size_t>()(
                     (n + 1) *
                     utils::math<size_t>::fma(static_cast<size_t>(2), static_cast<size_t>(n), static_cast<size_t>(1)) *
                     utils::math<size_t>::fma(static_cast<size_t>(4), static_cast<size_t>(n), static_cast<size_t>(1)));

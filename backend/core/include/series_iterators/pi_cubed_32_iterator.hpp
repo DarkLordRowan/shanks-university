@@ -42,7 +42,9 @@ public:
      * @return T The value of x * pi^3 / 32.
      */
     T get_sum() const override {
-        return this->x * utils::pow(utils::cast<T>::meta(std::numbers::pi), utils::cast<T>::meta(3)) / utils::cast<T>::meta(32);
+        const size_t precision = utils::helpers<T>::get_precision(this->x);
+        return this->x * utils::math<T>::pow(utils::cast<T, double>()(std::numbers::pi, precision), utils::cast<T, int>()(3, precision)) /
+               utils::cast<T, int>()(32, precision);
     }
 
     /**
@@ -50,7 +52,9 @@ public:
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return true if x is non-finite, false otherwise.
      */
-    bool is_invalid() const override { return !utils::helpers<T>::isfinite(this->x) || this->x == utils::cast<T>::meta(0); }
+    bool is_invalid() const override {
+        return !utils::helpers<T>::isfinite(this->x) || this->x == utils::cast<T, int>()(0);
+    }
 
     /**
      * @brief Computes the next term in the alternating series expansion.
@@ -59,8 +63,8 @@ public:
      */
     T next(K n, T& state) const override {
         // Alternating term with cubic denominator
-        state = utils::minus_one_raised_to_power_n<T, K>(n) * this->x /
-                utils::cast<T>::meta(
+        state = utils::math<T>::template minus_one_raised_to_power_n<K>(n) * this->x /
+                utils::cast<T, size_t>()(
                     utils::math<size_t>::fma(static_cast<size_t>(2), static_cast<size_t>(n), static_cast<size_t>(1)) *
                     utils::math<size_t>::fma(static_cast<size_t>(2), static_cast<size_t>(n), static_cast<size_t>(1)) *
                     utils::math<size_t>::fma(static_cast<size_t>(2), static_cast<size_t>(n), static_cast<size_t>(1)));

@@ -102,9 +102,9 @@ T brezinski_theta_algorithm<T, K>::operator()(const K n, const K order, const se
     const K base_size = static_cast<K>(3) * order / static_cast<K>(2) + static_cast<K>(1);
 
     // theta_odd and theta_even store intermediate results of the recursive transformation
-    std::vector<T> theta_odd(base_size, utils::cast<T>::meta(0.0, precision));
-    std::vector<T> theta_even(base_size, utils::cast<T>::meta(0.0, precision));
-    T delta = utils::cast<T>::meta(0.0, precision);
+    std::vector<T> theta_odd(base_size, utils::cast<T, int>()(0, precision));
+    std::vector<T> theta_even(base_size, utils::cast<T, int>()(0, precision));
+    T delta = utils::cast<T, int>()(0, precision);
 
     // Initialization: theta_0,j = S_j
     for (K j = static_cast<K>(0); j < base_size; ++j) {
@@ -123,7 +123,7 @@ T brezinski_theta_algorithm<T, K>::operator()(const K n, const K order, const se
             delta = theta_even[j1] - theta_even[j];
 
             // theta_2k+1,j = theta_2k+1,j+1 + 1 / (theta_2k,j+1 - theta_2k,j)
-            theta_odd[j] = utils::math<T>::fma(theta_odd[j1], delta, utils::cast<T>::meta(1.0, precision));
+            theta_odd[j] = utils::math<T>::fma(theta_odd[j1], delta, utils::cast<T, int>()(1, precision));
             theta_odd[j] /= delta;
         }
 

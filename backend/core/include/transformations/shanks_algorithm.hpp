@@ -82,7 +82,7 @@ T shanks_algorithm<T, K>::operator()(const K n, const K order, const series_resu
     matrix_template.resize(matrix_size, matrix_size);
 
     T upper_determinant, lower_determinant;
-    upper_determinant = lower_determinant = utils::cast<T>::meta(0, precision);
+    upper_determinant = lower_determinant = utils::cast<T, int>()(0, precision);
 
     // Fill the common part of the matrices (rows 1 to order) with partial sum differences
     for (size_t row = 1; row < matrix_size; ++row)
@@ -94,7 +94,7 @@ T shanks_algorithm<T, K>::operator()(const K n, const K order, const series_resu
     upper_determinant += matrix_template.determinant();
 
     // Compute the lower determinant by filling the first row with ones
-    for (size_t col = 0; col < matrix_size; ++col) matrix_template(0, col) = utils::cast<T>::meta(1, precision);
+    for (size_t col = 0; col < matrix_size; ++col) matrix_template(0, col) = utils::cast<T, int>()(1, precision);
     lower_determinant += matrix_template.determinant();
 
     // Final ratio yields the accelerated value

@@ -94,10 +94,10 @@ T lubkin_w_algorithm<T, K>::operator()(const K n, const K order, const series_re
     const K base_size = static_cast<K>(3) * order + static_cast<K>(1);
 
     // Working vector to store intermediate transformation values
-    std::vector<T> W(base_size, utils::cast<T>::meta(0, precision));
+    std::vector<T> W(base_size, utils::cast<T, int>()(0, precision));
 
     T Wo0, Wo1, Wo2, Woo1, Woo2;
-    Wo0 = Wo1 = Wo2 = Woo1 = Woo2 = utils::cast<T>::meta(0, precision);
+    Wo0 = Wo1 = Wo2 = Woo1 = Woo2 = utils::cast<T, int>()(0, precision);
 
     // Load initial partial sums into the working vector starting from index n
     for (K i = static_cast<K>(0); i < base_size; ++i) W[i] += data.Sn.at(+i);

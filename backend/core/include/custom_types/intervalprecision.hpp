@@ -936,7 +936,7 @@ inline interval<IT>& interval<IT>::operator/=(const interval<IT>& rhs) {
     // Compute the reverse of y e.g. 1/y
     auto inverse = [&](const IT& y, const bool up) {
         IT res(IT(1) / y);
-        const IT r(-utils::math<IT>::fma(res, y, utils::cast<IT, int>(-1.0)));
+        const IT r(-utils::math<IT>::fma(res, y, utils::cast<IT, int>()(-1.0)));
 
         if (up == false) {
             if (r < IT(0)) res = utils::helpers<IT>::nextafter(res, -infi);
@@ -1978,8 +1978,8 @@ inline interval<IT> pow(const interval<IT>& x, const interval<IT>& y) {
     // if y is an integer?
     if (utils::helpers<IT>::floor(y.inf()) == y.inf() &&
         utils::helpers<IT>::floor(y.sup()) == y.sup()) {  // raise to the power of an integer interval
-        interval<IT> lhs(utils::math<IT>::pow(x, utils::cast<interval<IT>, IT>(y.inf())));
-        interval<IT> rhs(utils::math<IT>::pow(x, utils::cast<interval<IT>, IT>(y.sup())));
+        interval<IT> lhs(utils::math<IT>::pow(x, utils::cast<interval<IT>(), IT>()(y.inf())));
+        interval<IT> rhs(utils::math<IT>::pow(x, utils::cast<interval<IT>(), IT>()(y.sup())));
         c = interval<IT>(std::min(lhs.inf(), rhs.inf()), std::max(lhs.sup(), rhs.sup()));
         return c;
     }

@@ -40,7 +40,7 @@ public:
      * @return T The value of the function at the current point x.
      */
     T get_sum() const override {
-        return utils::exp(utils::cast<T>::meta(-1) * utils::math<T>::cos(this->x)) *
+        return utils::math<T>::exp(utils::cast<T, int>()(-1) * utils::math<T>::cos(this->x)) *
                utils::math<T>::sin(utils::math<T>::sin(this->x));
     }
 
@@ -58,8 +58,9 @@ public:
      */
     T next(K n, T& state) const override {
         // General formula for the n-th term of the specific expansion
-        state = utils::minus_one_raised_to_power_n<T, K>(n) * utils::math<T>::sin(utils::cast<T>::meta(n + 1) * this->x) /
-                utils::cast<T>::meta(utils::fact<K>(n + 1));
+        state = utils::math<T>::template minus_one_raised_to_power_n<K>(n) *
+                utils::math<T>::sin(utils::cast<T, K>()(n + 1) * this->x) /
+                utils::cast<T, K>()(utils::math<K>::fact(n + 1));
         return state;
     }
 };

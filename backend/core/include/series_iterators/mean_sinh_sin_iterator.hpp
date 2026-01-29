@@ -40,7 +40,7 @@ public:
      * @return T The value of 0.5 * (sinh(x) + sin(x)).
      */
     T get_sum() const override {
-        return (utils::math<T>::sinh(this->x) + utils::math<T>::sin(this->x)) * utils::cast<T>::meta(0.5);
+        return (utils::math<T>::sinh(this->x) + utils::math<T>::sin(this->x)) * utils::cast<T, double>()(0.5);
     }
 
     /**
@@ -60,15 +60,15 @@ public:
         if (n == 0)
             state = this->x;
         else
-            state *= utils::pow(this->x, utils::cast<T>::meta(4)) /
-                     utils::cast<T>::meta(utils::math<size_t>::fma(static_cast<size_t>(4), static_cast<size_t>(n - 1),
-                                                             static_cast<size_t>(5)) *
-                                    utils::math<size_t>::fma(static_cast<size_t>(4), static_cast<size_t>(n - 1),
-                                                             static_cast<size_t>(4)) *
-                                    utils::math<size_t>::fma(static_cast<size_t>(4), static_cast<size_t>(n - 1),
-                                                             static_cast<size_t>(3)) *
-                                    utils::math<size_t>::fma(static_cast<size_t>(4), static_cast<size_t>(n - 1),
-                                                             static_cast<size_t>(2)));
+            state *= utils::math<T>::pow(this->x, utils::cast<T, int>()(4)) /
+                     utils::cast<T,size_t>()(utils::math<size_t>::fma(static_cast<size_t>(4), static_cast<size_t>(n - 1),
+                                                                   static_cast<size_t>(5)) *
+                                          utils::math<size_t>::fma(static_cast<size_t>(4), static_cast<size_t>(n - 1),
+                                                                   static_cast<size_t>(4)) *
+                                          utils::math<size_t>::fma(static_cast<size_t>(4), static_cast<size_t>(n - 1),
+                                                                   static_cast<size_t>(3)) *
+                                          utils::math<size_t>::fma(static_cast<size_t>(4), static_cast<size_t>(n - 1),
+                                                                   static_cast<size_t>(2)));
         return state;
     }
 };

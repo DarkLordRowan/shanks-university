@@ -87,7 +87,7 @@ public:
     template <typename U>
         requires std::is_constructible_v<T, U> && (!std::is_same_v<std::remove_cvref_t<U>, OperationCounting>) &&
                  (!std::is_same_v<std::remove_cvref_t<U>, T>)
-    OperationCounting(const U& v) : value(static_cast<T>::meta(v)) {}
+    OperationCounting(const U& v) : value(static_cast<T>(v)) {}
 
     // Generic forwarding constructor for multi-argument initialization (e.g.
     // mpreal(d, prec)) Constrained to require multiple arguments to avoid

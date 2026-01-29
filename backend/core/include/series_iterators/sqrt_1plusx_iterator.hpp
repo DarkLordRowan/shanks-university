@@ -39,7 +39,7 @@ public:
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The value of sqrt(1 + x).
      */
-    T get_sum() const override { return utils::math<T>::sqrt(utils::cast<T>::meta(1) + this->x); }
+    T get_sum() const override { return utils::math<T>::sqrt(utils::cast<T, int>()(1) + this->x); }
 
     /**
      * @brief Validates the current evaluation point x.
@@ -48,7 +48,7 @@ public:
      */
     bool is_invalid() const override {
         using float_type = real_of<T>::value;
-        return !utils::helpers<T>::isfinite(this->x) || utils::math<T>::abs(this->x) > utils::cast<float_type>(1.0);
+        return !utils::helpers<T>::isfinite(this->x) || utils::math<T>::abs(this->x) > utils::cast<float_type, int>()(1);
     }
 
     /**
@@ -59,9 +59,10 @@ public:
     T next(K n, T& state) const override {
         // Recurrence relation for binomial expansion with alpha = 0.5
         if (n == 0)
-            state = utils::cast<T>::meta(1, utils::helpers<T>::get_precision(state));
+            state = utils::cast<T, int>()(1, utils::helpers<T>::get_precision(state));
         else
-            state *= utils::cast<T>::meta(-1) * this->x * (utils::cast<T>::meta(2 * n) - utils::cast<T>::meta(3)) / utils::cast<T>::meta(2 * n);
+            state *= utils::cast<T, int>()(-1) * this->x * (utils::cast<T, K>()(2 * n) - utils::cast<T, int>()(3)) /
+                     utils::cast<T, K>()(2 * n);
         return state;
     }
 };

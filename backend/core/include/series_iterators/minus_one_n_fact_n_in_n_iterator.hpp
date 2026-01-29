@@ -39,7 +39,7 @@ public:
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The analytic sum.
      */
-    T get_sum() const override { return this->x * utils::cast<T>::meta(-0.65583160); }
+    T get_sum() const override { return this->x * utils::cast<T, double>()(-0.65583160); }
 
     /**
      * @brief Validates the current evaluation point x.
@@ -55,8 +55,8 @@ public:
      */
     T next(K n, T& state) const override {
         // Formula for the n-th term: (-1)^(n+1) * (n+1)! * x / (n+1)^(n+1)
-        state = utils::minus_one_raised_to_power_n<T, K>(n + 1) * utils::cast<T>::meta(utils::fact<K>(n + 1)) * this->x /
-                utils::cast<T>::meta(utils::pow(n + 1, n + 1));
+        state = utils::math<T>::template minus_one_raised_to_power_n<K>(n + 1) * utils::cast<T, K>()(utils::math<K>::fact(n + 1)) *
+                this->x / utils::cast<T, K>()(utils::math<K>::pow(n + 1, n + 1));
         return state;
     }
 };

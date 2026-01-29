@@ -40,8 +40,8 @@ public:
      * @return T The value of (1/sqrt(2)) * sin(x/sqrt(2)).
      */
     T get_sum() const override {
-        return utils::cast<T>::meta(1) / utils::math<T>::sqrt(utils::cast<T>::meta(2)) *
-               utils::math<T>::sin(this->x * utils::cast<T>::meta(1) / utils::math<T>::sqrt(utils::cast<T>::meta(2)));
+        return utils::cast<T, int>()(1) / utils::math<T>::sqrt(utils::cast<T, int>()(2)) *
+               utils::math<T>::sin(this->x * utils::cast<T, int>()(1) / utils::math<T>::sqrt(utils::cast<T, int>()(2)));
     }
 
     /**
@@ -59,12 +59,12 @@ public:
     T next(K n, T& state) const override {
         // Recurrence relation derived from the sin(u) expansion with u = x/sqrt(2)
         if (n == 0)
-            state = this->x * utils::cast<T>::meta(0.5);
+            state = this->x * utils::cast<T, double>()(0.5);
         else
-            state *= utils::cast<T>::meta(-1) * this->x * this->x /
-                     utils::cast<T>::meta(4 * n *
-                                    utils::math<size_t>::fma(static_cast<size_t>(2), static_cast<size_t>(n),
-                                                             static_cast<size_t>(1)));
+            state *= utils::cast<T, int>()(-1) * this->x * this->x /
+                     utils::cast<T, size_t>()(4 * n *
+                                          utils::math<size_t>::fma(static_cast<size_t>(2), static_cast<size_t>(n),
+                                                                   static_cast<size_t>(1)));
 
         return state;
     }

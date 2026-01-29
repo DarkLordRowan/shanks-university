@@ -42,7 +42,8 @@ public:
      * @return T The value of x * (pi/8 - 1/3).
      */
     T get_sum() const override {
-        return this->x * (utils::cast<T>::meta(std::numbers::pi * 0.125) - utils::cast<T>::meta(1) / utils::cast<T>::meta(3));
+        return this->x *
+               (utils::cast<T, double>()(std::numbers::pi * 0.125) - utils::cast<T, int>()(1) / utils::cast<T, int>()(3));
     }
 
     /**
@@ -59,8 +60,8 @@ public:
      */
     T next(K n, T& state) const override {
         // Formula for the n-th term of the specific series expansion
-        state = utils::minus_one_raised_to_power_n<T, K>(n) * this->x /
-                utils::cast<T>::meta(
+        state = utils::math<T>::template minus_one_raised_to_power_n<K>(n) * this->x /
+                utils::cast<T, size_t>()(
                     utils::math<size_t>::fma(static_cast<size_t>(2), static_cast<size_t>(n), static_cast<size_t>(1)) *
                     utils::math<size_t>::fma(static_cast<size_t>(2), static_cast<size_t>(n), static_cast<size_t>(3)) *
                     utils::math<size_t>::fma(static_cast<size_t>(2), static_cast<size_t>(n), static_cast<size_t>(5)));

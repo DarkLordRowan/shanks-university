@@ -40,8 +40,9 @@ public:
      * @return T The analytic sum.
      */
     T get_sum() const override {
-        return this->x * (utils::log(utils::cast<T>::meta(4)) + utils::cast<T>::meta(1.5) * utils::log(utils::cast<T>::meta(3)) -
-                          utils::cast<T>::meta(3));
+        const size_t precision = utils::helpers<T>::get_precision(this->x);
+        return this->x * (utils::math<T>::log(utils::cast<T, int>()(4, precision)) +
+                          utils::cast<T, double>()(1.5) * utils::math<T>::log(utils::cast<T, int>()(3, precision)) - utils::cast<T, int>()(3));
     }
 
     /**
@@ -58,7 +59,7 @@ public:
      */
     T next(K n, T& state) const override {
         // Specific term formula for the expansion: x / ((n+1) * (36*(n+1)^2 - 1))
-        state = this->x / utils::cast<T>::meta((n + 1) * (36 * (n + 1) * (n + 1) - 1));
+        state = this->x / utils::cast<T, K>()((n + 1) * (36 * (n + 1) * (n + 1) - 1));
         return state;
     }
 };

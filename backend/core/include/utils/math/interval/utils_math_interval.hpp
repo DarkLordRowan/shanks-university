@@ -1,9 +1,5 @@
-#ifndef UTILS_MATH_STD_FLOATING_POINT_HPP
-#define UTILS_MATH_STD_FLOATING_POINT_HPP
-#pragma once
-
-#ifndef UTILS_MATH_STD_COMPLEX_HPP
-#define UTILS_MATH_STD_COMPLEX_HPP
+#ifndef UTILS_MATH_INTERVAL_HPP
+#define UTILS_MATH_INTERVAL_HPP
 #pragma once
 
 template <typename T>
@@ -193,7 +189,5 @@ template <typename T>
 intprec::interval<T> utils::math<intprec::interval<T>>::abs(const intprec::interval<T>& x) {
     return intprec::abs(x);
 }
-
-#endif
 
 #endif

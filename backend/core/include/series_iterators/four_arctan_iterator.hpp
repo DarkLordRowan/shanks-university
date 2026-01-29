@@ -39,7 +39,7 @@ public:
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The value of 4 * arctan(x).
      */
-    T get_sum() const override { return utils::cast<T>::meta(4) * utils::math<T>::atan(this->x); }
+    T get_sum() const override { return utils::cast<T, int>()(4) * utils::math<T>::atan(this->x); }
 
     /**
      * @brief Validates the current evaluation point x.
@@ -48,7 +48,7 @@ public:
      */
     bool is_invalid() const override {
         using float_type = real_of<T>::value;
-        return !utils::helpers<T>::isfinite(this->x) || utils::math<T>::abs(this->x) > utils::cast<float_type>(1.0);
+        return !utils::helpers<T>::isfinite(this->x) || utils::math<T>::abs(this->x) > utils::cast<float_type, int>()(1);
     }
 
     /**
@@ -59,11 +59,11 @@ public:
     T next(K n, T& state) const override {
         // Recurrence logic for the alternating odd-power terms of the arctan expansion
         if (n == 0)
-            state = utils::cast<T>::meta(4) * this->x;
+            state = utils::cast<T, int>()(4) * this->x;
         else
-            state *= utils::cast<T>::meta(-1) * this->x * this->x * utils::cast<T>::meta(2 * n - 1) /
-                     utils::cast<T>::meta(utils::math<size_t>::fma(static_cast<size_t>(2), static_cast<size_t>(n),
-                                                             static_cast<size_t>(1)));
+            state *= utils::cast<T, int>()(-1) * this->x * this->x * utils::cast<T, K>()(2 * n - 1) /
+                     utils::cast<T, size_t>()(utils::math<size_t>::fma(static_cast<size_t>(2), static_cast<size_t>(n),
+                                                                   static_cast<size_t>(1)));
         return state;
     }
 };

@@ -49,7 +49,7 @@ public:
      */
     bool is_invalid() const override {
         using float_type = real_of<T>::value;
-        return !utils::helpers<T>::isfinite(this->x) || utils::math<T>::abs(this->x) > utils::cast<float_type>(1.0);
+        return !utils::helpers<T>::isfinite(this->x) || utils::math<T>::abs(this->x) > utils::cast<float_type, int>()(1);
     }
 
     /**
@@ -60,14 +60,14 @@ public:
     T next(K n, T& state) const override {
         // The expansion starts from the cubic term x^3 / 6
         if (n == 0)
-            state = utils::math<T>::pow(this->x, utils::cast<T>::meta(3)) / utils::cast<T>::meta(6);
+            state = utils::math<T>::pow(this->x, utils::cast<T, int>()(3)) / utils::cast<T, int>()(6);
         else
             state *=
                 this->x * this->x *
-                utils::cast<T>::meta(
+                utils::cast<T, size_t>()(
                     utils::math<size_t>::fma(static_cast<size_t>(2), static_cast<size_t>(n), static_cast<size_t>(1)) *
                     utils::math<size_t>::fma(static_cast<size_t>(2), static_cast<size_t>(n), static_cast<size_t>(1))) /
-                utils::cast<T>::meta(
+                utils::cast<T, size_t>()(
                     utils::math<size_t>::fma(static_cast<size_t>(2), static_cast<size_t>(n), static_cast<size_t>(2)) *
                     utils::math<size_t>::fma(static_cast<size_t>(2), static_cast<size_t>(n), static_cast<size_t>(3)));
         return state;

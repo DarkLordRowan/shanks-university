@@ -40,7 +40,8 @@ public:
      * @return T The value of 1 / sqrt(1 - 4x).
      */
     T get_sum() const override {
-        return utils::cast<T>::meta(1) / utils::math<T>::sqrt(utils::cast<T>::meta(1) - utils::cast<T>::meta(4) * this->x);
+        return utils::cast<T, int>()(1) /
+               utils::math<T>::sqrt(utils::cast<T, int>()(1) - utils::cast<T, int>()(4) * this->x);
     }
 
     /**
@@ -50,7 +51,7 @@ public:
      */
     bool is_invalid() const override {
         using float_type = real_of<T>::value;
-        return !utils::helpers<T>::isfinite(this->x) || utils::math<T>::abs(this->x) > utils::cast<float_type>(0.25);
+        return !utils::helpers<T>::isfinite(this->x) || utils::math<T>::abs(this->x) > utils::cast<float_type, double>()(0.25);
     }
 
     /**
@@ -61,12 +62,13 @@ public:
     T next(K n, T& state) const override {
         // Terms of this series are the central binomial coefficients C(2n, n) scaled by x^n
         if (n == 0)
-            state = utils::cast<T>::meta(1, utils::helpers<T>::get_precision(state));
+            state = utils::cast<T, int>()(1, utils::helpers<T>::get_precision(state));
         else
-            state *= this->x *
-                     utils::cast<T>::meta(2 * utils::math<size_t>::fma(static_cast<size_t>(2), static_cast<size_t>(n - 1),
-                                                                 static_cast<size_t>(1))) /
-                     utils::cast<T>::meta(n);
+            state *=
+                this->x *
+                utils::cast<T, size_t>()(2 * utils::math<size_t>::fma(static_cast<size_t>(2), static_cast<size_t>(n - 1),
+                                                                  static_cast<size_t>(1))) /
+                utils::cast<T, K>()(n);
         return state;
     }
 };
