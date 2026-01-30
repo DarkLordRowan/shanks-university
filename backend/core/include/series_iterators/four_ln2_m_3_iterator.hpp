@@ -40,7 +40,8 @@ public:
      * @return T The value of x * (4 * ln(2) - 3).
      */
     T get_sum() const override {
-        return this->x * (utils::cast<T, int>()(4) * utils::math<T>::log(utils::cast<T, int>()(2)) - utils::cast<T, int>()(3));
+        return this->x *
+               (utils::cast<T, int>()(4) * utils::math<T>::log(utils::cast<T, int>()(2)) - utils::cast<T, int>()(3));
     }
 
     /**

@@ -42,9 +42,9 @@ public:
      * @return T The value of the quadratic function at x.
      */
     T get_sum() const override {
-        return 
-               (utils::cast<T, int>()(3) * this->x * this->x -
-                utils::cast<T, double>()(std::numbers::pi) * utils::cast<T, double>()(std::numbers::pi)) / utils::cast<T, int>()(12);
+        return (utils::cast<T, int>()(3) * this->x * this->x -
+                utils::cast<T, double>()(std::numbers::pi) * utils::cast<T, double>()(std::numbers::pi)) /
+               utils::cast<T, int>()(12);
     }
 
     /**

@@ -63,9 +63,9 @@ T shanks_transform_alternating<T, K>::operator()(const K n, const K order, const
         std::max(utils::helpers<T>::get_precision(data.Sn[0]), utils::helpers<T>::get_precision(data.an[0]));
     if (data.Sn.size() < required_size || data.an.size() < required_size) {
         throw std::out_of_range("The Sn or an smaller then required for alt_shanks_{" +
-                                utils::helpers<T>::to_string(order) + "}^{" + utils::helpers<T>::to_string(n) + "}\n" +
+                                utils::helpers<K>::to_string(order) + "}^{" + utils::helpers<K>::to_string(n) + "}\n" +
                                 "the size of Sn and an must be at least " +
-                                utils::helpers<T>::to_string(required_size));
+                                utils::helpers<size_t>::to_string(required_size));
     }
 
     // Trivial case: order 0 returns the current partial sum

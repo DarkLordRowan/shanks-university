@@ -42,7 +42,8 @@ public:
     T get_sum() const override {
         const size_t precision = utils::helpers<T>::get_precision(this->x);
         return this->x * (utils::math<T>::log(utils::cast<T, int>()(4, precision)) +
-                          utils::cast<T, double>()(1.5) * utils::math<T>::log(utils::cast<T, int>()(3, precision)) - utils::cast<T, int>()(3));
+                          utils::cast<T, double>()(1.5) * utils::math<T>::log(utils::cast<T, int>()(3, precision)) -
+                          utils::cast<T, int>()(3));
     }
 
     /**

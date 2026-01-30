@@ -91,8 +91,8 @@ T generate_uniform_noise(const T& inf, const T& sup, std::mt19937_64& rng) {
 
     // Drawing a random value from within the specified interval range
     std::uniform_real_distribution<float_t> distribution{
-        utils::cast<float_t, typename T::type_value>()(inf.leftinterval()),
-        utils::cast<float_t, typename T::type_value>()(sup.rightinterval())};
+        utils::cast<float_t, typename T::value_type>()(inf.leftinterval()),
+        utils::cast<float_t, typename T::value_type>()(sup.rightinterval())};
 
     return T(static_cast<typename T::value_type>(distribution(rng)));
 };
@@ -123,7 +123,8 @@ T generate_uniform_noise(const T& inf, const T& sup, std::mt19937_64& rng) {
     if (inf >= sup) throw std::invalid_argument("Invalid borders for uniform noise generation.");
 
     // Simple uniform distribution generation for scalar types
-    std::uniform_real_distribution<float_t> distribution{utils::cast<float_t, T>()(inf), utils::cast<float_t, T>()(sup)};
+    std::uniform_real_distribution<float_t> distribution{utils::cast<float_t, T>()(inf),
+                                                         utils::cast<float_t, T>()(sup)};
 
     return utils::cast<T, float_t>()(distribution(rng));
 };

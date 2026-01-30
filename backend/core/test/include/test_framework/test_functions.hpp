@@ -126,7 +126,7 @@ inline series_result<T> apply_noise_interactive(series_result<T>& source, const 
         seed = std::chrono::system_clock::now().time_since_epoch().count() + std::rand();
     }
 
-    std::cout << "Seed : " << utils::helpers<T>::to_string(seed) << "\n";
+    std::cout << "Seed : " << utils::helpers<unsigned long long>::to_string(seed) << "\n";
 
     // Getting noise parameters based on type
     switch (noise_type) {

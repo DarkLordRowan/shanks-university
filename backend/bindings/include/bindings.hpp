@@ -18,7 +18,7 @@
 #include <tuple>
 
 #include "../../core/include/custom_concepts.hpp"
-#include "../../core/include/operation_counter.hpp"
+#include "../../core/include/custom_types/operation_counter.hpp"
 #include "../../core/include/utils.hpp"
 
 namespace py = pybind11;

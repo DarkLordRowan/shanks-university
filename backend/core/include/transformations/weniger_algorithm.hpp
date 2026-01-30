@@ -72,9 +72,9 @@ T weniger_algorithm<T, K>::operator()(const K n, const K order, const series_res
 
     if (data.Sn.size() < required_size || data.an.size() < required_size) {
         throw std::out_of_range("The Sn or an smaller then required for Weniger_{" +
-                                utils::helpers<T>::to_string(order) + "}^{" + utils::helpers<T>::to_string(n) + "}\n" +
+                                utils::helpers<K>::to_string(order) + "}^{" + utils::helpers<K>::to_string(n) + "}\n" +
                                 "the size of Sn and an must be at least " +
-                                utils::helpers<T>::to_string(required_size));
+                                utils::helpers<size_t>::to_string(required_size));
     }
 
     // Trivial case: order 0 returns the original partial sum
@@ -98,7 +98,8 @@ T weniger_algorithm<T, K>::operator()(const K n, const K order, const series_res
     T binomial_coef = utils::cast<T, K>()(utils::math<K>::binomial_coefficient(n, static_cast<K>(0)), precision);
 
     // Precompute initial value: (1)ₖ₋₁ = (k-1)!
-    for (K m = static_cast<K>(0); m < order - static_cast<K>(1); ++m) coef *= utils::cast<T, K>()(static_cast<K>(1) + m);
+    for (K m = static_cast<K>(0); m < order - static_cast<K>(1); ++m)
+        coef *= utils::cast<T, K>()(static_cast<K>(1) + m);
 
     K j1;
 

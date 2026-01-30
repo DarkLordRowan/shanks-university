@@ -64,10 +64,10 @@ public:
         if (n == 0)
             state = utils::cast<T, int>()(5) * this->x / utils::cast<T, int>()(3);
         else
-            state = utils::cast<T, int>()(5) / utils::cast<T, int>()(3) * utils::math<T>::template minus_one_raised_to_power_n<K>(n) *
-                    this->x /
+            state = utils::cast<T, int>()(5) / utils::cast<T, int>()(3) *
+                    utils::math<T>::template minus_one_raised_to_power_n<K>(n) * this->x /
                     utils::cast<T, size_t>()(utils::math<size_t>::fma(static_cast<size_t>(2), static_cast<size_t>(n),
-                                                                  static_cast<size_t>(1)));
+                                                                      static_cast<size_t>(1)));
         return state;
     }
 };

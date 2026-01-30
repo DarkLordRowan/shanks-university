@@ -43,7 +43,8 @@ public:
      */
     T get_sum() const override {
         return this->x / utils::cast<T, int>()(12) *
-               (this->x * this->x - utils::cast<T, double>()(std::numbers::pi) * utils::cast<T, double>()(std::numbers::pi));
+               (this->x * this->x -
+                utils::cast<T, double>()(std::numbers::pi) * utils::cast<T, double>()(std::numbers::pi));
     }
 
     /**

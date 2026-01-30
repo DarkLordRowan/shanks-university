@@ -185,14 +185,14 @@ T j_transformation_algorithm<T, K>::operator()(const K n, const K order, const s
     const K required_size = n + order + 1;
 
     if (data.Sn.size() < required_size) {
-        throw std::out_of_range("Insufficient data in Sn vector: size=" + utils::helpers<T>::to_string(data.Sn.size()) +
-                                ", required at least " + utils::helpers<T>::to_string(required_size));
+        throw std::out_of_range("Insufficient data in Sn vector: size=" + utils::helpers<size_t>::to_string(data.Sn.size()) +
+                                ", required at least " + utils::helpers<size_t>::to_string(required_size));
     }
 
     // Validate order parameter
     if (order > max_order_) {
-        throw std::domain_error("Requested order " + utils::helpers<T>::to_string(order) + " exceeds maximum order " +
-                                utils::helpers<T>::to_string(max_order_));
+        throw std::domain_error("Requested order " + utils::helpers<K>::to_string(order) + " exceeds maximum order " +
+                                utils::helpers<K>::to_string(max_order_));
     }
 
     // Base case: order 0 returns the partial sum directly

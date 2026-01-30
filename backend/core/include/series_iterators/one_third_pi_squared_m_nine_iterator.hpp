@@ -44,7 +44,8 @@ public:
     T get_sum() const override {
         const size_t precision = utils::helpers<T>::get_precision(this->x);
         return this->x *
-               (utils::cast<T, double>()(std::numbers::pi, precision) * utils::cast<T, double>()(std::numbers::pi, precision) -
+               (utils::cast<T, double>()(std::numbers::pi, precision) *
+                    utils::cast<T, double>()(std::numbers::pi, precision) -
                 utils::cast<T, int>()(9, precision)) /
                utils::cast<T, int>()(3, precision);
     }

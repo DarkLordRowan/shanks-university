@@ -195,10 +195,10 @@ T levin_sidi_m_algorithm<T, K>::operator()(const K n, const K order, const serie
         std::max(utils::helpers<T>::get_precision(data.Sn[0]), utils::helpers<T>::get_precision(data.an[0]));
 
     if (data.Sn.size() < required_size || data.an.size() < required_size) {
-        throw std::out_of_range("The Sn or an smaller then required for M_{" + utils::helpers<T>::to_string(order) +
-                                "}^{" + utils::helpers<T>::to_string(n) + "}\n" +
+        throw std::out_of_range("The Sn or an smaller then required for M_{" + utils::helpers<K>::to_string(order) +
+                                "}^{" + utils::helpers<K>::to_string(n) + "}\n" +
                                 "the size of Sn and an must be at least " +
-                                utils::helpers<T>::to_string(required_size));
+                                utils::helpers<size_t>::to_string(required_size));
     }
 
     // Trivial case: order 0 returns the current partial sum
@@ -241,7 +241,7 @@ T levin_sidi_m_algorithm<T, K>::operator()(const K n, const K order, const serie
         // Calculate the sign, binomial coefficient, and weight components
         rest = utils::math<T>::template minus_one_raised_to_power_n<K>(j);
         rest *= utils::cast<T, K>()(utils::math<K>::binomial_coefficient(n, j), precision);
-        rest *= utils::cast<T, K>()(up, precision);                     // Multiply by Pochhammer ratio term
+        rest *= utils::cast<T, float_type>()(up, precision);                     // Multiply by Pochhammer ratio term
         rest /= utils::cast<T, K>()(j + static_cast<K>(1), precision);  // Multiply by 1/(j+1) factor
         up /= (up_coef + utils::cast<float_type, K>()(j, precision));   // Update Pochhammer ratio for next iteration
         up *= (down_coef + utils::cast<float_type, K>()(

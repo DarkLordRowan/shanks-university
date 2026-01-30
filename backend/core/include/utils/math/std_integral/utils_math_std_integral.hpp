@@ -12,6 +12,16 @@ struct utils::math<T> {
     static T pow(const T& x, const T& y);
     static T fma(const T& a, const T& b, const T& c);
     static T abs(const T& x);
+
+    // availability of special function
+    using has_erf = std::false_type;
+    using has_zeta = std::false_type;
+    using has_ci_x = std::false_type;
+    using has_si_x = std::false_type;
+    using has_e_x = std::false_type;
+    using has_k_x = std::false_type;
+    using has_inc_gamma = std::false_type;
+    using has_lambertW0 = std::false_type;
 };
 
 template <std::integral T>
@@ -75,7 +85,7 @@ T utils::math<T>::minus_one_raised_to_power_n(const T j) {
         return static_cast<T>(std::abs(j) & 1 ? -1 : 1);
     else
         static_assert(std::false_type{},
-                      "ASDSADAutils::math::minus_one_raised_to_power_n can't be implemented for usigned integral type");
+                      "utils::math::minus_one_raised_to_power_n can't be implemented for unsigned integral type");
 }
 template <std::integral T>
 T utils::math<T>::pow(const T& x, const T& y) {

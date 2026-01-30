@@ -81,8 +81,8 @@ T wynn_epsilon_1_algorithm<T, K>::operator()(const K n, const K order, const ser
 
     if (data.Sn.size() < required_size) {
         throw std::out_of_range("The Sn smaller then required for wynn_epsilon_1_{" +
-                                utils::helpers<T>::to_string(order) + "}^{" + utils::helpers<T>::to_string(n) + "}\n" +
-                                "the size of Sn must be at least " + utils::helpers<T>::to_string(required_size));
+                                utils::helpers<K>::to_string(order) + "}^{" + utils::helpers<K>::to_string(n) + "}\n" +
+                                "the size of Sn must be at least " + utils::helpers<size_t>::to_string(required_size));
     }
 
     if (n == static_cast<K>(0)) throw std::domain_error("n = 0 in the input");

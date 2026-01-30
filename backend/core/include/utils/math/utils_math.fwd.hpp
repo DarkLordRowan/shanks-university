@@ -336,6 +336,16 @@ struct utils::math {
      * @return Underlying type value (absolute value)
      */
     static typename real_of<T>::value abs(const T& x);
+
+    // availability of special function
+    using has_erf = std::false_type;
+    using has_zeta = std::false_type;
+    using has_ci_x = std::false_type;
+    using has_si_x = std::false_type;
+    using has_e_x = std::false_type;
+    using has_k_x = std::false_type;
+    using has_inc_gamma = std::false_type;
+    using has_lambertW0 = std::false_type;
 };
 
 template <typename T>
@@ -478,6 +488,7 @@ typename real_of<T>::value utils::math<T>::abs(const T& x) {
 }
 #include "interval/utils_math_interval.hpp"
 #include "mpreal/utils_math_mpreal.hpp"
+#include "std_complex/utils_math_std_complex.hpp"
 #include "std_floating_point/utils_math_std_floating_point.hpp"
 #include "std_integral/utils_math_std_integral.hpp"
 

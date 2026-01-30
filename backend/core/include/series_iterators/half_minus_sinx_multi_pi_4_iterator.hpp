@@ -42,7 +42,8 @@ public:
      * @return T The value of 0.5 - (pi/4)*sin(x).
      */
     T get_sum() const override {
-        return utils::cast<T, double>()(0.5) - utils::cast<T, double>()(std::numbers::pi * 0.25) * utils::math<T>::sin(this->x);
+        return utils::cast<T, double>()(0.5) -
+               utils::cast<T, double>()(std::numbers::pi * 0.25) * utils::math<T>::sin(this->x);
     }
 
     /**

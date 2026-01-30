@@ -149,7 +149,8 @@ public:
      */
     T operator()(const K n, const K order, const std::vector<T>& an, const T gamma = utils::cast<T, int>()(-1),
                  const T rho = utils::cast<T, int>()(1)) const {
-        return utils::cast<T, K>()(order - static_cast<K>(1)) - gamma;  // p.377 rhi(gamma)-algorithm [http://servidor.demec.ufpr.br/CFD/bibliografia/MER/Sidi_2003.pdf]
+        return utils::cast<T, K>()(order - static_cast<K>(1)) -
+               gamma;  // p.377 rhi(gamma)-algorithm [http://servidor.demec.ufpr.br/CFD/bibliografia/MER/Sidi_2003.pdf]
     }
 };
 

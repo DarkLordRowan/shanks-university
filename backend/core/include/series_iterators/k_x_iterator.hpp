@@ -41,7 +41,16 @@ public:
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The value of the complete elliptic integral K(x).
      */
-    T get_sum() const override { return utils::math<T>::k_x(this->x); }
+    T get_sum() const override {
+        if constexpr (typename utils::math<T>::has_k_x{})
+            return utils::math<T>::k_x(this->x);
+        else
+        #ifndef DEBUG
+            static_assert(dependent_false<T>::value, "utils::math<T>::k_x not implemented for this type");
+        #else
+            return utils::helpers<T>::get_nan();
+        #endif
+    }
 
     /**
      * @brief Validates the current evaluation point x.
@@ -50,7 +59,8 @@ public:
      */
     bool is_invalid() const override {
         using float_type = real_of<T>::value;
-        return !utils::helpers<T>::isfinite(this->x) || utils::math<T>::abs(this->x) > utils::cast<float_type, int>()(1);
+        return !utils::helpers<T>::isfinite(this->x) ||
+               utils::math<T>::abs(this->x) > utils::cast<float_type, int>()(1);
     }
 
     /**
@@ -63,12 +73,13 @@ public:
         if (n == 0)
             state = utils::cast<T, double>()(std::numbers::pi * 0.5, utils::helpers<T>::get_precision(state));
         else
-            state *= this->x * this->x *
-                     utils::cast<T, size_t>()(utils::math<size_t>::fma(static_cast<size_t>(2), static_cast<size_t>(n - 1),
-                                                                   static_cast<size_t>(1)) *
-                                          utils::math<size_t>::fma(static_cast<size_t>(2), static_cast<size_t>(n - 1),
-                                                                   static_cast<size_t>(1))) /
-                     utils::cast<T, K>()(4 * n * n);
+            state *=
+                this->x * this->x *
+                utils::cast<T, size_t>()(utils::math<size_t>::fma(static_cast<size_t>(2), static_cast<size_t>(n - 1),
+                                                                  static_cast<size_t>(1)) *
+                                         utils::math<size_t>::fma(static_cast<size_t>(2), static_cast<size_t>(n - 1),
+                                                                  static_cast<size_t>(1))) /
+                utils::cast<T, K>()(4 * n * n);
         return state;
     }
 };

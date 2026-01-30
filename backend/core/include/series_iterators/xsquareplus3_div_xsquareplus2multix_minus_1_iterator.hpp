@@ -40,7 +40,8 @@ public:
      * @return T The value of the rational function at current point x.
      */
     T get_sum() const override {
-        return (this->x * this->x + utils::cast<T, int>()(3)) / (this->x * this->x + utils::cast<T, int>()(2) * this->x) -
+        return (this->x * this->x + utils::cast<T, int>()(3)) /
+                   (this->x * this->x + utils::cast<T, int>()(2) * this->x) -
                utils::cast<T, int>()(1);
     }
 

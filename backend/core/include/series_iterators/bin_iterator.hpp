@@ -26,7 +26,6 @@ namespace series {
 template <AcceptedLike T, UnsignedIntLike K>
 class bin_iterator final : public series_base_succ<T, K> {
 public:
-
     T alpha = utils::cast<T, int>()(0); /**< The exponent alpha in the binomial expansion. */
 
     /**
@@ -53,7 +52,8 @@ public:
      */
     bool is_invalid() const override {
         using float_type = real_of<T>::value;
-        return !utils::helpers<T>::isfinite(this->x) || utils::math<T>::abs(this->x) > utils::cast<float_type, int>()(1);
+        return !utils::helpers<T>::isfinite(this->x) ||
+               utils::math<T>::abs(this->x) > utils::cast<float_type, int>()(1);
     }
 
     /**

@@ -37,6 +37,21 @@ struct utils::math<mpfr::mpreal> {
     static mpfr::mpreal tanh(const mpfr::mpreal& x);
     static mpfr::mpreal atanh(const mpfr::mpreal& x);
     static mpfr::mpreal abs(const mpfr::mpreal& x);
+
+    using has_erf = std::true_type;
+    using has_zeta = std::true_type;
+    using has_inc_gamma = std::true_type;
+#ifdef __GSL_SF_EXPINT_H__
+    using has_ci_x = std::true_type;
+    using has_si_x = std::true_type;
+    using has_lambertW0 = std::true_type;
+#else
+    using has_ci_x = std::false_type;
+    using has_si_x = std::false_type;
+    using has_lambertW0 = std::false_type;
+#endif
+    using has_e_x = std::true_type;
+    using has_k_x = std::true_type;
 };
 
 template <std::integral K>

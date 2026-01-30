@@ -71,9 +71,9 @@ T shanks_algorithm<T, K>::operator()(const K n, const K order, const series_resu
 
     if (data.Sn.size() < required_size) {
         throw std::out_of_range("The Sn or an smaller then required for shanks_{" +
-                                utils::helpers<T>::to_string(order) + "}^{" + utils::helpers<T>::to_string(n) + "}\n" +
+                                utils::helpers<K>::to_string(order) + "}^{" + utils::helpers<K>::to_string(n) + "}\n" +
                                 "the size of Sn and an must be at least " +
-                                utils::helpers<T>::to_string(required_size));
+                                utils::helpers<size_t>::to_string(required_size));
     }
 
     // create matrix for further determinant calculation

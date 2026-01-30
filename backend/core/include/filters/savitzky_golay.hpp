@@ -2,13 +2,6 @@
 #define SAVITZKY_GOLAY_HPP
 #pragma once
 
-#include <eigen3/Eigen/Core>
-#include <eigen3/Eigen/Dense>
-#include <stdexcept>
-
-#include "../custom_concepts.hpp"
-#include "../utils/utils_cast.hpp"
-
 /**
  * @file savitzky_golay.hpp
  * @brief Savitzky-Golay filter implementation.
@@ -38,7 +31,7 @@ std::vector<Scalar> savitzky_golay_filter(const std::vector<Scalar>& data, size_
     const size_t precision = utils::helpers<Scalar>::get_precision(data.at(0));
 
     // Setting up the least squares problem using Eigen
-    Scalar N = utils::cast<Scalar>()(static_cast<int>()(window_length) / 2, precision);
+    Scalar N = utils::cast<Scalar, int>()(static_cast<int>(window_length) / 2, precision);
 
     Eigen::Vector<Scalar, Eigen::Dynamic> v = Eigen::Vector<Scalar, Eigen::Dynamic>::LinSpaced(window_length, -N, N);
     Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic> x =
@@ -51,13 +44,13 @@ std::vector<Scalar> savitzky_golay_filter(const std::vector<Scalar>& data, size_
     Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic> coeff_mat = (x.transpose() * x).inverse() * x.transpose();
 
     // Computing the final filter coefficients
-    Eigen::RowVector<Scalar, Eigen::Dynamic> coeffs = utils::cast<Scalar>()(utils::fact(derive), precision) *
+    Eigen::RowVector<Scalar, Eigen::Dynamic> coeffs = utils::cast<Scalar, size_t>()(utils::math<size_t>::fact(derive), precision) *
                                                       coeff_mat.row(derive) /
-                                                      utils::pow(delta, utils::cast<Scalar>()(derive, precision));
+                                                      utils::math<Scalar>::pow(delta, utils::cast<Scalar, size_t>()(derive, precision));
 
     // Convolution with padding: adding 0 at the start, rest 0 on the end
-    std::vector<Scalar> padded_vector(data.size() + (window_length - 1) * 2, utils::cast<Scalar>()(0.0, precision));
-    std::vector<Scalar> result(data.size(), utils::cast<Scalar>()(0.0, precision));
+    std::vector<Scalar> padded_vector(data.size() + (window_length - 1) * 2, utils::cast<Scalar, int>()(0, precision));
+    std::vector<Scalar> result(data.size(), utils::cast<Scalar, int>()(0, precision));
     std::copy(data.begin(), data.end(), padded_vector.begin() + 1);
 
     // Applying the filter via convolution

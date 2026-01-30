@@ -10,6 +10,9 @@
  * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  */
 
+template <typename...>
+struct dependent_false : std::false_type {};
+
 struct utils {
     // utils for math functions
     template <typename T>

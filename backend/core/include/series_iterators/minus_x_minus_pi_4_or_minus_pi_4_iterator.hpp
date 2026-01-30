@@ -74,11 +74,13 @@ public:
         if (n == 0)
             state = utils::cast<T, double>()(std::numbers::pi * 0.25, precision);
         else {
-            const T piDiv3 = utils::cast<T, double>()(std::numbers::pi, precision) / utils::cast<T, int>()(3, precision);
+            const T piDiv3 =
+                utils::cast<T, double>()(std::numbers::pi, precision) / utils::cast<T, int>()(3, precision);
             const T cos_coef =
                 (utils::math<T>::template minus_one_raised_to_power_n<K>(n) - utils::cast<T, int>()(1, precision)) /
                 (utils::cast<T, double>()(std::numbers::pi, precision) * utils::cast<T, K>()(n * n, precision));
-            const T sin_coef = utils::math<T>::template minus_one_raised_to_power_n<K>(n) / utils::cast<T, K>()(n, precision);
+            const T sin_coef =
+                utils::math<T>::template minus_one_raised_to_power_n<K>(n) / utils::cast<T, K>()(n, precision);
             state = cos_coef * utils::math<T>::cos(utils::cast<T, K>()(n) * this->x) +
                     sin_coef * utils::math<T>::sin(utils::cast<T, K>()(n) * this->x);
         }

@@ -42,7 +42,7 @@ concept AcceptedLike = requires { requires FloatLike<T> || ComplexLike<T> || Int
 /**
  * @brief Utility for static_assert in if constexpr branches.
  */
-template <typename...>
-struct dependent_false : std::false_type {};
+//template <typename...>
+//struct dependent_false : std::false_type {};
 
 #endif

@@ -40,6 +40,15 @@ struct utils::math<intprec::interval<T>> {
     static intprec::interval<T> tanh(const intprec::interval<T>& x);
     static intprec::interval<T> atanh(const intprec::interval<T>& x);
     static intprec::interval<T> abs(const intprec::interval<T>& x);
+
+    using has_erf = std::false_type;
+    using has_zeta = std::false_type;
+    using has_ci_x = std::false_type;
+    using has_si_x = std::false_type;
+    using has_e_x = std::false_type;
+    using has_k_x = std::false_type;
+    using has_inc_gamma = std::false_type;
+    using has_lambertW0 = std::false_type;
 };
 
 template <typename T>

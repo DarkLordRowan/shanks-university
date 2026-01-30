@@ -81,9 +81,9 @@ T lubkin_w_algorithm<T, K>::operator()(const K n, const K order, const series_re
     const size_t precision = utils::helpers<T>::get_precision(data.Sn[0]);
 
     if (data.Sn.size() < required_size) {
-        throw std::out_of_range("The Sn smaller then required for W_{" + utils::helpers<T>::to_string(order) + "}^{" +
-                                utils::helpers<T>::to_string(n) + "}\n" + "the size of Sn must be at least " +
-                                utils::helpers<T>::to_string(required_size));
+        throw std::out_of_range("The Sn smaller then required for W_{" + utils::helpers<K>::to_string(order) + "}^{" +
+                                utils::helpers<K>::to_string(n) + "}\n" + "the size of Sn must be at least " +
+                                utils::helpers<size_t>::to_string(required_size));
     }
 
     // Trivial case: order 0 returns the original partial sum at index n

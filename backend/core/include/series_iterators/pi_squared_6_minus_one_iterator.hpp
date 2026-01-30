@@ -42,9 +42,9 @@ public:
      * @return T The value of x * (pi^2 / 6 - 1).
      */
     T get_sum() const override {
-         const size_t precision = utils::helpers<T>::get_precision(this->x);
-        return this->x * (utils::cast<T, double>()(std::numbers::pi, precision) * utils::cast<T, double>()(std::numbers::pi, precision) /
-                              utils::cast<T, int>()(6) -
+        const size_t precision = utils::helpers<T>::get_precision(this->x);
+        return this->x * (utils::cast<T, double>()(std::numbers::pi, precision) *
+                              utils::cast<T, double>()(std::numbers::pi, precision) / utils::cast<T, int>()(6) -
                           utils::cast<T, int>()(1));
     }
 

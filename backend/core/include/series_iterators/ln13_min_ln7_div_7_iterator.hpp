@@ -40,7 +40,8 @@ public:
      * @return T The value of x * ln(13/7) / 7.
      */
     T get_sum() const override {
-        return this->x * utils::math<T>::log(utils::cast<T, int>()(13) / utils::cast<T, int>()(7)) / utils::cast<T, int>()(7);
+        return this->x * utils::math<T>::log(utils::cast<T, int>()(13) / utils::cast<T, int>()(7)) /
+               utils::cast<T, int>()(7);
     }
 
     /**
@@ -48,7 +49,9 @@ public:
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return true if x is non-finite, false otherwise.
      */
-    bool is_invalid() const override { return !utils::helpers<T>::isfinite(this->x) || this->x == utils::cast<T, int>()(0); }
+    bool is_invalid() const override {
+        return !utils::helpers<T>::isfinite(this->x) || this->x == utils::cast<T, int>()(0);
+    }
 
     /**
      * @brief Computes the next term in the series expansion.
@@ -62,7 +65,7 @@ public:
         else
             state *= utils::cast<T, int>()(-1) * utils::cast<T, K>()(6 * n) /
                      utils::cast<T, size_t>()(utils::math<size_t>::fma(static_cast<size_t>(7), static_cast<size_t>(n),
-                                                                   static_cast<size_t>(7)));
+                                                                       static_cast<size_t>(7)));
         return state;
     }
 };

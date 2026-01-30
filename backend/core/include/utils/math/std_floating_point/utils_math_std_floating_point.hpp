@@ -18,12 +18,12 @@ struct utils::math<T> {
     static T zeta(const T& x);
     static T e_x(const T& x);
     static T k_x(const T& x);
-    #ifdef __GSL_SF_EXPINT_H__
+#ifdef __GSL_SF_EXPINT_H__
     static T ci_x(const T& x);
     static T si_x(const T& x);
     static T inc_gamma(const T& x, const T& alpha);
     static T lambertW0(const T& x);
-    #endif
+#endif
     static T sin(const T& x);
     static T asin(const T& x);
     static T cos(const T& x);
@@ -37,6 +37,23 @@ struct utils::math<T> {
     static T tanh(const T& x);
     static T atanh(const T& x);
     static T abs(const T& x);
+
+    // availability of special function
+    using has_erf = std::true_type;
+    using has_zeta = std::true_type;
+#ifdef __GSL_SF_EXPINT_H__
+    using has_ci_x = std::true_type;
+    using has_si_x = std::true_type;
+    using has_inc_gamma = std::true_type;
+    using has_lambertW0 = std::true_type;
+#else
+    using has_ci_x = std::false_type;
+    using has_si_x = std::false_type;
+    using has_inc_gamma = std::false_type;
+    using has_lambertW0 = std::false_type;
+#endif
+    using has_e_x = std::true_type;
+    using has_k_x = std::true_type;
 };
 
 template <std::floating_point T>
@@ -98,8 +115,7 @@ T utils::math<T>::si_x(const T& x) {
 }
 template <std::floating_point T>
 T utils::math<T>::inc_gamma(const T& x, const T& alpha) {
-    return std::tgamma(alpha) -
-           static_cast<T>(gsl_sf_gamma_inc(static_cast<double>(alpha), static_cast<double>(x)));
+    return std::tgamma(alpha) - static_cast<T>(gsl_sf_gamma_inc(static_cast<double>(alpha), static_cast<double>(x)));
 }
 template <std::floating_point T>
 T utils::math<T>::lambertW0(const T& x) {

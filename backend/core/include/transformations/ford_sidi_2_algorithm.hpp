@@ -79,9 +79,9 @@ T ford_sidi_2_algorithm<T, K>::operator()(const K n, const K /*order*/, const se
     const size_t precision = utils::helpers<T>::get_precision(data.Sn[0]);
 
     if (data.Sn.size() < required_size) {
-        throw std::out_of_range("The Sn smaller then required for ford_sidi2_{" + utils::helpers<T>::to_string(n) +
+        throw std::out_of_range("The Sn smaller then required for ford_sidi2_{" + utils::helpers<K>::to_string(n) +
                                 "}\n" + "the size of Sn must be at least " +
-                                utils::helpers<T>::to_string(required_size));
+                                utils::helpers<size_t>::to_string(required_size));
     }
 
     // For theory, see: Ford & Sidi (1987), Section 1 - Input validation

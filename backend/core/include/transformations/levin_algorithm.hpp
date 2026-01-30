@@ -245,9 +245,9 @@ inline T levin_algorithm<T, K>::calc_result(const K n, const K order, const seri
         rest *= utils::cast<T, K>()(utils::math<K>::binomial_coefficient(order, j), precision);
 
         // Compute (n+j+1)^{k-1}/(n+k+1)^{k-1} - the weighting factors C_njk
-        C_njk =
-            utils::math<float_type>::pow(beta_in_use + utils::cast<float_type, K>()(n + j + static_cast<K>(1), precision),
-                                         utils::cast<float_type, K>()(order - static_cast<K>(1), precision));
+        C_njk = utils::math<float_type>::pow(
+            beta_in_use + utils::cast<float_type, K>()(n + j + static_cast<K>(1), precision),
+            utils::cast<float_type, K>()(order - static_cast<K>(1), precision));
         C_njk /= utils::math<float_type>::pow(
             beta_in_use + utils::cast<float_type, K>()(n + order + static_cast<K>(1), precision),
             utils::cast<float_type, K>()(order - static_cast<K>(1), precision));
@@ -256,8 +256,8 @@ inline T levin_algorithm<T, K>::calc_result(const K n, const K order, const seri
         rest *= remainder->operator()(
             n + j, n + j, data.an,
             utils::cast<T, float_type>()((remainder_type_in_use == shanks::remainders::remainder_type::u_type
-                                            ? beta_in_use
-                                            : utils::cast<T, int>()(1, precision))));
+                                              ? beta_in_use
+                                              : utils::cast<float_type, int>()(1, precision))));
 
         rest *= C_njk;
 
@@ -289,9 +289,9 @@ inline T levin_algorithm<T, K>::calc_result_rec(const K n, const K order, const 
         Denom[i] += remainder->operator()(
             n + i, n + i, data.an,
             utils::cast<T, float_type>()(remainder_type_in_use == shanks::remainders::remainder_type::u_type
-                                                 ? beta_in_use
-                                                 : utils::cast<float_type, int>()(1, precision),
-                                             precision));
+                                             ? beta_in_use
+                                             : utils::cast<float_type, int>()(1, precision),
+                                         precision));
 
         Num[i] += data.Sn.at(n + i) * Denom[i];
     }
@@ -310,7 +310,8 @@ inline T levin_algorithm<T, K>::calc_result_rec(const K n, const K order, const 
                 utils::cast<float_type, K>()(i));
             scale /= (beta_in_use + utils::cast<float_type, K>()(n + j + i, precision));
 
-            Denom[j] = utils::math<T>::fma(utils::cast<T, float_type>()(-scale), Denom[j], Denom[j + static_cast<K>(1)]);
+            Denom[j] =
+                utils::math<T>::fma(utils::cast<T, float_type>()(-scale), Denom[j], Denom[j + static_cast<K>(1)]);
             Num[j] = utils::math<T>::fma(utils::cast<T, float_type>()(-scale), Num[j], Num[j + static_cast<K>(1)]);
         }
 
@@ -330,10 +331,10 @@ T levin_algorithm<T, K>::operator()(const K n, const K order, const series_resul
         static_cast<K>(2) * static_cast<K>(remainder_type_in_use == shanks::remainders::remainder_type::v_wave_type);
 
     if (data.Sn.size() < required_size || data.an.size() < required_size) {
-        throw std::out_of_range("The Sn or an smaller then required for L_{" + utils::helpers<T>::to_string(order) +
-                                "}^{" + utils::helpers<T>::to_string(n) + "}\n" +
+        throw std::out_of_range("The Sn or an smaller then required for L_{" + utils::helpers<K>::to_string(order) +
+                                "}^{" + utils::helpers<K>::to_string(n) + "}\n" +
                                 "the size of Sn and an must be at least " +
-                                utils::helpers<T>::to_string(required_size));
+                                utils::helpers<size_t>::to_string(required_size));
     }
 
     if (order == static_cast<K>(0)) return data.Sn.at(n);

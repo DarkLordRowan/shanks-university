@@ -5,7 +5,7 @@
 template <typename To, typename From>
 struct utils::cast<std::complex<To>, From> {
     std::complex<To> operator()(const From& x, std::size_t precision = std::size_t{0});
-    std::complex<To> operator()(const From& x, const From& y, std::size_t precision = std::size_t{0});
+    //std::complex<To> operator()(const From& x, const From& y, std::size_t precision = std::size_t{0});
 };
 
 template <typename To, typename From>

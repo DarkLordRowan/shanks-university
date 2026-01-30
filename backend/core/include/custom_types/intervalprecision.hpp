@@ -1978,16 +1978,16 @@ inline interval<IT> pow(const interval<IT>& x, const interval<IT>& y) {
     // if y is an integer?
     if (utils::helpers<IT>::floor(y.inf()) == y.inf() &&
         utils::helpers<IT>::floor(y.sup()) == y.sup()) {  // raise to the power of an integer interval
-        interval<IT> lhs(utils::math<IT>::pow(x, utils::cast<interval<IT>(), IT>()(y.inf())));
-        interval<IT> rhs(utils::math<IT>::pow(x, utils::cast<interval<IT>(), IT>()(y.sup())));
+        interval<IT> lhs(utils::math<interval<IT>>::pow(x, utils::cast<interval<IT>, IT>()(y.inf())));
+        interval<IT> rhs(utils::math<interval<IT>>::pow(x, utils::cast<interval<IT>, IT>()(y.sup())));
         c = interval<IT>(std::min(lhs.inf(), rhs.inf()), std::max(lhs.sup(), rhs.sup()));
         return c;
     }
 
     // Otherwise do it the hard way
-    c = utils::math<IT>::log(x);
+    c = utils::math<interval<IT>>::log(x);
     c *= y;
-    c = utils::math<IT>::exp(c);
+    c = utils::math<interval<IT>>::exp(c);
     return c;
 }
 
@@ -2298,7 +2298,7 @@ inline interval<IT> sinh(const interval<IT>& x) {
     if (x.isEmpty()) return interval<IT>();  // Return the EMPTY interval;
     const interval<IT> one(IT(1));           // Ensure correct precision for IT=float_precision
     const interval<IT> half(IT(0.5));        // Ensure correct precision for IT=float_precision
-    const interval<IT> e(utils::math<IT>::exp(x));
+    const interval<IT> e(utils::math<interval<IT>>::exp(x));
     interval<IT> res(half * (e - one / e));
     // set the proper interval decoration
     res.intervaldecoration(x.intervaldecoration());
@@ -2311,7 +2311,7 @@ inline interval<IT> cosh(const interval<IT>& x) {
     if (x.isEmpty()) return interval<IT>();  // Return the EMPTY interval;
     interval<IT> one(x);                     // Ensure correct precision for IT=float_precision
     interval<IT> half(x);                    // Ensure correct precision for IT=float_precision
-    const interval<IT> e(utils::math<IT>::exp(x));
+    const interval<IT> e(utils::math<interval<IT>>::exp(x));
     one = interval<IT>(1);
     half = interval<IT>(0.5);
     interval<IT> res(half * (e + one / e));
@@ -2341,7 +2341,7 @@ inline interval<IT> asinh(const interval<IT>& x) {
     const interval<IT> one(1);
     interval<IT> xsq(x);
     xsq *= xsq;
-    interval<IT> res(utils::math<IT>::log(x + utils::math<IT>::sqrt(xsq + one)));
+    interval<IT> res(utils::math<interval<IT>>::log(x + utils::math<interval<IT>>::sqrt(xsq + one)));
     // set the proper interval decoration
     res.intervaldecoration(x.intervaldecoration());
     return res;
@@ -2382,7 +2382,7 @@ inline interval<IT> atanh(const interval<IT>& x) {
     interval<IT> xadjusted(ainf, asup);
     const interval<IT> one(1);
     const interval<IT> half(0.5);
-    interval<IT> res(utils::math<IT>::log((xadjusted + one) / (-xadjusted + one)) * half);
+    interval<IT> res(utils::math<interval<IT>>::log((xadjusted + one) / (-xadjusted + one)) * half);
     // set the proper interval decoration
     res.intervaldecoration(x.intervaldecoration());
     if (ainf == IT(-1) || asup == IT(1)) res.intervaldecoration(TRV);

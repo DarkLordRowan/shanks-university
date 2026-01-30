@@ -40,7 +40,8 @@ public:
      * @return T The value of the function at the current point x.
      */
     T get_sum() const override {
-        return utils::math<T>::log(utils::cast<T, int>()(1) + utils::math<T>::sqrt(utils::cast<T, int>()(1) + this->x * this->x)) -
+        return utils::math<T>::log(utils::cast<T, int>()(1) +
+                                   utils::math<T>::sqrt(utils::cast<T, int>()(1) + this->x * this->x)) -
                utils::math<T>::log(utils::cast<T, int>()(2));
     }
 
@@ -51,7 +52,8 @@ public:
      */
     bool is_invalid() const override {
         using float_type = real_of<T>::value;
-        return !utils::helpers<T>::isfinite(this->x) || utils::math<T>::abs(this->x) >= utils::cast<float_type, int>()(1);
+        return !utils::helpers<T>::isfinite(this->x) ||
+               utils::math<T>::abs(this->x) >= utils::cast<float_type, int>()(1);
     }
 
     /**
@@ -66,8 +68,8 @@ public:
         else
             state *= utils::cast<T, int>()(-1) * this->x * this->x *
                      utils::cast<T, size_t>()(utils::math<size_t>::fma(static_cast<size_t>(2), static_cast<size_t>(n),
-                                                                   static_cast<size_t>(1)) *
-                                          n) /
+                                                                       static_cast<size_t>(1)) *
+                                              n) /
                      utils::cast<T, K>()(2 * (n + 1) * (n + 1));
         return state;
     }

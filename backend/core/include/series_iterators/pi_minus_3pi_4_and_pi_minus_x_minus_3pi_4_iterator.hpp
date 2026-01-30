@@ -45,7 +45,8 @@ public:
         using float_type = real_of<T>::value;
 
         if constexpr (isComplexLike<T>::value) {
-            if (this->x.real() <= utils::cast<float_type, int>()(0)) return utils::cast<T, double>()(0.25 * std::numbers::pi);
+            if (this->x.real() <= utils::cast<float_type, int>()(0))
+                return utils::cast<T, double>()(0.25 * std::numbers::pi);
         } else {
             if (this->x <= utils::cast<T, int>()(0)) return utils::cast<T, double>()(0.25 * std::numbers::pi);
         }
@@ -76,8 +77,8 @@ public:
         state = utils::math<T>::cos(utils::cast<T, K>()(n1) * this->x) *
                     (utils::cast<T, int>()(1, precision) + utils::math<T>::template minus_one_raised_to_power_n<K>(n)) /
                     (utils::cast<T, double>()(std::numbers::pi) * utils::cast<T, K>()(n1 * n1)) +
-                utils::math<T>::sin(utils::cast<T, K>()(n1) * this->x) * utils::math<T>::template minus_one_raised_to_power_n<K>(n1) /
-                    utils::cast<T, K>()(n1);
+                utils::math<T>::sin(utils::cast<T, K>()(n1) * this->x) *
+                    utils::math<T>::template minus_one_raised_to_power_n<K>(n1) / utils::cast<T, K>()(n1);
         return state;
     }
 };

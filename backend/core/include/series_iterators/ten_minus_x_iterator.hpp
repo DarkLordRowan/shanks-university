@@ -61,10 +61,10 @@ public:
      */
     T next(K n, T& state) const override {
         // Specific Fourier term formula for the linear segment expansion
-        state =
-            utils::cast<T, int>()(10) * utils::math<T>::template minus_one_raised_to_power_n<K>(n + 1) /
-            (utils::cast<T, K>()(n + 1) * utils::cast<T, double>()(std::numbers::pi)) *
-            utils::math<T>::sin(utils::cast<T, K>()(n + 1) * utils::cast<T, double>()(std::numbers::pi * 0.2) * this->x);
+        state = utils::cast<T, int>()(10) * utils::math<T>::template minus_one_raised_to_power_n<K>(n + 1) /
+                (utils::cast<T, K>()(n + 1) * utils::cast<T, double>()(std::numbers::pi)) *
+                utils::math<T>::sin(utils::cast<T, K>()(n + 1) * utils::cast<T, double>()(std::numbers::pi * 0.2) *
+                                    this->x);
         return state;
     }
 };

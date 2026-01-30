@@ -59,7 +59,7 @@ public:
             state = utils::cast<T, int>()(1, utils::helpers<T>::get_precision(state));
         else
             state *= utils::cast<T, int>()(-1) * utils::math<T>::pow(this->x, utils::cast<T, int>()(4)) /
-                     utils::cast<T,size_t>()(n * (size_t{4} * n - size_t{2}));
+                     utils::cast<T, size_t>()(n * (size_t{4} * n - size_t{2}));
         return state;
     }
 };

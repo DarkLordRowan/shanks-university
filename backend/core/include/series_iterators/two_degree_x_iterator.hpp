@@ -39,7 +39,9 @@ public:
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The value of 2^x.
      */
-    T get_sum() const override { return utils::math<T>::pow(utils::cast<T, int>()(2, utils::helpers<T>::get_precision(this->x)), this->x); }
+    T get_sum() const override {
+        return utils::math<T>::pow(utils::cast<T, int>()(2, utils::helpers<T>::get_precision(this->x)), this->x);
+    }
 
     /**
      * @brief Validates the current evaluation point x.

@@ -84,8 +84,8 @@ T wynn_epsilon_3_algorithm<T, K>::operator()(const K n, const K order, const ser
 
     if (data.Sn.size() < required_size) {
         throw std::out_of_range("The Sn smaller then required for wynn_epsilon_3_{" +
-                                utils::helpers<T>::to_string(order) + "}^{" + utils::helpers<T>::to_string(n) + "}\n" +
-                                "the size of Sn must be at least " + utils::helpers<T>::to_string(required_size));
+                                utils::helpers<K>::to_string(order) + "}^{" + utils::helpers<K>::to_string(n) + "}\n" +
+                                "the size of Sn must be at least " + utils::helpers<size_t>::to_string(required_size));
     }
 
     if (n == static_cast<K>(0)) throw std::domain_error("n = 0 in the input");
@@ -110,8 +110,8 @@ T wynn_epsilon_3_algorithm<T, K>::operator()(const K n, const K order, const ser
     std::vector<T> epstab(static_cast<size_t>(2) * order + 5, utils::cast<T, int>()(0, precision));
 
     // Machine constants for numerical stability
-    const float_type EMACH = utils::helpers<float_type>::epsilon(abs_error);     ///< Machine epsilon
-    const float_type EPRN = utils::cast<float_type, int>()(50) * EMACH;            ///< Relative error tolerance
+    const float_type EMACH = utils::helpers<float_type>::epsilon(precision);     ///< Machine epsilon
+    const float_type EPRN = utils::cast<float_type, int>()(50) * EMACH;          ///< Relative error tolerance
     const float_type OFRN = utils::helpers<float_type>::numeric_max(precision);  ///< Overflow threshold
 
     // Iterate through the sequence of partial sums.

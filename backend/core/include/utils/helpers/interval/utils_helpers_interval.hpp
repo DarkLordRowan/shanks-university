@@ -14,8 +14,8 @@ struct utils::helpers<intprec::interval<T>> {
     static bool isfinite(const intprec::interval<T>& x);
     static bool isnan(const intprec::interval<T>& x);
     static bool isinf(const intprec::interval<T>& x);
-    static T epsilon(std::size_t precision = std::size_t{0});
-    static T numeric_max(std::size_t precision = std::size_t{0});
+    static intprec::interval<T> epsilon(std::size_t precision = std::size_t{0});
+    static intprec::interval<T> numeric_max(std::size_t precision = std::size_t{0});
 };
 
 template <typename T>
@@ -68,12 +68,12 @@ bool utils::helpers<intprec::interval<T>>::isinf(const intprec::interval<T>& x) 
 }
 
 template <typename T>
-T utils::helpers<intprec::interval<T>>::epsilon(std::size_t precision) {
-    return utils::helpers<T>::epsilon(precision);
+intprec::interval<T> utils::helpers<intprec::interval<T>>::epsilon(std::size_t precision) {
+    return intprec::interval<T>(utils::helpers<T>::epsilon(precision));
 }
 template <typename T>
-T utils::helpers<intprec::interval<T>>::numeric_max(std::size_t precision) {
-    return utils::helpers<T>::numeric_max(precision);
+intprec::interval<T> utils::helpers<intprec::interval<T>>::numeric_max(std::size_t precision) {
+    return intprec::interval<T>(utils::helpers<T>::numeric_max(precision));
 }
 
 #endif

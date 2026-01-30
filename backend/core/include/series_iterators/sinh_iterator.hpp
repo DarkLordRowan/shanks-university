@@ -60,8 +60,8 @@ public:
         else
             state *= this->x * this->x /
                      utils::cast<T, size_t>()(utils::math<size_t>::fma(static_cast<size_t>(2), static_cast<size_t>(n),
-                                                                   static_cast<size_t>(1)) *
-                                          2 * n);
+                                                                       static_cast<size_t>(1)) *
+                                              2 * n);
         return state;
     }
 };

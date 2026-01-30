@@ -17,6 +17,7 @@
  * @throws std::domain_error if a mathematical domain violation occurs during series evaluation.
  * @throws std::overflow_error if a numerical overflow or division by zero occurs.
  */
+ #define DEBUG
 #include <complex>
 
 // clang-format off
@@ -35,14 +36,15 @@
 // clang-format on
 
 int main() {
-    //std::cout << utils::cast<float, int>()(1) << "\n";
-    //std::cout << (std::floating_point<long double> ? 1 : 0) << "\n";
-    //std::cout << utils::math<float>::asinh(1.0f) << "\n";
+    // std::cout << utils::cast<float, int>()(1) << "\n";
+    // std::cout << (std::floating_point<long double> ? 1 : 0) << "\n";
+    // std::cout << utils::math<std::complex<float>>::asinh(std::complex(1.0f)) << "\n";
+    //std::cout << utils::math<std::complex<float>>::has_ci_x{} << "\n";
     while (true) {
         try {
-            main_testing_function<double, unsigned short int>();
-            main_testing_function<std::complex<long double>, unsigned long long int>();
-            //main_testing_function<intprec::interval<mpfr::mpreal>, unsigned short int>();
+            //main_testing_function<double, unsigned short int>();
+            //main_testing_function<std::complex<long double>, unsigned long long int>();
+            main_testing_function<intprec::interval<mpfr::mpreal>, unsigned short int>();
             //main_testing_function<mpfr::mpreal, unsigned short int>();
         } catch (std::domain_error& e) {
             std::cout << e.what() << "\n";

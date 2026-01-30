@@ -254,9 +254,9 @@ inline T levin_sidi_s_algorithm<T, K>::calc_result(const K n, const K order, con
             n + j,  // Multiply by remainder term 1/R_{n+j}
             n + j, data.an,
             utils::cast<T, float_type>()(remainder_type_in_use == shanks::remainders::remainder_type::u_type
-                                           ? beta_in_use
-                                           : utils::cast<T, int>()(1, precision),
-                                       precision));
+                                             ? beta_in_use
+                                             : utils::cast<float_type, int>()(1, precision),
+                                         precision));
 
         // Accumulate numerator and denominator
         numerator += rest * data.Sn.at(n + j);
@@ -291,9 +291,9 @@ inline T levin_sidi_s_algorithm<T, K>::calc_result_rec(const K n, const K order,
         Denom[i] += remainder->operator()(
             n + i, n + i, data.an,
             utils::cast<T, float_type>()(remainder_type_in_use == shanks::remainders::remainder_type::u_type
-                                           ? beta_in_use
-                                           : utils::cast<float_type, int>()(1),
-                                       precision));
+                                             ? beta_in_use
+                                             : utils::cast<float_type, int>()(1),
+                                         precision));
 
         Num[i] += data.Sn.at(n + i) * Denom[i];
     }
@@ -318,9 +318,9 @@ inline T levin_sidi_s_algorithm<T, K>::calc_result_rec(const K n, const K order,
             Denom[j] = utils::math<T>::fma(utils::cast<T, float_type>()(-scale1, precision),
                                            Denom[j] / utils::cast<T, float_type>()(scale2, precision),
                                            Denom[j + static_cast<K>(1)]);
-            Num[j] =
-                utils::math<T>::fma(utils::cast<T, float_type>()(-scale1, precision),
-                                    Num[j] / utils::cast<T, float_type>()(scale2, precision), Num[j + static_cast<K>(1)]);
+            Num[j] = utils::math<T>::fma(utils::cast<T, float_type>()(-scale1, precision),
+                                         Num[j] / utils::cast<T, float_type>()(scale2, precision),
+                                         Num[j + static_cast<K>(1)]);
         }
 
     // Final result ratio
@@ -339,10 +339,10 @@ T levin_sidi_s_algorithm<T, K>::operator()(const K n, const K order, const serie
         static_cast<K>(2) * static_cast<K>(remainder_type_in_use == shanks::remainders::remainder_type::v_wave_type);
 
     if (data.Sn.size() < required_size || data.an.size() < required_size) {
-        throw std::out_of_range("The Sn or an smaller then required for S_{" + utils::helpers<T>::to_string(order) +
-                                "}^{" + utils::helpers<T>::to_string(n) + "}\n" +
+        throw std::out_of_range("The Sn or an smaller then required for S_{" + utils::helpers<K>::to_string(order) +
+                                "}^{" + utils::helpers<K>::to_string(n) + "}\n" +
                                 "the size of Sn and an must be at least " +
-                                utils::helpers<T>::to_string(required_size));
+                                utils::helpers<size_t>::to_string(required_size));
     }
 
     // Trivial case: order 0 returns the original partial sum

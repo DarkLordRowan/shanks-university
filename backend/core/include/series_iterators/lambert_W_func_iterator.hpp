@@ -42,7 +42,16 @@ public:
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The value of the principal branch of the Lambert W function.
      */
-    T get_sum() const override { return utils::math<T>::lambertW0(this->x); }
+    T get_sum() const override {
+        if constexpr (typename utils::math<T>::has_lambertW0{})
+            return utils::math<T>::lambertW0(this->x);
+        else
+        #ifndef DEBUG
+            static_assert(dependent_false<T>::value, "utils::math<T>::lambertW0 not implemented for this type");
+        #else
+            return utils::helpers<T>::get_nan();
+        #endif
+    }
 
     /**
      * @brief Validates the current evaluation point x.
@@ -52,7 +61,8 @@ public:
     bool is_invalid() const override {
         using float_type = real_of<T>::value;
         return !utils::helpers<T>::isfinite(this->x) ||
-               utils::math<T>::abs(this->x) > utils::cast<float_type, int>()(1) / utils::cast<float_type, double>()(std::numbers::e);
+               utils::math<T>::abs(this->x) >
+                   utils::cast<float_type, int>()(1) / utils::cast<float_type, double>()(std::numbers::e);
     }
 
     /**

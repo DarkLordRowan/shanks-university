@@ -46,7 +46,8 @@ public:
         if constexpr (isComplexLike<T>::value) {
             // Check periodicity/branch for complex numbers using the real part
             if (this->x.real() <= utils::cast<T, double>()(std::numbers::pi).real())
-                return utils::math<T>::sin(this->x) - utils::cast<T, int>()(2) / utils::cast<T, double>()(std::numbers::pi);
+                return utils::math<T>::sin(this->x) -
+                       utils::cast<T, int>()(2) / utils::cast<T, double>()(std::numbers::pi);
         } else {
             // Standard real case
             if (this->x <= utils::cast<T, double>()(std::numbers::pi))

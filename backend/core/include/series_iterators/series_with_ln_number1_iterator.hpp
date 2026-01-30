@@ -58,9 +58,11 @@ public:
         const T n1_2 = n1 * n1;
 
         // Specific term formula involving factorials, exponentials, and logarithms
-        state = utils::math<T>::log(utils::cast<T, int>()(1) +
-                           utils::math<T>::pow(n1 / utils::cast<T, double>()(std::numbers::e), n1_2) *
-                               utils::math<T>::pow(utils::math<T>::sqrt(n1) / utils::cast<T, K>()(utils::math<K>::fact(n + 1)), n1)) *
+        state = utils::math<T>::log(
+                    utils::cast<T, int>()(1) +
+                    utils::math<T>::pow(n1 / utils::cast<T, double>()(std::numbers::e), n1_2) *
+                        utils::math<T>::pow(utils::math<T>::sqrt(n1) / utils::cast<T, K>()(utils::math<K>::fact(n + 1)),
+                                            n1)) *
                 this->x;
         return state;
     }

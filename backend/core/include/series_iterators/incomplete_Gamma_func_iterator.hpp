@@ -43,7 +43,17 @@ public:
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The value of the lower incomplete Gamma function.
      */
-    T get_sum() const override { return utils::math<T>::inc_gamma(this->x, alpha); }
+    T get_sum() const override { 
+        if constexpr (typename utils::math<T>::has_inc_gamma{})
+        return utils::math<T>::inc_gamma(this->x, alpha); 
+        else
+        #ifndef DEBUG
+        static_assert(dependent_false<T>::value, "utils::math<T>::inc_gamma is not implemented for this type");
+        #else
+            return utils::helpers<T>::get_nan();
+        #endif
+
+    }
 
     /**
      * @brief Validates the current evaluation point x.

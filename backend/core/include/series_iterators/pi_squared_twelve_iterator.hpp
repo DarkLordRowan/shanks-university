@@ -62,7 +62,8 @@ public:
      */
     T next(K n, T& state) const override {
         // Alternating term with quadratic denominator
-        state = this->x * utils::math<T>::template minus_one_raised_to_power_n<K>(n) / utils::cast<T, K>()((n + 1) * (n + 1));
+        state = this->x * utils::math<T>::template minus_one_raised_to_power_n<K>(n) /
+                utils::cast<T, K>()((n + 1) * (n + 1));
         return state;
     }
 };

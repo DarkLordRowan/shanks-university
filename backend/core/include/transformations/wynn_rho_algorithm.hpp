@@ -185,9 +185,9 @@ inline T wynn_rho_algorithm<T, K>::operator()(const K n, const K order, const se
 
     if (data.Sn.size() < required_size || data.an.size() < required_size) {
         throw std::out_of_range("The Sn or an smaller then required for wynn_rho_{" +
-                                utils::helpers<T>::to_string(order) + "}^{" + utils::helpers<T>::to_string(n) + "}\n" +
+                                utils::helpers<K>::to_string(order) + "}^{" + utils::helpers<K>::to_string(n) + "}\n" +
                                 "the size of Sn and an must be at least " +
-                                utils::helpers<T>::to_string(required_size));
+                                utils::helpers<size_t>::to_string(required_size));
     }
     // For theory, see: Brezinski (1977), Chapter 4, Eq. (4.10)
     // Base cases: return partial sum for n=0 or order=0

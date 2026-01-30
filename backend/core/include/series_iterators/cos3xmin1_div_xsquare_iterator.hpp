@@ -62,13 +62,15 @@ public:
         if (n == 0)
             state = utils::cast<T, int>()(1, utils::helpers<T>::get_precision(this->x)) / (this->x * this->x);
         else {
-            const T var_3x_1squared = utils::math<T>::fma(utils::cast<T, int>()(3), this->x, utils::cast<T, int>()(-1)) *
-                                      utils::math<T>::fma(utils::cast<T, int>()(3), this->x, utils::cast<T, int>()(-1));
+            const T var_3x_1squared =
+                utils::math<T>::fma(utils::cast<T, int>()(3), this->x, utils::cast<T, int>()(-1)) *
+                utils::math<T>::fma(utils::cast<T, int>()(3), this->x, utils::cast<T, int>()(-1));
             // Recursive update based on the Taylor series for cos(u) where u = 3x-1
-            state *= utils::cast<T, int>()(-1) * var_3x_1squared /
-                     utils::cast<T,size_t>()(2 * n *
-                                          utils::math<size_t>::fma(static_cast<size_t>(2), static_cast<size_t>(n - 1),
-                                                                   static_cast<size_t>(1)));
+            state *=
+                utils::cast<T, int>()(-1) * var_3x_1squared /
+                utils::cast<T, size_t>()(2 * n *
+                                         utils::math<size_t>::fma(static_cast<size_t>(2), static_cast<size_t>(n - 1),
+                                                                  static_cast<size_t>(1)));
         }
         return state;
     }

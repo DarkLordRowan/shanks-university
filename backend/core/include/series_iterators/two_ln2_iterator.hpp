@@ -39,7 +39,9 @@ public:
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The value of x * 2 * ln(2).
      */
-    T get_sum() const override { return this->x * utils::math<T>::log(utils::cast<T, int>()(4, utils::helpers<T>::get_precision(this->x))); }
+    T get_sum() const override {
+        return this->x * utils::math<T>::log(utils::cast<T, int>()(4, utils::helpers<T>::get_precision(this->x)));
+    }
 
     /**
      * @brief Validates the current evaluation point x.

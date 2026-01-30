@@ -42,7 +42,16 @@ public:
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The value of E_x(x).
      */
-    T get_sum() const override { return utils::math<T>::e_x(this->x); }
+    T get_sum() const override {
+        if constexpr (typename utils::math<T>::has_e_x{})
+            return utils::math<T>::e_x(this->x);
+        else
+        #ifndef DEBUG
+            static_assert(dependent_false<T>::value, "utils::math<T>::e_x not implemented for this type");
+        #else
+            return utils::helpers<T>::get_nan();
+        #endif
+    }
 
     /**
      * @brief Validates the current evaluation point x.
@@ -51,7 +60,8 @@ public:
      */
     bool is_invalid() const override {
         using float_type = real_of<T>::value;
-        return !utils::helpers<T>::isfinite(this->x) || utils::math<T>::abs(this->x) >= utils::cast<float_type, int>()(1);
+        return !utils::helpers<T>::isfinite(this->x) ||
+               utils::math<T>::abs(this->x) >= utils::cast<float_type, int>()(1);
     }
 
     /**

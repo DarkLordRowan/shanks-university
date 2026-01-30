@@ -42,8 +42,8 @@ public:
      * @return T The value of x * (pi/8 - 1/3).
      */
     T get_sum() const override {
-        return this->x *
-               (utils::cast<T, double>()(std::numbers::pi * 0.125) - utils::cast<T, int>()(1) / utils::cast<T, int>()(3));
+        return this->x * (utils::cast<T, double>()(std::numbers::pi * 0.125) -
+                          utils::cast<T, int>()(1) / utils::cast<T, int>()(3));
     }
 
     /**

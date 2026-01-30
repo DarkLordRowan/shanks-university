@@ -7,9 +7,6 @@
 #include <limits>
 #include <tuple>
 
-#include "custom_concepts.hpp"
-#include "utils/utils_helper.hpp"
-
 #ifdef SHANKS_ENABLE_PROFILING
 
 namespace shanks {
@@ -450,7 +447,7 @@ T sqrt(const T& v) {
 
 template <typename T>
 T pow(const T& b, const T& e) {
-    return ::utils::pow(b, e);
+    return ::utils::math<T>::pow(b, e);
 }
 
 template <typename T>

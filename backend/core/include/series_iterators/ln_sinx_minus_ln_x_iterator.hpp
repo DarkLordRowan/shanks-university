@@ -41,7 +41,9 @@ public:
      * @authors Bolshakov M.P.
      * @return T The value of ln(sin(x)/x).
      */
-    T get_sum() const override { return utils::math<T>::log(utils::math<T>::sin(this->x)) - utils::math<T>::log(this->x); }
+    T get_sum() const override {
+        return utils::math<T>::log(utils::math<T>::sin(this->x)) - utils::math<T>::log(this->x);
+    }
 
     /**
      * @brief Validates the current evaluation point x.
@@ -66,10 +68,10 @@ public:
      */
     T next(K n, T& state) const override {
         // Infinite product based expansion term for ln(sin(x)/x)
-        state = utils::math<T>::log(utils::cast<T, int>()(1) -
-                           this->x * this->x /
-                               (utils::cast<T, K>()((n + 1) * (n + 1)) * utils::cast<T, double>()(std::numbers::pi) *
-                                utils::cast<T, double>()(std::numbers::pi)));
+        state = utils::math<T>::log(utils::cast<T, int>()(1) - this->x * this->x /
+                                                                   (utils::cast<T, K>()((n + 1) * (n + 1)) *
+                                                                    utils::cast<T, double>()(std::numbers::pi) *
+                                                                    utils::cast<T, double>()(std::numbers::pi)));
         return state;
     }
 };

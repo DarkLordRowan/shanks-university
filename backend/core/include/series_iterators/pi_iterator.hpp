@@ -63,11 +63,12 @@ public:
         if (n == 0)
             state = this->x * utils::math<T>::sqrt(utils::cast<T, int>()(12, precision));
         else
-            state *= utils::cast<T, int>()(-1, precision) *
-                     utils::cast<T, size_t>()(utils::math<size_t>::fma(static_cast<size_t>(2), static_cast<size_t>(n - 1),
-                                                                   static_cast<size_t>(1))) /
-                     utils::cast<T, size_t>()(3 * utils::math<size_t>::fma(static_cast<size_t>(2), static_cast<size_t>(n),
-                                                                       static_cast<size_t>(1)));
+            state *=
+                utils::cast<T, int>()(-1, precision) *
+                utils::cast<T, size_t>()(utils::math<size_t>::fma(static_cast<size_t>(2), static_cast<size_t>(n - 1),
+                                                                  static_cast<size_t>(1))) /
+                utils::cast<T, size_t>()(3 * utils::math<size_t>::fma(static_cast<size_t>(2), static_cast<size_t>(n),
+                                                                      static_cast<size_t>(1)));
 
         return state;
     }

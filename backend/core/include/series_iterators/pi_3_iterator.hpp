@@ -41,7 +41,9 @@ public:
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The value of x * pi / 3.
      */
-    T get_sum() const override { return this->x * utils::cast<T, double>()(std::numbers::pi) / utils::cast<T, int>()(3); }
+    T get_sum() const override {
+        return this->x * utils::cast<T, double>()(std::numbers::pi) / utils::cast<T, int>()(3);
+    }
 
     /**
      * @brief Validates the current evaluation point x.

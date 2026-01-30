@@ -84,8 +84,8 @@ T chang_wynn_algorithm<T, K>::operator()(const K n, const K /*order*/, const ser
 
     if (data.Sn.size() < required_size || data.an.size() < required_size) {
         throw std::out_of_range("The Sn or an smaller then required for chann_wynn_{" +
-                                utils::helpers<T>::to_string(n) + "}\n" + "the size of Sn and an must be at least " +
-                                utils::helpers<T>::to_string(required_size));
+                                utils::helpers<K>::to_string(n) + "}\n" + "the size of Sn and an must be at least " +
+                                utils::helpers<size_t>::to_string(required_size));
     }
 
     // For theory, see: Ford & Sidi (1987), Section 1 - Input validation
@@ -130,10 +130,12 @@ T chang_wynn_algorithm<T, K>::operator()(const K n, const K /*order*/, const ser
         // For theory, see: Chang et al. (2019), Eq. (3.20c)
         // T₂⁽ⁿ⁾ = T₀⁽ⁿ⁺¹⁾ - [ΔT₀⁽ⁿ⁾ ΔT₀⁽ⁿ⁺¹⁾ Δ²T₀⁽ⁿ⁺¹⁾] / [ΔT₀⁽ⁿ⁺²⁾ Δ²T₀⁽ⁿ⁾ - ΔT₀⁽ⁿ⁾ Δ²T₀⁽ⁿ⁺¹⁾]
         // Compute second differences: Δ²S_{n+1} = S_{n+3} - 2S_{n+2} + S_{n+1}
-        coef = utils::math<T>::fma(utils::cast<T, int>()(-2, precision), data.Sn.at(i2), data.Sn.at(i3) + data.Sn.at(i1));
+        coef =
+            utils::math<T>::fma(utils::cast<T, int>()(-2, precision), data.Sn.at(i2), data.Sn.at(i3) + data.Sn.at(i1));
 
         // Compute Δ²S_n = S_{n+2} - 2S_{n+1} + S_n
-        coef2 = utils::math<T>::fma(utils::cast<T, int>()(-2, precision), data.Sn.at(i1), data.Sn.at(i2) + data.Sn.at(i));
+        coef2 =
+            utils::math<T>::fma(utils::cast<T, int>()(-2, precision), data.Sn.at(i1), data.Sn.at(i2) + data.Sn.at(i));
 
         // Numerator: ΔS_n * ΔS_{n+1} * Δ²S_{n+1}
         up = data.an.at(i1);

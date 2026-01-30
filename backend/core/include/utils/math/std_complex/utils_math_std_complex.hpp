@@ -27,6 +27,16 @@ struct utils::math<std::complex<T>> {
     static std::complex<T> tanh(const std::complex<T>& x);
     static std::complex<T> atanh(const std::complex<T>& x);
     static T abs(const std::complex<T>& x);
+
+    // availability of special function
+    using has_erf = std::false_type;
+    using has_zeta = std::false_type;
+    using has_ci_x = std::false_type;
+    using has_si_x = std::false_type;
+    using has_e_x = std::false_type;
+    using has_k_x = std::false_type;
+    using has_inc_gamma = std::false_type;
+    using has_lambertW0 = std::false_type;
 };
 
 template <typename T>
@@ -48,7 +58,7 @@ std::complex<T> utils::math<std::complex<T>>::atan2(const std::complex<T>& x, co
 template <typename T>
 std::complex<T> utils::math<std::complex<T>>::fma(const std::complex<T>& a, const std::complex<T>& b,
                                                   const std::complex<T>& c) {
-    return std::fma(a, b, c);
+    return a * b + c;
 }
 template <typename T>
 std::complex<T> utils::math<std::complex<T>>::sqrt(const std::complex<T>& x) {
@@ -120,7 +130,7 @@ std::complex<T> utils::math<std::complex<T>>::atanh(const std::complex<T>& x) {
 }
 template <typename T>
 T utils::math<std::complex<T>>::abs(const std::complex<T>& x) {
-    return std::abs(x)
+    return std::abs(x);
 }
 
 #endif

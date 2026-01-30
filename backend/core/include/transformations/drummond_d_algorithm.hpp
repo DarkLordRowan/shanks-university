@@ -273,10 +273,10 @@ T drummond_d_algorithm<T, K>::operator()(const K n, const K order, const series_
         static_cast<K>(2) * static_cast<K>(remainder_type_in_use == shanks::remainders::remainder_type::v_wave_type);
 
     if (data.Sn.size() < required_size || data.an.size() < required_size) {
-        throw std::out_of_range("The Sn or an smaller then required for D_{" + utils::helpers<T>::to_string(order) +
-                                "}^{" + utils::helpers<T>::to_string(n) + "}\n" +
+        throw std::out_of_range("The Sn or an smaller then required for D_{" + utils::helpers<K>::to_string(order) +
+                                "}^{" + utils::helpers<K>::to_string(n) + "}\n" +
                                 "the size of Sn and an must be at least " +
-                                utils::helpers<T>::to_string(required_size));
+                                utils::helpers<size_t>::to_string(required_size));
     }
 
     // Trivial case: order 0 returns the original partial sum
