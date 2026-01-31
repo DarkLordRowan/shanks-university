@@ -1,11 +1,6 @@
 #ifndef POISSSON_NOISE_HPP
 #define POISSSON_NOISE_HPP
 
-#include <random>
-
-#include "../custom_concepts.hpp"
-#include "../utils.hpp"
-
 /**
  * @brief Generates Poisson noise for given type and lambda parameter.
  * This function generates Poisson noise of complex-like type for the specified float-like lambda parameter which floors

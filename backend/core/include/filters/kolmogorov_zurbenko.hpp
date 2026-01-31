@@ -34,7 +34,7 @@ std::vector<Scalar> kolmogorov_zurbenko_filter(const std::vector<Scalar>& data, 
         for (size_t i{0}; m * i <= l; ++i) {
             const size_t j = (l > m * i ? l - m * i : 0);
             coeffs[l] += (1 - 2 * static_cast<int>(i & 1)) * utils::math<size_t>::binomial_coefficient(k, i) *
-                         utils::math<size_t>:binomial_coefficient(k + j - 1, j);
+                         utils::math<size_t>::binomial_coefficient(k + j - 1, j);
             coeffs[size - 1 - l] = coeffs[l];
         }
     }

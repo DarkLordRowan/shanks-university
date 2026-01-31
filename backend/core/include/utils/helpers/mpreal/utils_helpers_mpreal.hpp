@@ -1,6 +1,8 @@
-#ifndef UTILS_HELPER_MPREAL_HPP
-#define UTILS_HELPER_MPREAL_HPP
+#ifndef UTILS_HELPERS_MPREAL_HPP
+#define UTILS_HELPERS_MPREAL_HPP
 #pragma once
+
+#ifdef __MPREAL_H__
 
 template <>
 struct utils::helpers<mpfr::mpreal> {
@@ -56,5 +58,7 @@ mpfr::mpreal utils::helpers<mpfr::mpreal>::numeric_max(std::size_t precision) {
     else
         return std::numeric_limits<mpfr::mpreal>::max();
 }
+
+#endif
 
 #endif

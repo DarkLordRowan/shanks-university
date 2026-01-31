@@ -2,6 +2,8 @@
 #define UTILS_MATH_MPREAL_HPP
 #pragma once
 
+#ifdef __MPREAL_H__
+
 template <>
 struct utils::math<mpfr::mpreal> {
     template <std::integral K>
@@ -138,5 +140,7 @@ mpfr::mpreal utils::math<mpfr::mpreal>::tanh(const mpfr::mpreal& x) { return mpf
 mpfr::mpreal utils::math<mpfr::mpreal>::atanh(const mpfr::mpreal& x) { return mpfr::atanh(x); }
 
 mpfr::mpreal utils::math<mpfr::mpreal>::abs(const mpfr::mpreal& x) { return mpfr::abs(x); }
+
+#endif
 
 #endif

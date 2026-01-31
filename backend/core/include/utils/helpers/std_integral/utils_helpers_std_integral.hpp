@@ -1,5 +1,5 @@
-#ifndef UTILS_HELPER_STD_INTEGRAL_HPP
-#define UTILS_HELPER_STD_INTEGRAL_HPP
+#ifndef UTILS_HELPERS_STD_INTEGRAL_HPP
+#define UTILS_HELPERS_STD_INTEGRAL_HPP
 #pragma once
 
 template <std::integral T>

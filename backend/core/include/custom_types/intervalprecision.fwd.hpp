@@ -2,9 +2,6 @@
 #define INTERVALPRECISION_FWD_HPP
 #pragma once
 
-#include <eigen3/Eigen/Core>
-#include <eigen3/Eigen/Dense>
-
 namespace intprec {
 
 // The eight different interval classification
@@ -350,84 +347,5 @@ std::ostream& operator<<(std::ostream& strm, const interval<_Ty>& a);
 template <class _Ty>
 std::istream& operator>>(std::istream& strm, interval<_Ty>& c);
 }  // namespace intprec
-
-namespace Eigen {
-
-template <>
-struct NumTraits<intprec::interval<float>>
-    : NumTraits<float>  // permits to get the epsilon, dummy_precision, lowest, highest functions
-{
-    typedef intprec::interval<float> Real;
-    typedef intprec::interval<float> NonInteger;
-    typedef intprec::interval<float> Nested;
-
-    enum {
-        IsComplex = 0,
-        IsInteger = 0,
-        IsSigned = 1,
-        RequireInitialization = 1,
-        ReadCost = 1,
-        AddCost = 3,
-        MulCost = 3
-    };
-};
-
-template <>
-struct NumTraits<intprec::interval<double>>
-    : NumTraits<double>  // permits to get the epsilon, dummy_precision, lowest, highest functions
-{
-    typedef intprec::interval<double> Real;
-    typedef intprec::interval<double> NonInteger;
-    typedef intprec::interval<double> Nested;
-    //
-    enum {
-        IsComplex = 0,
-        IsInteger = 0,
-        IsSigned = 1,
-        RequireInitialization = 1,
-        ReadCost = 1,
-        AddCost = 3,
-        MulCost = 3
-    };
-};
-
-template <>
-struct NumTraits<intprec::interval<long double>>
-    : NumTraits<long double>  // permits to get the epsilon, dummy_precision, lowest, highest functions
-{
-    typedef intprec::interval<long double> Real;
-    typedef intprec::interval<long double> NonInteger;
-    typedef intprec::interval<long double> Nested;
-
-    enum {
-        IsComplex = 0,
-        IsInteger = 0,
-        IsSigned = 1,
-        RequireInitialization = 1,
-        ReadCost = 1,
-        AddCost = 3,
-        MulCost = 3
-    };
-};
-
-template <>
-struct NumTraits<intprec::interval<mpfr::mpreal>>
-    : NumTraits<double>  // permits to get the epsilon, dummy_precision, lowest, highest functions
-{
-    typedef intprec::interval<mpfr::mpreal> Real;
-    typedef intprec::interval<mpfr::mpreal> NonInteger;
-    typedef intprec::interval<mpfr::mpreal> Nested;
-
-    enum {
-        IsComplex = 0,
-        IsInteger = 0,
-        IsSigned = 1,
-        RequireInitialization = 1,
-        ReadCost = 1,
-        AddCost = 3,
-        MulCost = 3
-    };
-};
-}  // namespace Eigen
 
 #endif

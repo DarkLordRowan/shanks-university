@@ -22,5 +22,6 @@ To utils::cast<To, From>::operator()(const From& x, std::size_t precision) {
 
 #include "mpreal/utils_cast_mpreal.hpp"
 #include "std_complex/utils_cast_std_complex.hpp"
+#include "operation_counter/utils_cast_op_counter.hpp"
 
 #endif

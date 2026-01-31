@@ -9,8 +9,14 @@
 
 template <typename T>
 struct is_complex_t : public std::false_type {};
-template <std::floating_point U>
-struct is_complex_t<std::complex<U>> : public std::true_type {};
+
+template <std::floating_point T>
+struct is_complex_t<std::complex<T>> : public std::true_type {};
+
+#ifdef SHANKS_ENABLE_PROFILING
+template <std::floating_point T>
+struct is_complex_t<std::complex<shanks::profiling::OperationCounting<T>>> : public std::true_type {};
+#endif
 
 /**
  * @brief Type trait to check if a type behaves like a complex number.
@@ -25,6 +31,10 @@ struct isComplexLike<T> : public std::true_type {};
 #ifdef __MPREAL_H__
 template <>
 struct isComplexLike<std::complex<mpfr::mpreal>> : public std::true_type {};
+#ifdef SHANKS_ENABLE_PROFILING
+template <>
+struct isComplexLike<shanks::profiling::OperationCounting<std::complex<mpfr::mpreal>>> : public std::true_type {};
+#endif
 #endif
 
 template <typename T>

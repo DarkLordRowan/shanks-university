@@ -78,5 +78,6 @@ T utils::helpers<T>::numeric_max(std::size_t precision) {
 #include "std_complex/utils_helpers_std_complex.hpp"
 #include "std_floating_point/utils_helpers_std_floating_point.hpp"
 #include "std_integral/utils_helpers_std_integral.hpp"
+#include "operation_counter/utils_helpers_op_counter.hpp"
 
 #endif

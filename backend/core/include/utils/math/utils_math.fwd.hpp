@@ -7,7 +7,7 @@ struct real_of {
     using value = T;
 };
 
-template <FloatLike T>
+template <typename T>
 struct real_of<std::complex<T>> {
     using value = T;
 };
@@ -491,5 +491,6 @@ typename real_of<T>::value utils::math<T>::abs(const T& x) {
 #include "std_complex/utils_math_std_complex.hpp"
 #include "std_floating_point/utils_math_std_floating_point.hpp"
 #include "std_integral/utils_math_std_integral.hpp"
+#include "operation_counter/utils_math_op_counter.hpp"
 
 #endif

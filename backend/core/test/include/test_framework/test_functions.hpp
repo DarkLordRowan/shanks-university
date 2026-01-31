@@ -198,7 +198,6 @@ template <AcceptedLike T, std::unsigned_integral K>
 void cmp_transformations(const K n, const K order, shanks::series::series_base<T, K>* series, series_result<T>& result,
                          shanks::algos::series_acceleration<T, K>* test_1,
                          shanks::algos::series_acceleration<T, K>* test_2) {
-    using std::abs;
 
     std::cout << "Tranformations of order " << order << " remainders from i = 1 to " << n << '\n';
     std::cout << "The transformation #1 is ";
@@ -219,7 +218,7 @@ void cmp_transformations(const K n, const K order, shanks::series::series_base<T
             std::cout << "The transformation #2: S - T_" << i << " : " << utils::helpers<T>::to_string(diff_2) << '\n';
 
             // Comparing absolute errors
-            if (abs(diff_1) < abs(diff_2))
+            if (utils::math<T>::abs(diff_1) < utils::math<T>::abs(diff_2))
                 std::cout << "The transformation #1 is faster" << '\n';
             else
                 std::cout << "The transformation #2 is faster" << '\n';

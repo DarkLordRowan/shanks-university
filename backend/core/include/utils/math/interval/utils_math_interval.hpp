@@ -2,6 +2,8 @@
 #define UTILS_MATH_INTERVAL_HPP
 #pragma once
 
+#ifdef INTERVALPRECISION_FWD_HPP
+
 template <typename T>
 struct utils::math<intprec::interval<T>> {
     static intprec::interval<T> phi(const intprec::interval<T> n);
@@ -198,5 +200,7 @@ template <typename T>
 intprec::interval<T> utils::math<intprec::interval<T>>::abs(const intprec::interval<T>& x) {
     return intprec::abs(x);
 }
+
+#endif
 
 #endif

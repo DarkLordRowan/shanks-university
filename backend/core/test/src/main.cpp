@@ -17,34 +17,22 @@
  * @throws std::domain_error if a mathematical domain violation occurs during series evaluation.
  * @throws std::overflow_error if a numerical overflow or division by zero occurs.
  */
- #define DEBUG
-#include <complex>
-
+#define DEBUG
+#define SHANKS_ENABLE_PROFILING
 // clang-format off
 // Critical Section
-#include "../../include/custom_concepts.hpp"
-#include "gsl/gsl_sf_expint.h"
-#include <gsl/gsl_sf_gamma.h>
-#include <gsl/gsl_sf_lambert.h>
-#include "../../include/custom_types/intervalprecision.fwd.hpp"
-#include "../../include/custom_types/mpreal.h"
-#include "../../include/utils/utils.fwd.hpp"
-#include "../../include/custom_types/intervalprecision.hpp"
-
+#include "../../include/lib.hpp"
 #include "../include/test_framework/test_framework.hpp"
-
 // clang-format on
 
 int main() {
-    // std::cout << utils::cast<float, int>()(1) << "\n";
-    // std::cout << (std::floating_point<long double> ? 1 : 0) << "\n";
-    // std::cout << utils::math<std::complex<float>>::asinh(std::complex(1.0f)) << "\n";
-    //std::cout << utils::math<std::complex<float>>::has_ci_x{} << "\n";
+
     while (true) {
         try {
+            main_testing_function<shanks::profiling::OperationCounting<double>, unsigned short int>();
             //main_testing_function<double, unsigned short int>();
             //main_testing_function<std::complex<long double>, unsigned long long int>();
-            main_testing_function<intprec::interval<mpfr::mpreal>, unsigned short int>();
+            //main_testing_function<intprec::interval<mpfr::mpreal>, unsigned short int>();
             //main_testing_function<mpfr::mpreal, unsigned short int>();
         } catch (std::domain_error& e) {
             std::cout << e.what() << "\n";

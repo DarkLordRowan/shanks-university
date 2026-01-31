@@ -8,10 +8,8 @@
  * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  */
 
-#include <string>
 #include <vector>
 
-#include "custom_concepts.hpp"
 /**
  * @file utils_base.hpp
  * @brief This file contains the base utility definitions and the main utils struct.
@@ -49,13 +47,7 @@ struct GetUnderlyingType<intprec::interval<T>> {
     using value = T;
 };
 
-// clang-format off
-// Critical Section
-#include <type_traits>
-#include "custom_types/intervalprecision.fwd.hpp"
 #include "utils/utils.fwd.hpp"
-#include "custom_types/intervalprecision.hpp"
-// clang-format on
 
 // Core utility headers
 

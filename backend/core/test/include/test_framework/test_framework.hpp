@@ -19,12 +19,9 @@
 
 // clang-format off
 // Critical Section
-#include "../../../include/methods.hpp"
-#include "../../../include/noise/noise_generator.hpp"
-#include "../../../include/series.hpp"
 #include "../interfaces/test_funcs_info.hpp"
 #include "../interfaces/transformations_info.hpp"
-#include "../../../include/custom_types/intervalprecision.hpp"
+#include "../console/console_effects.hpp"
 #include "../console/console_IO.hpp"
 #include "test_functions.hpp"
 // clang-format on

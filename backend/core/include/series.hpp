@@ -2,17 +2,6 @@
 #define SERIES_HPP
 #pragma once
 
-#include <functional>
-#include <memory>
-#include <stdexcept>
-#include <string>
-#include <vector>
-
-#include "custom_concepts.hpp"
-#include "series_base.hpp"
-#include "series_iterators.hpp"
-#include "utils.hpp"
-
 namespace shanks {
 namespace series {
 

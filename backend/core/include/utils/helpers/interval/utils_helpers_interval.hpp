@@ -1,6 +1,8 @@
-#ifndef UTILS_HELPER_INTERVAL_HPP
-#define UTILS_HELPER_INTERVAL_HPP
+#ifndef UTILS_HELPERS_INTERVAL_HPP
+#define UTILS_HELPERS_INTERVAL_HPP
 #pragma once
+
+#ifdef INTERVALPRECISION_FWD_HPP
 
 template <typename T>
 struct utils::helpers<intprec::interval<T>> {
@@ -75,5 +77,7 @@ template <typename T>
 intprec::interval<T> utils::helpers<intprec::interval<T>>::numeric_max(std::size_t precision) {
     return intprec::interval<T>(utils::helpers<T>::numeric_max(precision));
 }
+
+#endif
 
 #endif
