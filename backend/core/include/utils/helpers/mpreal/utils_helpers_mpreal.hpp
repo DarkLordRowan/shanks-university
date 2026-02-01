@@ -11,6 +11,7 @@ struct utils::helpers<mpfr::mpreal> {
     static mpfr::mpreal floor(const mpfr::mpreal& x);
     static mpfr::mpreal ceil(const mpfr::mpreal& x);
     static mpfr::mpreal get_nan();
+    static mpfr::mpreal frexp(const mpfr::mpreal& x, int* exp);
     static std::size_t get_precision(const mpfr::mpreal& x);
     static std::string to_string(const mpfr::mpreal& x);
     static bool isfinite(const mpfr::mpreal& x);
@@ -32,7 +33,10 @@ mpfr::mpreal utils::helpers<mpfr::mpreal>::ceil(const mpfr::mpreal& x) { return 
 
 mpfr::mpreal utils::helpers<mpfr::mpreal>::get_nan() {
     return mpfr::mpreal().setNan();
-    ;
+}
+
+mpfr::mpreal utils::helpers<mpfr::mpreal>::frexp(const mpfr::mpreal& x, int* exp){
+    return mpfr::frexp(x, exp);
 }
 
 std::size_t utils::helpers<mpfr::mpreal>::get_precision(const mpfr::mpreal& x) {

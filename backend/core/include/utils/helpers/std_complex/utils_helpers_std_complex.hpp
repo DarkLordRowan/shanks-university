@@ -38,7 +38,7 @@ std::complex<T> utils::helpers<std::complex<T>>::ceil(const std::complex<T>& x) 
 
 template <typename T>
 std::complex<T> utils::helpers<std::complex<T>>::get_nan() {
-    return std::complex<T>(utils::helpers<T>::get_nan(),utils::helpers<T>::get_nan());
+    return std::complex<T>(utils::helpers<T>::get_nan(), utils::helpers<T>::get_nan());
 }
 
 template <typename T>

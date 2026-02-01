@@ -45,11 +45,11 @@ public:
         if constexpr (typename utils::math<T>::has_k_x{})
             return utils::math<T>::k_x(this->x);
         else
-        #ifndef DEBUG
-            static_assert(dependent_false<T>::value, "utils::math<T>::k_x not implemented for this type");
-        #else
+#ifndef DEBUG
+            assert(false);
+#else
             return utils::helpers<T>::get_nan();
-        #endif
+#endif
     }
 
     /**

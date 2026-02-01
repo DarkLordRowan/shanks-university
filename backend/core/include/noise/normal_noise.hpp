@@ -1,7 +1,6 @@
 #ifndef NORMAL_NOISE_HPP
 #define NORMAL_NOISE_HPP
 
-
 /**
  * @brief Generates normal (Gaussian) noise for given type and range.
  *

@@ -9,6 +9,7 @@ struct utils::helpers {
     static T floor(const T& x);
     static T ceil(const T& x);
     static T get_nan();
+    static T frexp(const T& x, int* exp);
     static std::size_t get_precision(const T& x);
     static std::string to_string(const T& x);
     static bool isfinite(const T& x);
@@ -75,9 +76,9 @@ T utils::helpers<T>::numeric_max(std::size_t precision) {
 
 #include "interval/utils_helpers_interval.hpp"
 #include "mpreal/utils_helpers_mpreal.hpp"
+#include "operation_counter/utils_helpers_op_counter.hpp"
 #include "std_complex/utils_helpers_std_complex.hpp"
 #include "std_floating_point/utils_helpers_std_floating_point.hpp"
 #include "std_integral/utils_helpers_std_integral.hpp"
-#include "operation_counter/utils_helpers_op_counter.hpp"
 
 #endif

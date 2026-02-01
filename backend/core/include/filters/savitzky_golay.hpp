@@ -44,9 +44,9 @@ std::vector<Scalar> savitzky_golay_filter(const std::vector<Scalar>& data, size_
     Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic> coeff_mat = (x.transpose() * x).inverse() * x.transpose();
 
     // Computing the final filter coefficients
-    Eigen::RowVector<Scalar, Eigen::Dynamic> coeffs = utils::cast<Scalar, size_t>()(utils::math<size_t>::fact(derive), precision) *
-                                                      coeff_mat.row(derive) /
-                                                      utils::math<Scalar>::pow(delta, utils::cast<Scalar, size_t>()(derive, precision));
+    Eigen::RowVector<Scalar, Eigen::Dynamic> coeffs =
+        utils::cast<Scalar, size_t>()(utils::math<size_t>::fact(derive), precision) * coeff_mat.row(derive) /
+        utils::math<Scalar>::pow(delta, utils::cast<Scalar, size_t>()(derive, precision));
 
     // Convolution with padding: adding 0 at the start, rest 0 on the end
     std::vector<Scalar> padded_vector(data.size() + (window_length - 1) * 2, utils::cast<Scalar, int>()(0, precision));

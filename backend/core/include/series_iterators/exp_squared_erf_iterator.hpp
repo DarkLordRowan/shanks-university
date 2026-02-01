@@ -45,11 +45,11 @@ public:
         if constexpr (typename utils::math<T>::has_erf{})
             return utils::math<T>::erf(this->x) * utils::math<T>::exp(this->x * this->x);
         else
-        #ifndef DEBUG
-            static_assert(dependent_false<T>::value, "utils::math<T>::erf not implemented for this type");
-        #else
+#ifndef DEBUG
+            assert(false);
+#else
             return utils::helpers<T>::get_nan();
-        #endif
+#endif
     }
 
     /**

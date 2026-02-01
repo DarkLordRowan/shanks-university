@@ -224,8 +224,9 @@ template <AcceptedLike T, UnsignedIntLike K>
 T anderson_acceleration_algorithm<T, K>::operator()(const K n, const K /*order*/, const series_result<T>& data) const {
     // Validate that we have enough data points to perform acceleration
     if (data.Sn.size() < n + 1)
-        throw std::out_of_range("Insufficient data in Sn vector: size=" + utils::helpers<size_t>::to_string(data.Sn.size()) +
-                                ", required at least " + utils::helpers<K>::to_string(n + 1));
+        throw std::out_of_range(
+            "Insufficient data in Sn vector: size=" + utils::helpers<size_t>::to_string(data.Sn.size()) +
+            ", required at least " + utils::helpers<K>::to_string(n + 1));
 
     // Not enough points for acceleration, return original partial sum
     if (n < 2) return data.Sn[n];

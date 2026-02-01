@@ -112,10 +112,32 @@ template <>
 inline long double infinity_interval<long double>() {
     return std::numeric_limits<long double>::infinity();
 }
+#ifdef __MPREAL_H__
 template <>
 inline mpfr::mpreal infinity_interval<mpfr::mpreal>() {
     return mpfr::const_infinity();
 }
+#endif
+#ifdef SHANKS_ENABLE_PROFILING
+template <>
+inline shanks::profiling::OperationCounting<float> infinity_interval<shanks::profiling::OperationCounting<float>>() {
+    return shanks::profiling::OperationCounting<float>(infinity_interval<float>());
+}
+template <>
+inline shanks::profiling::OperationCounting<double> infinity_interval<shanks::profiling::OperationCounting<double>>() {
+    return shanks::profiling::OperationCounting<double>(infinity_interval<double>());
+}
+template <>
+inline shanks::profiling::OperationCounting<long double> infinity_interval<shanks::profiling::OperationCounting<long double>>() {
+    return shanks::profiling::OperationCounting<long double>(infinity_interval<long double>());
+}
+#ifdef __MPREAL_H__
+template <>
+inline shanks::profiling::OperationCounting<mpfr::mpreal> infinity_interval<shanks::profiling::OperationCounting<mpfr::mpreal>>() {
+    return shanks::profiling::OperationCounting<mpfr::mpreal>(infinity_interval<mpfr::mpreal>());
+}
+#endif
+#endif
 
 // Underflow declaration for the various types
 template <FloatLike T>
@@ -133,10 +155,32 @@ template <>
 inline long double underflow_interval<long double>() {
     return LDBL_MIN;
 }
+#ifdef __MPREAL_H__
 template <>
 inline mpfr::mpreal underflow_interval<mpfr::mpreal>() {
     return mpfr::minval();
 }
+#endif
+#ifdef SHANKS_ENABLE_PROFILING
+template <>
+inline shanks::profiling::OperationCounting<float> underflow_interval<shanks::profiling::OperationCounting<float>>() {
+    return shanks::profiling::OperationCounting<float>(underflow_interval<float>());
+}
+template <>
+inline shanks::profiling::OperationCounting<double> underflow_interval<shanks::profiling::OperationCounting<double>>() {
+    return shanks::profiling::OperationCounting<double>(underflow_interval<double>());
+}
+template <>
+inline shanks::profiling::OperationCounting<long double> underflow_interval<shanks::profiling::OperationCounting<long double>>() {
+    return shanks::profiling::OperationCounting<long double>(underflow_interval<long double>());
+}
+#ifdef __MPREAL_H__
+template <>
+inline shanks::profiling::OperationCounting<mpfr::mpreal> underflow_interval<shanks::profiling::OperationCounting<mpfr::mpreal>>() {
+    return shanks::profiling::OperationCounting<mpfr::mpreal>(underflow_interval<mpfr::mpreal>());
+}
+#endif
+#endif
 
 //	Implement the twosum algorithm.
 //  Assuming round to nearest mode (default IEEE754)
@@ -246,8 +290,8 @@ std::pair<IT, IT> interval<IT>::fasttwo_prod(const IT& a, const IT& b) {
     if (p != IT(0) && utils::math<IT>::abs(p) < underflow_interval<IT>())  // Test for underflow conditions
     {  // Recalculate the err using the scale products
         int aexp, bexp;
-        IT ascale(frexp(a, &aexp));  // ascale [1.0,2.0)
-        IT bscale(frexp(b, &bexp));  // bscale [1.0,2.0)
+        IT ascale(utils::helpers<IT>::frexp(a, &aexp));  // ascale [1.0,2.0)
+        IT bscale(utils::helpers<IT>::frexp(b, &bexp));  // bscale [1.0,2.0)
         IT p2(ascale * bscale);
         err = utils::math<IT>::fma(ascale, bscale, -p2);
     }
@@ -302,7 +346,7 @@ inline interval<IT>::interval(const _X& x) {
             _X e = val - _X(left);
             if (e < _X(0)) left = utils::helpers<IT>::nextafter(left, -infi);
             e = val - _X(right);
-            if (e > _X(0)) right = utils::helpers<IT>::nextafter(right, +infi);
+            if (e > _X(0)) right = utils::helpers<IT>::nextafter(right, infi);
         };
         adjustBoundaries(x);
     }
@@ -315,7 +359,7 @@ inline interval<IT>::interval(const _X& x) {
 
         if (exceedsFloat || exceedsDouble) {
             _X e = x - _X(left);
-            if (e > _X(0)) right = utils::helpers<IT>::nextafter(right, +infi);
+            if (e > _X(0)) right = utils::helpers<IT>::nextafter(right, infi);
             if (e < _X(0)) left = utils::helpers<IT>::nextafter(left, -infi);
         }
     }
@@ -507,17 +551,17 @@ inline enum interval_type interval<IT>::intervaltype(const enum interval_type to
             case CLOSE:
                 // if the interval is already CLOSE then do nothing
                 if (to == LEFT_OPEN || to == OPEN) x.left = utils::helpers<IT>::nextafter(x.left, -infi);
-                if (to == RIGHT_OPEN || to == OPEN) x.right = utils::helpers<IT>::nextafter(x.right, +infi);
+                if (to == RIGHT_OPEN || to == OPEN) x.right = utils::helpers<IT>::nextafter(x.right, infi);
                 break;
             case OPEN:
                 // if the interval is already Open then do nothing
-                if (to == RIGHT_OPEN || to == CLOSE) x.left = utils::helpers<IT>::nextafter(x.left, +infi);
+                if (to == RIGHT_OPEN || to == CLOSE) x.left = utils::helpers<IT>::nextafter(x.left, infi);
                 if (to == LEFT_OPEN || to == CLOSE) x.right = utils::helpers<IT>::nextafter(x.right, -infi);
                 break;
             case LEFT_OPEN:
                 // If the interval is already RIGHT_CLOSE same as LEFT_OPEN then do nothing
-                if (to == RIGHT_OPEN || to == CLOSE) x.left = utils::helpers<IT>::nextafter(x.left, +infi);
-                if (to == RIGHT_OPEN || to == OPEN) x.right = utils::helpers<IT>::nextafter(x.right, +infi);
+                if (to == RIGHT_OPEN || to == CLOSE) x.left = utils::helpers<IT>::nextafter(x.left, infi);
+                if (to == RIGHT_OPEN || to == OPEN) x.right = utils::helpers<IT>::nextafter(x.right, infi);
                 break;
             case RIGHT_OPEN:
                 // If the interval is already LEFT_CLOSE then do nothing
@@ -565,7 +609,7 @@ template <FloatLike IT>
 inline IT interval<IT>::inf(bool toclose) const {
     const IT infi(infinity_interval<IT>());  // infi(INFINITY);
     if (isEmpty())                           // If empty return +infinity
-        return +infi;
+        return infi;
     // For a closed interval, directly return the minimum of left and right.
 #ifdef PHASE5
     if (!toclose) return std::min(left, right);
@@ -577,11 +621,11 @@ inline IT interval<IT>::inf(bool toclose) const {
 
     // Adjust left boundary for open intervals
     if (type == LEFT_OPEN || type == OPEN)
-        adjustedLeft = utils::helpers<IT>::nextafter(left, (left <= right) ? +infi : -infi);
+        adjustedLeft = utils::helpers<IT>::nextafter(left, (left <= right) ? infi : -infi);
 
     // Adjust right boundary for open intervals, taking into account improper intervals
     if (type == RIGHT_OPEN || type == OPEN)
-        adjustedRight = utils::helpers<IT>::nextafter(right, (left <= right) ? -infi : +infi);
+        adjustedRight = utils::helpers<IT>::nextafter(right, (left <= right) ? -infi : infi);
 
     // Return the minimum of the adjusted boundaries
     return std::min(adjustedLeft, adjustedRight);
@@ -605,11 +649,11 @@ inline IT interval<IT>::sup(bool toclose) const {
 
     // Adjust left boundary for open intervals
     if (type == LEFT_OPEN || type == OPEN)
-        adjustedLeft = utils::helpers<IT>::nextafter(left, (left <= right) ? +infi : -infi);
+        adjustedLeft = utils::helpers<IT>::nextafter(left, (left <= right) ? infi : -infi);
 
     // Adjust right boundary for open intervals, considering proper and improper intervals
     if (type == RIGHT_OPEN || type == OPEN)
-        adjustedRight = utils::helpers<IT>::nextafter(right, (left <= right) ? -infi : +infi);
+        adjustedRight = utils::helpers<IT>::nextafter(right, (left <= right) ? -infi : infi);
 
     // Return the maximum of the adjusted boundaries
     return std::max(adjustedLeft, adjustedRight);
@@ -682,7 +726,7 @@ inline bool interval<IT>::isEmpty() const {
 template <FloatLike IT>
 inline bool interval<IT>::isEntire() const {
     const IT infi(infinity_interval<IT>());  // infi(INFINITY);
-    return left == -infi && right == +infi;
+    return left == -infi && right == infi;
 }
 
 // Return interval classification
@@ -763,7 +807,7 @@ inline interval<IT>& interval<IT>::operator+=(const interval<IT>& rhs) {
     std::pair<IT, IT> xright = fasttwo_sum(sup(), rhs.sup());
     // Any adjustment?
     if (xleft.second < IT(0)) xleft.first = utils::helpers<IT>::nextafter(xleft.first, -infi);
-    if (xright.second > IT(0)) xright.first = utils::helpers<IT>::nextafter(xright.first, +infi);
+    if (xright.second > IT(0)) xright.first = utils::helpers<IT>::nextafter(xright.first, infi);
     left = xleft.first;
     right = xright.first;
 #ifdef PHASE5
@@ -798,7 +842,7 @@ inline interval<IT>& interval<IT>::operator-=(const interval<IT>& rhs) {
     std::pair<IT, IT> xleft = fasttwo_sum(inf(), -rhs.sup());
     std::pair<IT, IT> xright = fasttwo_sum(sup(), -rhs.inf());
     if (xleft.second < IT(0)) xleft.first = utils::helpers<IT>::nextafter(xleft.first, -infi);
-    if (xright.second > IT(0)) xright.first = utils::helpers<IT>::nextafter(xright.first, +infi);
+    if (xright.second > IT(0)) xright.first = utils::helpers<IT>::nextafter(xright.first, infi);
     left = xleft.first;
     right = xright.first;
 #ifdef PHASE5
@@ -856,7 +900,7 @@ inline interval<IT>& interval<IT>::operator*=(const interval<IT>& rhs) {
         interval<IT> res(tmp.first, tmp.first);
         const IT infi(infinity_interval<IT>());  // infi(INFINITY);
         if (tmp.second < c0) res.left = utils::helpers<IT>::nextafter(tmp.first, -infi);
-        if (tmp.second > c0) res.right = utils::helpers<IT>::nextafter(tmp.first, +infi);
+        if (tmp.second > c0) res.right = utils::helpers<IT>::nextafter(tmp.first, infi);
         return res;
     };
     // The initialization is done to preserve the precision when IT is a float_precision arbitrary type
@@ -941,7 +985,7 @@ inline interval<IT>& interval<IT>::operator/=(const interval<IT>& rhs) {
         if (up == false) {
             if (r < IT(0)) res = utils::helpers<IT>::nextafter(res, -infi);
         } else {
-            if (r > IT(0)) res = utils::helpers<IT>::nextafter(res, +infi);
+            if (r > IT(0)) res = utils::helpers<IT>::nextafter(res, infi);
         };
 
         return res;
@@ -951,7 +995,7 @@ inline interval<IT>& interval<IT>::operator/=(const interval<IT>& rhs) {
     IT bh(rhs.sup());
     if (bl == IT(0) && bh == IT(0)) {
         left = -infi;
-        right = +infi;
+        right = infi;
         *this *= tmp;
         decoration = ILL;
         return *this;
@@ -965,7 +1009,7 @@ inline interval<IT>& interval<IT>::operator/=(const interval<IT>& rhs) {
     }
     if (bl == IT(0)) {  // b.right is !=0
         left = inverse(bh, false);
-        right = +infi;
+        right = infi;
         *this *= tmp;
         decoration = ILL;
         return *this;
@@ -1730,7 +1774,7 @@ inline interval<IT> sqrt(const interval<IT>& x) {
         r = 0;  // When both is infinity
     else
         r = -utils::math<IT>::fma(right, right, -rightadjust);
-    if (r > IT(0)) right = utils::helpers<IT>::nextafter(right, +infi);
+    if (r > IT(0)) right = utils::helpers<IT>::nextafter(right, infi);
 
     interval<IT> res(left, right);
     // set the proper interval decoration
@@ -1820,7 +1864,7 @@ inline interval<IT> log(const interval<IT>& x) {
     else if (isIEEE754Float && r == IT(10))
         upper = ln10_interval<IT>().sup();
     else
-        upper = utils::helpers<IT>::nextafter(upper, +infi);  // Adjust for precision if not a shortcut value
+        upper = utils::helpers<IT>::nextafter(upper, infi);  // Adjust for precision if not a shortcut value
 
     // Ensure lower is not mistakenly set to a non-NaN value when l <= 0
     if (l <= IT(0) && r > IT(0)) lower = -infi;
@@ -1864,7 +1908,7 @@ inline interval<IT> log10(const interval<IT>& x) {
     else if (r == IT(10))
         upper = IT(1);
     else
-        upper = utils::helpers<IT>::nextafter(upper, +infi);  // Adjust for precision if not a shortcut value
+        upper = utils::helpers<IT>::nextafter(upper, infi);  // Adjust for precision if not a shortcut value
 
     // Ensure lower is not mistakenly set to a non-NaN value when l <= 0
     if (l <= IT(0) && r > IT(0)) lower = -infi;
@@ -1901,7 +1945,7 @@ inline interval<IT> exp(const interval<IT>& x) {
     else if (isIEEE754Float && r == IT(1))
         rightexp = e_interval<IT>().sup();  // e^1, use predefined constant
     else
-        rightexp = utils::helpers<IT>::nextafter(rightexp, +infi);  // Adjust unless it's a special case
+        rightexp = utils::helpers<IT>::nextafter(rightexp, infi);  // Adjust unless it's a special case
 
     // Create and return the interval from the calculated or adjusted values
     interval<IT> res(leftexp, rightexp);
@@ -1949,8 +1993,8 @@ inline interval<IT> pow(const interval<IT>& x, const IT y) {
 
     if (utils::helpers<IT>::floor(l) != l ||
         utils::helpers<IT>::floor(r) != r) {  // if either is not an integer then we do not have an exact power
-        lp = utils::helpers<IT>::nextafter(lp, (lp > IT(0)) ? -infi : +infi);
-        rp = utils::helpers<IT>::nextafter(rp, (rp > IT(0)) ? +infi : -infi);
+        lp = utils::helpers<IT>::nextafter(lp, (lp > IT(0)) ? -infi : infi);
+        rp = utils::helpers<IT>::nextafter(rp, (rp > IT(0)) ? infi : -infi);
     }
     // else Both are integers => trust the result
 
@@ -2051,7 +2095,7 @@ inline interval<IT> sin(const interval<IT>& x) {
 
     // Established a safety interval around the result to ensure correct bound for the computation
     if (sin_min != IT(-1) && sin_min != IT(0)) sin_min = utils::helpers<IT>::nextafter(sin_min, -infi);
-    if (sin_max != IT(1) && sin_max != IT(0)) sin_max = utils::helpers<IT>::nextafter(sin_max, +infi);
+    if (sin_max != IT(1) && sin_max != IT(0)) sin_max = utils::helpers<IT>::nextafter(sin_max, infi);
 
     // Create and return the interval based on calculated min and max sine values
     interval<IT> res(sin_min, sin_max);
@@ -2106,7 +2150,7 @@ inline interval<IT> cos(const interval<IT>& x) {
 
     // Established a safety interval around the result to ensure correct bound for the computation
     if (cos_min != IT(-1) && cos_min != IT(0)) cos_min = utils::utils::helpers<IT>::nextafter(cos_min, -infi);
-    if (cos_max != IT(1) && cos_max != IT(0)) cos_max = utils::utils::helpers<IT>::nextafter(cos_max, +infi);
+    if (cos_max != IT(1) && cos_max != IT(0)) cos_max = utils::utils::helpers<IT>::nextafter(cos_max, infi);
 
     // Create and return the interval based on calculated min and max cosine values
     interval<IT> res(cos_min, cos_max);
@@ -2150,7 +2194,7 @@ inline interval<IT> tan(const interval<IT>& x) {
     if (x.sup() - x.inf() >= pi ||
         (utils::helpers<IT>::floor((l + pi / IT(2)) / pi) != utils::helpers<IT>::floor((r + pi / IT(2)) / pi))) {
         // The function covers an entire period or crosses an asymptote, range is all real numbers
-        interval<IT> res(-infi, +infi);
+        interval<IT> res(-infi, infi);
         return res;
     }
 
@@ -2165,7 +2209,7 @@ inline interval<IT> tan(const interval<IT>& x) {
 
     // Established a safety interval around the result to ensure correct bound for the computation
     if (tan_min != pi) tan_min = utils::helpers<IT>::nextafter(tan_min, -infi);
-    if (tan_max != pi) tan_max = utils::helpers<IT>::nextafter(tan_max, +infi);
+    if (tan_max != pi) tan_max = utils::helpers<IT>::nextafter(tan_max, infi);
 
     // Create and return the interval based on calculated min and max tangent values
     interval<IT> res(tan_min, tan_max);
@@ -2203,7 +2247,7 @@ inline interval<IT> asin(const interval<IT>& x) {
 
     // Established a safety interval around the result to ensure correct bound for the computation
     asin_min = utils::helpers<IT>::nextafter(asin_min, -infi);
-    asin_max = utils::helpers<IT>::nextafter(asin_max, +infi);
+    asin_max = utils::helpers<IT>::nextafter(asin_max, infi);
 
     // Since arcsin is monotonically increasing in its domain, we directly return the interval
     // Create and return the interval based on calculated min and max tangent values
@@ -2241,7 +2285,7 @@ inline interval<IT> acos(const interval<IT>& x) {
 
     // Established a safety interval around the result to ensure correct bound for the computation
     acos_min = utils::helpers<IT>::nextafter(acos_min, -infi);
-    acos_max = utils::helpers<IT>::nextafter(acos_max, +infi);
+    acos_max = utils::helpers<IT>::nextafter(acos_max, infi);
 
     // Since acos is monotonically decreasing in its domain
     // Create and return the interval based on calculated min and max tangent values
@@ -2270,7 +2314,7 @@ inline interval<IT> atan(const interval<IT>& x) {
 
     // Established a safety interval around the result to ensure correct bound for the computation
     atan_min = utils::helpers<IT>::nextafter(atan_min, -infi);
-    atan_max = utils::helpers<IT>::nextafter(atan_max, +infi);
+    atan_max = utils::helpers<IT>::nextafter(atan_max, infi);
 
     // Since atan is monotonically increasing in its domain, we directly return the interval
     // Create and return the interval based on calculated min and max tangent values
@@ -2423,7 +2467,7 @@ inline interval<IT> sinsimpel(const interval<IT>& x) {
 
     // Established a safety interval around the result to ensure correct bound for the computation
     if (sin_min != IT(-1) && sin_min != IT(0)) sin_min = utils::helpers<IT>::nextafter(sin_min, -infi);
-    if (sin_max != IT(1) && sin_max != IT(0)) sin_max = utils::helpers<IT>::nextafter(sin_max, +infi);
+    if (sin_max != IT(1) && sin_max != IT(0)) sin_max = utils::helpers<IT>::nextafter(sin_max, infi);
 
     // Create and return the interval based on calculated min and max sine values
     return interval<IT>(IT(sin_min), IT(sin_max));
@@ -2438,9 +2482,17 @@ constexpr interval<IT> pi_interval(const size_t precision) {
         return interval<IT>(IT(3.141'592'653'589'793'1), IT(3.141'592'653'589'793'6));
     else if constexpr (std::is_same<IT, long double>::value)
         return interval<IT>(IT(3.141'592'653'589'793'1), IT(3.141'592'653'589'793'6));
+#ifdef __MPREAL_H__S
     else if constexpr (std::is_same<IT, mpfr::mpreal>::value)
         return interval<IT>(mpfr::const_pi(),
                             utils::helpers<IT>::nextafter(mpfr::const_pi(), mpfr::const_pi() + mpfr::mpreal(1.0f)));
+#endif
+#ifdef SHANKS_ENABLE_PROFILING
+    else if constexpr (is_profiling<IT>::value){
+        interval<typename IT::value_type> temp = pi_interval<typename IT::value_type>(precision);
+        return interval<IT>(utils::cast<IT, typename IT::value_type>()(temp.leftinterval()), utils::cast<IT, typename IT::value_type>()(temp.rightinterval()));
+    }
+#endif
     else
         static_assert(isFloatLike<IT>::value,
                       "Unsupported type for pi_interval.Type must be float, double, long double or float_precision.");
@@ -2455,11 +2507,19 @@ constexpr interval<IT> e_interval(const size_t precision) {
         return interval<IT>(IT(2.718'281'828'459'045'1), IT(2.718'281'828'459'045'5));
     else if constexpr (std::is_same<IT, long double>::value)
         return interval<IT>(IT(2.718'281'828'459'045'1), IT(2.718'281'828'459'045'5));
+#ifdef __MPREAL_H__
     else if constexpr (std::is_same<IT, mpfr::mpreal>::value)
         return interval<IT>(mpfr::const_euler(), utils::helpers<IT>::nextafter(
                                                      mpfr::const_euler(), mpfr::const_euler() + mpfr::mpreal(1.0f)));
+#endif
+#ifdef SHANKS_ENABLE_PROFILING
+    else if constexpr (is_profiling<IT>::value){
+        interval<typename IT::value_type> temp = e_interval<typename IT::value_type>(precision);
+        return interval<IT>(utils::cast<IT, typename IT::value_type>()(temp.leftinterval()), utils::cast<IT, typename IT::value_type>()(temp.rightinterval()));
+    }
+#endif
     else
-        static_assert(std::is_floating_point<IT>::value,
+        static_assert(isFloatLike<IT>::value,
                       "Unsupported type for pi_interval.Type must be float, double, long double or float_precision.");
 }
 
@@ -2472,9 +2532,17 @@ constexpr interval<IT> ln2_interval(const size_t precision) {
         return interval<IT>(IT(0.693'147'180'559'945'29), IT(0.693'147'180'559'945'40));
     else if constexpr (std::is_same<IT, long double>::value)
         return interval<IT>(IT(0.693'147'180'559'945'29), IT(0.693'147'180'559'945'40));
+#ifdef __MPREAL_H__
     else if constexpr (std::is_same<IT, mpfr::mpreal>::value)
         return interval<IT>(mpfr::const_log2(),
                             utils::helpers<IT>::nextafter(mpfr::const_log2(), mpfr::const_log2() + mpfr::mpreal(1.0f)));
+#endif
+#ifdef SHANKS_ENABLE_PROFILING
+    else if constexpr (is_profiling<IT>::value){
+        interval<typename IT::value_type> temp = ln2_interval<typename IT::value_type>(precision);
+        return interval<IT>(utils::cast<IT, typename IT::value_type>()(temp.leftinterval()), utils::cast<IT, typename IT::value_type>()(temp.rightinterval()));
+    }
+#endif
     else
         static_assert(isFloatLike<IT>::value,
                       "Unsupported type for pi_interval.Type must be float, double, long double or float_precision.");
@@ -2489,13 +2557,21 @@ constexpr interval<IT> ln10_interval(const size_t precision) {
         return interval<IT>(IT(2.302'585'092'994'045'5), IT(2.302'585'092'994'045'9));
     else if constexpr (std::is_same<IT, long double>::value)
         return interval<IT>(IT(2.302'585'092'994'045'5), IT(2.302'585'092'994'045'9));
+#ifdef __MPREAL_H__
     else if constexpr (std::is_same<IT, mpfr::mpreal>::value)
         return interval<IT>(mpfr::log(mpfr::mpreal("10")),
                             utils::helpers<IT>::nextafter(mpfr::log(mpfr::mpreal("10")),
                                                           mpfr::log(mpfr::mpreal("10")) + mpfr::mpreal(1.0f)));
-    else
-        static_assert(isFloatLike<IT>::valu,
-                      "Unsupported type for pi_interval.Type must be float, double, long double or float_precision.");
+#endif
+#ifdef SHANKS_ENABLE_PROFILING
+    else if constexpr (is_profiling<IT>::value){
+        interval<typename IT::value_type> temp = ln10_interval<typename IT::value_type>(precision);
+        return interval<IT>(utils::cast<IT, typename IT::value_type>()(temp.leftinterval()), utils::cast<IT, typename IT::value_type>()(temp.rightinterval()));
+    }
+#endif
+        else static_assert(
+            isFloatLike<IT>::value,
+            "Unsupported type for pi_interval.Type must be float, double, long double or float_precision.");
 }
 template <class _Ty>
 inline std::ostream& operator<<(std::ostream& strm, interval<_Ty>& a) {

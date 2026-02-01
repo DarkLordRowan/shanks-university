@@ -9,6 +9,7 @@ struct utils::helpers<T> {
     static T floor(const T& x);
     static T ceil(const T& x);
     static T get_nan();
+    static T frexp(const T& x, int* exp);
     static std::size_t get_precision(const T& x);
     static std::string to_string(const T& x);
     static bool isfinite(const T& x);
@@ -39,6 +40,11 @@ T utils::helpers<T>::ceil(const T& x) {
 template <std::floating_point T>
 T utils::helpers<T>::get_nan() {
     return std::nan("");
+}
+
+template <std::floating_point T>
+T utils::helpers<T>::frexp(const T& x, int* exp){
+    return std::frexp(x, exp);
 }
 
 template <std::floating_point T>

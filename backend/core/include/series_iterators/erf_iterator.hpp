@@ -47,11 +47,11 @@ public:
             return utils::math<T>::sqrt(utils::cast<T, double>()(std::numbers::pi)) * utils::math<T>::erf(this->x) *
                    utils::cast<T, double>()(0.5);
         else
-        #ifndef DEBUG
-            static_assert(dependent_false<T>::value, "utils::math<T>::erf not implemented for this type");
-        #else
+#ifndef DEBUG
+            assert(false);
+#else
             return utils::helpers<T>::get_nan();
-        #endif
+#endif
     }
 
     /**

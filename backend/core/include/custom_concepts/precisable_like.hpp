@@ -11,11 +11,15 @@ template <typename T>
 struct is_precisable : public std::false_type {};
 
 #ifdef __MPREAL_H__
-template <> struct is_precisable<mpfr::mpreal> : public std::true_type {};
-template <> struct is_precisable<std::complex<mpfr::mpreal>> : public std::true_type {};
+template <>
+struct is_precisable<mpfr::mpreal> : public std::true_type {};
+template <>
+struct is_precisable<std::complex<mpfr::mpreal>> : public std::true_type {};
 #ifdef SHANKS_ENABLE_PROFILING
-template <> struct is_precisable<shanks::profiling::OperationCounting<mpfr::mpreal>> : public std::true_type {};
-template <> struct is_precisable<std::complex<shanks::profiling::OperationCounting<mpfr::mpreal>>> : public std::true_type {};
+template <>
+struct is_precisable<shanks::profiling::OperationCounting<mpfr::mpreal>> : public std::true_type {};
+template <>
+struct is_precisable<std::complex<shanks::profiling::OperationCounting<mpfr::mpreal>>> : public std::true_type {};
 #endif
 #endif
 

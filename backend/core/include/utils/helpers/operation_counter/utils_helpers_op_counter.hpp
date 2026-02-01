@@ -8,36 +8,39 @@
 
 template <typename T>
 struct utils::helpers<OpsWrapperMacro(T)> {
-    static OpsWrapperMacro(T) nextafter(const OpsWrapperMacro(T)& x, const OpsWrapperMacro(T)& y);
-    static OpsWrapperMacro(T) fmod(const OpsWrapperMacro(T)& x, const OpsWrapperMacro(T)& y);
-    static OpsWrapperMacro(T) floor(const OpsWrapperMacro(T)& x);
-    static OpsWrapperMacro(T) ceil(const OpsWrapperMacro(T)& x);
+    static OpsWrapperMacro(T) nextafter(const OpsWrapperMacro(T) & x, const OpsWrapperMacro(T) & y);
+    static OpsWrapperMacro(T) fmod(const OpsWrapperMacro(T) & x, const OpsWrapperMacro(T) & y);
+    static OpsWrapperMacro(T) floor(const OpsWrapperMacro(T) & x);
+    static OpsWrapperMacro(T) ceil(const OpsWrapperMacro(T) & x);
     static OpsWrapperMacro(T) get_nan();
-    static std::size_t get_precision(const OpsWrapperMacro(T)& x);
-    static std::string to_string(const OpsWrapperMacro(T)& x);
-    static bool isfinite(const OpsWrapperMacro(T)& x);
-    static bool isnan(const OpsWrapperMacro(T)& x);
-    static bool isinf(const OpsWrapperMacro(T)& x);
+    static OpsWrapperMacro(T) frexp(const OpsWrapperMacro(T)& x, int* exp);
+    static std::size_t get_precision(const OpsWrapperMacro(T) & x);
+    static std::string to_string(const OpsWrapperMacro(T) & x);
+    static bool isfinite(const OpsWrapperMacro(T) & x);
+    static bool isnan(const OpsWrapperMacro(T) & x);
+    static bool isinf(const OpsWrapperMacro(T) & x);
     static OpsWrapperMacro(T) epsilon(std::size_t precision = std::size_t{0});
     static OpsWrapperMacro(T) numeric_max(std::size_t precision = std::size_t{0});
 };
 
 template <typename T>
-OpsWrapperMacro(T) utils::helpers<OpsWrapperMacro(T)>::nextafter(const OpsWrapperMacro(T)& x, const OpsWrapperMacro(T)& y) {
+OpsWrapperMacro(T) utils::helpers<OpsWrapperMacro(T)>::nextafter(const OpsWrapperMacro(T) & x,
+                                                                 const OpsWrapperMacro(T) & y) {
     return OpsWrapperMacro(T)(utils::helpers<T>::nextafter(x.value, y.value));
 }
 
 template <typename T>
-OpsWrapperMacro(T) utils::helpers<OpsWrapperMacro(T)>::fmod(const OpsWrapperMacro(T)& x, const OpsWrapperMacro(T)& y) {
-    return OpsWrapperMacro(T)(utils::helpers<T>::fmod(x, y));
+OpsWrapperMacro(T) utils::helpers<OpsWrapperMacro(T)>::fmod(const OpsWrapperMacro(T) & x,
+                                                            const OpsWrapperMacro(T) & y) {
+    return OpsWrapperMacro(T)(utils::helpers<T>::fmod(x.value, y.value));
 }
 template <typename T>
-OpsWrapperMacro(T) utils::helpers<OpsWrapperMacro(T)>::floor(const OpsWrapperMacro(T)& x) {
-    return OpsWrapperMacro(T)(utils::helpers<T>::floor(x));
+OpsWrapperMacro(T) utils::helpers<OpsWrapperMacro(T)>::floor(const OpsWrapperMacro(T) & x) {
+    return OpsWrapperMacro(T)(utils::helpers<T>::floor(x.value));
 }
 template <typename T>
-OpsWrapperMacro(T) utils::helpers<OpsWrapperMacro(T)>::ceil(const OpsWrapperMacro(T)& x) {
-    return OpsWrapperMacro(T)(utils::helpers<T>::ceil(x));
+OpsWrapperMacro(T) utils::helpers<OpsWrapperMacro(T)>::ceil(const OpsWrapperMacro(T) & x) {
+    return OpsWrapperMacro(T)(utils::helpers<T>::ceil(x.value));
 }
 
 template <typename T>
@@ -46,25 +49,30 @@ OpsWrapperMacro(T) utils::helpers<OpsWrapperMacro(T)>::get_nan() {
 }
 
 template <typename T>
-std::size_t utils::helpers<OpsWrapperMacro(T)>::get_precision(const OpsWrapperMacro(T)& x) {
+OpsWrapperMacro(T) utils::helpers<OpsWrapperMacro(T)>::frexp(const OpsWrapperMacro(T)& x, int* exp){
+    return OpsWrapperMacro(T)(utils::helpers<T>::frexp(x.value, exp));
+}
+
+template <typename T>
+std::size_t utils::helpers<OpsWrapperMacro(T)>::get_precision(const OpsWrapperMacro(T) & x) {
     return utils::helpers<T>::get_precision(x.value);
 }
 
 template <typename T>
-std::string utils::helpers<OpsWrapperMacro(T)>::to_string(const OpsWrapperMacro(T)& x) {
+std::string utils::helpers<OpsWrapperMacro(T)>::to_string(const OpsWrapperMacro(T) & x) {
     return utils::helpers<T>::to_string(x.value);
 }
 
 template <typename T>
-bool utils::helpers<OpsWrapperMacro(T)>::isfinite(const OpsWrapperMacro(T)& x) {
+bool utils::helpers<OpsWrapperMacro(T)>::isfinite(const OpsWrapperMacro(T) & x) {
     return utils::helpers<T>::isfinite(x.value);
 }
 template <typename T>
-bool utils::helpers<OpsWrapperMacro(T)>::isnan(const OpsWrapperMacro(T)& x) {
+bool utils::helpers<OpsWrapperMacro(T)>::isnan(const OpsWrapperMacro(T) & x) {
     return utils::helpers<T>::isnan(x.value);
 }
 template <typename T>
-bool utils::helpers<OpsWrapperMacro(T)>::isinf(const OpsWrapperMacro(T)& x) {
+bool utils::helpers<OpsWrapperMacro(T)>::isinf(const OpsWrapperMacro(T) & x) {
     return utils::helpers<T>::isinf(x.value);
 }
 

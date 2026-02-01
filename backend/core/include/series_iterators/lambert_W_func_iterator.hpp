@@ -46,11 +46,11 @@ public:
         if constexpr (typename utils::math<T>::has_lambertW0{})
             return utils::math<T>::lambertW0(this->x);
         else
-        #ifndef DEBUG
-            static_assert(dependent_false<T>::value, "utils::math<T>::lambertW0 not implemented for this type");
-        #else
+#ifndef DEBUG
+            assert(false);
+#else
             return utils::helpers<T>::get_nan();
-        #endif
+#endif
     }
 
     /**

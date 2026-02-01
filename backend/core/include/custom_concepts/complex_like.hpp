@@ -28,6 +28,7 @@ struct isComplexLike : public std::false_type {};
 template <typename T>
     requires is_complex_t<T>::value
 struct isComplexLike<T> : public std::true_type {};
+
 #ifdef __MPREAL_H__
 template <>
 struct isComplexLike<std::complex<mpfr::mpreal>> : public std::true_type {};

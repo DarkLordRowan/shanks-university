@@ -130,7 +130,10 @@ std::complex<T> utils::math<std::complex<T>>::atanh(const std::complex<T>& x) {
 }
 template <typename T>
 T utils::math<std::complex<T>>::abs(const std::complex<T>& x) {
-    return std::abs(x);
+    if constexpr (is_profiling<T>::value)
+        return (x * std::conj(x)).real();
+    else
+        return std::abs(x);
 }
 
 #endif

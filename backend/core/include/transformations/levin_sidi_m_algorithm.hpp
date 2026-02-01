@@ -241,7 +241,7 @@ T levin_sidi_m_algorithm<T, K>::operator()(const K n, const K order, const serie
         // Calculate the sign, binomial coefficient, and weight components
         rest = utils::math<T>::template minus_one_raised_to_power_n<K>(j);
         rest *= utils::cast<T, K>()(utils::math<K>::binomial_coefficient(n, j), precision);
-        rest *= utils::cast<T, float_type>()(up, precision);                     // Multiply by Pochhammer ratio term
+        rest *= utils::cast<T, float_type>()(up, precision);            // Multiply by Pochhammer ratio term
         rest /= utils::cast<T, K>()(j + static_cast<K>(1), precision);  // Multiply by 1/(j+1) factor
         up /= (up_coef + utils::cast<float_type, K>()(j, precision));   // Update Pochhammer ratio for next iteration
         up *= (down_coef + utils::cast<float_type, K>()(

@@ -8,31 +8,32 @@
 
 template <FloatLike To, FloatLike From>
 struct utils::cast<OpsWrapperMacro(To), From> {
-    OpsWrapperMacro(To) operator()(const From& x, std::size_t precision = std::size_t{0});
+    OpsWrapperMacro(To) operator()(const From & x, std::size_t precision = std::size_t{0});
 };
 
 template <FloatLike To, FloatLike From>
-OpsWrapperMacro(To) utils::cast<OpsWrapperMacro(To), From>::operator()(const From& x, std::size_t precision) {
+OpsWrapperMacro(To) utils::cast<OpsWrapperMacro(To), From>::operator()(const From & x, std::size_t precision) {
     return OpsWrapperMacro(To)(utils::cast<To, From>()(x, precision));
 }
 
 template <FloatLike To, FloatLike From>
 struct utils::cast<To, OpsWrapperMacro(From)> {
-    To operator()(const OpsWrapperMacro(From)& x, std::size_t precision = std::size_t{0});
+    To operator()(const OpsWrapperMacro(From) & x, std::size_t precision = std::size_t{0});
 };
 
 template <FloatLike To, FloatLike From>
-To utils::cast<To, OpsWrapperMacro(From)>::operator()(const OpsWrapperMacro(From)& x, std::size_t precision) {
+To utils::cast<To, OpsWrapperMacro(From)>::operator()(const OpsWrapperMacro(From) & x, std::size_t precision) {
     return utils::cast<To, From>()(x.value, precision);
 }
 
 template <FloatLike To, FloatLike From>
 struct utils::cast<OpsWrapperMacro(To), OpsWrapperMacro(From)> {
-    OpsWrapperMacro(To) operator()(const OpsWrapperMacro(From)& x, std::size_t precision = std::size_t{0});
+    OpsWrapperMacro(To) operator()(const OpsWrapperMacro(From) & x, std::size_t precision = std::size_t{0});
 };
 
 template <FloatLike To, FloatLike From>
-OpsWrapperMacro(To) utils::cast<OpsWrapperMacro(To), OpsWrapperMacro(From)>::operator()(const OpsWrapperMacro(From)& x, std::size_t precision) {
+OpsWrapperMacro(To) utils::cast<OpsWrapperMacro(To), OpsWrapperMacro(From)>::operator()(const OpsWrapperMacro(From) & x,
+                                                                                        std::size_t precision) {
     return OpsWrapperMacro(To)(utils::cast<To, From>()(x.value, precision));
 }
 

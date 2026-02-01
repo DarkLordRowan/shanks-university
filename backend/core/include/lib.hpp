@@ -27,6 +27,7 @@
 #include "custom_concepts/unsigned_int_like.hpp"
 #include "custom_concepts/precisable_like.hpp"
 #include "custom_concepts/complex_like.hpp"
+#include "custom_concepts/profiling_like.hpp"
 
 template <typename T>
 concept AcceptedLike = requires { requires FloatLike<T> || ComplexLike<T> || IntervalLike<T>; };
