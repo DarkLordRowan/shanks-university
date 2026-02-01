@@ -26,6 +26,7 @@
 // clang-format on
 
 int main() {
+
     while (true) {
         try {
             main_testing_function<intprec::interval<shanks::profiling::OperationCounting<double>>,unsigned short int>();

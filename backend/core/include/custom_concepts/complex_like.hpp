@@ -25,6 +25,7 @@ struct is_complex_t<std::complex<shanks::profiling::OperationCounting<T>>> : pub
  */
 template <typename T>
 struct isComplexLike : public std::false_type {};
+
 template <typename T>
     requires is_complex_t<T>::value
 struct isComplexLike<T> : public std::true_type {};
@@ -34,7 +35,7 @@ template <>
 struct isComplexLike<std::complex<mpfr::mpreal>> : public std::true_type {};
 #ifdef SHANKS_ENABLE_PROFILING
 template <>
-struct isComplexLike<shanks::profiling::OperationCounting<std::complex<mpfr::mpreal>>> : public std::true_type {};
+struct isComplexLike<std::complex<shanks::profiling::OperationCounting<mpfr::mpreal>>> : public std::true_type {};
 #endif
 #endif
 

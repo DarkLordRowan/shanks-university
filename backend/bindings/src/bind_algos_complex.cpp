@@ -1,5 +1,5 @@
-#include "../../core/include/methods.hpp"
 #include "../include/bindings_templates.hpp"
+#include "../../core/include/methods.hpp"
 
 void bind_algos_complex(py::module_& m) {
     bind_each_type<types_complex>(

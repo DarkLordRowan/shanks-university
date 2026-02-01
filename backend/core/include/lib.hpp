@@ -12,10 +12,6 @@
 #include <gsl/gsl_sf_gamma.h>
 #include <gsl/gsl_sf_lambert.h>
 
-#include "gsl/gsl_sf_expint.h"
-#include <gsl/gsl_sf_gamma.h>
-#include <gsl/gsl_sf_lambert.h>
-
 #include "custom_types/mpreal.h"
 #include "custom_types/operation_counter.hpp"
 

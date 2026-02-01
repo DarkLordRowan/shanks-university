@@ -21,42 +21,42 @@ struct utils::helpers<mpfr::mpreal> {
     static mpfr::mpreal numeric_max(std::size_t precision = std::size_t{0});
 };
 
-mpfr::mpreal utils::helpers<mpfr::mpreal>::nextafter(const mpfr::mpreal& x, const mpfr::mpreal& y) {
+inline mpfr::mpreal utils::helpers<mpfr::mpreal>::nextafter(const mpfr::mpreal& x, const mpfr::mpreal& y) {
     return mpfr::nextafter(x, y);
 }
 
-mpfr::mpreal utils::helpers<mpfr::mpreal>::fmod(const mpfr::mpreal& x, const mpfr::mpreal& y) {
+inline mpfr::mpreal utils::helpers<mpfr::mpreal>::fmod(const mpfr::mpreal& x, const mpfr::mpreal& y) {
     return mpfr::fmod(x, y);
 }
-mpfr::mpreal utils::helpers<mpfr::mpreal>::floor(const mpfr::mpreal& x) { return mpfr::floor(x); }
-mpfr::mpreal utils::helpers<mpfr::mpreal>::ceil(const mpfr::mpreal& x) { return mpfr::ceil(x); }
+inline mpfr::mpreal utils::helpers<mpfr::mpreal>::floor(const mpfr::mpreal& x) { return mpfr::floor(x); }
+inline mpfr::mpreal utils::helpers<mpfr::mpreal>::ceil(const mpfr::mpreal& x) { return mpfr::ceil(x); }
 
-mpfr::mpreal utils::helpers<mpfr::mpreal>::get_nan() {
+inline mpfr::mpreal utils::helpers<mpfr::mpreal>::get_nan() {
     return mpfr::mpreal().setNan();
 }
 
-mpfr::mpreal utils::helpers<mpfr::mpreal>::frexp(const mpfr::mpreal& x, int* exp){
+inline mpfr::mpreal utils::helpers<mpfr::mpreal>::frexp(const mpfr::mpreal& x, int* exp){
     return mpfr::frexp(x, exp);
 }
 
-std::size_t utils::helpers<mpfr::mpreal>::get_precision(const mpfr::mpreal& x) {
+inline std::size_t utils::helpers<mpfr::mpreal>::get_precision(const mpfr::mpreal& x) {
     return mpfr::bits2digits(x.get_prec());
 }
 
-std::string utils::helpers<mpfr::mpreal>::to_string(const mpfr::mpreal& x) { return x.toString(-1, 10); }
+inline std::string utils::helpers<mpfr::mpreal>::to_string(const mpfr::mpreal& x) { return x.toString(-1, 10); }
 
-bool utils::helpers<mpfr::mpreal>::isfinite(const mpfr::mpreal& x) { return mpfr::isfinite(x); }
-bool utils::helpers<mpfr::mpreal>::isnan(const mpfr::mpreal& x) { return mpfr::isnan(x); }
-bool utils::helpers<mpfr::mpreal>::isinf(const mpfr::mpreal& x) { return mpfr::isinf(x); }
+inline bool utils::helpers<mpfr::mpreal>::isfinite(const mpfr::mpreal& x) { return mpfr::isfinite(x); }
+inline bool utils::helpers<mpfr::mpreal>::isnan(const mpfr::mpreal& x) { return mpfr::isnan(x); }
+inline bool utils::helpers<mpfr::mpreal>::isinf(const mpfr::mpreal& x) { return mpfr::isinf(x); }
 
-mpfr::mpreal utils::helpers<mpfr::mpreal>::epsilon(std::size_t precision) {
+inline mpfr::mpreal utils::helpers<mpfr::mpreal>::epsilon(std::size_t precision) {
     if (precision > 0)
         return mpfr::machine_epsilon(precision);
     else
         return mpfr::machine_epsilon();
 }
 
-mpfr::mpreal utils::helpers<mpfr::mpreal>::numeric_max(std::size_t precision) {
+inline mpfr::mpreal utils::helpers<mpfr::mpreal>::numeric_max(std::size_t precision) {
     if (precision > 0)
         return std::numeric_limits<mpfr::mpreal>::max(mpfr::digits2bits(precision));
     else

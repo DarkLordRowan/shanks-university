@@ -17,9 +17,7 @@
 #include <sstream>
 #include <tuple>
 
-#include "../../core/include/custom_concepts.hpp"
-#include "../../core/include/custom_types/operation_counter.hpp"
-#include "../../core/include/utils.hpp"
+#include "../../core/include/custom_types/mpreal.h"
 
 namespace py = pybind11;
 
@@ -56,15 +54,6 @@ using types_to_bind =
 
 constexpr std::array<const char*, 8> suffixes{"F32", "F64", "FLong", "Arb", "CF32", "CF64", "CFLong", "CArb"};
 
-// --- Binding Function Declarations ---
-
-void bind_types(py::module_& m);
-void bind_series_real(py::module_& m);
-void bind_series_complex(py::module_& m);
-void bind_algos_real(py::module_& m);
-void bind_algos_complex(py::module_& m);
-void bind_noise_all(py::module_& m);
-void bind_filters_all(py::module_& m);
 
 // --- Template Helper for multiple types ---
 

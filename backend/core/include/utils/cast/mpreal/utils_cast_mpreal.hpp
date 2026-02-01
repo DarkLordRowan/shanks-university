@@ -12,7 +12,7 @@ struct utils::cast<mpfr::mpreal, From> {
 
 template <typename From>
     requires std::floating_point<From> || std::integral<From>
-mpfr::mpreal utils::cast<mpfr::mpreal, From>::operator()(const From& x, size_t precision) {
+inline mpfr::mpreal utils::cast<mpfr::mpreal, From>::operator()(const From& x, size_t precision) {
     if (precision > 0)
         return mpfr::mpreal(x, mpfr::digits2bits(precision));
     else

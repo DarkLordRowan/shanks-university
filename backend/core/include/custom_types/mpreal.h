@@ -48,6 +48,7 @@
 
 #ifndef __MPREAL_H__
 #define __MPREAL_H__
+#pragma once
 
 #include <stdint.h>
 

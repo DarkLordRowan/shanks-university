@@ -8,16 +8,9 @@
 #define BINDINGS_TEMPLATES_HPP
 #pragma once
 
-// clang-format off
-// Critical Section
+#include "../../core/include/lib.hpp"
 #include "bindings.hpp"
 
-#include "../../core/include/methods.hpp"
-#include "../../core/include/noise/noise_generator.hpp"
-#include "../../core/include/series.hpp"
-#include "../../core/include/filters/kolmogorov_zurbenko.hpp"
-#include "../../core/include/filters/savitzky_golay.hpp"
-// clang-format on
 
 /**
  * @brief Template implementation for binding series.
