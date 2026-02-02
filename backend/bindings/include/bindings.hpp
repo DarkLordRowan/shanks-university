@@ -18,6 +18,7 @@
 #include <tuple>
 
 #include "../../core/include/custom_types/mpreal.h"
+#include "../../core/include/custom_types/operation_counter.hpp"
 
 namespace py = pybind11;
 
