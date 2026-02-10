@@ -54,7 +54,9 @@ std::size_t utils::helpers<T>::get_precision(const T& x) {
 
 template <std::floating_point T>
 std::string utils::helpers<T>::to_string(const T& x) {
-    return std::to_string(x);
+    std::ostringstream oss;
+    oss << std::scientific << std::setprecision(std::numeric_limits<T>::max_digits10) << x;
+    return oss.str();
 }
 
 template <std::floating_point T>
