@@ -24,6 +24,7 @@
 #include "../console/console_effects.hpp"
 #include "../console/console_IO.hpp"
 #include "test_functions.hpp"
+#include "test_mpfr.hpp"
 // clang-format on
 
 /**
