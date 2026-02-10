@@ -8,9 +8,8 @@
 #define BINDINGS_TEMPLATES_HPP
 #pragma once
 
-
-#include "bindings.hpp"
 #include "../../core/include/lib.hpp"
+#include "bindings.hpp"
 
 /**
  * @brief Template implementation for binding series.

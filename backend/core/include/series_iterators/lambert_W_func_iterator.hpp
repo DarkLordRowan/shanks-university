@@ -74,8 +74,13 @@ public:
         // Implementation of the power series for W0(x)
         if (n == 0)
             state = this->x;
-        else
-            state *= utils::cast<T, int>()(-1) * this->x / utils::cast<T, K>()(n);
+        else {
+            const size_t precision = utils::helpers<T>::get_precision(state);
+            state *=
+                utils::cast<T, int>()(-1) * this->x *
+                utils::math<T>::pow(utils::cast<T, size_t>()(n + 1, precision) / utils::cast<T, size_t>()(n, precision),
+                                    utils::cast<T, size_t>()(n - 1, precision));
+        }
         return state;
     }
 };

@@ -13,7 +13,7 @@
 #include <gsl/gsl_sf_lambert.h>
 
 #include "custom_types/mpreal.h"
-#include "custom_types/operation_counter.hpp"
+#include "custom_types/operation_counter.fwd.hpp"
 
 #include "custom_concepts/float_like.hpp"
 
@@ -33,6 +33,7 @@ concept AcceptedLike = requires { requires FloatLike<T> || ComplexLike<T> || Int
 #include "utils.hpp"
 
 #include "custom_types/intervalprecision.hpp"
+#include "custom_types/operation_counter.hpp"
 
 
 #include "series_base.hpp"

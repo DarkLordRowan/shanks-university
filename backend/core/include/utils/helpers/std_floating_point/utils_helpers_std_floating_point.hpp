@@ -43,7 +43,7 @@ T utils::helpers<T>::get_nan() {
 }
 
 template <std::floating_point T>
-T utils::helpers<T>::frexp(const T& x, int* exp){
+T utils::helpers<T>::frexp(const T& x, int* exp) {
     return std::frexp(x, exp);
 }
 

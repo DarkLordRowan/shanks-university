@@ -1,10 +1,9 @@
-#include "../include/bindings.hpp"
 #include "../../core/include/lib.hpp"
+#include "../include/bindings.hpp"
 
 namespace py = pybind11;
 
 void bind_types(py::module_& m) {
-
 #ifdef SHANKS_ENABLE_PROFILING
     // 0. Bind profiling utils if enabled
     py::class_<shanks::profiling::OperationCounts>(m, "OperationCounts")
@@ -22,7 +21,6 @@ void bind_types(py::module_& m) {
     m.def("reset_operation_counts", &shanks::profiling::reset_counts);
     m.def("get_operation_counts", &shanks::profiling::get_counts);
 
-
     auto bind_real_props = []<typename T>(py::class_<OP<T>>& c) {
         c.def(py::self + py::self)
             .def(py::self - py::self)
@@ -35,19 +33,11 @@ void bind_types(py::module_& m) {
             .def(py::self >= py::self)
             .def(py::self == py::self)
             .def(py::self != py::self)
-            .def("__abs__",
-                 [](const OP<T>& self) {
-                     return abs(self);
-                 })
-            .def("__pow__",
-                 [](const OP<T>& self, const OP<T>& exp) {
-                     return pow(self, exp);
-                 })
-            .def("sqrt",
-                 [](const OP<T>& self) {
-                     return sqrt(self);
-                 })
-            .def("__hash__", [](const OP<T>& self) { return py::hash(py::str(utils::helpers<OP<T>>::to_string(self))); })
+            .def("__abs__", [](const OP<T>& self) { return abs(self); })
+            .def("__pow__", [](const OP<T>& self, const OP<T>& exp) { return pow(self, exp); })
+            .def("sqrt", [](const OP<T>& self) { return sqrt(self); })
+            .def("__hash__",
+                 [](const OP<T>& self) { return py::hash(py::str(utils::helpers<OP<T>>::to_string(self))); })
             .def("__repr__", [](const OP<T>& self) { return utils::helpers<OP<T>>::to_string(self); })
             .def(py::pickle([](const OP<T>& num) { return num.value; }, [](T val) { return OP<T>(val); }));
     };
@@ -135,21 +125,13 @@ void bind_types(py::module_& m) {
         .def(py::self >= py::self)
         .def(py::self == py::self)
         .def(py::self != py::self)
-        .def("__abs__",
-             [](const OP<mpfr::mpreal>& self) {
-                 return abs(self);
-             })
-        .def("__pow__",
-             [](const OP<mpfr::mpreal>& self,
-                const OP<mpfr::mpreal>& exp) {
-                 return pow(self, exp);
-             })
-        .def("sqrt",
-             [](const OP<mpfr::mpreal>& self) {
-                 return sqrt(self);
-             })
+        .def("__abs__", [](const OP<mpfr::mpreal>& self) { return abs(self); })
+        .def("__pow__", [](const OP<mpfr::mpreal>& self, const OP<mpfr::mpreal>& exp) { return pow(self, exp); })
+        .def("sqrt", [](const OP<mpfr::mpreal>& self) { return sqrt(self); })
         .def("__hash__",
-             [](const OP<mpfr::mpreal>& self) { return py::hash(py::str(utils::helpers<OP<mpfr::mpreal>>::to_string(self))); })
+             [](const OP<mpfr::mpreal>& self) {
+                 return py::hash(py::str(utils::helpers<OP<mpfr::mpreal>>::to_string(self)));
+             })
         .def("__repr__", [](const OP<mpfr::mpreal>& self) { return utils::helpers<OP<mpfr::mpreal>>::to_string(self); })
         .def(py::pickle([](const OP<mpfr::mpreal>& num) { return utils::helpers<OP<mpfr::mpreal>>::to_string(num); },
                         [](std::string s) { return OP<mpfr::mpreal>(s); }));

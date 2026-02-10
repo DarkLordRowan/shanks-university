@@ -1,7 +1,6 @@
 #include "../include/bindings_templates.hpp"
 
 void bind_algos_real(py::module_& m) {
-
     py::enum_<shanks::remainders::remainder_type>(m, "RemainderType")
         .value("u_type", shanks::remainders::remainder_type::u_type)
         .value("t_type", shanks::remainders::remainder_type::t_type)

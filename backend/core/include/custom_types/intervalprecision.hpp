@@ -84,8 +84,6 @@ static char _VinterP_[] = "@(#)intervalprecision.h 02.06 -- Copyright (C) Henrik
 #include <type_traits>
 #include <utility>
 
-#include "intervalprecision.fwd.hpp"
-
 static_assert(__cplusplus >= 201703L, "The intervalprecision.h code requires c++17 or higher.");
 
 namespace intprec {
@@ -128,12 +126,14 @@ inline shanks::profiling::OperationCounting<double> infinity_interval<shanks::pr
     return shanks::profiling::OperationCounting<double>(infinity_interval<double>());
 }
 template <>
-inline shanks::profiling::OperationCounting<long double> infinity_interval<shanks::profiling::OperationCounting<long double>>() {
+inline shanks::profiling::OperationCounting<long double>
+infinity_interval<shanks::profiling::OperationCounting<long double>>() {
     return shanks::profiling::OperationCounting<long double>(infinity_interval<long double>());
 }
 #ifdef __MPREAL_H__
 template <>
-inline shanks::profiling::OperationCounting<mpfr::mpreal> infinity_interval<shanks::profiling::OperationCounting<mpfr::mpreal>>() {
+inline shanks::profiling::OperationCounting<mpfr::mpreal>
+infinity_interval<shanks::profiling::OperationCounting<mpfr::mpreal>>() {
     return shanks::profiling::OperationCounting<mpfr::mpreal>(infinity_interval<mpfr::mpreal>());
 }
 #endif
@@ -171,12 +171,14 @@ inline shanks::profiling::OperationCounting<double> underflow_interval<shanks::p
     return shanks::profiling::OperationCounting<double>(underflow_interval<double>());
 }
 template <>
-inline shanks::profiling::OperationCounting<long double> underflow_interval<shanks::profiling::OperationCounting<long double>>() {
+inline shanks::profiling::OperationCounting<long double>
+underflow_interval<shanks::profiling::OperationCounting<long double>>() {
     return shanks::profiling::OperationCounting<long double>(underflow_interval<long double>());
 }
 #ifdef __MPREAL_H__
 template <>
-inline shanks::profiling::OperationCounting<mpfr::mpreal> underflow_interval<shanks::profiling::OperationCounting<mpfr::mpreal>>() {
+inline shanks::profiling::OperationCounting<mpfr::mpreal>
+underflow_interval<shanks::profiling::OperationCounting<mpfr::mpreal>>() {
     return shanks::profiling::OperationCounting<mpfr::mpreal>(underflow_interval<mpfr::mpreal>());
 }
 #endif
@@ -2488,9 +2490,10 @@ constexpr interval<IT> pi_interval(const size_t precision) {
                             utils::helpers<IT>::nextafter(mpfr::const_pi(), mpfr::const_pi() + mpfr::mpreal(1.0f)));
 #endif
 #ifdef SHANKS_ENABLE_PROFILING
-    else if constexpr (is_profiling<IT>::value){
+    else if constexpr (is_profiling<IT>::value) {
         interval<typename IT::value_type> temp = pi_interval<typename IT::value_type>(precision);
-        return interval<IT>(utils::cast<IT, typename IT::value_type>()(temp.leftinterval()), utils::cast<IT, typename IT::value_type>()(temp.rightinterval()));
+        return interval<IT>(utils::cast<IT, typename IT::value_type>()(temp.leftinterval()),
+                            utils::cast<IT, typename IT::value_type>()(temp.rightinterval()));
     }
 #endif
     else
@@ -2513,9 +2516,10 @@ constexpr interval<IT> e_interval(const size_t precision) {
                                                      mpfr::const_euler(), mpfr::const_euler() + mpfr::mpreal(1.0f)));
 #endif
 #ifdef SHANKS_ENABLE_PROFILING
-    else if constexpr (is_profiling<IT>::value){
+    else if constexpr (is_profiling<IT>::value) {
         interval<typename IT::value_type> temp = e_interval<typename IT::value_type>(precision);
-        return interval<IT>(utils::cast<IT, typename IT::value_type>()(temp.leftinterval()), utils::cast<IT, typename IT::value_type>()(temp.rightinterval()));
+        return interval<IT>(utils::cast<IT, typename IT::value_type>()(temp.leftinterval()),
+                            utils::cast<IT, typename IT::value_type>()(temp.rightinterval()));
     }
 #endif
     else
@@ -2538,9 +2542,10 @@ constexpr interval<IT> ln2_interval(const size_t precision) {
                             utils::helpers<IT>::nextafter(mpfr::const_log2(), mpfr::const_log2() + mpfr::mpreal(1.0f)));
 #endif
 #ifdef SHANKS_ENABLE_PROFILING
-    else if constexpr (is_profiling<IT>::value){
+    else if constexpr (is_profiling<IT>::value) {
         interval<typename IT::value_type> temp = ln2_interval<typename IT::value_type>(precision);
-        return interval<IT>(utils::cast<IT, typename IT::value_type>()(temp.leftinterval()), utils::cast<IT, typename IT::value_type>()(temp.rightinterval()));
+        return interval<IT>(utils::cast<IT, typename IT::value_type>()(temp.leftinterval()),
+                            utils::cast<IT, typename IT::value_type>()(temp.rightinterval()));
     }
 #endif
     else
@@ -2564,14 +2569,15 @@ constexpr interval<IT> ln10_interval(const size_t precision) {
                                                           mpfr::log(mpfr::mpreal("10")) + mpfr::mpreal(1.0f)));
 #endif
 #ifdef SHANKS_ENABLE_PROFILING
-    else if constexpr (is_profiling<IT>::value){
+    else if constexpr (is_profiling<IT>::value) {
         interval<typename IT::value_type> temp = ln10_interval<typename IT::value_type>(precision);
-        return interval<IT>(utils::cast<IT, typename IT::value_type>()(temp.leftinterval()), utils::cast<IT, typename IT::value_type>()(temp.rightinterval()));
+        return interval<IT>(utils::cast<IT, typename IT::value_type>()(temp.leftinterval()),
+                            utils::cast<IT, typename IT::value_type>()(temp.rightinterval()));
     }
 #endif
-        else static_assert(
-            isFloatLike<IT>::value,
-            "Unsupported type for pi_interval.Type must be float, double, long double or float_precision.");
+    else
+        static_assert(isFloatLike<IT>::value,
+                      "Unsupported type for pi_interval.Type must be float, double, long double or float_precision.");
 }
 template <class _Ty>
 inline std::ostream& operator<<(std::ostream& strm, interval<_Ty>& a) {

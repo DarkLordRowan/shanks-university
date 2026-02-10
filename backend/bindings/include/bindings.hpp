@@ -55,7 +55,6 @@ using types_to_bind =
 
 constexpr std::array<const char*, 8> suffixes{"F32", "F64", "FLong", "Arb", "CF32", "CF64", "CFLong", "CArb"};
 
-
 // --- Template Helper for multiple types ---
 
 template <typename TupleOfTypes, size_t N, typename Func, std::size_t TypesIndex = 0>

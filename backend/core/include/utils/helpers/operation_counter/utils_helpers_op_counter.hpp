@@ -13,7 +13,7 @@ struct utils::helpers<OpsWrapperMacro(T)> {
     static OpsWrapperMacro(T) floor(const OpsWrapperMacro(T) & x);
     static OpsWrapperMacro(T) ceil(const OpsWrapperMacro(T) & x);
     static OpsWrapperMacro(T) get_nan();
-    static OpsWrapperMacro(T) frexp(const OpsWrapperMacro(T)& x, int* exp);
+    static OpsWrapperMacro(T) frexp(const OpsWrapperMacro(T) & x, int* exp);
     static std::size_t get_precision(const OpsWrapperMacro(T) & x);
     static std::string to_string(const OpsWrapperMacro(T) & x);
     static bool isfinite(const OpsWrapperMacro(T) & x);
@@ -49,7 +49,7 @@ OpsWrapperMacro(T) utils::helpers<OpsWrapperMacro(T)>::get_nan() {
 }
 
 template <typename T>
-OpsWrapperMacro(T) utils::helpers<OpsWrapperMacro(T)>::frexp(const OpsWrapperMacro(T)& x, int* exp){
+OpsWrapperMacro(T) utils::helpers<OpsWrapperMacro(T)>::frexp(const OpsWrapperMacro(T) & x, int* exp) {
     return OpsWrapperMacro(T)(utils::helpers<T>::frexp(x.value, exp));
 }
 

@@ -1,7 +1,6 @@
 #include "../include/bindings_templates.hpp"
 
 void bind_noise_all(py::module_& m) {
-
     py::enum_<NoiseType>(m, "NoiseType")
         .value("Uniform", NoiseType::uniform)
         .value("Normal", NoiseType::normal)

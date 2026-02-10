@@ -64,13 +64,16 @@ inline mpfr::mpreal utils::math<mpfr::mpreal>::minus_one_raised_to_power_n(const
         return static_cast<mpfr::mpreal>(j & 1 ? -1 : 1);
 }
 
-inline mpfr::mpreal utils::math<mpfr::mpreal>::pow(const mpfr::mpreal& x, const mpfr::mpreal& y) { return mpfr::pow(x, y); }
+inline mpfr::mpreal utils::math<mpfr::mpreal>::pow(const mpfr::mpreal& x, const mpfr::mpreal& y) {
+    return mpfr::pow(x, y);
+}
 
 inline mpfr::mpreal utils::math<mpfr::mpreal>::atan2(const mpfr::mpreal& x, const mpfr::mpreal& y) {
     return mpfr::atan2(x, y);
 }
 
-inline mpfr::mpreal utils::math<mpfr::mpreal>::fma(const mpfr::mpreal& a, const mpfr::mpreal& b, const mpfr::mpreal& c) {
+inline mpfr::mpreal utils::math<mpfr::mpreal>::fma(const mpfr::mpreal& a, const mpfr::mpreal& b,
+                                                   const mpfr::mpreal& c) {
     return mpfr::fma(a, b, c);
 }
 

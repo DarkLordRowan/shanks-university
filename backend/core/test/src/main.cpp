@@ -26,15 +26,15 @@
 // clang-format on
 
 int main() {
-
     while (true) {
         try {
-            main_testing_function<intprec::interval<shanks::profiling::OperationCounting<double>>,unsigned short int>();
+            main_testing_function<mpfr::mpreal, unsigned short int>();
+            main_testing_function<intprec::interval<shanks::profiling::OperationCounting<double>>,
+                                  unsigned short int>();
             main_testing_function<double, unsigned short int>();
             main_testing_function<std::complex<long double>, unsigned long long int>();
             main_testing_function<std::complex<shanks::profiling::OperationCounting<double>>, unsigned long long int>();
             main_testing_function<intprec::interval<mpfr::mpreal>, unsigned short int>();
-            main_testing_function<mpfr::mpreal, unsigned short int>();
         } catch (std::domain_error& e) {
             std::cout << e.what() << "\n";
         } catch (std::overflow_error& e) {

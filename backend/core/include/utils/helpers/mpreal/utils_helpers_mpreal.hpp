@@ -31,13 +31,9 @@ inline mpfr::mpreal utils::helpers<mpfr::mpreal>::fmod(const mpfr::mpreal& x, co
 inline mpfr::mpreal utils::helpers<mpfr::mpreal>::floor(const mpfr::mpreal& x) { return mpfr::floor(x); }
 inline mpfr::mpreal utils::helpers<mpfr::mpreal>::ceil(const mpfr::mpreal& x) { return mpfr::ceil(x); }
 
-inline mpfr::mpreal utils::helpers<mpfr::mpreal>::get_nan() {
-    return mpfr::mpreal().setNan();
-}
+inline mpfr::mpreal utils::helpers<mpfr::mpreal>::get_nan() { return mpfr::mpreal().setNan(); }
 
-inline mpfr::mpreal utils::helpers<mpfr::mpreal>::frexp(const mpfr::mpreal& x, int* exp){
-    return mpfr::frexp(x, exp);
-}
+inline mpfr::mpreal utils::helpers<mpfr::mpreal>::frexp(const mpfr::mpreal& x, int* exp) { return mpfr::frexp(x, exp); }
 
 inline std::size_t utils::helpers<mpfr::mpreal>::get_precision(const mpfr::mpreal& x) {
     return mpfr::bits2digits(x.get_prec());
