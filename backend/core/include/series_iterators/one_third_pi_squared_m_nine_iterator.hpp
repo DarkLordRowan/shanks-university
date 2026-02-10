@@ -42,8 +42,12 @@ public:
      * @return T The value of x * (pi^2 - 9) / 3.
      */
     T get_sum() const override {
-        return this->x * (utils::cast<T>(std::numbers::pi) * utils::cast<T>(std::numbers::pi) - utils::cast<T>(9)) /
-               utils::cast<T>(3);
+        const size_t precision = utils::helpers<T>::get_precision(this->x);
+        return this->x *
+               (utils::cast<T, double>()(std::numbers::pi, precision) *
+                    utils::cast<T, double>()(std::numbers::pi, precision) -
+                utils::cast<T, int>()(9, precision)) /
+               utils::cast<T, int>()(3, precision);
     }
 
     /**
@@ -51,7 +55,9 @@ public:
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return true if x is non-finite, false otherwise.
      */
-    bool is_invalid() const override { return !utils::isfinite(this->x) || this->x == utils::cast<T>(0); }
+    bool is_invalid() const override {
+        return !utils::helpers<T>::isfinite(this->x) || this->x == utils::cast<T, int>()(0);
+    }
 
     /**
      * @brief Computes the next term in the series expansion.
@@ -60,7 +66,7 @@ public:
      */
     T next(K n, T& state) const override {
         // Formula for the n-th term of the specific expansion
-        state = this->x / utils::cast<T>((n + 1) * (n + 1) * (n + 2) * (n + 2));
+        state = this->x / utils::cast<T, K>()((n + 1) * (n + 1) * (n + 2) * (n + 2));
         return state;
     }
 };

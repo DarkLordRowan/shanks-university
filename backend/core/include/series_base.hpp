@@ -1,13 +1,6 @@
 #ifndef SERIES_BASE_HPP
 #define SERIES_BASE_HPP
-
 #pragma once
-
-#include <string>
-#include <vector>
-
-#include "custom_concepts.hpp"
-#include "utils.hpp"
 
 namespace shanks {
 namespace series {
@@ -39,14 +32,14 @@ protected:
         // sample for precision
         const T sample = func();
 
-        std::vector<T> an(n, utils::cast<T>(0.0, utils::get_precision(sample)));
-        std::vector<T> Sn(n, utils::cast<T>(0.0, utils::get_precision(sample)));
+        std::vector<T> an(n, utils::cast<T, int>()(0, utils::helpers<T>::get_precision(sample)));
+        std::vector<T> Sn(n, utils::cast<T, int>()(0, utils::helpers<T>::get_precision(sample)));
 
         an[0] += sample;
         Sn[0] += sample;
         for (K i = 1; i < n; ++i) {
             an[i] += func();
-            Sn[i] += an[i] + (is_seq ? utils::cast<T>(0.0) : Sn[i - static_cast<K>(1)]);
+            Sn[i] += an[i] + (is_seq ? utils::cast<T, int>()(0) : Sn[i - static_cast<K>(1)]);
         }
 
         return {Sn, an};
@@ -78,7 +71,7 @@ public:
     explicit series_base_succ(T x) : series_base_iter<T, K, T>(x) {}
 
     virtual T get_sum() const override = 0;
-    T initial_state() const { return utils::cast<T>(0.0, utils::get_precision(this->x)); };
+    T initial_state() const { return utils::cast<T, int>()(0, utils::helpers<T>::get_precision(this->x)); };
     virtual T next(K index, T& state) const = 0;
 
     bool is_invalid() const override { return true; }

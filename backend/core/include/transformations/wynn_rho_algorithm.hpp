@@ -12,11 +12,6 @@
  * Osada, N. (1993). Acceleration Methods for Slowly Convergent Sequences and Their Applications.
  */
 
-#include <memory>
-
-#include "series_acceleration.hpp"
-#include "wynn_numerators.hpp"
-
 namespace shanks {
 namespace algos {
 
@@ -45,8 +40,7 @@ namespace algos {
 template <AcceptedLike T, UnsignedIntLike K>
 class wynn_rho_algorithm final : public series_acceleration<T, K> {
 protected:
-    using float_type =
-        GetUnderlyingType<T>::value;  // type in case of complex or interval, represents type for real numbers
+    using float_type = real_of<T>::value;  // type in case of complex or interval, represents type for real numbers
 
     /// Strategy object for numerator computation.
     std::unique_ptr<const shanks::numerators::numerator_base<T, K>> numerator;
@@ -71,8 +65,8 @@ public:
      */
     explicit wynn_rho_algorithm(
         shanks::numerators::numerator_type numerator_type_to_use = shanks::numerators::numerator_type::rho_type,
-        const float_type& gamma_to_use = utils::cast<float_type>(-1.0),
-        const float_type& rho_to_use = utils::cast<float_type>(1.0))
+        const float_type& gamma_to_use = utils::cast<float_type, int>()(-1),
+        const float_type& rho_to_use = utils::cast<float_type, int>()(1))
         : series_acceleration<T, K>() {
         update_gamma(gamma_to_use);
         update_rho(rho_to_use);
@@ -173,8 +167,8 @@ public:
                 break;
             }
         }
-        series_acceleration<T, K>::acceleration_name += ", gamma = " + utils::to_string(gamma_in_use);
-        series_acceleration<T, K>::acceleration_name += ", rho = " + utils::to_string(rho_in_use);
+        series_acceleration<T, K>::acceleration_name += ", gamma = " + utils::helpers<T>::to_string(gamma_in_use);
+        series_acceleration<T, K>::acceleration_name += ", rho = " + utils::helpers<T>::to_string(rho_in_use);
 
         return series_acceleration<T, K>::acceleration_name;
     }
@@ -186,12 +180,14 @@ inline T wynn_rho_algorithm<T, K>::operator()(const K n, const K order, const se
     const K required_size =
         n + order + static_cast<K>(1) +
         order * static_cast<K>(numerator_type_in_use == shanks::numerators::numerator_type::rho_type);
-    const size_t precision = std::max(utils::get_precision(data.Sn[0]), utils::get_precision(data.an[0]));
+    const size_t precision =
+        std::max(utils::helpers<T>::get_precision(data.Sn[0]), utils::helpers<T>::get_precision(data.an[0]));
 
     if (data.Sn.size() < required_size || data.an.size() < required_size) {
-        throw std::out_of_range("The Sn or an smaller then required for wynn_rho_{" + utils::to_string(order) + "}^{" +
-                                utils::to_string(n) + "}\n" + "the size of Sn and an must be at least " +
-                                utils::to_string(required_size));
+        throw std::out_of_range("The Sn or an smaller then required for wynn_rho_{" +
+                                utils::helpers<K>::to_string(order) + "}^{" + utils::helpers<K>::to_string(n) + "}\n" +
+                                "the size of Sn and an must be at least " +
+                                utils::helpers<size_t>::to_string(required_size));
     }
     // For theory, see: Brezinski (1977), Chapter 4, Eq. (4.10)
     // Base cases: return partial sum for n=0 or order=0
@@ -199,14 +195,14 @@ inline T wynn_rho_algorithm<T, K>::operator()(const K n, const K order, const se
 
     const K base_size = order + static_cast<K>(1);
 
-    std::vector<T> rho_odd(base_size, utils::cast<T>(0.0, precision));  // vector for theta_(2n + 1)
+    std::vector<T> rho_odd(base_size, utils::cast<T, int>()(0, precision));  // vector for theta_(2n + 1)
     std::vector<T> rho_even(
-        base_size,
-        utils::cast<T>(0.0,
+        base_size, utils::cast<T, int>()(
+                       0,
                        precision));  // vector for theta_(2n), in the beginning it is theta_(-1) which is zero for all i
 
     T delta;  // temporary varaible
-    delta = utils::cast<T>(0.0, precision);
+    delta = utils::cast<T, int>()(0, precision);
 
     // init theta_(0)
     for (K j = static_cast<K>(0); j < base_size; ++j) rho_even[j] = data.Sn.at(n + j);
@@ -237,7 +233,7 @@ inline T wynn_rho_algorithm<T, K>::operator()(const K n, const K order, const se
         }
     }
 
-    if (!utils::isfinite(rho_even[0])) throw std::overflow_error("division by zero");
+    if (!utils::helpers<T>::isfinite(rho_even[0])) throw std::overflow_error("division by zero");
 
     return rho_even[0];
 }

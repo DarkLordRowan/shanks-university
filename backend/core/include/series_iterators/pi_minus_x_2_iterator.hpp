@@ -41,7 +41,9 @@ public:
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The value of (pi - x) / 2.
      */
-    T get_sum() const override { return (utils::cast<T>(std::numbers::pi) - this->x) * utils::cast<T>(0.5); }
+    T get_sum() const override {
+        return (utils::cast<T, double>()(std::numbers::pi) - this->x) * utils::cast<T, double>()(0.5);
+    }
 
     /**
      * @brief Validates the current evaluation point x.
@@ -49,14 +51,14 @@ public:
      * @return true if x is outside (0, pi) or non-finite, false otherwise.
      */
     bool is_invalid() const override {
-        using float_type = GetUnderlyingType<T>::value;
+        using float_type = real_of<T>::value;
 
         if constexpr (isComplexLike<T>::value) {
-            return !utils::isfinite(this->x) || this->x.real() <= utils::cast<float_type>(0) ||
-                   this->x.real() >= utils::cast<float_type>(std::numbers::pi);
+            return !utils::helpers<T>::isfinite(this->x) || this->x.real() <= utils::cast<float_type, int>()(0) ||
+                   this->x.real() >= utils::cast<float_type, double>()(std::numbers::pi);
         } else {
-            return !utils::isfinite(this->x) || this->x <= utils::cast<T>(0) ||
-                   this->x >= utils::cast<T>(std::numbers::pi);
+            return !utils::helpers<T>::isfinite(this->x) || this->x <= utils::cast<T, int>()(0) ||
+                   this->x >= utils::cast<T, double>()(std::numbers::pi);
         }
     }
 
@@ -67,7 +69,7 @@ public:
      */
     T next(K n, T& state) const override {
         // Fourier series term: sin(nx) / n for n >= 1
-        state = utils::sin(utils::cast<T>(n + 1) * this->x) / utils::cast<T>(n + 1);
+        state = utils::math<T>::sin(utils::cast<T, K>()(n + 1) * this->x) / utils::cast<T, K>()(n + 1);
         return state;
     }
 };

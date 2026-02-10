@@ -42,7 +42,8 @@ public:
      * @return T The value of 0.5 - (pi/4)*sin(x).
      */
     T get_sum() const override {
-        return utils::cast<T>(0.5) - utils::cast<T>(std::numbers::pi * 0.25) * utils::sin(this->x);
+        return utils::cast<T, double>()(0.5) -
+               utils::cast<T, double>()(std::numbers::pi * 0.25) * utils::math<T>::sin(this->x);
     }
 
     /**
@@ -51,13 +52,13 @@ public:
      * @return true if x is outside [0, pi/2] or non-finite, false otherwise.
      */
     bool is_invalid() const override {
-        using float_type = GetUnderlyingType<T>::value;
+        using float_type = real_of<T>::value;
         if constexpr (isComplexLike<T>::value) {
-            return !utils::isfinite(this->x) || this->x.real() < utils::cast<float_type>(0) ||
-                   this->x.real() > utils::cast<float_type>(0.5 * std::numbers::pi);
+            return !utils::helpers<T>::isfinite(this->x) || this->x.real() < utils::cast<float_type, int>()(0) ||
+                   this->x.real() > utils::cast<float_type, double>()(0.5 * std::numbers::pi);
         } else {
-            return !utils::isfinite(this->x) || this->x < utils::cast<T>(0) ||
-                   this->x > utils::cast<T>(0.5 * std::numbers::pi);
+            return !utils::helpers<T>::isfinite(this->x) || this->x < utils::cast<T, int>()(0) ||
+                   this->x > utils::cast<T, double>()(0.5 * std::numbers::pi);
         }
     }
 
@@ -68,11 +69,12 @@ public:
      */
     T next(K n, T& state) const override {
         // Specific term formula for the expansion of 0.5 - (pi/4)*sin(x)
-        state = utils::cos(
-                    utils::cast<T>(utils::fma(static_cast<size_t>(2), static_cast<size_t>(n), static_cast<size_t>(2))) *
-                    this->x) /
-                utils::cast<T>(utils::fma(static_cast<size_t>(2), static_cast<size_t>(n), static_cast<size_t>(1)) *
-                               utils::fma(static_cast<size_t>(2), static_cast<size_t>(n), static_cast<size_t>(3)));
+        state = utils::math<T>::cos(utils::cast<T, size_t>()(utils::math<size_t>::fma(
+                                        static_cast<size_t>(2), static_cast<size_t>(n), static_cast<size_t>(2))) *
+                                    this->x) /
+                utils::cast<T, size_t>()(
+                    utils::math<size_t>::fma(static_cast<size_t>(2), static_cast<size_t>(n), static_cast<size_t>(1)) *
+                    utils::math<size_t>::fma(static_cast<size_t>(2), static_cast<size_t>(n), static_cast<size_t>(3)));
         return state;
     }
 };

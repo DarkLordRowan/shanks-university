@@ -42,7 +42,8 @@ public:
      * @return T The value of -0.5 * ln(2 - 2*cos(x)).
      */
     T get_sum() const override {
-        return utils::cast<T>(-0.5) * utils::log(utils::cast<T>(2) - utils::cast<T>(2) * utils::cos(this->x));
+        return utils::cast<T, double>()(-0.5) *
+               utils::math<T>::log(utils::cast<T, int>()(2) - utils::cast<T, int>()(2) * utils::math<T>::cos(this->x));
     }
 
     /**
@@ -51,8 +52,9 @@ public:
      * @return true if |x| >= pi or non-finite, false otherwise.
      */
     bool is_invalid() const override {
-        using float_type = GetUnderlyingType<T>::value;
-        return !utils::isfinite(this->x) || utils::abs(this->x) >= utils::cast<float_type>(std::numbers::pi);
+        using float_type = real_of<T>::value;
+        return !utils::helpers<T>::isfinite(this->x) ||
+               utils::math<T>::abs(this->x) >= utils::cast<float_type, double>()(std::numbers::pi);
     }
 
     /**
@@ -62,7 +64,7 @@ public:
      */
     T next(K n, T& state) const override {
         // Fourier series term: cos((n+1)x) / (n+1)
-        state = utils::cos(utils::cast<T>(n + 1) * this->x) / utils::cast<T>(n + 1);
+        state = utils::math<T>::cos(utils::cast<T, K>()(n + 1) * this->x) / utils::cast<T, K>()(n + 1);
 
         return state;
     }

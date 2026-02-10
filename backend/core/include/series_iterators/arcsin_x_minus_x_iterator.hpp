@@ -40,7 +40,7 @@ public:
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The value of arcsin(x) - x.
      */
-    T get_sum() const override { return utils::asin(this->x) - this->x; }
+    T get_sum() const override { return utils::math<T>::asin(this->x) - this->x; }
 
     /**
      * @brief Validates the current evaluation point x.
@@ -48,8 +48,9 @@ public:
      * @return true if |x| > 1 or non-finite, false otherwise.
      */
     bool is_invalid() const override {
-        using float_type = GetUnderlyingType<T>::value;
-        return !utils::isfinite(this->x) || utils::abs(this->x) > utils::cast<float_type>(1.0);
+        using float_type = real_of<T>::value;
+        return !utils::helpers<T>::isfinite(this->x) ||
+               utils::math<T>::abs(this->x) > utils::cast<float_type, int>()(1);
     }
 
     /**
@@ -60,14 +61,16 @@ public:
     T next(K n, T& state) const override {
         // The expansion starts from the cubic term x^3 / 6
         if (n == 0)
-            state = utils::pow(this->x, utils::cast<T>(3)) / utils::cast<T>(6);
+            state = utils::math<T>::pow(this->x, utils::cast<T, int>()(3)) / utils::cast<T, int>()(6);
         else
             state *=
                 this->x * this->x *
-                utils::cast<T>(utils::fma(static_cast<size_t>(2), static_cast<size_t>(n), static_cast<size_t>(1)) *
-                               utils::fma(static_cast<size_t>(2), static_cast<size_t>(n), static_cast<size_t>(1))) /
-                utils::cast<T>(utils::fma(static_cast<size_t>(2), static_cast<size_t>(n), static_cast<size_t>(2)) *
-                               utils::fma(static_cast<size_t>(2), static_cast<size_t>(n), static_cast<size_t>(3)));
+                utils::cast<T, size_t>()(
+                    utils::math<size_t>::fma(static_cast<size_t>(2), static_cast<size_t>(n), static_cast<size_t>(1)) *
+                    utils::math<size_t>::fma(static_cast<size_t>(2), static_cast<size_t>(n), static_cast<size_t>(1))) /
+                utils::cast<T, size_t>()(
+                    utils::math<size_t>::fma(static_cast<size_t>(2), static_cast<size_t>(n), static_cast<size_t>(2)) *
+                    utils::math<size_t>::fma(static_cast<size_t>(2), static_cast<size_t>(n), static_cast<size_t>(3)));
         return state;
     }
 };

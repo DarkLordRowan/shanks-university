@@ -41,7 +41,7 @@ public:
      * @return T The value of the rational function at x.
      */
     T get_sum() const override {
-        return utils::cast<T>(1) / ((utils::cast<T>(2) - this->x) * (utils::cast<T>(3) + this->x));
+        return utils::cast<T, int>()(1) / ((utils::cast<T, int>()(2) - this->x) * (utils::cast<T, int>()(3) + this->x));
     }
 
     /**
@@ -50,8 +50,9 @@ public:
      * @return true if |x| >= 2 or non-finite, false otherwise.
      */
     bool is_invalid() const override {
-        using float_type = GetUnderlyingType<T>::value;
-        return !utils::isfinite(this->x) || utils::abs(this->x) >= utils::cast<float_type>(2.0);
+        using float_type = real_of<T>::value;
+        return !utils::helpers<T>::isfinite(this->x) ||
+               utils::math<T>::abs(this->x) >= utils::cast<float_type, int>()(2);
     }
 
     /**
@@ -61,11 +62,13 @@ public:
      */
     T next(K n, T& state) const override {
         // Formula for the n-th term based on partial fraction decomposition components
-        state = utils::pow(this->x, utils::cast<T>(n)) * utils::cast<T>(0.2) *
-                (utils::minus_one_raised_to_power_n<T, K>(n) *
-                     utils::cast<T>(utils::pow(static_cast<size_t>(2), static_cast<size_t>(n) + 1)) +
-                 utils::cast<T>(utils::pow(static_cast<size_t>(3), static_cast<size_t>(n) + 1))) /
-                utils::cast<T>(utils::pow(static_cast<size_t>(6), static_cast<size_t>(n) + 1));
+        state =
+            utils::math<T>::pow(this->x, utils::cast<T, K>()(n)) * utils::cast<T, double>()(0.2) *
+            (utils::math<T>::template minus_one_raised_to_power_n<K>(n) *
+                 utils::cast<T, size_t>()(
+                     utils::math<size_t>::pow(static_cast<size_t>(2), static_cast<size_t>(n) + 1)) +
+             utils::cast<T, size_t>()(utils::math<size_t>::pow(static_cast<size_t>(3), static_cast<size_t>(n) + 1))) /
+            utils::cast<T, size_t>()(utils::math<size_t>::pow(static_cast<size_t>(6), static_cast<size_t>(n) + 1));
 
         return state;
     }

@@ -12,9 +12,6 @@
 // Weniger, E.J. (1989). Nonlinear sequence transformations for the acceleration of convergence
 // and the summation of divergent series. Computer Physics Reports, 10(5-6), 189-371.
 // Weniger, E.J. (1992). Interpolation between sequence transformations. Numerical Algorithms, 3(1-4), 477-486.
-//
-
-#include "series_acceleration.hpp"
 
 namespace shanks {
 namespace algos {
@@ -70,12 +67,14 @@ template <AcceptedLike T, UnsignedIntLike K>
 T weniger_algorithm<T, K>::operator()(const K n, const K order, const series_result<T>& data) const {
     // Validation: ensure input vectors contain enough data for the specified order and base index
     const K required_size = n + order + static_cast<K>(1);
-    const size_t precision = std::max(utils::get_precision(data.Sn[0]), utils::get_precision(data.an[0]));
+    const size_t precision =
+        std::max(utils::helpers<T>::get_precision(data.Sn[0]), utils::helpers<T>::get_precision(data.an[0]));
 
     if (data.Sn.size() < required_size || data.an.size() < required_size) {
-        throw std::out_of_range("The Sn or an smaller then required for Weniger_{" + utils::to_string(order) + "}^{" +
-                                utils::to_string(n) + "}\n" + "the size of Sn and an must be at least " +
-                                utils::to_string(required_size));
+        throw std::out_of_range("The Sn or an smaller then required for Weniger_{" +
+                                utils::helpers<K>::to_string(order) + "}^{" + utils::helpers<K>::to_string(n) + "}\n" +
+                                "the size of Sn and an must be at least " +
+                                utils::helpers<size_t>::to_string(required_size));
     }
 
     // Trivial case: order 0 returns the original partial sum
@@ -83,8 +82,8 @@ T weniger_algorithm<T, K>::operator()(const K n, const K order, const series_res
 
     // For theory, see: Weniger (1989), Section 8.2, Eq. (8.2-7)
     // Weniger transformation as ratio of binomial sums with Pochhammer symbols
-    T numerator = utils::cast<T>(0.0, precision);
-    T denominator = utils::cast<T>(0.0, precision);
+    T numerator = utils::cast<T, int>()(0, precision);
+    T denominator = utils::cast<T, int>()(0, precision);
 
     // For theory, see: Weniger (1989), Eq. (8.2-7) term components
     T rest;  // Weight factor for current term: (-1)ʲ × C(order, j) × (β+n+j)ₖ₋₁
@@ -92,14 +91,15 @@ T weniger_algorithm<T, K>::operator()(const K n, const K order, const series_res
 
     // For theory, see: Weniger (1989), Eq. (8.2-7) weight factor
     // Initial Pochhammer-like term: (β+n)ₖ₋₁ with β=1, equivalent to (n+1)ₖ₋₁ = Γ(n+k)/Γ(n+1)
-    T coef = utils::cast<T>(1.0, precision);
+    T coef = utils::cast<T, int>()(1, precision);
 
     // For theory, see: Weniger (1989), Eq. (8.2-7) recursive computation
     // Initial binomial coefficient: C(order, 0) = 1
-    T binomial_coef = utils::cast<T>(utils::binomial_coefficient(n, static_cast<K>(0)), precision);
+    T binomial_coef = utils::cast<T, K>()(utils::math<K>::binomial_coefficient(n, static_cast<K>(0)), precision);
 
     // Precompute initial value: (1)ₖ₋₁ = (k-1)!
-    for (K m = static_cast<K>(0); m < order - static_cast<K>(1); ++m) coef *= utils::cast<T>(static_cast<K>(1) + m);
+    for (K m = static_cast<K>(0); m < order - static_cast<K>(1); ++m)
+        coef *= utils::cast<T, K>()(static_cast<K>(1) + m);
 
     K j1;
 
@@ -111,16 +111,16 @@ T weniger_algorithm<T, K>::operator()(const K n, const K order, const series_res
         // For theory, see: Weniger (1989), Eq. (8.2-7) term structure
         // Term sign: (-1)ʲ
 
-        rest = utils::cast<T>(1.0, precision);  // need to set precision before doing anything
-        rest *= utils::minus_one_raised_to_power_n<T, K>(j);
+        rest = utils::cast<T, int>()(1, precision);  // need to set precision before doing anything
+        rest *= utils::math<T>::template minus_one_raised_to_power_n<K>(j);
 
         // Binomial coefficient: C(order, j)
         rest *= binomial_coef;
 
         // For theory, see: Weniger (1989), Eq. (8.2-7) recursive binomial update
         // Update binomial coefficient: C(order, j+1) = C(order, j) × (order - j) / (j + 1)
-        binomial_coef *= utils::cast<T>(order - j, precision);
-        binomial_coef /= utils::cast<T>(j1, precision);
+        binomial_coef *= utils::cast<T, K>()(order - j, precision);
+        binomial_coef /= utils::cast<T, K>()(j1, precision);
 
         // For theory, see: Weniger (1989), Eq. (8.2-7) weight factor
         // Pochhammer symbol factor: (β+n+j)ₖ₋₁ with β=1
@@ -129,8 +129,8 @@ T weniger_algorithm<T, K>::operator()(const K n, const K order, const series_res
         // For theory, see: Weniger (1989), Eq. (8.2-7) recursive Pochhammer update
         // Update Pochhammer-like term: (β+n+j+1)ₖ₋₁ = (β+n+j)ₖ₋₁ × (β+n+j+order) / (β+n+j+1)
         // With β=1: (n+j+1)ₖ₋₁ = (n+j)ₖ₋₁ × (n+j+order) / (n+j+1)
-        coef *= utils::cast<T>(n + j + order, precision);
-        coef /= utils::cast<T>(n + j1, precision);
+        coef *= utils::cast<T, K>()(n + j + order, precision);
+        coef /= utils::cast<T, K>()(n + j1, precision);
 
         // For theory, see: Weniger (1989), Eq. (8.2-7) remainder estimate
         // Remainder estimate: ωₙ = Δsₙ = a_{n+1}, so 1/ωₙ = 1/a_{j+1}
@@ -150,7 +150,7 @@ T weniger_algorithm<T, K>::operator()(const K n, const K order, const series_res
     numerator /= denominator;
 
     // Check if the result is valid
-    if (!utils::isfinite(numerator)) throw std::overflow_error("division by zero");
+    if (!utils::helpers<T>::isfinite(numerator)) throw std::overflow_error("division by zero");
 
     return numerator;
 }

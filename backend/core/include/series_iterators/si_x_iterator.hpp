@@ -39,14 +39,23 @@ public:
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The value of the Sine Integral function at point x.
      */
-    T get_sum() const override { return utils::si_x(this->x); }
+    T get_sum() const override {
+        if constexpr (typename utils::math<T>::has_si_x{})
+            return utils::math<T>::si_x(this->x);
+        else
+#ifndef DEBUG
+            assert(false);
+#else
+            return utils::helpers<T>::get_nan();
+#endif
+    }
 
     /**
      * @brief Validates the current evaluation point x.
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return true if x is non-finite, false otherwise.
      */
-    bool is_invalid() const override { return !utils::isfinite(this->x); }
+    bool is_invalid() const override { return !utils::helpers<T>::isfinite(this->x); }
 
     /**
      * @brief Computes the next term in the Si(x) expansion.
@@ -59,10 +68,14 @@ public:
             state = this->x;
         else
             state *=
-                utils::cast<T>(-1) * this->x * this->x *
-                utils::cast<T>(utils::fma(static_cast<size_t>(2), static_cast<size_t>(n - 1), static_cast<size_t>(1))) /
-                utils::cast<T>(utils::fma(static_cast<size_t>(2), static_cast<size_t>(n), static_cast<size_t>(1)) * 2 *
-                               utils::fma(static_cast<size_t>(2), static_cast<size_t>(n), static_cast<size_t>(1)) * n);
+                utils::cast<T, int>()(-1) * this->x * this->x *
+                utils::cast<T, size_t>()(utils::math<size_t>::fma(static_cast<size_t>(2), static_cast<size_t>(n - 1),
+                                                                  static_cast<size_t>(1))) /
+                utils::cast<T, size_t>()(
+                    utils::math<size_t>::fma(static_cast<size_t>(2), static_cast<size_t>(n), static_cast<size_t>(1)) *
+                    2 *
+                    utils::math<size_t>::fma(static_cast<size_t>(2), static_cast<size_t>(n), static_cast<size_t>(1)) *
+                    n);
         return state;
     }
 };

@@ -40,7 +40,7 @@ public:
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The value of arctanh(x).
      */
-    T get_sum() const override { return utils::atanh(this->x); }
+    T get_sum() const override { return utils::math<T>::atanh(this->x); }
 
     /**
      * @brief Validates the current evaluation point x.
@@ -48,8 +48,9 @@ public:
      * @return true if |x| >= 1 or non-finite, false otherwise.
      */
     bool is_invalid() const override {
-        using float_type = GetUnderlyingType<T>::value;
-        return !utils::isfinite(this->x) || utils::abs(this->x) > utils::cast<float_type>(1.0);
+        using float_type = real_of<T>::value;
+        return !utils::helpers<T>::isfinite(this->x) ||
+               utils::math<T>::abs(this->x) > utils::cast<float_type, int>()(1);
     }
 
     /**
@@ -62,10 +63,11 @@ public:
         if (n == 0)
             state = this->x;
         else
-            state *=
-                this->x * this->x *
-                utils::cast<T>(utils::fma(static_cast<size_t>(2), static_cast<size_t>(n - 1), static_cast<size_t>(1))) /
-                utils::cast<T>(utils::fma(static_cast<size_t>(2), static_cast<size_t>(n), static_cast<size_t>(1)));
+            state *= this->x * this->x *
+                     utils::cast<T, size_t>()(utils::math<size_t>::fma(
+                         static_cast<size_t>(2), static_cast<size_t>(n - 1), static_cast<size_t>(1))) /
+                     utils::cast<T, size_t>()(utils::math<size_t>::fma(static_cast<size_t>(2), static_cast<size_t>(n),
+                                                                       static_cast<size_t>(1)));
         return state;
     }
 };

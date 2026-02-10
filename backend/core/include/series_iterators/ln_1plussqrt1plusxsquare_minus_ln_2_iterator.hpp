@@ -40,8 +40,9 @@ public:
      * @return T The value of the function at the current point x.
      */
     T get_sum() const override {
-        return utils::log(utils::cast<T>(1) + utils::sqrt(utils::cast<T>(1) + this->x * this->x)) -
-               utils::log(utils::cast<T>(2));
+        return utils::math<T>::log(utils::cast<T, int>()(1) +
+                                   utils::math<T>::sqrt(utils::cast<T, int>()(1) + this->x * this->x)) -
+               utils::math<T>::log(utils::cast<T, int>()(2));
     }
 
     /**
@@ -50,8 +51,9 @@ public:
      * @return true if |x| >= 1 or non-finite, false otherwise.
      */
     bool is_invalid() const override {
-        using float_type = GetUnderlyingType<T>::value;
-        return !utils::isfinite(this->x) || utils::abs(this->x) >= utils::cast<float_type>(1.0);
+        using float_type = real_of<T>::value;
+        return !utils::helpers<T>::isfinite(this->x) ||
+               utils::math<T>::abs(this->x) >= utils::cast<float_type, int>()(1);
     }
 
     /**
@@ -62,12 +64,13 @@ public:
     T next(K n, T& state) const override {
         // Recurrence relation for the Taylor expansion of ln(1 + sqrt(1 + x^2)) - ln(2)
         if (n == 0)
-            state = this->x * this->x * utils::cast<T>(0.25);
+            state = this->x * this->x * utils::cast<T, double>()(0.25);
         else
-            state *=
-                utils::cast<T>(-1) * this->x * this->x *
-                utils::cast<T>(utils::fma(static_cast<size_t>(2), static_cast<size_t>(n), static_cast<size_t>(1)) * n) /
-                utils::cast<T>(2 * (n + 1) * (n + 1));
+            state *= utils::cast<T, int>()(-1) * this->x * this->x *
+                     utils::cast<T, size_t>()(utils::math<size_t>::fma(static_cast<size_t>(2), static_cast<size_t>(n),
+                                                                       static_cast<size_t>(1)) *
+                                              n) /
+                     utils::cast<T, K>()(2 * (n + 1) * (n + 1));
         return state;
     }
 };

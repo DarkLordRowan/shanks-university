@@ -40,8 +40,8 @@ public:
      * @return T The value of the function at point x.
      */
     T get_sum() const override {
-        return utils::cast<T>(2) * utils::asin(this->x * utils::cast<T>(0.5)) *
-               utils::asin(this->x * utils::cast<T>(0.5));
+        return utils::cast<T, int>()(2) * utils::math<T>::asin(this->x * utils::cast<T, double>()(0.5)) *
+               utils::math<T>::asin(this->x * utils::cast<T, double>()(0.5));
     }
 
     /**
@@ -50,8 +50,9 @@ public:
      * @return true if |x| > 2 or non-finite, false otherwise.
      */
     bool is_invalid() const override {
-        using float_type = GetUnderlyingType<T>::value;
-        return !utils::isfinite(this->x) || utils::abs(this->x) > utils::cast<float_type>(2.0);
+        using float_type = real_of<T>::value;
+        return !utils::helpers<T>::isfinite(this->x) ||
+               utils::math<T>::abs(this->x) > utils::cast<float_type, int>()(2);
     }
 
     /**
@@ -62,11 +63,13 @@ public:
     T next(K n, T& state) const override {
         // Recurrence relation for the squared arcsin expansion terms
         if (n == 0)
-            state = this->x * this->x * utils::cast<T>(0.5);
+            state = this->x * this->x * utils::cast<T, double>()(0.5);
         else
-            state *= this->x * this->x * utils::cast<T>(n * n) /
-                     utils::cast<T>(utils::fma(static_cast<size_t>(2), static_cast<size_t>(n), static_cast<size_t>(1)) *
-                                    utils::fma(static_cast<size_t>(2), static_cast<size_t>(n), static_cast<size_t>(2)));
+            state *=
+                this->x * this->x * utils::cast<T, K>()(n * n) /
+                utils::cast<T, size_t>()(
+                    utils::math<size_t>::fma(static_cast<size_t>(2), static_cast<size_t>(n), static_cast<size_t>(1)) *
+                    utils::math<size_t>::fma(static_cast<size_t>(2), static_cast<size_t>(n), static_cast<size_t>(2)));
         return state;
     }
 };

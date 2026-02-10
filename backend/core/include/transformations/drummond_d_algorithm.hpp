@@ -12,11 +12,6 @@
  * @authors Naumov A.U.
  */
 
-#include <memory>
-
-#include "remainders.hpp"
-#include "series_acceleration.hpp"
-
 namespace shanks {
 namespace algos {
 
@@ -211,18 +206,19 @@ public:
 
 template <AcceptedLike T, UnsignedIntLike K>
 inline T drummond_d_algorithm<T, K>::calc_result(const K n, const K order, const series_result<T>& data) const {
-    const size_t precision = std::max(utils::get_precision(data.Sn[0]), utils::get_precision(data.an[0]));
+    const size_t precision =
+        std::max(utils::helpers<T>::get_precision(data.Sn[0]), utils::helpers<T>::get_precision(data.an[0]));
 
     T numerator, denominator, rest;
-    numerator = denominator = rest = utils::cast<T>(0.0, precision);
+    numerator = denominator = rest = utils::cast<T, int>()(0, precision);
 
     // For theory, see: Drummond (1976), Eq. (2.1)
     // D_n^{(k)} = [Σ_{j=0}^n (-1)^j C(n, j) w_{n,j} S_{n+j}] / [Σ_{j=0}^n (-1)^j C(n, j) w_{n,j}]
     // Core loop for the direct Drummond D-transformation formula
     for (K j = static_cast<K>(0); j <= order; ++j) {
         // Compute weight term: (-1)^j * C(n, j) * w_{n,j}
-        rest = utils::minus_one_raised_to_power_n<T, K>(j);
-        rest *= utils::cast<T>(utils::binomial_coefficient<K>(order, j), precision);
+        rest = utils::math<T>::template minus_one_raised_to_power_n<K>(j);
+        rest *= utils::cast<T, K>()(utils::math<K>::binomial_coefficient(order, j), precision);
         // Call the remainder strategy object
         rest *= remainder->operator()(n + j, n + j, data.an);
 
@@ -239,12 +235,13 @@ inline T drummond_d_algorithm<T, K>::calc_result(const K n, const K order, const
 
 template <AcceptedLike T, UnsignedIntLike K>
 inline T drummond_d_algorithm<T, K>::calc_result_rec(const K n, const K order, const series_result<T>& data) const {
-    const size_t precision = std::max(utils::get_precision(data.Sn[0]), utils::get_precision(data.an[0]));
+    const size_t precision =
+        std::max(utils::helpers<T>::get_precision(data.Sn[0]), utils::helpers<T>::get_precision(data.an[0]));
 
     // For theory, see: Sidi (2003), Section 9.5-5
     // Temporary vectors to store numerator and denominator coefficients for the recursive scheme
-    std::vector<T> Num = std::vector<T>(order + static_cast<K>(1), utils::cast<T>(0.0, precision));
-    std::vector<T> Denom = std::vector<T>(order + static_cast<K>(1), utils::cast<T>(0.0, precision));
+    std::vector<T> Num = std::vector<T>(order + static_cast<K>(1), utils::cast<T, int>()(0, precision));
+    std::vector<T> Denom = std::vector<T>(order + static_cast<K>(1), utils::cast<T, int>()(0, precision));
 
     // Initialize base values: N_j^{(0)} = w_{n,j} S_{n+j}, D_j^{(0)} = w_{n,j}
     for (K i = static_cast<K>(0); i < order + static_cast<K>(1); ++i) {
@@ -276,9 +273,10 @@ T drummond_d_algorithm<T, K>::operator()(const K n, const K order, const series_
         static_cast<K>(2) * static_cast<K>(remainder_type_in_use == shanks::remainders::remainder_type::v_wave_type);
 
     if (data.Sn.size() < required_size || data.an.size() < required_size) {
-        throw std::out_of_range("The Sn or an smaller then required for D_{" + utils::to_string(order) + "}^{" +
-                                utils::to_string(n) + "}\n" + "the size of Sn and an must be at least " +
-                                utils::to_string(required_size));
+        throw std::out_of_range("The Sn or an smaller then required for D_{" + utils::helpers<K>::to_string(order) +
+                                "}^{" + utils::helpers<K>::to_string(n) + "}\n" +
+                                "the size of Sn and an must be at least " +
+                                utils::helpers<size_t>::to_string(required_size));
     }
 
     // Trivial case: order 0 returns the original partial sum
@@ -289,7 +287,7 @@ T drummond_d_algorithm<T, K>::operator()(const K n, const K order, const series_
     // Branch to selected implementation strategy
     const T result = (use_recurrent_formula ? calc_result_rec(n, order, data) : calc_result(n, order, data));
 
-    if (!utils::isfinite(result)) throw std::overflow_error("division by zero");
+    if (!utils::helpers<T>::isfinite(result)) throw std::overflow_error("division by zero");
     return result;
 }
 

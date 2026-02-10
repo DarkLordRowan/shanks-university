@@ -17,38 +17,6 @@
 // Multistep epsilon-algorithm, Shanks' transformation, and Lotka-Volterra system by Hirota's method.
 // Mathematics of Computation.
 
-#include <eigen3/Eigen/Core>
-#include <eigen3/Eigen/Dense>
-
-#include "series_acceleration.hpp"
-
-#ifdef EIGEN_CORE_MODULE_H
-namespace Eigen {
-/**
- * @brief Template specialization of NumTraits for mpfr::mpreal to support Eigen integration.
- * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
- */
-template <>
-struct NumTraits<mpfr::mpreal>
-    : NumTraits<double>  // permits to get the epsilon, dummy_precision, lowest, highest functions
-{
-    typedef mpfr::mpreal Real;
-    typedef mpfr::mpreal NonInteger;
-    typedef mpfr::mpreal Nested;
-
-    enum {
-        IsComplex = 0,
-        IsInteger = 0,
-        IsSigned = 1,
-        RequireInitialization = 1,
-        ReadCost = 1,
-        AddCost = 3,
-        MulCost = 3
-    };
-};
-}  // namespace Eigen
-#endif
-
 namespace shanks {
 namespace algos {
 
@@ -99,12 +67,13 @@ template <AcceptedLike T, UnsignedIntLike K>
 T shanks_algorithm<T, K>::operator()(const K n, const K order, const series_result<T>& data) const {
     // Validation: required size is 2*order + n + 1
     const K required_size = static_cast<K>(2) * order + n + static_cast<K>(1);
-    const size_t precision = utils::get_precision(data.Sn[0]);
+    const size_t precision = utils::helpers<T>::get_precision(data.Sn[0]);
 
     if (data.Sn.size() < required_size) {
-        throw std::out_of_range("The Sn or an smaller then required for shanks_{" + utils::to_string(order) + "}^{" +
-                                utils::to_string(n) + "}\n" + "the size of Sn and an must be at least " +
-                                utils::to_string(required_size));
+        throw std::out_of_range("The Sn or an smaller then required for shanks_{" +
+                                utils::helpers<K>::to_string(order) + "}^{" + utils::helpers<K>::to_string(n) + "}\n" +
+                                "the size of Sn and an must be at least " +
+                                utils::helpers<size_t>::to_string(required_size));
     }
 
     // create matrix for further determinant calculation
@@ -113,7 +82,7 @@ T shanks_algorithm<T, K>::operator()(const K n, const K order, const series_resu
     matrix_template.resize(matrix_size, matrix_size);
 
     T upper_determinant, lower_determinant;
-    upper_determinant = lower_determinant = utils::cast<T>(0, precision);
+    upper_determinant = lower_determinant = utils::cast<T, int>()(0, precision);
 
     // Fill the common part of the matrices (rows 1 to order) with partial sum differences
     for (size_t row = 1; row < matrix_size; ++row)
@@ -125,13 +94,13 @@ T shanks_algorithm<T, K>::operator()(const K n, const K order, const series_resu
     upper_determinant += matrix_template.determinant();
 
     // Compute the lower determinant by filling the first row with ones
-    for (size_t col = 0; col < matrix_size; ++col) matrix_template(0, col) = utils::cast<T>(1, precision);
+    for (size_t col = 0; col < matrix_size; ++col) matrix_template(0, col) = utils::cast<T, int>()(1, precision);
     lower_determinant += matrix_template.determinant();
 
     // Final ratio yields the accelerated value
     const T result = upper_determinant / lower_determinant;
 
-    if (!utils::isfinite(result)) throw std::overflow_error("division by zero");
+    if (!utils::helpers<T>::isfinite(result)) throw std::overflow_error("division by zero");
 
     return result;
 }

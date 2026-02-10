@@ -43,14 +43,23 @@ public:
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The value of the lower incomplete Gamma function.
      */
-    T get_sum() const override { return utils::inc_gamma(this->x, alpha); }
+    T get_sum() const override {
+        if constexpr (typename utils::math<T>::has_inc_gamma{})
+            return utils::math<T>::inc_gamma(this->x, alpha);
+        else
+#ifndef DEBUG
+            assert(false);
+#else
+            return utils::helpers<T>::get_nan();
+#endif
+    }
 
     /**
      * @brief Validates the current evaluation point x.
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return true if x is non-finite, false otherwise.
      */
-    bool is_invalid() const override { return !utils::isfinite(this->x); }
+    bool is_invalid() const override { return !utils::helpers<T>::isfinite(this->x); }
 
     /**
      * @brief Computes the next term in the incomplete Gamma function expansion.
@@ -60,10 +69,10 @@ public:
     T next(K n, T& state) const override {
         // Recurrence relation for the series terms of gamma(alpha, x)
         if (n == 0)
-            state = utils::pow(this->x, alpha) / alpha;
+            state = utils::math<T>::pow(this->x, alpha) / alpha;
         else
-            state *= utils::cast<T>(-1) * this->x * (alpha + utils::cast<T>(n - 1)) /
-                     ((alpha + utils::cast<T>(n)) * utils::cast<T>(n));
+            state *= utils::cast<T, int>()(-1) * this->x * (alpha + utils::cast<T, K>()(n - 1)) /
+                     ((alpha + utils::cast<T, K>()(n)) * utils::cast<T, K>()(n));
 
         return state;
     }

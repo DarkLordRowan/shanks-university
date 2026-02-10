@@ -45,16 +45,19 @@ public:
     T get_sum() const override {
         if constexpr (isComplexLike<T>::value) {
             // Check periodicity/branch for complex numbers using the real part
-            if (this->x.real() <= utils::cast<T>(std::numbers::pi).real())
-                return utils::sin(this->x) - utils::cast<T>(2) / utils::cast<T>(std::numbers::pi);
+            if (this->x.real() <= utils::cast<T, double>()(std::numbers::pi).real())
+                return utils::math<T>::sin(this->x) -
+                       utils::cast<T, int>()(2) / utils::cast<T, double>()(std::numbers::pi);
         } else {
             // Standard real case
-            if (this->x <= utils::cast<T>(std::numbers::pi))
-                return utils::sin(this->x) - utils::cast<T>(2) / utils::cast<T>(std::numbers::pi);
+            if (this->x <= utils::cast<T, double>()(std::numbers::pi))
+                return utils::math<T>::sin(this->x) -
+                       utils::cast<T, int>()(2) / utils::cast<T, double>()(std::numbers::pi);
         }
 
         // Negative branch for absolute value
-        return utils::cast<T>(-1) * utils::sin(this->x) - utils::cast<T>(2) / utils::cast<T>(std::numbers::pi);
+        return utils::cast<T, int>()(-1) * utils::math<T>::sin(this->x) -
+               utils::cast<T, int>()(2) / utils::cast<T, double>()(std::numbers::pi);
     }
 
     /**
@@ -64,11 +67,12 @@ public:
      */
     bool is_invalid() const override {
         if constexpr (isComplexLike<T>::value) {
-            return !utils::isfinite(this->x) || this->x.real() < utils::cast<T>(0).real() ||
-                   this->x.real() > utils::cast<T>(2.0 * std::numbers::pi).real();
+            return !utils::helpers<T>::isfinite(this->x) ||
+                   this->x.real() < utils::cast<typename real_of<T>::value, int>()(0) ||
+                   this->x.real() > utils::cast<typename real_of<T>::value, double>()(2.0 * std::numbers::pi);
         } else {
-            return !utils::isfinite(this->x) || this->x < utils::cast<T>(0) ||
-                   this->x > utils::cast<T>(2.0 * std::numbers::pi);
+            return !utils::helpers<T>::isfinite(this->x) || this->x < utils::cast<T, int>()(0) ||
+                   this->x > utils::cast<T, double>()(2.0 * std::numbers::pi);
         }
     }
 
@@ -79,13 +83,14 @@ public:
      */
     T next(K n, T& state) const override {
         // Formula for the n-th term of the |sin(x)| Fourier series
-        state = utils::cast<T>(-4) *
-                utils::cos(
-                    utils::cast<T>(utils::fma(static_cast<size_t>(2), static_cast<size_t>(n), static_cast<size_t>(2))) *
-                    this->x) /
-                utils::cast<T>(utils::fma(static_cast<size_t>(2), static_cast<size_t>(n), static_cast<size_t>(1)) *
-                               utils::fma(static_cast<size_t>(2), static_cast<size_t>(n), static_cast<size_t>(3))) /
-                utils::cast<T>(std::numbers::pi);
+        state = utils::cast<T, int>()(-4) *
+                utils::math<T>::cos(utils::cast<T, size_t>()(utils::math<size_t>::fma(
+                                        static_cast<size_t>(2), static_cast<size_t>(n), static_cast<size_t>(2))) *
+                                    this->x) /
+                utils::cast<T, size_t>()(
+                    utils::math<size_t>::fma(static_cast<size_t>(2), static_cast<size_t>(n), static_cast<size_t>(1)) *
+                    utils::math<size_t>::fma(static_cast<size_t>(2), static_cast<size_t>(n), static_cast<size_t>(3))) /
+                utils::cast<T, double>()(std::numbers::pi);
 
         return state;
     }

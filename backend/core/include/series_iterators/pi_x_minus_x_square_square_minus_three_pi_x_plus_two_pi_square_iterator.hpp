@@ -41,18 +41,18 @@ public:
      * @return T The value of the piecewise function at current point x.
      */
     T get_sum() const override {
-        using float_type = GetUnderlyingType<T>::value;
+        using float_type = real_of<T>::value;
 
         if constexpr (isComplexLike<T>::value) {
-            if (this->x.real() <= utils::cast<float_type>(std::numbers::pi))
-                return utils::cast<T>(std::numbers::pi) * this->x - this->x * this->x;
+            if (this->x.real() <= utils::cast<float_type, double>()(std::numbers::pi))
+                return utils::cast<T, double>()(std::numbers::pi) * this->x - this->x * this->x;
         } else {
-            if (this->x <= utils::cast<T>(std::numbers::pi))
-                return utils::cast<T>(std::numbers::pi) * this->x - this->x * this->x;
+            if (this->x <= utils::cast<T, double>()(std::numbers::pi))
+                return utils::cast<T, double>()(std::numbers::pi) * this->x - this->x * this->x;
         }
 
-        return this->x * this->x - utils::cast<T>(3.0 * std::numbers::pi) * this->x +
-               utils::cast<T>(2.0 * std::numbers::pi) * utils::cast<T>(std::numbers::pi);
+        return this->x * this->x - utils::cast<T, double>()(3.0 * std::numbers::pi) * this->x +
+               utils::cast<T, double>()(2.0 * std::numbers::pi) * utils::cast<T, double>()(std::numbers::pi);
     }
 
     /**
@@ -61,14 +61,14 @@ public:
      * @return true if x is outside [0, 2pi] or non-finite, false otherwise.
      */
     bool is_invalid() const override {
-        using float_type = GetUnderlyingType<T>::value;
+        using float_type = real_of<T>::value;
 
         if constexpr (isComplexLike<T>::value) {
-            return !utils::isfinite(this->x) || this->x.real() < utils::cast<float_type>(0) ||
-                   this->x.real() > utils::cast<float_type>(2.0 * std::numbers::pi);
+            return !utils::helpers<T>::isfinite(this->x) || this->x.real() < utils::cast<float_type, int>()(0) ||
+                   this->x.real() > utils::cast<float_type, double>()(2.0 * std::numbers::pi);
         } else {
-            return !utils::isfinite(this->x) || this->x < utils::cast<T>(0) ||
-                   this->x > utils::cast<T>(2.0 * std::numbers::pi);
+            return !utils::helpers<T>::isfinite(this->x) || this->x < utils::cast<T, int>()(0) ||
+                   this->x > utils::cast<T, double>()(2.0 * std::numbers::pi);
         }
     }
 
@@ -79,14 +79,16 @@ public:
      */
     T next(K n, T& state) const override {
         // Formula for the odd harmonics of the Fourier sine series
-        state = utils::cast<T>(8) *
-                utils::sin(
-                    utils::cast<T>(utils::fma(static_cast<size_t>(2), static_cast<size_t>(n), static_cast<size_t>(1))) *
-                    this->x) /
-                (utils::cast<T>(std::numbers::pi) *
-                 utils::cast<T>(utils::fma(static_cast<size_t>(2), static_cast<size_t>(n), static_cast<size_t>(1)) *
-                                utils::fma(static_cast<size_t>(2), static_cast<size_t>(n), static_cast<size_t>(1)) *
-                                utils::fma(static_cast<size_t>(2), static_cast<size_t>(n), static_cast<size_t>(1))));
+        const size_t precision = utils::helpers<T>::get_precision(this->x);
+        state = utils::cast<T, int>()(8, precision) *
+                utils::math<T>::sin(utils::cast<T, size_t>()(utils::math<size_t>::fma(
+                                        static_cast<size_t>(2), static_cast<size_t>(n), static_cast<size_t>(1))) *
+                                    this->x) /
+                (utils::cast<T, double>()(std::numbers::pi, precision) *
+                 utils::cast<T, size_t>()(
+                     utils::math<size_t>::fma(static_cast<size_t>(2), static_cast<size_t>(n), static_cast<size_t>(1)) *
+                     utils::math<size_t>::fma(static_cast<size_t>(2), static_cast<size_t>(n), static_cast<size_t>(1)) *
+                     utils::math<size_t>::fma(static_cast<size_t>(2), static_cast<size_t>(n), static_cast<size_t>(1))));
         return state;
     }
 };

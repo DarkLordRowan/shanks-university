@@ -39,14 +39,14 @@ public:
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The value of sinh(x).
      */
-    T get_sum() const override { return utils::sinh(this->x); }
+    T get_sum() const override { return utils::math<T>::sinh(this->x); }
 
     /**
      * @brief Validates the current evaluation point x.
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return true if x is non-finite, false otherwise.
      */
-    bool is_invalid() const override { return !utils::isfinite(this->x); }
+    bool is_invalid() const override { return !utils::helpers<T>::isfinite(this->x); }
 
     /**
      * @brief Computes the next term in the sinh(x) Taylor expansion.
@@ -59,8 +59,9 @@ public:
             state = this->x;
         else
             state *= this->x * this->x /
-                     utils::cast<T>(utils::fma(static_cast<size_t>(2), static_cast<size_t>(n), static_cast<size_t>(1)) *
-                                    2 * n);
+                     utils::cast<T, size_t>()(utils::math<size_t>::fma(static_cast<size_t>(2), static_cast<size_t>(n),
+                                                                       static_cast<size_t>(1)) *
+                                              2 * n);
         return state;
     }
 };

@@ -39,14 +39,14 @@ public:
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The value of cosh(x).
      */
-    T get_sum() const override { return utils::cosh(this->x); }
+    T get_sum() const override { return utils::math<T>::cosh(this->x); }
 
     /**
      * @brief Validates the current evaluation point x.
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return true if x is non-finite, false otherwise.
      */
-    bool is_invalid() const override { return !utils::isfinite(this->x); }
+    bool is_invalid() const override { return !utils::helpers<T>::isfinite(this->x); }
 
     /**
      * @brief Computes the next term in the cosh(x) Taylor expansion.
@@ -56,9 +56,9 @@ public:
     T next(K n, T& state) const override {
         // Recurrence logic for the even-power terms of the cosh expansion
         if (n == 0)
-            state = utils::cast<T>(1, utils::get_precision(state));
+            state = utils::cast<T, int>()(1, utils::helpers<T>::get_precision(state));
         else
-            state *= this->x * this->x / utils::cast<T>(n * (size_t{4} * n - size_t{2}));
+            state *= this->x * this->x / utils::cast<T, size_t>()(n * (size_t{4} * n - size_t{2}));
         return state;
     }
 };

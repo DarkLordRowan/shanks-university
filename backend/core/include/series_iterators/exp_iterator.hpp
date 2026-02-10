@@ -39,14 +39,14 @@ public:
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The value of exp(x).
      */
-    T get_sum() const override { return utils::exp(this->x); }
+    T get_sum() const override { return utils::math<T>::exp(this->x); }
 
     /**
      * @brief Validates the current evaluation point x.
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return true if x is non-finite, false otherwise.
      */
-    bool is_invalid() const override { return !utils::isfinite(this->x); }
+    bool is_invalid() const override { return !utils::helpers<T>::isfinite(this->x); }
 
     /**
      * @brief Computes the next term in the exp(x) Taylor expansion.
@@ -56,9 +56,9 @@ public:
     T next(K n, T& state) const override {
         // Each term is x^n / n!, computed recursively from the previous term
         if (n == 0)
-            state = utils::cast<T>(1, utils::get_precision(state));
+            state = utils::cast<T, int>()(1, utils::helpers<T>::get_precision(state));
         else
-            state *= this->x / utils::cast<T>(n);
+            state *= this->x / utils::cast<T, K>()(n);
         return state;
     }
 };

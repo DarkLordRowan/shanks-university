@@ -41,14 +41,23 @@ public:
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The value of the product exp(x^2) * erf(x).
      */
-    T get_sum() const override { return utils::erf(this->x) * utils::exp(this->x * this->x); }
+    T get_sum() const override {
+        if constexpr (typename utils::math<T>::has_erf{})
+            return utils::math<T>::erf(this->x) * utils::math<T>::exp(this->x * this->x);
+        else
+#ifndef DEBUG
+            assert(false);
+#else
+            return utils::helpers<T>::get_nan();
+#endif
+    }
 
     /**
      * @brief Validates the current evaluation point x.
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return true if x is non-finite, false otherwise.
      */
-    bool is_invalid() const override { return !utils::isfinite(this->x); }
+    bool is_invalid() const override { return !utils::helpers<T>::isfinite(this->x); }
 
     /**
      * @brief Computes the next term in the exp(x^2) * erf(x) expansion.
@@ -58,10 +67,12 @@ public:
     T next(K n, T& state) const override {
         // Recurrence relation for the power series expansion of exp(x^2)*erf(x)
         if (n == 0)
-            state = utils::cast<T>(2) * this->x / utils::sqrt(utils::cast<T>(std::numbers::pi));
+            state =
+                utils::cast<T, int>()(2) * this->x / utils::math<T>::sqrt(utils::cast<T, double>()(std::numbers::pi));
         else
-            state *= utils::cast<T>(2) * this->x * this->x /
-                     utils::cast<T>(utils::fma(static_cast<size_t>(2), static_cast<size_t>(n), static_cast<size_t>(1)));
+            state *= utils::cast<T, int>()(2) * this->x * this->x /
+                     utils::cast<T, size_t>()(utils::math<size_t>::fma(static_cast<size_t>(2), static_cast<size_t>(n),
+                                                                       static_cast<size_t>(1)));
         return state;
     }
 };

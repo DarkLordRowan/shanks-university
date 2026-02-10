@@ -43,7 +43,15 @@ public:
      * @return T The value of (sqrt(pi)/2) * erf(x).
      */
     T get_sum() const override {
-        return utils::sqrt(utils::cast<T>(std::numbers::pi)) * utils::erf(this->x) * utils::cast<T>(0.5);
+        if constexpr (typename utils::math<T>::has_erf{})
+            return utils::math<T>::sqrt(utils::cast<T, double>()(std::numbers::pi)) * utils::math<T>::erf(this->x) *
+                   utils::cast<T, double>()(0.5);
+        else
+#ifndef DEBUG
+            assert(false);
+#else
+            return utils::helpers<T>::get_nan();
+#endif
     }
 
     /**
@@ -51,7 +59,7 @@ public:
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return true if x is non-finite, false otherwise.
      */
-    bool is_invalid() const override { return !utils::isfinite(this->x); }
+    bool is_invalid() const override { return !utils::helpers<T>::isfinite(this->x); }
 
     /**
      * @brief Computes the next term in the erf(x) Taylor expansion.
@@ -64,9 +72,11 @@ public:
             state = this->x;
         else
             state *=
-                utils::cast<T>(-1) * this->x * this->x *
-                utils::cast<T>(utils::fma(static_cast<size_t>(2), static_cast<size_t>(n - 1), static_cast<size_t>(1))) /
-                utils::cast<T>(n * utils::fma(static_cast<size_t>(2), static_cast<size_t>(n), static_cast<size_t>(1)));
+                utils::cast<T, int>()(-1) * this->x * this->x *
+                utils::cast<T, size_t>()(utils::math<size_t>::fma(static_cast<size_t>(2), static_cast<size_t>(n - 1),
+                                                                  static_cast<size_t>(1))) /
+                utils::cast<T, size_t>()(n * utils::math<size_t>::fma(static_cast<size_t>(2), static_cast<size_t>(n),
+                                                                      static_cast<size_t>(1)));
         return state;
     }
 };

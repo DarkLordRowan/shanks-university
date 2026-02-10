@@ -40,7 +40,8 @@ public:
      * @return T The value of sqrt((1 - sqrt(1 - x)) / x).
      */
     T get_sum() const override {
-        return utils::sqrt((utils::cast<T>(1) - utils::sqrt(utils::cast<T>(1) - this->x)) / this->x);
+        return utils::math<T>::sqrt(
+            (utils::cast<T, int>()(1) - utils::math<T>::sqrt(utils::cast<T, int>()(1) - this->x)) / this->x);
     }
 
     /**
@@ -49,9 +50,9 @@ public:
      * @return true if |x| >= 1, x is zero, or x is non-finite; false otherwise.
      */
     bool is_invalid() const override {
-        using float_type = GetUnderlyingType<T>::value;
-        return !utils::isfinite(this->x) || this->x == utils::cast<T>(0) ||
-               utils::abs(this->x) >= utils::cast<float_type>(1);
+        using float_type = real_of<T>::value;
+        return !utils::helpers<T>::isfinite(this->x) || this->x == utils::cast<T, int>()(0) ||
+               utils::math<T>::abs(this->x) >= utils::cast<float_type, int>()(1);
     }
 
     /**
@@ -62,15 +63,18 @@ public:
     T next(K n, T& state) const override {
         // First term corresponds to the limit at x -> 0, subsequent terms are calculated recursively
         if (n == 0)
-            state = utils::cast<T>(1, utils::get_precision(state)) /
-                    utils::sqrt(utils::cast<T>(2, utils::get_precision(state)));
+            state = utils::cast<T, int>()(1, utils::helpers<T>::get_precision(state)) /
+                    utils::math<T>::sqrt(utils::cast<T, int>()(2, utils::helpers<T>::get_precision(state)));
         else
             state *=
                 this->x *
-                utils::cast<T>(utils::fma(static_cast<size_t>(4), static_cast<size_t>(n - 1), static_cast<size_t>(1)) *
-                               utils::fma(static_cast<size_t>(4), static_cast<size_t>(n - 1), static_cast<size_t>(3))) /
-                utils::cast<T>(8 * n *
-                               utils::fma(static_cast<size_t>(2), static_cast<size_t>(n), static_cast<size_t>(1)));
+                utils::cast<T, size_t>()(utils::math<size_t>::fma(static_cast<size_t>(4), static_cast<size_t>(n - 1),
+                                                                  static_cast<size_t>(1)) *
+                                         utils::math<size_t>::fma(static_cast<size_t>(4), static_cast<size_t>(n - 1),
+                                                                  static_cast<size_t>(3))) /
+                utils::cast<T, size_t>()(
+                    8 * n *
+                    utils::math<size_t>::fma(static_cast<size_t>(2), static_cast<size_t>(n), static_cast<size_t>(1)));
         return state;
     }
 };

@@ -39,7 +39,9 @@ public:
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The value of -ln(1 - x).
      */
-    T get_sum() const override { return utils::cast<T>(-1) * utils::log(utils::cast<T>(1) - this->x); }
+    T get_sum() const override {
+        return utils::cast<T, int>()(-1) * utils::math<T>::log(utils::cast<T, int>()(1) - this->x);
+    }
 
     /**
      * @brief Validates the current evaluation point x.
@@ -47,8 +49,9 @@ public:
      * @return true if |x| >= 1 or non-finite, false otherwise.
      */
     bool is_invalid() const override {
-        using float_type = GetUnderlyingType<T>::value;
-        return !utils::isfinite(this->x) || utils::abs(this->x) >= utils::cast<float_type>(1.0);
+        using float_type = real_of<T>::value;
+        return !utils::helpers<T>::isfinite(this->x) ||
+               utils::math<T>::abs(this->x) >= utils::cast<float_type, int>()(1);
     }
 
     /**
@@ -61,7 +64,7 @@ public:
         if (n == 0)
             state = this->x;
         else
-            state *= this->x * utils::cast<T>(n) / utils::cast<T>(n + 1);
+            state *= this->x * utils::cast<T, K>()(n) / utils::cast<T, K>()(n + 1);
         return state;
     }
 };

@@ -1,0 +1,76 @@
+#ifndef UTILS_HELPERS_STD_INTEGRAL_HPP
+#define UTILS_HELPERS_STD_INTEGRAL_HPP
+#pragma once
+
+template <std::integral T>
+struct utils::helpers<T> {
+    static T nextafter(const T& x, const T& y);
+    static T fmod(const T& x, const T& y);
+    static T floor(const T& x);
+    static T ceil(const T& x);
+    static T get_nan();
+    static std::size_t get_precision(const T& x);
+    static std::string to_string(const T& x);
+    static bool isfinite(const T& x);
+    static bool isnan(const T& x);
+    static bool isinf(const T& x);
+    static T epsilon(std::size_t precision = std::size_t{0});
+    static T numeric_max(std::size_t precision = std::size_t{0});
+};
+
+template <std::integral T>
+T utils::helpers<T>::nextafter(const T& x, const T& y) {
+    return std::nextafter(x, y);
+}
+
+template <std::integral T>
+T utils::helpers<T>::fmod(const T& x, const T& y) {
+    return std::fmod(x, y);
+}
+template <std::integral T>
+T utils::helpers<T>::floor(const T& x) {
+    return std::floor(x);
+}
+template <std::integral T>
+T utils::helpers<T>::ceil(const T& x) {
+    return std::ceil(x);
+}
+
+template <std::integral T>
+T utils::helpers<T>::get_nan() {
+    return std::nan("");
+}
+
+template <std::integral T>
+std::size_t utils::helpers<T>::get_precision(const T& x) {
+    return std::size_t{0};
+}
+
+template <std::integral T>
+std::string utils::helpers<T>::to_string(const T& x) {
+    return std::to_string(x);
+}
+
+template <std::integral T>
+bool utils::helpers<T>::isfinite(const T& x) {
+    return std::isfinite(x);
+}
+template <std::integral T>
+bool utils::helpers<T>::isnan(const T& x) {
+    return std::isnan(x);
+}
+template <std::integral T>
+bool utils::helpers<T>::isinf(const T& x) {
+    return std::isinf(x);
+}
+
+template <std::integral T>
+T utils::helpers<T>::epsilon(std::size_t precision) {
+    return std::numeric_limits<T>::epsilon();
+}
+template <std::integral T>
+T utils::helpers<T>::numeric_max(std::size_t precision) {
+    return std::numeric_limits<T>::max();
+}
+
+#endif

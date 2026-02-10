@@ -2,12 +2,6 @@
 #define KOLMOGOROV_ZURBENKO_HPP
 #pragma once
 
-#include <vector>
-
-#include "../custom_concepts.hpp"
-#include "../utils/utils_cast.hpp"
-#include "../utils/utils_get_precision.hpp"
-
 /**
  * @file kolmogorov_zurbenko.hpp
  * @brief Kolmogorov-Zurbenko filter implementation.
@@ -30,7 +24,7 @@ std::vector<Scalar> kolmogorov_zurbenko_filter(const std::vector<Scalar>& data, 
 ) {
     const size_t m = window_length, k = degree;
     const size_t size = (m - 1) * k + 1;
-    const size_t precision = utils::get_precision(data.at(0));
+    const size_t precision = utils::helpers<Scalar>::get_precision(data.at(0));
     std::vector<int> coeffs = std::vector<int>(size, 0);
     coeffs[0] = coeffs[size - 1] = 1;
 
@@ -39,25 +33,25 @@ std::vector<Scalar> kolmogorov_zurbenko_filter(const std::vector<Scalar>& data, 
     for (size_t l{1}; l < middle_coeff; ++l) {
         for (size_t i{0}; m * i <= l; ++i) {
             const size_t j = (l > m * i ? l - m * i : 0);
-            coeffs[l] += (1 - 2 * static_cast<int>(i & 1)) * utils::binomial_coefficient(k, i) *
-                         utils::binomial_coefficient(k + j - 1, j);
+            coeffs[l] += (1 - 2 * static_cast<int>(i & 1)) * utils::math<size_t>::binomial_coefficient(k, i) *
+                         utils::math<size_t>::binomial_coefficient(k + j - 1, j);
             coeffs[size - 1 - l] = coeffs[l];
         }
     }
 
     // Preparing vectors for convolution and handling arbitrary precision
-    std::vector<Scalar> zur_coeffs(size, utils::cast<Scalar>(0.0, precision));
+    std::vector<Scalar> zur_coeffs(size + 1, utils::cast<Scalar, int>()(0, precision));
     const size_t N_pad = size / 2;
-    std::vector<Scalar> padded_vector(data.size() + N_pad * 2, utils::cast<Scalar>(0.0, precision));
-    std::vector<Scalar> result(data.size(), utils::cast<Scalar>(0.0, precision));
+    std::vector<Scalar> padded_vector(data.size() + N_pad * 2, utils::cast<Scalar, int>()(0, precision));
+    std::vector<Scalar> result(data.size(), utils::cast<Scalar, int>()(0, precision));
 
     // Convolution with padding: adding 0 at the start, rest 0 on the end
     std::copy(data.begin(), data.end(), padded_vector.begin() + N_pad);
 
     // Normalizing coefficients for the filter
     for (size_t i{0}; i < coeffs.size(); ++i) {
-        zur_coeffs[i] += utils::cast<Scalar>(coeffs[i], precision);
-        zur_coeffs[i] /= utils::cast<Scalar>(utils::pow(m, k), precision);
+        zur_coeffs[i] += utils::cast<Scalar, int>()(coeffs[i], precision);
+        zur_coeffs[i] /= utils::cast<Scalar, size_t>()(utils::math<size_t>::pow(m, k), precision);
     }
 
     // Applying the convolution to produce the filtered result

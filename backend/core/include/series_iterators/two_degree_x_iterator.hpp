@@ -39,14 +39,16 @@ public:
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The value of 2^x.
      */
-    T get_sum() const override { return utils::pow(utils::cast<T>(2), this->x); }
+    T get_sum() const override {
+        return utils::math<T>::pow(utils::cast<T, int>()(2, utils::helpers<T>::get_precision(this->x)), this->x);
+    }
 
     /**
      * @brief Validates the current evaluation point x.
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return true if x is non-finite, false otherwise.
      */
-    bool is_invalid() const override { return !utils::isfinite(this->x); }
+    bool is_invalid() const override { return !utils::helpers<T>::isfinite(this->x); }
 
     /**
      * @brief Computes the next term in the 2^x Taylor expansion.
@@ -55,10 +57,11 @@ public:
      */
     T next(K n, T& state) const override {
         // Each term is (x * ln(2))^n / n!, computed recursively
+        const size_t precision = utils::helpers<T>::get_precision(this->x);
         if (n == 0)
-            state = utils::cast<T>(1, utils::get_precision(state));
+            state = utils::cast<T, int>()(1, precision);
         else
-            state *= this->x * utils::log(utils::cast<T>(2)) / utils::cast<T>(n);
+            state *= this->x * utils::math<T>::log(utils::cast<T, int>()(2, precision)) / utils::cast<T, K>()(n);
         return state;
     }
 };

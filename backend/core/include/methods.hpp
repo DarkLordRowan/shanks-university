@@ -32,6 +32,14 @@ enum class transformation_id_t {
 #include <string>
 #include <vector>
 
+// clang-format off
+// Critical section
+#include "utils.hpp"
+#include "wynn_numerators.hpp"
+#include "remainders.hpp"
+#include "series_acceleration.hpp"
+// clang-format on
+
 #include "transformations/anderson_acceleration_algorithm.hpp"
 #include "transformations/brezinski_theta_algorithm.hpp"
 #include "transformations/chang_wynn_algorithm.hpp"

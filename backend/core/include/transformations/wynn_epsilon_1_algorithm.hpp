@@ -15,8 +15,6 @@
 // slowly convergent series based on the use of rational functions.
 // Numerische Mathematik, 4(1), 8-14.
 
-#include "series_acceleration.hpp"
-
 namespace shanks {
 namespace algos {
 
@@ -79,12 +77,12 @@ template <AcceptedLike T, UnsignedIntLike K>
 T wynn_epsilon_1_algorithm<T, K>::operator()(const K n, const K order, const series_result<T>& data) const {
     // Ensure we have enough data points: 2*order + n + 1 terms are required
     const K required_size = n + static_cast<K>(2) * order + static_cast<K>(1);
-    const size_t precision = utils::get_precision(data.Sn[0]);
+    const size_t precision = utils::helpers<T>::get_precision(data.Sn[0]);
 
     if (data.Sn.size() < required_size) {
-        throw std::out_of_range("The Sn smaller then required for wynn_epsilon_1_{" + utils::to_string(order) + "}^{" +
-                                utils::to_string(n) + "}\n" + "the size of Sn must be at least " +
-                                utils::to_string(required_size));
+        throw std::out_of_range("The Sn smaller then required for wynn_epsilon_1_{" +
+                                utils::helpers<K>::to_string(order) + "}^{" + utils::helpers<K>::to_string(n) + "}\n" +
+                                "the size of Sn must be at least " + utils::helpers<size_t>::to_string(required_size));
     }
 
     if (n == static_cast<K>(0)) throw std::domain_error("n = 0 in the input");
@@ -99,8 +97,8 @@ T wynn_epsilon_1_algorithm<T, K>::operator()(const K n, const K order, const ser
 
     // Initialize epsilon tables: e0 for current column, e1 for next column
     // For theory, see: Wynn (1956), Section 3 - Table construction
-    std::vector<T> e0(max_ind + static_cast<K>(1), utils::cast<T>(0.0, precision));
-    std::vector<T> e1(max_ind, utils::cast<T>(0.0, precision));
+    std::vector<T> e0(max_ind + static_cast<K>(1), utils::cast<T, int>()(0, precision));
+    std::vector<T> e1(max_ind, utils::cast<T, int>()(0, precision));
 
     auto e0_add = &e0;  // Pointer to current epsilon column
     auto e1_add = &e1;  // Pointer to next epsilon column
@@ -118,7 +116,7 @@ T wynn_epsilon_1_algorithm<T, K>::operator()(const K n, const K order, const ser
     for (K i = static_cast<K>(0); i < m; ++i) {
         for (K j = n1; j < max_ind; ++j) {
             // Compute εₖ₊₁⁽ʲ⁾ using the recurrence relation
-            (*e1_add)[j] += utils::cast<T>(1.0, precision) / ((*e0_add)[j + static_cast<K>(1)] - (*e0_add)[j]);
+            (*e1_add)[j] += utils::cast<T, int>()(1, precision) / ((*e0_add)[j + static_cast<K>(1)] - (*e0_add)[j]);
         }
 
         --max_ind;                           // Reduce working range for next iteration
@@ -128,7 +126,7 @@ T wynn_epsilon_1_algorithm<T, K>::operator()(const K n, const K order, const ser
 
     // Check for numerical stability
     // For theory, see: Wynn (1956), Section 4 - Numerical considerations
-    if (!utils::isfinite((*e0_add)[n1])) throw std::overflow_error("division by zero");
+    if (!utils::helpers<T>::isfinite((*e0_add)[n1])) throw std::overflow_error("division by zero");
 
     // Return the final transformed value (even-order epsilon transform)
     // For theory, see: Wynn (1956), Section 2 - ε₂ₖ⁽ⁿ⁾ as accelerated approximations

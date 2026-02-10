@@ -40,7 +40,7 @@ public:
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The value of cos(sqrt(x)).
      */
-    T get_sum() const override { return utils::cos(utils::sqrt(this->x)); }
+    T get_sum() const override { return utils::math<T>::cos(utils::math<T>::sqrt(this->x)); }
 
     /**
      * @brief Validates the current evaluation point x.
@@ -49,9 +49,10 @@ public:
      */
     bool is_invalid() const override {
         if constexpr (isComplexLike<T>::value) {
-            return !utils::isfinite(this->x) || this->x.real() <= utils::cast<T>(0).real();
+            return !utils::helpers<T>::isfinite(this->x) ||
+                   this->x.real() <= utils::cast<typename real_of<T>::value, int>()(0);
         } else {
-            return !utils::isfinite(this->x) || this->x < utils::cast<T>(0);
+            return !utils::helpers<T>::isfinite(this->x) || this->x < utils::cast<T, int>()(0);
         }
     }
 
@@ -63,12 +64,13 @@ public:
     T next(K n, T& state) const override {
         // First term is 1.0, subsequent terms derived from the cos Taylor expansion with u = sqrt(x)
         if (n == 0)
-            state = utils::cast<T>(1, utils::get_precision(state));
+            state = utils::cast<T, int>()(1, utils::helpers<T>::get_precision(state));
         else
             state *=
-                utils::cast<T>(-1) * this->x /
-                utils::cast<T>(2 * n *
-                               utils::fma(static_cast<size_t>(2), static_cast<size_t>(n - 1), static_cast<size_t>(1)));
+                utils::cast<T, int>()(-1) * this->x /
+                utils::cast<T, size_t>()(2 * n *
+                                         utils::math<size_t>::fma(static_cast<size_t>(2), static_cast<size_t>(n - 1),
+                                                                  static_cast<size_t>(1)));
         return state;
     }
 };

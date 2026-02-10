@@ -39,7 +39,7 @@ public:
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The value of 1 / (1 - x).
      */
-    T get_sum() const override { return utils::cast<T>(1) / (utils::cast<T>(1) - this->x); }
+    T get_sum() const override { return utils::cast<T, int>()(1) / (utils::cast<T, int>()(1) - this->x); }
 
     /**
      * @brief Validates the current evaluation point x.
@@ -47,8 +47,9 @@ public:
      * @return true if |x| >= 1 or non-finite, false otherwise.
      */
     bool is_invalid() const override {
-        using float_type = GetUnderlyingType<T>::value;
-        return !utils::isfinite(this->x) || utils::abs(this->x) > utils::cast<float_type>(1.0);
+        using float_type = real_of<T>::value;
+        return !utils::helpers<T>::isfinite(this->x) ||
+               utils::math<T>::abs(this->x) > utils::cast<float_type, int>()(1);
     }
 
     /**
@@ -59,7 +60,7 @@ public:
     T next(K n, T& state) const override {
         // Terms of the geometric series are powers of x
         if (n == 0)
-            state = utils::cast<T>(1, utils::get_precision(state));
+            state = utils::cast<T, int>()(1, utils::helpers<T>::get_precision(state));
         else
             state *= this->x;
         return state;

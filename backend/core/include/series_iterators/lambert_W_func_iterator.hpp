@@ -42,7 +42,16 @@ public:
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The value of the principal branch of the Lambert W function.
      */
-    T get_sum() const override { return utils::lambertW0(this->x); }
+    T get_sum() const override {
+        if constexpr (typename utils::math<T>::has_lambertW0{})
+            return utils::math<T>::lambertW0(this->x);
+        else
+#ifndef DEBUG
+            assert(false);
+#else
+            return utils::helpers<T>::get_nan();
+#endif
+    }
 
     /**
      * @brief Validates the current evaluation point x.
@@ -50,9 +59,10 @@ public:
      * @return true if |x| > 1/e or non-finite, false otherwise.
      */
     bool is_invalid() const override {
-        using float_type = GetUnderlyingType<T>::value;
-        return !utils::isfinite(this->x) ||
-               utils::abs(this->x) > utils::cast<float_type>(1) / utils::cast<float_type>(std::numbers::e);
+        using float_type = real_of<T>::value;
+        return !utils::helpers<T>::isfinite(this->x) ||
+               utils::math<T>::abs(this->x) >
+                   utils::cast<float_type, int>()(1) / utils::cast<float_type, double>()(std::numbers::e);
     }
 
     /**
@@ -65,7 +75,7 @@ public:
         if (n == 0)
             state = this->x;
         else
-            state *= utils::cast<T>(-1) * this->x / utils::cast<T>(n);
+            state *= utils::cast<T, int>()(-1) * this->x / utils::cast<T, K>()(n);
         return state;
     }
 };

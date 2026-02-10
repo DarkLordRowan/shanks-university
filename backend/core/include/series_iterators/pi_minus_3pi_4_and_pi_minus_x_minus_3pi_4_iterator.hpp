@@ -42,15 +42,16 @@ public:
      * @return T The value of the piecewise function at current point x.
      */
     T get_sum() const override {
-        using float_type = GetUnderlyingType<T>::value;
+        using float_type = real_of<T>::value;
 
         if constexpr (isComplexLike<T>::value) {
-            if (this->x.real() <= utils::cast<float_type>(0)) return utils::cast<T>(0.25 * std::numbers::pi);
+            if (this->x.real() <= utils::cast<float_type, int>()(0))
+                return utils::cast<T, double>()(0.25 * std::numbers::pi);
         } else {
-            if (this->x <= utils::cast<T>(0)) return utils::cast<T>(0.25 * std::numbers::pi);
+            if (this->x <= utils::cast<T, int>()(0)) return utils::cast<T, double>()(0.25 * std::numbers::pi);
         }
 
-        return utils::cast<T>(0.25 * std::numbers::pi) - this->x;
+        return utils::cast<T, double>()(0.25 * std::numbers::pi) - this->x;
     }
 
     /**
@@ -59,8 +60,9 @@ public:
      * @return true if |x| >= pi or non-finite, false otherwise.
      */
     bool is_invalid() const override {
-        using float_type = GetUnderlyingType<T>::value;
-        return !utils::isfinite(this->x) || utils::abs(this->x) >= utils::cast<float_type>(std::numbers::pi);
+        using float_type = real_of<T>::value;
+        return !utils::helpers<T>::isfinite(this->x) ||
+               utils::math<T>::abs(this->x) >= utils::cast<float_type, double>()(std::numbers::pi);
     }
 
     /**
@@ -70,12 +72,13 @@ public:
      */
     T next(K n, T& state) const override {
         // General Fourier term formula involving alternating cosine and sine components
+        const size_t precision = utils::helpers<T>::get_precision(this->x);
         const K n1 = n + 1;
-        state = utils::cos(utils::cast<T>(n1) * this->x) *
-                    (utils::cast<T>(1) + utils::minus_one_raised_to_power_n<T, K>(n)) /
-                    (utils::cast<T>(std::numbers::pi) * utils::cast<T>(n1 * n1)) +
-                utils::sin(utils::cast<T>(n1) * this->x) * utils::minus_one_raised_to_power_n<T, K>(n1) /
-                    utils::cast<T>(n1);
+        state = utils::math<T>::cos(utils::cast<T, K>()(n1) * this->x) *
+                    (utils::cast<T, int>()(1, precision) + utils::math<T>::template minus_one_raised_to_power_n<K>(n)) /
+                    (utils::cast<T, double>()(std::numbers::pi) * utils::cast<T, K>()(n1 * n1)) +
+                utils::math<T>::sin(utils::cast<T, K>()(n1) * this->x) *
+                    utils::math<T>::template minus_one_raised_to_power_n<K>(n1) / utils::cast<T, K>()(n1);
         return state;
     }
 };

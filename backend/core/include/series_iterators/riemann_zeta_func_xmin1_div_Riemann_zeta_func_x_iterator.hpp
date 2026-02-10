@@ -40,7 +40,16 @@ public:
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The value of the ratio zeta(s-1) / zeta(s).
      */
-    T get_sum() const override { return utils::zeta(this->x - utils::cast<T>(1.0)) / utils::zeta(this->x); }
+    T get_sum() const override {
+        if constexpr (typename utils::math<T>::has_zeta{})
+            return utils::math<T>::zeta(this->x - utils::cast<T, int>()(1)) / utils::math<T>::zeta(this->x);
+        else
+#ifndef DEBUG
+            assert(false);
+#else
+            return utils::helpers<T>::get_nan();
+#endif
+    }
 
     /**
      * @brief Validates the current evaluation point x (s).
@@ -48,12 +57,12 @@ public:
      * @return true if Re(x) <= 2 or x is non-finite, false otherwise.
      */
     bool is_invalid() const override {
-        using float_type = GetUnderlyingType<T>::value;
+        using float_type = real_of<T>::value;
 
         if constexpr (isComplexLike<T>::value) {
-            return !utils::isfinite(this->x) || this->x.real() <= utils::cast<float_type>(2);
+            return !utils::helpers<T>::isfinite(this->x) || this->x.real() <= utils::cast<float_type, int>()(2);
         } else {
-            return !utils::isfinite(this->x) || this->x <= utils::cast<T>(2);
+            return !utils::helpers<T>::isfinite(this->x) || this->x <= utils::cast<T, int>()(2);
         }
     }
 
@@ -64,7 +73,9 @@ public:
      */
     T next(K n, T& state) const override {
         // Dirichlet series term involving Euler's totient function
-        state = utils::phi<T, K>(n + 1) / utils::pow(utils::cast<T>(n + 1, utils::get_precision(state)), this->x);
+        const size_t precision = utils::helpers<T>::get_precision(this->x);
+        state = utils::cast<T, K>()(utils::math<K>::phi(n + 1), precision) /
+                utils::math<T>::pow(utils::cast<T, K>()(n + 1, precision), this->x);
         return state;
     }
 };

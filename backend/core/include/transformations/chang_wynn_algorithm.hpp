@@ -14,10 +14,6 @@
 // Construction of new generalizations of Wynn's epsilon and rho algorithm by solving
 // finite difference equations in the transformation order. Numerical Algorithms.
 
-#include <vector>
-
-#include "series_acceleration.hpp"
-
 namespace shanks {
 namespace algos {
 
@@ -84,11 +80,12 @@ template <AcceptedLike T, UnsignedIntLike K>
 T chang_wynn_algorithm<T, K>::operator()(const K n, const K /*order*/, const series_result<T>& data) const {
     // Ensure we have enough data points (Sn and an) to proceed
     const K required_size = n + static_cast<K>(1);
-    const size_t precision = utils::get_precision(data.Sn[0]);
+    const size_t precision = utils::helpers<T>::get_precision(data.Sn[0]);
 
     if (data.Sn.size() < required_size || data.an.size() < required_size) {
-        throw std::out_of_range("The Sn or an smaller then required for chann_wynn_{" + utils::to_string(n) + "}\n" +
-                                "the size of Sn and an must be at least " + utils::to_string(required_size));
+        throw std::out_of_range("The Sn or an smaller then required for chann_wynn_{" +
+                                utils::helpers<K>::to_string(n) + "}\n" + "the size of Sn and an must be at least " +
+                                utils::helpers<size_t>::to_string(required_size));
     }
 
     // For theory, see: Ford & Sidi (1987), Section 1 - Input validation
@@ -96,19 +93,18 @@ T chang_wynn_algorithm<T, K>::operator()(const K n, const K /*order*/, const ser
     if (n == static_cast<K>(0)) throw std::domain_error("n = 0 in the input");
 
     T up, down, coef, coef2;
-    up = down = coef = coef2 = utils::cast<T>(0.0, precision);
+    up = down = coef = coef2 = utils::cast<T, int>()(0, precision);
 
     // For theory, see: Wynn (1956), Section 3 (Algorithm)
     // Epsilon table structure: two rows to store intermediate transformations.
     std::vector<std::vector<T>> e(
-        2,
-        std::vector<T>(
-            n, utils::cast<T>(
-                   0.0, precision)));  // Two vectors of length n containing Epsilon table (current and previous rows).
+        2, std::vector<T>(
+               n, utils::cast<T, int>()(
+                      0, precision)));  // Two vectors of length n containing Epsilon table (current and previous rows).
 
     // For theory, see: Chang et al. (2019), Eq. (3.20d)
     // Vector F stores intermediate factors F₁⁽ⁿ⁾ used in the recursion.
-    std::vector<T> f(n, utils::cast<T>(0.0, precision));  // Vector for containing F results from index 0 to n-1.
+    std::vector<T> f(n, utils::cast<T, int>()(0, precision));  // Vector for containing F results from index 0 to n-1.
 
     K i1, i2, i3, k1;
     K max = n - (n & static_cast<K>(1));  // Ensure max index is even for stability
@@ -119,7 +115,7 @@ T chang_wynn_algorithm<T, K>::operator()(const K n, const K /*order*/, const ser
     for (K i = static_cast<K>(0); i < max; ++i) {
         // For theory, see: Wynn (1956), Eq. (2.8)
         // ε₁⁽ⁿ⁾ = 1 / ΔSₙ for n >= 0.
-        e[0][i] += utils::cast<T>(1.0, precision) / (data.an.at(i + static_cast<K>(1)));
+        e[0][i] += utils::cast<T, int>()(1, precision) / (data.an.at(i + static_cast<K>(1)));
     }
 
     // For theory, see: Chang et al. (2019), Eq. (3.20d)
@@ -134,10 +130,12 @@ T chang_wynn_algorithm<T, K>::operator()(const K n, const K /*order*/, const ser
         // For theory, see: Chang et al. (2019), Eq. (3.20c)
         // T₂⁽ⁿ⁾ = T₀⁽ⁿ⁺¹⁾ - [ΔT₀⁽ⁿ⁾ ΔT₀⁽ⁿ⁺¹⁾ Δ²T₀⁽ⁿ⁺¹⁾] / [ΔT₀⁽ⁿ⁺²⁾ Δ²T₀⁽ⁿ⁾ - ΔT₀⁽ⁿ⁾ Δ²T₀⁽ⁿ⁺¹⁾]
         // Compute second differences: Δ²S_{n+1} = S_{n+3} - 2S_{n+2} + S_{n+1}
-        coef = utils::fma(utils::cast<T>(-2.0, precision), data.Sn.at(i2), data.Sn.at(i3) + data.Sn.at(i1));
+        coef =
+            utils::math<T>::fma(utils::cast<T, int>()(-2, precision), data.Sn.at(i2), data.Sn.at(i3) + data.Sn.at(i1));
 
         // Compute Δ²S_n = S_{n+2} - 2S_{n+1} + S_n
-        coef2 = utils::fma(utils::cast<T>(-2.0, precision), data.Sn.at(i1), data.Sn.at(i2) + data.Sn.at(i));
+        coef2 =
+            utils::math<T>::fma(utils::cast<T, int>()(-2, precision), data.Sn.at(i1), data.Sn.at(i2) + data.Sn.at(i));
 
         // Numerator: ΔS_n * ΔS_{n+1} * Δ²S_{n+1}
         up = data.an.at(i1);
@@ -147,10 +145,10 @@ T chang_wynn_algorithm<T, K>::operator()(const K n, const K /*order*/, const ser
         // Denominator: ΔS_{n+2} * Δ²S_n - ΔS_n * Δ²S_{n+1}
         down = data.an.at(i3) * coef2;
         down -= data.an.at(i1) * coef;
-        down = utils::cast<T>(1.0, precision) / down;  // Reciprocal for division.
+        down = utils::cast<T, int>()(1, precision) / down;  // Reciprocal for division.
 
         // Compute T₂⁽ⁿ⁾ = S_{n+1} - (up * down)
-        e[1][i] = utils::fma(-up, down, data.Sn.at(i1));
+        e[1][i] = utils::math<T>::fma(-up, down, data.Sn.at(i1));
 
         // Compute F₁⁽ⁿ⁾ = Δ²S_{n+1} * Δ²S_n * down
         f[i] += coef * coef2 * down;
@@ -167,19 +165,19 @@ T chang_wynn_algorithm<T, K>::operator()(const K n, const K /*order*/, const ser
 
             // Numerator: 1 - k + k * F₁⁽ⁿ⁾
             // Calculate numerator based on Chang's modified formula
-            up = utils::fma(utils::cast<T>(k, precision), f[i], utils::cast<T>(k1, precision));
+            up = utils::math<T>::fma(utils::cast<T, K>()(k, precision), f[i], utils::cast<T, K>()(k1, precision));
 
             // Denominator: 1 / (Tₖ⁽ⁿ⁺¹⁾ - Tₖ⁽ⁿ⁾)
             // Reciprocal of the difference between current level terms
-            down = utils::cast<T>(1.0, precision);
+            down = utils::cast<T, int>()(1, precision);
             down /= (e[1][i1] - e[1][i]);
 
             // Tₖ₊₁⁽ⁿ⁾ = Tₖ₋₁⁽ⁿ⁺¹⁾ + (up * down)
             // Combine with previous level results
-            e[0][i] = utils::fma(up, down, e[0][i1]);
+            e[0][i] = utils::math<T>::fma(up, down, e[0][i1]);
 
             // Check for numerical breakdown (e.g., division by zero)
-            if (!utils::isfinite(e[0][i])) {
+            if (!utils::helpers<T>::isfinite(e[0][i])) {
                 max = k + i1;  // Cap the calculation to avoid further corruption
                 break;
             }
@@ -190,7 +188,7 @@ T chang_wynn_algorithm<T, K>::operator()(const K n, const K /*order*/, const ser
     }
 
     // Final validation of the result
-    if (!utils::isfinite(e[max & static_cast<K>(1)][0])) throw std::overflow_error("division by zero");
+    if (!utils::helpers<T>::isfinite(e[max & static_cast<K>(1)][0])) throw std::overflow_error("division by zero");
 
     return e[max & static_cast<K>(1)][0];
 }

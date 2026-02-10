@@ -1,7 +1,28 @@
 #include "../include/bindings.hpp"
+#include "../../core/include/lib.hpp"
+
+namespace py = pybind11;
 
 void bind_types(py::module_& m) {
+
 #ifdef SHANKS_ENABLE_PROFILING
+    // 0. Bind profiling utils if enabled
+    py::class_<shanks::profiling::OperationCounts>(m, "OperationCounts")
+        .def_readonly("add", &shanks::profiling::OperationCounts::add)
+        .def_readonly("mul", &shanks::profiling::OperationCounts::mul)
+        .def_readonly("div", &shanks::profiling::OperationCounts::div)
+        .def_readonly("special", &shanks::profiling::OperationCounts::special)
+        .def("__repr__", [](const shanks::profiling::OperationCounts& oc) {
+            std::ostringstream oss;
+            oss << "OperationCounts(add=" << oc.add << ", mul=" << oc.mul << ", div=" << oc.div
+                << ", special=" << oc.special << ")";
+            return oss.str();
+        });
+
+    m.def("reset_operation_counts", &shanks::profiling::reset_counts);
+    m.def("get_operation_counts", &shanks::profiling::get_counts);
+
+
     auto bind_real_props = []<typename T>(py::class_<OP<T>>& c) {
         c.def(py::self + py::self)
             .def(py::self - py::self)
@@ -16,21 +37,18 @@ void bind_types(py::module_& m) {
             .def(py::self != py::self)
             .def("__abs__",
                  [](const OP<T>& self) {
-                     using shanks::profiling::abs;
                      return abs(self);
                  })
             .def("__pow__",
                  [](const OP<T>& self, const OP<T>& exp) {
-                     using shanks::profiling::pow;
                      return pow(self, exp);
                  })
             .def("sqrt",
                  [](const OP<T>& self) {
-                     using shanks::profiling::sqrt;
                      return sqrt(self);
                  })
-            .def("__hash__", [](const OP<T>& self) { return py::hash(py::str(shanks::profiling::to_string(self))); })
-            .def("__repr__", [](const OP<T>& self) { return shanks::profiling::to_string(self); })
+            .def("__hash__", [](const OP<T>& self) { return py::hash(py::str(utils::helpers<OP<T>>::to_string(self))); })
+            .def("__repr__", [](const OP<T>& self) { return utils::helpers<OP<T>>::to_string(self); })
             .def(py::pickle([](const OP<T>& num) { return num.value; }, [](T val) { return OP<T>(val); }));
     };
 
@@ -70,8 +88,7 @@ void bind_types(py::module_& m) {
                                     }))
                     .def("__repr__", [](const std::complex<OP<float>>& c) {
                         std::ostringstream oss;
-                        oss << "CF32(" << shanks::profiling::to_string(c.real()) << ", "
-                            << shanks::profiling::to_string(c.imag()) << ")";
+                        oss << "CF32" + utils::helpers<OP<std::complex<OP<float>>>>::to_string(c);
                         return oss.str();
                     });
     bind_complex_props(cf32);
@@ -84,8 +101,7 @@ void bind_types(py::module_& m) {
                 [](py::tuple t) { return std::complex<OP<double>>(t[0].cast<OP<double>>(), t[1].cast<OP<double>>()); }))
             .def("__repr__", [](const std::complex<OP<double>>& c) {
                 std::ostringstream oss;
-                oss << "CF64(" << shanks::profiling::to_string(c.real()) << ", "
-                    << shanks::profiling::to_string(c.imag()) << ")";
+                oss << "CF64" + utils::helpers<OP<std::complex<OP<double>>>>::to_string(c);
                 return oss.str();
             });
     bind_complex_props(cf64);
@@ -100,8 +116,7 @@ void bind_types(py::module_& m) {
                             }))
             .def("__repr__", [](const std::complex<OP<long double>>& c) {
                 std::ostringstream oss;
-                oss << "CFLong(" << shanks::profiling::to_string(c.real()) << ", "
-                    << shanks::profiling::to_string(c.imag()) << ")";
+                oss << "CFLong" + utils::helpers<OP<std::complex<OP<long double>>>>::to_string(c);
                 return oss.str();
             });
     bind_complex_props(cfLong);
@@ -121,25 +136,22 @@ void bind_types(py::module_& m) {
         .def(py::self == py::self)
         .def(py::self != py::self)
         .def("__abs__",
-             [](const shanks::profiling::OperationCounting<mpfr::mpreal>& self) {
-                 using shanks::profiling::abs;
+             [](const OP<mpfr::mpreal>& self) {
                  return abs(self);
              })
         .def("__pow__",
-             [](const shanks::profiling::OperationCounting<mpfr::mpreal>& self,
-                const shanks::profiling::OperationCounting<mpfr::mpreal>& exp) {
-                 using shanks::profiling::pow;
+             [](const OP<mpfr::mpreal>& self,
+                const OP<mpfr::mpreal>& exp) {
                  return pow(self, exp);
              })
         .def("sqrt",
-             [](const shanks::profiling::OperationCounting<mpfr::mpreal>& self) {
-                 using shanks::profiling::sqrt;
+             [](const OP<mpfr::mpreal>& self) {
                  return sqrt(self);
              })
         .def("__hash__",
-             [](const OP<mpfr::mpreal>& self) { return py::hash(py::str(shanks::profiling::to_string(self))); })
-        .def("__repr__", [](const OP<mpfr::mpreal>& self) { return shanks::profiling::to_string(self); })
-        .def(py::pickle([](const OP<mpfr::mpreal>& num) { return shanks::profiling::to_string(num); },
+             [](const OP<mpfr::mpreal>& self) { return py::hash(py::str(utils::helpers<OP<mpfr::mpreal>>::to_string(self))); })
+        .def("__repr__", [](const OP<mpfr::mpreal>& self) { return utils::helpers<OP<mpfr::mpreal>>::to_string(self); })
+        .def(py::pickle([](const OP<mpfr::mpreal>& num) { return utils::helpers<OP<mpfr::mpreal>>::to_string(num); },
                         [](std::string s) { return OP<mpfr::mpreal>(s); }));
 
     auto cArb =
@@ -153,8 +165,7 @@ void bind_types(py::module_& m) {
                             }))
             .def("__repr__", [](const std::complex<OP<mpfr::mpreal>>& c) {
                 std::ostringstream oss;
-                oss << "CArb(" << shanks::profiling::to_string(c.real()) << ", "
-                    << shanks::profiling::to_string(c.imag()) << ")";
+                oss << "CArb" + utils::helpers<std::complex<OP<mpfr::mpreal>>>::to_string(c);
                 return oss.str();
             });
     bind_complex_props(cArb);

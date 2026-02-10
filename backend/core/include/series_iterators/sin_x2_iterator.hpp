@@ -39,14 +39,14 @@ public:
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The value of sin(x^2).
      */
-    T get_sum() const override { return utils::sin(this->x * this->x); }
+    T get_sum() const override { return utils::math<T>::sin(this->x * this->x); }
 
     /**
      * @brief Validates the current evaluation point x.
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return true if x is non-finite, false otherwise.
      */
-    bool is_invalid() const override { return !utils::isfinite(this->x); }
+    bool is_invalid() const override { return !utils::helpers<T>::isfinite(this->x); }
 
     /**
      * @brief Computes the next term in the sin(x^2) Taylor expansion.
@@ -58,9 +58,10 @@ public:
         if (n == 0)
             state = this->x * this->x;
         else
-            state *= utils::cast<T>(-1) * utils::pow(this->x, utils::cast<T>(4)) /
-                     utils::cast<T>(utils::fma(static_cast<size_t>(2), static_cast<size_t>(n), static_cast<size_t>(1)) *
-                                    2 * n);
+            state *= utils::cast<T, int>()(-1) * utils::math<T>::pow(this->x, utils::cast<T, int>()(4)) /
+                     utils::cast<T, size_t>()(utils::math<size_t>::fma(static_cast<size_t>(2), static_cast<size_t>(n),
+                                                                       static_cast<size_t>(1)) *
+                                              2 * n);
         return state;
     }
 };

@@ -40,7 +40,7 @@ public:
      * @return T The value of ln(1+x) / (1+x^2).
      */
     T get_sum() const override {
-        return utils::log(utils::cast<T>(1) + this->x) / (utils::cast<T>(1) + this->x * this->x);
+        return utils::math<T>::log(utils::cast<T, int>()(1) + this->x) / (utils::cast<T, int>()(1) + this->x * this->x);
     }
 
     /**
@@ -49,8 +49,9 @@ public:
      * @return true if |x| >= 1 or non-finite, false otherwise.
      */
     bool is_invalid() const override {
-        using float_type = GetUnderlyingType<T>::value;
-        return !utils::isfinite(this->x) || utils::abs(this->x) >= utils::cast<float_type>(1.0);
+        using float_type = real_of<T>::value;
+        return !utils::helpers<T>::isfinite(this->x) ||
+               utils::math<T>::abs(this->x) >= utils::cast<float_type, int>()(1);
     }
 
     /**
@@ -61,9 +62,9 @@ public:
     T next(K n, T& state) const override {
         // Terms are generated based on the combined expansion logic for the quotient
         if (n == 0)
-            state = this->x / (utils::cast<T>(1) + this->x * this->x);
+            state = this->x / (utils::cast<T, int>()(1) + this->x * this->x);
         else
-            state *= utils::cast<T>(-1) * this->x * utils::cast<T>(n) / (utils::cast<T>(n + 1));
+            state *= utils::cast<T, int>()(-1) * this->x * utils::cast<T, K>()(n) / (utils::cast<T, K>()(n + 1));
         return state;
     }
 };

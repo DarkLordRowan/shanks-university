@@ -39,14 +39,18 @@ public:
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The value of x * 2 * ln(2).
      */
-    T get_sum() const override { return this->x * utils::log(utils::cast<T>(4)); }
+    T get_sum() const override {
+        return this->x * utils::math<T>::log(utils::cast<T, int>()(4, utils::helpers<T>::get_precision(this->x)));
+    }
 
     /**
      * @brief Validates the current evaluation point x.
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return true if x is non-finite, false otherwise.
      */
-    bool is_invalid() const override { return !utils::isfinite(this->x) || this->x == utils::cast<T>(0); }
+    bool is_invalid() const override {
+        return !utils::helpers<T>::isfinite(this->x) || this->x == utils::cast<T, int>()(0);
+    }
 
     /**
      * @brief Computes the next term in the series expansion.
@@ -56,7 +60,8 @@ public:
     T next(K n, T& state) const override {
         const K n1 = n + 1;
         // Formula for the n-th term of the specific series expansion
-        state = utils::cast<T>(12 * n1 * n1 - 1) * this->x / utils::cast<T>(n1 * (4 * n1 * n1 - 1) * (4 * n1 * n1 - 1));
+        state = utils::cast<T, K>()(12 * n1 * n1 - 1) * this->x /
+                utils::cast<T, K>()(n1 * (4 * n1 * n1 - 1) * (4 * n1 * n1 - 1));
         return state;
     }
 };

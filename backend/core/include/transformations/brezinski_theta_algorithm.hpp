@@ -14,10 +14,6 @@
 // Weniger, E. J. (2003). Nonlinear Sequence Transformations for the Acceleration of
 // Convergence and the Summation of Divergent Series. Computer Physics Reports, 1(1), 1-123.
 
-#include <vector>
-
-#include "series_acceleration.hpp"
-
 namespace shanks {
 namespace algos {
 
@@ -79,13 +75,13 @@ template <AcceptedLike T, UnsignedIntLike K>
 T brezinski_theta_algorithm<T, K>::operator()(const K n, const K order, const series_result<T>& data) const {
     // Calculate the number of terms required from the Sn vector
     const K required_size = static_cast<K>(3) * order / static_cast<K>(2) + static_cast<K>(1) + n;
-    const size_t precision = utils::get_precision(data.Sn[0]);
+    const size_t precision = utils::helpers<T>::get_precision(data.Sn[0]);
 
     // Check if enough data is available in the partial sums vector
     if (data.Sn.size() < required_size) {
-        throw std::out_of_range("The Sn is smaller then required for theta_{" + utils::to_string(order) + "}^{" +
-                                utils::to_string(n) + "}\n" + "the size of Sn must be at least " +
-                                utils::to_string(required_size));
+        throw std::out_of_range("The Sn is smaller then required for theta_{" + utils::helpers<K>::to_string(order) +
+                                "}^{" + utils::helpers<K>::to_string(n) + "}\n" + "the size of Sn must be at least " +
+                                utils::helpers<size_t>::to_string(required_size));
     }
 
     // For theory, see: Brezinski (2003), Section 10.2, Theorem 10.2.1
@@ -106,9 +102,9 @@ T brezinski_theta_algorithm<T, K>::operator()(const K n, const K order, const se
     const K base_size = static_cast<K>(3) * order / static_cast<K>(2) + static_cast<K>(1);
 
     // theta_odd and theta_even store intermediate results of the recursive transformation
-    std::vector<T> theta_odd(base_size, utils::cast<T>(0.0, precision));
-    std::vector<T> theta_even(base_size, utils::cast<T>(0.0, precision));
-    T delta = utils::cast<T>(0.0, precision);
+    std::vector<T> theta_odd(base_size, utils::cast<T, int>()(0, precision));
+    std::vector<T> theta_even(base_size, utils::cast<T, int>()(0, precision));
+    T delta = utils::cast<T, int>()(0, precision);
 
     // Initialization: theta_0,j = S_j
     for (K j = static_cast<K>(0); j < base_size; ++j) {
@@ -127,7 +123,7 @@ T brezinski_theta_algorithm<T, K>::operator()(const K n, const K order, const se
             delta = theta_even[j1] - theta_even[j];
 
             // theta_2k+1,j = theta_2k+1,j+1 + 1 / (theta_2k,j+1 - theta_2k,j)
-            theta_odd[j] = utils::fma(theta_odd[j1], delta, utils::cast<T>(1.0, precision));
+            theta_odd[j] = utils::math<T>::fma(theta_odd[j1], delta, utils::cast<T, int>()(1, precision));
             theta_odd[j] /= delta;
         }
 
@@ -144,7 +140,7 @@ T brezinski_theta_algorithm<T, K>::operator()(const K n, const K order, const se
     }
 
     // Final check for validity of the result
-    if (!utils::isfinite(theta_even[0])) throw std::overflow_error("division by zero");
+    if (!utils::helpers<T>::isfinite(theta_even[0])) throw std::overflow_error("division by zero");
 
     return theta_even[0];
 }

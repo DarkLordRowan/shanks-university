@@ -39,14 +39,14 @@ public:
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The value of cos(x).
      */
-    T get_sum() const override { return utils::cos(this->x); }
+    T get_sum() const override { return utils::math<T>::cos(this->x); }
 
     /**
      * @brief Validates the current evaluation point x.
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return true if x is non-finite, false otherwise.
      */
-    bool is_invalid() const override { return !utils::isfinite(this->x); }
+    bool is_invalid() const override { return !utils::helpers<T>::isfinite(this->x); }
 
     /**
      * @brief Computes the next term in the cos(x) Taylor expansion.
@@ -56,10 +56,10 @@ public:
     T next(K n, T& state) const override {
         // Recurrence logic for the alternating even-power terms of the cosine expansion
         if (n == 0)
-            state = utils::cast<T>(1, utils::get_precision(state));
+            state = utils::cast<T, int>()(1, utils::helpers<T>::get_precision(state));
         else
-            state *= utils::cast<T>(-1) * this->x * this->x /
-                     utils::cast<T>(n * (static_cast<K>(4) * n - static_cast<K>(2)));
+            state *= utils::cast<T, int>()(-1) * this->x * this->x /
+                     utils::cast<T, K>()(n * (static_cast<K>(4) * n - static_cast<K>(2)));
         return state;
     }
 };

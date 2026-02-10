@@ -44,7 +44,8 @@ public:
      * @return T The value of m! / (1 - x)^(m + 1).
      */
     T get_sum() const override {
-        return utils::cast<T>(utils::fact<K>(m)) / utils::pow(utils::cast<T>(1) - this->x, utils::cast<T>(m + 1));
+        return utils::cast<T, K>()(utils::math<K>::fact(m)) /
+               utils::math<T>::pow(utils::cast<T, int>()(1) - this->x, utils::cast<T, K>()(m + 1));
     }
 
     /**
@@ -53,8 +54,9 @@ public:
      * @return true if |x| >= 1 or non-finite, false otherwise.
      */
     bool is_invalid() const override {
-        using float_type = GetUnderlyingType<T>::value;
-        return !utils::isfinite(this->x) || utils::abs(this->x) >= utils::cast<float_type>(1.0);
+        using float_type = real_of<T>::value;
+        return !utils::helpers<T>::isfinite(this->x) ||
+               utils::math<T>::abs(this->x) >= utils::cast<float_type, int>()(1);
     }
 
     /**
@@ -65,9 +67,9 @@ public:
     T next(K n, T& state) const override {
         // Recurrence relation based on the binomial coefficients for the m-th derivative of 1/(1-x)
         if (n == 0)
-            state = utils::cast<T>(utils::fact<K>(m), utils::get_precision(state));
+            state = utils::cast<T, K>()(utils::math<K>::fact(m), utils::helpers<T>::get_precision(state));
         else
-            state *= this->x * utils::cast<T>(m + static_cast<K>(n)) / utils::cast<T>(n);
+            state *= this->x * utils::cast<T, K>()(m + static_cast<K>(n)) / utils::cast<T, K>()(n);
         return state;
     }
 };
