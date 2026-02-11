@@ -1,122 +1,35 @@
 #ifndef POISSSON_NOISE_HPP
 #define POISSSON_NOISE_HPP
 
-/**
- * @brief Generates Poisson noise for given type and lambda parameter.
- * This function generates Poisson noise of complex-like type for the specified float-like lambda parameter which floors
- * to integer. Poisson noise follows a Poisson distribution. Noise is generated independently for real and imaginary
- * parts using the specified lambda parameter. Noise values are non-negative integers.
- *
- * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
- *
- * @tparam CT Complex-like type for noise generation.
- * @tparam FT Float-like type for lambda parameter.
- *
- * @param lambda Lambda parameter of the Poisson distribution.\n
- * Valid values: lambda > 0.\n
- * Defines the average rate (mean) of occurrence for the Poisson distribution.
- * @param rng Random number generator.\n
- * Valid values: any initialized std::mt19937_64 instance.
- *
- * @return Generated noise of type CT.
- * @throws std::invalid_argument if lambda <= 0
- */
-template <ComplexLike CT, FloatLike FT>
-    requires(!ComplexLike<FT>)
-CT generate_poisson_noise(const FT& lambda, std::mt19937_64& rng) {
-    if (lambda <= utils::cast<FT, int>()(0))
-        throw std::invalid_argument("Lambda must be positive for Poisson distribution.");
-
-    // Generating discrete Poisson distribution values
-    std::poisson_distribution<uint64_t> distribution{utils::cast<uint64_t, FT>()(lambda)};
-
-    return CT(distribution(rng), distribution(rng));
+template<typename T>
+struct poisson_noise{
+    static T generate(const double lambda, std::mt19937_64& rng){
+        static_assert(std::false_type{}, "poisson_noise::generate isn't implemented for this type");
+    }
 };
 
-/**
- * @brief Generates Poisson noise for given type and lambda parameter.
- * This function generates Poisson noise of float-like type for the specified float-like lambda parameter which floors
- * to integer. Poisson noise follows a Poisson distribution. Noise is generated using the specified lambda parameter.
- * Noise values are non-negative integers.
- *
- * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
- *
- * @tparam T Float-like type for noise generation.
- *
- * @param lambda Lambda parameter of the Poisson distribution.\n
- * Valid values: lambda > 0.\n
- * Defines the average rate (mean) of occurrence for the Poisson distribution.
- * @param rng Random number generator.\n
- * Valid values: any initialized std::mt19937_64 instance.
- *
- * @return Generated noise of type T.
- * @throws std::invalid_argument if lambda <= 0
- */
-template <FloatLike T>
-    requires(!ComplexLike<T>)
-T generate_poisson_noise(const T& lambda, std::mt19937_64& rng) {
-    if (lambda <= utils::cast<T, int>()(0))
-        throw std::invalid_argument("Lambda must be positive for Poisson distribution.");
-
-    // Simple Poisson distribution for scalar types
-    std::poisson_distribution<uint64_t> distribution{utils::cast<uint64_t, T>()(lambda)};
-
-    return utils::cast<T, uint64_t>()(distribution(rng));
+template<typename T>
+requires FloatLike<T> || IntervalLike<T>
+struct poisson_noise<T>{
+    static T generate(const double lambda, std::mt19937_64& rng);
 };
+template<typename T>
+requires FloatLike<T> || IntervalLike<T>
+T poisson_noise<T>::generate(const double lambda, std::mt19937_64& rng){
+    std::poisson_distribution<unsigned int> distrb{lambda};
+    return utils::cast<T, unsigned int>()(distrb(rng));
+}
 
-/**
- * @brief Generates Poisson noise for given type and lambda parameter.
- * This function generates Poisson noise of complex-like type for the specified complex-like lambda parameter which
- * floors to integer. Poisson noise follows a Poisson distribution. Noise is generated independently for real and
- * imaginary parts using the specified real and imaginary parts of the lambda parameter. Noise values are non-negative
- * integers.
- *
- * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
- *
- * @tparam T Complex-like type for noise generation.
- *
- * @param lambda Complex lambda parameter of the Poisson distribution.\n
- * Valid values: lambda.real() > 0 and lambda.imag() > 0.\n
- * Defines the average rate (mean) of occurrence for the Poisson distribution for both real and imaginary parts.
- * @param rng Random number generator.\n
- * Valid values: any initialized std::mt19937_64 instance.
- *
- * @return Generated noise of type T.
- * @throws std::invalid_argument if lambda parts are non-positive
- */
-template <ComplexLike T>
-T generate_poisson_noise(const T& lambda, std::mt19937_64& rng) {
-    if (lambda.real() <= utils::cast<typename real_of<T>::value, int>()(0) ||
-        lambda.imag() <= utils::cast<typename real_of<T>::value, int>()(0))
-        throw std::invalid_argument("Lambda must be positive for Poisson distribution.");
-
-    // Generating real and imaginary parts independently with their own lambda rates
-    std::poisson_distribution<uint64_t> distribution_real{
-        utils::cast<uint64_t, typename real_of<T>::value>()(lambda.real())};
-    std::poisson_distribution<uint64_t> distribution_imag{
-        utils::cast<uint64_t, typename real_of<T>::value>()(lambda.imag())};
-
-    return T(utils::cast<typename real_of<T>::value, uint64_t>()(distribution_real(rng)),
-             utils::cast<typename real_of<T>::value, uint64_t>()(distribution_imag(rng)));
+template<ComplexLike T>
+struct poisson_noise<T>{
+    static T generate(const double lambda, std::mt19937_64& rng);
 };
+template<ComplexLike T>
+T poisson_noise<T>::generate(const double lambda, std::mt19937_64& rng){
 
-/**
- * @brief Generates Poisson noise for interval types
- * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
- * @param lambda (T), rng (std::mt19937_64)
- * @return T (Generated noise)
- * @throws std::invalid_argument if lambda border is non-positive
- */
-template <IntervalLike T>
-T generate_poisson_noise(const T& lambda, std::mt19937_64& rng) {
-    if (lambda.leftinterval() <= utils::cast<typename T::value_type, int>()(0))
-        throw std::invalid_argument("Lambda must be positive for Poisson distribution.");
+    std::poisson_distribution<unsigned int> distrb{lambda};
+    return utils::cast<T, unsigned int>()(distrb(rng), distrb(rng));
 
-    // Using left boundary for Poisson rate calculation
-    std::poisson_distribution<uint64_t> distribution{
-        utils::cast<uint64_t, typename T::value_type>()(lambda.leftinterval())};
-
-    return T(utils::cast<typename T::value_type, uint64_t>()(distribution(rng)));
-};
+}
 
 #endif

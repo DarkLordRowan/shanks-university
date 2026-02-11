@@ -47,6 +47,11 @@ struct GetUnderlyingType<intprec::interval<T>> {
     using value = T;
 };
 
+template <typename T>
+struct GetUnderlyingType<shanks::profiling::OperationCounting<T>> {
+    using value = T;
+};
+
 #include "utils/utils.fwd.hpp"
 
 // Core utility headers

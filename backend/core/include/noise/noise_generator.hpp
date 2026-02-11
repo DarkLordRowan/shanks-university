@@ -34,7 +34,7 @@ enum NoiseMethod { jitter, scaling, noise_method_count };
 /**
  * @brief Internal implementation specialized via template parameters for maximum performance.
  */
-template <NoiseMethod Method, NoiseType Type, AcceptedLike T, AcceptedLike paramType>
+template <NoiseMethod Method, NoiseType Type, AcceptedLike T, FloatLike paramType>
 series_result<T> apply_noise_impl(const series_result<T>& result, std::mt19937_64& rng, const paramType& tParam1,
                                   const paramType& tParam2) {
     const size_t size = result.Sn.size();
@@ -46,11 +46,11 @@ series_result<T> apply_noise_impl(const series_result<T>& result, std::mt19937_6
     for (size_t i = 0; i < size; ++i) {
         T noise;
         if constexpr (Type == NoiseType::uniform) {
-            noise = generate_uniform_noise<T>(tParam1, tParam2, rng);
+            noise = uniform_noise<T>::generate(utils::cast<double, paramType>()(tParam1), utils::cast<double, paramType>()(tParam2), rng);
         } else if constexpr (Type == NoiseType::normal) {
-            noise = generate_normal_noise<T>(tParam1, tParam2, rng);
+            noise = normal_noise<T>::generate(utils::cast<double, paramType>()(tParam1), utils::cast<double, paramType>()(tParam2), rng);
         } else if constexpr (Type == NoiseType::poisson) {
-            noise = generate_poisson_noise<T>(tParam1, rng);
+            noise = poisson_noise<T>::generate(utils::cast<double, paramType>()(tParam1), rng);
         }
 
         if constexpr (Method == NoiseMethod::jitter) {
@@ -81,7 +81,7 @@ series_result<T> apply_noise_impl(const series_result<T>& result, std::mt19937_6
  *
  * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  */
-template <AcceptedLike T, AcceptedLike paramType>
+template <AcceptedLike T, FloatLike paramType>
 series_result<T> apply_noise(const series_result<T>& result, const NoiseMethod method, const NoiseType type,
                              const unsigned long long int seed, const paramType& tParam1,
                              const paramType& tParam2 = paramType{}) {

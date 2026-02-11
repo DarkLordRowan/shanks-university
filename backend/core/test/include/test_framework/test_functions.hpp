@@ -112,7 +112,7 @@ void cmp_a_n_and_transform(const K n, const K order, shanks::series::series_base
  *
  * @return A new series_result<T> with noise applied
  */
-template <AcceptedLike T, AcceptedLike ParamType>
+template <AcceptedLike T, FloatLike ParamType>
 inline series_result<T> apply_noise_interactive(series_result<T>& source, const NoiseType noise_type) {
     ParamType param1;
     ParamType param2;
