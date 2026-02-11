@@ -17,8 +17,7 @@
 #include <sstream>
 #include <tuple>
 
-#include "../../core/include/custom_types/mpreal.h"
-#include "../../core/include/custom_types/operation_counter.hpp"
+#include "../../core/include/lib.hpp"
 
 namespace py = pybind11;
 

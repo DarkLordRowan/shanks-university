@@ -39,7 +39,7 @@ inline std::size_t utils::helpers<mpfr::mpreal>::get_precision(const mpfr::mprea
     return mpfr::bits2digits(x.get_prec());
 }
 
-inline std::string utils::helpers<mpfr::mpreal>::to_string(const mpfr::mpreal& x) { return x.toString(-1, 10); }
+inline std::string utils::helpers<mpfr::mpreal>::to_string(const mpfr::mpreal& x) { return x.toString(INT_MAX, 10); }
 
 inline bool utils::helpers<mpfr::mpreal>::isfinite(const mpfr::mpreal& x) { return mpfr::isfinite(x); }
 inline bool utils::helpers<mpfr::mpreal>::isnan(const mpfr::mpreal& x) { return mpfr::isnan(x); }

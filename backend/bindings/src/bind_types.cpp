@@ -1,4 +1,3 @@
-#include "../../core/include/lib.hpp"
 #include "../include/bindings.hpp"
 
 namespace py = pybind11;

@@ -8,7 +8,6 @@
 #define BINDINGS_TEMPLATES_HPP
 #pragma once
 
-#include "../../core/include/lib.hpp"
 #include "bindings.hpp"
 
 /**
