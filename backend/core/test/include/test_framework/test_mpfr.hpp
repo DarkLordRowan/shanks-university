@@ -2,8 +2,6 @@
 #define TEST_MPFR_HPP
 #pragma once
 
-#include <unsupported/Eigen/MatrixFunctions>
-
 template<typename T, typename U, typename V> const std::vector<
 std::tuple<
 const char*,
@@ -15,28 +13,48 @@ const char*,
     std::make_tuple("SIN", utils::math<T>::sin, utils::math<U>::sin, utils::math<V>::sin),
     std::make_tuple("COS", utils::math<T>::cos, utils::math<U>::cos, utils::math<V>::cos),
     std::make_tuple("ATANH", utils::math<T>::atanh, utils::math<U>::atanh, utils::math<V>::atanh),
+    std::make_tuple("SQRT", utils::math<T>::sqrt, utils::math<U>::sqrt, utils::math<V>::sqrt),
+    std::make_tuple("LOG", utils::math<T>::log, utils::math<U>::log, utils::math<V>::log),
 };
 
 void test_mpreal(){
 
     float control_x_f = 0.501f;
-    float control_x_d = 0.501;
-    auto test_x = mpfr::mpreal(control_x_f, mp_prec_t{24});
-    auto test_control_x = mpfr::mpreal(control_x_f, mp_prec_t{27});
+    double control_x_d = 0.501;
+    auto test_x1 = mpfr::mpreal(control_x_f, mp_prec_t{24});
+    auto test_x2 = mpfr::mpreal(control_x_f, mp_prec_t{25});
+    auto test_x3 = mpfr::mpreal(control_x_f, mp_prec_t{26});
+    auto test_x4 = mpfr::mpreal(control_x_f, mp_prec_t{27});
+    auto test_x5 = mpfr::mpreal(control_x_d, mp_prec_t{53});
+    auto test_x6 = mpfr::mpreal(control_x_d, mp_prec_t{54});
+    auto test_x7 = mpfr::mpreal(control_x_d, mp_prec_t{55});
+    auto test_x8 = mpfr::mpreal(control_x_d, mp_prec_t{56});
     
 
-    std::cout << "MPFR WITH 24 MANTISSA BITS  " << utils::helpers<mpfr::mpreal>::to_string(test_x) << "\n";
-    std::cout << "MPFR WITH 27 MANTISSA BITS  " << utils::helpers<mpfr::mpreal>::to_string(test_control_x) << "\n";
+    std::cout << "MPFR WITH 24 MANTISSA BITS  " << utils::helpers<mpfr::mpreal>::to_string(test_x1) << "\n";
+    std::cout << "MPFR WITH 25 MANTISSA BITS  " << utils::helpers<mpfr::mpreal>::to_string(test_x2) << "\n";
+    std::cout << "MPFR WITH 26 MANTISSA BITS  " << utils::helpers<mpfr::mpreal>::to_string(test_x3) << "\n";
+    std::cout << "MPFR WITH 27 MANTISSA BITS  " << utils::helpers<mpfr::mpreal>::to_string(test_x4) << "\n";
     std::cout << "FLOAT X ( 24 MANTISSA BITS) " << utils::helpers<float>::to_string(control_x_f) << "\n";
-    std::cout << "DOUBLE X                    " << utils::helpers<double>::to_string(control_x_d) << "\n";
+    std::cout << "MPFR WITH 53 MANTISSA BITS  " << utils::helpers<mpfr::mpreal>::to_string(test_x5) << "\n";
+    std::cout << "MPFR WITH 54 MANTISSA BITS  " << utils::helpers<mpfr::mpreal>::to_string(test_x6) << "\n";
+    std::cout << "MPFR WITH 55 MANTISSA BITS  " << utils::helpers<mpfr::mpreal>::to_string(test_x7) << "\n";
+    std::cout << "MPFR WITH 56 MANTISSA BITS  " << utils::helpers<mpfr::mpreal>::to_string(test_x8) << "\n";
+    std::cout << "DOUBLE X                    " << utils::helpers<double>::to_string(control_x_d) << "\n\n";
 
     for (const auto& x : math_funcs_to_test<mpfr::mpreal, float, double>) {
         std::cout << "RESULT OF " << std::get<0>(x) << "\n";
         std::cout << "SCALAR COMPARISON\n";
-        std::cout << "MPFR WITH 24 MANTISSA BITS  " << utils::helpers<mpfr::mpreal>::to_string(std::get<1>(x)(test_x)) << "\n";
-        std::cout << "MPFR WITH 27 MANTISSA BITS  " << utils::helpers<mpfr::mpreal>::to_string(std::get<1>(x)(test_control_x)) << "\n";
+        std::cout << "MPFR WITH 24 MANTISSA BITS  " << utils::helpers<mpfr::mpreal>::to_string(std::get<1>(x)(test_x1)) << "\n";
+        std::cout << "MPFR WITH 25 MANTISSA BITS  " << utils::helpers<mpfr::mpreal>::to_string(std::get<1>(x)(test_x2)) << "\n";
+        std::cout << "MPFR WITH 26 MANTISSA BITS  " << utils::helpers<mpfr::mpreal>::to_string(std::get<1>(x)(test_x3)) << "\n";
+        std::cout << "MPFR WITH 27 MANTISSA BITS  " << utils::helpers<mpfr::mpreal>::to_string(std::get<1>(x)(test_x4)) << "\n";
         std::cout << "FLOAT X  (24 MANTISSA BITS) " << utils::helpers<float>::to_string(std::get<2>(x)(control_x_f)) << "\n";
-        std::cout << "DOUBLE X                    " << utils::helpers<double>::to_string(std::get<3>(x)(control_x_d)) << "\n";
+        std::cout << "MPFR WITH 53 MANTISSA BITS  " << utils::helpers<mpfr::mpreal>::to_string(std::get<1>(x)(test_x5)) << "\n";
+        std::cout << "MPFR WITH 54 MANTISSA BITS  " << utils::helpers<mpfr::mpreal>::to_string(std::get<1>(x)(test_x6)) << "\n";
+        std::cout << "MPFR WITH 55 MANTISSA BITS  " << utils::helpers<mpfr::mpreal>::to_string(std::get<1>(x)(test_x7)) << "\n";
+        std::cout << "MPFR WITH 56 MANTISSA BITS  " << utils::helpers<mpfr::mpreal>::to_string(std::get<1>(x)(test_x8)) << "\n";
+        std::cout << "DOUBLE X (53 MANTISSA BITS) " << utils::helpers<double>::to_string(std::get<3>(x)(control_x_d)) << "\n";
         std::cout << "\n\n";
     }
 }
@@ -51,20 +69,20 @@ void test_intervals() {
     const interval_f control_x_f(0.5f, 1.002f);
     const interval_d control_x_d(0.5, 1.002);
 
-    // precision as double
-    const interval control_group(arb(0.5, mp_prec_t{24}),
-                                                  arb(1.002, mp_prec_t(24)));
-    // precision a bit more
-    const interval test_group(arb(0.5, mp_prec_t{27}),
-                                               arb(1.002, mp_prec_t(27)));
+    const interval test_x1(arb(0.5, mp_prec_t{24}), arb(1.002, mp_prec_t(24)));
+    const interval test_x2(arb(0.5, mp_prec_t{27}), arb(1.002, mp_prec_t(27)));
+    const interval test_x3(arb(0.5, mp_prec_t{53}), arb(1.002, mp_prec_t(53)));
+    const interval test_x4(arb(0.5, mp_prec_t{56}), arb(1.002, mp_prec_t(56)));
 
     for (const auto& x : math_funcs_to_test<interval, interval_f, interval_d>) {
         std::cout << "RESULT OF " << std::get<0>(x) << "\n";
         std::cout << "LEFT INTERVAL COMPARISON\n";
-        std::cout << "24 digits" << utils::helpers<interval>::to_string(std::get<1>(x)(control_group)) << "\n";
-        std::cout << "27 digits" << utils::helpers<interval>::to_string(std::get<1>(x)(test_group)) << "\n";
+        std::cout << "24 digits" << utils::helpers<interval>::to_string(std::get<1>(x)(test_x1)) << "\n";
+        std::cout << "27 digits" << utils::helpers<interval>::to_string(std::get<1>(x)(test_x2)) << "\n";
         std::cout << "FLOAT    " << utils::helpers<interval_f>::to_string(std::get<2>(x)(control_x_f)) << "\n";
-        std::cout << "DOUBLE    " << utils::helpers<interval_d>::to_string(std::get<3>(x)(control_x_d)) << "\n";
+        std::cout << "53 digits" << utils::helpers<interval>::to_string(std::get<1>(x)(test_x3)) << "\n";
+        std::cout << "56 digits" << utils::helpers<interval>::to_string(std::get<1>(x)(test_x4)) << "\n";
+        std::cout << "DOUBLE   " << utils::helpers<interval_d>::to_string(std::get<3>(x)(control_x_d)) << "\n";
         std::cout << "\n\n";
     }
 }

@@ -227,3 +227,6 @@ inline void main_testing_function() {
             throw std::domain_error("wrong function_id");
     }
 }
+
+
+#include "test_series.hpp"
