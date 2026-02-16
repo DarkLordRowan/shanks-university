@@ -100,7 +100,7 @@ T lubkin_w_algorithm<T, K>::operator()(const K n, const K order, const series_re
     Wo0 = Wo1 = Wo2 = Woo1 = Woo2 = utils::cast<T, int>()(0, precision);
 
     // Load initial partial sums into the working vector starting from index n
-    for (K i = static_cast<K>(0); i < base_size; ++i) W[i] += data.Sn.at(+i);
+    for (K i = static_cast<K>(0); i < base_size; ++i) W[i] += data.Sn.at(n+i);
 
     K j1, j2, j3;  // Index variables
 

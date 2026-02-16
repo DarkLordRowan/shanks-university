@@ -111,7 +111,7 @@ T wynn_epsilon_2_algorithm<T, K>::operator()(const K n, const K order, const ser
 
     // For theory, see: Wynn (1956), Eq. (2) - Initialization with partial sums
     // Initialize the bottom row with partial sums: ε₀⁽ᵐ⁾ = Sₙ for m = 0,1,...,k
-    for (K i = static_cast<K>(0); i <= k; ++i) eps[3][i] = data.Sn.at(+i);
+    for (K i = static_cast<K>(0); i <= k; ++i) eps[3][i] = data.Sn.at(n+i);
 
     K i1, i2;
 
