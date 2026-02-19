@@ -1,3 +1,4 @@
+
 #ifndef SERIES_ITERATORS_HPP
 #define SERIES_ITERATORS_HPP
 #pragma once
@@ -110,8 +111,11 @@ enum class series_iterator_id_t {
 #include "series_iterators/pi_x_multi_e_xpi_plus_e_minusxpi_divided_e_xpi_minus_e_minusxpi_iterator.hpp"
 #include "series_iterators/riemann_zeta_func_iterator.hpp"
 #include "series_iterators/riemann_zeta_func_xmin1_div_Riemann_zeta_func_x_iterator.hpp"
-#include "series_iterators/series_with_ln_number1_iterator.hpp"
-#include "series_iterators/series_with_ln_number2_iterator.hpp"
+#include "series_iterators/rump_seq1_iterator.hpp"
+#include "series_iterators/rump_seq2_iterator.hpp"
+#include "series_iterators/rump_seq3_iterator.hpp"
+#include "series_iterators/rump_seq4_iterator.hpp"
+#include "series_iterators/rump_seq5_iterator.hpp"
 #include "series_iterators/si_x_iterator.hpp"
 #include "series_iterators/sin_iterator.hpp"
 #include "series_iterators/sin_x2_iterator.hpp"
@@ -120,8 +124,6 @@ enum class series_iterator_id_t {
 #include "series_iterators/sqrt_1plusx_iterator.hpp"
 #include "series_iterators/sqrt_1plusx_min_1_min_x_div_2_iterator.hpp"
 #include "series_iterators/sqrt_oneminussqrtoneminusx_div_x_iterator.hpp"
-#include "series_iterators/strange_seq1_iterator.hpp"
-#include "series_iterators/strange_seq2_iterator.hpp"
 #include "series_iterators/ten_minus_x_iterator.hpp"
 #include "series_iterators/three_minus_pi_iterator.hpp"
 #include "series_iterators/two_arcsin_square_x_halfed_iterator.hpp"

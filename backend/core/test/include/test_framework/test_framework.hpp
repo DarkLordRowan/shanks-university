@@ -177,8 +177,12 @@ inline void main_testing_function() {
     // Generating the initial series terms
     series_result<T> result = series->generate(
         n + 3 * order + 1,
-        static_cast<shanks::series::series_id_t>(series_idx) == shanks::series::series_id_t::strange_seq1_id ||
-            static_cast<shanks::series::series_id_t>(series_idx) == shanks::series::series_id_t::strange_seq2_id);
+        static_cast<shanks::series::series_id_t>(series_idx) == shanks::series::series_id_t::rump_seq1_id ||
+        static_cast<shanks::series::series_id_t>(series_idx) == shanks::series::series_id_t::rump_seq2_id ||
+        static_cast<shanks::series::series_id_t>(series_idx) == shanks::series::series_id_t::rump_seq3_id ||
+        static_cast<shanks::series::series_id_t>(series_idx) == shanks::series::series_id_t::rump_seq4_id ||
+        static_cast<shanks::series::series_id_t>(series_idx) == shanks::series::series_id_t::rump_seq5_id
+    );
 
     // Optional noise application
     std::string answer = "ok";
