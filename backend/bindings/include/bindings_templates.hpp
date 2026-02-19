@@ -129,8 +129,8 @@ template <AcceptedLike T>
 void bind_noise(pybind11::module_& m, const char* suffix) {
     m.def(
         create_name("applyNoise", suffix).c_str(),
-        [](const series_result<T>& result, NoiseMethod method, NoiseType type, unsigned long long int seed, const typename GetUnderlyingType<T>::value& p1,
-           const GetUnderlyingType<T>::value& p2) {
+        [](const series_result<T>& result, NoiseMethod method, NoiseType type, unsigned long long int seed,
+           const typename GetUnderlyingType<T>::value& p1, const GetUnderlyingType<T>::value& p2) {
             unsigned long long int actual_seed = (seed == 0) ? pseudo_random_seed : seed;
             return apply_noise(result, method, type, actual_seed, p1, p2);
         },
