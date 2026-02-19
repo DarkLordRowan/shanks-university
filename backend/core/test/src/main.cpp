@@ -25,37 +25,29 @@
 #include "../include/test_framework/test_framework.hpp"
 // clang-format on
 
-enum choices{
-    c_test_mpreal,
-    c_test_intervals,
-    c_test_eigen,
-    c_test_series,
-    c_test_algos
-};
+enum choices { c_test_mpreal, c_test_intervals, c_test_eigen, c_test_series, c_test_algos };
 
 int main() {
-
-    while (true){
-
+    while (true) {
         std::cout << "0 - test mpreal\n";
         std::cout << "1 - test interval\n";
         std::cout << "2 - test eigen\n";
         std::cout << "3 - test series\n";
         std::cout << "4 - test algos\n";
-        int choice =  console_IO<unsigned long>::input("TODO:");
+        int choice = console_IO<unsigned long>::input("TODO:");
 
-        switch(choice){
-            case choices::c_test_mpreal:{
+        switch (choice) {
+            case choices::c_test_mpreal: {
                 console_effects::clear_console();
                 test_mpreal();
                 break;
             }
-            case choices::c_test_intervals:{
+            case choices::c_test_intervals: {
                 console_effects::clear_console();
                 test_intervals();
                 break;
             }
-            case choices::c_test_series:{
+            case choices::c_test_series: {
                 console_effects::clear_console();
                 std::cout << "0 - float\n";
                 std::cout << "1 - double\n";
@@ -63,20 +55,27 @@ int main() {
                 std::cout << "3 - mpreal\n";
                 int type_to_use = console_IO<unsigned long>::input("type:");
                 console_effects::clear_console();
-                switch(type_to_use){
-                    case 0:
-                    {test_series<float>();break;}
-                    case 1:
-                    {test_series<double>();break;}
-                    case 2:
-                    {test_series<long double>();break;}
-                    case 3:
-                    {test_series<mpfr::mpreal>();break;}
+                switch (type_to_use) {
+                    case 0: {
+                        test_series<float>();
+                        break;
+                    }
+                    case 1: {
+                        test_series<double>();
+                        break;
+                    }
+                    case 2: {
+                        test_series<long double>();
+                        break;
+                    }
+                    case 3: {
+                        test_series<mpfr::mpreal>();
+                        break;
+                    }
                 }
                 break;
             }
-            case choices::c_test_algos:
-            {
+            case choices::c_test_algos: {
                 console_effects::clear_console();
                 std::cout << "0 - float\n";
                 std::cout << "1 - double\n";
@@ -91,41 +90,65 @@ int main() {
 
                 console_effects::clear_console();
 
-                switch(upper_type_to_use){
+                switch (upper_type_to_use) {
                     case 0:
-                        switch(type_to_use){
-                            case 0:
-                            {main_testing_function<float, unsigned short int>();break;}
-                            case 1:
-                            {main_testing_function<double, unsigned short int>();break;}
-                            case 2:
-                            {main_testing_function<long double, unsigned short int>();break;}
-                            case 3:
-                            {main_testing_function<mpfr::mpreal, unsigned short int>();break;}
+                        switch (type_to_use) {
+                            case 0: {
+                                main_testing_function<float, unsigned short int>();
+                                break;
+                            }
+                            case 1: {
+                                main_testing_function<double, unsigned short int>();
+                                break;
+                            }
+                            case 2: {
+                                main_testing_function<long double, unsigned short int>();
+                                break;
+                            }
+                            case 3: {
+                                main_testing_function<mpfr::mpreal, unsigned short int>();
+                                break;
+                            }
                         }
                         break;
                     case 1:
-                        switch(type_to_use){
-                            case 0:
-                            {main_testing_function<intprec::interval<float>, unsigned short int>();break;}
-                            case 1:
-                            {main_testing_function<intprec::interval<double>, unsigned short int>();break;}
-                            case 2:
-                            {main_testing_function<intprec::interval<long double>, unsigned short int>();break;}
-                            case 3:
-                            {main_testing_function<intprec::interval<mpfr::mpreal>, unsigned short int>();break;}
+                        switch (type_to_use) {
+                            case 0: {
+                                main_testing_function<intprec::interval<float>, unsigned short int>();
+                                break;
+                            }
+                            case 1: {
+                                main_testing_function<intprec::interval<double>, unsigned short int>();
+                                break;
+                            }
+                            case 2: {
+                                main_testing_function<intprec::interval<long double>, unsigned short int>();
+                                break;
+                            }
+                            case 3: {
+                                main_testing_function<intprec::interval<mpfr::mpreal>, unsigned short int>();
+                                break;
+                            }
                         }
                         break;
                     case 2:
-                        switch(type_to_use){
-                            case 0:
-                            {main_testing_function<std::complex<float>, unsigned short int>();break;}
-                            case 1:
-                            {main_testing_function<std::complex<double>, unsigned short int>();break;}
-                            case 2:
-                            {main_testing_function<std::complex<long double>, unsigned short int>();break;}
-                            case 3:
-                            {main_testing_function<std::complex<mpfr::mpreal>, unsigned short int>();break;}
+                        switch (type_to_use) {
+                            case 0: {
+                                main_testing_function<std::complex<float>, unsigned short int>();
+                                break;
+                            }
+                            case 1: {
+                                main_testing_function<std::complex<double>, unsigned short int>();
+                                break;
+                            }
+                            case 2: {
+                                main_testing_function<std::complex<long double>, unsigned short int>();
+                                break;
+                            }
+                            case 3: {
+                                main_testing_function<std::complex<mpfr::mpreal>, unsigned short int>();
+                                break;
+                            }
                         }
                         break;
                 }
@@ -134,10 +157,7 @@ int main() {
 
         console_effects::stop_console();
         console_effects::clear_console();
-
     }
-
-
 
     return 0;
 }

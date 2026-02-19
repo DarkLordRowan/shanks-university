@@ -228,5 +228,4 @@ inline void main_testing_function() {
     }
 }
 
-
 #include "test_series.hpp"

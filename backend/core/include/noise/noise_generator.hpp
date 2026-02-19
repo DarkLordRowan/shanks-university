@@ -46,9 +46,11 @@ series_result<T> apply_noise_impl(const series_result<T>& result, std::mt19937_6
     for (size_t i = 0; i < size; ++i) {
         T noise;
         if constexpr (Type == NoiseType::uniform) {
-            noise = uniform_noise<T>::generate(utils::cast<double, paramType>()(tParam1), utils::cast<double, paramType>()(tParam2), rng);
+            noise = uniform_noise<T>::generate(utils::cast<double, paramType>()(tParam1),
+                                               utils::cast<double, paramType>()(tParam2), rng);
         } else if constexpr (Type == NoiseType::normal) {
-            noise = normal_noise<T>::generate(utils::cast<double, paramType>()(tParam1), utils::cast<double, paramType>()(tParam2), rng);
+            noise = normal_noise<T>::generate(utils::cast<double, paramType>()(tParam1),
+                                              utils::cast<double, paramType>()(tParam2), rng);
         } else if constexpr (Type == NoiseType::poisson) {
             noise = poisson_noise<T>::generate(utils::cast<double, paramType>()(tParam1), rng);
         }

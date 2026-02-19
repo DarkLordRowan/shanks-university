@@ -2,9 +2,8 @@
 #define TEST_SERIES_HPP
 #pragma once
 
-template<typename T>
-void test_series(){
-
+template <typename T>
+void test_series() {
     using K = size_t;
 
     print_series_info();
@@ -29,20 +28,17 @@ void test_series(){
     K n = console_IO<K>::input("n");
 
     series_result<T> result = series->generate(
-        n,
-        static_cast<shanks::series::series_id_t>(series_idx) == shanks::series::series_id_t::strange_seq1_id ||
-            static_cast<shanks::series::series_id_t>(series_idx) == shanks::series::series_id_t::strange_seq2_id);
+        n, static_cast<shanks::series::series_id_t>(series_idx) == shanks::series::series_id_t::strange_seq1_id ||
+               static_cast<shanks::series::series_id_t>(series_idx) == shanks::series::series_id_t::strange_seq2_id);
 
-    for (size_t i{0}; i < result.an.size(); ++i){
+    for (size_t i{0}; i < result.an.size(); ++i) {
         std::cout << "n = " << i << " " << entry.name << "\n";
-        std::cout << "an:     " << utils::helpers<T>::to_string(result.an[i]     ) << "\n";
-        std::cout << "Sn:     " << utils::helpers<T>::to_string(result.Sn[i]     ) << "\n";
+        std::cout << "an:     " << utils::helpers<T>::to_string(result.an[i]) << "\n";
+        std::cout << "Sn:     " << utils::helpers<T>::to_string(result.Sn[i]) << "\n";
         std::cout << "S:      " << utils::helpers<T>::to_string(series->get_sum()) << "\n";
-        std::cout << "S - Sn: " << utils::helpers<T>::to_string(series->get_sum() - result.Sn[i])<< "\n";
+        std::cout << "S - Sn: " << utils::helpers<T>::to_string(series->get_sum() - result.Sn[i]) << "\n";
         std::cout << "\n\n";
     }
-
 }
-
 
 #endif

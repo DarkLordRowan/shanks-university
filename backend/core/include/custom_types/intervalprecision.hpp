@@ -2582,8 +2582,10 @@ constexpr interval<IT> ln10_interval(const size_t precision) {
 template <class _Ty>
 inline std::ostream& operator<<(std::ostream& strm, const interval<_Ty>& a) {
     if (a.intervaltype() == EMPTY) return strm << "EMPTY";
-    return strm << (a.intervaltype() == LEFT_OPEN || a.intervaltype() == OPEN ? "(" : "[") << utils::helpers<_Ty>::to_string(a.leftinterval()) << ","
-                << utils::helpers<_Ty>::to_string(a.rightinterval()) << (a.intervaltype() == RIGHT_OPEN || a.intervaltype() == OPEN ? ")" : "]");
+    return strm << (a.intervaltype() == LEFT_OPEN || a.intervaltype() == OPEN ? "(" : "[")
+                << utils::helpers<_Ty>::to_string(a.leftinterval()) << ","
+                << utils::helpers<_Ty>::to_string(a.rightinterval())
+                << (a.intervaltype() == RIGHT_OPEN || a.intervaltype() == OPEN ? ")" : "]");
 }
 
 // Input operator >>
