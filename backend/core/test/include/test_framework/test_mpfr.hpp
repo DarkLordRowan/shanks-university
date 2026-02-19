@@ -76,7 +76,6 @@ void test_intervals() {
 
     for (const auto& x : math_funcs_to_test<interval, interval_f, interval_d>) {
         std::cout << "RESULT OF " << std::get<0>(x) << "\n";
-        std::cout << "LEFT INTERVAL COMPARISON\n";
         std::cout << "24 digits" << utils::helpers<interval>::to_string(std::get<1>(x)(test_x1)) << "\n";
         std::cout << "27 digits" << utils::helpers<interval>::to_string(std::get<1>(x)(test_x2)) << "\n";
         std::cout << "FLOAT    " << utils::helpers<interval_f>::to_string(std::get<2>(x)(control_x_f)) << "\n";

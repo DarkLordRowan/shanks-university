@@ -2580,10 +2580,10 @@ constexpr interval<IT> ln10_interval(const size_t precision) {
                       "Unsupported type for pi_interval.Type must be float, double, long double or float_precision.");
 }
 template <class _Ty>
-inline std::ostream& operator<<(std::ostream& strm, interval<_Ty>& a) {
+inline std::ostream& operator<<(std::ostream& strm, const interval<_Ty>& a) {
     if (a.intervaltype() == EMPTY) return strm << "EMPTY";
-    return strm << (a.intervaltype() == LEFT_OPEN || a.intervaltype() == OPEN ? "(" : "[") << a.leftinterval() << ","
-                << a.rightinterval() << (a.intervaltype() == RIGHT_OPEN || a.intervaltype() == OPEN ? ")" : "]");
+    return strm << (a.intervaltype() == LEFT_OPEN || a.intervaltype() == OPEN ? "(" : "[") << utils::helpers<_Ty>::to_string(a.leftinterval()) << ","
+                << utils::helpers<_Ty>::to_string(a.rightinterval()) << (a.intervaltype() == RIGHT_OPEN || a.intervaltype() == OPEN ? ")" : "]");
 }
 
 // Input operator >>
@@ -2620,16 +2620,6 @@ inline std::istream& operator>>(std::istream& strm, interval<_Ty>& c) {
 
     return strm;
 }
-
-// Output Operator <<
-//
-template <class _Ty>
-inline std::ostream& operator<<(std::ostream& strm, const interval<_Ty>& a) {
-    if (a.intervaltype() == EMPTY) return strm << "EMPTY";
-    return strm << (a.intervaltype() == LEFT_OPEN || a.intervaltype() == OPEN ? "(" : "[") << a.leftinterval() << ","
-                << a.rightinterval() << (a.intervaltype() == RIGHT_OPEN || a.intervaltype() == OPEN ? ")" : "]");
-}
-
 }  // namespace intprec
 
 #endif
