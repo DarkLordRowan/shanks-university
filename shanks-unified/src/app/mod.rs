@@ -8,12 +8,17 @@ use crate::cache::Cache;
 use crate::config::{AppConfig, ExperimentConfig, SeriesInstance, MethodInstance, NoiseDef};
 use crate::ffi::{ShanksLibrary, SeriesResult, AccelResult, SeriesPoint, ComputeEvent, ComputeEventBody};
 use crate::compute::{ComputeEngine, ComputeTask};
-use crate::ffi::ParamValue;
-use crate::plot::Scientific;
 use std::sync::{Arc, RwLock, mpsc};
-use std::collections::HashMap;
 
 pub use selection::{SelectionNode, SelectionState, SelectedCombination};
+
+#[derive(Clone, PartialEq)]
+struct ComputeInputState {
+    series_tree: Option<SelectionNode>,
+    accel_tree: Option<SelectionNode>,
+    noise_tree: Option<SelectionNode>,
+    precision_tree: Option<SelectionNode>,
+}
 
 /// Application state shared across the UI.
 pub struct AppState {
@@ -133,19 +138,6 @@ impl AppState {
     }
 }
 
-#[derive(Clone, PartialEq)]
-struct ComputeInputState {
-    series_tree: Option<SelectionNode>,
-    accel_tree: Option<SelectionNode>,
-    noise_tree: Option<SelectionNode>,
-    precision_tree: Option<SelectionNode>,
-    selected_series: String,
-    selected_precision: String,
-    selected_accels: Vec<String>,
-    x_value: String,
-    n_terms: u64,
-    series_params: HashMap<String, ParamValue>,
-}
 
 /// Main application struct for egui.
 pub struct ShanksApp {
@@ -162,16 +154,6 @@ pub struct ShanksApp {
     noise_tree: Option<SelectionNode>,
     precision_tree: Option<SelectionNode>,
     
-    // Current selection for single-series mode
-    selected_series: String,
-    selected_precision: String,
-    selected_accels: Vec<String>,
-    x_value: String,
-    n_terms: u64,
-    
-    // Series parameters (dynamic)
-    series_params: HashMap<String, ParamValue>,
-    
     // Results
     current_result: Option<SeriesResult>,
     current_accel_results: Vec<(String, AccelResult)>,
@@ -179,31 +161,31 @@ pub struct ShanksApp {
     // UI options
     show_partial_sums: bool,
     show_accel_values: bool,
-    use_symlog: bool,
-    auto_compute: bool,
+    symlog_main: bool,
+    symlog_dev: bool,
     
-    // Mode toggle
-    use_tree_selection: bool,
+    // Tab selection
+    selected_tab: PlotTab,
     
     // Status
     status_message: String,
     is_computing: bool,
+    auto_compute: bool,
+}
+
+#[derive(PartialEq)]
+enum PlotTab {
+    Main,
+    Deviation,
 }
 
 impl ShanksApp {
     /// Create a new application instance.
     pub fn new(state: AppState) -> Self {
         let config = state.config.read().unwrap();
-        let default_precision = config.default_precision.clone();
         let show_partial_sums = config.ui.show_partial_sums;
         let use_symlog = config.ui.use_symlog;
         drop(config);
-
-        // Get default n_terms from experiment config if available
-        let n_terms = state.get_method_instances()
-            .first()
-            .map(|m| m.n as u64)
-            .unwrap_or(100);
 
         // Build selection trees if experiment config is loaded
         let series_instances = state.get_series_instances();
@@ -245,9 +227,6 @@ impl ShanksApp {
             (None, None)
         };
 
-        // Use tree selection mode if experiment config is loaded
-        let use_tree_selection = series_tree.is_some();
-
         Self {
             state,
             compute_engine,
@@ -257,21 +236,16 @@ impl ShanksApp {
             accel_tree,
             noise_tree,
             precision_tree,
-            selected_series: String::new(),
-            selected_precision: default_precision,
-            selected_accels: Vec::new(),
-            x_value: "1.0".to_string(),
-            n_terms,
-            series_params: HashMap::new(),
             current_result: None,
             current_accel_results: Vec::new(),
             show_partial_sums,
             show_accel_values: true,
-            use_symlog,
-            auto_compute: false,
-            use_tree_selection,
+            symlog_main: use_symlog,
+            symlog_dev: use_symlog,
+            selected_tab: PlotTab::Main,
             status_message: String::new(),
             is_computing: false,
+            auto_compute: false,
         }
     }
     
@@ -368,50 +342,7 @@ impl ShanksApp {
         }
     }
     
-    /// Start a computation (legacy single-series mode).
-    fn start_computation(&mut self) {
-        if self.state.is_offline() {
-            self.status_message = "Cannot compute in offline mode".to_string();
-            return;
-        }
-        
-        if self.selected_series.is_empty() {
-            self.status_message = "Please select a series".to_string();
-            return;
-        }
-        
-        // Build task
-        let mut task = ComputeTask::new(&self.selected_series, self.n_terms)
-            .with_precision(&self.selected_precision)
-            .with_x(&self.x_value);
-        
-        // Add series parameters
-        for (name, value) in &self.series_params {
-            task = task.with_param(name.clone(), value.clone());
-        }
-        
-        // Add algorithms
-        for accel in &self.selected_accels {
-            task = task.with_algorithm(accel);
-        }
-        
-        // Start task
-        if let Some(ref mut engine) = self.compute_engine {
-            match engine.start_task(task) {
-                Ok(id) => {
-                    self.current_task_id = Some(id);
-                    self.is_computing = true;
-                    self.status_message = "Computing...".to_string();
-                    self.current_result = None;
-                    self.current_accel_results.clear();
-                }
-                Err(e) => {
-                    self.status_message = format!("Error: {}", e);
-                }
-            }
-        }
-    }
-    
+
     /// Process events from compute engine.
     fn process_events(&mut self) {
         if let Some(ref mut rx) = self.event_rx {
@@ -451,13 +382,13 @@ impl ShanksApp {
     }
     
     /// Convert a series point to f64, optionally applying symlog.
-    fn point_to_f64(&self, point: &SeriesPoint) -> Option<f64> {
+    fn point_to_f64(&self, point: &SeriesPoint, use_symlog: bool) -> Option<f64> {
         let sci_val = match point {
             SeriesPoint::Real(v) => v,
             SeriesPoint::Complex(c) => &c.real,
         };
         
-        if self.use_symlog {
+        if use_symlog {
             // Convert to plot Scientific format directly to avoid f64 Infinity overflow
             let plot_sci = crate::plot::Scientific(sci_val.mantissa, sci_val.exponent as i32);
             Some(plot_sci.symlog())
@@ -477,14 +408,10 @@ impl ShanksApp {
             accel_tree: self.accel_tree.clone(),
             noise_tree: self.noise_tree.clone(),
             precision_tree: self.precision_tree.clone(),
-            selected_series: self.selected_series.clone(),
-            selected_precision: self.selected_precision.clone(),
-            selected_accels: self.selected_accels.clone(),
-            x_value: self.x_value.clone(),
-            n_terms: self.n_terms,
-            series_params: self.series_params.clone(),
         }
     }
+    
+
 }
 
 impl eframe::App for ShanksApp {
@@ -516,11 +443,7 @@ impl eframe::App for ShanksApp {
                 ui.menu_button("View", |ui| {
                     ui.checkbox(&mut self.show_partial_sums, "Show Partial Sums");
                     ui.checkbox(&mut self.show_accel_values, "Show Accelerated Values");
-                    ui.checkbox(&mut self.use_symlog, "Symlog Scale");
                     ui.separator();
-                    if ui.checkbox(&mut self.use_tree_selection, "Tree Selection Mode").changed() {
-                        // Mode toggled
-                    }
                 });
                 ui.menu_button("Help", |ui| {
                     if ui.button("About").clicked() {
@@ -549,7 +472,7 @@ impl eframe::App for ShanksApp {
             }
             
             // Tree selection mode
-            if self.use_tree_selection && self.series_tree.is_some() {
+            if self.series_tree.is_some() {
                 ui.heading("Tree Selection");
                 
                 egui::ScrollArea::vertical().max_height(300.0).show(ui, |ui| {
@@ -595,115 +518,7 @@ impl eframe::App for ShanksApp {
                     ui.checkbox(&mut self.auto_compute, "Auto");
                 });
             } else {
-                // Legacy single-series mode
-                ui.heading("Computation");
-                
-                // Series selection - prefer config-driven if available
-                ui.label("Series:");
-                let series_instances = self.state.get_series_instances();
-                if !series_instances.is_empty() {
-                    // Config-driven mode: show series from config
-                    egui::ComboBox::from_label("series_selector")
-                        .selected_text(&self.selected_series)
-                        .show_ui(ui, |ui| {
-                            for inst in &series_instances {
-                                let label = format!("{} ({})", inst.name, 
-                                    inst.args.get("x")
-                                        .and_then(|v| v.as_f64())
-                                        .map(|v| format!("x={}", v))
-                                        .unwrap_or_default());
-                                ui.selectable_value(&mut self.selected_series, inst.name.clone(), label);
-                            }
-                        });
-                } else {
-                    // Library mode: show all series from library
-                    egui::ComboBox::from_label("series_selector")
-                        .selected_text(&self.selected_series)
-                        .show_ui(ui, |ui| {
-                            let series_names = self.state.series_names.read().unwrap();
-                            for name in series_names.iter() {
-                                ui.selectable_value(&mut self.selected_series, name.clone(), name);
-                            }
-                        });
-                }
-                
-                // Precision selection
-                ui.label("Precision:");
-                egui::ComboBox::from_label("precision_selector")
-                    .selected_text(&self.selected_precision)
-                    .show_ui(ui, |ui| {
-                        let precision_names = self.state.precision_names.read().unwrap();
-                        for name in precision_names.iter() {
-                            ui.selectable_value(&mut self.selected_precision, name.clone(), name);
-                        }
-                    });
-                
-                // X value
-                ui.label("X value:");
-                ui.text_edit_singleline(&mut self.x_value);
-                
-                // N terms
-                ui.label("Number of terms:");
-                ui.add(egui::Slider::new(&mut self.n_terms, 10..=10000).text("n"));
-                
-                ui.separator();
-                
-                // Acceleration selection - prefer config-driven if available
-                ui.heading("Acceleration");
-                ui.label("Algorithms (click to toggle):");
-                
-                let method_instances = self.state.get_method_instances();
-                if !method_instances.is_empty() {
-                    // Config-driven mode: show methods from config
-                    egui::ScrollArea::vertical().max_height(150.0).show(ui, |ui| {
-                        for inst in &method_instances {
-                            // Store just the algorithm name, not the full label
-                            let name = inst.name.clone();
-                            let label = format!("{} (n={}, m={})", name, inst.n, inst.m);
-                            let is_selected = self.selected_accels.contains(&name);
-                            let mut selected = is_selected;
-                            if ui.checkbox(&mut selected, &label).changed() {
-                                if selected && !is_selected {
-                                    self.selected_accels.push(name);
-                                } else if !selected && is_selected {
-                                    self.selected_accels.retain(|n| n != &name);
-                                }
-                            }
-                        }
-                    });
-                } else {
-                    // Library mode: show all algorithms from library
-                    let accel_names: Vec<String> = self.state.accel_names.read().unwrap().iter().cloned().collect();
-                    egui::ScrollArea::vertical().max_height(150.0).show(ui, |ui| {
-                        for name in &accel_names {
-                            let is_selected = self.selected_accels.contains(name);
-                            let mut selected = is_selected;
-                            if ui.checkbox(&mut selected, name).changed() {
-                                if selected && !is_selected {
-                                    self.selected_accels.push(name.clone());
-                                } else if !selected && is_selected {
-                                    self.selected_accels.retain(|n| n != name);
-                                }
-                            }
-                        }
-                    });
-                }
-                
-                ui.separator();
-                
-                // Compute button
-                ui.horizontal(|ui| {
-                    if ui.add_enabled(!self.is_computing, egui::Button::new("Compute")).clicked() {
-                        self.start_computation();
-                    }
-                    
-                    if self.is_computing && ui.button("Cancel").clicked() {
-                        if let (Some(ref mut engine), Some(id)) = (&mut self.compute_engine, self.current_task_id) {
-                            engine.cancel_task(id);
-                        }
-                    }
-                    ui.checkbox(&mut self.auto_compute, "Auto");
-                });
+                ui.heading("No Series Tree Available");
             }
             
             // Status
@@ -733,6 +548,25 @@ impl eframe::App for ShanksApp {
                 return;
             }
             
+            ui.horizontal(|ui| {
+                ui.selectable_value(&mut self.selected_tab, PlotTab::Main, "Основной график");
+                ui.selectable_value(&mut self.selected_tab, PlotTab::Deviation, "Отклонения");
+                
+                ui.separator();
+                if self.selected_tab == PlotTab::Main {
+                    ui.checkbox(&mut self.symlog_main, "Symlog Scale");
+                } else {
+                    ui.checkbox(&mut self.symlog_dev, "Symlog Scale");
+                }
+            });
+            ui.separator();
+
+            let use_symlog = if self.selected_tab == PlotTab::Main {
+                self.symlog_main
+            } else {
+                self.symlog_dev
+            };
+
             // Plot area
             let mut plot = egui_plot::Plot::new("series_plot")
                 .view_aspect(1.5)
@@ -740,21 +574,25 @@ impl eframe::App for ShanksApp {
                 .x_axis_label("n")
                 .y_axis_label("Value");
             
-            if self.use_symlog {
+            if use_symlog {
                 plot = plot.y_axis_formatter(|mark, _range| {
                     crate::plot::symlog_formatter(mark.value)
+                })
+                .label_formatter(move |name, value| {
+                    format!("{}\nx={}\ny={}", name, value.x, crate::plot::symlog_formatter(value.y))
                 });
             }
             
             plot.show(ui, |plot_ui| {
-                // Plot partial sums if available
+                if self.selected_tab == PlotTab::Main {
+                    // Plot partial sums if available
                 if self.show_partial_sums {
                     if let Some(ref result) = self.current_result {
                         let points: Vec<[f64; 2]> = result.sn
                             .iter()
                             .enumerate()
                             .filter_map(|(i, p)| {
-                                self.point_to_f64(p).map(|v| [i as f64, v])
+                                self.point_to_f64(p, use_symlog).map(|v| [i as f64, v])
                             })
                             .collect();
                         
@@ -785,7 +623,7 @@ impl eframe::App for ShanksApp {
                             .iter()
                             .enumerate()
                             .filter_map(|(j, opt_p)| {
-                                opt_p.as_ref().and_then(|p| self.point_to_f64(p)).map(|v| [j as f64, v])
+                                opt_p.as_ref().and_then(|p| self.point_to_f64(p, use_symlog)).map(|v| [j as f64, v])
                             })
                             .collect();
                         
@@ -795,6 +633,39 @@ impl eframe::App for ShanksApp {
                         let line = egui_plot::Line::new(points)
                             .color(color)
                             .name(_name);
+                        plot_ui.line(line);
+                    }
+                }
+                } else if self.selected_tab == PlotTab::Deviation {
+                    let colors = [
+                        egui::Color32::RED,
+                        egui::Color32::GREEN,
+                        egui::Color32::YELLOW,
+                        egui::Color32::from_rgb(0, 255, 255), // Cyan
+                        egui::Color32::from_rgb(255, 0, 255), // Magenta
+                    ];
+
+                    for (i, (_name, result)) in self.current_accel_results.iter().enumerate() {
+                        let points: Vec<[f64; 2]> = result.deviations
+                            .iter()
+                            .enumerate()
+                            .filter_map(|(j, d)| {
+                                let mut val = d.to_f64();
+                                if use_symlog {
+                                    val = crate::plot::Scientific(d.mantissa, d.exponent as i32).symlog();
+                                }
+                                if val.is_finite() {
+                                    Some([j as f64 + 1.0, val]) // Accelerations output n from 1..=n
+                                } else {
+                                    None
+                                }
+                            })
+                            .collect();
+
+                        let color = colors[i % colors.len()];
+                        let line = egui_plot::Line::new(points)
+                            .color(color)
+                            .name(format!("{} Dev", _name));
                         plot_ui.line(line);
                     }
                 }
@@ -813,11 +684,7 @@ impl eframe::App for ShanksApp {
                     }
                 }
                 
-                if self.use_tree_selection {
-                    self.start_tree_computation();
-                } else {
-                    self.start_computation();
-                }
+                self.start_tree_computation();
             }
         }
     }

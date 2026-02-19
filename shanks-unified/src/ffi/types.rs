@@ -250,7 +250,7 @@ pub struct AccelResult {
     pub values: Vec<Option<SeriesPoint>>,
     /// Deviations/errors for each value
     #[serde(default)]
-    pub deviations: Vec<String>,
+    pub deviations: Vec<ScientificValue>,
     /// Events during computation
     #[serde(default)]
     pub events: Vec<ComputeEventEntry>,

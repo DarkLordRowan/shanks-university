@@ -10,7 +10,6 @@ pub use types::*;
 use libloading::{Library, Symbol};
 use std::ffi::{CStr, CString};
 use std::path::Path;
-use std::collections::HashMap;
 
 /// Error type for FFI operations.
 #[derive(Debug, thiserror::Error)]
