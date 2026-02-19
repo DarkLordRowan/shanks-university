@@ -3,10 +3,14 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     flake-utils.url = "github:numtide/flake-utils";
+    fenix = {
+      url = "github:nix-community/fenix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs =
-    { nixpkgs, flake-utils, ... }:
+    { nixpkgs, flake-utils, fenix, ... }:
     flake-utils.lib.eachDefaultSystem (
       system:
       let
@@ -39,7 +43,9 @@
                 mypy
               ]
             ))
+            fenix.packages.${system}.latest.toolchain
           ];
+          LD_LIBRARY_PATH = with pkgs; lib.makeLibraryPath [ libGL wayland libxkbcommon vulkan-loader ];
         };
       }
     );

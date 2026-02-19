@@ -1,0 +1,156 @@
+/**
+ * @file ffi_internal.hpp
+ * @brief Internal types shared between FFI implementation files.
+ * @authors Sobolev Y. A.
+ */
+
+#ifndef FFI_INTERNAL_HPP
+#define FFI_INTERNAL_HPP
+#pragma once
+
+#include <string>
+#include <cstdint>
+#include <cstring>
+#include <sstream>
+#include <cmath>
+#include <complex>
+// Ensure mpreal is available before using it in specialization
+#include "../../core/include/lib.hpp"
+
+namespace shanks {
+namespace ffi {
+
+// Precision types enumeration
+enum class PrecisionType {
+    F32, F64, FLong, Arb,
+    CF32, CF64, CFLong, CArb
+};
+
+// Parse precision string to enum
+inline bool parse_precision(const char* precision, PrecisionType& out) {
+    if (!precision) return false;
+    
+    if (strcmp(precision, "F32") == 0) { out = PrecisionType::F32; return true; }
+    if (strcmp(precision, "F64") == 0) { out = PrecisionType::F64; return true; }
+    if (strcmp(precision, "FLong") == 0) { out = PrecisionType::FLong; return true; }
+    if (strcmp(precision, "Arb") == 0) { out = PrecisionType::Arb; return true; }
+    if (strcmp(precision, "CF32") == 0) { out = PrecisionType::CF32; return true; }
+    if (strcmp(precision, "CF64") == 0) { out = PrecisionType::CF64; return true; }
+    if (strcmp(precision, "CFLong") == 0) { out = PrecisionType::CFLong; return true; }
+    if (strcmp(precision, "CArb") == 0) { out = PrecisionType::CArb; return true; }
+    
+    return false;
+}
+
+// Check if precision is complex
+inline bool is_complex_precision(PrecisionType p) {
+    return p >= PrecisionType::CF32;
+}
+
+// Scientific notation representation for JSON output
+struct ScientificValue {
+    double mantissa;
+    int64_t exponent;
+    
+    ScientificValue(double m = 0.0, int64_t e = 0) : mantissa(m), exponent(e) {}
+    
+    std::string to_json() const {
+        std::ostringstream oss;
+        oss << "{\"mantissa\": " << mantissa << ", \"exponent\": " << exponent << "}";
+        return oss.str();
+    }
+};
+
+// Convert a value to scientific notation
+template <typename T>
+inline ScientificValue to_scientific(T value) {
+    if (value == T(0)) {
+        return ScientificValue(0.0, 0);
+    }
+    
+    double abs_val = std::abs(static_cast<double>(value));
+    int64_t exp = static_cast<int64_t>(std::floor(std::log10(abs_val)));
+    double mantissa = static_cast<double>(value) / std::pow(10.0, exp);
+    
+    return ScientificValue(mantissa, exp);
+}
+
+// Specialization for mpfr::mpreal (if needed, otherwise we rely on cast)
+template <>
+inline ScientificValue to_scientific(mpfr::mpreal value) {
+    if (value == 0) {
+        return ScientificValue(0.0, 0);
+    }
+    
+    std::ostringstream oss;
+    oss << value;
+    std::string s = oss.str();
+    
+    // Parse scientific notation from mpreal string
+    size_t e_pos = s.find('e');
+    if (e_pos != std::string::npos) {
+        double mantissa = std::stod(s.substr(0, e_pos));
+        int64_t exp = std::stoll(s.substr(e_pos + 1));
+        return ScientificValue(mantissa, exp);
+    }
+    
+    return ScientificValue(std::stod(s), 0);
+}
+
+// JSON helpers
+inline std::string complex_to_json(double real, double imag) {
+    std::ostringstream oss;
+    oss << "{\"real\": " << to_scientific(real).to_json() 
+        << ", \"imag\": " << to_scientific(imag).to_json() << "}";
+    return oss.str();
+}
+
+// Helper to allocate and copy string for FFI return
+inline char* alloc_string(const std::string& s) {
+    if (s.empty()) {
+        char* ptr = new char[1];
+        ptr[0] = '\0';
+        return ptr;
+    }
+    char* ptr = new char[s.size() + 1];
+    std::memcpy(ptr, s.c_str(), s.size() + 1);
+    return ptr;
+}
+
+// Thread-local error storage
+extern thread_local std::string g_last_error;
+
+inline void set_error(const std::string& msg) {
+    g_last_error = msg;
+}
+
+inline void clear_error() {
+    g_last_error.clear();
+}
+
+// Type-erased series handle base class
+struct SeriesHandleBase {
+    virtual ~SeriesHandleBase() = default;
+    virtual std::string generate(uint64_t n, bool enable_profiling) = 0;
+    virtual PrecisionType get_precision() const = 0;
+    virtual std::string get_name() const = 0;
+    virtual const void* get_raw_data(uint64_t n) const = 0;
+};
+
+// Type-erased acceleration handle base class
+struct AccelHandleBase {
+    virtual ~AccelHandleBase() = default;
+    virtual std::string apply(
+        SeriesHandleBase* series, 
+        uint64_t n, 
+        uint64_t order, 
+        bool enable_profiling
+    ) = 0;
+    virtual PrecisionType get_precision() const = 0;
+    virtual std::string get_name() const = 0;
+};
+
+} // namespace ffi
+} // namespace shanks
+
+#endif // FFI_INTERNAL_HPP

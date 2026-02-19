@@ -1,0 +1,335 @@
+/**
+ * @file shanks_ffi.hpp
+ * @brief C-compatible FFI interface for the Shanks library.
+ * @authors Sobolev Y. A.
+ * 
+ * This header provides a C-compatible interface for calling the Shanks library
+ * from Rust (or any other language with FFI support). It uses opaque handles
+ * and JSON strings for data exchange.
+ * 
+ * All strings returned by functions are allocated by the library and must be
+ * freed using shanks_free_string().
+ */
+
+#ifndef SHANKS_FFI_HPP
+#define SHANKS_FFI_HPP
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#include <stdint.h>
+
+// ============================================================================
+// Platform-specific export macros
+// ============================================================================
+
+#if defined(_WIN32) || defined(__CYGWIN__)
+    #ifdef SHANKS_FFI_EXPORTS
+        #define SHANKS_FFI_API __declspec(dllexport)
+    #else
+        #define SHANKS_FFI_API __declspec(dllimport)
+    #endif
+#else
+    #define SHANKS_FFI_API __attribute__((visibility("default")))
+#endif
+
+// ============================================================================
+// Opaque Handles
+// ============================================================================
+
+/**
+ * @brief Opaque handle to a series instance.
+ * 
+ * Series are created with specific parameters and can be used to generate
+ * partial sums and terms.
+ */
+typedef void* ShanksSeriesHandle;
+
+/**
+ * @brief Opaque handle to an acceleration algorithm instance.
+ * 
+ * Acceleration algorithms transform series data to improve convergence.
+ */
+typedef void* ShanksAccelHandle;
+
+// ============================================================================
+// Error Handling
+// ============================================================================
+
+/**
+ * @brief Get the last error message.
+ * 
+ * Returns a thread-local error message from the last failed operation.
+ * The string is valid until the next FFI call in the same thread.
+ * 
+ * @return Error message string, or NULL if no error.
+ */
+SHANKS_FFI_API const char* shanks_last_error(void);
+
+/**
+ * @brief Clear the last error message.
+ */
+SHANKS_FFI_API void shanks_clear_error(void);
+
+// ============================================================================
+// Library Management
+// ============================================================================
+
+/**
+ * @brief Get library version string.
+ * 
+ * @return Version string (e.g., "1.0.0"). Does not need to be freed.
+ */
+SHANKS_FFI_API const char* shanks_get_version(void);
+
+// ============================================================================
+// Memory Management
+// ============================================================================
+
+/**
+ * @brief Free a string allocated by the library.
+ * 
+ * Use this to free strings returned by functions like shanks_list_series(),
+ * shanks_series_generate(), etc.
+ * 
+ * @param ptr Pointer to string to free. Safe to pass NULL.
+ */
+SHANKS_FFI_API void shanks_free_string(char* ptr);
+
+// ============================================================================
+// Registry Queries
+// ============================================================================
+
+/**
+ * @brief Get list of available series names.
+ * 
+ * @return JSON array of series names: ["SeriesName1", "SeriesName2", ...]
+ *         Must be freed with shanks_free_string().
+ */
+SHANKS_FFI_API char* shanks_list_series(void);
+
+/**
+ * @brief Get list of available acceleration algorithm names.
+ * 
+ * @return JSON array of algorithm names: ["shanks", "levin", ...]
+ *         Must be freed with shanks_free_string().
+ */
+SHANKS_FFI_API char* shanks_list_accels(void);
+
+/**
+ * @brief Get list of supported precision types.
+ * 
+ * @return JSON array of precision names: ["F32", "F64", "FLong", "Arb", "CF32", ...]
+ *         Must be freed with shanks_free_string().
+ */
+SHANKS_FFI_API char* shanks_list_precisions(void);
+
+/**
+ * @brief Get list of available noise types.
+ * 
+ * @return JSON array of noise type names: ["Normal", "Uniform", "Poisson"]
+ *         Must be freed with shanks_free_string().
+ */
+SHANKS_FFI_API char* shanks_list_noises(void);
+
+/**
+ * @brief Get list of available noise application methods.
+ * 
+ * @return JSON array of method names: ["jitter", "scaling"]
+ *         Must be freed with shanks_free_string().
+ */
+SHANKS_FFI_API char* shanks_list_noise_methods(void);
+
+/**
+ * @brief Get noise type metadata.
+ * 
+ * @param name Noise type name ("Normal", "Uniform", "Poisson").
+ * @return JSON object with noise metadata including parameters, or NULL if not found.
+ *         Must be freed with shanks_free_string().
+ */
+SHANKS_FFI_API char* shanks_get_noise_info(const char* name);
+
+/**
+ * @brief Get series metadata (parameters, description).
+ * 
+ * @param name Series name.
+ * @return JSON object with series metadata, or NULL if not found.
+ *         Must be freed with shanks_free_string().
+ */
+SHANKS_FFI_API char* shanks_get_series_info(const char* name);
+
+/**
+ * @brief Get acceleration algorithm metadata.
+ * 
+ * @param name Algorithm name.
+ * @return JSON object with algorithm metadata, or NULL if not found.
+ *         Must be freed with shanks_free_string().
+ */
+SHANKS_FFI_API char* shanks_get_accel_info(const char* name);
+
+// ============================================================================
+// Series Creation and Destruction
+// ============================================================================
+
+/**
+ * @brief Create a series instance.
+ * 
+ * @param name Series name from registry (e.g., "PiSeries", "ArcsinXSeries").
+ * @param precision Precision type: "F32", "F64", "FLong", "Arb", "CF32", etc.
+ * @param x_value The x parameter as a string (for arbitrary precision support).
+ * @param args_json JSON object with additional arguments: {"tParam": "1.0", "kParam": "10"}.
+ *                  Pass NULL or "{}" for default values.
+ * @return Handle to series instance, or NULL on error.
+ */
+SHANKS_FFI_API ShanksSeriesHandle shanks_series_create(
+    const char* name,
+    const char* precision,
+    const char* x_value,
+    const char* args_json
+);
+
+/**
+ * @brief Create a series instance with noise.
+ * 
+ * @param name Series name.
+ * @param precision Precision type.
+ * @param x_value The x parameter as a string.
+ * @param args_json Additional arguments as JSON.
+ * @param noise_json Noise configuration: {"type": "normal", "mean": "0.0", "stddev": "0.1", "seed": 42}.
+ *                   Supported types: "normal", "uniform", "poisson".
+ * @return Handle to series instance, or NULL on error.
+ */
+SHANKS_FFI_API ShanksSeriesHandle shanks_series_create_with_noise(
+    const char* name,
+    const char* precision,
+    const char* x_value,
+    const char* args_json,
+    const char* noise_json
+);
+
+/**
+ * @brief Destroy a series instance.
+ * 
+ * @param handle Series handle to destroy. Safe to pass NULL.
+ */
+SHANKS_FFI_API void shanks_series_destroy(ShanksSeriesHandle handle);
+
+/**
+ * @brief Get the analytical sum (limit) of the series, if known.
+ * 
+ * @param handle Series handle.
+ * @return The sum as a string (for arbitrary precision), or NULL if unknown.
+ *         Must be freed with shanks_free_string().
+ */
+SHANKS_FFI_API char* shanks_series_get_sum(ShanksSeriesHandle handle);
+
+/**
+ * @brief Get the x value of the series.
+ * 
+ * @param handle Series handle.
+ * @return The x value as a string. Must be freed with shanks_free_string().
+ */
+SHANKS_FFI_API char* shanks_series_get_x(ShanksSeriesHandle handle);
+
+// ============================================================================
+// Series Computation
+// ============================================================================
+
+/**
+ * @brief Generate partial sums and terms for a series.
+ * 
+ * @param handle Series handle.
+ * @param n Number of terms to generate.
+ * @param enable_profiling If non-zero, count operations (add, mul, div, special).
+ * @return JSON object: {
+ *     "Sn": [{"real": "1.0", "imag": "0.0", "exp": 0}, ...],
+ *     "an": [{"real": "1.0", "imag": "0.0", "exp": 0}, ...],
+ *     "sum": "3.14159...",
+ *     "profiling": {"add": 100, "mul": 50, "div": 10, "special": 5}
+ * }
+ * Values are in scientific notation: {mantissa, exponent}.
+ * Must be freed with shanks_free_string().
+ */
+SHANKS_FFI_API char* shanks_series_generate(
+    ShanksSeriesHandle handle,
+    uint64_t n,
+    int enable_profiling
+);
+
+// ============================================================================
+// Acceleration Algorithm Creation and Destruction
+// ============================================================================
+
+/**
+ * @brief Create an acceleration algorithm instance.
+ * 
+ * @param name Algorithm name from registry (e.g., "shanks", "levin", "wynn_epsilon").
+ * @param precision Precision type (must match series precision).
+ * @param args_json Algorithm parameters: {"m": "10", "remainder": "u", "beta": "1.0"}.
+ *                  Pass NULL or "{}" for default values.
+ * @return Handle to algorithm instance, or NULL on error.
+ */
+SHANKS_FFI_API ShanksAccelHandle shanks_accel_create(
+    const char* name,
+    const char* precision,
+    const char* args_json
+);
+
+/**
+ * @brief Destroy an acceleration algorithm instance.
+ * 
+ * @param handle Algorithm handle to destroy. Safe to pass NULL.
+ */
+SHANKS_FFI_API void shanks_accel_destroy(ShanksAccelHandle handle);
+
+// ============================================================================
+// Acceleration Computation
+// ============================================================================
+
+/**
+ * @brief Apply acceleration algorithm to series data.
+ * 
+ * @param accel Algorithm handle.
+ * @param series Series handle (must have same precision).
+ * @param n Number of terms to use from series.
+ * @param order Order parameter for the algorithm.
+ * @return JSON object: {
+ *     "values": [{"real": "3.14", "imag": "0.0", "exp": 0}, ...],
+ *     "deviations": ["0.001", "0.0001", ...],
+ *     "events": [{"n": 10, "name": "convergence", "description": "..."}],
+ *     "errors": [{"n": 5, "message": "division by zero"}],
+ *     "profiling": {"add": 100, "mul": 50, "div": 10, "special": 5}
+ * }
+ * Must be freed with shanks_free_string().
+ */
+SHANKS_FFI_API char* shanks_accel_apply(
+    ShanksAccelHandle accel,
+    ShanksSeriesHandle series,
+    uint64_t n,
+    uint64_t order
+);
+
+/**
+ * @brief Apply acceleration to pre-generated series data.
+ * 
+ * This is useful when you already have Sn and an arrays.
+ * 
+ * @param accel Algorithm handle.
+ * @param series_json JSON with series data: {"Sn": [...], "an": [...]}.
+ * @param n Number of terms.
+ * @param order Order parameter.
+ * @return JSON object with results (same format as shanks_accel_apply).
+ */
+SHANKS_FFI_API char* shanks_accel_apply_data(
+    ShanksAccelHandle accel,
+    const char* series_json,
+    uint64_t n,
+    uint64_t order
+);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif // SHANKS_FFI_HPP

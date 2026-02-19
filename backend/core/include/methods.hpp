@@ -130,6 +130,18 @@ struct transformation_registry_metadata {
     }
 
     /**
+     * @brief Get the vector of transformation keys
+     * @return std::vector<std::string>
+     */
+    static std::vector<std::string> get_keys() {
+        return {
+#define TRANSFORMATION_ENTRY(id, name, camel, cls, binding, ...) camel,
+#include "transformation_registry.def"
+#undef TRANSFORMATION_ENTRY
+        };
+    }
+
+    /**
      * @brief Get the vector of transformation ids
      * @return std::vector<transformation_id_t>
      */

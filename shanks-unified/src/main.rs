@@ -1,0 +1,275 @@
+//! Shanks Unified - Series Acceleration Visualization Tool
+//!
+//! This application provides a unified interface for:
+//! - Computing series partial sums and terms
+//! - Applying acceleration algorithms
+//! - Visualizing results with interactive plots
+//! - Caching results in SQLite database
+//!
+//! # Modes
+//!
+//! - **GUI mode** (default): Launch the interactive visualization UI
+//! - **Headless mode** (`--headless`): Run all computations from config without UI
+
+use clap::{Parser, Subcommand};
+use std::path::PathBuf;
+use std::sync::Arc;
+
+/// Shanks Unified - Series Acceleration Visualization Tool
+#[derive(Parser, Debug)]
+#[command(name = "shanks-unified")]
+#[command(about = "A unified tool for series acceleration and visualization")]
+#[command(version)]
+struct Args {
+    /// Path to the C++ library (libshanks_ffi.so / shanks_ffi.dll)
+    #[arg(short, long)]
+    lib_path: Option<PathBuf>,
+
+    /// Path to the SQLite database file
+    #[arg(short, long, default_value = "shanks.db")]
+    db_path: PathBuf,
+
+    /// Enable verbose logging
+    #[arg(short, long, action = clap::ArgAction::Count)]
+    verbose: u8,
+
+    #[command(subcommand)]
+    command: Option<Commands>,
+}
+
+#[derive(Subcommand, Debug)]
+enum Commands {
+    /// Run in GUI mode (default)
+    Gui {
+        /// Path to experiment configuration file
+        #[arg(short, long)]
+        config: Option<PathBuf>,
+    },
+
+    /// Run in headless mode - compute all series from config
+    Headless {
+        /// Path to experiment configuration file (required)
+        #[arg(short, long)]
+        config: PathBuf,
+
+        /// Comma-separated list of precisions to use
+        #[arg(long)]
+        precisions: Option<String>,
+    },
+
+    /// List available series, algorithms, and precisions
+    List {
+        /// What to list: series, accels, precisions, noises
+        #[arg(default_value = "all")]
+        what: String,
+    },
+}
+
+fn main() -> anyhow::Result<()> {
+    let args = Args::parse();
+
+    // Initialize logging
+    let log_level = match args.verbose {
+        0 => log::LevelFilter::Warn,
+        1 => log::LevelFilter::Info,
+        2 => log::LevelFilter::Debug,
+        _ => log::LevelFilter::Trace,
+    };
+    env_logger::Builder::new()
+        .filter_level(log_level)
+        .init();
+
+    log::info!("Starting Shanks Unified...");
+
+    // Load C++ library
+    let library = if let Some(lib_path) = &args.lib_path {
+        log::info!("Loading library from {:?}", lib_path);
+        Arc::new(shanks_unified::ffi::ShanksLibrary::load(lib_path)?)
+    } else {
+        log::error!("No library path specified. Use --lib-path");
+        return Err(anyhow::anyhow!(
+            "Library path required. Use --lib-path to specify the library location."
+        ));
+    };
+
+    // Initialize database
+    log::info!("Initializing database at {:?}", args.db_path);
+    let cache = shanks_unified::cache::Cache::new(&args.db_path)?;
+    cache.initialize_schema()?;
+
+    match &args.command {
+        None => {
+            run_gui(library, cache, None)
+        }
+        Some(Commands::Gui { config }) => {
+            run_gui(library, cache, config.clone())
+        }
+        Some(Commands::Headless { config, precisions }) => {
+            run_headless(library, cache, config.clone(), precisions.clone())
+        }
+        Some(Commands::List { what }) => {
+            run_list(&library, what)
+        }
+    }
+}
+
+fn run_gui(
+    library: Arc<shanks_unified::ffi::ShanksLibrary>,
+    cache: shanks_unified::cache::Cache,
+    config_path: Option<PathBuf>,
+) -> anyhow::Result<()> {
+    // Load experiment config if provided
+    let experiment_config = if let Some(path) = config_path {
+        log::info!("Loading experiment config from {:?}", path);
+        Some(shanks_unified::config::ExperimentConfig::load(&path)?)
+    } else {
+        None
+    };
+
+    // Create application state
+    let app_config = shanks_unified::config::AppConfig::default();
+    let app_state = shanks_unified::app::AppState::new(
+        app_config,
+        experiment_config,
+        cache,
+        Some(library),
+    );
+
+    // Run GUI
+    let native_options = eframe::NativeOptions {
+        viewport: egui::ViewportBuilder::default()
+            .with_inner_size([1200.0, 800.0])
+            .with_min_inner_size([800.0, 600.0])
+            .with_title("Shanks Unified"),
+        ..Default::default()
+    };
+
+    let result = eframe::run_native(
+        "Shanks Unified",
+        native_options,
+        Box::new(move |cc| {
+            // Set up egui style
+            let mut style = (*cc.egui_ctx.style()).clone();
+            style.spacing.item_spacing = egui::vec2(8.0, 6.0);
+            cc.egui_ctx.set_style(style);
+
+            Ok(Box::new(shanks_unified::app::ShanksApp::new(app_state)))
+        }),
+    );
+
+    if let Err(e) = result {
+        log::error!("GUI error: {}", e);
+        return Err(anyhow::anyhow!("GUI error: {}", e));
+    }
+
+    Ok(())
+}
+
+fn run_headless(
+    library: Arc<shanks_unified::ffi::ShanksLibrary>,
+    cache: shanks_unified::cache::Cache,
+    config_path: PathBuf,
+    precisions: Option<String>,
+) -> anyhow::Result<()> {
+    log::info!("Running in headless mode");
+
+    // Load experiment config
+    let mut config = shanks_unified::config::ExperimentConfig::load(&config_path)?;
+
+    // Override precisions if specified
+    if let Some(p) = precisions {
+        config.precisions = Some(p.split(',').map(|s| s.trim().to_string()).collect());
+    }
+
+    // Create headless runner
+    let mut runner = shanks_unified::headless::HeadlessRunner::new(config, library, cache)?;
+
+    // Set up progress callback
+    runner.set_progress_callback(|info| {
+        let status = match info.status {
+            shanks_unified::headless::Status::Computing => "Computing",
+            shanks_unified::headless::Status::Cached => "Cached",
+            shanks_unified::headless::Status::Complete => "Complete",
+            shanks_unified::headless::Status::Error(ref e) => &e,
+        };
+        println!(
+            "[{}/{}] {} ({}) - {} - {} [{:.1}s]",
+            info.current,
+            info.total,
+            info.series_name,
+            info.precision,
+            info.method_name,
+            status,
+            info.elapsed_secs
+        );
+    });
+
+    // Run all computations
+    let summary = runner.run_all()?;
+
+    // Print summary
+    println!("\n=== Run Summary ===");
+    println!("Total trials: {}", summary.total_trials);
+    println!("Successful: {}", summary.successful);
+    println!("Cached (skipped): {}", summary.cached);
+    println!("Failed: {}", summary.failed);
+    println!("Total time: {:.2}s", summary.total_time_secs);
+
+    if !summary.errors.is_empty() {
+        println!("\nErrors:");
+        for err in &summary.errors {
+            println!("  - {}", err);
+        }
+    }
+
+    Ok(())
+}
+
+fn run_list(library: &shanks_unified::ffi::ShanksLibrary, what: &str) -> anyhow::Result<()> {
+    let what = what.to_lowercase();
+
+    if what == "all" || what == "series" {
+        println!("Available series:");
+        let series = library.list_series()?;
+        for name in &series {
+            println!("  - {}", name);
+        }
+        println!();
+    }
+
+    if what == "all" || what == "accels" || what == "algorithms" {
+        println!("Available acceleration algorithms:");
+        let accels = library.list_accels()?;
+        for name in &accels {
+            println!("  - {}", name);
+        }
+        println!();
+    }
+
+    if what == "all" || what == "precisions" {
+        println!("Available precisions:");
+        let precisions = library.list_precisions()?;
+        for name in &precisions {
+            println!("  - {}", name);
+        }
+        println!();
+    }
+
+    if what == "all" || what == "noises" {
+        println!("Available noise types:");
+        let noises = library.list_noises()?;
+        for name in &noises {
+            println!("  - {}", name);
+        }
+        println!();
+
+        println!("Available noise methods:");
+        let methods = library.list_noise_methods()?;
+        for name in &methods {
+            println!("  - {}", name);
+        }
+        println!();
+    }
+
+    Ok(())
+}

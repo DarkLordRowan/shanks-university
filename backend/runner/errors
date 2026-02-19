@@ -1,0 +1,20 @@
+BUILDING PYSHANKS...
+CMake Deprecation Warning at /home/luna/prj/mirea/shanks/shanks-university/backend/runner/build/_deps/pybind11-src/CMakeLists.txt:13 (cmake_minimum_required):
+  Compatibility with CMake < 3.10 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+  to tell CMake that the project requires at least <min> but has been updated
+  to work with policies introduced by <max> or earlier.
+
+
+-- pybind11 v2.13.6 
+-- Configuring done (0.2s)
+-- Generating done (0.0s)
+-- Build files have been written to: /home/luna/prj/mirea/shanks/shanks-university/backend/runner/build
+[1/10] Generating CXX dyndep file CMakeFiles/pyshanks.dir/CXX.dd
+[2/5] Building CXX object CMakeFiles/pyshanks.dir/src/bind_filters.cpp.o
+[3/5] Building CXX object CMakeFiles/pyshanks.dir/src/bind_series_real.cpp.o
+[4/5] Building CXX object CMakeFiles/pyshanks.dir/src/bind_series_complex.cpp.o
+[5/5] Linking CXX shared module pyshanks.cpython-313-x86_64-linux-gnu.so
+PREPARING FOLDER FOR PYTHON...

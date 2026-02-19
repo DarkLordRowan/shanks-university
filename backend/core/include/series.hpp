@@ -2,6 +2,9 @@
 #define SERIES_HPP
 #pragma once
 
+#include <memory>
+#include <functional>
+
 namespace shanks {
 namespace series {
 
