@@ -14,6 +14,9 @@ jobs:
       run:
         shell: msys2 {0}
 
+    env:
+      CCACHE_DIR: ${{ github.workspace }}/.ccache
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -32,6 +35,20 @@ jobs:
             mingw-w64-x86_64-eigen3
             mingw-w64-x86_64-gsl
             mingw-w64-x86_64-rust
+            mingw-w64-x86_64-ccache
+
+      - name: Cache C++ (ccache)
+        uses: actions/cache@v4
+        with:
+          path: .ccache
+          key: ${{ runner.os }}-ccache-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-ccache-
+
+      - name: Cache Rust
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: "shanks-unified"
 
       - name: Build C++ Backend (libshanks_ffi.dll)
         run: |
@@ -50,15 +67,15 @@ jobs:
           mkdir shanks-unified-windows
           
           # Copy our built binaries
-          cp backend/ffi/build/libshanks_ffi.dll shanks-unified-windows/ || cp backend/ffi/build/lib/libshanks_ffi.dll shanks-unified-windows/ || cp backend/ffi/build/bin/libshanks_ffi.dll shanks-unified-windows/
-          cp shanks-unified/target/release/shanks_unified.exe shanks-unified-windows/
+          cp backend/ffi/build/bin/libshanks_ffi.dll shanks-unified-windows/
+          cp shanks-unified/target/release/shanks-unified.exe shanks-unified-windows/
           
           # Copy configurations
           cp -r shanks-unified/config shanks-unified-windows/
           
           # Use ldd to find and copy all required MSYS2/MinGW DLLs (gmp, mpfr, gsl, libstdc++, libgcc, etc.)
           ldd shanks-unified-windows/libshanks_ffi.dll | grep -i '/mingw64/bin/' | awk '{print $3}' | xargs -I '{}' cp '{}' shanks-unified-windows/
-          ldd shanks-unified-windows/shanks_unified.exe | grep -i '/mingw64/bin/' | awk '{print $3}' | xargs -I '{}' cp '{}' shanks-unified-windows/
+          ldd shanks-unified-windows/shanks-unified.exe | grep -i '/mingw64/bin/' | awk '{print $3}' | xargs -I '{}' cp '{}' shanks-unified-windows/
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
