@@ -44,11 +44,13 @@ jobs:
           key: ${{ runner.os }}-ccache-${{ github.sha }}
           restore-keys: |
             ${{ runner.os }}-ccache-
+          save-always: true
 
       - name: Cache Rust
         uses: Swatinem/rust-cache@v2
         with:
           workspaces: "shanks-unified"
+          save-if: ${{ always() }}
 
       - name: Build C++ Backend (libshanks_ffi.dll)
         run: |
@@ -74,8 +76,8 @@ jobs:
           cp -r shanks-unified/config shanks-unified-windows/
           
           # Use ldd to find and copy all required MSYS2/MinGW DLLs (gmp, mpfr, gsl, libstdc++, libgcc, etc.)
-          ldd shanks-unified-windows/libshanks_ffi.dll | grep -i '/mingw64/bin/' | awk '{print $3}' | xargs -I '{}' cp '{}' shanks-unified-windows/
-          ldd shanks-unified-windows/shanks-unified.exe | grep -i '/mingw64/bin/' | awk '{print $3}' | xargs -I '{}' cp '{}' shanks-unified-windows/
+          ldd shanks-unified-windows/libshanks_ffi.dll | grep -i 'mingw64' | awk '{print $3}' | xargs -I '{}' cp -n '{}' shanks-unified-windows/ || true
+          ldd shanks-unified-windows/shanks-unified.exe | grep -i 'mingw64' | awk '{print $3}' | xargs -I '{}' cp -n '{}' shanks-unified-windows/ || true
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
