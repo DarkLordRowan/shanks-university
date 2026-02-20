@@ -2,6 +2,7 @@
 #define ERF_ITERATOR_HPP
 
 #pragma once
+#include <cassert>
 
 #include <numbers>
 

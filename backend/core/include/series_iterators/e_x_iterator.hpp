@@ -2,6 +2,7 @@
 #define E_X_ITERATOR_HPP
 
 #pragma once
+#include <cassert>
 
 #include <numbers>
 

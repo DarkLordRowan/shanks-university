@@ -2,6 +2,7 @@
 #define LAMBERT_W_FUNC_ITERATOR_HPP
 
 #pragma once
+#include <cassert>
 
 #include <numbers>
 

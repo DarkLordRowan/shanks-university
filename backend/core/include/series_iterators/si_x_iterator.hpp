@@ -1,6 +1,7 @@
 #ifndef SI_X_ITERATOR_HPP
 #define SI_X_ITERATOR_HPP
 #pragma once
+#include <cassert>
 
 #include "../series_base.hpp"
 

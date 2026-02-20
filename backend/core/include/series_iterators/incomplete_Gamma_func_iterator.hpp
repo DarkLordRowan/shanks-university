@@ -1,6 +1,7 @@
 #ifndef INCOMPLETE_GAMMA_FUNC_ITERATOR_HPP
 #define INCOMPLETE_GAMMA_FUNC_ITERATOR_HPP
 #pragma once
+#include <cassert>
 
 #include "../series_base.hpp"
 

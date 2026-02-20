@@ -1,6 +1,7 @@
 #ifndef RIEMANN_ZETA_FUNC_XMIN1_DIV_RIEMANN_ZETA_FUNC_X_ITERATOR_HPP
 #define RIEMANN_ZETA_FUNC_XMIN1_DIV_RIEMANN_ZETA_FUNC_X_ITERATOR_HPP
 #pragma once
+#include <cassert>
 
 #include "../series_base.hpp"
 
