@@ -171,6 +171,12 @@ pub struct ShanksApp {
     status_message: String,
     is_computing: bool,
     auto_compute: bool,
+
+    // Plot controls
+    reset_plot: bool,
+    enable_aspect_ratio: bool,
+    aspect_x: String,
+    aspect_y: String,
 }
 
 #[derive(PartialEq)]
@@ -246,6 +252,10 @@ impl ShanksApp {
             status_message: String::new(),
             is_computing: false,
             auto_compute: false,
+            reset_plot: false,
+            enable_aspect_ratio: true,
+            aspect_x: "10.0".to_string(),
+            aspect_y: "1.0".to_string(),
         }
     }
     
@@ -558,6 +568,20 @@ impl eframe::App for ShanksApp {
                 } else {
                     ui.checkbox(&mut self.symlog_dev, "Symlog Scale");
                 }
+
+                ui.separator();
+                if ui.button("🏠 Home").clicked() {
+                    self.reset_plot = true;
+                }
+
+                ui.separator();
+                ui.checkbox(&mut self.enable_aspect_ratio, "Aspect Ratio");
+                if self.enable_aspect_ratio {
+                    ui.label("X:");
+                    ui.add(egui::TextEdit::singleline(&mut self.aspect_x).desired_width(40.0));
+                    ui.label("Y:");
+                    ui.add(egui::TextEdit::singleline(&mut self.aspect_y).desired_width(40.0));
+                }
             });
             ui.separator();
 
@@ -570,9 +594,22 @@ impl eframe::App for ShanksApp {
             // Plot area
             let mut plot = egui_plot::Plot::new("series_plot")
                 .view_aspect(1.5)
-                .legend(egui_plot::Legend::default())
+                .legend(egui_plot::Legend::default().position(egui_plot::Corner::RightTop))
                 .x_axis_label("n")
                 .y_axis_label("Value");
+
+            if self.reset_plot {
+                plot = plot.reset();
+                self.reset_plot = false;
+            }
+
+            if self.enable_aspect_ratio {
+                if let (Ok(x), Ok(y)) = (self.aspect_x.parse::<f64>(), self.aspect_y.parse::<f64>()) {
+                    if x > 0.0 && y > 0.0 {
+                        plot = plot.data_aspect((x / y) as f32);
+                    }
+                }
+            }
             
             if use_symlog {
                 plot = plot.y_axis_formatter(|mark, _range| {
@@ -592,7 +629,8 @@ impl eframe::App for ShanksApp {
                             .iter()
                             .enumerate()
                             .filter_map(|(i, p)| {
-                                self.point_to_f64(p, use_symlog).map(|v| [i as f64, v])
+                                self.point_to_f64(p, use_symlog)
+                                    .map(|v| [i as f64, v])
                             })
                             .collect();
                         
@@ -623,7 +661,9 @@ impl eframe::App for ShanksApp {
                             .iter()
                             .enumerate()
                             .filter_map(|(j, opt_p)| {
-                                opt_p.as_ref().and_then(|p| self.point_to_f64(p, use_symlog)).map(|v| [j as f64, v])
+                                opt_p.as_ref()
+                                     .and_then(|p| self.point_to_f64(p, use_symlog))
+                                     .map(|v| [j as f64, v])
                             })
                             .collect();
                         
