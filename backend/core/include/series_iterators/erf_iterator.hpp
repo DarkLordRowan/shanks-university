@@ -46,12 +46,9 @@ public:
         if constexpr (typename utils::math<T>::has_erf{})
             return utils::math<T>::sqrt(utils::cast<T, double>()(std::numbers::pi)) * utils::math<T>::erf(this->x) *
                    utils::cast<T, double>()(0.5);
-        else
-#ifndef DEBUG
-            assert(false);
-#else
-            return utils::helpers<T>::get_nan();
-#endif
+
+        assert(false);
+        return utils::helpers<T>::get_nan();
     }
 
     /**

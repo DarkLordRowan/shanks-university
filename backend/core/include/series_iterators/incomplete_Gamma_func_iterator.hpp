@@ -46,12 +46,9 @@ public:
     T get_sum() const override {
         if constexpr (typename utils::math<T>::has_inc_gamma{})
             return utils::math<T>::inc_gamma(this->x, alpha);
-        else
-#ifndef DEBUG
-            assert(false);
-#else
-            return utils::helpers<T>::get_nan();
-#endif
+
+        assert(false);
+        return utils::helpers<T>::get_nan();
     }
 
     /**

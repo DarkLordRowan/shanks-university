@@ -366,8 +366,8 @@ impl HeadlessRunner {
         &self,
         precision: &str,
         series: &SeriesInstance,
-        method: &MethodInstance,
-        noise: Option<&NoiseDef>,
+        _method: &MethodInstance,
+        _noise: Option<&NoiseDef>,
     ) -> CacheKey {
         CacheKey {
             name: series.name.clone(),
@@ -379,8 +379,6 @@ impl HeadlessRunner {
                 .map(|v| v.to_string())
                 .unwrap_or_default(),
             args: serde_json::to_string(&series.args).unwrap_or_default(),
-            method: method.name.clone(),
-            noise: noise.map(|n| format!("{}_{}", n.noise_type, n.seed)),
         }
     }
 
@@ -396,6 +394,4 @@ struct CacheKey {
     precision: String,
     x_value: String,
     args: String,
-    method: String,
-    noise: Option<String>,
 }

@@ -257,7 +257,7 @@ impl Cache {
         let mut an = Vec::new();
 
         for row in rows {
-            let (n, sn_real, sn_imag, sn_exp, an_real, an_imag, an_exp) = row?;
+            let (_n, sn_real, sn_imag, sn_exp, an_real, an_imag, an_exp) = row?;
             
             // Build Sn point
             if let (Some(real_str), Some(exp)) = (sn_real, sn_exp) {

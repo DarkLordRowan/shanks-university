@@ -43,12 +43,9 @@ public:
     T get_sum() const override {
         if constexpr (typename utils::math<T>::has_zeta{})
             return utils::math<T>::zeta(this->x - utils::cast<T, int>()(1)) / utils::math<T>::zeta(this->x);
-        else
-#ifndef DEBUG
-            assert(false);
-#else
-            return utils::helpers<T>::get_nan();
-#endif
+
+        assert(false);
+        return utils::helpers<T>::get_nan();
     }
 
     /**
