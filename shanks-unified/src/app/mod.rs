@@ -578,9 +578,9 @@ impl eframe::App for ShanksApp {
                 ui.separator();
                 
                 // Show selected count
-                let series_count = self.series_tree.as_ref().map(|t| t.count_selected()).unwrap_or(0);
-                let accel_count = self.accel_tree.as_ref().map(|t| t.count_selected()).unwrap_or(0);
-                ui.label(format!("Selected: {} series × {} accels", series_count, accel_count));
+                // let series_count = self.series_tree.as_ref().map(|t| t.count_selected()).unwrap_or(0);
+                // let accel_count = self.accel_tree.as_ref().map(|t| t.count_selected()).unwrap_or(0);
+                // ui.label(format!("Selected: {} series × {} accels", series_count, accel_count));
                 
                 ui.add_space(8.0);
                 if ui.add_enabled(!self.is_computing && (self.current_result.is_some() || !self.current_accel_results.is_empty()), egui::Button::new("Export JSON")).clicked() {
