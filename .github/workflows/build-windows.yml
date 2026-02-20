@@ -2,9 +2,9 @@ name: Build Windows Release
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
   workflow_dispatch:
 
 jobs:
@@ -50,7 +50,6 @@ jobs:
         uses: Swatinem/rust-cache@v2
         with:
           workspaces: "shanks-unified"
-          save-if: ${{ always() }}
 
       - name: Build C++ Backend (libshanks_ffi.dll)
         run: |
@@ -67,14 +66,14 @@ jobs:
       - name: Prepare Archive Folder
         run: |
           mkdir shanks-unified-windows
-          
+
           # Copy our built binaries
           cp backend/ffi/build/bin/libshanks_ffi.dll shanks-unified-windows/
           cp shanks-unified/target/release/shanks-unified.exe shanks-unified-windows/
-          
+
           # Copy configurations
           cp -r shanks-unified/config shanks-unified-windows/
-          
+
           # Use ldd to find and copy all required MSYS2/MinGW DLLs (gmp, mpfr, gsl, libstdc++, libgcc, etc.)
           ldd shanks-unified-windows/libshanks_ffi.dll | grep -i 'mingw64' | awk '{print $3}' | xargs -I '{}' cp -n '{}' shanks-unified-windows/ || true
           ldd shanks-unified-windows/shanks-unified.exe | grep -i 'mingw64' | awk '{print $3}' | xargs -I '{}' cp -n '{}' shanks-unified-windows/ || true
