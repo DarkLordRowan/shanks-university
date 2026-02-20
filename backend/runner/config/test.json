@@ -1,4 +1,5 @@
 {
+  "precisions": ["F32", "F64", "FLong", "Arb128", "Arb256"],
   "series": [
     "example_series.csv",
     {

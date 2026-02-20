@@ -33,11 +33,32 @@ inline bool parse_precision(const char* precision, PrecisionType& out) {
     if (strcmp(precision, "F32") == 0) { out = PrecisionType::F32; return true; }
     if (strcmp(precision, "F64") == 0) { out = PrecisionType::F64; return true; }
     if (strcmp(precision, "FLong") == 0) { out = PrecisionType::FLong; return true; }
-    if (strcmp(precision, "Arb") == 0) { out = PrecisionType::Arb; return true; }
+    
+    if (strncmp(precision, "Arb", 3) == 0) {
+        out = PrecisionType::Arb;
+        if (precision[3] != '\0') {
+            try {
+                int bits = std::stoi(precision + 3);
+                if (bits > 0) mpfr::mpreal::set_default_prec(bits);
+            } catch (...) {}
+        }
+        return true;
+    }
+    
     if (strcmp(precision, "CF32") == 0) { out = PrecisionType::CF32; return true; }
     if (strcmp(precision, "CF64") == 0) { out = PrecisionType::CF64; return true; }
     if (strcmp(precision, "CFLong") == 0) { out = PrecisionType::CFLong; return true; }
-    if (strcmp(precision, "CArb") == 0) { out = PrecisionType::CArb; return true; }
+    
+    if (strncmp(precision, "CArb", 4) == 0) {
+        out = PrecisionType::CArb;
+        if (precision[4] != '\0') {
+            try {
+                int bits = std::stoi(precision + 4);
+                if (bits > 0) mpfr::mpreal::set_default_prec(bits);
+            } catch (...) {}
+        }
+        return true;
+    }
     
     return false;
 }
