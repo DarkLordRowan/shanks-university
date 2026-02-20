@@ -16,6 +16,7 @@
 #include <functional>
 #include <memory>
 #include <mutex>
+#include <optional>
 #include <sstream>
 #include <string>
 #include <unordered_map>
@@ -59,6 +60,7 @@ struct SeriesHandleReal : public SeriesHandleBaseExt {
     // Cache for raw data extraction without JSON serialization overhead
     mutable std::unique_ptr<series_result<T>> cached_result;
     mutable uint64_t cached_n = 0;
+    mutable std::optional<T> cached_sum;
 
     SeriesHandleReal(std::unique_ptr<shanks::series::series_base<T, size_t>> s, 
                      PrecisionType p, T x, const std::string& n = "")
@@ -136,6 +138,18 @@ struct SeriesHandleReal : public SeriesHandleBaseExt {
         }
         return cached_result.get();
     }
+
+    const void* get_native_sum() const override {
+        if (!series) return nullptr;
+        if (!cached_sum) {
+            try {
+                cached_sum = series->get_sum();
+            } catch (...) {
+                return nullptr;
+            }
+        }
+        return &(*cached_sum);
+    }
 };
 
 // Template implementation for complex series
@@ -149,6 +163,7 @@ struct SeriesHandleComplex : public SeriesHandleBaseExt {
     // Cache for raw data extraction without JSON serialization overhead
     mutable std::unique_ptr<series_result<std::complex<T>>> cached_result;
     mutable uint64_t cached_n = 0;
+    mutable std::optional<std::complex<T>> cached_sum;
 
     SeriesHandleComplex(std::unique_ptr<shanks::series::series_base<std::complex<T>, size_t>> s, 
                         PrecisionType p, std::complex<T> x, const std::string& n = "")
@@ -219,6 +234,18 @@ struct SeriesHandleComplex : public SeriesHandleBaseExt {
             cached_n = n;
         }
         return cached_result.get();
+    }
+
+    const void* get_native_sum() const override {
+        if (!series) return nullptr;
+        if (!cached_sum) {
+            try {
+                cached_sum = series->get_sum();
+            } catch (...) {
+                return nullptr;
+            }
+        }
+        return &(*cached_sum);
     }
 };
 

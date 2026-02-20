@@ -135,6 +135,7 @@ struct SeriesHandleBase {
     virtual PrecisionType get_precision() const = 0;
     virtual std::string get_name() const = 0;
     virtual const void* get_raw_data(uint64_t n) const = 0;
+    virtual const void* get_native_sum() const = 0;
 };
 
 // Type-erased acceleration handle base class

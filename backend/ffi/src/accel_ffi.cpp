@@ -121,6 +121,14 @@ struct AccelHandleReal : public AccelHandleBaseExt {
         if (!raw_data) return "{}";
         const auto* data = static_cast<const series_result<T>*>(raw_data);
         
+        const void* sum_ptr = series->get_native_sum();
+        T sum = T(0);
+        bool has_sum = (sum_ptr != nullptr);
+        if (has_sum) {
+            sum = *static_cast<const T*>(sum_ptr);
+        }
+
+        std::vector<ScientificValue> deviations;
         std::ostringstream oss;
         oss << "{\"values\": [";
         bool first = true;
@@ -130,11 +138,22 @@ struct AccelHandleReal : public AccelHandleBaseExt {
             try {
                 T val = (*algo)(i, order, *data);
                 oss << shanks::ffi::to_scientific(val).to_json();
+                if (has_sum) {
+                    deviations.push_back(shanks::ffi::to_scientific(utils::math<T>::abs(val - sum)));
+                } else {
+                    deviations.push_back(ScientificValue(0.0, 0));
+                }
             } catch (...) {
                 oss << "null";
+                deviations.push_back(ScientificValue(0.0, 0));
             }
         }
-        oss << "], \"deviations\": []";
+        oss << "], \"deviations\": [";
+        for (size_t i = 0; i < deviations.size(); ++i) {
+            if (i > 0) oss << ", ";
+            oss << deviations[i].to_json();
+        }
+        oss << "]";
         
 #ifdef SHANKS_ENABLE_PROFILING
         if (enable_profiling) {
@@ -191,6 +210,14 @@ struct AccelHandleComplex : public AccelHandleBaseExt {
         if (!raw_data) return "{}";
         const auto* data = static_cast<const series_result<std::complex<T>>*>(raw_data);
         
+        const void* sum_ptr = series->get_native_sum();
+        std::complex<T> sum(0, 0);
+        bool has_sum = (sum_ptr != nullptr);
+        if (has_sum) {
+            sum = *static_cast<const std::complex<T>*>(sum_ptr);
+        }
+
+        std::vector<ScientificValue> deviations;
         std::ostringstream oss;
         oss << "{\"values\": [";
         bool first = true;
@@ -200,11 +227,22 @@ struct AccelHandleComplex : public AccelHandleBaseExt {
             try {
                 auto val = (*algo)(i, order, *data);
                 oss << shanks::ffi::complex_to_json(val.real(), val.imag());
+                if (has_sum) {
+                    deviations.push_back(shanks::ffi::to_scientific(utils::math<std::complex<T>>::abs(val - sum)));
+                } else {
+                    deviations.push_back(ScientificValue(0.0, 0));
+                }
             } catch (...) {
                 oss << "null";
+                deviations.push_back(ScientificValue(0.0, 0));
             }
         }
-        oss << "], \"deviations\": []";
+        oss << "], \"deviations\": [";
+        for (size_t i = 0; i < deviations.size(); ++i) {
+            if (i > 0) oss << ", ";
+            oss << deviations[i].to_json();
+        }
+        oss << "]";
         
 #ifdef SHANKS_ENABLE_PROFILING
         if (enable_profiling) {
