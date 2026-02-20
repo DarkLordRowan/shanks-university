@@ -213,6 +213,184 @@ impl Cache {
         }
     }
 
+    /// Check if an acceleration exists in the cache.
+    pub fn acceleration_exists(
+        &self,
+        series_id: i64,
+        accel_name: &str,
+        m_value: Option<i64>,
+        additional_args: &str,
+    ) -> Result<Option<i64>> {
+        let result = self.conn.query_row(
+            "SELECT id FROM accelerations WHERE series_id = ?1 AND accel_name = ?2 AND 
+             (m_value = ?3 OR (m_value IS NULL AND ?3 IS NULL)) AND additional_args = ?4",
+            params![series_id, accel_name, m_value, additional_args],
+            |row| row.get(0),
+        );
+
+        match result {
+            Ok(id) => Ok(Some(id)),
+            Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
+            Err(e) => Err(e.into()),
+        }
+    }
+
+    /// Get series result from the cache.
+    pub fn get_series_result(&self, series_id: i64) -> Result<Option<crate::ffi::SeriesResult>> {
+        let mut stmt = self.conn.prepare(
+            "SELECT n, sn_real, sn_imag, sn_exp, an_real, an_imag, an_exp 
+             FROM series_points WHERE series_id = ?1 ORDER BY n ASC"
+        )?;
+        
+        let rows = stmt.query_map(params![series_id], |row| {
+            let n: i64 = row.get(0)?;
+            let sn_real: Option<String> = row.get(1)?;
+            let sn_imag: Option<String> = row.get(2)?;
+            let sn_exp: Option<i64> = row.get(3)?;
+            let an_real: Option<String> = row.get(4)?;
+            let an_imag: Option<String> = row.get(5)?;
+            let an_exp: Option<i64> = row.get(6)?;
+            Ok((n, sn_real, sn_imag, sn_exp, an_real, an_imag, an_exp))
+        })?;
+
+        let mut sn = Vec::new();
+        let mut an = Vec::new();
+
+        for row in rows {
+            let (n, sn_real, sn_imag, sn_exp, an_real, an_imag, an_exp) = row?;
+            
+            // Build Sn point
+            if let (Some(real_str), Some(exp)) = (sn_real, sn_exp) {
+                if let Ok(real_val) = real_str.parse::<f64>() {
+                    let real_sci = crate::ffi::ScientificValue { mantissa: real_val, exponent: exp };
+                    if let Some(imag_str) = sn_imag {
+                        if !imag_str.is_empty() {
+                            if let Ok(imag_val) = imag_str.parse::<f64>() {
+                                let imag_sci = crate::ffi::ScientificValue { mantissa: imag_val, exponent: exp };
+                                sn.push(crate::ffi::SeriesPoint::Complex(crate::ffi::ComplexValue { real: real_sci, imag: imag_sci }));
+                                continue;
+                            }
+                        }
+                    }
+                    sn.push(crate::ffi::SeriesPoint::Real(real_sci));
+                }
+            }
+
+            // Build an point
+            if let (Some(real_str), Some(exp)) = (an_real, an_exp) {
+                if let Ok(real_val) = real_str.parse::<f64>() {
+                    let real_sci = crate::ffi::ScientificValue { mantissa: real_val, exponent: exp };
+                    if let Some(imag_str) = an_imag {
+                        if !imag_str.is_empty() {
+                            if let Ok(imag_val) = imag_str.parse::<f64>() {
+                                let imag_sci = crate::ffi::ScientificValue { mantissa: imag_val, exponent: exp };
+                                an.push(crate::ffi::SeriesPoint::Complex(crate::ffi::ComplexValue { real: real_sci, imag: imag_sci }));
+                                continue;
+                            }
+                        }
+                    }
+                    an.push(crate::ffi::SeriesPoint::Real(real_sci));
+                }
+            }
+        }
+
+        if sn.is_empty() {
+            return Ok(None);
+        }
+
+        Ok(Some(crate::ffi::SeriesResult {
+            sn,
+            an,
+            sum: None,
+            profiling: None,
+        }))
+    }
+
+    /// Get acceleration result from cache.
+    pub fn get_accel_result(&self, accel_id: i64) -> Result<Option<crate::ffi::AccelResult>> {
+        let mut stmt = self.conn.prepare(
+            "SELECT n, value_real, value_imag, value_exp, deviation 
+             FROM accel_points WHERE accel_id = ?1 ORDER BY n ASC"
+        )?;
+
+        let rows = stmt.query_map(params![accel_id], |row| {
+            let n: i64 = row.get(0)?;
+            let v_real: Option<String> = row.get(1)?;
+            let v_imag: Option<String> = row.get(2)?;
+            let v_exp: Option<i64> = row.get(3)?;
+            let dev_str: Option<String> = row.get(4)?;
+            Ok((n, v_real, v_imag, v_exp, dev_str))
+        })?;
+
+        let mut values = Vec::new();
+        let mut deviations = Vec::new();
+
+        let mut extracted_rows = Vec::new();
+        for row in rows {
+            extracted_rows.push(row?);
+        }
+        
+        if extracted_rows.is_empty() {
+            return Ok(None);
+        }
+
+        // Accel algorithms typically return `None` up to some N depending on algorithm.
+        // Cache stores only rows that were inserted. We should handle missing Ns as `None`s.
+        let mut max_n = 0;
+        for (n, _, _, _, _) in &extracted_rows {
+            if *n > max_n { max_n = *n; }
+        }
+
+        values.resize((max_n) as usize, None);
+        deviations.resize((max_n) as usize, crate::ffi::ScientificValue { mantissa: 0.0, exponent: 0 });
+
+        for (n, v_real, v_imag, v_exp, dev_str) in extracted_rows {
+            let idx = (n - 1) as usize; // assuming 1-based n
+            
+            // value
+            if let (Some(real_str), Some(exp)) = (v_real, v_exp) {
+                if let Ok(real_val) = real_str.parse::<f64>() {
+                    let real_sci = crate::ffi::ScientificValue { mantissa: real_val, exponent: exp };
+                    if let Some(imag_str) = v_imag {
+                        if !imag_str.is_empty() {
+                            if let Ok(imag_val) = imag_str.parse::<f64>() {
+                                let imag_sci = crate::ffi::ScientificValue { mantissa: imag_val, exponent: exp };
+                                values[idx] = Some(crate::ffi::SeriesPoint::Complex(crate::ffi::ComplexValue { real: real_sci, imag: imag_sci }));
+                            }
+                        } else {
+                            values[idx] = Some(crate::ffi::SeriesPoint::Real(real_sci));
+                        }
+                    } else {
+                        values[idx] = Some(crate::ffi::SeriesPoint::Real(real_sci));
+                    }
+                }
+            }
+
+            // deviation
+            if let Some(dev) = dev_str {
+                if let Ok(dev_val) = dev.parse::<f64>() {
+                    deviations[idx] = crate::ffi::ScientificValue::from_f64(dev_val);
+                } else if dev.contains("e") {
+                    // primitive fallback for standard format if available
+                    let parts: Vec<&str> = dev.split('e').collect();
+                    if parts.len() == 2 {
+                        if let (Ok(m), Ok(e)) = (parts[0].parse::<f64>(), parts[1].parse::<i64>()) {
+                            deviations[idx] = crate::ffi::ScientificValue { mantissa: m, exponent: e };
+                        }
+                    }
+                }
+            }
+        }
+
+        Ok(Some(crate::ffi::AccelResult {
+            values,
+            deviations,
+            events: vec![],
+            errors: vec![],
+            profiling: None,
+        }))
+    }
+
     /// Get all series names in the cache.
     pub fn list_cached_series(&self) -> Result<Vec<String>> {
         let mut stmt = self.conn.prepare("SELECT DISTINCT name FROM series")?;

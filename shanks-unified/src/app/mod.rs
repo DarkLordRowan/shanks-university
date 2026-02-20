@@ -8,7 +8,7 @@ use crate::cache::Cache;
 use crate::config::{AppConfig, ExperimentConfig, SeriesInstance, MethodInstance, NoiseDef};
 use crate::ffi::{ShanksLibrary, SeriesResult, AccelResult, SeriesPoint, ComputeEvent, ComputeEventBody};
 use crate::compute::{ComputeEngine, ComputeTask};
-use std::sync::{Arc, RwLock, mpsc};
+use std::sync::{Arc, RwLock, Mutex, mpsc};
 
 pub use selection::{SelectionNode, SelectionState, SelectedCombination};
 
@@ -27,7 +27,7 @@ pub struct AppState {
     /// Experiment configuration (from config file)
     pub experiment: Option<Arc<RwLock<ExperimentConfig>>>,
     /// Database cache
-    pub cache: Arc<RwLock<Cache>>,
+    pub cache: Arc<Mutex<Cache>>,
     /// C++ library
     pub library: Option<Arc<ShanksLibrary>>,
     /// Available series names (from library)
@@ -77,7 +77,7 @@ impl AppState {
         Self {
             config: Arc::new(RwLock::new(config)),
             experiment: experiment.map(|e| Arc::new(RwLock::new(e))),
-            cache: Arc::new(RwLock::new(cache)),
+            cache: Arc::new(Mutex::new(cache)),
             library,
             series_names: RwLock::new(series_names),
             accel_names: RwLock::new(accel_names),
@@ -94,7 +94,7 @@ impl AppState {
 
     /// Get cache statistics.
     pub fn cache_stats(&self) -> crate::cache::CacheStats {
-        self.cache.read().unwrap().stats().unwrap_or(crate::cache::CacheStats {
+        self.cache.lock().unwrap().stats().unwrap_or(crate::cache::CacheStats {
             series_count: 0,
             accel_count: 0,
             points_count: 0,
@@ -156,7 +156,11 @@ pub struct ShanksApp {
     
     // Results
     current_result: Option<SeriesResult>,
-    current_accel_results: Vec<(String, AccelResult)>,
+    current_accel_results: std::collections::BTreeMap<String, AccelResult>,
+
+    // Debounce and state
+    last_input_change: Option<std::time::Instant>,
+    last_computed_state: Option<ComputeInputState>,
     
     // UI options
     show_partial_sums: bool,
@@ -170,7 +174,6 @@ pub struct ShanksApp {
     // Status
     status_message: String,
     is_computing: bool,
-    auto_compute: bool,
 
     // Plot controls
     reset_plot: bool,
@@ -243,7 +246,7 @@ impl ShanksApp {
             noise_tree,
             precision_tree,
             current_result: None,
-            current_accel_results: Vec::new(),
+            current_accel_results: std::collections::BTreeMap::new(),
             show_partial_sums,
             show_accel_values: true,
             symlog_main: use_symlog,
@@ -251,7 +254,8 @@ impl ShanksApp {
             selected_tab: PlotTab::Main,
             status_message: String::new(),
             is_computing: false,
-            auto_compute: false,
+            last_input_change: None,
+            last_computed_state: None,
             reset_plot: false,
             enable_aspect_ratio: true,
             aspect_x: "10.0".to_string(),
@@ -259,69 +263,62 @@ impl ShanksApp {
         }
     }
     
-    /// Start a computation from tree selection.
-    fn start_tree_computation(&mut self) {
+    /// Synchronize the requested combination with the cache and start compute if necessary.
+    fn sync_with_cache_and_compute(&mut self) {
         if self.state.is_offline() {
-            self.status_message = "Cannot compute in offline mode".to_string();
-            return;
+            self.status_message = "Offline mode - cache only".to_string();
         }
         
-        let series_tree = match &self.series_tree {
-            Some(t) => t,
-            None => {
-                self.status_message = "No series tree available".to_string();
-                return;
-            }
-        };
-        
-        let accel_tree = match &self.accel_tree {
-            Some(t) => t,
-            None => {
-                self.status_message = "No acceleration tree available".to_string();
-                return;
-            }
-        };
-        
+        let series_tree = match &self.series_tree { Some(t) => t, None => return };
+        let accel_tree = match &self.accel_tree { Some(t) => t, None => return };
         let noise_tree = self.noise_tree.as_ref();
         let precision_tree = self.precision_tree.as_ref();
         
-        // Generate combinations
         let combinations = selection::generate_combinations(
-            series_tree,
-            accel_tree,
+            series_tree, accel_tree,
             noise_tree.unwrap_or(&SelectionNode::new("empty", "Empty")),
             precision_tree.unwrap_or(&SelectionNode::new("empty", "Empty")),
         );
         
         if combinations.is_empty() {
-            self.status_message = "No combinations selected".to_string();
+            self.current_result = None;
+            self.current_accel_results.clear();
             return;
         }
-        
-        // Group all accelerations for the first base series/precision combo
-        // TODO: Queue all combinations correctly for multiple series selections
+
         let base_combo = &combinations[0];
-        
         let series_n_points = 100;
+        let mut loaded_series = false;
         
-        let mut task = ComputeTask::new(&base_combo.series_name, series_n_points)
-            .with_precision(&base_combo.precision)
-            .with_x("1.0"); // TODO: Get x from series_params
+        let series_params_json = serde_json::to_string(&base_combo.series_params).unwrap_or_else(|_| "{}".to_string());
         
-        // Add series parameters
-        for (name, value) in &base_combo.series_params {
-            let param_value = value.parse::<f64>()
-                .map(crate::ffi::ParamValue::Float)
-                .unwrap_or_else(|_| crate::ffi::ParamValue::String(value.clone()));
-            task = task.with_param(name.clone(), param_value);
+        let cache_lock = self.state.cache.lock().unwrap();
+        let series_id = cache_lock.series_exists(
+            &base_combo.series_name,
+            &base_combo.precision,
+            "1.0",
+            &series_params_json
+        ).unwrap_or(None);
+
+        if let Some(id) = series_id {
+            if let Ok(Some(res)) = cache_lock.get_series_result(id) {
+                self.current_result = Some(res);
+                loaded_series = true;
+            }
         }
+        if !loaded_series {
+            self.current_result = None;
+        }
+
+        self.current_accel_results.clear();
+        let mut added_signatures = std::collections::HashSet::new();
         
-        // Add all selected algorithms that map to this base combo
-        let mut added_algorithms = std::collections::HashSet::new();
+        let mut missing_algorithms = Vec::new();
+
+        let mut all_algorithms = Vec::new();
         for combo in combinations.iter().filter(|c| c.series_name == base_combo.series_name && c.precision == base_combo.precision) {
-            // Deduplicate same algorithms for the same base configuration
             let signature = format!("{}-{}-{}", combo.method_name, combo.method_n, combo.method_m);
-            if !added_algorithms.insert(signature) { continue; }
+            if !added_signatures.insert(signature) { continue; }
             
             let mut params = std::collections::HashMap::new();
             params.insert("n".to_string(), crate::ffi::ParamValue::Int(combo.method_n));
@@ -332,23 +329,63 @@ impl ShanksApp {
                     .unwrap_or_else(|_| crate::ffi::ParamValue::String(v.clone()));
                 params.insert(k.clone(), pv);
             }
-            task = task.with_algorithm_params(combo.method_name.clone(), params);
+            all_algorithms.push(crate::compute::AccelParams { name: combo.method_name.clone(), params });
+        }
+
+        for accel in &all_algorithms {
+            let distinct_name = crate::compute::build_distinct_name(accel, &all_algorithms);
+            if let Some(id) = series_id {
+                let m_val = accel.params.get("m").and_then(|v| {
+                    if let crate::ffi::ParamValue::Int(i) = v { Some(*i) } else { None }
+                });
+                let accel_params_json = serde_json::to_string(&accel.params).unwrap_or_else(|_| "{}".to_string());
+                
+                let accel_id = cache_lock.acceleration_exists(id, &accel.name, m_val, &accel_params_json).unwrap_or(None);
+                if let Some(a_id) = accel_id {
+                    // exists in cache
+                    if let Ok(Some(res)) = cache_lock.get_accel_result(a_id) {
+                        self.current_accel_results.insert(distinct_name.clone(), res);
+                    } else {
+                        missing_algorithms.push(accel.clone());
+                    }
+                } else {
+                    missing_algorithms.push(accel.clone());
+                }
+            } else {
+                missing_algorithms.push(accel.clone());
+            }
         }
         
-        // Start task
-        if let Some(ref mut engine) = self.compute_engine {
-            match engine.start_task(task) {
-                Ok(id) => {
-                    self.current_task_id = Some(id);
-                    self.is_computing = true;
-                    self.status_message = format!("Computing {} combinations...", combinations.len());
-                    self.current_result = None;
-                    self.current_accel_results.clear();
-                }
-                Err(e) => {
-                    self.status_message = format!("Error: {}", e);
+        drop(cache_lock);
+
+        if !missing_algorithms.is_empty() || !loaded_series {
+            let mut task = ComputeTask::new(&base_combo.series_name, series_n_points)
+                .with_precision(&base_combo.precision)
+                .with_x("1.0"); // TODO: Use real x
+                
+            for (name, value) in &base_combo.series_params {
+                let param_value = value.parse::<f64>()
+                    .map(crate::ffi::ParamValue::Float)
+                    .unwrap_or_else(|_| crate::ffi::ParamValue::String(value.clone()));
+                task = task.with_param(name.clone(), param_value);
+            }
+            task.algorithms = missing_algorithms;
+
+            if let Some(ref mut engine) = self.compute_engine {
+                match engine.start_task(task) {
+                    Ok(id) => {
+                        self.current_task_id = Some(id);
+                        self.is_computing = true;
+                        self.status_message = "Computing missing combinations...".to_string();
+                    }
+                    Err(e) => {
+                        self.status_message = format!("Error: {}", e);
+                    }
                 }
             }
+        } else {
+            self.status_message = "Loaded fully from cache".to_string();
+            self.is_computing = false;
         }
     }
     
@@ -372,7 +409,7 @@ impl ShanksApp {
                     }
                     ComputeEventBody::AccelComplete { name, result } => {
                         log::info!("AccelComplete: {} values", result.values.len());
-                        self.current_accel_results.push((name, result));
+                        self.current_accel_results.insert(name, result);
                     }
                     ComputeEventBody::Complete => {
                         self.status_message = "Computation complete".to_string();
@@ -426,8 +463,30 @@ impl ShanksApp {
 
 impl eframe::App for ShanksApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-        // Capture initial state for auto-compute
-        let initial_state = self.get_compute_state();
+        // Capture initial state for debounce checking
+        let current_state = self.get_compute_state();
+        
+        if Some(&current_state) != self.last_computed_state.as_ref() {
+            // State changed
+            self.last_input_change = Some(std::time::Instant::now());
+            self.last_computed_state = Some(current_state.clone());
+        }
+        
+        if let Some(change_time) = self.last_input_change {
+            if change_time.elapsed().as_millis() > 300 {
+                // Debounce threshold passed, sync with cache
+                self.last_input_change = None;
+                
+                // Cancel existing task if any
+                if let (Some(ref mut engine), Some(id)) = (&mut self.compute_engine, self.current_task_id) {
+                    if self.is_computing {
+                        engine.cancel_task(id);
+                    }
+                }
+                
+                self.sync_with_cache_and_compute();
+            }
+        }
 
         // Process events from compute engine
         self.process_events();
@@ -442,7 +501,7 @@ impl eframe::App for ShanksApp {
             egui::menu::bar(ui, |ui| {
                 ui.menu_button("File", |ui| {
                     if ui.button("Clear Cache").clicked() {
-                        if let Err(e) = self.state.cache.write().unwrap().clear_all() {
+                        if let Err(e) = self.state.cache.lock().unwrap().clear_all() {
                             log::error!("Failed to clear cache: {}", e);
                         }
                     }
@@ -514,19 +573,7 @@ impl eframe::App for ShanksApp {
                 let accel_count = self.accel_tree.as_ref().map(|t| t.count_selected()).unwrap_or(0);
                 ui.label(format!("Selected: {} series × {} accels", series_count, accel_count));
                 
-                // Compute button
-                ui.horizontal(|ui| {
-                    if ui.add_enabled(!self.is_computing, egui::Button::new("Compute Selected")).clicked() {
-                        self.start_tree_computation();
-                    }
-                    
-                    if self.is_computing && ui.button("Cancel").clicked() {
-                        if let (Some(ref mut engine), Some(id)) = (&mut self.compute_engine, self.current_task_id) {
-                            engine.cancel_task(id);
-                        }
-                    }
-                    ui.checkbox(&mut self.auto_compute, "Auto");
-                });
+                // Removed explicit compute buttons for Debounce Cache-first flow
             } else {
                 ui.heading("No Series Tree Available");
             }
@@ -713,19 +760,6 @@ impl eframe::App for ShanksApp {
             
         });
 
-        // Check for state changes to trigger auto-compute
-        if self.auto_compute {
-            let final_state = self.get_compute_state();
-            if initial_state != final_state {
-                // Cancel existing computation if any
-                if let (Some(ref mut engine), Some(id)) = (&mut self.compute_engine, self.current_task_id) {
-                    if self.is_computing {
-                        engine.cancel_task(id);
-                    }
-                }
-                
-                self.start_tree_computation();
-            }
-        }
+        // Removed old Auto block
     }
 }

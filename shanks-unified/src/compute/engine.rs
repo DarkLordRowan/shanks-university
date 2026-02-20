@@ -2,7 +2,7 @@
 
 use std::collections::HashSet;
 use std::sync::Arc;
-use std::sync::RwLock;
+use std::sync::Mutex;
 use std::sync::mpsc as std_mpsc;
 use std::thread::{self, JoinHandle};
 use uuid::Uuid;
@@ -16,11 +16,11 @@ pub struct ComputeEngine {
     /// FFI library handle
     library: Arc<ShanksLibrary>,
     /// SQLite cache
-    cache: Arc<RwLock<Cache>>,
+    cache: Arc<Mutex<Cache>>,
     /// Running tasks
     tasks: std::collections::HashMap<Uuid, JoinHandle<()>>,
     /// Cancel flags for tasks
-    cancel_flags: Arc<RwLock<HashSet<Uuid>>>,
+    cancel_flags: Arc<Mutex<HashSet<Uuid>>>,
     /// Event sender
     event_tx: std_mpsc::Sender<ComputeEvent>,
 }
@@ -29,14 +29,14 @@ impl ComputeEngine {
     /// Create a new compute engine.
     pub fn new(
         library: Arc<ShanksLibrary>,
-        cache: Arc<RwLock<Cache>>,
+        cache: Arc<Mutex<Cache>>,
         event_tx: std_mpsc::Sender<ComputeEvent>,
     ) -> Self {
         Self {
             library,
             cache,
             tasks: std::collections::HashMap::new(),
-            cancel_flags: Arc::new(RwLock::new(HashSet::new())),
+            cancel_flags: Arc::new(Mutex::new(HashSet::new())),
             event_tx,
         }
     }
@@ -60,7 +60,7 @@ impl ComputeEngine {
             });
 
             // Check cancellation
-            if cancel_flags.read().unwrap().contains(&task_id) {
+            if cancel_flags.lock().unwrap().contains(&task_id) {
                 let _ = event_tx.send(ComputeEvent {
                     task_id,
                     body: ComputeEventBody::Cancelled,
@@ -94,7 +94,7 @@ impl ComputeEngine {
             };
 
             // Check cancellation
-            if cancel_flags.read().unwrap().contains(&task_id) {
+            if cancel_flags.lock().unwrap().contains(&task_id) {
                 library.series_destroy(series_handle);
                 let _ = event_tx.send(ComputeEvent {
                     task_id,
@@ -140,15 +140,56 @@ impl ComputeEngine {
 
             let _ = event_tx.send(ComputeEvent {
                 task_id,
-                body: ComputeEventBody::SeriesComplete { result: parsed_result },
+                body: ComputeEventBody::SeriesComplete { result: parsed_result.clone() },
             });
+
+            // Write to cache
+            let series_id = match _cache.lock().unwrap().insert_series(
+                &task.series.name,
+                &task.precision,
+                &task.series.x_value,
+                &series_params_json,
+                None,
+            ) {
+                Ok(id) => id,
+                Err(e) => {
+                    log::error!("Failed to insert series into cache: {}", e);
+                    -1
+                }
+            };
+
+            if series_id != -1 {
+                let mut db_points = Vec::with_capacity(parsed_result.sn.len());
+                let empty_point = crate::ffi::SeriesPoint::Real(crate::ffi::ScientificValue { mantissa: 0.0, exponent: 0 });
+                for (i, (sn, an)) in parsed_result.sn.iter().zip(
+                    parsed_result.an.iter().chain(std::iter::repeat(&empty_point))
+                ).enumerate() {
+                    let n = (i + 1) as i64;
+                    
+                    let (sn_real, sn_imag, sn_exp) = match sn {
+                        crate::ffi::SeriesPoint::Real(r) => (r.mantissa.to_string(), String::new(), r.exponent),
+                        crate::ffi::SeriesPoint::Complex(c) => (c.real.mantissa.to_string(), c.imag.mantissa.to_string(), c.real.exponent),
+                    };
+                    
+                    let (an_real, an_imag, an_exp) = match an {
+                        crate::ffi::SeriesPoint::Real(r) => (r.mantissa.to_string(), String::new(), r.exponent),
+                        crate::ffi::SeriesPoint::Complex(c) => (c.real.mantissa.to_string(), c.imag.mantissa.to_string(), c.real.exponent),
+                    };
+
+                    db_points.push((n, sn_real, sn_imag, sn_exp, an_real, an_imag, an_exp, String::new()));
+                }
+                
+                if let Err(e) = _cache.lock().unwrap().insert_series_points(series_id, &db_points) {
+                    log::error!("Failed to insert series points into cache: {}", e);
+                }
+            }
 
             // Apply each algorithm
             log::info!("Applying {} algorithms", task.algorithms.len());
             for accel in &task.algorithms {
                 log::info!("Creating algorithm '{}' with precision '{}'", accel.name, task.precision);
                 // Check cancellation
-                if cancel_flags.read().unwrap().contains(&task_id) {
+                if cancel_flags.lock().unwrap().contains(&task_id) {
                     library.series_destroy(series_handle);
                     let _ = event_tx.send(ComputeEvent {
                         task_id,
@@ -204,9 +245,53 @@ impl ComputeEngine {
                     task_id,
                     body: ComputeEventBody::AccelComplete { 
                         name: build_distinct_name(accel, &task.algorithms),
-                        result: parsed_accel,
+                        result: parsed_accel.clone(),
                     },
                 });
+
+                if series_id != -1 {
+                    let m_val = accel.params.get("m").and_then(|v| {
+                        if let crate::ffi::ParamValue::Int(i) = v { Some(*i) } else { None }
+                    });
+                    
+                    let accel_id = match _cache.lock().unwrap().insert_acceleration(
+                        series_id,
+                        &accel.name,
+                        m_val,
+                        &accel_params_json,
+                    ) {
+                        Ok(id) => id,
+                        Err(e) => {
+                            log::error!("Failed to insert acceleration into cache: {}", e);
+                            -1
+                        }
+                    };
+                    
+                    if accel_id != -1 {
+                        let mut db_points = Vec::with_capacity(parsed_accel.values.len());
+                        let empty_dev = crate::ffi::ScientificValue { mantissa: 0.0, exponent: 0 };
+                        
+                        for (i, (val_opt, dev)) in parsed_accel.values.iter().zip(
+                            parsed_accel.deviations.iter().chain(std::iter::repeat(&empty_dev))
+                        ).enumerate() {
+                            if let Some(val) = val_opt {
+                                let n = (i + 1) as i64;
+                                let (v_real, v_imag, v_exp) = match val {
+                                    crate::ffi::SeriesPoint::Real(r) => (r.mantissa.to_string(), String::new(), r.exponent),
+                                    crate::ffi::SeriesPoint::Complex(c) => (c.real.mantissa.to_string(), c.imag.mantissa.to_string(), c.real.exponent),
+                                };
+                                let dev_str = dev.format();
+                                db_points.push((n, v_real, v_imag, v_exp, dev_str, String::new()));
+                            }
+                        }
+                        
+                        if !db_points.is_empty() {
+                            if let Err(e) = _cache.lock().unwrap().insert_accel_points(accel_id, &db_points) {
+                                log::error!("Failed to insert accel points into cache: {}", e);
+                            }
+                        }
+                    }
+                }
 
                 library.accel_destroy(accel_handle);
             }
@@ -221,7 +306,7 @@ impl ComputeEngine {
             });
 
             // Cache the result
-            // TODO: Implement caching
+            // Done inline above
         });
 
         self.tasks.insert(task_id, handle);
@@ -230,7 +315,7 @@ impl ComputeEngine {
 
     /// Cancel a running task.
     pub fn cancel_task(&mut self, task_id: Uuid) {
-        self.cancel_flags.write().unwrap().insert(task_id);
+        self.cancel_flags.lock().unwrap().insert(task_id);
     }
 
     /// Check if a task is running.
@@ -261,7 +346,7 @@ impl ComputeEngine {
     }
 }
 
-fn build_distinct_name(accel: &crate::compute::task::AccelParams, all_accels: &[crate::compute::task::AccelParams]) -> String {
+pub fn build_distinct_name(accel: &crate::compute::task::AccelParams, all_accels: &[crate::compute::task::AccelParams]) -> String {
     let same_name_accels: Vec<_> = all_accels.iter().filter(|a| a.name == accel.name).collect();
     if same_name_accels.len() <= 1 {
         // Only one of this name, so just use parameters directly if we want, or just the name. 
