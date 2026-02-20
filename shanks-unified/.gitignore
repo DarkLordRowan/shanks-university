@@ -1,2 +1,3 @@
-/target
-/*.db
+target/
+shanks.db
+*.log
