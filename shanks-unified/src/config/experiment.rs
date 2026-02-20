@@ -189,12 +189,12 @@ pub struct SeriesInstance {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum ArgValue {
-    /// Single value
-    Single(serde_json::Value),
-    /// Array of values
-    Array(Vec<serde_json::Value>),
     /// Range definition
     Range(RangeDefFloat),
+    /// Array of values
+    Array(Vec<serde_json::Value>),
+    /// Single value
+    Single(serde_json::Value),
 }
 
 /// Float range definition for parameter expansion.
@@ -289,9 +289,9 @@ pub struct FilterDef {
     #[serde(rename = "type")]
     pub filter_type: String,
 
-    /// Filter parameters
+    /// Filter arguments
     #[serde(default)]
-    pub params: HashMap<String, serde_json::Value>,
+    pub args: HashMap<String, serde_json::Value>,
 }
 
 // ============================================================================

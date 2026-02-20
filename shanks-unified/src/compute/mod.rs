@@ -1,7 +1,8 @@
 //! Compute orchestration module.
 
-mod engine;
-mod task;
+pub mod core;
+pub mod engine;
+pub mod task;
 
 pub use engine::*;
 pub use task::*;

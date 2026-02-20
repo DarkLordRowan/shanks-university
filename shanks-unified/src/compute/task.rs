@@ -5,6 +5,7 @@ use std::collections::HashMap;
 use uuid::Uuid;
 
 use crate::ffi::ParamValue;
+use crate::config::NoiseDef;
 
 /// Parameters for a series computation.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -40,6 +41,9 @@ pub struct ComputeTask {
     pub series: SeriesParams,
     /// Number of points to generate
     pub n_points: u64,
+    /// Noise definition for the series
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub noise: Option<NoiseDef>,
     /// Algorithms to apply
     #[serde(default)]
     pub algorithms: Vec<AccelParams>,
@@ -57,6 +61,7 @@ impl ComputeTask {
                 params: HashMap::new(),
             },
             n_points,
+            noise: None,
             algorithms: Vec::new(),
         }
     }
@@ -70,6 +75,12 @@ impl ComputeTask {
     /// Set the x value.
     pub fn with_x(mut self, x_value: impl Into<String>) -> Self {
         self.series.x_value = x_value.into();
+        self
+    }
+
+    /// Set the noise definition.
+    pub fn with_noise(mut self, noise: NoiseDef) -> Self {
+        self.noise = Some(noise);
         self
     }
 

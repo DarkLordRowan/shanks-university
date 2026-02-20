@@ -7,8 +7,23 @@ mod ui;
 use crate::cache::Cache;
 use crate::config::{AppConfig, ExperimentConfig, SeriesInstance, MethodInstance, NoiseDef};
 use crate::ffi::{ShanksLibrary, SeriesResult, AccelResult, SeriesPoint, ComputeEvent, ComputeEventBody};
-use crate::compute::{ComputeEngine, ComputeTask};
+use crate::compute::ComputeEngine;
 use std::sync::{Arc, RwLock, Mutex, mpsc};
+use std::collections::HashMap;
+
+/// Parse a string value into the appropriate ParamValue type.
+/// Uses the same precedence as the C++ backend: Int → Float → Bool → String.
+fn parse_param_value(v: &str) -> crate::ffi::ParamValue {
+    if let Ok(i) = v.parse::<i64>() {
+        crate::ffi::ParamValue::Int(i)
+    } else if let Ok(f) = v.parse::<f64>() {
+        crate::ffi::ParamValue::Float(f)
+    } else if let Ok(b) = v.parse::<bool>() {
+        crate::ffi::ParamValue::Bool(b)
+    } else {
+        crate::ffi::ParamValue::String(v.to_string())
+    }
+}
 
 pub use selection::{SelectionNode, SelectionState, SelectedCombination};
 
@@ -264,131 +279,125 @@ impl ShanksApp {
     }
     
     /// Synchronize the requested combination with the cache and start compute if necessary.
+    /// Build compute tasks from current selection and submit them to the engine.
+    /// Results (series + accel) arrive purely via ComputeEngine events.
+    /// No direct cache access happens here.
     fn sync_with_cache_and_compute(&mut self) {
-        if self.state.is_offline() {
-            self.status_message = "Offline mode - cache only".to_string();
-        }
-        
         let series_tree = match &self.series_tree { Some(t) => t, None => return };
         let accel_tree = match &self.accel_tree { Some(t) => t, None => return };
         let noise_tree = self.noise_tree.as_ref();
         let precision_tree = self.precision_tree.as_ref();
-        
+
         let combinations = selection::generate_combinations(
             series_tree, accel_tree,
             noise_tree.unwrap_or(&SelectionNode::new("empty", "Empty")),
             precision_tree.unwrap_or(&SelectionNode::new("empty", "Empty")),
         );
-        
+
         if combinations.is_empty() {
             self.current_result = None;
             self.current_accel_results.clear();
             return;
         }
 
-        let base_combo = &combinations[0];
-        let series_n_points = 100;
-        let mut loaded_series = false;
-        
-        let series_params_json = serde_json::to_string(&base_combo.series_params).unwrap_or_else(|_| "{}".to_string());
-        
-        let cache_lock = self.state.cache.lock().unwrap();
-        let series_id = cache_lock.series_exists(
-            &base_combo.series_name,
-            &base_combo.precision,
-            "1.0",
-            &series_params_json
-        ).unwrap_or(None);
-
-        if let Some(id) = series_id {
-            if let Ok(Some(res)) = cache_lock.get_series_result(id) {
-                self.current_result = Some(res);
-                loaded_series = true;
+        // Cancel previous task if still running
+        if let (Some(ref mut engine), Some(id)) = (&mut self.compute_engine, self.current_task_id) {
+            if self.is_computing {
+                engine.cancel_task(id);
             }
         }
-        if !loaded_series {
-            self.current_result = None;
-        }
 
+        // Clear results — they will be repopulated entirely from incoming events
+        self.current_result = None;
         self.current_accel_results.clear();
-        let mut added_signatures = std::collections::HashSet::new();
-        
-        let mut missing_algorithms = Vec::new();
 
-        let mut all_algorithms = Vec::new();
-        for combo in combinations.iter().filter(|c| c.series_name == base_combo.series_name && c.precision == base_combo.precision) {
-            let signature = format!("{}-{}-{}", combo.method_name, combo.method_n, combo.method_m);
-            if !added_signatures.insert(signature) { continue; }
-            
-            let mut params = std::collections::HashMap::new();
-            params.insert("n".to_string(), crate::ffi::ParamValue::Int(combo.method_n));
-            params.insert("m".to_string(), crate::ffi::ParamValue::Int(combo.method_m));
+        // --- Build one ComputeTask per unique (series, precision, noise) combination ---
+        // Group: series_name+params_json+precision+noise_idx → (algorithms, max_n, params)
+        type TaskKey = (String, String, String, Option<usize>);
+        let mut task_map: HashMap<TaskKey, (Vec<crate::compute::AccelParams>, i64, HashMap<String, crate::ffi::ParamValue>)> = HashMap::new();
+
+
+        for combo in &combinations {
+            // Convert series params string→ParamValue
+            let mut series_params: HashMap<String, crate::ffi::ParamValue> = HashMap::new();
+            for (k, v) in &combo.series_params {
+                let pv = parse_param_value(v);
+                series_params.insert(k.clone(), pv);
+            }
+            let series_json = crate::compute::core::to_sorted_json(&series_params)
+                .unwrap_or_else(|_| "{}".to_string());
+
+            let key: TaskKey = (
+                combo.series_name.clone(),
+                series_json,
+                combo.precision.clone(),
+                combo.noise_idx,
+            );
+
+            // Build AccelParams for this combo
+            let mut accel_params: HashMap<String, crate::ffi::ParamValue> = HashMap::new();
+            accel_params.insert("m".to_string(), crate::ffi::ParamValue::Int(combo.method_m));
             for (k, v) in &combo.method_args {
-                let pv = v.parse::<f64>()
-                    .map(crate::ffi::ParamValue::Float)
-                    .unwrap_or_else(|_| crate::ffi::ParamValue::String(v.clone()));
-                params.insert(k.clone(), pv);
+                accel_params.insert(k.clone(), parse_param_value(v));
             }
-            all_algorithms.push(crate::compute::AccelParams { name: combo.method_name.clone(), params });
+            let accel = crate::compute::AccelParams {
+                name: combo.method_name.clone(),
+                params: accel_params,
+            };
+
+            let entry = task_map.entry(key).or_insert_with(|| (Vec::new(), combo.method_n, series_params.clone()));
+            // Track max n_points
+            if combo.method_n > entry.1 {
+                entry.1 = combo.method_n;
+            }
+            // Push accel if not already there (deduplicate by serialization)
+            let accel_json = crate::compute::core::to_sorted_json(&accel.params).unwrap_or_default();
+            let already = entry.0.iter().any(|a: &crate::compute::AccelParams| {
+                a.name == accel.name &&
+                crate::compute::core::to_sorted_json(&a.params).unwrap_or_default() == accel_json
+            });
+            if !already {
+                entry.0.push(accel);
+            }
         }
 
-        for accel in &all_algorithms {
-            let distinct_name = crate::compute::build_distinct_name(accel, &all_algorithms);
-            if let Some(id) = series_id {
-                let m_val = accel.params.get("m").and_then(|v| {
-                    if let crate::ffi::ParamValue::Int(i) = v { Some(*i) } else { None }
-                });
-                let accel_params_json = serde_json::to_string(&accel.params).unwrap_or_else(|_| "{}".to_string());
-                
-                let accel_id = cache_lock.acceleration_exists(id, &accel.name, m_val, &accel_params_json).unwrap_or(None);
-                if let Some(a_id) = accel_id {
-                    // exists in cache
-                    if let Ok(Some(res)) = cache_lock.get_accel_result(a_id) {
-                        self.current_accel_results.insert(distinct_name.clone(), res);
-                    } else {
-                        missing_algorithms.push(accel.clone());
-                    }
-                } else {
-                    missing_algorithms.push(accel.clone());
-                }
-            } else {
-                missing_algorithms.push(accel.clone());
-            }
-        }
-        
-        drop(cache_lock);
+        // Get noises list from experiment config
+        let noises = self.state.get_noises();
 
-        if !missing_algorithms.is_empty() || !loaded_series {
-            let mut task = ComputeTask::new(&base_combo.series_name, series_n_points)
-                .with_precision(&base_combo.precision)
-                .with_x("1.0"); // TODO: Use real x
-                
-            for (name, value) in &base_combo.series_params {
-                let param_value = value.parse::<f64>()
-                    .map(crate::ffi::ParamValue::Float)
-                    .unwrap_or_else(|_| crate::ffi::ParamValue::String(value.clone()));
-                task = task.with_param(name.clone(), param_value);
-            }
-            task.algorithms = missing_algorithms;
+        for ((series_name, _series_json, precision, noise_idx), (algorithms, n_points, series_params)) in task_map {
+            let noise = noise_idx.and_then(|i| noises.get(i));
+
+            let task = crate::compute::task::ComputeTask {
+                id: uuid::Uuid::new_v4(),
+                precision: precision.clone(),
+                series: crate::compute::task::SeriesParams {
+                    name: series_name.clone(),
+                    x_value: series_params.get("x")
+                        .and_then(|v| v.as_f64())
+                        .map(|f| f.to_string())
+                        .unwrap_or_else(|| "1.0".to_string()),
+                    params: series_params,
+                },
+                n_points: n_points as u64,
+                noise: noise.cloned(),
+                algorithms,
+            };
 
             if let Some(ref mut engine) = self.compute_engine {
                 match engine.start_task(task) {
                     Ok(id) => {
                         self.current_task_id = Some(id);
                         self.is_computing = true;
-                        self.status_message = "Computing missing combinations...".to_string();
+                        self.status_message = "Computing...".to_string();
                     }
                     Err(e) => {
-                        self.status_message = format!("Error: {}", e);
+                        self.status_message = format!("Error starting task: {}", e);
                     }
                 }
             }
-        } else {
-            self.status_message = "Loaded fully from cache".to_string();
-            self.is_computing = false;
         }
     }
-    
+
 
     /// Process events from compute engine.
     fn process_events(&mut self) {

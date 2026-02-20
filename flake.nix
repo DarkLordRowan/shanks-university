@@ -31,6 +31,7 @@
             ninja
             pkg-config
             poetry
+            sqlite
             (python3.withPackages (
               ps: with ps; [
                 pybind11-stubgen

@@ -4,12 +4,14 @@
 //! experiment configuration file without launching the GUI.
 
 use anyhow::Result;
-use std::sync::{Arc, RwLock};
+use std::sync::{Arc, Mutex};
 use std::time::Instant;
 
 use crate::cache::Cache;
-use crate::config::{ExperimentConfig, MethodInstance, NoiseDef, SeriesInstance};
-use crate::ffi::ShanksLibrary;
+use crate::config::{ExperimentConfig, NoiseDef};
+use crate::ffi::{ShanksLibrary, ComputeEventBody};
+use crate::compute::task::{SeriesParams, AccelParams, ComputeTask};
+use crate::compute::engine::ComputeEngine;
 
 /// Progress information for headless runs.
 #[derive(Debug, Clone)]
@@ -64,7 +66,7 @@ pub struct RunSummary {
 pub struct HeadlessRunner {
     config: ExperimentConfig,
     library: Arc<ShanksLibrary>,
-    cache: Arc<RwLock<Cache>>,
+    cache: Arc<Mutex<Cache>>,
     progress_callback: Option<Box<dyn Fn(ProgressInfo) + Send + Sync>>,
     precisions: Vec<String>,
 }
@@ -84,7 +86,7 @@ impl HeadlessRunner {
         Ok(Self {
             config,
             library,
-            cache: Arc::new(RwLock::new(cache)),
+            cache: Arc::new(Mutex::new(cache)),
             progress_callback: None,
             precisions,
         })
@@ -104,11 +106,6 @@ impl HeadlessRunner {
         let noises = &self.config.noises;
 
         let total = self.config.total_trials(&self.precisions);
-        let mut current = 0;
-        let mut successful = 0;
-        let mut cached = 0;
-        let mut failed = 0;
-        let mut errors = Vec::new();
 
         if series.is_empty() {
             log::warn!("No series defined in config");
@@ -143,243 +140,158 @@ impl HeadlessRunner {
             total
         );
 
+        let (tx, rx) = std::sync::mpsc::channel();
+        let mut engine = ComputeEngine::new(self.library.clone(), self.cache.clone(), tx);
+        let mut active_tasks = 0;
+        let mut task_mappings = std::collections::HashMap::new();
+
+        let noise_iter: Vec<Option<&NoiseDef>> = if noises.is_empty() {
+            vec![None]
+        } else {
+            noises.iter().map(Some).collect()
+        };
+
         for precision in &self.precisions {
             for series_inst in &series {
-                for method_inst in &methods {
-                    // Handle noise: if no noises defined, run without noise
-                    let noise_iter: Vec<Option<&NoiseDef>> = if noises.is_empty() {
-                        vec![None]
-                    } else {
-                        noises.iter().map(Some).collect()
-                    };
-
-                    for noise_opt in noise_iter {
-                        current += 1;
-
-                        let result = self.run_trial(
-                            precision,
-                            series_inst,
-                            method_inst,
-                            noise_opt,
-                            current,
-                            total,
-                            start_time.elapsed().as_secs_f64(),
-                        );
-
-                        match result {
-                            Ok(was_cached) => {
-                                if was_cached {
-                                    cached += 1;
+                for noise_opt in &noise_iter {
+                    let mut series_params_map = std::collections::HashMap::new();
+                    for (k, v) in &series_inst.args {
+                        let pv = match v {
+                            serde_json::Value::Number(n) => {
+                                if let Some(i) = n.as_i64() {
+                                    crate::ffi::ParamValue::Int(i)
+                                } else if let Some(f) = n.as_f64() {
+                                    crate::ffi::ParamValue::Float(f)
                                 } else {
-                                    successful += 1;
+                                    crate::ffi::ParamValue::String(n.to_string())
                                 }
                             }
-                            Err(e) => {
-                                failed += 1;
-                                let error_msg = format!(
-                                    "Trial {} failed: {} - {} - {}: {}",
-                                    current, series_inst.name, method_inst.name, precision, e
-                                );
-                                log::error!("{}", error_msg);
-                                errors.push(error_msg);
-                            }
+                            serde_json::Value::String(s) => crate::ffi::ParamValue::String(s.clone()),
+                            serde_json::Value::Bool(b) => crate::ffi::ParamValue::Bool(*b),
+                            _ => crate::ffi::ParamValue::String(v.to_string()),
+                        };
+                        series_params_map.insert(k.clone(), pv);
+                    }
+
+                    let series_params = SeriesParams {
+                        name: series_inst.name.clone(),
+                        x_value: series_inst.args.get("x").and_then(|v| v.as_f64()).map(|v| v.to_string()).unwrap_or_else(|| "1.0".to_string()),
+                        params: series_params_map,
+                    };
+
+                    let mut bundled_algorithms = Vec::new();
+                    let mut max_n_points = 10;
+                    
+                    for method_inst in &methods {
+                        let mut accel_args = std::collections::HashMap::new();
+                        for (k, v) in &method_inst.args {
+                            let pv = match v {
+                                serde_json::Value::Number(n) => {
+                                    if let Some(i) = n.as_i64() {
+                                        crate::ffi::ParamValue::Int(i)
+                                    } else if let Some(f) = n.as_f64() {
+                                        crate::ffi::ParamValue::Float(f)
+                                    } else {
+                                        crate::ffi::ParamValue::String(n.to_string())
+                                    }
+                                }
+                                serde_json::Value::String(s) => crate::ffi::ParamValue::String(s.clone()),
+                                serde_json::Value::Bool(b) => crate::ffi::ParamValue::Bool(*b),
+                                _ => crate::ffi::ParamValue::String(v.to_string()),
+                            };
+                            accel_args.insert(k.clone(), pv);
                         }
+
+                        if !accel_args.contains_key("m") {
+                            accel_args.insert("m".to_string(), crate::ffi::ParamValue::Int(method_inst.m as i64));
+                        }
+
+                        bundled_algorithms.push(AccelParams {
+                            name: method_inst.name.clone(),
+                            params: accel_args,
+                        });
+                        
+                        if method_inst.n > max_n_points {
+                            max_n_points = method_inst.n;
+                        }
+                    }
+
+                    let task = ComputeTask {
+                        id: uuid::Uuid::new_v4(),
+                        precision: precision.to_string(),
+                        series: series_params.clone(),
+                        n_points: max_n_points as u64,
+                        noise: noise_opt.cloned(),
+                        algorithms: bundled_algorithms.clone(),
+                    };
+                    
+                    if let Ok(id) = engine.start_task(task.clone()) {
+                        task_mappings.insert(id, task);
+                        active_tasks += 1;
                     }
                 }
             }
         }
 
+        let mut successful = 0;
+        let mut failed = 0;
+        let mut errors = Vec::new();
+
+        while active_tasks > 0 {
+            if let Ok(event) = rx.try_recv() {
+                match event.body {
+                    ComputeEventBody::Started => {}
+                    ComputeEventBody::Progress { .. } => {}
+                    ComputeEventBody::SeriesComplete { .. } => {}
+                    ComputeEventBody::AccelComplete { .. } => {
+                        self.report_progress(ProgressInfo {
+                            current: successful + failed,
+                            total,
+                            series_name: task_mappings.get(&event.task_id).unwrap().series.name.clone(),
+                            method_name: "(batch item)".to_string(),
+                            precision: task_mappings.get(&event.task_id).unwrap().precision.clone(),
+                            status: Status::Complete,
+                            elapsed_secs: start_time.elapsed().as_secs_f64(),
+                        });
+                    }
+                    ComputeEventBody::Error { error } => {
+                        let task = task_mappings.get(&event.task_id).unwrap();
+                        let error_msg = format!(
+                            "Task {} failed for series {}: {}",
+                            event.task_id, task.series.name, error
+                        );
+                        log::error!("{}", error_msg);
+                        errors.push(error_msg);
+                        failed += task.algorithms.len();
+                        active_tasks -= 1;
+                        engine.wait_for_task(event.task_id);
+                    }
+                    ComputeEventBody::Complete => {
+                        let task = task_mappings.get(&event.task_id).unwrap();
+                        successful += task.algorithms.len();
+                        active_tasks -= 1;
+                        engine.wait_for_task(event.task_id);
+                    }
+                    ComputeEventBody::Cancelled => {
+                        active_tasks -= 1;
+                        engine.wait_for_task(event.task_id);
+                    }
+                }
+            } else {
+                std::thread::sleep(std::time::Duration::from_millis(10));
+            }
+        }
+
+        engine.cleanup_completed();
+
         Ok(RunSummary {
-            total_trials: current,
+            total_trials: total,
             successful,
-            cached,
+            cached: 0, 
             failed,
             total_time_secs: start_time.elapsed().as_secs_f64(),
             errors,
         })
-    }
-
-    /// Run a single trial.
-    fn run_trial(
-        &self,
-        precision: &str,
-        series: &SeriesInstance,
-        method: &MethodInstance,
-        noise: Option<&NoiseDef>,
-        current: usize,
-        total: usize,
-        elapsed: f64,
-    ) -> Result<bool> {
-        // Report progress
-        self.report_progress(ProgressInfo {
-            current,
-            total,
-            series_name: series.name.clone(),
-            method_name: method.name.clone(),
-            precision: precision.to_string(),
-            status: Status::Computing,
-            elapsed_secs: elapsed,
-        });
-
-        // Build cache key
-        let cache_key = self.make_cache_key(precision, series, method, noise);
-
-        // Check cache first
-        {
-            let cache = self.cache.read().unwrap();
-            if let Ok(Some(_)) = cache.series_exists(
-                &cache_key.name,
-                &cache_key.precision,
-                &cache_key.x_value,
-                &cache_key.args,
-            ) {
-                log::debug!("Trial {}/{}: cached", current, total);
-                self.report_progress(ProgressInfo {
-                    current,
-                    total,
-                    series_name: series.name.clone(),
-                    method_name: method.name.clone(),
-                    precision: precision.to_string(),
-                    status: Status::Cached,
-                    elapsed_secs: elapsed,
-                });
-                return Ok(true);
-            }
-        }
-
-        // Create series
-        let args_json = serde_json::to_string(&series.args)?;
-        let x_value = series
-            .args
-            .get("x")
-            .and_then(|v| v.as_f64())
-            .map(|v| v.to_string())
-            .unwrap_or_else(|| "1.0".to_string());
-
-        let series_handle = if let Some(noise_def) = noise {
-            let noise_json = self.build_noise_json(noise_def);
-            self.library.series_create_with_noise(
-                &series.name,
-                precision,
-                &x_value,
-                &args_json,
-                &noise_json,
-            )?
-        } else {
-            self.library.series_create(&series.name, precision, &x_value, &args_json)?
-        };
-
-        // Generate series data
-        let n = method.n as u64;
-        let series_result_json = self.library.series_generate(&series_handle, n, false)?;
-        let series_result: crate::ffi::SeriesResult = serde_json::from_str(&series_result_json)?;
-
-        // Create acceleration algorithm
-        let method_args_json = serde_json::to_string(&method.args)?;
-        let accel_handle =
-            self.library.accel_create(&method.name, precision, &method_args_json)?;
-
-        // Apply acceleration
-        let accel_result_json = self.library.accel_apply(&accel_handle, &series_handle, n, method.m as u64)?;
-        let _accel_result: crate::ffi::AccelResult = serde_json::from_str(&accel_result_json)?;
-
-        // Cache results
-        {
-            let mut cache = self.cache.write().unwrap();
-            let series_id = cache.insert_series(
-                &series.name,
-                precision,
-                &x_value,
-                &args_json,
-                noise.map(|n| self.build_noise_json(n)).as_deref(),
-            )?;
-
-            // Insert series points
-            let points: Vec<(i64, String, String, i64, String, String, i64, String)> = series_result
-                .sn
-                .iter()
-                .enumerate()
-                .map(|(i, p)| {
-                    let (sn_real, sn_imag, sn_exp) = match p {
-                        crate::ffi::SeriesPoint::Real(v) => {
-                            (v.mantissa.to_string(), "0".to_string(), v.exponent)
-                        }
-                        crate::ffi::SeriesPoint::Complex(c) => (
-                            c.real.mantissa.to_string(),
-                            c.imag.mantissa.to_string(),
-                            c.real.exponent,
-                        ),
-                    };
-                    let an = series_result.an.get(i);
-                    let (an_real, an_imag, an_exp) = an
-                        .map(|p| match p {
-                            crate::ffi::SeriesPoint::Real(v) => {
-                                (v.mantissa.to_string(), "0".to_string(), v.exponent)
-                            }
-                            crate::ffi::SeriesPoint::Complex(c) => (
-                                c.real.mantissa.to_string(),
-                                c.imag.mantissa.to_string(),
-                                c.real.exponent,
-                            ),
-                        })
-                        .unwrap_or(("0".to_string(), "0".to_string(), 0));
-
-                    (i as i64, sn_real, sn_imag, sn_exp, an_real, an_imag, an_exp, String::new())
-                })
-                .collect();
-
-            if !points.is_empty() {
-                cache.insert_series_points(series_id, &points)?;
-            }
-        }
-
-        // Cleanup
-        self.library.series_destroy(series_handle);
-        self.library.accel_destroy(accel_handle);
-
-        // Report completion
-        self.report_progress(ProgressInfo {
-            current,
-            total,
-            series_name: series.name.clone(),
-            method_name: method.name.clone(),
-            precision: precision.to_string(),
-            status: Status::Complete,
-            elapsed_secs: elapsed,
-        });
-
-        Ok(false)
-    }
-
-    fn build_noise_json(&self, noise: &NoiseDef) -> String {
-        serde_json::json!({
-            "type": noise.noise_type.to_lowercase(),
-            "method": noise.method,
-            "param1": noise.param1,
-            "param2": noise.param2,
-            "seed": noise.seed
-        })
-        .to_string()
-    }
-
-    fn make_cache_key(
-        &self,
-        precision: &str,
-        series: &SeriesInstance,
-        _method: &MethodInstance,
-        _noise: Option<&NoiseDef>,
-    ) -> CacheKey {
-        CacheKey {
-            name: series.name.clone(),
-            precision: precision.to_string(),
-            x_value: series
-                .args
-                .get("x")
-                .and_then(|v| v.as_f64())
-                .map(|v| v.to_string())
-                .unwrap_or_default(),
-            args: serde_json::to_string(&series.args).unwrap_or_default(),
-        }
     }
 
     fn report_progress(&self, info: ProgressInfo) {
@@ -387,11 +299,4 @@ impl HeadlessRunner {
             callback(info);
         }
     }
-}
-
-struct CacheKey {
-    name: String,
-    precision: String,
-    x_value: String,
-    args: String,
 }
