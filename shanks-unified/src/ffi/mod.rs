@@ -48,6 +48,45 @@ impl ShanksLibrary {
         Ok(Self { library })
     }
 
+    /// Try to find the library path automatically in common locations.
+    pub fn find_library() -> Option<std::path::PathBuf> {
+        let lib_name = if cfg!(target_os = "windows") {
+            "shanks_ffi.dll"
+        } else if cfg!(target_os = "macos") {
+            "libshanks_ffi.dylib"
+        } else {
+            "libshanks_ffi.so"
+        };
+
+        // 1. Check environment variable
+        if let Ok(env_path) = std::env::var("SHANKSLIB_PATH") {
+            let path = std::path::PathBuf::from(env_path);
+            if path.exists() {
+                return Some(path);
+            }
+        }
+
+        // 2. Check current working directory
+        if let Ok(cwd) = std::env::current_dir() {
+            let lib_path = cwd.join(lib_name);
+            if lib_path.exists() {
+                return Some(lib_path);
+            }
+        }
+
+        // 3. Check next to the executable
+        if let Ok(exe_path) = std::env::current_exe() {
+            if let Some(exe_dir) = exe_path.parent() {
+                let lib_path = exe_dir.join(lib_name);
+                if lib_path.exists() {
+                    return Some(lib_path);
+                }
+            }
+        }
+
+        None
+    }
+
     /// Get the library version.
     pub fn version(&self) -> Result<&'static str, FfiError> {
         unsafe {

@@ -21,6 +21,9 @@ use std::sync::Arc;
 #[command(about = "A unified tool for series acceleration and visualization")]
 #[command(version)]
 struct Args {
+    /// Path to experiment configuration file (Drag & Drop / GUI mode)
+    config: Option<PathBuf>,
+
     /// Path to the C++ library (libshanks_ffi.so / shanks_ffi.dll)
     #[arg(short, long)]
     lib_path: Option<PathBuf>,
@@ -39,17 +42,15 @@ struct Args {
 
 #[derive(Subcommand, Debug)]
 enum Commands {
-    /// Run in GUI mode (default)
+    /// Run in GUI mode
     Gui {
         /// Path to experiment configuration file
-        #[arg(short, long)]
-        config: Option<PathBuf>,
+        config: PathBuf,
     },
 
     /// Run in headless mode - compute all series from config
     Headless {
-        /// Path to experiment configuration file (required)
-        #[arg(short, long)]
+        /// Path to experiment configuration file
         config: PathBuf,
 
         /// Comma-separated list of precisions to use
@@ -82,13 +83,15 @@ fn main() -> anyhow::Result<()> {
     log::info!("Starting Shanks Unified...");
 
     // Load C++ library
-    let library = if let Some(lib_path) = &args.lib_path {
-        log::info!("Loading library from {:?}", lib_path);
-        Arc::new(shanks_unified::ffi::ShanksLibrary::load(lib_path)?)
+    let lib_path = args.lib_path.or_else(shanks_unified::ffi::ShanksLibrary::find_library);
+
+    let library = if let Some(path) = lib_path {
+        log::info!("Loading library from {:?}", path);
+        Arc::new(shanks_unified::ffi::ShanksLibrary::load(&path)?)
     } else {
-        log::error!("No library path specified. Use --lib-path");
+        log::error!("No library found. Use --lib-path or ensure libshanks_ffi.so is in the current directory.");
         return Err(anyhow::anyhow!(
-            "Library path required. Use --lib-path to specify the library location."
+            "Library not found. Use --lib-path to specify the library location, or place it in the current directory."
         ));
     };
 
@@ -98,11 +101,20 @@ fn main() -> anyhow::Result<()> {
     cache.initialize_schema()?;
 
     match &args.command {
+        // Drag & Drop or GUI without subcommand
         None => {
-            run_gui(library, cache, None)
+            if let Some(config) = &args.config {
+                run_gui(library, cache, Some(config.clone()))
+            } else {
+                // No command and no config - print help
+                use clap::CommandFactory;
+                Args::command().print_help()?;
+                println!();
+                Ok(())
+            }
         }
         Some(Commands::Gui { config }) => {
-            run_gui(library, cache, config.clone())
+            run_gui(library, cache, Some(config.clone()))
         }
         Some(Commands::Headless { config, precisions }) => {
             run_headless(library, cache, config.clone(), precisions.clone())
