@@ -87,11 +87,19 @@ fn main() -> anyhow::Result<()> {
 
     let library = if let Some(path) = lib_path {
         log::info!("Loading library from {:?}", path);
-        Arc::new(shanks_unified::ffi::ShanksLibrary::load(&path)?)
+        shanks_unified::ffi::ShanksLibrary::load(&path).map(Arc::new).map_err(|e| {
+            let lib_name = if cfg!(target_os = "windows") { "shanks_ffi.dll" } else { "libshanks_ffi.so" };
+            anyhow::anyhow!(
+                "Failed to load library at {:?}: {}\n\nNote: If you are on Windows, ensure all dependencies (gmp, mpfr, etc.) are in the same directory as {}.",
+                path, e, lib_name
+            )
+        })?
     } else {
-        log::error!("No library found. Use --lib-path or ensure libshanks_ffi.so is in the current directory.");
+        let lib_name = if cfg!(target_os = "windows") { "shanks_ffi.dll" } else { "libshanks_ffi.so" };
+        log::error!("No library found. Use --lib-path or ensure {} is in the current directory.", lib_name);
         return Err(anyhow::anyhow!(
-            "Library not found. Use --lib-path to specify the library location, or place it in the current directory."
+            "Library not found. Use --lib-path to specify the library location, or place it in the current directory ({}).",
+            lib_name
         ));
     };
 
