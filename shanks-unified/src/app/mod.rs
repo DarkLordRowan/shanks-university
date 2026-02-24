@@ -153,6 +153,26 @@ impl AppState {
     }
 }
 
+#[derive(Clone)]
+struct CachedPlotLine {
+    name: String,
+    color: egui::Color32,
+    points: Vec<egui_plot::PlotPoint>,
+}
+
+#[derive(Default)]
+struct PlotCache {
+    symlog: bool,
+    log_linthresh: f64,
+    main_sn: Vec<CachedPlotLine>,
+    main_accel: Vec<CachedPlotLine>,
+    deviations: Vec<CachedPlotLine>,
+    prof_add: Vec<CachedPlotLine>,
+    prof_mul: Vec<CachedPlotLine>,
+    prof_div: Vec<CachedPlotLine>,
+    prof_special: Vec<CachedPlotLine>,
+}
+
 
 /// Main application struct for egui.
 pub struct ShanksApp {
@@ -180,20 +200,16 @@ pub struct ShanksApp {
     // UI options
     show_partial_sums: bool,
     show_accel_values: bool,
-    symlog_main: bool,
-    symlog_dev: bool,
     
     // Tab selection
     selected_tab: PlotTab,
+    tab_configs: HashMap<PlotTab, TabConfig>,
     
     // Status
     status_message: String,
     is_computing: bool,
-
-    reset_plot: bool,
-    enable_aspect_ratio: bool,
-    aspect_x: String,
-    aspect_y: String,
+    results_dirty: bool,
+    plot_cache: PlotCache,
     
     // Profiling plot options
     prof_show_add: bool,
@@ -202,7 +218,30 @@ pub struct ShanksApp {
     prof_show_special: bool,
 }
 
-#[derive(PartialEq)]
+#[derive(Clone)]
+struct TabConfig {
+    symlog: bool,
+    log_linthresh: f64,
+    reset_plot: bool,
+    enable_aspect_ratio: bool,
+    aspect_x: String,
+    aspect_y: String,
+}
+
+impl TabConfig {
+    fn new(symlog: bool, log_linthresh: f64) -> Self {
+        Self {
+            symlog,
+            log_linthresh,
+            reset_plot: false,
+            enable_aspect_ratio: true,
+            aspect_x: "10.0".to_string(),
+            aspect_y: "1.0".to_string(),
+        }
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Hash, Copy, Clone)]
 enum PlotTab {
     Main,
     Deviation,
@@ -257,6 +296,11 @@ impl ShanksApp {
             (None, None)
         };
 
+        let mut tab_configs = HashMap::new();
+        tab_configs.insert(PlotTab::Main, TabConfig::new(use_symlog, -50.0));
+        tab_configs.insert(PlotTab::Deviation, TabConfig::new(use_symlog, -50.0));
+        tab_configs.insert(PlotTab::Profiling, TabConfig::new(false, 0.0));
+
         Self {
             state,
             compute_engine,
@@ -272,15 +316,12 @@ impl ShanksApp {
             last_computed_state: None,
             show_partial_sums,
             show_accel_values: true,
-            symlog_main: use_symlog,
-            symlog_dev: use_symlog,
             selected_tab: PlotTab::Main,
+            tab_configs,
             status_message: String::new(),
             is_computing: false,
-            reset_plot: false,
-            enable_aspect_ratio: true,
-            aspect_x: "10.0".to_string(),
-            aspect_y: "1.0".to_string(),
+            results_dirty: false,
+            plot_cache: PlotCache::default(),
             prof_show_add: true,
             prof_show_mul: true,
             prof_show_div: true,
@@ -320,6 +361,7 @@ impl ShanksApp {
         // Clear results — they will be repopulated entirely from incoming events
         self.current_results.clear();
         self.current_accel_results.clear();
+        self.results_dirty = true;
 
         // --- Build one ComputeTask per unique (series, precision, noise) combination ---
         // Group: series_name+params_json+precision+noise_idx → (algorithms, max_n, params)
@@ -425,10 +467,12 @@ impl ShanksApp {
                         log::info!("SeriesComplete: {} Sn points", result.sn.len());
                         self.current_results.insert(name, result);
                         self.status_message = "Series complete, applying algorithms...".to_string();
+                        self.results_dirty = true;
                     }
                     ComputeEventBody::AccelComplete { name, result } => {
                         log::info!("AccelComplete: {} values", result.values.len());
                         self.current_accel_results.insert(name, result);
+                        self.results_dirty = true;
                     }
                     ComputeEventBody::Complete => {
                         self.status_message = "Computation complete".to_string();
@@ -448,7 +492,7 @@ impl ShanksApp {
     }
     
     /// Convert a series point to f64, optionally applying symlog.
-    fn point_to_f64(&self, point: &SeriesPoint, use_symlog: bool) -> Option<f64> {
+    fn point_to_f64(&self, point: &SeriesPoint, use_symlog: bool, log_linthresh: f64) -> Option<f64> {
         let sci_val = match point {
             SeriesPoint::Real(v) => v,
             SeriesPoint::Complex(c) => &c.real,
@@ -457,7 +501,7 @@ impl ShanksApp {
         if use_symlog {
             // Convert to plot Scientific format directly to avoid f64 Infinity overflow
             let plot_sci = crate::plot::Scientific(sci_val.mantissa, sci_val.exponent as i32);
-            Some(plot_sci.symlog())
+            Some(plot_sci.symlog(log_linthresh))
         } else {
             let value = sci_val.to_f64();
             if value.is_finite() {
@@ -476,7 +520,148 @@ impl ShanksApp {
             precision_tree: self.precision_tree.clone(),
         }
     }
-    
+
+    fn recompute_plot_cache(&mut self, use_symlog: bool, log_linthresh: f64) {
+        self.plot_cache.symlog = use_symlog;
+        self.plot_cache.log_linthresh = log_linthresh;
+        self.plot_cache.main_sn.clear();
+        self.plot_cache.main_accel.clear();
+        self.plot_cache.deviations.clear();
+        self.plot_cache.prof_add.clear();
+        self.plot_cache.prof_mul.clear();
+        self.plot_cache.prof_div.clear();
+        self.plot_cache.prof_special.clear();
+
+        let colors_sn = [
+            egui::Color32::BLUE,
+            egui::Color32::LIGHT_BLUE,
+            egui::Color32::DARK_BLUE,
+            egui::Color32::from_rgb(100, 100, 255),
+        ];
+        
+        for (i, (series_name, results)) in self.current_results.iter().enumerate() {
+            if self.show_partial_sums {
+                let pts: Vec<egui_plot::PlotPoint> = results.sn
+                .iter()
+                .enumerate()
+                .filter_map(|(j, p)| {
+                    self.point_to_f64(p, use_symlog, log_linthresh)
+                        .map(|v| [j as f64, v].into())
+                })
+                .collect();
+            
+            self.plot_cache.main_sn.push(CachedPlotLine {
+                name: format!("Sn - {}", series_name),
+                color: colors_sn[i % colors_sn.len()],
+                points: pts,
+            });
+            }
+        }
+
+        let colors_accel = [
+            egui::Color32::RED,
+            egui::Color32::GREEN,
+            egui::Color32::YELLOW,
+            egui::Color32::from_rgb(0, 255, 255), // Cyan
+            egui::Color32::from_rgb(255, 0, 255), // Magenta
+        ];
+
+        let colors_prof = [
+            egui::Color32::BLUE, egui::Color32::RED, egui::Color32::GREEN, egui::Color32::YELLOW,
+            egui::Color32::from_rgb(0, 255, 255), egui::Color32::from_rgb(255, 0, 255),
+        ];
+
+        for (i, (name, results)) in self.current_accel_results.iter().enumerate() {
+            if self.show_accel_values {
+                let pts: Vec<egui_plot::PlotPoint> = results.values
+                .iter()
+                .enumerate()
+                .filter_map(|(j, opt_p)| {
+                    opt_p.as_ref()
+                         .and_then(|p| self.point_to_f64(p, use_symlog, log_linthresh))
+                         .map(|v| [j as f64, v].into())
+                })
+                .collect();
+            self.plot_cache.main_accel.push(CachedPlotLine {
+                name: name.clone(),
+                color: colors_accel[i % colors_accel.len()],
+                points: pts,
+            });
+            }
+
+            // Deviations
+            let dev_pts: Vec<egui_plot::PlotPoint> = results.deviations
+                .iter()
+                .enumerate()
+                .filter_map(|(j, d)| {
+                    let mut val = d.to_f64();
+                    if use_symlog {
+                        val = crate::plot::Scientific(d.mantissa, d.exponent as i32).symlog(log_linthresh);
+                    }
+                    if val.is_finite() {
+                        Some([j as f64 + 1.0, val].into())
+                    } else {
+                        None
+                    }
+                })
+                .collect();
+            self.plot_cache.deviations.push(CachedPlotLine {
+                name: format!("{} Dev", name),
+                color: colors_accel[i % colors_accel.len()],
+                points: dev_pts,
+            });
+
+            // Profiling
+            if let Some(prof) = &results.profiling {
+                let base_color = colors_prof[i % colors_prof.len()];
+                
+                let add_pts: Vec<egui_plot::PlotPoint> = prof.add.iter().enumerate().map(|(j, &v)| {
+                    let mut val = v as f64;
+                    if use_symlog { val = crate::plot::Scientific::from_f64(val).symlog(log_linthresh); }
+                    [(j+1) as f64, val].into()
+                }).collect();
+                self.plot_cache.prof_add.push(CachedPlotLine {
+                    name: format!("{} (Add)", name),
+                    color: base_color,
+                    points: add_pts,
+                });
+
+                let mul_pts: Vec<egui_plot::PlotPoint> = prof.mul.iter().enumerate().map(|(j, &v)| {
+                    let mut val = v as f64;
+                    if use_symlog { val = crate::plot::Scientific::from_f64(val).symlog(log_linthresh); }
+                    [(j+1) as f64, val].into()
+                }).collect();
+                self.plot_cache.prof_mul.push(CachedPlotLine {
+                    name: format!("{} (Mul)", name),
+                    color: base_color.gamma_multiply(0.8),
+                    points: mul_pts,
+                });
+
+                let div_pts: Vec<egui_plot::PlotPoint> = prof.div.iter().enumerate().map(|(j, &v)| {
+                    let mut val = v as f64;
+                    if use_symlog { val = crate::plot::Scientific::from_f64(val).symlog(log_linthresh); }
+                    [(j+1) as f64, val].into()
+                }).collect();
+                self.plot_cache.prof_div.push(CachedPlotLine {
+                    name: format!("{} (Div)", name),
+                    color: base_color.gamma_multiply(0.6),
+                    points: div_pts,
+                });
+
+                let special_pts: Vec<egui_plot::PlotPoint> = prof.special.iter().enumerate().map(|(j, &v)| {
+                    let mut val = v as f64;
+                    if use_symlog { val = crate::plot::Scientific::from_f64(val).symlog(log_linthresh); }
+                    [(j+1) as f64, val].into()
+                }).collect();
+                self.plot_cache.prof_special.push(CachedPlotLine {
+                    name: format!("{} (Special)", name),
+                    color: base_color.gamma_multiply(0.4),
+                    points: special_pts,
+                });
+            }
+        }
+    }
+
 
 }
 
@@ -532,11 +717,6 @@ impl eframe::App for ShanksApp {
                     ui.checkbox(&mut self.show_partial_sums, "Show Partial Sums");
                     ui.checkbox(&mut self.show_accel_values, "Show Accelerated Values");
                     ui.separator();
-                });
-                ui.menu_button("Help", |ui| {
-                    if ui.button("About").clicked() {
-                        // Show about dialog
-                    }
                 });
             });
         });
@@ -634,34 +814,40 @@ impl eframe::App for ShanksApp {
                 ui.selectable_value(&mut self.selected_tab, PlotTab::Deviation, "Отклонения");
                 ui.selectable_value(&mut self.selected_tab, PlotTab::Profiling, "Профилирование");
                 
+                let config = self.tab_configs.get_mut(&self.selected_tab).expect("Tab config missing");
+
                 ui.separator();
-                if self.selected_tab == PlotTab::Main {
-                    ui.checkbox(&mut self.symlog_main, "Symlog Scale");
-                } else {
-                    ui.checkbox(&mut self.symlog_dev, "Symlog Scale");
+                ui.checkbox(&mut config.symlog, "Symlog Scale");
+                if config.symlog {
+                    ui.label("Log Linthresh:");
+                    ui.add(egui::DragValue::new(&mut config.log_linthresh).speed(1.0));
                 }
 
                 ui.separator();
                 if ui.button("🏠 Home").clicked() {
-                    self.reset_plot = true;
+                    config.reset_plot = true;
                 }
 
                 ui.separator();
-                ui.checkbox(&mut self.enable_aspect_ratio, "Aspect Ratio");
-                if self.enable_aspect_ratio {
+                ui.checkbox(&mut config.enable_aspect_ratio, "Aspect Ratio");
+                if config.enable_aspect_ratio {
                     ui.label("X:");
-                    ui.add(egui::TextEdit::singleline(&mut self.aspect_x).desired_width(40.0));
+                    ui.add(egui::TextEdit::singleline(&mut config.aspect_x).desired_width(40.0));
                     ui.label("Y:");
-                    ui.add(egui::TextEdit::singleline(&mut self.aspect_y).desired_width(40.0));
+                    ui.add(egui::TextEdit::singleline(&mut config.aspect_y).desired_width(40.0));
                 }
             });
             ui.separator();
 
-            let use_symlog = if self.selected_tab == PlotTab::Main {
-                self.symlog_main
-            } else {
-                self.symlog_dev
-            };
+            let use_symlog = self.tab_configs.get(&self.selected_tab).expect("Tab config missing").symlog;
+            let log_linthresh = self.tab_configs.get(&self.selected_tab).expect("Tab config missing").log_linthresh;
+
+            if self.results_dirty || self.plot_cache.symlog != use_symlog || self.plot_cache.log_linthresh != log_linthresh {
+                self.recompute_plot_cache(use_symlog, log_linthresh);
+                self.results_dirty = false;
+            }
+
+            let config = self.tab_configs.get_mut(&self.selected_tab).expect("Tab config missing");
 
             // Plot area
             if self.selected_tab == PlotTab::Profiling {
@@ -675,57 +861,58 @@ impl eframe::App for ShanksApp {
 
                     ui.separator();
 
-                    let prof_plot = egui_plot::Plot::new("profiling_plot")
+                    let mut prof_plot = egui_plot::Plot::new("profiling_plot")
                         .view_aspect(2.0)
                         .legend(egui_plot::Legend::default().position(egui_plot::Corner::RightTop))
                         .x_axis_label("n")
                         .y_axis_label("Operations");
 
-                    prof_plot.show(ui, |plot_ui| {
-                        let colors = [
-                            egui::Color32::BLUE, egui::Color32::RED, egui::Color32::GREEN, egui::Color32::YELLOW,
-                            egui::Color32::from_rgb(0, 255, 255), egui::Color32::from_rgb(255, 0, 255),
-                        ];
+                    if use_symlog {
+                        prof_plot = prof_plot.y_axis_formatter(move |mark, _range| {
+                            crate::plot::symlog_formatter(mark.value, log_linthresh)
+                        })
+                        .label_formatter(move |name, value| {
+                            format!("{}\nn={}\nops={}", name, value.x, crate::plot::symlog_formatter(value.y, log_linthresh))
+                        });
+                    }
 
-                        for (i, (name, result)) in self.current_accel_results.iter().enumerate() {
-                            if let Some(prof) = &result.profiling {
-                                let base_color = colors[i % colors.len()];
-                                
-                                if self.prof_show_add {
-                                    let pts: Vec<[f64; 2]> = prof.add.iter().enumerate().map(|(j, &v)| [(j+1) as f64, v as f64]).collect();
-                                    plot_ui.line(egui_plot::Line::new(pts).name(format!("{} (Add)", name)).color(base_color));
-                                }
-                                if self.prof_show_mul {
-                                    let pts: Vec<[f64; 2]> = prof.mul.iter().enumerate().map(|(j, &v)| [(j+1) as f64, v as f64]).collect();
-                                    plot_ui.line(egui_plot::Line::new(pts).name(format!("{} (Mul)", name)).color(base_color.gamma_multiply(0.8)));
-                                }
-                                if self.prof_show_div {
-                                    let pts: Vec<[f64; 2]> = prof.div.iter().enumerate().map(|(j, &v)| [(j+1) as f64, v as f64]).collect();
-                                    plot_ui.line(egui_plot::Line::new(pts).name(format!("{} (Div)", name)).color(base_color.gamma_multiply(0.6)));
-                                }
-                                if self.prof_show_special {
-                                    let pts: Vec<[f64; 2]> = prof.special.iter().enumerate().map(|(j, &v)| [(j+1) as f64, v as f64]).collect();
-                                    plot_ui.line(egui_plot::Line::new(pts).name(format!("{} (Special)", name)).color(base_color.gamma_multiply(0.4)));
-                                }
+                    prof_plot.show(ui, |plot_ui| {
+                        for line in &self.plot_cache.prof_add {
+                            if self.prof_show_add {
+                                plot_ui.line(egui_plot::Line::new(&*line.points).name(&line.name).color(line.color));
+                            }
+                        }
+                        for line in &self.plot_cache.prof_mul {
+                            if self.prof_show_mul {
+                                plot_ui.line(egui_plot::Line::new(&*line.points).name(&line.name).color(line.color));
+                            }
+                        }
+                        for line in &self.plot_cache.prof_div {
+                            if self.prof_show_div {
+                                plot_ui.line(egui_plot::Line::new(&*line.points).name(&line.name).color(line.color));
+                            }
+                        }
+                        for line in &self.plot_cache.prof_special {
+                            if self.prof_show_special {
+                                plot_ui.line(egui_plot::Line::new(&*line.points).name(&line.name).color(line.color));
                             }
                         }
                     });
                 });
-            }
- else {
+            } else {
                 let mut plot = egui_plot::Plot::new("series_plot")
                     .view_aspect(1.5)
                     .legend(egui_plot::Legend::default().position(egui_plot::Corner::RightTop))
                     .x_axis_label("n")
                     .y_axis_label("Value");
 
-                if self.reset_plot {
+                if config.reset_plot {
                     plot = plot.reset();
-                    self.reset_plot = false;
+                    config.reset_plot = false;
                 }
 
-                if self.enable_aspect_ratio {
-                    if let (Ok(x), Ok(y)) = (self.aspect_x.parse::<f64>(), self.aspect_y.parse::<f64>()) {
+                if config.enable_aspect_ratio {
+                    if let (Ok(x), Ok(y)) = (config.aspect_x.parse::<f64>(), config.aspect_y.parse::<f64>()) {
                         if x > 0.0 && y > 0.0 {
                             plot = plot.data_aspect((x / y) as f32);
                         }
@@ -733,105 +920,32 @@ impl eframe::App for ShanksApp {
                 }
                 
                 if use_symlog {
-                    plot = plot.y_axis_formatter(|mark, _range| {
-                        crate::plot::symlog_formatter(mark.value)
+                    plot = plot.y_axis_formatter(move |mark, _range| {
+                        crate::plot::symlog_formatter(mark.value, log_linthresh)
                     })
                     .label_formatter(move |name, value| {
-                        format!("{}\nx={}\ny={}", name, value.x, crate::plot::symlog_formatter(value.y))
+                        format!("{}\nx={}\ny={}", name, value.x, crate::plot::symlog_formatter(value.y, log_linthresh))
                     });
                 }
                 
                 plot.show(ui, |plot_ui| {
                     if self.selected_tab == PlotTab::Main {
                         // Plot partial sums if available
-                    if self.show_partial_sums {
-                        let colors = [
-                            egui::Color32::BLUE,
-                            egui::Color32::LIGHT_BLUE,
-                            egui::Color32::DARK_BLUE,
-                            egui::Color32::from_rgb(100, 100, 255),
-                        ];
-                        for (i, (series_name, result)) in self.current_results.iter().enumerate() {
-                            let points: Vec<[f64; 2]> = result.sn
-                                .iter()
-                                .enumerate()
-                                .filter_map(|(j, p)| {
-                                    self.point_to_f64(p, use_symlog)
-                                        .map(|v| [j as f64, v])
-                                })
-                                .collect();
-                            
-                            log::debug!("Plotting {} Sn points", points.len());
-                            
-                            let color = colors[i % colors.len()];
-                            let line = egui_plot::Line::new(points)
-                                .color(color)
-                                .name(format!("Sn - {}", series_name));
-                            plot_ui.line(line);
+                        if self.show_partial_sums {
+                            for line in &self.plot_cache.main_sn {
+                                plot_ui.line(egui_plot::Line::new(&*line.points).name(&line.name).color(line.color));
+                            }
                         }
-                    }
-                    
-                    // Plot accelerated values if available
-                    if self.show_accel_values {
-                        let colors = [
-                            egui::Color32::RED,
-                            egui::Color32::GREEN,
-                            egui::Color32::YELLOW,
-                            egui::Color32::from_rgb(0, 255, 255), // Cyan
-                            egui::Color32::from_rgb(255, 0, 255), // Magenta
-                        ];
                         
-                        for (i, (_name, result)) in self.current_accel_results.iter().enumerate() {
-                            let points: Vec<[f64; 2]> = result.values
-                                .iter()
-                                .enumerate()
-                                .filter_map(|(j, opt_p)| {
-                                    opt_p.as_ref()
-                                         .and_then(|p| self.point_to_f64(p, use_symlog))
-                                         .map(|v| [j as f64, v])
-                                })
-                                .collect();
-                            
-                            log::info!("GUI Render: plotting {} points for {}", points.len(), _name);
-                            
-                            let color = colors[i % colors.len()];
-                            let line = egui_plot::Line::new(points)
-                                .color(color)
-                                .name(_name);
-                            plot_ui.line(line);
+                        // Plot accelerated values if available
+                        if self.show_accel_values {
+                            for line in &self.plot_cache.main_accel {
+                                plot_ui.line(egui_plot::Line::new(&*line.points).name(&line.name).color(line.color));
+                            }
                         }
-                    }
                     } else if self.selected_tab == PlotTab::Deviation {
-                        let colors = [
-                            egui::Color32::RED,
-                            egui::Color32::GREEN,
-                            egui::Color32::YELLOW,
-                            egui::Color32::from_rgb(0, 255, 255), // Cyan
-                            egui::Color32::from_rgb(255, 0, 255), // Magenta
-                        ];
-
-                        for (i, (_name, result)) in self.current_accel_results.iter().enumerate() {
-                            let points: Vec<[f64; 2]> = result.deviations
-                                .iter()
-                                .enumerate()
-                                .filter_map(|(j, d)| {
-                                    let mut val = d.to_f64();
-                                    if use_symlog {
-                                        val = crate::plot::Scientific(d.mantissa, d.exponent as i32).symlog();
-                                    }
-                                    if val.is_finite() {
-                                        Some([j as f64 + 1.0, val]) // Accelerations output n from 1..=n
-                                    } else {
-                                        None
-                                    }
-                                })
-                                .collect();
-
-                            let color = colors[i % colors.len()];
-                            let line = egui_plot::Line::new(points)
-                                .color(color)
-                                .name(format!("{} Dev", _name));
-                            plot_ui.line(line);
+                        for line in &self.plot_cache.deviations {
+                            plot_ui.line(egui_plot::Line::new(&*line.points).name(&line.name).color(line.color));
                         }
                     }
                 });

@@ -4,13 +4,6 @@
 
 use serde::{Deserialize, Serialize};
 
-/// Linear threshold for symlog transformation.
-/// Values smaller than this are displayed linearly.
-const LINTHRESH: f64 = 1e-50;
-
-/// log10 of LINTHRESH, precomputed for efficiency.
-const LOG_LINTHRESH: f64 = -50.0;
-
 /// A value in scientific notation: mantissa × 10^exponent.
 #[derive(Clone, Copy, Debug, Default, Serialize, Deserialize)]
 pub struct Scientific(pub f64, pub i32);
@@ -42,7 +35,8 @@ impl Scientific {
     /// Symlog provides a smooth transition between linear and logarithmic scales:
     /// - Near zero: linear (preserves sign and small differences)
     /// - Far from zero: logarithmic (handles large dynamic range)
-    pub fn symlog(&self) -> f64 {
+    pub fn symlog(&self, log_linthresh: f64) -> f64 {
+        let linthresh = 10f64.powf(log_linthresh);
         let mantissa = self.0;
         let exponent = self.1;
 
@@ -60,7 +54,7 @@ impl Scientific {
         // Compare magnitude vs threshold
         // If the value is more than 16 orders of magnitude larger than threshold,
         // the "+ 1" in symlog formula becomes irrelevant due to f64 precision limits.
-        let magnitude_diff = val_log10 - LOG_LINTHRESH;
+        let magnitude_diff = val_log10 - log_linthresh;
 
         if magnitude_diff > 16.0 {
             // Huge numbers: log approximation
@@ -71,7 +65,7 @@ impl Scientific {
             // Small/transition numbers: exact math
             // Formula: log10(1 + |x|/L)
             // Near threshold, the "+ 1" creates the smooth curve.
-            sign * (1.0 + self.approx_f64().abs() / LINTHRESH).log10()
+            sign * (1.0 + self.approx_f64().abs() / linthresh).log10()
         }
     }
 
@@ -112,10 +106,10 @@ impl From<Scientific> for f64 {
 /// Convert symlog-transformed value back to a formatted string.
 ///
 /// This is used for axis labels on symlog-scaled plots.
-pub fn symlog_formatter(val: f64) -> String {
+pub fn symlog_formatter(val: f64, log_linthresh: f64) -> String {
     if val == 0.0 {
         return "0".to_string();
-    } else if (val + LOG_LINTHRESH).abs() < 0.00001 {
+    } else if (val + log_linthresh).abs() < 0.00001 {
         return "1".to_string();
     }
 
@@ -125,7 +119,7 @@ pub fn symlog_formatter(val: f64) -> String {
     // Inverse transform: |x| = L * (10^|y| - 1)
     // In log region: |x| ~= L * 10^|y|
     // So: log10(|x|) = log10(L) + |y|
-    let target_log10 = LOG_LINTHRESH + abs_plot_y;
+    let target_log10 = log_linthresh + abs_plot_y;
 
     // Reconstruct scientific notation
     let exponent = target_log10.floor();
@@ -161,14 +155,14 @@ mod tests {
     #[test]
     fn test_symlog_zero() {
         let s = Scientific(0.0, 0);
-        assert_eq!(s.symlog(), 0.0);
+        assert_eq!(s.symlog(-50.0), 0.0);
     }
 
     #[test]
     fn test_symlog_symmetry() {
         let pos = Scientific(1.5, 10);
         let neg = Scientific(-1.5, 10);
-        assert!((pos.symlog() + neg.symlog()).abs() < 1e-10);
+        assert!((pos.symlog(-50.0) + neg.symlog(-50.0)).abs() < 1e-10);
     }
 
     #[test]
