@@ -289,25 +289,34 @@ impl ShanksLibrary {
         precision: &str,
         x_value: &str,
         params_json: &str,
-        noise_json: &str,
+        noise_type: &str,
+        noise_method: &str,
+        param1: f64,
+        param2: f64,
+        seed: u64,
     ) -> Result<ShanksSeriesHandle, FfiError> {
         unsafe {
             let func: Symbol<
-                unsafe extern "C" fn(*const i8, *const i8, *const i8, *const i8, *const i8) -> *mut std::ffi::c_void,
+                unsafe extern "C" fn(*const i8, *const i8, *const i8, *const i8, *const i8, *const i8, f64, f64, u64) -> *mut std::ffi::c_void,
             > = self.library.get(b"shanks_series_create_with_noise")?;
 
             let name_c = CString::new(name)?;
             let precision_c = CString::new(precision)?;
             let x_value_c = CString::new(x_value)?;
             let args_json = CString::new(params_json)?;
-            let noise_c = CString::new(noise_json)?;
+            let type_c = CString::new(noise_type)?;
+            let method_c = CString::new(noise_method)?;
 
             let handle = func(
                 name_c.as_ptr(),
                 precision_c.as_ptr(),
                 x_value_c.as_ptr(),
                 args_json.as_ptr(),
-                noise_c.as_ptr(),
+                type_c.as_ptr(),
+                method_c.as_ptr(),
+                param1,
+                param2,
+                seed,
             );
 
             if handle.is_null() {

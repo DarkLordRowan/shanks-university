@@ -174,6 +174,7 @@ impl ComputeCore {
                 precision,
                 &x_value,
                 &args_json,
+                noise_json_opt.as_deref(),
             ).unwrap_or(None);
 
             if let Some(s_id) = series_exists_id {
@@ -215,14 +216,20 @@ impl ComputeCore {
 
         let fully_cached = algorithms_to_compute.is_empty() && cached_series_result.is_some();
 
+        let unique_series_name = format!("{} ({}{})", 
+            series.name, 
+            precision, 
+            noise.map(|n| format!(", {}", n.noise_type)).unwrap_or_default()
+        );
+
         // --- Emit cached results immediately ---
         // This is the key change: the GUI only ever hears about results via events.
         if let Some(ref res) = cached_series_result {
-            send_event(ComputeEventBody::SeriesComplete { result: res.clone() });
+            send_event(ComputeEventBody::SeriesComplete { name: unique_series_name.clone(), result: res.clone() });
         }
         for (accel, res) in &cached_results {
             send_event(ComputeEventBody::AccelComplete {
-                name: build_distinct_name(accel, algorithms),
+                name: format!("{} - {}", unique_series_name, build_distinct_name(accel, algorithms)),
                 result: res.clone(),
             });
         }
@@ -237,8 +244,18 @@ impl ComputeCore {
         // we need it to run algorithms).
         if check_cancel() { return Ok((false, errors)); }
 
-        let series_handle = match &noise_json_opt {
-            Some(noise_json) => self.library.series_create_with_noise(&series.name, precision, &x_value, &args_json, noise_json),
+        let series_handle = match noise {
+            Some(n) => self.library.series_create_with_noise(
+                &series.name,
+                precision,
+                &x_value,
+                &args_json,
+                &n.noise_type.to_lowercase(),
+                &n.method.to_lowercase(),
+                n.param1,
+                n.param2,
+                n.seed,
+            ),
             None => self.library.series_create(&series.name, precision, &x_value, &args_json)
         };
 
@@ -274,7 +291,7 @@ impl ComputeCore {
 
         // Emit SeriesComplete only if we didn't already emit it from cache
         if cached_series_result.is_none() {
-            send_event(ComputeEventBody::SeriesComplete { result: series_result.clone() });
+            send_event(ComputeEventBody::SeriesComplete { name: unique_series_name.clone(), result: series_result.clone() });
         }
 
         // --- Persist series ---
@@ -357,7 +374,7 @@ impl ComputeCore {
             };
 
             send_event(ComputeEventBody::AccelComplete {
-                name: build_distinct_name(&accel, algorithms),
+                name: format!("{} - {}", unique_series_name, build_distinct_name(&accel, algorithms)),
                 result: parsed_accel.clone(),
             });
 

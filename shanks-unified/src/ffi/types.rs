@@ -295,7 +295,7 @@ pub enum ComputeEventBody {
     /// Progress update
     Progress { stage: String, current: u64, total: u64 },
     /// Series generation complete
-    SeriesComplete { result: SeriesResult },
+    SeriesComplete { name: String, result: SeriesResult },
     /// Algorithm application complete
     AccelComplete { name: String, result: AccelResult },
     /// Error occurred

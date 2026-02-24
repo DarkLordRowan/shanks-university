@@ -189,23 +189,16 @@ SHANKS_FFI_API ShanksSeriesHandle shanks_series_create(
     const char* args_json
 );
 
-/**
- * @brief Create a series instance with noise.
- * 
- * @param name Series name.
- * @param precision Precision type.
- * @param x_value The x parameter as a string.
- * @param args_json Additional arguments as JSON.
- * @param noise_json Noise configuration: {"type": "normal", "mean": "0.0", "stddev": "0.1", "seed": 42}.
- *                   Supported types: "normal", "uniform", "poisson".
- * @return Handle to series instance, or NULL on error.
- */
 SHANKS_FFI_API ShanksSeriesHandle shanks_series_create_with_noise(
     const char* name,
     const char* precision,
     const char* x_value,
     const char* args_json,
-    const char* noise_json
+    const char* noise_type,
+    const char* noise_method,
+    double param1,
+    double param2,
+    uint64_t seed
 );
 
 /**

@@ -108,7 +108,11 @@ extern "C" SHANKS_FFI_API ShanksSeriesHandle shanks_series_create_with_noise(
     const char* precision,
     const char* x_value,
     const char* args_json,
-    const char* noise_json
+    const char* noise_type,
+    const char* noise_method,
+    double param1,
+    double param2,
+    uint64_t seed
 );
 
 extern "C" SHANKS_FFI_API void shanks_series_destroy(ShanksSeriesHandle handle);

@@ -31,9 +31,9 @@ impl Cache {
                 x_value TEXT,
                 arguments JSON,
                 noise_config JSON,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                UNIQUE(name, precision, x_value, arguments)
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
+            CREATE UNIQUE INDEX IF NOT EXISTS idx_series_unique ON series(name, precision, x_value, arguments, IFNULL(noise_config, ''));
 
             -- Partial sums Sn and terms an
             CREATE TABLE IF NOT EXISTS series_points (
@@ -116,11 +116,19 @@ impl Cache {
 
         let id = if result? == 0 {
             // Row already exists, get the ID
-            tx.query_row(
-                "SELECT id FROM series WHERE name = ?1 AND precision = ?2 AND x_value = ?3 AND arguments = ?4",
-                params![name, precision, x_value, arguments],
-                |row| row.get(0),
-            )?
+            if let Some(nc) = noise_config {
+                tx.query_row(
+                    "SELECT id FROM series WHERE name = ?1 AND precision = ?2 AND x_value = ?3 AND arguments = ?4 AND noise_config = ?5",
+                    params![name, precision, x_value, arguments, nc],
+                    |row| row.get(0),
+                )?
+            } else {
+                tx.query_row(
+                    "SELECT id FROM series WHERE name = ?1 AND precision = ?2 AND x_value = ?3 AND arguments = ?4 AND noise_config IS NULL",
+                    params![name, precision, x_value, arguments],
+                    |row| row.get(0),
+                )?
+            }
         } else {
             tx.last_insert_rowid()
         };
@@ -199,12 +207,21 @@ impl Cache {
         precision: &str,
         x_value: &str,
         arguments: &str,
+        noise_config: Option<&str>,
     ) -> Result<Option<i64>> {
-        let result = self.conn.query_row(
-            "SELECT id FROM series WHERE name = ?1 AND precision = ?2 AND x_value = ?3 AND arguments = ?4",
-            params![name, precision, x_value, arguments],
-            |row| row.get(0),
-        );
+        let result = if let Some(nc) = noise_config {
+            self.conn.query_row(
+                "SELECT id FROM series WHERE name = ?1 AND precision = ?2 AND x_value = ?3 AND arguments = ?4 AND noise_config = ?5",
+                params![name, precision, x_value, arguments, nc],
+                |row| row.get(0),
+            )
+        } else {
+            self.conn.query_row(
+                "SELECT id FROM series WHERE name = ?1 AND precision = ?2 AND x_value = ?3 AND arguments = ?4 AND noise_config IS NULL",
+                params![name, precision, x_value, arguments],
+                |row| row.get(0),
+            )
+        };
 
         match result {
             Ok(id) => Ok(Some(id)),

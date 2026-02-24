@@ -170,7 +170,7 @@ pub struct ShanksApp {
     precision_tree: Option<SelectionNode>,
     
     // Results
-    current_result: Option<SeriesResult>,
+    current_results: std::collections::BTreeMap<String, SeriesResult>,
     current_accel_results: std::collections::BTreeMap<String, AccelResult>,
 
     // Debounce and state
@@ -260,7 +260,7 @@ impl ShanksApp {
             accel_tree,
             noise_tree,
             precision_tree,
-            current_result: None,
+            current_results: std::collections::BTreeMap::new(),
             current_accel_results: std::collections::BTreeMap::new(),
             show_partial_sums,
             show_accel_values: true,
@@ -295,7 +295,7 @@ impl ShanksApp {
         );
 
         if combinations.is_empty() {
-            self.current_result = None;
+            self.current_results.clear();
             self.current_accel_results.clear();
             return;
         }
@@ -308,7 +308,7 @@ impl ShanksApp {
         }
 
         // Clear results — they will be repopulated entirely from incoming events
-        self.current_result = None;
+        self.current_results.clear();
         self.current_accel_results.clear();
 
         // --- Build one ComputeTask per unique (series, precision, noise) combination ---
@@ -411,9 +411,9 @@ impl ShanksApp {
                     ComputeEventBody::Progress { stage, current, total } => {
                         self.status_message = format!("{}: {}/{}", stage, current, total);
                     }
-                    ComputeEventBody::SeriesComplete { result } => {
+                    ComputeEventBody::SeriesComplete { name, result } => {
                         log::info!("SeriesComplete: {} Sn points", result.sn.len());
-                        self.current_result = Some(result);
+                        self.current_results.insert(name, result);
                         self.status_message = "Series complete, applying algorithms...".to_string();
                     }
                     ComputeEventBody::AccelComplete { name, result } => {
@@ -482,7 +482,7 @@ impl eframe::App for ShanksApp {
         }
         
         if let Some(change_time) = self.last_input_change {
-            if change_time.elapsed().as_millis() > 300 {
+            if change_time.elapsed().as_millis() > 100 {
                 // Debounce threshold passed, sync with cache
                 self.last_input_change = None;
                 
@@ -583,7 +583,7 @@ impl eframe::App for ShanksApp {
                 // ui.label(format!("Selected: {} series × {} accels", series_count, accel_count));
                 
                 ui.add_space(8.0);
-                if ui.add_enabled(!self.is_computing && (self.current_result.is_some() || !self.current_accel_results.is_empty()), egui::Button::new("Export JSON")).clicked() {
+                if ui.add_enabled(!self.is_computing && (!self.current_results.is_empty() || !self.current_accel_results.is_empty()), egui::Button::new("Export JSON")).clicked() {
                     self.export_json();
                 }
                 
@@ -612,7 +612,7 @@ impl eframe::App for ShanksApp {
 
         // Central panel - plots
         egui::CentralPanel::default().show(ctx, |ui| {
-            if self.current_result.is_none() && self.current_accel_results.is_empty() {
+            if self.current_results.is_empty() && self.current_accel_results.is_empty() {
                 ui.centered_and_justified(|ui| {
                     ui.heading("Select a series and click Compute");
                 });
@@ -685,24 +685,28 @@ impl eframe::App for ShanksApp {
                 if self.selected_tab == PlotTab::Main {
                     // Plot partial sums if available
                 if self.show_partial_sums {
-                    if let Some(ref result) = self.current_result {
+                    let colors = [
+                        egui::Color32::BLUE,
+                        egui::Color32::LIGHT_BLUE,
+                        egui::Color32::DARK_BLUE,
+                        egui::Color32::from_rgb(100, 100, 255),
+                    ];
+                    for (i, (series_name, result)) in self.current_results.iter().enumerate() {
                         let points: Vec<[f64; 2]> = result.sn
                             .iter()
                             .enumerate()
-                            .filter_map(|(i, p)| {
+                            .filter_map(|(j, p)| {
                                 self.point_to_f64(p, use_symlog)
-                                    .map(|v| [i as f64, v])
+                                    .map(|v| [j as f64, v])
                             })
                             .collect();
                         
                         log::debug!("Plotting {} Sn points", points.len());
-                        if !points.is_empty() {
-                            log::debug!("First point: {:?}, Last point: {:?}", points.first(), points.last());
-                        }
                         
+                        let color = colors[i % colors.len()];
                         let line = egui_plot::Line::new(points)
-                            .color(egui::Color32::BLUE)
-                            .name("Sn");
+                            .color(color)
+                            .name(format!("Sn - {}", series_name));
                         plot_ui.line(line);
                     }
                 }
@@ -784,7 +788,7 @@ impl ShanksApp {
         let path = format!("export_{}.json", timestamp);
 
         let data = serde_json::json!({
-            "series": self.current_result,
+            "series": self.current_results,
             "accelerations": self.current_accel_results,
         });
         
