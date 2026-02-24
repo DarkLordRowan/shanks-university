@@ -28,7 +28,7 @@ find_package(Eigen3 REQUIRED)
 find_package(GSL REQUIRED)
 
 # Option for profiling
-option(SHANKS_ENABLE_PROFILING "Enable operation counting" OFF)
+option(SHANKS_ENABLE_PROFILING "Enable operation counting" ON)
 if(SHANKS_ENABLE_PROFILING)
     add_definitions(-DSHANKS_ENABLE_PROFILING)
 endif()

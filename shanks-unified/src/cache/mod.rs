@@ -31,6 +31,7 @@ impl Cache {
                 x_value TEXT,
                 arguments JSON,
                 noise_config JSON,
+                profiling JSON,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
             CREATE UNIQUE INDEX IF NOT EXISTS idx_series_unique ON series(name, precision, x_value, arguments, IFNULL(noise_config, ''));
@@ -57,6 +58,7 @@ impl Cache {
                 accel_name TEXT NOT NULL,
                 m_value INTEGER,
                 additional_args JSON,
+                profiling JSON,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (series_id) REFERENCES series(id)
             );
@@ -105,18 +107,19 @@ impl Cache {
         x_value: &str,
         arguments: &str,
         noise_config: Option<&str>,
+        profiling: Option<&str>,
     ) -> Result<i64> {
         let tx = self.conn.transaction()?;
         
         let result = tx.execute(
-            "INSERT OR IGNORE INTO series (name, precision, x_value, arguments, noise_config)
-             VALUES (?1, ?2, ?3, ?4, ?5)",
-            params![name, precision, x_value, arguments, noise_config],
+            "INSERT OR IGNORE INTO series (name, precision, x_value, arguments, noise_config, profiling)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
+            params![name, precision, x_value, arguments, noise_config, profiling],
         );
 
         let id = if result? == 0 {
-            // Row already exists, get the ID
-            if let Some(nc) = noise_config {
+            // Row already exists, get the ID, ignoring profiling for uniqueness
+            let existing_id: i64 = if let Some(nc) = noise_config {
                 tx.query_row(
                     "SELECT id FROM series WHERE name = ?1 AND precision = ?2 AND x_value = ?3 AND arguments = ?4 AND noise_config = ?5",
                     params![name, precision, x_value, arguments, nc],
@@ -128,7 +131,15 @@ impl Cache {
                     params![name, precision, x_value, arguments],
                     |row| row.get(0),
                 )?
+            };
+            // Update profiling if it was null
+            if let Some(p) = profiling {
+                tx.execute(
+                    "UPDATE series SET profiling = ?1 WHERE id = ?2 AND profiling IS NULL",
+                    params![p, existing_id],
+                )?;
             }
+            existing_id
         } else {
             tx.last_insert_rowid()
         };
@@ -165,13 +176,14 @@ impl Cache {
         accel_name: &str,
         m_value: Option<i64>,
         additional_args: &str,
+        profiling: Option<&str>,
     ) -> Result<i64> {
         let tx = self.conn.transaction()?;
         
         tx.execute(
-            "INSERT INTO accelerations (series_id, accel_name, m_value, additional_args)
-             VALUES (?1, ?2, ?3, ?4)",
-            params![series_id, accel_name, m_value, additional_args],
+            "INSERT INTO accelerations (series_id, accel_name, m_value, additional_args, profiling)
+             VALUES (?1, ?2, ?3, ?4, ?5)",
+            params![series_id, accel_name, m_value, additional_args, profiling],
         )?;
 
         let id = tx.last_insert_rowid();
@@ -315,18 +327,19 @@ impl Cache {
             return Ok(None);
         }
 
+
+
         Ok(Some(crate::ffi::SeriesResult {
             sn,
             an,
             sum: None,
-            profiling: None,
         }))
     }
 
     /// Get acceleration result from cache.
     pub fn get_accel_result(&self, accel_id: i64) -> Result<Option<crate::ffi::AccelResult>> {
         let mut stmt = self.conn.prepare(
-            "SELECT n, value_real, value_imag, value_exp, deviation 
+            "SELECT n, value_real, value_imag, value_exp, deviation, profiling 
              FROM accel_points WHERE accel_id = ?1 ORDER BY n ASC"
         )?;
 
@@ -336,11 +349,17 @@ impl Cache {
             let v_imag: Option<String> = row.get(2)?;
             let v_exp: Option<i64> = row.get(3)?;
             let dev_str: Option<String> = row.get(4)?;
-            Ok((n, v_real, v_imag, v_exp, dev_str))
+            let prof_json: Option<String> = row.get(5)?;
+            Ok((n, v_real, v_imag, v_exp, dev_str, prof_json))
         })?;
 
         let mut values = Vec::new();
         let mut deviations = Vec::new();
+        let mut trace_add = Vec::new();
+        let mut trace_mul = Vec::new();
+        let mut trace_div = Vec::new();
+        let mut trace_special = Vec::new();
+        let mut has_any_profiling = false;
 
         let mut extracted_rows = Vec::new();
         for row in rows {
@@ -351,18 +370,20 @@ impl Cache {
             return Ok(None);
         }
 
-        // Accel algorithms typically return `None` up to some N depending on algorithm.
-        // Cache stores only rows that were inserted. We should handle missing Ns as `None`s.
         let mut max_n = 0;
-        for (n, _, _, _, _) in &extracted_rows {
+        for (n, _, _, _, _, _) in &extracted_rows {
             if *n > max_n { max_n = *n; }
         }
 
         values.resize((max_n) as usize, None);
         deviations.resize((max_n) as usize, crate::ffi::ScientificValue { mantissa: 0.0, exponent: 0 });
+        trace_add.resize((max_n) as usize, 0);
+        trace_mul.resize((max_n) as usize, 0);
+        trace_div.resize((max_n) as usize, 0);
+        trace_special.resize((max_n) as usize, 0);
 
-        for (n, v_real, v_imag, v_exp, dev_str) in extracted_rows {
-            let idx = (n - 1) as usize; // assuming 1-based n
+        for (n, v_real, v_imag, v_exp, dev_str, prof_json) in extracted_rows {
+            let idx = (n - 1) as usize;
             
             // value
             if let (Some(real_str), Some(exp)) = (v_real, v_exp) {
@@ -388,7 +409,6 @@ impl Cache {
                 if let Ok(dev_val) = dev.parse::<f64>() {
                     deviations[idx] = crate::ffi::ScientificValue::from_f64(dev_val);
                 } else if dev.contains("e") {
-                    // primitive fallback for standard format if available
                     let parts: Vec<&str> = dev.split('e').collect();
                     if parts.len() == 2 {
                         if let (Ok(m), Ok(e)) = (parts[0].parse::<f64>(), parts[1].parse::<i64>()) {
@@ -397,14 +417,36 @@ impl Cache {
                     }
                 }
             }
+
+            // profiling
+            if let Some(pj) = prof_json {
+                if let Ok(p) = serde_json::from_str::<serde_json::Value>(&pj) {
+                    trace_add[idx] = p["add"].as_u64().unwrap_or(0);
+                    trace_mul[idx] = p["mul"].as_u64().unwrap_or(0);
+                    trace_div[idx] = p["div"].as_u64().unwrap_or(0);
+                    trace_special[idx] = p["special"].as_u64().unwrap_or(0);
+                    has_any_profiling = true;
+                }
+            }
         }
+
+        let profiling = if has_any_profiling {
+            Some(crate::ffi::ProfilingTrace {
+                add: trace_add,
+                mul: trace_mul,
+                div: trace_div,
+                special: trace_special,
+            })
+        } else {
+            None
+        };
 
         Ok(Some(crate::ffi::AccelResult {
             values,
             deviations,
             events: vec![],
             errors: vec![],
-            profiling: None,
+            profiling,
         }))
     }
 

@@ -78,6 +78,9 @@ struct SeriesHandleReal : public SeriesHandleBaseExt {
         : series(std::move(s)), precision(p), x_value(x), name(n), noise_cfg(cfg) {}
     
     std::string generate(uint64_t n, bool enable_profiling) override {
+#ifdef SHANKS_ENABLE_PROFILING
+        shanks::profiling::reset_counts();
+#endif
         if (!series) {
             set_error("Series is null");
             return "{}";
@@ -189,6 +192,9 @@ struct SeriesHandleComplex : public SeriesHandleBaseExt {
         : series(std::move(s)), precision(p), x_value(x), name(n), noise_cfg(cfg) {}
     
     std::string generate(uint64_t n, bool enable_profiling) override {
+#ifdef SHANKS_ENABLE_PROFILING
+        shanks::profiling::reset_counts();
+#endif
         if (!series) {
             set_error("Series is null");
             return "{}";

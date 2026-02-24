@@ -306,6 +306,7 @@ impl ComputeCore {
                     &x_value,
                     &args_json,
                     noise_json_opt.as_deref(),
+                    None,
                 ).unwrap_or(-1)
             };
 
@@ -350,7 +351,7 @@ impl ComputeCore {
                 }
             };
 
-            let accel_result_json = match self.library.accel_apply(&accel_handle, &series_handle, n_points, m_val.unwrap_or(5) as u64) {
+            let accel_result_json = match self.library.accel_apply(&accel_handle, &series_handle, n_points, m_val.unwrap_or(5) as u64, true) {
                 Ok(r) => r,
                 Err(e) => {
                     self.library.accel_destroy(accel_handle);
@@ -384,7 +385,8 @@ impl ComputeCore {
                 let accel_id = if let Ok(Some(id)) = cache.acceleration_exists(final_series_id, &accel.name, m_val, &method_args_json) {
                     id
                 } else {
-                    cache.insert_acceleration(final_series_id, &accel.name, m_val, &method_args_json).unwrap_or(-1)
+                    let profiling_json = parsed_accel.profiling.as_ref().map(|p| serde_json::to_string(p).unwrap());
+                    cache.insert_acceleration(final_series_id, &accel.name, m_val, &method_args_json, profiling_json.as_deref()).unwrap_or(-1)
                 };
 
                 if accel_id != -1 {
@@ -394,15 +396,26 @@ impl ComputeCore {
                         parsed_accel.deviations.iter().chain(std::iter::repeat(&empty_dev))
                     ).enumerate() {
                         let n = (i + 1) as i64;
+                        let prof_json = if let Some(ref p) = parsed_accel.profiling {
+                            serde_json::json!({
+                                "add": p.add.get(i).copied().unwrap_or(0),
+                                "mul": p.mul.get(i).copied().unwrap_or(0),
+                                "div": p.div.get(i).copied().unwrap_or(0),
+                                "special": p.special.get(i).copied().unwrap_or(0),
+                            }).to_string()
+                        } else {
+                            String::new()
+                        };
+
                         if let Some(val) = val_opt {
                             let (v_real, v_imag, v_exp) = match val {
                                 crate::ffi::SeriesPoint::Real(r) => (r.mantissa.to_string(), String::new(), r.exponent),
                                 crate::ffi::SeriesPoint::Complex(c) => (c.real.mantissa.to_string(), c.imag.mantissa.to_string(), c.real.exponent),
                             };
                             let dev_str = dev.format();
-                            db_points.push((n, v_real, v_imag, v_exp, dev_str, String::new()));
+                            db_points.push((n, v_real, v_imag, v_exp, dev_str, prof_json));
                         } else {
-                            db_points.push((n, String::new(), String::new(), 0, String::new(), String::new()));
+                            db_points.push((n, String::new(), String::new(), 0, String::new(), prof_json));
                         }
                     }
                     if !db_points.is_empty() {

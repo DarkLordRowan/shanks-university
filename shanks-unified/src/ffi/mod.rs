@@ -413,13 +413,14 @@ impl ShanksLibrary {
         series: &ShanksSeriesHandle,
         n: u64,
         order: u64,
+        enable_profiling: bool,
     ) -> Result<String, FfiError> {
         unsafe {
             let func: Symbol<
-                unsafe extern "C" fn(*mut std::ffi::c_void, *mut std::ffi::c_void, u64, u64) -> *mut i8,
+                unsafe extern "C" fn(*mut std::ffi::c_void, *mut std::ffi::c_void, u64, u64, i32) -> *mut i8,
             > = self.library.get(b"shanks_accel_apply")?;
 
-            let ptr = func(accel.handle, series.handle, n, order);
+            let ptr = func(accel.handle, series.handle, n, order, if enable_profiling { 1 } else { 0 });
             if ptr.is_null() {
                 let err = self.last_error().unwrap_or_else(|| "Unknown error".to_string());
                 return Err(FfiError::LibraryError(err));

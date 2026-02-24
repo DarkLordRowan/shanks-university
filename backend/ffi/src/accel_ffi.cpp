@@ -91,10 +91,11 @@ struct AccelHandleReal : public AccelHandleBaseExt {
     std::unique_ptr<shanks::algos::series_acceleration<T, size_t>> algo;
     PrecisionType precision;
     std::string name;
+    size_t algo_index;
     
     AccelHandleReal(std::unique_ptr<shanks::algos::series_acceleration<T, size_t>> a, 
-                    PrecisionType p, const std::string& n)
-        : algo(std::move(a)), precision(p), name(n) {}
+                    PrecisionType p, const std::string& n, size_t idx)
+        : algo(std::move(a)), precision(p), name(n), algo_index(idx) {}
     
     std::string apply(
         SeriesHandleBase* series, 
@@ -116,7 +117,10 @@ struct AccelHandleReal : public AccelHandleBaseExt {
             return "{}";
         }
         
-        // We request n + 3 * order + 1 terms as some algorithms look ahead
+#ifdef SHANKS_ENABLE_PROFILING
+        shanks::profiling::reset_counts();
+#endif
+
         const void* raw_data = series->get_raw_data(n + 3 * order + 1);
         if (!raw_data) return "{}";
         const auto* data = static_cast<const series_result<T>*>(raw_data);
@@ -129,14 +133,50 @@ struct AccelHandleReal : public AccelHandleBaseExt {
         }
 
         std::vector<ScientificValue> deviations;
+        std::vector<unsigned long long> trace_add, trace_mul, trace_div, trace_special;
+
+        if (enable_profiling) {
+            trace_add.reserve(n); trace_mul.reserve(n); trace_div.reserve(n); trace_special.reserve(n);
+        }
+
+#ifdef SHANKS_ENABLE_PROFILING
+        using ProfT = shanks::profiling::OperationCounting<T>;
+        std::unique_ptr<shanks::algos::series_acceleration<ProfT, size_t>> algo_prof;
+        ::series_result<ProfT> data_prof;
+        
+        if (enable_profiling) {
+            algo_prof = shanks::algos::transformation_registry<ProfT, size_t>::create_by_index(algo_index);
+            data_prof.Sn.reserve(data->Sn.size());
+            data_prof.an.reserve(data->an.size());
+            for (const auto& val : data->Sn) data_prof.Sn.push_back(ProfT(val));
+            for (const auto& val : data->an) data_prof.an.push_back(ProfT(val));
+        }
+#endif
+
         std::ostringstream oss;
         oss << "{\"values\": [";
         bool first = true;
         for (uint64_t i = 1; i <= n; ++i) {
             if (!first) oss << ", ";
             first = false;
+            
             try {
                 T val = (*algo)(i, order, *data);
+                
+#ifdef SHANKS_ENABLE_PROFILING
+                if (enable_profiling && algo_prof) {
+                    shanks::profiling::reset_counts();
+                    auto before = shanks::profiling::get_counts();
+                    (*algo_prof)(i, order, data_prof);
+                    auto after = shanks::profiling::get_counts();
+                    
+                    trace_add.push_back(after.add - before.add);
+                    trace_mul.push_back(after.mul - before.mul);
+                    trace_div.push_back(after.div - before.div);
+                    trace_special.push_back(after.special - before.special);
+                }
+#endif
+                
                 oss << shanks::ffi::to_scientific(val).to_json();
                 if (has_sum) {
                     deviations.push_back(shanks::ffi::to_scientific(utils::math<T>::abs(val - sum)));
@@ -146,6 +186,9 @@ struct AccelHandleReal : public AccelHandleBaseExt {
             } catch (...) {
                 oss << "null";
                 deviations.push_back(ScientificValue(0.0, 0));
+                if (enable_profiling) {
+                    trace_add.push_back(0); trace_mul.push_back(0); trace_div.push_back(0); trace_special.push_back(0);
+                }
             }
         }
         oss << "], \"deviations\": [";
@@ -157,12 +200,19 @@ struct AccelHandleReal : public AccelHandleBaseExt {
         
 #ifdef SHANKS_ENABLE_PROFILING
         if (enable_profiling) {
-            auto counts = shanks::profiling::get_counts();
-            oss << ", \"profiling\": {"
-                << "\"add\": " << counts.add << ", "
-                << "\"mul\": " << counts.mul << ", "
-                << "\"div\": " << counts.div << ", "
-                << "\"special\": " << counts.special << "}";
+            auto append_v = [&](const std::vector<unsigned long long>& v) {
+                oss << "[";
+                for (size_t i = 0; i < v.size(); ++i) {
+                    if (i > 0) oss << ",";
+                    oss << v[i];
+                }
+                oss << "]";
+            };
+            oss << ", \"profiling\": {\"add\": "; append_v(trace_add);
+            oss << ", \"mul\": "; append_v(trace_mul);
+            oss << ", \"div\": "; append_v(trace_div);
+            oss << ", \"special\": "; append_v(trace_special);
+            oss << "}";
             shanks::profiling::reset_counts();
         }
 #endif
@@ -181,10 +231,11 @@ struct AccelHandleComplex : public AccelHandleBaseExt {
     std::unique_ptr<shanks::algos::series_acceleration<std::complex<T>, size_t>> algo;
     PrecisionType precision;
     std::string name;
+    size_t algo_index;
     
     AccelHandleComplex(std::unique_ptr<shanks::algos::series_acceleration<std::complex<T>, size_t>> a, 
-                        PrecisionType p, const std::string& n)
-        : algo(std::move(a)), precision(p), name(n) {}
+                       PrecisionType p, const std::string& n, size_t idx)
+        : algo(std::move(a)), precision(p), name(n), algo_index(idx) {}
     
     std::string apply(
         SeriesHandleBase* series, 
@@ -206,6 +257,10 @@ struct AccelHandleComplex : public AccelHandleBaseExt {
             return "{}";
         }
         
+#ifdef SHANKS_ENABLE_PROFILING
+        shanks::profiling::reset_counts();
+#endif
+
         const void* raw_data = series->get_raw_data(n + 3 * order + 1);
         if (!raw_data) return "{}";
         const auto* data = static_cast<const series_result<std::complex<T>>*>(raw_data);
@@ -218,14 +273,51 @@ struct AccelHandleComplex : public AccelHandleBaseExt {
         }
 
         std::vector<ScientificValue> deviations;
+        std::vector<unsigned long long> trace_add, trace_mul, trace_div, trace_special;
+
+        if (enable_profiling) {
+            trace_add.reserve(n); trace_mul.reserve(n); trace_div.reserve(n); trace_special.reserve(n);
+        }
+
+#ifdef SHANKS_ENABLE_PROFILING
+        using ProfRealT = shanks::profiling::OperationCounting<T>;
+        using ProfT = std::complex<ProfRealT>;
+        std::unique_ptr<shanks::algos::series_acceleration<ProfT, size_t>> algo_prof;
+        ::series_result<ProfT> data_prof;
+        
+        if (enable_profiling) {
+            algo_prof = shanks::algos::transformation_registry<ProfT, size_t>::create_by_index(algo_index);
+            data_prof.Sn.reserve(data->Sn.size());
+            data_prof.an.reserve(data->an.size());
+            for (const auto& val : data->Sn) data_prof.Sn.push_back(ProfT(ProfRealT(val.real()), ProfRealT(val.imag())));
+            for (const auto& val : data->an) data_prof.an.push_back(ProfT(ProfRealT(val.real()), ProfRealT(val.imag())));
+        }
+#endif
+
         std::ostringstream oss;
         oss << "{\"values\": [";
         bool first = true;
         for (uint64_t i = 1; i <= n; ++i) {
             if (!first) oss << ", ";
             first = false;
+            
             try {
                 auto val = (*algo)(i, order, *data);
+                
+#ifdef SHANKS_ENABLE_PROFILING
+                if (enable_profiling && algo_prof) {
+                    shanks::profiling::reset_counts();
+                    auto before = shanks::profiling::get_counts();
+                    (*algo_prof)(i, order, data_prof);
+                    auto after = shanks::profiling::get_counts();
+                    
+                    trace_add.push_back(after.add - before.add);
+                    trace_mul.push_back(after.mul - before.mul);
+                    trace_div.push_back(after.div - before.div);
+                    trace_special.push_back(after.special - before.special);
+                }
+#endif
+                
                 oss << shanks::ffi::complex_to_json(val.real(), val.imag());
                 if (has_sum) {
                     deviations.push_back(shanks::ffi::to_scientific(utils::math<std::complex<T>>::abs(val - sum)));
@@ -235,6 +327,9 @@ struct AccelHandleComplex : public AccelHandleBaseExt {
             } catch (...) {
                 oss << "null";
                 deviations.push_back(ScientificValue(0.0, 0));
+                if (enable_profiling) {
+                    trace_add.push_back(0); trace_mul.push_back(0); trace_div.push_back(0); trace_special.push_back(0);
+                }
             }
         }
         oss << "], \"deviations\": [";
@@ -246,12 +341,19 @@ struct AccelHandleComplex : public AccelHandleBaseExt {
         
 #ifdef SHANKS_ENABLE_PROFILING
         if (enable_profiling) {
-            auto counts = shanks::profiling::get_counts();
-            oss << ", \"profiling\": {"
-                << "\"add\": " << counts.add << ", "
-                << "\"mul\": " << counts.mul << ", "
-                << "\"div\": " << counts.div << ", "
-                << "\"special\": " << counts.special << "}";
+            auto append_v = [&](const std::vector<unsigned long long>& v) {
+                oss << "[";
+                for (size_t i = 0; i < v.size(); ++i) {
+                    if (i > 0) oss << ",";
+                    oss << v[i];
+                }
+                oss << "]";
+            };
+            oss << ", \"profiling\": {\"add\": "; append_v(trace_add);
+            oss << ", \"mul\": "; append_v(trace_mul);
+            oss << ", \"div\": "; append_v(trace_div);
+            oss << ", \"special\": "; append_v(trace_special);
+            oss << "}";
             shanks::profiling::reset_counts();
         }
 #endif
@@ -291,37 +393,37 @@ std::unique_ptr<AccelHandleBaseExt> create_accel_by_index(
         case PrecisionType::F64: {
             auto a = shanks::algos::transformation_registry<double, size_t>::create_by_index(index);
             if (!a) return nullptr;
-            return std::make_unique<AccelHandleReal<double>>(std::move(a), prec, name);
+            return std::make_unique<AccelHandleReal<double>>(std::move(a), prec, name, index);
         }
         case PrecisionType::F32: {
             auto a = shanks::algos::transformation_registry<float, size_t>::create_by_index(index);
             if (!a) return nullptr;
-            return std::make_unique<AccelHandleReal<float>>(std::move(a), prec, name);
+            return std::make_unique<AccelHandleReal<float>>(std::move(a), prec, name, index);
         }
         case PrecisionType::FLong: {
             auto a = shanks::algos::transformation_registry<long double, size_t>::create_by_index(index);
             if (!a) return nullptr;
-            return std::make_unique<AccelHandleReal<long double>>(std::move(a), prec, name);
+            return std::make_unique<AccelHandleReal<long double>>(std::move(a), prec, name, index);
         }
         case PrecisionType::Arb: {
             auto a = shanks::algos::transformation_registry<mpfr::mpreal, size_t>::create_by_index(index);
             if (!a) return nullptr;
-            return std::make_unique<AccelHandleReal<mpfr::mpreal>>(std::move(a), prec, name);
+            return std::make_unique<AccelHandleReal<mpfr::mpreal>>(std::move(a), prec, name, index);
         }
         case PrecisionType::CF64: {
             auto a = shanks::algos::transformation_registry<std::complex<double>, size_t>::create_by_index(index);
             if (!a) return nullptr;
-            return std::make_unique<AccelHandleComplex<double>>(std::move(a), prec, name);
+            return std::make_unique<AccelHandleComplex<double>>(std::move(a), prec, name, index);
         }
         case PrecisionType::CF32: {
             auto a = shanks::algos::transformation_registry<std::complex<float>, size_t>::create_by_index(index);
             if (!a) return nullptr;
-            return std::make_unique<AccelHandleComplex<float>>(std::move(a), prec, name);
+            return std::make_unique<AccelHandleComplex<float>>(std::move(a), prec, name, index);
         }
         case PrecisionType::CFLong: {
             auto a = shanks::algos::transformation_registry<std::complex<long double>, size_t>::create_by_index(index);
             if (!a) return nullptr;
-            return std::make_unique<AccelHandleComplex<long double>>(std::move(a), prec, name);
+            return std::make_unique<AccelHandleComplex<long double>>(std::move(a), prec, name, index);
         }
         case PrecisionType::CArb: {
             // Complex arbitrary precision - may not be supported
@@ -394,7 +496,8 @@ extern "C" SHANKS_FFI_API char* shanks_accel_apply(
     ShanksAccelHandle accel,
     ShanksSeriesHandle series,
     uint64_t n,
-    uint64_t order
+    uint64_t order,
+    int enable_profiling
 ) {
     clear_error();
     
@@ -418,7 +521,7 @@ extern "C" SHANKS_FFI_API char* shanks_accel_apply(
     }
     
     try {
-        std::string result = accel_ptr->apply(series_ptr, n, order, true);
+        std::string result = accel_ptr->apply(series_ptr, n, order, enable_profiling != 0);
         return alloc_string(result);
     } catch (const std::exception& e) {
         set_error(std::string("Error applying algorithm: ") + e.what());

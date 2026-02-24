@@ -225,22 +225,19 @@ pub struct SeriesResult {
     /// Analytical sum (if known)
     #[serde(skip_serializing_if = "Option::is_none")]
     pub sum: Option<String>,
-    /// Profiling information (if enabled)
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub profiling: Option<ProfilingInfo>,
 }
 
-/// Profiling information for operation counting.
+/// Profiling trace for operation counting per point.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ProfilingInfo {
-    /// Number of additions
-    pub add: u64,
-    /// Number of multiplications
-    pub mul: u64,
-    /// Number of divisions
-    pub div: u64,
-    /// Number of special operations (sqrt, exp, etc.)
-    pub special: u64,
+pub struct ProfilingTrace {
+    /// Number of additions per point
+    pub add: Vec<u64>,
+    /// Number of multiplications per point
+    pub mul: Vec<u64>,
+    /// Number of divisions per point
+    pub div: Vec<u64>,
+    /// Number of special operations per point
+    pub special: Vec<u64>,
 }
 
 /// Result of acceleration algorithm application.
@@ -259,7 +256,7 @@ pub struct AccelResult {
     pub errors: Vec<ComputeError>,
     /// Profiling information (if enabled)
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub profiling: Option<ProfilingInfo>,
+    pub profiling: Option<ProfilingTrace>,
 }
 
 /// An event during computation (convergence, strategy change, etc.)

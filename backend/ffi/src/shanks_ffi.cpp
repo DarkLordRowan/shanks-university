@@ -143,7 +143,8 @@ extern "C" SHANKS_FFI_API char* shanks_accel_apply(
     ShanksAccelHandle accel,
     ShanksSeriesHandle series,
     uint64_t n,
-    uint64_t order
+    uint64_t order,
+    int enable_profiling
 );
 
 extern "C" SHANKS_FFI_API char* shanks_accel_apply_data(

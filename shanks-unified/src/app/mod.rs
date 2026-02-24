@@ -190,17 +190,23 @@ pub struct ShanksApp {
     status_message: String,
     is_computing: bool,
 
-    // Plot controls
     reset_plot: bool,
     enable_aspect_ratio: bool,
     aspect_x: String,
     aspect_y: String,
+    
+    // Profiling plot options
+    prof_show_add: bool,
+    prof_show_mul: bool,
+    prof_show_div: bool,
+    prof_show_special: bool,
 }
 
 #[derive(PartialEq)]
 enum PlotTab {
     Main,
     Deviation,
+    Profiling,
 }
 
 impl ShanksApp {
@@ -262,6 +268,8 @@ impl ShanksApp {
             precision_tree,
             current_results: std::collections::BTreeMap::new(),
             current_accel_results: std::collections::BTreeMap::new(),
+            last_input_change: None,
+            last_computed_state: None,
             show_partial_sums,
             show_accel_values: true,
             symlog_main: use_symlog,
@@ -269,15 +277,17 @@ impl ShanksApp {
             selected_tab: PlotTab::Main,
             status_message: String::new(),
             is_computing: false,
-            last_input_change: None,
-            last_computed_state: None,
             reset_plot: false,
             enable_aspect_ratio: true,
             aspect_x: "10.0".to_string(),
             aspect_y: "1.0".to_string(),
+            prof_show_add: true,
+            prof_show_mul: true,
+            prof_show_div: true,
+            prof_show_special: true,
         }
     }
-    
+
     /// Synchronize the requested combination with the cache and start compute if necessary.
     /// Build compute tasks from current selection and submit them to the engine.
     /// Results (series + accel) arrive purely via ComputeEngine events.
@@ -622,6 +632,7 @@ impl eframe::App for ShanksApp {
             ui.horizontal(|ui| {
                 ui.selectable_value(&mut self.selected_tab, PlotTab::Main, "Основной график");
                 ui.selectable_value(&mut self.selected_tab, PlotTab::Deviation, "Отклонения");
+                ui.selectable_value(&mut self.selected_tab, PlotTab::Profiling, "Профилирование");
                 
                 ui.separator();
                 if self.selected_tab == PlotTab::Main {
@@ -653,128 +664,178 @@ impl eframe::App for ShanksApp {
             };
 
             // Plot area
-            let mut plot = egui_plot::Plot::new("series_plot")
-                .view_aspect(1.5)
-                .legend(egui_plot::Legend::default().position(egui_plot::Corner::RightTop))
-                .x_axis_label("n")
-                .y_axis_label("Value");
+            if self.selected_tab == PlotTab::Profiling {
+                ui.vertical(|ui| {
+                    ui.horizontal(|ui| {
+                        ui.checkbox(&mut self.prof_show_add, "Add").on_hover_text("Addition and Subtraction");
+                        ui.checkbox(&mut self.prof_show_mul, "Mul").on_hover_text("Multiplication");
+                        ui.checkbox(&mut self.prof_show_div, "Div").on_hover_text("Division");
+                        ui.checkbox(&mut self.prof_show_special, "Special").on_hover_text("Special functions (sqrt, exp, etc.)");
+                    });
 
-            if self.reset_plot {
-                plot = plot.reset();
-                self.reset_plot = false;
-            }
+                    ui.separator();
 
-            if self.enable_aspect_ratio {
-                if let (Ok(x), Ok(y)) = (self.aspect_x.parse::<f64>(), self.aspect_y.parse::<f64>()) {
-                    if x > 0.0 && y > 0.0 {
-                        plot = plot.data_aspect((x / y) as f32);
-                    }
-                }
-            }
-            
-            if use_symlog {
-                plot = plot.y_axis_formatter(|mark, _range| {
-                    crate::plot::symlog_formatter(mark.value)
-                })
-                .label_formatter(move |name, value| {
-                    format!("{}\nx={}\ny={}", name, value.x, crate::plot::symlog_formatter(value.y))
+                    let prof_plot = egui_plot::Plot::new("profiling_plot")
+                        .view_aspect(2.0)
+                        .legend(egui_plot::Legend::default().position(egui_plot::Corner::RightTop))
+                        .x_axis_label("n")
+                        .y_axis_label("Operations");
+
+                    prof_plot.show(ui, |plot_ui| {
+                        let colors = [
+                            egui::Color32::BLUE, egui::Color32::RED, egui::Color32::GREEN, egui::Color32::YELLOW,
+                            egui::Color32::from_rgb(0, 255, 255), egui::Color32::from_rgb(255, 0, 255),
+                        ];
+
+                        for (i, (name, result)) in self.current_accel_results.iter().enumerate() {
+                            if let Some(prof) = &result.profiling {
+                                let base_color = colors[i % colors.len()];
+                                
+                                if self.prof_show_add {
+                                    let pts: Vec<[f64; 2]> = prof.add.iter().enumerate().map(|(j, &v)| [(j+1) as f64, v as f64]).collect();
+                                    plot_ui.line(egui_plot::Line::new(pts).name(format!("{} (Add)", name)).color(base_color));
+                                }
+                                if self.prof_show_mul {
+                                    let pts: Vec<[f64; 2]> = prof.mul.iter().enumerate().map(|(j, &v)| [(j+1) as f64, v as f64]).collect();
+                                    plot_ui.line(egui_plot::Line::new(pts).name(format!("{} (Mul)", name)).color(base_color.gamma_multiply(0.8)));
+                                }
+                                if self.prof_show_div {
+                                    let pts: Vec<[f64; 2]> = prof.div.iter().enumerate().map(|(j, &v)| [(j+1) as f64, v as f64]).collect();
+                                    plot_ui.line(egui_plot::Line::new(pts).name(format!("{} (Div)", name)).color(base_color.gamma_multiply(0.6)));
+                                }
+                                if self.prof_show_special {
+                                    let pts: Vec<[f64; 2]> = prof.special.iter().enumerate().map(|(j, &v)| [(j+1) as f64, v as f64]).collect();
+                                    plot_ui.line(egui_plot::Line::new(pts).name(format!("{} (Special)", name)).color(base_color.gamma_multiply(0.4)));
+                                }
+                            }
+                        }
+                    });
                 });
             }
-            
-            plot.show(ui, |plot_ui| {
-                if self.selected_tab == PlotTab::Main {
-                    // Plot partial sums if available
-                if self.show_partial_sums {
-                    let colors = [
-                        egui::Color32::BLUE,
-                        egui::Color32::LIGHT_BLUE,
-                        egui::Color32::DARK_BLUE,
-                        egui::Color32::from_rgb(100, 100, 255),
-                    ];
-                    for (i, (series_name, result)) in self.current_results.iter().enumerate() {
-                        let points: Vec<[f64; 2]> = result.sn
-                            .iter()
-                            .enumerate()
-                            .filter_map(|(j, p)| {
-                                self.point_to_f64(p, use_symlog)
-                                    .map(|v| [j as f64, v])
-                            })
-                            .collect();
-                        
-                        log::debug!("Plotting {} Sn points", points.len());
-                        
-                        let color = colors[i % colors.len()];
-                        let line = egui_plot::Line::new(points)
-                            .color(color)
-                            .name(format!("Sn - {}", series_name));
-                        plot_ui.line(line);
+ else {
+                let mut plot = egui_plot::Plot::new("series_plot")
+                    .view_aspect(1.5)
+                    .legend(egui_plot::Legend::default().position(egui_plot::Corner::RightTop))
+                    .x_axis_label("n")
+                    .y_axis_label("Value");
+
+                if self.reset_plot {
+                    plot = plot.reset();
+                    self.reset_plot = false;
+                }
+
+                if self.enable_aspect_ratio {
+                    if let (Ok(x), Ok(y)) = (self.aspect_x.parse::<f64>(), self.aspect_y.parse::<f64>()) {
+                        if x > 0.0 && y > 0.0 {
+                            plot = plot.data_aspect((x / y) as f32);
+                        }
                     }
                 }
                 
-                // Plot accelerated values if available
-                if self.show_accel_values {
-                    let colors = [
-                        egui::Color32::RED,
-                        egui::Color32::GREEN,
-                        egui::Color32::YELLOW,
-                        egui::Color32::from_rgb(0, 255, 255), // Cyan
-                        egui::Color32::from_rgb(255, 0, 255), // Magenta
-                    ];
+                if use_symlog {
+                    plot = plot.y_axis_formatter(|mark, _range| {
+                        crate::plot::symlog_formatter(mark.value)
+                    })
+                    .label_formatter(move |name, value| {
+                        format!("{}\nx={}\ny={}", name, value.x, crate::plot::symlog_formatter(value.y))
+                    });
+                }
+                
+                plot.show(ui, |plot_ui| {
+                    if self.selected_tab == PlotTab::Main {
+                        // Plot partial sums if available
+                    if self.show_partial_sums {
+                        let colors = [
+                            egui::Color32::BLUE,
+                            egui::Color32::LIGHT_BLUE,
+                            egui::Color32::DARK_BLUE,
+                            egui::Color32::from_rgb(100, 100, 255),
+                        ];
+                        for (i, (series_name, result)) in self.current_results.iter().enumerate() {
+                            let points: Vec<[f64; 2]> = result.sn
+                                .iter()
+                                .enumerate()
+                                .filter_map(|(j, p)| {
+                                    self.point_to_f64(p, use_symlog)
+                                        .map(|v| [j as f64, v])
+                                })
+                                .collect();
+                            
+                            log::debug!("Plotting {} Sn points", points.len());
+                            
+                            let color = colors[i % colors.len()];
+                            let line = egui_plot::Line::new(points)
+                                .color(color)
+                                .name(format!("Sn - {}", series_name));
+                            plot_ui.line(line);
+                        }
+                    }
                     
-                    for (i, (_name, result)) in self.current_accel_results.iter().enumerate() {
-                        let points: Vec<[f64; 2]> = result.values
-                            .iter()
-                            .enumerate()
-                            .filter_map(|(j, opt_p)| {
-                                opt_p.as_ref()
-                                     .and_then(|p| self.point_to_f64(p, use_symlog))
-                                     .map(|v| [j as f64, v])
-                            })
-                            .collect();
+                    // Plot accelerated values if available
+                    if self.show_accel_values {
+                        let colors = [
+                            egui::Color32::RED,
+                            egui::Color32::GREEN,
+                            egui::Color32::YELLOW,
+                            egui::Color32::from_rgb(0, 255, 255), // Cyan
+                            egui::Color32::from_rgb(255, 0, 255), // Magenta
+                        ];
                         
-                        log::info!("GUI Render: plotting {} points for {}", points.len(), _name);
-                        
-                        let color = colors[i % colors.len()];
-                        let line = egui_plot::Line::new(points)
-                            .color(color)
-                            .name(_name);
-                        plot_ui.line(line);
+                        for (i, (_name, result)) in self.current_accel_results.iter().enumerate() {
+                            let points: Vec<[f64; 2]> = result.values
+                                .iter()
+                                .enumerate()
+                                .filter_map(|(j, opt_p)| {
+                                    opt_p.as_ref()
+                                         .and_then(|p| self.point_to_f64(p, use_symlog))
+                                         .map(|v| [j as f64, v])
+                                })
+                                .collect();
+                            
+                            log::info!("GUI Render: plotting {} points for {}", points.len(), _name);
+                            
+                            let color = colors[i % colors.len()];
+                            let line = egui_plot::Line::new(points)
+                                .color(color)
+                                .name(_name);
+                            plot_ui.line(line);
+                        }
                     }
-                }
-                } else if self.selected_tab == PlotTab::Deviation {
-                    let colors = [
-                        egui::Color32::RED,
-                        egui::Color32::GREEN,
-                        egui::Color32::YELLOW,
-                        egui::Color32::from_rgb(0, 255, 255), // Cyan
-                        egui::Color32::from_rgb(255, 0, 255), // Magenta
-                    ];
+                    } else if self.selected_tab == PlotTab::Deviation {
+                        let colors = [
+                            egui::Color32::RED,
+                            egui::Color32::GREEN,
+                            egui::Color32::YELLOW,
+                            egui::Color32::from_rgb(0, 255, 255), // Cyan
+                            egui::Color32::from_rgb(255, 0, 255), // Magenta
+                        ];
 
-                    for (i, (_name, result)) in self.current_accel_results.iter().enumerate() {
-                        let points: Vec<[f64; 2]> = result.deviations
-                            .iter()
-                            .enumerate()
-                            .filter_map(|(j, d)| {
-                                let mut val = d.to_f64();
-                                if use_symlog {
-                                    val = crate::plot::Scientific(d.mantissa, d.exponent as i32).symlog();
-                                }
-                                if val.is_finite() {
-                                    Some([j as f64 + 1.0, val]) // Accelerations output n from 1..=n
-                                } else {
-                                    None
-                                }
-                            })
-                            .collect();
+                        for (i, (_name, result)) in self.current_accel_results.iter().enumerate() {
+                            let points: Vec<[f64; 2]> = result.deviations
+                                .iter()
+                                .enumerate()
+                                .filter_map(|(j, d)| {
+                                    let mut val = d.to_f64();
+                                    if use_symlog {
+                                        val = crate::plot::Scientific(d.mantissa, d.exponent as i32).symlog();
+                                    }
+                                    if val.is_finite() {
+                                        Some([j as f64 + 1.0, val]) // Accelerations output n from 1..=n
+                                    } else {
+                                        None
+                                    }
+                                })
+                                .collect();
 
-                        let color = colors[i % colors.len()];
-                        let line = egui_plot::Line::new(points)
-                            .color(color)
-                            .name(format!("{} Dev", _name));
-                        plot_ui.line(line);
+                            let color = colors[i % colors.len()];
+                            let line = egui_plot::Line::new(points)
+                                .color(color)
+                                .name(format!("{} Dev", _name));
+                            plot_ui.line(line);
+                        }
                     }
-                }
-            });
+                });
+            }
             
         });
 
