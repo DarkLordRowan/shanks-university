@@ -5,11 +5,13 @@ mod tree_ui;
 mod ui;
 
 use crate::cache::Cache;
-use crate::config::{AppConfig, ExperimentConfig, SeriesInstance, MethodInstance, NoiseDef};
-use crate::ffi::{ShanksLibrary, SeriesResult, AccelResult, SeriesPoint, ComputeEvent, ComputeEventBody};
 use crate::compute::ComputeEngine;
-use std::sync::{Arc, RwLock, Mutex, mpsc};
+use crate::config::{AppConfig, ExperimentConfig, MethodInstance, NoiseDef, SeriesInstance};
+use crate::ffi::{
+    AccelResult, ComputeEvent, ComputeEventBody, SeriesPoint, SeriesResult, ShanksLibrary,
+};
 use std::collections::HashMap;
+use std::sync::{mpsc, Arc, Mutex, RwLock};
 
 /// Parse a string value into the appropriate ParamValue type.
 /// Uses the same precedence as the C++ backend: Int → Float → Bool → String.
@@ -25,7 +27,7 @@ fn parse_param_value(v: &str) -> crate::ffi::ParamValue {
     }
 }
 
-pub use selection::{SelectionNode, SelectionState, SelectedCombination};
+pub use selection::{SelectedCombination, SelectionNode, SelectionState};
 
 #[derive(Clone, PartialEq)]
 struct ComputeInputState {
@@ -66,7 +68,7 @@ impl AppState {
         library: Option<Arc<ShanksLibrary>>,
     ) -> Self {
         // Initialize lists from library or defaults
-        let (series_names, accel_names, precision_names, noise_names, noise_methods) = 
+        let (series_names, accel_names, precision_names, noise_names, noise_methods) =
             if let Some(ref lib) = library {
                 let series = lib.list_series().unwrap_or_default();
                 let accels = lib.list_accels().unwrap_or_default();
@@ -109,11 +111,15 @@ impl AppState {
 
     /// Get cache statistics.
     pub fn cache_stats(&self) -> crate::cache::CacheStats {
-        self.cache.lock().unwrap().stats().unwrap_or(crate::cache::CacheStats {
-            series_count: 0,
-            accel_count: 0,
-            points_count: 0,
-        })
+        self.cache
+            .lock()
+            .unwrap()
+            .stats()
+            .unwrap_or(crate::cache::CacheStats {
+                series_count: 0,
+                accel_count: 0,
+                points_count: 0,
+            })
     }
 
     /// Get expanded series instances from experiment config.
@@ -166,6 +172,8 @@ struct PlotCache {
     log_linthresh: f64,
     main_sn: Vec<CachedPlotLine>,
     main_accel: Vec<CachedPlotLine>,
+    limits: Vec<(String, f64)>,
+    max_n: f64,
     deviations: Vec<CachedPlotLine>,
     prof_add: Vec<CachedPlotLine>,
     prof_mul: Vec<CachedPlotLine>,
@@ -173,22 +181,21 @@ struct PlotCache {
     prof_special: Vec<CachedPlotLine>,
 }
 
-
 /// Main application struct for egui.
 pub struct ShanksApp {
     state: AppState,
-    
+
     // Compute engine
     compute_engine: Option<ComputeEngine>,
     event_rx: Option<mpsc::Receiver<ComputeEvent>>,
     current_task_id: Option<uuid::Uuid>,
-    
+
     // Selection trees
     series_tree: Option<SelectionNode>,
     accel_tree: Option<SelectionNode>,
     noise_tree: Option<SelectionNode>,
     precision_tree: Option<SelectionNode>,
-    
+
     // Results
     current_results: std::collections::BTreeMap<String, SeriesResult>,
     current_accel_results: std::collections::BTreeMap<String, AccelResult>,
@@ -196,21 +203,22 @@ pub struct ShanksApp {
     // Debounce and state
     last_input_change: Option<std::time::Instant>,
     last_computed_state: Option<ComputeInputState>,
-    
+
     // UI options
     show_partial_sums: bool,
     show_accel_values: bool,
-    
+    show_limit_lines: bool,
+
     // Tab selection
     selected_tab: PlotTab,
     tab_configs: HashMap<PlotTab, TabConfig>,
-    
+
     // Status
     status_message: String,
     is_computing: bool,
     results_dirty: bool,
     plot_cache: PlotCache,
-    
+
     // Profiling plot options
     prof_show_add: bool,
     prof_show_mul: bool,
@@ -261,25 +269,25 @@ impl ShanksApp {
         let method_instances = state.get_method_instances();
         let noises = state.get_noises();
         let precisions = state.get_precisions();
-        
+
         let series_tree = if !series_instances.is_empty() {
             Some(selection::build_series_tree(&series_instances))
         } else {
             None
         };
-        
+
         let accel_tree = if !method_instances.is_empty() {
             Some(selection::build_accel_tree(&method_instances))
         } else {
             None
         };
-        
+
         let noise_tree = if !noises.is_empty() {
             Some(selection::build_noise_tree(&noises))
         } else {
             None
         };
-        
+
         let precision_tree = if !precisions.is_empty() {
             Some(selection::build_precision_tree(&precisions))
         } else {
@@ -316,6 +324,7 @@ impl ShanksApp {
             last_computed_state: None,
             show_partial_sums,
             show_accel_values: true,
+            show_limit_lines: true,
             selected_tab: PlotTab::Main,
             tab_configs,
             status_message: String::new(),
@@ -334,13 +343,20 @@ impl ShanksApp {
     /// Results (series + accel) arrive purely via ComputeEngine events.
     /// No direct cache access happens here.
     fn sync_with_cache_and_compute(&mut self) {
-        let series_tree = match &self.series_tree { Some(t) => t, None => return };
-        let accel_tree = match &self.accel_tree { Some(t) => t, None => return };
+        let series_tree = match &self.series_tree {
+            Some(t) => t,
+            None => return,
+        };
+        let accel_tree = match &self.accel_tree {
+            Some(t) => t,
+            None => return,
+        };
         let noise_tree = self.noise_tree.as_ref();
         let precision_tree = self.precision_tree.as_ref();
 
         let combinations = selection::generate_combinations(
-            series_tree, accel_tree,
+            series_tree,
+            accel_tree,
             noise_tree.unwrap_or(&SelectionNode::new("empty", "Empty")),
             precision_tree.unwrap_or(&SelectionNode::new("empty", "Empty")),
         );
@@ -366,8 +382,14 @@ impl ShanksApp {
         // --- Build one ComputeTask per unique (series, precision, noise) combination ---
         // Group: series_name+params_json+precision+noise_idx → (algorithms, max_n, params)
         type TaskKey = (String, String, String, Option<usize>);
-        let mut task_map: HashMap<TaskKey, (Vec<crate::compute::AccelParams>, i64, HashMap<String, crate::ffi::ParamValue>)> = HashMap::new();
-
+        let mut task_map: HashMap<
+            TaskKey,
+            (
+                Vec<crate::compute::AccelParams>,
+                i64,
+                HashMap<String, crate::ffi::ParamValue>,
+            ),
+        > = HashMap::new();
 
         for combo in &combinations {
             // Convert series params string→ParamValue
@@ -397,16 +419,20 @@ impl ShanksApp {
                 params: accel_params,
             };
 
-            let entry = task_map.entry(key).or_insert_with(|| (Vec::new(), combo.method_n, series_params.clone()));
+            let entry = task_map
+                .entry(key)
+                .or_insert_with(|| (Vec::new(), combo.method_n, series_params.clone()));
             // Track max n_points
             if combo.method_n > entry.1 {
                 entry.1 = combo.method_n;
             }
             // Push accel if not already there (deduplicate by serialization)
-            let accel_json = crate::compute::core::to_sorted_json(&accel.params).unwrap_or_default();
+            let accel_json =
+                crate::compute::core::to_sorted_json(&accel.params).unwrap_or_default();
             let already = entry.0.iter().any(|a: &crate::compute::AccelParams| {
-                a.name == accel.name &&
-                crate::compute::core::to_sorted_json(&a.params).unwrap_or_default() == accel_json
+                a.name == accel.name
+                    && crate::compute::core::to_sorted_json(&a.params).unwrap_or_default()
+                        == accel_json
             });
             if !already {
                 entry.0.push(accel);
@@ -416,7 +442,11 @@ impl ShanksApp {
         // Get noises list from experiment config
         let noises = self.state.get_noises();
 
-        for ((series_name, _series_json, precision, noise_idx), (algorithms, n_points, series_params)) in task_map {
+        for (
+            (series_name, _series_json, precision, noise_idx),
+            (algorithms, n_points, series_params),
+        ) in task_map
+        {
             let noise = noise_idx.and_then(|i| noises.get(i));
 
             let task = crate::compute::task::ComputeTask {
@@ -424,7 +454,8 @@ impl ShanksApp {
                 precision: precision.clone(),
                 series: crate::compute::task::SeriesParams {
                     name: series_name.clone(),
-                    x_value: series_params.get("x")
+                    x_value: series_params
+                        .get("x")
                         .and_then(|v| v.as_f64())
                         .map(|f| f.to_string())
                         .unwrap_or_else(|| "1.0".to_string()),
@@ -450,7 +481,6 @@ impl ShanksApp {
         }
     }
 
-
     /// Process events from compute engine.
     fn process_events(&mut self) {
         if let Some(ref mut rx) = self.event_rx {
@@ -460,7 +490,11 @@ impl ShanksApp {
                     ComputeEventBody::Started => {
                         self.status_message = "Computation started...".to_string();
                     }
-                    ComputeEventBody::Progress { stage, current, total } => {
+                    ComputeEventBody::Progress {
+                        stage,
+                        current,
+                        total,
+                    } => {
                         self.status_message = format!("{}: {}/{}", stage, current, total);
                     }
                     ComputeEventBody::SeriesComplete { name, result } => {
@@ -490,14 +524,19 @@ impl ShanksApp {
             }
         }
     }
-    
+
     /// Convert a series point to f64, optionally applying symlog.
-    fn point_to_f64(&self, point: &SeriesPoint, use_symlog: bool, log_linthresh: f64) -> Option<f64> {
+    fn point_to_f64(
+        &self,
+        point: &SeriesPoint,
+        use_symlog: bool,
+        log_linthresh: f64,
+    ) -> Option<f64> {
         let sci_val = match point {
             SeriesPoint::Real(v) => v,
             SeriesPoint::Complex(c) => &c.real,
         };
-        
+
         if use_symlog {
             // Convert to plot Scientific format directly to avoid f64 Infinity overflow
             let plot_sci = crate::plot::Scientific(sci_val.mantissa, sci_val.exponent as i32);
@@ -511,7 +550,7 @@ impl ShanksApp {
             }
         }
     }
-    
+
     fn get_compute_state(&self) -> ComputeInputState {
         ComputeInputState {
             series_tree: self.series_tree.clone(),
@@ -526,11 +565,22 @@ impl ShanksApp {
         self.plot_cache.log_linthresh = log_linthresh;
         self.plot_cache.main_sn.clear();
         self.plot_cache.main_accel.clear();
+        self.plot_cache.limits.clear();
         self.plot_cache.deviations.clear();
         self.plot_cache.prof_add.clear();
         self.plot_cache.prof_mul.clear();
         self.plot_cache.prof_div.clear();
         self.plot_cache.prof_special.clear();
+        self.plot_cache.max_n = 0.0;
+
+        let mut max_n_seen = 0;
+        for res in self.current_results.values() {
+            max_n_seen = max_n_seen.max(res.sn.len());
+        }
+        for res in self.current_accel_results.values() {
+            max_n_seen = max_n_seen.max(res.values.len());
+        }
+        self.plot_cache.max_n = max_n_seen as f64;
 
         let colors_sn = [
             egui::Color32::BLUE,
@@ -538,23 +588,44 @@ impl ShanksApp {
             egui::Color32::DARK_BLUE,
             egui::Color32::from_rgb(100, 100, 255),
         ];
-        
+
         for (i, (series_name, results)) in self.current_results.iter().enumerate() {
+            if let Some(sum_str) = &results.sum {
+                let mut sum_val_opt = sum_str.parse::<f64>().ok();
+                if sum_val_opt.is_none() {
+                    if let Some(real_part) = sum_str.split(" + ").next() {
+                        sum_val_opt = real_part.parse::<f64>().ok();
+                    }
+                }
+
+                if let Some(sum_val) = sum_val_opt {
+                    let mut scaled_val = sum_val;
+                    if use_symlog {
+                        scaled_val =
+                            crate::plot::Scientific::from_f64(sum_val).symlog(log_linthresh);
+                    }
+                    self.plot_cache
+                        .limits
+                        .push((format!("Limit - {}", series_name), scaled_val));
+                }
+            }
+
             if self.show_partial_sums {
-                let pts: Vec<egui_plot::PlotPoint> = results.sn
-                .iter()
-                .enumerate()
-                .filter_map(|(j, p)| {
-                    self.point_to_f64(p, use_symlog, log_linthresh)
-                        .map(|v| [j as f64, v].into())
-                })
-                .collect();
-            
-            self.plot_cache.main_sn.push(CachedPlotLine {
-                name: format!("Sn - {}", series_name),
-                color: colors_sn[i % colors_sn.len()],
-                points: pts,
-            });
+                let pts: Vec<egui_plot::PlotPoint> = results
+                    .sn
+                    .iter()
+                    .enumerate()
+                    .filter_map(|(j, p)| {
+                        self.point_to_f64(p, use_symlog, log_linthresh)
+                            .map(|v| [j as f64, v].into())
+                    })
+                    .collect();
+
+                self.plot_cache.main_sn.push(CachedPlotLine {
+                    name: format!("Sn - {}", series_name),
+                    color: colors_sn[i % colors_sn.len()],
+                    points: pts,
+                });
             }
         }
 
@@ -567,36 +638,44 @@ impl ShanksApp {
         ];
 
         let colors_prof = [
-            egui::Color32::BLUE, egui::Color32::RED, egui::Color32::GREEN, egui::Color32::YELLOW,
-            egui::Color32::from_rgb(0, 255, 255), egui::Color32::from_rgb(255, 0, 255),
+            egui::Color32::BLUE,
+            egui::Color32::RED,
+            egui::Color32::GREEN,
+            egui::Color32::YELLOW,
+            egui::Color32::from_rgb(0, 255, 255),
+            egui::Color32::from_rgb(255, 0, 255),
         ];
 
         for (i, (name, results)) in self.current_accel_results.iter().enumerate() {
             if self.show_accel_values {
-                let pts: Vec<egui_plot::PlotPoint> = results.values
-                .iter()
-                .enumerate()
-                .filter_map(|(j, opt_p)| {
-                    opt_p.as_ref()
-                         .and_then(|p| self.point_to_f64(p, use_symlog, log_linthresh))
-                         .map(|v| [j as f64, v].into())
-                })
-                .collect();
-            self.plot_cache.main_accel.push(CachedPlotLine {
-                name: name.clone(),
-                color: colors_accel[i % colors_accel.len()],
-                points: pts,
-            });
+                let pts: Vec<egui_plot::PlotPoint> = results
+                    .values
+                    .iter()
+                    .enumerate()
+                    .filter_map(|(j, opt_p)| {
+                        opt_p
+                            .as_ref()
+                            .and_then(|p| self.point_to_f64(p, use_symlog, log_linthresh))
+                            .map(|v| [j as f64, v].into())
+                    })
+                    .collect();
+                self.plot_cache.main_accel.push(CachedPlotLine {
+                    name: name.clone(),
+                    color: colors_accel[i % colors_accel.len()],
+                    points: pts,
+                });
             }
 
             // Deviations
-            let dev_pts: Vec<egui_plot::PlotPoint> = results.deviations
+            let dev_pts: Vec<egui_plot::PlotPoint> = results
+                .deviations
                 .iter()
                 .enumerate()
                 .filter_map(|(j, d)| {
                     let mut val = d.to_f64();
                     if use_symlog {
-                        val = crate::plot::Scientific(d.mantissa, d.exponent as i32).symlog(log_linthresh);
+                        val = crate::plot::Scientific(d.mantissa, d.exponent as i32)
+                            .symlog(log_linthresh);
                     }
                     if val.is_finite() {
                         Some([j as f64 + 1.0, val].into())
@@ -614,45 +693,73 @@ impl ShanksApp {
             // Profiling
             if let Some(prof) = &results.profiling {
                 let base_color = colors_prof[i % colors_prof.len()];
-                
-                let add_pts: Vec<egui_plot::PlotPoint> = prof.add.iter().enumerate().map(|(j, &v)| {
-                    let mut val = v as f64;
-                    if use_symlog { val = crate::plot::Scientific::from_f64(val).symlog(log_linthresh); }
-                    [(j+1) as f64, val].into()
-                }).collect();
+
+                let add_pts: Vec<egui_plot::PlotPoint> = prof
+                    .add
+                    .iter()
+                    .enumerate()
+                    .map(|(j, &v)| {
+                        let mut val = v as f64;
+                        if use_symlog {
+                            val = crate::plot::Scientific::from_f64(val).symlog(log_linthresh);
+                        }
+                        [(j + 1) as f64, val].into()
+                    })
+                    .collect();
                 self.plot_cache.prof_add.push(CachedPlotLine {
                     name: format!("{} (Add)", name),
                     color: base_color,
                     points: add_pts,
                 });
 
-                let mul_pts: Vec<egui_plot::PlotPoint> = prof.mul.iter().enumerate().map(|(j, &v)| {
-                    let mut val = v as f64;
-                    if use_symlog { val = crate::plot::Scientific::from_f64(val).symlog(log_linthresh); }
-                    [(j+1) as f64, val].into()
-                }).collect();
+                let mul_pts: Vec<egui_plot::PlotPoint> = prof
+                    .mul
+                    .iter()
+                    .enumerate()
+                    .map(|(j, &v)| {
+                        let mut val = v as f64;
+                        if use_symlog {
+                            val = crate::plot::Scientific::from_f64(val).symlog(log_linthresh);
+                        }
+                        [(j + 1) as f64, val].into()
+                    })
+                    .collect();
                 self.plot_cache.prof_mul.push(CachedPlotLine {
                     name: format!("{} (Mul)", name),
                     color: base_color.gamma_multiply(0.8),
                     points: mul_pts,
                 });
 
-                let div_pts: Vec<egui_plot::PlotPoint> = prof.div.iter().enumerate().map(|(j, &v)| {
-                    let mut val = v as f64;
-                    if use_symlog { val = crate::plot::Scientific::from_f64(val).symlog(log_linthresh); }
-                    [(j+1) as f64, val].into()
-                }).collect();
+                let div_pts: Vec<egui_plot::PlotPoint> = prof
+                    .div
+                    .iter()
+                    .enumerate()
+                    .map(|(j, &v)| {
+                        let mut val = v as f64;
+                        if use_symlog {
+                            val = crate::plot::Scientific::from_f64(val).symlog(log_linthresh);
+                        }
+                        [(j + 1) as f64, val].into()
+                    })
+                    .collect();
                 self.plot_cache.prof_div.push(CachedPlotLine {
                     name: format!("{} (Div)", name),
                     color: base_color.gamma_multiply(0.6),
                     points: div_pts,
                 });
 
-                let special_pts: Vec<egui_plot::PlotPoint> = prof.special.iter().enumerate().map(|(j, &v)| {
-                    let mut val = v as f64;
-                    if use_symlog { val = crate::plot::Scientific::from_f64(val).symlog(log_linthresh); }
-                    [(j+1) as f64, val].into()
-                }).collect();
+                let special_pts: Vec<egui_plot::PlotPoint> = prof
+                    .special
+                    .iter()
+                    .enumerate()
+                    .map(|(j, &v)| {
+                        let mut val = v as f64;
+                        if use_symlog {
+                            val = crate::plot::Scientific::from_f64(val).symlog(log_linthresh);
+                        }
+                        [(j + 1) as f64, val].into()
+                    })
+                    .collect();
                 self.plot_cache.prof_special.push(CachedPlotLine {
                     name: format!("{} (Special)", name),
                     color: base_color.gamma_multiply(0.4),
@@ -661,45 +768,45 @@ impl ShanksApp {
             }
         }
     }
-
-
 }
 
 impl eframe::App for ShanksApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         // Capture initial state for debounce checking
         let current_state = self.get_compute_state();
-        
+
         if Some(&current_state) != self.last_computed_state.as_ref() {
             // State changed
             self.last_input_change = Some(std::time::Instant::now());
             self.last_computed_state = Some(current_state.clone());
         }
-        
+
         if let Some(change_time) = self.last_input_change {
             if change_time.elapsed().as_millis() > 100 {
                 // Debounce threshold passed, sync with cache
                 self.last_input_change = None;
-                
+
                 // Cancel existing task if any
-                if let (Some(ref mut engine), Some(id)) = (&mut self.compute_engine, self.current_task_id) {
+                if let (Some(ref mut engine), Some(id)) =
+                    (&mut self.compute_engine, self.current_task_id)
+                {
                     if self.is_computing {
                         engine.cancel_task(id);
                     }
                 }
-                
+
                 self.sync_with_cache_and_compute();
             }
         }
 
         // Process events from compute engine
         self.process_events();
-        
+
         // Request repaint if computing
         if self.is_computing {
             ctx.request_repaint();
         }
-        
+
         // Menu bar
         egui::TopBottomPanel::top("menu_bar").show(ctx, |ui| {
             egui::menu::bar(ui, |ui| {
@@ -714,8 +821,15 @@ impl eframe::App for ShanksApp {
                     }
                 });
                 ui.menu_button("View", |ui| {
-                    ui.checkbox(&mut self.show_partial_sums, "Show Partial Sums");
-                    ui.checkbox(&mut self.show_accel_values, "Show Accelerated Values");
+                    if ui.checkbox(&mut self.show_partial_sums, "Show Partial Sums").changed() {
+                        self.results_dirty = true;
+                    }
+                    if ui.checkbox(&mut self.show_accel_values, "Show Accelerated Values").changed() {
+                        self.results_dirty = true;
+                    }
+                    if ui.checkbox(&mut self.show_limit_lines, "Show Limit Lines").changed() {
+                        self.results_dirty = true;
+                    }
                     ui.separator();
                 });
             });
@@ -727,70 +841,80 @@ impl eframe::App for ShanksApp {
             if self.state.experiment.is_some() {
                 ui.heading("Experiment Config");
                 ui.label("Loaded from config file");
-                
+
                 let series_instances = self.state.get_series_instances();
                 let method_instances = self.state.get_method_instances();
                 let noises = self.state.get_noises();
-                
+
                 ui.label(format!("Series: {} definitions", series_instances.len()));
                 ui.label(format!("Methods: {} definitions", method_instances.len()));
                 ui.label(format!("Noises: {} definitions", noises.len()));
-                
+
                 ui.separator();
             }
-            
+
             // Tree selection mode
             if self.series_tree.is_some() {
                 ui.heading("Tree Selection");
-                
-                egui::ScrollArea::vertical().max_height(300.0).show(ui, |ui| {
-                    // Series tree
-                    if let Some(ref mut tree) = self.series_tree {
-                        tree_ui::draw_tree(ui, tree);
-                    }
-                    
-                    // Acceleration tree
-                    if let Some(ref mut tree) = self.accel_tree {
-                        tree_ui::draw_tree(ui, tree);
-                    }
-                    
-                    // Noise tree
-                    if let Some(ref mut tree) = self.noise_tree {
-                        tree_ui::draw_tree(ui, tree);
-                    }
-                    
-                    // Precision tree
-                    if let Some(ref mut tree) = self.precision_tree {
-                        tree_ui::draw_tree(ui, tree);
-                    }
-                });
-                
+
+                egui::ScrollArea::vertical()
+                    .max_height(300.0)
+                    .show(ui, |ui| {
+                        // Series tree
+                        if let Some(ref mut tree) = self.series_tree {
+                            tree_ui::draw_tree(ui, tree);
+                        }
+
+                        // Acceleration tree
+                        if let Some(ref mut tree) = self.accel_tree {
+                            tree_ui::draw_tree(ui, tree);
+                        }
+
+                        // Noise tree
+                        if let Some(ref mut tree) = self.noise_tree {
+                            tree_ui::draw_tree(ui, tree);
+                        }
+
+                        // Precision tree
+                        if let Some(ref mut tree) = self.precision_tree {
+                            tree_ui::draw_tree(ui, tree);
+                        }
+                    });
+
                 ui.separator();
-                
+
                 // Show selected count
                 // let series_count = self.series_tree.as_ref().map(|t| t.count_selected()).unwrap_or(0);
                 // let accel_count = self.accel_tree.as_ref().map(|t| t.count_selected()).unwrap_or(0);
                 // ui.label(format!("Selected: {} series × {} accels", series_count, accel_count));
-                
+
                 ui.add_space(8.0);
-                if ui.add_enabled(!self.is_computing && (!self.current_results.is_empty() || !self.current_accel_results.is_empty()), egui::Button::new("Export JSON")).clicked() {
+                if ui
+                    .add_enabled(
+                        !self.is_computing
+                            && (!self.current_results.is_empty()
+                                || !self.current_accel_results.is_empty()),
+                        egui::Button::new("Export JSON"),
+                    )
+                    .clicked()
+                {
                     self.export_json();
                 }
-                
+
                 // Removed explicit compute buttons for Debounce Cache-first flow
             } else {
                 ui.heading("No Series Tree Available");
             }
-            
+
             // Status
             if !self.status_message.is_empty() {
                 ui.colored_label(egui::Color32::LIGHT_GRAY, &self.status_message);
             }
-            
+
             if self.state.is_offline() {
                 ui.colored_label(egui::Color32::YELLOW, "Offline mode - cache only");
             }
-            
+
             // Cache stats
             ui.separator();
             ui.heading("Cache");
@@ -808,13 +932,16 @@ impl eframe::App for ShanksApp {
                 });
                 return;
             }
-            
+
             ui.horizontal(|ui| {
                 ui.selectable_value(&mut self.selected_tab, PlotTab::Main, "Основной график");
                 ui.selectable_value(&mut self.selected_tab, PlotTab::Deviation, "Отклонения");
                 ui.selectable_value(&mut self.selected_tab, PlotTab::Profiling, "Профилирование");
-                
-                let config = self.tab_configs.get_mut(&self.selected_tab).expect("Tab config missing");
+
+                let config = self
+                    .tab_configs
+                    .get_mut(&self.selected_tab)
+                    .expect("Tab config missing");
 
                 ui.separator();
                 ui.checkbox(&mut config.symlog, "Symlog Scale");
@@ -839,24 +966,42 @@ impl eframe::App for ShanksApp {
             });
             ui.separator();
 
-            let use_symlog = self.tab_configs.get(&self.selected_tab).expect("Tab config missing").symlog;
-            let log_linthresh = self.tab_configs.get(&self.selected_tab).expect("Tab config missing").log_linthresh;
+            let use_symlog = self
+                .tab_configs
+                .get(&self.selected_tab)
+                .expect("Tab config missing")
+                .symlog;
+            let log_linthresh = self
+                .tab_configs
+                .get(&self.selected_tab)
+                .expect("Tab config missing")
+                .log_linthresh;
 
-            if self.results_dirty || self.plot_cache.symlog != use_symlog || self.plot_cache.log_linthresh != log_linthresh {
+            if self.results_dirty
+                || self.plot_cache.symlog != use_symlog
+                || self.plot_cache.log_linthresh != log_linthresh
+            {
                 self.recompute_plot_cache(use_symlog, log_linthresh);
                 self.results_dirty = false;
             }
 
-            let config = self.tab_configs.get_mut(&self.selected_tab).expect("Tab config missing");
+            let config = self
+                .tab_configs
+                .get_mut(&self.selected_tab)
+                .expect("Tab config missing");
 
             // Plot area
             if self.selected_tab == PlotTab::Profiling {
                 ui.vertical(|ui| {
                     ui.horizontal(|ui| {
-                        ui.checkbox(&mut self.prof_show_add, "Add").on_hover_text("Addition and Subtraction");
-                        ui.checkbox(&mut self.prof_show_mul, "Mul").on_hover_text("Multiplication");
-                        ui.checkbox(&mut self.prof_show_div, "Div").on_hover_text("Division");
-                        ui.checkbox(&mut self.prof_show_special, "Special").on_hover_text("Special functions (sqrt, exp, etc.)");
+                        ui.checkbox(&mut self.prof_show_add, "Add")
+                            .on_hover_text("Addition and Subtraction");
+                        ui.checkbox(&mut self.prof_show_mul, "Mul")
+                            .on_hover_text("Multiplication");
+                        ui.checkbox(&mut self.prof_show_div, "Div")
+                            .on_hover_text("Division");
+                        ui.checkbox(&mut self.prof_show_special, "Special")
+                            .on_hover_text("Special functions (sqrt, exp, etc.)");
                     });
 
                     ui.separator();
@@ -868,33 +1013,55 @@ impl eframe::App for ShanksApp {
                         .y_axis_label("Operations");
 
                     if use_symlog {
-                        prof_plot = prof_plot.y_axis_formatter(move |mark, _range| {
-                            crate::plot::symlog_formatter(mark.value, log_linthresh)
-                        })
-                        .label_formatter(move |name, value| {
-                            format!("{}\nn={}\nops={}", name, value.x, crate::plot::symlog_formatter(value.y, log_linthresh))
-                        });
+                        prof_plot = prof_plot
+                            .y_axis_formatter(move |mark, _range| {
+                                crate::plot::symlog_formatter(mark.value, log_linthresh)
+                            })
+                            .label_formatter(move |name, value| {
+                                format!(
+                                    "{}\nn={}\nops={}",
+                                    name,
+                                    value.x,
+                                    crate::plot::symlog_formatter(value.y, log_linthresh)
+                                )
+                            });
                     }
 
                     prof_plot.show(ui, |plot_ui| {
                         for line in &self.plot_cache.prof_add {
                             if self.prof_show_add {
-                                plot_ui.line(egui_plot::Line::new(&*line.points).name(&line.name).color(line.color));
+                                plot_ui.line(
+                                    egui_plot::Line::new(&*line.points)
+                                        .name(&line.name)
+                                        .color(line.color),
+                                );
                             }
                         }
                         for line in &self.plot_cache.prof_mul {
                             if self.prof_show_mul {
-                                plot_ui.line(egui_plot::Line::new(&*line.points).name(&line.name).color(line.color));
+                                plot_ui.line(
+                                    egui_plot::Line::new(&*line.points)
+                                        .name(&line.name)
+                                        .color(line.color),
+                                );
                             }
                         }
                         for line in &self.plot_cache.prof_div {
                             if self.prof_show_div {
-                                plot_ui.line(egui_plot::Line::new(&*line.points).name(&line.name).color(line.color));
+                                plot_ui.line(
+                                    egui_plot::Line::new(&*line.points)
+                                        .name(&line.name)
+                                        .color(line.color),
+                                );
                             }
                         }
                         for line in &self.plot_cache.prof_special {
                             if self.prof_show_special {
-                                plot_ui.line(egui_plot::Line::new(&*line.points).name(&line.name).color(line.color));
+                                plot_ui.line(
+                                    egui_plot::Line::new(&*line.points)
+                                        .name(&line.name)
+                                        .color(line.color),
+                                );
                             }
                         }
                     });
@@ -912,45 +1079,81 @@ impl eframe::App for ShanksApp {
                 }
 
                 if config.enable_aspect_ratio {
-                    if let (Ok(x), Ok(y)) = (config.aspect_x.parse::<f64>(), config.aspect_y.parse::<f64>()) {
+                    if let (Ok(x), Ok(y)) = (
+                        config.aspect_x.parse::<f64>(),
+                        config.aspect_y.parse::<f64>(),
+                    ) {
                         if x > 0.0 && y > 0.0 {
                             plot = plot.data_aspect((x / y) as f32);
                         }
                     }
                 }
-                
+
                 if use_symlog {
-                    plot = plot.y_axis_formatter(move |mark, _range| {
-                        crate::plot::symlog_formatter(mark.value, log_linthresh)
-                    })
-                    .label_formatter(move |name, value| {
-                        format!("{}\nx={}\ny={}", name, value.x, crate::plot::symlog_formatter(value.y, log_linthresh))
-                    });
+                    plot = plot
+                        .y_axis_formatter(move |mark, _range| {
+                            crate::plot::symlog_formatter(mark.value, log_linthresh)
+                        })
+                        .label_formatter(move |name, value| {
+                            format!(
+                                "{}\nx={}\ny={}",
+                                name,
+                                value.x,
+                                crate::plot::symlog_formatter(value.y, log_linthresh)
+                            )
+                        });
                 }
-                
+
                 plot.show(ui, |plot_ui| {
                     if self.selected_tab == PlotTab::Main {
                         // Plot partial sums if available
                         if self.show_partial_sums {
                             for line in &self.plot_cache.main_sn {
-                                plot_ui.line(egui_plot::Line::new(&*line.points).name(&line.name).color(line.color));
+                                plot_ui.line(
+                                    egui_plot::Line::new(&*line.points)
+                                        .name(&line.name)
+                                        .color(line.color),
+                                );
                             }
                         }
-                        
+
+                        // Plot limits if enabled
+                        if self.show_limit_lines {
+                            let max_n = self.plot_cache.max_n;
+                            for (name, val) in &self.plot_cache.limits {
+                                plot_ui.line(
+                                    egui_plot::Line::new(vec![
+                                        [-1.0, *val],
+                                        [max_n + 1.0, *val],
+                                    ])
+                                    .name(name)
+                                    .color(egui::Color32::RED)
+                                    .width(2.0),
+                                );
+                            }
+                        }
+
                         // Plot accelerated values if available
                         if self.show_accel_values {
                             for line in &self.plot_cache.main_accel {
-                                plot_ui.line(egui_plot::Line::new(&*line.points).name(&line.name).color(line.color));
+                                plot_ui.line(
+                                    egui_plot::Line::new(&*line.points)
+                                        .name(&line.name)
+                                        .color(line.color),
+                                );
                             }
                         }
                     } else if self.selected_tab == PlotTab::Deviation {
                         for line in &self.plot_cache.deviations {
-                            plot_ui.line(egui_plot::Line::new(&*line.points).name(&line.name).color(line.color));
+                            plot_ui.line(
+                                egui_plot::Line::new(&*line.points)
+                                    .name(&line.name)
+                                    .color(line.color),
+                            );
                         }
                     }
                 });
             }
-            
         });
 
         // Removed old Auto block
@@ -966,7 +1169,7 @@ impl ShanksApp {
             "series": self.current_results,
             "accelerations": self.current_accel_results,
         });
-        
+
         match serde_json::to_string_pretty(&data) {
             Ok(json) => {
                 if let Err(e) = std::fs::write(&path, json) {

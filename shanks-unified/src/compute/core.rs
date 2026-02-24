@@ -287,7 +287,15 @@ impl ComputeCore {
             }
         };
 
-        let series_result: SeriesResult = serde_json::from_str(&series_result_json)?;
+        let mut series_result: SeriesResult = serde_json::from_str(&series_result_json)?;
+
+        if series_result.sum.is_none() || series_result.sum.as_ref().map(|s| s.is_empty()).unwrap_or(false) {
+            if let Ok(sum_str) = self.library.series_get_sum(&series_handle) {
+                if !sum_str.is_empty() {
+                    series_result.sum = Some(sum_str);
+                }
+            }
+        }
 
         // Emit SeriesComplete only if we didn't already emit it from cache
         if cached_series_result.is_none() {
@@ -307,6 +315,7 @@ impl ComputeCore {
                     &args_json,
                     noise_json_opt.as_deref(),
                     None,
+                    series_result.sum.as_deref(),
                 ).unwrap_or(-1)
             };
 

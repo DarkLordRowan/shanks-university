@@ -4,7 +4,7 @@
 //! allowing fast retrieval without recomputation.
 
 use anyhow::Result;
-use rusqlite::{Connection, params};
+use rusqlite::{params, Connection};
 use std::path::Path;
 
 /// SQLite cache for series and acceleration results.
@@ -108,13 +108,14 @@ impl Cache {
         arguments: &str,
         noise_config: Option<&str>,
         profiling: Option<&str>,
+        sum_val: Option<&str>,
     ) -> Result<i64> {
         let tx = self.conn.transaction()?;
-        
+
         let result = tx.execute(
-            "INSERT OR IGNORE INTO series (name, precision, x_value, arguments, noise_config, profiling)
-             VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
-            params![name, precision, x_value, arguments, noise_config, profiling],
+            "INSERT OR IGNORE INTO series (name, precision, x_value, arguments, noise_config, profiling, sum)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
+            params![name, precision, x_value, arguments, noise_config, profiling, sum_val],
         );
 
         let id = if result? == 0 {
@@ -132,11 +133,17 @@ impl Cache {
                     |row| row.get(0),
                 )?
             };
-            // Update profiling if it was null
+            // Update profiling or sum if it was null
             if let Some(p) = profiling {
                 tx.execute(
                     "UPDATE series SET profiling = ?1 WHERE id = ?2 AND profiling IS NULL",
                     params![p, existing_id],
+                )?;
+            }
+            if let Some(s) = sum_val {
+                tx.execute(
+                    "UPDATE series SET sum = ?1 WHERE id = ?2 AND sum IS NULL",
+                    params![s, existing_id],
                 )?;
             }
             existing_id
@@ -155,13 +162,15 @@ impl Cache {
         points: &[(i64, String, String, i64, String, String, i64, String)],
     ) -> Result<()> {
         let tx = self.conn.transaction()?;
-        
+
         for (n, sn_real, sn_imag, sn_exp, an_real, an_imag, an_exp, deviation) in points {
             tx.execute(
-                "INSERT OR REPLACE INTO series_points 
+                "INSERT OR REPLACE INTO series_points
                  (series_id, n, sn_real, sn_imag, sn_exp, an_real, an_imag, an_exp, deviation)
                  VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)",
-                params![series_id, n, sn_real, sn_imag, sn_exp, an_real, an_imag, an_exp, deviation],
+                params![
+                    series_id, n, sn_real, sn_imag, sn_exp, an_real, an_imag, an_exp, deviation
+                ],
             )?;
         }
 
@@ -179,7 +188,7 @@ impl Cache {
         profiling: Option<&str>,
     ) -> Result<i64> {
         let tx = self.conn.transaction()?;
-        
+
         tx.execute(
             "INSERT INTO accelerations (series_id, accel_name, m_value, additional_args, profiling)
              VALUES (?1, ?2, ?3, ?4, ?5)",
@@ -198,10 +207,10 @@ impl Cache {
         points: &[(i64, String, String, i64, String, String)],
     ) -> Result<()> {
         let tx = self.conn.transaction()?;
-        
+
         for (n, value_real, value_imag, value_exp, deviation, profiling) in points {
             tx.execute(
-                "INSERT OR REPLACE INTO accel_points 
+                "INSERT OR REPLACE INTO accel_points
                  (accel_id, n, value_real, value_imag, value_exp, deviation, profiling)
                  VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
                 params![accel_id, n, value_real, value_imag, value_exp, deviation, profiling],
@@ -251,7 +260,7 @@ impl Cache {
         additional_args: &str,
     ) -> Result<Option<i64>> {
         let result = self.conn.query_row(
-            "SELECT id FROM accelerations WHERE series_id = ?1 AND accel_name = ?2 AND 
+            "SELECT id FROM accelerations WHERE series_id = ?1 AND accel_name = ?2 AND
              (m_value = ?3 OR (m_value IS NULL AND ?3 IS NULL)) AND additional_args = ?4",
             params![series_id, accel_name, m_value, additional_args],
             |row| row.get(0),
@@ -266,11 +275,20 @@ impl Cache {
 
     /// Get series result from the cache.
     pub fn get_series_result(&self, series_id: i64) -> Result<Option<crate::ffi::SeriesResult>> {
+        let sum_val: Option<String> = self
+            .conn
+            .query_row(
+                "SELECT sum FROM series WHERE id = ?1",
+                params![series_id],
+                |row| row.get(0),
+            )
+            .unwrap_or(None);
+
         let mut stmt = self.conn.prepare(
-            "SELECT n, sn_real, sn_imag, sn_exp, an_real, an_imag, an_exp 
-             FROM series_points WHERE series_id = ?1 ORDER BY n ASC"
+            "SELECT n, sn_real, sn_imag, sn_exp, an_real, an_imag, an_exp
+             FROM series_points WHERE series_id = ?1 ORDER BY n ASC",
         )?;
-        
+
         let rows = stmt.query_map(params![series_id], |row| {
             let n: i64 = row.get(0)?;
             let sn_real: Option<String> = row.get(1)?;
@@ -287,16 +305,27 @@ impl Cache {
 
         for row in rows {
             let (_n, sn_real, sn_imag, sn_exp, an_real, an_imag, an_exp) = row?;
-            
+
             // Build Sn point
             if let (Some(real_str), Some(exp)) = (sn_real, sn_exp) {
                 if let Ok(real_val) = real_str.parse::<f64>() {
-                    let real_sci = crate::ffi::ScientificValue { mantissa: real_val, exponent: exp };
+                    let real_sci = crate::ffi::ScientificValue {
+                        mantissa: real_val,
+                        exponent: exp,
+                    };
                     if let Some(imag_str) = sn_imag {
                         if !imag_str.is_empty() {
                             if let Ok(imag_val) = imag_str.parse::<f64>() {
-                                let imag_sci = crate::ffi::ScientificValue { mantissa: imag_val, exponent: exp };
-                                sn.push(crate::ffi::SeriesPoint::Complex(crate::ffi::ComplexValue { real: real_sci, imag: imag_sci }));
+                                let imag_sci = crate::ffi::ScientificValue {
+                                    mantissa: imag_val,
+                                    exponent: exp,
+                                };
+                                sn.push(crate::ffi::SeriesPoint::Complex(
+                                    crate::ffi::ComplexValue {
+                                        real: real_sci,
+                                        imag: imag_sci,
+                                    },
+                                ));
                                 continue;
                             }
                         }
@@ -308,12 +337,23 @@ impl Cache {
             // Build an point
             if let (Some(real_str), Some(exp)) = (an_real, an_exp) {
                 if let Ok(real_val) = real_str.parse::<f64>() {
-                    let real_sci = crate::ffi::ScientificValue { mantissa: real_val, exponent: exp };
+                    let real_sci = crate::ffi::ScientificValue {
+                        mantissa: real_val,
+                        exponent: exp,
+                    };
                     if let Some(imag_str) = an_imag {
                         if !imag_str.is_empty() {
                             if let Ok(imag_val) = imag_str.parse::<f64>() {
-                                let imag_sci = crate::ffi::ScientificValue { mantissa: imag_val, exponent: exp };
-                                an.push(crate::ffi::SeriesPoint::Complex(crate::ffi::ComplexValue { real: real_sci, imag: imag_sci }));
+                                let imag_sci = crate::ffi::ScientificValue {
+                                    mantissa: imag_val,
+                                    exponent: exp,
+                                };
+                                an.push(crate::ffi::SeriesPoint::Complex(
+                                    crate::ffi::ComplexValue {
+                                        real: real_sci,
+                                        imag: imag_sci,
+                                    },
+                                ));
                                 continue;
                             }
                         }
@@ -327,20 +367,18 @@ impl Cache {
             return Ok(None);
         }
 
-
-
         Ok(Some(crate::ffi::SeriesResult {
             sn,
             an,
-            sum: None,
+            sum: sum_val,
         }))
     }
 
     /// Get acceleration result from cache.
     pub fn get_accel_result(&self, accel_id: i64) -> Result<Option<crate::ffi::AccelResult>> {
         let mut stmt = self.conn.prepare(
-            "SELECT n, value_real, value_imag, value_exp, deviation, profiling 
-             FROM accel_points WHERE accel_id = ?1 ORDER BY n ASC"
+            "SELECT n, value_real, value_imag, value_exp, deviation, profiling
+             FROM accel_points WHERE accel_id = ?1 ORDER BY n ASC",
         )?;
 
         let rows = stmt.query_map(params![accel_id], |row| {
@@ -365,18 +403,26 @@ impl Cache {
         for row in rows {
             extracted_rows.push(row?);
         }
-        
+
         if extracted_rows.is_empty() {
             return Ok(None);
         }
 
         let mut max_n = 0;
         for (n, _, _, _, _, _) in &extracted_rows {
-            if *n > max_n { max_n = *n; }
+            if *n > max_n {
+                max_n = *n;
+            }
         }
 
         values.resize((max_n) as usize, None);
-        deviations.resize((max_n) as usize, crate::ffi::ScientificValue { mantissa: 0.0, exponent: 0 });
+        deviations.resize(
+            (max_n) as usize,
+            crate::ffi::ScientificValue {
+                mantissa: 0.0,
+                exponent: 0,
+            },
+        );
         trace_add.resize((max_n) as usize, 0);
         trace_mul.resize((max_n) as usize, 0);
         trace_div.resize((max_n) as usize, 0);
@@ -384,16 +430,27 @@ impl Cache {
 
         for (n, v_real, v_imag, v_exp, dev_str, prof_json) in extracted_rows {
             let idx = (n - 1) as usize;
-            
+
             // value
             if let (Some(real_str), Some(exp)) = (v_real, v_exp) {
                 if let Ok(real_val) = real_str.parse::<f64>() {
-                    let real_sci = crate::ffi::ScientificValue { mantissa: real_val, exponent: exp };
+                    let real_sci = crate::ffi::ScientificValue {
+                        mantissa: real_val,
+                        exponent: exp,
+                    };
                     if let Some(imag_str) = v_imag {
                         if !imag_str.is_empty() {
                             if let Ok(imag_val) = imag_str.parse::<f64>() {
-                                let imag_sci = crate::ffi::ScientificValue { mantissa: imag_val, exponent: exp };
-                                values[idx] = Some(crate::ffi::SeriesPoint::Complex(crate::ffi::ComplexValue { real: real_sci, imag: imag_sci }));
+                                let imag_sci = crate::ffi::ScientificValue {
+                                    mantissa: imag_val,
+                                    exponent: exp,
+                                };
+                                values[idx] = Some(crate::ffi::SeriesPoint::Complex(
+                                    crate::ffi::ComplexValue {
+                                        real: real_sci,
+                                        imag: imag_sci,
+                                    },
+                                ));
                             }
                         } else {
                             values[idx] = Some(crate::ffi::SeriesPoint::Real(real_sci));
@@ -412,7 +469,10 @@ impl Cache {
                     let parts: Vec<&str> = dev.split('e').collect();
                     if parts.len() == 2 {
                         if let (Ok(m), Ok(e)) = (parts[0].parse::<f64>(), parts[1].parse::<i64>()) {
-                            deviations[idx] = crate::ffi::ScientificValue { mantissa: m, exponent: e };
+                            deviations[idx] = crate::ffi::ScientificValue {
+                                mantissa: m,
+                                exponent: e,
+                            };
                         }
                     }
                 }
@@ -463,9 +523,9 @@ impl Cache {
 
     /// Get all precisions for a series name.
     pub fn get_precisions_for_series(&self, name: &str) -> Result<Vec<String>> {
-        let mut stmt = self.conn.prepare(
-            "SELECT DISTINCT precision FROM series WHERE name = ?1"
-        )?;
+        let mut stmt = self
+            .conn
+            .prepare("SELECT DISTINCT precision FROM series WHERE name = ?1")?;
         let rows = stmt.query_map(params![name], |row| row.get(0))?;
         let mut precisions = Vec::new();
         for precision in rows {
@@ -486,15 +546,15 @@ impl Cache {
 
     /// Get database statistics.
     pub fn stats(&self) -> Result<CacheStats> {
-        let series_count: i64 = self.conn.query_row(
-            "SELECT COUNT(*) FROM series", [], |row| row.get(0)
-        )?;
-        let accel_count: i64 = self.conn.query_row(
-            "SELECT COUNT(*) FROM accelerations", [], |row| row.get(0)
-        )?;
-        let points_count: i64 = self.conn.query_row(
-            "SELECT COUNT(*) FROM series_points", [], |row| row.get(0)
-        )?;
+        let series_count: i64 = self
+            .conn
+            .query_row("SELECT COUNT(*) FROM series", [], |row| row.get(0))?;
+        let accel_count: i64 =
+            self.conn
+                .query_row("SELECT COUNT(*) FROM accelerations", [], |row| row.get(0))?;
+        let points_count: i64 =
+            self.conn
+                .query_row("SELECT COUNT(*) FROM series_points", [], |row| row.get(0))?;
 
         Ok(CacheStats {
             series_count,
