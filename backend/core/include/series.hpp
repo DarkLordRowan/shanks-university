@@ -99,4 +99,39 @@ inline std::unique_ptr<series_base<T, K>> series_registry<T, K>::create(size_t i
 }  // namespace series
 }  // namespace shanks
 
+// ---------------------------------------------------------------------------
+// Explicit instantiation declarations (extern template)
+// Prevents each translation unit from independently instantiating
+// series_registry<T,K>::get_entries(), which causes MinGW linker failures
+// with static local variables inside function templates in shared DLL builds.
+// The actual definitions live in backend/ffi/src/series_registry_impl.cpp.
+// ---------------------------------------------------------------------------
+#ifdef SHANKS_FFI_SHARED_BUILD
+#include "custom_types/intervalprecision.fwd.hpp"
+#include "custom_types/mpreal.h"
+#include <complex>
+
+namespace shanks { namespace series {
+
+extern template class series_registry<float,       size_t>;
+extern template class series_registry<double,      size_t>;
+extern template class series_registry<long double, size_t>;
+extern template class series_registry<mpfr::mpreal, size_t>;
+
+extern template class series_registry<std::complex<float>,       size_t>;
+extern template class series_registry<std::complex<double>,      size_t>;
+extern template class series_registry<std::complex<long double>, size_t>;
+
+extern template class series_registry<intprec::interval<float>,       size_t>;
+extern template class series_registry<intprec::interval<double>,      size_t>;
+extern template class series_registry<intprec::interval<long double>, size_t>;
+extern template class series_registry<intprec::interval<mpfr::mpreal>, size_t>;
+
+extern template class series_registry<std::complex<intprec::interval<float>>,       size_t>;
+extern template class series_registry<std::complex<intprec::interval<double>>,      size_t>;
+extern template class series_registry<std::complex<intprec::interval<long double>>, size_t>;
+
+}} // namespace shanks::series
+#endif // SHANKS_FFI_SHARED_BUILD
+
 #endif

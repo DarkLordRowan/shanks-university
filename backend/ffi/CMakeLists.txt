@@ -39,6 +39,7 @@ add_library(shanks_ffi SHARED
     ${CMAKE_CURRENT_SOURCE_DIR}/src/series_ffi.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/accel_ffi.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/registry_ffi.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/series_registry_impl.cpp
 )
 
 target_include_directories(shanks_ffi PUBLIC
@@ -61,6 +62,9 @@ set_target_properties(shanks_ffi PROPERTIES
 )
 
 # Export symbols for shared library
+# SHANKS_FFI_SHARED_BUILD activates extern template declarations in series.hpp
+# so that only series_registry_impl.cpp emits the static-local definitions.
+target_compile_definitions(shanks_ffi PRIVATE SHANKS_FFI_SHARED_BUILD)
 if(WIN32)
     target_compile_definitions(shanks_ffi PRIVATE SHANKS_FFI_EXPORTS)
 endif()
