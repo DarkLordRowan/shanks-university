@@ -323,13 +323,46 @@ series_registry<intprec::interval<mpfr::mpreal>, size_t>::s_entries = [] {
     };
 }();
 
-// NOTE: std::complex<intprec::interval<T>> specializations are intentionally
-// NOT listed here. Those types are only instantiated in series_ffi.cpp (a
-// single TU), so there's no COMDAT/deduplication problem. Their s_entries
-// static data member will be implicitly defined on first use — which works
-// correctly since there's only one translation unit that triggers it.
-// Forcing explicit instantiation for those types causes typeinfo linker errors
-// because many series iterators can't be constructed for complex-interval types.
+// ---------------------------------------------------------------------------
+// std::complex<intprec::interval<float>>, size_t
+// s_entries definition only — NO full template class instantiation below,
+// which would trigger typeinfo linker errors for unsupported iterator types.
+// ---------------------------------------------------------------------------
+template <>
+const std::vector<series_registry<std::complex<intprec::interval<float>>, size_t>::entry>
+series_registry<std::complex<intprec::interval<float>>, size_t>::s_entries = [] {
+    using T [[maybe_unused]] = std::complex<intprec::interval<float>>;
+    using K [[maybe_unused]] = size_t;
+    return std::vector<series_registry<std::complex<intprec::interval<float>>, size_t>::entry>{
+#include "../../core/include/series_registry.def"
+    };
+}();
+
+// ---------------------------------------------------------------------------
+// std::complex<intprec::interval<double>>, size_t
+// ---------------------------------------------------------------------------
+template <>
+const std::vector<series_registry<std::complex<intprec::interval<double>>, size_t>::entry>
+series_registry<std::complex<intprec::interval<double>>, size_t>::s_entries = [] {
+    using T [[maybe_unused]] = std::complex<intprec::interval<double>>;
+    using K [[maybe_unused]] = size_t;
+    return std::vector<series_registry<std::complex<intprec::interval<double>>, size_t>::entry>{
+#include "../../core/include/series_registry.def"
+    };
+}();
+
+// ---------------------------------------------------------------------------
+// std::complex<intprec::interval<long double>>, size_t
+// ---------------------------------------------------------------------------
+template <>
+const std::vector<series_registry<std::complex<intprec::interval<long double>>, size_t>::entry>
+series_registry<std::complex<intprec::interval<long double>>, size_t>::s_entries = [] {
+    using T [[maybe_unused]] = std::complex<intprec::interval<long double>>;
+    using K [[maybe_unused]] = size_t;
+    return std::vector<series_registry<std::complex<intprec::interval<long double>>, size_t>::entry>{
+#include "../../core/include/series_registry.def"
+    };
+}();
 
 }} // namespace shanks::series
 
