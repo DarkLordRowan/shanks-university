@@ -333,11 +333,13 @@ impl ComputeCore {
                         crate::ffi::SeriesPoint::Real(r) => (r.mantissa.to_string(), String::new(), r.exponent),
                         crate::ffi::SeriesPoint::Complex(c) => (c.real.mantissa.to_string(), c.imag.mantissa.to_string(), c.real.exponent),
                         crate::ffi::SeriesPoint::Interval(i) => (serde_json::to_string(i).unwrap(), String::new(), 0),
+                        crate::ffi::SeriesPoint::CInterval(ci) => (serde_json::to_string(ci).unwrap(), String::new(), 0),
                     };
                     let (an_real, an_imag, an_exp) = match an {
                         crate::ffi::SeriesPoint::Real(r) => (r.mantissa.to_string(), String::new(), r.exponent),
                         crate::ffi::SeriesPoint::Complex(c) => (c.real.mantissa.to_string(), c.imag.mantissa.to_string(), c.real.exponent),
                         crate::ffi::SeriesPoint::Interval(i) => (serde_json::to_string(i).unwrap(), String::new(), 0),
+                        crate::ffi::SeriesPoint::CInterval(ci) => (serde_json::to_string(ci).unwrap(), String::new(), 0),
                     };
                     db_points.push((n, sn_real, sn_imag, sn_exp, an_real, an_imag, an_exp, String::new()));
                 }
@@ -426,6 +428,7 @@ impl ComputeCore {
                                 crate::ffi::SeriesPoint::Real(r) => (r.mantissa.to_string(), String::new(), r.exponent),
                                 crate::ffi::SeriesPoint::Complex(c) => (c.real.mantissa.to_string(), c.imag.mantissa.to_string(), c.real.exponent),
                                 crate::ffi::SeriesPoint::Interval(i) => (serde_json::to_string(i).unwrap(), String::new(), 0),
+                                crate::ffi::SeriesPoint::CInterval(ci) => (serde_json::to_string(ci).unwrap(), String::new(), 0),
                             };
                             let dev_str = dev.format();
                             db_points.push((n, v_real, v_imag, v_exp, dev_str, prof_json));

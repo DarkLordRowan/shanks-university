@@ -30,6 +30,14 @@ template <typename T>
     requires is_complex_t<T>::value
 struct isComplexLike<T> : public std::true_type {};
 
+template <typename T>
+struct isComplexLike<std::complex<intprec::interval<T>>> : public std::true_type {};
+
+#ifdef SHANKS_ENABLE_PROFILING
+template <typename T>
+struct isComplexLike<std::complex<shanks::profiling::OperationCounting<intprec::interval<T>>>> : public std::true_type {};
+#endif
+
 #ifdef __MPREAL_H__
 template <>
 struct isComplexLike<std::complex<mpfr::mpreal>> : public std::true_type {};

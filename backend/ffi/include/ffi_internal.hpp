@@ -24,7 +24,8 @@ namespace ffi {
 enum class PrecisionType {
     F32, F64, FLong, Arb,
     CF32, CF64, CFLong, CArb,
-    IntervalF32, IntervalF64, IntervalFLong, IntervalArb
+    IntervalF32, IntervalF64, IntervalFLong, IntervalArb,
+    CIntervalF32, CIntervalF64, CIntervalFLong, CIntervalArb
 };
 
 // Parse precision string to enum
@@ -70,6 +71,21 @@ inline bool parse_precision(const char* precision, PrecisionType& out) {
         if (precision[11] != '\0') {
             try {
                 int bits = std::stoi(precision + 11);
+                if (bits > 0) mpfr::mpreal::set_default_prec(bits);
+            } catch (...) {}
+        }
+        return true;
+    }
+    
+    if (strcmp(precision, "CIntervalF32") == 0) { out = PrecisionType::CIntervalF32; return true; }
+    if (strcmp(precision, "CIntervalF64") == 0) { out = PrecisionType::CIntervalF64; return true; }
+    if (strcmp(precision, "CIntervalFLong") == 0) { out = PrecisionType::CIntervalFLong; return true; }
+    
+    if (strncmp(precision, "CIntervalArb", 12) == 0) {
+        out = PrecisionType::CIntervalArb;
+        if (precision[12] != '\0') {
+            try {
+                int bits = std::stoi(precision + 12);
                 if (bits > 0) mpfr::mpreal::set_default_prec(bits);
             } catch (...) {}
         }
@@ -147,6 +163,14 @@ inline std::string interval_to_json(const intprec::interval<T>& value) {
     std::ostringstream oss;
     oss << "{\"inf\": " << to_scientific(value.inf()).to_json() 
         << ", \"sup\": " << to_scientific(value.sup()).to_json() << "}";
+    return oss.str();
+}
+
+template <typename T>
+inline std::string complex_interval_to_json(const std::complex<intprec::interval<T>>& value) {
+    std::ostringstream oss;
+    oss << "{\"real\": " << interval_to_json(value.real()) 
+        << ", \"imag\": " << interval_to_json(value.imag()) << "}";
     return oss.str();
 }
 

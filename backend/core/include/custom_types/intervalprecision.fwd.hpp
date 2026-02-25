@@ -64,6 +64,11 @@ public:
     // Regular interval with interval_type (default CLOSE)
     explicit interval(const IT&, const IT&, const enum interval_type t = CLOSE);
 
+    // Implicit promotion constructors from integer types to allow Eigen traits to instantiate Scalar(1) or Scalar(0)
+    interval(int val) : left(IT(val)), right(IT(val)), type(CLOSE), decoration(COM) {}
+    interval(long val) : left(IT(val)), right(IT(val)), type(CLOSE), decoration(COM) {}
+    interval(long long val) : left(IT(val)), right(IT(val)), type(CLOSE), decoration(COM) {}
+
     // Constructor for mixed type IT != _X (base types). Allows auto construction of e.g. interval<double> x(float)
     // Notice that the phase one constructor above is still valid when both the interval type IT and the argument
     // is also of the same type
@@ -191,6 +196,11 @@ interval<IT> sqr(const interval<IT>&);  // x^2
 template <FloatLike IT>
 interval<IT> sqrt(const interval<IT>&);  // sqrt(x)
 
+template <FloatLike IT>
+interval<IT> atan2(const interval<IT>&, const interval<IT>&);
+template <FloatLike IT>
+interval<IT> hypot(const interval<IT>&, const interval<IT>&);
+
 // Arithmetic binary and monadic operators for mixed arithmetic
 template <FloatLike IT, FloatLike _X>
 interval<IT> operator+(const interval<IT>&, const _X&);
@@ -203,8 +213,24 @@ interval<IT> operator-(const _X&, const interval<IT>&);
 // template <FloatLike IT, FloatLike _X> interval<IT> operator*(const interval<IT>&, const _X&);
 // template <FloatLike IT, FloatLike _X> interval<IT> operator*(const _X&, const interval<IT>&);
 template <FloatLike IT, FloatLike _X>
+interval<IT> operator/(const _X&, const interval<IT>&);
+
+// Arithmetic operators for integral types mixed arithmetic
+template <FloatLike IT, std::integral _X>
+interval<IT> operator+(const interval<IT>&, const _X&);
+template <FloatLike IT, std::integral _X>
+interval<IT> operator+(const _X&, const interval<IT>&);
+template <FloatLike IT, std::integral _X>
+interval<IT> operator-(const interval<IT>&, const _X&);
+template <FloatLike IT, std::integral _X>
+interval<IT> operator-(const _X&, const interval<IT>&);
+template <FloatLike IT, std::integral _X>
+interval<IT> operator*(const interval<IT>&, const _X&);
+template <FloatLike IT, std::integral _X>
+interval<IT> operator*(const _X&, const interval<IT>&);
+template <FloatLike IT, std::integral _X>
 interval<IT> operator/(const interval<IT>&, const _X&);
-template <FloatLike IT, FloatLike _X>
+template <FloatLike IT, std::integral _X>
 interval<IT> operator/(const _X&, const interval<IT>&);
 
 // Boolean operators for mixed arithmetic
@@ -238,6 +264,32 @@ template <FloatLike IT, FloatLike _X>
 bool operator>(const _X&, const interval<IT>&);
 template <FloatLike IT, FloatLike _X>
 bool operator>(const interval<IT>&, const interval<_X>&);
+
+// Boolean operators for integral types mixed arithmetic
+template <FloatLike IT, std::integral _X>
+bool operator==(const interval<IT>&, const _X&);
+template <FloatLike IT, std::integral _X>
+bool operator==(const _X&, const interval<IT>&);
+template <FloatLike IT, std::integral _X>
+bool operator!=(const interval<IT>&, const _X&);
+template <FloatLike IT, std::integral _X>
+bool operator!=(const _X&, const interval<IT>&);
+template <FloatLike IT, std::integral _X>
+bool operator>=(const interval<IT>&, const _X&);
+template <FloatLike IT, std::integral _X>
+bool operator>=(const _X&, const interval<IT>&);
+template <FloatLike IT, std::integral _X>
+bool operator<=(const interval<IT>&, const _X&);
+template <FloatLike IT, std::integral _X>
+bool operator<=(const _X&, const interval<IT>&);
+template <FloatLike IT, std::integral _X>
+bool operator>(const interval<IT>&, const _X&);
+template <FloatLike IT, std::integral _X>
+bool operator>(const _X&, const interval<IT>&);
+template <FloatLike IT, std::integral _X>
+bool operator<(const interval<IT>&, const _X&);
+template <FloatLike IT, std::integral _X>
+bool operator<(const _X&, const interval<IT>&);
 template <FloatLike IT, FloatLike _X>
 bool operator<(const interval<IT>&, const _X&);
 template <FloatLike IT, FloatLike _X>

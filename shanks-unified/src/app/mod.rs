@@ -173,6 +173,16 @@ struct CachedIntervalData {
     points: Vec<egui_plot::PlotPoint>,
 }
 
+/// Interval bounds extracted from a series point, per axis.
+enum PointBounds {
+    /// No bounds (Real or Complex).
+    None,
+    /// 1-D bounds (Interval) – single axis.
+    OneDim { inf: f64, sup: f64 },
+    /// 2-D bounds (CInterval) – real and imaginary components are separate.
+    TwoDim { real_inf: f64, real_sup: f64, imag_inf: f64, imag_sup: f64 },
+}
+
 #[derive(Default)]
 struct PlotCache {
     symlog: bool,
@@ -182,7 +192,10 @@ struct PlotCache {
     limits: Vec<(String, f64)>,
     max_n: f64,
     deviations: Vec<CachedPlotLine>,
-    intervals: Vec<CachedIntervalData>,
+    /// Filled bounds for the real axis (or 1-D interval).
+    intervals_re: Vec<CachedIntervalData>,
+    /// Filled bounds for the imaginary axis (CInterval only).
+    intervals_im: Vec<CachedIntervalData>,
     prof_add: Vec<CachedPlotLine>,
     prof_mul: Vec<CachedPlotLine>,
     prof_div: Vec<CachedPlotLine>,
@@ -577,16 +590,31 @@ impl ShanksApp {
                 }
                 if mid.is_finite() { Some((mid, None)) } else { None }
             }
+            SeriesPoint::CInterval(c) => {
+                let mut r = (c.real.inf.to_f64() + c.real.sup.to_f64()) / 2.0;
+                let mut i = (c.imag.inf.to_f64() + c.imag.sup.to_f64()) / 2.0;
+                if use_symlog {
+                    r = crate::plot::Scientific::from_f64(r).symlog(log_linthresh);
+                    i = crate::plot::Scientific::from_f64(i).symlog(log_linthresh);
+                }
+                if r.is_finite() && i.is_finite() {
+                    Some((r, Some(i)))
+                } else if r.is_finite() {
+                    Some((r, None))
+                } else {
+                    None
+                }
+            }
         }
     }
 
-    /// Extract interval bounds to f64, optionally applying symlog.
-    fn point_to_bounds_f64(
+    /// Extract interval bounds to [`PointBounds`], optionally applying symlog.
+    fn point_to_bounds(
         &self,
         point: &SeriesPoint,
         use_symlog: bool,
         log_linthresh: f64,
-    ) -> Option<(f64, f64)> {
+    ) -> PointBounds {
         match point {
             SeriesPoint::Interval(v) => {
                 let mut inf = v.inf.to_f64();
@@ -598,12 +626,33 @@ impl ShanksApp {
                         .symlog(log_linthresh);
                 }
                 if inf.is_finite() && sup.is_finite() {
-                    Some((inf, sup))
+                    PointBounds::OneDim { inf, sup }
                 } else {
-                    None
+                    PointBounds::None
                 }
             }
-            _ => None,
+            SeriesPoint::CInterval(c) => {
+                let mut real_inf = c.real.inf.to_f64();
+                let mut real_sup = c.real.sup.to_f64();
+                let mut imag_inf = c.imag.inf.to_f64();
+                let mut imag_sup = c.imag.sup.to_f64();
+                if use_symlog {
+                    real_inf = crate::plot::Scientific(c.real.inf.mantissa, c.real.inf.exponent as i32).symlog(log_linthresh);
+                    real_sup = crate::plot::Scientific(c.real.sup.mantissa, c.real.sup.exponent as i32).symlog(log_linthresh);
+                    imag_inf = crate::plot::Scientific(c.imag.inf.mantissa, c.imag.inf.exponent as i32).symlog(log_linthresh);
+                    imag_sup = crate::plot::Scientific(c.imag.sup.mantissa, c.imag.sup.exponent as i32).symlog(log_linthresh);
+                }
+                let re_ok = real_inf.is_finite() && real_sup.is_finite();
+                let im_ok = imag_inf.is_finite() && imag_sup.is_finite();
+                if re_ok && im_ok {
+                    PointBounds::TwoDim { real_inf, real_sup, imag_inf, imag_sup }
+                } else if re_ok {
+                    PointBounds::OneDim { inf: real_inf, sup: real_sup }
+                } else {
+                    PointBounds::None
+                }
+            }
+            _ => PointBounds::None,
         }
     }
 
@@ -623,7 +672,8 @@ impl ShanksApp {
         self.plot_cache.main_accel.clear();
         self.plot_cache.limits.clear();
         self.plot_cache.deviations.clear();
-        self.plot_cache.intervals.clear();
+        self.plot_cache.intervals_re.clear();
+        self.plot_cache.intervals_im.clear();
         self.plot_cache.prof_add.clear();
         self.plot_cache.prof_mul.clear();
         self.plot_cache.prof_div.clear();
@@ -685,35 +735,65 @@ impl ShanksApp {
                 });
             }
 
-            let mut inf_pts = Vec::new();
-            let mut sup_pts = Vec::new();
+            let mut inf_pts_re = Vec::new();
+            let mut sup_pts_re = Vec::new();
+            let mut inf_pts_im = Vec::new();
+            let mut sup_pts_im = Vec::new();
             for (j, p) in results.sn.iter().enumerate() {
-                if let Some((inf, sup)) = self.point_to_bounds_f64(p, use_symlog, log_linthresh) {
-                    inf_pts.push([j as f64, inf].into());
-                    sup_pts.push([j as f64, sup].into());
+                match self.point_to_bounds(p, use_symlog, log_linthresh) {
+                    PointBounds::OneDim { inf, sup } => {
+                        inf_pts_re.push([j as f64, inf].into());
+                        sup_pts_re.push([j as f64, sup].into());
+                    }
+                    PointBounds::TwoDim { real_inf, real_sup, imag_inf, imag_sup } => {
+                        inf_pts_re.push([j as f64, real_inf].into());
+                        sup_pts_re.push([j as f64, real_sup].into());
+                        inf_pts_im.push([j as f64, imag_inf].into());
+                        sup_pts_im.push([j as f64, imag_sup].into());
+                    }
+                    PointBounds::None => {}
                 }
             }
-            if !inf_pts.is_empty() {
-                let mut poly_pts = sup_pts.clone();
-                for pt in inf_pts.iter().rev() {
-                    poly_pts.push(*pt);
-                }
-                self.plot_cache.intervals.push(CachedIntervalData {
-                    name: format!("Bounds - {}", series_name),
+
+            // Real / 1-D bounds
+            if !inf_pts_re.is_empty() {
+                let mut poly_pts = sup_pts_re.clone();
+                for pt in inf_pts_re.iter().rev() { poly_pts.push(*pt); }
+                self.plot_cache.intervals_re.push(CachedIntervalData {
+                    name: format!("Bounds (Re) - {}", series_name),
                     fill_color: colors_sn[i % colors_sn.len()].gamma_multiply(0.2),
                     points: poly_pts,
                 });
-                
-                // Add dashed outline lines as well
                 self.plot_cache.main_sn.push(CachedPlotLine {
-                    name: format!("sup Sn - {}", series_name),
+                    name: format!("sup (Re) Sn - {}", series_name),
                     color: colors_sn[i % colors_sn.len()].gamma_multiply(0.8),
-                    points: sup_pts,
+                    points: sup_pts_re,
                 });
                 self.plot_cache.main_sn.push(CachedPlotLine {
-                    name: format!("inf Sn - {}", series_name),
+                    name: format!("inf (Re) Sn - {}", series_name),
                     color: colors_sn[i % colors_sn.len()].gamma_multiply(0.8),
-                    points: inf_pts,
+                    points: inf_pts_re,
+                });
+            }
+
+            // Imaginary bounds (CInterval only)
+            if !inf_pts_im.is_empty() {
+                let mut poly_pts = sup_pts_im.clone();
+                for pt in inf_pts_im.iter().rev() { poly_pts.push(*pt); }
+                self.plot_cache.intervals_im.push(CachedIntervalData {
+                    name: format!("Bounds (Im) - {}", series_name),
+                    fill_color: colors_sn[i % colors_sn.len()].gamma_multiply(0.15),
+                    points: poly_pts,
+                });
+                self.plot_cache.main_sn.push(CachedPlotLine {
+                    name: format!("sup (Im) Sn - {}", series_name),
+                    color: colors_sn[i % colors_sn.len()].gamma_multiply(0.6),
+                    points: sup_pts_im,
+                });
+                self.plot_cache.main_sn.push(CachedPlotLine {
+                    name: format!("inf (Im) Sn - {}", series_name),
+                    color: colors_sn[i % colors_sn.len()].gamma_multiply(0.6),
+                    points: inf_pts_im,
                 });
             }
         }
@@ -765,35 +845,67 @@ impl ShanksApp {
                 });
             }
 
-            let mut inf_pts = Vec::new();
-            let mut sup_pts = Vec::new();
+            let mut inf_pts_re = Vec::new();
+            let mut sup_pts_re = Vec::new();
+            let mut inf_pts_im = Vec::new();
+            let mut sup_pts_im = Vec::new();
             for (j, opt_p) in results.values.iter().enumerate() {
                 if let Some(p) = opt_p {
-                    if let Some((inf, sup)) = self.point_to_bounds_f64(p, use_symlog, log_linthresh) {
-                        inf_pts.push([j as f64, inf].into());
-                        sup_pts.push([j as f64, sup].into());
+                    match self.point_to_bounds(p, use_symlog, log_linthresh) {
+                        PointBounds::OneDim { inf, sup } => {
+                            inf_pts_re.push([j as f64, inf].into());
+                            sup_pts_re.push([j as f64, sup].into());
+                        }
+                        PointBounds::TwoDim { real_inf, real_sup, imag_inf, imag_sup } => {
+                            inf_pts_re.push([j as f64, real_inf].into());
+                            sup_pts_re.push([j as f64, real_sup].into());
+                            inf_pts_im.push([j as f64, imag_inf].into());
+                            sup_pts_im.push([j as f64, imag_sup].into());
+                        }
+                        PointBounds::None => {}
                     }
                 }
             }
-            if !inf_pts.is_empty() {
-                let mut poly_pts = sup_pts.clone();
-                for pt in inf_pts.iter().rev() {
-                    poly_pts.push(*pt);
-                }
-                self.plot_cache.intervals.push(CachedIntervalData {
-                    name: format!("Bounds Dev - {}", name),
+
+            // Real / 1-D bounds
+            if !inf_pts_re.is_empty() {
+                let mut poly_pts = sup_pts_re.clone();
+                for pt in inf_pts_re.iter().rev() { poly_pts.push(*pt); }
+                self.plot_cache.intervals_re.push(CachedIntervalData {
+                    name: format!("Bounds Dev (Re) - {}", name),
                     fill_color: colors_accel[i % colors_accel.len()].gamma_multiply(0.2),
                     points: poly_pts,
                 });
                 self.plot_cache.main_accel.push(CachedPlotLine {
-                    name: format!("sup - {}", name),
+                    name: format!("sup (Re) - {}", name),
                     color: colors_accel[i % colors_accel.len()].gamma_multiply(0.8),
-                    points: sup_pts,
+                    points: sup_pts_re,
                 });
                 self.plot_cache.main_accel.push(CachedPlotLine {
-                    name: format!("inf - {}", name),
+                    name: format!("inf (Re) - {}", name),
                     color: colors_accel[i % colors_accel.len()].gamma_multiply(0.8),
-                    points: inf_pts,
+                    points: inf_pts_re,
+                });
+            }
+
+            // Imaginary bounds (CInterval only)
+            if !inf_pts_im.is_empty() {
+                let mut poly_pts = sup_pts_im.clone();
+                for pt in inf_pts_im.iter().rev() { poly_pts.push(*pt); }
+                self.plot_cache.intervals_im.push(CachedIntervalData {
+                    name: format!("Bounds Dev (Im) - {}", name),
+                    fill_color: colors_accel[i % colors_accel.len()].gamma_multiply(0.15),
+                    points: poly_pts,
+                });
+                self.plot_cache.main_accel.push(CachedPlotLine {
+                    name: format!("sup (Im) - {}", name),
+                    color: colors_accel[i % colors_accel.len()].gamma_multiply(0.6),
+                    points: sup_pts_im,
+                });
+                self.plot_cache.main_accel.push(CachedPlotLine {
+                    name: format!("inf (Im) - {}", name),
+                    color: colors_accel[i % colors_accel.len()].gamma_multiply(0.6),
+                    points: inf_pts_im,
                 });
             }
 
@@ -1235,8 +1347,8 @@ impl eframe::App for ShanksApp {
                 plot.show(ui, |plot_ui| {
                     if self.selected_tab == PlotTab::Main {
                         for line in &self.plot_cache.main_sn {
-                            let is_sup = line.name.starts_with("sup Sn");
-                            let is_inf = line.name.starts_with("inf Sn");
+                            let is_sup = line.name.starts_with("sup (");
+                            let is_inf = line.name.starts_with("inf (");
                             let is_bound = is_sup || is_inf;
                             
                             if !is_bound && !self.show_partial_sums {
@@ -1258,9 +1370,17 @@ impl eframe::App for ShanksApp {
                             plot_ui.line(l);
                         }
                         
-                        // Plot interval polygons
+                        // Plot interval polygons (real axis / 1-D)
                         if self.show_interval_shade {
-                            for poly_data in &self.plot_cache.intervals {
+                            for poly_data in &self.plot_cache.intervals_re {
+                                plot_ui.polygon(
+                                    egui_plot::Polygon::new(&*poly_data.points)
+                                        .name(&poly_data.name)
+                                        .fill_color(poly_data.fill_color),
+                                );
+                            }
+                            // Imaginary axis bounds (CInterval)
+                            for poly_data in &self.plot_cache.intervals_im {
                                 plot_ui.polygon(
                                     egui_plot::Polygon::new(&*poly_data.points)
                                         .name(&poly_data.name)
@@ -1286,8 +1406,8 @@ impl eframe::App for ShanksApp {
                         }
 
                         for line in &self.plot_cache.main_accel {
-                            let is_sup = line.name.starts_with("sup -");
-                            let is_inf = line.name.starts_with("inf -");
+                            let is_sup = line.name.starts_with("sup (");
+                            let is_inf = line.name.starts_with("inf (");
                             let is_bound = is_sup || is_inf;
                             
                             if !is_bound && !self.show_accel_values {

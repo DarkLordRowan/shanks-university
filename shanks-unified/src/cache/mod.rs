@@ -310,7 +310,9 @@ impl Cache {
             // Build Sn point
             if let (Some(real_str), Some(exp)) = (sn_real, sn_exp) {
                 if real_str.starts_with('{') {
-                    if let Ok(interval) = serde_json::from_str::<crate::ffi::IntervalValue>(&real_str) {
+                    if let Ok(cinterval) = serde_json::from_str::<crate::ffi::CIntervalValue>(&real_str) {
+                        sn.push(crate::ffi::SeriesPoint::CInterval(cinterval));
+                    } else if let Ok(interval) = serde_json::from_str::<crate::ffi::IntervalValue>(&real_str) {
                         sn.push(crate::ffi::SeriesPoint::Interval(interval));
                     }
                 } else if let Ok(real_val) = real_str.parse::<f64>() {
@@ -342,7 +344,9 @@ impl Cache {
             // Build an point
             if let (Some(real_str), Some(exp)) = (an_real, an_exp) {
                 if real_str.starts_with('{') {
-                    if let Ok(interval) = serde_json::from_str::<crate::ffi::IntervalValue>(&real_str) {
+                    if let Ok(cinterval) = serde_json::from_str::<crate::ffi::CIntervalValue>(&real_str) {
+                        an.push(crate::ffi::SeriesPoint::CInterval(cinterval));
+                    } else if let Ok(interval) = serde_json::from_str::<crate::ffi::IntervalValue>(&real_str) {
                         an.push(crate::ffi::SeriesPoint::Interval(interval));
                     }
                 } else if let Ok(real_val) = real_str.parse::<f64>() {
@@ -443,7 +447,9 @@ impl Cache {
             // value
             if let (Some(real_str), Some(exp)) = (v_real, v_exp) {
                 if real_str.starts_with('{') {
-                    if let Ok(interval) = serde_json::from_str::<crate::ffi::IntervalValue>(&real_str) {
+                    if let Ok(cinterval) = serde_json::from_str::<crate::ffi::CIntervalValue>(&real_str) {
+                        values[idx] = Some(crate::ffi::SeriesPoint::CInterval(cinterval));
+                    } else if let Ok(interval) = serde_json::from_str::<crate::ffi::IntervalValue>(&real_str) {
                         values[idx] = Some(crate::ffi::SeriesPoint::Interval(interval));
                     }
                 } else if let Ok(real_val) = real_str.parse::<f64>() {

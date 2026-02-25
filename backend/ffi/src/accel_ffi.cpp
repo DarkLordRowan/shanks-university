@@ -464,6 +464,104 @@ struct AccelHandleInterval : public AccelHandleBaseExt {
     std::string get_name() const override { return name; }
 };
 
+// Template implementation for complex interval acceleration algorithms
+template <typename T>
+struct AccelHandleCInterval : public AccelHandleBaseExt {
+    std::unique_ptr<shanks::algos::series_acceleration<std::complex<intprec::interval<T>>, size_t>> algo;
+    PrecisionType precision;
+    std::string name;
+    size_t algo_index;
+    
+    AccelHandleCInterval(std::unique_ptr<shanks::algos::series_acceleration<std::complex<intprec::interval<T>>, size_t>> a, 
+                        PrecisionType p, const std::string& n, size_t idx)
+        : algo(std::move(a)), precision(p), name(n), algo_index(idx) {}
+    
+    std::string apply(
+        SeriesHandleBase* series, 
+        uint64_t n, 
+        uint64_t order, 
+        bool enable_profiling
+    ) override {
+        return apply_to_result(n, order, series, enable_profiling);
+    }
+    
+    std::string apply_to_result(
+        uint64_t n, 
+        uint64_t order, 
+        SeriesHandleBase* series, 
+        bool enable_profiling
+    ) override {
+        if (!algo) {
+            set_error("Algorithm is null");
+            return "{}";
+        }
+        
+#ifdef SHANKS_ENABLE_PROFILING
+        shanks::profiling::reset_counts();
+#endif
+
+        const void* raw_data = series->get_raw_data(n + 3 * order + 1);
+        if (!raw_data) return "{}";
+        const auto* data = static_cast<const series_result<std::complex<intprec::interval<T>>>*>(raw_data);
+        
+        const void* sum_ptr = series->get_native_sum();
+        std::complex<intprec::interval<T>> sum(0);
+        bool has_sum = (sum_ptr != nullptr);
+        if (has_sum) {
+            sum = *static_cast<const std::complex<intprec::interval<T>>*>(sum_ptr);
+        }
+
+        std::vector<ScientificValue> deviations;
+
+        std::ostringstream oss;
+        oss << "{\"values\": [";
+        bool first = true;
+        for (uint64_t i = 1; i <= n; ++i) {
+            if (!first) oss << ", ";
+            first = false;
+            
+            try {
+                auto val = (*algo)(i, order, *data);
+                
+                oss << shanks::ffi::complex_interval_to_json(val);
+                if (has_sum) {
+                    // Deviation mapping: absolute magnitude of the complex interval difference
+                    deviations.push_back(shanks::ffi::to_scientific(utils::math<std::complex<intprec::interval<T>>>::abs(val - sum).mag()));
+                } else {
+                    deviations.push_back(ScientificValue(0.0, 0));
+                }
+            } catch (...) {
+                oss << "null";
+                deviations.push_back(ScientificValue(0.0, 0));
+            }
+        }
+        oss << "], \"deviations\": [";
+        for (size_t i = 0; i < deviations.size(); ++i) {
+            if (i > 0) oss << ", ";
+            oss << deviations[i].to_json();
+        }
+        oss << "]";
+        
+#ifdef SHANKS_ENABLE_PROFILING
+        if (enable_profiling) {
+            auto counts = shanks::profiling::get_counts();
+            oss << ", \"profiling\": {"
+                << "\"add\": [" << counts.add << "], "
+                << "\"mul\": [" << counts.mul << "], "
+                << "\"div\": [" << counts.div << "], "
+                << "\"special\": [" << counts.special << "]}";
+            shanks::profiling::reset_counts();
+        }
+#endif
+        
+        oss << "}";
+        return oss.str();
+    }
+    
+    PrecisionType get_precision() const override { return precision; }
+    std::string get_name() const override { return name; }
+};
+
 // Helper to find algorithm index by name
 size_t find_accel_index(const char* name) {
     auto names = shanks::algos::transformation_registry_metadata::get_names();
@@ -547,6 +645,25 @@ std::unique_ptr<AccelHandleBaseExt> create_accel_by_index(
             auto a = shanks::algos::transformation_registry<intprec::interval<mpfr::mpreal>, size_t>::create_by_index(index);
             if (!a) return nullptr;
             return std::make_unique<AccelHandleInterval<mpfr::mpreal>>(std::move(a), prec, name, index);
+        }
+        case PrecisionType::CIntervalF64: {
+            auto a = shanks::algos::transformation_registry<std::complex<intprec::interval<double>>, size_t>::create_by_index(index);
+            if (!a) return nullptr;
+            return std::make_unique<AccelHandleCInterval<double>>(std::move(a), prec, name, index);
+        }
+        case PrecisionType::CIntervalF32: {
+            auto a = shanks::algos::transformation_registry<std::complex<intprec::interval<float>>, size_t>::create_by_index(index);
+            if (!a) return nullptr;
+            return std::make_unique<AccelHandleCInterval<float>>(std::move(a), prec, name, index);
+        }
+        case PrecisionType::CIntervalFLong: {
+            auto a = shanks::algos::transformation_registry<std::complex<intprec::interval<long double>>, size_t>::create_by_index(index);
+            if (!a) return nullptr;
+            return std::make_unique<AccelHandleCInterval<long double>>(std::move(a), prec, name, index);
+        }
+        case PrecisionType::CIntervalArb: {
+            set_error("Complex arbitrary interval precision not yet supported for algorithms");
+            return nullptr;
         }
         default:
             set_error("Unsupported precision type");

@@ -209,7 +209,22 @@ impl IntervalValue {
     }
 }
 
-/// A point in the series (Sn or an value).
+/// Complex interval value
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CIntervalValue {
+    /// Real part
+    pub real: IntervalValue,
+    /// Imaginary part
+    pub imag: IntervalValue,
+}
+
+impl CIntervalValue {
+    /// Format as a string.
+    pub fn format(&self) -> String {
+        format!("{} + {}j", self.real.format(), self.imag.format())
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum SeriesPoint {
@@ -217,8 +232,10 @@ pub enum SeriesPoint {
     Real(ScientificValue),
     /// Complex value
     Complex(ComplexValue),
-    /// Interval value
+    /// Interval value // MUST GO BEFORE CInterval IF IT WAS AMBIGUOUS, BUT STRUCTURAL DIFFERENCES SHOULD HANDLE IT
     Interval(IntervalValue),
+    /// Complex interval value
+    CInterval(CIntervalValue),
 }
 
 impl SeriesPoint {
@@ -228,6 +245,7 @@ impl SeriesPoint {
             SeriesPoint::Real(v) => v.to_f64(),
             SeriesPoint::Complex(v) => v.real.to_f64(),
             SeriesPoint::Interval(v) => (v.inf.to_f64() + v.sup.to_f64()) / 2.0,
+            SeriesPoint::CInterval(v) => (v.real.inf.to_f64() + v.real.sup.to_f64()) / 2.0,
         }
     }
 }

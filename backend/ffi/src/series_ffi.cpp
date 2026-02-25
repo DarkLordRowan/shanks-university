@@ -105,11 +105,16 @@ struct SeriesHandleReal : public SeriesHandleBaseExt {
         oss << "]";
         
         // Add sum if available
-        try {
-            std::string sum_str;
-            oss << ", \"sum\": \"" << sum_str << "\"";
-        } catch (...) {}
-        
+        if (!series->is_invalid()) {
+            try {
+                T sum = series->get_sum();
+                std::string sum_json = shanks::ffi::to_scientific(sum).to_json();
+                oss << ", \"sum\": " << sum_json;
+            } catch (...) {
+                // Do not emit "sum" key if it fails
+            }
+        }
+
 #ifdef SHANKS_ENABLE_PROFILING
         if (enable_profiling) {
             auto counts = shanks::profiling::get_counts();
@@ -126,7 +131,7 @@ struct SeriesHandleReal : public SeriesHandleBaseExt {
         return oss.str();
     }
     std::string get_sum() const override {
-        if (!series) return "";
+        if (!series || series->is_invalid()) return "";
         try {
             T sum = series->get_sum();
             return shanks::ffi::to_scientific(sum).to_json();
@@ -230,7 +235,7 @@ struct SeriesHandleComplex : public SeriesHandleBaseExt {
         return oss.str();
     }
     std::string get_sum() const override {
-        if (!series) return "";
+        if (!series || series->is_invalid()) return "";
         try {
             auto sum = series->get_sum();
             return shanks::ffi::complex_to_json(sum.real(), sum.imag());
@@ -338,7 +343,7 @@ struct SeriesHandleInterval : public SeriesHandleBaseExt {
         return oss.str();
     }
     std::string get_sum() const override {
-        if (!series) return "";
+        if (!series || series->is_invalid()) return "";
         try {
             auto sum = series->get_sum();
             return shanks::ffi::interval_to_json(sum);
@@ -360,6 +365,104 @@ struct SeriesHandleInterval : public SeriesHandleBaseExt {
         if (!cached_result || cached_n < n) {
             auto result = series->generate(n);
             cached_result = std::make_unique<series_result<intprec::interval<T>>>(result);
+            cached_n = n;
+        }
+        return cached_result.get();
+    }
+
+    const void* get_native_sum() const override {
+        if (!series) return nullptr;
+        if (!cached_sum) {
+            try {
+                cached_sum = series->get_sum();
+            } catch (...) {
+                return nullptr;
+            }
+        }
+        return &(*cached_sum);
+    }
+};
+
+// Template implementation for complex interval series
+template <typename T>
+struct SeriesHandleCInterval : public SeriesHandleBaseExt {
+    std::unique_ptr<shanks::series::series_base<std::complex<intprec::interval<T>>, size_t>> series;
+    PrecisionType precision;
+    std::complex<intprec::interval<T>> x_value;
+    std::string name;
+    
+    mutable std::unique_ptr<series_result<std::complex<intprec::interval<T>>>> cached_result;
+    mutable uint64_t cached_n = 0;
+    mutable std::optional<std::complex<intprec::interval<T>>> cached_sum;
+    NoiseConfig noise_cfg;
+
+    SeriesHandleCInterval(std::unique_ptr<shanks::series::series_base<std::complex<intprec::interval<T>>, size_t>> s, 
+                        PrecisionType p, std::complex<intprec::interval<T>> x, const std::string& n = "", const NoiseConfig& cfg = {})
+        : series(std::move(s)), precision(p), x_value(x), name(n), noise_cfg(cfg) {}
+    
+    std::string generate(uint64_t n, bool enable_profiling) override {
+#ifdef SHANKS_ENABLE_PROFILING
+        shanks::profiling::reset_counts();
+#endif
+        if (!series) {
+            set_error("Series is null");
+            return "{}";
+        }
+        
+        auto result = series->generate(static_cast<size_t>(n));
+        
+        std::ostringstream oss;
+        oss << "{\"Sn\": [";
+        for (size_t i = 0; i < result.Sn.size(); ++i) {
+            if (i > 0) oss << ", ";
+            oss << shanks::ffi::complex_interval_to_json(result.Sn[i]);
+        }
+        oss << "], \"an\": [";
+        for (size_t i = 0; i < result.an.size(); ++i) {
+            if (i > 0) oss << ", ";
+            oss << shanks::ffi::complex_interval_to_json(result.an[i]);
+        }
+        oss << "]";
+        
+#ifdef SHANKS_ENABLE_PROFILING
+        if (enable_profiling) {
+            auto counts = shanks::profiling::get_counts();
+            oss << ", \"profiling\": {"
+                << "\"add\": " << counts.add << ", "
+                << "\"mul\": " << counts.mul << ", "
+                << "\"div\": " << counts.div << ", "
+                << "\"special\": " << counts.special << "}";
+            shanks::profiling::reset_counts();
+        }
+#endif
+        
+        oss << "}";
+        return oss.str();
+    }
+    std::string get_sum() const override {
+        if (!series || series->is_invalid()) return "";
+        try {
+            auto sum = series->get_sum();
+            return shanks::ffi::complex_interval_to_json(sum);
+        } catch (...) {
+            return "";
+        }
+    }
+    std::string get_x() const override {
+        std::ostringstream oss;
+        oss << "[" << x_value.real().inf() << ", " << x_value.real().sup() << "]+[" 
+            << x_value.imag().inf() << ", " << x_value.imag().sup() << "]j";
+        return oss.str();
+    }
+    
+    PrecisionType get_precision() const override { return precision; }
+    std::string get_name() const override { return name; }
+
+    const void* get_raw_data(uint64_t n) const override {
+        if (!series) return nullptr;
+        if (!cached_result || cached_n < n) {
+            auto result = series->generate(n);
+            cached_result = std::make_unique<series_result<std::complex<intprec::interval<T>>>>(result);
             cached_n = n;
         }
         return cached_result.get();
@@ -509,6 +612,55 @@ std::unique_ptr<SeriesHandleBaseExt> create_series_by_index(
             if (!s) return nullptr;
             return std::make_unique<SeriesHandleInterval<mpfr::mpreal>>(std::move(s), prec, xi, name, noise_cfg);
         }
+        case PrecisionType::CIntervalF64: {
+            double real = 0, imag = 0;
+            size_t plus_pos = x_value.find('+');
+            size_t j_pos = x_value.find('j');
+            if (plus_pos != std::string::npos && j_pos != std::string::npos) {
+                real = parse_x<double>(x_value.substr(0, plus_pos));
+                imag = parse_x<double>(x_value.substr(plus_pos + 1, j_pos - plus_pos - 1));
+            } else {
+                real = parse_x<double>(x_value);
+            }
+            std::complex<intprec::interval<double>> x{intprec::interval<double>(real), intprec::interval<double>(imag)};
+            auto s = shanks::series::series_registry<std::complex<intprec::interval<double>>, size_t>::create(index, x);
+            if (!s) return nullptr;
+            return std::make_unique<SeriesHandleCInterval<double>>(std::move(s), prec, x, name, noise_cfg);
+        }
+        case PrecisionType::CIntervalF32: {
+            float real = 0, imag = 0;
+            size_t plus_pos = x_value.find('+');
+            size_t j_pos = x_value.find('j');
+            if (plus_pos != std::string::npos && j_pos != std::string::npos) {
+                real = parse_x<float>(x_value.substr(0, plus_pos));
+                imag = parse_x<float>(x_value.substr(plus_pos + 1, j_pos - plus_pos - 1));
+            } else {
+                real = parse_x<float>(x_value);
+            }
+            std::complex<intprec::interval<float>> x{intprec::interval<float>(real), intprec::interval<float>(imag)};
+            auto s = shanks::series::series_registry<std::complex<intprec::interval<float>>, size_t>::create(index, x);
+            if (!s) return nullptr;
+            return std::make_unique<SeriesHandleCInterval<float>>(std::move(s), prec, x, name, noise_cfg);
+        }
+        case PrecisionType::CIntervalFLong: {
+            long double real = 0, imag = 0;
+            size_t plus_pos = x_value.find('+');
+            size_t j_pos = x_value.find('j');
+            if (plus_pos != std::string::npos && j_pos != std::string::npos) {
+                real = parse_x<long double>(x_value.substr(0, plus_pos));
+                imag = parse_x<long double>(x_value.substr(plus_pos + 1, j_pos - plus_pos - 1));
+            } else {
+                real = parse_x<long double>(x_value);
+            }
+            std::complex<intprec::interval<long double>> x{intprec::interval<long double>(real), intprec::interval<long double>(imag)};
+            auto s = shanks::series::series_registry<std::complex<intprec::interval<long double>>, size_t>::create(index, x);
+            if (!s) return nullptr;
+            return std::make_unique<SeriesHandleCInterval<long double>>(std::move(s), prec, x, name, noise_cfg);
+        }
+        case PrecisionType::CIntervalArb: {
+            set_error("Complex arbitrary interval precision not yet supported for series");
+            return nullptr;
+        }
         default:
             set_error("Unsupported precision type");
             return nullptr;
@@ -653,6 +805,9 @@ extern "C" SHANKS_FFI_API char* shanks_series_get_sum(ShanksSeriesHandle handle)
     
     auto* ptr = static_cast<SeriesHandleBaseExt*>(handle);
     std::string sum = ptr->get_sum();
+    // Return empty json object structure instead of literal empty string
+    // if get_sum fails or is invalid, to prevent JSON parse errors when appended
+    if (sum.empty()) return alloc_string("");
     return alloc_string(sum);
 }
 

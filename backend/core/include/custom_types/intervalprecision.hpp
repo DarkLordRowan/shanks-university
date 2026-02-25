@@ -2579,6 +2579,71 @@ constexpr interval<IT> ln10_interval(const size_t precision) {
         static_assert(isFloatLike<IT>::value,
                       "Unsupported type for pi_interval.Type must be float, double, long double or float_precision.");
 }
+
+// ------------------------------------------------------------------------------------------------------------------
+//
+// MIXED ARITHMETIC BINARY AND UNARY OPERATORS
+//
+template <FloatLike IT>
+inline interval<IT> atan2(const interval<IT>& y, const interval<IT>& x) {
+    if (x.inf() > 0) {
+        return interval<IT>(std::atan2(y.inf(), x.sup()), std::atan2(y.sup(), x.inf()));
+    }
+    // Naive fallback for now
+    IT mid_y = y.mid();
+    IT mid_x = x.mid();
+    return interval<IT>(std::atan2(mid_y, mid_x));
+}
+
+template <FloatLike IT>
+inline interval<IT> hypot(const interval<IT>& x, const interval<IT>& y) {
+    return sqrt(sqr(x) + sqr(y));
+}
+
+// Arithmetic operators for integral types mixed arithmetic
+template <FloatLike IT, std::integral _X>
+inline interval<IT> operator+(const interval<IT>& a, const _X& b) { return a + interval<IT>(b); }
+template <FloatLike IT, std::integral _X>
+inline interval<IT> operator+(const _X& a, const interval<IT>& b) { return interval<IT>(a) + b; }
+template <FloatLike IT, std::integral _X>
+inline interval<IT> operator-(const interval<IT>& a, const _X& b) { return a - interval<IT>(b); }
+template <FloatLike IT, std::integral _X>
+inline interval<IT> operator-(const _X& a, const interval<IT>& b) { return interval<IT>(a) - b; }
+template <FloatLike IT, std::integral _X>
+inline interval<IT> operator*(const interval<IT>& a, const _X& b) { return a * interval<IT>(b); }
+template <FloatLike IT, std::integral _X>
+inline interval<IT> operator*(const _X& a, const interval<IT>& b) { return interval<IT>(a) * b; }
+template <FloatLike IT, std::integral _X>
+inline interval<IT> operator/(const interval<IT>& a, const _X& b) { return a / interval<IT>(b); }
+template <FloatLike IT, std::integral _X>
+inline interval<IT> operator/(const _X& a, const interval<IT>& b) { return interval<IT>(a) / b; }
+
+// Boolean operators for integral types mixed arithmetic
+template <FloatLike IT, std::integral _X>
+inline bool operator==(const interval<IT>& a, const _X& b) { return a == interval<IT>(b); }
+template <FloatLike IT, std::integral _X>
+inline bool operator==(const _X& a, const interval<IT>& b) { return interval<IT>(a) == b; }
+template <FloatLike IT, std::integral _X>
+inline bool operator!=(const interval<IT>& a, const _X& b) { return a != interval<IT>(b); }
+template <FloatLike IT, std::integral _X>
+inline bool operator!=(const _X& a, const interval<IT>& b) { return interval<IT>(a) != b; }
+template <FloatLike IT, std::integral _X>
+inline bool operator>=(const interval<IT>& a, const _X& b) { return a >= interval<IT>(b); }
+template <FloatLike IT, std::integral _X>
+inline bool operator>=(const _X& a, const interval<IT>& b) { return interval<IT>(a) >= b; }
+template <FloatLike IT, std::integral _X>
+inline bool operator<=(const interval<IT>& a, const _X& b) { return a <= interval<IT>(b); }
+template <FloatLike IT, std::integral _X>
+inline bool operator<=(const _X& a, const interval<IT>& b) { return interval<IT>(a) <= b; }
+template <FloatLike IT, std::integral _X>
+inline bool operator>(const interval<IT>& a, const _X& b) { return a > interval<IT>(b); }
+template <FloatLike IT, std::integral _X>
+inline bool operator>(const _X& a, const interval<IT>& b) { return interval<IT>(a) > b; }
+template <FloatLike IT, std::integral _X>
+inline bool operator<(const interval<IT>& a, const _X& b) { return a < interval<IT>(b); }
+template <FloatLike IT, std::integral _X>
+inline bool operator<(const _X& a, const interval<IT>& b) { return interval<IT>(a) < b; }
+
 template <class _Ty>
 inline std::ostream& operator<<(std::ostream& strm, const interval<_Ty>& a) {
     if (a.intervaltype() == EMPTY) return strm << "EMPTY";
