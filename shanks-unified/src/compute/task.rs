@@ -4,8 +4,8 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use uuid::Uuid;
 
-use crate::ffi::ParamValue;
 use crate::config::NoiseDef;
+use crate::ffi::ParamValue;
 
 /// Parameters for a series computation.
 #[derive(Debug, Clone, Serialize, Deserialize)]

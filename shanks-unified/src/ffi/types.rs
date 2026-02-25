@@ -165,7 +165,10 @@ impl ScientificValue {
     /// Create from f64.
     pub fn from_f64(value: f64) -> Self {
         if value == 0.0 {
-            return ScientificValue { mantissa: 0.0, exponent: 0 };
+            return ScientificValue {
+                mantissa: 0.0,
+                exponent: 0,
+            };
         }
         let exponent = value.abs().log10().floor() as i64;
         let mantissa = value / 10f64.powi(exponent as i32);
@@ -228,18 +231,13 @@ impl CIntervalValue {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum SeriesPoint {
-    /// Real value
     Real(ScientificValue),
-    /// Complex value
     Complex(ComplexValue),
-    /// Interval value // MUST GO BEFORE CInterval IF IT WAS AMBIGUOUS, BUT STRUCTURAL DIFFERENCES SHOULD HANDLE IT
     Interval(IntervalValue),
-    /// Complex interval value
     CInterval(CIntervalValue),
 }
 
 impl SeriesPoint {
-    /// Get as f64 (returns real part for complex, midpoint for interval).
     pub fn as_f64(&self) -> f64 {
         match self {
             SeriesPoint::Real(v) => v.to_f64(),
@@ -250,15 +248,263 @@ impl SeriesPoint {
     }
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct ScientificArray {
+    pub mantissa: Vec<f64>,
+    pub exponent: Vec<i64>,
+}
+
+impl ScientificArray {
+    pub fn len(&self) -> usize {
+        self.mantissa.len().min(self.exponent.len())
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+
+    pub fn to_f64(&self, idx: usize) -> f64 {
+        self.mantissa[idx] * 10f64.powi(self.exponent[idx] as i32)
+    }
+
+    pub fn get(&self, idx: usize) -> ScientificValue {
+        ScientificValue {
+            mantissa: self.mantissa.get(idx).copied().unwrap_or(0.0),
+            exponent: self.exponent.get(idx).copied().unwrap_or(0),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ComplexArray {
+    pub real: ScientificArray,
+    pub imag: ScientificArray,
+}
+
+impl ComplexArray {
+    pub fn get(&self, idx: usize) -> ComplexValue {
+        ComplexValue {
+            real: self.real.get(idx),
+            imag: self.imag.get(idx),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct IntervalArray {
+    pub inf: ScientificArray,
+    pub sup: ScientificArray,
+}
+
+impl IntervalArray {
+    pub fn get(&self, idx: usize) -> IntervalValue {
+        IntervalValue {
+            inf: self.inf.get(idx),
+            sup: self.sup.get(idx),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CIntervalArray {
+    pub real: IntervalArray,
+    pub imag: IntervalArray,
+}
+
+impl CIntervalArray {
+    pub fn get(&self, idx: usize) -> CIntervalValue {
+        CIntervalValue {
+            real: self.real.get(idx),
+            imag: self.imag.get(idx),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum SeriesPointArray {
+    Real(ScientificArray),
+    Complex(ComplexArray),
+    Interval(IntervalArray),
+    CInterval(CIntervalArray),
+}
+
+impl SeriesPointArray {
+    pub fn len(&self) -> usize {
+        match self {
+            Self::Real(r) => r.len(),
+            Self::Complex(c) => c.real.len(),
+            Self::Interval(i) => i.inf.len(),
+            Self::CInterval(ci) => ci.real.inf.len(),
+        }
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+
+    pub fn get(&self, idx: usize) -> SeriesPoint {
+        match self {
+            Self::Real(r) => SeriesPoint::Real(r.get(idx)),
+            Self::Complex(c) => SeriesPoint::Complex(c.get(idx)),
+            Self::Interval(i) => SeriesPoint::Interval(i.get(idx)),
+            Self::CInterval(ci) => SeriesPoint::CInterval(ci.get(idx)),
+        }
+    }
+
+    pub fn as_f64(&self, idx: usize) -> f64 {
+        match self {
+            Self::Real(r) => r.to_f64(idx),
+            Self::Complex(c) => c.real.to_f64(idx),
+            Self::Interval(i) => (i.inf.to_f64(idx) + i.sup.to_f64(idx)) / 2.0,
+            Self::CInterval(ci) => (ci.real.inf.to_f64(idx) + ci.real.sup.to_f64(idx)) / 2.0,
+        }
+    }
+
+    pub fn from_vec(points: &[SeriesPoint]) -> Self {
+        if points.is_empty() {
+            return Self::Real(Default::default());
+        }
+        match &points[0] {
+            SeriesPoint::Real(_) => {
+                let mut mantissa = Vec::with_capacity(points.len());
+                let mut exponent = Vec::with_capacity(points.len());
+                for p in points {
+                    if let SeriesPoint::Real(r) = p {
+                        mantissa.push(r.mantissa);
+                        exponent.push(r.exponent);
+                    } else {
+                        mantissa.push(0.0);
+                        exponent.push(0);
+                    }
+                }
+                Self::Real(ScientificArray { mantissa, exponent })
+            }
+            SeriesPoint::Complex(_) => {
+                let mut r_mantissa = Vec::with_capacity(points.len());
+                let mut r_exponent = Vec::with_capacity(points.len());
+                let mut i_mantissa = Vec::with_capacity(points.len());
+                let mut i_exponent = Vec::with_capacity(points.len());
+                for p in points {
+                    if let SeriesPoint::Complex(c) = p {
+                        r_mantissa.push(c.real.mantissa);
+                        r_exponent.push(c.real.exponent);
+                        i_mantissa.push(c.imag.mantissa);
+                        i_exponent.push(c.imag.exponent);
+                    } else {
+                        r_mantissa.push(0.0);
+                        r_exponent.push(0);
+                        i_mantissa.push(0.0);
+                        i_exponent.push(0);
+                    }
+                }
+                Self::Complex(ComplexArray {
+                    real: ScientificArray {
+                        mantissa: r_mantissa,
+                        exponent: r_exponent,
+                    },
+                    imag: ScientificArray {
+                        mantissa: i_mantissa,
+                        exponent: i_exponent,
+                    },
+                })
+            }
+            SeriesPoint::Interval(_) => {
+                let mut inf_m = Vec::with_capacity(points.len());
+                let mut inf_e = Vec::with_capacity(points.len());
+                let mut sup_m = Vec::with_capacity(points.len());
+                let mut sup_e = Vec::with_capacity(points.len());
+                for p in points {
+                    if let SeriesPoint::Interval(i) = p {
+                        inf_m.push(i.inf.mantissa);
+                        inf_e.push(i.inf.exponent);
+                        sup_m.push(i.sup.mantissa);
+                        sup_e.push(i.sup.exponent);
+                    } else {
+                        inf_m.push(0.0);
+                        inf_e.push(0);
+                        sup_m.push(0.0);
+                        sup_e.push(0);
+                    }
+                }
+                Self::Interval(IntervalArray {
+                    inf: ScientificArray {
+                        mantissa: inf_m,
+                        exponent: inf_e,
+                    },
+                    sup: ScientificArray {
+                        mantissa: sup_m,
+                        exponent: sup_e,
+                    },
+                })
+            }
+            SeriesPoint::CInterval(_) => {
+                let mut r_inf_m = Vec::with_capacity(points.len());
+                let mut r_inf_e = Vec::with_capacity(points.len());
+                let mut r_sup_m = Vec::with_capacity(points.len());
+                let mut r_sup_e = Vec::with_capacity(points.len());
+                let mut i_inf_m = Vec::with_capacity(points.len());
+                let mut i_inf_e = Vec::with_capacity(points.len());
+                let mut i_sup_m = Vec::with_capacity(points.len());
+                let mut i_sup_e = Vec::with_capacity(points.len());
+
+                for p in points {
+                    if let SeriesPoint::CInterval(ci) = p {
+                        r_inf_m.push(ci.real.inf.mantissa);
+                        r_inf_e.push(ci.real.inf.exponent);
+                        r_sup_m.push(ci.real.sup.mantissa);
+                        r_sup_e.push(ci.real.sup.exponent);
+                        i_inf_m.push(ci.imag.inf.mantissa);
+                        i_inf_e.push(ci.imag.inf.exponent);
+                        i_sup_m.push(ci.imag.sup.mantissa);
+                        i_sup_e.push(ci.imag.sup.exponent);
+                    } else {
+                        r_inf_m.push(0.0);
+                        r_inf_e.push(0);
+                        r_sup_m.push(0.0);
+                        r_sup_e.push(0);
+                        i_inf_m.push(0.0);
+                        i_inf_e.push(0);
+                        i_sup_m.push(0.0);
+                        i_sup_e.push(0);
+                    }
+                }
+                Self::CInterval(CIntervalArray {
+                    real: IntervalArray {
+                        inf: ScientificArray {
+                            mantissa: r_inf_m,
+                            exponent: r_inf_e,
+                        },
+                        sup: ScientificArray {
+                            mantissa: r_sup_m,
+                            exponent: r_sup_e,
+                        },
+                    },
+                    imag: IntervalArray {
+                        inf: ScientificArray {
+                            mantissa: i_inf_m,
+                            exponent: i_inf_e,
+                        },
+                        sup: ScientificArray {
+                            mantissa: i_sup_m,
+                            exponent: i_sup_e,
+                        },
+                    },
+                })
+            }
+        }
+    }
+}
+
 /// Result of series generation.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SeriesResult {
     /// Partial sums Sn
     #[serde(alias = "Sn")]
-    pub sn: Vec<SeriesPoint>,
+    pub sn: SeriesPointArray,
     /// Individual terms an
     #[serde(alias = "an")]
-    pub an: Vec<SeriesPoint>,
+    pub an: SeriesPointArray,
     /// Analytical sum (if known)
     #[serde(skip_serializing_if = "Option::is_none")]
     pub sum: Option<SeriesPoint>,
@@ -281,10 +527,12 @@ pub struct ProfilingTrace {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AccelResult {
     /// Accelerated values
-    pub values: Vec<Option<SeriesPoint>>,
+    pub values: SeriesPointArray,
+    /// Whether each point is valid (e.g., algorithm didn't fail)
+    pub valid: Vec<bool>,
     /// Deviations/errors for each value
     #[serde(default)]
-    pub deviations: Vec<ScientificValue>,
+    pub deviations: ScientificArray,
     /// Events during computation
     #[serde(default)]
     pub events: Vec<ComputeEventEntry>,
@@ -327,7 +575,11 @@ pub enum ComputeEventBody {
     /// Task started
     Started,
     /// Progress update
-    Progress { stage: String, current: u64, total: u64 },
+    Progress {
+        stage: String,
+        current: u64,
+        total: u64,
+    },
     /// Series generation complete
     SeriesComplete { name: String, result: SeriesResult },
     /// Algorithm application complete

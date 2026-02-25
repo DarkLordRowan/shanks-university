@@ -233,9 +233,12 @@ fn expand_args(args: &HashMap<String, ArgValue>) -> Vec<HashMap<String, serde_js
             ArgValue::Range(range) => range
                 .values()
                 .into_iter()
-                .map(|v| serde_json::Value::Number(serde_json::Number::from_f64(v).unwrap_or_else(|| {
-                    serde_json::Number::from(0)
-                })))
+                .map(|v| {
+                    serde_json::Value::Number(
+                        serde_json::Number::from_f64(v)
+                            .unwrap_or_else(|| serde_json::Number::from(0)),
+                    )
+                })
                 .collect(),
         };
 
@@ -495,10 +498,13 @@ mod tests {
             name: "CosSeries".to_string(),
             args: {
                 let mut args = HashMap::new();
-                args.insert("x".to_string(), ArgValue::Array(vec![
-                    serde_json::Value::Number(serde_json::Number::from(1)),
-                    serde_json::Value::Number(serde_json::Number::from(2)),
-                ]));
+                args.insert(
+                    "x".to_string(),
+                    ArgValue::Array(vec![
+                        serde_json::Value::Number(serde_json::Number::from(1)),
+                        serde_json::Value::Number(serde_json::Number::from(2)),
+                    ]),
+                );
                 args
             },
             vec_size: None,
@@ -516,9 +522,10 @@ mod tests {
             m: vec![4],
             args: {
                 let mut args = HashMap::new();
-                args.insert("remainder".to_string(), vec![
-                    serde_json::Value::String("u_type".to_string()),
-                ]);
+                args.insert(
+                    "remainder".to_string(),
+                    vec![serde_json::Value::String("u_type".to_string())],
+                );
                 args
             },
             events: vec![],

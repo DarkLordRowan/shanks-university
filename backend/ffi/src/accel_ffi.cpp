@@ -125,7 +125,7 @@ struct AccelHandleReal : public AccelHandleBaseExt {
             sum = *static_cast<const T*>(sum_ptr);
         }
 
-        std::vector<ScientificValue> deviations;
+
         std::vector<unsigned long long> trace_add, trace_mul, trace_div, trace_special;
 
         if (enable_profiling) {
@@ -146,11 +146,13 @@ struct AccelHandleReal : public AccelHandleBaseExt {
         }
 #endif
 
-        std::ostringstream oss;
-        oss << "{\"values\": [";
+        shanks::ffi::RealSerializer<T> val_ser;
+        shanks::ffi::RealSerializer<T> dev_ser;
+        std::ostringstream valid_oss;
+        
         bool first = true;
         for (uint64_t i = 1; i <= n; ++i) {
-            if (!first) oss << ", ";
+            if (!first) valid_oss << ",";
             first = false;
             
             try {
@@ -170,26 +172,27 @@ struct AccelHandleReal : public AccelHandleBaseExt {
                 }
 #endif
                 
-                oss << shanks::ffi::to_scientific(val).to_json();
+                val_ser.push(val);
                 if (has_sum) {
-                    deviations.push_back(shanks::ffi::to_scientific(utils::math<T>::abs(val - sum)));
+                    dev_ser.push(utils::math<T>::abs(val - sum));
                 } else {
-                    deviations.push_back(ScientificValue(0.0, 0));
+                    dev_ser.push(T(0));
                 }
+                valid_oss << "true";
             } catch (...) {
-                oss << "null";
-                deviations.push_back(ScientificValue(0.0, 0));
+                val_ser.push(T(0));
+                dev_ser.push(T(0));
+                valid_oss << "false";
                 if (enable_profiling) {
                     trace_add.push_back(0); trace_mul.push_back(0); trace_div.push_back(0); trace_special.push_back(0);
                 }
             }
         }
-        oss << "], \"deviations\": [";
-        for (size_t i = 0; i < deviations.size(); ++i) {
-            if (i > 0) oss << ", ";
-            oss << deviations[i].to_json();
-        }
-        oss << "]";
+        
+        std::ostringstream oss;
+        oss << "{\"values\": " << val_ser.to_json() 
+            << ", \"valid\": [" << valid_oss.str() << "]"
+            << ", \"deviations\": " << dev_ser.to_json();
         
 #ifdef SHANKS_ENABLE_PROFILING
         if (enable_profiling) {
@@ -287,11 +290,13 @@ struct AccelHandleComplex : public AccelHandleBaseExt {
         }
 #endif
 
-        std::ostringstream oss;
-        oss << "{\"values\": [";
+        shanks::ffi::ComplexSerializer<T> val_ser;
+        shanks::ffi::RealSerializer<T> dev_ser;
+        std::ostringstream valid_oss;
+
         bool first = true;
         for (uint64_t i = 1; i <= n; ++i) {
-            if (!first) oss << ", ";
+            if (!first) valid_oss << ",";
             first = false;
             
             try {
@@ -311,26 +316,27 @@ struct AccelHandleComplex : public AccelHandleBaseExt {
                 }
 #endif
                 
-                oss << shanks::ffi::complex_to_json(val.real(), val.imag());
+                val_ser.push(val);
                 if (has_sum) {
-                    deviations.push_back(shanks::ffi::to_scientific(utils::math<std::complex<T>>::abs(val - sum)));
+                    dev_ser.push(utils::math<std::complex<T>>::abs(val - sum));
                 } else {
-                    deviations.push_back(ScientificValue(0.0, 0));
+                    dev_ser.push(T(0));
                 }
+                valid_oss << "true";
             } catch (...) {
-                oss << "null";
-                deviations.push_back(ScientificValue(0.0, 0));
+                val_ser.push(std::complex<T>(0, 0));
+                dev_ser.push(T(0));
+                valid_oss << "false";
                 if (enable_profiling) {
                     trace_add.push_back(0); trace_mul.push_back(0); trace_div.push_back(0); trace_special.push_back(0);
                 }
             }
         }
-        oss << "], \"deviations\": [";
-        for (size_t i = 0; i < deviations.size(); ++i) {
-            if (i > 0) oss << ", ";
-            oss << deviations[i].to_json();
-        }
-        oss << "]";
+        
+        std::ostringstream oss;
+        oss << "{\"values\": " << val_ser.to_json() 
+            << ", \"valid\": [" << valid_oss.str() << "]"
+            << ", \"deviations\": " << dev_ser.to_json();
         
 #ifdef SHANKS_ENABLE_PROFILING
         if (enable_profiling) {
@@ -408,34 +414,36 @@ struct AccelHandleInterval : public AccelHandleBaseExt {
 
         std::vector<ScientificValue> deviations;
 
-        std::ostringstream oss;
-        oss << "{\"values\": [";
+        shanks::ffi::IntervalSerializer<T> val_ser;
+        shanks::ffi::RealSerializer<T> dev_ser;
+        std::ostringstream valid_oss;
+
         bool first = true;
         for (uint64_t i = 1; i <= n; ++i) {
-            if (!first) oss << ", ";
+            if (!first) valid_oss << ",";
             first = false;
             
             try {
                 auto val = (*algo)(i, order, *data);
                 
-                oss << shanks::ffi::interval_to_json(val);
+                val_ser.push(val);
                 if (has_sum) {
-                    // Deviation mapping: absolute magnitude of the interval difference
-                    deviations.push_back(shanks::ffi::to_scientific(utils::math<intprec::interval<T>>::abs(val - sum).mag()));
+                    dev_ser.push(utils::math<intprec::interval<T>>::abs(val - sum).mag());
                 } else {
-                    deviations.push_back(ScientificValue(0.0, 0));
+                    dev_ser.push(T(0));
                 }
+                valid_oss << "true";
             } catch (...) {
-                oss << "null";
-                deviations.push_back(ScientificValue(0.0, 0));
+                val_ser.push(intprec::interval<T>(0));
+                dev_ser.push(T(0));
+                valid_oss << "false";
             }
         }
-        oss << "], \"deviations\": [";
-        for (size_t i = 0; i < deviations.size(); ++i) {
-            if (i > 0) oss << ", ";
-            oss << deviations[i].to_json();
-        }
-        oss << "]";
+        
+        std::ostringstream oss;
+        oss << "{\"values\": " << val_ser.to_json() 
+            << ", \"valid\": [" << valid_oss.str() << "]"
+            << ", \"deviations\": " << dev_ser.to_json();
         
 #ifdef SHANKS_ENABLE_PROFILING
         if (enable_profiling) {
@@ -506,34 +514,35 @@ struct AccelHandleCInterval : public AccelHandleBaseExt {
 
         std::vector<ScientificValue> deviations;
 
-        std::ostringstream oss;
-        oss << "{\"values\": [";
+        shanks::ffi::CIntervalSerializer<T> val_ser;
+        shanks::ffi::RealSerializer<T> dev_ser;
+        std::ostringstream valid_oss;
+
         bool first = true;
         for (uint64_t i = 1; i <= n; ++i) {
-            if (!first) oss << ", ";
+            if (!first) valid_oss << ",";
             first = false;
             
             try {
                 auto val = (*algo)(i, order, *data);
                 
-                oss << shanks::ffi::complex_interval_to_json(val);
+                val_ser.push(val);
                 if (has_sum) {
-                    // Deviation mapping: absolute magnitude of the complex interval difference
-                    deviations.push_back(shanks::ffi::to_scientific(utils::math<std::complex<intprec::interval<T>>>::abs(val - sum).mag()));
+                    dev_ser.push(utils::math<std::complex<intprec::interval<T>>>::abs(val - sum).mag());
                 } else {
-                    deviations.push_back(ScientificValue(0.0, 0));
+                    dev_ser.push(T(0));
                 }
+                valid_oss << "true";
             } catch (...) {
-                oss << "null";
-                deviations.push_back(ScientificValue(0.0, 0));
+                val_ser.push(std::complex<intprec::interval<T>>(0));
+                dev_ser.push(T(0));
+                valid_oss << "false";
             }
         }
-        oss << "], \"deviations\": [";
-        for (size_t i = 0; i < deviations.size(); ++i) {
-            if (i > 0) oss << ", ";
-            oss << deviations[i].to_json();
-        }
-        oss << "]";
+        std::ostringstream oss;
+        oss << "{\"values\": " << val_ser.to_json() 
+            << ", \"valid\": [" << valid_oss.str() << "]"
+            << ", \"deviations\": " << dev_ser.to_json();
         
 #ifdef SHANKS_ENABLE_PROFILING
         if (enable_profiling) {

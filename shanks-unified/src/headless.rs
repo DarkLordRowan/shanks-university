@@ -8,10 +8,10 @@ use std::sync::{Arc, Mutex};
 use std::time::Instant;
 
 use crate::cache::Cache;
-use crate::config::{ExperimentConfig, NoiseDef};
-use crate::ffi::{ShanksLibrary, ComputeEventBody};
-use crate::compute::task::{SeriesParams, AccelParams, ComputeTask};
 use crate::compute::engine::ComputeEngine;
+use crate::compute::task::{AccelParams, ComputeTask, SeriesParams};
+use crate::config::{ExperimentConfig, NoiseDef};
+use crate::ffi::{ComputeEventBody, ShanksLibrary};
 
 /// Progress information for headless runs.
 #[derive(Debug, Clone)]
@@ -166,7 +166,9 @@ impl HeadlessRunner {
                                     crate::ffi::ParamValue::String(n.to_string())
                                 }
                             }
-                            serde_json::Value::String(s) => crate::ffi::ParamValue::String(s.clone()),
+                            serde_json::Value::String(s) => {
+                                crate::ffi::ParamValue::String(s.clone())
+                            }
                             serde_json::Value::Bool(b) => crate::ffi::ParamValue::Bool(*b),
                             _ => crate::ffi::ParamValue::String(v.to_string()),
                         };
@@ -175,13 +177,18 @@ impl HeadlessRunner {
 
                     let series_params = SeriesParams {
                         name: series_inst.name.clone(),
-                        x_value: series_inst.args.get("x").and_then(|v| v.as_f64()).map(|v| v.to_string()).unwrap_or_else(|| "1.0".to_string()),
+                        x_value: series_inst
+                            .args
+                            .get("x")
+                            .and_then(|v| v.as_f64())
+                            .map(|v| v.to_string())
+                            .unwrap_or_else(|| "1.0".to_string()),
                         params: series_params_map,
                     };
 
                     let mut bundled_algorithms = Vec::new();
                     let mut max_n_points = 10;
-                    
+
                     for method_inst in &methods {
                         let mut accel_args = std::collections::HashMap::new();
                         for (k, v) in &method_inst.args {
@@ -195,7 +202,9 @@ impl HeadlessRunner {
                                         crate::ffi::ParamValue::String(n.to_string())
                                     }
                                 }
-                                serde_json::Value::String(s) => crate::ffi::ParamValue::String(s.clone()),
+                                serde_json::Value::String(s) => {
+                                    crate::ffi::ParamValue::String(s.clone())
+                                }
                                 serde_json::Value::Bool(b) => crate::ffi::ParamValue::Bool(*b),
                                 _ => crate::ffi::ParamValue::String(v.to_string()),
                             };
@@ -203,14 +212,17 @@ impl HeadlessRunner {
                         }
 
                         if !accel_args.contains_key("m") {
-                            accel_args.insert("m".to_string(), crate::ffi::ParamValue::Int(method_inst.m as i64));
+                            accel_args.insert(
+                                "m".to_string(),
+                                crate::ffi::ParamValue::Int(method_inst.m as i64),
+                            );
                         }
 
                         bundled_algorithms.push(AccelParams {
                             name: method_inst.name.clone(),
                             params: accel_args,
                         });
-                        
+
                         if method_inst.n > max_n_points {
                             max_n_points = method_inst.n;
                         }
@@ -224,7 +236,7 @@ impl HeadlessRunner {
                         noise: noise_opt.cloned(),
                         algorithms: bundled_algorithms.clone(),
                     };
-                    
+
                     if let Ok(id) = engine.start_task(task.clone()) {
                         task_mappings.insert(id, task);
                         active_tasks += 1;
@@ -247,7 +259,12 @@ impl HeadlessRunner {
                         self.report_progress(ProgressInfo {
                             current: successful + failed,
                             total,
-                            series_name: task_mappings.get(&event.task_id).unwrap().series.name.clone(),
+                            series_name: task_mappings
+                                .get(&event.task_id)
+                                .unwrap()
+                                .series
+                                .name
+                                .clone(),
                             method_name: "(batch item)".to_string(),
                             precision: task_mappings.get(&event.task_id).unwrap().precision.clone(),
                             status: Status::Complete,
@@ -287,7 +304,7 @@ impl HeadlessRunner {
         Ok(RunSummary {
             total_trials: total,
             successful,
-            cached: 0, 
+            cached: 0,
             failed,
             total_time_secs: start_time.elapsed().as_secs_f64(),
             errors,

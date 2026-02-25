@@ -1,21 +1,24 @@
 //! Integration tests for FFI layer
 
-use std::path::Path;
 use shanks_unified::ffi::ShanksLibrary;
+use std::path::Path;
 
 /// Test that we can load the library and list series
 #[test]
 fn test_list_series() {
     let lib = ShanksLibrary::load(Path::new("../backend/ffi/build/lib/libshanks_ffi.so"));
     assert!(lib.is_ok(), "Failed to load library: {:?}", lib.err());
-    
+
     let lib = lib.unwrap();
     let series = lib.list_series();
     assert!(series.is_ok(), "Failed to list series: {:?}", series.err());
-    
+
     let series = series.unwrap();
     assert!(!series.is_empty(), "Series list should not be empty");
-    assert!(series.contains(&"Ln2Series".to_string()), "Should contain Ln2Series");
+    assert!(
+        series.contains(&"Ln2Series".to_string()),
+        "Should contain Ln2Series"
+    );
 }
 
 /// Test that we can list acceleration algorithms
@@ -23,11 +26,11 @@ fn test_list_series() {
 fn test_list_accels() {
     let lib = ShanksLibrary::load(Path::new("../backend/ffi/build/lib/libshanks_ffi.so"));
     assert!(lib.is_ok(), "Failed to load library: {:?}", lib.err());
-    
+
     let lib = lib.unwrap();
     let accels = lib.list_accels();
     assert!(accels.is_ok(), "Failed to list accels: {:?}", accels.err());
-    
+
     let accels = accels.unwrap();
     assert!(!accels.is_empty(), "Accel list should not be empty");
 }
@@ -37,24 +40,32 @@ fn test_list_accels() {
 fn test_series_create_and_generate() {
     let lib = ShanksLibrary::load(Path::new("../backend/ffi/build/lib/libshanks_ffi.so"));
     assert!(lib.is_ok(), "Failed to load library: {:?}", lib.err());
-    
+
     let lib = lib.unwrap();
-    
+
     // Create series (name, precision, x_value, params_json)
     // Use "F64" precision as in the C++ test
     let handle = lib.series_create("Ln2Series", "F64", "1.0", "{}");
-    assert!(handle.is_ok(), "Failed to create series: {:?}", handle.err());
-    
+    assert!(
+        handle.is_ok(),
+        "Failed to create series: {:?}",
+        handle.err()
+    );
+
     let handle = handle.unwrap();
-    
+
     // Generate series
     let result = lib.series_generate(&handle, 10, false);
-    assert!(result.is_ok(), "Failed to generate series: {:?}", result.err());
-    
+    assert!(
+        result.is_ok(),
+        "Failed to generate series: {:?}",
+        result.err()
+    );
+
     let result = result.unwrap();
     assert!(!result.is_empty(), "Series result should not be empty");
     assert!(result.contains("Sn"), "Result should contain Sn field");
-    
+
     // Cleanup
     lib.series_destroy(handle);
 }
@@ -64,36 +75,58 @@ fn test_series_create_and_generate() {
 fn test_accel_create() {
     let lib = ShanksLibrary::load(Path::new("../backend/ffi/build/lib/libshanks_ffi.so"));
     assert!(lib.is_ok(), "Failed to load library: {:?}", lib.err());
-    
+
     let lib = lib.unwrap();
-    
+
     // Create series first (name, precision, x_value, params_json)
     let series_handle = lib.series_create("Ln2Series", "F64", "1.0", "{}");
-    assert!(series_handle.is_ok(), "Failed to create series: {:?}", series_handle.err());
-    
+    assert!(
+        series_handle.is_ok(),
+        "Failed to create series: {:?}",
+        series_handle.err()
+    );
+
     let series_handle = series_handle.unwrap();
-    
+
     // Generate series
     let gen_result = lib.series_generate(&series_handle, 10, false);
-    assert!(gen_result.is_ok(), "Failed to generate series: {:?}", gen_result.err());
-    
+    assert!(
+        gen_result.is_ok(),
+        "Failed to generate series: {:?}",
+        gen_result.err()
+    );
+
     // Create acceleration algorithm (name, precision, params_json)
     // Use "Shanks Transformation" as in the C++ test
     let accel_handle = lib.accel_create("Shanks Transformation", "F64", "{}");
-    assert!(accel_handle.is_ok(), "Failed to create accel: {:?}", accel_handle.err());
-    
+    assert!(
+        accel_handle.is_ok(),
+        "Failed to create accel: {:?}",
+        accel_handle.err()
+    );
+
     let accel_handle = accel_handle.unwrap();
-    
+
     // Apply acceleration (accel, series, n, order)
     let accel_result = lib.accel_apply(&accel_handle, &series_handle, 10, 5, false);
-    assert!(accel_result.is_ok(), "Failed to apply accel: {:?}", accel_result.err());
-    
+    assert!(
+        accel_result.is_ok(),
+        "Failed to apply accel: {:?}",
+        accel_result.err()
+    );
+
     let accel_result = accel_result.unwrap();
     eprintln!("Acceleration result: {}", accel_result);
-    assert!(!accel_result.is_empty(), "Acceleration result should not be empty");
+    assert!(
+        !accel_result.is_empty(),
+        "Acceleration result should not be empty"
+    );
     // The result might have different field names, just check it's valid JSON
-    assert!(accel_result.starts_with("{") || accel_result.starts_with("["), "Result should be JSON");
-    
+    assert!(
+        accel_result.starts_with("{") || accel_result.starts_with("["),
+        "Result should be JSON"
+    );
+
     // Cleanup
     lib.accel_destroy(accel_handle);
     lib.series_destroy(series_handle);

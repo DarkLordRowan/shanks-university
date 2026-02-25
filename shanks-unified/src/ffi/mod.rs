@@ -258,7 +258,12 @@ impl ShanksLibrary {
     ) -> Result<ShanksSeriesHandle, FfiError> {
         unsafe {
             let func: Symbol<
-                unsafe extern "C" fn(*const i8, *const i8, *const i8, *const i8) -> *mut std::ffi::c_void,
+                unsafe extern "C" fn(
+                    *const i8,
+                    *const i8,
+                    *const i8,
+                    *const i8,
+                ) -> *mut std::ffi::c_void,
             > = self.library.get(b"shanks_series_create")?;
 
             let name_c = CString::new(name)?;
@@ -274,7 +279,9 @@ impl ShanksLibrary {
             );
 
             if handle.is_null() {
-                let err = self.last_error().unwrap_or_else(|| "Unknown error".to_string());
+                let err = self
+                    .last_error()
+                    .unwrap_or_else(|| "Unknown error".to_string());
                 return Err(FfiError::LibraryError(err));
             }
 
@@ -297,7 +304,17 @@ impl ShanksLibrary {
     ) -> Result<ShanksSeriesHandle, FfiError> {
         unsafe {
             let func: Symbol<
-                unsafe extern "C" fn(*const i8, *const i8, *const i8, *const i8, *const i8, *const i8, f64, f64, u64) -> *mut std::ffi::c_void,
+                unsafe extern "C" fn(
+                    *const i8,
+                    *const i8,
+                    *const i8,
+                    *const i8,
+                    *const i8,
+                    *const i8,
+                    f64,
+                    f64,
+                    u64,
+                ) -> *mut std::ffi::c_void,
             > = self.library.get(b"shanks_series_create_with_noise")?;
 
             let name_c = CString::new(name)?;
@@ -320,7 +337,9 @@ impl ShanksLibrary {
             );
 
             if handle.is_null() {
-                let err = self.last_error().unwrap_or_else(|| "Unknown error".to_string());
+                let err = self
+                    .last_error()
+                    .unwrap_or_else(|| "Unknown error".to_string());
                 return Err(FfiError::LibraryError(err));
             }
 
@@ -341,7 +360,9 @@ impl ShanksLibrary {
 
             let ptr = func(handle.handle, n, if enable_profiling { 1 } else { 0 });
             if ptr.is_null() {
-                let err = self.last_error().unwrap_or_else(|| "Unknown error".to_string());
+                let err = self
+                    .last_error()
+                    .unwrap_or_else(|| "Unknown error".to_string());
                 return Err(FfiError::LibraryError(err));
             }
 
@@ -371,9 +392,12 @@ impl ShanksLibrary {
     /// Destroy a series handle.
     pub fn series_destroy(&self, handle: ShanksSeriesHandle) {
         unsafe {
-            if let Ok(func) = self.library.get::<Symbol<unsafe extern "C" fn(*mut std::ffi::c_void)>>(
-                b"shanks_series_destroy",
-            ) {
+            if let Ok(func) = self
+                .library
+                .get::<Symbol<unsafe extern "C" fn(*mut std::ffi::c_void)>>(
+                    b"shanks_series_destroy",
+                )
+            {
                 func(handle.handle);
             }
         }
@@ -398,7 +422,9 @@ impl ShanksLibrary {
             let handle = func(name_c.as_ptr(), precision_c.as_ptr(), args_json.as_ptr());
 
             if handle.is_null() {
-                let err = self.last_error().unwrap_or_else(|| "Unknown error".to_string());
+                let err = self
+                    .last_error()
+                    .unwrap_or_else(|| "Unknown error".to_string());
                 return Err(FfiError::LibraryError(err));
             }
 
@@ -417,12 +443,26 @@ impl ShanksLibrary {
     ) -> Result<String, FfiError> {
         unsafe {
             let func: Symbol<
-                unsafe extern "C" fn(*mut std::ffi::c_void, *mut std::ffi::c_void, u64, u64, i32) -> *mut i8,
+                unsafe extern "C" fn(
+                    *mut std::ffi::c_void,
+                    *mut std::ffi::c_void,
+                    u64,
+                    u64,
+                    i32,
+                ) -> *mut i8,
             > = self.library.get(b"shanks_accel_apply")?;
 
-            let ptr = func(accel.handle, series.handle, n, order, if enable_profiling { 1 } else { 0 });
+            let ptr = func(
+                accel.handle,
+                series.handle,
+                n,
+                order,
+                if enable_profiling { 1 } else { 0 },
+            );
             if ptr.is_null() {
-                let err = self.last_error().unwrap_or_else(|| "Unknown error".to_string());
+                let err = self
+                    .last_error()
+                    .unwrap_or_else(|| "Unknown error".to_string());
                 return Err(FfiError::LibraryError(err));
             }
 
@@ -435,9 +475,10 @@ impl ShanksLibrary {
     /// Destroy an acceleration handle.
     pub fn accel_destroy(&self, handle: ShanksAccelHandle) {
         unsafe {
-            if let Ok(func) = self.library.get::<Symbol<unsafe extern "C" fn(*mut std::ffi::c_void)>>(
-                b"shanks_accel_destroy",
-            ) {
+            if let Ok(func) = self
+                .library
+                .get::<Symbol<unsafe extern "C" fn(*mut std::ffi::c_void)>>(b"shanks_accel_destroy")
+            {
                 func(handle.handle);
             }
         }
@@ -446,9 +487,10 @@ impl ShanksLibrary {
     /// Free a string allocated by the library.
     fn free_string(&self, ptr: *mut i8) {
         unsafe {
-            if let Ok(func) = self.library.get::<Symbol<unsafe extern "C" fn(*mut i8)>>(
-                b"shanks_free_string",
-            ) {
+            if let Ok(func) = self
+                .library
+                .get::<Symbol<unsafe extern "C" fn(*mut i8)>>(b"shanks_free_string")
+            {
                 func(ptr);
             }
         }
@@ -466,7 +508,9 @@ unsafe impl Sync for ShanksSeriesHandle {}
 
 impl Clone for ShanksSeriesHandle {
     fn clone(&self) -> Self {
-        Self { handle: self.handle }
+        Self {
+            handle: self.handle,
+        }
     }
 }
 
@@ -480,6 +524,8 @@ unsafe impl Sync for ShanksAccelHandle {}
 
 impl Clone for ShanksAccelHandle {
     fn clone(&self) -> Self {
-        Self { handle: self.handle }
+        Self {
+            handle: self.handle,
+        }
     }
 }

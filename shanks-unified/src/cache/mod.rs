@@ -310,9 +310,13 @@ impl Cache {
             // Build Sn point
             if let (Some(real_str), Some(exp)) = (sn_real, sn_exp) {
                 if real_str.starts_with('{') {
-                    if let Ok(cinterval) = serde_json::from_str::<crate::ffi::CIntervalValue>(&real_str) {
+                    if let Ok(cinterval) =
+                        serde_json::from_str::<crate::ffi::CIntervalValue>(&real_str)
+                    {
                         sn.push(crate::ffi::SeriesPoint::CInterval(cinterval));
-                    } else if let Ok(interval) = serde_json::from_str::<crate::ffi::IntervalValue>(&real_str) {
+                    } else if let Ok(interval) =
+                        serde_json::from_str::<crate::ffi::IntervalValue>(&real_str)
+                    {
                         sn.push(crate::ffi::SeriesPoint::Interval(interval));
                     }
                 } else if let Ok(real_val) = real_str.parse::<f64>() {
@@ -344,9 +348,13 @@ impl Cache {
             // Build an point
             if let (Some(real_str), Some(exp)) = (an_real, an_exp) {
                 if real_str.starts_with('{') {
-                    if let Ok(cinterval) = serde_json::from_str::<crate::ffi::CIntervalValue>(&real_str) {
+                    if let Ok(cinterval) =
+                        serde_json::from_str::<crate::ffi::CIntervalValue>(&real_str)
+                    {
                         an.push(crate::ffi::SeriesPoint::CInterval(cinterval));
-                    } else if let Ok(interval) = serde_json::from_str::<crate::ffi::IntervalValue>(&real_str) {
+                    } else if let Ok(interval) =
+                        serde_json::from_str::<crate::ffi::IntervalValue>(&real_str)
+                    {
                         an.push(crate::ffi::SeriesPoint::Interval(interval));
                     }
                 } else if let Ok(real_val) = real_str.parse::<f64>() {
@@ -381,8 +389,8 @@ impl Cache {
         }
 
         Ok(Some(crate::ffi::SeriesResult {
-            sn,
-            an,
+            sn: crate::ffi::SeriesPointArray::from_vec(&sn),
+            an: crate::ffi::SeriesPointArray::from_vec(&an),
             sum: sum_val,
         }))
     }
@@ -447,9 +455,13 @@ impl Cache {
             // value
             if let (Some(real_str), Some(exp)) = (v_real, v_exp) {
                 if real_str.starts_with('{') {
-                    if let Ok(cinterval) = serde_json::from_str::<crate::ffi::CIntervalValue>(&real_str) {
+                    if let Ok(cinterval) =
+                        serde_json::from_str::<crate::ffi::CIntervalValue>(&real_str)
+                    {
                         values[idx] = Some(crate::ffi::SeriesPoint::CInterval(cinterval));
-                    } else if let Ok(interval) = serde_json::from_str::<crate::ffi::IntervalValue>(&real_str) {
+                    } else if let Ok(interval) =
+                        serde_json::from_str::<crate::ffi::IntervalValue>(&real_str)
+                    {
                         values[idx] = Some(crate::ffi::SeriesPoint::Interval(interval));
                     }
                 } else if let Ok(real_val) = real_str.parse::<f64>() {
@@ -520,9 +532,47 @@ impl Cache {
             None
         };
 
+        let mut first_val = None;
+        for v in &values {
+            if let Some(val) = v {
+                first_val = Some(val.clone());
+                break;
+            }
+        }
+        let fb_dummy = crate::ffi::SeriesPoint::Real(crate::ffi::ScientificValue {
+            mantissa: 0.0,
+            exponent: 0,
+        });
+        let fallback = first_val.unwrap_or(fb_dummy);
+
+        let mut valid = Vec::with_capacity(values.len());
+        let mut dense_values = Vec::with_capacity(values.len());
+        for v in values {
+            if let Some(val) = v {
+                valid.push(true);
+                dense_values.push(val);
+            } else {
+                valid.push(false);
+                dense_values.push(fallback.clone());
+            }
+        }
+        let values_array = crate::ffi::SeriesPointArray::from_vec(&dense_values);
+
+        let mut dev_mantissa = Vec::with_capacity(deviations.len());
+        let mut dev_exponent = Vec::with_capacity(deviations.len());
+        for d in deviations {
+            dev_mantissa.push(d.mantissa);
+            dev_exponent.push(d.exponent);
+        }
+        let deviations_array = crate::ffi::ScientificArray {
+            mantissa: dev_mantissa,
+            exponent: dev_exponent,
+        };
+
         Ok(Some(crate::ffi::AccelResult {
-            values,
-            deviations,
+            values: values_array,
+            valid,
+            deviations: deviations_array,
             events: vec![],
             errors: vec![],
             profiling,

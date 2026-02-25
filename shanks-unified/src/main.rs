@@ -77,13 +77,15 @@ fn main() -> anyhow::Result<()> {
         _ => log::LevelFilter::Trace,
     };
     env_logger::Builder::new()
-        .filter_level(log_level)
+        .filter_module("shanks_unified", log_level)
         .init();
 
     log::info!("Starting Shanks Unified...");
 
     // Load C++ library
-    let lib_path = args.lib_path.or_else(shanks_unified::ffi::ShanksLibrary::find_library);
+    let lib_path = args
+        .lib_path
+        .or_else(shanks_unified::ffi::ShanksLibrary::find_library);
 
     let library = if let Some(path) = lib_path {
         log::info!("Loading library from {:?}", path);
@@ -95,8 +97,15 @@ fn main() -> anyhow::Result<()> {
             )
         })?
     } else {
-        let lib_name = if cfg!(target_os = "windows") { "shanks_ffi.dll" } else { "libshanks_ffi.so" };
-        log::error!("No library found. Use --lib-path or ensure {} is in the current directory.", lib_name);
+        let lib_name = if cfg!(target_os = "windows") {
+            "shanks_ffi.dll"
+        } else {
+            "libshanks_ffi.so"
+        };
+        log::error!(
+            "No library found. Use --lib-path or ensure {} is in the current directory.",
+            lib_name
+        );
         return Err(anyhow::anyhow!(
             "Library not found. Use --lib-path to specify the library location, or place it in the current directory ({}).",
             lib_name
@@ -121,15 +130,15 @@ fn main() -> anyhow::Result<()> {
                 Ok(())
             }
         }
-        Some(Commands::Gui { config }) => {
-            run_gui(library, cache, Some(config.clone()))
-        }
-        Some(Commands::Headless { config, precisions }) => {
-            run_headless(library, cache, config.clone(), precisions.clone(), args.verbose > 0)
-        }
-        Some(Commands::List { what }) => {
-            run_list(&library, what)
-        }
+        Some(Commands::Gui { config }) => run_gui(library, cache, Some(config.clone())),
+        Some(Commands::Headless { config, precisions }) => run_headless(
+            library,
+            cache,
+            config.clone(),
+            precisions.clone(),
+            args.verbose > 0,
+        ),
+        Some(Commands::List { what }) => run_list(&library, what),
     }
 }
 
@@ -148,12 +157,8 @@ fn run_gui(
 
     // Create application state
     let app_config = shanks_unified::config::AppConfig::default();
-    let app_state = shanks_unified::app::AppState::new(
-        app_config,
-        experiment_config,
-        cache,
-        Some(library),
-    );
+    let app_state =
+        shanks_unified::app::AppState::new(app_config, experiment_config, cache, Some(library));
 
     // Run GUI
     let native_options = eframe::NativeOptions {
@@ -206,11 +211,12 @@ fn run_headless(
     let mut runner = shanks_unified::headless::HeadlessRunner::new(config, library, cache)?;
 
     // Set up progress callback
-    let last_print = std::sync::Arc::new(std::sync::Mutex::new((std::time::Instant::now(), -1_i32)));
+    let last_print =
+        std::sync::Arc::new(std::sync::Mutex::new((std::time::Instant::now(), -1_i32)));
     runner.set_progress_callback(move |info| {
         let now = std::time::Instant::now();
         let mut state = last_print.lock().unwrap();
-        
+
         let percent = (info.current as f64 / info.total as f64 * 100.0) as i32;
         let should_print = if verbose {
             now.duration_since(state.0).as_millis() > 100 || info.current == info.total
@@ -222,14 +228,14 @@ fn run_headless(
             state.0 = now;
             state.1 = percent;
             use std::io::Write;
-            
+
             let status = match info.status {
                 shanks_unified::headless::Status::Computing => "Computing",
                 shanks_unified::headless::Status::Cached => "Cached   ",
                 shanks_unified::headless::Status::Complete => "Complete ",
                 shanks_unified::headless::Status::Error(_) => "Error    ",
             };
-            
+
             print!(
                 "\r[{}/{}] ({}%) {} ({}) - {} - {} [{:.1}s]\x1B[K",
                 info.current,
@@ -241,7 +247,7 @@ fn run_headless(
                 status,
                 info.elapsed_secs
             );
-            
+
             if !verbose && info.current != info.total {
                 println!();
             } else if info.current == info.total {

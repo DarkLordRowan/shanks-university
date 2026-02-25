@@ -1,16 +1,16 @@
 //! Compute engine for task execution using standard threads.
 
 use std::collections::HashSet;
+use std::sync::mpsc as std_mpsc;
 use std::sync::Arc;
 use std::sync::Mutex;
-use std::sync::mpsc as std_mpsc;
 use std::thread::{self, JoinHandle};
 use uuid::Uuid;
 
-use crate::cache::Cache;
-use crate::ffi::{ShanksLibrary, ComputeEvent, ComputeEventBody};
-use super::task::ComputeTask;
 use super::core::ComputeCore;
+use super::task::ComputeTask;
+use crate::cache::Cache;
+use crate::ffi::{ComputeEvent, ComputeEventBody, ShanksLibrary};
 
 /// Compute engine for running series generation and acceleration.
 pub struct ComputeEngine {
@@ -50,8 +50,12 @@ impl ComputeEngine {
         let cancel_flags = self.cancel_flags.clone();
         let event_tx = self.event_tx.clone();
 
-        log::info!("Starting task {} for series '{}' with precision {}", 
-            task_id, task.series.name, task.precision);
+        log::info!(
+            "Starting task {} for series '{}' with precision {}",
+            task_id,
+            task.series.name,
+            task.precision
+        );
 
         let core = ComputeCore::new(library, cache);
 
@@ -77,11 +81,12 @@ impl ComputeEngine {
                 log::error!("Core execution failed: {}", e);
                 let _ = event_tx.send(ComputeEvent {
                     task_id,
-                    body: ComputeEventBody::Error { error: e.to_string() },
+                    body: ComputeEventBody::Error {
+                        error: e.to_string(),
+                    },
                 });
             }
         });
-
 
         self.tasks.insert(task_id, handle);
         Ok(task_id)
@@ -119,8 +124,6 @@ impl ComputeEngine {
         }
     }
 }
-
-
 
 #[cfg(test)]
 mod tests {

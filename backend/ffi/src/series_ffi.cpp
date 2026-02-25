@@ -91,27 +91,21 @@ struct SeriesHandleReal : public SeriesHandleBaseExt {
             result = apply_noise<T, double>(result, noise_cfg.method, noise_cfg.type, noise_cfg.seed, noise_cfg.param1, noise_cfg.param2);
         }
         
+        shanks::ffi::RealSerializer<T> sn_ser;
+        shanks::ffi::RealSerializer<T> an_ser;
+        
+        for (const auto& val : result.Sn) sn_ser.push(val);
+        for (const auto& val : result.an) an_ser.push(val);
+        
         std::ostringstream oss;
-        oss << "{\"Sn\": [";
-        for (size_t i = 0; i < result.Sn.size(); ++i) {
-            if (i > 0) oss << ", ";
-            oss << shanks::ffi::to_scientific(result.Sn[i]).to_json();
-        }
-        oss << "], \"an\": [";
-        for (size_t i = 0; i < result.an.size(); ++i) {
-            if (i > 0) oss << ", ";
-            oss << shanks::ffi::to_scientific(result.an[i]).to_json();
-        }
-        oss << "]";
+        oss << "{\"Sn\": " << sn_ser.to_json() << ", \"an\": " << an_ser.to_json();
         
         // Add sum if available
         if (!series->is_invalid()) {
             try {
                 T sum = series->get_sum();
-                std::string sum_json = shanks::ffi::to_scientific(sum).to_json();
-                oss << ", \"sum\": " << sum_json;
+                oss << ", \"sum\": " << shanks::ffi::to_scientific(sum).to_json();
             } catch (...) {
-                // Do not emit "sum" key if it fails
             }
         }
 
@@ -206,18 +200,14 @@ struct SeriesHandleComplex : public SeriesHandleBaseExt {
             result = apply_noise<std::complex<T>, double>(result, noise_cfg.method, noise_cfg.type, noise_cfg.seed, noise_cfg.param1, noise_cfg.param2);
         }
         
+        shanks::ffi::ComplexSerializer<T> sn_ser;
+        shanks::ffi::ComplexSerializer<T> an_ser;
+        
+        for (const auto& val : result.Sn) sn_ser.push(val);
+        for (const auto& val : result.an) an_ser.push(val);
+        
         std::ostringstream oss;
-        oss << "{\"Sn\": [";
-        for (size_t i = 0; i < result.Sn.size(); ++i) {
-            if (i > 0) oss << ", ";
-            oss << shanks::ffi::complex_to_json(result.Sn[i].real(), result.Sn[i].imag());
-        }
-        oss << "], \"an\": [";
-        for (size_t i = 0; i < result.an.size(); ++i) {
-            if (i > 0) oss << ", ";
-            oss << shanks::ffi::complex_to_json(result.an[i].real(), result.an[i].imag());
-        }
-        oss << "]";
+        oss << "{\"Sn\": " << sn_ser.to_json() << ", \"an\": " << an_ser.to_json();
         
 #ifdef SHANKS_ENABLE_PROFILING
         if (enable_profiling) {
@@ -238,7 +228,9 @@ struct SeriesHandleComplex : public SeriesHandleBaseExt {
         if (!series || series->is_invalid()) return "";
         try {
             auto sum = series->get_sum();
-            return shanks::ffi::complex_to_json(sum.real(), sum.imag());
+            shanks::ffi::ComplexSerializer<T> ser;
+            ser.push(sum);
+            return ser.to_json();
         } catch (...) {
             return "";
         }
@@ -314,18 +306,14 @@ struct SeriesHandleInterval : public SeriesHandleBaseExt {
             // result = apply_noise<intprec::interval<T>, double>(result, noise_cfg.method, noise_cfg.type, noise_cfg.seed, noise_cfg.param1, noise_cfg.param2);
         }
         
+        shanks::ffi::IntervalSerializer<T> sn_ser;
+        shanks::ffi::IntervalSerializer<T> an_ser;
+        
+        for (const auto& val : result.Sn) sn_ser.push(val);
+        for (const auto& val : result.an) an_ser.push(val);
+        
         std::ostringstream oss;
-        oss << "{\"Sn\": [";
-        for (size_t i = 0; i < result.Sn.size(); ++i) {
-            if (i > 0) oss << ", ";
-            oss << shanks::ffi::interval_to_json(result.Sn[i]);
-        }
-        oss << "], \"an\": [";
-        for (size_t i = 0; i < result.an.size(); ++i) {
-            if (i > 0) oss << ", ";
-            oss << shanks::ffi::interval_to_json(result.an[i]);
-        }
-        oss << "]";
+        oss << "{\"Sn\": " << sn_ser.to_json() << ", \"an\": " << an_ser.to_json();
         
 #ifdef SHANKS_ENABLE_PROFILING
         if (enable_profiling) {
@@ -346,7 +334,9 @@ struct SeriesHandleInterval : public SeriesHandleBaseExt {
         if (!series || series->is_invalid()) return "";
         try {
             auto sum = series->get_sum();
-            return shanks::ffi::interval_to_json(sum);
+            shanks::ffi::IntervalSerializer<T> ser;
+            ser.push(sum);
+            return ser.to_json();
         } catch (...) {
             return "";
         }
@@ -411,18 +401,14 @@ struct SeriesHandleCInterval : public SeriesHandleBaseExt {
         
         auto result = series->generate(static_cast<size_t>(n));
         
+        shanks::ffi::CIntervalSerializer<T> sn_ser;
+        shanks::ffi::CIntervalSerializer<T> an_ser;
+        
+        for (const auto& val : result.Sn) sn_ser.push(val);
+        for (const auto& val : result.an) an_ser.push(val);
+        
         std::ostringstream oss;
-        oss << "{\"Sn\": [";
-        for (size_t i = 0; i < result.Sn.size(); ++i) {
-            if (i > 0) oss << ", ";
-            oss << shanks::ffi::complex_interval_to_json(result.Sn[i]);
-        }
-        oss << "], \"an\": [";
-        for (size_t i = 0; i < result.an.size(); ++i) {
-            if (i > 0) oss << ", ";
-            oss << shanks::ffi::complex_interval_to_json(result.an[i]);
-        }
-        oss << "]";
+        oss << "{\"Sn\": " << sn_ser.to_json() << ", \"an\": " << an_ser.to_json();
         
 #ifdef SHANKS_ENABLE_PROFILING
         if (enable_profiling) {
@@ -443,7 +429,9 @@ struct SeriesHandleCInterval : public SeriesHandleBaseExt {
         if (!series || series->is_invalid()) return "";
         try {
             auto sum = series->get_sum();
-            return shanks::ffi::complex_interval_to_json(sum);
+            shanks::ffi::CIntervalSerializer<T> ser;
+            ser.push(sum);
+            return ser.to_json();
         } catch (...) {
             return "";
         }

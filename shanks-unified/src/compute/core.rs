@@ -9,22 +9,22 @@
 //! Callers (GUI, headless) must NOT read the cache directly; they purely react
 //! to events.
 
-use std::sync::{Arc, Mutex};
-use uuid::Uuid;
-use std::sync::mpsc as std_mpsc;
 use anyhow::Result;
 use std::collections::BTreeMap;
+use std::sync::mpsc as std_mpsc;
+use std::sync::{Arc, Mutex};
+use uuid::Uuid;
 
+use super::task::{AccelParams, SeriesParams};
 use crate::cache::Cache;
-use crate::ffi::{
-    ShanksLibrary, SeriesResult, AccelResult, ComputeEvent, ComputeEventBody,
-};
 use crate::config::NoiseDef;
-use super::task::{SeriesParams, AccelParams};
+use crate::ffi::{AccelResult, ComputeEvent, ComputeEventBody, SeriesResult, ShanksLibrary};
 
 /// Deterministic serialization of parameters to ensure caching consistency.
 /// Always produces a sorted-key JSON string regardless of HashMap iteration order.
-pub fn to_sorted_json<T: serde::Serialize>(map: &std::collections::HashMap<String, T>) -> Result<String> {
+pub fn to_sorted_json<T: serde::Serialize>(
+    map: &std::collections::HashMap<String, T>,
+) -> Result<String> {
     let sorted_map: BTreeMap<_, _> = map.iter().collect();
     Ok(serde_json::to_string(&sorted_map)?)
 }
@@ -127,7 +127,6 @@ impl ComputeCore {
         event_tx: Option<std_mpsc::Sender<ComputeEvent>>,
         cancel_flags: Option<Arc<Mutex<std::collections::HashSet<Uuid>>>>,
     ) -> Result<(bool, Vec<String>)> {
-
         let mut errors = Vec::new();
 
         let send_event = |body: ComputeEventBody| {
@@ -146,11 +145,14 @@ impl ComputeCore {
             false
         };
 
-        if check_cancel() { return Ok((false, errors)); }
+        if check_cancel() {
+            return Ok((false, errors));
+        }
 
         // --- Deterministic key generation ---
         let args_json = to_sorted_json(&series.params)?;
-        let x_value = series.params
+        let x_value = series
+            .params
             .get("x")
             .and_then(|v| v.as_f64())
             .map(|v| v.to_string())
@@ -169,13 +171,15 @@ impl ComputeCore {
         {
             let cache_lock = self.cache.lock().unwrap();
 
-            let series_exists_id = cache_lock.series_exists(
-                &series.name,
-                precision,
-                &x_value,
-                &args_json,
-                noise_json_opt.as_deref(),
-            ).unwrap_or(None);
+            let series_exists_id = cache_lock
+                .series_exists(
+                    &series.name,
+                    precision,
+                    &x_value,
+                    &args_json,
+                    noise_json_opt.as_deref(),
+                )
+                .unwrap_or(None);
 
             if let Some(s_id) = series_exists_id {
                 cached_series_id = Some(s_id);
@@ -189,10 +193,15 @@ impl ComputeCore {
 
                 for accel in algorithms {
                     let method_args_json = to_sorted_json(&accel.params)?;
-                    let m_val = accel.params.get("m").and_then(|v| v.as_f64().map(|f| f as i64));
+                    let m_val = accel
+                        .params
+                        .get("m")
+                        .and_then(|v| v.as_f64().map(|f| f as i64));
 
                     let mut needs_compute = true;
-                    if let Ok(Some(accel_id)) = cache_lock.acceleration_exists(s_id, &accel.name, m_val, &method_args_json) {
+                    if let Ok(Some(accel_id)) =
+                        cache_lock.acceleration_exists(s_id, &accel.name, m_val, &method_args_json)
+                    {
                         if let Ok(Some(accel_res)) = cache_lock.get_accel_result(accel_id) {
                             if accel_res.values.len() >= n_points as usize {
                                 cached_results.push((accel.clone(), accel_res));
@@ -208,7 +217,10 @@ impl ComputeCore {
                 // Series not in cache at all — compute everything
                 for accel in algorithms {
                     let method_args_json = to_sorted_json(&accel.params)?;
-                    let m_val = accel.params.get("m").and_then(|v| v.as_f64().map(|f| f as i64));
+                    let m_val = accel
+                        .params
+                        .get("m")
+                        .and_then(|v| v.as_f64().map(|f| f as i64));
                     algorithms_to_compute.push((accel.clone(), method_args_json, m_val));
                 }
             }
@@ -216,20 +228,30 @@ impl ComputeCore {
 
         let fully_cached = algorithms_to_compute.is_empty() && cached_series_result.is_some();
 
-        let unique_series_name = format!("{} ({}{})", 
-            series.name, 
-            precision, 
-            noise.map(|n| format!(", {}", n.noise_type)).unwrap_or_default()
+        let unique_series_name = format!(
+            "{} ({}{})",
+            series.name,
+            precision,
+            noise
+                .map(|n| format!(", {}", n.noise_type))
+                .unwrap_or_default()
         );
 
         // --- Emit cached results immediately ---
         // This is the key change: the GUI only ever hears about results via events.
         if let Some(ref res) = cached_series_result {
-            send_event(ComputeEventBody::SeriesComplete { name: unique_series_name.clone(), result: res.clone() });
+            send_event(ComputeEventBody::SeriesComplete {
+                name: unique_series_name.clone(),
+                result: res.clone(),
+            });
         }
         for (accel, res) in &cached_results {
             send_event(ComputeEventBody::AccelComplete {
-                name: format!("{} - {}", unique_series_name, build_distinct_name(accel, algorithms)),
+                name: format!(
+                    "{} - {}",
+                    unique_series_name,
+                    build_distinct_name(accel, algorithms)
+                ),
                 result: res.clone(),
             });
         }
@@ -242,7 +264,9 @@ impl ComputeCore {
         // --- Compute what's missing ---
         // We need to generate the series via FFI (either we don't have it, or
         // we need it to run algorithms).
-        if check_cancel() { return Ok((false, errors)); }
+        if check_cancel() {
+            return Ok((false, errors));
+        }
 
         let series_handle = match noise {
             Some(n) => self.library.series_create_with_noise(
@@ -256,7 +280,9 @@ impl ComputeCore {
                 n.param2,
                 n.seed,
             ),
-            None => self.library.series_create(&series.name, precision, &x_value, &args_json)
+            None => self
+                .library
+                .series_create(&series.name, precision, &x_value, &args_json),
         };
 
         let series_handle = match series_handle {
@@ -275,7 +301,10 @@ impl ComputeCore {
             return Ok((false, errors));
         }
 
-        let series_result_json = match self.library.series_generate(&series_handle, n_points, false) {
+        let series_result_json = match self
+            .library
+            .series_generate(&series_handle, n_points, false)
+        {
             Ok(r) => r,
             Err(e) => {
                 let msg = format!("Failed to generate series '{}': {}", series.name, e);
@@ -292,7 +321,8 @@ impl ComputeCore {
         if series_result.sum.is_none() {
             if let Ok(sum_str) = self.library.series_get_sum(&series_handle) {
                 if !sum_str.is_empty() {
-                    if let Ok(sum_point) = serde_json::from_str::<crate::ffi::SeriesPoint>(&sum_str) {
+                    if let Ok(sum_point) = serde_json::from_str::<crate::ffi::SeriesPoint>(&sum_str)
+                    {
                         series_result.sum = Some(sum_point);
                     }
                 }
@@ -301,7 +331,10 @@ impl ComputeCore {
 
         // Emit SeriesComplete only if we didn't already emit it from cache
         if cached_series_result.is_none() {
-            send_event(ComputeEventBody::SeriesComplete { name: unique_series_name.clone(), result: series_result.clone() });
+            send_event(ComputeEventBody::SeriesComplete {
+                name: unique_series_name.clone(),
+                result: series_result.clone(),
+            });
         }
 
         // --- Persist series ---
@@ -310,38 +343,79 @@ impl ComputeCore {
             let id = if let Some(s_id) = cached_series_id {
                 s_id
             } else {
-                let sum_json = series_result.sum.as_ref().and_then(|s| serde_json::to_string(s).ok());
-                cache.insert_series(
-                    &series.name,
-                    precision,
-                    &x_value,
-                    &args_json,
-                    noise_json_opt.as_deref(),
-                    None,
-                    sum_json.as_deref(),
-                ).unwrap_or(-1)
+                let sum_json = series_result
+                    .sum
+                    .as_ref()
+                    .and_then(|s| serde_json::to_string(s).ok());
+                cache
+                    .insert_series(
+                        &series.name,
+                        precision,
+                        &x_value,
+                        &args_json,
+                        noise_json_opt.as_deref(),
+                        None,
+                        sum_json.as_deref(),
+                    )
+                    .unwrap_or(-1)
             };
 
             if id != -1 {
                 let mut db_points = Vec::with_capacity(series_result.sn.len());
-                let empty_point = crate::ffi::SeriesPoint::Real(crate::ffi::ScientificValue { mantissa: 0.0, exponent: 0 });
-                for (i, (sn, an)) in series_result.sn.iter().zip(
-                    series_result.an.iter().chain(std::iter::repeat(&empty_point))
-                ).enumerate() {
+                let empty_point = crate::ffi::SeriesPoint::Real(crate::ffi::ScientificValue {
+                    mantissa: 0.0,
+                    exponent: 0,
+                });
+                for i in 0..series_result.sn.len() {
                     let n = (i + 1) as i64;
+                    let sn = series_result.sn.get(i);
+                    let an = if i < series_result.an.len() {
+                        series_result.an.get(i)
+                    } else {
+                        empty_point.clone()
+                    };
                     let (sn_real, sn_imag, sn_exp) = match sn {
-                        crate::ffi::SeriesPoint::Real(r) => (r.mantissa.to_string(), String::new(), r.exponent),
-                        crate::ffi::SeriesPoint::Complex(c) => (c.real.mantissa.to_string(), c.imag.mantissa.to_string(), c.real.exponent),
-                        crate::ffi::SeriesPoint::Interval(i) => (serde_json::to_string(i).unwrap(), String::new(), 0),
-                        crate::ffi::SeriesPoint::CInterval(ci) => (serde_json::to_string(ci).unwrap(), String::new(), 0),
+                        crate::ffi::SeriesPoint::Real(r) => {
+                            (r.mantissa.to_string(), String::new(), r.exponent)
+                        }
+                        crate::ffi::SeriesPoint::Complex(c) => (
+                            c.real.mantissa.to_string(),
+                            c.imag.mantissa.to_string(),
+                            c.real.exponent,
+                        ),
+                        crate::ffi::SeriesPoint::Interval(ref i) => {
+                            (serde_json::to_string(i).unwrap(), String::new(), 0)
+                        }
+                        crate::ffi::SeriesPoint::CInterval(ref ci) => {
+                            (serde_json::to_string(ci).unwrap(), String::new(), 0)
+                        }
                     };
                     let (an_real, an_imag, an_exp) = match an {
-                        crate::ffi::SeriesPoint::Real(r) => (r.mantissa.to_string(), String::new(), r.exponent),
-                        crate::ffi::SeriesPoint::Complex(c) => (c.real.mantissa.to_string(), c.imag.mantissa.to_string(), c.real.exponent),
-                        crate::ffi::SeriesPoint::Interval(i) => (serde_json::to_string(i).unwrap(), String::new(), 0),
-                        crate::ffi::SeriesPoint::CInterval(ci) => (serde_json::to_string(ci).unwrap(), String::new(), 0),
+                        crate::ffi::SeriesPoint::Real(r) => {
+                            (r.mantissa.to_string(), String::new(), r.exponent)
+                        }
+                        crate::ffi::SeriesPoint::Complex(c) => (
+                            c.real.mantissa.to_string(),
+                            c.imag.mantissa.to_string(),
+                            c.real.exponent,
+                        ),
+                        crate::ffi::SeriesPoint::Interval(ref i_val) => {
+                            (serde_json::to_string(i_val).unwrap(), String::new(), 0)
+                        }
+                        crate::ffi::SeriesPoint::CInterval(ref ci) => {
+                            (serde_json::to_string(ci).unwrap(), String::new(), 0)
+                        }
                     };
-                    db_points.push((n, sn_real, sn_imag, sn_exp, an_real, an_imag, an_exp, String::new()));
+                    db_points.push((
+                        n,
+                        sn_real,
+                        sn_imag,
+                        sn_exp,
+                        an_real,
+                        an_imag,
+                        an_exp,
+                        String::new(),
+                    ));
                 }
                 if !db_points.is_empty() {
                     let _ = cache.insert_series_points(id, &db_points);
@@ -357,17 +431,27 @@ impl ComputeCore {
                 return Ok((false, errors));
             }
 
-            let accel_handle = match self.library.accel_create(&accel.name, precision, &method_args_json) {
-                Ok(h) => h,
-                Err(e) => {
-                    let msg = format!("Failed to create algorithm '{}': {}", accel.name, e);
-                    errors.push(msg.clone());
-                    send_event(ComputeEventBody::Error { error: msg });
-                    continue;
-                }
-            };
+            let accel_handle =
+                match self
+                    .library
+                    .accel_create(&accel.name, precision, &method_args_json)
+                {
+                    Ok(h) => h,
+                    Err(e) => {
+                        let msg = format!("Failed to create algorithm '{}': {}", accel.name, e);
+                        errors.push(msg.clone());
+                        send_event(ComputeEventBody::Error { error: msg });
+                        continue;
+                    }
+                };
 
-            let accel_result_json = match self.library.accel_apply(&accel_handle, &series_handle, n_points, m_val.unwrap_or(5) as u64, true) {
+            let accel_result_json = match self.library.accel_apply(
+                &accel_handle,
+                &series_handle,
+                n_points,
+                m_val.unwrap_or(5) as u64,
+                true,
+            ) {
                 Ok(r) => r,
                 Err(e) => {
                     self.library.accel_destroy(accel_handle);
@@ -383,7 +467,8 @@ impl ComputeCore {
             let parsed_accel: AccelResult = match serde_json::from_str(&accel_result_json) {
                 Ok(r) => r,
                 Err(e) => {
-                    let msg = format!("JSON parse error for '{}': {}", accel.name, e);
+                    let msg = format!("JSON parse error for '{}': {}\n", accel.name, e);
+                    log::debug!("{accel_result_json}");
                     errors.push(msg.clone());
                     send_event(ComputeEventBody::Error { error: msg });
                     continue;
@@ -391,49 +476,91 @@ impl ComputeCore {
             };
 
             send_event(ComputeEventBody::AccelComplete {
-                name: format!("{} - {}", unique_series_name, build_distinct_name(&accel, algorithms)),
+                name: format!(
+                    "{} - {}",
+                    unique_series_name,
+                    build_distinct_name(&accel, algorithms)
+                ),
                 result: parsed_accel.clone(),
             });
 
             // Persist acceleration result
             if final_series_id != -1 {
                 let mut cache = self.cache.lock().unwrap();
-                let accel_id = if let Ok(Some(id)) = cache.acceleration_exists(final_series_id, &accel.name, m_val, &method_args_json) {
+                let accel_id = if let Ok(Some(id)) = cache.acceleration_exists(
+                    final_series_id,
+                    &accel.name,
+                    m_val,
+                    &method_args_json,
+                ) {
                     id
                 } else {
-                    let profiling_json = parsed_accel.profiling.as_ref().map(|p| serde_json::to_string(p).unwrap());
-                    cache.insert_acceleration(final_series_id, &accel.name, m_val, &method_args_json, profiling_json.as_deref()).unwrap_or(-1)
+                    let profiling_json = parsed_accel
+                        .profiling
+                        .as_ref()
+                        .map(|p| serde_json::to_string(p).unwrap());
+                    cache
+                        .insert_acceleration(
+                            final_series_id,
+                            &accel.name,
+                            m_val,
+                            &method_args_json,
+                            profiling_json.as_deref(),
+                        )
+                        .unwrap_or(-1)
                 };
 
                 if accel_id != -1 {
                     let mut db_points = Vec::with_capacity(parsed_accel.values.len());
-                    let empty_dev = crate::ffi::ScientificValue { mantissa: 0.0, exponent: 0 };
-                    for (i, (val_opt, dev)) in parsed_accel.values.iter().zip(
-                        parsed_accel.deviations.iter().chain(std::iter::repeat(&empty_dev))
-                    ).enumerate() {
+
+                    for i in 0..parsed_accel.values.len() {
                         let n = (i + 1) as i64;
+                        let val_opt = if parsed_accel.valid.get(i).copied().unwrap_or(false) {
+                            Some(parsed_accel.values.get(i))
+                        } else {
+                            None
+                        };
+                        let dev = parsed_accel.deviations.get(i);
                         let prof_json = if let Some(ref p) = parsed_accel.profiling {
                             serde_json::json!({
                                 "add": p.add.get(i).copied().unwrap_or(0),
                                 "mul": p.mul.get(i).copied().unwrap_or(0),
                                 "div": p.div.get(i).copied().unwrap_or(0),
                                 "special": p.special.get(i).copied().unwrap_or(0),
-                            }).to_string()
+                            })
+                            .to_string()
                         } else {
                             String::new()
                         };
 
                         if let Some(val) = val_opt {
                             let (v_real, v_imag, v_exp) = match val {
-                                crate::ffi::SeriesPoint::Real(r) => (r.mantissa.to_string(), String::new(), r.exponent),
-                                crate::ffi::SeriesPoint::Complex(c) => (c.real.mantissa.to_string(), c.imag.mantissa.to_string(), c.real.exponent),
-                                crate::ffi::SeriesPoint::Interval(i) => (serde_json::to_string(i).unwrap(), String::new(), 0),
-                                crate::ffi::SeriesPoint::CInterval(ci) => (serde_json::to_string(ci).unwrap(), String::new(), 0),
+                                crate::ffi::SeriesPoint::Real(r) => {
+                                    (r.mantissa.to_string(), String::new(), r.exponent)
+                                }
+                                crate::ffi::SeriesPoint::Complex(c) => (
+                                    c.real.mantissa.to_string(),
+                                    c.imag.mantissa.to_string(),
+                                    c.real.exponent,
+                                ),
+                                crate::ffi::SeriesPoint::Interval(ref i_val) => {
+                                    (serde_json::to_string(i_val).unwrap(), String::new(), 0)
+                                }
+                                crate::ffi::SeriesPoint::CInterval(ref ci) => {
+                                    (serde_json::to_string(ci).unwrap(), String::new(), 0)
+                                }
                             };
                             let dev_str = dev.format();
                             db_points.push((n, v_real, v_imag, v_exp, dev_str, prof_json));
                         } else {
-                            db_points.push((n, String::new(), String::new(), 0, String::new(), prof_json));
+                            db_points.push((
+                                n,
+                                String::new(),
+                                String::new(),
+                                0,
+                                String::new(),
+                                prof_json,
+                            ));
                         }
                     }
                     if !db_points.is_empty() {

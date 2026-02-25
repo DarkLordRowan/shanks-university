@@ -98,8 +98,14 @@ impl SelectionNode {
             return;
         }
 
-        let all_selected = self.children.iter().all(|c| matches!(c.state, SelectionState::All));
-        let none_selected = self.children.iter().all(|c| matches!(c.state, SelectionState::None));
+        let all_selected = self
+            .children
+            .iter()
+            .all(|c| matches!(c.state, SelectionState::All));
+        let none_selected = self
+            .children
+            .iter()
+            .all(|c| matches!(c.state, SelectionState::None));
 
         self.state = if all_selected {
             SelectionState::All
@@ -119,7 +125,11 @@ impl SelectionNode {
     /// Count selected leaf nodes.
     pub fn count_selected(&self) -> usize {
         if self.children.is_empty() {
-            if self.is_selected() { 1 } else { 0 }
+            if self.is_selected() {
+                1
+            } else {
+                0
+            }
         } else {
             self.children.iter().map(|c| c.count_selected()).sum()
         }
@@ -159,13 +169,15 @@ fn propagate_to_children(state: &SelectionState, children: &mut [SelectionNode])
 }
 
 /// Build a series selection tree from experiment config.
-pub fn build_series_tree(series_instances: &[super::super::config::SeriesInstance]) -> SelectionNode {
-    let mut root = SelectionNode::new("series_root", "ALL SERIES")
-        .with_expandable(true);
+pub fn build_series_tree(
+    series_instances: &[super::super::config::SeriesInstance],
+) -> SelectionNode {
+    let mut root = SelectionNode::new("series_root", "ALL SERIES").with_expandable(true);
     root.expanded = true;
 
     // Group series by name
-    let mut series_by_name: HashMap<String, Vec<&super::super::config::SeriesInstance>> = HashMap::new();
+    let mut series_by_name: HashMap<String, Vec<&super::super::config::SeriesInstance>> =
+        HashMap::new();
     for instance in series_instances {
         series_by_name
             .entry(instance.name.clone())
@@ -175,8 +187,8 @@ pub fn build_series_tree(series_instances: &[super::super::config::SeriesInstanc
 
     // Build tree for each series
     for (name, instances) in series_by_name {
-        let mut series_node = SelectionNode::new(format!("series_{}", name), &name)
-            .with_expandable(true);
+        let mut series_node =
+            SelectionNode::new(format!("series_{}", name), &name).with_expandable(true);
 
         // Collect all parameters and their values
         let mut params: HashMap<String, HashSet<String>> = HashMap::new();
@@ -187,17 +199,18 @@ pub fn build_series_tree(series_instances: &[super::super::config::SeriesInstanc
                     serde_json::Value::String(s) => s.clone(),
                     _ => value.to_string(),
                 };
-                params.entry(param_name.clone()).or_default().insert(value_str);
+                params
+                    .entry(param_name.clone())
+                    .or_default()
+                    .insert(value_str);
             }
         }
 
         // Build parameter nodes
         for (param_name, values) in params {
-            let mut param_node = SelectionNode::new(
-                format!("series_{}_{}", name, param_name),
-                &param_name,
-            )
-            .with_expandable(true);
+            let mut param_node =
+                SelectionNode::new(format!("series_{}_{}", name, param_name), &param_name)
+                    .with_expandable(true);
 
             // Sort values for consistent display
             let mut sorted_values: Vec<_> = values.into_iter().collect();
@@ -205,10 +218,8 @@ pub fn build_series_tree(series_instances: &[super::super::config::SeriesInstanc
 
             // Build value nodes
             for value in sorted_values {
-                let value_node = SelectionNode::new(
-                    format!("series_{}_{}_{}", name, param_name, value),
-                    &value,
-                );
+                let value_node =
+                    SelectionNode::new(format!("series_{}_{}_{}", name, param_name, value), &value);
                 param_node.children.push(value_node);
             }
 
@@ -222,13 +233,15 @@ pub fn build_series_tree(series_instances: &[super::super::config::SeriesInstanc
 }
 
 /// Build an acceleration selection tree from experiment config.
-pub fn build_accel_tree(method_instances: &[super::super::config::MethodInstance]) -> SelectionNode {
-    let mut root = SelectionNode::new("accel_root", "ALL ACCELERATIONS")
-        .with_expandable(true);
+pub fn build_accel_tree(
+    method_instances: &[super::super::config::MethodInstance],
+) -> SelectionNode {
+    let mut root = SelectionNode::new("accel_root", "ALL ACCELERATIONS").with_expandable(true);
     root.expanded = true;
 
     // Group methods by name
-    let mut methods_by_name: HashMap<String, Vec<&super::super::config::MethodInstance>> = HashMap::new();
+    let mut methods_by_name: HashMap<String, Vec<&super::super::config::MethodInstance>> =
+        HashMap::new();
     for instance in method_instances {
         methods_by_name
             .entry(instance.name.clone())
@@ -238,13 +251,13 @@ pub fn build_accel_tree(method_instances: &[super::super::config::MethodInstance
 
     // Build tree for each method
     for (name, instances) in methods_by_name {
-        let mut method_node = SelectionNode::new(format!("method_{}", name), &name)
-            .with_expandable(true);
+        let mut method_node =
+            SelectionNode::new(format!("method_{}", name), &name).with_expandable(true);
 
         // Add n values
         let n_values: HashSet<i64> = instances.iter().map(|i| i.n).collect();
-        let mut n_node = SelectionNode::new(format!("method_{}_n", name), "n")
-            .with_expandable(true);
+        let mut n_node =
+            SelectionNode::new(format!("method_{}_n", name), "n").with_expandable(true);
         let mut sorted_n: Vec<_> = n_values.into_iter().collect();
         sorted_n.sort();
         for n in sorted_n {
@@ -257,8 +270,8 @@ pub fn build_accel_tree(method_instances: &[super::super::config::MethodInstance
 
         // Add m values
         let m_values: HashSet<i64> = instances.iter().map(|i| i.m).collect();
-        let mut m_node = SelectionNode::new(format!("method_{}_m", name), "m")
-            .with_expandable(true);
+        let mut m_node =
+            SelectionNode::new(format!("method_{}_m", name), "m").with_expandable(true);
         let mut sorted_m: Vec<_> = m_values.into_iter().collect();
         sorted_m.sort();
         for m in sorted_m {
@@ -284,11 +297,9 @@ pub fn build_accel_tree(method_instances: &[super::super::config::MethodInstance
 
         // Build arg nodes
         for (arg_name, values) in args {
-            let mut arg_node = SelectionNode::new(
-                format!("method_{}_{}", name, arg_name),
-                &arg_name,
-            )
-            .with_expandable(true);
+            let mut arg_node =
+                SelectionNode::new(format!("method_{}_{}", name, arg_name), &arg_name)
+                    .with_expandable(true);
 
             let mut sorted_values: Vec<_> = values.into_iter().collect();
             sorted_values.sort();
@@ -311,8 +322,7 @@ pub fn build_accel_tree(method_instances: &[super::super::config::MethodInstance
 
 /// Build a noise selection tree from experiment config.
 pub fn build_noise_tree(noises: &[super::super::config::NoiseDef]) -> SelectionNode {
-    let mut root = SelectionNode::new("noise_root", "ALL NOISES")
-        .with_expandable(true);
+    let mut root = SelectionNode::new("noise_root", "ALL NOISES").with_expandable(true);
     root.expanded = true;
 
     for (idx, noise) in noises.iter().enumerate() {
@@ -322,15 +332,15 @@ pub fn build_noise_tree(noises: &[super::super::config::NoiseDef]) -> SelectionN
     }
 
     // Add "No noise" option
-    root.children.push(SelectionNode::new("noise_none", "No noise"));
+    root.children
+        .push(SelectionNode::new("noise_none", "No noise"));
 
     root
 }
 
 /// Build a precision selection tree.
 pub fn build_precision_tree(precisions: &[String]) -> SelectionNode {
-    let mut root = SelectionNode::new("precision_root", "ALL PRECISIONS")
-        .with_expandable(true);
+    let mut root = SelectionNode::new("precision_root", "ALL PRECISIONS").with_expandable(true);
     root.expanded = true;
 
     for precision in precisions {
@@ -413,7 +423,7 @@ fn extract_series_combinations(tree: &SelectionNode) -> Vec<SeriesCombo> {
 
         let name = series_node.label.clone();
         let params = extract_param_values(series_node);
-        
+
         // Generate all parameter combinations
         if params.is_empty() {
             combos.push((name, HashMap::new()));
@@ -480,8 +490,16 @@ fn extract_accel_combinations(tree: &SelectionNode) -> Vec<AccelCombo> {
         }
 
         // Generate combinations
-        let n_values = if n_values.is_empty() { vec![33] } else { n_values };
-        let m_values = if m_values.is_empty() { vec![4] } else { m_values };
+        let n_values = if n_values.is_empty() {
+            vec![33]
+        } else {
+            n_values
+        };
+        let m_values = if m_values.is_empty() {
+            vec![4]
+        } else {
+            m_values
+        };
 
         let arg_combos = if args.is_empty() {
             vec![HashMap::new()]
@@ -552,13 +570,15 @@ fn extract_param_values(node: &SelectionNode) -> HashMap<String, Vec<String>> {
     params
 }
 
-fn generate_param_combinations(params: &HashMap<String, Vec<String>>) -> Vec<HashMap<String, String>> {
+fn generate_param_combinations(
+    params: &HashMap<String, Vec<String>>,
+) -> Vec<HashMap<String, String>> {
     if params.is_empty() {
         return vec![HashMap::new()];
     }
 
     let mut result = vec![HashMap::new()];
-    
+
     for (key, values) in params {
         let mut new_result = Vec::new();
         for existing in &result {
@@ -585,12 +605,12 @@ mod tests {
             .with_child(SelectionNode::new("child2", "Child 2"));
 
         assert_eq!(node.state, SelectionState::None);
-        
+
         node.toggle();
         assert_eq!(node.state, SelectionState::All);
         assert_eq!(node.children[0].state, SelectionState::All);
         assert_eq!(node.children[1].state, SelectionState::All);
-        
+
         node.toggle();
         assert_eq!(node.state, SelectionState::None);
         assert_eq!(node.children[0].state, SelectionState::None);
@@ -605,7 +625,7 @@ mod tests {
 
         node.children[0].toggle();
         node.update_from_children();
-        
+
         assert!(matches!(node.state, SelectionState::Partial(_)));
     }
 
@@ -616,10 +636,10 @@ mod tests {
             .with_child(SelectionNode::new("child2", "Child 2"));
 
         assert_eq!(node.count_selected(), 0);
-        
+
         node.children[0].toggle();
         assert_eq!(node.count_selected(), 1);
-        
+
         node.toggle();
         assert_eq!(node.count_selected(), 2);
     }

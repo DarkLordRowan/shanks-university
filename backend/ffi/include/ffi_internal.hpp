@@ -121,9 +121,17 @@ inline ScientificValue to_scientific(T value) {
         return ScientificValue(0.0, 0);
     }
     
-    double abs_val = std::abs(static_cast<double>(value));
+    double val_d = static_cast<double>(value);
+    if (std::isnan(val_d)) {
+        return ScientificValue(0.0, 0);
+    }
+    if (std::isinf(val_d)) {
+        return ScientificValue(val_d > 0 ? 1.7976931348623157 : -1.7976931348623157, 308);
+    }
+
+    double abs_val = std::abs(val_d);
     int64_t exp = static_cast<int64_t>(std::floor(std::log10(abs_val)));
-    double mantissa = static_cast<double>(value) / std::pow(10.0, exp);
+    double mantissa = val_d / std::pow(10.0, exp);
     
     return ScientificValue(mantissa, exp);
 }
@@ -139,6 +147,14 @@ inline ScientificValue to_scientific(mpfr::mpreal value) {
     oss << value;
     std::string s = oss.str();
     
+    if (s.find("NaN") != std::string::npos || s.find("nan") != std::string::npos) {
+        return ScientificValue(0.0, 0);
+    }
+    if (s.find("Inf") != std::string::npos || s.find("inf") != std::string::npos) {
+        bool neg = s.find("-") != std::string::npos;
+        return ScientificValue(neg ? -1.7976931348623157 : 1.7976931348623157, 308);
+    }
+    
     // Parse scientific notation from mpreal string
     size_t e_pos = s.find('e');
     if (e_pos != std::string::npos) {
@@ -150,29 +166,71 @@ inline ScientificValue to_scientific(mpfr::mpreal value) {
     return ScientificValue(std::stod(s), 0);
 }
 
-template <typename T>
-inline std::string complex_to_json(const T& real, const T& imag) {
-    std::ostringstream oss;
-    oss << "{\"real\": " << to_scientific(real).to_json() 
-        << ", \"imag\": " << to_scientific(imag).to_json() << "}";
-    return oss.str();
-}
+template<typename T>
+struct RealSerializer {
+    std::ostringstream mantissa;
+    std::ostringstream exponent;
+    bool first = true;
+    
+    void push(T val) {
+        if (!first) { mantissa << ","; exponent << ","; }
+        first = false;
+        auto sci = shanks::ffi::to_scientific(val);
+        mantissa << sci.mantissa;
+        exponent << sci.exponent;
+    }
+    
+    std::string to_json() {
+        std::ostringstream oss;
+        oss << "{\"mantissa\": [" << mantissa.str() << "], \"exponent\": [" << exponent.str() << "]}";
+        return oss.str();
+    }
+};
 
-template <typename T>
-inline std::string interval_to_json(const intprec::interval<T>& value) {
-    std::ostringstream oss;
-    oss << "{\"inf\": " << to_scientific(value.inf()).to_json() 
-        << ", \"sup\": " << to_scientific(value.sup()).to_json() << "}";
-    return oss.str();
-}
+template<typename T>
+struct ComplexSerializer {
+    RealSerializer<T> real;
+    RealSerializer<T> imag;
+    
+    void push(const std::complex<T>& val) {
+        real.push(val.real());
+        imag.push(val.imag());
+    }
+    
+    std::string to_json() {
+        return "{\"real\": " + real.to_json() + ", \"imag\": " + imag.to_json() + "}";
+    }
+};
 
-template <typename T>
-inline std::string complex_interval_to_json(const std::complex<intprec::interval<T>>& value) {
-    std::ostringstream oss;
-    oss << "{\"real\": " << interval_to_json(value.real()) 
-        << ", \"imag\": " << interval_to_json(value.imag()) << "}";
-    return oss.str();
-}
+template<typename T>
+struct IntervalSerializer {
+    RealSerializer<T> inf;
+    RealSerializer<T> sup;
+    
+    void push(const intprec::interval<T>& val) {
+        inf.push(val.inf());
+        sup.push(val.sup());
+    }
+    
+    std::string to_json() {
+        return "{\"inf\": " + inf.to_json() + ", \"sup\": " + sup.to_json() + "}";
+    }
+};
+
+template<typename T>
+struct CIntervalSerializer {
+    IntervalSerializer<T> real;
+    IntervalSerializer<T> imag;
+    
+    void push(const std::complex<intprec::interval<T>>& val) {
+        real.push(val.real());
+        imag.push(val.imag());
+    }
+    
+    std::string to_json() {
+        return "{\"real\": " + real.to_json() + ", \"imag\": " + imag.to_json() + "}";
+    }
+};
 
 // Helper to allocate and copy string for FFI return
 inline char* alloc_string(const std::string& s) {

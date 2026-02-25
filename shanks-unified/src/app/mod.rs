@@ -752,8 +752,9 @@ impl ShanksApp {
             let mut pts_re: Vec<egui_plot::PlotPoint> = Vec::new();
             let mut pts_im: Vec<egui_plot::PlotPoint> = Vec::new();
 
-            for (j, p) in results.sn.iter().enumerate() {
-                if let Some((re, im_opt)) = self.point_to_f64_parts(p, use_symlog, log_linthresh) {
+            for j in 0..results.sn.len() {
+                let p = results.sn.get(j);
+                if let Some((re, im_opt)) = self.point_to_f64_parts(&p, use_symlog, log_linthresh) {
                     pts_re.push([j as f64, re].into());
                     if let Some(im) = im_opt {
                         pts_im.push([j as f64, im].into());
@@ -784,8 +785,9 @@ impl ShanksApp {
             let mut sup_pts_re = Vec::new();
             let mut inf_pts_im = Vec::new();
             let mut sup_pts_im = Vec::new();
-            for (j, p) in results.sn.iter().enumerate() {
-                match self.point_to_bounds(p, use_symlog, log_linthresh) {
+            for j in 0..results.sn.len() {
+                let p = results.sn.get(j);
+                match self.point_to_bounds(&p, use_symlog, log_linthresh) {
                     PointBounds::OneDim { inf, sup } => {
                         inf_pts_re.push([j as f64, inf].into());
                         sup_pts_re.push([j as f64, sup].into());
@@ -873,10 +875,11 @@ impl ShanksApp {
             let mut pts_accel_re: Vec<egui_plot::PlotPoint> = Vec::new();
             let mut pts_accel_im: Vec<egui_plot::PlotPoint> = Vec::new();
 
-            for (j, opt_p) in results.values.iter().enumerate() {
-                if let Some(p) = opt_p {
+            for j in 0..results.values.len() {
+                if results.valid.get(j).copied().unwrap_or(false) {
+                    let p = results.values.get(j);
                     if let Some((re, im_opt)) =
-                        self.point_to_f64_parts(p, use_symlog, log_linthresh)
+                        self.point_to_f64_parts(&p, use_symlog, log_linthresh)
                     {
                         pts_accel_re.push([j as f64, re].into());
                         if let Some(im) = im_opt {
@@ -909,9 +912,10 @@ impl ShanksApp {
             let mut sup_pts_re = Vec::new();
             let mut inf_pts_im = Vec::new();
             let mut sup_pts_im = Vec::new();
-            for (j, opt_p) in results.values.iter().enumerate() {
-                if let Some(p) = opt_p {
-                    match self.point_to_bounds(p, use_symlog, log_linthresh) {
+            for j in 0..results.values.len() {
+                if results.valid.get(j).copied().unwrap_or(false) {
+                    let p = results.values.get(j);
+                    match self.point_to_bounds(&p, use_symlog, log_linthresh) {
                         PointBounds::OneDim { inf, sup } => {
                             inf_pts_re.push([j as f64, inf].into());
                             sup_pts_re.push([j as f64, sup].into());
@@ -979,23 +983,19 @@ impl ShanksApp {
             }
 
             // Deviations
-            let dev_pts: Vec<egui_plot::PlotPoint> = results
-                .deviations
-                .iter()
-                .enumerate()
-                .filter_map(|(j, d)| {
-                    let mut val = d.to_f64();
-                    if use_symlog {
-                        val = crate::plot::Scientific(d.mantissa, d.exponent as i32)
-                            .symlog(log_linthresh);
-                    }
-                    if val.is_finite() {
-                        Some([j as f64 + 1.0, val].into())
-                    } else {
-                        None
-                    }
-                })
-                .collect();
+            let mut dev_pts: Vec<egui_plot::PlotPoint> =
+                Vec::with_capacity(results.deviations.len());
+            for j in 0..results.deviations.len() {
+                let d = results.deviations.get(j);
+                let mut val = d.to_f64();
+                if use_symlog {
+                    val = crate::plot::Scientific(d.mantissa, d.exponent as i32)
+                        .symlog(log_linthresh);
+                }
+                if val.is_finite() {
+                    dev_pts.push([j as f64 + 1.0, val].into());
+                }
+            }
             self.plot_cache.deviations.push(CachedPlotLine {
                 name: format!("{} Dev", name),
                 color: colors_accel[i % colors_accel.len()],
