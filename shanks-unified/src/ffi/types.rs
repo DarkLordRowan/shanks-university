@@ -243,7 +243,7 @@ pub struct SeriesResult {
     pub an: Vec<SeriesPoint>,
     /// Analytical sum (if known)
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub sum: Option<String>,
+    pub sum: Option<SeriesPoint>,
 }
 
 /// Profiling trace for operation counting per point.

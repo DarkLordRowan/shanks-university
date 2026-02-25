@@ -125,19 +125,15 @@ struct SeriesHandleReal : public SeriesHandleBaseExt {
         oss << "}";
         return oss.str();
     }
-    
     std::string get_sum() const override {
         if (!series) return "";
         try {
             T sum = series->get_sum();
-            std::ostringstream oss;
-            oss << sum;
-            return oss.str();
+            return shanks::ffi::to_scientific(sum).to_json();
         } catch (...) {
             return "";
         }
     }
-    
     std::string get_x() const override {
         std::ostringstream oss;
         oss << x_value;
@@ -233,19 +229,15 @@ struct SeriesHandleComplex : public SeriesHandleBaseExt {
         oss << "}";
         return oss.str();
     }
-    
     std::string get_sum() const override {
         if (!series) return "";
         try {
             auto sum = series->get_sum();
-            std::ostringstream oss;
-            oss << sum.real() << "+" << sum.imag() << "j";
-            return oss.str();
+            return shanks::ffi::complex_to_json(sum.real(), sum.imag());
         } catch (...) {
             return "";
         }
     }
-    
     std::string get_x() const override {
         std::ostringstream oss;
         oss << x_value.real() << "+" << x_value.imag() << "j";
@@ -345,19 +337,15 @@ struct SeriesHandleInterval : public SeriesHandleBaseExt {
         oss << "}";
         return oss.str();
     }
-    
     std::string get_sum() const override {
         if (!series) return "";
         try {
             auto sum = series->get_sum();
-            std::ostringstream oss;
-            oss << "[" << sum.inf() << ", " << sum.sup() << "]";
-            return oss.str();
+            return shanks::ffi::interval_to_json(sum);
         } catch (...) {
             return "";
         }
     }
-    
     std::string get_x() const override {
         std::ostringstream oss;
         oss << "[" << x_value.inf() << ", " << x_value.sup() << "]";
@@ -445,9 +433,7 @@ std::unique_ptr<SeriesHandleBaseExt> create_series_by_index(
             return std::make_unique<SeriesHandleReal<mpfr::mpreal>>(std::move(s), prec, x, name, noise_cfg);
         }
         case PrecisionType::CF64: {
-            // Complex double - parse "real+imagj" format
             double real = 0, imag = 0;
-            // Simple parsing: assume format "real+imagj" or just "real"
             size_t plus_pos = x_value.find('+');
             size_t j_pos = x_value.find('j');
             if (plus_pos != std::string::npos && j_pos != std::string::npos) {
@@ -460,6 +446,40 @@ std::unique_ptr<SeriesHandleBaseExt> create_series_by_index(
             auto s = shanks::series::series_registry<std::complex<double>, size_t>::create(index, x);
             if (!s) return nullptr;
             return std::make_unique<SeriesHandleComplex<double>>(std::move(s), prec, x, name, noise_cfg);
+        }
+        case PrecisionType::CF32: {
+            float real = 0, imag = 0;
+            size_t plus_pos = x_value.find('+');
+            size_t j_pos = x_value.find('j');
+            if (plus_pos != std::string::npos && j_pos != std::string::npos) {
+                real = parse_x<float>(x_value.substr(0, plus_pos));
+                imag = parse_x<float>(x_value.substr(plus_pos + 1, j_pos - plus_pos - 1));
+            } else {
+                real = parse_x<float>(x_value);
+            }
+            std::complex<float> x(real, imag);
+            auto s = shanks::series::series_registry<std::complex<float>, size_t>::create(index, x);
+            if (!s) return nullptr;
+            return std::make_unique<SeriesHandleComplex<float>>(std::move(s), prec, x, name, noise_cfg);
+        }
+        case PrecisionType::CFLong: {
+            long double real = 0, imag = 0;
+            size_t plus_pos = x_value.find('+');
+            size_t j_pos = x_value.find('j');
+            if (plus_pos != std::string::npos && j_pos != std::string::npos) {
+                real = parse_x<long double>(x_value.substr(0, plus_pos));
+                imag = parse_x<long double>(x_value.substr(plus_pos + 1, j_pos - plus_pos - 1));
+            } else {
+                real = parse_x<long double>(x_value);
+            }
+            std::complex<long double> x(real, imag);
+            auto s = shanks::series::series_registry<std::complex<long double>, size_t>::create(index, x);
+            if (!s) return nullptr;
+            return std::make_unique<SeriesHandleComplex<long double>>(std::move(s), prec, x, name, noise_cfg);
+        }
+        case PrecisionType::CArb: {
+            set_error("Complex arbitrary precision not yet supported for series");
+            return nullptr;
         }
         case PrecisionType::IntervalF32: {
             float x = parse_x<float>(x_value);

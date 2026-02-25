@@ -289,10 +289,12 @@ impl ComputeCore {
 
         let mut series_result: SeriesResult = serde_json::from_str(&series_result_json)?;
 
-        if series_result.sum.is_none() || series_result.sum.as_ref().map(|s| s.is_empty()).unwrap_or(false) {
+        if series_result.sum.is_none() {
             if let Ok(sum_str) = self.library.series_get_sum(&series_handle) {
                 if !sum_str.is_empty() {
-                    series_result.sum = Some(sum_str);
+                    if let Ok(sum_point) = serde_json::from_str::<crate::ffi::SeriesPoint>(&sum_str) {
+                        series_result.sum = Some(sum_point);
+                    }
                 }
             }
         }
@@ -308,6 +310,7 @@ impl ComputeCore {
             let id = if let Some(s_id) = cached_series_id {
                 s_id
             } else {
+                let sum_json = series_result.sum.as_ref().and_then(|s| serde_json::to_string(s).ok());
                 cache.insert_series(
                     &series.name,
                     precision,
@@ -315,7 +318,7 @@ impl ComputeCore {
                     &args_json,
                     noise_json_opt.as_deref(),
                     None,
-                    series_result.sum.as_deref(),
+                    sum_json.as_deref(),
                 ).unwrap_or(-1)
             };
 

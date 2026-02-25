@@ -273,9 +273,8 @@ impl Cache {
         }
     }
 
-    /// Get series result from the cache.
     pub fn get_series_result(&self, series_id: i64) -> Result<Option<crate::ffi::SeriesResult>> {
-        let sum_val: Option<String> = self
+        let sum_json: Option<String> = self
             .conn
             .query_row(
                 "SELECT sum FROM series WHERE id = ?1",
@@ -283,6 +282,8 @@ impl Cache {
                 |row| row.get(0),
             )
             .unwrap_or(None);
+
+        let sum_val = sum_json.and_then(|s| serde_json::from_str(&s).ok());
 
         let mut stmt = self.conn.prepare(
             "SELECT n, sn_real, sn_imag, sn_exp, an_real, an_imag, an_exp
