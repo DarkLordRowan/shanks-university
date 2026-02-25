@@ -39,34 +39,14 @@ public:
         bool needsK;
     };
 
+    // Static data member — has proper external linkage on all platforms,
+    // unlike a static local inside an inline function, which MinGW fails to
+    // deduplicate across translation units when building a shared DLL.
+    // Defined in series_registry_impl.cpp via explicit specialization.
+    static const std::vector<entry> s_entries;
+
     static const std::vector<entry>& get_entries() {
-        static const std::vector<entry> entries = {
-// DEFININTION OF SERIES_ENTRY MACRO
-#define SERIES_ENTRY(snake, camel)                                                                 \
-    {camel,                                                                                        \
-     [](T x, T t, K k) -> std::unique_ptr<series_base<T, K>> {                                     \
-         if constexpr (std::is_constructible_v<shanks::series::snake##_iterator<T, K>, T, T, K>)   \
-             return std::make_unique<shanks::series::snake##_iterator<T, K>>(x, t, k);             \
-         else if constexpr (std::is_constructible_v<shanks::series::snake##_iterator<T, K>, T, T>) \
-             return std::make_unique<shanks::series::snake##_iterator<T, K>>(x, t);                \
-         else if constexpr (std::is_constructible_v<shanks::series::snake##_iterator<T, K>, T, K>) \
-             return std::make_unique<shanks::series::snake##_iterator<T, K>>(x, k);                \
-         else                                                                                      \
-             return std::make_unique<shanks::series::snake##_iterator<T, K>>(x);                   \
-     },                                                                                            \
-     std::is_constructible_v<shanks::series::snake##_iterator<T, K>, T, T>,                        \
-     std::is_constructible_v<shanks::series::snake##_iterator<T, K>, T, K>},
-// DEFININTION OF SERIS_LAST MACRO
-#define SERIES_LAST(snake, camel) SERIES_ENTRY(snake, camel)
-#define SERIES_ENTRY_ARGS(snake, camel, a1, a2) SERIES_ENTRY(snake, camel)
-#define SERIES_LAST_ARGS(snake, camel, a1, a2) SERIES_LAST(snake, camel)
-#include "series_registry.def"
-#undef SERIES_ENTRY
-#undef SERIES_LAST
-#undef SERIES_ENTRY_ARGS
-#undef SERIES_LAST_ARGS
-        };
-        return entries;
+        return s_entries;
     }
 
     static std::unique_ptr<series_base<T, K>> create(size_t index, T x, T addTParameter = T(1), K addKParameter = K(1));
@@ -100,11 +80,11 @@ inline std::unique_ptr<series_base<T, K>> series_registry<T, K>::create(size_t i
 }  // namespace shanks
 
 // ---------------------------------------------------------------------------
-// Explicit instantiation declarations (extern template)
-// Prevents each translation unit from independently instantiating
-// series_registry<T,K>::get_entries(), which causes MinGW linker failures
-// with static local variables inside function templates in shared DLL builds.
-// The actual definitions live in backend/ffi/src/series_registry_impl.cpp.
+// Explicit instantiation declarations (extern template).
+// Suppresses implicit instantiation (and thus implicit definition of the
+// s_entries static member) in every TU that includes this header when
+// SHANKS_FFI_SHARED_BUILD is defined.  The single definition is provided in
+// backend/ffi/src/series_registry_impl.cpp.
 // ---------------------------------------------------------------------------
 #ifdef SHANKS_FFI_SHARED_BUILD
 #include "custom_types/intervalprecision.fwd.hpp"
@@ -126,10 +106,6 @@ extern template class series_registry<intprec::interval<float>,       size_t>;
 extern template class series_registry<intprec::interval<double>,      size_t>;
 extern template class series_registry<intprec::interval<long double>, size_t>;
 extern template class series_registry<intprec::interval<mpfr::mpreal>, size_t>;
-
-extern template class series_registry<std::complex<intprec::interval<float>>,       size_t>;
-extern template class series_registry<std::complex<intprec::interval<double>>,      size_t>;
-extern template class series_registry<std::complex<intprec::interval<long double>>, size_t>;
 
 }} // namespace shanks::series
 #endif // SHANKS_FFI_SHARED_BUILD
