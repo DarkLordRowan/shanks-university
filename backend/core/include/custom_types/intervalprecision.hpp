@@ -665,7 +665,7 @@ inline IT interval<IT>::sup(bool toclose) const {
 // if empty return no value
 template <FloatLike IT>
 inline IT interval<IT>::mid() const {
-    if (isEmpty()) return utils::helpers<IT>::get_nan(left);
+    if (isEmpty()) return utils::helpers<IT>::get_nan();
     if (right == left)
         return left;
     else
@@ -676,7 +676,7 @@ inline IT interval<IT>::mid() const {
 // Notice that radius is negative for improper intervals
 template <FloatLike IT>
 inline IT interval<IT>::rad() const {
-    if (isEmpty()) return utils::helpers<IT>::get_nan(left);
+    if (isEmpty()) return utils::helpers<IT>::get_nan();
     IT r((right - left) / IT(2));
     return r;
 }
@@ -684,7 +684,7 @@ inline IT interval<IT>::rad() const {
 // Return interval width
 template <FloatLike IT>
 inline IT interval<IT>::wid() const {
-    if (isEmpty()) return utils::helpers<IT>::get_nan(left);
+    if (isEmpty()) return utils::helpers<IT>::get_nan();
     IT r(right - left);
     if (r < IT(0)) r = -r;
     return r;
@@ -693,7 +693,7 @@ inline IT interval<IT>::wid() const {
 // Return mignitude of class
 template <FloatLike IT>
 inline IT interval<IT>::mig() const {
-    if (isEmpty()) return utils::helpers<IT>::get_nan(left);
+    if (isEmpty()) return utils::helpers<IT>::get_nan();
     const IT l(utils::math<IT>::abs(inf()));
     const IT r(utils::math<IT>::abs(sup()));
     return std::min(l, r);
@@ -702,7 +702,7 @@ inline IT interval<IT>::mig() const {
 // Return magnitude of interval
 template <FloatLike IT>
 inline IT interval<IT>::mag() const {
-    if (isEmpty()) return utils::helpers<IT>::get_nan(left);
+    if (isEmpty()) return utils::helpers<IT>::get_nan();
     const IT l(utils::math<IT>::abs(inf()));
     const IT r(utils::math<IT>::abs(sup()));
     return std::max(l, r);

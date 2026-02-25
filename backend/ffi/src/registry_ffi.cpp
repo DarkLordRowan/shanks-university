@@ -59,6 +59,7 @@ std::string vector_to_json_array(const std::vector<std::string>& vec) {
 const std::vector<std::string> g_precision_names = {
     "F32", "F64", "FLong", "Arb",
     "CF32", "CF64", "CFLong", "CArb",
+    "IntervalF32", "IntervalF64", "IntervalFLong", "IntervalArb"
 };
 
 // Noise types (from noise_generator.hpp)

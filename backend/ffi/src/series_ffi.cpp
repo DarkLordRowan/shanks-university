@@ -281,6 +281,115 @@ struct SeriesHandleComplex : public SeriesHandleBaseExt {
     }
 };
 
+// Template implementation for interval series
+template <typename T>
+struct SeriesHandleInterval : public SeriesHandleBaseExt {
+    std::unique_ptr<shanks::series::series_base<intprec::interval<T>, size_t>> series;
+    PrecisionType precision;
+    intprec::interval<T> x_value;
+    std::string name;
+    
+    // Cache for raw data extraction without JSON serialization overhead
+    mutable std::unique_ptr<series_result<intprec::interval<T>>> cached_result;
+    mutable uint64_t cached_n = 0;
+    mutable std::optional<intprec::interval<T>> cached_sum;
+    NoiseConfig noise_cfg;
+
+    SeriesHandleInterval(std::unique_ptr<shanks::series::series_base<intprec::interval<T>, size_t>> s, 
+                        PrecisionType p, intprec::interval<T> x, const std::string& n = "", const NoiseConfig& cfg = {})
+        : series(std::move(s)), precision(p), x_value(x), name(n), noise_cfg(cfg) {}
+    
+    std::string generate(uint64_t n, bool enable_profiling) override {
+#ifdef SHANKS_ENABLE_PROFILING
+        shanks::profiling::reset_counts();
+#endif
+        if (!series) {
+            set_error("Series is null");
+            return "{}";
+        }
+        
+        auto result = series->generate(static_cast<size_t>(n));
+        if (noise_cfg.enabled) {
+            // Noise for intervals would require interval noise generation which might not be implemented yet.
+            // Leaving as is if apply_noise supports intervals, otherwise it will just use the value.
+            // Note: Currently apply_noise on interval may fallback to throwing or not working, 
+            // but we can try letting it work or disabling noise.
+            // result = apply_noise<intprec::interval<T>, double>(result, noise_cfg.method, noise_cfg.type, noise_cfg.seed, noise_cfg.param1, noise_cfg.param2);
+        }
+        
+        std::ostringstream oss;
+        oss << "{\"Sn\": [";
+        for (size_t i = 0; i < result.Sn.size(); ++i) {
+            if (i > 0) oss << ", ";
+            oss << shanks::ffi::interval_to_json(result.Sn[i]);
+        }
+        oss << "], \"an\": [";
+        for (size_t i = 0; i < result.an.size(); ++i) {
+            if (i > 0) oss << ", ";
+            oss << shanks::ffi::interval_to_json(result.an[i]);
+        }
+        oss << "]";
+        
+#ifdef SHANKS_ENABLE_PROFILING
+        if (enable_profiling) {
+            auto counts = shanks::profiling::get_counts();
+            oss << ", \"profiling\": {"
+                << "\"add\": " << counts.add << ", "
+                << "\"mul\": " << counts.mul << ", "
+                << "\"div\": " << counts.div << ", "
+                << "\"special\": " << counts.special << "}";
+            shanks::profiling::reset_counts();
+        }
+#endif
+        
+        oss << "}";
+        return oss.str();
+    }
+    
+    std::string get_sum() const override {
+        if (!series) return "";
+        try {
+            auto sum = series->get_sum();
+            std::ostringstream oss;
+            oss << "[" << sum.inf() << ", " << sum.sup() << "]";
+            return oss.str();
+        } catch (...) {
+            return "";
+        }
+    }
+    
+    std::string get_x() const override {
+        std::ostringstream oss;
+        oss << "[" << x_value.inf() << ", " << x_value.sup() << "]";
+        return oss.str();
+    }
+    
+    PrecisionType get_precision() const override { return precision; }
+    std::string get_name() const override { return name; }
+
+    const void* get_raw_data(uint64_t n) const override {
+        if (!series) return nullptr;
+        if (!cached_result || cached_n < n) {
+            auto result = series->generate(n);
+            cached_result = std::make_unique<series_result<intprec::interval<T>>>(result);
+            cached_n = n;
+        }
+        return cached_result.get();
+    }
+
+    const void* get_native_sum() const override {
+        if (!series) return nullptr;
+        if (!cached_sum) {
+            try {
+                cached_sum = series->get_sum();
+            } catch (...) {
+                return nullptr;
+            }
+        }
+        return &(*cached_sum);
+    }
+};
+
 // Helper to parse x value
 template <typename T>
 T parse_x(const std::string& x) {
@@ -351,6 +460,34 @@ std::unique_ptr<SeriesHandleBaseExt> create_series_by_index(
             auto s = shanks::series::series_registry<std::complex<double>, size_t>::create(index, x);
             if (!s) return nullptr;
             return std::make_unique<SeriesHandleComplex<double>>(std::move(s), prec, x, name, noise_cfg);
+        }
+        case PrecisionType::IntervalF32: {
+            float x = parse_x<float>(x_value);
+            intprec::interval<float> xi(x);
+            auto s = shanks::series::series_registry<intprec::interval<float>, size_t>::create(index, xi);
+            if (!s) return nullptr;
+            return std::make_unique<SeriesHandleInterval<float>>(std::move(s), prec, xi, name, noise_cfg);
+        }
+        case PrecisionType::IntervalF64: {
+            double x = parse_x<double>(x_value);
+            intprec::interval<double> xi(x);
+            auto s = shanks::series::series_registry<intprec::interval<double>, size_t>::create(index, xi);
+            if (!s) return nullptr;
+            return std::make_unique<SeriesHandleInterval<double>>(std::move(s), prec, xi, name, noise_cfg);
+        }
+        case PrecisionType::IntervalFLong: {
+            long double x = parse_x<long double>(x_value);
+            intprec::interval<long double> xi(x);
+            auto s = shanks::series::series_registry<intprec::interval<long double>, size_t>::create(index, xi);
+            if (!s) return nullptr;
+            return std::make_unique<SeriesHandleInterval<long double>>(std::move(s), prec, xi, name, noise_cfg);
+        }
+        case PrecisionType::IntervalArb: {
+            mpfr::mpreal x = parse_x<mpfr::mpreal>(x_value);
+            intprec::interval<mpfr::mpreal> xi(x);
+            auto s = shanks::series::series_registry<intprec::interval<mpfr::mpreal>, size_t>::create(index, xi);
+            if (!s) return nullptr;
+            return std::make_unique<SeriesHandleInterval<mpfr::mpreal>>(std::move(s), prec, xi, name, noise_cfg);
         }
         default:
             set_error("Unsupported precision type");

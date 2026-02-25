@@ -166,6 +166,13 @@ struct CachedPlotLine {
     points: Vec<egui_plot::PlotPoint>,
 }
 
+#[derive(Clone)]
+struct CachedIntervalData {
+    name: String,
+    fill_color: egui::Color32,
+    points: Vec<egui_plot::PlotPoint>,
+}
+
 #[derive(Default)]
 struct PlotCache {
     symlog: bool,
@@ -175,6 +182,7 @@ struct PlotCache {
     limits: Vec<(String, f64)>,
     max_n: f64,
     deviations: Vec<CachedPlotLine>,
+    intervals: Vec<CachedIntervalData>,
     prof_add: Vec<CachedPlotLine>,
     prof_mul: Vec<CachedPlotLine>,
     prof_div: Vec<CachedPlotLine>,
@@ -208,6 +216,9 @@ pub struct ShanksApp {
     show_partial_sums: bool,
     show_accel_values: bool,
     show_limit_lines: bool,
+    show_interval_sup: bool,
+    show_interval_inf: bool,
+    show_interval_shade: bool,
 
     // Tab selection
     selected_tab: PlotTab,
@@ -325,6 +336,9 @@ impl ShanksApp {
             show_partial_sums,
             show_accel_values: true,
             show_limit_lines: true,
+            show_interval_sup: true,
+            show_interval_inf: true,
+            show_interval_shade: true,
             selected_tab: PlotTab::Main,
             tab_configs,
             status_message: String::new(),
@@ -535,6 +549,7 @@ impl ShanksApp {
         let sci_val = match point {
             SeriesPoint::Real(v) => v,
             SeriesPoint::Complex(c) => &c.real,
+            SeriesPoint::Interval(_) => return None,
         };
 
         if use_symlog {
@@ -548,6 +563,33 @@ impl ShanksApp {
             } else {
                 None
             }
+        }
+    }
+
+    /// Extract interval bounds to f64, optionally applying symlog.
+    fn point_to_bounds_f64(
+        &self,
+        point: &SeriesPoint,
+        use_symlog: bool,
+        log_linthresh: f64,
+    ) -> Option<(f64, f64)> {
+        match point {
+            SeriesPoint::Interval(v) => {
+                let mut inf = v.inf.to_f64();
+                let mut sup = v.sup.to_f64();
+                if use_symlog {
+                    inf = crate::plot::Scientific(v.inf.mantissa, v.inf.exponent as i32)
+                        .symlog(log_linthresh);
+                    sup = crate::plot::Scientific(v.sup.mantissa, v.sup.exponent as i32)
+                        .symlog(log_linthresh);
+                }
+                if inf.is_finite() && sup.is_finite() {
+                    Some((inf, sup))
+                } else {
+                    None
+                }
+            }
+            _ => None,
         }
     }
 
@@ -567,6 +609,7 @@ impl ShanksApp {
         self.plot_cache.main_accel.clear();
         self.plot_cache.limits.clear();
         self.plot_cache.deviations.clear();
+        self.plot_cache.intervals.clear();
         self.plot_cache.prof_add.clear();
         self.plot_cache.prof_mul.clear();
         self.plot_cache.prof_div.clear();
@@ -627,6 +670,46 @@ impl ShanksApp {
                     points: pts,
                 });
             }
+
+            if self.show_interval_sup || self.show_interval_inf || self.show_interval_shade {
+                let mut inf_pts = Vec::new();
+                let mut sup_pts = Vec::new();
+                for (j, p) in results.sn.iter().enumerate() {
+                    if let Some((inf, sup)) = self.point_to_bounds_f64(p, use_symlog, log_linthresh) {
+                        inf_pts.push([j as f64, inf].into());
+                        sup_pts.push([j as f64, sup].into());
+                    }
+                }
+                if !inf_pts.is_empty() {
+                    if self.show_interval_shade {
+                        let mut poly_pts = sup_pts.clone();
+                        for pt in inf_pts.iter().rev() {
+                            poly_pts.push(*pt);
+                        }
+                        self.plot_cache.intervals.push(CachedIntervalData {
+                            name: format!("Bounds - {}", series_name),
+                            fill_color: colors_sn[i % colors_sn.len()].gamma_multiply(0.2),
+                            points: poly_pts,
+                        });
+                    }
+                    
+                    if self.show_interval_sup {
+                        // Add dashed outline lines as well
+                        self.plot_cache.main_sn.push(CachedPlotLine {
+                            name: format!("sup Sn - {}", series_name),
+                            color: colors_sn[i % colors_sn.len()].gamma_multiply(0.8),
+                            points: sup_pts,
+                        });
+                    }
+                    if self.show_interval_inf {
+                        self.plot_cache.main_sn.push(CachedPlotLine {
+                            name: format!("inf Sn - {}", series_name),
+                            color: colors_sn[i % colors_sn.len()].gamma_multiply(0.8),
+                            points: inf_pts,
+                        });
+                    }
+                }
+            }
         }
 
         let colors_accel = [
@@ -664,6 +747,46 @@ impl ShanksApp {
                     color: colors_accel[i % colors_accel.len()],
                     points: pts,
                 });
+            }
+
+            if self.show_interval_sup || self.show_interval_inf || self.show_interval_shade {
+                let mut inf_pts = Vec::new();
+                let mut sup_pts = Vec::new();
+                for (j, opt_p) in results.values.iter().enumerate() {
+                    if let Some(p) = opt_p {
+                        if let Some((inf, sup)) = self.point_to_bounds_f64(p, use_symlog, log_linthresh) {
+                            inf_pts.push([j as f64, inf].into());
+                            sup_pts.push([j as f64, sup].into());
+                        }
+                    }
+                }
+                if !inf_pts.is_empty() {
+                    if self.show_interval_shade {
+                        let mut poly_pts = sup_pts.clone();
+                        for pt in inf_pts.iter().rev() {
+                            poly_pts.push(*pt);
+                        }
+                        self.plot_cache.intervals.push(CachedIntervalData {
+                            name: format!("Bounds Dev - {}", name),
+                            fill_color: colors_accel[i % colors_accel.len()].gamma_multiply(0.2),
+                            points: poly_pts,
+                        });
+                    }
+                    if self.show_interval_sup {
+                        self.plot_cache.main_accel.push(CachedPlotLine {
+                            name: format!("sup - {}", name),
+                            color: colors_accel[i % colors_accel.len()].gamma_multiply(0.8),
+                            points: sup_pts,
+                        });
+                    }
+                    if self.show_interval_inf {
+                        self.plot_cache.main_accel.push(CachedPlotLine {
+                            name: format!("inf - {}", name),
+                            color: colors_accel[i % colors_accel.len()].gamma_multiply(0.8),
+                            points: inf_pts,
+                        });
+                    }
+                }
             }
 
             // Deviations
@@ -828,6 +951,15 @@ impl eframe::App for ShanksApp {
                         self.results_dirty = true;
                     }
                     if ui.checkbox(&mut self.show_limit_lines, "Show Limit Lines").changed() {
+                        self.results_dirty = true;
+                    }
+                    if ui.checkbox(&mut self.show_interval_sup, "Show Interval Sup").changed() {
+                        self.results_dirty = true;
+                    }
+                    if ui.checkbox(&mut self.show_interval_inf, "Show Interval Inf").changed() {
+                        self.results_dirty = true;
+                    }
+                    if ui.checkbox(&mut self.show_interval_shade, "Shade Interval Bounds").changed() {
                         self.results_dirty = true;
                     }
                     ui.separator();
@@ -1109,10 +1241,24 @@ impl eframe::App for ShanksApp {
                         // Plot partial sums if available
                         if self.show_partial_sums {
                             for line in &self.plot_cache.main_sn {
-                                plot_ui.line(
-                                    egui_plot::Line::new(&*line.points)
-                                        .name(&line.name)
-                                        .color(line.color),
+                                let mut l = egui_plot::Line::new(&*line.points)
+                                    .name(&line.name)
+                                    .color(line.color);
+                                // Hack: distinguish bounds lines by checking the name
+                                if line.name.starts_with("sup") || line.name.starts_with("inf") {
+                                    l = l.style(egui_plot::LineStyle::Dashed { length: 5.0 });
+                                }
+                                plot_ui.line(l);
+                            }
+                        }
+                        
+                        // Plot interval polygons
+                        if self.show_interval_shade {
+                            for poly_data in &self.plot_cache.intervals {
+                                plot_ui.polygon(
+                                    egui_plot::Polygon::new(&*poly_data.points)
+                                        .name(&poly_data.name)
+                                        .fill_color(poly_data.fill_color),
                                 );
                             }
                         }
@@ -1136,11 +1282,13 @@ impl eframe::App for ShanksApp {
                         // Plot accelerated values if available
                         if self.show_accel_values {
                             for line in &self.plot_cache.main_accel {
-                                plot_ui.line(
-                                    egui_plot::Line::new(&*line.points)
-                                        .name(&line.name)
-                                        .color(line.color),
-                                );
+                                let mut l = egui_plot::Line::new(&*line.points)
+                                    .name(&line.name)
+                                    .color(line.color);
+                                if line.name.starts_with("sup") || line.name.starts_with("inf") {
+                                    l = l.style(egui_plot::LineStyle::Dashed { length: 5.0 });
+                                }
+                                plot_ui.line(l);
                             }
                         }
                     } else if self.selected_tab == PlotTab::Deviation {

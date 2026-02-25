@@ -85,7 +85,7 @@ fn test_accel_create() {
     let accel_handle = accel_handle.unwrap();
     
     // Apply acceleration (accel, series, n, order)
-    let accel_result = lib.accel_apply(&accel_handle, &series_handle, 10, 5);
+    let accel_result = lib.accel_apply(&accel_handle, &series_handle, 10, 5, false);
     assert!(accel_result.is_ok(), "Failed to apply accel: {:?}", accel_result.err());
     
     let accel_result = accel_result.unwrap();

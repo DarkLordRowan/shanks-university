@@ -193,6 +193,22 @@ impl ComplexValue {
     }
 }
 
+/// Interval value bounds
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct IntervalValue {
+    /// Infimum (lower bound)
+    pub inf: ScientificValue,
+    /// Supremum (upper bound)
+    pub sup: ScientificValue,
+}
+
+impl IntervalValue {
+    /// Format as a string.
+    pub fn format(&self) -> String {
+        format!("[{}, {}]", self.inf.format(), self.sup.format())
+    }
+}
+
 /// A point in the series (Sn or an value).
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
@@ -201,14 +217,17 @@ pub enum SeriesPoint {
     Real(ScientificValue),
     /// Complex value
     Complex(ComplexValue),
+    /// Interval value
+    Interval(IntervalValue),
 }
 
 impl SeriesPoint {
-    /// Get as f64 (returns real part for complex).
+    /// Get as f64 (returns real part for complex, midpoint for interval).
     pub fn as_f64(&self) -> f64 {
         match self {
             SeriesPoint::Real(v) => v.to_f64(),
             SeriesPoint::Complex(v) => v.real.to_f64(),
+            SeriesPoint::Interval(v) => (v.inf.to_f64() + v.sup.to_f64()) / 2.0,
         }
     }
 }
