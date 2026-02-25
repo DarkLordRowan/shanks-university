@@ -272,6 +272,19 @@ series_registry<std::complex<long double>, size_t>::s_entries = [] {
 }();
 
 // ---------------------------------------------------------------------------
+// std::complex<mpfr::mpreal>, size_t
+// ---------------------------------------------------------------------------
+template <>
+const std::vector<series_registry<std::complex<mpfr::mpreal>, size_t>::entry>
+series_registry<std::complex<mpfr::mpreal>, size_t>::s_entries = [] {
+    using T [[maybe_unused]] = std::complex<mpfr::mpreal>;
+    using K [[maybe_unused]] = size_t;
+    return std::vector<series_registry<std::complex<mpfr::mpreal>, size_t>::entry>{
+#include "../../core/include/series_registry.def"
+    };
+}();
+
+// ---------------------------------------------------------------------------
 // intprec::interval<float>, size_t
 // ---------------------------------------------------------------------------
 template <>
@@ -364,6 +377,19 @@ series_registry<std::complex<intprec::interval<long double>>, size_t>::s_entries
     };
 }();
 
+// ---------------------------------------------------------------------------
+// std::complex<intprec::interval<mpfr::mpreal>>, size_t
+// ---------------------------------------------------------------------------
+template <>
+const std::vector<series_registry<std::complex<intprec::interval<mpfr::mpreal>>, size_t>::entry>
+series_registry<std::complex<intprec::interval<mpfr::mpreal>>, size_t>::s_entries = [] {
+    using T [[maybe_unused]] = std::complex<intprec::interval<mpfr::mpreal>>;
+    using K [[maybe_unused]] = size_t;
+    return std::vector<series_registry<std::complex<intprec::interval<mpfr::mpreal>>, size_t>::entry>{
+#include "../../core/include/series_registry.def"
+    };
+}();
+
 }} // namespace shanks::series
 
 #undef SERIES_ENTRY
@@ -385,6 +411,7 @@ template class series_registry<mpfr::mpreal, size_t>;
 template class series_registry<std::complex<float>,       size_t>;
 template class series_registry<std::complex<double>,      size_t>;
 template class series_registry<std::complex<long double>, size_t>;
+template class series_registry<std::complex<mpfr::mpreal>, size_t>;
 
 template class series_registry<intprec::interval<float>,       size_t>;
 template class series_registry<intprec::interval<double>,      size_t>;

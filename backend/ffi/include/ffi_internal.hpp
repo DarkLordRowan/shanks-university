@@ -150,8 +150,8 @@ inline ScientificValue to_scientific(mpfr::mpreal value) {
     return ScientificValue(std::stod(s), 0);
 }
 
-// JSON helpers
-inline std::string complex_to_json(double real, double imag) {
+template <typename T>
+inline std::string complex_to_json(const T& real, const T& imag) {
     std::ostringstream oss;
     oss << "{\"real\": " << to_scientific(real).to_json() 
         << ", \"imag\": " << to_scientific(imag).to_json() << "}";

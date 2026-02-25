@@ -581,8 +581,19 @@ std::unique_ptr<SeriesHandleBaseExt> create_series_by_index(
             return std::make_unique<SeriesHandleComplex<long double>>(std::move(s), prec, x, name, noise_cfg);
         }
         case PrecisionType::CArb: {
-            set_error("Complex arbitrary precision not yet supported for series");
-            return nullptr;
+            mpfr::mpreal real = 0, imag = 0;
+            size_t plus_pos = x_value.find('+');
+            size_t j_pos = x_value.find('j');
+            if (plus_pos != std::string::npos && j_pos != std::string::npos) {
+                real = parse_x<mpfr::mpreal>(x_value.substr(0, plus_pos));
+                imag = parse_x<mpfr::mpreal>(x_value.substr(plus_pos + 1, j_pos - plus_pos - 1));
+            } else {
+                real = parse_x<mpfr::mpreal>(x_value);
+            }
+            std::complex<mpfr::mpreal> x(real, imag);
+            auto s = shanks::series::series_registry<std::complex<mpfr::mpreal>, size_t>::create(index, x);
+            if (!s) return nullptr;
+            return std::make_unique<SeriesHandleComplex<mpfr::mpreal>>(std::move(s), prec, x, name, noise_cfg);
         }
         case PrecisionType::IntervalF32: {
             float x = parse_x<float>(x_value);
@@ -658,8 +669,19 @@ std::unique_ptr<SeriesHandleBaseExt> create_series_by_index(
             return std::make_unique<SeriesHandleCInterval<long double>>(std::move(s), prec, x, name, noise_cfg);
         }
         case PrecisionType::CIntervalArb: {
-            set_error("Complex arbitrary interval precision not yet supported for series");
-            return nullptr;
+            mpfr::mpreal real = 0, imag = 0;
+            size_t plus_pos = x_value.find('+');
+            size_t j_pos = x_value.find('j');
+            if (plus_pos != std::string::npos && j_pos != std::string::npos) {
+                real = parse_x<mpfr::mpreal>(x_value.substr(0, plus_pos));
+                imag = parse_x<mpfr::mpreal>(x_value.substr(plus_pos + 1, j_pos - plus_pos - 1));
+            } else {
+                real = parse_x<mpfr::mpreal>(x_value);
+            }
+            std::complex<intprec::interval<mpfr::mpreal>> x{intprec::interval<mpfr::mpreal>(real), intprec::interval<mpfr::mpreal>(imag)};
+            auto s = shanks::series::series_registry<std::complex<intprec::interval<mpfr::mpreal>>, size_t>::create(index, x);
+            if (!s) return nullptr;
+            return std::make_unique<SeriesHandleCInterval<mpfr::mpreal>>(std::move(s), prec, x, name, noise_cfg);
         }
         default:
             set_error("Unsupported precision type");
@@ -705,7 +727,9 @@ extern "C" SHANKS_FFI_API ShanksSeriesHandle shanks_series_create(
     try {
         auto handle = create_series_by_index(index, prec, x, n);
         if (!handle) {
-            set_error(std::string("Failed to create series: ") + name);
+            if (shanks::ffi::g_last_error.empty()) {
+                set_error(std::string("Failed to create series: ") + name);
+            }
             return nullptr;
         }
         return handle.release();
@@ -775,7 +799,9 @@ extern "C" SHANKS_FFI_API ShanksSeriesHandle shanks_series_create_with_noise(
     try {
         auto handle = create_series_by_index(index, prec, x, n, cfg);
         if (!handle) {
-            set_error(std::string("Failed to create series: ") + name);
+            if (shanks::ffi::g_last_error.empty()) {
+                set_error(std::string("Failed to create series: ") + name);
+            }
             return nullptr;
         }
         return handle.release();

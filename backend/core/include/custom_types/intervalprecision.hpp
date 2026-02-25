@@ -2586,13 +2586,14 @@ constexpr interval<IT> ln10_interval(const size_t precision) {
 //
 template <FloatLike IT>
 inline interval<IT> atan2(const interval<IT>& y, const interval<IT>& x) {
+    using std::atan2;
     if (x.inf() > 0) {
-        return interval<IT>(std::atan2(y.inf(), x.sup()), std::atan2(y.sup(), x.inf()));
+        return interval<IT>(atan2(y.inf(), x.sup()), atan2(y.sup(), x.inf()));
     }
     // Naive fallback for now
     IT mid_y = y.mid();
     IT mid_x = x.mid();
-    return interval<IT>(std::atan2(mid_y, mid_x));
+    return interval<IT>(atan2(mid_y, mid_x));
 }
 
 template <FloatLike IT>

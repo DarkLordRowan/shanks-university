@@ -502,5 +502,6 @@ src/libs
 lib/build
 *.sln
 *.vcxproj
+*.so
 
 GEMINI.md

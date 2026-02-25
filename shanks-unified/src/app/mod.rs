@@ -180,7 +180,12 @@ enum PointBounds {
     /// 1-D bounds (Interval) – single axis.
     OneDim { inf: f64, sup: f64 },
     /// 2-D bounds (CInterval) – real and imaginary components are separate.
-    TwoDim { real_inf: f64, real_sup: f64, imag_inf: f64, imag_sup: f64 },
+    TwoDim {
+        real_inf: f64,
+        real_sup: f64,
+        imag_inf: f64,
+        imag_sup: f64,
+    },
 }
 
 #[derive(Default)]
@@ -541,6 +546,7 @@ impl ShanksApp {
                     }
                     ComputeEventBody::Error { error } => {
                         self.status_message = format!("Error: {}", error);
+                        log::error!("Error: {}", error);
                         self.is_computing = false;
                     }
                     ComputeEventBody::Cancelled => {
@@ -563,16 +569,23 @@ impl ShanksApp {
             SeriesPoint::Real(v) => {
                 let mut val = v.to_f64();
                 if use_symlog {
-                    val = crate::plot::Scientific(v.mantissa, v.exponent as i32).symlog(log_linthresh);
+                    val = crate::plot::Scientific(v.mantissa, v.exponent as i32)
+                        .symlog(log_linthresh);
                 }
-                if val.is_finite() { Some((val, None)) } else { None }
+                if val.is_finite() {
+                    Some((val, None))
+                } else {
+                    None
+                }
             }
             SeriesPoint::Complex(c) => {
                 let mut r = c.real.to_f64();
                 let mut i = c.imag.to_f64();
                 if use_symlog {
-                    r = crate::plot::Scientific(c.real.mantissa, c.real.exponent as i32).symlog(log_linthresh);
-                    i = crate::plot::Scientific(c.imag.mantissa, c.imag.exponent as i32).symlog(log_linthresh);
+                    r = crate::plot::Scientific(c.real.mantissa, c.real.exponent as i32)
+                        .symlog(log_linthresh);
+                    i = crate::plot::Scientific(c.imag.mantissa, c.imag.exponent as i32)
+                        .symlog(log_linthresh);
                 }
                 if r.is_finite() && i.is_finite() {
                     Some((r, Some(i)))
@@ -588,7 +601,11 @@ impl ShanksApp {
                     // Approximate the scientific value of midpoint (not perfect, but enough for visual symlog)
                     mid = crate::plot::Scientific::from_f64(mid).symlog(log_linthresh);
                 }
-                if mid.is_finite() { Some((mid, None)) } else { None }
+                if mid.is_finite() {
+                    Some((mid, None))
+                } else {
+                    None
+                }
             }
             SeriesPoint::CInterval(c) => {
                 let mut r = (c.real.inf.to_f64() + c.real.sup.to_f64()) / 2.0;
@@ -637,17 +654,33 @@ impl ShanksApp {
                 let mut imag_inf = c.imag.inf.to_f64();
                 let mut imag_sup = c.imag.sup.to_f64();
                 if use_symlog {
-                    real_inf = crate::plot::Scientific(c.real.inf.mantissa, c.real.inf.exponent as i32).symlog(log_linthresh);
-                    real_sup = crate::plot::Scientific(c.real.sup.mantissa, c.real.sup.exponent as i32).symlog(log_linthresh);
-                    imag_inf = crate::plot::Scientific(c.imag.inf.mantissa, c.imag.inf.exponent as i32).symlog(log_linthresh);
-                    imag_sup = crate::plot::Scientific(c.imag.sup.mantissa, c.imag.sup.exponent as i32).symlog(log_linthresh);
+                    real_inf =
+                        crate::plot::Scientific(c.real.inf.mantissa, c.real.inf.exponent as i32)
+                            .symlog(log_linthresh);
+                    real_sup =
+                        crate::plot::Scientific(c.real.sup.mantissa, c.real.sup.exponent as i32)
+                            .symlog(log_linthresh);
+                    imag_inf =
+                        crate::plot::Scientific(c.imag.inf.mantissa, c.imag.inf.exponent as i32)
+                            .symlog(log_linthresh);
+                    imag_sup =
+                        crate::plot::Scientific(c.imag.sup.mantissa, c.imag.sup.exponent as i32)
+                            .symlog(log_linthresh);
                 }
                 let re_ok = real_inf.is_finite() && real_sup.is_finite();
                 let im_ok = imag_inf.is_finite() && imag_sup.is_finite();
                 if re_ok && im_ok {
-                    PointBounds::TwoDim { real_inf, real_sup, imag_inf, imag_sup }
+                    PointBounds::TwoDim {
+                        real_inf,
+                        real_sup,
+                        imag_inf,
+                        imag_sup,
+                    }
                 } else if re_ok {
-                    PointBounds::OneDim { inf: real_inf, sup: real_sup }
+                    PointBounds::OneDim {
+                        inf: real_inf,
+                        sup: real_sup,
+                    }
                 } else {
                     PointBounds::None
                 }
@@ -698,12 +731,20 @@ impl ShanksApp {
 
         for (i, (series_name, results)) in self.current_results.iter().enumerate() {
             if let Some(sum_point) = &results.sum {
-                if let Some((r, i_opt)) = self.point_to_f64_parts(sum_point, use_symlog, log_linthresh) {
-                    let name = if i_opt.is_some() { format!("Limit (Re) - {}", series_name) } else { format!("Limit - {}", series_name) };
+                if let Some((r, i_opt)) =
+                    self.point_to_f64_parts(sum_point, use_symlog, log_linthresh)
+                {
+                    let name = if i_opt.is_some() {
+                        format!("Limit (Re) - {}", series_name)
+                    } else {
+                        format!("Limit - {}", series_name)
+                    };
                     self.plot_cache.limits.push((name, r));
-                    
+
                     if let Some(im) = i_opt {
-                        self.plot_cache.limits.push((format!("Limit (Im) - {}", series_name), im));
+                        self.plot_cache
+                            .limits
+                            .push((format!("Limit (Im) - {}", series_name), im));
                     }
                 }
             }
@@ -722,7 +763,11 @@ impl ShanksApp {
 
             if !pts_re.is_empty() {
                 self.plot_cache.main_sn.push(CachedPlotLine {
-                    name: if pts_im.is_empty() { format!("Sn - {}", series_name) } else { format!("Sn (Re) - {}", series_name) },
+                    name: if pts_im.is_empty() {
+                        format!("Sn - {}", series_name)
+                    } else {
+                        format!("Sn (Re) - {}", series_name)
+                    },
                     color: colors_sn[i % colors_sn.len()],
                     points: pts_re,
                 });
@@ -745,7 +790,12 @@ impl ShanksApp {
                         inf_pts_re.push([j as f64, inf].into());
                         sup_pts_re.push([j as f64, sup].into());
                     }
-                    PointBounds::TwoDim { real_inf, real_sup, imag_inf, imag_sup } => {
+                    PointBounds::TwoDim {
+                        real_inf,
+                        real_sup,
+                        imag_inf,
+                        imag_sup,
+                    } => {
                         inf_pts_re.push([j as f64, real_inf].into());
                         sup_pts_re.push([j as f64, real_sup].into());
                         inf_pts_im.push([j as f64, imag_inf].into());
@@ -758,7 +808,9 @@ impl ShanksApp {
             // Real / 1-D bounds
             if !inf_pts_re.is_empty() {
                 let mut poly_pts = sup_pts_re.clone();
-                for pt in inf_pts_re.iter().rev() { poly_pts.push(*pt); }
+                for pt in inf_pts_re.iter().rev() {
+                    poly_pts.push(*pt);
+                }
                 self.plot_cache.intervals_re.push(CachedIntervalData {
                     name: format!("Bounds (Re) - {}", series_name),
                     fill_color: colors_sn[i % colors_sn.len()].gamma_multiply(0.2),
@@ -779,7 +831,9 @@ impl ShanksApp {
             // Imaginary bounds (CInterval only)
             if !inf_pts_im.is_empty() {
                 let mut poly_pts = sup_pts_im.clone();
-                for pt in inf_pts_im.iter().rev() { poly_pts.push(*pt); }
+                for pt in inf_pts_im.iter().rev() {
+                    poly_pts.push(*pt);
+                }
                 self.plot_cache.intervals_im.push(CachedIntervalData {
                     name: format!("Bounds (Im) - {}", series_name),
                     fill_color: colors_sn[i % colors_sn.len()].gamma_multiply(0.15),
@@ -821,7 +875,9 @@ impl ShanksApp {
 
             for (j, opt_p) in results.values.iter().enumerate() {
                 if let Some(p) = opt_p {
-                    if let Some((re, im_opt)) = self.point_to_f64_parts(p, use_symlog, log_linthresh) {
+                    if let Some((re, im_opt)) =
+                        self.point_to_f64_parts(p, use_symlog, log_linthresh)
+                    {
                         pts_accel_re.push([j as f64, re].into());
                         if let Some(im) = im_opt {
                             pts_accel_im.push([j as f64, im].into());
@@ -832,7 +888,11 @@ impl ShanksApp {
 
             if !pts_accel_re.is_empty() {
                 self.plot_cache.main_accel.push(CachedPlotLine {
-                    name: if pts_accel_im.is_empty() { name.clone() } else { format!("{} (Re)", name) },
+                    name: if pts_accel_im.is_empty() {
+                        name.clone()
+                    } else {
+                        format!("{} (Re)", name)
+                    },
                     color: colors_accel[i % colors_accel.len()],
                     points: pts_accel_re,
                 });
@@ -856,7 +916,12 @@ impl ShanksApp {
                             inf_pts_re.push([j as f64, inf].into());
                             sup_pts_re.push([j as f64, sup].into());
                         }
-                        PointBounds::TwoDim { real_inf, real_sup, imag_inf, imag_sup } => {
+                        PointBounds::TwoDim {
+                            real_inf,
+                            real_sup,
+                            imag_inf,
+                            imag_sup,
+                        } => {
                             inf_pts_re.push([j as f64, real_inf].into());
                             sup_pts_re.push([j as f64, real_sup].into());
                             inf_pts_im.push([j as f64, imag_inf].into());
@@ -870,7 +935,9 @@ impl ShanksApp {
             // Real / 1-D bounds
             if !inf_pts_re.is_empty() {
                 let mut poly_pts = sup_pts_re.clone();
-                for pt in inf_pts_re.iter().rev() { poly_pts.push(*pt); }
+                for pt in inf_pts_re.iter().rev() {
+                    poly_pts.push(*pt);
+                }
                 self.plot_cache.intervals_re.push(CachedIntervalData {
                     name: format!("Bounds Dev (Re) - {}", name),
                     fill_color: colors_accel[i % colors_accel.len()].gamma_multiply(0.2),
@@ -891,7 +958,9 @@ impl ShanksApp {
             // Imaginary bounds (CInterval only)
             if !inf_pts_im.is_empty() {
                 let mut poly_pts = sup_pts_im.clone();
-                for pt in inf_pts_im.iter().rev() { poly_pts.push(*pt); }
+                for pt in inf_pts_im.iter().rev() {
+                    poly_pts.push(*pt);
+                }
                 self.plot_cache.intervals_im.push(CachedIntervalData {
                     name: format!("Bounds Dev (Im) - {}", name),
                     fill_color: colors_accel[i % colors_accel.len()].gamma_multiply(0.15),
@@ -1350,7 +1419,7 @@ impl eframe::App for ShanksApp {
                             let is_sup = line.name.starts_with("sup (");
                             let is_inf = line.name.starts_with("inf (");
                             let is_bound = is_sup || is_inf;
-                            
+
                             if !is_bound && !self.show_partial_sums {
                                 continue;
                             }
@@ -1369,7 +1438,7 @@ impl eframe::App for ShanksApp {
                             }
                             plot_ui.line(l);
                         }
-                        
+
                         // Plot interval polygons (real axis / 1-D)
                         if self.show_interval_shade {
                             for poly_data in &self.plot_cache.intervals_re {
@@ -1394,13 +1463,10 @@ impl eframe::App for ShanksApp {
                             let max_n = self.plot_cache.max_n;
                             for (name, val) in &self.plot_cache.limits {
                                 plot_ui.line(
-                                    egui_plot::Line::new(vec![
-                                        [-1.0, *val],
-                                        [max_n + 1.0, *val],
-                                    ])
-                                    .name(name)
-                                    .color(egui::Color32::RED)
-                                    .width(2.0),
+                                    egui_plot::Line::new(vec![[-1.0, *val], [max_n + 1.0, *val]])
+                                        .name(name)
+                                        .color(egui::Color32::RED)
+                                        .width(2.0),
                                 );
                             }
                         }
@@ -1409,7 +1475,7 @@ impl eframe::App for ShanksApp {
                             let is_sup = line.name.starts_with("sup (");
                             let is_inf = line.name.starts_with("inf (");
                             let is_bound = is_sup || is_inf;
-                            
+
                             if !is_bound && !self.show_accel_values {
                                 continue;
                             }

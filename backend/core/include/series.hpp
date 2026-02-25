@@ -101,6 +101,7 @@ extern template class series_registry<mpfr::mpreal, size_t>;
 extern template class series_registry<std::complex<float>,       size_t>;
 extern template class series_registry<std::complex<double>,      size_t>;
 extern template class series_registry<std::complex<long double>, size_t>;
+extern template class series_registry<std::complex<mpfr::mpreal>, size_t>;
 
 extern template class series_registry<intprec::interval<float>,       size_t>;
 extern template class series_registry<intprec::interval<double>,      size_t>;

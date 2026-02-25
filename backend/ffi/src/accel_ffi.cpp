@@ -67,13 +67,6 @@ ScientificValue to_scientific(mpfr::mpreal value) {
     return ScientificValue(std::stod(s), 0);
 }
 
-// JSON helper for complex values
-std::string complex_to_json(double real, double imag) {
-    std::ostringstream oss;
-    oss << "{\"real\": " << to_scientific(real).to_json() 
-        << ", \"imag\": " << to_scientific(imag).to_json() << "}";
-    return oss.str();
-}
 
 // Extended acceleration handle
 struct AccelHandleBaseExt : public AccelHandleBase {
@@ -622,9 +615,9 @@ std::unique_ptr<AccelHandleBaseExt> create_accel_by_index(
             return std::make_unique<AccelHandleComplex<long double>>(std::move(a), prec, name, index);
         }
         case PrecisionType::CArb: {
-            // Complex arbitrary precision - may not be supported
-            set_error("Complex arbitrary precision not yet supported for algorithms");
-            return nullptr;
+            auto a = shanks::algos::transformation_registry<std::complex<mpfr::mpreal>, size_t>::create_by_index(index);
+            if (!a) return nullptr;
+            return std::make_unique<AccelHandleComplex<mpfr::mpreal>>(std::move(a), prec, name, index);
         }
         case PrecisionType::IntervalF32: {
             auto a = shanks::algos::transformation_registry<intprec::interval<float>, size_t>::create_by_index(index);
@@ -662,8 +655,9 @@ std::unique_ptr<AccelHandleBaseExt> create_accel_by_index(
             return std::make_unique<AccelHandleCInterval<long double>>(std::move(a), prec, name, index);
         }
         case PrecisionType::CIntervalArb: {
-            set_error("Complex arbitrary interval precision not yet supported for algorithms");
-            return nullptr;
+            auto a = shanks::algos::transformation_registry<std::complex<intprec::interval<mpfr::mpreal>>, size_t>::create_by_index(index);
+            if (!a) return nullptr;
+            return std::make_unique<AccelHandleCInterval<mpfr::mpreal>>(std::move(a), prec, name, index);
         }
         default:
             set_error("Unsupported precision type");
@@ -707,7 +701,9 @@ extern "C" SHANKS_FFI_API ShanksAccelHandle shanks_accel_create(
     try {
         auto handle = create_accel_by_index(index, prec, n);
         if (!handle) {
-            set_error(std::string("Failed to create algorithm: ") + name);
+            if (shanks::ffi::g_last_error.empty()) {
+                set_error(std::string("Failed to create algorithm: ") + name);
+            }
             return nullptr;
         }
         return handle.release();
