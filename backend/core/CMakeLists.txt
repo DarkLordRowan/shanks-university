@@ -25,6 +25,7 @@ find_package(GSL REQUIRED)
 include_directories(
     ${CMAKE_SOURCE_DIR}/include
     ${CMAKE_SOURCE_DIR}/test/include
+    ${CMAKE_SOURCE_DIR}/../ffi/include
 )
 
 # -------------------------
@@ -32,7 +33,9 @@ include_directories(
 # -------------------------
 
 add_executable(shanks
+    ${CMAKE_SOURCE_DIR}/../ffi/src/series_registry_impl.cpp
     ${CMAKE_SOURCE_DIR}/test/src/main.cpp
+ 
 )
 
 target_link_libraries(shanks PRIVATE MPFR::MPFR GMP::GMP Eigen3::Eigen GSL::gsl GSL::gslcblas)

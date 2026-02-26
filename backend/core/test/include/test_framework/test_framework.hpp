@@ -175,13 +175,9 @@ inline void main_testing_function() {
     K n = console_IO<K>::input("n");
     K order = console_IO<K>::input("order");
     // Generating the initial series terms
+
     series_result<T> result = series->generate(
-        n + 3 * order + 1,
-        static_cast<shanks::series::series_id_t>(series_idx) == shanks::series::series_id_t::rump_seq1_id ||
-        static_cast<shanks::series::series_id_t>(series_idx) == shanks::series::series_id_t::rump_seq2_id ||
-        static_cast<shanks::series::series_id_t>(series_idx) == shanks::series::series_id_t::rump_seq3_id ||
-        static_cast<shanks::series::series_id_t>(series_idx) == shanks::series::series_id_t::rump_seq4_id ||
-        static_cast<shanks::series::series_id_t>(series_idx) == shanks::series::series_id_t::rump_seq5_id
+        n + 3 * order + 1, shanks::series::is_seq(static_cast<shanks::series::series_iterator_id_t>(series_idx + 1))
     );
 
     // Optional noise application

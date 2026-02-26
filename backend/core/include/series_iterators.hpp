@@ -32,6 +32,15 @@ enum class series_iterator_id_t {
     series_iterator_id_t_count
 };
 
+inline bool is_seq(shanks::series::series_iterator_id_t id){
+    return id == shanks::series::series_iterator_id_t::rump_seq1_iterator_id ||
+           id == shanks::series::series_iterator_id_t::rump_seq2_iterator_id || 
+           id == shanks::series::series_iterator_id_t::rump_seq3_iterator_id || 
+           id == shanks::series::series_iterator_id_t::rump_seq4_iterator_id || 
+           id == shanks::series::series_iterator_id_t::rump_seq5_iterator_id || 
+           id == shanks::series::series_iterator_id_t::rump_seq6_iterator_id;
+}
+
 }  // namespace series
 }  // namespace shanks
 // Include all specific iterator definitions
@@ -116,6 +125,7 @@ enum class series_iterator_id_t {
 #include "series_iterators/rump_seq3_iterator.hpp"
 #include "series_iterators/rump_seq4_iterator.hpp"
 #include "series_iterators/rump_seq5_iterator.hpp"
+#include "series_iterators/rump_seq6_iterator.hpp"
 #include "series_iterators/si_x_iterator.hpp"
 #include "series_iterators/sin_iterator.hpp"
 #include "series_iterators/sin_x2_iterator.hpp"

@@ -28,11 +28,7 @@ void test_series() {
     K n = console_IO<K>::input("n");
 
     series_result<T> result = series->generate(
-        n, static_cast<shanks::series::series_id_t>(series_idx) == shanks::series::series_id_t::rump_seq1_id ||
-           static_cast<shanks::series::series_id_t>(series_idx) == shanks::series::series_id_t::rump_seq2_id ||
-           static_cast<shanks::series::series_id_t>(series_idx) == shanks::series::series_id_t::rump_seq3_id ||
-           static_cast<shanks::series::series_id_t>(series_idx) == shanks::series::series_id_t::rump_seq4_id ||
-           static_cast<shanks::series::series_id_t>(series_idx) == shanks::series::series_id_t::rump_seq5_id
+        n, shanks::series::is_seq(static_cast<shanks::series::series_iterator_id_t>(series_idx + 1))
         );
 
     for (size_t i{0}; i < result.an.size(); ++i) {

@@ -94,19 +94,19 @@ int main() {
                     case 0:
                         switch (type_to_use) {
                             case 0: {
-                                main_testing_function<float, unsigned short int>();
+                                main_testing_function<float, size_t>();
                                 break;
                             }
                             case 1: {
-                                main_testing_function<double, unsigned short int>();
+                                main_testing_function<double, size_t>();
                                 break;
                             }
                             case 2: {
-                                main_testing_function<long double, unsigned short int>();
+                                main_testing_function<long double, size_t>();
                                 break;
                             }
                             case 3: {
-                                main_testing_function<mpfr::mpreal, unsigned short int>();
+                                main_testing_function<mpfr::mpreal, size_t>();
                                 break;
                             }
                         }
@@ -114,19 +114,19 @@ int main() {
                     case 1:
                         switch (type_to_use) {
                             case 0: {
-                                main_testing_function<intprec::interval<float>, unsigned short int>();
+                                main_testing_function<intprec::interval<float>, size_t>();
                                 break;
                             }
                             case 1: {
-                                main_testing_function<intprec::interval<double>, unsigned short int>();
+                                main_testing_function<intprec::interval<double>, size_t>();
                                 break;
                             }
                             case 2: {
-                                main_testing_function<intprec::interval<long double>, unsigned short int>();
+                                main_testing_function<intprec::interval<long double>, size_t>();
                                 break;
                             }
                             case 3: {
-                                main_testing_function<intprec::interval<mpfr::mpreal>, unsigned short int>();
+                                main_testing_function<intprec::interval<mpfr::mpreal>, size_t>();
                                 break;
                             }
                         }
@@ -134,19 +134,19 @@ int main() {
                     case 2:
                         switch (type_to_use) {
                             case 0: {
-                                main_testing_function<std::complex<float>, unsigned short int>();
+                                main_testing_function<std::complex<float>, size_t>();
                                 break;
                             }
                             case 1: {
-                                main_testing_function<std::complex<double>, unsigned short int>();
+                                main_testing_function<std::complex<double>, size_t>();
                                 break;
                             }
                             case 2: {
-                                main_testing_function<std::complex<long double>, unsigned short int>();
+                                main_testing_function<std::complex<long double>, size_t>();
                                 break;
                             }
                             case 3: {
-                                main_testing_function<std::complex<mpfr::mpreal>, unsigned short int>();
+                                main_testing_function<std::complex<mpfr::mpreal>, size_t>();
                                 break;
                             }
                         }
