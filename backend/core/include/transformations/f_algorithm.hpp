@@ -23,6 +23,8 @@ protected:
     /// The specific type of remainder variant currently active.
     shanks::remainders::remainder_type remainder_type_in_use{shanks::remainders::remainder_type::u_type};
 
+    std::function<T (K)> auxilary_series;
+
 public:
     /**
      * @brief Parameterized constructor to initialize Drummond's D-algorithm.
@@ -39,8 +41,11 @@ public:
      * @authors Naumov A.U.
      */
     explicit f_algorithm(
-        const shanks::remainders::remainder_type remainder_type_to_use = shanks::remainders::remainder_type::u_type)
-        : series_acceleration<T, K>(){
+        const shanks::remainders::remainder_type remainder_type_to_use = shanks::remainders::remainder_type::u_type,
+        std::function<T (K)> auxilary_series = [](K n){ return utils::cast<T,K>()(n+2);}
+    )
+        : series_acceleration<T, K>(), auxilary_series(auxilary_series)
+    {
         update_type(remainder_type_to_use);
     };
 
@@ -169,8 +174,8 @@ T f_algorithm<T, K>::operator()(const K n, const K order, const series_result<T>
     // Initialize base values
     // xn = n+4
     for (K i = static_cast<K>(0); i < order + static_cast<K>(1); ++i) {
-        Denom[i] += remainder->operator()(n + i, n + i, data.an) / utils::cast<T,int>()(n + i + 3);
-        Num[i]   += data.Sn.at(n + i) * Denom[i] / utils::cast<T,int>()(n + i + 3);
+        Denom[i] += remainder->operator()(n + i, n + i, data.an) / (auxilary_series(n+i) - utils::cast<T,int>()(1));
+        Num[i]   += data.Sn.at(n + i) * Denom[i] / (auxilary_series(n+i) - utils::cast<T,int>()(1));
     }
 
     // Apply forward difference recurrence:
@@ -178,9 +183,9 @@ T f_algorithm<T, K>::operator()(const K n, const K order, const series_result<T>
     // D_j^{(i)} = D_{j+1}^{(i-1)} - D_j^{(i-1)}
     for (K i = static_cast<K>(1); i <= order; ++i)
         for (K j = static_cast<K>(0); j <= order - i; ++j) {
-            const T left  = utils::cast<T,K>()(n + 2 * i + 2); /// x_{n+k}+k-2
-            const T right = utils::cast<T,K>()(n + i + 2); /// x_{n} + k-2
-            const T denom = utils::cast<T,K>()(i);
+            const T left  = utils::cast<T,K>()(i, precision) + auxilary_series(n+i+j) - utils::cast<T,int>()(2, precision);
+            const T right = utils::cast<T,K>()(i, precision) + auxilary_series(n+i)   - utils::cast<T,int>()(2, precision);
+            const T denom = auxilary_series(n+i+j) - auxilary_series(n+i);
             const T DenomTmp = (Denom[j + static_cast<K>(1)] * left - Denom[j] *  right) / denom;
             const T NumTmp   = (Num[j + static_cast<K>(1)] * left -   Num[j] * right) / denom;
             Denom[j] = (utils::helpers<T>::isfinite(DenomTmp) && utils::helpers<T>::isfinite(NumTmp) ? DenomTmp : Denom[j]);
