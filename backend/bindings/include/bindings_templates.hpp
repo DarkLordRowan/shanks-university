@@ -36,10 +36,7 @@ void bind_series(pybind11::module_& m, const char* suffix) {
             else                                                                                       \
                 it = std::make_unique<S>(x);                                                           \
             return std::make_pair(                                                                     \
-                it->generate(n, std::is_same<shanks::series::snake##_iterator<T, K>,                   \
-                                             shanks::series::strange_seq1_iterator<T, K>>::value ||    \
-                                    std::is_same<shanks::series::snake##_iterator<T, K>,               \
-                                                 shanks::series::strange_seq2_iterator<T, K>>::value), \
+                it->generate(n, shanks::series::is_seq(shanks::series::series_iterator_id_t::snake##_iterator_id)), \
                 it->get_sum());                                                                        \
         },                                                                                             \
         py::arg("n"), py::arg("x") = T(0), py::arg(tName ? tName : "tParam") = T(1),                   \

@@ -23,7 +23,7 @@ protected:
     /// The specific type of remainder variant currently active.
     shanks::remainders::remainder_type remainder_type_in_use{shanks::remainders::remainder_type::u_type};
 
-    std::function<T (K)> auxilary_series;
+    std::function<T (K)> auxilary_series = [](K n){ return utils::cast<T,K>()(n+2);};
 
 public:
     /**
@@ -40,11 +40,8 @@ public:
      *        false: Use direct computation (simpler but potentially slower)
      * @authors Naumov A.U.
      */
-    explicit f_algorithm(
-        const shanks::remainders::remainder_type remainder_type_to_use = shanks::remainders::remainder_type::u_type,
-        std::function<T (K)> auxilary_series = [](K n){ return utils::cast<T,K>()(n+2);}
-    )
-        : series_acceleration<T, K>(), auxilary_series(auxilary_series)
+    explicit f_algorithm( const shanks::remainders::remainder_type remainder_type_to_use = shanks::remainders::remainder_type::u_type )
+        : series_acceleration<T, K>()
     {
         update_type(remainder_type_to_use);
     };

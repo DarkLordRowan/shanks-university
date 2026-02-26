@@ -8,6 +8,7 @@
  * @file rump_seq4_iterator.hpp
  * @brief Iterator for the sequence x_{n+1} = 56.5 + (160 - 737.5/x_{n-1})/x_n with initial values x_0 = 109225/43691, x_1 = 10923/4369
  * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+ * On recurrences converging to the wrong limit infnite precision and some new examples (14), limit = 1.6666667?
  */
 
 namespace shanks {
@@ -35,7 +36,7 @@ public:
      * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
      * @return T The limit of the sequence.
      */
-    T get_sum() const override { return utils::cast<T, int>()(0); }
+    T get_sum() const override { return utils::cast<T, int>()(5) / utils::cast<T, int>()(3); }
 
     /**
      * @brief Validates the current evaluation point x.
