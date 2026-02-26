@@ -189,10 +189,10 @@ pub struct SeriesInstance {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum ArgValue {
-    /// Range definition
-    Range(RangeDefFloat),
     /// Array of values
     Array(Vec<serde_json::Value>),
+    /// Range definition
+    Range(RangeDefFloat),
     /// Single value
     Single(serde_json::Value),
 }
@@ -326,10 +326,10 @@ pub struct MethodDef {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum NValue {
-    /// Range definition
-    Range(RangeDefInt),
     /// Array of values
     Array(Vec<i64>),
+    /// Range definition
+    Range(RangeDefInt),
 }
 
 impl NValue {
