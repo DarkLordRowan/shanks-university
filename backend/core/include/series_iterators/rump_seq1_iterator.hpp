@@ -9,6 +9,7 @@
  * @brief Iterator for the sequence x_{n+1} = 6496 - (4205*2^10+609725*2^15/x_{n-1})/x_n with initial values x_0 =
  * -1305, x_1 = -1440
  * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+ * "On recurrences converging to the wrong limit in fnite precision and some new examples" Table 1  limit = 0
  */
 
 namespace shanks {

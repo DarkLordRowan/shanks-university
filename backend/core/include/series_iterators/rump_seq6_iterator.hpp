@@ -18,6 +18,7 @@ namespace series {
  * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
  * @tparam T Floating-point type for series elements (AcceptedLike).
  * @tparam K Unsigned integral type for indexing (UnsignedIntLike).
+ * On recurrences converging to the wrong limit infnite precision and some new examples (15), limit = 36
  */
 template <AcceptedLike T, UnsignedIntLike K>
 class rump_seq6_iterator final : public series_base_iter<T, K, std::pair<T, T>> {

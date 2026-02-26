@@ -8,6 +8,7 @@
  * @file rump_seq2_iterator.hpp
  * @brief Iterator for the sequence x_{n+1} = -256 + 131072/x_{n-1}/x_n with initial values x_0 = 3, x_1 = 170
  * @authors Naumov A.U., Lykov D.S., Kreynin R.G.
+ * "On recurrences converging to the wrong limit in fnite precision and some new examples" Table 2  limit = 0
  */
 
 namespace shanks {
