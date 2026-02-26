@@ -55,12 +55,10 @@ int main() {
         
         // Test 5: Generate series
         std::cout << "\n5. Testing shanks_series_generate()..." << std::endl;
-        char* result = shanks_series_generate(series, 10, 0);
+        FFISeriesResult* result = shanks_series_generate(series, 10);
         if (result) {
-            std::cout << "Series result (first 300 chars): " << std::endl;
-            std::string s(result);
-            std::cout << s.substr(0, 300) << "..." << std::endl;
-            shanks_free_string(result);
+            std::cout << "Series generic result nodes: " << result->sn.lines[0].len << std::endl;
+            shanks_series_result_free(result);
         } else {
             std::cout << "FAILED: generate result is null" << std::endl;
             const char* err = shanks_last_error();

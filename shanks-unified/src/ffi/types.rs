@@ -4,6 +4,99 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 // ============================================================================
+// Raw FFI Data Structures
+// ============================================================================
+
+#[repr(C)]
+#[derive(Debug, Clone, Copy)]
+pub struct FfiLine {
+    pub mantissas: *const f64,
+    pub exponents: *const i64,
+    pub len: u64,
+}
+
+#[repr(C)]
+#[derive(Debug, Clone, Copy)]
+pub struct FfiLineColl {
+    pub type_id: u32, // 0=Real, 1=Complex, 2=Interval, 3=CInterval
+    pub lines: [FfiLine; 4],
+}
+
+#[repr(C)]
+#[derive(Debug, Clone, Copy)]
+pub struct FfiSeriesResult {
+    pub sn: FfiLineColl,
+    pub an: FfiLineColl,
+    pub has_sum: u32,
+    pub sum_type: u32,
+    pub sum_m: [f64; 4],
+    pub sum_e: [i64; 4],
+    pub deviations: FfiLineColl,
+}
+
+#[repr(C)]
+#[derive(Debug, Clone, Copy)]
+pub struct FfiAccelResult {
+    pub values: FfiLineColl,
+    pub deviations: FfiLine,
+}
+
+impl FfiLine {
+    pub unsafe fn to_scientific_array(&self) -> ScientificArray {
+        let len = self.len as usize;
+        if len == 0 || self.mantissas.is_null() || self.exponents.is_null() {
+            return ScientificArray {
+                mantissa: vec![0.0; len],
+                exponent: vec![0; len],
+            };
+        }
+        
+        let mantissas = std::slice::from_raw_parts(self.mantissas, len).to_vec();
+        let exponents = std::slice::from_raw_parts(self.exponents, len).to_vec();
+        
+        ScientificArray {
+            mantissa: mantissas,
+            exponent: exponents,
+        }
+    }
+}
+
+impl FfiLineColl {
+    pub unsafe fn to_series_point_array(&self) -> SeriesPointArray {
+        match self.type_id {
+            0 => { // Real
+                SeriesPointArray::Real(self.lines[0].to_scientific_array())
+            }
+            1 => { // Complex
+                SeriesPointArray::Complex(ComplexArray {
+                    real: self.lines[0].to_scientific_array(),
+                    imag: self.lines[1].to_scientific_array(),
+                })
+            }
+            2 => { // Interval
+                SeriesPointArray::Interval(IntervalArray {
+                    inf: self.lines[0].to_scientific_array(),
+                    sup: self.lines[1].to_scientific_array(),
+                })
+            }
+            3 => { // CInterval
+                SeriesPointArray::CInterval(CIntervalArray {
+                    real: IntervalArray {
+                        inf: self.lines[0].to_scientific_array(),
+                        sup: self.lines[1].to_scientific_array(),
+                    },
+                    imag: IntervalArray {
+                        inf: self.lines[2].to_scientific_array(),
+                        sup: self.lines[3].to_scientific_array(),
+                    }
+                })
+            }
+            _ => SeriesPointArray::Real(ScientificArray::default())
+        }
+    }
+}
+
+// ============================================================================
 // Parameter Types (Generic)
 // ============================================================================
 

@@ -7,6 +7,40 @@ use anyhow::Result;
 use rusqlite::{params, Connection};
 use std::path::Path;
 
+/// Helper to convert f64 slice to bytes
+fn f64_to_bytes(data: &[f64]) -> &[u8] {
+    unsafe { std::slice::from_raw_parts(data.as_ptr() as *const u8, data.len() * 8) }
+}
+
+/// Helper to convert i64 slice to bytes
+fn i64_to_bytes(data: &[i64]) -> &[u8] {
+    unsafe { std::slice::from_raw_parts(data.as_ptr() as *const u8, data.len() * 8) }
+}
+
+/// Helper to parse f64 vec from bytes carefully (alignment safe)
+fn bytes_to_f64(data: &[u8]) -> Vec<f64> {
+    if data.is_empty() { return Vec::new(); }
+    let count = data.len() / 8;
+    let mut vec = Vec::with_capacity(count);
+    unsafe {
+        std::ptr::copy_nonoverlapping(data.as_ptr(), vec.as_mut_ptr() as *mut u8, count * 8);
+        vec.set_len(count);
+    }
+    vec
+}
+
+/// Helper to parse i64 vec from bytes carefully (alignment safe)
+fn bytes_to_i64(data: &[u8]) -> Vec<i64> {
+    if data.is_empty() { return Vec::new(); }
+    let count = data.len() / 8;
+    let mut vec = Vec::with_capacity(count);
+    unsafe {
+        std::ptr::copy_nonoverlapping(data.as_ptr(), vec.as_mut_ptr() as *mut u8, count * 8);
+        vec.set_len(count);
+    }
+    vec
+}
+
 /// SQLite cache for series and acceleration results.
 pub struct Cache {
     conn: Connection,
@@ -37,18 +71,19 @@ impl Cache {
             );
             CREATE UNIQUE INDEX IF NOT EXISTS idx_series_unique ON series(name, precision, x_value, arguments, IFNULL(noise_config, ''));
 
-            -- Partial sums Sn and terms an
-            CREATE TABLE IF NOT EXISTS series_points (
-                series_id INTEGER NOT NULL,
-                n INTEGER NOT NULL,
-                sn_real TEXT,
-                sn_imag TEXT,
-                sn_exp INTEGER,
-                an_real TEXT,
-                an_imag TEXT,
-                an_exp INTEGER,
-                deviation TEXT,
-                PRIMARY KEY (series_id, n),
+            -- Drop legacy row-by-row tables
+            DROP TABLE IF EXISTS series_points;
+            DROP TABLE IF EXISTS accel_points;
+
+            -- Series binary data
+            CREATE TABLE IF NOT EXISTS series_data (
+                series_id INTEGER PRIMARY KEY,
+                sn_type INTEGER, sn_len INTEGER,
+                sn_m0 BLOB, sn_e0 BLOB, sn_m1 BLOB, sn_e1 BLOB, sn_m2 BLOB, sn_e2 BLOB, sn_m3 BLOB, sn_e3 BLOB,
+                an_type INTEGER, an_len INTEGER,
+                an_m0 BLOB, an_e0 BLOB, an_m1 BLOB, an_e1 BLOB, an_m2 BLOB, an_e2 BLOB, an_m3 BLOB, an_e3 BLOB,
+                dev_len INTEGER,
+                dev_m BLOB, dev_e BLOB,
                 FOREIGN KEY (series_id) REFERENCES series(id)
             );
 
@@ -64,16 +99,13 @@ impl Cache {
                 FOREIGN KEY (series_id) REFERENCES series(id)
             );
 
-            -- Accelerated values
-            CREATE TABLE IF NOT EXISTS accel_points (
-                accel_id INTEGER NOT NULL,
-                n INTEGER NOT NULL,
-                value_real TEXT,
-                value_imag TEXT,
-                value_exp INTEGER,
-                deviation TEXT,
-                profiling JSON,
-                PRIMARY KEY (accel_id, n),
+            -- Accelerated binary data
+            CREATE TABLE IF NOT EXISTS accel_data (
+                accel_id INTEGER PRIMARY KEY,
+                val_type INTEGER, val_len INTEGER,
+                val_m0 BLOB, val_e0 BLOB, val_m1 BLOB, val_e1 BLOB, val_m2 BLOB, val_e2 BLOB, val_m3 BLOB, val_e3 BLOB,
+                dev_len INTEGER,
+                dev_m BLOB, dev_e BLOB,
                 FOREIGN KEY (accel_id) REFERENCES accelerations(id)
             );
 
@@ -171,29 +203,103 @@ impl Cache {
         Ok(id)
     }
 
-    /// Insert series points.
-    pub fn insert_series_points(
+    fn serialize_point_array<'a>(
+        &self,
+        array: &'a crate::ffi::SeriesPointArray,
+    ) -> (u32, i64, Vec<(&'a [u8], &'a [u8])>) {
+        let mut data = vec![(&[][..], &[][..]); 4];
+        let (t, len) = match array {
+            crate::ffi::SeriesPointArray::Real(r) => {
+                data[0] = (f64_to_bytes(&r.mantissa), i64_to_bytes(&r.exponent));
+                (0, r.len())
+            }
+            crate::ffi::SeriesPointArray::Complex(c) => {
+                data[0] = (f64_to_bytes(&c.real.mantissa), i64_to_bytes(&c.real.exponent));
+                data[1] = (f64_to_bytes(&c.imag.mantissa), i64_to_bytes(&c.imag.exponent));
+                (1, c.real.len())
+            }
+            crate::ffi::SeriesPointArray::Interval(i) => {
+                data[0] = (f64_to_bytes(&i.inf.mantissa), i64_to_bytes(&i.inf.exponent));
+                data[1] = (f64_to_bytes(&i.sup.mantissa), i64_to_bytes(&i.sup.exponent));
+                (2, i.inf.len())
+            }
+            crate::ffi::SeriesPointArray::CInterval(ci) => {
+                data[0] = (
+                    f64_to_bytes(&ci.real.inf.mantissa),
+                    i64_to_bytes(&ci.real.inf.exponent),
+                );
+                data[1] = (
+                    f64_to_bytes(&ci.real.sup.mantissa),
+                    i64_to_bytes(&ci.real.sup.exponent),
+                );
+                data[2] = (
+                    f64_to_bytes(&ci.imag.inf.mantissa),
+                    i64_to_bytes(&ci.imag.inf.exponent),
+                );
+                data[3] = (
+                    f64_to_bytes(&ci.imag.sup.mantissa),
+                    i64_to_bytes(&ci.imag.sup.exponent),
+                );
+                (3, ci.real.inf.len())
+            }
+        };
+        (t, len as i64, data)
+    }
+
+    /// Insert series binary data.
+    pub fn insert_series_result(
         &mut self,
         series_id: i64,
-        points: &[(i64, String, String, i64, String, String, i64, String)],
+        result: &crate::ffi::SeriesResult,
     ) -> Result<()> {
-        let tx = self.conn.transaction()?;
+        let (sn_type, sn_len, sn_data) = self.serialize_point_array(&result.sn);
+        let (an_type, an_len, an_data) = self.serialize_point_array(&result.an);
 
-        for (n, sn_real, sn_imag, sn_exp, an_real, an_imag, an_exp, deviation) in points {
-            tx.execute(
-                "INSERT OR REPLACE INTO series_points
-                 (series_id, n, sn_real, sn_imag, sn_exp, an_real, an_imag, an_exp, deviation)
-                 VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)",
-                params![
-                    series_id, n, sn_real, sn_imag, sn_exp, an_real, an_imag, an_exp, deviation
-                ],
-            )?;
-        }
+        let dev_len = result.deviations.len();
+        let dev_m = f64_to_bytes(&result.deviations.mantissa);
+        let dev_e = i64_to_bytes(&result.deviations.exponent);
 
-        if let Err(e) = tx.commit() {
-            log::error!("Failed to commit series points insertion: {}", e);
-            return Err(e.into());
-        }
+        self.conn.execute(
+            "INSERT OR REPLACE INTO series_data (
+                series_id,
+                sn_type, sn_len, sn_m0, sn_e0, sn_m1, sn_e1, sn_m2, sn_e2, sn_m3, sn_e3,
+                an_type, an_len, an_m0, an_e0, an_m1, an_e1, an_m2, an_e2, an_m3, an_e3,
+                dev_len, dev_m, dev_e
+            ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20, ?21, ?22, ?23)",
+            params![
+                series_id,
+                sn_type, sn_len, sn_data[0].0, sn_data[0].1, sn_data[1].0, sn_data[1].1, sn_data[2].0, sn_data[2].1, sn_data[3].0, sn_data[3].1,
+                an_type, an_len, an_data[0].0, an_data[0].1, an_data[1].0, an_data[1].1, an_data[2].0, an_data[2].1, an_data[3].0, an_data[3].1,
+                dev_len as i64, dev_m, dev_e
+            ],
+        )?;
+        Ok(())
+    }
+
+    /// Insert acceleration binary data.
+    pub fn insert_accel_result(
+        &mut self,
+        accel_id: i64,
+        result: &crate::ffi::AccelResult,
+    ) -> Result<()> {
+        let (val_type, val_len, val_data) = self.serialize_point_array(&result.values);
+
+        let dev_len = result.deviations.len();
+        let dev_m = f64_to_bytes(&result.deviations.mantissa);
+        let dev_e = i64_to_bytes(&result.deviations.exponent);
+
+        self.conn.execute(
+            "INSERT OR REPLACE INTO accel_data (
+                accel_id,
+                val_type, val_len, val_m0, val_e0, val_m1, val_e1, val_m2, val_e2, val_m3, val_e3,
+                dev_len, dev_m, dev_e
+            ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14)",
+            params![
+                accel_id,
+                val_type, val_len, val_data[0].0, val_data[0].1, val_data[1].0, val_data[1].1, val_data[2].0, val_data[2].1, val_data[3].0, val_data[3].1,
+                dev_len as i64, dev_m, dev_e
+            ],
+        )?;
         Ok(())
     }
 
@@ -219,24 +325,13 @@ impl Cache {
         Ok(id)
     }
 
-    /// Insert acceleration points.
+    // insert_accel_points is deprecated and replaced by insert_accel_result.
+    // Keeping this for now if needed by other callers.
     pub fn insert_accel_points(
         &mut self,
-        accel_id: i64,
-        points: &[(i64, String, String, i64, String, String)],
+        _accel_id: i64,
+        _points: &[(i64, String, String, i64, String, String)],
     ) -> Result<()> {
-        let tx = self.conn.transaction()?;
-
-        for (n, value_real, value_imag, value_exp, deviation, profiling) in points {
-            tx.execute(
-                "INSERT OR REPLACE INTO accel_points
-                 (accel_id, n, value_real, value_imag, value_exp, deviation, profiling)
-                 VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
-                params![accel_id, n, value_real, value_imag, value_exp, deviation, profiling],
-            )?;
-        }
-
-        tx.commit()?;
         Ok(())
     }
 
@@ -340,342 +435,146 @@ impl Cache {
 
         let sum_val = sum_json.and_then(|s| serde_json::from_str(&s).ok());
 
-        let mut stmt = self.conn.prepare(
-            "SELECT n, sn_real, sn_imag, sn_exp, an_real, an_imag, an_exp, deviation
-             FROM series_points WHERE series_id = ?1 ORDER BY n ASC",
-        )?;
+        let result = self.conn.query_row(
+            "SELECT 
+                sn_type, sn_len, sn_m0, sn_e0, sn_m1, sn_e1, sn_m2, sn_e2, sn_m3, sn_e3,
+                an_type, an_len, an_m0, an_e0, an_m1, an_e1, an_m2, an_e2, an_m3, an_e3,
+                dev_len, dev_m, dev_e
+             FROM series_data WHERE series_id = ?1",
+            params![series_id],
+            |row| {
+                let sn_type: u32 = row.get(0)?;
+                let _sn_len: i64 = row.get(1)?;
+                let sn_m: Vec<Vec<u8>> = vec![row.get(2)?, row.get(4)?, row.get(6)?, row.get(8)?];
+                let sn_e: Vec<Vec<u8>> = vec![row.get(3)?, row.get(5)?, row.get(7)?, row.get(9)?];
 
-        let rows = stmt.query_map(params![series_id], |row| {
-            let n: i64 = row.get(0)?;
-            let sn_real: Option<String> = row.get(1)?;
-            let sn_imag: Option<String> = row.get(2)?;
-            let sn_exp: Option<i64> = row.get(3)?;
-            let an_real: Option<String> = row.get(4)?;
-            let an_imag: Option<String> = row.get(5)?;
-            let an_exp: Option<i64> = row.get(6)?;
-            let dev_str: Option<String> = row.get(7)?;
-            Ok((n, sn_real, sn_imag, sn_exp, an_real, an_imag, an_exp, dev_str))
-        })?;
+                let an_type: u32 = row.get(10)?;
+                let _an_len: i64 = row.get(11)?;
+                let an_m: Vec<Vec<u8>> = vec![row.get(12)?, row.get(14)?, row.get(16)?, row.get(18)?];
+                let an_e: Vec<Vec<u8>> = vec![row.get(13)?, row.get(15)?, row.get(17)?, row.get(19)?];
 
-        let mut sn = Vec::new();
-        let mut an = Vec::new();
-        let mut dev_mantissa: Vec<f64> = Vec::new();
-        let mut dev_exponent: Vec<i64> = Vec::new();
+                let _dev_len: i64 = row.get(20)?;
+                let dev_m: Vec<u8> = row.get(21)?;
+                let dev_e: Vec<u8> = row.get(22)?;
 
-        for row in rows {
-            let (_n, sn_real, sn_imag, sn_exp, an_real, an_imag, an_exp, dev_str) = row?;
+                Ok((sn_type, sn_m, sn_e, an_type, an_m, an_e, dev_m, dev_e))
+            },
+        );
 
-            // Build Sn point
-            if let (Some(real_str), Some(exp)) = (sn_real, sn_exp) {
-                if real_str.starts_with('{') {
-                    if let Ok(cinterval) =
-                        serde_json::from_str::<crate::ffi::CIntervalValue>(&real_str)
-                    {
-                        sn.push(crate::ffi::SeriesPoint::CInterval(cinterval));
-                    } else if let Ok(interval) =
-                        serde_json::from_str::<crate::ffi::IntervalValue>(&real_str)
-                    {
-                        sn.push(crate::ffi::SeriesPoint::Interval(interval));
-                    }
-                } else if let Ok(real_val) = real_str.parse::<f64>() {
-                    let real_sci = crate::ffi::ScientificValue {
-                        mantissa: real_val,
-                        exponent: exp,
-                    };
-                    if let Some(imag_str) = sn_imag {
-                        if !imag_str.is_empty() {
-                            // Parse "mantissa|exponent" (new format) or just "mantissa" (legacy)
-                            let (imag_mantissa, imag_exp) = if let Some(pipe_pos) = imag_str.find('|') {
-                                let m = imag_str[..pipe_pos].parse::<f64>().unwrap_or(0.0);
-                                let e = imag_str[pipe_pos + 1..].parse::<i64>().unwrap_or(exp);
-                                (m, e)
-                            } else {
-                                (imag_str.parse::<f64>().unwrap_or(0.0), exp)
-                            };
-                            let imag_sci = crate::ffi::ScientificValue {
-                                mantissa: imag_mantissa,
-                                exponent: imag_exp,
-                            };
-                            sn.push(crate::ffi::SeriesPoint::Complex(
-                                crate::ffi::ComplexValue {
-                                    real: real_sci,
-                                    imag: imag_sci,
-                                },
-                            ));
-                        } else {
-                            sn.push(crate::ffi::SeriesPoint::Real(real_sci));
-                        }
-                    } else {
-                        sn.push(crate::ffi::SeriesPoint::Real(real_sci));
-                    }
-                }
-            }
+        let (sn_type, sn_m, sn_e, an_type, an_m, an_e, dev_m, dev_e) = match result {
+            Ok(v) => v,
+            Err(rusqlite::Error::QueryReturnedNoRows) => return Ok(None),
+            Err(e) => return Err(e.into()),
+        };
 
-            // Build an point
-            if let (Some(real_str), Some(exp)) = (an_real, an_exp) {
-                if real_str.starts_with('{') {
-                    if let Ok(cinterval) =
-                        serde_json::from_str::<crate::ffi::CIntervalValue>(&real_str)
-                    {
-                        an.push(crate::ffi::SeriesPoint::CInterval(cinterval));
-                    } else if let Ok(interval) =
-                        serde_json::from_str::<crate::ffi::IntervalValue>(&real_str)
-                    {
-                        an.push(crate::ffi::SeriesPoint::Interval(interval));
-                    }
-                } else if let Ok(real_val) = real_str.parse::<f64>() {
-                    let real_sci = crate::ffi::ScientificValue {
-                        mantissa: real_val,
-                        exponent: exp,
-                    };
-                    if let Some(imag_str) = an_imag {
-                        if !imag_str.is_empty() {
-                            // Parse "mantissa|exponent" (new format) or just "mantissa" (legacy)
-                            let (imag_mantissa, imag_exp) = if let Some(pipe_pos) = imag_str.find('|') {
-                                let m = imag_str[..pipe_pos].parse::<f64>().unwrap_or(0.0);
-                                let e = imag_str[pipe_pos + 1..].parse::<i64>().unwrap_or(exp);
-                                (m, e)
-                            } else {
-                                (imag_str.parse::<f64>().unwrap_or(0.0), exp)
-                            };
-                            let imag_sci = crate::ffi::ScientificValue {
-                                mantissa: imag_mantissa,
-                                exponent: imag_exp,
-                            };
-                            an.push(crate::ffi::SeriesPoint::Complex(
-                                crate::ffi::ComplexValue {
-                                    real: real_sci,
-                                    imag: imag_sci,
-                                },
-                            ));
-                        } else {
-                            an.push(crate::ffi::SeriesPoint::Real(real_sci));
-                        }
-                    } else {
-                        an.push(crate::ffi::SeriesPoint::Real(real_sci));
-                    }
-                }
-            }
-            // Parse deviation (same format as accel: "mantissaEexp" or plain float)
-            if let Some(dev) = dev_str {
-                if let Some(e_pos) = dev.find('e') {
-                    if let (Ok(m), Ok(e)) = (
-                        dev[..e_pos].parse::<f64>(),
-                        dev[e_pos + 1..].parse::<i64>(),
-                    ) {
-                        dev_mantissa.push(m);
-                        dev_exponent.push(e);
-                    } else {
-                        dev_mantissa.push(0.0);
-                        dev_exponent.push(0);
-                    }
-                } else if let Ok(v) = dev.parse::<f64>() {
-                    dev_mantissa.push(v);
-                    dev_exponent.push(0);
-                } else {
-                    dev_mantissa.push(0.0);
-                    dev_exponent.push(0);
-                }
-            } else {
-                dev_mantissa.push(0.0);
-                dev_exponent.push(0);
-            }
-        }
-
-        if sn.is_empty() {
-            return Ok(None);
-        }
+        let sn = self.reconstruct_point_array(sn_type, sn_m, sn_e);
+        let an = self.reconstruct_point_array(an_type, an_m, an_e);
+        let deviations = crate::ffi::ScientificArray {
+            mantissa: bytes_to_f64(&dev_m),
+            exponent: bytes_to_i64(&dev_e),
+        };
 
         Ok(Some(crate::ffi::SeriesResult {
-            sn: crate::ffi::SeriesPointArray::from_vec(&sn),
-            an: crate::ffi::SeriesPointArray::from_vec(&an),
+            sn,
+            an,
             sum: sum_val,
-            deviations: crate::ffi::ScientificArray {
-                mantissa: dev_mantissa,
-                exponent: dev_exponent,
-            },
+            deviations,
         }))
+    }
+
+    fn reconstruct_point_array(
+        &self,
+        t: u32,
+        m: Vec<Vec<u8>>,
+        e: Vec<Vec<u8>>,
+    ) -> crate::ffi::SeriesPointArray {
+        match t {
+            0 => crate::ffi::SeriesPointArray::Real(crate::ffi::ScientificArray {
+                mantissa: bytes_to_f64(&m[0]),
+                exponent: bytes_to_i64(&e[0]),
+            }),
+            1 => crate::ffi::SeriesPointArray::Complex(crate::ffi::ComplexArray {
+                real: crate::ffi::ScientificArray {
+                    mantissa: bytes_to_f64(&m[0]),
+                    exponent: bytes_to_i64(&e[0]),
+                },
+                imag: crate::ffi::ScientificArray {
+                    mantissa: bytes_to_f64(&m[1]),
+                    exponent: bytes_to_i64(&e[1]),
+                },
+            }),
+            2 => crate::ffi::SeriesPointArray::Interval(crate::ffi::IntervalArray {
+                inf: crate::ffi::ScientificArray {
+                    mantissa: bytes_to_f64(&m[0]),
+                    exponent: bytes_to_i64(&e[0]),
+                },
+                sup: crate::ffi::ScientificArray {
+                    mantissa: bytes_to_f64(&m[1]),
+                    exponent: bytes_to_i64(&e[1]),
+                },
+            }),
+            3 => crate::ffi::SeriesPointArray::CInterval(crate::ffi::CIntervalArray {
+                real: crate::ffi::IntervalArray {
+                    inf: crate::ffi::ScientificArray {
+                        mantissa: bytes_to_f64(&m[0]),
+                        exponent: bytes_to_i64(&e[0]),
+                    },
+                    sup: crate::ffi::ScientificArray {
+                        mantissa: bytes_to_f64(&m[1]),
+                        exponent: bytes_to_i64(&e[1]),
+                    },
+                },
+                imag: crate::ffi::IntervalArray {
+                    inf: crate::ffi::ScientificArray {
+                        mantissa: bytes_to_f64(&m[2]),
+                        exponent: bytes_to_i64(&e[2]),
+                    },
+                    sup: crate::ffi::ScientificArray {
+                        mantissa: bytes_to_f64(&m[3]),
+                        exponent: bytes_to_i64(&e[3]),
+                    },
+                },
+            }),
+            _ => crate::ffi::SeriesPointArray::Real(Default::default()),
+        }
     }
 
     /// Get acceleration result from cache.
     pub fn get_accel_result(&self, accel_id: i64) -> Result<Option<crate::ffi::AccelResult>> {
-        let mut stmt = self.conn.prepare(
-            "SELECT n, value_real, value_imag, value_exp, deviation, profiling
-             FROM accel_points WHERE accel_id = ?1 ORDER BY n ASC",
-        )?;
+        let result = self.conn.query_row(
+            "SELECT 
+                val_type, val_len, val_m0, val_e0, val_m1, val_e1, val_m2, val_e2, val_m3, val_e3,
+                dev_len, dev_m, dev_e
+             FROM accel_data WHERE accel_id = ?1",
+            params![accel_id],
+            |row| {
+                let val_type: u32 = row.get(0)?;
+                let val_len: i64 = row.get(1)?;
+                let val_m: Vec<Vec<u8>> = vec![row.get(2)?, row.get(4)?, row.get(6)?, row.get(8)?];
+                let val_e: Vec<Vec<u8>> = vec![row.get(3)?, row.get(5)?, row.get(7)?, row.get(9)?];
 
-        let rows = stmt.query_map(params![accel_id], |row| {
-            let n: i64 = row.get(0)?;
-            let v_real: Option<String> = row.get(1)?;
-            let v_imag: Option<String> = row.get(2)?;
-            let v_exp: Option<i64> = row.get(3)?;
-            let dev_str: Option<String> = row.get(4)?;
-            let prof_json: Option<String> = row.get(5)?;
-            Ok((n, v_real, v_imag, v_exp, dev_str, prof_json))
-        })?;
+                let dev_len: i64 = row.get(10)?;
+                let dev_m: Vec<u8> = row.get(11)?;
+                let dev_e: Vec<u8> = row.get(12)?;
 
-        let mut values = Vec::new();
-        let mut deviations = Vec::new();
-        let mut trace_add = Vec::new();
-        let mut trace_mul = Vec::new();
-        let mut trace_div = Vec::new();
-        let mut trace_special = Vec::new();
-        let mut has_any_profiling = false;
-
-        let mut extracted_rows = Vec::new();
-        for row in rows {
-            extracted_rows.push(row?);
-        }
-
-        if extracted_rows.is_empty() {
-            return Ok(None);
-        }
-
-        let mut max_n = 0;
-        for (n, _, _, _, _, _) in &extracted_rows {
-            if *n > max_n {
-                max_n = *n;
-            }
-        }
-
-        values.resize((max_n) as usize, None);
-        deviations.resize(
-            (max_n) as usize,
-            crate::ffi::ScientificValue {
-                mantissa: 0.0,
-                exponent: 0,
+                Ok((val_type, val_len, val_m, val_e, dev_len, dev_m, dev_e))
             },
         );
-        trace_add.resize((max_n) as usize, 0);
-        trace_mul.resize((max_n) as usize, 0);
-        trace_div.resize((max_n) as usize, 0);
-        trace_special.resize((max_n) as usize, 0);
 
-        for (n, v_real, v_imag, v_exp, dev_str, prof_json) in extracted_rows {
-            let idx = (n - 1) as usize;
-
-            // value
-            if let (Some(real_str), Some(exp)) = (v_real, v_exp) {
-                if real_str.starts_with('{') {
-                    if let Ok(cinterval) =
-                        serde_json::from_str::<crate::ffi::CIntervalValue>(&real_str)
-                    {
-                        values[idx] = Some(crate::ffi::SeriesPoint::CInterval(cinterval));
-                    } else if let Ok(interval) =
-                        serde_json::from_str::<crate::ffi::IntervalValue>(&real_str)
-                    {
-                        values[idx] = Some(crate::ffi::SeriesPoint::Interval(interval));
-                    }
-                } else if let Ok(real_val) = real_str.parse::<f64>() {
-                    let real_sci = crate::ffi::ScientificValue {
-                        mantissa: real_val,
-                        exponent: exp,
-                    };
-                    if let Some(imag_str) = v_imag {
-                        if !imag_str.is_empty() {
-                            // Parse "mantissa|exponent" (new format) or just "mantissa" (legacy)
-                            let (imag_mantissa, imag_exp) = if let Some(pipe_pos) = imag_str.find('|') {
-                                let m = imag_str[..pipe_pos].parse::<f64>().unwrap_or(0.0);
-                                let e = imag_str[pipe_pos + 1..].parse::<i64>().unwrap_or(exp);
-                                (m, e)
-                            } else {
-                                (imag_str.parse::<f64>().unwrap_or(0.0), exp)
-                            };
-                            let imag_sci = crate::ffi::ScientificValue {
-                                mantissa: imag_mantissa,
-                                exponent: imag_exp,
-                            };
-                            values[idx] = Some(crate::ffi::SeriesPoint::Complex(
-                                crate::ffi::ComplexValue {
-                                    real: real_sci,
-                                    imag: imag_sci,
-                                },
-                            ));
-                        } else {
-                            values[idx] = Some(crate::ffi::SeriesPoint::Real(real_sci));
-                        }
-                    } else {
-                        values[idx] = Some(crate::ffi::SeriesPoint::Real(real_sci));
-                    }
-                }
-            }
-
-            // deviation
-            if let Some(dev) = dev_str {
-                if let Ok(dev_val) = dev.parse::<f64>() {
-                    deviations[idx] = crate::ffi::ScientificValue::from_f64(dev_val);
-                } else if dev.contains("e") {
-                    let parts: Vec<&str> = dev.split('e').collect();
-                    if parts.len() == 2 {
-                        if let (Ok(m), Ok(e)) = (parts[0].parse::<f64>(), parts[1].parse::<i64>()) {
-                            deviations[idx] = crate::ffi::ScientificValue {
-                                mantissa: m,
-                                exponent: e,
-                            };
-                        }
-                    }
-                }
-            }
-
-            // profiling
-            if let Some(pj) = prof_json {
-                if let Ok(p) = serde_json::from_str::<serde_json::Value>(&pj) {
-                    trace_add[idx] = p["add"].as_u64().unwrap_or(0);
-                    trace_mul[idx] = p["mul"].as_u64().unwrap_or(0);
-                    trace_div[idx] = p["div"].as_u64().unwrap_or(0);
-                    trace_special[idx] = p["special"].as_u64().unwrap_or(0);
-                    has_any_profiling = true;
-                }
-            }
-        }
-
-        let profiling = if has_any_profiling {
-            Some(crate::ffi::ProfilingTrace {
-                add: trace_add,
-                mul: trace_mul,
-                div: trace_div,
-                special: trace_special,
-            })
-        } else {
-            None
+        let (val_type, val_len, val_m, val_e, dev_len, dev_m, dev_e) = match result {
+            Ok(v) => v,
+            Err(rusqlite::Error::QueryReturnedNoRows) => return Ok(None),
+            Err(e) => return Err(e.into()),
         };
 
-        let mut first_val = None;
-        for v in &values {
-            if let Some(val) = v {
-                first_val = Some(val.clone());
-                break;
-            }
-        }
-        let fb_dummy = crate::ffi::SeriesPoint::Real(crate::ffi::ScientificValue {
-            mantissa: 0.0,
-            exponent: 0,
-        });
-        let fallback = first_val.unwrap_or(fb_dummy);
-
-        let mut valid = Vec::with_capacity(values.len());
-        let mut dense_values = Vec::with_capacity(values.len());
-        for v in values {
-            if let Some(val) = v {
-                valid.push(true);
-                dense_values.push(val);
-            } else {
-                valid.push(false);
-                dense_values.push(fallback.clone());
-            }
-        }
-        let values_array = crate::ffi::SeriesPointArray::from_vec(&dense_values);
-
-        let mut dev_mantissa = Vec::with_capacity(deviations.len());
-        let mut dev_exponent = Vec::with_capacity(deviations.len());
-        for d in deviations {
-            dev_mantissa.push(d.mantissa);
-            dev_exponent.push(d.exponent);
-        }
-        let deviations_array = crate::ffi::ScientificArray {
-            mantissa: dev_mantissa,
-            exponent: dev_exponent,
+        let values = self.reconstruct_point_array(val_type, val_m, val_e);
+        let deviations = crate::ffi::ScientificArray {
+            mantissa: bytes_to_f64(&dev_m),
+            exponent: bytes_to_i64(&dev_e),
         };
+
+        // Reconstruct valid array (all true for cache hits)
+        let valid = vec![true; val_len as usize];
 
         // --- Fetch events ---
         let mut stmt_events = self.conn.prepare(
@@ -720,13 +619,13 @@ impl Cache {
         }
 
         Ok(Some(crate::ffi::AccelResult {
-            values: values_array,
+            values,
             valid,
-            deviations: deviations_array,
+            deviations,
             events,
             errors: vec![],
             filtered_estimates,
-            profiling,
+            profiling: None,
         }))
     }
 
@@ -756,10 +655,10 @@ impl Cache {
 
     /// Clear all cached data.
     pub fn clear_all(&self) -> Result<()> {
-        self.conn.execute("DELETE FROM accel_points", [])?;
+        self.conn.execute("DELETE FROM accel_data", [])?;
         self.conn.execute("DELETE FROM accelerations", [])?;
         self.conn.execute("DELETE FROM events", [])?;
-        self.conn.execute("DELETE FROM series_points", [])?;
+        self.conn.execute("DELETE FROM series_data", [])?;
         self.conn.execute("DELETE FROM series", [])?;
         Ok(())
     }
@@ -772,14 +671,11 @@ impl Cache {
         let accel_count: i64 =
             self.conn
                 .query_row("SELECT COUNT(*) FROM accelerations", [], |row| row.get(0))?;
-        let points_count: i64 =
-            self.conn
-                .query_row("SELECT COUNT(*) FROM series_points", [], |row| row.get(0))?;
-
+        
         Ok(CacheStats {
             series_count,
             accel_count,
-            points_count,
+            points_count: 0, // No longer counting individual points
         })
     }
 }

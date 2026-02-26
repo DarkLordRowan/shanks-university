@@ -166,71 +166,149 @@ inline ScientificValue to_scientific(mpfr::mpreal value) {
     return ScientificValue(std::stod(s), 0);
 }
 
-template<typename T>
-struct RealSerializer {
-    std::ostringstream mantissa;
-    std::ostringstream exponent;
-    bool first = true;
-    
-    void push(T val) {
-        if (!first) { mantissa << ","; exponent << ","; }
-        first = false;
-        auto sci = shanks::ffi::to_scientific(val);
-        mantissa << sci.mantissa;
-        exponent << sci.exponent;
+// ============================================================================
+// Binary FFI Builders
+// ============================================================================
+
+struct BinarySerializer {
+    std::vector<double> mantissas;
+    std::vector<int64_t> exponents;
+
+    BinarySerializer() {
+        mantissas.reserve(1000);
+        exponents.reserve(1000);
     }
-    
-    std::string to_json() {
-        std::ostringstream oss;
-        oss << "{\"mantissa\": [" << mantissa.str() << "], \"exponent\": [" << exponent.str() << "]}";
-        return oss.str();
+
+    template<typename T>
+    void push(T val) {
+        auto sci = shanks::ffi::to_scientific(val);
+        mantissas.push_back(sci.mantissa);
+        exponents.push_back(sci.exponent);
+    }
+
+    void push_scientific(const ScientificValue& sci) {
+        mantissas.push_back(sci.mantissa);
+        exponents.push_back(sci.exponent);
+    }
+
+    FFILine finalize() {
+        FFILine line;
+        line.len = mantissas.size();
+        if (line.len > 0) {
+            line.mantissas = new double[line.len];
+            line.exponents = new int64_t[line.len];
+            std::memcpy(line.mantissas, mantissas.data(), line.len * sizeof(double));
+            std::memcpy(line.exponents, exponents.data(), line.len * sizeof(int64_t));
+        } else {
+            line.mantissas = nullptr;
+            line.exponents = nullptr;
+        }
+        return line;
     }
 };
 
 template<typename T>
-struct ComplexSerializer {
-    RealSerializer<T> real;
-    RealSerializer<T> imag;
+struct RealBinarySerializer {
+    BinarySerializer ser;
+
+    void push(T val) { ser.push(val); }
+
+    FFILineColl finalize() {
+        FFILineColl coll;
+        coll.type = 0; // Real
+        coll.lines[0] = ser.finalize();
+        coll.lines[1] = {nullptr, nullptr, 0};
+        coll.lines[2] = {nullptr, nullptr, 0};
+        coll.lines[3] = {nullptr, nullptr, 0};
+        return coll;
+    }
+};
+
+template<typename T>
+struct ComplexBinarySerializer {
+    BinarySerializer real;
+    BinarySerializer imag;
     
     void push(const std::complex<T>& val) {
         real.push(val.real());
         imag.push(val.imag());
     }
     
-    std::string to_json() {
-        return "{\"real\": " + real.to_json() + ", \"imag\": " + imag.to_json() + "}";
+    FFILineColl finalize() {
+        FFILineColl coll;
+        coll.type = 1; // Complex
+        coll.lines[0] = real.finalize();
+        coll.lines[1] = imag.finalize();
+        coll.lines[2] = {nullptr, nullptr, 0};
+        coll.lines[3] = {nullptr, nullptr, 0};
+        return coll;
     }
 };
 
 template<typename T>
-struct IntervalSerializer {
-    RealSerializer<T> inf;
-    RealSerializer<T> sup;
+struct IntervalBinarySerializer {
+    BinarySerializer inf;
+    BinarySerializer sup;
     
     void push(const intprec::interval<T>& val) {
         inf.push(val.inf());
         sup.push(val.sup());
     }
     
-    std::string to_json() {
-        return "{\"inf\": " + inf.to_json() + ", \"sup\": " + sup.to_json() + "}";
+    FFILineColl finalize() {
+        FFILineColl coll;
+        coll.type = 2; // Interval
+        coll.lines[0] = inf.finalize();
+        coll.lines[1] = sup.finalize();
+        coll.lines[2] = {nullptr, nullptr, 0};
+        coll.lines[3] = {nullptr, nullptr, 0};
+        return coll;
     }
 };
 
 template<typename T>
-struct CIntervalSerializer {
-    IntervalSerializer<T> real;
-    IntervalSerializer<T> imag;
+struct CIntervalBinarySerializer {
+    BinarySerializer real_inf;
+    BinarySerializer real_sup;
+    BinarySerializer imag_inf;
+    BinarySerializer imag_sup;
     
     void push(const std::complex<intprec::interval<T>>& val) {
-        real.push(val.real());
-        imag.push(val.imag());
+        real_inf.push(val.real().inf());
+        real_sup.push(val.real().sup());
+        imag_inf.push(val.imag().inf());
+        imag_sup.push(val.imag().sup());
     }
     
-    std::string to_json() {
-        return "{\"real\": " + real.to_json() + ", \"imag\": " + imag.to_json() + "}";
+    FFILineColl finalize() {
+        FFILineColl coll;
+        coll.type = 3; // CInterval
+        coll.lines[0] = real_inf.finalize();
+        coll.lines[1] = real_sup.finalize();
+        coll.lines[2] = imag_inf.finalize();
+        coll.lines[3] = imag_sup.finalize();
+        return coll;
     }
 };
+
+// Memory free helpers
+inline void free_ffi_line(FFILine* line) {
+    if (line->mantissas) {
+        delete[] line->mantissas;
+        line->mantissas = nullptr;
+    }
+    if (line->exponents) {
+        delete[] line->exponents;
+        line->exponents = nullptr;
+    }
+    line->len = 0;
+}
+
+inline void free_ffi_line_coll(FFILineColl* coll) {
+    for (int i = 0; i < 4; i++) {
+        free_ffi_line(&coll->lines[i]);
+    }
+}
 
 // Helper to allocate and copy string for FFI return
 inline char* alloc_string(const std::string& s) {
@@ -258,7 +336,7 @@ inline void clear_error() {
 // Type-erased series handle base class
 struct SeriesHandleBase {
     virtual ~SeriesHandleBase() = default;
-    virtual std::string generate(uint64_t n, bool enable_profiling) = 0;
+    virtual FFISeriesResult* generate(uint64_t n) = 0;
     virtual PrecisionType get_precision() const = 0;
     virtual std::string get_name() const = 0;
     virtual const void* get_raw_data(uint64_t n) const = 0;

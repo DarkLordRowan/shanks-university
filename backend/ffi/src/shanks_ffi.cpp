@@ -121,11 +121,7 @@ extern "C" SHANKS_FFI_API char* shanks_series_get_sum(ShanksSeriesHandle handle)
 
 extern "C" SHANKS_FFI_API char* shanks_series_get_x(ShanksSeriesHandle handle);
 
-extern "C" SHANKS_FFI_API char* shanks_series_generate(
-    ShanksSeriesHandle handle,
-    uint64_t n,
-    int enable_profiling
-);
+// Removes duplicate declaration
 
 // ============================================================================
 // Acceleration (stubs - implemented in accel_ffi.cpp)
@@ -139,13 +135,7 @@ extern "C" SHANKS_FFI_API ShanksAccelHandle shanks_accel_create(
 
 extern "C" SHANKS_FFI_API void shanks_accel_destroy(ShanksAccelHandle handle);
 
-extern "C" SHANKS_FFI_API char* shanks_accel_apply(
-    ShanksAccelHandle accel,
-    ShanksSeriesHandle series,
-    uint64_t n,
-    uint64_t order,
-    int enable_profiling
-);
+// Removes duplicate declaration
 
 extern "C" SHANKS_FFI_API char* shanks_accel_apply_data(
     ShanksAccelHandle accel,

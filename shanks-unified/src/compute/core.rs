@@ -302,9 +302,9 @@ impl ComputeCore {
             return Ok((false, errors));
         }
 
-        let series_result_json = match self
+        let mut series_result = match self
             .library
-            .series_generate(&series_handle, n_points, false)
+            .series_generate(&series_handle, n_points)
         {
             Ok(r) => r,
             Err(e) => {
@@ -316,8 +316,6 @@ impl ComputeCore {
                 return Ok((false, errors));
             }
         };
-
-        let mut series_result: SeriesResult = serde_json::from_str(&series_result_json)?;
 
         if series_result.sum.is_none() {
             if let Ok(sum_str) = self.library.series_get_sum(&series_handle) {
@@ -366,67 +364,12 @@ impl ComputeCore {
             };
 
             if id != -1 {
-                let mut db_points = Vec::with_capacity(series_result.sn.len());
-                let empty_point = crate::ffi::SeriesPoint::Real(crate::ffi::ScientificValue {
-                    mantissa: 0.0,
-                    exponent: 0,
-                });
-                for i in 0..series_result.sn.len() {
-                    let n = (i + 1) as i64;
-                    let sn = series_result.sn.get(i);
-                    let an = if i < series_result.an.len() {
-                        series_result.an.get(i)
-                    } else {
-                        empty_point.clone()
-                    };
-                    let (sn_real, sn_imag, sn_exp) = match sn {
-                        crate::ffi::SeriesPoint::Real(r) => {
-                            (r.mantissa.to_string(), String::new(), r.exponent)
-                        }
-                        crate::ffi::SeriesPoint::Complex(c) => (
-                            c.real.mantissa.to_string(),
-                            format!("{}|{}", c.imag.mantissa, c.imag.exponent),
-                            c.real.exponent,
-                        ),
-                        crate::ffi::SeriesPoint::Interval(ref i) => {
-                            (serde_json::to_string(i).unwrap(), String::new(), 0)
-                        }
-                        crate::ffi::SeriesPoint::CInterval(ref ci) => {
-                            (serde_json::to_string(ci).unwrap(), String::new(), 0)
-                        }
-                    };
-                    let (an_real, an_imag, an_exp) = match an {
-                        crate::ffi::SeriesPoint::Real(r) => {
-                            (r.mantissa.to_string(), String::new(), r.exponent)
-                        }
-                        crate::ffi::SeriesPoint::Complex(c) => (
-                            c.real.mantissa.to_string(),
-                            format!("{}|{}", c.imag.mantissa, c.imag.exponent),
-                            c.real.exponent,
-                        ),
-                        crate::ffi::SeriesPoint::Interval(ref i_val) => {
-                            (serde_json::to_string(i_val).unwrap(), String::new(), 0)
-                        }
-                        crate::ffi::SeriesPoint::CInterval(ref ci) => {
-                            (serde_json::to_string(ci).unwrap(), String::new(), 0)
-                        }
-                    };
-                    let dev_str = series_result.deviations.get(i).format();
-                    db_points.push((
-                        n,
-                        sn_real,
-                        sn_imag,
-                        sn_exp,
-                        an_real,
-                        an_imag,
-                        an_exp,
-                        dev_str,
-                    ));
-                }
-                if !db_points.is_empty() {
-                    if let Err(e) = cache.insert_series_points(id, &db_points) {
-                        log::error!("Failed to insert series points into cache for id={}: {}", id, e);
-                    }
+                if let Err(e) = cache.insert_series_result(id, &series_result) {
+                    log::error!(
+                        "Failed to insert series result into cache for id={}: {}",
+                        id,
+                        e
+                    );
                 }
             }
             id
@@ -453,12 +396,11 @@ impl ComputeCore {
                     }
                 };
 
-            let accel_result_json = match self.library.accel_apply(
+            let mut parsed_accel = match self.library.accel_apply(
                 &accel_handle,
                 &series_handle,
                 n_points,
                 m_val.unwrap_or(5) as u64,
-                true,
             ) {
                 Ok(r) => r,
                 Err(e) => {
@@ -472,16 +414,6 @@ impl ComputeCore {
 
             self.library.accel_destroy(accel_handle);
 
-            let mut parsed_accel: AccelResult = match serde_json::from_str(&accel_result_json) {
-                Ok(r) => r,
-                Err(e) => {
-                    let msg = format!("JSON parse error for '{}': {}\n", accel.name, e);
-                    log::debug!("{accel_result_json}");
-                    errors.push(msg.clone());
-                    send_event(ComputeEventBody::Error { error: msg });
-                    continue;
-                }
-            };
 
             // --- Event Detection & Smoothing ---
             // Simple divergence detection: if deviation increases 3 times consecutively
@@ -600,64 +532,13 @@ impl ComputeCore {
                 };
 
                 if accel_id != -1 {
-                    let mut db_points = Vec::with_capacity(parsed_accel.values.len());
-
-                    for i in 0..parsed_accel.values.len() {
-                        let n = (i + 1) as i64;
-                        let val_opt = if parsed_accel.valid.get(i).copied().unwrap_or(false) {
-                            Some(parsed_accel.values.get(i))
-                        } else {
-                            None
-                        };
-                        let dev = parsed_accel.deviations.get(i);
-                        let prof_json = if let Some(ref p) = parsed_accel.profiling {
-                            serde_json::json!({
-                                "add": p.add.get(i).copied().unwrap_or(0),
-                                "mul": p.mul.get(i).copied().unwrap_or(0),
-                                "div": p.div.get(i).copied().unwrap_or(0),
-                                "special": p.special.get(i).copied().unwrap_or(0),
-                            })
-                            .to_string()
-                        } else {
-                            String::new()
-                        };
-
-                        if let Some(val) = val_opt {
-                            let (v_real, v_imag, v_exp) = match val {
-                                crate::ffi::SeriesPoint::Real(r) => {
-                                    (r.mantissa.to_string(), String::new(), r.exponent)
-                                }
-                                crate::ffi::SeriesPoint::Complex(c) => (
-                                    c.real.mantissa.to_string(),
-                                    format!("{}|{}", c.imag.mantissa, c.imag.exponent),
-                                    c.real.exponent,
-                                ),
-                                crate::ffi::SeriesPoint::Interval(ref i_val) => {
-                                    (serde_json::to_string(i_val).unwrap(), String::new(), 0)
-                                }
-                                crate::ffi::SeriesPoint::CInterval(ref ci) => {
-                                    (serde_json::to_string(ci).unwrap(), String::new(), 0)
-                                }
-                            };
-                            let dev_str = dev.format();
-                            db_points.push((n, v_real, v_imag, v_exp, dev_str, prof_json));
-                        } else {
-                            db_points.push((
-                                n,
-                                String::new(),
-                                String::new(),
-                                0,
-                                String::new(),
-                                prof_json,
-                            ));
-                        }
+                    if let Err(e) = cache.insert_accel_result(accel_id, &parsed_accel) {
+                        log::error!(
+                            "Failed to insert acceleration result into cache for id={}: {}",
+                            accel_id,
+                            e
+                        );
                     }
-                    if !db_points.is_empty() {
-                        if let Err(e) = cache.insert_accel_points(accel_id, &db_points) {
-                             log::error!("Failed to insert accel points into cache for id={}: {}", accel_id, e);
-                        }
-                    }
-
                     if !parsed_accel.events.is_empty() {
                         if let Err(e) = cache.insert_accel_events(accel_id, &parsed_accel.events) {
                              log::error!("Failed to insert accel events into cache for id={}: {}", accel_id, e);

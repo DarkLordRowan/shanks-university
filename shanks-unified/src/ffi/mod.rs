@@ -347,18 +347,17 @@ impl ShanksLibrary {
         }
     }
 
-    /// Generate series data (returns JSON string).
+    /// Generate series data (returns the structural result directly).
     pub fn series_generate(
         &self,
         handle: &ShanksSeriesHandle,
         n: u64,
-        enable_profiling: bool,
-    ) -> Result<String, FfiError> {
+    ) -> Result<SeriesResult, FfiError> {
         unsafe {
-            let func: Symbol<unsafe extern "C" fn(*mut std::ffi::c_void, u64, i32) -> *mut i8> =
+            let func: Symbol<unsafe extern "C" fn(*mut std::ffi::c_void, u64) -> *mut FfiSeriesResult> =
                 self.library.get(b"shanks_series_generate")?;
 
-            let ptr = func(handle.handle, n, if enable_profiling { 1 } else { 0 });
+            let ptr = func(handle.handle, n);
             if ptr.is_null() {
                 let err = self
                     .last_error()
@@ -366,9 +365,51 @@ impl ShanksLibrary {
                 return Err(FfiError::LibraryError(err));
             }
 
-            let json_str = CStr::from_ptr(ptr).to_str()?.to_string();
-            self.free_string(ptr);
-            Ok(json_str)
+            let ffi_res = *ptr;
+            
+            // Convert to native safe types
+            let sn = ffi_res.sn.to_series_point_array();
+            let an = ffi_res.an.to_series_point_array();
+            let deviations = ffi_res.deviations.lines[0].to_scientific_array();
+
+            let sum = if ffi_res.has_sum != 0 {
+                match ffi_res.sum_type {
+                    0 => Some(SeriesPoint::Real(ScientificValue {
+                        mantissa: ffi_res.sum_m[0],
+                        exponent: ffi_res.sum_e[0],
+                    })),
+                    1 => Some(SeriesPoint::Complex(ComplexValue {
+                        real: ScientificValue { mantissa: ffi_res.sum_m[0], exponent: ffi_res.sum_e[0] },
+                        imag: ScientificValue { mantissa: ffi_res.sum_m[1], exponent: ffi_res.sum_e[1] },
+                    })),
+                    2 => Some(SeriesPoint::Interval(IntervalValue {
+                        inf: ScientificValue { mantissa: ffi_res.sum_m[0], exponent: ffi_res.sum_e[0] },
+                        sup: ScientificValue { mantissa: ffi_res.sum_m[1], exponent: ffi_res.sum_e[1] },
+                    })),
+                    3 => Some(SeriesPoint::CInterval(CIntervalValue {
+                        real: IntervalValue {
+                            inf: ScientificValue { mantissa: ffi_res.sum_m[0], exponent: ffi_res.sum_e[0] },
+                            sup: ScientificValue { mantissa: ffi_res.sum_m[1], exponent: ffi_res.sum_e[1] },
+                        },
+                        imag: IntervalValue {
+                            inf: ScientificValue { mantissa: ffi_res.sum_m[2], exponent: ffi_res.sum_e[2] },
+                            sup: ScientificValue { mantissa: ffi_res.sum_m[3], exponent: ffi_res.sum_e[3] },
+                        },
+                    })),
+                    _ => None,
+                }
+            } else {
+                None
+            };
+            
+            let result = SeriesResult { sn, an, sum, deviations };
+
+            // Free the result struct
+            let free_func: Symbol<unsafe extern "C" fn(*mut FfiSeriesResult)> =
+                self.library.get(b"shanks_series_result_free")?;
+            free_func(ptr);
+
+            Ok(result)
         }
     }
 
@@ -432,15 +473,14 @@ impl ShanksLibrary {
         }
     }
 
-    /// Apply acceleration algorithm to series (returns JSON string).
+    /// Apply acceleration algorithm to a series (returns the structural result directly).
     pub fn accel_apply(
         &self,
         accel: &ShanksAccelHandle,
         series: &ShanksSeriesHandle,
         n: u64,
         order: u64,
-        enable_profiling: bool,
-    ) -> Result<String, FfiError> {
+    ) -> Result<AccelResult, FfiError> {
         unsafe {
             let func: Symbol<
                 unsafe extern "C" fn(
@@ -448,8 +488,7 @@ impl ShanksLibrary {
                     *mut std::ffi::c_void,
                     u64,
                     u64,
-                    i32,
-                ) -> *mut i8,
+                ) -> *mut FfiAccelResult,
             > = self.library.get(b"shanks_accel_apply")?;
 
             let ptr = func(
@@ -457,8 +496,8 @@ impl ShanksLibrary {
                 series.handle,
                 n,
                 order,
-                if enable_profiling { 1 } else { 0 },
             );
+
             if ptr.is_null() {
                 let err = self
                     .last_error()
@@ -466,9 +505,28 @@ impl ShanksLibrary {
                 return Err(FfiError::LibraryError(err));
             }
 
-            let json_str = CStr::from_ptr(ptr).to_str()?.to_string();
-            self.free_string(ptr);
-            Ok(json_str)
+            let ffi_res = *ptr;
+            
+            // Convert to native safe types
+            let values = ffi_res.values.to_series_point_array();
+            let deviations = ffi_res.deviations.to_scientific_array();
+
+            let result = AccelResult {
+                values,
+                valid: vec![true; n as usize], // TODO: Re-introduce valid tracker in binary FFI later if needed or derive from values
+                deviations,
+                events: Vec::new(),
+                errors: Vec::new(),
+                filtered_estimates: Vec::new(),
+                profiling: None,
+            };
+
+            // Free the result struct
+            let free_func: Symbol<unsafe extern "C" fn(*mut FfiAccelResult)> =
+                self.library.get(b"shanks_accel_result_free")?;
+            free_func(ptr);
+
+            Ok(result)
         }
     }
 

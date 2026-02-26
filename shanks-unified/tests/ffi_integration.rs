@@ -55,7 +55,7 @@ fn test_series_create_and_generate() {
     let handle = handle.unwrap();
 
     // Generate series
-    let result = lib.series_generate(&handle, 10, false);
+    let result = lib.series_generate(&handle, 10);
     assert!(
         result.is_ok(),
         "Failed to generate series: {:?}",
@@ -63,8 +63,8 @@ fn test_series_create_and_generate() {
     );
 
     let result = result.unwrap();
-    assert!(!result.is_empty(), "Series result should not be empty");
-    assert!(result.contains("Sn"), "Result should contain Sn field");
+    assert!(!result.sn.is_empty(), "Series result sn should not be empty");
+    assert!(!result.an.is_empty(), "Series result an should not be empty");
 
     // Cleanup
     lib.series_destroy(handle);
@@ -89,7 +89,7 @@ fn test_accel_create() {
     let series_handle = series_handle.unwrap();
 
     // Generate series
-    let gen_result = lib.series_generate(&series_handle, 10, false);
+    let gen_result = lib.series_generate(&series_handle, 10);
     assert!(
         gen_result.is_ok(),
         "Failed to generate series: {:?}",
@@ -108,7 +108,7 @@ fn test_accel_create() {
     let accel_handle = accel_handle.unwrap();
 
     // Apply acceleration (accel, series, n, order)
-    let accel_result = lib.accel_apply(&accel_handle, &series_handle, 10, 5, false);
+    let accel_result = lib.accel_apply(&accel_handle, &series_handle, 10, 5);
     assert!(
         accel_result.is_ok(),
         "Failed to apply accel: {:?}",
@@ -116,15 +116,10 @@ fn test_accel_create() {
     );
 
     let accel_result = accel_result.unwrap();
-    eprintln!("Acceleration result: {}", accel_result);
+    eprintln!("Acceleration result nodes: {}", accel_result.values.len());
     assert!(
-        !accel_result.is_empty(),
+        !accel_result.values.is_empty(),
         "Acceleration result should not be empty"
-    );
-    // The result might have different field names, just check it's valid JSON
-    assert!(
-        accel_result.starts_with("{") || accel_result.starts_with("["),
-        "Result should be JSON"
     );
 
     // Cleanup

@@ -226,6 +226,48 @@ SHANKS_FFI_API char* shanks_series_get_sum(ShanksSeriesHandle handle);
 SHANKS_FFI_API char* shanks_series_get_x(ShanksSeriesHandle handle);
 
 // ============================================================================
+// Data Structures for Binary FFI Transfer
+// ============================================================================
+
+/**
+ * @brief Represents a single sequence of scientific notation numbers.
+ */
+typedef struct {
+    double* mantissas;
+    int64_t* exponents;
+    uint64_t len;
+} FFILine;
+
+/**
+ * @brief Represents a collection of lines (real, complex, interval, or complex-interval).
+ */
+typedef struct {
+    uint32_t type; // 0=Real, 1=Complex, 2=Interval, 3=CInterval
+    FFILine lines[4]; 
+} FFILineColl;
+
+/**
+ * @brief Result from generating a series.
+ */
+typedef struct {
+    FFILineColl sn;
+    FFILineColl an;
+    uint32_t has_sum;  // 1 if sum exists, 0 otherwise
+    uint32_t sum_type; // same enum as FFILineColl.type
+    double sum_m[4];   // up to 4 mantissas for the sum point
+    int64_t sum_e[4];  // up to 4 exponents for the sum point
+    FFILineColl deviations; // same type layout as sn, usually 1 real line
+} FFISeriesResult;
+
+/**
+ * @brief Result from applying an acceleration algorithm.
+ */
+typedef struct {
+    FFILineColl values;
+    FFILine deviations; // Always Real (double)
+} FFIAccelResult;
+
+// ============================================================================
 // Series Computation
 // ============================================================================
 
@@ -234,21 +276,18 @@ SHANKS_FFI_API char* shanks_series_get_x(ShanksSeriesHandle handle);
  * 
  * @param handle Series handle.
  * @param n Number of terms to generate.
- * @param enable_profiling If non-zero, count operations (add, mul, div, special).
- * @return JSON object: {
- *     "Sn": [{"real": "1.0", "imag": "0.0", "exp": 0}, ...],
- *     "an": [{"real": "1.0", "imag": "0.0", "exp": 0}, ...],
- *     "sum": "3.14159...",
- *     "profiling": {"add": 100, "mul": 50, "div": 10, "special": 5}
- * }
- * Values are in scientific notation: {mantissa, exponent}.
- * Must be freed with shanks_free_string().
+ * @return Pointer to a dynamically allocated FFISeriesResult.
+ *         Must be freed with shanks_series_result_free().
  */
-SHANKS_FFI_API char* shanks_series_generate(
+SHANKS_FFI_API FFISeriesResult* shanks_series_generate(
     ShanksSeriesHandle handle,
-    uint64_t n,
-    int enable_profiling
+    uint64_t n
 );
+
+/**
+ * @brief Free an FFISeriesResult structure allocated by the library.
+ */
+SHANKS_FFI_API void shanks_series_result_free(FFISeriesResult* result);
 
 // ============================================================================
 // Acceleration Algorithm Creation and Destruction
@@ -287,40 +326,20 @@ SHANKS_FFI_API void shanks_accel_destroy(ShanksAccelHandle handle);
  * @param series Series handle (must have same precision).
  * @param n Number of terms to use from series.
  * @param order Order parameter for the algorithm.
- * @return JSON object: {
- *     "values": [{"real": "3.14", "imag": "0.0", "exp": 0}, ...],
- *     "deviations": ["0.001", "0.0001", ...],
- *     "events": [{"n": 10, "name": "convergence", "description": "..."}],
- *     "errors": [{"n": 5, "message": "division by zero"}],
- *     "profiling": {"add": 100, "mul": 50, "div": 10, "special": 5}
- * }
- * Must be freed with shanks_free_string().
+ * @return Pointer to dynamically allocated FFIAccelResult.
+ *         Must be freed with shanks_accel_result_free().
  */
-SHANKS_FFI_API char* shanks_accel_apply(
+SHANKS_FFI_API FFIAccelResult* shanks_accel_apply(
     ShanksAccelHandle accel,
     ShanksSeriesHandle series,
     uint64_t n,
-    uint64_t order,
-    int enable_profiling
+    uint64_t order
 );
 
 /**
- * @brief Apply acceleration to pre-generated series data.
- * 
- * This is useful when you already have Sn and an arrays.
- * 
- * @param accel Algorithm handle.
- * @param series_json JSON with series data: {"Sn": [...], "an": [...]}.
- * @param n Number of terms.
- * @param order Order parameter.
- * @return JSON object with results (same format as shanks_accel_apply).
+ * @brief Free an FFIAccelResult structure allocated by the library.
  */
-SHANKS_FFI_API char* shanks_accel_apply_data(
-    ShanksAccelHandle accel,
-    const char* series_json,
-    uint64_t n,
-    uint64_t order
-);
+SHANKS_FFI_API void shanks_accel_result_free(FFIAccelResult* result);
 
 // ============================================================================
 // Post-Processing

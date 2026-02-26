@@ -71,7 +71,7 @@ ScientificValue to_scientific(mpfr::mpreal value) {
 
 // Extended acceleration handle
 struct AccelHandleBaseExt : public AccelHandleBase {
-    virtual std::string apply_to_result(
+    virtual FFIAccelResult* apply_to_result(
         uint64_t n, 
         uint64_t order, 
         SeriesHandleBase* series, 
@@ -97,10 +97,10 @@ struct AccelHandleReal : public AccelHandleBaseExt {
         uint64_t order, 
         bool enable_profiling
     ) override {
-        return apply_to_result(n, order, series, enable_profiling);
+        return "{}"; // Legacy virtual interface placeholder
     }
     
-    std::string apply_to_result(
+    FFIAccelResult* apply_to_result(
         uint64_t n, 
         uint64_t order, 
         SeriesHandleBase* series, 
@@ -108,7 +108,7 @@ struct AccelHandleReal : public AccelHandleBaseExt {
     ) override {
         if (!algo) {
             set_error("Algorithm is null");
-            return "{}";
+            return nullptr;
         }
         
 #ifdef SHANKS_ENABLE_PROFILING
@@ -116,7 +116,7 @@ struct AccelHandleReal : public AccelHandleBaseExt {
 #endif
 
         const void* raw_data = series->get_raw_data(n + 3 * order + 1);
-        if (!raw_data) return "{}";
+        if (!raw_data) return nullptr;
         const auto* data = static_cast<const series_result<T>*>(raw_data);
         
         const void* sum_ptr = series->get_native_sum();
@@ -126,96 +126,33 @@ struct AccelHandleReal : public AccelHandleBaseExt {
             sum = *static_cast<const T*>(sum_ptr);
         }
 
-
-        std::vector<unsigned long long> trace_add, trace_mul, trace_div, trace_special;
-
-        if (enable_profiling) {
-            trace_add.reserve(n); trace_mul.reserve(n); trace_div.reserve(n); trace_special.reserve(n);
-        }
-
-#ifdef SHANKS_ENABLE_PROFILING
-        using ProfT = shanks::profiling::OperationCounting<T>;
-        std::unique_ptr<shanks::algos::series_acceleration<ProfT, size_t>> algo_prof;
-        ::series_result<ProfT> data_prof;
+        shanks::ffi::RealBinarySerializer<T> val_ser;
+        shanks::ffi::RealBinarySerializer<T> dev_ser;
         
-        if (enable_profiling) {
-            algo_prof = shanks::algos::transformation_registry<ProfT, size_t>::create_by_index(algo_index);
-            data_prof.Sn.reserve(data->Sn.size());
-            data_prof.an.reserve(data->an.size());
-            for (const auto& val : data->Sn) data_prof.Sn.push_back(ProfT(val));
-            for (const auto& val : data->an) data_prof.an.push_back(ProfT(val));
-        }
-#endif
-
-        shanks::ffi::RealSerializer<T> val_ser;
-        shanks::ffi::RealSerializer<T> dev_ser;
-        std::ostringstream valid_oss;
-        
-        bool first = true;
         for (uint64_t i = 1; i <= n; ++i) {
-            if (!first) valid_oss << ",";
-            first = false;
-            
             try {
                 T val = (*algo)(i, order, *data);
-                
-#ifdef SHANKS_ENABLE_PROFILING
-                if (enable_profiling && algo_prof) {
-                    shanks::profiling::reset_counts();
-                    auto before = shanks::profiling::get_counts();
-                    (*algo_prof)(i, order, data_prof);
-                    auto after = shanks::profiling::get_counts();
-                    
-                    trace_add.push_back(after.add - before.add);
-                    trace_mul.push_back(after.mul - before.mul);
-                    trace_div.push_back(after.div - before.div);
-                    trace_special.push_back(after.special - before.special);
-                }
-#endif
-                
                 val_ser.push(val);
                 if (has_sum) {
                     dev_ser.push(utils::math<T>::abs(val - sum));
                 } else {
                     dev_ser.push(T(0));
                 }
-                valid_oss << "true";
             } catch (...) {
                 val_ser.push(T(0));
                 dev_ser.push(T(0));
-                valid_oss << "false";
-                if (enable_profiling) {
-                    trace_add.push_back(0); trace_mul.push_back(0); trace_div.push_back(0); trace_special.push_back(0);
-                }
             }
         }
         
-        std::ostringstream oss;
-        oss << "{\"values\": " << val_ser.to_json() 
-            << ", \"valid\": [" << valid_oss.str() << "]"
-            << ", \"deviations\": " << dev_ser.to_json();
+        auto* res = new FFIAccelResult();
+        std::memset(res, 0, sizeof(FFIAccelResult));
+        res->values = val_ser.finalize();
+        // Since deviations is just FFILine now 
+        // RealBinarySerializer creates FFILineColl. We just take the first line.
+        FFILineColl dev_coll = dev_ser.finalize();
+        res->deviations = dev_coll.lines[0];
         
-#ifdef SHANKS_ENABLE_PROFILING
-        if (enable_profiling) {
-            auto append_v = [&](const std::vector<unsigned long long>& v) {
-                oss << "[";
-                for (size_t i = 0; i < v.size(); ++i) {
-                    if (i > 0) oss << ",";
-                    oss << v[i];
-                }
-                oss << "]";
-            };
-            oss << ", \"profiling\": {\"add\": "; append_v(trace_add);
-            oss << ", \"mul\": "; append_v(trace_mul);
-            oss << ", \"div\": "; append_v(trace_div);
-            oss << ", \"special\": "; append_v(trace_special);
-            oss << "}";
-            shanks::profiling::reset_counts();
-        }
-#endif
-        
-        oss << "}";
-        return oss.str();
+        return res;
     }
     
     PrecisionType get_precision() const override { return precision; }
@@ -240,10 +177,10 @@ struct AccelHandleComplex : public AccelHandleBaseExt {
         uint64_t order, 
         bool enable_profiling
     ) override {
-        return apply_to_result(n, order, series, enable_profiling);
+        return "{}"; // Legacy virtual interface placeholder
     }
     
-    std::string apply_to_result(
+    FFIAccelResult* apply_to_result(
         uint64_t n, 
         uint64_t order, 
         SeriesHandleBase* series, 
@@ -251,7 +188,7 @@ struct AccelHandleComplex : public AccelHandleBaseExt {
     ) override {
         if (!algo) {
             set_error("Algorithm is null");
-            return "{}";
+            return nullptr;
         }
         
 #ifdef SHANKS_ENABLE_PROFILING
@@ -259,7 +196,7 @@ struct AccelHandleComplex : public AccelHandleBaseExt {
 #endif
 
         const void* raw_data = series->get_raw_data(n + 3 * order + 1);
-        if (!raw_data) return "{}";
+        if (!raw_data) return nullptr;
         const auto* data = static_cast<const series_result<std::complex<T>>*>(raw_data);
         
         const void* sum_ptr = series->get_native_sum();
@@ -269,97 +206,33 @@ struct AccelHandleComplex : public AccelHandleBaseExt {
             sum = *static_cast<const std::complex<T>*>(sum_ptr);
         }
 
-        std::vector<ScientificValue> deviations;
-        std::vector<unsigned long long> trace_add, trace_mul, trace_div, trace_special;
+        shanks::ffi::ComplexBinarySerializer<T> val_ser;
+        shanks::ffi::RealBinarySerializer<T> dev_ser;
 
-        if (enable_profiling) {
-            trace_add.reserve(n); trace_mul.reserve(n); trace_div.reserve(n); trace_special.reserve(n);
-        }
-
-#ifdef SHANKS_ENABLE_PROFILING
-        using ProfRealT = shanks::profiling::OperationCounting<T>;
-        using ProfT = std::complex<ProfRealT>;
-        std::unique_ptr<shanks::algos::series_acceleration<ProfT, size_t>> algo_prof;
-        ::series_result<ProfT> data_prof;
-        
-        if (enable_profiling) {
-            algo_prof = shanks::algos::transformation_registry<ProfT, size_t>::create_by_index(algo_index);
-            data_prof.Sn.reserve(data->Sn.size());
-            data_prof.an.reserve(data->an.size());
-            for (const auto& val : data->Sn) data_prof.Sn.push_back(ProfT(ProfRealT(val.real()), ProfRealT(val.imag())));
-            for (const auto& val : data->an) data_prof.an.push_back(ProfT(ProfRealT(val.real()), ProfRealT(val.imag())));
-        }
-#endif
-
-        shanks::ffi::ComplexSerializer<T> val_ser;
-        shanks::ffi::RealSerializer<T> dev_ser;
-        std::ostringstream valid_oss;
-
-        bool first = true;
         for (uint64_t i = 1; i <= n; ++i) {
-            if (!first) valid_oss << ",";
-            first = false;
-            
             try {
                 auto val = (*algo)(i, order, *data);
-                
-#ifdef SHANKS_ENABLE_PROFILING
-                if (enable_profiling && algo_prof) {
-                    shanks::profiling::reset_counts();
-                    auto before = shanks::profiling::get_counts();
-                    (*algo_prof)(i, order, data_prof);
-                    auto after = shanks::profiling::get_counts();
-                    
-                    trace_add.push_back(after.add - before.add);
-                    trace_mul.push_back(after.mul - before.mul);
-                    trace_div.push_back(after.div - before.div);
-                    trace_special.push_back(after.special - before.special);
-                }
-#endif
-                
                 val_ser.push(val);
                 if (has_sum) {
                     dev_ser.push(utils::math<std::complex<T>>::abs(val - sum));
                 } else {
                     dev_ser.push(T(0));
                 }
-                valid_oss << "true";
             } catch (...) {
                 val_ser.push(std::complex<T>(0, 0));
                 dev_ser.push(T(0));
-                valid_oss << "false";
-                if (enable_profiling) {
-                    trace_add.push_back(0); trace_mul.push_back(0); trace_div.push_back(0); trace_special.push_back(0);
-                }
             }
         }
         
-        std::ostringstream oss;
-        oss << "{\"values\": " << val_ser.to_json() 
-            << ", \"valid\": [" << valid_oss.str() << "]"
-            << ", \"deviations\": " << dev_ser.to_json();
+        auto* res = new FFIAccelResult();
+        std::memset(res, 0, sizeof(FFIAccelResult));
+        res->values = val_ser.finalize();
+        // Since deviations is just FFILine now 
+        // RealBinarySerializer creates FFILineColl. We just take the first line.
+        FFILineColl dev_coll = dev_ser.finalize();
+        res->deviations = dev_coll.lines[0];
         
-#ifdef SHANKS_ENABLE_PROFILING
-        if (enable_profiling) {
-            auto append_v = [&](const std::vector<unsigned long long>& v) {
-                oss << "[";
-                for (size_t i = 0; i < v.size(); ++i) {
-                    if (i > 0) oss << ",";
-                    oss << v[i];
-                }
-                oss << "]";
-            };
-            oss << ", \"profiling\": {\"add\": "; append_v(trace_add);
-            oss << ", \"mul\": "; append_v(trace_mul);
-            oss << ", \"div\": "; append_v(trace_div);
-            oss << ", \"special\": "; append_v(trace_special);
-            oss << "}";
-            shanks::profiling::reset_counts();
-        }
-#endif
-        
-        oss << "}";
-        return oss.str();
+        return res;
     }
     
     PrecisionType get_precision() const override { return precision; }
@@ -384,10 +257,10 @@ struct AccelHandleInterval : public AccelHandleBaseExt {
         uint64_t order, 
         bool enable_profiling
     ) override {
-        return apply_to_result(n, order, series, enable_profiling);
+        return "{}"; // Legacy virtual interface placeholder
     }
     
-    std::string apply_to_result(
+    FFIAccelResult* apply_to_result(
         uint64_t n, 
         uint64_t order, 
         SeriesHandleBase* series, 
@@ -395,7 +268,7 @@ struct AccelHandleInterval : public AccelHandleBaseExt {
     ) override {
         if (!algo) {
             set_error("Algorithm is null");
-            return "{}";
+            return nullptr;
         }
         
 #ifdef SHANKS_ENABLE_PROFILING
@@ -403,7 +276,7 @@ struct AccelHandleInterval : public AccelHandleBaseExt {
 #endif
 
         const void* raw_data = series->get_raw_data(n + 3 * order + 1);
-        if (!raw_data) return "{}";
+        if (!raw_data) return nullptr;
         const auto* data = static_cast<const series_result<intprec::interval<T>>*>(raw_data);
         
         const void* sum_ptr = series->get_native_sum();
@@ -413,53 +286,33 @@ struct AccelHandleInterval : public AccelHandleBaseExt {
             sum = *static_cast<const intprec::interval<T>*>(sum_ptr);
         }
 
-        std::vector<ScientificValue> deviations;
+        shanks::ffi::IntervalBinarySerializer<T> val_ser;
+        shanks::ffi::RealBinarySerializer<T> dev_ser;
 
-        shanks::ffi::IntervalSerializer<T> val_ser;
-        shanks::ffi::RealSerializer<T> dev_ser;
-        std::ostringstream valid_oss;
-
-        bool first = true;
         for (uint64_t i = 1; i <= n; ++i) {
-            if (!first) valid_oss << ",";
-            first = false;
-            
             try {
                 auto val = (*algo)(i, order, *data);
-                
                 val_ser.push(val);
                 if (has_sum) {
                     dev_ser.push(utils::math<intprec::interval<T>>::abs(val - sum).mag());
                 } else {
                     dev_ser.push(T(0));
                 }
-                valid_oss << "true";
             } catch (...) {
                 val_ser.push(intprec::interval<T>(0));
                 dev_ser.push(T(0));
-                valid_oss << "false";
             }
         }
         
-        std::ostringstream oss;
-        oss << "{\"values\": " << val_ser.to_json() 
-            << ", \"valid\": [" << valid_oss.str() << "]"
-            << ", \"deviations\": " << dev_ser.to_json();
+        auto* res = new FFIAccelResult();
+        std::memset(res, 0, sizeof(FFIAccelResult));
+        res->values = val_ser.finalize();
+        // Since deviations is just FFILine now 
+        // RealBinarySerializer creates FFILineColl. We just take the first line.
+        FFILineColl dev_coll = dev_ser.finalize();
+        res->deviations = dev_coll.lines[0];
         
-#ifdef SHANKS_ENABLE_PROFILING
-        if (enable_profiling) {
-            auto counts = shanks::profiling::get_counts();
-            oss << ", \"profiling\": {"
-                << "\"add\": [" << counts.add << "], "
-                << "\"mul\": [" << counts.mul << "], "
-                << "\"div\": [" << counts.div << "], "
-                << "\"special\": [" << counts.special << "]}";
-            shanks::profiling::reset_counts();
-        }
-#endif
-        
-        oss << "}";
-        return oss.str();
+        return res;
     }
     
     PrecisionType get_precision() const override { return precision; }
@@ -484,10 +337,10 @@ struct AccelHandleCInterval : public AccelHandleBaseExt {
         uint64_t order, 
         bool enable_profiling
     ) override {
-        return apply_to_result(n, order, series, enable_profiling);
+        return "{}"; // Legacy virtual interface placeholder
     }
     
-    std::string apply_to_result(
+    FFIAccelResult* apply_to_result(
         uint64_t n, 
         uint64_t order, 
         SeriesHandleBase* series, 
@@ -495,7 +348,7 @@ struct AccelHandleCInterval : public AccelHandleBaseExt {
     ) override {
         if (!algo) {
             set_error("Algorithm is null");
-            return "{}";
+            return nullptr;
         }
         
 #ifdef SHANKS_ENABLE_PROFILING
@@ -503,7 +356,7 @@ struct AccelHandleCInterval : public AccelHandleBaseExt {
 #endif
 
         const void* raw_data = series->get_raw_data(n + 3 * order + 1);
-        if (!raw_data) return "{}";
+        if (!raw_data) return nullptr;
         const auto* data = static_cast<const series_result<std::complex<intprec::interval<T>>>*>(raw_data);
         
         const void* sum_ptr = series->get_native_sum();
@@ -513,52 +366,33 @@ struct AccelHandleCInterval : public AccelHandleBaseExt {
             sum = *static_cast<const std::complex<intprec::interval<T>>*>(sum_ptr);
         }
 
-        std::vector<ScientificValue> deviations;
+        shanks::ffi::CIntervalBinarySerializer<T> val_ser;
+        shanks::ffi::RealBinarySerializer<T> dev_ser;
 
-        shanks::ffi::CIntervalSerializer<T> val_ser;
-        shanks::ffi::RealSerializer<T> dev_ser;
-        std::ostringstream valid_oss;
-
-        bool first = true;
         for (uint64_t i = 1; i <= n; ++i) {
-            if (!first) valid_oss << ",";
-            first = false;
-            
             try {
                 auto val = (*algo)(i, order, *data);
-                
                 val_ser.push(val);
                 if (has_sum) {
                     dev_ser.push(utils::math<std::complex<intprec::interval<T>>>::abs(val - sum).mag());
                 } else {
                     dev_ser.push(T(0));
                 }
-                valid_oss << "true";
             } catch (...) {
                 val_ser.push(std::complex<intprec::interval<T>>(0));
                 dev_ser.push(T(0));
-                valid_oss << "false";
             }
         }
-        std::ostringstream oss;
-        oss << "{\"values\": " << val_ser.to_json() 
-            << ", \"valid\": [" << valid_oss.str() << "]"
-            << ", \"deviations\": " << dev_ser.to_json();
         
-#ifdef SHANKS_ENABLE_PROFILING
-        if (enable_profiling) {
-            auto counts = shanks::profiling::get_counts();
-            oss << ", \"profiling\": {"
-                << "\"add\": [" << counts.add << "], "
-                << "\"mul\": [" << counts.mul << "], "
-                << "\"div\": [" << counts.div << "], "
-                << "\"special\": [" << counts.special << "]}";
-            shanks::profiling::reset_counts();
-        }
-#endif
+        auto* res = new FFIAccelResult();
+        std::memset(res, 0, sizeof(FFIAccelResult));
+        res->values = val_ser.finalize();
+        // Since deviations is just FFILine now 
+        // RealBinarySerializer creates FFILineColl. We just take the first line.
+        FFILineColl dev_coll = dev_ser.finalize();
+        res->deviations = dev_coll.lines[0];
         
-        oss << "}";
-        return oss.str();
+        return res;
     }
     
     PrecisionType get_precision() const override { return precision; }
@@ -880,23 +714,22 @@ extern "C" SHANKS_FFI_API void shanks_accel_destroy(ShanksAccelHandle handle) {
     }
 }
 
-extern "C" SHANKS_FFI_API char* shanks_accel_apply(
+extern "C" SHANKS_FFI_API FFIAccelResult* shanks_accel_apply(
     ShanksAccelHandle accel,
     ShanksSeriesHandle series,
     uint64_t n,
-    uint64_t order,
-    int enable_profiling
+    uint64_t order
 ) {
     clear_error();
     
     if (!accel) {
         set_error("Invalid algorithm handle");
-        return alloc_string("{}");
+        return nullptr;
     }
     
     if (!series) {
         set_error("Invalid series handle");
-        return alloc_string("{}");
+        return nullptr;
     }
     
     auto* accel_ptr = static_cast<AccelHandleBaseExt*>(accel);
@@ -905,16 +738,22 @@ extern "C" SHANKS_FFI_API char* shanks_accel_apply(
     // Check precision compatibility
     if (accel_ptr->get_precision() != series_ptr->get_precision()) {
         set_error("Precision mismatch between algorithm and series");
-        return alloc_string("{}");
+        return nullptr;
     }
     
     try {
-        std::string result = accel_ptr->apply(series_ptr, n, order, enable_profiling != 0);
-        return alloc_string(result);
+        return accel_ptr->apply_to_result(n, order, series_ptr, false);
     } catch (const std::exception& e) {
         set_error(std::string("Error applying algorithm: ") + e.what());
-        return alloc_string("{}");
+        return nullptr;
     }
+}
+
+extern "C" SHANKS_FFI_API void shanks_accel_result_free(FFIAccelResult* result) {
+    if (!result) return;
+    shanks::ffi::free_ffi_line_coll(&result->values);
+    shanks::ffi::free_ffi_line(&result->deviations);
+    delete result;
 }
 
 extern "C" SHANKS_FFI_API char* shanks_accel_apply_data(

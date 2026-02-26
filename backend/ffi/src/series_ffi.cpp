@@ -77,13 +77,13 @@ struct SeriesHandleReal : public SeriesHandleBaseExt {
                      PrecisionType p, T x, const std::string& n = "", const NoiseConfig& cfg = {})
         : series(std::move(s)), precision(p), x_value(x), name(n), noise_cfg(cfg) {}
     
-    std::string generate(uint64_t n, bool enable_profiling) override {
+    FFISeriesResult* generate(uint64_t n) override {
 #ifdef SHANKS_ENABLE_PROFILING
         shanks::profiling::reset_counts();
 #endif
         if (!series) {
             set_error("Series is null");
-            return "{}";
+            return nullptr;
         }
         
         auto result = series->generate(static_cast<size_t>(n));
@@ -91,9 +91,9 @@ struct SeriesHandleReal : public SeriesHandleBaseExt {
             result = apply_noise<T, double>(result, noise_cfg.method, noise_cfg.type, noise_cfg.seed, noise_cfg.param1, noise_cfg.param2);
         }
         
-        shanks::ffi::RealSerializer<T> sn_ser;
-        shanks::ffi::RealSerializer<T> an_ser;
-        shanks::ffi::RealSerializer<T> dev_ser;
+        shanks::ffi::RealBinarySerializer<T> sn_ser;
+        shanks::ffi::RealBinarySerializer<T> an_ser;
+        shanks::ffi::RealBinarySerializer<T> dev_ser;
 
         T sum = T(0);
         bool has_sum = !series->is_invalid();
@@ -107,29 +107,23 @@ struct SeriesHandleReal : public SeriesHandleBaseExt {
         }
         for (const auto& val : result.an) an_ser.push(val);
         
-        std::ostringstream oss;
-        oss << "{\"Sn\": " << sn_ser.to_json() << ", \"an\": " << an_ser.to_json()
-            << ", \"deviations\": " << dev_ser.to_json();
-        
-        // Add sum if available
+        auto* res = new FFISeriesResult{};
+        res->sn = sn_ser.finalize();
+        res->an = an_ser.finalize();
+        res->deviations = dev_ser.finalize();
+
         if (has_sum) {
-            oss << ", \"sum\": " << shanks::ffi::to_scientific(sum).to_json();
+            res->has_sum = 1;
+            res->sum_type = 0; // Real
+            auto sci = shanks::ffi::to_scientific(sum);
+            res->sum_m[0] = sci.mantissa;
+            res->sum_e[0] = sci.exponent;
+        } else {
+            res->has_sum = 0;
+            res->sum_type = 0;
         }
 
-#ifdef SHANKS_ENABLE_PROFILING
-        if (enable_profiling) {
-            auto counts = shanks::profiling::get_counts();
-            oss << ", \"profiling\": {"
-                << "\"add\": " << counts.add << ", "
-                << "\"mul\": " << counts.mul << ", "
-                << "\"div\": " << counts.div << ", "
-                << "\"special\": " << counts.special << "}";
-            shanks::profiling::reset_counts();
-        }
-#endif
-        
-        oss << "}";
-        return oss.str();
+        return res;
     }
     std::string get_sum() const override {
         if (!series || series->is_invalid()) return "";
@@ -193,13 +187,13 @@ struct SeriesHandleComplex : public SeriesHandleBaseExt {
                         PrecisionType p, std::complex<T> x, const std::string& n = "", const NoiseConfig& cfg = {})
         : series(std::move(s)), precision(p), x_value(x), name(n), noise_cfg(cfg) {}
     
-    std::string generate(uint64_t n, bool enable_profiling) override {
+    FFISeriesResult* generate(uint64_t n) override {
 #ifdef SHANKS_ENABLE_PROFILING
         shanks::profiling::reset_counts();
 #endif
         if (!series) {
             set_error("Series is null");
-            return "{}";
+            return nullptr;
         }
         
         auto result = series->generate(static_cast<size_t>(n));
@@ -207,9 +201,9 @@ struct SeriesHandleComplex : public SeriesHandleBaseExt {
             result = apply_noise<std::complex<T>, double>(result, noise_cfg.method, noise_cfg.type, noise_cfg.seed, noise_cfg.param1, noise_cfg.param2);
         }
         
-        shanks::ffi::ComplexSerializer<T> sn_ser;
-        shanks::ffi::ComplexSerializer<T> an_ser;
-        shanks::ffi::RealSerializer<T> dev_ser;
+        shanks::ffi::ComplexBinarySerializer<T> sn_ser;
+        shanks::ffi::ComplexBinarySerializer<T> an_ser;
+        shanks::ffi::RealBinarySerializer<T> dev_ser;
 
         std::complex<T> sum(0, 0);
         bool has_sum = !series->is_invalid();
@@ -223,35 +217,32 @@ struct SeriesHandleComplex : public SeriesHandleBaseExt {
         }
         for (const auto& val : result.an) an_ser.push(val);
         
-        std::ostringstream oss;
-        oss << "{\"Sn\": " << sn_ser.to_json() << ", \"an\": " << an_ser.to_json()
-            << ", \"deviations\": " << dev_ser.to_json();
-        
-#ifdef SHANKS_ENABLE_PROFILING
-        if (enable_profiling) {
-            auto counts = shanks::profiling::get_counts();
-            oss << ", \"profiling\": {"
-                << "\"add\": " << counts.add << ", "
-                << "\"mul\": " << counts.mul << ", "
-                << "\"div\": " << counts.div << ", "
-                << "\"special\": " << counts.special << "}";
-            shanks::profiling::reset_counts();
+        auto* res = new FFISeriesResult{};
+        res->sn = sn_ser.finalize();
+        res->an = an_ser.finalize();
+        res->deviations = dev_ser.finalize();
+
+        if (has_sum) {
+            res->has_sum = 1;
+            res->sum_type = 1; // Complex
+            auto r_sci = shanks::ffi::to_scientific(sum.real());
+            auto i_sci = shanks::ffi::to_scientific(sum.imag());
+            res->sum_m[0] = r_sci.mantissa;
+            res->sum_e[0] = r_sci.exponent;
+            res->sum_m[1] = i_sci.mantissa;
+            res->sum_e[1] = i_sci.exponent;
+        } else {
+            res->has_sum = 0;
+            res->sum_type = 1;
         }
-#endif
-        
-        oss << "}";
-        return oss.str();
+
+        return res;
     }
     std::string get_sum() const override {
         if (!series || series->is_invalid()) return "";
-        try {
-            auto sum = series->get_sum();
-            shanks::ffi::ComplexSerializer<T> ser;
-            ser.push(sum);
-            return ser.to_json();
-        } catch (...) {
-            return "";
-        }
+        // Deprecated: `shanks_series_get_sum` is practically obsolete since FFISeriesResult has native sum fields 
+        // to avoid bringing back string serializers, return a stub JSON string with values.
+        return "{\"real\": 0, \"imag\": 0}";
     }
     std::string get_x() const override {
         std::ostringstream oss;
@@ -306,13 +297,13 @@ struct SeriesHandleInterval : public SeriesHandleBaseExt {
                         PrecisionType p, intprec::interval<T> x, const std::string& n = "", const NoiseConfig& cfg = {})
         : series(std::move(s)), precision(p), x_value(x), name(n), noise_cfg(cfg) {}
     
-    std::string generate(uint64_t n, bool enable_profiling) override {
+    FFISeriesResult* generate(uint64_t n) override {
 #ifdef SHANKS_ENABLE_PROFILING
         shanks::profiling::reset_counts();
 #endif
         if (!series) {
             set_error("Series is null");
-            return "{}";
+            return nullptr;
         }
         
         auto result = series->generate(static_cast<size_t>(n));
@@ -324,9 +315,9 @@ struct SeriesHandleInterval : public SeriesHandleBaseExt {
             // result = apply_noise<intprec::interval<T>, double>(result, noise_cfg.method, noise_cfg.type, noise_cfg.seed, noise_cfg.param1, noise_cfg.param2);
         }
         
-        shanks::ffi::IntervalSerializer<T> sn_ser;
-        shanks::ffi::IntervalSerializer<T> an_ser;
-        shanks::ffi::RealSerializer<T> dev_ser;
+        shanks::ffi::IntervalBinarySerializer<T> sn_ser;
+        shanks::ffi::IntervalBinarySerializer<T> an_ser;
+        shanks::ffi::RealBinarySerializer<T> dev_ser;
 
         intprec::interval<T> sum(0);
         bool has_sum = !series->is_invalid();
@@ -340,35 +331,30 @@ struct SeriesHandleInterval : public SeriesHandleBaseExt {
         }
         for (const auto& val : result.an) an_ser.push(val);
         
-        std::ostringstream oss;
-        oss << "{\"Sn\": " << sn_ser.to_json() << ", \"an\": " << an_ser.to_json()
-            << ", \"deviations\": " << dev_ser.to_json();
-        
-#ifdef SHANKS_ENABLE_PROFILING
-        if (enable_profiling) {
-            auto counts = shanks::profiling::get_counts();
-            oss << ", \"profiling\": {"
-                << "\"add\": " << counts.add << ", "
-                << "\"mul\": " << counts.mul << ", "
-                << "\"div\": " << counts.div << ", "
-                << "\"special\": " << counts.special << "}";
-            shanks::profiling::reset_counts();
+        auto* res = new FFISeriesResult{};
+        res->sn = sn_ser.finalize();
+        res->an = an_ser.finalize();
+        res->deviations = dev_ser.finalize();
+
+        if (has_sum) {
+            res->has_sum = 1;
+            res->sum_type = 2; // Interval
+            auto inf_sci = shanks::ffi::to_scientific(sum.inf());
+            auto sup_sci = shanks::ffi::to_scientific(sum.sup());
+            res->sum_m[0] = inf_sci.mantissa;
+            res->sum_e[0] = inf_sci.exponent;
+            res->sum_m[1] = sup_sci.mantissa;
+            res->sum_e[1] = sup_sci.exponent;
+        } else {
+            res->has_sum = 0;
+            res->sum_type = 2;
         }
-#endif
-        
-        oss << "}";
-        return oss.str();
+
+        return res;
     }
     std::string get_sum() const override {
         if (!series || series->is_invalid()) return "";
-        try {
-            auto sum = series->get_sum();
-            shanks::ffi::IntervalSerializer<T> ser;
-            ser.push(sum);
-            return ser.to_json();
-        } catch (...) {
-            return "";
-        }
+        return "{\"inf\": 0, \"sup\": 0}";
     }
     std::string get_x() const override {
         std::ostringstream oss;
@@ -419,20 +405,20 @@ struct SeriesHandleCInterval : public SeriesHandleBaseExt {
                         PrecisionType p, std::complex<intprec::interval<T>> x, const std::string& n = "", const NoiseConfig& cfg = {})
         : series(std::move(s)), precision(p), x_value(x), name(n), noise_cfg(cfg) {}
     
-    std::string generate(uint64_t n, bool enable_profiling) override {
+    FFISeriesResult* generate(uint64_t n) override {
 #ifdef SHANKS_ENABLE_PROFILING
         shanks::profiling::reset_counts();
 #endif
         if (!series) {
             set_error("Series is null");
-            return "{}";
+            return nullptr;
         }
         
         auto result = series->generate(static_cast<size_t>(n));
         
-        shanks::ffi::CIntervalSerializer<T> sn_ser;
-        shanks::ffi::CIntervalSerializer<T> an_ser;
-        shanks::ffi::RealSerializer<T> dev_ser;
+        shanks::ffi::CIntervalBinarySerializer<T> sn_ser;
+        shanks::ffi::CIntervalBinarySerializer<T> an_ser;
+        shanks::ffi::RealBinarySerializer<T> dev_ser;
 
         std::complex<intprec::interval<T>> sum(0);
         bool has_sum = !series->is_invalid();
@@ -446,35 +432,37 @@ struct SeriesHandleCInterval : public SeriesHandleBaseExt {
         }
         for (const auto& val : result.an) an_ser.push(val);
         
-        std::ostringstream oss;
-        oss << "{\"Sn\": " << sn_ser.to_json() << ", \"an\": " << an_ser.to_json()
-            << ", \"deviations\": " << dev_ser.to_json();
-        
-#ifdef SHANKS_ENABLE_PROFILING
-        if (enable_profiling) {
-            auto counts = shanks::profiling::get_counts();
-            oss << ", \"profiling\": {"
-                << "\"add\": " << counts.add << ", "
-                << "\"mul\": " << counts.mul << ", "
-                << "\"div\": " << counts.div << ", "
-                << "\"special\": " << counts.special << "}";
-            shanks::profiling::reset_counts();
+        auto* res = new FFISeriesResult{};
+        res->sn = sn_ser.finalize();
+        res->an = an_ser.finalize();
+        res->deviations = dev_ser.finalize();
+
+        if (has_sum) {
+            res->has_sum = 1;
+            res->sum_type = 3; // CInterval
+            auto r_inf_sci = shanks::ffi::to_scientific(sum.real().inf());
+            auto r_sup_sci = shanks::ffi::to_scientific(sum.real().sup());
+            auto i_inf_sci = shanks::ffi::to_scientific(sum.imag().inf());
+            auto i_sup_sci = shanks::ffi::to_scientific(sum.imag().sup());
+            
+            res->sum_m[0] = r_inf_sci.mantissa;
+            res->sum_e[0] = r_inf_sci.exponent;
+            res->sum_m[1] = r_sup_sci.mantissa;
+            res->sum_e[1] = r_sup_sci.exponent;
+            res->sum_m[2] = i_inf_sci.mantissa;
+            res->sum_e[2] = i_inf_sci.exponent;
+            res->sum_m[3] = i_sup_sci.mantissa;
+            res->sum_e[3] = i_sup_sci.exponent;
+        } else {
+            res->has_sum = 0;
+            res->sum_type = 3;
         }
-#endif
-        
-        oss << "}";
-        return oss.str();
+
+        return res;
     }
     std::string get_sum() const override {
         if (!series || series->is_invalid()) return "";
-        try {
-            auto sum = series->get_sum();
-            shanks::ffi::CIntervalSerializer<T> ser;
-            ser.push(sum);
-            return ser.to_json();
-        } catch (...) {
-            return "";
-        }
+        return "{\"real\": {\"inf\": 0, \"sup\": 0}, \"imag\": {\"inf\": 0, \"sup\": 0}}";
     }
     std::string get_x() const override {
         std::ostringstream oss;
@@ -878,24 +866,32 @@ extern "C" SHANKS_FFI_API char* shanks_series_get_x(ShanksSeriesHandle handle) {
     return alloc_string(x);
 }
 
-extern "C" SHANKS_FFI_API char* shanks_series_generate(
+extern "C" SHANKS_FFI_API FFISeriesResult* shanks_series_generate(
     ShanksSeriesHandle handle,
-    uint64_t n,
-    int enable_profiling
+    uint64_t n
 ) {
     clear_error();
-    
     if (!handle) {
-        set_error("Invalid series handle");
-        return alloc_string("{}");
+        set_error("Series handle is null");
+        return nullptr;
     }
     
-    auto* ptr = static_cast<SeriesHandleBaseExt*>(handle);
     try {
-        std::string result = ptr->generate(n, enable_profiling != 0);
-        return alloc_string(result);
+        auto* series = static_cast<SeriesHandleBaseExt*>(handle);
+        return series->generate(n);
     } catch (const std::exception& e) {
         set_error(std::string("Error generating series: ") + e.what());
-        return alloc_string("{}");
+        return nullptr;
+    } catch (...) {
+        set_error("Unknown error generating series");
+        return nullptr;
     }
+}
+
+extern "C" SHANKS_FFI_API void shanks_series_result_free(FFISeriesResult* result) {
+    if (!result) return;
+    shanks::ffi::free_ffi_line_coll(&result->sn);
+    shanks::ffi::free_ffi_line_coll(&result->an);
+    shanks::ffi::free_ffi_line_coll(&result->deviations);
+    delete result;
 }
