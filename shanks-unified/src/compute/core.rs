@@ -385,7 +385,7 @@ impl ComputeCore {
                         }
                         crate::ffi::SeriesPoint::Complex(c) => (
                             c.real.mantissa.to_string(),
-                            c.imag.mantissa.to_string(),
+                            format!("{}|{}", c.imag.mantissa, c.imag.exponent),
                             c.real.exponent,
                         ),
                         crate::ffi::SeriesPoint::Interval(ref i) => {
@@ -401,7 +401,7 @@ impl ComputeCore {
                         }
                         crate::ffi::SeriesPoint::Complex(c) => (
                             c.real.mantissa.to_string(),
-                            c.imag.mantissa.to_string(),
+                            format!("{}|{}", c.imag.mantissa, c.imag.exponent),
                             c.real.exponent,
                         ),
                         crate::ffi::SeriesPoint::Interval(ref i_val) => {
@@ -629,7 +629,7 @@ impl ComputeCore {
                                 }
                                 crate::ffi::SeriesPoint::Complex(c) => (
                                     c.real.mantissa.to_string(),
-                                    c.imag.mantissa.to_string(),
+                                    format!("{}|{}", c.imag.mantissa, c.imag.exponent),
                                     c.real.exponent,
                                 ),
                                 crate::ffi::SeriesPoint::Interval(ref i_val) => {

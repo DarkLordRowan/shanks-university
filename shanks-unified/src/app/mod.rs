@@ -198,6 +198,7 @@ struct PlotCache {
     symlog: bool,
     log_linthresh: f64,
     main_sn: Vec<CachedPlotLine>,
+    main_an: Vec<CachedPlotLine>,
     main_accel: Vec<CachedPlotLine>,
     limits: Vec<(String, f64, Option<(f64, f64)>)>,
     smoothed_estimates: Vec<CachedPlotLine>,
@@ -249,6 +250,7 @@ pub struct ShanksApp {
 
     // UI options
     show_partial_sums: bool,
+    show_an: bool,
     show_accel_values: bool,
     show_limit_lines: bool,
     show_smoothed_estimates: bool,
@@ -307,6 +309,7 @@ impl ShanksApp {
     /// Create a new application instance.
     pub fn new(state: AppState) -> Self {
         let show_partial_sums = true;
+        let show_an = false;
         let use_symlog = false;
 
         // Build selection trees if experiment config is loaded
@@ -371,6 +374,7 @@ impl ShanksApp {
             last_input_change: None,
             last_computed_state: None,
             show_partial_sums,
+            show_an,
             show_accel_values: true,
             show_limit_lines: true,
             show_smoothed_estimates: true,
@@ -754,6 +758,7 @@ impl ShanksApp {
         self.plot_cache.symlog = use_symlog;
         self.plot_cache.log_linthresh = log_linthresh;
         self.plot_cache.main_sn.clear();
+        self.plot_cache.main_an.clear();
         self.plot_cache.main_accel.clear();
         self.plot_cache.limits.clear();
         self.plot_cache.smoothed_estimates.clear();
@@ -833,6 +838,45 @@ impl ShanksApp {
                     name: format!("Sn (Im) - {}", series_name),
                     color: colors_sn[i % colors_sn.len()].gamma_multiply(0.6),
                     points: pts_im,
+                });
+            }
+
+            let colors_an = [
+                egui::Color32::from_rgb(255, 140, 0),   // Orange
+                egui::Color32::from_rgb(255, 200, 0),   // Gold
+                egui::Color32::from_rgb(200, 80, 0),    // Dark orange
+                egui::Color32::from_rgb(255, 100, 100), // Salmon
+            ];
+
+            let mut an_re: Vec<egui_plot::PlotPoint> = Vec::new();
+            let mut an_im: Vec<egui_plot::PlotPoint> = Vec::new();
+
+            for j in 0..results.an.len() {
+                let p = results.an.get(j);
+                if let Some((re, im_opt)) = self.point_to_f64_parts(&p, use_symlog, log_linthresh) {
+                    an_re.push([j as f64, re].into());
+                    if let Some(im) = im_opt {
+                        an_im.push([j as f64, im].into());
+                    }
+                }
+            }
+
+            if !an_re.is_empty() {
+                self.plot_cache.main_an.push(CachedPlotLine {
+                    name: if an_im.is_empty() {
+                        format!("An - {}", series_name)
+                    } else {
+                        format!("An (Re) - {}", series_name)
+                    },
+                    color: colors_an[i % colors_an.len()],
+                    points: an_re,
+                });
+            }
+            if !an_im.is_empty() {
+                self.plot_cache.main_an.push(CachedPlotLine {
+                    name: format!("An (Im) - {}", series_name),
+                    color: colors_an[i % colors_an.len()].gamma_multiply(0.65),
+                    points: an_im,
                 });
             }
 
@@ -1292,6 +1336,7 @@ impl eframe::App for ShanksApp {
                 });
                 ui.menu_button("View", |ui| {
                     ui.checkbox(&mut self.show_partial_sums, "Show Partial Sums");
+                    ui.checkbox(&mut self.show_an, "Show An");
                     ui.checkbox(&mut self.show_accel_values, "Show Accelerated Values");
                     ui.checkbox(&mut self.show_limit_lines, "Show Series Limits");
                     ui.checkbox(&mut self.show_smoothed_estimates, "Show Smoothed Estimates");
@@ -1596,6 +1641,16 @@ impl eframe::App for ShanksApp {
                                 l = l.style(egui_plot::LineStyle::Dashed { length: 5.0 });
                             }
                             plot_ui.line(l);
+                        }
+
+                        if self.show_an {
+                            for line in &self.plot_cache.main_an {
+                                let l = egui_plot::Line::new(&*line.points)
+                                    .name(&line.name)
+                                    .color(line.color)
+                                    .style(egui_plot::LineStyle::Dashed { length: 2.0 });
+                                plot_ui.line(l);
+                            }
                         }
 
                         // Plot interval polygons (real axis / 1-D)

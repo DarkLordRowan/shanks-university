@@ -384,19 +384,25 @@ impl Cache {
                     };
                     if let Some(imag_str) = sn_imag {
                         if !imag_str.is_empty() {
-                            if let Ok(imag_val) = imag_str.parse::<f64>() {
-                                let imag_sci = crate::ffi::ScientificValue {
-                                    mantissa: imag_val,
-                                    exponent: exp,
-                                };
-                                sn.push(crate::ffi::SeriesPoint::Complex(
-                                    crate::ffi::ComplexValue {
-                                        real: real_sci,
-                                        imag: imag_sci,
-                                    },
-                                ));
-                                continue;
-                            }
+                            // Parse "mantissa|exponent" (new format) or just "mantissa" (legacy)
+                            let (imag_mantissa, imag_exp) = if let Some(pipe_pos) = imag_str.find('|') {
+                                let m = imag_str[..pipe_pos].parse::<f64>().unwrap_or(0.0);
+                                let e = imag_str[pipe_pos + 1..].parse::<i64>().unwrap_or(exp);
+                                (m, e)
+                            } else {
+                                (imag_str.parse::<f64>().unwrap_or(0.0), exp)
+                            };
+                            let imag_sci = crate::ffi::ScientificValue {
+                                mantissa: imag_mantissa,
+                                exponent: imag_exp,
+                            };
+                            sn.push(crate::ffi::SeriesPoint::Complex(
+                                crate::ffi::ComplexValue {
+                                    real: real_sci,
+                                    imag: imag_sci,
+                                },
+                            ));
+                            continue;
                         }
                     }
                     sn.push(crate::ffi::SeriesPoint::Real(real_sci));
@@ -422,19 +428,25 @@ impl Cache {
                     };
                     if let Some(imag_str) = an_imag {
                         if !imag_str.is_empty() {
-                            if let Ok(imag_val) = imag_str.parse::<f64>() {
-                                let imag_sci = crate::ffi::ScientificValue {
-                                    mantissa: imag_val,
-                                    exponent: exp,
-                                };
-                                an.push(crate::ffi::SeriesPoint::Complex(
-                                    crate::ffi::ComplexValue {
-                                        real: real_sci,
-                                        imag: imag_sci,
-                                    },
-                                ));
-                                continue;
-                            }
+                            // Parse "mantissa|exponent" (new format) or just "mantissa" (legacy)
+                            let (imag_mantissa, imag_exp) = if let Some(pipe_pos) = imag_str.find('|') {
+                                let m = imag_str[..pipe_pos].parse::<f64>().unwrap_or(0.0);
+                                let e = imag_str[pipe_pos + 1..].parse::<i64>().unwrap_or(exp);
+                                (m, e)
+                            } else {
+                                (imag_str.parse::<f64>().unwrap_or(0.0), exp)
+                            };
+                            let imag_sci = crate::ffi::ScientificValue {
+                                mantissa: imag_mantissa,
+                                exponent: imag_exp,
+                            };
+                            an.push(crate::ffi::SeriesPoint::Complex(
+                                crate::ffi::ComplexValue {
+                                    real: real_sci,
+                                    imag: imag_sci,
+                                },
+                            ));
+                            continue;
                         }
                     }
                     an.push(crate::ffi::SeriesPoint::Real(real_sci));
@@ -557,18 +569,24 @@ impl Cache {
                     };
                     if let Some(imag_str) = v_imag {
                         if !imag_str.is_empty() {
-                            if let Ok(imag_val) = imag_str.parse::<f64>() {
-                                let imag_sci = crate::ffi::ScientificValue {
-                                    mantissa: imag_val,
-                                    exponent: exp,
-                                };
-                                values[idx] = Some(crate::ffi::SeriesPoint::Complex(
-                                    crate::ffi::ComplexValue {
-                                        real: real_sci,
-                                        imag: imag_sci,
-                                    },
-                                ));
-                            }
+                            // Parse "mantissa|exponent" (new format) or just "mantissa" (legacy)
+                            let (imag_mantissa, imag_exp) = if let Some(pipe_pos) = imag_str.find('|') {
+                                let m = imag_str[..pipe_pos].parse::<f64>().unwrap_or(0.0);
+                                let e = imag_str[pipe_pos + 1..].parse::<i64>().unwrap_or(exp);
+                                (m, e)
+                            } else {
+                                (imag_str.parse::<f64>().unwrap_or(0.0), exp)
+                            };
+                            let imag_sci = crate::ffi::ScientificValue {
+                                mantissa: imag_mantissa,
+                                exponent: imag_exp,
+                            };
+                            values[idx] = Some(crate::ffi::SeriesPoint::Complex(
+                                crate::ffi::ComplexValue {
+                                    real: real_sci,
+                                    imag: imag_sci,
+                                },
+                            ));
                         } else {
                             values[idx] = Some(crate::ffi::SeriesPoint::Real(real_sci));
                         }
