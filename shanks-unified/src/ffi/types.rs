@@ -174,6 +174,11 @@ impl ScientificValue {
         let mantissa = value / 10f64.powi(exponent as i32);
         ScientificValue { mantissa, exponent }
     }
+
+    /// Format as a high-precision scientific notation string (e.g., "1.2345678901234567e-5").
+    pub fn format_high_precision(&self) -> String {
+        format!("{:.17e}", self.mantissa * 10f64.powi(self.exponent as i32))
+    }
 }
 
 /// Complex number in scientific notation.
@@ -194,6 +199,19 @@ impl ComplexValue {
             format!("{} + {}j", self.real.format(), self.imag.format())
         }
     }
+
+    /// Format as a high-precision scientific notation string.
+    pub fn format_high_precision(&self) -> String {
+        if self.imag.mantissa.abs() < 1e-18 {
+            self.real.format_high_precision()
+        } else {
+            format!(
+                "{} + {}j",
+                self.real.format_high_precision(),
+                self.imag.format_high_precision()
+            )
+        }
+    }
 }
 
 /// Interval value bounds
@@ -210,6 +228,15 @@ impl IntervalValue {
     pub fn format(&self) -> String {
         format!("[{}, {}]", self.inf.format(), self.sup.format())
     }
+
+    /// Format as a high-precision scientific notation string.
+    pub fn format_high_precision(&self) -> String {
+        format!(
+            "[{}, {}]",
+            self.inf.format_high_precision(),
+            self.sup.format_high_precision()
+        )
+    }
 }
 
 /// Complex interval value
@@ -225,6 +252,15 @@ impl CIntervalValue {
     /// Format as a string.
     pub fn format(&self) -> String {
         format!("{} + {}j", self.real.format(), self.imag.format())
+    }
+
+    /// Format as a high-precision scientific notation string.
+    pub fn format_high_precision(&self) -> String {
+        format!(
+            "{} + {}j",
+            self.real.format_high_precision(),
+            self.imag.format_high_precision()
+        )
     }
 }
 
@@ -244,6 +280,16 @@ impl SeriesPoint {
             SeriesPoint::Complex(v) => v.real.to_f64(),
             SeriesPoint::Interval(v) => (v.inf.to_f64() + v.sup.to_f64()) / 2.0,
             SeriesPoint::CInterval(v) => (v.real.inf.to_f64() + v.real.sup.to_f64()) / 2.0,
+        }
+    }
+
+    /// Format as a high-precision scientific notation string.
+    pub fn format_high_precision(&self) -> String {
+        match self {
+            SeriesPoint::Real(v) => v.format_high_precision(),
+            SeriesPoint::Complex(v) => v.format_high_precision(),
+            SeriesPoint::Interval(v) => v.format_high_precision(),
+            SeriesPoint::CInterval(v) => v.format_high_precision(),
         }
     }
 }

@@ -226,6 +226,8 @@ pub struct ShanksApp {
     compute_engine: Option<ComputeEngine>,
     event_rx: Option<mpsc::Receiver<ComputeEvent>>,
     current_task_id: Option<uuid::Uuid>,
+    /// Active tasks being computed, to associate results with parameters
+    active_tasks: std::collections::HashMap<uuid::Uuid, crate::compute::task::ComputeTask>,
 
     // Selection trees
     series_tree: Option<SelectionNode>,
@@ -236,6 +238,10 @@ pub struct ShanksApp {
     // Results
     current_results: std::collections::BTreeMap<String, SeriesResult>,
     current_accel_results: std::collections::BTreeMap<String, AccelResult>,
+    /// Parameters used for each series result
+    current_results_params: std::collections::HashMap<String, crate::compute::SeriesParams>,
+    /// Parameters used for each acceleration result
+    current_accel_params: std::collections::HashMap<String, crate::compute::AccelParams>,
 
     // Debounce and state
     last_input_change: Option<std::time::Instant>,
@@ -353,12 +359,15 @@ impl ShanksApp {
             compute_engine,
             event_rx,
             current_task_id: None,
+            active_tasks: std::collections::HashMap::new(),
             series_tree,
             accel_tree,
             noise_tree,
             precision_tree,
             current_results: std::collections::BTreeMap::new(),
             current_accel_results: std::collections::BTreeMap::new(),
+            current_results_params: std::collections::HashMap::new(),
+            current_accel_params: std::collections::HashMap::new(),
             last_input_change: None,
             last_computed_state: None,
             show_partial_sums,
@@ -420,6 +429,9 @@ impl ShanksApp {
         // Clear results — they will be repopulated entirely from incoming events
         self.current_results.clear();
         self.current_accel_results.clear();
+        self.current_results_params.clear();
+        self.current_accel_params.clear();
+        self.active_tasks.clear();
         self.results_dirty = true;
 
         // --- Build one ComputeTask per unique (series, precision, noise) combination ---
@@ -512,9 +524,10 @@ impl ShanksApp {
             };
 
             if let Some(ref mut engine) = self.compute_engine {
-                match engine.start_task(task) {
+                match engine.start_task(task.clone()) {
                     Ok(id) => {
                         self.current_task_id = Some(id);
+                        self.active_tasks.insert(id, task);
                         self.is_computing = true;
                         self.status_message = "Computing...".to_string();
                     }
@@ -542,14 +555,40 @@ impl ShanksApp {
                     } => {
                         self.status_message = format!("{}: {}/{}", stage, current, total);
                     }
-                    ComputeEventBody::SeriesComplete { name, result } => {
+                     ComputeEventBody::SeriesComplete { name, result } => {
                         log::info!("SeriesComplete: {} Sn points", result.sn.len());
+                        if let Some(task) = self.active_tasks.get(&event.task_id) {
+                            self.current_results_params
+                                .insert(name.clone(), task.series.clone());
+                        }
                         self.current_results.insert(name, result);
                         self.status_message = "Series complete, applying algorithms...".to_string();
                         self.results_dirty = true;
                     }
                     ComputeEventBody::AccelComplete { name, result } => {
                         log::info!("AccelComplete: {} values", result.values.len());
+                        if let Some(task) = self.active_tasks.get(&event.task_id) {
+                            // Find which algorithm this relates to by name
+                            for accel in &task.algorithms {
+                                let accel_name = format!(
+                                    "{} ({}{}) - {}",
+                                    task.series.name,
+                                    task.precision,
+                                    task.noise
+                                        .as_ref()
+                                        .map(|n| format!(", {}", n.noise_type))
+                                        .unwrap_or_default(),
+                                    crate::compute::core::build_distinct_name(
+                                        accel,
+                                        &task.algorithms
+                                    )
+                                );
+                                if accel_name == name {
+                                    self.current_accel_params.insert(name.clone(), accel.clone());
+                                    break;
+                                }
+                            }
+                        }
                         self.current_accel_results.insert(name, result);
                         self.results_dirty = true;
                     }
@@ -1675,9 +1714,99 @@ impl ShanksApp {
         let timestamp = chrono::Local::now().format("%Y%m%d_%H%M%S").to_string();
         let path = format!("export_{}.json", timestamp);
 
+        let mut series_list = Vec::new();
+
+        for (series_name, series_res) in &self.current_results {
+            let mut series_entry = serde_json::json!({
+                "name": series_name,
+                "params": {},
+                "partial_sums": [],
+                "limit": null,
+                "accelerations": []
+            });
+
+            if let Some(params) = self.current_results_params.get(series_name) {
+                series_entry["params"] = serde_json::to_value(&params.params).unwrap_or_default();
+            }
+
+            if let Some(limit) = &series_res.sum {
+                series_entry["limit"] = serde_json::Value::String(limit.format_high_precision());
+            }
+
+            let n_points = series_res.sn.len();
+            let mut partial_sums = Vec::with_capacity(n_points);
+            for i in 0..n_points {
+                partial_sums.push(series_res.sn.get(i).format_high_precision());
+            }
+            series_entry["partial_sums"] =
+                serde_json::Value::Array(partial_sums.into_iter().map(serde_json::Value::String).collect());
+
+            let mut accelerations = Vec::new();
+            for (accel_name, accel_res) in &self.current_accel_results {
+                if accel_name.starts_with(series_name) {
+                    let mut accel_entry = serde_json::json!({
+                        "name": accel_name,
+                        "params": {},
+                        "points": {}
+                    });
+
+                    if let Some(params) = self.current_accel_params.get(accel_name) {
+                        accel_entry["params"] =
+                            serde_json::to_value(&params.params).unwrap_or_default();
+                    }
+
+                    let mut points_map = serde_json::Map::new();
+                    for i in 0..accel_res.values.len() {
+                        let n = i + 1;
+                        // Build using a Map to ensure field order if preserve_order is enabled
+                        let mut point_map = serde_json::Map::new();
+                        
+                        point_map.insert("unaccelerated".to_string(), serde_json::json!({
+                            "value": series_res.sn.get(i).format_high_precision(),
+                            "deviation": if i < series_res.deviations.len() {
+                                series_res.deviations.get(i).format_high_precision()
+                            } else {
+                                "null".to_string()
+                            }
+                        }));
+
+                        point_map.insert("accelerated".to_string(), serde_json::json!({
+                            "value": accel_res.values.get(i).format_high_precision(),
+                            "deviation": accel_res.deviations.get(i).format_high_precision()
+                        }));
+
+                        // Filter events for this point n
+                        let mut pt_events = Vec::new();
+                        for event in &accel_res.events {
+                            if event.n == n as u64 {
+                                pt_events.push(serde_json::json!({
+                                    "name": event.name,
+                                    "description": event.description
+                                }));
+                            }
+                        }
+                        for error in &accel_res.errors {
+                            if error.n == n as u64 {
+                                pt_events.push(serde_json::json!({
+                                    "name": "error",
+                                    "description": error.message
+                                }));
+                            }
+                        }
+                        point_map.insert("events".to_string(), serde_json::Value::Array(pt_events));
+
+                        points_map.insert(n.to_string(), serde_json::Value::Object(point_map));
+                    }
+                    accel_entry["points"] = serde_json::Value::Object(points_map);
+                    accelerations.push(accel_entry);
+                }
+            }
+            series_entry["accelerations"] = serde_json::Value::Array(accelerations);
+            series_list.push(series_entry);
+        }
+
         let data = serde_json::json!({
-            "series": self.current_results,
-            "accelerations": self.current_accel_results,
+            "series": series_list
         });
 
         match serde_json::to_string_pretty(&data) {
